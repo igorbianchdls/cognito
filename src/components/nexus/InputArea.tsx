@@ -64,24 +64,24 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }> | null
 
 const models = [
   { id: 'analistaDados', name: 'Analista de Dados', icon: iconMap['analistaDados'] },
-  { id: 'claudeAgent', name: 'Claude Simple', icon: iconMap['claudeAgent'] },
-  { id: 'ecommerceSalesAgentV2', name: 'E-commerce Sales', icon: iconMap['ecommerceSalesAgentV2'] },
-  { id: 'salesAgent', name: 'Sales Agent', icon: iconMap['salesAgent'] },
-  { id: 'contasAReceberAgent', name: 'Contas a Receber', icon: iconMap['contasAReceberAgent'] },
-  { id: 'receiptsAgent', name: 'Receipts', icon: iconMap['receiptsAgent'] },
-  { id: 'nfeAgent', name: 'Notas Fiscais', icon: iconMap['nfeAgent'] },
-  { id: 'inventoryAgent', name: 'Inventory', icon: iconMap['inventoryAgent'] },
-  { id: 'logisticsAgent', name: 'Logistics', icon: iconMap['logisticsAgent'] },
-  { id: 'funcionariosAgent', name: 'Funcionários', icon: iconMap['funcionariosAgent'] },
-  { id: 'paidTrafficAgent', name: 'Tráfego Pago', icon: iconMap['paidTrafficAgent'] },
-  { id: 'organicMarketingAgent', name: 'Marketing Orgânico', icon: iconMap['organicMarketingAgent'] },
-  { id: 'webAnalyticsAgent', name: 'Web Analytics', icon: iconMap['webAnalyticsAgent'] },
+  { id: 'claudeAgent', name: 'Assistente IA (Geral)', icon: iconMap['claudeAgent'] },
+  { id: 'ecommerceSalesAgentV2', name: 'Gestor de E-commerce', icon: iconMap['ecommerceSalesAgentV2'] },
+  { id: 'salesAgent', name: 'Executivo de Vendas', icon: iconMap['salesAgent'] },
+  { id: 'contasAReceberAgent', name: 'Contas a Pagar e Receber', icon: iconMap['contasAReceberAgent'] },
+  { id: 'receiptsAgent', name: 'Analista de Despesas', icon: iconMap['receiptsAgent'] },
+  { id: 'nfeAgent', name: 'Analista Fiscal (NF-e)', icon: iconMap['nfeAgent'] },
+  { id: 'inventoryAgent', name: 'Gestor de Estoque', icon: iconMap['inventoryAgent'] },
+  { id: 'logisticsAgent', name: 'Coordenador de Logística', icon: iconMap['logisticsAgent'] },
+  { id: 'funcionariosAgent', name: 'Analista de RH', icon: iconMap['funcionariosAgent'] },
+  { id: 'paidTrafficAgent', name: 'Gestor de Tráfego Pago', icon: iconMap['paidTrafficAgent'] },
+  { id: 'organicMarketingAgent', name: 'Analista de Marketing Orgânico', icon: iconMap['organicMarketingAgent'] },
+  { id: 'webAnalyticsAgent', name: 'Analista de Web Analytics', icon: iconMap['webAnalyticsAgent'] },
   { id: 'gestorDeComprasAgent', name: 'Gestor de Compras', icon: iconMap['gestorDeComprasAgent'] },
-  { id: 'gestorDeProjetosAgent', name: 'Gestor de Projetos', icon: iconMap['gestorDeProjetosAgent'] },
+  { id: 'gestorDeProjetosAgent', name: 'Gerente de Projetos', icon: iconMap['gestorDeProjetosAgent'] },
   { id: 'gestorDeServicosAgent', name: 'Gestor de Serviços', icon: iconMap['gestorDeServicosAgent'] },
-  { id: 'gestorDeVendasB2BAgent', name: 'Gestor de Vendas B2B', icon: iconMap['gestorDeVendasB2BAgent'] },
-  { id: 'crmAgent', name: 'CRM', icon: iconMap['crmAgent'] },
-  { id: 'automationAgent', name: 'Automações', icon: Wrench },
+  { id: 'gestorDeVendasB2BAgent', name: 'Gerente de Vendas B2B', icon: iconMap['gestorDeVendasB2BAgent'] },
+  { id: 'crmAgent', name: 'Analista de CRM', icon: iconMap['crmAgent'] },
+  { id: 'automationAgent', name: 'Arquiteto de Automação', icon: Wrench },
 ];
 
 export default function InputArea({ input, setInput, onSubmit, status, selectedAgent, onAgentChange, onFileSelected }: InputAreaProps) {
@@ -147,24 +147,24 @@ export default function InputArea({ input, setInput, onSubmit, status, selectedA
             const getAgentName = (id: string) => {
               switch (id) {
                 case 'analistaDados': return 'Analista de Dados';
-                case 'claudeAgent': return 'Claude Simple';
-                case 'salesAgent': return 'Sales Agent';
-                case 'contasAReceberAgent': return 'Contas a Receber';
-                case 'receiptsAgent': return 'Receipts';
-                case 'nfeAgent': return 'Notas Fiscais';
-                case 'inventoryAgent': return 'Inventory';
-                case 'ecommerceSalesAgentV2': return 'E-commerce Sales';
-                case 'webAnalyticsAgent': return 'Web Analytics';
-                case 'logisticsAgent': return 'Logistics';
-                case 'paidTrafficAgent': return 'Tráfego Pago';
-                case 'organicMarketingAgent': return 'Marketing Orgânico';
+                case 'claudeAgent': return 'Assistente IA (Geral)';
+                case 'salesAgent': return 'Executivo de Vendas';
+                case 'contasAReceberAgent': return 'Contas a Pagar e Receber';
+                case 'receiptsAgent': return 'Analista de Despesas';
+                case 'nfeAgent': return 'Analista Fiscal (NF-e)';
+                case 'inventoryAgent': return 'Gestor de Estoque';
+                case 'ecommerceSalesAgentV2': return 'Gestor de E-commerce';
+                case 'webAnalyticsAgent': return 'Analista de Web Analytics';
+                case 'logisticsAgent': return 'Coordenador de Logística';
+                case 'paidTrafficAgent': return 'Gestor de Tráfego Pago';
+                case 'organicMarketingAgent': return 'Analista de Marketing Orgânico';
                 case 'gestorDeComprasAgent': return 'Gestor de Compras';
-                case 'gestorDeProjetosAgent': return 'Gestor de Projetos';
+                case 'gestorDeProjetosAgent': return 'Gerente de Projetos';
                 case 'gestorDeServicosAgent': return 'Gestor de Serviços';
-                case 'gestorDeVendasB2BAgent': return 'Gestor de Vendas B2B';
-                case 'funcionariosAgent': return 'Funcionários';
-                case 'crmAgent': return 'CRM';
-                case 'automationAgent': return 'Automações';
+                case 'gestorDeVendasB2BAgent': return 'Gerente de Vendas B2B';
+                case 'funcionariosAgent': return 'Analista de RH';
+                case 'crmAgent': return 'Analista de CRM';
+                case 'automationAgent': return 'Arquiteto de Automação';
                 default: return id;
               }
             };

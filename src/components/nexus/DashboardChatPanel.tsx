@@ -8,6 +8,7 @@ import { $visualBuilderState, visualBuilderActions } from '@/stores/visualBuilde
 import type { Widget } from '@/stores/visualBuilderStore';
 import { ThemeManager, type ThemeName } from '@/components/visual-builder/ThemeManager';
 import { BackgroundManager, type BackgroundPresetKey } from '@/components/visual-builder/BackgroundManager';
+import { BorderManager, type BorderPresetKey } from '@/components/visual-builder/BorderManager';
 import { ColorManager, type ColorPresetKey } from '@/components/visual-builder/ColorManager';
 import { FontManager, type FontPresetKey, type FontSizeKey } from '@/components/visual-builder/FontManager';
 import {
@@ -37,11 +38,14 @@ export default function DashboardChatPanel() {
   const [selectedFont, setSelectedFont] = useState<FontPresetKey>('inter');
   const [selectedFontSize, setSelectedFontSize] = useState<FontSizeKey>('lg');
   const [selectedBackground, setSelectedBackground] = useState<BackgroundPresetKey>('white');
+  const [selectedBorder, setSelectedBorder] = useState<BorderPresetKey>('subtle-rounded');
   const [selectedCorporateColor, setSelectedCorporateColor] = useState<ColorPresetKey>('corporate');
   const visualBuilderState = useStore($visualBuilderState);
 
   // Available backgrounds
   const availableBackgrounds = BackgroundManager.getAvailableBackgrounds();
+  // Available borders (no tokens here; rely on preview labels/colors)
+  const availableBorders = BorderManager.getAvailableBorders();
 
   // Available corporate color palettes
   const availableColorPalettes = ColorManager.getAvailableColorPalettes();
@@ -64,6 +68,22 @@ export default function DashboardChatPanel() {
       }
     } catch (error) {
       // Invalid JSON, keep current theme
+    }
+  }, [visualBuilderState.code]);
+
+  // Detect current border from code and initialize based on theme
+  useEffect(() => {
+    try {
+      const config = JSON.parse(visualBuilderState.code);
+      if (config.customBorder && BorderManager.isValidPreset(config.customBorder)) {
+        setSelectedBorder(config.customBorder);
+      } else if (config.theme) {
+        setSelectedBorder(BorderManager.getDefaultForTheme(config.theme));
+      } else {
+        setSelectedBorder(BorderManager.getDefaultPreset());
+      }
+    } catch (error) {
+      // Invalid JSON, keep current border
     }
   }, [visualBuilderState.code]);
 
@@ -221,6 +241,21 @@ export default function DashboardChatPanel() {
       console.log('🎨 Corporate color changed to:', colorKey);
     } catch (error) {
       console.error('Error applying corporate color:', error);
+    }
+  };
+
+  const handleBorderChange = (borderKey: BorderPresetKey) => {
+    try {
+      const config = JSON.parse(visualBuilderState.code);
+      const updatedConfig = {
+        ...config,
+        customBorder: borderKey
+      };
+      visualBuilderActions.updateCode(JSON.stringify(updatedConfig, null, 2));
+      setSelectedBorder(borderKey);
+      console.log('🎨 Border preset changed to:', borderKey);
+    } catch (error) {
+      console.error('Error applying border preset:', error);
     }
   };
 
@@ -466,6 +501,49 @@ export default function DashboardChatPanel() {
                     </div>
                   </div>
                   {selectedBackground === background.key && (
+                    <Check className="w-4 h-4 text-blue-600" />
+                  )}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Border Selector */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <div>
+                <ArtifactAction
+                  icon={Square}
+                  tooltip={`Border: ${availableBorders.find(b => b.key === selectedBorder)?.name || 'Unknown'}`}
+                  variant="ghost"
+                />
+              </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-64">
+              <div className="px-2 py-1.5 text-sm font-medium text-muted-foreground">
+                Select Border
+              </div>
+              <DropdownMenuSeparator />
+
+              {availableBorders.map((border) => (
+                <DropdownMenuItem
+                  key={border.key}
+                  onClick={() => handleBorderChange(border.key)}
+                  className="flex items-center justify-between py-2"
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="w-6 h-6 rounded border border-gray-200"
+                      style={border.previewStyle}
+                    />
+                    <div>
+                      <div className="font-medium text-sm">{border.name}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {border.description}
+                      </div>
+                    </div>
+                  </div>
+                  {selectedBorder === border.key && (
                     <Check className="w-4 h-4 text-blue-600" />
                   )}
                 </DropdownMenuItem>

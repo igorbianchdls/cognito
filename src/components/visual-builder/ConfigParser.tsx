@@ -199,8 +199,22 @@ export class ConfigParser {
   };
 
 
-  private static applyThemeToWidgets(widgets: Widget[], theme: ThemeName, customFont?: string, corporateColor?: string, customFontSize?: string): Widget[] {
-    return ThemeManager.applyThemeToWidgets(widgets, theme, customFont, corporateColor, customFontSize);
+  private static applyThemeToWidgets(
+    widgets: Widget[],
+    theme: ThemeName,
+    customFont?: string,
+    corporateColor?: string,
+    customFontSize?: string,
+    customBorder?: string
+  ): Widget[] {
+    return ThemeManager.applyThemeToWidgets(
+      widgets,
+      theme,
+      customFont,
+      corporateColor,
+      customFontSize,
+      customBorder
+    );
   }
 
   static parse(jsonString: string): ParseResult {
@@ -215,6 +229,7 @@ export class ConfigParser {
       const customFont = config.customFont as string;
       const customFontSize = config.customFontSize as string;
       const customBackground = config.customBackground as string;
+      const customBorder = config.customBorder as string;
       const corporateColor = config.corporateColor as string;
       const layoutRows = (config.layoutRows || rawGridConfig.layoutRows) as Record<string, LayoutRow> | undefined;
 
@@ -253,12 +268,12 @@ export class ConfigParser {
 
       // Step 5: Apply theme to widgets and grid if theme is specified and valid
       const themedWidgets = (theme && ThemeManager.isValidTheme(theme))
-        ? this.applyThemeToWidgets(validWidgets, theme, customFont, corporateColor, customFontSize)
+        ? this.applyThemeToWidgets(validWidgets, theme, customFont, corporateColor, customFontSize, customBorder)
         : validWidgets;
 
       // Step 6: Apply theme to grid (now handles custom background internally)
       const themedGridConfig = (theme && ThemeManager.isValidTheme(theme))
-        ? ThemeManager.applyThemeToGrid(gridConfig, theme, corporateColor, customBackground)
+        ? ThemeManager.applyThemeToGrid(gridConfig, theme, corporateColor, customBackground, customBorder)
         : gridConfig;
 
       return {

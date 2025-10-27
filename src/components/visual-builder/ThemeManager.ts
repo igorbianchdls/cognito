@@ -8,6 +8,7 @@ import type { PieChartConfig } from '@/stores/apps/pieChartStore';
 import type { AreaChartConfig } from '@/stores/apps/areaChartStore';
 import { THEME_TOKENS, TYPOGRAPHY_PRESETS, THEME_BACKGROUND_MAPPING, type ThemeTokenName, type DesignTokens } from './DesignTokens';
 import { BackgroundManager } from './BackgroundManager';
+import { BorderManager, type BorderPresetKey } from './BorderManager';
 import { ColorManager, type ColorPresetKey } from './ColorManager';
 import { FontManager, type FontSizeKey } from './FontManager';
 
@@ -706,7 +707,14 @@ export class ThemeManager {
   /**
    * Applies design tokens to a single widget based on its type
    */
-  static applyThemeToWidget(widget: Widget, themeName: ThemeName, customFont?: string, corporateColorKey?: string, customFontSize?: string): Widget {
+  static applyThemeToWidget(
+    widget: Widget,
+    themeName: ThemeName,
+    customFont?: string,
+    corporateColorKey?: string,
+    customFontSize?: string,
+    borderPresetKey?: string
+  ): Widget {
     if (!this.isValidTheme(themeName)) {
       console.warn(`Invalid theme: ${themeName}. Skipping theme application.`);
       return widget;
@@ -739,23 +747,88 @@ export class ThemeManager {
       };
     }
 
+    // Determine border preset
+    let effectiveBorderPreset: BorderPresetKey = BorderManager.getDefaultForTheme(themeName);
+    if (borderPresetKey && BorderManager.isValidPreset(borderPresetKey)) {
+      effectiveBorderPreset = borderPresetKey as BorderPresetKey;
+    }
+
+    // Apply theme per widget type
+    let themed = widget;
     switch (widget.type) {
       case 'kpi':
-        return this.applyThemeToKPI(widget, tokens, themeName);
-      case 'bar':
-        return this.applyThemeToBarChart(widget, tokens, themeName);
-      case 'line':
-        return this.applyThemeToLineChart(widget, tokens, themeName);
-      case 'pie':
-        return this.applyThemeToPieChart(widget, tokens, themeName);
-      case 'area':
-        return this.applyThemeToAreaChart(widget, tokens, themeName);
-      case 'insights':
-        return this.applyThemeToInsights(widget, tokens, themeName);
-      case 'alerts':
-        return this.applyThemeToAlerts(widget, tokens, themeName);
-      case 'recommendations':
-        return this.applyThemeToRecommendations(widget, tokens, themeName);
+        themed = this.applyThemeToKPI(widget, tokens, themeName);
+        // Apply border via BorderManager
+        if (!themed.kpiConfig) themed.kpiConfig = {} as any;
+        Object.assign(
+          themed.kpiConfig,
+          BorderManager.getKPICardBorderStyle(effectiveBorderPreset, tokens)
+        );
+        return themed;
+      case 'bar': {
+        themed = this.applyThemeToBarChart(widget, tokens, themeName);
+        if (!themed.barConfig) themed.barConfig = {} as any;
+        if (!themed.barConfig.styling) themed.barConfig.styling = {} as any;
+        Object.assign(
+          themed.barConfig.styling,
+          BorderManager.getContainerBorderStyle(effectiveBorderPreset, tokens)
+        );
+        return themed;
+      }
+      case 'line': {
+        themed = this.applyThemeToLineChart(widget, tokens, themeName);
+        if (!themed.lineConfig) themed.lineConfig = {} as any;
+        if (!themed.lineConfig.styling) themed.lineConfig.styling = {} as any;
+        Object.assign(
+          themed.lineConfig.styling,
+          BorderManager.getContainerBorderStyle(effectiveBorderPreset, tokens)
+        );
+        return themed;
+      }
+      case 'pie': {
+        themed = this.applyThemeToPieChart(widget, tokens, themeName);
+        if (!themed.pieConfig) themed.pieConfig = {} as any;
+        if (!themed.pieConfig.styling) themed.pieConfig.styling = {} as any;
+        Object.assign(
+          themed.pieConfig.styling,
+          BorderManager.getContainerBorderStyle(effectiveBorderPreset, tokens)
+        );
+        return themed;
+      }
+      case 'area': {
+        themed = this.applyThemeToAreaChart(widget, tokens, themeName);
+        if (!themed.areaConfig) themed.areaConfig = {} as any;
+        if (!themed.areaConfig.styling) themed.areaConfig.styling = {} as any;
+        Object.assign(
+          themed.areaConfig.styling,
+          BorderManager.getContainerBorderStyle(effectiveBorderPreset, tokens)
+        );
+        return themed;
+      }
+      case 'insights': {
+        themed = this.applyThemeToInsights(widget, tokens, themeName);
+        if (!themed.insightsConfig) themed.insightsConfig = {} as any;
+        const b = BorderManager.getBorderStyle(effectiveBorderPreset, tokens);
+        themed.insightsConfig.borderColor = b.color;
+        themed.insightsConfig.borderAccentColor = b.accentColor;
+        return themed;
+      }
+      case 'alerts': {
+        themed = this.applyThemeToAlerts(widget, tokens, themeName);
+        if (!themed.alertsConfig) themed.alertsConfig = {} as any;
+        const b = BorderManager.getBorderStyle(effectiveBorderPreset, tokens);
+        themed.alertsConfig.borderColor = b.color;
+        themed.alertsConfig.borderAccentColor = b.accentColor;
+        return themed;
+      }
+      case 'recommendations': {
+        themed = this.applyThemeToRecommendations(widget, tokens, themeName);
+        if (!themed.recommendationsConfig) themed.recommendationsConfig = {} as any;
+        const b = BorderManager.getBorderStyle(effectiveBorderPreset, tokens);
+        themed.recommendationsConfig.borderColor = b.color;
+        themed.recommendationsConfig.borderAccentColor = b.accentColor;
+        return themed;
+      }
       default:
         console.warn(`Unknown widget type: ${widget.type}. Skipping theme application.`);
         return widget;
@@ -765,14 +838,34 @@ export class ThemeManager {
   /**
    * Applies design tokens to multiple widgets
    */
-  static applyThemeToWidgets(widgets: Widget[], themeName: ThemeName, customFont?: string, corporateColorKey?: string, customFontSize?: string): Widget[] {
-    return widgets.map(widget => this.applyThemeToWidget(widget, themeName, customFont, corporateColorKey, customFontSize));
+  static applyThemeToWidgets(
+    widgets: Widget[],
+    themeName: ThemeName,
+    customFont?: string,
+    corporateColorKey?: string,
+    customFontSize?: string,
+    borderPresetKey?: string
+  ): Widget[] {
+    return widgets.map(widget => this.applyThemeToWidget(
+      widget,
+      themeName,
+      customFont,
+      corporateColorKey,
+      customFontSize,
+      borderPresetKey
+    ));
   }
 
   /**
    * Applies design tokens to grid configuration
    */
-  static applyThemeToGrid(gridConfig: GridConfig, themeName: ThemeName, corporateColorKey?: string, customBackground?: string): GridConfig {
+  static applyThemeToGrid(
+    gridConfig: GridConfig,
+    themeName: ThemeName,
+    corporateColorKey?: string,
+    customBackground?: string,
+    borderPresetKey?: string
+  ): GridConfig {
     if (!this.isValidTheme(themeName)) {
       console.warn(`Invalid theme: ${themeName}. Skipping grid theme application.`);
       return gridConfig;
@@ -790,15 +883,22 @@ export class ThemeManager {
       backgroundStyle = BackgroundManager.getBackgroundStyle(backgroundPresetKey);
     }
 
+    // Compute border style from manager
+    let effectiveBorderPreset: BorderPresetKey = BorderManager.getDefaultForTheme(themeName);
+    if (borderPresetKey && BorderManager.isValidPreset(borderPresetKey)) {
+      effectiveBorderPreset = borderPresetKey as BorderPresetKey;
+    }
+    const gridBorder = BorderManager.getGridBorderStyle(effectiveBorderPreset, tokens);
+
     return {
       ...gridConfig,
       // Apply background from BackgroundManager instead of hardcoded values
       ...backgroundStyle,
 
-      // Fixed border style (gray, no shadow)
-      borderColor: '#d1d5db',        // Cinza claro fixo
-      borderWidth: 1,                 // 1px
-      borderRadius: 8,                // 8px arredondamento
+      // Border from BorderManager preset
+      borderColor: gridBorder.borderColor,
+      borderWidth: gridBorder.borderWidth,
+      borderRadius: gridBorder.borderRadius,
 
       // Spacing
       padding: gridConfig.padding || tokens.spacing.md,

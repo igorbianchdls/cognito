@@ -2712,21 +2712,21 @@ const getAgentInfo = (agent: string) => {
     case 'analistaDados':
       return { initial: 'A', title: 'Analista de Dados', color: 'bg-indigo-500' };
     case 'salesAgent':
-      return { initial: 'V', title: 'SalesAgent', color: 'bg-indigo-600' };
+      return { initial: 'V', title: 'Executivo de Vendas', color: 'bg-indigo-600' };
     case 'contasAReceberAgent':
       return { initial: 'C', title: 'Contas a Pagar e Receber', color: 'bg-teal-600' };
     case 'receiptsAgent':
-      return { initial: 'R', title: 'Receipts Agent', color: 'bg-orange-600' };
+      return { initial: 'R', title: 'Analista de Despesas', color: 'bg-orange-600' };
     case 'nfeAgent':
-      return { initial: 'N', title: 'Invoice Agent', color: 'bg-emerald-600' };
+      return { initial: 'N', title: 'Analista Fiscal (NF-e)', color: 'bg-emerald-600' };
     case 'inventoryAgent':
-      return { initial: 'I', title: 'Inventory Agent', color: 'bg-blue-600' };
+      return { initial: 'I', title: 'Gestor de Estoque', color: 'bg-blue-600' };
     case 'ecommerceSalesAgent':
-      return { initial: 'E', title: 'E-commerce Sales Agent', color: 'bg-emerald-600' };
+      return { initial: 'E', title: 'Gestor de E-commerce', color: 'bg-emerald-600' };
     case 'ecommerceSalesAgentV2':
-      return { initial: 'E', title: 'Agente de Vendas E-commerce', color: 'bg-emerald-700' };
+      return { initial: 'E', title: 'Gestor de E-commerce', color: 'bg-emerald-700' };
     default:
-      return { initial: 'A', title: 'AI Assistant', color: 'bg-gray-500' };
+      return { initial: 'A', title: 'Assistente IA (Geral)', color: 'bg-gray-500' };
   }
 };
 
