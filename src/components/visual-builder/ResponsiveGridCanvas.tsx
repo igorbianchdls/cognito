@@ -20,6 +20,7 @@ interface ResponsiveGridCanvasProps {
   headerSubtitle?: string;
   onFilterChange?: (filters: GlobalFilters) => void;
   isFilterLoading?: boolean;
+  themeName?: string;
 }
 
 // Draggable Widget Component
@@ -94,7 +95,7 @@ function DraggableWidget({ widget, spanClasses, spanValue, minHeight, globalFilt
   );
 }
 
-export default function ResponsiveGridCanvas({ widgets, gridConfig, globalFilters, viewportMode = 'desktop', onLayoutChange, headerTitle, headerSubtitle, onFilterChange, isFilterLoading }: ResponsiveGridCanvasProps) {
+export default function ResponsiveGridCanvas({ widgets, gridConfig, globalFilters, viewportMode = 'desktop', onLayoutChange, headerTitle, headerSubtitle, onFilterChange, isFilterLoading, themeName }: ResponsiveGridCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [editingWidget, setEditingWidget] = useState<Widget | null>(null);
 
@@ -375,6 +376,7 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig, globalFilter
           onFilterChange={(dateRange: DateRangeFilter) => onFilterChange?.({ dateRange })}
           isLoading={!!isFilterLoading}
           containerPadding={gridConfig.padding ?? 16}
+          themeName={themeName as any}
         />
         {/* Empty State */}
         {widgets.length === 0 && (

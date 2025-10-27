@@ -11,6 +11,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import type { DateRangeFilter, DateRangeType } from '@/stores/visualBuilderStore';
+import { useStore } from '@nanostores/react';
+import { $headerUi, resolveHeaderStyle } from '@/stores/ui/headerUiStore';
+import type { ThemeName } from './ThemeManager';
 
 interface DashboardInCanvasHeaderProps {
   title: string;
@@ -20,6 +23,7 @@ interface DashboardInCanvasHeaderProps {
   isLoading?: boolean;
   rightExtras?: React.ReactNode;
   containerPadding?: number; // used to collapse container padding (left/right/top)
+  themeName?: ThemeName;
 }
 
 const DATE_RANGE_OPTIONS: { value: DateRangeType; label: string }[] = [
@@ -38,8 +42,10 @@ export default function DashboardInCanvasHeader({
   onFilterChange,
   isLoading = false,
   rightExtras,
-  containerPadding = 0
+  containerPadding = 0,
+  themeName
 }: DashboardInCanvasHeaderProps) {
+  const headerUi = useStore($headerUi);
   const [selectedType, setSelectedType] = useState<DateRangeType>(currentFilter.type);
 
   const handleFilterTypeChange = (value: DateRangeType) => {
@@ -95,12 +101,18 @@ export default function DashboardInCanvasHeader({
     }
   }, [currentFilter]);
 
+  const headerStyle = resolveHeaderStyle(themeName, headerUi.variant);
+
   return (
     <div
-      className="sticky top-0 z-20 bg-white border-b border-gray-200"
+      className="sticky top-0 z-20 border-b"
       style={{
         marginLeft: -containerPadding,
         marginRight: -containerPadding,
+        background: headerStyle.background,
+        borderBottomColor: headerStyle.borderBottomColor,
+        borderBottomWidth: 1,
+        borderBottomStyle: 'solid',
       }}
     >
       <div
@@ -108,16 +120,16 @@ export default function DashboardInCanvasHeader({
         style={{ paddingLeft: containerPadding, paddingRight: containerPadding }}
       >
         <div className="min-w-0">
-          <h2 className="text-base sm:text-lg font-semibold text-gray-900 truncate">{title}</h2>
+          <h2 className="text-base sm:text-lg font-semibold truncate" style={{ color: headerStyle.textPrimary }}>{title}</h2>
           {subtitle && (
-            <p className="text-xs sm:text-sm text-gray-600 truncate">{subtitle}</p>
+            <p className="text-xs sm:text-sm truncate" style={{ color: headerStyle.textSecondary }}>{subtitle}</p>
           )}
         </div>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
             <div className="hidden sm:flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-gray-500" />
-              <span className="text-sm font-medium text-gray-700">Periodo</span>
+              <Calendar className="h-4 w-4" style={{ color: headerStyle.textSecondary }} />
+              <span className="text-sm font-medium" style={{ color: headerStyle.textSecondary }}>Periodo</span>
             </div>
             <Select value={selectedType} onValueChange={handleFilterTypeChange} disabled={isLoading}>
               <SelectTrigger className="w-44 sm:w-56">
@@ -134,10 +146,10 @@ export default function DashboardInCanvasHeader({
               Atualizar
             </Button>
           </div>
-          <div className="hidden lg:block text-sm text-gray-500">
-            <span className="font-medium">{currentLabel}</span>
+          <div className="hidden lg:block text-sm" style={{ color: headerStyle.textSecondary }}>
+            <span className="font-medium" style={{ color: headerStyle.textPrimary }}>{currentLabel}</span>
             {dateRangeDescription && (
-              <span className="ml-2 text-gray-400">({dateRangeDescription})</span>
+              <span className="ml-2">({dateRangeDescription})</span>
             )}
           </div>
           {rightExtras}

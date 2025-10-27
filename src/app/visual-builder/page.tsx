@@ -14,6 +14,13 @@ export default function VisualBuilderPage() {
   const [activeTab, setActiveTab] = useState<'editor' | 'dashboard' | 'responsive'>('editor');
   const [viewportMode, setViewportMode] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
   const [isFilterLoading, setIsFilterLoading] = useState(false);
+  const currentThemeName = useMemo(() => {
+    try {
+      const cfg = JSON.parse(visualBuilderState.code);
+      if (cfg && typeof cfg.theme === 'string') return cfg.theme as any;
+    } catch {}
+    return 'dark' as any;
+  }, [visualBuilderState.code]);
 
   // Initialize store on mount
   useEffect(() => {
@@ -139,6 +146,7 @@ export default function VisualBuilderPage() {
                 headerSubtitle={visualBuilderState.dashboardSubtitle || 'Real-time visualization with Supabase data'}
                 onFilterChange={handleFilterChange}
                 isFilterLoading={isFilterLoading}
+                themeName={currentThemeName}
               />
             </div>
           </div>
@@ -209,6 +217,7 @@ export default function VisualBuilderPage() {
                 headerSubtitle={visualBuilderState.dashboardSubtitle || 'Preview different device layouts'}
                 onFilterChange={handleFilterChange}
                 isFilterLoading={isFilterLoading}
+                themeName={currentThemeName}
               />
             </div>
           </div>

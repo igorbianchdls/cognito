@@ -27,9 +27,12 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { FileText, BarChart3, Palette, Check, Type, Square, Paintbrush, Monitor, Tablet, Smartphone, ChevronDown } from 'lucide-react';
+import { FileText, BarChart3, Palette, Check, Type, Square, Paintbrush, Monitor, Tablet, Smartphone, ChevronDown, Layout } from 'lucide-react';
+import { $headerUi, headerUiActions } from '@/stores/ui/headerUiStore';
+import { useStore } from '@nanostores/react';
 
 export default function DashboardChatPanel() {
+  const headerUi = useStore($headerUi);
   const [activeTab, setActiveTab] = useState<'editor' | 'dashboard'>('editor');
   const [selectedViewport, setSelectedViewport] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
   const [selectedDashboard, setSelectedDashboard] = useState('Dashboard Builder');
@@ -576,3 +579,33 @@ export default function DashboardChatPanel() {
     </Artifact>
   );
 }
+          {/* Header Style Selector */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <div>
+                <ArtifactAction
+                  icon={Layout}
+                  tooltip={`Header: ${headerUi.variant === 'auto' ? `Auto (${selectedTheme === 'light' ? 'light' : 'dark'})` : headerUi.variant}`}
+                  variant="ghost"
+                />
+              </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <div className="px-2 py-1.5 text-sm font-medium text-muted-foreground">
+                Header Style
+              </div>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => headerUiActions.setVariant('auto')} className="flex items-center justify-between py-2">
+                <span>Auto</span>
+                {headerUi.variant === 'auto' && <Check className="w-4 h-4 text-blue-600" />}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => headerUiActions.setVariant('light')} className="flex items-center justify-between py-2">
+                <span>Light</span>
+                {headerUi.variant === 'light' && <Check className="w-4 h-4 text-blue-600" />}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => headerUiActions.setVariant('dark')} className="flex items-center justify-between py-2">
+                <span>Dark</span>
+                {headerUi.variant === 'dark' && <Check className="w-4 h-4 text-blue-600" />}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>

@@ -43,9 +43,10 @@ interface GridCanvasProps {
   headerSubtitle?: string;
   onFilterChange?: (filters: GlobalFilters) => void;
   isFilterLoading?: boolean;
+  themeName?: string;
 }
 
-export default function GridCanvas({ widgets, gridConfig, globalFilters, onLayoutChange, headerTitle, headerSubtitle, onFilterChange, isFilterLoading }: GridCanvasProps) {
+export default function GridCanvas({ widgets, gridConfig, globalFilters, onLayoutChange, headerTitle, headerSubtitle, onFilterChange, isFilterLoading, themeName }: GridCanvasProps) {
   // Extract theme colors from gridConfig
   const backgroundColor = gridConfig.backgroundColor || '#ffffff';
   const borderColor = gridConfig.borderColor || '#e5e7eb';
@@ -144,6 +145,7 @@ export default function GridCanvas({ widgets, gridConfig, globalFilters, onLayou
       onFilterChange={(dateRange: DateRangeFilter) => onFilterChange?.({ dateRange })}
       isLoading={!!isFilterLoading}
       containerPadding={gridConfig.padding ?? 16}
+      themeName={themeName as any}
     />
   );
 
