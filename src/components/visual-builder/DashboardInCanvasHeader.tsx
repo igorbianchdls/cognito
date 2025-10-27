@@ -102,6 +102,8 @@ export default function DashboardInCanvasHeader({
   }, [currentFilter]);
 
   const headerStyle = resolveHeaderStyle(themeName, headerUi.variant);
+  const variantKind = (headerUi.variant === 'auto' ? (themeName === 'light' ? 'light' : 'dark') : headerUi.variant);
+  const isDark = variantKind === 'dark';
 
   return (
     <div
@@ -132,16 +134,48 @@ export default function DashboardInCanvasHeader({
               <span className="text-sm font-medium" style={{ color: headerStyle.textSecondary }}>Periodo</span>
             </div>
             <Select value={selectedType} onValueChange={handleFilterTypeChange} disabled={isLoading}>
-              <SelectTrigger className="w-44 sm:w-56">
+              <SelectTrigger
+                className="w-44 sm:w-56 h-9 rounded-md"
+                style={{
+                  backgroundColor: 'transparent',
+                  color: headerStyle.textPrimary,
+                  borderColor: headerStyle.borderBottomColor,
+                }}
+              >
                 <SelectValue placeholder="Periodo" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent
+                className="rounded-md border"
+                style={{
+                  backgroundColor: headerStyle.background,
+                  color: headerStyle.textPrimary,
+                  borderColor: headerStyle.borderBottomColor,
+                }}
+              >
                 {DATE_RANGE_OPTIONS.map(opt => (
-                  <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                  <SelectItem
+                    key={opt.value}
+                    value={opt.value}
+                    className={isDark ? 'hover:bg-gray-800 focus:bg-gray-800' : 'hover:bg-gray-100 focus:bg-gray-100'}
+                    style={{ color: headerStyle.textPrimary }}
+                  >
+                    {opt.label}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isLoading} className="flex items-center gap-1">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRefresh}
+              disabled={isLoading}
+              className="flex items-center gap-1 h-9"
+              style={{
+                backgroundColor: 'transparent',
+                color: headerStyle.textPrimary,
+                borderColor: headerStyle.borderBottomColor,
+              }}
+            >
               <RefreshCw className={`h-3 w-3 ${isLoading ? 'animate-spin' : ''}`} />
               Atualizar
             </Button>
