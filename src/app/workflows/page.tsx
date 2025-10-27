@@ -14,8 +14,32 @@ import WorkflowTabs, { type WorkflowTabsValue } from "@/components/workflows/Wor
 export default function WorkflowsPage() {
   const [filters, setFilters] = useState<FiltersState>({ q: '', status: 'todos', sort: 'recentes' })
   const [activeCategory, setActiveCategory] = useState<WorkflowTabsValue>('todos')
-  const total = workflowsMock.length
-  const title = useMemo(() => `Workflows (${total})`, [total])
+  const filteredData = useMemo(() => {
+    let arr = [...workflowsMock]
+    if (activeCategory !== 'todos') {
+      arr = arr.filter(w => (w.category || 'outros') === activeCategory)
+    }
+    if (filters.q) {
+      const term = filters.q.toLowerCase()
+      arr = arr.filter(w =>
+        w.name.toLowerCase().includes(term) ||
+        (w.description?.toLowerCase() || '').includes(term) ||
+        (w.tags || []).some(t => t.toLowerCase().includes(term))
+      )
+    }
+    if (filters.status !== 'todos') {
+      arr = arr.filter(w => w.status === filters.status)
+    }
+    if (filters.sort === 'recentes') {
+      arr.sort((a, b) => +new Date(b.updatedAt) - +new Date(a.updatedAt))
+    } else if (filters.sort === 'nome') {
+      arr.sort((a, b) => a.name.localeCompare(b.name))
+    } else if (filters.sort === 'execucoes') {
+      arr.sort((a, b) => (b.runs || 0) - (a.runs || 0))
+    }
+    return arr
+  }, [activeCategory, filters])
+  const title = useMemo(() => `Workflows (${filteredData.length})`, [filteredData.length])
 
   const handleOpen = (id: string) => {
     console.log('Abrir workflow', id)
@@ -50,15 +74,7 @@ export default function WorkflowsPage() {
             <WorkflowFilters value={filters} onChange={setFilters} onCreate={handleCreate} />
 
             <div className="mt-6">
-              <WorkflowList
-                data={workflowsMock}
-                q={filters.q}
-                status={filters.status}
-                sort={filters.sort}
-                onOpen={handleOpen}
-                onCreate={handleCreate}
-                category={activeCategory}
-              />
+              <WorkflowList data={filteredData} onOpen={handleOpen} onCreate={handleCreate} />
             </div>
           </div>
         </div>
