@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useStore } from '@nanostores/react';
+import { useStore as useNanoStore } from '@nanostores/react';
 import MonacoEditor from '@/components/visual-builder/MonacoEditor';
 import ResponsiveGridCanvas from '@/components/visual-builder/ResponsiveGridCanvas';
 import { $visualBuilderState, visualBuilderActions } from '@/stores/visualBuilderStore';
@@ -29,10 +29,9 @@ import {
 import { Button } from '@/components/ui/button';
 import { FileText, BarChart3, Palette, Check, Type, Square, Paintbrush, Monitor, Tablet, Smartphone, ChevronDown, Layout } from 'lucide-react';
 import { $headerUi, headerUiActions } from '@/stores/ui/headerUiStore';
-import { useStore } from '@nanostores/react';
 
 export default function DashboardChatPanel() {
-  const headerUi = useStore($headerUi);
+  const headerUi = useNanoStore($headerUi);
   const [activeTab, setActiveTab] = useState<'editor' | 'dashboard'>('editor');
   const [selectedViewport, setSelectedViewport] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
   const [selectedDashboard, setSelectedDashboard] = useState('Dashboard Builder');
@@ -41,7 +40,7 @@ export default function DashboardChatPanel() {
   const [selectedFontSize, setSelectedFontSize] = useState<FontSizeKey>('lg');
   const [selectedBackground, setSelectedBackground] = useState<BackgroundPresetKey>('white');
   const [selectedCorporateColor, setSelectedCorporateColor] = useState<ColorPresetKey>('corporate');
-  const visualBuilderState = useStore($visualBuilderState);
+  const visualBuilderState = useNanoStore($visualBuilderState);
 
   // Available backgrounds
   const availableBackgrounds = BackgroundManager.getAvailableBackgrounds();
