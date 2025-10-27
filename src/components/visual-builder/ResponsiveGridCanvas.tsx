@@ -118,6 +118,7 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig, globalFilter
   const borderColor = gridConfig.borderColor || '#e5e7eb';
 
   // Advanced container styles (same as original GridCanvas)
+  const pad = gridConfig.padding ?? 16;
   const containerStyles = {
     // Background: priority to gradient, fallback to backgroundColor
     background: gridConfig.backgroundGradient?.enabled
@@ -139,7 +140,10 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig, globalFilter
       : undefined,
 
     // Spacing
-    padding: gridConfig.padding ? `${gridConfig.padding}px` : '16px',
+    paddingTop: 0,
+    paddingLeft: `${pad}px`,
+    paddingRight: `${pad}px`,
+    paddingBottom: `${pad}px`,
     margin: gridConfig.margin ? `${gridConfig.margin}px` : undefined,
   };
 

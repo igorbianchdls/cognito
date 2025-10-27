@@ -52,6 +52,7 @@ export default function GridCanvas({ widgets, gridConfig, globalFilters, onLayou
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Advanced container styles with priority system (same as widgets)
+  const pad = gridConfig.padding ?? 16;
   const containerStyles = {
     // Background: priority to gradient, fallback to backgroundColor
     background: gridConfig.backgroundGradient?.enabled
@@ -73,7 +74,10 @@ export default function GridCanvas({ widgets, gridConfig, globalFilters, onLayou
       : undefined,
 
     // Spacing
-    padding: gridConfig.padding ? `${gridConfig.padding}px` : '16px',
+    paddingTop: 0,
+    paddingLeft: `${pad}px`,
+    paddingRight: `${pad}px`,
+    paddingBottom: `${pad}px`,
     margin: gridConfig.margin ? `${gridConfig.margin}px` : undefined,
   };
 
