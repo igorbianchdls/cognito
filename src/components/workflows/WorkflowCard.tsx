@@ -124,7 +124,7 @@ export function WorkflowCard({ workflow, onOpen, onDuplicate, onRename, onDelete
             {workflow.name}
           </h3>
           {workflow.description && (
-            <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
+            <p className="text-sm text-muted-foreground line-clamp-3 mt-1">
               {workflow.description}
             </p>
           )}

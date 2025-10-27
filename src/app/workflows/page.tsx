@@ -64,9 +64,7 @@ export default function WorkflowsPage() {
           )}
           className="px-6 md:px-10 pb-2"
         />
-        <div className="px-6 md:px-10">
-          <WorkflowTabs value={activeCategory} onChange={setActiveCategory} />
-        </div>
+        <WorkflowTabs value={activeCategory} onChange={setActiveCategory} />
 
         {/* Content */}
         <div className="flex-1 bg-[#FBFBFB]">
