@@ -19,6 +19,7 @@ interface DashboardInCanvasHeaderProps {
   onFilterChange: (filter: DateRangeFilter) => void;
   isLoading?: boolean;
   rightExtras?: React.ReactNode;
+  containerPadding?: number; // used to collapse container padding (left/right/top)
 }
 
 const DATE_RANGE_OPTIONS: { value: DateRangeType; label: string }[] = [
@@ -36,7 +37,8 @@ export default function DashboardInCanvasHeader({
   currentFilter,
   onFilterChange,
   isLoading = false,
-  rightExtras
+  rightExtras,
+  containerPadding = 0
 }: DashboardInCanvasHeaderProps) {
   const [selectedType, setSelectedType] = useState<DateRangeType>(currentFilter.type);
 
@@ -94,8 +96,15 @@ export default function DashboardInCanvasHeader({
   }, [currentFilter]);
 
   return (
-    <div className="sticky top-0 z-20 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80 border-b border-gray-200">
-      <div className="px-4 sm:px-6 py-3 flex items-center justify-between">
+    <div
+      className="sticky top-0 z-20 bg-white border-b border-gray-200"
+      style={{
+        marginLeft: -containerPadding,
+        marginRight: -containerPadding,
+        marginTop: -containerPadding,
+      }}
+    >
+      <div className="flex items-center justify-between">
         <div className="min-w-0">
           <h2 className="text-base sm:text-lg font-semibold text-gray-900 truncate">{title}</h2>
           {subtitle && (
@@ -135,4 +144,3 @@ export default function DashboardInCanvasHeader({
     </div>
   );
 }
-

@@ -139,6 +139,7 @@ export default function GridCanvas({ widgets, gridConfig, globalFilters, onLayou
       currentFilter={globalFilters?.dateRange || { type: 'last_30_days' }}
       onFilterChange={(dateRange: DateRangeFilter) => onFilterChange?.({ dateRange })}
       isLoading={!!isFilterLoading}
+      containerPadding={gridConfig.padding ?? 16}
     />
   );
 

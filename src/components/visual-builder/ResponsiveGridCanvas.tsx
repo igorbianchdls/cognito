@@ -370,6 +370,7 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig, globalFilter
           currentFilter={globalFilters?.dateRange || { type: 'last_30_days' }}
           onFilterChange={(dateRange: DateRangeFilter) => onFilterChange?.({ dateRange })}
           isLoading={!!isFilterLoading}
+          containerPadding={gridConfig.padding ?? 16}
         />
         {/* Empty State */}
         {widgets.length === 0 && (
