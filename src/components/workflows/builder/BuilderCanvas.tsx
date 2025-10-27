@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState, useEffect } from "react"
+import { useMemo, useState, useEffect, type Dispatch, type SetStateAction } from "react"
 import InsertButton, { type InsertType } from "./InsertButton"
 import TriggerNode from "./nodes/TriggerNode"
 import ActionNode from "./nodes/ActionNode"
@@ -9,9 +9,9 @@ import type { Step } from "@/app/workflows/builder/types"
 
 type Props = {
   steps?: Step[]
-  setSteps?: (s: Step[]) => void
+  setSteps?: Dispatch<SetStateAction<Step[]>>
   selectedId?: string | null
-  setSelectedId?: (id: string | null) => void
+  setSelectedId?: Dispatch<SetStateAction<string | null>>
 }
 
 export default function BuilderCanvas(props: Props = {}) {
