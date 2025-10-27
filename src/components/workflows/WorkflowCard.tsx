@@ -75,7 +75,7 @@ export function WorkflowCard({ workflow, onOpen, onDuplicate, onRename, onDelete
           <CategoryIconBadge {...categoryVisuals(workflow.category)} ariaLabel={workflow.category || 'categoria'} />
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <h3 className="text-base font-semibold truncate max-w-[240px]" title={workflow.name}>
+              <h3 className="text-base font-semibold line-clamp-2 break-words" title={workflow.name}>
                 {workflow.name}
               </h3>
             </div>

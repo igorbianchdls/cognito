@@ -29,7 +29,7 @@ export function CategoryIconBadge({
   className?: string
   ariaLabel?: string
 }) {
-  const sizeClasses = size === 'sm' ? 'w-8 h-8 rounded-lg' : 'w-10 h-10 rounded-xl'
+  const sizeClasses = size === 'sm' ? 'w-8 h-8 rounded-md' : 'w-10 h-10 rounded-md'
   return (
     <div
       role="img"
@@ -49,4 +49,3 @@ export function CategoryIconBadge({
 export type { Tone as CategoryTone }
 
 export default CategoryIconBadge
-
