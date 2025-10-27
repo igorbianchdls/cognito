@@ -12,7 +12,27 @@ import {
 import { cn } from "@/lib/utils"
 import type { WorkflowSummary, WorkflowCategory } from "@/app/workflows/types"
 import CategoryIconBadge from "@/components/workflows/CategoryIconBadge"
-import { Banknote, ShoppingCart, Megaphone, Wrench, Users, Headphones, MoreHorizontal, Heart } from "lucide-react"
+import {
+  Banknote,
+  ShoppingCart,
+  Megaphone,
+  Wrench,
+  Users,
+  Headphones,
+  MoreHorizontal,
+  Heart,
+  Receipt,
+  FileText,
+  Barcode,
+  ScanText,
+  ShieldAlert,
+  TrendingUp,
+  Package,
+  Truck,
+  Percent,
+  BadgeDollarSign,
+  Handshake,
+} from "lucide-react"
 
 type Props = {
   workflow: WorkflowSummary
@@ -46,25 +66,52 @@ function StatusBadge({ status }: { status: WorkflowSummary["status"] }) {
   return <Badge className={cn("border", styles)}>{label}</Badge>
 }
 
-function categoryVisuals(category?: WorkflowCategory) {
-  switch (category) {
-    case 'financeiro':
-      return { tone: 'green' as const, icon: <Banknote /> }
-    case 'vendas':
-      return { tone: 'amber' as const, icon: <ShoppingCart /> }
-    case 'marketing':
-      return { tone: 'violet' as const, icon: <Megaphone /> }
-    case 'operacoes':
-      return { tone: 'slate' as const, icon: <Wrench /> }
-    case 'crm':
-      return { tone: 'blue' as const, icon: <Users /> }
-    case 'suporte':
-      return { tone: 'indigo' as const, icon: <Headphones /> }
-    case 'outros':
-      return { tone: 'gray' as const, icon: <MoreHorizontal /> }
-    default:
-      return { tone: 'lime' as const, icon: <Heart /> }
+function getWorkflowVisuals(w: WorkflowSummary) {
+  const tags = (w.tags || []).map(t => t.toLowerCase())
+  const has = (t: string) => tags.includes(t)
+
+  // Overrides por visualKey (se adotarmos depois)
+  // if (w.visualKey === '...') return { tone: '...', icon: <.../> }
+
+  // Financeiro: regras por tag
+  if (w.category === 'financeiro') {
+    if (has('nfe')) return { tone: 'orange' as const, icon: <Receipt /> }
+    if (has('ap')) return { tone: 'emerald' as const, icon: <FileText /> }
+    if (has('ar')) return { tone: 'green' as const, icon: <Banknote /> }
+    if (has('conciliação') || has('conciliacao') || has('bancos')) return { tone: 'indigo' as const, icon: <Barcode /> }
+    if (has('boletos')) return { tone: 'sky' as const, icon: <Barcode /> }
+    if (has('ocr')) return { tone: 'cyan' as const, icon: <ScanText /> }
+    if (has('despesas')) return { tone: 'violet' as const, icon: <FileText /> }
+    if (has('auditoria') || has('fraude')) return { tone: 'rose' as const, icon: <ShieldAlert /> }
+    if (has('fluxo') || has('forecast')) return { tone: 'purple' as const, icon: <TrendingUp /> }
+    return { tone: 'green' as const, icon: <Banknote /> }
   }
+
+  // Vendas
+  if (w.category === 'vendas') {
+    if (has('pedido') || has('expedicao')) return { tone: 'slate' as const, icon: <Package /> }
+    if (has('crm') || has('proposta') || has('contrato')) return { tone: 'blue' as const, icon: <Handshake /> }
+    if (has('descontos')) return { tone: 'blue' as const, icon: <Percent /> }
+    if (has('comissoes')) return { tone: 'amber' as const, icon: <BadgeDollarSign /> }
+    return { tone: 'amber' as const, icon: <ShoppingCart /> }
+  }
+
+  // Marketing
+  if (w.category === 'marketing') {
+    return { tone: 'teal' as const, icon: <Megaphone /> }
+  }
+
+  // Operações
+  if (w.category === 'operacoes') {
+    if (has('wms') || has('tms') || has('logistica')) return { tone: 'slate' as const, icon: <Truck /> }
+    return { tone: 'slate' as const, icon: <Wrench /> }
+  }
+
+  // CRM/Suporte
+  if (w.category === 'crm') return { tone: 'blue' as const, icon: <Users /> }
+  if (w.category === 'suporte') return { tone: 'indigo' as const, icon: <Headphones /> }
+  if (w.category === 'outros') return { tone: 'gray' as const, icon: <MoreHorizontal /> }
+  return { tone: 'lime' as const, icon: <Heart /> }
 }
 
 export function WorkflowCard({ workflow, onOpen, onDuplicate, onRename, onDelete }: Props) {
@@ -72,7 +119,7 @@ export function WorkflowCard({ workflow, onOpen, onDuplicate, onRename, onDelete
     <Card className="group relative flex flex-col gap-3 p-5 rounded-2xl border border-gray-200 bg-white shadow-sm hover:shadow-md hover:border-gray-300 transition-colors">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <CategoryIconBadge {...categoryVisuals(workflow.category)} ariaLabel={workflow.category || 'categoria'} className="mb-2" />
+          <CategoryIconBadge {...getWorkflowVisuals(workflow)} ariaLabel={workflow.category || 'categoria'} className="mb-2" />
           <h3 className="text-base font-semibold line-clamp-2 break-words" title={workflow.name}>
             {workflow.name}
           </h3>
