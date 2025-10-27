@@ -1,4 +1,4 @@
-import type { WorkflowSummary } from '@/types/apps/workflows'
+import type { WorkflowSummary } from '@/app/workflows/types'
 
 export const workflowsMock: WorkflowSummary[] = [
   {
@@ -90,4 +90,3 @@ export const workflowsMock: WorkflowSummary[] = [
     owner: 'Marketing',
   },
 ]
-

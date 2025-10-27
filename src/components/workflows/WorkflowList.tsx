@@ -3,7 +3,7 @@
 import { useMemo } from "react"
 import WorkflowCard from "@/components/workflows/WorkflowCard"
 import EmptyState from "@/components/workflows/EmptyState"
-import type { WorkflowSummary } from "@/types/apps/workflows"
+import type { WorkflowSummary } from "@/app/workflows/types"
 
 type Props = {
   data: WorkflowSummary[]
@@ -52,4 +52,3 @@ export function WorkflowList({ data, q = '', status = 'todos', sort = 'recentes'
 }
 
 export default WorkflowList
-

@@ -64,6 +64,11 @@ const navigationData = {
       icon: LayoutGrid,
     },
     {
+      title: "Workflows",
+      url: "/workflows",
+      icon: LayoutGrid,
+    },
+    {
       title: "Docs",
       url: "/docs",
       icon: FileText,

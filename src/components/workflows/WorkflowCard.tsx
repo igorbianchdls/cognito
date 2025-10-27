@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
-import type { WorkflowSummary } from "@/types/apps/workflows"
+import type { WorkflowSummary } from "@/app/workflows/types"
 
 type Props = {
   workflow: WorkflowSummary
@@ -102,4 +102,3 @@ export function WorkflowCard({ workflow, onOpen, onDuplicate, onRename, onDelete
 }
 
 export default WorkflowCard
-
