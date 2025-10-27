@@ -6,7 +6,7 @@ import Link from 'next/link';
 import MonacoEditor from '@/components/visual-builder/MonacoEditor';
 import GridCanvas from '@/components/visual-builder/GridCanvas';
 import ResponsiveGridCanvas from '@/components/visual-builder/ResponsiveGridCanvas';
-import FilterHeader from '@/components/visual-builder/FilterHeader';
+import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import { $visualBuilderState, visualBuilderActions } from '@/stores/visualBuilderStore';
 import type { Widget, GlobalFilters } from '@/stores/visualBuilderStore';
 
@@ -129,21 +129,15 @@ export default function VisualBuilderPage() {
 
         {/* Dashboard Tab */}
         {activeTab === 'dashboard' && (
-          <div className="h-full bg-gray-50">
-            <div className="border-b border-gray-200 bg-white">
-              <div className="p-4">
-                <h2 className="text-lg font-semibold text-gray-900">Live Dashboard</h2>
-                <p className="text-sm text-gray-600">Real-time visualization with Supabase data</p>
-              </div>
-              
-              {/* Filtros Globais */}
-              <FilterHeader
-                currentFilter={visualBuilderState.globalFilters.dateRange}
-                onFilterChange={(dateRange) => handleFilterChange({ dateRange })}
-                isLoading={isFilterLoading}
-              />
-            </div>
-            <div className="h-[calc(100%-146px)] p-6 overflow-auto">
+          <div className="h-full bg-gray-50 flex flex-col">
+            <DashboardHeader
+              title="Live Dashboard"
+              subtitle="Real-time visualization with Supabase data"
+              currentFilter={visualBuilderState.globalFilters.dateRange}
+              onFilterChange={(dateRange) => handleFilterChange({ dateRange })}
+              isLoading={isFilterLoading}
+            />
+            <div className="flex-1 p-6 overflow-auto">
               <GridCanvas
                 widgets={visualBuilderState.widgets}
                 gridConfig={visualBuilderState.gridConfig}
