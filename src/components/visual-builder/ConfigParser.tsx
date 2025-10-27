@@ -206,20 +206,14 @@ export class ConfigParser {
     theme: ThemeName,
     customFont?: string,
     corporateColor?: string,
-    customFontSize?: string,
-    customBorder?: string,
-    customBorderColor?: string,
-    customBorderAccentColor?: string
+    customFontSize?: string
   ): Widget[] {
     return ThemeManager.applyThemeToWidgets(
       widgets,
       theme,
       customFont,
       corporateColor,
-      customFontSize,
-      customBorder,
-      customBorderColor,
-      customBorderAccentColor
+      customFontSize
     );
   }
 
@@ -235,9 +229,6 @@ export class ConfigParser {
       const customFont = config.customFont as string;
       const customFontSize = config.customFontSize as string;
       const customBackground = config.customBackground as string;
-      const customBorder = config.customBorder as string;
-      const customBorderColor = config.customBorderColor as string;
-      const customBorderAccentColor = config.customBorderAccentColor as string;
       const corporateColor = config.corporateColor as string;
       const layoutRows = (config.layoutRows || rawGridConfig.layoutRows) as Record<string, LayoutRow> | undefined;
       const dashboardTitle = typeof config.dashboardTitle === 'string' ? config.dashboardTitle : undefined;
@@ -278,12 +269,12 @@ export class ConfigParser {
 
       // Step 5: Apply theme to widgets and grid if theme is specified and valid
       const themedWidgets = (theme && ThemeManager.isValidTheme(theme))
-        ? this.applyThemeToWidgets(validWidgets, theme, customFont, corporateColor, customFontSize, customBorder, customBorderColor, customBorderAccentColor)
+        ? this.applyThemeToWidgets(validWidgets, theme, customFont, corporateColor, customFontSize)
         : validWidgets;
 
       // Step 6: Apply theme to grid (now handles custom background internally)
       const themedGridConfig = (theme && ThemeManager.isValidTheme(theme))
-        ? ThemeManager.applyThemeToGrid(gridConfig, theme, corporateColor, customBackground, customBorder, customBorderColor, customBorderAccentColor)
+        ? ThemeManager.applyThemeToGrid(gridConfig, theme, corporateColor, customBackground)
         : gridConfig;
 
       return {
