@@ -19,4 +19,10 @@ export interface WorkflowSummary {
   runs?: number
   owner?: string
   category?: WorkflowCategory
+  // Campos adicionais (opcionais) para enriquecer a UI futuramente
+  isAI?: boolean
+  stepsCount?: number
+  keyApps?: string[]
+  schedule?: string
+  lastRunStatus?: 'success' | 'warning' | 'error' | 'never'
 }
