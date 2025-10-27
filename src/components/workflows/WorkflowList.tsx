@@ -3,7 +3,7 @@
 import { useMemo } from "react"
 import WorkflowCard from "@/components/workflows/WorkflowCard"
 import EmptyState from "@/components/workflows/EmptyState"
-import type { WorkflowSummary } from "@/app/workflows/types"
+import type { WorkflowSummary, WorkflowCategory } from "@/app/workflows/types"
 
 type Props = {
   data: WorkflowSummary[]
@@ -12,11 +12,15 @@ type Props = {
   sort?: 'recentes' | 'nome' | 'execucoes'
   onOpen?: (id: string) => void
   onCreate?: () => void
+  category?: WorkflowCategory | 'todos'
 }
 
-export function WorkflowList({ data, q = '', status = 'todos', sort = 'recentes', onOpen, onCreate }: Props) {
+export function WorkflowList({ data, q = '', status = 'todos', sort = 'recentes', onOpen, onCreate, category = 'todos' }: Props) {
   const items = useMemo(() => {
     let arr = data
+    if (category !== 'todos') {
+      arr = arr.filter(w => (w.category || 'outros') === category)
+    }
     if (q) {
       const term = q.toLowerCase()
       arr = arr.filter(w =>

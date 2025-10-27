@@ -8,9 +8,12 @@ import { WorkflowFilters, type FiltersState } from "@/components/workflows/Workf
 import { Button } from "@/components/ui/button"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { SidebarShadcn } from "@/components/navigation/SidebarShadcn"
+import PageHeader from "@/components/modulos/PageHeader"
+import WorkflowTabs, { type WorkflowTabsValue } from "@/components/workflows/WorkflowTabs"
 
 export default function WorkflowsPage() {
   const [filters, setFilters] = useState<FiltersState>({ q: '', status: 'todos', sort: 'recentes' })
+  const [activeCategory, setActiveCategory] = useState<WorkflowTabsValue>('todos')
   const total = workflowsMock.length
   const title = useMemo(() => `Workflows (${total})`, [total])
 
@@ -25,26 +28,24 @@ export default function WorkflowsPage() {
   return (
     <SidebarProvider defaultOpen={false}>
       <SidebarShadcn />
-      <SidebarInset>
-        {/* Header */}
-        <div className="border-b" style={{ backgroundColor: 'hsl(0 0% 98%)' }}>
-          <div className="mx-auto max-w-6xl px-6 py-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-2xl font-bold">{title}</h1>
-                <p className="text-sm text-muted-foreground mt-1">Gerencie e crie automações visuais</p>
-              </div>
-              <div className="hidden md:block">
-                <Link href="/workflows/new">
-                  <Button>Novo workflow</Button>
-                </Link>
-              </div>
-            </div>
-          </div>
+      <SidebarInset className="h-screen flex flex-col overflow-auto bg-white">
+        {/* Header com PageHeader + Tabs (estilo Financeiro) */}
+        <PageHeader
+          title={title}
+          subtitle="Gerencie e crie automações visuais"
+          actions={(
+            <Link href="/workflows/new">
+              <Button>Novo workflow</Button>
+            </Link>
+          )}
+          className="pb-2"
+        />
+        <div className="px-4 md:px-6">
+          <WorkflowTabs value={activeCategory} onChange={setActiveCategory} />
         </div>
 
         {/* Content */}
-        <div style={{ backgroundColor: 'hsl(0 0% 98%)' }}>
+        <div className="flex-1">
           <div className="mx-auto max-w-6xl px-6 py-6">
             <WorkflowFilters value={filters} onChange={setFilters} onCreate={handleCreate} />
 
@@ -56,6 +57,7 @@ export default function WorkflowsPage() {
                 sort={filters.sort}
                 onOpen={handleOpen}
                 onCreate={handleCreate}
+                category={activeCategory}
               />
             </div>
           </div>

@@ -1,4 +1,12 @@
 export type WorkflowStatus = 'ativo' | 'rascunho' | 'pausado'
+export type WorkflowCategory =
+  | 'financeiro'
+  | 'vendas'
+  | 'marketing'
+  | 'operacoes'
+  | 'crm'
+  | 'suporte'
+  | 'outros'
 
 export interface WorkflowSummary {
   id: string
@@ -10,5 +18,5 @@ export interface WorkflowSummary {
   createdAt: string // ISO date
   runs?: number
   owner?: string
+  category?: WorkflowCategory
 }
-
