@@ -16,8 +16,6 @@ export default function PulsePage() {
   const [chip, setChip] = useState<Chip>('all')
   const [tab, setTab] = useState<Tab>('foryou')
   const counts = { unusual: 1, normal: 12, following: 6, all: 13 }
-  const [dateRange, setDateRange] = useState<'today'|'7d'|'30d'|'90d'|'month'>('7d')
-  const [scope, setScope] = useState<string>('Minha org')
 
   // Mock hero items reused across cards
   const items: InsightHeroItem[] = useMemo(() => ([
@@ -57,10 +55,6 @@ export default function PulsePage() {
               </>
             )}
             lastUpdated={new Date(Date.now() - 5 * 60 * 1000)}
-            dateRange={dateRange}
-            onDateRangeChange={setDateRange}
-            scope={scope}
-            onScopeChange={setScope}
           />
 
           <PulseChips value={chip} counts={counts} onChange={setChip} />
