@@ -55,7 +55,7 @@ export default function PulsePage() {
               </>
             )}
             lastUpdated={new Date(Date.now() - 5 * 60 * 1000)}
-            avatarUrl="/avatars/user.jpg"
+            avatarUrl="https://images.pexels.com/photos/17527940/pexels-photo-17527940.jpeg?cs=srgb&dl=pexels-rogeriosouzafotografia-17527940.jpg&fm=jpg"
           />
 
           <PulseChips value={chip} counts={counts} onChange={setChip} />
