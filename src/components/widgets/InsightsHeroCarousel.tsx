@@ -186,7 +186,7 @@ function getTheme(variant: Variant) {
   switch (variant) {
     case 'aurora':
       return {
-        wrapperWidth: 'max-w-[340px]',
+        wrapperWidth: 'w-full',
         height: 'h-[300px]',
         radius: 'rounded-2xl',
         padding: 'p-5',
@@ -207,7 +207,7 @@ function getTheme(variant: Variant) {
       }
     case 'blueNight':
       return {
-        wrapperWidth: 'max-w-[340px]',
+        wrapperWidth: 'w-full',
         height: 'h-[300px]',
         radius: 'rounded-2xl',
         padding: 'p-5',
@@ -228,7 +228,7 @@ function getTheme(variant: Variant) {
       }
     case 'neoLight':
       return {
-        wrapperWidth: 'max-w-[340px]',
+        wrapperWidth: 'w-full',
         height: 'h-[300px]',
         radius: 'rounded-2xl',
         padding: 'p-5',
@@ -249,7 +249,7 @@ function getTheme(variant: Variant) {
       }
     case 'report':
       return {
-        wrapperWidth: 'max-w-[420px]',
+        wrapperWidth: 'w-full',
         height: 'h-[360px]',
         radius: 'rounded-3xl',
         padding: 'p-6',
@@ -269,7 +269,7 @@ function getTheme(variant: Variant) {
       }
     case 'emberRed':
       return {
-        wrapperWidth: 'max-w-[340px]',
+        wrapperWidth: 'w-full',
         height: 'h-[300px]',
         radius: 'rounded-2xl',
         padding: 'p-5',
@@ -290,7 +290,7 @@ function getTheme(variant: Variant) {
       }
     case 'obsidianBlack':
       return {
-        wrapperWidth: 'max-w-[340px]',
+        wrapperWidth: 'w-full',
         height: 'h-[300px]',
         radius: 'rounded-2xl',
         padding: 'p-5',
@@ -311,7 +311,7 @@ function getTheme(variant: Variant) {
       }
     case 'sunsetOrange':
       return {
-        wrapperWidth: 'max-w-[340px]',
+        wrapperWidth: 'w-full',
         height: 'h-[300px]',
         radius: 'rounded-2xl',
         padding: 'p-5',
@@ -332,7 +332,7 @@ function getTheme(variant: Variant) {
       }
     case 'crimsonGlow':
       return {
-        wrapperWidth: 'max-w-[340px]',
+        wrapperWidth: 'w-full',
         height: 'h-[300px]',
         radius: 'rounded-2xl',
         padding: 'p-5',
@@ -353,7 +353,7 @@ function getTheme(variant: Variant) {
       }
     case 'roseDawn':
       return {
-        wrapperWidth: 'max-w-[340px]',
+        wrapperWidth: 'w-full',
         height: 'h-[300px]',
         radius: 'rounded-2xl',
         padding: 'p-5',
