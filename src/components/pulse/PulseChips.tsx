@@ -1,8 +1,8 @@
 "use client"
 
-type Chip = 'unusual' | 'normal' | 'all'
+type Chip = 'unusual' | 'normal' | 'following' | 'all'
 
-type Counts = { unusual: number; normal: number; all: number }
+type Counts = { unusual: number; normal: number; following: number; all: number }
 
 type PulseChipsProps = {
   value: Chip
@@ -37,6 +37,17 @@ export function PulseChips({ value, counts, onChange }: PulseChipsProps) {
         </button>
 
         <button
+          onClick={() => onChange('following')}
+          className={`px-3 py-1.5 rounded-full text-xs font-medium backdrop-blur ring-1 transition ${
+            value === 'following'
+              ? 'bg-blue-100 text-blue-900 ring-blue-200'
+              : 'bg-blue-50/60 text-blue-700 ring-blue-200/60 hover:bg-blue-100'
+          }`}
+        >
+          Following <span className="ml-1 inline-flex items-center justify-center h-5 min-w-5 px-1 rounded-full bg-white/70 text-blue-700">{counts.following}</span>
+        </button>
+
+        <button
           onClick={() => onChange('all')}
           className={`px-3 py-1.5 rounded-full text-xs font-medium backdrop-blur ring-1 transition ${
             value === 'all'
@@ -52,4 +63,3 @@ export function PulseChips({ value, counts, onChange }: PulseChipsProps) {
 }
 
 export default PulseChips
-

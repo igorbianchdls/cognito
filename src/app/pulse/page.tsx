@@ -9,13 +9,15 @@ import PulseChips from '@/components/pulse/PulseChips'
 import PulseTabs from '@/components/pulse/PulseTabs'
 import PulseFeed from '@/components/pulse/PulseFeed'
 
-type Chip = 'unusual' | 'normal' | 'all'
+type Chip = 'unusual' | 'normal' | 'following' | 'all'
 type Tab = 'following' | 'foryou' | 'allmetrics'
 
 export default function PulsePage() {
   const [chip, setChip] = useState<Chip>('all')
   const [tab, setTab] = useState<Tab>('foryou')
-  const counts = { unusual: 1, normal: 12, all: 13 }
+  const counts = { unusual: 1, normal: 12, following: 6, all: 13 }
+  const [dateRange, setDateRange] = useState<'today'|'7d'|'30d'|'90d'|'month'>('7d')
+  const [scope, setScope] = useState<string>('Minha org')
 
   // Mock hero items reused across cards
   const items: InsightHeroItem[] = useMemo(() => ([
@@ -48,12 +50,17 @@ export default function PulsePage() {
       <SidebarInset className="min-h-screen flex flex-col overflow-auto bg-white">
         <div className="w-full px-4 md:px-6 py-8">
           <PulseHeader
-            title="Hey, there. Here’s today’s pulse."
-            subtitle={(
+            userName="Igor Bianch"
+            summary={(
               <>
-                Appliance Sales is seeing an unusual spike, while <span className="text-blue-600 hover:underline cursor-pointer">Branch Revenue</span> and <span className="text-blue-600 hover:underline cursor-pointer">Campaign ROI</span> are steadily increasing. Of the 12 metrics you follow, 1 is unusual.
+                Hoje: 1 métrica incomum. Receita e ROI continuam em alta.
               </>
             )}
+            lastUpdated={new Date(Date.now() - 5 * 60 * 1000)}
+            dateRange={dateRange}
+            onDateRangeChange={setDateRange}
+            scope={scope}
+            onScopeChange={setScope}
           />
 
           <PulseChips value={chip} counts={counts} onChange={setChip} />
