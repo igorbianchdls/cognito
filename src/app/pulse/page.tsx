@@ -53,7 +53,7 @@ export default function PulsePage() {
             userName="Igor Bianch"
             summary={(
               <>
-                Hoje: 1 métrica incomum. Receita e ROI continuam em alta.
+                Vendas de eletrodomésticos caíram 8% vs. semana passada (fora da faixa esperada). Receita total +6% puxada por orgânico e CRM; ROI de campanhas subiu para 3,1×.
               </>
             )}
             lastUpdated={new Date(Date.now() - 5 * 60 * 1000)}
