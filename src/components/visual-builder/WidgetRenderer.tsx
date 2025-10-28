@@ -10,6 +10,7 @@ import { KPICard } from '@/components/widgets/KPICard';
 import InsightsCard from '@/components/widgets/InsightsCard';
 import AlertasCard from '@/components/widgets/AlertasCard';
 import RecomendacoesCard from '@/components/widgets/RecomendacoesCard';
+import InsightsHeroCarousel from '@/components/widgets/InsightsHeroCarousel';
 import SQLModal from './SQLModal';
 import type { Widget } from '../visual-builder/ConfigParser';
 import type { GlobalFilters } from '@/stores/visualBuilderStore';
@@ -439,7 +440,6 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
             title={widget.title}
             useGlobalStore={widget.insightsConfig?.useGlobalStore ?? true}
             {...(widget.insightsConfig || {})}
-            // Typography props - Title
             titleFontFamily={widget.insightsConfig?.titleFontFamily}
             titleFontSize={widget.insightsConfig?.titleFontSize}
             titleFontWeight={widget.insightsConfig?.titleFontWeight}
@@ -465,6 +465,27 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
         </div>
       );
       break;
+
+    case 'insightsHero': {
+      const items = widget.insightsHeroConfig?.items || [
+        { id: 'i1', headline: '+78%', title: 'increase in your revenue by end of this month is forecasted.', description: 'Asep is about to receive 15K new customers which results in 78% increase in revenue.', rangeLabel: 'This Week' },
+        { id: 'i2', headline: '+24%', title: 'expected uplift in mobile conversion compared to last week.', description: 'Evening cohort 20–22h continues to outperform other slots.', rangeLabel: 'This Week' },
+        { id: 'i3', headline: '–12%', title: 'drop in bounce rate after homepage UX update.', description: 'Engagement improved across organic traffic and returning users.', rangeLabel: 'This Month' },
+      ]
+
+      widgetContent = (
+        <div className="h-full w-full p-2">
+          <InsightsHeroCarousel
+            items={items}
+            variant={widget.insightsHeroConfig?.variant || 'aurora'}
+            autoplay={widget.insightsHeroConfig?.autoplayDelay ? { delay: widget.insightsHeroConfig.autoplayDelay } : false}
+            loop={widget.insightsHeroConfig?.loop ?? true}
+            showArrows={widget.insightsHeroConfig?.showArrows ?? true}
+          />
+        </div>
+      )
+      break;
+    }
 
     case 'recommendations':
       widgetContent = (

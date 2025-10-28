@@ -210,36 +210,35 @@ const initialCode = `{
       }
     },
     {
-      "id": "insights1",
-      "type": "insights",
+      "id": "insights_hero_1",
+      "type": "insightsHero",
       "position": { "x": 0, "y": 12, "w": 6, "h": 6 },
       "row": "3",
       "span": { "desktop": 1, "tablet": 1, "mobile": 1 },
       "order": 7,
       "heightPx": 400,
-      "title": "💡 Insights de Tráfego",
-      "insightsConfig": {
-        "useGlobalStore": true,
-        "maxItems": 5,
-        "collapsible": true,
-        "showActions": true
+      "title": "💡 AI Insights (Crimson)",
+      "insightsHeroConfig": {
+        "variant": "crimsonGlow",
+        "autoplayDelay": 5000,
+        "showArrows": true,
+        "loop": true
       }
     },
     {
-      "id": "alerts1",
-      "type": "alerts",
+      "id": "insights_hero_2",
+      "type": "insightsHero",
       "position": { "x": 6, "y": 12, "w": 6, "h": 6 },
       "row": "3",
       "span": { "desktop": 1, "tablet": 1, "mobile": 1 },
       "order": 8,
       "heightPx": 400,
-      "title": "⚠️ Alertas de Performance",
-      "alertsConfig": {
-        "useGlobalStore": true,
-        "maxItems": 5,
-        "collapsible": true,
-        "showActions": true,
-        "showOnlyCritical": false
+      "title": "💡 AI Insights (Rose)",
+      "insightsHeroConfig": {
+        "variant": "roseDawn",
+        "autoplayDelay": 6000,
+        "showArrows": true,
+        "loop": true
       }
     }
   ]

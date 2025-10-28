@@ -28,6 +28,14 @@ export interface InsightsConfig {
   titleColor?: string;
 }
 
+export interface InsightsHeroConfig {
+  variant?: 'aurora' | 'blueNight' | 'neoLight' | 'report' | 'emberRed' | 'obsidianBlack' | 'sunsetOrange' | 'crimsonGlow' | 'roseDawn';
+  autoplayDelay?: number;
+  showArrows?: boolean;
+  loop?: boolean;
+  items?: Array<{ id: string; headline: string; title: string; description?: string; rangeLabel?: string }>; // optional explicit items
+}
+
 export interface AlertsConfig {
   maxItems?: number;
   useGlobalStore?: boolean;
@@ -130,7 +138,7 @@ export interface WidgetSpan {
 
 export interface Widget {
   id: string;
-  type: 'bar' | 'line' | 'pie' | 'area' | 'kpi' | 'insights' | 'alerts' | 'recommendations';
+  type: 'bar' | 'line' | 'pie' | 'area' | 'kpi' | 'insights' | 'alerts' | 'recommendations' | 'insightsHero';
   position: {
     x: number;
     y: number;
@@ -171,6 +179,8 @@ export interface Widget {
   pieConfig?: Partial<PieChartConfig>;
   areaConfig?: Partial<AreaChartConfig>;
   insightsConfig?: InsightsConfig;
+  // New: Insights hero (Swiper carousel variant)
+  insightsHeroConfig?: InsightsHeroConfig;
   alertsConfig?: AlertsConfig;
   recommendationsConfig?: RecommendationsConfig;
 }
@@ -193,7 +203,7 @@ export interface ParseResult {
 }
 
 export class ConfigParser {
-  private static VALID_TYPES = ['bar', 'line', 'pie', 'area', 'kpi', 'insights', 'alerts', 'recommendations'];
+  private static VALID_TYPES = ['bar', 'line', 'pie', 'area', 'kpi', 'insights', 'alerts', 'recommendations', 'insightsHero'];
   private static DEFAULT_GRID_CONFIG: GridConfig = {
     maxRows: 12,
     rowHeight: 30,
