@@ -118,16 +118,26 @@ export default function DashboardInCanvasHeader({
       }}
     >
       <div
-        className="flex items-center justify-between py-4"
+        className="flex items-center justify-between py-5 md:py-6"
         style={{ paddingLeft: containerPadding, paddingRight: containerPadding }}
       >
-        <div className="min-w-0">
-          <h2 className="text-base sm:text-lg font-semibold truncate" style={{ color: headerStyle.textPrimary }}>{title}</h2>
+        <div className="min-w-0 flex flex-col space-y-0.5">
+          <h2
+            className="text-lg md:text-xl font-semibold leading-tight tracking-tight truncate"
+            style={{ color: headerStyle.textPrimary }}
+          >
+            {title}
+          </h2>
           {subtitle && (
-            <p className="text-xs sm:text-sm truncate" style={{ color: headerStyle.textSecondary }}>{subtitle}</p>
+            <p
+              className="text-xs md:text-sm leading-snug truncate"
+              style={{ color: headerStyle.textSecondary }}
+            >
+              {subtitle}
+            </p>
           )}
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 md:gap-4">
           <div className="flex items-center gap-2">
             <div className="hidden sm:flex items-center gap-2">
               <Calendar className="h-4 w-4" style={{ color: headerStyle.textSecondary }} />
