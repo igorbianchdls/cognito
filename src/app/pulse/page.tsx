@@ -47,7 +47,7 @@ export default function PulsePage() {
               <div>
                 <div className="text-sm font-medium text-gray-500">Pulse</div>
                 <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900 mt-1">
-                  Hey, there. Here's today’s pulse.
+                  Hey, there. Here’s today’s pulse.
                 </h1>
                 <p className="mt-3 text-gray-600 max-w-2xl">
                   Appliance Sales is seeing an unusual spike, while <span className="text-blue-600 hover:underline cursor-pointer">Branch Revenue</span> and <span className="text-blue-600 hover:underline cursor-pointer">Campaign ROI</span> are steadily increasing. Of the 12 metrics you follow, 1 is unusual.
@@ -138,4 +138,3 @@ export default function PulsePage() {
     </div>
   )
 }
-
