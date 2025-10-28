@@ -44,14 +44,14 @@ export function PulseHeader({
           {greeting}, {userName}
         </h1>
         {(summary || lastUpdated) && (
-          <div className="mt-2 flex items-center gap-3 flex-wrap text-sm">
+          <div className="mt-2 text-sm">
             {summary && (
-              <p className="text-gray-600 max-w-3xl">{summary}</p>
+              <p className="text-gray-600 w-full leading-relaxed">{summary}</p>
             )}
             {lastUpdated && (
-              <span className="inline-flex items-center gap-1 text-gray-500">
+              <div className="mt-1 inline-flex items-center gap-1 text-gray-500">
                 <Clock className="h-4 w-4" /> Atualizado há {formatTimeAgo(lastUpdated)}
-              </span>
+              </div>
             )}
           </div>
         )}
