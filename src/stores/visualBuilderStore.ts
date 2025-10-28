@@ -56,7 +56,7 @@ const initialCode = `{
       "mobile": 1
     },
     "3": {
-      "desktop": 3,
+      "desktop": 2,
       "tablet": 1,
       "mobile": 1
     }
@@ -212,7 +212,7 @@ const initialCode = `{
     {
       "id": "insights1",
       "type": "insights",
-      "position": { "x": 0, "y": 12, "w": 4, "h": 6 },
+      "position": { "x": 0, "y": 12, "w": 6, "h": 6 },
       "row": "3",
       "span": { "desktop": 1, "tablet": 1, "mobile": 1 },
       "order": 7,
@@ -228,7 +228,7 @@ const initialCode = `{
     {
       "id": "alerts1",
       "type": "alerts",
-      "position": { "x": 4, "y": 12, "w": 4, "h": 6 },
+      "position": { "x": 6, "y": 12, "w": 6, "h": 6 },
       "row": "3",
       "span": { "desktop": 1, "tablet": 1, "mobile": 1 },
       "order": 8,
@@ -240,23 +240,6 @@ const initialCode = `{
         "collapsible": true,
         "showActions": true,
         "showOnlyCritical": false
-      }
-    },
-    {
-      "id": "recommendations1",
-      "type": "recommendations",
-      "position": { "x": 8, "y": 12, "w": 4, "h": 6 },
-      "row": "3",
-      "span": { "desktop": 1, "tablet": 1, "mobile": 1 },
-      "order": 9,
-      "heightPx": 400,
-      "title": "🎯 Otimizações Sugeridas",
-      "recommendationsConfig": {
-        "useGlobalStore": true,
-        "maxItems": 5,
-        "collapsible": true,
-        "showActions": true,
-        "priorityFilter": "all"
       }
     }
   ]
