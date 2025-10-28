@@ -60,10 +60,9 @@ export function PulseHeader({
     <div className="grid grid-cols-1 gap-4">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <div className="text-sm font-medium text-gray-500">{label}</div>
+          <div className="text-lg font-normal text-gray-500">{todayLabel}</div>
           <h1 className="text-3xl font-semibold tracking-tight text-gray-900 mt-1">
             {greeting}, {userName}
-            <span className="ml-3 align-baseline text-gray-500 text-lg font-normal">{todayLabel}</span>
           </h1>
           {(summary || lastUpdated) && (
             <div className="mt-2 flex items-center gap-3 flex-wrap text-sm">
