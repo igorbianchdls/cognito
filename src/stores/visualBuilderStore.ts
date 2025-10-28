@@ -56,8 +56,8 @@ const initialCode = `{
       "mobile": 1
     },
     "3": {
-      "desktop": 2,
-      "tablet": 1,
+      "desktop": 4,
+      "tablet": 2,
       "mobile": 1
     }
   },
@@ -212,7 +212,7 @@ const initialCode = `{
     {
       "id": "insights_hero_1",
       "type": "insightsHero",
-      "position": { "x": 0, "y": 12, "w": 6, "h": 6 },
+      "position": { "x": 0, "y": 12, "w": 3, "h": 6 },
       "row": "3",
       "span": { "desktop": 1, "tablet": 1, "mobile": 1 },
       "order": 7,
@@ -228,7 +228,7 @@ const initialCode = `{
     {
       "id": "insights_hero_2",
       "type": "insightsHero",
-      "position": { "x": 6, "y": 12, "w": 6, "h": 6 },
+      "position": { "x": 3, "y": 12, "w": 3, "h": 6 },
       "row": "3",
       "span": { "desktop": 1, "tablet": 1, "mobile": 1 },
       "order": 8,
@@ -237,6 +237,38 @@ const initialCode = `{
       "insightsHeroConfig": {
         "variant": "roseDawn",
         "autoplayDelay": 6000,
+        "showArrows": true,
+        "loop": true
+      }
+    },
+    {
+      "id": "insights_hero_3",
+      "type": "insightsHero",
+      "position": { "x": 6, "y": 12, "w": 3, "h": 6 },
+      "row": "3",
+      "span": { "desktop": 1, "tablet": 1, "mobile": 1 },
+      "order": 9,
+      "heightPx": 400,
+      "title": "💡 AI Insights (Obsidian)",
+      "insightsHeroConfig": {
+        "variant": "obsidianBlack",
+        "autoplayDelay": 6000,
+        "showArrows": true,
+        "loop": true
+      }
+    },
+    {
+      "id": "insights_hero_4",
+      "type": "insightsHero",
+      "position": { "x": 9, "y": 12, "w": 3, "h": 6 },
+      "row": "3",
+      "span": { "desktop": 1, "tablet": 1, "mobile": 1 },
+      "order": 10,
+      "heightPx": 400,
+      "title": "💡 AI Insights (Aurora)",
+      "insightsHeroConfig": {
+        "variant": "aurora",
+        "autoplayDelay": 5000,
         "showArrows": true,
         "loop": true
       }
