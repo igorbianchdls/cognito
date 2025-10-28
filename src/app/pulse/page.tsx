@@ -1,8 +1,10 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { Search, UserCircle2 } from 'lucide-react'
+import { Search } from 'lucide-react'
 import InsightsHeroCarousel, { type InsightHeroItem } from '@/components/widgets/InsightsHeroCarousel'
+import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
+import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
 
 type Chip = 'unusual' | 'normal' | 'all'
 type Tab = 'following' | 'foryou' | 'allmetrics'
@@ -38,103 +40,99 @@ export default function PulsePage() {
   ]), [])
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <div className="mx-auto max-w-7xl px-6 md:px-10 py-8">
-        {/* Header */}
-        <div className="bg-white rounded-3xl border border-gray-200 shadow-sm">
-          <div className="p-6 md:p-8 grid grid-cols-1 gap-6">
-            <div className="flex items-start justify-between">
+    <SidebarProvider defaultOpen={false}>
+      <SidebarShadcn />
+      <SidebarInset className="min-h-screen flex flex-col overflow-auto bg-[#F5F7F9]">
+        <div className="mx-auto max-w-7xl w-full px-6 md:px-10 py-8">
+          {/* Top header area (no white boxes) */}
+          <div className="grid grid-cols-1 gap-4">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
-                <div className="text-sm font-medium text-gray-500">Pulse</div>
-                <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900 mt-1">
+                <div className="text-sm font-medium text-gray-500">Tableau Pulse</div>
+                <h1 className="text-3xl font-semibold tracking-tight text-gray-900 mt-1">
                   Hey, there. Here’s today’s pulse.
                 </h1>
-                <p className="mt-3 text-gray-600 max-w-2xl">
+                <p className="mt-2 text-gray-600 max-w-3xl">
                   Appliance Sales is seeing an unusual spike, while <span className="text-blue-600 hover:underline cursor-pointer">Branch Revenue</span> and <span className="text-blue-600 hover:underline cursor-pointer">Campaign ROI</span> are steadily increasing. Of the 12 metrics you follow, 1 is unusual.
                 </p>
               </div>
-              <div className="hidden md:flex items-center gap-3">
+              <div className="w-full md:w-auto">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <input
-                    className="pl-9 pr-3 py-2 w-64 rounded-lg border border-gray-200 bg-gray-50 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                    className="pl-9 pr-3 py-2 w-full md:w-72 rounded-lg border border-gray-200 bg-white text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-200"
                     placeholder="Search for metrics"
                   />
                 </div>
-                <div className="h-8 w-[1px] bg-gray-200" />
-                <UserCircle2 className="h-8 w-8 text-gray-400" />
               </div>
             </div>
 
-            {/* Chips */}
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setChip('unusual')}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium backdrop-blur ring-1 transition ${
-                  chip === 'unusual'
-                    ? 'bg-emerald-100 text-emerald-900 ring-emerald-200'
-                    : 'bg-emerald-50/60 text-emerald-700 ring-emerald-200/60 hover:bg-emerald-100'
-                }`}
-              >
-                Unusual <span className="ml-1 inline-flex items-center justify-center h-5 min-w-5 px-1 rounded-full bg-white/70 text-emerald-700">{counts.unusual}</span>
-              </button>
-              <button
-                onClick={() => setChip('normal')}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium backdrop-blur ring-1 transition ${
-                  chip === 'normal'
-                    ? 'bg-indigo-100 text-indigo-900 ring-indigo-200'
-                    : 'bg-indigo-50/60 text-indigo-700 ring-indigo-200/60 hover:bg-indigo-100'
-                }`}
-              >
-                Normal <span className="ml-1 inline-flex items-center justify-center h-5 min-w-5 px-1 rounded-full bg-white/70 text-indigo-700">{counts.normal}</span>
-              </button>
-              <button
-                onClick={() => setChip('all')}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium backdrop-blur ring-1 transition ${
-                  chip === 'all'
-                    ? 'bg-gray-100 text-gray-900 ring-gray-200'
-                    : 'bg-gray-50/60 text-gray-700 ring-gray-200/60 hover:bg-gray-100'
-                }`}
-              >
-                All <span className="ml-1 inline-flex items-center justify-center h-5 min-w-5 px-1 rounded-full bg-white/70 text-gray-700">{counts.all}</span>
-              </button>
-            </div>
-
-            {/* Tabs */}
-            <div className="flex items-center gap-5 text-sm">
-              {([
-                { id: 'following', label: 'Following' },
-                { id: 'foryou', label: 'For you' },
-                { id: 'allmetrics', label: 'All metrics' },
-              ] as { id: Tab; label: string }[]).map(t => (
+            {/* Chips + Tabs row */}
+            <div className="flex flex-wrap items-center gap-3 mt-2">
+              <div className="flex items-center gap-2">
                 <button
-                  key={t.id}
-                  onClick={() => setTab(t.id)}
-                  className={`relative pb-2 transition-colors ${tab === t.id ? 'text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
+                  onClick={() => setChip('unusual')}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium backdrop-blur ring-1 transition ${
+                    chip === 'unusual'
+                      ? 'bg-emerald-100 text-emerald-900 ring-emerald-200'
+                      : 'bg-emerald-50/60 text-emerald-700 ring-emerald-200/60 hover:bg-emerald-100'
+                  }`}
                 >
-                  {t.label}
-                  {tab === t.id && (
-                    <span className="absolute left-0 right-0 -bottom-[1px] h-[2px] rounded-full bg-gray-900" />
-                  )}
+                  Unusual <span className="ml-1 inline-flex items-center justify-center h-5 min-w-5 px-1 rounded-full bg-white/70 text-emerald-700">{counts.unusual}</span>
                 </button>
-              ))}
+                <button
+                  onClick={() => setChip('normal')}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium backdrop-blur ring-1 transition ${
+                    chip === 'normal'
+                      ? 'bg-indigo-100 text-indigo-900 ring-indigo-200'
+                      : 'bg-indigo-50/60 text-indigo-700 ring-indigo-200/60 hover:bg-indigo-100'
+                  }`}
+                >
+                  Normal <span className="ml-1 inline-flex items-center justify-center h-5 min-w-5 px-1 rounded-full bg-white/70 text-indigo-700">{counts.normal}</span>
+                </button>
+                <button
+                  onClick={() => setChip('all')}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium backdrop-blur ring-1 transition ${
+                    chip === 'all'
+                      ? 'bg-gray-100 text-gray-900 ring-gray-200'
+                      : 'bg-gray-50/60 text-gray-700 ring-gray-200/60 hover:bg-gray-100'
+                  }`}
+                >
+                  All <span className="ml-1 inline-flex items-center justify-center h-5 min-w-5 px-1 rounded-full bg-white/70 text-gray-700">{counts.all}</span>
+                </button>
+              </div>
+
+              <div className="h-6 w-px bg-gray-200 mx-1" />
+
+              <div className="flex items-center gap-5 text-sm">
+                {([
+                  { id: 'following', label: 'Following' },
+                  { id: 'foryou', label: 'For you' },
+                  { id: 'allmetrics', label: 'All metrics' },
+                ] as { id: Tab; label: string }[]).map(t => (
+                  <button
+                    key={t.id}
+                    onClick={() => setTab(t.id)}
+                    className={`relative pb-1 transition-colors ${tab === t.id ? 'text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
+                  >
+                    {t.label}
+                    {tab === t.id && (
+                      <span className="absolute left-0 right-0 -bottom-[1px] h-[2px] rounded-full bg-gray-900" />
+                    )}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Feed */}
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div className="bg-white rounded-2xl border border-gray-200 p-4">
+          {/* Feed: use insight cards directly (no white containers) */}
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <InsightsHeroCarousel items={items} variant="neoLight" showArrows={false} />
-          </div>
-          <div className="bg-white rounded-2xl border border-gray-200 p-4">
             <InsightsHeroCarousel items={items} variant="aurora" />
-          </div>
-          <div className="bg-white rounded-2xl border border-gray-200 p-4">
             <InsightsHeroCarousel items={items} variant="obsidianBlack" />
           </div>
         </div>
-      </div>
-    </div>
+      </SidebarInset>
+    </SidebarProvider>
   )
 }
