@@ -17,7 +17,7 @@ export type InsightHeroItem = {
   rangeLabel?: string // ex: "This Week"
 }
 
-type Variant = 'aurora' | 'blueNight' | 'neoLight' | 'report'
+type Variant = 'aurora' | 'blueNight' | 'neoLight' | 'report' | 'emberRed' | 'obsidianBlack' | 'sunsetOrange'
 
 type Props = {
   items: InsightHeroItem[]
@@ -110,25 +110,49 @@ export default function InsightsHeroCarousel({
         .insights-swiper .swiper-pagination-bullet {
           width: 18px; height: 4px; border-radius: 9999px; margin: 0 4px !important; opacity: 1;
         }
-        /* aurora + blueNight (dark) */
+        /* dark variants */
         .insights-swiper--aurora .swiper-button-next,
         .insights-swiper--aurora .swiper-button-prev,
         .insights-swiper--blueNight .swiper-button-next,
-        .insights-swiper--blueNight .swiper-button-prev {
+        .insights-swiper--blueNight .swiper-button-prev,
+        .insights-swiper--emberRed .swiper-button-next,
+        .insights-swiper--emberRed .swiper-button-prev,
+        .insights-swiper--obsidianBlack .swiper-button-next,
+        .insights-swiper--obsidianBlack .swiper-button-prev,
+        .insights-swiper--sunsetOrange .swiper-button-next,
+        .insights-swiper--sunsetOrange .swiper-button-prev {
           color: #ffffff; width: 28px; height: 28px; top: auto; bottom: 10px;
         }
         .insights-swiper--aurora .swiper-button-prev,
-        .insights-swiper--blueNight .swiper-button-prev { left: 8px; }
+        .insights-swiper--blueNight .swiper-button-prev,
+        .insights-swiper--emberRed .swiper-button-prev,
+        .insights-swiper--obsidianBlack .swiper-button-prev,
+        .insights-swiper--sunsetOrange .swiper-button-prev { left: 8px; }
         .insights-swiper--aurora .swiper-button-next,
-        .insights-swiper--blueNight .swiper-button-next { right: 8px; }
+        .insights-swiper--blueNight .swiper-button-next,
+        .insights-swiper--emberRed .swiper-button-next,
+        .insights-swiper--obsidianBlack .swiper-button-next,
+        .insights-swiper--sunsetOrange .swiper-button-next { right: 8px; }
         .insights-swiper--aurora .swiper-button-next:after,
         .insights-swiper--aurora .swiper-button-prev:after,
         .insights-swiper--blueNight .swiper-button-next:after,
-        .insights-swiper--blueNight .swiper-button-prev:after { font-size: 18px; }
+        .insights-swiper--blueNight .swiper-button-prev:after,
+        .insights-swiper--emberRed .swiper-button-next:after,
+        .insights-swiper--emberRed .swiper-button-prev:after,
+        .insights-swiper--obsidianBlack .swiper-button-next:after,
+        .insights-swiper--obsidianBlack .swiper-button-prev:after,
+        .insights-swiper--sunsetOrange .swiper-button-next:after,
+        .insights-swiper--sunsetOrange .swiper-button-prev:after { font-size: 18px; }
         .insights-swiper--aurora .swiper-pagination-bullet,
-        .insights-swiper--blueNight .swiper-pagination-bullet { background: rgba(255,255,255,.35); }
+        .insights-swiper--blueNight .swiper-pagination-bullet,
+        .insights-swiper--emberRed .swiper-pagination-bullet,
+        .insights-swiper--obsidianBlack .swiper-pagination-bullet,
+        .insights-swiper--sunsetOrange .swiper-pagination-bullet { background: rgba(255,255,255,.35); }
         .insights-swiper--aurora .swiper-pagination-bullet-active,
-        .insights-swiper--blueNight .swiper-pagination-bullet-active { background: #ffffff; }
+        .insights-swiper--blueNight .swiper-pagination-bullet-active,
+        .insights-swiper--emberRed .swiper-pagination-bullet-active,
+        .insights-swiper--obsidianBlack .swiper-pagination-bullet-active,
+        .insights-swiper--sunsetOrange .swiper-pagination-bullet-active { background: #ffffff; }
         /* neo light */
         .insights-swiper--neoLight .swiper-button-next,
         .insights-swiper--neoLight .swiper-button-prev { color: #111827; width: 26px; height: 26px; top: auto; bottom: 10px; }
@@ -227,6 +251,69 @@ function getTheme(variant: Variant) {
         glow: false,
         style: {
           background: '#fcfcfd',
+        } as React.CSSProperties,
+      }
+    case 'emberRed':
+      return {
+        wrapperWidth: 'max-w-[340px]',
+        height: 'h-[300px]',
+        radius: 'rounded-2xl',
+        padding: 'p-5',
+        text: 'text-white',
+        shadow: 'shadow-xl',
+        border: 'border-transparent',
+        headerText: 'text-white/90',
+        pill: 'bg-white/20 backdrop-blur border border-white/20',
+        moreBtn: 'hover:bg-white/20',
+        headline: 'text-5xl font-extrabold tracking-tight',
+        bodyStrong: 'text-white/95',
+        bodyMuted: 'text-white/85',
+        glow: true,
+        style: {
+          background:
+            'radial-gradient(120px 120px at 40px 40px, rgba(255,255,255,0.12), transparent 60%), linear-gradient(135deg, #dc2626 0%, #111827 70%)',
+        } as React.CSSProperties,
+      }
+    case 'obsidianBlack':
+      return {
+        wrapperWidth: 'max-w-[340px]',
+        height: 'h-[300px]',
+        radius: 'rounded-2xl',
+        padding: 'p-5',
+        text: 'text-white',
+        shadow: 'shadow-xl',
+        border: 'border-transparent',
+        headerText: 'text-white/80',
+        pill: 'bg-white/15 backdrop-blur border border-white/15',
+        moreBtn: 'hover:bg-white/10',
+        headline: 'text-5xl font-extrabold tracking-tight',
+        bodyStrong: 'text-white/90',
+        bodyMuted: 'text-white/75',
+        glow: false,
+        style: {
+          background:
+            'linear-gradient(180deg, #0b0f19 0%, #111827 100%)',
+        } as React.CSSProperties,
+      }
+    case 'sunsetOrange':
+      return {
+        wrapperWidth: 'max-w-[340px]',
+        height: 'h-[300px]',
+        radius: 'rounded-2xl',
+        padding: 'p-5',
+        text: 'text-white',
+        shadow: 'shadow-xl',
+        border: 'border-transparent',
+        headerText: 'text-white/90',
+        pill: 'bg-white/20 backdrop-blur border border-white/20',
+        moreBtn: 'hover:bg-white/20',
+        headline: 'text-5xl font-extrabold tracking-tight',
+        bodyStrong: 'text-white/95',
+        bodyMuted: 'text-white/85',
+        glow: true,
+        style: {
+          background:
+            'radial-gradient(120px 120px at 40px 40px, rgba(255,255,255,0.12), transparent 60%), linear-gradient(135deg, #f97316 0%, #0f172a 70%)',
         } as React.CSSProperties,
       }
   }

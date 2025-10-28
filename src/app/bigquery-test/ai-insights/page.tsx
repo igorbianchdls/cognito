@@ -54,6 +54,21 @@ export default function AiInsightsPage() {
             <h2 className="text-sm font-semibold text-gray-700 mb-3">Report Minimal</h2>
             <InsightsHeroCarousel items={items} variant="report" showArrows={false} />
           </section>
+
+          <section>
+            <h2 className="text-sm font-semibold text-gray-700 mb-3">Ember Red</h2>
+            <InsightsHeroCarousel items={items} variant="emberRed" />
+          </section>
+
+          <section>
+            <h2 className="text-sm font-semibold text-gray-700 mb-3">Obsidian Black</h2>
+            <InsightsHeroCarousel items={items} variant="obsidianBlack" />
+          </section>
+
+          <section>
+            <h2 className="text-sm font-semibold text-gray-700 mb-3">Sunset Orange</h2>
+            <InsightsHeroCarousel items={items} variant="sunsetOrange" />
+          </section>
         </div>
       </div>
     </div>
