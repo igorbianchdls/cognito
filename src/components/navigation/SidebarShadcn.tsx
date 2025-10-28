@@ -5,11 +5,8 @@ import { usePathname } from "next/navigation"
 import {
   MessageSquare,
   LayoutGrid,
-  Sheet,
-  Database,
   GalleryVerticalEnd,
   Plug,
-  FileText,
 } from "lucide-react"
 
 import MetaIcon from "@/components/icons/MetaIcon"
@@ -59,34 +56,14 @@ const navigationData = {
       isActive: false, // Will be set dynamically
     },
     {
-      title: "Apps", 
-      url: "/apps",
-      icon: LayoutGrid,
-    },
-    {
       title: "Workflows",
       url: "/workflows",
       icon: LayoutGrid,
     },
     {
-      title: "Docs",
-      url: "/docs",
-      icon: FileText,
-    },
-    {
       title: "Integrações",
       url: "/integracoes",
       icon: Plug,
-    },
-    {
-      title: "Planilhas",
-      url: "/sheets",
-      icon: Sheet,
-    },
-    {
-      title: "BigQuery",
-      url: "/bigquery-test",
-      icon: Database,
     },
   ],
   integrations: [
