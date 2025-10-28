@@ -32,14 +32,30 @@ export default function AiInsightsPage() {
     <div className="min-h-screen bg-gray-100 p-8">
       <div className="max-w-7xl mx-auto">
         <h1 className="text-2xl font-bold text-gray-800 mb-6">AI Insights Card (Swiper)</h1>
-        <p className="text-gray-600 mb-8">
-          Subrota: <code>/bigquery-test/ai-insights</code>. Abaixo está o componente de card
-          com slider, inspirado na referência enviada.
-        </p>
+        <p className="text-gray-600 mb-8">Rota: <code>/bigquery-test/ai-insights</code>. Mostrando variações de design.</p>
 
-        <InsightsHeroCarousel items={items} autoplay={{ delay: 5000 }} />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+          <section>
+            <h2 className="text-sm font-semibold text-gray-700 mb-3">Aurora Dark</h2>
+            <InsightsHeroCarousel items={items} autoplay={{ delay: 5000 }} variant="aurora" />
+          </section>
+
+          <section>
+            <h2 className="text-sm font-semibold text-gray-700 mb-3">Blue Night</h2>
+            <InsightsHeroCarousel items={items} loop variant="blueNight" />
+          </section>
+
+          <section>
+            <h2 className="text-sm font-semibold text-gray-700 mb-3">Neo‑Light</h2>
+            <InsightsHeroCarousel items={items} variant="neoLight" />
+          </section>
+
+          <section>
+            <h2 className="text-sm font-semibold text-gray-700 mb-3">Report Minimal</h2>
+            <InsightsHeroCarousel items={items} variant="report" showArrows={false} />
+          </section>
+        </div>
       </div>
     </div>
   )
 }
-

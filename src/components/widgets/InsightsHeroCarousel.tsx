@@ -17,18 +17,31 @@ export type InsightHeroItem = {
   rangeLabel?: string // ex: "This Week"
 }
 
+type Variant = 'aurora' | 'blueNight' | 'neoLight' | 'report'
+
 type Props = {
   items: InsightHeroItem[]
   loop?: boolean
   autoplay?: boolean | { delay: number }
+  variant?: Variant
+  paginationStyle?: 'dashes' | 'segments'
+  showArrows?: boolean
 }
 
-export default function InsightsHeroCarousel({ items, loop = true, autoplay }: Props) {
+export default function InsightsHeroCarousel({
+  items,
+  loop = true,
+  autoplay,
+  variant = 'aurora',
+  paginationStyle = 'dashes',
+  showArrows = true,
+}: Props) {
+  const theme = getTheme(variant)
   return (
-    <div className="insights-swiper">
+    <div className={`insights-swiper insights-swiper--${variant}`}>
       <Swiper
         modules={[Navigation, Pagination, A11y, Keyboard, Autoplay]}
-        navigation
+        navigation={showArrows}
         pagination={{ clickable: true }}
         keyboard={{ enabled: true }}
         a11y={{ enabled: true }}
@@ -36,32 +49,31 @@ export default function InsightsHeroCarousel({ items, loop = true, autoplay }: P
         autoplay={autoplay || false}
         slidesPerView={1}
         spaceBetween={0}
-        className="max-w-[340px]"
+        className={theme.wrapperWidth}
       >
         {items.map((it) => (
           <SwiperSlide key={it.id}>
             <article
               role="region"
               aria-label={`Insight ${it.headline}`}
-              className="relative h-[300px] rounded-2xl p-5 text-white shadow-xl overflow-hidden select-none"
-              style={{
-                background:
-                  'linear-gradient(135deg, rgba(16,185,129,1) 0%, rgba(5,150,105,1) 70%)',
-              }}
+              className={`relative ${theme.height} ${theme.radius} ${theme.padding} ${theme.text} ${theme.shadow} overflow-hidden select-none border ${theme.border}`}
+              style={theme.style}
             >
               {/* subtle radial glow */}
-              <div className="pointer-events-none absolute -left-6 top-6 h-28 w-28 rounded-full bg-white/25 blur-2xl" />
+              {theme.glow && (
+                <div className="pointer-events-none absolute -left-6 top-6 h-28 w-28 rounded-full bg-white/25 blur-2xl" />
+              )}
               {/* header */}
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-white/90">
+                <div className={`flex items-center gap-2 ${theme.headerText}`}>
                   <Sparkles className="h-4 w-4" />
                   <span className="text-sm font-medium">Insight</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="px-3 py-1 rounded-full bg-white/20 backdrop-blur text-xs font-medium">
+                  <span className={`px-3 py-1 rounded-full ${theme.pill} text-xs font-medium`}> 
                     {it.rangeLabel || 'This Week'}
                   </span>
-                  <button aria-label="More options" className="p-1 rounded-full hover:bg-white/20">
+                  <button aria-label="More options" className={`p-1 rounded-full ${theme.moreBtn}`}>
                     <MoreHorizontal className="h-4 w-4" />
                   </button>
                 </div>
@@ -69,12 +81,12 @@ export default function InsightsHeroCarousel({ items, loop = true, autoplay }: P
 
               {/* content */}
               <div className="mt-4">
-                <div className="text-5xl font-extrabold tracking-tight">{it.headline}</div>
-                <p className="mt-3 text-[15px] leading-relaxed text-white/95 max-w-[96%]">
+                <div className={`${theme.headline}`}>{it.headline}</div>
+                <p className={`mt-3 text-[15px] leading-relaxed ${theme.bodyStrong} max-w-[96%]`}>
                   {it.title}
                 </p>
                 {it.description && (
-                  <p className="mt-4 text-xs leading-5 text-white/85 max-w-[96%]">
+                  <p className={`mt-4 text-xs leading-5 ${theme.bodyMuted} max-w-[96%]`}>
                     {it.description}
                   </p>
                 )}
@@ -89,45 +101,133 @@ export default function InsightsHeroCarousel({ items, loop = true, autoplay }: P
 
       {/* Scoped styling for Swiper controls to match the reference */}
       <style jsx global>{`
-        .insights-swiper .swiper {
-          border-radius: 1rem;
-        }
-        /* arrows at bottom corners */
-        .insights-swiper .swiper-button-next,
-        .insights-swiper .swiper-button-prev {
-          color: #ffffff;
-          width: 28px;
-          height: 28px;
-          top: auto;
-          bottom: 10px;
-        }
-        .insights-swiper .swiper-button-prev { left: 8px; }
-        .insights-swiper .swiper-button-next { right: 8px; }
-        .insights-swiper .swiper-button-next:after,
-        .insights-swiper .swiper-button-prev:after {
-          font-size: 18px;
-        }
-        /* center pagination with dash style */
+        .insights-swiper .swiper { border-radius: 1rem; }
         .insights-swiper .swiper-horizontal>.swiper-pagination-bullets,
         .insights-swiper .swiper-pagination-bullets.swiper-pagination-horizontal {
-          bottom: 12px;
-          left: 50%;
-          transform: translateX(-50%);
-          width: auto;
+          bottom: 12px; left: 50%; transform: translateX(-50%); width: auto;
         }
+        /* base dash bullets */
         .insights-swiper .swiper-pagination-bullet {
-          width: 18px;
-          height: 4px;
-          border-radius: 9999px;
-          background: rgba(255,255,255,.35);
-          opacity: 1;
-          margin: 0 4px !important;
+          width: 18px; height: 4px; border-radius: 9999px; margin: 0 4px !important; opacity: 1;
         }
-        .insights-swiper .swiper-pagination-bullet-active {
-          background: #ffffff;
+        /* aurora + blueNight (dark) */
+        .insights-swiper--aurora .swiper-button-next,
+        .insights-swiper--aurora .swiper-button-prev,
+        .insights-swiper--blueNight .swiper-button-next,
+        .insights-swiper--blueNight .swiper-button-prev {
+          color: #ffffff; width: 28px; height: 28px; top: auto; bottom: 10px;
         }
+        .insights-swiper--aurora .swiper-button-prev,
+        .insights-swiper--blueNight .swiper-button-prev { left: 8px; }
+        .insights-swiper--aurora .swiper-button-next,
+        .insights-swiper--blueNight .swiper-button-next { right: 8px; }
+        .insights-swiper--aurora .swiper-button-next:after,
+        .insights-swiper--aurora .swiper-button-prev:after,
+        .insights-swiper--blueNight .swiper-button-next:after,
+        .insights-swiper--blueNight .swiper-button-prev:after { font-size: 18px; }
+        .insights-swiper--aurora .swiper-pagination-bullet,
+        .insights-swiper--blueNight .swiper-pagination-bullet { background: rgba(255,255,255,.35); }
+        .insights-swiper--aurora .swiper-pagination-bullet-active,
+        .insights-swiper--blueNight .swiper-pagination-bullet-active { background: #ffffff; }
+        /* neo light */
+        .insights-swiper--neoLight .swiper-button-next,
+        .insights-swiper--neoLight .swiper-button-prev { color: #111827; width: 26px; height: 26px; top: auto; bottom: 10px; }
+        .insights-swiper--neoLight .swiper-button-prev { left: 8px; }
+        .insights-swiper--neoLight .swiper-button-next { right: 8px; }
+        .insights-swiper--neoLight .swiper-pagination-bullet { background: rgba(0,0,0,.18); }
+        .insights-swiper--neoLight .swiper-pagination-bullet-active { background: rgba(0,0,0,.7); }
+        /* report: segments, no arrows */
+        .insights-swiper--report .swiper-pagination-bullet { width: 44px; height: 6px; background: rgba(16,185,129,.25); }
+        .insights-swiper--report .swiper-pagination-bullet-active { background: rgb(16,185,129); }
       `}</style>
     </div>
   )
 }
 
+function getTheme(variant: Variant) {
+  switch (variant) {
+    case 'aurora':
+      return {
+        wrapperWidth: 'max-w-[340px]',
+        height: 'h-[300px]',
+        radius: 'rounded-2xl',
+        padding: 'p-5',
+        text: 'text-white',
+        shadow: 'shadow-xl',
+        border: 'border-transparent',
+        headerText: 'text-white/90',
+        pill: 'bg-white/20 backdrop-blur border border-white/20',
+        moreBtn: 'hover:bg-white/20',
+        headline: 'text-5xl font-extrabold tracking-tight',
+        bodyStrong: 'text-white/95',
+        bodyMuted: 'text-white/85',
+        glow: true,
+        style: {
+          background:
+            'radial-gradient(120px 120px at 40px 40px, rgba(255,255,255,0.15), transparent 60%), linear-gradient(135deg, #16a34a 0%, #065f46 70%)',
+        } as React.CSSProperties,
+      }
+    case 'blueNight':
+      return {
+        wrapperWidth: 'max-w-[340px]',
+        height: 'h-[300px]',
+        radius: 'rounded-2xl',
+        padding: 'p-5',
+        text: 'text-white',
+        shadow: 'shadow-xl',
+        border: 'border-transparent',
+        headerText: 'text-white/90',
+        pill: 'bg-white/20 backdrop-blur border border-white/20',
+        moreBtn: 'hover:bg-white/20',
+        headline: 'text-5xl font-extrabold tracking-tight',
+        bodyStrong: 'text-white/95',
+        bodyMuted: 'text-white/80',
+        glow: false,
+        style: {
+          background:
+            'linear-gradient(135deg, #1d4ed8 0%, #0f172a 65%)',
+        } as React.CSSProperties,
+      }
+    case 'neoLight':
+      return {
+        wrapperWidth: 'max-w-[340px]',
+        height: 'h-[300px]',
+        radius: 'rounded-2xl',
+        padding: 'p-5',
+        text: 'text-gray-900',
+        shadow: 'shadow-[0_15px_50px_rgba(0,0,0,.08)]',
+        border: 'border-[#e7e7ea]',
+        headerText: 'text-gray-600',
+        pill: 'bg-white border border-gray-200',
+        moreBtn: 'hover:bg-gray-100',
+        headline: 'text-5xl font-extrabold tracking-tight text-gray-800',
+        bodyStrong: 'text-gray-800',
+        bodyMuted: 'text-gray-500',
+        glow: false,
+        style: {
+          background:
+            'linear-gradient(180deg, #f7f7f8 0%, #f1f2f4 100%)',
+        } as React.CSSProperties,
+      }
+    case 'report':
+      return {
+        wrapperWidth: 'max-w-[420px]',
+        height: 'h-[360px]',
+        radius: 'rounded-3xl',
+        padding: 'p-6',
+        text: 'text-gray-900',
+        shadow: 'shadow-[0_20px_70px_rgba(0,0,0,.10)]',
+        border: 'border-[#e6e8eb]',
+        headerText: 'text-gray-700',
+        pill: 'bg-white border border-emerald-500/30 text-gray-800',
+        moreBtn: 'hover:bg-gray-100',
+        headline: 'text-[42px] leading-none font-semibold tracking-tight text-gray-900',
+        bodyStrong: 'text-gray-800',
+        bodyMuted: 'text-gray-500',
+        glow: false,
+        style: {
+          background: '#fcfcfd',
+        } as React.CSSProperties,
+      }
+  }
+}
