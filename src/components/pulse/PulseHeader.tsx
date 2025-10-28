@@ -51,6 +51,11 @@ export function PulseHeader({
     return 'Boa noite'
   })()
 
+  const todayLabel = (() => {
+    const fmt = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit' })
+    return `Hoje, ${fmt.format(new Date())}`
+  })()
+
   return (
     <div className="grid grid-cols-1 gap-4">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -58,6 +63,7 @@ export function PulseHeader({
           <div className="text-sm font-medium text-gray-500">{label}</div>
           <h1 className="text-3xl font-semibold tracking-tight text-gray-900 mt-1">
             {greeting}, {userName}
+            <span className="ml-3 align-baseline text-gray-500 text-lg font-normal">{todayLabel}</span>
           </h1>
           {(summary || lastUpdated) && (
             <div className="mt-2 flex items-center gap-3 flex-wrap text-sm">

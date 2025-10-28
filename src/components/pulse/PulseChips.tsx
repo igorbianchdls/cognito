@@ -12,7 +12,7 @@ type PulseChipsProps = {
 
 export function PulseChips({ value, counts, onChange }: PulseChipsProps) {
   return (
-    <div className="flex flex-wrap items-center gap-3 mt-2">
+    <div className="flex flex-wrap items-center gap-3 mt-4">
       <div className="flex items-center gap-2">
         <button
           onClick={() => onChange('unusual')}

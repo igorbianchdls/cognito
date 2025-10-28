@@ -14,7 +14,7 @@ export function PulseTabs({ value, onChange, activeBorderColor = '#111827' }: Pu
   return (
     <Tabs value={value} onValueChange={(v) => onChange(v as Tab)} className="w-full">
       <TabsList className="w-full h-12" variant="underline">
-        <div className="w-full flex items-end gap-3">
+        <div className="w-full px-4 md:px-6 flex items-end gap-3">
           <TabsTrigger value="following" variant="underline" className="pb-2 px-2 md:px-3" activeBorderColor={activeBorderColor}>
             Following
           </TabsTrigger>
@@ -31,4 +31,3 @@ export function PulseTabs({ value, onChange, activeBorderColor = '#111827' }: Pu
 }
 
 export default PulseTabs
-
