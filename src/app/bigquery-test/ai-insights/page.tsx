@@ -69,6 +69,16 @@ export default function AiInsightsPage() {
             <h2 className="text-sm font-semibold text-gray-700 mb-3">Sunset Orange</h2>
             <InsightsHeroCarousel items={items} variant="sunsetOrange" />
           </section>
+
+          <section>
+            <h2 className="text-sm font-semibold text-gray-700 mb-3">Crimson Glow</h2>
+            <InsightsHeroCarousel items={items} variant="crimsonGlow" />
+          </section>
+
+          <section>
+            <h2 className="text-sm font-semibold text-gray-700 mb-3">Rose Dawn</h2>
+            <InsightsHeroCarousel items={items} variant="roseDawn" />
+          </section>
         </div>
       </div>
     </div>

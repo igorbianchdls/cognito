@@ -17,7 +17,7 @@ export type InsightHeroItem = {
   rangeLabel?: string // ex: "This Week"
 }
 
-type Variant = 'aurora' | 'blueNight' | 'neoLight' | 'report' | 'emberRed' | 'obsidianBlack' | 'sunsetOrange'
+type Variant = 'aurora' | 'blueNight' | 'neoLight' | 'report' | 'emberRed' | 'obsidianBlack' | 'sunsetOrange' | 'crimsonGlow' | 'roseDawn'
 
 type Props = {
   items: InsightHeroItem[]
@@ -120,7 +120,11 @@ export default function InsightsHeroCarousel({
         .insights-swiper--obsidianBlack .swiper-button-next,
         .insights-swiper--obsidianBlack .swiper-button-prev,
         .insights-swiper--sunsetOrange .swiper-button-next,
-        .insights-swiper--sunsetOrange .swiper-button-prev {
+        .insights-swiper--sunsetOrange .swiper-button-prev,
+        .insights-swiper--crimsonGlow .swiper-button-next,
+        .insights-swiper--crimsonGlow .swiper-button-prev,
+        .insights-swiper--roseDawn .swiper-button-next,
+        .insights-swiper--roseDawn .swiper-button-prev {
           color: #ffffff; width: 28px; height: 28px; top: auto; bottom: 10px;
         }
         .insights-swiper--aurora .swiper-button-prev,
@@ -132,7 +136,9 @@ export default function InsightsHeroCarousel({
         .insights-swiper--blueNight .swiper-button-next,
         .insights-swiper--emberRed .swiper-button-next,
         .insights-swiper--obsidianBlack .swiper-button-next,
-        .insights-swiper--sunsetOrange .swiper-button-next { right: 8px; }
+        .insights-swiper--sunsetOrange .swiper-button-next,
+        .insights-swiper--crimsonGlow .swiper-button-next,
+        .insights-swiper--roseDawn .swiper-button-next { right: 8px; }
         .insights-swiper--aurora .swiper-button-next:after,
         .insights-swiper--aurora .swiper-button-prev:after,
         .insights-swiper--blueNight .swiper-button-next:after,
@@ -142,17 +148,25 @@ export default function InsightsHeroCarousel({
         .insights-swiper--obsidianBlack .swiper-button-next:after,
         .insights-swiper--obsidianBlack .swiper-button-prev:after,
         .insights-swiper--sunsetOrange .swiper-button-next:after,
-        .insights-swiper--sunsetOrange .swiper-button-prev:after { font-size: 18px; }
+        .insights-swiper--sunsetOrange .swiper-button-prev:after,
+        .insights-swiper--crimsonGlow .swiper-button-next:after,
+        .insights-swiper--crimsonGlow .swiper-button-prev:after,
+        .insights-swiper--roseDawn .swiper-button-next:after,
+        .insights-swiper--roseDawn .swiper-button-prev:after { font-size: 18px; }
         .insights-swiper--aurora .swiper-pagination-bullet,
         .insights-swiper--blueNight .swiper-pagination-bullet,
         .insights-swiper--emberRed .swiper-pagination-bullet,
         .insights-swiper--obsidianBlack .swiper-pagination-bullet,
-        .insights-swiper--sunsetOrange .swiper-pagination-bullet { background: rgba(255,255,255,.35); }
+        .insights-swiper--sunsetOrange .swiper-pagination-bullet,
+        .insights-swiper--crimsonGlow .swiper-pagination-bullet,
+        .insights-swiper--roseDawn .swiper-pagination-bullet { background: rgba(255,255,255,.35); }
         .insights-swiper--aurora .swiper-pagination-bullet-active,
         .insights-swiper--blueNight .swiper-pagination-bullet-active,
         .insights-swiper--emberRed .swiper-pagination-bullet-active,
         .insights-swiper--obsidianBlack .swiper-pagination-bullet-active,
-        .insights-swiper--sunsetOrange .swiper-pagination-bullet-active { background: #ffffff; }
+        .insights-swiper--sunsetOrange .swiper-pagination-bullet-active,
+        .insights-swiper--crimsonGlow .swiper-pagination-bullet-active,
+        .insights-swiper--roseDawn .swiper-pagination-bullet-active { background: #ffffff; }
         /* neo light */
         .insights-swiper--neoLight .swiper-button-next,
         .insights-swiper--neoLight .swiper-button-prev { color: #111827; width: 26px; height: 26px; top: auto; bottom: 10px; }
@@ -314,6 +328,48 @@ function getTheme(variant: Variant) {
         style: {
           background:
             'radial-gradient(120px 120px at 40px 40px, rgba(255,255,255,0.12), transparent 60%), linear-gradient(135deg, #f97316 0%, #0f172a 70%)',
+        } as React.CSSProperties,
+      }
+    case 'crimsonGlow':
+      return {
+        wrapperWidth: 'max-w-[340px]',
+        height: 'h-[300px]',
+        radius: 'rounded-2xl',
+        padding: 'p-5',
+        text: 'text-white',
+        shadow: 'shadow-xl',
+        border: 'border-transparent',
+        headerText: 'text-white/90',
+        pill: 'bg-white/20 backdrop-blur border border-white/20',
+        moreBtn: 'hover:bg-white/20',
+        headline: 'text-5xl font-extrabold tracking-tight',
+        bodyStrong: 'text-white/95',
+        bodyMuted: 'text-white/85',
+        glow: true,
+        style: {
+          background:
+            'radial-gradient(120px 120px at 40px 40px, rgba(255,255,255,0.12), transparent 60%), linear-gradient(135deg, #ef4444 0%, #b91c1c 70%)',
+        } as React.CSSProperties,
+      }
+    case 'roseDawn':
+      return {
+        wrapperWidth: 'max-w-[340px]',
+        height: 'h-[300px]',
+        radius: 'rounded-2xl',
+        padding: 'p-5',
+        text: 'text-white',
+        shadow: 'shadow-xl',
+        border: 'border-transparent',
+        headerText: 'text-white/90',
+        pill: 'bg-white/20 backdrop-blur border border-white/20',
+        moreBtn: 'hover:bg-white/20',
+        headline: 'text-5xl font-extrabold tracking-tight',
+        bodyStrong: 'text-white/95',
+        bodyMuted: 'text-white/85',
+        glow: true,
+        style: {
+          background:
+            'radial-gradient(120px 120px at 40px 40px, rgba(255,255,255,0.12), transparent 60%), linear-gradient(135deg, #f43f5e 0%, #fb7185 70%)',
         } as React.CSSProperties,
       }
   }
