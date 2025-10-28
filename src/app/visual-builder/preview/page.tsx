@@ -4,11 +4,19 @@ import { useEffect, useState } from 'react';
 import { useStore } from '@nanostores/react';
 import Link from 'next/link';
 import ResponsiveGridCanvas from '@/components/visual-builder/ResponsiveGridCanvas';
+import { ThemeManager, type ThemeName } from '@/components/visual-builder/ThemeManager';
 import { $visualBuilderState, visualBuilderActions } from '@/stores/visualBuilderStore';
 
 export default function PreviewPage() {
   const visualBuilderState = useStore($visualBuilderState);
   const [viewportMode, setViewportMode] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
+  const currentThemeName: ThemeName = (() => {
+    try {
+      const cfg = JSON.parse(visualBuilderState.code);
+      if (cfg && typeof cfg.theme === 'string' && ThemeManager.isValidTheme(cfg.theme)) return cfg.theme;
+    } catch {}
+    return 'dark';
+  })();
 
   // Initialize store on mount
   useEffect(() => {
@@ -69,6 +77,9 @@ export default function PreviewPage() {
           widgets={visualBuilderState.widgets}
           gridConfig={visualBuilderState.gridConfig}
           viewportMode={viewportMode}
+          headerTitle={visualBuilderState.dashboardTitle || 'Live Dashboard'}
+          headerSubtitle={visualBuilderState.dashboardSubtitle || 'Real-time visualization with Supabase data'}
+          themeName={currentThemeName}
         />
       </div>
     </div>

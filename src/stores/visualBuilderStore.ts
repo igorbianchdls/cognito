@@ -34,6 +34,8 @@ interface VisualBuilderState {
 
 const initialCode = `{
   "theme": "dark",
+  "dashboardTitle": "Live Dashboard",
+  "dashboardSubtitle": "Real-time visualization with Supabase data",
   "config": {
     "maxRows": 25,
     "rowHeight": 30,

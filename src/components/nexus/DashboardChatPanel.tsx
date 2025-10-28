@@ -608,6 +608,8 @@ export default function DashboardChatPanel() {
               gridConfig={visualBuilderState.gridConfig}
               viewportMode={selectedViewport}
               onLayoutChange={visualBuilderActions.updateWidgets}
+              headerTitle={visualBuilderState.dashboardTitle || 'Live Dashboard'}
+              headerSubtitle={visualBuilderState.dashboardSubtitle || 'Real-time visualization with Supabase data'}
             />
           </div>
         )}
