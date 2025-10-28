@@ -110,7 +110,7 @@ export default function PulsePage() {
         {/* Full-width tabs underline band (like /workflows) */}
         <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)} className="w-full">
           <TabsList className="w-full h-12" variant="underline">
-            <div className="w-full px-6 md:px-10 flex items-end gap-3">
+            <div className="w-full flex items-end gap-3">
               <TabsTrigger value="following" variant="underline" className="pb-2 px-2 md:px-3" activeBorderColor="#111827">
                 Following
               </TabsTrigger>
