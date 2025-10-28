@@ -44,7 +44,7 @@ export default function PulsePage() {
     <SidebarProvider defaultOpen={true}>
       <SidebarShadcn />
       <SidebarInset className="min-h-screen flex flex-col overflow-auto bg-white">
-        <div className="mx-auto max-w-7xl w-full px-0 py-8">
+        <div className="w-full px-0 py-8">
           {/* Top header area (no white boxes) */}
           <div className="grid grid-cols-1 gap-4">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -126,7 +126,7 @@ export default function PulsePage() {
         </Tabs>
 
         {/* Feed: use insight cards directly (no white containers) */}
-        <div className="mx-auto max-w-7xl w-full px-0">
+        <div className="w-full px-0">
           <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <InsightsHeroCarousel items={items} variant="neoLight" showArrows={false} />
             <InsightsHeroCarousel items={items} variant="aurora" />
