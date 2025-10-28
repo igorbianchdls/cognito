@@ -65,7 +65,20 @@ export default function PulsePage() {
 
         {/* Feed: use insight cards directly (no white containers) */}
         <div className="w-full px-4 md:px-6">
-          <PulseFeed items={items} />
+          <PulseFeed
+            items={items}
+            variants={[
+              'aurora',
+              'blueNight',
+              'neoLight',
+              'emberRed',
+              'obsidianBlack',
+              'sunsetOrange',
+              'crimsonGlow',
+              'roseDawn',
+              'report',
+            ]}
+          />
         </div>
       </SidebarInset>
     </SidebarProvider>
