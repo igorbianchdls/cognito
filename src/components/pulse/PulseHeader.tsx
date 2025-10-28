@@ -7,6 +7,7 @@ type PulseHeaderProps = {
   userName: string
   summary?: React.ReactNode
   lastUpdated?: Date
+  avatarUrl?: string
 }
 
 function formatTimeAgo(date?: Date): string {
@@ -23,6 +24,7 @@ export function PulseHeader({
   userName,
   summary,
   lastUpdated,
+  avatarUrl,
 }: PulseHeaderProps) {
   const greeting = (() => {
     const h = new Date().getHours()
@@ -40,9 +42,22 @@ export function PulseHeader({
     <div className="grid grid-cols-1 gap-4">
       <div>
         <div className="text-lg font-normal text-gray-500">{todayLabel}</div>
-        <h1 className="text-3xl font-semibold tracking-tight text-gray-900 mt-1">
-          {greeting}, {userName}
-        </h1>
+        <div className="mt-1 flex items-center gap-3">
+          {avatarUrl ? (
+            <img
+              src={avatarUrl}
+              alt={userName}
+              className="h-10 w-10 rounded-full ring-1 ring-gray-200 object-cover"
+            />
+          ) : (
+            <div className="h-10 w-10 rounded-full ring-1 ring-gray-200 bg-gray-100 flex items-center justify-center text-gray-600 text-sm font-medium">
+              {userName?.[0]?.toUpperCase()}
+            </div>
+          )}
+          <h1 className="text-3xl font-semibold tracking-tight text-gray-900">
+            {greeting}, {userName}
+          </h1>
+        </div>
         {(summary || lastUpdated) && (
           <div className="mt-2 text-sm">
             {summary && (
