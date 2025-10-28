@@ -42,7 +42,10 @@ export function PulseHeader({
     <div className="grid grid-cols-1 gap-4">
       <div>
         <div className="text-lg font-normal text-gray-500">{todayLabel}</div>
-        <div className="mt-1 flex items-center gap-3">
+        <div className="mt-1 flex items-center justify-between gap-3">
+          <h1 className="text-3xl font-semibold tracking-tight text-gray-900">
+            {greeting}, {userName}
+          </h1>
           {avatarUrl ? (
             <img
               src={avatarUrl}
@@ -54,9 +57,6 @@ export function PulseHeader({
               {userName?.[0]?.toUpperCase()}
             </div>
           )}
-          <h1 className="text-3xl font-semibold tracking-tight text-gray-900">
-            {greeting}, {userName}
-          </h1>
         </div>
         {(summary || lastUpdated) && (
           <div className="mt-2 text-sm">
