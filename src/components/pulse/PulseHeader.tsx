@@ -42,7 +42,7 @@ export function PulseHeader({
     <div className="grid grid-cols-1 gap-4">
       <div>
         <div className="text-lg font-normal text-gray-500">{todayLabel}</div>
-        <div className="mt-1 flex items-center justify-between gap-3">
+        <div className="mt-1 flex items-center gap-3">
           <h1 className="text-3xl font-semibold tracking-tight text-gray-900">
             {greeting}, {userName}
           </h1>
@@ -50,10 +50,10 @@ export function PulseHeader({
             <img
               src={avatarUrl}
               alt={userName}
-              className="h-10 w-10 rounded-full ring-1 ring-gray-200 object-cover"
+              className="h-10 w-10 rounded-full ring-1 ring-gray-200 object-cover shrink-0"
             />
           ) : (
-            <div className="h-10 w-10 rounded-full ring-1 ring-gray-200 bg-gray-100 flex items-center justify-center text-gray-600 text-sm font-medium">
+            <div className="h-10 w-10 rounded-full ring-1 ring-gray-200 bg-gray-100 flex items-center justify-center text-gray-600 text-sm font-medium shrink-0">
               {userName?.[0]?.toUpperCase()}
             </div>
           )}
