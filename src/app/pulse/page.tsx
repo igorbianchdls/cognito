@@ -5,6 +5,7 @@ import { Search } from 'lucide-react'
 import InsightsHeroCarousel, { type InsightHeroItem } from '@/components/widgets/InsightsHeroCarousel'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 type Chip = 'unusual' | 'normal' | 'all'
 type Tab = 'following' | 'foryou' | 'allmetrics'
@@ -40,7 +41,7 @@ export default function PulsePage() {
   ]), [])
 
   return (
-    <SidebarProvider defaultOpen={false}>
+    <SidebarProvider defaultOpen={true}>
       <SidebarShadcn />
       <SidebarInset className="min-h-screen flex flex-col overflow-auto bg-[#F5F7F9]">
         <div className="mx-auto max-w-7xl w-full px-6 md:px-10 py-8">
@@ -102,30 +103,28 @@ export default function PulsePage() {
                 </button>
               </div>
 
-              <div className="h-6 w-px bg-gray-200 mx-1" />
-
-              <div className="flex items-center gap-5 text-sm">
-                {([
-                  { id: 'following', label: 'Following' },
-                  { id: 'foryou', label: 'For you' },
-                  { id: 'allmetrics', label: 'All metrics' },
-                ] as { id: Tab; label: string }[]).map(t => (
-                  <button
-                    key={t.id}
-                    onClick={() => setTab(t.id)}
-                    className={`relative pb-1 transition-colors ${tab === t.id ? 'text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
-                  >
-                    {t.label}
-                    {tab === t.id && (
-                      <span className="absolute left-0 right-0 -bottom-[1px] h-[2px] rounded-full bg-gray-900" />
-                    )}
-                  </button>
-                ))}
-              </div>
+              {/* divider removed; tabs come below as full-width underline */}
             </div>
-          </div>
+        </div>
 
-          {/* Feed: use insight cards directly (no white containers) */}
+        {/* Full-width tabs underline band (like /workflows) */}
+        <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)} className="w-full">
+          <TabsList className="w-full h-12" variant="underline">
+            <div className="w-full px-6 md:px-10 flex items-end gap-3">
+              <TabsTrigger value="following" variant="underline" className="pb-2 px-2 md:px-3" activeBorderColor="#111827">
+                Following
+              </TabsTrigger>
+              <TabsTrigger value="foryou" variant="underline" className="pb-2 px-2 md:px-3" activeBorderColor="#111827">
+                For you
+              </TabsTrigger>
+              <TabsTrigger value="allmetrics" variant="underline" className="pb-2 px-2 md:px-3" activeBorderColor="#111827">
+                All metrics
+              </TabsTrigger>
+            </div>
+          </TabsList>
+        </Tabs>
+
+        {/* Feed: use insight cards directly (no white containers) */}
           <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <InsightsHeroCarousel items={items} variant="neoLight" showArrows={false} />
             <InsightsHeroCarousel items={items} variant="aurora" />
