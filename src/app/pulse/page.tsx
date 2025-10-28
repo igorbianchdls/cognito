@@ -46,7 +46,7 @@ export default function PulsePage() {
     <SidebarProvider defaultOpen={true}>
       <SidebarShadcn />
       <SidebarInset className="min-h-screen flex flex-col overflow-auto bg-white">
-        <div className="w-full px-0 py-8">
+        <div className="w-full px-4 md:px-6 py-8">
           <PulseHeader
             title="Hey, there. Here’s today’s pulse."
             subtitle={(
@@ -63,7 +63,7 @@ export default function PulsePage() {
         <PulseTabs value={tab} onChange={setTab} />
 
         {/* Feed: use insight cards directly (no white containers) */}
-        <div className="w-full px-0">
+        <div className="w-full px-4 md:px-6">
           <PulseFeed items={items} />
         </div>
       </SidebarInset>
