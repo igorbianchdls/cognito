@@ -27,12 +27,11 @@ export default function ModulosContabilidadePage() {
   useEffect(() => {
     contabilidadeUiActions.setTabs({
       options: [
-        { value: 'lancamentos', label: 'Lançamentos' },
+        { value: 'lancamentos', label: 'Lançamentos contábeis' },
+        { value: 'centros-de-custo', label: 'Centros de Custo' },
+        { value: 'centros-de-lucro', label: 'Centros de Lucro' },
         { value: 'plano-contas', label: 'Plano de Contas' },
-        { value: 'balancete', label: 'Balancete' },
-        { value: 'dre', label: 'DRE' },
-        { value: 'balanco', label: 'Balanço Patrimonial' },
-        { value: 'obrigacoes', label: 'Obrigações/Impostos' },
+        { value: 'regras-contabeis', label: 'Regras contábeis' },
       ],
       selected: 'lancamentos',
     })
@@ -63,36 +62,35 @@ export default function ModulosContabilidadePage() {
           { accessorKey: 'historico', header: 'Histórico' },
           { accessorKey: 'valor', header: 'Valor', cell: ({ row }) => formatBRL(row.original['valor']) },
         ]
+      case 'centros-de-custo':
+        return [
+          { accessorKey: 'codigo', header: 'Código' },
+          { accessorKey: 'nome', header: 'Nome' },
+          { accessorKey: 'responsavel', header: 'Responsável' },
+        ]
+      case 'centros-de-lucro':
+        return [
+          { accessorKey: 'codigo', header: 'Código' },
+          { accessorKey: 'nome', header: 'Nome' },
+          { accessorKey: 'responsavel', header: 'Responsável' },
+        ]
       case 'plano-contas':
         return [
           { accessorKey: 'codigo', header: 'Código' },
           { accessorKey: 'nome', header: 'Nome' },
           { accessorKey: 'tipo', header: 'Tipo' },
         ]
-      case 'balancete':
+      case 'regras-contabeis':
         return [
-          { accessorKey: 'conta', header: 'Conta' },
-          { accessorKey: 'debito', header: 'Débito', cell: ({ row }) => formatBRL(row.original['debito']) },
-          { accessorKey: 'credito', header: 'Crédito', cell: ({ row }) => formatBRL(row.original['credito']) },
-          { accessorKey: 'saldo', header: 'Saldo', cell: ({ row }) => formatBRL(row.original['saldo']) },
+          { accessorKey: 'regra', header: 'Regra' },
+          { accessorKey: 'descricao', header: 'Descrição' },
+          { accessorKey: 'ativo', header: 'Ativa' },
         ]
-      case 'dre':
-        return [
-          { accessorKey: 'conta', header: 'Conta' },
-          { accessorKey: 'valor', header: 'Valor', cell: ({ row }) => formatBRL(row.original['valor']) },
-        ]
-      case 'balanco':
-        return [
-          { accessorKey: 'grupo', header: 'Grupo' },
-          { accessorKey: 'conta', header: 'Conta' },
-          { accessorKey: 'valor', header: 'Valor', cell: ({ row }) => formatBRL(row.original['valor']) },
-        ]
-      case 'obrigacoes':
       default:
         return [
-          { accessorKey: 'tipo', header: 'Tipo' },
-          { accessorKey: 'periodo', header: 'Período' },
-          { accessorKey: 'status', header: 'Status' },
+          { accessorKey: 'codigo', header: 'Código' },
+          { accessorKey: 'nome', header: 'Nome' },
+          { accessorKey: 'descricao', header: 'Descrição' },
         ]
     }
   }, [tabs.selected])
