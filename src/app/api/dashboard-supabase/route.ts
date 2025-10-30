@@ -13,7 +13,8 @@ function calculateDateRange(filter: DateRangeFilter): { startDate: string, endDa
   switch (filter.type) {
     case 'last_7_days':
       const weekAgo = new Date(today);
-      weekAgo.setDate(today.getDate() - 7);
+      // Inclusivo: hoje e os 6 dias anteriores = 7 dias
+      weekAgo.setDate(today.getDate() - 6);
       return {
         startDate: formatDate(weekAgo),
         endDate: formatDate(today)
@@ -21,7 +22,8 @@ function calculateDateRange(filter: DateRangeFilter): { startDate: string, endDa
       
     case 'last_30_days':
       const monthAgo = new Date(today);
-      monthAgo.setDate(today.getDate() - 30);
+      // Inclusivo: hoje e os 29 dias anteriores = 30 dias
+      monthAgo.setDate(today.getDate() - 29);
       return {
         startDate: formatDate(monthAgo),
         endDate: formatDate(today)
@@ -29,7 +31,8 @@ function calculateDateRange(filter: DateRangeFilter): { startDate: string, endDa
       
     case 'last_90_days':
       const quarterAgo = new Date(today);
-      quarterAgo.setDate(today.getDate() - 90);
+      // Inclusivo: hoje e os 89 dias anteriores = 90 dias
+      quarterAgo.setDate(today.getDate() - 89);
       return {
         startDate: formatDate(quarterAgo),
         endDate: formatDate(today)
@@ -60,7 +63,8 @@ function calculateDateRange(filter: DateRangeFilter): { startDate: string, endDa
       
     default:
       const defaultMonthAgo = new Date(today);
-      defaultMonthAgo.setDate(today.getDate() - 30);
+      // Inclusivo: hoje e os 29 dias anteriores = 30 dias
+      defaultMonthAgo.setDate(today.getDate() - 29);
       return {
         startDate: formatDate(defaultMonthAgo),
         endDate: formatDate(today)
