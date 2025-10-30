@@ -169,6 +169,7 @@ const initialCode = `{
       "row": "1",
       "span": { "desktop": 1, "tablet": 1, "mobile": 1 },
       "order": 3,
+      "heightPx": 280,
       "title": "🏆 Top 10 Campanhas por Gasto",
       "dataSource": {
         "schema": "marketing",
