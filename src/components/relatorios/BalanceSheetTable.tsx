@@ -1,8 +1,11 @@
 "use client"
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { ChevronRight, ChevronDown } from 'lucide-react'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { useStore } from '@nanostores/react'
+import { $reportsCommands } from '@/stores/reportsUiStore'
+import { $tabs } from '@/stores/modulos/financeiroUiStore'
 
 type Node = {
   id: string
@@ -80,6 +83,8 @@ export default function BalanceSheetTable({ periods = [
   { key: '2025-03', label: 'Março' },
 ] }: Props) {
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
+  const commands = useStore($reportsCommands)
+  const tabs = useStore($tabs)
   const toggle = (id: string) => setExpanded(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n })
 
   const rows = useMemo(() => flatten(DATA, expanded), [expanded])
@@ -98,6 +103,22 @@ export default function BalanceSheetTable({ periods = [
   const ativo = DATA.find(n => n.id === 'ativo')!
   const passivo = DATA.find(n => n.id === 'passivo')!
   const pl = DATA.find(n => n.id === 'pl')!
+
+  useEffect(() => {
+    if (tabs.selected !== 'balanco') return
+    // Expand all
+    const collect = (nodes: Node[], set: Set<string>) => {
+      for (const n of nodes) {
+        if (n.children && n.children.length) {
+          set.add(n.id)
+          collect(n.children, set)
+        }
+      }
+    }
+    const s = new Set<string>()
+    collect(DATA, s)
+    setExpanded(s)
+  }, [commands.expandAllCounter, tabs.selected])
 
   return (
     <div className="rounded-lg border bg-white">

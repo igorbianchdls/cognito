@@ -7,8 +7,9 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar'
 import type { DateRange } from 'react-day-picker'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Calendar as CalendarIcon, SlidersHorizontal, Eye } from 'lucide-react'
+import { Calendar as CalendarIcon, SlidersHorizontal, ChevronsDown, Download } from 'lucide-react'
 import { $reportsFilters, reportsFiltersActions, type ReportsCadence, type ReportsView } from '@/stores/reportsFiltersStore'
+import { reportsUiActions } from '@/stores/reportsUiStore'
 
 function fmt(d?: Date) {
   return d ? d.toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : ''
@@ -97,11 +98,17 @@ export default function ReportsFiltersBar() {
           </SelectContent>
         </Select>
 
-        {/* Visualizar */}
-        <Button variant="outline" className="h-9 ml-auto gap-2">
-          <Eye className="w-4 h-4" />
-          Atualizar visão
-        </Button>
+        {/* Ações à direita */}
+        <div className="ml-auto flex items-center gap-2">
+          <Button variant="outline" className="h-9 gap-2 bg-white" onClick={() => reportsUiActions.expandAll()}>
+            <ChevronsDown className="w-4 h-4" />
+            Expandir tudo
+          </Button>
+          <Button variant="outline" className="h-9 gap-2 bg-white" onClick={() => reportsUiActions.exportCurrent()}>
+            <Download className="w-4 h-4" />
+            Baixar planilha
+          </Button>
+        </div>
       </div>
     </div>
   )

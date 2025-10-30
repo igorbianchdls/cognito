@@ -1,8 +1,11 @@
 "use client"
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { ChevronRight, ChevronDown } from 'lucide-react'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { useStore } from '@nanostores/react'
+import { $reportsCommands } from '@/stores/reportsUiStore'
+import { $tabs } from '@/stores/modulos/financeiroUiStore'
 
 export type DRENode = {
   id: string
@@ -119,6 +122,8 @@ export default function DRETable({ data = DEFAULT_DATA, periods = [
   { key: '2025-03', label: 'Março' },
 ] }: DRETableProps) {
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set<string>())
+  const commands = useStore($reportsCommands)
+  const tabs = useStore($tabs)
 
   const rows = useMemo(() => flatten(data, expanded), [data, expanded])
 
@@ -149,6 +154,64 @@ export default function DRETable({ data = DEFAULT_DATA, periods = [
   }
 
   const isExpandable = (node: DRENode) => Boolean(node.children && node.children.length > 0)
+
+  const collectExpandableIds = (nodes: DRENode[], out: Set<string>) => {
+    for (const n of nodes) {
+      if (n.children && n.children.length) {
+        out.add(n.id)
+        collectExpandableIds(n.children, out)
+      }
+    }
+  }
+
+  useEffect(() => {
+    if (tabs.selected !== 'dre') return
+    // Expand all when command triggered
+    const set = new Set<string>()
+    collectExpandableIds(data, set)
+    setExpanded(set)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [commands.expandAllCounter, tabs.selected, data])
+
+  // Export CSV when requested and DRE is active
+  useEffect(() => {
+    if (tabs.selected !== 'dre') return
+    const header = ['Conta', ...periods.map(p => p.label), 'Total']
+    const allRows = flattenAll(data)
+    const csvLines: string[] = []
+    csvLines.push(header.join(','))
+    for (const { node, depth } of allRows) {
+      const name = `${' '.repeat(depth * 2)}${node.name}`.replaceAll(',', ' ')
+      const vals = periods.map(p => computeNodeValueForPeriod(node, p.key))
+      const tot = computeNodeValue(node, periods.map(p => p.key))
+      csvLines.push([name, ...vals.map(v => String(v)), String(tot)].join(','))
+    }
+    // Footer totals
+    const receitaTotals = periods.map(p => totalRevenueByPeriod[p.key] || 0)
+    csvLines.push(['Receita Total', ...receitaTotals.map(String), String(receitaTotals.reduce((a, b) => a + b, 0))].join(','))
+    const profitTotals = periods.map(p => profitByPeriod[p.key] || 0)
+    csvLines.push(['Lucro/Prejuízo', ...profitTotals.map(String), String(profitTotals.reduce((a, b) => a + b, 0))].join(','))
+    const blob = new Blob([csvLines.join('\n')], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'dre.csv'
+    a.click()
+    URL.revokeObjectURL(url)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [commands.exportCounter, tabs.selected])
+
+  function flattenAll(nodes: DRENode[]): Array<{ node: DRENode; depth: number }> {
+    const out: Array<{ node: DRENode; depth: number }> = []
+    const walk = (arr: DRENode[], depth = 0) => {
+      for (const n of arr) {
+        out.push({ node: n, depth })
+        if (n.children && n.children.length) walk(n.children, depth + 1)
+      }
+    }
+    walk(nodes, 0)
+    return out
+  }
 
   return (
     <div className="rounded-lg border bg-white">
