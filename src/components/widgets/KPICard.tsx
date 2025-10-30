@@ -396,6 +396,12 @@ export function KPICard({
           // Apply custom border for smooth variant only
           if (kpiContainerBorderColor && borderVariant === 'smooth') {
             style.border = `${(kpiContainerBorderWidth ?? 1)}px solid ${hexToRgba(kpiContainerBorderColor, kpiContainerBorderOpacity ?? 1)}`
+          } else if (borderVariant === 'accent') {
+            // Light continuous border behind the corner accents (not white/transparent)
+            const lightBorder = kpiContainerBorderColor
+              ? hexToRgba(kpiContainerBorderColor, kpiContainerBorderOpacity ?? 1)
+              : '#e5e7eb' // Tailwind gray-200
+            style.border = `${(kpiContainerBorderWidth ?? 0.5)}px solid ${lightBorder}`
           }
           // Border radius precedence: tileBorderRadius > kpiContainerBorderRadius
           if (typeof tileBorderRadius === 'number') {
