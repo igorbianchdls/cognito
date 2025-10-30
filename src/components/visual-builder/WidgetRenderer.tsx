@@ -419,6 +419,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
         <div className="h-full w-full p-2 relative">
           {renderSQLButton()}
           <KPICard
+            variant="tile"
             name={widget.title}
             currentValue={kpiValue}
             unit={widget.unit || widget.kpiConfig?.unit}
