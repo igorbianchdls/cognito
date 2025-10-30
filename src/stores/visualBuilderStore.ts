@@ -72,8 +72,8 @@ const initialCode = `{
       "heightPx": 320,
       "title": "📊 Gasto por Plataforma",
       "dataSource": {
-        "schema": "trafego_pago",
-        "table": "vw_ads_data",
+        "schema": "marketing",
+        "table": "view_trafego_pago",
         "x": "plataforma",
         "y": "gasto",
         "aggregation": "SUM"
@@ -97,8 +97,8 @@ const initialCode = `{
       "heightPx": 150,
       "title": "💰 Gasto Total",
       "dataSource": {
-        "schema": "trafego_pago",
-        "table": "vw_ads_data",
+        "schema": "marketing",
+        "table": "view_trafego_pago",
         "x": "gasto",
         "aggregation": "SUM"
       },
@@ -121,8 +121,8 @@ const initialCode = `{
       "heightPx": 280,
       "title": "📈 Impressões ao Longo do Tempo",
       "dataSource": {
-        "schema": "trafego_pago",
-        "table": "vw_ads_data",
+        "schema": "marketing",
+        "table": "view_trafego_pago",
         "x": "data",
         "y": "impressao",
         "aggregation": "SUM"
@@ -146,8 +146,8 @@ const initialCode = `{
       "heightPx": 280,
       "title": "📊 Impressões ao Longo do Tempo (Barras)",
       "dataSource": {
-        "schema": "trafego_pago",
-        "table": "vw_ads_data",
+        "schema": "marketing",
+        "table": "view_trafego_pago",
         "x": "data",
         "y": "impressao",
         "aggregation": "SUM"
@@ -170,8 +170,8 @@ const initialCode = `{
       "order": 3,
       "title": "📱 Conversões por Dispositivo",
       "dataSource": {
-        "schema": "trafego_pago",
-        "table": "vw_ads_data",
+        "schema": "marketing",
+        "table": "view_trafego_pago",
         "x": "dispositivo",
         "y": "conversao",
         "aggregation": "SUM"
@@ -195,8 +195,8 @@ const initialCode = `{
       "heightPx": 150,
       "title": "🎯 ROAS Médio",
       "dataSource": {
-        "schema": "trafego_pago",
-        "table": "vw_ads_data",
+        "schema": "marketing",
+        "table": "view_trafego_pago",
         "x": "roas",
         "aggregation": "AVG"
       },

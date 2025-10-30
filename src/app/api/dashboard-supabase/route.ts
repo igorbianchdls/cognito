@@ -75,7 +75,7 @@ const generatePostgreSQLQuery = (
   y: string, 
   tabela: string, 
   agregacao?: string, 
-  schema = 'trafego_pago',
+  schema = 'marketing',
   dateFilter?: DateRangeFilter
 ): string => {
   const defaultAgregacao = tipo === 'pie' ? 'COUNT' : 'SUM';
@@ -144,7 +144,7 @@ export async function POST(request: NextRequest) {
   try {
     // Parse request body
     const { type, dataSource, filters } = await request.json();
-    const { table, x, y, aggregation, schema = 'trafego_pago' } = dataSource;
+    const { table, x, y, aggregation, schema = 'marketing' } = dataSource;
     const dateFilter = filters?.dateRange;
 
     // 📥 Request received log
