@@ -374,9 +374,9 @@ export function KPICard({
     const TrendIcon = isPositive ? ArrowUpRight : ArrowDownRight
 
     const sizeMap = {
-      sm: { label: 'text-[12px]', value: 'text-[20px]', micro: 'text-[11px]', icon: 24, pad: 'p-3' },
-      md: { label: 'text-[13px]', value: 'text-[24px]', micro: 'text-[12px]', icon: 28, pad: 'p-4' },
-      lg: { label: 'text-[14px]', value: 'text-[28px]', micro: 'text-[12px]', icon: 32, pad: 'p-5' },
+      sm: { label: 'text-[12px]', value: 'text-[20px]', micro: 'text-[11px]', icon: 30, pad: 'p-3' },
+      md: { label: 'text-[13px]', value: 'text-[24px]', micro: 'text-[12px]', icon: 36, pad: 'p-4' },
+      lg: { label: 'text-[14px]', value: 'text-[28px]', micro: 'text-[12px]', icon: 42, pad: 'p-5' },
     } as const
     const s = sizeMap[size]
 
@@ -392,17 +392,17 @@ export function KPICard({
             {React.isValidElement(icon)
               ? React.cloneElement(
                   icon as React.ReactElement<{ size?: number; color?: string }>,
-                  { size: Math.max(14, s.icon - 12), color: iconColor || '#9ca3af' }
+                  { size: Math.max(16, s.icon - 8), color: iconColor || '#9ca3af' }
                 )
               : null}
           </div>
         </div>
         {/* Value */}
-        <div className={`mt-2 font-semibold text-slate-900 ${s.value}`}>
+        <div className={`py-1 font-semibold text-slate-900 ${s.value}`}>
           {formatValue(currentValue, unit)}
         </div>
         {/* Footer */}
-        <div className="mt-2 flex items-center gap-2">
+        <div className="flex items-center gap-2">
           <TrendIcon size={14} color={appliedChangeColor} />
           <span style={{ color: appliedChangeColor }} className="font-medium text-[12px]">
             {Math.abs(effectiveChangePct || 0).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%
