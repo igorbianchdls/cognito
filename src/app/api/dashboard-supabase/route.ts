@@ -188,6 +188,8 @@ export async function POST(request: NextRequest) {
       const prevEnd = new Date(start.getTime() - 24 * 3600 * 1000);
       const prevStart = new Date(prevEnd.getTime() - ms);
       const fmt = (d: Date) => d.toISOString().split('T')[0];
+      const days = Math.max(1, Math.round(ms / (24 * 3600 * 1000)) + 1);
+      const comparisonLabel = `VS PREV. ${days} DAYS`;
 
       const qualifiedTable = `"${schema}"."${table}"`;
       const sqlKPI = `WITH current AS (
@@ -208,7 +210,7 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json({
         success: true,
-        data: { value: currentVal, previousValue: previousVal, changePct },
+        data: { value: currentVal, previousValue: previousVal, changePct, comparisonLabel },
         sql_query: sqlKPI,
         totalRecords: 1,
         metadata: { generatedAt: new Date().toISOString(), dataSource: 'supabase', schema, table }

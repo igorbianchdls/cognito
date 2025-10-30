@@ -27,6 +27,7 @@ type KPIData = {
   value: number;
   previousValue?: number;
   changePct?: number;
+  comparisonLabel?: string;
 };
 
 type WidgetData = ChartDataPoint[] | KPIData | null;
@@ -143,6 +144,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
   const kpiValue = widget.type === 'kpi' && isKPIData(data) ? data.value : 0;
   const kpiPrev = widget.type === 'kpi' && isKPIData(data) ? data.previousValue : undefined;
   const kpiChangePct = widget.type === 'kpi' && isKPIData(data) ? data.changePct : undefined;
+  const kpiLabel = widget.type === 'kpi' && isKPIData(data) ? data.comparisonLabel : undefined;
 
   // 🔧 Data processing log
   console.log('🔧 Data processed for widget:', widget.id, {
@@ -426,6 +428,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
             currentValue={kpiValue}
             previousValue={kpiPrev}
             changePct={kpiChangePct}
+            comparisonLabel={kpiLabel}
             unit={widget.unit || widget.kpiConfig?.unit}
             success={true}
             {...(widget.kpiConfig || {})}
