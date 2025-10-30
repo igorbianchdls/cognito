@@ -385,19 +385,15 @@ export function KPICard({
     const innerIconSize = tileIconSize ?? Math.max(16, circleSize - 8)
 
     return (
-      <Card className={kpiContainerClassName || `bg-white border ${borderVariant === 'accent' ? '' : 'border-gray-200'} shadow-sm rounded-xl relative ${s.pad}`}
+      <Card className={kpiContainerClassName || `bg-white ${borderVariant === 'accent' ? 'border-0' : 'border border-gray-200'} shadow-sm rounded-xl relative ${s.pad}`}
         style={(() => {
           if (tilePadding !== undefined) return { padding: `${tilePadding}px` } as React.CSSProperties
           const style: React.CSSProperties = {}
           if (tilePaddingX !== undefined) { style.paddingLeft = tilePaddingX; style.paddingRight = tilePaddingX }
           if (tilePaddingY !== undefined) { style.paddingTop = tilePaddingY; style.paddingBottom = tilePaddingY }
-          // Apply custom border color if provided
-          if (kpiContainerBorderColor) {
+          // Apply custom border for smooth variant only
+          if (kpiContainerBorderColor && borderVariant === 'smooth') {
             style.border = `${borderVariant === 'accent' ? 0.5 : (kpiContainerBorderWidth ?? 1)}px solid ${hexToRgba(kpiContainerBorderColor, kpiContainerBorderOpacity ?? 1)}`
-          } else if (borderVariant === 'accent') {
-            style.borderWidth = 0.5
-            style.borderStyle = 'solid'
-            style.borderColor = '#777'
           }
           if (typeof kpiContainerBorderRadius === 'number') style.borderRadius = kpiContainerBorderRadius
           if (typeof kpiContainerShadow === 'boolean') style.boxShadow = kpiContainerShadow ? '0 1px 2px rgba(0,0,0,.06), 0 8px 24px rgba(0,0,0,.06)' : 'none'
