@@ -87,6 +87,7 @@ interface KPICardProps {
   tileIconCircleSize?: number; // px
   tileIconSize?: number; // px
   tileValuePaddingY?: number; // px
+  tileBorderRadius?: number; // px
 
   // Container styling props
   kpiContainerBackgroundColor?: string;
@@ -212,6 +213,7 @@ export function KPICard({
   tileIconCircleSize,
   tileIconSize,
   tileValuePaddingY,
+  tileBorderRadius,
 
   // Container styling props
   kpiContainerBackgroundColor,
@@ -395,7 +397,15 @@ export function KPICard({
           if (kpiContainerBorderColor && borderVariant === 'smooth') {
             style.border = `${(kpiContainerBorderWidth ?? 1)}px solid ${hexToRgba(kpiContainerBorderColor, kpiContainerBorderOpacity ?? 1)}`
           }
-          if (typeof kpiContainerBorderRadius === 'number') style.borderRadius = kpiContainerBorderRadius
+          // Border radius precedence: tileBorderRadius > kpiContainerBorderRadius
+          if (typeof tileBorderRadius === 'number') {
+            style.borderRadius = tileBorderRadius
+          } else if (typeof kpiContainerBorderRadius === 'number') {
+            style.borderRadius = kpiContainerBorderRadius
+          } else if (borderVariant === 'accent') {
+            // Default to sharp corners for accent if not provided
+            style.borderRadius = 0
+          }
           if (typeof kpiContainerShadow === 'boolean') style.boxShadow = kpiContainerShadow ? '0 1px 2px rgba(0,0,0,.06), 0 8px 24px rgba(0,0,0,.06)' : 'none'
           return Object.keys(style).length ? style : undefined
         })()}

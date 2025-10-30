@@ -9,6 +9,7 @@ export default function BigQueryKPIDemoPage() {
   const [tilePaddingY, setTilePaddingY] = useState<number>(16)
   const [tileValuePaddingY, setTileValuePaddingY] = useState<number>(4)
   const [borderVariant, setBorderVariant] = useState<'smooth' | 'accent'>('smooth')
+  const [tileBorderRadius, setTileBorderRadius] = useState<number>(12)
 
   return (
     <div className="p-6 space-y-6">
@@ -29,6 +30,9 @@ export default function BigQueryKPIDemoPage() {
             <option value="accent">Cantos acentuados (anterior)</option>
           </select>
         </label>
+        <label className="flex items-center gap-2">Radius
+          <input type="number" className="border rounded px-2 py-1 w-20" value={tileBorderRadius} onChange={(e) => setTileBorderRadius(Number(e.target.value))} />
+        </label>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <KPICard
@@ -44,6 +48,7 @@ export default function BigQueryKPIDemoPage() {
           tilePaddingY={tilePaddingY}
           tileValuePaddingY={tileValuePaddingY}
           borderVariant={borderVariant}
+          tileBorderRadius={tileBorderRadius}
         />
         <KPICard
           variant="tile"
@@ -58,6 +63,7 @@ export default function BigQueryKPIDemoPage() {
           tilePaddingY={tilePaddingY}
           tileValuePaddingY={tileValuePaddingY}
           borderVariant={borderVariant}
+          tileBorderRadius={tileBorderRadius}
         />
         <KPICard
           variant="tile"
@@ -71,6 +77,7 @@ export default function BigQueryKPIDemoPage() {
           tilePaddingY={tilePaddingY}
           tileValuePaddingY={tileValuePaddingY}
           borderVariant={borderVariant}
+          tileBorderRadius={tileBorderRadius}
         />
         <KPICard
           variant="tile"
@@ -84,6 +91,7 @@ export default function BigQueryKPIDemoPage() {
           tilePaddingY={tilePaddingY}
           tileValuePaddingY={tileValuePaddingY}
           borderVariant={borderVariant}
+          tileBorderRadius={tileBorderRadius}
         />
       </div>
     </div>
