@@ -26,6 +26,12 @@ function calculateDateRange(filter: DateRangeFilter): { startDate: string, endDa
         startDate: formatDate(weekAgo),
         endDate: formatDate(today)
       };
+    case 'last_14_days': {
+      const d = new Date(today);
+      // Inclusivo: hoje e os 13 dias anteriores = 14 dias
+      d.setDate(today.getDate() - 13);
+      return { startDate: formatDate(d), endDate: formatDate(today) };
+    }
       
     case 'last_30_days':
       const monthAgo = new Date(today);
@@ -327,8 +333,3 @@ function generateMockData(type: string, x: string, y: string, table: string) {
     value: Math.floor(Math.random() * 1000) + 100
   }));
 }
-    case 'last_14_days': {
-      const d = new Date(today);
-      d.setDate(today.getDate() - 13);
-      return { startDate: formatDate(d), endDate: formatDate(today) };
-    }
