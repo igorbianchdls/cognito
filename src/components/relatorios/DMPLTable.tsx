@@ -26,17 +26,17 @@ export default function DMPLTable({ periods = DEFAULT_PERIODS }: Props) {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-2/5">Componente do PL</TableHead>
-            {periods.map(p => <TableHead key={p.key} className="text-right">{p.label}</TableHead>)}
-            <TableHead className="text-right">Total</TableHead>
+            <TableHead className="w-2/5 text-gray-600">Componente do PL</TableHead>
+            {periods.map(p => <TableHead key={p.key} className="text-right text-gray-600">{p.label}</TableHead>)}
+            <TableHead className="text-right text-gray-600">Total</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {ROWS.map(r => (
             <TableRow key={r.id}>
               <TableCell className="font-medium text-gray-800">{r.label}</TableCell>
-              {periods.map(p => <TableCell key={p.key} className="text-right">{currency(r.valuesByPeriod[p.key] || 0)}</TableCell>)}
-              <TableCell className="text-right font-medium">{currency(periods.reduce((acc, p) => acc + (r.valuesByPeriod[p.key] || 0), 0))}</TableCell>
+              {periods.map(p => <TableCell key={p.key} className="text-right text-gray-700">{currency(r.valuesByPeriod[p.key] || 0)}</TableCell>)}
+              <TableCell className="text-right font-medium text-gray-900">{currency(periods.reduce((acc, p) => acc + (r.valuesByPeriod[p.key] || 0), 0))}</TableCell>
             </TableRow>
           ))}
           <TableRow>
@@ -55,4 +55,3 @@ export default function DMPLTable({ periods = DEFAULT_PERIODS }: Props) {
     </div>
   )
 }
-

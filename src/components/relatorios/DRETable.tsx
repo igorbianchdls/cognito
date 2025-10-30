@@ -147,11 +147,11 @@ export default function DRETable({ data = DEFAULT_DATA, periods = [
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-2/5">Conta</TableHead>
+            <TableHead className="w-2/5 text-gray-600">Conta</TableHead>
             {periods.map((p) => (
-              <TableHead key={p.key} className="text-right">{p.label}</TableHead>
+              <TableHead key={p.key} className="text-right text-gray-600">{p.label}</TableHead>
             ))}
-            <TableHead className="text-right">Total</TableHead>
+            <TableHead className="text-right text-gray-600">Total</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -162,7 +162,7 @@ export default function DRETable({ data = DEFAULT_DATA, periods = [
             const indent = depth * 20
             const isNegative = total < 0
             return (
-              <TableRow key={node.id} className={isSection ? 'bg-gray-50' : ''}>
+              <TableRow key={node.id}>
                 <TableCell className="text-gray-800">
                   <div className="flex items-center" style={{ paddingLeft: indent }}>
                     {hasChildren ? (
@@ -184,14 +184,14 @@ export default function DRETable({ data = DEFAULT_DATA, periods = [
                   const v = computeNodeValueForPeriod(node, p.key)
                   const neg = v < 0
                   return (
-                    <TableCell key={p.key} className="text-right">
+                    <TableCell key={p.key} className="text-right text-gray-700">
                       <span className={isSection ? 'font-medium' : ''} style={{ color: neg ? '#dc2626' : undefined }}>
                         {formatCurrencyBRL(v)}
                       </span>
                     </TableCell>
                   )
                 })}
-                <TableCell className="text-right">
+                <TableCell className="text-right text-gray-700">
                   <span className={isSection ? 'font-medium' : ''} style={{ color: isNegative ? '#dc2626' : undefined }}>
                     {formatCurrencyBRL(total)}
                   </span>

@@ -64,9 +64,9 @@ export default function CashFlowTable({ periods = PERIODS_DEFAULT }: Props) {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-2/5">Conta</TableHead>
-            {periods.map(p => <TableHead key={p.key} className="text-right">{p.label}</TableHead>)}
-            <TableHead className="text-right">Total</TableHead>
+            <TableHead className="w-2/5 text-gray-600">Conta</TableHead>
+            {periods.map(p => <TableHead key={p.key} className="text-right text-gray-600">{p.label}</TableHead>)}
+            <TableHead className="text-right text-gray-600">Total</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -76,8 +76,8 @@ export default function CashFlowTable({ periods = PERIODS_DEFAULT }: Props) {
             const tot = total(node, chave)
             const neg = tot < 0
             return (
-              <TableRow key={node.id} className={has ? 'bg-gray-50' : ''}>
-                <TableCell>
+              <TableRow key={node.id}>
+                <TableCell className="text-gray-800">
                   <div className="flex items-center" style={{ paddingLeft: indent }}>
                     {has ? (
                       <button type="button" onClick={() => toggle(node.id)} className="mr-2 text-gray-600 hover:text-gray-900">
@@ -89,9 +89,9 @@ export default function CashFlowTable({ periods = PERIODS_DEFAULT }: Props) {
                 </TableCell>
                 {periods.map(p => {
                   const v = valueFor(node, p.key)
-                  return <TableCell key={p.key} className="text-right" style={{ color: v < 0 ? '#dc2626' : undefined }}>{currency(v)}</TableCell>
+                  return <TableCell key={p.key} className="text-right text-gray-700" style={{ color: v < 0 ? '#dc2626' : undefined }}>{currency(v)}</TableCell>
                 })}
-                <TableCell className="text-right" style={{ color: neg ? '#dc2626' : undefined }}>{currency(tot)}</TableCell>
+                <TableCell className="text-right text-gray-700" style={{ color: neg ? '#dc2626' : undefined }}>{currency(tot)}</TableCell>
               </TableRow>
             )
           })}
@@ -109,4 +109,3 @@ export default function CashFlowTable({ periods = PERIODS_DEFAULT }: Props) {
     </div>
   )
 }
-

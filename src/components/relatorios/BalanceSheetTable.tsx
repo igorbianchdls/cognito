@@ -104,9 +104,9 @@ export default function BalanceSheetTable({ periods = [
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-2/5">Conta</TableHead>
-            {periods.map(p => <TableHead key={p.key} className="text-right">{p.label}</TableHead>)}
-            <TableHead className="text-right">Total</TableHead>
+            <TableHead className="w-2/5 text-gray-600">Conta</TableHead>
+            {periods.map(p => <TableHead key={p.key} className="text-right text-gray-600">{p.label}</TableHead>)}
+            <TableHead className="text-right text-gray-600">Total</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -114,8 +114,8 @@ export default function BalanceSheetTable({ periods = [
             const has = Boolean(node.children && node.children.length)
             const indent = depth * 20
             return (
-              <TableRow key={node.id} className={has ? 'bg-gray-50' : ''}>
-                <TableCell>
+              <TableRow key={node.id}>
+                <TableCell className="text-gray-800">
                   <div className="flex items-center" style={{ paddingLeft: indent }}>
                     {has ? (
                       <button type="button" onClick={() => toggle(node.id)} className="mr-2 text-gray-600 hover:text-gray-900">
@@ -126,9 +126,9 @@ export default function BalanceSheetTable({ periods = [
                   </div>
                 </TableCell>
                 {periods.map(p => (
-                  <TableCell key={p.key} className="text-right">{currency(valueFor(node, p.key))}</TableCell>
+                  <TableCell key={p.key} className="text-right text-gray-700">{currency(valueFor(node, p.key))}</TableCell>
                 ))}
-                <TableCell className="text-right">{currency(total(node, periods.map(p => p.key)))}</TableCell>
+                <TableCell className="text-right text-gray-700">{currency(total(node, periods.map(p => p.key)))}</TableCell>
               </TableRow>
             )
           })}
@@ -148,4 +148,3 @@ export default function BalanceSheetTable({ periods = [
     </div>
   )
 }
-
