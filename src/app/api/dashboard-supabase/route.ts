@@ -193,7 +193,7 @@ export async function POST(request: NextRequest) {
       const prevStart = new Date(prevEnd.getTime() - ms);
       const fmt = (d: Date) => d.toISOString().split('T')[0];
       const days = Math.max(1, Math.round(ms / (24 * 3600 * 1000)) + 1);
-      const comparisonLabel = `VS PREV. ${days} DAYS`;
+      const comparisonLabel = days === 1 ? 'VS DIA ANTERIOR' : `VS ${days} DIAS ANTERIORES`;
 
       const qualifiedTable = `"${schema}"."${table}"`;
       const sqlKPI = `WITH current AS (
