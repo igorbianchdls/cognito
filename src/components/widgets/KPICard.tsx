@@ -80,7 +80,9 @@ interface KPICardProps {
   neutralColor?: string;
 
   // Tile layout overrides (optional)
-  tilePadding?: number; // px
+  tilePadding?: number; // px (uniform)
+  tilePaddingX?: number; // px
+  tilePaddingY?: number; // px
   tileIconCircleSize?: number; // px
   tileIconSize?: number; // px
   tileValuePaddingY?: number; // px
@@ -203,6 +205,8 @@ export function KPICard({
 
   // Tile overrides
   tilePadding,
+  tilePaddingX,
+  tilePaddingY,
   tileIconCircleSize,
   tileIconSize,
   tileValuePaddingY,
@@ -396,22 +400,28 @@ export function KPICard({
 
     return (
       <Card className={kpiContainerClassName || `bg-white border border-gray-200 shadow-sm rounded-xl ${s.pad}`}
-        style={tilePadding !== undefined ? { padding: `${tilePadding}px` } : undefined}
+        style={(() => {
+          if (tilePadding !== undefined) return { padding: `${tilePadding}px` } as React.CSSProperties
+          const style: React.CSSProperties = {}
+          if (tilePaddingX !== undefined) { style.paddingLeft = tilePaddingX; style.paddingRight = tilePaddingX }
+          if (tilePaddingY !== undefined) { style.paddingTop = tilePaddingY; style.paddingBottom = tilePaddingY }
+          return Object.keys(style).length ? style : undefined
+        })()}
       >
         {/* Header */}
         <div className="flex items-start justify-between">
           <div className={`font-medium text-slate-800 ${s.label}`}>{name || 'KPI'}</div>
-          <div
-            className="flex items-center justify-center rounded-full"
-            style={{ width: circleSize, height: circleSize, backgroundColor: iconBg || '#f3f4f6' }}
-          >
-            {React.isValidElement(icon)
-              ? React.cloneElement(
-                  icon as React.ReactElement<{ size?: number; color?: string }>,
-                  { size: innerIconSize, color: iconColor || '#9ca3af' }
-                )
-              : null}
-          </div>
+          {React.isValidElement(icon) ? (
+            <div
+              className="flex items-center justify-center rounded-full"
+              style={{ width: circleSize, height: circleSize, backgroundColor: iconBg || '#f3f4f6' }}
+            >
+              {React.cloneElement(
+                icon as React.ReactElement<{ size?: number; color?: string }>,
+                { size: innerIconSize, color: iconColor || '#9ca3af' }
+              )}
+            </div>
+          ) : null}
         </div>
         {/* Value */}
         <div className={`font-semibold text-slate-900 ${s.value}`} style={tileValuePaddingY !== undefined ? { paddingTop: tileValuePaddingY, paddingBottom: tileValuePaddingY } : { paddingTop: 4, paddingBottom: 4 }}>
