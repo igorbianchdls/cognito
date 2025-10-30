@@ -28,6 +28,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { FileText, BarChart3, Palette, Check, Type, Square, Paintbrush, Monitor, Tablet, Smartphone, ChevronDown, Layout } from 'lucide-react';
+import { BorderManager, type BorderPresetKey } from '@/components/visual-builder/BorderManager';
 import { $headerUi, headerUiActions } from '@/stores/ui/headerUiStore';
 
 export default function DashboardChatPanel() {
@@ -39,6 +40,12 @@ export default function DashboardChatPanel() {
   const [selectedFont, setSelectedFont] = useState<FontPresetKey>('inter');
   const [selectedFontSize, setSelectedFontSize] = useState<FontSizeKey>('lg');
   const [selectedBackground, setSelectedBackground] = useState<BackgroundPresetKey>('fundo-branco');
+  const [selectedBorderType, setSelectedBorderType] = useState<BorderPresetKey>('suave');
+  const [borderColor, setBorderColor] = useState<string>('#e5e7eb');
+  const [borderWidth, setBorderWidth] = useState<number>(1);
+  const [borderRadius, setBorderRadius] = useState<number>(12);
+  const [borderAccentColor, setBorderAccentColor] = useState<string>('#bbb');
+  const [borderShadow, setBorderShadow] = useState<boolean>(true);
   const [selectedCorporateColor, setSelectedCorporateColor] = useState<ColorPresetKey>('corporate');
   const visualBuilderState = useNanoStore($visualBuilderState);
 
@@ -130,6 +137,19 @@ export default function DashboardChatPanel() {
     }
   }, [visualBuilderState.code]);
 
+  // Detect current border from code
+  useEffect(() => {
+    try {
+      const config = JSON.parse(visualBuilderState.code);
+      if (config.borderType && BorderManager.isValid(config.borderType)) setSelectedBorderType(config.borderType)
+      if (typeof config.borderColor === 'string') setBorderColor(config.borderColor)
+      if (typeof config.borderWidth === 'number') setBorderWidth(config.borderWidth)
+      if (typeof config.borderRadius === 'number') setBorderRadius(config.borderRadius)
+      if (typeof config.borderAccentColor === 'string') setBorderAccentColor(config.borderAccentColor)
+      if (typeof config.borderShadow === 'boolean') setBorderShadow(config.borderShadow)
+    } catch {}
+  }, [visualBuilderState.code])
+
   // Detect current corporate color from code and initialize based on theme
   useEffect(() => {
     try {
@@ -218,6 +238,38 @@ export default function DashboardChatPanel() {
       console.log('🎨 Background changed to:', backgroundKey);
     } catch (error) {
       console.error('Error updating background:', error);
+    }
+  };
+
+  const handleBorderTypeChange = (type: BorderPresetKey) => {
+    try {
+      const config = JSON.parse(visualBuilderState.code);
+      const updatedConfig = {
+        ...config,
+        borderType: type
+      };
+      visualBuilderActions.updateCode(JSON.stringify(updatedConfig, null, 2));
+      setSelectedBorderType(type);
+    } catch (error) {
+      console.error('Error updating border type:', error);
+    }
+  };
+
+  const handleBorderPropChange = (prop: 'borderColor'|'borderWidth'|'borderRadius'|'borderAccentColor'|'borderShadow', value: string | number | boolean) => {
+    try {
+      const config = JSON.parse(visualBuilderState.code);
+      const updatedConfig = {
+        ...config,
+        [prop]: value
+      };
+      visualBuilderActions.updateCode(JSON.stringify(updatedConfig, null, 2));
+      if (prop === 'borderColor') setBorderColor(String(value))
+      if (prop === 'borderWidth') setBorderWidth(Number(value))
+      if (prop === 'borderRadius') setBorderRadius(Number(value))
+      if (prop === 'borderAccentColor') setBorderAccentColor(String(value))
+      if (prop === 'borderShadow') setBorderShadow(Boolean(value))
+    } catch (error) {
+      console.error('Error updating border property:', error);
     }
   };
 
@@ -484,6 +536,60 @@ export default function DashboardChatPanel() {
                   )}
                 </DropdownMenuItem>
               ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Border Selector */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <div>
+                <ArtifactAction
+                  icon={Paintbrush}
+                  tooltip={`Borda: ${selectedBorderType}`}
+                  variant="ghost"
+                />
+              </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-72">
+              <div className="px-2 py-1.5 text-sm font-medium text-muted-foreground">Borda</div>
+              <DropdownMenuSeparator />
+              {BorderManager.getAvailableBorders().map((b) => (
+                <DropdownMenuItem key={b.key} onClick={() => handleBorderTypeChange(b.key)} className="flex items-center justify-between py-2">
+                  <div className="flex flex-col">
+                    <span className="font-medium text-sm">{b.name}</span>
+                    <span className="text-xs text-muted-foreground">{b.description}</span>
+                  </div>
+                  {selectedBorderType === b.key && <Check className="w-4 h-4 text-blue-600" />}
+                </DropdownMenuItem>
+              ))}
+              <DropdownMenuSeparator />
+              <div className="px-2 py-1.5 text-sm font-medium text-muted-foreground">Propriedades</div>
+              <div className="px-3 py-2 text-xs text-muted-foreground space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <span>Cor</span>
+                  <input type="color" value={borderColor} onChange={(e) => handleBorderPropChange('borderColor', e.target.value)} />
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <span>Largura</span>
+                  <input className="w-20 border rounded px-2 py-1" type="number" value={borderWidth} onChange={(e) => handleBorderPropChange('borderWidth', Number(e.target.value))} />
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <span>Raio</span>
+                  <input className="w-20 border rounded px-2 py-1" type="number" value={borderRadius} onChange={(e) => handleBorderPropChange('borderRadius', Number(e.target.value))} />
+                </div>
+                {selectedBorderType === 'acentuada' && (
+                  <div className="flex items-center justify-between gap-2">
+                    <span>Cor dos cantos</span>
+                    <input type="color" value={borderAccentColor} onChange={(e) => handleBorderPropChange('borderAccentColor', e.target.value)} />
+                  </div>
+                )}
+                {selectedBorderType === 'suave' && (
+                  <div className="flex items-center justify-between gap-2">
+                    <span>Sombra</span>
+                    <input type="checkbox" checked={borderShadow} onChange={(e) => handleBorderPropChange('borderShadow', e.target.checked)} />
+                  </div>
+                )}
+              </div>
             </DropdownMenuContent>
           </DropdownMenu>
 

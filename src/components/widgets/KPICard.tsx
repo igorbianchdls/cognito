@@ -32,7 +32,7 @@ interface KPICardProps {
   // Visual variant
   variant?: 'classic' | 'tile'
   size?: 'sm' | 'md' | 'lg'
-  borderVariant?: 'smooth' | 'accent'
+  borderVariant?: 'smooth' | 'accent' | 'none'
 
   // Data props
   kpiId?: string;
@@ -387,7 +387,7 @@ export function KPICard({
     const innerIconSize = tileIconSize ?? Math.max(16, circleSize - 8)
 
     return (
-      <div className={kpiContainerClassName || `bg-white ${borderVariant === 'accent' ? '' : 'border border-gray-200'} ${borderVariant === 'accent' ? 'shadow-none' : 'shadow-sm'} relative ${s.pad}`}
+      <div className={kpiContainerClassName || `bg-white ${borderVariant === 'accent' ? '' : (borderVariant === 'smooth' ? 'border border-gray-200' : '')} ${borderVariant === 'accent' ? 'shadow-none' : (borderVariant === 'none' ? 'shadow-none' : 'shadow-sm')} relative ${s.pad}`}
         style={(() => {
           if (tilePadding !== undefined) return { padding: `${tilePadding}px` } as React.CSSProperties
           const style: React.CSSProperties = {}
@@ -402,6 +402,8 @@ export function KPICard({
               ? hexToRgba(kpiContainerBorderColor, kpiContainerBorderOpacity ?? 1)
               : '#e5e7eb' // Tailwind gray-200
             style.border = `${(kpiContainerBorderWidth ?? 0.5)}px solid ${lightBorder}`
+          } else if (borderVariant === 'none') {
+            style.border = 'none'
           }
           // Border radius precedence: tileBorderRadius > kpiContainerBorderRadius
           if (typeof tileBorderRadius === 'number') {
@@ -414,6 +416,8 @@ export function KPICard({
           } else if (borderVariant === 'smooth') {
             // Default rounded corners for smooth variant
             style.borderRadius = 12
+          } else if (borderVariant === 'none') {
+            style.borderRadius = 0
           }
           if (typeof kpiContainerShadow === 'boolean') style.boxShadow = kpiContainerShadow ? '0 1px 2px rgba(0,0,0,.06), 0 8px 24px rgba(0,0,0,.06)' : 'none'
           // Force no shadow for accent variant

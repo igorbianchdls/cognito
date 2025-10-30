@@ -8,6 +8,7 @@ import type { PieChartConfig } from '@/stores/apps/pieChartStore';
 import type { AreaChartConfig } from '@/stores/apps/areaChartStore';
 import { THEME_TOKENS, TYPOGRAPHY_PRESETS, THEME_BACKGROUND_MAPPING, type ThemeTokenName, type DesignTokens } from './DesignTokens';
 import { BackgroundManager } from './BackgroundManager';
+import { BorderManager, type BorderPresetKey } from './BorderManager';
 import { ColorManager, type ColorPresetKey } from './ColorManager';
 import { FontManager, type FontSizeKey } from './FontManager';
 
@@ -137,7 +138,19 @@ export class ThemeManager {
   /**
    * Applies design tokens to a single KPI widget
    */
-  private static applyThemeToKPI(widget: Widget, tokens: DesignTokens, _themeName: ThemeName): Widget {
+  private static applyThemeToKPI(
+    widget: Widget,
+    tokens: DesignTokens,
+    _themeName: ThemeName,
+    borderOptions?: {
+      type?: BorderPresetKey;
+      color?: string;
+      width?: number;
+      radius?: number;
+      accentColor?: string;
+      shadow?: boolean;
+    }
+  ): Widget {
     const clonedWidget = { ...widget };
 
     if (!clonedWidget.kpiConfig) {
@@ -206,6 +219,26 @@ export class ThemeManager {
     clonedWidget.kpiConfig.kpiContainerBorderRadius = tokens.borders.radius.md;
 
     clonedWidget.kpiConfig.kpiContainerShadow = tokens.effects.shadow.opacity > 0;
+
+    // Apply Border Manager style (global)
+    const preset: BorderPresetKey = (borderOptions?.type && BorderManager.isValid(borderOptions.type))
+      ? borderOptions.type
+      : 'suave'
+    const style = BorderManager.getStyle(preset, {
+      color: borderOptions?.color,
+      width: borderOptions?.width,
+      radius: borderOptions?.radius,
+      accentColor: borderOptions?.accentColor,
+      shadow: borderOptions?.shadow,
+    })
+
+    // Map to KPI config / KPICard props
+    clonedWidget.kpiConfig.kpiContainerBorderColor = style.color
+    clonedWidget.kpiConfig.kpiContainerBorderWidth = style.width
+    clonedWidget.kpiConfig.kpiContainerBorderRadius = style.radius
+    clonedWidget.kpiConfig.kpiContainerShadow = style.shadow
+    clonedWidget.kpiConfig.kpiContainerBorderAccentColor = style.accentColor
+    ;(clonedWidget.kpiConfig as any).borderVariant = style.type === 'acentuada' ? 'accent' : (style.type === 'sem-borda' ? 'none' : 'smooth')
 
     return clonedWidget;
   }
@@ -711,7 +744,15 @@ export class ThemeManager {
     themeName: ThemeName,
     customFont?: string,
     corporateColorKey?: string,
-    customFontSize?: string
+    customFontSize?: string,
+    borderOptions?: {
+      type?: BorderPresetKey;
+      color?: string;
+      width?: number;
+      radius?: number;
+      accentColor?: string;
+      shadow?: boolean;
+    }
   ): Widget {
     if (!this.isValidTheme(themeName)) {
       console.warn(`Invalid theme: ${themeName}. Skipping theme application.`);
@@ -749,7 +790,7 @@ export class ThemeManager {
     let themed = widget;
     switch (widget.type) {
       case 'kpi':
-        themed = this.applyThemeToKPI(widget, tokens, themeName);
+        themed = this.applyThemeToKPI(widget, tokens, themeName, borderOptions);
         return themed;
       case 'bar': {
         themed = this.applyThemeToBarChart(widget, tokens, themeName);
@@ -793,14 +834,23 @@ export class ThemeManager {
     themeName: ThemeName,
     customFont?: string,
     corporateColorKey?: string,
-    customFontSize?: string
+    customFontSize?: string,
+    borderOptions?: {
+      type?: BorderPresetKey;
+      color?: string;
+      width?: number;
+      radius?: number;
+      accentColor?: string;
+      shadow?: boolean;
+    }
   ): Widget[] {
     return widgets.map(widget => this.applyThemeToWidget(
       widget,
       themeName,
       customFont,
       corporateColorKey,
-      customFontSize
+      customFontSize,
+      borderOptions
     ));
   }
 

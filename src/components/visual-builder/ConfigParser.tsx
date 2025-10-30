@@ -216,14 +216,23 @@ export class ConfigParser {
     theme: ThemeName,
     customFont?: string,
     corporateColor?: string,
-    customFontSize?: string
+    customFontSize?: string,
+    borderOptions?: {
+      type?: import('./BorderManager').BorderPresetKey;
+      color?: string;
+      width?: number;
+      radius?: number;
+      accentColor?: string;
+      shadow?: boolean;
+    }
   ): Widget[] {
     return ThemeManager.applyThemeToWidgets(
       widgets,
       theme,
       customFont,
       corporateColor,
-      customFontSize
+      customFontSize,
+      borderOptions
     );
   }
 
@@ -243,6 +252,14 @@ export class ConfigParser {
       const layoutRows = (config.layoutRows || rawGridConfig.layoutRows) as Record<string, LayoutRow> | undefined;
       const dashboardTitle = typeof config.dashboardTitle === 'string' ? config.dashboardTitle : undefined;
       const dashboardSubtitle = typeof config.dashboardSubtitle === 'string' ? config.dashboardSubtitle : undefined;
+
+      // Border options (top-level)
+      const borderType = typeof config.borderType === 'string' ? config.borderType : undefined;
+      const borderColor = typeof config.borderColor === 'string' ? config.borderColor : undefined;
+      const borderWidth = typeof config.borderWidth === 'number' ? config.borderWidth : undefined;
+      const borderRadius = typeof config.borderRadius === 'number' ? config.borderRadius : undefined;
+      const borderAccentColor = typeof config.borderAccentColor === 'string' ? config.borderAccentColor : undefined;
+      const borderShadow = typeof config.borderShadow === 'boolean' ? config.borderShadow : undefined;
 
       // Step 3: Process grid config with defaults
       const gridConfig: GridConfig = {
@@ -279,7 +296,14 @@ export class ConfigParser {
 
       // Step 5: Apply theme to widgets and grid if theme is specified and valid
       const themedWidgets = (theme && ThemeManager.isValidTheme(theme))
-        ? this.applyThemeToWidgets(validWidgets, theme, customFont, corporateColor, customFontSize)
+        ? this.applyThemeToWidgets(validWidgets, theme, customFont, corporateColor, customFontSize, {
+            type: borderType as any,
+            color: borderColor,
+            width: borderWidth,
+            radius: borderRadius,
+            accentColor: borderAccentColor,
+            shadow: borderShadow,
+          })
         : validWidgets;
 
       // Step 6: Apply theme to grid (now handles custom background internally)
