@@ -386,7 +386,7 @@ export function KPICard({
             style={{ width: s.icon, height: s.icon, backgroundColor: iconBg || '#f3f4f6' }}
           >
             {React.isValidElement(icon)
-              ? React.cloneElement(icon as React.ReactElement, { size: Math.max(14, s.icon - 12), color: iconColor || '#9ca3af' })
+              ? React.cloneElement(icon as React.ReactElement<any>, { size: Math.max(14, s.icon - 12), color: iconColor || '#9ca3af' })
               : null}
           </div>
         </div>
