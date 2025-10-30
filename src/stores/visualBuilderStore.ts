@@ -74,7 +74,7 @@ const initialCode = `{
       "dataSource": {
         "schema": "marketing",
         "table": "view_trafego_pago",
-        "x": "plataforma_metricas",
+        "x": "plataforma_conta",
         "y": "gasto",
         "aggregation": "SUM"
       },
