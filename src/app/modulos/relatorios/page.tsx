@@ -10,6 +10,7 @@ import DataTable, { type TableData } from '@/components/widgets/Table'
 import type { ColumnDef } from '@tanstack/react-table'
 import { BarChart3, DollarSign, ShoppingCart, Megaphone } from 'lucide-react'
 import { $titulo, $tabs, $tabelaUI, $layout, financeiroUiActions } from '@/stores/modulos/financeiroUiStore'
+import DRETable from '@/components/relatorios/DRETable'
 
 export default function ModulosRelatoriosPage() {
   const titulo = useStore($titulo)
@@ -22,17 +23,20 @@ export default function ModulosRelatoriosPage() {
     financeiroUiActions.setTitulo({ title: 'Relatórios', subtitle: 'Central de relatórios gerenciais' })
     financeiroUiActions.setTabs({
       options: [
+        { value: 'dre', label: 'DRE' },
         { value: 'executivo', label: 'Executivo' },
         { value: 'financeiro', label: 'Financeiro' },
         { value: 'vendas', label: 'Vendas' },
         { value: 'marketing', label: 'Marketing' },
       ],
-      selected: 'executivo',
+      selected: 'dre',
     })
   }, [])
 
   const iconFor = (v: string) => {
     switch (v) {
+      case 'dre':
+        return <BarChart3 className="h-4 w-4" />
       case 'executivo':
         return <BarChart3 className="h-4 w-4" />
       case 'financeiro':
@@ -59,6 +63,8 @@ export default function ModulosRelatoriosPage() {
 
   const { columns, data }: { columns: ColumnDef<Row>[]; data: Row[] } = useMemo(() => {
     switch (tabs.selected) {
+      case 'dre':
+        return { columns: [], data: [] }
       case 'financeiro':
         return {
           columns: [
@@ -156,36 +162,40 @@ export default function ModulosRelatoriosPage() {
         </div>
         <div style={{ paddingTop: (layout.contentTopGap || 0) + (layout.mbTabs || 0) }}>
           <div className="px-4 md:px-6" style={{ marginBottom: 8 }}>
-            <div className="border-y bg-background" style={{ borderColor: tabelaUI.borderColor }}>
-              <DataTable
-                columns={columns}
-                data={data}
-                enableSearch={tabelaUI.enableSearch}
-                showColumnToggle={tabelaUI.enableColumnToggle}
-                showPagination={tabelaUI.showPagination}
-                pageSize={tabelaUI.pageSize}
-                headerBackground={tabelaUI.headerBg}
-                headerTextColor={tabelaUI.headerText}
-                cellTextColor={tabelaUI.cellText}
-                headerFontSize={tabelaUI.headerFontSize}
-                headerFontFamily={fontVar(tabelaUI.headerFontFamily)}
-                headerFontWeight={tabelaUI.headerFontWeight}
-                headerLetterSpacing={tabelaUI.headerLetterSpacing}
-                cellFontSize={tabelaUI.cellFontSize}
-                cellFontFamily={fontVar(tabelaUI.cellFontFamily)}
-                cellFontWeight={tabelaUI.cellFontWeight}
-                cellLetterSpacing={tabelaUI.cellLetterSpacing}
-                enableZebraStripes={tabelaUI.enableZebraStripes}
-                rowAlternateBgColor={tabelaUI.rowAlternateBgColor}
-                borderColor={tabelaUI.borderColor}
-                borderWidth={tabelaUI.borderWidth}
-                selectionColumnWidth={tabelaUI.selectionColumnWidth}
-                enableRowSelection={tabelaUI.enableRowSelection}
-                selectionMode={tabelaUI.selectionMode}
-                defaultSortColumn={tabelaUI.defaultSortColumn}
-                defaultSortDirection={tabelaUI.defaultSortDirection}
-              />
-            </div>
+            {tabs.selected === 'dre' ? (
+              <DRETable />
+            ) : (
+              <div className="border-y bg-background" style={{ borderColor: tabelaUI.borderColor }}>
+                <DataTable
+                  columns={columns}
+                  data={data}
+                  enableSearch={tabelaUI.enableSearch}
+                  showColumnToggle={tabelaUI.enableColumnToggle}
+                  showPagination={tabelaUI.showPagination}
+                  pageSize={tabelaUI.pageSize}
+                  headerBackground={tabelaUI.headerBg}
+                  headerTextColor={tabelaUI.headerText}
+                  cellTextColor={tabelaUI.cellText}
+                  headerFontSize={tabelaUI.headerFontSize}
+                  headerFontFamily={fontVar(tabelaUI.headerFontFamily)}
+                  headerFontWeight={tabelaUI.headerFontWeight}
+                  headerLetterSpacing={tabelaUI.headerLetterSpacing}
+                  cellFontSize={tabelaUI.cellFontSize}
+                  cellFontFamily={fontVar(tabelaUI.cellFontFamily)}
+                  cellFontWeight={tabelaUI.cellFontWeight}
+                  cellLetterSpacing={tabelaUI.cellLetterSpacing}
+                  enableZebraStripes={tabelaUI.enableZebraStripes}
+                  rowAlternateBgColor={tabelaUI.rowAlternateBgColor}
+                  borderColor={tabelaUI.borderColor}
+                  borderWidth={tabelaUI.borderWidth}
+                  selectionColumnWidth={tabelaUI.selectionColumnWidth}
+                  enableRowSelection={tabelaUI.enableRowSelection}
+                  selectionMode={tabelaUI.selectionMode}
+                  defaultSortColumn={tabelaUI.defaultSortColumn}
+                  defaultSortDirection={tabelaUI.defaultSortDirection}
+                />
+              </div>
+            )}
           </div>
         </div>
       </SidebarInset>
