@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 
 import {
@@ -7,6 +7,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import React from 'react'
+import { ArrowDownRight, ArrowUpRight } from 'lucide-react'
 
 // Helper function to convert hex color + opacity to RGBA
 function hexToRgba(hex: string, opacity: number = 1): string {
@@ -27,6 +29,10 @@ function hexToRgba(hex: string, opacity: number = 1): string {
 }
 
 interface KPICardProps {
+  // Visual variant
+  variant?: 'classic' | 'tile'
+  size?: 'sm' | 'md' | 'lg'
+
   // Data props
   kpiId?: string;
   name?: string;
@@ -38,10 +44,12 @@ interface KPICardProps {
   previousValue?: number;
   target?: number;
   unit?: string;
-  change?: number;
+  change?: number; // kept for backward-compat
+  changePct?: number; // percent change (e.g., 14.7 for 14.7%)
   trend?: string;
   status?: string;
   timeRange?: string;
+  comparisonLabel?: string; // e.g. 'VS PREV. 28 DAYS'
   visualization?: {
     chartType?: string;
     color?: string;
@@ -56,6 +64,20 @@ interface KPICardProps {
   };
   success?: boolean;
   error?: string;
+
+  // Icon for tile variant
+  icon?: React.ReactNode;
+  iconColor?: string;
+  iconBg?: string;
+
+  // Formatting
+  abbreviate?: boolean;
+  decimals?: number;
+
+  // Colors
+  positiveColor?: string;
+  negativeColor?: string;
+  neutralColor?: string;
 
   // Container styling props
   kpiContainerBackgroundColor?: string;
@@ -135,6 +157,8 @@ interface KPICardProps {
 }
 
 export function KPICard({
+  variant = 'classic',
+  size = 'md',
   // Data props
   kpiId,
   name,
@@ -147,13 +171,29 @@ export function KPICard({
   target,
   unit,
   change,
+  changePct,
   trend,
   status,
   timeRange,
+  comparisonLabel = 'VS PREV. 28 DAYS',
   visualization,
   metadata,
   success,
   error,
+
+  // Icon
+  icon,
+  iconColor,
+  iconBg,
+
+  // Formatting
+  abbreviate,
+  decimals = 2,
+
+  // Colors
+  positiveColor = '#16a34a',
+  negativeColor = '#dc2626',
+  neutralColor = '#6b7280',
 
   // Container styling props
   kpiContainerBackgroundColor,
@@ -233,15 +273,28 @@ export function KPICard({
     );
   }
 
+  const formatAbbreviate = (n: number) => {
+    const abs = Math.abs(n)
+    if (abs >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(decimals)}B`
+    if (abs >= 1_000_000) return `${(n / 1_000_000).toFixed(decimals)}M`
+    if (abs >= 1_000) return `${(n / 1_000).toFixed(decimals)}K`
+    return n.toFixed(decimals)
+  }
+
   const formatValue = (value: number | undefined, unit: string = '') => {
     if (value === undefined || value === null) return 'N/A';
-
-    const formattedNumber = value.toLocaleString('pt-BR', {
-      minimumFractionDigits: unit === '%' || unit === 'rating' ? 1 : 0,
-      maximumFractionDigits: unit === '%' || unit === 'rating' ? 1 : 0,
-    });
-
-    return unit === '$' ? `${unit}${formattedNumber}` : `${formattedNumber} ${unit}`;
+    let formattedNumber: string
+    if (abbreviate && unit !== '%' && unit !== 'rating') {
+      formattedNumber = formatAbbreviate(Number(value))
+    } else {
+      formattedNumber = Number(value).toLocaleString('pt-BR', {
+        minimumFractionDigits: unit === '%' || unit === 'rating' ? 2 : 0,
+        maximumFractionDigits: unit === '%' || unit === 'rating' ? 2 : 2,
+      })
+    }
+    if (unit === '$') return `${unit}${formattedNumber}`
+    if (unit) return `${formattedNumber} ${unit}`
+    return formattedNumber
   };
 
   // Helper function to convert hex to RGB
@@ -302,6 +355,58 @@ export function KPICard({
     return undefined;
   };
 
+
+  // Tile variant (mock-like UI)
+  if (variant === 'tile') {
+    // Calculate change percent
+    const effectiveChangePct = changePct !== undefined && changePct !== null
+      ? changePct
+      : (previousValue !== undefined && previousValue !== null && previousValue !== 0
+          ? ((Number(currentValue || 0) - Number(previousValue)) / Math.abs(Number(previousValue))) * 100
+          : (change !== undefined ? change : 0))
+
+    const isPositive = (effectiveChangePct ?? 0) >= 0
+    const changeColor = isPositive ? positiveColor : negativeColor
+    const TrendIcon = isPositive ? ArrowUpRight : ArrowDownRight
+
+    const sizeMap = {
+      sm: { label: 'text-[12px]', value: 'text-[20px]', micro: 'text-[11px]', icon: 24, pad: 'p-3' },
+      md: { label: 'text-[13px]', value: 'text-[24px]', micro: 'text-[12px]', icon: 28, pad: 'p-4' },
+      lg: { label: 'text-[14px]', value: 'text-[28px]', micro: 'text-[12px]', icon: 32, pad: 'p-5' },
+    } as const
+    const s = sizeMap[size]
+
+    return (
+      <Card className={kpiContainerClassName || `bg-white border border-gray-200 shadow-sm rounded-xl ${s.pad}`}>
+        {/* Header */}
+        <div className="flex items-start justify-between">
+          <div className={`font-medium text-slate-800 ${s.label}`}>{name || 'KPI'}</div>
+          <div
+            className="flex items-center justify-center rounded-full"
+            style={{ width: s.icon, height: s.icon, backgroundColor: iconBg || '#f3f4f6' }}
+          >
+            {React.isValidElement(icon)
+              ? React.cloneElement(icon as React.ReactElement, { size: Math.max(14, s.icon - 12), color: iconColor || '#9ca3af' })
+              : null}
+          </div>
+        </div>
+        {/* Value */}
+        <div className={`mt-2 font-semibold text-slate-900 ${s.value}`}>
+          {formatValue(currentValue, unit)}
+        </div>
+        {/* Footer */}
+        <div className="mt-2 flex items-center gap-2">
+          <TrendIcon size={14} color={changeColor} />
+          <span style={{ color: changeColor }} className="font-medium text-[12px]">
+            {Math.abs(effectiveChangePct || 0).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%
+          </span>
+          <span className={`uppercase tracking-wide ${s.micro} text-gray-400`}>
+            {comparisonLabel}
+          </span>
+        </div>
+      </Card>
+    )
+  }
 
   return (
     <Card
