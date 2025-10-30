@@ -361,22 +361,6 @@ export function KPICard({
     return undefined;
   };
 
-  // Create advanced shadow
-  const getAdvancedShadow = () => {
-    const hasCustomShadow = containerShadowColor || containerShadowOpacity !== undefined ||
-                           containerShadowBlur !== undefined || containerShadowOffsetX !== undefined ||
-                           containerShadowOffsetY !== undefined;
-
-    if (hasCustomShadow) {
-      return `${containerShadowOffsetX || 0}px ${containerShadowOffsetY || 4}px ${containerShadowBlur || 8}px rgba(${
-        hexToRgb(containerShadowColor || '#000000')
-      }, ${containerShadowOpacity || 0.2})`;
-    }
-
-
-    return undefined;
-  };
-
 
   // Tile variant (mock-like UI)
   if (variant === 'tile') {
@@ -409,12 +393,14 @@ export function KPICard({
           if (tilePaddingY !== undefined) { style.paddingTop = tilePaddingY; style.paddingBottom = tilePaddingY }
           // Apply custom border color if provided
           if (kpiContainerBorderColor) {
-            (style as any).border = `${borderVariant === 'accent' ? 0.5 : (kpiContainerBorderWidth ?? 1)}px solid ${hexToRgba(kpiContainerBorderColor, kpiContainerBorderOpacity ?? 1)}`
+            style.border = `${borderVariant === 'accent' ? 0.5 : (kpiContainerBorderWidth ?? 1)}px solid ${hexToRgba(kpiContainerBorderColor, kpiContainerBorderOpacity ?? 1)}`
           } else if (borderVariant === 'accent') {
-            (style as any).borderWidth = 0.5
-            (style as any).borderStyle = 'solid'
-            (style as any).borderColor = '#777'
+            style.borderWidth = 0.5
+            style.borderStyle = 'solid'
+            style.borderColor = '#777'
           }
+          if (typeof kpiContainerBorderRadius === 'number') style.borderRadius = kpiContainerBorderRadius
+          if (typeof kpiContainerShadow === 'boolean') style.boxShadow = kpiContainerShadow ? '0 1px 2px rgba(0,0,0,.06), 0 8px 24px rgba(0,0,0,.06)' : 'none'
           return Object.keys(style).length ? style : undefined
         })()}
       >
