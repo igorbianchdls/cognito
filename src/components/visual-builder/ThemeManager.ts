@@ -246,7 +246,19 @@ export class ThemeManager {
   /**
    * Applies design tokens to a single Bar Chart widget
    */
-  private static applyThemeToBarChart(widget: Widget, tokens: DesignTokens, _themeName: ThemeName): Widget {
+  private static applyThemeToBarChart(
+    widget: Widget,
+    tokens: DesignTokens,
+    _themeName: ThemeName,
+    borderOptions?: {
+      type?: BorderPresetKey;
+      color?: string;
+      width?: number;
+      radius?: number;
+      accentColor?: string;
+      shadow?: boolean;
+    }
+  ): Widget {
     const clonedWidget = { ...widget };
 
     if (!clonedWidget.barConfig) {
@@ -323,11 +335,21 @@ export class ThemeManager {
       clonedWidget.barConfig.styling.containerBoxShadow = `${tokens.effects.shadow.offsetX}px ${tokens.effects.shadow.offsetY}px ${tokens.effects.shadow.blur}px rgba(0, 0, 0, ${tokens.effects.shadow.opacity})`;
     }
 
-    // Apply border properties from tokens
-    clonedWidget.barConfig.styling.containerBorderColor = tokens.borders.color;
-    clonedWidget.barConfig.styling.containerBorderAccentColor = tokens.borders.accentColor;
-    clonedWidget.barConfig.styling.containerBorderWidth = tokens.borders.width.medium;
-    clonedWidget.barConfig.styling.containerBorderRadius = tokens.borders.radius.lg;
+    // Apply border via BorderManager
+    const presetB: BorderPresetKey = (borderOptions?.type && BorderManager.isValid(borderOptions.type)) ? borderOptions.type : 'suave'
+    const bStyle = BorderManager.getStyle(presetB, {
+      color: borderOptions?.color,
+      width: borderOptions?.width,
+      radius: borderOptions?.radius,
+      accentColor: borderOptions?.accentColor,
+      shadow: borderOptions?.shadow,
+    })
+    clonedWidget.barConfig.styling.containerBorderColor = bStyle.color;
+    clonedWidget.barConfig.styling.containerBorderAccentColor = bStyle.accentColor;
+    clonedWidget.barConfig.styling.containerBorderWidth = bStyle.width;
+    clonedWidget.barConfig.styling.containerBorderRadius = bStyle.radius;
+    clonedWidget.barConfig.styling.containerBoxShadow = bStyle.shadow ? (clonedWidget.barConfig.styling.containerBoxShadow || '0 1px 2px rgba(0,0,0,.06)') : 'none';
+    clonedWidget.barConfig.styling.containerBorderVariant = bStyle.type === 'acentuada' ? 'accent' : (bStyle.type === 'sem-borda' ? 'none' : 'smooth')
 
     return clonedWidget;
   }
@@ -335,7 +357,19 @@ export class ThemeManager {
   /**
    * Applies design tokens to a single Line Chart widget
    */
-  private static applyThemeToLineChart(widget: Widget, tokens: DesignTokens, _themeName: ThemeName): Widget {
+  private static applyThemeToLineChart(
+    widget: Widget,
+    tokens: DesignTokens,
+    _themeName: ThemeName,
+    borderOptions?: {
+      type?: BorderPresetKey;
+      color?: string;
+      width?: number;
+      radius?: number;
+      accentColor?: string;
+      shadow?: boolean;
+    }
+  ): Widget {
     const clonedWidget = { ...widget };
 
     if (!clonedWidget.lineConfig) {
@@ -413,11 +447,21 @@ export class ThemeManager {
       clonedWidget.lineConfig.styling.containerBoxShadow = `${tokens.effects.shadow.offsetX}px ${tokens.effects.shadow.offsetY}px ${tokens.effects.shadow.blur}px rgba(0, 0, 0, ${tokens.effects.shadow.opacity})`;
     }
 
-    // Apply border properties from tokens
-    clonedWidget.lineConfig.styling.containerBorderColor = tokens.borders.color;
-    clonedWidget.lineConfig.styling.containerBorderAccentColor = tokens.borders.accentColor;
-    clonedWidget.lineConfig.styling.containerBorderWidth = tokens.borders.width.medium;
-    clonedWidget.lineConfig.styling.containerBorderRadius = tokens.borders.radius.lg;
+    // Apply border via BorderManager
+    const presetL: BorderPresetKey = (borderOptions?.type && BorderManager.isValid(borderOptions.type)) ? borderOptions.type : 'suave'
+    const lStyle = BorderManager.getStyle(presetL, {
+      color: borderOptions?.color,
+      width: borderOptions?.width,
+      radius: borderOptions?.radius,
+      accentColor: borderOptions?.accentColor,
+      shadow: borderOptions?.shadow,
+    })
+    clonedWidget.lineConfig.styling.containerBorderColor = lStyle.color;
+    clonedWidget.lineConfig.styling.containerBorderAccentColor = lStyle.accentColor;
+    clonedWidget.lineConfig.styling.containerBorderWidth = lStyle.width;
+    clonedWidget.lineConfig.styling.containerBorderRadius = lStyle.radius;
+    clonedWidget.lineConfig.styling.containerBoxShadow = lStyle.shadow ? (clonedWidget.lineConfig.styling.containerBoxShadow || '0 1px 2px rgba(0,0,0,.06)') : 'none';
+    clonedWidget.lineConfig.styling.containerBorderVariant = lStyle.type === 'acentuada' ? 'accent' : (lStyle.type === 'sem-borda' ? 'none' : 'smooth')
 
     return clonedWidget;
   }
@@ -425,7 +469,19 @@ export class ThemeManager {
   /**
    * Applies design tokens to a single Pie Chart widget
    */
-  private static applyThemeToPieChart(widget: Widget, tokens: DesignTokens, _themeName: ThemeName): Widget {
+  private static applyThemeToPieChart(
+    widget: Widget,
+    tokens: DesignTokens,
+    _themeName: ThemeName,
+    borderOptions?: {
+      type?: BorderPresetKey;
+      color?: string;
+      width?: number;
+      radius?: number;
+      accentColor?: string;
+      shadow?: boolean;
+    }
+  ): Widget {
     const clonedWidget = { ...widget };
 
     if (!clonedWidget.pieConfig) {
@@ -507,11 +563,21 @@ export class ThemeManager {
       clonedWidget.pieConfig.styling.containerBoxShadow = `${tokens.effects.shadow.offsetX}px ${tokens.effects.shadow.offsetY}px ${tokens.effects.shadow.blur}px rgba(0, 0, 0, ${tokens.effects.shadow.opacity})`;
     }
 
-    // Apply border properties from tokens
-    clonedWidget.pieConfig.styling.containerBorderColor = tokens.borders.color;
-    clonedWidget.pieConfig.styling.containerBorderAccentColor = tokens.borders.accentColor;
-    clonedWidget.pieConfig.styling.containerBorderWidth = tokens.borders.width.medium;
-    clonedWidget.pieConfig.styling.containerBorderRadius = tokens.borders.radius.lg;
+    // Apply border via BorderManager
+    const presetP: BorderPresetKey = (borderOptions?.type && BorderManager.isValid(borderOptions.type)) ? borderOptions.type : 'suave'
+    const pStyle = BorderManager.getStyle(presetP, {
+      color: borderOptions?.color,
+      width: borderOptions?.width,
+      radius: borderOptions?.radius,
+      accentColor: borderOptions?.accentColor,
+      shadow: borderOptions?.shadow,
+    })
+    clonedWidget.pieConfig.styling.containerBorderColor = pStyle.color;
+    clonedWidget.pieConfig.styling.containerBorderAccentColor = pStyle.accentColor;
+    clonedWidget.pieConfig.styling.containerBorderWidth = pStyle.width;
+    clonedWidget.pieConfig.styling.containerBorderRadius = pStyle.radius;
+    clonedWidget.pieConfig.styling.containerBoxShadow = pStyle.shadow ? (clonedWidget.pieConfig.styling.containerBoxShadow || '0 1px 2px rgba(0,0,0,.06)') : 'none';
+    clonedWidget.pieConfig.styling.containerBorderVariant = pStyle.type === 'acentuada' ? 'accent' : (pStyle.type === 'sem-borda' ? 'none' : 'smooth')
 
     return clonedWidget;
   }
@@ -519,7 +585,19 @@ export class ThemeManager {
   /**
    * Applies design tokens to a single Area Chart widget
    */
-  private static applyThemeToAreaChart(widget: Widget, tokens: DesignTokens, _themeName: ThemeName): Widget {
+  private static applyThemeToAreaChart(
+    widget: Widget,
+    tokens: DesignTokens,
+    _themeName: ThemeName,
+    borderOptions?: {
+      type?: BorderPresetKey;
+      color?: string;
+      width?: number;
+      radius?: number;
+      accentColor?: string;
+      shadow?: boolean;
+    }
+  ): Widget {
     const clonedWidget = { ...widget };
 
     if (!clonedWidget.areaConfig) {
@@ -603,6 +681,22 @@ export class ThemeManager {
     clonedWidget.areaConfig.styling.containerBorderAccentColor = tokens.borders.accentColor;
     clonedWidget.areaConfig.styling.containerBorderWidth = tokens.borders.width.medium;
     clonedWidget.areaConfig.styling.containerBorderRadius = tokens.borders.radius.lg;
+
+    // Apply border via BorderManager
+    const presetA: BorderPresetKey = (borderOptions?.type && BorderManager.isValid(borderOptions.type)) ? borderOptions.type : 'suave'
+    const aStyle = BorderManager.getStyle(presetA, {
+      color: borderOptions?.color,
+      width: borderOptions?.width,
+      radius: borderOptions?.radius,
+      accentColor: borderOptions?.accentColor,
+      shadow: borderOptions?.shadow,
+    })
+    clonedWidget.areaConfig.styling.containerBorderColor = aStyle.color;
+    clonedWidget.areaConfig.styling.containerBorderAccentColor = aStyle.accentColor;
+    clonedWidget.areaConfig.styling.containerBorderWidth = aStyle.width;
+    clonedWidget.areaConfig.styling.containerBorderRadius = aStyle.radius;
+    clonedWidget.areaConfig.styling.containerBoxShadow = aStyle.shadow ? (clonedWidget.areaConfig.styling.containerBoxShadow || '0 1px 2px rgba(0,0,0,.06)') : 'none';
+    clonedWidget.areaConfig.styling.containerBorderVariant = aStyle.type === 'acentuada' ? 'accent' : (aStyle.type === 'sem-borda' ? 'none' : 'smooth')
 
     return clonedWidget;
   }
@@ -793,19 +887,19 @@ export class ThemeManager {
         themed = this.applyThemeToKPI(widget, tokens, themeName, borderOptions);
         return themed;
       case 'bar': {
-        themed = this.applyThemeToBarChart(widget, tokens, themeName);
+        themed = this.applyThemeToBarChart(widget, tokens, themeName, borderOptions);
         return themed;
       }
       case 'line': {
-        themed = this.applyThemeToLineChart(widget, tokens, themeName);
+        themed = this.applyThemeToLineChart(widget, tokens, themeName, borderOptions);
         return themed;
       }
       case 'pie': {
-        themed = this.applyThemeToPieChart(widget, tokens, themeName);
+        themed = this.applyThemeToPieChart(widget, tokens, themeName, borderOptions);
         return themed;
       }
       case 'area': {
-        themed = this.applyThemeToAreaChart(widget, tokens, themeName);
+        themed = this.applyThemeToAreaChart(widget, tokens, themeName, borderOptions);
         return themed;
       }
       case 'insights': {

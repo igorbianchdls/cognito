@@ -145,6 +145,7 @@ export interface PieChartConfig {
     containerBorderColor?: string
     containerBorderAccentColor?: string
     containerBorderRadius?: number
+    containerBorderVariant?: 'smooth' | 'accent' | 'none'
     containerPadding?: number
     
     // Container Glass Effect & Modern Styles (mesmas props do BarChart)

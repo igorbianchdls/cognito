@@ -191,6 +191,7 @@ export interface BarChartConfig {
     containerBorderColor?: string
     containerBorderAccentColor?: string
     containerBorderRadius?: number
+    containerBorderVariant?: 'smooth' | 'accent' | 'none'
     containerPadding?: number
     
     // Container Shadow

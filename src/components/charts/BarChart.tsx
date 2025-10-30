@@ -133,6 +133,7 @@ export function BarChart(props: BarChartProps) {
     containerBorderAccentColor,
     containerBorderRadius,
     containerPadding,
+    containerBorderVariant,
     // Container Shadow props
     containerShadowColor,
     containerShadowOpacity,
@@ -281,14 +282,17 @@ export function BarChart(props: BarChartProps) {
           // Override with specific props if provided (backwards compatibility)
           padding: `${containerPadding || 16}px`,
           margin: '0 auto',
-          border: `0.5px solid ${containerBorderColor || '#777'}`, // Corner accent border
-          // border: containerBorderWidth ? `${containerBorderWidth}px solid ${containerBorderColor || '#e5e7eb'}` : '1px solid #e5e7eb', // Commented out
-          // borderRadius: `${containerBorderRadius || 8}px`, // Commented for corner accent effect
-          // boxShadow: containerStyles.boxShadow || boxShadow, // Commented out
+          border: containerBorderVariant === 'none'
+            ? 'none'
+            : (containerBorderWidth !== undefined
+                ? `${containerBorderWidth}px solid ${containerBorderColor || '#e5e7eb'}`
+                : `1px solid ${containerBorderColor || '#e5e7eb'}`),
+          borderRadius: containerBorderVariant === 'accent' ? 0 : (containerBorderRadius !== undefined ? `${containerBorderRadius}px` : '12px'),
         })
       }}
     >
-      {/* Corner accents - positioned to overlay border */}
+      {/* Corner accents - only for accent variant */}
+      {containerBorderVariant === 'accent' && (
       <div
         className="absolute w-3 h-3"
         style={{
@@ -297,8 +301,8 @@ export function BarChart(props: BarChartProps) {
           borderTop: `0.5px solid ${containerBorderAccentColor || '#bbb'}`,
           borderLeft: `0.5px solid ${containerBorderAccentColor || '#bbb'}`
         }}
-      ></div>
-      <div
+      ></div>)}
+      {containerBorderVariant === 'accent' && (<div
         className="absolute w-3 h-3"
         style={{
           top: '-0.5px',
@@ -306,8 +310,8 @@ export function BarChart(props: BarChartProps) {
           borderTop: `0.5px solid ${containerBorderAccentColor || '#bbb'}`,
           borderRight: `0.5px solid ${containerBorderAccentColor || '#bbb'}`
         }}
-      ></div>
-      <div
+      ></div>)}
+      {containerBorderVariant === 'accent' && (<div
         className="absolute w-3 h-3"
         style={{
           bottom: '-0.5px',
@@ -315,8 +319,8 @@ export function BarChart(props: BarChartProps) {
           borderBottom: `0.5px solid ${containerBorderAccentColor || '#bbb'}`,
           borderLeft: `0.5px solid ${containerBorderAccentColor || '#bbb'}`
         }}
-      ></div>
-      <div
+      ></div>)}
+      {containerBorderVariant === 'accent' && (<div
         className="absolute w-3 h-3"
         style={{
           bottom: '-0.5px',
@@ -324,7 +328,7 @@ export function BarChart(props: BarChartProps) {
           borderBottom: `0.5px solid ${containerBorderAccentColor || '#bbb'}`,
           borderRight: `0.5px solid ${containerBorderAccentColor || '#bbb'}`
         }}
-      ></div>
+      ></div>)}
       {title && (
         <h3
           className={titleClassName || undefined}
