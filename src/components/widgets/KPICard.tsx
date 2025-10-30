@@ -393,7 +393,7 @@ export function KPICard({
           if (tilePaddingY !== undefined) { style.paddingTop = tilePaddingY; style.paddingBottom = tilePaddingY }
           // Apply custom border for smooth variant only
           if (kpiContainerBorderColor && borderVariant === 'smooth') {
-            style.border = `${borderVariant === 'accent' ? 0.5 : (kpiContainerBorderWidth ?? 1)}px solid ${hexToRgba(kpiContainerBorderColor, kpiContainerBorderOpacity ?? 1)}`
+            style.border = `${(kpiContainerBorderWidth ?? 1)}px solid ${hexToRgba(kpiContainerBorderColor, kpiContainerBorderOpacity ?? 1)}`
           }
           if (typeof kpiContainerBorderRadius === 'number') style.borderRadius = kpiContainerBorderRadius
           if (typeof kpiContainerShadow === 'boolean') style.boxShadow = kpiContainerShadow ? '0 1px 2px rgba(0,0,0,.06), 0 8px 24px rgba(0,0,0,.06)' : 'none'
