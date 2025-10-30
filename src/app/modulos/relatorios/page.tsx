@@ -79,6 +79,41 @@ export default function ModulosRelatoriosPage() {
 
   type Row = TableData
 
+  // Build periods (mensal) from dateRange
+  const periods = useMemo(() => {
+    if (filters.cadence !== 'mensal') {
+      return [
+        { key: '2025-01', label: 'Janeiro' },
+        { key: '2025-02', label: 'Fevereiro' },
+        { key: '2025-03', label: 'Março' },
+      ]
+    }
+    const from = filters.dateRange?.from
+    const to = filters.dateRange?.to
+    if (!from || !to) {
+      // default last 3 months relative to today
+      const d = new Date()
+      const mk = (yr: number, m: number) => `${yr}-${String(m + 1).padStart(2, '0')}`
+      const arr: { key: string; label: string }[] = []
+      for (let i = 2; i >= 0; i--) {
+        const x = new Date(d.getFullYear(), d.getMonth() - i, 1)
+        arr.push({ key: mk(x.getFullYear(), x.getMonth()), label: x.toLocaleString('pt-BR', { month: 'long' }) })
+      }
+      return arr
+    }
+    // generate month list between from and to
+    const list: { key: string; label: string }[] = []
+    const cur = new Date(from.getFullYear(), from.getMonth(), 1)
+    const end = new Date(to.getFullYear(), to.getMonth(), 1)
+    while (cur <= end && list.length < 24) {
+      const key = `${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, '0')}`
+      const label = cur.toLocaleString('pt-BR', { month: 'long' })
+      list.push({ key, label })
+      cur.setMonth(cur.getMonth() + 1)
+    }
+    return list
+  }, [filters.cadence, filters.dateRange?.from, filters.dateRange?.to])
+
   const { columns, data }: { columns: ColumnDef<Row>[]; data: Row[] } = useMemo(() => {
     switch (tabs.selected) {
       case 'balancete': {
@@ -288,37 +323,3 @@ export default function ModulosRelatoriosPage() {
     </SidebarProvider>
   )
 }
-  // Build periods (mensal) from dateRange
-  const periods = useMemo(() => {
-    if (filters.cadence !== 'mensal') {
-      return [
-        { key: '2025-01', label: 'Janeiro' },
-        { key: '2025-02', label: 'Fevereiro' },
-        { key: '2025-03', label: 'Março' },
-      ]
-    }
-    const from = filters.dateRange?.from
-    const to = filters.dateRange?.to
-    if (!from || !to) {
-      // default last 3 months relative to today
-      const d = new Date()
-      const mk = (yr: number, m: number) => `${yr}-${String(m + 1).padStart(2, '0')}`
-      const arr: { key: string; label: string }[] = []
-      for (let i = 2; i >= 0; i--) {
-        const x = new Date(d.getFullYear(), d.getMonth() - i, 1)
-        arr.push({ key: mk(x.getFullYear(), x.getMonth()), label: x.toLocaleString('pt-BR', { month: 'long' }) })
-      }
-      return arr
-    }
-    // generate month list between from and to
-    const list: { key: string; label: string }[] = []
-    const cur = new Date(from.getFullYear(), from.getMonth(), 1)
-    const end = new Date(to.getFullYear(), to.getMonth(), 1)
-    while (cur <= end && list.length < 24) {
-      const key = `${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, '0')}`
-      const label = cur.toLocaleString('pt-BR', { month: 'long' })
-      list.push({ key, label })
-      cur.setMonth(cur.getMonth() + 1)
-    }
-    return list
-  }, [filters.cadence, filters.dateRange?.from, filters.dateRange?.to])
