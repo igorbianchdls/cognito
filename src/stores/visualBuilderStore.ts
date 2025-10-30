@@ -119,7 +119,7 @@ const initialCode = `{
       "row": "2",
       "span": { "desktop": 1, "tablet": 2, "mobile": 1 },
       "order": 4,
-      "heightPx": 280,
+      "heightPx": 320,
       "title": "📊 ROAS por Plataforma",
       "dataSource": {
         "schema": "marketing",
