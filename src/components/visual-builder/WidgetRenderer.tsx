@@ -230,7 +230,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
     return (
       <button
         onClick={() => setShowSQLModal(true)}
-        className="absolute top-2 right-2 z-10 p-1.5 bg-white/90 hover:bg-white border border-gray-200 rounded-md shadow-sm hover:shadow-md transition-all duration-200 group"
+        className="absolute top-2 right-16 z-10 p-1.5 bg-white/90 hover:bg-white border border-gray-200 rounded-md shadow-sm hover:shadow-md transition-all duration-200 opacity-0 group-hover:opacity-100"
         title="Ver SQL gerado"
       >
         <Database className="w-4 h-4 text-gray-600 group-hover:text-blue-600" />
@@ -263,7 +263,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
       });
 
       widgetContent = (
-        <div className="h-full w-full p-2 relative">
+        <div className="h-full w-full p-2 relative group">
           {renderSQLButton()}
           <BarChart
             {...commonChartProps}
@@ -326,7 +326,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
 
     case 'line':
       widgetContent = (
-        <div className="h-full w-full p-2 relative">
+        <div className="h-full w-full p-2 relative group">
           {renderSQLButton()}
           <LineChart
             {...commonChartProps}
@@ -358,7 +358,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
 
     case 'pie':
       widgetContent = (
-        <div className="h-full w-full p-2 relative">
+        <div className="h-full w-full p-2 relative group">
           {renderSQLButton()}
           <PieChart
             {...commonChartProps}
@@ -387,7 +387,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
 
     case 'area':
       widgetContent = (
-        <div className="h-full w-full p-2 relative">
+        <div className="h-full w-full p-2 relative group">
           {renderSQLButton()}
           <AreaChart
             {...commonChartProps}
@@ -420,7 +420,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
 
     case 'kpi':
       widgetContent = (
-        <div className="h-full w-full p-2 relative">
+        <div className="h-full w-full p-2 relative group">
           {renderSQLButton()}
           <KPICard
             variant="tile"
