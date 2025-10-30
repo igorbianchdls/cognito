@@ -11,6 +11,9 @@ import type { ColumnDef } from '@tanstack/react-table'
 import { BarChart3, DollarSign, ShoppingCart, Megaphone } from 'lucide-react'
 import { $titulo, $tabs, $tabelaUI, $layout, financeiroUiActions } from '@/stores/modulos/financeiroUiStore'
 import DRETable from '@/components/relatorios/DRETable'
+import BalanceSheetTable from '@/components/relatorios/BalanceSheetTable'
+import CashFlowTable from '@/components/relatorios/CashFlowTable'
+import DMPLTable from '@/components/relatorios/DMPLTable'
 
 export default function ModulosRelatoriosPage() {
   const titulo = useStore($titulo)
@@ -23,6 +26,10 @@ export default function ModulosRelatoriosPage() {
     financeiroUiActions.setTitulo({ title: 'Relatórios', subtitle: 'Central de relatórios gerenciais' })
     financeiroUiActions.setTabs({
       options: [
+        { value: 'balanco', label: 'Balanço' },
+        { value: 'dfc', label: 'Fluxo de Caixa' },
+        { value: 'balancete', label: 'Balancete' },
+        { value: 'dmpl', label: 'DMPL' },
         { value: 'dre', label: 'DRE' },
         { value: 'executivo', label: 'Executivo' },
         { value: 'financeiro', label: 'Financeiro' },
@@ -35,6 +42,14 @@ export default function ModulosRelatoriosPage() {
 
   const iconFor = (v: string) => {
     switch (v) {
+      case 'balanco':
+        return <BarChart3 className="h-4 w-4" />
+      case 'dfc':
+        return <BarChart3 className="h-4 w-4" />
+      case 'balancete':
+        return <BarChart3 className="h-4 w-4" />
+      case 'dmpl':
+        return <BarChart3 className="h-4 w-4" />
       case 'dre':
         return <BarChart3 className="h-4 w-4" />
       case 'executivo':
@@ -63,6 +78,26 @@ export default function ModulosRelatoriosPage() {
 
   const { columns, data }: { columns: ColumnDef<Row>[]; data: Row[] } = useMemo(() => {
     switch (tabs.selected) {
+      case 'balancete': {
+        const columns: ColumnDef<Row>[] = [
+          { accessorKey: 'codigo', header: 'Código' },
+          { accessorKey: 'conta', header: 'Conta' },
+          { accessorKey: 'debito', header: 'Débito' },
+          { accessorKey: 'credito', header: 'Crédito' },
+          { accessorKey: 'saldo', header: 'Saldo' },
+        ]
+        const data: Row[] = [
+          { codigo: '1.1.1.01', conta: 'Caixa', debito: 120000, credito: 0, saldo: 120000 },
+          { codigo: '1.1.1.02', conta: 'Bancos', debito: 5000, credito: 0, saldo: 5000 },
+          { codigo: '1.1.2.01', conta: 'Clientes', debito: 81000, credito: 0, saldo: 81000 },
+          { codigo: '1.1.3.01', conta: 'Estoques', debito: 56000, credito: 0, saldo: 56000 },
+          { codigo: '2.1.1.01', conta: 'Fornecedores', debito: 0, credito: 73000, saldo: -73000 },
+          { codigo: '2.1.2.01', conta: 'Obrigações trabalhistas', debito: 0, credito: 23000, saldo: -23000 },
+          { codigo: '3.1.1.01', conta: 'Capital Social', debito: 0, credito: 180000, saldo: -180000 },
+          { codigo: '3.1.2.01', conta: 'Reservas', debito: 0, credito: 35000, saldo: -35000 },
+        ]
+        return { columns, data }
+      }
       case 'dre':
         return { columns: [], data: [] }
       case 'financeiro':
@@ -162,40 +197,84 @@ export default function ModulosRelatoriosPage() {
         </div>
         <div style={{ paddingTop: (layout.contentTopGap || 0) + (layout.mbTabs || 0) }}>
           <div className="px-4 md:px-6" style={{ marginBottom: 8 }}>
-            {tabs.selected === 'dre' ? (
-              <DRETable />
-            ) : (
-              <div className="border-y bg-background" style={{ borderColor: tabelaUI.borderColor }}>
-                <DataTable
-                  columns={columns}
-                  data={data}
-                  enableSearch={tabelaUI.enableSearch}
-                  showColumnToggle={tabelaUI.enableColumnToggle}
-                  showPagination={tabelaUI.showPagination}
-                  pageSize={tabelaUI.pageSize}
-                  headerBackground={tabelaUI.headerBg}
-                  headerTextColor={tabelaUI.headerText}
-                  cellTextColor={tabelaUI.cellText}
-                  headerFontSize={tabelaUI.headerFontSize}
-                  headerFontFamily={fontVar(tabelaUI.headerFontFamily)}
-                  headerFontWeight={tabelaUI.headerFontWeight}
-                  headerLetterSpacing={tabelaUI.headerLetterSpacing}
-                  cellFontSize={tabelaUI.cellFontSize}
-                  cellFontFamily={fontVar(tabelaUI.cellFontFamily)}
-                  cellFontWeight={tabelaUI.cellFontWeight}
-                  cellLetterSpacing={tabelaUI.cellLetterSpacing}
-                  enableZebraStripes={tabelaUI.enableZebraStripes}
-                  rowAlternateBgColor={tabelaUI.rowAlternateBgColor}
-                  borderColor={tabelaUI.borderColor}
-                  borderWidth={tabelaUI.borderWidth}
-                  selectionColumnWidth={tabelaUI.selectionColumnWidth}
-                  enableRowSelection={tabelaUI.enableRowSelection}
-                  selectionMode={tabelaUI.selectionMode}
-                  defaultSortColumn={tabelaUI.defaultSortColumn}
-                  defaultSortDirection={tabelaUI.defaultSortDirection}
-                />
-              </div>
-            )}
+            {(() => {
+              switch (tabs.selected) {
+                case 'balanco':
+                  return <BalanceSheetTable />
+                case 'dfc':
+                  return <CashFlowTable />
+                case 'dmpl':
+                  return <DMPLTable />
+                case 'dre':
+                  return <DRETable />
+                case 'balancete':
+                  return (
+                    <div className="border-y bg-background" style={{ borderColor: tabelaUI.borderColor }}>
+                      <DataTable
+                        columns={columns}
+                        data={data}
+                        enableSearch={tabelaUI.enableSearch}
+                        showColumnToggle={tabelaUI.enableColumnToggle}
+                        showPagination={tabelaUI.showPagination}
+                        pageSize={tabelaUI.pageSize}
+                        headerBackground={tabelaUI.headerBg}
+                        headerTextColor={tabelaUI.headerText}
+                        cellTextColor={tabelaUI.cellText}
+                        headerFontSize={tabelaUI.headerFontSize}
+                        headerFontFamily={fontVar(tabelaUI.headerFontFamily)}
+                        headerFontWeight={tabelaUI.headerFontWeight}
+                        headerLetterSpacing={tabelaUI.headerLetterSpacing}
+                        cellFontSize={tabelaUI.cellFontSize}
+                        cellFontFamily={fontVar(tabelaUI.cellFontFamily)}
+                        cellFontWeight={tabelaUI.cellFontWeight}
+                        cellLetterSpacing={tabelaUI.cellLetterSpacing}
+                        enableZebraStripes={tabelaUI.enableZebraStripes}
+                        rowAlternateBgColor={tabelaUI.rowAlternateBgColor}
+                        borderColor={tabelaUI.borderColor}
+                        borderWidth={tabelaUI.borderWidth}
+                        selectionColumnWidth={tabelaUI.selectionColumnWidth}
+                        enableRowSelection={tabelaUI.enableRowSelection}
+                        selectionMode={tabelaUI.selectionMode}
+                        defaultSortColumn={tabelaUI.defaultSortColumn}
+                        defaultSortDirection={tabelaUI.defaultSortDirection}
+                      />
+                    </div>
+                  )
+                default:
+                  return (
+                    <div className="border-y bg-background" style={{ borderColor: tabelaUI.borderColor }}>
+                      <DataTable
+                        columns={columns}
+                        data={data}
+                        enableSearch={tabelaUI.enableSearch}
+                        showColumnToggle={tabelaUI.enableColumnToggle}
+                        showPagination={tabelaUI.showPagination}
+                        pageSize={tabelaUI.pageSize}
+                        headerBackground={tabelaUI.headerBg}
+                        headerTextColor={tabelaUI.headerText}
+                        cellTextColor={tabelaUI.cellText}
+                        headerFontSize={tabelaUI.headerFontSize}
+                        headerFontFamily={fontVar(tabelaUI.headerFontFamily)}
+                        headerFontWeight={tabelaUI.headerFontWeight}
+                        headerLetterSpacing={tabelaUI.headerLetterSpacing}
+                        cellFontSize={tabelaUI.cellFontSize}
+                        cellFontFamily={fontVar(tabelaUI.cellFontFamily)}
+                        cellFontWeight={tabelaUI.cellFontWeight}
+                        cellLetterSpacing={tabelaUI.cellLetterSpacing}
+                        enableZebraStripes={tabelaUI.enableZebraStripes}
+                        rowAlternateBgColor={tabelaUI.rowAlternateBgColor}
+                        borderColor={tabelaUI.borderColor}
+                        borderWidth={tabelaUI.borderWidth}
+                        selectionColumnWidth={tabelaUI.selectionColumnWidth}
+                        enableRowSelection={tabelaUI.enableRowSelection}
+                        selectionMode={tabelaUI.selectionMode}
+                        defaultSortColumn={tabelaUI.defaultSortColumn}
+                        defaultSortDirection={tabelaUI.defaultSortDirection}
+                      />
+                    </div>
+                  )
+              }
+            })()}
           </div>
         </div>
       </SidebarInset>
