@@ -177,6 +177,44 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    // KPIs: calcular período atual vs período anterior
+    if (type === 'kpi') {
+      const yCol = y || 'impressao';
+      const agg = aggregation || 'SUM';
+      const { startDate, endDate } = calculateDateRange(dateFilter || { type: 'last_30_days' });
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      const ms = end.getTime() - start.getTime();
+      const prevEnd = new Date(start.getTime() - 24 * 3600 * 1000);
+      const prevStart = new Date(prevEnd.getTime() - ms);
+      const fmt = (d: Date) => d.toISOString().split('T')[0];
+
+      const qualifiedTable = `"${schema}"."${table}"`;
+      const sqlKPI = `WITH current AS (
+        SELECT ${agg}("${yCol}") AS total
+        FROM ${qualifiedTable}
+        WHERE "data_metricas" >= '${startDate}' AND "data_metricas" <= '${endDate}'
+      ), previous AS (
+        SELECT ${agg}("${yCol}") AS total
+        FROM ${qualifiedTable}
+        WHERE "data_metricas" >= '${fmt(prevStart)}' AND "data_metricas" <= '${fmt(prevEnd)}'
+      )
+      SELECT current.total AS current_value, previous.total AS previous_value FROM current, previous`;
+
+      const rows = await runQuery<{ current_value: number; previous_value: number }>(sqlKPI);
+      const currentVal = Number(rows[0]?.current_value || 0);
+      const previousVal = Number(rows[0]?.previous_value || 0);
+      const changePct = previousVal ? ((currentVal - previousVal) / Math.abs(previousVal)) * 100 : 0;
+
+      return NextResponse.json({
+        success: true,
+        data: { value: currentVal, previousValue: previousVal, changePct },
+        sql_query: sqlKPI,
+        totalRecords: 1,
+        metadata: { generatedAt: new Date().toISOString(), dataSource: 'supabase', schema, table }
+      });
+    }
+
     // Gerar SQL automaticamente para PostgreSQL
     const sqlQuery = generatePostgreSQLQuery(type, x, y || 'impressao', table, aggregation, schema, dateFilter);
 

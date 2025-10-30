@@ -25,6 +25,8 @@ type ChartDataPoint = {
 
 type KPIData = {
   value: number;
+  previousValue?: number;
+  changePct?: number;
 };
 
 type WidgetData = ChartDataPoint[] | KPIData | null;
@@ -138,9 +140,9 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
 
   // Use ONLY BigQuery data - no mock fallbacks
   const chartData = Array.isArray(data) ? data : [];
-  const kpiValue = widget.type === 'kpi' && isKPIData(data)
-    ? data.value
-    : 0;
+  const kpiValue = widget.type === 'kpi' && isKPIData(data) ? data.value : 0;
+  const kpiPrev = widget.type === 'kpi' && isKPIData(data) ? data.previousValue : undefined;
+  const kpiChangePct = widget.type === 'kpi' && isKPIData(data) ? data.changePct : undefined;
 
   // 🔧 Data processing log
   console.log('🔧 Data processed for widget:', widget.id, {
@@ -422,6 +424,8 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
             variant="tile"
             name={widget.title}
             currentValue={kpiValue}
+            previousValue={kpiPrev}
+            changePct={kpiChangePct}
             unit={widget.unit || widget.kpiConfig?.unit}
             success={true}
             {...(widget.kpiConfig || {})}
