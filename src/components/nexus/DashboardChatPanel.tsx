@@ -35,10 +35,10 @@ export default function DashboardChatPanel() {
   const [activeTab, setActiveTab] = useState<'editor' | 'dashboard'>('editor');
   const [selectedViewport, setSelectedViewport] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
   const [selectedDashboard, setSelectedDashboard] = useState('Dashboard Builder');
-  const [selectedTheme, setSelectedTheme] = useState<ThemeName>('dark');
+  const [selectedTheme, setSelectedTheme] = useState<ThemeName>('branco');
   const [selectedFont, setSelectedFont] = useState<FontPresetKey>('inter');
   const [selectedFontSize, setSelectedFontSize] = useState<FontSizeKey>('lg');
-  const [selectedBackground, setSelectedBackground] = useState<BackgroundPresetKey>('white');
+  const [selectedBackground, setSelectedBackground] = useState<BackgroundPresetKey>('fundo-branco');
   const [selectedCorporateColor, setSelectedCorporateColor] = useState<ColorPresetKey>('corporate');
   const visualBuilderState = useNanoStore($visualBuilderState);
 
@@ -54,8 +54,9 @@ export default function DashboardChatPanel() {
   const availableFontSizes = FontManager.getAvailableFontSizes();
 
   // Header tooltip without nested template literals
+  const isLightTheme = selectedTheme === 'branco' || selectedTheme === 'cinza-claro';
   const headerVariantLabel = headerUi.variant === 'auto'
-    ? 'Auto (' + (selectedTheme === 'light' ? 'light' : 'dark') + ')'
+    ? 'Auto (' + (isLightTheme ? 'light' : 'dark') + ')'
     : headerUi.variant;
   const headerTooltip = 'Header: ' + headerVariantLabel;
 
@@ -318,11 +319,11 @@ export default function DashboardChatPanel() {
               </div>
               <DropdownMenuSeparator />
 
-              {/* Classic Themes */}
+              {/* Temas disponíveis */}
               <div className="px-2 py-1 text-xs font-medium text-muted-foreground">
-                Classic
+                Temas
               </div>
-              {(['light', 'dark', 'corporate'] as ThemeName[]).map((theme) => {
+              {(['branco', 'cinza-claro', 'preto', 'cinza-escuro'] as ThemeName[]).map((theme) => {
                 const preview = ThemeManager.getThemePreview(theme);
                 return (
                   <DropdownMenuItem
@@ -349,38 +350,7 @@ export default function DashboardChatPanel() {
                 );
               })}
 
-              <DropdownMenuSeparator />
-
-              {/* Business Themes */}
-              <div className="px-2 py-1 text-xs font-medium text-muted-foreground">
-                Business
-              </div>
-              {(['navy', 'slate', 'hightech', 'platinum'] as ThemeName[]).map((theme) => {
-                const preview = ThemeManager.getThemePreview(theme);
-                return (
-                  <DropdownMenuItem
-                    key={theme}
-                    onClick={() => handleThemeChange(theme)}
-                    className="flex items-center justify-between py-2"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="w-4 h-4 rounded border border-gray-200"
-                        style={{ backgroundColor: preview.primaryColor }}
-                      />
-                      <div>
-                        <div className="font-medium">{preview.name}</div>
-                        <div className="text-xs text-muted-foreground truncate max-w-40">
-                          {preview.description}
-                        </div>
-                      </div>
-                    </div>
-                    {selectedTheme === theme && (
-                      <Check className="w-4 h-4 text-blue-600" />
-                    )}
-                  </DropdownMenuItem>
-                );
-              })}
+              
             </DropdownMenuContent>
           </DropdownMenu>
 

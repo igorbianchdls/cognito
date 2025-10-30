@@ -865,15 +865,11 @@ export class ThemeManager {
     const backgroundStyle = BackgroundManager.getBackgroundStyle(backgroundPresetKey);
 
     const previews = {
-      light: { name: 'Light', description: 'Clean white background with dark text' },
-      dark: { name: 'Dark', description: 'Modern dark theme with enhanced contrast' },
-      corporate: { name: 'Corporate', description: 'Professional business gray theme' },
-      navy: { name: 'Navy', description: 'Executive navy blue for C-level presentations' },
-      slate: { name: 'Slate', description: 'Premium gray for financial analytics' },
-      forest: { name: 'Forest', description: 'Sustainable green for ESG dashboards' },
-      hightech: { name: 'High Tech', description: 'Futuristic neon cyan theme for modern dashboards' },
-      platinum: { name: 'Platinum', description: 'Elegant silver for premium reports' }
-    };
+      'branco': { name: 'Branco', description: 'Cartões brancos, texto escuro' },
+      'cinza-claro': { name: 'Cinza Claro', description: 'Cartões cinza claro, texto escuro' },
+      'preto': { name: 'Preto', description: 'Cartões pretos, texto claro' },
+      'cinza-escuro': { name: 'Cinza Escuro', description: 'Cartões cinza escuro, texto claro' }
+    } as const;
 
     return {
       ...previews[themeName],

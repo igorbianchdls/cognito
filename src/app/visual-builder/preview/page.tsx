@@ -15,7 +15,7 @@ export default function PreviewPage() {
       const cfg = JSON.parse(visualBuilderState.code);
       if (cfg && typeof cfg.theme === 'string' && ThemeManager.isValidTheme(cfg.theme)) return cfg.theme;
     } catch {}
-    return 'dark';
+    return 'branco';
   })();
 
   // Initialize store on mount

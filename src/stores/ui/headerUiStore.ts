@@ -78,7 +78,8 @@ export const headerUiActions = {
 export function resolveHeaderVariant(themeName?: string, variant?: HeaderVariant): 'light' | 'dark' {
   const v = variant || $headerUi.get().variant
   if (v && v !== 'auto') return v
-  return themeName === 'light' ? 'light' : 'dark'
+  const isLight = themeName === 'branco' || themeName === 'cinza-claro'
+  return isLight ? 'light' : 'dark'
 }
 
 export function resolveHeaderStyle(themeName?: string, variant?: HeaderVariant): HeaderStyle {
@@ -86,4 +87,3 @@ export function resolveHeaderStyle(themeName?: string, variant?: HeaderVariant):
   const styles = $headerUi.get().styles
   return styles[kind]
 }
-

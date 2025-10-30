@@ -33,7 +33,7 @@ interface VisualBuilderState {
 }
 
 const initialCode = `{
-  "theme": "dark",
+  "theme": "branco",
   "dashboardTitle": "Live Dashboard",
   "dashboardSubtitle": "Real-time visualization with Supabase data",
   "config": {
@@ -451,10 +451,10 @@ export const visualBuilderActions = {
     })
 
     // Extrair tema atual do código
-    let currentTheme = 'light'
+    let currentTheme = 'branco'
     try {
       const parsedCode = JSON.parse(currentState.code)
-      currentTheme = parsedCode.theme || 'light'
+      currentTheme = parsedCode.theme || 'branco'
     } catch (error) {
       console.warn('Erro ao extrair tema do código atual:', error)
     }

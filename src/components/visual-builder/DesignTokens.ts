@@ -1174,15 +1174,72 @@ export const PLATINUM_TOKENS: DesignTokens = {
 };
 
 // Theme mapping
+// Minimal Portuguese themes focused on card colors
+const BRANCO_TOKENS: DesignTokens = {
+  ...LIGHT_TOKENS,
+  colors: {
+    ...LIGHT_TOKENS.colors,
+    surface: '#ffffff',
+    surfaceElevated: '#ffffff',
+    text: { ...LIGHT_TOKENS.colors.text, primary: '#1e293b', secondary: '#475569' },
+  },
+  effects: {
+    ...LIGHT_TOKENS.effects,
+    gradient: undefined,
+    backdrop: undefined,
+  }
+}
+
+const CINZA_CLARO_TOKENS: DesignTokens = {
+  ...LIGHT_TOKENS,
+  colors: {
+    ...LIGHT_TOKENS.colors,
+    surface: '#f3f4f6', // cinza claro
+    surfaceElevated: '#f3f4f6',
+    text: { ...LIGHT_TOKENS.colors.text, primary: '#1f2937', secondary: '#4b5563' },
+  },
+  effects: {
+    ...LIGHT_TOKENS.effects,
+    gradient: undefined,
+    backdrop: undefined,
+  }
+}
+
+const PRETO_TOKENS: DesignTokens = {
+  ...DARK_TOKENS,
+  colors: {
+    ...DARK_TOKENS.colors,
+    surface: '#0d0d0d', // preto quase puro
+    surfaceElevated: '#111111',
+    text: { ...DARK_TOKENS.colors.text, primary: '#ffffff', secondary: '#d1d5db' },
+  },
+  effects: {
+    ...DARK_TOKENS.effects,
+    gradient: undefined,
+    backdrop: undefined,
+  }
+}
+
+const CINZA_ESCURO_TOKENS: DesignTokens = {
+  ...DARK_TOKENS,
+  colors: {
+    ...DARK_TOKENS.colors,
+    surface: '#111827', // cinza escuro
+    surfaceElevated: '#1f2937',
+    text: { ...DARK_TOKENS.colors.text, primary: '#f9fafb', secondary: '#e5e7eb' },
+  },
+  effects: {
+    ...DARK_TOKENS.effects,
+    gradient: undefined,
+    backdrop: undefined,
+  }
+}
+
 export const THEME_TOKENS = {
-  light: LIGHT_TOKENS,
-  dark: DARK_TOKENS,
-  corporate: CORPORATE_TOKENS,
-  navy: NAVY_TOKENS,
-  slate: SLATE_TOKENS,
-  forest: FOREST_TOKENS,
-  hightech: HIGHTECH_TOKENS,
-  platinum: PLATINUM_TOKENS
+  'branco': BRANCO_TOKENS,
+  'cinza-claro': CINZA_CLARO_TOKENS,
+  'preto': PRETO_TOKENS,
+  'cinza-escuro': CINZA_ESCURO_TOKENS,
 } as const;
 
 export type ThemeTokenName = keyof typeof THEME_TOKENS;
@@ -1192,12 +1249,8 @@ import type { BackgroundPresetKey } from './BackgroundManager';
 
 // Theme to Background mapping - each theme uses a specific background preset
 export const THEME_BACKGROUND_MAPPING: Record<ThemeTokenName, BackgroundPresetKey> = {
-  light: 'light',
-  dark: 'black',
-  corporate: 'corporate',
-  navy: 'navy',
-  slate: 'glassDark',
-  forest: 'darkGray',
-  hightech: 'hightech',
-  platinum: 'glassLight'
+  'branco': 'fundo-cinza-claro',
+  'cinza-claro': 'fundo-branco',
+  'preto': 'fundo-cinza-escuro',
+  'cinza-escuro': 'fundo-preto',
 } as const;

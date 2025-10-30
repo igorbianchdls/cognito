@@ -102,7 +102,8 @@ export default function DashboardInCanvasHeader({
   }, [currentFilter]);
 
   const headerStyle = resolveHeaderStyle(themeName, headerUi.variant);
-  const variantKind = (headerUi.variant === 'auto' ? (themeName === 'light' ? 'light' : 'dark') : headerUi.variant);
+  const isLightTheme = themeName === 'branco' || themeName === 'cinza-claro';
+  const variantKind = (headerUi.variant === 'auto' ? (isLightTheme ? 'light' : 'dark') : headerUi.variant);
   const isDark = variantKind === 'dark';
 
   return (

@@ -36,109 +36,35 @@ interface GlassBackgroundPreset extends BackgroundPresetBase {
 type BackgroundPreset = SolidBackgroundPreset | GradientBackgroundPreset | GlassBackgroundPreset;
 
 const BACKGROUND_PRESETS: Record<string, BackgroundPreset> = {
-  // Solid Colors
-  white: {
+  // Fundos sólidos (4 opções)
+  'fundo-branco': {
     type: 'solid',
-    name: 'White',
-    description: 'Clean white background',
+    name: 'Fundo Branco',
+    description: 'Branco puro para dashboards claros',
     backgroundColor: '#ffffff',
     backgroundGradient: { enabled: false }
   },
-  light: {
+  'fundo-cinza-claro': {
     type: 'solid',
-    name: 'Light',
-    description: 'Light gray background for modern themes',
+    name: 'Fundo Cinza Claro',
+    description: 'Cinza muito claro para contraste suave',
     backgroundColor: '#f8fafc',
     backgroundGradient: { enabled: false }
   },
-  black: {
+  'fundo-cinza-escuro': {
     type: 'solid',
-    name: 'Black',
-    description: 'Pure black background',
-    backgroundColor: '#000000',
-    backgroundGradient: { enabled: false }
-  },
-  darkGray: {
-    type: 'solid',
-    name: 'Dark Gray',
-    description: 'Dark charcoal background',
+    name: 'Fundo Cinza Escuro',
+    description: 'Cinza escuro para dashboards escuros',
     backgroundColor: '#1f2937',
     backgroundGradient: { enabled: false }
   },
-  navy: {
-    type: 'gradient',
-    name: 'Navy',
-    description: 'Navy Deep gradient background',
-    backgroundColor: '#1a202c',
-    backgroundGradient: {
-      enabled: true,
-      type: 'linear',
-      direction: '225deg',
-      startColor: 'rgba(255,255,255,0.06)',
-      endColor: '#1a202c'
-    }
-  },
-  corporate: {
+  'fundo-preto': {
     type: 'solid',
-    name: 'Corporate',
-    description: 'Corporate dark purple background',
-    backgroundColor: '#151138',
-    backgroundGradient: { enabled: false }
-  },
-
-  // Gradients
-
-  // Glass Effects
-  glassLight: {
-    type: 'gradient',
-    name: 'Platinum Deep',
-    description: 'Platinum Deep gradient with subtle glass effect',
-    backgroundColor: '#18181b',
-    backgroundGradient: {
-      enabled: true,
-      type: 'linear',
-      direction: '225deg',
-      startColor: 'rgba(255,255,255,0.06)',
-      endColor: '#18181b'
-    }
-  },
-  glassDark: {
-    type: 'glass',
-    name: 'Glass Dark',
-    description: 'Dark glass with blur',
-    backgroundColor: 'rgba(0, 0, 0, 0.2)',
-    backgroundGradient: { enabled: false },
-    backdropFilter: {
-      enabled: true,
-      blur: 15
-    }
-  },
-  hightech: {
-    type: 'gradient',
-    name: 'High Tech',
-    description: 'Futuristic dark gradient with cyan accents',
+    name: 'Fundo Preto',
+    description: 'Preto puro para alto contraste',
     backgroundColor: '#000000',
-    backgroundGradient: {
-      enabled: true,
-      type: 'linear',
-      direction: '135deg',
-      startColor: '#000000',
-      endColor: '#001a2e'
-    }
-  },
-  deepblue: {
-    type: 'gradient',
-    name: 'Deep Blue',
-    description: 'Professional deep navy background',
-    backgroundColor: '#0a1525',
-    backgroundGradient: {
-      enabled: true,
-      type: 'linear',
-      direction: '135deg',
-      startColor: '#0a1525',
-      endColor: '#1a2332'
-    }
-  },
+    backgroundGradient: { enabled: false }
+  }
 };
 
 export type BackgroundPresetKey = keyof typeof BACKGROUND_PRESETS;
@@ -268,7 +194,7 @@ export class BackgroundManager {
    * Gets default background
    */
   static getDefaultBackground(): BackgroundPresetKey {
-    return 'white';
+    return 'fundo-branco';
   }
 }
 
