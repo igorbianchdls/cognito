@@ -8,7 +8,7 @@ import type { Widget, GridConfig, ParseResult } from '@/components/visual-builde
 export type { Widget, GridConfig } from '@/components/visual-builder/ConfigParser'
 
 // Tipos para filtros globais
-export type DateRangeType = 'last_7_days' | 'last_30_days' | 'last_90_days' | 'current_month' | 'last_month' | 'custom';
+export type DateRangeType = 'today' | 'yesterday' | 'last_7_days' | 'last_14_days' | 'last_30_days' | 'last_90_days' | 'current_month' | 'last_month' | 'custom';
 
 export interface DateRangeFilter {
   type: DateRangeType;

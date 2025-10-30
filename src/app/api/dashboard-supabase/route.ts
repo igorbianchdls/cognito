@@ -11,6 +11,13 @@ function calculateDateRange(filter: DateRangeFilter): { startDate: string, endDa
   const formatDate = (date: Date) => date.toISOString().split('T')[0];
   
   switch (filter.type) {
+    case 'today':
+      return { startDate: formatDate(today), endDate: formatDate(today) };
+    case 'yesterday': {
+      const y = new Date(today);
+      y.setDate(today.getDate() - 1);
+      return { startDate: formatDate(y), endDate: formatDate(y) };
+    }
     case 'last_7_days':
       const weekAgo = new Date(today);
       // Inclusivo: hoje e os 6 dias anteriores = 7 dias
@@ -320,3 +327,8 @@ function generateMockData(type: string, x: string, y: string, table: string) {
     value: Math.floor(Math.random() * 1000) + 100
   }));
 }
+    case 'last_14_days': {
+      const d = new Date(today);
+      d.setDate(today.getDate() - 13);
+      return { startDate: formatDate(d), endDate: formatDate(today) };
+    }

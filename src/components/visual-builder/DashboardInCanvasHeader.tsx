@@ -27,12 +27,13 @@ interface DashboardInCanvasHeaderProps {
 }
 
 const DATE_RANGE_OPTIONS: { value: DateRangeType; label: string }[] = [
-  { value: 'last_7_days', label: 'Ultimos 7 dias' },
-  { value: 'last_30_days', label: 'Ultimos 30 dias' },
-  { value: 'last_90_days', label: 'Ultimos 90 dias' },
-  { value: 'current_month', label: 'Mes atual' },
-  { value: 'last_month', label: 'Mes anterior' },
-  { value: 'custom', label: 'Periodo personalizado' }
+  { value: 'today', label: 'Hoje' },
+  { value: 'yesterday', label: 'Ontem' },
+  { value: 'last_7_days', label: 'Últimos 7 dias' },
+  { value: 'last_14_days', label: 'Últimos 14 dias' },
+  { value: 'last_30_days', label: 'Últimos 30 dias' },
+  { value: 'last_90_days', label: 'Últimos 90 dias' },
+  { value: 'custom', label: 'Personalizado' }
 ];
 
 export default function DashboardInCanvasHeader({
@@ -67,29 +68,33 @@ export default function DashboardInCanvasHeader({
   const dateRangeDescription = useMemo(() => {
     const today = new Date();
     switch (currentFilter.type) {
+      case 'today': {
+        return `${today.toLocaleDateString('pt-BR')} - ${today.toLocaleDateString('pt-BR')}`;
+      }
+      case 'yesterday': {
+        const y = new Date(today);
+        y.setDate(today.getDate() - 1);
+        return `${y.toLocaleDateString('pt-BR')} - ${y.toLocaleDateString('pt-BR')}`;
+      }
       case 'last_7_days': {
         const weekAgo = new Date(today);
-        weekAgo.setDate(today.getDate() - 7);
+        weekAgo.setDate(today.getDate() - 6);
         return `${weekAgo.toLocaleDateString('pt-BR')} - ${today.toLocaleDateString('pt-BR')}`;
+      }
+      case 'last_14_days': {
+        const d = new Date(today);
+        d.setDate(today.getDate() - 13);
+        return `${d.toLocaleDateString('pt-BR')} - ${today.toLocaleDateString('pt-BR')}`;
       }
       case 'last_30_days': {
         const monthAgo = new Date(today);
-        monthAgo.setDate(today.getDate() - 30);
+        monthAgo.setDate(today.getDate() - 29);
         return `${monthAgo.toLocaleDateString('pt-BR')} - ${today.toLocaleDateString('pt-BR')}`;
       }
       case 'last_90_days': {
         const quarterAgo = new Date(today);
-        quarterAgo.setDate(today.getDate() - 90);
+        quarterAgo.setDate(today.getDate() - 89);
         return `${quarterAgo.toLocaleDateString('pt-BR')} - ${today.toLocaleDateString('pt-BR')}`;
-      }
-      case 'current_month': {
-        const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-        return `${firstDay.toLocaleDateString('pt-BR')} - ${today.toLocaleDateString('pt-BR')}`;
-      }
-      case 'last_month': {
-        const start = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-        const end = new Date(today.getFullYear(), today.getMonth(), 0);
-        return `${start.toLocaleDateString('pt-BR')} - ${end.toLocaleDateString('pt-BR')}`;
       }
       case 'custom':
         if (currentFilter.startDate && currentFilter.endDate) {
