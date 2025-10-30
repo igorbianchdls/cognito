@@ -32,7 +32,7 @@ export default function ReportsFiltersBar() {
         {/* Date Range */}
         <Popover>
           <PopoverTrigger asChild>
-            <Button variant="outline" className="h-9 px-3 gap-2">
+            <Button variant="outline" className="h-9 px-3 gap-2 bg-white">
               <CalendarIcon className="w-4 h-4" />
               <span>{periodLabel}</span>
             </Button>
@@ -51,7 +51,7 @@ export default function ReportsFiltersBar() {
 
         {/* Cadence */}
         <Select value={state.cadence} onValueChange={(v: ReportsCadence) => reportsFiltersActions.setCadence(v)}>
-          <SelectTrigger className="h-9 w-40">
+          <SelectTrigger className="h-9 w-40 bg-white">
             <SelectValue placeholder="Cadência" />
           </SelectTrigger>
           <SelectContent>
@@ -64,7 +64,7 @@ export default function ReportsFiltersBar() {
         {/* Filters (placeholder popover) */}
         <Popover>
           <PopoverTrigger asChild>
-            <Button variant="outline" className="h-9 px-3 gap-2">
+            <Button variant="outline" className="h-9 px-3 gap-2 bg-white">
               <SlidersHorizontal className="w-4 h-4" />
               <span>Filtros</span>
             </Button>
@@ -87,7 +87,7 @@ export default function ReportsFiltersBar() {
 
         {/* Report View */}
         <Select value={state.view} onValueChange={(v: ReportsView) => reportsFiltersActions.setView(v)}>
-          <SelectTrigger className="h-9 w-44">
+          <SelectTrigger className="h-9 w-44 bg-white">
             <SelectValue placeholder="Report View" />
           </SelectTrigger>
           <SelectContent>
@@ -106,4 +106,3 @@ export default function ReportsFiltersBar() {
     </div>
   )
 }
-
