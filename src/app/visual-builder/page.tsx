@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { useStore } from '@nanostores/react';
 import Link from 'next/link';
 import MonacoEditor from '@/components/visual-builder/MonacoEditor';
-import GridCanvas from '@/components/visual-builder/GridCanvas';
 import ResponsiveGridCanvas from '@/components/visual-builder/ResponsiveGridCanvas';
 import { $visualBuilderState, visualBuilderActions } from '@/stores/visualBuilderStore';
 import { ThemeManager, type ThemeName } from '@/components/visual-builder/ThemeManager';
@@ -12,7 +11,7 @@ import type { Widget, GlobalFilters } from '@/stores/visualBuilderStore';
 
 export default function VisualBuilderPage() {
   const visualBuilderState = useStore($visualBuilderState);
-  const [activeTab, setActiveTab] = useState<'editor' | 'dashboard' | 'responsive'>('editor');
+  const [activeTab, setActiveTab] = useState<'editor' | 'responsive'>('editor');
   const [viewportMode, setViewportMode] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
   const [isFilterLoading, setIsFilterLoading] = useState(false);
   const currentThemeName: ThemeName = useMemo<ThemeName>(() => {
@@ -93,16 +92,6 @@ export default function VisualBuilderPage() {
           </button>
           <button
             className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === 'dashboard'
-                ? 'border-blue-500 text-blue-600 bg-blue-50'
-                : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-            }`}
-            onClick={() => setActiveTab('dashboard')}
-          >
-            📊 Dashboard
-          </button>
-          <button
-            className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
               activeTab === 'responsive'
                 ? 'border-blue-500 text-blue-600 bg-blue-50'
                 : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'
@@ -134,24 +123,7 @@ export default function VisualBuilderPage() {
           </div>
         )}
 
-        {/* Dashboard Tab */}
-        {activeTab === 'dashboard' && (
-          <div className="h-full bg-gray-50 flex flex-col">
-            <div className="flex-1 p-6 overflow-auto">
-              <GridCanvas
-                widgets={visualBuilderState.widgets}
-                gridConfig={visualBuilderState.gridConfig}
-                globalFilters={visualBuilderState.globalFilters}
-                onLayoutChange={handleLayoutChange}
-                headerTitle={visualBuilderState.dashboardTitle || 'Live Dashboard'}
-                headerSubtitle={visualBuilderState.dashboardSubtitle || 'Real-time visualization with Supabase data'}
-                onFilterChange={handleFilterChange}
-                isFilterLoading={isFilterLoading}
-                themeName={currentThemeName}
-              />
-            </div>
-          </div>
-        )}
+        {/* Dashboard Tab removed: using only Responsive Grid */}
 
         {/* Responsive Tab */}
         {activeTab === 'responsive' && (
