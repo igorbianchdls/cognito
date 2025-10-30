@@ -89,6 +89,7 @@ interface PieChartProps extends BaseChartProps {
   containerBorderAccentColor?: string
   containerBorderRadius?: number
   containerPadding?: number
+  containerBorderVariant?: 'smooth' | 'accent' | 'none'
   // Container Shadow props
   containerShadowColor?: string
   containerShadowOpacity?: number
