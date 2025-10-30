@@ -84,11 +84,11 @@ const generatePostgreSQLQuery = (
   // Build qualified table name for PostgreSQL
   const qualifiedTable = `"${schema}"."${tabela}"`;
 
-  // Build date filter condition
+  // Build date filter condition (default to marketing.view_trafego_pago date column)
   let dateCondition = '';
   if (dateFilter) {
     const { startDate, endDate } = calculateDateRange(dateFilter);
-    dateCondition = ` AND "data" >= '${startDate}' AND "data" <= '${endDate}'`;
+    dateCondition = ` AND "data_metricas" >= '${startDate}' AND "data_metricas" <= '${endDate}'`;
   }
 
   switch (tipo) {

@@ -74,7 +74,7 @@ const initialCode = `{
       "dataSource": {
         "schema": "marketing",
         "table": "view_trafego_pago",
-        "x": "plataforma",
+        "x": "plataforma_metricas",
         "y": "gasto",
         "aggregation": "SUM"
       },
@@ -100,6 +100,7 @@ const initialCode = `{
         "schema": "marketing",
         "table": "view_trafego_pago",
         "x": "gasto",
+        "y": "gasto",
         "aggregation": "SUM"
       },
       "kpiConfig": {
@@ -123,7 +124,7 @@ const initialCode = `{
       "dataSource": {
         "schema": "marketing",
         "table": "view_trafego_pago",
-        "x": "data",
+        "x": "data_metricas",
         "y": "impressao",
         "aggregation": "SUM"
       },
@@ -148,7 +149,7 @@ const initialCode = `{
       "dataSource": {
         "schema": "marketing",
         "table": "view_trafego_pago",
-        "x": "data",
+        "x": "data_metricas",
         "y": "impressao",
         "aggregation": "SUM"
       },
@@ -198,6 +199,7 @@ const initialCode = `{
         "schema": "marketing",
         "table": "view_trafego_pago",
         "x": "roas",
+        "y": "roas",
         "aggregation": "AVG"
       },
       "kpiConfig": {
