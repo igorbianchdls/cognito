@@ -90,17 +90,18 @@ export default function ModulosRelatoriosPage() {
           <div>
             <PageHeader title="Relatórios" subtitle="Central de relatórios gerenciais" />
           </div>
-          <div>
+          <div style={{ marginBottom: 0 }}>
             <TabsNav
               options={tabs}
               value={tab}
               onValueChange={setTab}
               activeBorderColor="#111827"
+              className="px-0 md:px-0"
             />
           </div>
         </div>
-        <div className="flex-1">
-          <div className="px-4 md:px-6" style={{ marginTop: 12 }}>
+        <div className="flex-1" style={{ paddingTop: 0 }}>
+          <div className="px-4 md:px-6" style={{ marginTop: 8 }}>
             <div className="border-y bg-background">
               <DataTable columns={columns} data={data} />
             </div>
@@ -110,4 +111,3 @@ export default function ModulosRelatoriosPage() {
     </SidebarProvider>
   )
 }
-
