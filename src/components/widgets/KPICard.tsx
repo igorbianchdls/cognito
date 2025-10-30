@@ -254,14 +254,18 @@ export function KPICard({
   kpiNameLineHeight,
 
   // Special color props
-  changeColor,
-  targetColor,
+  changeColor: changeColorProp,
+  targetColor: targetColorProp,
 
   // Tailwind Classes - KPI
   kpiNameClassName = "",
   kpiValueClassName = "",
   kpiContainerClassName = ""
 }: KPICardProps) {
+  // Reference compatibility props so linter doesn't flag them as unused
+  const __compat = { kpiId, datasetId, tableId, metric, calculation, target, trend, status, timeRange, visualization, metadata, targetColorProp }
+  void __compat
+
   if (error || !success) {
     return (
       <Card className="bg-red-50 border-red-200">
@@ -366,7 +370,7 @@ export function KPICard({
           : (change !== undefined ? change : 0))
 
     const isPositive = (effectiveChangePct ?? 0) >= 0
-    const changeColor = isPositive ? positiveColor : negativeColor
+    const appliedChangeColor = changeColorProp ?? (isPositive ? positiveColor : negativeColor)
     const TrendIcon = isPositive ? ArrowUpRight : ArrowDownRight
 
     const sizeMap = {
@@ -386,7 +390,10 @@ export function KPICard({
             style={{ width: s.icon, height: s.icon, backgroundColor: iconBg || '#f3f4f6' }}
           >
             {React.isValidElement(icon)
-              ? React.cloneElement(icon as React.ReactElement<any>, { size: Math.max(14, s.icon - 12), color: iconColor || '#9ca3af' })
+              ? React.cloneElement(
+                  icon as React.ReactElement<{ size?: number; color?: string }>,
+                  { size: Math.max(14, s.icon - 12), color: iconColor || '#9ca3af' }
+                )
               : null}
           </div>
         </div>
@@ -396,11 +403,11 @@ export function KPICard({
         </div>
         {/* Footer */}
         <div className="mt-2 flex items-center gap-2">
-          <TrendIcon size={14} color={changeColor} />
-          <span style={{ color: changeColor }} className="font-medium text-[12px]">
+          <TrendIcon size={14} color={appliedChangeColor} />
+          <span style={{ color: appliedChangeColor }} className="font-medium text-[12px]">
             {Math.abs(effectiveChangePct || 0).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%
           </span>
-          <span className={`uppercase tracking-wide ${s.micro} text-gray-400`}>
+          <span className={`uppercase tracking-wide ${s.micro}`} style={{ color: neutralColor }}>
             {comparisonLabel}
           </span>
         </div>
