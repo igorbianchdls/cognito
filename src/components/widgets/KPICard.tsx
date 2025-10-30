@@ -387,7 +387,7 @@ export function KPICard({
     const innerIconSize = tileIconSize ?? Math.max(16, circleSize - 8)
 
     return (
-      <Card className={kpiContainerClassName || `bg-white ${borderVariant === 'accent' ? 'border-0' : 'border border-gray-200'} shadow-sm rounded-xl relative ${s.pad}`}
+      <div className={kpiContainerClassName || `bg-white ${borderVariant === 'accent' ? '' : 'border border-gray-200'} shadow-sm relative ${s.pad}`}
         style={(() => {
           if (tilePadding !== undefined) return { padding: `${tilePadding}px` } as React.CSSProperties
           const style: React.CSSProperties = {}
@@ -479,7 +479,7 @@ export function KPICard({
             />
           </>
         ) : null}
-      </Card>
+      </div>
     )
   }
 
