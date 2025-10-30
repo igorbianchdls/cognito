@@ -114,21 +114,21 @@ const initialCode = `{
     },
     {
       "id": "impressoes_tempo",
-      "type": "line",
+      "type": "bar",
       "position": { "x": 0, "y": 4, "w": 9, "h": 4 },
       "row": "2",
       "span": { "desktop": 1, "tablet": 2, "mobile": 1 },
       "order": 4,
       "heightPx": 280,
-      "title": "📈 Impressões ao Longo do Tempo",
+      "title": "📊 ROAS por Plataforma",
       "dataSource": {
         "schema": "marketing",
         "table": "view_trafego_pago",
-        "x": "data_metricas",
-        "y": "impressao",
-        "aggregation": "SUM"
+        "x": "plataforma_conta",
+        "y": "roas_calculado",
+        "aggregation": "AVG"
       },
-      "lineConfig": {
+      "barConfig": {
         "styling": {
           "showLegend": false,
           "showGrid": true,
