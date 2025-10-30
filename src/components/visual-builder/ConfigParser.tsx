@@ -122,6 +122,7 @@ export interface GridConfig {
 
 // Theme types are now managed by ThemeManager
 import { ThemeManager, type ThemeName } from './ThemeManager';
+import { BorderManager, type BorderPresetKey } from './BorderManager';
 
 // Responsive layout interfaces
 export interface LayoutRow {
@@ -254,7 +255,9 @@ export class ConfigParser {
       const dashboardSubtitle = typeof config.dashboardSubtitle === 'string' ? config.dashboardSubtitle : undefined;
 
       // Border options (top-level)
-      const borderType = typeof config.borderType === 'string' ? config.borderType : undefined;
+      const borderType = typeof config.borderType === 'string' && BorderManager.isValid(config.borderType)
+        ? (config.borderType as BorderPresetKey)
+        : undefined;
       const borderColor = typeof config.borderColor === 'string' ? config.borderColor : undefined;
       const borderWidth = typeof config.borderWidth === 'number' ? config.borderWidth : undefined;
       const borderRadius = typeof config.borderRadius === 'number' ? config.borderRadius : undefined;
@@ -297,7 +300,7 @@ export class ConfigParser {
       // Step 5: Apply theme to widgets and grid if theme is specified and valid
       const themedWidgets = (theme && ThemeManager.isValidTheme(theme))
         ? this.applyThemeToWidgets(validWidgets, theme, customFont, corporateColor, customFontSize, {
-            type: borderType as any,
+            type: borderType,
             color: borderColor,
             width: borderWidth,
             radius: borderRadius,

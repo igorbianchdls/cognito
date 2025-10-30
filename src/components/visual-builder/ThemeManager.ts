@@ -238,7 +238,7 @@ export class ThemeManager {
     clonedWidget.kpiConfig.kpiContainerBorderRadius = style.radius
     clonedWidget.kpiConfig.kpiContainerShadow = style.shadow
     clonedWidget.kpiConfig.kpiContainerBorderAccentColor = style.accentColor
-    ;(clonedWidget.kpiConfig as any).borderVariant = style.type === 'acentuada' ? 'accent' : (style.type === 'sem-borda' ? 'none' : 'smooth')
+    clonedWidget.kpiConfig.borderVariant = style.type === 'acentuada' ? 'accent' : (style.type === 'sem-borda' ? 'none' : 'smooth')
 
     return clonedWidget;
   }

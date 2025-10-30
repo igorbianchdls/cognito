@@ -132,6 +132,9 @@ export interface KPIConfig {
   kpiNameClassName?: string
   kpiValueClassName?: string
   kpiContainerClassName?: string
+
+  // Border variant (visual style) propagated to KPICard
+  borderVariant?: 'smooth' | 'accent' | 'none'
 }
 
 // KPI Widget interface
