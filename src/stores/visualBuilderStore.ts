@@ -169,12 +169,12 @@ const initialCode = `{
       "row": "1",
       "span": { "desktop": 1, "tablet": 1, "mobile": 1 },
       "order": 3,
-      "title": "📱 Conversões por Dispositivo",
+      "title": "🏆 Top 10 Campanhas por Gasto",
       "dataSource": {
         "schema": "marketing",
         "table": "view_trafego_pago",
-        "x": "dispositivo",
-        "y": "conversao",
+        "x": "campanha_nome",
+        "y": "gasto",
         "aggregation": "SUM"
       },
       "pieConfig": {
