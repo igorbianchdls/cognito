@@ -62,17 +62,15 @@ export default function DashboardInCanvasHeader({
     return undefined;
   });
 
-  useEffect(() => {
-    setSelectedType(currentFilter.type);
-  }, [currentFilter.type]);
+  // Note: keep selectedType controlled by user action to avoid flicker when opening custom picker
 
   const handleFilterTypeChange = (value: DateRangeType) => {
     setSelectedType(value);
     if (value !== 'custom') {
       onFilterChange({ type: value });
     } else {
-      // Open custom date picker when selecting personalizado
-      setShowCustomPicker(true);
+      // Defer opening to avoid immediate close from Select's outside click
+      setTimeout(() => setShowCustomPicker(true), 50);
     }
   };
 
