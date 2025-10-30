@@ -8,7 +8,7 @@ import PageHeader from '@/components/modulos/PageHeader'
 import TabsNav, { type Opcao } from '@/components/modulos/TabsNav'
 import DataTable, { type TableData } from '@/components/widgets/Table'
 import type { ColumnDef } from '@tanstack/react-table'
-import { BarChart3, DollarSign, ShoppingCart, Megaphone } from 'lucide-react'
+import { BarChart3 } from 'lucide-react'
 import { $titulo, $tabs, $tabelaUI, $layout, financeiroUiActions } from '@/stores/modulos/financeiroUiStore'
 import DRETable from '@/components/relatorios/DRETable'
 import BalanceSheetTable from '@/components/relatorios/BalanceSheetTable'
@@ -34,10 +34,6 @@ export default function ModulosRelatoriosPage() {
         { value: 'dfc', label: 'Fluxo de Caixa' },
         { value: 'balancete', label: 'Balancete' },
         { value: 'dmpl', label: 'DMPL' },
-        { value: 'executivo', label: 'Executivo' },
-        { value: 'financeiro', label: 'Financeiro' },
-        { value: 'vendas', label: 'Vendas' },
-        { value: 'marketing', label: 'Marketing' },
       ],
       selected: 'dre',
     })
@@ -55,14 +51,6 @@ export default function ModulosRelatoriosPage() {
         return <BarChart3 className="h-4 w-4" />
       case 'dre':
         return <BarChart3 className="h-4 w-4" />
-      case 'executivo':
-        return <BarChart3 className="h-4 w-4" />
-      case 'financeiro':
-        return <DollarSign className="h-4 w-4" />
-      case 'vendas':
-        return <ShoppingCart className="h-4 w-4" />
-      case 'marketing':
-        return <Megaphone className="h-4 w-4" />
       default:
         return null
     }
@@ -135,62 +123,8 @@ export default function ModulosRelatoriosPage() {
       }
       case 'dre':
         return { columns: [], data: [] }
-      case 'financeiro':
-        return {
-          columns: [
-            { accessorKey: 'conta', header: 'Conta' },
-            { accessorKey: 'periodo', header: 'Período' },
-            { accessorKey: 'valor', header: 'Valor' },
-            { accessorKey: 'status', header: 'Status' },
-          ],
-          data: [
-            { conta: 'Receita', periodo: 'Mês atual', valor: 125000, status: 'OK' },
-            { conta: 'Despesa', periodo: 'Mês atual', valor: 83000, status: 'OK' },
-            { conta: 'Margem', periodo: 'Mês atual', valor: 42000, status: 'OK' },
-          ],
-        }
-      case 'vendas':
-        return {
-          columns: [
-            { accessorKey: 'produto', header: 'Produto' },
-            { accessorKey: 'quantidade', header: 'Qtd' },
-            { accessorKey: 'faturamento', header: 'Faturamento' },
-            { accessorKey: 'canal', header: 'Canal' },
-          ],
-          data: [
-            { produto: 'SKU-1001', quantidade: 120, faturamento: 36000, canal: 'E-commerce' },
-            { produto: 'SKU-2040', quantidade: 75, faturamento: 22500, canal: 'Marketplace' },
-            { produto: 'SKU-3344', quantidade: 58, faturamento: 17400, canal: 'E-commerce' },
-          ],
-        }
-      case 'marketing':
-        return {
-          columns: [
-            { accessorKey: 'campanha', header: 'Campanha' },
-            { accessorKey: 'impressoes', header: 'Impressões' },
-            { accessorKey: 'cliques', header: 'Cliques' },
-            { accessorKey: 'ctr', header: 'CTR (%)' },
-          ],
-          data: [
-            { campanha: 'Awareness Q4', impressoes: 120000, cliques: 7200, ctr: 6.0 },
-            { campanha: 'Promo Black', impressoes: 85000, cliques: 5950, ctr: 7.0 },
-            { campanha: 'Retargeting', impressoes: 56000, cliques: 3920, ctr: 7.0 },
-          ],
-        }
-      case 'executivo':
       default:
-        return {
-          columns: [
-            { accessorKey: 'indicador', header: 'Indicador' },
-            { accessorKey: 'valor', header: 'Valor' },
-            { accessorKey: 'variacao', header: 'Variação' },
-          ],
-          data: [
-            { indicador: 'Receita', valor: 125000, variacao: '+8.2%' },
-            { indicador: 'CAC', valor: 47.3, variacao: '-3.1%' },
-            { indicador: 'Conversão', valor: '2.4%', variacao: '+0.2pp' },
-          ],
-        }
+        return { columns: [], data: [] }
     }
   }, [tabs.selected])
 
