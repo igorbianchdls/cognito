@@ -1,7 +1,7 @@
 'use client';
 
-import { Calendar, RefreshCw } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { Calendar as CalendarIcon, RefreshCw } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -11,6 +11,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import type { DateRangeFilter, DateRangeType } from '@/stores/visualBuilderStore';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import type { DateRange } from 'react-day-picker';
 import { useStore } from '@nanostores/react';
 import { $headerUi, resolveHeaderStyle } from '@/stores/ui/headerUiStore';
 import type { ThemeName } from './ThemeManager';
@@ -48,13 +51,37 @@ export default function DashboardInCanvasHeader({
 }: DashboardInCanvasHeaderProps) {
   const headerUi = useStore($headerUi);
   const [selectedType, setSelectedType] = useState<DateRangeType>(currentFilter.type);
+  const [showCustomPicker, setShowCustomPicker] = useState(false);
+  const [customRange, setCustomRange] = useState<DateRange | undefined>(() => {
+    if (currentFilter.type === 'custom' && currentFilter.startDate && currentFilter.endDate) {
+      return {
+        from: new Date(currentFilter.startDate),
+        to: new Date(currentFilter.endDate)
+      };
+    }
+    return undefined;
+  });
+
+  useEffect(() => {
+    setSelectedType(currentFilter.type);
+  }, [currentFilter.type]);
 
   const handleFilterTypeChange = (value: DateRangeType) => {
     setSelectedType(value);
     if (value !== 'custom') {
       onFilterChange({ type: value });
+    } else {
+      // Open custom date picker when selecting personalizado
+      setShowCustomPicker(true);
     }
   };
+
+  useEffect(() => {
+    // Keep internal range in sync if currentFilter changes externally
+    if (currentFilter.type === 'custom' && currentFilter.startDate && currentFilter.endDate) {
+      setCustomRange({ from: new Date(currentFilter.startDate), to: new Date(currentFilter.endDate) });
+    }
+  }, [currentFilter]);
 
   const handleRefresh = () => {
     onFilterChange(currentFilter);
@@ -146,7 +173,7 @@ export default function DashboardInCanvasHeader({
         <div className="flex items-center gap-3 md:gap-4">
           <div className="flex items-center gap-2">
             <div className="hidden sm:flex items-center gap-2">
-              <Calendar className="h-4 w-4" style={{ color: headerStyle.textSecondary }} />
+              <CalendarIcon className="h-4 w-4" style={{ color: headerStyle.textSecondary }} />
               <span className="text-sm font-medium" style={{ color: headerStyle.textSecondary }}>Periodo</span>
             </div>
             <Select value={selectedType} onValueChange={handleFilterTypeChange} disabled={isLoading}>
@@ -180,6 +207,39 @@ export default function DashboardInCanvasHeader({
                 ))}
               </SelectContent>
             </Select>
+            {/* Custom date range popover */}
+            <Popover open={showCustomPicker} onOpenChange={setShowCustomPicker}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-9"
+                  disabled={selectedType !== 'custom' || isLoading}
+                  style={{
+                    backgroundColor: 'transparent',
+                    color: headerStyle.textPrimary,
+                    borderColor: headerStyle.borderBottomColor,
+                  }}
+                >
+                  Selecionar datas
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent align="start" sideOffset={8} className="p-2">
+                <Calendar
+                  mode="range"
+                  numberOfMonths={2}
+                  selected={customRange}
+                  onSelect={(range?: DateRange) => {
+                    setCustomRange(range);
+                    if (range?.from && range?.to) {
+                      const toISO = (d: Date) => d.toISOString().split('T')[0];
+                      onFilterChange({ type: 'custom', startDate: toISO(range.from), endDate: toISO(range.to) });
+                      setShowCustomPicker(false);
+                    }
+                  }}
+                />
+              </PopoverContent>
+            </Popover>
             <Button
               variant="outline"
               size="sm"
