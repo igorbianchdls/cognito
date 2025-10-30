@@ -387,7 +387,7 @@ export function KPICard({
     const innerIconSize = tileIconSize ?? Math.max(16, circleSize - 8)
 
     return (
-      <div className={kpiContainerClassName || `bg-white ${borderVariant === 'accent' ? '' : 'border border-gray-200'} shadow-sm relative ${s.pad}`}
+      <div className={kpiContainerClassName || `bg-white ${borderVariant === 'accent' ? '' : 'border border-gray-200'} ${borderVariant === 'accent' ? 'shadow-none' : 'shadow-sm'} relative ${s.pad}`}
         style={(() => {
           if (tilePadding !== undefined) return { padding: `${tilePadding}px` } as React.CSSProperties
           const style: React.CSSProperties = {}
@@ -410,6 +410,8 @@ export function KPICard({
             style.borderRadius = 12
           }
           if (typeof kpiContainerShadow === 'boolean') style.boxShadow = kpiContainerShadow ? '0 1px 2px rgba(0,0,0,.06), 0 8px 24px rgba(0,0,0,.06)' : 'none'
+          // Force no shadow for accent variant
+          if (borderVariant === 'accent') style.boxShadow = 'none'
           return Object.keys(style).length ? style : undefined
         })()}
       >
