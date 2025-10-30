@@ -9,7 +9,7 @@ export default function BigQueryKPIDemoPage() {
   const [tilePaddingY, setTilePaddingY] = useState<number>(16)
   const [tileValuePaddingY, setTileValuePaddingY] = useState<number>(4)
   const [borderVariant, setBorderVariant] = useState<'smooth' | 'accent'>('smooth')
-  const [tileBorderRadius, setTileBorderRadius] = useState<number>(0)
+  const [tileBorderRadius, setTileBorderRadius] = useState<number>(12)
 
   return (
     <div className="p-6 space-y-6">
@@ -48,7 +48,7 @@ export default function BigQueryKPIDemoPage() {
           tilePaddingY={tilePaddingY}
           tileValuePaddingY={tileValuePaddingY}
           borderVariant={borderVariant}
-          tileBorderRadius={tileBorderRadius}
+          tileBorderRadius={borderVariant === 'smooth' ? tileBorderRadius : undefined}
         />
         <KPICard
           variant="tile"
@@ -63,7 +63,7 @@ export default function BigQueryKPIDemoPage() {
           tilePaddingY={tilePaddingY}
           tileValuePaddingY={tileValuePaddingY}
           borderVariant={borderVariant}
-          tileBorderRadius={tileBorderRadius}
+          tileBorderRadius={borderVariant === 'smooth' ? tileBorderRadius : undefined}
         />
         <KPICard
           variant="tile"
@@ -77,7 +77,7 @@ export default function BigQueryKPIDemoPage() {
           tilePaddingY={tilePaddingY}
           tileValuePaddingY={tileValuePaddingY}
           borderVariant={borderVariant}
-          tileBorderRadius={tileBorderRadius}
+          tileBorderRadius={borderVariant === 'smooth' ? tileBorderRadius : undefined}
         />
         <KPICard
           variant="tile"
@@ -91,7 +91,7 @@ export default function BigQueryKPIDemoPage() {
           tilePaddingY={tilePaddingY}
           tileValuePaddingY={tileValuePaddingY}
           borderVariant={borderVariant}
-          tileBorderRadius={tileBorderRadius}
+          tileBorderRadius={borderVariant === 'smooth' ? tileBorderRadius : undefined}
         />
       </div>
     </div>

@@ -405,6 +405,9 @@ export function KPICard({
           } else if (borderVariant === 'accent') {
             // Default to sharp corners for accent if not provided
             style.borderRadius = 0
+          } else if (borderVariant === 'smooth') {
+            // Default rounded corners for smooth variant
+            style.borderRadius = 12
           }
           if (typeof kpiContainerShadow === 'boolean') style.boxShadow = kpiContainerShadow ? '0 1px 2px rgba(0,0,0,.06), 0 8px 24px rgba(0,0,0,.06)' : 'none'
           return Object.keys(style).length ? style : undefined
