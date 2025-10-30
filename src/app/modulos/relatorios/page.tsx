@@ -1,6 +1,7 @@
 "use client"
 
-import { useMemo, useState } from 'react'
+import { useMemo, useEffect } from 'react'
+import { useStore } from '@nanostores/react'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
 import PageHeader from '@/components/modulos/PageHeader'
@@ -8,21 +9,56 @@ import TabsNav, { type Opcao } from '@/components/modulos/TabsNav'
 import DataTable, { type TableData } from '@/components/widgets/Table'
 import type { ColumnDef } from '@tanstack/react-table'
 import { BarChart3, DollarSign, ShoppingCart, Megaphone } from 'lucide-react'
+import { $titulo, $tabs, $tabelaUI, $layout, financeiroUiActions } from '@/stores/modulos/financeiroUiStore'
 
 export default function ModulosRelatoriosPage() {
-  const [tab, setTab] = useState<string>('executivo')
+  const titulo = useStore($titulo)
+  const tabs = useStore($tabs)
+  const tabelaUI = useStore($tabelaUI)
+  const layout = useStore($layout)
 
-  const tabs: Opcao[] = [
-    { value: 'executivo', label: 'Executivo', icon: <BarChart3 className="h-4 w-4" /> },
-    { value: 'financeiro', label: 'Financeiro', icon: <DollarSign className="h-4 w-4" /> },
-    { value: 'vendas', label: 'Vendas', icon: <ShoppingCart className="h-4 w-4" /> },
-    { value: 'marketing', label: 'Marketing', icon: <Megaphone className="h-4 w-4" /> },
-  ]
+  // Initialize UI and tabs options similar to other modules
+  useEffect(() => {
+    financeiroUiActions.setTitulo({ title: 'Relatórios', subtitle: 'Central de relatórios gerenciais' })
+    financeiroUiActions.setTabs({
+      options: [
+        { value: 'executivo', label: 'Executivo' },
+        { value: 'financeiro', label: 'Financeiro' },
+        { value: 'vendas', label: 'Vendas' },
+        { value: 'marketing', label: 'Marketing' },
+      ],
+      selected: 'executivo',
+    })
+  }, [])
+
+  const iconFor = (v: string) => {
+    switch (v) {
+      case 'executivo':
+        return <BarChart3 className="h-4 w-4" />
+      case 'financeiro':
+        return <DollarSign className="h-4 w-4" />
+      case 'vendas':
+        return <ShoppingCart className="h-4 w-4" />
+      case 'marketing':
+        return <Megaphone className="h-4 w-4" />
+      default:
+        return null
+    }
+  }
+
+  const tabOptions: Opcao[] = (tabs.options || []).map(opt => ({ ...opt, icon: iconFor(opt.value) }))
+
+  const fontVar = (name?: string) => {
+    if (!name) return undefined
+    if (name === 'Inter') return 'var(--font-inter)'
+    if (name === 'Geist') return 'var(--font-geist-sans)'
+    return name
+  }
 
   type Row = TableData
 
   const { columns, data }: { columns: ColumnDef<Row>[]; data: Row[] } = useMemo(() => {
-    switch (tab) {
+    switch (tabs.selected) {
       case 'financeiro':
         return {
           columns: [
@@ -80,30 +116,75 @@ export default function ModulosRelatoriosPage() {
           ],
         }
     }
-  }, [tab])
+  }, [tabs.selected])
 
   return (
     <SidebarProvider>
       <SidebarShadcn />
-      <SidebarInset className="min-h-screen flex flex-col overflow-y-auto bg-gray-50">
-        <div className="bg-white">
-          <div>
-            <PageHeader title="Relatórios" subtitle="Central de relatórios gerenciais" />
+      <SidebarInset className="min-h-screen flex flex-col overflow-y-auto" style={{ background: layout.contentBg }}>
+        <div style={{ background: 'white' }}>
+          <div style={{ marginBottom: layout.mbTitle }}>
+            <PageHeader
+              title={titulo.title}
+              subtitle={titulo.subtitle}
+              titleFontFamily={fontVar(titulo.titleFontFamily)}
+              titleFontSize={titulo.titleFontSize}
+              titleFontWeight={titulo.titleFontWeight}
+              titleColor={titulo.titleColor}
+              titleLetterSpacing={titulo.titleLetterSpacing}
+            />
           </div>
           <div style={{ marginBottom: 0 }}>
             <TabsNav
-              options={tabs}
-              value={tab}
-              onValueChange={setTab}
-              activeBorderColor="#111827"
+              options={tabOptions}
+              value={tabs.selected}
+              onValueChange={(v) => financeiroUiActions.setTabs({ selected: v })}
+              fontFamily={fontVar(tabs.fontFamily)}
+              fontSize={tabs.fontSize}
+              fontWeight={tabs.fontWeight}
+              color={tabs.color}
+              letterSpacing={tabs.letterSpacing}
+              iconSize={tabs.iconSize}
+              labelOffsetY={tabs.labelOffsetY}
+              startOffset={tabs.leftOffset}
+              activeColor={tabs.activeColor}
+              activeFontWeight={tabs.activeFontWeight}
+              activeBorderColor={tabs.activeBorderColor}
               className="px-0 md:px-0"
             />
           </div>
         </div>
-        <div className="flex-1" style={{ paddingTop: 0 }}>
-          <div className="px-4 md:px-6" style={{ marginTop: 8 }}>
-            <div className="border-y bg-background">
-              <DataTable columns={columns} data={data} />
+        <div style={{ paddingTop: (layout.contentTopGap || 0) + (layout.mbTabs || 0) }}>
+          <div className="px-4 md:px-6" style={{ marginBottom: 8 }}>
+            <div className="border-y bg-background" style={{ borderColor: tabelaUI.borderColor }}>
+              <DataTable
+                columns={columns}
+                data={data}
+                enableSearch={tabelaUI.enableSearch}
+                showColumnToggle={tabelaUI.enableColumnToggle}
+                showPagination={tabelaUI.showPagination}
+                pageSize={tabelaUI.pageSize}
+                headerBackground={tabelaUI.headerBg}
+                headerTextColor={tabelaUI.headerText}
+                cellTextColor={tabelaUI.cellText}
+                headerFontSize={tabelaUI.headerFontSize}
+                headerFontFamily={fontVar(tabelaUI.headerFontFamily)}
+                headerFontWeight={tabelaUI.headerFontWeight}
+                headerLetterSpacing={tabelaUI.headerLetterSpacing}
+                cellFontSize={tabelaUI.cellFontSize}
+                cellFontFamily={fontVar(tabelaUI.cellFontFamily)}
+                cellFontWeight={tabelaUI.cellFontWeight}
+                cellLetterSpacing={tabelaUI.cellLetterSpacing}
+                enableZebraStripes={tabelaUI.enableZebraStripes}
+                rowAlternateBgColor={tabelaUI.rowAlternateBgColor}
+                borderColor={tabelaUI.borderColor}
+                borderWidth={tabelaUI.borderWidth}
+                selectionColumnWidth={tabelaUI.selectionColumnWidth}
+                enableRowSelection={tabelaUI.enableRowSelection}
+                selectionMode={tabelaUI.selectionMode}
+                defaultSortColumn={tabelaUI.defaultSortColumn}
+                defaultSortDirection={tabelaUI.defaultSortDirection}
+              />
             </div>
           </div>
         </div>
