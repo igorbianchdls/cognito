@@ -131,6 +131,14 @@ export default function DRETable({ data = DEFAULT_DATA, periods = [
     return map
   }, [data, periods])
 
+  const profitByPeriod = useMemo(() => {
+    const map: Record<string, number> = {}
+    for (const p of periods) {
+      map[p.key] = data.reduce((acc, n) => acc + computeNodeValueForPeriod(n, p.key), 0)
+    }
+    return map
+  }, [data, periods])
+
   const toggle = (id: string) => {
     setExpanded(prev => {
       const next = new Set(prev)
@@ -207,6 +215,22 @@ export default function DRETable({ data = DEFAULT_DATA, periods = [
             ))}
             <TableCell className="text-right font-semibold text-gray-900">
               {formatCurrencyBRL(Object.values(totalRevenueByPeriod).reduce((a, b) => a + b, 0))}
+            </TableCell>
+          </TableRow>
+          {/* Lucro/Prejuízo: Receita - Despesas (somatório de todos os grupos) */}
+          <TableRow>
+            <TableCell className="font-semibold text-gray-900">Lucro/Prejuízo</TableCell>
+            {periods.map((p) => {
+              const v = profitByPeriod[p.key] || 0
+              const neg = v < 0
+              return (
+                <TableCell key={p.key} className="text-right font-semibold" style={{ color: neg ? '#dc2626' : '#111827' }}>
+                  {formatCurrencyBRL(v)}
+                </TableCell>
+              )
+            })}
+            <TableCell className="text-right font-semibold" style={{ color: (Object.values(profitByPeriod).reduce((a, b) => a + b, 0) < 0) ? '#dc2626' : '#111827' }}>
+              {formatCurrencyBRL(Object.values(profitByPeriod).reduce((a, b) => a + b, 0))}
             </TableCell>
           </TableRow>
         </TableBody>

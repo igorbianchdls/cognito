@@ -29,11 +29,11 @@ export default function ModulosRelatoriosPage() {
     financeiroUiActions.setTitulo({ title: 'Relatórios', subtitle: 'Central de relatórios gerenciais' })
     financeiroUiActions.setTabs({
       options: [
+        { value: 'dre', label: 'DRE' },
         { value: 'balanco', label: 'Balanço' },
         { value: 'dfc', label: 'Fluxo de Caixa' },
         { value: 'balancete', label: 'Balancete' },
         { value: 'dmpl', label: 'DMPL' },
-        { value: 'dre', label: 'DRE' },
         { value: 'executivo', label: 'Executivo' },
         { value: 'financeiro', label: 'Financeiro' },
         { value: 'vendas', label: 'Vendas' },
