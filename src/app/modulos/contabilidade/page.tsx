@@ -31,6 +31,8 @@ export default function ModulosContabilidadePage() {
         { value: 'centros-de-custo', label: 'Centros de Custo' },
         { value: 'centros-de-lucro', label: 'Centros de Lucro' },
         { value: 'plano-contas', label: 'Plano de Contas' },
+        { value: 'categorias', label: 'Categorias' },
+        { value: 'segmentos', label: 'Segmentos' },
         { value: 'regras-contabeis', label: 'Regras contábeis' },
       ],
       selected: 'lancamentos',
@@ -79,6 +81,18 @@ export default function ModulosContabilidadePage() {
           { accessorKey: 'codigo', header: 'Código' },
           { accessorKey: 'nome', header: 'Nome' },
           { accessorKey: 'tipo', header: 'Tipo' },
+        ]
+      case 'categorias':
+        return [
+          { accessorKey: 'codigo', header: 'Código' },
+          { accessorKey: 'nome', header: 'Nome' },
+          { accessorKey: 'descricao', header: 'Descrição' },
+        ]
+      case 'segmentos':
+        return [
+          { accessorKey: 'codigo', header: 'Código' },
+          { accessorKey: 'nome', header: 'Nome' },
+          { accessorKey: 'descricao', header: 'Descrição' },
         ]
       case 'regras-contabeis':
         return [
