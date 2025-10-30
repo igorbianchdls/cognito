@@ -14,12 +14,15 @@ import DRETable from '@/components/relatorios/DRETable'
 import BalanceSheetTable from '@/components/relatorios/BalanceSheetTable'
 import CashFlowTable from '@/components/relatorios/CashFlowTable'
 import DMPLTable from '@/components/relatorios/DMPLTable'
+import ReportsFiltersBar from '@/components/relatorios/ReportsFiltersBar'
+import { $reportsFilters } from '@/stores/reportsFiltersStore'
 
 export default function ModulosRelatoriosPage() {
   const titulo = useStore($titulo)
   const tabs = useStore($tabs)
   const tabelaUI = useStore($tabelaUI)
   const layout = useStore($layout)
+  const filters = useStore($reportsFilters)
 
   // Initialize UI and tabs options similar to other modules
   useEffect(() => {
@@ -196,17 +199,21 @@ export default function ModulosRelatoriosPage() {
           </div>
         </div>
         <div style={{ paddingTop: (layout.contentTopGap || 0) + (layout.mbTabs || 0) }}>
+          {/* Filtros de relatório (compartilhável entre abas) */}
+          <div className="px-4 md:px-6" style={{ marginBottom: 8 }}>
+            <ReportsFiltersBar />
+          </div>
           <div className="px-4 md:px-6" style={{ marginBottom: 8 }}>
             {(() => {
               switch (tabs.selected) {
                 case 'balanco':
-                  return <BalanceSheetTable />
+                  return <BalanceSheetTable periods={periods} />
                 case 'dfc':
-                  return <CashFlowTable />
+                  return <CashFlowTable periods={periods} />
                 case 'dmpl':
-                  return <DMPLTable />
+                  return <DMPLTable periods={periods} />
                 case 'dre':
-                  return <DRETable />
+                  return <DRETable periods={periods} />
                 case 'balancete':
                   return (
                     <div className="border-y bg-background" style={{ borderColor: tabelaUI.borderColor }}>
@@ -281,3 +288,37 @@ export default function ModulosRelatoriosPage() {
     </SidebarProvider>
   )
 }
+  // Build periods (mensal) from dateRange
+  const periods = useMemo(() => {
+    if (filters.cadence !== 'mensal') {
+      return [
+        { key: '2025-01', label: 'Janeiro' },
+        { key: '2025-02', label: 'Fevereiro' },
+        { key: '2025-03', label: 'Março' },
+      ]
+    }
+    const from = filters.dateRange?.from
+    const to = filters.dateRange?.to
+    if (!from || !to) {
+      // default last 3 months relative to today
+      const d = new Date()
+      const mk = (yr: number, m: number) => `${yr}-${String(m + 1).padStart(2, '0')}`
+      const arr: { key: string; label: string }[] = []
+      for (let i = 2; i >= 0; i--) {
+        const x = new Date(d.getFullYear(), d.getMonth() - i, 1)
+        arr.push({ key: mk(x.getFullYear(), x.getMonth()), label: x.toLocaleString('pt-BR', { month: 'long' }) })
+      }
+      return arr
+    }
+    // generate month list between from and to
+    const list: { key: string; label: string }[] = []
+    const cur = new Date(from.getFullYear(), from.getMonth(), 1)
+    const end = new Date(to.getFullYear(), to.getMonth(), 1)
+    while (cur <= end && list.length < 24) {
+      const key = `${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, '0')}`
+      const label = cur.toLocaleString('pt-BR', { month: 'long' })
+      list.push({ key, label })
+      cur.setMonth(cur.getMonth() + 1)
+    }
+    return list
+  }, [filters.cadence, filters.dateRange?.from, filters.dateRange?.to])
