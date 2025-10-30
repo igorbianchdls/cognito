@@ -410,7 +410,7 @@ export function KPICard({
       >
         {/* Header */}
         <div className="flex items-start justify-between">
-          <div className={`font-medium text-slate-800 ${s.label}`}>{name || 'KPI'}</div>
+          <div className={`font-medium text-slate-800 leading-none ${s.label}`}>{name || 'KPI'}</div>
           {React.isValidElement(icon) ? (
             <div
               className="flex items-center justify-center rounded-full"
@@ -424,16 +424,16 @@ export function KPICard({
           ) : null}
         </div>
         {/* Value */}
-        <div className={`font-semibold text-slate-900 ${s.value}`} style={tileValuePaddingY !== undefined ? { paddingTop: tileValuePaddingY, paddingBottom: tileValuePaddingY } : { paddingTop: 4, paddingBottom: 4 }}>
+        <div className={`font-semibold text-slate-900 leading-none ${s.value}`} style={tileValuePaddingY !== undefined ? { paddingTop: tileValuePaddingY, paddingBottom: tileValuePaddingY } : { paddingTop: 4, paddingBottom: 4 }}>
           {formatValue(currentValue, unit)}
         </div>
         {/* Footer */}
         <div className="flex items-center gap-2">
           <TrendIcon size={14} color={appliedChangeColor} />
-          <span style={{ color: appliedChangeColor }} className="font-medium text-[12px]">
+          <span style={{ color: appliedChangeColor }} className="font-medium text-[12px] leading-none">
             {Math.abs(effectiveChangePct || 0).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%
           </span>
-          <span className={`uppercase tracking-wide ${s.micro}`} style={{ color: neutralColor }}>
+          <span className={`uppercase tracking-wide leading-none ${s.micro}`} style={{ color: neutralColor }}>
             {comparisonLabel}
           </span>
         </div>
