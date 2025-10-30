@@ -8,6 +8,7 @@ export default function BigQueryKPIDemoPage() {
   const [tilePaddingX, setTilePaddingX] = useState<number>(16)
   const [tilePaddingY, setTilePaddingY] = useState<number>(16)
   const [tileValuePaddingY, setTileValuePaddingY] = useState<number>(4)
+  const [borderVariant, setBorderVariant] = useState<'smooth' | 'accent'>('smooth')
 
   return (
     <div className="p-6 space-y-6">
@@ -21,6 +22,12 @@ export default function BigQueryKPIDemoPage() {
         </label>
         <label className="flex items-center gap-2">Value py
           <input type="number" className="border rounded px-2 py-1 w-20" value={tileValuePaddingY} onChange={(e) => setTileValuePaddingY(Number(e.target.value))} />
+        </label>
+        <label className="flex items-center gap-2">Borda
+          <select className="border rounded px-2 py-1" value={borderVariant} onChange={(e) => setBorderVariant(e.target.value as 'smooth' | 'accent')}>
+            <option value="smooth">Suave (atual)</option>
+            <option value="accent">Cantos acentuados (anterior)</option>
+          </select>
         </label>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -36,6 +43,7 @@ export default function BigQueryKPIDemoPage() {
           tilePaddingX={tilePaddingX}
           tilePaddingY={tilePaddingY}
           tileValuePaddingY={tileValuePaddingY}
+          borderVariant={borderVariant}
         />
         <KPICard
           variant="tile"
@@ -49,6 +57,7 @@ export default function BigQueryKPIDemoPage() {
           tilePaddingX={tilePaddingX}
           tilePaddingY={tilePaddingY}
           tileValuePaddingY={tileValuePaddingY}
+          borderVariant={borderVariant}
         />
         <KPICard
           variant="tile"
@@ -61,6 +70,7 @@ export default function BigQueryKPIDemoPage() {
           tilePaddingX={tilePaddingX}
           tilePaddingY={tilePaddingY}
           tileValuePaddingY={tileValuePaddingY}
+          borderVariant={borderVariant}
         />
         <KPICard
           variant="tile"
@@ -73,6 +83,7 @@ export default function BigQueryKPIDemoPage() {
           tilePaddingX={tilePaddingX}
           tilePaddingY={tilePaddingY}
           tileValuePaddingY={tileValuePaddingY}
+          borderVariant={borderVariant}
         />
       </div>
     </div>

@@ -32,6 +32,7 @@ interface KPICardProps {
   // Visual variant
   variant?: 'classic' | 'tile'
   size?: 'sm' | 'md' | 'lg'
+  borderVariant?: 'smooth' | 'accent'
 
   // Data props
   kpiId?: string;
@@ -167,6 +168,7 @@ interface KPICardProps {
 export function KPICard({
   variant = 'classic',
   size = 'md',
+  borderVariant = 'smooth',
   // Data props
   kpiId,
   name,
@@ -399,12 +401,20 @@ export function KPICard({
     const innerIconSize = tileIconSize ?? Math.max(16, circleSize - 8)
 
     return (
-      <Card className={kpiContainerClassName || `bg-white border border-gray-200 shadow-sm rounded-xl ${s.pad}`}
+      <Card className={kpiContainerClassName || `bg-white border ${borderVariant === 'accent' ? '' : 'border-gray-200'} shadow-sm rounded-xl relative ${s.pad}`}
         style={(() => {
           if (tilePadding !== undefined) return { padding: `${tilePadding}px` } as React.CSSProperties
           const style: React.CSSProperties = {}
           if (tilePaddingX !== undefined) { style.paddingLeft = tilePaddingX; style.paddingRight = tilePaddingX }
           if (tilePaddingY !== undefined) { style.paddingTop = tilePaddingY; style.paddingBottom = tilePaddingY }
+          // Apply custom border color if provided
+          if (kpiContainerBorderColor) {
+            (style as any).border = `${borderVariant === 'accent' ? 0.5 : (kpiContainerBorderWidth ?? 1)}px solid ${hexToRgba(kpiContainerBorderColor, kpiContainerBorderOpacity ?? 1)}`
+          } else if (borderVariant === 'accent') {
+            (style as any).borderWidth = 0.5
+            (style as any).borderStyle = 'solid'
+            (style as any).borderColor = '#777'
+          }
           return Object.keys(style).length ? style : undefined
         })()}
       >
@@ -437,6 +447,46 @@ export function KPICard({
             {comparisonLabel}
           </span>
         </div>
+        {borderVariant === 'accent' ? (
+          <>
+            <div
+              className="absolute w-3 h-3"
+              style={{
+                top: '-0.5px',
+                left: '-0.5px',
+                borderTop: `0.5px solid ${kpiContainerBorderAccentColor || '#bbb'}`,
+                borderLeft: `0.5px solid ${kpiContainerBorderAccentColor || '#bbb'}`
+              }}
+            />
+            <div
+              className="absolute w-3 h-3"
+              style={{
+                top: '-0.5px',
+                right: '-0.5px',
+                borderTop: `0.5px solid ${kpiContainerBorderAccentColor || '#bbb'}`,
+                borderRight: `0.5px solid ${kpiContainerBorderAccentColor || '#bbb'}`
+              }}
+            />
+            <div
+              className="absolute w-3 h-3"
+              style={{
+                bottom: '-0.5px',
+                left: '-0.5px',
+                borderBottom: `0.5px solid ${kpiContainerBorderAccentColor || '#bbb'}`,
+                borderLeft: `0.5px solid ${kpiContainerBorderAccentColor || '#bbb'}`
+              }}
+            />
+            <div
+              className="absolute w-3 h-3"
+              style={{
+                bottom: '-0.5px',
+                right: '-0.5px',
+                borderBottom: `0.5px solid ${kpiContainerBorderAccentColor || '#bbb'}`,
+                borderRight: `0.5px solid ${kpiContainerBorderAccentColor || '#bbb'}`
+              }}
+            />
+          </>
+        ) : null}
       </Card>
     )
   }
