@@ -79,6 +79,12 @@ interface KPICardProps {
   negativeColor?: string;
   neutralColor?: string;
 
+  // Tile layout overrides (optional)
+  tilePadding?: number; // px
+  tileIconCircleSize?: number; // px
+  tileIconSize?: number; // px
+  tileValuePaddingY?: number; // px
+
   // Container styling props
   kpiContainerBackgroundColor?: string;
   kpiContainerBackgroundOpacity?: number;
@@ -194,6 +200,12 @@ export function KPICard({
   positiveColor = '#16a34a',
   negativeColor = '#dc2626',
   neutralColor = '#6b7280',
+
+  // Tile overrides
+  tilePadding,
+  tileIconCircleSize,
+  tileIconSize,
+  tileValuePaddingY,
 
   // Container styling props
   kpiContainerBackgroundColor,
@@ -379,26 +391,30 @@ export function KPICard({
       lg: { label: 'text-[14px]', value: 'text-[28px]', micro: 'text-[12px]', icon: 42, pad: 'p-5' },
     } as const
     const s = sizeMap[size]
+    const circleSize = tileIconCircleSize ?? s.icon
+    const innerIconSize = tileIconSize ?? Math.max(16, circleSize - 8)
 
     return (
-      <Card className={kpiContainerClassName || `bg-white border border-gray-200 shadow-sm rounded-xl ${s.pad}`}>
+      <Card className={kpiContainerClassName || `bg-white border border-gray-200 shadow-sm rounded-xl ${s.pad}`}
+        style={tilePadding !== undefined ? { padding: `${tilePadding}px` } : undefined}
+      >
         {/* Header */}
         <div className="flex items-start justify-between">
           <div className={`font-medium text-slate-800 ${s.label}`}>{name || 'KPI'}</div>
           <div
             className="flex items-center justify-center rounded-full"
-            style={{ width: s.icon, height: s.icon, backgroundColor: iconBg || '#f3f4f6' }}
+            style={{ width: circleSize, height: circleSize, backgroundColor: iconBg || '#f3f4f6' }}
           >
             {React.isValidElement(icon)
               ? React.cloneElement(
                   icon as React.ReactElement<{ size?: number; color?: string }>,
-                  { size: Math.max(16, s.icon - 8), color: iconColor || '#9ca3af' }
+                  { size: innerIconSize, color: iconColor || '#9ca3af' }
                 )
               : null}
           </div>
         </div>
         {/* Value */}
-        <div className={`py-1 font-semibold text-slate-900 ${s.value}`}>
+        <div className={`font-semibold text-slate-900 ${s.value}`} style={tileValuePaddingY !== undefined ? { paddingTop: tileValuePaddingY, paddingBottom: tileValuePaddingY } : { paddingTop: 4, paddingBottom: 4 }}>
           {formatValue(currentValue, unit)}
         </div>
         {/* Footer */}
