@@ -258,5 +258,8 @@ export const DEFAULT_KPI_CONFIG: Required<Omit<KPIConfig, 'name' | 'value' | 'un
   // Tailwind Classes defaults
   kpiNameClassName: '',
   kpiValueClassName: '',
-  kpiContainerClassName: ''
+  kpiContainerClassName: '',
+
+  // Border variant default
+  borderVariant: 'smooth'
 }
