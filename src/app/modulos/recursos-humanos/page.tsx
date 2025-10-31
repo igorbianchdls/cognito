@@ -34,8 +34,6 @@ export default function ModulosRecursosHumanosPage() {
     financeiroUiActions.setTabs({
       options: [
         { value: 'funcionarios', label: 'Funcionários' },
-        { value: 'cargos', label: 'Cargos' },
-        { value: 'departamentos', label: 'Departamentos' },
         { value: 'tipos-ausencia', label: 'Tipos de Ausência' },
         { value: 'contratos', label: 'Contratos' },
         { value: 'historico-salarial', label: 'Histórico Salarial' },
@@ -135,21 +133,6 @@ export default function ModulosRecursosHumanosPage() {
           { accessorKey: 'tipo_de_pagamento', header: 'Tipo de Pagamento' },
           { accessorKey: 'inicio_vigencia', header: 'Início Vigência', cell: ({ row }) => formatDate(row.original['inicio_vigencia']) },
           { accessorKey: 'fim_vigencia', header: 'Fim Vigência', cell: ({ row }) => formatDate(row.original['fim_vigencia']) },
-        ]
-      case 'cargos':
-        return [
-          { accessorKey: 'id', header: 'ID' },
-          { accessorKey: 'cargo', header: 'Cargo' },
-          { accessorKey: 'descricao', header: 'Descrição' },
-          { accessorKey: 'qtd_funcionarios', header: 'Qtd Funcionários' },
-        ]
-      case 'departamentos':
-        return [
-          { accessorKey: 'id', header: 'ID' },
-          { accessorKey: 'departamento', header: 'Departamento' },
-          { accessorKey: 'departamento_pai', header: 'Departamento Pai' },
-          { accessorKey: 'gestor', header: 'Gestor' },
-          { accessorKey: 'qtd_funcionarios', header: 'Qtd Funcionários' },
         ]
       case 'tipos-ausencia':
         return [
@@ -290,10 +273,6 @@ export default function ModulosRecursosHumanosPage() {
       switch (v) {
         case 'funcionarios':
           return <Users className="h-4 w-4" />
-        case 'cargos':
-          return <Briefcase className="h-4 w-4" />
-        case 'departamentos':
-          return <Building className="h-4 w-4" />
         case 'tipos-ausencia':
           return <CalendarDays className="h-4 w-4" />
         default:

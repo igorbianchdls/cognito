@@ -32,11 +32,9 @@ export default function ModulosContabilidadePage() {
     contabilidadeUiActions.setTabs({
       options: [
         { value: 'lancamentos', label: 'Lançamentos contábeis' },
-        { value: 'centros-de-custo', label: 'Centros de Custo' },
-        { value: 'centros-de-lucro', label: 'Centros de Lucro' },
+        { value: 'balanco-patrimonial', label: 'Balanço Patrimonial' },
+        { value: 'dre', label: 'DRE' },
         { value: 'plano-contas', label: 'Plano de Contas' },
-        { value: 'categorias', label: 'Categorias' },
-        { value: 'segmentos', label: 'Segmentos' },
         { value: 'regras-contabeis', label: 'Regras contábeis' },
       ],
       selected: 'lancamentos',
@@ -113,6 +111,26 @@ export default function ModulosContabilidadePage() {
           { accessorKey: 'centro_custo', header: 'Centro de Custo' },
           { accessorKey: 'centro_lucro', header: 'Centro de Lucro' },
           { accessorKey: 'historico_linha', header: 'Histórico' },
+        ]
+      case 'balanco-patrimonial':
+        return [
+          { accessorKey: 'grupo', header: 'Grupo' },
+          { accessorKey: 'conta', header: 'Conta' },
+          { accessorKey: 'tipo', header: 'Tipo (Ativo/Passivo/PL)' },
+          { accessorKey: 'saldo_inicial', header: 'Saldo Inicial', cell: ({ row }) => formatBRL(row.original['saldo_inicial']) },
+          { accessorKey: 'movimentos', header: 'Movimentos', cell: ({ row }) => formatBRL(row.original['movimentos']) },
+          { accessorKey: 'saldo_final', header: 'Saldo Final', cell: ({ row }) => formatBRL(row.original['saldo_final']) },
+          { accessorKey: 'nivel', header: 'Nível' },
+        ]
+      case 'dre':
+        return [
+          { accessorKey: 'grupo', header: 'Grupo' },
+          { accessorKey: 'conta', header: 'Conta' },
+          { accessorKey: 'tipo', header: 'Tipo (Receita/Despesa)' },
+          { accessorKey: 'periodo', header: 'Período' },
+          { accessorKey: 'valor', header: 'Valor', cell: ({ row }) => formatBRL(row.original['valor']) },
+          { accessorKey: 'acumulado', header: 'Acumulado', cell: ({ row }) => formatBRL(row.original['acumulado']) },
+          { accessorKey: 'percentual', header: '% Receita', cell: ({ row }) => String(row.original['percentual'] ?? '') },
         ]
       case 'centros-de-custo':
         return [
