@@ -25,8 +25,8 @@ export default function ModulosProdutosPage() {
 
   const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date } | undefined>(undefined)
   const [data, setData] = useState<Row[]>([])
-  const [isLoading] = useState(false)
-  const [error] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const fontVar = (name?: string) => {
     if (!name) return undefined
@@ -44,9 +44,7 @@ export default function ModulosProdutosPage() {
       options: [
         { value: 'produtos', label: 'Produtos' },
         { value: 'variacoes', label: 'Variações' },
-        { value: 'categorias', label: 'Categorias' },
-        { value: 'marcas', label: 'Marcas' },
-        { value: 'atributos', label: 'Atributos' },
+        { value: 'dados-fiscais', label: 'Dados Fiscais' },
       ],
       selected: 'produtos',
     })
@@ -72,44 +70,69 @@ export default function ModulosProdutosPage() {
     switch (tabs.selected) {
       case 'produtos':
         return [
-          { accessorKey: 'sku', header: 'SKU' },
-          { accessorKey: 'produto', header: 'Produto' },
+          { accessorKey: 'nome', header: 'Produto' },
+          { accessorKey: 'descricao', header: 'Descrição' },
           { accessorKey: 'categoria', header: 'Categoria' },
           { accessorKey: 'marca', header: 'Marca' },
-          { accessorKey: 'preco', header: 'Preço', cell: ({ row }) => formatBRL(row.original['preco']) },
           { accessorKey: 'ativo', header: 'Ativo' },
-          { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em']) },
         ]
       case 'variacoes':
         return [
+          { accessorKey: 'produto_pai', header: 'Produto' },
           { accessorKey: 'sku', header: 'SKU' },
-          { accessorKey: 'produto_pai', header: 'Produto Pai' },
-          { accessorKey: 'variacao', header: 'Variação' },
-          { accessorKey: 'preco', header: 'Preço', cell: ({ row }) => formatBRL(row.original['preco']) },
-          { accessorKey: 'estoque', header: 'Estoque' },
+          { accessorKey: 'preco_base', header: 'Preço Base', cell: ({ row }) => formatBRL(row.original['preco_base']) },
+          { accessorKey: 'peso_kg', header: 'Peso (kg)' },
+          { accessorKey: 'altura_cm', header: 'Altura (cm)' },
+          { accessorKey: 'largura_cm', header: 'Largura (cm)' },
+          { accessorKey: 'profundidade_cm', header: 'Profundidade (cm)' },
           { accessorKey: 'ativo', header: 'Ativo' },
         ]
-      case 'categorias':
+      case 'dados-fiscais':
         return [
-          { accessorKey: 'codigo', header: 'Código' },
-          { accessorKey: 'categoria', header: 'Categoria' },
-          { accessorKey: 'ativo', header: 'Ativo' },
-        ]
-      case 'marcas':
-        return [
-          { accessorKey: 'marca', header: 'Marca' },
-          { accessorKey: 'site', header: 'Site' },
-          { accessorKey: 'ativo', header: 'Ativo' },
-        ]
-      case 'atributos':
-        return [
-          { accessorKey: 'atributo', header: 'Atributo' },
-          { accessorKey: 'tipo', header: 'Tipo' },
-          { accessorKey: 'ativo', header: 'Ativo' },
+          { accessorKey: 'produto', header: 'Produto' },
+          { accessorKey: 'sku', header: 'SKU' },
+          { accessorKey: 'ncm', header: 'NCM' },
+          { accessorKey: 'cest', header: 'CEST' },
+          { accessorKey: 'cfop', header: 'CFOP' },
+          { accessorKey: 'cst', header: 'CST' },
+          { accessorKey: 'origem', header: 'Origem' },
+          { accessorKey: 'aliquota_icms', header: 'ICMS (%)' },
+          { accessorKey: 'aliquota_ipi', header: 'IPI (%)' },
+          { accessorKey: 'aliquota_pis', header: 'PIS (%)' },
+          { accessorKey: 'aliquota_cofins', header: 'COFINS (%)' },
+          { accessorKey: 'regime_tributario', header: 'Regime Tributário' },
         ]
       default:
         return []
     }
+  }, [tabs.selected])
+
+  // Carrega dados conforme a tab selecionada
+  useEffect(() => {
+    const controller = new AbortController()
+    const load = async () => {
+      setIsLoading(true)
+      setError(null)
+      try {
+        const params = new URLSearchParams()
+        params.set('view', tabs.selected)
+        const url = `/api/modulos/produtos?${params.toString()}`
+        const res = await fetch(url, { cache: 'no-store', signal: controller.signal })
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const json = await res.json()
+        const rows = (json?.rows || []) as Row[]
+        setData(Array.isArray(rows) ? rows : [])
+      } catch (e) {
+        if (!(e instanceof DOMException && e.name === 'AbortError')) {
+          setError(e instanceof Error ? e.message : 'Falha ao carregar dados')
+          setData([])
+        }
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    load()
+    return () => controller.abort()
   }, [tabs.selected])
 
   return (
