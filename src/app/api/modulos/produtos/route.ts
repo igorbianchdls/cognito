@@ -13,6 +13,11 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
     categoria: 'c.nome',
     marca: 'm.nome',
     ativo: 'p.ativo',
+    sku: 'v.sku',
+    variacao_id: 'v.id',
+    preco_base: 'v.preco_base',
+    lista_preco: 'lp.nome',
+    preco_lista: 'pp.preco',
   },
   variacoes: {
     id: 'v.id',
@@ -68,11 +73,20 @@ export async function GET(req: NextRequest) {
         p.descricao,
         c.nome AS categoria,
         m.nome AS marca,
-        p.ativo`
-      baseSql = `FROM produtos.produtos p
+        p.ativo,
+        p.imagem_url AS produto_imagem_url,
+        v.id AS variacao_id,
+        v.sku,
+        v.preco_base AS preco_base,
+        lp.nome AS lista_preco,
+        pp.preco AS preco_lista`
+      baseSql = `FROM produtos.produto p
         LEFT JOIN produtos.categorias c ON c.id = p.categoria_id
-        LEFT JOIN produtos.marcas m ON m.id = p.marca_id`
-      orderClause = orderBy ? `ORDER BY ${orderBy} ${orderDir}` : 'ORDER BY p.nome ASC'
+        LEFT JOIN produtos.marcas m ON m.id = p.marca_id
+        LEFT JOIN produtos.produto_variacoes v ON v.produto_pai_id = p.id
+        LEFT JOIN produtos.precos_produto pp ON pp.variacao_id = v.id
+        LEFT JOIN produtos.listas_preco lp ON lp.id = pp.lista_preco_id`
+      orderClause = orderBy ? `ORDER BY ${orderBy} ${orderDir}` : 'ORDER BY p.nome ASC, v.sku ASC'
     } else if (view === 'variacoes') {
       selectSql = `SELECT
         v.id,
@@ -85,7 +99,7 @@ export async function GET(req: NextRequest) {
         v.profundidade_cm,
         v.ativo`
       baseSql = `FROM produtos.produto_variacoes v
-        JOIN produtos.produtos p ON p.id = v.produto_pai_id`
+        JOIN produtos.produto p ON p.id = v.produto_pai_id`
       orderClause = orderBy ? `ORDER BY ${orderBy} ${orderDir}` : 'ORDER BY p.nome ASC, v.id ASC'
     } else if (view === 'dados-fiscais') {
       selectSql = `SELECT
@@ -103,7 +117,7 @@ export async function GET(req: NextRequest) {
         pf.regime_tributario`
       baseSql = `FROM produtos.produtos_fiscal pf
         JOIN produtos.produto_variacoes v ON v.id = pf.variacao_id
-        JOIN produtos.produtos p ON p.id = v.produto_pai_id`
+        JOIN produtos.produto p ON p.id = v.produto_pai_id`
       orderClause = orderBy ? `ORDER BY ${orderBy} ${orderDir}` : 'ORDER BY p.nome ASC, v.sku ASC'
     } else {
       return Response.json({ success: false, message: `View inválida: ${view}` }, { status: 400 })
@@ -134,4 +148,3 @@ export async function GET(req: NextRequest) {
     )
   }
 }
-
