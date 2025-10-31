@@ -28,6 +28,13 @@ export default function ModulosEmpresaPage() {
   const [isLoading] = useState(false)
   const [error] = useState<string | null>(null)
 
+  const fontVar = (name?: string) => {
+    if (!name) return undefined
+    if (name === 'Inter') return 'var(--font-inter)'
+    if (name === 'Geist') return 'var(--font-geist-sans)'
+    return name
+  }
+
   useEffect(() => {
     empresaUiActions.setTitulo({
       title: 'Empresa',
@@ -113,23 +120,25 @@ export default function ModulosEmpresaPage() {
   return (
     <SidebarProvider>
       <SidebarShadcn />
-      <SidebarInset className="h-screen flex flex-col">
-        <div className="shrink-0" style={{ marginBottom: layout.mbTitle }}>
-          <PageHeader
-            title={titulo.title}
-            subtitle={titulo.subtitle}
-            titleFontFamily={titulo.titleFontFamily}
-            titleFontSize={titulo.titleFontSize}
-            titleFontWeight={titulo.titleFontWeight}
-            titleColor={titulo.titleColor}
-            titleLetterSpacing={titulo.titleLetterSpacing}
-          />
-          <div className="px-4 md:px-6" style={{ marginBottom: layout.mbTabs }}>
+      <SidebarInset className="min-h-screen flex flex-col overflow-y-auto" style={{ background: layout.contentBg }}>
+        <div style={{ background: 'white' }}>
+          <div style={{ marginBottom: layout.mbTitle }}>
+            <PageHeader
+              title={titulo.title}
+              subtitle={titulo.subtitle}
+              titleFontFamily={fontVar(titulo.titleFontFamily)}
+              titleFontSize={titulo.titleFontSize}
+              titleFontWeight={titulo.titleFontWeight}
+              titleColor={titulo.titleColor}
+              titleLetterSpacing={titulo.titleLetterSpacing}
+            />
+          </div>
+          <div style={{ marginBottom: 0 }}>
             <TabsNav
               options={tabOptions}
               value={tabs.selected}
               onValueChange={(v) => empresaUiActions.setTabs({ selected: v })}
-              fontFamily={tabs.fontFamily}
+              fontFamily={fontVar(tabs.fontFamily)}
               fontSize={tabs.fontSize}
               fontWeight={tabs.fontWeight}
               color={tabs.color}
@@ -140,6 +149,7 @@ export default function ModulosEmpresaPage() {
               activeColor={tabs.activeColor}
               activeFontWeight={tabs.activeFontWeight}
               activeBorderColor={tabs.activeBorderColor}
+              className="px-0 md:px-0"
             />
           </div>
         </div>
@@ -151,7 +161,7 @@ export default function ModulosEmpresaPage() {
               total={data.length}
               dateRange={dateRange}
               onDateRangeChange={setDateRange}
-              fontFamily={tabs.fontFamily}
+              fontFamily={fontVar(tabs.fontFamily)}
               fontSize={toolbarUI.fontSize}
               fontWeight={toolbarUI.fontWeight}
               fontColor={toolbarUI.fontColor}
@@ -212,4 +222,3 @@ export default function ModulosEmpresaPage() {
     </SidebarProvider>
   )
 }
-
