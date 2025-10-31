@@ -95,6 +95,59 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
     criado_em: 'cf.criado_em',
     atualizado_em: 'cf.atualizado_em',
   },
+  'contas-financeiras': {
+    conta_id: 'cf.id',
+    nome_conta: 'cf.nome_conta',
+    tipo_conta: 'cf.tipo_conta',
+    agencia: 'cf.agencia',
+    numero_conta: 'cf.numero_conta',
+    pix_chave: 'cf.pix_chave',
+    saldo_inicial: 'cf.saldo_inicial',
+    saldo_atual: 'cf.saldo_atual',
+    data_abertura: 'cf.data_abertura',
+    ativo: 'cf.ativo',
+    criado_em: 'cf.criado_em',
+    atualizado_em: 'cf.atualizado_em',
+  },
+  categorias: {
+    id: 'cat.id',
+    nome: 'cat.nome',
+    tipo: 'cat.tipo',
+    descricao: 'cat.descricao',
+    ativo: 'cat.ativo',
+    criado_em: 'cat.criado_em',
+    atualizado_em: 'cat.atualizado_em',
+  },
+  'centros-de-custo': {
+    id: 'cc.id',
+    codigo: 'cc.codigo',
+    nome: 'cc.nome',
+    descricao: 'cc.descricao',
+    ativo: 'cc.ativo',
+    criado_em: 'cc.criado_em',
+    atualizado_em: 'cc.atualizado_em',
+  },
+  'centros-de-lucro': {
+    id: 'cl.id',
+    codigo: 'cl.codigo',
+    nome: 'cl.nome',
+    descricao: 'cl.descricao',
+    ativo: 'cl.ativo',
+    criado_em: 'cl.criado_em',
+    atualizado_em: 'cl.atualizado_em',
+  },
+  projetos: {
+    id: 'p.id',
+    codigo: 'p.codigo',
+    nome: 'p.nome',
+    data_inicio: 'p.data_inicio',
+    data_fim: 'p.data_fim',
+    status: 'p.status',
+    descricao: 'p.descricao',
+    ativo: 'p.ativo',
+    criado_em: 'p.criado_em',
+    atualizado_em: 'p.atualizado_em',
+  },
   movimentos: {
     id: 'm.id',
     data: 'm.data',
@@ -319,6 +372,76 @@ export async function GET(req: NextRequest) {
                           cf.criado_em,
                           cf.atualizado_em`;
       whereDateCol = 'cf.criado_em';
+    } else if (view === 'contas-financeiras') {
+      // Contas Financeiras (categorias -> Contas Financeiras)
+      baseSql = `FROM financeiro.contas_financeiras cf`;
+      selectSql = `SELECT cf.id AS conta_id,
+                          cf.tenant_id,
+                          cf.criado_por,
+                          cf.banco_id,
+                          cf.nome_conta,
+                          cf.tipo_conta,
+                          cf.agencia,
+                          cf.numero_conta,
+                          cf.pix_chave,
+                          cf.moeda_id,
+                          cf.saldo_inicial,
+                          cf.saldo_atual,
+                          cf.data_abertura,
+                          cf.ativo,
+                          cf.criado_em,
+                          cf.atualizado_em,
+                          cf.conta_contabil_id`;
+      whereDateCol = 'cf.criado_em';
+    } else if (view === 'categorias') {
+      baseSql = `FROM financeiro.categorias_financeiras cat`;
+      selectSql = `SELECT cat.id,
+                          cat.tenant_id,
+                          cat.criado_por,
+                          cat.nome,
+                          cat.tipo,
+                          cat.descricao,
+                          cat.ativo,
+                          cat.criado_em,
+                          cat.atualizado_em,
+                          cat.conta_contabil_id`;
+      whereDateCol = 'cat.criado_em';
+    } else if (view === 'centros-de-custo') {
+      baseSql = `FROM financeiro.centros_custo cc`;
+      selectSql = `SELECT cc.id,
+                          cc.tenant_id,
+                          cc.codigo,
+                          cc.nome,
+                          cc.descricao,
+                          cc.ativo,
+                          cc.criado_em,
+                          cc.atualizado_em`;
+      whereDateCol = 'cc.criado_em';
+    } else if (view === 'centros-de-lucro') {
+      baseSql = `FROM financeiro.centros_lucro cl`;
+      selectSql = `SELECT cl.id,
+                          cl.tenant_id,
+                          cl.codigo,
+                          cl.nome,
+                          cl.descricao,
+                          cl.ativo,
+                          cl.criado_em,
+                          cl.atualizado_em`;
+      whereDateCol = 'cl.criado_em';
+    } else if (view === 'projetos') {
+      baseSql = `FROM financeiro.projetos p`;
+      selectSql = `SELECT p.id,
+                          p.tenant_id,
+                          p.codigo,
+                          p.nome,
+                          p.data_inicio,
+                          p.data_fim,
+                          p.status,
+                          p.descricao,
+                          p.ativo,
+                          p.criado_em,
+                          p.atualizado_em`;
+      whereDateCol = 'p.data_inicio';
     } else if (view === 'movimentos') {
       baseSql = `FROM gestaofinanceira.movimentos m
                  LEFT JOIN gestaofinanceira.categorias cat ON cat.id = m.categoria_id
@@ -358,10 +481,20 @@ export async function GET(req: NextRequest) {
                   : (view === 'conciliacao'
                       ? 'ORDER BY cb.periodo_fim DESC'
                       : (view === 'bancos'
-                          ? 'ORDER BY b.id ASC'
+                          ? 'ORDER BY b.nome_banco ASC'
                           : (view === 'contas'
                               ? 'ORDER BY cf.id ASC'
-                              : `ORDER BY ${whereDateCol} DESC`))))))
+                              : (view === 'contas-financeiras'
+                                  ? 'ORDER BY cf.nome_conta ASC'
+                                  : (view === 'categorias'
+                                      ? 'ORDER BY cat.tipo ASC, cat.nome ASC'
+                                      : (view === 'centros-de-custo'
+                                          ? 'ORDER BY cc.codigo ASC'
+                                          : (view === 'centros-de-lucro'
+                                              ? 'ORDER BY cl.codigo ASC'
+                                              : (view === 'projetos'
+                                                  ? 'ORDER BY p.data_inicio DESC'
+                                                  : `ORDER BY ${whereDateCol} DESC`)))))))))
     const limitOffsetClause = `LIMIT $${idx}::int OFFSET $${idx + 1}::int`;
     const paramsWithPage = [...params, pageSize, offset];
 

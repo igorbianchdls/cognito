@@ -27,6 +27,7 @@ export default function ModulosFinanceiroCategoriasPage() {
   const [data, setData] = useState<Row[]>([])
   const [isLoading] = useState(false)
   const [error] = useState<string | null>(null)
+  const [reloadKey, setReloadKey] = useState(0)
 
   const fontVar = (name?: string) => {
     if (!name) return undefined
@@ -53,6 +54,15 @@ export default function ModulosFinanceiroCategoriasPage() {
   const iconFor = (v: string) => <List className="h-4 w-4" />
   const tabOptions: Opcao[] = useMemo(() => (tabs.options.map((opt) => ({ ...opt, icon: iconFor(opt.value) })) as Opcao[]), [tabs.options])
 
+  const formatDate = (value?: unknown) => {
+    if (!value) return ''
+    try {
+      const d = new Date(String(value))
+      if (isNaN(d.getTime())) return String(value)
+      return d.toLocaleDateString('pt-BR')
+    } catch { return String(value) }
+  }
+
   const columns: ColumnDef<Row>[] = useMemo(() => {
     switch (tabs.selected) {
       case 'bancos':
@@ -61,8 +71,8 @@ export default function ModulosFinanceiroCategoriasPage() {
           { accessorKey: 'numero_banco', header: 'Número' },
           { accessorKey: 'agencia', header: 'Agência' },
           { accessorKey: 'endereco', header: 'Endereço' },
-          { accessorKey: 'criado_em', header: 'Criado em' },
-          { accessorKey: 'atualizado_em', header: 'Atualizado em' },
+          { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em']) },
+          { accessorKey: 'atualizado_em', header: 'Atualizado em', cell: ({ row }) => formatDate(row.original['atualizado_em']) },
         ]
       case 'contas-financeiras':
         return [
@@ -74,45 +84,75 @@ export default function ModulosFinanceiroCategoriasPage() {
           { accessorKey: 'pix_chave', header: 'Pix' },
           { accessorKey: 'saldo_inicial', header: 'Saldo Inicial' },
           { accessorKey: 'saldo_atual', header: 'Saldo Atual' },
-          { accessorKey: 'data_abertura', header: 'Abertura' },
+          { accessorKey: 'data_abertura', header: 'Abertura', cell: ({ row }) => formatDate(row.original['data_abertura']) },
           { accessorKey: 'ativo', header: 'Ativa' },
         ]
       case 'centros-de-custo':
         return [
+          { accessorKey: 'id', header: 'ID' },
           { accessorKey: 'codigo', header: 'Código' },
           { accessorKey: 'nome', header: 'Nome' },
-          { accessorKey: 'status', header: 'Status' },
-          { accessorKey: 'criado_em', header: 'Criado em' },
-          { accessorKey: 'atualizado_em', header: 'Atualizado em' },
+          { accessorKey: 'descricao', header: 'Descrição' },
+          { accessorKey: 'ativo', header: 'Ativo' },
+          { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em']) },
+          { accessorKey: 'atualizado_em', header: 'Atualizado em', cell: ({ row }) => formatDate(row.original['atualizado_em']) },
         ]
       case 'centros-de-lucro':
         return [
+          { accessorKey: 'id', header: 'ID' },
           { accessorKey: 'codigo', header: 'Código' },
           { accessorKey: 'nome', header: 'Nome' },
-          { accessorKey: 'status', header: 'Status' },
-          { accessorKey: 'criado_em', header: 'Criado em' },
-          { accessorKey: 'atualizado_em', header: 'Atualizado em' },
+          { accessorKey: 'descricao', header: 'Descrição' },
+          { accessorKey: 'ativo', header: 'Ativo' },
+          { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em']) },
+          { accessorKey: 'atualizado_em', header: 'Atualizado em', cell: ({ row }) => formatDate(row.original['atualizado_em']) },
         ]
       case 'projetos':
         return [
+          { accessorKey: 'id', header: 'ID' },
           { accessorKey: 'codigo', header: 'Código' },
           { accessorKey: 'nome', header: 'Projeto' },
-          { accessorKey: 'responsavel', header: 'Responsável' },
-          { accessorKey: 'inicio', header: 'Início' },
-          { accessorKey: 'fim', header: 'Fim' },
+          { accessorKey: 'data_inicio', header: 'Início', cell: ({ row }) => formatDate(row.original['data_inicio']) },
+          { accessorKey: 'data_fim', header: 'Fim', cell: ({ row }) => formatDate(row.original['data_fim']) },
           { accessorKey: 'status', header: 'Status' },
+          { accessorKey: 'ativo', header: 'Ativo' },
         ]
       case 'categorias':
       default:
         return [
-          { accessorKey: 'codigo', header: 'Código' },
+          { accessorKey: 'id', header: 'ID' },
           { accessorKey: 'nome', header: 'Nome' },
           { accessorKey: 'tipo', header: 'Tipo' },
-          { accessorKey: 'nivel', header: 'Nível' },
+          { accessorKey: 'descricao', header: 'Descrição' },
           { accessorKey: 'ativo', header: 'Ativo' },
+          { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em']) },
+          { accessorKey: 'atualizado_em', header: 'Atualizado em', cell: ({ row }) => formatDate(row.original['atualizado_em']) },
         ]
     }
   }, [tabs.selected])
+
+  useEffect(() => {
+    const controller = new AbortController()
+    const load = async () => {
+      try {
+        // Monta a query para a view selecionada
+        const view = tabs.selected
+        const params = new URLSearchParams()
+        params.set('view', view)
+        const url = `/api/modulos/financeiro?${params.toString()}`
+        const res = await fetch(url, { cache: 'no-store', signal: controller.signal })
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const json = await res.json()
+        const rows = (json?.rows || []) as Row[]
+        setData(Array.isArray(rows) ? rows : [])
+      } catch (e) {
+        // Silencia erros nesta versão (placeholder)
+        setData([])
+      }
+    }
+    load()
+    return () => controller.abort()
+  }, [tabs.selected, reloadKey])
 
   return (
     <SidebarProvider>
