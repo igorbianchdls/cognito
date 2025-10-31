@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { usePathname, useRouter } from "next/navigation"
-import { DollarSign, ShoppingCart, Users, Package, ShoppingBag, Wrench, Megaphone, Briefcase, BookOpen, FileText, Building2, ChevronRight, ChevronDown, Home } from "lucide-react"
+import { DollarSign, ShoppingCart, Users, Package, ShoppingBag, Wrench, Megaphone, Briefcase, BookOpen, FileText, Building2, ChevronRight, ChevronDown, Home, Truck } from "lucide-react"
 
 import {
   SidebarGroup,
@@ -129,6 +129,16 @@ export function NavModulos() {
             >
               <ShoppingBag />
               <span>Compras</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              tooltip="Transportes"
+              onClick={() => router.push("/modulos/transportes")}
+              isActive={pathname.startsWith("/modulos/transportes")}
+            >
+              <Truck />
+              <span>Transportes</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
