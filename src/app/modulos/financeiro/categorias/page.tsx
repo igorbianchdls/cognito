@@ -11,12 +11,12 @@ import PageHeader from '@/components/modulos/PageHeader'
 import TabsNav, { type Opcao } from '@/components/modulos/TabsNav'
 import DataToolbar from '@/components/modulos/DataToolbar'
 import DataTable, { type TableData } from '@/components/widgets/Table'
-import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, empresaUiActions } from '@/stores/modulos/empresaUiStore'
+import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, financeiroUiActions } from '@/stores/modulos/financeiroUiStore'
 import { List } from 'lucide-react'
 
 type Row = TableData
 
-export default function ModulosEmpresaPage() {
+export default function ModulosFinanceiroCategoriasPage() {
   const titulo = useStore($titulo)
   const tabs = useStore($tabs)
   const tabelaUI = useStore($tabelaUI)
@@ -36,101 +36,29 @@ export default function ModulosEmpresaPage() {
   }
 
   useEffect(() => {
-    empresaUiActions.setTitulo({
-      title: 'Empresa',
-      subtitle: 'Selecione uma opção para visualizar os dados',
-    })
-    empresaUiActions.setTabs({
+    financeiroUiActions.setTitulo({ title: 'Financeiro', subtitle: 'Categorias' })
+    financeiroUiActions.setTabs({
       options: [
-        { value: 'dados', label: 'Dados Cadastrais' },
-        { value: 'filiais', label: 'Filiais' },
-        { value: 'cargos', label: 'Cargos' },
-        { value: 'departamentos', label: 'Departamentos' },
-        { value: 'documentos', label: 'Documentos' },
-        { value: 'usuarios', label: 'Usuários' },
-        { value: 'configuracoes', label: 'Configurações' },
+        { value: 'categorias', label: 'Categorias' },
       ],
-      selected: 'dados',
+      selected: 'categorias',
     })
   }, [])
 
   const iconFor = (v: string) => <List className="h-4 w-4" />
   const tabOptions: Opcao[] = useMemo(() => (tabs.options.map((opt) => ({ ...opt, icon: iconFor(opt.value) })) as Opcao[]), [tabs.options])
 
-  const formatDate = (value?: unknown) => {
-    if (!value) return ''
-    try {
-      const d = new Date(String(value))
-      if (isNaN(d.getTime())) return String(value)
-      return d.toLocaleDateString('pt-BR')
-    } catch { return String(value) }
-  }
-
   const columns: ColumnDef<Row>[] = useMemo(() => {
     switch (tabs.selected) {
-      case 'dados':
-        return [
-          { accessorKey: 'razao_social', header: 'Razão Social' },
-          { accessorKey: 'nome_fantasia', header: 'Nome Fantasia' },
-          { accessorKey: 'cnpj', header: 'CNPJ' },
-          { accessorKey: 'inscricao_estadual', header: 'Inscrição Estadual' },
-          { accessorKey: 'telefone', header: 'Telefone' },
-          { accessorKey: 'email', header: 'E-mail' },
-          { accessorKey: 'cidade', header: 'Cidade' },
-          { accessorKey: 'uf', header: 'UF' },
-          { accessorKey: 'status', header: 'Status' },
-        ]
-      case 'filiais':
+      case 'categorias':
+      default:
         return [
           { accessorKey: 'codigo', header: 'Código' },
-          { accessorKey: 'filial', header: 'Filial' },
-          { accessorKey: 'cnpj', header: 'CNPJ' },
-          { accessorKey: 'cidade', header: 'Cidade' },
-          { accessorKey: 'uf', header: 'UF' },
-          { accessorKey: 'ativo', header: 'Ativo' },
-          { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em']) },
-        ]
-      case 'documentos':
-        return [
-          { accessorKey: 'tipo', header: 'Tipo' },
-          { accessorKey: 'numero', header: 'Número' },
-          { accessorKey: 'data_emissao', header: 'Emissão', cell: ({ row }) => formatDate(row.original['data_emissao']) },
-          { accessorKey: 'validade', header: 'Validade', cell: ({ row }) => formatDate(row.original['validade']) },
-          { accessorKey: 'arquivo', header: 'Arquivo' },
-          { accessorKey: 'status', header: 'Status' },
-        ]
-      case 'cargos':
-        return [
-          { accessorKey: 'id', header: 'ID' },
-          { accessorKey: 'cargo', header: 'Cargo' },
-          { accessorKey: 'descricao', header: 'Descrição' },
-          { accessorKey: 'qtd_funcionarios', header: 'Qtd Funcionários' },
-        ]
-      case 'departamentos':
-        return [
-          { accessorKey: 'id', header: 'ID' },
-          { accessorKey: 'departamento', header: 'Departamento' },
-          { accessorKey: 'departamento_pai', header: 'Departamento Pai' },
-          { accessorKey: 'gestor', header: 'Gestor' },
-          { accessorKey: 'qtd_funcionarios', header: 'Qtd Funcionários' },
-        ]
-      case 'usuarios':
-        return [
           { accessorKey: 'nome', header: 'Nome' },
-          { accessorKey: 'email', header: 'E-mail' },
-          { accessorKey: 'perfil', header: 'Perfil' },
-          { accessorKey: 'situacao', header: 'Situação' },
-          { accessorKey: 'ultimo_acesso', header: 'Último Acesso', cell: ({ row }) => formatDate(row.original['ultimo_acesso']) },
+          { accessorKey: 'tipo', header: 'Tipo' },
+          { accessorKey: 'nivel', header: 'Nível' },
+          { accessorKey: 'ativo', header: 'Ativo' },
         ]
-      case 'configuracoes':
-        return [
-          { accessorKey: 'chave', header: 'Chave' },
-          { accessorKey: 'valor', header: 'Valor' },
-          { accessorKey: 'descricao', header: 'Descrição' },
-          { accessorKey: 'atualizado_em', header: 'Atualizado em', cell: ({ row }) => formatDate(row.original['atualizado_em']) },
-        ]
-      default:
-        return []
     }
   }, [tabs.selected])
 
@@ -154,7 +82,7 @@ export default function ModulosEmpresaPage() {
             <TabsNav
               options={tabOptions}
               value={tabs.selected}
-              onValueChange={(v) => empresaUiActions.setTabs({ selected: v })}
+              onValueChange={(v) => financeiroUiActions.setTabs({ selected: v })}
               fontFamily={fontVar(tabs.fontFamily)}
               fontSize={tabs.fontSize}
               fontWeight={tabs.fontWeight}
@@ -239,3 +167,4 @@ export default function ModulosEmpresaPage() {
     </SidebarProvider>
   )
 }
+

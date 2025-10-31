@@ -1,7 +1,8 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { usePathname, useRouter } from "next/navigation"
-import { DollarSign, ShoppingCart, Users, Package, ShoppingBag, Wrench, Megaphone, Briefcase, BookOpen, FileText, Building2 } from "lucide-react"
+import { DollarSign, ShoppingCart, Users, Package, ShoppingBag, Wrench, Megaphone, Briefcase, BookOpen, FileText, Building2, ChevronRight, ChevronDown, Home } from "lucide-react"
 
 import {
   SidebarGroup,
@@ -9,11 +10,21 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuAction,
+  SidebarMenuSub,
+  SidebarMenuSubItem,
+  SidebarMenuSubButton,
 } from "@/components/ui/sidebar"
 
 export function NavModulos() {
   const router = useRouter()
   const pathname = usePathname()
+
+  // Expand Financeiro submenu when on any Financeiro route
+  const [openFinanceiro, setOpenFinanceiro] = useState(false)
+  useEffect(() => {
+    setOpenFinanceiro(pathname.startsWith("/modulos/financeiro"))
+  }, [pathname])
 
   return (
     <>
@@ -33,12 +44,37 @@ export function NavModulos() {
           <SidebarMenuItem>
             <SidebarMenuButton
               tooltip="Financeiro"
-              onClick={() => router.push("/modulos/financeiro")}
+              onClick={() => setOpenFinanceiro((v) => !v)}
               isActive={pathname.startsWith("/modulos/financeiro")}
             >
               <DollarSign />
               <span>Financeiro</span>
             </SidebarMenuButton>
+            <SidebarMenuAction asChild>
+              <button onClick={() => setOpenFinanceiro((v) => !v)} aria-label="Expandir Financeiro">
+                {openFinanceiro ? <ChevronDown /> : <ChevronRight />}
+              </button>
+            </SidebarMenuAction>
+            {openFinanceiro ? (
+              <SidebarMenuSub>
+                <SidebarMenuSubItem>
+                  <SidebarMenuSubButton asChild isActive={pathname === "/modulos/financeiro"}>
+                    <button onClick={() => router.push("/modulos/financeiro")}>
+                      <Home />
+                      <span>Home</span>
+                    </button>
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+                <SidebarMenuSubItem>
+                  <SidebarMenuSubButton asChild isActive={pathname.startsWith("/modulos/financeiro/categorias")}>
+                    <button onClick={() => router.push("/modulos/financeiro/categorias")}>
+                      <BookOpen />
+                      <span>Categorias</span>
+                    </button>
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+              </SidebarMenuSub>
+            ) : null}
           </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton
