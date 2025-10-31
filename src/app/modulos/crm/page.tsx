@@ -51,6 +51,9 @@ export default function ModulosCrmPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date } | undefined>()
+  const [page, setPage] = useState<number>(1)
+  const [pageSize, setPageSize] = useState<number>(20)
+  const [total, setTotal] = useState<number>(0)
 
   const formatDate = (value?: unknown, withTime?: boolean) => {
     if (!value) return ''
@@ -216,16 +219,23 @@ export default function ModulosCrmPage() {
             params.set('ate', `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`)
           }
         }
+        // Server-side pagination (exceto 'campanhas', que retorna agrupado sem paginação)
+        if (tabs.selected !== 'campanhas') {
+          params.set('page', String(page))
+          params.set('pageSize', String(pageSize))
+        }
         const url = `/api/modulos/crm?${params.toString()}`
         const res = await fetch(url, { cache: 'no-store', signal: controller.signal })
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
         const json = await res.json()
         const rows = (json?.rows || []) as Row[]
         setData(Array.isArray(rows) ? rows : [])
+        setTotal(Number(json?.total ?? rows.length) || 0)
       } catch (e) {
         if (!(e instanceof DOMException && e.name === 'AbortError')) {
           setError(e instanceof Error ? e.message : 'Falha ao carregar dados')
           setData([])
+          setTotal(0)
         }
       } finally {
         setIsLoading(false)
@@ -233,7 +243,10 @@ export default function ModulosCrmPage() {
     }
     load()
     return () => controller.abort()
-  }, [tabs.selected, dateRange?.from, dateRange?.to])
+  }, [tabs.selected, dateRange?.from, dateRange?.to, page, pageSize])
+
+  // Reset page quando mudar de aba ou período
+  useEffect(() => { setPage(1) }, [tabs.selected, dateRange?.from, dateRange?.to])
 
   const tabOptions: Opcao[] = useMemo(() => {
     const iconFor = (v: string) => {
@@ -296,9 +309,9 @@ export default function ModulosCrmPage() {
         <div style={{ paddingTop: (layout.contentTopGap || 0) + (layout.mbTabs || 0) }}>
           <div className="px-4 md:px-6" style={{ marginBottom: 8 }}>
             <DataToolbar
-              from={data.length === 0 ? 0 : 1}
-              to={Math.min(tabelaUI.pageSize, data.length)}
-              total={data.length}
+              from={(tabs.selected !== 'campanhas' ? total : data.length) === 0 ? 0 : (page - 1) * pageSize + 1}
+              to={(tabs.selected !== 'campanhas' ? total : data.length) === 0 ? 0 : Math.min(page * pageSize, (tabs.selected !== 'campanhas' ? total : data.length))}
+              total={tabs.selected !== 'campanhas' ? total : data.length}
               dateRange={['oportunidades', 'atividades', 'campanhas'].includes(tabs.selected) ? dateRange : undefined}
               onDateRangeChange={['oportunidades', 'atividades', 'campanhas'].includes(tabs.selected) ? setDateRange : undefined}
               fontFamily={fontVar(toolbarUI.fontFamily)}
@@ -327,12 +340,16 @@ export default function ModulosCrmPage() {
                 <div className="p-6 text-sm text-red-600">Erro ao carregar: {error}</div>
               ) : (
                 <DataTable
+                  key={tabs.selected}
                   columns={columns}
                   data={data}
                   enableSearch={tabelaUI.enableSearch}
                   showColumnToggle={tabelaUI.enableColumnToggle}
                   showPagination={tabelaUI.showPagination}
-                  pageSize={tabelaUI.pageSize}
+                  pageSize={pageSize}
+                  pageIndex={tabs.selected !== 'campanhas' ? page - 1 : undefined}
+                  serverSidePagination={tabs.selected !== 'campanhas'}
+                  serverTotalRows={tabs.selected !== 'campanhas' ? total : undefined}
                   headerBackground={tabelaUI.headerBg}
                   headerTextColor={tabelaUI.headerText}
                   cellTextColor={tabelaUI.cellText}
@@ -353,6 +370,10 @@ export default function ModulosCrmPage() {
                   selectionMode={tabelaUI.selectionMode}
                   defaultSortColumn={tabelaUI.defaultSortColumn}
                   defaultSortDirection={tabelaUI.defaultSortDirection}
+                  onPaginationChange={({ pageIndex, pageSize: newSize }) => {
+                    setPage(pageIndex + 1)
+                    setPageSize(newSize)
+                  }}
                 />
               )}
             </div>
@@ -362,4 +383,3 @@ export default function ModulosCrmPage() {
     </SidebarProvider>
   )
 }
-

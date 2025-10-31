@@ -55,6 +55,9 @@ export default function ModulosServicosPage() {
   const [error, setError] = useState<string | null>(null)
   const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date } | undefined>()
   const [reloadKey, setReloadKey] = useState(0)
+  const [page, setPage] = useState<number>(1)
+  const [pageSize, setPageSize] = useState<number>(20)
+  const [total, setTotal] = useState<number>(0)
 
   // Editor de imagem
   const [imgEditorOpen, setImgEditorOpen] = useState(false)
@@ -371,16 +374,22 @@ export default function ModulosServicosPage() {
             params.set('ate', `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`)
           }
         }
+        if (!(tabs.selected === 'tecnicos' || tabs.selected === 'clientes')) {
+          params.set('page', String(page))
+          params.set('pageSize', String(pageSize))
+        }
         const url = `/api/modulos/servicos?${params.toString()}`
         const res = await fetch(url, { cache: 'no-store', signal: controller.signal })
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
         const json = await res.json()
         const rows = (json?.rows || []) as Row[]
         setData(Array.isArray(rows) ? rows : [])
+        setTotal(Number(json?.total ?? rows.length) || 0)
       } catch (e) {
         if (!(e instanceof DOMException && e.name === 'AbortError')) {
           setError(e instanceof Error ? e.message : 'Falha ao carregar dados')
           setData([])
+          setTotal(0)
         }
       } finally {
         setIsLoading(false)
@@ -388,7 +397,10 @@ export default function ModulosServicosPage() {
     }
     load()
     return () => controller.abort()
-  }, [tabs.selected, dateRange?.from, dateRange?.to, reloadKey])
+  }, [tabs.selected, dateRange?.from, dateRange?.to, page, pageSize, reloadKey])
+
+  // Reset page quando aba ou período mudar
+  useEffect(() => { setPage(1) }, [tabs.selected, dateRange?.from, dateRange?.to])
 
   const tabOptions: Opcao[] = useMemo(() => {
     const iconFor = (v: string) => {
@@ -449,9 +461,9 @@ export default function ModulosServicosPage() {
         <div style={{ paddingTop: (layout.contentTopGap || 0) + (layout.mbTabs || 0) }}>
           <div className="px-4 md:px-6" style={{ marginBottom: 8 }}>
             <DataToolbar
-              from={data.length === 0 ? 0 : 1}
-              to={Math.min(tabelaUI.pageSize, data.length)}
-              total={data.length}
+              from={(tabs.selected !== 'tecnicos' && tabs.selected !== 'clientes' ? total : data.length) === 0 ? 0 : (page - 1) * pageSize + 1}
+              to={(tabs.selected !== 'tecnicos' && tabs.selected !== 'clientes' ? total : data.length) === 0 ? 0 : Math.min(page * pageSize, (tabs.selected !== 'tecnicos' && tabs.selected !== 'clientes' ? total : data.length))}
+              total={tabs.selected !== 'tecnicos' && tabs.selected !== 'clientes' ? total : data.length}
               dateRange={['ordens-servico', 'agendamentos', 'servicos'].includes(tabs.selected) ? dateRange : undefined}
               onDateRangeChange={['ordens-servico', 'agendamentos', 'servicos'].includes(tabs.selected) ? setDateRange : undefined}
               fontFamily={fontVar(toolbarUI.fontFamily)}
@@ -480,12 +492,16 @@ export default function ModulosServicosPage() {
                 <div className="p-6 text-sm text-red-600">Erro ao carregar: {error}</div>
               ) : (
                 <DataTable
+                  key={tabs.selected}
                   columns={columns}
                   data={data}
                   enableSearch={tabelaUI.enableSearch}
                   showColumnToggle={tabelaUI.enableColumnToggle}
                   showPagination={tabelaUI.showPagination}
-                  pageSize={tabelaUI.pageSize}
+                  pageSize={pageSize}
+                  pageIndex={!(tabs.selected === 'tecnicos' || tabs.selected === 'clientes') ? page - 1 : undefined}
+                  serverSidePagination={!(tabs.selected === 'tecnicos' || tabs.selected === 'clientes')}
+                  serverTotalRows={!(tabs.selected === 'tecnicos' || tabs.selected === 'clientes') ? total : undefined}
                   headerBackground={tabelaUI.headerBg}
                   headerTextColor={tabelaUI.headerText}
                   cellTextColor={tabelaUI.cellText}
@@ -506,6 +522,10 @@ export default function ModulosServicosPage() {
                   selectionMode={tabelaUI.selectionMode}
                   defaultSortColumn={tabelaUI.defaultSortColumn}
                   defaultSortDirection={tabelaUI.defaultSortDirection}
+                  onPaginationChange={({ pageIndex, pageSize: newSize }) => {
+                    setPage(pageIndex + 1)
+                    setPageSize(newSize)
+                  }}
                 />
               )}
             </div>
