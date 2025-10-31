@@ -470,31 +470,48 @@ export async function GET(req: NextRequest) {
     if (ate) push(`${whereDateCol} <=`, ate);
 
     const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
-    const orderClause = orderBy
-      ? `ORDER BY ${orderBy} ${orderDir}`
-      : (view === 'contas-a-pagar'
-          ? 'ORDER BY cap.data_vencimento ASC'
-          : (view === 'contas-a-receber'
-              ? 'ORDER BY car.data_vencimento ASC'
-              : (view === 'extrato'
-                  ? 'ORDER BY eb.id ASC, t.data_transacao ASC'
-                  : (view === 'conciliacao'
-                      ? 'ORDER BY cb.periodo_fim DESC'
-                      : (view === 'bancos'
-                          ? 'ORDER BY b.nome_banco ASC'
-                          : (view === 'contas'
-                              ? 'ORDER BY cf.id ASC'
-                              : (view === 'contas-financeiras'
-                                  ? 'ORDER BY cf.nome_conta ASC'
-                                  : (view === 'categorias'
-                                      ? 'ORDER BY cat.tipo ASC, cat.nome ASC'
-                                      : (view === 'centros-de-custo'
-                                          ? 'ORDER BY cc.codigo ASC'
-                                          : (view === 'centros-de-lucro'
-                                              ? 'ORDER BY cl.codigo ASC'
-                                              : (view === 'projetos'
-                                                  ? 'ORDER BY p.data_inicio DESC'
-                                                  : `ORDER BY ${whereDateCol} DESC`)))))))))
+    let orderClause: string
+    if (orderBy) {
+      orderClause = `ORDER BY ${orderBy} ${orderDir}`
+    } else {
+      switch (view) {
+        case 'contas-a-pagar':
+          orderClause = 'ORDER BY cap.data_vencimento ASC'
+          break
+        case 'contas-a-receber':
+          orderClause = 'ORDER BY car.data_vencimento ASC'
+          break
+        case 'extrato':
+          orderClause = 'ORDER BY eb.id ASC, t.data_transacao ASC'
+          break
+        case 'conciliacao':
+          orderClause = 'ORDER BY cb.periodo_fim DESC'
+          break
+        case 'bancos':
+          orderClause = 'ORDER BY b.nome_banco ASC'
+          break
+        case 'contas':
+          orderClause = 'ORDER BY cf.id ASC'
+          break
+        case 'contas-financeiras':
+          orderClause = 'ORDER BY cf.nome_conta ASC'
+          break
+        case 'categorias':
+          orderClause = 'ORDER BY cat.tipo ASC, cat.nome ASC'
+          break
+        case 'centros-de-custo':
+          orderClause = 'ORDER BY cc.codigo ASC'
+          break
+        case 'centros-de-lucro':
+          orderClause = 'ORDER BY cl.codigo ASC'
+          break
+        case 'projetos':
+          orderClause = 'ORDER BY p.data_inicio DESC'
+          break
+        default:
+          orderClause = `ORDER BY ${whereDateCol} DESC`
+      }
+    }
     const limitOffsetClause = `LIMIT $${idx}::int OFFSET $${idx + 1}::int`;
     const paramsWithPage = [...params, pageSize, offset];
 
