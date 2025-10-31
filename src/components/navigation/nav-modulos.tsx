@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { usePathname, useRouter } from "next/navigation"
-import { DollarSign, ShoppingCart, Users, Package, ShoppingBag, Wrench, Megaphone, Briefcase, BookOpen, FileText, Building2, ChevronRight, ChevronDown, Home, Truck } from "lucide-react"
+import { DollarSign, ShoppingCart, Users, Package, ShoppingBag, Wrench, Megaphone, Briefcase, BookOpen, FileText, Building2, ChevronRight, ChevronDown, Home, Truck, BarChart3 } from "lucide-react"
 
 import {
   SidebarGroup,
@@ -186,14 +186,19 @@ export function NavModulos() {
               <span>Serviços</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarGroup>
+      <SidebarGroup>
+        <SidebarGroupLabel>Marketing</SidebarGroupLabel>
+        <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
-              tooltip="Marketing"
+              tooltip="Marketing Orgânico"
               onClick={() => router.push("/modulos/marketing")}
               isActive={pathname.startsWith("/modulos/marketing")}
             >
               <Megaphone />
-              <span>Marketing</span>
+              <span>Marketing Orgânico</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
@@ -204,6 +209,16 @@ export function NavModulos() {
             >
               <Megaphone />
               <span>Tráfego Pago</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              tooltip="Web Analytics"
+              onClick={() => router.push("/modulos/web-analytics")}
+              isActive={pathname.startsWith("/modulos/web-analytics")}
+            >
+              <BarChart3 />
+              <span>Web Analytics</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
