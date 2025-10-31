@@ -102,6 +102,16 @@ export function NavModulos() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
+              tooltip="Produtos"
+              onClick={() => router.push("/modulos/produtos")}
+              isActive={pathname.startsWith("/modulos/produtos")}
+            >
+              <Package />
+              <span>Produtos</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton
               tooltip="Vendas"
               onClick={() => router.push("/modulos/vendas")}
               isActive={pathname.startsWith("/modulos/vendas")}
