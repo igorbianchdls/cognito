@@ -145,6 +145,8 @@ export function DataTable<TData extends TableData>({
   showColumnToggle = true,
   showPagination = true,
   pageSize = 10,
+  serverSidePagination = false,
+  serverTotalRows,
   // Styling props with defaults
   headerBackground = '#f9fafb',
   headerTextColor = '#374151',

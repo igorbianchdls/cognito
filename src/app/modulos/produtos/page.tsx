@@ -264,6 +264,7 @@ export default function ModulosProdutosPage() {
                 <div className="p-6 text-sm text-red-600">Erro ao carregar: {error}</div>
               ) : (
                 <DataTable
+                  key={tabs.selected}
                   columns={columns}
                   data={data}
                   enableSearch={tabelaUI.enableSearch}
