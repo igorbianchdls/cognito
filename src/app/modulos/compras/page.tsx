@@ -56,6 +56,9 @@ export default function ModulosComprasPage() {
   const [error, setError] = useState<string | null>(null)
   const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date } | undefined>()
   const [reloadKey, setReloadKey] = useState(0)
+  const [page, setPage] = useState<number>(1)
+  const [pageSize, setPageSize] = useState<number>(20)
+  const [total, setTotal] = useState<number>(0)
 
   // Editor fornecedor (pedidos)
   const [editorOpen, setEditorOpen] = useState(false)
