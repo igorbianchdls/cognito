@@ -54,6 +54,9 @@ export default function ModulosEstoquePage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date } | undefined>()
+  const [page, setPage] = useState<number>(1)
+  const [pageSize, setPageSize] = useState<number>(20)
+  const [total, setTotal] = useState<number>(0)
 
   const formatDate = (value?: unknown) => {
     if (!value) return ''
