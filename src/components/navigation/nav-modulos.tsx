@@ -109,41 +109,6 @@ export function NavModulos() {
         </SidebarMenu>
       </SidebarGroup>
       <SidebarGroup>
-        <SidebarGroupLabel>Supply Chain</SidebarGroupLabel>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              tooltip="Estoque"
-              onClick={() => router.push("/modulos/estoque")}
-              isActive={pathname.startsWith("/modulos/estoque")}
-            >
-              <Package />
-              <span>Estoque</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              tooltip="Compras"
-              onClick={() => router.push("/modulos/compras")}
-              isActive={pathname.startsWith("/modulos/compras")}
-            >
-              <ShoppingBag />
-              <span>Compras</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              tooltip="Transportes"
-              onClick={() => router.push("/modulos/transportes")}
-              isActive={pathname.startsWith("/modulos/transportes")}
-            >
-              <Truck />
-              <span>Transportes</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarGroup>
-      <SidebarGroup>
         <SidebarGroupLabel>Vendas</SidebarGroupLabel>
         <SidebarMenu>
           <SidebarMenuItem>
@@ -219,6 +184,42 @@ export function NavModulos() {
             >
               <BarChart3 />
               <span>Web Analytics</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarGroup>
+
+      <SidebarGroup>
+        <SidebarGroupLabel>Supply Chain</SidebarGroupLabel>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              tooltip="Estoque"
+              onClick={() => router.push("/modulos/estoque")}
+              isActive={pathname.startsWith("/modulos/estoque")}
+            >
+              <Package />
+              <span>Estoque</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              tooltip="Compras"
+              onClick={() => router.push("/modulos/compras")}
+              isActive={pathname.startsWith("/modulos/compras")}
+            >
+              <ShoppingBag />
+              <span>Compras</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              tooltip="Transportes"
+              onClick={() => router.push("/modulos/transportes")}
+              isActive={pathname.startsWith("/modulos/transportes")}
+            >
+              <Truck />
+              <span>Transportes</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
