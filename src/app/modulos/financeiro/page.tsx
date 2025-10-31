@@ -414,6 +414,9 @@ export default function ModulosFinanceiroPage() {
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
   const [reloadKey, setReloadKey] = useState<number>(0)
+  const [page, setPage] = useState<number>(1)
+  const [pageSize, setPageSize] = useState<number>(20)
+  const [total, setTotal] = useState<number>(0)
 
   // Editor (fornecedor + conta)
   const [editorOpen, setEditorOpen] = useState(false)
@@ -460,16 +463,20 @@ export default function ModulosFinanceiroPage() {
           const dd = String(d.getDate()).padStart(2, '0')
           params.set('ate', `${yyyy}-${mm}-${dd}`)
         }
+        params.set('page', String(page))
+        params.set('pageSize', String(pageSize))
         const url = `/api/modulos/financeiro?${params.toString()}`
         const res = await fetch(url, { cache: 'no-store', signal: controller.signal })
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
         const json = await res.json()
         const rows = (json?.rows || []) as Row[]
         setData(Array.isArray(rows) ? rows : [])
+        setTotal(Number(json?.total ?? rows.length) || 0)
       } catch (e) {
         if (!(e instanceof DOMException && e.name === 'AbortError')) {
           setError(e instanceof Error ? e.message : 'Falha ao carregar dados')
           setData([])
+          setTotal(0)
         }
       } finally {
         setIsLoading(false)
@@ -477,7 +484,10 @@ export default function ModulosFinanceiroPage() {
     }
     load()
     return () => controller.abort()
-  }, [tabs.selected, dateRange?.from, dateRange?.to, reloadKey])
+  }, [tabs.selected, dateRange?.from, dateRange?.to, page, pageSize, reloadKey])
+
+  // Reset page when tab or date range changes
+  useEffect(() => { setPage(1) }, [tabs.selected, dateRange?.from, dateRange?.to])
 
   const openEditor = (row: Row) => {
     const fornecedorId = row['fornecedor_id']
@@ -588,9 +598,9 @@ export default function ModulosFinanceiroPage() {
           {/* Toolbar direita (paginador + botão) */}
           <div className="px-4 md:px-6" style={{ marginBottom: 8 }}>
             <DataToolbar
-              from={data.length === 0 ? 0 : 1}
-              to={Math.min(tabelaUI.pageSize, data.length)}
-              total={data.length}
+              from={total === 0 ? 0 : (page - 1) * pageSize + 1}
+              to={total === 0 ? 0 : Math.min(page * pageSize, total)}
+              total={total}
               dateRange={dateRange}
               onDateRangeChange={setDateRange}
               fontFamily={fontVar(toolbarUI.fontFamily)}
@@ -619,12 +629,16 @@ export default function ModulosFinanceiroPage() {
                 <div className="p-6 text-sm text-red-600">Erro ao carregar: {error}</div>
               ) : (
                 <DataTable
+                  key={tabs.selected}
                   columns={columns}
                   data={data}
                   enableSearch={tabelaUI.enableSearch}
                   showColumnToggle={tabelaUI.enableColumnToggle}
                   showPagination={tabelaUI.showPagination}
-                  pageSize={tabelaUI.pageSize}
+                  pageSize={pageSize}
+                  pageIndex={page - 1}
+                  serverSidePagination
+                  serverTotalRows={total}
                   headerBackground={tabelaUI.headerBg}
                   headerTextColor={tabelaUI.headerText}
                   cellTextColor={tabelaUI.cellText}
@@ -645,6 +659,10 @@ export default function ModulosFinanceiroPage() {
                   selectionMode={tabelaUI.selectionMode}
                   defaultSortColumn={tabelaUI.defaultSortColumn}
                   defaultSortDirection={tabelaUI.defaultSortDirection}
+                  onPaginationChange={({ pageIndex, pageSize: newSize }) => {
+                    setPage(pageIndex + 1)
+                    setPageSize(newSize)
+                  }}
                 />
               )}
             </div>
