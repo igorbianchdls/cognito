@@ -25,8 +25,8 @@ export default function ModulosEmpresaPage() {
 
   const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date } | undefined>(undefined)
   const [data, setData] = useState<Row[]>([])
-  const [isLoading] = useState(false)
-  const [error] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const fontVar = (name?: string) => {
     if (!name) return undefined
@@ -44,11 +44,8 @@ export default function ModulosEmpresaPage() {
       options: [
         { value: 'dados', label: 'Dados Cadastrais' },
         { value: 'filiais', label: 'Filiais' },
-        { value: 'cargos', label: 'Cargos' },
         { value: 'departamentos', label: 'Departamentos' },
-        { value: 'documentos', label: 'Documentos' },
-        { value: 'usuarios', label: 'Usuários' },
-        { value: 'configuracoes', label: 'Configurações' },
+        { value: 'cargos', label: 'Cargos' },
       ],
       selected: 'dados',
     })
@@ -74,64 +71,71 @@ export default function ModulosEmpresaPage() {
           { accessorKey: 'nome_fantasia', header: 'Nome Fantasia' },
           { accessorKey: 'cnpj', header: 'CNPJ' },
           { accessorKey: 'inscricao_estadual', header: 'Inscrição Estadual' },
-          { accessorKey: 'telefone', header: 'Telefone' },
-          { accessorKey: 'email', header: 'E-mail' },
+          { accessorKey: 'regime_tributario', header: 'Regime Tributário' },
+          { accessorKey: 'endereco', header: 'Endereço' },
           { accessorKey: 'cidade', header: 'Cidade' },
-          { accessorKey: 'uf', header: 'UF' },
-          { accessorKey: 'status', header: 'Status' },
+          { accessorKey: 'estado', header: 'Estado' },
+          { accessorKey: 'pais', header: 'País' },
+          { accessorKey: 'ativo', header: 'Ativo' },
         ]
       case 'filiais':
         return [
           { accessorKey: 'codigo', header: 'Código' },
-          { accessorKey: 'filial', header: 'Filial' },
+          { accessorKey: 'nome', header: 'Nome' },
           { accessorKey: 'cnpj', header: 'CNPJ' },
+          { accessorKey: 'inscricao_estadual', header: 'Inscrição Estadual' },
+          { accessorKey: 'endereco', header: 'Endereço' },
           { accessorKey: 'cidade', header: 'Cidade' },
-          { accessorKey: 'uf', header: 'UF' },
+          { accessorKey: 'estado', header: 'Estado' },
+          { accessorKey: 'pais', header: 'País' },
+          { accessorKey: 'matriz', header: 'Matriz' },
           { accessorKey: 'ativo', header: 'Ativo' },
-          { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em']) },
-        ]
-      case 'documentos':
-        return [
-          { accessorKey: 'tipo', header: 'Tipo' },
-          { accessorKey: 'numero', header: 'Número' },
-          { accessorKey: 'data_emissao', header: 'Emissão', cell: ({ row }) => formatDate(row.original['data_emissao']) },
-          { accessorKey: 'validade', header: 'Validade', cell: ({ row }) => formatDate(row.original['validade']) },
-          { accessorKey: 'arquivo', header: 'Arquivo' },
-          { accessorKey: 'status', header: 'Status' },
-        ]
-      case 'cargos':
-        return [
-          { accessorKey: 'id', header: 'ID' },
-          { accessorKey: 'cargo', header: 'Cargo' },
-          { accessorKey: 'descricao', header: 'Descrição' },
-          { accessorKey: 'qtd_funcionarios', header: 'Qtd Funcionários' },
         ]
       case 'departamentos':
         return [
-          { accessorKey: 'id', header: 'ID' },
-          { accessorKey: 'departamento', header: 'Departamento' },
-          { accessorKey: 'departamento_pai', header: 'Departamento Pai' },
-          { accessorKey: 'gestor', header: 'Gestor' },
-          { accessorKey: 'qtd_funcionarios', header: 'Qtd Funcionários' },
-        ]
-      case 'usuarios':
-        return [
+          { accessorKey: 'codigo', header: 'Código' },
           { accessorKey: 'nome', header: 'Nome' },
-          { accessorKey: 'email', header: 'E-mail' },
-          { accessorKey: 'perfil', header: 'Perfil' },
-          { accessorKey: 'situacao', header: 'Situação' },
-          { accessorKey: 'ultimo_acesso', header: 'Último Acesso', cell: ({ row }) => formatDate(row.original['ultimo_acesso']) },
+          { accessorKey: 'responsavel', header: 'Responsável' },
+          { accessorKey: 'ativo', header: 'Ativo' },
         ]
-      case 'configuracoes':
-        return [
-          { accessorKey: 'chave', header: 'Chave' },
-          { accessorKey: 'valor', header: 'Valor' },
-          { accessorKey: 'descricao', header: 'Descrição' },
-          { accessorKey: 'atualizado_em', header: 'Atualizado em', cell: ({ row }) => formatDate(row.original['atualizado_em']) },
-        ]
+      case 'cargos':
       default:
-        return []
+        return [
+          { accessorKey: 'codigo', header: 'Código' },
+          { accessorKey: 'nome', header: 'Nome' },
+          { accessorKey: 'nivel', header: 'Nível' },
+          { accessorKey: 'descricao', header: 'Descrição' },
+          { accessorKey: 'ativo', header: 'Ativo' },
+        ]
     }
+  }, [tabs.selected])
+
+  // Carrega dados conforme a tab selecionada
+  useEffect(() => {
+    const controller = new AbortController()
+    const load = async () => {
+      setIsLoading(true)
+      setError(null)
+      try {
+        const params = new URLSearchParams()
+        params.set('view', tabs.selected)
+        const url = `/api/modulos/empresa?${params.toString()}`
+        const res = await fetch(url, { cache: 'no-store', signal: controller.signal })
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const json = await res.json()
+        const rows = (json?.rows || []) as Row[]
+        setData(Array.isArray(rows) ? rows : [])
+      } catch (e) {
+        if (!(e instanceof DOMException && e.name === 'AbortError')) {
+          setError(e instanceof Error ? e.message : 'Falha ao carregar dados')
+          setData([])
+        }
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    load()
+    return () => controller.abort()
   }, [tabs.selected])
 
   return (
