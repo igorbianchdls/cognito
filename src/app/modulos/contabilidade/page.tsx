@@ -107,11 +107,10 @@ export default function ModulosContabilidadePage() {
           { accessorKey: 'data_lancamento', header: 'Data', cell: ({ row }) => formatDate(row.original['data_lancamento']) },
           { accessorKey: 'codigo_conta', header: 'Código Conta' },
           { accessorKey: 'nome_conta', header: 'Nome Conta' },
+          { accessorKey: 'tipo_linha', header: 'Tipo Linha' },
+          { accessorKey: 'valor', header: 'Valor', cell: ({ row }) => formatBRL(row.original['valor']) },
           { accessorKey: 'debito', header: 'Débito', cell: ({ row }) => formatBRL(row.original['debito']) },
           { accessorKey: 'credito', header: 'Crédito', cell: ({ row }) => formatBRL(row.original['credito']) },
-          { accessorKey: 'saldo', header: 'Saldo', cell: ({ row }) => formatBRL(row.original['saldo']) },
-          { accessorKey: 'centro_custo', header: 'Centro de Custo' },
-          { accessorKey: 'centro_lucro', header: 'Centro de Lucro' },
           { accessorKey: 'historico_linha', header: 'Histórico' },
         ]
       case 'balanco-patrimonial':
@@ -155,10 +154,11 @@ export default function ModulosContabilidadePage() {
           { accessorKey: 'codigo', header: 'Código' },
           { accessorKey: 'nome', header: 'Nome' },
           { accessorKey: 'tipo_conta', header: 'Tipo' },
-          { accessorKey: 'categoria', header: 'Categoria' },
-          { accessorKey: 'segmento', header: 'Segmento' },
+          { accessorKey: 'conta_pai_id', header: 'Conta Pai ID' },
           { accessorKey: 'nivel', header: 'Nível' },
           { accessorKey: 'aceita_lancamento', header: 'Aceita Lançamento' },
+          { accessorKey: 'categoria_id', header: 'Categoria ID' },
+          { accessorKey: 'segmento_id', header: 'Segmento ID' },
         ]
       case 'categorias':
         return [
@@ -178,15 +178,13 @@ export default function ModulosContabilidadePage() {
         ]
       case 'regras-contabeis':
         return [
+          { accessorKey: 'id', header: 'ID' },
           { accessorKey: 'tipo_operacao', header: 'Tipo de Operação' },
+          { accessorKey: 'categoria_financeira_id', header: 'Categoria Financeira ID' },
+          { accessorKey: 'conta_debito_id', header: 'Conta Débito ID' },
+          { accessorKey: 'conta_credito_id', header: 'Conta Crédito ID' },
           { accessorKey: 'descricao', header: 'Descrição' },
-          { accessorKey: 'codigo_conta_debito', header: 'Código Conta Débito' },
-          { accessorKey: 'conta_debito', header: 'Conta Débito' },
-          { accessorKey: 'codigo_conta_credito', header: 'Código Conta Crédito' },
-          { accessorKey: 'conta_credito', header: 'Conta Crédito' },
-          { accessorKey: 'centro_custo', header: 'Centro de Custo' },
-          { accessorKey: 'status_regra', header: 'Status' },
-          { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em']) },
+          { accessorKey: 'ativo', header: 'Ativo' },
         ]
       default:
         return [

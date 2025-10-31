@@ -168,53 +168,49 @@ export async function GET(req: NextRequest) {
 
     if (view === 'lancamentos') {
       baseSql = `FROM contabilidade.lancamentos_contabeis lc
-                 LEFT JOIN contabilidade.lancamentos_contabeis_linhas lcl ON lcl.lancamento_id = lc.id
-                 LEFT JOIN contabilidade.plano_contas pc ON pc.id = lcl.conta_id
-                 LEFT JOIN contabilidade.centros_custo cc ON cc.id = lcl.centro_custo_id
-                 LEFT JOIN contabilidade.centros_lucro cl ON cl.id = lcl.centro_lucro_id`
+                 LEFT JOIN contabilidade.lancamentos_contabeis_linhas lcl 
+                        ON lcl.lancamento_id = lc.id
+                 LEFT JOIN contabilidade.plano_contas pc 
+                        ON pc.id = lcl.conta_id`
       selectSql = `SELECT
-                    lc.id AS lancamento_id,
+                    lc.id                        AS lancamento_id,
                     lc.data_lancamento,
-                    lc.historico AS historico_geral,
-                    lc.tipo_origem,
-                    lc.documento_origem,
-                    lc.origem_schema,
+                    lc.historico                 AS historico_geral,
                     lc.origem_tabela,
+                    lc.origem,
                     lc.origem_id,
                     lc.cliente_id,
                     lc.fornecedor_id,
-                    lcl.id AS linha_id,
-                    pc.codigo AS codigo_conta,
-                    pc.nome AS nome_conta,
-                    pc.tipo_conta,
+                    lc.conta_financeira_id,
+                    lc.total_debitos,
+                    lc.total_creditos,
+
+                    lcl.id                       AS linha_id,
+                    lcl.tipo                     AS tipo_linha,
+                    lcl.valor,
                     lcl.debito,
                     lcl.credito,
-                    (COALESCE(lcl.debito,0) - COALESCE(lcl.credito,0)) AS saldo,
-                    cc.nome AS centro_custo,
-                    cl.nome AS centro_lucro,
-                    lcl.historico AS historico_linha,
-                    lc.criado_em`
+                    lcl.historico                AS historico_linha,
+
+                    pc.id                        AS conta_contabil_id,
+                    pc.codigo                    AS codigo_conta,
+                    pc.nome                      AS nome_conta,
+                    pc.tipo_conta                AS tipo_conta`
       whereDateCol = 'lc.data_lancamento'
       if (cliente_id) push('lc.cliente_id =', cliente_id)
       if (fornecedor_id) push('lc.fornecedor_id =', fornecedor_id)
     } else if (view === 'plano-contas') {
-      baseSql = `FROM contabilidade.plano_contas pc
-                 LEFT JOIN contabilidade.plano_contas_categorias pcc ON pcc.id = pc.categoria_id
-                 LEFT JOIN contabilidade.plano_contas_segmentos pcs ON pcs.id = pc.segmento_id
-                 LEFT JOIN contabilidade.plano_contas pai ON pai.id = pc.conta_pai_id`
+      baseSql = `FROM contabilidade.plano_contas pc`
       selectSql = `SELECT
                     pc.id,
                     pc.codigo,
                     pc.nome,
                     pc.tipo_conta,
-                    pcc.nome AS categoria,
-                    pcs.nome AS segmento,
                     pc.conta_pai_id,
-                    pai.nome AS conta_pai,
                     pc.nivel,
                     pc.aceita_lancamento,
-                    pc.criado_em,
-                    pc.atualizado_em`
+                    pc.categoria_id,
+                    pc.segmento_id`
       whereDateCol = 'pc.criado_em'
     } else if (view === 'categorias') {
       baseSql = `FROM contabilidade.plano_contas_categorias pcc`
@@ -261,24 +257,17 @@ export async function GET(req: NextRequest) {
                     cl.atualizado_em`
       whereDateCol = 'cl.criado_em'
     } else if (view === 'regras-contabeis') {
-      baseSql = `FROM contabilidade.regras_contabeis rc
-                 LEFT JOIN contabilidade.plano_contas cd ON cd.id = rc.conta_debito_id
-                 LEFT JOIN contabilidade.plano_contas cc ON cc.id = rc.conta_credito_id
-                 LEFT JOIN contabilidade.centros_custo ccc ON ccc.id = rc.centro_custo_id`
+      baseSql = `FROM contabilidade.regras_contabeis rc`
       selectSql = `SELECT
                     rc.id,
                     rc.tenant_id,
                     rc.tipo_operacao,
-                    rc.descricao,
                     rc.categoria_financeira_id,
-                    cd.codigo AS codigo_conta_debito,
-                    cd.nome AS conta_debito,
-                    cc.codigo AS codigo_conta_credito,
-                    cc.nome AS conta_credito,
-                    ccc.nome AS centro_custo,
-                    CASE WHEN rc.ativo THEN 'Ativa' ELSE 'Inativa' END AS status_regra,
-                    rc.criado_em`
-      whereDateCol = 'rc.criado_em'
+                    rc.conta_debito_id,
+                    rc.conta_credito_id,
+                    rc.descricao,
+                    rc.ativo`
+      whereDateCol = 'rc.id'
     } else {
       return Response.json({ success: false, message: `View inválida: ${view}` }, { status: 400 })
     }
@@ -289,7 +278,7 @@ export async function GET(req: NextRequest) {
     const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''
 
     let defaultOrder = ''
-    if (view === 'lancamentos') defaultOrder = 'ORDER BY lc.data_lancamento DESC, lc.id DESC'
+    if (view === 'lancamentos') defaultOrder = 'ORDER BY lc.data_lancamento DESC, lc.id ASC, lcl.id ASC'
     else if (view === 'plano-contas') defaultOrder = 'ORDER BY pc.codigo ASC'
     else if (view === 'categorias') defaultOrder = 'ORDER BY pcc.tipo ASC, pcc.nivel ASC, pcc.ordem ASC'
     else if (view === 'segmentos') defaultOrder = 'ORDER BY pcs.ordem ASC'
