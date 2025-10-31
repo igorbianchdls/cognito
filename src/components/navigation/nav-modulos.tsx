@@ -1,7 +1,7 @@
 "use client"
 
 import { usePathname, useRouter } from "next/navigation"
-import { DollarSign, ShoppingCart, Users, Package, ShoppingBag, Wrench, Megaphone, Briefcase, BookOpen, FileText, BarChart3, Building2 } from "lucide-react"
+import { DollarSign, ShoppingCart, Users, Package, ShoppingBag, Wrench, Megaphone, Briefcase, BookOpen, FileText, Building2 } from "lucide-react"
 
 import {
   SidebarGroup,
@@ -52,16 +52,6 @@ export function NavModulos() {
           </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton
-              tooltip="Relatórios"
-              onClick={() => router.push("/modulos/relatorios")}
-              isActive={pathname.startsWith("/modulos/relatorios")}
-            >
-              <BarChart3 />
-              <span>Relatórios</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton
               tooltip="Documentos"
               onClick={() => router.push("/modulos/documentos")}
               isActive={pathname.startsWith("/modulos/documentos")}
@@ -70,6 +60,21 @@ export function NavModulos() {
               <span>Documentos</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              tooltip="Recursos Humanos"
+              onClick={() => router.push("/modulos/recursos-humanos")}
+              isActive={pathname.startsWith("/modulos/recursos-humanos")}
+            >
+              <Briefcase />
+              <span>Recursos Humanos</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarGroup>
+      <SidebarGroup>
+        <SidebarGroupLabel>Supply Chain</SidebarGroupLabel>
+        <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
               tooltip="Estoque"
@@ -88,16 +93,6 @@ export function NavModulos() {
             >
               <ShoppingBag />
               <span>Compras</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              tooltip="Recursos Humanos"
-              onClick={() => router.push("/modulos/recursos-humanos")}
-              isActive={pathname.startsWith("/modulos/recursos-humanos")}
-            >
-              <Briefcase />
-              <span>Recursos Humanos</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
