@@ -1,7 +1,7 @@
 "use client"
 
 import { usePathname, useRouter } from "next/navigation"
-import { DollarSign, ShoppingCart, Users, Package, ShoppingBag, Wrench, Megaphone, Briefcase, BookOpen, FileText, BarChart3 } from "lucide-react"
+import { DollarSign, ShoppingCart, Users, Package, ShoppingBag, Wrench, Megaphone, Briefcase, BookOpen, FileText, BarChart3, Building2 } from "lucide-react"
 
 import {
   SidebarGroup,
@@ -20,6 +20,16 @@ export function NavModulos() {
       <SidebarGroup>
         <SidebarGroupLabel>Gestão</SidebarGroupLabel>
         <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              tooltip="Empresa"
+              onClick={() => router.push("/modulos/empresa")}
+              isActive={pathname.startsWith("/modulos/empresa")}
+            >
+              <Building2 />
+              <span>Empresa</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton
               tooltip="Financeiro"
