@@ -229,16 +229,22 @@ export default function ModulosComprasPage() {
           const d = dateRange.to
           params.set('ate', `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`)
         }
+        if (!(tabs.selected === 'solicitacoes-compra' || tabs.selected === 'cotacoes-compra')) {
+          params.set('page', String(page))
+          params.set('pageSize', String(pageSize))
+        }
         const url = `/api/modulos/compras?${params.toString()}`
         const res = await fetch(url, { cache: 'no-store', signal: controller.signal })
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
         const json = await res.json()
         const rows = (json?.rows || []) as Row[]
         setData(Array.isArray(rows) ? rows : [])
+        setTotal(Number(json?.total ?? rows.length) || 0)
       } catch (e) {
         if (!(e instanceof DOMException && e.name === 'AbortError')) {
           setError(e instanceof Error ? e.message : 'Falha ao carregar dados')
           setData([])
+          setTotal(0)
         }
       } finally {
         setIsLoading(false)
@@ -246,7 +252,9 @@ export default function ModulosComprasPage() {
     }
     load()
     return () => controller.abort()
-  }, [tabs.selected, dateRange?.from, dateRange?.to, reloadKey])
+  }, [tabs.selected, dateRange?.from, dateRange?.to, page, pageSize, reloadKey])
+
+  useEffect(() => { setPage(1) }, [tabs.selected, dateRange?.from, dateRange?.to])
 
   const tabOptions: Opcao[] = useMemo(() => {
     const iconFor = (v: string) => {
@@ -307,9 +315,9 @@ export default function ModulosComprasPage() {
         <div style={{ paddingTop: (layout.contentTopGap || 0) + (layout.mbTabs || 0) }}>
           <div className="px-4 md:px-6" style={{ marginBottom: 8 }}>
             <DataToolbar
-              from={data.length === 0 ? 0 : 1}
-              to={Math.min(tabelaUI.pageSize, data.length)}
-              total={data.length}
+              from={(!(tabs.selected === 'solicitacoes-compra' || tabs.selected === 'cotacoes-compra') ? total : data.length) === 0 ? 0 : (page - 1) * pageSize + 1}
+              to={(!(tabs.selected === 'solicitacoes-compra' || tabs.selected === 'cotacoes-compra') ? total : data.length) === 0 ? 0 : Math.min(page * pageSize, (!(tabs.selected === 'solicitacoes-compra' || tabs.selected === 'cotacoes-compra') ? total : data.length))}
+              total={!(tabs.selected === 'solicitacoes-compra' || tabs.selected === 'cotacoes-compra') ? total : data.length}
               dateRange={dateRange}
               onDateRangeChange={setDateRange}
               fontFamily={fontVar(toolbarUI.fontFamily)}
@@ -338,12 +346,16 @@ export default function ModulosComprasPage() {
                 <div className="p-6 text-sm text-red-600">Erro ao carregar: {error}</div>
               ) : (
                 <DataTable
+                  key={tabs.selected}
                   columns={columns}
                   data={data}
                   enableSearch={tabelaUI.enableSearch}
                   showColumnToggle={tabelaUI.enableColumnToggle}
                   showPagination={tabelaUI.showPagination}
-                  pageSize={tabelaUI.pageSize}
+                  pageSize={pageSize}
+                  pageIndex={!(tabs.selected === 'solicitacoes-compra' || tabs.selected === 'cotacoes-compra') ? page - 1 : undefined}
+                  serverSidePagination={!(tabs.selected === 'solicitacoes-compra' || tabs.selected === 'cotacoes-compra')}
+                  serverTotalRows={!(tabs.selected === 'solicitacoes-compra' || tabs.selected === 'cotacoes-compra') ? total : undefined}
                   headerBackground={tabelaUI.headerBg}
                   headerTextColor={tabelaUI.headerText}
                   cellTextColor={tabelaUI.cellText}
@@ -364,6 +376,10 @@ export default function ModulosComprasPage() {
                   selectionMode={tabelaUI.selectionMode}
                   defaultSortColumn={tabelaUI.defaultSortColumn}
                   defaultSortDirection={tabelaUI.defaultSortDirection}
+                  onPaginationChange={({ pageIndex, pageSize: newSize }) => {
+                    setPage(pageIndex + 1)
+                    setPageSize(newSize)
+                  }}
                 />
               )}
             </div>
