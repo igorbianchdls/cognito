@@ -111,6 +111,61 @@ export async function GET(req: NextRequest) {
     let whereDateCol = ''
     let selectSql = ''
 
+    // Views com dados mockados: Balanço Patrimonial e DRE
+    if (view === 'balanco-patrimonial') {
+      const mock: Record<string, unknown>[] = [
+        { grupo: 'Ativo Circulante', conta: 'Caixa e Equivalentes de Caixa', tipo: 'Ativo', nivel: 3, saldo_inicial: 120000, movimentos: 35000, saldo_final: 155000 },
+        { grupo: 'Ativo Circulante', conta: 'Contas a Receber', tipo: 'Ativo', nivel: 3, saldo_inicial: 80000, movimentos: -10000, saldo_final: 70000 },
+        { grupo: 'Ativo Não Circulante', conta: 'Imobilizado', tipo: 'Ativo', nivel: 2, saldo_inicial: 300000, movimentos: 20000, saldo_final: 320000 },
+        { grupo: 'Passivo Circulante', conta: 'Fornecedores', tipo: 'Passivo', nivel: 3, saldo_inicial: 90000, movimentos: -15000, saldo_final: 75000 },
+        { grupo: 'Passivo Não Circulante', conta: 'Empréstimos e Financiamentos', tipo: 'Passivo', nivel: 2, saldo_inicial: 200000, movimentos: -10000, saldo_final: 190000 },
+        { grupo: 'Patrimônio Líquido', conta: 'Capital Social', tipo: 'PL', nivel: 1, saldo_inicial: 250000, movimentos: 0, saldo_final: 250000 },
+        { grupo: 'Patrimônio Líquido', conta: 'Lucros/Prejuízos Acumulados', tipo: 'PL', nivel: 1, saldo_inicial: 50000, movimentos: 15000, saldo_final: 65000 },
+      ]
+      const total = mock.length
+      const sliced = mock.slice(offset, offset + pageSize)
+      return Response.json({
+        success: true,
+        view,
+        page,
+        pageSize,
+        total,
+        rows: sliced,
+        sql: 'mock: balanco-patrimonial',
+        params: JSON.stringify([]),
+      }, { headers: { 'Cache-Control': 'no-store' } })
+    }
+
+    if (view === 'dre') {
+      const periodo = new Date().toISOString().slice(0, 7) // YYYY-MM
+      const mock: Record<string, unknown>[] = [
+        { grupo: 'Receitas', conta: 'Receita Bruta de Vendas', tipo: 'Receita', periodo, valor: 450000, acumulado: 450000, percentual: '100%' },
+        { grupo: '(-) Deduções', conta: 'Devoluções/Impostos sobre Vendas', tipo: 'Despesa', periodo, valor: -50000, acumulado: 400000, percentual: '88.9%' },
+        { grupo: 'Receita Líquida', conta: 'Receita Líquida de Vendas', tipo: 'Receita', periodo, valor: 400000, acumulado: 400000, percentual: '88.9%' },
+        { grupo: 'Custos', conta: 'Custo das Mercadorias Vendidas', tipo: 'Despesa', periodo, valor: -240000, acumulado: 160000, percentual: '35.6%' },
+        { grupo: 'Lucro Bruto', conta: 'Lucro Bruto', tipo: 'Receita', periodo, valor: 160000, acumulado: 160000, percentual: '35.6%' },
+        { grupo: 'Despesas Operacionais', conta: 'Despesas Comerciais', tipo: 'Despesa', periodo, valor: -30000, acumulado: 130000, percentual: '28.9%' },
+        { grupo: 'Despesas Operacionais', conta: 'Despesas Administrativas', tipo: 'Despesa', periodo, valor: -20000, acumulado: 110000, percentual: '24.4%' },
+        { grupo: 'Resultado Operacional', conta: 'Lucro Operacional', tipo: 'Receita', periodo, valor: 110000, acumulado: 110000, percentual: '24.4%' },
+        { grupo: 'Resultado Financeiro', conta: 'Despesas Financeiras', tipo: 'Despesa', periodo, valor: -10000, acumulado: 100000, percentual: '22.2%' },
+        { grupo: 'Resultado Antes do IR', conta: 'Resultado Antes do IR', tipo: 'Receita', periodo, valor: 100000, acumulado: 100000, percentual: '22.2%' },
+        { grupo: 'Imposto de Renda', conta: 'IR e Contribuições', tipo: 'Despesa', periodo, valor: -20000, acumulado: 80000, percentual: '17.8%' },
+        { grupo: 'Resultado do Exercício', conta: 'Lucro Líquido', tipo: 'Receita', periodo, valor: 80000, acumulado: 80000, percentual: '17.8%' },
+      ]
+      const total = mock.length
+      const sliced = mock.slice(offset, offset + pageSize)
+      return Response.json({
+        success: true,
+        view,
+        page,
+        pageSize,
+        total,
+        rows: sliced,
+        sql: 'mock: dre',
+        params: JSON.stringify([]),
+      }, { headers: { 'Cache-Control': 'no-store' } })
+    }
+
     if (view === 'lancamentos') {
       baseSql = `FROM contabilidade.lancamentos_contabeis lc
                  LEFT JOIN contabilidade.lancamentos_contabeis_linhas lcl ON lcl.lancamento_id = lc.id
