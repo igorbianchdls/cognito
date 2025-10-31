@@ -27,6 +27,9 @@ export default function ModulosProdutosPage() {
   const [data, setData] = useState<Row[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [page, setPage] = useState<number>(1)
+  const [pageSize, setPageSize] = useState<number>(20)
+  const [total, setTotal] = useState<number>(0)
 
   const fontVar = (name?: string) => {
     if (!name) return undefined
@@ -49,6 +52,11 @@ export default function ModulosProdutosPage() {
       selected: 'produtos',
     })
   }, [])
+
+  // Reset page when tab changes
+  useEffect(() => {
+    setPage(1)
+  }, [tabs.selected])
 
   const iconFor = (v: string) => <List className="h-4 w-4" />
   const tabOptions: Opcao[] = useMemo(() => (tabs.options.map((opt) => ({ ...opt, icon: iconFor(opt.value) })) as Opcao[]), [tabs.options])
@@ -154,7 +162,7 @@ export default function ModulosProdutosPage() {
     }
   }, [tabs.selected])
 
-  // Carrega dados conforme a tab selecionada
+  // Carrega dados conforme a tab selecionada (server-side pagination)
   useEffect(() => {
     const controller = new AbortController()
     const load = async () => {
@@ -163,16 +171,20 @@ export default function ModulosProdutosPage() {
       try {
         const params = new URLSearchParams()
         params.set('view', tabs.selected)
+        params.set('page', String(page))
+        params.set('pageSize', String(pageSize))
         const url = `/api/modulos/produtos?${params.toString()}`
         const res = await fetch(url, { cache: 'no-store', signal: controller.signal })
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
         const json = await res.json()
         const rows = (json?.rows || []) as Row[]
         setData(Array.isArray(rows) ? rows : [])
+        setTotal(Number(json?.total ?? rows.length) || 0)
       } catch (e) {
         if (!(e instanceof DOMException && e.name === 'AbortError')) {
           setError(e instanceof Error ? e.message : 'Falha ao carregar dados')
           setData([])
+          setTotal(0)
         }
       } finally {
         setIsLoading(false)
@@ -180,7 +192,7 @@ export default function ModulosProdutosPage() {
     }
     load()
     return () => controller.abort()
-  }, [tabs.selected])
+  }, [tabs.selected, page, pageSize])
 
   return (
     <SidebarProvider>
@@ -221,9 +233,9 @@ export default function ModulosProdutosPage() {
         <div style={{ paddingTop: (layout.contentTopGap || 0) + (layout.mbTabs || 0) }}>
           <div className="px-4 md:px-6" style={{ marginBottom: 8 }}>
             <DataToolbar
-              from={data.length === 0 ? 0 : 1}
-              to={Math.min(tabelaUI.pageSize, data.length)}
-              total={data.length}
+              from={total === 0 ? 0 : (page - 1) * pageSize + 1}
+              to={total === 0 ? 0 : Math.min(page * pageSize, total)}
+              total={total}
               dateRange={dateRange}
               onDateRangeChange={setDateRange}
               fontFamily={fontVar(tabs.fontFamily)}
@@ -257,7 +269,9 @@ export default function ModulosProdutosPage() {
                   enableSearch={tabelaUI.enableSearch}
                   showColumnToggle={tabelaUI.enableColumnToggle}
                   showPagination={tabelaUI.showPagination}
-                  pageSize={tabelaUI.pageSize}
+                  pageSize={pageSize}
+                  serverSidePagination
+                  serverTotalRows={total}
                   headerBackground={tabelaUI.headerBg}
                   headerTextColor={tabelaUI.headerText}
                   cellTextColor={tabelaUI.cellText}
@@ -278,6 +292,11 @@ export default function ModulosProdutosPage() {
                   selectionMode={tabelaUI.selectionMode}
                   defaultSortColumn={tabelaUI.defaultSortColumn}
                   defaultSortDirection={tabelaUI.defaultSortDirection}
+                  onPaginationChange={({ pageIndex, pageSize: newSize }) => {
+                    // tanstack pageIndex é 0-based
+                    setPage(pageIndex + 1)
+                    setPageSize(newSize)
+                  }}
                 />
               )}
             </div>

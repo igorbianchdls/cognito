@@ -56,6 +56,9 @@ interface DataTableProps<TData extends TableData> {
   showColumnToggle?: boolean
   showPagination?: boolean
   pageSize?: number
+  // Server-side pagination support
+  serverSidePagination?: boolean
+  serverTotalRows?: number
   // Styling props
   headerBackground?: string
   headerTextColor?: string
@@ -369,6 +372,7 @@ export function DataTable<TData extends TableData>({
     return cols
   }, [columns, enableRowSelection, editableMode, editableRowActions, deleteRow, duplicateRow])
 
+  const isServer = !!serverSidePagination
   const table = useReactTable({
     data: tableData,
     columns: tableColumns,
@@ -378,6 +382,8 @@ export function DataTable<TData extends TableData>({
       },
       sorting: defaultSortColumn ? [{ id: defaultSortColumn, desc: defaultSortDirection === 'desc' }] : [],
     },
+    manualPagination: isServer,
+    pageCount: isServer ? Math.max(1, Math.ceil(((serverTotalRows ?? tableData.length) || 0) / pageSize)) : undefined,
     enableColumnResizing: true,
     columnResizeMode: 'onChange',
     columnResizeDirection: 'ltr',
@@ -386,7 +392,7 @@ export function DataTable<TData extends TableData>({
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
+    getPaginationRowModel: isServer ? undefined : getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
@@ -400,6 +406,13 @@ export function DataTable<TData extends TableData>({
       columnSizing,
     },
   })
+
+  // Sync external pageSize changes with table
+  React.useEffect(() => {
+    if (table.getState().pagination.pageSize !== pageSize) {
+      table.setPageSize(pageSize)
+    }
+  }, [pageSize])
 
   const globalFilter = table.getState().globalFilter
   // Notify table API to parent
@@ -421,8 +434,10 @@ export function DataTable<TData extends TableData>({
   // Emit pagination changes
   const pageIndex = table.getState().pagination.pageIndex
   const pageSizeState = table.getState().pagination.pageSize
-  const totalRows = table.getFilteredRowModel().rows.length
-  const pageCount = table.getPageCount()
+  const totalRows = isServer ? (serverTotalRows ?? 0) : table.getFilteredRowModel().rows.length
+  const pageCount = isServer
+    ? Math.max(1, Math.ceil((totalRows || 0) / table.getState().pagination.pageSize))
+    : table.getPageCount()
   React.useEffect(() => {
     onPaginationChange?.({ pageIndex, pageSize: pageSizeState, totalRows, pageCount })
   }, [onPaginationChange, pageIndex, pageSizeState, totalRows, pageCount])

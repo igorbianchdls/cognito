@@ -53,7 +53,7 @@ export async function GET(req: NextRequest) {
     if (!view) return Response.json({ success: false, message: 'Parâmetro view é obrigatório' }, { status: 400 })
 
     const page = Math.max(1, Number(searchParams.get('page') || 1))
-    const pageSize = Math.max(1, Math.min(1000, Number(searchParams.get('pageSize') || 20)))
+    const pageSize = Math.max(1, Math.min(1000, Number(searchParams.get('pageSize') || 1000)))
     const offset = (page - 1) * pageSize
 
     const orderByParam = (searchParams.get('order_by') || '').toLowerCase()

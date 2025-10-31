@@ -86,7 +86,7 @@ export async function GET(req: NextRequest) {
 
     // Paginação
     const page = Math.max(1, parseNumber(searchParams.get('page'), 1) || 1)
-    const pageSize = Math.max(1, Math.min(1000, parseNumber(searchParams.get('pageSize'), 50) || 50))
+    const pageSize = Math.max(1, Math.min(1000, parseNumber(searchParams.get('pageSize'), 1000) || 1000))
     const offset = (page - 1) * pageSize
 
     // Ordenação
