@@ -94,7 +94,16 @@ const DEFAULT_DATA: DRENode[] = [
         name: 'Geral e Administrativo',
         children: [
           { id: 'salarios', name: 'Salários e Encargos', valuesByPeriod: { '2025-01': -9_400, '2025-02': -9_400, '2025-03': -9_200 } },
-          { id: 'escritorio', name: 'Custos de Escritório', valuesByPeriod: { '2025-01': -1_000, '2025-02': -1_000, '2025-03': -1_000 } },
+          {
+            id: 'escritorio',
+            name: 'Custos de Escritório',
+            children: [
+              { id: 'aluguel', name: 'Aluguel', valuesByPeriod: { '2025-01': -400, '2025-02': -400, '2025-03': -400 } },
+              { id: 'conta-luz', name: 'Conta de Luz', valuesByPeriod: { '2025-01': -250, '2025-02': -250, '2025-03': -260 } },
+              { id: 'internet', name: 'Internet', valuesByPeriod: { '2025-01': -150, '2025-02': -150, '2025-03': -150 } },
+              { id: 'materiais', name: 'Materiais de Escritório', valuesByPeriod: { '2025-01': -200, '2025-02': -200, '2025-03': -190 } },
+            ],
+          },
           { id: 'servicos-terceiros', name: 'Serviços de Terceiros', valuesByPeriod: { '2025-01': -1_400, '2025-02': -1_400, '2025-03': -1_400 } },
         ],
       },

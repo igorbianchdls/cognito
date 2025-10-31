@@ -8,6 +8,8 @@ import PageHeader from '@/components/modulos/PageHeader'
 import TabsNav, { type Opcao } from '@/components/modulos/TabsNav'
 import DataToolbar from '@/components/modulos/DataToolbar'
 import DataTable, { type TableData } from '@/components/widgets/Table'
+import DRETable from '@/components/relatorios/DRETable'
+import BalanceSheetTable from '@/components/relatorios/BalanceSheetTable'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
 import { List } from 'lucide-react'
@@ -262,6 +264,10 @@ export default function ModulosContabilidadePage() {
                 <div className="p-6 text-sm text-gray-500">Carregando dados…</div>
               ) : error ? (
                 <div className="p-6 text-sm text-red-600">Erro ao carregar: {error}</div>
+              ) : tabs.selected === 'dre' ? (
+                <DRETable />
+              ) : tabs.selected === 'balanco-patrimonial' ? (
+                <BalanceSheetTable />
               ) : (
                 <DataTable
                   columns={columns}
