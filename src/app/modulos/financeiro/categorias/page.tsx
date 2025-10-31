@@ -39,7 +39,12 @@ export default function ModulosFinanceiroCategoriasPage() {
     financeiroUiActions.setTitulo({ title: 'Financeiro', subtitle: 'Categorias' })
     financeiroUiActions.setTabs({
       options: [
+        { value: 'bancos', label: 'Bancos' },
+        { value: 'contas-financeiras', label: 'Contas Financeiras' },
         { value: 'categorias', label: 'Categorias' },
+        { value: 'centros-de-custo', label: 'Centros de Custo' },
+        { value: 'centros-de-lucro', label: 'Centros de Lucro' },
+        { value: 'projetos', label: 'Projetos' },
       ],
       selected: 'categorias',
     })
@@ -50,6 +55,53 @@ export default function ModulosFinanceiroCategoriasPage() {
 
   const columns: ColumnDef<Row>[] = useMemo(() => {
     switch (tabs.selected) {
+      case 'bancos':
+        return [
+          { accessorKey: 'nome_banco', header: 'Banco' },
+          { accessorKey: 'numero_banco', header: 'Número' },
+          { accessorKey: 'agencia', header: 'Agência' },
+          { accessorKey: 'endereco', header: 'Endereço' },
+          { accessorKey: 'criado_em', header: 'Criado em' },
+          { accessorKey: 'atualizado_em', header: 'Atualizado em' },
+        ]
+      case 'contas-financeiras':
+        return [
+          { accessorKey: 'conta_id', header: 'Conta ID' },
+          { accessorKey: 'nome_conta', header: 'Nome' },
+          { accessorKey: 'tipo_conta', header: 'Tipo' },
+          { accessorKey: 'agencia', header: 'Agência' },
+          { accessorKey: 'numero_conta', header: 'Número Conta' },
+          { accessorKey: 'pix_chave', header: 'Pix' },
+          { accessorKey: 'saldo_inicial', header: 'Saldo Inicial' },
+          { accessorKey: 'saldo_atual', header: 'Saldo Atual' },
+          { accessorKey: 'data_abertura', header: 'Abertura' },
+          { accessorKey: 'ativo', header: 'Ativa' },
+        ]
+      case 'centros-de-custo':
+        return [
+          { accessorKey: 'codigo', header: 'Código' },
+          { accessorKey: 'nome', header: 'Nome' },
+          { accessorKey: 'status', header: 'Status' },
+          { accessorKey: 'criado_em', header: 'Criado em' },
+          { accessorKey: 'atualizado_em', header: 'Atualizado em' },
+        ]
+      case 'centros-de-lucro':
+        return [
+          { accessorKey: 'codigo', header: 'Código' },
+          { accessorKey: 'nome', header: 'Nome' },
+          { accessorKey: 'status', header: 'Status' },
+          { accessorKey: 'criado_em', header: 'Criado em' },
+          { accessorKey: 'atualizado_em', header: 'Atualizado em' },
+        ]
+      case 'projetos':
+        return [
+          { accessorKey: 'codigo', header: 'Código' },
+          { accessorKey: 'nome', header: 'Projeto' },
+          { accessorKey: 'responsavel', header: 'Responsável' },
+          { accessorKey: 'inicio', header: 'Início' },
+          { accessorKey: 'fim', header: 'Fim' },
+          { accessorKey: 'status', header: 'Status' },
+        ]
       case 'categorias':
       default:
         return [
@@ -167,4 +219,3 @@ export default function ModulosFinanceiroCategoriasPage() {
     </SidebarProvider>
   )
 }
-
