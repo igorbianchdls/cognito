@@ -271,6 +271,7 @@ export default function ModulosProdutosPage() {
                   showColumnToggle={tabelaUI.enableColumnToggle}
                   showPagination={tabelaUI.showPagination}
                   pageSize={pageSize}
+                  pageIndex={page - 1}
                   serverSidePagination
                   serverTotalRows={total}
                   headerBackground={tabelaUI.headerBg}

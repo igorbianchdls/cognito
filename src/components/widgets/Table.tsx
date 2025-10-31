@@ -12,6 +12,8 @@ import {
   SortingState,
   useReactTable,
   VisibilityState,
+  type PaginationState,
+  type Updater,
 } from "@tanstack/react-table"
 import { ChevronDown, ChevronLeft, ChevronRight, MoreHorizontal, Plus, Trash2, Copy, X, Check } from "lucide-react"
 
@@ -59,6 +61,7 @@ interface DataTableProps<TData extends TableData> {
   // Server-side pagination support
   serverSidePagination?: boolean
   serverTotalRows?: number
+  pageIndex?: number
   // Styling props
   headerBackground?: string
   headerTextColor?: string
@@ -147,6 +150,7 @@ export function DataTable<TData extends TableData>({
   pageSize = 10,
   serverSidePagination = false,
   serverTotalRows,
+  pageIndex: controlledPageIndex,
   // Styling props with defaults
   headerBackground = '#f9fafb',
   headerTextColor = '#374151',
@@ -197,7 +201,7 @@ export function DataTable<TData extends TableData>({
   onRowDuplicate,
   onDataChange,
   onTableReady,
-  onPaginationChange,
+  onPaginationChange: onExternalPaginationChange,
 }: DataTableProps<TData>) {
   const [sorting, setSorting] = React.useState<SortingState>(
     defaultSortColumn ? [{ id: defaultSortColumn, desc: defaultSortDirection === 'desc' }] : []
@@ -375,6 +379,10 @@ export function DataTable<TData extends TableData>({
   }, [columns, enableRowSelection, editableMode, editableRowActions, deleteRow, duplicateRow])
 
   const isServer = !!serverSidePagination
+  const controlledPagination = isServer
+    ? { pageIndex: controlledPageIndex ?? 0, pageSize }
+    : undefined
+
   const table = useReactTable({
     data: tableData,
     columns: tableColumns,
@@ -406,6 +414,16 @@ export function DataTable<TData extends TableData>({
       columnVisibility,
       rowSelection,
       columnSizing,
+      ...(controlledPagination ? { pagination: controlledPagination } : {}),
+    },
+    onPaginationChange: (updater: Updater<PaginationState>) => {
+      const prev = table.getState().pagination
+      const next = typeof updater === 'function' ? (updater as (old: PaginationState) => PaginationState)(prev) : updater
+      const totalRowsSS = isServer ? (serverTotalRows ?? 0) : table.getFilteredRowModel().rows.length
+      const pageCountSS = isServer
+        ? Math.max(1, Math.ceil((totalRowsSS || 0) / next.pageSize))
+        : table.getPageCount()
+      onExternalPaginationChange?.({ pageIndex: next.pageIndex, pageSize: next.pageSize, totalRows: totalRowsSS, pageCount: pageCountSS })
     },
   })
 
@@ -441,8 +459,8 @@ export function DataTable<TData extends TableData>({
     ? Math.max(1, Math.ceil((totalRows || 0) / table.getState().pagination.pageSize))
     : table.getPageCount()
   React.useEffect(() => {
-    onPaginationChange?.({ pageIndex, pageSize: pageSizeState, totalRows, pageCount })
-  }, [onPaginationChange, pageIndex, pageSizeState, totalRows, pageCount])
+    onExternalPaginationChange?.({ pageIndex, pageSize: pageSizeState, totalRows, pageCount })
+  }, [onExternalPaginationChange, pageIndex, pageSizeState, totalRows, pageCount])
   
   // Handle keyboard events for editing
   const handleKeyDown = React.useCallback((e: React.KeyboardEvent) => {
