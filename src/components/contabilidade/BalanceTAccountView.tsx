@@ -96,18 +96,18 @@ export default function BalanceTAccountView() {
 
   return (
     <div className="space-y-4">
-      {/* Linha superior fixa em 2 colunas: Ativo (esq) e Passivo (dir) */}
-      <div className="grid grid-cols-2 gap-4">
-        <div>
+      {/* Linha superior fixa em 2 colunas (sempre lado a lado) */}
+      <div className="flex gap-4 overflow-x-auto" style={{ whiteSpace: 'nowrap' }}>
+        <div className="basis-1/2 shrink-0 grow-0 min-w-[360px]">
           <SecaoTabela titulo="Ativo" grupos={MOCK.ativo} />
         </div>
-        <div>
+        <div className="basis-1/2 shrink-0 grow-0 min-w-[360px]">
           <SecaoTabela titulo="Passivo" grupos={MOCK.passivo} />
         </div>
       </div>
 
       {/* Linha inferior: Patrimônio Líquido (largura total) */}
-      <div>
+      <div className="overflow-x-auto">
         <SecaoTabela titulo="Patrimônio Líquido" grupos={MOCK.pl} />
       </div>
 
