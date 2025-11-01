@@ -195,12 +195,17 @@ export default function ModulosContabilidadePage() {
       case 'regras-contabeis':
         return [
           { accessorKey: 'id', header: 'ID' },
-          { accessorKey: 'tipo_operacao', header: 'Tipo de Operação' },
-          { accessorKey: 'categoria_financeira_id', header: 'Categoria Financeira ID' },
-          { accessorKey: 'conta_debito_id', header: 'Conta Débito ID' },
-          { accessorKey: 'conta_credito_id', header: 'Conta Crédito ID' },
+          { accessorKey: 'origem', header: 'Origem' },
+          { accessorKey: 'subtipo', header: 'Subtipo' },
+          { accessorKey: 'categoria_financeira', header: 'Categoria' },
+          { accessorKey: 'codigo_conta_debito', header: 'Cód. Débito' },
+          { accessorKey: 'conta_debito', header: 'Conta Débito' },
+          { accessorKey: 'codigo_conta_credito', header: 'Cód. Crédito' },
+          { accessorKey: 'conta_credito', header: 'Conta Crédito' },
           { accessorKey: 'descricao', header: 'Descrição' },
+          { accessorKey: 'automatico', header: 'Automático' },
           { accessorKey: 'ativo', header: 'Ativo' },
+          { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em']) },
         ]
       default:
         return [

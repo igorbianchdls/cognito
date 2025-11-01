@@ -62,11 +62,18 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
     atualizado_em: 'cl.atualizado_em',
   },
   'regras-contabeis': {
-    id: 'rc.id',
-    tipo_operacao: 'rc.tipo_operacao',
-    descricao: 'rc.descricao',
-    categoria_financeira_id: 'rc.categoria_financeira_id',
-    criado_em: 'rc.criado_em',
+    id: 'r.id',
+    origem: 'r.origem',
+    subtipo: 'r.subtipo',
+    categoria_financeira: 'cf.nome',
+    codigo_conta_debito: 'd.codigo',
+    conta_debito: 'd.nome',
+    codigo_conta_credito: 'c.codigo',
+    conta_credito: 'c.nome',
+    descricao: 'r.descricao',
+    automatico: 'r.automatico',
+    ativo: 'r.ativo',
+    criado_em: 'r.criado_em',
   },
 }
 
@@ -269,17 +276,24 @@ export async function GET(req: NextRequest) {
                     cl.atualizado_em`
       whereDateCol = 'cl.criado_em'
     } else if (view === 'regras-contabeis') {
-      baseSql = `FROM contabilidade.regras_contabeis rc`
+      baseSql = `FROM contabilidade.regras_contabeis r
+                 LEFT JOIN administrativo.categorias_financeiras cf ON r.categoria_financeira_id = cf.id
+                 LEFT JOIN contabilidade.plano_contas d ON r.conta_debito_id = d.id
+                 LEFT JOIN contabilidade.plano_contas c ON r.conta_credito_id = c.id`
       selectSql = `SELECT
-                    rc.id,
-                    rc.tenant_id,
-                    rc.tipo_operacao,
-                    rc.categoria_financeira_id,
-                    rc.conta_debito_id,
-                    rc.conta_credito_id,
-                    rc.descricao,
-                    rc.ativo`
-      whereDateCol = 'rc.id'
+                    r.id,
+                    r.origem,
+                    r.subtipo,
+                    COALESCE(cf.nome, '— Todas —') AS categoria_financeira,
+                    d.codigo AS codigo_conta_debito,
+                    d.nome AS conta_debito,
+                    c.codigo AS codigo_conta_credito,
+                    c.nome AS conta_credito,
+                    r.descricao,
+                    r.automatico,
+                    r.ativo,
+                    r.criado_em`
+      whereDateCol = 'r.criado_em'
     } else {
       return Response.json({ success: false, message: `View inválida: ${view}` }, { status: 400 })
     }
@@ -296,7 +310,13 @@ export async function GET(req: NextRequest) {
     else if (view === 'segmentos') defaultOrder = 'ORDER BY pcs.ordem ASC'
     else if (view === 'centros-de-custo') defaultOrder = 'ORDER BY cc.codigo ASC'
     else if (view === 'centros-de-lucro') defaultOrder = 'ORDER BY cl.codigo ASC'
-    else if (view === 'regras-contabeis') defaultOrder = 'ORDER BY rc.tipo_operacao ASC, rc.id ASC'
+    else if (view === 'regras-contabeis') defaultOrder = `ORDER BY CASE 
+                                                                WHEN r.origem = 'contas_a_pagar' THEN 1
+                                                                WHEN r.origem = 'pagamentos_efetuados' THEN 2
+                                                                WHEN r.origem = 'contas_a_receber' THEN 3
+                                                                WHEN r.origem = 'pagamentos_recebidos' THEN 4
+                                                                ELSE 5
+                                                              END, r.id ASC`
 
     const orderClause = orderBy ? `ORDER BY ${orderBy} ${orderDir}` : defaultOrder
     const limitOffsetClause = `LIMIT $${idx}::int OFFSET $${idx + 1}::int`
