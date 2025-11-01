@@ -56,24 +56,6 @@ export function NavModulos() {
               <DollarSign />
               <span>Financeiro</span>
             </SidebarMenuButton>
-            <SidebarMenuSub>
-              <SidebarMenuSubItem>
-                <SidebarMenuSubButton asChild isActive={pathname === "/modulos/financeiro"}>
-                  <button onClick={() => router.push("/modulos/financeiro")}>
-                    <Home />
-                    <span>Home</span>
-                  </button>
-                </SidebarMenuSubButton>
-              </SidebarMenuSubItem>
-              <SidebarMenuSubItem>
-                <SidebarMenuSubButton asChild isActive={pathname.startsWith("/modulos/financeiro/categorias")}>
-                  <button onClick={() => router.push("/modulos/financeiro/categorias")}>
-                    <BookOpen />
-                    <span>Categorias</span>
-                  </button>
-                </SidebarMenuSubButton>
-              </SidebarMenuSubItem>
-            </SidebarMenuSub>
           </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton
