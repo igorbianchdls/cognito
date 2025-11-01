@@ -8,13 +8,17 @@ export const revalidate = 0;
 // Safeguard: whitelist order by columns per view
 const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
   'contas-a-pagar': {
-    id: 'cap.id',
+    lancamento_id: 'lf.id',
+    descricao: 'lf.descricao',
+    descricao_lancamento: 'lf.descricao',
+    valor_total: 'lf.valor',
+    data_lancamento: 'lf.data_lancamento',
+    data_vencimento: 'lf.data_vencimento',
+    status: 'lf.status',
+    categoria_financeira: 'cf.nome',
     fornecedor: 'f.nome',
-    data_emissao: 'cap.data_emissao',
-    data_vencimento: 'cap.data_vencimento',
-    data_pagamento: 'cap.data_pagamento',
-    valor_total: 'cap.valor_total',
-    status: 'cap.status',
+    centro_custo: 'cc.nome',
+    projeto: 'p.nome',
   },
   'contas-a-receber': {
     id: 'car.id',
@@ -26,11 +30,22 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
     status: 'car.status',
   },
   'pagamentos-efetuados': {
-    id: 'pe.id',
+    lancamento_id: 'lf.id',
+    descricao_pagamento: 'lf.descricao',
+    valor_pago: 'lf.valor',
+    data_pagamento: 'lf.data_lancamento',
+    status: 'lf.status',
+    origem_tabela: 'lf.origem_tabela',
+    origem_id: 'lf.origem_id',
     fornecedor: 'f.nome',
-    data_pagamento: 'pe.data_pagamento',
-    valor_total: 'pe.valor_total',
-    status: 'pe.status',
+    categoria_financeira: 'cf.nome',
+    conta_financeira: 'cb.nome_conta',
+    agencia: 'cb.agencia',
+    numero_conta: 'cb.numero_conta',
+    descricao_despesa: 'd.descricao',
+    valor_despesa: 'd.valor_total',
+    vencimento_original: 'd.data_vencimento',
+    data_competencia: 'd.data_competencia',
   },
   'pagamentos-recebidos': {
     id: 'pr.id',
@@ -206,55 +221,68 @@ export async function GET(req: NextRequest) {
     let selectSql = '';
 
     if (view === 'contas-a-pagar') {
-      baseSql = `FROM financeiro.contas_a_pagar cap
-                 LEFT JOIN entidades.fornecedores f ON cap.fornecedor_id = f.id
-                 LEFT JOIN financeiro.categorias_financeiras cat ON cap.categoria_id = cat.id
-                 LEFT JOIN financeiro.contas_financeiras cf ON cap.conta_financeira_id = cf.id`;
-      selectSql = `SELECT cap.id AS conta_id,
-                          cap.fornecedor_id AS fornecedor_id,
-                          cap.descricao,
-                          f.nome AS fornecedor,
-                          f.imagem_url AS fornecedor_imagem_url,
-                          cat.nome AS fornecedor_categoria,
-                          cf.nome_conta AS conta_bancaria,
-                          cf.nome_conta AS conta_financeira,
-                          cap.tipo_titulo,
-                          cap.valor_total,
-                          cap.data_emissao,
-                          cap.data_vencimento,
-                          cap.data_pagamento,
-                          cap.status`;
-      // Filtro principal por data: vencimento para contas
-      whereDateCol = 'cap.data_vencimento';
-      if (fornecedor_id) push('cap.fornecedor_id =', fornecedor_id);
-      if (status) push('LOWER(cap.status) =', status.toLowerCase());
-      if (valor_min !== undefined) push('cap.valor_total >=', valor_min);
-      if (valor_max !== undefined) push('cap.valor_total <=', valor_max);
+      baseSql = `FROM financeiro.lancamentos_financeiros lf
+                 LEFT JOIN administrativo.categorias_financeiras cf ON lf.categoria_id = cf.id
+                 LEFT JOIN entidades.fornecedores f ON lf.entidade_id = f.id
+                 LEFT JOIN empresa.centros_custo cc ON lf.centro_custo_id = cc.id
+                 LEFT JOIN administrativo.projetos p ON lf.origem_tabela = 'despesas' AND lf.origem_id = p.id
+                 LEFT JOIN administrativo.despesas d ON lf.origem_tabela = 'despesas' AND lf.origem_id = d.id`;
+      selectSql = `SELECT 
+                        lf.id AS lancamento_id,
+                        lf.descricao AS descricao_lancamento,
+                        lf.descricao AS descricao,
+                        lf.valor AS valor_total,
+                        lf.data_lancamento,
+                        lf.data_vencimento,
+                        lf.status,
+                        lf.origem_tabela,
+                        lf.origem_id,
+                        cf.nome AS categoria_financeira,
+                        f.nome AS fornecedor,
+                        f.imagem_url AS fornecedor_imagem_url,
+                        cf.nome AS fornecedor_categoria,
+                        cc.nome AS centro_custo,
+                        p.nome AS projeto,
+                        d.descricao AS descricao_despesa,
+                        d.valor_total AS valor_despesa,
+                        d.data_competencia,
+                        d.criado_em AS despesa_criada_em`;
+      whereDateCol = 'lf.data_vencimento';
+      conditions.push(`lf.tipo = 'conta_a_pagar'`);
+      if (fornecedor_id) push('lf.entidade_id =', fornecedor_id);
+      if (status) push('LOWER(lf.status) =', status.toLowerCase());
+      if (valor_min !== undefined) push('lf.valor >=', valor_min);
+      if (valor_max !== undefined) push('lf.valor <=', valor_max);
     } else if (view === 'pagamentos-efetuados') {
-      baseSql = `FROM financeiro.pagamentos_efetuados pe
-                 LEFT JOIN entidades.fornecedores f ON f.id = pe.fornecedor_id
-                 LEFT JOIN financeiro.contas_financeiras cf ON cf.id = pe.conta_financeira_id
-                 LEFT JOIN financeiro.pagamentos_efetuados_linhas pel ON pel.pagamento_id = pe.id
-                 LEFT JOIN financeiro.contas_a_pagar cap ON cap.id = pel.conta_pagar_id
-                 LEFT JOIN financeiro.categorias_financeiras cat ON cat.id = cap.categoria_id`;
-      selectSql = `SELECT pe.id AS pagamento_id,
-                          pe.fornecedor_id AS fornecedor_id,
-                          cap.id AS conta_id,
-                          f.nome AS fornecedor,
-                          f.imagem_url AS fornecedor_imagem_url,
-                          cat.nome AS fornecedor_categoria,
-                          cf.nome_conta AS conta_bancaria,
-                          cf.nome_conta AS conta_financeira,
-                          cap.descricao AS descricao,
-                          pe.valor_total AS valor_total,
-                          pe.data_pagamento,
-                          pe.tipo_pagamento AS tipo_titulo,
-                          pe.status`;
-      whereDateCol = 'pe.data_pagamento';
-      if (fornecedor_id) push('pe.fornecedor_id =', fornecedor_id);
-      if (status) push('LOWER(pe.status) =', status.toLowerCase());
-      if (valor_min !== undefined) push('pe.valor_total >=', valor_min);
-      if (valor_max !== undefined) push('pe.valor_total <=', valor_max);
+      baseSql = `FROM financeiro.lancamentos_financeiros lf
+                 LEFT JOIN administrativo.categorias_financeiras cf ON lf.categoria_id = cf.id
+                 LEFT JOIN entidades.fornecedores f ON lf.entidade_id = f.id
+                 LEFT JOIN financeiro.contas_financeiras cb ON lf.conta_financeira_id = cb.id
+                 LEFT JOIN administrativo.despesas d ON lf.origem_tabela = 'despesas' AND lf.origem_id = d.id`;
+      selectSql = `SELECT 
+                        lf.id AS lancamento_id,
+                        lf.descricao AS descricao_pagamento,
+                        ABS(lf.valor) AS valor_pago,
+                        lf.data_lancamento AS data_pagamento,
+                        lf.status,
+                        lf.origem_tabela,
+                        lf.origem_id,
+                        f.nome AS fornecedor,
+                        f.imagem_url AS fornecedor_imagem_url,
+                        cf.nome AS categoria_financeira,
+                        cb.nome_conta AS conta_financeira,
+                        cb.agencia,
+                        cb.numero_conta,
+                        d.descricao AS descricao_despesa,
+                        d.valor_total AS valor_despesa,
+                        d.data_vencimento AS vencimento_original,
+                        d.data_competencia`;
+      whereDateCol = 'lf.data_lancamento';
+      conditions.push(`lf.tipo = 'pagamento'`);
+      if (fornecedor_id) push('lf.entidade_id =', fornecedor_id);
+      if (status) push('LOWER(lf.status) =', status.toLowerCase());
+      if (valor_min !== undefined) conditions.push(`ABS(lf.valor) >= $${idx++}`), params.push(valor_min);
+      if (valor_max !== undefined) conditions.push(`ABS(lf.valor) <= $${idx++}`), params.push(valor_max);
     } else if (view === 'pagamentos-recebidos') {
       baseSql = `FROM financeiro.pagamentos_recebidos pr
                  LEFT JOIN entidades.clientes cli ON cli.id = pr.cliente_id
@@ -476,7 +504,7 @@ export async function GET(req: NextRequest) {
     } else {
       switch (view) {
         case 'contas-a-pagar':
-          orderClause = 'ORDER BY cap.data_vencimento ASC'
+          orderClause = 'ORDER BY lf.data_vencimento ASC'
           break
         case 'contas-a-receber':
           orderClause = 'ORDER BY car.data_vencimento ASC'

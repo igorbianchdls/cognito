@@ -277,7 +277,7 @@ export default function ModulosFinanceiroPage() {
             header: 'Fornecedor',
             cell: ({ row }) => {
               const nome = row.original['fornecedor'] || 'Sem nome'
-              const categoria = row.original['fornecedor_categoria'] || 'Sem categoria'
+              const categoria = row.original['categoria_financeira'] || 'Sem categoria'
               const imagemUrl = row.original['fornecedor_imagem_url']
               const colors = getColorFromName(String(nome))
 
@@ -285,8 +285,7 @@ export default function ModulosFinanceiroPage() {
                 <div className="flex items-center">
                   <div
                     className="flex items-center justify-center mr-3 cursor-pointer"
-                    role="button"
-                    onClick={() => openEditor(row.original)}
+                    role="img"
                     style={{ width: 40, height: 40, borderRadius: 8, overflow: 'hidden', backgroundColor: imagemUrl ? 'transparent' : colors.bg }}
                   >
                     {imagemUrl ? (
@@ -298,24 +297,19 @@ export default function ModulosFinanceiroPage() {
                     )}
                   </div>
                   <div>
-                    <button
-                      type="button"
-                      onClick={() => openEditor(row.original)}
-                      className="text-left"
-                      style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}
-                    >
+                    <div className="text-left" style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}>
                       {String(nome)}
-                    </button>
+                    </div>
                     <div style={{ fontSize: 12, fontWeight: 400, color: '#6b7280' }}>{String(categoria)}</div>
                   </div>
                 </div>
               )
             }
           },
-          { accessorKey: 'descricao', header: 'Descrição' },
+          { accessorKey: 'descricao_pagamento', header: 'Descrição' },
           { accessorKey: 'data_pagamento', header: 'Pago em', cell: ({ row }) => formatDate(row.original['data_pagamento']) },
-          { accessorKey: 'valor_total', header: 'Valor', cell: ({ row }) => formatBRL(row.original['valor_total']) },
-          { accessorKey: 'tipo_titulo', header: 'Tipo' },
+          { accessorKey: 'valor_pago', header: 'Valor', cell: ({ row }) => formatBRL(row.original['valor_pago']) },
+          { accessorKey: 'conta_financeira', header: 'Conta' },
         ]
       case 'pagamentos-recebidos':
         return [
