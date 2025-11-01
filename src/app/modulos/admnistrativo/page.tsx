@@ -236,7 +236,7 @@ export default function ModulosAdmnistrativoPage() {
                 const cat = row.original['categoria']
                 const dep = row.original['departamento']
                 if (cat && dep) return `${String(cat)} / ${String(dep)}`
-                return String(cat || dep || '')
+                return String(cat || dep || '—')
               })()
               const imagemUrl = row.original['funcionario_imagem_url']
               const colors = getColorFromName(String(nome))
@@ -264,7 +264,7 @@ export default function ModulosAdmnistrativoPage() {
               )
             }
           },
-          { accessorKey: 'tipo', header: 'Tipo' },
+          { accessorKey: 'tipo_reembolso', header: 'Tipo' },
           { accessorKey: 'descricao_linha', header: 'Descrição' },
           { accessorKey: 'categoria', header: 'Categoria' },
           { accessorKey: 'data_despesa', header: 'Data Despesa', cell: ({ row }) => formatDate(row.original['data_despesa']) },

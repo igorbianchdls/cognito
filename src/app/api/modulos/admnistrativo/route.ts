@@ -35,17 +35,13 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
     criado_em: 'c.criado_em',
   },
   'reembolsos': {
-    id: 'r.id',
-    tenant_id: 'r.tenant_id',
+    reembolso_id: 'r.id',
     funcionario: 'f.nome_razao_social',
-    tipo: 'r.tipo',
+    tipo_reembolso: 'r.tipo',
     valor_total: 'r.valor_total',
     status: 'r.status',
     incluir_na_folha: 'r.incluir_na_folha',
     criado_em: 'r.criado_em',
-    centro_custo: 'cc.nome',
-    departamento: 'dp.nome',
-    projeto: 'pj.nome',
     linha_id: 'rl.id',
     descricao_linha: 'rl.descricao',
     categoria: 'cf.nome',
@@ -179,23 +175,16 @@ export async function GET(req: NextRequest) {
       baseSql = `FROM administrativo.reembolsos r
                  LEFT JOIN administrativo.reembolsos_linhas rl ON rl.obrigacao_id = r.id
                  LEFT JOIN administrativo.categorias_financeiras cf ON rl.categoria_id = cf.id
-                 LEFT JOIN entidades.funcionarios f ON r.funcionario_id = f.id
-                 LEFT JOIN empresa.centros_custo cc ON r.centro_custo_id = cc.id
-                 LEFT JOIN empresa.departamentos dp ON r.departamento_id = dp.id
-                 LEFT JOIN administrativo.projetos pj ON r.projeto_id = pj.id`
-      selectSql = `SELECT
-                    r.id,
-                    r.tenant_id,
+                 LEFT JOIN entidades.funcionarios f ON r.funcionario_id = f.id`
+      selectSql = `SELECT 
+                    r.id AS reembolso_id,
                     f.nome_razao_social AS funcionario,
                     f.imagem_url AS funcionario_imagem_url,
-                    r.tipo,
+                    r.tipo AS tipo_reembolso,
                     r.valor_total,
                     r.status,
                     r.incluir_na_folha,
                     r.criado_em,
-                    cc.nome AS centro_custo,
-                    dp.nome AS departamento,
-                    pj.nome AS projeto,
                     rl.id AS linha_id,
                     rl.descricao AS descricao_linha,
                     cf.nome AS categoria,
