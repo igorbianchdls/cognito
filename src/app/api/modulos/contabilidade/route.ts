@@ -20,9 +20,11 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
     id: 'pc.id',
     codigo: 'pc.codigo',
     nome: 'pc.nome',
-    tipo_conta: 'pc.tipo_conta',
+    grupo_principal: "LEFT(pc.codigo, 1)",
     nivel: 'pc.nivel',
     aceita_lancamento: 'pc.aceita_lancamento',
+    codigo_pai: 'pai.codigo',
+    conta_pai: 'pai.nome',
     criado_em: 'pc.criado_em',
     atualizado_em: 'pc.atualizado_em',
   },
@@ -199,18 +201,28 @@ export async function GET(req: NextRequest) {
       whereDateCol = 'lc.data_lancamento'
       if (cliente_id) push('lc.cliente_id =', cliente_id)
       if (fornecedor_id) push('lc.fornecedor_id =', fornecedor_id)
-    } else if (view === 'plano-contas') {
-      baseSql = `FROM contabilidade.plano_contas pc`
+  } else if (view === 'plano-contas') {
+      baseSql = `FROM contabilidade.plano_contas pc
+                 LEFT JOIN contabilidade.plano_contas pai ON pai.id = pc.conta_pai_id`
       selectSql = `SELECT
                     pc.id,
                     pc.codigo,
                     pc.nome,
-                    pc.tipo_conta,
-                    pc.conta_pai_id,
+                    CASE LEFT(pc.codigo, 1)
+                      WHEN '1' THEN 'Ativo'
+                      WHEN '2' THEN 'Passivo'
+                      WHEN '3' THEN 'Patrimônio Líquido'
+                      WHEN '4' THEN 'Receita'
+                      WHEN '5' THEN 'Custo'
+                      WHEN '6' THEN 'Despesa'
+                      ELSE 'Outro'
+                    END AS grupo_principal,
                     pc.nivel,
                     pc.aceita_lancamento,
-                    pc.categoria_id,
-                    pc.segmento_id`
+                    pai.codigo AS codigo_pai,
+                    pai.nome AS conta_pai,
+                    pc.criado_em,
+                    pc.atualizado_em`
       whereDateCol = 'pc.criado_em'
     } else if (view === 'categorias') {
       baseSql = `FROM contabilidade.plano_contas_categorias pcc`
@@ -279,7 +291,7 @@ export async function GET(req: NextRequest) {
 
     let defaultOrder = ''
     if (view === 'lancamentos') defaultOrder = 'ORDER BY lc.data_lancamento DESC, lc.id ASC, lcl.id ASC'
-    else if (view === 'plano-contas') defaultOrder = 'ORDER BY pc.codigo ASC'
+    else if (view === 'plano-contas') defaultOrder = 'ORDER BY pc.codigo::text COLLATE "C"'
     else if (view === 'categorias') defaultOrder = 'ORDER BY pcc.tipo ASC, pcc.nivel ASC, pcc.ordem ASC'
     else if (view === 'segmentos') defaultOrder = 'ORDER BY pcs.ordem ASC'
     else if (view === 'centros-de-custo') defaultOrder = 'ORDER BY cc.codigo ASC'

@@ -168,12 +168,13 @@ export default function ModulosContabilidadePage() {
         return [
           { accessorKey: 'codigo', header: 'Código' },
           { accessorKey: 'nome', header: 'Nome' },
-          { accessorKey: 'tipo_conta', header: 'Tipo' },
-          { accessorKey: 'conta_pai_id', header: 'Conta Pai ID' },
+          { accessorKey: 'grupo_principal', header: 'Grupo' },
           { accessorKey: 'nivel', header: 'Nível' },
           { accessorKey: 'aceita_lancamento', header: 'Aceita Lançamento' },
-          { accessorKey: 'categoria_id', header: 'Categoria ID' },
-          { accessorKey: 'segmento_id', header: 'Segmento ID' },
+          { accessorKey: 'codigo_pai', header: 'Código Pai' },
+          { accessorKey: 'conta_pai', header: 'Conta Pai' },
+          { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em']) },
+          { accessorKey: 'atualizado_em', header: 'Atualizado em', cell: ({ row }) => formatDate(row.original['atualizado_em']) },
         ]
       case 'categorias':
         return [
