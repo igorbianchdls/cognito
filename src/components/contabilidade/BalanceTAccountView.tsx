@@ -96,20 +96,24 @@ export default function BalanceTAccountView() {
 
   return (
     <div className="space-y-4">
-      {/* Linha superior: Ativo (esq) e Passivo (dir) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <SecaoTabela titulo="Ativo" grupos={MOCK.ativo} />
-        <SecaoTabela titulo="Passivo" grupos={MOCK.passivo} />
+      {/* Linha superior fixa em 2 colunas: Ativo (esq) e Passivo (dir) */}
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <SecaoTabela titulo="Ativo" grupos={MOCK.ativo} />
+        </div>
+        <div>
+          <SecaoTabela titulo="Passivo" grupos={MOCK.passivo} />
+        </div>
       </div>
 
-      {/* Linha inferior: Patrimônio Líquido */}
-      <SecaoTabela titulo="Patrimônio Líquido" grupos={MOCK.pl} />
+      {/* Linha inferior: Patrimônio Líquido (largura total) */}
+      <div>
+        <SecaoTabela titulo="Patrimônio Líquido" grupos={MOCK.pl} />
+      </div>
 
       {/* Validação de equilíbrio */}
       <div className="rounded-md border p-3 text-sm flex items-center justify-between">
-        <div className="text-gray-700">
-          Validação: Total Ativo = Total Passivo + PL
-        </div>
+        <div className="text-gray-700">Validação: Total Ativo = Total Passivo + PL</div>
         <div className="font-semibold" style={{ color: emEquilibrio ? '#15803D' : '#DC2626' }}>
           {currency(totalAtivo)} {emEquilibrio ? '=' : '≠'} {currency(totalDireita)}
         </div>
@@ -117,4 +121,3 @@ export default function BalanceTAccountView() {
     </div>
   )
 }
-
