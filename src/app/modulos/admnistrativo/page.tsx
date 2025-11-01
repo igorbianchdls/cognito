@@ -110,9 +110,10 @@ export default function ModulosAdmnistrativoPage() {
     switch (tabs.selected) {
       case 'despesas':
         return [
-          { accessorKey: 'descricao', header: 'Descrição' },
+          { accessorKey: 'descricao_despesa', header: 'Descrição' },
           { accessorKey: 'fornecedor', header: 'Fornecedor' },
           { accessorKey: 'categoria', header: 'Categoria' },
+          { accessorKey: 'data_competencia', header: 'Competência', cell: ({ row }) => formatDate(row.original['data_competencia']) },
           { accessorKey: 'data_vencimento', header: 'Vencimento', cell: ({ row }) => formatDate(row.original['data_vencimento']) },
           { accessorKey: 'valor_total', header: 'Valor', cell: ({ row }) => formatBRL(row.original['valor_total']) },
           { accessorKey: 'status', header: 'Status' },

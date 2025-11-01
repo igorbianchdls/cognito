@@ -9,16 +9,15 @@ export const revalidate = 0
 const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
   'despesas': {
     id: 'd.id',
-    descricao: 'd.descricao',
+    descricao_despesa: 'd.descricao',
     valor_total: 'd.valor_total',
+    data_competencia: 'd.data_competencia',
     data_vencimento: 'd.data_vencimento',
     status: 'd.status',
-    fornecedor: 'f.nome',
     categoria: 'cf.nome',
+    fornecedor: 'f.nome',
     centro_custo: 'cc.nome',
-    departamento: 'dp.nome',
-    projeto: 'pj.nome',
-    filial: 'fl.nome',
+    projeto: 'p.nome',
     criado_em: 'd.criado_em',
   },
   'contratos': {
@@ -123,24 +122,21 @@ export async function GET(req: NextRequest) {
 
     if (view === 'despesas') {
       baseSql = `FROM administrativo.despesas d
-                 LEFT JOIN entidades.fornecedores f ON d.fornecedor_id = f.id
                  LEFT JOIN administrativo.categorias_financeiras cf ON d.categoria_id = cf.id
+                 LEFT JOIN entidades.fornecedores f ON d.fornecedor_id = f.id
                  LEFT JOIN empresa.centros_custo cc ON d.centro_custo_id = cc.id
-                 LEFT JOIN empresa.departamentos dp ON d.departamento_id = dp.id
-                 LEFT JOIN administrativo.projetos pj ON d.projeto_id = pj.id
-                 LEFT JOIN empresa.filiais fl ON d.filial_id = fl.id`
-      selectSql = `SELECT
+                 LEFT JOIN administrativo.projetos p ON d.projeto_id = p.id`
+      selectSql = `SELECT 
                     d.id,
-                    d.descricao,
+                    d.descricao AS descricao_despesa,
                     d.valor_total,
+                    d.data_competencia,
                     d.data_vencimento,
                     d.status,
-                    f.nome AS fornecedor,
                     cf.nome AS categoria,
+                    f.nome AS fornecedor,
                     cc.nome AS centro_custo,
-                    dp.nome AS departamento,
-                    pj.nome AS projeto,
-                    fl.nome AS filial,
+                    p.nome AS projeto,
                     d.criado_em`
       whereDateCol = 'd.data_vencimento'
     } else if (view === 'contratos') {
@@ -232,7 +228,7 @@ export async function GET(req: NextRequest) {
 
     const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''
     let defaultOrder = ''
-    if (view === 'despesas') defaultOrder = 'ORDER BY d.data_vencimento DESC'
+    if (view === 'despesas') defaultOrder = 'ORDER BY d.data_vencimento ASC'
     else if (view === 'contratos') defaultOrder = 'ORDER BY c.data_inicio DESC'
     else if (view === 'reembolsos') defaultOrder = 'ORDER BY r.criado_em DESC'
     else if (view === 'obrigacoes-legais') defaultOrder = 'ORDER BY o.data_vencimento ASC'
