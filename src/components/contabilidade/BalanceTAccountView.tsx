@@ -96,21 +96,20 @@ export default function BalanceTAccountView() {
 
   return (
     <div className="space-y-4">
-      {/* Linha superior fixa em 2 colunas (sempre lado a lado) */}
+      <div className="px-1 text-sm text-gray-700">Balanço em razonete</div>
+      {/* Razonete: Esquerda = Ativo; Direita = Passivo e abaixo Patrimônio Líquido */}
       <div className="overflow-x-auto">
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, minWidth: 720 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, minWidth: 960 }}>
+          {/* Coluna esquerda: ATIVO */}
           <div>
             <SecaoTabela titulo="Ativo" grupos={MOCK.ativo} />
           </div>
-          <div>
+          {/* Coluna direita: PASSIVO (acima) + PL (abaixo) */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <SecaoTabela titulo="Passivo" grupos={MOCK.passivo} />
+            <SecaoTabela titulo="Patrimônio Líquido" grupos={MOCK.pl} />
           </div>
         </div>
-      </div>
-
-      {/* Linha inferior: Patrimônio Líquido (largura total) */}
-      <div className="overflow-x-auto">
-        <SecaoTabela titulo="Patrimônio Líquido" grupos={MOCK.pl} />
       </div>
 
       {/* Validação de equilíbrio */}
