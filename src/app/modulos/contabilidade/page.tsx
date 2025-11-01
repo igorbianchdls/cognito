@@ -10,6 +10,7 @@ import DataToolbar from '@/components/modulos/DataToolbar'
 import DataTable, { type TableData } from '@/components/widgets/Table'
 import DRETable from '@/components/relatorios/DRETable'
 import BalanceSheetTable from '@/components/relatorios/BalanceSheetTable'
+import BalanceTAccountView from '@/components/contabilidade/BalanceTAccountView'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
 import { List } from 'lucide-react'
@@ -286,7 +287,7 @@ export default function ModulosContabilidadePage() {
               ) : tabs.selected === 'dre' ? (
                 <DRETable />
               ) : tabs.selected === 'balanco-patrimonial' ? (
-                <BalanceSheetTable />
+                <BalanceTAccountView />
               ) : (
                 <DataTable
                   key={tabs.selected}
