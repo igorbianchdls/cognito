@@ -42,12 +42,8 @@ export default function ModulosFinanceiroCategoriasPage() {
       options: [
         { value: 'bancos', label: 'Bancos' },
         { value: 'contas-financeiras', label: 'Contas Financeiras' },
-        { value: 'categorias', label: 'Categorias' },
-        { value: 'centros-de-custo', label: 'Centros de Custo' },
-        { value: 'centros-de-lucro', label: 'Centros de Lucro' },
-        { value: 'projetos', label: 'Projetos' },
       ],
-      selected: 'categorias',
+      selected: 'bancos',
     })
   }, [])
 

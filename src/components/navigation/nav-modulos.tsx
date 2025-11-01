@@ -43,6 +43,16 @@ export function NavModulos() {
           </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton
+              tooltip="Administrativo"
+              onClick={() => router.push("/modulos/admnistrativo")}
+              isActive={pathname.startsWith("/modulos/admnistrativo")}
+            >
+              <Building2 />
+              <span>Administrativo</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton
               tooltip="Financeiro"
               onClick={() => setOpenFinanceiro((v) => !v)}
               isActive={pathname.startsWith("/modulos/financeiro")}
