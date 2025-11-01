@@ -40,10 +40,9 @@ export default function ModulosFinanceiroCategoriasPage() {
     financeiroUiActions.setTitulo({ title: 'Financeiro', subtitle: 'Categorias' })
     financeiroUiActions.setTabs({
       options: [
-        { value: 'bancos', label: 'Bancos' },
-        { value: 'contas-financeiras', label: 'Contas Financeiras' },
+        { value: 'categorias', label: 'Categorias' },
       ],
-      selected: 'bancos',
+      selected: 'categorias',
     })
   }, [])
 

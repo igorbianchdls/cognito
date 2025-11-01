@@ -20,11 +20,7 @@ export function NavModulos() {
   const router = useRouter()
   const pathname = usePathname()
 
-  // Expand Financeiro submenu when on any Financeiro route
-  const [openFinanceiro, setOpenFinanceiro] = useState(false)
-  useEffect(() => {
-    setOpenFinanceiro(pathname.startsWith("/modulos/financeiro"))
-  }, [pathname])
+  // Financeiro sempre expandido
 
   return (
     <>
@@ -54,37 +50,30 @@ export function NavModulos() {
           <SidebarMenuItem>
             <SidebarMenuButton
               tooltip="Financeiro"
-              onClick={() => setOpenFinanceiro((v) => !v)}
+              onClick={() => router.push("/modulos/financeiro")}
               isActive={pathname.startsWith("/modulos/financeiro")}
             >
               <DollarSign />
               <span>Financeiro</span>
             </SidebarMenuButton>
-            <SidebarMenuAction asChild>
-              <button onClick={() => setOpenFinanceiro((v) => !v)} aria-label="Expandir Financeiro">
-                {openFinanceiro ? <ChevronDown /> : <ChevronRight />}
-              </button>
-            </SidebarMenuAction>
-            {openFinanceiro ? (
-              <SidebarMenuSub>
-                <SidebarMenuSubItem>
-                  <SidebarMenuSubButton asChild isActive={pathname === "/modulos/financeiro"}>
-                    <button onClick={() => router.push("/modulos/financeiro")}>
-                      <Home />
-                      <span>Home</span>
-                    </button>
-                  </SidebarMenuSubButton>
-                </SidebarMenuSubItem>
-                <SidebarMenuSubItem>
-                  <SidebarMenuSubButton asChild isActive={pathname.startsWith("/modulos/financeiro/categorias")}>
-                    <button onClick={() => router.push("/modulos/financeiro/categorias")}>
-                      <BookOpen />
-                      <span>Categorias</span>
-                    </button>
-                  </SidebarMenuSubButton>
-                </SidebarMenuSubItem>
-              </SidebarMenuSub>
-            ) : null}
+            <SidebarMenuSub>
+              <SidebarMenuSubItem>
+                <SidebarMenuSubButton asChild isActive={pathname === "/modulos/financeiro"}>
+                  <button onClick={() => router.push("/modulos/financeiro")}>
+                    <Home />
+                    <span>Home</span>
+                  </button>
+                </SidebarMenuSubButton>
+              </SidebarMenuSubItem>
+              <SidebarMenuSubItem>
+                <SidebarMenuSubButton asChild isActive={pathname.startsWith("/modulos/financeiro/categorias")}>
+                  <button onClick={() => router.push("/modulos/financeiro/categorias")}>
+                    <BookOpen />
+                    <span>Categorias</span>
+                  </button>
+                </SidebarMenuSubButton>
+              </SidebarMenuSubItem>
+            </SidebarMenuSub>
           </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton

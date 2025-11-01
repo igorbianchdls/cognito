@@ -42,6 +42,8 @@ export default function ModulosFinanceiroPage() {
         { value: 'extrato', label: 'Extrato' },
         { value: 'conciliacao', label: 'Conciliação' },
         { value: 'movimentos', label: 'Movimentos' },
+        { value: 'bancos', label: 'Bancos' },
+        { value: 'contas', label: 'Contas Financeiras' },
       ],
       selected: 'contas-a-pagar',
     })
