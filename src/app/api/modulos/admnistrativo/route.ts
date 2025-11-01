@@ -185,6 +185,7 @@ export async function GET(req: NextRequest) {
                     r.id,
                     r.tenant_id,
                     f.nome_razao_social AS funcionario,
+                    f.imagem_url AS funcionario_imagem_url,
                     r.tipo,
                     r.valor_total,
                     r.status,
