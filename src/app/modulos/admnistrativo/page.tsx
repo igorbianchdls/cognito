@@ -235,8 +235,8 @@ export default function ModulosAdmnistrativoPage() {
               const subtitulo = (() => {
                 const cat = row.original['categoria']
                 const dep = row.original['departamento']
-                if (cat && dep) return `${String(cat)} / ${String(dep)}`
-                return String(cat || dep || '—')
+                const catText = cat ? String(cat) : 'sem Categoria'
+                return dep ? `${catText} / ${String(dep)}` : catText
               })()
               const imagemUrl = row.original['funcionario_imagem_url']
               const colors = getColorFromName(String(nome))
