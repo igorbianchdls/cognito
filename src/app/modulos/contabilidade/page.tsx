@@ -278,7 +278,10 @@ export default function ModulosContabilidadePage() {
             />
           </div>
           <div className="flex-1 min-h-0 overflow-auto" style={{ marginBottom: layout.mbTable }}>
-            <div className="border-y bg-background" style={{ borderColor: tabelaUI.borderColor }}>
+            <div
+              className={`border-y ${tabs.selected === 'balanco-patrimonial' ? '' : 'bg-background'}`}
+              style={{ borderColor: tabelaUI.borderColor, background: tabs.selected === 'balanco-patrimonial' ? 'transparent' : undefined }}
+            >
               {isLoading ? (
                 <div className="p-6 text-sm text-gray-500">Carregando dados…</div>
               ) : error ? (

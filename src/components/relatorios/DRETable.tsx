@@ -246,8 +246,9 @@ export default function DRETable({ data = DEFAULT_DATA, periods = [
             const indent = depth * 20
             const isNegative = total < 0
             const isTopLevel = depth === 0 && isSection
+            const rowBg = '#FFFFFF'
             return (
-              <TableRow key={node.id} className={isTopLevel ? 'bg-gray-50/70' : (idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/40')}>
+              <TableRow key={node.id} style={{ backgroundColor: rowBg }}>
                 <TableCell className={isTopLevel ? 'text-gray-800 font-semibold uppercase tracking-wide text-[12px]' : 'text-gray-800'}>
                   <div className="flex items-center" style={{ paddingLeft: indent }}>
                     {hasChildren ? (
