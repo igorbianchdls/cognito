@@ -58,6 +58,7 @@ export default function BalanceTAccountView() {
   const SecaoTabela = ({ titulo, grupos }: { titulo: string; grupos: Grupo[] }) => (
     <div className="rounded-lg border bg-white">
       <div className="px-4 py-3 border-b text-sm font-semibold text-gray-800">{titulo}</div>
+      <div className="px-2">
       <Table>
         <TableHeader>
           <TableRow>
@@ -68,16 +69,16 @@ export default function BalanceTAccountView() {
         <TableBody>
           {grupos.map((g) => (
             <>
-              <TableRow key={`g-${titulo}-${g.nome}`}>
-                <TableCell colSpan={2} className="bg-gray-50 text-gray-700 font-medium">{g.nome}</TableCell>
+              <TableRow key={`g-${titulo}-${g.nome}`} style={{ backgroundColor: '#ffffff' }}>
+                <TableCell colSpan={2} className="text-gray-700 font-medium">{g.nome}</TableCell>
               </TableRow>
               {g.linhas.map((l, idx) => (
-                <TableRow key={`l-${titulo}-${g.nome}-${idx}`}>
+                <TableRow key={`l-${titulo}-${g.nome}-${idx}`} style={{ backgroundColor: '#ffffff' }}>
                   <TableCell className="text-gray-800">{l.conta}</TableCell>
                   <TableCell className="text-right text-gray-800">{currency(Number(l.valor) || 0)}</TableCell>
                 </TableRow>
               ))}
-              <TableRow key={`t-${titulo}-${g.nome}`}>
+              <TableRow key={`t-${titulo}-${g.nome}`} style={{ backgroundColor: '#ffffff' }}>
                 <TableCell className="text-right font-semibold text-gray-900">Subtotal</TableCell>
                 <TableCell className="text-right font-semibold text-gray-900">{currency(totalGrupo(g))}</TableCell>
               </TableRow>
@@ -91,12 +92,12 @@ export default function BalanceTAccountView() {
           </TableRow>
         </TableBody>
       </Table>
+      </div>
     </div>
   )
 
   return (
     <div className="space-y-4">
-      <div className="px-1 text-sm text-gray-700">Balanço em razonete</div>
       {/* Razonete: Esquerda = Ativo; Direita = Passivo e abaixo Patrimônio Líquido */}
       <div className="overflow-x-auto">
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, minWidth: 960 }}>
