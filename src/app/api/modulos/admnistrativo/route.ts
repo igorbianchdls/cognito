@@ -35,6 +35,49 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
     filial: 'fl.nome',
     criado_em: 'c.criado_em',
   },
+  'reembolsos': {
+    id: 'r.id',
+    tenant_id: 'r.tenant_id',
+    funcionario: 'f.nome_razao_social',
+    tipo: 'r.tipo',
+    valor_total: 'r.valor_total',
+    status: 'r.status',
+    incluir_na_folha: 'r.incluir_na_folha',
+    criado_em: 'r.criado_em',
+    centro_custo: 'cc.nome',
+    departamento: 'dp.nome',
+    projeto: 'pj.nome',
+    linha_id: 'rl.id',
+    descricao_linha: 'rl.descricao',
+    categoria: 'cf.nome',
+    valor_linha: 'rl.valor',
+    data_despesa: 'rl.data_despesa',
+  },
+  'obrigacoes-legais': {
+    id: 'o.id',
+    tipo_obrigacao: 't.nome',
+    descricao_obrigacao: 'o.descricao',
+    data_vencimento: 'o.data_vencimento',
+    valor: 'o.valor',
+    status: 'o.status',
+    responsavel: 'f.nome_razao_social',
+    categoria: 'cf.nome',
+    criado_em: 'o.criado_em',
+  },
+  'documentos': {
+    id: 'doc.id',
+    origem_schema: 'doc.origem_schema',
+    origem_tabela: 'doc.origem_tabela',
+    origem_id: 'doc.origem_id',
+    tipo_documento: 'doc.tipo_documento',
+    numero_documento: 'doc.numero_documento',
+    descricao: 'doc.descricao',
+    data_emissao: 'doc.data_emissao',
+    valor_total: 'doc.valor_total',
+    arquivo_url: 'doc.arquivo_url',
+    status: 'doc.status',
+    criado_em: 'doc.criado_em',
+  },
 }
 
 const parseNumber = (v: string | null, fallback?: number) => (v ? Number(v) : fallback)
@@ -122,9 +165,64 @@ export async function GET(req: NextRequest) {
                     fl.nome AS filial,
                     c.criado_em`
       whereDateCol = 'c.data_inicio'
-    } else if (['reembolsos', 'obrigacoes-legais', 'documentos'].includes(view)) {
-      // Enquanto não há SQL definido para essas views, retorna vazio de forma consistente
-      return Response.json({ success: true, view, page, pageSize, total: 0, rows: [] }, { headers: { 'Cache-Control': 'no-store' } })
+    } else if (view === 'reembolsos') {
+      baseSql = `FROM administrativo.reembolsos r
+                 LEFT JOIN administrativo.reembolsos_linhas rl ON rl.obrigacao_id = r.id
+                 LEFT JOIN administrativo.categorias_financeiras cf ON rl.categoria_id = cf.id
+                 LEFT JOIN entidades.funcionarios f ON r.funcionario_id = f.id
+                 LEFT JOIN empresa.centros_custo cc ON r.centro_custo_id = cc.id
+                 LEFT JOIN empresa.departamentos dp ON r.departamento_id = dp.id
+                 LEFT JOIN administrativo.projetos pj ON r.projeto_id = pj.id`
+      selectSql = `SELECT
+                    r.id,
+                    r.tenant_id,
+                    f.nome_razao_social AS funcionario,
+                    r.tipo,
+                    r.valor_total,
+                    r.status,
+                    r.incluir_na_folha,
+                    r.criado_em,
+                    cc.nome AS centro_custo,
+                    dp.nome AS departamento,
+                    pj.nome AS projeto,
+                    rl.id AS linha_id,
+                    rl.descricao AS descricao_linha,
+                    cf.nome AS categoria,
+                    rl.valor AS valor_linha,
+                    rl.data_despesa`
+      whereDateCol = 'r.criado_em'
+    } else if (view === 'obrigacoes-legais') {
+      baseSql = `FROM administrativo.obrigacoes_legais o
+                 LEFT JOIN administrativo.obrigacoes_legais_tipos t ON o.tipo_id = t.id
+                 LEFT JOIN entidades.funcionarios f ON o.responsavel_id = f.id
+                 LEFT JOIN administrativo.categorias_financeiras cf ON o.categoria_id = cf.id`
+      selectSql = `SELECT 
+                    o.id,
+                    t.nome AS tipo_obrigacao,
+                    o.descricao AS descricao_obrigacao,
+                    o.data_vencimento,
+                    o.valor,
+                    o.status,
+                    f.nome_razao_social AS responsavel,
+                    cf.nome AS categoria,
+                    o.criado_em`
+      whereDateCol = 'o.data_vencimento'
+    } else if (view === 'documentos') {
+      baseSql = `FROM administrativo.documentos doc`
+      selectSql = `SELECT 
+                    doc.id,
+                    doc.origem_schema,
+                    doc.origem_tabela,
+                    doc.origem_id,
+                    doc.tipo_documento,
+                    doc.numero_documento,
+                    doc.descricao,
+                    doc.data_emissao,
+                    doc.valor_total,
+                    doc.arquivo_url,
+                    doc.status,
+                    doc.criado_em`
+      whereDateCol = 'doc.criado_em'
     } else {
       return Response.json({ success: false, message: `View inválida: ${view}` }, { status: 400 })
     }
@@ -133,9 +231,12 @@ export async function GET(req: NextRequest) {
     if (ate) push(`${whereDateCol} <=`, ate)
 
     const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''
-    const defaultOrder = view === 'despesas'
-      ? 'ORDER BY d.data_vencimento DESC'
-      : 'ORDER BY c.data_inicio DESC'
+    let defaultOrder = ''
+    if (view === 'despesas') defaultOrder = 'ORDER BY d.data_vencimento DESC'
+    else if (view === 'contratos') defaultOrder = 'ORDER BY c.data_inicio DESC'
+    else if (view === 'reembolsos') defaultOrder = 'ORDER BY r.criado_em DESC'
+    else if (view === 'obrigacoes-legais') defaultOrder = 'ORDER BY o.data_vencimento ASC'
+    else if (view === 'documentos') defaultOrder = 'ORDER BY doc.criado_em DESC'
     const orderClause = orderBy ? `ORDER BY ${orderBy} ${orderDir}` : defaultOrder
     const limitOffsetClause = `LIMIT $${idx}::int OFFSET $${idx + 1}::int`
     const paramsWithPage = [...params, pageSize, offset]

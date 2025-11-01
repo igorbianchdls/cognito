@@ -128,26 +128,34 @@ export default function ModulosAdmnistrativoPage() {
         ]
       case 'reembolsos':
         return [
-          { accessorKey: 'data', header: 'Data', cell: ({ row }) => formatDate(row.original['data']) },
-          { accessorKey: 'colaborador', header: 'Colaborador' },
-          { accessorKey: 'descricao', header: 'Descrição' },
-          { accessorKey: 'valor', header: 'Valor', cell: ({ row }) => formatBRL(row.original['valor']) },
+          { accessorKey: 'funcionario', header: 'Funcionário' },
+          { accessorKey: 'tipo', header: 'Tipo' },
+          { accessorKey: 'descricao_linha', header: 'Descrição' },
+          { accessorKey: 'categoria', header: 'Categoria' },
+          { accessorKey: 'data_despesa', header: 'Data Despesa', cell: ({ row }) => formatDate(row.original['data_despesa']) },
+          { accessorKey: 'valor_linha', header: 'Valor', cell: ({ row }) => formatBRL(row.original['valor_linha']) },
           { accessorKey: 'status', header: 'Status' },
         ]
       case 'obrigacoes-legais':
         return [
-          { accessorKey: 'tipo', header: 'Tipo' },
-          { accessorKey: 'descricao', header: 'Descrição' },
-          { accessorKey: 'vencimento', header: 'Vencimento', cell: ({ row }) => formatDate(row.original['vencimento']) },
+          { accessorKey: 'tipo_obrigacao', header: 'Tipo' },
+          { accessorKey: 'descricao_obrigacao', header: 'Descrição' },
+          { accessorKey: 'data_vencimento', header: 'Vencimento', cell: ({ row }) => formatDate(row.original['data_vencimento']) },
+          { accessorKey: 'valor', header: 'Valor', cell: ({ row }) => formatBRL(row.original['valor']) },
           { accessorKey: 'responsavel', header: 'Responsável' },
+          { accessorKey: 'categoria', header: 'Categoria' },
           { accessorKey: 'status', header: 'Status' },
+          { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em']) },
         ]
       case 'documentos':
         return [
-          { accessorKey: 'nome', header: 'Nome' },
-          { accessorKey: 'tipo', header: 'Tipo' },
-          { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em']) },
+          { accessorKey: 'tipo_documento', header: 'Tipo' },
+          { accessorKey: 'numero_documento', header: 'Número' },
+          { accessorKey: 'descricao', header: 'Descrição' },
+          { accessorKey: 'data_emissao', header: 'Emissão', cell: ({ row }) => formatDate(row.original['data_emissao']) },
+          { accessorKey: 'valor_total', header: 'Valor', cell: ({ row }) => formatBRL(row.original['valor_total']) },
           { accessorKey: 'status', header: 'Status' },
+          { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em']) },
         ]
       default:
         return [
