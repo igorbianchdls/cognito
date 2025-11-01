@@ -77,6 +77,18 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
     status: 'doc.status',
     criado_em: 'doc.criado_em',
   },
+  'categorias': {
+    id: 'cf.id',
+    categoria: 'cf.nome',
+    tipo: 'cf.tipo',
+    descricao: 'cf.descricao',
+    ativo: 'cf.ativo',
+    conta_contabil_id: 'cf.conta_contabil_id',
+    codigo_conta: 'pc.codigo',
+    nome_conta_contabil: 'pc.nome',
+    criado_em: 'cf.criado_em',
+    atualizado_em: 'cf.atualizado_em',
+  },
 }
 
 const parseNumber = (v: string | null, fallback?: number) => (v ? Number(v) : fallback)
@@ -219,6 +231,21 @@ export async function GET(req: NextRequest) {
                     doc.status,
                     doc.criado_em`
       whereDateCol = 'doc.criado_em'
+    } else if (view === 'categorias') {
+      baseSql = `FROM administrativo.categorias_financeiras cf
+                 LEFT JOIN contabilidade.plano_contas pc ON cf.conta_contabil_id = pc.id`
+      selectSql = `SELECT 
+                    cf.id,
+                    cf.nome AS categoria,
+                    cf.tipo,
+                    cf.descricao,
+                    cf.ativo,
+                    cf.conta_contabil_id,
+                    pc.codigo AS codigo_conta,
+                    pc.nome AS nome_conta_contabil,
+                    cf.criado_em,
+                    cf.atualizado_em`
+      whereDateCol = 'cf.criado_em'
     } else {
       return Response.json({ success: false, message: `View inválida: ${view}` }, { status: 400 })
     }
@@ -233,6 +260,7 @@ export async function GET(req: NextRequest) {
     else if (view === 'reembolsos') defaultOrder = 'ORDER BY r.criado_em DESC'
     else if (view === 'obrigacoes-legais') defaultOrder = 'ORDER BY o.data_vencimento ASC'
     else if (view === 'documentos') defaultOrder = 'ORDER BY doc.criado_em DESC'
+    else if (view === 'categorias') defaultOrder = 'ORDER BY cf.tipo ASC, cf.nome ASC'
     const orderClause = orderBy ? `ORDER BY ${orderBy} ${orderDir}` : defaultOrder
     const limitOffsetClause = `LIMIT $${idx}::int OFFSET $${idx + 1}::int`
     const paramsWithPage = [...params, pageSize, offset]

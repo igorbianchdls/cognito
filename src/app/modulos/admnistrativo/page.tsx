@@ -38,6 +38,7 @@ export default function ModulosAdmnistrativoPage() {
         { value: 'reembolsos', label: 'Reembolsos' },
         { value: 'obrigacoes-legais', label: 'Obrigações Legais' },
         { value: 'documentos', label: 'Documentos' },
+        { value: 'categorias', label: 'Categorias' },
       ],
       selected: 'despesas',
     })
@@ -157,6 +158,17 @@ export default function ModulosAdmnistrativoPage() {
           { accessorKey: 'valor_total', header: 'Valor', cell: ({ row }) => formatBRL(row.original['valor_total']) },
           { accessorKey: 'status', header: 'Status' },
           { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em']) },
+        ]
+      case 'categorias':
+        return [
+          { accessorKey: 'categoria', header: 'Categoria' },
+          { accessorKey: 'tipo', header: 'Tipo' },
+          { accessorKey: 'descricao', header: 'Descrição' },
+          { accessorKey: 'ativo', header: 'Ativo' },
+          { accessorKey: 'codigo_conta', header: 'Código Conta' },
+          { accessorKey: 'nome_conta_contabil', header: 'Conta Contábil' },
+          { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em']) },
+          { accessorKey: 'atualizado_em', header: 'Atualizado em', cell: ({ row }) => formatDate(row.original['atualizado_em']) },
         ]
       default:
         return [
