@@ -131,7 +131,45 @@ export default function ModulosAdmnistrativoPage() {
       case 'despesas':
         return [
           { accessorKey: 'descricao_despesa', header: 'Descrição' },
-          { accessorKey: 'fornecedor', header: 'Fornecedor' },
+          {
+            accessorKey: 'fornecedor',
+            header: 'Fornecedor',
+            size: 280,
+            minSize: 220,
+            cell: ({ row }) => {
+              const nome = row.original['fornecedor'] || 'Sem fornecedor'
+              const subtitulo = (() => {
+                const cat = row.original['categoria']
+                const dep = row.original['departamento']
+                if (cat && dep) return `${String(cat)} / ${String(dep)}`
+                return String(cat || dep || '')
+              })()
+              const imagemUrl = row.original['fornecedor_imagem_url']
+              const colors = getColorFromName(String(nome))
+              return (
+                <div className="flex items-center">
+                  <div
+                    className="flex items-center justify-center mr-3"
+                    style={{ width: 40, height: 40, borderRadius: 8, overflow: 'hidden', backgroundColor: imagemUrl ? 'transparent' : colors.bg }}
+                  >
+                    {imagemUrl ? (
+                      <img src={String(imagemUrl)} alt={String(nome)} className="w-full h-full object-cover" />
+                    ) : (
+                      <div style={{ fontSize: 18, fontWeight: 600, color: colors.text }}>
+                        {String(nome)?.charAt(0)?.toUpperCase() || '?'}
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <div className="text-left" style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}>
+                      {String(nome)}
+                    </div>
+                    <div style={{ fontSize: 12, fontWeight: 400, color: '#6b7280' }}>{subtitulo}</div>
+                  </div>
+                </div>
+              )
+            }
+          },
           { accessorKey: 'categoria', header: 'Categoria' },
           { accessorKey: 'data_competencia', header: 'Competência', cell: ({ row }) => formatDate(row.original['data_competencia']) },
           { accessorKey: 'data_vencimento', header: 'Vencimento', cell: ({ row }) => formatDate(row.original['data_vencimento']) },
@@ -141,7 +179,45 @@ export default function ModulosAdmnistrativoPage() {
       case 'contratos':
         return [
           { accessorKey: 'descricao', header: 'Descrição' },
-          { accessorKey: 'fornecedor', header: 'Fornecedor' },
+          {
+            accessorKey: 'fornecedor',
+            header: 'Fornecedor',
+            size: 280,
+            minSize: 220,
+            cell: ({ row }) => {
+              const nome = row.original['fornecedor'] || 'Sem fornecedor'
+              const subtitulo = (() => {
+                const cat = row.original['categoria']
+                const dep = row.original['departamento']
+                if (cat && dep) return `${String(cat)} / ${String(dep)}`
+                return String(cat || dep || '')
+              })()
+              const imagemUrl = row.original['fornecedor_imagem_url']
+              const colors = getColorFromName(String(nome))
+              return (
+                <div className="flex items-center">
+                  <div
+                    className="flex items-center justify-center mr-3"
+                    style={{ width: 40, height: 40, borderRadius: 8, overflow: 'hidden', backgroundColor: imagemUrl ? 'transparent' : colors.bg }}
+                  >
+                    {imagemUrl ? (
+                      <img src={String(imagemUrl)} alt={String(nome)} className="w-full h-full object-cover" />
+                    ) : (
+                      <div style={{ fontSize: 18, fontWeight: 600, color: colors.text }}>
+                        {String(nome)?.charAt(0)?.toUpperCase() || '?'}
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <div className="text-left" style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}>
+                      {String(nome)}
+                    </div>
+                    <div style={{ fontSize: 12, fontWeight: 400, color: '#6b7280' }}>{subtitulo}</div>
+                  </div>
+                </div>
+              )
+            }
+          },
           { accessorKey: 'categoria', header: 'Categoria' },
           { accessorKey: 'data_inicio', header: 'Início', cell: ({ row }) => formatDate(row.original['data_inicio']) },
           { accessorKey: 'data_fim', header: 'Fim', cell: ({ row }) => formatDate(row.original['data_fim']) },

@@ -147,6 +147,7 @@ export async function GET(req: NextRequest) {
                     d.status,
                     cf.nome AS categoria,
                     f.nome AS fornecedor,
+                    f.imagem_url AS fornecedor_imagem_url,
                     cc.nome AS centro_custo,
                     p.nome AS projeto,
                     d.criado_em`
@@ -166,6 +167,7 @@ export async function GET(req: NextRequest) {
                     c.data_fim,
                     c.status,
                     f.nome AS fornecedor,
+                    f.imagem_url AS fornecedor_imagem_url,
                     cf.nome AS categoria,
                     cc.nome AS centro_custo,
                     dp.nome AS departamento,
