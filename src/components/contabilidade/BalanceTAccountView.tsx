@@ -97,7 +97,7 @@ export default function BalanceTAccountView() {
   )
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 px-4 md:px-6">
       {/* Razonete: Esquerda = Ativo; Direita = Passivo e abaixo Patrimônio Líquido */}
       <div className="overflow-x-auto">
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, minWidth: 960 }}>
