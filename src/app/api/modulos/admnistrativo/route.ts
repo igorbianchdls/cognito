@@ -179,7 +179,6 @@ export async function GET(req: NextRequest) {
       selectSql = `SELECT 
                     r.id AS reembolso_id,
                     f.nome_razao_social AS funcionario,
-                    f.imagem_url AS funcionario_imagem_url,
                     r.tipo AS tipo_reembolso,
                     r.valor_total,
                     r.status,
