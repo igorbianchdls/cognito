@@ -110,19 +110,20 @@ export default function ModulosAdmnistrativoPage() {
     switch (tabs.selected) {
       case 'despesas':
         return [
-          { accessorKey: 'data', header: 'Data', cell: ({ row }) => formatDate(row.original['data']) },
+          { accessorKey: 'descricao', header: 'Descrição' },
           { accessorKey: 'fornecedor', header: 'Fornecedor' },
           { accessorKey: 'categoria', header: 'Categoria' },
-          { accessorKey: 'valor', header: 'Valor', cell: ({ row }) => formatBRL(row.original['valor']) },
+          { accessorKey: 'data_vencimento', header: 'Vencimento', cell: ({ row }) => formatDate(row.original['data_vencimento']) },
+          { accessorKey: 'valor_total', header: 'Valor', cell: ({ row }) => formatBRL(row.original['valor_total']) },
           { accessorKey: 'status', header: 'Status' },
         ]
       case 'contratos':
         return [
-          { accessorKey: 'numero', header: 'Número' },
-          { accessorKey: 'parte', header: 'Parte' },
-          { accessorKey: 'inicio', header: 'Início', cell: ({ row }) => formatDate(row.original['inicio']) },
-          { accessorKey: 'fim', header: 'Fim', cell: ({ row }) => formatDate(row.original['fim']) },
-          { accessorKey: 'valor', header: 'Valor', cell: ({ row }) => formatBRL(row.original['valor']) },
+          { accessorKey: 'descricao', header: 'Descrição' },
+          { accessorKey: 'fornecedor', header: 'Fornecedor' },
+          { accessorKey: 'categoria', header: 'Categoria' },
+          { accessorKey: 'data_inicio', header: 'Início', cell: ({ row }) => formatDate(row.original['data_inicio']) },
+          { accessorKey: 'data_fim', header: 'Fim', cell: ({ row }) => formatDate(row.original['data_fim']) },
           { accessorKey: 'status', header: 'Status' },
         ]
       case 'reembolsos':
@@ -269,4 +270,3 @@ export default function ModulosAdmnistrativoPage() {
     </SidebarProvider>
   )
 }
-
