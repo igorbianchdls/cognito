@@ -25,7 +25,7 @@ export default function IntegradoTesterPage() {
     descricao: 'Despesa integrada de teste',
     conta_financeira_id: '',
   })
-  const [tables, setTables] = useState<{ despesas?: Row[]; lf?: Row[]; lc?: Row[]; linhas?: Row[] }>({})
+  const [tables, setTables] = useState<{ despesas?: Row[]; lf?: Row[]; lc?: Row[]; linhas?: Row[]; headers?: Row[] }>({})
   const [carForm, setCarForm] = useState({ tenant_id: '1', cliente_id: '', categoria_id: '', valor: '', data_vencimento: '', descricao: '' })
   const [peForm, setPeForm] = useState({ tenant_id: '1', fornecedor_id: '', categoria_id: '', subtipo: '', valor: '', data_lancamento: '', descricao: '', conta_financeira_id: '' })
   const [prForm, setPrForm] = useState({ tenant_id: '1', cliente_id: '', categoria_id: '', subtipo: '', valor: '', data_lancamento: '', descricao: '', conta_financeira_id: '' })
@@ -67,6 +67,13 @@ export default function IntegradoTesterPage() {
     { accessorKey: 'debito', header: 'Débito' },
     { accessorKey: 'credito', header: 'Crédito' },
   ]), [])
+  const colsHeaders: ColumnDef<Row>[] = useMemo(() => ([
+    { accessorKey: 'lancamento_id', header: 'ID' },
+    { accessorKey: 'data_lancamento', header: 'Data' },
+    { accessorKey: 'historico', header: 'Histórico' },
+    { accessorKey: 'total_debitos', header: 'Débitos' },
+    { accessorKey: 'total_creditos', header: 'Créditos' },
+  ]), [])
 
   const loadCats = async () => {
     try {
@@ -84,14 +91,15 @@ export default function IntegradoTesterPage() {
 
   const loadTables = async () => {
     try {
-      const [dRes, lfRes, lcRes, lnRes] = await Promise.all([
+      const [dRes, lfRes, lcRes, lnRes, hdRes] = await Promise.all([
         fetch('/bigquery-test/administrativo/despesas', { cache: 'no-store' }),
         fetch('/bigquery-test/financeiro/lancamentos', { cache: 'no-store' }),
         fetch('/bigquery-test/contabilidade/lancamentos', { cache: 'no-store' }),
         fetch('/bigquery-test/contabilidade/linhas', { cache: 'no-store' }),
+        fetch('/bigquery-test/contabilidade/headers', { cache: 'no-store' }),
       ])
-      const d = await dRes.json(); const lf = await lfRes.json(); const lc = await lcRes.json(); const ln = await lnRes.json()
-      setTables({ despesas: d?.rows || [], lf: lf?.rows || [], lc: lc?.rows || [], linhas: ln?.rows || [] })
+      const d = await dRes.json(); const lf = await lfRes.json(); const lc = await lcRes.json(); const ln = await lnRes.json(); const hd = await hdRes.json()
+      setTables({ despesas: d?.rows || [], lf: lf?.rows || [], lc: lc?.rows || [], linhas: ln?.rows || [], headers: hd?.rows || [] })
     } catch {}
   }
 
@@ -361,6 +369,11 @@ export default function IntegradoTesterPage() {
       <div className="space-y-2">
         <h2 className="text-base font-medium">Lançamentos Contábeis (últimos 10)</h2>
         <DataTable<Row> columns={colsLc} data={tables.lc || []} pageSize={10} />
+      </div>
+
+      <div className="space-y-2">
+        <h2 className="text-base font-medium">Cabeçalhos Contábeis (IDs mais recentes)</h2>
+        <DataTable<Row> columns={colsHeaders} data={tables.headers || []} pageSize={10} />
       </div>
 
       <div className="space-y-2">
