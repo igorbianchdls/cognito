@@ -345,30 +345,45 @@ export async function GET(req: NextRequest) {
     }
 
     if (view === 'lancamentos') {
-      baseSql = `FROM contabilidade.lancamentos_contabeis lc
-                 LEFT JOIN contabilidade.lancamentos_contabeis_linhas lcl 
-                        ON lcl.lancamento_id = lc.id`
-      selectSql = `SELECT
-                    lc.id AS lancamento_id,
-                    lc.data_lancamento,
-                    lc.historico,
-                    lc.origem_tabela,
-                    lc.origem_id,
-                    lc.fornecedor_id,
-                    lc.cliente_id,
-                    lc.conta_financeira_id,
-                    lc.total_debitos,
-                    lc.total_creditos,
-                    lcl.id AS linha_id,
-                    lcl.conta_id,
-                    lcl.debito,
-                    lcl.credito,
-                    lcl.historico AS historico_linha,
-                    lcl.criado_em`
       whereDateCol = 'lc.data_lancamento'
       if (cliente_id) push('lc.cliente_id =', cliente_id)
       if (fornecedor_id) push('lc.fornecedor_id =', fornecedor_id)
-  } else if (view === 'plano-contas') {
+      const headerWhere = conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''
+      const chLimit = `LIMIT $${idx}::int OFFSET $${idx + 1}::int`
+      const paramsWithPage = [...params, pageSize, offset]
+      const listSql = `WITH ch AS (
+                         SELECT lc.id
+                         FROM contabilidade.lancamentos_contabeis lc
+                         ${headerWhere}
+                         ORDER BY lc.data_lancamento DESC, lc.id DESC
+                         ${chLimit}
+                       )
+                       SELECT lc.id AS lancamento_id,
+                              lc.data_lancamento,
+                              lc.historico,
+                              lc.origem_tabela,
+                              lc.origem_id,
+                              lc.cliente_id,
+                              lc.fornecedor_id,
+                              lc.conta_financeira_id,
+                              lc.total_debitos,
+                              lc.total_creditos,
+                              lcl.id AS linha_id,
+                              lcl.conta_id,
+                              lcl.debito,
+                              lcl.credito,
+                              lcl.historico AS historico_linha,
+                              lcl.criado_em
+                       FROM ch
+                       JOIN contabilidade.lancamentos_contabeis lc ON lc.id = ch.id
+                       LEFT JOIN contabilidade.lancamentos_contabeis_linhas lcl ON lcl.lancamento_id = lc.id
+                       ORDER BY lc.data_lancamento DESC, lc.id DESC, lcl.id ASC`;
+      const rows = await runQuery<Record<string, unknown>>(listSql, paramsWithPage)
+      const totalSql = `SELECT COUNT(*)::int AS total FROM contabilidade.lancamentos_contabeis lc ${headerWhere}`
+      const totalRows = await runQuery<{ total: number }>(totalSql, params)
+      const total = totalRows[0]?.total ?? 0
+      return Response.json({ success: true, view, page, pageSize, total, rows, sql: listSql, params: JSON.stringify(paramsWithPage) }, { headers: { 'Cache-Control': 'no-store' } })
+    } else if (view === 'plano-contas') {
       baseSql = `FROM contabilidade.plano_contas pc
                  LEFT JOIN contabilidade.plano_contas pai ON pai.id = pc.conta_pai_id`
       selectSql = `SELECT
