@@ -36,7 +36,8 @@ export async function POST(req: Request) {
     }
 
     const { data: inserted, error: insertError } = await supabase
-      .from('documentos.documentos_anexos')
+      .schema('documentos')
+      .from('documentos_anexos')
       .insert([{
         documento_id: documentoId,
         nome_arquivo: originalName,
@@ -57,4 +58,3 @@ export async function POST(req: Request) {
     return Response.json({ success: false, message: 'Erro interno', error: error instanceof Error ? error.message : 'Erro desconhecido' }, { status: 500 })
   }
 }
-

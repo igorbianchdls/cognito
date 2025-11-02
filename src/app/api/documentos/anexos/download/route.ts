@@ -15,7 +15,8 @@ export async function GET(req: Request) {
     }
 
     const { data, error } = await supabase
-      .from('documentos.documentos_anexos')
+      .schema('documentos')
+      .from('documentos_anexos')
       .select('arquivo_url, nome_arquivo')
       .eq('id', id)
       .single()
@@ -38,4 +39,3 @@ export async function GET(req: Request) {
     return Response.json({ success: false, message: 'Erro interno', error: error instanceof Error ? error.message : 'Erro desconhecido' }, { status: 500 })
   }
 }
-

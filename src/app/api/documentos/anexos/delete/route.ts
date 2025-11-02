@@ -15,7 +15,8 @@ export async function DELETE(req: Request) {
     }
 
     const { data, error } = await supabase
-      .from('documentos.documentos_anexos')
+      .schema('documentos')
+      .from('documentos_anexos')
       .select('arquivo_url')
       .eq('id', id)
       .single()
@@ -25,7 +26,7 @@ export async function DELETE(req: Request) {
     }
 
     await supabase.storage.from('documentos').remove([data.arquivo_url as string]).catch(() => {})
-    const { error: delError } = await supabase.from('documentos.documentos_anexos').delete().eq('id', id)
+    const { error: delError } = await supabase.schema('documentos').from('documentos_anexos').delete().eq('id', id)
     if (delError) {
       return Response.json({ success: false, message: 'Falha ao excluir registro', error: delError.message }, { status: 500 })
     }
@@ -35,4 +36,3 @@ export async function DELETE(req: Request) {
     return Response.json({ success: false, message: 'Erro interno', error: error instanceof Error ? error.message : 'Erro desconhecido' }, { status: 500 })
   }
 }
-
