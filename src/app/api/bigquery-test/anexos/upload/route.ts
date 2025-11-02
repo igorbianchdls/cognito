@@ -36,6 +36,22 @@ export async function POST(req: Request) {
       return Response.json({ success: false, message: 'Falha no upload do arquivo', error: uploadError.message }, { status: 500 })
     }
 
+    // Tentar gravar metadados em documentos.documentos_anexos (documento_id opcional)
+    let dbInserted = false
+    try {
+      const { error: insertErr } = await supabase
+        .schema('documentos')
+        .from('documentos_anexos')
+        .insert([{ 
+          documento_id: documentoId ? Number(documentoId) : null,
+          nome_arquivo: originalName,
+          tipo_arquivo: file.type || null,
+          arquivo_url: path,
+          tamanho_bytes: typeof file.size === 'number' ? file.size : null,
+        }])
+      if (!insertErr) dbInserted = true
+    } catch {}
+
     // URL assinada opcional para retorno imediato
     const { data: signed } = await supabase
       .storage
@@ -51,7 +67,8 @@ export async function POST(req: Request) {
         tipo_arquivo: file.type || null,
         tamanho_bytes: typeof file.size === 'number' ? file.size : null,
       },
-      signed_url: signed?.signedUrl
+      signed_url: signed?.signedUrl,
+      dbInserted
     })
   } catch (error) {
     console.error('Erro upload anexo:', error)
