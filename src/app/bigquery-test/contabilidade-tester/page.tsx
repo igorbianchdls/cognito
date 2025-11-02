@@ -30,7 +30,7 @@ export default function ContabilidadeTesterPage() {
     descricao: 'Conta a pagar de teste',
     conta_financeira_id: '',
   })
-  const [tables, setTables] = useState<{ lf?: Row[]; lc?: Row[] }>({})
+  const [tables, setTables] = useState<{ lf?: Row[]; lc?: Row[]; linhas?: Row[] }>({})
 
   const columns: ColumnDef<Row>[] = useMemo(() => ([
     { accessorKey: 'tipo', header: 'Tipo' },
@@ -124,15 +124,26 @@ export default function ContabilidadeTesterPage() {
     { accessorKey: 'total_creditos', header: 'Créditos' },
   ]), [])
 
+  const colsLinhas: ColumnDef<Row>[] = useMemo(() => ([
+    { accessorKey: 'linha_id', header: 'Linha' },
+    { accessorKey: 'lancamento_id', header: 'Lançamento' },
+    { accessorKey: 'tipo', header: 'Tipo' },
+    { accessorKey: 'conta_codigo', header: 'Conta (código)' },
+    { accessorKey: 'conta_nome', header: 'Conta (nome)' },
+    { accessorKey: 'valor', header: 'Valor' },
+  ]), [])
+
   const loadTables = async () => {
     try {
-      const [lfRes, lcRes] = await Promise.all([
+      const [lfRes, lcRes, lnRes] = await Promise.all([
         fetch('/bigquery-test/financeiro/lancamentos', { cache: 'no-store' }),
         fetch('/bigquery-test/contabilidade/lancamentos', { cache: 'no-store' }),
+        fetch('/bigquery-test/contabilidade/linhas', { cache: 'no-store' }),
       ])
       const lf = await lfRes.json()
       const lc = await lcRes.json()
-      setTables({ lf: lf?.rows || [], lc: lc?.rows || [] })
+      const ln = await lnRes.json()
+      setTables({ lf: lf?.rows || [], lc: lc?.rows || [], linhas: ln?.rows || [] })
     } catch {}
   }
 
@@ -280,6 +291,11 @@ export default function ContabilidadeTesterPage() {
       <div className="space-y-2">
         <h2 className="text-base font-medium">Lançamentos Contábeis (últimos 50)</h2>
         <DataTable<Row> columns={colsLc} data={tables.lc || []} pageSize={10} />
+      </div>
+
+      <div className="space-y-2">
+        <h2 className="text-base font-medium">Linhas Contábeis (últimas 10)</h2>
+        <DataTable<Row> columns={colsLinhas} data={tables.linhas || []} pageSize={10} />
       </div>
     </div>
   )
