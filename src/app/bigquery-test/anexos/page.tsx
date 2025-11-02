@@ -192,14 +192,20 @@ export default function AnexosPage() {
 
       {mode === 'upload' ? (
         <div className="flex items-center gap-2 mb-4">
-          <input type="file" onChange={(e) => setFile(e.target.files?.[0] || null)} />
-          <button
-            className="px-3 py-1 bg-blue-600 text-white rounded disabled:opacity-50"
-            onClick={() => handleUpload()}
-            disabled={!file || loading}
-          >
-            {loading ? 'Enviando…' : 'Enviar Anexo'}
-          </button>
+          <label className="px-3 py-1 bg-blue-600 text-white rounded cursor-pointer">
+            <input
+              type="file"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0]
+                if (f) {
+                  handleUpload(f)
+                }
+                e.currentTarget.value = ''
+              }}
+            />
+            {loading ? 'Enviando…' : 'Selecionar e Enviar'}
+          </label>
         </div>
       ) : (
         <div className="mb-4 border rounded p-3">
