@@ -104,8 +104,15 @@ export async function POST(req: NextRequest) {
         const lfId: number = Number(lancRes.rows[0].id)
         createdLancamentos.push({ id: lfId, valor: valorParcela, data_vencimento: vencStr })
 
-        // Resolve regra contábil para conta_a_pagar pela categoria
-        if (categoria_id !== undefined) {
+        // Idempotência: evita gerar contábil duplicado para o mesmo lançamento financeiro
+        const existsRes = await client.query(
+          `SELECT 1 FROM contabilidade.lancamentos_contabeis WHERE tenant_id = $1 AND lancamento_financeiro_id = $2 LIMIT 1`,
+          [tenant_id, lfId]
+        )
+        const jaExisteContabil = existsRes.rowCount && Number(existsRes.rowCount) > 0
+
+        // Resolve regra contábil para conta_a_pagar pela categoria (somente se ainda não existir)
+        if (!jaExisteContabil && categoria_id !== undefined) {
           const regraSql = `
             SELECT r.conta_debito_id, r.conta_credito_id
               FROM contabilidade.regras_contabeis r
