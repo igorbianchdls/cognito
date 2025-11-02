@@ -355,7 +355,7 @@ export async function GET(req: NextRequest) {
                          SELECT lc.id
                          FROM contabilidade.lancamentos_contabeis lc
                          ${headerWhere}
-                         ORDER BY lc.data_lancamento DESC, lc.id DESC
+                         ORDER BY lc.id DESC
                          ${chLimit}
                        )
                        SELECT lc.id AS lancamento_id,
@@ -377,7 +377,7 @@ export async function GET(req: NextRequest) {
                        FROM ch
                        JOIN contabilidade.lancamentos_contabeis lc ON lc.id = ch.id
                        LEFT JOIN contabilidade.lancamentos_contabeis_linhas lcl ON lcl.lancamento_id = lc.id
-                       ORDER BY lc.data_lancamento DESC, lc.id DESC, lcl.id ASC`;
+                       ORDER BY lc.id DESC, lcl.id ASC`;
       const rows = await runQuery<Record<string, unknown>>(listSql, paramsWithPage)
       const totalSql = `SELECT COUNT(*)::int AS total FROM contabilidade.lancamentos_contabeis lc ${headerWhere}`
       const totalRows = await runQuery<{ total: number }>(totalSql, params)

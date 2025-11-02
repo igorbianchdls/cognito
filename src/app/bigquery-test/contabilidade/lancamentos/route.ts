@@ -10,7 +10,7 @@ export async function GET() {
       WITH last_headers AS (
         SELECT id
         FROM contabilidade.lancamentos_contabeis
-        ORDER BY data_lancamento DESC, id DESC
+        ORDER BY id DESC
         LIMIT 10
       )
       SELECT
@@ -33,7 +33,7 @@ export async function GET() {
       FROM last_headers lh
       JOIN contabilidade.lancamentos_contabeis lc ON lc.id = lh.id
       LEFT JOIN contabilidade.lancamentos_contabeis_linhas lcl ON lcl.lancamento_id = lc.id
-      ORDER BY lc.data_lancamento DESC, lc.id DESC, lcl.id ASC`
+      ORDER BY lc.id DESC, lcl.id ASC`
     const rows = await runQuery<Record<string, unknown>>(sql)
     return Response.json({ success: true, rows })
   } catch (e) {
