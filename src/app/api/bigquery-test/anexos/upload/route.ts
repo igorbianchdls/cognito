@@ -39,32 +39,23 @@ export async function POST(req: Request) {
       return Response.json({ success: false, message: 'Falha no upload do arquivo', error: uploadError.message }, { status: 500 })
     }
 
-    // Inserir metadados na tabela documentos.documentos_anexos
-    const { data: inserted, error: insertError } = await supabase
-      .from('documentos.documentos_anexos')
-      .insert([{
-        documento_id: Number(documentoId),
-        nome_arquivo: originalName,
-        tipo_arquivo: file.type || null,
-        arquivo_url: path, // armazenamos o caminho no storage
-        tamanho_bytes: typeof file.size === 'number' ? file.size : null,
-      }])
-      .select()
-
-    if (insertError) {
-      console.error('Erro insert anexos:', insertError)
-      // tentar remover do storage
-      await supabase.storage.from('documentos').remove([path]).catch(() => {})
-      return Response.json({ success: false, message: 'Falha ao gravar metadados', error: insertError.message }, { status: 500 })
-    }
-
     // URL assinada opcional para retorno imediato
     const { data: signed } = await supabase
       .storage
       .from('documentos')
       .createSignedUrl(path, 60 * 5)
 
-    return Response.json({ success: true, message: 'Upload concluído', anexo: inserted?.[0], signed_url: signed?.signedUrl })
+    return Response.json({
+      success: true,
+      message: 'Upload concluído (storage) ',
+      storage_path: path,
+      file: {
+        nome_arquivo: originalName,
+        tipo_arquivo: file.type || null,
+        tamanho_bytes: typeof file.size === 'number' ? file.size : null,
+      },
+      signed_url: signed?.signedUrl
+    })
   } catch (error) {
     console.error('Erro upload anexo:', error)
     return Response.json({ success: false, message: 'Erro interno', error: error instanceof Error ? error.message : 'Erro desconhecido' }, { status: 500 })

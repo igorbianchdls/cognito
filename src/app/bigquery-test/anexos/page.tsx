@@ -56,7 +56,16 @@ export default function AnexosPage() {
       const json = await res.json()
       if (!json?.success) throw new Error(json?.message || 'Falha no upload')
       setFile(null)
-      await fetchList()
+      // Adiciona item recém-enviado na tabela (somente storage, sem DB)
+      const uploaded: Anexo = {
+        id: Date.now(),
+        nome_arquivo: json?.file?.nome_arquivo || chosenFile.name,
+        tipo_arquivo: json?.file?.tipo_arquivo || chosenFile.type,
+        tamanho_bytes: json?.file?.tamanho_bytes ?? chosenFile.size,
+        criado_em: new Date().toISOString(),
+        signed_url: json?.signed_url || undefined,
+      }
+      setRows(prev => [uploaded, ...prev])
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Erro ao enviar')
     } finally { setLoading(false) }
@@ -143,14 +152,14 @@ export default function AnexosPage() {
           />
         </div>
       )}
-        <button
+      <button
           className="px-3 py-1 bg-gray-200 rounded"
           onClick={() => fetchList()}
           disabled={!documentoId || loading}
         >
           Atualizar
         </button>
-      </div>
+      
       {error && <div className="text-red-600 text-sm mb-3">{error}</div>}
       <div className="border rounded">
         <table className="w-full text-sm">
