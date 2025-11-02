@@ -55,23 +55,44 @@ export default function ModulosDocumentosPage() {
       return d.toLocaleDateString('pt-BR')
     } catch { return String(value) }
   }
+  const formatBRL = (value?: unknown) => {
+    const n = Number(value ?? 0)
+    return isNaN(n) ? String(value ?? '') : n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+  }
 
   const columns: ColumnDef<Row>[] = useMemo(() => {
     switch (tabs.selected) {
       case 'fiscal':
         return [
           { accessorKey: 'data_emissao', header: 'Emissão', cell: ({ row }) => formatDate(row.original['data_emissao']) },
-          { accessorKey: 'tipo_documento', header: 'Tipo (NF-e, Guia, etc.)' },
+          { accessorKey: 'tipo_documento', header: 'Tipo' },
           { accessorKey: 'numero', header: 'Número' },
           { accessorKey: 'descricao', header: 'Descrição' },
+          { accessorKey: 'valor_total', header: 'Valor Total', cell: ({ row }) => formatBRL(row.original['valor_total']) },
           { accessorKey: 'status', header: 'Status' },
+          { accessorKey: 'cfop', header: 'CFOP' },
+          { accessorKey: 'chave_acesso', header: 'Chave de Acesso' },
+          { accessorKey: 'natureza_operacao', header: 'Natureza' },
+          { accessorKey: 'modelo', header: 'Modelo' },
+          { accessorKey: 'serie', header: 'Série' },
+          { accessorKey: 'data_autorizacao', header: 'Autorizado em', cell: ({ row }) => formatDate(row.original['data_autorizacao']) },
+          { accessorKey: 'xml_url', header: 'XML', cell: ({ row }) => {
+            const url = row.original['xml_url'] as string | undefined
+            return url ? (<a href={url} target="_blank" rel="noreferrer" className="text-blue-600 underline">Baixar</a>) : '-'
+          } },
         ]
       case 'financeiro':
         return [
           { accessorKey: 'data_emissao', header: 'Emissão', cell: ({ row }) => formatDate(row.original['data_emissao']) },
-          { accessorKey: 'tipo_documento', header: 'Tipo (Fatura, Recibo, Extrato)' },
+          { accessorKey: 'tipo_documento', header: 'Tipo' },
           { accessorKey: 'numero', header: 'Número' },
           { accessorKey: 'descricao', header: 'Descrição' },
+          { accessorKey: 'meio_pagamento', header: 'Meio de Pagamento' },
+          { accessorKey: 'banco_id', header: 'Banco' },
+          { accessorKey: 'codigo_barras', header: 'Código de Barras' },
+          { accessorKey: 'data_liquidacao', header: 'Liquidação', cell: ({ row }) => formatDate(row.original['data_liquidacao']) },
+          { accessorKey: 'valor_total', header: 'Valor Total', cell: ({ row }) => formatBRL(row.original['valor_total']) },
+          { accessorKey: 'valor_pago', header: 'Valor Pago', cell: ({ row }) => formatBRL(row.original['valor_pago']) },
           { accessorKey: 'status', header: 'Status' },
         ]
       case 'operacional':

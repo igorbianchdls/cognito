@@ -7,26 +7,7 @@ export const revalidate = 0
 
 const parseNumber = (v: string | null, fallback?: number) => (v ? Number(v) : fallback)
 
-const ALL_KNOWN_TYPES = [
-  'Nota Fiscal (NF-e)', 'Guia de Imposto',
-  'Recibo', 'Fatura', 'Duplicata', 'Extrato Bancário',
-  'Ordem de Serviço', 'Conhecimento de Transporte', 'Checklist', 'Relatório Operacional',
-  'Procuração', 'Aditivo', 'Termo', 'Notificação Extrajudicial',
-  'Proposta', 'Pedido',
-  'Contracheque', 'Atestado', 'Holerite', 'Advertência', 'Contrato de Trabalho',
-  'Contrato'
-]
-
-const TYPES_BY_VIEW: Record<string, string[]> = {
-  fiscal: ['Nota Fiscal (NF-e)', 'Guia de Imposto'],
-  financeiro: ['Recibo', 'Fatura', 'Duplicata', 'Extrato Bancário'],
-  operacional: ['Ordem de Serviço', 'Conhecimento de Transporte', 'Checklist', 'Relatório Operacional'],
-  juridico: ['Procuração', 'Aditivo', 'Termo', 'Notificação Extrajudicial'],
-  comercial: ['Proposta', 'Pedido'],
-  rh: ['Contracheque', 'Atestado', 'Holerite', 'Advertência', 'Contrato de Trabalho'],
-  contratos: ['Contrato', 'Aditivo'],
-  outros: [],
-}
+// Este endpoint segue o padrão dos módulos (como contabilidade): compõe SQL dinâmico e usa runQuery.
 
 export async function GET(req: NextRequest) {
   try {
@@ -52,49 +33,119 @@ export async function GET(req: NextRequest) {
       idx += 1
     }
 
-    // Filtro por tipo de documento conforme view
-    if (view !== 'outros') {
-      const types = TYPES_BY_VIEW[view] || []
-      if (types.length) {
-        const placeholders = types.map((_, i) => `$${idx + i}`).join(', ')
-        conditions.push(`d.tipo_documento IN (${placeholders})`)
-        params.push(...types)
-        idx += types.length
-      }
-    } else {
-      // Outros = tudo que não está nos tipos conhecidos
-      const types = ALL_KNOWN_TYPES
-      const placeholders = types.map((_, i) => `$${idx + i}`).join(', ')
-      conditions.push(`(d.tipo_documento IS NULL OR d.tipo_documento NOT IN (${placeholders}))`)
-      params.push(...types)
-      idx += types.length
+    let listSql = ''
+    let totalSql = ''
+    let paramsWithPage: unknown[] = []
+
+    // Filtro de período será sempre em d.data_emissao, se fornecido
+    const addDateFilters = () => {
+      if (de) push('d.data_emissao >=', de)
+      if (ate) push('d.data_emissao <=', ate)
     }
 
-    // Filtro de período (data_emissao)
-    if (de) push('d.data_emissao >=', de)
-    if (ate) push('d.data_emissao <=', ate)
+    if (view === 'fiscal') {
+      // Consulta de Documentos Fiscais (exatamente como especificado)
+      addDateFilters()
+      conditions.push(`td.categoria = 'fiscal'`)
+      const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''
+      const orderClause = 'ORDER BY d.data_emissao DESC NULLS LAST, d.id DESC'
+      const limitOffset = `LIMIT $${idx}::int OFFSET $${idx + 1}::int`
+      paramsWithPage = [...params, pageSize, offset]
 
-    const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''
+      listSql = `SELECT 
+        d.id AS documento_id,
+        td.nome AS tipo_documento,
+        d.numero,
+        d.descricao,
+        d.data_emissao,
+        d.valor_total,
+        d.status,
+        f.cfop,
+        f.chave_acesso,
+        f.natureza_operacao,
+        f.modelo,
+        f.serie,
+        f.xml_url,
+        f.data_autorizacao,
+        f.ambiente
+      FROM documentos.documento d
+      LEFT JOIN documentos.tipos_documentos td ON td.id = d.tipo_documento_id
+      LEFT JOIN documentos.documentos_fiscais f ON f.documento_id = d.id
+      ${whereClause}
+      ${orderClause}
+      ${limitOffset}`.trim()
 
-    const selectSql = `SELECT 
-      d.id AS documento_id,
-      d.tipo_documento,
-      d.numero_documento AS numero,
-      d.descricao,
-      d.data_emissao,
-      d.valor_total,
-      d.status,
-      COALESCE(d.arquivo_pdf_url, d.arquivo_xml_url) AS arquivo_url
-    FROM gestaodocumentos.documentos d`
+      totalSql = `SELECT COUNT(*)::int AS total
+      FROM documentos.documento d
+      LEFT JOIN documentos.tipos_documentos td ON td.id = d.tipo_documento_id
+      LEFT JOIN documentos.documentos_fiscais f ON f.documento_id = d.id
+      ${whereClause}`
+    } else if (view === 'financeiro') {
+      // Consulta de Documentos Financeiros (exatamente como especificado)
+      addDateFilters()
+      conditions.push(`td.categoria = 'financeiro'`)
+      const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''
+      const orderClause = 'ORDER BY d.data_emissao DESC NULLS LAST, d.id DESC'
+      const limitOffset = `LIMIT $${idx}::int OFFSET $${idx + 1}::int`
+      paramsWithPage = [...params, pageSize, offset]
 
-    const orderClause = 'ORDER BY d.data_emissao DESC NULLS LAST, d.id DESC'
-    const limitOffset = `LIMIT $${idx}::int OFFSET $${idx + 1}::int`
-    const paramsWithPage = [...params, pageSize, offset]
+      listSql = `SELECT 
+        d.id AS documento_id,
+        td.nome AS tipo_documento,
+        d.numero,
+        d.descricao,
+        d.data_emissao,
+        d.valor_total,
+        d.status,
+        f.meio_pagamento,
+        f.banco_id,
+        f.codigo_barras,
+        f.data_liquidacao,
+        f.valor_pago
+      FROM documentos.documento d
+      LEFT JOIN documentos.tipos_documentos td ON td.id = d.tipo_documento_id
+      LEFT JOIN documentos.documentos_financeiros f ON f.documento_id = d.id
+      ${whereClause}
+      ${orderClause}
+      ${limitOffset}`.trim()
 
-    const listSql = `${selectSql} ${whereClause} ${orderClause} ${limitOffset}`.trim()
+      totalSql = `SELECT COUNT(*)::int AS total
+      FROM documentos.documento d
+      LEFT JOIN documentos.tipos_documentos td ON td.id = d.tipo_documento_id
+      LEFT JOIN documentos.documentos_financeiros f ON f.documento_id = d.id
+      ${whereClause}`
+    } else {
+      // Genérico por categoria (demais tabs): usa tabela mestre + tipos_documentos
+      addDateFilters()
+      conditions.push(`td.categoria = $${idx}`)
+      params.push(view)
+      idx += 1
+      const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''
+      const orderClause = 'ORDER BY d.data_emissao DESC NULLS LAST, d.id DESC'
+      const limitOffset = `LIMIT $${idx}::int OFFSET $${idx + 1}::int`
+      paramsWithPage = [...params, pageSize, offset]
+
+      listSql = `SELECT 
+        d.id AS documento_id,
+        td.nome AS tipo_documento,
+        d.numero,
+        d.descricao,
+        d.data_emissao,
+        d.valor_total,
+        d.status
+      FROM documentos.documento d
+      LEFT JOIN documentos.tipos_documentos td ON td.id = d.tipo_documento_id
+      ${whereClause}
+      ${orderClause}
+      ${limitOffset}`.trim()
+
+      totalSql = `SELECT COUNT(*)::int AS total
+      FROM documentos.documento d
+      LEFT JOIN documentos.tipos_documentos td ON td.id = d.tipo_documento_id
+      ${whereClause}`
+    }
+
     const rows = await runQuery<Record<string, unknown>>(listSql, paramsWithPage)
-
-    const totalSql = `SELECT COUNT(*)::int AS total FROM gestaodocumentos.documentos d ${whereClause}`
     const totalRows = await runQuery<{ total: number }>(totalSql, params)
     const total = totalRows[0]?.total ?? 0
 
@@ -113,4 +164,3 @@ export async function GET(req: NextRequest) {
     return Response.json({ success: false, message: 'Erro interno', error: error instanceof Error ? error.message : 'Erro desconhecido' }, { status: 500 })
   }
 }
-
