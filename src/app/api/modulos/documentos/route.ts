@@ -136,7 +136,12 @@ export async function GET(req: NextRequest) {
         c.data_inicio,
         c.data_fim,
         c.prazo_meses,
-        c.renovacao_automatica
+        c.renovacao_automatica,
+        c.valor_mensal,
+        c.objeto,
+        c.clausulas_json,
+        d.criado_em,
+        d.atualizado_em
       FROM documentos.documento d
       LEFT JOIN documentos.tipos_documentos td 
         ON td.id = d.tipo_documento_id
@@ -150,6 +155,43 @@ export async function GET(req: NextRequest) {
       FROM documentos.documento d
       LEFT JOIN documentos.tipos_documentos td ON td.id = d.tipo_documento_id
       INNER JOIN documentos.documentos_contratos c ON c.documento_id = d.id
+      ${whereClause}`
+    } else if (view === 'operacional') {
+      // Documentos Operacionais: conforme campos fornecidos
+      addDateFilters()
+      const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''
+      const orderClause = 'ORDER BY d.id DESC'
+      const limitOffset = `LIMIT $${idx}::int OFFSET $${idx + 1}::int`
+      paramsWithPage = [...params, pageSize, offset]
+
+      listSql = `SELECT 
+        d.id AS documento_id,
+        td.nome AS tipo_documento,
+        d.numero,
+        d.descricao,
+        d.data_emissao,
+        d.valor_total,
+        d.status,
+        o.responsavel_id,
+        o.local_execucao,
+        o.data_execucao,
+        o.checklist_json,
+        o.observacoes,
+        d.criado_em,
+        d.atualizado_em
+      FROM documentos.documento d
+      LEFT JOIN documentos.tipos_documentos td 
+        ON td.id = d.tipo_documento_id
+      INNER JOIN documentos.documentos_operacionais o 
+        ON o.documento_id = d.id
+      ${whereClause}
+      ${orderClause}
+      ${limitOffset}`.trim()
+
+      totalSql = `SELECT COUNT(*)::int AS total
+      FROM documentos.documento d
+      LEFT JOIN documentos.tipos_documentos td ON td.id = d.tipo_documento_id
+      INNER JOIN documentos.documentos_operacionais o ON o.documento_id = d.id
       ${whereClause}`
     } else {
       // Genérico por categoria (demais tabs): usa tabela mestre + tipos_documentos

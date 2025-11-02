@@ -99,11 +99,22 @@ export default function ModulosDocumentosPage() {
         ]
       case 'operacional':
         return [
-          { accessorKey: 'data_emissao', header: 'Data', cell: ({ row }) => formatDate(row.original['data_emissao']) },
-          { accessorKey: 'tipo_documento', header: 'Tipo (OS, Documento Oper.)' },
+          { accessorKey: 'data_emissao', header: 'Emissão', cell: ({ row }) => formatDate(row.original['data_emissao']) },
+          { accessorKey: 'tipo_documento', header: 'Tipo' },
           { accessorKey: 'numero', header: 'Número' },
           { accessorKey: 'descricao', header: 'Descrição' },
+          { accessorKey: 'valor_total', header: 'Valor Total', cell: ({ row }) => formatBRL(row.original['valor_total']) },
           { accessorKey: 'status', header: 'Status' },
+          { accessorKey: 'responsavel_id', header: 'Responsável' },
+          { accessorKey: 'local_execucao', header: 'Local de Execução' },
+          { accessorKey: 'data_execucao', header: 'Data Execução', cell: ({ row }) => formatDate(row.original['data_execucao']) },
+          { accessorKey: 'checklist_json', header: 'Checklist', cell: ({ row }) => {
+            const v = row.original['checklist_json']
+            try { return v ? JSON.stringify(v).slice(0, 120) + '…' : '-' } catch { return String(v ?? '-') }
+          } },
+          { accessorKey: 'observacoes', header: 'Observações' },
+          { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em']) },
+          { accessorKey: 'atualizado_em', header: 'Atualizado em', cell: ({ row }) => formatDate(row.original['atualizado_em']) },
         ]
       case 'juridico':
         return [
@@ -141,6 +152,14 @@ export default function ModulosDocumentosPage() {
           { accessorKey: 'data_fim', header: 'Fim', cell: ({ row }) => formatDate(row.original['data_fim']) },
           { accessorKey: 'prazo_meses', header: 'Prazo (meses)' },
           { accessorKey: 'renovacao_automatica', header: 'Renovação Automática' },
+          { accessorKey: 'valor_mensal', header: 'Valor Mensal', cell: ({ row }) => formatBRL(row.original['valor_mensal']) },
+          { accessorKey: 'objeto', header: 'Objeto' },
+          { accessorKey: 'clausulas_json', header: 'Cláusulas', cell: ({ row }) => {
+            const v = row.original['clausulas_json']
+            try { return v ? JSON.stringify(v).slice(0, 120) + '…' : '-' } catch { return String(v ?? '-') }
+          } },
+          { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em']) },
+          { accessorKey: 'atualizado_em', header: 'Atualizado em', cell: ({ row }) => formatDate(row.original['atualizado_em']) },
         ]
       case 'outros':
       default:
