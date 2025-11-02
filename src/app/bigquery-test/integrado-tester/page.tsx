@@ -26,6 +26,9 @@ export default function IntegradoTesterPage() {
     conta_financeira_id: '',
   })
   const [tables, setTables] = useState<{ despesas?: Row[]; lf?: Row[]; lc?: Row[]; linhas?: Row[] }>({})
+  const [carForm, setCarForm] = useState({ tenant_id: '1', cliente_id: '', categoria_id: '', valor: '', data_vencimento: '', descricao: '' })
+  const [peForm, setPeForm] = useState({ tenant_id: '1', fornecedor_id: '', categoria_id: '', subtipo: '', valor: '', data_lancamento: '', descricao: '', conta_financeira_id: '' })
+  const [prForm, setPrForm] = useState({ tenant_id: '1', cliente_id: '', categoria_id: '', subtipo: '', valor: '', data_lancamento: '', descricao: '', conta_financeira_id: '' })
 
   const colsDespesas: ColumnDef<Row>[] = useMemo(() => ([
     { accessorKey: 'id', header: 'ID' },
@@ -121,6 +124,42 @@ export default function IntegradoTesterPage() {
     }
   }
 
+  const criarCAR = async () => {
+    setLoading(true); setError(null)
+    try {
+      const payload: Record<string, unknown> = {}
+      const assign = (k: keyof typeof carForm, parseNum = false) => { const v = carForm[k]; if (v !== '') payload[k] = parseNum ? Number(v) : v }
+      assign('tenant_id', true); assign('cliente_id', true); assign('categoria_id', true); assign('valor', true); assign('data_vencimento'); assign('descricao')
+      const res = await fetch('/bigquery-test/financeiro/contas-a-receber', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+      const json = await res.json(); if (!res.ok || !json?.success) throw new Error(json?.message || `HTTP ${res.status}`)
+      await loadTables()
+    } catch (e) { setError(e instanceof Error ? e.message : 'Falha ao criar') } finally { setLoading(false) }
+  }
+
+  const criarPE = async () => {
+    setLoading(true); setError(null)
+    try {
+      const payload: Record<string, unknown> = {}
+      const assign = (k: keyof typeof peForm, parseNum = false) => { const v = peForm[k]; if (v !== '') payload[k] = parseNum ? Number(v) : v }
+      assign('tenant_id', true); assign('fornecedor_id', true); assign('categoria_id', true); assign('subtipo'); assign('valor', true); assign('data_lancamento'); assign('descricao'); assign('conta_financeira_id', true)
+      const res = await fetch('/bigquery-test/financeiro/pagamentos-efetuados', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+      const json = await res.json(); if (!res.ok || !json?.success) throw new Error(json?.message || `HTTP ${res.status}`)
+      await loadTables()
+    } catch (e) { setError(e instanceof Error ? e.message : 'Falha ao criar') } finally { setLoading(false) }
+  }
+
+  const criarPR = async () => {
+    setLoading(true); setError(null)
+    try {
+      const payload: Record<string, unknown> = {}
+      const assign = (k: keyof typeof prForm, parseNum = false) => { const v = prForm[k]; if (v !== '') payload[k] = parseNum ? Number(v) : v }
+      assign('tenant_id', true); assign('cliente_id', true); assign('categoria_id', true); assign('subtipo'); assign('valor', true); assign('data_lancamento'); assign('descricao'); assign('conta_financeira_id', true)
+      const res = await fetch('/bigquery-test/financeiro/pagamentos-recebidos', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+      const json = await res.json(); if (!res.ok || !json?.success) throw new Error(json?.message || `HTTP ${res.status}`)
+      await loadTables()
+    } catch (e) { setError(e instanceof Error ? e.message : 'Falha ao criar') } finally { setLoading(false) }
+  }
+
   return (
     <div className="p-6 space-y-8">
       <div>
@@ -187,6 +226,136 @@ export default function IntegradoTesterPage() {
       <div className="space-y-2">
         <h2 className="text-base font-medium">Lançamentos Financeiros (últimos 10)</h2>
         <DataTable<Row> columns={colsLf} data={tables.lf || []} pageSize={10} />
+      </div>
+
+      {/* Contas a Receber */}
+      <div className="space-y-4">
+        <h2 className="text-base font-medium">Criar Conta a Receber + contábil</h2>
+        {error && <div className="text-sm text-red-600">{error}</div>}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div>
+            <label className="text-xs text-gray-600">Tenant ID</label>
+            <Input value={carForm.tenant_id} onChange={(e) => setCarForm(prev => ({ ...prev, tenant_id: e.target.value }))} />
+          </div>
+          <div>
+            <label className="text-xs text-gray-600">Cliente (entidade_id)</label>
+            <Input value={carForm.cliente_id} onChange={(e) => setCarForm(prev => ({ ...prev, cliente_id: e.target.value }))} />
+          </div>
+          <div>
+            <label className="text-xs text-gray-600">Categoria</label>
+            <select className="h-9 w-full rounded border border-gray-300 px-2 text-sm" value={carForm.categoria_id} onChange={(e) => setCarForm(prev => ({ ...prev, categoria_id: e.target.value }))}>
+              <option value="">Selecione…</option>
+              {cats.map(c => (<option key={c.id} value={c.id}>{c.nome}{c.tipo ? ` (${c.tipo})` : ''}</option>))}
+            </select>
+          </div>
+          <div>
+            <label className="text-xs text-gray-600">Valor</label>
+            <Input value={carForm.valor} onChange={(e) => setCarForm(prev => ({ ...prev, valor: e.target.value }))} />
+          </div>
+          <div>
+            <label className="text-xs text-gray-600">Data Vencimento</label>
+            <Input value={carForm.data_vencimento} onChange={(e) => setCarForm(prev => ({ ...prev, data_vencimento: e.target.value }))} type="date" />
+          </div>
+          <div className="md:col-span-3">
+            <label className="text-xs text-gray-600">Descrição</label>
+            <Input value={carForm.descricao} onChange={(e) => setCarForm(prev => ({ ...prev, descricao: e.target.value }))} />
+          </div>
+        </div>
+        <div>
+          <Button onClick={criarCAR} disabled={loading}>{loading ? 'Criando...' : 'Criar Conta a Receber + contábil'}</Button>
+        </div>
+      </div>
+
+      {/* Pagamento Efetuado */}
+      <div className="space-y-4">
+        <h2 className="text-base font-medium">Criar Pagamento Efetuado + contábil</h2>
+        {error && <div className="text-sm text-red-600">{error}</div>}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div>
+            <label className="text-xs text-gray-600">Tenant ID</label>
+            <Input value={peForm.tenant_id} onChange={(e) => setPeForm(prev => ({ ...prev, tenant_id: e.target.value }))} />
+          </div>
+          <div>
+            <label className="text-xs text-gray-600">Fornecedor (entidade_id)</label>
+            <Input value={peForm.fornecedor_id} onChange={(e) => setPeForm(prev => ({ ...prev, fornecedor_id: e.target.value }))} />
+          </div>
+          <div>
+            <label className="text-xs text-gray-600">Categoria</label>
+            <select className="h-9 w-full rounded border border-gray-300 px-2 text-sm" value={peForm.categoria_id} onChange={(e) => setPeForm(prev => ({ ...prev, categoria_id: e.target.value }))}>
+              <option value="">Selecione…</option>
+              {cats.map(c => (<option key={c.id} value={c.id}>{c.nome}{c.tipo ? ` (${c.tipo})` : ''}</option>))}
+            </select>
+          </div>
+          <div>
+            <label className="text-xs text-gray-600">Subtipo (opcional)</label>
+            <Input value={peForm.subtipo} onChange={(e) => setPeForm(prev => ({ ...prev, subtipo: e.target.value }))} placeholder="fornecedor|caixa" />
+          </div>
+          <div>
+            <label className="text-xs text-gray-600">Valor</label>
+            <Input value={peForm.valor} onChange={(e) => setPeForm(prev => ({ ...prev, valor: e.target.value }))} />
+          </div>
+          <div>
+            <label className="text-xs text-gray-600">Data Pagamento</label>
+            <Input value={peForm.data_lancamento} onChange={(e) => setPeForm(prev => ({ ...prev, data_lancamento: e.target.value }))} type="date" />
+          </div>
+          <div className="md:col-span-3">
+            <label className="text-xs text-gray-600">Descrição</label>
+            <Input value={peForm.descricao} onChange={(e) => setPeForm(prev => ({ ...prev, descricao: e.target.value }))} />
+          </div>
+          <div>
+            <label className="text-xs text-gray-600">Conta Financeira ID</label>
+            <Input value={peForm.conta_financeira_id} onChange={(e) => setPeForm(prev => ({ ...prev, conta_financeira_id: e.target.value }))} />
+          </div>
+        </div>
+        <div>
+          <Button onClick={criarPE} disabled={loading}>{loading ? 'Criando...' : 'Criar Pagamento Efetuado + contábil'}</Button>
+        </div>
+      </div>
+
+      {/* Pagamento Recebido */}
+      <div className="space-y-4">
+        <h2 className="text-base font-medium">Criar Pagamento Recebido + contábil</h2>
+        {error && <div className="text-sm text-red-600">{error}</div>}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div>
+            <label className="text-xs text-gray-600">Tenant ID</label>
+            <Input value={prForm.tenant_id} onChange={(e) => setPrForm(prev => ({ ...prev, tenant_id: e.target.value }))} />
+          </div>
+          <div>
+            <label className="text-xs text-gray-600">Cliente (entidade_id)</label>
+            <Input value={prForm.cliente_id} onChange={(e) => setPrForm(prev => ({ ...prev, cliente_id: e.target.value }))} />
+          </div>
+          <div>
+            <label className="text-xs text-gray-600">Categoria</label>
+            <select className="h-9 w-full rounded border border-gray-300 px-2 text-sm" value={prForm.categoria_id} onChange={(e) => setPrForm(prev => ({ ...prev, categoria_id: e.target.value }))}>
+              <option value="">Selecione…</option>
+              {cats.map(c => (<option key={c.id} value={c.id}>{c.nome}{c.tipo ? ` (${c.tipo})` : ''}</option>))}
+            </select>
+          </div>
+          <div>
+            <label className="text-xs text-gray-600">Subtipo (opcional)</label>
+            <Input value={prForm.subtipo} onChange={(e) => setPrForm(prev => ({ ...prev, subtipo: e.target.value }))} placeholder="venda_distribuicao|venda_ecommerce" />
+          </div>
+          <div>
+            <label className="text-xs text-gray-600">Valor</label>
+            <Input value={prForm.valor} onChange={(e) => setPrForm(prev => ({ ...prev, valor: e.target.value }))} />
+          </div>
+          <div>
+            <label className="text-xs text-gray-600">Data Recebimento</label>
+            <Input value={prForm.data_lancamento} onChange={(e) => setPrForm(prev => ({ ...prev, data_lancamento: e.target.value }))} type="date" />
+          </div>
+          <div className="md:col-span-3">
+            <label className="text-xs text-gray-600">Descrição</label>
+            <Input value={prForm.descricao} onChange={(e) => setPrForm(prev => ({ ...prev, descricao: e.target.value }))} />
+          </div>
+          <div>
+            <label className="text-xs text-gray-600">Conta Financeira ID</label>
+            <Input value={prForm.conta_financeira_id} onChange={(e) => setPrForm(prev => ({ ...prev, conta_financeira_id: e.target.value }))} />
+          </div>
+        </div>
+        <div>
+          <Button onClick={criarPR} disabled={loading}>{loading ? 'Criando...' : 'Criar Pagamento Recebido + contábil'}</Button>
+        </div>
       </div>
 
       <div className="space-y-2">
