@@ -29,22 +29,17 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
     status: 'lf.status',
   },
   'pagamentos-efetuados': {
-    lancamento_id: 'lf.id',
-    descricao_pagamento: 'lf.descricao',
-    valor_pago: 'lf.valor',
-    data_pagamento: 'lf.data_lancamento',
-    status: 'lf.status',
-    origem_tabela: 'lf.origem_tabela',
-    origem_id: 'lf.origem_id',
+    id: 'pe.id',
+    descricao_pagamento: 'pe.descricao',
+    valor_pago: 'pe.valor',
+    data_pagamento: 'pe.data_lancamento',
+    data_vencimento: 'pe.data_vencimento',
+    status: 'pe.status',
+    origem_tabela: 'pe.origem_tabela',
+    origem_id: 'pe.origem_id',
     fornecedor: 'f.nome',
-    categoria_financeira: 'cf.nome',
-    conta_financeira: 'cb.nome_conta',
-    agencia: 'cb.agencia',
-    numero_conta: 'cb.numero_conta',
-    descricao_despesa: 'd.descricao',
-    valor_despesa: 'd.valor_total',
-    vencimento_original: 'd.data_vencimento',
-    data_competencia: 'd.data_competencia',
+    categoria_financeira: 'cat.nome',
+    conta_financeira: 'cf.nome_conta',
   },
   'pagamentos-recebidos': {
     id: 'pr.id',
@@ -256,35 +251,32 @@ export async function GET(req: NextRequest) {
       if (valor_min !== undefined) push('lf.valor >=', valor_min);
       if (valor_max !== undefined) push('lf.valor <=', valor_max);
     } else if (view === 'pagamentos-efetuados') {
-      baseSql = `FROM financeiro.lancamentos_financeiros lf
-                 LEFT JOIN administrativo.categorias_financeiras cf ON lf.categoria_id = cf.id
-                 LEFT JOIN entidades.fornecedores f ON lf.entidade_id = f.id
-                 LEFT JOIN financeiro.contas_financeiras cb ON lf.conta_financeira_id = cb.id
-                 LEFT JOIN administrativo.despesas d ON lf.origem_tabela = 'despesas' AND lf.origem_id = d.id`;
+      // Pagamentos Efetuados via lancamentos_financeiros conforme solicitado
+      baseSql = `FROM financeiro.lancamentos_financeiros pe
+                 LEFT JOIN financeiro.contas_financeiras cf ON cf.id = pe.conta_financeira_id
+                 LEFT JOIN administrativo.categorias_financeiras cat ON cat.id = pe.categoria_id
+                 LEFT JOIN entidades.fornecedores f ON f.id = pe.entidade_id`;
       selectSql = `SELECT 
-                        lf.id AS lancamento_id,
-                        lf.descricao AS descricao_pagamento,
-                        ABS(lf.valor) AS valor_pago,
-                        lf.data_lancamento AS data_pagamento,
-                        lf.status,
-                        lf.origem_tabela,
-                        lf.origem_id,
+                        pe.id,
+                        pe.tenant_id,
+                        pe.tipo,
+                        pe.descricao AS descricao_pagamento,
+                        pe.valor AS valor_pago,
+                        pe.data_lancamento AS data_pagamento,
+                        pe.data_vencimento,
+                        pe.status,
+                        cf.nome_conta AS conta_financeira,
+                        cat.nome AS categoria_financeira,
                         f.nome AS fornecedor,
-                        f.imagem_url AS fornecedor_imagem_url,
-                        cf.nome AS categoria_financeira,
-                        cb.nome_conta AS conta_financeira,
-                        cb.agencia,
-                        cb.numero_conta,
-                        d.descricao AS descricao_despesa,
-                        d.valor_total AS valor_despesa,
-                        d.data_vencimento AS vencimento_original,
-                        d.data_competencia`;
-      whereDateCol = 'lf.data_lancamento';
-      conditions.push(`lf.tipo = 'pagamento'`);
-      if (fornecedor_id) push('lf.entidade_id =', fornecedor_id);
-      if (status) push('LOWER(lf.status) =', status.toLowerCase());
-      if (valor_min !== undefined) conditions.push(`ABS(lf.valor) >= $${idx++}`), params.push(valor_min);
-      if (valor_max !== undefined) conditions.push(`ABS(lf.valor) <= $${idx++}`), params.push(valor_max);
+                        pe.origem_tabela,
+                        pe.origem_id,
+                        pe.criado_em`;
+      whereDateCol = 'pe.data_lancamento';
+      conditions.push(`pe.tipo = 'pagamento_efetuado'`);
+      if (fornecedor_id) push('pe.entidade_id =', fornecedor_id);
+      if (status) push('LOWER(pe.status) =', status.toLowerCase());
+      if (valor_min !== undefined) push('pe.valor >=', valor_min);
+      if (valor_max !== undefined) push('pe.valor <=', valor_max);
     } else if (view === 'pagamentos-recebidos') {
       // Pagamentos Recebidos via lancamentos_financeiros conforme solicitado
       baseSql = `FROM financeiro.lancamentos_financeiros pr
