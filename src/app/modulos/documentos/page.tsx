@@ -27,14 +27,16 @@ export default function ModulosDocumentosPage() {
   useEffect(() => {
     documentosUiActions.setTabs({
       options: [
-        { value: 'inbox', label: 'Inbox' },
-        { value: 'processados', label: 'Processados' },
-        { value: 'tipos', label: 'Tipos' },
-        { value: 'ocr', label: 'OCR/Extração' },
-        { value: 'modelos', label: 'Modelos' },
-        { value: 'uploads', label: 'Uploads' },
+        { value: 'fiscal', label: 'Fiscal' },
+        { value: 'financeiro', label: 'Financeiro' },
+        { value: 'operacional', label: 'Operacional' },
+        { value: 'juridico', label: 'Jurídico' },
+        { value: 'comercial', label: 'Comercial' },
+        { value: 'rh', label: 'RH' },
+        { value: 'contratos', label: 'Contratos' },
+        { value: 'outros', label: 'Outros' },
       ],
-      selected: 'inbox',
+      selected: 'fiscal',
     })
   }, [])
 
@@ -52,42 +54,61 @@ export default function ModulosDocumentosPage() {
 
   const columns: ColumnDef<Row>[] = useMemo(() => {
     switch (tabs.selected) {
-      case 'inbox':
+      case 'fiscal':
         return [
-          { accessorKey: 'data', header: 'Recebido em', cell: ({ row }) => formatDate(row.original['data']) },
-          { accessorKey: 'tipo', header: 'Tipo' },
-          { accessorKey: 'origem', header: 'Origem' },
-          { accessorKey: 'status', header: 'Status' },
-        ]
-      case 'processados':
-        return [
-          { accessorKey: 'data', header: 'Processado em', cell: ({ row }) => formatDate(row.original['data']) },
-          { accessorKey: 'tipo', header: 'Tipo' },
+          { accessorKey: 'data', header: 'Data', cell: ({ row }) => formatDate(row.original['data']) },
+          { accessorKey: 'tipo', header: 'Tipo (NF-e, Guia, etc.)' },
           { accessorKey: 'descricao', header: 'Descrição' },
           { accessorKey: 'status', header: 'Status' },
         ]
-      case 'tipos':
+      case 'financeiro':
         return [
-          { accessorKey: 'nome', header: 'Nome' },
+          { accessorKey: 'data', header: 'Data', cell: ({ row }) => formatDate(row.original['data']) },
+          { accessorKey: 'tipo', header: 'Tipo (Fatura, Recibo, Extrato)' },
           { accessorKey: 'descricao', header: 'Descrição' },
+          { accessorKey: 'status', header: 'Status' },
         ]
-      case 'ocr':
+      case 'operacional':
         return [
-          { accessorKey: 'documento', header: 'Documento' },
-          { accessorKey: 'campos', header: 'Campos' },
-          { accessorKey: 'confianca', header: 'Confiança' },
+          { accessorKey: 'data', header: 'Data', cell: ({ row }) => formatDate(row.original['data']) },
+          { accessorKey: 'tipo', header: 'Tipo (OS, Documento Oper.)' },
+          { accessorKey: 'descricao', header: 'Descrição' },
+          { accessorKey: 'status', header: 'Status' },
         ]
-      case 'modelos':
+      case 'juridico':
         return [
-          { accessorKey: 'nome', header: 'Nome' },
-          { accessorKey: 'versao', header: 'Versão' },
-          { accessorKey: 'atualizado_em', header: 'Atualizado em', cell: ({ row }) => formatDate(row.original['atualizado_em']) },
+          { accessorKey: 'data', header: 'Data', cell: ({ row }) => formatDate(row.original['data']) },
+          { accessorKey: 'tipo', header: 'Tipo (Procurações, Aditivos, etc.)' },
+          { accessorKey: 'descricao', header: 'Descrição' },
+          { accessorKey: 'status', header: 'Status' },
         ]
-      case 'uploads':
+      case 'comercial':
+        return [
+          { accessorKey: 'data', header: 'Data', cell: ({ row }) => formatDate(row.original['data']) },
+          { accessorKey: 'tipo', header: 'Tipo (Propostas, Pedidos)' },
+          { accessorKey: 'descricao', header: 'Descrição' },
+          { accessorKey: 'status', header: 'Status' },
+        ]
+      case 'rh':
+        return [
+          { accessorKey: 'data', header: 'Data', cell: ({ row }) => formatDate(row.original['data']) },
+          { accessorKey: 'tipo', header: 'Tipo (Contracheque, Atestado, etc.)' },
+          { accessorKey: 'descricao', header: 'Descrição' },
+          { accessorKey: 'status', header: 'Status' },
+        ]
+      case 'contratos':
+        return [
+          { accessorKey: 'data', header: 'Data', cell: ({ row }) => formatDate(row.original['data']) },
+          { accessorKey: 'tipo', header: 'Tipo (Contrato, Aditivo)' },
+          { accessorKey: 'descricao', header: 'Descrição' },
+          { accessorKey: 'status', header: 'Status' },
+        ]
+      case 'outros':
       default:
         return [
-          { accessorKey: 'arquivo', header: 'Arquivo' },
-          { accessorKey: 'tamanho', header: 'Tamanho' },
+          { accessorKey: 'data', header: 'Data', cell: ({ row }) => formatDate(row.original['data']) },
+          { accessorKey: 'tipo', header: 'Tipo' },
+          { accessorKey: 'descricao', header: 'Descrição' },
           { accessorKey: 'status', header: 'Status' },
         ]
     }
