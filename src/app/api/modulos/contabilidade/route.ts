@@ -479,7 +479,7 @@ export async function GET(req: NextRequest) {
     const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''
 
     let defaultOrder = ''
-    else if (view === 'plano-contas') defaultOrder = 'ORDER BY pc.codigo::text COLLATE "C"'
+    if (view === 'plano-contas') defaultOrder = 'ORDER BY pc.codigo::text COLLATE "C"'
     else if (view === 'categorias') defaultOrder = 'ORDER BY pcc.tipo ASC, pcc.nivel ASC, pcc.ordem ASC'
     else if (view === 'segmentos') defaultOrder = 'ORDER BY pcs.ordem ASC'
     else if (view === 'centros-de-custo') defaultOrder = 'ORDER BY cc.codigo ASC'
