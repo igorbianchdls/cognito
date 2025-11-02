@@ -187,6 +187,23 @@ export async function GET(req: NextRequest) {
         codigo: string; nome: string; tipo_conta: string; saldo_final: number; grupo: string
       }>(bpSql, [from, to])
 
+      // Resultado do período (Receitas - Custos/Despesas) dentro do intervalo [from..to]
+      const resultadoSql = `
+        SELECT COALESCE(SUM(
+          CASE WHEN pc.tipo_conta IN ('Receita','Passivo','Patrimônio Líquido')
+                 THEN (lcl.credito - lcl.debito)
+               ELSE (lcl.debito - lcl.credito)
+          END
+        ),0) AS resultado
+        FROM contabilidade.lancamentos_contabeis lc
+        JOIN contabilidade.lancamentos_contabeis_linhas lcl ON lcl.lancamento_id = lc.id
+        JOIN contabilidade.plano_contas pc ON pc.id = lcl.conta_id
+        WHERE lc.data_lancamento BETWEEN $1::date AND $2::date
+          AND pc.aceita_lancamento = TRUE
+          AND (pc.codigo LIKE '4.%' OR pc.codigo LIKE '5.%' OR pc.codigo LIKE '6.%')`;
+      const resRows = await runQuery<{ resultado: number }>(resultadoSql, [from, to])
+      const resultadoPeriodo = Number(resRows[0]?.resultado || 0)
+
       const toLinha = (r: { codigo: string; nome: string; saldo_final: number }) => ({ conta: `${r.codigo} ${r.nome}`, valor: Number(r.saldo_final || 0) })
       const groupBy = (list: typeof rows, pred: (g: string) => boolean): { [k: string]: { nome: string; linhas: { conta: string; valor: number }[] } } => {
         const out: Record<string, { nome: string; linhas: { conta: string; valor: number }[] }> = {}
@@ -201,6 +218,9 @@ export async function GET(req: NextRequest) {
       const ativos = Object.values(groupBy(rows, (g) => g.startsWith('Ativo')))
       const passivos = Object.values(groupBy(rows, (g) => g.startsWith('Passivo')))
       const pls = Object.values(groupBy(rows, (g) => g === 'Patrimônio Líquido'))
+      if (resultadoPeriodo !== 0) {
+        pls.push({ nome: 'Resultado do Período', linhas: [{ conta: 'Resultado do Exercício', valor: resultadoPeriodo }] })
+      }
 
       return Response.json({
         success: true,
