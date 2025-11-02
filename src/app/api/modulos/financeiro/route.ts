@@ -48,11 +48,14 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
   },
   'pagamentos-recebidos': {
     id: 'pr.id',
-    cliente: 'cli.nome',
-    data_pagamento: 'pr.data_pagamento',
-    data_recebimento: 'pr.data_pagamento',
-    valor_total: 'pr.valor_total',
+    cliente: 'ent.nome',
+    data_lancamento: 'pr.data_lancamento',
+    data_recebimento: 'pr.data_lancamento',
+    valor: 'pr.valor',
+    valor_total: 'pr.valor',
     status: 'pr.status',
+    conta_financeira: 'cf.nome_conta',
+    categoria_financeira: 'cat.nome',
   },
   conciliacao: {
     conciliacao_id: 'cb.id',
@@ -283,31 +286,35 @@ export async function GET(req: NextRequest) {
       if (valor_min !== undefined) conditions.push(`ABS(lf.valor) >= $${idx++}`), params.push(valor_min);
       if (valor_max !== undefined) conditions.push(`ABS(lf.valor) <= $${idx++}`), params.push(valor_max);
     } else if (view === 'pagamentos-recebidos') {
-      baseSql = `FROM financeiro.pagamentos_recebidos pr
-                 LEFT JOIN entidades.clientes cli ON cli.id = pr.cliente_id
+      // Pagamentos Recebidos via lancamentos_financeiros conforme solicitado
+      baseSql = `FROM financeiro.lancamentos_financeiros pr
                  LEFT JOIN financeiro.contas_financeiras cf ON cf.id = pr.conta_financeira_id
-                 LEFT JOIN financeiro.pagamentos_recebidos_linhas prl ON prl.pagamento_id = pr.id
-                 LEFT JOIN financeiro.contas_a_receber car ON car.id = prl.conta_receber_id
-                 LEFT JOIN financeiro.categorias_financeiras cat ON cat.id = car.categoria_receita_id`;
-      selectSql = `SELECT pr.id AS pagamento_id,
-                          pr.cliente_id AS cliente_id,
-                          car.id AS conta_id,
-                          cli.nome AS cliente,
-                          cli.imagem_url AS cliente_imagem_url,
-                          cat.nome AS cliente_categoria,
-                          cf.nome_conta AS conta_bancaria,
+                 LEFT JOIN administrativo.categorias_financeiras cat ON cat.id = pr.categoria_id
+                 LEFT JOIN entidades.clientes ent ON ent.id = pr.entidade_id`;
+      selectSql = `SELECT 
+                          pr.id AS pagamento_id,
+                          pr.id AS id,
+                          pr.descricao AS descricao,
+                          pr.tipo,
+                          pr.valor AS valor_total,
+                          pr.data_lancamento AS data_recebimento,
+                          pr.data_lancamento,
+                          pr.data_vencimento,
+                          pr.status,
                           cf.nome_conta AS conta_financeira,
-                          car.descricao AS descricao,
-                          pr.valor_total AS valor_total,
-                          pr.data_pagamento AS data_recebimento,
-                          car.data_vencimento,
-                          pr.tipo_pagamento AS tipo_titulo,
-                          pr.status`;
-      whereDateCol = 'pr.data_pagamento';
-      if (cliente_id) push('pr.cliente_id =', cliente_id);
+                          cat.nome AS categoria_financeira,
+                          cat.nome AS cliente_categoria,
+                          ent.nome AS cliente,
+                          ent.imagem_url AS cliente_imagem_url,
+                          pr.origem_tabela,
+                          pr.origem_id,
+                          pr.criado_em`;
+      whereDateCol = 'pr.data_lancamento';
+      conditions.push(`pr.tipo = 'pagamento_recebido'`);
+      if (cliente_id) push('pr.entidade_id =', cliente_id);
       if (status) push('LOWER(pr.status) =', status.toLowerCase());
-      if (valor_min !== undefined) push('pr.valor_total >=', valor_min);
-      if (valor_max !== undefined) push('pr.valor_total <=', valor_max);
+      if (valor_min !== undefined) push('pr.valor >=', valor_min);
+      if (valor_max !== undefined) push('pr.valor <=', valor_max);
     } else if (view === 'contas-a-receber') {
       // Contas a Receber via lancamentos_financeiros conforme solicitado
       baseSql = `FROM financeiro.lancamentos_financeiros lf
