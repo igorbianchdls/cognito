@@ -12,6 +12,16 @@ type Anexo = {
   signed_url?: string
 }
 
+type FinanceiroDoc = {
+  documento_id: number
+  tipo_documento?: string
+  numero?: string
+  descricao?: string
+  data_emissao?: string
+  valor_total?: number
+  status?: string
+}
+
 export default function AnexosPage() {
   const [file, setFile] = useState<File | null>(null)
   const [mode, setMode] = useState<'upload' | 'create'>('create')
@@ -21,6 +31,12 @@ export default function AnexosPage() {
   const [loading, setLoading] = useState(false)
   const [rows, setRows] = useState<Anexo[]>([])
   const [error, setError] = useState<string | null>(null)
+  const [docs, setDocs] = useState<FinanceiroDoc[]>([])
+  const [docsLoading, setDocsLoading] = useState(false)
+  const [selectedDocForAnexos, setSelectedDocForAnexos] = useState<number | null>(null)
+  const [docAnexos, setDocAnexos] = useState<Anexo[]>([])
+  const [docAnexosLoading, setDocAnexosLoading] = useState(false)
+  const [rowUploadBusy, setRowUploadBusy] = useState<number | null>(null)
 
 
   const handleUpload = async (overrideFile?: File) => {
@@ -76,6 +92,86 @@ export default function AnexosPage() {
       setRows([])
     } finally { setLoading(false) }
   }
+
+  const fetchFinanceDocs = async () => {
+    try {
+      setDocsLoading(true)
+      const params = new URLSearchParams()
+      params.set('view', 'financeiro')
+      params.set('page', '1')
+      params.set('pageSize', '20')
+      const res = await fetch(`/api/modulos/documentos?${params.toString()}`, { cache: 'no-store' })
+      const json = await res.json()
+      if (res.ok && Array.isArray(json?.rows)) {
+        // map to FinanceiroDoc
+        const mapped: FinanceiroDoc[] = json.rows.map((r: Record<string, unknown>) => ({
+          documento_id: Number(r['documento_id'] ?? r['id'] ?? 0),
+          tipo_documento: String(r['tipo_documento'] ?? ''),
+          numero: r['numero'] != null ? String(r['numero']) : undefined,
+          descricao: r['descricao'] != null ? String(r['descricao']) : undefined,
+          data_emissao: r['data_emissao'] != null ? String(r['data_emissao']) : undefined,
+          valor_total: r['valor_total'] != null ? Number(r['valor_total']) : undefined,
+          status: r['status'] != null ? String(r['status']) : undefined,
+        }))
+        setDocs(mapped)
+      } else {
+        setDocs([])
+      }
+    } catch {
+      setDocs([])
+    } finally {
+      setDocsLoading(false)
+    }
+  }
+
+  const openDocAnexos = async (documentoId: number) => {
+    setSelectedDocForAnexos(documentoId)
+    try {
+      setDocAnexosLoading(true)
+      const res = await fetch(`/api/documentos/anexos/list?documento_id=${documentoId}`, { cache: 'no-store' })
+      const json = await res.json()
+      if (res.ok && Array.isArray(json?.rows)) {
+        setDocAnexos(json.rows as Anexo[])
+      } else {
+        setDocAnexos([])
+      }
+    } catch {
+      setDocAnexos([])
+    } finally {
+      setDocAnexosLoading(false)
+    }
+  }
+
+  const uploadForDocumento = async (documentoId: number, f: File) => {
+    try {
+      setRowUploadBusy(documentoId)
+      const fd = new FormData()
+      fd.set('documento_id', String(documentoId))
+      fd.set('file', f)
+      const res = await fetch('/api/documentos/anexos/upload', { method: 'POST', body: fd })
+      const json = await res.json()
+      if (!json?.success) throw new Error(json?.message || 'Falha ao enviar anexo')
+      // refresh anexos if panel is open for this doc
+      if (selectedDocForAnexos === documentoId) {
+        await openDocAnexos(documentoId)
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Erro ao enviar anexo do documento')
+    } finally {
+      setRowUploadBusy(null)
+    }
+  }
+
+  const downloadAnexo = async (id: number) => {
+    const res = await fetch(`/api/documentos/anexos/download?id=${id}`)
+    const json = await res.json()
+    if (json?.success && json?.url) window.open(json.url, '_blank')
+  }
+
+  useEffect(() => {
+    // carregar documentos financeiros na abertura
+    fetchFinanceDocs().catch(() => {})
+  }, [])
 
   return (
     <div className="max-w-3xl mx-auto p-6">
@@ -182,6 +278,96 @@ export default function AnexosPage() {
           </tbody>
         </table>
       </div>
+
+      <h2 className="text-lg font-semibold mt-8 mb-3">Documentos Financeiros</h2>
+      <div className="border rounded">
+        <table className="w-full text-sm">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="text-left p-2">Documento ID</th>
+              <th className="text-left p-2">Número</th>
+              <th className="text-left p-2">Tipo</th>
+              <th className="text-left p-2">Status</th>
+              <th className="text-left p-2">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {docsLoading && (
+              <tr><td className="p-2" colSpan={5}>Carregando…</td></tr>
+            )}
+            {!docsLoading && docs.length === 0 && (
+              <tr><td className="p-2 text-gray-500" colSpan={5}>Nenhum documento</td></tr>
+            )}
+            {docs.map((d) => (
+              <tr key={d.documento_id} className="border-t">
+                <td className="p-2">{d.documento_id}</td>
+                <td className="p-2">{d.numero || '-'}</td>
+                <td className="p-2">{d.tipo_documento || '-'}</td>
+                <td className="p-2">{d.status || '-'}</td>
+                <td className="p-2">
+                  <label className="inline-flex items-center gap-2 text-blue-600 underline cursor-pointer">
+                    <input
+                      type="file"
+                      className="hidden"
+                      onChange={(e) => {
+                        const f = e.target.files?.[0]
+                        if (f) uploadForDocumento(d.documento_id, f)
+                        e.currentTarget.value = ''
+                      }}
+                    />
+                    <span>{rowUploadBusy === d.documento_id ? 'Enviando…' : 'Upload'}</span>
+                  </label>
+                  <button className="ml-3 text-blue-600 underline" onClick={() => openDocAnexos(d.documento_id)}>Ver anexos</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {selectedDocForAnexos && (
+        <div className="fixed inset-0 bg-black/30 flex justify-end z-50" onClick={() => setSelectedDocForAnexos(null)}>
+          <div className="w-full max-w-md bg-white h-full shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <div className="p-4 border-b flex items-center justify-between">
+              <h3 className="font-semibold">Anexos do Documento #{selectedDocForAnexos}</h3>
+              <button className="text-gray-500" onClick={() => setSelectedDocForAnexos(null)}>Fechar</button>
+            </div>
+            <div className="p-4 overflow-auto h-[calc(100%-64px)]">
+              {docAnexosLoading ? (
+                <div>Carregando…</div>
+              ) : (
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-left">
+                      <th className="p-2">Arquivo</th>
+                      <th className="p-2">Tipo</th>
+                      <th className="p-2">Tamanho</th>
+                      <th className="p-2">Data</th>
+                      <th className="p-2">Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {docAnexos.length === 0 && (
+                      <tr><td className="p-2 text-gray-500" colSpan={5}>Nenhum anexo</td></tr>
+                    )}
+                    {docAnexos.map((a) => (
+                      <tr key={a.id} className="border-t">
+                        <td className="p-2">{a.nome_arquivo || '-'}</td>
+                        <td className="p-2">{a.tipo_arquivo || '-'}</td>
+                        <td className="p-2">{typeof a.tamanho_bytes === 'number' ? `${a.tamanho_bytes} bytes` : '-'}</td>
+                        <td className="p-2">{a.criado_em ? new Date(a.criado_em).toLocaleString('pt-BR') : '-'}</td>
+                        <td className="p-2 flex items-center gap-3">
+                          <button className="text-blue-600 underline" onClick={() => downloadAnexo(a.id)}>Baixar</button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
