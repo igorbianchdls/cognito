@@ -25,12 +25,11 @@ export default function AnexosPage() {
 
   const handleUpload = async (overrideFile?: File) => {
     const chosenFile = overrideFile ?? file
-    if (!documentoId || !chosenFile) return
+    if (!chosenFile) return
     try {
       setLoading(true)
       setError(null)
       const fd = new FormData()
-      fd.set('documento_id', documentoId)
       fd.set('file', chosenFile)
       const res = await fetch('/api/bigquery-test/anexos/upload', { method: 'POST', body: fd })
       const json = await res.json()
@@ -112,7 +111,7 @@ export default function AnexosPage() {
             <button
               className="px-3 py-1 bg-blue-600 text-white rounded disabled:opacity-50"
               onClick={handleCreateAndUpload}
-              disabled={!documentoId || loading}
+              disabled={loading}
             >
               {loading ? 'Enviando…' : 'Criar e Enviar'}
             </button>
