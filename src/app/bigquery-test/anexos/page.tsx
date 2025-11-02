@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 
 type Anexo = {
   id: number
@@ -95,7 +95,7 @@ export default function AnexosPage() {
     } finally { setLoading(false) }
   }
 
-  const fetchDocs = async () => {
+  const fetchDocs = useCallback(async () => {
     try {
       setDocsLoading(true)
       const params = new URLSearchParams()
@@ -124,7 +124,7 @@ export default function AnexosPage() {
     } finally {
       setDocsLoading(false)
     }
-  }
+  }, [selectedView])
 
   const openDocAnexos = async (documentoId: number) => {
     setSelectedDocForAnexos(documentoId)
@@ -173,7 +173,7 @@ export default function AnexosPage() {
   useEffect(() => {
     // carregar documentos conforme view selecionado
     fetchDocs().catch(() => {})
-  }, [selectedView])
+  }, [fetchDocs])
 
   return (
     <div className="max-w-3xl mx-auto p-6">
@@ -310,7 +310,13 @@ export default function AnexosPage() {
         <select
           className="border rounded px-2 py-1 text-sm"
           value={selectedView}
-          onChange={(e) => setSelectedView(e.target.value as any)}
+          onChange={(e) => {
+            const v = e.target.value
+            const allowed = ['financeiro','fiscal','operacional','juridico','comercial','rh','contratos','outros'] as const
+            if ((allowed as readonly string[]).includes(v)) {
+              setSelectedView(v as typeof allowed[number])
+            }
+          }}
         >
           <option value="financeiro">Financeiro</option>
           <option value="fiscal">Fiscal</option>
