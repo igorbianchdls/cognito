@@ -1,6 +1,7 @@
 "use client"
 
 import { useMemo, useState, useEffect } from 'react'
+import type { DRENode } from '@/components/relatorios/DRETable'
 import { useStore } from '@nanostores/react'
 import type { ColumnDef } from '@tanstack/react-table'
 
@@ -26,9 +27,11 @@ export default function ModulosContabilidadePage() {
 
   const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date } | undefined>(undefined)
   const [data, setData] = useState<Row[]>([])
+  const [dreNodes, setDreNodes] = useState<DRENode[]>([])
+  const [drePeriods, setDrePeriods] = useState<{ key: string; label: string }[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [reloadKey, setReloadKey] = useState(0)
+  const [reloadKey] = useState(0)
   const [page, setPage] = useState<number>(1)
   const [pageSize, setPageSize] = useState<number>(20)
   const [total, setTotal] = useState<number>(0)
@@ -78,7 +81,8 @@ export default function ModulosContabilidadePage() {
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
         const json = await res.json()
         if (tabs.selected === 'dre') {
-          setData(json)
+          setDreNodes(Array.isArray(json?.nodes) ? json.nodes as DRENode[] : [])
+          setDrePeriods(Array.isArray(json?.periods) ? json.periods as { key: string; label: string }[] : [])
           setTotal(0)
         } else {
           const rows = (json?.rows || []) as Row[]
@@ -104,8 +108,8 @@ export default function ModulosContabilidadePage() {
     setPage(1)
   }, [tabs.selected, dateRange?.from, dateRange?.to])
 
-  const iconFor = (v: string) => <List className="h-4 w-4" />
-  const tabOptions: Opcao[] = useMemo(() => (tabs.options.map((opt) => ({ ...opt, icon: iconFor(opt.value) })) as Opcao[]), [tabs.options])
+  const iconFor = () => <List className="h-4 w-4" />
+  const tabOptions: Opcao[] = useMemo(() => (tabs.options.map((opt) => ({ ...opt, icon: iconFor() })) as Opcao[]), [tabs.options])
 
   const formatDate = (value?: unknown) => {
     if (!value) return ''
@@ -293,7 +297,7 @@ export default function ModulosContabilidadePage() {
               ) : error ? (
                 <div className="p-6 text-sm text-red-600">Erro ao carregar: {error}</div>
               ) : tabs.selected === 'dre' ? (
-                <DRETable data={(data as any)?.nodes || []} periods={(data as any)?.periods || []} />
+                <DRETable data={dreNodes} periods={drePeriods} />
               ) : tabs.selected === 'balanco-patrimonial' ? (
                 <BalanceTAccountView />
               ) : (
