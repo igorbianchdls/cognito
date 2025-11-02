@@ -34,6 +34,7 @@ export default function ModulosAdmnistrativoPage() {
     admnistrativoUiActions.setTabs({
       options: [
         { value: 'despesas', label: 'Despesas' },
+        { value: 'compras', label: 'Compras' },
         { value: 'contratos', label: 'Contratos' },
         { value: 'reembolsos', label: 'Reembolsos' },
         { value: 'obrigacoes-legais', label: 'Obrigações Legais' },
@@ -128,6 +129,55 @@ export default function ModulosAdmnistrativoPage() {
 
   const columns: ColumnDef<Row>[] = useMemo(() => {
     switch (tabs.selected) {
+      case 'compras':
+        return [
+          {
+            accessorKey: 'fornecedor',
+            header: 'Fornecedor',
+            size: 280,
+            minSize: 220,
+            cell: ({ row }) => {
+              const nome = row.original['fornecedor'] || 'Sem fornecedor'
+              const subtitulo = row.original['categoria_financeira'] || ''
+              const imagemUrl = row.original['fornecedor_imagem_url']
+              const colors = getColorFromName(String(nome))
+              return (
+                <div className="flex items-center">
+                  <div
+                    className="flex items-center justify-center mr-3"
+                    style={{ width: 40, height: 40, borderRadius: 8, overflow: 'hidden', backgroundColor: imagemUrl ? 'transparent' : colors.bg }}
+                  >
+                    {imagemUrl ? (
+                      <img src={String(imagemUrl)} alt={String(nome)} className="w-full h-full object-cover" />
+                    ) : (
+                      <div style={{ fontSize: 18, fontWeight: 600, color: colors.text }}>
+                        {String(nome)?.charAt(0)?.toUpperCase() || '?'}
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <div className="text-left" style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}>
+                      {String(nome)}
+                    </div>
+                    {subtitulo ? (
+                      <div style={{ fontSize: 12, fontWeight: 400, color: '#6b7280' }}>{String(subtitulo)}</div>
+                    ) : null}
+                  </div>
+                </div>
+              )
+            }
+          },
+          { accessorKey: 'categoria_financeira', header: 'Categoria' },
+          { accessorKey: 'valor_total', header: 'Valor', cell: ({ row }) => formatBRL(row.original['valor_total']) },
+          { accessorKey: 'data_pedido', header: 'Pedido', cell: ({ row }) => formatDate(row.original['data_pedido']) },
+          { accessorKey: 'data_prevista_entrega', header: 'Prevista Entrega', cell: ({ row }) => formatDate(row.original['data_prevista_entrega']) },
+          { accessorKey: 'status', header: 'Status' },
+          { accessorKey: 'centro_custo', header: 'Centro Custo' },
+          { accessorKey: 'departamento', header: 'Departamento' },
+          { accessorKey: 'projeto', header: 'Projeto' },
+          { accessorKey: 'observacao', header: 'Observação' },
+          { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em']) },
+        ]
       case 'despesas':
         return [
           { accessorKey: 'descricao_despesa', header: 'Descrição' },

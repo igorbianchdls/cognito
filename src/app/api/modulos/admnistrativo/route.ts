@@ -7,6 +7,19 @@ export const revalidate = 0
 
 // Whitelist para ordenação segura por view
 const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
+  'compras': {
+    id: 'c.id',
+    fornecedor: 'f.nome',
+    categoria_financeira: 'cat.nome',
+    valor_total: 'c.valor_total',
+    data_pedido: 'c.data_pedido',
+    data_prevista_entrega: 'c.data_prevista_entrega',
+    status: 'c.status',
+    centro_custo: 'cc.nome',
+    departamento: 'd.nome',
+    projeto: 'p.nome',
+    criado_em: 'c.criado_em',
+  },
   'despesas': {
     id: 'd.id',
     descricao_despesa: 'd.descricao',
@@ -148,6 +161,28 @@ export async function GET(req: NextRequest) {
                     p.nome AS projeto,
                     d.criado_em`
       whereDateCol = 'd.data_vencimento'
+    } else if (view === 'compras') {
+      baseSql = `FROM administrativo.compras c
+                 LEFT JOIN entidades.fornecedores f ON f.id = c.fornecedor_id
+                 LEFT JOIN administrativo.categorias_financeiras cat ON cat.id = c.categoria_id
+                 LEFT JOIN empresa.centros_custo cc ON cc.id = c.centro_custo_id
+                 LEFT JOIN empresa.departamentos d ON d.id = c.departamento_id
+                 LEFT JOIN administrativo.projetos p ON p.id = c.projeto_id`;
+      selectSql = `SELECT
+                    c.id,
+                    c.tenant_id,
+                    f.nome AS fornecedor,
+                    cat.nome AS categoria_financeira,
+                    c.valor_total,
+                    c.data_pedido,
+                    c.data_prevista_entrega,
+                    c.status,
+                    cc.nome AS centro_custo,
+                    d.nome AS departamento,
+                    p.nome AS projeto,
+                    c.observacao,
+                    c.criado_em`;
+      whereDateCol = 'c.data_pedido'
     } else if (view === 'contratos') {
       baseSql = `FROM administrativo.contratos c
                  LEFT JOIN entidades.fornecedores f ON c.fornecedor_id = f.id
@@ -241,12 +276,15 @@ export async function GET(req: NextRequest) {
       return Response.json({ success: false, message: `View inválida: ${view}` }, { status: 400 })
     }
 
-    if (de) push(`${whereDateCol} >=`, de)
-    if (ate) push(`${whereDateCol} <=`, ate)
+    if (whereDateCol) {
+      if (de) push(`${whereDateCol} >=`, de)
+      if (ate) push(`${whereDateCol} <=`, ate)
+    }
 
     const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''
     let defaultOrder = ''
-    if (view === 'despesas') defaultOrder = 'ORDER BY d.data_vencimento ASC'
+    if (view === 'compras') defaultOrder = 'ORDER BY c.data_pedido DESC'
+    else if (view === 'despesas') defaultOrder = 'ORDER BY d.data_vencimento ASC'
     else if (view === 'contratos') defaultOrder = 'ORDER BY c.data_inicio DESC'
     else if (view === 'reembolsos') defaultOrder = 'ORDER BY r.criado_em DESC'
     else if (view === 'obrigacoes-legais') defaultOrder = 'ORDER BY o.data_vencimento ASC'
