@@ -25,6 +25,9 @@ export default function ModulosDocumentosPage() {
   const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date } | undefined>(undefined)
   const [rows, setRows] = useState<Row[]>([])
   const [total, setTotal] = useState<number>(0)
+  const [anexosOpenFor, setAnexosOpenFor] = useState<number | null>(null)
+  const [anexos, setAnexos] = useState<Array<{ id: number; nome_arquivo?: string; tipo_arquivo?: string; tamanho_bytes?: number; criado_em?: string }>>([])
+  const [anexoUpload, setAnexoUpload] = useState<File | null>(null)
   const [loading, setLoading] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -58,6 +61,48 @@ export default function ModulosDocumentosPage() {
   const formatBRL = (value?: unknown) => {
     const n = Number(value ?? 0)
     return isNaN(n) ? String(value ?? '') : n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+  }
+
+  const openAnexosDrawer = async (documentoId: number) => {
+    if (!documentoId || Number.isNaN(documentoId)) return
+    setAnexosOpenFor(documentoId)
+    try {
+      const res = await fetch(`/api/documentos/anexos/list?documento_id=${documentoId}`, { cache: 'no-store' })
+      const json = await res.json()
+      setAnexos(Array.isArray(json?.rows) ? json.rows : [])
+    } catch {
+      setAnexos([])
+    }
+  }
+
+  const uploadAnexo = async () => {
+    if (!anexosOpenFor || !anexoUpload) return
+    const fd = new FormData()
+    fd.set('documento_id', String(anexosOpenFor))
+    fd.set('file', anexoUpload)
+    const res = await fetch('/api/documentos/anexos/upload', { method: 'POST', body: fd })
+    const json = await res.json()
+    if (json?.success) {
+      setAnexoUpload(null)
+      await openAnexosDrawer(anexosOpenFor)
+    }
+  }
+
+  const downloadAnexo = async (id: number) => {
+    const res = await fetch(`/api/documentos/anexos/download?id=${id}`)
+    const json = await res.json()
+    if (json?.success && json?.url) {
+      window.open(json.url, '_blank')
+    }
+  }
+
+  const deleteAnexo = async (id: number) => {
+    if (!confirm('Excluir anexo?')) return
+    const res = await fetch(`/api/documentos/anexos/delete?id=${id}`, { method: 'DELETE' })
+    const json = await res.json()
+    if (json?.success && anexosOpenFor) {
+      await openAnexosDrawer(anexosOpenFor)
+    }
   }
 
   const columns: ColumnDef<Row>[] = useMemo(() => {
@@ -96,6 +141,17 @@ export default function ModulosDocumentosPage() {
           { accessorKey: 'status', header: 'Status' },
           { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em']) },
           { accessorKey: 'atualizado_em', header: 'Atualizado em', cell: ({ row }) => formatDate(row.original['atualizado_em']) },
+          { accessorKey: 'anexos', header: 'Anexos', cell: ({ row }) => {
+            const id = row.original['documento_id'] as number | undefined
+            return (
+              <button
+                className="text-blue-600 underline"
+                onClick={() => openAnexosDrawer(typeof id === 'number' ? id : Number(row.original['id'] || 0))}
+              >
+                Ver anexos
+              </button>
+            )
+          } },
         ]
       case 'operacional':
         return [
@@ -304,8 +360,57 @@ export default function ModulosDocumentosPage() {
               />
             </div>
           </div>
+          {anexosOpenFor && (
+            <div className="fixed inset-0 bg-black/30 flex justify-end z-50" onClick={() => setAnexosOpenFor(null)}>
+              <div className="w-full max-w-md bg-white h-full shadow-xl" onClick={(e) => e.stopPropagation()}>
+                <div className="p-4 border-b">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-semibold">Anexos do Documento #{anexosOpenFor}</h3>
+                    <button className="text-gray-500" onClick={() => setAnexosOpenFor(null)}>Fechar</button>
+                  </div>
+                  <div className="mt-3 flex items-center gap-2">
+                    <input type="file" onChange={(e) => setAnexoUpload(e.target.files?.[0] || null)} />
+                    <button className="px-3 py-1 bg-blue-600 text-white rounded disabled:opacity-50" onClick={uploadAnexo} disabled={!anexoUpload}>Enviar</button>
+                  </div>
+                </div>
+                <div className="p-4 overflow-auto h-[calc(100%-100px)]">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="text-left">
+                        <th className="p-2">Arquivo</th>
+                        <th className="p-2">Tipo</th>
+                        <th className="p-2">Tamanho</th>
+                        <th className="p-2">Data</th>
+                        <th className="p-2">Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {anexos.length === 0 && (
+                        <tr><td className="p-2 text-gray-500" colSpan={5}>Nenhum anexo</td></tr>
+                      )}
+                      {anexos.map((a) => (
+                        <tr key={a.id} className="border-t">
+                          <td className="p-2">{a.nome_arquivo || '-'}</td>
+                          <td className="p-2">{a.tipo_arquivo || '-'}</td>
+                          <td className="p-2">{typeof a.tamanho_bytes === 'number' ? `${a.tamanho_bytes} bytes` : '-'}</td>
+                          <td className="p-2">{a.criado_em ? new Date(a.criado_em).toLocaleString('pt-BR') : '-'}</td>
+                          <td className="p-2 flex items-center gap-3">
+                            <button className="text-blue-600 underline" onClick={() => downloadAnexo(a.id)}>Baixar</button>
+                            <button className="text-red-600 underline" onClick={() => deleteAnexo(a.id)}>Excluir</button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </SidebarInset>
     </SidebarProvider>
   )
 }
+ 
+// Drawer simples de anexos (inserido abaixo do componente principal)
+// Nota: Em um cenário ideal, mover para componente separado e estilizar conforme design system
