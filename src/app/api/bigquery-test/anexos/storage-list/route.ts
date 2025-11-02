@@ -14,24 +14,33 @@ type ListedFile = {
   mimeType?: string
 }
 
+type StorageListEntry = {
+  name: string
+  id?: string
+  updated_at?: string
+  created_at?: string
+  metadata?: { size?: number; mimetype?: string } | null
+  type?: 'file' | 'folder'
+}
+
 async function listRecursive(bucket: string, prefix: string): Promise<ListedFile[]> {
   const out: ListedFile[] = []
 
   // List entries at this prefix
   const { data, error } = await supabase.storage.from(bucket).list(prefix, { limit: 1000 })
   if (error) throw error
-  if (!data) return out
+  const entries: StorageListEntry[] = (data ?? []) as unknown as StorageListEntry[]
 
-  for (const entry of data) {
+  for (const entry of entries) {
     if (entry.name.endsWith('/')) continue
-    if (entry.id === undefined && entry.metadata === undefined && entry.created_at === undefined && entry.updated_at === undefined && entry.name && entry.name.indexOf('.') === -1) {
+    if (!entry.metadata && !entry.updated_at && entry.name && entry.name.indexOf('.') === -1) {
       // It's likely a folder in older SDKs – recurse
       const child = await listRecursive(bucket, `${prefix ? prefix + '/' : ''}${entry.name}`)
       out.push(...child)
       continue
     }
 
-    if ('id' in entry === false && entry.name && entry.name.indexOf('.') === -1 && entry.updated_at === undefined) {
+    if (!('id' in entry) && entry.name && entry.name.indexOf('.') === -1 && entry.updated_at === undefined) {
       // Folder-like – recurse
       const child = await listRecursive(bucket, `${prefix ? prefix + '/' : ''}${entry.name}`)
       out.push(...child)
@@ -43,14 +52,14 @@ async function listRecursive(bucket: string, prefix: string): Promise<ListedFile
     out.push({
       path: fullPath,
       name: entry.name,
-      size: (entry as any)?.metadata?.size ?? undefined,
-      updated_at: (entry as any)?.updated_at ?? undefined,
-      mimeType: (entry as any)?.metadata?.mimetype ?? undefined,
+      size: entry.metadata?.size ?? undefined,
+      updated_at: entry.updated_at ?? undefined,
+      mimeType: entry.metadata?.mimetype ?? undefined,
     })
   }
 
   // Also handle folder entries explicitly if returned with type property
-  const folders = data.filter((e: any) => e?.type === 'folder').map((e) => e.name)
+  const folders = entries.filter((e) => e.type === 'folder').map((e) => e.name)
   for (const folder of folders) {
     const child = await listRecursive(bucket, `${prefix ? prefix + '/' : ''}${folder}`)
     out.push(...child)
@@ -85,4 +94,3 @@ export async function GET(req: Request) {
     return Response.json({ success: false, message: 'Erro ao listar arquivos do storage', error: error instanceof Error ? error.message : 'Erro desconhecido' }, { status: 500 })
   }
 }
-
