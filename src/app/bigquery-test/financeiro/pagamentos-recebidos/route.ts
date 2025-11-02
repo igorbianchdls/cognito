@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
 
       // 2) Idempotência contábil
       const exists = await client.query(`SELECT 1 FROM contabilidade.lancamentos_contabeis WHERE tenant_id = $1 AND lancamento_financeiro_id = $2 LIMIT 1`, [tenant_id, lfId])
-      if (!exists.rowCount) {
+      if (!(Array.isArray(exists.rows) && exists.rows.length > 0)) {
         // 3) Regra contábil: preferir categoria; senão, subtipo
         let regra
         if (categoria_id !== undefined) {
@@ -107,4 +107,3 @@ export async function GET() {
     return Response.json({ success: false, message: e instanceof Error ? e.message : 'Erro desconhecido' }, { status: 500 })
   }
 }
-

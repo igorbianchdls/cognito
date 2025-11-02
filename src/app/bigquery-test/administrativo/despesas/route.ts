@@ -109,7 +109,7 @@ export async function POST(req: NextRequest) {
           `SELECT 1 FROM contabilidade.lancamentos_contabeis WHERE tenant_id = $1 AND lancamento_financeiro_id = $2 LIMIT 1`,
           [tenant_id, lfId]
         )
-        const jaExisteContabil = existsRes.rowCount && Number(existsRes.rowCount) > 0
+        const jaExisteContabil = Array.isArray(existsRes.rows) && existsRes.rows.length > 0
 
         // Resolve regra contábil para conta_a_pagar pela categoria (somente se ainda não existir)
         if (!jaExisteContabil && categoria_id !== undefined) {
