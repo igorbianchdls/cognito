@@ -23,6 +23,10 @@ export default function ModulosDocumentosPage() {
   const toolbarUI = useStore($toolbarUI)
 
   const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date } | undefined>(undefined)
+  const [rows, setRows] = useState<Row[]>([])
+  const [total, setTotal] = useState<number>(0)
+  const [loading, setLoading] = useState<boolean>(false)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     documentosUiActions.setTabs({
@@ -56,63 +60,109 @@ export default function ModulosDocumentosPage() {
     switch (tabs.selected) {
       case 'fiscal':
         return [
-          { accessorKey: 'data', header: 'Data', cell: ({ row }) => formatDate(row.original['data']) },
-          { accessorKey: 'tipo', header: 'Tipo (NF-e, Guia, etc.)' },
+          { accessorKey: 'data_emissao', header: 'Emissão', cell: ({ row }) => formatDate(row.original['data_emissao']) },
+          { accessorKey: 'tipo_documento', header: 'Tipo (NF-e, Guia, etc.)' },
+          { accessorKey: 'numero', header: 'Número' },
           { accessorKey: 'descricao', header: 'Descrição' },
           { accessorKey: 'status', header: 'Status' },
         ]
       case 'financeiro':
         return [
-          { accessorKey: 'data', header: 'Data', cell: ({ row }) => formatDate(row.original['data']) },
-          { accessorKey: 'tipo', header: 'Tipo (Fatura, Recibo, Extrato)' },
+          { accessorKey: 'data_emissao', header: 'Emissão', cell: ({ row }) => formatDate(row.original['data_emissao']) },
+          { accessorKey: 'tipo_documento', header: 'Tipo (Fatura, Recibo, Extrato)' },
+          { accessorKey: 'numero', header: 'Número' },
           { accessorKey: 'descricao', header: 'Descrição' },
           { accessorKey: 'status', header: 'Status' },
         ]
       case 'operacional':
         return [
-          { accessorKey: 'data', header: 'Data', cell: ({ row }) => formatDate(row.original['data']) },
-          { accessorKey: 'tipo', header: 'Tipo (OS, Documento Oper.)' },
+          { accessorKey: 'data_emissao', header: 'Data', cell: ({ row }) => formatDate(row.original['data_emissao']) },
+          { accessorKey: 'tipo_documento', header: 'Tipo (OS, Documento Oper.)' },
+          { accessorKey: 'numero', header: 'Número' },
           { accessorKey: 'descricao', header: 'Descrição' },
           { accessorKey: 'status', header: 'Status' },
         ]
       case 'juridico':
         return [
-          { accessorKey: 'data', header: 'Data', cell: ({ row }) => formatDate(row.original['data']) },
-          { accessorKey: 'tipo', header: 'Tipo (Procurações, Aditivos, etc.)' },
+          { accessorKey: 'data_emissao', header: 'Data', cell: ({ row }) => formatDate(row.original['data_emissao']) },
+          { accessorKey: 'tipo_documento', header: 'Tipo (Procurações, Aditivos, etc.)' },
+          { accessorKey: 'numero', header: 'Número' },
           { accessorKey: 'descricao', header: 'Descrição' },
           { accessorKey: 'status', header: 'Status' },
         ]
       case 'comercial':
         return [
-          { accessorKey: 'data', header: 'Data', cell: ({ row }) => formatDate(row.original['data']) },
-          { accessorKey: 'tipo', header: 'Tipo (Propostas, Pedidos)' },
+          { accessorKey: 'data_emissao', header: 'Data', cell: ({ row }) => formatDate(row.original['data_emissao']) },
+          { accessorKey: 'tipo_documento', header: 'Tipo (Propostas, Pedidos)' },
+          { accessorKey: 'numero', header: 'Número' },
           { accessorKey: 'descricao', header: 'Descrição' },
           { accessorKey: 'status', header: 'Status' },
         ]
       case 'rh':
         return [
-          { accessorKey: 'data', header: 'Data', cell: ({ row }) => formatDate(row.original['data']) },
-          { accessorKey: 'tipo', header: 'Tipo (Contracheque, Atestado, etc.)' },
+          { accessorKey: 'data_emissao', header: 'Data', cell: ({ row }) => formatDate(row.original['data_emissao']) },
+          { accessorKey: 'tipo_documento', header: 'Tipo (Contracheque, Atestado, etc.)' },
+          { accessorKey: 'numero', header: 'Número' },
           { accessorKey: 'descricao', header: 'Descrição' },
           { accessorKey: 'status', header: 'Status' },
         ]
       case 'contratos':
         return [
-          { accessorKey: 'data', header: 'Data', cell: ({ row }) => formatDate(row.original['data']) },
-          { accessorKey: 'tipo', header: 'Tipo (Contrato, Aditivo)' },
+          { accessorKey: 'data_emissao', header: 'Data', cell: ({ row }) => formatDate(row.original['data_emissao']) },
+          { accessorKey: 'tipo_documento', header: 'Tipo (Contrato, Aditivo)' },
+          { accessorKey: 'numero', header: 'Número' },
           { accessorKey: 'descricao', header: 'Descrição' },
           { accessorKey: 'status', header: 'Status' },
         ]
       case 'outros':
       default:
         return [
-          { accessorKey: 'data', header: 'Data', cell: ({ row }) => formatDate(row.original['data']) },
-          { accessorKey: 'tipo', header: 'Tipo' },
+          { accessorKey: 'data_emissao', header: 'Data', cell: ({ row }) => formatDate(row.original['data_emissao']) },
+          { accessorKey: 'tipo_documento', header: 'Tipo' },
+          { accessorKey: 'numero', header: 'Número' },
           { accessorKey: 'descricao', header: 'Descrição' },
           { accessorKey: 'status', header: 'Status' },
         ]
     }
   }, [tabs.selected])
+
+  useEffect(() => {
+    const controller = new AbortController()
+    const load = async () => {
+      setLoading(true)
+      setError(null)
+      try {
+        const params = new URLSearchParams()
+        params.set('view', tabs.selected)
+        if (dateRange?.from) {
+          const d = new Date(dateRange.from)
+          params.set('de', `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`)
+        }
+        if (dateRange?.to) {
+          const d = new Date(dateRange.to)
+          params.set('ate', `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`)
+        }
+        params.set('page', '1')
+        params.set('pageSize', '50')
+        const url = `/api/modulos/documentos?${params.toString()}`
+        const res = await fetch(url, { cache: 'no-store', signal: controller.signal })
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const json = await res.json()
+        setRows(Array.isArray(json?.rows) ? (json.rows as Row[]) : [])
+        setTotal(Number(json?.total ?? 0))
+      } catch (e) {
+        if (!(e instanceof DOMException && e.name === 'AbortError')) {
+          setRows([])
+          setTotal(0)
+          setError(e instanceof Error ? e.message : 'Falha ao carregar dados')
+        }
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
+    return () => controller.abort()
+  }, [tabs.selected, dateRange?.from, dateRange?.to])
 
   return (
     <SidebarProvider>
@@ -153,8 +203,8 @@ export default function ModulosDocumentosPage() {
           <div className="px-4 md:px-6" style={{ marginBottom: 8 }}>
             <DataToolbar
               from={0}
-              to={0}
-              total={0}
+              to={rows.length}
+              total={total}
               dateRange={dateRange}
               onDateRangeChange={setDateRange}
               fontFamily={tabs.fontFamily}
@@ -179,7 +229,7 @@ export default function ModulosDocumentosPage() {
             <div className="border-y bg-background" style={{ borderColor: tabelaUI.borderColor }}>
               <DataTable
                 columns={columns}
-                data={[]}
+                data={rows}
                 enableSearch={tabelaUI.enableSearch}
                 showColumnToggle={tabelaUI.enableColumnToggle}
                 showPagination={tabelaUI.showPagination}
