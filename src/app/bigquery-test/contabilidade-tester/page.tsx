@@ -20,6 +20,17 @@ export default function ContabilidadeTesterPage() {
   const [result, setResult] = useState<{ regra?: Record<string, unknown>; rows?: Row[] } | null>(null)
   const [genLfId, setGenLfId] = useState('')
   const [genResult, setGenResult] = useState<{ lcId?: number; linhas?: Row[]; error?: string } | null>(null)
+  const [cpForm, setCpForm] = useState({
+    tenant_id: '1',
+    categoria_id: '',
+    entidade_id: '',
+    valor: '',
+    data_lancamento: '',
+    data_vencimento: '',
+    descricao: 'Conta a pagar de teste',
+    conta_financeira_id: '',
+  })
+  const [tables, setTables] = useState<{ lf?: Row[]; lc?: Row[] }>({})
 
   const columns: ColumnDef<Row>[] = useMemo(() => ([
     { accessorKey: 'tipo', header: 'Tipo' },
@@ -94,6 +105,68 @@ export default function ContabilidadeTesterPage() {
     }
   }
 
+  const colsLf: ColumnDef<Row>[] = useMemo(() => ([
+    { accessorKey: 'id', header: 'ID' },
+    { accessorKey: 'tipo', header: 'Tipo' },
+    { accessorKey: 'descricao', header: 'Descrição' },
+    { accessorKey: 'valor', header: 'Valor' },
+    { accessorKey: 'data_vencimento', header: 'Vencimento' },
+    { accessorKey: 'categoria_id', header: 'Categoria' },
+    { accessorKey: 'entidade_id', header: 'Fornecedor' },
+    { accessorKey: 'criado_em', header: 'Criado em' },
+  ]), [])
+
+  const colsLc: ColumnDef<Row>[] = useMemo(() => ([
+    { accessorKey: 'id', header: 'ID' },
+    { accessorKey: 'data_lancamento', header: 'Data' },
+    { accessorKey: 'historico', header: 'Histórico' },
+    { accessorKey: 'lancamento_financeiro_id', header: 'LF ID' },
+    { accessorKey: 'total_debitos', header: 'Débitos' },
+    { accessorKey: 'total_creditos', header: 'Créditos' },
+    { accessorKey: 'criado_em', header: 'Criado em' },
+  ]), [])
+
+  const loadTables = async () => {
+    try {
+      const [lfRes, lcRes] = await Promise.all([
+        fetch('/bigquery-test/financeiro/lancamentos', { cache: 'no-store' }),
+        fetch('/bigquery-test/contabilidade/lancamentos', { cache: 'no-store' }),
+      ])
+      const lf = await lfRes.json()
+      const lc = await lcRes.json()
+      setTables({ lf: lf?.rows || [], lc: lc?.rows || [] })
+    } catch {}
+  }
+
+  const criarContaPagarEContabil = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const payload: Record<string, unknown> = {}
+      const assign = (k: keyof typeof cpForm, parseNum = false) => {
+        const v = cpForm[k]
+        if (v !== '') payload[k] = parseNum ? Number(v) : v
+      }
+      assign('tenant_id', true)
+      assign('categoria_id', true)
+      assign('entidade_id', true)
+      assign('valor', true)
+      assign('data_lancamento')
+      assign('data_vencimento')
+      assign('descricao')
+      assign('conta_financeira_id', true)
+
+      const res = await fetch('/bigquery-test/financeiro/contas-a-pagar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+      const json = await res.json()
+      if (!res.ok || !json?.success) throw new Error(json?.message || `HTTP ${res.status}`)
+      await loadTables()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Falha ao criar conta a pagar + contábil')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="p-6 space-y-8">
       <div>
@@ -156,6 +229,59 @@ export default function ContabilidadeTesterPage() {
             <DataTable<Row> columns={genColumns} data={genResult.linhas} pageSize={10} />
           </div>
         )}
+      </div>
+
+      <div className="space-y-4">
+        <h2 className="text-base font-medium">Criar Conta a Pagar + contábil (automático)</h2>
+        {error && <div className="text-sm text-red-600">{error}</div>}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div>
+            <label className="text-xs text-gray-600">Tenant ID</label>
+            <Input value={cpForm.tenant_id} onChange={(e) => setCpForm(prev => ({ ...prev, tenant_id: e.target.value }))} placeholder="ex: 1" />
+          </div>
+          <div>
+            <label className="text-xs text-gray-600">Categoria ID</label>
+            <Input value={cpForm.categoria_id} onChange={(e) => setCpForm(prev => ({ ...prev, categoria_id: e.target.value }))} placeholder="ex: 12" />
+          </div>
+          <div>
+            <label className="text-xs text-gray-600">Fornecedor (entidade_id)</label>
+            <Input value={cpForm.entidade_id} onChange={(e) => setCpForm(prev => ({ ...prev, entidade_id: e.target.value }))} placeholder="opcional" />
+          </div>
+          <div>
+            <label className="text-xs text-gray-600">Valor</label>
+            <Input value={cpForm.valor} onChange={(e) => setCpForm(prev => ({ ...prev, valor: e.target.value }))} placeholder="ex: 1000.00" />
+          </div>
+          <div>
+            <label className="text-xs text-gray-600">Data Lançamento</label>
+            <Input value={cpForm.data_lancamento} onChange={(e) => setCpForm(prev => ({ ...prev, data_lancamento: e.target.value }))} type="date" />
+          </div>
+          <div>
+            <label className="text-xs text-gray-600">Data Vencimento</label>
+            <Input value={cpForm.data_vencimento} onChange={(e) => setCpForm(prev => ({ ...prev, data_vencimento: e.target.value }))} type="date" />
+          </div>
+          <div className="md:col-span-3">
+            <label className="text-xs text-gray-600">Descrição</label>
+            <Input value={cpForm.descricao} onChange={(e) => setCpForm(prev => ({ ...prev, descricao: e.target.value }))} />
+          </div>
+          <div>
+            <label className="text-xs text-gray-600">Conta Financeira ID</label>
+            <Input value={cpForm.conta_financeira_id} onChange={(e) => setCpForm(prev => ({ ...prev, conta_financeira_id: e.target.value }))} placeholder="opcional" />
+          </div>
+        </div>
+        <div>
+          <Button onClick={criarContaPagarEContabil} disabled={loading}>{loading ? 'Criando...' : 'Criar e gerar contábil'}</Button>
+          <Button variant="outline" className="ml-2" onClick={loadTables}>Recarregar Tabelas</Button>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <h2 className="text-base font-medium">Lançamentos Financeiros (últimos 50)</h2>
+        <DataTable<Row> columns={colsLf} data={tables.lf || []} pageSize={10} />
+      </div>
+
+      <div className="space-y-2">
+        <h2 className="text-base font-medium">Lançamentos Contábeis (últimos 50)</h2>
+        <DataTable<Row> columns={colsLc} data={tables.lc || []} pageSize={10} />
       </div>
     </div>
   )
