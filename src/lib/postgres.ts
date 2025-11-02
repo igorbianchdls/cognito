@@ -1,5 +1,8 @@
 import { Pool } from 'pg';
-type PoolClient = import('pg').PoolClient;
+type SQLClient = {
+  query: (sql: string, params?: unknown[]) => Promise<{ rows: Record<string, unknown>[] }>
+  release: () => void
+}
 
 let pool: InstanceType<typeof Pool> | null = null;
 
@@ -38,8 +41,8 @@ export async function closePool() {
   }
 }
 
-export async function withTransaction<T>(fn: (client: PoolClient) => Promise<T>): Promise<T> {
-  const client = await getPool().connect();
+export async function withTransaction<T>(fn: (client: SQLClient) => Promise<T>): Promise<T> {
+  const client = (await getPool().connect()) as unknown as SQLClient;
   try {
     await client.query('BEGIN');
     try {
