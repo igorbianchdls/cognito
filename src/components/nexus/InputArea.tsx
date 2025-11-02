@@ -25,8 +25,7 @@ import {
   ArrowUpRight,
   Activity,
   DollarSign,
-  BookOpen,
-  FileText
+  BookOpen
 } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 import type { ChatStatus } from 'ai';
