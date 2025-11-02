@@ -16,6 +16,10 @@ type Anexo = {
 export default function AnexosPage() {
   const [documentoId, setDocumentoId] = useState<string>('')
   const [file, setFile] = useState<File | null>(null)
+  const [mode, setMode] = useState<'upload' | 'create'>('create')
+  const [nomeArquivo, setNomeArquivo] = useState<string>('documento.txt')
+  const [tipoArquivo, setTipoArquivo] = useState<string>('text/plain')
+  const [conteudo, setConteudo] = useState<string>('')
   const [loading, setLoading] = useState(false)
   const [rows, setRows] = useState<Anexo[]>([])
   const [error, setError] = useState<string | null>(null)
@@ -39,14 +43,15 @@ export default function AnexosPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [documentoId])
 
-  const handleUpload = async () => {
-    if (!documentoId || !file) return
+  const handleUpload = async (overrideFile?: File) => {
+    const chosenFile = overrideFile ?? file
+    if (!documentoId || !chosenFile) return
     try {
       setLoading(true)
       setError(null)
       const fd = new FormData()
       fd.set('documento_id', documentoId)
-      fd.set('file', file)
+      fd.set('file', chosenFile)
       const res = await fetch('/api/bigquery-test/anexos/upload', { method: 'POST', body: fd })
       const json = await res.json()
       if (!json?.success) throw new Error(json?.message || 'Falha no upload')
@@ -55,6 +60,19 @@ export default function AnexosPage() {
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Erro ao enviar')
     } finally { setLoading(false) }
+  }
+
+  const handleCreateAndUpload = async () => {
+    try {
+      const name = (nomeArquivo || '').trim() || 'documento.txt'
+      const type = (tipoArquivo || 'text/plain').trim()
+      const blob = new Blob([conteudo ?? ''], { type })
+      const syntheticFile = new File([blob], name, { type })
+      await handleUpload(syntheticFile)
+      setConteudo('')
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Erro ao criar arquivo')
+    }
   }
 
   return (
@@ -67,17 +85,64 @@ export default function AnexosPage() {
           value={documentoId}
           onChange={(e) => setDocumentoId(e.target.value)}
         />
-        <input
-          type="file"
-          onChange={(e) => setFile(e.target.files?.[0] || null)}
-        />
-        <button
-          className="px-3 py-1 bg-blue-600 text-white rounded disabled:opacity-50"
-          onClick={handleUpload}
-          disabled={!documentoId || !file || loading}
-        >
-          {loading ? 'Enviando…' : 'Enviar Anexo'}
-        </button>
+        <div className="ml-2 flex items-center gap-2">
+          <label className="text-sm">Modo:</label>
+          <select
+            className="border rounded px-2 py-1 text-sm"
+            value={mode}
+            onChange={(e) => setMode(e.target.value as 'upload'|'create')}
+          >
+            <option value="create">Criar documento</option>
+            <option value="upload">Enviar arquivo</option>
+          </select>
+        </div>
+      </div>
+
+      {mode === 'upload' ? (
+        <div className="flex items-center gap-2 mb-4">
+          <input type="file" onChange={(e) => setFile(e.target.files?.[0] || null)} />
+          <button
+            className="px-3 py-1 bg-blue-600 text-white rounded disabled:opacity-50"
+            onClick={() => handleUpload()}
+            disabled={!documentoId || !file || loading}
+          >
+            {loading ? 'Enviando…' : 'Enviar Anexo'}
+          </button>
+        </div>
+      ) : (
+        <div className="mb-4 border rounded p-3">
+          <div className="flex items-center gap-2 mb-2">
+            <input
+              className="border rounded px-2 py-1 text-sm flex-1"
+              placeholder="nome do arquivo (ex: documento.txt)"
+              value={nomeArquivo}
+              onChange={(e) => setNomeArquivo(e.target.value)}
+            />
+            <select
+              className="border rounded px-2 py-1 text-sm"
+              value={tipoArquivo}
+              onChange={(e) => setTipoArquivo(e.target.value)}
+            >
+              <option value="text/plain">text/plain</option>
+              <option value="application/json">application/json</option>
+            </select>
+            <button
+              className="px-3 py-1 bg-blue-600 text-white rounded disabled:opacity-50"
+              onClick={handleCreateAndUpload}
+              disabled={!documentoId || loading}
+            >
+              {loading ? 'Enviando…' : 'Criar e Enviar'}
+            </button>
+          </div>
+          <textarea
+            className="w-full border rounded p-2 text-sm"
+            rows={6}
+            placeholder="Conteúdo do documento"
+            value={conteudo}
+            onChange={(e) => setConteudo(e.target.value)}
+          />
+        </div>
+      )}
         <button
           className="px-3 py-1 bg-gray-200 rounded"
           onClick={() => fetchList()}
@@ -123,4 +188,3 @@ export default function AnexosPage() {
     </div>
   )
 }
-
