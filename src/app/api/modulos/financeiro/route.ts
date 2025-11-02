@@ -21,13 +21,12 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
     projeto: 'p.nome',
   },
   'contas-a-receber': {
-    id: 'car.id',
-    cliente: 'cli.nome',
-    data_emissao: 'car.data_emissao',
-    data_vencimento: 'car.data_vencimento',
-    data_recebimento: 'car.data_recebimento',
-    valor_total: 'car.valor_total',
-    status: 'car.status',
+    id: 'lf.id',
+    cliente: 'e.nome',
+    data_lancamento: 'lf.data_lancamento',
+    data_vencimento: 'lf.data_vencimento',
+    valor_total: 'lf.valor',
+    status: 'lf.status',
   },
   'pagamentos-efetuados': {
     lancamento_id: 'lf.id',
@@ -310,29 +309,30 @@ export async function GET(req: NextRequest) {
       if (valor_min !== undefined) push('pr.valor_total >=', valor_min);
       if (valor_max !== undefined) push('pr.valor_total <=', valor_max);
     } else if (view === 'contas-a-receber') {
-      baseSql = `FROM financeiro.contas_a_receber car
-                 LEFT JOIN entidades.clientes cli ON car.cliente_id = cli.id
-                 LEFT JOIN financeiro.categorias_financeiras cat ON car.categoria_receita_id = cat.id
-                 LEFT JOIN financeiro.contas_financeiras cf ON car.conta_financeira_id = cf.id`;
-      selectSql = `SELECT car.id AS conta_id,
-                          car.cliente_id AS cliente_id,
-                          car.descricao,
-                          cli.nome AS cliente,
-                          cli.imagem_url AS cliente_imagem_url,
-                          cat.nome AS cliente_categoria,
-                          cf.nome_conta AS conta_bancaria,
-                          cf.nome_conta AS conta_financeira,
-                          car.valor_total,
-                          car.data_emissao,
-                          car.data_vencimento,
-                          car.data_recebimento,
-                          car.status`;
-      // Filtro principal por data: vencimento para contas
-      whereDateCol = 'car.data_vencimento';
-      if (cliente_id) push('car.cliente_id =', cliente_id);
-      if (status) push('LOWER(car.status) =', status.toLowerCase());
-      if (valor_min !== undefined) push('car.valor_total >=', valor_min);
-      if (valor_max !== undefined) push('car.valor_total <=', valor_max);
+      // Contas a Receber via lancamentos_financeiros conforme solicitado
+      baseSql = `FROM financeiro.lancamentos_financeiros lf
+                 LEFT JOIN administrativo.categorias_financeiras cf ON cf.id = lf.categoria_id
+                 LEFT JOIN entidades.clientes e ON e.id = lf.entidade_id`;
+      selectSql = `SELECT 
+                          lf.id AS conta_id,
+                          lf.entidade_id AS cliente_id,
+                          lf.descricao AS descricao,
+                          e.nome AS cliente,
+                          cf.nome AS cliente_categoria,
+                          lf.valor AS valor_total,
+                          lf.data_lancamento,
+                          lf.data_vencimento,
+                          lf.status,
+                          lf.origem_tabela,
+                          lf.origem_id,
+                          lf.criado_em`;
+      // Filtro principal por data: vencimento
+      whereDateCol = 'lf.data_vencimento';
+      conditions.push(`lf.tipo = 'conta_a_receber'`);
+      if (cliente_id) push('lf.entidade_id =', cliente_id);
+      if (status) push('LOWER(lf.status) =', status.toLowerCase());
+      if (valor_min !== undefined) push('lf.valor >=', valor_min);
+      if (valor_max !== undefined) push('lf.valor <=', valor_max);
     } else if (view === 'extrato') {
       baseSql = `FROM financeiro.extratos_bancarios eb
                  LEFT JOIN financeiro.extrato_transacoes t ON t.extrato_id = eb.id
@@ -507,7 +507,7 @@ export async function GET(req: NextRequest) {
           orderClause = 'ORDER BY lf.data_vencimento ASC'
           break
         case 'contas-a-receber':
-          orderClause = 'ORDER BY car.data_vencimento ASC'
+          orderClause = 'ORDER BY lf.data_vencimento ASC'
           break
         case 'extrato':
           orderClause = 'ORDER BY eb.id ASC, t.data_transacao ASC'
