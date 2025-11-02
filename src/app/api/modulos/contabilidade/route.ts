@@ -145,32 +145,105 @@ export async function GET(req: NextRequest) {
     }
 
     if (view === 'dre') {
-      const periodo = new Date().toISOString().slice(0, 7) // YYYY-MM
-      const mock: Record<string, unknown>[] = [
-        { grupo: 'Receitas', conta: 'Receita Bruta de Vendas', tipo: 'Receita', periodo, valor: 450000, acumulado: 450000, percentual: '100%' },
-        { grupo: '(-) Deduções', conta: 'Devoluções/Impostos sobre Vendas', tipo: 'Despesa', periodo, valor: -50000, acumulado: 400000, percentual: '88.9%' },
-        { grupo: 'Receita Líquida', conta: 'Receita Líquida de Vendas', tipo: 'Receita', periodo, valor: 400000, acumulado: 400000, percentual: '88.9%' },
-        { grupo: 'Custos', conta: 'Custo das Mercadorias Vendidas', tipo: 'Despesa', periodo, valor: -240000, acumulado: 160000, percentual: '35.6%' },
-        { grupo: 'Lucro Bruto', conta: 'Lucro Bruto', tipo: 'Receita', periodo, valor: 160000, acumulado: 160000, percentual: '35.6%' },
-        { grupo: 'Despesas Operacionais', conta: 'Despesas Comerciais', tipo: 'Despesa', periodo, valor: -30000, acumulado: 130000, percentual: '28.9%' },
-        { grupo: 'Despesas Operacionais', conta: 'Despesas Administrativas', tipo: 'Despesa', periodo, valor: -20000, acumulado: 110000, percentual: '24.4%' },
-        { grupo: 'Resultado Operacional', conta: 'Lucro Operacional', tipo: 'Receita', periodo, valor: 110000, acumulado: 110000, percentual: '24.4%' },
-        { grupo: 'Resultado Financeiro', conta: 'Despesas Financeiras', tipo: 'Despesa', periodo, valor: -10000, acumulado: 100000, percentual: '22.2%' },
-        { grupo: 'Resultado Antes do IR', conta: 'Resultado Antes do IR', tipo: 'Receita', periodo, valor: 100000, acumulado: 100000, percentual: '22.2%' },
-        { grupo: 'Imposto de Renda', conta: 'IR e Contribuições', tipo: 'Despesa', periodo, valor: -20000, acumulado: 80000, percentual: '17.8%' },
-        { grupo: 'Resultado do Exercício', conta: 'Lucro Líquido', tipo: 'Receita', periodo, valor: 80000, acumulado: 80000, percentual: '17.8%' },
+      // DRE real a partir de lançamentos contábeis
+      // Janela de período
+      const today = new Date()
+      const y = today.getFullYear()
+      const m = String(today.getMonth() + 1).padStart(2, '0')
+      const firstDay = `${y}-${m}-01`
+      const from = de || firstDay
+      const to = ate || new Date().toISOString().slice(0, 10)
+
+      const dreSql = `
+        WITH base AS (
+          SELECT 
+            lc.data_lancamento::date AS data_lancamento,
+            DATE_TRUNC('month', lc.data_lancamento)::date AS periodo,
+            pc.codigo,
+            pc.tipo_conta,
+            COALESCE(lcl.debito,0) AS debito,
+            COALESCE(lcl.credito,0) AS credito
+          FROM contabilidade.lancamentos_contabeis lc
+          JOIN contabilidade.lancamentos_contabeis_linhas lcl ON lcl.lancamento_id = lc.id
+          JOIN contabilidade.plano_contas pc ON pc.id = lcl.conta_id
+          WHERE lc.data_lancamento::date BETWEEN $1::date AND $2::date
+        )
+        SELECT 
+          TO_CHAR(periodo, 'YYYY-MM') AS periodo_key,
+          CASE 
+            WHEN codigo LIKE '4.1.%' THEN 'receita_operacional'
+            WHEN codigo LIKE '4.2.%' THEN 'receita_outros'
+            WHEN codigo LIKE '5.1.%' THEN 'cogs'
+            WHEN codigo LIKE '5.2.%' THEN 'custos_operacionais'
+            WHEN codigo LIKE '6.1.%' THEN 'despesas_adm'
+            WHEN codigo LIKE '6.2.%' THEN 'despesas_comerciais'
+            WHEN codigo LIKE '6.3.%' THEN 'despesas_financeiras'
+            ELSE NULL
+          END AS grupo,
+          SUM(
+            CASE WHEN tipo_conta IN ('Receita','Passivo','Patrimônio Líquido')
+              THEN (credito - debito)
+              ELSE (debito - credito)
+            END
+          ) AS valor
+        FROM base
+        GROUP BY 1,2
+        ORDER BY 1,2
+      `
+      const dreRows = await runQuery<{ periodo_key: string; grupo: string | null; valor: number }>(dreSql, [from, to])
+      // Construir períodos (ordenados)
+      const periodKeys = Array.from(new Set(dreRows.map(r => r.periodo_key))).sort()
+      const months = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez']
+      const periods = periodKeys.map(k => {
+        const [yy, mm] = k.split('-')
+        const label = `${months[Number(mm)-1]}/${yy}`
+        return { key: k, label }
+      })
+
+      const byGroup: Record<string, Record<string, number>> = {}
+      for (const r of dreRows) {
+        if (!r.grupo) continue
+        if (!byGroup[r.grupo]) byGroup[r.grupo] = {}
+        byGroup[r.grupo][r.periodo_key] = Number(r.valor || 0)
+      }
+
+      // Montar árvore DRE (mínima e coerente com seu plano)
+      const node = (id: string, name: string, key: string) => ({ id, name, valuesByPeriod: byGroup[key] || {} })
+      const data = [
+        {
+          id: 'receita',
+          name: 'Receita',
+          children: [
+            node('receita-operacionais', 'Receitas Operacionais', 'receita_operacional'),
+            node('receita-outras', 'Receitas Financeiras e Outras', 'receita_outros'),
+          ],
+        },
+        {
+          id: 'cogs',
+          name: 'Custos dos Produtos/Operacionais (COGS)',
+          children: [
+            node('cogs-cmv', 'CMV (5.1)', 'cogs'),
+            node('cogs-op', 'Custos Operacionais/Logística (5.2)', 'custos_operacionais'),
+          ],
+        },
+        {
+          id: 'opex',
+          name: 'Despesas Operacionais',
+          children: [
+            node('desp-adm', 'Administrativas (6.1)', 'despesas_adm'),
+            node('desp-com', 'Comerciais e Marketing (6.2)', 'despesas_comerciais'),
+            node('desp-fin', 'Financeiras (6.3)', 'despesas_financeiras'),
+          ],
+        },
       ]
-      const total = mock.length
-      const sliced = mock.slice(offset, offset + pageSize)
+
       return Response.json({
         success: true,
         view,
-        page,
-        pageSize,
-        total,
-        rows: sliced,
-        sql: 'mock: dre',
-        params: JSON.stringify([]),
+        periods,
+        nodes: data,
+        sql: dreRows.length ? 'ok' : 'sem movimentos',
+        params: JSON.stringify([from, to]),
       }, { headers: { 'Cache-Control': 'no-store' } })
     }
 

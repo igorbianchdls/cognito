@@ -77,9 +77,14 @@ export default function ModulosContabilidadePage() {
         const res = await fetch(url, { cache: 'no-store', signal: controller.signal })
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
         const json = await res.json()
-        const rows = (json?.rows || []) as Row[]
-        setData(Array.isArray(rows) ? rows : [])
-        setTotal(Number(json?.total ?? rows.length) || 0)
+        if (tabs.selected === 'dre') {
+          setData(json)
+          setTotal(0)
+        } else {
+          const rows = (json?.rows || []) as Row[]
+          setData(Array.isArray(rows) ? rows : [])
+          setTotal(Number(json?.total ?? rows.length) || 0)
+        }
       } catch (e) {
         if (!(e instanceof DOMException && e.name === 'AbortError')) {
           setError(e instanceof Error ? e.message : 'Falha ao carregar dados')
@@ -288,7 +293,7 @@ export default function ModulosContabilidadePage() {
               ) : error ? (
                 <div className="p-6 text-sm text-red-600">Erro ao carregar: {error}</div>
               ) : tabs.selected === 'dre' ? (
-                <DRETable />
+                <DRETable data={(data as any)?.nodes || []} periods={(data as any)?.periods || []} />
               ) : tabs.selected === 'balanco-patrimonial' ? (
                 <BalanceTAccountView />
               ) : (
