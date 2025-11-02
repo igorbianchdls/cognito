@@ -11,10 +11,6 @@ export async function POST(req: Request) {
     const formData = await req.formData()
     const documentoId = String(formData.get('documento_id') || '').trim()
     const file = formData.get('file') as File | null
-
-    if (!documentoId) {
-      return Response.json({ success: false, message: 'documento_id é obrigatório' }, { status: 400 })
-    }
     if (!file) {
       return Response.json({ success: false, message: 'Arquivo (file) é obrigatório' }, { status: 400 })
     }
@@ -26,7 +22,8 @@ export async function POST(req: Request) {
     const originalName = file.name || 'arquivo'
     const ext = originalName.includes('.') ? originalName.split('.').pop() : 'bin'
     const rand = Math.random().toString(36).slice(2)
-    const path = `${documentoId}/${yyyy}/${mm}/${Date.now()}-${rand}.${ext}`
+    const basePrefix = documentoId ? documentoId : 'uploads'
+    const path = `${basePrefix}/${yyyy}/${mm}/${Date.now()}-${rand}.${ext}`
 
     // Upload para bucket privado 'documentos'
     const ab = await file.arrayBuffer()

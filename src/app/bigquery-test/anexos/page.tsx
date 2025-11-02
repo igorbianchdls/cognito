@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react'
 
 type Anexo = {
   id: number
-  documento_id?: number
   nome_arquivo?: string
   tipo_arquivo?: string
   arquivo_url?: string
@@ -14,7 +13,6 @@ type Anexo = {
 }
 
 export default function AnexosPage() {
-  const [documentoId, setDocumentoId] = useState<string>('')
   const [file, setFile] = useState<File | null>(null)
   const [mode, setMode] = useState<'upload' | 'create'>('create')
   const [nomeArquivo, setNomeArquivo] = useState<string>('documento.txt')
@@ -24,24 +22,6 @@ export default function AnexosPage() {
   const [rows, setRows] = useState<Anexo[]>([])
   const [error, setError] = useState<string | null>(null)
 
-  const fetchList = async () => {
-    if (!documentoId) { setRows([]); return }
-    try {
-      setLoading(true)
-      const res = await fetch(`/api/bigquery-test/anexos/list?documento_id=${encodeURIComponent(documentoId)}`, { cache: 'no-store' })
-      const json = await res.json()
-      if (!json?.success) throw new Error(json?.message || 'Falha ao listar')
-      setRows(Array.isArray(json.rows) ? json.rows : [])
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Erro ao listar')
-      setRows([])
-    } finally { setLoading(false) }
-  }
-
-  useEffect(() => {
-    fetchList().catch(() => {})
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [documentoId])
 
   const handleUpload = async (overrideFile?: File) => {
     const chosenFile = overrideFile ?? file
@@ -88,13 +68,7 @@ export default function AnexosPage() {
     <div className="max-w-3xl mx-auto p-6">
       <h1 className="text-xl font-semibold mb-4">Anexos (bigquery-test)</h1>
       <div className="flex items-center gap-2 mb-4">
-        <input
-          className="border rounded px-2 py-1 text-sm"
-          placeholder="Documento ID"
-          value={documentoId}
-          onChange={(e) => setDocumentoId(e.target.value)}
-        />
-        <div className="ml-2 flex items-center gap-2">
+        <div className="flex items-center gap-2">
           <label className="text-sm">Modo:</label>
           <select
             className="border rounded px-2 py-1 text-sm"
@@ -113,7 +87,7 @@ export default function AnexosPage() {
           <button
             className="px-3 py-1 bg-blue-600 text-white rounded disabled:opacity-50"
             onClick={() => handleUpload()}
-            disabled={!documentoId || !file || loading}
+            disabled={!file || loading}
           >
             {loading ? 'Enviando…' : 'Enviar Anexo'}
           </button>
@@ -152,14 +126,6 @@ export default function AnexosPage() {
           />
         </div>
       )}
-      <button
-          className="px-3 py-1 bg-gray-200 rounded"
-          onClick={() => fetchList()}
-          disabled={!documentoId || loading}
-        >
-          Atualizar
-        </button>
-      
       {error && <div className="text-red-600 text-sm mb-3">{error}</div>}
       <div className="border rounded">
         <table className="w-full text-sm">
