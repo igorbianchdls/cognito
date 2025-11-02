@@ -246,7 +246,13 @@ export async function GET(req: NextRequest) {
       const to = ate || new Date().toISOString().slice(0, 10)
 
       const dreSql = `
-        WITH base AS (
+        WITH canon AS (
+          SELECT MIN(id) AS id
+          FROM contabilidade.lancamentos_contabeis
+          WHERE data_lancamento::date BETWEEN $1::date AND $2::date
+          GROUP BY tenant_id, COALESCE(lancamento_financeiro_id, id)
+        ),
+        base AS (
           SELECT 
             lc.data_lancamento::date AS data_lancamento,
             DATE_TRUNC('month', lc.data_lancamento)::date AS periodo,
@@ -254,10 +260,10 @@ export async function GET(req: NextRequest) {
             pc.tipo_conta,
             COALESCE(lcl.debito,0) AS debito,
             COALESCE(lcl.credito,0) AS credito
-          FROM contabilidade.lancamentos_contabeis lc
+          FROM canon ch
+          JOIN contabilidade.lancamentos_contabeis lc ON lc.id = ch.id
           JOIN contabilidade.lancamentos_contabeis_linhas lcl ON lcl.lancamento_id = lc.id
           JOIN contabilidade.plano_contas pc ON pc.id = lcl.conta_id
-          WHERE lc.data_lancamento::date BETWEEN $1::date AND $2::date
         )
         SELECT 
           TO_CHAR(periodo, 'YYYY-MM') AS periodo_key,
