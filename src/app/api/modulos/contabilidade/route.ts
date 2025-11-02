@@ -189,7 +189,7 @@ export async function GET(req: NextRequest) {
 
       const toLinha = (r: { codigo: string; nome: string; saldo_final: number }) => ({ conta: `${r.codigo} ${r.nome}`, valor: Number(r.saldo_final || 0) })
       const groupBy = (list: typeof rows, pred: (g: string) => boolean): { [k: string]: { nome: string; linhas: { conta: string; valor: number }[] } } => {
-        const out: any = {}
+        const out: Record<string, { nome: string; linhas: { conta: string; valor: number }[] }> = {}
         for (const r of list) {
           if (!pred(r.grupo)) continue
           const key = r.grupo
