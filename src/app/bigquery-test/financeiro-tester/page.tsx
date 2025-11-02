@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import DataTable, { type TableData } from '@/components/widgets/Table'
+import type { ColumnDef } from '@tanstack/react-table'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 
@@ -75,7 +76,7 @@ export default function FinanceiroTesterPage() {
     }
   }
 
-  const colsDespesas = useMemo(() => ([
+  const colsDespesas: ColumnDef<Row>[] = useMemo(() => ([
     { accessorKey: 'id', header: 'ID' },
     { accessorKey: 'descricao', header: 'Descrição' },
     { accessorKey: 'valor_total', header: 'Valor' },
@@ -83,7 +84,7 @@ export default function FinanceiroTesterPage() {
     { accessorKey: 'criado_em', header: 'Criado em' },
   ]), [])
 
-  const colsLanc = useMemo(() => ([
+  const colsLanc: ColumnDef<Row>[] = useMemo(() => ([
     { accessorKey: 'id', header: 'ID' },
     { accessorKey: 'tipo', header: 'Tipo' },
     { accessorKey: 'descricao', header: 'Descrição' },
@@ -100,7 +101,7 @@ export default function FinanceiroTesterPage() {
     <div className="p-6 space-y-8">
       <div>
         <h1 className="text-xl font-semibold">Financeiro Tester</h1>
-        <p className="text-sm text-gray-500">Crie uma despesa e veja o lançamento "conta a pagar" criado automaticamente.</p>
+        <p className="text-sm text-gray-500">Crie uma despesa e veja o lançamento &quot;conta a pagar&quot; criado automaticamente.</p>
       </div>
 
       <div className="space-y-4">
@@ -156,14 +157,13 @@ export default function FinanceiroTesterPage() {
 
       <div className="space-y-2">
         <h2 className="text-base font-medium">Despesas (últimas 50)</h2>
-        <DataTable columns={colsDespesas as any} data={despesas} pageSize={10} />
+        <DataTable<Row> columns={colsDespesas} data={despesas} pageSize={10} />
       </div>
 
       <div className="space-y-2">
         <h2 className="text-base font-medium">Lançamentos Financeiros (últimos 50)</h2>
-        <DataTable columns={colsLanc as any} data={lancamentos} pageSize={10} />
+        <DataTable<Row> columns={colsLanc} data={lancamentos} pageSize={10} />
       </div>
     </div>
   )
 }
-
