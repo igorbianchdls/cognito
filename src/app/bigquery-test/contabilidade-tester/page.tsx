@@ -1,6 +1,8 @@
+
 'use client'
 
 import { useMemo, useState } from 'react'
+import type React from 'react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import DataTable, { type TableData } from '@/components/widgets/Table'
@@ -41,8 +43,18 @@ export default function ContabilidadeTesterPage() {
       if (!res.ok || !json?.success) throw new Error(json?.message || `HTTP ${res.status}`)
       const regra = json.regra as Record<string, unknown>
       const rows: Row[] = [
-        { tipo: 'Débito', conta_id: regra['conta_debito_id'], codigo: regra['debito_codigo'], nome: regra['debito_nome'] },
-        { tipo: 'Crédito', conta_id: regra['conta_credito_id'], codigo: regra['credito_codigo'], nome: regra['credito_nome'] },
+        {
+          tipo: 'Débito',
+          conta_id: regra['conta_debito_id'] !== undefined ? Number(regra['conta_debito_id']) : null,
+          codigo: regra['debito_codigo'] !== undefined ? String(regra['debito_codigo']) : '',
+          nome: regra['debito_nome'] !== undefined ? String(regra['debito_nome']) : '',
+        },
+        {
+          tipo: 'Crédito',
+          conta_id: regra['conta_credito_id'] !== undefined ? Number(regra['conta_credito_id']) : null,
+          codigo: regra['credito_codigo'] !== undefined ? String(regra['credito_codigo']) : '',
+          nome: regra['credito_nome'] !== undefined ? String(regra['credito_nome']) : '',
+        },
       ]
       setResult({ regra, rows })
     } catch (e) {
