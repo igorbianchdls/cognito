@@ -72,7 +72,8 @@ export async function POST(req: NextRequest) {
       const valorParcelaBase = Math.floor((valor_total / totalParcelas) * 100) / 100
       let acumulado = 0
 
-      const startDate = new Date(primeiro_vencimento)
+      const primeiroVencimentoStr: string = (primeiro_vencimento as string)
+      const startDate = new Date(primeiroVencimentoStr)
       if (isNaN(startDate.getTime())) {
         throw new Error('primeiro_vencimento inválido')
       }
@@ -109,4 +110,3 @@ export async function POST(req: NextRequest) {
     return Response.json({ success: false, message: e instanceof Error ? e.message : 'Erro desconhecido' }, { status: 500 })
   }
 }
-
