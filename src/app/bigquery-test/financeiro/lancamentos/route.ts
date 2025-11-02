@@ -10,7 +10,7 @@ export async function GET() {
       SELECT id, tenant_id, despesa_id, entidade_id, categoria_id, descricao, tipo, status, valor, data_lancamento, data_vencimento, criado_em
       FROM financeiro.lancamentos_financeiros
       ORDER BY criado_em DESC
-      LIMIT 50
+      LIMIT 10
     `
     const rows = await runQuery<Record<string, unknown>>(sql)
     return Response.json({ success: true, rows })
@@ -18,4 +18,3 @@ export async function GET() {
     return Response.json({ success: false, message: e instanceof Error ? e.message : 'Erro desconhecido' }, { status: 500 })
   }
 }
-

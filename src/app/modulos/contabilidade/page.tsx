@@ -120,13 +120,14 @@ export default function ModulosContabilidadePage() {
       case 'lancamentos':
         return [
           { accessorKey: 'data_lancamento', header: 'Data', cell: ({ row }) => formatDate(row.original['data_lancamento']) },
-          { accessorKey: 'codigo_conta', header: 'Código Conta' },
-          { accessorKey: 'nome_conta', header: 'Nome Conta' },
-          { accessorKey: 'tipo_linha', header: 'Tipo Linha' },
-          { accessorKey: 'valor', header: 'Valor', cell: ({ row }) => formatBRL(row.original['valor']) },
+          { accessorKey: 'historico', header: 'Histórico' },
+          { accessorKey: 'linha_id', header: 'Linha' },
+          { accessorKey: 'conta_id', header: 'Conta' },
           { accessorKey: 'debito', header: 'Débito', cell: ({ row }) => formatBRL(row.original['debito']) },
           { accessorKey: 'credito', header: 'Crédito', cell: ({ row }) => formatBRL(row.original['credito']) },
-          { accessorKey: 'historico_linha', header: 'Histórico' },
+          { accessorKey: 'historico_linha', header: 'Histórico Linha' },
+          { accessorKey: 'total_debitos', header: 'Total Débitos', cell: ({ row }) => formatBRL(row.original['total_debitos']) },
+          { accessorKey: 'total_creditos', header: 'Total Créditos', cell: ({ row }) => formatBRL(row.original['total_creditos']) },
         ]
       case 'balanco-patrimonial':
         return [

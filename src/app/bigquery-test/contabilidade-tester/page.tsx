@@ -117,13 +117,11 @@ export default function ContabilidadeTesterPage() {
   ]), [])
 
   const colsLc: ColumnDef<Row>[] = useMemo(() => ([
-    { accessorKey: 'id', header: 'ID' },
+    { accessorKey: 'lancamento_id', header: 'ID' },
     { accessorKey: 'data_lancamento', header: 'Data' },
     { accessorKey: 'historico', header: 'Histórico' },
-    { accessorKey: 'lancamento_financeiro_id', header: 'LF ID' },
     { accessorKey: 'total_debitos', header: 'Débitos' },
     { accessorKey: 'total_creditos', header: 'Créditos' },
-    { accessorKey: 'criado_em', header: 'Criado em' },
   ]), [])
 
   const loadTables = async () => {

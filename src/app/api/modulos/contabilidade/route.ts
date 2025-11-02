@@ -10,11 +10,10 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
   'lancamentos': {
     lancamento_id: 'lc.id',
     data_lancamento: 'lc.data_lancamento',
-    codigo_conta: 'pc.codigo',
-    nome_conta: 'pc.nome',
+    conta_id: 'lcl.conta_id',
     debito: 'lcl.debito',
     credito: 'lcl.credito',
-    criado_em: 'lc.criado_em',
+    criado_em: 'lcl.criado_em',
   },
   'plano-contas': {
     id: 'pc.id',
@@ -178,33 +177,24 @@ export async function GET(req: NextRequest) {
     if (view === 'lancamentos') {
       baseSql = `FROM contabilidade.lancamentos_contabeis lc
                  LEFT JOIN contabilidade.lancamentos_contabeis_linhas lcl 
-                        ON lcl.lancamento_id = lc.id
-                 LEFT JOIN contabilidade.plano_contas pc 
-                        ON pc.id = lcl.conta_id`
+                        ON lcl.lancamento_id = lc.id`
       selectSql = `SELECT
-                    lc.id                        AS lancamento_id,
+                    lc.id AS lancamento_id,
                     lc.data_lancamento,
-                    lc.historico                 AS historico_geral,
+                    lc.historico,
                     lc.origem_tabela,
-                    lc.origem,
                     lc.origem_id,
-                    lc.cliente_id,
                     lc.fornecedor_id,
+                    lc.cliente_id,
                     lc.conta_financeira_id,
                     lc.total_debitos,
                     lc.total_creditos,
-
-                    lcl.id                       AS linha_id,
-                    lcl.tipo                     AS tipo_linha,
-                    lcl.valor,
+                    lcl.id AS linha_id,
+                    lcl.conta_id,
                     lcl.debito,
                     lcl.credito,
-                    lcl.historico                AS historico_linha,
-
-                    pc.id                        AS conta_contabil_id,
-                    pc.codigo                    AS codigo_conta,
-                    pc.nome                      AS nome_conta,
-                    pc.tipo_conta                AS tipo_conta`
+                    lcl.historico AS historico_linha,
+                    lcl.criado_em`
       whereDateCol = 'lc.data_lancamento'
       if (cliente_id) push('lc.cliente_id =', cliente_id)
       if (fornecedor_id) push('lc.fornecedor_id =', fornecedor_id)
@@ -304,7 +294,7 @@ export async function GET(req: NextRequest) {
     const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''
 
     let defaultOrder = ''
-    if (view === 'lancamentos') defaultOrder = 'ORDER BY lc.data_lancamento DESC, lc.id ASC, lcl.id ASC'
+    if (view === 'lancamentos') defaultOrder = 'ORDER BY lc.data_lancamento DESC, lc.id DESC'
     else if (view === 'plano-contas') defaultOrder = 'ORDER BY pc.codigo::text COLLATE "C"'
     else if (view === 'categorias') defaultOrder = 'ORDER BY pcc.tipo ASC, pcc.nivel ASC, pcc.ordem ASC'
     else if (view === 'segmentos') defaultOrder = 'ORDER BY pcs.ordem ASC'
