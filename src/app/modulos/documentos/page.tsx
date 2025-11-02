@@ -94,6 +94,8 @@ export default function ModulosDocumentosPage() {
           { accessorKey: 'valor_total', header: 'Valor Total', cell: ({ row }) => formatBRL(row.original['valor_total']) },
           { accessorKey: 'valor_pago', header: 'Valor Pago', cell: ({ row }) => formatBRL(row.original['valor_pago']) },
           { accessorKey: 'status', header: 'Status' },
+          { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em']) },
+          { accessorKey: 'atualizado_em', header: 'Atualizado em', cell: ({ row }) => formatDate(row.original['atualizado_em']) },
         ]
       case 'operacional':
         return [
@@ -129,11 +131,16 @@ export default function ModulosDocumentosPage() {
         ]
       case 'contratos':
         return [
-          { accessorKey: 'data_emissao', header: 'Data', cell: ({ row }) => formatDate(row.original['data_emissao']) },
-          { accessorKey: 'tipo_documento', header: 'Tipo (Contrato, Aditivo)' },
+          { accessorKey: 'data_emissao', header: 'Emissão', cell: ({ row }) => formatDate(row.original['data_emissao']) },
+          { accessorKey: 'tipo_documento', header: 'Tipo' },
           { accessorKey: 'numero', header: 'Número' },
           { accessorKey: 'descricao', header: 'Descrição' },
+          { accessorKey: 'valor_total', header: 'Valor Total', cell: ({ row }) => formatBRL(row.original['valor_total']) },
           { accessorKey: 'status', header: 'Status' },
+          { accessorKey: 'data_inicio', header: 'Início', cell: ({ row }) => formatDate(row.original['data_inicio']) },
+          { accessorKey: 'data_fim', header: 'Fim', cell: ({ row }) => formatDate(row.original['data_fim']) },
+          { accessorKey: 'prazo_meses', header: 'Prazo (meses)' },
+          { accessorKey: 'renovacao_automatica', header: 'Renovação Automática' },
         ]
       case 'outros':
       default:

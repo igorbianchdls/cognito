@@ -81,11 +81,10 @@ export async function GET(req: NextRequest) {
       LEFT JOIN documentos.documentos_fiscais f ON f.documento_id = d.id
       ${whereClause}`
     } else if (view === 'financeiro') {
-      // Consulta de Documentos Financeiros (exatamente como especificado)
+      // Consulta de Documentos Financeiros (EXATA como fornecida)
       addDateFilters()
-      conditions.push(`td.categoria = 'financeiro'`)
       const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''
-      const orderClause = 'ORDER BY d.data_emissao DESC NULLS LAST, d.id DESC'
+      const orderClause = 'ORDER BY d.id DESC'
       const limitOffset = `LIMIT $${idx}::int OFFSET $${idx + 1}::int`
       paramsWithPage = [...params, pageSize, offset]
 
@@ -101,10 +100,14 @@ export async function GET(req: NextRequest) {
         f.banco_id,
         f.codigo_barras,
         f.data_liquidacao,
-        f.valor_pago
+        f.valor_pago,
+        d.criado_em,
+        d.atualizado_em
       FROM documentos.documento d
-      LEFT JOIN documentos.tipos_documentos td ON td.id = d.tipo_documento_id
-      LEFT JOIN documentos.documentos_financeiros f ON f.documento_id = d.id
+      LEFT JOIN documentos.tipos_documentos td 
+        ON td.id = d.tipo_documento_id
+      INNER JOIN documentos.documentos_financeiros f 
+        ON f.documento_id = d.id
       ${whereClause}
       ${orderClause}
       ${limitOffset}`.trim()
@@ -112,7 +115,41 @@ export async function GET(req: NextRequest) {
       totalSql = `SELECT COUNT(*)::int AS total
       FROM documentos.documento d
       LEFT JOIN documentos.tipos_documentos td ON td.id = d.tipo_documento_id
-      LEFT JOIN documentos.documentos_financeiros f ON f.documento_id = d.id
+      INNER JOIN documentos.documentos_financeiros f ON f.documento_id = d.id
+      ${whereClause}`
+    } else if (view === 'contratos') {
+      // Consulta de Documentos de Contratos (EXATA conforme campos fornecidos)
+      addDateFilters()
+      const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''
+      const orderClause = 'ORDER BY d.id DESC'
+      const limitOffset = `LIMIT $${idx}::int OFFSET $${idx + 1}::int`
+      paramsWithPage = [...params, pageSize, offset]
+
+      listSql = `SELECT 
+        d.id AS documento_id,
+        td.nome AS tipo_documento,
+        d.numero,
+        d.descricao,
+        d.data_emissao,
+        d.valor_total,
+        d.status,
+        c.data_inicio,
+        c.data_fim,
+        c.prazo_meses,
+        c.renovacao_automatica
+      FROM documentos.documento d
+      LEFT JOIN documentos.tipos_documentos td 
+        ON td.id = d.tipo_documento_id
+      INNER JOIN documentos.documentos_contratos c 
+        ON c.documento_id = d.id
+      ${whereClause}
+      ${orderClause}
+      ${limitOffset}`.trim()
+
+      totalSql = `SELECT COUNT(*)::int AS total
+      FROM documentos.documento d
+      LEFT JOIN documentos.tipos_documentos td ON td.id = d.tipo_documento_id
+      INNER JOIN documentos.documentos_contratos c ON c.documento_id = d.id
       ${whereClause}`
     } else {
       // Genérico por categoria (demais tabs): usa tabela mestre + tipos_documentos
