@@ -119,28 +119,99 @@ export async function GET(req: NextRequest) {
     let whereDateCol = ''
     let selectSql = ''
 
-    // Views com dados mockados: Balanço Patrimonial e DRE
+    // Balanço Patrimonial real
     if (view === 'balanco-patrimonial') {
-      const mock: Record<string, unknown>[] = [
-        { grupo: 'Ativo Circulante', conta: 'Caixa e Equivalentes de Caixa', tipo: 'Ativo', nivel: 3, saldo_inicial: 120000, movimentos: 35000, saldo_final: 155000 },
-        { grupo: 'Ativo Circulante', conta: 'Contas a Receber', tipo: 'Ativo', nivel: 3, saldo_inicial: 80000, movimentos: -10000, saldo_final: 70000 },
-        { grupo: 'Ativo Não Circulante', conta: 'Imobilizado', tipo: 'Ativo', nivel: 2, saldo_inicial: 300000, movimentos: 20000, saldo_final: 320000 },
-        { grupo: 'Passivo Circulante', conta: 'Fornecedores', tipo: 'Passivo', nivel: 3, saldo_inicial: 90000, movimentos: -15000, saldo_final: 75000 },
-        { grupo: 'Passivo Não Circulante', conta: 'Empréstimos e Financiamentos', tipo: 'Passivo', nivel: 2, saldo_inicial: 200000, movimentos: -10000, saldo_final: 190000 },
-        { grupo: 'Patrimônio Líquido', conta: 'Capital Social', tipo: 'PL', nivel: 1, saldo_inicial: 250000, movimentos: 0, saldo_final: 250000 },
-        { grupo: 'Patrimônio Líquido', conta: 'Lucros/Prejuízos Acumulados', tipo: 'PL', nivel: 1, saldo_inicial: 50000, movimentos: 15000, saldo_final: 65000 },
-      ]
-      const total = mock.length
-      const sliced = mock.slice(offset, offset + pageSize)
+      const today = new Date()
+      const y = today.getFullYear()
+      const m = String(today.getMonth() + 1).padStart(2, '0')
+      const firstDay = `${y}-${m}-01`
+      const from = de || firstDay
+      const to = ate || new Date().toISOString().slice(0, 10)
+
+      const bpSql = `
+        WITH base AS (
+          SELECT 
+            lc.data_lancamento::date AS data_lancamento,
+            pc.codigo,
+            pc.nome,
+            pc.tipo_conta,
+            pc.aceita_lancamento,
+            COALESCE(lcl.debito,0) AS debito,
+            COALESCE(lcl.credito,0) AS credito
+          FROM contabilidade.lancamentos_contabeis lc
+          JOIN contabilidade.lancamentos_contabeis_linhas lcl ON lcl.lancamento_id = lc.id
+          JOIN contabilidade.plano_contas pc ON pc.id = lcl.conta_id
+        ),
+        inicial AS (
+          SELECT codigo, nome, tipo_conta,
+            SUM(CASE WHEN tipo_conta IN ('Receita','Passivo','Patrimônio Líquido') THEN (credito - debito) ELSE (debito - credito) END) AS saldo_inicial
+          FROM base
+          WHERE data_lancamento < $1::date AND aceita_lancamento = TRUE
+          GROUP BY codigo, nome, tipo_conta
+        ),
+        movimentos AS (
+          SELECT codigo, nome, tipo_conta,
+            SUM(CASE WHEN tipo_conta IN ('Receita','Passivo','Patrimônio Líquido') THEN (credito - debito) ELSE (debito - credito) END) AS movimentos
+          FROM base
+          WHERE data_lancamento BETWEEN $1::date AND $2::date AND aceita_lancamento = TRUE
+          GROUP BY codigo, nome, tipo_conta
+        ),
+        final AS (
+          SELECT 
+            COALESCE(i.codigo, m.codigo) AS codigo,
+            COALESCE(i.nome, m.nome) AS nome,
+            COALESCE(i.tipo_conta, m.tipo_conta) AS tipo_conta,
+            COALESCE(i.saldo_inicial,0) AS saldo_inicial,
+            COALESCE(m.movimentos,0) AS movimentos,
+            COALESCE(i.saldo_inicial,0) + COALESCE(m.movimentos,0) AS saldo_final
+          FROM inicial i
+          FULL JOIN movimentos m USING (codigo, nome, tipo_conta)
+        ),
+        classificados AS (
+          SELECT 
+            f.codigo, f.nome, f.tipo_conta, f.saldo_inicial, f.movimentos, f.saldo_final,
+            CASE 
+              WHEN f.codigo LIKE '1.1.%' THEN 'Ativo Circulante'
+              WHEN f.codigo LIKE '1.2.%' THEN 'Ativo Não Circulante'
+              WHEN f.codigo LIKE '2.1.%' THEN 'Passivo Circulante'
+              WHEN f.codigo LIKE '2.2.%' THEN 'Passivo Não Circulante'
+              WHEN f.codigo LIKE '3.%' THEN 'Patrimônio Líquido'
+              ELSE NULL
+            END AS grupo
+          FROM final f
+        )
+        SELECT * FROM classificados WHERE grupo IS NOT NULL AND saldo_final <> 0
+        ORDER BY codigo::text COLLATE "C"`;
+
+      const rows = await runQuery<{
+        codigo: string; nome: string; tipo_conta: string; saldo_final: number; grupo: string
+      }>(bpSql, [from, to])
+
+      const toLinha = (r: { codigo: string; nome: string; saldo_final: number }) => ({ conta: `${r.codigo} ${r.nome}`, valor: Number(r.saldo_final || 0) })
+      const groupBy = (list: typeof rows, pred: (g: string) => boolean): { [k: string]: { nome: string; linhas: { conta: string; valor: number }[] } } => {
+        const out: any = {}
+        for (const r of list) {
+          if (!pred(r.grupo)) continue
+          const key = r.grupo
+          if (!out[key]) out[key] = { nome: key, linhas: [] }
+          out[key].linhas.push(toLinha(r))
+        }
+        return out
+      }
+      const ativos = Object.values(groupBy(rows, (g) => g.startsWith('Ativo')))
+      const passivos = Object.values(groupBy(rows, (g) => g.startsWith('Passivo')))
+      const pls = Object.values(groupBy(rows, (g) => g === 'Patrimônio Líquido'))
+
       return Response.json({
         success: true,
         view,
-        page,
-        pageSize,
-        total,
-        rows: sliced,
-        sql: 'mock: balanco-patrimonial',
-        params: JSON.stringify([]),
+        from,
+        to,
+        ativo: ativos,
+        passivo: passivos,
+        pl: pls,
+        sql: 'ok',
+        params: JSON.stringify([from, to])
       }, { headers: { 'Cache-Control': 'no-store' } })
     }
 

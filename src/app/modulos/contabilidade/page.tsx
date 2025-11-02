@@ -29,6 +29,10 @@ export default function ModulosContabilidadePage() {
   const [data, setData] = useState<Row[]>([])
   const [dreNodes, setDreNodes] = useState<DRENode[]>([])
   const [drePeriods, setDrePeriods] = useState<{ key: string; label: string }[]>([])
+  type BPLinha = { conta: string; valor: number }
+  type BPGrupo = { nome: string; linhas: BPLinha[] }
+  type BPData = { ativo: BPGrupo[]; passivo: BPGrupo[]; pl: BPGrupo[] }
+  const [bpData, setBpData] = useState<BPData>({ ativo: [], passivo: [], pl: [] })
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [reloadKey] = useState(0)
@@ -83,6 +87,13 @@ export default function ModulosContabilidadePage() {
         if (tabs.selected === 'dre') {
           setDreNodes(Array.isArray(json?.nodes) ? json.nodes as DRENode[] : [])
           setDrePeriods(Array.isArray(json?.periods) ? json.periods as { key: string; label: string }[] : [])
+          setTotal(0)
+        } else if (tabs.selected === 'balanco-patrimonial') {
+          setBpData({
+            ativo: Array.isArray(json?.ativo) ? (json.ativo as BPGrupo[]) : [],
+            passivo: Array.isArray(json?.passivo) ? (json.passivo as BPGrupo[]) : [],
+            pl: Array.isArray(json?.pl) ? (json.pl as BPGrupo[]) : [],
+          })
           setTotal(0)
         } else {
           const rows = (json?.rows || []) as Row[]
@@ -299,7 +310,7 @@ export default function ModulosContabilidadePage() {
               ) : tabs.selected === 'dre' ? (
                 <DRETable data={dreNodes} periods={drePeriods} />
               ) : tabs.selected === 'balanco-patrimonial' ? (
-                <BalanceTAccountView />
+                <BalanceTAccountView data={bpData} />
               ) : (
                 <DataTable
                   key={tabs.selected}

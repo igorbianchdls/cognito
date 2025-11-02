@@ -6,35 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 type Linha = { conta: string; valor: number }
 type Grupo = { nome: string; linhas: Linha[] }
 
-// Mock de dados – ajuste conforme necessário
-const MOCK = {
-  ativo: [
-    { nome: 'Ativo Circulante', linhas: [
-      { conta: 'Caixa e Equivalentes de Caixa', valor: 155000 },
-      { conta: 'Contas a Receber', valor: 70000 },
-      { conta: 'Estoques', valor: 56000 },
-    ] },
-    { nome: 'Ativo Não Circulante', linhas: [
-      { conta: 'Imobilizado', valor: 320000 },
-      { conta: 'Intangível', valor: 31000 },
-    ] },
-  ] as Grupo[],
-  passivo: [
-    { nome: 'Passivo Circulante', linhas: [
-      { conta: 'Fornecedores', valor: 75000 },
-      { conta: 'Obrigações Trabalhistas', valor: 23000 },
-    ] },
-    { nome: 'Passivo Não Circulante', linhas: [
-      { conta: 'Empréstimos e Financiamentos', valor: 190000 },
-    ] },
-  ] as Grupo[],
-  pl: [
-    { nome: 'Patrimônio Líquido', linhas: [
-      { conta: 'Capital Social', valor: 250000 },
-      { conta: 'Lucros/Prejuízos Acumulados', valor: 65000 },
-    ] },
-  ] as Grupo[],
-}
+type BalanceData = { ativo: Grupo[]; passivo: Grupo[]; pl: Grupo[] }
 
 function currency(n: number) {
   return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -47,10 +19,13 @@ function totalSecao(gs: Grupo[]) {
   return gs.reduce((acc, g) => acc + totalGrupo(g), 0)
 }
 
-export default function BalanceTAccountView() {
-  const totalAtivo = useMemo(() => totalSecao(MOCK.ativo), [])
-  const totalPassivo = useMemo(() => totalSecao(MOCK.passivo), [])
-  const totalPL = useMemo(() => totalSecao(MOCK.pl), [])
+export default function BalanceTAccountView({ data }: { data: BalanceData }) {
+  const ativo = data?.ativo || []
+  const passivo = data?.passivo || []
+  const pl = data?.pl || []
+  const totalAtivo = useMemo(() => totalSecao(ativo), [ativo])
+  const totalPassivo = useMemo(() => totalSecao(passivo), [passivo])
+  const totalPL = useMemo(() => totalSecao(pl), [pl])
 
   const totalDireita = totalPassivo + totalPL
   const emEquilibrio = Math.abs(totalAtivo - totalDireita) < 0.005
@@ -103,12 +78,12 @@ export default function BalanceTAccountView() {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, minWidth: 960 }}>
           {/* Coluna esquerda: ATIVO */}
           <div>
-            <SecaoTabela titulo="Ativo" grupos={MOCK.ativo} />
+            <SecaoTabela titulo="Ativo" grupos={ativo} />
           </div>
           {/* Coluna direita: PASSIVO (acima) + PL (abaixo) */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <SecaoTabela titulo="Passivo" grupos={MOCK.passivo} />
-            <SecaoTabela titulo="Patrimônio Líquido" grupos={MOCK.pl} />
+            <SecaoTabela titulo="Passivo" grupos={passivo} />
+            <SecaoTabela titulo="Patrimônio Líquido" grupos={pl} />
           </div>
         </div>
       </div>
