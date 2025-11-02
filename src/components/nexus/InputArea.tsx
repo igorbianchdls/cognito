@@ -24,7 +24,9 @@ import {
   Package,
   ArrowUpRight,
   Activity,
-  DollarSign
+  DollarSign,
+  BookOpen,
+  FileText
 } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 import type { ChatStatus } from 'ai';
@@ -60,6 +62,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }> | null
   'gestorDeVendasB2BAgent': TrendingUp,
   'funcionariosAgent': Users,
   'crmAgent': Users,
+  'contabilidadeAgent': BookOpen,
 };
 
 const models = [
@@ -82,6 +85,7 @@ const models = [
   { id: 'gestorDeVendasB2BAgent', name: 'Gerente de Vendas B2B', icon: iconMap['gestorDeVendasB2BAgent'] },
   { id: 'crmAgent', name: 'Analista de CRM', icon: iconMap['crmAgent'] },
   { id: 'automationAgent', name: 'Arquiteto de Automação', icon: Wrench },
+  { id: 'contabilidadeAgent', name: 'Agente de Contabilidade', icon: iconMap['contabilidadeAgent'] },
 ];
 
 export default function InputArea({ input, setInput, onSubmit, status, selectedAgent, onAgentChange, onFileSelected }: InputAreaProps) {
@@ -165,6 +169,7 @@ export default function InputArea({ input, setInput, onSubmit, status, selectedA
                 case 'funcionariosAgent': return 'Analista de RH';
                 case 'crmAgent': return 'Analista de CRM';
                 case 'automationAgent': return 'Arquiteto de Automação';
+                case 'contabilidadeAgent': return 'Agente de Contabilidade';
                 default: return id;
               }
             };

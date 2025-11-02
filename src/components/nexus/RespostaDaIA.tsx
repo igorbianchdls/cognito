@@ -66,7 +66,7 @@ import type { AutomationSummaryOutput } from '@/tools/automationTools';
 import OportunidadesResult from './tools/crm/OportunidadesResult';
 import AtividadesResult from './tools/crm/AtividadesResult';
 import type { GetCrmOportunidadesOutput, GetCrmAtividadesOutput } from '@/tools/crmTools';
-import { BarChart3, DollarSign, LineChart, TrendingUp, AlertTriangle } from 'lucide-react';
+import { BarChart3, DollarSign, LineChart, TrendingUp, AlertTriangle, FileText } from 'lucide-react';
 import AnaliseDeCampanhas from '../tools/paid-traffic/analiseDeCampanhas';
 import OrganicMarketingDataTable from '../tools/OrganicMarketingDataTable';
 import PaidTrafficDataTable from '../tools/PaidTrafficDataTable';
@@ -6674,6 +6674,93 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
           );
         }
 
+        // Contabilidade: Lançamentos Contábeis
+        if (part.type === 'tool-listarLancamentosContabeis') {
+          const tool = part as NexusToolUIPart;
+          const open = tool.state === 'output-available' || tool.state === 'output-error';
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={open}>
+                <ToolHeader type={part.type} state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && (
+                <GenericResultTable
+                  title="Lançamentos Contábeis"
+                  icon={FileText}
+                  iconColor="text-blue-600"
+                  success={(tool.output as GenericRowsToolOutput).success}
+                  message={(tool.output as GenericRowsToolOutput).message}
+                  rows={(tool.output as GenericRowsToolOutput).rows as Array<Record<string, unknown>>}
+                  count={(tool.output as GenericRowsToolOutput).count}
+                  sql_query={(tool.output as GenericRowsToolOutput).sql_query}
+                />
+              )}
+            </div>
+          );
+        }
+
+        // Contabilidade: DRE por período
+        if (part.type === 'tool-gerarDRE') {
+          const tool = part as NexusToolUIPart;
+          const open = tool.state === 'output-available' || tool.state === 'output-error';
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={open}>
+                <ToolHeader type={part.type} state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && (
+                <GenericResultTable
+                  title="DRE (Resultados por período)"
+                  icon={BarChart3}
+                  iconColor="text-emerald-600"
+                  success={(tool.output as GenericRowsToolOutput).success}
+                  message={(tool.output as GenericRowsToolOutput).message}
+                  rows={(tool.output as GenericRowsToolOutput).rows as Array<Record<string, unknown>>}
+                  count={(tool.output as GenericRowsToolOutput).count}
+                  sql_query={(tool.output as GenericRowsToolOutput).sql_query}
+                />
+              )}
+            </div>
+          );
+        }
+
+        // Contabilidade: Balanço Patrimonial
+        if (part.type === 'tool-gerarBalancoPatrimonial') {
+          const tool = part as NexusToolUIPart;
+          const open = tool.state === 'output-available' || tool.state === 'output-error';
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={open}>
+                <ToolHeader type={part.type} state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && (
+                <GenericResultTable
+                  title="Balanço Patrimonial"
+                  icon={BarChart3}
+                  iconColor="text-indigo-600"
+                  success={(tool.output as GenericRowsToolOutput).success}
+                  message={(tool.output as GenericRowsToolOutput).message}
+                  rows={(tool.output as GenericRowsToolOutput).rows as Array<Record<string, unknown>>}
+                  count={(tool.output as GenericRowsToolOutput).count}
+                  sql_query={(tool.output as GenericRowsToolOutput).sql_query}
+                />
+              )}
+            </div>
+          );
+        }
+
         // Gestor de Funcionários — novas tools (SQL)
         if (part.type === 'tool-listarFuncionariosRH') {
           const tool = part as NexusToolUIPart;
@@ -6740,943 +6827,4 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
               {tool.state === 'output-available' && (
                 <CargosResult
                   success={(tool.output as RowsToolOutput).success}
-                  message={(tool.output as RowsToolOutput).message}
-                  rows={(tool.output as RowsToolOutput).rows}
-                  count={(tool.output as RowsToolOutput).count}
-                  sql_query={(tool.output as RowsToolOutput).sql_query}
-                />
-              )}
-            </div>
-          );
-        }
-
-        if (part.type === 'tool-listarTiposAusenciaRH') {
-          const tool = part as NexusToolUIPart;
-          const open = tool.state === 'output-available' || tool.state === 'output-error';
-          return (
-            <div key={tool.toolCallId}>
-              <Tool defaultOpen={open}>
-                <ToolHeader type={part.type} state={tool.state} />
-                <ToolContent>
-                  {tool.input && <ToolInput input={tool.input} />}
-                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
-                </ToolContent>
-              </Tool>
-              {tool.state === 'output-available' && (
-                <TiposAusenciaResult
-                  success={(tool.output as RowsToolOutput).success}
-                  message={(tool.output as RowsToolOutput).message}
-                  rows={(tool.output as RowsToolOutput).rows}
-                  count={(tool.output as RowsToolOutput).count}
-                  sql_query={(tool.output as RowsToolOutput).sql_query}
-                />
-              )}
-            </div>
-          );
-        }
-
-        if (part.type === 'tool-listarContratosRH') {
-          const tool = part as NexusToolUIPart;
-          const open = tool.state === 'output-available' || tool.state === 'output-error';
-          return (
-            <div key={tool.toolCallId}>
-              <Tool defaultOpen={open}>
-                <ToolHeader type={part.type} state={tool.state} />
-                <ToolContent>
-                  {tool.input && <ToolInput input={tool.input} />}
-                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
-                </ToolContent>
-              </Tool>
-              {tool.state === 'output-available' && (
-                <ContratosResult
-                  success={(tool.output as RowsToolOutput).success}
-                  message={(tool.output as RowsToolOutput).message}
-                  rows={(tool.output as RowsToolOutput).rows}
-                  count={(tool.output as RowsToolOutput).count}
-                  sql_query={(tool.output as RowsToolOutput).sql_query}
-                />
-              )}
-            </div>
-          );
-        }
-
-        if (part.type === 'tool-listarHistoricoSalarialRH') {
-          const tool = part as NexusToolUIPart;
-          const open = tool.state === 'output-available' || tool.state === 'output-error';
-          return (
-            <div key={tool.toolCallId}>
-              <Tool defaultOpen={open}>
-                <ToolHeader type={part.type} state={tool.state} />
-                <ToolContent>
-                  {tool.input && <ToolInput input={tool.input} />}
-                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
-                </ToolContent>
-              </Tool>
-              {tool.state === 'output-available' && (
-                <HistoricoSalarialResult
-                  success={(tool.output as RowsToolOutput).success}
-                  message={(tool.output as RowsToolOutput).message}
-                  rows={(tool.output as RowsToolOutput).rows}
-                  count={(tool.output as RowsToolOutput).count}
-                  sql_query={(tool.output as RowsToolOutput).sql_query}
-                />
-              )}
-            </div>
-          );
-        }
-
-        if (part.type === 'tool-indicadoresRH') {
-          const tool = part as NexusToolUIPart;
-          const open = tool.state === 'output-available' || tool.state === 'output-error';
-          return (
-            <div key={tool.toolCallId}>
-              <Tool defaultOpen={open}>
-                <ToolHeader type={part.type} state={tool.state} />
-                <ToolContent>
-                  {tool.input && <ToolInput input={tool.input} />}
-                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
-                </ToolContent>
-              </Tool>
-              {tool.state === 'output-available' && (
-                <IndicadoresRHResult
-                  success={(tool.output as ServicosKpiToolOutput).success}
-                  message={(tool.output as ServicosKpiToolOutput).message}
-                  kpis={(tool.output as ServicosKpiToolOutput).kpis}
-                  sql_query={(tool.output as ServicosKpiToolOutput).sql_query}
-                />
-              )}
-            </div>
-          );
-        }
-
-        if (part.type === 'tool-getAnalyticsData') {
-          const analyticsTool = part as NexusToolUIPart;
-          const callId = analyticsTool.toolCallId;
-          const shouldBeOpen = analyticsTool.state === 'output-available' || analyticsTool.state === 'output-error';
-
-          return (
-            <div key={callId}>
-              <Tool defaultOpen={shouldBeOpen}>
-                <ToolHeader type="tool-getAnalyticsData" state={analyticsTool.state} />
-                <ToolContent>
-                  {analyticsTool.input && (
-                    <ToolInput input={analyticsTool.input} />
-                  )}
-                  {analyticsTool.state === 'output-error' && (
-                    <ToolOutput
-                      output={null}
-                      errorText={analyticsTool.errorText}
-                    />
-                  )}
-                </ToolContent>
-              </Tool>
-              {analyticsTool.state === 'output-available' && (
-                <AnalyticsDataTable
-                  success={(analyticsTool.output as GetAnalyticsDataToolOutput).success}
-                  count={(analyticsTool.output as GetAnalyticsDataToolOutput).count}
-                  table={(analyticsTool.output as GetAnalyticsDataToolOutput).table}
-                  rows={(analyticsTool.output as GetAnalyticsDataToolOutput).rows}
-                  message={(analyticsTool.output as GetAnalyticsDataToolOutput).message}
-                  error={(analyticsTool.output as GetAnalyticsDataToolOutput).error}
-                  sql_query={(analyticsTool.output as GetAnalyticsDataToolOutput).sql_query}
-                />
-              )}
-            </div>
-          );
-        }
-
-        // CRM: Oportunidades
-        if (part.type === 'tool-getCrmOportunidades') {
-          const tool = part as NexusToolUIPart;
-          const open = tool.state === 'output-available' || tool.state === 'output-error';
-          return (
-            <div key={tool.toolCallId}>
-              <Tool defaultOpen={open}>
-                <ToolHeader type="tool-getCrmOportunidades" state={tool.state} />
-                <ToolContent>
-                  {tool.input && <ToolInput input={tool.input} />}
-                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
-                </ToolContent>
-              </Tool>
-              {tool.state === 'output-available' && (
-                <OportunidadesResult result={tool.output as GetCrmOportunidadesOutput} />
-              )}
-            </div>
-          );
-        }
-
-        // CRM: Atividades
-        if (part.type === 'tool-getCrmAtividades') {
-          const tool = part as NexusToolUIPart;
-          const open = tool.state === 'output-available' || tool.state === 'output-error';
-          return (
-            <div key={tool.toolCallId}>
-              <Tool defaultOpen={open}>
-                <ToolHeader type="tool-getCrmAtividades" state={tool.state} />
-                <ToolContent>
-                  {tool.input && <ToolInput input={tool.input} />}
-                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
-                </ToolContent>
-              </Tool>
-              {tool.state === 'output-available' && (
-                <AtividadesResult result={tool.output as GetCrmAtividadesOutput} />
-              )}
-            </div>
-          );
-        }
-
-        if (part.type === 'tool-automationSummary') {
-          const autoTool = part as NexusToolUIPart;
-          const callId = autoTool.toolCallId;
-          const shouldBeOpen = autoTool.state === 'output-available' || autoTool.state === 'output-error';
-
-          return (
-            <div key={callId}>
-              <Tool defaultOpen={shouldBeOpen}>
-                <ToolHeader type="tool-automationSummary" state={autoTool.state} />
-                <ToolContent>
-                  {autoTool.input && (
-                    <ToolInput input={autoTool.input} />
-                  )}
-                  {autoTool.state === 'output-error' && (
-                    <ToolOutput
-                      output={null}
-                      errorText={autoTool.errorText}
-                    />
-                  )}
-                </ToolContent>
-              </Tool>
-              {autoTool.state === 'output-available' && (() => {
-                const output = autoTool.output as AutomationSummaryOutput | undefined;
-                return (
-                  <AutomationResultCard
-                    ocr={output?.ocr}
-                    fornecedor={output?.fornecedor}
-                    contaAPagar={output?.contaAPagar}
-                    warnings={output?.warnings}
-                  />
-                );
-              })()}
-            </div>
-          );
-        }
-
-        if (part.type === 'tool-getContasAPagar') {
-          const contasAPagarTool = part as NexusToolUIPart;
-          const callId = contasAPagarTool.toolCallId;
-          const shouldBeOpen = contasAPagarTool.state === 'output-available' || contasAPagarTool.state === 'output-error';
-
-          return (
-            <div key={callId}>
-              <Tool defaultOpen={shouldBeOpen}>
-                <ToolHeader type="tool-getContasAPagar" state={contasAPagarTool.state} />
-                <ToolContent>
-                  {contasAPagarTool.input && (
-                    <ToolInput input={contasAPagarTool.input} />
-                  )}
-                  {contasAPagarTool.state === 'output-error' && (
-                    <ToolOutput
-                      output={null}
-                      errorText={contasAPagarTool.errorText}
-                    />
-                  )}
-                </ToolContent>
-              </Tool>
-              {contasAPagarTool.state === 'output-available' && (
-                <ContasAPagarResult
-                  result={contasAPagarTool.output as GetContasAPagarToolOutput}
-                />
-              )}
-            </div>
-          );
-        }
-
-        if (part.type === 'tool-getPagamentosEfetuados') {
-          const pagamentosEfetuadosTool = part as NexusToolUIPart;
-          const callId = pagamentosEfetuadosTool.toolCallId;
-          const shouldBeOpen = pagamentosEfetuadosTool.state === 'output-available' || pagamentosEfetuadosTool.state === 'output-error';
-
-          return (
-            <div key={callId}>
-              <Tool defaultOpen={shouldBeOpen}>
-                <ToolHeader type="tool-getPagamentosEfetuados" state={pagamentosEfetuadosTool.state} />
-                <ToolContent>
-                  {pagamentosEfetuadosTool.input && (
-                    <ToolInput input={pagamentosEfetuadosTool.input} />
-                  )}
-                  {pagamentosEfetuadosTool.state === 'output-error' && (
-                    <ToolOutput
-                      output={null}
-                      errorText={pagamentosEfetuadosTool.errorText}
-                    />
-                  )}
-                </ToolContent>
-              </Tool>
-              {pagamentosEfetuadosTool.state === 'output-available' && (
-                <PagamentosEfetuadosResult
-                  result={pagamentosEfetuadosTool.output as GetPagamentosEfetuadosToolOutput}
-                />
-              )}
-            </div>
-          );
-        }
-
-        if (part.type === 'tool-calcularFluxoCaixa') {
-          const fluxoCaixaTool = part as NexusToolUIPart;
-          const callId = fluxoCaixaTool.toolCallId;
-          const shouldBeOpen = fluxoCaixaTool.state === 'output-available' || fluxoCaixaTool.state === 'output-error';
-
-          return (
-            <div key={callId}>
-              <Tool defaultOpen={shouldBeOpen}>
-                <ToolHeader type="tool-calcularFluxoCaixa" state={fluxoCaixaTool.state} />
-                <ToolContent>
-                  {fluxoCaixaTool.input && (
-                    <ToolInput input={fluxoCaixaTool.input} />
-                  )}
-                  {fluxoCaixaTool.state === 'output-error' && (
-                    <ToolOutput
-                      output={null}
-                      errorText={fluxoCaixaTool.errorText}
-                    />
-                  )}
-                </ToolContent>
-              </Tool>
-              {fluxoCaixaTool.state === 'output-available' && (
-                <FluxoCaixaResult
-                  {...(fluxoCaixaTool.output as CalcularFluxoCaixaToolOutput)}
-                />
-              )}
-            </div>
-          );
-        }
-
-        if (part.type === 'tool-getMovimentos') {
-          const movimentosTool = part as NexusToolUIPart;
-          const callId = movimentosTool.toolCallId;
-          const shouldBeOpen = movimentosTool.state === 'output-available' || movimentosTool.state === 'output-error';
-
-          return (
-            <div key={callId}>
-              <Tool defaultOpen={shouldBeOpen}>
-                <ToolHeader type="tool-getMovimentos" state={movimentosTool.state} />
-                <ToolContent>
-                  {movimentosTool.input && (
-                    <ToolInput input={movimentosTool.input} />
-                  )}
-                  {movimentosTool.state === 'output-error' && (
-                    <ToolOutput
-                      output={null}
-                      errorText={movimentosTool.errorText}
-                    />
-                  )}
-                </ToolContent>
-              </Tool>
-              {movimentosTool.state === 'output-available' && (
-                <MovimentosResult
-                  result={movimentosTool.output as GetMovimentosOutput}
-                />
-              )}
-            </div>
-          );
-        }
-
-        if (part.type === 'tool-analisarMovimentosPorCentroCusto') {
-          const movimentosCCTool = part as NexusToolUIPart;
-          const callId = movimentosCCTool.toolCallId;
-          const shouldBeOpen = movimentosCCTool.state === 'output-available' || movimentosCCTool.state === 'output-error';
-
-          return (
-            <div key={callId}>
-              <Tool defaultOpen={shouldBeOpen}>
-                <ToolHeader type="tool-analisarMovimentosPorCentroCusto" state={movimentosCCTool.state} />
-                <ToolContent>
-                  {movimentosCCTool.input && (
-                    <ToolInput input={movimentosCCTool.input} />
-                  )}
-                  {movimentosCCTool.state === 'output-error' && (
-                    <ToolOutput
-                      output={null}
-                      errorText={movimentosCCTool.errorText}
-                    />
-                  )}
-                </ToolContent>
-              </Tool>
-              {movimentosCCTool.state === 'output-available' && (
-                <MovimentosPorCentroCustoResult
-                  result={movimentosCCTool.output as GetMovimentosPorCentroCustoOutput}
-                />
-              )}
-            </div>
-          );
-        }
-
-        if (part.type === 'tool-getTransacoesExtrato') {
-          const transacoesTool = part as NexusToolUIPart;
-          const callId = transacoesTool.toolCallId;
-          const shouldBeOpen = transacoesTool.state === 'output-available' || transacoesTool.state === 'output-error';
-
-          return (
-            <div key={callId}>
-              <Tool defaultOpen={shouldBeOpen}>
-                <ToolHeader type="tool-getTransacoesExtrato" state={transacoesTool.state} />
-                <ToolContent>
-                  {transacoesTool.input && (
-                    <ToolInput input={transacoesTool.input} />
-                  )}
-                  {transacoesTool.state === 'output-error' && (
-                    <ToolOutput
-                      output={null}
-                      errorText={transacoesTool.errorText}
-                    />
-                  )}
-                </ToolContent>
-              </Tool>
-              {transacoesTool.state === 'output-available' && (
-                <TransacoesExtratoResult
-                  result={transacoesTool.output as GetTransacoesExtratoOutput}
-                />
-              )}
-            </div>
-          );
-        }
-
-        if (part.type === 'tool-obterSaldoBancario') {
-          const saldoTool = part as NexusToolUIPart;
-          const callId = saldoTool.toolCallId;
-          const shouldBeOpen = saldoTool.state === 'output-available' || saldoTool.state === 'output-error';
-
-          return (
-            <div key={callId}>
-              <Tool defaultOpen={shouldBeOpen}>
-                <ToolHeader type="tool-obterSaldoBancario" state={saldoTool.state} />
-                <ToolContent>
-                  {saldoTool.input && (
-                    <ToolInput input={saldoTool.input} />
-                  )}
-                  {saldoTool.state === 'output-error' && (
-                    <ToolOutput
-                      output={null}
-                      errorText={saldoTool.errorText}
-                    />
-                  )}
-                </ToolContent>
-              </Tool>
-              {saldoTool.state === 'output-available' && (
-                <SaldoBancarioResult
-                  result={saldoTool.output as ObterSaldoBancarioOutput}
-                />
-              )}
-            </div>
-          );
-        }
-
-        if (part.type === 'tool-obterDespesasPorCentroCusto') {
-          const despesasTool = part as NexusToolUIPart;
-          const callId = despesasTool.toolCallId;
-          const shouldBeOpen = despesasTool.state === 'output-available' || despesasTool.state === 'output-error';
-
-          return (
-            <div key={callId}>
-              <Tool defaultOpen={shouldBeOpen}>
-                <ToolHeader type="tool-obterDespesasPorCentroCusto" state={despesasTool.state} />
-                <ToolContent>
-                  {despesasTool.input && (
-                    <ToolInput input={despesasTool.input} />
-                  )}
-                  {despesasTool.state === 'output-error' && (
-                    <ToolOutput
-                      output={null}
-                      errorText={despesasTool.errorText}
-                    />
-                  )}
-                </ToolContent>
-              </Tool>
-              {despesasTool.state === 'output-available' && (
-                <DespesasCentroCustoResult
-                  result={despesasTool.output as ObterDespesasPorCentroCustoOutput}
-                />
-              )}
-            </div>
-          );
-        }
-
-        if (part.type === 'tool-analisarInadimplencia') {
-          const inadimplenciaTool = part as NexusToolUIPart;
-          const callId = inadimplenciaTool.toolCallId;
-          const shouldBeOpen = inadimplenciaTool.state === 'output-available' || inadimplenciaTool.state === 'output-error';
-
-          return (
-            <div key={callId}>
-              <Tool defaultOpen={shouldBeOpen}>
-                <ToolHeader type="tool-analisarInadimplencia" state={inadimplenciaTool.state} />
-                <ToolContent>
-                  {inadimplenciaTool.input && (
-                    <ToolInput input={inadimplenciaTool.input} />
-                  )}
-                  {inadimplenciaTool.state === 'output-error' && (
-                    <ToolOutput
-                      output={null}
-                      errorText={inadimplenciaTool.errorText}
-                    />
-                  )}
-                </ToolContent>
-              </Tool>
-              {inadimplenciaTool.state === 'output-available' && (
-                <InadimplenciaResult
-                  result={inadimplenciaTool.output as AnalisarInadimplenciaOutput}
-                />
-              )}
-            </div>
-          );
-        }
-
-        // Inventory Analytics Tools
-        if (part.type === 'tool-calculateInventoryMetrics') {
-          const tool = part as NexusToolUIPart;
-          return (
-            <div key={tool.toolCallId}>
-              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
-                <ToolHeader type="tool-calculateInventoryMetrics" state={tool.state} />
-                <ToolContent>
-                  {tool.input && <ToolInput input={tool.input} />}
-                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
-                </ToolContent>
-              </Tool>
-              {tool.state === 'output-available' && tool.output && (
-                <CalculateMetricsResult
-                  success={(tool.output as CalculateInventoryMetricsToolOutput).success}
-                  message={(tool.output as CalculateInventoryMetricsToolOutput).message}
-                  periodo_dias={(tool.output as CalculateInventoryMetricsToolOutput).periodo_dias}
-                  data={(tool.output as CalculateInventoryMetricsToolOutput).data}
-                  sql_query={(tool.output as CalculateInventoryMetricsToolOutput).sql_query}
-                />
-              )}
-            </div>
-          );
-        }
-
-        if (part.type === 'tool-analyzeStockMovementTrends') {
-          const tool = part as NexusToolUIPart;
-          return (
-            <div key={tool.toolCallId}>
-              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
-                <ToolHeader type="tool-analyzeStockMovementTrends" state={tool.state} />
-                <ToolContent>
-                  {tool.input && <ToolInput input={tool.input} />}
-                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
-                </ToolContent>
-              </Tool>
-              {tool.state === 'output-available' && tool.output && (
-                <TrendsAnalysisResult
-                  success={(tool.output as AnalyzeStockMovementTrendsToolOutput).success}
-                  message={(tool.output as AnalyzeStockMovementTrendsToolOutput).message}
-                  periodo_dias={(tool.output as AnalyzeStockMovementTrendsToolOutput).periodo_dias}
-                  data={(tool.output as AnalyzeStockMovementTrendsToolOutput).data}
-                  sql_query={(tool.output as AnalyzeStockMovementTrendsToolOutput).sql_query}
-                />
-              )}
-            </div>
-          );
-        }
-
-        if (part.type === 'tool-abcDetalhadaProduto') {
-          const tool = part as NexusToolUIPart;
-          return (
-            <div key={tool.toolCallId}>
-              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
-                <ToolHeader type="tool-abcDetalhadaProduto" state={tool.state} />
-                <ToolContent>
-                  {tool.input && <ToolInput input={tool.input} />}
-                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
-                </ToolContent>
-              </Tool>
-              {tool.state === 'output-available' && tool.output && (
-                <GenericResultTable
-                  title="ABC Detalhada por Produto"
-                  icon={BarChart3}
-                  iconColor="text-purple-600"
-                  success={(tool.output as RowsToolOutput).success}
-                  message={(tool.output as RowsToolOutput).message}
-                  rows={(tool.output as RowsToolOutput).rows}
-                  count={(tool.output as RowsToolOutput).count}
-                  sql_query={(tool.output as RowsToolOutput).sql_query}
-                />
-              )}
-            </div>
-          );
-        }
-
-        if (part.type === 'tool-forecastRestockNeeds') {
-          const tool = part as NexusToolUIPart;
-          return (
-            <div key={tool.toolCallId}>
-              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
-                <ToolHeader type="tool-forecastRestockNeeds" state={tool.state} />
-                <ToolContent>
-                  {tool.input && <ToolInput input={tool.input} />}
-                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
-                </ToolContent>
-              </Tool>
-              {tool.state === 'output-available' && tool.output && (
-                <RestockForecastResult
-                  success={(tool.output as ForecastRestockNeedsToolOutput).success}
-                  message={(tool.output as ForecastRestockNeedsToolOutput).message}
-                  periodo_dias={(tool.output as ForecastRestockNeedsToolOutput).periodo_dias}
-                  data={(tool.output as ForecastRestockNeedsToolOutput).data}
-                  sql_query={(tool.output as ForecastRestockNeedsToolOutput).sql_query}
-                />
-              )}
-            </div>
-          );
-        }
-
-        if (part.type === 'tool-analiseDOS') {
-          const tool = part as NexusToolUIPart;
-          return (
-            <div key={tool.toolCallId}>
-              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
-                <ToolHeader type="tool-analiseDOS" state={tool.state} />
-                <ToolContent>
-                  {tool.input && <ToolInput input={tool.input} />}
-                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
-                </ToolContent>
-              </Tool>
-              {tool.state === 'output-available' && tool.output && (
-                <GenericResultTable
-                  title="Dias de Estoque (DOS)"
-                  icon={TrendingUp}
-                  iconColor="text-orange-600"
-                  success={(tool.output as RowsToolOutput).success}
-                  message={(tool.output as RowsToolOutput).message}
-                  rows={(tool.output as RowsToolOutput).rows}
-                  count={(tool.output as RowsToolOutput).count}
-                  sql_query={(tool.output as RowsToolOutput).sql_query}
-                />
-              )}
-            </div>
-          );
-        }
-
-        if (part.type === 'tool-identifySlowMovingItems') {
-          const tool = part as NexusToolUIPart;
-          return (
-            <div key={tool.toolCallId}>
-              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
-                <ToolHeader type="tool-identifySlowMovingItems" state={tool.state} />
-                <ToolContent>
-                  {tool.input && <ToolInput input={tool.input} />}
-                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
-                </ToolContent>
-              </Tool>
-              {tool.state === 'output-available' && tool.output && (
-                <SlowMovingItemsResult
-                  success={(tool.output as IdentifySlowMovingItemsToolOutput).success}
-                  message={(tool.output as IdentifySlowMovingItemsToolOutput).message}
-                  periodo_dias={(tool.output as IdentifySlowMovingItemsToolOutput).periodo_dias}
-                  data={(tool.output as IdentifySlowMovingItemsToolOutput).data}
-                  sql_query={(tool.output as IdentifySlowMovingItemsToolOutput).sql_query}
-                />
-              )}
-            </div>
-          );
-        }
-
-        if (part.type === 'tool-abcResumoGerencial') {
-          const tool = part as NexusToolUIPart;
-          return (
-            <div key={tool.toolCallId}>
-              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
-                <ToolHeader type="tool-abcResumoGerencial" state={tool.state} />
-                <ToolContent>
-                  {tool.input && <ToolInput input={tool.input} />}
-                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
-                </ToolContent>
-              </Tool>
-              {tool.state === 'output-available' && tool.output && (
-                <GenericResultTable
-                  title="Resumo Gerencial da Curva ABC"
-                  icon={BarChart3}
-                  iconColor="text-indigo-600"
-                  success={(tool.output as RowsToolOutput).success}
-                  message={(tool.output as RowsToolOutput).message}
-                  rows={(tool.output as RowsToolOutput).rows}
-                  count={(tool.output as RowsToolOutput).count}
-                  sql_query={(tool.output as RowsToolOutput).sql_query}
-                />
-              )}
-            </div>
-          );
-        }
-
-        if (part.type === 'tool-desempenhoPorDepositoExpedicoes') {
-          const tool = part as NexusToolUIPart;
-          return (
-            <div key={tool.toolCallId}>
-              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
-                <ToolHeader type="tool-desempenhoPorDepositoExpedicoes" state={tool.state} />
-                <ToolContent>
-                  {tool.input && <ToolInput input={tool.input} />}
-                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
-                </ToolContent>
-              </Tool>
-              {tool.state === 'output-available' && tool.output && (
-                <GenericResultTable
-                  title="Desempenho por Depósito (Expedições)"
-                  icon={BarChart3}
-                  iconColor="text-amber-600"
-                  success={(tool.output as RowsToolOutput).success}
-                  message={(tool.output as RowsToolOutput).message}
-                  rows={(tool.output as RowsToolOutput).rows}
-                  count={(tool.output as RowsToolOutput).count}
-                  sql_query={(tool.output as RowsToolOutput).sql_query}
-                />
-              )}
-            </div>
-          );
-        }
-
-        if (part.type === 'tool-analiseGiroEstoque') {
-          const tool = part as NexusToolUIPart;
-          return (
-            <div key={tool.toolCallId}>
-              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
-                <ToolHeader type="tool-analiseGiroEstoque" state={tool.state} />
-                <ToolContent>
-                  {tool.input && <ToolInput input={tool.input} />}
-                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
-                </ToolContent>
-              </Tool>
-              {tool.state === 'output-available' && tool.output && (
-                <GenericResultTable
-                  title="Giro de Estoque"
-                  icon={TrendingUp}
-                  iconColor="text-emerald-600"
-                  success={(tool.output as RowsToolOutput).success}
-                  message={(tool.output as RowsToolOutput).message}
-                  rows={(tool.output as RowsToolOutput).rows}
-                  count={(tool.output as RowsToolOutput).count}
-                  sql_query={(tool.output as RowsToolOutput).sql_query}
-                />
-              )}
-            </div>
-          );
-        }
-
-        // Estoque (schema estoque) — Leitura
-        if (part.type === 'tool-listarAlmoxarifadosEstoque') {
-          const tool = part as NexusToolUIPart;
-          const open = tool.state === 'output-available' || tool.state === 'output-error';
-          return (
-            <div key={tool.toolCallId}>
-              <Tool defaultOpen={open}>
-                <ToolHeader type={part.type} state={tool.state} />
-                <ToolContent>
-                  {tool.input && <ToolInput input={tool.input} />}
-                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
-                </ToolContent>
-              </Tool>
-              {tool.state === 'output-available' && (
-                <AlmoxarifadosEstoqueResult
-                  success={(tool.output as RowsToolOutput).success}
-                  message={(tool.output as RowsToolOutput).message}
-                  rows={(tool.output as RowsToolOutput).rows}
-                  count={(tool.output as RowsToolOutput).count}
-                  sql_query={(tool.output as RowsToolOutput).sql_query}
-                />
-              )}
-            </div>
-          );
-        }
-
-        if (part.type === 'tool-listarEstoqueAtual') {
-          const tool = part as NexusToolUIPart;
-          const open = tool.state === 'output-available' || tool.state === 'output-error';
-          return (
-            <div key={tool.toolCallId}>
-              <Tool defaultOpen={open}>
-                <ToolHeader type={part.type} state={tool.state} />
-                <ToolContent>
-                  {tool.input && <ToolInput input={tool.input} />}
-                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
-                </ToolContent>
-              </Tool>
-              {tool.state === 'output-available' && (
-                <EstoqueAtualResult
-                  success={(tool.output as RowsToolOutput).success}
-                  message={(tool.output as RowsToolOutput).message}
-                  rows={(tool.output as RowsToolOutput).rows}
-                  count={(tool.output as RowsToolOutput).count}
-                  sql_query={(tool.output as RowsToolOutput).sql_query}
-                />
-              )}
-            </div>
-          );
-        }
-
-        if (part.type === 'tool-listarMovimentacoesEstoque') {
-          const tool = part as NexusToolUIPart;
-          const open = tool.state === 'output-available' || tool.state === 'output-error';
-          return (
-            <div key={tool.toolCallId}>
-              <Tool defaultOpen={open}>
-                <ToolHeader type={part.type} state={tool.state} />
-                <ToolContent>
-                  {tool.input && <ToolInput input={tool.input} />}
-                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
-                </ToolContent>
-              </Tool>
-              {tool.state === 'output-available' && (
-                <MovimentacoesEstoqueResult
-                  success={(tool.output as RowsToolOutput).success}
-                  message={(tool.output as RowsToolOutput).message}
-                  rows={(tool.output as RowsToolOutput).rows}
-                  count={(tool.output as RowsToolOutput).count}
-                  sql_query={(tool.output as RowsToolOutput).sql_query}
-                />
-              )}
-            </div>
-          );
-        }
-
-        if (part.type === 'tool-listarTransferenciasEstoque') {
-          const tool = part as NexusToolUIPart;
-          const open = tool.state === 'output-available' || tool.state === 'output-error';
-          return (
-            <div key={tool.toolCallId}>
-              <Tool defaultOpen={open}>
-                <ToolHeader type={part.type} state={tool.state} />
-                <ToolContent>
-                  {tool.input && <ToolInput input={tool.input} />}
-                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
-                </ToolContent>
-              </Tool>
-              {tool.state === 'output-available' && (
-                <TransferenciasEstoqueResult
-                  success={(tool.output as RowsToolOutput).success}
-                  message={(tool.output as RowsToolOutput).message}
-                  rows={(tool.output as RowsToolOutput).rows}
-                  count={(tool.output as RowsToolOutput).count}
-                  sql_query={(tool.output as RowsToolOutput).sql_query}
-                />
-              )}
-            </div>
-          );
-        }
-
-        if (part.type === 'tool-listarInventariosEstoque') {
-          const tool = part as NexusToolUIPart;
-          const open = tool.state === 'output-available' || tool.state === 'output-error';
-          return (
-            <div key={tool.toolCallId}>
-              <Tool defaultOpen={open}>
-                <ToolHeader type={part.type} state={tool.state} />
-                <ToolContent>
-                  {tool.input && <ToolInput input={tool.input} />}
-                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
-                </ToolContent>
-              </Tool>
-              {tool.state === 'output-available' && (
-                <InventariosEstoqueResult
-                  success={(tool.output as RowsToolOutput).success}
-                  message={(tool.output as RowsToolOutput).message}
-                  rows={(tool.output as RowsToolOutput).rows}
-                  count={(tool.output as RowsToolOutput).count}
-                  sql_query={(tool.output as RowsToolOutput).sql_query}
-                />
-              )}
-            </div>
-          );
-        }
-
-        if (part.type === 'tool-listarCustosEstoque') {
-          const tool = part as NexusToolUIPart;
-          const open = tool.state === 'output-available' || tool.state === 'output-error';
-          return (
-            <div key={tool.toolCallId}>
-              <Tool defaultOpen={open}>
-                <ToolHeader type={part.type} state={tool.state} />
-                <ToolContent>
-                  {tool.input && <ToolInput input={tool.input} />}
-                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
-                </ToolContent>
-              </Tool>
-              {tool.state === 'output-available' && (
-                <CustosEstoqueResult
-                  success={(tool.output as RowsToolOutput).success}
-                  message={(tool.output as RowsToolOutput).message}
-                  rows={(tool.output as RowsToolOutput).rows}
-                  count={(tool.output as RowsToolOutput).count}
-                  sql_query={(tool.output as RowsToolOutput).sql_query}
-                />
-              )}
-            </div>
-          );
-        }
-
-        if (part.type === 'tool-listarTiposMovimentacao') {
-          const tool = part as NexusToolUIPart;
-          const open = tool.state === 'output-available' || tool.state === 'output-error';
-          return (
-            <div key={tool.toolCallId}>
-              <Tool defaultOpen={open}>
-                <ToolHeader type={part.type} state={tool.state} />
-                <ToolContent>
-                  {tool.input && <ToolInput input={tool.input} />}
-                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
-                </ToolContent>
-              </Tool>
-              {tool.state === 'output-available' && (
-                <TiposMovimentacaoResult
-                  success={(tool.output as RowsToolOutput).success}
-                  message={(tool.output as RowsToolOutput).message}
-                  rows={(tool.output as RowsToolOutput).rows}
-                  count={(tool.output as RowsToolOutput).count}
-                  sql_query={(tool.output as RowsToolOutput).sql_query}
-                />
-              )}
-            </div>
-          );
-        }
-
-        if (part.type === 'tool-detectAnomalies') {
-          const tool = part as NexusToolUIPart;
-          return (
-            <div key={tool.toolCallId}>
-              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
-                <ToolHeader type="tool-detectAnomalies" state={tool.state} />
-                <ToolContent>
-                  {tool.input && <ToolInput input={tool.input} />}
-                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
-                </ToolContent>
-              </Tool>
-              {tool.state === 'output-available' && tool.output && (
-                <AnomaliesResult
-                  success={(tool.output as DetectAnomaliesToolOutput).success}
-                  message={(tool.output as DetectAnomaliesToolOutput).message}
-                  periodo_dias={(tool.output as DetectAnomaliesToolOutput).periodo_dias}
-                  data={(tool.output as DetectAnomaliesToolOutput).data}
-                  sql_query={(tool.output as DetectAnomaliesToolOutput).sql_query}
-                />
-              )}
-            </div>
-          );
-        }
-
-        return null;
-      })}
-
-      <Actions className="mt-2">
-        <Action tooltip="Copy message" onClick={handleCopy}>
-          <CopyIcon className="size-4" />
-        </Action>
-        <Action tooltip="Like">
-          <ThumbsUpIcon className="size-4" />
-        </Action>
-        <Action tooltip="Dislike">
-          <ThumbsDownIcon className="size-4" />
-        </Action>
-      </Actions>
-    </div>
-  );
-}
+                  message={(tool.output 
