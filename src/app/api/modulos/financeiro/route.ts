@@ -18,7 +18,6 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
     categoria_financeira: 'cf.nome',
     fornecedor: 'f.nome',
     centro_custo: 'cc.nome',
-    projeto: 'p.nome',
   },
   'contas-a-receber': {
     id: 'lf.id',
@@ -35,8 +34,6 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
     data_pagamento: 'pe.data_lancamento',
     data_vencimento: 'pe.data_vencimento',
     status: 'pe.status',
-    origem_tabela: 'pe.origem_tabela',
-    origem_id: 'pe.origem_id',
     fornecedor: 'f.nome',
     categoria_financeira: 'cat.nome',
     conta_financeira: 'cf.nome_conta',
@@ -222,8 +219,7 @@ export async function GET(req: NextRequest) {
                  LEFT JOIN administrativo.categorias_financeiras cf ON lf.categoria_id = cf.id
                  LEFT JOIN entidades.fornecedores f ON lf.entidade_id = f.id
                  LEFT JOIN empresa.centros_custo cc ON lf.centro_custo_id = cc.id
-                 LEFT JOIN administrativo.projetos p ON lf.origem_tabela = 'despesas' AND lf.origem_id = p.id
-                 LEFT JOIN administrativo.despesas d ON lf.origem_tabela = 'despesas' AND lf.origem_id = d.id`;
+                 LEFT JOIN administrativo.despesas d ON d.id = lf.despesa_id`;
       selectSql = `SELECT 
                         lf.id AS lancamento_id,
                         lf.descricao AS descricao_lancamento,
@@ -232,14 +228,12 @@ export async function GET(req: NextRequest) {
                         lf.data_lancamento,
                         lf.data_vencimento,
                         lf.status,
-                        lf.origem_tabela,
-                        lf.origem_id,
+                        lf.despesa_id,
                         cf.nome AS categoria_financeira,
                         f.nome AS fornecedor,
                         f.imagem_url AS fornecedor_imagem_url,
                         cf.nome AS fornecedor_categoria,
                         cc.nome AS centro_custo,
-                        p.nome AS projeto,
                         d.descricao AS descricao_despesa,
                         d.valor_total AS valor_despesa,
                         d.data_competencia,
@@ -268,8 +262,7 @@ export async function GET(req: NextRequest) {
                         cf.nome_conta AS conta_financeira,
                         cat.nome AS categoria_financeira,
                         f.nome AS fornecedor,
-                        pe.origem_tabela,
-                        pe.origem_id,
+                        pe.despesa_id,
                         pe.criado_em`;
       whereDateCol = 'pe.data_lancamento';
       conditions.push(`pe.tipo = 'pagamento_efetuado'`);
@@ -298,8 +291,7 @@ export async function GET(req: NextRequest) {
                           cat.nome AS cliente_categoria,
                           ent.nome AS cliente,
                           ent.imagem_url AS cliente_imagem_url,
-                          pr.origem_tabela,
-                          pr.origem_id,
+                          pr.despesa_id,
                           pr.criado_em`;
       whereDateCol = 'pr.data_lancamento';
       conditions.push(`pr.tipo = 'pagamento_recebido'`);
@@ -322,8 +314,7 @@ export async function GET(req: NextRequest) {
                           lf.data_lancamento,
                           lf.data_vencimento,
                           lf.status,
-                          lf.origem_tabela,
-                          lf.origem_id,
+                          lf.despesa_id,
                           lf.criado_em`;
       // Filtro principal por data: vencimento
       whereDateCol = 'lf.data_vencimento';

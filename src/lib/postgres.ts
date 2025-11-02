@@ -1,4 +1,4 @@
-import { Pool } from 'pg';
+import { Pool, PoolClient } from 'pg';
 
 let pool: InstanceType<typeof Pool> | null = null;
 
@@ -34,5 +34,22 @@ export async function closePool() {
   if (pool) {
     await pool.end();
     pool = null;
+  }
+}
+
+export async function withTransaction<T>(fn: (client: PoolClient) => Promise<T>): Promise<T> {
+  const client = await getPool().connect();
+  try {
+    await client.query('BEGIN');
+    try {
+      const result = await fn(client);
+      await client.query('COMMIT');
+      return result;
+    } catch (err) {
+      try { await client.query('ROLLBACK'); } catch {}
+      throw err;
+    }
+  } finally {
+    client.release();
   }
 }
