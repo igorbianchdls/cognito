@@ -7,11 +7,12 @@ import DataTable, { type TableData } from '@/components/widgets/Table'
 import type { ColumnDef } from '@tanstack/react-table'
 
 type Row = TableData
+type Origem = 'conta_a_pagar' | 'pagamento_efetuado' | 'conta_a_receber' | 'pagamento_recebido'
 
 export default function ContabilidadeTesterPage() {
   const [tenantId, setTenantId] = useState('1')
   const [categoriaId, setCategoriaId] = useState('')
-  const [origem, setOrigem] = useState<'conta_a_pagar' | 'pagamento_efetuado' | 'conta_a_receber' | 'pagamento_recebido'>('conta_a_pagar')
+  const [origem, setOrigem] = useState<Origem>('conta_a_pagar')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<{ regra?: Record<string, unknown>; rows?: Row[] } | null>(null)
@@ -74,7 +75,7 @@ export default function ContabilidadeTesterPage() {
             <select
               className="h-9 w-full rounded border border-gray-300 px-2 text-sm"
               value={origem}
-              onChange={(e) => setOrigem(e.target.value as any)}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setOrigem(e.target.value as Origem)}
             >
               <option value="conta_a_pagar">conta_a_pagar</option>
               <option value="pagamento_efetuado">pagamento_efetuado</option>
@@ -97,4 +98,3 @@ export default function ContabilidadeTesterPage() {
     </div>
   )
 }
-
