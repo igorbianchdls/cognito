@@ -18,6 +18,8 @@ export default function ContabilidadeTesterPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<{ regra?: Record<string, unknown>; rows?: Row[] } | null>(null)
+  const [genLfId, setGenLfId] = useState('')
+  const [genResult, setGenResult] = useState<{ lcId?: number; linhas?: Row[]; error?: string } | null>(null)
 
   const columns: ColumnDef<Row>[] = useMemo(() => ([
     { accessorKey: 'tipo', header: 'Tipo' },
@@ -59,6 +61,34 @@ export default function ContabilidadeTesterPage() {
       setResult({ regra, rows })
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Falha na consulta')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const genColumns: ColumnDef<Row>[] = useMemo(() => ([
+    { accessorKey: 'id', header: 'Linha' },
+    { accessorKey: 'conta_id', header: 'Conta' },
+    { accessorKey: 'debito', header: 'Débito' },
+    { accessorKey: 'credito', header: 'Crédito' },
+    { accessorKey: 'historico', header: 'Histórico' },
+  ]), [])
+
+  const gerarFromFinanceiro = async () => {
+    setLoading(true)
+    setError(null)
+    setGenResult(null)
+    try {
+      if (!genLfId) throw new Error('Informe o ID do lançamento financeiro (conta_a_pagar)')
+      const res = await fetch('/bigquery-test/contabilidade/lancamentos/from-financeiro', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ lancamento_financeiro_id: Number(genLfId) })
+      })
+      const json = await res.json()
+      if (!res.ok || !json?.success) throw new Error(json?.message || `HTTP ${res.status}`)
+      const linhas = (json.linhas || []) as Row[]
+      setGenResult({ lcId: json.lancamento_contabil_id as number, linhas })
+    } catch (e) {
+      setGenResult({ error: e instanceof Error ? e.message : 'Falha na geração' })
     } finally {
       setLoading(false)
     }
@@ -107,6 +137,26 @@ export default function ContabilidadeTesterPage() {
           <DataTable<Row> columns={columns} data={result.rows} pageSize={5} />
         </div>
       )}
+
+      <div className="space-y-4">
+        <h2 className="text-base font-medium">Gerar contábil a partir do lançamento financeiro (conta_a_pagar)</h2>
+        {genResult?.error && <div className="text-sm text-red-600">{genResult.error}</div>}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div>
+            <label className="text-xs text-gray-600">Lançamento Financeiro ID</label>
+            <Input value={genLfId} onChange={(e) => setGenLfId(e.target.value)} placeholder="ex: 123" />
+          </div>
+        </div>
+        <div>
+          <Button onClick={gerarFromFinanceiro} disabled={loading}>{loading ? 'Gerando...' : 'Gerar contábil'}</Button>
+        </div>
+        {genResult?.linhas && (
+          <div className="space-y-2">
+            <h3 className="text-sm text-gray-700">Lançamento Contábil #{genResult.lcId}</h3>
+            <DataTable<Row> columns={genColumns} data={genResult.linhas} pageSize={10} />
+          </div>
+        )}
+      </div>
     </div>
   )
 }
