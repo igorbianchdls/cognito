@@ -69,8 +69,6 @@ import type { GetCrmOportunidadesOutput, GetCrmAtividadesOutput } from '@/tools/
 import { BarChart3, DollarSign, LineChart, TrendingUp, AlertTriangle, FileText } from 'lucide-react';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
 import type { ColumnDef } from '@tanstack/react-table';
-import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
-import type { ColumnDef } from '@tanstack/react-table';
 import AnaliseDeCampanhas from '../tools/paid-traffic/analiseDeCampanhas';
 import OrganicMarketingDataTable from '../tools/OrganicMarketingDataTable';
 import PaidTrafficDataTable from '../tools/PaidTrafficDataTable';
@@ -6749,4 +6747,100 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   )}
                 </ToolContent>
               </Tool>
-              {p
+              {projetosTool.state === 'output-available' && (
+                <ProjetosDataTable
+                  success={(projetosTool.output as GetProjetosDataToolOutput).success}
+                  count={(projetosTool.output as GetProjetosDataToolOutput).count}
+                  table={(projetosTool.output as GetProjetosDataToolOutput).table}
+                  data={(projetosTool.output as GetProjetosDataToolOutput).data}
+                  message={(projetosTool.output as GetProjetosDataToolOutput).message}
+                  error={(projetosTool.output as GetProjetosDataToolOutput).error}
+                />
+              )}
+            </div>
+          );
+        }
+
+        // Contabilidade: Lançamentos Contábeis
+        if (part.type === 'tool-listarLancamentosContabeis') {
+          const tool = part as NexusToolUIPart;
+          const open = tool.state === 'output-available' || tool.state === 'output-error';
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={open}>
+                <ToolHeader type={part.type} state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && (
+                <LancamentosContabeisResult
+                  success={(tool.output as GenericRowsToolOutput).success}
+                  message={(tool.output as GenericRowsToolOutput).message}
+                  rows={(tool.output as GenericRowsToolOutput).rows as Array<Record<string, unknown>>}
+                  count={(tool.output as GenericRowsToolOutput).count}
+                  sql_query={(tool.output as GenericRowsToolOutput).sql_query}
+                />
+              )}
+            </div>
+          );
+        }
+
+        // Contabilidade: DRE por período
+        if (part.type === 'tool-gerarDRE') {
+          const tool = part as NexusToolUIPart;
+          const open = tool.state === 'output-available' || tool.state === 'output-error';
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={open}>
+                <ToolHeader type={part.type} state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && (
+                <DREContabilResult
+                  success={(tool.output as GenericRowsToolOutput).success}
+                  message={(tool.output as GenericRowsToolOutput).message}
+                  rows={(tool.output as GenericRowsToolOutput).rows as Array<Record<string, unknown>>}
+                  count={(tool.output as GenericRowsToolOutput).count}
+                  sql_query={(tool.output as GenericRowsToolOutput).sql_query}
+                />
+              )}
+            </div>
+          );
+        }
+
+        // Contabilidade: Balanço Patrimonial
+        if (part.type === 'tool-gerarBalancoPatrimonial') {
+          const tool = part as NexusToolUIPart;
+          const open = tool.state === 'output-available' || tool.state === 'output-error';
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={open}>
+                <ToolHeader type={part.type} state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && (
+                <BalancoPatrimonialResult
+                  success={(tool.output as GenericRowsToolOutput).success}
+                  message={(tool.output as GenericRowsToolOutput).message}
+                  rows={(tool.output as GenericRowsToolOutput).rows as Array<Record<string, unknown>>}
+                  count={(tool.output as GenericRowsToolOutput).count}
+                  sql_query={(tool.output as GenericRowsToolOutput).sql_query}
+                />
+              )}
+            </div>
+          );
+        }
+
+        return null;
+      })}
+    </div>
+  );
+}
