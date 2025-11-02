@@ -69,7 +69,13 @@ export default function IntegradoTesterPage() {
     try {
       const res = await fetch('/bigquery-test/administrativo/categorias', { cache: 'no-store' })
       const json = await res.json()
-      setCats((json?.rows || []).map((r: any) => ({ id: r.id, nome: r.nome, tipo: r.tipo, conta_contabil_id: r.conta_contabil_id })))
+      const rows = (json?.rows || []) as Array<Record<string, unknown>>
+      setCats(rows.map((r) => ({
+        id: Number(r['id']),
+        nome: String(r['nome']),
+        tipo: r['tipo'] !== undefined && r['tipo'] !== null ? String(r['tipo']) : undefined,
+        conta_contabil_id: r['conta_contabil_id'] !== undefined && r['conta_contabil_id'] !== null ? Number(r['conta_contabil_id']) : undefined,
+      })))
     } catch {}
   }
 
@@ -195,4 +201,3 @@ export default function IntegradoTesterPage() {
     </div>
   )
 }
-
