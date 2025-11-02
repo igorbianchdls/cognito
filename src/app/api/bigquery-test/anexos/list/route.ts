@@ -31,8 +31,21 @@ export async function GET(req: Request) {
       return Response.json({ success: false, message: 'Falha ao listar anexos', error: error.message }, { status: 500 })
     }
 
+    type AnexoRow = {
+      id: number
+      documento_id: number | null
+      nome_arquivo: string | null
+      tipo_arquivo: string | null
+      arquivo_url: string | null
+      tamanho_bytes: number | null
+      criado_em: string | null
+      [key: string]: unknown
+    }
+
+    const baseRows: AnexoRow[] = (data ?? []) as unknown as AnexoRow[]
+
     // Assinar URLs
-    const rows = await Promise.all((data || []).map(async (r: any) => {
+    const rows = await Promise.all(baseRows.map(async (r) => {
       if (r.arquivo_url) {
         const { data: signed } = await supabase
           .storage
@@ -49,4 +62,3 @@ export async function GET(req: Request) {
     return Response.json({ success: false, message: 'Erro interno', error: error instanceof Error ? error.message : 'Erro desconhecido' }, { status: 500 })
   }
 }
-

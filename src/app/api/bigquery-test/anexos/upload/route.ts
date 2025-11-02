@@ -47,7 +47,7 @@ export async function POST(req: Request) {
         nome_arquivo: originalName,
         tipo_arquivo: file.type || null,
         arquivo_url: path, // armazenamos o caminho no storage
-        tamanho_bytes: (file as any).size ?? null,
+        tamanho_bytes: typeof file.size === 'number' ? file.size : null,
       }])
       .select()
 
@@ -70,4 +70,3 @@ export async function POST(req: Request) {
     return Response.json({ success: false, message: 'Erro interno', error: error instanceof Error ? error.message : 'Erro desconhecido' }, { status: 500 })
   }
 }
-
