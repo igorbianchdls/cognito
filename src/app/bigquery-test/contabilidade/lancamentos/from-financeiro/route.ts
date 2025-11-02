@@ -90,11 +90,11 @@ export async function POST(req: NextRequest) {
       const lcId: number = Number(lcRes.rows[0]?.id)
 
       const histLinha = historico
-      const insertLinhaSql = `INSERT INTO contabilidade.lancamentos_contabeis_linhas (lancamento_id, conta_id, debito, credito, historico) VALUES ($1, $2, $3, $4, $5)`
+      const insertLinhaSql = `INSERT INTO contabilidade.lancamentos_contabeis_linhas (lancamento_id, lancamento_contabil_id, conta_id, debito, credito, historico) VALUES ($1, $2, $3, $4, $5, $6)`
       // Débito
-      await client.query(insertLinhaSql, [lcId, contaDebitoId, valorAbs, 0, histLinha])
+      await client.query(insertLinhaSql, [lcId, lcId, contaDebitoId, valorAbs, 0, histLinha])
       // Crédito
-      await client.query(insertLinhaSql, [lcId, contaCreditoId, 0, valorAbs, histLinha])
+      await client.query(insertLinhaSql, [lcId, lcId, contaCreditoId, 0, valorAbs, histLinha])
 
       const linhas = await client.query(
         `SELECT id, conta_id, debito, credito, historico FROM contabilidade.lancamentos_contabeis_linhas WHERE lancamento_id = $1 ORDER BY id ASC`,
