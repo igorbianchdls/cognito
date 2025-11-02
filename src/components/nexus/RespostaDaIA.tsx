@@ -67,6 +67,10 @@ import OportunidadesResult from './tools/crm/OportunidadesResult';
 import AtividadesResult from './tools/crm/AtividadesResult';
 import type { GetCrmOportunidadesOutput, GetCrmAtividadesOutput } from '@/tools/crmTools';
 import { BarChart3, DollarSign, LineChart, TrendingUp, AlertTriangle, FileText } from 'lucide-react';
+import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
+import type { ColumnDef } from '@tanstack/react-table';
+import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
+import type { ColumnDef } from '@tanstack/react-table';
 import AnaliseDeCampanhas from '../tools/paid-traffic/analiseDeCampanhas';
 import OrganicMarketingDataTable from '../tools/OrganicMarketingDataTable';
 import PaidTrafficDataTable from '../tools/PaidTrafficDataTable';
@@ -167,6 +171,126 @@ import DesempenhoPorDiaDaSemanaResult from '../tools/paid-traffic/DesempenhoPorD
 import DeteccaoAnomaliasROASResult from '../tools/paid-traffic/DeteccaoAnomaliasROASResult';
 import DeteccaoAnomaliasTaxaConversaoResult from '../tools/paid-traffic/DeteccaoAnomaliasTaxaConversaoResult';
 import AdPerformanceForecastResult from '../tools/paid-traffic/AdPerformanceForecastResult';
+
+// Contabilidade — componentes dedicados (inline)
+type LancRow = Record<string, unknown> & {
+  lancamento_id?: number | string;
+  data_lancamento?: string;
+  historico?: string;
+  linha_id?: number | string;
+  conta_codigo?: string;
+  conta_nome?: string;
+  debito?: number;
+  credito?: number;
+  total_debitos?: number;
+  total_creditos?: number;
+  historico_linha?: string;
+};
+
+function LancamentosContabeisResult({ success, message, rows = [], count, sql_query }: { success: boolean; message: string; rows?: LancRow[]; count?: number; sql_query?: string }) {
+  const columns: ColumnDef<LancRow>[] = [
+    { accessorKey: 'data_lancamento', header: 'Data', cell: ({ row }) => {
+      const d = row.original.data_lancamento as string | undefined;
+      return d ? new Date(d).toLocaleDateString('pt-BR') : '-';
+    } },
+    { accessorKey: 'lancamento_id', header: 'Lançamento' },
+    { accessorKey: 'linha_id', header: 'Linha' },
+    { accessorKey: 'conta', header: 'Conta', cell: ({ row }) => {
+      const cod = row.original.conta_codigo || '';
+      const nome = row.original.conta_nome || '';
+      const label = String(cod ? `${cod} - ${nome}` : (nome || '-'));
+      return <span className="text-sm">{label}</span>;
+    } },
+    { accessorKey: 'debito', header: 'Débito', cell: ({ row }) => {
+      const v = Number(row.original.debito || 0);
+      return v ? v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-';
+    } },
+    { accessorKey: 'credito', header: 'Crédito', cell: ({ row }) => {
+      const v = Number(row.original.credito || 0);
+      return v ? v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-';
+    } },
+    { accessorKey: 'historico', header: 'Histórico' },
+    { accessorKey: 'historico_linha', header: 'Histórico da linha' },
+    { accessorKey: 'total_debitos', header: 'Total Débitos', cell: ({ row }) => {
+      const v = Number(row.original.total_debitos || 0);
+      return v ? v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-';
+    } },
+    { accessorKey: 'total_creditos', header: 'Total Créditos', cell: ({ row }) => {
+      const v = Number(row.original.total_creditos || 0);
+      return v ? v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-';
+    } },
+  ];
+
+  return (
+    <ArtifactDataTable
+      data={rows as LancRow[]}
+      columns={columns}
+      title="Lançamentos Contábeis"
+      icon={FileText}
+      iconColor="text-blue-600"
+      message={message}
+      success={success}
+      count={typeof count === 'number' ? count : (rows?.length ?? 0)}
+      exportFileName="lancamentos-contabeis"
+      pageSize={20}
+      sqlQuery={sql_query}
+    />
+  );
+}
+
+type DRERow = Record<string, unknown> & { periodo_key?: string; periodo?: string; grupo?: string; valor?: number };
+function DREContabilResult({ success, message, rows = [], count, sql_query }: { success: boolean; message: string; rows?: DRERow[]; count?: number; sql_query?: string }) {
+  const columns: ColumnDef<DRERow>[] = [
+    { accessorKey: 'periodo', header: 'Período' },
+    { accessorKey: 'grupo', header: 'Grupo' },
+    { accessorKey: 'valor', header: 'Valor', cell: ({ row }) => {
+      const v = Number(row.original.valor || 0);
+      return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    } },
+  ];
+  return (
+    <ArtifactDataTable
+      data={rows as DRERow[]}
+      columns={columns}
+      title="DRE (Resultados por período)"
+      icon={BarChart3}
+      iconColor="text-emerald-600"
+      message={message}
+      success={success}
+      count={typeof count === 'number' ? count : (rows?.length ?? 0)}
+      exportFileName="dre"
+      pageSize={20}
+      sqlQuery={sql_query}
+    />
+  );
+}
+
+type BPRow = Record<string, unknown> & { grupo?: string; codigo?: string; nome?: string; saldo_inicial?: number; movimentos?: number; saldo_final?: number };
+function BalancoPatrimonialResult({ success, message, rows = [], count, sql_query }: { success: boolean; message: string; rows?: BPRow[]; count?: number; sql_query?: string }) {
+  const columns: ColumnDef<BPRow>[] = [
+    { accessorKey: 'grupo', header: 'Grupo' },
+    { accessorKey: 'codigo', header: 'Código' },
+    { accessorKey: 'nome', header: 'Conta' },
+    { accessorKey: 'saldo_inicial', header: 'Saldo Inicial', cell: ({ row }) => Number(row.original.saldo_inicial || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) },
+    { accessorKey: 'movimentos', header: 'Movimentos', cell: ({ row }) => Number(row.original.movimentos || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) },
+    { accessorKey: 'saldo_final', header: 'Saldo Final', cell: ({ row }) => Number(row.original.saldo_final || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) },
+  ];
+  return (
+    <ArtifactDataTable
+      data={rows as BPRow[]}
+      columns={columns}
+      title="Balanço Patrimonial"
+      icon={BarChart3}
+      iconColor="text-indigo-600"
+      message={message}
+      success={success}
+      count={typeof count === 'number' ? count : (rows?.length ?? 0)}
+      exportFileName="balanco-patrimonial"
+      pageSize={20}
+      sqlQuery={sql_query}
+    />
+  );
+}
 
 interface ReasoningPart {
   type: 'reasoning';
@@ -6625,206 +6749,4 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   )}
                 </ToolContent>
               </Tool>
-              {projetosTool.state === 'output-available' && (
-                <ProjetosDataTable
-                  success={(projetosTool.output as GetProjetosDataToolOutput).success}
-                  count={(projetosTool.output as GetProjetosDataToolOutput).count}
-                  table={(projetosTool.output as GetProjetosDataToolOutput).table}
-                  data={(projetosTool.output as GetProjetosDataToolOutput).data}
-                  message={(projetosTool.output as GetProjetosDataToolOutput).message}
-                  error={(projetosTool.output as GetProjetosDataToolOutput).error}
-                />
-              )}
-            </div>
-          );
-        }
-
-        if (part.type === 'tool-getFuncionariosData') {
-          const funcionariosTool = part as NexusToolUIPart;
-          const callId = funcionariosTool.toolCallId;
-          const shouldBeOpen = funcionariosTool.state === 'output-available' || funcionariosTool.state === 'output-error';
-
-          return (
-            <div key={callId}>
-              <Tool defaultOpen={shouldBeOpen}>
-                <ToolHeader type="tool-getFuncionariosData" state={funcionariosTool.state} />
-                <ToolContent>
-                  {funcionariosTool.input && (
-                    <ToolInput input={funcionariosTool.input} />
-                  )}
-                  {funcionariosTool.state === 'output-error' && (
-                    <ToolOutput
-                      output={null}
-                      errorText={funcionariosTool.errorText}
-                    />
-                  )}
-                </ToolContent>
-              </Tool>
-              {funcionariosTool.state === 'output-available' && (
-                <FuncionariosDataTable
-                  success={(funcionariosTool.output as GetFuncionariosDataToolOutput).success}
-                  count={(funcionariosTool.output as GetFuncionariosDataToolOutput).count}
-                  table={(funcionariosTool.output as GetFuncionariosDataToolOutput).table}
-                  data={(funcionariosTool.output as GetFuncionariosDataToolOutput).data}
-                  message={(funcionariosTool.output as GetFuncionariosDataToolOutput).message}
-                  error={(funcionariosTool.output as GetFuncionariosDataToolOutput).error}
-                />
-              )}
-            </div>
-          );
-        }
-
-        // Contabilidade: Lançamentos Contábeis
-        if (part.type === 'tool-listarLancamentosContabeis') {
-          const tool = part as NexusToolUIPart;
-          const open = tool.state === 'output-available' || tool.state === 'output-error';
-          return (
-            <div key={tool.toolCallId}>
-              <Tool defaultOpen={open}>
-                <ToolHeader type={part.type} state={tool.state} />
-                <ToolContent>
-                  {tool.input && <ToolInput input={tool.input} />}
-                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
-                </ToolContent>
-              </Tool>
-              {tool.state === 'output-available' && (
-                <GenericResultTable
-                  title="Lançamentos Contábeis"
-                  icon={FileText}
-                  iconColor="text-blue-600"
-                  success={(tool.output as GenericRowsToolOutput).success}
-                  message={(tool.output as GenericRowsToolOutput).message}
-                  rows={(tool.output as GenericRowsToolOutput).rows as Array<Record<string, unknown>>}
-                  count={(tool.output as GenericRowsToolOutput).count}
-                  sql_query={(tool.output as GenericRowsToolOutput).sql_query}
-                />
-              )}
-            </div>
-          );
-        }
-
-        // Contabilidade: DRE por período
-        if (part.type === 'tool-gerarDRE') {
-          const tool = part as NexusToolUIPart;
-          const open = tool.state === 'output-available' || tool.state === 'output-error';
-          return (
-            <div key={tool.toolCallId}>
-              <Tool defaultOpen={open}>
-                <ToolHeader type={part.type} state={tool.state} />
-                <ToolContent>
-                  {tool.input && <ToolInput input={tool.input} />}
-                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
-                </ToolContent>
-              </Tool>
-              {tool.state === 'output-available' && (
-                <GenericResultTable
-                  title="DRE (Resultados por período)"
-                  icon={BarChart3}
-                  iconColor="text-emerald-600"
-                  success={(tool.output as GenericRowsToolOutput).success}
-                  message={(tool.output as GenericRowsToolOutput).message}
-                  rows={(tool.output as GenericRowsToolOutput).rows as Array<Record<string, unknown>>}
-                  count={(tool.output as GenericRowsToolOutput).count}
-                  sql_query={(tool.output as GenericRowsToolOutput).sql_query}
-                />
-              )}
-            </div>
-          );
-        }
-
-        // Contabilidade: Balanço Patrimonial
-        if (part.type === 'tool-gerarBalancoPatrimonial') {
-          const tool = part as NexusToolUIPart;
-          const open = tool.state === 'output-available' || tool.state === 'output-error';
-          return (
-            <div key={tool.toolCallId}>
-              <Tool defaultOpen={open}>
-                <ToolHeader type={part.type} state={tool.state} />
-                <ToolContent>
-                  {tool.input && <ToolInput input={tool.input} />}
-                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
-                </ToolContent>
-              </Tool>
-              {tool.state === 'output-available' && (
-                <GenericResultTable
-                  title="Balanço Patrimonial"
-                  icon={BarChart3}
-                  iconColor="text-indigo-600"
-                  success={(tool.output as GenericRowsToolOutput).success}
-                  message={(tool.output as GenericRowsToolOutput).message}
-                  rows={(tool.output as GenericRowsToolOutput).rows as Array<Record<string, unknown>>}
-                  count={(tool.output as GenericRowsToolOutput).count}
-                  sql_query={(tool.output as GenericRowsToolOutput).sql_query}
-                />
-              )}
-            </div>
-          );
-        }
-
-        // Gestor de Funcionários — novas tools (SQL)
-        if (part.type === 'tool-listarFuncionariosRH') {
-          const tool = part as NexusToolUIPart;
-          const open = tool.state === 'output-available' || tool.state === 'output-error';
-          return (
-            <div key={tool.toolCallId}>
-              <Tool defaultOpen={open}>
-                <ToolHeader type={part.type} state={tool.state} />
-                <ToolContent>
-                  {tool.input && <ToolInput input={tool.input} />}
-                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
-                </ToolContent>
-              </Tool>
-              {tool.state === 'output-available' && (
-                <FuncionariosResult
-                  success={(tool.output as RowsToolOutput).success}
-                  message={(tool.output as RowsToolOutput).message}
-                  rows={(tool.output as RowsToolOutput).rows}
-                  count={(tool.output as RowsToolOutput).count}
-                  sql_query={(tool.output as RowsToolOutput).sql_query}
-                />
-              )}
-            </div>
-          );
-        }
-
-        if (part.type === 'tool-listarDepartamentosRH') {
-          const tool = part as NexusToolUIPart;
-          const open = tool.state === 'output-available' || tool.state === 'output-error';
-          return (
-            <div key={tool.toolCallId}>
-              <Tool defaultOpen={open}>
-                <ToolHeader type={part.type} state={tool.state} />
-                <ToolContent>
-                  {tool.input && <ToolInput input={tool.input} />}
-                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
-                </ToolContent>
-              </Tool>
-              {tool.state === 'output-available' && (
-                <DepartamentosResult
-                  success={(tool.output as RowsToolOutput).success}
-                  message={(tool.output as RowsToolOutput).message}
-                  rows={(tool.output as RowsToolOutput).rows}
-                  count={(tool.output as RowsToolOutput).count}
-                  sql_query={(tool.output as RowsToolOutput).sql_query}
-                />
-              )}
-            </div>
-          );
-        }
-
-        if (part.type === 'tool-listarCargosRH') {
-          const tool = part as NexusToolUIPart;
-          const open = tool.state === 'output-available' || tool.state === 'output-error';
-          return (
-            <div key={tool.toolCallId}>
-              <Tool defaultOpen={open}>
-                <ToolHeader type={part.type} state={tool.state} />
-                <ToolContent>
-                  {tool.input && <ToolInput input={tool.input} />}
-                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
-                </ToolContent>
-              </Tool>
-              {tool.state === 'output-available' && (
-                <CargosResult
-                  success={(tool.output as RowsToolOutput).success}
-                  message={(tool.output 
+              {p
