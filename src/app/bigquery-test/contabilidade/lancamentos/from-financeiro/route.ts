@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
         RETURNING id`;
       const lcVals = [tenantId, dataLanc, historico, fornecedorId, contaFinanceiraId, valorAbs, lfId]
       const lcRes = await client.query(insertLcSql, lcVals)
-      const lcId: number = lcRes.rows[0].id
+      const lcId: number = Number(lcRes.rows[0]?.id)
 
       const histLinha = historico
       const insertLinhaSql = `INSERT INTO contabilidade.lancamentos_contabeis_linhas (lancamento_id, conta_id, debito, credito, historico) VALUES ($1, $2, $3, $4, $5)`
@@ -109,4 +109,3 @@ export async function POST(req: NextRequest) {
     return Response.json({ success: false, message: e instanceof Error ? e.message : 'Erro desconhecido' }, { status: 500 })
   }
 }
-
