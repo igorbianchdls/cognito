@@ -1,4 +1,5 @@
-import { Pool, PoolClient } from 'pg';
+import { Pool } from 'pg';
+type PoolClient = import('pg').PoolClient;
 
 let pool: InstanceType<typeof Pool> | null = null;
 
