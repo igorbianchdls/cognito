@@ -37,6 +37,8 @@ export default function AnexosPage() {
   const [docAnexos, setDocAnexos] = useState<Anexo[]>([])
   const [docAnexosLoading, setDocAnexosLoading] = useState(false)
   const [rowUploadBusy, setRowUploadBusy] = useState<number | null>(null)
+  const [selectedView, setSelectedView] = useState<'fiscal'|'financeiro'|'operacional'|'juridico'|'comercial'|'rh'|'contratos'|'outros'>('financeiro')
+  const [uploadDocumentoId, setUploadDocumentoId] = useState<string>('')
 
 
   const handleUpload = async (overrideFile?: File) => {
@@ -93,11 +95,11 @@ export default function AnexosPage() {
     } finally { setLoading(false) }
   }
 
-  const fetchFinanceDocs = async () => {
+  const fetchDocs = async () => {
     try {
       setDocsLoading(true)
       const params = new URLSearchParams()
-      params.set('view', 'financeiro')
+      params.set('view', selectedView)
       params.set('page', '1')
       params.set('pageSize', '20')
       const res = await fetch(`/api/modulos/documentos?${params.toString()}`, { cache: 'no-store' })
@@ -169,14 +171,14 @@ export default function AnexosPage() {
   }
 
   useEffect(() => {
-    // carregar documentos financeiros na abertura
-    fetchFinanceDocs().catch(() => {})
-  }, [])
+    // carregar documentos conforme view selecionado
+    fetchDocs().catch(() => {})
+  }, [selectedView])
 
   return (
     <div className="max-w-3xl mx-auto p-6">
       <h1 className="text-xl font-semibold mb-4">Anexos (bigquery-test)</h1>
-      <div className="flex items-center gap-2 mb-4">
+      <div className="flex items-center gap-4 mb-4">
         <div className="flex items-center gap-2">
           <label className="text-sm">Modo:</label>
           <select
@@ -188,6 +190,17 @@ export default function AnexosPage() {
             <option value="upload">Enviar arquivo</option>
           </select>
         </div>
+        {mode === 'upload' && (
+          <div className="flex items-center gap-2">
+            <label className="text-sm">Documento ID (opcional):</label>
+            <input
+              className="border rounded px-2 py-1 text-sm w-40"
+              placeholder="ex: 123"
+              value={uploadDocumentoId}
+              onChange={(e) => setUploadDocumentoId(e.target.value)}
+            />
+          </div>
+        )}
       </div>
 
       {mode === 'upload' ? (
@@ -199,7 +212,13 @@ export default function AnexosPage() {
               onChange={(e) => {
                 const f = e.target.files?.[0]
                 if (f) {
-                  handleUpload(f)
+                  // Se o usuário informou um documento_id, envia para o endpoint de anexos por documento
+                  const docIdNum = Number((uploadDocumentoId || '').trim())
+                  if (docIdNum && !Number.isNaN(docIdNum)) {
+                    uploadForDocumento(docIdNum, f)
+                  } else {
+                    handleUpload(f)
+                  }
                 }
                 e.currentTarget.value = ''
               }}
@@ -285,7 +304,24 @@ export default function AnexosPage() {
         </table>
       </div>
 
-      <h2 className="text-lg font-semibold mt-8 mb-3">Documentos Financeiros</h2>
+      <div className="flex items-center gap-2 mt-8 mb-3">
+        <h2 className="text-lg font-semibold">Documentos</h2>
+        <span className="text-sm text-gray-600">(view)</span>
+        <select
+          className="border rounded px-2 py-1 text-sm"
+          value={selectedView}
+          onChange={(e) => setSelectedView(e.target.value as any)}
+        >
+          <option value="financeiro">Financeiro</option>
+          <option value="fiscal">Fiscal</option>
+          <option value="operacional">Operacional</option>
+          <option value="juridico">Jurídico</option>
+          <option value="comercial">Comercial</option>
+          <option value="rh">RH</option>
+          <option value="contratos">Contratos</option>
+          <option value="outros">Outros</option>
+        </select>
+      </div>
       <div className="border rounded">
         <table className="w-full text-sm">
           <thead className="bg-gray-50">
