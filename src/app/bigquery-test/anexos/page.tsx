@@ -63,6 +63,20 @@ export default function AnexosPage() {
     }
   }
 
+  const refreshFromStorage = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      const res = await fetch('/api/bigquery-test/anexos/storage-list?prefix=uploads', { cache: 'no-store' })
+      const json = await res.json()
+      if (!json?.success) throw new Error(json?.message || 'Falha ao listar storage')
+      setRows(Array.isArray(json.rows) ? json.rows : [])
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Erro ao listar storage')
+      setRows([])
+    } finally { setLoading(false) }
+  }
+
   return (
     <div className="max-w-3xl mx-auto p-6">
       <h1 className="text-xl font-semibold mb-4">Anexos (bigquery-test)</h1>
@@ -125,6 +139,15 @@ export default function AnexosPage() {
           />
         </div>
       )}
+      <div className="mb-4">
+        <button
+          className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+          onClick={refreshFromStorage}
+          disabled={loading}
+        >
+          Atualizar (Storage)
+        </button>
+      </div>
       {error && <div className="text-red-600 text-sm mb-3">{error}</div>}
       <div className="border rounded">
         <table className="w-full text-sm">
