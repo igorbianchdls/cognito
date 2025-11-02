@@ -38,7 +38,7 @@ export default function AnexosPage() {
   const [docAnexosLoading, setDocAnexosLoading] = useState(false)
   const [rowUploadBusy, setRowUploadBusy] = useState<number | null>(null)
   const [selectedView, setSelectedView] = useState<'fiscal'|'financeiro'|'operacional'|'juridico'|'comercial'|'rh'|'contratos'|'outros'>('financeiro')
-  const [uploadDocumentoId, setUploadDocumentoId] = useState<string>('')
+  const [selectedDocumentoId, setSelectedDocumentoId] = useState<string>('')
 
 
   const handleUpload = async (overrideFile?: File) => {
@@ -192,13 +192,19 @@ export default function AnexosPage() {
         </div>
         {mode === 'upload' && (
           <div className="flex items-center gap-2">
-            <label className="text-sm">Documento ID (opcional):</label>
-            <input
-              className="border rounded px-2 py-1 text-sm w-40"
-              placeholder="ex: 123"
-              value={uploadDocumentoId}
-              onChange={(e) => setUploadDocumentoId(e.target.value)}
-            />
+            <label className="text-sm">Documento (opcional):</label>
+            <select
+              className="border rounded px-2 py-1 text-sm w-72"
+              value={selectedDocumentoId}
+              onChange={(e) => setSelectedDocumentoId(e.target.value)}
+            >
+              <option value="">Selecione um documento…</option>
+              {docs.map((d) => (
+                <option key={d.documento_id} value={String(d.documento_id)}>
+                  #{d.documento_id} — {d.tipo_documento || 'Doc'} {d.numero ? `(${d.numero})` : ''} {d.status ? `- ${d.status}` : ''}
+                </option>
+              ))}
+            </select>
           </div>
         )}
       </div>
@@ -212,8 +218,8 @@ export default function AnexosPage() {
               onChange={(e) => {
                 const f = e.target.files?.[0]
                 if (f) {
-                  // Se o usuário informou um documento_id, envia para o endpoint de anexos por documento
-                  const docIdNum = Number((uploadDocumentoId || '').trim())
+                  // Se o usuário selecionou um documento, envia para o endpoint de anexos por documento
+                  const docIdNum = Number((selectedDocumentoId || '').trim())
                   if (docIdNum && !Number.isNaN(docIdNum)) {
                     uploadForDocumento(docIdNum, f)
                   } else {
