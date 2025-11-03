@@ -78,13 +78,15 @@ export async function GET(req: Request) {
 
     // Sign URLs
     const rows = await Promise.all(files.map(async (f) => {
-      const { data: signed } = await supabase.storage.from('documentos').createSignedUrl(f.path, 60 * 5)
+      const { data: openSigned } = await supabase.storage.from('documentos').createSignedUrl(f.path, 60 * 5)
+      const { data: downloadSigned } = await supabase.storage.from('documentos').createSignedUrl(f.path, 60 * 5, { download: f.name })
       return {
         nome_arquivo: f.name,
         tipo_arquivo: f.mimeType ?? null,
         tamanho_bytes: f.size ?? null,
         criado_em: f.updated_at ?? null,
-        signed_url: signed?.signedUrl,
+        signed_url: openSigned?.signedUrl,
+        download_url: downloadSigned?.signedUrl,
       }
     }))
 

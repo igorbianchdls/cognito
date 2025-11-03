@@ -11,6 +11,7 @@ type Anexo = {
   tamanho_bytes?: number
   criado_em?: string
   signed_url?: string
+  download_url?: string
 }
 
 type FinanceiroDoc = {
@@ -332,8 +333,15 @@ export default function AnexosPage() {
                 <td className="p-2">{typeof r.tamanho_bytes === 'number' ? `${r.tamanho_bytes} bytes` : '-'}</td>
                 <td className="p-2">{r.criado_em ? new Date(r.criado_em).toLocaleString('pt-BR') : '-'}</td>
                 <td className="p-2">
-                  {r.signed_url ? (
-                    <a href={r.signed_url} target="_blank" rel="noreferrer" className="text-blue-600 underline">Abrir</a>
+                  {r.signed_url || r.download_url ? (
+                    <div className="flex items-center gap-3">
+                      {r.signed_url && (
+                        <a href={r.signed_url} target="_blank" rel="noreferrer" className="text-blue-600 underline">Abrir</a>
+                      )}
+                      {r.download_url && (
+                        <a href={r.download_url} target="_blank" rel="noreferrer" className="text-blue-600 underline">Baixar</a>
+                      )}
+                    </div>
                   ) : '-'}
                 </td>
               </tr>
