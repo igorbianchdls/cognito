@@ -35,7 +35,13 @@ export default function WorkflowsPage() {
   const filteredData = useMemo(() => {
     let arr = [...workflowsMock]
     if (activeCategory !== 'todos') {
-      arr = arr.filter(w => (w.category || 'outros') === activeCategory)
+      const statusMap: Record<'ativos' | 'rascunhos' | 'pausados', 'ativo' | 'rascunho' | 'pausado'> = {
+        ativos: 'ativo',
+        rascunhos: 'rascunho',
+        pausados: 'pausado',
+      }
+      const desired = statusMap[activeCategory]
+      arr = arr.filter(w => w.status === desired)
     }
     if (filters.q) {
       const term = filters.q.toLowerCase()
