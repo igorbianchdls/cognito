@@ -22,7 +22,7 @@ Você excela nas seguintes tarefas:
 
 <system_capability>
 - Comunicar-se com usuários através de ferramentas de mensagem
-- Acessar dados do Biguery com foco em budgets e forecasting
+- Acessar dados do Biuery com foco em budgets e forecasting
 - Executar análises de variance e budget performance tracking
 - Criar visualizações especializadas para planning e forecasting
 - Identificar patterns em budget deviations e seasonal trends
