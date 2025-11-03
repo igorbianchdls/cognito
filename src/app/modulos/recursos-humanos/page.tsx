@@ -12,9 +12,10 @@ import TabsNav from '@/components/modulos/TabsNav'
 import DataTable, { type TableData } from '@/components/widgets/Table'
 import DataToolbar from '@/components/modulos/DataToolbar'
 import StatusBadge from '@/components/modulos/StatusBadge'
+import EntityDisplay from '@/components/modulos/EntityDisplay'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/stores/modulos/moduleUiStore'
 import type { Opcao } from '@/components/modulos/TabsNav'
-import { Users, Briefcase, Building, CalendarDays } from 'lucide-react'
+import { Users, CalendarDays } from 'lucide-react'
 import FuncionarioEditorSheet from '@/components/modulos/rh/FuncionarioEditorSheet'
 
 type Row = TableData
@@ -82,26 +83,7 @@ export default function ModulosRecursosHumanosPage() {
     }
   }
 
-  const getColorFromName = (name: string) => {
-    let hash = 0
-    for (let i = 0; i < name.length; i++) {
-      hash = name.charCodeAt(i) + ((hash << 5) - hash)
-    }
-
-    const colors = [
-      { bg: '#DBEAFE', text: '#1E40AF' },
-      { bg: '#DCFCE7', text: '#15803D' },
-      { bg: '#FEF3C7', text: '#B45309' },
-      { bg: '#FCE7F3', text: '#BE185D' },
-      { bg: '#E0E7FF', text: '#4338CA' },
-      { bg: '#FED7AA', text: '#C2410C' },
-      { bg: '#E9D5FF', text: '#7C3AED' },
-      { bg: '#D1FAE5', text: '#047857' },
-    ]
-
-    const index = Math.abs(hash) % colors.length
-    return colors[index]
-  }
+  
 
   const openEditor = (row: Row) => {
     const id = row['id']
@@ -127,7 +109,7 @@ export default function ModulosRecursosHumanosPage() {
           { accessorKey: 'tipo_de_contrato', header: 'Tipo de Contrato' },
           { accessorKey: 'admissao', header: 'Admissão', cell: ({ row }) => formatDate(row.original['admissao']) },
           { accessorKey: 'demissao', header: 'Demissão', cell: ({ row }) => formatDate(row.original['demissao']) },
-          { accessorKey: 'status', header: 'Status' },
+          { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
         ]
       case 'historico-salarial':
         return [
@@ -142,7 +124,7 @@ export default function ModulosRecursosHumanosPage() {
         return [
           { accessorKey: 'id', header: 'ID' },
           { accessorKey: 'tipo_de_ausencia', header: 'Tipo de Ausência' },
-          { accessorKey: 'desconta_saldo_ferias', header: 'Desconta do Saldo de Férias' },
+          { accessorKey: 'desconta_saldo_ferias', header: 'Desconta do Saldo de Férias', cell: ({ row }) => <StatusBadge value={row.original['desconta_saldo_ferias']} type="bool" /> },
         ]
       case 'funcionarios':
       default:
@@ -153,42 +135,15 @@ export default function ModulosRecursosHumanosPage() {
             header: 'Funcionário',
             size: 250,
             minSize: 200,
-            cell: ({ row }) => {
-              const nome = row.original['funcionario'] || 'Sem nome'
-              const cargo = row.original['cargo'] || 'Sem cargo'
-              const imagemUrl = row.original['funcionario_imagem_url']
-              const colors = getColorFromName(String(nome))
-
-              return (
-                <div className="flex items-center">
-                  <div
-                    className="flex items-center justify-center mr-3 cursor-pointer"
-                    role="button"
-                    onClick={() => openEditor(row.original)}
-                    style={{ width: 40, height: 40, borderRadius: 8, overflow: 'hidden', backgroundColor: imagemUrl ? 'transparent' : colors.bg }}
-                  >
-                    {imagemUrl ? (
-                      <img src={String(imagemUrl)} alt={String(nome)} className="w-full h-full object-cover" />
-                    ) : (
-                      <div style={{ fontSize: 18, fontWeight: 600, color: colors.text }}>
-                        {String(nome)?.charAt(0)?.toUpperCase() || '?'}
-                      </div>
-                    )}
-                  </div>
-                  <div>
-                    <button
-                      type="button"
-                      onClick={() => openEditor(row.original)}
-                      className="text-left"
-                      style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}
-                    >
-                      {String(nome)}
-                    </button>
-                    <div style={{ fontSize: 12, fontWeight: 400, color: '#6b7280' }}>{String(cargo)}</div>
-                  </div>
-                </div>
-              )
-            }
+            cell: ({ row }) => (
+              <EntityDisplay
+                name={row.original['funcionario'] ? String(row.original['funcionario']) : 'Sem nome'}
+                subtitle={row.original['cargo'] ? String(row.original['cargo']) : 'Sem cargo'}
+                imageUrl={row.original['funcionario_imagem_url'] ? String(row.original['funcionario_imagem_url']) : undefined}
+                onClick={() => openEditor(row.original)}
+                clickable
+              />
+            )
           },
           { accessorKey: 'cargo', header: 'Cargo' },
           {
@@ -201,26 +156,12 @@ export default function ModulosRecursosHumanosPage() {
             header: 'Gestor Direto',
             size: 250,
             minSize: 200,
-            cell: ({ row }) => {
-              const nome = row.original['gestor_direto'] || 'Sem gestor'
-              const subtitulo = row.original['cargo_gestor'] || 'Sem cargo'
-              const colors = getColorFromName(String(nome))
-
-              return (
-                <div className="flex items-center">
-                  <div className="flex items-center justify-center mr-3"
-                       style={{ width: 40, height: 40, borderRadius: 8, overflow: 'hidden', backgroundColor: colors.bg }}>
-                    <div style={{ fontSize: 18, fontWeight: 600, color: colors.text }}>
-                      {String(nome)?.charAt(0)?.toUpperCase() || '?'}
-                    </div>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}>{String(nome)}</div>
-                    <div style={{ fontSize: 12, fontWeight: 400, color: '#6b7280' }}>{String(subtitulo)}</div>
-                  </div>
-                </div>
-              )
-            }
+            cell: ({ row }) => (
+              <EntityDisplay
+                name={row.original['gestor_direto'] ? String(row.original['gestor_direto']) : 'Sem gestor'}
+                subtitle={row.original['cargo_gestor'] ? String(row.original['cargo_gestor']) : 'Sem cargo'}
+              />
+            )
           },
           { accessorKey: 'email_corporativo', header: 'E-mail Corporativo' },
           { accessorKey: 'telefone', header: 'Telefone' },
