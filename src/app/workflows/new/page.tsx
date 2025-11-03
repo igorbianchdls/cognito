@@ -36,7 +36,7 @@ export default function NewWorkflowPage() {
   return (
     <SidebarProvider defaultOpen={false}>
       <SidebarShadcn />
-      <SidebarInset className="h-screen flex flex-col bg-white">
+      <SidebarInset className="h-screen flex flex-col bg-white builder-scope">
         <BuilderHeader
           name={name}
           onRename={setName}

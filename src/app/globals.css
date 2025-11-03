@@ -304,3 +304,9 @@ body:has([data-page="nexus"]) {
   background-image: radial-gradient(#E5E7EB 1px, transparent 1px);
   background-size: 16px 16px;
 }
+
+/* Builder: force Inter font with -0.02em letter-spacing across scope */
+.builder-scope, .builder-scope * {
+  font-family: var(--font-inter) !important;
+  letter-spacing: -0.02em !important;
+}
