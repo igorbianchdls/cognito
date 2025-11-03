@@ -11,7 +11,7 @@ import PageHeader from '@/components/modulos/PageHeader'
 import TabsNav, { type Opcao } from '@/components/modulos/TabsNav'
 import DataToolbar from '@/components/modulos/DataToolbar'
 import DataTable, { type TableData } from '@/components/widgets/Table'
-import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, empresaUiActions } from '@/stores/modulos/empresaUiStore'
+import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/stores/modulos/moduleUiStore'
 import { List } from 'lucide-react'
 
 type Row = TableData
@@ -39,11 +39,11 @@ export default function ModulosEmpresaPage() {
   }
 
   useEffect(() => {
-    empresaUiActions.setTitulo({
+    moduleUiActions.setTitulo({
       title: 'Empresa',
       subtitle: 'Selecione uma opção para visualizar os dados',
     })
-    empresaUiActions.setTabs({
+    moduleUiActions.setTabs({
       options: [
         { value: 'dados', label: 'Dados Cadastrais' },
         { value: 'filiais', label: 'Filiais' },
@@ -196,7 +196,7 @@ export default function ModulosEmpresaPage() {
             <TabsNav
               options={tabOptions}
               value={tabs.selected}
-              onValueChange={(v) => empresaUiActions.setTabs({ selected: v })}
+              onValueChange={(v) => moduleUiActions.setTabs({ selected: v })}
               fontFamily={fontVar(tabs.fontFamily)}
               fontSize={tabs.fontSize}
               fontWeight={tabs.fontWeight}
