@@ -10,11 +10,12 @@ import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
 type FontWeight = '300' | '400' | '500' | '600' | '700' | '800' | '900'
 
 const FONT_OPTIONS = [
-  'Georgia',
-  'Times New Roman',
-  'Garamond',
-  'Palatino',
-  'Baskerville',
+  'PT Serif',
+  'Noto Serif',
+  'Libre',
+  'Crimson',
+  'Amiri',
+  'Radley',
   'Geist',
   'Inter',
 ] as const
