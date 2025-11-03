@@ -43,7 +43,8 @@ export async function POST(req: Request) {
     const originalName = file.name || 'arquivo'
     const ext = originalName.includes('.') ? originalName.split('.').pop() : 'bin'
     const rand = Math.random().toString(36).slice(2)
-    const storagePath = `documentos/${domain}/${documentoId}/${yyyy}/${mm}/${Date.now()}-${rand}.${ext}`
+    // Padroniza o caminho no bucket 'documentos'
+    const storagePath = `${domain}/${documentoId}/${yyyy}/${mm}/${Date.now()}-${rand}.${ext}`
 
     const ab = await file.arrayBuffer()
     const { error: uploadError } = await supabase.storage
@@ -68,7 +69,12 @@ export async function POST(req: Request) {
         ]
       )
       const inserted = rows?.[0] || null
-      return Response.json({ success: true, anexo: inserted })
+      const { data: signed, error: signError } = await supabase
+        .storage
+        .from('documentos')
+        .createSignedUrl(storagePath, 60 * 5)
+      const signed_url = signError ? undefined : signed?.signedUrl
+      return Response.json({ success: true, anexo: inserted, signed_url })
     } catch (e) {
       await supabase.storage.from('documentos').remove([storagePath]).catch(() => {})
       const msg = e instanceof Error ? e.message : String(e)
