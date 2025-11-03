@@ -12,6 +12,7 @@ import TabsNav from '@/components/modulos/TabsNav'
 import DataTable, { type TableData } from '@/components/widgets/Table'
 import DataToolbar from '@/components/modulos/DataToolbar'
 import StatusBadge from '@/components/modulos/StatusBadge'
+import EntityDisplay from '@/components/modulos/EntityDisplay'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/stores/modulos/moduleUiStore'
 import type { Opcao } from '@/components/modulos/TabsNav'
 import { Wrench, Calendar, User, Users, List } from 'lucide-react'
@@ -95,26 +96,7 @@ export default function ModulosServicosPage() {
     return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
   }
 
-  const getColorFromName = (name: string) => {
-    let hash = 0
-    for (let i = 0; i < name.length; i++) {
-      hash = name.charCodeAt(i) + ((hash << 5) - hash)
-    }
-
-    const colors = [
-      { bg: '#DBEAFE', text: '#1E40AF' },
-      { bg: '#DCFCE7', text: '#15803D' },
-      { bg: '#FEF3C7', text: '#B45309' },
-      { bg: '#FCE7F3', text: '#BE185D' },
-      { bg: '#E0E7FF', text: '#4338CA' },
-      { bg: '#FED7AA', text: '#C2410C' },
-      { bg: '#E9D5FF', text: '#7C3AED' },
-      { bg: '#D1FAE5', text: '#047857' },
-    ]
-
-    const index = Math.abs(hash) % colors.length
-    return colors[index]
-  }
+  
 
   const columns: ColumnDef<Row>[] = useMemo(() => {
     switch (tabs.selected) {
@@ -126,7 +108,7 @@ export default function ModulosServicosPage() {
           { accessorKey: 'data_agendada', header: 'Data Agendada', cell: ({ row }) => formatDate(row.original['data_agendada'], true) },
           { accessorKey: 'data_inicio', header: 'Início', cell: ({ row }) => formatDate(row.original['data_inicio'], true) },
           { accessorKey: 'data_fim', header: 'Fim', cell: ({ row }) => formatDate(row.original['data_fim'], true) },
-          { accessorKey: 'status', header: 'Status' },
+          { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
           { accessorKey: 'observacoes', header: 'Observações' },
         ]
       case 'tecnicos':
@@ -137,48 +119,22 @@ export default function ModulosServicosPage() {
             header: 'Técnico',
             size: 250,
             minSize: 200,
-            cell: ({ row }) => {
-              const nome = row.original['tecnico'] || 'Sem nome'
-              const subtitulo = row.original['cargo'] || 'Sem cargo'
-              const imagemUrl = row.original['tecnico_imagem_url']
-              const colors = getColorFromName(String(nome))
-
-              return (
-                <div className="flex items-center">
-                  <div
-                       className="flex items-center justify-center mr-3 cursor-pointer"
-                       role="button"
-                       onClick={() => openImagemEditor('tecnico', row.original['id'] as string | number, { nome: String(nome), imagem_url: imagemUrl ? String(imagemUrl) : undefined })}
-                       style={{ width: 40, height: 40, borderRadius: 8, overflow: 'hidden', backgroundColor: imagemUrl ? 'transparent' : colors.bg }}>
-                    {imagemUrl ? (
-                      <img src={String(imagemUrl)} alt={String(nome)} className="w-full h-full object-cover" />
-                    ) : (
-                      <div style={{ fontSize: 18, fontWeight: 600, color: colors.text }}>
-                        {String(nome)?.charAt(0)?.toUpperCase() || '?'}
-                      </div>
-                    )}
-                  </div>
-                  <div>
-                    <button
-                      type="button"
-                      onClick={() => openImagemEditor('tecnico', row.original['id'] as string | number, { nome: String(nome), imagem_url: imagemUrl ? String(imagemUrl) : undefined })}
-                      className="text-left"
-                      style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}
-                    >
-                      {String(nome)}
-                    </button>
-                    <div style={{ fontSize: 12, fontWeight: 400, color: '#6b7280' }}>{String(subtitulo)}</div>
-                  </div>
-                </div>
-              )
-            }
+            cell: ({ row }) => (
+              <EntityDisplay
+                name={row.original['tecnico'] ? String(row.original['tecnico']) : 'Sem nome'}
+                subtitle={row.original['cargo'] ? String(row.original['cargo']) : 'Sem cargo'}
+                imageUrl={row.original['tecnico_imagem_url'] ? String(row.original['tecnico_imagem_url']) : undefined}
+                onClick={() => openImagemEditor('tecnico', row.original['id'] as string | number, { nome: String(row.original['tecnico'] || ''), imagem_url: row.original['tecnico_imagem_url'] ? String(row.original['tecnico_imagem_url']) : undefined })}
+                clickable
+              />
+            )
           },
           { accessorKey: 'cargo', header: 'Cargo' },
           { accessorKey: 'especialidade', header: 'Especialidade' },
           { accessorKey: 'custo_hora', header: 'Custo/Hora (R$)', cell: ({ row }) => formatBRL(row.original['custo_hora']) },
           { accessorKey: 'telefone', header: 'Telefone' },
           { accessorKey: 'email', header: 'Email' },
-          { accessorKey: 'status', header: 'Status' },
+          { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
           { accessorKey: 'ordens_servico', header: 'Ordens de Serviço' },
           { accessorKey: 'horas_trabalhadas', header: 'Horas Trabalhadas' },
           { accessorKey: 'admissao', header: 'Admissão', cell: ({ row }) => formatDate(row.original['admissao']) },
@@ -191,47 +147,21 @@ export default function ModulosServicosPage() {
             header: 'Cliente',
             size: 250,
             minSize: 200,
-            cell: ({ row }) => {
-              const nome = row.original['cliente'] || 'Sem nome'
-              const subtitulo = row.original['segmento'] || 'Sem segmento'
-              const imagemUrl = row.original['cliente_imagem_url']
-              const colors = getColorFromName(String(nome))
-
-              return (
-                <div className="flex items-center">
-                  <div
-                       className="flex items-center justify-center mr-3 cursor-pointer"
-                       role="button"
-                       onClick={() => openImagemEditor('cliente', row.original['id'] as string | number, { nome: String(nome), imagem_url: imagemUrl ? String(imagemUrl) : undefined })}
-                       style={{ width: 40, height: 40, borderRadius: 8, overflow: 'hidden', backgroundColor: imagemUrl ? 'transparent' : colors.bg }}>
-                    {imagemUrl ? (
-                      <img src={String(imagemUrl)} alt={String(nome)} className="w-full h-full object-cover" />
-                    ) : (
-                      <div style={{ fontSize: 18, fontWeight: 600, color: colors.text }}>
-                        {String(nome)?.charAt(0)?.toUpperCase() || '?'}
-                      </div>
-                    )}
-                  </div>
-                  <div>
-                    <button
-                      type="button"
-                      onClick={() => openImagemEditor('cliente', row.original['id'] as string | number, { nome: String(nome), imagem_url: imagemUrl ? String(imagemUrl) : undefined })}
-                      className="text-left"
-                      style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}
-                    >
-                      {String(nome)}
-                    </button>
-                    <div style={{ fontSize: 12, fontWeight: 400, color: '#6b7280' }}>{String(subtitulo)}</div>
-                  </div>
-                </div>
-              )
-            }
+            cell: ({ row }) => (
+              <EntityDisplay
+                name={row.original['cliente'] ? String(row.original['cliente']) : 'Sem nome'}
+                subtitle={row.original['segmento'] ? String(row.original['segmento']) : 'Sem segmento'}
+                imageUrl={row.original['cliente_imagem_url'] ? String(row.original['cliente_imagem_url']) : undefined}
+                onClick={() => openImagemEditor('cliente', row.original['id'] as string | number, { nome: String(row.original['cliente'] || ''), imagem_url: row.original['cliente_imagem_url'] ? String(row.original['cliente_imagem_url']) : undefined })}
+                clickable
+              />
+            )
           },
           { accessorKey: 'segmento', header: 'Segmento' },
           { accessorKey: 'telefone', header: 'Telefone' },
           { accessorKey: 'email', header: 'Email' },
           { accessorKey: 'cidade_uf', header: 'Cidade/UF' },
-          { accessorKey: 'status', header: 'Status' },
+          { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
           { accessorKey: 'total_ordens', header: 'Total de Ordens' },
           { accessorKey: 'ultima_os', header: 'Última OS', cell: ({ row }) => formatDate(row.original['ultima_os']) },
         ]
@@ -243,7 +173,7 @@ export default function ModulosServicosPage() {
           { accessorKey: 'categoria', header: 'Categoria' },
           { accessorKey: 'unidade_medida', header: 'Unidade de Medida' },
           { accessorKey: 'preco_base', header: 'Preço Base (R$)', cell: ({ row }) => formatBRL(row.original['preco_base']) },
-          { accessorKey: 'status', header: 'Status' },
+          { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
           { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em']) },
           { accessorKey: 'atualizado_em', header: 'Atualizado em', cell: ({ row }) => formatDate(row.original['atualizado_em']) },
         ]
@@ -257,84 +187,30 @@ export default function ModulosServicosPage() {
             header: 'Cliente',
             size: 250,
             minSize: 200,
-            cell: ({ row }) => {
-              const nome = row.original['cliente'] || 'Sem nome'
-              const subtitulo = row.original['segmento'] || 'Sem segmento'
-              const imagemUrl = row.original['cliente_imagem_url']
-              const clienteId = row.original['cliente_id'] as string | number | undefined
-              const colors = getColorFromName(String(nome))
-
-              return (
-                <div className="flex items-center">
-                  <div
-                       className="flex items-center justify-center mr-3 cursor-pointer"
-                       role="button"
-                       onClick={() => openImagemEditor('cliente', clienteId, { nome: String(nome), imagem_url: imagemUrl ? String(imagemUrl) : undefined })}
-                       style={{ width: 40, height: 40, borderRadius: 8, overflow: 'hidden', backgroundColor: imagemUrl ? 'transparent' : colors.bg }}>
-                    {imagemUrl ? (
-                      <img src={String(imagemUrl)} alt={String(nome)} className="w-full h-full object-cover" />
-                    ) : (
-                      <div style={{ fontSize: 18, fontWeight: 600, color: colors.text }}>
-                        {String(nome)?.charAt(0)?.toUpperCase() || '?'}
-                      </div>
-                    )}
-                  </div>
-                  <div>
-                    <button
-                      type="button"
-                      onClick={() => openImagemEditor('cliente', clienteId, { nome: String(nome), imagem_url: imagemUrl ? String(imagemUrl) : undefined })}
-                      className="text-left"
-                      style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}
-                    >
-                      {String(nome)}
-                    </button>
-                    <div style={{ fontSize: 12, fontWeight: 400, color: '#6b7280' }}>{String(subtitulo)}</div>
-                  </div>
-                </div>
-              )
-            }
+            cell: ({ row }) => (
+              <EntityDisplay
+                name={row.original['cliente'] ? String(row.original['cliente']) : 'Sem nome'}
+                subtitle={row.original['segmento'] ? String(row.original['segmento']) : 'Sem segmento'}
+                imageUrl={row.original['cliente_imagem_url'] ? String(row.original['cliente_imagem_url']) : undefined}
+                onClick={() => openImagemEditor('cliente', row.original['cliente_id'] as string | number | undefined, { nome: String(row.original['cliente'] || ''), imagem_url: row.original['cliente_imagem_url'] ? String(row.original['cliente_imagem_url']) : undefined })}
+                clickable
+              />
+            )
           },
           {
             accessorKey: 'tecnico_responsavel',
             header: 'Técnico Responsável',
             size: 250,
             minSize: 200,
-            cell: ({ row }) => {
-              const nome = row.original['tecnico_responsavel'] || 'Sem nome'
-              const subtitulo = row.original['cargo_tecnico'] || 'Sem cargo'
-              const imagemUrl = row.original['tecnico_imagem_url']
-              const tecnicoId = row.original['tecnico_id'] as string | number | undefined
-              const colors = getColorFromName(String(nome))
-
-              return (
-                <div className="flex items-center">
-                  <div
-                       className="flex items-center justify-center mr-3 cursor-pointer"
-                       role="button"
-                       onClick={() => openImagemEditor('tecnico', tecnicoId, { nome: String(nome), imagem_url: imagemUrl ? String(imagemUrl) : undefined })}
-                       style={{ width: 40, height: 40, borderRadius: 8, overflow: 'hidden', backgroundColor: imagemUrl ? 'transparent' : colors.bg }}>
-                    {imagemUrl ? (
-                      <img src={String(imagemUrl)} alt={String(nome)} className="w-full h-full object-cover" />
-                    ) : (
-                      <div style={{ fontSize: 18, fontWeight: 600, color: colors.text }}>
-                        {String(nome)?.charAt(0)?.toUpperCase() || '?'}
-                      </div>
-                    )}
-                  </div>
-                  <div>
-                    <button
-                      type="button"
-                      onClick={() => openImagemEditor('tecnico', tecnicoId, { nome: String(nome), imagem_url: imagemUrl ? String(imagemUrl) : undefined })}
-                      className="text-left"
-                      style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}
-                    >
-                      {String(nome)}
-                    </button>
-                    <div style={{ fontSize: 12, fontWeight: 400, color: '#6b7280' }}>{String(subtitulo)}</div>
-                  </div>
-                </div>
-              )
-            }
+            cell: ({ row }) => (
+              <EntityDisplay
+                name={row.original['tecnico_responsavel'] ? String(row.original['tecnico_responsavel']) : 'Sem nome'}
+                subtitle={row.original['cargo_tecnico'] ? String(row.original['cargo_tecnico']) : 'Sem cargo'}
+                imageUrl={row.original['tecnico_imagem_url'] ? String(row.original['tecnico_imagem_url']) : undefined}
+                onClick={() => openImagemEditor('tecnico', row.original['tecnico_id'] as string | number | undefined, { nome: String(row.original['tecnico_responsavel'] || ''), imagem_url: row.original['tecnico_imagem_url'] ? String(row.original['tecnico_imagem_url']) : undefined })}
+                clickable
+              />
+            )
           },
           {
             accessorKey: 'status',

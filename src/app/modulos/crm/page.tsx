@@ -12,6 +12,7 @@ import TabsNav from '@/components/modulos/TabsNav'
 import DataTable, { type TableData } from '@/components/widgets/Table'
 import DataToolbar from '@/components/modulos/DataToolbar'
 import StatusBadge from '@/components/modulos/StatusBadge'
+import EntityDisplay from '@/components/modulos/EntityDisplay'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/stores/modulos/moduleUiStore'
 import type { Opcao } from '@/components/modulos/TabsNav'
 import { Briefcase, UserPlus, Building2, UserCircle2, CalendarClock, Megaphone } from 'lucide-react'
@@ -72,26 +73,7 @@ export default function ModulosCrmPage() {
     return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
   }
 
-  const getColorFromName = (name: string) => {
-    let hash = 0
-    for (let i = 0; i < name.length; i++) {
-      hash = name.charCodeAt(i) + ((hash << 5) - hash)
-    }
-
-    const colors = [
-      { bg: '#DBEAFE', text: '#1E40AF' },
-      { bg: '#DCFCE7', text: '#15803D' },
-      { bg: '#FEF3C7', text: '#B45309' },
-      { bg: '#FCE7F3', text: '#BE185D' },
-      { bg: '#E0E7FF', text: '#4338CA' },
-      { bg: '#FED7AA', text: '#C2410C' },
-      { bg: '#E9D5FF', text: '#7C3AED' },
-      { bg: '#D1FAE5', text: '#047857' },
-    ]
-
-    const index = Math.abs(hash) % colors.length
-    return colors[index]
-  }
+  
 
   const columns: ColumnDef<Row>[] = useMemo(() => {
     switch (tabs.selected) {
@@ -103,7 +85,7 @@ export default function ModulosCrmPage() {
           { accessorKey: 'email', header: 'Email' },
           { accessorKey: 'telefone', header: 'Telefone' },
           { accessorKey: 'origem', header: 'Origem' },
-          { accessorKey: 'status', header: 'Status' },
+          { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
           { accessorKey: 'responsavel', header: 'Responsável' },
         ]
       case 'contas':
@@ -131,7 +113,7 @@ export default function ModulosCrmPage() {
           { accessorKey: 'id', header: 'ID' },
           { accessorKey: 'assunto', header: 'Assunto' },
           { accessorKey: 'tipo', header: 'Tipo' },
-          { accessorKey: 'status', header: 'Status' },
+          { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
           { accessorKey: 'data_vencimento', header: 'Data Vencimento', cell: ({ row }) => formatDate(row.original['data_vencimento'], true) },
           { accessorKey: 'conta', header: 'Conta' },
           { accessorKey: 'contato', header: 'Contato' },
@@ -145,7 +127,7 @@ export default function ModulosCrmPage() {
           { accessorKey: 'id', header: 'ID' },
           { accessorKey: 'campanha', header: 'Campanha' },
           { accessorKey: 'tipo', header: 'Tipo' },
-          { accessorKey: 'status', header: 'Status' },
+          { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
           { accessorKey: 'inicio', header: 'Início', cell: ({ row }) => formatDate(row.original['inicio']) },
           { accessorKey: 'fim', header: 'Fim', cell: ({ row }) => formatDate(row.original['fim']) },
           { accessorKey: 'responsavel', header: 'Responsável' },
@@ -161,26 +143,12 @@ export default function ModulosCrmPage() {
             header: 'Conta',
             size: 250,
             minSize: 200,
-            cell: ({ row }) => {
-              const nome = row.original['conta'] || 'Sem conta'
-              const subtitulo = row.original['segmento_conta'] || 'Sem segmento'
-              const colors = getColorFromName(String(nome))
-
-              return (
-                <div className="flex items-center">
-                  <div className="flex items-center justify-center mr-3"
-                       style={{ width: 40, height: 40, borderRadius: 8, overflow: 'hidden', backgroundColor: colors.bg }}>
-                    <div style={{ fontSize: 18, fontWeight: 600, color: colors.text }}>
-                      {String(nome)?.charAt(0)?.toUpperCase() || '?'}
-                    </div>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}>{String(nome)}</div>
-                    <div style={{ fontSize: 12, fontWeight: 400, color: '#6b7280' }}>{String(subtitulo)}</div>
-                  </div>
-                </div>
-              )
-            }
+            cell: ({ row }) => (
+              <EntityDisplay
+                name={row.original['conta'] ? String(row.original['conta']) : 'Sem conta'}
+                subtitle={row.original['segmento_conta'] ? String(row.original['segmento_conta']) : 'Sem segmento'}
+              />
+            )
           },
           { accessorKey: 'responsavel', header: 'Responsável' },
           {
