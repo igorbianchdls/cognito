@@ -14,7 +14,7 @@ import BalanceTAccountView from '@/components/contabilidade/BalanceTAccountView'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
 import { List } from 'lucide-react'
-import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, contabilidadeUiActions } from '@/stores/modulos/contabilidadeUiStore'
+import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/stores/modulos/moduleUiStore'
 
 type Row = TableData
 
@@ -41,7 +41,8 @@ export default function ModulosContabilidadePage() {
   const [total, setTotal] = useState<number>(0)
 
   useEffect(() => {
-    contabilidadeUiActions.setTabs({
+    moduleUiActions.setTitulo({ title: 'Contabilidade', subtitle: 'Lançamentos, balancetes e plano de contas', titleFontFamily: 'var(--font-crimson-text)' })
+    moduleUiActions.setTabs({
       options: [
         { value: 'lancamentos', label: 'Lançamentos contábeis' },
         { value: 'balanco-patrimonial', label: 'Balanço Patrimonial' },
@@ -257,7 +258,7 @@ export default function ModulosContabilidadePage() {
             <TabsNav
               options={tabOptions}
               value={tabs.selected}
-              onValueChange={(v) => contabilidadeUiActions.setTabs({ selected: v })}
+              onValueChange={(v) => moduleUiActions.setTabs({ selected: v })}
               fontFamily={tabs.fontFamily}
               fontSize={tabs.fontSize}
               fontWeight={tabs.fontWeight}

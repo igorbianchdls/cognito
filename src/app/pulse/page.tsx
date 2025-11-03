@@ -1,21 +1,25 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { type InsightHeroItem } from '@/components/widgets/InsightsHeroCarousel'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
 import PageHeader from '@/components/modulos/PageHeader'
 import PulseHeader from '@/components/pulse/PulseHeader'
 import PulseChips from '@/components/pulse/PulseChips'
-import PulseTabs from '@/components/pulse/PulseTabs'
+import TabsNav, { type Opcao } from '@/components/modulos/TabsNav'
+import { useStore } from '@nanostores/react'
+import { $titulo, $tabs, $layout, moduleUiActions } from '@/stores/modulos/moduleUiStore'
 import PulseFeed from '@/components/pulse/PulseFeed'
 
 type Chip = 'unusual' | 'normal' | 'following' | 'all'
 type Tab = 'following' | 'foryou' | 'allmetrics'
 
 export default function PulsePage() {
+  const titulo = useStore($titulo)
+  const tabs = useStore($tabs)
+  const layout = useStore($layout)
   const [chip, setChip] = useState<Chip>('all')
-  const [tab, setTab] = useState<Tab>('foryou')
   const counts = { unusual: 1, normal: 12, following: 6, all: 13 }
 
   // Mock hero items reused across cards
@@ -43,21 +47,33 @@ export default function PulsePage() {
     },
   ]), [])
 
+  useEffect(() => {
+    moduleUiActions.setTitulo({ title: 'Pulse', subtitle: 'Insights rápidos, status e variações de desempenho', titleFontFamily: 'var(--font-crimson-text)' })
+    moduleUiActions.setTabs({
+      options: [
+        { value: 'foryou', label: 'Para você' },
+        { value: 'following', label: 'Seguindo' },
+        { value: 'allmetrics', label: 'Todas métricas' },
+      ],
+      selected: 'foryou',
+    })
+  }, [])
+
   return (
     <SidebarProvider defaultOpen={true}>
       <SidebarShadcn />
-      <SidebarInset className="min-h-screen flex flex-col overflow-auto" style={{ background: 'rgb(253, 253, 253)' }}>
+      <SidebarInset className="min-h-screen flex flex-col overflow-auto" style={{ background: layout.contentBg }}>
         {/* Topo branco com título/subtítulo e chips abaixo */}
         <div style={{ background: 'white' }}>
           <div className="w-full px-4 md:px-6 pt-6">
             <PageHeader
-              title="Pulse"
-              subtitle="Insights rápidos, status e variações de desempenho"
-              titleFontFamily="var(--font-crimson-text)"
-              titleFontSize={24}
-              titleFontWeight="600"
-              titleColor="#111827"
-              titleLetterSpacing={0}
+              title={titulo.title}
+              subtitle={titulo.subtitle}
+              titleFontFamily={titulo.titleFontFamily}
+              titleFontSize={titulo.titleFontSize}
+              titleFontWeight={titulo.titleFontWeight}
+              titleColor={titulo.titleColor}
+              titleLetterSpacing={titulo.titleLetterSpacing}
             />
             <PulseHeader
               userName="Igor Bianch"
@@ -73,7 +89,22 @@ export default function PulsePage() {
               <PulseChips value={chip} counts={counts} onChange={setChip} />
             </div>
             {/* Tabs underline com borda logo abaixo do topo */}
-            <PulseTabs value={tab} onChange={setTab} />
+            <TabsNav
+              options={(tabs.options as Opcao[])}
+              value={tabs.selected}
+              onValueChange={(v) => moduleUiActions.setTabs({ selected: v })}
+              fontFamily={tabs.fontFamily}
+              fontSize={tabs.fontSize}
+              fontWeight={tabs.fontWeight}
+              color={tabs.color}
+              letterSpacing={tabs.letterSpacing}
+              iconSize={tabs.iconSize}
+              startOffset={tabs.leftOffset}
+              labelOffsetY={tabs.labelOffsetY}
+              activeColor={tabs.activeColor}
+              activeFontWeight={tabs.activeFontWeight}
+              activeBorderColor={tabs.activeBorderColor}
+            />
           </div>
         </div>
 

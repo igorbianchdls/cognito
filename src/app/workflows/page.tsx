@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { workflowsMock } from "@/data/workflows.mock"
 import WorkflowList from "@/components/workflows/WorkflowList"
@@ -9,11 +9,29 @@ import { Button } from "@/components/ui/button"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { SidebarShadcn } from "@/components/navigation/SidebarShadcn"
 import PageHeader from "@/components/modulos/PageHeader"
-import WorkflowTabs, { type WorkflowTabsValue } from "@/components/workflows/WorkflowTabs"
+import TabsNav, { type Opcao } from "@/components/modulos/TabsNav"
+import { useStore } from "@nanostores/react"
+import { $titulo, $tabs, $layout, moduleUiActions } from "@/stores/modulos/moduleUiStore"
 
 export default function WorkflowsPage() {
+  const titulo = useStore($titulo)
+  const tabs = useStore($tabs)
+  const layout = useStore($layout)
   const [filters, setFilters] = useState<FiltersState>({ q: '', status: 'todos', sort: 'recentes' })
-  const [activeCategory, setActiveCategory] = useState<WorkflowTabsValue>('todos')
+  const [activeCategory, setActiveCategory] = useState<'todos' | 'ativos' | 'rascunhos' | 'pausados'>('todos')
+
+  useEffect(() => {
+    moduleUiActions.setTitulo({ title: 'Workflows', subtitle: 'Gerencie e crie automações visuais', titleFontFamily: 'var(--font-crimson-text)' })
+    moduleUiActions.setTabs({
+      options: [
+        { value: 'todos', label: 'Todos' },
+        { value: 'ativos', label: 'Ativos' },
+        { value: 'rascunhos', label: 'Rascunhos' },
+        { value: 'pausados', label: 'Pausados' },
+      ],
+      selected: 'todos',
+    })
+  }, [])
   const filteredData = useMemo(() => {
     let arr = [...workflowsMock]
     if (activeCategory !== 'todos') {
@@ -41,6 +59,12 @@ export default function WorkflowsPage() {
   }, [activeCategory, filters])
   const title = useMemo(() => `Workflows (${filteredData.length})`, [filteredData.length])
 
+  // Sincroniza seleção do store com estado local de categoria
+  useEffect(() => {
+    const sel = tabs.selected as 'todos' | 'ativos' | 'rascunhos' | 'pausados'
+    if (sel && sel !== activeCategory) setActiveCategory(sel)
+  }, [tabs.selected])
+
   const handleOpen = (id: string) => {
     console.log('Abrir workflow', id)
   }
@@ -52,18 +76,18 @@ export default function WorkflowsPage() {
   return (
     <SidebarProvider defaultOpen={false}>
       <SidebarShadcn />
-      <SidebarInset className="min-h-screen flex flex-col overflow-auto" style={{ background: 'rgb(253, 253, 253)' }}>
+      <SidebarInset className="min-h-screen flex flex-col overflow-auto" style={{ background: layout.contentBg }}>
         {/* Topo branco com título e tabs com borda */}
         <div style={{ background: 'white' }}>
           <div style={{ marginBottom: 16 }}>
             <PageHeader
-              title={title}
-              subtitle="Gerencie e crie automações visuais"
-              titleFontFamily="var(--font-crimson-text)"
-              titleFontSize={24}
-              titleFontWeight="600"
-              titleColor="#111827"
-              titleLetterSpacing={0}
+              title={titulo.title || title}
+              subtitle={titulo.subtitle}
+              titleFontFamily={titulo.titleFontFamily}
+              titleFontSize={titulo.titleFontSize}
+              titleFontWeight={titulo.titleFontWeight}
+              titleColor={titulo.titleColor}
+              titleLetterSpacing={titulo.titleLetterSpacing}
               className="px-6 md:px-10 pb-2"
               actions={(
                 <Link href="/workflows/new">
@@ -72,7 +96,23 @@ export default function WorkflowsPage() {
               )}
             />
           </div>
-          <WorkflowTabs value={activeCategory} onChange={setActiveCategory} />
+          <TabsNav
+            options={(tabs.options as Opcao[])}
+            value={tabs.selected}
+            onValueChange={(v) => moduleUiActions.setTabs({ selected: v })}
+            fontFamily={tabs.fontFamily}
+            fontSize={tabs.fontSize}
+            fontWeight={tabs.fontWeight}
+            color={tabs.color}
+            letterSpacing={tabs.letterSpacing}
+            iconSize={tabs.iconSize}
+            startOffset={tabs.leftOffset}
+            labelOffsetY={tabs.labelOffsetY}
+            activeColor={tabs.activeColor}
+            activeFontWeight={tabs.activeFontWeight}
+            activeBorderColor={tabs.activeBorderColor}
+            className="px-6 md:px-10"
+          />
         </div>
 
         {/* Conteúdo em cinza claro */}
