@@ -252,6 +252,8 @@ export default function ModulosCrmPage() {
               titleFontWeight={titulo.titleFontWeight}
               titleColor={titulo.titleColor}
               titleLetterSpacing={titulo.titleLetterSpacing}
+              subtitleFontFamily={fontVar(titulo.subtitleFontFamily)}
+              subtitleLetterSpacing={titulo.subtitleLetterSpacing}
             />
           </div>
           <div style={{ marginBottom: 0 }}>

@@ -9,6 +9,12 @@ export type TituloState = {
   titleFontWeight?: string
   titleColor?: string
   titleLetterSpacing?: number
+  // Subtitle typography
+  subtitleFontFamily?: string
+  subtitleFontSize?: number
+  subtitleFontWeight?: string
+  subtitleColor?: string
+  subtitleLetterSpacing?: number
 }
 
 export type TabsOption = {
@@ -127,11 +133,11 @@ const DEFAULT_TABS: TabsState = {
     { value: 'recebimentos', label: 'Recebimentos' },
   ],
   selected: 'visao',
-  fontFamily: 'Geist',
+  fontFamily: 'Inter',
   fontSize: 15,
   fontWeight: '400',
   color: 'rgb(128, 128, 128)',
-  letterSpacing: 0,
+  letterSpacing: -0.3,
   iconSize: 16,
   leftOffset: 20,
   labelOffsetY: 6,
@@ -153,12 +159,12 @@ const DEFAULT_TABELA_UI: TabelaUIState = {
   cellText: '#1f2937',
   headerFontSize: 13,
   cellFontSize: 13,
-  headerFontFamily: 'Geist',
+  headerFontFamily: 'Inter',
   headerFontWeight: '500',
-  cellFontFamily: 'Geist',
+  cellFontFamily: 'Inter',
   cellFontWeight: '400',
-  headerLetterSpacing: 0,
-  cellLetterSpacing: 0,
+  headerLetterSpacing: -0.28,
+  cellLetterSpacing: -0.28,
   enableZebraStripes: true,
   rowAlternateBgColor: '#ffffff',
   borderColor: '#f0f0f0',
@@ -168,7 +174,7 @@ const DEFAULT_TABELA_UI: TabelaUIState = {
   defaultSortDirection: 'asc',
 }
 
-export const $titulo = atom<TituloState>({ ...DEFAULT_TITULO })
+export const $titulo = atom<TituloState>({ ...DEFAULT_TITULO, subtitleFontFamily: 'Inter', subtitleLetterSpacing: -0.28 })
 export const $tabs = atom<TabsState>({ ...DEFAULT_TABS })
 export const $tabelaUI = atom<TabelaUIState>({ ...DEFAULT_TABELA_UI })
 export const DEFAULT_TOOLBAR_UI: ToolbarUIState = {
@@ -236,7 +242,7 @@ export const financeiroUiActions = {
     $catalogUI.set({ ...$catalogUI.get(), ...partial })
   },
   resetAll: () => {
-    $titulo.set({ ...DEFAULT_TITULO })
+    $titulo.set({ ...DEFAULT_TITULO, subtitleFontFamily: 'Inter', subtitleLetterSpacing: -0.28 })
     $tabs.set({ ...DEFAULT_TABS })
     $tabelaUI.set({ ...DEFAULT_TABELA_UI })
     $toolbarUI.set({ ...DEFAULT_TOOLBAR_UI })
