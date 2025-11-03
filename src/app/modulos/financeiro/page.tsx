@@ -102,7 +102,7 @@ export default function ModulosFinanceiroPage() {
             header: 'Banco',
             cell: ({ row }) => (
               <EntityDisplay
-                name={row.original['nome_banco'] || 'Sem nome'}
+                name={row.original['nome_banco'] ? String(row.original['nome_banco']) : 'Sem nome'}
                 imageUrl={row.original['banco_imagem_url'] || row.original['imagem_url'] ? String(row.original['banco_imagem_url'] || row.original['imagem_url']) : undefined}
                 onClick={() => openBancoEditor(row.original)}
                 clickable
@@ -139,7 +139,7 @@ export default function ModulosFinanceiroPage() {
             header: 'Banco',
             cell: ({ row }) => (
               <EntityDisplay
-                name={row.original['banco'] || 'Sem nome'}
+                name={row.original['banco'] ? String(row.original['banco']) : 'Sem nome'}
                 imageUrl={row.original['banco_imagem_url'] ? String(row.original['banco_imagem_url']) : undefined}
                 onClick={() => openBancoEditor(row.original)}
                 clickable
@@ -180,8 +180,8 @@ export default function ModulosFinanceiroPage() {
             header: 'Cliente',
             cell: ({ row }) => (
               <EntityDisplay
-                name={row.original['cliente'] || 'Sem nome'}
-                subtitle={row.original['cliente_categoria'] || 'Sem categoria'}
+                name={row.original['cliente'] ? String(row.original['cliente']) : 'Sem nome'}
+                subtitle={row.original['cliente_categoria'] ? String(row.original['cliente_categoria']) : 'Sem categoria'}
                 imageUrl={row.original['cliente_imagem_url'] ? String(row.original['cliente_imagem_url']) : undefined}
                 onClick={() => openClienteEditor(row.original)}
                 clickable
@@ -200,8 +200,8 @@ export default function ModulosFinanceiroPage() {
             header: 'Fornecedor',
             cell: ({ row }) => (
               <EntityDisplay
-                name={row.original['fornecedor'] || 'Sem nome'}
-                subtitle={row.original['categoria_financeira'] || 'Sem categoria'}
+                name={row.original['fornecedor'] ? String(row.original['fornecedor']) : 'Sem nome'}
+                subtitle={row.original['categoria_financeira'] ? String(row.original['categoria_financeira']) : 'Sem categoria'}
                 imageUrl={row.original['fornecedor_imagem_url'] ? String(row.original['fornecedor_imagem_url']) : undefined}
               />
             )
@@ -218,8 +218,8 @@ export default function ModulosFinanceiroPage() {
             header: 'Cliente',
             cell: ({ row }) => (
               <EntityDisplay
-                name={row.original['cliente'] || 'Sem nome'}
-                subtitle={row.original['cliente_categoria'] || 'Sem categoria'}
+                name={row.original['cliente'] ? String(row.original['cliente']) : 'Sem nome'}
+                subtitle={row.original['cliente_categoria'] ? String(row.original['cliente_categoria']) : 'Sem categoria'}
                 imageUrl={row.original['cliente_imagem_url'] ? String(row.original['cliente_imagem_url']) : undefined}
                 onClick={() => openClienteEditor(row.original)}
                 clickable
@@ -247,8 +247,8 @@ export default function ModulosFinanceiroPage() {
             header: 'Fornecedor',
             cell: ({ row }) => (
               <EntityDisplay
-                name={row.original['fornecedor'] || 'Sem nome'}
-                subtitle={row.original['fornecedor_categoria'] || 'Sem categoria'}
+                name={row.original['fornecedor'] ? String(row.original['fornecedor']) : 'Sem nome'}
+                subtitle={row.original['fornecedor_categoria'] ? String(row.original['fornecedor_categoria']) : 'Sem categoria'}
                 imageUrl={row.original['fornecedor_imagem_url'] ? String(row.original['fornecedor_imagem_url']) : undefined}
                 onClick={() => openEditor(row.original)}
                 clickable
