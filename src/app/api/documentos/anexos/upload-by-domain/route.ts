@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { runQuery } from '@/lib/postgres'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -22,17 +23,15 @@ export async function POST(req: Request) {
 
     let documentoId: number | null = null
     if (domain === 'financeiro') {
-      // Buscar documento_id diretamente da tabela de domínio
-      const { data, error } = await supabase
-        .schema('documentos')
-        .from('documentos_financeiros')
-        .select('documento_id')
-        .eq('id', domainId)
-        .single()
-      if (error || !data?.documento_id) {
-        return Response.json({ success: false, message: 'Não foi possível resolver documento_id a partir de domain_id', error: error?.message }, { status: 400 })
+      const rows = await runQuery<{ documento_id: number }>(
+        `SELECT documento_id FROM documentos.documentos_financeiros WHERE id = $1 LIMIT 1`,
+        [domainId]
+      )
+      const row = rows?.[0]
+      if (!row?.documento_id) {
+        return Response.json({ success: false, message: 'Não foi possível resolver documento_id a partir de domain_id' }, { status: 400 })
       }
-      documentoId = Number(data.documento_id)
+      documentoId = Number(row.documento_id)
     } else {
       return Response.json({ success: false, message: `Domínio não suportado: ${domain}` }, { status: 400 })
     }
@@ -55,26 +54,27 @@ export async function POST(req: Request) {
     }
 
     // Inserir metadados
-    const { data: inserted, error: insertError } = await supabase
-      .schema('documentos')
-      .from('documentos_anexos')
-      .insert([{ 
-        documento_id: documentoId,
-        nome_arquivo: originalName,
-        tipo_arquivo: file.type || null,
-        arquivo_url: storagePath,
-        tamanho_bytes: typeof file.size === 'number' ? file.size : null,
-      }])
-      .select()
-    if (insertError) {
-      // rollback storage
+    try {
+      const rows = await runQuery(
+        `INSERT INTO documentos.documentos_anexos (documento_id, nome_arquivo, tipo_arquivo, arquivo_url, tamanho_bytes)
+         VALUES ($1, $2, $3, $4, $5)
+         RETURNING id, documento_id, nome_arquivo, tipo_arquivo, arquivo_url, tamanho_bytes, criado_em`,
+        [
+          documentoId,
+          originalName,
+          file.type || null,
+          storagePath,
+          typeof file.size === 'number' ? file.size : null,
+        ]
+      )
+      const inserted = rows?.[0] || null
+      return Response.json({ success: true, anexo: inserted })
+    } catch (e) {
       await supabase.storage.from('documentos').remove([storagePath]).catch(() => {})
-      return Response.json({ success: false, message: 'Falha ao gravar metadados', error: insertError.message }, { status: 500 })
+      const msg = e instanceof Error ? e.message : String(e)
+      return Response.json({ success: false, message: 'Falha ao gravar metadados', error: msg }, { status: 500 })
     }
-
-    return Response.json({ success: true, anexo: inserted?.[0] })
   } catch (error) {
     return Response.json({ success: false, message: 'Erro interno', error: error instanceof Error ? error.message : 'Erro desconhecido' }, { status: 500 })
   }
 }
-

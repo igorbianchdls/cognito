@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { runQuery } from '@/lib/postgres'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -14,14 +15,13 @@ export async function GET(req: Request) {
       return Response.json({ success: false, message: 'id é obrigatório' }, { status: 400 })
     }
 
-    const { data, error } = await supabase
-      .schema('documentos')
-      .from('documentos_anexos')
-      .select('arquivo_url, nome_arquivo')
-      .eq('id', id)
-      .single()
+    const rows = await runQuery<{ arquivo_url: string; nome_arquivo?: string }>(
+      `SELECT arquivo_url, nome_arquivo FROM documentos.documentos_anexos WHERE id = $1 LIMIT 1`,
+      [id]
+    )
+    const data = rows?.[0]
 
-    if (error || !data?.arquivo_url) {
+    if (!data?.arquivo_url) {
       return Response.json({ success: false, message: 'Anexo não encontrado' }, { status: 404 })
     }
 

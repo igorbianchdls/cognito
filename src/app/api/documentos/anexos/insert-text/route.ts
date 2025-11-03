@@ -1,8 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-const supabase = createClient(supabaseUrl, supabaseServiceKey)
+import { runQuery } from '@/lib/postgres'
 
 export const maxDuration = 300
 
@@ -32,23 +28,13 @@ export async function POST(req: Request) {
       return Response.json({ success: false, message: 'arquivo_url é obrigatório' }, { status: 400 })
     }
 
-    // Inserção completa para teste.
-    const { data, error } = await supabase
-      .schema('documentos')
-      .from('documentos_anexos')
-      .insert([{ 
-        documento_id,
-        nome_arquivo,
-        tipo_arquivo,
-        arquivo_url,
-      }])
-      .select()
-
-    if (error) {
-      return Response.json({ success: false, message: 'Falha ao inserir em documentos_anexos', error: error.message }, { status: 500 })
-    }
-
-    return Response.json({ success: true, anexo: data?.[0] ?? null })
+    const rows = await runQuery(
+      `INSERT INTO documentos.documentos_anexos (documento_id, nome_arquivo, tipo_arquivo, arquivo_url)
+       VALUES ($1, $2, $3, $4)
+       RETURNING id, documento_id, nome_arquivo, tipo_arquivo, arquivo_url, tamanho_bytes, criado_em`,
+      [documento_id, nome_arquivo, tipo_arquivo, arquivo_url]
+    )
+    return Response.json({ success: true, anexo: rows?.[0] ?? null })
   } catch (error) {
     return Response.json({ success: false, message: 'Erro interno', error: error instanceof Error ? error.message : 'Erro desconhecido' }, { status: 500 })
   }

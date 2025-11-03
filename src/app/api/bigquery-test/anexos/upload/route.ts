@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { runQuery } from '@/lib/postgres'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -39,17 +40,20 @@ export async function POST(req: Request) {
     // Tentar gravar metadados em documentos.documentos_anexos (documento_id opcional)
     let dbInserted = false
     try {
-      const { error: insertErr } = await supabase
-        .schema('documentos')
-        .from('documentos_anexos')
-        .insert([{ 
-          documento_id: documentoId ? Number(documentoId) : null,
-          nome_arquivo: originalName,
-          tipo_arquivo: file.type || null,
-          arquivo_url: path,
-          tamanho_bytes: typeof file.size === 'number' ? file.size : null,
-        }])
-      if (!insertErr) dbInserted = true
+      if (documentoId) {
+        await runQuery(
+          `INSERT INTO documentos.documentos_anexos (documento_id, nome_arquivo, tipo_arquivo, arquivo_url, tamanho_bytes)
+           VALUES ($1, $2, $3, $4, $5)`,
+          [
+            Number(documentoId),
+            originalName,
+            file.type || null,
+            path,
+            typeof file.size === 'number' ? file.size : null,
+          ]
+        )
+        dbInserted = true
+      }
     } catch {}
 
     // URL assinada opcional para retorno imediato
