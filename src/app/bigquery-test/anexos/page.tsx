@@ -508,7 +508,7 @@ export default function AnexosPage() {
               {allAnexos.map((r) => (
                 <tr key={r.id} className="border-t">
                   <td className="p-2">{r.id}</td>
-                  <td className="p-2">{r as any && (r as any).documento_id != null ? String((r as any).documento_id) : '-'}</td>
+                  <td className="p-2">{r.documento_id != null ? String(r.documento_id) : '-'}</td>
                   <td className="p-2">{r.nome_arquivo || '-'}</td>
                   <td className="p-2">{r.tipo_arquivo || '-'}</td>
                   <td className="p-2">{r.arquivo_url || '-'}</td>
