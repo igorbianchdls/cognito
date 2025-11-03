@@ -11,6 +11,8 @@ import PageHeader from '@/components/modulos/PageHeader'
 import TabsNav from '@/components/modulos/TabsNav'
 import DataTable, { type TableData } from '@/components/widgets/Table'
 import DataToolbar from '@/components/modulos/DataToolbar'
+import StatusBadge from '@/components/modulos/StatusBadge'
+import EntityDisplay from '@/components/modulos/EntityDisplay'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/stores/modulos/moduleUiStore'
 import type { Opcao } from '@/components/modulos/TabsNav'
 import { Megaphone } from 'lucide-react'
@@ -84,7 +86,20 @@ export default function ModulosTrafegoPagoPage() {
       case 'contas-ads':
         return [
           { accessorKey: 'conta', header: 'Conta de Anúncios' },
-          { accessorKey: 'plataforma', header: 'Plataforma' },
+          {
+            accessorKey: 'plataforma',
+            header: 'Plataforma',
+            cell: ({ row }) => {
+              const asset = getPlatformAsset(String(row.original['plataforma'] || ''))
+              return (
+                <EntityDisplay
+                  name={asset.title}
+                  subtitle={row.original['conta'] ? String(row.original['conta']) : undefined}
+                  imageUrl={asset.src}
+                />
+              )
+            }
+          },
           { accessorKey: 'conectado_em', header: 'Conectado em', cell: ({ row }) => formatDate(row.original['conectado_em']) },
           { accessorKey: 'gasto_total', header: 'Gasto Total (R$)', cell: ({ row }) => formatBRL(row.original['gasto_total']) },
           { accessorKey: 'impressoes', header: 'Impressões' },
@@ -97,7 +112,7 @@ export default function ModulosTrafegoPagoPage() {
         return [
           { accessorKey: 'grupo', header: 'Grupo de Anúncios' },
           { accessorKey: 'campanha', header: 'Campanha' },
-          { accessorKey: 'status', header: 'Status' },
+          { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
           { accessorKey: 'orcamento_diario', header: 'Orçamento Diário (R$)', cell: ({ row }) => formatBRL(row.original['orcamento_diario']) },
           { accessorKey: 'gasto_total', header: 'Gasto Total (R$)', cell: ({ row }) => formatBRL(row.original['gasto_total']) },
           { accessorKey: 'impressoes', header: 'Impressões' },
@@ -109,10 +124,23 @@ export default function ModulosTrafegoPagoPage() {
       case 'anuncios':
         return [
           { accessorKey: 'titulo', header: 'Título do Anúncio' },
-          { accessorKey: 'plataforma', header: 'Plataforma' },
+          {
+            accessorKey: 'plataforma',
+            header: 'Plataforma',
+            cell: ({ row }) => {
+              const asset = getPlatformAsset(String(row.original['plataforma'] || ''))
+              return (
+                <EntityDisplay
+                  name={asset.title}
+                  subtitle={row.original['campanha'] ? String(row.original['campanha']) : undefined}
+                  imageUrl={asset.src}
+                />
+              )
+            }
+          },
           { accessorKey: 'campanha', header: 'Campanha' },
           { accessorKey: 'grupo', header: 'Grupo de Anúncios' },
-          { accessorKey: 'status', header: 'Status' },
+          { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
           { accessorKey: 'publicado_em', header: 'Publicado em', cell: ({ row }) => formatDate(row.original['publicado_em']) },
           { accessorKey: 'gasto', header: 'Gasto (R$)', cell: ({ row }) => formatBRL(row.original['gasto']) },
           { accessorKey: 'impressoes', header: 'Impressões' },
@@ -128,7 +156,7 @@ export default function ModulosTrafegoPagoPage() {
         return [
           { accessorKey: 'campanha', header: 'Campanha' },
           { accessorKey: 'objetivo', header: 'Objetivo' },
-          { accessorKey: 'status', header: 'Status' },
+          { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
           { accessorKey: 'conta', header: 'Conta de Anúncios' },
           {
             accessorKey: 'plataforma',
@@ -136,15 +164,13 @@ export default function ModulosTrafegoPagoPage() {
             size: 220,
             minSize: 180,
             cell: ({ row }) => {
-              const plat = row.original['plataforma'] || '—'
-              const asset = getPlatformAsset(String(plat))
+              const asset = getPlatformAsset(String(row.original['plataforma'] || ''))
               return (
-                <div className="flex items-center">
-                  <div className="mr-3" style={{ width: 28, height: 28, borderRadius: 6, overflow: 'hidden', background: '#f3f4f6' }}>
-                    <img src={asset.src} alt={asset.title} className="w-full h-full object-contain p-1" />
-                  </div>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: '#111827' }}>{asset.title}</div>
-                </div>
+                <EntityDisplay
+                  name={asset.title}
+                  subtitle={row.original['conta'] ? String(row.original['conta']) : undefined}
+                  imageUrl={asset.src}
+                />
               )
             }
           },
