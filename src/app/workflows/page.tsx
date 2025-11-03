@@ -52,22 +52,31 @@ export default function WorkflowsPage() {
   return (
     <SidebarProvider defaultOpen={false}>
       <SidebarShadcn />
-      <SidebarInset className="h-screen flex flex-col overflow-auto bg-white">
-        {/* Header com PageHeader + Tabs (estilo Financeiro) */}
-        <PageHeader
-          title={title}
-          subtitle="Gerencie e crie automações visuais"
-          actions={(
-            <Link href="/workflows/new">
-              <Button>Novo workflow</Button>
-            </Link>
-          )}
-          className="px-6 md:px-10 pb-2"
-        />
-        <WorkflowTabs value={activeCategory} onChange={setActiveCategory} />
+      <SidebarInset className="min-h-screen flex flex-col overflow-auto" style={{ background: 'rgb(253, 253, 253)' }}>
+        {/* Topo branco com título e tabs com borda */}
+        <div style={{ background: 'white' }}>
+          <div style={{ marginBottom: 16 }}>
+            <PageHeader
+              title={title}
+              subtitle="Gerencie e crie automações visuais"
+              titleFontFamily="var(--font-crimson-text)"
+              titleFontSize={24}
+              titleFontWeight="600"
+              titleColor="#111827"
+              titleLetterSpacing={0}
+              className="px-6 md:px-10 pb-2"
+              actions={(
+                <Link href="/workflows/new">
+                  <Button>Novo workflow</Button>
+                </Link>
+              )}
+            />
+          </div>
+          <WorkflowTabs value={activeCategory} onChange={setActiveCategory} />
+        </div>
 
-        {/* Content */}
-        <div className="flex-1 bg-[#FBFBFB]">
+        {/* Conteúdo em cinza claro */}
+        <div className="flex-1">
           <div className="mx-auto max-w-7xl px-6 md:px-10 py-6 pt-6">
             <WorkflowFilters value={filters} onChange={setFilters} onCreate={handleCreate} />
 

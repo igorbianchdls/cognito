@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 import { type InsightHeroItem } from '@/components/widgets/InsightsHeroCarousel'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
+import PageHeader from '@/components/modulos/PageHeader'
 import PulseHeader from '@/components/pulse/PulseHeader'
 import PulseChips from '@/components/pulse/PulseChips'
 import PulseTabs from '@/components/pulse/PulseTabs'
@@ -45,40 +46,42 @@ export default function PulsePage() {
   return (
     <SidebarProvider defaultOpen={true}>
       <SidebarShadcn />
-      <SidebarInset className="min-h-screen flex flex-col overflow-auto bg-white">
-        <div className="w-full px-4 md:px-6 py-8">
-          <PulseHeader
-            userName="Igor Bianch"
-            summary={(
-              <>
-                Vendas de eletrodomésticos caíram 8% vs. semana passada (fora da faixa esperada). Receita total +6% puxada por orgânico e CRM; ROI de campanhas subiu para 3,1×.
-              </>
-            )}
-            lastUpdated={new Date(Date.now() - 5 * 60 * 1000)}
-            avatarUrl="https://images.pexels.com/photos/17527940/pexels-photo-17527940.jpeg?cs=srgb&dl=pexels-rogeriosouzafotografia-17527940.jpg&fm=jpg"
-          />
-
-          <PulseChips value={chip} counts={counts} onChange={setChip} />
+      <SidebarInset className="min-h-screen flex flex-col overflow-auto" style={{ background: 'rgb(253, 253, 253)' }}>
+        {/* Topo branco com título/subtítulo e chips abaixo */}
+        <div style={{ background: 'white' }}>
+          <div className="w-full px-4 md:px-6 pt-6">
+            <PageHeader
+              title="Pulse"
+              subtitle="Insights rápidos, status e variações de desempenho"
+              titleFontFamily="var(--font-crimson-text)"
+              titleFontSize={24}
+              titleFontWeight="600"
+              titleColor="#111827"
+              titleLetterSpacing={0}
+            />
+            <PulseHeader
+              userName="Igor Bianch"
+              summary={(
+                <>
+                  Vendas de eletrodomésticos caíram 8% vs. semana passada (fora da faixa esperada). Receita total +6% puxada por orgânico e CRM; ROI de campanhas subiu para 3,1×.
+                </>
+              )}
+              lastUpdated={new Date(Date.now() - 5 * 60 * 1000)}
+              avatarUrl="https://images.pexels.com/photos/17527940/pexels-photo-17527940.jpeg?cs=srgb&dl=pexels-rogeriosouzafotografia-17527940.jpg&fm=jpg"
+            />
+            <div className="pb-4">
+              <PulseChips value={chip} counts={counts} onChange={setChip} />
+            </div>
+            {/* Tabs underline com borda logo abaixo do topo */}
+            <PulseTabs value={tab} onChange={setTab} />
+          </div>
         </div>
 
-        {/* Full-width tabs underline band (like /workflows) */}
-        <PulseTabs value={tab} onChange={setTab} />
-
-        {/* Feed: use insight cards directly (no white containers) */}
-        <div className="w-full px-4 md:px-6">
+        {/* Conteúdo em cinza claro */}
+        <div className="w-full px-4 md:px-6 py-4 flex-1">
           <PulseFeed
             items={items}
-            variants={[
-              'aurora',
-              'blueNight',
-              'neoLight',
-              'emberRed',
-              'obsidianBlack',
-              'sunsetOrange',
-              'crimsonGlow',
-              'roseDawn',
-              'report',
-            ]}
+            variants={['aurora','blueNight','neoLight','emberRed','obsidianBlack','sunsetOrange','crimsonGlow','roseDawn','report']}
           />
         </div>
       </SidebarInset>

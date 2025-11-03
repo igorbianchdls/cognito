@@ -13,7 +13,7 @@ import TabsNav from '@/components/modulos/TabsNav'
 import DataTable, { type TableData } from '@/components/widgets/Table'
 import DataToolbar from '@/components/modulos/DataToolbar'
 import StatusBadge from '@/components/modulos/StatusBadge'
-import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, financeiroUiActions } from '@/stores/modulos/financeiroUiStore'
+import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/stores/modulos/moduleUiStore'
 import type { Opcao } from '@/components/modulos/TabsNav'
 import { ShoppingCart, Users, Map, Users2, LayoutGrid } from 'lucide-react'
 import PedidosLinkedEditorSheet from '@/components/modulos/vendas/PedidosLinkedEditorSheet'
@@ -28,11 +28,12 @@ export default function ModulosVendasPage() {
   const toolbarUI = useStore($toolbarUI)
 
   useEffect(() => {
-    financeiroUiActions.setTitulo({
+    moduleUiActions.setTitulo({
       title: 'Vendas',
       subtitle: 'Selecione uma opção para visualizar os dados',
+      titleFontFamily: 'var(--font-crimson-text)'
     })
-    financeiroUiActions.setTabs({
+    moduleUiActions.setTabs({
       options: [
         { value: 'pedidos', label: 'Pedidos' },
         { value: 'clientes', label: 'Clientes' },
@@ -357,7 +358,7 @@ export default function ModulosVendasPage() {
             <TabsNav
               options={tabOptions}
               value={tabs.selected}
-              onValueChange={(v) => financeiroUiActions.setTabs({ selected: v })}
+              onValueChange={(v) => moduleUiActions.setTabs({ selected: v })}
               fontFamily={fontVar(tabs.fontFamily)}
               fontSize={tabs.fontSize}
               fontWeight={tabs.fontWeight}

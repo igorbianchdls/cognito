@@ -12,7 +12,7 @@ import PageHeader from '@/components/modulos/PageHeader'
 import TabsNav from '@/components/modulos/TabsNav'
 import DataTable, { type TableData } from '@/components/widgets/Table'
 import DataToolbar from '@/components/modulos/DataToolbar'
-import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, financeiroUiActions } from '@/stores/modulos/financeiroUiStore'
+import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/stores/modulos/moduleUiStore'
 import type { Opcao } from '@/components/modulos/TabsNav'
 import { Megaphone, FileText, BarChart3 } from 'lucide-react'
 import PlataformaEditorSheet from '@/components/modulos/marketing/PlataformaEditorSheet'
@@ -27,11 +27,12 @@ export default function ModulosMarketingPage() {
   const toolbarUI = useStore($toolbarUI)
 
   useEffect(() => {
-    financeiroUiActions.setTitulo({
+    moduleUiActions.setTitulo({
       title: 'Marketing',
       subtitle: 'Selecione uma opção para visualizar os dados',
+      titleFontFamily: 'var(--font-crimson-text)'
     })
-    financeiroUiActions.setTabs({
+    moduleUiActions.setTabs({
       options: [
         { value: 'contas', label: 'Contas' },
         { value: 'publicacoes', label: 'Publicações' },
@@ -259,7 +260,7 @@ export default function ModulosMarketingPage() {
             <TabsNav
               options={tabOptions}
               value={tabs.selected}
-              onValueChange={(v) => financeiroUiActions.setTabs({ selected: v })}
+              onValueChange={(v) => moduleUiActions.setTabs({ selected: v })}
               fontFamily={fontVar(tabs.fontFamily)}
               fontSize={tabs.fontSize}
               fontWeight={tabs.fontWeight}

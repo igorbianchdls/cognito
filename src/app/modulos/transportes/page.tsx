@@ -11,7 +11,7 @@ import PageHeader from '@/components/modulos/PageHeader'
 import TabsNav, { type Opcao } from '@/components/modulos/TabsNav'
 import DataToolbar from '@/components/modulos/DataToolbar'
 import DataTable, { type TableData } from '@/components/widgets/Table'
-import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, financeiroUiActions } from '@/stores/modulos/financeiroUiStore'
+import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/stores/modulos/moduleUiStore'
 import { List } from 'lucide-react'
 
 type Row = TableData
@@ -24,8 +24,8 @@ export default function ModulosTransportesPage() {
   const toolbarUI = useStore($toolbarUI)
 
   useEffect(() => {
-    financeiroUiActions.setTitulo({ title: 'Transportes', subtitle: 'Operações de transporte e logística' })
-    financeiroUiActions.setTabs({
+    moduleUiActions.setTitulo({ title: 'Transportes', subtitle: 'Operações de transporte e logística', titleFontFamily: 'var(--font-crimson-text)' })
+    moduleUiActions.setTabs({
       options: [
         { value: 'entregas', label: 'Entregas' },
         { value: 'viagens', label: 'Viagens' },
@@ -130,7 +130,7 @@ export default function ModulosTransportesPage() {
             <TabsNav
               options={tabOptions}
               value={tabs.selected}
-              onValueChange={(v) => financeiroUiActions.setTabs({ selected: v })}
+              onValueChange={(v) => moduleUiActions.setTabs({ selected: v })}
               fontFamily={fontVar(tabs.fontFamily)}
               fontSize={tabs.fontSize}
               fontWeight={tabs.fontWeight}
@@ -215,4 +215,3 @@ export default function ModulosTransportesPage() {
     </SidebarProvider>
   )
 }
-

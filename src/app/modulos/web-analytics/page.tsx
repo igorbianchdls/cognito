@@ -11,7 +11,7 @@ import PageHeader from '@/components/modulos/PageHeader'
 import TabsNav, { type Opcao } from '@/components/modulos/TabsNav'
 import DataToolbar from '@/components/modulos/DataToolbar'
 import DataTable, { type TableData } from '@/components/widgets/Table'
-import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, financeiroUiActions } from '@/stores/modulos/financeiroUiStore'
+import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/stores/modulos/moduleUiStore'
 import { List } from 'lucide-react'
 
 type Row = TableData
@@ -24,8 +24,8 @@ export default function ModulosWebAnalyticsPage() {
   const toolbarUI = useStore($toolbarUI)
 
   useEffect(() => {
-    financeiroUiActions.setTitulo({ title: 'Web Analytics', subtitle: 'Métricas de tráfego e comportamento' })
-    financeiroUiActions.setTabs({
+    moduleUiActions.setTitulo({ title: 'Web Analytics', subtitle: 'Métricas de tráfego e comportamento', titleFontFamily: 'var(--font-crimson-text)' })
+    moduleUiActions.setTabs({
       options: [
         { value: 'visitantes', label: 'Visitantes' },
         { value: 'sessoes', label: 'Sessões' },
@@ -118,7 +118,7 @@ export default function ModulosWebAnalyticsPage() {
             <TabsNav
               options={tabOptions}
               value={tabs.selected}
-              onValueChange={(v) => financeiroUiActions.setTabs({ selected: v })}
+              onValueChange={(v) => moduleUiActions.setTabs({ selected: v })}
               fontFamily={fontVar(tabs.fontFamily)}
               fontSize={tabs.fontSize}
               fontWeight={tabs.fontWeight}
@@ -203,4 +203,3 @@ export default function ModulosWebAnalyticsPage() {
     </SidebarProvider>
   )
 }
-

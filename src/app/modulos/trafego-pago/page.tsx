@@ -11,7 +11,7 @@ import PageHeader from '@/components/modulos/PageHeader'
 import TabsNav from '@/components/modulos/TabsNav'
 import DataTable, { type TableData } from '@/components/widgets/Table'
 import DataToolbar from '@/components/modulos/DataToolbar'
-import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, financeiroUiActions } from '@/stores/modulos/financeiroUiStore'
+import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/stores/modulos/moduleUiStore'
 import type { Opcao } from '@/components/modulos/TabsNav'
 import { Megaphone } from 'lucide-react'
 
@@ -25,11 +25,12 @@ export default function ModulosTrafegoPagoPage() {
   const toolbarUI = useStore($toolbarUI)
 
   useEffect(() => {
-    financeiroUiActions.setTitulo({
+    moduleUiActions.setTitulo({
       title: 'Tráfego Pago',
       subtitle: 'Campanhas pagas e performance',
+      titleFontFamily: 'var(--font-crimson-text)'
     })
-    financeiroUiActions.setTabs({
+    moduleUiActions.setTabs({
       options: [
         { value: 'contas-ads', label: 'Contas de Anúncio' },
         { value: 'campanhas', label: 'Campanhas' },
@@ -228,7 +229,7 @@ export default function ModulosTrafegoPagoPage() {
             <TabsNav
               options={tabOptions}
               value={tabs.selected}
-              onValueChange={(v) => financeiroUiActions.setTabs({ selected: v })}
+              onValueChange={(v) => moduleUiActions.setTabs({ selected: v })}
               fontFamily={fontVar(tabs.fontFamily)}
               fontSize={tabs.fontSize}
               fontWeight={tabs.fontWeight}

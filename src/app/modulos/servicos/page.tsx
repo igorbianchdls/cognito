@@ -12,7 +12,7 @@ import TabsNav from '@/components/modulos/TabsNav'
 import DataTable, { type TableData } from '@/components/widgets/Table'
 import DataToolbar from '@/components/modulos/DataToolbar'
 import StatusBadge from '@/components/modulos/StatusBadge'
-import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, financeiroUiActions } from '@/stores/modulos/financeiroUiStore'
+import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/stores/modulos/moduleUiStore'
 import type { Opcao } from '@/components/modulos/TabsNav'
 import { Wrench, Calendar, User, Users, List } from 'lucide-react'
 import ImagemEditorSheet from '@/components/modulos/servicos/ImagemEditorSheet'
@@ -27,11 +27,12 @@ export default function ModulosServicosPage() {
   const toolbarUI = useStore($toolbarUI)
 
   useEffect(() => {
-    financeiroUiActions.setTitulo({
+    moduleUiActions.setTitulo({
       title: 'Serviços',
       subtitle: 'Selecione uma opção para visualizar os dados',
+      titleFontFamily: 'var(--font-crimson-text)'
     })
-    financeiroUiActions.setTabs({
+    moduleUiActions.setTabs({
       options: [
         { value: 'ordens-servico', label: 'Ordens de Serviço' },
         { value: 'agendamentos', label: 'Agendamentos' },
@@ -442,7 +443,7 @@ export default function ModulosServicosPage() {
             <TabsNav
               options={tabOptions}
               value={tabs.selected}
-              onValueChange={(v) => financeiroUiActions.setTabs({ selected: v })}
+              onValueChange={(v) => moduleUiActions.setTabs({ selected: v })}
               fontFamily={fontVar(tabs.fontFamily)}
               fontSize={tabs.fontSize}
               fontWeight={tabs.fontWeight}

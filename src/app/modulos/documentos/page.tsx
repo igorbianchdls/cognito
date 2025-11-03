@@ -11,7 +11,7 @@ import DataTable, { type TableData } from '@/components/widgets/Table'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
 import { List } from 'lucide-react'
-import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, documentosUiActions } from '@/stores/modulos/documentosUiStore'
+import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/stores/modulos/moduleUiStore'
 
 type Row = TableData
 
@@ -32,7 +32,8 @@ export default function ModulosDocumentosPage() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    documentosUiActions.setTabs({
+    moduleUiActions.setTitulo({ title: 'Documentos', subtitle: 'Selecione uma opção para visualizar os dados', titleFontFamily: 'var(--font-crimson-text)' })
+    moduleUiActions.setTabs({
       options: [
         { value: 'fiscal', label: 'Fiscal' },
         { value: 'financeiro', label: 'Financeiro' },
@@ -287,7 +288,7 @@ export default function ModulosDocumentosPage() {
             <TabsNav
               options={tabOptions}
               value={tabs.selected}
-              onValueChange={(v) => documentosUiActions.setTabs({ selected: v })}
+              onValueChange={(v) => moduleUiActions.setTabs({ selected: v })}
               fontFamily={tabs.fontFamily}
               fontSize={tabs.fontSize}
               fontWeight={tabs.fontWeight}

@@ -11,7 +11,7 @@ import PageHeader from '@/components/modulos/PageHeader'
 import TabsNav, { type Opcao } from '@/components/modulos/TabsNav'
 import DataToolbar from '@/components/modulos/DataToolbar'
 import DataTable, { type TableData } from '@/components/widgets/Table'
-import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, produtosUiActions } from '@/stores/modulos/produtosUiStore'
+import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/stores/modulos/moduleUiStore'
 import { List } from 'lucide-react'
 
 type Row = TableData
@@ -39,11 +39,12 @@ export default function ModulosProdutosPage() {
   }
 
   useEffect(() => {
-    produtosUiActions.setTitulo({
+    moduleUiActions.setTitulo({
       title: 'Produtos',
       subtitle: 'Selecione uma opção para visualizar os dados',
+      titleFontFamily: 'var(--font-crimson-text)'
     })
-    produtosUiActions.setTabs({
+    moduleUiActions.setTabs({
       options: [
         { value: 'produtos', label: 'Produtos' },
         { value: 'variacoes', label: 'Variações' },
@@ -214,7 +215,7 @@ export default function ModulosProdutosPage() {
             <TabsNav
               options={tabOptions}
               value={tabs.selected}
-              onValueChange={(v) => produtosUiActions.setTabs({ selected: v })}
+              onValueChange={(v) => moduleUiActions.setTabs({ selected: v })}
               fontFamily={fontVar(tabs.fontFamily)}
               fontSize={tabs.fontSize}
               fontWeight={tabs.fontWeight}

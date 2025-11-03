@@ -13,7 +13,7 @@ import TabsNav from '@/components/modulos/TabsNav'
 import DataTable, { type TableData } from '@/components/widgets/Table'
 import DataToolbar from '@/components/modulos/DataToolbar'
 import StatusBadge from '@/components/modulos/StatusBadge'
-import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, financeiroUiActions } from '@/stores/modulos/financeiroUiStore'
+import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/stores/modulos/moduleUiStore'
 import type { Opcao } from '@/components/modulos/TabsNav'
 import { ShoppingBag, Building2, PackageCheck, FilePlus2, FileSpreadsheet } from 'lucide-react'
 import FornecedorComprasEditorSheet from '@/components/modulos/compras/FornecedorComprasEditorSheet'
@@ -28,11 +28,12 @@ export default function ModulosComprasPage() {
   const toolbarUI = useStore($toolbarUI)
 
   useEffect(() => {
-    financeiroUiActions.setTitulo({
+    moduleUiActions.setTitulo({
       title: 'Compras',
       subtitle: 'Selecione uma opção para visualizar os dados',
+      titleFontFamily: 'var(--font-crimson-text)'
     })
-    financeiroUiActions.setTabs({
+    moduleUiActions.setTabs({
       options: [
         { value: 'fornecedores', label: 'Fornecedores' },
         { value: 'pedidos', label: 'Pedidos' },
@@ -299,7 +300,7 @@ export default function ModulosComprasPage() {
             <TabsNav
               options={tabOptions}
               value={tabs.selected}
-              onValueChange={(v) => financeiroUiActions.setTabs({ selected: v })}
+              onValueChange={(v) => moduleUiActions.setTabs({ selected: v })}
               fontFamily={fontVar(tabs.fontFamily)}
               fontSize={tabs.fontSize}
               fontWeight={tabs.fontWeight}
