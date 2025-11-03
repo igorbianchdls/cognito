@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import type { CreateSignedUrlOptions } from '@supabase/storage-js'
 import { runQuery } from '@/lib/postgres'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -26,11 +27,13 @@ export async function GET(req: Request) {
       return Response.json({ success: false, message: 'Anexo não encontrado' }, { status: 404 })
     }
 
-    const options = mode === 'download' ? { download: data.nome_arquivo || 'arquivo' } : undefined
+    const downloadName = typeof data.nome_arquivo === 'string' && data.nome_arquivo.trim() ? data.nome_arquivo : 'arquivo'
+    const options: CreateSignedUrlOptions | undefined =
+      mode === 'download' ? { download: downloadName } : undefined
     const { data: signed, error: signError } = await supabase
       .storage
       .from('documentos')
-      .createSignedUrl(data.arquivo_url as string, 60 * 5, options as any)
+      .createSignedUrl(data.arquivo_url, 60 * 5, options)
 
     if (signError) {
       return Response.json({ success: false, message: 'Falha ao assinar URL', error: signError.message }, { status: 500 })
