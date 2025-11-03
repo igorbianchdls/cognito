@@ -43,6 +43,9 @@ export default function AnexosPage() {
   // Tabela completa documentos_anexos (teste)
   const [allAnexos, setAllAnexos] = useState<Anexo[]>([])
   const [allAnexosLoading, setAllAnexosLoading] = useState(false)
+  const [insertDocumentoId, setInsertDocumentoId] = useState('')
+  const [insertNomeArquivo, setInsertNomeArquivo] = useState('')
+  const [insertTipoArquivo, setInsertTipoArquivo] = useState('')
   const [insertArquivoUrl, setInsertArquivoUrl] = useState('')
 
 
@@ -455,26 +458,58 @@ export default function AnexosPage() {
             {allAnexosLoading ? 'Atualizando…' : 'Atualizar'}
           </button>
         </div>
-        <div className="mb-3 flex gap-2">
+        <div className="mb-3 grid grid-cols-1 md:grid-cols-2 gap-2">
           <input
-            className="border rounded px-2 py-1 text-sm flex-1"
-            placeholder="Digite um valor para arquivo_url (teste)"
+            className="border rounded px-2 py-1 text-sm"
+            placeholder="documento_id (número)"
+            value={insertDocumentoId}
+            onChange={(e) => setInsertDocumentoId(e.target.value)}
+          />
+          <input
+            className="border rounded px-2 py-1 text-sm"
+            placeholder="nome_arquivo (ex: arquivo.txt)"
+            value={insertNomeArquivo}
+            onChange={(e) => setInsertNomeArquivo(e.target.value)}
+          />
+          <input
+            className="border rounded px-2 py-1 text-sm"
+            placeholder="tipo_arquivo (ex: text/plain)"
+            value={insertTipoArquivo}
+            onChange={(e) => setInsertTipoArquivo(e.target.value)}
+          />
+          <input
+            className="border rounded px-2 py-1 text-sm"
+            placeholder="arquivo_url (ex: caminho/no/storage ou url)"
             value={insertArquivoUrl}
             onChange={(e) => setInsertArquivoUrl(e.target.value)}
           />
+        </div>
+        <div className="mb-3">
           <button
             className="px-3 py-1 bg-green-600 text-white rounded disabled:opacity-50"
-            disabled={!insertArquivoUrl.trim()}
+            disabled={!(insertDocumentoId.trim() && insertNomeArquivo.trim() && insertTipoArquivo.trim() && insertArquivoUrl.trim())}
             onClick={async () => {
               try {
                 setError(null)
+                const documento_id = Number(insertDocumentoId.trim())
+                if (!documento_id || Number.isNaN(documento_id)) {
+                  throw new Error('documento_id inválido')
+                }
                 const res = await fetch('/api/documentos/anexos/insert-text', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ arquivo_url: insertArquivoUrl.trim() })
+                  body: JSON.stringify({
+                    documento_id,
+                    nome_arquivo: insertNomeArquivo.trim(),
+                    tipo_arquivo: insertTipoArquivo.trim(),
+                    arquivo_url: insertArquivoUrl.trim(),
+                  })
                 })
                 const json = await res.json()
                 if (!json?.success) throw new Error(json?.error || json?.message || 'Falha ao inserir')
+                setInsertDocumentoId('')
+                setInsertNomeArquivo('')
+                setInsertTipoArquivo('')
                 setInsertArquivoUrl('')
                 await refreshAllAnexos()
               } catch (e) {
@@ -482,7 +517,7 @@ export default function AnexosPage() {
               }
             }}
           >
-            Inserir arquivo_url
+            Inserir row completa
           </button>
         </div>
         <div className="border rounded overflow-auto">
