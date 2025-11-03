@@ -6,6 +6,7 @@ import { SidebarShadcn } from "@/components/navigation/SidebarShadcn"
 import BuilderHeader from "@/components/workflows/builder/BuilderHeader"
 import BuilderCanvas from "@/components/workflows/builder/BuilderCanvas"
 import PropertiesPanel from "@/components/workflows/builder/PropertiesPanel"
+import ConnectorsPanel from "@/components/workflows/builder/ConnectorsPanel"
 import type { Step } from "@/app/workflows/builder/types"
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels"
 
@@ -60,7 +61,15 @@ export default function NewWorkflowPage() {
           autoOpen={autoOpen}
           onToggleAutoOpen={() => setAutoOpen(v => !v)}
         />
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 overflow-hidden flex">
+          {/* Left: Connectors (UI only) */}
+          <div className="w-72 border-r bg-white hidden md:block">
+            <div className="h-full overflow-auto">
+              <ConnectorsPanel />
+            </div>
+          </div>
+          {/* Center + Right */}
+          <div className="flex-1 overflow-hidden">
           {isPanelOpen && selectedStep ? (
             <PanelGroup direction="horizontal">
               <Panel minSize={40} defaultSize={66}>
@@ -105,6 +114,7 @@ export default function NewWorkflowPage() {
               />
             </div>
           )}
+          </div>
         </div>
       </SidebarInset>
     </SidebarProvider>
