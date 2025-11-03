@@ -78,60 +78,6 @@ export default function ModulosFinanceiroPage() {
     return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
   }
 
-  const getColorFromName = (name: string) => {
-    let hash = 0
-    for (let i = 0; i < name.length; i++) {
-      hash = name.charCodeAt(i) + ((hash << 5) - hash)
-    }
-
-    const colors = [
-      { bg: '#DBEAFE', text: '#1E40AF' },
-      { bg: '#DCFCE7', text: '#15803D' },
-      { bg: '#FEF3C7', text: '#B45309' },
-      { bg: '#FCE7F3', text: '#BE185D' },
-      { bg: '#E0E7FF', text: '#4338CA' },
-      { bg: '#FED7AA', text: '#C2410C' },
-      { bg: '#E9D5FF', text: '#7C3AED' },
-      { bg: '#D1FAE5', text: '#047857' },
-    ]
-
-    const index = Math.abs(hash) % colors.length
-    return colors[index]
-  }
-
-  const renderStatusBadge = (status?: unknown) => {
-    const statusStr = String(status || '').toLowerCase()
-
-    let bgColor = '#f3f4f6'
-    let textColor = '#6b7280'
-
-    if (statusStr === 'pago' || statusStr === 'recebido') {
-      bgColor = '#dcfce7'
-      textColor = '#16a34a'
-    } else if (statusStr === 'pendente' || statusStr === 'em aberto') {
-      bgColor = '#fef3c7'
-      textColor = '#ca8a04'
-    } else if (statusStr === 'vencido' || statusStr === 'atrasado') {
-      bgColor = '#fee2e2'
-      textColor = '#dc2626'
-    }
-
-    return (
-      <span style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        padding: '4px 12px',
-        borderRadius: 9999,
-        fontSize: 12,
-        fontWeight: 500,
-        backgroundColor: bgColor,
-        color: textColor
-      }}>
-        {String(status)}
-      </span>
-    )
-  }
-
   const columns: ColumnDef<Row>[] = useMemo(() => {
     switch (tabs.selected) {
       case 'contas':
@@ -154,25 +100,14 @@ export default function ModulosFinanceiroPage() {
           {
             accessorKey: 'nome_banco',
             header: 'Banco',
-            cell: ({ row }) => {
-              const nome = row.original['nome_banco'] || 'Sem nome'
-              const imagemUrl = row.original['banco_imagem_url'] || row.original['imagem_url']
-              const colors = getColorFromName(String(nome))
-              return (
-                <div className="flex items-center">
-                  <div className="flex items-center justify-center mr-3 cursor-pointer" role="button" onClick={() => openBancoEditor(row.original)} style={{ width: 40, height: 40, borderRadius: 8, overflow: 'hidden', backgroundColor: imagemUrl ? 'transparent' : colors.bg }}>
-                    {imagemUrl ? (
-                      <img src={String(imagemUrl)} alt={String(nome)} className="w-full h-full object-cover" />
-                    ) : (
-                      <div style={{ fontSize: 18, fontWeight: 600, color: colors.text }}>
-                        {String(nome)?.charAt(0)?.toUpperCase() || '?'}
-                      </div>
-                    )}
-                  </div>
-                  <button type="button" onClick={() => openBancoEditor(row.original)} className="text-left" style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}>{String(nome)}</button>
-                </div>
-              )
-            }
+            cell: ({ row }) => (
+              <EntityDisplay
+                name={row.original['nome_banco'] || 'Sem nome'}
+                imageUrl={row.original['banco_imagem_url'] || row.original['imagem_url'] ? String(row.original['banco_imagem_url'] || row.original['imagem_url']) : undefined}
+                onClick={() => openBancoEditor(row.original)}
+                clickable
+              />
+            )
           },
           { accessorKey: 'numero_banco', header: 'Número' },
           { accessorKey: 'agencia', header: 'Agência' },
@@ -192,7 +127,7 @@ export default function ModulosFinanceiroPage() {
           { accessorKey: 'saldo_extrato', header: 'Saldo Extrato', cell: ({ row }) => formatBRL(row.original['saldo_extrato']) },
           { accessorKey: 'saldo_sistema', header: 'Saldo Sistema', cell: ({ row }) => formatBRL(row.original['saldo_sistema']) },
           { accessorKey: 'diferenca', header: 'Diferença', cell: ({ row }) => formatBRL(row.original['diferenca']) },
-          { accessorKey: 'status', header: 'Status', cell: ({ row }) => renderStatusBadge(row.original['status']) },
+          { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
           { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em']) },
         ]
       case 'extrato':
@@ -202,15 +137,14 @@ export default function ModulosFinanceiroPage() {
           {
             accessorKey: 'banco',
             header: 'Banco',
-            cell: ({ row }) => {
-              const nome = row.original['banco'] || 'Sem nome'
-              const imagemUrl = row.original['banco_imagem_url']
-              return (
-                <button type="button" onClick={() => openBancoEditor(row.original)} className="text-left">
-                  <EntityDisplay name={String(nome)} imageUrl={imagemUrl ? String(imagemUrl) : undefined} />
-                </button>
-              )
-            }
+            cell: ({ row }) => (
+              <EntityDisplay
+                name={row.original['banco'] || 'Sem nome'}
+                imageUrl={row.original['banco_imagem_url'] ? String(row.original['banco_imagem_url']) : undefined}
+                onClick={() => openBancoEditor(row.original)}
+                clickable
+              />
+            )
           },
           { accessorKey: 'conta_financeira', header: 'Conta' },
           {
@@ -222,7 +156,7 @@ export default function ModulosFinanceiroPage() {
           { accessorKey: 'total_creditos', header: 'Créditos', cell: ({ row }) => formatBRL(row.original['total_creditos']) },
           { accessorKey: 'total_debitos', header: 'Débitos', cell: ({ row }) => formatBRL(row.original['total_debitos']) },
           { accessorKey: 'saldo_final', header: 'Saldo Final', cell: ({ row }) => formatBRL(row.original['saldo_final']) },
-          { accessorKey: 'status', header: 'Status', cell: ({ row }) => renderStatusBadge(row.original['status']) },
+          { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
           { accessorKey: 'transacao_id', header: 'Transação' },
           { accessorKey: 'data_transacao', header: 'Data Transação', cell: ({ row }) => formatDate(row.original['data_transacao']) },
           {
@@ -244,72 +178,33 @@ export default function ModulosFinanceiroPage() {
           {
             accessorKey: 'cliente',
             header: 'Cliente',
-            cell: ({ row }) => {
-              const nome = row.original['cliente'] || 'Sem nome'
-              const categoria = row.original['cliente_categoria'] || 'Sem categoria'
-              const imagemUrl = row.original['cliente_imagem_url']
-              const colors = getColorFromName(String(nome))
-
-              return (
-                <div className="flex items-center">
-                  <div className="flex items-center justify-center mr-3 cursor-pointer" role="button" onClick={() => openClienteEditor(row.original)}
-                       style={{ width: 40, height: 40, borderRadius: 8, overflow: 'hidden', backgroundColor: imagemUrl ? 'transparent' : colors.bg }}>
-                    {imagemUrl ? (
-                      <img src={String(imagemUrl)} alt={String(nome)} className="w-full h-full object-cover" />
-                    ) : (
-                      <div style={{ fontSize: 18, fontWeight: 600, color: colors.text }}>
-                        {String(nome)?.charAt(0)?.toUpperCase() || '?'}
-                      </div>
-                    )}
-                  </div>
-                  <div>
-                    <button type="button" onClick={() => openClienteEditor(row.original)} className="text-left" style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}>{String(nome)}</button>
-                    <div style={{ fontSize: 12, fontWeight: 400, color: '#6b7280' }}>{String(categoria)}</div>
-                  </div>
-                </div>
-              )
-            }
+            cell: ({ row }) => (
+              <EntityDisplay
+                name={row.original['cliente'] || 'Sem nome'}
+                subtitle={row.original['cliente_categoria'] || 'Sem categoria'}
+                imageUrl={row.original['cliente_imagem_url'] ? String(row.original['cliente_imagem_url']) : undefined}
+                onClick={() => openClienteEditor(row.original)}
+                clickable
+              />
+            )
           },
           { accessorKey: 'descricao', header: 'Descrição' },
           { accessorKey: 'data_vencimento', header: 'Vencimento', cell: ({ row }) => formatDate(row.original['data_vencimento']) },
           { accessorKey: 'valor_total', header: 'Valor', cell: ({ row }) => formatBRL(row.original['valor_total']) },
-          { accessorKey: 'status', header: 'Status', cell: ({ row }) => renderStatusBadge(row.original['status']) },
+          { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
         ]
       case 'pagamentos-efetuados':
         return [
           {
             accessorKey: 'fornecedor',
             header: 'Fornecedor',
-            cell: ({ row }) => {
-              const nome = row.original['fornecedor'] || 'Sem nome'
-              const categoria = row.original['categoria_financeira'] || 'Sem categoria'
-              const imagemUrl = row.original['fornecedor_imagem_url']
-              const colors = getColorFromName(String(nome))
-
-              return (
-                <div className="flex items-center">
-                  <div
-                    className="flex items-center justify-center mr-3 cursor-pointer"
-                    role="img"
-                    style={{ width: 40, height: 40, borderRadius: 8, overflow: 'hidden', backgroundColor: imagemUrl ? 'transparent' : colors.bg }}
-                  >
-                    {imagemUrl ? (
-                      <img src={String(imagemUrl)} alt={String(nome)} className="w-full h-full object-cover" />
-                    ) : (
-                      <div style={{ fontSize: 18, fontWeight: 600, color: colors.text }}>
-                        {String(nome)?.charAt(0)?.toUpperCase() || '?'}
-                      </div>
-                    )}
-                  </div>
-                  <div>
-                    <div className="text-left" style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}>
-                      {String(nome)}
-                    </div>
-                    <div style={{ fontSize: 12, fontWeight: 400, color: '#6b7280' }}>{String(categoria)}</div>
-                  </div>
-                </div>
-              )
-            }
+            cell: ({ row }) => (
+              <EntityDisplay
+                name={row.original['fornecedor'] || 'Sem nome'}
+                subtitle={row.original['categoria_financeira'] || 'Sem categoria'}
+                imageUrl={row.original['fornecedor_imagem_url'] ? String(row.original['fornecedor_imagem_url']) : undefined}
+              />
+            )
           },
           { accessorKey: 'descricao_pagamento', header: 'Descrição' },
           { accessorKey: 'data_pagamento', header: 'Pago em', cell: ({ row }) => formatDate(row.original['data_pagamento']) },
@@ -321,36 +216,20 @@ export default function ModulosFinanceiroPage() {
           {
             accessorKey: 'cliente',
             header: 'Cliente',
-            cell: ({ row }) => {
-              const nome = row.original['cliente'] || 'Sem nome'
-              const categoria = row.original['cliente_categoria'] || 'Sem categoria'
-              const imagemUrl = row.original['cliente_imagem_url']
-              const colors = getColorFromName(String(nome))
-
-              return (
-                <div className="flex items-center">
-                  <div className="flex items-center justify-center mr-3 cursor-pointer" role="button" onClick={() => openClienteEditor(row.original)}
-                       style={{ width: 40, height: 40, borderRadius: 8, overflow: 'hidden', backgroundColor: imagemUrl ? 'transparent' : colors.bg }}>
-                    {imagemUrl ? (
-                      <img src={String(imagemUrl)} alt={String(nome)} className="w-full h-full object-cover" />
-                    ) : (
-                      <div style={{ fontSize: 18, fontWeight: 600, color: colors.text }}>
-                        {String(nome)?.charAt(0)?.toUpperCase() || '?'}
-                      </div>
-                    )}
-                  </div>
-                  <div>
-                    <button type="button" onClick={() => openClienteEditor(row.original)} className="text-left" style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}>{String(nome)}</button>
-                    <div style={{ fontSize: 12, fontWeight: 400, color: '#6b7280' }}>{String(categoria)}</div>
-                  </div>
-                </div>
-              )
-            }
+            cell: ({ row }) => (
+              <EntityDisplay
+                name={row.original['cliente'] || 'Sem nome'}
+                subtitle={row.original['cliente_categoria'] || 'Sem categoria'}
+                imageUrl={row.original['cliente_imagem_url'] ? String(row.original['cliente_imagem_url']) : undefined}
+                onClick={() => openClienteEditor(row.original)}
+                clickable
+              />
+            )
           },
           { accessorKey: 'descricao', header: 'Descrição' },
           { accessorKey: 'data_recebimento', header: 'Recebido em', cell: ({ row }) => formatDate(row.original['data_recebimento']) },
           { accessorKey: 'valor_total', header: 'Valor', cell: ({ row }) => formatBRL(row.original['valor_total']) },
-          { accessorKey: 'status', header: 'Status', cell: ({ row }) => renderStatusBadge(row.original['status']) },
+          { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
         ]
       case 'movimentos':
         return [
@@ -366,47 +245,20 @@ export default function ModulosFinanceiroPage() {
           {
             accessorKey: 'fornecedor',
             header: 'Fornecedor',
-            cell: ({ row }) => {
-              const nome = row.original['fornecedor'] || 'Sem nome'
-              const categoria = row.original['fornecedor_categoria'] || 'Sem categoria'
-              const imagemUrl = row.original['fornecedor_imagem_url']
-              const colors = getColorFromName(String(nome))
-
-              return (
-                <div className="flex items-center">
-                  <div
-                    className="flex items-center justify-center mr-3 cursor-pointer"
-                    role="button"
-                    onClick={() => openEditor(row.original)}
-                    style={{ width: 40, height: 40, borderRadius: 8, overflow: 'hidden', backgroundColor: imagemUrl ? 'transparent' : colors.bg }}
-                  >
-                    {imagemUrl ? (
-                      <img src={String(imagemUrl)} alt={String(nome)} className="w-full h-full object-cover" />
-                    ) : (
-                      <div style={{ fontSize: 18, fontWeight: 600, color: colors.text }}>
-                        {String(nome)?.charAt(0)?.toUpperCase() || '?'}
-                      </div>
-                    )}
-                  </div>
-                  <div>
-                    <button
-                      type="button"
-                      onClick={() => openEditor(row.original)}
-                      className="text-left"
-                      style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}
-                    >
-                      {String(nome)}
-                    </button>
-                    <div style={{ fontSize: 12, fontWeight: 400, color: '#6b7280' }}>{String(categoria)}</div>
-                  </div>
-                </div>
-              )
-            }
+            cell: ({ row }) => (
+              <EntityDisplay
+                name={row.original['fornecedor'] || 'Sem nome'}
+                subtitle={row.original['fornecedor_categoria'] || 'Sem categoria'}
+                imageUrl={row.original['fornecedor_imagem_url'] ? String(row.original['fornecedor_imagem_url']) : undefined}
+                onClick={() => openEditor(row.original)}
+                clickable
+              />
+            )
           },
           { accessorKey: 'descricao', header: 'Descrição' },
           { accessorKey: 'data_vencimento', header: 'Vencimento', cell: ({ row }) => formatDate(row.original['data_vencimento']) },
           { accessorKey: 'valor_total', header: 'Valor', cell: ({ row }) => formatBRL(row.original['valor_total']) },
-          { accessorKey: 'status', header: 'Status', cell: ({ row }) => renderStatusBadge(row.original['status']) },
+          { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
         ]
     }
   }, [tabs.selected])

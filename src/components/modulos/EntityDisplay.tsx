@@ -4,6 +4,8 @@ type EntityDisplayProps = {
   name?: string
   subtitle?: string
   imageUrl?: string
+  onClick?: () => void
+  clickable?: boolean
 }
 
 const getColorFromName = (name: string) => {
@@ -27,11 +29,11 @@ const getColorFromName = (name: string) => {
   return colors[index]
 }
 
-export default function EntityDisplay({ name, subtitle, imageUrl }: EntityDisplayProps) {
+export default function EntityDisplay({ name, subtitle, imageUrl, onClick, clickable }: EntityDisplayProps) {
   const displayName = name || 'Sem nome'
   const colors = getColorFromName(displayName)
 
-  return (
+  const content = (
     <div className="flex items-center">
       <div
         className="flex items-center justify-center mr-3"
@@ -41,6 +43,7 @@ export default function EntityDisplay({ name, subtitle, imageUrl }: EntityDispla
           borderRadius: 8,
           overflow: 'hidden',
           backgroundColor: colors.bg,
+          cursor: clickable || onClick ? 'pointer' : undefined,
         }}
       >
         {imageUrl ? (
@@ -59,4 +62,19 @@ export default function EntityDisplay({ name, subtitle, imageUrl }: EntityDispla
       </div>
     </div>
   )
+
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        className="text-left w-full"
+        style={{ background: 'none', border: 'none', padding: 0 }}
+      >
+        {content}
+      </button>
+    )
+  }
+
+  return content
 }
