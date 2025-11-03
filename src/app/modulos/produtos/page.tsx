@@ -12,6 +12,8 @@ import TabsNav, { type Opcao } from '@/components/modulos/TabsNav'
 import DataToolbar from '@/components/modulos/DataToolbar'
 import DataTable, { type TableData } from '@/components/widgets/Table'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/stores/modulos/moduleUiStore'
+import EntityDisplay from '@/components/modulos/EntityDisplay'
+import StatusBadge from '@/components/modulos/StatusBadge'
 import { List } from 'lucide-react'
 
 type Row = TableData
@@ -75,24 +77,7 @@ export default function ModulosProdutosPage() {
     return isNaN(n) ? String(value ?? '') : n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
   }
 
-  const getColorFromName = (name: string) => {
-    let hash = 0
-    for (let i = 0; i < name.length; i++) {
-      hash = name.charCodeAt(i) + ((hash << 5) - hash)
-    }
-    const colors = [
-      { bg: '#DBEAFE', text: '#1E40AF' },
-      { bg: '#DCFCE7', text: '#15803D' },
-      { bg: '#FEF3C7', text: '#B45309' },
-      { bg: '#FCE7F3', text: '#BE185D' },
-      { bg: '#E0E7FF', text: '#4338CA' },
-      { bg: '#FED7AA', text: '#C2410C' },
-      { bg: '#E9D5FF', text: '#7C3AED' },
-      { bg: '#D1FAE5', text: '#047857' },
-    ]
-    const index = Math.abs(hash) % colors.length
-    return colors[index]
-  }
+  
 
   const columns: ColumnDef<Row>[] = useMemo(() => {
     switch (tabs.selected) {
@@ -101,36 +86,17 @@ export default function ModulosProdutosPage() {
           {
             accessorKey: 'nome',
             header: 'Produto',
-            cell: ({ row }) => {
-              const nome = row.original['nome'] || 'Sem nome'
-              const categoria = row.original['categoria'] || 'Sem categoria'
-              const imagemUrl = row.original['produto_imagem_url']
-              const colors = getColorFromName(String(nome))
-              return (
-                <div className="flex items-center">
-                  <div
-                    className="flex items-center justify-center mr-3"
-                    style={{ width: 40, height: 40, borderRadius: 8, overflow: 'hidden', backgroundColor: imagemUrl ? 'transparent' : colors.bg }}
-                  >
-                    {imagemUrl ? (
-                      <img src={String(imagemUrl)} alt={String(nome)} className="w-full h-full object-cover" />
-                    ) : (
-                      <div style={{ fontSize: 18, fontWeight: 600, color: colors.text }}>
-                        {String(nome)?.charAt(0)?.toUpperCase() || '?'}
-                      </div>
-                    )}
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}>{String(nome)}</div>
-                    <div style={{ fontSize: 12, fontWeight: 400, color: '#6b7280' }}>{String(categoria)}</div>
-                  </div>
-                </div>
-              )
-            }
+            cell: ({ row }) => (
+              <EntityDisplay
+                name={row.original['nome'] ? String(row.original['nome']) : 'Sem nome'}
+                subtitle={row.original['categoria'] ? String(row.original['categoria']) : 'Sem categoria'}
+                imageUrl={row.original['produto_imagem_url'] ? String(row.original['produto_imagem_url']) : undefined}
+              />
+            )
           },
           { accessorKey: 'descricao', header: 'Descrição' },
           { accessorKey: 'marca', header: 'Marca' },
-          { accessorKey: 'ativo', header: 'Ativo' },
+          { accessorKey: 'ativo', header: 'Ativo', cell: ({ row }) => <StatusBadge value={row.original['ativo']} type="bool" /> },
         ]
       case 'variacoes':
         return [
@@ -141,7 +107,7 @@ export default function ModulosProdutosPage() {
           { accessorKey: 'altura_cm', header: 'Altura (cm)' },
           { accessorKey: 'largura_cm', header: 'Largura (cm)' },
           { accessorKey: 'profundidade_cm', header: 'Profundidade (cm)' },
-          { accessorKey: 'ativo', header: 'Ativo' },
+          { accessorKey: 'ativo', header: 'Ativo', cell: ({ row }) => <StatusBadge value={row.original['ativo']} type="bool" /> },
         ]
       case 'dados-fiscais':
         return [

@@ -13,6 +13,7 @@ import TabsNav from '@/components/modulos/TabsNav'
 import DataTable, { type TableData } from '@/components/widgets/Table'
 import DataToolbar from '@/components/modulos/DataToolbar'
 import StatusBadge from '@/components/modulos/StatusBadge'
+import EntityDisplay from '@/components/modulos/EntityDisplay'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/stores/modulos/moduleUiStore'
 import type { Opcao } from '@/components/modulos/TabsNav'
 import { ShoppingCart, Users, Map, Users2, LayoutGrid } from 'lucide-react'
@@ -109,26 +110,7 @@ export default function ModulosVendasPage() {
     return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
   }
 
-  const getColorFromName = (name: string) => {
-    let hash = 0
-    for (let i = 0; i < name.length; i++) {
-      hash = name.charCodeAt(i) + ((hash << 5) - hash)
-    }
-
-    const colors = [
-      { bg: '#DBEAFE', text: '#1E40AF' },
-      { bg: '#DCFCE7', text: '#15803D' },
-      { bg: '#FEF3C7', text: '#B45309' },
-      { bg: '#FCE7F3', text: '#BE185D' },
-      { bg: '#E0E7FF', text: '#4338CA' },
-      { bg: '#FED7AA', text: '#C2410C' },
-      { bg: '#E9D5FF', text: '#7C3AED' },
-      { bg: '#D1FAE5', text: '#047857' },
-    ]
-
-    const index = Math.abs(hash) % colors.length
-    return colors[index]
-  }
+  
 
   const columns: ColumnDef<Row>[] = useMemo(() => {
     switch (tabs.selected) {
@@ -143,12 +125,12 @@ export default function ModulosVendasPage() {
           { accessorKey: 'territorio', header: 'Território' },
           { accessorKey: 'canal_origem', header: 'Canal de Origem' },
           { accessorKey: 'categoria_cliente', header: 'Categoria' },
-          { accessorKey: 'status_cliente', header: 'Status' },
+          { accessorKey: 'status_cliente', header: 'Status', cell: ({ row }) => <StatusBadge value={row.original['status_cliente']} type="status" /> },
           { accessorKey: 'cliente_desde', header: 'Cliente Desde', cell: ({ row }) => formatDate(row.original['cliente_desde']) },
           { accessorKey: 'data_ultima_compra', header: 'Última Compra', cell: ({ row }) => formatDate(row.original['data_ultima_compra']) },
           { accessorKey: 'faturamento_estimado_anual', header: 'Faturamento Estimado', cell: ({ row }) => formatBRL(row.original['faturamento_estimado_anual']) },
           { accessorKey: 'frequencia_pedidos_mensal', header: 'Frequência Mensal (pedidos)' },
-          { accessorKey: 'ativo', header: 'Ativo' },
+          { accessorKey: 'ativo', header: 'Ativo', cell: ({ row }) => <StatusBadge value={row.original['ativo']} type="bool" /> },
         ]
       case 'territorios':
         return [
@@ -163,7 +145,7 @@ export default function ModulosVendasPage() {
           { accessorKey: 'descricao', header: 'Descrição' },
           { accessorKey: 'qtd_vendedores', header: 'Qtd Vendedores' },
           { accessorKey: 'territorios_atendidos', header: 'Territórios Atendidos' },
-          { accessorKey: 'ativo', header: 'Ativa' },
+          { accessorKey: 'ativo', header: 'Ativa', cell: ({ row }) => <StatusBadge value={row.original['ativo']} type="bool" /> },
           { accessorKey: 'created_at', header: 'Criada em', cell: ({ row }) => formatDate(row.original['created_at']) },
         ]
       case 'canais':
@@ -183,78 +165,29 @@ export default function ModulosVendasPage() {
             header: 'Cliente',
             size: 250,
             minSize: 200,
-            cell: ({ row }) => {
-              const nome = row.original['cliente'] || 'Sem cliente'
-              const subtitulo = row.original['segmento_cliente'] || 'Sem segmento'
-              const imagemUrl = row.original['cliente_imagem_url']
-              const colors = getColorFromName(String(nome))
-
-              return (
-                <div className="flex items-center">
-                  <div
-                    className="flex items-center justify-center mr-3 cursor-pointer"
-                    role="button"
-                    onClick={() => openEditorCliente(row.original)}
-                    style={{ width: 40, height: 40, borderRadius: 8, overflow: 'hidden', backgroundColor: imagemUrl ? 'transparent' : colors.bg }}>
-                    {imagemUrl ? (
-                      <img src={String(imagemUrl)} alt={String(nome)} className="w-full h-full object-cover" />
-                    ) : (
-                      <div style={{ fontSize: 18, fontWeight: 600, color: colors.text }}>
-                        {String(nome)?.charAt(0)?.toUpperCase() || '?'}
-                      </div>
-                    )}
-                  </div>
-                  <div>
-                    <button
-                      type="button"
-                      onClick={() => openEditorCliente(row.original)}
-                      className="text-left"
-                      style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}
-                    >
-                      {String(nome)}
-                    </button>
-                    <div style={{ fontSize: 12, fontWeight: 400, color: '#6b7280' }}>{String(subtitulo)}</div>
-                  </div>
-                </div>
-              )
-            }
+            cell: ({ row }) => (
+              <EntityDisplay
+                name={row.original['cliente'] ? String(row.original['cliente']) : 'Sem cliente'}
+                subtitle={row.original['segmento_cliente'] ? String(row.original['segmento_cliente']) : 'Sem segmento'}
+                imageUrl={row.original['cliente_imagem_url'] ? String(row.original['cliente_imagem_url']) : undefined}
+                onClick={() => openEditorCliente(row.original)}
+                clickable
+              />
+            )
           },
           {
             accessorKey: 'canal_venda',
             header: 'Canal de Venda',
             size: 200,
             minSize: 150,
-            cell: ({ row }) => {
-              const nome = row.original['canal_venda'] || 'Sem canal'
-              const imagemUrl = row.original['canal_imagem_url']
-              const colors = getColorFromName(String(nome))
-
-              return (
-                <div className="flex items-center">
-                  <div
-                    className="flex items-center justify-center mr-3 cursor-pointer"
-                    role="button"
-                    onClick={() => openEditorCanal(row.original)}
-                    style={{ width: 40, height: 40, borderRadius: 8, overflow: 'hidden', backgroundColor: imagemUrl ? 'transparent' : colors.bg }}>
-                    {imagemUrl ? (
-                      <img src={String(imagemUrl)} alt={String(nome)} className="w-full h-full object-cover" />
-                    ) : (
-                      <div style={{ fontSize: 18, fontWeight: 600, color: colors.text }}>
-                        {String(nome)?.charAt(0)?.toUpperCase() || '?'}
-                      </div>
-                    )}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => openEditorCanal(row.original)}
-                    className="text-left"
-                    style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}
-                  >
-                    {String(nome)}
-                  </button>
-                </div>
-              )
-            }
+            cell: ({ row }) => (
+              <EntityDisplay
+                name={row.original['canal_venda'] ? String(row.original['canal_venda']) : 'Sem canal'}
+                imageUrl={row.original['canal_imagem_url'] ? String(row.original['canal_imagem_url']) : undefined}
+                onClick={() => openEditorCanal(row.original)}
+                clickable
+              />
+            )
           },
           { accessorKey: 'vendedor', header: 'Vendedor' },
           {
