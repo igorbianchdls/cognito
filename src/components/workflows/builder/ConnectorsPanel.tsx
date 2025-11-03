@@ -6,15 +6,17 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { GitBranch, Clock4, Network, Code, Database, Settings, Webhook, Zap, Slack, Github, Gitlab, Plug } from "lucide-react"
 
 const SectionList = ({ items }: { items: { icon: React.ReactNode; label: string; hint?: string }[] }) => (
-  <div className="grid grid-cols-2 gap-2">
+  <div className="grid grid-cols-2 gap-3">
     {items.map((it, i) => (
-      <div key={i} className="flex items-start gap-3 p-3 rounded-lg border border-gray-100 hover:border-gray-200 hover:bg-gray-50 text-sm cursor-default select-none min-h-[64px]">
-        <span className="inline-flex items-center justify-center w-8 h-8 rounded-md bg-gray-100 text-gray-700">
+      <div
+        key={i}
+        className="flex flex-col items-center justify-center gap-2 p-4 rounded-lg border border-gray-100 hover:border-gray-200 hover:bg-gray-50 cursor-default select-none min-h-[88px] text-center"
+      >
+        <span className="inline-flex items-center justify-center w-10 h-10 rounded-md bg-gray-100 text-gray-700">
           {it.icon}
         </span>
-        <div className="flex-1 min-w-0">
-          <div className="truncate text-gray-800 font-semibold" style={{ fontFamily: 'var(--font-inter)', letterSpacing: '-0.28px' }}>{it.label}</div>
-          {it.hint ? <div className="text-[11px] text-gray-500 truncate" style={{ fontFamily: 'var(--font-inter)', letterSpacing: '-0.28px' }}>{it.hint}</div> : null}
+        <div className="w-full truncate text-gray-800 font-medium" style={{ fontFamily: 'var(--font-inter)', letterSpacing: '-0.28px' }}>
+          {it.label}
         </div>
       </div>
     ))}

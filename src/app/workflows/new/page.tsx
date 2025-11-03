@@ -8,7 +8,7 @@ import BuilderCanvas from "@/components/workflows/builder/BuilderCanvas"
 import PropertiesPanel from "@/components/workflows/builder/PropertiesPanel"
 import ConnectorsPanel from "@/components/workflows/builder/ConnectorsPanel"
 import type { Step } from "@/app/workflows/builder/types"
-import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels"
+// Removed resizable panels: right properties panel is always visible
 
 export default function NewWorkflowPage() {
   const [name, setName] = useState("Novo workflow")
@@ -19,8 +19,7 @@ export default function NewWorkflowPage() {
     { id: 's4', type: 'branch' },
   ])
   const [selectedId, setSelectedId] = useState<string | null>(null)
-  const [isPanelOpen, setIsPanelOpen] = useState(false)
-  const [autoOpen, setAutoOpen] = useState(true)
+  // Properties panel is always open
   const selectedStep = useMemo(() => steps.find(s => s.id === selectedId) || null, [steps, selectedId])
 
   const updateStep = (id: string, patch: Partial<Step>) => {
@@ -32,22 +31,7 @@ export default function NewWorkflowPage() {
     setSelectedId(prev => (prev === id ? null : prev))
   }
 
-  // Atalhos: P para alternar painel; Esc para fechar
-  if (typeof window !== 'undefined') {
-    const w = window as Window & { __wf_panel_keys__?: boolean }
-    if (!w.__wf_panel_keys__) {
-      w.addEventListener('keydown', (e) => {
-        if (e.key.toLowerCase() === 'p') {
-          e.preventDefault()
-          setIsPanelOpen((v) => !v)
-        }
-        if (e.key === 'Escape') {
-          setIsPanelOpen(false)
-        }
-      })
-      w.__wf_panel_keys__ = true
-    }
-  }
+  // No toggle shortcuts: panel remains open
 
   return (
     <SidebarProvider defaultOpen={false}>
@@ -56,62 +40,31 @@ export default function NewWorkflowPage() {
         <BuilderHeader
           name={name}
           onRename={setName}
-          isPanelOpen={isPanelOpen}
-          onTogglePanel={() => setIsPanelOpen(v => !v)}
-          autoOpen={autoOpen}
-          onToggleAutoOpen={() => setAutoOpen(v => !v)}
         />
         <div className="flex-1 overflow-hidden flex">
           {/* Left: Connectors (UI only) */}
-          <div className="w-80 border-r bg-white hidden md:block">
+          <div className="w-96 border-r bg-white hidden md:block">
             <ConnectorsPanel />
           </div>
-          {/* Center + Right */}
-          <div className="flex-1 overflow-hidden">
-          {isPanelOpen && selectedStep ? (
-            <PanelGroup direction="horizontal">
-              <Panel minSize={40} defaultSize={66}>
-                <div className="h-full overflow-auto custom-scrollbar">
-                  <BuilderCanvas
-                    steps={steps}
-                    setSteps={setSteps}
-                    selectedId={selectedId}
-                    setSelectedId={setSelectedId}
-                    onNodeSelect={(id) => {
-                      setSelectedId(id)
-                      if (autoOpen) setIsPanelOpen(true)
-                    }}
-                    onBackgroundClick={() => setSelectedId(null)}
-                  />
-                </div>
-              </Panel>
-              <PanelResizeHandle className="w-1 bg-gray-200 hover:bg-gray-300 cursor-col-resize" />
-              <Panel minSize={24} defaultSize={34}>
-                <div className="h-full overflow-auto border-l bg-white custom-scrollbar">
-                  <PropertiesPanel
-                    step={selectedStep}
-                    onChange={(patch) => selectedStep && updateStep(selectedStep.id, patch)}
-                    onDelete={() => selectedStep && removeStep(selectedStep.id)}
-                    onClose={() => setIsPanelOpen(false)}
-                  />
-                </div>
-              </Panel>
-            </PanelGroup>
-          ) : (
-            <div className="h-full overflow-auto custom-scrollbar">
+          {/* Center + Right (fixed right panel) */}
+          <div className="flex-1 overflow-hidden flex">
+            <div className="flex-1 h-full overflow-auto custom-scrollbar">
               <BuilderCanvas
                 steps={steps}
                 setSteps={setSteps}
                 selectedId={selectedId}
                 setSelectedId={setSelectedId}
-                onNodeSelect={(id) => {
-                  setSelectedId(id)
-                  if (autoOpen) setIsPanelOpen(true)
-                }}
+                onNodeSelect={(id) => setSelectedId(id)}
                 onBackgroundClick={() => setSelectedId(null)}
               />
             </div>
-          )}
+            <div className="w-96 h-full overflow-auto border-l bg-white custom-scrollbar">
+              <PropertiesPanel
+                step={selectedStep}
+                onChange={(patch) => selectedStep && updateStep(selectedStep.id, patch)}
+                onDelete={() => selectedStep && removeStep(selectedStep.id)}
+              />
+            </div>
           </div>
         </div>
       </SidebarInset>

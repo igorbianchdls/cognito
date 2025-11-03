@@ -2,23 +2,14 @@
 
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
-import { Switch } from "@/components/ui/switch"
-import { Undo2, Redo2, ZoomIn, ZoomOut, Save, PanelRightOpen } from "lucide-react"
+import { Undo2, Redo2, ZoomIn, ZoomOut, Save } from "lucide-react"
 
 export default function BuilderHeader({
   name,
   onRename,
-  isPanelOpen,
-  onTogglePanel,
-  autoOpen,
-  onToggleAutoOpen,
 }: {
   name: string
   onRename: (v: string) => void
-  isPanelOpen?: boolean
-  onTogglePanel?: () => void
-  autoOpen?: boolean
-  onToggleAutoOpen?: () => void
 }) {
   return (
     <header className="flex items-center justify-between border-b px-6 md:px-10 py-3">
@@ -29,15 +20,7 @@ export default function BuilderHeader({
           className="bg-transparent text-lg font-semibold outline-none border-none"
         />
         <Separator orientation="vertical" className="h-6" />
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={onTogglePanel}>
-            <PanelRightOpen className="h-4 w-4 mr-2" /> {isPanelOpen ? 'Ocultar' : 'Propriedades'}
-          </Button>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <span>Auto-abrir</span>
-            <Switch checked={!!autoOpen} onCheckedChange={() => onToggleAutoOpen && onToggleAutoOpen()} />
-          </div>
-        </div>
+        <div className="flex items-center gap-2" />
       </div>
 
       <div className="flex items-center gap-2">
