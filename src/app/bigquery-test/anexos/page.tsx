@@ -186,8 +186,13 @@ export default function AnexosPage() {
     }
   }
 
-  const downloadAnexo = async (id: number) => {
+  const openAnexo = async (id: number) => {
     const res = await fetch(`/api/documentos/anexos/download?id=${id}`)
+    const json = await res.json()
+    if (json?.success && json?.url) window.open(json.url, '_blank')
+  }
+  const downloadAnexo = async (id: number) => {
+    const res = await fetch(`/api/documentos/anexos/download?id=${id}&mode=download`)
     const json = await res.json()
     if (json?.success && json?.url) window.open(json.url, '_blank')
   }
@@ -328,7 +333,7 @@ export default function AnexosPage() {
                 <td className="p-2">{r.criado_em ? new Date(r.criado_em).toLocaleString('pt-BR') : '-'}</td>
                 <td className="p-2">
                   {r.signed_url ? (
-                    <a href={r.signed_url} target="_blank" rel="noreferrer" className="text-blue-600 underline">Baixar</a>
+                    <a href={r.signed_url} target="_blank" rel="noreferrer" className="text-blue-600 underline">Abrir</a>
                   ) : '-'}
                 </td>
               </tr>
@@ -438,6 +443,7 @@ export default function AnexosPage() {
                         <td className="p-2">{typeof a.tamanho_bytes === 'number' ? `${a.tamanho_bytes} bytes` : '-'}</td>
                         <td className="p-2">{a.criado_em ? new Date(a.criado_em).toLocaleString('pt-BR') : '-'}</td>
                         <td className="p-2 flex items-center gap-3">
+                          <button className="text-blue-600 underline" onClick={() => openAnexo(a.id)}>Abrir</button>
                           <button className="text-blue-600 underline" onClick={() => downloadAnexo(a.id)}>Baixar</button>
                         </td>
                       </tr>

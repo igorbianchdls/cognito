@@ -11,6 +11,7 @@ export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url)
     const id = Number(String(searchParams.get('id') || '').trim())
+    const mode = String(searchParams.get('mode') || '').trim().toLowerCase()
     if (!id || Number.isNaN(id)) {
       return Response.json({ success: false, message: 'id é obrigatório' }, { status: 400 })
     }
@@ -25,10 +26,11 @@ export async function GET(req: Request) {
       return Response.json({ success: false, message: 'Anexo não encontrado' }, { status: 404 })
     }
 
+    const options = mode === 'download' ? { download: data.nome_arquivo || 'arquivo' } : undefined
     const { data: signed, error: signError } = await supabase
       .storage
       .from('documentos')
-      .createSignedUrl(data.arquivo_url as string, 60 * 5)
+      .createSignedUrl(data.arquivo_url as string, 60 * 5, options as any)
 
     if (signError) {
       return Response.json({ success: false, message: 'Falha ao assinar URL', error: signError.message }, { status: 500 })
