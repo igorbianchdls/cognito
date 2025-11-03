@@ -6,12 +6,14 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { GitBranch, Clock4, Network, Code, Database, Settings, Webhook, Zap, Slack, Github, Gitlab, Plug } from "lucide-react"
 
 const SectionList = ({ items }: { items: { icon: React.ReactNode; label: string; hint?: string }[] }) => (
-  <div className="grid grid-cols-1 gap-1">
+  <div className="grid grid-cols-2 gap-2">
     {items.map((it, i) => (
-      <div key={i} className="flex items-center gap-3 px-2 py-2 rounded-md hover:bg-gray-50 text-sm cursor-default select-none">
-        <span className="inline-flex items-center justify-center w-6 h-6 text-gray-600">{it.icon}</span>
+      <div key={i} className="flex items-start gap-3 p-3 rounded-lg border border-gray-100 hover:border-gray-200 hover:bg-gray-50 text-sm cursor-default select-none min-h-[64px]">
+        <span className="inline-flex items-center justify-center w-8 h-8 rounded-md bg-gray-100 text-gray-700">
+          {it.icon}
+        </span>
         <div className="flex-1 min-w-0">
-          <div className="truncate text-gray-800" style={{ fontFamily: 'var(--font-inter)', letterSpacing: '-0.28px' }}>{it.label}</div>
+          <div className="truncate text-gray-800 font-semibold" style={{ fontFamily: 'var(--font-inter)', letterSpacing: '-0.28px' }}>{it.label}</div>
           {it.hint ? <div className="text-[11px] text-gray-500 truncate" style={{ fontFamily: 'var(--font-inter)', letterSpacing: '-0.28px' }}>{it.hint}</div> : null}
         </div>
       </div>
@@ -21,13 +23,13 @@ const SectionList = ({ items }: { items: { icon: React.ReactNode; label: string;
 
 export default function ConnectorsPanel() {
   return (
-    <aside className="h-full w-full bg-white">
+    <aside className="h-full w-full bg-white flex flex-col">
       <div className="p-3">
         <div className="text-xs font-medium text-gray-500 mb-2" style={{ fontFamily: 'var(--font-inter)', letterSpacing: '-0.28px' }}>Conectores</div>
         <Input placeholder="Buscar conectores..." className="h-8" />
       </div>
       <Separator />
-      <div className="p-2 overflow-auto" style={{ maxHeight: 'calc(100vh - 56px)' }}>
+      <div className="p-2 flex-1 overflow-auto sidebar-scrollbar">
         <Accordion type="multiple" defaultValue={["core","helpers","triggers","apps"]}>
           <AccordionItem value="core" className="border-none">
             <AccordionTrigger className="text-sm px-2" style={{ fontFamily: 'var(--font-inter)', letterSpacing: '-0.28px' }}>Core</AccordionTrigger>
@@ -79,4 +81,3 @@ export default function ConnectorsPanel() {
     </aside>
   )
 }
-

@@ -63,17 +63,15 @@ export default function NewWorkflowPage() {
         />
         <div className="flex-1 overflow-hidden flex">
           {/* Left: Connectors (UI only) */}
-          <div className="w-72 border-r bg-white hidden md:block">
-            <div className="h-full overflow-auto">
-              <ConnectorsPanel />
-            </div>
+          <div className="w-80 border-r bg-white hidden md:block">
+            <ConnectorsPanel />
           </div>
           {/* Center + Right */}
           <div className="flex-1 overflow-hidden">
           {isPanelOpen && selectedStep ? (
             <PanelGroup direction="horizontal">
               <Panel minSize={40} defaultSize={66}>
-                <div className="h-full overflow-auto">
+                <div className="h-full overflow-auto custom-scrollbar">
                   <BuilderCanvas
                     steps={steps}
                     setSteps={setSteps}
@@ -89,7 +87,7 @@ export default function NewWorkflowPage() {
               </Panel>
               <PanelResizeHandle className="w-1 bg-gray-200 hover:bg-gray-300 cursor-col-resize" />
               <Panel minSize={24} defaultSize={34}>
-                <div className="h-full overflow-auto border-l bg-white">
+                <div className="h-full overflow-auto border-l bg-white custom-scrollbar">
                   <PropertiesPanel
                     step={selectedStep}
                     onChange={(patch) => selectedStep && updateStep(selectedStep.id, patch)}
@@ -100,7 +98,7 @@ export default function NewWorkflowPage() {
               </Panel>
             </PanelGroup>
           ) : (
-            <div className="h-full overflow-auto">
+            <div className="h-full overflow-auto custom-scrollbar">
               <BuilderCanvas
                 steps={steps}
                 setSteps={setSteps}
