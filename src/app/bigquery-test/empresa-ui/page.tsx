@@ -12,18 +12,25 @@ type FontWeight = '300' | '400' | '500' | '600' | '700' | '800' | '900'
 const FONT_OPTIONS = [
   'PT Serif',
   'Noto Serif',
-  'Libre',
-  'Crimson',
+  'Libre Baskerville',
+  'Crimson Text',
   'Amiri',
   'Radley',
   'Geist',
   'Inter',
+  'Georgia',
 ] as const
 
 function fontVar(name?: string) {
   if (!name) return undefined
   if (name === 'Inter') return 'var(--font-inter)'
   if (name === 'Geist') return 'var(--font-geist-sans)'
+  if (name === 'PT Serif') return 'var(--font-pt-serif)'
+  if (name === 'Noto Serif') return 'var(--font-noto-serif)'
+  if (name === 'Libre Baskerville') return 'var(--font-libre-baskerville)'
+  if (name === 'Crimson Text') return 'var(--font-crimson-text)'
+  if (name === 'Amiri') return 'var(--font-amiri)'
+  if (name === 'Radley') return 'var(--font-radley)'
   return name
 }
 
