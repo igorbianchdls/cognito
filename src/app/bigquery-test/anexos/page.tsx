@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 
 type Anexo = {
   id: number
+  documento_id?: number
   nome_arquivo?: string
   tipo_arquivo?: string
   arquivo_url?: string
@@ -39,6 +40,10 @@ export default function AnexosPage() {
   const [rowUploadBusy, setRowUploadBusy] = useState<number | null>(null)
   const [selectedView, setSelectedView] = useState<'fiscal'|'financeiro'|'operacional'|'juridico'|'comercial'|'rh'|'contratos'|'outros'>('financeiro')
   const [selectedDocumentoId, setSelectedDocumentoId] = useState<string>('')
+  // Tabela completa documentos_anexos (teste)
+  const [allAnexos, setAllAnexos] = useState<Anexo[]>([])
+  const [allAnexosLoading, setAllAnexosLoading] = useState(false)
+  const [insertArquivoUrl, setInsertArquivoUrl] = useState('')
 
 
   const handleUpload = async (overrideFile?: File) => {
@@ -93,6 +98,20 @@ export default function AnexosPage() {
       setError(e instanceof Error ? e.message : 'Erro ao listar storage')
       setRows([])
     } finally { setLoading(false) }
+  }
+
+  const refreshAllAnexos = async () => {
+    try {
+      setAllAnexosLoading(true)
+      const res = await fetch('/api/documentos/anexos/all?limit=100', { cache: 'no-store' })
+      const json = await res.json()
+      if (res.ok && Array.isArray(json?.rows)) setAllAnexos(json.rows)
+      else setAllAnexos([])
+    } catch {
+      setAllAnexos([])
+    } finally {
+      setAllAnexosLoading(false)
+    }
   }
 
   const fetchDocs = useCallback(async () => {
@@ -174,6 +193,11 @@ export default function AnexosPage() {
     // carregar documentos conforme view selecionado
     fetchDocs().catch(() => {})
   }, [fetchDocs])
+
+  useEffect(() => {
+    // carregar tabela completa documentos_anexos (teste)
+    refreshAllAnexos().catch(() => {})
+  }, [])
 
   return (
     <div className="max-w-3xl mx-auto p-6">
@@ -422,6 +446,80 @@ export default function AnexosPage() {
           </div>
         </div>
       )}
+
+      {/* Tabela completa documentos_anexos (teste) */}
+      <div className="mt-10">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-lg font-semibold">Tabela documentos_anexos (teste direto no DB)</h2>
+          <button className="px-3 py-1 bg-gray-200 rounded" onClick={refreshAllAnexos} disabled={allAnexosLoading}>
+            {allAnexosLoading ? 'Atualizando…' : 'Atualizar'}
+          </button>
+        </div>
+        <div className="mb-3 flex gap-2">
+          <input
+            className="border rounded px-2 py-1 text-sm flex-1"
+            placeholder="Digite um valor para arquivo_url (teste)"
+            value={insertArquivoUrl}
+            onChange={(e) => setInsertArquivoUrl(e.target.value)}
+          />
+          <button
+            className="px-3 py-1 bg-green-600 text-white rounded disabled:opacity-50"
+            disabled={!insertArquivoUrl.trim()}
+            onClick={async () => {
+              try {
+                setError(null)
+                const res = await fetch('/api/documentos/anexos/insert-text', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ arquivo_url: insertArquivoUrl.trim() })
+                })
+                const json = await res.json()
+                if (!json?.success) throw new Error(json?.error || json?.message || 'Falha ao inserir')
+                setInsertArquivoUrl('')
+                await refreshAllAnexos()
+              } catch (e) {
+                setError(e instanceof Error ? e.message : 'Erro ao inserir em documentos_anexos')
+              }
+            }}
+          >
+            Inserir arquivo_url
+          </button>
+        </div>
+        <div className="border rounded overflow-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="text-left p-2">ID</th>
+                <th className="text-left p-2">Documento</th>
+                <th className="text-left p-2">Nome</th>
+                <th className="text-left p-2">Tipo</th>
+                <th className="text-left p-2">Arquivo URL</th>
+                <th className="text-left p-2">Tamanho</th>
+                <th className="text-left p-2">Criado em</th>
+              </tr>
+            </thead>
+            <tbody>
+              {allAnexosLoading && (
+                <tr><td className="p-2" colSpan={7}>Carregando…</td></tr>
+              )}
+              {!allAnexosLoading && allAnexos.length === 0 && (
+                <tr><td className="p-2 text-gray-500" colSpan={7}>Nenhum registro</td></tr>
+              )}
+              {allAnexos.map((r) => (
+                <tr key={r.id} className="border-t">
+                  <td className="p-2">{r.id}</td>
+                  <td className="p-2">{r as any && (r as any).documento_id != null ? String((r as any).documento_id) : '-'}</td>
+                  <td className="p-2">{r.nome_arquivo || '-'}</td>
+                  <td className="p-2">{r.tipo_arquivo || '-'}</td>
+                  <td className="p-2">{r.arquivo_url || '-'}</td>
+                  <td className="p-2">{typeof r.tamanho_bytes === 'number' ? `${r.tamanho_bytes} bytes` : '-'}</td>
+                  <td className="p-2">{r.criado_em ? new Date(r.criado_em).toLocaleString('pt-BR') : '-'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   )
 }
