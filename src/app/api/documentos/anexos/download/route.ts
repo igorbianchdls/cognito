@@ -1,5 +1,4 @@
 import { createClient } from '@supabase/supabase-js'
-import type { CreateSignedUrlOptions } from '@supabase/storage-js'
 import { runQuery } from '@/lib/postgres'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -28,8 +27,7 @@ export async function GET(req: Request) {
     }
 
     const downloadName = typeof data.nome_arquivo === 'string' && data.nome_arquivo.trim() ? data.nome_arquivo : 'arquivo'
-    const options: CreateSignedUrlOptions | undefined =
-      mode === 'download' ? { download: downloadName } : undefined
+    const options = mode === 'download' ? { download: downloadName } : undefined
     const { data: signed, error: signError } = await supabase
       .storage
       .from('documentos')
