@@ -11,7 +11,7 @@ import DataTable, { type TableData } from '@/components/widgets/Table'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
 import { List } from 'lucide-react'
-import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, admnistrativoUiActions } from '@/stores/modulos/admnistrativoUiStore'
+import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/stores/modulos/moduleUiStore'
 
 type Row = TableData
 
@@ -31,7 +31,8 @@ export default function ModulosAdmnistrativoPage() {
   const [total, setTotal] = useState<number>(0)
 
   useEffect(() => {
-    admnistrativoUiActions.setTabs({
+    moduleUiActions.setTitulo({ title: 'Administrativo', subtitle: 'Selecione uma opção para visualizar os dados', titleFontFamily: 'var(--font-crimson-text)' })
+    moduleUiActions.setTabs({
       options: [
         { value: 'despesas', label: 'Despesas' },
         { value: 'compras', label: 'Compras' },
@@ -382,7 +383,7 @@ export default function ModulosAdmnistrativoPage() {
             <TabsNav
               options={tabOptions}
               value={tabs.selected}
-              onValueChange={(v) => admnistrativoUiActions.setTabs({ selected: v })}
+              onValueChange={(v) => moduleUiActions.setTabs({ selected: v })}
               fontFamily={tabs.fontFamily}
               fontSize={tabs.fontSize}
               fontWeight={tabs.fontWeight}

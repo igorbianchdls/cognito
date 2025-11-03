@@ -12,7 +12,7 @@ import TabsNav from '@/components/modulos/TabsNav'
 import DataTable, { type TableData } from '@/components/widgets/Table'
 import DataToolbar from '@/components/modulos/DataToolbar'
 import StatusBadge from '@/components/modulos/StatusBadge'
-import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, financeiroUiActions } from '@/stores/modulos/financeiroUiStore'
+import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/stores/modulos/moduleUiStore'
 import type { Opcao } from '@/components/modulos/TabsNav'
 import { Briefcase, UserPlus, Building2, UserCircle2, CalendarClock, Megaphone } from 'lucide-react'
 
@@ -26,8 +26,8 @@ export default function ModulosCrmPage() {
   const toolbarUI = useStore($toolbarUI)
 
   useEffect(() => {
-    financeiroUiActions.setTitulo({ title: 'CRM', subtitle: 'Relacione-se com clientes, leads e oportunidades' })
-    financeiroUiActions.setTabs({
+    moduleUiActions.setTitulo({ title: 'CRM', subtitle: 'Relacione-se com clientes, leads e oportunidades', titleFontFamily: 'var(--font-crimson-text)' })
+    moduleUiActions.setTabs({
       options: [
         { value: 'oportunidades', label: 'Oportunidades' },
         { value: 'leads', label: 'Leads' },
@@ -290,7 +290,7 @@ export default function ModulosCrmPage() {
             <TabsNav
               options={tabOptions}
               value={tabs.selected}
-              onValueChange={(v) => financeiroUiActions.setTabs({ selected: v })}
+              onValueChange={(v) => moduleUiActions.setTabs({ selected: v })}
               fontFamily={fontVar(tabs.fontFamily)}
               fontSize={tabs.fontSize}
               fontWeight={tabs.fontWeight}
