@@ -100,12 +100,38 @@ export default function ModulosRecursosHumanosPage() {
     setEditorOpen(true)
   }
 
+  const openFuncionarioEditorFromRow = (row: Row) => {
+    const id = row['funcionario_id'] || row['id']
+    if (!id) return
+    setSelectedFuncionarioId(String(id))
+    setFuncionarioPrefill({
+      nome_completo: row['funcionario'] ? String(row['funcionario']) : undefined,
+      imagem_url: row['funcionario_imagem_url'] ? String(row['funcionario_imagem_url']) : undefined,
+      email_corporativo: row['email_corporativo'] ? String(row['email_corporativo']) : undefined,
+      telefone: row['telefone'] ? String(row['telefone']) : undefined,
+      status: row['status'] ? String(row['status']) : undefined,
+      data_nascimento: row['data_nascimento'] ? String(row['data_nascimento']) : undefined,
+    })
+    setEditorOpen(true)
+  }
+
   const columns: ColumnDef<Row>[] = useMemo(() => {
     switch (tabs.selected) {
       case 'contratos':
         return [
           { accessorKey: 'id', header: 'ID' },
-          { accessorKey: 'funcionario', header: 'Funcionário' },
+          {
+            accessorKey: 'funcionario',
+            header: 'Funcionário',
+            cell: ({ row }) => (
+              <EntityDisplay
+                name={row.original['funcionario'] ? String(row.original['funcionario']) : 'Sem nome'}
+                imageUrl={row.original['funcionario_imagem_url'] ? String(row.original['funcionario_imagem_url']) : undefined}
+                onClick={() => openFuncionarioEditorFromRow(row.original)}
+                clickable
+              />
+            )
+          },
           { accessorKey: 'tipo_de_contrato', header: 'Tipo de Contrato' },
           { accessorKey: 'admissao', header: 'Admissão', cell: ({ row }) => formatDate(row.original['admissao']) },
           { accessorKey: 'demissao', header: 'Demissão', cell: ({ row }) => formatDate(row.original['demissao']) },
@@ -114,7 +140,18 @@ export default function ModulosRecursosHumanosPage() {
       case 'historico-salarial':
         return [
           { accessorKey: 'id', header: 'ID' },
-          { accessorKey: 'funcionario', header: 'Funcionário' },
+          {
+            accessorKey: 'funcionario',
+            header: 'Funcionário',
+            cell: ({ row }) => (
+              <EntityDisplay
+                name={row.original['funcionario'] ? String(row.original['funcionario']) : 'Sem nome'}
+                imageUrl={row.original['funcionario_imagem_url'] ? String(row.original['funcionario_imagem_url']) : undefined}
+                onClick={() => openFuncionarioEditorFromRow(row.original)}
+                clickable
+              />
+            )
+          },
           { accessorKey: 'salario_base', header: 'Salário Base (R$)' },
           { accessorKey: 'tipo_de_pagamento', header: 'Tipo de Pagamento' },
           { accessorKey: 'inicio_vigencia', header: 'Início Vigência', cell: ({ row }) => formatDate(row.original['inicio_vigencia']) },

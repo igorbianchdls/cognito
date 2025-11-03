@@ -160,9 +160,11 @@ export async function GET(req: NextRequest) {
         params.push(q);
         i += 1;
       }
-    } else if (view === 'contratos') {
+  } else if (view === 'contratos') {
       selectSql = `SELECT ct.contratoid AS id,
+                          f.funcionarioid AS funcionario_id,
                           f.nomecompleto AS funcionario,
+                          f.imagem_url AS funcionario_imagem_url,
                           ct.tipodecontrato AS tipo_de_contrato,
                           ct.dataadmissao AS admissao,
                           ct.datademissao AS demissao,
@@ -176,9 +178,11 @@ export async function GET(req: NextRequest) {
         params.push(q);
         i += 1;
       }
-    } else if (view === 'historico-salarial') {
+  } else if (view === 'historico-salarial') {
       selectSql = `SELECT hs.historicosalarialid AS id,
+                          f.funcionarioid AS funcionario_id,
                           f.nomecompleto AS funcionario,
+                          f.imagem_url AS funcionario_imagem_url,
                           hs.salariobase AS salario_base,
                           hs.tipodepagamento AS tipo_de_pagamento,
                           hs.datainiciovigencia AS inicio_vigencia,
