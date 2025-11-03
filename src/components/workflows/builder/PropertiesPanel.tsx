@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
@@ -15,8 +14,14 @@ import Tag from "./properties/Tag"
 import KeyValueRow from "./properties/KeyValueRow"
 import { Database, Zap } from "lucide-react"
 
-export default function PropertiesPanel({ step, onChange, onDelete }: { step: Step | null; onChange: (patch: Partial<Step>) => void; onDelete: () => void }) {
-  const [activeTab, setActiveTab] = useState<'editor'|'settings'|'details'|'executions'>('settings')
+type TabKey = 'editor' | 'settings' | 'details' | 'executions'
+
+export default function PropertiesPanel({ step, onChange: _onChange, onDelete: _onDelete }: { step: Step | null; onChange: (patch: Partial<Step>) => void; onDelete: () => void }) {
+  const [activeTab, setActiveTab] = useState<TabKey>('settings')
+  const handleTabChange = (v: string) => {
+    const allowed = ['editor','settings','details','executions'] as const
+    if ((allowed as readonly string[]).includes(v)) setActiveTab(v as TabKey)
+  }
 
   if (!step) {
     return (
@@ -39,7 +44,7 @@ export default function PropertiesPanel({ step, onChange, onDelete }: { step: St
       <NodeToolbar />
       <Separator />
 
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="flex-1 flex flex-col">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="flex-1 flex flex-col">
         <div className="px-4 pt-2">
           <TabsList variant="underline">
             <TabsTrigger value="editor">Editor</TabsTrigger>
