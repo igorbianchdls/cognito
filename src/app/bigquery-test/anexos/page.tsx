@@ -35,6 +35,9 @@ export default function AnexosPage() {
   const [error, setError] = useState<string | null>(null)
   const [docs, setDocs] = useState<FinanceiroDoc[]>([])
   const [docsLoading, setDocsLoading] = useState(false)
+  type AllDoc = FinanceiroDoc & { origem?: string }
+  const [allDocs, setAllDocs] = useState<AllDoc[]>([])
+  const [allDocsLoading, setAllDocsLoading] = useState(false)
   const [selectedDocForAnexos, setSelectedDocForAnexos] = useState<number | null>(null)
   const [docAnexos, setDocAnexos] = useState<Anexo[]>([])
   const [docAnexosLoading, setDocAnexosLoading] = useState(false)
@@ -134,6 +137,36 @@ export default function AnexosPage() {
     }
   }
 
+  const refreshAllDocs = async () => {
+    try {
+      setAllDocsLoading(true)
+      const params = new URLSearchParams()
+      params.set('page', '1')
+      params.set('pageSize', '20')
+      const res = await fetch(`/api/modulos/documentos/all?${params.toString()}`, { cache: 'no-store' })
+      const json = await res.json()
+      if (res.ok && Array.isArray(json?.rows)) {
+        const mapped: AllDoc[] = json.rows.map((r: Record<string, unknown>) => ({
+          documento_id: Number(r['documento_id'] ?? r['id'] ?? 0),
+          tipo_documento: r['tipo_documento'] != null ? String(r['tipo_documento']) : undefined,
+          numero: r['numero'] != null ? String(r['numero']) : undefined,
+          descricao: r['descricao'] != null ? String(r['descricao']) : undefined,
+          data_emissao: r['data_emissao'] != null ? String(r['data_emissao']) : undefined,
+          valor_total: r['valor_total'] != null ? Number(r['valor_total']) : undefined,
+          status: r['status'] != null ? String(r['status']) : undefined,
+          origem: r['origem'] != null ? String(r['origem']) : undefined,
+        }))
+        setAllDocs(mapped)
+      } else {
+        setAllDocs([])
+      }
+    } catch {
+      setAllDocs([])
+    } finally {
+      setAllDocsLoading(false)
+    }
+  }
+
   const fetchDocs = useCallback(async () => {
     try {
       setDocsLoading(true)
@@ -224,6 +257,8 @@ export default function AnexosPage() {
     refreshAllAnexos().catch(() => {})
     // carregar tabela de anexos do financeiro
     refreshFinanceAnexos().catch(() => {})
+    // carregar todos os documentos
+    refreshAllDocs().catch(() => {})
   }, [])
 
   return (
@@ -700,6 +735,62 @@ export default function AnexosPage() {
                     >
                       Baixar
                     </a>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Tabela: Todos os Documentos (com origem) */}
+      <div className="mt-10">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-lg font-semibold">Todos os Documentos</h2>
+          <button className="px-3 py-1 bg-gray-200 rounded" onClick={refreshAllDocs} disabled={allDocsLoading}>
+            {allDocsLoading ? 'Atualizando…' : 'Atualizar'}
+          </button>
+        </div>
+        <div className="border rounded overflow-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="text-left p-2">Documento ID</th>
+                <th className="text-left p-2">Número</th>
+                <th className="text-left p-2">Tipo</th>
+                <th className="text-left p-2">Origem</th>
+                <th className="text-left p-2">Status</th>
+                <th className="text-left p-2">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {allDocsLoading && (
+                <tr><td className="p-2" colSpan={6}>Carregando…</td></tr>
+              )}
+              {!allDocsLoading && allDocs.length === 0 && (
+                <tr><td className="p-2 text-gray-500" colSpan={6}>Nenhum documento</td></tr>
+              )}
+              {allDocs.map((d) => (
+                <tr key={d.documento_id} className="border-t">
+                  <td className="p-2">{d.documento_id}</td>
+                  <td className="p-2">{d.numero || '-'}</td>
+                  <td className="p-2">{d.tipo_documento || '-'}</td>
+                  <td className="p-2">{d.origem || '-'}</td>
+                  <td className="p-2">{d.status || '-'}</td>
+                  <td className="p-2">
+                    <label className="inline-flex items-center gap-2 text-blue-600 underline cursor-pointer">
+                      <input
+                        type="file"
+                        className="hidden"
+                        onChange={(e) => {
+                          const f = e.target.files?.[0]
+                          if (f) uploadForDocumento(d.documento_id, f)
+                          e.currentTarget.value = ''
+                        }}
+                      />
+                      <span>{rowUploadBusy === d.documento_id ? 'Enviando…' : 'Upload'}</span>
+                    </label>
+                    <button className="ml-3 text-blue-600 underline" onClick={() => openDocAnexos(d.documento_id)}>Ver anexos</button>
                   </td>
                 </tr>
               ))}
