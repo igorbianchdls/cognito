@@ -56,7 +56,7 @@ export default function CadastroDadosFiscaisSheet({ triggerLabel = "Cadastrar", 
 
   const loadProdutos = React.useCallback(async () => {
     try {
-      const res = await fetch('/api/produtos/produtos/list', { cache: 'no-store' })
+      const res = await fetch('/api/modulos/produtos/produtos/list', { cache: 'no-store' })
       const json = await res.json()
       if (res.ok && Array.isArray(json?.rows)) setProdutos(json.rows)
       else setProdutos([])
@@ -67,7 +67,7 @@ export default function CadastroDadosFiscaisSheet({ triggerLabel = "Cadastrar", 
 
   const loadVariacoes = React.useCallback(async (produtoId?: string) => {
     try {
-      const url = produtoId ? `/api/produtos/variacoes/list?produto_id=${encodeURIComponent(produtoId)}` : '/api/produtos/variacoes/list'
+      const url = produtoId ? `/api/modulos/produtos/variacoes/list?produto_id=${encodeURIComponent(produtoId)}` : '/api/modulos/produtos/variacoes/list'
       const res = await fetch(url, { cache: 'no-store' })
       const json = await res.json()
       if (res.ok && Array.isArray(json?.rows)) setVariacoes(json.rows)
@@ -228,4 +228,3 @@ export default function CadastroDadosFiscaisSheet({ triggerLabel = "Cadastrar", 
     </Sheet>
   )
 }
-

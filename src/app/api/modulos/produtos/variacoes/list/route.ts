@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
     )
     return Response.json({ success: true, rows }, { headers: { 'Cache-Control': 'no-store' } })
   } catch (error) {
-    console.error('📦 API /api/produtos/variacoes/list error:', error)
+    console.error('📦 API /api/modulos/produtos/variacoes/list error:', error)
     return Response.json({ success: false, message: 'Erro interno' }, { status: 500 })
   }
 }

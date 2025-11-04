@@ -18,6 +18,11 @@ import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from 
 import type { Opcao } from '@/components/modulos/TabsNav'
 import { ShoppingCart, Users, Map, Users2, LayoutGrid } from 'lucide-react'
 import PedidosLinkedEditorSheet from '@/components/modulos/vendas/PedidosLinkedEditorSheet'
+import CadastroPedidoSheet from '@/components/vendas/CadastroPedidoSheet'
+import CadastroClienteSheet from '@/components/vendas/CadastroClienteSheet'
+import CadastroTerritorioSheet from '@/components/vendas/CadastroTerritorioSheet'
+import CadastroEquipeSheet from '@/components/vendas/CadastroEquipeSheet'
+import CadastroCanalSheet from '@/components/vendas/CadastroCanalSheet'
 
 type Row = TableData
 
@@ -333,6 +338,19 @@ export default function ModulosVendasPage() {
               iconSize={toolbarUI.iconSize}
               searchWidth={toolbarUI.searchWidth}
               dateRangeWidth={toolbarUI.dateRangeWidth}
+              actionComponent={
+                tabs.selected === 'pedidos' ? (
+                  <CadastroPedidoSheet triggerLabel="Cadastrar" onCreated={() => setReloadKey((k) => k + 1)} />
+                ) : tabs.selected === 'clientes' ? (
+                  <CadastroClienteSheet triggerLabel="Cadastrar" onCreated={() => setReloadKey((k) => k + 1)} />
+                ) : tabs.selected === 'territorios' ? (
+                  <CadastroTerritorioSheet triggerLabel="Cadastrar" onCreated={() => setReloadKey((k) => k + 1)} />
+                ) : tabs.selected === 'equipes' ? (
+                  <CadastroEquipeSheet triggerLabel="Cadastrar" onCreated={() => setReloadKey((k) => k + 1)} />
+                ) : tabs.selected === 'canais' ? (
+                  <CadastroCanalSheet triggerLabel="Cadastrar" onCreated={() => setReloadKey((k) => k + 1)} />
+                ) : undefined
+              }
             />
           </div>
           <div className="flex-1 min-h-0 overflow-auto" style={{ marginBottom: layout.mbTable }}>

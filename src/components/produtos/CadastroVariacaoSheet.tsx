@@ -47,7 +47,7 @@ export default function CadastroVariacaoSheet({ triggerLabel = "Cadastrar", onCr
 
   const loadProdutos = React.useCallback(async () => {
     try {
-      const res = await fetch('/api/produtos/produtos/list', { cache: 'no-store' })
+      const res = await fetch('/api/modulos/produtos/produtos/list', { cache: 'no-store' })
       const json = await res.json()
       if (res.ok && Array.isArray(json?.rows)) setProdutos(json.rows)
       else setProdutos([])
@@ -167,4 +167,3 @@ export default function CadastroVariacaoSheet({ triggerLabel = "Cadastrar", onCr
     </Sheet>
   )
 }
-

@@ -7,16 +7,12 @@ export const revalidate = 0
 
 export async function GET(req: NextRequest) {
   try {
-    const sql = `
-      SELECT id, nome
-      FROM produtos.produto
-      WHERE ativo = true
-      ORDER BY nome ASC
-    `
-    const rows = await runQuery<{ id: number; nome: string }>(sql)
+    const rows = await runQuery<{ id: number; nome: string }>(
+      `SELECT id, nome FROM gestaovendas.territorios_venda ORDER BY nome ASC`
+    )
     return Response.json({ success: true, rows }, { headers: { 'Cache-Control': 'no-store' } })
   } catch (error) {
-    console.error('📦 API /api/produtos/produtos/list error:', error)
+    console.error('🛒 API /api/modulos/vendas/territorios/list error:', error)
     return Response.json({ success: false, message: 'Erro interno' }, { status: 500 })
   }
 }
