@@ -7,6 +7,7 @@ import type { ColumnDef } from '@tanstack/react-table'
 import PageHeader from '@/components/modulos/PageHeader'
 import TabsNav, { type Opcao } from '@/components/modulos/TabsNav'
 import DataToolbar from '@/components/modulos/DataToolbar'
+import CadastroFiscalDocumentoAnexoSheet from '@/components/modulos/CadastroFiscalDocumentoAnexoSheet'
 import DataTable, { type TableData } from '@/components/widgets/Table'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
@@ -30,6 +31,7 @@ export default function ModulosDocumentosPage() {
   const [anexoUpload, setAnexoUpload] = useState<File | null>(null)
   const [loading, setLoading] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
+  const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
     moduleUiActions.setTitulo({ title: 'Documentos', subtitle: 'Selecione uma opção para visualizar os dados', titleFontFamily: 'var(--font-crimson-text)' })
@@ -335,7 +337,7 @@ export default function ModulosDocumentosPage() {
     }
     load()
     return () => controller.abort()
-  }, [tabs.selected, dateRange?.from, dateRange?.to])
+  }, [tabs.selected, dateRange?.from, dateRange?.to, refreshKey])
 
   return (
     <SidebarProvider>
@@ -376,29 +378,35 @@ export default function ModulosDocumentosPage() {
         </div>
         <div style={{ paddingTop: (layout.contentTopGap || 0) + (layout.mbTabs || 0) }}>
           <div className="px-4 md:px-6" style={{ marginBottom: 8 }}>
-            <DataToolbar
-              from={0}
-              to={rows.length}
-              total={total}
-              dateRange={dateRange}
-              onDateRangeChange={setDateRange}
-              fontFamily={tabs.fontFamily}
-              fontSize={toolbarUI.fontSize}
-              fontWeight={toolbarUI.fontWeight}
-              fontColor={toolbarUI.fontColor}
-              letterSpacing={toolbarUI.letterSpacing}
-              borderBottomWidth={toolbarUI.borderBottomWidth}
-              borderBottomColor={toolbarUI.borderBottomColor}
-              borderDistanceTop={toolbarUI.borderDistanceTop}
-              underlineColor={toolbarUI.underlineColor}
-              underlineWidth={toolbarUI.underlineWidth}
-              underlineOffsetTop={toolbarUI.underlineOffsetTop}
-              iconGap={toolbarUI.iconGap}
-              iconColor={toolbarUI.iconColor}
-              iconSize={toolbarUI.iconSize}
-              searchWidth={toolbarUI.searchWidth}
-              dateRangeWidth={toolbarUI.dateRangeWidth}
-            />
+          <DataToolbar
+            from={0}
+            to={rows.length}
+            total={total}
+            dateRange={dateRange}
+            onDateRangeChange={setDateRange}
+            fontFamily={tabs.fontFamily}
+            fontSize={toolbarUI.fontSize}
+            fontWeight={toolbarUI.fontWeight}
+            fontColor={toolbarUI.fontColor}
+            letterSpacing={toolbarUI.letterSpacing}
+            borderBottomWidth={toolbarUI.borderBottomWidth}
+            borderBottomColor={toolbarUI.borderBottomColor}
+            borderDistanceTop={toolbarUI.borderDistanceTop}
+            underlineColor={toolbarUI.underlineColor}
+            underlineWidth={toolbarUI.underlineWidth}
+            underlineOffsetTop={toolbarUI.underlineOffsetTop}
+            iconGap={toolbarUI.iconGap}
+            iconColor={toolbarUI.iconColor}
+            iconSize={toolbarUI.iconSize}
+            searchWidth={toolbarUI.searchWidth}
+            dateRangeWidth={toolbarUI.dateRangeWidth}
+            actionComponent={tabs.selected === 'fiscal' ? (
+              <CadastroFiscalDocumentoAnexoSheet
+                triggerLabel="Cadastrar"
+                onCreated={() => setRefreshKey((k) => k + 1)}
+              />
+            ) : undefined}
+          />
           </div>
           <div className="flex-1 min-h-0 overflow-auto" style={{ marginBottom: layout.mbTable }}>
             <div className="border-y bg-background" style={{ borderColor: tabelaUI.borderColor }}>

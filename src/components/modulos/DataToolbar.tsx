@@ -43,6 +43,8 @@ type DataToolbarProps = {
   iconSize?: number
   searchWidth?: number
   dateRangeWidth?: number
+  // Custom action (replaces default CadastroFormSheet)
+  actionComponent?: React.ReactNode
 }
 
 export default function DataToolbar({
@@ -73,6 +75,7 @@ export default function DataToolbar({
   iconSize,
   searchWidth,
   dateRangeWidth,
+  actionComponent,
 }: DataToolbarProps) {
   const fmt = (d?: Date) =>
     d ? d.toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : ''
@@ -163,7 +166,7 @@ export default function DataToolbar({
           </Button>
         </div>
 
-        <CadastroFormSheet triggerLabel={actionLabel} />
+        {actionComponent ?? <CadastroFormSheet triggerLabel={actionLabel} />}
         </div>
       </div>
       {typeof underlineWidth === 'number' && underlineWidth > 0 && (
