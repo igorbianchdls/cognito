@@ -62,7 +62,8 @@ export default function CadastroFiscalDocumentoAnexoSheet({ triggerLabel = "Cada
       const res = await fetch('/api/documentos/tipos?categoria=fiscal', { cache: 'no-store' })
       const json = await res.json()
       if (res.ok && Array.isArray(json?.rows)) {
-        const mapped = json.rows.map((r: any) => ({ id: Number(r.id), nome: String(r.nome), categoria: r.categoria ? String(r.categoria) : undefined }))
+        const rows = json.rows as Array<{ id: number | string; nome: string; categoria?: string | null }>
+        const mapped = rows.map((r) => ({ id: Number(r.id), nome: String(r.nome), categoria: r.categoria != null ? String(r.categoria) : undefined }))
         setTipos(mapped)
       } else {
         setTipos([])
@@ -228,4 +229,3 @@ export default function CadastroFiscalDocumentoAnexoSheet({ triggerLabel = "Cada
     </Sheet>
   )
 }
-
