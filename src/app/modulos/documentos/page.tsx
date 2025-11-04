@@ -451,20 +451,18 @@ export default function ModulosDocumentosPage() {
                       <tr className="text-left">
                         <th className="p-2">Arquivo</th>
                         <th className="p-2">Tipo</th>
-                        <th className="p-2">Tamanho</th>
                         <th className="p-2">Data</th>
                         <th className="p-2">Ações</th>
                       </tr>
                     </thead>
                     <tbody>
                       {anexos.length === 0 && (
-                        <tr><td className="p-2 text-gray-500" colSpan={5}>Nenhum anexo</td></tr>
+                        <tr><td className="p-2 text-gray-500" colSpan={4}>Nenhum anexo</td></tr>
                       )}
                       {anexos.map((a) => (
                         <tr key={a.id} className="border-t">
                           <td className="p-2">{a.nome_arquivo || '-'}</td>
                           <td className="p-2">{a.tipo_arquivo || '-'}</td>
-                          <td className="p-2">{typeof a.tamanho_bytes === 'number' ? `${a.tamanho_bytes} bytes` : '-'}</td>
                           <td className="p-2">{a.criado_em ? new Date(a.criado_em).toLocaleString('pt-BR') : '-'}</td>
                           <td className="p-2 flex items-center gap-3">
                             <button className="text-blue-600 underline" onClick={() => downloadAnexo(a.id)}>Baixar</button>
