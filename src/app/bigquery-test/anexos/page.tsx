@@ -44,6 +44,8 @@ export default function AnexosPage() {
   // Tabela completa documentos_anexos (teste)
   const [allAnexos, setAllAnexos] = useState<Anexo[]>([])
   const [allAnexosLoading, setAllAnexosLoading] = useState(false)
+  const [financeAnexos, setFinanceAnexos] = useState<Anexo[]>([])
+  const [financeAnexosLoading, setFinanceAnexosLoading] = useState(false)
   const [insertDocumentoId, setInsertDocumentoId] = useState('')
   const [insertNomeArquivo, setInsertNomeArquivo] = useState('')
   const [insertTipoArquivo, setInsertTipoArquivo] = useState('')
@@ -115,6 +117,20 @@ export default function AnexosPage() {
       setAllAnexos([])
     } finally {
       setAllAnexosLoading(false)
+    }
+  }
+
+  const refreshFinanceAnexos = async () => {
+    try {
+      setFinanceAnexosLoading(true)
+      const res = await fetch('/api/documentos/anexos/all-financeiro?limit=100', { cache: 'no-store' })
+      const json = await res.json()
+      if (res.ok && Array.isArray(json?.rows)) setFinanceAnexos(json.rows)
+      else setFinanceAnexos([])
+    } catch {
+      setFinanceAnexos([])
+    } finally {
+      setFinanceAnexosLoading(false)
     }
   }
 
@@ -206,6 +222,8 @@ export default function AnexosPage() {
   useEffect(() => {
     // carregar tabela completa documentos_anexos (teste)
     refreshAllAnexos().catch(() => {})
+    // carregar tabela de anexos do financeiro
+    refreshFinanceAnexos().catch(() => {})
   }, [])
 
   return (
@@ -599,6 +617,66 @@ export default function AnexosPage() {
                 <tr><td className="p-2 text-gray-500" colSpan={7}>Nenhum registro</td></tr>
               )}
               {allAnexos.map((r) => (
+                <tr key={r.id} className="border-t">
+                  <td className="p-2">{r.id}</td>
+                  <td className="p-2">{r.documento_id != null ? String(r.documento_id) : '-'}</td>
+                  <td className="p-2">{r.nome_arquivo || '-'}</td>
+                  <td className="p-2">{r.tipo_arquivo || '-'}</td>
+                  <td className="p-2">{r.arquivo_url || '-'}</td>
+                  <td className="p-2">
+                    <a
+                      href="#"
+                      className="text-blue-600 underline"
+                      onClick={(e) => { e.preventDefault(); openAnexo(r.id) }}
+                    >
+                      Visualizar
+                    </a>
+                  </td>
+                  <td className="p-2">
+                    <a
+                      href="#"
+                      className="text-blue-600 underline"
+                      onClick={(e) => { e.preventDefault(); downloadAnexo(r.id) }}
+                    >
+                      Baixar
+                    </a>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Tabela: Documentos Anexos (Financeiro) */}
+      <div className="mt-10">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-lg font-semibold">Documentos Anexos (Financeiro)</h2>
+          <button className="px-3 py-1 bg-gray-200 rounded" onClick={refreshFinanceAnexos} disabled={financeAnexosLoading}>
+            {financeAnexosLoading ? 'Atualizando…' : 'Atualizar'}
+          </button>
+        </div>
+        <div className="border rounded overflow-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="text-left p-2">ID</th>
+                <th className="text-left p-2">Documento</th>
+                <th className="text-left p-2">Nome</th>
+                <th className="text-left p-2">Tipo</th>
+                <th className="text-left p-2">Arquivo URL</th>
+                <th className="text-left p-2">Visualizar</th>
+                <th className="text-left p-2">Baixar</th>
+              </tr>
+            </thead>
+            <tbody>
+              {financeAnexosLoading && (
+                <tr><td className="p-2" colSpan={7}>Carregando…</td></tr>
+              )}
+              {!financeAnexosLoading && financeAnexos.length === 0 && (
+                <tr><td className="p-2 text-gray-500" colSpan={7}>Nenhum registro</td></tr>
+              )}
+              {financeAnexos.map((r) => (
                 <tr key={r.id} className="border-t">
                   <td className="p-2">{r.id}</td>
                   <td className="p-2">{r.documento_id != null ? String(r.documento_id) : '-'}</td>
