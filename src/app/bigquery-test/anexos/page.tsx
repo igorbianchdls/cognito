@@ -587,15 +587,16 @@ export default function AnexosPage() {
                 <th className="text-left p-2">Nome</th>
                 <th className="text-left p-2">Tipo</th>
                 <th className="text-left p-2">Arquivo URL</th>
+                <th className="text-left p-2">Visualizar</th>
                 <th className="text-left p-2">Baixar</th>
               </tr>
             </thead>
             <tbody>
               {allAnexosLoading && (
-                <tr><td className="p-2" colSpan={6}>Carregando…</td></tr>
+                <tr><td className="p-2" colSpan={7}>Carregando…</td></tr>
               )}
               {!allAnexosLoading && allAnexos.length === 0 && (
-                <tr><td className="p-2 text-gray-500" colSpan={6}>Nenhum registro</td></tr>
+                <tr><td className="p-2 text-gray-500" colSpan={7}>Nenhum registro</td></tr>
               )}
               {allAnexos.map((r) => (
                 <tr key={r.id} className="border-t">
@@ -604,6 +605,15 @@ export default function AnexosPage() {
                   <td className="p-2">{r.nome_arquivo || '-'}</td>
                   <td className="p-2">{r.tipo_arquivo || '-'}</td>
                   <td className="p-2">{r.arquivo_url || '-'}</td>
+                  <td className="p-2">
+                    <a
+                      href="#"
+                      className="text-blue-600 underline"
+                      onClick={(e) => { e.preventDefault(); openAnexo(r.id) }}
+                    >
+                      Visualizar
+                    </a>
+                  </td>
                   <td className="p-2">
                     <a
                       href="#"
