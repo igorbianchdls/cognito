@@ -14,6 +14,11 @@ import DataTable, { type TableData } from '@/components/widgets/Table'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/stores/modulos/moduleUiStore'
 import { List } from 'lucide-react'
 
+import CadastroEmpresaSheet from '@/components/empresa/CadastroEmpresaSheet'
+import CadastroFilialSheet from '@/components/empresa/CadastroFilialSheet'
+import CadastroDepartamentoSheet from '@/components/empresa/CadastroDepartamentoSheet'
+import CadastroCargoSheet from '@/components/empresa/CadastroCargoSheet'
+
 type Row = TableData
 
 export default function ModulosEmpresaPage() {
@@ -30,6 +35,7 @@ export default function ModulosEmpresaPage() {
   const [page, setPage] = useState<number>(1)
   const [pageSize, setPageSize] = useState<number>(20)
   const [total, setTotal] = useState<number>(0)
+  const [refreshKey, setRefreshKey] = useState(0)
 
   const fontVar = (name?: string) => {
     if (!name) return undefined
@@ -147,7 +153,7 @@ export default function ModulosEmpresaPage() {
     }
     load()
     return () => controller.abort()
-  }, [tabs.selected, page, pageSize])
+  }, [tabs.selected, page, pageSize, refreshKey])
 
   // Carrega dados conforme a tab selecionada
   useEffect(() => {
@@ -175,7 +181,7 @@ export default function ModulosEmpresaPage() {
     }
     load()
     return () => controller.abort()
-  }, [tabs.selected])
+  }, [tabs.selected, refreshKey])
 
   return (
     <SidebarProvider>
@@ -239,6 +245,29 @@ export default function ModulosEmpresaPage() {
               iconSize={toolbarUI.iconSize}
               searchWidth={toolbarUI.searchWidth}
               dateRangeWidth={toolbarUI.dateRangeWidth}
+              actionComponent={
+                tabs.selected === 'dados' ? (
+                  <CadastroEmpresaSheet
+                    triggerLabel="Cadastrar"
+                    onCreated={() => setRefreshKey((k) => k + 1)}
+                  />
+                ) : tabs.selected === 'filiais' ? (
+                  <CadastroFilialSheet
+                    triggerLabel="Cadastrar"
+                    onCreated={() => setRefreshKey((k) => k + 1)}
+                  />
+                ) : tabs.selected === 'departamentos' ? (
+                  <CadastroDepartamentoSheet
+                    triggerLabel="Cadastrar"
+                    onCreated={() => setRefreshKey((k) => k + 1)}
+                  />
+                ) : tabs.selected === 'cargos' ? (
+                  <CadastroCargoSheet
+                    triggerLabel="Cadastrar"
+                    onCreated={() => setRefreshKey((k) => k + 1)}
+                  />
+                ) : undefined
+              }
             />
           </div>
           <div className="flex-1 min-h-0 overflow-auto" style={{ marginBottom: layout.mbTable }}>
