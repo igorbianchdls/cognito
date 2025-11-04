@@ -51,7 +51,7 @@ export async function POST(req: Request) {
         const documento_id = Number(inserted?.id)
         if (!documento_id) throw new Error('Falha ao criar documento')
 
-        // 2) Inserir registro por domínio (apenas fiscal nesta etapa)
+        // 2) Inserir registro por domínio
         if (view === 'fiscal') {
           const cfop = String(form.get('cfop') || '').trim() || null
           const chave_acesso = String(form.get('chave_acesso') || '').trim() || null
@@ -64,6 +64,52 @@ export async function POST(req: Request) {
             `INSERT INTO documentos.documentos_fiscais (documento_id, cfop, chave_acesso, natureza_operacao, modelo, serie, data_autorizacao, ambiente)
              VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
             [documento_id, cfop, chave_acesso, natureza_operacao, modelo, serie, data_autorizacao, ambiente]
+          )
+        } else if (view === 'financeiro') {
+          const meio_pagamento = String(form.get('meio_pagamento') || '').trim() || null
+          const banco_id_raw = String(form.get('banco_id') || '').trim()
+          const banco_id = banco_id_raw ? Number(banco_id_raw) : null
+          const codigo_barras = String(form.get('codigo_barras') || '').trim() || null
+          const data_liquidacao = String(form.get('data_liquidacao') || '').trim() || null
+          const valor_pago_raw = String(form.get('valor_pago') || '').trim()
+          const valor_pago = valor_pago_raw ? Number(valor_pago_raw) : null
+
+          await client.query(
+            `INSERT INTO documentos.documentos_financeiros (documento_id, meio_pagamento, banco_id, codigo_barras, data_liquidacao, valor_pago)
+             VALUES ($1, $2, $3, $4, $5, $6)`,
+            [documento_id, meio_pagamento, banco_id, codigo_barras, data_liquidacao, valor_pago]
+          )
+        } else if (view === 'operacional') {
+          const responsavel_id_raw = String(form.get('responsavel_id') || '').trim()
+          const responsavel_id = responsavel_id_raw ? Number(responsavel_id_raw) : null
+          const local_execucao = String(form.get('local_execucao') || '').trim() || null
+          const data_execucao = String(form.get('data_execucao') || '').trim() || null
+          const checklist_json = String(form.get('checklist_json') || '').trim() || null
+          const observacoes = String(form.get('observacoes') || '').trim() || null
+
+          await client.query(
+            `INSERT INTO documentos.documentos_operacionais (documento_id, responsavel_id, local_execucao, data_execucao, checklist_json, observacoes)
+             VALUES ($1, $2, $3, $4, COALESCE($5::jsonb, NULL), $6)`,
+            [documento_id, responsavel_id, local_execucao, data_execucao, checklist_json, observacoes]
+          )
+        } else if (view === 'juridico' || view === 'rh') {
+          // Sem tabela de domínio específica no código atual; mantém apenas o documento + anexo
+        } else if (view === 'contratos') {
+          const data_inicio = String(form.get('data_inicio') || '').trim() || null
+          const data_fim = String(form.get('data_fim') || '').trim() || null
+          const prazo_meses_raw = String(form.get('prazo_meses') || '').trim()
+          const prazo_meses = prazo_meses_raw ? Number(prazo_meses_raw) : null
+          const renovacao_automatica_raw = String(form.get('renovacao_automatica') || '').trim().toLowerCase()
+          const renovacao_automatica = renovacao_automatica_raw ? (['1','true','t','yes','y','sim','s'].includes(renovacao_automatica_raw) ? true : false) : null
+          const valor_mensal_raw = String(form.get('valor_mensal') || '').trim()
+          const valor_mensal = valor_mensal_raw ? Number(valor_mensal_raw) : null
+          const objeto = String(form.get('objeto') || '').trim() || null
+          const clausulas_json = String(form.get('clausulas_json') || '').trim() || null
+
+          await client.query(
+            `INSERT INTO documentos.documentos_contratos (documento_id, data_inicio, data_fim, prazo_meses, renovacao_automatica, valor_mensal, objeto, clausulas_json)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, COALESCE($8::jsonb, NULL))`,
+            [documento_id, data_inicio, data_fim, prazo_meses, renovacao_automatica, valor_mensal, objeto, clausulas_json]
           )
         } else {
           throw new Error(`View não suportada: ${view}`)

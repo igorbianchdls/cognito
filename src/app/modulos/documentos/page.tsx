@@ -8,6 +8,11 @@ import PageHeader from '@/components/modulos/PageHeader'
 import TabsNav, { type Opcao } from '@/components/modulos/TabsNav'
 import DataToolbar from '@/components/modulos/DataToolbar'
 import CadastroFiscalDocumentoAnexoSheet from '@/components/documentos/CadastroFiscalDocumentoAnexoSheet'
+import CadastroFinanceiroDocumentoAnexoSheet from '@/components/documentos/CadastroFinanceiroDocumentoAnexoSheet'
+import CadastroOperacionalDocumentoAnexoSheet from '@/components/documentos/CadastroOperacionalDocumentoAnexoSheet'
+import CadastroJuridicoDocumentoAnexoSheet from '@/components/documentos/CadastroJuridicoDocumentoAnexoSheet'
+import CadastroRHDocumentoAnexoSheet from '@/components/documentos/CadastroRHDocumentoAnexoSheet'
+import CadastroContratosDocumentoAnexoSheet from '@/components/documentos/CadastroContratosDocumentoAnexoSheet'
 import DataTable, { type TableData } from '@/components/widgets/Table'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
@@ -44,7 +49,6 @@ export default function ModulosDocumentosPage() {
         { value: 'comercial', label: 'Comercial' },
         { value: 'rh', label: 'RH' },
         { value: 'contratos', label: 'Contratos' },
-        { value: 'outros', label: 'Outros' },
       ],
       selected: 'fiscal',
     })
@@ -400,12 +404,39 @@ export default function ModulosDocumentosPage() {
             iconSize={toolbarUI.iconSize}
             searchWidth={toolbarUI.searchWidth}
             dateRangeWidth={toolbarUI.dateRangeWidth}
-            actionComponent={tabs.selected === 'fiscal' ? (
-              <CadastroFiscalDocumentoAnexoSheet
-                triggerLabel="Cadastrar"
-                onCreated={() => setRefreshKey((k) => k + 1)}
-              />
-            ) : undefined}
+            actionComponent={
+              tabs.selected === 'fiscal' ? (
+                <CadastroFiscalDocumentoAnexoSheet
+                  triggerLabel="Cadastrar"
+                  onCreated={() => setRefreshKey((k) => k + 1)}
+                />
+              ) : tabs.selected === 'financeiro' ? (
+                <CadastroFinanceiroDocumentoAnexoSheet
+                  triggerLabel="Cadastrar"
+                  onCreated={() => setRefreshKey((k) => k + 1)}
+                />
+              ) : tabs.selected === 'operacional' ? (
+                <CadastroOperacionalDocumentoAnexoSheet
+                  triggerLabel="Cadastrar"
+                  onCreated={() => setRefreshKey((k) => k + 1)}
+                />
+              ) : tabs.selected === 'juridico' ? (
+                <CadastroJuridicoDocumentoAnexoSheet
+                  triggerLabel="Cadastrar"
+                  onCreated={() => setRefreshKey((k) => k + 1)}
+                />
+              ) : tabs.selected === 'rh' ? (
+                <CadastroRHDocumentoAnexoSheet
+                  triggerLabel="Cadastrar"
+                  onCreated={() => setRefreshKey((k) => k + 1)}
+                />
+              ) : tabs.selected === 'contratos' ? (
+                <CadastroContratosDocumentoAnexoSheet
+                  triggerLabel="Cadastrar"
+                  onCreated={() => setRefreshKey((k) => k + 1)}
+                />
+              ) : undefined
+            }
           />
           </div>
           <div className="flex-1 min-h-0 overflow-auto" style={{ marginBottom: layout.mbTable }}>
