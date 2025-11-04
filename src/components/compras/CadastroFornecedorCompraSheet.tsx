@@ -60,9 +60,9 @@ export default function CadastroFornecedorCompraSheet({ triggerLabel = "Cadastra
         <div className="h-full flex flex-col">
           <SheetHeader className="p-4 border-b"><SheetTitle>Cadastrar Fornecedor</SheetTitle><SheetDescription>Defina os dados do fornecedor</SheetDescription></SheetHeader>
           <div className="flex-1 overflow-auto p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="md:col-span-2"><Label>Nome Fantasia<span className="text-red-500"> *</span></Label><Input value={nome} onChange={(e)=>setNome(e.target.value)} /></div>
-              <div className="md:col-span-2"><Label>Razão Social</Label><Input value={razao} onChange={(e)=>setRazao(e.target.value)} /></div>
+            <div className="grid grid-cols-1 gap-4">
+              <div><Label>Nome Fantasia<span className="text-red-500"> *</span></Label><Input value={nome} onChange={(e)=>setNome(e.target.value)} /></div>
+              <div><Label>Razão Social</Label><Input value={razao} onChange={(e)=>setRazao(e.target.value)} /></div>
               <div><Label>CNPJ</Label><Input value={cnpj} onChange={(e)=>setCnpj(e.target.value)} /></div>
               <div><Label>Telefone</Label><Input value={telefone} onChange={(e)=>setTelefone(e.target.value)} /></div>
               <div><Label>Email</Label><Input value={email} onChange={(e)=>setEmail(e.target.value)} /></div>
@@ -70,7 +70,7 @@ export default function CadastroFornecedorCompraSheet({ triggerLabel = "Cadastra
               <div><Label>Estado</Label><Input value={estado} onChange={(e)=>setEstado(e.target.value)} /></div>
               <div><Label>País</Label><Input value={pais} onChange={(e)=>setPais(e.target.value)} /></div>
               <div><Label>Categoria</Label><Input value={categoria} onChange={(e)=>setCategoria(e.target.value)} /></div>
-              <div className="md:col-span-2"><Label>Imagem (URL)</Label><Input value={imagemUrl} onChange={(e)=>setImagemUrl(e.target.value)} placeholder="https://..." /></div>
+              <div><Label>Imagem (URL)</Label><Input value={imagemUrl} onChange={(e)=>setImagemUrl(e.target.value)} placeholder="https://..." /></div>
               <div className="flex items-center space-x-2"><Checkbox id="ativo" checked={ativo} onCheckedChange={(c)=>setAtivo(c === true)} /><Label htmlFor="ativo" className="cursor-pointer">Ativo</Label></div>
             </div>
             {error && <div className="mt-3 text-sm text-red-600">{error}</div>}
@@ -81,4 +81,3 @@ export default function CadastroFornecedorCompraSheet({ triggerLabel = "Cadastra
     </Sheet>
   )
 }
-

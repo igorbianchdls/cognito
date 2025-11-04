@@ -58,7 +58,7 @@ export default function CadastroCotacaoCompraSheet({ triggerLabel = "Cadastrar",
         <div className="h-full flex flex-col">
           <SheetHeader className="p-4 border-b"><SheetTitle>Cadastrar Cotação</SheetTitle><SheetDescription>Defina os dados da cotação</SheetDescription></SheetHeader>
           <div className="flex-1 overflow-auto p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               <div>
                 <Label>Fornecedor<span className="text-red-500"> *</span></Label>
                 <Select value={fornecedorId} onValueChange={setFornecedorId}>
@@ -69,7 +69,7 @@ export default function CadastroCotacaoCompraSheet({ triggerLabel = "Cadastrar",
               <div><Label>Data Envio<span className="text-red-500"> *</span></Label><Input type="date" value={dataEnvio} onChange={(e)=>setDataEnvio(e.target.value)} /></div>
               <div><Label>Data Retorno</Label><Input type="date" value={dataRetorno} onChange={(e)=>setDataRetorno(e.target.value)} /></div>
               <div><Label>Status</Label><Input value={status} onChange={(e)=>setStatus(e.target.value)} placeholder="ex: enviada, recebida" /></div>
-              <div className="md:col-span-2"><Label>Observações</Label><Textarea rows={3} value={observacoes} onChange={(e)=>setObservacoes(e.target.value)} /></div>
+              <div><Label>Observações</Label><Textarea rows={3} value={observacoes} onChange={(e)=>setObservacoes(e.target.value)} /></div>
             </div>
             {error && <div className="mt-3 text-sm text-red-600">{error}</div>}
           </div>
@@ -79,4 +79,3 @@ export default function CadastroCotacaoCompraSheet({ triggerLabel = "Cadastrar",
     </Sheet>
   )
 }
-
