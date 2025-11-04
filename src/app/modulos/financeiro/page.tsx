@@ -19,6 +19,12 @@ import StatusBadge from '@/components/modulos/StatusBadge'
 import FornecedorEditorSheet from '@/components/modulos/financeiro/FornecedorEditorSheet'
 import ClienteEditorSheet from '@/components/modulos/financeiro/ClienteEditorSheet'
 import BancoEditorSheet from '@/components/modulos/financeiro/BancoEditorSheet'
+import CadastroContaAPagarSheet from '@/components/financeiro/CadastroContaAPagarSheet'
+import CadastroContaAReceberSheet from '@/components/financeiro/CadastroContaAReceberSheet'
+import CadastroPagamentoEfetuadoSheet from '@/components/financeiro/CadastroPagamentoEfetuadoSheet'
+import CadastroPagamentoRecebidoSheet from '@/components/financeiro/CadastroPagamentoRecebidoSheet'
+import CadastroBancoSheet from '@/components/financeiro/CadastroBancoSheet'
+import CadastroContaFinanceiraSheet from '@/components/financeiro/CadastroContaFinanceiraSheet'
 
 type Row = TableData
 
@@ -474,6 +480,21 @@ export default function ModulosFinanceiroPage() {
               iconSize={toolbarUI.iconSize}
               searchWidth={toolbarUI.searchWidth}
               dateRangeWidth={toolbarUI.dateRangeWidth}
+              actionComponent={
+                tabs.selected === 'contas-a-pagar' ? (
+                  <CadastroContaAPagarSheet triggerLabel="Cadastrar" onSaved={() => setReloadKey((k) => k + 1)} />
+                ) : tabs.selected === 'contas-a-receber' ? (
+                  <CadastroContaAReceberSheet triggerLabel="Cadastrar" onSaved={() => setReloadKey((k) => k + 1)} />
+                ) : tabs.selected === 'pagamentos-efetuados' ? (
+                  <CadastroPagamentoEfetuadoSheet triggerLabel="Cadastrar" onSaved={() => setReloadKey((k) => k + 1)} />
+                ) : tabs.selected === 'pagamentos-recebidos' ? (
+                  <CadastroPagamentoRecebidoSheet triggerLabel="Cadastrar" onSaved={() => setReloadKey((k) => k + 1)} />
+                ) : tabs.selected === 'bancos' ? (
+                  <CadastroBancoSheet triggerLabel="Cadastrar" onSaved={() => setReloadKey((k) => k + 1)} />
+                ) : tabs.selected === 'contas' ? (
+                  <CadastroContaFinanceiraSheet triggerLabel="Cadastrar" onSaved={() => setReloadKey((k) => k + 1)} />
+                ) : undefined
+              }
             />
           </div>
           <div className="flex-1 min-h-0 overflow-auto" style={{ marginBottom: layout.mbTable }}>
