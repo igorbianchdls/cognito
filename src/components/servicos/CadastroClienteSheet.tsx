@@ -1,17 +1,15 @@
 "use client"
 
 import * as React from "react"
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter, SheetTrigger, SheetClose } from "@/components/ui/sheet"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import BaseCadastroSheet from "@/components/modulos/BaseCadastroSheet"
 
 type Props = { triggerLabel?: string; onCreated?: (id: number) => void }
 
 export default function CadastroClienteSheet({ triggerLabel = "Cadastrar", onCreated }: Props) {
-  const [open, setOpen] = React.useState(false)
-  const [loading, setLoading] = React.useState(false)
-  const [error, setError] = React.useState<string | null>(null)
+  const [isOpen, setIsOpen] = React.useState(false)
+  const createdIdRef = React.useRef<number | null>(null)
 
   const [nome, setNome] = React.useState("")
   const [segmento, setSegmento] = React.useState("")
@@ -22,13 +20,17 @@ export default function CadastroClienteSheet({ triggerLabel = "Cadastrar", onCre
   const [status, setStatus] = React.useState("")
   const [imagemUrl, setImagemUrl] = React.useState("")
 
-  const canSave = !!nome.trim()
-  const reset = () => { setNome(""); setSegmento(""); setTelefone(""); setEmail(""); setCidade(""); setEstado(""); setStatus(""); setImagemUrl(""); setError(null) }
+  const resetForm = () => {
+    setNome(""); setSegmento(""); setTelefone(""); setEmail("")
+    setCidade(""); setEstado(""); setStatus(""); setImagemUrl("")
+  }
 
-  const onSave = async () => {
-    if (!canSave || loading) return
+  const onSubmit = async (): Promise<{ success: boolean; error?: string }> => {
+    if (!nome.trim()) {
+      return { success: false, error: 'Nome é obrigatório' }
+    }
+
     try {
-      setLoading(true); setError(null)
       const fd = new FormData()
       fd.set('nome_fantasia', nome.trim())
       if (segmento) fd.set('segmento', segmento.trim())
@@ -38,36 +40,44 @@ export default function CadastroClienteSheet({ triggerLabel = "Cadastrar", onCre
       if (estado) fd.set('estado', estado.trim())
       if (status) fd.set('status', status.trim())
       if (imagemUrl) fd.set('imagem_url', imagemUrl.trim())
+
       const res = await fetch('/api/modulos/servicos/clientes', { method: 'POST', body: fd })
       const json = await res.json()
-      if (!res.ok || !json?.success) throw new Error(json?.message || json?.error || 'Falha ao cadastrar')
-      const id = Number(json?.id)
-      setOpen(false); reset(); if (!Number.isNaN(id)) onCreated?.(id)
-    } catch (e) { setError(e instanceof Error ? e.message : 'Erro ao salvar') } finally { setLoading(false) }
+
+      if (!res.ok || !json?.success) {
+        return { success: false, error: json?.message || json?.error || 'Falha ao cadastrar' }
+      }
+
+      createdIdRef.current = Number.isNaN(Number(json?.id)) ? null : Number(json?.id)
+      return { success: true }
+    } catch (e) {
+      return { success: false, error: e instanceof Error ? e.message : 'Erro ao salvar' }
+    }
   }
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild><Button className="ml-3 h-8 rounded bg-yellow-200 px-3 text-gray-900 hover:bg-yellow-300" variant="secondary">{triggerLabel}</Button></SheetTrigger>
-      <SheetContent side="right" className="w-screen max-w-2xl p-0">
-        <div className="h-full flex flex-col">
-          <SheetHeader className="p-4 border-b"><SheetTitle>Cadastrar Cliente</SheetTitle><SheetDescription>Defina os dados do cliente</SheetDescription></SheetHeader>
-          <div className="flex-1 overflow-auto p-6">
-            <div className="grid grid-cols-1 gap-4">
-              <div><Label>Nome Fantasia<span className="text-red-500"> *</span></Label><Input value={nome} onChange={(e)=>setNome(e.target.value)} /></div>
-              <div><Label>Segmento</Label><Input value={segmento} onChange={(e)=>setSegmento(e.target.value)} /></div>
-              <div><Label>Telefone</Label><Input value={telefone} onChange={(e)=>setTelefone(e.target.value)} /></div>
-              <div><Label>Email</Label><Input value={email} onChange={(e)=>setEmail(e.target.value)} /></div>
-              <div><Label>Cidade</Label><Input value={cidade} onChange={(e)=>setCidade(e.target.value)} /></div>
-              <div><Label>Estado</Label><Input value={estado} onChange={(e)=>setEstado(e.target.value)} /></div>
-              <div><Label>Status</Label><Input value={status} onChange={(e)=>setStatus(e.target.value)} placeholder="ex: ativo, bloqueado" /></div>
-              <div className="md:col-span-2"><Label>Imagem (URL)</Label><Input value={imagemUrl} onChange={(e)=>setImagemUrl(e.target.value)} placeholder="https://..." /></div>
-            </div>
-            {error && <div className="mt-3 text-sm text-red-600">{error}</div>}
-          </div>
-          <SheetFooter className="p-4 border-t"><SheetClose asChild><Button variant="outline">Cancelar</Button></SheetClose><Button onClick={onSave} disabled={!canSave || loading}>{loading ? 'Salvando…' : 'Salvar'}</Button></SheetFooter>
-        </div>
-      </SheetContent>
-    </Sheet>
+    <BaseCadastroSheet
+      triggerLabel={triggerLabel}
+      title="Cadastrar Cliente"
+      description="Defina os dados do cliente"
+      widthClassName="max-w-2xl"
+      onOpenChange={setIsOpen}
+      onSubmit={onSubmit}
+      onSuccess={() => {
+        const id = createdIdRef.current
+        createdIdRef.current = null
+        resetForm()
+        if (typeof id === 'number') onCreated?.(id)
+      }}
+    >
+      <div><Label>Nome Fantasia<span className="text-red-500"> *</span></Label><Input value={nome} onChange={(e) => setNome(e.target.value)} /></div>
+      <div><Label>Segmento</Label><Input value={segmento} onChange={(e) => setSegmento(e.target.value)} /></div>
+      <div><Label>Telefone</Label><Input value={telefone} onChange={(e) => setTelefone(e.target.value)} /></div>
+      <div><Label>Email</Label><Input value={email} onChange={(e) => setEmail(e.target.value)} /></div>
+      <div><Label>Cidade</Label><Input value={cidade} onChange={(e) => setCidade(e.target.value)} /></div>
+      <div><Label>Estado</Label><Input value={estado} onChange={(e) => setEstado(e.target.value)} /></div>
+      <div><Label>Status</Label><Input value={status} onChange={(e) => setStatus(e.target.value)} placeholder="ex: ativo, bloqueado" /></div>
+      <div className="md:col-span-2"><Label>Imagem (URL)</Label><Input value={imagemUrl} onChange={(e) => setImagemUrl(e.target.value)} placeholder="https://..." /></div>
+    </BaseCadastroSheet>
   )
 }

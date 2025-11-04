@@ -1,13 +1,12 @@
 "use client"
 
 import * as React from "react"
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter, SheetTrigger, SheetClose } from "@/components/ui/sheet"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Textarea } from "@/components/ui/textarea"
+import BaseCadastroSheet from "@/components/modulos/BaseCadastroSheet"
 
 type Props = {
   triggerLabel?: string
@@ -25,9 +24,8 @@ const NIVEIS = [
 ]
 
 export default function CadastroCargoSheet({ triggerLabel = "Cadastrar", onCreated }: Props) {
-  const [open, setOpen] = React.useState(false)
-  const [loading, setLoading] = React.useState(false)
-  const [error, setError] = React.useState<string | null>(null)
+  const [isOpen, setIsOpen] = React.useState(false)
+  const createdIdRef = React.useRef<number | null>(null)
   const [empresas, setEmpresas] = React.useState<Empresa[]>([])
   const [departamentos, setDepartamentos] = React.useState<Departamento[]>([])
 
@@ -47,7 +45,6 @@ export default function CadastroCargoSheet({ triggerLabel = "Cadastrar", onCreat
     setNivel("")
     setDescricao("")
     setAtivo(true)
-    setError(null)
   }
 
   const loadEmpresas = React.useCallback(async () => {
@@ -83,25 +80,22 @@ export default function CadastroCargoSheet({ triggerLabel = "Cadastrar", onCreat
   }, [])
 
   React.useEffect(() => {
-    if (open) loadEmpresas()
-  }, [open, loadEmpresas])
+    if (isOpen) loadEmpresas()
+  }, [isOpen, loadEmpresas])
 
   React.useEffect(() => {
     if (empresaId) {
       loadDepartamentos(empresaId)
-      setDepartamentoId("") // Reset departamento when empresa changes
+      setDepartamentoId("")
     }
   }, [empresaId, loadDepartamentos])
 
-  const canSave = !!empresaId && !!codigo.trim() && !!nome.trim()
-
-  const onSave = async () => {
-    if (!canSave || loading) return
+  const onSubmit = async (): Promise<{ success: boolean; error?: string }> => {
+    if (!(empresaId && codigo.trim() && nome.trim())) {
+      return { success: false, error: 'Preencha empresa, código e nome' }
+    }
 
     try {
-      setLoading(true)
-      setError(null)
-
       const fd = new FormData()
       fd.set('view', 'cargos')
       fd.set('empresa_id', empresaId)
@@ -116,123 +110,68 @@ export default function CadastroCargoSheet({ triggerLabel = "Cadastrar", onCreat
       const json = await res.json()
 
       if (!res.ok || !json?.success) {
-        throw new Error(json?.message || json?.error || 'Falha ao cadastrar')
+        return { success: false, error: json?.message || json?.error || 'Falha ao cadastrar' }
       }
 
-      const cargoId = Number(json?.id)
-      setOpen(false)
-      resetForm()
-      if (typeof cargoId === 'number' && !Number.isNaN(cargoId)) {
-        onCreated?.(cargoId)
-      }
+      createdIdRef.current = Number.isNaN(Number(json?.id)) ? null : Number(json?.id)
+      return { success: true }
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Erro ao salvar')
-    } finally {
-      setLoading(false)
+      return { success: false, error: e instanceof Error ? e.message : 'Erro ao salvar' }
     }
   }
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        <Button className="ml-3 h-8 rounded bg-yellow-200 px-3 text-gray-900 hover:bg-yellow-300" variant="secondary">
-          {triggerLabel}
-        </Button>
-      </SheetTrigger>
-      <SheetContent side="right" className="w-screen max-w-2xl p-0">
-        <div className="h-full flex flex-col">
-          <SheetHeader className="p-4 border-b">
-            <SheetTitle>Cadastrar Cargo</SheetTitle>
-            <SheetDescription>Preencha os dados do cargo</SheetDescription>
-          </SheetHeader>
-
-          <div className="flex-1 overflow-auto p-6">
-            <div className="grid grid-cols-1 gap-4">
-              <div className="md:col-span-2">
-                <Label>Empresa <span className="text-red-500">*</span></Label>
-                <Select onValueChange={setEmpresaId} value={empresaId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione a empresa" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {empresas.map(e => (
-                      <SelectItem key={e.id} value={String(e.id)}>
-                        {e.nome_fantasia || e.razao_social}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="md:col-span-2">
-                <Label>Departamento</Label>
-                <Select onValueChange={setDepartamentoId} value={departamentoId} disabled={!empresaId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder={empresaId ? "Selecione o departamento" : "Selecione uma empresa primeiro"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {departamentos.map(d => (
-                      <SelectItem key={d.id} value={String(d.id)}>
-                        {d.codigo ? `${d.codigo} - ${d.nome}` : d.nome}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label>Código <span className="text-red-500">*</span></Label>
-                <Input value={codigo} onChange={(e) => setCodigo(e.target.value)} placeholder="Ex: CARGO001" />
-              </div>
-
-              <div>
-                <Label>Nome <span className="text-red-500">*</span></Label>
-                <Input value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Ex: Analista de Sistemas" />
-              </div>
-
-              <div className="md:col-span-2">
-                <Label>Nível</Label>
-                <Select onValueChange={setNivel} value={nivel}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o nível" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {NIVEIS.map(n => (
-                      <SelectItem key={n.value} value={n.value}>{n.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="md:col-span-2">
-                <Label>Descrição</Label>
-                <Textarea
-                  rows={4}
-                  value={descricao}
-                  onChange={(e) => setDescricao(e.target.value)}
-                  placeholder="Descreva as responsabilidades e requisitos do cargo"
-                />
-              </div>
-
-              <div className="md:col-span-2 flex items-center space-x-2">
-                <Checkbox id="ativo" checked={ativo} onCheckedChange={(checked) => setAtivo(checked === true)} />
-                <Label htmlFor="ativo" className="cursor-pointer">Cargo ativo</Label>
-              </div>
-            </div>
-
-            {error && <div className="mt-3 text-sm text-red-600">{error}</div>}
-          </div>
-
-          <SheetFooter className="p-4 border-t">
-            <SheetClose asChild>
-              <Button variant="outline">Cancelar</Button>
-            </SheetClose>
-            <Button onClick={onSave} disabled={!canSave || loading}>
-              {loading ? 'Salvando…' : 'Salvar'}
-            </Button>
-          </SheetFooter>
-        </div>
-      </SheetContent>
-    </Sheet>
+    <BaseCadastroSheet
+      triggerLabel={triggerLabel}
+      title="Cadastrar Cargo"
+      description="Preencha os dados do cargo"
+      widthClassName="max-w-2xl"
+      onOpenChange={setIsOpen}
+      onSubmit={onSubmit}
+      onSuccess={() => {
+        const id = createdIdRef.current
+        createdIdRef.current = null
+        resetForm()
+        if (typeof id === 'number') onCreated?.(id)
+      }}
+    >
+      <div className="md:col-span-2">
+        <Label>Empresa <span className="text-red-500">*</span></Label>
+        <Select onValueChange={setEmpresaId} value={empresaId}>
+          <SelectTrigger><SelectValue placeholder="Selecione a empresa" /></SelectTrigger>
+          <SelectContent>{empresas.map(e => <SelectItem key={e.id} value={String(e.id)}>{e.nome_fantasia || e.razao_social}</SelectItem>)}</SelectContent>
+        </Select>
+      </div>
+      <div className="md:col-span-2">
+        <Label>Departamento</Label>
+        <Select onValueChange={setDepartamentoId} value={departamentoId} disabled={!empresaId}>
+          <SelectTrigger><SelectValue placeholder={empresaId ? "Selecione o departamento" : "Selecione uma empresa primeiro"} /></SelectTrigger>
+          <SelectContent>{departamentos.map(d => <SelectItem key={d.id} value={String(d.id)}>{d.codigo ? `${d.codigo} - ${d.nome}` : d.nome}</SelectItem>)}</SelectContent>
+        </Select>
+      </div>
+      <div>
+        <Label>Código <span className="text-red-500">*</span></Label>
+        <Input value={codigo} onChange={(e) => setCodigo(e.target.value)} placeholder="Ex: CARGO001" />
+      </div>
+      <div>
+        <Label>Nome <span className="text-red-500">*</span></Label>
+        <Input value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Ex: Analista de Sistemas" />
+      </div>
+      <div className="md:col-span-2">
+        <Label>Nível</Label>
+        <Select onValueChange={setNivel} value={nivel}>
+          <SelectTrigger><SelectValue placeholder="Selecione o nível" /></SelectTrigger>
+          <SelectContent>{NIVEIS.map(n => <SelectItem key={n.value} value={n.value}>{n.label}</SelectItem>)}</SelectContent>
+        </Select>
+      </div>
+      <div className="md:col-span-2">
+        <Label>Descrição</Label>
+        <Textarea rows={4} value={descricao} onChange={(e) => setDescricao(e.target.value)} placeholder="Descreva as responsabilidades e requisitos do cargo" />
+      </div>
+      <div className="md:col-span-2 flex items-center space-x-2">
+        <Checkbox id="ativo" checked={ativo} onCheckedChange={(checked) => setAtivo(checked === true)} />
+        <Label htmlFor="ativo" className="cursor-pointer">Cargo ativo</Label>
+      </div>
+    </BaseCadastroSheet>
   )
 }

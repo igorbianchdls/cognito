@@ -1,13 +1,12 @@
 "use client"
 
 import * as React from "react"
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter, SheetTrigger, SheetClose } from "@/components/ui/sheet"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
 import { validateCNPJFormat } from "@/lib/validators"
+import BaseCadastroSheet from "@/components/modulos/BaseCadastroSheet"
 
 type Props = {
   triggerLabel?: string
@@ -22,9 +21,8 @@ const ESTADOS = [
 ]
 
 export default function CadastroFilialSheet({ triggerLabel = "Cadastrar", onCreated }: Props) {
-  const [open, setOpen] = React.useState(false)
-  const [loading, setLoading] = React.useState(false)
-  const [error, setError] = React.useState<string | null>(null)
+  const [isOpen, setIsOpen] = React.useState(false)
+  const createdIdRef = React.useRef<number | null>(null)
   const [empresas, setEmpresas] = React.useState<Empresa[]>([])
 
   const [empresaId, setEmpresaId] = React.useState("")
@@ -51,7 +49,6 @@ export default function CadastroFilialSheet({ triggerLabel = "Cadastrar", onCrea
     setPais("Brasil")
     setMatriz(false)
     setAtivo(true)
-    setError(null)
   }
 
   const loadEmpresas = React.useCallback(async () => {
@@ -69,24 +66,19 @@ export default function CadastroFilialSheet({ triggerLabel = "Cadastrar", onCrea
   }, [])
 
   React.useEffect(() => {
-    if (open) loadEmpresas()
-  }, [open, loadEmpresas])
+    if (isOpen) loadEmpresas()
+  }, [isOpen, loadEmpresas])
 
-  const canSave = !!empresaId && !!codigo.trim() && !!nome.trim()
+  const onSubmit = async (): Promise<{ success: boolean; error?: string }> => {
+    if (!(empresaId && codigo.trim() && nome.trim())) {
+      return { success: false, error: 'Preencha empresa, código e nome' }
+    }
 
-  const onSave = async () => {
-    if (!canSave || loading) return
-
-    // Validações
     if (cnpj && !validateCNPJFormat(cnpj)) {
-      setError('CNPJ inválido. Use o formato ##.###.###/####-## ou apenas números')
-      return
+      return { success: false, error: 'CNPJ inválido. Use o formato ##.###.###/####-## ou apenas números' }
     }
 
     try {
-      setLoading(true)
-      setError(null)
-
       const fd = new FormData()
       fd.set('view', 'filiais')
       fd.set('empresa_id', empresaId)
@@ -105,133 +97,83 @@ export default function CadastroFilialSheet({ triggerLabel = "Cadastrar", onCrea
       const json = await res.json()
 
       if (!res.ok || !json?.success) {
-        throw new Error(json?.message || json?.error || 'Falha ao cadastrar')
+        return { success: false, error: json?.message || json?.error || 'Falha ao cadastrar' }
       }
 
-      const filialId = Number(json?.id)
-      setOpen(false)
-      resetForm()
-      if (typeof filialId === 'number' && !Number.isNaN(filialId)) {
-        onCreated?.(filialId)
-      }
+      createdIdRef.current = Number.isNaN(Number(json?.id)) ? null : Number(json?.id)
+      return { success: true }
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Erro ao salvar')
-    } finally {
-      setLoading(false)
+      return { success: false, error: e instanceof Error ? e.message : 'Erro ao salvar' }
     }
   }
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        <Button className="ml-3 h-8 rounded bg-yellow-200 px-3 text-gray-900 hover:bg-yellow-300" variant="secondary">
-          {triggerLabel}
-        </Button>
-      </SheetTrigger>
-      <SheetContent side="right" className="w-screen max-w-2xl p-0">
-        <div className="h-full flex flex-col">
-          <SheetHeader className="p-4 border-b">
-            <SheetTitle>Cadastrar Filial</SheetTitle>
-            <SheetDescription>Preencha os dados da filial</SheetDescription>
-          </SheetHeader>
-
-          <div className="flex-1 overflow-auto p-6">
-            <div className="grid grid-cols-1 gap-4">
-              <div className="md:col-span-2">
-                <Label>Empresa <span className="text-red-500">*</span></Label>
-                <Select onValueChange={setEmpresaId} value={empresaId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione a empresa" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {empresas.map(e => (
-                      <SelectItem key={e.id} value={String(e.id)}>
-                        {e.nome_fantasia || e.razao_social}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label>Código <span className="text-red-500">*</span></Label>
-                <Input value={codigo} onChange={(e) => setCodigo(e.target.value)} placeholder="Ex: FIL001" />
-              </div>
-
-              <div>
-                <Label>Nome <span className="text-red-500">*</span></Label>
-                <Input value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Ex: Filial São Paulo" />
-              </div>
-
-              <div>
-                <Label>CNPJ</Label>
-                <Input
-                  value={cnpj}
-                  onChange={(e) => setCnpj(e.target.value)}
-                  placeholder="00.000.000/0000-00"
-                  maxLength={18}
-                />
-              </div>
-
-              <div>
-                <Label>Inscrição Estadual</Label>
-                <Input value={inscricaoEstadual} onChange={(e) => setInscricaoEstadual(e.target.value)} />
-              </div>
-
-              <div>
-                <Label>Endereço</Label>
-                <Input value={endereco} onChange={(e) => setEndereco(e.target.value)} placeholder="Rua, número, complemento" />
-              </div>
-
-              <div>
-                <Label>Cidade</Label>
-                <Input value={cidade} onChange={(e) => setCidade(e.target.value)} />
-              </div>
-
-              <div>
-                <Label>Estado</Label>
-                <Select onValueChange={setEstado} value={estado}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ESTADOS.map(e => (
-                      <SelectItem key={e} value={e}>{e}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label>País</Label>
-                <Input value={pais} onChange={(e) => setPais(e.target.value)} />
-              </div>
-
-              <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-2">
-                  <Checkbox id="matriz" checked={matriz} onCheckedChange={(checked) => setMatriz(checked === true)} />
-                  <Label htmlFor="matriz" className="cursor-pointer">É matriz</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox id="ativo" checked={ativo} onCheckedChange={(checked) => setAtivo(checked === true)} />
-                  <Label htmlFor="ativo" className="cursor-pointer">Ativo</Label>
-                </div>
-              </div>
-            </div>
-
-            {error && <div className="mt-3 text-sm text-red-600">{error}</div>}
-          </div>
-
-          <SheetFooter className="p-4 border-t">
-            <SheetClose asChild>
-              <Button variant="outline">Cancelar</Button>
-            </SheetClose>
-            <Button onClick={onSave} disabled={!canSave || loading}>
-              {loading ? 'Salvando…' : 'Salvar'}
-            </Button>
-          </SheetFooter>
+    <BaseCadastroSheet
+      triggerLabel={triggerLabel}
+      title="Cadastrar Filial"
+      description="Preencha os dados da filial"
+      widthClassName="max-w-2xl"
+      onOpenChange={setIsOpen}
+      onSubmit={onSubmit}
+      onSuccess={() => {
+        const id = createdIdRef.current
+        createdIdRef.current = null
+        resetForm()
+        if (typeof id === 'number') onCreated?.(id)
+      }}
+    >
+      <div className="md:col-span-2">
+        <Label>Empresa <span className="text-red-500">*</span></Label>
+        <Select onValueChange={setEmpresaId} value={empresaId}>
+          <SelectTrigger><SelectValue placeholder="Selecione a empresa" /></SelectTrigger>
+          <SelectContent>{empresas.map(e => <SelectItem key={e.id} value={String(e.id)}>{e.nome_fantasia || e.razao_social}</SelectItem>)}</SelectContent>
+        </Select>
+      </div>
+      <div>
+        <Label>Código <span className="text-red-500">*</span></Label>
+        <Input value={codigo} onChange={(e) => setCodigo(e.target.value)} placeholder="Ex: FIL001" />
+      </div>
+      <div>
+        <Label>Nome <span className="text-red-500">*</span></Label>
+        <Input value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Ex: Filial São Paulo" />
+      </div>
+      <div>
+        <Label>CNPJ</Label>
+        <Input value={cnpj} onChange={(e) => setCnpj(e.target.value)} placeholder="00.000.000/0000-00" maxLength={18} />
+      </div>
+      <div>
+        <Label>Inscrição Estadual</Label>
+        <Input value={inscricaoEstadual} onChange={(e) => setInscricaoEstadual(e.target.value)} />
+      </div>
+      <div>
+        <Label>Endereço</Label>
+        <Input value={endereco} onChange={(e) => setEndereco(e.target.value)} placeholder="Rua, número, complemento" />
+      </div>
+      <div>
+        <Label>Cidade</Label>
+        <Input value={cidade} onChange={(e) => setCidade(e.target.value)} />
+      </div>
+      <div>
+        <Label>Estado</Label>
+        <Select onValueChange={setEstado} value={estado}>
+          <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+          <SelectContent>{ESTADOS.map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)}</SelectContent>
+        </Select>
+      </div>
+      <div>
+        <Label>País</Label>
+        <Input value={pais} onChange={(e) => setPais(e.target.value)} />
+      </div>
+      <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-2">
+          <Checkbox id="matriz" checked={matriz} onCheckedChange={(checked) => setMatriz(checked === true)} />
+          <Label htmlFor="matriz" className="cursor-pointer">É matriz</Label>
         </div>
-      </SheetContent>
-    </Sheet>
+        <div className="flex items-center space-x-2">
+          <Checkbox id="ativo" checked={ativo} onCheckedChange={(checked) => setAtivo(checked === true)} />
+          <Label htmlFor="ativo" className="cursor-pointer">Ativo</Label>
+        </div>
+      </div>
+    </BaseCadastroSheet>
   )
 }
