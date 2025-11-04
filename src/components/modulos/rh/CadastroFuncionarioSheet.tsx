@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { validateEmail } from "@/lib/validators"
 
 type Props = {
@@ -234,16 +233,15 @@ export default function CadastroFuncionarioSheet({ triggerLabel = "Cadastrar", o
 
               <div className="md:col-span-2">
                 <Label>Imagem do Funcionário</Label>
-                <RadioGroup value={imagemTipo} onValueChange={(v) => setImagemTipo(v as "url" | "upload")} className="flex gap-4 mt-2">
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="url" id="imagem-url" />
-                    <Label htmlFor="imagem-url" className="cursor-pointer">URL</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="upload" id="imagem-upload" />
-                    <Label htmlFor="imagem-upload" className="cursor-pointer">Upload</Label>
-                  </div>
-                </RadioGroup>
+                <Select value={imagemTipo} onValueChange={(v) => setImagemTipo(v as "url" | "upload")}>
+                  <SelectTrigger className="mt-2">
+                    <SelectValue placeholder="Escolha o tipo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="url">URL da Imagem</SelectItem>
+                    <SelectItem value="upload">Upload de Arquivo</SelectItem>
+                  </SelectContent>
+                </Select>
                 {imagemTipo === 'url' ? (
                   <Input className="mt-2" value={imagemUrl} onChange={(e) => setImagemUrl(e.target.value)} placeholder="https://exemplo.com/foto.jpg" />
                 ) : (
