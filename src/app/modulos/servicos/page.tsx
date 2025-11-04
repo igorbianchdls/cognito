@@ -11,6 +11,11 @@ import PageHeader from '@/components/modulos/PageHeader'
 import TabsNav from '@/components/modulos/TabsNav'
 import DataTable, { type TableData } from '@/components/widgets/Table'
 import DataToolbar from '@/components/modulos/DataToolbar'
+import CadastroOrdemServicoSheet from '@/components/servicos/CadastroOrdemServicoSheet'
+import CadastroAgendamentoSheet from '@/components/servicos/CadastroAgendamentoSheet'
+import CadastroTecnicoSheet from '@/components/servicos/CadastroTecnicoSheet'
+import CadastroClienteSheet from '@/components/servicos/CadastroClienteSheet'
+import CadastroServicoSheet from '@/components/servicos/CadastroServicoSheet'
 import StatusBadge from '@/components/modulos/StatusBadge'
 import EntityDisplay from '@/components/modulos/EntityDisplay'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/stores/modulos/moduleUiStore'
@@ -361,6 +366,19 @@ export default function ModulosServicosPage() {
               iconSize={toolbarUI.iconSize}
               searchWidth={toolbarUI.searchWidth}
               dateRangeWidth={toolbarUI.dateRangeWidth}
+              actionComponent={
+                tabs.selected === 'ordens-servico' ? (
+                  <CadastroOrdemServicoSheet triggerLabel="Cadastrar" onCreated={() => setReloadKey((k) => k + 1)} />
+                ) : tabs.selected === 'agendamentos' ? (
+                  <CadastroAgendamentoSheet triggerLabel="Cadastrar" onCreated={() => setReloadKey((k) => k + 1)} />
+                ) : tabs.selected === 'tecnicos' ? (
+                  <CadastroTecnicoSheet triggerLabel="Cadastrar" onCreated={() => setReloadKey((k) => k + 1)} />
+                ) : tabs.selected === 'clientes' ? (
+                  <CadastroClienteSheet triggerLabel="Cadastrar" onCreated={() => setReloadKey((k) => k + 1)} />
+                ) : tabs.selected === 'servicos' ? (
+                  <CadastroServicoSheet triggerLabel="Cadastrar" onCreated={() => setReloadKey((k) => k + 1)} />
+                ) : undefined
+              }
             />
           </div>
           <div className="flex-1 min-h-0 overflow-auto" style={{ marginBottom: layout.mbTable }}>
