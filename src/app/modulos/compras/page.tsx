@@ -12,6 +12,11 @@ import PageHeader from '@/components/modulos/PageHeader'
 import TabsNav from '@/components/modulos/TabsNav'
 import DataTable, { type TableData } from '@/components/widgets/Table'
 import DataToolbar from '@/components/modulos/DataToolbar'
+import CadastroFornecedorCompraSheet from '@/components/compras/CadastroFornecedorCompraSheet'
+import CadastroPedidoCompraSheet from '@/components/compras/CadastroPedidoCompraSheet'
+import CadastroRecebimentoCompraSheet from '@/components/compras/CadastroRecebimentoCompraSheet'
+import CadastroSolicitacaoCompraSheet from '@/components/compras/CadastroSolicitacaoCompraSheet'
+import CadastroCotacaoCompraSheet from '@/components/compras/CadastroCotacaoCompraSheet'
 import StatusBadge from '@/components/modulos/StatusBadge'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/stores/modulos/moduleUiStore'
 import type { Opcao } from '@/components/modulos/TabsNav'
@@ -342,6 +347,19 @@ export default function ModulosComprasPage() {
               iconSize={toolbarUI.iconSize}
               searchWidth={toolbarUI.searchWidth}
               dateRangeWidth={toolbarUI.dateRangeWidth}
+              actionComponent={
+                tabs.selected === 'fornecedores' ? (
+                  <CadastroFornecedorCompraSheet triggerLabel="Cadastrar" onCreated={() => setReloadKey((k) => k + 1)} />
+                ) : tabs.selected === 'pedidos' ? (
+                  <CadastroPedidoCompraSheet triggerLabel="Cadastrar" onCreated={() => setReloadKey((k) => k + 1)} />
+                ) : tabs.selected === 'recebimentos' ? (
+                  <CadastroRecebimentoCompraSheet triggerLabel="Cadastrar" onCreated={() => setReloadKey((k) => k + 1)} />
+                ) : tabs.selected === 'solicitacoes-compra' ? (
+                  <CadastroSolicitacaoCompraSheet triggerLabel="Cadastrar" onCreated={() => setReloadKey((k) => k + 1)} />
+                ) : tabs.selected === 'cotacoes-compra' ? (
+                  <CadastroCotacaoCompraSheet triggerLabel="Cadastrar" onCreated={() => setReloadKey((k) => k + 1)} />
+                ) : undefined
+              }
             />
           </div>
           <div className="flex-1 min-h-0 overflow-auto" style={{ marginBottom: layout.mbTable }}>
