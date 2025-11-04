@@ -15,6 +15,9 @@ import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from 
 import EntityDisplay from '@/components/modulos/EntityDisplay'
 import StatusBadge from '@/components/modulos/StatusBadge'
 import { List } from 'lucide-react'
+import CadastroProdutoSheet from '@/components/produtos/CadastroProdutoSheet'
+import CadastroVariacaoSheet from '@/components/produtos/CadastroVariacaoSheet'
+import CadastroDadosFiscaisSheet from '@/components/produtos/CadastroDadosFiscaisSheet'
 
 type Row = TableData
 
@@ -32,6 +35,7 @@ export default function ModulosProdutosPage() {
   const [page, setPage] = useState<number>(1)
   const [pageSize, setPageSize] = useState<number>(20)
   const [total, setTotal] = useState<number>(0)
+  const [refreshKey, setRefreshKey] = useState<number>(0)
 
   const fontVar = (name?: string) => {
     if (!name) return undefined
@@ -159,7 +163,7 @@ export default function ModulosProdutosPage() {
     }
     load()
     return () => controller.abort()
-  }, [tabs.selected, page, pageSize])
+  }, [tabs.selected, page, pageSize, refreshKey])
 
   return (
     <SidebarProvider>
@@ -223,6 +227,15 @@ export default function ModulosProdutosPage() {
               iconSize={toolbarUI.iconSize}
               searchWidth={toolbarUI.searchWidth}
               dateRangeWidth={toolbarUI.dateRangeWidth}
+              actionComponent={
+                tabs.selected === 'produtos' ? (
+                  <CadastroProdutoSheet triggerLabel="Cadastrar" onCreated={() => setRefreshKey((k) => k + 1)} />
+                ) : tabs.selected === 'variacoes' ? (
+                  <CadastroVariacaoSheet triggerLabel="Cadastrar" onCreated={() => setRefreshKey((k) => k + 1)} />
+                ) : tabs.selected === 'dados-fiscais' ? (
+                  <CadastroDadosFiscaisSheet triggerLabel="Cadastrar" onCreated={() => setRefreshKey((k) => k + 1)} />
+                ) : undefined
+              }
             />
           </div>
           <div className="flex-1 min-h-0 overflow-auto" style={{ marginBottom: layout.mbTable }}>
