@@ -11,6 +11,12 @@ import PageHeader from '@/components/modulos/PageHeader'
 import TabsNav from '@/components/modulos/TabsNav'
 import DataTable, { type TableData } from '@/components/widgets/Table'
 import DataToolbar from '@/components/modulos/DataToolbar'
+import CadastroOportunidadeSheet from '@/components/crm/CadastroOportunidadeSheet'
+import CadastroLeadSheet from '@/components/crm/CadastroLeadSheet'
+import CadastroContaSheet from '@/components/crm/CadastroContaSheet'
+import CadastroContatoSheet from '@/components/crm/CadastroContatoSheet'
+import CadastroAtividadeSheet from '@/components/crm/CadastroAtividadeSheet'
+import CadastroCampanhaSheet from '@/components/crm/CadastroCampanhaSheet'
 import StatusBadge from '@/components/modulos/StatusBadge'
 import EntityDisplay from '@/components/modulos/EntityDisplay'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/stores/modulos/moduleUiStore'
@@ -55,6 +61,7 @@ export default function ModulosCrmPage() {
   const [page, setPage] = useState<number>(1)
   const [pageSize, setPageSize] = useState<number>(20)
   const [total, setTotal] = useState<number>(0)
+  const [refreshKey, setRefreshKey] = useState<number>(0)
 
   const formatDate = (value?: unknown, withTime?: boolean) => {
     if (!value) return ''
@@ -211,7 +218,7 @@ export default function ModulosCrmPage() {
     }
     load()
     return () => controller.abort()
-  }, [tabs.selected, dateRange?.from, dateRange?.to, page, pageSize])
+  }, [tabs.selected, dateRange?.from, dateRange?.to, page, pageSize, refreshKey])
 
   // Reset page quando mudar de aba ou período
   useEffect(() => { setPage(1) }, [tabs.selected, dateRange?.from, dateRange?.to])
@@ -300,6 +307,21 @@ export default function ModulosCrmPage() {
               iconSize={toolbarUI.iconSize}
               searchWidth={toolbarUI.searchWidth}
               dateRangeWidth={toolbarUI.dateRangeWidth}
+              actionComponent={
+                tabs.selected === 'oportunidades' ? (
+                  <CadastroOportunidadeSheet triggerLabel="Cadastrar" onCreated={() => setRefreshKey((k) => k + 1)} />
+                ) : tabs.selected === 'leads' ? (
+                  <CadastroLeadSheet triggerLabel="Cadastrar" onCreated={() => setRefreshKey((k) => k + 1)} />
+                ) : tabs.selected === 'contas' ? (
+                  <CadastroContaSheet triggerLabel="Cadastrar" onCreated={() => setRefreshKey((k) => k + 1)} />
+                ) : tabs.selected === 'contatos' ? (
+                  <CadastroContatoSheet triggerLabel="Cadastrar" onCreated={() => setRefreshKey((k) => k + 1)} />
+                ) : tabs.selected === 'atividades' ? (
+                  <CadastroAtividadeSheet triggerLabel="Cadastrar" onCreated={() => setRefreshKey((k) => k + 1)} />
+                ) : tabs.selected === 'campanhas' ? (
+                  <CadastroCampanhaSheet triggerLabel="Cadastrar" onCreated={() => setRefreshKey((k) => k + 1)} />
+                ) : undefined
+              }
             />
           </div>
           <div className="flex-1 min-h-0 overflow-auto" style={{ marginBottom: layout.mbTable }}>
