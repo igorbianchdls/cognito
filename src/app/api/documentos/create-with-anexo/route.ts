@@ -13,6 +13,7 @@ export async function POST(req: Request) {
     const view = String(form.get('view') || '').trim().toLowerCase()
     const file = form.get('file') as File | null
     const tipo_documento_id = Number(String(form.get('tipo_documento_id') || '').trim())
+    const tenant_id = Number(String(form.get('tenant_id') || '').trim())
 
     if (!view) {
       return Response.json({ success: false, message: 'view é obrigatório' }, { status: 400 })
@@ -22,6 +23,9 @@ export async function POST(req: Request) {
     }
     if (!tipo_documento_id || Number.isNaN(tipo_documento_id)) {
       return Response.json({ success: false, message: 'tipo_documento_id é obrigatório' }, { status: 400 })
+    }
+    if (!tenant_id || Number.isNaN(tenant_id)) {
+      return Response.json({ success: false, message: 'tenant_id é obrigatório' }, { status: 400 })
     }
 
     // Campos do documento principal
@@ -38,10 +42,10 @@ export async function POST(req: Request) {
       const result = await withTransaction(async (client) => {
         // 1) Inserir documento
         const docInsert = await client.query(
-          `INSERT INTO documentos.documento (tipo_documento_id, numero, descricao, data_emissao, valor_total, status)
-           VALUES ($1, $2, $3, $4, $5, $6)
+          `INSERT INTO documentos.documento (tenant_id, tipo_documento_id, numero, descricao, data_emissao, valor_total, status)
+           VALUES ($1, $2, $3, $4, $5, $6, $7)
            RETURNING id`,
-          [tipo_documento_id, numero, descricao, data_emissao, valor_total, status]
+          [tenant_id, tipo_documento_id, numero, descricao, data_emissao, valor_total, status]
         )
         const inserted = docInsert.rows[0] as { id: number | string }
         const documento_id = Number(inserted?.id)

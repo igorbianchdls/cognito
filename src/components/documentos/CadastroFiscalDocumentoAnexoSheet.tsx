@@ -21,6 +21,7 @@ export default function CadastroFiscalDocumentoAnexoSheet({ triggerLabel = "Cada
   const [error, setError] = React.useState<string | null>(null)
 
   // Campos básicos
+  const [tenantId, setTenantId] = React.useState<string>('1')
   const [tipoDocumentoId, setTipoDocumentoId] = React.useState<string>("")
   const [numero, setNumero] = React.useState("")
   const [descricao, setDescricao] = React.useState("")
@@ -40,6 +41,7 @@ export default function CadastroFiscalDocumentoAnexoSheet({ triggerLabel = "Cada
   const [file, setFile] = React.useState<File | null>(null)
 
   const resetForm = () => {
+    setTenantId('1')
     setTipoDocumentoId("")
     setNumero("")
     setDescricao("")
@@ -86,6 +88,7 @@ export default function CadastroFiscalDocumentoAnexoSheet({ triggerLabel = "Cada
       setError(null)
       const fd = new FormData()
       fd.set('view', 'fiscal')
+      if (tenantId) fd.set('tenant_id', tenantId)
       fd.set('tipo_documento_id', tipoDocumentoId)
       if (numero) fd.set('numero', numero)
       if (descricao) fd.set('descricao', descricao)
@@ -133,6 +136,11 @@ export default function CadastroFiscalDocumentoAnexoSheet({ triggerLabel = "Cada
 
           <div className="flex-1 overflow-auto p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label>Tenant ID</Label>
+                <Input value={tenantId} onChange={(e) => setTenantId(e.target.value)} />
+              </div>
+
               <div>
                 <Label>Tipo de Documento</Label>
                 <Select onValueChange={setTipoDocumentoId} value={tipoDocumentoId}>
@@ -229,4 +237,3 @@ export default function CadastroFiscalDocumentoAnexoSheet({ triggerLabel = "Cada
     </Sheet>
   )
 }
-
