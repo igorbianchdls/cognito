@@ -29,7 +29,8 @@ export default function CadastroRHDocumentoAnexoSheet({ triggerLabel = "Cadastra
       const res = await fetch('/api/documentos/tipos?categoria=rh', { cache: 'no-store' })
       const json = await res.json()
       if (res.ok && Array.isArray(json?.rows)) {
-        setTipos(json.rows.map((r: any) => ({ id: Number(r.id), nome: String(r.nome), categoria: r.categoria ? String(r.categoria) : undefined })))
+        const rows = json.rows as Array<{ id: number | string; nome: string; categoria?: string | null }>
+        setTipos(rows.map((r) => ({ id: Number(r.id), nome: String(r.nome), categoria: r.categoria ? String(r.categoria) : undefined })))
       } else setTipos([])
     } catch { setTipos([]) }
   }, [])
