@@ -28,6 +28,12 @@ export default function ConnectorsPanel({ onConnectorClick }: { onConnectorClick
 
   const providers: Provider[] = useMemo(() => catalog.providers, [])
   const actionBlocks = catalog.actionBlocks
+  const actionProvider: Provider = useMemo(() => ({
+    id: 'action-blocks',
+    name: 'Action Blocks',
+    count: actionBlocks.length,
+    connectors: actionBlocks,
+  }), [actionBlocks])
 
   const results = useMemo(() => {
     if (!query.trim()) return [] as ReturnType<typeof flatAllConnectors>
@@ -65,14 +71,14 @@ export default function ConnectorsPanel({ onConnectorClick }: { onConnectorClick
           </div>
         ) : (
           <>
-            {/* Action Blocks section */}
-            <div className="px-1 pb-3">
-              <div className="text-xs font-medium text-gray-700 mb-2" style={{ fontFamily: 'var(--font-inter)', letterSpacing: '-0.28px' }}>Action Blocks</div>
-              <div className="grid grid-cols-2 gap-3">
-                {actionBlocks.map((ab) => (
-                  <ConnectorTile key={ab.id} icon={ab.icon} label={ab.label} hint={ab.hint} onClick={() => onConnectorClick?.(ab.id)} />
-                ))}
-              </div>
+            {/* Collapsible Action Blocks as a provider */}
+            <div className="px-1">
+              <ProviderRow
+                provider={actionProvider}
+                expanded={expanded['action-blocks'] ?? true}
+                onToggle={() => setExpanded((prev) => ({ ...prev, ['action-blocks']: !(prev['action-blocks'] ?? true) }))}
+                onConnectorClick={onConnectorClick}
+              />
             </div>
 
             {/* Providers list */}
