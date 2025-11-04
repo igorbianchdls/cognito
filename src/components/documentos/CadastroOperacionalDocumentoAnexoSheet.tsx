@@ -130,7 +130,7 @@ export default function CadastroOperacionalDocumentoAnexoSheet({ triggerLabel = 
           </SheetHeader>
 
           <div className="flex-1 overflow-auto p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               <div>
                 <Label>Tenant ID</Label>
                 <Input value={tenantId} onChange={(e) => setTenantId(e.target.value)} />
@@ -155,7 +155,7 @@ export default function CadastroOperacionalDocumentoAnexoSheet({ triggerLabel = 
                 <Input value={numero} onChange={(e) => setNumero(e.target.value)} />
               </div>
 
-              <div className="md:col-span-2">
+              <div>
                 <Label>Descrição</Label>
                 <Input value={descricao} onChange={(e) => setDescricao(e.target.value)} />
               </div>
@@ -190,17 +190,17 @@ export default function CadastroOperacionalDocumentoAnexoSheet({ triggerLabel = 
                 <Input type="date" value={dataExecucao} onChange={(e) => setDataExecucao(e.target.value)} />
               </div>
 
-              <div className="md:col-span-2">
+              <div>
                 <Label>Checklist (JSON)</Label>
                 <Textarea rows={4} value={checklistJson} onChange={(e) => setChecklistJson(e.target.value)} />
               </div>
 
-              <div className="md:col-span-2">
+              <div>
                 <Label>Observações</Label>
                 <Textarea rows={3} value={observacoes} onChange={(e) => setObservacoes(e.target.value)} />
               </div>
 
-              <div className="md:col-span-2">
+              <div>
                 <Label>Arquivo (obrigatório)</Label>
                 <Input type="file" onChange={(e) => setFile(e.target.files?.[0] || null)} />
               </div>
@@ -222,4 +222,3 @@ export default function CadastroOperacionalDocumentoAnexoSheet({ triggerLabel = 
     </Sheet>
   )
 }
-

@@ -70,7 +70,7 @@ export default function CadastroAgendamentoSheet({ triggerLabel = "Cadastrar", o
         <div className="h-full flex flex-col">
           <SheetHeader className="p-4 border-b"><SheetTitle>Cadastrar Agendamento</SheetTitle><SheetDescription>Defina os dados do agendamento</SheetDescription></SheetHeader>
           <div className="flex-1 overflow-auto p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               <div>
                 <Label>Ordem de Serviço<span className="text-red-500"> *</span></Label>
                 <Select value={ordemId} onValueChange={setOrdemId}>
@@ -99,4 +99,3 @@ export default function CadastroAgendamentoSheet({ triggerLabel = "Cadastrar", o
     </Sheet>
   )
 }
-

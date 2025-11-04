@@ -82,7 +82,7 @@ export default function CadastroContaSheet({ triggerLabel = "Cadastrar", onCreat
             <SheetDescription>Defina os dados da conta</SheetDescription>
           </SheetHeader>
           <div className="flex-1 overflow-auto p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               <div>
                 <Label>Nome<span className="text-red-500"> *</span></Label>
                 <Input value={nome} onChange={(e) => setNome(e.target.value)} />
@@ -124,4 +124,3 @@ export default function CadastroContaSheet({ triggerLabel = "Cadastrar", onCreat
     </Sheet>
   )
 }
-

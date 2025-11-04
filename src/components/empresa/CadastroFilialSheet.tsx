@@ -136,7 +136,7 @@ export default function CadastroFilialSheet({ triggerLabel = "Cadastrar", onCrea
           </SheetHeader>
 
           <div className="flex-1 overflow-auto p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               <div className="md:col-span-2">
                 <Label>Empresa <span className="text-red-500">*</span></Label>
                 <Select onValueChange={setEmpresaId} value={empresaId}>
@@ -178,7 +178,7 @@ export default function CadastroFilialSheet({ triggerLabel = "Cadastrar", onCrea
                 <Input value={inscricaoEstadual} onChange={(e) => setInscricaoEstadual(e.target.value)} />
               </div>
 
-              <div className="md:col-span-2">
+              <div>
                 <Label>Endereço</Label>
                 <Input value={endereco} onChange={(e) => setEndereco(e.target.value)} placeholder="Rua, número, complemento" />
               </div>
@@ -207,7 +207,7 @@ export default function CadastroFilialSheet({ triggerLabel = "Cadastrar", onCrea
                 <Input value={pais} onChange={(e) => setPais(e.target.value)} />
               </div>
 
-              <div className="md:col-span-2 flex items-center space-x-4">
+              <div className="flex items-center space-x-4">
                 <div className="flex items-center space-x-2">
                   <Checkbox id="matriz" checked={matriz} onCheckedChange={(checked) => setMatriz(checked === true)} />
                   <Label htmlFor="matriz" className="cursor-pointer">É matriz</Label>

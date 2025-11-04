@@ -125,8 +125,8 @@ export default function CadastroClienteSheet({ triggerLabel = "Cadastrar", onCre
             <SheetDescription>Preencha os dados do cliente</SheetDescription>
           </SheetHeader>
           <div className="flex-1 overflow-auto p-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="md:col-span-2">
+            <div className="grid grid-cols-1 gap-4">
+              <div>
                 <Label>Nome<span className="text-red-500"> *</span></Label>
                 <Input value={nome} onChange={(e) => setNome(e.target.value)} />
               </div>
@@ -197,7 +197,7 @@ export default function CadastroClienteSheet({ triggerLabel = "Cadastrar", onCre
                 <Input type="date" value={clienteDesde} onChange={(e) => setClienteDesde(e.target.value)} />
               </div>
 
-              <div className="md:col-span-3 flex items-center space-x-2">
+              <div className="flex items-center space-x-2">
                 <Checkbox id="ativo" checked={ativo} onCheckedChange={(c) => setAtivo(c === true)} />
                 <Label htmlFor="ativo" className="cursor-pointer">Ativo</Label>
               </div>
@@ -217,4 +217,3 @@ export default function CadastroClienteSheet({ triggerLabel = "Cadastrar", onCre
     </Sheet>
   )
 }
-

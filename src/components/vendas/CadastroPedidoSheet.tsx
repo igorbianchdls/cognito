@@ -118,7 +118,7 @@ export default function CadastroPedidoSheet({ triggerLabel = "Cadastrar", onCrea
             <SheetDescription>Preencha os dados principais do pedido</SheetDescription>
           </SheetHeader>
           <div className="flex-1 overflow-auto p-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               <div>
                 <Label>Número do Pedido<span className="text-red-500"> *</span></Label>
                 <Input value={numeroPedido} onChange={(e) => setNumeroPedido(e.target.value)} />
@@ -205,4 +205,3 @@ export default function CadastroPedidoSheet({ triggerLabel = "Cadastrar", onCrea
     </Sheet>
   )
 }
-

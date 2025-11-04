@@ -74,23 +74,23 @@ export default function CadastroProdutoSheet({ triggerLabel = "Cadastrar", onCre
           </SheetHeader>
 
           <div className="flex-1 overflow-auto p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="md:col-span-2">
+            <div className="grid grid-cols-1 gap-4">
+              <div>
                 <Label>Nome <span className="text-red-500">*</span></Label>
                 <Input value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Ex: Camiseta Clássica" />
               </div>
 
-              <div className="md:col-span-2">
+              <div>
                 <Label>Descrição</Label>
                 <Textarea value={descricao} onChange={(e) => setDescricao(e.target.value)} placeholder="Descreva o produto" rows={4} />
               </div>
 
-              <div className="md:col-span-2">
+              <div>
                 <Label>Imagem (URL)</Label>
                 <Input value={imagemUrl} onChange={(e) => setImagemUrl(e.target.value)} placeholder="https://..." />
               </div>
 
-              <div className="md:col-span-2 flex items-center space-x-2">
+              <div className="flex items-center space-x-2">
                 <Checkbox id="ativo" checked={ativo} onCheckedChange={(c) => setAtivo(c === true)} />
                 <Label htmlFor="ativo" className="cursor-pointer">Ativo</Label>
               </div>
@@ -112,4 +112,3 @@ export default function CadastroProdutoSheet({ triggerLabel = "Cadastrar", onCre
     </Sheet>
   )
 }
-

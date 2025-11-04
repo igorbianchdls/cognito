@@ -118,13 +118,13 @@ export default function CadastroEmpresaSheet({ triggerLabel = "Cadastrar", onCre
           </SheetHeader>
 
           <div className="flex-1 overflow-auto p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="md:col-span-2">
+            <div className="grid grid-cols-1 gap-4">
+              <div>
                 <Label>Razão Social <span className="text-red-500">*</span></Label>
                 <Input value={razaoSocial} onChange={(e) => setRazaoSocial(e.target.value)} placeholder="Ex: Empresa LTDA" />
               </div>
 
-              <div className="md:col-span-2">
+              <div>
                 <Label>Nome Fantasia</Label>
                 <Input value={nomeFantasia} onChange={(e) => setNomeFantasia(e.target.value)} placeholder="Ex: Minha Empresa" />
               </div>
@@ -172,7 +172,7 @@ export default function CadastroEmpresaSheet({ triggerLabel = "Cadastrar", onCre
                 </Select>
               </div>
 
-              <div className="md:col-span-2">
+              <div>
                 <Label>Endereço</Label>
                 <Input value={endereco} onChange={(e) => setEndereco(e.target.value)} placeholder="Rua, número, complemento" />
               </div>
@@ -187,7 +187,7 @@ export default function CadastroEmpresaSheet({ triggerLabel = "Cadastrar", onCre
                 <Input value={pais} onChange={(e) => setPais(e.target.value)} />
               </div>
 
-              <div className="md:col-span-2 flex items-center space-x-2">
+              <div className="flex items-center space-x-2">
                 <Checkbox id="ativo" checked={ativo} onCheckedChange={(checked) => setAtivo(checked === true)} />
                 <Label htmlFor="ativo" className="cursor-pointer">Empresa ativa</Label>
               </div>

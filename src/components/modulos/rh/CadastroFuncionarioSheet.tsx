@@ -153,8 +153,8 @@ export default function CadastroFuncionarioSheet({ triggerLabel = "Cadastrar", o
           </SheetHeader>
 
           <div className="flex-1 overflow-auto p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="md:col-span-2">
+            <div className="grid grid-cols-1 gap-4">
+              <div>
                 <Label>Nome Completo <span className="text-red-500">*</span></Label>
                 <Input value={nomeCompleto} onChange={(e) => setNomeCompleto(e.target.value)} placeholder="Ex: João Silva" />
               </div>
@@ -217,7 +217,7 @@ export default function CadastroFuncionarioSheet({ triggerLabel = "Cadastrar", o
                 </Select>
               </div>
 
-              <div className="md:col-span-2">
+              <div>
                 <Label>Gestor Direto</Label>
                 <Select onValueChange={setGestorDiretoId} value={gestorDiretoId}>
                   <SelectTrigger>
@@ -231,7 +231,7 @@ export default function CadastroFuncionarioSheet({ triggerLabel = "Cadastrar", o
                 </Select>
               </div>
 
-              <div className="md:col-span-2">
+              <div>
                 <Label>Imagem do Funcionário</Label>
                 <Select value={imagemTipo} onValueChange={(v) => setImagemTipo(v as "url" | "upload")}>
                   <SelectTrigger className="mt-2">

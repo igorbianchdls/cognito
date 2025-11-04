@@ -51,7 +51,7 @@ export default function CadastroServicoSheet({ triggerLabel = "Cadastrar", onCre
         <div className="h-full flex flex-col">
           <SheetHeader className="p-4 border-b"><SheetTitle>Cadastrar Serviço</SheetTitle><SheetDescription>Defina os dados do serviço</SheetDescription></SheetHeader>
           <div className="flex-1 overflow-auto p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               <div className="md:col-span-2"><Label>Nome<span className="text-red-500"> *</span></Label><Input value={nome} onChange={(e)=>setNome(e.target.value)} /></div>
               <div className="md:col-span-2"><Label>Descrição</Label><Textarea rows={3} value={descricao} onChange={(e)=>setDescricao(e.target.value)} /></div>
               <div><Label>Categoria</Label><Input value={categoria} onChange={(e)=>setCategoria(e.target.value)} /></div>
@@ -67,4 +67,3 @@ export default function CadastroServicoSheet({ triggerLabel = "Cadastrar", onCre
     </Sheet>
   )
 }
-

@@ -74,7 +74,7 @@ export default function CadastroContaAReceberSheet({ triggerLabel = "Cadastrar",
         <div className="h-full flex flex-col">
           <SheetHeader className="p-4 border-b"><SheetTitle>Nova Conta a Receber</SheetTitle><SheetDescription>Preencha os dados da conta</SheetDescription></SheetHeader>
           <div className="flex-1 overflow-auto p-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               <div className="md:col-span-2"><Label>Descrição<span className="text-red-500"> *</span></Label><Textarea rows={2} value={descricao} onChange={(e)=>setDescricao(e.target.value)} /></div>
               <div><Label>Valor<span className="text-red-500"> *</span></Label><Input type="number" step="0.01" value={valor} onChange={(e)=>setValor(e.target.value)} /></div>
               <div><Label>Lançamento<span className="text-red-500"> *</span></Label><Input type="date" value={dataLanc} onChange={(e)=>setDataLanc(e.target.value)} /></div>
@@ -111,4 +111,3 @@ export default function CadastroContaAReceberSheet({ triggerLabel = "Cadastrar",
     </Sheet>
   )
 }
-

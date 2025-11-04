@@ -139,7 +139,7 @@ export default function CadastroDadosFiscaisSheet({ triggerLabel = "Cadastrar", 
           </SheetHeader>
 
           <div className="flex-1 overflow-auto p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               <div>
                 <Label>Produto (opcional p/ filtrar)</Label>
                 <Select value={produtoId} onValueChange={setProdutoId}>
@@ -206,7 +206,7 @@ export default function CadastroDadosFiscaisSheet({ triggerLabel = "Cadastrar", 
                 <Input value={aliquotaCofins} onChange={(e) => setAliquotaCofins(e.target.value)} type="number" step="0.01" />
               </div>
 
-              <div className="md:col-span-2">
+              <div>
                 <Label>Regime Tributário</Label>
                 <Input value={regimeTributario} onChange={(e) => setRegimeTributario(e.target.value)} placeholder="ex: simples, lucro presumido" />
               </div>
