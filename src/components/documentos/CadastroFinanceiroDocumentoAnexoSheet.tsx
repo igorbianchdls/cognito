@@ -22,7 +22,7 @@ export default function CadastroFinanceiroDocumentoAnexoSheet({ triggerLabel = "
 
   // Campos básicos
   const [tenantId, setTenantId] = React.useState<string>('1')
-  const [tipoDocumentoId, setTipoDocumentoId] = React.useState<string]("")
+  const [tipoDocumentoId, setTipoDocumentoId] = React.useState<string>("")
   const [numero, setNumero] = React.useState("")
   const [descricao, setDescricao] = React.useState("")
   const [dataEmissao, setDataEmissao] = React.useState("")
@@ -221,4 +221,3 @@ export default function CadastroFinanceiroDocumentoAnexoSheet({ triggerLabel = "
     </Sheet>
   )
 }
-
