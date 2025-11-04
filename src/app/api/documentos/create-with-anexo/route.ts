@@ -43,7 +43,8 @@ export async function POST(req: Request) {
            RETURNING id`,
           [tipo_documento_id, numero, descricao, data_emissao, valor_total, status]
         )
-        const documento_id: number = docInsert.rows[0]?.id
+        const inserted = docInsert.rows[0] as { id: number | string }
+        const documento_id = Number(inserted?.id)
         if (!documento_id) throw new Error('Falha ao criar documento')
 
         // 2) Inserir registro por domínio (apenas fiscal nesta etapa)
@@ -111,4 +112,3 @@ export async function POST(req: Request) {
     return Response.json({ success: false, message: 'Erro interno', error: error instanceof Error ? error.message : 'Erro desconhecido' }, { status: 500 })
   }
 }
-
