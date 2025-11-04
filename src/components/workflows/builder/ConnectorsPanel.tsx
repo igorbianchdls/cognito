@@ -1,84 +1,94 @@
 "use client"
 
+import * as React from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { GitBranch, Clock4, Network, Code, Database, Settings, Webhook, Zap, Slack, Github, Gitlab, Plug } from "lucide-react"
+import ProviderRow from "./connector/ProviderRow"
+import ConnectorTile from "./connector/ConnectorTile"
+import { catalog, flatAllConnectors } from "./connector/data"
+import type { Provider } from "./connector/types"
 
-const SectionList = ({ items }: { items: { icon: React.ReactNode; label: string; hint?: string }[] }) => (
-  <div className="grid grid-cols-2 gap-3">
-    {items.map((it, i) => (
-      <div
-        key={i}
-        className="flex flex-col items-center justify-center gap-2 p-4 rounded-lg border border-gray-100 hover:border-gray-200 hover:bg-gray-50 cursor-default select-none min-h-[88px] text-center"
-      >
-        <span className="inline-flex items-center justify-center w-10 h-10 rounded-md bg-gray-100 text-gray-700">
-          {it.icon}
-        </span>
-        <div className="w-full truncate text-gray-800 font-medium" style={{ fontFamily: 'var(--font-inter)', letterSpacing: '-0.28px' }}>
-          {it.label}
-        </div>
-      </div>
-    ))}
-  </div>
-)
+const STORAGE_KEY = 'workflows_connectors_expanded'
 
-export default function ConnectorsPanel() {
+export default function ConnectorsPanel({ onConnectorClick }: { onConnectorClick?: (id: string) => void }) {
+  const [query, setQuery] = useState("")
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({})
+
+  // Persist expanded providers
+  useEffect(() => {
+    try {
+      const str = localStorage.getItem(STORAGE_KEY)
+      if (str) setExpanded(JSON.parse(str))
+    } catch {}
+  }, [])
+  useEffect(() => {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(expanded)) } catch {}
+  }, [expanded])
+
+  const providers: Provider[] = useMemo(() => catalog.providers, [])
+  const actionBlocks = catalog.actionBlocks
+
+  const results = useMemo(() => {
+    if (!query.trim()) return [] as ReturnType<typeof flatAllConnectors>
+    const q = query.trim().toLowerCase()
+    return flatAllConnectors().filter((c) =>
+      c.label.toLowerCase().includes(q) ||
+      (c.hint && c.hint.toLowerCase().includes(q)) ||
+      (c.tags?.some(t => t.toLowerCase().includes(q)))
+    )
+  }, [query])
+
   return (
     <aside className="h-full w-full bg-white flex flex-col">
-      <div className="p-3">
-        <div className="text-xs font-medium text-gray-500 mb-2" style={{ fontFamily: 'var(--font-inter)', letterSpacing: '-0.28px' }}>Conectores</div>
-        <Input placeholder="Buscar conectores..." className="h-8" />
+      <div className="p-3 sticky top-0 bg-white z-10">
+        <div className="text-xs font-medium text-gray-500 mb-2" style={{ fontFamily: 'var(--font-inter)', letterSpacing: '-0.28px' }}>Connectors</div>
+        <Input placeholder="Search connectors..." className="h-8" value={query} onChange={(e) => setQuery(e.target.value)} />
       </div>
       <Separator />
       <div className="p-2 flex-1 overflow-auto sidebar-scrollbar">
-        <Accordion type="multiple" defaultValue={["core","helpers","triggers","apps"]}>
-          <AccordionItem value="core" className="border-none">
-            <AccordionTrigger className="text-sm px-2" style={{ fontFamily: 'var(--font-inter)', letterSpacing: '-0.28px' }}>Core</AccordionTrigger>
-            <AccordionContent className="px-1 pb-2">
-              <SectionList items={[
-                { icon: <GitBranch className="w-4 h-4" />, label: 'Branch', hint: 'Fluxo condicional' },
-                { icon: <Clock4 className="w-4 h-4" />, label: 'Delay', hint: 'Aguardar intervalo' },
-                { icon: <Network className="w-4 h-4" />, label: 'HTTP client', hint: 'Chamar API' },
-                { icon: <Code className="w-4 h-4" />, label: 'Script', hint: 'JavaScript customizado' },
-                { icon: <Database className="w-4 h-4" />, label: 'Data storage', hint: 'Guardar/ler dados' },
-              ]} />
-            </AccordionContent>
-          </AccordionItem>
+        {/* Results mode */}
+        {query.trim() ? (
+          <div className="px-1 pb-3">
+            <div className="text-xs text-gray-500 mb-2" style={{ fontFamily: 'var(--font-inter)', letterSpacing: '-0.28px' }}>
+              Results ({results.length})
+            </div>
+            {results.length ? (
+              <div className="grid grid-cols-2 gap-3">
+                {results.map((c) => (
+                  <ConnectorTile key={c.id} icon={c.icon} label={c.label} hint={c.provider} onClick={() => onConnectorClick?.(c.id)} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-xs text-gray-500">No connectors found</div>
+            )}
+          </div>
+        ) : (
+          <>
+            {/* Action Blocks section */}
+            <div className="px-1 pb-3">
+              <div className="text-xs font-medium text-gray-700 mb-2" style={{ fontFamily: 'var(--font-inter)', letterSpacing: '-0.28px' }}>Action Blocks</div>
+              <div className="grid grid-cols-2 gap-3">
+                {actionBlocks.map((ab) => (
+                  <ConnectorTile key={ab.id} icon={ab.icon} label={ab.label} hint={ab.hint} onClick={() => onConnectorClick?.(ab.id)} />
+                ))}
+              </div>
+            </div>
 
-          <AccordionItem value="helpers" className="border-none">
-            <AccordionTrigger className="text-sm px-2" style={{ fontFamily: 'var(--font-inter)', letterSpacing: '-0.28px' }}>Helpers</AccordionTrigger>
-            <AccordionContent className="px-1 pb-2">
-              <SectionList items={[
-                { icon: <Settings className="w-4 h-4" />, label: 'Data mapper', hint: 'Transformar dados' },
-                { icon: <Settings className="w-4 h-4" />, label: 'CSV reader', hint: 'Ler CSV' },
-                { icon: <Settings className="w-4 h-4" />, label: 'CSV editor', hint: 'Editar CSV' },
-              ]} />
-            </AccordionContent>
-          </AccordionItem>
-
-          <AccordionItem value="triggers" className="border-none">
-            <AccordionTrigger className="text-sm px-2" style={{ fontFamily: 'var(--font-inter)', letterSpacing: '-0.28px' }}>Triggers</AccordionTrigger>
-            <AccordionContent className="px-1 pb-2">
-              <SectionList items={[
-                { icon: <Webhook className="w-4 h-4" />, label: 'Webhook trigger', hint: 'Receber eventos HTTP' },
-                { icon: <Zap className="w-4 h-4" />, label: 'Schedule trigger', hint: 'Executar por agenda' },
-              ]} />
-            </AccordionContent>
-          </AccordionItem>
-
-          <AccordionItem value="apps" className="border-none">
-            <AccordionTrigger className="text-sm px-2" style={{ fontFamily: 'var(--font-inter)', letterSpacing: '-0.28px' }}>Apps</AccordionTrigger>
-            <AccordionContent className="px-1 pb-3">
-              <SectionList items={[
-                { icon: <Github className="w-4 h-4" />, label: 'GitHub' },
-                { icon: <Slack className="w-4 h-4" />, label: 'Slack' },
-                { icon: <Gitlab className="w-4 h-4" />, label: 'GitLab' },
-                { icon: <Plug className="w-4 h-4" />, label: 'Webhook' },
-              ]} />
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
+            {/* Providers list */}
+            <div className="px-1">
+              {providers.map((p) => (
+                <ProviderRow
+                  key={p.id}
+                  provider={p}
+                  expanded={!!expanded[p.id]}
+                  onToggle={() => setExpanded((prev) => ({ ...prev, [p.id]: !prev[p.id] }))}
+                  onConnectorClick={onConnectorClick}
+                />
+              ))}
+            </div>
+          </>
+        )}
       </div>
     </aside>
   )
