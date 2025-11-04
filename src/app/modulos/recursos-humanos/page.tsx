@@ -17,6 +17,10 @@ import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from 
 import type { Opcao } from '@/components/modulos/TabsNav'
 import { Users, CalendarDays } from 'lucide-react'
 import FuncionarioEditorSheet from '@/components/modulos/rh/FuncionarioEditorSheet'
+import CadastroFuncionarioSheet from '@/components/modulos/rh/CadastroFuncionarioSheet'
+import CadastroTipoAusenciaSheet from '@/components/modulos/rh/CadastroTipoAusenciaSheet'
+import CadastroContratoSheet from '@/components/modulos/rh/CadastroContratoSheet'
+import CadastroHistoricoSalarialSheet from '@/components/modulos/rh/CadastroHistoricoSalarialSheet'
 
 type Row = TableData
 
@@ -56,6 +60,7 @@ export default function ModulosRecursosHumanosPage() {
   const [error, setError] = useState<string | null>(null)
   const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date } | undefined>()
   const [reloadKey, setReloadKey] = useState(0)
+  const [refreshKey, setRefreshKey] = useState(0)
   const [page, setPage] = useState<number>(1)
   const [pageSize, setPageSize] = useState<number>(20)
   const [total, setTotal] = useState<number>(0)
@@ -254,7 +259,7 @@ export default function ModulosRecursosHumanosPage() {
     }
     load()
     return () => controller.abort()
-  }, [tabs.selected, dateRange?.from, dateRange?.to, page, pageSize, reloadKey])
+  }, [tabs.selected, dateRange?.from, dateRange?.to, page, pageSize, reloadKey, refreshKey])
 
   // Reset page quando mudar de aba ou período
   useEffect(() => { setPage(1) }, [tabs.selected, dateRange?.from, dateRange?.to])
@@ -335,6 +340,29 @@ export default function ModulosRecursosHumanosPage() {
               iconSize={toolbarUI.iconSize}
               searchWidth={toolbarUI.searchWidth}
               dateRangeWidth={toolbarUI.dateRangeWidth}
+              actionComponent={
+                tabs.selected === 'funcionarios' ? (
+                  <CadastroFuncionarioSheet
+                    triggerLabel="Cadastrar"
+                    onCreated={() => setRefreshKey((k) => k + 1)}
+                  />
+                ) : tabs.selected === 'tipos-ausencia' ? (
+                  <CadastroTipoAusenciaSheet
+                    triggerLabel="Cadastrar"
+                    onCreated={() => setRefreshKey((k) => k + 1)}
+                  />
+                ) : tabs.selected === 'contratos' ? (
+                  <CadastroContratoSheet
+                    triggerLabel="Cadastrar"
+                    onCreated={() => setRefreshKey((k) => k + 1)}
+                  />
+                ) : tabs.selected === 'historico-salarial' ? (
+                  <CadastroHistoricoSalarialSheet
+                    triggerLabel="Cadastrar"
+                    onCreated={() => setRefreshKey((k) => k + 1)}
+                  />
+                ) : undefined
+              }
             />
           </div>
           <div className="flex-1 min-h-0 overflow-auto" style={{ marginBottom: layout.mbTable }}>

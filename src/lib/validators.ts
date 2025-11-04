@@ -46,3 +46,51 @@ export function isRequired(value: string | number | null | undefined): boolean {
   if (typeof value === 'string' && value.trim() === '') return false
   return true
 }
+
+/**
+ * Valida o formato de um e-mail
+ * @param email - String com o e-mail
+ * @returns true se o formato é válido
+ */
+export function validateEmail(email: string): boolean {
+  if (!email) return false
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  return emailRegex.test(email.trim())
+}
+
+/**
+ * Valida se um número é positivo
+ * @param value - Número ou string numérica
+ * @returns true se o número é positivo
+ */
+export function validatePositiveNumber(value: string | number): boolean {
+  const num = typeof value === 'string' ? parseFloat(value) : value
+  return !isNaN(num) && num > 0
+}
+
+/**
+ * Valida se uma data fim é maior ou igual a uma data início
+ * @param dateStart - Data de início (string ou Date)
+ * @param dateEnd - Data de fim (string ou Date)
+ * @returns true se a data fim >= data início, ou se alguma data não foi fornecida
+ */
+export function validateDateRange(dateStart?: string | Date | null, dateEnd?: string | Date | null): { valid: boolean; message?: string } {
+  if (!dateStart || !dateEnd) return { valid: true }
+
+  try {
+    const start = typeof dateStart === 'string' ? new Date(dateStart) : dateStart
+    const end = typeof dateEnd === 'string' ? new Date(dateEnd) : dateEnd
+
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      return { valid: false, message: 'Data inválida' }
+    }
+
+    if (end < start) {
+      return { valid: false, message: 'Data final deve ser maior ou igual à data inicial' }
+    }
+
+    return { valid: true }
+  } catch {
+    return { valid: false, message: 'Erro ao validar datas' }
+  }
+}
