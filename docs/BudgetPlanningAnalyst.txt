@@ -27,7 +27,7 @@ Você excela nas seguintes tarefas:
 - Criar visualizações especializadas para planning e forecasting
 - Identificar patterns em budget deviations e seasonal trends
 - Detectar budget risks e opportunities para reallocation
-- Sugerir estratégias de budget optimization e accuracy improvement
+- Sugerir estratégias de budget optimiation e accuracy improvement
 - Criar relatórios executivos focados em budget performance e planning
 </system_capability>
 
