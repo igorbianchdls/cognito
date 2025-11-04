@@ -126,6 +126,17 @@ export default function ModulosDocumentosPage() {
             const url = row.original['xml_url'] as string | undefined
             return url ? (<a href={url} target="_blank" rel="noreferrer" className="text-blue-600 underline">Baixar</a>) : '-'
           } },
+          { accessorKey: 'anexos', header: 'Anexos', cell: ({ row }) => {
+            const id = row.original['documento_id'] as number | undefined
+            return (
+              <button
+                className="text-blue-600 underline"
+                onClick={() => openAnexosDrawer(typeof id === 'number' ? id : Number(row.original['id'] || 0))}
+              >
+                Ver anexos
+              </button>
+            )
+          } },
         ]
       case 'financeiro':
         return [
@@ -172,6 +183,17 @@ export default function ModulosDocumentosPage() {
           { accessorKey: 'observacoes', header: 'Observações' },
           { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em']) },
           { accessorKey: 'atualizado_em', header: 'Atualizado em', cell: ({ row }) => formatDate(row.original['atualizado_em']) },
+          { accessorKey: 'anexos', header: 'Anexos', cell: ({ row }) => {
+            const id = row.original['documento_id'] as number | undefined
+            return (
+              <button
+                className="text-blue-600 underline"
+                onClick={() => openAnexosDrawer(typeof id === 'number' ? id : Number(row.original['id'] || 0))}
+              >
+                Ver anexos
+              </button>
+            )
+          } },
         ]
       case 'juridico':
         return [
@@ -180,6 +202,17 @@ export default function ModulosDocumentosPage() {
           { accessorKey: 'numero', header: 'Número' },
           { accessorKey: 'descricao', header: 'Descrição' },
           { accessorKey: 'status', header: 'Status' },
+          { accessorKey: 'anexos', header: 'Anexos', cell: ({ row }) => {
+            const id = row.original['documento_id'] as number | undefined
+            return (
+              <button
+                className="text-blue-600 underline"
+                onClick={() => openAnexosDrawer(typeof id === 'number' ? id : Number(row.original['id'] || 0))}
+              >
+                Ver anexos
+              </button>
+            )
+          } },
         ]
       case 'comercial':
         return [
@@ -188,6 +221,17 @@ export default function ModulosDocumentosPage() {
           { accessorKey: 'numero', header: 'Número' },
           { accessorKey: 'descricao', header: 'Descrição' },
           { accessorKey: 'status', header: 'Status' },
+          { accessorKey: 'anexos', header: 'Anexos', cell: ({ row }) => {
+            const id = row.original['documento_id'] as number | undefined
+            return (
+              <button
+                className="text-blue-600 underline"
+                onClick={() => openAnexosDrawer(typeof id === 'number' ? id : Number(row.original['id'] || 0))}
+              >
+                Ver anexos
+              </button>
+            )
+          } },
         ]
       case 'rh':
         return [
@@ -196,6 +240,17 @@ export default function ModulosDocumentosPage() {
           { accessorKey: 'numero', header: 'Número' },
           { accessorKey: 'descricao', header: 'Descrição' },
           { accessorKey: 'status', header: 'Status' },
+          { accessorKey: 'anexos', header: 'Anexos', cell: ({ row }) => {
+            const id = row.original['documento_id'] as number | undefined
+            return (
+              <button
+                className="text-blue-600 underline"
+                onClick={() => openAnexosDrawer(typeof id === 'number' ? id : Number(row.original['id'] || 0))}
+              >
+                Ver anexos
+              </button>
+            )
+          } },
         ]
       case 'contratos':
         return [
@@ -217,6 +272,17 @@ export default function ModulosDocumentosPage() {
           } },
           { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em']) },
           { accessorKey: 'atualizado_em', header: 'Atualizado em', cell: ({ row }) => formatDate(row.original['atualizado_em']) },
+          { accessorKey: 'anexos', header: 'Anexos', cell: ({ row }) => {
+            const id = row.original['documento_id'] as number | undefined
+            return (
+              <button
+                className="text-blue-600 underline"
+                onClick={() => openAnexosDrawer(typeof id === 'number' ? id : Number(row.original['id'] || 0))}
+              >
+                Ver anexos
+              </button>
+            )
+          } },
         ]
       case 'outros':
       default:
@@ -226,6 +292,17 @@ export default function ModulosDocumentosPage() {
           { accessorKey: 'numero', header: 'Número' },
           { accessorKey: 'descricao', header: 'Descrição' },
           { accessorKey: 'status', header: 'Status' },
+          { accessorKey: 'anexos', header: 'Anexos', cell: ({ row }) => {
+            const id = row.original['documento_id'] as number | undefined
+            return (
+              <button
+                className="text-blue-600 underline"
+                onClick={() => openAnexosDrawer(typeof id === 'number' ? id : Number(row.original['id'] || 0))}
+              >
+                Ver anexos
+              </button>
+            )
+          } },
         ]
     }
   }, [tabs.selected])
