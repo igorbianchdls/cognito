@@ -1,11 +1,10 @@
 "use client"
 
 import * as React from "react"
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter, SheetTrigger, SheetClose } from "@/components/ui/sheet"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
+import BaseCadastroSheet from "@/components/modulos/BaseCadastroSheet"
 
 type Props = {
   triggerLabel?: string
@@ -13,9 +12,8 @@ type Props = {
 }
 
 export default function CadastroTipoAusenciaSheet({ triggerLabel = "Cadastrar", onCreated }: Props) {
-  const [open, setOpen] = React.useState(false)
-  const [loading, setLoading] = React.useState(false)
-  const [error, setError] = React.useState<string | null>(null)
+  const [isOpen, setIsOpen] = React.useState(false)
+  const createdIdRef = React.useRef<number | null>(null)
 
   const [nome, setNome] = React.useState("")
   const [descontaSaldoFerias, setDescontaSaldoFerias] = React.useState(false)
@@ -23,18 +21,14 @@ export default function CadastroTipoAusenciaSheet({ triggerLabel = "Cadastrar", 
   const resetForm = () => {
     setNome("")
     setDescontaSaldoFerias(false)
-    setError(null)
   }
 
-  const canSave = !!nome.trim()
-
-  const onSave = async () => {
-    if (!canSave || loading) return
+  const onSubmit = async (): Promise<{ success: boolean; error?: string }> => {
+    if (!nome.trim()) {
+      return { success: false, error: 'Nome do tipo de ausência é obrigatório' }
+    }
 
     try {
-      setLoading(true)
-      setError(null)
-
       const fd = new FormData()
       fd.set('view', 'tipos-ausencia')
       fd.set('nome', nome.trim())
@@ -44,68 +38,39 @@ export default function CadastroTipoAusenciaSheet({ triggerLabel = "Cadastrar", 
       const json = await res.json()
 
       if (!res.ok || !json?.success) {
-        throw new Error(json?.message || json?.error || 'Falha ao cadastrar')
+        return { success: false, error: json?.message || json?.error || 'Falha ao cadastrar' }
       }
 
-      const tipoAusenciaId = Number(json?.id)
-      setOpen(false)
-      resetForm()
-      if (typeof tipoAusenciaId === 'number' && !Number.isNaN(tipoAusenciaId)) {
-        onCreated?.(tipoAusenciaId)
-      }
+      createdIdRef.current = Number.isNaN(Number(json?.id)) ? null : Number(json?.id)
+      return { success: true }
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Erro ao salvar')
-    } finally {
-      setLoading(false)
+      return { success: false, error: e instanceof Error ? e.message : 'Erro ao salvar' }
     }
   }
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        <Button className="ml-3 h-8 rounded bg-yellow-200 px-3 text-gray-900 hover:bg-yellow-300" variant="secondary">
-          {triggerLabel}
-        </Button>
-      </SheetTrigger>
-      <SheetContent side="right" className="w-screen max-w-md p-0">
-        <div className="h-full flex flex-col">
-          <SheetHeader className="p-4 border-b">
-            <SheetTitle>Cadastrar Tipo de Ausência</SheetTitle>
-            <SheetDescription>Preencha os dados do tipo de ausência</SheetDescription>
-          </SheetHeader>
-
-          <div className="flex-1 overflow-auto p-6">
-            <div className="space-y-4">
-              <div>
-                <Label>Tipo de Ausência <span className="text-red-500">*</span></Label>
-                <Input value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Ex: Férias, Licença Médica" />
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="desconta-ferias"
-                  checked={descontaSaldoFerias}
-                  onCheckedChange={(checked) => setDescontaSaldoFerias(checked === true)}
-                />
-                <Label htmlFor="desconta-ferias" className="cursor-pointer">
-                  Desconta do saldo de férias
-                </Label>
-              </div>
-            </div>
-
-            {error && <div className="mt-3 text-sm text-red-600">{error}</div>}
-          </div>
-
-          <SheetFooter className="p-4 border-t">
-            <SheetClose asChild>
-              <Button variant="outline">Cancelar</Button>
-            </SheetClose>
-            <Button onClick={onSave} disabled={!canSave || loading}>
-              {loading ? 'Salvando…' : 'Salvar'}
-            </Button>
-          </SheetFooter>
-        </div>
-      </SheetContent>
-    </Sheet>
+    <BaseCadastroSheet
+      triggerLabel={triggerLabel}
+      title="Cadastrar Tipo de Ausência"
+      description="Preencha os dados do tipo de ausência"
+      widthClassName="max-w-md"
+      onOpenChange={setIsOpen}
+      onSubmit={onSubmit}
+      onSuccess={() => {
+        const id = createdIdRef.current
+        createdIdRef.current = null
+        resetForm()
+        if (typeof id === 'number') onCreated?.(id)
+      }}
+    >
+      <div>
+        <Label>Tipo de Ausência <span className="text-red-500">*</span></Label>
+        <Input value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Ex: Férias, Licença Médica" />
+      </div>
+      <div className="flex items-center space-x-2">
+        <Checkbox id="desconta-ferias" checked={descontaSaldoFerias} onCheckedChange={(checked) => setDescontaSaldoFerias(checked === true)} />
+        <Label htmlFor="desconta-ferias" className="cursor-pointer">Desconta do saldo de férias</Label>
+      </div>
+    </BaseCadastroSheet>
   )
 }
