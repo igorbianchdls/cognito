@@ -1,19 +1,17 @@
 "use client"
 
 import * as React from "react"
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter, SheetTrigger, SheetClose } from "@/components/ui/sheet"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
+import BaseCadastroSheet from "@/components/modulos/BaseCadastroSheet"
 
 type Props = { triggerLabel?: string; onCreated?: (id: number) => void }
 type Item = { id: number; nome: string }
 
 export default function CadastroContatoSheet({ triggerLabel = "Cadastrar", onCreated }: Props) {
-  const [open, setOpen] = React.useState(false)
-  const [loading, setLoading] = React.useState(false)
-  const [error, setError] = React.useState<string | null>(null)
+  const [isOpen, setIsOpen] = React.useState(false)
+  const createdIdRef = React.useRef<number | null>(null)
 
   const [contas, setContas] = React.useState<Item[]>([])
   const [vendedores, setVendedores] = React.useState<Item[]>([])
@@ -27,7 +25,7 @@ export default function CadastroContatoSheet({ triggerLabel = "Cadastrar", onCre
   const [usuarioId, setUsuarioId] = React.useState("")
 
   const canSave = !!primeiroNome.trim()
-  const reset = () => { setPrimeiroNome(""); setSobrenome(""); setCargo(""); setEmail(""); setTelefone(""); setContaId(""); setUsuarioId(""); setError(null) }
+  const reset = () => { setPrimeiroNome(""); setSobrenome(""); setCargo(""); setEmail(""); setTelefone(""); setContaId(""); setUsuarioId("") }
 
   const fetchList = async (url: string): Promise<Item[]> => {
     try {
@@ -39,7 +37,7 @@ export default function CadastroContatoSheet({ triggerLabel = "Cadastrar", onCre
   }
 
   React.useEffect(() => {
-    if (!open) return
+    if (!isOpen) return
     ;(async () => {
       const [cs, vs] = await Promise.all([
         fetchList('/api/modulos/crm/contas/list'),
@@ -48,13 +46,11 @@ export default function CadastroContatoSheet({ triggerLabel = "Cadastrar", onCre
       setContas(cs)
       setVendedores(vs)
     })()
-  }, [open])
+  }, [isOpen])
 
-  const onSave = async () => {
-    if (!canSave || loading) return
+  const onSubmit = async (): Promise<{ success: boolean; error?: string }> => {
+    if (!primeiroNome.trim()) return { success: false, error: 'Informe o primeiro nome.' }
     try {
-      setLoading(true)
-      setError(null)
       const fd = new FormData()
       fd.set('primeiro_nome', primeiroNome.trim())
       if (sobrenome) fd.set('sobrenome', sobrenome.trim())
@@ -65,78 +61,63 @@ export default function CadastroContatoSheet({ triggerLabel = "Cadastrar", onCre
       if (usuarioId) fd.set('usuario_id', usuarioId)
       const res = await fetch('/api/modulos/crm/contatos', { method: 'POST', body: fd })
       const json = await res.json()
-      if (!res.ok || !json?.success) throw new Error(json?.message || json?.error || 'Falha ao cadastrar')
+      if (!res.ok || !json?.success) return { success: false, error: json?.message || json?.error || 'Falha ao cadastrar' }
       const id = Number(json?.id)
-      setOpen(false)
-      reset()
-      if (!Number.isNaN(id)) onCreated?.(id)
+      createdIdRef.current = Number.isNaN(id) ? null : id
+      return { success: true }
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Erro ao salvar')
-    } finally {
-      setLoading(false)
+      return { success: false, error: e instanceof Error ? e.message : 'Erro ao salvar' }
     }
   }
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        <Button className="ml-3 h-8 rounded bg-yellow-200 px-3 text-gray-900 hover:bg-yellow-300" variant="secondary">{triggerLabel}</Button>
-      </SheetTrigger>
-      <SheetContent side="right" className="w-screen max-w-2xl p-0">
-        <div className="h-full flex flex-col">
-          <SheetHeader className="p-4 border-b">
-            <SheetTitle>Cadastrar Contato</SheetTitle>
-            <SheetDescription>Defina os dados do contato</SheetDescription>
-          </SheetHeader>
-          <div className="flex-1 overflow-auto p-6">
-            <div className="grid grid-cols-1 gap-4">
-              <div>
-                <Label>Primeiro Nome<span className="text-red-500"> *</span></Label>
-                <Input value={primeiroNome} onChange={(e) => setPrimeiroNome(e.target.value)} />
-              </div>
-              <div>
-                <Label>Sobrenome</Label>
-                <Input value={sobrenome} onChange={(e) => setSobrenome(e.target.value)} />
-              </div>
-              <div>
-                <Label>Cargo</Label>
-                <Input value={cargo} onChange={(e) => setCargo(e.target.value)} />
-              </div>
-              <div>
-                <Label>Email</Label>
-                <Input value={email} onChange={(e) => setEmail(e.target.value)} />
-              </div>
-              <div>
-                <Label>Telefone</Label>
-                <Input value={telefone} onChange={(e) => setTelefone(e.target.value)} />
-              </div>
-              <div>
-                <Label>Conta</Label>
-                <Select value={contaId} onValueChange={setContaId}>
-                  <SelectTrigger><SelectValue placeholder="Selecione a conta" /></SelectTrigger>
-                  <SelectContent>
-                    {contas.map(c => <SelectItem key={c.id} value={String(c.id)}>{c.nome}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Responsável</Label>
-                <Select value={usuarioId} onValueChange={setUsuarioId}>
-                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                  <SelectContent>
-                    {vendedores.map(v => <SelectItem key={v.id} value={String(v.id)}>{v.nome}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            {error && <div className="mt-3 text-sm text-red-600">{error}</div>}
-          </div>
-          <SheetFooter className="p-4 border-t">
-            <SheetClose asChild><Button variant="outline">Cancelar</Button></SheetClose>
-            <Button onClick={onSave} disabled={!canSave || loading}>{loading ? 'Salvando…' : 'Salvar'}</Button>
-          </SheetFooter>
-        </div>
-      </SheetContent>
-    </Sheet>
+    <BaseCadastroSheet
+      triggerLabel={triggerLabel}
+      title="Cadastrar Contato"
+      description="Defina os dados do contato"
+      widthClassName="max-w-2xl"
+      onOpenChange={setIsOpen}
+      onSubmit={onSubmit}
+      onSuccess={() => { const id = createdIdRef.current; createdIdRef.current = null; reset(); if (typeof id === 'number') onCreated?.(id) }}
+    >
+      <div>
+        <Label>Primeiro Nome<span className="text-red-500"> *</span></Label>
+        <Input value={primeiroNome} onChange={(e) => setPrimeiroNome(e.target.value)} />
+      </div>
+      <div>
+        <Label>Sobrenome</Label>
+        <Input value={sobrenome} onChange={(e) => setSobrenome(e.target.value)} />
+      </div>
+      <div>
+        <Label>Cargo</Label>
+        <Input value={cargo} onChange={(e) => setCargo(e.target.value)} />
+      </div>
+      <div>
+        <Label>Email</Label>
+        <Input value={email} onChange={(e) => setEmail(e.target.value)} />
+      </div>
+      <div>
+        <Label>Telefone</Label>
+        <Input value={telefone} onChange={(e) => setTelefone(e.target.value)} />
+      </div>
+      <div>
+        <Label>Conta</Label>
+        <Select value={contaId} onValueChange={setContaId}>
+          <SelectTrigger><SelectValue placeholder="Selecione a conta" /></SelectTrigger>
+          <SelectContent>
+            {contas.map(c => <SelectItem key={c.id} value={String(c.id)}>{c.nome}</SelectItem>)}
+          </SelectContent>
+        </Select>
+      </div>
+      <div>
+        <Label>Responsável</Label>
+        <Select value={usuarioId} onValueChange={setUsuarioId}>
+          <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+          <SelectContent>
+            {vendedores.map(v => <SelectItem key={v.id} value={String(v.id)}>{v.nome}</SelectItem>)}
+          </SelectContent>
+        </Select>
+      </div>
+    </BaseCadastroSheet>
   )
 }
