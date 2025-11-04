@@ -127,12 +127,11 @@ export default function ModulosDocumentosPage() {
             return url ? (<a href={url} target="_blank" rel="noreferrer" className="text-blue-600 underline">Baixar</a>) : '-'
           } },
           { accessorKey: 'anexos', header: 'Anexos', cell: ({ row }) => {
-            const id = row.original['documento_id'] as number | undefined
+            const rawId = (row.original['documento_id'] ?? row.original['id']) as unknown
+            const docId = Number(rawId)
+            if (!docId || Number.isNaN(docId)) return <span className="text-gray-400">-</span>
             return (
-              <button
-                className="text-blue-600 underline"
-                onClick={() => openAnexosDrawer(typeof id === 'number' ? id : Number(row.original['id'] || 0))}
-              >
+              <button className="text-blue-600 underline" onClick={() => openAnexosDrawer(docId)}>
                 Ver anexos
               </button>
             )
@@ -154,12 +153,11 @@ export default function ModulosDocumentosPage() {
           { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em']) },
           { accessorKey: 'atualizado_em', header: 'Atualizado em', cell: ({ row }) => formatDate(row.original['atualizado_em']) },
           { accessorKey: 'anexos', header: 'Anexos', cell: ({ row }) => {
-            const id = row.original['documento_id'] as number | undefined
+            const rawId = (row.original['documento_id'] ?? row.original['id']) as unknown
+            const docId = Number(rawId)
+            if (!docId || Number.isNaN(docId)) return <span className="text-gray-400">-</span>
             return (
-              <button
-                className="text-blue-600 underline"
-                onClick={() => openAnexosDrawer(typeof id === 'number' ? id : Number(row.original['id'] || 0))}
-              >
+              <button className="text-blue-600 underline" onClick={() => openAnexosDrawer(docId)}>
                 Ver anexos
               </button>
             )
@@ -184,12 +182,11 @@ export default function ModulosDocumentosPage() {
           { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em']) },
           { accessorKey: 'atualizado_em', header: 'Atualizado em', cell: ({ row }) => formatDate(row.original['atualizado_em']) },
           { accessorKey: 'anexos', header: 'Anexos', cell: ({ row }) => {
-            const id = row.original['documento_id'] as number | undefined
+            const rawId = (row.original['documento_id'] ?? row.original['id']) as unknown
+            const docId = Number(rawId)
+            if (!docId || Number.isNaN(docId)) return <span className="text-gray-400">-</span>
             return (
-              <button
-                className="text-blue-600 underline"
-                onClick={() => openAnexosDrawer(typeof id === 'number' ? id : Number(row.original['id'] || 0))}
-              >
+              <button className="text-blue-600 underline" onClick={() => openAnexosDrawer(docId)}>
                 Ver anexos
               </button>
             )
@@ -203,12 +200,11 @@ export default function ModulosDocumentosPage() {
           { accessorKey: 'descricao', header: 'Descrição' },
           { accessorKey: 'status', header: 'Status' },
           { accessorKey: 'anexos', header: 'Anexos', cell: ({ row }) => {
-            const id = row.original['documento_id'] as number | undefined
+            const rawId = (row.original['documento_id'] ?? row.original['id']) as unknown
+            const docId = Number(rawId)
+            if (!docId || Number.isNaN(docId)) return <span className="text-gray-400">-</span>
             return (
-              <button
-                className="text-blue-600 underline"
-                onClick={() => openAnexosDrawer(typeof id === 'number' ? id : Number(row.original['id'] || 0))}
-              >
+              <button className="text-blue-600 underline" onClick={() => openAnexosDrawer(docId)}>
                 Ver anexos
               </button>
             )
@@ -222,12 +218,11 @@ export default function ModulosDocumentosPage() {
           { accessorKey: 'descricao', header: 'Descrição' },
           { accessorKey: 'status', header: 'Status' },
           { accessorKey: 'anexos', header: 'Anexos', cell: ({ row }) => {
-            const id = row.original['documento_id'] as number | undefined
+            const rawId = (row.original['documento_id'] ?? row.original['id']) as unknown
+            const docId = Number(rawId)
+            if (!docId || Number.isNaN(docId)) return <span className="text-gray-400">-</span>
             return (
-              <button
-                className="text-blue-600 underline"
-                onClick={() => openAnexosDrawer(typeof id === 'number' ? id : Number(row.original['id'] || 0))}
-              >
+              <button className="text-blue-600 underline" onClick={() => openAnexosDrawer(docId)}>
                 Ver anexos
               </button>
             )
@@ -241,12 +236,11 @@ export default function ModulosDocumentosPage() {
           { accessorKey: 'descricao', header: 'Descrição' },
           { accessorKey: 'status', header: 'Status' },
           { accessorKey: 'anexos', header: 'Anexos', cell: ({ row }) => {
-            const id = row.original['documento_id'] as number | undefined
+            const rawId = (row.original['documento_id'] ?? row.original['id']) as unknown
+            const docId = Number(rawId)
+            if (!docId || Number.isNaN(docId)) return <span className="text-gray-400">-</span>
             return (
-              <button
-                className="text-blue-600 underline"
-                onClick={() => openAnexosDrawer(typeof id === 'number' ? id : Number(row.original['id'] || 0))}
-              >
+              <button className="text-blue-600 underline" onClick={() => openAnexosDrawer(docId)}>
                 Ver anexos
               </button>
             )
@@ -273,12 +267,11 @@ export default function ModulosDocumentosPage() {
           { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em']) },
           { accessorKey: 'atualizado_em', header: 'Atualizado em', cell: ({ row }) => formatDate(row.original['atualizado_em']) },
           { accessorKey: 'anexos', header: 'Anexos', cell: ({ row }) => {
-            const id = row.original['documento_id'] as number | undefined
+            const rawId = (row.original['documento_id'] ?? row.original['id']) as unknown
+            const docId = Number(rawId)
+            if (!docId || Number.isNaN(docId)) return <span className="text-gray-400">-</span>
             return (
-              <button
-                className="text-blue-600 underline"
-                onClick={() => openAnexosDrawer(typeof id === 'number' ? id : Number(row.original['id'] || 0))}
-              >
+              <button className="text-blue-600 underline" onClick={() => openAnexosDrawer(docId)}>
                 Ver anexos
               </button>
             )
@@ -293,12 +286,11 @@ export default function ModulosDocumentosPage() {
           { accessorKey: 'descricao', header: 'Descrição' },
           { accessorKey: 'status', header: 'Status' },
           { accessorKey: 'anexos', header: 'Anexos', cell: ({ row }) => {
-            const id = row.original['documento_id'] as number | undefined
+            const rawId = (row.original['documento_id'] ?? row.original['id']) as unknown
+            const docId = Number(rawId)
+            if (!docId || Number.isNaN(docId)) return <span className="text-gray-400">-</span>
             return (
-              <button
-                className="text-blue-600 underline"
-                onClick={() => openAnexosDrawer(typeof id === 'number' ? id : Number(row.original['id'] || 0))}
-              >
+              <button className="text-blue-600 underline" onClick={() => openAnexosDrawer(docId)}>
                 Ver anexos
               </button>
             )
