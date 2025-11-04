@@ -1,27 +1,19 @@
 "use client"
 
 import * as React from "react"
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter, SheetTrigger, SheetClose } from "@/components/ui/sheet"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import BaseCadastroSheet from "@/components/modulos/BaseCadastroSheet"
 
-type Props = {
-  triggerLabel?: string
-  onCreated?: (documentoId: number) => void
-}
-
+type Props = { triggerLabel?: string; onCreated?: (documentoId: number) => void }
 type TipoDocumento = { id: number; nome: string; categoria?: string }
 
 export default function CadastroContratosDocumentoAnexoSheet({ triggerLabel = "Cadastrar", onCreated }: Props) {
-  const [open, setOpen] = React.useState(false)
+  const [isOpen, setIsOpen] = React.useState(false)
+  const createdIdRef = React.useRef<number | null>(null)
   const [tipos, setTipos] = React.useState<TipoDocumento[]>([])
-  const [loading, setLoading] = React.useState(false)
-  const [error, setError] = React.useState<string | null>(null)
-
-  // Campos básicos
   const [tenantId, setTenantId] = React.useState<string>('1')
   const [tipoDocumentoId, setTipoDocumentoId] = React.useState<string>("")
   const [numero, setNumero] = React.useState("")
@@ -29,8 +21,6 @@ export default function CadastroContratosDocumentoAnexoSheet({ triggerLabel = "C
   const [dataEmissao, setDataEmissao] = React.useState("")
   const [valorTotal, setValorTotal] = React.useState("")
   const [status, setStatus] = React.useState("")
-
-  // Campos contratos
   const [dataInicio, setDataInicio] = React.useState("")
   const [dataFim, setDataFim] = React.useState("")
   const [prazoMeses, setPrazoMeses] = React.useState("")
@@ -38,26 +28,12 @@ export default function CadastroContratosDocumentoAnexoSheet({ triggerLabel = "C
   const [valorMensal, setValorMensal] = React.useState("")
   const [objeto, setObjeto] = React.useState("")
   const [clausulasJson, setClausulasJson] = React.useState("")
-
   const [file, setFile] = React.useState<File | null>(null)
 
   const resetForm = () => {
-    setTenantId('1')
-    setTipoDocumentoId("")
-    setNumero("")
-    setDescricao("")
-    setDataEmissao("")
-    setValorTotal("")
-    setStatus("")
-    setDataInicio("")
-    setDataFim("")
-    setPrazoMeses("")
-    setRenovacaoAutomatica("false")
-    setValorMensal("")
-    setObjeto("")
-    setClausulasJson("")
-    setFile(null)
-    setError(null)
+    setTenantId('1'); setTipoDocumentoId(""); setNumero(""); setDescricao(""); setDataEmissao(""); setValorTotal("")
+    setStatus(""); setDataInicio(""); setDataFim(""); setPrazoMeses(""); setRenovacaoAutomatica("false")
+    setValorMensal(""); setObjeto(""); setClausulasJson(""); setFile(null)
   }
 
   const loadTipos = React.useCallback(async () => {
@@ -65,28 +41,16 @@ export default function CadastroContratosDocumentoAnexoSheet({ triggerLabel = "C
       const res = await fetch('/api/documentos/tipos?categoria=contratos', { cache: 'no-store' })
       const json = await res.json()
       if (res.ok && Array.isArray(json?.rows)) {
-        const rows = json.rows as Array<{ id: number | string; nome: string; categoria?: string | null }>
-        const mapped = rows.map((r) => ({ id: Number(r.id), nome: String(r.nome), categoria: r.categoria != null ? String(r.categoria) : undefined }))
-        setTipos(mapped)
-      } else {
-        setTipos([])
-      }
-    } catch {
-      setTipos([])
-    }
+        setTipos(json.rows.map((r: any) => ({ id: Number(r.id), nome: String(r.nome), categoria: r.categoria ? String(r.categoria) : undefined })))
+      } else setTipos([])
+    } catch { setTipos([]) }
   }, [])
 
-  React.useEffect(() => {
-    if (open) loadTipos()
-  }, [open, loadTipos])
+  React.useEffect(() => { if (isOpen) loadTipos() }, [isOpen, loadTipos])
 
-  const canSave = !!file && !!tipoDocumentoId
-
-  const onSave = async () => {
-    if (!canSave || loading) return
+  const onSubmit = async (): Promise<{ success: boolean; error?: string }> => {
+    if (!(file && tipoDocumentoId)) return { success: false, error: 'Selecione o tipo de documento e anexe um arquivo.' }
     try {
-      setLoading(true)
-      setError(null)
       const fd = new FormData()
       fd.set('view', 'contratos')
       if (tenantId) fd.set('tenant_id', tenantId)
@@ -96,7 +60,6 @@ export default function CadastroContratosDocumentoAnexoSheet({ triggerLabel = "C
       if (dataEmissao) fd.set('data_emissao', dataEmissao)
       if (valorTotal) fd.set('valor_total', valorTotal)
       if (status) fd.set('status', status)
-
       if (dataInicio) fd.set('data_inicio', dataInicio)
       if (dataFim) fd.set('data_fim', dataFim)
       if (prazoMeses) fd.set('prazo_meses', prazoMeses)
@@ -104,145 +67,35 @@ export default function CadastroContratosDocumentoAnexoSheet({ triggerLabel = "C
       if (valorMensal) fd.set('valor_mensal', valorMensal)
       if (objeto) fd.set('objeto', objeto)
       if (clausulasJson) fd.set('clausulas_json', clausulasJson)
-
       if (file) fd.set('file', file)
 
       const res = await fetch('/api/documentos/create-with-anexo', { method: 'POST', body: fd })
       const json = await res.json()
-      if (!res.ok || !json?.success) throw new Error(json?.message || json?.error || 'Falha ao cadastrar')
-      const docId = Number(json?.documento_id)
-      setOpen(false)
-      resetForm()
-      if (typeof docId === 'number' && !Number.isNaN(docId)) onCreated?.(docId)
+      if (!res.ok || !json?.success) return { success: false, error: json?.message || json?.error || 'Falha ao cadastrar' }
+      createdIdRef.current = Number.isNaN(Number(json?.documento_id)) ? null : Number(json?.documento_id)
+      return { success: true }
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Erro ao salvar')
-    } finally {
-      setLoading(false)
+      return { success: false, error: e instanceof Error ? e.message : 'Erro ao salvar' }
     }
   }
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        <Button className="ml-3 h-8 rounded bg-yellow-200 px-3 text-gray-900 hover:bg-yellow-300" variant="secondary">
-          {triggerLabel}
-        </Button>
-      </SheetTrigger>
-      <SheetContent side="right" className="w-screen max-w-none p-0">
-        <div className="h-full flex flex-col">
-          <SheetHeader className="p-4 border-b">
-            <SheetTitle>Cadastrar Documento de Contratos c/ Anexo</SheetTitle>
-            <SheetDescription>Preencha os campos e anexe o arquivo</SheetDescription>
-          </SheetHeader>
-
-          <div className="flex-1 overflow-auto p-6">
-            <div className="grid grid-cols-1 gap-4">
-              <div>
-                <Label>Tenant ID</Label>
-                <Input value={tenantId} onChange={(e) => setTenantId(e.target.value)} />
-              </div>
-
-              <div>
-                <Label>Tipo de Documento</Label>
-                <Select onValueChange={setTipoDocumentoId} value={tipoDocumentoId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {tipos.map(t => (
-                      <SelectItem key={t.id} value={String(t.id)}>{t.nome}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label>Número</Label>
-                <Input value={numero} onChange={(e) => setNumero(e.target.value)} />
-              </div>
-
-              <div>
-                <Label>Descrição</Label>
-                <Input value={descricao} onChange={(e) => setDescricao(e.target.value)} />
-              </div>
-
-              <div>
-                <Label>Data de Emissão</Label>
-                <Input type="date" value={dataEmissao} onChange={(e) => setDataEmissao(e.target.value)} />
-              </div>
-
-              <div>
-                <Label>Valor Total</Label>
-                <Input type="number" step="0.01" value={valorTotal} onChange={(e) => setValorTotal(e.target.value)} />
-              </div>
-
-              <div>
-                <Label>Status</Label>
-                <Input value={status} onChange={(e) => setStatus(e.target.value)} />
-              </div>
-
-              <div>
-                <Label>Data Início</Label>
-                <Input type="date" value={dataInicio} onChange={(e) => setDataInicio(e.target.value)} />
-              </div>
-
-              <div>
-                <Label>Data Fim</Label>
-                <Input type="date" value={dataFim} onChange={(e) => setDataFim(e.target.value)} />
-              </div>
-
-              <div>
-                <Label>Prazo (meses)</Label>
-                <Input type="number" value={prazoMeses} onChange={(e) => setPrazoMeses(e.target.value)} />
-              </div>
-
-              <div>
-                <Label>Renovação Automática</Label>
-                <Select value={renovacaoAutomatica} onValueChange={setRenovacaoAutomatica}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="false">Não</SelectItem>
-                    <SelectItem value="true">Sim</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label>Valor Mensal</Label>
-                <Input type="number" step="0.01" value={valorMensal} onChange={(e) => setValorMensal(e.target.value)} />
-              </div>
-
-              <div>
-                <Label>Objeto</Label>
-                <Input value={objeto} onChange={(e) => setObjeto(e.target.value)} />
-              </div>
-
-              <div>
-                <Label>Cláusulas (JSON)</Label>
-                <Textarea rows={5} value={clausulasJson} onChange={(e) => setClausulasJson(e.target.value)} />
-              </div>
-
-              <div>
-                <Label>Arquivo (obrigatório)</Label>
-                <Input type="file" onChange={(e) => setFile(e.target.files?.[0] || null)} />
-              </div>
-            </div>
-
-            {error && <div className="mt-3 text-sm text-red-600">{error}</div>}
-          </div>
-
-          <SheetFooter className="p-4 border-t">
-            <SheetClose asChild>
-              <Button variant="outline">Cancelar</Button>
-            </SheetClose>
-            <Button onClick={onSave} disabled={!canSave || loading}>
-              {loading ? 'Salvando…' : 'Salvar'}
-            </Button>
-          </SheetFooter>
-        </div>
-      </SheetContent>
-    </Sheet>
+    <BaseCadastroSheet triggerLabel={triggerLabel} title="Cadastrar Contrato c/ Anexo" description="Preencha os campos e anexe o arquivo" widthClassName="max-w-none" onOpenChange={setIsOpen} onSubmit={onSubmit} onSuccess={() => { const id = createdIdRef.current; createdIdRef.current = null; resetForm(); if (typeof id === 'number') onCreated?.(id) }}>
+      <div><Label>Tenant ID</Label><Input value={tenantId} onChange={(e) => setTenantId(e.target.value)} /></div>
+      <div><Label>Tipo de Documento</Label><Select onValueChange={setTipoDocumentoId} value={tipoDocumentoId}><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{tipos.map(t => <SelectItem key={t.id} value={String(t.id)}>{t.nome}</SelectItem>)}</SelectContent></Select></div>
+      <div><Label>Número</Label><Input value={numero} onChange={(e) => setNumero(e.target.value)} /></div>
+      <div><Label>Descrição</Label><Input value={descricao} onChange={(e) => setDescricao(e.target.value)} /></div>
+      <div><Label>Data de Emissão</Label><Input type="date" value={dataEmissao} onChange={(e) => setDataEmissao(e.target.value)} /></div>
+      <div><Label>Valor Total</Label><Input type="number" step="0.01" value={valorTotal} onChange={(e) => setValorTotal(e.target.value)} /></div>
+      <div><Label>Status</Label><Input value={status} onChange={(e) => setStatus(e.target.value)} /></div>
+      <div><Label>Data Início</Label><Input type="date" value={dataInicio} onChange={(e) => setDataInicio(e.target.value)} /></div>
+      <div><Label>Data Fim</Label><Input type="date" value={dataFim} onChange={(e) => setDataFim(e.target.value)} /></div>
+      <div><Label>Prazo (meses)</Label><Input type="number" value={prazoMeses} onChange={(e) => setPrazoMeses(e.target.value)} /></div>
+      <div><Label>Renovação Automática</Label><Select value={renovacaoAutomatica} onValueChange={setRenovacaoAutomatica}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="false">Não</SelectItem><SelectItem value="true">Sim</SelectItem></SelectContent></Select></div>
+      <div><Label>Valor Mensal</Label><Input type="number" step="0.01" value={valorMensal} onChange={(e) => setValorMensal(e.target.value)} /></div>
+      <div><Label>Objeto</Label><Input value={objeto} onChange={(e) => setObjeto(e.target.value)} /></div>
+      <div><Label>Cláusulas (JSON)</Label><Textarea rows={4} value={clausulasJson} onChange={(e) => setClausulasJson(e.target.value)} /></div>
+      <div><Label>Arquivo (obrigatório)</Label><Input type="file" onChange={(e) => setFile(e.target.files?.[0] || null)} /></div>
+    </BaseCadastroSheet>
   )
 }
