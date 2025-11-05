@@ -165,26 +165,74 @@ export function NavModulos() {
               </CollapsibleContent>
             </SidebarMenuItem>
           </Collapsible>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              tooltip="CRM"
-              onClick={() => router.push("/modulos/crm")}
-              isActive={pathname.startsWith("/modulos/crm")}
-            >
-              <Users />
-              <span>CRM</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              tooltip="Serviços"
-              onClick={() => router.push("/modulos/servicos")}
-              isActive={pathname.startsWith("/modulos/servicos")}
-            >
-              <Wrench />
-              <span>Serviços</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+          <Collapsible
+            key="crm"
+            asChild
+            defaultOpen={pathname.startsWith("/modulos/crm")}
+            className="group/collapsible"
+          >
+            <SidebarMenuItem>
+              <CollapsibleTrigger asChild>
+                <SidebarMenuButton tooltip="CRM">
+                  <Users />
+                  <span>CRM</span>
+                  <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                </SidebarMenuButton>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <SidebarMenuSub>
+                  <SidebarMenuSubItem>
+                    <SidebarMenuSubButton asChild isActive={pathname === "/modulos/crm"}>
+                      <a href="/modulos/crm">
+                        <span>Gestão</span>
+                      </a>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                  <SidebarMenuSubItem>
+                    <SidebarMenuSubButton asChild isActive={pathname === "/modulos/crm/dashboard"}>
+                      <a href="/modulos/crm/dashboard">
+                        <span>Dashboard</span>
+                      </a>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                </SidebarMenuSub>
+              </CollapsibleContent>
+            </SidebarMenuItem>
+          </Collapsible>
+          <Collapsible
+            key="servicos"
+            asChild
+            defaultOpen={pathname.startsWith("/modulos/servicos")}
+            className="group/collapsible"
+          >
+            <SidebarMenuItem>
+              <CollapsibleTrigger asChild>
+                <SidebarMenuButton tooltip="Serviços">
+                  <Wrench />
+                  <span>Serviços</span>
+                  <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                </SidebarMenuButton>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <SidebarMenuSub>
+                  <SidebarMenuSubItem>
+                    <SidebarMenuSubButton asChild isActive={pathname === "/modulos/servicos"}>
+                      <a href="/modulos/servicos">
+                        <span>Gestão</span>
+                      </a>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                  <SidebarMenuSubItem>
+                    <SidebarMenuSubButton asChild isActive={pathname === "/modulos/servicos/dashboard"}>
+                      <a href="/modulos/servicos/dashboard">
+                        <span>Dashboard</span>
+                      </a>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                </SidebarMenuSub>
+              </CollapsibleContent>
+            </SidebarMenuItem>
+          </Collapsible>
         </SidebarMenu>
       </SidebarGroup>
       <SidebarGroup>
