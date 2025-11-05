@@ -5,6 +5,7 @@ import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { SidebarShadcn } from "@/components/navigation/SidebarShadcn"
 import BlockPalette from "@/components/agentes/builder/BlockPalette"
 import FlowCanvas from "@/components/agentes/builder/flow/FlowCanvas"
+import { ReactFlowProvider } from 'reactflow'
 import PropertiesPanel from "@/components/agentes/builder/PropertiesPanel"
 import type { Block, BlockKind } from "@/types/agentes/builder"
 import type { Node, Edge } from 'reactflow'
@@ -76,9 +77,11 @@ export default function NewAgentPage() {
             <BlockPalette onAdd={addBlock} />
           </div>
           <div className="flex-1 overflow-hidden flex">
-          <div className="flex-1 h-full overflow-auto custom-scrollbar">
-            <FlowCanvas nodes={nodes} setNodes={setNodes} edges={edges} setEdges={setEdges} onSelectNode={setSelectedId} />
-          </div>
+            <div className="flex-1 h-full overflow-auto custom-scrollbar">
+              <ReactFlowProvider>
+                <FlowCanvas nodes={nodes} setNodes={setNodes} edges={edges} setEdges={setEdges} onSelectNode={setSelectedId} />
+              </ReactFlowProvider>
+            </div>
             <div className="w-96 h-full overflow-auto border-l bg-white custom-scrollbar">
               <PropertiesPanel
                 block={selectedBlock}

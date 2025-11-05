@@ -2,7 +2,7 @@
 
 import 'reactflow/dist/style.css'
 import React, { useCallback } from 'react'
-import ReactFlow, { Background, BackgroundVariant, Controls, MiniMap, addEdge, applyEdgeChanges, applyNodeChanges, useReactFlow, type Connection, type Edge, type EdgeChange, type Node, type NodeChange, type OnSelectionChangeParams, ReactFlowProvider } from 'reactflow'
+import ReactFlow, { Background, BackgroundVariant, Controls, MiniMap, addEdge, applyEdgeChanges, applyNodeChanges, useReactFlow, type Connection, type Edge, type EdgeChange, type Node, type NodeChange, type OnSelectionChangeParams } from 'reactflow'
 import type { NodeData } from '@/types/agentes/flow'
 import AgentNode from './nodeTypes/AgentNode'
 import ToolNode from './nodeTypes/ToolNode'
@@ -66,7 +66,6 @@ export default function FlowCanvas({ nodes, setNodes, edges, setEdges, onSelectN
   }, [rf, setNodes])
 
   return (
-    <ReactFlowProvider>
       <div className="h-full w-full">
         <ReactFlow
           nodes={nodes}
@@ -90,6 +89,5 @@ export default function FlowCanvas({ nodes, setNodes, edges, setEdges, onSelectN
           <Controls />
         </ReactFlow>
       </div>
-    </ReactFlowProvider>
   )
 }
