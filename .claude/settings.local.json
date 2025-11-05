@@ -33,7 +33,8 @@
       "WebFetch(domain:vercel.com)",
       "WebFetch(domain:handsontable.com)",
       "Bash(test:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "WebFetch(domain:mastra.ai)"
     ],
     "deny": []
   }
