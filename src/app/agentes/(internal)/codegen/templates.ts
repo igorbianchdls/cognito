@@ -13,7 +13,7 @@ export function genRouteTs(graph: Graph, slug: string): string {
   const graphJson = stringifyGraph(graph)
 
   const imports = `import { NextResponse } from 'next/server'
-import { execute } from '@/app/agentes/(internal)/runtime/runner'`
+import { execute } from '../(internal)/runtime/runner'`
 
   return `// Arquivo gerado automaticamente pelo Agent Builder (não editar manualmente)
 // slug: ${slug}
