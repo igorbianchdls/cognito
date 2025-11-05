@@ -12,6 +12,8 @@ import type { Node, Edge } from 'reactflow'
 import type { NodeData } from '@/types/agentes/flow'
 import { flowToGraph } from '@/components/agentes/builder/flow/serialization'
 import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import CodePreview from "@/components/agentes/codegen/CodePreview"
 
 export default function NewAgentPage() {
   const [name, setName] = useState("Novo agente")
@@ -28,6 +30,7 @@ export default function NewAgentPage() {
   const [edges, setEdges] = useState<Edge[]>(initialEdges)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const selectedBlock = useMemo(() => nodes.find(n => n.id === selectedId)?.data.block || null, [nodes, selectedId])
+  const [showCode, setShowCode] = useState(false)
 
   const addBlock = (payload: { kind: BlockKind; name?: string; toolId?: string }) => {
     const { kind, name, toolId } = payload
@@ -75,6 +78,7 @@ export default function NewAgentPage() {
         <div className="flex items-center justify-between px-6 md:px-10 h-14 border-b">
           <input className="text-xl font-semibold outline-none bg-transparent" value={name} onChange={(e) => setName(e.target.value)} />
           <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => setShowCode(true)}>Código</Button>
             <Button variant="outline" onClick={handleTest}>Testar</Button>
           </div>
         </div>
@@ -98,6 +102,14 @@ export default function NewAgentPage() {
           </div>
         </div>
       </SidebarInset>
+      <Dialog open={showCode} onOpenChange={setShowCode}>
+        <DialogContent className="max-w-5xl">
+          <DialogHeader>
+            <DialogTitle>Código gerado</DialogTitle>
+          </DialogHeader>
+          <CodePreview graph={flowToGraph(nodes, edges)} initialSlug={name} />
+        </DialogContent>
+      </Dialog>
     </SidebarProvider>
   )
 }
