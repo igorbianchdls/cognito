@@ -72,6 +72,7 @@ export default function PropertiesPanel({ block, onChange, onDelete }: { block: 
                 <Select value={(cfgUnknown as Partial<AgentBlockConfig>).model || 'anthropic/claude-3-5-sonnet-latest'} onValueChange={(v) => onChange({ config: { ...(cfgUnknown as Partial<AgentBlockConfig>), model: v } })}>
                   <SelectTrigger className="h-8 w-full"><SelectValue /></SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="anthropic/claude-sonnet-4-20250514">Anthropic · Claude 4 Sonnet (20250514)</SelectItem>
                     <SelectItem value="anthropic/claude-3-5-sonnet-latest">Anthropic · Claude 3.5 Sonnet</SelectItem>
                     <SelectItem value="anthropic/claude-3-haiku-latest">Anthropic · Claude 3 Haiku</SelectItem>
                     <SelectItem value="openai/gpt-4o-mini">OpenAI · GPT-4o mini</SelectItem>
