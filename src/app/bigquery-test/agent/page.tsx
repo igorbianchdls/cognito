@@ -2,13 +2,13 @@
 
 import { useCallback, useMemo, useRef, useState } from "react";
 
-type ChatMessage = {
+type SimpleMessage = {
   role: "user" | "assistant" | "system";
   content: string;
 };
 
 export default function Page() {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<SimpleMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [model, setModel] = useState<string | undefined>(undefined);
@@ -24,7 +24,7 @@ export default function Page() {
     async (e: React.FormEvent) => {
       e.preventDefault();
       if (!input.trim()) return;
-      const next = [...messages, { role: "user", content: input } as ChatMessage];
+      const next: SimpleMessage[] = [...messages, { role: "user", content: input } as SimpleMessage];
       setMessages(next);
       setInput("");
       setLoading(true);
@@ -68,7 +68,7 @@ export default function Page() {
           messages.map((m, i) => (
             <div key={i} style={{ marginBottom: 12 }}>
               <div style={{ fontSize: 12, color: "#777", marginBottom: 4 }}>{m.role === "user" ? "Você" : m.role === "assistant" ? "IA" : "Sistema"}</div>
-              <div style={{ whiteSpace: "pre-wrap" }}>{m.content}</div>
+              <div style={{ whiteSpace: "pre-wrap" }}>{String(m.content)}</div>
             </div>
           ))
         )}

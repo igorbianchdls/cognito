@@ -4,6 +4,6 @@ import { Agent } from "@mastra/core/agent";
 export const testAgent = new Agent({
   name: "test-agent",
   instructions: "You are a helpful assistant.",
-  model: anthropic("claude-3-5-sonnet-latest"),
+  // Align with existing claudeAgents
+  model: anthropic("claude-sonnet-4-20250514"),
 });
-
