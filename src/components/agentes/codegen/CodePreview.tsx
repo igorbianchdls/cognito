@@ -10,7 +10,7 @@ import { slugify } from '@/app/agentes/(internal)/codegen/helpers'
 
 export default function CodePreview({ graph, initialSlug }: { graph: Graph; initialSlug?: string }) {
   const [slug, setSlug] = useState<string>(initialSlug && initialSlug.trim() ? slugify(initialSlug) : 'agente-visual')
-  const [active, setActive] = useState<string>('agent.ts')
+  const [active, setActive] = useState<string>('route.ts')
 
   const bundle = useMemo(() => generateCode(graph, { slug, includeRoute: true, includeJson: true }), [graph, slug])
   const files = bundle.files
@@ -67,4 +67,3 @@ export default function CodePreview({ graph, initialSlug }: { graph: Graph; init
     </div>
   )
 }
-

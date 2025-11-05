@@ -1,6 +1,6 @@
 import type { Graph } from '@/types/agentes/builder'
 import { slugify, validateGraph } from './helpers'
-import { genAgentTs, genDefinitionJson, genRouteTs } from './templates'
+import { genDefinitionJson, genRouteTs } from './templates'
 import type { CodeBundle, FileSpec, GenerateOptions } from './types'
 
 export function generateCode(graph: Graph, opts: GenerateOptions = {}): CodeBundle {
@@ -14,12 +14,9 @@ export function generateCode(graph: Graph, opts: GenerateOptions = {}): CodeBund
   const files: FileSpec[] = []
   const targetDir = `src/app/agentes/${slug}`
 
-  // agent.ts
-  files.push({ path: `${targetDir}/agent.ts`, contents: genAgentTs(graph, slug) })
-
-  // route.ts (opcional)
+  // route.ts com AI SDK (único arquivo executável no MVP)
   if (includeRoute) {
-    files.push({ path: `${targetDir}/route.ts`, contents: genRouteTs(slug) })
+    files.push({ path: `${targetDir}/route.ts`, contents: genRouteTs(graph, slug) })
   }
 
   // definition.json (opcional)
@@ -29,4 +26,3 @@ export function generateCode(graph: Graph, opts: GenerateOptions = {}): CodeBund
 
   return { files, warnings, slug, graph }
 }
-
