@@ -5,6 +5,24 @@ export interface Branch {
   next: string | null
 }
 
+// Configs específicas por tipo (MVP)
+export interface AgentBlockConfig {
+  model?: string
+  systemPrompt?: string
+}
+
+export interface ToolBlockConfig {
+  toolIds?: string[]
+}
+
+export interface ConditionBlockConfig {
+  expression?: string
+}
+
+export interface ResponseBlockConfig {
+  template?: string
+}
+
 export interface Block {
   id: string
   kind: BlockKind
@@ -18,4 +36,3 @@ export interface Graph {
   headId: string | null
   blocks: Block[]
 }
-

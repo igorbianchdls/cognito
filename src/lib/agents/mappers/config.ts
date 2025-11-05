@@ -1,4 +1,4 @@
-import type { Graph, Block } from "@/types/agentes/builder"
+import type { Graph, AgentBlockConfig, ToolBlockConfig, ResponseBlockConfig } from "@/types/agentes/builder"
 
 export type AgentConfig = {
   agent?: {
@@ -16,7 +16,7 @@ export function mapGraphToConfig(graph: Graph): AgentConfig {
   // Find first agent block
   const agentBlock = graph.blocks.find(b => b.kind === 'agente')
   if (agentBlock) {
-    const acfg = (agentBlock.config || {}) as Record<string, any>
+    const acfg = (agentBlock.config || {}) as Partial<AgentBlockConfig>
     cfg.agent = {
       model: acfg.model,
       systemPrompt: acfg.systemPrompt,
@@ -26,17 +26,16 @@ export function mapGraphToConfig(graph: Graph): AgentConfig {
   // Gather tools
   const toolsBlock = graph.blocks.find(b => b.kind === 'ferramenta')
   if (toolsBlock) {
-    const tcfg = (toolsBlock.config || {}) as Record<string, any>
+    const tcfg = (toolsBlock.config || {}) as Partial<ToolBlockConfig>
     cfg.tools = Array.isArray(tcfg.toolIds) ? tcfg.toolIds : []
   }
 
   // Response template
   const respBlock = graph.blocks.find(b => b.kind === 'resposta')
   if (respBlock) {
-    const rcfg = (respBlock.config || {}) as Record<string, any>
+    const rcfg = (respBlock.config || {}) as Partial<ResponseBlockConfig>
     cfg.output = { template: rcfg.template }
   }
 
   return cfg
 }
-

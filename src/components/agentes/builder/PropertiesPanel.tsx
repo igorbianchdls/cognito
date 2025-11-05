@@ -5,7 +5,7 @@ import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import type { Block } from "@/types/agentes/builder"
+import type { Block, AgentBlockConfig, ToolBlockConfig, ConditionBlockConfig, ResponseBlockConfig } from "@/types/agentes/builder"
 import { Bot, Wrench, GitBranch, MessageSquareText } from "lucide-react"
 
 type TabKey = 'geral' | 'config'
@@ -30,7 +30,7 @@ export default function PropertiesPanel({ block, onChange, onDelete }: { block: 
   const icon = block.kind === 'agente' ? <Bot className="w-4 h-4" /> : block.kind === 'ferramenta' ? <Wrench className="w-4 h-4" /> : block.kind === 'condicao' ? <GitBranch className="w-4 h-4" /> : <MessageSquareText className="w-4 h-4" />
   const title = block.name || (block.kind.charAt(0).toUpperCase() + block.kind.slice(1))
 
-  const cfg = (block.config || {}) as Record<string, any>
+  const cfgUnknown = (block.config || {}) as Record<string, unknown>
 
   return (
     <div className="h-full flex flex-col bg-white">
@@ -68,11 +68,11 @@ export default function PropertiesPanel({ block, onChange, onDelete }: { block: 
             <>
               <div className="space-y-2">
                 <label className="text-xs text-gray-600">Modelo</label>
-                <Input className="h-8" value={cfg.model || ''} onChange={(e) => onChange({ config: { ...cfg, model: e.target.value } })} placeholder="ex: anthropic/claude-3-5-sonnet" />
+                <Input className="h-8" value={(cfgUnknown as Partial<AgentBlockConfig>).model || ''} onChange={(e) => onChange({ config: { ...(cfgUnknown as Partial<AgentBlockConfig>), model: e.target.value } })} placeholder="ex: anthropic/claude-3-5-sonnet" />
               </div>
               <div className="space-y-2">
                 <label className="text-xs text-gray-600">Instruções (system prompt)</label>
-                <Textarea value={cfg.systemPrompt || ''} onChange={(e) => onChange({ config: { ...cfg, systemPrompt: e.target.value } })} rows={8} />
+                <Textarea value={(cfgUnknown as Partial<AgentBlockConfig>).systemPrompt || ''} onChange={(e) => onChange({ config: { ...(cfgUnknown as Partial<AgentBlockConfig>), systemPrompt: e.target.value } })} rows={8} />
               </div>
             </>
           ) : null}
@@ -80,7 +80,7 @@ export default function PropertiesPanel({ block, onChange, onDelete }: { block: 
             <>
               <div className="space-y-2">
                 <label className="text-xs text-gray-600">Ferramentas (IDs)</label>
-                <Input className="h-8" value={(cfg.toolIds || []).join(', ')} onChange={(e) => onChange({ config: { ...cfg, toolIds: e.target.value.split(',').map(s => s.trim()).filter(Boolean) } })} placeholder="ex: http, bigquery" />
+                <Input className="h-8" value={((cfgUnknown as Partial<ToolBlockConfig>).toolIds || []).join(', ')} onChange={(e) => onChange({ config: { ...(cfgUnknown as Partial<ToolBlockConfig>), toolIds: e.target.value.split(',').map(s => s.trim()).filter(Boolean) } })} placeholder="ex: http, bigquery" />
               </div>
             </>
           ) : null}
@@ -88,7 +88,7 @@ export default function PropertiesPanel({ block, onChange, onDelete }: { block: 
             <>
               <div className="space-y-2">
                 <label className="text-xs text-gray-600">Expressão (MVP)</label>
-                <Input className="h-8" value={cfg.expression || ''} onChange={(e) => onChange({ config: { ...cfg, expression: e.target.value } })} placeholder="ex: input.includes('ok')" />
+                <Input className="h-8" value={(cfgUnknown as Partial<ConditionBlockConfig>).expression || ''} onChange={(e) => onChange({ config: { ...(cfgUnknown as Partial<ConditionBlockConfig>), expression: e.target.value } })} placeholder="ex: input.includes('ok')" />
               </div>
             </>
           ) : null}
@@ -96,7 +96,7 @@ export default function PropertiesPanel({ block, onChange, onDelete }: { block: 
             <>
               <div className="space-y-2">
                 <label className="text-xs text-gray-600">Template de resposta</label>
-                <Textarea value={cfg.template || ''} onChange={(e) => onChange({ config: { ...cfg, template: e.target.value } })} rows={6} placeholder="ex: {{output}}" />
+                <Textarea value={(cfgUnknown as Partial<ResponseBlockConfig>).template || ''} onChange={(e) => onChange({ config: { ...(cfgUnknown as Partial<ResponseBlockConfig>), template: e.target.value } })} rows={6} placeholder="ex: {{output}}" />
               </div>
             </>
           ) : null}
@@ -105,4 +105,3 @@ export default function PropertiesPanel({ block, onChange, onDelete }: { block: 
     </div>
   )
 }
-
