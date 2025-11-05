@@ -13,7 +13,7 @@ import {
 } from '@/components/ai-elements/prompt-input'
 
 export default function WorkflowRunChatPanel({ graph, className, autoSend }: { graph: Graph; className?: string; autoSend?: string }) {
-  const transport = useMemo(() => new DefaultChatTransport({ api: '/api/agentes/run-visual-chat' }), [])
+  const transport = useMemo(() => new DefaultChatTransport({ api: '/api/agentes/run-visual-chat', body: { graph } }), [graph])
   const { messages, status, sendMessage } = useChat({
     transport,
     body: { graph },
