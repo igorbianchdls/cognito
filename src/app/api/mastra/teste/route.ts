@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
       return Response.json({ error: "Invalid prompt" }, { status: 400 });
     }
 
-    const result = await testAgent.run(prompt);
+    const result = await testAgent.generate(prompt);
     return Response.json({ result });
   } catch (err: unknown) {
     console.error("Mastra agent error:", err);
