@@ -2,7 +2,7 @@
 
 import 'reactflow/dist/style.css'
 import React, { useCallback } from 'react'
-import ReactFlow, { Background, Controls, MiniMap, addEdge, applyEdgeChanges, applyNodeChanges, type Connection, type Edge, type EdgeChange, type Node, type NodeChange, type OnSelectionChangeParams, ReactFlowProvider } from 'reactflow'
+import ReactFlow, { Background, BackgroundVariant, Controls, MiniMap, addEdge, applyEdgeChanges, applyNodeChanges, type Connection, type Edge, type EdgeChange, type Node, type NodeChange, type OnSelectionChangeParams, ReactFlowProvider } from 'reactflow'
 import type { NodeData } from '@/types/agentes/flow'
 import AgentNode from './nodeTypes/AgentNode'
 import ToolNode from './nodeTypes/ToolNode'
@@ -55,7 +55,7 @@ export default function FlowCanvas({ nodes, setNodes, edges, setEdges, onSelectN
           fitView
           proOptions={{ hideAttribution: true }}
         >
-          <Background variant="dots" gap={16} size={1} />
+          <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
           <MiniMap />
           <Controls />
         </ReactFlow>
