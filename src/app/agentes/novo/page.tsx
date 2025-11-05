@@ -75,6 +75,20 @@ export default function NewAgentPage() {
     }
   }
 
+  const handleRun = async () => {
+    try {
+      const res = await fetch('/api/agentes/run-visual', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ graph: flowToGraph(nodes, edges), message: 'olá agente' }),
+      })
+      const data = await res.json()
+      alert(`Run (runner): ${data.reply || JSON.stringify(data)}`)
+    } catch (e) {
+      alert('Falha ao rodar agente: ' + (e as Error).message)
+    }
+  }
+
   return (
     <SidebarProvider defaultOpen={false}>
       <SidebarShadcn />
@@ -83,6 +97,7 @@ export default function NewAgentPage() {
           <input className="text-xl font-semibold outline-none bg-transparent" value={name} onChange={(e) => setName(e.target.value)} />
           <div className="flex items-center gap-2">
             <Button variant="outline" onClick={() => setShowCode(true)}>Código</Button>
+            <Button variant="outline" onClick={handleRun}>Run</Button>
             <Button variant="outline" onClick={handleTest}>Testar</Button>
           </div>
         </div>
