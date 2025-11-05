@@ -3,10 +3,23 @@
 import type { UIMessage } from 'ai'
 import { Reasoning, ReasoningTrigger, ReasoningContent } from '@/components/ai-elements/reasoning'
 
+type TextPart = { type: 'text'; text: string }
+type ReasoningPart = { type: 'reasoning'; content?: string; text?: string; state?: string }
+
+const isTextPart = (p: unknown): p is TextPart => {
+  const t = (p as { type?: string; text?: unknown })?.type
+  return t === 'text' && typeof (p as { text?: unknown }).text === 'string'
+}
+
+const isReasoningPart = (p: unknown): p is ReasoningPart => {
+  const t = (p as { type?: string })?.type
+  return t === 'reasoning'
+}
+
 export default function AssistantMessage({ message }: { message: UIMessage }) {
-  const parts = message.parts || []
-  const texts = parts.filter((p) => p.type === 'text') as Array<{ type: 'text'; text: string }>
-  const reasonings = parts.filter((p) => (p as any).type === 'reasoning') as Array<{ type: 'reasoning'; content?: string; text?: string; state?: string }>
+  const parts = (message.parts || []) as unknown[]
+  const texts = parts.filter(isTextPart)
+  const reasonings = parts.filter(isReasoningPart)
 
   return (
     <div className="space-y-2">
@@ -26,4 +39,3 @@ export default function AssistantMessage({ message }: { message: UIMessage }) {
     </div>
   )
 }
-

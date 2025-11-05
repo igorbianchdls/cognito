@@ -3,13 +3,19 @@
 import type { UIMessage } from 'ai'
 import AssistantMessage from './AssistantMessage'
 
+type TextPart = { type: 'text'; text: string }
+const isTextPart = (p: unknown): p is TextPart => {
+  const t = (p as { type?: string; text?: unknown })?.type
+  return t === 'text' && typeof (p as { text?: unknown }).text === 'string'
+}
+
 export default function ChatMessages({ messages }: { messages: UIMessage[] }) {
   return (
     <div className="space-y-4">
       {messages.map((m) => (
         <div key={m.id} className="text-sm">
           {m.role === 'user' ? (
-            <div className="max-w-[80%] bg-gray-100 rounded-md px-3 py-2 inline-block whitespace-pre-wrap">{m.parts?.find(p => p.type === 'text')?.text || ''}</div>
+            <div className="max-w-[80%] bg-gray-100 rounded-md px-3 py-2 inline-block whitespace-pre-wrap">{((m.parts || []) as unknown[]).find(isTextPart)?.text || ''}</div>
           ) : (
             <AssistantMessage message={m} />
           )}
@@ -21,4 +27,3 @@ export default function ChatMessages({ messages }: { messages: UIMessage[] }) {
     </div>
   )
 }
-
