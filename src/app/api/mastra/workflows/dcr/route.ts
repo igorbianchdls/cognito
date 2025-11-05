@@ -14,7 +14,8 @@ export async function POST(req: NextRequest) {
       return Response.json({ error: "Invalid question" }, { status: 400 });
     }
 
-    const out = await dcrWorkflow.execute({ inputData: { question } });
+    const run = await dcrWorkflow.createRunAsync();
+    const out = await run.start({ inputData: { question } });
     return Response.json(out);
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Internal error";
@@ -25,4 +26,3 @@ export async function POST(req: NextRequest) {
 export async function GET() {
   return Response.json({ status: "ok" });
 }
-
