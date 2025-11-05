@@ -14,7 +14,7 @@ const draftStep = createStep({
   }),
   execute: async ({ inputData }) => {
     const res = await drafteeAgent.generate(inputData.question);
-    const draft = await res.text;
+    const draft = res.text;
     const model = res.response?.modelId;
     return { question: inputData.question, draft, model };
   },
@@ -45,7 +45,7 @@ const critiqueStep = createStep({
     ].join("\n");
 
     const res = await criticAgent.generate(prompt);
-    const critique = await res.text;
+    const critique = res.text;
     const model = res.response?.modelId ?? inputData.model;
     return { question: inputData.question, draft: inputData.draft, critique, model };
   },
@@ -79,7 +79,7 @@ const reviseStep = createStep({
     ].join("\n");
 
     const res = await reviewerAgent.generate(prompt);
-    const finalText = await res.text;
+    const finalText = res.text;
     const model = res.response?.modelId ?? inputData.model;
     return { draft: inputData.draft, critique: inputData.critique, final: finalText, model };
   },
