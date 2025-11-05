@@ -11,16 +11,20 @@ export default function PaletteItem({
   badgeColor = '#1F2937',
   kind,
   onAdd,
+  meta,
 }: {
   icon: React.ReactNode
   label: string
   badgeBg?: string
   badgeColor?: string
   kind: BlockKind
-  onAdd: (kind: BlockKind) => void
+  onAdd: (payload: { kind: BlockKind; name?: string; toolId?: string }) => void
+  meta?: { toolId?: string }
 }) {
   const handleDragStart = (e: React.DragEvent) => {
     e.dataTransfer.setData('application/x-block-kind', String(kind))
+    e.dataTransfer.setData('application/x-block-name', String(label))
+    if (meta?.toolId) e.dataTransfer.setData('application/x-tool-id', String(meta.toolId))
     e.dataTransfer.effectAllowed = 'move'
   }
   return (
@@ -30,7 +34,7 @@ export default function PaletteItem({
       )}
       draggable
       onDragStart={handleDragStart}
-      onClick={() => onAdd(kind)}
+      onClick={() => onAdd({ kind, name: label, toolId: meta?.toolId })}
       type="button"
     >
       <span

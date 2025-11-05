@@ -29,9 +29,15 @@ export default function NewAgentPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const selectedBlock = useMemo(() => nodes.find(n => n.id === selectedId)?.data.block || null, [nodes, selectedId])
 
-  const addBlock = (kind: BlockKind) => {
+  const addBlock = (payload: { kind: BlockKind; name?: string; toolId?: string }) => {
+    const { kind, name, toolId } = payload
     const id = `b${Date.now()}`
-    const base: Node<NodeData> = { id, type: kind, data: { block: { id, kind, name: kind.charAt(0).toUpperCase() + kind.slice(1) } as Block }, position: { x: 320, y: 120 } }
+    const block: Block = { id, kind, name: name || (kind.charAt(0).toUpperCase() + kind.slice(1)) }
+    if (kind === 'ferramenta' && toolId) {
+      block.config = { ...(block.config || {}), toolIds: [toolId] }
+      if (!block.name) block.name = toolId
+    }
+    const base: Node<NodeData> = { id, type: kind, data: { block }, position: { x: 320, y: 120 } }
     setNodes(prev => [...prev, base])
     setSelectedId(id)
   }

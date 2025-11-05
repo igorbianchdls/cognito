@@ -57,10 +57,15 @@ export default function FlowCanvas({ nodes, setNodes, edges, setEdges, onSelectN
   const onDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault()
     const kind = e.dataTransfer.getData('application/x-block-kind')
+    const name = e.dataTransfer.getData('application/x-block-name')
+    const toolId = e.dataTransfer.getData('application/x-tool-id')
     if (!kind) return
     const position = rf.project({ x: e.clientX, y: e.clientY })
     const id = `b${Date.now()}`
-    const block: Block = { id, kind: kind as BlockKind, name: kind.charAt(0).toUpperCase() + kind.slice(1) }
+    const block: Block = { id, kind: kind as BlockKind, name: name || (kind.charAt(0).toUpperCase() + kind.slice(1)) }
+    if (kind === 'ferramenta' && toolId) {
+      block.config = { ...(block.config || {}), toolIds: [toolId] }
+    }
     const node: Node<NodeData> = { id, type: kind as BlockKind, data: { block }, position }
     setNodes((nds) => nds.concat(node))
   }, [rf, setNodes])
@@ -84,7 +89,7 @@ export default function FlowCanvas({ nodes, setNodes, edges, setEdges, onSelectN
           proOptions={{ hideAttribution: true }}
           style={{ background: '#F3F4F6' }}
         >
-          <Background variant={BackgroundVariant.Dots} gap={16} size={1} color="#E5E7EB" />
+          <Background variant={BackgroundVariant.Dots} gap={18} size={1} color="#D1D5DB" />
           <MiniMap />
           <Controls />
         </ReactFlow>

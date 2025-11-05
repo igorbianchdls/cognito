@@ -5,7 +5,7 @@ import PaletteSection from "./palette/PaletteSection"
 import PaletteItem from "./palette/PaletteItem"
 import { Bot, CircleStop, FileText, FileSearch, ShieldCheck, Settings2, GitBranch, RefreshCw, UserCheck, Wand2, ToggleLeft } from "lucide-react"
 
-export default function BlockPalette({ onAdd }: { onAdd: (type: BlockKind) => void }) {
+export default function BlockPalette({ onAdd }: { onAdd: (payload: { kind: BlockKind; name?: string; toolId?: string }) => void }) {
   return (
     <div className="m-3 bg-white rounded-2xl border border-gray-200 shadow-sm">
       <PaletteSection title="Core" />
@@ -17,9 +17,9 @@ export default function BlockPalette({ onAdd }: { onAdd: (type: BlockKind) => vo
 
       <PaletteSection title="Tools" />
       <div className="px-2">
-        <PaletteItem icon={<FileSearch className="w-4 h-4" />} label="File search" badgeBg="#FEF3C7" badgeColor="#B45309" kind="ferramenta" onAdd={onAdd} />
-        <PaletteItem icon={<ShieldCheck className="w-4 h-4" />} label="Guardrails" badgeBg="#FEF3C7" badgeColor="#B45309" kind="ferramenta" onAdd={onAdd} />
-        <PaletteItem icon={<Settings2 className="w-4 h-4" />} label="MCP" badgeBg="#FEF3C7" badgeColor="#B45309" kind="ferramenta" onAdd={onAdd} />
+        <PaletteItem icon={<FileSearch className="w-4 h-4" />} label="File search" badgeBg="#FEF3C7" badgeColor="#B45309" kind="ferramenta" meta={{ toolId: 'file-search' }} onAdd={onAdd} />
+        <PaletteItem icon={<ShieldCheck className="w-4 h-4" />} label="Guardrails" badgeBg="#FEF3C7" badgeColor="#B45309" kind="ferramenta" meta={{ toolId: 'guardrails' }} onAdd={onAdd} />
+        <PaletteItem icon={<Settings2 className="w-4 h-4" />} label="MCP" badgeBg="#FEF3C7" badgeColor="#B45309" kind="ferramenta" meta={{ toolId: 'mcp' }} onAdd={onAdd} />
       </div>
 
       <PaletteSection title="Logic" />
