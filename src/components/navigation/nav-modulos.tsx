@@ -15,6 +15,11 @@ import {
   SidebarMenuSubItem,
   SidebarMenuSubButton,
 } from "@/components/ui/sidebar"
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible"
 
 export function NavModulos() {
   const router = useRouter()
@@ -47,16 +52,40 @@ export function NavModulos() {
               <span>Administrativo</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              tooltip="Financeiro"
-              onClick={() => router.push("/modulos/financeiro")}
-              isActive={pathname.startsWith("/modulos/financeiro")}
-            >
-              <DollarSign />
-              <span>Financeiro</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+          <Collapsible
+            key="financeiro"
+            asChild
+            defaultOpen={pathname.startsWith("/modulos/financeiro")}
+            className="group/collapsible"
+          >
+            <SidebarMenuItem>
+              <CollapsibleTrigger asChild>
+                <SidebarMenuButton tooltip="Financeiro">
+                  <DollarSign />
+                  <span>Financeiro</span>
+                  <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                </SidebarMenuButton>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <SidebarMenuSub>
+                  <SidebarMenuSubItem>
+                    <SidebarMenuSubButton asChild isActive={pathname === "/modulos/financeiro"}>
+                      <a href="/modulos/financeiro">
+                        <span>Gestão</span>
+                      </a>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                  <SidebarMenuSubItem>
+                    <SidebarMenuSubButton asChild isActive={pathname === "/modulos/financeiro/dashboard"}>
+                      <a href="/modulos/financeiro/dashboard">
+                        <span>Dashboard</span>
+                      </a>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                </SidebarMenuSub>
+              </CollapsibleContent>
+            </SidebarMenuItem>
+          </Collapsible>
           <SidebarMenuItem>
             <SidebarMenuButton
               tooltip="Contabilidade"
