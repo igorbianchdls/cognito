@@ -89,7 +89,7 @@ export default function FlowCanvas({ nodes, setNodes, edges, setEdges, onSelectN
           proOptions={{ hideAttribution: true }}
           style={{ background: '#FAFAFA' }}
         >
-          <Background variant={BackgroundVariant.Dots} gap={18} size={1} color="#E6E8EB" />
+          <Background variant={BackgroundVariant.Dots} gap={18} size={1} color="#D1D5DB" />
           <MiniMap />
           <Controls />
         </ReactFlow>

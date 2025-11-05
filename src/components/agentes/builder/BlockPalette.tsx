@@ -7,7 +7,7 @@ import { Bot, CircleStop, FileText, FileSearch, ShieldCheck, Settings2, GitBranc
 
 export default function BlockPalette({ onAdd }: { onAdd: (payload: { kind: BlockKind; name?: string; toolId?: string }) => void }) {
   return (
-    <div className="m-3 bg-white rounded-2xl border border-gray-200 shadow-sm">
+    <div className="m-3">
       <PaletteSection title="Core" />
       <div className="px-2">
         <PaletteItem icon={<Bot className="w-4 h-4" />} label="Agent" badgeBg="#EEF2FF" badgeColor="#1D4ED8" kind="agente" onAdd={onAdd} />
