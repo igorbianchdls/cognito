@@ -10,6 +10,7 @@ export function genRouteTs(graph: Graph, slug: string): string {
   const provider = model.includes('/') ? model.split('/')[0] : 'anthropic'
   const modelName = model.includes('/') ? model.split('/').slice(1).join('/') : model
   const importOpenAI = provider === 'openai'
+  const stepCount = graph.blocks.filter(b => b.kind === 'step').length
 
   const imports = `import { NextResponse } from 'next/server'
 import { generateText } from 'ai'
@@ -39,6 +40,8 @@ export async function POST(request: Request) {
       system: "${sys}",
       prompt,
       temperature,
+      // Passo-a-passo gerado pelo builder (STEP nodes): ${'${'}String(${stepCount})${'}'}
+      ${stepCount > 0 ? `maxToolRoundtrips: ${stepCount},` : ''}
       ${provider === 'anthropic' ? `providerOptions: { anthropic: { thinking: { type: 'enabled', budgetTokens: 8000 } } },` : ''}
     })
     return NextResponse.json({ reply: text })

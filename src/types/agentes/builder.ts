@@ -9,6 +9,7 @@ export type BlockKind =
   | 'aprovacao'
   | 'transform'
   | 'setstate'
+  | 'step'
 
 export interface Branch {
   label: string

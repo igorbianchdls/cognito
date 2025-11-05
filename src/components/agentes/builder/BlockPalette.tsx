@@ -3,7 +3,7 @@
 import type { BlockKind } from "@/types/agentes/builder"
 import PaletteSection from "./palette/PaletteSection"
 import PaletteItem from "./palette/PaletteItem"
-import { Bot, CircleStop, FileText, FileSearch, ShieldCheck, Settings2, GitBranch, RefreshCw, UserCheck, Wand2, ToggleLeft } from "lucide-react"
+import { Bot, CircleStop, FileText, FileSearch, ShieldCheck, Settings2, GitBranch, RefreshCw, UserCheck, Wand2, ToggleLeft, ListChecks } from "lucide-react"
 
 export default function BlockPalette({ onAdd }: { onAdd: (payload: { kind: BlockKind; name?: string; toolId?: string }) => void }) {
   return (
@@ -24,6 +24,7 @@ export default function BlockPalette({ onAdd }: { onAdd: (payload: { kind: Block
 
       <PaletteSection title="Logic" />
       <div className="px-2">
+        <PaletteItem icon={<ListChecks className="w-4 h-4" />} label="STEP" badgeBg="#FFEDD5" badgeColor="#C2410C" kind="step" onAdd={onAdd} />
         <PaletteItem icon={<GitBranch className="w-4 h-4" />} label="If / else" badgeBg="#FFEDD5" badgeColor="#C2410C" kind="condicao" onAdd={onAdd} />
         <PaletteItem icon={<RefreshCw className="w-4 h-4" />} label="While" badgeBg="#FFEDD5" badgeColor="#C2410C" kind="loop" onAdd={onAdd} />
         <PaletteItem icon={<UserCheck className="w-4 h-4" />} label="User approval" badgeBg="#FFEDD5" badgeColor="#C2410C" kind="aprovacao" onAdd={onAdd} />

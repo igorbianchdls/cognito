@@ -14,6 +14,7 @@ import {
   UserCheck,
   Wand2,
   ToggleLeft,
+  ListChecks,
   Wrench,
 } from 'lucide-react'
 
@@ -50,6 +51,8 @@ export function getVisualForBlock(block: Block): {
       return { icon: <Wand2 className="w-4 h-4" />, badgeBg: '#F3E8FF', badgeColor: '#7E22CE' }
     case 'setstate':
       return { icon: <ToggleLeft className="w-4 h-4" />, badgeBg: '#F3E8FF', badgeColor: '#7E22CE' }
+    case 'step':
+      return { icon: <ListChecks className="w-4 h-4" />, badgeBg: '#FFEDD5', badgeColor: '#C2410C' }
     default:
       return { icon: <FileText className="w-4 h-4" />, ...baseGray }
   }

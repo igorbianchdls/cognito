@@ -18,13 +18,17 @@ import CodePreview from "@/components/agentes/codegen/CodePreview"
 export default function NewAgentPage() {
   const [name, setName] = useState("Novo agente")
   const initialNodes: Node<NodeData>[] = [
-    { id: 'b1', type: 'agente', data: { block: { id: 'b1', kind: 'agente', name: 'Agente principal', config: { model: '', systemPrompt: '' } } }, position: { x: 100, y: 80 } },
-    { id: 'b2', type: 'ferramenta', data: { block: { id: 'b2', kind: 'ferramenta', name: 'Ferramentas', config: { toolIds: [] } } }, position: { x: 100, y: 220 } },
-    { id: 'b3', type: 'resposta', data: { block: { id: 'b3', kind: 'resposta', name: 'Resposta' } }, position: { x: 100, y: 360 } },
+    { id: 'b1', type: 'agente', data: { block: { id: 'b1', kind: 'agente', name: 'Agente principal', config: { model: 'anthropic/claude-3-haiku-latest', systemPrompt: 'Promtp' } } }, position: { x: 100, y: 60 } },
+    { id: 'b2', type: 'step', data: { block: { id: 'b2', kind: 'step', name: 'Step 1' } }, position: { x: 100, y: 200 } },
+    { id: 'b3', type: 'step', data: { block: { id: 'b3', kind: 'step', name: 'Step 2' } }, position: { x: 100, y: 320 } },
+    { id: 'b4', type: 'step', data: { block: { id: 'b4', kind: 'step', name: 'Step 3' } }, position: { x: 100, y: 440 } },
+    { id: 'b5', type: 'resposta', data: { block: { id: 'b5', kind: 'resposta', name: 'Resposta' } }, position: { x: 100, y: 560 } },
   ]
   const initialEdges: Edge[] = [
     { id: 'b1-b2', source: 'b1', target: 'b2' },
     { id: 'b2-b3', source: 'b2', target: 'b3' },
+    { id: 'b3-b4', source: 'b3', target: 'b4' },
+    { id: 'b4-b5', source: 'b4', target: 'b5' },
   ]
   const [nodes, setNodes] = useState<Node<NodeData>[]>(initialNodes)
   const [edges, setEdges] = useState<Edge[]>(initialEdges)

@@ -44,6 +44,8 @@ export function validateGraph(graph: Graph): { warnings: string[]; hasAgent: boo
   const hasResponse = graph.blocks.some(b => b.kind === 'resposta')
   if (!hasAgent) warnings.push('Nenhum bloco "Agente" encontrado — model/systemPrompt ausentes (usando defaults).')
   if (!hasResponse) warnings.push('Nenhum bloco "Resposta" encontrado — usando template padrão {{output}}.')
+  const steps = graph.blocks.filter(b => b.kind === 'step').length
+  if (steps === 0) warnings.push('Nenhum bloco "STEP" encontrado — execuções em passo único.')
   for (const b of graph.blocks) {
     if (b.kind === 'condicao') {
       const cfg = (b.config || {}) as Partial<ConditionBlockConfig>
