@@ -52,7 +52,10 @@ export default function FlowCanvas({ nodes, setNodes, edges, setEdges, onSelectN
           onEdgesChange={onEdgesChange}
           onSelectionChange={onSelectionChange}
           nodeTypes={nodeTypes}
-          fitView
+          deleteKeyCode={["Backspace", "Delete"]}
+          defaultViewport={{ x: 0, y: 0, zoom: 0.8 }}
+          minZoom={0.2}
+          maxZoom={1.5}
           proOptions={{ hideAttribution: true }}
         >
           <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
