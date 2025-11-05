@@ -16,7 +16,6 @@ export default function WorkflowRunChatPanel({ graph, className, autoSend }: { g
   const transport = useMemo(() => new DefaultChatTransport({ api: '/api/agentes/run-visual-chat', body: { graph } }), [graph])
   const { messages, status, sendMessage } = useChat({
     transport,
-    body: { graph },
     id: 'workflow-run-panel',
   })
   const [text, setText] = useState('')
