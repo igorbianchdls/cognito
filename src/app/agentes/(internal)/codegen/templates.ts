@@ -21,6 +21,7 @@ ${imports}
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
+export const maxDuration = 300
 
 function selectModel() {
   ${importOpenAI ? `if ('${provider}' === 'openai') return openai('${modelName}')` : ''}
@@ -37,6 +38,7 @@ export async function POST(request: Request) {
       system: "${sys}",
       prompt,
       temperature,
+      ${provider === 'anthropic' ? `providerOptions: { anthropic: { thinking: { type: 'enabled', budgetTokens: 8000 } } },` : ''}
     })
     return NextResponse.json({ reply: text })
   } catch (error: unknown) {
