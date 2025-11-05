@@ -1,9 +1,11 @@
 "use client";
 
 import { useCallback, useMemo, useRef, useState } from "react";
-import type { CoreMessage } from "ai";
 
-type ChatMessage = CoreMessage; // { role: 'user' | 'assistant' | 'system'; content: string }
+type ChatMessage = {
+  role: "user" | "assistant" | "system";
+  content: string;
+};
 
 export default function Page() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
