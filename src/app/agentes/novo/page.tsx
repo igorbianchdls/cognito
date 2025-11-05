@@ -17,9 +17,8 @@ export default function NewAgentPage() {
   const initialNodes: Node<NodeData>[] = [
     { id: 'b1', type: 'agente', data: { block: { id: 'b1', kind: 'agente', name: 'Agente principal', config: { model: '', systemPrompt: '' } } }, position: { x: 100, y: 80 } },
     { id: 'b2', type: 'ferramenta', data: { block: { id: 'b2', kind: 'ferramenta', name: 'Ferramentas', config: { toolIds: [] } } }, position: { x: 100, y: 220 } },
-    { id: 'b3', type: 'resposta', data: { block: { id: 'b3', kind: 'resposta', name: 'Resposta' } } },
+    { id: 'b3', type: 'resposta', data: { block: { id: 'b3', kind: 'resposta', name: 'Resposta' } }, position: { x: 100, y: 360 } },
   ]
-  initialNodes[2].position = { x: 100, y: 360 }
   const initialEdges: Edge[] = [
     { id: 'b1-b2', source: 'b1', target: 'b2' },
     { id: 'b2-b3', source: 'b2', target: 'b3' },
