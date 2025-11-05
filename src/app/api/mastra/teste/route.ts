@@ -12,13 +12,13 @@ export async function POST(req: NextRequest) {
 
     const result = await testAgent.run(prompt);
     return Response.json({ result });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Mastra agent error:", err);
-    return Response.json({ error: err?.message ?? "Internal error" }, { status: 500 });
+    const message = err instanceof Error ? err.message : "Internal error";
+    return Response.json({ error: message }, { status: 500 });
   }
 }
 
 export async function GET() {
   return Response.json({ status: "ok" });
 }
-

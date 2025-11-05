@@ -17,17 +17,28 @@ export default function Page() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt }),
       });
-      const data = await res.json();
-      const r = (data as any)?.result;
+      const data: unknown = await res.json();
+      const obj: Record<string, unknown> =
+        typeof data === "object" && data !== null ? (data as Record<string, unknown>) : {};
+
+      const r = obj["result"];
       let text = "";
-      if (typeof r === "string") text = r;
-      else if (r?.output != null) text = String(r.output);
-      else if (r?.text != null) text = String(r.text);
-      else if (r?.message != null) text = String(r.message);
-      else text = JSON.stringify(r ?? data);
+      if (typeof r === "string") {
+        text = r;
+      } else if (r && typeof r === "object") {
+        const ro = r as Record<string, unknown>;
+        if ("output" in ro) text = String(ro["output"] ?? "");
+        else if ("text" in ro) text = String(ro["text"] ?? "");
+        else if ("message" in ro) text = String(ro["message"] ?? "");
+        else text = JSON.stringify(r);
+      } else if ("error" in obj) {
+        text = String(obj["error"] ?? "Erro");
+      } else {
+        text = JSON.stringify(data);
+      }
       setOutput(text);
-    } catch (e: any) {
-      setOutput(`Erro: ${e?.message ?? "Falha na requisição"}`);
+    } catch (e: unknown) {
+      setOutput(`Erro: ${e instanceof Error ? e.message : "Falha na requisição"}`);
     } finally {
       setLoading(false);
     }
@@ -56,4 +67,3 @@ export default function Page() {
     </div>
   );
 }
-
