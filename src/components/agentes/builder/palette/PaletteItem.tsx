@@ -30,7 +30,7 @@ export default function PaletteItem({
   return (
     <button
       className={cn(
-        'w-full h-10 px-3 rounded-xl flex items-center gap-3 text-left hover:bg-gray-50 border border-transparent hover:border-gray-200 active:scale-[0.99] transition select-none',
+        'w-full px-3 py-2 rounded-xl flex items-center gap-3 text-left hover:bg-gray-50 border border-transparent hover:border-gray-200 active:scale-[0.99] transition select-none',
       )}
       draggable
       onDragStart={handleDragStart}

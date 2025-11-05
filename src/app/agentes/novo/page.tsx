@@ -13,6 +13,7 @@ import type { Node, Edge } from 'reactflow'
 import type { NodeData } from '@/types/agentes/flow'
 import { flowToGraph } from '@/components/agentes/builder/flow/serialization'
 import { Button } from "@/components/ui/button"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import CodePreview from "@/components/agentes/codegen/CodePreview"
@@ -38,6 +39,7 @@ export default function NewAgentPage() {
   const selectedBlock = useMemo(() => nodes.find(n => n.id === selectedId)?.data.block || null, [nodes, selectedId])
   const [showCode, setShowCode] = useState(false)
   const [runTrigger, setRunTrigger] = useState(0)
+  const [leftTab, setLeftTab] = useState<'agentes' | 'workflows'>('agentes')
 
   const addBlock = (payload: { kind: BlockKind; name?: string; toolId?: string }) => {
     const { kind, name, toolId } = payload
@@ -106,6 +108,14 @@ export default function NewAgentPage() {
         </div>
         <div className="flex-1 overflow-hidden flex">
           <div className="w-80 border-r bg-white hidden md:block">
+            <div className="px-3 pt-2">
+              <Tabs value={leftTab} onValueChange={(v) => setLeftTab(v as 'agentes' | 'workflows')}>
+                <TabsList variant="underline">
+                  <TabsTrigger value="agentes">Agentes</TabsTrigger>
+                  <TabsTrigger value="workflows">Workflows</TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
             <BlockPalette onAdd={addBlock} />
           </div>
           <div className="flex-1 overflow-hidden flex">
