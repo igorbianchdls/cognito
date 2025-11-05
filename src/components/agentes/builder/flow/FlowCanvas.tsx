@@ -2,7 +2,7 @@
 
 import 'reactflow/dist/style.css'
 import React, { useCallback } from 'react'
-import ReactFlow, { Background, Controls, MiniMap, addEdge, type Connection, type Edge, type Node, ReactFlowProvider } from 'reactflow'
+import ReactFlow, { Background, Controls, MiniMap, addEdge, applyEdgeChanges, applyNodeChanges, type Connection, type Edge, type EdgeChange, type Node, type NodeChange, type OnSelectionChangeParams, ReactFlowProvider } from 'reactflow'
 import type { NodeData } from '@/types/agentes/flow'
 import AgentNode from './nodeTypes/AgentNode'
 import ToolNode from './nodeTypes/ToolNode'
@@ -29,22 +29,16 @@ export default function FlowCanvas({ nodes, setNodes, edges, setEdges, onSelectN
     setEdges((eds) => addEdge({ ...connection }, eds))
   }, [setEdges])
 
-  const onNodesChange = useCallback((changes: any) => {
-    setNodes((nds) => nds.map((n) => {
-      const change = changes.find((c: any) => c.id === n.id)
-      if (change?.type === 'position' && change.position) {
-        return { ...n, position: change.position }
-      }
-      return n
-    }))
+  const onNodesChange = useCallback((changes: NodeChange[]) => {
+    setNodes((nds) => applyNodeChanges(changes, nds))
   }, [setNodes])
 
-  const onEdgesChange = useCallback((changes: any) => {
-    // naive: ignore for MVP or re-build edges accordingly
-  }, [])
+  const onEdgesChange = useCallback((changes: EdgeChange[]) => {
+    setEdges((eds) => applyEdgeChanges(changes, eds))
+  }, [setEdges])
 
-  const onSelectionChange = useCallback(({ nodes: selNodes }: { nodes: Node<NodeData>[] }) => {
-    onSelectNode?.(selNodes?.[0]?.id ?? null)
+  const onSelectionChange = useCallback((params: OnSelectionChangeParams) => {
+    onSelectNode?.(params.nodes?.[0]?.id ?? null)
   }, [onSelectNode])
 
   return (
@@ -69,4 +63,3 @@ export default function FlowCanvas({ nodes, setNodes, edges, setEdges, onSelectN
     </ReactFlowProvider>
   )
 }
-
