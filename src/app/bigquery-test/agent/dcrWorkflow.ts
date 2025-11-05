@@ -12,11 +12,11 @@ const draftStep = createStep({
     draft: z.string(),
     model: z.string().optional(),
   }),
-  execute: async ({ input }) => {
-    const res = await drafteeAgent.generate(input.question);
+  execute: async ({ inputData }) => {
+    const res = await drafteeAgent.generate(inputData.question);
     const draft = await res.text;
     const model = res.response?.modelId;
-    return { question: input.question, draft, model };
+    return { question: inputData.question, draft, model };
   },
 });
 
@@ -33,21 +33,21 @@ const critiqueStep = createStep({
     critique: z.string(),
     model: z.string().optional(),
   }),
-  execute: async ({ input }) => {
+  execute: async ({ inputData }) => {
     const prompt = [
       "Critique the following draft for the given question.",
       "Return 3–7 bullet points of concrete improvements (facts, clarity, structure, tone).",
       "Do not rewrite the answer.",
       "",
-      `Question: ${input.question}`,
+      `Question: ${inputData.question}`,
       "Draft:",
-      input.draft,
+      inputData.draft,
     ].join("\n");
 
     const res = await criticAgent.generate(prompt);
     const critique = await res.text;
-    const model = res.response?.modelId ?? input.model;
-    return { question: input.question, draft: input.draft, critique, model };
+    const model = res.response?.modelId ?? inputData.model;
+    return { question: inputData.question, draft: inputData.draft, critique, model };
   },
 });
 
@@ -65,23 +65,23 @@ const reviseStep = createStep({
     final: z.string(),
     model: z.string().optional(),
   }),
-  execute: async ({ input }) => {
+  execute: async ({ inputData }) => {
     const prompt = [
       "Revise the DRAFT into a clean FINAL answer using ALL CRITIQUE bullets.",
       "Keep it short, clear, and actionable.",
       "",
-      `Question: ${input.question}`,
+      `Question: ${inputData.question}`,
       "CRITIQUE:",
-      input.critique,
+      inputData.critique,
       "",
       "DRAFT:",
-      input.draft,
+      inputData.draft,
     ].join("\n");
 
     const res = await reviewerAgent.generate(prompt);
     const finalText = await res.text;
-    const model = res.response?.modelId ?? input.model;
-    return { draft: input.draft, critique: input.critique, final: finalText, model };
+    const model = res.response?.modelId ?? inputData.model;
+    return { draft: inputData.draft, critique: inputData.critique, final: finalText, model };
   },
 });
 
