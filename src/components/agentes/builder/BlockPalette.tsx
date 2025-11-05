@@ -9,20 +9,19 @@ export default function BlockPalette({ onAdd }: { onAdd: (kind: BlockKind) => vo
     <div className="p-3 space-y-2">
       <div className="px-2 pb-2 text-xs font-medium text-gray-600">Blocos</div>
       <div className="grid grid-cols-1 gap-2">
-        <Button variant="outline" className="justify-start gap-2" onClick={() => onAdd('agente')}>
+        <Button variant="outline" className="justify-start gap-2" draggable onDragStart={(e) => e.dataTransfer.setData('application/x-block-kind', 'agente')} onClick={() => onAdd('agente')}>
           <Bot className="w-4 h-4" /> Agente
         </Button>
-        <Button variant="outline" className="justify-start gap-2" onClick={() => onAdd('ferramenta')}>
+        <Button variant="outline" className="justify-start gap-2" draggable onDragStart={(e) => e.dataTransfer.setData('application/x-block-kind', 'ferramenta')} onClick={() => onAdd('ferramenta')}>
           <Wrench className="w-4 h-4" /> Ferramenta
         </Button>
-        <Button variant="outline" className="justify-start gap-2" onClick={() => onAdd('condicao')}>
+        <Button variant="outline" className="justify-start gap-2" draggable onDragStart={(e) => e.dataTransfer.setData('application/x-block-kind', 'condicao')} onClick={() => onAdd('condicao')}>
           <GitBranch className="w-4 h-4" /> Condição
         </Button>
-        <Button variant="outline" className="justify-start gap-2" onClick={() => onAdd('resposta')}>
+        <Button variant="outline" className="justify-start gap-2" draggable onDragStart={(e) => e.dataTransfer.setData('application/x-block-kind', 'resposta')} onClick={() => onAdd('resposta')}>
           <MessageSquareText className="w-4 h-4" /> Resposta
         </Button>
       </div>
     </div>
   )
 }
-
