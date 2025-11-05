@@ -238,36 +238,108 @@ export function NavModulos() {
       <SidebarGroup>
         <SidebarGroupLabel>Marketing</SidebarGroupLabel>
         <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              tooltip="Marketing Orgânico"
-              onClick={() => router.push("/modulos/marketing")}
-              isActive={pathname.startsWith("/modulos/marketing")}
-            >
-              <Megaphone />
-              <span>Marketing Orgânico</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              tooltip="Tráfego Pago"
-              onClick={() => router.push("/modulos/trafego-pago")}
-              isActive={pathname.startsWith("/modulos/trafego-pago")}
-            >
-              <Megaphone />
-              <span>Tráfego Pago</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              tooltip="Web Analytics"
-              onClick={() => router.push("/modulos/web-analytics")}
-              isActive={pathname.startsWith("/modulos/web-analytics")}
-            >
-              <BarChart3 />
-              <span>Web Analytics</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+          <Collapsible
+            key="marketing"
+            asChild
+            defaultOpen={pathname.startsWith("/modulos/marketing")}
+            className="group/collapsible"
+          >
+            <SidebarMenuItem>
+              <CollapsibleTrigger asChild>
+                <SidebarMenuButton tooltip="Marketing Orgânico">
+                  <Megaphone />
+                  <span>Marketing Orgânico</span>
+                  <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                </SidebarMenuButton>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <SidebarMenuSub>
+                  <SidebarMenuSubItem>
+                    <SidebarMenuSubButton asChild isActive={pathname === "/modulos/marketing"}>
+                      <a href="/modulos/marketing">
+                        <span>Gestão</span>
+                      </a>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                  <SidebarMenuSubItem>
+                    <SidebarMenuSubButton asChild isActive={pathname === "/modulos/marketing/dashboard"}>
+                      <a href="/modulos/marketing/dashboard">
+                        <span>Dashboard</span>
+                      </a>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                </SidebarMenuSub>
+              </CollapsibleContent>
+            </SidebarMenuItem>
+          </Collapsible>
+          <Collapsible
+            key="trafego-pago"
+            asChild
+            defaultOpen={pathname.startsWith("/modulos/trafego-pago")}
+            className="group/collapsible"
+          >
+            <SidebarMenuItem>
+              <CollapsibleTrigger asChild>
+                <SidebarMenuButton tooltip="Tráfego Pago">
+                  <Megaphone />
+                  <span>Tráfego Pago</span>
+                  <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                </SidebarMenuButton>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <SidebarMenuSub>
+                  <SidebarMenuSubItem>
+                    <SidebarMenuSubButton asChild isActive={pathname === "/modulos/trafego-pago"}>
+                      <a href="/modulos/trafego-pago">
+                        <span>Gestão</span>
+                      </a>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                  <SidebarMenuSubItem>
+                    <SidebarMenuSubButton asChild isActive={pathname === "/modulos/trafego-pago/dashboard"}>
+                      <a href="/modulos/trafego-pago/dashboard">
+                        <span>Dashboard</span>
+                      </a>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                </SidebarMenuSub>
+              </CollapsibleContent>
+            </SidebarMenuItem>
+          </Collapsible>
+          <Collapsible
+            key="web-analytics"
+            asChild
+            defaultOpen={pathname.startsWith("/modulos/web-analytics")}
+            className="group/collapsible"
+          >
+            <SidebarMenuItem>
+              <CollapsibleTrigger asChild>
+                <SidebarMenuButton tooltip="Web Analytics">
+                  <BarChart3 />
+                  <span>Web Analytics</span>
+                  <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                </SidebarMenuButton>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <SidebarMenuSub>
+                  <SidebarMenuSubItem>
+                    <SidebarMenuSubButton asChild isActive={pathname === "/modulos/web-analytics"}>
+                      <a href="/modulos/web-analytics">
+                        <span>Gestão</span>
+                      </a>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                  <SidebarMenuSubItem>
+                    <SidebarMenuSubButton asChild isActive={pathname === "/modulos/web-analytics/dashboard"}>
+                      <a href="/modulos/web-analytics/dashboard">
+                        <span>Dashboard</span>
+                      </a>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                </SidebarMenuSub>
+              </CollapsibleContent>
+            </SidebarMenuItem>
+          </Collapsible>
         </SidebarMenu>
       </SidebarGroup>
 
