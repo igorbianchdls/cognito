@@ -1,6 +1,6 @@
 "use client"
 
-import { DefaultChatTransport, type UIMessage } from 'ai'
+import { DefaultChatTransport, type UIMessage, type ChatStatus } from 'ai'
 import { useChat } from '@ai-sdk/react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Graph } from '@/types/agentes/builder'
@@ -30,7 +30,7 @@ export default function WorkflowRunChatPanel({ graph, className, autoSend }: { g
     if (autoSend) {
       void sendMessage({ text: autoSend })
     }
-  }, [autoSend])
+  }, [autoSend, sendMessage])
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -59,7 +59,7 @@ export default function WorkflowRunChatPanel({ graph, className, autoSend }: { g
         <PromptInput onSubmit={onSubmit}>
           <PromptInputTextarea value={text} onChange={(e) => setText(e.target.value)} />
           <PromptInputToolbar>
-            <PromptInputSubmit status={status as any} disabled={!text} />
+            <PromptInputSubmit status={status as ChatStatus} disabled={!text} />
           </PromptInputToolbar>
         </PromptInput>
       </div>
