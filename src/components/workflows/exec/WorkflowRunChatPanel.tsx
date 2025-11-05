@@ -1,7 +1,8 @@
 "use client"
 
-import { useChat, DefaultChatTransport, type UIMessage } from 'ai'
-import { useEffect, useMemo, useRef } from 'react'
+import { DefaultChatTransport, type UIMessage } from 'ai'
+import { useChat } from '@ai-sdk/react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Graph } from '@/types/agentes/builder'
 import RespostaDaIA from '@/components/nexus/RespostaDaIA'
 import {
@@ -13,11 +14,12 @@ import {
 
 export default function WorkflowRunChatPanel({ graph, className, autoSend }: { graph: Graph; className?: string; autoSend?: string }) {
   const transport = useMemo(() => new DefaultChatTransport({ api: '/api/agentes/run-visual-chat' }), [])
-  const { messages, input, setInput, status, append } = useChat({
+  const { messages, status, sendMessage } = useChat({
     transport,
     body: { graph },
     id: 'workflow-run-panel',
   })
+  const [text, setText] = useState('')
 
   const containerRef = useRef<HTMLDivElement | null>(null)
   useEffect(() => {
@@ -26,15 +28,15 @@ export default function WorkflowRunChatPanel({ graph, className, autoSend }: { g
 
   useEffect(() => {
     if (autoSend) {
-      void append({ role: 'user', content: [{ type: 'text', text: autoSend }] })
+      void sendMessage({ text: autoSend })
     }
   }, [autoSend])
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!input.trim()) return
-    void append({ role: 'user', content: [{ type: 'text', text: input }] })
-    setInput('')
+    if (!text.trim()) return
+    void sendMessage({ text })
+    setText('')
   }
 
   return (
@@ -55,13 +57,12 @@ export default function WorkflowRunChatPanel({ graph, className, autoSend }: { g
       </div>
       <div className="p-3 border-t">
         <PromptInput onSubmit={onSubmit}>
-          <PromptInputTextarea value={input} onChange={(e) => setInput(e.target.value)} />
+          <PromptInputTextarea value={text} onChange={(e) => setText(e.target.value)} />
           <PromptInputToolbar>
-            <PromptInputSubmit status={status as any} disabled={!input} />
+            <PromptInputSubmit status={status as any} disabled={!text} />
           </PromptInputToolbar>
         </PromptInput>
       </div>
     </div>
   )
 }
-
