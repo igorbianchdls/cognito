@@ -1,23 +1,13 @@
 'use client'
 
-import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
-import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
-import PageHeader from '@/components/modulos/PageHeader'
+import DashboardLayout from '@/components/modulos/DashboardLayout'
 
 export default function CRMDashboardPage() {
   return (
-    <SidebarProvider>
-      <SidebarShadcn />
-      <SidebarInset className="min-h-screen flex flex-col overflow-y-auto" style={{ background: '#f8f9fa' }}>
-        <div style={{ background: 'white', paddingBottom: 16 }}>
-          <PageHeader
-            title="Dashboard CRM"
-            subtitle="Visão geral do relacionamento com clientes"
-            titleFontFamily="var(--font-crimson-text)"
-          />
-        </div>
-
-        <div className="flex-1 p-6">
+    <DashboardLayout
+      title="Dashboard CRM"
+      subtitle="Visão geral do relacionamento com clientes"
+    >
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             {/* Card: Oportunidades Abertas */}
             <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
@@ -158,8 +148,6 @@ export default function CRMDashboardPage() {
               </div>
             </div>
           </div>
-        </div>
-      </SidebarInset>
-    </SidebarProvider>
+    </DashboardLayout>
   )
 }

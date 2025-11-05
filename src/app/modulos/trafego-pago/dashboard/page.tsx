@@ -1,23 +1,13 @@
 'use client'
 
-import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
-import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
-import PageHeader from '@/components/modulos/PageHeader'
+import DashboardLayout from '@/components/modulos/DashboardLayout'
 
 export default function TrafegoPagoDashboardPage() {
   return (
-    <SidebarProvider>
-      <SidebarShadcn />
-      <SidebarInset className="min-h-screen flex flex-col overflow-y-auto" style={{ background: '#f8f9fa' }}>
-        <div style={{ background: 'white', paddingBottom: 16 }}>
-          <PageHeader
-            title="Dashboard de Tráfego Pago"
-            subtitle="Visão geral das campanhas de anúncios"
-            titleFontFamily="var(--font-crimson-text)"
-          />
-        </div>
-
-        <div className="flex-1 p-6">
+    <DashboardLayout
+      title="Dashboard de Tráfego Pago"
+      subtitle="Visão geral das campanhas de anúncios"
+    >
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             {/* Card: Investimento Total */}
             <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
@@ -158,8 +148,6 @@ export default function TrafegoPagoDashboardPage() {
               </div>
             </div>
           </div>
-        </div>
-      </SidebarInset>
-    </SidebarProvider>
+    </DashboardLayout>
   )
 }
