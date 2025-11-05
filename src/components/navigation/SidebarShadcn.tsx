@@ -56,8 +56,8 @@ const navigationData = {
       isActive: false, // Will be set dynamically
     },
     {
-      title: "Workflows",
-      url: "/workflows",
+      title: "Agentes",
+      url: "/agentes",
       icon: LayoutGrid,
     },
     {

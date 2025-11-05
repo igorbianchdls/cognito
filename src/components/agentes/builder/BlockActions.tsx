@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { MoreHorizontal, Copy, Trash2 } from "lucide-react"
 
-export default function NodeActions({
+export default function BlockActions({
   onDelete,
   onDuplicate,
 }: {
