@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import type { Block, AgentBlockConfig, ToolBlockConfig, ConditionBlockConfig, ResponseBlockConfig } from "@/types/agentes/builder"
+import type { Block, AgentBlockConfig, ToolBlockConfig, ConditionBlockConfig, ResponseBlockConfig, StepBlockConfig } from "@/types/agentes/builder"
 import { Bot, Wrench, GitBranch, MessageSquareText } from "lucide-react"
 
 type TabKey = 'geral' | 'config'
@@ -119,6 +119,35 @@ export default function PropertiesPanel({ block, onChange, onDelete }: { block: 
               <div className="space-y-2">
                 <label className="text-xs text-gray-600">Template de resposta</label>
                 <Textarea value={(cfgUnknown as Partial<ResponseBlockConfig>).template || ''} onChange={(e) => onChange({ config: { ...(cfgUnknown as Partial<ResponseBlockConfig>), template: e.target.value } })} rows={6} placeholder="ex: {{output}}" />
+              </div>
+            </>
+          ) : null}
+          {block.kind === 'step' ? (
+            <>
+              <div className="space-y-2">
+                <label className="text-xs text-gray-600">Max steps</label>
+                <Input type="number" min={1} max={20} className="h-8" value={String((cfgUnknown as Partial<StepBlockConfig>).maxSteps ?? '')} onChange={(e) => onChange({ config: { ...(cfgUnknown as Partial<StepBlockConfig>), maxSteps: e.currentTarget.value ? Number(e.currentTarget.value) : undefined } })} placeholder="ex: 3" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs text-gray-600">Tool choice</label>
+                <Select value={(cfgUnknown as Partial<StepBlockConfig>).toolChoice || 'auto'} onValueChange={(v) => onChange({ config: { ...(cfgUnknown as Partial<StepBlockConfig>), toolChoice: v as StepBlockConfig['toolChoice'] } })}>
+                  <SelectTrigger className="h-8 w-full"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="auto">auto</SelectItem>
+                    <SelectItem value="none">none</SelectItem>
+                    <SelectItem value="required">required</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs text-gray-600">prepareStep</label>
+                <Select value={String((cfgUnknown as Partial<StepBlockConfig>).prepareStepEnabled ?? false)} onValueChange={(v) => onChange({ config: { ...(cfgUnknown as Partial<StepBlockConfig>), prepareStepEnabled: v === 'true' } })}>
+                  <SelectTrigger className="h-8 w-full"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="false">desativado</SelectItem>
+                    <SelectItem value="true">ativado</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </>
           ) : null}

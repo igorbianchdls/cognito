@@ -35,6 +35,13 @@ export interface ResponseBlockConfig {
   template?: string
 }
 
+export interface StepBlockConfig {
+  maxSteps?: number
+  toolChoice?: 'auto' | 'none' | 'required'
+  prepareStepEnabled?: boolean
+  notes?: string
+}
+
 export interface Block {
   id: string
   kind: BlockKind

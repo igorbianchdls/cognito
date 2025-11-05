@@ -1,5 +1,5 @@
 import type { Graph } from '@/types/agentes/builder'
-import { getFirstAgent, stringifyGraph, tsStringLiteral } from './helpers'
+import { getFirstAgent, stringifyGraph, tsStringLiteral, getStepSettings } from './helpers'
 
 export function genRouteTs(graph: Graph, slug: string): string {
   const agent = getFirstAgent(graph) || {}
@@ -10,7 +10,7 @@ export function genRouteTs(graph: Graph, slug: string): string {
   const provider = model.includes('/') ? model.split('/')[0] : 'anthropic'
   const modelName = model.includes('/') ? model.split('/').slice(1).join('/') : model
   const importOpenAI = provider === 'openai'
-  const stepCount = graph.blocks.filter(b => b.kind === 'step').length
+  const step = getStepSettings(graph)
 
   const imports = `import { NextResponse } from 'next/server'
 import { generateText } from 'ai'
@@ -19,6 +19,7 @@ import { anthropic } from '@ai-sdk/anthropic'${importOpenAI ? "\nimport { openai
   return `// Arquivo gerado automaticamente pelo Agent Builder (não editar manualmente)
 // slug: ${slug}
 ${imports}
+import type { PrepareStepFunction } from 'ai'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -35,13 +36,16 @@ export async function POST(request: Request) {
     const body = await request.json().catch(() => ({})) as { message?: string; temperature?: number }
     const prompt = String(body?.message ?? '')
     const temperature = typeof body?.temperature === 'number' ? body.temperature : ${defaultTemp}
+    ${step.prepareStepEnabled ? `const prepareStep: PrepareStepFunction = ({ steps, stepNumber, model, messages }) => { /* TODO: customize step */ return undefined }` : ''}
     const { text } = await generateText({
       model: selectModel(),
       system: "${sys}",
       prompt,
       temperature,
-      // Passo-a-passo gerado pelo builder (STEP nodes): ${'${'}String(${stepCount})${'}'}
-      ${stepCount > 0 ? `maxToolRoundtrips: ${stepCount},` : ''}
+      // Passo-a-passo gerado pelo builder (STEP nodes): ${'${'}String(${step.count})${'}'}
+      ${step.count > 0 ? `maxToolRoundtrips: ${step.maxSteps ?? step.count},` : ''}
+      ${step.toolChoice && step.toolChoice !== 'auto' ? `toolChoice: '${step.toolChoice}',` : ''}
+      ${step.prepareStepEnabled ? `prepareStep,` : ''}
       ${provider === 'anthropic' ? `providerOptions: { anthropic: { thinking: { type: 'enabled', budgetTokens: 8000 } } },` : ''}
     })
     return NextResponse.json({ reply: text })

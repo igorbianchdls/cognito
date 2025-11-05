@@ -1,4 +1,4 @@
-import type { Graph, Block, BlockKind, AgentBlockConfig, ToolBlockConfig, ResponseBlockConfig, ConditionBlockConfig } from '@/types/agentes/builder'
+import type { Graph, Block, BlockKind, AgentBlockConfig, ToolBlockConfig, ResponseBlockConfig, ConditionBlockConfig, StepBlockConfig } from '@/types/agentes/builder'
 
 export function slugify(input: string): string {
   return input
@@ -61,6 +61,19 @@ export function stringifyGraph(graph: Graph): string {
   // Serialize with stable order
   const replacer = (_key: string, value: unknown) => value
   return JSON.stringify(graph, replacer, 2)
+}
+
+export function getStepSettings(graph: Graph): { maxSteps?: number; toolChoice?: 'auto' | 'none' | 'required'; prepareStepEnabled?: boolean; count: number } {
+  const steps = graph.blocks.filter(b => b.kind === 'step')
+  const count = steps.length
+  if (steps.length === 0) return { count }
+  const cfg = (steps[0].config || {}) as Partial<StepBlockConfig>
+  return {
+    count,
+    maxSteps: cfg.maxSteps,
+    toolChoice: cfg.toolChoice,
+    prepareStepEnabled: cfg.prepareStepEnabled,
+  }
 }
 
 export function tsStringLiteral(value: string): string {
