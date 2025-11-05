@@ -14,7 +14,6 @@ import type { NodeData } from '@/types/agentes/flow'
 import { flowToGraph } from '@/components/agentes/builder/flow/serialization'
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import CodePreview from "@/components/agentes/codegen/CodePreview"
 
