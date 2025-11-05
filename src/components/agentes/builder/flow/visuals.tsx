@@ -1,0 +1,56 @@
+"use client"
+
+import React from 'react'
+import type { Block } from '@/types/agentes/builder'
+import {
+  Bot,
+  CircleStop,
+  FileText,
+  FileSearch,
+  ShieldCheck,
+  Settings2,
+  GitBranch,
+  RefreshCw,
+  UserCheck,
+  Wand2,
+  ToggleLeft,
+  Wrench,
+} from 'lucide-react'
+
+export function getVisualForBlock(block: Block): {
+  icon: React.ReactNode
+  badgeBg: string
+  badgeColor: string
+} {
+  const baseGray = { badgeBg: '#F3F4F6', badgeColor: '#6B7280' }
+
+  switch (block.kind) {
+    case 'agente':
+      return { icon: <Bot className="w-4 h-4" />, badgeBg: '#EEF2FF', badgeColor: '#1D4ED8' }
+    case 'resposta':
+      return { icon: <CircleStop className="w-4 h-4" />, badgeBg: '#EAF7EC', badgeColor: '#059669' }
+    case 'condicao':
+      return { icon: <GitBranch className="w-4 h-4" />, badgeBg: '#FFEDD5', badgeColor: '#C2410C' }
+    case 'ferramenta': {
+      const toolId = Array.isArray((block.config as any)?.toolIds) ? (block.config as any).toolIds[0] : undefined
+      if (toolId === 'file-search') return { icon: <FileSearch className="w-4 h-4" />, badgeBg: '#FEF3C7', badgeColor: '#B45309' }
+      if (toolId === 'guardrails') return { icon: <ShieldCheck className="w-4 h-4" />, badgeBg: '#FEF3C7', badgeColor: '#B45309' }
+      if (toolId === 'mcp') return { icon: <Settings2 className="w-4 h-4" />, badgeBg: '#FEF3C7', badgeColor: '#B45309' }
+      // default ferramenta
+      return { icon: <Wrench className="w-4 h-4" />, badgeBg: '#FEF3C7', badgeColor: '#B45309' }
+    }
+    case 'nota':
+      return { icon: <FileText className="w-4 h-4" />, ...baseGray }
+    case 'loop':
+      return { icon: <RefreshCw className="w-4 h-4" />, badgeBg: '#FFEDD5', badgeColor: '#C2410C' }
+    case 'aprovacao':
+      return { icon: <UserCheck className="w-4 h-4" />, badgeBg: '#FFEDD5', badgeColor: '#C2410C' }
+    case 'transform':
+      return { icon: <Wand2 className="w-4 h-4" />, badgeBg: '#F3E8FF', badgeColor: '#7E22CE' }
+    case 'setstate':
+      return { icon: <ToggleLeft className="w-4 h-4" />, badgeBg: '#F3E8FF', badgeColor: '#7E22CE' }
+    default:
+      return { icon: <FileText className="w-4 h-4" />, ...baseGray }
+  }
+}
+
