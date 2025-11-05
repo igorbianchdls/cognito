@@ -131,16 +131,40 @@ export function NavModulos() {
               <span>Produtos</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              tooltip="Vendas"
-              onClick={() => router.push("/modulos/vendas")}
-              isActive={pathname.startsWith("/modulos/vendas")}
-            >
-              <ShoppingCart />
-              <span>Vendas</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+          <Collapsible
+            key="vendas"
+            asChild
+            defaultOpen={pathname.startsWith("/modulos/vendas")}
+            className="group/collapsible"
+          >
+            <SidebarMenuItem>
+              <CollapsibleTrigger asChild>
+                <SidebarMenuButton tooltip="Vendas">
+                  <ShoppingCart />
+                  <span>Vendas</span>
+                  <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                </SidebarMenuButton>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <SidebarMenuSub>
+                  <SidebarMenuSubItem>
+                    <SidebarMenuSubButton asChild isActive={pathname === "/modulos/vendas"}>
+                      <a href="/modulos/vendas">
+                        <span>Gestão</span>
+                      </a>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                  <SidebarMenuSubItem>
+                    <SidebarMenuSubButton asChild isActive={pathname === "/modulos/vendas/dashboard"}>
+                      <a href="/modulos/vendas/dashboard">
+                        <span>Dashboard</span>
+                      </a>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                </SidebarMenuSub>
+              </CollapsibleContent>
+            </SidebarMenuItem>
+          </Collapsible>
           <SidebarMenuItem>
             <SidebarMenuButton
               tooltip="CRM"
