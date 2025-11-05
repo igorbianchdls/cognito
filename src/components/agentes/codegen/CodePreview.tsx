@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -10,9 +10,13 @@ import { slugify } from '@/app/agentes/(internal)/codegen/helpers'
 
 export default function CodePreview({ graph, initialSlug }: { graph: Graph; initialSlug?: string }) {
   const [slug, setSlug] = useState<string>(initialSlug && initialSlug.trim() ? slugify(initialSlug) : 'agente-visual')
+  useEffect(() => {
+    setSlug(initialSlug && initialSlug.trim() ? slugify(initialSlug) : 'agente-visual')
+  }, [initialSlug])
   const [active, setActive] = useState<string>('route.ts')
 
-  const bundle = useMemo(() => generateCode(graph, { slug, includeRoute: true, includeJson: true }), [graph, slug])
+  const graphKey = useMemo(() => JSON.stringify(graph), [graph])
+  const bundle = useMemo(() => generateCode(graph, { slug, includeRoute: true, includeJson: true }), [graphKey, slug])
   const files = bundle.files
 
   const current = files.find(f => f.path.endsWith(active)) || files[0]
