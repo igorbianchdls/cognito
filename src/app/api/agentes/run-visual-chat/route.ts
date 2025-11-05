@@ -1,4 +1,4 @@
-import { convertToModelMessages, streamText } from 'ai'
+import { convertToModelMessages, streamText, type UIMessage } from 'ai'
 import { NextResponse } from 'next/server'
 import type { Graph, AgentBlockConfig, StepBlockConfig } from '@/types/agentes/builder'
 import { anthropic } from '@ai-sdk/anthropic'
@@ -18,7 +18,7 @@ function selectModel(providerModel?: string) {
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json() as { graph: Graph; messages: any[] }
+    const body = await req.json() as { graph: Graph; messages: UIMessage[] }
     const { graph, messages } = body
     if (!graph || !messages) return NextResponse.json({ error: 'Missing graph or messages' }, { status: 400 })
 
@@ -46,4 +46,3 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: msg }, { status: 500 })
   }
 }
-
