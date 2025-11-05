@@ -1,26 +1,38 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
-import { Bot, Wrench, GitBranch, MessageSquareText } from "lucide-react"
 import type { BlockKind } from "@/types/agentes/builder"
+import PaletteSection from "./palette/PaletteSection"
+import PaletteItem from "./palette/PaletteItem"
+import { Bot, CircleStop, FileText, FileSearch, ShieldCheck, Settings2, GitBranch, RefreshCw, UserCheck, Wand2, ToggleLeft } from "lucide-react"
 
-export default function BlockPalette({ onAdd }: { onAdd: (kind: BlockKind) => void }) {
+export default function BlockPalette({ onAdd }: { onAdd: (type: BlockKind) => void }) {
   return (
-    <div className="p-3 space-y-2">
-      <div className="px-2 pb-2 text-xs font-medium text-gray-600">Blocos</div>
-      <div className="grid grid-cols-1 gap-2">
-        <Button variant="outline" className="justify-start gap-2" draggable onDragStart={(e) => e.dataTransfer.setData('application/x-block-kind', 'agente')} onClick={() => onAdd('agente')}>
-          <Bot className="w-4 h-4" /> Agente
-        </Button>
-        <Button variant="outline" className="justify-start gap-2" draggable onDragStart={(e) => e.dataTransfer.setData('application/x-block-kind', 'ferramenta')} onClick={() => onAdd('ferramenta')}>
-          <Wrench className="w-4 h-4" /> Ferramenta
-        </Button>
-        <Button variant="outline" className="justify-start gap-2" draggable onDragStart={(e) => e.dataTransfer.setData('application/x-block-kind', 'condicao')} onClick={() => onAdd('condicao')}>
-          <GitBranch className="w-4 h-4" /> Condição
-        </Button>
-        <Button variant="outline" className="justify-start gap-2" draggable onDragStart={(e) => e.dataTransfer.setData('application/x-block-kind', 'resposta')} onClick={() => onAdd('resposta')}>
-          <MessageSquareText className="w-4 h-4" /> Resposta
-        </Button>
+    <div className="m-3 bg-white rounded-2xl border border-gray-200 shadow-sm">
+      <PaletteSection title="Core" />
+      <div className="px-2">
+        <PaletteItem icon={<Bot className="w-4 h-4" />} label="Agent" badgeBg="#EEF2FF" badgeColor="#1D4ED8" kind="agente" onAdd={onAdd} />
+        <PaletteItem icon={<CircleStop className="w-4 h-4" />} label="End" badgeBg="#EAF7EC" badgeColor="#059669" kind="resposta" onAdd={onAdd} />
+        <PaletteItem icon={<FileText className="w-4 h-4" />} label="Note" badgeBg="#F3F4F6" badgeColor="#6B7280" kind="nota" onAdd={onAdd} />
+      </div>
+
+      <PaletteSection title="Tools" />
+      <div className="px-2">
+        <PaletteItem icon={<FileSearch className="w-4 h-4" />} label="File search" badgeBg="#FEF3C7" badgeColor="#B45309" kind="ferramenta" onAdd={onAdd} />
+        <PaletteItem icon={<ShieldCheck className="w-4 h-4" />} label="Guardrails" badgeBg="#FEF3C7" badgeColor="#B45309" kind="ferramenta" onAdd={onAdd} />
+        <PaletteItem icon={<Settings2 className="w-4 h-4" />} label="MCP" badgeBg="#FEF3C7" badgeColor="#B45309" kind="ferramenta" onAdd={onAdd} />
+      </div>
+
+      <PaletteSection title="Logic" />
+      <div className="px-2">
+        <PaletteItem icon={<GitBranch className="w-4 h-4" />} label="If / else" badgeBg="#FFEDD5" badgeColor="#C2410C" kind="condicao" onAdd={onAdd} />
+        <PaletteItem icon={<RefreshCw className="w-4 h-4" />} label="While" badgeBg="#FFEDD5" badgeColor="#C2410C" kind="loop" onAdd={onAdd} />
+        <PaletteItem icon={<UserCheck className="w-4 h-4" />} label="User approval" badgeBg="#FFEDD5" badgeColor="#C2410C" kind="aprovacao" onAdd={onAdd} />
+      </div>
+
+      <PaletteSection title="Data" />
+      <div className="px-2 pb-3">
+        <PaletteItem icon={<Wand2 className="w-4 h-4" />} label="Transform" badgeBg="#F3E8FF" badgeColor="#7E22CE" kind="transform" onAdd={onAdd} />
+        <PaletteItem icon={<ToggleLeft className="w-4 h-4" />} label="Set state" badgeBg="#F3E8FF" badgeColor="#7E22CE" kind="setstate" onAdd={onAdd} />
       </div>
     </div>
   )

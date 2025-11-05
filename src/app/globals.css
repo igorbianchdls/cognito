@@ -310,3 +310,9 @@ body:has([data-page="nexus"]) {
   font-family: var(--font-inter) !important;
   letter-spacing: -0.02em !important;
 }
+
+/* React Flow: highlight selected edge */
+.react-flow__edge.selected .react-flow__edge-path {
+  stroke: var(--destructive);
+  stroke-width: 2;
+}

@@ -1,4 +1,14 @@
-export type BlockKind = 'agente' | 'ferramenta' | 'condicao' | 'resposta' | 'inicio'
+export type BlockKind =
+  | 'agente'
+  | 'ferramenta'
+  | 'condicao'
+  | 'resposta'
+  | 'inicio'
+  | 'nota'
+  | 'loop'
+  | 'aprovacao'
+  | 'transform'
+  | 'setstate'
 
 export interface Branch {
   label: string
