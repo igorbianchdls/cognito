@@ -5,6 +5,7 @@ export function genRouteTs(graph: Graph, slug: string): string {
   const agent = getFirstAgent(graph) || {}
   const model = String(agent.model || 'anthropic/claude-3-5-sonnet-latest')
   const sys = tsStringLiteral(agent.systemPrompt || '')
+  const defaultTemp = (typeof agent.temperature === 'number' && !Number.isNaN(agent.temperature)) ? agent.temperature : 0.2
 
   const provider = model.includes('/') ? model.split('/')[0] : 'anthropic'
   const modelName = model.includes('/') ? model.split('/').slice(1).join('/') : model
@@ -32,7 +33,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json().catch(() => ({})) as { message?: string; temperature?: number }
     const prompt = String(body?.message ?? '')
-    const temperature = typeof body?.temperature === 'number' ? body.temperature : 0.2
+    const temperature = typeof body?.temperature === 'number' ? body.temperature : ${defaultTemp}
     const { text } = await generateText({
       model: selectModel(),
       system: "${sys}",

@@ -5,6 +5,7 @@ import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import type { Block, AgentBlockConfig, ToolBlockConfig, ConditionBlockConfig, ResponseBlockConfig } from "@/types/agentes/builder"
 import { Bot, Wrench, GitBranch, MessageSquareText } from "lucide-react"
 
@@ -68,7 +69,28 @@ export default function PropertiesPanel({ block, onChange, onDelete }: { block: 
             <>
               <div className="space-y-2">
                 <label className="text-xs text-gray-600">Modelo</label>
-                <Input className="h-8" value={(cfgUnknown as Partial<AgentBlockConfig>).model || ''} onChange={(e) => onChange({ config: { ...(cfgUnknown as Partial<AgentBlockConfig>), model: e.target.value } })} placeholder="ex: anthropic/claude-3-5-sonnet" />
+                <Select value={(cfgUnknown as Partial<AgentBlockConfig>).model || 'anthropic/claude-3-5-sonnet-latest'} onValueChange={(v) => onChange({ config: { ...(cfgUnknown as Partial<AgentBlockConfig>), model: v } })}>
+                  <SelectTrigger className="h-8 w-full"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="anthropic/claude-3-5-sonnet-latest">Anthropic · Claude 3.5 Sonnet</SelectItem>
+                    <SelectItem value="anthropic/claude-3-haiku-latest">Anthropic · Claude 3 Haiku</SelectItem>
+                    <SelectItem value="openai/gpt-4o-mini">OpenAI · GPT-4o mini</SelectItem>
+                    <SelectItem value="openai/gpt-4o">OpenAI · GPT-4o</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs text-gray-600">Temperatura</label>
+                <Select value={String((cfgUnknown as Partial<AgentBlockConfig>).temperature ?? 0.2)} onValueChange={(v) => onChange({ config: { ...(cfgUnknown as Partial<AgentBlockConfig>), temperature: Number(v) } })}>
+                  <SelectTrigger className="h-8 w-full"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0.0">0.0 (determinístico)</SelectItem>
+                    <SelectItem value="0.2">0.2</SelectItem>
+                    <SelectItem value="0.5">0.5</SelectItem>
+                    <SelectItem value="0.7">0.7</SelectItem>
+                    <SelectItem value="1.0">1.0 (criativo)</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
                 <label className="text-xs text-gray-600">Instruções (system prompt)</label>

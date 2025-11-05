@@ -25,11 +25,11 @@ export function collectTools(graph: Graph): string[] {
   return Array.from(tools)
 }
 
-export function getFirstAgent(graph: Graph): { model?: string; systemPrompt?: string } | null {
+export function getFirstAgent(graph: Graph): { model?: string; systemPrompt?: string; temperature?: number } | null {
   const block = graph.blocks.find(b => b.kind === 'agente')
   if (!block) return null
   const cfg = (block.config || {}) as Partial<AgentBlockConfig>
-  return { model: cfg.model, systemPrompt: cfg.systemPrompt }
+  return { model: cfg.model, systemPrompt: cfg.systemPrompt, temperature: cfg.temperature }
 }
 
 export function getResponseTemplate(graph: Graph): string {
@@ -70,4 +70,3 @@ export function tsStringLiteral(value: string): string {
     .replace(/\t/g, '\\t')
     .replace(/"/g, '\\"')
 }
-

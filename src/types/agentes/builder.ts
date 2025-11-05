@@ -19,6 +19,7 @@ export interface Branch {
 export interface AgentBlockConfig {
   model?: string
   systemPrompt?: string
+  temperature?: number
 }
 
 export interface ToolBlockConfig {
