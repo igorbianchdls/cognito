@@ -7,7 +7,7 @@ import BlockPalette from "@/components/agentes/builder/BlockPalette"
 import FlowCanvas from "@/components/agentes/builder/flow/FlowCanvas"
 import { ReactFlowProvider } from 'reactflow'
 import PropertiesPanel from "@/components/agentes/builder/PropertiesPanel"
-import RunPanel from "@/components/agentes/run/RunPanel"
+import WorkflowRightPanel from "@/components/workflows/exec/WorkflowRightPanel"
 import type { Block, BlockKind } from "@/types/agentes/builder"
 import type { Node, Edge } from 'reactflow'
 import type { NodeData } from '@/types/agentes/flow'
@@ -37,7 +37,6 @@ export default function NewAgentPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const selectedBlock = useMemo(() => nodes.find(n => n.id === selectedId)?.data.block || null, [nodes, selectedId])
   const [showCode, setShowCode] = useState(false)
-  const [rightTab, setRightTab] = useState<'props' | 'exec'>('props')
   const [runTrigger, setRunTrigger] = useState(0)
 
   const addBlock = (payload: { kind: BlockKind; name?: string; toolId?: string }) => {
@@ -101,7 +100,7 @@ export default function NewAgentPage() {
           <input className="text-xl font-semibold outline-none bg-transparent" value={name} onChange={(e) => setName(e.target.value)} />
           <div className="flex items-center gap-2">
             <Button variant="outline" onClick={() => setShowCode(true)}>Código</Button>
-            <Button variant="outline" onClick={() => { setRightTab('exec'); setRunTrigger(v => v + 1) }}>Run</Button>
+            <Button variant="outline" onClick={() => { setRunTrigger(v => v + 1) }}>Run</Button>
             <Button variant="outline" onClick={handleTest}>Testar</Button>
           </div>
         </div>
@@ -115,26 +114,18 @@ export default function NewAgentPage() {
                 <FlowCanvas nodes={nodes} setNodes={setNodes} edges={edges} setEdges={setEdges} onSelectNode={setSelectedId} />
               </ReactFlowProvider>
             </div>
-            <div className="w-96 h-full overflow-auto border-l bg-white custom-scrollbar">
-              <Tabs value={rightTab} onValueChange={(v) => setRightTab(v as 'props' | 'exec')} className="flex-1 flex flex-col">
-                <div className="px-4 pt-2">
-                  <TabsList variant="underline">
-                    <TabsTrigger value="props">Propriedades</TabsTrigger>
-                    <TabsTrigger value="exec">Execução</TabsTrigger>
-                  </TabsList>
-                </div>
-                <TabsContent value="props" className="flex-1 overflow-auto">
-                  <PropertiesPanel
-                    block={selectedBlock}
-                    onChange={updateBlock}
-                    onDelete={removeSelected}
-                  />
-                </TabsContent>
-                <TabsContent value="exec" className="flex-1 overflow-auto">
-                  <RunPanel graph={flowToGraph(nodes, edges)} triggerRun={runTrigger} />
-                </TabsContent>
-              </Tabs>
-            </div>
+            <WorkflowRightPanel
+              className="w-96 h-full overflow-auto border-l bg-white custom-scrollbar"
+              propertiesSlot={(
+                <PropertiesPanel
+                  block={selectedBlock}
+                  onChange={updateBlock}
+                  onDelete={removeSelected}
+                />
+              )}
+              graph={flowToGraph(nodes, edges)}
+              triggerRun={runTrigger}
+            />
           </div>
         </div>
       </SidebarInset>
