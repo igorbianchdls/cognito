@@ -1,7 +1,7 @@
 "use client"
 
 import React from 'react'
-import type { Block } from '@/types/agentes/builder'
+import type { Block, ToolBlockConfig } from '@/types/agentes/builder'
 import {
   Bot,
   CircleStop,
@@ -32,7 +32,8 @@ export function getVisualForBlock(block: Block): {
     case 'condicao':
       return { icon: <GitBranch className="w-4 h-4" />, badgeBg: '#FFEDD5', badgeColor: '#C2410C' }
     case 'ferramenta': {
-      const toolId = Array.isArray((block.config as any)?.toolIds) ? (block.config as any).toolIds[0] : undefined
+      const cfg = (block.config || {}) as Partial<ToolBlockConfig>
+      const toolId = Array.isArray(cfg.toolIds) ? cfg.toolIds[0] : undefined
       if (toolId === 'file-search') return { icon: <FileSearch className="w-4 h-4" />, badgeBg: '#FEF3C7', badgeColor: '#B45309' }
       if (toolId === 'guardrails') return { icon: <ShieldCheck className="w-4 h-4" />, badgeBg: '#FEF3C7', badgeColor: '#B45309' }
       if (toolId === 'mcp') return { icon: <Settings2 className="w-4 h-4" />, badgeBg: '#FEF3C7', badgeColor: '#B45309' }
@@ -53,4 +54,3 @@ export function getVisualForBlock(block: Block): {
       return { icon: <FileText className="w-4 h-4" />, ...baseGray }
   }
 }
-
