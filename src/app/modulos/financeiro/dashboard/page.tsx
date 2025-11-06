@@ -2,7 +2,12 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import DashboardLayout from '@/components/modulos/DashboardLayout'
-import { ArrowDownCircle, ArrowUpCircle, AlertTriangle, BarChart3, Wallet, Clock, Star, CalendarCheck } from 'lucide-react'
+import { ArrowDownCircle, ArrowUpCircle, AlertTriangle, BarChart3, Wallet, Clock, Star, CalendarCheck, Calendar as CalendarIcon } from 'lucide-react'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Button } from '@/components/ui/button'
+import { Calendar } from '@/components/ui/calendar'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import type { DateRange } from 'react-day-picker'
 
 type BaseRow = {
   valor_total?: number | string
@@ -86,6 +91,9 @@ export default function FinanceiroDashboardPage() {
   const [peRows, setPeRows] = useState<EfetuadoRow[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // Header filters
+  const [dateRange, setDateRange] = useState<DateRange | undefined>()
+  const [dataFilter, setDataFilter] = useState<string>('todos')
 
   // Typography controls
   const [fonts, setFonts] = useState({
@@ -137,6 +145,54 @@ export default function FinanceiroDashboardPage() {
     fontSize: typeof fonts.headerSubtitle.size === 'number' ? `${fonts.headerSubtitle.size}px` : undefined,
     textTransform: fonts.headerSubtitle.transform === 'uppercase' ? 'uppercase' : 'none',
   }), [fonts.headerSubtitle])
+
+  // Header right actions (date range + generic data filter)
+  const rangeLabel = useMemo(() => {
+    if (dateRange?.from && dateRange?.to) {
+      const fmt = (d: Date) => d.toLocaleDateString('pt-BR')
+      return `${fmt(dateRange.from)} - ${fmt(dateRange.to)}`
+    }
+    if (dateRange?.from) {
+      const fmt = (d: Date) => d.toLocaleDateString('pt-BR')
+      return `${fmt(dateRange.from)}`
+    }
+    return 'Selecionar período'
+  }, [dateRange])
+
+  const headerActions = (
+    <div className="flex items-center gap-2">
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button variant="outline" size="sm" className="h-9 px-3">
+            <CalendarIcon className="mr-2 h-4 w-4" />
+            <span className="text-xs whitespace-nowrap">{rangeLabel}</span>
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent align="end" className="p-2 w-auto">
+          <Calendar
+            mode="range"
+            selected={dateRange}
+            onSelect={setDateRange}
+            numberOfMonths={2}
+            captionLayout="dropdown-buttons"
+            showOutsideDays
+            initialFocus
+          />
+        </PopoverContent>
+      </Popover>
+      <Select value={dataFilter} onValueChange={setDataFilter}>
+        <SelectTrigger className="h-9 w-[160px]">
+          <SelectValue placeholder="Filtro" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="todos">Todos</SelectItem>
+          <SelectItem value="pendentes">Pendentes</SelectItem>
+          <SelectItem value="vencidos">Vencidos</SelectItem>
+          <SelectItem value="pagos">Pagos</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+  )
 
   useEffect(() => {
     let cancelled = false
@@ -450,11 +506,13 @@ export default function FinanceiroDashboardPage() {
 
   return (
     <DashboardLayout
-      title="Dashboard Financeiro"
-      subtitle="Foco diário: Contas a Receber e a Pagar"
+      title="Olá, Igor Bianch"
+      subtitle="Você está na aba Dashboard do módulo Financeiro"
       backgroundColor="#ffffff"
       headerTitleStyle={styleHeaderTitle}
       headerSubtitleStyle={styleHeaderSubtitle}
+      headerActions={headerActions}
+      userAvatarUrl="https://i.pravatar.cc/80?img=12"
     >
       {loading ? (
         <div className="p-6 text-sm text-gray-500">Carregando dados…</div>
