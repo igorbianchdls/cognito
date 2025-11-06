@@ -4,7 +4,7 @@ import type { Graph, AgentBlockConfig, StepBlockConfig } from '@/types/agentes/b
 import { anthropic } from '@ai-sdk/anthropic'
 import { openai } from '@ai-sdk/openai'
 import { collectTools } from '@/app/agentes/(internal)/codegen/helpers'
-import { getToolsForIds } from '@/app/agentes/(internal)/runtime/tools'
+import { getToolsForIds, buildBuilderToolGuide } from '@/app/agentes/(internal)/runtime/tools'
 import * as builderTools from '@/tools/agentbuilder'
 
 export const runtime = 'nodejs'
@@ -44,9 +44,11 @@ export async function POST(req: Request) {
       tools = { ...fromBuilder, ...fallback }
     }
 
+    const system = [String(agent.systemPrompt || ''), buildBuilderToolGuide(toolIds)].filter(Boolean).join('\n\n')
+
     const result = streamText({
       model: selectModel(agent.model),
-      system: String(agent.systemPrompt || ''),
+      system,
       messages: convertToModelMessages(messages),
       temperature: typeof agent.temperature === 'number' ? agent.temperature : 0.2,
       ...(tools ? { tools } : {}),

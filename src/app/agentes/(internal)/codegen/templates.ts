@@ -44,6 +44,33 @@ import { anthropic } from '@ai-sdk/anthropic'${importOpenAI ? "\nimport { openai
 
   const prepareTypeImport = step.prepareStepEnabled ? "import type { PrepareStepFunction } from 'ai'" : ""
 
+  // Build extra tool usage instructions for builder tools
+  const builderGuide = (() => {
+    const hasWeather = builderIds.includes('getWeather')
+    const hasTime = builderIds.includes('getTime')
+    if (!hasWeather && !hasTime) return ''
+    const lines: string[] = []
+    lines.push('You can call the following tools to answer user questions. Prefer calling a tool when the user asks about these topics. Return concise, helpful answers using the tool results.')
+    if (hasWeather) {
+      lines.push('Tool: getWeather\nInput JSON: { "location": "City or place name" }\nUse when: the user asks about weather for a place.\nRespond with: temperature and a short condition summary.')
+    }
+    if (hasTime) {
+      lines.push('Tool: getTime\nInput JSON: { "location"?: string, "timezone"?: string (IANA, e.g. "America/Sao_Paulo") }\nUse when: the user asks for local time.\nRespond with: local time and timezone.')
+    }
+    lines.push('If input is ambiguous, ask a brief clarifying question before calling a tool.')
+    return lines.join('\n\n')
+  })()
+
+  const systemText = ["${sys}", "${tsStringLiteral('')}"]
+    .filter(Boolean)
+    .join('\\n\\n')
+
+  const fullSystem = ["${sys}", "${tsStringLiteral('')}"].filter(Boolean).join('\\n\\n')
+
+  const sysCombined = ["${sys}", "${tsStringLiteral('')}"].filter(Boolean).join('\\n\\n')
+
+  const sysFinal = ["${sys}", "${tsStringLiteral(builderGuide)}"].filter(Boolean).join('\\n\\n')
+
   return `// Arquivo gerado automaticamente pelo Agent Builder (não editar manualmente)
 // slug: ${slug}
 ${imports}
@@ -68,7 +95,7 @@ export async function POST(request: Request) {
     ${needsStub ? `// TEST TOOLS (auto-generated for unknown ids)\n    ${testToolDecls}\n` : ''}
     const { text } = await generateText({
       model: selectModel(),
-      system: "${sys}",
+      system: "${sysFinal}",
       prompt,
       temperature,
       ${toolEntries.length ? `tools: ${toolsObjectLiteral},` : ''}

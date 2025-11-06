@@ -72,3 +72,31 @@ export function getTestToolsByIds(ids: string[]): Record<string, Tool> {
 export function getToolsForIds(ids: string[]): Record<string, Tool> {
   return TEST_TOOLS_MODE ? getTestToolsByIds(ids) : getToolsByIds(ids)
 }
+
+export function buildBuilderToolGuide(ids: string[]): string {
+  const hasWeather = ids.includes('getWeather')
+  const hasTime = ids.includes('getTime')
+  if (!hasWeather && !hasTime) return ''
+  const parts: string[] = []
+  parts.push(
+    'You can call the following tools to answer user questions. Prefer calling a tool when the user asks about these topics. Return concise, helpful answers using the tool results. '
+  )
+  if (hasWeather) {
+    parts.push(
+      `Tool: getWeather
+Input JSON: { "location": "City or place name" }
+Use when: the user asks about weather for a place.
+Respond with: temperature and a short condition summary.`
+    )
+  }
+  if (hasTime) {
+    parts.push(
+      `Tool: getTime
+Input JSON: { "location"?: string, "timezone"?: string (IANA, e.g. "America/Sao_Paulo") }
+Use when: the user asks for local time.
+Respond with: local time and timezone.`
+    )
+  }
+  parts.push('If input is ambiguous, ask a brief clarifying question before calling a tool.')
+  return parts.join('\n\n')
+}

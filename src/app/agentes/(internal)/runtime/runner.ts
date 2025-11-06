@@ -3,7 +3,7 @@ import { anthropic } from '@ai-sdk/anthropic'
 import { openai } from '@ai-sdk/openai'
 import type { Graph, AgentBlockConfig, StepBlockConfig } from '@/types/agentes/builder'
 import { collectTools } from '@/app/agentes/(internal)/codegen/helpers'
-import { getToolsForIds } from '@/app/agentes/(internal)/runtime/tools'
+import { getToolsForIds, buildBuilderToolGuide } from '@/app/agentes/(internal)/runtime/tools'
 import * as builderTools from '@/tools/agentbuilder'
 
 export type ExecOptions = {
@@ -58,9 +58,11 @@ export async function execute(graph: Graph, input: string, opts?: ExecOptions): 
     ? (() => undefined)
     : undefined
 
+  const system = [String(agent.systemPrompt || ''), buildBuilderToolGuide(toolsIds)].filter(Boolean).join('\n\n')
+
   const { text } = await generateText({
     model: selectModel(agent.model),
-    system: String(agent.systemPrompt || ''),
+    system,
     prompt: input,
     temperature,
     ...(tools ? { tools } : {}),

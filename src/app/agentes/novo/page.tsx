@@ -22,7 +22,7 @@ import CodePreview from "@/components/agentes/codegen/CodePreview"
 export default function NewAgentPage() {
   const [name, setName] = useState("Novo agente")
   const initialNodes: Node<NodeData>[] = [
-    { id: 'b1', type: 'agente', data: { block: { id: 'b1', kind: 'agente', name: 'Agente principal', config: { model: 'anthropic/claude-3-haiku-latest', systemPrompt: 'Promtp' } } }, position: { x: 100, y: 60 } },
+    { id: 'b1', type: 'agente', data: { block: { id: 'b1', kind: 'agente', name: 'Agente principal', config: { model: 'anthropic/claude-3-haiku-latest', systemPrompt: 'Você é um assistente. Use tool-calling quando necessário. Se o usuário pedir sobre clima, chame getWeather com { location }. Se pedir horário local, chame getTime com { location? e/ou timezone }. Se estiver ambíguo, peça esclarecimento antes de chamar a tool. Responda de forma concisa e útil.' } } }, position: { x: 100, y: 60 } },
     { id: 'b2', type: 'step', data: { block: { id: 'b2', kind: 'step', name: 'Step 1' } }, position: { x: 100, y: 200 } },
     { id: 'b3', type: 'step', data: { block: { id: 'b3', kind: 'step', name: 'Step 2' } }, position: { x: 100, y: 320 } },
     { id: 'b4', type: 'step', data: { block: { id: 'b4', kind: 'step', name: 'Step 3' } }, position: { x: 100, y: 440 } },
