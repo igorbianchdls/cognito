@@ -50,7 +50,7 @@ export default function NewAgentPage() {
         block: {
           id: 'b2',
           kind: 'prepareStep',
-          name: 'PrepareStep',
+          name: 'Preparar contexto e histórico',
           config: {
             compressAfterMessages: 10,
             keepLastMessages: 10,
@@ -67,7 +67,7 @@ export default function NewAgentPage() {
         block: {
           id: 'b3',
           kind: 'stopWhen',
-          name: 'StopWhen',
+          name: 'Condições de parada',
           config: {
             stepLimit: 2,
             stopOnTools: [],
@@ -79,22 +79,22 @@ export default function NewAgentPage() {
     {
       id: 'b4',
       type: 'step',
-      data: { block: { id: 'b4', kind: 'step', name: 'Step 1', config: { toolChoice: 'auto' } } },
+      data: { block: { id: 'b4', kind: 'step', name: 'Buscar dados na tabela SQL', config: { toolChoice: 'auto' } } },
       position: { x: 100, y: 420 },
     },
     {
       id: 'b6',
       type: 'step',
-      data: { block: { id: 'b6', kind: 'step', name: 'Step 2', config: { toolChoice: 'auto' } } },
+      data: { block: { id: 'b6', kind: 'step', name: 'Analisar intenção e escolher tool', config: { toolChoice: 'auto' } } },
       position: { x: 100, y: 540 },
     },
     {
       id: 'b7',
       type: 'step',
-      data: { block: { id: 'b7', kind: 'step', name: 'Step 3', config: { toolChoice: 'auto' } } },
+      data: { block: { id: 'b7', kind: 'step', name: 'Gerar resposta e formatar', config: { toolChoice: 'auto' } } },
       position: { x: 100, y: 660 },
     },
-    { id: 'b5', type: 'resposta', data: { block: { id: 'b5', kind: 'resposta', name: 'Resposta' } }, position: { x: 100, y: 780 } },
+    { id: 'b5', type: 'resposta', data: { block: { id: 'b5', kind: 'resposta', name: 'Responder ao usuário' } }, position: { x: 100, y: 780 } },
   ]
   const initialEdges: Edge[] = [
     { id: 'b1-b2', source: 'b1', target: 'b2' },
@@ -173,10 +173,8 @@ export default function NewAgentPage() {
             <div className="inline-flex items-center justify-center w-7 h-7 rounded-md border bg-yellow-100 text-yellow-800 border-yellow-200">
               <Paperclip className="w-4 h-4" />
             </div>
-            <div className="flex items-center gap-1">
-              <input className="text-[15px] font-semibold outline-none bg-transparent w-auto max-w-[40ch] pr-0" value={name} onChange={(e) => setName(e.target.value)} />
-              <Switch checked={enabled} onCheckedChange={setEnabled} className="data-[state=checked]:bg-blue-600" />
-            </div>
+            <input className="text-[15px] font-semibold outline-none bg-transparent w-auto flex-none max-w-[40ch]" value={name} onChange={(e) => setName(e.target.value)} />
+            <Switch checked={enabled} onCheckedChange={setEnabled} className="data-[state=checked]:bg-blue-600" />
           </div>
           {/* Right: Settings, Preview, Save */}
           <div className="flex items-center gap-4">
