@@ -98,7 +98,7 @@ const navigationData = {
   ],
 }
 
-export function SidebarShadcn({ bgColor, textColor, itemTextColor, style, ...props }: React.ComponentProps<typeof Sidebar> & { bgColor?: string; textColor?: string; itemTextColor?: string }) {
+export function SidebarShadcn({ bgColor, textColor, itemTextColor, sectionTitleStyle, style, ...props }: React.ComponentProps<typeof Sidebar> & { bgColor?: string; textColor?: string; itemTextColor?: string; sectionTitleStyle?: React.CSSProperties }) {
   const pathname = usePathname()
 
   // Update active state based on current path
@@ -126,11 +126,11 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, style, ...pro
         <TeamSwitcher teams={dataWithActiveState.teams} />
       </SidebarHeader>
       <SidebarContent>
-        <NavMainSimple items={dataWithActiveState.navMain} />
-        <NavModulos />
+        <NavMainSimple items={dataWithActiveState.navMain} groupLabelStyle={sectionTitleStyle} />
+        <NavModulos groupLabelStyle={sectionTitleStyle} />
         
         <SidebarGroup>
-          <SidebarGroupLabel>Integrações</SidebarGroupLabel>
+          <SidebarGroupLabel style={sectionTitleStyle}>Integrações</SidebarGroupLabel>
           <SidebarMenu>
             {navigationData.integrations.map((integration) => (
               <SidebarMenuItem key={integration.title}>

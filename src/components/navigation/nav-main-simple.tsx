@@ -13,6 +13,7 @@ import {
 
 export function NavMainSimple({
   items,
+  groupLabelStyle,
 }: {
   items: {
     title: string
@@ -20,6 +21,7 @@ export function NavMainSimple({
     icon?: LucideIcon
     isActive?: boolean
   }[]
+  groupLabelStyle?: React.CSSProperties
 }) {
   const router = useRouter()
 
@@ -29,7 +31,7 @@ export function NavMainSimple({
 
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+      <SidebarGroupLabel style={groupLabelStyle}>Navigation</SidebarGroupLabel>
       <SidebarMenu>
         {items.map((item) => (
           <SidebarMenuItem key={item.title}>

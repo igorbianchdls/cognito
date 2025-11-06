@@ -98,7 +98,9 @@ export default function FinanceiroDashboardPage() {
   // Typography controls
   const [fonts, setFonts] = useState({
     values: { family: 'Space Mono', weight: 700 as number | undefined, letterSpacing: 0 as number | undefined, color: '#111827' as string | undefined, size: 24 as number | undefined, transform: 'none' as 'none' | 'uppercase' },
-    title: { family: 'Space Mono', weight: 500 as number | undefined, letterSpacing: 0 as number | undefined, color: '#adadad' as string | undefined, size: 13 as number | undefined, transform: 'uppercase' as 'none' | 'uppercase' },
+    // Separação de títulos: KPI vs Charts
+    kpiTitle: { family: 'Space Mono', weight: 500 as number | undefined, letterSpacing: 0 as number | undefined, color: '#adadad' as string | undefined, size: 13 as number | undefined, transform: 'uppercase' as 'none' | 'uppercase' },
+    chartTitle: { family: 'Space Mono', weight: 500 as number | undefined, letterSpacing: 0 as number | undefined, color: '#adadad' as string | undefined, size: 13 as number | undefined, transform: 'uppercase' as 'none' | 'uppercase' },
     text: { family: 'Inter', weight: 400 as number | undefined, letterSpacing: 0 as number | undefined, color: '#6b7280' as string | undefined, size: 12 as number | undefined, transform: 'none' as 'none' | 'uppercase' },
     filters: { family: 'Inter', weight: 400 as number | undefined, letterSpacing: 0 as number | undefined, color: 'rgb(122, 122, 122)' as string | undefined, size: 13 as number | undefined, transform: 'none' as 'none' | 'uppercase' },
     headerTitle: { family: 'Space Mono', weight: 700 as number | undefined, letterSpacing: 0 as number | undefined, color: '#111827' as string | undefined, size: 20 as number | undefined, transform: 'uppercase' as 'none' | 'uppercase' },
@@ -107,8 +109,8 @@ export default function FinanceiroDashboardPage() {
   const [cardBorderColor, setCardBorderColor] = useState<string>('#f0f0f0')
   const [pageBgColor, setPageBgColor] = useState<string>('#ffffff')
   const [filtersIconColor, setFiltersIconColor] = useState<string>('#6b7280')
-  const [sidebarBgColor, setSidebarBgColor] = useState<string>('#fafafa')
-  const [sidebarTextColor, setSidebarTextColor] = useState<string>('#3f3f46')
+  const [sidebarBgColor, setSidebarBgColor] = useState<string>('#fdfdfd')
+  const [sidebarTextColor, setSidebarTextColor] = useState<string>('#717171')
   const [sidebarItemTextColor, setSidebarItemTextColor] = useState<string>('#0f172a')
   const styleValues = useMemo<React.CSSProperties>(() => ({
     fontFamily: fontVar(fonts.values.family),
@@ -118,14 +120,22 @@ export default function FinanceiroDashboardPage() {
     fontSize: typeof fonts.values.size === 'number' ? `${fonts.values.size}px` : undefined,
     textTransform: fonts.values.transform === 'uppercase' ? 'uppercase' : 'none',
   }), [fonts.values])
-  const styleTitle = useMemo<React.CSSProperties>(() => ({
-    fontFamily: fontVar(fonts.title.family),
-    fontWeight: fonts.title.weight as React.CSSProperties['fontWeight'],
-    letterSpacing: typeof fonts.title.letterSpacing === 'number' ? `${fonts.title.letterSpacing}px` : undefined,
-    color: fonts.title.color || undefined,
-    fontSize: typeof fonts.title.size === 'number' ? `${fonts.title.size}px` : undefined,
-    textTransform: fonts.title.transform === 'uppercase' ? 'uppercase' : 'none',
-  }), [fonts.title])
+  const styleKpiTitle = useMemo<React.CSSProperties>(() => ({
+    fontFamily: fontVar(fonts.kpiTitle.family),
+    fontWeight: fonts.kpiTitle.weight as React.CSSProperties['fontWeight'],
+    letterSpacing: typeof fonts.kpiTitle.letterSpacing === 'number' ? `${fonts.kpiTitle.letterSpacing}px` : undefined,
+    color: fonts.kpiTitle.color || undefined,
+    fontSize: typeof fonts.kpiTitle.size === 'number' ? `${fonts.kpiTitle.size}px` : undefined,
+    textTransform: fonts.kpiTitle.transform === 'uppercase' ? 'uppercase' : 'none',
+  }), [fonts.kpiTitle])
+  const styleChartTitle = useMemo<React.CSSProperties>(() => ({
+    fontFamily: fontVar(fonts.chartTitle.family),
+    fontWeight: fonts.chartTitle.weight as React.CSSProperties['fontWeight'],
+    letterSpacing: typeof fonts.chartTitle.letterSpacing === 'number' ? `${fonts.chartTitle.letterSpacing}px` : undefined,
+    color: fonts.chartTitle.color || undefined,
+    fontSize: typeof fonts.chartTitle.size === 'number' ? `${fonts.chartTitle.size}px` : undefined,
+    textTransform: fonts.chartTitle.transform === 'uppercase' ? 'uppercase' : 'none',
+  }), [fonts.chartTitle])
   const styleText = useMemo<React.CSSProperties>(() => ({
     fontFamily: fontVar(fonts.text.family),
     fontWeight: fonts.text.weight as React.CSSProperties['fontWeight'],
@@ -160,6 +170,15 @@ export default function FinanceiroDashboardPage() {
     fontSize: typeof fonts.filters.size === 'number' ? `${fonts.filters.size}px` : undefined,
     textTransform: fonts.filters.transform === 'uppercase' ? 'uppercase' : 'none',
   }), [fonts.filters])
+
+  const styleSidebarSectionTitle = useMemo<React.CSSProperties>(() => ({
+    fontFamily: fontVar(fonts.sidebarSectionTitle.family),
+    fontWeight: fonts.sidebarSectionTitle.weight as React.CSSProperties['fontWeight'],
+    letterSpacing: typeof fonts.sidebarSectionTitle.letterSpacing === 'number' ? `${fonts.sidebarSectionTitle.letterSpacing}px` : undefined,
+    color: fonts.sidebarSectionTitle.color || undefined,
+    fontSize: typeof fonts.sidebarSectionTitle.size === 'number' ? `${fonts.sidebarSectionTitle.size}px` : undefined,
+    textTransform: fonts.sidebarSectionTitle.transform === 'uppercase' ? 'uppercase' : 'none',
+  }), [fonts.sidebarSectionTitle])
 
   // Header right actions (date range + generic data filter)
   const rangeLabel = useMemo(() => {
@@ -531,6 +550,7 @@ export default function FinanceiroDashboardPage() {
       sidebarBgColor={sidebarBgColor}
       sidebarTextColor={sidebarTextColor}
       sidebarItemTextColor={sidebarItemTextColor}
+      sidebarSectionTitleStyle={styleSidebarSectionTitle}
       userAvatarUrl="https://i.pravatar.cc/80?img=12"
     >
       {loading ? (
@@ -541,22 +561,22 @@ export default function FinanceiroDashboardPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div className="bg-white p-6 rounded-lg border border-gray-100" style={{ borderColor: cardBorderColor }}>
-          <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleTitle}><ArrowDownCircle className="w-4 h-4 text-emerald-600" />A Receber Hoje</div>
+          <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleKpiTitle}><ArrowDownCircle className="w-4 h-4 text-emerald-600" />A Receber Hoje</div>
           <div className="text-2xl font-bold text-emerald-600" style={styleValues}>{formatBRL(kpis.arHoje)}</div>
           <div className="text-xs text-gray-400 mt-1" style={styleText}>Título(s) com vencimento hoje</div>
         </div>
         <div className="bg-white p-6 rounded-lg border border-gray-100" style={{ borderColor: cardBorderColor }}>
-          <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleTitle}><ArrowUpCircle className="w-4 h-4 text-rose-600" />A Pagar Hoje</div>
+          <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleKpiTitle}><ArrowUpCircle className="w-4 h-4 text-rose-600" />A Pagar Hoje</div>
           <div className="text-2xl font-bold text-rose-600" style={styleValues}>{formatBRL(kpis.apHoje)}</div>
           <div className="text-xs text-gray-400 mt-1" style={styleText}>Pagamentos previstos para hoje</div>
         </div>
         <div className="bg-white p-6 rounded-lg border border-gray-100" style={{ borderColor: cardBorderColor }}>
-          <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleTitle}><AlertTriangle className="w-4 h-4 text-orange-500" />Vencidos A Receber</div>
+          <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleKpiTitle}><AlertTriangle className="w-4 h-4 text-orange-500" />Vencidos A Receber</div>
           <div className="text-2xl font-bold text-orange-600" style={styleValues}>{formatBRL(kpis.arVencidos)}</div>
           <div className="text-xs text-gray-400 mt-1" style={styleText}>Valores atrasados</div>
         </div>
         <div className="bg-white p-6 rounded-lg border border-gray-100" style={{ borderColor: cardBorderColor }}>
-          <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleTitle}><AlertTriangle className="w-4 h-4 text-red-500" />Vencidos A Pagar</div>
+          <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleKpiTitle}><AlertTriangle className="w-4 h-4 text-red-500" />Vencidos A Pagar</div>
           <div className="text-2xl font-bold text-red-600" style={styleValues}>{formatBRL(kpis.apVencidos)}</div>
           <div className="text-xs text-gray-400 mt-1" style={styleText}>Compromissos em atraso</div>
         </div>
@@ -564,14 +584,14 @@ export default function FinanceiroDashboardPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <div className="bg-white p-6 rounded-lg border border-gray-100" style={{ borderColor: cardBorderColor }}>
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleTitle}><BarChart3 className="w-5 h-5 text-indigo-600" />Receitas vs Despesas</h3>
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><BarChart3 className="w-5 h-5 text-indigo-600" />Receitas vs Despesas</h3>
           <BarsReceitasDespesas
             items={receitasDespesas.data.map(d => ({ label: d.label, receita: d.receita, despesa: d.despesa }))}
             max={receitasDespesas.maxVal}
           />
         </div>
         <div className="bg-white p-6 rounded-lg border border-gray-100" style={{ borderColor: cardBorderColor }}>
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleTitle}><Wallet className="w-5 h-5 text-blue-600" />Saldo no final do mês</h3>
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><Wallet className="w-5 h-5 text-blue-600" />Saldo no final do mês</h3>
           <div className="flex items-center justify-between text-xs text-gray-600 mb-1" style={styleText}>
             <span>Acumulado</span>
             <span>
@@ -593,18 +613,18 @@ export default function FinanceiroDashboardPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <div className="bg-white p-6 rounded-lg border border-gray-100" style={{ borderColor: cardBorderColor }}>
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleTitle}><Clock className="w-5 h-5 text-emerald-600" />Aging A Receber</h3>
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><Clock className="w-5 h-5 text-emerald-600" />Aging A Receber</h3>
           <AgingBar data={arAging} />
         </div>
         <div className="bg-white p-6 rounded-lg border border-gray-100" style={{ borderColor: cardBorderColor }}>
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleTitle}><Clock className="w-5 h-5 text-rose-600" />Aging A Pagar</h3>
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><Clock className="w-5 h-5 text-rose-600" />Aging A Pagar</h3>
           <AgingBar data={apAging} />
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white p-6 rounded-lg border border-gray-100" style={{ borderColor: cardBorderColor }}>
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleTitle}><Star className="w-5 h-5 text-amber-500" />A Receber Prioritário</h3>
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><Star className="w-5 h-5 text-amber-500" />A Receber Prioritário</h3>
           <div className="space-y-3">
             {topReceber.length === 0 ? (
               <div className="text-sm text-gray-400" style={styleText}>Sem títulos</div>
@@ -622,7 +642,7 @@ export default function FinanceiroDashboardPage() {
           </div>
         </div>
         <div className="bg-white p-6 rounded-lg border border-gray-100" style={{ borderColor: cardBorderColor }}>
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleTitle}><CalendarCheck className="w-5 h-5 text-rose-600" />Pagamentos do Dia</h3>
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><CalendarCheck className="w-5 h-5 text-rose-600" />Pagamentos do Dia</h3>
           <div className="space-y-3">
             {pagamentosHoje.length === 0 ? (
               <div className="text-sm text-gray-400" style={styleText}>Sem pagamentos para hoje</div>
@@ -720,15 +740,15 @@ export default function FinanceiroDashboardPage() {
             </div>
           </div>
 
-          {/* Título */}
+          {/* Título (KPI) */}
           <div>
-            <div className="text-xs text-gray-500 mb-2">Título (ex.: rótulos de KPIs e títulos de gráficos)</div>
+            <div className="text-xs text-gray-500 mb-2">Título (KPI)</div>
             <div className="flex items-center gap-2 mb-2">
               <label className="text-xs text-gray-600 w-16">Fonte</label>
               <select
                 className="border rounded px-2 py-1 text-xs"
-                value={fonts.title.family}
-                onChange={(e) => setFonts((f) => ({ ...f, title: { ...f.title, family: e.target.value } }))}
+                value={fonts.kpiTitle.family}
+                onChange={(e) => setFonts((f) => ({ ...f, kpiTitle: { ...f.kpiTitle, family: e.target.value } }))}
               >
                 <option>Inter</option>
                 <option>Geist</option>
@@ -743,8 +763,8 @@ export default function FinanceiroDashboardPage() {
               <label className="text-xs text-gray-600 w-16">Caixa</label>
               <select
                 className="border rounded px-2 py-1 text-xs w-24"
-                value={fonts.title.transform}
-                onChange={(e) => setFonts((f) => ({ ...f, title: { ...f.title, transform: e.target.value as 'none' | 'uppercase' } }))}
+                value={fonts.kpiTitle.transform}
+                onChange={(e) => setFonts((f) => ({ ...f, kpiTitle: { ...f.kpiTitle, transform: e.target.value as 'none' | 'uppercase' } }))}
               >
                 <option value="none">Normal</option>
                 <option value="uppercase">UPPERCASE</option>
@@ -755,11 +775,11 @@ export default function FinanceiroDashboardPage() {
               <input
                 type="number"
                 className="border rounded px-2 py-1 text-xs w-24"
-                value={fonts.title.weight ?? 600}
+                value={fonts.kpiTitle.weight ?? 600}
                 min={100}
                 max={900}
                 step={100}
-                onChange={(e) => setFonts((f) => ({ ...f, title: { ...f.title, weight: Number(e.target.value) } }))}
+                onChange={(e) => setFonts((f) => ({ ...f, kpiTitle: { ...f.kpiTitle, weight: Number(e.target.value) } }))}
               />
             </div>
             <div className="flex items-center gap-2 mb-2">
@@ -767,11 +787,11 @@ export default function FinanceiroDashboardPage() {
               <input
                 type="number"
                 className="border rounded px-2 py-1 text-xs w-24"
-                value={fonts.title.size ?? 14}
+                value={fonts.kpiTitle.size ?? 14}
                 min={8}
                 max={48}
                 step={1}
-                onChange={(e) => setFonts((f) => ({ ...f, title: { ...f.title, size: Number(e.target.value) } }))}
+                onChange={(e) => setFonts((f) => ({ ...f, kpiTitle: { ...f.kpiTitle, size: Number(e.target.value) } }))}
               />
             </div>
             <div className="flex items-center gap-2">
@@ -779,9 +799,9 @@ export default function FinanceiroDashboardPage() {
               <input
                 type="number"
                 className="border rounded px-2 py-1 text-xs w-24"
-                value={fonts.title.letterSpacing ?? 0}
+                value={fonts.kpiTitle.letterSpacing ?? 0}
                 step={0.5}
-                onChange={(e) => setFonts((f) => ({ ...f, title: { ...f.title, letterSpacing: Number(e.target.value) } }))}
+                onChange={(e) => setFonts((f) => ({ ...f, kpiTitle: { ...f.kpiTitle, letterSpacing: Number(e.target.value) } }))}
               />
             </div>
             <div className="flex items-center gap-2 mt-2">
@@ -789,8 +809,83 @@ export default function FinanceiroDashboardPage() {
               <input
                 type="color"
                 className="border rounded w-8 h-6"
-                value={fonts.title.color || '#1f2937'}
-                onChange={(e) => setFonts((f) => ({ ...f, title: { ...f.title, color: e.target.value } }))}
+                value={fonts.kpiTitle.color || '#1f2937'}
+                onChange={(e) => setFonts((f) => ({ ...f, kpiTitle: { ...f.kpiTitle, color: e.target.value } }))}
+              />
+            </div>
+          </div>
+
+          {/* Título (Charts) */}
+          <div>
+            <div className="text-xs text-gray-500 mb-2">Título (Charts)</div>
+            <div className="flex items-center gap-2 mb-2">
+              <label className="text-xs text-gray-600 w-16">Fonte</label>
+              <select
+                className="border rounded px-2 py-1 text-xs"
+                value={fonts.chartTitle.family}
+                onChange={(e) => setFonts((f) => ({ ...f, chartTitle: { ...f.chartTitle, family: e.target.value } }))}
+              >
+                <option>Inter</option>
+                <option>Geist</option>
+                <option>Roboto Mono</option>
+                <option>Geist Mono</option>
+                <option>IBM Plex Mono</option>
+                <option>Avenir</option>
+                <option>Space Mono</option>
+              </select>
+            </div>
+            <div className="flex items-center gap-2 mb-2">
+              <label className="text-xs text-gray-600 w-16">Caixa</label>
+              <select
+                className="border rounded px-2 py-1 text-xs w-24"
+                value={fonts.chartTitle.transform}
+                onChange={(e) => setFonts((f) => ({ ...f, chartTitle: { ...f.chartTitle, transform: e.target.value as 'none' | 'uppercase' } }))}
+              >
+                <option value="none">Normal</option>
+                <option value="uppercase">UPPERCASE</option>
+              </select>
+            </div>
+            <div className="flex items-center gap-2 mb-2">
+              <label className="text-xs text-gray-600 w-16">Peso</label>
+              <input
+                type="number"
+                className="border rounded px-2 py-1 text-xs w-24"
+                value={fonts.chartTitle.weight ?? 600}
+                min={100}
+                max={900}
+                step={100}
+                onChange={(e) => setFonts((f) => ({ ...f, chartTitle: { ...f.chartTitle, weight: Number(e.target.value) } }))}
+              />
+            </div>
+            <div className="flex items-center gap-2 mb-2">
+              <label className="text-xs text-gray-600 w-16">Tamanho</label>
+              <input
+                type="number"
+                className="border rounded px-2 py-1 text-xs w-24"
+                value={fonts.chartTitle.size ?? 14}
+                min={8}
+                max={48}
+                step={1}
+                onChange={(e) => setFonts((f) => ({ ...f, chartTitle: { ...f.chartTitle, size: Number(e.target.value) } }))}
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <label className="text-xs text-gray-600 w-16">Espaço</label>
+              <input
+                type="number"
+                className="border rounded px-2 py-1 text-xs w-24"
+                value={fonts.chartTitle.letterSpacing ?? 0}
+                step={0.5}
+                onChange={(e) => setFonts((f) => ({ ...f, chartTitle: { ...f.chartTitle, letterSpacing: Number(e.target.value) } }))}
+              />
+            </div>
+            <div className="flex items-center gap-2 mt-2">
+              <label className="text-xs text-gray-600 w-16">Cor</label>
+              <input
+                type="color"
+                className="border rounded w-8 h-6"
+                value={fonts.chartTitle.color || '#1f2937'}
+                onChange={(e) => setFonts((f) => ({ ...f, chartTitle: { ...f.chartTitle, color: e.target.value } }))}
               />
             </div>
           </div>
@@ -954,6 +1049,84 @@ export default function FinanceiroDashboardPage() {
           </div>
         </div>
         <div className="mt-6">
+          <h5 className="text-xs font-semibold text-gray-700 mb-2">Sidebar — Título das Seções</h5>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <div className="text-xs text-gray-500 mb-2">Tipografia do título (ex.: Gestão, Vendas, Integrações)</div>
+              <div className="flex items-center gap-2 mb-2">
+                <label className="text-xs text-gray-600 w-20">Fonte</label>
+                <select
+                  className="border rounded px-2 py-1 text-xs"
+                  value={fonts.sidebarSectionTitle.family}
+                  onChange={(e) => setFonts((f) => ({ ...f, sidebarSectionTitle: { ...f.sidebarSectionTitle, family: e.target.value } }))}
+                >
+                  <option>Inter</option>
+                  <option>Geist</option>
+                  <option>Roboto Mono</option>
+                  <option>Geist Mono</option>
+                  <option>IBM Plex Mono</option>
+                  <option>Avenir</option>
+                  <option>Space Mono</option>
+                </select>
+              </div>
+              <div className="flex items-center gap-2 mb-2">
+                <label className="text-xs text-gray-600 w-20">Caixa</label>
+                <select
+                  className="border rounded px-2 py-1 text-xs w-28"
+                  value={fonts.sidebarSectionTitle.transform}
+                  onChange={(e) => setFonts((f) => ({ ...f, sidebarSectionTitle: { ...f.sidebarSectionTitle, transform: e.target.value as 'none' | 'uppercase' } }))}
+                >
+                  <option value="none">Normal</option>
+                  <option value="uppercase">UPPERCASE</option>
+                </select>
+              </div>
+              <div className="flex items-center gap-2 mb-2">
+                <label className="text-xs text-gray-600 w-20">Peso</label>
+                <input
+                  type="number"
+                  className="border rounded px-2 py-1 text-xs w-24"
+                  value={fonts.sidebarSectionTitle.weight ?? 600}
+                  min={100}
+                  max={900}
+                  step={100}
+                  onChange={(e) => setFonts((f) => ({ ...f, sidebarSectionTitle: { ...f.sidebarSectionTitle, weight: Number(e.target.value) } }))}
+                />
+              </div>
+              <div className="flex items-center gap-2 mb-2">
+                <label className="text-xs text-gray-600 w-20">Tamanho</label>
+                <input
+                  type="number"
+                  className="border rounded px-2 py-1 text-xs w-24"
+                  value={fonts.sidebarSectionTitle.size ?? 12}
+                  min={8}
+                  max={32}
+                  step={1}
+                  onChange={(e) => setFonts((f) => ({ ...f, sidebarSectionTitle: { ...f.sidebarSectionTitle, size: Number(e.target.value) } }))}
+                />
+              </div>
+              <div className="flex items-center gap-2 mb-2">
+                <label className="text-xs text-gray-600 w-20">Espaço</label>
+                <input
+                  type="number"
+                  className="border rounded px-2 py-1 text-xs w-24"
+                  value={fonts.sidebarSectionTitle.letterSpacing ?? 0}
+                  step={0.5}
+                  onChange={(e) => setFonts((f) => ({ ...f, sidebarSectionTitle: { ...f.sidebarSectionTitle, letterSpacing: Number(e.target.value) } }))}
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="text-xs text-gray-600 w-20">Cor</label>
+                <input
+                  type="color"
+                  className="border rounded w-8 h-6"
+                  value={fonts.sidebarSectionTitle.color || '#6b7280'}
+                  onChange={(e) => setFonts((f) => ({ ...f, sidebarSectionTitle: { ...f.sidebarSectionTitle, color: e.target.value } }))}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="mt-6">
           <h5 className="text-xs font-semibold text-gray-700 mb-2">Filtros (Date Range e Select)</h5>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Tipografia dos filtros */}
@@ -1098,3 +1271,4 @@ export default function FinanceiroDashboardPage() {
     </DashboardLayout>
   )
 }
+    sidebarSectionTitle: { family: 'Inter', weight: 600 as number | undefined, letterSpacing: 0 as number | undefined, color: '#6b7280' as string | undefined, size: 12 as number | undefined, transform: 'uppercase' as 'none' | 'uppercase' },

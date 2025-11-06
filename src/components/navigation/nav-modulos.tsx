@@ -21,7 +21,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
 
-export function NavModulos() {
+export function NavModulos({ groupLabelStyle }: { groupLabelStyle?: React.CSSProperties } = {}) {
   const router = useRouter()
   const pathname = usePathname()
 
@@ -30,7 +30,7 @@ export function NavModulos() {
   return (
     <>
       <SidebarGroup>
-        <SidebarGroupLabel>Gestão</SidebarGroupLabel>
+        <SidebarGroupLabel style={groupLabelStyle}>Gestão</SidebarGroupLabel>
         <SidebarMenu>
           {/* Financeiro primeiro */}
           <Collapsible
@@ -172,7 +172,7 @@ export function NavModulos() {
         </SidebarMenu>
       </SidebarGroup>
       <SidebarGroup>
-        <SidebarGroupLabel>Vendas</SidebarGroupLabel>
+        <SidebarGroupLabel style={groupLabelStyle}>Vendas</SidebarGroupLabel>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
