@@ -289,7 +289,7 @@ export function NavModulos({ groupLabelStyle }: { groupLabelStyle?: React.CSSPro
         </SidebarMenu>
       </SidebarGroup>
       <SidebarGroup>
-        <SidebarGroupLabel>Marketing</SidebarGroupLabel>
+        <SidebarGroupLabel style={groupLabelStyle}>Marketing</SidebarGroupLabel>
         <SidebarMenu>
           <Collapsible
             key="marketing"
@@ -397,7 +397,7 @@ export function NavModulos({ groupLabelStyle }: { groupLabelStyle?: React.CSSPro
       </SidebarGroup>
 
       <SidebarGroup>
-        <SidebarGroupLabel>Supply Chain</SidebarGroupLabel>
+        <SidebarGroupLabel style={groupLabelStyle}>Supply Chain</SidebarGroupLabel>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
