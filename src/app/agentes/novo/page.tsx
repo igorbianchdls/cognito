@@ -8,6 +8,7 @@ import FlowCanvas from "@/components/agentes/builder/flow/FlowCanvas"
 import { ReactFlowProvider } from 'reactflow'
 import PropertiesPanel from "@/components/agentes/builder/PropertiesPanel"
 import WorkflowRunChatPanel from "@/components/workflows/exec/WorkflowRunChatPanel"
+import ToolsPanel from "@/components/workflows/tools/ToolsPanel"
 import type { Block, BlockKind } from "@/types/agentes/builder"
 import type { Node, Edge } from 'reactflow'
 import type { NodeData } from '@/types/agentes/flow'
@@ -39,7 +40,7 @@ export default function NewAgentPage() {
   const [showCode, setShowCode] = useState(false)
   const [runTrigger, setRunTrigger] = useState(0)
   const [leftTab, setLeftTab] = useState<'agentes' | 'workflows'>('agentes')
-  const [showExec, setShowExec] = useState(false)
+  const [rightPanelMode, setRightPanelMode] = useState<'playground' | 'tools' | 'exec'>('playground')
 
   const addBlock = (payload: { kind: BlockKind; name?: string; toolId?: string }) => {
     const { kind, name, toolId } = payload
@@ -102,7 +103,7 @@ export default function NewAgentPage() {
           <input className="text-xl font-semibold outline-none bg-transparent" value={name} onChange={(e) => setName(e.target.value)} />
           <div className="flex items-center gap-2">
             <Button variant="outline" onClick={() => setShowCode(true)}>Código</Button>
-            <Button variant="outline" onClick={() => { setShowExec(true); setRunTrigger(v => v + 1) }}>Run</Button>
+            <Button variant="outline" onClick={() => { setRightPanelMode('exec'); setRunTrigger(v => v + 1) }}>Run</Button>
             <Button variant="outline" onClick={handleTest}>Testar</Button>
           </div>
         </div>
@@ -125,13 +126,16 @@ export default function NewAgentPage() {
               </ReactFlowProvider>
             </div>
             <div className="w-96 h-full overflow-auto border-l bg-white custom-scrollbar">
-              {showExec ? (
+              {rightPanelMode === 'exec' ? (
                 <WorkflowRunChatPanel graph={flowToGraph(nodes, edges)} autoSend={runTrigger ? 'olá agente' : undefined} />
+              ) : rightPanelMode === 'tools' ? (
+                <ToolsPanel onBack={() => setRightPanelMode('playground')} />
               ) : (
                 <PropertiesPanel
                   block={selectedBlock}
                   onChange={updateBlock}
                   onDelete={removeSelected}
+                  onOpenTools={() => setRightPanelMode('tools')}
                 />
               )}
             </div>

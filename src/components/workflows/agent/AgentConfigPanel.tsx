@@ -17,9 +17,10 @@ type Props = {
   config: Partial<AgentBlockConfig>
   onChange: (patch: Partial<AgentBlockConfig>) => void
   onSave?: () => void
+  onOpenTools?: () => void
 }
 
-export default function AgentConfigPanel({ name, onChangeName, config, onChange, onSave }: Props) {
+export default function AgentConfigPanel({ name, onChangeName, config, onChange, onSave, onOpenTools }: Props) {
   const temperature = typeof config.temperature === 'number' ? config.temperature : 0.2
   const isTrained = useMemo(() => !!(config.model && (config.systemPrompt || '').trim().length > 0), [config.model, config.systemPrompt])
 
@@ -108,7 +109,7 @@ export default function AgentConfigPanel({ name, onChangeName, config, onChange,
       {/* Ferramentas */}
       <div className="space-y-2">
         <div className="text-xs text-gray-600">Ferramentas</div>
-        <Button variant="outline" className="h-10 w-full justify-between">
+        <Button variant="outline" className="h-10 w-full justify-between" onClick={onOpenTools}>
           <div className="flex items-center gap-2 text-sm">
             <Wrench className="w-4 h-4" />
             <span>Configurar ferramentas</span>

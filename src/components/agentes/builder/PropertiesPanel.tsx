@@ -9,7 +9,7 @@ import type { Block, AgentBlockConfig, ToolBlockConfig, ConditionBlockConfig, Re
 import { Bot, Wrench, GitBranch, MessageSquareText } from "lucide-react"
 import AgentConfigPanel from "@/components/workflows/agent/AgentConfigPanel"
 
-export default function PropertiesPanel({ block, onChange, onDelete }: { block: Block | null; onChange: (patch: Partial<Block>) => void; onDelete: () => void }) {
+export default function PropertiesPanel({ block, onChange, onDelete, onOpenTools }: { block: Block | null; onChange: (patch: Partial<Block>) => void; onDelete: () => void; onOpenTools?: () => void }) {
 
   if (!block) {
     return (
@@ -48,6 +48,7 @@ export default function PropertiesPanel({ block, onChange, onDelete }: { block: 
             config={cfgUnknown as Partial<AgentBlockConfig>}
             onChange={(patch) => onChange({ config: { ...(cfgUnknown as Partial<AgentBlockConfig>), ...patch } })}
             onSave={() => { /* TODO: persist */ }}
+            onOpenTools={onOpenTools}
           />
         ) : null}
 
