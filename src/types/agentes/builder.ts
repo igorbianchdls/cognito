@@ -42,6 +42,11 @@ export interface StepBlockConfig {
   toolChoice?: 'auto' | 'none' | 'required'
   prepareStepEnabled?: boolean
   notes?: string
+  // Overrides por passo
+  modelOverride?: string
+  systemMode?: 'append' | 'replace'
+  systemText?: string
+  forcedToolName?: string
 }
 
 export interface PrepareStepBlockConfig {

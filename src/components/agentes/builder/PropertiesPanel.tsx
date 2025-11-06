@@ -118,6 +118,10 @@ export default function PropertiesPanel({ block, onChange, onDelete, onOpenTools
                 </Select>
               </div>
               <div className="space-y-2">
+                <label className="text-xs text-gray-600">Force tool (name)</label>
+                <Input className="h-8" value={(cfgUnknown as Partial<StepBlockConfig>).forcedToolName || ''} onChange={(e) => onChange({ config: { ...(cfgUnknown as Partial<StepBlockConfig>), forcedToolName: e.currentTarget.value || undefined } })} placeholder="ex: getTime" />
+              </div>
+              <div className="space-y-2">
                 <label className="text-xs text-gray-600">prepareStep</label>
                 <Select value={String((cfgUnknown as Partial<StepBlockConfig>).prepareStepEnabled ?? false)} onValueChange={(v) => onChange({ config: { ...(cfgUnknown as Partial<StepBlockConfig>), prepareStepEnabled: v === 'true' } })}>
                   <SelectTrigger className="h-8 w-full"><SelectValue /></SelectTrigger>
@@ -126,6 +130,20 @@ export default function PropertiesPanel({ block, onChange, onDelete, onOpenTools
                     <SelectItem value="true">ativado</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs text-gray-600">System mode</label>
+                <Select value={(cfgUnknown as Partial<StepBlockConfig>).systemMode || 'append'} onValueChange={(v) => onChange({ config: { ...(cfgUnknown as Partial<StepBlockConfig>), systemMode: v as StepBlockConfig['systemMode'] } })}>
+                  <SelectTrigger className="h-8 w-full"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="append">append</SelectItem>
+                    <SelectItem value="replace">replace</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs text-gray-600">System text (override per step)</label>
+                <Textarea rows={5} value={(cfgUnknown as Partial<StepBlockConfig>).systemText || ''} onChange={(e) => onChange({ config: { ...(cfgUnknown as Partial<StepBlockConfig>), systemText: e.currentTarget.value || undefined } })} placeholder="Instruções específicas para este passo" />
               </div>
             </>
           ) : null}

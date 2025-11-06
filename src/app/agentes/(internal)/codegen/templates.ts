@@ -1,5 +1,5 @@
 import type { Graph } from '@/types/agentes/builder'
-import { getFirstAgent, stringifyGraph, tsStringLiteral, getStepSettings, collectTools, getPrepareStepSettings, getStopWhenSettings } from './helpers'
+import { getFirstAgent, stringifyGraph, tsStringLiteral, getStepSettings, collectTools, getPrepareStepSettings, getStopWhenSettings, getOrderedSteps } from './helpers'
 
 export function genRouteTs(graph: Graph, slug: string): string {
   const agent = getFirstAgent(graph) || {}
@@ -72,16 +72,26 @@ import { anthropic } from '@ai-sdk/anthropic'${importOpenAI ? "\nimport { openai
   const compressAfter = (prepCfg && typeof prepCfg.compressAfterMessages === 'number') ? prepCfg.compressAfterMessages : undefined
   const keepLast = (prepCfg && typeof prepCfg.keepLastMessages === 'number') ? prepCfg.keepLastMessages : undefined
   const defaultTC = prepCfg?.defaultToolChoice === 'none' ? 'none' : 'auto'
-  const prepareStepDecl = hasPrepareStep ? `const prepareStep = async ({ stepNumber, messages }) => {
+  const BASE_SYSTEM_DECL = `const BASE_SYSTEM = "${sysFinal}"`
+  const stepSystemDecls = orderedSteps.map((cfg, idx) => {
+    const sysText = (cfg as any).systemText as string | undefined
+    const sysMode = (cfg as any).systemMode as 'append' | 'replace' | undefined
+    if (!sysText || !sysText.trim()) return ''
+    const escaped = tsStringLiteral(sysText)
+    if (sysMode === 'replace') return `const STEP_BASE_SYSTEM_${idx} = "${escaped}"`
+    return `const STEP_APPEND_SYSTEM_${idx} = "${escaped}"`
+  }).filter(Boolean).join('\n')
+
+  const needPrepareFunc = hasPrepareStep || stepCases.length > 0
+  const prepareStepDecl = needPrepareFunc ? `const prepareStep = async ({ stepNumber, messages }) => {
       // Generated from PrepareStep node
       ${typeof compressAfter === 'number' ? `if (Array.isArray(messages) && messages.length > ${compressAfter}) {
         ${typeof keepLast === 'number' ? `return { messages: messages.slice(-${keepLast}) }` : `return { messages: messages.slice(-${compressAfter}) }`}
       }` : ''}
       ${defaultTC === 'none' ? `// Default tool choice (can be overridden per step)
       return { toolChoice: 'none' }` : ''}
-      // TODO: override per step
-      // if (stepNumber === 0) return { toolChoice: { type: 'tool', toolName: 'getTime' } }
-      // if (stepNumber === 1) return { toolChoice: { type: 'tool', toolName: 'getWeather' } }
+      // Per-step overrides from Step nodes
+      ${stepCases}
       return undefined
     }` : ''
 
@@ -98,6 +108,28 @@ import { anthropic } from '@ai-sdk/anthropic'${importOpenAI ? "\nimport { openai
     }
   }
   const stopWhenLine = stopParts.length ? `stopWhen: [${stopParts.join(', ')}],` : ''
+
+  // Build per-step overrides from ordered Step nodes
+  const orderedSteps = getOrderedSteps(graph)
+  const stepCases = orderedSteps.map((cfg, idx) => {
+    const cases: string[] = []
+    const tc = cfg.toolChoice
+    const forced = (cfg as any).forcedToolName as string | undefined
+    if (forced && forced.trim()) {
+      cases.push(`return { toolChoice: { type: 'tool', toolName: '${tsStringLiteral(forced.trim())}' } }`)
+    } else if (tc && tc !== 'auto') {
+      cases.push(`return { toolChoice: '${tc}' }`)
+    }
+    const sysText = (cfg as any).systemText as string | undefined
+    const sysMode = (cfg as any).systemMode as 'append' | 'replace' | undefined
+    if (sysText && sysText.trim()) {
+      const escaped = tsStringLiteral(sysText)
+      if (sysMode === 'replace') cases.push(`return { system: STEP_BASE_SYSTEM_${idx} }`)
+      else cases.push(`return { system: BASE_SYSTEM + "\\n\\n" + STEP_APPEND_SYSTEM_${idx} }`)
+    }
+    if (cases.length === 0) return ''
+    return `if (stepNumber === ${idx}) { ${cases[0]} }`
+  }).filter(Boolean).join('\n      ')
 
   return `// Arquivo gerado automaticamente pelo Agent Builder (não editar manualmente)
 // slug: ${slug}
@@ -119,16 +151,19 @@ export async function POST(request: Request) {
     const prompt = String(body?.message ?? '')
     const temperature = typeof body?.temperature === 'number' ? body.temperature : ${defaultTemp}
     ${needsStub ? `// TEST TOOLS (auto-generated for unknown ids)\n    ${testToolDecls}\n` : ''}
+    // Base system and per-step systems
+    ${BASE_SYSTEM_DECL}
+    ${stepSystemDecls}
     ${hasPrepareStep ? prepareStepDecl : ''}
     const { text } = await generateText({
       model: selectModel(),
-      system: "${sysFinal}",
+      system: BASE_SYSTEM,
       prompt,
       temperature,
       ${toolEntries.length ? `tools: ${toolsObjectLiteral},` : ''}
       ${stopWhenLine}
       ${step.toolChoice && step.toolChoice !== 'auto' ? `toolChoice: '${step.toolChoice}',` : ''}
-      ${hasPrepareStep ? `prepareStep,` : ''}
+      ${needPrepareFunc ? `prepareStep,` : ''}
       ${provider === 'anthropic' ? `providerOptions: { anthropic: { thinking: { type: 'enabled', budgetTokens: 8000 } } },` : ''}
     })
     return NextResponse.json({ reply: text })

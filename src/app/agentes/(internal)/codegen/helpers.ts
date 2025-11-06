@@ -115,3 +115,25 @@ export function getStopWhenSettings(graph: Graph): { stepLimit?: number; stopOnT
   if (Array.isArray(cfg.stopOnTools)) out.stopOnTools = cfg.stopOnTools.filter((s): s is string => typeof s === 'string' && !!s.trim())
   return out
 }
+
+export function getOrderedSteps(graph: Graph): Array<Partial<StepBlockConfig>> {
+  const byId = new Map(graph.blocks.map(b => [b.id, b] as const))
+  const steps: Array<Partial<StepBlockConfig>> = []
+  let currentId = graph.headId || null
+  const visited = new Set<string>()
+  let safety = 0
+  while (currentId && safety < 1000) {
+    safety += 1
+    if (visited.has(currentId)) break
+    visited.add(currentId)
+    const b = byId.get(currentId)
+    if (!b) break
+    if (b.kind === 'step') {
+      steps.push((b.config || {}) as Partial<StepBlockConfig>)
+    }
+    // follow next
+    const nextId = (b as any).next as string | null | undefined
+    currentId = nextId || null
+  }
+  return steps
+}
