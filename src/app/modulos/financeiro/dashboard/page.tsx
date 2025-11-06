@@ -10,6 +10,7 @@ import { Calendar } from '@/components/ui/calendar'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import type { DateRange } from 'react-day-picker'
 import { $financeiroDashboardUI, $financeiroDashboardFilters, financeiroDashboardActions } from '@/stores/modulos/financeiroDashboardStore'
+import type { FinanceiroDashboardUIState } from '@/stores/modulos/financeiroDashboardStore'
 
 type BaseRow = {
   valor_total?: number | string
@@ -101,8 +102,12 @@ export default function FinanceiroDashboardPage() {
   const pageBgColor = ui.pageBgColor
   const filtersIconColor = ui.filtersIconColor
   // Patch-like setters to keep UI code similar
-  const setFonts = (updater: (prev: any) => any) => {
-    const next = updater(fonts as any)
+  const setFonts = (
+    updater: (
+      prev: FinanceiroDashboardUIState['fonts']
+    ) => FinanceiroDashboardUIState['fonts']
+  ) => {
+    const next = updater(fonts)
     financeiroDashboardActions.setUI({ fonts: next })
   }
   const setCardBorderColor = (v: string) => financeiroDashboardActions.setUI({ cardBorderColor: v })
