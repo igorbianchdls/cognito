@@ -1,5 +1,5 @@
 import type { Graph } from '@/types/agentes/builder'
-import { getFirstAgent, stringifyGraph, tsStringLiteral, getStepSettings, collectTools } from './helpers'
+import { getFirstAgent, stringifyGraph, tsStringLiteral, getStepSettings, collectTools, getPrepareStepSettings } from './helpers'
 
 export function genRouteTs(graph: Graph, slug: string): string {
   const agent = getFirstAgent(graph) || {}
@@ -42,7 +42,7 @@ import { anthropic } from '@ai-sdk/anthropic'${importOpenAI ? "\nimport { openai
     + (builderIds.length ? `\nimport { ${builderIds.join(', ')} } from '@/tools/agentbuilder'` : '')
     + (needsStub ? `\nimport { z } from 'zod'` : '')
 
-  const prepareTypeImport = step.prepareStepEnabled ? "import type { PrepareStepFunction } from 'ai'" : ""
+  // No additional imports required for prepareStep generation
 
   // Build extra tool usage instructions for builder tools
   const builderGuide = (() => {
@@ -61,20 +61,30 @@ import { anthropic } from '@ai-sdk/anthropic'${importOpenAI ? "\nimport { openai
     return lines.join('\n\n')
   })()
 
-  const systemText = ["${sys}", "${tsStringLiteral('')}"]
-    .filter(Boolean)
-    .join('\\n\\n')
-
-  const fullSystem = ["${sys}", "${tsStringLiteral('')}"].filter(Boolean).join('\\n\\n')
-
-  const sysCombined = ["${sys}", "${tsStringLiteral('')}"].filter(Boolean).join('\\n\\n')
-
   const sysFinal = ["${sys}", "${tsStringLiteral(builderGuide)}"].filter(Boolean).join('\\n\\n')
+
+  // PrepareStep node mapping → inline prepareStep function
+  const prepCfg = getPrepareStepSettings(graph)
+  const hasPrepareStep = !!prepCfg
+  const compressAfter = (prepCfg && typeof prepCfg.compressAfterMessages === 'number') ? prepCfg.compressAfterMessages : undefined
+  const keepLast = (prepCfg && typeof prepCfg.keepLastMessages === 'number') ? prepCfg.keepLastMessages : undefined
+  const defaultTC = prepCfg?.defaultToolChoice === 'none' ? 'none' : 'auto'
+  const prepareStepDecl = hasPrepareStep ? `const prepareStep = async ({ stepNumber, messages }) => {
+      // Generated from PrepareStep node
+      ${typeof compressAfter === 'number' ? `if (Array.isArray(messages) && messages.length > ${compressAfter}) {
+        ${typeof keepLast === 'number' ? `return { messages: messages.slice(-${keepLast}) }` : `return { messages: messages.slice(-${compressAfter}) }`}
+      }` : ''}
+      ${defaultTC === 'none' ? `// Default tool choice (can be overridden per step)
+      return { toolChoice: 'none' }` : ''}
+      // TODO: override per step
+      // if (stepNumber === 0) return { toolChoice: { type: 'tool', toolName: 'getTime' } }
+      // if (stepNumber === 1) return { toolChoice: { type: 'tool', toolName: 'getWeather' } }
+      return undefined
+    }` : ''
 
   return `// Arquivo gerado automaticamente pelo Agent Builder (não editar manualmente)
 // slug: ${slug}
 ${imports}
-${prepareTypeImport}
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -91,17 +101,16 @@ export async function POST(request: Request) {
     const body = await request.json().catch(() => ({})) as { message?: string; temperature?: number }
     const prompt = String(body?.message ?? '')
     const temperature = typeof body?.temperature === 'number' ? body.temperature : ${defaultTemp}
-    ${step.prepareStepEnabled ? `const prepareStep: PrepareStepFunction = () => undefined` : ''}
     ${needsStub ? `// TEST TOOLS (auto-generated for unknown ids)\n    ${testToolDecls}\n` : ''}
+    ${hasPrepareStep ? prepareStepDecl : ''}
     const { text } = await generateText({
       model: selectModel(),
       system: "${sysFinal}",
       prompt,
       temperature,
       ${toolEntries.length ? `tools: ${toolsObjectLiteral},` : ''}
-      ${step.count > 0 ? `maxToolRoundtrips: ${step.maxSteps ?? step.count},` : ''}
       ${step.toolChoice && step.toolChoice !== 'auto' ? `toolChoice: '${step.toolChoice}',` : ''}
-      ${step.prepareStepEnabled ? `prepareStep,` : ''}
+      ${hasPrepareStep ? `prepareStep,` : ''}
       ${provider === 'anthropic' ? `providerOptions: { anthropic: { thinking: { type: 'enabled', budgetTokens: 8000 } } },` : ''}
     })
     return NextResponse.json({ reply: text })

@@ -1,4 +1,4 @@
-import type { Graph, Block, BlockKind, AgentBlockConfig, ToolBlockConfig, ResponseBlockConfig, ConditionBlockConfig, StepBlockConfig } from '@/types/agentes/builder'
+import type { Graph, Block, BlockKind, AgentBlockConfig, ToolBlockConfig, ResponseBlockConfig, ConditionBlockConfig, StepBlockConfig, PrepareStepBlockConfig } from '@/types/agentes/builder'
 
 export function slugify(input: string): string {
   return input
@@ -92,4 +92,16 @@ export function tsStringLiteral(value: string): string {
     .replace(/\r/g, '')
     .replace(/\t/g, '\\t')
     .replace(/"/g, '\\"')
+}
+
+export function getPrepareStepSettings(graph: Graph): Partial<PrepareStepBlockConfig> | null {
+  const block = graph.blocks.find(b => b.kind === 'prepareStep')
+  if (!block) return null
+  const cfg = (block.config || {}) as Partial<PrepareStepBlockConfig>
+  const out: Partial<PrepareStepBlockConfig> = {}
+  if (typeof cfg.compressAfterMessages === 'number') out.compressAfterMessages = cfg.compressAfterMessages
+  if (typeof cfg.keepLastMessages === 'number') out.keepLastMessages = cfg.keepLastMessages
+  if (Array.isArray(cfg.stopOnTools)) out.stopOnTools = cfg.stopOnTools.filter((s): s is string => typeof s === 'string' && !!s.trim())
+  if (cfg.defaultToolChoice === 'auto' || cfg.defaultToolChoice === 'none') out.defaultToolChoice = cfg.defaultToolChoice
+  return out
 }
