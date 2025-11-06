@@ -53,6 +53,8 @@ export function getVisualForBlock(block: Block): {
       return { icon: <ToggleLeft className="w-4 h-4" />, badgeBg: '#F3E8FF', badgeColor: '#7E22CE' }
     case 'step':
       return { icon: <ListChecks className="w-4 h-4" />, badgeBg: '#FFEDD5', badgeColor: '#C2410C' }
+    case 'prepareStep':
+      return { icon: <Settings2 className="w-4 h-4" />, badgeBg: '#E0F2FE', badgeColor: '#0369A1' }
     default:
       return { icon: <FileText className="w-4 h-4" />, ...baseGray }
   }

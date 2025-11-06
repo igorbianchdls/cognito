@@ -5,7 +5,7 @@ import { Separator } from "@/components/ui/separator"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import type { Block, AgentBlockConfig, ToolBlockConfig, ConditionBlockConfig, ResponseBlockConfig, StepBlockConfig } from "@/types/agentes/builder"
+import type { Block, AgentBlockConfig, ToolBlockConfig, ConditionBlockConfig, ResponseBlockConfig, StepBlockConfig, PrepareStepBlockConfig } from "@/types/agentes/builder"
 import { Bot, Wrench, GitBranch, MessageSquareText } from "lucide-react"
 import AgentConfigPanel from "@/components/workflows/agent/AgentConfigPanel"
 
@@ -112,6 +112,32 @@ export default function PropertiesPanel({ block, onChange, onDelete, onOpenTools
                   <SelectContent>
                     <SelectItem value="false">desativado</SelectItem>
                     <SelectItem value="true">ativado</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </>
+          ) : null}
+          {block.kind === 'prepareStep' ? (
+            <>
+              <div className="space-y-2">
+                <label className="text-xs text-gray-600">Compress after messages</label>
+                <Input type="number" min={0} className="h-8" value={String((cfgUnknown as Partial<PrepareStepBlockConfig>).compressAfterMessages ?? '')} onChange={(e) => onChange({ config: { ...(cfgUnknown as Partial<PrepareStepBlockConfig>), compressAfterMessages: e.currentTarget.value ? Number(e.currentTarget.value) : undefined } })} placeholder="ex: 10" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs text-gray-600">Keep last messages</label>
+                <Input type="number" min={0} className="h-8" value={String((cfgUnknown as Partial<PrepareStepBlockConfig>).keepLastMessages ?? '')} onChange={(e) => onChange({ config: { ...(cfgUnknown as Partial<PrepareStepBlockConfig>), keepLastMessages: e.currentTarget.value ? Number(e.currentTarget.value) : undefined } })} placeholder="ex: 10" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs text-gray-600">Stop when tools called (IDs, separado por vírgula)</label>
+                <Input className="h-8" value={((cfgUnknown as Partial<PrepareStepBlockConfig>).stopOnTools || []).join(', ')} onChange={(e) => onChange({ config: { ...(cfgUnknown as Partial<PrepareStepBlockConfig>), stopOnTools: e.currentTarget.value.split(',').map(s => s.trim()).filter(Boolean) } })} placeholder="ex: finalize,save" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs text-gray-600">Default tool choice</label>
+                <Select value={(cfgUnknown as Partial<PrepareStepBlockConfig>).defaultToolChoice || 'auto'} onValueChange={(v) => onChange({ config: { ...(cfgUnknown as Partial<PrepareStepBlockConfig>), defaultToolChoice: v as PrepareStepBlockConfig['defaultToolChoice'] } })}>
+                  <SelectTrigger className="h-8 w-full"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="auto">auto</SelectItem>
+                    <SelectItem value="none">none</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

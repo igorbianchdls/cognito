@@ -10,6 +10,7 @@ import ConditionNode from './nodeTypes/ConditionNode'
 import ResponseNode from './nodeTypes/ResponseNode'
 import PlaceholderNode from './nodeTypes/PlaceholderNode'
 import StepNode from './nodeTypes/StepNode'
+import PrepareStepNode from './nodeTypes/PrepareStepNode'
 import type { Block, BlockKind } from '@/types/agentes/builder'
 
 const nodeTypes = {
@@ -23,6 +24,7 @@ const nodeTypes = {
   transform: PlaceholderNode,
   setstate: PlaceholderNode,
   step: StepNode,
+  prepareStep: PrepareStepNode,
 } as const
 
 type Props = {

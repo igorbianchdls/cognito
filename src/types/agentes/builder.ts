@@ -10,6 +10,7 @@ export type BlockKind =
   | 'transform'
   | 'setstate'
   | 'step'
+  | 'prepareStep'
 
 export interface Branch {
   label: string
@@ -40,6 +41,14 @@ export interface StepBlockConfig {
   toolChoice?: 'auto' | 'none' | 'required'
   prepareStepEnabled?: boolean
   notes?: string
+}
+
+export interface PrepareStepBlockConfig {
+  compressAfterMessages?: number
+  keepLastMessages?: number
+  stopOnTools?: string[]
+  defaultModel?: string
+  defaultToolChoice?: 'auto' | 'none'
 }
 
 export interface Block {

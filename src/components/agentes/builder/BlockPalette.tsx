@@ -25,6 +25,7 @@ export default function BlockPalette({ onAdd }: { onAdd: (payload: { kind: Block
       <PaletteSection title="Logic" />
       <div className="px-3 py-2">
         <PaletteItem icon={<ListChecks className="w-4 h-4" />} label="STEP" badgeBg="#FFEDD5" badgeColor="#C2410C" kind="step" onAdd={onAdd} />
+        <PaletteItem icon={<Settings2 className="w-4 h-4" />} label="PrepareStep" badgeBg="#E0F2FE" badgeColor="#0369A1" kind="prepareStep" onAdd={onAdd} />
         <PaletteItem icon={<GitBranch className="w-4 h-4" />} label="If / else" badgeBg="#FFEDD5" badgeColor="#C2410C" kind="condicao" onAdd={onAdd} />
         <PaletteItem icon={<RefreshCw className="w-4 h-4" />} label="While" badgeBg="#FFEDD5" badgeColor="#C2410C" kind="loop" onAdd={onAdd} />
         <PaletteItem icon={<UserCheck className="w-4 h-4" />} label="User approval" badgeBg="#FFEDD5" badgeColor="#C2410C" kind="aprovacao" onAdd={onAdd} />
