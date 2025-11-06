@@ -20,6 +20,16 @@ type APRow = BaseRow & {
   descricao_lancamento?: string
 }
 
+type RecebidoRow = {
+  valor_total?: number | string
+  data_recebimento?: string
+}
+
+type EfetuadoRow = {
+  valor_pago?: number | string
+  data_pagamento?: string
+}
+
 function formatBRL(v: unknown) {
   const n = Number(v ?? 0)
   if (isNaN(n)) return String(v ?? '')
@@ -58,6 +68,8 @@ function isPaid(status?: string) {
 export default function FinanceiroDashboardPage() {
   const [arRows, setArRows] = useState<ARRow[]>([])
   const [apRows, setApRows] = useState<APRow[]>([])
+  const [prRows, setPrRows] = useState<RecebidoRow[]>([])
+  const [peRows, setPeRows] = useState<EfetuadoRow[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -68,13 +80,17 @@ export default function FinanceiroDashboardPage() {
       setError(null)
       try {
         const qs = (view: string) => `/api/modulos/financeiro?view=${view}&page=1&pageSize=1000`
-        const [arRes, apRes] = await Promise.allSettled([
+        const [arRes, apRes, prRes, peRes] = await Promise.allSettled([
           fetch(qs('contas-a-receber'), { cache: 'no-store' }),
           fetch(qs('contas-a-pagar'), { cache: 'no-store' }),
+          fetch(qs('pagamentos-recebidos'), { cache: 'no-store' }),
+          fetch(qs('pagamentos-efetuados'), { cache: 'no-store' }),
         ])
 
         let ar: ARRow[] = []
         let ap: APRow[] = []
+        let pr: RecebidoRow[] = []
+        let pe: EfetuadoRow[] = []
 
         if (arRes.status === 'fulfilled' && arRes.value.ok) {
           const j = (await arRes.value.json()) as { rows?: unknown[] }
@@ -83,6 +99,14 @@ export default function FinanceiroDashboardPage() {
         if (apRes.status === 'fulfilled' && apRes.value.ok) {
           const j = (await apRes.value.json()) as { rows?: unknown[] }
           ap = Array.isArray(j?.rows) ? (j.rows as unknown as APRow[]) : []
+        }
+        if (prRes.status === 'fulfilled' && prRes.value.ok) {
+          const j = (await prRes.value.json()) as { rows?: unknown[] }
+          pr = Array.isArray(j?.rows) ? (j.rows as unknown as RecebidoRow[]) : []
+        }
+        if (peRes.status === 'fulfilled' && peRes.value.ok) {
+          const j = (await peRes.value.json()) as { rows?: unknown[] }
+          pe = Array.isArray(j?.rows) ? (j.rows as unknown as EfetuadoRow[]) : []
         }
 
         // Fallback mock if nothing returned (ex: sem DB)
@@ -102,11 +126,27 @@ export default function FinanceiroDashboardPage() {
             { fornecedor: 'Fornecedor Y', descricao_lancamento: 'Contrato', descricao: 'Contrato', valor_total: 780, data_vencimento: in3, status: 'pendente' },
             { fornecedor: 'Fornecedor Z', descricao_lancamento: 'Impostos', descricao: 'Impostos', valor_total: 5600, data_vencimento: y2, status: 'vencido' },
           ]
+          // mocks de recebidos/efetuados para gráficos
+          const m0 = toDateOnly(new Date())
+          const m1 = toDateOnly(new Date(new Date().setMonth(new Date().getMonth() - 1)))
+          const m2 = toDateOnly(new Date(new Date().setMonth(new Date().getMonth() - 2)))
+          pr = [
+            { valor_total: 18000, data_recebimento: m2 },
+            { valor_total: 22000, data_recebimento: m1 },
+            { valor_total: 19500, data_recebimento: m0 },
+          ]
+          pe = [
+            { valor_pago: 12500, data_pagamento: m2 },
+            { valor_pago: 16750, data_pagamento: m1 },
+            { valor_pago: 14200, data_pagamento: m0 },
+          ]
         }
 
         if (!cancelled) {
           setArRows(ar)
           setApRows(ap)
+          setPrRows(pr)
+          setPeRows(pe)
         }
       } catch (e) {
         if (!cancelled) setError('Falha ao carregar dados')
@@ -214,6 +254,135 @@ export default function FinanceiroDashboardPage() {
     )
   }
 
+  // ---- Charts: Receitas vs Despesas & Saldo no final do mês ----
+  function monthKey(d: Date) {
+    const y = d.getFullYear()
+    const m = String(d.getMonth() + 1).padStart(2, '0')
+    return `${y}-${m}`
+  }
+  function monthKeyFromStr(s?: string) {
+    if (!s) return null
+    const d = parseDate(s)
+    if (!d) return null
+    return monthKey(d)
+  }
+  function monthLabel(key: string) {
+    const [y, m] = key.split('-').map(Number)
+    const d = new Date(y, (m || 1) - 1, 1)
+    return d.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' })
+  }
+  function lastMonths(n: number) {
+    const arr: string[] = []
+    const base = new Date()
+    for (let i = n - 1; i >= 0; i--) {
+      const d = new Date(base.getFullYear(), base.getMonth() - i, 1)
+      arr.push(monthKey(d))
+    }
+    return arr
+  }
+  const meses = useMemo(() => lastMonths(6), [])
+
+  const receitasDespesas = useMemo(() => {
+    const rec: Record<string, number> = {}
+    const des: Record<string, number> = {}
+    for (const k of meses) { rec[k] = 0; des[k] = 0 }
+
+    // Receitas realizadas
+    for (const r of prRows) {
+      const k = monthKeyFromStr(r.data_recebimento)
+      if (k && k in rec) rec[k] += Number(r.valor_total) || 0
+    }
+    // Despesas realizadas
+    for (const r of peRows) {
+      const k = monthKeyFromStr(r.data_pagamento)
+      if (k && k in des) des[k] += Number(r.valor_pago) || 0
+    }
+
+    // Fallback: se tudo zero, usar AR/AP por vencimento como proxy
+    const allZero = meses.every(k => (rec[k] || 0) === 0 && (des[k] || 0) === 0)
+    if (allZero) {
+      for (const r of arRows) {
+        const k = monthKeyFromStr(r.data_vencimento)
+        if (k && k in rec && !isPaid(r.status)) rec[k] += Number(r.valor_total) || 0
+      }
+      for (const r of apRows) {
+        const k = monthKeyFromStr(r.data_vencimento)
+        if (k && k in des && !isPaid(r.status)) des[k] += Number(r.valor_total) || 0
+      }
+    }
+
+    const data = meses.map(k => ({ key: k, label: monthLabel(k), receita: rec[k] || 0, despesa: des[k] || 0 }))
+    const maxVal = Math.max(1, ...data.map(d => Math.max(d.receita, d.despesa)))
+    const saldoMensal = data.map(d => d.receita - d.despesa)
+    const saldoAcumulado: number[] = []
+    saldoMensal.reduce((acc, v, idx) => {
+      const s = acc + v
+      saldoAcumulado[idx] = s
+      return s
+    }, 0)
+    const minSaldo = Math.min(0, ...saldoAcumulado)
+    const maxSaldo = Math.max(1, ...saldoAcumulado)
+    return { data, maxVal, saldoAcumulado, minSaldo, maxSaldo }
+  }, [meses, prRows, peRows, arRows, apRows])
+
+  function BarsReceitasDespesas({ items, max }: { items: { label: string; receita: number; despesa: number }[]; max: number }) {
+    return (
+      <div>
+        <div className="flex items-center gap-4 mb-3 text-xs text-gray-600">
+          <div className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded bg-emerald-500" />Receitas</div>
+          <div className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded bg-rose-500" />Despesas</div>
+        </div>
+        <div className="grid grid-cols-6 gap-3 h-44 items-end">
+          {items.map((it) => {
+            const rH = Math.round((it.receita / max) * 100)
+            const dH = Math.round((it.despesa / max) * 100)
+            return (
+              <div key={it.label} className="flex flex-col items-center justify-end gap-1">
+                <div className="w-full flex items-end justify-center gap-1 h-full">
+                  <div className="w-2/5 bg-emerald-500/80 rounded" style={{ height: `${rH}%` }} />
+                  <div className="w-2/5 bg-rose-500/80 rounded" style={{ height: `${dH}%` }} />
+                </div>
+                <div className="text-[11px] text-gray-600">{it.label}</div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    )
+  }
+
+  function LineSaldoMensal({ values, min, max }: { values: number[]; min: number; max: number }) {
+    const W = 520
+    const H = 180
+    const padX = 16
+    const padY = 12
+    const n = Math.max(1, values.length)
+    const xStep = (W - padX * 2) / Math.max(1, n - 1)
+    const scaleY = (v: number) => {
+      const rng = max - min || 1
+      const t = (v - min) / rng
+      return H - padY - t * (H - padY * 2)
+    }
+    const pts = values.map((v, i) => `${padX + i * xStep},${scaleY(v)}`).join(' ')
+    return (
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-44">
+        <defs>
+          <linearGradient id="saldoGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#2563eb" stopOpacity="0.35" />
+            <stop offset="100%" stopColor="#2563eb" stopOpacity="0.0" />
+          </linearGradient>
+        </defs>
+        <polyline points={pts} fill="none" stroke="#2563eb" strokeWidth="2" />
+        {values.length > 1 && (
+          <polygon
+            points={`${padX},${scaleY(values[0])} ${pts} ${padX + (n - 1) * xStep},${H - padY} ${padX},${H - padY}`}
+            fill="url(#saldoGrad)"
+          />
+        )}
+      </svg>
+    )
+  }
+
   return (
     <DashboardLayout
       title="Dashboard Financeiro"
@@ -245,6 +414,35 @@ export default function FinanceiroDashboardPage() {
           <div className="text-sm font-medium text-gray-500 mb-2">Vencidos A Pagar</div>
           <div className="text-2xl font-bold text-red-600">{formatBRL(kpis.apVencidos)}</div>
           <div className="text-xs text-gray-400 mt-1">Compromissos em atraso</div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+          <h3 className="text-lg font-semibold mb-4">Receitas vs Despesas</h3>
+          <BarsReceitasDespesas
+            items={receitasDespesas.data.map(d => ({ label: d.label, receita: d.receita, despesa: d.despesa }))}
+            max={receitasDespesas.maxVal}
+          />
+        </div>
+        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+          <h3 className="text-lg font-semibold mb-4">Saldo no final do mês</h3>
+          <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
+            <span>Acumulado</span>
+            <span>
+              Último: {formatBRL(receitasDespesas.saldoAcumulado.at(-1) ?? 0)}
+            </span>
+          </div>
+          <LineSaldoMensal
+            values={receitasDespesas.saldoAcumulado}
+            min={receitasDespesas.minSaldo}
+            max={receitasDespesas.maxSaldo}
+          />
+          <div className="grid grid-cols-6 gap-3 mt-1">
+            {receitasDespesas.data.map(d => (
+              <div key={d.key} className="text-[11px] text-gray-600 text-center">{d.label}</div>
+            ))}
+          </div>
         </div>
       </div>
 
