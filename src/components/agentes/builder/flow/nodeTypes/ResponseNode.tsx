@@ -10,20 +10,16 @@ import { getVisualForBlock } from '../visuals'
 export default function ResponseNode({ data, selected }: NodeProps<NodeData>) {
   const name = data.block.name || 'Resposta'
   const visual = getVisualForBlock(data.block)
+  const desc = 'Resposta'
   return (
     <div className="relative">
       <Handle type="target" position={Position.Top} id="in" />
       <BlockCard selected={selected}>
-        <div className="flex items-start gap-3">
+        <div className="flex items-center justify-between mb-1">
           <div className="inline-flex items-center justify-center w-9 h-9 rounded-lg border" style={{ background: visual.badgeBg, color: visual.badgeColor, borderColor: 'rgba(0,0,0,0.06)' }}>{visual.icon}</div>
-          <div>
-            <div className="text-sm font-semibold text-gray-900">{name}</div>
-            <div className="text-xs text-gray-500">Resposta</div>
-          </div>
+          <div className="text-[11px] text-gray-500">{desc}</div>
         </div>
-        <div className="text-green-600 flex items-center gap-1">
-          <CheckCircle2 className="w-4 h-4" />
-        </div>
+        <div className="text-base font-semibold text-gray-900">{name}</div>
         <BlockActions />
       </BlockCard>
       {/* Sem saída */}
