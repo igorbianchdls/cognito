@@ -47,7 +47,7 @@ function monthKey(d: Date) { return `${d.getFullYear()}-${String(d.getMonth() + 
 function monthLabel(key: string) { const [y, m] = key.split('-').map(Number); const d = new Date(y, (m || 1) - 1, 1); return d.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' }) }
 function lastMonths(n: number) { const arr: string[] = []; const base = new Date(); for (let i= n-1;i>=0;i--){ const d=new Date(base.getFullYear(), base.getMonth()-i, 1); arr.push(monthKey(d)) } return arr }
 function formatNum(n?: number) { return (n ?? 0).toLocaleString('pt-BR') }
-function formatBR(n?: number) { return (n ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) }
+// formatBR removido por não uso
 
 export default function MarketingDashboardPage() {
   const [contas, setContas] = useState<ContaRow[]>([])
@@ -109,7 +109,7 @@ export default function MarketingDashboardPage() {
           ]
         }
         if (!cancelled) { setContas(cs); setPubs(ps); setMets(ms) }
-      } catch (e) {
+      } catch {
         if (!cancelled) setError('Falha ao carregar dados')
       } finally { if (!cancelled) setLoading(false) }
     }
@@ -141,15 +141,16 @@ export default function MarketingDashboardPage() {
   }, [mets])
   const crescimento30d = useMemo(() => {
     // delta seguidores entre primeiro e último snapshot do período
-    const byConta = new Map<string, { first?: number; last?: number }>()
+    type ContaAgg = { first?: number; last?: number; tFirst?: number; tLast?: number }
+    const byConta = new Map<string, ContaAgg>()
     for (const r of contas) {
       const k = String(r.conta || '')
       if (!k) continue
       const val = Number(r.seguidores) || 0
       const t = parseDate(r.registrado_em)?.getTime() || 0
-      const cur = byConta.get(k) || {}
-      if (cur.first == null || t < (cur as any).tFirst) { (cur as any).tFirst = t; cur.first = val }
-      if (cur.last == null || t > (cur as any).tLast) { (cur as any).tLast = t; cur.last = val }
+      const cur: ContaAgg = byConta.get(k) ?? {}
+      if (cur.first == null || t < (cur.tFirst ?? Number.POSITIVE_INFINITY)) { cur.tFirst = t; cur.first = val }
+      if (cur.last == null || t > (cur.tLast ?? Number.NEGATIVE_INFINITY)) { cur.tLast = t; cur.last = val }
       byConta.set(k, cur)
     }
     let firstSum = 0; let lastSum = 0
