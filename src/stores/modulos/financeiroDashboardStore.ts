@@ -23,6 +23,7 @@ export type FinanceiroDashboardUIState = {
     sidebarSectionTitle: Typography
   }
   cardBorderColor: string
+  cardShadow: boolean
   pageBgColor: string
   filtersIconColor: string
 }
@@ -44,6 +45,7 @@ const DEFAULT_UI: FinanceiroDashboardUIState = {
     sidebarSectionTitle: { family: 'Space Mono', weight: 500, letterSpacing: 0, color: '#808080', size: 12, transform: 'uppercase' },
   },
   cardBorderColor: '#f0f0f0',
+  cardShadow: false,
   pageBgColor: '#ffffff',
   filtersIconColor: '#6b7280',
 }
@@ -84,4 +86,3 @@ export const financeiroDashboardActions = {
   resetUI: () => $financeiroDashboardUI.set({ ...DEFAULT_UI }),
   resetFilters: () => $financeiroDashboardFilters.set({ ...DEFAULT_FILTERS }),
 }
-

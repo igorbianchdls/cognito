@@ -4,7 +4,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useStore } from '@nanostores/react'
 import DashboardLayout from '@/components/modulos/DashboardLayout'
-import { $financeiroDashboardUI } from '@/stores/modulos/financeiroDashboardStore'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Button } from '@/components/ui/button'
+import { Calendar } from '@/components/ui/calendar'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Calendar as CalendarIcon } from 'lucide-react'
+import type { DateRange } from 'react-day-picker'
+import { $financeiroDashboardUI, $financeiroDashboardFilters, financeiroDashboardActions } from '@/stores/modulos/financeiroDashboardStore'
 
 type BPLinha = { conta: string; valor: number }
 type BPSecao = { nome: string; linhas: BPLinha[] }
@@ -27,9 +33,12 @@ function formatNum(n?: number) { return (Number(n||0)).toLocaleString('pt-BR') }
 export default function ContabilidadeDashboardPage() {
   // Global UI (reuso das props do dashboard financeiro)
   const ui = useStore($financeiroDashboardUI)
+  const filters = useStore($financeiroDashboardFilters)
   const fonts = ui.fonts
   const cardBorderColor = ui.cardBorderColor
   const pageBgColor = ui.pageBgColor
+  const cardShadow = ui.cardShadow
+  const filtersIconColor = ui.filtersIconColor
   
   const [bp, setBp] = useState<BPResponse | null>(null)
   const [dre, setDre] = useState<DREResponse | null>(null)
@@ -98,6 +107,78 @@ export default function ContabilidadeDashboardPage() {
     fontSize: typeof fonts.headerSubtitle.size === 'number' ? `${fonts.headerSubtitle.size}px` : undefined,
     textTransform: fonts.headerSubtitle.transform === 'uppercase' ? 'uppercase' : 'none',
   }), [fonts.headerSubtitle])
+
+  const styleFilters = useMemo<React.CSSProperties>(() => ({
+    fontFamily: fontVar(fonts.filters.family),
+    fontWeight: fonts.filters.weight as React.CSSProperties['fontWeight'],
+    letterSpacing: typeof fonts.filters.letterSpacing === 'number' ? `${fonts.filters.letterSpacing}px` : undefined,
+    color: fonts.filters.color || undefined,
+    fontSize: typeof fonts.filters.size === 'number' ? `${fonts.filters.size}px` : undefined,
+    textTransform: fonts.filters.transform === 'uppercase' ? 'uppercase' : 'none',
+  }), [fonts.filters])
+
+  // Date range & filtro (globais)
+  const dateRange: DateRange | undefined = useMemo(() => {
+    const from = filters.dateRange?.from ? new Date(filters.dateRange.from) : undefined
+    const to = filters.dateRange?.to ? new Date(filters.dateRange.to) : undefined
+    if (!from && !to) return undefined
+    return { from, to }
+  }, [filters.dateRange])
+  const setDateRange = (range?: DateRange) => {
+    const toISO = (d?: Date) => (d ? d.toISOString().slice(0, 10) : undefined)
+    financeiroDashboardActions.setFilters({
+      dateRange: range ? { from: toISO(range.from), to: toISO(range.to) } : undefined,
+    })
+  }
+  const dataFilter = filters.dataFilter
+  const setDataFilter = (v: string) => financeiroDashboardActions.setFilters({ dataFilter: v })
+
+  const rangeLabel = useMemo(() => {
+    if (dateRange?.from && dateRange?.to) {
+      const fmt = (d: Date) => d.toLocaleDateString('pt-BR')
+      return `${fmt(dateRange.from)} - ${fmt(dateRange.to)}`
+    }
+    if (dateRange?.from) {
+      const fmt = (d: Date) => d.toLocaleDateString('pt-BR')
+      return `${fmt(dateRange.from)}`
+    }
+    return 'Selecionar período'
+  }, [dateRange])
+
+  const headerActions = (
+    <div className="flex items-center gap-2">
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button variant="outline" size="sm" className="h-9 px-3">
+            <CalendarIcon className="mr-2 h-4 w-4" style={{ color: filtersIconColor }} />
+            <span className="whitespace-nowrap" style={styleFilters}>{rangeLabel}</span>
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent align="end" className="p-2 w-auto">
+          <Calendar
+            mode="range"
+            selected={dateRange}
+            onSelect={setDateRange}
+            numberOfMonths={2}
+            captionLayout="dropdown"
+            showOutsideDays
+            initialFocus
+          />
+        </PopoverContent>
+      </Popover>
+      <Select value={dataFilter} onValueChange={setDataFilter}>
+        <SelectTrigger className="h-9 w-[160px]" style={styleFilters}>
+          <SelectValue placeholder="Filtro" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="todos">Todos</SelectItem>
+          <SelectItem value="pendentes">Pendentes</SelectItem>
+          <SelectItem value="vencidos">Vencidos</SelectItem>
+          <SelectItem value="pagos">Pagos</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+  )
 
   useEffect(() => {
     let cancelled = false
@@ -266,33 +347,38 @@ export default function ContabilidadeDashboardPage() {
     return cur ? cur.lucro : 0
   }, [dreResumo])
 
+  const cardContainerClass = `bg-white p-6 rounded-lg border border-gray-100${cardShadow ? ' shadow-sm' : ''}`
+
   return (
     <DashboardLayout
-      title="Dashboard Contábil"
-      subtitle="Balanço, DRE e lançamentos"
+      title="Olá, Igor Bianch"
+      subtitle="Você está na aba Dashboard do módulo Contabilidade"
       backgroundColor={pageBgColor}
+      headerBackground="transparent"
       headerTitleStyle={styleHeaderTitle}
       headerSubtitleStyle={styleHeaderSubtitle}
+      headerActions={headerActions}
+      userAvatarUrl="https://i.pravatar.cc/80?img=12"
     >
       {loading ? (<div className="p-4 text-sm text-gray-500">Carregando…</div>) : error ? (<div className="p-4 text-sm text-red-600">{error}</div>) : null}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white p-6 rounded-lg border border-gray-100 shadow-sm" style={{ borderColor: cardBorderColor }}>
+        <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
           <div className="text-sm font-medium text-gray-500 mb-2" style={styleKpiTitle}>Ativo Total</div>
           <div className="text-2xl font-bold text-blue-600" style={styleValues}>{formatBRL(kpis.ativo)}</div>
           <div className="text-xs text-gray-400 mt-1" style={styleText}>Balanço (período)</div>
         </div>
-        <div className="bg-white p-6 rounded-lg border border-gray-100 shadow-sm" style={{ borderColor: cardBorderColor }}>
+        <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
           <div className="text-sm font-medium text-gray-500 mb-2" style={styleKpiTitle}>Passivo + PL</div>
           <div className="text-2xl font-bold text-indigo-600" style={styleValues}>{formatBRL(kpis.passivo + kpis.pl)}</div>
           <div className="text-xs text-gray-400 mt-1" style={styleText}>Estrutura de capital</div>
         </div>
-        <div className="bg-white p-6 rounded-lg border border-gray-100 shadow-sm" style={{ borderColor: cardBorderColor }}>
+        <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
           <div className="text-sm font-medium text-gray-500 mb-2" style={styleKpiTitle}>Lucro do Mês</div>
           <div className="text-2xl font-bold text-emerald-600" style={styleValues}>{formatBRL(lucroAtual)}</div>
           <div className="text-xs text-gray-400 mt-1" style={styleText}>Receita − COGS − Opex</div>
         </div>
-        <div className="bg-white p-6 rounded-lg border border-gray-100 shadow-sm" style={{ borderColor: cardBorderColor }}>
+        <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
           <div className="text-sm font-medium text-gray-500 mb-2" style={styleKpiTitle}>Liquidez Corrente</div>
           <div className="text-2xl font-bold text-orange-600" style={styleValues}>{liquidezCorrente.toFixed(2)}x</div>
           <div className="text-xs text-gray-400 mt-1" style={styleText}>AC / PC</div>
@@ -300,18 +386,18 @@ export default function ContabilidadeDashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <div className="bg-white p-6 rounded-lg border border-gray-100 shadow-sm" style={{ borderColor: cardBorderColor }}>
+        <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
           <h3 className="text-lg font-semibold mb-4" style={styleChartTitle}>DRE por Mês</h3>
           <BarsDRE items={dreResumo.map(d => ({ label: d.label, receita: d.receita, cogs: d.cogs, opex: d.opex }))} />
         </div>
-        <div className="bg-white p-6 rounded-lg border border-gray-100 shadow-sm" style={{ borderColor: cardBorderColor }}>
+        <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
           <h3 className="text-lg font-semibold mb-4" style={styleChartTitle}>Composição do Balanço</h3>
           <HBars items={bpComposicao} color="bg-sky-500" />
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white p-6 rounded-lg border border-gray-100 shadow-sm" style={{ borderColor: cardBorderColor }}>
+        <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
           <h3 className="text-lg font-semibold mb-4" style={styleChartTitle}>Últimos Lançamentos</h3>
           <div className="space-y-3">
             {ultimosLanc.length === 0 ? (
@@ -330,7 +416,7 @@ export default function ContabilidadeDashboardPage() {
             ))}
           </div>
         </div>
-        <div className="bg-white p-6 rounded-lg border border-gray-100 shadow-sm" style={{ borderColor: cardBorderColor }}>
+        <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
           <h3 className="text-lg font-semibold mb-4" style={styleChartTitle}>Observações</h3>
           <ul className="text-sm text-gray-600 space-y-2 list-disc pl-5" style={styleText}>
             <li>Considere revisar regras contábeis automáticas para CAP/AR/Payments.</li>
