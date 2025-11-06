@@ -100,7 +100,7 @@ export default function FinanceiroDashboardPage() {
     letterSpacing: typeof fonts.values.letterSpacing === 'number' ? `${fonts.values.letterSpacing}px` : undefined,
     color: fonts.values.color || undefined,
     fontSize: typeof fonts.values.size === 'number' ? `${fonts.values.size}px` : undefined,
-    textTransform: fonts.values.transform === 'uppercase' ? 'uppercase' : undefined,
+    textTransform: fonts.values.transform === 'uppercase' ? 'uppercase' : 'none',
   }), [fonts.values])
   const styleTitle = useMemo(() => ({
     fontFamily: fontVar(fonts.title.family),
@@ -108,7 +108,7 @@ export default function FinanceiroDashboardPage() {
     letterSpacing: typeof fonts.title.letterSpacing === 'number' ? `${fonts.title.letterSpacing}px` : undefined,
     color: fonts.title.color || undefined,
     fontSize: typeof fonts.title.size === 'number' ? `${fonts.title.size}px` : undefined,
-    textTransform: fonts.title.transform === 'uppercase' ? 'uppercase' : undefined,
+    textTransform: fonts.title.transform === 'uppercase' ? 'uppercase' : 'none',
   }), [fonts.title])
   const styleText = useMemo(() => ({
     fontFamily: fontVar(fonts.text.family),
@@ -116,7 +116,7 @@ export default function FinanceiroDashboardPage() {
     letterSpacing: typeof fonts.text.letterSpacing === 'number' ? `${fonts.text.letterSpacing}px` : undefined,
     color: fonts.text.color || undefined,
     fontSize: typeof fonts.text.size === 'number' ? `${fonts.text.size}px` : undefined,
-    textTransform: fonts.text.transform === 'uppercase' ? 'uppercase' : undefined,
+    textTransform: fonts.text.transform === 'uppercase' ? 'uppercase' : 'none',
   }), [fonts.text])
 
   useEffect(() => {
