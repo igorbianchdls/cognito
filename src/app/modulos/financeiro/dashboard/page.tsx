@@ -104,6 +104,7 @@ export default function FinanceiroDashboardPage() {
     headerSubtitle: { family: 'Inter', weight: 400 as number | undefined, letterSpacing: 0 as number | undefined, color: '#6b7280' as string | undefined, size: 12 as number | undefined, transform: 'none' as 'none' | 'uppercase' },
   })
   const [cardBorderColor, setCardBorderColor] = useState<string>('#f3f4f6')
+  const [pageBgColor, setPageBgColor] = useState<string>('#ffffff')
   const styleValues = useMemo<React.CSSProperties>(() => ({
     fontFamily: fontVar(fonts.values.family),
     fontWeight: fonts.values.weight as React.CSSProperties['fontWeight'],
@@ -508,7 +509,8 @@ export default function FinanceiroDashboardPage() {
     <DashboardLayout
       title="Olá, Igor Bianch"
       subtitle="Você está na aba Dashboard do módulo Financeiro"
-      backgroundColor="#ffffff"
+      backgroundColor={pageBgColor}
+      headerBackground="transparent"
       headerTitleStyle={styleHeaderTitle}
       headerSubtitleStyle={styleHeaderSubtitle}
       headerActions={headerActions}
@@ -935,14 +937,25 @@ export default function FinanceiroDashboardPage() {
           </div>
         </div>
         <div className="mt-4 pt-3 border-t border-gray-100">
-          <div className="flex items-center gap-3">
-            <div className="text-xs text-gray-500">Borda dos cards</div>
-            <input
-              type="color"
-              className="border rounded w-8 h-6"
-              value={cardBorderColor}
-              onChange={(e) => setCardBorderColor(e.target.value)}
-            />
+          <div className="flex items-center gap-6 flex-wrap">
+            <div className="flex items-center gap-3">
+              <div className="text-xs text-gray-500">Fundo da página</div>
+              <input
+                type="color"
+                className="border rounded w-8 h-6"
+                value={pageBgColor}
+                onChange={(e) => setPageBgColor(e.target.value)}
+              />
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="text-xs text-gray-500">Borda dos cards</div>
+              <input
+                type="color"
+                className="border rounded w-8 h-6"
+                value={cardBorderColor}
+                onChange={(e) => setCardBorderColor(e.target.value)}
+              />
+            </div>
           </div>
         </div>
       </div>

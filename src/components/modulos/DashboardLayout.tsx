@@ -19,6 +19,7 @@ interface DashboardLayoutProps {
   headerTitleStyle?: React.CSSProperties
   headerSubtitleStyle?: React.CSSProperties
   backgroundColor?: string
+  headerBackground?: string
   contentClassName?: string
 }
 
@@ -35,6 +36,7 @@ export default function DashboardLayout({
   headerTitleStyle,
   headerSubtitleStyle,
   backgroundColor = '#f8f9fa',
+  headerBackground = 'white',
   contentClassName = 'flex-1 p-6',
 }: DashboardLayoutProps) {
   return (
@@ -44,7 +46,7 @@ export default function DashboardLayout({
         className="min-h-screen flex flex-col overflow-y-auto"
         style={{ background: backgroundColor }}
       >
-        <div style={{ background: 'white', paddingBottom: 8 }}>
+        <div style={{ background: headerBackground, paddingBottom: 8 }}>
           <DashboardHeader
             title={title}
             subtitle={subtitle}
