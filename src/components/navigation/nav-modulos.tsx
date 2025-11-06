@@ -32,26 +32,7 @@ export function NavModulos() {
       <SidebarGroup>
         <SidebarGroupLabel>Gestão</SidebarGroupLabel>
         <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              tooltip="Empresa"
-              onClick={() => router.push("/modulos/empresa")}
-              isActive={pathname.startsWith("/modulos/empresa")}
-            >
-              <Building2 />
-              <span>Empresa</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              tooltip="Administrativo"
-              onClick={() => router.push("/modulos/admnistrativo")}
-              isActive={pathname.startsWith("/modulos/admnistrativo")}
-            >
-              <Building2 />
-              <span>Administrativo</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+          {/* Financeiro primeiro */}
           <Collapsible
             key="financeiro"
             asChild
@@ -86,6 +67,7 @@ export function NavModulos() {
               </CollapsibleContent>
             </SidebarMenuItem>
           </Collapsible>
+          {/* Contabilidade logo abaixo */}
           <SidebarMenuItem>
             <SidebarMenuButton
               tooltip="Contabilidade"
@@ -94,6 +76,27 @@ export function NavModulos() {
             >
               <BookOpen />
               <span>Contabilidade</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          {/* Demais itens */}
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              tooltip="Empresa"
+              onClick={() => router.push("/modulos/empresa")}
+              isActive={pathname.startsWith("/modulos/empresa")}
+            >
+              <Building2 />
+              <span>Empresa</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              tooltip="Administrativo"
+              onClick={() => router.push("/modulos/admnistrativo")}
+              isActive={pathname.startsWith("/modulos/admnistrativo")}
+            >
+              <Building2 />
+              <span>Administrativo</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
