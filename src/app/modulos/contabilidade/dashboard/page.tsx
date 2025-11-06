@@ -1,7 +1,10 @@
+
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import { useStore } from '@nanostores/react'
 import DashboardLayout from '@/components/modulos/DashboardLayout'
+import { $financeiroDashboardUI } from '@/stores/modulos/financeiroDashboardStore'
 
 type BPLinha = { conta: string; valor: number }
 type BPSecao = { nome: string; linhas: BPLinha[] }
@@ -22,11 +25,79 @@ function formatBRL(n?: number) { return (Number(n||0)).toLocaleString('pt-BR', {
 function formatNum(n?: number) { return (Number(n||0)).toLocaleString('pt-BR') }
 
 export default function ContabilidadeDashboardPage() {
+  // Global UI (reuso das props do dashboard financeiro)
+  const ui = useStore($financeiroDashboardUI)
+  const fonts = ui.fonts
+  const cardBorderColor = ui.cardBorderColor
+  const pageBgColor = ui.pageBgColor
+  
   const [bp, setBp] = useState<BPResponse | null>(null)
   const [dre, setDre] = useState<DREResponse | null>(null)
   const [lanc, setLanc] = useState<LancRow[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Font map (mesmo helper do financeiro)
+  function fontVar(name?: string) {
+    if (!name) return undefined
+    if (name === 'Inter') return 'var(--font-inter)'
+    if (name === 'Geist') return 'var(--font-geist-sans)'
+    if (name === 'Roboto Mono') return 'var(--font-roboto-mono)'
+    if (name === 'Geist Mono') return 'var(--font-geist-mono)'
+    if (name === 'IBM Plex Mono') return 'var(--font-ibm-plex-mono), "IBM Plex Mono", monospace'
+    if (name === 'Avenir') return 'var(--font-avenir), Avenir, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif'
+    if (name === 'Space Mono') return 'var(--font-space-mono), "Space Mono", monospace'
+    return name
+  }
+
+  const styleValues = useMemo<React.CSSProperties>(() => ({
+    fontFamily: fontVar(fonts.values.family),
+    fontWeight: fonts.values.weight as React.CSSProperties['fontWeight'],
+    letterSpacing: typeof fonts.values.letterSpacing === 'number' ? `${fonts.values.letterSpacing}px` : undefined,
+    color: fonts.values.color || undefined,
+    fontSize: typeof fonts.values.size === 'number' ? `${fonts.values.size}px` : undefined,
+    textTransform: fonts.values.transform === 'uppercase' ? 'uppercase' : 'none',
+  }), [fonts.values])
+  const styleKpiTitle = useMemo<React.CSSProperties>(() => ({
+    fontFamily: fontVar(fonts.kpiTitle.family),
+    fontWeight: fonts.kpiTitle.weight as React.CSSProperties['fontWeight'],
+    letterSpacing: typeof fonts.kpiTitle.letterSpacing === 'number' ? `${fonts.kpiTitle.letterSpacing}px` : undefined,
+    color: fonts.kpiTitle.color || undefined,
+    fontSize: typeof fonts.kpiTitle.size === 'number' ? `${fonts.kpiTitle.size}px` : undefined,
+    textTransform: fonts.kpiTitle.transform === 'uppercase' ? 'uppercase' : 'none',
+  }), [fonts.kpiTitle])
+  const styleChartTitle = useMemo<React.CSSProperties>(() => ({
+    fontFamily: fontVar(fonts.chartTitle.family),
+    fontWeight: fonts.chartTitle.weight as React.CSSProperties['fontWeight'],
+    letterSpacing: typeof fonts.chartTitle.letterSpacing === 'number' ? `${fonts.chartTitle.letterSpacing}px` : undefined,
+    color: fonts.chartTitle.color || undefined,
+    fontSize: typeof fonts.chartTitle.size === 'number' ? `${fonts.chartTitle.size}px` : undefined,
+    textTransform: fonts.chartTitle.transform === 'uppercase' ? 'uppercase' : 'none',
+  }), [fonts.chartTitle])
+  const styleText = useMemo<React.CSSProperties>(() => ({
+    fontFamily: fontVar(fonts.text.family),
+    fontWeight: fonts.text.weight as React.CSSProperties['fontWeight'],
+    letterSpacing: typeof fonts.text.letterSpacing === 'number' ? `${fonts.text.letterSpacing}px` : undefined,
+    color: fonts.text.color || undefined,
+    fontSize: typeof fonts.text.size === 'number' ? `${fonts.text.size}px` : undefined,
+    textTransform: fonts.text.transform === 'uppercase' ? 'uppercase' : 'none',
+  }), [fonts.text])
+  const styleHeaderTitle = useMemo<React.CSSProperties>(() => ({
+    fontFamily: fontVar(fonts.headerTitle.family),
+    fontWeight: fonts.headerTitle.weight as React.CSSProperties['fontWeight'],
+    letterSpacing: typeof fonts.headerTitle.letterSpacing === 'number' ? `${fonts.headerTitle.letterSpacing}px` : undefined,
+    color: fonts.headerTitle.color || undefined,
+    fontSize: typeof fonts.headerTitle.size === 'number' ? `${fonts.headerTitle.size}px` : undefined,
+    textTransform: fonts.headerTitle.transform === 'uppercase' ? 'uppercase' : 'none',
+  }), [fonts.headerTitle])
+  const styleHeaderSubtitle = useMemo<React.CSSProperties>(() => ({
+    fontFamily: fontVar(fonts.headerSubtitle.family),
+    fontWeight: fonts.headerSubtitle.weight as React.CSSProperties['fontWeight'],
+    letterSpacing: typeof fonts.headerSubtitle.letterSpacing === 'number' ? `${fonts.headerSubtitle.letterSpacing}px` : undefined,
+    color: fonts.headerSubtitle.color || undefined,
+    fontSize: typeof fonts.headerSubtitle.size === 'number' ? `${fonts.headerSubtitle.size}px` : undefined,
+    textTransform: fonts.headerSubtitle.transform === 'uppercase' ? 'uppercase' : 'none',
+  }), [fonts.headerSubtitle])
 
   useEffect(() => {
     let cancelled = false
@@ -199,55 +270,57 @@ export default function ContabilidadeDashboardPage() {
     <DashboardLayout
       title="Dashboard Contábil"
       subtitle="Balanço, DRE e lançamentos"
-      backgroundColor="#ffffff"
+      backgroundColor={pageBgColor}
+      headerTitleStyle={styleHeaderTitle}
+      headerSubtitleStyle={styleHeaderSubtitle}
     >
       {loading ? (<div className="p-4 text-sm text-gray-500">Carregando…</div>) : error ? (<div className="p-4 text-sm text-red-600">{error}</div>) : null}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <div className="text-sm font-medium text-gray-500 mb-2">Ativo Total</div>
-          <div className="text-2xl font-bold text-blue-600">{formatBRL(kpis.ativo)}</div>
-          <div className="text-xs text-gray-400 mt-1">Balanço (período)</div>
+        <div className="bg-white p-6 rounded-lg border border-gray-100 shadow-sm" style={{ borderColor: cardBorderColor }}>
+          <div className="text-sm font-medium text-gray-500 mb-2" style={styleKpiTitle}>Ativo Total</div>
+          <div className="text-2xl font-bold text-blue-600" style={styleValues}>{formatBRL(kpis.ativo)}</div>
+          <div className="text-xs text-gray-400 mt-1" style={styleText}>Balanço (período)</div>
         </div>
-        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <div className="text-sm font-medium text-gray-500 mb-2">Passivo + PL</div>
-          <div className="text-2xl font-bold text-indigo-600">{formatBRL(kpis.passivo + kpis.pl)}</div>
-          <div className="text-xs text-gray-400 mt-1">Estrutura de capital</div>
+        <div className="bg-white p-6 rounded-lg border border-gray-100 shadow-sm" style={{ borderColor: cardBorderColor }}>
+          <div className="text-sm font-medium text-gray-500 mb-2" style={styleKpiTitle}>Passivo + PL</div>
+          <div className="text-2xl font-bold text-indigo-600" style={styleValues}>{formatBRL(kpis.passivo + kpis.pl)}</div>
+          <div className="text-xs text-gray-400 mt-1" style={styleText}>Estrutura de capital</div>
         </div>
-        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <div className="text-sm font-medium text-gray-500 mb-2">Lucro do Mês</div>
-          <div className="text-2xl font-bold text-emerald-600">{formatBRL(lucroAtual)}</div>
-          <div className="text-xs text-gray-400 mt-1">Receita − COGS − Opex</div>
+        <div className="bg-white p-6 rounded-lg border border-gray-100 shadow-sm" style={{ borderColor: cardBorderColor }}>
+          <div className="text-sm font-medium text-gray-500 mb-2" style={styleKpiTitle}>Lucro do Mês</div>
+          <div className="text-2xl font-bold text-emerald-600" style={styleValues}>{formatBRL(lucroAtual)}</div>
+          <div className="text-xs text-gray-400 mt-1" style={styleText}>Receita − COGS − Opex</div>
         </div>
-        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <div className="text-sm font-medium text-gray-500 mb-2">Liquidez Corrente</div>
-          <div className="text-2xl font-bold text-orange-600">{liquidezCorrente.toFixed(2)}x</div>
-          <div className="text-xs text-gray-400 mt-1">AC / PC</div>
+        <div className="bg-white p-6 rounded-lg border border-gray-100 shadow-sm" style={{ borderColor: cardBorderColor }}>
+          <div className="text-sm font-medium text-gray-500 mb-2" style={styleKpiTitle}>Liquidez Corrente</div>
+          <div className="text-2xl font-bold text-orange-600" style={styleValues}>{liquidezCorrente.toFixed(2)}x</div>
+          <div className="text-xs text-gray-400 mt-1" style={styleText}>AC / PC</div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <h3 className="text-lg font-semibold mb-4">DRE por Mês</h3>
+        <div className="bg-white p-6 rounded-lg border border-gray-100 shadow-sm" style={{ borderColor: cardBorderColor }}>
+          <h3 className="text-lg font-semibold mb-4" style={styleChartTitle}>DRE por Mês</h3>
           <BarsDRE items={dreResumo.map(d => ({ label: d.label, receita: d.receita, cogs: d.cogs, opex: d.opex }))} />
         </div>
-        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <h3 className="text-lg font-semibold mb-4">Composição do Balanço</h3>
+        <div className="bg-white p-6 rounded-lg border border-gray-100 shadow-sm" style={{ borderColor: cardBorderColor }}>
+          <h3 className="text-lg font-semibold mb-4" style={styleChartTitle}>Composição do Balanço</h3>
           <HBars items={bpComposicao} color="bg-sky-500" />
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <h3 className="text-lg font-semibold mb-4">Últimos Lançamentos</h3>
+        <div className="bg-white p-6 rounded-lg border border-gray-100 shadow-sm" style={{ borderColor: cardBorderColor }}>
+          <h3 className="text-lg font-semibold mb-4" style={styleChartTitle}>Últimos Lançamentos</h3>
           <div className="space-y-3">
             {ultimosLanc.length === 0 ? (
-              <div className="text-sm text-gray-400">Sem lançamentos</div>
+              <div className="text-sm text-gray-400" style={styleText}>Sem lançamentos</div>
             ) : ultimosLanc.map((l, idx) => (
-              <div key={`${l.lancamento_id}-${idx}`} className="flex justify-between items-center pb-2 border-b last:border-b-0">
+              <div key={`${l.lancamento_id}-${idx}`} className="flex justify-between items-center pb-2 border-b last:border-b-0" style={{ borderColor: cardBorderColor }}>
                 <div>
-                  <div className="font-medium text-sm">{l.historico || 'Lançamento'}</div>
-                  <div className="text-xs text-gray-500">{l.data_lancamento ? new Date(l.data_lancamento).toLocaleDateString('pt-BR') : '—'} • {l.conta_codigo || ''} {l.conta_nome || ''}</div>
+                  <div className="font-medium text-sm" style={styleText}>{l.historico || 'Lançamento'}</div>
+                  <div className="text-xs text-gray-500" style={styleText}>{l.data_lancamento ? new Date(l.data_lancamento).toLocaleDateString('pt-BR') : '—'} • {l.conta_codigo || ''} {l.conta_nome || ''}</div>
                 </div>
                 <div className="text-right text-xs">
                   <div className="text-rose-600">{Number(l.debito||0) > 0 ? `D ${formatBRL(Number(l.debito))}` : ''}</div>
@@ -257,9 +330,9 @@ export default function ContabilidadeDashboardPage() {
             ))}
           </div>
         </div>
-        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <h3 className="text-lg font-semibold mb-4">Observações</h3>
-          <ul className="text-sm text-gray-600 space-y-2 list-disc pl-5">
+        <div className="bg-white p-6 rounded-lg border border-gray-100 shadow-sm" style={{ borderColor: cardBorderColor }}>
+          <h3 className="text-lg font-semibold mb-4" style={styleChartTitle}>Observações</h3>
+          <ul className="text-sm text-gray-600 space-y-2 list-disc pl-5" style={styleText}>
             <li>Considere revisar regras contábeis automáticas para CAP/AR/Payments.</li>
             <li>Valide mapeamento do plano de contas para DRE e BP.</li>
             <li>Concilie lançamentos pendentes antes do fechamento.</li>
@@ -269,4 +342,3 @@ export default function ContabilidadeDashboardPage() {
     </DashboardLayout>
   )
 }
-
