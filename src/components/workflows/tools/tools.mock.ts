@@ -1,4 +1,4 @@
-import { Database, Globe, Mail, Bot, Cloud, FileText, Image, Sparkles, Plug, Server, MessageSquare, FlaskConical, TrendingUp, Package, Truck, Users, Receipt, FileSpreadsheet, ShoppingCart, BarChart3, ClipboardList, KanbanSquare, BadgeDollarSign } from 'lucide-react'
+import { Database, Globe, Mail, Bot, Cloud, FileText, Image, Sparkles, Plug, Server, MessageSquare, FlaskConical, TrendingUp, Package, Truck, Users, Receipt, FileSpreadsheet, ShoppingCart, BarChart3, ClipboardList, KanbanSquare, BadgeDollarSign, Calendar } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
 export type ToolMeta = {

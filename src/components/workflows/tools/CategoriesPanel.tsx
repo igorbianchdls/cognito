@@ -9,15 +9,12 @@ import { TOOL_CATEGORIES, TOOLS_MOCK } from './tools.mock'
 export default function CategoriesPanel({ onBack, onOpenCategory }: { onBack?: () => void; onOpenCategory?: (category: string) => void }) {
   // Build counts per category from mock
   const counts = TOOL_CATEGORIES.reduce<Record<string, number>>((acc, cat) => {
-    if (cat === 'Todas') {
-      acc[cat] = TOOLS_MOCK.length
-    } else {
-      acc[cat] = TOOLS_MOCK.filter(t => t.category === cat).length
-    }
+    acc[cat] = TOOLS_MOCK.filter(t => t.category === cat).length
     return acc
   }, {})
 
-  const categories = TOOL_CATEGORIES.filter(c => c !== 'Todas')
+  const total = TOOLS_MOCK.length
+  const categories = TOOL_CATEGORIES
 
   const STYLE: Record<string, { icon: LucideIcon; bg: string; color: string }> = {
     Data: { icon: Database, bg: '#EEF2FF', color: '#1D4ED8' },
@@ -60,7 +57,7 @@ export default function CategoriesPanel({ onBack, onOpenCategory }: { onBack?: (
           })}
         </div>
         <Separator className="my-4" />
-        <div className="text-xs text-gray-500">Total: {counts['Todas']} ferramentas</div>
+        <div className="text-xs text-gray-500">Total: {total} ferramentas</div>
       </div>
     </div>
   )
