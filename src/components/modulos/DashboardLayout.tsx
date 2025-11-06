@@ -2,7 +2,7 @@
 
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
-import PageHeader from '@/components/modulos/PageHeader'
+import DashboardHeader from '@/components/modulos/DashboardHeader'
 import * as React from 'react'
 
 interface DashboardLayoutProps {
@@ -10,16 +10,12 @@ interface DashboardLayoutProps {
   subtitle?: string
   children: React.ReactNode
   headerActions?: React.ReactNode
-  titleFontFamily?: string
-  titleFontSize?: number
-  titleFontWeight?: string
-  titleColor?: string
-  titleLetterSpacing?: number
-  subtitleFontFamily?: string
-  subtitleFontSize?: number
-  subtitleFontWeight?: string
-  subtitleColor?: string
-  subtitleLetterSpacing?: number
+  // New header (compact) extras
+  userAvatarUrl?: string
+  onSearch?: () => void
+  onNotifications?: () => void
+  secondaryCta?: { label: string; onClick?: () => void; icon?: React.ReactNode }
+  primaryCta?: { label: string; onClick?: () => void; icon?: React.ReactNode }
   backgroundColor?: string
   contentClassName?: string
 }
@@ -29,18 +25,13 @@ export default function DashboardLayout({
   subtitle,
   children,
   headerActions,
-  titleFontFamily = 'var(--font-crimson-text)',
+  userAvatarUrl,
+  onSearch,
+  onNotifications,
+  secondaryCta,
+  primaryCta,
   backgroundColor = '#f8f9fa',
   contentClassName = 'flex-1 p-6',
-  titleFontSize,
-  titleFontWeight,
-  titleColor,
-  titleLetterSpacing,
-  subtitleFontFamily,
-  subtitleFontSize,
-  subtitleFontWeight,
-  subtitleColor,
-  subtitleLetterSpacing,
 }: DashboardLayoutProps) {
   return (
     <SidebarProvider>
@@ -49,21 +40,16 @@ export default function DashboardLayout({
         className="min-h-screen flex flex-col overflow-y-auto"
         style={{ background: backgroundColor }}
       >
-        <div style={{ background: 'white', paddingBottom: 16 }}>
-          <PageHeader
+        <div style={{ background: 'white', paddingBottom: 8 }}>
+          <DashboardHeader
             title={title}
             subtitle={subtitle}
-            actions={headerActions}
-            titleFontFamily={titleFontFamily}
-            titleFontSize={titleFontSize}
-            titleFontWeight={titleFontWeight}
-            titleColor={titleColor}
-            titleLetterSpacing={titleLetterSpacing}
-            subtitleFontFamily={subtitleFontFamily}
-            subtitleFontSize={subtitleFontSize}
-            subtitleFontWeight={subtitleFontWeight}
-            subtitleColor={subtitleColor}
-            subtitleLetterSpacing={subtitleLetterSpacing}
+            avatarUrl={userAvatarUrl}
+            onSearch={onSearch}
+            onNotifications={onNotifications}
+            secondaryCta={secondaryCta}
+            primaryCta={primaryCta}
+            actionsRight={headerActions}
           />
         </div>
 
