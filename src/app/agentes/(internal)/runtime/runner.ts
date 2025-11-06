@@ -2,6 +2,8 @@ import { generateText, type PrepareStepFunction } from 'ai'
 import { anthropic } from '@ai-sdk/anthropic'
 import { openai } from '@ai-sdk/openai'
 import type { Graph, AgentBlockConfig, StepBlockConfig } from '@/types/agentes/builder'
+import { collectTools } from '@/app/agentes/(internal)/codegen/helpers'
+import { getToolsByIds } from '@/app/agentes/(internal)/runtime/tools'
 
 export type ExecOptions = {
   temperature?: number
@@ -37,6 +39,8 @@ export async function execute(graph: Graph, input: string, opts?: ExecOptions): 
   const agent = getAgent(graph)
   const step = getStep(graph)
   const temperature = typeof opts?.temperature === 'number' ? opts!.temperature : (typeof agent.temperature === 'number' ? agent.temperature : 0.2)
+  const toolsIds = collectTools(graph)
+  const tools = toolsIds.length ? getToolsByIds(toolsIds) : undefined
 
   const prepareStep: PrepareStepFunction | undefined = step.prepareStepEnabled
     ? (() => undefined)
@@ -47,6 +51,7 @@ export async function execute(graph: Graph, input: string, opts?: ExecOptions): 
     system: String(agent.systemPrompt || ''),
     prompt: input,
     temperature,
+    ...(tools ? { tools } : {}),
     ...(step.count > 0 ? { maxToolRoundtrips: step.maxSteps ?? step.count } : {}),
     ...(step.toolChoice && step.toolChoice !== 'auto' ? { toolChoice: step.toolChoice } : {}),
     ...(prepareStep ? { prepareStep } : {}),
@@ -59,4 +64,3 @@ export async function execute(graph: Graph, input: string, opts?: ExecOptions): 
 
   return { reply: text }
 }
-

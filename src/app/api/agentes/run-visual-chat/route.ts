@@ -3,6 +3,8 @@ import { NextResponse } from 'next/server'
 import type { Graph, AgentBlockConfig, StepBlockConfig } from '@/types/agentes/builder'
 import { anthropic } from '@ai-sdk/anthropic'
 import { openai } from '@ai-sdk/openai'
+import { collectTools } from '@/app/agentes/(internal)/codegen/helpers'
+import { getToolsByIds } from '@/app/agentes/(internal)/runtime/tools'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -27,11 +29,15 @@ export async function POST(req: Request) {
     const steps = graph.blocks.filter(b => b.kind === 'step')
     const stepCfg = (steps[0]?.config || {}) as Partial<StepBlockConfig>
 
+    const toolIds = collectTools(graph)
+    const tools = toolIds.length ? getToolsByIds(toolIds) : undefined
+
     const result = streamText({
       model: selectModel(agent.model),
       system: String(agent.systemPrompt || ''),
       messages: convertToModelMessages(messages),
       temperature: typeof agent.temperature === 'number' ? agent.temperature : 0.2,
+      ...(tools ? { tools } : {}),
       ...(steps.length > 0 ? { maxToolRoundtrips: stepCfg.maxSteps ?? steps.length } : {}),
       ...(stepCfg.toolChoice && stepCfg.toolChoice !== 'auto' ? { toolChoice: stepCfg.toolChoice } : {}),
       ...(stepCfg.prepareStepEnabled ? { prepareStep: () => undefined } : {}),

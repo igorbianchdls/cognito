@@ -1,5 +1,6 @@
 import type { Graph } from '@/types/agentes/builder'
-import { getFirstAgent, stringifyGraph, tsStringLiteral, getStepSettings } from './helpers'
+import { getFirstAgent, stringifyGraph, tsStringLiteral, getStepSettings, collectTools } from './helpers'
+import { buildToolImports } from './tool-map'
 
 export function genRouteTs(graph: Graph, slug: string): string {
   const agent = getFirstAgent(graph) || {}
@@ -12,9 +13,13 @@ export function genRouteTs(graph: Graph, slug: string): string {
   const importOpenAI = provider === 'openai'
   const step = getStepSettings(graph)
 
+  const selectedToolIds = collectTools(graph)
+  const { importLines: toolImports, toolsObjectLiteral } = buildToolImports(selectedToolIds)
+
   const imports = `import { NextResponse } from 'next/server'
 import { generateText } from 'ai'
 import { anthropic } from '@ai-sdk/anthropic'${importOpenAI ? "\nimport { openai } from '@ai-sdk/openai'" : ''}`
+    + (toolImports ? `\n${toolImports}` : '')
 
   return `// Arquivo gerado automaticamente pelo Agent Builder (não editar manualmente)
 // slug: ${slug}
@@ -42,6 +47,7 @@ export async function POST(request: Request) {
       system: "${sys}",
       prompt,
       temperature,
+      ${selectedToolIds.length ? `tools: ${toolsObjectLiteral},` : ''}
       ${step.count > 0 ? `maxToolRoundtrips: ${step.maxSteps ?? step.count},` : ''}
       ${step.toolChoice && step.toolChoice !== 'auto' ? `toolChoice: '${step.toolChoice}',` : ''}
       ${step.prepareStepEnabled ? `prepareStep,` : ''}
