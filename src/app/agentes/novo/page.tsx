@@ -166,14 +166,19 @@ export default function NewAgentPage() {
       <SidebarInset className="h-screen flex flex-col bg-white">
         <div className="flex items-center justify-between pl-2 pr-3 md:pl-3 md:pr-6 h-14 border-b">
           {/* Left: back, badge icon, title input, toggle */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 md:gap-3">
             <Link href="/agentes" className="text-gray-700 hover:text-gray-900">
               <ArrowLeft className="w-5 h-5" />
             </Link>
             <div className="inline-flex items-center justify-center w-7 h-7 rounded-md border bg-yellow-100 text-yellow-800 border-yellow-200">
               <Paperclip className="w-4 h-4" />
             </div>
-            <input className="text-[15px] font-semibold outline-none bg-transparent w-auto flex-none max-w-[40ch]" value={name} onChange={(e) => setName(e.target.value)} />
+            <input
+              className="text-[15px] font-semibold outline-none bg-transparent w-auto flex-none"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              style={{ width: `${Math.min(Math.max((name || '').length + 2, 8), 40)}ch` }}
+            />
             <Switch checked={enabled} onCheckedChange={setEnabled} className="data-[state=checked]:bg-blue-600" />
           </div>
           {/* Right: Settings, Preview, Save */}
