@@ -107,6 +107,8 @@ export default function FinanceiroDashboardPage() {
   const [cardBorderColor, setCardBorderColor] = useState<string>('rgb(240, 240, 240)')
   const [pageBgColor, setPageBgColor] = useState<string>('#ffffff')
   const [filtersIconColor, setFiltersIconColor] = useState<string>('#6b7280')
+  const [sidebarBgColor, setSidebarBgColor] = useState<string>('hsl(0, 0%, 98%)')
+  const [sidebarTextColor, setSidebarTextColor] = useState<string>('hsl(240, 5.3%, 26.1%)')
   const styleValues = useMemo<React.CSSProperties>(() => ({
     fontFamily: fontVar(fonts.values.family),
     fontWeight: fonts.values.weight as React.CSSProperties['fontWeight'],
@@ -525,6 +527,8 @@ export default function FinanceiroDashboardPage() {
       headerTitleStyle={styleHeaderTitle}
       headerSubtitleStyle={styleHeaderSubtitle}
       headerActions={headerActions}
+      sidebarBgColor={sidebarBgColor}
+      sidebarTextColor={sidebarTextColor}
       userAvatarUrl="https://i.pravatar.cc/80?img=12"
     >
       {loading ? (
@@ -1057,6 +1061,24 @@ export default function FinanceiroDashboardPage() {
                 className="border rounded w-8 h-6"
                 value={cardBorderColor}
                 onChange={(e) => setCardBorderColor(e.target.value)}
+              />
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="text-xs text-gray-500">Sidebar - Fundo</div>
+              <input
+                type="color"
+                className="border rounded w-8 h-6"
+                value={sidebarBgColor}
+                onChange={(e) => setSidebarBgColor(e.target.value)}
+              />
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="text-xs text-gray-500">Sidebar - Ícone/Texto</div>
+              <input
+                type="color"
+                className="border rounded w-8 h-6"
+                value={sidebarTextColor}
+                onChange={(e) => setSidebarTextColor(e.target.value)}
               />
             </div>
           </div>

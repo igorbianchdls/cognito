@@ -98,7 +98,7 @@ const navigationData = {
   ],
 }
 
-export function SidebarShadcn({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export function SidebarShadcn({ bgColor, textColor, style, ...props }: React.ComponentProps<typeof Sidebar> & { bgColor?: string; textColor?: string }) {
   const pathname = usePathname()
 
   // Update active state based on current path
@@ -112,8 +112,15 @@ export function SidebarShadcn({ ...props }: React.ComponentProps<typeof Sidebar>
     navMain: navMainWithActiveState
   }
 
+  // Inline CSS variable overrides for sidebar theme
+  const inlineStyle = {
+    ...(style || {}),
+    ...(bgColor ? ({ ["--sidebar"]: bgColor } as React.CSSProperties) : {}),
+    ...(textColor ? ({ ["--sidebar-foreground"]: textColor } as React.CSSProperties) : {}),
+  } as React.CSSProperties
+
   return (
-    <Sidebar collapsible="icon" {...props}>
+    <Sidebar collapsible="icon" style={inlineStyle} {...props}>
       <SidebarHeader>
         <TeamSwitcher teams={dataWithActiveState.teams} />
       </SidebarHeader>

@@ -20,6 +20,8 @@ interface DashboardLayoutProps {
   headerSubtitleStyle?: React.CSSProperties
   backgroundColor?: string
   headerBackground?: string
+  sidebarBgColor?: string
+  sidebarTextColor?: string
   contentClassName?: string
 }
 
@@ -37,11 +39,13 @@ export default function DashboardLayout({
   headerSubtitleStyle,
   backgroundColor = '#f8f9fa',
   headerBackground = 'white',
+  sidebarBgColor,
+  sidebarTextColor,
   contentClassName = 'flex-1 p-6',
 }: DashboardLayoutProps) {
   return (
     <SidebarProvider>
-      <SidebarShadcn />
+      <SidebarShadcn bgColor={sidebarBgColor} textColor={sidebarTextColor} />
       <SidebarInset
         className="min-h-screen flex flex-col overflow-y-auto"
         style={{ background: backgroundColor }}
