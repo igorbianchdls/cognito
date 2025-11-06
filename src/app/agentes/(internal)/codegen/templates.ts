@@ -42,7 +42,7 @@ import { anthropic } from '@ai-sdk/anthropic'${importOpenAI ? "\nimport { openai
     + (builderIds.length ? `\nimport { ${builderIds.join(', ')} } from '@/tools/agentbuilder'` : '')
     + (needsStub ? `\nimport { z } from 'zod'` : '')
 
-  const prepareTypeImport = ${step.prepareStepEnabled ? '`import type { PrepareStepFunction } from \'ai\'`' : '``'}
+  const prepareTypeImport = step.prepareStepEnabled ? "import type { PrepareStepFunction } from 'ai'" : ""
 
   return `// Arquivo gerado automaticamente pelo Agent Builder (não editar manualmente)
 // slug: ${slug}
