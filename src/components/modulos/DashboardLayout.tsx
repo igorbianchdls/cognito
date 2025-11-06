@@ -16,6 +16,8 @@ interface DashboardLayoutProps {
   onNotifications?: () => void
   secondaryCta?: { label: string; onClick?: () => void; icon?: React.ReactNode }
   primaryCta?: { label: string; onClick?: () => void; icon?: React.ReactNode }
+  headerTitleStyle?: React.CSSProperties
+  headerSubtitleStyle?: React.CSSProperties
   backgroundColor?: string
   contentClassName?: string
 }
@@ -30,6 +32,8 @@ export default function DashboardLayout({
   onNotifications,
   secondaryCta,
   primaryCta,
+  headerTitleStyle,
+  headerSubtitleStyle,
   backgroundColor = '#f8f9fa',
   contentClassName = 'flex-1 p-6',
 }: DashboardLayoutProps) {
@@ -50,6 +54,8 @@ export default function DashboardLayout({
             secondaryCta={secondaryCta}
             primaryCta={primaryCta}
             actionsRight={headerActions}
+            titleStyle={headerTitleStyle}
+            subtitleStyle={headerSubtitleStyle}
           />
         </div>
 

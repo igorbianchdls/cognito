@@ -39,6 +39,8 @@
   --sidebar-ring: hsl(217.2 91.2% 59.8%);
   --highlight: oklch(0.852 0.199 91.936);
   --cinzaDark: rgb(94, 94, 94);
+  /* Fallback/alias for Avenir if not provided by next/font */
+  --font-avenir: Avenir, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
 .dark {

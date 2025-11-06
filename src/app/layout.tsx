@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Inter, PT_Serif, Noto_Serif, Libre_Baskerville, Crimson_Text, Amiri, Radley } from "next/font/google";
+import { Geist, Geist_Mono, Inter, PT_Serif, Noto_Serif, Libre_Baskerville, Crimson_Text, Amiri, Radley, IBM_Plex_Mono, Space_Mono, Roboto_Mono } from "next/font/google";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -15,6 +15,24 @@ const geistMono = Geist_Mono({
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
+});
+
+const ibmPlexMono = IBM_Plex_Mono({
+  variable: "--font-ibm-plex-mono",
+  subsets: ["latin"],
+  weight: ["400","500","600","700"],
+});
+
+const spaceMono = Space_Mono({
+  variable: "--font-space-mono",
+  subsets: ["latin"],
+  weight: ["400","700"],
+});
+
+const robotoMono = Roboto_Mono({
+  variable: "--font-roboto-mono",
+  subsets: ["latin"],
+  weight: ["400","500","700"],
 });
 
 const ptSerif = PT_Serif({
@@ -71,7 +89,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} ${ptSerif.variable} ${notoSerif.variable} ${libreBaskerville.variable} ${crimsonText.variable} ${amiri.variable} ${radley.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} ${ptSerif.variable} ${notoSerif.variable} ${libreBaskerville.variable} ${crimsonText.variable} ${amiri.variable} ${radley.variable} ${ibmPlexMono.variable} ${spaceMono.variable} ${robotoMono.variable} antialiased`}
       >
         {children}
       </body>

@@ -92,6 +92,8 @@ export default function FinanceiroDashboardPage() {
     values: { family: 'Inter', weight: 700 as number | undefined, letterSpacing: 0 as number | undefined, color: '#111827' as string | undefined, size: 24 as number | undefined, transform: 'none' as 'none' | 'uppercase' },
     title: { family: 'Inter', weight: 600 as number | undefined, letterSpacing: 0 as number | undefined, color: '#1f2937' as string | undefined, size: 14 as number | undefined, transform: 'none' as 'none' | 'uppercase' },
     text: { family: 'Inter', weight: 400 as number | undefined, letterSpacing: 0 as number | undefined, color: '#6b7280' as string | undefined, size: 12 as number | undefined, transform: 'none' as 'none' | 'uppercase' },
+    headerTitle: { family: 'Inter', weight: 700 as number | undefined, letterSpacing: 0 as number | undefined, color: '#111827' as string | undefined, size: 18 as number | undefined, transform: 'none' as 'none' | 'uppercase' },
+    headerSubtitle: { family: 'Inter', weight: 400 as number | undefined, letterSpacing: 0 as number | undefined, color: '#6b7280' as string | undefined, size: 12 as number | undefined, transform: 'none' as 'none' | 'uppercase' },
   })
   const [cardBorderColor, setCardBorderColor] = useState<string>('#f3f4f6')
   const styleValues = useMemo<React.CSSProperties>(() => ({
@@ -118,6 +120,23 @@ export default function FinanceiroDashboardPage() {
     fontSize: typeof fonts.text.size === 'number' ? `${fonts.text.size}px` : undefined,
     textTransform: fonts.text.transform === 'uppercase' ? 'uppercase' : 'none',
   }), [fonts.text])
+
+  const styleHeaderTitle = useMemo<React.CSSProperties>(() => ({
+    fontFamily: fontVar(fonts.headerTitle.family),
+    fontWeight: fonts.headerTitle.weight as React.CSSProperties['fontWeight'],
+    letterSpacing: typeof fonts.headerTitle.letterSpacing === 'number' ? `${fonts.headerTitle.letterSpacing}px` : undefined,
+    color: fonts.headerTitle.color || undefined,
+    fontSize: typeof fonts.headerTitle.size === 'number' ? `${fonts.headerTitle.size}px` : undefined,
+    textTransform: fonts.headerTitle.transform === 'uppercase' ? 'uppercase' : 'none',
+  }), [fonts.headerTitle])
+  const styleHeaderSubtitle = useMemo<React.CSSProperties>(() => ({
+    fontFamily: fontVar(fonts.headerSubtitle.family),
+    fontWeight: fonts.headerSubtitle.weight as React.CSSProperties['fontWeight'],
+    letterSpacing: typeof fonts.headerSubtitle.letterSpacing === 'number' ? `${fonts.headerSubtitle.letterSpacing}px` : undefined,
+    color: fonts.headerSubtitle.color || undefined,
+    fontSize: typeof fonts.headerSubtitle.size === 'number' ? `${fonts.headerSubtitle.size}px` : undefined,
+    textTransform: fonts.headerSubtitle.transform === 'uppercase' ? 'uppercase' : 'none',
+  }), [fonts.headerSubtitle])
 
   useEffect(() => {
     let cancelled = false
@@ -434,6 +453,8 @@ export default function FinanceiroDashboardPage() {
       title="Dashboard Financeiro"
       subtitle="Foco diário: Contas a Receber e a Pagar"
       backgroundColor="#ffffff"
+      headerTitleStyle={styleHeaderTitle}
+      headerSubtitleStyle={styleHeaderSubtitle}
     >
       {loading ? (
         <div className="p-6 text-sm text-gray-500">Carregando dados…</div>
@@ -769,6 +790,89 @@ export default function FinanceiroDashboardPage() {
                 value={fonts.text.color || '#6b7280'}
                 onChange={(e) => setFonts((f) => ({ ...f, text: { ...f.text, color: e.target.value } }))}
               />
+            </div>
+          </div>
+        </div>
+        <div className="mt-6">
+          <h5 className="text-xs font-semibold text-gray-700 mb-2">Header</h5>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Header Title */}
+            <div>
+              <div className="text-xs text-gray-500 mb-2">Título do Header</div>
+              <div className="flex items-center gap-2 mb-2">
+                <label className="text-xs text-gray-600 w-16">Fonte</label>
+                <select className="border rounded px-2 py-1 text-xs" value={fonts.headerTitle.family} onChange={(e) => setFonts((f) => ({ ...f, headerTitle: { ...f.headerTitle, family: e.target.value } }))}>
+                  <option>Inter</option>
+                  <option>Geist</option>
+                  <option>Roboto Mono</option>
+                  <option>Geist Mono</option>
+                  <option>IBM Plex Mono</option>
+                  <option>Avenir</option>
+                  <option>Space Mono</option>
+                </select>
+              </div>
+              <div className="flex items-center gap-2 mb-2">
+                <label className="text-xs text-gray-600 w-16">Peso</label>
+                <input type="number" className="border rounded px-2 py-1 text-xs w-24" value={fonts.headerTitle.weight ?? 700} min={100} max={900} step={100} onChange={(e) => setFonts((f) => ({ ...f, headerTitle: { ...f.headerTitle, weight: Number(e.target.value) } }))} />
+              </div>
+              <div className="flex items-center gap-2 mb-2">
+                <label className="text-xs text-gray-600 w-16">Tamanho</label>
+                <input type="number" className="border rounded px-2 py-1 text-xs w-24" value={fonts.headerTitle.size ?? 18} min={8} max={48} step={1} onChange={(e) => setFonts((f) => ({ ...f, headerTitle: { ...f.headerTitle, size: Number(e.target.value) } }))} />
+              </div>
+              <div className="flex items-center gap-2 mb-2">
+                <label className="text-xs text-gray-600 w-16">Espaço</label>
+                <input type="number" className="border rounded px-2 py-1 text-xs w-24" value={fonts.headerTitle.letterSpacing ?? 0} step={0.5} onChange={(e) => setFonts((f) => ({ ...f, headerTitle: { ...f.headerTitle, letterSpacing: Number(e.target.value) } }))} />
+              </div>
+              <div className="flex items-center gap-2 mb-2">
+                <label className="text-xs text-gray-600 w-16">Caixa</label>
+                <select className="border rounded px-2 py-1 text-xs w-24" value={fonts.headerTitle.transform} onChange={(e) => setFonts((f) => ({ ...f, headerTitle: { ...f.headerTitle, transform: e.target.value as 'none' | 'uppercase' } }))}>
+                  <option value="none">Normal</option>
+                  <option value="uppercase">UPPERCASE</option>
+                </select>
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="text-xs text-gray-600 w-16">Cor</label>
+                <input type="color" className="border rounded w-8 h-6" value={fonts.headerTitle.color || '#111827'} onChange={(e) => setFonts((f) => ({ ...f, headerTitle: { ...f.headerTitle, color: e.target.value } }))} />
+              </div>
+            </div>
+            {/* Header Subtitle */}
+            <div>
+              <div className="text-xs text-gray-500 mb-2">Subtítulo do Header</div>
+              <div className="flex items-center gap-2 mb-2">
+                <label className="text-xs text-gray-600 w-16">Fonte</label>
+                <select className="border rounded px-2 py-1 text-xs" value={fonts.headerSubtitle.family} onChange={(e) => setFonts((f) => ({ ...f, headerSubtitle: { ...f.headerSubtitle, family: e.target.value } }))}>
+                  <option>Inter</option>
+                  <option>Geist</option>
+                  <option>Roboto Mono</option>
+                  <option>Geist Mono</option>
+                  <option>IBM Plex Mono</option>
+                  <option>Avenir</option>
+                  <option>Space Mono</option>
+                </select>
+              </div>
+              <div className="flex items-center gap-2 mb-2">
+                <label className="text-xs text-gray-600 w-16">Peso</label>
+                <input type="number" className="border rounded px-2 py-1 text-xs w-24" value={fonts.headerSubtitle.weight ?? 400} min={100} max={900} step={100} onChange={(e) => setFonts((f) => ({ ...f, headerSubtitle: { ...f.headerSubtitle, weight: Number(e.target.value) } }))} />
+              </div>
+              <div className="flex items-center gap-2 mb-2">
+                <label className="text-xs text-gray-600 w-16">Tamanho</label>
+                <input type="number" className="border rounded px-2 py-1 text-xs w-24" value={fonts.headerSubtitle.size ?? 12} min={8} max={48} step={1} onChange={(e) => setFonts((f) => ({ ...f, headerSubtitle: { ...f.headerSubtitle, size: Number(e.target.value) } }))} />
+              </div>
+              <div className="flex items-center gap-2 mb-2">
+                <label className="text-xs text-gray-600 w-16">Espaço</label>
+                <input type="number" className="border rounded px-2 py-1 text-xs w-24" value={fonts.headerSubtitle.letterSpacing ?? 0} step={0.5} onChange={(e) => setFonts((f) => ({ ...f, headerSubtitle: { ...f.headerSubtitle, letterSpacing: Number(e.target.value) } }))} />
+              </div>
+              <div className="flex items-center gap-2 mb-2">
+                <label className="text-xs text-gray-600 w-16">Caixa</label>
+                <select className="border rounded px-2 py-1 text-xs w-24" value={fonts.headerSubtitle.transform} onChange={(e) => setFonts((f) => ({ ...f, headerSubtitle: { ...f.headerSubtitle, transform: e.target.value as 'none' | 'uppercase' } }))}>
+                  <option value="none">Normal</option>
+                  <option value="uppercase">UPPERCASE</option>
+                </select>
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="text-xs text-gray-600 w-16">Cor</label>
+                <input type="color" className="border rounded w-8 h-6" value={fonts.headerSubtitle.color || '#6b7280'} onChange={(e) => setFonts((f) => ({ ...f, headerSubtitle: { ...f.headerSubtitle, color: e.target.value } }))} />
+              </div>
             </div>
           </div>
         </div>

@@ -18,9 +18,12 @@ interface DashboardHeaderProps {
   primaryCta?: CTA // e.g., Create Request
   actionsLeft?: React.ReactNode
   actionsRight?: React.ReactNode
+  // Typography styles
+  titleStyle?: React.CSSProperties
+  subtitleStyle?: React.CSSProperties
 }
 
-export default function DashboardHeader({ title, subtitle, avatarUrl, className, onSearch, onNotifications, secondaryCta, primaryCta, actionsLeft, actionsRight }: DashboardHeaderProps) {
+export default function DashboardHeader({ title, subtitle, avatarUrl, className, onSearch, onNotifications, secondaryCta, primaryCta, actionsLeft, actionsRight, titleStyle, subtitleStyle }: DashboardHeaderProps) {
   return (
     <div className={`w-full px-4 pt-4 md:px-6 md:pt-6 ${className ?? ""}`}>
       <div className="flex items-center justify-between gap-3">
@@ -34,9 +37,9 @@ export default function DashboardHeader({ title, subtitle, avatarUrl, className,
             )}
           </div>
           <div>
-            <div className="text-base md:text-lg font-semibold text-gray-900 leading-tight">{title}</div>
+            <div className="text-base md:text-lg font-semibold text-gray-900 leading-tight" style={titleStyle}>{title}</div>
             {subtitle ? (
-              <div className="text-xs md:text-sm text-gray-500 mt-0.5">{subtitle}</div>
+              <div className="text-xs md:text-sm text-gray-500 mt-0.5" style={subtitleStyle}>{subtitle}</div>
             ) : null}
             {actionsLeft ? <div className="mt-1">{actionsLeft}</div> : null}
           </div>
@@ -67,4 +70,3 @@ export default function DashboardHeader({ title, subtitle, avatarUrl, className,
     </div>
   )
 }
-
