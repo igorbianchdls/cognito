@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
+import Link from "next/link"
 import { SidebarShadcn } from "@/components/navigation/SidebarShadcn"
 import BlockPalette from "@/components/agentes/builder/BlockPalette"
 import FlowCanvas from "@/components/agentes/builder/flow/FlowCanvas"
@@ -15,13 +16,15 @@ import type { Node, Edge } from 'reactflow'
 import type { NodeData } from '@/types/agentes/flow'
 import { flowToGraph } from '@/components/agentes/builder/flow/serialization'
 import { Button } from "@/components/ui/button"
-import { Code2, Play, Save } from "lucide-react"
+import { Code2, Play, Save, ArrowLeft, Paperclip, Settings as Cog, Play as PreviewIcon } from "lucide-react"
+import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import CodePreview from "@/components/agentes/codegen/CodePreview"
 
 export default function NewAgentPage() {
   const [name, setName] = useState("Novo agente")
+  const [enabled, setEnabled] = useState(true)
   const initialNodes: Node<NodeData>[] = [
     {
       id: 'b1',
@@ -157,27 +160,40 @@ export default function NewAgentPage() {
       <SidebarShadcn />
       <SidebarInset className="h-screen flex flex-col bg-white">
         <div className="flex items-center justify-between px-6 md:px-10 h-14 border-b">
-          <input className="text-xl font-semibold outline-none bg-transparent" value={name} onChange={(e) => setName(e.target.value)} />
-        <div className="flex items-center gap-2">
+          {/* Left: back, badge icon, title input, toggle */}
+          <div className="flex items-center gap-3">
+            <Link href="/agentes" className="text-gray-700 hover:text-gray-900">
+              <ArrowLeft className="w-5 h-5" />
+            </Link>
+            <div className="inline-flex items-center justify-center w-7 h-7 rounded-md border bg-yellow-100 text-yellow-800 border-yellow-200">
+              <Paperclip className="w-4 h-4" />
+            </div>
+            <input className="text-[15px] font-semibold outline-none bg-transparent" value={name} onChange={(e) => setName(e.target.value)} />
+            <div className="ml-1">
+              <Switch checked={enabled} onCheckedChange={setEnabled} className="data-[state=checked]:bg-blue-600" />
+            </div>
+          </div>
+          {/* Right: Settings, Preview, Save */}
+          <div className="flex items-center gap-2">
             <Button
-              onClick={() => setShowCode(true)}
-              className="rounded-full bg-gray-100 text-gray-900 hover:bg-gray-200 border border-gray-300 h-9 px-4"
+              onClick={() => {/* open settings */}}
+              className="rounded-full bg-gray-100 text-gray-900 hover:bg-gray-200 border border-gray-300 h-8 px-3"
               variant="outline"
             >
-              <Code2 className="w-4 h-4 mr-2" /> Código
+              <Cog className="w-4 h-4 mr-2" /> Settings
             </Button>
             <Button
               onClick={() => { setRightPanelMode('exec'); setRunTrigger(v => v + 1) }}
-              className="rounded-full bg-gray-100 text-gray-900 hover:bg-gray-200 border border-gray-300 h-9 px-4"
+              className="rounded-full bg-gray-100 text-gray-900 hover:bg-gray-200 border border-gray-300 h-8 px-3"
               variant="outline"
             >
-              <Play className="w-4 h-4 mr-2" /> Run
+              <PreviewIcon className="w-4 h-4 mr-2" /> Preview
             </Button>
             <Button
               onClick={handleTest}
-              className="rounded-full bg-blue-600 text-white hover:bg-blue-700 border-transparent h-9 px-4"
+              className="rounded-full bg-blue-600 text-white hover:bg-blue-700 border-transparent h-8 px-4"
             >
-              <Save className="w-4 h-4 mr-2" /> Salvar
+              <Save className="w-4 h-4 mr-2" /> Save
             </Button>
           </div>
         </div>
