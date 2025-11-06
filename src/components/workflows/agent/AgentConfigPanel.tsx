@@ -7,7 +7,7 @@ import { Slider } from '@/components/ui/slider'
 import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { Info, RefreshCw, ChevronRight, Bot } from 'lucide-react'
+import { Info, RefreshCw, ChevronRight, Bot, Wrench } from 'lucide-react'
 import type { AgentBlockConfig } from '@/types/agentes/builder'
 import { useMemo } from 'react'
 
@@ -26,7 +26,7 @@ export default function AgentConfigPanel({ name, onChangeName, config, onChange,
   return (
     <div className="p-4 space-y-4">
       {/* Title */}
-      <div className="text-xl font-semibold">Playground</div>
+      <div className="text-4xl font-semibold">Playground</div>
 
       {/* Name */}
       <div className="space-y-2">
@@ -104,6 +104,18 @@ export default function AgentConfigPanel({ name, onChangeName, config, onChange,
       </div>
 
       <Separator />
+
+      {/* Ferramentas */}
+      <div className="space-y-2">
+        <div className="text-xs text-gray-600">Ferramentas</div>
+        <Button variant="outline" className="h-10 w-full justify-between">
+          <div className="flex items-center gap-2 text-sm">
+            <Wrench className="w-4 h-4" />
+            <span>Configurar ferramentas</span>
+          </div>
+          <ChevronRight className="w-4 h-4 text-gray-500" />
+        </Button>
+      </div>
 
       {/* System prompt selector */}
       <div className="space-y-2">
