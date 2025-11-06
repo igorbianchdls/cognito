@@ -94,7 +94,7 @@ export default function FinanceiroDashboardPage() {
     text: { family: 'Inter', weight: 400 as number | undefined, letterSpacing: 0 as number | undefined, color: '#6b7280' as string | undefined, size: 12 as number | undefined, transform: 'none' as 'none' | 'uppercase' },
   })
   const [cardBorderColor, setCardBorderColor] = useState<string>('#f3f4f6')
-  const styleValues = useMemo(() => ({
+  const styleValues = useMemo<React.CSSProperties>(() => ({
     fontFamily: fontVar(fonts.values.family),
     fontWeight: fonts.values.weight as React.CSSProperties['fontWeight'],
     letterSpacing: typeof fonts.values.letterSpacing === 'number' ? `${fonts.values.letterSpacing}px` : undefined,
@@ -102,7 +102,7 @@ export default function FinanceiroDashboardPage() {
     fontSize: typeof fonts.values.size === 'number' ? `${fonts.values.size}px` : undefined,
     textTransform: fonts.values.transform === 'uppercase' ? 'uppercase' : 'none',
   }), [fonts.values])
-  const styleTitle = useMemo(() => ({
+  const styleTitle = useMemo<React.CSSProperties>(() => ({
     fontFamily: fontVar(fonts.title.family),
     fontWeight: fonts.title.weight as React.CSSProperties['fontWeight'],
     letterSpacing: typeof fonts.title.letterSpacing === 'number' ? `${fonts.title.letterSpacing}px` : undefined,
@@ -110,7 +110,7 @@ export default function FinanceiroDashboardPage() {
     fontSize: typeof fonts.title.size === 'number' ? `${fonts.title.size}px` : undefined,
     textTransform: fonts.title.transform === 'uppercase' ? 'uppercase' : 'none',
   }), [fonts.title])
-  const styleText = useMemo(() => ({
+  const styleText = useMemo<React.CSSProperties>(() => ({
     fontFamily: fontVar(fonts.text.family),
     fontWeight: fonts.text.weight as React.CSSProperties['fontWeight'],
     letterSpacing: typeof fonts.text.letterSpacing === 'number' ? `${fonts.text.letterSpacing}px` : undefined,
