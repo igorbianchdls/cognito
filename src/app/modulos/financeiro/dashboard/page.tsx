@@ -387,6 +387,7 @@ export default function FinanceiroDashboardPage() {
     <DashboardLayout
       title="Dashboard Financeiro"
       subtitle="Foco diário: Contas a Receber e a Pagar"
+      backgroundColor="#ffffff"
     >
       {loading ? (
         <div className="p-6 text-sm text-gray-500">Carregando dados…</div>
