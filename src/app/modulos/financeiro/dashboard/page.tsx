@@ -44,6 +44,9 @@ function fontVar(name?: string) {
   if (name === 'Geist') return 'var(--font-geist-sans)'
   if (name === 'Roboto Mono') return 'var(--font-roboto-mono)'
   if (name === 'Geist Mono') return 'var(--font-geist-mono)'
+  if (name === 'IBM Plex Mono') return 'var(--font-ibm-plex-mono), "IBM Plex Mono", monospace'
+  if (name === 'Avenir') return 'var(--font-avenir), Avenir, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif'
+  if (name === 'Space Mono') return 'var(--font-space-mono), "Space Mono", monospace'
   return name
 }
 
@@ -86,9 +89,9 @@ export default function FinanceiroDashboardPage() {
 
   // Typography controls
   const [fonts, setFonts] = useState({
-    values: { family: 'Inter', weight: 700 as number | undefined, letterSpacing: 0 as number | undefined, color: '#111827' as string | undefined },
-    title: { family: 'Inter', weight: 600 as number | undefined, letterSpacing: 0 as number | undefined, color: '#1f2937' as string | undefined },
-    text: { family: 'Inter', weight: 400 as number | undefined, letterSpacing: 0 as number | undefined, color: '#6b7280' as string | undefined },
+    values: { family: 'Inter', weight: 700 as number | undefined, letterSpacing: 0 as number | undefined, color: '#111827' as string | undefined, size: 24 as number | undefined, transform: 'none' as 'none' | 'uppercase' },
+    title: { family: 'Inter', weight: 600 as number | undefined, letterSpacing: 0 as number | undefined, color: '#1f2937' as string | undefined, size: 14 as number | undefined, transform: 'none' as 'none' | 'uppercase' },
+    text: { family: 'Inter', weight: 400 as number | undefined, letterSpacing: 0 as number | undefined, color: '#6b7280' as string | undefined, size: 12 as number | undefined, transform: 'none' as 'none' | 'uppercase' },
   })
   const [cardBorderColor, setCardBorderColor] = useState<string>('#f3f4f6')
   const styleValues = useMemo(() => ({
@@ -96,18 +99,24 @@ export default function FinanceiroDashboardPage() {
     fontWeight: fonts.values.weight as React.CSSProperties['fontWeight'],
     letterSpacing: typeof fonts.values.letterSpacing === 'number' ? `${fonts.values.letterSpacing}px` : undefined,
     color: fonts.values.color || undefined,
+    fontSize: typeof fonts.values.size === 'number' ? `${fonts.values.size}px` : undefined,
+    textTransform: fonts.values.transform === 'uppercase' ? 'uppercase' : undefined,
   }), [fonts.values])
   const styleTitle = useMemo(() => ({
     fontFamily: fontVar(fonts.title.family),
     fontWeight: fonts.title.weight as React.CSSProperties['fontWeight'],
     letterSpacing: typeof fonts.title.letterSpacing === 'number' ? `${fonts.title.letterSpacing}px` : undefined,
     color: fonts.title.color || undefined,
+    fontSize: typeof fonts.title.size === 'number' ? `${fonts.title.size}px` : undefined,
+    textTransform: fonts.title.transform === 'uppercase' ? 'uppercase' : undefined,
   }), [fonts.title])
   const styleText = useMemo(() => ({
     fontFamily: fontVar(fonts.text.family),
     fontWeight: fonts.text.weight as React.CSSProperties['fontWeight'],
     letterSpacing: typeof fonts.text.letterSpacing === 'number' ? `${fonts.text.letterSpacing}px` : undefined,
     color: fonts.text.color || undefined,
+    fontSize: typeof fonts.text.size === 'number' ? `${fonts.text.size}px` : undefined,
+    textTransform: fonts.text.transform === 'uppercase' ? 'uppercase' : undefined,
   }), [fonts.text])
 
   useEffect(() => {
@@ -552,6 +561,20 @@ export default function FinanceiroDashboardPage() {
                 <option>Geist</option>
                 <option>Roboto Mono</option>
                 <option>Geist Mono</option>
+                <option>IBM Plex Mono</option>
+                <option>Avenir</option>
+                <option>Space Mono</option>
+              </select>
+            </div>
+            <div className="flex items-center gap-2 mb-2">
+              <label className="text-xs text-gray-600 w-16">Caixa</label>
+              <select
+                className="border rounded px-2 py-1 text-xs w-24"
+                value={fonts.values.transform}
+                onChange={(e) => setFonts((f) => ({ ...f, values: { ...f.values, transform: e.target.value as 'none' | 'uppercase' } }))}
+              >
+                <option value="none">Normal</option>
+                <option value="uppercase">UPPERCASE</option>
               </select>
             </div>
             <div className="flex items-center gap-2 mb-2">
@@ -564,6 +587,18 @@ export default function FinanceiroDashboardPage() {
                 max={900}
                 step={100}
                 onChange={(e) => setFonts((f) => ({ ...f, values: { ...f.values, weight: Number(e.target.value) } }))}
+              />
+            </div>
+            <div className="flex items-center gap-2 mb-2">
+              <label className="text-xs text-gray-600 w-16">Tamanho</label>
+              <input
+                type="number"
+                className="border rounded px-2 py-1 text-xs w-24"
+                value={fonts.values.size ?? 24}
+                min={8}
+                max={64}
+                step={1}
+                onChange={(e) => setFonts((f) => ({ ...f, values: { ...f.values, size: Number(e.target.value) } }))}
               />
             </div>
             <div className="flex items-center gap-2">
@@ -601,6 +636,20 @@ export default function FinanceiroDashboardPage() {
                 <option>Geist</option>
                 <option>Roboto Mono</option>
                 <option>Geist Mono</option>
+                <option>IBM Plex Mono</option>
+                <option>Avenir</option>
+                <option>Space Mono</option>
+              </select>
+            </div>
+            <div className="flex items-center gap-2 mb-2">
+              <label className="text-xs text-gray-600 w-16">Caixa</label>
+              <select
+                className="border rounded px-2 py-1 text-xs w-24"
+                value={fonts.title.transform}
+                onChange={(e) => setFonts((f) => ({ ...f, title: { ...f.title, transform: e.target.value as 'none' | 'uppercase' } }))}
+              >
+                <option value="none">Normal</option>
+                <option value="uppercase">UPPERCASE</option>
               </select>
             </div>
             <div className="flex items-center gap-2 mb-2">
@@ -613,6 +662,18 @@ export default function FinanceiroDashboardPage() {
                 max={900}
                 step={100}
                 onChange={(e) => setFonts((f) => ({ ...f, title: { ...f.title, weight: Number(e.target.value) } }))}
+              />
+            </div>
+            <div className="flex items-center gap-2 mb-2">
+              <label className="text-xs text-gray-600 w-16">Tamanho</label>
+              <input
+                type="number"
+                className="border rounded px-2 py-1 text-xs w-24"
+                value={fonts.title.size ?? 14}
+                min={8}
+                max={48}
+                step={1}
+                onChange={(e) => setFonts((f) => ({ ...f, title: { ...f.title, size: Number(e.target.value) } }))}
               />
             </div>
             <div className="flex items-center gap-2">
@@ -650,6 +711,20 @@ export default function FinanceiroDashboardPage() {
                 <option>Geist</option>
                 <option>Roboto Mono</option>
                 <option>Geist Mono</option>
+                <option>IBM Plex Mono</option>
+                <option>Avenir</option>
+                <option>Space Mono</option>
+              </select>
+            </div>
+            <div className="flex items-center gap-2 mb-2">
+              <label className="text-xs text-gray-600 w-16">Caixa</label>
+              <select
+                className="border rounded px-2 py-1 text-xs w-24"
+                value={fonts.text.transform}
+                onChange={(e) => setFonts((f) => ({ ...f, text: { ...f.text, transform: e.target.value as 'none' | 'uppercase' } }))}
+              >
+                <option value="none">Normal</option>
+                <option value="uppercase">UPPERCASE</option>
               </select>
             </div>
             <div className="flex items-center gap-2 mb-2">
@@ -662,6 +737,18 @@ export default function FinanceiroDashboardPage() {
                 max={900}
                 step={100}
                 onChange={(e) => setFonts((f) => ({ ...f, text: { ...f.text, weight: Number(e.target.value) } }))}
+              />
+            </div>
+            <div className="flex items-center gap-2 mb-2">
+              <label className="text-xs text-gray-600 w-16">Tamanho</label>
+              <input
+                type="number"
+                className="border rounded px-2 py-1 text-xs w-24"
+                value={fonts.text.size ?? 12}
+                min={8}
+                max={32}
+                step={1}
+                onChange={(e) => setFonts((f) => ({ ...f, text: { ...f.text, size: Number(e.target.value) } }))}
               />
             </div>
             <div className="flex items-center gap-2">
