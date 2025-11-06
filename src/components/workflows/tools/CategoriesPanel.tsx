@@ -32,14 +32,14 @@ export default function CategoriesPanel({ onBack, onOpenCategory }: { onBack?: (
 
   return (
     <div className="h-full flex flex-col">
-      <div className="p-4 flex items-center gap-2 border-b">
-        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onBack}>
-          <ChevronLeft className="w-4 h-4" />
-        </Button>
+      <div className="p-4 flex items-center justify-between border-b">
         <div>
           <div className="text-xl font-semibold">Categorias</div>
           <div className="text-xs text-gray-500">Escolha uma categoria para explorar ferramentas</div>
         </div>
+        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onBack}>
+          <ChevronLeft className="w-4 h-4" />
+        </Button>
       </div>
       <div className="p-4 flex-1 overflow-auto custom-scrollbar">
         <div className="grid grid-cols-1 gap-3">

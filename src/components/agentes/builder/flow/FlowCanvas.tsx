@@ -85,7 +85,7 @@ export default function FlowCanvas({ nodes, setNodes, edges, setEdges, onSelectN
           onDrop={onDrop}
           nodeTypes={nodeTypes}
           deleteKeyCode={["Backspace", "Delete"]}
-          defaultViewport={{ x: 0, y: 0, zoom: 0.8 }}
+          defaultViewport={{ x: 0, y: 0, zoom: 0.9 }}
           minZoom={0.2}
           maxZoom={1.5}
           proOptions={{ hideAttribution: true }}
