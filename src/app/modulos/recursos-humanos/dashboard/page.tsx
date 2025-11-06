@@ -1,7 +1,16 @@
+
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import { useStore } from '@nanostores/react'
 import DashboardLayout from '@/components/modulos/DashboardLayout'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Button } from '@/components/ui/button'
+import { Calendar } from '@/components/ui/calendar'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Calendar as CalendarIcon } from 'lucide-react'
+import type { DateRange } from 'react-day-picker'
+import { $financeiroDashboardUI, $financeiroDashboardFilters, financeiroDashboardActions } from '@/stores/modulos/financeiroDashboardStore'
 
 type ContratoRow = {
   id?: number | string
@@ -35,11 +44,150 @@ function formatBRL(n?: number) { return (Number(n||0)).toLocaleString('pt-BR', {
 function formatNum(n?: number) { return (Number(n||0)).toLocaleString('pt-BR') }
 
 export default function RHDashboardPage() {
+  // Global UI & Filters
+  const ui = useStore($financeiroDashboardUI)
+  const filters = useStore($financeiroDashboardFilters)
+  const fonts = ui.fonts
+  const cardBorderColor = ui.cardBorderColor
+  const pageBgColor = ui.pageBgColor
+  const cardShadow = ui.cardShadow
+  const filtersIconColor = ui.filtersIconColor
   const [contratos, setContratos] = useState<ContratoRow[]>([])
   const [historico, setHistorico] = useState<HistoricoRow[]>([])
   const [departamentos, setDepartamentos] = useState<DepartamentoRow[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Font map (compartilhado)
+  function fontVar(name?: string) {
+    if (!name) return undefined
+    if (name === 'Inter') return 'var(--font-inter)'
+    if (name === 'Geist') return 'var(--font-geist-sans)'
+    if (name === 'Roboto Mono') return 'var(--font-roboto-mono)'
+    if (name === 'Geist Mono') return 'var(--font-geist-mono)'
+    if (name === 'IBM Plex Mono') return 'var(--font-ibm-plex-mono), "IBM Plex Mono", monospace'
+    if (name === 'Avenir') return 'var(--font-avenir), Avenir, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif'
+    if (name === 'Space Mono') return 'var(--font-space-mono), "Space Mono", monospace'
+    return name
+  }
+
+  const styleValues = useMemo<React.CSSProperties>(() => ({
+    fontFamily: fontVar(fonts.values.family),
+    fontWeight: fonts.values.weight as React.CSSProperties['fontWeight'],
+    letterSpacing: typeof fonts.values.letterSpacing === 'number' ? `${fonts.values.letterSpacing}px` : undefined,
+    color: fonts.values.color || undefined,
+    fontSize: typeof fonts.values.size === 'number' ? `${fonts.values.size}px` : undefined,
+    textTransform: fonts.values.transform === 'uppercase' ? 'uppercase' : 'none',
+  }), [fonts.values])
+  const styleKpiTitle = useMemo<React.CSSProperties>(() => ({
+    fontFamily: fontVar(fonts.kpiTitle.family),
+    fontWeight: fonts.kpiTitle.weight as React.CSSProperties['fontWeight'],
+    letterSpacing: typeof fonts.kpiTitle.letterSpacing === 'number' ? `${fonts.kpiTitle.letterSpacing}px` : undefined,
+    color: fonts.kpiTitle.color || undefined,
+    fontSize: typeof fonts.kpiTitle.size === 'number' ? `${fonts.kpiTitle.size}px` : undefined,
+    textTransform: fonts.kpiTitle.transform === 'uppercase' ? 'uppercase' : 'none',
+  }), [fonts.kpiTitle])
+  const styleChartTitle = useMemo<React.CSSProperties>(() => ({
+    fontFamily: fontVar(fonts.chartTitle.family),
+    fontWeight: fonts.chartTitle.weight as React.CSSProperties['fontWeight'],
+    letterSpacing: typeof fonts.chartTitle.letterSpacing === 'number' ? `${fonts.chartTitle.letterSpacing}px` : undefined,
+    color: fonts.chartTitle.color || undefined,
+    fontSize: typeof fonts.chartTitle.size === 'number' ? `${fonts.chartTitle.size}px` : undefined,
+    textTransform: fonts.chartTitle.transform === 'uppercase' ? 'uppercase' : 'none',
+  }), [fonts.chartTitle])
+  const styleText = useMemo<React.CSSProperties>(() => ({
+    fontFamily: fontVar(fonts.text.family),
+    fontWeight: fonts.text.weight as React.CSSProperties['fontWeight'],
+    letterSpacing: typeof fonts.text.letterSpacing === 'number' ? `${fonts.text.letterSpacing}px` : undefined,
+    color: fonts.text.color || undefined,
+    fontSize: typeof fonts.text.size === 'number' ? `${fonts.text.size}px` : undefined,
+    textTransform: fonts.text.transform === 'uppercase' ? 'uppercase' : 'none',
+  }), [fonts.text])
+  const styleHeaderTitle = useMemo<React.CSSProperties>(() => ({
+    fontFamily: fontVar(fonts.headerTitle.family),
+    fontWeight: fonts.headerTitle.weight as React.CSSProperties['fontWeight'],
+    letterSpacing: typeof fonts.headerTitle.letterSpacing === 'number' ? `${fonts.headerTitle.letterSpacing}px` : undefined,
+    color: fonts.headerTitle.color || undefined,
+    fontSize: typeof fonts.headerTitle.size === 'number' ? `${fonts.headerTitle.size}px` : undefined,
+    textTransform: fonts.headerTitle.transform === 'uppercase' ? 'uppercase' : 'none',
+  }), [fonts.headerTitle])
+  const styleHeaderSubtitle = useMemo<React.CSSProperties>(() => ({
+    fontFamily: fontVar(fonts.headerSubtitle.family),
+    fontWeight: fonts.headerSubtitle.weight as React.CSSProperties['fontWeight'],
+    letterSpacing: typeof fonts.headerSubtitle.letterSpacing === 'number' ? `${fonts.headerSubtitle.letterSpacing}px` : undefined,
+    color: fonts.headerSubtitle.color || undefined,
+    fontSize: typeof fonts.headerSubtitle.size === 'number' ? `${fonts.headerSubtitle.size}px` : undefined,
+    textTransform: fonts.headerSubtitle.transform === 'uppercase' ? 'uppercase' : 'none',
+  }), [fonts.headerSubtitle])
+
+  // Header filters/actions (globais)
+  const styleFilters = useMemo<React.CSSProperties>(() => ({
+    fontFamily: fontVar(fonts.filters.family),
+    fontWeight: fonts.filters.weight as React.CSSProperties['fontWeight'],
+    letterSpacing: typeof fonts.filters.letterSpacing === 'number' ? `${fonts.filters.letterSpacing}px` : undefined,
+    color: fonts.filters.color || undefined,
+    fontSize: typeof fonts.filters.size === 'number' ? `${fonts.filters.size}px` : undefined,
+    textTransform: fonts.filters.transform === 'uppercase' ? 'uppercase' : 'none',
+  }), [fonts.filters])
+  const dateRange: DateRange | undefined = useMemo(() => {
+    const from = filters.dateRange?.from ? new Date(filters.dateRange.from) : undefined
+    const to = filters.dateRange?.to ? new Date(filters.dateRange.to) : undefined
+    if (!from && !to) return undefined
+    return { from, to }
+  }, [filters.dateRange])
+  const setDateRange = (range?: DateRange) => {
+    const toISO = (d?: Date) => (d ? d.toISOString().slice(0, 10) : undefined)
+    financeiroDashboardActions.setFilters({
+      dateRange: range ? { from: toISO(range.from), to: toISO(range.to) } : undefined,
+    })
+  }
+  const dataFilter = filters.dataFilter
+  const setDataFilter = (v: string) => financeiroDashboardActions.setFilters({ dataFilter: v })
+  const rangeLabel = useMemo(() => {
+    if (dateRange?.from && dateRange?.to) {
+      const fmt = (d: Date) => d.toLocaleDateString('pt-BR')
+      return `${fmt(dateRange.from)} - ${fmt(dateRange.to)}`
+    }
+    if (dateRange?.from) {
+      const fmt = (d: Date) => d.toLocaleDateString('pt-BR')
+      return `${fmt(dateRange.from)}`
+    }
+    return 'Selecionar período'
+  }, [dateRange])
+  const headerActions = (
+    <div className="flex items-center gap-2">
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button variant="outline" size="sm" className="h-9 px-3">
+            <CalendarIcon className="mr-2 h-4 w-4" style={{ color: filtersIconColor }} />
+            <span className="whitespace-nowrap" style={styleFilters}>{rangeLabel}</span>
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent align="end" className="p-2 w-auto">
+          <Calendar
+            mode="range"
+            selected={dateRange}
+            onSelect={setDateRange}
+            numberOfMonths={2}
+            captionLayout="dropdown"
+            showOutsideDays
+            initialFocus
+          />
+        </PopoverContent>
+      </Popover>
+      <Select value={dataFilter} onValueChange={setDataFilter}>
+        <SelectTrigger className="h-9 w-[160px]" style={styleFilters}>
+          <SelectValue placeholder="Filtro" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="todos">Todos</SelectItem>
+          <SelectItem value="pendentes">Pendentes</SelectItem>
+          <SelectItem value="vencidos">Vencidos</SelectItem>
+          <SelectItem value="pagos">Pagos</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+  )
 
   useEffect(() => {
     let cancelled = false
@@ -159,66 +307,78 @@ export default function RHDashboardPage() {
 
   return (
     <DashboardLayout
-      title="Dashboard de RH"
-      subtitle="Folha, headcount e movimentações"
-      backgroundColor="#ffffff"
+      title="Olá, Igor Bianch"
+      subtitle="Você está na aba Dashboard do módulo Recursos Humanos"
+      backgroundColor={pageBgColor}
+      headerBackground="transparent"
+      headerTitleStyle={styleHeaderTitle}
+      headerSubtitleStyle={styleHeaderSubtitle}
+      headerActions={headerActions}
+      userAvatarUrl="https://i.pravatar.cc/80?img=12"
     >
       {loading ? (<div className="p-4 text-sm text-gray-500">Carregando…</div>) : error ? (<div className="p-4 text-sm text-red-600">{error}</div>) : null}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <div className="text-sm font-medium text-gray-500 mb-2">Folha Estimada (mês)</div>
-          <div className="text-2xl font-bold text-blue-600">{formatBRL(folhaEstim)}</div>
-          <div className="text-xs text-gray-400 mt-1">Soma dos salários vigentes</div>
-        </div>
-        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <div className="text-sm font-medium text-gray-500 mb-2">Headcount Atual</div>
-          <div className="text-2xl font-bold text-green-600">{formatNum(headcount)}</div>
-          <div className="text-xs text-gray-400 mt-1">Contratos ativos</div>
-        </div>
-        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <div className="text-sm font-medium text-gray-500 mb-2">Admissões (mês)</div>
-          <div className="text-2xl font-bold text-emerald-600">{formatNum(admissoesMes)}</div>
-          <div className="text-xs text-gray-400 mt-1">Entrada de colaboradores</div>
-        </div>
-        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <div className="text-sm font-medium text-gray-500 mb-2">Demissões (mês)</div>
-          <div className="text-2xl font-bold text-rose-600">{formatNum(demissoesMes)}</div>
-          <div className="text-xs text-gray-400 mt-1">Saídas registradas</div>
-        </div>
+        {(() => {
+          const cardCls = `bg-white p-6 rounded-lg border border-gray-100${cardShadow ? ' shadow-sm' : ''}`
+          return (
+            <>
+              <div className={cardCls} style={{ borderColor: cardBorderColor }}>
+                <div className="text-sm font-medium text-gray-500 mb-2" style={styleKpiTitle}>Folha Estimada (mês)</div>
+                <div className="text-2xl font-bold text-blue-600" style={styleValues}>{formatBRL(folhaEstim)}</div>
+                <div className="text-xs text-gray-400 mt-1" style={styleText}>Soma dos salários vigentes</div>
+              </div>
+              <div className={cardCls} style={{ borderColor: cardBorderColor }}>
+                <div className="text-sm font-medium text-gray-500 mb-2" style={styleKpiTitle}>Headcount Atual</div>
+                <div className="text-2xl font-bold text-green-600" style={styleValues}>{formatNum(headcount)}</div>
+                <div className="text-xs text-gray-400 mt-1" style={styleText}>Contratos ativos</div>
+              </div>
+              <div className={cardCls} style={{ borderColor: cardBorderColor }}>
+                <div className="text-sm font-medium text-gray-500 mb-2" style={styleKpiTitle}>Admissões (mês)</div>
+                <div className="text-2xl font-bold text-emerald-600" style={styleValues}>{formatNum(admissoesMes)}</div>
+                <div className="text-xs text-gray-400 mt-1" style={styleText}>Entrada de colaboradores</div>
+              </div>
+              <div className={cardCls} style={{ borderColor: cardBorderColor }}>
+                <div className="text-sm font-medium text-gray-500 mb-2" style={styleKpiTitle}>Demissões (mês)</div>
+                <div className="text-2xl font-bold text-rose-600" style={styleValues}>{formatNum(demissoesMes)}</div>
+                <div className="text-xs text-gray-400 mt-1" style={styleText}>Saídas registradas</div>
+              </div>
+            </>
+          )
+        })()}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <h3 className="text-lg font-semibold mb-4">Folha por Tipo de Pagamento</h3>
+        <div className={`bg-white p-6 rounded-lg border border-gray-100${cardShadow ? ' shadow-sm' : ''}`} style={{ borderColor: cardBorderColor }}>
+          <h3 className="text-lg font-semibold mb-4" style={styleChartTitle}>Folha por Tipo de Pagamento</h3>
           <HBars items={folhaPorTipo} color="bg-sky-500" />
         </div>
-        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <h3 className="text-lg font-semibold mb-4">Headcount por Departamento</h3>
+        <div className={`bg-white p-6 rounded-lg border border-gray-100${cardShadow ? ' shadow-sm' : ''}`} style={{ borderColor: cardBorderColor }}>
+          <h3 className="text-lg font-semibold mb-4" style={styleChartTitle}>Headcount por Departamento</h3>
           <HBars items={headcountPorDepto} color="bg-indigo-500" />
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <h3 className="text-lg font-semibold mb-4">Últimas Movimentações</h3>
+        <div className={`bg-white p-6 rounded-lg border border-gray-100${cardShadow ? ' shadow-sm' : ''}`} style={{ borderColor: cardBorderColor }}>
+          <h3 className="text-lg font-semibold mb-4" style={styleChartTitle}>Últimas Movimentações</h3>
           <div className="space-y-3">
             {ultimasMov.length === 0 ? (
-              <div className="text-sm text-gray-400">Sem movimentações</div>
+              <div className="text-sm text-gray-400" style={styleText}>Sem movimentações</div>
             ) : ultimasMov.map((m, idx) => (
-              <div key={`${m.tipo}-${m.nome}-${idx}`} className="flex justify-between items-center pb-2 border-b last:border-b-0">
+              <div key={`${m.tipo}-${m.nome}-${idx}`} className="flex justify-between items-center pb-2 border-b last:border-b-0" style={{ borderColor: cardBorderColor }}>
                 <div>
-                  <div className="font-medium text-sm">{m.tipo} • {m.nome}</div>
-                  <div className="text-xs text-gray-500">{new Date(m.data).toLocaleDateString('pt-BR')}</div>
+                  <div className="font-medium text-sm" style={styleText}>{m.tipo} • {m.nome}</div>
+                  <div className="text-xs text-gray-500" style={styleText}>{new Date(m.data).toLocaleDateString('pt-BR')}</div>
                 </div>
                 <div className={`text-xs ${m.tipo === 'Admissão' ? 'text-emerald-600' : 'text-rose-600'}`}>{m.tipo}</div>
               </div>
             ))}
           </div>
         </div>
-        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <h3 className="text-lg font-semibold mb-4">Observações</h3>
-          <ul className="text-sm text-gray-600 space-y-2 list-disc pl-5">
+        <div className={`bg-white p-6 rounded-lg border border-gray-100${cardShadow ? ' shadow-sm' : ''}`} style={{ borderColor: cardBorderColor }}>
+          <h3 className="text-lg font-semibold mb-4" style={styleChartTitle}>Observações</h3>
+          <ul className="text-sm text-gray-600 space-y-2 list-disc pl-5" style={styleText}>
             <li>Use contratos e histórico salarial para validar a folha.</li>
             <li>Parametrize benefícios e encargos para custo total por colaborador.</li>
             <li>Acompanhe admissões/demissões para prever impacto de headcount.</li>

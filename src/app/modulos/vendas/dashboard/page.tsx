@@ -1,9 +1,15 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
-import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
-import PageHeader from '@/components/modulos/PageHeader'
+import { useStore } from '@nanostores/react'
+import DashboardLayout from '@/components/modulos/DashboardLayout'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Button } from '@/components/ui/button'
+import { Calendar } from '@/components/ui/calendar'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Calendar as CalendarIcon } from 'lucide-react'
+import type { DateRange } from 'react-day-picker'
+import { $financeiroDashboardUI, $financeiroDashboardFilters, financeiroDashboardActions } from '@/stores/modulos/financeiroDashboardStore'
 
 type PedidoRow = {
   valor_total_pedido?: number | string
@@ -32,6 +38,14 @@ function lastMonths(n: number) { const arr: string[] = []; const base = new Date
 function isCompleted(status?: string) { if (!status) return false; const s = status.toLowerCase(); return s.includes('conclu') || s.includes('fatur') || s.includes('pago') || s.includes('final') }
 
 export default function VendasDashboardPage() {
+  // Global UI & Filters
+  const ui = useStore($financeiroDashboardUI)
+  const filters = useStore($financeiroDashboardFilters)
+  const fonts = ui.fonts
+  const cardBorderColor = ui.cardBorderColor
+  const pageBgColor = ui.pageBgColor
+  const cardShadow = ui.cardShadow
+  const filtersIconColor = ui.filtersIconColor
   const [rows, setRows] = useState<PedidoRow[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -143,65 +157,194 @@ export default function VendasDashboardPage() {
     )
   }
 
-  return (
-    <SidebarProvider>
-      <SidebarShadcn />
-      <SidebarInset className="min-h-screen flex flex-col overflow-y-auto" style={{ background: '#ffffff' }}>
-        <div style={{ background: 'white', paddingBottom: 16 }}>
-          <PageHeader
-            title="Dashboard de Vendas"
-            subtitle="Visão geral de performance e vendas"
-            titleFontFamily="var(--font-crimson-text)"
+  // Fonts and header styles
+  function fontVar(name?: string) {
+    if (!name) return undefined
+    if (name === 'Inter') return 'var(--font-inter)'
+    if (name === 'Geist') return 'var(--font-geist-sans)'
+    if (name === 'Roboto Mono') return 'var(--font-roboto-mono)'
+    if (name === 'Geist Mono') return 'var(--font-geist-mono)'
+    if (name === 'IBM Plex Mono') return 'var(--font-ibm-plex-mono), "IBM Plex Mono", monospace'
+    if (name === 'Avenir') return 'var(--font-avenir), Avenir, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif'
+    if (name === 'Space Mono') return 'var(--font-space-mono), "Space Mono", monospace'
+    return name
+  }
+  const styleValues = useMemo<React.CSSProperties>(() => ({
+    fontFamily: fontVar(fonts.values.family),
+    fontWeight: fonts.values.weight as React.CSSProperties['fontWeight'],
+    letterSpacing: typeof fonts.values.letterSpacing === 'number' ? `${fonts.values.letterSpacing}px` : undefined,
+    color: fonts.values.color || undefined,
+    fontSize: typeof fonts.values.size === 'number' ? `${fonts.values.size}px` : undefined,
+    textTransform: fonts.values.transform === 'uppercase' ? 'uppercase' : 'none',
+  }), [fonts.values])
+  const styleKpiTitle = useMemo<React.CSSProperties>(() => ({
+    fontFamily: fontVar(fonts.kpiTitle.family),
+    fontWeight: fonts.kpiTitle.weight as React.CSSProperties['fontWeight'],
+    letterSpacing: typeof fonts.kpiTitle.letterSpacing === 'number' ? `${fonts.kpiTitle.letterSpacing}px` : undefined,
+    color: fonts.kpiTitle.color || undefined,
+    fontSize: typeof fonts.kpiTitle.size === 'number' ? `${fonts.kpiTitle.size}px` : undefined,
+    textTransform: fonts.kpiTitle.transform === 'uppercase' ? 'uppercase' : 'none',
+  }), [fonts.kpiTitle])
+  const styleChartTitle = useMemo<React.CSSProperties>(() => ({
+    fontFamily: fontVar(fonts.chartTitle.family),
+    fontWeight: fonts.chartTitle.weight as React.CSSProperties['fontWeight'],
+    letterSpacing: typeof fonts.chartTitle.letterSpacing === 'number' ? `${fonts.chartTitle.letterSpacing}px` : undefined,
+    color: fonts.chartTitle.color || undefined,
+    fontSize: typeof fonts.chartTitle.size === 'number' ? `${fonts.chartTitle.size}px` : undefined,
+    textTransform: fonts.chartTitle.transform === 'uppercase' ? 'uppercase' : 'none',
+  }), [fonts.chartTitle])
+  const styleText = useMemo<React.CSSProperties>(() => ({
+    fontFamily: fontVar(fonts.text.family),
+    fontWeight: fonts.text.weight as React.CSSProperties['fontWeight'],
+    letterSpacing: typeof fonts.text.letterSpacing === 'number' ? `${fonts.text.letterSpacing}px` : undefined,
+    color: fonts.text.color || undefined,
+    fontSize: typeof fonts.text.size === 'number' ? `${fonts.text.size}px` : undefined,
+    textTransform: fonts.text.transform === 'uppercase' ? 'uppercase' : 'none',
+  }), [fonts.text])
+  const styleHeaderTitle = useMemo<React.CSSProperties>(() => ({
+    fontFamily: fontVar(fonts.headerTitle.family),
+    fontWeight: fonts.headerTitle.weight as React.CSSProperties['fontWeight'],
+    letterSpacing: typeof fonts.headerTitle.letterSpacing === 'number' ? `${fonts.headerTitle.letterSpacing}px` : undefined,
+    color: fonts.headerTitle.color || undefined,
+    fontSize: typeof fonts.headerTitle.size === 'number' ? `${fonts.headerTitle.size}px` : undefined,
+    textTransform: fonts.headerTitle.transform === 'uppercase' ? 'uppercase' : 'none',
+  }), [fonts.headerTitle])
+  const styleHeaderSubtitle = useMemo<React.CSSProperties>(() => ({
+    fontFamily: fontVar(fonts.headerSubtitle.family),
+    fontWeight: fonts.headerSubtitle.weight as React.CSSProperties['fontWeight'],
+    letterSpacing: typeof fonts.headerSubtitle.letterSpacing === 'number' ? `${fonts.headerSubtitle.letterSpacing}px` : undefined,
+    color: fonts.headerSubtitle.color || undefined,
+    fontSize: typeof fonts.headerSubtitle.size === 'number' ? `${fonts.headerSubtitle.size}px` : undefined,
+    textTransform: fonts.headerSubtitle.transform === 'uppercase' ? 'uppercase' : 'none',
+  }), [fonts.headerSubtitle])
+  const styleFilters = useMemo<React.CSSProperties>(() => ({
+    fontFamily: fontVar(fonts.filters.family),
+    fontWeight: fonts.filters.weight as React.CSSProperties['fontWeight'],
+    letterSpacing: typeof fonts.filters.letterSpacing === 'number' ? `${fonts.filters.letterSpacing}px` : undefined,
+    color: fonts.filters.color || undefined,
+    fontSize: typeof fonts.filters.size === 'number' ? `${fonts.filters.size}px` : undefined,
+    textTransform: fonts.filters.transform === 'uppercase' ? 'uppercase' : 'none',
+  }), [fonts.filters])
+  const dateRange: DateRange | undefined = useMemo(() => {
+    const from = filters.dateRange?.from ? new Date(filters.dateRange.from) : undefined
+    const to = filters.dateRange?.to ? new Date(filters.dateRange.to) : undefined
+    if (!from && !to) return undefined
+    return { from, to }
+  }, [filters.dateRange])
+  const setDateRange = (range?: DateRange) => {
+    const toISO = (d?: Date) => (d ? d.toISOString().slice(0, 10) : undefined)
+    financeiroDashboardActions.setFilters({
+      dateRange: range ? { from: toISO(range.from), to: toISO(range.to) } : undefined,
+    })
+  }
+  const dataFilter = filters.dataFilter
+  const setDataFilter = (v: string) => financeiroDashboardActions.setFilters({ dataFilter: v })
+  const rangeLabel = useMemo(() => {
+    if (dateRange?.from && dateRange?.to) {
+      const fmt = (d: Date) => d.toLocaleDateString('pt-BR')
+      return `${fmt(dateRange.from)} - ${fmt(dateRange.to)}`
+    }
+    if (dateRange?.from) {
+      const fmt = (d: Date) => d.toLocaleDateString('pt-BR')
+      return `${fmt(dateRange.from)}`
+    }
+    return 'Selecionar período'
+  }, [dateRange])
+  const headerActions = (
+    <div className="flex items-center gap-2">
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button variant="outline" size="sm" className="h-9 px-3">
+            <CalendarIcon className="mr-2 h-4 w-4" style={{ color: filtersIconColor }} />
+            <span className="whitespace-nowrap" style={styleFilters}>{rangeLabel}</span>
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent align="end" className="p-2 w-auto">
+          <Calendar
+            mode="range"
+            selected={dateRange}
+            onSelect={setDateRange}
+            numberOfMonths={2}
+            captionLayout="dropdown"
+            showOutsideDays
+            initialFocus
           />
-        </div>
+        </PopoverContent>
+      </Popover>
+      <Select value={dataFilter} onValueChange={setDataFilter}>
+        <SelectTrigger className="h-9 w-[160px]" style={styleFilters}>
+          <SelectValue placeholder="Filtro" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="todos">Todos</SelectItem>
+          <SelectItem value="pendentes">Pendentes</SelectItem>
+          <SelectItem value="vencidos">Vencidos</SelectItem>
+          <SelectItem value="pagos">Pagos</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+  )
 
-        <div className="flex-1 p-6">
+  const cardContainerClass = `bg-white p-6 rounded-lg border border-gray-100${cardShadow ? ' shadow-sm' : ''}`
+
+  return (
+    <DashboardLayout
+      title="Olá, Igor Bianch"
+      subtitle="Você está na aba Dashboard do módulo Vendas"
+      backgroundColor={pageBgColor}
+      headerBackground="transparent"
+      headerTitleStyle={styleHeaderTitle}
+      headerSubtitleStyle={styleHeaderSubtitle}
+      headerActions={headerActions}
+      userAvatarUrl="https://i.pravatar.cc/80?img=12"
+    >
+      <div className="flex-1">
           {loading ? (<div className="p-4 text-sm text-gray-500">Carregando…</div>) : error ? (<div className="p-4 text-sm text-red-600">{error}</div>) : null}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-              <div className="text-sm font-medium text-gray-500 mb-2">Total Vendas (6m)</div>
-              <div className="text-2xl font-bold text-blue-600">{formatBRL(kpis.total)}</div>
-              <div className="text-xs text-gray-400 mt-1">Soma de pedidos</div>
+            <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
+              <div className="text-sm font-medium text-gray-500 mb-2" style={styleKpiTitle}>Total Vendas (6m)</div>
+              <div className="text-2xl font-bold text-blue-600" style={styleValues}>{formatBRL(kpis.total)}</div>
+              <div className="text-xs text-gray-400 mt-1" style={styleText}>Soma de pedidos</div>
             </div>
-            <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-              <div className="text-sm font-medium text-gray-500 mb-2">Ticket Médio</div>
-              <div className="text-2xl font-bold text-green-600">{formatBRL(kpis.ticket)}</div>
-              <div className="text-xs text-gray-400 mt-1">Total / pedidos</div>
+            <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
+              <div className="text-sm font-medium text-gray-500 mb-2" style={styleKpiTitle}>Ticket Médio</div>
+              <div className="text-2xl font-bold text-green-600" style={styleValues}>{formatBRL(kpis.ticket)}</div>
+              <div className="text-xs text-gray-400 mt-1" style={styleText}>Total / pedidos</div>
             </div>
-            <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-              <div className="text-sm font-medium text-gray-500 mb-2">Pedidos</div>
-              <div className="text-2xl font-bold text-purple-600">{kpis.pedidos}</div>
-              <div className="text-xs text-gray-400 mt-1">Registros no período</div>
+            <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
+              <div className="text-sm font-medium text-gray-500 mb-2" style={styleKpiTitle}>Pedidos</div>
+              <div className="text-2xl font-bold text-purple-600" style={styleValues}>{kpis.pedidos}</div>
+              <div className="text-xs text-gray-400 mt-1" style={styleText}>Registros no período</div>
             </div>
-            <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-              <div className="text-sm font-medium text-gray-500 mb-2">Taxa de Conversão</div>
-              <div className="text-2xl font-bold text-orange-600">{kpis.conv.toFixed(1)}%</div>
-              <div className="text-xs text-gray-400 mt-1">Concluídos / total</div>
+            <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
+              <div className="text-sm font-medium text-gray-500 mb-2" style={styleKpiTitle}>Taxa de Conversão</div>
+              <div className="text-2xl font-bold text-orange-600" style={styleValues}>{kpis.conv.toFixed(1)}%</div>
+              <div className="text-xs text-gray-400 mt-1" style={styleText}>Concluídos / total</div>
             </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-              <h3 className="text-lg font-semibold mb-4">Vendas por Canal</h3>
+            <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
+              <h3 className="text-lg font-semibold mb-4" style={styleChartTitle}>Vendas por Canal</h3>
               <HBars items={vendasPorCanal} color="bg-blue-500" />
             </div>
-            <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-              <h3 className="text-lg font-semibold mb-4">Performance da Equipe</h3>
+            <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
+              <h3 className="text-lg font-semibold mb-4" style={styleChartTitle}>Performance da Equipe</h3>
               <HBars items={vendasPorVendedor} color="bg-emerald-500" />
             </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-              <h3 className="text-lg font-semibold mb-4">Top Clientes</h3>
+            <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
+              <h3 className="text-lg font-semibold mb-4" style={styleChartTitle}>Top Clientes</h3>
               <div className="space-y-3">
                 {topClientes.length === 0 ? (
-                  <div className="text-sm text-gray-400">Sem dados</div>
+                  <div className="text-sm text-gray-400" style={styleText}>Sem dados</div>
                 ) : topClientes.map((c) => (
-                  <div key={c.cliente} className="flex justify-between items-center pb-2 border-b last:border-b-0">
+                  <div key={c.cliente} className="flex justify-between items-center pb-2 border-b last:border-b-0" style={{ borderColor: cardBorderColor }}>
                     <div>
-                      <div className="font-medium text-sm">{c.cliente}</div>
-                      <div className="text-xs text-gray-500">{c.pedidos} pedidos</div>
+                      <div className="font-medium text-sm" style={styleText}>{c.cliente}</div>
+                      <div className="text-xs text-gray-500" style={styleText}>{c.pedidos} pedidos</div>
                     </div>
                     <div className="font-semibold text-blue-600">{formatBRL(c.total)}</div>
                   </div>
@@ -209,33 +352,33 @@ export default function VendasDashboardPage() {
               </div>
             </div>
 
-            <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-              <h3 className="text-lg font-semibold mb-4">Vendas por Cidade/UF</h3>
+            <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
+              <h3 className="text-lg font-semibold mb-4" style={styleChartTitle}>Vendas por Cidade/UF</h3>
               <div className="space-y-3">
                 {vendasPorCidade.length === 0 ? (
-                  <div className="text-sm text-gray-400">Sem dados</div>
+                  <div className="text-sm text-gray-400" style={styleText}>Sem dados</div>
                 ) : vendasPorCidade.map((x) => (
                   <div key={x.cidade} className="flex justify-between items-center">
                     <div className="flex items-center gap-2">
                       <div className="w-3 h-3 rounded-full bg-indigo-500"></div>
-                      <span className="text-sm">{x.cidade}</span>
+                      <span className="text-sm" style={styleText}>{x.cidade}</span>
                     </div>
-                    <span className="font-semibold text-sm">{formatBRL(x.total)}</span>
+                    <span className="font-semibold text-sm" style={styleText}>{formatBRL(x.total)}</span>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-              <h3 className="text-lg font-semibold mb-4">Pedidos Recentes</h3>
+            <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
+              <h3 className="text-lg font-semibold mb-4" style={styleChartTitle}>Pedidos Recentes</h3>
               <div className="space-y-3">
                 {pedidosRecentes.length === 0 ? (
-                  <div className="text-sm text-gray-400">Sem pedidos recentes</div>
+                  <div className="text-sm text-gray-400" style={styleText}>Sem pedidos recentes</div>
                 ) : pedidosRecentes.map((p) => (
-                  <div key={p.numero_pedido ?? `${p.cliente}-${p.data_pedido}`} className="flex justify-between items-center pb-2 border-b last:border-b-0">
+                  <div key={p.numero_pedido ?? `${p.cliente}-${p.data_pedido}`} className="flex justify-between items-center pb-2 border-b last:border-b-0" style={{ borderColor: cardBorderColor }}>
                     <div>
-                      <div className="font-medium text-sm">{p.numero_pedido || 'Pedido'}</div>
-                      <div className="text-xs text-gray-500">{p.cliente || '—'} • {new Date(p.data_pedido || '').toLocaleDateString('pt-BR')}</div>
+                      <div className="font-medium text-sm" style={styleText}>{p.numero_pedido || 'Pedido'}</div>
+                      <div className="text-xs text-gray-500" style={styleText}>{p.cliente || '—'} • {new Date(p.data_pedido || '').toLocaleDateString('pt-BR')}</div>
                     </div>
                     <div>
                       <div className={`font-semibold text-sm ${isCompleted(p.status) ? 'text-green-600' : 'text-orange-600'}`}>{formatBRL(p.valor_total_pedido)}</div>
@@ -246,8 +389,7 @@ export default function VendasDashboardPage() {
               </div>
             </div>
           </div>
-        </div>
-      </SidebarInset>
-    </SidebarProvider>
+      </div>
+    </DashboardLayout>
   )
 }
