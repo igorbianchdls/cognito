@@ -15,6 +15,7 @@ import type { Node, Edge } from 'reactflow'
 import type { NodeData } from '@/types/agentes/flow'
 import { flowToGraph } from '@/components/agentes/builder/flow/serialization'
 import { Button } from "@/components/ui/button"
+import { Code2, Play, Save } from "lucide-react"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import CodePreview from "@/components/agentes/codegen/CodePreview"
@@ -157,10 +158,27 @@ export default function NewAgentPage() {
       <SidebarInset className="h-screen flex flex-col bg-white">
         <div className="flex items-center justify-between px-6 md:px-10 h-14 border-b">
           <input className="text-xl font-semibold outline-none bg-transparent" value={name} onChange={(e) => setName(e.target.value)} />
-          <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={() => setShowCode(true)}>Código</Button>
-            <Button variant="outline" onClick={() => { setRightPanelMode('exec'); setRunTrigger(v => v + 1) }}>Run</Button>
-            <Button variant="outline" onClick={handleTest}>Testar</Button>
+        <div className="flex items-center gap-2">
+            <Button
+              onClick={() => setShowCode(true)}
+              className="rounded-full bg-gray-100 text-gray-900 hover:bg-gray-200 border border-gray-300 h-9 px-4"
+              variant="outline"
+            >
+              <Code2 className="w-4 h-4 mr-2" /> Código
+            </Button>
+            <Button
+              onClick={() => { setRightPanelMode('exec'); setRunTrigger(v => v + 1) }}
+              className="rounded-full bg-gray-100 text-gray-900 hover:bg-gray-200 border border-gray-300 h-9 px-4"
+              variant="outline"
+            >
+              <Play className="w-4 h-4 mr-2" /> Run
+            </Button>
+            <Button
+              onClick={handleTest}
+              className="rounded-full bg-blue-600 text-white hover:bg-blue-700 border-transparent h-9 px-4"
+            >
+              <Save className="w-4 h-4 mr-2" /> Salvar
+            </Button>
           </div>
         </div>
         <div className="flex-1 overflow-hidden flex">
