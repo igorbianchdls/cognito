@@ -10,7 +10,7 @@ import PropertiesPanel from "@/components/agentes/builder/PropertiesPanel"
 import WorkflowRunChatPanel from "@/components/workflows/exec/WorkflowRunChatPanel"
 import ToolsPanel from "@/components/workflows/tools/ToolsPanel"
 import CategoriesPanel from "@/components/workflows/tools/CategoriesPanel"
-import type { Block, BlockKind } from "@/types/agentes/builder"
+import type { Block, BlockKind, ToolBlockConfig } from "@/types/agentes/builder"
 import type { Node, Edge } from 'reactflow'
 import type { NodeData } from '@/types/agentes/flow'
 import { flowToGraph } from '@/components/agentes/builder/flow/serialization'
@@ -83,19 +83,7 @@ export default function NewAgentPage() {
     }
   }
 
-  const handleRun = async () => {
-    try {
-      const res = await fetch('/api/agentes/run-visual', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ graph: flowToGraph(nodes, edges), message: 'olá agente' }),
-      })
-      const data = await res.json()
-      alert(`Run (runner): ${data.reply || JSON.stringify(data)}`)
-    } catch (e) {
-      alert('Falha ao rodar agente: ' + (e as Error).message)
-    }
-  }
+  // handleRun removed (unused) — run is triggered by switching to exec panel
 
   return (
     <SidebarProvider defaultOpen={false}>
@@ -141,10 +129,10 @@ export default function NewAgentPage() {
                     const idx = nodes.findIndex(n => n.data.block.kind === 'ferramenta')
                     if (idx >= 0) {
                       const node = nodes[idx]
-                      const cfg = (node.data.block.config || {}) as any
+                      const cfg = (node.data.block.config || {}) as Partial<ToolBlockConfig>
                       const current: string[] = Array.isArray(cfg.toolIds) ? cfg.toolIds : []
                       const next = Array.from(new Set([...current, id]))
-                      const updated = { ...node, data: { block: { ...node.data.block, config: { ...cfg, toolIds: next } } } }
+                      const updated = { ...node, data: { block: { ...node.data.block, config: { ...(cfg as Partial<ToolBlockConfig>), toolIds: next } } } }
                       setNodes(prev => prev.map((n, i) => i === idx ? updated : n))
                     } else {
                       addBlock({ kind: 'ferramenta', toolId: id })
