@@ -19,6 +19,13 @@ function selectModel(providerModel?: string) {
   return anthropic(modelName)
 }
 
+function supportsAnthropicThinking(providerModel?: string) {
+  const model = String(providerModel || '')
+  const provider = model.includes('/') ? model.split('/')[0] : 'anthropic'
+  const name = model.includes('/') ? model.split('/').slice(1).join('/') : model
+  return provider === 'anthropic' && /(sonnet|opus)/i.test(name)
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json() as { graph: Graph; messages: UIMessage[] }
@@ -55,9 +62,7 @@ export async function POST(req: Request) {
       ...(steps.length > 0 ? { maxToolRoundtrips: stepCfg.maxSteps ?? steps.length } : {}),
       ...(stepCfg.toolChoice && stepCfg.toolChoice !== 'auto' ? { toolChoice: stepCfg.toolChoice } : {}),
       ...(stepCfg.prepareStepEnabled ? { prepareStep: () => undefined } : {}),
-      providerOptions: {
-        anthropic: { thinking: { type: 'enabled', budgetTokens: 8000 } }
-      }
+      ...(supportsAnthropicThinking(agent.model) ? { providerOptions: { anthropic: { thinking: { type: 'enabled', budgetTokens: 8000 } } } } : {})
     })
 
     return result.toUIMessageStreamResponse()

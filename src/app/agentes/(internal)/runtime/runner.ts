@@ -36,6 +36,13 @@ function selectModel(providerModel: string | undefined) {
   return anthropic(modelName)
 }
 
+function supportsAnthropicThinking(providerModel?: string) {
+  const model = String(providerModel || '')
+  const provider = model.includes('/') ? model.split('/')[0] : 'anthropic'
+  const name = model.includes('/') ? model.split('/').slice(1).join('/') : model
+  return provider === 'anthropic' && /(sonnet|opus)/i.test(name)
+}
+
 export async function execute(graph: Graph, input: string, opts?: ExecOptions): Promise<{ reply: string }> {
   const agent = getAgent(graph)
   const step = getStep(graph)
@@ -69,11 +76,7 @@ export async function execute(graph: Graph, input: string, opts?: ExecOptions): 
     ...(step.count > 0 ? { maxToolRoundtrips: step.maxSteps ?? step.count } : {}),
     ...(step.toolChoice && step.toolChoice !== 'auto' ? { toolChoice: step.toolChoice } : {}),
     ...(prepareStep ? { prepareStep } : {}),
-    providerOptions: {
-      anthropic: {
-        thinking: { type: 'enabled', budgetTokens: 8000 },
-      },
-    },
+    ...(supportsAnthropicThinking(agent.model) ? { providerOptions: { anthropic: { thinking: { type: 'enabled', budgetTokens: 8000 } } } } : {}),
   })
 
   return { reply: text }
