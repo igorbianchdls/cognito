@@ -14,9 +14,9 @@ export default function NodeHeader({ icon, badgeBg, badgeColor, description, tit
   return (
     <div className="mb-0.5">
       {/* Top row: icon (left) + small gray description to the right */}
-      <div className="flex items-center gap-2 mb-1">
+      <div className="flex items-center gap-1.5 mb-1">
         <div
-          className="inline-flex items-center justify-center w-7 h-7 rounded-md border"
+          className="inline-flex items-center justify-center w-6 h-6 rounded-md border"
           style={{ background: badgeBg, color: badgeColor, borderColor: 'rgba(0,0,0,0.06)' }}
         >
           {icon}

@@ -23,21 +23,13 @@ export default function PropertiesPanel({ block, onChange, onDelete: _onDelete, 
     )
   }
 
-  const icon = block.kind === 'agente' ? <Bot className="w-4 h-4" /> : block.kind === 'ferramenta' ? <Wrench className="w-4 h-4" /> : block.kind === 'condicao' ? <GitBranch className="w-4 h-4" /> : <MessageSquareText className="w-4 h-4" />
-  const title = block.name || (block.kind.charAt(0).toUpperCase() + block.kind.slice(1))
+  // Header oculto: sem ícone/título no painel direito
 
   const cfgUnknown = (block.config || {}) as Record<string, unknown>
 
   return (
     <div className="h-full flex flex-col bg-white">
-      <div className="p-4 flex items-center gap-2">
-        {icon}
-        <div>
-          <div className="text-sm font-medium">{title}</div>
-          <div className="text-xs text-muted-foreground">{block.kind}</div>
-        </div>
-      </div>
-      <Separator />
+      {/* Header removido conforme solicitado */}
 
       <div className="flex-1 overflow-auto p-4 space-y-4 custom-scrollbar">
         {block.kind === 'agente' ? (

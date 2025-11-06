@@ -15,7 +15,7 @@ export default function BlockCard({
   return (
     <div
       className={cn(
-        "relative bg-white rounded-2xl px-5 py-4 flex items-start justify-between gap-3 cursor-pointer w-fit min-w-[32ch] max-w-[56ch] shadow-[0_1px_2px_rgba(0,0,0,0.06)] hover:shadow-md transition-all",
+        "relative bg-white rounded-2xl px-4 py-3 flex items-start justify-between gap-2 cursor-pointer w-fit min-w-[28ch] max-w-[56ch] shadow-[0_1px_2px_rgba(0,0,0,0.06)] hover:shadow-md transition-all",
         borderStyle,
         "border-gray-200 hover:border-gray-300",
         ringStyle,
@@ -29,4 +29,3 @@ export default function BlockCard({
       {children}
     </div>
   )}
-
