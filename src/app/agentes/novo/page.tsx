@@ -107,7 +107,12 @@ export default function NewAgentPage() {
   const [nodes, setNodes] = useState<Node<NodeData>[]>(initialNodes)
   const [edges, setEdges] = useState<Edge[]>(initialEdges)
   const [selectedId, setSelectedId] = useState<string | null>(null)
-  const selectedBlock = useMemo(() => nodes.find(n => n.id === selectedId)?.data.block || null, [nodes, selectedId])
+  const selectedBlock = useMemo(() => {
+    const explicit = nodes.find(n => n.id === selectedId)?.data.block
+    if (explicit) return explicit
+    const agent = nodes.find(n => n.data.block.kind === 'agente')?.data.block
+    return agent || null
+  }, [nodes, selectedId])
   const [showCode, setShowCode] = useState(false)
   const [runTrigger, setRunTrigger] = useState(0)
   const [leftTab, setLeftTab] = useState<'agentes' | 'workflows'>('agentes')
