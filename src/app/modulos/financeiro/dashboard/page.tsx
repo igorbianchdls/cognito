@@ -103,6 +103,7 @@ export default function FinanceiroDashboardPage() {
     chartTitle: { family: 'Space Mono', weight: 500 as number | undefined, letterSpacing: 0 as number | undefined, color: '#adadad' as string | undefined, size: 13 as number | undefined, transform: 'uppercase' as 'none' | 'uppercase' },
     text: { family: 'Inter', weight: 400 as number | undefined, letterSpacing: 0 as number | undefined, color: '#6b7280' as string | undefined, size: 12 as number | undefined, transform: 'none' as 'none' | 'uppercase' },
     filters: { family: 'Inter', weight: 400 as number | undefined, letterSpacing: 0 as number | undefined, color: 'rgb(122, 122, 122)' as string | undefined, size: 13 as number | undefined, transform: 'none' as 'none' | 'uppercase' },
+    sidebarSectionTitle: { family: 'Inter', weight: 600 as number | undefined, letterSpacing: 0 as number | undefined, color: '#6b7280' as string | undefined, size: 12 as number | undefined, transform: 'uppercase' as 'none' | 'uppercase' },
     headerTitle: { family: 'Space Mono', weight: 700 as number | undefined, letterSpacing: 0 as number | undefined, color: '#111827' as string | undefined, size: 20 as number | undefined, transform: 'uppercase' as 'none' | 'uppercase' },
     headerSubtitle: { family: 'Inter', weight: 400 as number | undefined, letterSpacing: 0 as number | undefined, color: '#6b7280' as string | undefined, size: 12 as number | undefined, transform: 'none' as 'none' | 'uppercase' },
   })
