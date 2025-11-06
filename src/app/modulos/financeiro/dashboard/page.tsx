@@ -100,11 +100,11 @@ export default function FinanceiroDashboardPage() {
     values: { family: 'Space Mono', weight: 700 as number | undefined, letterSpacing: 0 as number | undefined, color: '#111827' as string | undefined, size: 24 as number | undefined, transform: 'none' as 'none' | 'uppercase' },
     title: { family: 'Space Mono', weight: 500 as number | undefined, letterSpacing: 0 as number | undefined, color: '#adadad' as string | undefined, size: 13 as number | undefined, transform: 'uppercase' as 'none' | 'uppercase' },
     text: { family: 'Inter', weight: 400 as number | undefined, letterSpacing: 0 as number | undefined, color: '#6b7280' as string | undefined, size: 12 as number | undefined, transform: 'none' as 'none' | 'uppercase' },
-    filters: { family: 'Inter', weight: 400 as number | undefined, letterSpacing: 0 as number | undefined, color: '#374151' as string | undefined, size: 12 as number | undefined, transform: 'none' as 'none' | 'uppercase' },
-    headerTitle: { family: 'Inter', weight: 700 as number | undefined, letterSpacing: 0 as number | undefined, color: '#111827' as string | undefined, size: 18 as number | undefined, transform: 'none' as 'none' | 'uppercase' },
+    filters: { family: 'Inter', weight: 400 as number | undefined, letterSpacing: 0 as number | undefined, color: 'rgb(122, 122, 122)' as string | undefined, size: 13 as number | undefined, transform: 'none' as 'none' | 'uppercase' },
+    headerTitle: { family: 'Space Mono', weight: 700 as number | undefined, letterSpacing: 0 as number | undefined, color: '#111827' as string | undefined, size: 20 as number | undefined, transform: 'uppercase' as 'none' | 'uppercase' },
     headerSubtitle: { family: 'Inter', weight: 400 as number | undefined, letterSpacing: 0 as number | undefined, color: '#6b7280' as string | undefined, size: 12 as number | undefined, transform: 'none' as 'none' | 'uppercase' },
   })
-  const [cardBorderColor, setCardBorderColor] = useState<string>('#f3f4f6')
+  const [cardBorderColor, setCardBorderColor] = useState<string>('rgb(240, 240, 240)')
   const [pageBgColor, setPageBgColor] = useState<string>('#ffffff')
   const [filtersIconColor, setFiltersIconColor] = useState<string>('#6b7280')
   const styleValues = useMemo<React.CSSProperties>(() => ({
@@ -604,7 +604,7 @@ export default function FinanceiroDashboardPage() {
               <div className="text-sm text-gray-400" style={styleText}>Sem títulos</div>
             ) : (
               topReceber.map((i, idx) => (
-                <div key={idx} className="flex justify-between items-center pb-2 border-b last:border-b-0">
+                <div key={idx} className="flex justify-between items-center pb-2 border-b last:border-b-0" style={{ borderColor: cardBorderColor }}>
                   <div>
                     <div className="font-medium text-sm">{i.nome}</div>
                     <div className="text-xs text-gray-500" style={styleText}>{i.desc || '—'} • Venc {i.dd! < 0 ? `${Math.abs(i.dd!)}d` : `em ${i.dd}d`}</div>
@@ -622,7 +622,7 @@ export default function FinanceiroDashboardPage() {
               <div className="text-sm text-gray-400" style={styleText}>Sem pagamentos para hoje</div>
             ) : (
               pagamentosHoje.map((i, idx) => (
-                <div key={idx} className="flex justify-between items-center pb-2 border-b last:border-b-0">
+                <div key={idx} className="flex justify-between items-center pb-2 border-b last:border-b-0" style={{ borderColor: cardBorderColor }}>
                   <div>
                     <div className="font-medium text-sm">{i.nome}</div>
                     <div className="text-xs text-gray-500" style={styleText}>{i.desc || '—'}</div>
@@ -636,7 +636,7 @@ export default function FinanceiroDashboardPage() {
       </div>
 
       {/* Tipografia - Controles */}
-      <div className="mt-6 bg-white p-4 rounded-lg border border-gray-100">
+      <div className="mt-6 bg-white p-4 rounded-lg border border-gray-100" style={{ borderColor: cardBorderColor }}>
         <h4 className="text-sm font-semibold text-gray-700 mb-3">Tipografia</h4>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Valores */}
@@ -1039,7 +1039,7 @@ export default function FinanceiroDashboardPage() {
             </div>
           </div>
         </div>
-        <div className="mt-4 pt-3 border-t border-gray-100">
+        <div className="mt-4 pt-3 border-t border-gray-100" style={{ borderColor: cardBorderColor }}>
           <div className="flex items-center gap-6 flex-wrap">
             <div className="flex items-center gap-3">
               <div className="text-xs text-gray-500">Fundo da página</div>
