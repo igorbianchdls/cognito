@@ -68,16 +68,40 @@ export function NavModulos() {
             </SidebarMenuItem>
           </Collapsible>
           {/* Contabilidade logo abaixo */}
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              tooltip="Contabilidade"
-              onClick={() => router.push("/modulos/contabilidade")}
-              isActive={pathname.startsWith("/modulos/contabilidade")}
-            >
-              <BookOpen />
-              <span>Contabilidade</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+          <Collapsible
+            key="contabilidade"
+            asChild
+            defaultOpen={pathname.startsWith("/modulos/contabilidade")}
+            className="group/collapsible"
+          >
+            <SidebarMenuItem>
+              <CollapsibleTrigger asChild>
+                <SidebarMenuButton tooltip="Contabilidade">
+                  <BookOpen />
+                  <span>Contabilidade</span>
+                  <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                </SidebarMenuButton>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <SidebarMenuSub>
+                  <SidebarMenuSubItem>
+                    <SidebarMenuSubButton asChild isActive={pathname === "/modulos/contabilidade"}>
+                      <a href="/modulos/contabilidade">
+                        <span>Gestão</span>
+                      </a>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                  <SidebarMenuSubItem>
+                    <SidebarMenuSubButton asChild isActive={pathname === "/modulos/contabilidade/dashboard"}>
+                      <a href="/modulos/contabilidade/dashboard">
+                        <span>Dashboard</span>
+                      </a>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                </SidebarMenuSub>
+              </CollapsibleContent>
+            </SidebarMenuItem>
+          </Collapsible>
           {/* Demais itens */}
           <SidebarMenuItem>
             <SidebarMenuButton
@@ -109,16 +133,40 @@ export function NavModulos() {
               <span>Documentos</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              tooltip="Recursos Humanos"
-              onClick={() => router.push("/modulos/recursos-humanos")}
-              isActive={pathname.startsWith("/modulos/recursos-humanos")}
-            >
-              <Briefcase />
-              <span>Recursos Humanos</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+          <Collapsible
+            key="recursos-humanos"
+            asChild
+            defaultOpen={pathname.startsWith("/modulos/recursos-humanos")}
+            className="group/collapsible"
+          >
+            <SidebarMenuItem>
+              <CollapsibleTrigger asChild>
+                <SidebarMenuButton tooltip="Recursos Humanos">
+                  <Briefcase />
+                  <span>Recursos Humanos</span>
+                  <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                </SidebarMenuButton>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <SidebarMenuSub>
+                  <SidebarMenuSubItem>
+                    <SidebarMenuSubButton asChild isActive={pathname === "/modulos/recursos-humanos"}>
+                      <a href="/modulos/recursos-humanos">
+                        <span>Gestão</span>
+                      </a>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                  <SidebarMenuSubItem>
+                    <SidebarMenuSubButton asChild isActive={pathname === "/modulos/recursos-humanos/dashboard"}>
+                      <a href="/modulos/recursos-humanos/dashboard">
+                        <span>Dashboard</span>
+                      </a>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                </SidebarMenuSub>
+              </CollapsibleContent>
+            </SidebarMenuItem>
+          </Collapsible>
         </SidebarMenu>
       </SidebarGroup>
       <SidebarGroup>
