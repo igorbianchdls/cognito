@@ -78,13 +78,27 @@ export default function NewAgentPage() {
       data: { block: { id: 'b4', kind: 'step', name: 'Step 1', config: { toolChoice: 'auto' } } },
       position: { x: 100, y: 420 },
     },
-    { id: 'b5', type: 'resposta', data: { block: { id: 'b5', kind: 'resposta', name: 'Resposta' } }, position: { x: 100, y: 540 } },
+    {
+      id: 'b6',
+      type: 'step',
+      data: { block: { id: 'b6', kind: 'step', name: 'Step 2', config: { toolChoice: 'auto' } } },
+      position: { x: 100, y: 540 },
+    },
+    {
+      id: 'b7',
+      type: 'step',
+      data: { block: { id: 'b7', kind: 'step', name: 'Step 3', config: { toolChoice: 'auto' } } },
+      position: { x: 100, y: 660 },
+    },
+    { id: 'b5', type: 'resposta', data: { block: { id: 'b5', kind: 'resposta', name: 'Resposta' } }, position: { x: 100, y: 780 } },
   ]
   const initialEdges: Edge[] = [
     { id: 'b1-b2', source: 'b1', target: 'b2' },
     { id: 'b2-b3', source: 'b2', target: 'b3' },
     { id: 'b3-b4', source: 'b3', target: 'b4' },
-    { id: 'b4-b5', source: 'b4', target: 'b5' },
+    { id: 'b4-b6', source: 'b4', target: 'b6' },
+    { id: 'b6-b7', source: 'b6', target: 'b7' },
+    { id: 'b7-b5', source: 'b7', target: 'b5' },
   ]
   const [nodes, setNodes] = useState<Node<NodeData>[]>(initialNodes)
   const [edges, setEdges] = useState<Edge[]>(initialEdges)
