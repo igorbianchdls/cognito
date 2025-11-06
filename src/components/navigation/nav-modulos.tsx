@@ -103,38 +103,6 @@ export function NavModulos() {
             </SidebarMenuItem>
           </Collapsible>
           {/* Recursos Humanos abaixo de Contabilidade */}
-          
-          {/* Demais itens */}
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              tooltip="Empresa"
-              onClick={() => router.push("/modulos/empresa")}
-              isActive={pathname.startsWith("/modulos/empresa")}
-            >
-              <Building2 />
-              <span>Empresa</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              tooltip="Administrativo"
-              onClick={() => router.push("/modulos/admnistrativo")}
-              isActive={pathname.startsWith("/modulos/admnistrativo")}
-            >
-              <Building2 />
-              <span>Administrativo</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              tooltip="Documentos"
-              onClick={() => router.push("/modulos/documentos")}
-              isActive={pathname.startsWith("/modulos/documentos")}
-            >
-              <FileText />
-              <span>Documentos</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
           <Collapsible
             key="recursos-humanos"
             asChild
@@ -169,6 +137,38 @@ export function NavModulos() {
               </CollapsibleContent>
             </SidebarMenuItem>
           </Collapsible>
+          
+          {/* Demais itens */}
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              tooltip="Empresa"
+              onClick={() => router.push("/modulos/empresa")}
+              isActive={pathname.startsWith("/modulos/empresa")}
+            >
+              <Building2 />
+              <span>Empresa</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              tooltip="Administrativo"
+              onClick={() => router.push("/modulos/admnistrativo")}
+              isActive={pathname.startsWith("/modulos/admnistrativo")}
+            >
+              <Building2 />
+              <span>Administrativo</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              tooltip="Documentos"
+              onClick={() => router.push("/modulos/documentos")}
+              isActive={pathname.startsWith("/modulos/documentos")}
+            >
+              <FileText />
+              <span>Documentos</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
         </SidebarMenu>
       </SidebarGroup>
       <SidebarGroup>
