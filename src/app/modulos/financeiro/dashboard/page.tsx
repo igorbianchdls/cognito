@@ -97,8 +97,8 @@ export default function FinanceiroDashboardPage() {
 
   // Typography controls
   const [fonts, setFonts] = useState({
-    values: { family: 'Inter', weight: 700 as number | undefined, letterSpacing: 0 as number | undefined, color: '#111827' as string | undefined, size: 24 as number | undefined, transform: 'none' as 'none' | 'uppercase' },
-    title: { family: 'Inter', weight: 600 as number | undefined, letterSpacing: 0 as number | undefined, color: '#1f2937' as string | undefined, size: 14 as number | undefined, transform: 'none' as 'none' | 'uppercase' },
+    values: { family: 'Space Mono', weight: 700 as number | undefined, letterSpacing: 0 as number | undefined, color: '#111827' as string | undefined, size: 24 as number | undefined, transform: 'none' as 'none' | 'uppercase' },
+    title: { family: 'Space Mono', weight: 600 as number | undefined, letterSpacing: 0 as number | undefined, color: '#adadad' as string | undefined, size: 14 as number | undefined, transform: 'none' as 'none' | 'uppercase' },
     text: { family: 'Inter', weight: 400 as number | undefined, letterSpacing: 0 as number | undefined, color: '#6b7280' as string | undefined, size: 12 as number | undefined, transform: 'none' as 'none' | 'uppercase' },
     headerTitle: { family: 'Inter', weight: 700 as number | undefined, letterSpacing: 0 as number | undefined, color: '#111827' as string | undefined, size: 18 as number | undefined, transform: 'none' as 'none' | 'uppercase' },
     headerSubtitle: { family: 'Inter', weight: 400 as number | undefined, letterSpacing: 0 as number | undefined, color: '#6b7280' as string | undefined, size: 12 as number | undefined, transform: 'none' as 'none' | 'uppercase' },
