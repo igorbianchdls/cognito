@@ -1,153 +1,371 @@
 'use client'
 
+import { useEffect, useMemo, useState } from 'react'
 import DashboardLayout from '@/components/modulos/DashboardLayout'
 
+type ContaRow = {
+  id?: number | string
+  conta?: string
+  plataforma?: string
+  seguidores?: number | string
+  seguindo?: number | string
+  total_publicacoes?: number | string
+  taxa_engajamento?: number | string
+  registrado_em?: string
+}
+
+type PublicacaoRow = {
+  id?: number | string
+  conta?: string
+  titulo?: string
+  tipo?: string
+  status?: string
+  criado_em?: string
+  atualizado_em?: string
+}
+
+type MetricasRow = {
+  id_publicacao?: number | string
+  conta?: string
+  titulo?: string
+  tipo?: string
+  curtidas?: number | string
+  comentarios?: number | string
+  compartilhamentos?: number | string
+  visualizacoes?: number | string
+  impressoes?: number | string
+  taxa_engajamento?: number | string
+  ultimo_registro?: string
+}
+
+function toDateOnly(d: Date) {
+  const yyyy = d.getFullYear(); const mm = String(d.getMonth() + 1).padStart(2, '0'); const dd = String(d.getDate()).padStart(2, '0')
+  return `${yyyy}-${mm}-${dd}`
+}
+function parseDate(s?: string) { if (!s) return null; const d = new Date(s); return isNaN(d.getTime()) ? null : d }
+function monthKey(d: Date) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}` }
+function monthLabel(key: string) { const [y, m] = key.split('-').map(Number); const d = new Date(y, (m || 1) - 1, 1); return d.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' }) }
+function lastMonths(n: number) { const arr: string[] = []; const base = new Date(); for (let i= n-1;i>=0;i--){ const d=new Date(base.getFullYear(), base.getMonth()-i, 1); arr.push(monthKey(d)) } return arr }
+function formatNum(n?: number) { return (n ?? 0).toLocaleString('pt-BR') }
+function formatBR(n?: number) { return (n ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) }
+
 export default function MarketingDashboardPage() {
+  const [contas, setContas] = useState<ContaRow[]>([])
+  const [pubs, setPubs] = useState<PublicacaoRow[]>([])
+  const [mets, setMets] = useState<MetricasRow[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    async function load() {
+      setLoading(true); setError(null)
+      try {
+        const de6m = toDateOnly(new Date(new Date().getFullYear(), new Date().getMonth() - 5, 1))
+        const de30 = toDateOnly(new Date(Date.now() - 29 * 86400000))
+        const urls = [
+          `/api/modulos/marketing?view=contas&page=1&pageSize=1000&de=${de6m}`,
+          `/api/modulos/marketing?view=publicacoes&page=1&pageSize=1000&de=${de30}`,
+          `/api/modulos/marketing?view=metricas&page=1&pageSize=1000&de=${de30}`,
+        ]
+        const [cRes, pRes, mRes] = await Promise.allSettled(urls.map(u => fetch(u, { cache: 'no-store' })))
+        let cs: ContaRow[] = []
+        let ps: PublicacaoRow[] = []
+        let ms: MetricasRow[] = []
+        if (cRes.status === 'fulfilled' && cRes.value.ok) {
+          const j = (await cRes.value.json()) as { rows?: unknown[] }
+          cs = Array.isArray(j?.rows) ? (j.rows as unknown as ContaRow[]) : []
+        }
+        if (pRes.status === 'fulfilled' && pRes.value.ok) {
+          const j = (await pRes.value.json()) as { rows?: unknown[] }
+          ps = Array.isArray(j?.rows) ? (j.rows as unknown as PublicacaoRow[]) : []
+        }
+        if (mRes.status === 'fulfilled' && mRes.value.ok) {
+          const j = (await mRes.value.json()) as { rows?: unknown[] }
+          ms = Array.isArray(j?.rows) ? (j.rows as unknown as MetricasRow[]) : []
+        }
+        if (cs.length === 0 && ps.length === 0 && ms.length === 0) {
+          // Mocks coerentes
+          const base = new Date()
+          const d0 = toDateOnly(base)
+          const d1 = toDateOnly(new Date(base.getFullYear(), base.getMonth(), base.getDate()-7))
+          cs = [
+            { conta: '@brand_ig', plataforma: 'Instagram', seguidores: 12500, total_publicacoes: 320, taxa_engajamento: 4.2, registrado_em: d0 },
+            { conta: '@brand_tt', plataforma: 'TikTok', seguidores: 8300, total_publicacoes: 210, taxa_engajamento: 6.1, registrado_em: d0 },
+            { conta: '@brand_fb', plataforma: 'Facebook', seguidores: 5600, total_publicacoes: 540, taxa_engajamento: 2.8, registrado_em: d0 },
+            { conta: '@brand_li', plataforma: 'LinkedIn', seguidores: 2147, total_publicacoes: 120, taxa_engajamento: 3.5, registrado_em: d0 },
+            { conta: '@brand_ig', plataforma: 'Instagram', seguidores: 12100, total_publicacoes: 315, taxa_engajamento: 4.0, registrado_em: d1 },
+            { conta: '@brand_tt', plataforma: 'TikTok', seguidores: 7900, total_publicacoes: 205, taxa_engajamento: 5.9, registrado_em: d1 },
+          ]
+          ps = [
+            { id: 1, conta: '@brand_ig', titulo: 'Lançamento X', tipo: 'Reel', status: 'publicado', criado_em: d0 },
+            { id: 2, conta: '@brand_tt', titulo: 'Trend Y', tipo: 'Vídeo', status: 'publicado', criado_em: d0 },
+            { id: 3, conta: '@brand_fb', titulo: 'Bastidores', tipo: 'Post', status: 'publicado', criado_em: d1 },
+          ]
+          ms = [
+            { id_publicacao: 1, conta: '@brand_ig', titulo: 'Lançamento X', tipo: 'Reel', curtidas: 820, comentarios: 95, compartilhamentos: 40, visualizacoes: 24000, impressoes: 30000, taxa_engajamento: 3.18, ultimo_registro: d0 },
+            { id_publicacao: 2, conta: '@brand_tt', titulo: 'Trend Y', tipo: 'Vídeo', curtidas: 1500, comentarios: 210, compartilhamentos: 180, visualizacoes: 68000, impressoes: 72000, taxa_engajamento: 2.56, ultimo_registro: d0 },
+            { id_publicacao: 3, conta: '@brand_fb', titulo: 'Bastidores', tipo: 'Post', curtidas: 260, comentarios: 40, compartilhamentos: 22, visualizacoes: 9000, impressoes: 11000, taxa_engajamento: 2.91, ultimo_registro: d1 },
+          ]
+        }
+        if (!cancelled) { setContas(cs); setPubs(ps); setMets(ms) }
+      } catch (e) {
+        if (!cancelled) setError('Falha ao carregar dados')
+      } finally { if (!cancelled) setLoading(false) }
+    }
+    load(); return () => { cancelled = true }
+  }, [])
+
+  // Deduplicar contas pela leitura mais recente (por conta)
+  const latestConta = useMemo(() => {
+    const map = new Map<string, ContaRow>()
+    for (const r of contas) {
+      const key = String(r.conta || '')
+      if (!key) continue
+      const current = map.get(key)
+      const rd = parseDate(r.registrado_em)?.getTime() || 0
+      const cd = current ? (parseDate(current.registrado_em)?.getTime() || 0) : -1
+      if (!current || rd > cd) map.set(key, r)
+    }
+    return Array.from(map.values())
+  }, [contas])
+
+  // KPIs
+  const seguidoresTotais = useMemo(() => latestConta.reduce((acc, r) => acc + (Number(r.seguidores) || 0), 0), [latestConta])
+  const publicacoes30d = useMemo(() => pubs.length, [pubs])
+  const engajamentoGeral = useMemo(() => {
+    const inter = mets.reduce((acc, m) => acc + (Number(m.curtidas) || 0) + (Number(m.comentarios) || 0) + (Number(m.compartilhamentos) || 0), 0)
+    const imps = mets.reduce((acc, m) => acc + (Number(m.impressoes) || 0), 0)
+    if (imps <= 0) return 0
+    return (inter / imps) * 100
+  }, [mets])
+  const crescimento30d = useMemo(() => {
+    // delta seguidores entre primeiro e último snapshot do período
+    const byConta = new Map<string, { first?: number; last?: number }>()
+    for (const r of contas) {
+      const k = String(r.conta || '')
+      if (!k) continue
+      const val = Number(r.seguidores) || 0
+      const t = parseDate(r.registrado_em)?.getTime() || 0
+      const cur = byConta.get(k) || {}
+      if (cur.first == null || t < (cur as any).tFirst) { (cur as any).tFirst = t; cur.first = val }
+      if (cur.last == null || t > (cur as any).tLast) { (cur as any).tLast = t; cur.last = val }
+      byConta.set(k, cur)
+    }
+    let firstSum = 0; let lastSum = 0
+    for (const v of byConta.values()) { firstSum += v.first || 0; lastSum += v.last || 0 }
+    if (firstSum <= 0) return 0
+    return ((lastSum - firstSum) / firstSum) * 100
+  }, [contas])
+
+  // Engajamento por plataforma (média ponderada por seguidores)
+  const engajPorPlataforma = useMemo(() => {
+    const agg = new Map<string, { seg: number; weighted: number }>()
+    for (const r of latestConta) {
+      const plat = r.plataforma || '—'
+      const seg = Number(r.seguidores) || 0
+      const er = Number(r.taxa_engajamento) || 0
+      const cur = agg.get(plat) || { seg: 0, weighted: 0 }
+      cur.seg += seg
+      cur.weighted += er * seg
+      agg.set(plat, cur)
+    }
+    return Array.from(agg, ([label, v]) => ({ label, value: v.seg > 0 ? v.weighted / v.seg : 0 }))
+      .sort((a,b)=> b.value - a.value)
+  }, [latestConta])
+
+  // Crescimento de seguidores por mês (soma do último snapshot do mês)
+  const meses = useMemo(() => lastMonths(6), [])
+  const seguidoresMes = useMemo(() => {
+    const byMes = new Map<string, Map<string, { t: number; seg: number }>>() // mes -> conta -> latest
+    for (const r of contas) {
+      const d = parseDate(r.registrado_em); if (!d) continue
+      const k = monthKey(d)
+      const conta = String(r.conta || '')
+      const seg = Number(r.seguidores) || 0
+      const t = d.getTime()
+      const map = byMes.get(k) || new Map<string, { t: number; seg: number }>()
+      const cur = map.get(conta)
+      if (!cur || t > cur.t) map.set(conta, { t, seg })
+      byMes.set(k, map)
+    }
+    return meses.map(k => {
+      const m = byMes.get(k)
+      const total = m ? Array.from(m.values()).reduce((acc, v) => acc + v.seg, 0) : 0
+      return { key: k, label: monthLabel(k), value: total }
+    })
+  }, [contas, meses])
+
+  // Top posts por engajamento
+  const topPosts = useMemo(() => {
+    const withER = mets.map(m => ({
+      titulo: m.titulo || 'Post',
+      conta: m.conta || '—',
+      er: Number(m.taxa_engajamento) || 0,
+      views: Number(m.visualizacoes) || 0,
+      curtidas: Number(m.curtidas) || 0,
+    }))
+    return withER.sort((a,b)=> b.er - a.er).slice(0, 5)
+  }, [mets])
+
+  // Desempenho por plataforma (seguidores totais)
+  const desempenhoPlataforma = useMemo(() => {
+    const agg = new Map<string, { seguidores: number; contas: number }>()
+    for (const r of latestConta) {
+      const plat = r.plataforma || '—'
+      const seg = Number(r.seguidores) || 0
+      const cur = agg.get(plat) || { seguidores: 0, contas: 0 }
+      cur.seguidores += seg; cur.contas += 1
+      agg.set(plat, cur)
+    }
+    return Array.from(agg, ([plataforma, v]) => ({ plataforma, seguidores: v.seguidores, contas: v.contas }))
+      .sort((a,b)=> b.seguidores - a.seguidores)
+  }, [latestConta])
+
+  const recentes = useMemo(() => {
+    return [...pubs].sort((a,b)=> new Date(b.criado_em || 0).getTime() - new Date(a.criado_em || 0).getTime()).slice(0,3)
+  }, [pubs])
+
+  // Simple chart components
+  function HBars({ items, suffix = '', color = 'bg-indigo-500' }: { items: { label: string; value: number }[]; suffix?: string; color?: string }) {
+    const max = Math.max(1, ...items.map(i => i.value))
+    return (
+      <div className="space-y-3">
+        {items.map((it) => {
+          const pct = Math.round((it.value / max) * 100)
+          return (
+            <div key={it.label}>
+              <div className="flex justify-between text-xs text-gray-600 mb-1"><span>{it.label}</span><span>{suffix ? `${it.value.toFixed(2)}${suffix}` : it.value.toFixed(2)}</span></div>
+              <div className="w-full h-2.5 bg-gray-100 rounded"><div className={`${color} h-2.5 rounded`} style={{ width: `${pct}%` }} /></div>
+            </div>
+          )
+        })}
+        {items.length === 0 && <div className="text-xs text-gray-400">Sem dados</div>}
+      </div>
+    )
+  }
+
+  function LineSimple({ items, color = '#2563eb' }: { items: { label: string; value: number }[]; color?: string }) {
+    const W = 520, H = 180, padX = 16, padY = 12
+    const max = Math.max(1, ...items.map(i => i.value)); const min = Math.min(0, ...items.map(i => i.value))
+    const n = Math.max(1, items.length); const xStep = (W - padX * 2) / Math.max(1, n - 1)
+    const scaleY = (v: number) => { const rng = max - min || 1; const t = (v - min) / rng; return H - padY - t * (H - padY * 2) }
+    const pts = items.map((p, i) => `${padX + i * xStep},${scaleY(p.value)}`).join(' ')
+    return (
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-44">
+        <defs>
+          <linearGradient id="gradLine" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={color} stopOpacity="0.35" />
+            <stop offset="100%" stopColor={color} stopOpacity="0.0" />
+          </linearGradient>
+        </defs>
+        <polyline points={pts} fill="none" stroke={color} strokeWidth="2" />
+        {items.length > 1 && (
+          <polygon points={`${padX},${scaleY(items[0].value)} ${pts} ${padX + (n - 1) * xStep},${H - padY} ${padX},${H - padY}`} fill="url(#gradLine)" />
+        )}
+      </svg>
+    )
+  }
+
   return (
     <DashboardLayout
       title="Dashboard de Marketing Orgânico"
       subtitle="Visão geral do desempenho nas redes sociais"
+      backgroundColor="#ffffff"
     >
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            {/* Card: Seguidores Totais */}
-            <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-              <div className="text-sm font-medium text-gray-500 mb-2">Seguidores Totais</div>
-              <div className="text-2xl font-bold text-blue-600">28.547</div>
-              <div className="text-xs text-gray-400 mt-1">+1.234 este mês</div>
-            </div>
+      {loading ? (<div className="p-4 text-sm text-gray-500">Carregando…</div>) : error ? (<div className="p-4 text-sm text-red-600">{error}</div>) : null}
 
-            {/* Card: Engajamento */}
-            <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-              <div className="text-sm font-medium text-gray-500 mb-2">Taxa de Engajamento</div>
-              <div className="text-2xl font-bold text-green-600">4.8%</div>
-              <div className="text-xs text-gray-400 mt-1">+0.5% vs mês anterior</div>
-            </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+          <div className="text-sm font-medium text-gray-500 mb-2">Seguidores Totais</div>
+          <div className="text-2xl font-bold text-blue-600">{formatNum(seguidoresTotais)}</div>
+          <div className="text-xs text-gray-400 mt-1">Somatório (último snapshot)</div>
+        </div>
+        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+          <div className="text-sm font-medium text-gray-500 mb-2">Taxa de Engajamento</div>
+          <div className="text-2xl font-bold text-green-600">{engajamentoGeral.toFixed(2)}%</div>
+          <div className="text-xs text-gray-400 mt-1">Interações / impressões (30d)</div>
+        </div>
+        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+          <div className="text-sm font-medium text-gray-500 mb-2">Publicações (30d)</div>
+          <div className="text-2xl font-bold text-purple-600">{formatNum(publicacoes30d)}</div>
+          <div className="text-xs text-gray-400 mt-1">Total de posts</div>
+        </div>
+        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+          <div className="text-sm font-medium text-gray-500 mb-2">Crescimento de Seguidores</div>
+          <div className="text-2xl font-bold text-orange-600">{crescimento30d.toFixed(2)}%</div>
+          <div className="text-xs text-gray-400 mt-1">Variação no período</div>
+        </div>
+      </div>
 
-            {/* Card: Publicações do Mês */}
-            <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-              <div className="text-sm font-medium text-gray-500 mb-2">Publicações do Mês</div>
-              <div className="text-2xl font-bold text-purple-600">42</div>
-              <div className="text-xs text-gray-400 mt-1">Média de 1.4 por dia</div>
-            </div>
-
-            {/* Card: Taxa de Crescimento */}
-            <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-              <div className="text-sm font-medium text-gray-500 mb-2">Taxa de Crescimento</div>
-              <div className="text-2xl font-bold text-orange-600">+5.2%</div>
-              <div className="text-xs text-gray-400 mt-1">Últimos 30 dias</div>
-            </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+          <h3 className="text-lg font-semibold mb-4">Engajamento por Plataforma</h3>
+          <HBars items={engajPorPlataforma} suffix="%" color="bg-emerald-500" />
+        </div>
+        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+          <h3 className="text-lg font-semibold mb-4">Crescimento de Seguidores</h3>
+          <LineSimple items={seguidoresMes.map(m => ({ label: m.label, value: m.value }))} />
+          <div className="grid grid-cols-6 gap-3 mt-1">
+            {seguidoresMes.map(m => (
+              <div key={m.key} className="text-[11px] text-gray-600 text-center">{m.label}</div>
+            ))}
           </div>
+        </div>
+      </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            {/* Gráfico Placeholder 1 */}
-            <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-              <h3 className="text-lg font-semibold mb-4">Engajamento por Plataforma</h3>
-              <div className="h-64 flex items-center justify-center bg-gray-50 rounded border border-dashed border-gray-300">
-                <p className="text-gray-400">Gráfico será implementado</p>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+          <h3 className="text-lg font-semibold mb-4">Top Posts (ER%)</h3>
+          <div className="space-y-3">
+            {topPosts.length === 0 ? (
+              <div className="text-sm text-gray-400">Sem dados</div>
+            ) : topPosts.map((p, idx) => (
+              <div key={idx} className="flex justify-between items-center pb-2 border-b last:border-b-0">
+                <div>
+                  <div className="font-medium text-sm">{p.titulo}</div>
+                  <div className="text-xs text-gray-500">{p.conta} • {formatNum(p.views)} views</div>
+                </div>
+                <div className="text-emerald-700 font-semibold text-sm">{p.er.toFixed(2)}%</div>
               </div>
-            </div>
-
-            {/* Gráfico Placeholder 2 */}
-            <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-              <h3 className="text-lg font-semibold mb-4">Crescimento de Seguidores</h3>
-              <div className="h-64 flex items-center justify-center bg-gray-50 rounded border border-dashed border-gray-300">
-                <p className="text-gray-400">Gráfico será implementado</p>
-              </div>
-            </div>
+            ))}
           </div>
+        </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Top Posts */}
-            <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-              <h3 className="text-lg font-semibold mb-4">Top Posts (Engajamento)</h3>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center pb-2 border-b">
-                  <div>
-                    <div className="font-medium text-sm">Lançamento de Produto</div>
-                    <div className="text-xs text-gray-500">Instagram - 12/11</div>
-                  </div>
-                  <div className="text-xs font-semibold text-green-600">2.5K</div>
+        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+          <h3 className="text-lg font-semibold mb-4">Desempenho por Plataforma</h3>
+          <div className="space-y-3">
+            {desempenhoPlataforma.length === 0 ? (
+              <div className="text-sm text-gray-400">Sem dados</div>
+            ) : desempenhoPlataforma.map((x) => (
+              <div key={x.plataforma} className="flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-indigo-500"></div>
+                  <span className="text-sm">{x.plataforma}</span>
                 </div>
-                <div className="flex justify-between items-center pb-2 border-b">
-                  <div>
-                    <div className="font-medium text-sm">Dica Semanal</div>
-                    <div className="text-xs text-gray-500">LinkedIn - 10/11</div>
-                  </div>
-                  <div className="text-xs font-semibold text-green-600">1.8K</div>
-                </div>
-                <div className="flex justify-between items-center pb-2">
-                  <div>
-                    <div className="font-medium text-sm">Bastidores da Equipe</div>
-                    <div className="text-xs text-gray-500">Facebook - 08/11</div>
-                  </div>
-                  <div className="text-xs font-semibold text-green-600">1.2K</div>
-                </div>
+                <span className="font-semibold text-sm">{formatNum(x.seguidores)}</span>
               </div>
-            </div>
-
-            {/* Plataformas por Desempenho */}
-            <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-              <h3 className="text-lg font-semibold mb-4">Desempenho por Plataforma</h3>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                    <span className="text-sm">Instagram</span>
-                  </div>
-                  <span className="font-semibold text-sm">12.5K</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                    <span className="text-sm">LinkedIn</span>
-                  </div>
-                  <span className="font-semibold text-sm">8.2K</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-purple-500"></div>
-                    <span className="text-sm">Facebook</span>
-                  </div>
-                  <span className="font-semibold text-sm">5.8K</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-orange-500"></div>
-                    <span className="text-sm">Twitter/X</span>
-                  </div>
-                  <span className="font-semibold text-sm">2.0K</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Últimas Publicações */}
-            <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-              <h3 className="text-lg font-semibold mb-4">Últimas Publicações</h3>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center pb-2 border-b">
-                  <div>
-                    <div className="font-medium text-sm">Novidade da Semana</div>
-                    <div className="text-xs text-gray-500">Instagram - Hoje</div>
-                  </div>
-                  <div className="font-semibold text-blue-600 text-sm">450</div>
-                </div>
-                <div className="flex justify-between items-center pb-2 border-b">
-                  <div>
-                    <div className="font-medium text-sm">Artigo de Blog</div>
-                    <div className="text-xs text-gray-500">LinkedIn - Ontem</div>
-                  </div>
-                  <div className="font-semibold text-blue-600 text-sm">320</div>
-                </div>
-                <div className="flex justify-between items-center pb-2">
-                  <div>
-                    <div className="font-medium text-sm">Enquete Mensal</div>
-                    <div className="text-xs text-gray-500">Facebook - 2 dias</div>
-                  </div>
-                  <div className="font-semibold text-blue-600 text-sm">280</div>
-                </div>
-              </div>
-            </div>
+            ))}
           </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+          <h3 className="text-lg font-semibold mb-4">Últimas Publicações</h3>
+          <div className="space-y-3">
+            {recentes.length === 0 ? (
+              <div className="text-sm text-gray-400">Sem publicações</div>
+            ) : recentes.map((p) => (
+              <div key={String(p.id ?? p.titulo)} className="flex justify-between items-center pb-2 border-b last:border-b-0">
+                <div>
+                  <div className="font-medium text-sm">{p.titulo || 'Post'}</div>
+                  <div className="text-xs text-gray-500">{p.conta || '—'} • {p.criado_em ? new Date(p.criado_em).toLocaleDateString('pt-BR') : '—'}</div>
+                </div>
+                <div className="font-semibold text-blue-600 text-sm">{p.tipo || '—'}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
     </DashboardLayout>
   )
 }
