@@ -9,6 +9,7 @@ import { ReactFlowProvider } from 'reactflow'
 import PropertiesPanel from "@/components/agentes/builder/PropertiesPanel"
 import WorkflowRunChatPanel from "@/components/workflows/exec/WorkflowRunChatPanel"
 import ToolsPanel from "@/components/workflows/tools/ToolsPanel"
+import CategoriesPanel from "@/components/workflows/tools/CategoriesPanel"
 import type { Block, BlockKind } from "@/types/agentes/builder"
 import type { Node, Edge } from 'reactflow'
 import type { NodeData } from '@/types/agentes/flow'
@@ -40,7 +41,8 @@ export default function NewAgentPage() {
   const [showCode, setShowCode] = useState(false)
   const [runTrigger, setRunTrigger] = useState(0)
   const [leftTab, setLeftTab] = useState<'agentes' | 'workflows'>('agentes')
-  const [rightPanelMode, setRightPanelMode] = useState<'playground' | 'tools' | 'exec'>('playground')
+  const [rightPanelMode, setRightPanelMode] = useState<'playground' | 'categories' | 'tools' | 'exec'>('playground')
+  const [selectedCategory, setSelectedCategory] = useState<string>('Data')
 
   const addBlock = (payload: { kind: BlockKind; name?: string; toolId?: string }) => {
     const { kind, name, toolId } = payload
@@ -128,14 +130,16 @@ export default function NewAgentPage() {
             <div className="w-96 h-full overflow-auto border-l bg-white custom-scrollbar">
               {rightPanelMode === 'exec' ? (
                 <WorkflowRunChatPanel graph={flowToGraph(nodes, edges)} autoSend={runTrigger ? 'olá agente' : undefined} />
+              ) : rightPanelMode === 'categories' ? (
+                <CategoriesPanel onBack={() => setRightPanelMode('playground')} onOpenCategory={(cat) => { setSelectedCategory(cat); setRightPanelMode('tools') }} />
               ) : rightPanelMode === 'tools' ? (
-                <ToolsPanel onBack={() => setRightPanelMode('playground')} />
+                <ToolsPanel category={selectedCategory} onBack={() => setRightPanelMode('categories')} />
               ) : (
                 <PropertiesPanel
                   block={selectedBlock}
                   onChange={updateBlock}
                   onDelete={removeSelected}
-                  onOpenTools={() => setRightPanelMode('tools')}
+                  onOpenTools={() => setRightPanelMode('categories')}
                 />
               )}
             </div>
