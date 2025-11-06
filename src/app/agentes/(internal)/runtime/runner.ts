@@ -3,7 +3,7 @@ import { anthropic } from '@ai-sdk/anthropic'
 import { openai } from '@ai-sdk/openai'
 import type { Graph, AgentBlockConfig, StepBlockConfig } from '@/types/agentes/builder'
 import { collectTools } from '@/app/agentes/(internal)/codegen/helpers'
-import { getToolsByIds } from '@/app/agentes/(internal)/runtime/tools'
+import { getToolsForIds } from '@/app/agentes/(internal)/runtime/tools'
 
 export type ExecOptions = {
   temperature?: number
@@ -40,7 +40,7 @@ export async function execute(graph: Graph, input: string, opts?: ExecOptions): 
   const step = getStep(graph)
   const temperature = typeof opts?.temperature === 'number' ? opts!.temperature : (typeof agent.temperature === 'number' ? agent.temperature : 0.2)
   const toolsIds = collectTools(graph)
-  const tools = toolsIds.length ? getToolsByIds(toolsIds) : undefined
+  const tools = toolsIds.length ? getToolsForIds(toolsIds) : undefined
 
   const prepareStep: PrepareStepFunction | undefined = step.prepareStepEnabled
     ? (() => undefined)

@@ -4,7 +4,7 @@ import type { Graph, AgentBlockConfig, StepBlockConfig } from '@/types/agentes/b
 import { anthropic } from '@ai-sdk/anthropic'
 import { openai } from '@ai-sdk/openai'
 import { collectTools } from '@/app/agentes/(internal)/codegen/helpers'
-import { getToolsByIds } from '@/app/agentes/(internal)/runtime/tools'
+import { getToolsForIds } from '@/app/agentes/(internal)/runtime/tools'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -30,7 +30,7 @@ export async function POST(req: Request) {
     const stepCfg = (steps[0]?.config || {}) as Partial<StepBlockConfig>
 
     const toolIds = collectTools(graph)
-    const tools = toolIds.length ? getToolsByIds(toolIds) : undefined
+    const tools = toolIds.length ? getToolsForIds(toolIds) : undefined
 
     const result = streamText({
       model: selectModel(agent.model),

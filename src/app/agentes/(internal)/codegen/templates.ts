@@ -14,12 +14,27 @@ export function genRouteTs(graph: Graph, slug: string): string {
   const step = getStepSettings(graph)
 
   const selectedToolIds = collectTools(graph)
-  const { importLines: toolImports, toolsObjectLiteral } = buildToolImports(selectedToolIds)
+
+  // Modo TESTE: gerar tools stub inline
+  const sanitize = (id: string) => id.replace(/[^A-Za-z0-9_]/g, '_')
+  const testToolDecls = selectedToolIds.map((id) => {
+    const varName = `t_${sanitize(id)}`
+    return `const ${varName} = tool({
+  description: 'TEST:${id}',
+  inputSchema: z.object({ payload: z.any().optional() }).optional(),
+  execute: async (input) => ({ ok: true, test: true, id: '${id}', input }),
+})`
+  }).join('\n\n')
+  const toolsObjectLiteral = selectedToolIds.length
+    ? `{
+        ${selectedToolIds.map((id) => `${id}: t_${sanitize(id)}`).join(',\n        ')}
+      }`
+    : '{}'
 
   const imports = `import { NextResponse } from 'next/server'
-import { generateText } from 'ai'
+import { generateText, tool } from 'ai'
 import { anthropic } from '@ai-sdk/anthropic'${importOpenAI ? "\nimport { openai } from '@ai-sdk/openai'" : ''}`
-    + (toolImports ? `\n${toolImports}` : '')
+    + (selectedToolIds.length ? `\nimport { z } from 'zod'` : '')
 
   return `// Arquivo gerado automaticamente pelo Agent Builder (não editar manualmente)
 // slug: ${slug}
@@ -42,6 +57,9 @@ export async function POST(request: Request) {
     const prompt = String(body?.message ?? '')
     const temperature = typeof body?.temperature === 'number' ? body.temperature : ${defaultTemp}
     ${step.prepareStepEnabled ? `const prepareStep: PrepareStepFunction = () => undefined` : ''}
+    ${selectedToolIds.length ? `// TEST TOOLS (auto-generated)
+    ${testToolDecls}
+` : ''}
     const { text } = await generateText({
       model: selectModel(),
       system: "${sys}",

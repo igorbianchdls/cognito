@@ -133,7 +133,24 @@ export default function NewAgentPage() {
               ) : rightPanelMode === 'categories' ? (
                 <CategoriesPanel onBack={() => setRightPanelMode('playground')} onOpenCategory={(cat) => { setSelectedCategory(cat); setRightPanelMode('tools') }} />
               ) : rightPanelMode === 'tools' ? (
-                <ToolsPanel category={selectedCategory} onBack={() => setRightPanelMode('categories')} />
+                <ToolsPanel
+                  category={selectedCategory}
+                  onBack={() => setRightPanelMode('categories')}
+                  onActivate={(id) => {
+                    // Merge into existing ferramenta block if present; otherwise create one
+                    const idx = nodes.findIndex(n => n.data.block.kind === 'ferramenta')
+                    if (idx >= 0) {
+                      const node = nodes[idx]
+                      const cfg = (node.data.block.config || {}) as any
+                      const current: string[] = Array.isArray(cfg.toolIds) ? cfg.toolIds : []
+                      const next = Array.from(new Set([...current, id]))
+                      const updated = { ...node, data: { block: { ...node.data.block, config: { ...cfg, toolIds: next } } } }
+                      setNodes(prev => prev.map((n, i) => i === idx ? updated : n))
+                    } else {
+                      addBlock({ kind: 'ferramenta', toolId: id })
+                    }
+                  }}
+                />
               ) : (
                 <PropertiesPanel
                   block={selectedBlock}

@@ -1,4 +1,6 @@
 import type { Tool } from 'ai'
+import { tool } from 'ai'
+import { z } from 'zod'
 
 // Import concrete tool implementations
 import { getAnalyticsData } from '@/tools/analyticsTools'
@@ -50,3 +52,23 @@ export function getToolsByIds(ids: string[]): Record<string, Tool> {
   return obj
 }
 
+// Test mode (default ON). Set AGENTS_TEST_TOOLS=false to disable stubs.
+export const TEST_TOOLS_MODE = process.env.AGENTS_TEST_TOOLS !== 'false'
+
+function createTestTool(id: string): Tool {
+  return tool({
+    description: `TEST:${id}`,
+    inputSchema: z.object({ payload: z.any().optional() }).optional(),
+    execute: async (input) => ({ ok: true, test: true, id, input }),
+  })
+}
+
+export function getTestToolsByIds(ids: string[]): Record<string, Tool> {
+  const obj: Record<string, Tool> = {}
+  for (const id of ids) obj[id] = createTestTool(id)
+  return obj
+}
+
+export function getToolsForIds(ids: string[]): Record<string, Tool> {
+  return TEST_TOOLS_MODE ? getTestToolsByIds(ids) : getToolsByIds(ids)
+}
