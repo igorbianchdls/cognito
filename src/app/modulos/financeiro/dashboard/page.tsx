@@ -174,7 +174,7 @@ export default function FinanceiroDashboardPage() {
             selected={dateRange}
             onSelect={setDateRange}
             numberOfMonths={2}
-            captionLayout="dropdown-buttons"
+            captionLayout="dropdown"
             showOutsideDays
             initialFocus
           />
