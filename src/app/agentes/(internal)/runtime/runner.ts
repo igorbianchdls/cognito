@@ -1,9 +1,10 @@
-import { generateText, type PrepareStepFunction } from 'ai'
+import { generateText, type PrepareStepFunction, type Tool } from 'ai'
 import { anthropic } from '@ai-sdk/anthropic'
 import { openai } from '@ai-sdk/openai'
 import type { Graph, AgentBlockConfig, StepBlockConfig } from '@/types/agentes/builder'
 import { collectTools } from '@/app/agentes/(internal)/codegen/helpers'
 import { getToolsForIds } from '@/app/agentes/(internal)/runtime/tools'
+import * as builderTools from '@/tools/agentbuilder'
 
 export type ExecOptions = {
   temperature?: number
@@ -40,7 +41,18 @@ export async function execute(graph: Graph, input: string, opts?: ExecOptions): 
   const step = getStep(graph)
   const temperature = typeof opts?.temperature === 'number' ? opts!.temperature : (typeof agent.temperature === 'number' ? agent.temperature : 0.2)
   const toolsIds = collectTools(graph)
-  const tools = toolsIds.length ? getToolsForIds(toolsIds) : undefined
+  let tools: Record<string, Tool> | undefined = undefined
+  if (toolsIds.length) {
+    const fromBuilder: Record<string, Tool> = {}
+    const missing: string[] = []
+    for (const id of toolsIds) {
+      const candidate = (builderTools as Record<string, Tool | undefined>)[id]
+      if (candidate) fromBuilder[id] = candidate
+      else missing.push(id)
+    }
+    const fallback = missing.length ? getToolsForIds(missing) : {}
+    tools = { ...fromBuilder, ...fallback }
+  }
 
   const prepareStep: PrepareStepFunction | undefined = step.prepareStepEnabled
     ? (() => undefined)

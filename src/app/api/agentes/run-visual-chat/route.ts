@@ -1,10 +1,11 @@
-import { convertToModelMessages, streamText, type UIMessage } from 'ai'
+import { convertToModelMessages, streamText, type UIMessage, type Tool } from 'ai'
 import { NextResponse } from 'next/server'
 import type { Graph, AgentBlockConfig, StepBlockConfig } from '@/types/agentes/builder'
 import { anthropic } from '@ai-sdk/anthropic'
 import { openai } from '@ai-sdk/openai'
 import { collectTools } from '@/app/agentes/(internal)/codegen/helpers'
 import { getToolsForIds } from '@/app/agentes/(internal)/runtime/tools'
+import * as builderTools from '@/tools/agentbuilder'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -30,7 +31,18 @@ export async function POST(req: Request) {
     const stepCfg = (steps[0]?.config || {}) as Partial<StepBlockConfig>
 
     const toolIds = collectTools(graph)
-    const tools = toolIds.length ? getToolsForIds(toolIds) : undefined
+    let tools: Record<string, Tool> | undefined = undefined
+    if (toolIds.length) {
+      const fromBuilder: Record<string, Tool> = {}
+      const missing: string[] = []
+      for (const id of toolIds) {
+        const candidate = (builderTools as Record<string, Tool | undefined>)[id]
+        if (candidate) fromBuilder[id] = candidate
+        else missing.push(id)
+      }
+      const fallback = missing.length ? getToolsForIds(missing) : {}
+      tools = { ...fromBuilder, ...fallback }
+    }
 
     const result = streamText({
       model: selectModel(agent.model),

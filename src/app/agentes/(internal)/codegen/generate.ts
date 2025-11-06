@@ -12,7 +12,7 @@ export function generateCode(graph: Graph, opts: GenerateOptions = {}): CodeBund
   const base = validateGraph(graph)
   const warnings = [...base.warnings]
   const selectedToolIds = collectTools(graph)
-  if (selectedToolIds.length) warnings.push('Modo teste: gerando tools stub inline para ' + selectedToolIds.length + ' id(s).')
+  if (selectedToolIds.length) warnings.push('Agent Builder: usando tools de src/tools/agentbuilder quando disponíveis; ids desconhecidos usam stub.')
 
   const files: FileSpec[] = []
   const targetDir = `src/app/agentes/${slug}`

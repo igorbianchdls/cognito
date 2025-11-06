@@ -83,4 +83,9 @@ export const TOOLS_MOCK: ToolMeta[] = [
   // Automação / Geral
   { id: 'executarAutomacao', name: 'executarAutomacao', description: 'Ações de automação e rotinas.', category: 'Automação', icon: Sparkles },
   { id: 'assistant', name: 'assistant', description: 'Assistente geral (sem tools).', category: 'Geral', icon: Bot },
+
+  // Agent Builder (teste)
+  { id: 'echoTool', name: 'echoTool', description: 'Teste: ecoa a mensagem informada.', category: 'Geral', icon: MessageSquare },
+  { id: 'sumTool', name: 'sumTool', description: 'Teste: soma números fornecidos.', category: 'Geral', icon: BarChart3 },
+  { id: 'pickFieldsTool', name: 'pickFieldsTool', description: 'Teste: extrai campos de um objeto.', category: 'Geral', icon: ClipboardList },
 ]

@@ -1,6 +1,5 @@
 import type { Graph } from '@/types/agentes/builder'
 import { getFirstAgent, stringifyGraph, tsStringLiteral, getStepSettings, collectTools } from './helpers'
-import { buildToolImports } from './tool-map'
 
 export function genRouteTs(graph: Graph, slug: string): string {
   const agent = getFirstAgent(graph) || {}
@@ -14,10 +13,12 @@ export function genRouteTs(graph: Graph, slug: string): string {
   const step = getStepSettings(graph)
 
   const selectedToolIds = collectTools(graph)
+  const BUILDER_SET = new Set(['echoTool','sumTool','pickFieldsTool'])
+  const builderIds = selectedToolIds.filter(id => BUILDER_SET.has(id))
+  const stubIds = selectedToolIds.filter(id => !BUILDER_SET.has(id))
 
-  // Modo TESTE: gerar tools stub inline
   const sanitize = (id: string) => id.replace(/[^A-Za-z0-9_]/g, '_')
-  const testToolDecls = selectedToolIds.map((id) => {
+  const testToolDecls = stubIds.map((id) => {
     const varName = `t_${sanitize(id)}`
     return `const ${varName} = tool({
   description: 'TEST:${id}',
@@ -25,21 +26,28 @@ export function genRouteTs(graph: Graph, slug: string): string {
   execute: async (input) => ({ ok: true, test: true, id: '${id}', input }),
 })`
   }).join('\n\n')
-  const toolsObjectLiteral = selectedToolIds.length
+  const toolEntries: string[] = []
+  for (const id of builderIds) toolEntries.push(id)
+  for (const id of stubIds) toolEntries.push(`${id}: t_${sanitize(id)}`)
+  const toolsObjectLiteral = toolEntries.length
     ? `{
-        ${selectedToolIds.map((id) => `${id}: t_${sanitize(id)}`).join(',\n        ')}
+        ${toolEntries.join(',\n        ')}
       }`
     : '{}'
 
+  const needsStub = stubIds.length > 0
   const imports = `import { NextResponse } from 'next/server'
-import { generateText, tool } from 'ai'
+import { generateText${needsStub ? ', tool' : ''} } from 'ai'
 import { anthropic } from '@ai-sdk/anthropic'${importOpenAI ? "\nimport { openai } from '@ai-sdk/openai'" : ''}`
-    + (selectedToolIds.length ? `\nimport { z } from 'zod'` : '')
+    + (builderIds.length ? `\nimport { ${builderIds.join(', ')} } from '@/tools/agentbuilder'` : '')
+    + (needsStub ? `\nimport { z } from 'zod'` : '')
+
+  const prepareTypeImport = ${step.prepareStepEnabled ? '`import type { PrepareStepFunction } from \'ai\'`' : '``'}
 
   return `// Arquivo gerado automaticamente pelo Agent Builder (não editar manualmente)
 // slug: ${slug}
 ${imports}
-import type { PrepareStepFunction } from 'ai'
+${prepareTypeImport}
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -57,15 +65,13 @@ export async function POST(request: Request) {
     const prompt = String(body?.message ?? '')
     const temperature = typeof body?.temperature === 'number' ? body.temperature : ${defaultTemp}
     ${step.prepareStepEnabled ? `const prepareStep: PrepareStepFunction = () => undefined` : ''}
-    ${selectedToolIds.length ? `// TEST TOOLS (auto-generated)
-    ${testToolDecls}
-` : ''}
+    ${needsStub ? `// TEST TOOLS (auto-generated for unknown ids)\n    ${testToolDecls}\n` : ''}
     const { text } = await generateText({
       model: selectModel(),
       system: "${sys}",
       prompt,
       temperature,
-      ${selectedToolIds.length ? `tools: ${toolsObjectLiteral},` : ''}
+      ${toolEntries.length ? `tools: ${toolsObjectLiteral},` : ''}
       ${step.count > 0 ? `maxToolRoundtrips: ${step.maxSteps ?? step.count},` : ''}
       ${step.toolChoice && step.toolChoice !== 'auto' ? `toolChoice: '${step.toolChoice}',` : ''}
       ${step.prepareStepEnabled ? `prepareStep,` : ''}
