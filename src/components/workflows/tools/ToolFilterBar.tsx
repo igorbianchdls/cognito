@@ -7,7 +7,7 @@ export default function ToolFilterBar({ categories, activeCategory }: { categori
   return (
     <div className="space-y-3">
       <Input placeholder="Buscar ferramentas" className="h-8" />
-      <Tabs value={activeCategory}>
+      <Tabs defaultValue={activeCategory}>
         <TabsList variant="underline">
           {categories.map(c => (
             <TabsTrigger key={c} value={c}>{c}</TabsTrigger>
@@ -18,4 +18,3 @@ export default function ToolFilterBar({ categories, activeCategory }: { categori
     </div>
   )
 }
-
