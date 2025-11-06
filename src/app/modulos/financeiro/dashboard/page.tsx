@@ -3,7 +3,22 @@
 import { useEffect, useMemo, useState } from 'react'
 import DashboardLayout from '@/components/modulos/DashboardLayout'
 
-type Row = Record<string, any>
+type BaseRow = {
+  valor_total?: number | string
+  data_vencimento?: string
+  status?: string
+}
+
+type ARRow = BaseRow & {
+  cliente?: string
+  descricao?: string
+}
+
+type APRow = BaseRow & {
+  fornecedor?: string
+  descricao?: string
+  descricao_lancamento?: string
+}
 
 function formatBRL(v: unknown) {
   const n = Number(v ?? 0)
@@ -41,8 +56,8 @@ function isPaid(status?: string) {
 }
 
 export default function FinanceiroDashboardPage() {
-  const [arRows, setArRows] = useState<Row[]>([])
-  const [apRows, setApRows] = useState<Row[]>([])
+  const [arRows, setArRows] = useState<ARRow[]>([])
+  const [apRows, setApRows] = useState<APRow[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -58,16 +73,16 @@ export default function FinanceiroDashboardPage() {
           fetch(qs('contas-a-pagar'), { cache: 'no-store' }),
         ])
 
-        let ar: Row[] = []
-        let ap: Row[] = []
+        let ar: ARRow[] = []
+        let ap: APRow[] = []
 
         if (arRes.status === 'fulfilled' && arRes.value.ok) {
-          const j = await arRes.value.json()
-          ar = Array.isArray(j?.rows) ? j.rows : []
+          const j = (await arRes.value.json()) as { rows?: unknown[] }
+          ar = Array.isArray(j?.rows) ? (j.rows as unknown as ARRow[]) : []
         }
         if (apRes.status === 'fulfilled' && apRes.value.ok) {
-          const j = await apRes.value.json()
-          ap = Array.isArray(j?.rows) ? j.rows : []
+          const j = (await apRes.value.json()) as { rows?: unknown[] }
+          ap = Array.isArray(j?.rows) ? (j.rows as unknown as APRow[]) : []
         }
 
         // Fallback mock if nothing returned (ex: sem DB)
@@ -106,11 +121,11 @@ export default function FinanceiroDashboardPage() {
   // Helpers to compute KPIs
   const todayStr = toDateOnly(new Date())
   const isToday = (d?: string) => d ? toDateOnly(new Date(d)) === todayStr : false
-  const isOverdue = (r: Row) => !isPaid(r.status) && (daysDiffFromToday(String(r.data_vencimento)) ?? 1) < 0
-  const isOpenOrOverdue = (r: Row) => !isPaid(r.status)
+  const isOverdue = <T extends BaseRow>(r: T) => !isPaid(r.status) && (daysDiffFromToday(String(r.data_vencimento)) ?? 1) < 0
+  const isOpenOrOverdue = <T extends BaseRow>(r: T) => !isPaid(r.status)
 
   const kpis = useMemo(() => {
-    const sum = (arr: Row[], pred: (r: Row) => boolean) => arr.filter(pred).reduce((acc, r) => acc + (Number(r.valor_total) || 0), 0)
+    const sum = <T extends BaseRow>(arr: T[], pred: (r: T) => boolean) => arr.filter(pred).reduce((acc, r) => acc + (Number(r.valor_total) || 0), 0)
     return {
       arHoje: sum(arRows, r => isOpenOrOverdue(r) && isToday(String(r.data_vencimento))),
       apHoje: sum(apRows, r => isOpenOrOverdue(r) && isToday(String(r.data_vencimento))),
@@ -121,7 +136,7 @@ export default function FinanceiroDashboardPage() {
 
   // Aging buckets (valor em BRL por faixa)
   type Bucket = { label: string; value: number }
-  function buildAging(rows: Row[]): Bucket[] {
+  function buildAging<T extends BaseRow>(rows: T[]): Bucket[] {
     const buckets: Record<string, number> = {
       'Vencido >30': 0,
       'Vencido 1–30': 0,
