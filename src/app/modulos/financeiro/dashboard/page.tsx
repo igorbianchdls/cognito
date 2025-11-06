@@ -104,11 +104,12 @@ export default function FinanceiroDashboardPage() {
     headerTitle: { family: 'Space Mono', weight: 700 as number | undefined, letterSpacing: 0 as number | undefined, color: '#111827' as string | undefined, size: 20 as number | undefined, transform: 'uppercase' as 'none' | 'uppercase' },
     headerSubtitle: { family: 'Inter', weight: 400 as number | undefined, letterSpacing: 0 as number | undefined, color: '#6b7280' as string | undefined, size: 12 as number | undefined, transform: 'none' as 'none' | 'uppercase' },
   })
-  const [cardBorderColor, setCardBorderColor] = useState<string>('rgb(240, 240, 240)')
+  const [cardBorderColor, setCardBorderColor] = useState<string>('#f0f0f0')
   const [pageBgColor, setPageBgColor] = useState<string>('#ffffff')
   const [filtersIconColor, setFiltersIconColor] = useState<string>('#6b7280')
-  const [sidebarBgColor, setSidebarBgColor] = useState<string>('hsl(0, 0%, 98%)')
-  const [sidebarTextColor, setSidebarTextColor] = useState<string>('hsl(240, 5.3%, 26.1%)')
+  const [sidebarBgColor, setSidebarBgColor] = useState<string>('#fafafa')
+  const [sidebarTextColor, setSidebarTextColor] = useState<string>('#3f3f46')
+  const [sidebarItemTextColor, setSidebarItemTextColor] = useState<string>('#0f172a')
   const styleValues = useMemo<React.CSSProperties>(() => ({
     fontFamily: fontVar(fonts.values.family),
     fontWeight: fonts.values.weight as React.CSSProperties['fontWeight'],
@@ -529,6 +530,7 @@ export default function FinanceiroDashboardPage() {
       headerActions={headerActions}
       sidebarBgColor={sidebarBgColor}
       sidebarTextColor={sidebarTextColor}
+      sidebarItemTextColor={sidebarItemTextColor}
       userAvatarUrl="https://i.pravatar.cc/80?img=12"
     >
       {loading ? (
@@ -1079,6 +1081,15 @@ export default function FinanceiroDashboardPage() {
                 className="border rounded w-8 h-6"
                 value={sidebarTextColor}
                 onChange={(e) => setSidebarTextColor(e.target.value)}
+              />
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="text-xs text-gray-500">Sidebar - Itens (Ativo/Hover)</div>
+              <input
+                type="color"
+                className="border rounded w-8 h-6"
+                value={sidebarItemTextColor}
+                onChange={(e) => setSidebarItemTextColor(e.target.value)}
               />
             </div>
           </div>

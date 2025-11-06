@@ -98,7 +98,7 @@ const navigationData = {
   ],
 }
 
-export function SidebarShadcn({ bgColor, textColor, style, ...props }: React.ComponentProps<typeof Sidebar> & { bgColor?: string; textColor?: string }) {
+export function SidebarShadcn({ bgColor, textColor, itemTextColor, style, ...props }: React.ComponentProps<typeof Sidebar> & { bgColor?: string; textColor?: string; itemTextColor?: string }) {
   const pathname = usePathname()
 
   // Update active state based on current path
@@ -117,6 +117,7 @@ export function SidebarShadcn({ bgColor, textColor, style, ...props }: React.Com
     ...(style || {}),
     ...(bgColor ? ({ ["--sidebar"]: bgColor } as React.CSSProperties) : {}),
     ...(textColor ? ({ ["--sidebar-foreground"]: textColor } as React.CSSProperties) : {}),
+    ...(itemTextColor ? ({ ["--sidebar-accent-foreground"]: itemTextColor } as React.CSSProperties) : {}),
   } as React.CSSProperties
 
   return (

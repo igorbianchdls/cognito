@@ -157,6 +157,7 @@ function Sidebar({
   collapsible = "offcanvas",
   className,
   children,
+  style,
   ...props
 }: React.ComponentProps<"div"> & {
   side?: "left" | "right"
@@ -188,11 +189,10 @@ function Sidebar({
           data-slot="sidebar"
           data-mobile="true"
           className="bg-sidebar text-sidebar-foreground w-(--sidebar-width) p-0 [&>button]:hidden"
-          style={
-            {
-              "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
-            } as React.CSSProperties
-          }
+          style={{
+            "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
+            ...(style as React.CSSProperties),
+          } as React.CSSProperties}
           side={side}
         >
           <SheetHeader className="sr-only">
@@ -213,6 +213,7 @@ function Sidebar({
       data-variant={variant}
       data-side={side}
       data-slot="sidebar"
+      style={style as React.CSSProperties}
     >
       {/* This is what handles the sidebar gap on desktop */}
       <div
