@@ -1,150 +1,284 @@
 'use client'
 
+import { useEffect, useMemo, useState } from 'react'
 import DashboardLayout from '@/components/modulos/DashboardLayout'
 
+type Row = Record<string, any>
+
+function formatBRL(v: unknown) {
+  const n = Number(v ?? 0)
+  if (isNaN(n)) return String(v ?? '')
+  return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+}
+
+function toDateOnly(d: Date) {
+  const yyyy = d.getFullYear()
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
+  const dd = String(d.getDate()).padStart(2, '0')
+  return `${yyyy}-${mm}-${dd}`
+}
+
+function parseDate(value?: string) {
+  if (!value) return null
+  const d = new Date(value)
+  return isNaN(d.getTime()) ? null : d
+}
+
+function daysDiffFromToday(dateStr?: string) {
+  const d = parseDate(dateStr)
+  if (!d) return null
+  const today = new Date()
+  const a = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+  const b = new Date(d.getFullYear(), d.getMonth(), d.getDate())
+  const ms = b.getTime() - a.getTime()
+  return Math.round(ms / (1000 * 60 * 60 * 24))
+}
+
+function isPaid(status?: string) {
+  if (!status) return false
+  const s = status.toLowerCase()
+  return s.includes('pago') || s.includes('liquidado') || s.includes('baixado')
+}
+
 export default function FinanceiroDashboardPage() {
+  const [arRows, setArRows] = useState<Row[]>([])
+  const [apRows, setApRows] = useState<Row[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    async function load() {
+      setLoading(true)
+      setError(null)
+      try {
+        const qs = (view: string) => `/api/modulos/financeiro?view=${view}&page=1&pageSize=1000`
+        const [arRes, apRes] = await Promise.allSettled([
+          fetch(qs('contas-a-receber'), { cache: 'no-store' }),
+          fetch(qs('contas-a-pagar'), { cache: 'no-store' }),
+        ])
+
+        let ar: Row[] = []
+        let ap: Row[] = []
+
+        if (arRes.status === 'fulfilled' && arRes.value.ok) {
+          const j = await arRes.value.json()
+          ar = Array.isArray(j?.rows) ? j.rows : []
+        }
+        if (apRes.status === 'fulfilled' && apRes.value.ok) {
+          const j = await apRes.value.json()
+          ap = Array.isArray(j?.rows) ? j.rows : []
+        }
+
+        // Fallback mock if nothing returned (ex: sem DB)
+        if (ar.length === 0 && ap.length === 0) {
+          const today = toDateOnly(new Date())
+          const in3 = toDateOnly(new Date(Date.now() + 3 * 86400000))
+          const in6 = toDateOnly(new Date(Date.now() + 6 * 86400000))
+          const y2 = toDateOnly(new Date(Date.now() - 2 * 86400000))
+          ar = [
+            { cliente: 'Cliente A', descricao: 'NF 1001', valor_total: 2500, data_vencimento: y2, status: 'vencido' },
+            { cliente: 'Cliente B', descricao: 'Fatura 2002', valor_total: 5200, data_vencimento: today, status: 'pendente' },
+            { cliente: 'Cliente C', descricao: 'Mensalidade', valor_total: 1800, data_vencimento: in3, status: 'pendente' },
+            { cliente: 'Cliente D', descricao: 'Serviço', valor_total: 3400, data_vencimento: in6, status: 'pendente' },
+          ]
+          ap = [
+            { fornecedor: 'Fornecedor X', descricao_lancamento: 'NF 889', descricao: 'NF 889', valor_total: 3100, data_vencimento: today, status: 'pendente' },
+            { fornecedor: 'Fornecedor Y', descricao_lancamento: 'Contrato', descricao: 'Contrato', valor_total: 780, data_vencimento: in3, status: 'pendente' },
+            { fornecedor: 'Fornecedor Z', descricao_lancamento: 'Impostos', descricao: 'Impostos', valor_total: 5600, data_vencimento: y2, status: 'vencido' },
+          ]
+        }
+
+        if (!cancelled) {
+          setArRows(ar)
+          setApRows(ap)
+        }
+      } catch (e) {
+        if (!cancelled) setError('Falha ao carregar dados')
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    load()
+    return () => { cancelled = true }
+  }, [])
+
+  // Helpers to compute KPIs
+  const todayStr = toDateOnly(new Date())
+  const isToday = (d?: string) => d ? toDateOnly(new Date(d)) === todayStr : false
+  const isOverdue = (r: Row) => !isPaid(r.status) && (daysDiffFromToday(String(r.data_vencimento)) ?? 1) < 0
+  const isOpenOrOverdue = (r: Row) => !isPaid(r.status)
+
+  const kpis = useMemo(() => {
+    const sum = (arr: Row[], pred: (r: Row) => boolean) => arr.filter(pred).reduce((acc, r) => acc + (Number(r.valor_total) || 0), 0)
+    return {
+      arHoje: sum(arRows, r => isOpenOrOverdue(r) && isToday(String(r.data_vencimento))),
+      apHoje: sum(apRows, r => isOpenOrOverdue(r) && isToday(String(r.data_vencimento))),
+      arVencidos: sum(arRows, r => isOverdue(r)),
+      apVencidos: sum(apRows, r => isOverdue(r)),
+    }
+  }, [arRows, apRows])
+
+  // Aging buckets (valor em BRL por faixa)
+  type Bucket = { label: string; value: number }
+  function buildAging(rows: Row[]): Bucket[] {
+    const buckets: Record<string, number> = {
+      'Vencido >30': 0,
+      'Vencido 1–30': 0,
+      'Vence 1–7': 0,
+      'Vence 8–15': 0,
+      'Vence 16–30': 0,
+    }
+    for (const r of rows) {
+      if (isPaid(r.status)) continue
+      const v = Number(r.valor_total) || 0
+      const dd = daysDiffFromToday(String(r.data_vencimento))
+      if (dd == null) continue
+      if (dd < -30) buckets['Vencido >30'] += v
+      else if (dd < 0) buckets['Vencido 1–30'] += v
+      else if (dd <= 7) buckets['Vence 1–7'] += v
+      else if (dd <= 15) buckets['Vence 8–15'] += v
+      else if (dd <= 30) buckets['Vence 16–30'] += v
+    }
+    return Object.entries(buckets).map(([label, value]) => ({ label, value }))
+  }
+
+  const arAging = useMemo(() => buildAging(arRows), [arRows])
+  const apAging = useMemo(() => buildAging(apRows), [apRows])
+
+  const topReceber = useMemo(() => {
+    const rows = arRows.filter(r => !isPaid(r.status))
+    return rows
+      .map(r => ({
+        nome: r.cliente || 'Cliente',
+        desc: r.descricao,
+        valor: Number(r.valor_total) || 0,
+        dv: String(r.data_vencimento),
+        dd: daysDiffFromToday(String(r.data_vencimento)) ?? 9999,
+      }))
+      .sort((a, b) => (a.dd ?? 9999) - (b.dd ?? 9999) || b.valor - a.valor)
+      .slice(0, 5)
+  }, [arRows])
+
+  const pagamentosHoje = useMemo(() => {
+    const rows = apRows.filter(r => !isPaid(r.status) && isToday(String(r.data_vencimento)))
+    return rows
+      .map(r => ({
+        nome: r.fornecedor || 'Fornecedor',
+        desc: r.descricao || r.descricao_lancamento,
+        valor: Number(r.valor_total) || 0,
+        dv: String(r.data_vencimento),
+      }))
+      .sort((a, b) => b.valor - a.valor)
+      .slice(0, 5)
+  }, [apRows])
+
+  function AgingBar({ data }: { data: Bucket[] }) {
+    const total = data.reduce((acc, b) => acc + b.value, 0)
+    return (
+      <div className="space-y-3">
+        {data.map((b) => {
+          const pct = total > 0 ? Math.max(2, Math.round((b.value / total) * 100)) : 0
+          const color = b.label.includes('Vencido') ? 'bg-red-500' : 'bg-amber-500'
+          return (
+            <div key={b.label} className="">
+              <div className="flex justify-between text-xs text-gray-600 mb-1">
+                <span>{b.label}</span>
+                <span>{formatBRL(b.value)}</span>
+              </div>
+              <div className="w-full h-2.5 bg-gray-100 rounded">
+                <div className={`${color} h-2.5 rounded`} style={{ width: `${pct}%` }} />
+              </div>
+            </div>
+          )
+        })}
+        {total === 0 && (
+          <div className="text-xs text-gray-400">Sem valores pendentes</div>
+        )}
+      </div>
+    )
+  }
+
   return (
     <DashboardLayout
       title="Dashboard Financeiro"
-      subtitle="Visão geral das finanças"
+      subtitle="Foco diário: Contas a Receber e a Pagar"
     >
+      {loading ? (
+        <div className="p-6 text-sm text-gray-500">Carregando dados…</div>
+      ) : error ? (
+        <div className="p-6 text-sm text-red-600">{error}</div>
+      ) : null}
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        {/* Card: Receitas */}
         <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <div className="text-sm font-medium text-gray-500 mb-2">Receitas do Mês</div>
-          <div className="text-2xl font-bold text-green-600">R$ 125.430,00</div>
-          <div className="text-xs text-gray-400 mt-1">+12.5% vs mês anterior</div>
+          <div className="text-sm font-medium text-gray-500 mb-2">A Receber Hoje</div>
+          <div className="text-2xl font-bold text-emerald-600">{formatBRL(kpis.arHoje)}</div>
+          <div className="text-xs text-gray-400 mt-1">Título(s) com vencimento hoje</div>
         </div>
-
-        {/* Card: Despesas */}
         <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <div className="text-sm font-medium text-gray-500 mb-2">Despesas do Mês</div>
-          <div className="text-2xl font-bold text-red-600">R$ 87.250,00</div>
-          <div className="text-xs text-gray-400 mt-1">+5.3% vs mês anterior</div>
+          <div className="text-sm font-medium text-gray-500 mb-2">A Pagar Hoje</div>
+          <div className="text-2xl font-bold text-rose-600">{formatBRL(kpis.apHoje)}</div>
+          <div className="text-xs text-gray-400 mt-1">Pagamentos previstos para hoje</div>
         </div>
-
-        {/* Card: Saldo */}
         <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <div className="text-sm font-medium text-gray-500 mb-2">Saldo Atual</div>
-          <div className="text-2xl font-bold text-blue-600">R$ 38.180,00</div>
-          <div className="text-xs text-gray-400 mt-1">Em todas as contas</div>
+          <div className="text-sm font-medium text-gray-500 mb-2">Vencidos A Receber</div>
+          <div className="text-2xl font-bold text-orange-600">{formatBRL(kpis.arVencidos)}</div>
+          <div className="text-xs text-gray-400 mt-1">Valores atrasados</div>
         </div>
-
-        {/* Card: A Receber */}
         <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <div className="text-sm font-medium text-gray-500 mb-2">A Receber (30 dias)</div>
-          <div className="text-2xl font-bold text-orange-600">R$ 45.920,00</div>
-          <div className="text-xs text-gray-400 mt-1">15 contas em aberto</div>
+          <div className="text-sm font-medium text-gray-500 mb-2">Vencidos A Pagar</div>
+          <div className="text-2xl font-bold text-red-600">{formatBRL(kpis.apVencidos)}</div>
+          <div className="text-xs text-gray-400 mt-1">Compromissos em atraso</div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        {/* Gráfico Placeholder 1 */}
         <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <h3 className="text-lg font-semibold mb-4">Receitas vs Despesas</h3>
-          <div className="h-64 flex items-center justify-center bg-gray-50 rounded border border-dashed border-gray-300">
-            <p className="text-gray-400">Gráfico será implementado</p>
-          </div>
+          <h3 className="text-lg font-semibold mb-4">Aging A Receber</h3>
+          <AgingBar data={arAging} />
         </div>
-
-        {/* Gráfico Placeholder 2 */}
         <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <h3 className="text-lg font-semibold mb-4">Fluxo de Caixa</h3>
-          <div className="h-64 flex items-center justify-center bg-gray-50 rounded border border-dashed border-gray-300">
-            <p className="text-gray-400">Gráfico será implementado</p>
-          </div>
+          <h3 className="text-lg font-semibold mb-4">Aging A Pagar</h3>
+          <AgingBar data={apAging} />
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Contas a Vencer */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <h3 className="text-lg font-semibold mb-4">Contas a Vencer (7 dias)</h3>
+          <h3 className="text-lg font-semibold mb-4">A Receber Prioritário</h3>
           <div className="space-y-3">
-            <div className="flex justify-between items-center pb-2 border-b">
-              <div>
-                <div className="font-medium text-sm">Fornecedor A</div>
-                <div className="text-xs text-gray-500">Vence em 3 dias</div>
-              </div>
-              <div className="font-semibold text-red-600">R$ 2.500,00</div>
-            </div>
-            <div className="flex justify-between items-center pb-2 border-b">
-              <div>
-                <div className="font-medium text-sm">Fornecedor B</div>
-                <div className="text-xs text-gray-500">Vence em 5 dias</div>
-              </div>
-              <div className="font-semibold text-red-600">R$ 1.800,00</div>
-            </div>
-            <div className="flex justify-between items-center pb-2">
-              <div>
-                <div className="font-medium text-sm">Fornecedor C</div>
-                <div className="text-xs text-gray-500">Vence em 6 dias</div>
-              </div>
-              <div className="font-semibold text-red-600">R$ 3.200,00</div>
-            </div>
+            {topReceber.length === 0 ? (
+              <div className="text-sm text-gray-400">Sem títulos</div>
+            ) : (
+              topReceber.map((i, idx) => (
+                <div key={idx} className="flex justify-between items-center pb-2 border-b last:border-b-0">
+                  <div>
+                    <div className="font-medium text-sm">{i.nome}</div>
+                    <div className="text-xs text-gray-500">{i.desc || '—'} • Venc {i.dd! < 0 ? `${Math.abs(i.dd!)}d` : `em ${i.dd}d`}</div>
+                  </div>
+                  <div className="font-semibold text-emerald-700">{formatBRL(i.valor)}</div>
+                </div>
+              ))
+            )}
           </div>
         </div>
-
-        {/* Top Categorias */}
         <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <h3 className="text-lg font-semibold mb-4">Top Categorias (Despesas)</h3>
+          <h3 className="text-lg font-semibold mb-4">Pagamentos do Dia</h3>
           <div className="space-y-3">
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                <span className="text-sm">Folha de Pagamento</span>
-              </div>
-              <span className="font-semibold text-sm">R$ 45.000,00</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                <span className="text-sm">Fornecedores</span>
-              </div>
-              <span className="font-semibold text-sm">R$ 22.500,00</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-orange-500"></div>
-                <span className="text-sm">Impostos</span>
-              </div>
-              <span className="font-semibold text-sm">R$ 12.800,00</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-purple-500"></div>
-                <span className="text-sm">Operacional</span>
-              </div>
-              <span className="font-semibold text-sm">R$ 6.950,00</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Últimas Transações */}
-        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <h3 className="text-lg font-semibold mb-4">Últimas Transações</h3>
-          <div className="space-y-3">
-            <div className="flex justify-between items-center pb-2 border-b">
-              <div>
-                <div className="font-medium text-sm">Pagamento recebido</div>
-                <div className="text-xs text-gray-500">Cliente XYZ</div>
-              </div>
-              <div className="font-semibold text-green-600 text-sm">+R$ 5.000,00</div>
-            </div>
-            <div className="flex justify-between items-center pb-2 border-b">
-              <div>
-                <div className="font-medium text-sm">Pagamento efetuado</div>
-                <div className="text-xs text-gray-500">Fornecedor ABC</div>
-              </div>
-              <div className="font-semibold text-red-600 text-sm">-R$ 2.300,00</div>
-            </div>
-            <div className="flex justify-between items-center pb-2">
-              <div>
-                <div className="font-medium text-sm">Pagamento recebido</div>
-                <div className="text-xs text-gray-500">Cliente DEF</div>
-              </div>
-              <div className="font-semibold text-green-600 text-sm">+R$ 8.500,00</div>
-            </div>
+            {pagamentosHoje.length === 0 ? (
+              <div className="text-sm text-gray-400">Sem pagamentos para hoje</div>
+            ) : (
+              pagamentosHoje.map((i, idx) => (
+                <div key={idx} className="flex justify-between items-center pb-2 border-b last:border-b-0">
+                  <div>
+                    <div className="font-medium text-sm">{i.nome}</div>
+                    <div className="text-xs text-gray-500">{i.desc || '—'}</div>
+                  </div>
+                  <div className="font-semibold text-rose-700">{formatBRL(i.valor)}</div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>
