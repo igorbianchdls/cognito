@@ -41,21 +41,27 @@ export default function PropertiesPanel({ block, onChange, onDelete }: { block: 
       <Separator />
 
       <div className="flex-1 overflow-auto p-4 space-y-4 custom-scrollbar">
-        <div className="space-y-2">
-          <label className="text-xs text-gray-600">Nome</label>
-          <Input className="h-8" value={block.name || ''} onChange={(e) => onChange({ name: e.target.value })} />
-        </div>
-        <div className="space-y-2">
-          <label className="text-xs text-gray-600">ID</label>
-          <Input className="h-8" value={block.id} readOnly />
-        </div>
-
         {block.kind === 'agente' ? (
           <AgentConfigPanel
+            name={block.name || ''}
+            onChangeName={(v) => onChange({ name: v })}
             config={cfgUnknown as Partial<AgentBlockConfig>}
             onChange={(patch) => onChange({ config: { ...(cfgUnknown as Partial<AgentBlockConfig>), ...patch } })}
             onSave={() => { /* TODO: persist */ }}
           />
+        ) : null}
+
+        {block.kind !== 'agente' ? (
+          <>
+            <div className="space-y-2">
+              <label className="text-xs text-gray-600">Nome</label>
+              <Input className="h-8" value={block.name || ''} onChange={(e) => onChange({ name: e.target.value })} />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs text-gray-600">ID</label>
+              <Input className="h-8" value={block.id} readOnly />
+            </div>
+          </>
         ) : null}
           {block.kind === 'ferramenta' ? (
             <>

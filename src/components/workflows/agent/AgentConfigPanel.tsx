@@ -5,23 +5,35 @@ import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Slider } from '@/components/ui/slider'
 import { Textarea } from '@/components/ui/textarea'
+import { Input } from '@/components/ui/input'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Info, RefreshCw, ChevronRight, Bot } from 'lucide-react'
 import type { AgentBlockConfig } from '@/types/agentes/builder'
 import { useMemo } from 'react'
 
 type Props = {
+  name: string
+  onChangeName: (name: string) => void
   config: Partial<AgentBlockConfig>
   onChange: (patch: Partial<AgentBlockConfig>) => void
   onSave?: () => void
 }
 
-export default function AgentConfigPanel({ config, onChange, onSave }: Props) {
+export default function AgentConfigPanel({ name, onChangeName, config, onChange, onSave }: Props) {
   const temperature = typeof config.temperature === 'number' ? config.temperature : 0.2
   const isTrained = useMemo(() => !!(config.model && (config.systemPrompt || '').trim().length > 0), [config.model, config.systemPrompt])
 
   return (
     <div className="p-4 space-y-4">
+      {/* Title */}
+      <div className="text-xl font-semibold">Playground</div>
+
+      {/* Name */}
+      <div className="space-y-2">
+        <div className="text-xs text-gray-600">Nome</div>
+        <Input className="h-8" value={name} onChange={(e) => onChangeName(e.target.value)} />
+      </div>
+      <Separator />
       {/* Status + Save */}
       <div className="rounded-xl border bg-white p-4">
         <div className="flex items-center justify-between">
@@ -119,4 +131,3 @@ export default function AgentConfigPanel({ config, onChange, onSave }: Props) {
     </div>
   )
 }
-
