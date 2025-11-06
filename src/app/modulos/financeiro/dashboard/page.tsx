@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import { useStore } from '@nanostores/react'
 import DashboardLayout from '@/components/modulos/DashboardLayout'
 import { ArrowDownCircle, ArrowUpCircle, AlertTriangle, BarChart3, Wallet, Clock, Star, CalendarCheck, Calendar as CalendarIcon } from 'lucide-react'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -8,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import type { DateRange } from 'react-day-picker'
+import { $financeiroDashboardUI, $financeiroDashboardFilters, financeiroDashboardActions } from '@/stores/modulos/financeiroDashboardStore'
 
 type BaseRow = {
   valor_total?: number | string
@@ -91,25 +93,35 @@ export default function FinanceiroDashboardPage() {
   const [peRows, setPeRows] = useState<EfetuadoRow[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  // Header filters
-  const [dateRange, setDateRange] = useState<DateRange | undefined>()
-  const [dataFilter, setDataFilter] = useState<string>('todos')
-
-  // Typography controls
-  const [fonts, setFonts] = useState({
-    values: { family: 'Space Mono', weight: 700 as number | undefined, letterSpacing: 0 as number | undefined, color: '#111827' as string | undefined, size: 24 as number | undefined, transform: 'none' as 'none' | 'uppercase' },
-    // Separação de títulos: KPI vs Charts
-    kpiTitle: { family: 'Space Mono', weight: 500 as number | undefined, letterSpacing: 0 as number | undefined, color: '#adadad' as string | undefined, size: 13 as number | undefined, transform: 'uppercase' as 'none' | 'uppercase' },
-    chartTitle: { family: 'Space Mono', weight: 500 as number | undefined, letterSpacing: 0 as number | undefined, color: '#adadad' as string | undefined, size: 13 as number | undefined, transform: 'uppercase' as 'none' | 'uppercase' },
-    text: { family: 'Inter', weight: 400 as number | undefined, letterSpacing: 0 as number | undefined, color: '#6b7280' as string | undefined, size: 12 as number | undefined, transform: 'none' as 'none' | 'uppercase' },
-    filters: { family: 'Inter', weight: 400 as number | undefined, letterSpacing: 0 as number | undefined, color: 'rgb(122, 122, 122)' as string | undefined, size: 13 as number | undefined, transform: 'none' as 'none' | 'uppercase' },
-    sidebarSectionTitle: { family: 'Space Mono', weight: 500 as number | undefined, letterSpacing: 0 as number | undefined, color: '#808080' as string | undefined, size: 12 as number | undefined, transform: 'uppercase' as 'none' | 'uppercase' },
-    headerTitle: { family: 'Space Mono', weight: 700 as number | undefined, letterSpacing: 0 as number | undefined, color: '#111827' as string | undefined, size: 20 as number | undefined, transform: 'uppercase' as 'none' | 'uppercase' },
-    headerSubtitle: { family: 'Inter', weight: 400 as number | undefined, letterSpacing: 0 as number | undefined, color: '#6b7280' as string | undefined, size: 12 as number | undefined, transform: 'none' as 'none' | 'uppercase' },
-  })
-  const [cardBorderColor, setCardBorderColor] = useState<string>('#f0f0f0')
-  const [pageBgColor, setPageBgColor] = useState<string>('#ffffff')
-  const [filtersIconColor, setFiltersIconColor] = useState<string>('#6b7280')
+  // Global (Nanostores): UI + Filters
+  const ui = useStore($financeiroDashboardUI)
+  const filters = useStore($financeiroDashboardFilters)
+  const fonts = ui.fonts
+  const cardBorderColor = ui.cardBorderColor
+  const pageBgColor = ui.pageBgColor
+  const filtersIconColor = ui.filtersIconColor
+  // Patch-like setters to keep UI code similar
+  const setFonts = (updater: (prev: any) => any) => {
+    const next = updater(fonts as any)
+    financeiroDashboardActions.setUI({ fonts: next })
+  }
+  const setCardBorderColor = (v: string) => financeiroDashboardActions.setUI({ cardBorderColor: v })
+  const setPageBgColor = (v: string) => financeiroDashboardActions.setUI({ pageBgColor: v })
+  const setFiltersIconColor = (v: string) => financeiroDashboardActions.setUI({ filtersIconColor: v })
+  const dateRange: DateRange | undefined = useMemo(() => {
+    const from = filters.dateRange?.from ? new Date(filters.dateRange.from) : undefined
+    const to = filters.dateRange?.to ? new Date(filters.dateRange.to) : undefined
+    if (!from && !to) return undefined
+    return { from, to }
+  }, [filters.dateRange])
+  const setDateRange = (range?: DateRange) => {
+    const toISO = (d?: Date) => (d ? d.toISOString().slice(0, 10) : undefined)
+    financeiroDashboardActions.setFilters({
+      dateRange: range ? { from: toISO(range.from), to: toISO(range.to) } : undefined,
+    })
+  }
+  const dataFilter = filters.dataFilter
+  const setDataFilter = (v: string) => financeiroDashboardActions.setFilters({ dataFilter: v })
   const [sidebarBgColor, setSidebarBgColor] = useState<string>('#fdfdfd')
   const [sidebarTextColor, setSidebarTextColor] = useState<string>('#717171')
   const [sidebarItemTextColor, setSidebarItemTextColor] = useState<string>('#0f172a')
