@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react"
 import { Separator } from "@/components/ui/separator"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -10,11 +9,7 @@ import type { Block, AgentBlockConfig, ToolBlockConfig, ConditionBlockConfig, Re
 import { Bot, Wrench, GitBranch, MessageSquareText } from "lucide-react"
 import AgentConfigPanel from "@/components/workflows/agent/AgentConfigPanel"
 
-type TabKey = 'geral' | 'config'
-
 export default function PropertiesPanel({ block, onChange, onDelete }: { block: Block | null; onChange: (patch: Partial<Block>) => void; onDelete: () => void }) {
-  const [activeTab, setActiveTab] = useState<TabKey>('geral')
-  useEffect(() => setActiveTab('geral'), [block?.id])
 
   if (!block) {
     return (
@@ -45,34 +40,23 @@ export default function PropertiesPanel({ block, onChange, onDelete }: { block: 
       </div>
       <Separator />
 
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as TabKey)} className="flex-1 flex flex-col">
-        <div className="px-4 pt-2">
-          <TabsList variant="underline">
-            <TabsTrigger value="geral">Geral</TabsTrigger>
-            <TabsTrigger value="config">Config</TabsTrigger>
-          </TabsList>
+      <div className="flex-1 overflow-auto p-4 space-y-4 custom-scrollbar">
+        <div className="space-y-2">
+          <label className="text-xs text-gray-600">Nome</label>
+          <Input className="h-8" value={block.name || ''} onChange={(e) => onChange({ name: e.target.value })} />
         </div>
-        <Separator />
+        <div className="space-y-2">
+          <label className="text-xs text-gray-600">ID</label>
+          <Input className="h-8" value={block.id} readOnly />
+        </div>
 
-        <TabsContent value="geral" className="flex-1 overflow-auto p-4 space-y-4 custom-scrollbar">
-          <div className="space-y-2">
-            <label className="text-xs text-gray-600">Nome</label>
-            <Input className="h-8" value={block.name || ''} onChange={(e) => onChange({ name: e.target.value })} />
-          </div>
-          <div className="space-y-2">
-            <label className="text-xs text-gray-600">ID</label>
-            <Input className="h-8" value={block.id} readOnly />
-          </div>
-        </TabsContent>
-
-        <TabsContent value="config" className="flex-1 overflow-auto p-4 space-y-4 custom-scrollbar">
-          {block.kind === 'agente' ? (
-            <AgentConfigPanel
-              config={cfgUnknown as Partial<AgentBlockConfig>}
-              onChange={(patch) => onChange({ config: { ...(cfgUnknown as Partial<AgentBlockConfig>), ...patch } })}
-              onSave={() => { /* TODO: persist */ }}
-            />
-          ) : null}
+        {block.kind === 'agente' ? (
+          <AgentConfigPanel
+            config={cfgUnknown as Partial<AgentBlockConfig>}
+            onChange={(patch) => onChange({ config: { ...(cfgUnknown as Partial<AgentBlockConfig>), ...patch } })}
+            onSave={() => { /* TODO: persist */ }}
+          />
+        ) : null}
           {block.kind === 'ferramenta' ? (
             <>
               <div className="space-y-2">
@@ -126,8 +110,7 @@ export default function PropertiesPanel({ block, onChange, onDelete }: { block: 
               </div>
             </>
           ) : null}
-        </TabsContent>
-      </Tabs>
+      </div>
     </div>
   )
 }
