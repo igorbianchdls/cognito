@@ -102,6 +102,8 @@ export function NavModulos() {
               </CollapsibleContent>
             </SidebarMenuItem>
           </Collapsible>
+          {/* Recursos Humanos abaixo de Contabilidade */}
+          
           {/* Demais itens */}
           <SidebarMenuItem>
             <SidebarMenuButton

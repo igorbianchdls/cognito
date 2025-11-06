@@ -15,7 +15,7 @@ import StatusBadge from '@/components/modulos/StatusBadge'
 import EntityDisplay from '@/components/modulos/EntityDisplay'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/stores/modulos/moduleUiStore'
 import type { Opcao } from '@/components/modulos/TabsNav'
-import { Users, CalendarDays } from 'lucide-react'
+import { Users, CalendarDays, FileText, BadgeDollarSign } from 'lucide-react'
 import FuncionarioEditorSheet from '@/components/modulos/rh/FuncionarioEditorSheet'
 import CadastroFuncionarioSheet from '@/components/modulos/rh/CadastroFuncionarioSheet'
 import CadastroTipoAusenciaSheet from '@/components/modulos/rh/CadastroTipoAusenciaSheet'
@@ -39,10 +39,10 @@ export default function ModulosRecursosHumanosPage() {
     })
     moduleUiActions.setTabs({
       options: [
-        { value: 'funcionarios', label: 'Funcionários' },
-        { value: 'tipos-ausencia', label: 'Tipos de Ausência' },
-        { value: 'contratos', label: 'Contratos' },
-        { value: 'historico-salarial', label: 'Histórico Salarial' },
+        { value: 'funcionarios', label: 'Funcionários', icon: <Users className="text-slate-700" /> },
+        { value: 'tipos-ausencia', label: 'Tipos de Ausência', icon: <CalendarDays className="text-blue-600" /> },
+        { value: 'contratos', label: 'Contratos', icon: <FileText className="text-indigo-700" /> },
+        { value: 'historico-salarial', label: 'Histórico Salarial', icon: <BadgeDollarSign className="text-emerald-700" /> },
       ],
       selected: 'funcionarios',
     })

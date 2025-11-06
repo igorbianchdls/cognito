@@ -13,7 +13,7 @@ import DRETable from '@/components/relatorios/DRETable'
 import BalanceTAccountView from '@/components/contabilidade/BalanceTAccountView'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
-import { List } from 'lucide-react'
+import { FileText, Landmark, BarChart3, BookOpen, Wrench } from 'lucide-react'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/stores/modulos/moduleUiStore'
 
 type Row = TableData
@@ -44,11 +44,11 @@ export default function ModulosContabilidadePage() {
     moduleUiActions.setTitulo({ title: 'Contabilidade', subtitle: 'Lançamentos, balancetes e plano de contas', titleFontFamily: 'var(--font-crimson-text)' })
     moduleUiActions.setTabs({
       options: [
-        { value: 'lancamentos', label: 'Lançamentos contábeis' },
-        { value: 'balanco-patrimonial', label: 'Balanço Patrimonial' },
-        { value: 'dre', label: 'DRE' },
-        { value: 'plano-contas', label: 'Plano de Contas' },
-        { value: 'regras-contabeis', label: 'Regras contábeis' },
+        { value: 'lancamentos', label: 'Lançamentos contábeis', icon: <FileText className="text-slate-600" /> },
+        { value: 'balanco-patrimonial', label: 'Balanço Patrimonial', icon: <Landmark className="text-blue-700" /> },
+        { value: 'dre', label: 'DRE', icon: <BarChart3 className="text-emerald-700" /> },
+        { value: 'plano-contas', label: 'Plano de Contas', icon: <BookOpen className="text-indigo-700" /> },
+        { value: 'regras-contabeis', label: 'Regras contábeis', icon: <Wrench className="text-amber-600" /> },
       ],
       selected: 'lancamentos',
     })
@@ -120,8 +120,7 @@ export default function ModulosContabilidadePage() {
     setPage(1)
   }, [tabs.selected, dateRange?.from, dateRange?.to])
 
-  const iconFor = () => <List className="h-4 w-4" />
-  const tabOptions: Opcao[] = useMemo(() => (tabs.options.map((opt) => ({ ...opt, icon: iconFor() })) as Opcao[]), [tabs.options])
+  const tabOptions: Opcao[] = useMemo(() => (tabs.options as Opcao[]), [tabs.options])
 
   const formatDate = (value?: unknown) => {
     if (!value) return ''
