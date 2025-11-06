@@ -22,11 +22,63 @@ import CodePreview from "@/components/agentes/codegen/CodePreview"
 export default function NewAgentPage() {
   const [name, setName] = useState("Novo agente")
   const initialNodes: Node<NodeData>[] = [
-    { id: 'b1', type: 'agente', data: { block: { id: 'b1', kind: 'agente', name: 'Agente principal', config: { model: 'anthropic/claude-3-haiku-latest', systemPrompt: 'Você é um assistente. Use tool-calling quando necessário. Se o usuário pedir sobre clima, chame getWeather com { location }. Se pedir horário local, chame getTime com { location? e/ou timezone }. Se estiver ambíguo, peça esclarecimento antes de chamar a tool. Responda de forma concisa e útil.' } } }, position: { x: 100, y: 60 } },
-    { id: 'b2', type: 'step', data: { block: { id: 'b2', kind: 'step', name: 'Step 1' } }, position: { x: 100, y: 200 } },
-    { id: 'b3', type: 'step', data: { block: { id: 'b3', kind: 'step', name: 'Step 2' } }, position: { x: 100, y: 320 } },
-    { id: 'b4', type: 'step', data: { block: { id: 'b4', kind: 'step', name: 'Step 3' } }, position: { x: 100, y: 440 } },
-    { id: 'b5', type: 'resposta', data: { block: { id: 'b5', kind: 'resposta', name: 'Resposta' } }, position: { x: 100, y: 560 } },
+    {
+      id: 'b1',
+      type: 'agente',
+      data: {
+        block: {
+          id: 'b1',
+          kind: 'agente',
+          name: 'Agente principal',
+          config: {
+            model: 'anthropic/claude-3-haiku-latest',
+            systemPrompt:
+              'Você é um assistente. Use tool-calling quando necessário. Se o usuário pedir sobre clima, chame getWeather com { location }. Se pedir horário local, chame getTime com { location? e/ou timezone }. Se estiver ambíguo, peça esclarecimento antes de chamar a tool. Responda de forma concisa e útil.',
+          },
+        },
+      },
+      position: { x: 100, y: 60 },
+    },
+    {
+      id: 'b2',
+      type: 'prepareStep',
+      data: {
+        block: {
+          id: 'b2',
+          kind: 'prepareStep',
+          name: 'PrepareStep',
+          config: {
+            compressAfterMessages: 10,
+            keepLastMessages: 10,
+            defaultToolChoice: 'auto',
+          },
+        },
+      },
+      position: { x: 100, y: 180 },
+    },
+    {
+      id: 'b3',
+      type: 'stopWhen',
+      data: {
+        block: {
+          id: 'b3',
+          kind: 'stopWhen',
+          name: 'StopWhen',
+          config: {
+            stepLimit: 2,
+            stopOnTools: [],
+          },
+        },
+      },
+      position: { x: 100, y: 300 },
+    },
+    {
+      id: 'b4',
+      type: 'step',
+      data: { block: { id: 'b4', kind: 'step', name: 'Step 1', config: { toolChoice: 'auto' } } },
+      position: { x: 100, y: 420 },
+    },
+    { id: 'b5', type: 'resposta', data: { block: { id: 'b5', kind: 'resposta', name: 'Resposta' } }, position: { x: 100, y: 540 } },
   ]
   const initialEdges: Edge[] = [
     { id: 'b1-b2', source: 'b1', target: 'b2' },

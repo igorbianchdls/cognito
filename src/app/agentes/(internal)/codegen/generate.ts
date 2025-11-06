@@ -1,5 +1,5 @@
 import type { Graph } from '@/types/agentes/builder'
-import { slugify, validateGraph, collectTools } from './helpers'
+import { slugify, validateGraph, collectTools, getStepSettings } from './helpers'
 import { genDefinitionJson, genRouteTs } from './templates'
 import type { CodeBundle, FileSpec, GenerateOptions } from './types'
 
@@ -13,6 +13,12 @@ export function generateCode(graph: Graph, opts: GenerateOptions = {}): CodeBund
   const warnings = [...base.warnings]
   const selectedToolIds = collectTools(graph)
   if (selectedToolIds.length) warnings.push('Agent Builder: usando tools de src/tools/agentbuilder quando disponíveis; ids desconhecidos usam stub.')
+
+  // STEP guidance: only toolChoice is used in codegen; loop settings come from StopWhen node
+  const step = getStepSettings(graph)
+  if (step.count > 0) {
+    warnings.push('STEP: toolChoice aplicado. Para loop de passos, use o nó StopWhen (stepCountIs / hasToolCall).')
+  }
 
   const files: FileSpec[] = []
   const targetDir = `src/app/agentes/${slug}`
