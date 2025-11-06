@@ -1,6 +1,4 @@
 "use client"
-
-import { useState, useEffect } from "react"
 import { Separator } from "@/components/ui/separator"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -8,8 +6,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import type { Block, AgentBlockConfig, ToolBlockConfig, ConditionBlockConfig, ResponseBlockConfig, StepBlockConfig, PrepareStepBlockConfig, StopWhenBlockConfig } from "@/types/agentes/builder"
 import { Bot, Wrench, GitBranch, MessageSquareText } from "lucide-react"
 import AgentConfigPanel from "@/components/workflows/agent/AgentConfigPanel"
+import { Button } from "@/components/ui/button"
 
-export default function PropertiesPanel({ block, onChange, onDelete, onOpenTools }: { block: Block | null; onChange: (patch: Partial<Block>) => void; onDelete: () => void; onOpenTools?: () => void }) {
+export default function PropertiesPanel({ block, onChange, onDelete: _onDelete, onOpenTools }: { block: Block | null; onChange: (patch: Partial<Block>) => void; onDelete: () => void; onOpenTools?: () => void }) {
 
   if (!block) {
     return (
