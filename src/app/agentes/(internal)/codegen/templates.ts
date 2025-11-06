@@ -1,5 +1,5 @@
 import type { Graph } from '@/types/agentes/builder'
-import { getFirstAgent, stringifyGraph, tsStringLiteral, getStepSettings, collectTools, getPrepareStepSettings } from './helpers'
+import { getFirstAgent, stringifyGraph, tsStringLiteral, getStepSettings, collectTools, getPrepareStepSettings, getStopWhenSettings } from './helpers'
 
 export function genRouteTs(graph: Graph, slug: string): string {
   const agent = getFirstAgent(graph) || {}
@@ -36,8 +36,11 @@ export function genRouteTs(graph: Graph, slug: string): string {
     : '{}'
 
   const needsStub = stubIds.length > 0
+  const stopCfg = getStopWhenSettings(graph)
+  const needsStopWhen = !!stopCfg && ((typeof stopCfg.stepLimit === 'number') || (stopCfg.stopOnTools && stopCfg.stopOnTools.length > 0))
+
   const imports = `import { NextResponse } from 'next/server'
-import { generateText${needsStub ? ', tool' : ''} } from 'ai'
+import { generateText${needsStub ? ', tool' : ''}${needsStopWhen ? ', stepCountIs, hasToolCall' : ''} } from 'ai'
 import { anthropic } from '@ai-sdk/anthropic'${importOpenAI ? "\nimport { openai } from '@ai-sdk/openai'" : ''}`
     + (builderIds.length ? `\nimport { ${builderIds.join(', ')} } from '@/tools/agentbuilder'` : '')
     + (needsStub ? `\nimport { z } from 'zod'` : '')
@@ -82,6 +85,20 @@ import { anthropic } from '@ai-sdk/anthropic'${importOpenAI ? "\nimport { openai
       return undefined
     }` : ''
 
+  // Build stopWhen from StopWhen node
+  const stopParts: string[] = []
+  if (stopCfg) {
+    if (typeof stopCfg.stepLimit === 'number' && stopCfg.stepLimit > 0) {
+      stopParts.push(`stepCountIs(${stopCfg.stepLimit})`)
+    }
+    if (Array.isArray(stopCfg.stopOnTools)) {
+      for (const t of stopCfg.stopOnTools) {
+        if (t && typeof t === 'string') stopParts.push(`hasToolCall('${t}')`)
+      }
+    }
+  }
+  const stopWhenLine = stopParts.length ? `stopWhen: [${stopParts.join(', ')}],` : ''
+
   return `// Arquivo gerado automaticamente pelo Agent Builder (não editar manualmente)
 // slug: ${slug}
 ${imports}
@@ -109,6 +126,7 @@ export async function POST(request: Request) {
       prompt,
       temperature,
       ${toolEntries.length ? `tools: ${toolsObjectLiteral},` : ''}
+      ${stopWhenLine}
       ${step.toolChoice && step.toolChoice !== 'auto' ? `toolChoice: '${step.toolChoice}',` : ''}
       ${hasPrepareStep ? `prepareStep,` : ''}
       ${provider === 'anthropic' ? `providerOptions: { anthropic: { thinking: { type: 'enabled', budgetTokens: 8000 } } },` : ''}

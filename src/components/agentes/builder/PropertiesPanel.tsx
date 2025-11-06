@@ -5,7 +5,7 @@ import { Separator } from "@/components/ui/separator"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import type { Block, AgentBlockConfig, ToolBlockConfig, ConditionBlockConfig, ResponseBlockConfig, StepBlockConfig, PrepareStepBlockConfig } from "@/types/agentes/builder"
+import type { Block, AgentBlockConfig, ToolBlockConfig, ConditionBlockConfig, ResponseBlockConfig, StepBlockConfig, PrepareStepBlockConfig, StopWhenBlockConfig } from "@/types/agentes/builder"
 import { Bot, Wrench, GitBranch, MessageSquareText } from "lucide-react"
 import AgentConfigPanel from "@/components/workflows/agent/AgentConfigPanel"
 
@@ -69,6 +69,18 @@ export default function PropertiesPanel({ block, onChange, onDelete, onOpenTools
               <div className="space-y-2">
                 <label className="text-xs text-gray-600">Ferramentas (IDs)</label>
                 <Input className="h-8" value={((cfgUnknown as Partial<ToolBlockConfig>).toolIds || []).join(', ')} onChange={(e) => onChange({ config: { ...(cfgUnknown as Partial<ToolBlockConfig>), toolIds: e.target.value.split(',').map(s => s.trim()).filter(Boolean) } })} placeholder="ex: http, bigquery" />
+              </div>
+            </>
+          ) : null}
+          {block.kind === 'stopWhen' ? (
+            <>
+              <div className="space-y-2">
+                <label className="text-xs text-gray-600">Step limit</label>
+                <Input type="number" min={1} className="h-8" value={String((cfgUnknown as Partial<StopWhenBlockConfig>).stepLimit ?? '')} onChange={(e) => onChange({ config: { ...(cfgUnknown as Partial<StopWhenBlockConfig>), stepLimit: e.currentTarget.value ? Number(e.currentTarget.value) : undefined } })} placeholder="ex: 2" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs text-gray-600">Stop when tools called (IDs, separado por vírgula)</label>
+                <Input className="h-8" value={((cfgUnknown as Partial<StopWhenBlockConfig>).stopOnTools || []).join(', ')} onChange={(e) => onChange({ config: { ...(cfgUnknown as Partial<StopWhenBlockConfig>), stopOnTools: e.currentTarget.value.split(',').map(s => s.trim()).filter(Boolean) } })} placeholder="ex: finalize,save" />
               </div>
             </>
           ) : null}

@@ -1,4 +1,4 @@
-import type { Graph, Block, BlockKind, AgentBlockConfig, ToolBlockConfig, ResponseBlockConfig, ConditionBlockConfig, StepBlockConfig, PrepareStepBlockConfig } from '@/types/agentes/builder'
+import type { Graph, Block, BlockKind, AgentBlockConfig, ToolBlockConfig, ResponseBlockConfig, ConditionBlockConfig, StepBlockConfig, PrepareStepBlockConfig, StopWhenBlockConfig } from '@/types/agentes/builder'
 
 export function slugify(input: string): string {
   return input
@@ -103,5 +103,15 @@ export function getPrepareStepSettings(graph: Graph): Partial<PrepareStepBlockCo
   if (typeof cfg.keepLastMessages === 'number') out.keepLastMessages = cfg.keepLastMessages
   if (Array.isArray(cfg.stopOnTools)) out.stopOnTools = cfg.stopOnTools.filter((s): s is string => typeof s === 'string' && !!s.trim())
   if (cfg.defaultToolChoice === 'auto' || cfg.defaultToolChoice === 'none') out.defaultToolChoice = cfg.defaultToolChoice
+  return out
+}
+
+export function getStopWhenSettings(graph: Graph): { stepLimit?: number; stopOnTools: string[] } | null {
+  const block = graph.blocks.find(b => b.kind === 'stopWhen')
+  if (!block) return null
+  const cfg = (block.config || {}) as Partial<StopWhenBlockConfig>
+  const out: { stepLimit?: number; stopOnTools: string[] } = { stopOnTools: [] }
+  if (typeof cfg.stepLimit === 'number') out.stepLimit = cfg.stepLimit
+  if (Array.isArray(cfg.stopOnTools)) out.stopOnTools = cfg.stopOnTools.filter((s): s is string => typeof s === 'string' && !!s.trim())
   return out
 }

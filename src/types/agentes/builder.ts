@@ -11,6 +11,7 @@ export type BlockKind =
   | 'setstate'
   | 'step'
   | 'prepareStep'
+  | 'stopWhen'
 
 export interface Branch {
   label: string
@@ -49,6 +50,11 @@ export interface PrepareStepBlockConfig {
   stopOnTools?: string[]
   defaultModel?: string
   defaultToolChoice?: 'auto' | 'none'
+}
+
+export interface StopWhenBlockConfig {
+  stepLimit?: number
+  stopOnTools?: string[]
 }
 
 export interface Block {

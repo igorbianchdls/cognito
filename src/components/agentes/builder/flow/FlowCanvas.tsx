@@ -11,6 +11,7 @@ import ResponseNode from './nodeTypes/ResponseNode'
 import PlaceholderNode from './nodeTypes/PlaceholderNode'
 import StepNode from './nodeTypes/StepNode'
 import PrepareStepNode from './nodeTypes/PrepareStepNode'
+import StopWhenNode from './nodeTypes/StopWhenNode'
 import type { Block, BlockKind } from '@/types/agentes/builder'
 
 const nodeTypes = {
@@ -25,6 +26,7 @@ const nodeTypes = {
   setstate: PlaceholderNode,
   step: StepNode,
   prepareStep: PrepareStepNode,
+  stopWhen: StopWhenNode,
 } as const
 
 type Props = {
