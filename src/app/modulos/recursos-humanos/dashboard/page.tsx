@@ -65,7 +65,7 @@ export default function RHDashboardPage() {
           const mStart = toMonthStart(); const mKey = toDateStr(mStart).slice(0,7)
           cs = [
             { funcionario: 'Ana', admissao: `${mKey}-01`, demissao: null, status: 'ativo' },
-            { funcionario: 'Bruno', admissao: `${mKey}-02", demissao: null, status: 'ativo' },
+            { funcionario: 'Bruno', admissao: `${mKey}-02`, demissao: null, status: 'ativo' },
             { funcionario: 'Caio', admissao: `${mKey}-03`, demissao: `${mKey}-10`, status: 'inativo' },
           ]
           hs = [
@@ -228,4 +228,3 @@ export default function RHDashboardPage() {
     </DashboardLayout>
   )
 }
-
