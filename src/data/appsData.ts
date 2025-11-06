@@ -30,7 +30,7 @@ export const categories = [
   's', 
   'Ls',
   'ApGe',
-  'Compnnts',
+  'Compnts',
   'Login & gn Up',
   'Blog & Porolio',
   'E-commerce',
