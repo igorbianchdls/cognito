@@ -9,21 +9,21 @@ export default function BlockPalette({ onAdd }: { onAdd: (payload: { kind: Block
   return (
     <div className="m-3">
       <PaletteSection title="Core" />
-      <div className="px-2 py-2">
+      <div className="px-3 py-2">
         <PaletteItem icon={<Bot className="w-4 h-4" />} label="Agent" badgeBg="#EEF2FF" badgeColor="#1D4ED8" kind="agente" onAdd={onAdd} />
         <PaletteItem icon={<CircleStop className="w-4 h-4" />} label="End" badgeBg="#EAF7EC" badgeColor="#059669" kind="resposta" onAdd={onAdd} />
         <PaletteItem icon={<FileText className="w-4 h-4" />} label="Note" badgeBg="#F3F4F6" badgeColor="#6B7280" kind="nota" onAdd={onAdd} />
       </div>
 
       <PaletteSection title="Tools" />
-      <div className="px-2 py-2">
+      <div className="px-3 py-2">
         <PaletteItem icon={<FileSearch className="w-4 h-4" />} label="File search" badgeBg="#FEF3C7" badgeColor="#B45309" kind="ferramenta" meta={{ toolId: 'file-search' }} onAdd={onAdd} />
         <PaletteItem icon={<ShieldCheck className="w-4 h-4" />} label="Guardrails" badgeBg="#FEF3C7" badgeColor="#B45309" kind="ferramenta" meta={{ toolId: 'guardrails' }} onAdd={onAdd} />
         <PaletteItem icon={<Settings2 className="w-4 h-4" />} label="MCP" badgeBg="#FEF3C7" badgeColor="#B45309" kind="ferramenta" meta={{ toolId: 'mcp' }} onAdd={onAdd} />
       </div>
 
       <PaletteSection title="Logic" />
-      <div className="px-2 py-2">
+      <div className="px-3 py-2">
         <PaletteItem icon={<ListChecks className="w-4 h-4" />} label="STEP" badgeBg="#FFEDD5" badgeColor="#C2410C" kind="step" onAdd={onAdd} />
         <PaletteItem icon={<GitBranch className="w-4 h-4" />} label="If / else" badgeBg="#FFEDD5" badgeColor="#C2410C" kind="condicao" onAdd={onAdd} />
         <PaletteItem icon={<RefreshCw className="w-4 h-4" />} label="While" badgeBg="#FFEDD5" badgeColor="#C2410C" kind="loop" onAdd={onAdd} />
@@ -31,7 +31,7 @@ export default function BlockPalette({ onAdd }: { onAdd: (payload: { kind: Block
       </div>
 
       <PaletteSection title="Data" />
-      <div className="px-2 py-2 pb-3">
+      <div className="px-3 py-2 pb-3">
         <PaletteItem icon={<Wand2 className="w-4 h-4" />} label="Transform" badgeBg="#F3E8FF" badgeColor="#7E22CE" kind="transform" onAdd={onAdd} />
         <PaletteItem icon={<ToggleLeft className="w-4 h-4" />} label="Set state" badgeBg="#F3E8FF" badgeColor="#7E22CE" kind="setstate" onAdd={onAdd} />
       </div>

@@ -113,7 +113,7 @@ export default function NewAgentPage() {
           <div className="w-80 border-r bg-white hidden md:block">
             <div className="px-3 pt-2">
               <Tabs value={leftTab} onValueChange={(v) => setLeftTab(v as 'agentes' | 'workflows')}>
-                <TabsList variant="underline">
+                <TabsList variant="underline" className="border-b-0">
                   <TabsTrigger value="agentes">Agentes</TabsTrigger>
                   <TabsTrigger value="workflows">Workflows</TabsTrigger>
                 </TabsList>
