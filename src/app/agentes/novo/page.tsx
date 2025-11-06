@@ -173,8 +173,8 @@ export default function NewAgentPage() {
             <div className="inline-flex items-center justify-center w-7 h-7 rounded-md border bg-yellow-100 text-yellow-800 border-yellow-200">
               <Paperclip className="w-4 h-4" />
             </div>
-            <input className="text-[15px] font-semibold outline-none bg-transparent w-auto max-w-[40ch]" value={name} onChange={(e) => setName(e.target.value)} />
-            <div className="ml-2">
+            <div className="flex items-center gap-1">
+              <input className="text-[15px] font-semibold outline-none bg-transparent w-auto max-w-[40ch] pr-0" value={name} onChange={(e) => setName(e.target.value)} />
               <Switch checked={enabled} onCheckedChange={setEnabled} className="data-[state=checked]:bg-blue-600" />
             </div>
           </div>

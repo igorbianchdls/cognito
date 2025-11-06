@@ -24,7 +24,7 @@ export default function NodeHeader({ icon, badgeBg, badgeColor, description, tit
         <div className="text-[11px] leading-none text-gray-500">{description}</div>
       </div>
       {/* Bottom row: prominent title */}
-      <div className="text-[13px] font-semibold text-gray-900">{title}</div>
+      <div className="text-sm font-semibold text-gray-900">{title}</div>
     </div>
   )
 }
