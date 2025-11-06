@@ -1,4 +1,5 @@
 import { atom } from 'nanostores'
+import type { ReactNode } from 'react'
 
 export type TituloState = {
   title: string
@@ -16,7 +17,7 @@ export type TituloState = {
   subtitleLetterSpacing?: number
 }
 
-export type TabsOption = { value: string; label: string }
+export type TabsOption = { value: string; label: string; icon?: ReactNode; rightIcon?: ReactNode; badge?: ReactNode }
 
 export type TabsState = {
   options: TabsOption[]

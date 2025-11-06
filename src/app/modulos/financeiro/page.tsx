@@ -13,7 +13,7 @@ import DataTable, { type TableData } from '@/components/widgets/Table'
 import DataToolbar from '@/components/modulos/DataToolbar'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/stores/modulos/moduleUiStore'
 import type { Opcao } from '@/components/modulos/TabsNav'
-import { CreditCard, ArrowDownCircle, ArrowUpCircle, List } from 'lucide-react'
+import { CreditCard, ArrowDownCircle, ArrowUpCircle, List, Landmark, Wallet, Activity, CheckCheck } from 'lucide-react'
 import EntityDisplay from '@/components/modulos/EntityDisplay'
 import StatusBadge from '@/components/modulos/StatusBadge'
 import FornecedorEditorSheet from '@/components/modulos/financeiro/FornecedorEditorSheet'
@@ -46,15 +46,15 @@ export default function ModulosFinanceiroPage() {
     })
     moduleUiActions.setTabs({
       options: [
-        { value: 'contas-a-pagar', label: 'Contas a Pagar' },
-        { value: 'contas-a-receber', label: 'Contas a Receber' },
-        { value: 'pagamentos-efetuados', label: 'Pagamentos Efetuados' },
-        { value: 'pagamentos-recebidos', label: 'Pagamentos Recebidos' },
-        { value: 'extrato', label: 'Extrato' },
-        { value: 'conciliacao', label: 'Conciliação' },
-        { value: 'movimentos', label: 'Movimentos' },
-        { value: 'bancos', label: 'Bancos' },
-        { value: 'contas', label: 'Contas Financeiras' },
+        { value: 'contas-a-pagar', label: 'Contas a Pagar', icon: <ArrowUpCircle className="text-rose-500" /> },
+        { value: 'contas-a-receber', label: 'Contas a Receber', icon: <ArrowDownCircle className="text-emerald-600" /> },
+        { value: 'pagamentos-efetuados', label: 'Pagamentos Efetuados', icon: <CreditCard className="text-rose-500" /> },
+        { value: 'pagamentos-recebidos', label: 'Pagamentos Recebidos', icon: <CreditCard className="text-emerald-600" /> },
+        { value: 'extrato', label: 'Extrato', icon: <List className="text-blue-600" /> },
+        { value: 'conciliacao', label: 'Conciliação', icon: <CheckCheck className="text-indigo-600" /> },
+        { value: 'movimentos', label: 'Movimentos', icon: <Activity className="text-amber-600" /> },
+        { value: 'bancos', label: 'Bancos', icon: <Landmark className="text-sky-600" /> },
+        { value: 'contas', label: 'Contas Financeiras', icon: <Wallet className="text-gray-700" /> },
       ],
       selected: 'contas-a-pagar',
     })
