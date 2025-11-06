@@ -37,6 +37,16 @@ function formatBRL(v: unknown) {
   return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
 
+// Font controls
+function fontVar(name?: string) {
+  if (!name) return undefined
+  if (name === 'Inter') return 'var(--font-inter)'
+  if (name === 'Geist') return 'var(--font-geist-sans)'
+  if (name === 'Roboto Mono') return 'var(--font-roboto-mono)'
+  if (name === 'Geist Mono') return 'var(--font-geist-mono)'
+  return name
+}
+
 function toDateOnly(d: Date) {
   const yyyy = d.getFullYear()
   const mm = String(d.getMonth() + 1).padStart(2, '0')
@@ -73,6 +83,32 @@ export default function FinanceiroDashboardPage() {
   const [peRows, setPeRows] = useState<EfetuadoRow[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Typography controls
+  const [fonts, setFonts] = useState({
+    values: { family: 'Inter', weight: 700 as number | undefined, letterSpacing: 0 as number | undefined, color: '#111827' as string | undefined },
+    title: { family: 'Inter', weight: 600 as number | undefined, letterSpacing: 0 as number | undefined, color: '#1f2937' as string | undefined },
+    text: { family: 'Inter', weight: 400 as number | undefined, letterSpacing: 0 as number | undefined, color: '#6b7280' as string | undefined },
+  })
+  const [cardBorderColor, setCardBorderColor] = useState<string>('#f3f4f6')
+  const styleValues = useMemo(() => ({
+    fontFamily: fontVar(fonts.values.family),
+    fontWeight: fonts.values.weight as React.CSSProperties['fontWeight'],
+    letterSpacing: typeof fonts.values.letterSpacing === 'number' ? `${fonts.values.letterSpacing}px` : undefined,
+    color: fonts.values.color || undefined,
+  }), [fonts.values])
+  const styleTitle = useMemo(() => ({
+    fontFamily: fontVar(fonts.title.family),
+    fontWeight: fonts.title.weight as React.CSSProperties['fontWeight'],
+    letterSpacing: typeof fonts.title.letterSpacing === 'number' ? `${fonts.title.letterSpacing}px` : undefined,
+    color: fonts.title.color || undefined,
+  }), [fonts.title])
+  const styleText = useMemo(() => ({
+    fontFamily: fontVar(fonts.text.family),
+    fontWeight: fonts.text.weight as React.CSSProperties['fontWeight'],
+    letterSpacing: typeof fonts.text.letterSpacing === 'number' ? `${fonts.text.letterSpacing}px` : undefined,
+    color: fonts.text.color || undefined,
+  }), [fonts.text])
 
   useEffect(() => {
     let cancelled = false
@@ -238,7 +274,7 @@ export default function FinanceiroDashboardPage() {
           const color = b.label.includes('Vencido') ? 'bg-red-500' : 'bg-amber-500'
           return (
             <div key={b.label} className="">
-              <div className="flex justify-between text-xs text-gray-600 mb-1">
+              <div className="flex justify-between text-xs text-gray-600 mb-1" style={styleText}>
                 <span>{b.label}</span>
                 <span>{formatBRL(b.value)}</span>
               </div>
@@ -249,7 +285,7 @@ export default function FinanceiroDashboardPage() {
           )
         })}
         {total === 0 && (
-          <div className="text-xs text-gray-400">Sem valores pendentes</div>
+          <div className="text-xs text-gray-400" style={styleText}>Sem valores pendentes</div>
         )}
       </div>
     )
@@ -343,7 +379,7 @@ export default function FinanceiroDashboardPage() {
                   <div className="w-2/5 bg-emerald-500/80 rounded" style={{ height: `${rH}%` }} />
                   <div className="w-2/5 bg-rose-500/80 rounded" style={{ height: `${dH}%` }} />
                 </div>
-                <div className="text-[11px] text-gray-600">{it.label}</div>
+                <div className="text-[11px] text-gray-600" style={styleText}>{it.label}</div>
               </div>
             )
           })}
@@ -397,39 +433,39 @@ export default function FinanceiroDashboardPage() {
       ) : null}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white p-6 rounded-lg border border-gray-100">
-          <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2"><ArrowDownCircle className="w-4 h-4 text-emerald-600" />A Receber Hoje</div>
-          <div className="text-2xl font-bold text-emerald-600">{formatBRL(kpis.arHoje)}</div>
-          <div className="text-xs text-gray-400 mt-1">Título(s) com vencimento hoje</div>
+        <div className="bg-white p-6 rounded-lg border border-gray-100" style={{ borderColor: cardBorderColor }}>
+          <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleTitle}><ArrowDownCircle className="w-4 h-4 text-emerald-600" />A Receber Hoje</div>
+          <div className="text-2xl font-bold text-emerald-600" style={styleValues}>{formatBRL(kpis.arHoje)}</div>
+          <div className="text-xs text-gray-400 mt-1" style={styleText}>Título(s) com vencimento hoje</div>
         </div>
-        <div className="bg-white p-6 rounded-lg border border-gray-100">
-          <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2"><ArrowUpCircle className="w-4 h-4 text-rose-600" />A Pagar Hoje</div>
-          <div className="text-2xl font-bold text-rose-600">{formatBRL(kpis.apHoje)}</div>
-          <div className="text-xs text-gray-400 mt-1">Pagamentos previstos para hoje</div>
+        <div className="bg-white p-6 rounded-lg border border-gray-100" style={{ borderColor: cardBorderColor }}>
+          <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleTitle}><ArrowUpCircle className="w-4 h-4 text-rose-600" />A Pagar Hoje</div>
+          <div className="text-2xl font-bold text-rose-600" style={styleValues}>{formatBRL(kpis.apHoje)}</div>
+          <div className="text-xs text-gray-400 mt-1" style={styleText}>Pagamentos previstos para hoje</div>
         </div>
-        <div className="bg-white p-6 rounded-lg border border-gray-100">
-          <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-orange-500" />Vencidos A Receber</div>
-          <div className="text-2xl font-bold text-orange-600">{formatBRL(kpis.arVencidos)}</div>
-          <div className="text-xs text-gray-400 mt-1">Valores atrasados</div>
+        <div className="bg-white p-6 rounded-lg border border-gray-100" style={{ borderColor: cardBorderColor }}>
+          <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleTitle}><AlertTriangle className="w-4 h-4 text-orange-500" />Vencidos A Receber</div>
+          <div className="text-2xl font-bold text-orange-600" style={styleValues}>{formatBRL(kpis.arVencidos)}</div>
+          <div className="text-xs text-gray-400 mt-1" style={styleText}>Valores atrasados</div>
         </div>
-        <div className="bg-white p-6 rounded-lg border border-gray-100">
-          <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-red-500" />Vencidos A Pagar</div>
-          <div className="text-2xl font-bold text-red-600">{formatBRL(kpis.apVencidos)}</div>
-          <div className="text-xs text-gray-400 mt-1">Compromissos em atraso</div>
+        <div className="bg-white p-6 rounded-lg border border-gray-100" style={{ borderColor: cardBorderColor }}>
+          <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleTitle}><AlertTriangle className="w-4 h-4 text-red-500" />Vencidos A Pagar</div>
+          <div className="text-2xl font-bold text-red-600" style={styleValues}>{formatBRL(kpis.apVencidos)}</div>
+          <div className="text-xs text-gray-400 mt-1" style={styleText}>Compromissos em atraso</div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <div className="bg-white p-6 rounded-lg border border-gray-100">
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2"><BarChart3 className="w-5 h-5 text-indigo-600" />Receitas vs Despesas</h3>
+        <div className="bg-white p-6 rounded-lg border border-gray-100" style={{ borderColor: cardBorderColor }}>
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleTitle}><BarChart3 className="w-5 h-5 text-indigo-600" />Receitas vs Despesas</h3>
           <BarsReceitasDespesas
             items={receitasDespesas.data.map(d => ({ label: d.label, receita: d.receita, despesa: d.despesa }))}
             max={receitasDespesas.maxVal}
           />
         </div>
-        <div className="bg-white p-6 rounded-lg border border-gray-100">
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2"><Wallet className="w-5 h-5 text-blue-600" />Saldo no final do mês</h3>
-          <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
+        <div className="bg-white p-6 rounded-lg border border-gray-100" style={{ borderColor: cardBorderColor }}>
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleTitle}><Wallet className="w-5 h-5 text-blue-600" />Saldo no final do mês</h3>
+          <div className="flex items-center justify-between text-xs text-gray-600 mb-1" style={styleText}>
             <span>Acumulado</span>
             <span>
               Último: {formatBRL(receitasDespesas.saldoAcumulado.at(-1) ?? 0)}
@@ -442,35 +478,35 @@ export default function FinanceiroDashboardPage() {
           />
           <div className="grid grid-cols-6 gap-3 mt-1">
             {receitasDespesas.data.map(d => (
-              <div key={d.key} className="text-[11px] text-gray-600 text-center">{d.label}</div>
+              <div key={d.key} className="text-[11px] text-gray-600 text-center" style={styleText}>{d.label}</div>
             ))}
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <div className="bg-white p-6 rounded-lg border border-gray-100">
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2"><Clock className="w-5 h-5 text-emerald-600" />Aging A Receber</h3>
+        <div className="bg-white p-6 rounded-lg border border-gray-100" style={{ borderColor: cardBorderColor }}>
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleTitle}><Clock className="w-5 h-5 text-emerald-600" />Aging A Receber</h3>
           <AgingBar data={arAging} />
         </div>
-        <div className="bg-white p-6 rounded-lg border border-gray-100">
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2"><Clock className="w-5 h-5 text-rose-600" />Aging A Pagar</h3>
+        <div className="bg-white p-6 rounded-lg border border-gray-100" style={{ borderColor: cardBorderColor }}>
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleTitle}><Clock className="w-5 h-5 text-rose-600" />Aging A Pagar</h3>
           <AgingBar data={apAging} />
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white p-6 rounded-lg border border-gray-100">
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2"><Star className="w-5 h-5 text-amber-500" />A Receber Prioritário</h3>
+        <div className="bg-white p-6 rounded-lg border border-gray-100" style={{ borderColor: cardBorderColor }}>
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleTitle}><Star className="w-5 h-5 text-amber-500" />A Receber Prioritário</h3>
           <div className="space-y-3">
             {topReceber.length === 0 ? (
-              <div className="text-sm text-gray-400">Sem títulos</div>
+              <div className="text-sm text-gray-400" style={styleText}>Sem títulos</div>
             ) : (
               topReceber.map((i, idx) => (
                 <div key={idx} className="flex justify-between items-center pb-2 border-b last:border-b-0">
                   <div>
                     <div className="font-medium text-sm">{i.nome}</div>
-                    <div className="text-xs text-gray-500">{i.desc || '—'} • Venc {i.dd! < 0 ? `${Math.abs(i.dd!)}d` : `em ${i.dd}d`}</div>
+                    <div className="text-xs text-gray-500" style={styleText}>{i.desc || '—'} • Venc {i.dd! < 0 ? `${Math.abs(i.dd!)}d` : `em ${i.dd}d`}</div>
                   </div>
                   <div className="font-semibold text-emerald-700">{formatBRL(i.valor)}</div>
                 </div>
@@ -478,22 +514,186 @@ export default function FinanceiroDashboardPage() {
             )}
           </div>
         </div>
-        <div className="bg-white p-6 rounded-lg border border-gray-100">
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2"><CalendarCheck className="w-5 h-5 text-rose-600" />Pagamentos do Dia</h3>
+        <div className="bg-white p-6 rounded-lg border border-gray-100" style={{ borderColor: cardBorderColor }}>
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleTitle}><CalendarCheck className="w-5 h-5 text-rose-600" />Pagamentos do Dia</h3>
           <div className="space-y-3">
             {pagamentosHoje.length === 0 ? (
-              <div className="text-sm text-gray-400">Sem pagamentos para hoje</div>
+              <div className="text-sm text-gray-400" style={styleText}>Sem pagamentos para hoje</div>
             ) : (
               pagamentosHoje.map((i, idx) => (
                 <div key={idx} className="flex justify-between items-center pb-2 border-b last:border-b-0">
                   <div>
                     <div className="font-medium text-sm">{i.nome}</div>
-                    <div className="text-xs text-gray-500">{i.desc || '—'}</div>
+                    <div className="text-xs text-gray-500" style={styleText}>{i.desc || '—'}</div>
                   </div>
                   <div className="font-semibold text-rose-700">{formatBRL(i.valor)}</div>
                 </div>
               ))
             )}
+          </div>
+        </div>
+      </div>
+
+      {/* Tipografia - Controles */}
+      <div className="mt-6 bg-white p-4 rounded-lg border border-gray-100">
+        <h4 className="text-sm font-semibold text-gray-700 mb-3">Tipografia</h4>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Valores */}
+          <div>
+            <div className="text-xs text-gray-500 mb-2">Valores (ex.: números de KPIs)</div>
+            <div className="flex items-center gap-2 mb-2">
+              <label className="text-xs text-gray-600 w-16">Fonte</label>
+              <select
+                className="border rounded px-2 py-1 text-xs"
+                value={fonts.values.family}
+                onChange={(e) => setFonts((f) => ({ ...f, values: { ...f.values, family: e.target.value } }))}
+              >
+                <option>Inter</option>
+                <option>Geist</option>
+                <option>Roboto Mono</option>
+                <option>Geist Mono</option>
+              </select>
+            </div>
+            <div className="flex items-center gap-2 mb-2">
+              <label className="text-xs text-gray-600 w-16">Peso</label>
+              <input
+                type="number"
+                className="border rounded px-2 py-1 text-xs w-24"
+                value={fonts.values.weight ?? 700}
+                min={100}
+                max={900}
+                step={100}
+                onChange={(e) => setFonts((f) => ({ ...f, values: { ...f.values, weight: Number(e.target.value) } }))}
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <label className="text-xs text-gray-600 w-16">Espaço</label>
+              <input
+                type="number"
+                className="border rounded px-2 py-1 text-xs w-24"
+                value={fonts.values.letterSpacing ?? 0}
+                step={0.5}
+                onChange={(e) => setFonts((f) => ({ ...f, values: { ...f.values, letterSpacing: Number(e.target.value) } }))}
+              />
+            </div>
+            <div className="flex items-center gap-2 mt-2">
+              <label className="text-xs text-gray-600 w-16">Cor</label>
+              <input
+                type="color"
+                className="border rounded w-8 h-6"
+                value={fonts.values.color || '#111827'}
+                onChange={(e) => setFonts((f) => ({ ...f, values: { ...f.values, color: e.target.value } }))}
+              />
+            </div>
+          </div>
+
+          {/* Título */}
+          <div>
+            <div className="text-xs text-gray-500 mb-2">Título (ex.: rótulos de KPIs e títulos de gráficos)</div>
+            <div className="flex items-center gap-2 mb-2">
+              <label className="text-xs text-gray-600 w-16">Fonte</label>
+              <select
+                className="border rounded px-2 py-1 text-xs"
+                value={fonts.title.family}
+                onChange={(e) => setFonts((f) => ({ ...f, title: { ...f.title, family: e.target.value } }))}
+              >
+                <option>Inter</option>
+                <option>Geist</option>
+                <option>Roboto Mono</option>
+                <option>Geist Mono</option>
+              </select>
+            </div>
+            <div className="flex items-center gap-2 mb-2">
+              <label className="text-xs text-gray-600 w-16">Peso</label>
+              <input
+                type="number"
+                className="border rounded px-2 py-1 text-xs w-24"
+                value={fonts.title.weight ?? 600}
+                min={100}
+                max={900}
+                step={100}
+                onChange={(e) => setFonts((f) => ({ ...f, title: { ...f.title, weight: Number(e.target.value) } }))}
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <label className="text-xs text-gray-600 w-16">Espaço</label>
+              <input
+                type="number"
+                className="border rounded px-2 py-1 text-xs w-24"
+                value={fonts.title.letterSpacing ?? 0}
+                step={0.5}
+                onChange={(e) => setFonts((f) => ({ ...f, title: { ...f.title, letterSpacing: Number(e.target.value) } }))}
+              />
+            </div>
+            <div className="flex items-center gap-2 mt-2">
+              <label className="text-xs text-gray-600 w-16">Cor</label>
+              <input
+                type="color"
+                className="border rounded w-8 h-6"
+                value={fonts.title.color || '#1f2937'}
+                onChange={(e) => setFonts((f) => ({ ...f, title: { ...f.title, color: e.target.value } }))}
+              />
+            </div>
+          </div>
+
+          {/* Texto */}
+          <div>
+            <div className="text-xs text-gray-500 mb-2">Texto (ex.: subtítulos e descrições)</div>
+            <div className="flex items-center gap-2 mb-2">
+              <label className="text-xs text-gray-600 w-16">Fonte</label>
+              <select
+                className="border rounded px-2 py-1 text-xs"
+                value={fonts.text.family}
+                onChange={(e) => setFonts((f) => ({ ...f, text: { ...f.text, family: e.target.value } }))}
+              >
+                <option>Inter</option>
+                <option>Geist</option>
+                <option>Roboto Mono</option>
+                <option>Geist Mono</option>
+              </select>
+            </div>
+            <div className="flex items-center gap-2 mb-2">
+              <label className="text-xs text-gray-600 w-16">Peso</label>
+              <input
+                type="number"
+                className="border rounded px-2 py-1 text-xs w-24"
+                value={fonts.text.weight ?? 400}
+                min={100}
+                max={900}
+                step={100}
+                onChange={(e) => setFonts((f) => ({ ...f, text: { ...f.text, weight: Number(e.target.value) } }))}
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <label className="text-xs text-gray-600 w-16">Espaço</label>
+              <input
+                type="number"
+                className="border rounded px-2 py-1 text-xs w-24"
+                value={fonts.text.letterSpacing ?? 0}
+                step={0.5}
+                onChange={(e) => setFonts((f) => ({ ...f, text: { ...f.text, letterSpacing: Number(e.target.value) } }))}
+              />
+            </div>
+            <div className="flex items-center gap-2 mt-2">
+              <label className="text-xs text-gray-600 w-16">Cor</label>
+              <input
+                type="color"
+                className="border rounded w-8 h-6"
+                value={fonts.text.color || '#6b7280'}
+                onChange={(e) => setFonts((f) => ({ ...f, text: { ...f.text, color: e.target.value } }))}
+              />
+            </div>
+          </div>
+        </div>
+        <div className="mt-4 pt-3 border-t border-gray-100">
+          <div className="flex items-center gap-3">
+            <div className="text-xs text-gray-500">Borda dos cards</div>
+            <input
+              type="color"
+              className="border rounded w-8 h-6"
+              value={cardBorderColor}
+              onChange={(e) => setCardBorderColor(e.target.value)}
+            />
           </div>
         </div>
       </div>
