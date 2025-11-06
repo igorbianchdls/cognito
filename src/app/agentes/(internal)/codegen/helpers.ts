@@ -1,4 +1,4 @@
-import type { Graph, Block, BlockKind, AgentBlockConfig, ToolBlockConfig, ResponseBlockConfig, ConditionBlockConfig, StepBlockConfig, PrepareStepBlockConfig, StopWhenBlockConfig } from '@/types/agentes/builder'
+import type { Graph, AgentBlockConfig, ToolBlockConfig, ResponseBlockConfig, ConditionBlockConfig, StepBlockConfig, PrepareStepBlockConfig, StopWhenBlockConfig } from '@/types/agentes/builder'
 
 export function slugify(input: string): string {
   return input
@@ -132,8 +132,8 @@ export function getOrderedSteps(graph: Graph): Array<Partial<StepBlockConfig>> {
       steps.push((b.config || {}) as Partial<StepBlockConfig>)
     }
     // follow next
-    const nextId = (b as any).next as string | null | undefined
-    currentId = nextId || null
+    const nextId = (b.next ?? null) as string | null
+    currentId = nextId
   }
   return steps
 }

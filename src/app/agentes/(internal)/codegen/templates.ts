@@ -64,7 +64,7 @@ import { anthropic } from '@ai-sdk/anthropic'${importOpenAI ? "\nimport { openai
     return lines.join('\n\n')
   })()
 
-  const sysFinal = ["${sys}", "${tsStringLiteral(builderGuide)}"].filter(Boolean).join('\\n\\n')
+  const sysFinal = [sys, tsStringLiteral(builderGuide)].filter(Boolean).join('\\n\\n')
 
   // PrepareStep node mapping → inline prepareStep function
   const prepCfg = getPrepareStepSettings(graph)
@@ -73,14 +73,34 @@ import { anthropic } from '@ai-sdk/anthropic'${importOpenAI ? "\nimport { openai
   const keepLast = (prepCfg && typeof prepCfg.keepLastMessages === 'number') ? prepCfg.keepLastMessages : undefined
   const defaultTC = prepCfg?.defaultToolChoice === 'none' ? 'none' : 'auto'
   const BASE_SYSTEM_DECL = `const BASE_SYSTEM = "${sysFinal}"`
+  const orderedSteps = getOrderedSteps(graph)
   const stepSystemDecls = orderedSteps.map((cfg, idx) => {
-    const sysText = (cfg as any).systemText as string | undefined
-    const sysMode = (cfg as any).systemMode as 'append' | 'replace' | undefined
+    const sysText = cfg.systemText
+    const sysMode = cfg.systemMode
     if (!sysText || !sysText.trim()) return ''
     const escaped = tsStringLiteral(sysText)
     if (sysMode === 'replace') return `const STEP_BASE_SYSTEM_${idx} = "${escaped}"`
     return `const STEP_APPEND_SYSTEM_${idx} = "${escaped}"`
   }).filter(Boolean).join('\n')
+
+  const stepCases = orderedSteps.map((cfg, idx) => {
+    const cases: string[] = []
+    const tc = cfg.toolChoice
+    const forced = cfg.forcedToolName
+    if (forced && forced.trim()) {
+      cases.push(`return { toolChoice: { type: 'tool', toolName: '${tsStringLiteral(forced.trim())}' } }`)
+    } else if (tc && tc !== 'auto') {
+      cases.push(`return { toolChoice: '${tc}' }`)
+    }
+    const sysText = cfg.systemText
+    const sysMode = cfg.systemMode
+    if (sysText && sysText.trim()) {
+      if (sysMode === 'replace') cases.push(`return { system: STEP_BASE_SYSTEM_${idx} }`)
+      else cases.push(`return { system: BASE_SYSTEM + "\\n\\n" + STEP_APPEND_SYSTEM_${idx} }`)
+    }
+    if (cases.length === 0) return ''
+    return `if (stepNumber === ${idx}) { ${cases[0]} }`
+  }).filter(Boolean).join('\n      ')
 
   const needPrepareFunc = hasPrepareStep || stepCases.length > 0
   const prepareStepDecl = needPrepareFunc ? `const prepareStep = async ({ stepNumber, messages }) => {
@@ -109,27 +129,7 @@ import { anthropic } from '@ai-sdk/anthropic'${importOpenAI ? "\nimport { openai
   }
   const stopWhenLine = stopParts.length ? `stopWhen: [${stopParts.join(', ')}],` : ''
 
-  // Build per-step overrides from ordered Step nodes
-  const orderedSteps = getOrderedSteps(graph)
-  const stepCases = orderedSteps.map((cfg, idx) => {
-    const cases: string[] = []
-    const tc = cfg.toolChoice
-    const forced = (cfg as any).forcedToolName as string | undefined
-    if (forced && forced.trim()) {
-      cases.push(`return { toolChoice: { type: 'tool', toolName: '${tsStringLiteral(forced.trim())}' } }`)
-    } else if (tc && tc !== 'auto') {
-      cases.push(`return { toolChoice: '${tc}' }`)
-    }
-    const sysText = (cfg as any).systemText as string | undefined
-    const sysMode = (cfg as any).systemMode as 'append' | 'replace' | undefined
-    if (sysText && sysText.trim()) {
-      const escaped = tsStringLiteral(sysText)
-      if (sysMode === 'replace') cases.push(`return { system: STEP_BASE_SYSTEM_${idx} }`)
-      else cases.push(`return { system: BASE_SYSTEM + "\\n\\n" + STEP_APPEND_SYSTEM_${idx} }`)
-    }
-    if (cases.length === 0) return ''
-    return `if (stepNumber === ${idx}) { ${cases[0]} }`
-  }).filter(Boolean).join('\n      ')
+  // stepCases defined above
 
   return `// Arquivo gerado automaticamente pelo Agent Builder (não editar manualmente)
 // slug: ${slug}
@@ -154,7 +154,7 @@ export async function POST(request: Request) {
     // Base system and per-step systems
     ${BASE_SYSTEM_DECL}
     ${stepSystemDecls}
-    ${hasPrepareStep ? prepareStepDecl : ''}
+    ${needPrepareFunc ? prepareStepDecl : ''}
     const { text } = await generateText({
       model: selectModel(),
       system: BASE_SYSTEM,
