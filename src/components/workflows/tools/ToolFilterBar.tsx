@@ -7,7 +7,7 @@ export default function ToolFilterBar({ categories, activeCategory }: { categori
   return (
     <div className="space-y-3">
       <Input placeholder="Buscar ferramentas" className="h-8" />
-      <Tabs defaultValue={activeCategory}>
+      <Tabs value={activeCategory} onValueChange={() => {}}>
         <TabsList variant="underline">
           {categories.map(c => (
             <TabsTrigger key={c} value={c}>{c}</TabsTrigger>
