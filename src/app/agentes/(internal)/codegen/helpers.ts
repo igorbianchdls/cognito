@@ -29,6 +29,13 @@ export function collectTools(graph: Graph): string[] {
         if (typeof id === 'string' && id.trim()) tools.add(id.trim())
       }
     }
+    if (b.kind === 'step') {
+      const scfg = (b.config || {}) as Partial<StepBlockConfig> & { stepTools?: string[] }
+      const ids = Array.isArray(scfg.stepTools) ? scfg.stepTools : []
+      for (const id of ids) {
+        if (typeof id === 'string' && id.trim()) tools.add(id.trim())
+      }
+    }
   }
   return Array.from(tools)
 }

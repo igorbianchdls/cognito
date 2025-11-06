@@ -83,6 +83,18 @@ import { anthropic } from '@ai-sdk/anthropic'${importOpenAI ? "\nimport { openai
     return `const STEP_APPEND_SYSTEM_${idx} = "${escaped}"`
   }).filter(Boolean).join('\n')
 
+  // Step-specific tools subsets
+  const stepToolDecls = orderedSteps.map((cfg, idx) => {
+    const ids = Array.isArray((cfg as any).stepTools) ? (cfg as any).stepTools as string[] : []
+    if (!ids.length) return ''
+    const entries = ids.map(id => {
+      const isBuilder = BUILDER_SET.has(id)
+      const varName = isBuilder ? id : `t_${sanitize(id)}`
+      return (isBuilder ? `${id}` : `${id}: ${varName}`)
+    }).join(', ')
+    return `const STEP_TOOLS_${idx} = { ${entries} }`
+  }).filter(Boolean).join('\n')
+
   const stepCases = orderedSteps.map((cfg, idx) => {
     const cases: string[] = []
     const tc = cfg.toolChoice
@@ -102,16 +114,31 @@ import { anthropic } from '@ai-sdk/anthropic'${importOpenAI ? "\nimport { openai
     return `if (stepNumber === ${idx}) { ${cases[0]} }`
   }).filter(Boolean).join('\n      ')
 
-  const needPrepareFunc = hasPrepareStep || stepCases.length > 0
+  const needPrepareFunc = hasPrepareStep || stepCases.length > 0 || stepToolDecls.length > 0
   const prepareStepDecl = needPrepareFunc ? `const prepareStep = async ({ stepNumber, messages }) => {
-      // Generated from PrepareStep node
+      // Generated from PrepareStep + Step nodes
       ${typeof compressAfter === 'number' ? `if (Array.isArray(messages) && messages.length > ${compressAfter}) {
         ${typeof keepLast === 'number' ? `return { messages: messages.slice(-${keepLast}) }` : `return { messages: messages.slice(-${compressAfter}) }`}
       }` : ''}
-      ${defaultTC === 'none' ? `// Default tool choice (can be overridden per step)
-      return { toolChoice: 'none' }` : ''}
+      const r = {};
       // Per-step overrides from Step nodes
-      ${stepCases}
+      ${orderedSteps.map((cfg, idx) => {
+        const parts: string[] = []
+        const forced = cfg.forcedToolName
+        const tc = cfg.toolChoice
+        const sysText = cfg.systemText
+        const sysMode = cfg.systemMode
+        const hasTools = Array.isArray((cfg as any).stepTools) && ((cfg as any).stepTools as string[]).length > 0
+        const body: string[] = []
+        if (forced && forced.trim()) body.push(`r.toolChoice = { type: 'tool', toolName: '${tsStringLiteral(forced.trim())}' }`)
+        else if (tc && tc !== 'auto') body.push(`r.toolChoice = '${tc}'`)
+        if (sysText && sysText.trim()) body.push(sysMode === 'replace' ? `r.system = STEP_BASE_SYSTEM_${idx}` : `r.system = BASE_SYSTEM + "\\n\\n" + STEP_APPEND_SYSTEM_${idx}`)
+        if (hasTools) body.push(`r.tools = STEP_TOOLS_${idx}`)
+        if (body.length === 0) return ''
+        return `if (stepNumber === ${idx}) { ${body.join('; ')} }`
+      }).filter(Boolean).join('\n      ')}
+      ${defaultTC === 'none' ? `if (!('toolChoice' in r)) { r.toolChoice = 'none' }` : ''}
+      if (Object.keys(r).length) return r
       return undefined
     }` : ''
 
@@ -154,6 +181,7 @@ export async function POST(request: Request) {
     // Base system and per-step systems
     ${BASE_SYSTEM_DECL}
     ${stepSystemDecls}
+    ${stepToolDecls}
     ${needPrepareFunc ? prepareStepDecl : ''}
     const { text } = await generateText({
       model: selectModel(),
