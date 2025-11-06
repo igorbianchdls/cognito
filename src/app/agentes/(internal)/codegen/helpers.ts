@@ -21,6 +21,14 @@ export function collectTools(graph: Graph): string[] {
         }
       }
     }
+    if (b.kind === 'agente') {
+      // Permite que o Agent armazene toolIds diretamente no config
+      const acfg = (b.config || {}) as Record<string, unknown>
+      const ids = Array.isArray(acfg.toolIds) ? acfg.toolIds : []
+      for (const id of ids) {
+        if (typeof id === 'string' && id.trim()) tools.add(id.trim())
+      }
+    }
   }
   return Array.from(tools)
 }

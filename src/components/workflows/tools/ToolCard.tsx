@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button'
 import type { ToolMeta } from './tools.mock'
 
-export default function ToolCard({ tool, onActivate }: { tool: ToolMeta; onActivate?: (id: string) => void }) {
+export default function ToolCard({ tool, onActivate, active }: { tool: ToolMeta; onActivate?: (id: string) => void; active?: boolean }) {
   const Icon = tool.icon
   return (
     <div className="border rounded-md p-3 hover:bg-gray-50 transition">
@@ -18,7 +18,14 @@ export default function ToolCard({ tool, onActivate }: { tool: ToolMeta; onActiv
       </div>
       <div className="mt-2 text-xs text-gray-600 line-clamp-2">{tool.description}</div>
       <div className="mt-3 flex items-center gap-2">
-        <Button variant="outline" className="h-7 px-3 text-xs" onClick={() => onActivate?.(tool.id)}>Ativar</Button>
+        <Button
+          variant={active ? 'default' : 'outline'}
+          className="h-7 px-3 text-xs"
+          onClick={() => onActivate?.(tool.id)}
+          disabled={active}
+        >
+          {active ? 'Ativo' : 'Ativar'}
+        </Button>
         <Button variant="ghost" className="h-7 px-3 text-xs" disabled>Configurar</Button>
       </div>
     </div>

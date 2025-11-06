@@ -124,18 +124,21 @@ export default function NewAgentPage() {
                 <ToolsPanel
                   category={selectedCategory}
                   onBack={() => setRightPanelMode('categories')}
+                  activeToolIds={(() => {
+                    const agent = nodes.find(n => n.data.block.kind === 'agente')
+                    const cfg = (agent?.data.block.config || {}) as Partial<ToolBlockConfig> & { toolIds?: string[] }
+                    return Array.isArray(cfg.toolIds) ? cfg.toolIds : []
+                  })()}
                   onActivate={(id) => {
-                    // Merge into existing ferramenta block if present; otherwise create one
-                    const idx = nodes.findIndex(n => n.data.block.kind === 'ferramenta')
-                    if (idx >= 0) {
-                      const node = nodes[idx]
-                      const cfg = (node.data.block.config || {}) as Partial<ToolBlockConfig>
+                    // Ativa tool sem criar node no canvas: grava no config do primeiro agente
+                    const agentIdx = nodes.findIndex(n => n.data.block.kind === 'agente')
+                    if (agentIdx >= 0) {
+                      const node = nodes[agentIdx]
+                      const cfg = (node.data.block.config || {}) as Partial<ToolBlockConfig> & { toolIds?: string[] }
                       const current: string[] = Array.isArray(cfg.toolIds) ? cfg.toolIds : []
                       const next = Array.from(new Set([...current, id]))
-                      const updated = { ...node, data: { block: { ...node.data.block, config: { ...(cfg as Partial<ToolBlockConfig>), toolIds: next } } } }
-                      setNodes(prev => prev.map((n, i) => i === idx ? updated : n))
-                    } else {
-                      addBlock({ kind: 'ferramenta', toolId: id })
+                      const updated = { ...node, data: { block: { ...node.data.block, config: { ...cfg, toolIds: next } } } }
+                      setNodes(prev => prev.map((n, i) => i === agentIdx ? updated : n))
                     }
                   }}
                 />

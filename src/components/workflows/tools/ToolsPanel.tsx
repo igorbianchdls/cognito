@@ -6,7 +6,7 @@ import { ChevronLeft } from 'lucide-react'
 import ToolsGrid from './ToolsGrid'
 import { TOOLS_MOCK } from './tools.mock'
 
-export default function ToolsPanel({ category, onBack, onActivate }: { category: string; onBack?: () => void; onActivate?: (id: string) => void }) {
+export default function ToolsPanel({ category, onBack, onActivate, activeToolIds }: { category: string; onBack?: () => void; onActivate?: (id: string) => void; activeToolIds?: string[] }) {
   const items = category ? TOOLS_MOCK.filter(t => t.category === category) : TOOLS_MOCK
   return (
     <div className="h-full flex flex-col">
@@ -20,7 +20,7 @@ export default function ToolsPanel({ category, onBack, onActivate }: { category:
         </Button>
       </div>
       <div className="p-4 space-y-4 flex-1 overflow-auto custom-scrollbar">
-        <ToolsGrid items={items} onActivate={onActivate} />
+        <ToolsGrid items={items} onActivate={onActivate} activeToolIds={activeToolIds} />
       </div>
     </div>
   )
