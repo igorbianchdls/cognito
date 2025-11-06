@@ -59,7 +59,9 @@ export async function POST(req: Request) {
       messages: convertToModelMessages(messages),
       temperature: typeof agent.temperature === 'number' ? agent.temperature : 0.2,
       ...(tools ? { tools } : {}),
-      ...(steps.length > 0 ? { maxToolRoundtrips: stepCfg.maxSteps ?? steps.length } : {}),
+      ...(steps.length > 0
+        ? { maxToolRoundtrips: stepCfg.maxSteps ?? steps.length }
+        : (tools ? { maxToolRoundtrips: 2 } : {})),
       ...(stepCfg.toolChoice && stepCfg.toolChoice !== 'auto' ? { toolChoice: stepCfg.toolChoice } : {}),
       ...(stepCfg.prepareStepEnabled ? { prepareStep: () => undefined } : {}),
       ...(supportsAnthropicThinking(agent.model) ? { providerOptions: { anthropic: { thinking: { type: 'enabled', budgetTokens: 8000 } } } } : {})

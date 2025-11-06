@@ -73,7 +73,9 @@ export async function execute(graph: Graph, input: string, opts?: ExecOptions): 
     prompt: input,
     temperature,
     ...(tools ? { tools } : {}),
-    ...(step.count > 0 ? { maxToolRoundtrips: step.maxSteps ?? step.count } : {}),
+    ...(step.count > 0
+      ? { maxToolRoundtrips: step.maxSteps ?? step.count }
+      : (tools ? { maxToolRoundtrips: 2 } : {})),
     ...(step.toolChoice && step.toolChoice !== 'auto' ? { toolChoice: step.toolChoice } : {}),
     ...(prepareStep ? { prepareStep } : {}),
     ...(supportsAnthropicThinking(agent.model) ? { providerOptions: { anthropic: { thinking: { type: 'enabled', budgetTokens: 8000 } } } } : {}),
