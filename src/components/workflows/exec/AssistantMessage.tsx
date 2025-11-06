@@ -89,10 +89,10 @@ export default function AssistantMessage({ message }: { message: UIMessage }) {
           <Tool defaultOpen={shouldBeOpen} key={callId}>
             <ToolHeader type={t as ToolUIPart['type']} state={part.state as ToolUIPart['state']} />
             <ToolContent>
-              {part.input && <ToolInput input={part.input} />}
-              {part.state === 'output-error' && (
+              {part.input !== undefined ? <ToolInput input={part.input as ToolUIPart['input']} /> : null}
+              {part.state === 'output-error' ? (
                 <ToolOutput output={null} errorText={part.errorText} />
-              )}
+              ) : null}
             </ToolContent>
           </Tool>
         )
