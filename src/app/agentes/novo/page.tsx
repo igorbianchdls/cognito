@@ -191,20 +191,36 @@ export default function NewAgentPage() {
                   category={selectedCategory}
                   onBack={() => setRightPanelMode('categories')}
                   activeToolIds={(() => {
+                    if (selectedBlock?.kind === 'step') {
+                      const stepNode = nodes.find(n => n.data.block.id === selectedBlock.id)
+                      const scfg = (stepNode?.data.block.config || {}) as Partial<ToolBlockConfig> & { stepTools?: string[] }
+                      return Array.isArray(scfg.stepTools) ? scfg.stepTools : []
+                    }
                     const agent = nodes.find(n => n.data.block.kind === 'agente')
                     const cfg = (agent?.data.block.config || {}) as Partial<ToolBlockConfig> & { toolIds?: string[] }
                     return Array.isArray(cfg.toolIds) ? cfg.toolIds : []
                   })()}
                   onActivate={(id) => {
-                    // Ativa tool sem criar node no canvas: grava no config do primeiro agente
-                    const agentIdx = nodes.findIndex(n => n.data.block.kind === 'agente')
-                    if (agentIdx >= 0) {
-                      const node = nodes[agentIdx]
-                      const cfg = (node.data.block.config || {}) as Partial<ToolBlockConfig> & { toolIds?: string[] }
-                      const current: string[] = Array.isArray(cfg.toolIds) ? cfg.toolIds : []
-                      const next = Array.from(new Set([...current, id]))
-                      const updated = { ...node, data: { block: { ...node.data.block, config: { ...cfg, toolIds: next } } } }
-                      setNodes(prev => prev.map((n, i) => i === agentIdx ? updated : n))
+                    if (selectedBlock?.kind === 'step') {
+                      const idx = nodes.findIndex(n => n.data.block.id === selectedBlock.id)
+                      if (idx >= 0) {
+                        const node = nodes[idx]
+                        const cfg = (node.data.block.config || {}) as { stepTools?: string[] }
+                        const current: string[] = Array.isArray(cfg.stepTools) ? cfg.stepTools : []
+                        const next = Array.from(new Set([...current, id]))
+                        const updated = { ...node, data: { block: { ...node.data.block, config: { ...cfg, stepTools: next } } } }
+                        setNodes(prev => prev.map((n, i) => i === idx ? updated : n))
+                      }
+                    } else {
+                      const agentIdx = nodes.findIndex(n => n.data.block.kind === 'agente')
+                      if (agentIdx >= 0) {
+                        const node = nodes[agentIdx]
+                        const cfg = (node.data.block.config || {}) as { toolIds?: string[] }
+                        const current: string[] = Array.isArray(cfg.toolIds) ? cfg.toolIds : []
+                        const next = Array.from(new Set([...current, id]))
+                        const updated = { ...node, data: { block: { ...node.data.block, config: { ...cfg, toolIds: next } } } }
+                        setNodes(prev => prev.map((n, i) => i === agentIdx ? updated : n))
+                      }
                     }
                   }}
                 />

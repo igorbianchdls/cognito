@@ -103,6 +103,19 @@ export default function PropertiesPanel({ block, onChange, onDelete, onOpenTools
           {block.kind === 'step' ? (
             <>
               <div className="space-y-2">
+                <label className="text-xs text-gray-600">Model (override)</label>
+                <Select value={(cfgUnknown as Partial<StepBlockConfig>).modelOverride || 'anthropic/claude-3-5-sonnet-latest'} onValueChange={(v) => onChange({ config: { ...(cfgUnknown as Partial<StepBlockConfig>), modelOverride: v } })}>
+                  <SelectTrigger className="h-8 w-full"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="anthropic/claude-sonnet-4-20250514">Anthropic · Claude 4 Sonnet (20250514)</SelectItem>
+                    <SelectItem value="anthropic/claude-3-5-sonnet-latest">Anthropic · Claude 3.5 Sonnet</SelectItem>
+                    <SelectItem value="anthropic/claude-3-haiku-latest">Anthropic · Claude 3 Haiku</SelectItem>
+                    <SelectItem value="openai/gpt-4o-mini">OpenAI · GPT-4o mini</SelectItem>
+                    <SelectItem value="openai/gpt-4o">OpenAI · GPT-4o</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
                 <label className="text-xs text-gray-600">Max steps</label>
                 <Input type="number" min={1} max={20} className="h-8" value={String((cfgUnknown as Partial<StepBlockConfig>).maxSteps ?? '')} onChange={(e) => onChange({ config: { ...(cfgUnknown as Partial<StepBlockConfig>), maxSteps: e.currentTarget.value ? Number(e.currentTarget.value) : undefined } })} placeholder="ex: 3" />
               </div>
@@ -120,6 +133,10 @@ export default function PropertiesPanel({ block, onChange, onDelete, onOpenTools
               <div className="space-y-2">
                 <label className="text-xs text-gray-600">Force tool (name)</label>
                 <Input className="h-8" value={(cfgUnknown as Partial<StepBlockConfig>).forcedToolName || ''} onChange={(e) => onChange({ config: { ...(cfgUnknown as Partial<StepBlockConfig>), forcedToolName: e.currentTarget.value || undefined } })} placeholder="ex: getTime" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs text-gray-600">Ferramentas (apenas este step)</label>
+                <Button variant="outline" className="h-8" onClick={onOpenTools}>Configurar ferramentas</Button>
               </div>
               <div className="space-y-2">
                 <label className="text-xs text-gray-600">prepareStep</label>

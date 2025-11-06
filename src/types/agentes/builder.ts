@@ -47,6 +47,7 @@ export interface StepBlockConfig {
   systemMode?: 'append' | 'replace'
   systemText?: string
   forcedToolName?: string
+  stepTools?: string[]
 }
 
 export interface PrepareStepBlockConfig {
