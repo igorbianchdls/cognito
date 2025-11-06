@@ -49,3 +49,50 @@ export const pickFieldsTool = tool({
   }
 })
 
+// === Simple demo tools for Agent Builder ===
+
+export const getWeather = tool({
+  description: 'AgentBuilder: retorna clima sintético para uma localização',
+  inputSchema: z.object({
+    location: z.string().min(1).describe('Cidade ou local para consultar clima'),
+  }),
+  execute: async ({ location }) => {
+    // Temperatura sintética baseada em hash simples do nome
+    let hash = 0
+    for (let i = 0; i < location.length; i++) hash = (hash * 31 + location.charCodeAt(i)) | 0
+    const base = Math.abs(hash % 35) // 0..34
+    const temperature = Math.round(base - 5) // -5..29
+
+    return {
+      success: true,
+      message: `Weather for ${location}`,
+      data: { location, temperature },
+    }
+  },
+})
+
+export const getTime = tool({
+  description: 'AgentBuilder: retorna horário local de um timezone (ou UTC)',
+  inputSchema: z.object({
+    location: z.string().optional().describe('Rótulo amigável do local (opcional)'),
+    timezone: z.string().optional().describe('Time zone IANA, ex: America/Sao_Paulo'),
+  }),
+  execute: async ({ location, timezone }) => {
+    const tz = timezone && timezone.trim() ? timezone.trim() : 'UTC'
+    const now = new Date()
+    const fmt = new Intl.DateTimeFormat('en-GB', {
+      timeZone: tz,
+      year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false,
+    })
+    const parts = fmt.formatToParts(now)
+    const get = (type: string) => parts.find(p => p.type === type)?.value || '00'
+    const local = `${get('year')}-${get('month')}-${get('day')}T${get('hour')}:${get('minute')}:${get('second')}`
+
+    return {
+      success: true,
+      message: `Local time for ${location || tz}`,
+      data: { location: location || tz, timezone: tz, localTimeISO: local },
+    }
+  },
+})

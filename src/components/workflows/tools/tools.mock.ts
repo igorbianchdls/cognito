@@ -88,4 +88,6 @@ export const TOOLS_MOCK: ToolMeta[] = [
   { id: 'echoTool', name: 'echoTool', description: 'Teste: ecoa a mensagem informada.', category: 'Geral', icon: MessageSquare },
   { id: 'sumTool', name: 'sumTool', description: 'Teste: soma números fornecidos.', category: 'Geral', icon: BarChart3 },
   { id: 'pickFieldsTool', name: 'pickFieldsTool', description: 'Teste: extrai campos de um objeto.', category: 'Geral', icon: ClipboardList },
+  { id: 'getWeather', name: 'getWeather', description: 'Obter clima (demo) para uma cidade/local.', category: 'Geral', icon: Cloud },
+  { id: 'getTime', name: 'getTime', description: 'Obter horário local por timezone (demo).', category: 'Geral', icon: Calendar },
 ]

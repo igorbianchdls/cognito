@@ -13,7 +13,7 @@ export function genRouteTs(graph: Graph, slug: string): string {
   const step = getStepSettings(graph)
 
   const selectedToolIds = collectTools(graph)
-  const BUILDER_SET = new Set(['echoTool','sumTool','pickFieldsTool'])
+  const BUILDER_SET = new Set(['echoTool','sumTool','pickFieldsTool','getWeather','getTime'])
   const builderIds = selectedToolIds.filter(id => BUILDER_SET.has(id))
   const stubIds = selectedToolIds.filter(id => !BUILDER_SET.has(id))
 
