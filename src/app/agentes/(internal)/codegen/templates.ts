@@ -85,7 +85,7 @@ import { anthropic } from '@ai-sdk/anthropic'${importOpenAI ? "\nimport { openai
 
   // Step-specific tools subsets
   const stepToolDecls = orderedSteps.map((cfg, idx) => {
-    const ids = Array.isArray((cfg as any).stepTools) ? (cfg as any).stepTools as string[] : []
+    const ids = Array.isArray(cfg.stepTools) ? (cfg.stepTools as string[]) : []
     if (!ids.length) return ''
     const entries = ids.map(id => {
       const isBuilder = BUILDER_SET.has(id)
@@ -128,7 +128,7 @@ import { anthropic } from '@ai-sdk/anthropic'${importOpenAI ? "\nimport { openai
         const tc = cfg.toolChoice
         const sysText = cfg.systemText
         const sysMode = cfg.systemMode
-        const hasTools = Array.isArray((cfg as any).stepTools) && ((cfg as any).stepTools as string[]).length > 0
+        const hasTools = Array.isArray(cfg.stepTools) && (cfg.stepTools as string[]).length > 0
         const body: string[] = []
         if (forced && forced.trim()) body.push(`r.toolChoice = { type: 'tool', toolName: '${tsStringLiteral(forced.trim())}' }`)
         else if (tc && tc !== 'auto') body.push(`r.toolChoice = '${tc}'`)
