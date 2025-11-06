@@ -507,6 +507,30 @@ export default function FinanceiroDashboardPage() {
     )
   }
 
+  function BarList({ items, color = 'bg-sky-500' }: { items: { label: string; value: number }[]; color?: string }) {
+    const max = Math.max(1, ...items.map(i => i.value))
+    return (
+      <div className="space-y-3">
+        {items.length === 0 ? (
+          <div className="text-xs text-gray-400" style={styleText}>Sem dados</div>
+        ) : items.map((it) => {
+          const pct = Math.round((it.value / max) * 100)
+          return (
+            <div key={it.label}>
+              <div className="flex justify-between text-xs text-gray-600 mb-1" style={styleText}>
+                <span className="truncate pr-2">{it.label}</span>
+                <span>{formatBRL(it.value)}</span>
+              </div>
+              <div className="w-full h-2.5 bg-gray-100 rounded">
+                <div className={`${color} h-2.5 rounded`} style={{ width: `${pct}%` }} />
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    )
+  }
+
   function LineSaldoMensal({ values, min, max }: { values: number[]; min: number; max: number }) {
     const W = 520
     const H = 180
@@ -583,7 +607,8 @@ export default function FinanceiroDashboardPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+      {/* Charts — Row 1 (3 charts) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <div className="bg-white p-6 rounded-lg border border-gray-100" style={{ borderColor: cardBorderColor }}>
           <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><BarChart3 className="w-5 h-5 text-indigo-600" />Receitas vs Despesas</h3>
           <BarsReceitasDespesas
@@ -595,9 +620,7 @@ export default function FinanceiroDashboardPage() {
           <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><Wallet className="w-5 h-5 text-blue-600" />Saldo no final do mês</h3>
           <div className="flex items-center justify-between text-xs text-gray-600 mb-1" style={styleText}>
             <span>Acumulado</span>
-            <span>
-              Último: {formatBRL(receitasDespesas.saldoAcumulado.at(-1) ?? 0)}
-            </span>
+            <span>Último: {formatBRL(receitasDespesas.saldoAcumulado.at(-1) ?? 0)}</span>
           </div>
           <LineSaldoMensal
             values={receitasDespesas.saldoAcumulado}
@@ -610,55 +633,31 @@ export default function FinanceiroDashboardPage() {
             ))}
           </div>
         </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <div className="bg-white p-6 rounded-lg border border-gray-100" style={{ borderColor: cardBorderColor }}>
           <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><Clock className="w-5 h-5 text-emerald-600" />Aging A Receber</h3>
           <AgingBar data={arAging} />
         </div>
+      </div>
+
+      {/* Charts — Row 2 (3 charts) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <div className="bg-white p-6 rounded-lg border border-gray-100" style={{ borderColor: cardBorderColor }}>
           <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><Clock className="w-5 h-5 text-rose-600" />Aging A Pagar</h3>
           <AgingBar data={apAging} />
         </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white p-6 rounded-lg border border-gray-100" style={{ borderColor: cardBorderColor }}>
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><Star className="w-5 h-5 text-amber-500" />A Receber Prioritário</h3>
-          <div className="space-y-3">
-            {topReceber.length === 0 ? (
-              <div className="text-sm text-gray-400" style={styleText}>Sem títulos</div>
-            ) : (
-              topReceber.map((i, idx) => (
-                <div key={idx} className="flex justify-between items-center pb-2 border-b last:border-b-0" style={{ borderColor: cardBorderColor }}>
-                  <div>
-                    <div className="font-medium text-sm">{i.nome}</div>
-                    <div className="text-xs text-gray-500" style={styleText}>{i.desc || '—'} • Venc {i.dd! < 0 ? `${Math.abs(i.dd!)}d` : `em ${i.dd}d`}</div>
-                  </div>
-                  <div className="font-semibold text-emerald-700">{formatBRL(i.valor)}</div>
-                </div>
-              ))
-            )}
-          </div>
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><Star className="w-5 h-5 text-amber-500" />Top A Receber</h3>
+          <BarList
+            items={topReceber.map(i => ({ label: i.nome, value: i.valor }))}
+            color="bg-emerald-500"
+          />
         </div>
         <div className="bg-white p-6 rounded-lg border border-gray-100" style={{ borderColor: cardBorderColor }}>
           <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><CalendarCheck className="w-5 h-5 text-rose-600" />Pagamentos do Dia</h3>
-          <div className="space-y-3">
-            {pagamentosHoje.length === 0 ? (
-              <div className="text-sm text-gray-400" style={styleText}>Sem pagamentos para hoje</div>
-            ) : (
-              pagamentosHoje.map((i, idx) => (
-                <div key={idx} className="flex justify-between items-center pb-2 border-b last:border-b-0" style={{ borderColor: cardBorderColor }}>
-                  <div>
-                    <div className="font-medium text-sm">{i.nome}</div>
-                    <div className="text-xs text-gray-500" style={styleText}>{i.desc || '—'}</div>
-                  </div>
-                  <div className="font-semibold text-rose-700">{formatBRL(i.valor)}</div>
-                </div>
-              ))
-            )}
-          </div>
+          <BarList
+            items={pagamentosHoje.map(i => ({ label: i.nome, value: i.valor }))}
+            color="bg-violet-500"
+          />
         </div>
       </div>
 
