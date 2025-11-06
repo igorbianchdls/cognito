@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import DashboardLayout from '@/components/modulos/DashboardLayout'
+import { ArrowDownCircle, ArrowUpCircle, AlertTriangle, BarChart3, Wallet, Clock, Star, CalendarCheck } from 'lucide-react'
 
 type BaseRow = {
   valor_total?: number | string
@@ -396,38 +397,38 @@ export default function FinanceiroDashboardPage() {
       ) : null}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <div className="text-sm font-medium text-gray-500 mb-2">A Receber Hoje</div>
+        <div className="bg-white p-6 rounded-lg border border-gray-100">
+          <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2"><ArrowDownCircle className="w-4 h-4 text-emerald-600" />A Receber Hoje</div>
           <div className="text-2xl font-bold text-emerald-600">{formatBRL(kpis.arHoje)}</div>
           <div className="text-xs text-gray-400 mt-1">Título(s) com vencimento hoje</div>
         </div>
-        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <div className="text-sm font-medium text-gray-500 mb-2">A Pagar Hoje</div>
+        <div className="bg-white p-6 rounded-lg border border-gray-100">
+          <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2"><ArrowUpCircle className="w-4 h-4 text-rose-600" />A Pagar Hoje</div>
           <div className="text-2xl font-bold text-rose-600">{formatBRL(kpis.apHoje)}</div>
           <div className="text-xs text-gray-400 mt-1">Pagamentos previstos para hoje</div>
         </div>
-        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <div className="text-sm font-medium text-gray-500 mb-2">Vencidos A Receber</div>
+        <div className="bg-white p-6 rounded-lg border border-gray-100">
+          <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-orange-500" />Vencidos A Receber</div>
           <div className="text-2xl font-bold text-orange-600">{formatBRL(kpis.arVencidos)}</div>
           <div className="text-xs text-gray-400 mt-1">Valores atrasados</div>
         </div>
-        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <div className="text-sm font-medium text-gray-500 mb-2">Vencidos A Pagar</div>
+        <div className="bg-white p-6 rounded-lg border border-gray-100">
+          <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-red-500" />Vencidos A Pagar</div>
           <div className="text-2xl font-bold text-red-600">{formatBRL(kpis.apVencidos)}</div>
           <div className="text-xs text-gray-400 mt-1">Compromissos em atraso</div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <h3 className="text-lg font-semibold mb-4">Receitas vs Despesas</h3>
+        <div className="bg-white p-6 rounded-lg border border-gray-100">
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2"><BarChart3 className="w-5 h-5 text-indigo-600" />Receitas vs Despesas</h3>
           <BarsReceitasDespesas
             items={receitasDespesas.data.map(d => ({ label: d.label, receita: d.receita, despesa: d.despesa }))}
             max={receitasDespesas.maxVal}
           />
         </div>
-        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <h3 className="text-lg font-semibold mb-4">Saldo no final do mês</h3>
+        <div className="bg-white p-6 rounded-lg border border-gray-100">
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2"><Wallet className="w-5 h-5 text-blue-600" />Saldo no final do mês</h3>
           <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
             <span>Acumulado</span>
             <span>
@@ -448,19 +449,19 @@ export default function FinanceiroDashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <h3 className="text-lg font-semibold mb-4">Aging A Receber</h3>
+        <div className="bg-white p-6 rounded-lg border border-gray-100">
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2"><Clock className="w-5 h-5 text-emerald-600" />Aging A Receber</h3>
           <AgingBar data={arAging} />
         </div>
-        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <h3 className="text-lg font-semibold mb-4">Aging A Pagar</h3>
+        <div className="bg-white p-6 rounded-lg border border-gray-100">
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2"><Clock className="w-5 h-5 text-rose-600" />Aging A Pagar</h3>
           <AgingBar data={apAging} />
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <h3 className="text-lg font-semibold mb-4">A Receber Prioritário</h3>
+        <div className="bg-white p-6 rounded-lg border border-gray-100">
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2"><Star className="w-5 h-5 text-amber-500" />A Receber Prioritário</h3>
           <div className="space-y-3">
             {topReceber.length === 0 ? (
               <div className="text-sm text-gray-400">Sem títulos</div>
@@ -477,8 +478,8 @@ export default function FinanceiroDashboardPage() {
             )}
           </div>
         </div>
-        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <h3 className="text-lg font-semibold mb-4">Pagamentos do Dia</h3>
+        <div className="bg-white p-6 rounded-lg border border-gray-100">
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2"><CalendarCheck className="w-5 h-5 text-rose-600" />Pagamentos do Dia</h3>
           <div className="space-y-3">
             {pagamentosHoje.length === 0 ? (
               <div className="text-sm text-gray-400">Sem pagamentos para hoje</div>
