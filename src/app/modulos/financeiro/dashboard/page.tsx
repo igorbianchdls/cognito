@@ -100,11 +100,13 @@ export default function FinanceiroDashboardPage() {
     values: { family: 'Space Mono', weight: 700 as number | undefined, letterSpacing: 0 as number | undefined, color: '#111827' as string | undefined, size: 24 as number | undefined, transform: 'none' as 'none' | 'uppercase' },
     title: { family: 'Space Mono', weight: 500 as number | undefined, letterSpacing: 0 as number | undefined, color: '#adadad' as string | undefined, size: 13 as number | undefined, transform: 'uppercase' as 'none' | 'uppercase' },
     text: { family: 'Inter', weight: 400 as number | undefined, letterSpacing: 0 as number | undefined, color: '#6b7280' as string | undefined, size: 12 as number | undefined, transform: 'none' as 'none' | 'uppercase' },
+    filters: { family: 'Inter', weight: 400 as number | undefined, letterSpacing: 0 as number | undefined, color: '#374151' as string | undefined, size: 12 as number | undefined, transform: 'none' as 'none' | 'uppercase' },
     headerTitle: { family: 'Inter', weight: 700 as number | undefined, letterSpacing: 0 as number | undefined, color: '#111827' as string | undefined, size: 18 as number | undefined, transform: 'none' as 'none' | 'uppercase' },
     headerSubtitle: { family: 'Inter', weight: 400 as number | undefined, letterSpacing: 0 as number | undefined, color: '#6b7280' as string | undefined, size: 12 as number | undefined, transform: 'none' as 'none' | 'uppercase' },
   })
   const [cardBorderColor, setCardBorderColor] = useState<string>('#f3f4f6')
   const [pageBgColor, setPageBgColor] = useState<string>('#ffffff')
+  const [filtersIconColor, setFiltersIconColor] = useState<string>('#6b7280')
   const styleValues = useMemo<React.CSSProperties>(() => ({
     fontFamily: fontVar(fonts.values.family),
     fontWeight: fonts.values.weight as React.CSSProperties['fontWeight'],
@@ -147,6 +149,15 @@ export default function FinanceiroDashboardPage() {
     textTransform: fonts.headerSubtitle.transform === 'uppercase' ? 'uppercase' : 'none',
   }), [fonts.headerSubtitle])
 
+  const styleFilters = useMemo<React.CSSProperties>(() => ({
+    fontFamily: fontVar(fonts.filters.family),
+    fontWeight: fonts.filters.weight as React.CSSProperties['fontWeight'],
+    letterSpacing: typeof fonts.filters.letterSpacing === 'number' ? `${fonts.filters.letterSpacing}px` : undefined,
+    color: fonts.filters.color || undefined,
+    fontSize: typeof fonts.filters.size === 'number' ? `${fonts.filters.size}px` : undefined,
+    textTransform: fonts.filters.transform === 'uppercase' ? 'uppercase' : 'none',
+  }), [fonts.filters])
+
   // Header right actions (date range + generic data filter)
   const rangeLabel = useMemo(() => {
     if (dateRange?.from && dateRange?.to) {
@@ -165,8 +176,8 @@ export default function FinanceiroDashboardPage() {
       <Popover>
         <PopoverTrigger asChild>
           <Button variant="outline" size="sm" className="h-9 px-3">
-            <CalendarIcon className="mr-2 h-4 w-4" />
-            <span className="text-xs whitespace-nowrap">{rangeLabel}</span>
+            <CalendarIcon className="mr-2 h-4 w-4" style={{ color: filtersIconColor }} />
+            <span className="whitespace-nowrap" style={styleFilters}>{rangeLabel}</span>
           </Button>
         </PopoverTrigger>
         <PopoverContent align="end" className="p-2 w-auto">
@@ -182,7 +193,7 @@ export default function FinanceiroDashboardPage() {
         </PopoverContent>
       </Popover>
       <Select value={dataFilter} onValueChange={setDataFilter}>
-        <SelectTrigger className="h-9 w-[160px]">
+        <SelectTrigger className="h-9 w-[160px]" style={styleFilters}>
           <SelectValue placeholder="Filtro" />
         </SelectTrigger>
         <SelectContent>
@@ -932,6 +943,98 @@ export default function FinanceiroDashboardPage() {
               <div className="flex items-center gap-2">
                 <label className="text-xs text-gray-600 w-16">Cor</label>
                 <input type="color" className="border rounded w-8 h-6" value={fonts.headerSubtitle.color || '#6b7280'} onChange={(e) => setFonts((f) => ({ ...f, headerSubtitle: { ...f.headerSubtitle, color: e.target.value } }))} />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="mt-6">
+          <h5 className="text-xs font-semibold text-gray-700 mb-2">Filtros (Date Range e Select)</h5>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Tipografia dos filtros */}
+            <div>
+              <div className="text-xs text-gray-500 mb-2">Fonte dos filtros</div>
+              <div className="flex items-center gap-2 mb-2">
+                <label className="text-xs text-gray-600 w-16">Fonte</label>
+                <select
+                  className="border rounded px-2 py-1 text-xs"
+                  value={fonts.filters.family}
+                  onChange={(e) => setFonts((f) => ({ ...f, filters: { ...f.filters, family: e.target.value } }))}
+                >
+                  <option>Inter</option>
+                  <option>Geist</option>
+                  <option>Roboto Mono</option>
+                  <option>Geist Mono</option>
+                  <option>IBM Plex Mono</option>
+                  <option>Avenir</option>
+                  <option>Space Mono</option>
+                </select>
+              </div>
+              <div className="flex items-center gap-2 mb-2">
+                <label className="text-xs text-gray-600 w-16">Caixa</label>
+                <select
+                  className="border rounded px-2 py-1 text-xs w-24"
+                  value={fonts.filters.transform}
+                  onChange={(e) => setFonts((f) => ({ ...f, filters: { ...f.filters, transform: e.target.value as 'none' | 'uppercase' } }))}
+                >
+                  <option value="none">Normal</option>
+                  <option value="uppercase">UPPERCASE</option>
+                </select>
+              </div>
+              <div className="flex items-center gap-2 mb-2">
+                <label className="text-xs text-gray-600 w-16">Peso</label>
+                <input
+                  type="number"
+                  className="border rounded px-2 py-1 text-xs w-24"
+                  value={fonts.filters.weight ?? 400}
+                  min={100}
+                  max={900}
+                  step={100}
+                  onChange={(e) => setFonts((f) => ({ ...f, filters: { ...f.filters, weight: Number(e.target.value) } }))}
+                />
+              </div>
+              <div className="flex items-center gap-2 mb-2">
+                <label className="text-xs text-gray-600 w-16">Tamanho</label>
+                <input
+                  type="number"
+                  className="border rounded px-2 py-1 text-xs w-24"
+                  value={fonts.filters.size ?? 12}
+                  min={8}
+                  max={32}
+                  step={1}
+                  onChange={(e) => setFonts((f) => ({ ...f, filters: { ...f.filters, size: Number(e.target.value) } }))}
+                />
+              </div>
+              <div className="flex items-center gap-2 mb-2">
+                <label className="text-xs text-gray-600 w-16">Espaço</label>
+                <input
+                  type="number"
+                  className="border rounded px-2 py-1 text-xs w-24"
+                  value={fonts.filters.letterSpacing ?? 0}
+                  step={0.5}
+                  onChange={(e) => setFonts((f) => ({ ...f, filters: { ...f.filters, letterSpacing: Number(e.target.value) } }))}
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="text-xs text-gray-600 w-16">Cor</label>
+                <input
+                  type="color"
+                  className="border rounded w-8 h-6"
+                  value={fonts.filters.color || '#374151'}
+                  onChange={(e) => setFonts((f) => ({ ...f, filters: { ...f.filters, color: e.target.value } }))}
+                />
+              </div>
+            </div>
+            {/* Cor do ícone dos filtros */}
+            <div>
+              <div className="text-xs text-gray-500 mb-2">Cor do ícone dos filtros</div>
+              <div className="flex items-center gap-2">
+                <label className="text-xs text-gray-600 w-24">Ícone</label>
+                <input
+                  type="color"
+                  className="border rounded w-8 h-6"
+                  value={filtersIconColor}
+                  onChange={(e) => setFiltersIconColor(e.target.value)}
+                />
               </div>
             </div>
           </div>
