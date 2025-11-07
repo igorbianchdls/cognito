@@ -56,6 +56,7 @@ export default function TrafegoPagoDashboardPage() {
   const cardBorderColor = ui.cardBorderColor
   const pageBgColor = ui.pageBgColor
   const cardShadow = ui.cardShadow
+  
   const filtersIconColor = ui.filtersIconColor
   const [resumos, setResumos] = useState<ResumoRow[]>([])
   const [campanhas, setCampanhas] = useState<CampanhaRow[]>([])

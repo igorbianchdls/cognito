@@ -24,6 +24,7 @@ export type FinanceiroDashboardUIState = {
   }
   cardBorderColor: string
   cardShadow: boolean
+  cardShadowPreset: 'none' | '1' | '2' | '3' | '4' | '5'
   pageBgColor: string
   filtersIconColor: string
 }
@@ -46,6 +47,7 @@ const DEFAULT_UI: FinanceiroDashboardUIState = {
   },
   cardBorderColor: 'rgb(233, 233, 233)',
   cardShadow: false,
+  cardShadowPreset: 'none',
   pageBgColor: '#ffffff',
   filtersIconColor: '#6b7280',
 }
@@ -68,6 +70,10 @@ export const financeiroDashboardActions = {
       ...partial,
       fonts: partial.fonts ? { ...curr.fonts, ...partial.fonts } : curr.fonts,
     })
+  },
+  setCardShadowPreset: (preset: FinanceiroDashboardUIState['cardShadowPreset']) => {
+    const curr = $financeiroDashboardUI.get()
+    $financeiroDashboardUI.set({ ...curr, cardShadowPreset: preset })
   },
   setFont: (section: FontSection, patch: Partial<Typography>) => {
     const curr = $financeiroDashboardUI.get()

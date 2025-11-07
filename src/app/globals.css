@@ -41,6 +41,43 @@
   --cinzaDark: rgb(94, 94, 94);
   /* Fallback/alias for Avenir if not provided by next/font */
   --font-avenir: Avenir, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+  /* Shadow palette (alpha tokens) */
+  --gray-a2: rgba(0, 0, 0, 0.03);
+  --gray-a3: rgba(0, 0, 0, 0.06);
+  --gray-a5: rgba(0, 0, 0, 0.10);
+  --black-a1: rgba(0, 0, 0, 0.04);
+  --black-a2: rgba(0, 0, 0, 0.08);
+  --black-a3: rgba(0, 0, 0, 0.16);
+
+  /* Card shadow presets */
+  --shadow-1:
+    inset 0 0 0 1px var(--gray-a5),
+    inset 0 1.5px 2px 0 var(--gray-a2),
+    inset 0 1.5px 2px 0 var(--black-a2);
+
+  --shadow-2:
+    0 0 0 1px var(--gray-a3),
+    0 0 0 0.5px var(--black-a1),
+    0 1px 1px 0 var(--gray-a2),
+    0 2px 1px -1px var(--black-a1),
+    0 1px 3px 0 var(--black-a1);
+
+  --shadow-3:
+    0 0 0 1px var(--gray-a3),
+    0 2px 3px -2px var(--gray-a3),
+    0 3px 12px -4px var(--black-a2),
+    0 4px 16px -8px var(--black-a2);
+
+  --shadow-4:
+    0 0 0 1px var(--gray-a3),
+    0 8px 40px var(--black-a1),
+    0 12px 32px -16px var(--gray-a3);
+
+  --shadow-5:
+    0 0 0 1px var(--gray-a3),
+    0 12px 60px var(--black-a3),
+    0 12px 32px -16px var(--gray-a5);
 }
 
 .dark {

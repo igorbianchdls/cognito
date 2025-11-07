@@ -100,9 +100,10 @@ export default function FinanceiroDashboardPage() {
   const filters = useStore($financeiroDashboardFilters)
   const fonts = ui.fonts
   const cardBorderColor = ui.cardBorderColor
-  const cardShadow = ui.cardShadow
+  const cardShadow = ui.cardShadow // legacy flag (kept for compatibility)
   const pageBgColor = ui.pageBgColor
   const filtersIconColor = ui.filtersIconColor
+  const cardShadowPreset = ui.cardShadowPreset
   // Patch-like setters to keep UI code similar
   const setFonts = (
     updater: (
@@ -248,7 +249,8 @@ export default function FinanceiroDashboardPage() {
     </div>
   )
 
-  const cardContainerClass = `bg-white p-6 rounded-lg border border-gray-100${cardShadow ? ' shadow-sm' : ''}`
+  const cardContainerClass = `bg-white p-6 rounded-lg border border-gray-100`
+  const cardBoxShadow = useMemo(() => (cardShadowPreset === 'none' ? 'none' : `var(--shadow-${cardShadowPreset})`), [cardShadowPreset])
 
   useEffect(() => {
     let cancelled = false
@@ -606,22 +608,22 @@ export default function FinanceiroDashboardPage() {
       ) : null}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
+        <div className={cardContainerClass} style={{ borderColor: cardBorderColor, boxShadow: cardBoxShadow }}>
           <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleKpiTitle}><ArrowDownCircle className="w-4 h-4 text-emerald-600" />A Receber Hoje</div>
           <div className="text-2xl font-bold text-emerald-600" style={styleValues}>{formatBRL(kpis.arHoje)}</div>
           <div className="text-xs text-gray-400 mt-1" style={styleText}>Título(s) com vencimento hoje</div>
         </div>
-        <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
+        <div className={cardContainerClass} style={{ borderColor: cardBorderColor, boxShadow: cardBoxShadow }}>
           <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleKpiTitle}><ArrowUpCircle className="w-4 h-4 text-rose-600" />A Pagar Hoje</div>
           <div className="text-2xl font-bold text-rose-600" style={styleValues}>{formatBRL(kpis.apHoje)}</div>
           <div className="text-xs text-gray-400 mt-1" style={styleText}>Pagamentos previstos para hoje</div>
         </div>
-        <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
+        <div className={cardContainerClass} style={{ borderColor: cardBorderColor, boxShadow: cardBoxShadow }}>
           <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleKpiTitle}><AlertTriangle className="w-4 h-4 text-orange-500" />Vencidos A Receber</div>
           <div className="text-2xl font-bold text-orange-600" style={styleValues}>{formatBRL(kpis.arVencidos)}</div>
           <div className="text-xs text-gray-400 mt-1" style={styleText}>Valores atrasados</div>
         </div>
-        <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
+        <div className={cardContainerClass} style={{ borderColor: cardBorderColor, boxShadow: cardBoxShadow }}>
           <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleKpiTitle}><AlertTriangle className="w-4 h-4 text-red-500" />Vencidos A Pagar</div>
           <div className="text-2xl font-bold text-red-600" style={styleValues}>{formatBRL(kpis.apVencidos)}</div>
           <div className="text-xs text-gray-400 mt-1" style={styleText}>Compromissos em atraso</div>
@@ -630,14 +632,14 @@ export default function FinanceiroDashboardPage() {
 
       {/* Charts — Row 1 (3 charts) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
+        <div className={cardContainerClass} style={{ borderColor: cardBorderColor, boxShadow: cardBoxShadow }}>
           <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><BarChart3 className="w-5 h-5 text-indigo-600" />Receitas vs Despesas</h3>
           <BarsReceitasDespesas
             items={receitasDespesas.data.map(d => ({ label: d.label, receita: d.receita, despesa: d.despesa }))}
             max={receitasDespesas.maxVal}
           />
         </div>
-        <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
+        <div className={cardContainerClass} style={{ borderColor: cardBorderColor, boxShadow: cardBoxShadow }}>
           <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><Wallet className="w-5 h-5 text-blue-600" />Saldo no final do mês</h3>
           <div className="flex items-center justify-between text-xs text-gray-600 mb-1" style={styleText}>
             <span>Acumulado</span>
@@ -1261,7 +1263,18 @@ export default function FinanceiroDashboardPage() {
             </div>
             <div className="flex items-center gap-3">
               <div className="text-xs text-gray-500">Sombra dos cards</div>
-              <Switch checked={cardShadow} onCheckedChange={(v) => financeiroDashboardActions.setUI({ cardShadow: Boolean(v) })} />
+              <select
+                className="border rounded px-2 py-1 text-xs"
+                value={cardShadowPreset}
+                onChange={(e) => financeiroDashboardActions.setCardShadowPreset(e.target.value as typeof cardShadowPreset)}
+              >
+                <option value="none">Nenhuma</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+              </select>
             </div>
             <div className="flex items-center gap-3">
               <div className="text-xs text-gray-500">Sidebar - Fundo</div>

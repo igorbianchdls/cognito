@@ -300,18 +300,18 @@ export default function VendasDashboardPage() {
     >
       <div className="flex-1">
           {loading ? (<div className="p-4 text-sm text-gray-500">Carregando…</div>) : error ? (<div className="p-4 text-sm text-red-600">{error}</div>) : null}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
               <div className="text-sm font-medium text-gray-500 mb-2" style={styleKpiTitle}>Total Vendas (6m)</div>
               <div className="text-2xl font-bold text-blue-600" style={styleValues}>{formatBRL(kpis.total)}</div>
               <div className="text-xs text-gray-400 mt-1" style={styleText}>Soma de pedidos</div>
             </div>
-            <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
+        <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
               <div className="text-sm font-medium text-gray-500 mb-2" style={styleKpiTitle}>Ticket Médio</div>
               <div className="text-2xl font-bold text-green-600" style={styleValues}>{formatBRL(kpis.ticket)}</div>
               <div className="text-xs text-gray-400 mt-1" style={styleText}>Total / pedidos</div>
             </div>
-            <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
+        <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
               <div className="text-sm font-medium text-gray-500 mb-2" style={styleKpiTitle}>Pedidos</div>
               <div className="text-2xl font-bold text-purple-600" style={styleValues}>{kpis.pedidos}</div>
               <div className="text-xs text-gray-400 mt-1" style={styleText}>Registros no período</div>
