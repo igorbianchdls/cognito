@@ -121,7 +121,7 @@ export default function CRMDashboardPage() {
           ]
         }
         if (!cancelled) { setOpps(os); setLeads(ls); setAtivs(as) }
-      } catch (e) {
+      } catch {
         if (!cancelled) setError('Falha ao carregar dados')
       } finally { if (!cancelled) setLoading(false) }
     }
@@ -336,24 +336,7 @@ export default function CRMDashboardPage() {
     </div>
   )
 
-  // Simple bars
-  function HBars({ items, color }: { items: { label: string; value: number }[]; color: string }) {
-    const max = Math.max(1, ...items.map(i => i.value))
-    return (
-      <div className="space-y-3">
-        {items.map((it) => {
-          const pct = Math.round((it.value / max) * 100)
-          return (
-            <div key={it.label}>
-              <div className="flex justify-between text-xs text-gray-600 mb-1"><span>{it.label}</span><span>{it.value}</span></div>
-              <div className="w-full h-2.5 bg-gray-100 rounded"><div className={`${color} h-2.5 rounded`} style={{ width: `${pct}%` }} /></div>
-            </div>
-          )
-        })}
-        {items.length === 0 && <div className="text-xs text-gray-400">Sem dados</div>}
-      </div>
-    )
-  }
+  // Simple bars (currency)
 
   function HBarsCurrency({ items, color }: { items: { label: string; value: number }[]; color: string }) {
     const max = Math.max(1, ...items.map(i => i.value))
@@ -378,11 +361,6 @@ export default function CRMDashboardPage() {
       title="Olá, Igor Bianch"
       subtitle="Você está na aba Dashboard do módulo CRM"
       backgroundColor={pageBgColor}
-      headerBackground="transparent"
-      headerTitleStyle={styleHeaderTitle}
-      headerSubtitleStyle={styleHeaderSubtitle}
-      headerActions={headerActions}
-      userAvatarUrl="https://i.pravatar.cc/80?img=12"
       headerBackground="transparent"
       headerTitleStyle={styleHeaderTitle}
       headerSubtitleStyle={styleHeaderSubtitle}
