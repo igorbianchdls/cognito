@@ -101,6 +101,8 @@ export default function FinanceiroDashboardPage() {
   const [topLucros, setTopLucros] = useState<{ label: string; value: number }[]>([])
   const [topProjetos, setTopProjetos] = useState<{ label: string; value: number }[]>([])
   const [topFiliais, setTopFiliais] = useState<{ label: string; value: number }[]>([])
+  const [topFornecedores, setTopFornecedores] = useState<{ label: string; value: number }[]>([])
+  const [topClientes, setTopClientes] = useState<{ label: string; value: number }[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   // Global (Nanostores): UI + Filters
@@ -294,7 +296,7 @@ export default function FinanceiroDashboardPage() {
       setError(null)
       try {
         const qs = (view: string) => `/api/modulos/financeiro?view=${view}&page=1&pageSize=1000`
-        const [arRes, apRes, prRes, peRes, kpisRes, agingArRes, agingApRes, topCcRes, topCatRes, topDepRes, topLucroRes, topProjRes, topFilialRes] = await Promise.allSettled([
+        const [arRes, apRes, prRes, peRes, kpisRes, agingArRes, agingApRes, topCcRes, topCatRes, topDepRes, topLucroRes, topProjRes, topFilialRes, cfRealRes, cfProjRes, topFornRes, topCliRes] = await Promise.allSettled([
           fetch(qs('contas-a-receber'), { cache: 'no-store' }),
           fetch(qs('contas-a-pagar'), { cache: 'no-store' }),
           fetch(qs('pagamentos-recebidos'), { cache: 'no-store' }),
@@ -308,6 +310,10 @@ export default function FinanceiroDashboardPage() {
           fetch(`/api/modulos/financeiro?view=top-despesas&dim=centro_lucro&de=${kpiDe}&ate=${kpiAte}`, { cache: 'no-store' }),
           fetch(`/api/modulos/financeiro?view=top-despesas&dim=projeto&de=${kpiDe}&ate=${kpiAte}`, { cache: 'no-store' }),
           fetch(`/api/modulos/financeiro?view=top-despesas&dim=filial&de=${kpiDe}&ate=${kpiAte}`, { cache: 'no-store' }),
+          fetch(`/api/modulos/financeiro?view=cashflow-realized&de=${kpiDe}&ate=${kpiAte}&group_by=month`, { cache: 'no-store' }),
+          fetch(`/api/modulos/financeiro?view=cashflow-projected&de=${kpiDe}&ate=${kpiAte}&group_by=month`, { cache: 'no-store' }),
+          fetch(`/api/modulos/financeiro?view=top-despesas&dim=fornecedor&de=${kpiDe}&ate=${kpiAte}`, { cache: 'no-store' }),
+          fetch(`/api/modulos/financeiro?view=top-receitas&dim=cliente&de=${kpiDe}&ate=${kpiAte}`, { cache: 'no-store' }),
         ])
 
         let ar: ARRow[] = []
@@ -427,6 +433,25 @@ export default function FinanceiroDashboardPage() {
             const j = await topFilialRes.value.json() as { rows?: Array<{ label?: string; total?: number }> }
             setTopFiliais(Array.isArray(j?.rows) ? j.rows.map(r => ({ label: String(r.label || ''), value: Number(r.total || 0) })) : [])
           } else setTopFiliais([])
+
+          if (cfRealRes.status === 'fulfilled' && cfRealRes.value.ok) {
+            const j = await cfRealRes.value.json() as { rows?: Array<{ period: string; entradas: number; saidas: number; net: number }> }
+            setCashRealized(Array.isArray(j?.rows) ? j.rows : [])
+          } else setCashRealized([])
+          if (cfProjRes.status === 'fulfilled' && cfProjRes.value.ok) {
+            const j = await cfProjRes.value.json() as { rows?: Array<{ period: string; entradas: number; saidas: number; net: number; saldo_projetado?: number }> }
+            setCashProjected(Array.isArray(j?.rows) ? j.rows : [])
+          } else setCashProjected([])
+
+          // Top fornecedores e clientes
+          if (topFornRes.status === 'fulfilled' && topFornRes.value.ok) {
+            const j = await topFornRes.value.json() as { rows?: Array<{ label?: string; total?: number }> }
+            setTopFornecedores(Array.isArray(j?.rows) ? j.rows.map(r => ({ label: String(r.label || ''), value: Number(r.total || 0) })) : [])
+          } else setTopFornecedores([])
+          if (topCliRes.status === 'fulfilled' && topCliRes.value.ok) {
+            const j = await topCliRes.value.json() as { rows?: Array<{ label?: string; total?: number }> }
+            setTopClientes(Array.isArray(j?.rows) ? j.rows.map(r => ({ label: String(r.label || ''), value: Number(r.total || 0) })) : [])
+          } else setTopClientes([])
         }
       } catch (e) {
         if (!cancelled) setError('Falha ao carregar dados')
@@ -567,48 +592,12 @@ export default function FinanceiroDashboardPage() {
   }
   const meses = useMemo(() => lastMonths(6), [])
 
-  const receitasDespesas = useMemo(() => {
-    const rec: Record<string, number> = {}
-    const des: Record<string, number> = {}
-    for (const k of meses) { rec[k] = 0; des[k] = 0 }
-
-    // Receitas realizadas
-    for (const r of prRows) {
-      const k = monthKeyFromStr(r.data_recebimento)
-      if (k && k in rec) rec[k] += Number(r.valor_total) || 0
-    }
-    // Despesas realizadas
-    for (const r of peRows) {
-      const k = monthKeyFromStr(r.data_pagamento)
-      if (k && k in des) des[k] += Number(r.valor_pago) || 0
-    }
-
-    // Fallback: se tudo zero, usar AR/AP por vencimento como proxy
-    const allZero = meses.every(k => (rec[k] || 0) === 0 && (des[k] || 0) === 0)
-    if (allZero) {
-      for (const r of arRows) {
-        const k = monthKeyFromStr(r.data_vencimento)
-        if (k && k in rec && !isPaid(r.status)) rec[k] += Number(r.valor_total) || 0
-      }
-      for (const r of apRows) {
-        const k = monthKeyFromStr(r.data_vencimento)
-        if (k && k in des && !isPaid(r.status)) des[k] += Number(r.valor_total) || 0
-      }
-    }
-
-    const data = meses.map(k => ({ key: k, label: monthLabel(k), receita: rec[k] || 0, despesa: des[k] || 0 }))
-    const maxVal = Math.max(1, ...data.map(d => Math.max(d.receita, d.despesa)))
-    const saldoMensal = data.map(d => d.receita - d.despesa)
-    const saldoAcumulado: number[] = []
-    saldoMensal.reduce((acc, v, idx) => {
-      const s = acc + v
-      saldoAcumulado[idx] = s
-      return s
-    }, 0)
-    const minSaldo = Math.min(0, ...saldoAcumulado)
-    const maxSaldo = Math.max(1, ...saldoAcumulado)
-    return { data, maxVal, saldoAcumulado, minSaldo, maxSaldo }
-  }, [meses, prRows, peRows, arRows, apRows])
+  // Helpers to display cashflow labels
+  function periodToLabel(s: string) {
+    const d = parseDate(s)
+    if (!d) return s
+    return d.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' })
+  }
 
   function BarsReceitasDespesas({ items, max }: { items: { label: string; receita: number; despesa: number }[]; max: number }) {
     return (
@@ -744,29 +733,29 @@ export default function FinanceiroDashboardPage() {
         </div>
       </div>
 
-      {/* Charts — Row 1 (3 charts) */}
+      {/* Charts — Row 1 (Fluxo de Caixa) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor, boxShadow: cardBoxShadow }}>
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><BarChart3 className="w-5 h-5 text-indigo-600" />Receitas vs Despesas</h3>
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><BarChart3 className="w-5 h-5 text-indigo-600" />Fluxo de Caixa — Realizado</h3>
           <BarsReceitasDespesas
-            items={receitasDespesas.data.map(d => ({ label: d.label, receita: d.receita, despesa: d.despesa }))}
-            max={receitasDespesas.maxVal}
+            items={cashRealized.map(d => ({ label: periodToLabel(d.period), receita: d.entradas, despesa: d.saidas }))}
+            max={Math.max(1, ...cashRealized.map(d => Math.max(d.entradas, d.saidas)))}
           />
         </div>
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor, boxShadow: cardBoxShadow }}>
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><Wallet className="w-5 h-5 text-blue-600" />Saldo no final do mês</h3>
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><Wallet className="w-5 h-5 text-blue-600" />Fluxo de Caixa — Projetado</h3>
           <div className="flex items-center justify-between text-xs text-gray-600 mb-1" style={styleText}>
-            <span>Acumulado</span>
-            <span>Último: {formatBRL(receitasDespesas.saldoAcumulado.at(-1) ?? 0)}</span>
+            <span>Saldo Projetado</span>
+            <span>Último: {formatBRL(cashProjected.at(-1)?.saldo_projetado ?? 0)}</span>
           </div>
           <LineSaldoMensal
-            values={receitasDespesas.saldoAcumulado}
-            min={receitasDespesas.minSaldo}
-            max={receitasDespesas.maxSaldo}
+            values={cashProjected.map(d => d.saldo_projetado || 0)}
+            min={Math.min(0, ...(cashProjected.map(d => d.saldo_projetado || 0)))}
+            max={Math.max(1, ...(cashProjected.map(d => d.saldo_projetado || 0)))}
           />
           <div className="grid grid-cols-6 gap-3 mt-1">
-            {receitasDespesas.data.map(d => (
-              <div key={d.key} className="text-[11px] text-gray-600 text-center" style={styleText}>{d.label}</div>
+            {cashProjected.map((d, idx) => (
+              <div key={`${d.period}-${idx}`} className="text-[11px] text-gray-600 text-center" style={styleText}>{periodToLabel(d.period)}</div>
             ))}
           </div>
         </div>
@@ -776,25 +765,19 @@ export default function FinanceiroDashboardPage() {
         </div>
       </div>
 
-      {/* Charts — Row 2 (3 charts) */}
+      {/* Charts — Row 2 (Aging AP + Tops Fornecedores/Clientes) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
           <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><Clock className="w-5 h-5 text-rose-600" />Aging A Pagar</h3>
           <AgingBar data={apAging} />
         </div>
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><Star className="w-5 h-5 text-amber-500" />Top A Receber</h3>
-          <BarList
-            items={topReceber.map(i => ({ label: i.nome, value: i.valor }))}
-            color="bg-emerald-500"
-          />
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><Star className="w-5 h-5 text-amber-500" />Top 5 Fornecedores</h3>
+          <BarList items={topFornecedores} color="bg-emerald-500" />
         </div>
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><CalendarCheck className="w-5 h-5 text-rose-600" />Pagamentos do Dia</h3>
-          <BarList
-            items={pagamentosHoje.map(i => ({ label: i.nome, value: i.valor }))}
-            color="bg-violet-500"
-          />
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><CalendarCheck className="w-5 h-5 text-rose-600" />Top 5 Clientes</h3>
+          <BarList items={topClientes} color="bg-violet-500" />
         </div>
       </div>
 

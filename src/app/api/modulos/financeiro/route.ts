@@ -360,6 +360,103 @@ export async function GET(req: NextRequest) {
 
       const rows = await runQuery<{ bucket: string; total: number | null }>(agingSql, paramsAging);
       return Response.json({ success: true, ref: ref || null, rows, sql_query: agingSql, sql_params: paramsAging });
+    } else if (view === 'cashflow-realized') {
+      // Fluxo de Caixa Realizado: entradas (pagamento_recebido) x saídas (pagamento_efetuado)
+      const gb = (searchParams.get('group_by') || 'month').toLowerCase(); // day|week|month
+      const valid = gb === 'day' || gb === 'week' || gb === 'month';
+      const groupBy = valid ? gb : 'month';
+      const tenantId = parseNumber(searchParams.get('tenant_id'));
+      const contaId = parseNumber(searchParams.get('conta_id'));
+
+      const bucketExpr = `date_trunc('${groupBy}', lf.data_lancamento)::date`;
+      const paramsR: unknown[] = [];
+      let idxR = 1;
+      let whereBase = `WHERE 1=1`;
+      if (de) { whereBase += ` AND lf.data_lancamento >= $${idxR++}`; paramsR.push(de); }
+      if (ate) { whereBase += ` AND lf.data_lancamento <= $${idxR++}`; paramsR.push(ate); }
+      if (tenantId) { whereBase += ` AND lf.tenant_id = $${idxR++}`; paramsR.push(tenantId); }
+
+      // Optional account filter via header (ap/ar)
+      const contaFiltroReceb = contaId ? ` AND ar.conta_financeira_id = $${idxR++}` : '';
+      if (contaId) paramsR.push(contaId);
+      const contaFiltroPago = contaId ? ` AND ap.conta_financeira_id = $${idxR++}` : '';
+      if (contaId) paramsR.push(contaId);
+
+      const sql = `
+        SELECT period,
+               SUM(entradas) AS entradas,
+               SUM(saidas)   AS saidas
+          FROM (
+            SELECT ${bucketExpr} AS period, SUM(lf.valor) AS entradas, 0::numeric AS saidas
+              FROM financeiro.lancamentos_financeiros lf
+              JOIN financeiro.lancamentos_financeiros ar ON ar.id = lf.lancamento_origem_id
+              ${whereBase} AND LOWER(lf.tipo) = 'pagamento_recebido'${contaFiltroReceb}
+              GROUP BY 1
+            UNION ALL
+            SELECT ${bucketExpr} AS period, 0::numeric AS entradas, SUM(lf.valor) AS saidas
+              FROM financeiro.lancamentos_financeiros lf
+              JOIN financeiro.lancamentos_financeiros ap ON ap.id = lf.lancamento_origem_id
+              ${whereBase} AND LOWER(lf.tipo) = 'pagamento_efetuado'${contaFiltroPago}
+              GROUP BY 1
+          ) s
+         GROUP BY period
+         ORDER BY period ASC
+      `.replace(/\n\s+/g, ' ').trim();
+
+      const rows = await runQuery<{ period: string; entradas: number | null; saidas: number | null }>(sql, paramsR);
+      const data = rows.map(r => ({
+        period: r.period,
+        entradas: Number(r.entradas || 0),
+        saidas: Number(r.saidas || 0),
+        net: Number(r.entradas || 0) - Number(r.saidas || 0)
+      }));
+      return Response.json({ success: true, rows: data, sql_query: sql, sql_params: paramsR, group_by: groupBy });
+    } else if (view === 'cashflow-projected') {
+      // Fluxo de Caixa Projetado: títulos pendentes por vencimento (AR/AP)
+      const gb = (searchParams.get('group_by') || 'month').toLowerCase(); // day|week|month
+      const valid = gb === 'day' || gb === 'week' || gb === 'month';
+      const groupBy = valid ? gb : 'month';
+      const tenantId = parseNumber(searchParams.get('tenant_id'));
+      const saldoInicial = parseNumber(searchParams.get('saldo_inicial'), 0) || 0;
+
+      const bucketExpr = `date_trunc('${groupBy}', lf.data_vencimento)::date`;
+      const paramsP: unknown[] = [];
+      let idxP = 1;
+      let wherePend = `WHERE LOWER(lf.status) = 'pendente'`;
+      if (de) { wherePend += ` AND lf.data_vencimento >= $${idxP++}`; paramsP.push(de); }
+      if (ate) { wherePend += ` AND lf.data_vencimento <= $${idxP++}`; paramsP.push(ate); }
+      if (tenantId) { wherePend += ` AND lf.tenant_id = $${idxP++}`; paramsP.push(tenantId); }
+
+      const sql = `
+        SELECT period,
+               SUM(entradas) AS entradas,
+               SUM(saidas)   AS saidas
+          FROM (
+            SELECT ${bucketExpr} AS period, SUM(lf.valor) AS entradas, 0::numeric AS saidas
+              FROM financeiro.lancamentos_financeiros lf
+              ${wherePend} AND LOWER(lf.tipo) = 'conta_a_receber'
+              GROUP BY 1
+            UNION ALL
+            SELECT ${bucketExpr} AS period, 0::numeric AS entradas, SUM(lf.valor) AS saidas
+              FROM financeiro.lancamentos_financeiros lf
+              ${wherePend} AND LOWER(lf.tipo) = 'conta_a_pagar'
+              GROUP BY 1
+          ) s
+         GROUP BY period
+         ORDER BY period ASC
+      `.replace(/\n\s+/g, ' ').trim();
+
+      const rows = await runQuery<{ period: string; entradas: number | null; saidas: number | null }>(sql, paramsP);
+      // Compute saldo projetado acumulado
+      let saldo = saldoInicial;
+      const data = rows.map(r => {
+        const entradas = Number(r.entradas || 0);
+        const saidas = Number(r.saidas || 0);
+        const net = entradas - saidas;
+        saldo += net;
+        return { period: r.period, entradas, saidas, net, saldo_projetado: saldo };
+      });
+      return Response.json({ success: true, saldo_inicial: saldoInicial, rows: data, sql_query: sql, sql_params: paramsP, group_by: groupBy });
     } else if (view === 'top-despesas') {
       // Top N despesas por dimensão (categoria | centro_custo | departamento)
       const dim = (searchParams.get('dim') || '').toLowerCase();
@@ -372,8 +469,9 @@ export async function GET(req: NextRequest) {
       else if (dim === 'centro_lucro' || dim === 'centro-lucro') dimExpr = "COALESCE(cl_ap.nome, 'Sem centro de lucro')";
       else if (dim === 'filial') dimExpr = "COALESCE(fil_ap.nome, 'Sem filial')";
       else if (dim === 'projeto') dimExpr = "COALESCE(prj_ap.nome, 'Sem projeto')";
+      else if (dim === 'fornecedor') dimExpr = "COALESCE(forn_ap.nome, 'Sem fornecedor')";
       else {
-        return Response.json({ success: false, message: "Parâmetro 'dim' inválido. Use 'categoria' | 'centro_custo' | 'departamento'" }, { status: 400 });
+        return Response.json({ success: false, message: "Parâmetro 'dim' inválido. Use 'categoria' | 'centro_custo' | 'departamento' | 'centro_lucro' | 'projeto' | 'filial' | 'fornecedor'" }, { status: 400 });
       }
 
       const tenantId = parseNumber(searchParams.get('tenant_id'));
@@ -396,6 +494,36 @@ export async function GET(req: NextRequest) {
           LEFT JOIN empresa.centros_lucro cl_ap ON cl_ap.id = ap.centro_lucro_id
           LEFT JOIN empresa.filiais fil_ap ON fil_ap.id = ap.filial_id
           LEFT JOIN financeiro.projetos prj_ap ON prj_ap.id = ap.projeto_id
+          LEFT JOIN entidades.fornecedores forn_ap ON forn_ap.id = ap.fornecedor_id
+          ${where}
+          GROUP BY 1
+          ORDER BY total DESC
+          LIMIT ${limit}
+      `.replace(/\n\s+/g, ' ').trim();
+
+      const rows = await runQuery<{ label: string; total: number | null }>(sql, params);
+      return Response.json({ success: true, rows, sql_query: sql, sql_params: params });
+    } else if (view === 'top-receitas') {
+      // Top N receitas por cliente (pagamentos recebidos no período)
+      const dim = (searchParams.get('dim') || '').toLowerCase();
+      const limit = Math.max(1, Math.min(50, parseNumber(searchParams.get('limit'), 5) || 5));
+      if (dim !== 'cliente') {
+        return Response.json({ success: false, message: "Parâmetro 'dim' inválido. Use 'cliente'" }, { status: 400 });
+      }
+
+      const tenantId = parseNumber(searchParams.get('tenant_id'));
+      const params: unknown[] = [];
+      let idx = 1;
+      let where = `WHERE lf.tipo = 'pagamento_recebido'`;
+      if (de) { where += ` AND lf.data_lancamento >= $${idx++}`; params.push(de); }
+      if (ate) { where += ` AND lf.data_lancamento <= $${idx++}`; params.push(ate); }
+      if (tenantId) { where += ` AND lf.tenant_id = $${idx++}`; params.push(tenantId); }
+
+      const sql = `
+        SELECT COALESCE(cli_ar.nome, 'Sem cliente') AS label, COALESCE(SUM(lf.valor), 0) AS total
+          FROM financeiro.lancamentos_financeiros lf
+          JOIN financeiro.lancamentos_financeiros ar ON ar.id = lf.lancamento_origem_id
+          LEFT JOIN entidades.clientes cli_ar ON cli_ar.id = ar.cliente_id
           ${where}
           GROUP BY 1
           ORDER BY total DESC
