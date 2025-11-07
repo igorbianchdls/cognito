@@ -1136,7 +1136,7 @@ export const rankingPorCategoriaFinanceira = tool({
     tipo: z.enum(['pagamento_efetuado', 'conta_a_pagar', 'contas_a_pagar', 'pagamento_recebido', 'conta_a_receber', 'contas_a_receber']).default('pagamento_efetuado')
       .describe("Base: 'pagamento_efetuado' | 'conta_a_pagar' | 'pagamento_recebido' | 'conta_a_receber' (aceita plural)"),
   }),
-  execute: async ({ data_inicial, data_final, limit, tipo }) => {
+  execute: async ({ data_inicial, data_final, limit, tipo = 'pagamento_efetuado' }) => {
     try {
       const norm = (t: string) => t === 'contas_a_pagar' ? 'conta_a_pagar' : (t === 'contas_a_receber' ? 'conta_a_receber' : t);
       const tipoNorm = norm(tipo);
@@ -1333,7 +1333,7 @@ export const rankingFinanceiroPorDimensao = tool({
     data_final: z.string().optional().describe('Data final (YYYY-MM-DD)'),
     limit: z.number().default(100).describe('Número máximo de linhas no ranking'),
   }),
-  execute: async ({ tipo, dimensao, data_inicial, data_final, limit }) => {
+  execute: async ({ tipo = 'pagamento_efetuado', dimensao, data_inicial, data_final, limit }) => {
     try {
       const norm = (t: string) =>
         t === 'contas_a_pagar' ? 'conta_a_pagar' : t === 'contas_a_receber' ? 'conta_a_receber' : t;
