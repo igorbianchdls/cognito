@@ -24,9 +24,10 @@ interface Props {
   rows?: Row[]
   count?: number
   sql_query?: string
+  title?: string
 }
 
-export default function TecnicosResult({ success, message, rows = [], count, sql_query }: Props) {
+export default function TecnicosResult({ success, message, rows = [], count, sql_query, title }: Props) {
   const columns: ColumnDef<Row>[] = useMemo(() => [
     {
       accessorKey: 'nome',
@@ -61,7 +62,7 @@ export default function TecnicosResult({ success, message, rows = [], count, sql
     <ArtifactDataTable
       data={rows}
       columns={columns}
-      title="Técnicos"
+      title={title ?? "Técnicos"}
       icon={Users}
       iconColor="text-emerald-700"
       message={message}
@@ -73,4 +74,3 @@ export default function TecnicosResult({ success, message, rows = [], count, sql
     />
   )
 }
-

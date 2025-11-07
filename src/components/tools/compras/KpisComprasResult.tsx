@@ -12,9 +12,10 @@ interface Props {
   message: string
   kpis?: Kpis
   sql_query?: string
+  title?: string
 }
 
-export default function KpisComprasResult({ success, message, kpis = {}, sql_query }: Props) {
+export default function KpisComprasResult({ success, message, kpis = {}, sql_query, title }: Props) {
   const rows = useMemo(() => {
     const entries = Object.entries(kpis || {})
     if (!entries.length) return [] as Array<Record<string, unknown>>
@@ -34,7 +35,7 @@ export default function KpisComprasResult({ success, message, kpis = {}, sql_que
     <ArtifactDataTable
       data={rows}
       columns={columns}
-      title="KPIs de Compras"
+      title={title ?? "KPIs de Compras"}
       icon={BarChart3}
       iconColor="text-indigo-700"
       message={message}
@@ -46,4 +47,3 @@ export default function KpisComprasResult({ success, message, kpis = {}, sql_que
     />
   )
 }
-

@@ -1450,6 +1450,7 @@ type RowsToolOutput = {
   count?: number;
   sql_query?: string;
   sql_params?: string;
+  title?: string;
 };
 
 type ServicosKpiToolOutput = {
@@ -1457,6 +1458,7 @@ type ServicosKpiToolOutput = {
   message: string;
   kpis?: Record<string, number | string | null | undefined>;
   sql_query?: string;
+  title?: string;
 };
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -5090,6 +5092,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   rows={(tool.output as RowsToolOutput).rows}
                   count={(tool.output as RowsToolOutput).count}
                   sql_query={(tool.output as RowsToolOutput).sql_query}
+                  title={(tool.output as RowsToolOutput).title}
                 />
               )}
             </div>
@@ -5115,6 +5118,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   rows={(tool.output as RowsToolOutput).rows}
                   count={(tool.output as RowsToolOutput).count}
                   sql_query={(tool.output as RowsToolOutput).sql_query}
+                  title={(tool.output as RowsToolOutput).title}
                 />
               )}
             </div>
@@ -5140,6 +5144,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   rows={(tool.output as RowsToolOutput).rows}
                   count={(tool.output as RowsToolOutput).count}
                   sql_query={(tool.output as RowsToolOutput).sql_query}
+                  title={(tool.output as RowsToolOutput).title}
                 />
               )}
             </div>
@@ -5165,6 +5170,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   rows={(tool.output as RowsToolOutput).rows}
                   count={(tool.output as RowsToolOutput).count}
                   sql_query={(tool.output as RowsToolOutput).sql_query}
+                  title={(tool.output as RowsToolOutput).title}
                 />
               )}
             </div>
@@ -5190,6 +5196,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   rows={(tool.output as RowsToolOutput).rows}
                   count={(tool.output as RowsToolOutput).count}
                   sql_query={(tool.output as RowsToolOutput).sql_query}
+                  title={(tool.output as RowsToolOutput).title}
                 />
               )}
             </div>
@@ -5214,6 +5221,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   message={(tool.output as ServicosKpiToolOutput).message}
                   kpis={(tool.output as ServicosKpiToolOutput).kpis}
                   sql_query={(tool.output as ServicosKpiToolOutput).sql_query}
+                  title={(tool.output as ServicosKpiToolOutput).title}
                 />
               )}
             </div>
@@ -5390,6 +5398,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   rows={(tool.output as RowsToolOutput).rows}
                   count={(tool.output as RowsToolOutput).count}
                   sql_query={(tool.output as RowsToolOutput).sql_query}
+                  title={(tool.output as RowsToolOutput).title}
                 />
               )}
             </div>
@@ -5415,6 +5424,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   rows={(tool.output as RowsToolOutput).rows}
                   count={(tool.output as RowsToolOutput).count}
                   sql_query={(tool.output as RowsToolOutput).sql_query}
+                  title={(tool.output as RowsToolOutput).title}
                 />
               )}
             </div>
@@ -5440,6 +5450,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   rows={(tool.output as RowsToolOutput).rows}
                   count={(tool.output as RowsToolOutput).count}
                   sql_query={(tool.output as RowsToolOutput).sql_query}
+                  title={(tool.output as RowsToolOutput).title}
                 />
               )}
             </div>
@@ -5465,6 +5476,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   rows={(tool.output as RowsToolOutput).rows}
                   count={(tool.output as RowsToolOutput).count}
                   sql_query={(tool.output as RowsToolOutput).sql_query}
+                  title={(tool.output as RowsToolOutput).title}
                 />
               )}
             </div>
@@ -5490,6 +5502,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   rows={(tool.output as RowsToolOutput).rows}
                   count={(tool.output as RowsToolOutput).count}
                   sql_query={(tool.output as RowsToolOutput).sql_query}
+                  title={(tool.output as RowsToolOutput).title}
                 />
               )}
             </div>
@@ -5514,6 +5527,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   message={(tool.output as ServicosKpiToolOutput).message}
                   kpis={(tool.output as ServicosKpiToolOutput).kpis}
                   sql_query={(tool.output as ServicosKpiToolOutput).sql_query}
+                  title={(tool.output as ServicosKpiToolOutput).title}
                 />
               )}
             </div>

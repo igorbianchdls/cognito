@@ -79,7 +79,19 @@ export const listarOrdensDeServico = tool({
     const sql = `${selectSql}\n${baseSql}\n${whereClause}\n${orderClause}\n${limitClause}`.trim()
     try {
       const rows = await runQuery<Record<string, unknown>>(sql, paramsWithLimit)
-      return { success: true, message: `✅ ${rows.length} OS encontradas`, count: rows.length, rows, sql_query: sql, sql_params: fmtParams(paramsWithLimit) }
+      const baseTitle = 'Ordens de Serviço'
+      let periodStr = ''
+      if (de && ate) periodStr = `${de} a ${ate}`
+      else if (de) periodStr = `desde ${de}`
+      else if (ate) periodStr = `até ${ate}`
+      let mainFilter = ''
+      if (status) mainFilter = `Status ${status}`
+      else if (tecnico_id) mainFilter = `Técnico ${tecnico_id}`
+      else if (cliente_id) mainFilter = `Cliente ${cliente_id}`
+      else if (prioridade) mainFilter = `Prioridade ${prioridade}`
+      else if (q) mainFilter = `Busca "${q}"`
+      const title = [baseTitle, periodStr, mainFilter].filter(Boolean).join(' · ')
+      return { success: true, message: `✅ ${rows.length} OS encontradas`, count: rows.length, rows, title, sql_query: sql, sql_params: fmtParams(paramsWithLimit) }
     } catch (error) {
       return { success: false, message: '❌ Erro ao listar Ordens de Serviço', error: error instanceof Error ? error.message : String(error), rows: [], sql_query: sql, sql_params: fmtParams(paramsWithLimit) }
     }
@@ -133,7 +145,15 @@ export const listarTecnicos = tool({
     const sql = `${selectSql}\n${baseSql}\n${whereClause}\n${groupBy}\n${orderClause}\n${limitClause}`.trim()
     try {
       const rows = await runQuery<Record<string, unknown>>(sql, paramsWithLimit)
-      return { success: true, message: `✅ ${rows.length} técnico(s) encontrados`, count: rows.length, rows, sql_query: sql, sql_params: fmtParams(paramsWithLimit) }
+      const baseTitle = 'Técnicos'
+      let mainFilter = ''
+      if (especialidade) mainFilter = `Esp. ${especialidade}`
+      else if (status) mainFilter = `Status ${status}`
+      else if (custo_min !== undefined) mainFilter = `≥ ${Number(custo_min).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`
+      else if (custo_max !== undefined) mainFilter = `≤ ${Number(custo_max).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`
+      const periodStr = de && ate ? `${de} a ${ate}` : de ? `desde ${de}` : ate ? `até ${ate}` : ''
+      const title = [baseTitle, periodStr, mainFilter].filter(Boolean).join(' · ')
+      return { success: true, message: `✅ ${rows.length} técnico(s) encontrados`, count: rows.length, rows, title, sql_query: sql, sql_params: fmtParams(paramsWithLimit) }
     } catch (error) {
       return { success: false, message: '❌ Erro ao listar técnicos', error: error instanceof Error ? error.message : String(error), rows: [], sql_query: sql, sql_params: fmtParams(paramsWithLimit) }
     }
@@ -181,7 +201,11 @@ export const listarAgendamentos = tool({
     const sql = `${selectSql}\n${baseSql}\n${whereClause}\n${orderClause}\n${limitClause}`.trim()
     try {
       const rows = await runQuery<Record<string, unknown>>(sql, paramsWithLimit)
-      return { success: true, message: `✅ ${rows.length} agendamento(s)`, count: rows.length, rows, sql_query: sql, sql_params: fmtParams(paramsWithLimit) }
+      const baseTitle = 'Agendamentos'
+      const periodStr = de && ate ? `${de} a ${ate}` : de ? `desde ${de}` : ate ? `até ${ate}` : ''
+      const mainFilter = status ? `Status ${status}` : (tecnico_id ? `Técnico ${tecnico_id}` : (q ? `Busca "${q}"` : ''))
+      const title = [baseTitle, periodStr, mainFilter].filter(Boolean).join(' · ')
+      return { success: true, message: `✅ ${rows.length} agendamento(s)`, count: rows.length, rows, title, sql_query: sql, sql_params: fmtParams(paramsWithLimit) }
     } catch (error) {
       return { success: false, message: '❌ Erro ao listar agendamentos', error: error instanceof Error ? error.message : String(error), rows: [], sql_query: sql, sql_params: fmtParams(paramsWithLimit) }
     }
@@ -229,7 +253,14 @@ export const listarCatalogoDeServicos = tool({
     const sql = `${selectSql}\n${baseSql}\n${whereClause}\n${orderClause}\n${limitClause}`.trim()
     try {
       const rows = await runQuery<Record<string, unknown>>(sql, paramsWithLimit)
-      return { success: true, message: `✅ ${rows.length} serviço(s)`, count: rows.length, rows, sql_query: sql, sql_params: fmtParams(paramsWithLimit) }
+      const baseTitle = 'Catálogo de Serviços'
+      let mainFilter = ''
+      if (categoria) mainFilter = `Categoria ${categoria}`
+      else if (ativo) mainFilter = ativo === 'true' ? 'Ativos' : 'Inativos'
+      else if (preco_min !== undefined) mainFilter = `≥ ${Number(preco_min).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`
+      else if (preco_max !== undefined) mainFilter = `≤ ${Number(preco_max).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`
+      const title = [baseTitle, mainFilter].filter(Boolean).join(' · ')
+      return { success: true, message: `✅ ${rows.length} serviço(s)`, count: rows.length, rows, title, sql_query: sql, sql_params: fmtParams(paramsWithLimit) }
     } catch (error) {
       return { success: false, message: '❌ Erro ao listar catálogo de serviços', error: error instanceof Error ? error.message : String(error), rows: [], sql_query: sql, sql_params: fmtParams(paramsWithLimit) }
     }
@@ -270,7 +301,10 @@ export const historicoDeServicosDoCliente = tool({
     const sql = `${selectSql}\n${baseSql}\n${whereClause}\n${orderClause}\n${limitClause}`.trim()
     try {
       const rows = await runQuery<Record<string, unknown>>(sql, paramsWithLimit)
-      return { success: true, message: `✅ ${rows.length} registro(s) do cliente`, count: rows.length, rows, sql_query: sql, sql_params: fmtParams(paramsWithLimit) }
+      const baseTitle = 'Histórico do Cliente'
+      const periodStr = de && ate ? `${de} a ${ate}` : de ? `desde ${de}` : ate ? `até ${ate}` : ''
+      const title = [baseTitle, `Cliente ${cliente_id}`, periodStr].filter(Boolean).join(' · ')
+      return { success: true, message: `✅ ${rows.length} registro(s) do cliente`, count: rows.length, rows, title, sql_query: sql, sql_params: fmtParams(paramsWithLimit) }
     } catch (error) {
       return { success: false, message: '❌ Erro ao buscar histórico do cliente', error: error instanceof Error ? error.message : String(error), rows: [], sql_query: sql, sql_params: fmtParams(paramsWithLimit) }
     }
@@ -303,10 +337,12 @@ export const indicadoresDeServicos = tool({
 
     try {
       const [row] = await runQuery<Record<string, unknown>>(sql, params)
-      return { success: true, message: '✅ KPIs calculados', kpis: row ?? {}, sql_query: sql, sql_params: fmtParams(params) }
+      const baseTitle = 'Indicadores de Serviços'
+      const periodStr = de && ate ? `${de} a ${ate}` : de ? `desde ${de}` : ate ? `até ${ate}` : ''
+      const title = [baseTitle, periodStr].filter(Boolean).join(' · ')
+      return { success: true, message: '✅ KPIs calculados', kpis: row ?? {}, title, sql_query: sql, sql_params: fmtParams(params) }
     } catch (error) {
       return { success: false, message: '❌ Erro ao calcular KPIs', error: error instanceof Error ? error.message : String(error), kpis: {}, sql_query: sql, sql_params: fmtParams(params) }
     }
   }
 })
-

@@ -19,9 +19,9 @@ type Row = Record<string, unknown> & {
   cadastrado_em?: string
 }
 
-interface Props { success: boolean; message: string; rows?: Row[]; count?: number; sql_query?: string }
+interface Props { success: boolean; message: string; rows?: Row[]; count?: number; sql_query?: string; title?: string }
 
-export default function FornecedoresCompraResult({ success, message, rows = [], count, sql_query }: Props) {
+export default function FornecedoresCompraResult({ success, message, rows = [], count, sql_query, title }: Props) {
   const columns: ColumnDef<Row>[] = useMemo(() => [
     {
       accessorKey: 'nome_fantasia',
@@ -53,7 +53,7 @@ export default function FornecedoresCompraResult({ success, message, rows = [], 
     <ArtifactDataTable
       data={rows}
       columns={columns}
-      title="Fornecedores"
+      title={title ?? "Fornecedores"}
       icon={Building2}
       iconColor="text-slate-700"
       message={message}
@@ -65,4 +65,3 @@ export default function FornecedoresCompraResult({ success, message, rows = [], 
     />
   )
 }
-

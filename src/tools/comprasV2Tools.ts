@@ -60,7 +60,14 @@ export const listarFornecedoresCompra = tool({
     const sql = `${selectSql}\n${baseSql}\n${whereClause}\n${orderClause}\n${limitClause}`.trim()
     try {
       const rows = await runQuery<Record<string, unknown>>(sql, paramsWithLimit)
-      return { success: true, message: `✅ ${rows.length} fornecedores`, rows, count: rows.length, sql_query: sql, sql_params: fmtParams(paramsWithLimit) }
+      const baseTitle = 'Fornecedores'
+      const periodStr = de && ate ? `${de} a ${ate}` : de ? `desde ${de}` : ate ? `até ${ate}` : ''
+      let mainFilter = ''
+      if (pais) mainFilter = `País ${pais}`
+      else if (ativo) mainFilter = ativo === 'true' ? 'Ativos' : 'Inativos'
+      else if (status) mainFilter = `Status ${status}`
+      const title = [baseTitle, periodStr, mainFilter].filter(Boolean).join(' · ')
+      return { success: true, message: `✅ ${rows.length} fornecedores`, rows, count: rows.length, title, sql_query: sql, sql_params: fmtParams(paramsWithLimit) }
     } catch (error) {
       return { success: false, message: '❌ Erro ao listar fornecedores', rows: [], count: 0, error: error instanceof Error ? error.message : String(error), sql_query: sql, sql_params: fmtParams(paramsWithLimit) }
     }
@@ -114,7 +121,14 @@ export const listarPedidosCompra = tool({
     const sql = `${selectSql}\n${baseSql}\n${whereClause}\n${orderClause}\n${limitClause}`.trim()
     try {
       const rows = await runQuery<Record<string, unknown>>(sql, paramsWithLimit)
-      return { success: true, message: `✅ ${rows.length} pedidos de compra`, rows, count: rows.length, sql_query: sql, sql_params: fmtParams(paramsWithLimit) }
+      const baseTitle = 'Pedidos de Compra'
+      const periodStr = de && ate ? `${de} a ${ate}` : de ? `desde ${de}` : ate ? `até ${ate}` : ''
+      let mainFilter = ''
+      if (status) mainFilter = `Status ${status}`
+      else if (fornecedor_id) mainFilter = `Fornecedor ${fornecedor_id}`
+      else if (condicao_pagamento_id) mainFilter = `Cond. Pgto ${condicao_pagamento_id}`
+      const title = [baseTitle, periodStr, mainFilter].filter(Boolean).join(' · ')
+      return { success: true, message: `✅ ${rows.length} pedidos de compra`, rows, count: rows.length, title, sql_query: sql, sql_params: fmtParams(paramsWithLimit) }
     } catch (error) {
       return { success: false, message: '❌ Erro ao listar pedidos de compra', rows: [], count: 0, error: error instanceof Error ? error.message : String(error), sql_query: sql, sql_params: fmtParams(paramsWithLimit) }
     }
@@ -165,7 +179,11 @@ export const listarRecebimentosCompra = tool({
     const sql = `${selectSql}\n${baseSql}\n${whereClause}\n${orderClause}\n${limitClause}`.trim()
     try {
       const rows = await runQuery<Record<string, unknown>>(sql, paramsWithLimit)
-      return { success: true, message: `✅ ${rows.length} recebimento(s)`, rows, count: rows.length, sql_query: sql, sql_params: fmtParams(paramsWithLimit) }
+      const baseTitle = 'Recebimentos de Compra'
+      const periodStr = de && ate ? `${de} a ${ate}` : de ? `desde ${de}` : ate ? `até ${ate}` : ''
+      const mainFilter = fornecedor_id ? `Fornecedor ${fornecedor_id}` : ''
+      const title = [baseTitle, periodStr, mainFilter].filter(Boolean).join(' · ')
+      return { success: true, message: `✅ ${rows.length} recebimento(s)`, rows, count: rows.length, title, sql_query: sql, sql_params: fmtParams(paramsWithLimit) }
     } catch (error) {
       return { success: false, message: '❌ Erro ao listar recebimentos', rows: [], count: 0, error: error instanceof Error ? error.message : String(error), sql_query: sql, sql_params: fmtParams(paramsWithLimit) }
     }
@@ -208,7 +226,11 @@ export const listarSolicitacoesCompra = tool({
     const sql = `${selectSql}\n${baseSql}\n${whereClause}\n${groupBy}\n${orderClause}\n${limitClause}`.trim()
     try {
       const rows = await runQuery<Record<string, unknown>>(sql, paramsWithLimit)
-      return { success: true, message: `✅ ${rows.length} solicitação(ões)`, rows, count: rows.length, sql_query: sql, sql_params: fmtParams(paramsWithLimit) }
+      const baseTitle = 'Solicitações de Compra'
+      const periodStr = de && ate ? `${de} a ${ate}` : de ? `desde ${de}` : ate ? `até ${ate}` : ''
+      const mainFilter = status ? `Status ${status}` : ''
+      const title = [baseTitle, periodStr, mainFilter].filter(Boolean).join(' · ')
+      return { success: true, message: `✅ ${rows.length} solicitação(ões)`, rows, count: rows.length, title, sql_query: sql, sql_params: fmtParams(paramsWithLimit) }
     } catch (error) {
       return { success: false, message: '❌ Erro ao listar solicitações', rows: [], count: 0, error: error instanceof Error ? error.message : String(error), sql_query: sql, sql_params: fmtParams(paramsWithLimit) }
     }
@@ -256,7 +278,13 @@ export const listarCotacoesCompra = tool({
     const sql = `${selectSql}\n${baseSql}\n${whereClause}\n${groupBy}\n${orderClause}\n${limitClause}`.trim()
     try {
       const rows = await runQuery<Record<string, unknown>>(sql, paramsWithLimit)
-      return { success: true, message: `✅ ${rows.length} cotação(ões)`, rows, count: rows.length, sql_query: sql, sql_params: fmtParams(paramsWithLimit) }
+      const baseTitle = 'Cotações de Compra'
+      const periodStr = de && ate ? `${de} a ${ate}` : de ? `desde ${de}` : ate ? `até ${ate}` : ''
+      let mainFilter = ''
+      if (status) mainFilter = `Status ${status}`
+      else if (fornecedor_id) mainFilter = `Fornecedor ${fornecedor_id}`
+      const title = [baseTitle, periodStr, mainFilter].filter(Boolean).join(' · ')
+      return { success: true, message: `✅ ${rows.length} cotação(ões)`, rows, count: rows.length, title, sql_query: sql, sql_params: fmtParams(paramsWithLimit) }
     } catch (error) {
       return { success: false, message: '❌ Erro ao listar cotações', rows: [], count: 0, error: error instanceof Error ? error.message : String(error), sql_query: sql, sql_params: fmtParams(paramsWithLimit) }
     }
@@ -327,10 +355,12 @@ export const kpisCompras = tool({
         { name: 'solicitacoes', sql: solSql, params: solParams },
       ]
 
-      return { success: true, message: '✅ KPIs de compras', kpis, sql_query: JSON.stringify(combinedSql, null, 2) }
+      const baseTitle = 'KPIs de Compras'
+      const periodStr = de && ate ? `${de} a ${ate}` : de ? `desde ${de}` : ate ? `até ${ate}` : ''
+      const title = [baseTitle, periodStr].filter(Boolean).join(' · ')
+      return { success: true, message: '✅ KPIs de compras', kpis, title, sql_query: JSON.stringify(combinedSql, null, 2) }
     } catch (error) {
       return { success: false, message: '❌ Erro ao calcular KPIs', kpis: {}, error: error instanceof Error ? error.message : String(error) }
     }
   }
 })
-

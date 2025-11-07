@@ -21,9 +21,10 @@ interface Props {
   rows?: Row[]
   count?: number
   sql_query?: string
+  title?: string
 }
 
-export default function HistoricoClienteResult({ success, message, rows = [], count, sql_query }: Props) {
+export default function HistoricoClienteResult({ success, message, rows = [], count, sql_query, title }: Props) {
   const columns: ColumnDef<Row>[] = useMemo(() => [
     { accessorKey: 'numero_os', header: 'Nº OS' },
     {
@@ -54,7 +55,7 @@ export default function HistoricoClienteResult({ success, message, rows = [], co
     <ArtifactDataTable
       data={rows}
       columns={columns}
-      title="Histórico do Cliente"
+      title={title ?? "Histórico do Cliente"}
       icon={User}
       iconColor="text-gray-700"
       message={message}
@@ -66,4 +67,3 @@ export default function HistoricoClienteResult({ success, message, rows = [], co
     />
   )
 }
-

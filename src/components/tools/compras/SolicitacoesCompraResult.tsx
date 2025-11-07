@@ -13,9 +13,9 @@ type Row = Record<string, unknown> & {
   observacoes?: string
 }
 
-interface Props { success: boolean; message: string; rows?: Row[]; count?: number; sql_query?: string }
+interface Props { success: boolean; message: string; rows?: Row[]; count?: number; sql_query?: string; title?: string }
 
-export default function SolicitacoesCompraResult({ success, message, rows = [], count, sql_query }: Props) {
+export default function SolicitacoesCompraResult({ success, message, rows = [], count, sql_query, title }: Props) {
   const columns: ColumnDef<Row>[] = useMemo(() => [
     { accessorKey: 'data_solicitacao', header: 'Data', cell: ({ row }) => {
       const d = row.original.data_solicitacao as string | undefined
@@ -34,7 +34,7 @@ export default function SolicitacoesCompraResult({ success, message, rows = [], 
     <ArtifactDataTable
       data={rows}
       columns={columns}
-      title="Solicitações de Compra"
+      title={title ?? "Solicitações de Compra"}
       icon={FilePlus2}
       iconColor="text-sky-700"
       message={message}
@@ -46,4 +46,3 @@ export default function SolicitacoesCompraResult({ success, message, rows = [], 
     />
   )
 }
-
