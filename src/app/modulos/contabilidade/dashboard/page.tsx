@@ -390,14 +390,14 @@ export default function ContabilidadeDashboardPage() {
 
       {/* Tabelas do Balanço Patrimonial (Ativo | Passivo | PL) */}
       {bp && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-          <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
+        <div className="grid grid-cols-3 gap-6 items-start content-start mb-6">
+          <div className={`${cardContainerClass} min-w-0`} style={{ borderColor: cardBorderColor }}>
             <BPTabela title="Ativo" secoes={bp.ativo} />
           </div>
-          <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
+          <div className={`${cardContainerClass} min-w-0`} style={{ borderColor: cardBorderColor }}>
             <BPTabela title="Passivo" secoes={bp.passivo} />
           </div>
-          <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
+          <div className={`${cardContainerClass} min-w-0`} style={{ borderColor: cardBorderColor }}>
             <BPTabela title="Patrimônio Líquido" secoes={bp.pl} />
           </div>
         </div>
