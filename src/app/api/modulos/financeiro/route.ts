@@ -215,35 +215,40 @@ export async function GET(req: NextRequest) {
     let selectSql = '';
 
     if (view === 'contas-a-pagar') {
+      // Contas a Pagar – query mais completa, mantendo campos esperados pela UI
       baseSql = `FROM financeiro.lancamentos_financeiros lf
-                 LEFT JOIN administrativo.categorias_financeiras cf ON lf.categoria_id = cf.id
-                 LEFT JOIN entidades.fornecedores f ON lf.entidade_id = f.id
-                 LEFT JOIN empresa.centros_custo cc ON lf.centro_custo_id = cc.id
-                 LEFT JOIN administrativo.despesas d ON d.id = lf.despesa_id`;
-      selectSql = `SELECT 
+                 LEFT JOIN financeiro.categorias_financeiras cf ON cf.id = lf.categoria_id
+                 LEFT JOIN empresa.centros_custo cc ON cc.id = lf.centro_custo_id
+                 LEFT JOIN entidades.fornecedores f ON f.id = lf.entidade_id
+                 LEFT JOIN empresa.centros_lucro cl ON cl.id = lf.centro_lucro_id
+                 LEFT JOIN empresa.departamentos dp ON dp.id = lf.departamento_id
+                 LEFT JOIN empresa.filiais fl ON fl.id = lf.filial_id
+                 LEFT JOIN financeiro.projetos pj ON pj.id = lf.projeto_id`;
+      selectSql = `SELECT
                         lf.id AS lancamento_id,
-                        lf.descricao AS descricao_lancamento,
                         lf.descricao AS descricao,
-                        lf.valor AS valor_total,
                         lf.data_lancamento,
                         lf.data_vencimento,
+                        lf.valor AS valor_total,
                         lf.status,
-                        lf.despesa_id,
-                        cf.nome AS categoria_financeira,
+
+                        cf.nome AS categoria_nome,
+                        cf.nome AS fornecedor_categoria,
+                        cc.nome AS centro_custo_nome,
                         f.nome AS fornecedor,
                         f.imagem_url AS fornecedor_imagem_url,
-                        cf.nome AS fornecedor_categoria,
-                        cc.nome AS centro_custo,
-                        d.descricao AS descricao_despesa,
-                        d.valor_total AS valor_despesa,
-                        d.data_competencia,
-                        d.criado_em AS despesa_criada_em`;
+                        cl.nome AS centro_lucro_nome,
+                        dp.nome AS departamento_nome,
+                        fl.nome AS filial_nome,
+                        pj.nome AS projeto_nome`;
       whereDateCol = 'lf.data_vencimento';
-      conditions.push(`lf.tipo = 'conta_a_pagar'`);
+      conditions.push(`LOWER(lf.tipo) = 'conta_a_pagar'`);
       if (fornecedor_id) push('lf.entidade_id =', fornecedor_id);
       if (status) push('LOWER(lf.status) =', status.toLowerCase());
       if (valor_min !== undefined) push('lf.valor >=', valor_min);
       if (valor_max !== undefined) push('lf.valor <=', valor_max);
+      if (de) push(`${whereDateCol} >=`, de);
+      if (ate) push(`${whereDateCol} <=`, ate);
     } else if (view === 'pagamentos-efetuados') {
       // Pagamentos Efetuados via lancamentos_financeiros conforme solicitado
       baseSql = `FROM financeiro.lancamentos_financeiros pe
@@ -484,8 +489,11 @@ export async function GET(req: NextRequest) {
       return Response.json({ success: false, message: `View inválida: ${view}` }, { status: 400 });
     }
 
-    if (de) push(`${whereDateCol} >=`, de);
-    if (ate) push(`${whereDateCol} <=`, ate);
+    // Para outras views, aplicar filtros de data depois de montar os blocos
+    if (view !== 'contas-a-pagar') {
+      if (de) push(`${whereDateCol} >=`, de);
+      if (ate) push(`${whereDateCol} <=`, ate);
+    }
 
     const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
     let orderClause: string
@@ -494,7 +502,7 @@ export async function GET(req: NextRequest) {
     } else {
       switch (view) {
         case 'contas-a-pagar':
-          orderClause = 'ORDER BY lf.data_vencimento ASC'
+          orderClause = 'ORDER BY lf.data_vencimento ASC NULLS LAST, lf.id ASC'
           break
         case 'contas-a-receber':
           orderClause = 'ORDER BY lf.data_vencimento ASC'
