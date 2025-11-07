@@ -4300,6 +4300,66 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
           );
         }
 
+        if (part.type === 'tool-getContasAPagar') {
+          const contasAPagarTool = part as NexusToolUIPart;
+          const callId = contasAPagarTool.toolCallId;
+          const shouldBeOpen = contasAPagarTool.state === 'output-available' || contasAPagarTool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-getContasAPagar" state={contasAPagarTool.state} />
+                <ToolContent>
+                  {contasAPagarTool.input && (
+                    <ToolInput input={contasAPagarTool.input} />
+                  )}
+                  {contasAPagarTool.state === 'output-error' && (
+                    <ToolOutput
+                      output={null}
+                      errorText={contasAPagarTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {contasAPagarTool.state === 'output-available' && (
+                <ContasAPagarResult
+                  result={contasAPagarTool.output as GetContasAPagarToolOutput}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-getPagamentosEfetuados') {
+          const pagamentosEfetuadosTool = part as NexusToolUIPart;
+          const callId = pagamentosEfetuadosTool.toolCallId;
+          const shouldBeOpen = pagamentosEfetuadosTool.state === 'output-available' || pagamentosEfetuadosTool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-getPagamentosEfetuados" state={pagamentosEfetuadosTool.state} />
+                <ToolContent>
+                  {pagamentosEfetuadosTool.input && (
+                    <ToolInput input={pagamentosEfetuadosTool.input} />
+                  )}
+                  {pagamentosEfetuadosTool.state === 'output-error' && (
+                    <ToolOutput
+                      output={null}
+                      errorText={pagamentosEfetuadosTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {pagamentosEfetuadosTool.state === 'output-available' && (
+                <PagamentosEfetuadosResult
+                  result={pagamentosEfetuadosTool.output as GetPagamentosEfetuadosToolOutput}
+                />
+              )}
+            </div>
+          );
+        }
+
         if (part.type === 'tool-getReceipts') {
           const receiptsTool = part as NexusToolUIPart;
           const callId = receiptsTool.toolCallId;
