@@ -1754,6 +1754,147 @@ export const rankingFinanceiroPorDimensao = tool({
 });
 
 // ============================================================================
+// AGING FINANCEIRO (AP/AR)
+// ============================================================================
+
+export const agingFinanceiro = tool({
+  description: 'Aging de títulos financeiros (contas a pagar/receber) por faixas de dias, com base na data de vencimento e data-base informada.',
+  inputSchema: z.object({
+    tipo: z.enum(['conta_a_pagar', 'conta_a_receber']).default('conta_a_pagar')
+      .describe("Tipo de título: 'conta_a_pagar' (AP) ou 'conta_a_receber' (AR)"),
+    data_base: z.string().optional().describe('Data-base (YYYY-MM-DD). Default: hoje'),
+    buckets: z.array(z.number().int().positive()).default([30, 60, 90])
+      .describe('Limiares dos buckets em dias: ex. [30,60,90] → 0-30, 31-60, 61-90, >90'),
+    somente_pendentes: z.boolean().default(true)
+      .describe('Considerar apenas títulos pendentes'),
+    entidade_id: z.string().optional().describe('Fornecedor (AP) ou Cliente (AR)'),
+    categoria_id: z.string().optional(),
+    centro_custo_id: z.string().optional(),
+    projeto_id: z.string().optional(),
+    departamento_id: z.string().optional(),
+    filial_id: z.string().optional(),
+    limit: z.number().default(1000).describe('Limite de leitura (segurança)'),
+  }),
+  execute: async ({
+    tipo,
+    data_base,
+    buckets,
+    somente_pendentes,
+    entidade_id,
+    categoria_id,
+    centro_custo_id,
+    projeto_id,
+    departamento_id,
+    filial_id,
+  }) => {
+    try {
+      // Data-base padrão: hoje
+      const todayISO = new Date().toISOString().slice(0, 10);
+      const baseDate = (data_base && /\d{4}-\d{2}-\d{2}/.test(data_base)) ? data_base : todayISO;
+
+      // Buckets: ordenar e normalizar
+      const edges = Array.from(new Set((buckets || []).filter(n => Number.isFinite(n) && n > 0).map(n => Math.trunc(Number(n))))).sort((a, b) => a - b);
+      const thresholds = edges.length ? edges : [30, 60, 90];
+
+      // Expressão de dias em atraso
+      const diasExpr = `($1::date - lf.data_vencimento)::int`;
+
+      // CASE para bucket label
+      const labelParts: string[] = [`WHEN ${diasExpr} <= 0 THEN 'Não vencido'`];
+      const orderParts: string[] = [`WHEN ${diasExpr} <= 0 THEN 0`];
+      let start = 1;
+      let ord = 1;
+      thresholds.forEach((t, i) => {
+        const end = t;
+        const low = start;
+        const high = end;
+        labelParts.push(`WHEN ${diasExpr} BETWEEN ${low} AND ${high} THEN '${low}-${high}'`);
+        orderParts.push(`WHEN ${diasExpr} BETWEEN ${low} AND ${high} THEN ${ord}`);
+        start = t + 1;
+        ord += 1;
+      });
+      // Maior que último bucket
+      labelParts.push(`WHEN ${diasExpr} > ${thresholds[thresholds.length - 1]} THEN '> ${thresholds[thresholds.length - 1]}'`);
+      orderParts.push(`WHEN ${diasExpr} > ${thresholds[thresholds.length - 1]} THEN ${ord}`);
+
+      const bucketLabelCase = `CASE ${labelParts.join(' ')} ELSE 'Não classificado' END`;
+      const bucketOrderCase = `CASE ${orderParts.join(' ')} ELSE ${ord + 1} END`;
+
+      // Condições
+      const conditions: string[] = [];
+      const params: unknown[] = [baseDate]; // $1 reservado para data_base
+      let idx = 2;
+
+      conditions.push(`lf.tipo = $${idx}`);
+      params.push(tipo);
+      idx += 1;
+
+      if (somente_pendentes) {
+        conditions.push(`LOWER(lf.status) = 'pendente'`);
+      }
+      if (entidade_id) { conditions.push(`lf.entidade_id = $${idx}`); params.push(entidade_id); idx += 1; }
+      if (categoria_id) { conditions.push(`lf.categoria_id = $${idx}`); params.push(categoria_id); idx += 1; }
+      if (centro_custo_id) { conditions.push(`lf.centro_custo_id = $${idx}`); params.push(centro_custo_id); idx += 1; }
+      if (projeto_id) { conditions.push(`lf.projeto_id = $${idx}`); params.push(projeto_id); idx += 1; }
+      if (departamento_id) { conditions.push(`lf.departamento_id = $${idx}`); params.push(departamento_id); idx += 1; }
+      if (filial_id) { conditions.push(`lf.filial_id = $${idx}`); params.push(filial_id); idx += 1; }
+
+      const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+
+      // Consulta principal: buckets
+      const listSql = `
+        SELECT
+          ${bucketLabelCase} AS bucket,
+          ${bucketOrderCase} AS bucket_order,
+          COUNT(*)::int AS qtd,
+          SUM(lf.valor) AS total
+        FROM financeiro.lancamentos_financeiros lf
+        ${whereClause}
+        GROUP BY bucket, bucket_order
+        ORDER BY bucket_order ASC
+      `.trim();
+
+      const rows = await runQuery<{ bucket: string; bucket_order: number; qtd: number; total: number | null }>(listSql, params);
+
+      // Totais
+      const totalSql = `
+        SELECT SUM(lf.valor) AS total_geral
+        FROM financeiro.lancamentos_financeiros lf
+        ${whereClause}
+      `.trim();
+      const [tot] = await runQuery<{ total_geral: number | null }>(totalSql, params);
+      const totalGeral = Number(tot?.total_geral ?? 0);
+
+      const tipoLabel = tipo === 'conta_a_receber' ? 'Contas a Receber' : 'Contas a Pagar';
+      const title = `Aging ${tipoLabel} · ${baseDate}` + (somente_pendentes ? ' · Pendentes' : '');
+      const message = `Distribuição por faixas: ${rows.length} buckets (Total: ${totalGeral.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})`;
+
+      // Mapear para formato simples
+      const outRows = rows.map(r => ({ bucket: r.bucket, qtd: r.qtd, total: Number(r.total ?? 0) }));
+
+      return {
+        success: true,
+        rows: outRows,
+        count: outRows.length,
+        totals: { total_geral: totalGeral },
+        title,
+        message,
+        sql_query: `${listSql}\n\n-- Totais\n${totalSql}`,
+        sql_params: formatSqlParams(params),
+      };
+    } catch (error) {
+      console.error('ERRO agingFinanceiro:', error);
+      return {
+        success: false,
+        rows: [],
+        count: 0,
+        message: `Erro ao gerar aging: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+      };
+    }
+  },
+});
+
+// ============================================================================
 // MOVIMENTOS POR CENTRO DE CUSTO (por período)
 // ============================================================================
 

@@ -52,6 +52,7 @@ import InventoryList from '../tools/InventoryList';
 import FluxoCaixaResult, { type FluxoCaixaRow } from '../tools/FluxoCaixaResult';
 import GenericResultTable from '../tools/GenericResultTable';
 import RankingPorDimensaoFinanceiroResult from '../tools/RankingPorDimensaoFinanceiroResult';
+import AgingFinanceiroResult from '../tools/AgingFinanceiroResult';
 import ContasAReceberResult from '../tools/ContasAReceberResult';
 import ContasAPagarResult, { type ContaPagarRow } from '../tools/ContasAPagarResult';
 import PagamentosRecebidosResult from '../tools/PagamentosRecebidosResult';
@@ -4539,6 +4540,36 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
               {rankTool.state === 'output-available' && (
                 <RankingPorDimensaoFinanceiroResult
                   result={rankTool.output as any}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-agingFinanceiro') {
+          const agingTool = part as NexusToolUIPart;
+          const callId = agingTool.toolCallId;
+          const shouldBeOpen = agingTool.state === 'output-available' || agingTool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-agingFinanceiro" state={agingTool.state} />
+                <ToolContent>
+                  {agingTool.input && (
+                    <ToolInput input={agingTool.input} />
+                  )}
+                  {agingTool.state === 'output-error' && (
+                    <ToolOutput
+                      output={null}
+                      errorText={agingTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {agingTool.state === 'output-available' && (
+                <AgingFinanceiroResult
+                  result={agingTool.output as any}
                 />
               )}
             </div>
