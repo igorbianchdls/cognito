@@ -13,7 +13,7 @@ import DataTable, { type TableData } from '@/components/widgets/Table'
 import DataToolbar from '@/components/modulos/DataToolbar'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/stores/modulos/moduleUiStore'
 import type { Opcao } from '@/components/modulos/TabsNav'
-import { CreditCard, ArrowDownCircle, ArrowUpCircle, List, Landmark, Wallet, Activity, CheckCheck } from 'lucide-react'
+import { CreditCard, ArrowDownCircle, ArrowUpCircle, List, Landmark, Wallet, Activity, CheckCheck, Receipt } from 'lucide-react'
 import EntityDisplay from '@/components/modulos/EntityDisplay'
 import StatusBadge from '@/components/modulos/StatusBadge'
 import FornecedorEditorSheet from '@/components/modulos/financeiro/FornecedorEditorSheet'
@@ -424,13 +424,15 @@ export default function ModulosFinanceiroPage() {
         case 'pagamentos-recebidos':
           return <ArrowDownCircle className="h-4 w-4" />
         case 'extrato':
-          return <List className="h-4 w-4" />
+          return <Receipt className="h-4 w-4" />
         case 'conciliacao':
-          return <List className="h-4 w-4" />
+          return <CheckCheck className="h-4 w-4" />
         case 'bancos':
-          return <List className="h-4 w-4" />
+          return <Landmark className="h-4 w-4" />
         case 'movimentos':
-          return <List className="h-4 w-4" />
+          return <Activity className="h-4 w-4" />
+        case 'contas':
+          return <Wallet className="h-4 w-4" />
         default:
           return null
       }
