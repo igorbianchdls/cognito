@@ -1547,6 +1547,210 @@ export const rankingFinanceiroPorDimensao = tool({
 });
 
 // ============================================================================
+// FLUXO DE CAIXA (somente Entradas, Saídas e Fluxo por período)
+// ============================================================================
+
+export const fluxoCaixa = tool({
+  description:
+    'Fluxo de caixa por período (entradas, saídas e fluxo líquido), em base realizada, planejada ou ambas. Não calcula saldo.',
+  inputSchema: z.object({
+    tipo_base: z.enum(['realizado', 'planejado', 'ambos']).default('realizado'),
+    data_inicial: z.string().describe('Data inicial (YYYY-MM-DD)'),
+    data_final: z.string().describe('Data final (YYYY-MM-DD)'),
+    group_by: z.enum(['dia', 'semana', 'mes']).default('dia'),
+    conta_financeira_id: z.string().optional(),
+    categoria_id: z.string().optional(),
+    centro_custo_id: z.string().optional(),
+    projeto_id: z.string().optional(),
+    departamento_id: z.string().optional(),
+    filial_id: z.string().optional(),
+    tenant_id: z.string().optional(),
+  }),
+  execute: async ({
+    tipo_base = 'realizado',
+    data_inicial,
+    data_final,
+    group_by = 'dia',
+    conta_financeira_id,
+    categoria_id,
+    centro_custo_id,
+    projeto_id,
+    departamento_id,
+    filial_id,
+    tenant_id,
+  }) => {
+    try {
+      // Granularidade
+      const step = group_by === 'dia' ? "1 day" : group_by === 'semana' ? "1 week" : "1 month";
+      const trunc = group_by === 'dia' ? 'day' : group_by === 'semana' ? 'week' : 'month';
+
+      // Filtro auxiliar
+      const buildFilter = (alias: string) => {
+        const conds: string[] = [];
+        const params: unknown[] = [];
+        let idx = 1; // marcador apenas para leitura; a substituição real é embutida via template
+        if (conta_financeira_id) { conds.push(`${alias}.conta_financeira_id = '${conta_financeira_id}'`); idx++; }
+        if (categoria_id) { conds.push(`${alias}.categoria_id = '${categoria_id}'`); idx++; }
+        if (centro_custo_id) { conds.push(`${alias}.centro_custo_id = '${centro_custo_id}'`); idx++; }
+        if (projeto_id) { conds.push(`${alias}.projeto_id = '${projeto_id}'`); idx++; }
+        if (departamento_id) { conds.push(`${alias}.departamento_id = '${departamento_id}'`); idx++; }
+        if (filial_id) { conds.push(`${alias}.filial_id = '${filial_id}'`); idx++; }
+        if (tenant_id) { conds.push(`${alias}.tenant_id = '${tenant_id}'`); idx++; }
+        return conds.length ? `AND ${conds.join(' AND ')}` : '';
+      };
+
+      const calSql = `SELECT gs::date AS periodo FROM generate_series($1::date, $2::date, '${step}') AS gs`;
+
+      // Subconsultas de realizado (pagamentos): data_lancamento
+      const realizedInSql = `
+        SELECT date_trunc('${trunc}', lf.data_lancamento)::date AS periodo, SUM(lf.valor) AS entradas
+        FROM financeiro.lancamentos_financeiros lf
+        WHERE lf.tipo = 'pagamento_recebido'
+          AND lf.data_lancamento >= $1::date AND lf.data_lancamento <= $2::date
+          ${buildFilter('lf')}
+        GROUP BY 1`;
+      const realizedOutSql = `
+        SELECT date_trunc('${trunc}', lf.data_lancamento)::date AS periodo, SUM(ABS(lf.valor)) AS saídas
+        FROM financeiro.lancamentos_financeiros lf
+        WHERE lf.tipo = 'pagamento_efetuado'
+          AND lf.data_lancamento >= $1::date AND lf.data_lancamento <= $2::date
+          ${buildFilter('lf')}
+        GROUP BY 1`;
+
+      // Subconsultas de planejado (títulos): data_vencimento
+      const plannedInSql = `
+        SELECT date_trunc('${trunc}', lf.data_vencimento)::date AS periodo, SUM(lf.valor) AS entradas
+        FROM financeiro.lancamentos_financeiros lf
+        WHERE lf.tipo = 'conta_a_receber'
+          AND lf.data_vencimento >= $1::date AND lf.data_vencimento <= $2::date
+          ${buildFilter('lf')}
+        GROUP BY 1`;
+      const plannedOutSql = `
+        SELECT date_trunc('${trunc}', lf.data_vencimento)::date AS periodo, SUM(lf.valor) AS saídas
+        FROM financeiro.lancamentos_financeiros lf
+        WHERE lf.tipo = 'conta_a_pagar'
+          AND lf.data_vencimento >= $1::date AND lf.data_vencimento <= $2::date
+          ${buildFilter('lf')}
+        GROUP BY 1`;
+
+      // Montagem por base
+      let listSql = '';
+      if (tipo_base === 'realizado') {
+        listSql = `
+          WITH cal AS (${calSql}),
+               ent AS (${realizedInSql}),
+               sai AS (${realizedOutSql})
+          SELECT c.periodo,
+                 COALESCE(ent.entradas, 0) AS entradas,
+                 COALESCE(sai.saídas, 0)    AS saidas,
+                 COALESCE(ent.entradas, 0) - COALESCE(sai.saídas, 0) AS fluxo
+          FROM cal c
+          LEFT JOIN ent ON ent.periodo = c.periodo
+          LEFT JOIN sai ON sai.periodo = c.periodo
+          ORDER BY c.periodo`;
+      } else if (tipo_base === 'planejado') {
+        listSql = `
+          WITH cal AS (${calSql}),
+               ent AS (${plannedInSql}),
+               sai AS (${plannedOutSql})
+          SELECT c.periodo,
+                 COALESCE(ent.entradas, 0) AS entradas,
+                 COALESCE(sai.saídas, 0)    AS saidas,
+                 COALESCE(ent.entradas, 0) - COALESCE(sai.saídas, 0) AS fluxo
+          FROM cal c
+          LEFT JOIN ent ON ent.periodo = c.periodo
+          LEFT JOIN sai ON sai.periodo = c.periodo
+          ORDER BY c.periodo`;
+      } else {
+        // ambos: juntar as duas bases
+        listSql = `
+          WITH cal AS (${calSql}),
+               ent_r AS (${realizedInSql}),
+               sai_r AS (${realizedOutSql}),
+               ent_p AS (${plannedInSql}),
+               sai_p AS (${plannedOutSql})
+          SELECT c.periodo,
+                 COALESCE(ent_r.entradas, 0) AS entradas_real,
+                 COALESCE(sai_r.saídas, 0)    AS saidas_real,
+                 COALESCE(ent_r.entradas, 0) - COALESCE(sai_r.saídas, 0) AS fluxo_real,
+                 COALESCE(ent_p.entradas, 0) AS entradas_plan,
+                 COALESCE(sai_p.saídas, 0)    AS saidas_plan,
+                 COALESCE(ent_p.entradas, 0) - COALESCE(sai_p.saídas, 0) AS fluxo_plan
+          FROM cal c
+          LEFT JOIN ent_r ON ent_r.periodo = c.periodo
+          LEFT JOIN sai_r ON sai_r.periodo = c.periodo
+          LEFT JOIN ent_p ON ent_p.periodo = c.periodo
+          LEFT JOIN sai_p ON sai_p.periodo = c.periodo
+          ORDER BY c.periodo`;
+      }
+
+      const rows = await runQuery<Record<string, unknown>>(listSql, [data_inicial, data_final]);
+
+      // Totais
+      type TotalsRow = { entradas?: number | null; saidas?: number | null; fluxo?: number | null;
+                         entradas_real?: number | null; saidas_real?: number | null; fluxo_real?: number | null;
+                         entradas_plan?: number | null; saidas_plan?: number | null; fluxo_plan?: number | null };
+      const totals = (rows as TotalsRow[]).reduce((acc, r) => {
+        if (tipo_base === 'ambos') {
+          acc.entradas += Number(r.entradas_real ?? 0);
+          acc.saidas   += Number(r.saidas_real ?? 0);
+          acc.fluxo    += Number(r.fluxo_real ?? 0);
+          acc.entradas_plan += Number(r.entradas_plan ?? 0);
+          acc.saidas_plan   += Number(r.saidas_plan ?? 0);
+          acc.fluxo_plan    += Number(r.fluxo_plan ?? 0);
+        } else {
+          acc.entradas += Number(r.entradas ?? 0);
+          acc.saidas   += Number(r.saidas ?? 0);
+          acc.fluxo    += Number(r.fluxo ?? 0);
+        }
+        return acc;
+      }, { entradas: 0, saidas: 0, fluxo: 0, entradas_plan: 0, saidas_plan: 0, fluxo_plan: 0 });
+
+      const title = `Fluxo de Caixa (${tipo_base}) · ${data_inicial} a ${data_final}`;
+      const message = tipo_base === 'ambos'
+        ? `Realizado: ${totals.entradas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} de entradas, ${totals.saidas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} de saídas. Planejado: ${totals.entradas_plan.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} de entradas, ${totals.saidas_plan.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} de saídas.`
+        : `Entradas: ${totals.entradas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}, Saídas: ${totals.saidas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`;
+
+      return {
+        success: true,
+        rows,
+        count: rows.length,
+        summary: tipo_base === 'ambos'
+          ? {
+              realizado: {
+                entradas_total: totals.entradas,
+                saidas_total: totals.saidas,
+                fluxo_liquido_total: totals.fluxo,
+              },
+              planejado: {
+                entradas_total: totals.entradas_plan,
+                saidas_total: totals.saidas_plan,
+                fluxo_liquido_total: totals.fluxo_plan,
+              },
+            }
+          : {
+              entradas_total: totals.entradas,
+              saidas_total: totals.saidas,
+              fluxo_liquido_total: totals.fluxo,
+            },
+        title,
+        message,
+        sql_query: listSql,
+        sql_params: JSON.stringify([data_inicial, data_final]),
+      };
+    } catch (error) {
+      console.error('ERRO fluxoCaixa:', error);
+      return {
+        success: false,
+        rows: [],
+        count: 0,
+        message: `Erro ao calcular fluxo de caixa: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+      };
+    }
+  },
+});
+
+// ============================================================================
 // AGING FINANCEIRO (AP/AR)
 // ============================================================================
 
