@@ -1142,9 +1142,9 @@ export const rankingPorCategoriaFinanceira = tool({
       const tipoNorm = norm(tipo);
 
       let params: unknown[] = [];
-      let sql: string;
-      let totalSql: string;
-      let titleKind: string;
+      let sql: string = '';
+      let totalSql: string = '';
+      let titleKind: string = '';
 
       if (tipoNorm === 'pagamento_efetuado') {
         // Realizado: soma lf.valor por categoria do cabeçalho AP
@@ -1274,6 +1274,9 @@ export const rankingPorCategoriaFinanceira = tool({
         ];
       }
 
+      if (!sql || !totalSql) {
+        throw new Error(`tipo inválido para rankingPorCategoriaFinanceira: ${tipoNorm}`);
+      }
       const rows = await runQuery<Record<string, unknown>>(sql, params);
       const [tot] = await runQuery<{ total_geral: number | null }>(
         totalSql,
