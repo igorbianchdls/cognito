@@ -73,19 +73,19 @@ export const createFornecedor = tool({
 })
 
 export const createContaAPagar = tool({
-  description: 'Cria conta a pagar (schema financeiro)',
+  description: 'Cria conta a pagar (financeiro.lancamentos_financeiros)',
   inputSchema: z.object({
     fornecedor_id: z.string(),
     descricao: z.string(),
     valor_total: z.number().positive(),
     data_emissao: z.string().describe('YYYY-MM-DD'),
     data_vencimento: z.string().describe('YYYY-MM-DD'),
-    status: z.enum(['Pendente', 'Pago', 'Cancelado']).default('Pendente'),
-    numero_documento: z.string().optional(),
+    // Aceita qualquer string e normaliza internamente (ex.: 'Pendente' -> 'pendente')
+    status: z.string().optional(),
     categoria_id: z.string().optional(),
     conta_financeira_id: z.string().optional(),
     centro_custo_id: z.string().optional(),
-    tipo_titulo: z.string().optional(),
+    tenant_id: z.number().optional(),
   }),
   execute: async (payload) => {
     try {
@@ -96,28 +96,43 @@ export const createContaAPagar = tool({
         data_emissao,
         data_vencimento,
         status,
-        numero_documento,
         categoria_id,
         conta_financeira_id,
         centro_custo_id,
-        tipo_titulo,
+        tenant_id,
       } = payload
 
+      // Normaliza status para minúsculo conforme schema unificado
+      const normalizedStatusRaw = (status || 'pendente').toString().trim().toLowerCase()
+      const normalizedStatus = ['pendente', 'pago', 'cancelado'].includes(normalizedStatusRaw)
+        ? normalizedStatusRaw
+        : 'pendente'
+
+      // Monta colunas/valores para lancamentos_financeiros
       const columns: string[] = [
-        'fornecedor_id',
+        'tenant_id',
+        'tipo',
         'descricao',
-        'valor_total',
-        'data_emissao',
+        'valor',
+        'data_lancamento',
         'data_vencimento',
         'status',
+        'entidade_id',
       ]
+      const entidadeId = fornecedor_id ? Number(fornecedor_id) : null
+      const categoriaIdNum = typeof categoria_id !== 'undefined' && categoria_id !== null ? Number(categoria_id) : undefined
+      const contaFinanceiraIdNum = typeof conta_financeira_id !== 'undefined' && conta_financeira_id !== null ? Number(conta_financeira_id) : undefined
+      const centroCustoIdNum = typeof centro_custo_id !== 'undefined' && centro_custo_id !== null ? Number(centro_custo_id) : undefined
+
       const values: unknown[] = [
-        fornecedor_id,
+        tenant_id ?? null,
+        'conta_a_pagar',
         descricao,
-        valor_total,
+        Math.abs(valor_total),
         data_emissao,
         data_vencimento,
-        status,
+        normalizedStatus,
+        entidadeId,
       ]
 
       const addOpt = (col: string, v: unknown) => {
@@ -127,21 +142,31 @@ export const createContaAPagar = tool({
         }
       }
 
-      addOpt('numero_documento', numero_documento ?? null)
-      addOpt('categoria_id', categoria_id ?? null)
-      addOpt('conta_financeira_id', conta_financeira_id ?? null)
-      addOpt('centro_custo_id', centro_custo_id ?? null)
-      addOpt('tipo_titulo', tipo_titulo ?? null)
+      addOpt('categoria_id', typeof categoriaIdNum === 'number' && !Number.isNaN(categoriaIdNum) ? categoriaIdNum : null)
+      addOpt('conta_financeira_id', typeof contaFinanceiraIdNum === 'number' && !Number.isNaN(contaFinanceiraIdNum) ? contaFinanceiraIdNum : null)
+      addOpt('centro_custo_id', typeof centroCustoIdNum === 'number' && !Number.isNaN(centroCustoIdNum) ? centroCustoIdNum : null)
 
       const placeholders = columns.map((_, i) => `$${i + 1}`).join(', ')
       const insertSql = `
-        INSERT INTO financeiro.contas_a_pagar (${columns.join(', ')})
+        INSERT INTO financeiro.lancamentos_financeiros (${columns.join(', ')})
         VALUES (${placeholders})
-        RETURNING id, fornecedor_id, descricao, valor_total, data_emissao, data_vencimento, status,
-                  numero_documento, categoria_id, conta_financeira_id, centro_custo_id, tipo_titulo
+        RETURNING id, tipo, descricao, valor, data_lancamento, data_vencimento, status,
+                  entidade_id, categoria_id, conta_financeira_id, centro_custo_id
       `.trim()
       const [row] = await runQuery<Record<string, unknown>>(insertSql, values)
-      return { success: true, message: 'Conta a pagar criada com sucesso', conta: row, sql_query: insertSql, sql_params: fmt(values) }
+
+      // Mapeia campos esperados pelo card/resumo
+      const conta = row ? {
+        id: row['id'],
+        descricao: row['descricao'],
+        valor: row['valor'],
+        data_emissao: row['data_lancamento'],
+        data_vencimento: row['data_vencimento'],
+        status: row['status'],
+        fornecedor_id: row['entidade_id'],
+      } : null
+
+      return { success: true, message: 'Conta a pagar criada com sucesso', conta, sql_query: insertSql, sql_params: fmt(values) }
     } catch (error) {
       return { success: false, message: `Erro ao criar conta a pagar: ${error instanceof Error ? error.message : String(error)}` }
     }
