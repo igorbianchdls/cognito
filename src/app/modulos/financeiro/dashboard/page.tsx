@@ -93,6 +93,11 @@ export default function FinanceiroDashboardPage() {
   const [apRows, setApRows] = useState<APRow[]>([])
   const [prRows, setPrRows] = useState<RecebidoRow[]>([])
   const [peRows, setPeRows] = useState<EfetuadoRow[]>([])
+  const [arAging, setArAging] = useState<Bucket[]>([])
+  const [apAging, setApAging] = useState<Bucket[]>([])
+  const [topCC, setTopCC] = useState<{ label: string; value: number }[]>([])
+  const [topCategorias, setTopCategorias] = useState<{ label: string; value: number }[]>([])
+  const [topDepartamentos, setTopDepartamentos] = useState<{ label: string; value: number }[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   // Global (Nanostores): UI + Filters
@@ -286,12 +291,17 @@ export default function FinanceiroDashboardPage() {
       setError(null)
       try {
         const qs = (view: string) => `/api/modulos/financeiro?view=${view}&page=1&pageSize=1000`
-        const [arRes, apRes, prRes, peRes, kpisRes] = await Promise.allSettled([
+        const [arRes, apRes, prRes, peRes, kpisRes, agingArRes, agingApRes, topCcRes, topCatRes, topDepRes] = await Promise.allSettled([
           fetch(qs('contas-a-receber'), { cache: 'no-store' }),
           fetch(qs('contas-a-pagar'), { cache: 'no-store' }),
           fetch(qs('pagamentos-recebidos'), { cache: 'no-store' }),
           fetch(qs('pagamentos-efetuados'), { cache: 'no-store' }),
           fetch(`/api/modulos/financeiro?view=kpis&de=${kpiDe}&ate=${kpiAte}`, { cache: 'no-store' }),
+          fetch(`/api/modulos/financeiro?view=aging&tipo=ar`, { cache: 'no-store' }),
+          fetch(`/api/modulos/financeiro?view=aging&tipo=ap`, { cache: 'no-store' }),
+          fetch(`/api/modulos/financeiro?view=top-despesas&dim=centro_custo&de=${kpiDe}&ate=${kpiAte}`, { cache: 'no-store' }),
+          fetch(`/api/modulos/financeiro?view=top-despesas&dim=categoria&de=${kpiDe}&ate=${kpiAte}`, { cache: 'no-store' }),
+          fetch(`/api/modulos/financeiro?view=top-despesas&dim=departamento&de=${kpiDe}&ate=${kpiAte}`, { cache: 'no-store' }),
         ])
 
         let ar: ARRow[] = []
@@ -362,11 +372,43 @@ export default function FinanceiroDashboardPage() {
           }
         }
 
+        // Aging via API (fallback para cálculo local)
+        let arAgingData: Bucket[] | null = null
+        let apAgingData: Bucket[] | null = null
+        if (agingArRes.status === 'fulfilled' && agingArRes.value.ok) {
+          const j = await agingArRes.value.json() as { rows?: Array<{ bucket?: string; total?: number }> }
+          if (Array.isArray(j?.rows)) {
+            arAgingData = j.rows.map(r => ({ label: String(r.bucket || ''), value: Number(r.total || 0) }))
+          }
+        }
+        if (agingApRes.status === 'fulfilled' && agingApRes.value.ok) {
+          const j = await agingApRes.value.json() as { rows?: Array<{ bucket?: string; total?: number }> }
+          if (Array.isArray(j?.rows)) {
+            apAgingData = j.rows.map(r => ({ label: String(r.bucket || ''), value: Number(r.total || 0) }))
+          }
+        }
+
         if (!cancelled) {
           setArRows(ar)
           setApRows(ap)
           setPrRows(pr)
           setPeRows(pe)
+          // Aplicar aging (com fallback para cálculo local)
+          setArAging(arAgingData && arAgingData.length ? arAgingData : buildAging(ar))
+          setApAging(apAgingData && apAgingData.length ? apAgingData : buildAging(ap))
+          // Top 5 (CC, Categoria, Departamento)
+          if (topCcRes.status === 'fulfilled' && topCcRes.value.ok) {
+            const j = await topCcRes.value.json() as { rows?: Array<{ label?: string; total?: number }> }
+            setTopCC(Array.isArray(j?.rows) ? j.rows.map(r => ({ label: String(r.label || ''), value: Number(r.total || 0) })) : [])
+          } else setTopCC([])
+          if (topCatRes.status === 'fulfilled' && topCatRes.value.ok) {
+            const j = await topCatRes.value.json() as { rows?: Array<{ label?: string; total?: number }> }
+            setTopCategorias(Array.isArray(j?.rows) ? j.rows.map(r => ({ label: String(r.label || ''), value: Number(r.total || 0) })) : [])
+          } else setTopCategorias([])
+          if (topDepRes.status === 'fulfilled' && topDepRes.value.ok) {
+            const j = await topDepRes.value.json() as { rows?: Array<{ label?: string; total?: number }> }
+            setTopDepartamentos(Array.isArray(j?.rows) ? j.rows.map(r => ({ label: String(r.label || ''), value: Number(r.total || 0) })) : [])
+          } else setTopDepartamentos([])
         }
       } catch (e) {
         if (!cancelled) setError('Falha ao carregar dados')
@@ -736,6 +778,22 @@ export default function FinanceiroDashboardPage() {
             items={pagamentosHoje.map(i => ({ label: i.nome, value: i.valor }))}
             color="bg-violet-500"
           />
+        </div>
+      </div>
+
+      {/* Charts — Row 3 (Top 5 por dimensão) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><BarChart3 className="w-5 h-5 text-indigo-600" />Top 5 Centros de Custo</h3>
+          <BarList items={topCC} color="bg-indigo-500" />
+        </div>
+        <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><BarChart3 className="w-5 h-5 text-rose-600" />Top 5 Categorias</h3>
+          <BarList items={topCategorias} color="bg-rose-500" />
+        </div>
+        <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><BarChart3 className="w-5 h-5 text-amber-600" />Top 5 Departamentos</h3>
+          <BarList items={topDepartamentos} color="bg-amber-500" />
         </div>
       </div>
 

@@ -315,7 +315,88 @@ export async function GET(req: NextRequest) {
     }
   }
 
-    if (view === 'contas-a-pagar') {
+    if (view === 'aging') {
+      // Aging buckets por tipo (AR | AP) com somatórios
+      const tipo = (searchParams.get('tipo') || '').toLowerCase(); // 'ar' | 'ap'
+      if (tipo !== 'ar' && tipo !== 'ap') {
+        return Response.json({ success: false, message: "Parâmetro 'tipo' deve ser 'ar' ou 'ap'" }, { status: 400 });
+      }
+
+      const tipoLancamento = tipo === 'ar' ? 'conta_a_receber' : 'conta_a_pagar';
+      const tenantId = parseNumber(searchParams.get('tenant_id'));
+      const tenantFilter = tenantId ? ' AND lf.tenant_id = $1' : '';
+      const paramsAging: unknown[] = tenantId ? [tenantId] : [];
+
+      const agingSql = `
+        WITH buckets AS (
+          SELECT 1 AS ord, 'Vencido >30'::text AS bucket
+          UNION ALL SELECT 2, 'Vencido 1–30'
+          UNION ALL SELECT 3, 'Vence 1–7'
+          UNION ALL SELECT 4, 'Vence 8–15'
+          UNION ALL SELECT 5, 'Vence 16–30'
+        ), agg AS (
+          SELECT
+            CASE
+              WHEN lf.data_vencimento < CURRENT_DATE - INTERVAL '30 days' THEN 'Vencido >30'
+              WHEN lf.data_vencimento < CURRENT_DATE THEN 'Vencido 1–30'
+              WHEN lf.data_vencimento <= CURRENT_DATE + INTERVAL '7 days' THEN 'Vence 1–7'
+              WHEN lf.data_vencimento <= CURRENT_DATE + INTERVAL '15 days' THEN 'Vence 8–15'
+              WHEN lf.data_vencimento <= CURRENT_DATE + INTERVAL '30 days' THEN 'Vence 16–30'
+            END AS bucket,
+            SUM(lf.valor) AS total
+          FROM financeiro.lancamentos_financeiros lf
+          WHERE LOWER(lf.tipo) = '${tipoLancamento}'
+            AND LOWER(lf.status) = 'pendente'
+            ${tenantFilter}
+          GROUP BY 1
+        )
+        SELECT b.bucket, COALESCE(a.total, 0) AS total
+        FROM buckets b
+        LEFT JOIN agg a ON a.bucket = b.bucket
+        ORDER BY b.ord
+      `.replace(/\n\s+/g, ' ').trim();
+
+      const rows = await runQuery<{ bucket: string; total: number | null }>(agingSql, paramsAging);
+      return Response.json({ success: true, rows, sql_query: agingSql, sql_params: paramsAging });
+    } else if (view === 'top-despesas') {
+      // Top N despesas por dimensão (categoria | centro_custo | departamento)
+      const dim = (searchParams.get('dim') || '').toLowerCase();
+      const limit = Math.max(1, Math.min(50, parseNumber(searchParams.get('limit'), 5) || 5));
+
+      let dimExpr = '';
+      if (dim === 'categoria') dimExpr = "COALESCE(cat_ap.nome, 'Sem categoria')";
+      else if (dim === 'centro_custo' || dim === 'centro-custo') dimExpr = "COALESCE(cc_ap.nome, 'Sem centro de custo')";
+      else if (dim === 'departamento') dimExpr = "COALESCE(dep_ap.nome, 'Sem departamento')";
+      else {
+        return Response.json({ success: false, message: "Parâmetro 'dim' inválido. Use 'categoria' | 'centro_custo' | 'departamento'" }, { status: 400 });
+      }
+
+      const tenantId = parseNumber(searchParams.get('tenant_id'));
+      const params: unknown[] = [];
+      let idx = 1;
+      let where = `WHERE lf.tipo = 'pagamento_efetuado'`;
+
+      // Período em data de pagamento (realizado)
+      if (de) { where += ` AND lf.data_lancamento >= $${idx++}`; params.push(de); }
+      if (ate) { where += ` AND lf.data_lancamento <= $${idx++}`; params.push(ate); }
+      if (tenantId) { where += ` AND lf.tenant_id = $${idx++}`; params.push(tenantId); }
+
+      const sql = `
+        SELECT ${dimExpr} AS label, COALESCE(SUM(lf.valor), 0) AS total
+          FROM financeiro.lancamentos_financeiros lf
+          JOIN financeiro.lancamentos_financeiros ap ON ap.id = lf.lancamento_origem_id
+          LEFT JOIN financeiro.categorias_financeiras cat_ap ON cat_ap.id = ap.categoria_id
+          LEFT JOIN empresa.centros_custo cc_ap ON cc_ap.id = ap.centro_custo_id
+          LEFT JOIN empresa.departamentos dep_ap ON dep_ap.id = ap.departamento_id
+          ${where}
+          GROUP BY 1
+          ORDER BY total DESC
+          LIMIT ${limit}
+      `.replace(/\n\s+/g, ' ').trim();
+
+      const rows = await runQuery<{ label: string; total: number | null }>(sql, params);
+      return Response.json({ success: true, rows, sql_query: sql, sql_params: params });
+    } else if (view === 'contas-a-pagar') {
       // Contas a Pagar – query mais completa, mantendo campos esperados pela UI
       baseSql = `FROM financeiro.lancamentos_financeiros lf
                  LEFT JOIN financeiro.categorias_financeiras cf ON cf.id = lf.categoria_id
