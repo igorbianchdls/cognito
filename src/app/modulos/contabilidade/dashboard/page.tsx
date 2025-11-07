@@ -45,6 +45,7 @@ export default function ContabilidadeDashboardPage() {
   const [bp, setBp] = useState<BPResponse | null>(null)
   const [dre, setDre] = useState<DREResponse | null>(null)
   const [lanc, setLanc] = useState<LancRow[]>([])
+  const [contKpis, setContKpis] = useState<{ lucro?: number; margem_liquida?: number | null; capital_de_giro?: number; liquidez_corrente?: number | null; endividamento?: number | null } | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -193,10 +194,11 @@ export default function ContabilidadeDashboardPage() {
         const fromISO = dateRange?.from ? dateRange.from.toISOString().slice(0,10) : firstDay
         const toISO = dateRange?.to ? dateRange.to.toISOString().slice(0,10) : today.toISOString().slice(0,10)
         const base = '/api/modulos/contabilidade'
-        const [bpRes, dreRes, lRes] = await Promise.allSettled([
+        const [bpRes, dreRes, lRes, kpisRes] = await Promise.allSettled([
           fetch(`${base}?view=balanco-patrimonial&de=${fromISO}&ate=${toISO}`, { cache: 'no-store' }),
           fetch(`${base}?view=dre&de=${fromISO}&ate=${toISO}`, { cache: 'no-store' }),
           fetch(`${base}?view=lancamentos&page=1&pageSize=10&order_by=data_lancamento&order_dir=desc`, { cache: 'no-store' }),
+          fetch(`${base}?view=kpis&de=${fromISO}&ate=${toISO}`, { cache: 'no-store' }),
         ])
         let bpJ: BPResponse | null = null
         let dreJ: DREResponse | null = null
@@ -204,6 +206,11 @@ export default function ContabilidadeDashboardPage() {
         if (bpRes.status === 'fulfilled' && bpRes.value.ok) { const j = await bpRes.value.json(); if (j?.success) bpJ = j as BPResponse }
         if (dreRes.status === 'fulfilled' && dreRes.value.ok) { const j = await dreRes.value.json(); if (j?.success) dreJ = j as DREResponse }
         if (lRes.status === 'fulfilled' && lRes.value.ok) { const j = await lRes.value.json(); lJ = Array.isArray(j?.rows) ? j.rows as LancRow[] : [] }
+
+        if (kpisRes.status === 'fulfilled' && kpisRes.value.ok) {
+          const j = await kpisRes.value.json()
+          if (j?.kpis) setContKpis(j.kpis as typeof contKpis)
+        }
 
         if (!bpJ && !dreJ && lJ.length === 0) {
           // fallback mocks mínimos
@@ -366,28 +373,41 @@ export default function ContabilidadeDashboardPage() {
     >
       {loading ? (<div className="p-4 text-sm text-gray-500">Carregando…</div>) : error ? (<div className="p-4 text-sm text-red-600">{error}</div>) : null}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
-          <div className="text-sm font-medium text-gray-500 mb-2" style={styleKpiTitle}>Ativo Total</div>
-          <div className="text-2xl font-bold text-blue-600" style={styleValues}>{formatBRL(kpis.ativo)}</div>
-          <div className="text-xs text-gray-400 mt-1" style={styleText}>Balanço (período)</div>
+      {contKpis && (
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
+          <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
+            <div className="text-sm font-medium text-gray-500 mb-2" style={styleKpiTitle}>Lucro do Período</div>
+            <div className="text-2xl font-bold text-emerald-600" style={styleValues}>{formatBRL(contKpis.lucro)}</div>
+            <div className="text-xs text-gray-400 mt-1" style={styleText}>Receitas − Custos − Despesas</div>
+          </div>
+          <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
+            <div className="text-sm font-medium text-gray-500 mb-2" style={styleKpiTitle}>Margem Líquida</div>
+            <div className="text-2xl font-bold text-blue-600" style={styleValues}>{
+              contKpis.margem_liquida != null ? `${(contKpis.margem_liquida * 100).toFixed(1)}%` : '—'
+            }</div>
+            <div className="text-xs text-gray-400 mt-1" style={styleText}>Lucro / Receita</div>
+          </div>
+          <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
+            <div className="text-sm font-medium text-gray-500 mb-2" style={styleKpiTitle}>Capital de Giro</div>
+            <div className="text-2xl font-bold text-indigo-600" style={styleValues}>{formatBRL(contKpis.capital_de_giro)}</div>
+            <div className="text-xs text-gray-400 mt-1" style={styleText}>Ativo Circulante − Passivo Circulante</div>
+          </div>
+          <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
+            <div className="text-sm font-medium text-gray-500 mb-2" style={styleKpiTitle}>Liquidez Corrente</div>
+            <div className="text-2xl font-bold text-orange-600" style={styleValues}>{
+              contKpis.liquidez_corrente != null ? `${contKpis.liquidez_corrente.toFixed(2)}x` : '—'
+            }</div>
+            <div className="text-xs text-gray-400 mt-1" style={styleText}>AC / PC</div>
+          </div>
+          <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
+            <div className="text-sm font-medium text-gray-500 mb-2" style={styleKpiTitle}>Endividamento</div>
+            <div className="text-2xl font-bold text-rose-600" style={styleValues}>{
+              contKpis.endividamento != null ? `${(contKpis.endividamento * 100).toFixed(1)}%` : '—'
+            }</div>
+            <div className="text-xs text-gray-400 mt-1" style={styleText}>Passivo / Ativo</div>
+          </div>
         </div>
-        <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
-          <div className="text-sm font-medium text-gray-500 mb-2" style={styleKpiTitle}>Passivo + PL</div>
-          <div className="text-2xl font-bold text-indigo-600" style={styleValues}>{formatBRL(kpis.passivo + kpis.pl)}</div>
-          <div className="text-xs text-gray-400 mt-1" style={styleText}>Estrutura de capital</div>
-        </div>
-        <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
-          <div className="text-sm font-medium text-gray-500 mb-2" style={styleKpiTitle}>Lucro do Mês</div>
-          <div className="text-2xl font-bold text-emerald-600" style={styleValues}>{formatBRL(lucroAtual)}</div>
-          <div className="text-xs text-gray-400 mt-1" style={styleText}>Receita − COGS − Opex</div>
-        </div>
-        <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
-          <div className="text-sm font-medium text-gray-500 mb-2" style={styleKpiTitle}>Liquidez Corrente</div>
-          <div className="text-2xl font-bold text-orange-600" style={styleValues}>{liquidezCorrente.toFixed(2)}x</div>
-          <div className="text-xs text-gray-400 mt-1" style={styleText}>AC / PC</div>
-        </div>
-      </div>
+      )}
 
       {/* Tabelas do Balanço Patrimonial (Ativo | Passivo | PL) */}
       {bp && (
