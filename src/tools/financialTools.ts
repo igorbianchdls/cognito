@@ -1460,10 +1460,14 @@ export const rankingFinanceiroPorDimensao = tool({
         }
       };
 
-      const dimKeyCanonical: 'departamento' | 'filial' | 'projeto' | 'centro_lucro' | 'natureza_financeira' | 'categorias_financeiras' | 'centros_custo' =
-        dimensao === 'categoria' || dimensao === 'categoria_financeira' ? 'categorias_financeiras'
-        : dimensao === 'centro_custo' || dimensao === 'cc' ? 'centros_custo'
-        : (dimensao as any);
+      type DimKey = 'departamento' | 'filial' | 'projeto' | 'centro_lucro' | 'natureza_financeira' | 'categorias_financeiras' | 'centros_custo'
+      type DimInput = DimKey | 'categoria' | 'categoria_financeira' | 'centro_custo' | 'cc'
+      const toCanonicalDim = (d: DimInput): DimKey => {
+        if (d === 'categoria' || d === 'categoria_financeira') return 'categorias_financeiras'
+        if (d === 'centro_custo' || d === 'cc') return 'centros_custo'
+        return d
+      }
+      const dimKeyCanonical: DimKey = toCanonicalDim(dimensao as DimInput)
 
       const dm = joinForDim(cfg.headAlias, dimKeyCanonical);
 
