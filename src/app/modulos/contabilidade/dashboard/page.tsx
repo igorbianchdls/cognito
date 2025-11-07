@@ -4,6 +4,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useStore } from '@nanostores/react'
 import DashboardLayout from '@/components/modulos/DashboardLayout'
+import DRETable from '@/components/relatorios/DRETable'
 import BPTabela from '@/components/modulos/contabilidade/BPTabela'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
@@ -403,16 +404,15 @@ export default function ContabilidadeDashboardPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
-          <h3 className="text-lg font-semibold mb-4" style={styleChartTitle}>DRE por Mês</h3>
-          <BarsDRE items={dreResumo.map(d => ({ label: d.label, receita: d.receita, cogs: d.cogs, opex: d.opex }))} />
+      {/* DRE em largura total (igual à aba DRE) */}
+      {dre && (
+        <div className="mb-6">
+          <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
+            <h3 className="text-lg font-semibold mb-4" style={styleChartTitle}>DRE</h3>
+            <DRETable data={dre.nodes} periods={dre.periods} />
+          </div>
         </div>
-        <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
-          <h3 className="text-lg font-semibold mb-4" style={styleChartTitle}>Composição do Balanço</h3>
-          <HBars items={bpComposicao} color="bg-sky-500" />
-        </div>
-      </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
