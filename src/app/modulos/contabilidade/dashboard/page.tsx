@@ -4,6 +4,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useStore } from '@nanostores/react'
 import DashboardLayout from '@/components/modulos/DashboardLayout'
+import BPTabela from '@/components/modulos/contabilidade/BPTabela'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
@@ -188,10 +189,12 @@ export default function ContabilidadeDashboardPage() {
         const today = new Date()
         const y = today.getFullYear(); const m = String(today.getMonth()+1).padStart(2,'0')
         const firstDay = `${y}-${m}-01`
+        const fromISO = dateRange?.from ? dateRange.from.toISOString().slice(0,10) : firstDay
+        const toISO = dateRange?.to ? dateRange.to.toISOString().slice(0,10) : today.toISOString().slice(0,10)
         const base = '/api/modulos/contabilidade'
         const [bpRes, dreRes, lRes] = await Promise.allSettled([
-          fetch(`${base}?view=balanco-patrimonial&de=${firstDay}`, { cache: 'no-store' }),
-          fetch(`${base}?view=dre&de=${firstDay}`, { cache: 'no-store' }),
+          fetch(`${base}?view=balanco-patrimonial&de=${fromISO}&ate=${toISO}`, { cache: 'no-store' }),
+          fetch(`${base}?view=dre&de=${fromISO}&ate=${toISO}`, { cache: 'no-store' }),
           fetch(`${base}?view=lancamentos&page=1&pageSize=10&order_by=data_lancamento&order_dir=desc`, { cache: 'no-store' }),
         ])
         let bpJ: BPResponse | null = null
@@ -239,7 +242,7 @@ export default function ContabilidadeDashboardPage() {
       } catch { if (!cancelled) setError('Falha ao carregar dados') } finally { if (!cancelled) setLoading(false) }
     }
     load(); return () => { cancelled = true }
-  }, [])
+  }, [dateRange])
 
   const kpis = useMemo(() => {
     if (!bp) return { ativo: 0, passivo: 0, pl: 0, ac: 0, pc: 0 }
@@ -384,6 +387,21 @@ export default function ContabilidadeDashboardPage() {
           <div className="text-xs text-gray-400 mt-1" style={styleText}>AC / PC</div>
         </div>
       </div>
+
+      {/* Tabelas do Balanço Patrimonial (Ativo | Passivo | PL) */}
+      {bp && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
+            <BPTabela title="Ativo" secoes={bp.ativo} />
+          </div>
+          <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
+            <BPTabela title="Passivo" secoes={bp.passivo} />
+          </div>
+          <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
+            <BPTabela title="Patrimônio Líquido" secoes={bp.pl} />
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
