@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { usePathname, useRouter } from "next/navigation"
-import { DollarSign, ShoppingCart, Users, Package, ShoppingBag, Wrench, Megaphone, Briefcase, BookOpen, FileText, Building2, ChevronRight, ChevronDown, Home, Truck, BarChart3 } from "lucide-react"
+import { DollarSign, ShoppingCart, Users, Package, ShoppingBag, Wrench, Megaphone, Briefcase, BookOpen, FileText, Building2, ChevronRight, ChevronDown, Home, Truck, BarChart3, Settings } from "lucide-react"
 
 import {
   SidebarGroup,
@@ -137,7 +137,7 @@ export function NavModulos({ groupLabelStyle }: { groupLabelStyle?: React.CSSPro
               </CollapsibleContent>
             </SidebarMenuItem>
           </Collapsible>
-          
+
           {/* Demais itens */}
           <SidebarMenuItem>
             <SidebarMenuButton
@@ -279,6 +279,34 @@ export function NavModulos({ groupLabelStyle }: { groupLabelStyle?: React.CSSPro
                     <SidebarMenuSubButton asChild isActive={pathname === "/modulos/servicos/dashboard"}>
                       <a href="/modulos/servicos/dashboard">
                         <span>Dashboard</span>
+                      </a>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                </SidebarMenuSub>
+              </CollapsibleContent>
+            </SidebarMenuItem>
+          </Collapsible>
+          {/* Manutenção dentro de Vendas */}
+          <Collapsible
+            key="manutencao"
+            asChild
+            defaultOpen={pathname.startsWith("/modulos/manutencao")}
+            className="group/collapsible"
+          >
+            <SidebarMenuItem>
+              <CollapsibleTrigger asChild>
+                <SidebarMenuButton tooltip="Manutenção">
+                  <Settings />
+                  <span>Manutenção</span>
+                  <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                </SidebarMenuButton>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <SidebarMenuSub>
+                  <SidebarMenuSubItem>
+                    <SidebarMenuSubButton asChild isActive={pathname === "/modulos/manutencao"}>
+                      <a href="/modulos/manutencao">
+                        <span>Gestão</span>
                       </a>
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
@@ -433,6 +461,7 @@ export function NavModulos({ groupLabelStyle }: { groupLabelStyle?: React.CSSPro
               </CollapsibleContent>
             </SidebarMenuItem>
           </Collapsible>
+          {/* Compras dentro de Supply Chain */}
           <Collapsible
             key="compras"
             asChild
