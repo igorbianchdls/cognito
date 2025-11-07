@@ -1,7 +1,15 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import { useStore } from '@nanostores/react'
 import DashboardLayout from '@/components/modulos/DashboardLayout'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Button } from '@/components/ui/button'
+import { Calendar } from '@/components/ui/calendar'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Calendar as CalendarIcon } from 'lucide-react'
+import type { DateRange } from 'react-day-picker'
+import { $financeiroDashboardUI, $financeiroDashboardFilters, financeiroDashboardActions } from '@/stores/modulos/financeiroDashboardStore'
 
 type ResumoRow = {
   plataforma?: string
@@ -41,6 +49,14 @@ function formatBRL(n?: number) { return (Number(n||0)).toLocaleString('pt-BR', {
 function formatNum(n?: number) { return (Number(n||0)).toLocaleString('pt-BR') }
 
 export default function TrafegoPagoDashboardPage() {
+  // Global UI & Filters
+  const ui = useStore($financeiroDashboardUI)
+  const filters = useStore($financeiroDashboardFilters)
+  const fonts = ui.fonts
+  const cardBorderColor = ui.cardBorderColor
+  const pageBgColor = ui.pageBgColor
+  const cardShadow = ui.cardShadow
+  const filtersIconColor = ui.filtersIconColor
   const [resumos, setResumos] = useState<ResumoRow[]>([])
   const [campanhas, setCampanhas] = useState<CampanhaRow[]>([])
   const [anuncios, setAnuncios] = useState<AnuncioRow[]>([])
@@ -105,6 +121,138 @@ export default function TrafegoPagoDashboardPage() {
     }
     load(); return () => { cancelled = true }
   }, [])
+
+  // Fonts mapping
+  function fontVar(name?: string) {
+    if (!name) return undefined
+    if (name === 'Inter') return 'var(--font-inter)'
+    if (name === 'Geist') return 'var(--font-geist-sans)'
+    if (name === 'Roboto Mono') return 'var(--font-roboto-mono)'
+    if (name === 'Geist Mono') return 'var(--font-geist-mono)'
+    if (name === 'IBM Plex Mono') return 'var(--font-ibm-plex-mono), "IBM Plex Mono", monospace'
+    if (name === 'Avenir') return 'var(--font-avenir), Avenir, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif'
+    if (name === 'Space Mono') return 'var(--font-space-mono), "Space Mono", monospace'
+    return name
+  }
+  const styleValues = useMemo<React.CSSProperties>(() => ({
+    fontFamily: fontVar(fonts.values.family),
+    fontWeight: fonts.values.weight as React.CSSProperties['fontWeight'],
+    letterSpacing: typeof fonts.values.letterSpacing === 'number' ? `${fonts.values.letterSpacing}px` : undefined,
+    color: fonts.values.color || undefined,
+    fontSize: typeof fonts.values.size === 'number' ? `${fonts.values.size}px` : undefined,
+    textTransform: fonts.values.transform === 'uppercase' ? 'uppercase' : 'none',
+  }), [fonts.values])
+  const styleKpiTitle = useMemo<React.CSSProperties>(() => ({
+    fontFamily: fontVar(fonts.kpiTitle.family),
+    fontWeight: fonts.kpiTitle.weight as React.CSSProperties['fontWeight'],
+    letterSpacing: typeof fonts.kpiTitle.letterSpacing === 'number' ? `${fonts.kpiTitle.letterSpacing}px` : undefined,
+    color: fonts.kpiTitle.color || undefined,
+    fontSize: typeof fonts.kpiTitle.size === 'number' ? `${fonts.kpiTitle.size}px` : undefined,
+    textTransform: fonts.kpiTitle.transform === 'uppercase' ? 'uppercase' : 'none',
+  }), [fonts.kpiTitle])
+  const styleChartTitle = useMemo<React.CSSProperties>(() => ({
+    fontFamily: fontVar(fonts.chartTitle.family),
+    fontWeight: fonts.chartTitle.weight as React.CSSProperties['fontWeight'],
+    letterSpacing: typeof fonts.chartTitle.letterSpacing === 'number' ? `${fonts.chartTitle.letterSpacing}px` : undefined,
+    color: fonts.chartTitle.color || undefined,
+    fontSize: typeof fonts.chartTitle.size === 'number' ? `${fonts.chartTitle.size}px` : undefined,
+    textTransform: fonts.chartTitle.transform === 'uppercase' ? 'uppercase' : 'none',
+  }), [fonts.chartTitle])
+  const styleText = useMemo<React.CSSProperties>(() => ({
+    fontFamily: fontVar(fonts.text.family),
+    fontWeight: fonts.text.weight as React.CSSProperties['fontWeight'],
+    letterSpacing: typeof fonts.text.letterSpacing === 'number' ? `${fonts.text.letterSpacing}px` : undefined,
+    color: fonts.text.color || undefined,
+    fontSize: typeof fonts.text.size === 'number' ? `${fonts.text.size}px` : undefined,
+    textTransform: fonts.text.transform === 'uppercase' ? 'uppercase' : 'none',
+  }), [fonts.text])
+  const styleHeaderTitle = useMemo<React.CSSProperties>(() => ({
+    fontFamily: fontVar(fonts.headerTitle.family),
+    fontWeight: fonts.headerTitle.weight as React.CSSProperties['fontWeight'],
+    letterSpacing: typeof fonts.headerTitle.letterSpacing === 'number' ? `${fonts.headerTitle.letterSpacing}px` : undefined,
+    color: fonts.headerTitle.color || undefined,
+    fontSize: typeof fonts.headerTitle.size === 'number' ? `${fonts.headerTitle.size}px` : undefined,
+    textTransform: fonts.headerTitle.transform === 'uppercase' ? 'uppercase' : 'none',
+  }), [fonts.headerTitle])
+  const styleHeaderSubtitle = useMemo<React.CSSProperties>(() => ({
+    fontFamily: fontVar(fonts.headerSubtitle.family),
+    fontWeight: fonts.headerSubtitle.weight as React.CSSProperties['fontWeight'],
+    letterSpacing: typeof fonts.headerSubtitle.letterSpacing === 'number' ? `${fonts.headerSubtitle.letterSpacing}px` : undefined,
+    color: fonts.headerSubtitle.color || undefined,
+    fontSize: typeof fonts.headerSubtitle.size === 'number' ? `${fonts.headerSubtitle.size}px` : undefined,
+    textTransform: fonts.headerSubtitle.transform === 'uppercase' ? 'uppercase' : 'none',
+  }), [fonts.headerSubtitle])
+
+  // Header actions (date range + filter)
+  const styleFilters = useMemo<React.CSSProperties>(() => ({
+    fontFamily: fontVar(fonts.filters.family),
+    fontWeight: fonts.filters.weight as React.CSSProperties['fontWeight'],
+    letterSpacing: typeof fonts.filters.letterSpacing === 'number' ? `${fonts.filters.letterSpacing}px` : undefined,
+    color: fonts.filters.color || undefined,
+    fontSize: typeof fonts.filters.size === 'number' ? `${fonts.filters.size}px` : undefined,
+    textTransform: fonts.filters.transform === 'uppercase' ? 'uppercase' : 'none',
+  }), [fonts.filters])
+  const dateRange: DateRange | undefined = useMemo(() => {
+    const from = filters.dateRange?.from ? new Date(filters.dateRange.from) : undefined
+    const to = filters.dateRange?.to ? new Date(filters.dateRange.to) : undefined
+    if (!from && !to) return undefined
+    return { from, to }
+  }, [filters.dateRange])
+  const setDateRange = (range?: DateRange) => {
+    const toISO = (d?: Date) => (d ? d.toISOString().slice(0, 10) : undefined)
+    financeiroDashboardActions.setFilters({
+      dateRange: range ? { from: toISO(range.from), to: toISO(range.to) } : undefined,
+    })
+  }
+  const dataFilter = filters.dataFilter
+  const setDataFilter = (v: string) => financeiroDashboardActions.setFilters({ dataFilter: v })
+  const rangeLabel = useMemo(() => {
+    if (dateRange?.from && dateRange?.to) {
+      const fmt = (d: Date) => d.toLocaleDateString('pt-BR')
+      return `${fmt(dateRange.from)} - ${fmt(dateRange.to)}`
+    }
+    if (dateRange?.from) {
+      const fmt = (d: Date) => d.toLocaleDateString('pt-BR')
+      return `${fmt(dateRange.from)}`
+    }
+    return 'Selecionar período'
+  }, [dateRange])
+  const headerActions = (
+    <div className="flex items-center gap-2">
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button variant="outline" size="sm" className="h-9 px-3">
+            <CalendarIcon className="mr-2 h-4 w-4" style={{ color: filtersIconColor }} />
+            <span className="whitespace-nowrap" style={styleFilters}>{rangeLabel}</span>
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent align="end" className="p-2 w-auto">
+          <Calendar
+            mode="range"
+            selected={dateRange}
+            onSelect={setDateRange}
+            numberOfMonths={2}
+            captionLayout="dropdown"
+            showOutsideDays
+            initialFocus
+          />
+        </PopoverContent>
+      </Popover>
+      <Select value={dataFilter} onValueChange={setDataFilter}>
+        <SelectTrigger className="h-9 w-[160px]" style={styleFilters}>
+          <SelectValue placeholder="Filtro" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="todos">Todos</SelectItem>
+          <SelectItem value="pendentes">Pendentes</SelectItem>
+          <SelectItem value="vencidos">Vencidos</SelectItem>
+          <SelectItem value="pagos">Pagos</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+  )
+
+  const cardContainerClass = `bg-white p-6 rounded-lg border border-gray-100${cardShadow ? ' shadow-sm' : ''}`
 
   const meses = useMemo(() => lastMonths(6), [])
 
@@ -242,62 +390,69 @@ export default function TrafegoPagoDashboardPage() {
 
   return (
     <DashboardLayout
-      title="Dashboard de Tráfego Pago"
-      subtitle="Visão geral das campanhas de anúncios"
-      backgroundColor="#ffffff"
+      title="Olá, Igor Bianch"
+      subtitle="Você está na aba Dashboard do módulo Tráfego Pago"
+      backgroundColor={pageBgColor}
+      headerBackground="transparent"
+      headerTitleStyle={styleHeaderTitle}
+      headerSubtitleStyle={styleHeaderSubtitle}
+      headerActions={headerActions}
+      userAvatarUrl="https://i.pravatar.cc/80?img=12"
     >
       {loading ? (<div className="p-4 text-sm text-gray-500">Carregando…</div>) : error ? (<div className="p-4 text-sm text-red-600">{error}</div>) : null}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <div className="text-sm font-medium text-gray-500 mb-2">Investimento (mês)</div>
-          <div className="text-2xl font-bold text-blue-600">{formatBRL(kpis.gasto)}</div>
-          <div className="text-xs text-gray-400 mt-1">Soma gasto do mês corrente</div>
-        </div>
-        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <div className="text-sm font-medium text-gray-500 mb-2">Conversões (mês)</div>
-          <div className="text-2xl font-bold text-green-600">{formatNum(kpis.conv)}</div>
-          <div className="text-xs text-gray-400 mt-1">Total do mês corrente</div>
-        </div>
-        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <div className="text-sm font-medium text-gray-500 mb-2">CPC Médio</div>
-          <div className="text-2xl font-bold text-purple-600">{formatBRL(kpis.cpc)}</div>
-          <div className="text-xs text-gray-400 mt-1">Gasto/Clques (mês)</div>
-        </div>
-        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <div className="text-sm font-medium text-gray-500 mb-2">ROAS</div>
-          <div className="text-2xl font-bold text-orange-600">{kpis.roas.toFixed(2)}x</div>
-          <div className="text-xs text-gray-400 mt-1">Receita/Investimento (mês)</div>
-        </div>
+        {(() => { const cls = cardContainerClass; return (
+          <>
+            <div className={cls} style={{ borderColor: cardBorderColor }}>
+              <div className="text-sm font-medium text-gray-500 mb-2" style={styleKpiTitle}>Investimento (mês)</div>
+              <div className="text-2xl font-bold text-blue-600" style={styleValues}>{formatBRL(kpis.gasto)}</div>
+              <div className="text-xs text-gray-400 mt-1" style={styleText}>Soma gasto do mês corrente</div>
+            </div>
+            <div className={cls} style={{ borderColor: cardBorderColor }}>
+              <div className="text-sm font-medium text-gray-500 mb-2" style={styleKpiTitle}>Conversões (mês)</div>
+              <div className="text-2xl font-bold text-green-600" style={styleValues}>{formatNum(kpis.conv)}</div>
+              <div className="text-xs text-gray-400 mt-1" style={styleText}>Total do mês corrente</div>
+            </div>
+            <div className={cls} style={{ borderColor: cardBorderColor }}>
+              <div className="text-sm font-medium text-gray-500 mb-2" style={styleKpiTitle}>CPC Médio</div>
+              <div className="text-2xl font-bold text-purple-600" style={styleValues}>{formatBRL(kpis.cpc)}</div>
+              <div className="text-xs text-gray-400 mt-1" style={styleText}>Gasto/Clques (mês)</div>
+            </div>
+            <div className={cls} style={{ borderColor: cardBorderColor }}>
+              <div className="text-sm font-medium text-gray-500 mb-2" style={styleKpiTitle}>ROAS</div>
+              <div className="text-2xl font-bold text-orange-600" style={styleValues}>{kpis.roas.toFixed(2)}x</div>
+              <div className="text-xs text-gray-400 mt-1" style={styleText}>Receita/Investimento (mês)</div>
+            </div>
+          </>
+        )})()}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <h3 className="text-lg font-semibold mb-4">Investimento vs Receita</h3>
+        <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
+          <h3 className="text-lg font-semibold mb-4" style={styleChartTitle}>Investimento vs Receita</h3>
           <BarsInvestRet items={investRet} max={maxInvRet} />
         </div>
-        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <h3 className="text-lg font-semibold mb-4">CPA por mês</h3>
+        <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
+          <h3 className="text-lg font-semibold mb-4" style={styleChartTitle}>CPA por mês</h3>
           <LineCPA items={cpaMes} />
           <div className="grid grid-cols-6 gap-3 mt-1">
-            {cpaMes.map(m => (
-              <div key={m.key} className="text-[11px] text-gray-600 text-center">{m.label}</div>
-            ))}
+            {cpaMes.map(m => (<div key={m.key} className="text-[11px] text-gray-600 text-center" style={styleText}>{m.label}</div>))}
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <h3 className="text-lg font-semibold mb-4">Campanhas com Melhor ROAS</h3>
+        <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
+          <h3 className="text-lg font-semibold mb-4" style={styleChartTitle}>Campanhas com Melhor ROAS</h3>
           <div className="space-y-3">
             {topCampanhas.length === 0 ? (
-              <div className="text-sm text-gray-400">Sem dados</div>
+              <div className="text-sm text-gray-400" style={styleText}>Sem dados</div>
             ) : topCampanhas.map((c, idx) => (
-              <div key={idx} className="flex justify-between items-center pb-2 border-b last:border-b-0">
+              <div key={idx} className="flex justify-between items-center pb-2 border-b last:border-b-0" style={{ borderColor: cardBorderColor }}>
                 <div>
-                  <div className="font-medium text-sm">{c.campanha || 'Campanha'}</div>
-                  <div className="text-xs text-gray-500">{c.plataforma || '—'}</div>
+                  <div className="font-medium text-sm" style={styleText}>{c.campanha || 'Campanha'}</div>
+                  <div className="text-xs text-gray-500" style={styleText}>{c.plataforma || '—'}</div>
                 </div>
                 <div className="text-emerald-700 font-semibold text-sm">{(((Number(c.receita)||0)/(Number(c.gasto)||1))).toFixed(2)}x</div>
               </div>
@@ -305,21 +460,21 @@ export default function TrafegoPagoDashboardPage() {
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <h3 className="text-lg font-semibold mb-4">Conversões por Plataforma</h3>
+        <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
+          <h3 className="text-lg font-semibold mb-4" style={styleChartTitle}>Conversões por Plataforma</h3>
           <HBars items={convPorPlataforma} color="bg-sky-500" />
         </div>
 
-        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <h3 className="text-lg font-semibold mb-4">Últimos Anúncios Criados</h3>
+        <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
+          <h3 className="text-lg font-semibold mb-4" style={styleChartTitle}>Últimos Anúncios Criados</h3>
           <div className="space-y-3">
             {anunciosRecentes.length === 0 ? (
-              <div className="text-sm text-gray-400">Sem anúncios</div>
+              <div className="text-sm text-gray-400" style={styleText}>Sem anúncios</div>
             ) : anunciosRecentes.map((a) => (
-              <div key={String(a.id ?? a.nome)} className="flex justify-between items-center pb-2 border-b last:border-b-0">
+              <div key={String(a.id ?? a.nome)} className="flex justify-between items-center pb-2 border-b last:border-b-0" style={{ borderColor: cardBorderColor }}>
                 <div>
-                  <div className="font-medium text-sm">{a.nome || 'Anúncio'}</div>
-                  <div className="text-xs text-gray-500">{a.plataforma || '—'} • {a.criado_em ? new Date(a.criado_em).toLocaleDateString('pt-BR') : '—'}</div>
+                  <div className="font-medium text-sm" style={styleText}>{a.nome || 'Anúncio'}</div>
+                  <div className="text-xs text-gray-500" style={styleText}>{a.plataforma || '—'} • {a.criado_em ? new Date(a.criado_em).toLocaleDateString('pt-BR') : '—'}</div>
                 </div>
                 <div className={`text-xs ${String(a.status||'').toLowerCase().includes('ativo') ? 'text-green-600' : 'text-yellow-600'}`}>{a.status || '—'}</div>
               </div>

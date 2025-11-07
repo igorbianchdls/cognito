@@ -1,7 +1,15 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import { useStore } from '@nanostores/react'
 import DashboardLayout from '@/components/modulos/DashboardLayout'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Button } from '@/components/ui/button'
+import { Calendar } from '@/components/ui/calendar'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Calendar as CalendarIcon } from 'lucide-react'
+import type { DateRange } from 'react-day-picker'
+import { $financeiroDashboardUI, $financeiroDashboardFilters, financeiroDashboardActions } from '@/stores/modulos/financeiroDashboardStore'
 
 type OportunidadeRow = {
   oportunidade?: string
@@ -49,6 +57,14 @@ function isClosedLost(estagio?: string) { if (!estagio) return false; const s = 
 function isClosed(estagio?: string) { return isClosedWon(estagio) || isClosedLost(estagio) || (estagio?.toLowerCase().includes('fech')) }
 
 export default function CRMDashboardPage() {
+  // Global UI & Filters
+  const ui = useStore($financeiroDashboardUI)
+  const filters = useStore($financeiroDashboardFilters)
+  const fonts = ui.fonts
+  const cardBorderColor = ui.cardBorderColor
+  const pageBgColor = ui.pageBgColor
+  const cardShadow = ui.cardShadow
+  const filtersIconColor = ui.filtersIconColor
   const [opps, setOpps] = useState<OportunidadeRow[]>([])
   const [leads, setLeads] = useState<LeadRow[]>([])
   const [ativs, setAtivs] = useState<AtividadeRow[]>([])
@@ -190,6 +206,136 @@ export default function CRMDashboardPage() {
       .slice(0,3)
   }, [ativs])
 
+  // Fonts mapping
+  function fontVar(name?: string) {
+    if (!name) return undefined
+    if (name === 'Inter') return 'var(--font-inter)'
+    if (name === 'Geist') return 'var(--font-geist-sans)'
+    if (name === 'Roboto Mono') return 'var(--font-roboto-mono)'
+    if (name === 'Geist Mono') return 'var(--font-geist-mono)'
+    if (name === 'IBM Plex Mono') return 'var(--font-ibm-plex-mono), "IBM Plex Mono", monospace'
+    if (name === 'Avenir') return 'var(--font-avenir), Avenir, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif'
+    if (name === 'Space Mono') return 'var(--font-space-mono), "Space Mono", monospace'
+    return name
+  }
+  const styleValues = useMemo<React.CSSProperties>(() => ({
+    fontFamily: fontVar(fonts.values.family),
+    fontWeight: fonts.values.weight as React.CSSProperties['fontWeight'],
+    letterSpacing: typeof fonts.values.letterSpacing === 'number' ? `${fonts.values.letterSpacing}px` : undefined,
+    color: fonts.values.color || undefined,
+    fontSize: typeof fonts.values.size === 'number' ? `${fonts.values.size}px` : undefined,
+    textTransform: fonts.values.transform === 'uppercase' ? 'uppercase' : 'none',
+  }), [fonts.values])
+  const styleKpiTitle = useMemo<React.CSSProperties>(() => ({
+    fontFamily: fontVar(fonts.kpiTitle.family),
+    fontWeight: fonts.kpiTitle.weight as React.CSSProperties['fontWeight'],
+    letterSpacing: typeof fonts.kpiTitle.letterSpacing === 'number' ? `${fonts.kpiTitle.letterSpacing}px` : undefined,
+    color: fonts.kpiTitle.color || undefined,
+    fontSize: typeof fonts.kpiTitle.size === 'number' ? `${fonts.kpiTitle.size}px` : undefined,
+    textTransform: fonts.kpiTitle.transform === 'uppercase' ? 'uppercase' : 'none',
+  }), [fonts.kpiTitle])
+  const styleChartTitle = useMemo<React.CSSProperties>(() => ({
+    fontFamily: fontVar(fonts.chartTitle.family),
+    fontWeight: fonts.chartTitle.weight as React.CSSProperties['fontWeight'],
+    letterSpacing: typeof fonts.chartTitle.letterSpacing === 'number' ? `${fonts.chartTitle.letterSpacing}px` : undefined,
+    color: fonts.chartTitle.color || undefined,
+    fontSize: typeof fonts.chartTitle.size === 'number' ? `${fonts.chartTitle.size}px` : undefined,
+    textTransform: fonts.chartTitle.transform === 'uppercase' ? 'uppercase' : 'none',
+  }), [fonts.chartTitle])
+  const styleText = useMemo<React.CSSProperties>(() => ({
+    fontFamily: fontVar(fonts.text.family),
+    fontWeight: fonts.text.weight as React.CSSProperties['fontWeight'],
+    letterSpacing: typeof fonts.text.letterSpacing === 'number' ? `${fonts.text.letterSpacing}px` : undefined,
+    color: fonts.text.color || undefined,
+    fontSize: typeof fonts.text.size === 'number' ? `${fonts.text.size}px` : undefined,
+    textTransform: fonts.text.transform === 'uppercase' ? 'uppercase' : 'none',
+  }), [fonts.text])
+  const styleHeaderTitle = useMemo<React.CSSProperties>(() => ({
+    fontFamily: fontVar(fonts.headerTitle.family),
+    fontWeight: fonts.headerTitle.weight as React.CSSProperties['fontWeight'],
+    letterSpacing: typeof fonts.headerTitle.letterSpacing === 'number' ? `${fonts.headerTitle.letterSpacing}px` : undefined,
+    color: fonts.headerTitle.color || undefined,
+    fontSize: typeof fonts.headerTitle.size === 'number' ? `${fonts.headerTitle.size}px` : undefined,
+    textTransform: fonts.headerTitle.transform === 'uppercase' ? 'uppercase' : 'none',
+  }), [fonts.headerTitle])
+  const styleHeaderSubtitle = useMemo<React.CSSProperties>(() => ({
+    fontFamily: fontVar(fonts.headerSubtitle.family),
+    fontWeight: fonts.headerSubtitle.weight as React.CSSProperties['fontWeight'],
+    letterSpacing: typeof fonts.headerSubtitle.letterSpacing === 'number' ? `${fonts.headerSubtitle.letterSpacing}px` : undefined,
+    color: fonts.headerSubtitle.color || undefined,
+    fontSize: typeof fonts.headerSubtitle.size === 'number' ? `${fonts.headerSubtitle.size}px` : undefined,
+    textTransform: fonts.headerSubtitle.transform === 'uppercase' ? 'uppercase' : 'none',
+  }), [fonts.headerSubtitle])
+
+  // Header actions
+  const styleFilters = useMemo<React.CSSProperties>(() => ({
+    fontFamily: fontVar(fonts.filters.family),
+    fontWeight: fonts.filters.weight as React.CSSProperties['fontWeight'],
+    letterSpacing: typeof fonts.filters.letterSpacing === 'number' ? `${fonts.filters.letterSpacing}px` : undefined,
+    color: fonts.filters.color || undefined,
+    fontSize: typeof fonts.filters.size === 'number' ? `${fonts.filters.size}px` : undefined,
+    textTransform: fonts.filters.transform === 'uppercase' ? 'uppercase' : 'none',
+  }), [fonts.filters])
+  const dateRange: DateRange | undefined = useMemo(() => {
+    const from = filters.dateRange?.from ? new Date(filters.dateRange.from) : undefined
+    const to = filters.dateRange?.to ? new Date(filters.dateRange.to) : undefined
+    if (!from && !to) return undefined
+    return { from, to }
+  }, [filters.dateRange])
+  const setDateRange = (range?: DateRange) => {
+    const toISO = (d?: Date) => (d ? d.toISOString().slice(0, 10) : undefined)
+    financeiroDashboardActions.setFilters({
+      dateRange: range ? { from: toISO(range.from), to: toISO(range.to) } : undefined,
+    })
+  }
+  const dataFilter = filters.dataFilter
+  const setDataFilter = (v: string) => financeiroDashboardActions.setFilters({ dataFilter: v })
+  const rangeLabel = useMemo(() => {
+    if (dateRange?.from && dateRange?.to) {
+      const fmt = (d: Date) => d.toLocaleDateString('pt-BR')
+      return `${fmt(dateRange.from)} - ${fmt(dateRange.to)}`
+    }
+    if (dateRange?.from) {
+      const fmt = (d: Date) => d.toLocaleDateString('pt-BR')
+      return `${fmt(dateRange.from)}`
+    }
+    return 'Selecionar período'
+  }, [dateRange])
+  const headerActions = (
+    <div className="flex items-center gap-2">
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button variant="outline" size="sm" className="h-9 px-3">
+            <CalendarIcon className="mr-2 h-4 w-4" style={{ color: filtersIconColor }} />
+            <span className="whitespace-nowrap" style={styleFilters}>{rangeLabel}</span>
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent align="end" className="p-2 w-auto">
+          <Calendar
+            mode="range"
+            selected={dateRange}
+            onSelect={setDateRange}
+            numberOfMonths={2}
+            captionLayout="dropdown"
+            showOutsideDays
+            initialFocus
+          />
+        </PopoverContent>
+      </Popover>
+      <Select value={dataFilter} onValueChange={setDataFilter}>
+        <SelectTrigger className="h-9 w-[160px]" style={styleFilters}>
+          <SelectValue placeholder="Filtro" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="todos">Todos</SelectItem>
+          <SelectItem value="pendentes">Pendentes</SelectItem>
+          <SelectItem value="vencidos">Vencidos</SelectItem>
+          <SelectItem value="pagos">Pagos</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+  )
+
   // Simple bars
   function HBars({ items, color }: { items: { label: string; value: number }[]; color: string }) {
     const max = Math.max(1, ...items.map(i => i.value))
@@ -229,42 +375,56 @@ export default function CRMDashboardPage() {
 
   return (
     <DashboardLayout
-      title="Dashboard CRM"
-      subtitle="Visão geral do relacionamento com clientes"
-      backgroundColor="#ffffff"
+      title="Olá, Igor Bianch"
+      subtitle="Você está na aba Dashboard do módulo CRM"
+      backgroundColor={pageBgColor}
+      headerBackground="transparent"
+      headerTitleStyle={styleHeaderTitle}
+      headerSubtitleStyle={styleHeaderSubtitle}
+      headerActions={headerActions}
+      userAvatarUrl="https://i.pravatar.cc/80?img=12"
+      headerBackground="transparent"
+      headerTitleStyle={styleHeaderTitle}
+      headerSubtitleStyle={styleHeaderSubtitle}
+      headerActions={headerActions}
+      userAvatarUrl="https://i.pravatar.cc/80?img=12"
     >
       {loading ? (<div className="p-4 text-sm text-gray-500">Carregando…</div>) : error ? (<div className="p-4 text-sm text-red-600">{error}</div>) : null}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <div className="text-sm font-medium text-gray-500 mb-2">Oportunidades Abertas</div>
-          <div className="text-2xl font-bold text-blue-600">{openOpps.length}</div>
-          <div className="text-xs text-gray-400 mt-1">No pipeline atual</div>
-        </div>
-        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <div className="text-sm font-medium text-gray-500 mb-2">Valor do Pipeline</div>
-          <div className="text-2xl font-bold text-purple-600">{formatBRL(pipelineValue)}</div>
-          <div className="text-xs text-gray-400 mt-1">Soma de oportunidades abertas</div>
-        </div>
-        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <div className="text-sm font-medium text-gray-500 mb-2">Taxa de Ganho (6m)</div>
-          <div className="text-2xl font-bold text-green-600">{winStats.rate.toFixed(1)}%</div>
-          <div className="text-xs text-gray-400 mt-1">{winStats.won}/{winStats.total} fechadas como ganho</div>
-        </div>
-        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <div className="text-sm font-medium text-gray-500 mb-2">Atividades Hoje</div>
-          <div className="text-2xl font-bold text-orange-600">{pendingActivitiesToday}</div>
-          <div className="text-xs text-gray-400 mt-1">Pendentes para hoje</div>
-        </div>
+        {(() => { const cls = `bg-white p-6 rounded-lg border border-gray-100${cardShadow ? ' shadow-sm' : ''}`; return (
+          <>
+            <div className={cls} style={{ borderColor: cardBorderColor }}>
+              <div className="text-sm font-medium text-gray-500 mb-2" style={styleKpiTitle}>Oportunidades Abertas</div>
+              <div className="text-2xl font-bold text-blue-600" style={styleValues}>{openOpps.length}</div>
+              <div className="text-xs text-gray-400 mt-1" style={styleText}>No pipeline atual</div>
+            </div>
+            <div className={cls} style={{ borderColor: cardBorderColor }}>
+              <div className="text-sm font-medium text-gray-500 mb-2" style={styleKpiTitle}>Valor do Pipeline</div>
+              <div className="text-2xl font-bold text-purple-600" style={styleValues}>{formatBRL(pipelineValue)}</div>
+              <div className="text-xs text-gray-400 mt-1" style={styleText}>Soma de oportunidades abertas</div>
+            </div>
+            <div className={cls} style={{ borderColor: cardBorderColor }}>
+              <div className="text-sm font-medium text-gray-500 mb-2" style={styleKpiTitle}>Taxa de Ganho (6m)</div>
+              <div className="text-2xl font-bold text-green-600" style={styleValues}>{winStats.rate.toFixed(1)}%</div>
+              <div className="text-xs text-gray-400 mt-1" style={styleText}>{winStats.won}/{winStats.total} fechadas como ganho</div>
+            </div>
+            <div className={cls} style={{ borderColor: cardBorderColor }}>
+              <div className="text-sm font-medium text-gray-500 mb-2" style={styleKpiTitle}>Atividades Hoje</div>
+              <div className="text-2xl font-bold text-orange-600" style={styleValues}>{pendingActivitiesToday}</div>
+              <div className="text-xs text-gray-400 mt-1" style={styleText}>Pendentes para hoje</div>
+            </div>
+          </>
+        )})()}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <h3 className="text-lg font-semibold mb-4">Funil de Vendas</h3>
+        <div className={`bg-white p-6 rounded-lg border border-gray-100${cardShadow ? ' shadow-sm' : ''}`} style={{ borderColor: cardBorderColor }}>
+          <h3 className="text-lg font-semibold mb-4" style={styleChartTitle}>Funil de Vendas</h3>
           <HBarsCurrency items={funnel.map(f => ({ label: f.label, value: f.value }))} color="bg-cyan-500" />
         </div>
-        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <h3 className="text-lg font-semibold mb-4">Conversões por Mês</h3>
+        <div className={`bg-white p-6 rounded-lg border border-gray-100${cardShadow ? ' shadow-sm' : ''}`} style={{ borderColor: cardBorderColor }}>
+          <h3 className="text-lg font-semibold mb-4" style={styleChartTitle}>Conversões por Mês</h3>
           <div className="grid grid-cols-6 gap-3 h-44 items-end">
             {winsMes.map(m => {
               const max = Math.max(1, ...winsMes.map(x => x.value))
@@ -272,7 +432,7 @@ export default function CRMDashboardPage() {
               return (
                 <div key={m.key} className="flex flex-col items-center justify-end gap-1">
                   <div className="w-full bg-indigo-500/80 rounded" style={{ height: `${h}%` }} />
-                  <div className="text-[11px] text-gray-600">{m.label}</div>
+                  <div className="text-[11px] text-gray-600" style={styleText}>{m.label}</div>
                 </div>
               )
             })}
@@ -281,16 +441,16 @@ export default function CRMDashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <h3 className="text-lg font-semibold mb-4">Oportunidades Quentes</h3>
+        <div className={`bg-white p-6 rounded-lg border border-gray-100${cardShadow ? ' shadow-sm' : ''}`} style={{ borderColor: cardBorderColor }}>
+          <h3 className="text-lg font-semibold mb-4" style={styleChartTitle}>Oportunidades Quentes</h3>
           <div className="space-y-3">
             {hotOpps.length === 0 ? (
-              <div className="text-sm text-gray-400">Sem oportunidades</div>
+              <div className="text-sm text-gray-400" style={styleText}>Sem oportunidades</div>
             ) : hotOpps.map((o, idx) => (
-              <div key={idx} className="flex justify-between items-center pb-2 border-b last:border-b-0">
+              <div key={idx} className="flex justify-between items-center pb-2 border-b last:border-b-0" style={{ borderColor: cardBorderColor }}>
                 <div>
-                  <div className="font-medium text-sm">{o.oportunidade || o.conta || 'Oportunidade'}</div>
-                  <div className="text-xs text-gray-500">{o.estagio || '—'} • {o.probabilidade ?? '—'}%</div>
+                  <div className="font-medium text-sm" style={styleText}>{o.oportunidade || o.conta || 'Oportunidade'}</div>
+                  <div className="text-xs text-gray-500" style={styleText}>{o.estagio || '—'} • {o.probabilidade ?? '—'}%</div>
                 </div>
                 <div className="font-semibold text-green-700">{formatBRL(o.valor)}</div>
               </div>
@@ -298,33 +458,33 @@ export default function CRMDashboardPage() {
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <h3 className="text-lg font-semibold mb-4">Top Fontes de Leads</h3>
+        <div className={`bg-white p-6 rounded-lg border border-gray-100${cardShadow ? ' shadow-sm' : ''}`} style={{ borderColor: cardBorderColor }}>
+          <h3 className="text-lg font-semibold mb-4" style={styleChartTitle}>Top Fontes de Leads</h3>
           <div className="space-y-3">
             {fontesLeads.length === 0 ? (
-              <div className="text-sm text-gray-400">Sem dados</div>
+              <div className="text-sm text-gray-400" style={styleText}>Sem dados</div>
             ) : fontesLeads.map((f) => (
               <div key={f.label} className="flex justify-between items-center">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full bg-sky-500"></div>
-                  <span className="text-sm">{f.label}</span>
+                  <span className="text-sm" style={styleText}>{f.label}</span>
                 </div>
-                <span className="font-semibold text-sm">{f.value}</span>
+                <span className="font-semibold text-sm" style={styleText}>{f.value}</span>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <h3 className="text-lg font-semibold mb-4">Últimas Atividades</h3>
+        <div className={`bg-white p-6 rounded-lg border border-gray-100${cardShadow ? ' shadow-sm' : ''}`} style={{ borderColor: cardBorderColor }}>
+          <h3 className="text-lg font-semibold mb-4" style={styleChartTitle}>Últimas Atividades</h3>
           <div className="space-y-3">
             {recentAtivs.length === 0 ? (
-              <div className="text-sm text-gray-400">Sem atividades</div>
+              <div className="text-sm text-gray-400" style={styleText}>Sem atividades</div>
             ) : recentAtivs.map((a, idx) => (
-              <div key={idx} className="flex justify-between items-center pb-2 border-b last:border-b-0">
+              <div key={idx} className="flex justify-between items-center pb-2 border-b last:border-b-0" style={{ borderColor: cardBorderColor }}>
                 <div>
-                  <div className="font-medium text-sm">{a.assunto || a.tipo || 'Atividade'}</div>
-                  <div className="text-xs text-gray-500">{a.conta || a.lead || a.oportunidade || '—'}</div>
+                  <div className="font-medium text-sm" style={styleText}>{a.assunto || a.tipo || 'Atividade'}</div>
+                  <div className="text-xs text-gray-500" style={styleText}>{a.conta || a.lead || a.oportunidade || '—'}</div>
                 </div>
                 <div className="text-xs text-gray-400">{a.data_vencimento ? new Date(a.data_vencimento).toLocaleDateString('pt-BR') : '—'}</div>
               </div>

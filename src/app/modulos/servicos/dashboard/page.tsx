@@ -157,57 +157,66 @@ export default function ServicosDashboardPage() {
 
   return (
     <DashboardLayout
-      title="Dashboard de Serviços"
-      subtitle="Visão geral das ordens de serviço"
-      backgroundColor="#ffffff"
+      title="Olá, Igor Bianch"
+      subtitle="Você está na aba Dashboard do módulo Serviços"
+      backgroundColor={pageBgColor}
+      headerBackground="transparent"
+      headerTitleStyle={styleHeaderTitle}
+      headerSubtitleStyle={styleHeaderSubtitle}
+      headerActions={headerActions}
+      userAvatarUrl="https://i.pravatar.cc/80?img=12"
     >
       {loading ? (<div className="p-4 text-sm text-gray-500">Carregando…</div>) : error ? (<div className="p-4 text-sm text-red-600">{error}</div>) : null}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <div className="text-sm font-medium text-gray-500 mb-2">Ordens Abertas</div>
-          <div className="text-2xl font-bold text-blue-600">{formatNum(ordensAbertas)}</div>
-          <div className="text-xs text-gray-400 mt-1">Em progresso e pendentes</div>
-        </div>
-        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <div className="text-sm font-medium text-gray-500 mb-2">Técnicos Ativos</div>
-          <div className="text-2xl font-bold text-green-600">{formatNum(tecnicosAtivos)}</div>
-          <div className="text-xs text-gray-400 mt-1">Disponíveis no período</div>
-        </div>
-        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <div className="text-sm font-medium text-gray-500 mb-2">Receita do Mês</div>
-          <div className="text-2xl font-bold text-purple-600">{formatBRL(receitaMes)}</div>
-          <div className="text-xs text-gray-400 mt-1">Somatório de OS concluídas</div>
-        </div>
-        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <div className="text-sm font-medium text-gray-500 mb-2">Tempo Médio</div>
-          <div className="text-2xl font-bold text-orange-600">{tmaDias.toFixed(1)} dias</div>
-          <div className="text-xs text-gray-400 mt-1">Conclusão de ordens</div>
-        </div>
+        {(() => { const cls = `bg-white p-6 rounded-lg border border-gray-100${cardShadow ? ' shadow-sm' : ''}`; return (
+          <>
+            <div className={cls} style={{ borderColor: cardBorderColor}}>
+              <div className="text-sm font-medium text-gray-500 mb-2" style={styleKpiTitle}>Ordens Abertas</div>
+              <div className="text-2xl font-bold text-blue-600" style={styleValues}>{formatNum(ordensAbertas)}</div>
+              <div className="text-xs text-gray-400 mt-1" style={styleText}>Em progresso e pendentes</div>
+            </div>
+            <div className={cls} style={{ borderColor: cardBorderColor}}>
+              <div className="text-sm font-medium text-gray-500 mb-2" style={styleKpiTitle}>Técnicos Ativos</div>
+              <div className="text-2xl font-bold text-green-600" style={styleValues}>{formatNum(tecnicosAtivos)}</div>
+              <div className="text-xs text-gray-400 mt-1" style={styleText}>Disponíveis no período</div>
+            </div>
+            <div className={cls} style={{ borderColor: cardBorderColor}}>
+              <div className="text-sm font-medium text-gray-500 mb-2" style={styleKpiTitle}>Receita do Mês</div>
+              <div className="text-2xl font-bold text-purple-600" style={styleValues}>{formatBRL(receitaMes)}</div>
+              <div className="text-xs text-gray-400 mt-1" style={styleText}>Somatório de OS concluídas</div>
+            </div>
+            <div className={cls} style={{ borderColor: cardBorderColor}}>
+              <div className="text-sm font-medium text-gray-500 mb-2" style={styleKpiTitle}>Tempo Médio</div>
+              <div className="text-2xl font-bold text-orange-600" style={styleValues}>{tmaDias.toFixed(1)} dias</div>
+              <div className="text-xs text-gray-400 mt-1" style={styleText}>Conclusão de ordens</div>
+            </div>
+          </>
+        )})()}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <h3 className="text-lg font-semibold mb-4">Ordens por Status</h3>
+        <div className={`bg-white p-6 rounded-lg border border-gray-100${cardShadow ? ' shadow-sm' : ''}`} style={{ borderColor: cardBorderColor }}>
+          <h3 className="text-lg font-semibold mb-4" style={styleChartTitle}>Ordens por Status</h3>
           <HBars items={statusDist} color="bg-cyan-500" />
         </div>
-        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <h3 className="text-lg font-semibold mb-4">Receita de Serviços (Mensal)</h3>
+        <div className={`bg-white p-6 rounded-lg border border-gray-100${cardShadow ? ' shadow-sm' : ''}`} style={{ borderColor: cardBorderColor }}>
+          <h3 className="text-lg font-semibold mb-4" style={styleChartTitle}>Receita de Serviços (Mensal)</h3>
           <BarsReceita items={receitaMensal.map(m => ({ label: m.label, value: m.value }))} />
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <h3 className="text-lg font-semibold mb-4">Ordens Urgentes</h3>
+        <div className={`bg-white p-6 rounded-lg border border-gray-100${cardShadow ? ' shadow-sm' : ''}`} style={{ borderColor: cardBorderColor }}>
+          <h3 className="text-lg font-semibold mb-4" style={styleChartTitle}>Ordens Urgentes</h3>
           <div className="space-y-3">
             {ordensUrgentes.length === 0 ? (
-              <div className="text-sm text-gray-400">Sem ordens</div>
+              <div className="text-sm text-gray-400" style={styleText}>Sem ordens</div>
             ) : ordensUrgentes.map((o, idx) => (
-              <div key={`${o.numero_os}-${idx}`} className="flex justify-between items-center pb-2 border-b last:border-b-0">
+              <div key={`${o.numero_os}-${idx}`} className="flex justify-between items-center pb-2 border-b last:border-b-0" style={{ borderColor: cardBorderColor }}>
                 <div>
-                  <div className="font-medium text-sm">{o.numero_os} - {o.prioridade || '—'}</div>
-                  <div className="text-xs text-gray-500">{o.cliente || '—'}</div>
+                  <div className="font-medium text-sm" style={styleText}>{o.numero_os} - {o.prioridade || '—'}</div>
+                  <div className="text-xs text-gray-500" style={styleText}>{o.cliente || '—'}</div>
                 </div>
                 <div className={`text-xs ${String(o.prioridade||'').toLowerCase().includes('crít')||String(o.prioridade||'').toLowerCase().includes('crit') ? 'text-red-600' : 'text-orange-600'}`}>{o.prioridade || '—'}</div>
               </div>
@@ -215,33 +224,33 @@ export default function ServicosDashboardPage() {
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <h3 className="text-lg font-semibold mb-4">Top Técnicos (Mês)</h3>
+        <div className={`bg-white p-6 rounded-lg border border-gray-100${cardShadow ? ' shadow-sm' : ''}`} style={{ borderColor: cardBorderColor }}>
+          <h3 className="text-lg font-semibold mb-4" style={styleChartTitle}>Top Técnicos (Mês)</h3>
           <div className="space-y-3">
             {topTecnicosMes.length === 0 ? (
-              <div className="text-sm text-gray-400">Sem dados</div>
+              <div className="text-sm text-gray-400" style={styleText}>Sem dados</div>
             ) : topTecnicosMes.map((t) => (
               <div key={t.tecnico} className="flex justify-between items-center">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full bg-indigo-500"></div>
-                  <span className="text-sm">{t.tecnico}</span>
+                  <span className="text-sm" style={styleText}>{t.tecnico}</span>
                 </div>
-                <span className="font-semibold text-sm">{formatNum(t.total)} OS</span>
+                <span className="font-semibold text-sm" style={styleText}>{formatNum(t.total)} OS</span>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <h3 className="text-lg font-semibold mb-4">Últimas Ordens Concluídas</h3>
+        <div className={`bg-white p-6 rounded-lg border border-gray-100${cardShadow ? ' shadow-sm' : ''}`} style={{ borderColor: cardBorderColor }}>
+          <h3 className="text-lg font-semibold mb-4" style={styleChartTitle}>Últimas Ordens Concluídas</h3>
           <div className="space-y-3">
             {ultimasConcluidas.length === 0 ? (
-              <div className="text-sm text-gray-400">Sem ordens concluídas</div>
+              <div className="text-sm text-gray-400" style={styleText}>Sem ordens concluídas</div>
             ) : ultimasConcluidas.map((o, idx) => (
-              <div key={`${o.numero_os}-done-${idx}`} className="flex justify-between items-center pb-2 border-b last:border-b-0">
+              <div key={`${o.numero_os}-done-${idx}`} className="flex justify-between items-center pb-2 border-b last:border-b-0" style={{ borderColor: cardBorderColor }}>
                 <div>
-                  <div className="font-medium text-sm">{o.numero_os || 'OS'}</div>
-                  <div className="text-xs text-gray-500">{o.cliente || '—'}</div>
+                  <div className="font-medium text-sm" style={styleText}>{o.numero_os || 'OS'}</div>
+                  <div className="text-xs text-gray-500" style={styleText}>{o.cliente || '—'}</div>
                 </div>
                 <div className="font-semibold text-green-600 text-sm">{formatBRL(Number(o.valor_final)||0)}</div>
               </div>
