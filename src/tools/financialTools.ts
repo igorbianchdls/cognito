@@ -1330,7 +1330,20 @@ export const rankingFinanceiroPorDimensao = tool({
         "Base de cálculo: 'pagamento_efetuado' | 'conta_a_pagar' | 'pagamento_recebido' | 'conta_a_receber' (aceita plural)"
       ),
     dimensao: z
-      .enum(['departamento', 'filial', 'projeto', 'centro_lucro', 'natureza_financeira'])
+      .enum([
+        'departamento',
+        'filial',
+        'projeto',
+        'centro_lucro',
+        'natureza_financeira',
+        'categorias_financeiras',
+        'centros_custo',
+        // aliases
+        'categoria',
+        'categoria_financeira',
+        'centro_custo',
+        'cc',
+      ])
       .describe('Dimensão de agrupamento'),
     data_inicial: z.string().optional().describe('Data inicial (YYYY-MM-DD)'),
     data_final: z.string().optional().describe('Data final (YYYY-MM-DD)'),
@@ -1396,8 +1409,8 @@ export const rankingFinanceiroPorDimensao = tool({
       const cfg = buildForTipo();
 
       // Mapear joins e expressão de dimensão com base no cabeçalho
-      const joinForDim = (h: 'ap' | 'ar') => {
-        switch (dimensao) {
+      const joinForDim = (h: 'ap' | 'ar', dimKey: 'departamento' | 'filial' | 'projeto' | 'centro_lucro' | 'natureza_financeira' | 'categorias_financeiras' | 'centros_custo') => {
+        switch (dimKey) {
           case 'departamento':
             return {
               joins: `LEFT JOIN empresa.departamentos dep ON dep.id = ${h}.departamento_id`,
@@ -1422,6 +1435,18 @@ export const rankingFinanceiroPorDimensao = tool({
               expr: `COALESCE(cl.nome, '— sem centro de lucro —')`,
               label: 'Centro de Lucro',
             } as const;
+          case 'centros_custo':
+            return {
+              joins: `LEFT JOIN empresa.centros_custo cc ON cc.id = ${h}.centro_custo_id`,
+              expr: `COALESCE(cc.nome, '— sem centro de custo —')`,
+              label: 'Centro de Custo',
+            } as const;
+          case 'categorias_financeiras':
+            return {
+              joins: `LEFT JOIN financeiro.categorias_financeiras cat ON cat.id = ${h}.categoria_id`,
+              expr: `COALESCE(cat.nome, '— sem categoria —')`,
+              label: 'Categoria Financeira',
+            } as const;
           case 'natureza_financeira':
             return {
               joins:
@@ -1435,7 +1460,12 @@ export const rankingFinanceiroPorDimensao = tool({
         }
       };
 
-      const dm = joinForDim(cfg.headAlias);
+      const dimKeyCanonical: 'departamento' | 'filial' | 'projeto' | 'centro_lucro' | 'natureza_financeira' | 'categorias_financeiras' | 'centros_custo' =
+        dimensao === 'categoria' || dimensao === 'categoria_financeira' ? 'categorias_financeiras'
+        : dimensao === 'centro_custo' || dimensao === 'cc' ? 'centros_custo'
+        : (dimensao as any);
+
+      const dm = joinForDim(cfg.headAlias, dimKeyCanonical);
 
       // Montar filtros de período
       const where: string[] = [...cfg.whereParts];
