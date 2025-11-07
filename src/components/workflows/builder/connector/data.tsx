@@ -54,13 +54,13 @@ export const catalog: ConnectorCatalog = {
         { id: 'fin.getContasAPagar', label: 'Contas a Pagar', hint: 'Listar e analisar pagáveis', kind: 'action' as const, icon: <Wallet className="w-4 h-4" /> },
         { id: 'fin.getPagamentosRecebidos', label: 'Pagamentos Recebidos', hint: 'Histórico de recebimentos', kind: 'action' as const, icon: <Wallet className="w-4 h-4" /> },
         { id: 'fin.getPagamentosEfetuados', label: 'Pagamentos Efetuados', hint: 'Saídas realizadas', kind: 'action' as const, icon: <Wallet className="w-4 h-4" /> },
-        { id: 'fin.calcularFluxoCaixa', label: 'Fluxo de Caixa', hint: 'Projeção e fluxo consolidado', kind: 'action' as const, icon: <LineChart className="w-4 h-4" /> },
+        // Removido: fin.calcularFluxoCaixa (tool excluída)
         // Removido: analisarReceitasPorCentroCusto (consolidado no ranking por CC)
         { id: 'fin.getTransacoesExtrato', label: 'Transações (Extrato)', hint: 'Movimentação bancária', kind: 'action' as const, icon: <Database className="w-4 h-4" /> },
         { id: 'fin.obterSaldoBancario', label: 'Saldo Bancário', hint: 'Saldos por conta', kind: 'action' as const, icon: <Wallet className="w-4 h-4" /> },
-        { id: 'fin.obterDespesasPorCentroCusto', label: 'Despesas por Centro de Custo', hint: 'Despesas por CC', kind: 'action' as const, icon: <BarChart3 className="w-4 h-4" /> },
+        { id: 'fin.obterDespesasPorCentroCusto', label: 'Por Centro de Custo', hint: 'Ranking por CC', kind: 'action' as const, icon: <BarChart3 className="w-4 h-4" /> },
         { id: 'fin.analisarInadimplencia', label: 'Inadimplência', hint: 'Clientes inadimplentes', kind: 'action' as const, icon: <FileText className="w-4 h-4" /> },
-        { id: 'fin.analisarDespesasPorCategoria', label: 'Despesas por Categoria', hint: 'Categorias de despesa', kind: 'action' as const, icon: <Calculator className="w-4 h-4" /> },
+        { id: 'fin.rankingPorCategoriaFinanceira', label: 'Por Categoria', hint: 'Ranking por categoria', kind: 'action' as const, icon: <Calculator className="w-4 h-4" /> },
       ],
     },
     {

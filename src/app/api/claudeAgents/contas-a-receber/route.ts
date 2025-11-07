@@ -5,13 +5,11 @@ import {
   getContasAPagar,
   getPagamentosRecebidos,
   getPagamentosEfetuados,
-  calcularFluxoCaixa,
   getTransacoesExtrato,
   obterSaldoBancario,
   obterDespesasPorCentroCusto,
   analisarInadimplencia,
-  analisarDespesasPorCategoria,
-  getMovimentos,
+  rankingPorCategoriaFinanceira,
 } from '@/tools/financialTools';
 import { createDashboardTool } from '@/tools/apps/createDashboardTool';
 
@@ -239,26 +237,23 @@ Use a tool acima "obterDespesasPorCentroCusto" com o parâmetro `tipo` para alte
 - Realizado: `tipo: 'pagamento_efetuado'` (soma dos pagamentos por CC do cabeçalho)
 - Planejado: `tipo: 'conta_a_pagar'` (soma dos títulos por CC)
 
-## 💼 ANÁLISE DE DESPESAS POR CATEGORIA
-**analisarDespesasPorCategoria** - Analisa receitas agrupadas por categoria com totais e detalhamento
+## 💼 RANKING POR CATEGORIA FINANCEIRA
+**rankingPorCategoriaFinanceira** - Ranking por categoria financeira (despesas/receitas), com base em realizado ou planejado
 
 **Parâmetros:**
+- \`tipo\`: 'pagamento_efetuado' | 'conta_a_pagar' | 'pagamento_recebido' | 'conta_a_receber'
+- \`data_inicial\`, \`data_final\` (opcional): período do ranking
 - \`limit\`: número máximo de resultados (padrão: 100)
 
 **Retorna:**
-- Lista de categorias de receita com totais
-- Quantidade de títulos por categoria
+- Lista de categorias e total gasto no período
 - Total geral consolidado
 
-**Quando usar:**
-- Análise de composição de receitas
-- Identificar principais fontes de receita
-- Diversificação de receitas
-- Planejamento estratégico comercial
-
 **Exemplos:**
-- "Quais categorias geram mais receita?" → \`analisarDespesasPorCategoria({ limit: 10 })\`
-- "Distribuição de receitas por categoria" → \`analisarDespesasPorCategoria({})\`
+- "Categorias mais gastas (realizado)" → \`rankingPorCategoriaFinanceira({ tipo: 'pagamento_efetuado', data_inicial: '2025-11-01', data_final: '2025-11-30' })\`
+- "Planejado por categoria (a pagar)" → \`rankingPorCategoriaFinanceira({ tipo: 'conta_a_pagar', data_inicial: '2026-01-01', data_final: '2026-03-31' })\`
+- "Receitas por categoria (realizado)" → \`rankingPorCategoriaFinanceira({ tipo: 'pagamento_recebido', data_inicial: '2025-11-01', data_final: '2025-11-30' })\`
+- "Planejado de receitas (a receber)" → \`rankingPorCategoriaFinanceira({ tipo: 'conta_a_receber' })\`
 
 ## ⚠️ ANÁLISE DE INADIMPLÊNCIA
 **analisarInadimplencia** - Analisa inadimplência por faixas de atraso (aging)
@@ -618,13 +613,11 @@ Seja sempre profissional, orientado a dados e ofereça insights acionáveis. Pri
         getContasAPagar,
         getPagamentosRecebidos,
         getPagamentosEfetuados,
-        calcularFluxoCaixa,
         getTransacoesExtrato,
         obterSaldoBancario,
         obterDespesasPorCentroCusto,
         analisarInadimplencia,
-        analisarDespesasPorCategoria,
-        getMovimentos,
+        rankingPorCategoriaFinanceira,
         createDashboardTool,
       }
     });

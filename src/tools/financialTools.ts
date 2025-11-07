@@ -662,7 +662,7 @@ const normalizePeriodo = (dias: number) => {
   30);
 };
 
-export const calcularFluxoCaixa = tool({
+const calcularFluxoCaixa = tool({
   description: 'Calcula fluxo de caixa diário (saldo inicial por contas + movimentos) entre um período informado.',
   inputSchema: z.object({
     data_inicial: z.string().optional().describe('Data inicial (YYYY-MM-DD)'),
@@ -818,7 +818,7 @@ export const calcularFluxoCaixa = tool({
 
 // Removido: analisarReceitasPorCentroCusto (substituído por obterDespesasPorCentroCusto com opção de tipo)
 
-export const createMovimento = tool({
+const createMovimento = tool({
   description: 'Cria um movimento financeiro (entrada ou saída) manualmente registrado no sistema.',
   inputSchema: z.object({
     conta_id: z.string().describe('ID da conta bancária'),
@@ -1371,57 +1371,169 @@ export const obterDespesasPorCentroCusto = tool({
 // ANÁLISE DE DESPESAS POR CATEGORIA
 // ============================================================================
 
-export const analisarDespesasPorCategoria = tool({
-  description: 'Analisa receitas agrupadas por categoria com totais e detalhamento',
+export const rankingPorCategoriaFinanceira = tool({
+  description: 'Ranking por categoria financeira; base em pagamento_efetuado/conta_a_pagar (despesas) ou pagamento_recebido/conta_a_receber (receitas)',
   inputSchema: z.object({
-    limit: z.number().default(100).describe('Número máximo de resultados'),
+    data_inicial: z.string().optional().describe('Data inicial (YYYY-MM-DD)'),
+    data_final: z.string().optional().describe('Data final (YYYY-MM-DD)'),
+    limit: z.number().default(100).describe('Número máximo de categorias'),
+    tipo: z.enum(['pagamento_efetuado', 'conta_a_pagar', 'contas_a_pagar', 'pagamento_recebido', 'conta_a_receber', 'contas_a_receber']).default('pagamento_efetuado')
+      .describe("Base: 'pagamento_efetuado' | 'conta_a_pagar' | 'pagamento_recebido' | 'conta_a_receber' (aceita plural)"),
   }),
-  execute: async ({
-    limit,
-  }) => {
+  execute: async ({ data_inicial, data_final, limit, tipo }) => {
     try {
-      const params: unknown[] = [limit];
+      const norm = (t: string) => t === 'contas_a_pagar' ? 'conta_a_pagar' : (t === 'contas_a_receber' ? 'conta_a_receber' : t);
+      const tipoNorm = norm(tipo);
 
-      const sql = `
-        SELECT
-          cat.nome AS categoria_receita,
-          SUM(car.valor_total) AS total_receitas,
-          COUNT(car.id) AS qtd_titulos
-        FROM financeiro.contas_a_receber car
-        LEFT JOIN financeiro.categorias cat ON cat.id = car.categoria_receita_id
-        WHERE car.status IN ('pago', 'parcial')
-        GROUP BY cat.nome
-        ORDER BY total_receitas DESC
-        LIMIT $1
-      `.trim();
+      let params: unknown[] = [];
+      let sql: string;
+      let totalSql: string;
+      let titleKind: string;
+
+      if (tipoNorm === 'pagamento_efetuado') {
+        // Realizado: soma lf.valor por categoria do cabeçalho AP
+        sql = `
+          SELECT
+            COALESCE(cat.nome, '— sem categoria —') AS categoria,
+            SUM(lf.valor) AS total_gasto
+          FROM financeiro.lancamentos_financeiros lf
+          JOIN financeiro.lancamentos_financeiros ap
+            ON ap.id = lf.lancamento_origem_id
+          LEFT JOIN financeiro.categorias_financeiras cat
+            ON cat.id = ap.categoria_id
+          WHERE lf.tipo = 'pagamento_efetuado'
+          ${data_inicial ? `AND lf.data_lancamento >= $1` : ''}
+          ${data_final ? `AND lf.data_lancamento <= $${data_inicial ? 2 : 1}` : ''}
+          GROUP BY COALESCE(cat.nome, '— sem categoria —')
+          ORDER BY total_gasto DESC
+          LIMIT $${(data_inicial ? 1 : 0) + (data_final ? 1 : 0) + 1}
+        `.trim();
+
+        totalSql = `
+          SELECT SUM(lf.valor) AS total_geral
+          FROM financeiro.lancamentos_financeiros lf
+          WHERE lf.tipo = 'pagamento_efetuado'
+          ${data_inicial ? `AND lf.data_lancamento >= $1` : ''}
+          ${data_final ? `AND lf.data_lancamento <= $${data_inicial ? 2 : 1}` : ''}
+        `.trim();
+
+        titleKind = 'Pagamentos Efetuados';
+        params = [
+          ...([] as unknown[]).concat(data_inicial ? [data_inicial] as unknown[] : [])
+                               .concat(data_final ? [data_final] as unknown[] : []),
+          limit,
+        ];
+      } else if (tipoNorm === 'conta_a_pagar') {
+        // Planejado: soma ap.valor por categoria do próprio cabeçalho
+        sql = `
+          SELECT
+            COALESCE(cat.nome, '— sem categoria —') AS categoria,
+            SUM(ap.valor) AS total_gasto
+          FROM financeiro.lancamentos_financeiros ap
+          LEFT JOIN financeiro.categorias_financeiras cat ON cat.id = ap.categoria_id
+          WHERE ap.tipo = 'conta_a_pagar'
+          ${data_inicial ? `AND ap.data_vencimento >= $1` : ''}
+          ${data_final ? `AND ap.data_vencimento <= $${data_inicial ? 2 : 1}` : ''}
+          GROUP BY COALESCE(cat.nome, '— sem categoria —')
+          ORDER BY total_gasto DESC
+          LIMIT $${(data_inicial ? 1 : 0) + (data_final ? 1 : 0) + 1}
+        `.trim();
+
+        totalSql = `
+          SELECT SUM(ap.valor) AS total_geral
+          FROM financeiro.lancamentos_financeiros ap
+          WHERE ap.tipo = 'conta_a_pagar'
+          ${data_inicial ? `AND ap.data_vencimento >= $1` : ''}
+          ${data_final ? `AND ap.data_vencimento <= $${data_inicial ? 2 : 1}` : ''}
+        `.trim();
+
+        titleKind = 'Títulos (A Pagar)';
+        params = [
+          ...([] as unknown[]).concat(data_inicial ? [data_inicial] as unknown[] : [])
+                               .concat(data_final ? [data_final] as unknown[] : []),
+          limit,
+        ];
+      } else if (tipoNorm === 'pagamento_recebido') {
+        // Realizado (Recebido): soma lf.valor por categoria do cabeçalho AR
+        sql = `
+          SELECT
+            COALESCE(cat.nome, '— sem categoria —') AS categoria,
+            SUM(lf.valor) AS total_gasto
+          FROM financeiro.lancamentos_financeiros lf
+          JOIN financeiro.lancamentos_financeiros ar
+            ON ar.id = lf.lancamento_origem_id
+          LEFT JOIN financeiro.categorias_financeiras cat
+            ON cat.id = ar.categoria_id
+          WHERE lf.tipo = 'pagamento_recebido'
+          ${data_inicial ? `AND lf.data_lancamento >= $1` : ''}
+          ${data_final ? `AND lf.data_lancamento <= $${data_inicial ? 2 : 1}` : ''}
+          GROUP BY COALESCE(cat.nome, '— sem categoria —')
+          ORDER BY total_gasto DESC
+          LIMIT $${(data_inicial ? 1 : 0) + (data_final ? 1 : 0) + 1}
+        `.trim();
+
+        totalSql = `
+          SELECT SUM(lf.valor) AS total_geral
+          FROM financeiro.lancamentos_financeiros lf
+          WHERE lf.tipo = 'pagamento_recebido'
+          ${data_inicial ? `AND lf.data_lancamento >= $1` : ''}
+          ${data_final ? `AND lf.data_lancamento <= $${data_inicial ? 2 : 1}` : ''}
+        `.trim();
+
+        titleKind = 'Pagamentos Recebidos';
+        params = [
+          ...([] as unknown[]).concat(data_inicial ? [data_inicial] as unknown[] : [])
+                               .concat(data_final ? [data_final] as unknown[] : []),
+          limit,
+        ];
+      } else if (tipoNorm === 'conta_a_receber') {
+        // Planejado (Receber): soma ar.valor por categoria do próprio cabeçalho AR
+        sql = `
+          SELECT
+            COALESCE(cat.nome, '— sem categoria —') AS categoria,
+            SUM(ar.valor) AS total_gasto
+          FROM financeiro.lancamentos_financeiros ar
+          LEFT JOIN financeiro.categorias_financeiras cat ON cat.id = ar.categoria_id
+          WHERE ar.tipo = 'conta_a_receber'
+          ${data_inicial ? `AND ar.data_vencimento >= $1` : ''}
+          ${data_final ? `AND ar.data_vencimento <= $${data_inicial ? 2 : 1}` : ''}
+          GROUP BY COALESCE(cat.nome, '— sem categoria —')
+          ORDER BY total_gasto DESC
+          LIMIT $${(data_inicial ? 1 : 0) + (data_final ? 1 : 0) + 1}
+        `.trim();
+
+        totalSql = `
+          SELECT SUM(ar.valor) AS total_geral
+          FROM financeiro.lancamentos_financeiros ar
+          WHERE ar.tipo = 'conta_a_receber'
+          ${data_inicial ? `AND ar.data_vencimento >= $1` : ''}
+          ${data_final ? `AND ar.data_vencimento <= $${data_inicial ? 2 : 1}` : ''}
+        `.trim();
+
+        titleKind = 'Títulos (A Receber)';
+        params = [
+          ...([] as unknown[]).concat(data_inicial ? [data_inicial] as unknown[] : [])
+                               .concat(data_final ? [data_final] as unknown[] : []),
+          limit,
+        ];
+      }
 
       const rows = await runQuery<Record<string, unknown>>(sql, params);
+      const [tot] = await runQuery<{ total_geral: number | null }>(
+        totalSql,
+        ([] as unknown[]).concat(data_inicial ? [data_inicial] as unknown[] : [])
+                         .concat(data_final ? [data_final] as unknown[] : [])
+      );
 
-      const totalSql = `
-        SELECT
-          SUM(valor_total) AS total_geral,
-          COUNT(*) AS total_titulos
-        FROM financeiro.contas_a_receber
-        WHERE status IN ('pago', 'parcial')
-      `.trim();
-
-      const [totals] = await runQuery<{
-        total_geral: number | null;
-        total_titulos: number | null;
-      }>(totalSql, []);
-
-      const totalGeral = Number(totals?.total_geral ?? 0);
+      const totalGeral = Number(tot?.total_geral ?? 0);
 
       return {
         success: true,
         rows,
         count: rows.length,
-        totals: {
-          total_geral: totalGeral,
-          total_titulos: Number(totals?.total_titulos ?? 0),
-        },
-        title: `Receitas por Categoria · Top ${limit}`,
-        message: `${rows.length} categorias encontradas (Total: ${totalGeral.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})`,
+        totals: { total_geral: totalGeral },
+        title: `Ranking por Categoria (${titleKind})` + (data_inicial || data_final ? ` · ${data_inicial || '...'} a ${data_final || '...'}` : ''),
+        message: `${rows.length} categorias (Total: ${totalGeral.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})`,
         sql_query: `${sql}\n\n-- Totais\n${totalSql}`,
         sql_params: formatSqlParams(params),
       };
@@ -1429,9 +1541,9 @@ export const analisarDespesasPorCategoria = tool({
       console.error('ERRO analisarDespesasPorCategoria:', error);
       return {
         success: false,
-        message: `Erro ao analisar receitas por categoria: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
         rows: [],
         count: 0,
+        message: `Erro ao analisar despesas por categoria: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
       };
     }
   },
@@ -1447,7 +1559,7 @@ export const analisarDespesasPorCategoria = tool({
 // LISTAR MOVIMENTOS (por período)
 // ============================================================================
 
-export const getMovimentos = tool({
+const getMovimentos = tool({
   description: 'Busca movimentos financeiros efetivados (entradas/saídas) com filtros por período, conta, categoria e valor',
   inputSchema: z.object({
     limit: z.number().default(50).describe('Número máximo de resultados'),
