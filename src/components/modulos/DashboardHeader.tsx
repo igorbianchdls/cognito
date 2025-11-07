@@ -36,10 +36,10 @@ export default function DashboardHeader({ title, subtitle, avatarUrl, className,
               <span className="text-xs text-purple-700 font-semibold">{(title || "").slice(0, 2).toUpperCase()}</span>
             )}
           </div>
-          <div>
+          <div className="flex flex-col justify-center">
             <div className="text-base md:text-lg font-semibold text-gray-900 leading-tight" style={titleStyle}>{title}</div>
             {subtitle ? (
-              <div className="text-xs md:text-sm text-gray-500 mt-0.5" style={subtitleStyle}>{subtitle}</div>
+              <div className="text-xs md:text-sm text-gray-500" style={subtitleStyle}>{subtitle}</div>
             ) : null}
             {actionsLeft ? <div className="mt-1">{actionsLeft}</div> : null}
           </div>
