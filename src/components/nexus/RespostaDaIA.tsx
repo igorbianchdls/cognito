@@ -169,6 +169,8 @@ import DesempenhoPorDiaDaSemanaResult from '../tools/paid-traffic/DesempenhoPorD
 import DeteccaoAnomaliasROASResult from '../tools/paid-traffic/DeteccaoAnomaliasROASResult';
 import DeteccaoAnomaliasTaxaConversaoResult from '../tools/paid-traffic/DeteccaoAnomaliasTaxaConversaoResult';
 import AdPerformanceForecastResult from '../tools/paid-traffic/AdPerformanceForecastResult';
+import DRETable, { type DRENode } from '@/components/relatorios/DRETable';
+import BalanceTAccountView from '@/components/contabilidade/BalanceTAccountView';
 
 // Contabilidade — componentes dedicados (inline)
 type LancRow = Record<string, unknown> & {
@@ -237,7 +239,18 @@ function LancamentosContabeisResult({ success, message, rows = [], count, sql_qu
 }
 
 type DRERow = Record<string, unknown> & { periodo_key?: string; periodo?: string; grupo?: string; valor?: number };
-function DREContabilResult({ success, message, rows = [], count, sql_query }: { success: boolean; message: string; rows?: DRERow[]; count?: number; sql_query?: string }) {
+function DREContabilResult({ success, message, rows = [], count, sql_query, nodes, periods }: { success: boolean; message: string; rows?: DRERow[]; count?: number; sql_query?: string; nodes?: DRENode[]; periods?: { key: string; label: string }[] }) {
+  // Se a tool fornecer estrutura rica (nodes + periods), utiliza DRETable
+  if (nodes && periods) {
+    return (
+      <div className="space-y-2">
+        <div className="text-sm text-muted-foreground">{message}</div>
+        <DRETable data={nodes} periods={periods} />
+      </div>
+    );
+  }
+
+  // Fallback: tabela plana
   const columns: ColumnDef<DRERow>[] = [
     { accessorKey: 'periodo', header: 'Período' },
     { accessorKey: 'grupo', header: 'Grupo' },
@@ -264,7 +277,17 @@ function DREContabilResult({ success, message, rows = [], count, sql_query }: { 
 }
 
 type BPRow = Record<string, unknown> & { grupo?: string; codigo?: string; nome?: string; saldo_inicial?: number; movimentos?: number; saldo_final?: number };
-function BalancoPatrimonialResult({ success, message, rows = [], count, sql_query }: { success: boolean; message: string; rows?: BPRow[]; count?: number; sql_query?: string }) {
+function BalancoPatrimonialResult({ success, message, rows = [], count, sql_query, ativo, passivo, pl }: { success: boolean; message: string; rows?: BPRow[]; count?: number; sql_query?: string; ativo?: Array<{ nome: string; linhas: { conta: string; valor: number }[] }>; passivo?: Array<{ nome: string; linhas: { conta: string; valor: number }[] }>; pl?: Array<{ nome: string; linhas: { conta: string; valor: number }[] }> }) {
+  if (ativo && passivo && pl) {
+    return (
+      <div className="space-y-2">
+        <div className="text-sm text-muted-foreground">{message}</div>
+        <BalanceTAccountView data={{ ativo, passivo, pl }} />
+      </div>
+    );
+  }
+
+  // Fallback: tabela plana
   const columns: ColumnDef<BPRow>[] = [
     { accessorKey: 'grupo', header: 'Grupo' },
     { accessorKey: 'codigo', header: 'Código' },
@@ -6893,6 +6916,10 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   rows={(tool.output as GenericRowsToolOutput).rows as Array<Record<string, unknown>>}
                   count={(tool.output as GenericRowsToolOutput).count}
                   sql_query={(tool.output as GenericRowsToolOutput).sql_query}
+                  // @ts-expect-error campos extras vindos da tool
+                  nodes={(tool.output as any).nodes}
+                  // @ts-expect-error campos extras vindos da tool
+                  periods={(tool.output as any).periods}
                 />
               )}
             </div>
@@ -6919,6 +6946,12 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   rows={(tool.output as GenericRowsToolOutput).rows as Array<Record<string, unknown>>}
                   count={(tool.output as GenericRowsToolOutput).count}
                   sql_query={(tool.output as GenericRowsToolOutput).sql_query}
+                  // @ts-expect-error campos extras vindos da tool
+                  ativo={(tool.output as any).ativo}
+                  // @ts-expect-error campos extras vindos da tool
+                  passivo={(tool.output as any).passivo}
+                  // @ts-expect-error campos extras vindos da tool
+                  pl={(tool.output as any).pl}
                 />
               )}
             </div>

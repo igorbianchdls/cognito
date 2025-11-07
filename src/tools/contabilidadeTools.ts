@@ -93,7 +93,8 @@ export const gerarDRE = tool({
       const months = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
       const toLabel = (key: string) => {
         const [yy, mm] = key.split('-');
-        const label = `${months[Number(mm) - 1]}/${yy}`;
+        const idx = Math.max(1, Math.min(12, Number(mm)));
+        const label = `${months[idx - 1]}/${yy}`;
         return label;
       };
 
@@ -101,11 +102,57 @@ export const gerarDRE = tool({
         .filter(r => r.grupo)
         .map(r => ({ periodo_key: r.periodo_key, periodo: toLabel(r.periodo_key), grupo: r.grupo as string, valor: Number(r.valor || 0) }));
 
+      // periods (ordenados)
+      const periodKeys = Array.from(new Set(normalized.map(r => r.periodo_key))).sort();
+      const periods = periodKeys.map(k => ({ key: k, label: toLabel(k) }));
+
+      // Map por grupo -> {periodKey: value}
+      const byGroup: Record<string, Record<string, number>> = {};
+      for (const r of normalized) {
+        if (!byGroup[r.grupo!]) byGroup[r.grupo!] = {};
+        byGroup[r.grupo!][r.periodo_key!] = Number(r.valor || 0);
+      }
+
+      // Monta árvore como em /modulos/contabilidade/route.ts
+      const node = (id: string, name: string, key: string) => ({ id, name, valuesByPeriod: byGroup[key] || {} });
+      const nodes = [
+        {
+          id: 'receita',
+          name: 'Receita',
+          children: [
+            node('receita-operacionais', 'Receitas Operacionais (4.1)', 'receita_operacional'),
+            node('receita-outras', 'Receitas Financeiras/Outras (4.2)', 'receita_outros'),
+          ],
+        },
+        {
+          id: 'cogs',
+          name: 'Custos dos Produtos/Operacionais (5.x)',
+          children: [
+            node('cogs-cmv', 'CMV (5.1)', 'cogs'),
+            node('cogs-op', 'Custos Operacionais/Logística (5.2)', 'custos_operacionais'),
+          ],
+        },
+        {
+          id: 'opex',
+          name: 'Despesas Operacionais (6.x)',
+          children: [
+            node('desp-adm', 'Administrativas (6.1)', 'despesas_adm'),
+            node('desp-com', 'Comerciais e Marketing (6.2)', 'despesas_comerciais'),
+            node('desp-fin', 'Financeiras (6.3)', 'despesas_financeiras'),
+          ],
+        },
+      ];
+
       return {
         success: true,
         message: `DRE gerada (${normalized.length} linhas)`,
+        // Dados tabulares (legado)
         rows: normalized as Array<Record<string, unknown>>,
         count: normalized.length,
+        // Dados estruturados (para UI rica)
+        periods,
+        nodes,
+        // Debug
         sql_query: dreSql,
         sql_params: jsonParams([from, to]),
       };
@@ -149,11 +196,52 @@ export const gerarBalancoPatrimonial = tool({
         saldo_final: Number(r.saldo_final || 0),
       }));
 
+      // Resultado do Período (4/5/6) igual ao módulo
+      const resultadoSql = `
+        SELECT COALESCE(SUM(
+          CASE WHEN pc.tipo_conta IN ('Receita','Passivo','Patrimônio Líquido')
+                 THEN (lcl.credito - lcl.debito)
+               ELSE (lcl.debito - lcl.credito)
+          END
+        ),0) AS resultado
+        FROM contabilidade.lancamentos_contabeis lc
+        JOIN contabilidade.lancamentos_contabeis_linhas lcl ON lcl.lancamento_id = lc.id
+        JOIN contabilidade.plano_contas pc ON pc.id = lcl.conta_id
+        WHERE lc.data_lancamento BETWEEN $1::date AND $2::date
+          AND pc.aceita_lancamento = TRUE
+          AND (pc.codigo LIKE '4.%' OR pc.codigo LIKE '5.%' OR pc.codigo LIKE '6.%')`;
+      const [resRow] = await runQuery<{ resultado: number }>(resultadoSql, [from, to]);
+      const resultadoPeriodo = Number(resRow?.resultado || 0);
+
+      // Agrupa em ativo/passivo/pl para UI de razonete
+      const toLinha = (r: { codigo: string; nome: string; saldo_final: number }) => ({ conta: `${r.codigo} ${r.nome}`, valor: Number(r.saldo_final || 0) });
+      const groupBy = (list: typeof rows, pred: (g: string) => boolean) => {
+        const map: Record<string, { nome: string; linhas: { conta: string; valor: number }[] }> = {};
+        for (const r of list) {
+          if (!pred(r.grupo)) continue;
+          const key = r.grupo;
+          if (!map[key]) map[key] = { nome: key, linhas: [] };
+          map[key].linhas.push(toLinha(r));
+        }
+        return Object.values(map);
+      };
+      const ativo = groupBy(rows, (g) => g.startsWith('Ativo'));
+      const passivo = groupBy(rows, (g) => g.startsWith('Passivo'));
+      const pl = groupBy(rows, (g) => g === 'Patrimônio Líquido');
+      if (resultadoPeriodo !== 0) {
+        pl.push({ nome: 'Resultado do Período', linhas: [{ conta: 'Resultado do Exercício', valor: resultadoPeriodo }] });
+      }
+
       return {
         success: true,
         message: `Balanço gerado (${normalized.length} linhas)`,
         rows: normalized as Array<Record<string, unknown>>,
         count: normalized.length,
+        // Dados estruturados (para UI rica)
+        ativo,
+        passivo,
+        pl,
+        // Debug
         sql_query: bpSql,
         sql_params: jsonParams([from, to]),
       };
@@ -167,4 +255,3 @@ export const gerarBalancoPatrimonial = tool({
     }
   }
 });
-
