@@ -30,6 +30,7 @@ type GetContasAReceberOutput = {
   message: string;
   sql_query?: string;
   error?: string;
+  title?: string;
 };
 
 export default function ContasAReceberResult({ result }: { result: GetContasAReceberOutput }) {
@@ -166,7 +167,7 @@ export default function ContasAReceberResult({ result }: { result: GetContasARec
     <ArtifactDataTable
       data={tableRows}
       columns={columns}
-      title="Contas a Receber"
+      title={result.title ?? 'Contas a Receber'}
       icon={DollarSign}
       iconColor="text-green-600"
       message={result.message}

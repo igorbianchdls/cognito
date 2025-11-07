@@ -30,6 +30,7 @@ type GetContasAPagarOutput = {
   message: string;
   sql_query?: string;
   error?: string;
+  title?: string;
 };
 
 export default function ContasAPagarResult({ result }: { result: GetContasAPagarOutput }) {
@@ -164,7 +165,7 @@ export default function ContasAPagarResult({ result }: { result: GetContasAPagar
     <ArtifactDataTable
       data={tableRows}
       columns={columns}
-      title="Contas a Pagar"
+      title={result.title ?? 'Contas a Pagar'}
       icon={Receipt}
       iconColor="text-red-600"
       message={result.message}

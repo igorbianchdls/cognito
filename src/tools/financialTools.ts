@@ -142,12 +142,34 @@ export const getContasAReceber = tool({
       const totalValor = Number(totals?.total_valor ?? 0);
       const count = rowsRaw.length;
 
+      // Geração de título dinâmico para UI
+      const parts: string[] = ['Contas a Receber'];
+      if (status) {
+        const s = status.toLowerCase();
+        const map: Record<string, string> = {
+          pendente: 'Pendentes',
+          pago: 'Pagas',
+          cancelado: 'Canceladas',
+          vencido: 'Vencidas',
+        };
+        parts.push(map[s] || s.charAt(0).toUpperCase() + s.slice(1));
+      }
+      if (cliente_id) parts.push(`Cliente: ${cliente_id}`);
+      if (data_vencimento_de || data_vencimento_ate) parts.push(`Venc. ${data_vencimento_de || '...'} a ${data_vencimento_ate || '...'}`);
+      if (data_emissao_de || data_emissao_ate) parts.push(`Emissão ${data_emissao_de || '...'} a ${data_emissao_ate || '...'}`);
+      if (typeof vence_em_dias === 'number') parts.push(`Próximos ${vence_em_dias} dias`);
+      if (typeof venceu_ha_dias === 'number') parts.push(`Vencidas últimos ${venceu_ha_dias} dias`);
+      if (typeof valor_minimo === 'number') parts.push(`≥ ${Number(valor_minimo).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`);
+      if (typeof valor_maximo === 'number') parts.push(`≤ ${Number(valor_maximo).toLocaleString('pt-BR', { style: 'currency', 'currency': 'BRL' })}`);
+      const title = parts.join(' · ');
+
       return {
         success: true,
         count,
         total_valor: totalValor,
         rows: rowsRaw,
         message: `Encontradas ${count} contas a receber (Total: ${totalValor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})`,
+        title,
         sql_query: `${listSql}\n\n-- Totais\n${totalsSql}`,
         sql_params: formatSqlParams(paramsWithLimit),
       };
@@ -278,12 +300,24 @@ export const getPagamentosRecebidos = tool({
       const totalValor = Number(totals?.total_valor ?? 0);
       const count = rowsRaw.length;
 
+      // Título dinâmico
+      const parts: string[] = ['Pagamentos Recebidos'];
+      if (cliente_id) parts.push(`Cliente: ${cliente_id}`);
+      if (data_emissao_de || data_emissao_ate) parts.push(`Período ${data_emissao_de || '...'} a ${data_emissao_ate || '...'}`);
+      if (data_vencimento_de || data_vencimento_ate) parts.push(`Venc. ${data_vencimento_de || '...'} a ${data_vencimento_ate || '...'}`);
+      if (typeof vence_em_dias === 'number') parts.push(`Próximos ${vence_em_dias} dias`);
+      if (typeof venceu_ha_dias === 'number') parts.push(`Últimos ${venceu_ha_dias} dias`);
+      if (typeof valor_minimo === 'number') parts.push(`≥ ${Number(valor_minimo).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`);
+      if (typeof valor_maximo === 'number') parts.push(`≤ ${Number(valor_maximo).toLocaleString('pt-BR', { style: 'currency', 'currency': 'BRL' })}`);
+      const title = parts.join(' · ');
+
       return {
         success: true,
         count,
         total_valor: totalValor,
         rows: rowsRaw,
         message: `Encontrados ${count} pagamentos recebidos (Total: ${totalValor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})`,
+        title,
         sql_query: `${listSql}\n\n-- Totais\n${totalsSql}`,
         sql_params: formatSqlParams(paramsWithLimit),
       };
@@ -425,12 +459,34 @@ export const getContasAPagar = tool({
       const totalValor = Number(totals?.total_valor ?? 0);
       const count = rowsRaw.length;
 
+      // Título dinâmico
+      const parts: string[] = ['Contas a Pagar'];
+      if (status) {
+        const s = status.toLowerCase();
+        const map: Record<string, string> = {
+          pendente: 'Pendentes',
+          pago: 'Pagas',
+          cancelado: 'Canceladas',
+          vencido: 'Vencidas',
+        };
+        parts.push(map[s] || s.charAt(0).toUpperCase() + s.slice(1));
+      }
+      if (fornecedor_id) parts.push(`Fornecedor: ${fornecedor_id}`);
+      if (data_vencimento_de || data_vencimento_ate) parts.push(`Venc. ${data_vencimento_de || '...'} a ${data_vencimento_ate || '...'}`);
+      if (data_emissao_de || data_emissao_ate) parts.push(`Emissão ${data_emissao_de || '...'} a ${data_emissao_ate || '...'}`);
+      if (typeof vence_em_dias === 'number') parts.push(`Próximos ${vence_em_dias} dias`);
+      if (typeof venceu_ha_dias === 'number') parts.push(`Vencidas últimos ${venceu_ha_dias} dias`);
+      if (typeof valor_minimo === 'number') parts.push(`≥ ${Number(valor_minimo).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`);
+      if (typeof valor_maximo === 'number') parts.push(`≤ ${Number(valor_maximo).toLocaleString('pt-BR', { style: 'currency', 'currency': 'BRL' })}`);
+      const title = parts.join(' · ');
+
       return {
         success: true,
         count,
         total_valor: totalValor,
         rows: rowsRaw,
         message: `Encontradas ${count} contas a pagar (Total: ${totalValor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})`,
+        title,
         sql_query: `${listSql}\n\n-- Totais\n${totalsSql}`,
         sql_params: formatSqlParams(paramsWithLimit),
       };
@@ -559,12 +615,24 @@ export const getPagamentosEfetuados = tool({
       const totalValor = Number(totals?.total_valor ?? 0);
       const count = rowsRaw.length;
 
+      // Título dinâmico
+      const parts: string[] = ['Pagamentos Efetuados'];
+      if (fornecedor_id) parts.push(`Fornecedor: ${fornecedor_id}`);
+      if (data_emissao_de || data_emissao_ate) parts.push(`Período ${data_emissao_de || '...'} a ${data_emissao_ate || '...'}`);
+      if (data_vencimento_de || data_vencimento_ate) parts.push(`Venc. ${data_vencimento_de || '...'} a ${data_vencimento_ate || '...'}`);
+      if (typeof vence_em_dias === 'number') parts.push(`Próximos ${vence_em_dias} dias`);
+      if (typeof venceu_ha_dias === 'number') parts.push(`Últimos ${venceu_ha_dias} dias`);
+      if (typeof valor_minimo === 'number') parts.push(`≥ ${Number(valor_minimo).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`);
+      if (typeof valor_maximo === 'number') parts.push(`≤ ${Number(valor_maximo).toLocaleString('pt-BR', { style: 'currency', 'currency': 'BRL' })}`);
+      const title = parts.join(' · ');
+
       return {
         success: true,
         count,
         total_valor: totalValor,
         rows: rowsRaw,
         message: `Encontrados ${count} pagamentos efetuados (Total: ${totalValor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})`,
+        title,
         sql_query: `${listSql}\n\n-- Totais\n${totalsSql}`,
         sql_params: formatSqlParams(paramsWithLimit),
       };

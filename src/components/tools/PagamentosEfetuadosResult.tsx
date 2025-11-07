@@ -30,6 +30,7 @@ type GetPagamentosEfetuadosOutput = {
   message: string;
   sql_query?: string;
   error?: string;
+  title?: string;
 };
 
 export default function PagamentosEfetuadosResult({ result }: { result: GetPagamentosEfetuadosOutput }) {
@@ -140,7 +141,7 @@ export default function PagamentosEfetuadosResult({ result }: { result: GetPagam
     <ArtifactDataTable
       data={result.rows}
       columns={columns}
-      title="Pagamentos Efetuados"
+      title={result.title ?? 'Pagamentos Efetuados'}
       icon={CheckCircle}
       iconColor="text-blue-600"
       message={result.message}
