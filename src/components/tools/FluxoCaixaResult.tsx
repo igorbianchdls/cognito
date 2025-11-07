@@ -34,6 +34,7 @@ interface FluxoCaixaResultProps {
   };
   message?: string;
   sql_query?: string;
+  title?: string;
 }
 
 const formatCurrency = (value?: number | null) =>
@@ -50,6 +51,7 @@ export default function FluxoCaixaResult({
   summary,
   message,
   sql_query,
+  title,
 }: FluxoCaixaResultProps) {
   const data = rows ?? [];
 
@@ -151,7 +153,7 @@ export default function FluxoCaixaResult({
       <ArtifactDataTable
         data={data}
         columns={columns}
-        title="Projeção de Fluxo de Caixa"
+        title={title ?? 'Projeção de Fluxo de Caixa'}
         icon={Activity}
         iconColor="text-blue-600"
         message={subtitle}

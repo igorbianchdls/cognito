@@ -29,6 +29,7 @@ export type ObterSaldoBancarioOutput = {
   message: string;
   sql_query?: string;
   error?: string;
+  title?: string;
 };
 
 const COLORS = ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ef4444', '#06b6d4', '#ec4899', '#14b8a6'];
@@ -129,7 +130,7 @@ export default function SaldoBancarioResult({ result }: { result: ObterSaldoBanc
     <ArtifactDataTable
       data={result.rows}
       columns={columns}
-      title="Saldos Bancários"
+      title={result.title ?? 'Saldos Bancários'}
       icon={Landmark}
       iconColor="text-blue-600"
       message={result.message}

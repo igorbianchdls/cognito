@@ -49,12 +49,28 @@ export const listarLancamentosContabeis = tool({
       const totalRows = await runQuery<{ total: number }>(totalSql, params);
       const total = Number(totalRows?.[0]?.total ?? 0);
 
+      // Título dinâmico (curto): base + período + 1 filtro principal
+      const baseTitle = 'Lançamentos Contábeis';
+      let periodStr = '';
+      if (de && ate) periodStr = `${de} a ${ate}`;
+      else if (de) periodStr = `desde ${de}`;
+      else if (ate) periodStr = `até ${ate}`;
+
+      let mainFilter = '';
+      if (conta_codigo_like) mainFilter = `Conta ${conta_codigo_like}`;
+      else if (conta_id) mainFilter = `Conta ${conta_id}`;
+      else if (cliente_id) mainFilter = `Cliente ${cliente_id}`;
+      else if (fornecedor_id) mainFilter = `Fornecedor ${fornecedor_id}`;
+
+      const title = [baseTitle, periodStr, mainFilter].filter(Boolean).join(' · ');
+
       return {
         success: true,
         message: `Encontrados ${rows.length} registros (página ${page})`,
         rows,
         count: rows.length,
         total,
+        title,
         sql_query: listSql,
         sql_params: jsonParams([...paramsWithPage, conta_codigo_like ?? null, conta_id ?? null]),
       };
@@ -143,12 +159,14 @@ export const gerarDRE = tool({
         },
       ];
 
+      const title = `DRE · ${from} a ${to}`;
       return {
         success: true,
         message: `DRE gerada (${normalized.length} linhas)`,
         // Dados tabulares (legado)
         rows: normalized as Array<Record<string, unknown>>,
         count: normalized.length,
+        title,
         // Dados estruturados (para UI rica)
         periods,
         nodes,
@@ -232,11 +250,13 @@ export const gerarBalancoPatrimonial = tool({
         pl.push({ nome: 'Resultado do Período', linhas: [{ conta: 'Resultado do Exercício', valor: resultadoPeriodo }] });
       }
 
+      const title = `Balanço Patrimonial · ${from} a ${to}`;
       return {
         success: true,
         message: `Balanço gerado (${normalized.length} linhas)`,
         rows: normalized as Array<Record<string, unknown>>,
         count: normalized.length,
+        title,
         // Dados estruturados (para UI rica)
         ativo,
         passivo,

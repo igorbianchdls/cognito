@@ -30,6 +30,7 @@ export type ObterDespesasPorCentroCustoOutput = {
   message: string;
   sql_query?: string;
   error?: string;
+  title?: string;
 };
 
 export default function DespesasCentroCustoResult({ result }: { result: ObterDespesasPorCentroCustoOutput }) {
@@ -129,7 +130,7 @@ export default function DespesasCentroCustoResult({ result }: { result: ObterDes
     <ArtifactDataTable
       data={tableRows}
       columns={columns}
-      title="Despesas por Centro de Custo"
+      title={result.title ?? 'Despesas por Centro de Custo'}
       icon={Layers}
       iconColor="text-orange-600"
       message={result.message}

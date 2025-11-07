@@ -29,6 +29,7 @@ export type GetMovimentosPorCentroCustoOutput = {
   message: string;
   sql_query?: string;
   error?: string;
+  title?: string;
 };
 
 export default function MovimentosPorCentroCustoResult({ result }: { result: GetMovimentosPorCentroCustoOutput }) {
@@ -142,7 +143,7 @@ export default function MovimentosPorCentroCustoResult({ result }: { result: Get
     <ArtifactDataTable
       data={tableRows}
       columns={columns}
-      title="Movimentos por Centro de Custo"
+      title={result.title ?? 'Movimentos por Centro de Custo'}
       icon={BarChart3}
       iconColor="text-purple-600"
       message={result.message}

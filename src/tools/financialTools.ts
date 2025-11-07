@@ -783,6 +783,7 @@ export const calcularFluxoCaixa = tool({
       ];
 
       const diffDays = Math.max(0, Math.ceil((new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24)));
+      const title = `Projeção de Fluxo de Caixa · ${startDate} a ${endDate}`;
 
       return {
         success: true,
@@ -797,6 +798,7 @@ export const calcularFluxoCaixa = tool({
           entradas_vencidas: 0,
           saidas_vencidas: 0,
         },
+        title,
         sql_query: fluxoSql,
         sql_params: formatSqlParams([startDate, endDate]),
       };
@@ -865,6 +867,7 @@ export const analisarReceitasPorCentroCusto = tool({
           total_geral: totalGeral,
           total_titulos: Number(totals?.total_titulos ?? 0),
         },
+        title: `Receitas por Centro de Lucro · Top ${limit}`,
         message: `${rows.length} centros de lucro encontrados (Total: ${totalGeral.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})`,
         sql_query: `${sql}\n\n-- Totais\n${totalSql}`,
         sql_params: formatSqlParams(params),
@@ -1062,6 +1065,7 @@ export const analisarInadimplencia = tool({
           total_inadimplencia: totalInadimplencia,
           total_vencidas: totalVencidas,
         },
+        title: `Inadimplência · ${tipo === 'ambos' ? 'A Receber e A Pagar' : tipo === 'receber' ? 'A Receber' : 'A Pagar'}`,
         message: `Análise de inadimplência: ${totalVencidas} títulos vencidos (${totalInadimplencia.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})`,
         sql_query: `${sql}\n\n-- Totais\n${totalSql}`,
         sql_params: formatSqlParams([]),
@@ -1166,6 +1170,14 @@ export const getTransacoesExtrato = tool({
         rows,
         count: rows.length,
         total_valor: totalValor,
+        title: [
+          'Transações e Extrato',
+          conta_id ? `Conta: ${conta_id}` : undefined,
+          tipo ? `Tipo: ${tipo}` : undefined,
+          origem ? `Origem: ${origem}` : undefined,
+          conciliado !== undefined ? (conciliado ? 'Conciliadas' : 'Não conciliadas') : undefined,
+          data_inicial || data_final ? `${data_inicial || '...'} a ${data_final || '...'}` : undefined,
+        ].filter(Boolean).join(' · '),
         message: `Encontradas ${rows.length} transações (Total: ${totalValor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})`,
         sql_query: sql,
         sql_params: formatSqlParams(paramsWithLimit),
@@ -1283,6 +1295,7 @@ export const obterSaldoBancario = tool({
           saldo_negativo: saldoNegativo,
           total_contas: rows.length,
         },
+        title: ['Saldos Bancários', `Data: ${asOfDate}`, tipo_conta ? `Tipo: ${tipo_conta}` : undefined, incluir_inativas ? 'Inclui inativas' : undefined].filter(Boolean).join(' · '),
         message: `${rows.length} contas bancárias (Saldo total: ${saldoTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})`,
         sql_query: sql,
         sql_params: formatSqlParams(params),
@@ -1375,6 +1388,7 @@ export const obterDespesasPorCentroCusto = tool({
           data_inicial,
           data_final,
         },
+        title: `Despesas por Centro de Custo · ${data_inicial} a ${data_final} · Top ${limit}`,
         message: `${rows.length} centros de custo com despesas (Total: ${totalGeral.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})`,
         sql_query: `${sql}\n\n-- Total Geral\n${totalSql}`,
         sql_params: formatSqlParams(params),
@@ -1444,6 +1458,7 @@ export const analisarDespesasPorCategoria = tool({
           total_geral: totalGeral,
           total_titulos: Number(totals?.total_titulos ?? 0),
         },
+        title: `Receitas por Categoria · Top ${limit}`,
         message: `${rows.length} categorias encontradas (Total: ${totalGeral.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})`,
         sql_query: `${sql}\n\n-- Totais\n${totalSql}`,
         sql_params: formatSqlParams(params),
@@ -1530,6 +1545,7 @@ export const analisarMovimentosPorCentroCusto = tool({
           total_linhas: rows.length,
         },
         periodo: { data_inicial, data_final },
+        title: `Movimentos por Centro de Custo · ${data_inicial} a ${data_final}`,
         message: `${rows.length} agrupamentos por CC e categoria (${data_inicial} a ${data_final})`,
         sql_query: sql,
         sql_params: formatSqlParams([data_inicial, data_final, limit]),
@@ -1634,6 +1650,15 @@ export const getMovimentos = tool({
           saldo_liquido: totalEntradas - totalSaidas,
           total_movimentos: rows.length,
         },
+        title: [
+          'Movimentos Financeiros',
+          conta_id ? `Conta: ${conta_id}` : undefined,
+          tipo ? `Tipo: ${tipo}` : undefined,
+          categoria_id ? `Categoria: ${categoria_id}` : undefined,
+          (data_inicial || data_final) ? `${data_inicial || '...'} a ${data_final || '...'}` : undefined,
+          valor_minimo !== undefined ? `≥ ${Number(valor_minimo).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}` : undefined,
+          valor_maximo !== undefined ? `≤ ${Number(valor_maximo).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}` : undefined,
+        ].filter(Boolean).join(' · '),
         message: `${rows.length} movimentos encontrados`,
         sql_query: sql,
         sql_params: formatSqlParams([...params, limit]),

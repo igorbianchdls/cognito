@@ -24,6 +24,7 @@ export type GetTransacoesExtratoOutput = {
   message: string;
   sql_query?: string;
   error?: string;
+  title?: string;
 };
 
 export default function TransacoesExtratoResult({ result }: { result: GetTransacoesExtratoOutput }) {
@@ -152,7 +153,7 @@ export default function TransacoesExtratoResult({ result }: { result: GetTransac
     <ArtifactDataTable
       data={tableRows}
       columns={columns}
-      title="Transações e Extrato"
+      title={result.title ?? 'Transações e Extrato'}
       icon={FileText}
       iconColor="text-purple-600"
       message={result.message}

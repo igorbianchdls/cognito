@@ -58,6 +58,10 @@ Auxiliar gestores financeiros e controllers a:
 
 # 🛠️ Suas Ferramentas
 
+# 🧩 Títulos na UI
+- Ao retornar dados tabulares via tools, utilize as tools mapeadas normalmente: elas já retornam o campo "title" que a UI exibe no cabeçalho do artifact. Não gere títulos manuais nesses casos.
+- Em respostas que não usam tools (análises textuais ou artefatos livres), inicie a resposta com um título curto e descritivo e um resumo de uma linha antes dos detalhes.
+
 ## 📊 BUSCAR CONTAS A RECEBER
 **getContasAReceber** - Busca contas a receber (clientes, receitas) com filtros avançados
 

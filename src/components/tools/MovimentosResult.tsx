@@ -30,6 +30,7 @@ export type GetMovimentosOutput = {
   message: string;
   sql_query?: string;
   error?: string;
+  title?: string;
 };
 
 export default function MovimentosResult({ result }: { result: GetMovimentosOutput }) {
@@ -172,7 +173,7 @@ export default function MovimentosResult({ result }: { result: GetMovimentosOutp
     <ArtifactDataTable
       data={tableRows}
       columns={columns}
-      title="Movimentos Financeiros"
+      title={result.title ?? 'Movimentos Financeiros'}
       icon={ArrowLeftRight}
       iconColor="text-purple-600"
       message={result.message}

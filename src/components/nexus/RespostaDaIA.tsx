@@ -187,7 +187,7 @@ type LancRow = Record<string, unknown> & {
   historico_linha?: string;
 };
 
-function LancamentosContabeisResult({ success, message, rows = [], count, sql_query }: { success: boolean; message: string; rows?: LancRow[]; count?: number; sql_query?: string }) {
+function LancamentosContabeisResult({ success, message, rows = [], count, sql_query, title }: { success: boolean; message: string; rows?: LancRow[]; count?: number; sql_query?: string; title?: string }) {
   const columns: ColumnDef<LancRow>[] = [
     { accessorKey: 'data_lancamento', header: 'Data', cell: ({ row }) => {
       const d = row.original.data_lancamento as string | undefined;
@@ -225,7 +225,7 @@ function LancamentosContabeisResult({ success, message, rows = [], count, sql_qu
     <ArtifactDataTable
       data={rows as LancRow[]}
       columns={columns}
-      title="Lançamentos Contábeis"
+      title={title ?? "Lançamentos Contábeis"}
       icon={FileText}
       iconColor="text-blue-600"
       message={message}
@@ -239,12 +239,12 @@ function LancamentosContabeisResult({ success, message, rows = [], count, sql_qu
 }
 
 type DRERow = Record<string, unknown> & { periodo_key?: string; periodo?: string; grupo?: string; valor?: number };
-function DREContabilResult({ success, message, rows = [], count, sql_query, nodes, periods }: { success: boolean; message: string; rows?: DRERow[]; count?: number; sql_query?: string; nodes?: DRENode[]; periods?: { key: string; label: string }[] }) {
+function DREContabilResult({ success, message, rows = [], count, sql_query, nodes, periods, title }: { success: boolean; message: string; rows?: DRERow[]; count?: number; sql_query?: string; nodes?: DRENode[]; periods?: { key: string; label: string }[]; title?: string }) {
   // Se a tool fornecer estrutura rica (nodes + periods), utiliza DRETable
   if (nodes && periods) {
     return (
       <div className="space-y-2">
-        <div className="text-sm text-muted-foreground">{message}</div>
+        <div className="text-sm text-muted-foreground">{title || message}</div>
         <DRETable data={nodes} periods={periods} />
       </div>
     );
@@ -263,7 +263,7 @@ function DREContabilResult({ success, message, rows = [], count, sql_query, node
     <ArtifactDataTable
       data={rows as DRERow[]}
       columns={columns}
-      title="DRE (Resultados por período)"
+      title={title ?? "DRE (Resultados por período)"}
       icon={BarChart3}
       iconColor="text-emerald-600"
       message={message}
@@ -277,11 +277,11 @@ function DREContabilResult({ success, message, rows = [], count, sql_query, node
 }
 
 type BPRow = Record<string, unknown> & { grupo?: string; codigo?: string; nome?: string; saldo_inicial?: number; movimentos?: number; saldo_final?: number };
-function BalancoPatrimonialResult({ success, message, rows = [], count, sql_query, ativo, passivo, pl }: { success: boolean; message: string; rows?: BPRow[]; count?: number; sql_query?: string; ativo?: Array<{ nome: string; linhas: { conta: string; valor: number }[] }>; passivo?: Array<{ nome: string; linhas: { conta: string; valor: number }[] }>; pl?: Array<{ nome: string; linhas: { conta: string; valor: number }[] }> }) {
+function BalancoPatrimonialResult({ success, message, rows = [], count, sql_query, ativo, passivo, pl, title }: { success: boolean; message: string; rows?: BPRow[]; count?: number; sql_query?: string; ativo?: Array<{ nome: string; linhas: { conta: string; valor: number }[] }>; passivo?: Array<{ nome: string; linhas: { conta: string; valor: number }[] }>; pl?: Array<{ nome: string; linhas: { conta: string; valor: number }[] }>; title?: string }) {
   if (ativo && passivo && pl) {
     return (
       <div className="space-y-2">
-        <div className="text-sm text-muted-foreground">{message}</div>
+        <div className="text-sm text-muted-foreground">{title || message}</div>
         <BalanceTAccountView data={{ ativo, passivo, pl }} />
       </div>
     );
@@ -300,7 +300,7 @@ function BalancoPatrimonialResult({ success, message, rows = [], count, sql_quer
     <ArtifactDataTable
       data={rows as BPRow[]}
       columns={columns}
-      title="Balanço Patrimonial"
+      title={title ?? "Balanço Patrimonial"}
       icon={BarChart3}
       iconColor="text-indigo-600"
       message={message}
@@ -1996,6 +1996,7 @@ type GenericRowsToolOutput = {
   count?: number;
   sql_query?: string;
   sql_queries?: Array<{ name?: string; sql: string; params?: unknown[] }>;
+  title?: string;
 };
 
 type CalculateDateRangeToolInput = {
@@ -6879,6 +6880,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   rows={(tool.output as GenericRowsToolOutput).rows as Array<Record<string, unknown>>}
                   count={(tool.output as GenericRowsToolOutput).count}
                   sql_query={(tool.output as GenericRowsToolOutput).sql_query}
+                  title={(tool.output as GenericRowsToolOutput & { title?: string }).title}
                 />
               )}
             </div>
@@ -6910,6 +6912,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                     sql_query={(tool.output as GenericRowsToolOutput).sql_query}
                     nodes={extra.nodes}
                     periods={extra.periods}
+                    title={(tool.output as GenericRowsToolOutput & { title?: string }).title}
                   />
                 );
               })()}
@@ -6944,6 +6947,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                     ativo={extra.ativo}
                     passivo={extra.passivo}
                     pl={extra.pl}
+                    title={(tool.output as GenericRowsToolOutput & { title?: string }).title}
                   />
                 );
               })()}

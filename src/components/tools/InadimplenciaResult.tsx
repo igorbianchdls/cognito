@@ -24,6 +24,7 @@ export type AnalisarInadimplenciaOutput = {
   message: string;
   sql_query?: string;
   error?: string;
+  title?: string;
 };
 
 export default function InadimplenciaResult({ result }: { result: AnalisarInadimplenciaOutput }) {
@@ -109,7 +110,7 @@ export default function InadimplenciaResult({ result }: { result: AnalisarInadim
     <ArtifactDataTable
       data={result.rows}
       columns={columns}
-      title="Análise de Inadimplência"
+      title={result.title ?? 'Análise de Inadimplência'}
       icon={AlertTriangle}
       iconColor="text-red-600"
       message={result.message}
