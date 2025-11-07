@@ -103,10 +103,10 @@ const DEFAULT_TITULO: TituloState = {
 const DEFAULT_TABS: TabsState = {
   options: [],
   selected: 'default',
-  fontFamily: 'Inter',
-  fontSize: 15,
+  fontFamily: 'Geist',
+  fontSize: 14,
   fontWeight: '400',
-  color: 'rgb(128, 128, 128)',
+  color: 'rgb(180, 180, 180)',
   letterSpacing: -0.3,
   iconSize: 16,
   leftOffset: 20,
