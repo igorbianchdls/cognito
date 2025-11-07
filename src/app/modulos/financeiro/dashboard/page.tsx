@@ -225,6 +225,8 @@ export default function FinanceiroDashboardPage() {
     return 'Selecionar período'
   }, [dateRange])
 
+  const [groupBy, setGroupBy] = useState<'day' | 'week' | 'month'>('month')
+
   const headerActions = (
     <div className="flex items-center gap-2">
       <Popover>
@@ -255,6 +257,18 @@ export default function FinanceiroDashboardPage() {
           <SelectItem value="pendentes">Pendentes</SelectItem>
           <SelectItem value="vencidos">Vencidos</SelectItem>
           <SelectItem value="pagos">Pagos</SelectItem>
+        </SelectContent>
+      </Select>
+
+      {/* Agrupar por */}
+      <Select value={groupBy} onValueChange={(v) => setGroupBy(v as 'day' | 'week' | 'month')}>
+        <SelectTrigger className="h-9 w-[140px]" style={styleFilters}>
+          <SelectValue placeholder="Agrupar por" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="day">Dia</SelectItem>
+          <SelectItem value="week">Semana</SelectItem>
+          <SelectItem value="month">Mês</SelectItem>
         </SelectContent>
       </Select>
     </div>
@@ -311,8 +325,8 @@ export default function FinanceiroDashboardPage() {
           fetch(`/api/modulos/financeiro?view=top-despesas&dim=centro_lucro&de=${kpiDe}&ate=${kpiAte}`, { cache: 'no-store' }),
           fetch(`/api/modulos/financeiro?view=top-despesas&dim=projeto&de=${kpiDe}&ate=${kpiAte}`, { cache: 'no-store' }),
           fetch(`/api/modulos/financeiro?view=top-despesas&dim=filial&de=${kpiDe}&ate=${kpiAte}`, { cache: 'no-store' }),
-          fetch(`/api/modulos/financeiro?view=cashflow-realized&de=${kpiDe}&ate=${kpiAte}&group_by=month`, { cache: 'no-store' }),
-          fetch(`/api/modulos/financeiro?view=cashflow-projected&de=${kpiDe}&ate=${kpiAte}&group_by=month`, { cache: 'no-store' }),
+          fetch(`/api/modulos/financeiro?view=cashflow-realized&de=${kpiDe}&ate=${kpiAte}&group_by=${groupBy}`, { cache: 'no-store' }),
+          fetch(`/api/modulos/financeiro?view=cashflow-projected&de=${kpiDe}&ate=${kpiAte}&group_by=${groupBy}`, { cache: 'no-store' }),
           fetch(`/api/modulos/financeiro?view=top-despesas&dim=fornecedor&de=${kpiDe}&ate=${kpiAte}`, { cache: 'no-store' }),
           fetch(`/api/modulos/financeiro?view=top-receitas&dim=cliente&de=${kpiDe}&ate=${kpiAte}`, { cache: 'no-store' }),
         ])
@@ -602,6 +616,8 @@ export default function FinanceiroDashboardPage() {
   function periodToLabel(s: string) {
     const d = parseDate(s)
     if (!d) return s
+    if (groupBy === 'day') return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
+    if (groupBy === 'week') return `sem ${d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}`
     return d.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' })
   }
 
