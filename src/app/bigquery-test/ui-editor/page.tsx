@@ -81,14 +81,14 @@ export default function UIEditorPage() {
     { id: '3', label: 'Tab 3', iconName: 'Users' },
   ])
   const [selectedTab, setSelectedTab] = useState('1')
-  const [tabsFontFamily, setTabsFontFamily] = useState('default')
-  const [tabsFontSize, setTabsFontSize] = useState(15)
-  const [tabsFontWeight, setTabsFontWeight] = useState('500')
-  const [tabsColor, setTabsColor] = useState('#6b7280')
+  const [tabsFontFamily, setTabsFontFamily] = useState('geist')
+  const [tabsFontSize, setTabsFontSize] = useState(14)
+  const [tabsFontWeight, setTabsFontWeight] = useState('400')
+  const [tabsColor, setTabsColor] = useState('#b4b4b4')
   const [tabsLetterSpacing, setTabsLetterSpacing] = useState(0)
   const [tabsIconSize, setTabsIconSize] = useState(16)
   const [tabsActiveColor, setTabsActiveColor] = useState('#111827')
-  const [tabsActiveFontWeight, setTabsActiveFontWeight] = useState('600')
+  const [tabsActiveFontWeight, setTabsActiveFontWeight] = useState('400')
   const [tabsActiveBorderColor, setTabsActiveBorderColor] = useState('#111827')
 
   // Converter tabs para formato Opcao
