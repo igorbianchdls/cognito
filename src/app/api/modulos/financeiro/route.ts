@@ -235,10 +235,85 @@ export async function GET(req: NextRequest) {
       idx += 1;
     };
 
-    let baseSql = '';
-    let whereDateCol = '';
-    let totalSql = '';
-    let selectSql = '';
+  let baseSql = '';
+  let whereDateCol = '';
+  let totalSql = '';
+  let selectSql = '';
+
+  if (view === 'kpis') {
+    try {
+      // Intervalo: usa 'de' e 'ate' se vierem; senão mês corrente
+      const now = new Date();
+      const firstDayDefault = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
+      const lastDayDefault = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().slice(0, 10);
+
+      const deDate = de || firstDayDefault;
+      const ateDate = ate || lastDayDefault;
+
+      const kpiParamsBase: unknown[] = [deDate, ateDate];
+      let idxKpi = 3;
+      const conds: string[] = [];
+      const addTenant = () => {
+        if (conta_id) return; // não se aplica aqui
+      };
+      // tenant opcional
+      const tenantId = parseNumber(searchParams.get('tenant_id'));
+      const tenantFilter = tenantId ? ` AND lf.tenant_id = $${idxKpi++}` : '';
+      const kpiParams: unknown[] = tenantId ? [...kpiParamsBase, tenantId] : [...kpiParamsBase];
+
+      // A RECEBER NO MÊS (vencimento dentro do período, pendente)
+      const arSql = `SELECT COALESCE(SUM(lf.valor), 0) AS total
+                     FROM financeiro.lancamentos_financeiros lf
+                    WHERE LOWER(lf.tipo) = 'conta_a_receber'
+                      AND LOWER(lf.status) = 'pendente'
+                      AND lf.data_vencimento BETWEEN $1 AND $2${tenantFilter}`.replace(/\s+/g, ' ');
+      const [arRow] = await runQuery<{ total: number | null }>(arSql, kpiParams);
+
+      // A PAGAR NO MÊS (vencimento dentro do período, pendente)
+      const apSql = `SELECT COALESCE(SUM(lf.valor), 0) AS total
+                     FROM financeiro.lancamentos_financeiros lf
+                    WHERE LOWER(lf.tipo) = 'conta_a_pagar'
+                      AND LOWER(lf.status) = 'pendente'
+                      AND lf.data_vencimento BETWEEN $1 AND $2${tenantFilter}`.replace(/\s+/g, ' ');
+      const [apRow] = await runQuery<{ total: number | null }>(apSql, kpiParams);
+
+      // RECEBIDO NO MÊS (pagamentos recebidos no período)
+      const recSql = `SELECT COALESCE(SUM(lf.valor), 0) AS total
+                       FROM financeiro.lancamentos_financeiros lf
+                      WHERE LOWER(lf.tipo) = 'pagamento_recebido'
+                        AND lf.data_lancamento BETWEEN $1 AND $2${tenantFilter}`.replace(/\s+/g, ' ');
+      const [recRow] = await runQuery<{ total: number | null }>(recSql, kpiParams);
+
+      // PAGO NO MÊS (pagamentos efetuados no período)
+      const pagoSql = `SELECT COALESCE(SUM(lf.valor), 0) AS total
+                        FROM financeiro.lancamentos_financeiros lf
+                       WHERE LOWER(lf.tipo) = 'pagamento_efetuado'
+                         AND lf.data_lancamento BETWEEN $1 AND $2${tenantFilter}`.replace(/\s+/g, ' ');
+      const [pagoRow] = await runQuery<{ total: number | null }>(pagoSql, kpiParams);
+
+      return Response.json({
+        success: true,
+        de: deDate,
+        ate: ateDate,
+        kpis: {
+          ar_mes: Number(arRow?.total ?? 0),
+          ap_mes: Number(apRow?.total ?? 0),
+          recebidos_mes: Number(recRow?.total ?? 0),
+          pagos_mes: Number(pagoRow?.total ?? 0),
+        },
+        sql_query: {
+          a_receber_mes: arSql,
+          a_pagar_mes: apSql,
+          recebidos_mes: recSql,
+          pagos_mes: pagoSql,
+        },
+        sql_params: kpiParams,
+      });
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      return Response.json({ success: false, message: msg }, { status: 400 });
+    }
+  }
 
     if (view === 'contas-a-pagar') {
       // Contas a Pagar – query mais completa, mantendo campos esperados pela UI

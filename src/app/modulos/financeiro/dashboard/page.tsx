@@ -252,6 +252,15 @@ export default function FinanceiroDashboardPage() {
   const cardContainerClass = `bg-white p-6 rounded-lg border border-gray-100`
   const cardBoxShadow = useMemo(() => (cardShadowPreset === 'none' ? 'none' : `var(--shadow-${cardShadowPreset})`), [cardShadowPreset])
 
+  // KPIs do mês (Novembro/2025)
+  const KPI_DE = '2025-11-01'
+  const KPI_ATE = '2025-11-30'
+  const KPI_LABEL = useMemo(() => {
+    const d = new Date(2025, 10, 1)
+    return d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
+  }, [])
+  const [kpisMonth, setKpisMonth] = useState<{ arMes: number; apMes: number; recebidosMes: number; pagosMes: number } | null>(null)
+
   useEffect(() => {
     let cancelled = false
     async function load() {
@@ -259,11 +268,12 @@ export default function FinanceiroDashboardPage() {
       setError(null)
       try {
         const qs = (view: string) => `/api/modulos/financeiro?view=${view}&page=1&pageSize=1000`
-        const [arRes, apRes, prRes, peRes] = await Promise.allSettled([
+        const [arRes, apRes, prRes, peRes, kpisRes] = await Promise.allSettled([
           fetch(qs('contas-a-receber'), { cache: 'no-store' }),
           fetch(qs('contas-a-pagar'), { cache: 'no-store' }),
           fetch(qs('pagamentos-recebidos'), { cache: 'no-store' }),
           fetch(qs('pagamentos-efetuados'), { cache: 'no-store' }),
+          fetch(`/api/modulos/financeiro?view=kpis&de=${KPI_DE}&ate=${KPI_ATE}`, { cache: 'no-store' }),
         ])
 
         let ar: ARRow[] = []
@@ -321,6 +331,19 @@ export default function FinanceiroDashboardPage() {
           ]
         }
 
+        // KPIs mês (API)
+        if (kpisRes.status === 'fulfilled' && kpisRes.value.ok) {
+          const j = await kpisRes.value.json() as { kpis?: { ar_mes?: number; ap_mes?: number; recebidos_mes?: number; pagos_mes?: number } }
+          if (j?.kpis) {
+            setKpisMonth({
+              arMes: Number(j.kpis.ar_mes || 0),
+              apMes: Number(j.kpis.ap_mes || 0),
+              recebidosMes: Number(j.kpis.recebidos_mes || 0),
+              pagosMes: Number(j.kpis.pagos_mes || 0),
+            })
+          }
+        }
+
         if (!cancelled) {
           setArRows(ar)
           setApRows(ap)
@@ -343,15 +366,21 @@ export default function FinanceiroDashboardPage() {
   const isOverdue = <T extends BaseRow>(r: T) => !isPaid(r.status) && (daysDiffFromToday(String(r.data_vencimento)) ?? 1) < 0
   const isOpenOrOverdue = <T extends BaseRow>(r: T) => !isPaid(r.status)
 
+  // Fallback simples caso a API de KPIs não responda: usa somas do mês corrente (client-side)
   const kpis = useMemo(() => {
-    const sum = <T extends BaseRow>(arr: T[], pred: (r: T) => boolean) => arr.filter(pred).reduce((acc, r) => acc + (Number(r.valor_total) || 0), 0)
-    return {
-      arHoje: sum(arRows, r => isOpenOrOverdue(r) && isToday(String(r.data_vencimento))),
-      apHoje: sum(apRows, r => isOpenOrOverdue(r) && isToday(String(r.data_vencimento))),
-      arVencidos: sum(arRows, r => isOverdue(r)),
-      apVencidos: sum(apRows, r => isOverdue(r)),
+    if (kpisMonth) return kpisMonth
+    const inMonth = (ds?: string) => {
+      if (!ds) return false
+      return ds >= KPI_DE && ds <= KPI_ATE
     }
-  }, [arRows, apRows])
+    const sum = <T extends BaseRow>(arr: T[], pred: (r: T) => boolean) => arr.filter(pred).reduce((acc, r) => acc + (Number(r.valor_total) || 0), 0)
+    const arMes = sum(arRows, r => !isPaid(r.status) && inMonth(String(r.data_vencimento)))
+    const apMes = sum(apRows, r => !isPaid(r.status) && inMonth(String(r.data_vencimento)))
+    // recebidos/pagos: aproximar por data de pagamento/recebimento nos arrays de séries
+    const recebidosMes = prRows.filter(r => inMonth(String(r.data_recebimento))).reduce((a, r) => a + (Number(r.valor_total) || 0), 0)
+    const pagosMes = peRows.filter(r => inMonth(String(r.data_pagamento))).reduce((a, r) => a + (Number(r.valor_pago) || 0), 0)
+    return { arMes, apMes, recebidosMes, pagosMes }
+  }, [kpisMonth, arRows, apRows, prRows, peRows])
 
   // Aging buckets (valor em BRL por faixa)
   type Bucket = { label: string; value: number }
@@ -609,24 +638,32 @@ export default function FinanceiroDashboardPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor, boxShadow: cardBoxShadow }}>
-          <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleKpiTitle}><ArrowDownCircle className="w-4 h-4 text-emerald-600" />A Receber Hoje</div>
-          <div className="text-2xl font-bold text-emerald-600" style={styleValues}>{formatBRL(kpis.arHoje)}</div>
-          <div className="text-xs text-gray-400 mt-1" style={styleText}>Título(s) com vencimento hoje</div>
+          <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleKpiTitle}>
+            <ArrowDownCircle className="w-4 h-4 text-emerald-600" />A Receber no mês ({KPI_LABEL})
+          </div>
+          <div className="text-2xl font-bold text-emerald-600" style={styleValues}>{formatBRL(kpis.arMes)}</div>
+          <div className="text-xs text-gray-400 mt-1" style={styleText}>Vencimento dentro do mês</div>
         </div>
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor, boxShadow: cardBoxShadow }}>
-          <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleKpiTitle}><ArrowUpCircle className="w-4 h-4 text-rose-600" />A Pagar Hoje</div>
-          <div className="text-2xl font-bold text-rose-600" style={styleValues}>{formatBRL(kpis.apHoje)}</div>
-          <div className="text-xs text-gray-400 mt-1" style={styleText}>Pagamentos previstos para hoje</div>
+          <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleKpiTitle}>
+            <ArrowUpCircle className="w-4 h-4 text-rose-600" />A Pagar no mês ({KPI_LABEL})
+          </div>
+          <div className="text-2xl font-bold text-rose-600" style={styleValues}>{formatBRL(kpis.apMes)}</div>
+          <div className="text-xs text-gray-400 mt-1" style={styleText}>Vencimento dentro do mês</div>
         </div>
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor, boxShadow: cardBoxShadow }}>
-          <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleKpiTitle}><AlertTriangle className="w-4 h-4 text-orange-500" />Vencidos A Receber</div>
-          <div className="text-2xl font-bold text-orange-600" style={styleValues}>{formatBRL(kpis.arVencidos)}</div>
-          <div className="text-xs text-gray-400 mt-1" style={styleText}>Valores atrasados</div>
+          <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleKpiTitle}>
+            <Wallet className="w-4 h-4 text-emerald-600" />Recebido no mês ({KPI_LABEL})
+          </div>
+          <div className="text-2xl font-bold text-emerald-600" style={styleValues}>{formatBRL(kpis.recebidosMes)}</div>
+          <div className="text-xs text-gray-400 mt-1" style={styleText}>Recebimentos realizados no período</div>
         </div>
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor, boxShadow: cardBoxShadow }}>
-          <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleKpiTitle}><AlertTriangle className="w-4 h-4 text-red-500" />Vencidos A Pagar</div>
-          <div className="text-2xl font-bold text-red-600" style={styleValues}>{formatBRL(kpis.apVencidos)}</div>
-          <div className="text-xs text-gray-400 mt-1" style={styleText}>Compromissos em atraso</div>
+          <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleKpiTitle}>
+            <CalendarCheck className="w-4 h-4 text-rose-600" />Pago no mês ({KPI_LABEL})
+          </div>
+          <div className="text-2xl font-bold text-rose-600" style={styleValues}>{formatBRL(kpis.pagosMes)}</div>
+          <div className="text-xs text-gray-400 mt-1" style={styleText}>Pagamentos realizados no período</div>
         </div>
       </div>
 
