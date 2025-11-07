@@ -94,7 +94,7 @@ const DEFAULT_TITULO: TituloState = {
   title: 'Módulo',
   subtitle: 'Selecione uma opção para visualizar os dados',
   titleFontFamily: 'Geist',
-  titleFontSize: 24,
+  titleFontSize: 32,
   titleFontWeight: '600',
   titleColor: '#111827',
   titleLetterSpacing: 0,
