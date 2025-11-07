@@ -32,36 +32,47 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
   },
   'pagamentos-efetuados': {
     id: 'lf.id',
+    pagamento_id: 'lf.id',
+    titulo_id: 'ap.id',
     descricao_pagamento: 'lf.descricao',
+    pagamento_descricao: 'lf.descricao',
+    titulo_descricao: 'ap.descricao',
     valor_pago: 'lf.valor',
+    valor_titulo: 'ap.valor',
     data_pagamento: 'lf.data_lancamento',
-    data_vencimento: 'lf.data_vencimento',
+    vencimento_titulo: 'ap.data_vencimento',
     status: 'lf.status',
-    fornecedor: 'forn.nome',
-    categoria_financeira: 'cat.nome',
+    fornecedor: 'forn_ap.nome',
+    categoria_financeira: 'cat_ap.nome',
+    categoria: 'cat_ap.nome',
     conta_financeira: 'cf.nome_conta',
     metodo_pagamento: 'mp.nome',
-    centro_custo: 'cc.nome',
-    departamento: 'dep.nome',
-    filial: 'fil.nome',
-    projeto: 'prj.nome',
+    centro_custo: 'cc_ap.nome',
+    departamento: 'dep_ap.nome',
+    filial: 'fil_ap.nome',
+    projeto: 'prj_ap.nome',
+    natureza: "'SAIDA'",
   },
   'pagamentos-recebidos': {
     id: 'lf.id',
-    cliente: 'cli.nome',
+    recebimento_id: 'lf.id',
+    titulo_id: 'ar.id',
+    cliente: 'cli_ar.nome',
     data_lancamento: 'lf.data_lancamento',
     data_recebimento: 'lf.data_lancamento',
+    vencimento_titulo: 'ar.data_vencimento',
     valor: 'lf.valor',
     valor_total: 'lf.valor',
+    valor_titulo: 'ar.valor',
     status: 'lf.status',
     conta_financeira: 'cf.nome_conta',
-    categoria: 'cat.nome',
-    categoria_financeira: 'cat.nome',
+    categoria: 'cat_ar.nome',
+    categoria_financeira: 'cat_ar.nome',
     metodo_pagamento: 'mp.nome',
-    centro_lucro: 'cl.nome',
-    departamento: 'dep.nome',
-    filial: 'fil.nome',
-    projeto: 'prj.nome',
+    centro_lucro: 'cl_ar.nome',
+    departamento: 'dep_ar.nome',
+    filial: 'fil_ar.nome',
+    projeto: 'prj_ar.nome',
     natureza_financeira: 'nf.nome',
   },
   conciliacao: {
@@ -270,72 +281,82 @@ export async function GET(req: NextRequest) {
       if (de) push(`${whereDateCol} >=`, de);
       if (ate) push(`${whereDateCol} <=`, ate);
     } else if (view === 'pagamentos-efetuados') {
-      // Pagamentos Efetuados – query mais completa conforme solicitado
+      // Pagamentos Efetuados – dimensões vindas do cabeçalho (conta_a_pagar)
       baseSql = `FROM financeiro.lancamentos_financeiros lf
-                 LEFT JOIN financeiro.metodos_pagamento mp ON mp.id = lf.metodo_pagamento_id
-                 LEFT JOIN financeiro.contas_financeiras cf ON cf.id = lf.conta_financeira_id
-                 LEFT JOIN financeiro.categorias_financeiras cat ON cat.id = lf.categoria_id
-                 LEFT JOIN empresa.centros_custo cc ON cc.id = lf.centro_custo_id
-                 LEFT JOIN empresa.departamentos dep ON dep.id = lf.departamento_id
-                 LEFT JOIN empresa.filiais fil ON fil.id = lf.filial_id
-                 LEFT JOIN financeiro.projetos prj ON prj.id = lf.projeto_id
-                 LEFT JOIN entidades.fornecedores forn ON forn.id = lf.fornecedor_id`;
+                 JOIN financeiro.lancamentos_financeiros ap ON ap.id = lf.lancamento_origem_id
+                 LEFT JOIN financeiro.metodos_pagamento mp ON mp.id = ap.metodo_pagamento_id
+                 LEFT JOIN financeiro.contas_financeiras cf ON cf.id = ap.conta_financeira_id
+                 LEFT JOIN financeiro.categorias_financeiras cat_ap ON cat_ap.id = ap.categoria_id
+                 LEFT JOIN empresa.centros_custo cc_ap ON cc_ap.id = ap.centro_custo_id
+                 LEFT JOIN empresa.departamentos dep_ap ON dep_ap.id = ap.departamento_id
+                 LEFT JOIN empresa.filiais fil_ap ON fil_ap.id = ap.filial_id
+                 LEFT JOIN financeiro.projetos prj_ap ON prj_ap.id = ap.projeto_id
+                 LEFT JOIN entidades.fornecedores forn_ap ON forn_ap.id = ap.fornecedor_id`;
       selectSql = `SELECT
-                        lf.id,
+                        lf.id AS pagamento_id,
+                        ap.id AS titulo_id,
                         lf.data_lancamento AS data_pagamento,
-                        lf.data_vencimento,
+                        ap.data_vencimento AS vencimento_titulo,
+                        ap.valor AS valor_titulo,
                         lf.valor AS valor_pago,
-                        lf.descricao AS descricao_pagamento,
-                        lf.status,
+                        'SAIDA' AS natureza,
                         mp.nome AS metodo_pagamento,
                         cf.nome_conta AS conta_financeira,
-                        cat.nome AS categoria_financeira,
-                        cc.nome AS centro_custo,
-                        dep.nome AS departamento,
-                        fil.nome AS filial,
-                        prj.nome AS projeto,
-                        forn.nome AS fornecedor,
-                        forn.imagem_url AS fornecedor_imagem_url`;
+                        cat_ap.nome AS categoria,
+                        cat_ap.nome AS categoria_financeira,
+                        cc_ap.nome AS centro_custo,
+                        dep_ap.nome AS departamento,
+                        fil_ap.nome AS filial,
+                        prj_ap.nome AS projeto,
+                        forn_ap.nome AS fornecedor,
+                        forn_ap.imagem_url AS fornecedor_imagem_url,
+                        ap.descricao AS titulo_descricao,
+                        lf.descricao AS pagamento_descricao,
+                        lf.descricao AS descricao_pagamento,
+                        lf.status`;
       whereDateCol = 'lf.data_lancamento';
       conditions.push(`lf.tipo = 'pagamento_efetuado'`);
-      if (fornecedor_id) push('lf.fornecedor_id =', fornecedor_id);
+      if (fornecedor_id) push('ap.fornecedor_id =', fornecedor_id);
       if (status) push('LOWER(lf.status) =', status.toLowerCase());
       if (valor_min !== undefined) push('lf.valor >=', valor_min);
       if (valor_max !== undefined) push('lf.valor <=', valor_max);
     } else if (view === 'pagamentos-recebidos') {
-      // Pagamentos Recebidos – query completa conforme solicitado
+      // Pagamentos Recebidos – dimensões vindas do cabeçalho (conta_a_receber)
       baseSql = `FROM financeiro.lancamentos_financeiros lf
-                 LEFT JOIN financeiro.metodos_pagamento mp ON mp.id = lf.metodo_pagamento_id
-                 LEFT JOIN financeiro.contas_financeiras cf ON cf.id = lf.conta_financeira_id
-                 LEFT JOIN financeiro.categorias_financeiras cat ON cat.id = lf.categoria_id
-                 LEFT JOIN financeiro.naturezas_financeiras nf ON nf.id = cat.natureza_id
-                 LEFT JOIN empresa.centros_lucro cl ON cl.id = lf.centro_lucro_id
-                 LEFT JOIN empresa.departamentos dep ON dep.id = lf.departamento_id
-                 LEFT JOIN empresa.filiais fil ON fil.id = lf.filial_id
-                 LEFT JOIN financeiro.projetos prj ON prj.id = lf.projeto_id
-                 LEFT JOIN entidades.clientes cli ON cli.id = lf.cliente_id`;
+                 JOIN financeiro.lancamentos_financeiros ar ON ar.id = lf.lancamento_origem_id
+                 LEFT JOIN financeiro.metodos_pagamento mp ON mp.id = ar.metodo_pagamento_id
+                 LEFT JOIN financeiro.contas_financeiras cf ON cf.id = ar.conta_financeira_id
+                 LEFT JOIN financeiro.categorias_financeiras cat_ar ON cat_ar.id = ar.categoria_id
+                 LEFT JOIN financeiro.naturezas_financeiras nf ON nf.id = cat_ar.natureza_id
+                 LEFT JOIN empresa.centros_lucro cl_ar ON cl_ar.id = ar.centro_lucro_id
+                 LEFT JOIN empresa.departamentos dep_ar ON dep_ar.id = ar.departamento_id
+                 LEFT JOIN empresa.filiais fil_ar ON fil_ar.id = ar.filial_id
+                 LEFT JOIN financeiro.projetos prj_ar ON prj_ar.id = ar.projeto_id
+                 LEFT JOIN entidades.clientes cli_ar ON cli_ar.id = ar.cliente_id`;
       selectSql = `SELECT
-                          lf.id,
+                          lf.id AS recebimento_id,
+                          ar.id AS titulo_id,
                           lf.data_lancamento AS data_recebimento,
-                          lf.data_lancamento,
-                          lf.data_vencimento,
+                          ar.data_vencimento AS vencimento_titulo,
+                          ar.valor AS valor_titulo,
+                          lf.valor AS valor_recebido,
                           lf.valor AS valor_total,
                           lf.descricao AS descricao,
                           'ENTRADA' AS natureza,
                           mp.nome AS metodo_pagamento,
                           cf.nome_conta AS conta_financeira,
-                          cat.nome AS categoria,
-                          nf.nome AS natureza_financeira,
-                          cl.nome AS centro_lucro,
-                          dep.nome AS departamento,
-                          fil.nome AS filial,
-                          prj.nome AS projeto,
-                          cli.nome AS cliente,
-                          cli.imagem_url AS cliente_imagem_url,
-                          cat.nome AS cliente_categoria`;
+                          cat_ar.nome AS categoria,
+                          cl_ar.nome AS centro_lucro,
+                          dep_ar.nome AS departamento,
+                          fil_ar.nome AS filial,
+                          prj_ar.nome AS projeto,
+                          cli_ar.nome AS cliente,
+                          cli_ar.imagem_url AS cliente_imagem_url,
+                          cat_ar.nome AS cliente_categoria,
+                          nf.nome AS natureza_financeira`;
       whereDateCol = 'lf.data_lancamento';
       conditions.push(`lf.tipo = 'pagamento_recebido'`);
-      if (cliente_id) push('lf.cliente_id =', cliente_id);
+      if (cliente_id) push('ar.cliente_id =', cliente_id);
       if (status) push('LOWER(lf.status) =', status.toLowerCase());
       if (valor_min !== undefined) push('lf.valor >=', valor_min);
       if (valor_max !== undefined) push('lf.valor <=', valor_max);

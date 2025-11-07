@@ -212,7 +212,7 @@ export default function ModulosFinanceiroPage() {
             cell: ({ row }) => (
               <EntityDisplay
                 name={row.original['fornecedor'] ? String(row.original['fornecedor']) : 'Sem nome'}
-                subtitle={row.original['categoria_financeira'] ? String(row.original['categoria_financeira']) : 'Sem categoria'}
+                subtitle={row.original['categoria_financeira'] ? String(row.original['categoria_financeira']) : (row.original['categoria'] ? String(row.original['categoria']) : 'Sem categoria')}
                 imageUrl={row.original['fornecedor_imagem_url'] ? String(row.original['fornecedor_imagem_url']) : undefined}
               />
             )
