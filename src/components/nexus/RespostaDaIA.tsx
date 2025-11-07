@@ -2847,6 +2847,32 @@ const getAgentInfo = (agent: string) => {
       return { initial: 'E', title: 'Gestor de E-commerce', color: 'bg-emerald-600' };
     case 'ecommerceSalesAgentV2':
       return { initial: 'E', title: 'Gestor de E-commerce', color: 'bg-emerald-700' };
+    case 'claudeAgent':
+      return { initial: 'A', title: 'Assistente IA (Geral)', color: 'bg-gray-500' };
+    case 'webAnalyticsAgent':
+      return { initial: 'W', title: 'Analista de Web Analytics', color: 'bg-blue-600' };
+    case 'logisticsAgent':
+      return { initial: 'L', title: 'Coordenador de Logística', color: 'bg-orange-600' };
+    case 'paidTrafficAgent':
+      return { initial: 'P', title: 'Gestor de Tráfego Pago', color: 'bg-pink-600' };
+    case 'organicMarketingAgent':
+      return { initial: 'O', title: 'Analista de Marketing Orgânico', color: 'bg-green-600' };
+    case 'gestorDeComprasAgent':
+      return { initial: 'C', title: 'Gestor de Compras', color: 'bg-amber-600' };
+    case 'gestorDeProjetosAgent':
+      return { initial: 'P', title: 'Gerente de Projetos', color: 'bg-cyan-600' };
+    case 'gestorDeServicosAgent':
+      return { initial: 'S', title: 'Gestor de Serviços', color: 'bg-teal-600' };
+    case 'gestorDeVendasB2BAgent':
+      return { initial: 'B', title: 'Gerente de Vendas B2B', color: 'bg-violet-600' };
+    case 'funcionariosAgent':
+      return { initial: 'R', title: 'Analista de RH', color: 'bg-rose-600' };
+    case 'crmAgent':
+      return { initial: 'C', title: 'Analista de CRM', color: 'bg-sky-600' };
+    case 'automationAgent':
+      return { initial: 'A', title: 'Arquiteto de Automação', color: 'bg-slate-600' };
+    case 'contabilidadeAgent':
+      return { initial: 'C', title: 'Agente de Contabilidade', color: 'bg-emerald-600' };
     default:
       return { initial: 'A', title: 'Assistente IA (Geral)', color: 'bg-gray-500' };
   }
