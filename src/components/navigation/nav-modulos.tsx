@@ -399,16 +399,40 @@ export function NavModulos({ groupLabelStyle }: { groupLabelStyle?: React.CSSPro
       <SidebarGroup>
         <SidebarGroupLabel style={groupLabelStyle}>Supply Chain</SidebarGroupLabel>
         <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              tooltip="Estoque"
-              onClick={() => router.push("/modulos/estoque")}
-              isActive={pathname.startsWith("/modulos/estoque")}
-            >
-              <Package />
-              <span>Estoque</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+          <Collapsible
+            key="estoque"
+            asChild
+            defaultOpen={pathname.startsWith("/modulos/estoque")}
+            className="group/collapsible"
+          >
+            <SidebarMenuItem>
+              <CollapsibleTrigger asChild>
+                <SidebarMenuButton tooltip="Estoque">
+                  <Package />
+                  <span>Estoque</span>
+                  <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                </SidebarMenuButton>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <SidebarMenuSub>
+                  <SidebarMenuSubItem>
+                    <SidebarMenuSubButton asChild isActive={pathname === "/modulos/estoque"}>
+                      <a href="/modulos/estoque">
+                        <span>Gestão</span>
+                      </a>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                  <SidebarMenuSubItem>
+                    <SidebarMenuSubButton asChild isActive={pathname === "/modulos/estoque/dashboard"}>
+                      <a href="/modulos/estoque/dashboard">
+                        <span>Dashboard</span>
+                      </a>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                </SidebarMenuSub>
+              </CollapsibleContent>
+            </SidebarMenuItem>
+          </Collapsible>
           <SidebarMenuItem>
             <SidebarMenuButton
               tooltip="Compras"
