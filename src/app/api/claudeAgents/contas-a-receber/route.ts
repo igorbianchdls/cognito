@@ -233,9 +233,9 @@ Auxiliar gestores financeiros e controllers a:
 - Planejamento orçamentário
 
 ## 📊 RANKING POR CENTRO DE CUSTO
-Use a tool acima "obterDespesasPorCentroCusto" com o parâmetro `tipo` para alternar entre:
-- Realizado: `tipo: 'pagamento_efetuado'` (soma dos pagamentos por CC do cabeçalho)
-- Planejado: `tipo: 'conta_a_pagar'` (soma dos títulos por CC)
+Use a tool acima "obterDespesasPorCentroCusto" com o parâmetro \`tipo\` para alternar entre:
+- Realizado: \`tipo: 'pagamento_efetuado'\` (soma dos pagamentos por CC do cabeçalho)
+- Planejado: \`tipo: 'conta_a_pagar'\` (soma dos títulos por CC)
 
 ## 💼 RANKING POR CATEGORIA FINANCEIRA
 **rankingPorCategoriaFinanceira** - Ranking por categoria financeira (despesas/receitas), com base em realizado ou planejado
