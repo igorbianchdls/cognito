@@ -39,7 +39,7 @@ export default function ModulosDocumentosPage() {
   const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
-    moduleUiActions.setTitulo({ title: 'Documentos', subtitle: 'Selecione uma opção para visualizar os dados', titleFontFamily: 'var(--font-crimson-text)' })
+    moduleUiActions.setTitulo({ title: 'Documentos', subtitle: 'Selecione uma opção para visualizar os dados' })
     moduleUiActions.setTabs({
       options: [
         { value: 'fiscal', label: 'Fiscal' },

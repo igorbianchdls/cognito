@@ -31,8 +31,7 @@ export default function ModulosManutencaoPage() {
   useEffect(() => {
     moduleUiActions.setTitulo({
       title: 'Manutenção',
-      subtitle: 'Gestão de ordens de serviço, ativos e manutenções',
-      titleFontFamily: 'var(--font-crimson-text)'
+      subtitle: 'Gestão de ordens de serviço, ativos e manutenções'
     })
     moduleUiActions.setTabs({
       options: [

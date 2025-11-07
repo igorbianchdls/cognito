@@ -36,8 +36,7 @@ export default function ModulosVendasPage() {
   useEffect(() => {
     moduleUiActions.setTitulo({
       title: 'Vendas',
-      subtitle: 'Selecione uma opção para visualizar os dados',
-      titleFontFamily: 'var(--font-crimson-text)'
+      subtitle: 'Selecione uma opção para visualizar os dados'
     })
     moduleUiActions.setTabs({
       options: [

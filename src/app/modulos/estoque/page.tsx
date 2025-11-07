@@ -27,8 +27,7 @@ export default function ModulosEstoquePage() {
   useEffect(() => {
     moduleUiActions.setTitulo({
       title: 'Estoque',
-      subtitle: 'Dados operacionais do estoque (Supabase)',
-      titleFontFamily: 'var(--font-crimson-text)'
+      subtitle: 'Dados operacionais do estoque (Supabase)'
     })
     moduleUiActions.setTabs({
       options: [

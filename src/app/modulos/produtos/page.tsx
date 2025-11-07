@@ -47,8 +47,7 @@ export default function ModulosProdutosPage() {
   useEffect(() => {
     moduleUiActions.setTitulo({
       title: 'Produtos',
-      subtitle: 'Selecione uma opção para visualizar os dados',
-      titleFontFamily: 'var(--font-crimson-text)'
+      subtitle: 'Selecione uma opção para visualizar os dados'
     })
     moduleUiActions.setTabs({
       options: [

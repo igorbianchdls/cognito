@@ -47,8 +47,7 @@ export default function ModulosEmpresaPage() {
   useEffect(() => {
     moduleUiActions.setTitulo({
       title: 'Empresa',
-      subtitle: 'Selecione uma opção para visualizar os dados',
-      titleFontFamily: 'var(--font-crimson-text)'
+      subtitle: 'Selecione uma opção para visualizar os dados'
     })
     moduleUiActions.setTabs({
       options: [

@@ -24,7 +24,7 @@ export default function ModulosWebAnalyticsPage() {
   const toolbarUI = useStore($toolbarUI)
 
   useEffect(() => {
-    moduleUiActions.setTitulo({ title: 'Web Analytics', subtitle: 'Métricas de tráfego e comportamento', titleFontFamily: 'var(--font-crimson-text)' })
+    moduleUiActions.setTitulo({ title: 'Web Analytics', subtitle: 'Métricas de tráfego e comportamento' })
     moduleUiActions.setTabs({
       options: [
         { value: 'visitantes', label: 'Visitantes' },

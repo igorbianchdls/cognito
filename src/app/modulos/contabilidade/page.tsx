@@ -41,7 +41,7 @@ export default function ModulosContabilidadePage() {
   const [total, setTotal] = useState<number>(0)
 
   useEffect(() => {
-    moduleUiActions.setTitulo({ title: 'Contabilidade', subtitle: 'Lançamentos, balancetes e plano de contas', titleFontFamily: 'var(--font-crimson-text)' })
+    moduleUiActions.setTitulo({ title: 'Contabilidade', subtitle: 'Lançamentos, balancetes e plano de contas' })
     moduleUiActions.setTabs({
       options: [
         { value: 'lancamentos', label: 'Lançamentos contábeis', icon: <FileText className="text-slate-600" /> },

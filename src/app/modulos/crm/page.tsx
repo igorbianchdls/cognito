@@ -33,7 +33,7 @@ export default function ModulosCrmPage() {
   const toolbarUI = useStore($toolbarUI)
 
   useEffect(() => {
-    moduleUiActions.setTitulo({ title: 'CRM', subtitle: 'Relacione-se com clientes, leads e oportunidades', titleFontFamily: 'var(--font-crimson-text)' })
+    moduleUiActions.setTitulo({ title: 'CRM', subtitle: 'Relacione-se com clientes, leads e oportunidades' })
     moduleUiActions.setTabs({
       options: [
         { value: 'oportunidades', label: 'Oportunidades' },

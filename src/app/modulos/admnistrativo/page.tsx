@@ -31,7 +31,7 @@ export default function ModulosAdmnistrativoPage() {
   const [total, setTotal] = useState<number>(0)
 
   useEffect(() => {
-    moduleUiActions.setTitulo({ title: 'Administrativo', subtitle: 'Selecione uma opção para visualizar os dados', titleFontFamily: 'var(--font-crimson-text)' })
+    moduleUiActions.setTitulo({ title: 'Administrativo', subtitle: 'Selecione uma opção para visualizar os dados' })
     moduleUiActions.setTabs({
       options: [
         { value: 'despesas', label: 'Despesas' },

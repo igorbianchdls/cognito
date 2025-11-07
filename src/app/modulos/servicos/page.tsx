@@ -35,8 +35,7 @@ export default function ModulosServicosPage() {
   useEffect(() => {
     moduleUiActions.setTitulo({
       title: 'Serviços',
-      subtitle: 'Selecione uma opção para visualizar os dados',
-      titleFontFamily: 'var(--font-crimson-text)'
+      subtitle: 'Selecione uma opção para visualizar os dados'
     })
     moduleUiActions.setTabs({
       options: [

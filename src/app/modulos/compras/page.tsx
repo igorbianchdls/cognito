@@ -35,8 +35,7 @@ export default function ModulosComprasPage() {
   useEffect(() => {
     moduleUiActions.setTitulo({
       title: 'Compras',
-      subtitle: 'Selecione uma opção para visualizar os dados',
-      titleFontFamily: 'var(--font-crimson-text)'
+      subtitle: 'Selecione uma opção para visualizar os dados'
     })
     moduleUiActions.setTabs({
       options: [

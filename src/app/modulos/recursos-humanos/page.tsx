@@ -34,8 +34,7 @@ export default function ModulosRecursosHumanosPage() {
   useEffect(() => {
     moduleUiActions.setTitulo({
       title: 'Recursos Humanos',
-      subtitle: 'Selecione uma opção para visualizar os dados',
-      titleFontFamily: 'var(--font-crimson-text)'
+      subtitle: 'Selecione uma opção para visualizar os dados'
     })
     moduleUiActions.setTabs({
       options: [

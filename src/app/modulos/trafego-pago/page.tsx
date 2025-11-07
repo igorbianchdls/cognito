@@ -29,8 +29,7 @@ export default function ModulosTrafegoPagoPage() {
   useEffect(() => {
     moduleUiActions.setTitulo({
       title: 'Tráfego Pago',
-      subtitle: 'Campanhas pagas e performance',
-      titleFontFamily: 'var(--font-crimson-text)'
+      subtitle: 'Campanhas pagas e performance'
     })
     moduleUiActions.setTabs({
       options: [

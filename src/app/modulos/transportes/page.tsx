@@ -24,7 +24,7 @@ export default function ModulosTransportesPage() {
   const toolbarUI = useStore($toolbarUI)
 
   useEffect(() => {
-    moduleUiActions.setTitulo({ title: 'Transportes', subtitle: 'Operações de transporte e logística', titleFontFamily: 'var(--font-crimson-text)' })
+    moduleUiActions.setTitulo({ title: 'Transportes', subtitle: 'Operações de transporte e logística' })
     moduleUiActions.setTabs({
       options: [
         { value: 'entregas', label: 'Entregas' },

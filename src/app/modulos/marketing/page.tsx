@@ -29,8 +29,7 @@ export default function ModulosMarketingPage() {
   useEffect(() => {
     moduleUiActions.setTitulo({
       title: 'Marketing',
-      subtitle: 'Selecione uma opção para visualizar os dados',
-      titleFontFamily: 'var(--font-crimson-text)'
+      subtitle: 'Selecione uma opção para visualizar os dados'
     })
     moduleUiActions.setTabs({
       options: [
