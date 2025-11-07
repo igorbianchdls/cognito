@@ -252,14 +252,32 @@ export default function FinanceiroDashboardPage() {
   const cardContainerClass = `bg-white p-6 rounded-lg border border-gray-100`
   const cardBoxShadow = useMemo(() => (cardShadowPreset === 'none' ? 'none' : `var(--shadow-${cardShadowPreset})`), [cardShadowPreset])
 
-  // KPIs do mês (Novembro/2025)
-  const KPI_DE = '2025-11-01'
-  const KPI_ATE = '2025-11-30'
-  const KPI_LABEL = useMemo(() => {
-    const d = new Date(2025, 10, 1)
-    return d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
-  }, [])
+  // KPIs do mês — dinâmico via date picker (header)
   const [kpisMonth, setKpisMonth] = useState<{ arMes: number; apMes: number; recebidosMes: number; pagosMes: number } | null>(null)
+  const { kpiDe, kpiAte, kpiLabel } = useMemo(() => {
+    const now = new Date()
+    const firstDayOf = (d: Date) => new Date(d.getFullYear(), d.getMonth(), 1)
+    const lastDayOf = (d: Date) => new Date(d.getFullYear(), d.getMonth() + 1, 0)
+    let start: Date
+    let end: Date
+    if (dateRange?.from && dateRange?.to) {
+      start = new Date(dateRange.from)
+      end = new Date(dateRange.to)
+    } else if (dateRange?.from) {
+      start = firstDayOf(dateRange.from)
+      end = lastDayOf(dateRange.from)
+    } else {
+      start = firstDayOf(now)
+      end = lastDayOf(now)
+    }
+    const deIso = toDateOnly(start)
+    const ateIso = toDateOnly(end)
+    const sameMonth = start.getFullYear() === end.getFullYear() && start.getMonth() === end.getMonth()
+    const label = sameMonth
+      ? start.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
+      : `${start.toLocaleDateString('pt-BR')} - ${end.toLocaleDateString('pt-BR')}`
+    return { kpiDe: deIso, kpiAte: ateIso, kpiLabel: label }
+  }, [dateRange])
 
   useEffect(() => {
     let cancelled = false
@@ -273,7 +291,7 @@ export default function FinanceiroDashboardPage() {
           fetch(qs('contas-a-pagar'), { cache: 'no-store' }),
           fetch(qs('pagamentos-recebidos'), { cache: 'no-store' }),
           fetch(qs('pagamentos-efetuados'), { cache: 'no-store' }),
-          fetch(`/api/modulos/financeiro?view=kpis&de=${KPI_DE}&ate=${KPI_ATE}`, { cache: 'no-store' }),
+          fetch(`/api/modulos/financeiro?view=kpis&de=${kpiDe}&ate=${kpiAte}`, { cache: 'no-store' }),
         ])
 
         let ar: ARRow[] = []
@@ -358,7 +376,7 @@ export default function FinanceiroDashboardPage() {
     }
     load()
     return () => { cancelled = true }
-  }, [])
+  }, [kpiDe, kpiAte])
 
   // Helpers to compute KPIs
   const todayStr = toDateOnly(new Date())
@@ -371,7 +389,7 @@ export default function FinanceiroDashboardPage() {
     if (kpisMonth) return kpisMonth
     const inMonth = (ds?: string) => {
       if (!ds) return false
-      return ds >= KPI_DE && ds <= KPI_ATE
+      return ds >= kpiDe && ds <= kpiAte
     }
     const sum = <T extends BaseRow>(arr: T[], pred: (r: T) => boolean) => arr.filter(pred).reduce((acc, r) => acc + (Number(r.valor_total) || 0), 0)
     const arMes = sum(arRows, r => !isPaid(r.status) && inMonth(String(r.data_vencimento)))
@@ -639,28 +657,28 @@ export default function FinanceiroDashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor, boxShadow: cardBoxShadow }}>
           <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleKpiTitle}>
-            <ArrowDownCircle className="w-4 h-4 text-emerald-600" />A Receber no mês ({KPI_LABEL})
+            <ArrowDownCircle className="w-4 h-4 text-emerald-600" />A Receber no mês ({kpiLabel})
           </div>
           <div className="text-2xl font-bold text-emerald-600" style={styleValues}>{formatBRL(kpis.arMes)}</div>
-          <div className="text-xs text-gray-400 mt-1" style={styleText}>Vencimento dentro do mês</div>
+          <div className="text-xs text-gray-400 mt-1" style={styleText}>Vencimento dentro do período</div>
         </div>
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor, boxShadow: cardBoxShadow }}>
           <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleKpiTitle}>
-            <ArrowUpCircle className="w-4 h-4 text-rose-600" />A Pagar no mês ({KPI_LABEL})
+            <ArrowUpCircle className="w-4 h-4 text-rose-600" />A Pagar no mês ({kpiLabel})
           </div>
           <div className="text-2xl font-bold text-rose-600" style={styleValues}>{formatBRL(kpis.apMes)}</div>
-          <div className="text-xs text-gray-400 mt-1" style={styleText}>Vencimento dentro do mês</div>
+          <div className="text-xs text-gray-400 mt-1" style={styleText}>Vencimento dentro do período</div>
         </div>
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor, boxShadow: cardBoxShadow }}>
           <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleKpiTitle}>
-            <Wallet className="w-4 h-4 text-emerald-600" />Recebido no mês ({KPI_LABEL})
+            <Wallet className="w-4 h-4 text-emerald-600" />Recebido no mês ({kpiLabel})
           </div>
           <div className="text-2xl font-bold text-emerald-600" style={styleValues}>{formatBRL(kpis.recebidosMes)}</div>
           <div className="text-xs text-gray-400 mt-1" style={styleText}>Recebimentos realizados no período</div>
         </div>
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor, boxShadow: cardBoxShadow }}>
           <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleKpiTitle}>
-            <CalendarCheck className="w-4 h-4 text-rose-600" />Pago no mês ({KPI_LABEL})
+            <CalendarCheck className="w-4 h-4 text-rose-600" />Pago no mês ({kpiLabel})
           </div>
           <div className="text-2xl font-bold text-rose-600" style={styleValues}>{formatBRL(kpis.pagosMes)}</div>
           <div className="text-xs text-gray-400 mt-1" style={styleText}>Pagamentos realizados no período</div>
