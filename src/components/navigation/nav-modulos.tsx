@@ -433,16 +433,40 @@ export function NavModulos({ groupLabelStyle }: { groupLabelStyle?: React.CSSPro
               </CollapsibleContent>
             </SidebarMenuItem>
           </Collapsible>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              tooltip="Compras"
-              onClick={() => router.push("/modulos/compras")}
-              isActive={pathname.startsWith("/modulos/compras")}
-            >
-              <ShoppingBag />
-              <span>Compras</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+          <Collapsible
+            key="compras"
+            asChild
+            defaultOpen={pathname.startsWith("/modulos/compras")}
+            className="group/collapsible"
+          >
+            <SidebarMenuItem>
+              <CollapsibleTrigger asChild>
+                <SidebarMenuButton tooltip="Compras">
+                  <ShoppingBag />
+                  <span>Compras</span>
+                  <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                </SidebarMenuButton>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <SidebarMenuSub>
+                  <SidebarMenuSubItem>
+                    <SidebarMenuSubButton asChild isActive={pathname === "/modulos/compras"}>
+                      <a href="/modulos/compras">
+                        <span>Gestão</span>
+                      </a>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                  <SidebarMenuSubItem>
+                    <SidebarMenuSubButton asChild isActive={pathname === "/modulos/compras/dashboard"}>
+                      <a href="/modulos/compras/dashboard">
+                        <span>Dashboard</span>
+                      </a>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                </SidebarMenuSub>
+              </CollapsibleContent>
+            </SidebarMenuItem>
+          </Collapsible>
           <SidebarMenuItem>
             <SidebarMenuButton
               tooltip="Transportes"
