@@ -11,7 +11,9 @@ import {
   obterSaldoBancario,
   obterDespesasPorCentroCusto,
   analisarInadimplencia,
-  analisarDespesasPorCategoria
+  analisarDespesasPorCategoria,
+  getMovimentos,
+  analisarMovimentosPorCentroCusto
 } from '@/tools/financialTools';
 import { createDashboardTool } from '@/tools/apps/createDashboardTool';
 
@@ -77,6 +79,30 @@ Auxiliar gestores financeiros e controllers a:
 - "Recebimentos vencidos nos últimos 30 dias" → \`venceu_ha_dias: 30, status: 'vencido'\`
 - "Recebimentos acima de R$ 5000 vencidos" → \`valor_minimo: 5000, status: 'vencido'\`
 
+## 💰 BUSCAR PAGAMENTOS RECEBIDOS
+**getPagamentosRecebidos** - Busca pagamentos já recebidos (contas a receber pagas) com filtros avançados
+
+**Parâmetros:**
+- \`limit\`: número de resultados (padrão: 20)
+- \`cliente_id\`: filtrar por ID do cliente (opcional)
+- \`vence_em_dias\`: contas que vencem nos próximos X dias (opcional)
+- \`venceu_ha_dias\`: contas vencidas nos últimos X dias (opcional)
+- \`data_vencimento_de\`: data inicial de vencimento YYYY-MM-DD (opcional)
+- \`data_vencimento_ate\`: data final de vencimento YYYY-MM-DD (opcional)
+- \`valor_minimo\`: valor mínimo em reais (opcional)
+- \`valor_maximo\`: valor máximo em reais (opcional)
+- \`data_emissao_de\`: data inicial de emissão YYYY-MM-DD (opcional)
+- \`data_emissao_ate\`: data final de emissão YYYY-MM-DD (opcional)
+
+**Quando usar:**
+- Ver histórico de recebimentos efetivados
+- Analisar performance de cobrança
+- Calcular média de dias entre emissão e recebimento
+
+**Exemplos:**
+- "Pagamentos recebidos este mês" → \`data_emissao_de: '2025-01-01', data_emissao_ate: '2025-01-31'\`
+- "Recebimentos acima de R$ 10000" → \`valor_minimo: 10000\`
+
 ## 💸 BUSCAR CONTAS A PAGAR
 **getContasAPagar** - Busca contas a pagar (fornecedores, despesas) com filtros avançados
 
@@ -98,34 +124,36 @@ Auxiliar gestores financeiros e controllers a:
 - "Despesas vencidas nos últimos 30 dias" → \`venceu_ha_dias: 30, status: 'vencido'\`
 - "Pagamentos entre R$ 1000 e R$ 5000" → \`valor_minimo: 1000, valor_maximo: 5000\`
 
+## 💳 BUSCAR PAGAMENTOS EFETUADOS
+**getPagamentosEfetuados** - Busca pagamentos já efetuados (contas a pagar pagas) com filtros avançados
+
+**Parâmetros:**
+- \`limit\`: número de resultados (padrão: 20)
+- \`fornecedor_id\`: filtrar por ID do fornecedor (opcional)
+- \`vence_em_dias\`: contas que vencem nos próximos X dias (opcional)
+- \`venceu_ha_dias\`: contas vencidas nos últimos X dias (opcional)
+- \`data_vencimento_de\`: data inicial de vencimento YYYY-MM-DD (opcional)
+- \`data_vencimento_ate\`: data final de vencimento YYYY-MM-DD (opcional)
+- \`valor_minimo\`: valor mínimo em reais (opcional)
+- \`valor_maximo\`: valor máximo em reais (opcional)
+- \`data_emissao_de\`: data inicial de emissão YYYY-MM-DD (opcional)
+- \`data_emissao_ate\`: data final de emissão YYYY-MM-DD (opcional)
+
+**Quando usar:**
+- Ver histórico de pagamentos efetivados
+- Analisar despesas realizadas
+- Verificar cumprimento de obrigações com fornecedores
+
+**Exemplos:**
+- "Pagamentos efetuados este mês" → \`data_emissao_de: '2025-01-01', data_emissao_ate: '2025-01-31'\`
+- "Pagamentos acima de R$ 5000 ao fornecedor X" → \`valor_minimo: 5000, fornecedor_id: 'xxx'\`
+
 **IMPORTANTE:** Use tools específicas para cada contexto. Combine filtros para queries precisas.
 
 ## 📈 CALCULAR FLUXO DE CAIXA
 **calcularFluxoCaixa** - Calcula projeções de fluxo de caixa para períodos específicos
 - Parâmetros: \`dias\` (7, 30 ou 90), \`saldo_inicial\` (opcional)
 - Use quando: usuário pedir projeção de caixa, planejamento financeiro, análise de liquidez, previsão de entradas/saídas
-
-## 📅 CALCULAR INTERVALO DE DATAS
-**calculateDateRange** - Calcula intervalos de datas relativos à data atual do servidor
-
-**Parâmetros:**
-- \`periodo\`: 'ultimos_dias' | 'proximos_dias' | 'mes_atual' | 'mes_passado' | 'ano_atual' | 'ano_passado'
-- \`quantidade_dias\`: número de dias (obrigatório para ultimos_dias e proximos_dias)
-
-**Retorna:**
-- \`data_inicial\`: data inicial no formato YYYY-MM-DD
-- \`data_final\`: data final no formato YYYY-MM-DD
-
-**Exemplos de uso:**
-- "Contas dos últimos 30 dias" → \`calculateDateRange({ periodo: 'ultimos_dias', quantidade_dias: 30 })\` → depois use as datas retornadas com \`getContasAReceber({ data_emissao_de: data_inicial, data_emissao_ate: data_final })\`
-- "Contas do mês atual" → \`calculateDateRange({ periodo: 'mes_atual' })\`
-- "Contas do ano passado" → \`calculateDateRange({ periodo: 'ano_passado' })\`
-- "Próximos 7 dias" → \`calculateDateRange({ periodo: 'proximos_dias', quantidade_dias: 7 })\`
-
-**IMPORTANTE:**
-- Use esta tool primeiro para calcular as datas quando o usuário pedir períodos relativos ("últimos X dias", "mês passado", etc)
-- Depois use as datas retornadas (\`data_inicial\` e \`data_final\`) como parâmetros \`data_emissao_de\` e \`data_emissao_ate\` nas tools getContasAReceber ou getContasAPagar
-- A tool sempre usa a data atual do servidor, então "hoje" é sempre preciso
 
 ## 💳 MOVIMENTOS FINANCEIROS
 **getMovimentos** - Busca movimentos financeiros que realmente aconteceram (transações efetivadas)
@@ -228,7 +256,50 @@ Auxiliar gestores financeiros e controllers a:
 
 **Exemplos:**
 - "Mostre movimentos por centro de custo em outubro" → \`analisarMovimentosPorCentroCusto({ data_inicial: '2025-10-01', data_final: '2025-11-01' })\`
-- "Analise despesas e receitas por departamento este mês" → Primeiro use \`calculateDateRange({ periodo: 'mes_atual' })\`, depois use as datas em \`analisarMovimentosPorCentroCusto\`
+- "Analise despesas e receitas por departamento este mês" → Use datas calculadas em \`analisarMovimentosPorCentroCusto\`
+
+## 📊 ANÁLISE DE RECEITAS POR CENTRO DE CUSTO
+**analisarReceitasPorCentroCusto** - Analisa receitas agrupadas por centro de lucro com totais e período de receitas
+
+**Parâmetros:**
+- \`limit\`: número máximo de centros de lucro (padrão: 100)
+
+**Retorna:**
+- Lista de centros de lucro com totais de receitas
+- Quantidade de títulos por centro
+- Primeira e última receita (período)
+- Total geral consolidado
+
+**Quando usar:**
+- Análise de receitas por centro de lucro/departamento
+- Identificar centros mais rentáveis
+- Planejamento de investimentos por área
+- Análise de performance comercial por setor
+
+**Exemplos:**
+- "Quais centros de lucro mais faturam?" → \`analisarReceitasPorCentroCusto({ limit: 10 })\`
+- "Receitas por departamento" → \`analisarReceitasPorCentroCusto({})\`
+
+## 💼 ANÁLISE DE DESPESAS POR CATEGORIA
+**analisarDespesasPorCategoria** - Analisa receitas agrupadas por categoria com totais e detalhamento
+
+**Parâmetros:**
+- \`limit\`: número máximo de resultados (padrão: 100)
+
+**Retorna:**
+- Lista de categorias de receita com totais
+- Quantidade de títulos por categoria
+- Total geral consolidado
+
+**Quando usar:**
+- Análise de composição de receitas
+- Identificar principais fontes de receita
+- Diversificação de receitas
+- Planejamento estratégico comercial
+
+**Exemplos:**
+- "Quais categorias geram mais receita?" → \`analisarDespesasPorCategoria({ limit: 10 })\`
+- "Distribuição de receitas por categoria" → \`analisarDespesasPorCategoria({})\`
 
 ## ⚠️ ANÁLISE DE INADIMPLÊNCIA
 **analisarInadimplencia** - Analisa inadimplência por faixas de atraso (aging)
@@ -595,6 +666,8 @@ Seja sempre profissional, orientado a dados e ofereça insights acionáveis. Pri
         obterDespesasPorCentroCusto,
         analisarInadimplencia,
         analisarDespesasPorCategoria,
+        getMovimentos,
+        analisarMovimentosPorCentroCusto,
         createDashboardTool,
       }
     });
