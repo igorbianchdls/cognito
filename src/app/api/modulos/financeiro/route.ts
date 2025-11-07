@@ -324,8 +324,14 @@ export async function GET(req: NextRequest) {
 
       const tipoLancamento = tipo === 'ar' ? 'conta_a_receber' : 'conta_a_pagar';
       const tenantId = parseNumber(searchParams.get('tenant_id'));
-      const tenantFilter = tenantId ? ' AND lf.tenant_id = $1' : '';
-      const paramsAging: unknown[] = tenantId ? [tenantId] : [];
+      // Data de referência para aging: ?ref=YYYY-MM-DD, senão usa 'ate', senão CURRENT_DATE
+      const ref = searchParams.get('ref') || ate || undefined;
+      let paramsAging: unknown[] = [];
+      let idxA = 1;
+      const refFilterExpr = ref ? `$${idxA++}` : 'CURRENT_DATE';
+      if (ref) paramsAging.push(ref);
+      const tenantFilter = tenantId ? ` AND lf.tenant_id = $${idxA++}` : '';
+      if (tenantId) paramsAging.push(tenantId);
 
       const agingSql = `
         WITH buckets AS (
@@ -337,11 +343,11 @@ export async function GET(req: NextRequest) {
         ), agg AS (
           SELECT
             CASE
-              WHEN lf.data_vencimento < CURRENT_DATE - INTERVAL '30 days' THEN 'Vencido >30'
-              WHEN lf.data_vencimento < CURRENT_DATE THEN 'Vencido 1–30'
-              WHEN lf.data_vencimento <= CURRENT_DATE + INTERVAL '7 days' THEN 'Vence 1–7'
-              WHEN lf.data_vencimento <= CURRENT_DATE + INTERVAL '15 days' THEN 'Vence 8–15'
-              WHEN lf.data_vencimento <= CURRENT_DATE + INTERVAL '30 days' THEN 'Vence 16–30'
+              WHEN lf.data_vencimento < ${refFilterExpr} - INTERVAL '30 days' THEN 'Vencido >30'
+              WHEN lf.data_vencimento < ${refFilterExpr} THEN 'Vencido 1–30'
+              WHEN lf.data_vencimento <= ${refFilterExpr} + INTERVAL '7 days' THEN 'Vence 1–7'
+              WHEN lf.data_vencimento <= ${refFilterExpr} + INTERVAL '15 days' THEN 'Vence 8–15'
+              WHEN lf.data_vencimento <= ${refFilterExpr} + INTERVAL '30 days' THEN 'Vence 16–30'
             END AS bucket,
             SUM(lf.valor) AS total
           FROM financeiro.lancamentos_financeiros lf
@@ -357,7 +363,7 @@ export async function GET(req: NextRequest) {
       `.replace(/\n\s+/g, ' ').trim();
 
       const rows = await runQuery<{ bucket: string; total: number | null }>(agingSql, paramsAging);
-      return Response.json({ success: true, rows, sql_query: agingSql, sql_params: paramsAging });
+      return Response.json({ success: true, ref: ref || null, rows, sql_query: agingSql, sql_params: paramsAging });
     } else if (view === 'top-despesas') {
       // Top N despesas por dimensão (categoria | centro_custo | departamento)
       const dim = (searchParams.get('dim') || '').toLowerCase();
