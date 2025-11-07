@@ -172,11 +172,11 @@ export async function GET(req: NextRequest) {
           SELECT 
             f.codigo, f.nome, f.tipo_conta, f.saldo_inicial, f.movimentos, f.saldo_final,
             CASE 
-              WHEN f.codigo LIKE '1.1.%' THEN 'Ativo Circulante'
-              WHEN f.codigo LIKE '1.2.%' THEN 'Ativo Não Circulante'
-              WHEN f.codigo LIKE '2.1.%' THEN 'Passivo Circulante'
-              WHEN f.codigo LIKE '2.2.%' THEN 'Passivo Não Circulante'
-              WHEN f.codigo LIKE '3.%' THEN 'Patrimônio Líquido'
+              WHEN f.codigo ~ '^1\\.0*1\\.' THEN 'Ativo Circulante'
+              WHEN f.codigo ~ '^1\\.' THEN 'Ativo Não Circulante'
+              WHEN f.codigo ~ '^2\\.0*1\\.' THEN 'Passivo Circulante'
+              WHEN f.codigo ~ '^2\\.' THEN 'Passivo Não Circulante'
+              WHEN f.codigo ~ '^3\\.' THEN 'Patrimônio Líquido'
               ELSE NULL
             END AS grupo
           FROM final f
@@ -295,11 +295,11 @@ export async function GET(req: NextRequest) {
           SELECT 
             f.codigo, f.nome, f.tipo_conta, f.saldo_inicial, f.movimentos, f.saldo_final,
             CASE 
-              WHEN f.codigo LIKE '1.1.%' THEN 'Ativo Circulante'
-              WHEN f.codigo LIKE '1.2.%' THEN 'Ativo Não Circulante'
-              WHEN f.codigo LIKE '2.1.%' THEN 'Passivo Circulante'
-              WHEN f.codigo LIKE '2.2.%' THEN 'Passivo Não Circulante'
-              WHEN f.codigo LIKE '3.%' THEN 'Patrimônio Líquido'
+              WHEN f.codigo ~ '^1\\.0*1\\.' THEN 'Ativo Circulante'
+              WHEN f.codigo ~ '^1\\.' THEN 'Ativo Não Circulante'
+              WHEN f.codigo ~ '^2\\.0*1\\.' THEN 'Passivo Circulante'
+              WHEN f.codigo ~ '^2\\.' THEN 'Passivo Não Circulante'
+              WHEN f.codigo ~ '^3\\.' THEN 'Patrimônio Líquido'
               ELSE NULL
             END AS grupo
           FROM final f
