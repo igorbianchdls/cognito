@@ -373,6 +373,9 @@ export async function GET(req: NextRequest) {
       if (dim === 'categoria') dimExpr = "COALESCE(cat_ap.nome, 'Sem categoria')";
       else if (dim === 'centro_custo' || dim === 'centro-custo') dimExpr = "COALESCE(cc_ap.nome, 'Sem centro de custo')";
       else if (dim === 'departamento') dimExpr = "COALESCE(dep_ap.nome, 'Sem departamento')";
+      else if (dim === 'centro_lucro' || dim === 'centro-lucro') dimExpr = "COALESCE(cl_ap.nome, 'Sem centro de lucro')";
+      else if (dim === 'filial') dimExpr = "COALESCE(fil_ap.nome, 'Sem filial')";
+      else if (dim === 'projeto') dimExpr = "COALESCE(prj_ap.nome, 'Sem projeto')";
       else {
         return Response.json({ success: false, message: "Parâmetro 'dim' inválido. Use 'categoria' | 'centro_custo' | 'departamento'" }, { status: 400 });
       }
@@ -394,6 +397,9 @@ export async function GET(req: NextRequest) {
           LEFT JOIN financeiro.categorias_financeiras cat_ap ON cat_ap.id = ap.categoria_id
           LEFT JOIN empresa.centros_custo cc_ap ON cc_ap.id = ap.centro_custo_id
           LEFT JOIN empresa.departamentos dep_ap ON dep_ap.id = ap.departamento_id
+          LEFT JOIN empresa.centros_lucro cl_ap ON cl_ap.id = ap.centro_lucro_id
+          LEFT JOIN empresa.filiais fil_ap ON fil_ap.id = ap.filial_id
+          LEFT JOIN financeiro.projetos prj_ap ON prj_ap.id = ap.projeto_id
           ${where}
           GROUP BY 1
           ORDER BY total DESC

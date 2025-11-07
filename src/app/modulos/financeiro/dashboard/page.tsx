@@ -98,6 +98,9 @@ export default function FinanceiroDashboardPage() {
   const [topCC, setTopCC] = useState<{ label: string; value: number }[]>([])
   const [topCategorias, setTopCategorias] = useState<{ label: string; value: number }[]>([])
   const [topDepartamentos, setTopDepartamentos] = useState<{ label: string; value: number }[]>([])
+  const [topLucros, setTopLucros] = useState<{ label: string; value: number }[]>([])
+  const [topProjetos, setTopProjetos] = useState<{ label: string; value: number }[]>([])
+  const [topFiliais, setTopFiliais] = useState<{ label: string; value: number }[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   // Global (Nanostores): UI + Filters
@@ -291,7 +294,7 @@ export default function FinanceiroDashboardPage() {
       setError(null)
       try {
         const qs = (view: string) => `/api/modulos/financeiro?view=${view}&page=1&pageSize=1000`
-        const [arRes, apRes, prRes, peRes, kpisRes, agingArRes, agingApRes, topCcRes, topCatRes, topDepRes] = await Promise.allSettled([
+        const [arRes, apRes, prRes, peRes, kpisRes, agingArRes, agingApRes, topCcRes, topCatRes, topDepRes, topLucroRes, topProjRes, topFilialRes] = await Promise.allSettled([
           fetch(qs('contas-a-receber'), { cache: 'no-store' }),
           fetch(qs('contas-a-pagar'), { cache: 'no-store' }),
           fetch(qs('pagamentos-recebidos'), { cache: 'no-store' }),
@@ -302,6 +305,9 @@ export default function FinanceiroDashboardPage() {
           fetch(`/api/modulos/financeiro?view=top-despesas&dim=centro_custo&de=${kpiDe}&ate=${kpiAte}`, { cache: 'no-store' }),
           fetch(`/api/modulos/financeiro?view=top-despesas&dim=categoria&de=${kpiDe}&ate=${kpiAte}`, { cache: 'no-store' }),
           fetch(`/api/modulos/financeiro?view=top-despesas&dim=departamento&de=${kpiDe}&ate=${kpiAte}`, { cache: 'no-store' }),
+          fetch(`/api/modulos/financeiro?view=top-despesas&dim=centro_lucro&de=${kpiDe}&ate=${kpiAte}`, { cache: 'no-store' }),
+          fetch(`/api/modulos/financeiro?view=top-despesas&dim=projeto&de=${kpiDe}&ate=${kpiAte}`, { cache: 'no-store' }),
+          fetch(`/api/modulos/financeiro?view=top-despesas&dim=filial&de=${kpiDe}&ate=${kpiAte}`, { cache: 'no-store' }),
         ])
 
         let ar: ARRow[] = []
@@ -409,6 +415,18 @@ export default function FinanceiroDashboardPage() {
             const j = await topDepRes.value.json() as { rows?: Array<{ label?: string; total?: number }> }
             setTopDepartamentos(Array.isArray(j?.rows) ? j.rows.map(r => ({ label: String(r.label || ''), value: Number(r.total || 0) })) : [])
           } else setTopDepartamentos([])
+          if (topLucroRes.status === 'fulfilled' && topLucroRes.value.ok) {
+            const j = await topLucroRes.value.json() as { rows?: Array<{ label?: string; total?: number }> }
+            setTopLucros(Array.isArray(j?.rows) ? j.rows.map(r => ({ label: String(r.label || ''), value: Number(r.total || 0) })) : [])
+          } else setTopLucros([])
+          if (topProjRes.status === 'fulfilled' && topProjRes.value.ok) {
+            const j = await topProjRes.value.json() as { rows?: Array<{ label?: string; total?: number }> }
+            setTopProjetos(Array.isArray(j?.rows) ? j.rows.map(r => ({ label: String(r.label || ''), value: Number(r.total || 0) })) : [])
+          } else setTopProjetos([])
+          if (topFilialRes.status === 'fulfilled' && topFilialRes.value.ok) {
+            const j = await topFilialRes.value.json() as { rows?: Array<{ label?: string; total?: number }> }
+            setTopFiliais(Array.isArray(j?.rows) ? j.rows.map(r => ({ label: String(r.label || ''), value: Number(r.total || 0) })) : [])
+          } else setTopFiliais([])
         }
       } catch (e) {
         if (!cancelled) setError('Falha ao carregar dados')
@@ -793,6 +811,22 @@ export default function FinanceiroDashboardPage() {
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
           <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><BarChart3 className="w-5 h-5 text-amber-600" />Top 5 Departamentos</h3>
           <BarList items={topDepartamentos} color="bg-amber-500" />
+        </div>
+      </div>
+
+      {/* Charts — Row 4 (Top 5 por dimensão) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><BarChart3 className="w-5 h-5 text-emerald-600" />Top 5 Centros de Lucro</h3>
+          <BarList items={topLucros} color="bg-emerald-500" />
+        </div>
+        <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><BarChart3 className="w-5 h-5 text-purple-600" />Top 5 Projetos</h3>
+          <BarList items={topProjetos} color="bg-purple-500" />
+        </div>
+        <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><BarChart3 className="w-5 h-5 text-teal-600" />Top 5 Filiais</h3>
+          <BarList items={topFiliais} color="bg-teal-500" />
         </div>
       </div>
 
