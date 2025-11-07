@@ -816,73 +816,7 @@ export const calcularFluxoCaixa = tool({
 // MOVIMENTOS FINANCEIROS
 // ============================================================================
 
-export const analisarReceitasPorCentroCusto = tool({
-  description: 'Analisa receitas agrupadas por centro de lucro com totais e período de receitas',
-  inputSchema: z.object({
-    limit: z.number().default(100).describe('Número máximo de centros de lucro'),
-  }),
-  execute: async ({
-    limit,
-  }) => {
-    try {
-      const params: unknown[] = [limit];
-
-      const sql = `
-        SELECT
-          cl.nome AS centro_lucro,
-          SUM(car.valor_total) AS total_receitas,
-          COUNT(car.id) AS qtd_titulos,
-          MIN(car.data_vencimento) AS primeira_receita,
-          MAX(car.data_vencimento) AS ultima_receita
-        FROM financeiro.contas_a_receber car
-        LEFT JOIN financeiro.centros_lucro cl ON cl.id = car.centro_lucro_id
-        WHERE car.status IN ('pago', 'parcial')
-        GROUP BY cl.nome
-        ORDER BY total_receitas DESC
-        LIMIT $1
-      `.trim();
-
-      const rows = await runQuery<Record<string, unknown>>(sql, params);
-
-      const totalSql = `
-        SELECT
-          SUM(valor_total) AS total_geral,
-          COUNT(*) AS total_titulos
-        FROM financeiro.contas_a_receber
-        WHERE status IN ('pago', 'parcial')
-      `.trim();
-
-      const [totals] = await runQuery<{
-        total_geral: number | null;
-        total_titulos: number | null;
-      }>(totalSql, []);
-
-      const totalGeral = Number(totals?.total_geral ?? 0);
-
-      return {
-        success: true,
-        rows,
-        count: rows.length,
-        totals: {
-          total_geral: totalGeral,
-          total_titulos: Number(totals?.total_titulos ?? 0),
-        },
-        title: `Receitas por Centro de Lucro · Top ${limit}`,
-        message: `${rows.length} centros de lucro encontrados (Total: ${totalGeral.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})`,
-        sql_query: `${sql}\n\n-- Totais\n${totalSql}`,
-        sql_params: formatSqlParams(params),
-      };
-    } catch (error) {
-      console.error('ERRO analisarReceitasPorCentroCusto:', error);
-      return {
-        success: false,
-        message: `Erro ao analisar receitas por centro de lucro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
-        rows: [],
-        count: 0,
-      };
-    }
-  },
-});
+// Removido: analisarReceitasPorCentroCusto (substituído por obterDespesasPorCentroCusto com opção de tipo)
 
 export const createMovimento = tool({
   description: 'Cria um movimento financeiro (entrada ou saída) manualmente registrado no sistema.',
@@ -1317,61 +1251,89 @@ export const obterSaldoBancario = tool({
 // ============================================================================
 
 export const obterDespesasPorCentroCusto = tool({
-  description: 'Analisa despesas agrupadas por centro de custo com totais e percentuais',
+  description: 'Ranking por Centro de Custo, somando valores por tipo (pagamento_efetuado ou conta_a_pagar)',
   inputSchema: z.object({
     data_inicial: z.string().describe('Data inicial (YYYY-MM-DD)'),
     data_final: z.string().describe('Data final (YYYY-MM-DD)'),
     limit: z.number().default(20).describe('Número máximo de centros de custo'),
+    tipo: z.enum(['pagamento_efetuado', 'conta_a_pagar', 'contas_a_pagar']).default('pagamento_efetuado')
+      .describe("Tipo de base: 'pagamento_efetuado' (realizado) ou 'conta_a_pagar' (planejado)"),
   }),
   execute: async ({
     data_inicial,
     data_final,
     limit,
+    tipo,
   }) => {
     try {
-      const params: unknown[] = [data_inicial, data_final, limit];
+      // Normalização do tipo (aceita 'contas_a_pagar' e converte)
+      const tipoNorm = tipo === 'contas_a_pagar' ? 'conta_a_pagar' : tipo;
 
-      const sql = `
-        SELECT
-          cc.id AS centro_custo_id,
-          cc.nome AS centro_custo,
-          cc.codigo,
-          COUNT(cap.id) AS qtd_titulos,
-          SUM(cap.valor_total) AS total_despesas,
-          ROUND(
-            (SUM(cap.valor_total) * 100.0 / NULLIF(
-              (SELECT SUM(valor_total) FROM financeiro.contas_a_pagar
-               WHERE data_vencimento >= $1 AND data_vencimento <= $2
-               AND status IN ('pago', 'parcial')),
-              0
-            )),
-            2
-          ) AS percentual
-        FROM financeiro.centros_custo cc
-        LEFT JOIN financeiro.contas_a_pagar cap
-          ON cap.centro_custo_id = cc.id
-          AND cap.data_vencimento >= $1 AND cap.data_vencimento <= $2
-          AND cap.status IN ('pago', 'parcial')
-        GROUP BY cc.id, cc.nome, cc.codigo
-        HAVING SUM(cap.valor_total) > 0
-        ORDER BY total_despesas DESC
-        LIMIT $3
-      `.trim();
+      let params: unknown[] = [data_inicial, data_final, limit];
+      let sql: string;
+      let totalSql: string;
+      let titleKind: string;
+
+      if (tipoNorm === 'pagamento_efetuado') {
+        // Ranking por Centro de Custo baseado em pagamentos efetuados (realizado)
+        sql = `
+          SELECT
+            COALESCE(cc.nome, '— sem CC —') AS centro_custo,
+            SUM(lf.valor) AS total_gasto
+          FROM financeiro.lancamentos_financeiros lf
+          JOIN financeiro.lancamentos_financeiros ap
+            ON ap.id = lf.lancamento_origem_id
+          LEFT JOIN empresa.centros_custo cc
+            ON cc.id = ap.centro_custo_id
+          WHERE lf.tipo = 'pagamento_efetuado'
+            AND lf.data_lancamento >= $1 AND lf.data_lancamento <= $2
+          GROUP BY COALESCE(cc.nome, '— sem CC —')
+          ORDER BY total_gasto DESC
+          LIMIT $3
+        `.trim();
+
+        totalSql = `
+          SELECT
+            SUM(lf.valor) AS total_geral,
+            COUNT(*) AS total_registros
+          FROM financeiro.lancamentos_financeiros lf
+          WHERE lf.tipo = 'pagamento_efetuado'
+            AND lf.data_lancamento >= $1 AND lf.data_lancamento <= $2
+        `.trim();
+
+        titleKind = 'Pagamentos';
+      } else {
+        // Ranking por Centro de Custo baseado em títulos a pagar (planejado)
+        sql = `
+          SELECT
+            COALESCE(cc.nome, '— sem CC —') AS centro_custo,
+            SUM(ap.valor) AS total_gasto
+          FROM financeiro.lancamentos_financeiros ap
+          LEFT JOIN empresa.centros_custo cc
+            ON cc.id = ap.centro_custo_id
+          WHERE ap.tipo = 'conta_a_pagar'
+            AND ap.data_vencimento >= $1 AND ap.data_vencimento <= $2
+          GROUP BY COALESCE(cc.nome, '— sem CC —')
+          ORDER BY total_gasto DESC
+          LIMIT $3
+        `.trim();
+
+        totalSql = `
+          SELECT
+            SUM(ap.valor) AS total_geral,
+            COUNT(*) AS total_registros
+          FROM financeiro.lancamentos_financeiros ap
+          WHERE ap.tipo = 'conta_a_pagar'
+            AND ap.data_vencimento >= $1 AND ap.data_vencimento <= $2
+        `.trim();
+
+        titleKind = 'Títulos (A Pagar)';
+      }
 
       const rows = await runQuery<Record<string, unknown>>(sql, params);
-
-      const totalSql = `
-        SELECT
-          SUM(valor_total) AS total_geral,
-          COUNT(*) AS total_despesas
-        FROM financeiro.contas_a_pagar
-        WHERE data_vencimento >= $1 AND data_vencimento <= $2
-        AND status IN ('pago', 'parcial')
-      `.trim();
-
       const [totals] = await runQuery<{
         total_geral: number | null;
-        total_despesas: number | null;
+        total_registros: number | null;
       }>(totalSql, [data_inicial, data_final]);
 
       const totalGeral = Number(totals?.total_geral ?? 0);
@@ -1388,9 +1350,9 @@ export const obterDespesasPorCentroCusto = tool({
           data_inicial,
           data_final,
         },
-        title: `Despesas por Centro de Custo · ${data_inicial} a ${data_final} · Top ${limit}`,
-        message: `${rows.length} centros de custo com despesas (Total: ${totalGeral.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})`,
-        sql_query: `${sql}\n\n-- Total Geral\n${totalSql}`,
+        title: `Ranking Centros de Custo (${titleKind}) · ${data_inicial} a ${data_final} · Top ${limit}`,
+        message: `${rows.length} centros de custo (Total: ${totalGeral.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})`,
+        sql_query: `${sql}\n\n-- Totais\n${totalSql}`,
         sql_params: formatSqlParams(params),
       };
     } catch (error) {
@@ -1479,88 +1441,7 @@ export const analisarDespesasPorCategoria = tool({
 // MOVIMENTOS POR CENTRO DE CUSTO (por período)
 // ============================================================================
 
-export const analisarMovimentosPorCentroCusto = tool({
-  description: 'Analisa movimentos efetivados agrupados por centro de custo e categoria no período informado',
-  inputSchema: z.object({
-    data_inicial: z.string().describe('Data inicial (YYYY-MM-DD)'),
-    data_final: z.string().describe('Data final exclusiva (YYYY-MM-DD)'),
-    limit: z.number().default(100).describe('Número máximo de linhas agregadas'),
-  }),
-  execute: async ({ data_inicial, data_final, limit }) => {
-    try {
-      const sql = `
-        WITH base AS (
-          SELECT
-            COALESCE(cc.nome, '— sem CC —') AS centro_custo,
-            COALESCE(cat.nome, 'Sem categoria') AS categoria,
-            'Receita' AS tipo_categoria,
-            SUM(m.valor) AS total
-          FROM gestaofinanceira.movimentos m
-          LEFT JOIN gestaofinanceira.centros_custo cc ON cc.id = m.centro_custo_id
-          LEFT JOIN gestaofinanceira.categorias cat ON cat.id = m.categoria_id
-          WHERE m.data >= $1::date AND m.data < $2::date
-            AND m.valor > 0
-          GROUP BY COALESCE(cc.nome, '— sem CC —'), COALESCE(cat.nome, 'Sem categoria')
-          UNION ALL
-          SELECT
-            COALESCE(cc.nome, '— sem CC —') AS centro_custo,
-            COALESCE(cat.nome, 'Sem categoria') AS categoria,
-            'Despesa' AS tipo_categoria,
-            SUM(ABS(m.valor)) AS total
-          FROM gestaofinanceira.movimentos m
-          LEFT JOIN gestaofinanceira.centros_custo cc ON cc.id = m.centro_custo_id
-          LEFT JOIN gestaofinanceira.categorias cat ON cat.id = m.categoria_id
-          WHERE m.data >= $1::date AND m.data < $2::date
-            AND m.valor < 0
-          GROUP BY COALESCE(cc.nome, '— sem CC —'), COALESCE(cat.nome, 'Sem categoria')
-        )
-        SELECT * FROM base
-        ORDER BY total DESC
-        LIMIT $3::int
-      `.trim();
-
-      const rows = await runQuery<{
-        centro_custo: string;
-        categoria: string;
-        tipo_categoria: 'Receita' | 'Despesa';
-        total: number;
-      }>(sql, [data_inicial, data_final, limit]);
-
-      // Totais consolidados
-      const totalEntradas = rows
-        .filter(r => r.tipo_categoria === 'Receita')
-        .reduce((s, r) => s + Number(r.total || 0), 0);
-      const totalSaidas = rows
-        .filter(r => r.tipo_categoria === 'Despesa')
-        .reduce((s, r) => s + Number(r.total || 0), 0);
-
-      return {
-        success: true,
-        rows,
-        count: rows.length,
-        totals: {
-          total_entradas: totalEntradas,
-          total_saidas: totalSaidas,
-          saldo_liquido: totalEntradas - totalSaidas,
-          total_linhas: rows.length,
-        },
-        periodo: { data_inicial, data_final },
-        title: `Movimentos por Centro de Custo · ${data_inicial} a ${data_final}`,
-        message: `${rows.length} agrupamentos por CC e categoria (${data_inicial} a ${data_final})`,
-        sql_query: sql,
-        sql_params: formatSqlParams([data_inicial, data_final, limit]),
-      };
-    } catch (error) {
-      console.error('ERRO analisarMovimentosPorCentroCusto:', error);
-      return {
-        success: false,
-        rows: [],
-        count: 0,
-        message: `Erro ao analisar movimentos por centro de custo: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
-      };
-    }
-  },
-});
+// Removido: analisarMovimentosPorCentroCusto (substituído por ranking por centro de custo)
 
 // ============================================================================
 // LISTAR MOVIMENTOS (por período)

@@ -55,7 +55,7 @@ export const catalog: ConnectorCatalog = {
         { id: 'fin.getPagamentosRecebidos', label: 'Pagamentos Recebidos', hint: 'Histórico de recebimentos', kind: 'action' as const, icon: <Wallet className="w-4 h-4" /> },
         { id: 'fin.getPagamentosEfetuados', label: 'Pagamentos Efetuados', hint: 'Saídas realizadas', kind: 'action' as const, icon: <Wallet className="w-4 h-4" /> },
         { id: 'fin.calcularFluxoCaixa', label: 'Fluxo de Caixa', hint: 'Projeção e fluxo consolidado', kind: 'action' as const, icon: <LineChart className="w-4 h-4" /> },
-        { id: 'fin.analisarReceitasPorCentroCusto', label: 'Receitas por Centro de Custo', hint: 'Receitas por CC', kind: 'action' as const, icon: <BarChart3 className="w-4 h-4" /> },
+        // Removido: analisarReceitasPorCentroCusto (consolidado no ranking por CC)
         { id: 'fin.getTransacoesExtrato', label: 'Transações (Extrato)', hint: 'Movimentação bancária', kind: 'action' as const, icon: <Database className="w-4 h-4" /> },
         { id: 'fin.obterSaldoBancario', label: 'Saldo Bancário', hint: 'Saldos por conta', kind: 'action' as const, icon: <Wallet className="w-4 h-4" /> },
         { id: 'fin.obterDespesasPorCentroCusto', label: 'Despesas por Centro de Custo', hint: 'Despesas por CC', kind: 'action' as const, icon: <BarChart3 className="w-4 h-4" /> },

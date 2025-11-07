@@ -6,14 +6,12 @@ import {
   getPagamentosRecebidos,
   getPagamentosEfetuados,
   calcularFluxoCaixa,
-  analisarReceitasPorCentroCusto,
   getTransacoesExtrato,
   obterSaldoBancario,
   obterDespesasPorCentroCusto,
   analisarInadimplencia,
   analisarDespesasPorCategoria,
   getMovimentos,
-  analisarMovimentosPorCentroCusto
 } from '@/tools/financialTools';
 import { createDashboardTool } from '@/tools/apps/createDashboardTool';
 
@@ -220,14 +218,15 @@ Auxiliar gestores financeiros e controllers a:
 - Análise de liquidez imediata
 - Distribuição de recursos entre contas
 
-## 💰 DESPESAS POR CENTRO DE CUSTO
-**obterDespesasPorCentroCusto** - Analisa despesas agrupadas por centro de custo
+## 💰 RANKING POR CENTRO DE CUSTO
+**obterDespesasPorCentroCusto** - Ranking por centro de custo (realizado vs. planejado)
 
 **Parâmetros obrigatórios:**
 - \`data_inicial\`: data inicial YYYY-MM-DD
 - \`data_final\`: data final YYYY-MM-DD
 
 **Parâmetros opcionais:**
+- \`tipo\`: 'pagamento_efetuado' (realizado) | 'conta_a_pagar' (planejado). Aceita também 'contas_a_pagar'. Padrão: 'pagamento_efetuado'.
 - \`limit\`: número máximo de centros (padrão: 20)
 
 **Quando usar:**
@@ -235,54 +234,10 @@ Auxiliar gestores financeiros e controllers a:
 - Identificar áreas com maior consumo
 - Planejamento orçamentário
 
-## 📊 ANÁLISE DE MOVIMENTOS POR CENTRO DE CUSTO
-**analisarMovimentosPorCentroCusto** - Analisa movimentos financeiros efetivados agrupados por centro de custo e categoria
-
-**Parâmetros obrigatórios:**
-- \`data_inicial\`: data inicial YYYY-MM-DD
-- \`data_final\`: data final exclusiva YYYY-MM-DD
-
-**Parâmetros opcionais:**
-- \`limit\`: número máximo de resultados (padrão: 100)
-
-**Retorna:**
-- Lista de agrupamentos por centro de custo e categoria
-- \`tipo_categoria\`: Receita ou Despesa
-- \`total\`: valor total por agrupamento
-- Totais consolidados: entradas, saídas, saldo líquido
-
-**Quando usar:**
-- Análise de movimentos reais por centro de custo
-- Ver distribuição de receitas e despesas por departamento/projeto
-- Identificar áreas com maior movimentação financeira
-- Comparar realizado vs planejado por centro de custo
-- Análise de performance por categoria dentro de cada centro de custo
-
-**Exemplos:**
-- "Mostre movimentos por centro de custo em outubro" → \`analisarMovimentosPorCentroCusto({ data_inicial: '2025-10-01', data_final: '2025-11-01' })\`
-- "Analise despesas e receitas por departamento este mês" → Use datas calculadas em \`analisarMovimentosPorCentroCusto\`
-
-## 📊 ANÁLISE DE RECEITAS POR CENTRO DE CUSTO
-**analisarReceitasPorCentroCusto** - Analisa receitas agrupadas por centro de lucro com totais e período de receitas
-
-**Parâmetros:**
-- \`limit\`: número máximo de centros de lucro (padrão: 100)
-
-**Retorna:**
-- Lista de centros de lucro com totais de receitas
-- Quantidade de títulos por centro
-- Primeira e última receita (período)
-- Total geral consolidado
-
-**Quando usar:**
-- Análise de receitas por centro de lucro/departamento
-- Identificar centros mais rentáveis
-- Planejamento de investimentos por área
-- Análise de performance comercial por setor
-
-**Exemplos:**
-- "Quais centros de lucro mais faturam?" → \`analisarReceitasPorCentroCusto({ limit: 10 })\`
-- "Receitas por departamento" → \`analisarReceitasPorCentroCusto({})\`
+## 📊 RANKING POR CENTRO DE CUSTO
+Use a tool acima "obterDespesasPorCentroCusto" com o parâmetro `tipo` para alternar entre:
+- Realizado: `tipo: 'pagamento_efetuado'` (soma dos pagamentos por CC do cabeçalho)
+- Planejado: `tipo: 'conta_a_pagar'` (soma dos títulos por CC)
 
 ## 💼 ANÁLISE DE DESPESAS POR CATEGORIA
 **analisarDespesasPorCategoria** - Analisa receitas agrupadas por categoria com totais e detalhamento
@@ -664,14 +619,12 @@ Seja sempre profissional, orientado a dados e ofereça insights acionáveis. Pri
         getPagamentosRecebidos,
         getPagamentosEfetuados,
         calcularFluxoCaixa,
-        analisarReceitasPorCentroCusto,
         getTransacoesExtrato,
         obterSaldoBancario,
         obterDespesasPorCentroCusto,
         analisarInadimplencia,
         analisarDespesasPorCategoria,
         getMovimentos,
-        analisarMovimentosPorCentroCusto,
         createDashboardTool,
       }
     });
