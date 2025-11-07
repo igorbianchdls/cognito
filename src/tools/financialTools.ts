@@ -1100,7 +1100,7 @@ export const obterDespesasPorCentroCusto = tool({
         count: rows.length,
         totals: {
           total_geral: totalGeral,
-          total_despesas: Number(totals?.total_despesas ?? 0),
+          total_registros: Number(totals?.total_registros ?? 0),
         },
         periodo: {
           data_inicial,
