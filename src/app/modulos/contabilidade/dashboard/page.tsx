@@ -6,6 +6,8 @@ import { useStore } from '@nanostores/react'
 import DashboardLayout from '@/components/modulos/DashboardLayout'
 import DRETable from '@/components/relatorios/DRETable'
 import BPTabela from '@/components/modulos/contabilidade/BPTabela'
+import WaterfallDRE from '@/components/modulos/contabilidade/WaterfallDRE'
+import { MultiLine } from '@/components/modulos/financeiro/NivoCharts'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
@@ -430,6 +432,37 @@ export default function ContabilidadeDashboardPage() {
           <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
             <h3 className="text-lg font-semibold mb-4" style={styleChartTitle}>DRE</h3>
             <DRETable data={dre.nodes} periods={dre.periods} />
+          </div>
+        </div>
+      )}
+
+      {/* Evolução Mensal + Waterfall (DRE) */}
+      {dre && dreResumo.length > 0 && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
+            <h3 className="text-lg font-semibold mb-4" style={styleChartTitle}>Evolução Mensal (Receita, COGS, Opex, Lucro)</h3>
+            <MultiLine
+              series={[
+                { id: 'Receita', color: '#10b981', points: dreResumo.map(d => ({ x: d.label, y: d.receita })) },
+                { id: 'COGS', color: '#ef4444', points: dreResumo.map(d => ({ x: d.label, y: d.cogs })) },
+                { id: 'Opex', color: '#6366f1', points: dreResumo.map(d => ({ x: d.label, y: d.opex })) },
+                { id: 'Lucro', color: '#2563eb', points: dreResumo.map(d => ({ x: d.label, y: d.lucro })) },
+              ]}
+            />
+          </div>
+          <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
+            <h3 className="text-lg font-semibold mb-4" style={styleChartTitle}>Waterfall (Período Atual)</h3>
+            {(() => {
+              const last = dreResumo.at(-1)!;
+              return (
+                <WaterfallDRE
+                  receita={last.receita}
+                  cogs={-Math.abs(last.cogs)}
+                  opex={-Math.abs(last.opex)}
+                  lucro={last.lucro}
+                />
+              );
+            })()}
           </div>
         </div>
       )}

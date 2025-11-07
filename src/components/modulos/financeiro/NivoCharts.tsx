@@ -129,3 +129,36 @@ export function SimpleHorizontalBar({ items, color = '#64748b', height = 180 }: 
     </div>
   );
 }
+
+export function MultiLine({
+  series,
+  height = 220,
+}: {
+  series: Array<{ id: string; color?: string; points: Array<{ x: string; y: number }> }>;
+  height?: number;
+}) {
+  const data = series.map(s => ({ id: s.id, color: s.color, data: s.points }));
+  const colors = series.map(s => s.color || undefined).filter(Boolean) as string[];
+  return (
+    <div style={{ height }}>
+      <ResponsiveLine
+        data={data as any}
+        margin={{ top: 10, right: 12, bottom: 30, left: 48 }}
+        xScale={{ type: 'point' }}
+        yScale={{ type: 'linear', stacked: false, min: 'auto', max: 'auto' }}
+        axisBottom={{ tickSize: 0, tickPadding: 8 }}
+        axisLeft={{ tickSize: 0, tickPadding: 6 }}
+        enablePoints={true}
+        pointSize={6}
+        useMesh={true}
+        enableArea={false}
+        colors={colors.length ? colors : undefined}
+        theme={theme}
+        animate={false}
+        legends={[{
+          anchor: 'bottom', direction: 'row', translateY: 28, itemWidth: 90, itemHeight: 12, symbolSize: 10, itemsSpacing: 12,
+        }]}
+      />
+    </div>
+  );
+}
