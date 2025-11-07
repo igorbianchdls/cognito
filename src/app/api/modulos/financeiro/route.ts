@@ -16,38 +16,53 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
     data_vencimento: 'lf.data_vencimento',
     status: 'lf.status',
     categoria_financeira: 'cf.nome',
+    categoria_nome: 'cf.nome',
+    natureza_nome: 'nf.nome',
+    natureza_tipo: 'nf.tipo',
     fornecedor: 'f.nome',
     centro_custo: 'cc.nome',
   },
   'contas-a-receber': {
     id: 'lf.id',
-    cliente: 'e.nome',
+    cliente: 'c.nome',
     data_lancamento: 'lf.data_lancamento',
     data_vencimento: 'lf.data_vencimento',
     valor_total: 'lf.valor',
     status: 'lf.status',
   },
   'pagamentos-efetuados': {
-    id: 'pe.id',
-    descricao_pagamento: 'pe.descricao',
-    valor_pago: 'pe.valor',
-    data_pagamento: 'pe.data_lancamento',
-    data_vencimento: 'pe.data_vencimento',
-    status: 'pe.status',
-    fornecedor: 'f.nome',
+    id: 'lf.id',
+    descricao_pagamento: 'lf.descricao',
+    valor_pago: 'lf.valor',
+    data_pagamento: 'lf.data_lancamento',
+    data_vencimento: 'lf.data_vencimento',
+    status: 'lf.status',
+    fornecedor: 'forn.nome',
     categoria_financeira: 'cat.nome',
     conta_financeira: 'cf.nome_conta',
+    metodo_pagamento: 'mp.nome',
+    centro_custo: 'cc.nome',
+    departamento: 'dep.nome',
+    filial: 'fil.nome',
+    projeto: 'prj.nome',
   },
   'pagamentos-recebidos': {
-    id: 'pr.id',
-    cliente: 'ent.nome',
-    data_lancamento: 'pr.data_lancamento',
-    data_recebimento: 'pr.data_lancamento',
-    valor: 'pr.valor',
-    valor_total: 'pr.valor',
-    status: 'pr.status',
+    id: 'lf.id',
+    cliente: 'cli.nome',
+    data_lancamento: 'lf.data_lancamento',
+    data_recebimento: 'lf.data_lancamento',
+    valor: 'lf.valor',
+    valor_total: 'lf.valor',
+    status: 'lf.status',
     conta_financeira: 'cf.nome_conta',
+    categoria: 'cat.nome',
     categoria_financeira: 'cat.nome',
+    metodo_pagamento: 'mp.nome',
+    centro_lucro: 'cl.nome',
+    departamento: 'dep.nome',
+    filial: 'fil.nome',
+    projeto: 'prj.nome',
+    natureza_financeira: 'nf.nome',
   },
   conciliacao: {
     conciliacao_id: 'cb.id',
@@ -218,6 +233,7 @@ export async function GET(req: NextRequest) {
       // Contas a Pagar – query mais completa, mantendo campos esperados pela UI
       baseSql = `FROM financeiro.lancamentos_financeiros lf
                  LEFT JOIN financeiro.categorias_financeiras cf ON cf.id = lf.categoria_id
+                 LEFT JOIN financeiro.naturezas_financeiras nf ON nf.id = cf.natureza_id
                  LEFT JOIN empresa.centros_custo cc ON cc.id = lf.centro_custo_id
                  LEFT JOIN entidades.fornecedores f ON f.id = lf.entidade_id
                  LEFT JOIN empresa.centros_lucro cl ON cl.id = lf.centro_lucro_id
@@ -226,6 +242,8 @@ export async function GET(req: NextRequest) {
                  LEFT JOIN financeiro.projetos pj ON pj.id = lf.projeto_id`;
       selectSql = `SELECT
                         lf.id AS lancamento_id,
+                        lf.id AS conta_id,
+                        lf.entidade_id AS fornecedor_id,
                         lf.descricao AS descricao,
                         lf.data_lancamento,
                         lf.data_vencimento,
@@ -233,6 +251,8 @@ export async function GET(req: NextRequest) {
                         lf.status,
 
                         cf.nome AS categoria_nome,
+                        nf.nome AS natureza_nome,
+                        nf.tipo AS natureza_tipo,
                         cf.nome AS fornecedor_categoria,
                         cc.nome AS centro_custo_nome,
                         f.nome AS fornecedor,
@@ -250,80 +270,104 @@ export async function GET(req: NextRequest) {
       if (de) push(`${whereDateCol} >=`, de);
       if (ate) push(`${whereDateCol} <=`, ate);
     } else if (view === 'pagamentos-efetuados') {
-      // Pagamentos Efetuados via lancamentos_financeiros conforme solicitado
-      baseSql = `FROM financeiro.lancamentos_financeiros pe
-                 LEFT JOIN financeiro.contas_financeiras cf ON cf.id = pe.conta_financeira_id
-                 LEFT JOIN administrativo.categorias_financeiras cat ON cat.id = pe.categoria_id
-                 LEFT JOIN entidades.fornecedores f ON f.id = pe.entidade_id`;
-      selectSql = `SELECT 
-                        pe.id,
-                        pe.tenant_id,
-                        pe.tipo,
-                        pe.descricao AS descricao_pagamento,
-                        pe.valor AS valor_pago,
-                        pe.data_lancamento AS data_pagamento,
-                        pe.data_vencimento,
-                        pe.status,
+      // Pagamentos Efetuados – query mais completa conforme solicitado
+      baseSql = `FROM financeiro.lancamentos_financeiros lf
+                 LEFT JOIN financeiro.metodos_pagamento mp ON mp.id = lf.metodo_pagamento_id
+                 LEFT JOIN financeiro.contas_financeiras cf ON cf.id = lf.conta_financeira_id
+                 LEFT JOIN financeiro.categorias_financeiras cat ON cat.id = lf.categoria_id
+                 LEFT JOIN empresa.centros_custo cc ON cc.id = lf.centro_custo_id
+                 LEFT JOIN empresa.departamentos dep ON dep.id = lf.departamento_id
+                 LEFT JOIN empresa.filiais fil ON fil.id = lf.filial_id
+                 LEFT JOIN financeiro.projetos prj ON prj.id = lf.projeto_id
+                 LEFT JOIN entidades.fornecedores forn ON forn.id = lf.fornecedor_id`;
+      selectSql = `SELECT
+                        lf.id,
+                        lf.data_lancamento AS data_pagamento,
+                        lf.data_vencimento,
+                        lf.valor AS valor_pago,
+                        lf.descricao AS descricao_pagamento,
+                        lf.status,
+                        mp.nome AS metodo_pagamento,
                         cf.nome_conta AS conta_financeira,
                         cat.nome AS categoria_financeira,
-                        f.nome AS fornecedor,
-                        pe.despesa_id,
-                        pe.criado_em`;
-      whereDateCol = 'pe.data_lancamento';
-      conditions.push(`pe.tipo = 'pagamento_efetuado'`);
-      if (fornecedor_id) push('pe.entidade_id =', fornecedor_id);
-      if (status) push('LOWER(pe.status) =', status.toLowerCase());
-      if (valor_min !== undefined) push('pe.valor >=', valor_min);
-      if (valor_max !== undefined) push('pe.valor <=', valor_max);
+                        cc.nome AS centro_custo,
+                        dep.nome AS departamento,
+                        fil.nome AS filial,
+                        prj.nome AS projeto,
+                        forn.nome AS fornecedor,
+                        forn.imagem_url AS fornecedor_imagem_url`;
+      whereDateCol = 'lf.data_lancamento';
+      conditions.push(`lf.tipo = 'pagamento_efetuado'`);
+      if (fornecedor_id) push('lf.fornecedor_id =', fornecedor_id);
+      if (status) push('LOWER(lf.status) =', status.toLowerCase());
+      if (valor_min !== undefined) push('lf.valor >=', valor_min);
+      if (valor_max !== undefined) push('lf.valor <=', valor_max);
     } else if (view === 'pagamentos-recebidos') {
-      // Pagamentos Recebidos via lancamentos_financeiros conforme solicitado
-      baseSql = `FROM financeiro.lancamentos_financeiros pr
-                 LEFT JOIN financeiro.contas_financeiras cf ON cf.id = pr.conta_financeira_id
-                 LEFT JOIN administrativo.categorias_financeiras cat ON cat.id = pr.categoria_id
-                 LEFT JOIN entidades.clientes ent ON ent.id = pr.entidade_id`;
-      selectSql = `SELECT 
-                          pr.id AS pagamento_id,
-                          pr.id AS id,
-                          pr.descricao AS descricao,
-                          pr.tipo,
-                          pr.valor AS valor_total,
-                          pr.data_lancamento AS data_recebimento,
-                          pr.data_lancamento,
-                          pr.data_vencimento,
-                          pr.status,
-                          cf.nome_conta AS conta_financeira,
-                          cat.nome AS categoria_financeira,
-                          cat.nome AS cliente_categoria,
-                          ent.nome AS cliente,
-                          ent.imagem_url AS cliente_imagem_url,
-                          pr.despesa_id,
-                          pr.criado_em`;
-      whereDateCol = 'pr.data_lancamento';
-      conditions.push(`pr.tipo = 'pagamento_recebido'`);
-      if (cliente_id) push('pr.entidade_id =', cliente_id);
-      if (status) push('LOWER(pr.status) =', status.toLowerCase());
-      if (valor_min !== undefined) push('pr.valor >=', valor_min);
-      if (valor_max !== undefined) push('pr.valor <=', valor_max);
-    } else if (view === 'contas-a-receber') {
-      // Contas a Receber via lancamentos_financeiros conforme solicitado
+      // Pagamentos Recebidos – query completa conforme solicitado
       baseSql = `FROM financeiro.lancamentos_financeiros lf
-                 LEFT JOIN administrativo.categorias_financeiras cf ON cf.id = lf.categoria_id
-                 LEFT JOIN entidades.clientes e ON e.id = lf.entidade_id`;
-      selectSql = `SELECT 
-                          lf.id AS conta_id,
-                          lf.entidade_id AS cliente_id,
-                          lf.descricao AS descricao,
-                          e.nome AS cliente,
-                          cf.nome AS cliente_categoria,
-                          lf.valor AS valor_total,
+                 LEFT JOIN financeiro.metodos_pagamento mp ON mp.id = lf.metodo_pagamento_id
+                 LEFT JOIN financeiro.contas_financeiras cf ON cf.id = lf.conta_financeira_id
+                 LEFT JOIN financeiro.categorias_financeiras cat ON cat.id = lf.categoria_id
+                 LEFT JOIN financeiro.naturezas_financeiras nf ON nf.id = cat.natureza_id
+                 LEFT JOIN empresa.centros_lucro cl ON cl.id = lf.centro_lucro_id
+                 LEFT JOIN empresa.departamentos dep ON dep.id = lf.departamento_id
+                 LEFT JOIN empresa.filiais fil ON fil.id = lf.filial_id
+                 LEFT JOIN financeiro.projetos prj ON prj.id = lf.projeto_id
+                 LEFT JOIN entidades.clientes cli ON cli.id = lf.cliente_id`;
+      selectSql = `SELECT
+                          lf.id,
+                          lf.data_lancamento AS data_recebimento,
                           lf.data_lancamento,
                           lf.data_vencimento,
+                          lf.valor AS valor_total,
+                          lf.descricao AS descricao,
+                          'ENTRADA' AS natureza,
+                          mp.nome AS metodo_pagamento,
+                          cf.nome_conta AS conta_financeira,
+                          cat.nome AS categoria,
+                          nf.nome AS natureza_financeira,
+                          cl.nome AS centro_lucro,
+                          dep.nome AS departamento,
+                          fil.nome AS filial,
+                          prj.nome AS projeto,
+                          cli.nome AS cliente,
+                          cli.imagem_url AS cliente_imagem_url,
+                          cat.nome AS cliente_categoria`;
+      whereDateCol = 'lf.data_lancamento';
+      conditions.push(`lf.tipo = 'pagamento_recebido'`);
+      if (cliente_id) push('lf.cliente_id =', cliente_id);
+      if (status) push('LOWER(lf.status) =', status.toLowerCase());
+      if (valor_min !== undefined) push('lf.valor >=', valor_min);
+      if (valor_max !== undefined) push('lf.valor <=', valor_max);
+    } else if (view === 'contas-a-receber') {
+      // Contas a Receber – query mais completa, mantendo campos esperados pela UI
+      baseSql = `FROM financeiro.lancamentos_financeiros lf
+                 LEFT JOIN financeiro.categorias_financeiras cf ON cf.id = lf.categoria_id
+                 LEFT JOIN empresa.centros_lucro cl ON cl.id = lf.centro_lucro_id
+                 LEFT JOIN empresa.departamentos dp ON dp.id = lf.departamento_id
+                 LEFT JOIN empresa.filiais fl ON fl.id = lf.filial_id
+                 LEFT JOIN financeiro.projetos pj ON pj.id = lf.projeto_id
+                 LEFT JOIN entidades.clientes c ON c.id = lf.entidade_id`;
+      selectSql = `SELECT
+                          lf.id AS lancamento_id,
+                          lf.entidade_id AS cliente_id,
+                          lf.descricao AS descricao,
+                          lf.data_lancamento,
+                          lf.data_vencimento,
+                          lf.valor AS valor_total,
                           lf.status,
-                          lf.despesa_id,
-                          lf.criado_em`;
+
+                          cf.nome AS categoria_nome,
+                          cf.nome AS cliente_categoria,
+                          cl.nome AS centro_lucro_nome,
+                          dp.nome AS departamento_nome,
+                          fl.nome AS filial_nome,
+                          pj.nome AS projeto_nome,
+                          c.nome AS cliente,
+                          c.imagem_url AS cliente_imagem_url`;
       // Filtro principal por data: vencimento
       whereDateCol = 'lf.data_vencimento';
-      conditions.push(`lf.tipo = 'conta_a_receber'`);
+      conditions.push(`LOWER(lf.tipo) = 'conta_a_receber'`);
       if (cliente_id) push('lf.entidade_id =', cliente_id);
       if (status) push('LOWER(lf.status) =', status.toLowerCase());
       if (valor_min !== undefined) push('lf.valor >=', valor_min);
@@ -504,8 +548,14 @@ export async function GET(req: NextRequest) {
         case 'contas-a-pagar':
           orderClause = 'ORDER BY lf.data_vencimento ASC NULLS LAST, lf.id ASC'
           break
+        case 'pagamentos-efetuados':
+          orderClause = 'ORDER BY lf.data_lancamento DESC, lf.id DESC'
+          break
+        case 'pagamentos-recebidos':
+          orderClause = 'ORDER BY lf.data_lancamento DESC, lf.id DESC'
+          break
         case 'contas-a-receber':
-          orderClause = 'ORDER BY lf.data_vencimento ASC'
+          orderClause = 'ORDER BY lf.data_vencimento ASC NULLS LAST, lf.id ASC'
           break
         case 'extrato':
           orderClause = 'ORDER BY eb.id ASC, t.data_transacao ASC'

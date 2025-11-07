@@ -194,9 +194,15 @@ export default function ModulosFinanceiroPage() {
             )
           },
           { accessorKey: 'descricao', header: 'Descrição' },
+          { accessorKey: 'data_lancamento', header: 'Lançamento', cell: ({ row }) => formatDate(row.original['data_lancamento']) },
           { accessorKey: 'data_vencimento', header: 'Vencimento', cell: ({ row }) => formatDate(row.original['data_vencimento']) },
           { accessorKey: 'valor_total', header: 'Valor', cell: ({ row }) => formatBRL(row.original['valor_total']) },
           { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
+          { accessorKey: 'categoria_nome', header: 'Categoria' },
+          { accessorKey: 'centro_lucro_nome', header: 'Centro de Lucro' },
+          { accessorKey: 'departamento_nome', header: 'Departamento' },
+          { accessorKey: 'filial_nome', header: 'Filial' },
+          { accessorKey: 'projeto_nome', header: 'Projeto' },
         ]
       case 'pagamentos-efetuados':
         return [
@@ -215,6 +221,12 @@ export default function ModulosFinanceiroPage() {
           { accessorKey: 'data_pagamento', header: 'Pago em', cell: ({ row }) => formatDate(row.original['data_pagamento']) },
           { accessorKey: 'valor_pago', header: 'Valor', cell: ({ row }) => formatBRL(row.original['valor_pago']) },
           { accessorKey: 'conta_financeira', header: 'Conta' },
+          { accessorKey: 'metodo_pagamento', header: 'Método' },
+          { accessorKey: 'categoria_financeira', header: 'Categoria' },
+          { accessorKey: 'centro_custo', header: 'Centro de Custo' },
+          { accessorKey: 'departamento', header: 'Departamento' },
+          { accessorKey: 'filial', header: 'Filial' },
+          { accessorKey: 'projeto', header: 'Projeto' },
         ]
       case 'pagamentos-recebidos':
         return [
@@ -235,6 +247,15 @@ export default function ModulosFinanceiroPage() {
           { accessorKey: 'data_recebimento', header: 'Recebido em', cell: ({ row }) => formatDate(row.original['data_recebimento']) },
           { accessorKey: 'valor_total', header: 'Valor', cell: ({ row }) => formatBRL(row.original['valor_total']) },
           { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
+          { accessorKey: 'natureza', header: 'Natureza' },
+          { accessorKey: 'natureza_financeira', header: 'Natureza Financeira' },
+          { accessorKey: 'metodo_pagamento', header: 'Método' },
+          { accessorKey: 'conta_financeira', header: 'Conta' },
+          { accessorKey: 'categoria', header: 'Categoria' },
+          { accessorKey: 'centro_lucro', header: 'Centro de Lucro' },
+          { accessorKey: 'departamento', header: 'Departamento' },
+          { accessorKey: 'filial', header: 'Filial' },
+          { accessorKey: 'projeto', header: 'Projeto' },
         ]
       case 'movimentos':
         return [
@@ -261,6 +282,8 @@ export default function ModulosFinanceiroPage() {
             )
           },
           { accessorKey: 'descricao', header: 'Descrição' },
+          { accessorKey: 'natureza_nome', header: 'Natureza' },
+          { accessorKey: 'natureza_tipo', header: 'Tipo Natureza' },
           { accessorKey: 'data_vencimento', header: 'Vencimento', cell: ({ row }) => formatDate(row.original['data_vencimento']) },
           { accessorKey: 'valor_total', header: 'Valor', cell: ({ row }) => formatBRL(row.original['valor_total']) },
           { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
