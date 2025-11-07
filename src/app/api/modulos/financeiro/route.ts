@@ -252,10 +252,6 @@ export async function GET(req: NextRequest) {
 
       const kpiParamsBase: unknown[] = [deDate, ateDate];
       let idxKpi = 3;
-      const conds: string[] = [];
-      const addTenant = () => {
-        if (conta_id) return; // não se aplica aqui
-      };
       // tenant opcional
       const tenantId = parseNumber(searchParams.get('tenant_id'));
       const tenantFilter = tenantId ? ` AND lf.tenant_id = $${idxKpi++}` : '';
@@ -326,7 +322,7 @@ export async function GET(req: NextRequest) {
       const tenantId = parseNumber(searchParams.get('tenant_id'));
       // Data de referência para aging: ?ref=YYYY-MM-DD, senão usa 'ate', senão CURRENT_DATE
       const ref = searchParams.get('ref') || ate || undefined;
-      let paramsAging: unknown[] = [];
+      const paramsAging: unknown[] = [];
       let idxA = 1;
       const refFilterExpr = ref ? `$${idxA++}` : 'CURRENT_DATE';
       if (ref) paramsAging.push(ref);
