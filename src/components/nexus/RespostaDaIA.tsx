@@ -91,9 +91,6 @@ import FuncionariosResult from '../tools/funcionarios/FuncionariosResult';
 import DepartamentosResult from '../tools/funcionarios/DepartamentosResult';
 import CargosResult from '../tools/funcionarios/CargosResult';
 import TiposAusenciaResult from '../tools/funcionarios/TiposAusenciaResult';
-import ContratosResult from '../tools/funcionarios/ContratosResult';
-import HistoricoSalarialResult from '../tools/funcionarios/HistoricoSalarialResult';
-import IndicadoresRHResult from '../tools/funcionarios/IndicadoresRHResult';
 import FornecedoresCompraResult from '../tools/compras/FornecedoresCompraResult';
 import PedidosCompraResult from '../tools/compras/PedidosCompraResult';
 import RecebimentosCompraResult from '../tools/compras/RecebimentosCompraResult';
@@ -119,20 +116,13 @@ import PerformanceLancamentoResult, { type PerformanceLancamentoRow } from '../t
 import CestaComprasResult, { type CestaComprasRow } from '../tools/ecommerce/CestaComprasResult';
 import VendasPorEstadoResult, { type VendasPorEstadoRow } from '../tools/ecommerce/VendasPorEstadoResult';
 import LogisticsDataTable from '../tools/LogisticsDataTable';
-import AnalyticsDataTable from '../tools/AnalyticsDataTable';
 import ComprasDataTable from '../tools/ComprasDataTable';
 import ProjetosDataTable from '../tools/ProjetosDataTable';
-import FuncionariosDataTable from '../tools/FuncionariosDataTable';
 import RevenueMetricsResult, { type RevenueMetricsRow } from '../tools/RevenueMetricsResult';
 import CustomerMetricsResult from '../tools/CustomerMetricsResult';
 import ProductPerformanceResult from '../tools/ProductPerformanceResult';
 import CouponEffectivenessResult from '../tools/CouponEffectivenessResult';
 import ChannelAnalysisResult from '../tools/ChannelAnalysisResult';
-import CalculateMetricsResult from '../tools/inventory/CalculateMetricsResult';
-import TrendsAnalysisResult from '../tools/inventory/TrendsAnalysisResult';
-import RestockForecastResult from '../tools/inventory/RestockForecastResult';
-import SlowMovingItemsResult from '../tools/inventory/SlowMovingItemsResult';
-import AnomaliesResult from '../tools/inventory/AnomaliesResult';
 import DeliveryPerformanceResult from '../tools/logistics/DeliveryPerformanceResult';
 import CarrierBenchmarkResult from '../tools/logistics/CarrierBenchmarkResult';
 import ShippingCostStructureResult from '../tools/logistics/ShippingCostStructureResult';
@@ -187,6 +177,28 @@ type LancRow = Record<string, unknown> & {
   total_debitos?: number;
   total_creditos?: number;
   historico_linha?: string;
+};
+
+// Tipos para novas tools financeiras (ranking/aging)
+type RankingFinanceiroPorDimensaoOutput = {
+  success: boolean;
+  count: number;
+  rows: Array<{ dimensao?: string; total?: number }>;
+  message: string;
+  sql_query?: string;
+  error?: string;
+  title?: string;
+};
+
+type AgingFinanceiroToolOutput = {
+  success: boolean;
+  count: number;
+  rows: Array<{ bucket?: string; qtd?: number; total?: number }>;
+  message: string;
+  sql_query?: string;
+  error?: string;
+  title?: string;
+  totals?: { total_geral?: number };
 };
 
 function LancamentosContabeisResult({ success, message, rows = [], count, sql_query, title }: { success: boolean; message: string; rows?: LancRow[]; count?: number; sql_query?: string; title?: string }) {
@@ -4539,7 +4551,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
               </Tool>
               {rankTool.state === 'output-available' && (
                 <RankingPorDimensaoFinanceiroResult
-                  result={rankTool.output as any}
+                  result={rankTool.output as RankingFinanceiroPorDimensaoOutput}
                 />
               )}
             </div>
@@ -4569,7 +4581,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
               </Tool>
               {agingTool.state === 'output-available' && (
                 <AgingFinanceiroResult
-                  result={agingTool.output as any}
+                  result={agingTool.output as AgingFinanceiroToolOutput}
                 />
               )}
             </div>
