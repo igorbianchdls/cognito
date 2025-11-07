@@ -137,12 +137,13 @@ export function MultiLine({
   series: Array<{ id: string; color?: string; points: Array<{ x: string; y: number }> }>;
   height?: number;
 }) {
-  const data = series.map(s => ({ id: s.id, color: s.color, data: s.points }));
+  const data: { id: string; color?: string; data: { x: string; y: number }[] }[] =
+    series.map(s => ({ id: s.id, color: s.color, data: s.points }));
   const colors = series.map(s => s.color || undefined).filter(Boolean) as string[];
   return (
     <div style={{ height }}>
       <ResponsiveLine
-        data={data as any}
+        data={data}
         margin={{ top: 10, right: 12, bottom: 30, left: 48 }}
         xScale={{ type: 'point' }}
         yScale={{ type: 'linear', stacked: false, min: 'auto', max: 'auto' }}
