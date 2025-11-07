@@ -592,6 +592,11 @@ export default function FinanceiroDashboardPage() {
   }
   const meses = useMemo(() => lastMonths(6), [])
 
+  // Cashflow (realizado/projetado) - estados
+  type CashRow = { period: string; entradas: number; saidas: number; net: number; saldo_projetado?: number }
+  const [cashRealized, setCashRealized] = useState<CashRow[]>([])
+  const [cashProjected, setCashProjected] = useState<CashRow[]>([])
+
   // Helpers to display cashflow labels
   function periodToLabel(s: string) {
     const d = parseDate(s)
