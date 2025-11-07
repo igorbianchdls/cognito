@@ -1610,7 +1610,7 @@ export const fluxoCaixa = tool({
           ${buildFilter('lf')}
         GROUP BY 1`;
       const realizedOutSql = `
-        SELECT date_trunc('${trunc}', lf.data_lancamento)::date AS periodo, SUM(ABS(lf.valor)) AS saídas
+        SELECT date_trunc('${trunc}', lf.data_lancamento)::date AS periodo, SUM(ABS(lf.valor)) AS saidas
         FROM financeiro.lancamentos_financeiros lf
         WHERE lf.tipo = 'pagamento_efetuado'
           AND lf.data_lancamento >= $1::date AND lf.data_lancamento <= $2::date
@@ -1626,7 +1626,7 @@ export const fluxoCaixa = tool({
           ${buildFilter('lf')}
         GROUP BY 1`;
       const plannedOutSql = `
-        SELECT date_trunc('${trunc}', lf.data_vencimento)::date AS periodo, SUM(lf.valor) AS saídas
+        SELECT date_trunc('${trunc}', lf.data_vencimento)::date AS periodo, SUM(lf.valor) AS saidas
         FROM financeiro.lancamentos_financeiros lf
         WHERE lf.tipo = 'conta_a_pagar'
           AND lf.data_vencimento >= $1::date AND lf.data_vencimento <= $2::date
@@ -1642,8 +1642,8 @@ export const fluxoCaixa = tool({
                sai AS (${realizedOutSql})
           SELECT c.periodo,
                  COALESCE(ent.entradas, 0) AS entradas,
-                 COALESCE(sai.saídas, 0)    AS saidas,
-                 COALESCE(ent.entradas, 0) - COALESCE(sai.saídas, 0) AS fluxo
+                 COALESCE(sai.saidas, 0)    AS saidas,
+                 COALESCE(ent.entradas, 0) - COALESCE(sai.saidas, 0) AS fluxo
           FROM cal c
           LEFT JOIN ent ON ent.periodo = c.periodo
           LEFT JOIN sai ON sai.periodo = c.periodo
@@ -1655,8 +1655,8 @@ export const fluxoCaixa = tool({
                sai AS (${plannedOutSql})
           SELECT c.periodo,
                  COALESCE(ent.entradas, 0) AS entradas,
-                 COALESCE(sai.saídas, 0)    AS saidas,
-                 COALESCE(ent.entradas, 0) - COALESCE(sai.saídas, 0) AS fluxo
+                 COALESCE(sai.saidas, 0)    AS saidas,
+                 COALESCE(ent.entradas, 0) - COALESCE(sai.saidas, 0) AS fluxo
           FROM cal c
           LEFT JOIN ent ON ent.periodo = c.periodo
           LEFT JOIN sai ON sai.periodo = c.periodo
@@ -1671,11 +1671,11 @@ export const fluxoCaixa = tool({
                sai_p AS (${plannedOutSql})
           SELECT c.periodo,
                  COALESCE(ent_r.entradas, 0) AS entradas_real,
-                 COALESCE(sai_r.saídas, 0)    AS saidas_real,
-                 COALESCE(ent_r.entradas, 0) - COALESCE(sai_r.saídas, 0) AS fluxo_real,
+                 COALESCE(sai_r.saidas, 0)    AS saidas_real,
+                 COALESCE(ent_r.entradas, 0) - COALESCE(sai_r.saidas, 0) AS fluxo_real,
                  COALESCE(ent_p.entradas, 0) AS entradas_plan,
-                 COALESCE(sai_p.saídas, 0)    AS saidas_plan,
-                 COALESCE(ent_p.entradas, 0) - COALESCE(sai_p.saídas, 0) AS fluxo_plan
+                 COALESCE(sai_p.saidas, 0)    AS saidas_plan,
+                 COALESCE(ent_p.entradas, 0) - COALESCE(sai_p.saidas, 0) AS fluxo_plan
           FROM cal c
           LEFT JOIN ent_r ON ent_r.periodo = c.periodo
           LEFT JOIN sai_r ON sai_r.periodo = c.periodo
@@ -1690,7 +1690,8 @@ export const fluxoCaixa = tool({
       type TotalsRow = { entradas?: number | null; saidas?: number | null; fluxo?: number | null;
                          entradas_real?: number | null; saidas_real?: number | null; fluxo_real?: number | null;
                          entradas_plan?: number | null; saidas_plan?: number | null; fluxo_plan?: number | null };
-      const totals = (rows as TotalsRow[]).reduce((acc, r) => {
+      type SumTotals = { entradas: number; saidas: number; fluxo: number; entradas_plan: number; saidas_plan: number; fluxo_plan: number }
+      const totals = (rows as TotalsRow[]).reduce<SumTotals>((acc, r) => {
         if (tipo_base === 'ambos') {
           acc.entradas += Number(r.entradas_real ?? 0);
           acc.saidas   += Number(r.saidas_real ?? 0);
@@ -1704,7 +1705,7 @@ export const fluxoCaixa = tool({
           acc.fluxo    += Number(r.fluxo ?? 0);
         }
         return acc;
-      }, { entradas: 0, saidas: 0, fluxo: 0, entradas_plan: 0, saidas_plan: 0, fluxo_plan: 0 });
+      }, { entradas: 0, saidas: 0, fluxo: 0, entradas_plan: 0, saidas_plan: 0, fluxo_plan: 0 } as SumTotals);
 
       const title = `Fluxo de Caixa (${tipo_base}) · ${data_inicial} a ${data_final}`;
       const message = tipo_base === 'ambos'
