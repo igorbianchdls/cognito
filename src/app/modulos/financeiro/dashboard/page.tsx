@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useStore } from '@nanostores/react'
 import DashboardLayout from '@/components/modulos/DashboardLayout'
 import { ArrowDownCircle, ArrowUpCircle, AlertTriangle, BarChart3, Wallet, Clock, Star, CalendarCheck, Calendar as CalendarIcon } from 'lucide-react'
+import { CashGroupedBar, ProjectedLine, SimpleHorizontalBar } from '@/components/modulos/financeiro/NivoCharts'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
@@ -742,10 +743,7 @@ export default function FinanceiroDashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor, boxShadow: cardBoxShadow }}>
           <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><BarChart3 className="w-5 h-5 text-indigo-600" />Fluxo de Caixa — Realizado</h3>
-          <BarsReceitasDespesas
-            items={cashRealized.map(d => ({ label: periodToLabel(d.period), receita: d.entradas, despesa: d.saidas }))}
-            max={Math.max(1, ...cashRealized.map(d => Math.max(d.entradas, d.saidas)))}
-          />
+          <CashGroupedBar data={cashRealized.map(d => ({ label: periodToLabel(d.period), entradas: d.entradas, saidas: d.saidas }))} />
         </div>
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor, boxShadow: cardBoxShadow }}>
           <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><Wallet className="w-5 h-5 text-blue-600" />Fluxo de Caixa — Projetado</h3>
@@ -753,11 +751,7 @@ export default function FinanceiroDashboardPage() {
             <span>Saldo Projetado</span>
             <span>Último: {formatBRL(cashProjected.at(-1)?.saldo_projetado ?? 0)}</span>
           </div>
-          <LineSaldoMensal
-            values={cashProjected.map(d => d.saldo_projetado || 0)}
-            min={Math.min(0, ...(cashProjected.map(d => d.saldo_projetado || 0)))}
-            max={Math.max(1, ...(cashProjected.map(d => d.saldo_projetado || 0)))}
-          />
+          <ProjectedLine points={cashProjected.map(d => ({ x: periodToLabel(d.period), y: d.saldo_projetado || 0 }))} />
           <div className="grid grid-cols-6 gap-3 mt-1">
             {cashProjected.map((d, idx) => (
               <div key={`${d.period}-${idx}`} className="text-[11px] text-gray-600 text-center" style={styleText}>{periodToLabel(d.period)}</div>
@@ -766,7 +760,7 @@ export default function FinanceiroDashboardPage() {
         </div>
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
           <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><Clock className="w-5 h-5 text-emerald-600" />Aging A Receber</h3>
-          <AgingBar data={arAging} />
+          <SimpleHorizontalBar items={arAging.map(b => ({ label: b.label, value: b.value }))} color="#059669" />
         </div>
       </div>
 
@@ -774,15 +768,15 @@ export default function FinanceiroDashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
           <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><Clock className="w-5 h-5 text-rose-600" />Aging A Pagar</h3>
-          <AgingBar data={apAging} />
+          <SimpleHorizontalBar items={apAging.map(b => ({ label: b.label, value: b.value }))} color="#ef4444" />
         </div>
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
           <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><Star className="w-5 h-5 text-amber-500" />Top 5 Fornecedores</h3>
-          <BarList items={topFornecedores} color="bg-emerald-500" />
+          <SimpleHorizontalBar items={topFornecedores} color="#10b981" />
         </div>
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
           <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><CalendarCheck className="w-5 h-5 text-rose-600" />Top 5 Clientes</h3>
-          <BarList items={topClientes} color="bg-violet-500" />
+          <SimpleHorizontalBar items={topClientes} color="#8b5cf6" />
         </div>
       </div>
 
@@ -790,15 +784,15 @@ export default function FinanceiroDashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
           <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><BarChart3 className="w-5 h-5 text-indigo-600" />Top 5 Centros de Custo</h3>
-          <BarList items={topCC} color="bg-indigo-500" />
+          <SimpleHorizontalBar items={topCC} color="#6366f1" />
         </div>
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
           <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><BarChart3 className="w-5 h-5 text-rose-600" />Top 5 Categorias</h3>
-          <BarList items={topCategorias} color="bg-rose-500" />
+          <SimpleHorizontalBar items={topCategorias} color="#f43f5e" />
         </div>
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
           <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><BarChart3 className="w-5 h-5 text-amber-600" />Top 5 Departamentos</h3>
-          <BarList items={topDepartamentos} color="bg-amber-500" />
+          <SimpleHorizontalBar items={topDepartamentos} color="#f59e0b" />
         </div>
       </div>
 
@@ -806,15 +800,15 @@ export default function FinanceiroDashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
           <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><BarChart3 className="w-5 h-5 text-emerald-600" />Top 5 Centros de Lucro</h3>
-          <BarList items={topLucros} color="bg-emerald-500" />
+          <SimpleHorizontalBar items={topLucros} color="#10b981" />
         </div>
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
           <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><BarChart3 className="w-5 h-5 text-purple-600" />Top 5 Projetos</h3>
-          <BarList items={topProjetos} color="bg-purple-500" />
+          <SimpleHorizontalBar items={topProjetos} color="#8b5cf6" />
         </div>
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
           <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><BarChart3 className="w-5 h-5 text-teal-600" />Top 5 Filiais</h3>
-          <BarList items={topFiliais} color="bg-teal-500" />
+          <SimpleHorizontalBar items={topFiliais} color="#14b8a6" />
         </div>
       </div>
 
