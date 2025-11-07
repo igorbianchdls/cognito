@@ -466,8 +466,7 @@ export default function FinanceiroDashboardPage() {
     return Object.entries(buckets).map(([label, value]) => ({ label, value }))
   }
 
-  const arAging = useMemo(() => buildAging(arRows), [arRows])
-  const apAging = useMemo(() => buildAging(apRows), [apRows])
+  // aging agora vem do endpoint; mantemos fallback via buildAging() ao carregar
 
   const topReceber = useMemo(() => {
     const rows = arRows.filter(r => !isPaid(r.status))
