@@ -2934,18 +2934,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
     }
   };
 
-  const handleCopy = async () => {
-    const textParts = message.parts
-      .filter(part => part.type === 'text')
-      .map(part => part.text)
-      .join(' ');
-    
-    try {
-      await navigator.clipboard.writeText(textParts);
-    } catch (error) {
-      console.error('Failed to copy:', error);
-    }
-  };
+  // Removed unused handleCopy to satisfy linter
 
   return (
     <div key={message.id} className="max-w-full overflow-hidden">
@@ -6909,19 +6898,21 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
                 </ToolContent>
               </Tool>
-              {tool.state === 'output-available' && (
-                <DREContabilResult
-                  success={(tool.output as GenericRowsToolOutput).success}
-                  message={(tool.output as GenericRowsToolOutput).message}
-                  rows={(tool.output as GenericRowsToolOutput).rows as Array<Record<string, unknown>>}
-                  count={(tool.output as GenericRowsToolOutput).count}
-                  sql_query={(tool.output as GenericRowsToolOutput).sql_query}
-                  // @ts-expect-error campos extras vindos da tool
-                  nodes={(tool.output as any).nodes}
-                  // @ts-expect-error campos extras vindos da tool
-                  periods={(tool.output as any).periods}
-                />
-              )}
+              {tool.state === 'output-available' && (() => {
+                type Period = { key: string; label: string };
+                const extra = tool.output as GenericRowsToolOutput & { nodes?: DRENode[]; periods?: Period[] };
+                return (
+                  <DREContabilResult
+                    success={(tool.output as GenericRowsToolOutput).success}
+                    message={(tool.output as GenericRowsToolOutput).message}
+                    rows={(tool.output as GenericRowsToolOutput).rows as Array<Record<string, unknown>>}
+                    count={(tool.output as GenericRowsToolOutput).count}
+                    sql_query={(tool.output as GenericRowsToolOutput).sql_query}
+                    nodes={extra.nodes}
+                    periods={extra.periods}
+                  />
+                );
+              })()}
             </div>
           );
         }
@@ -6939,21 +6930,23 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
                 </ToolContent>
               </Tool>
-              {tool.state === 'output-available' && (
-                <BalancoPatrimonialResult
-                  success={(tool.output as GenericRowsToolOutput).success}
-                  message={(tool.output as GenericRowsToolOutput).message}
-                  rows={(tool.output as GenericRowsToolOutput).rows as Array<Record<string, unknown>>}
-                  count={(tool.output as GenericRowsToolOutput).count}
-                  sql_query={(tool.output as GenericRowsToolOutput).sql_query}
-                  // @ts-expect-error campos extras vindos da tool
-                  ativo={(tool.output as any).ativo}
-                  // @ts-expect-error campos extras vindos da tool
-                  passivo={(tool.output as any).passivo}
-                  // @ts-expect-error campos extras vindos da tool
-                  pl={(tool.output as any).pl}
-                />
-              )}
+              {tool.state === 'output-available' && (() => {
+                type BalanceLinha = { conta: string; valor: number };
+                type BalanceGrupo = { nome: string; linhas: BalanceLinha[] };
+                const extra = tool.output as GenericRowsToolOutput & { ativo?: BalanceGrupo[]; passivo?: BalanceGrupo[]; pl?: BalanceGrupo[] };
+                return (
+                  <BalancoPatrimonialResult
+                    success={(tool.output as GenericRowsToolOutput).success}
+                    message={(tool.output as GenericRowsToolOutput).message}
+                    rows={(tool.output as GenericRowsToolOutput).rows as Array<Record<string, unknown>>}
+                    count={(tool.output as GenericRowsToolOutput).count}
+                    sql_query={(tool.output as GenericRowsToolOutput).sql_query}
+                    ativo={extra.ativo}
+                    passivo={extra.passivo}
+                    pl={extra.pl}
+                  />
+                );
+              })()}
             </div>
           );
         }
