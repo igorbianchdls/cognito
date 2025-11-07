@@ -51,6 +51,7 @@ import NotasFiscaisList from '../tools/NotasFiscaisList';
 import InventoryList from '../tools/InventoryList';
 import FluxoCaixaResult, { type FluxoCaixaRow } from '../tools/FluxoCaixaResult';
 import GenericResultTable from '../tools/GenericResultTable';
+import RankingPorDimensaoFinanceiroResult from '../tools/RankingPorDimensaoFinanceiroResult';
 import ContasAReceberResult from '../tools/ContasAReceberResult';
 import ContasAPagarResult, { type ContaPagarRow } from '../tools/ContasAPagarResult';
 import PagamentosRecebidosResult from '../tools/PagamentosRecebidosResult';
@@ -4508,6 +4509,36 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   rows={(financialDataTool.output as GetFinancialDataToolOutput).data as Array<Record<string, unknown>>}
                   count={(financialDataTool.output as GetFinancialDataToolOutput).count}
                   sql_query={(financialDataTool.output as GetFinancialDataToolOutput).sql_query}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-rankingFinanceiroPorDimensao') {
+          const rankTool = part as NexusToolUIPart;
+          const callId = rankTool.toolCallId;
+          const shouldBeOpen = rankTool.state === 'output-available' || rankTool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-rankingFinanceiroPorDimensao" state={rankTool.state} />
+                <ToolContent>
+                  {rankTool.input && (
+                    <ToolInput input={rankTool.input} />
+                  )}
+                  {rankTool.state === 'output-error' && (
+                    <ToolOutput
+                      output={null}
+                      errorText={rankTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {rankTool.state === 'output-available' && (
+                <RankingPorDimensaoFinanceiroResult
+                  result={rankTool.output as any}
                 />
               )}
             </div>

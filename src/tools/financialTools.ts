@@ -1550,6 +1550,210 @@ export const rankingPorCategoriaFinanceira = tool({
 });
 
 // ============================================================================
+// RANKING FINANCEIRO POR DIMENSÃO (genérico)
+// ============================================================================
+
+export const rankingFinanceiroPorDimensao = tool({
+  description:
+    'Ranking financeiro por dimensão (departamento, filial, projeto, centro de lucro, natureza_financeira) com base em realizado ou planejado',
+  inputSchema: z.object({
+    tipo: z
+      .enum([
+        'pagamento_efetuado',
+        'conta_a_pagar',
+        'contas_a_pagar',
+        'pagamento_recebido',
+        'conta_a_receber',
+        'contas_a_receber',
+      ])
+      .default('pagamento_efetuado')
+      .describe(
+        "Base de cálculo: 'pagamento_efetuado' | 'conta_a_pagar' | 'pagamento_recebido' | 'conta_a_receber' (aceita plural)"
+      ),
+    dimensao: z
+      .enum(['departamento', 'filial', 'projeto', 'centro_lucro', 'natureza_financeira'])
+      .describe('Dimensão de agrupamento'),
+    data_inicial: z.string().optional().describe('Data inicial (YYYY-MM-DD)'),
+    data_final: z.string().optional().describe('Data final (YYYY-MM-DD)'),
+    limit: z.number().default(100).describe('Número máximo de linhas no ranking'),
+  }),
+  execute: async ({ tipo, dimensao, data_inicial, data_final, limit }) => {
+    try {
+      const norm = (t: string) =>
+        t === 'contas_a_pagar' ? 'conta_a_pagar' : t === 'contas_a_receber' ? 'conta_a_receber' : t;
+      const tipoNorm = norm(tipo);
+
+      // Configuração de FROM/WHERE/colunas por tipo (realizado x planejado)
+      type Build = {
+        headAlias: 'ap' | 'ar';
+        baseFrom: string; // inclui joins necessários ao cabeçalho h
+        whereParts: string[];
+        valorExpr: string; // SUM() target
+        dataCol: string; // coluna para filtros de período
+      };
+
+      const buildForTipo = (): Build => {
+        if (tipoNorm === 'pagamento_efetuado') {
+          return {
+            headAlias: 'ap',
+            baseFrom:
+              `FROM financeiro.lancamentos_financeiros lf ` +
+              `JOIN financeiro.lancamentos_financeiros ap ON ap.id = lf.lancamento_origem_id`,
+            whereParts: [`lf.tipo = 'pagamento_efetuado'`],
+            valorExpr: 'lf.valor',
+            dataCol: 'lf.data_lancamento',
+          };
+        }
+        if (tipoNorm === 'conta_a_pagar') {
+          return {
+            headAlias: 'ap',
+            baseFrom: `FROM financeiro.lancamentos_financeiros ap`,
+            whereParts: [`ap.tipo = 'conta_a_pagar'`],
+            valorExpr: 'ap.valor',
+            dataCol: 'ap.data_vencimento',
+          };
+        }
+        if (tipoNorm === 'pagamento_recebido') {
+          return {
+            headAlias: 'ar',
+            baseFrom:
+              `FROM financeiro.lancamentos_financeiros lf ` +
+              `JOIN financeiro.lancamentos_financeiros ar ON ar.id = lf.lancamento_origem_id`,
+            whereParts: [`lf.tipo = 'pagamento_recebido'`],
+            valorExpr: 'lf.valor',
+            dataCol: 'lf.data_lancamento',
+          };
+        }
+        // conta_a_receber (planejado)
+        return {
+          headAlias: 'ar',
+          baseFrom: `FROM financeiro.lancamentos_financeiros ar`,
+          whereParts: [`ar.tipo = 'conta_a_receber'`],
+          valorExpr: 'ar.valor',
+          dataCol: 'ar.data_vencimento',
+        };
+      };
+
+      const cfg = buildForTipo();
+
+      // Mapear joins e expressão de dimensão com base no cabeçalho
+      const joinForDim = (h: 'ap' | 'ar') => {
+        switch (dimensao) {
+          case 'departamento':
+            return {
+              joins: `LEFT JOIN empresa.departamentos dep ON dep.id = ${h}.departamento_id`,
+              expr: `COALESCE(dep.nome, '— sem departamento —')`,
+              label: 'Departamento',
+            } as const;
+          case 'filial':
+            return {
+              joins: `LEFT JOIN empresa.filiais fil ON fil.id = ${h}.filial_id`,
+              expr: `COALESCE(fil.nome, '— sem filial —')`,
+              label: 'Filial',
+            } as const;
+          case 'projeto':
+            return {
+              joins: `LEFT JOIN financeiro.projetos prj ON prj.id = ${h}.projeto_id`,
+              expr: `COALESCE(prj.nome, '— sem projeto —')`,
+              label: 'Projeto',
+            } as const;
+          case 'centro_lucro':
+            return {
+              joins: `LEFT JOIN empresa.centros_lucro cl ON cl.id = ${h}.centro_lucro_id`,
+              expr: `COALESCE(cl.nome, '— sem centro de lucro —')`,
+              label: 'Centro de Lucro',
+            } as const;
+          case 'natureza_financeira':
+            return {
+              joins:
+                `LEFT JOIN financeiro.categorias_financeiras cat ON cat.id = ${h}.categoria_id ` +
+                `LEFT JOIN financeiro.naturezas_financeiras nf ON nf.id = cat.natureza_id`,
+              expr: `COALESCE(nf.nome, '— sem natureza —')`,
+              label: 'Natureza Financeira',
+            } as const;
+          default:
+            return { joins: '', expr: `''`, label: 'Dimensão' } as const;
+        }
+      };
+
+      const dm = joinForDim(cfg.headAlias);
+
+      // Montar filtros de período
+      const where: string[] = [...cfg.whereParts];
+      const params: unknown[] = [];
+      let idx = 1;
+      if (data_inicial) {
+        where.push(`${cfg.dataCol} >= $${idx}`);
+        params.push(data_inicial);
+        idx += 1;
+      }
+      if (data_final) {
+        where.push(`${cfg.dataCol} <= $${idx}`);
+        params.push(data_final);
+        idx += 1;
+      }
+      const whereClause = where.length ? `WHERE ${where.join(' AND ')}` : '';
+
+      // Consulta principal (ranking)
+      const listSql = `
+        SELECT
+          ${dm.expr} AS dimensao,
+          SUM(${cfg.valorExpr}) AS total
+        ${cfg.baseFrom}
+        ${dm.joins ? dm.joins : ''}
+        ${whereClause}
+        GROUP BY ${dm.expr}
+        ORDER BY total DESC
+        LIMIT $${idx}
+      `.trim();
+      const paramsWithLimit = [...params, limit];
+
+      // Totais
+      const totalSql = `
+        SELECT SUM(${cfg.valorExpr}) AS total_geral
+        ${cfg.baseFrom}
+        ${dm.joins ? dm.joins : ''}
+        ${whereClause}
+      `.trim();
+
+      const rows = await runQuery<{ dimensao: string; total: number }>(listSql, paramsWithLimit);
+      const [tot] = await runQuery<{ total_geral: number | null }>(totalSql, params);
+      const totalGeral = Number(tot?.total_geral ?? 0);
+
+      const titleKindMap: Record<string, string> = {
+        pagamento_efetuado: 'Pagamentos Efetuados',
+        conta_a_pagar: 'Títulos (A Pagar)',
+        pagamento_recebido: 'Pagamentos Recebidos',
+        conta_a_receber: 'Títulos (A Receber)',
+      };
+      const kind = titleKindMap[tipoNorm] || tipoNorm;
+
+      const title = `Ranking por ${dm.label} (${kind})` +
+        (data_inicial || data_final ? ` · ${data_inicial || '...'} a ${data_final || '...'}` : '');
+
+      return {
+        success: true,
+        rows,
+        count: rows.length,
+        totals: { total_geral: totalGeral },
+        title,
+        message: `${rows.length} grupos por ${dm.label} (Total: ${totalGeral.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})`,
+        sql_query: `${listSql}\n\n-- Totais\n${totalSql}`,
+        sql_params: formatSqlParams(paramsWithLimit),
+      };
+    } catch (error) {
+      console.error('ERRO rankingFinanceiroPorDimensao:', error);
+      return {
+        success: false,
+        rows: [],
+        count: 0,
+        message: `Erro ao gerar ranking por dimensão: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+      };
+    }
+  },
+});
+
+// ============================================================================
 // MOVIMENTOS POR CENTRO DE CUSTO (por período)
 // ============================================================================
 
