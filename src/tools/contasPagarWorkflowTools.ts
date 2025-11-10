@@ -22,7 +22,7 @@ import { tool } from 'ai';
 export const buscarClassificacoesFinanceiras = tool({
   description: '[WORKFLOW] Busca todas as classificações financeiras disponíveis: categorias financeiras, centros de custo e naturezas financeiras. Use esta tool para mostrar as opções disponíveis ao usuário antes de criar uma conta a pagar.',
 
-  parameters: z.object({
+  inputSchema: z.object({
     termo_busca: z.string().optional()
       .describe('Termo opcional para filtrar as classificações. Se não informado, retorna todas.')
   }),
@@ -104,7 +104,7 @@ export const buscarClassificacoesFinanceiras = tool({
 export const buscarFornecedor = tool({
   description: '[WORKFLOW] Busca fornecedor existente no sistema por CNPJ ou nome. Use após extrair os dados do documento para verificar se o fornecedor já está cadastrado.',
 
-  parameters: z.object({
+  inputSchema: z.object({
     cnpj: z.string().optional()
       .describe('CNPJ do fornecedor (formato: 00.000.000/0000-00 ou apenas números)'),
     nome: z.string().optional()
@@ -190,7 +190,7 @@ export const buscarFornecedor = tool({
 export const criarFornecedor = tool({
   description: '[WORKFLOW] Cria novo fornecedor no sistema. Use quando buscarFornecedor não encontrar o fornecedor e for necessário cadastrá-lo antes de criar a conta a pagar.',
 
-  parameters: z.object({
+  inputSchema: z.object({
     nome: z.string()
       .describe('Nome ou razão social do fornecedor'),
     cnpj: z.string()
@@ -250,7 +250,7 @@ export const criarFornecedor = tool({
 export const criarContaPagar = tool({
   description: '[WORKFLOW] Cria nova conta a pagar no sistema. Esta é a etapa final do fluxo. Usa as informações extraídas do documento e os IDs obtidos das tools anteriores (fornecedor, categoria, centro de custo).',
 
-  parameters: z.object({
+  inputSchema: z.object({
     fornecedor_id: z.string()
       .describe('ID do fornecedor (obtido de buscarFornecedor ou criarFornecedor)'),
     categoria_id: z.string()
