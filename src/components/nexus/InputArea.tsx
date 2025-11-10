@@ -223,8 +223,10 @@ export default function InputArea({ input, setInput, onSubmit, status, selectedA
             }}
             value={selectedAgent}
           >
-            <PromptInputModelSelectTrigger>
-              <PromptInputModelSelectValue />
+            <PromptInputModelSelectTrigger
+              className={selectedAgent ? 'text-blue-600 hover:text-blue-700' : ''}
+            >
+              <PromptInputModelSelectValue placeholder="Agentes" />
             </PromptInputModelSelectTrigger>
             <PromptInputModelSelectContent>
               {models.map((model) => (
@@ -247,7 +249,9 @@ export default function InputArea({ input, setInput, onSubmit, status, selectedA
             }}
             value={selectedWorkflow || ''}
           >
-            <PromptInputModelSelectTrigger>
+            <PromptInputModelSelectTrigger
+              className={selectedWorkflow ? 'text-blue-600 hover:text-blue-700' : ''}
+            >
               <PromptInputModelSelectValue placeholder="Workflow" />
             </PromptInputModelSelectTrigger>
             <PromptInputModelSelectContent>

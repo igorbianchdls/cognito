@@ -2903,6 +2903,15 @@ const getAgentInfo = (agent: string) => {
       return { initial: 'C', title: 'Analista de CRM', color: 'bg-sky-600' };
     case 'contabilidadeAgent':
       return { initial: 'C', title: 'Agente de Contabilidade', color: 'bg-emerald-600' };
+    // Workflows
+    case 'contas-a-pagar':
+      return { initial: '💳', title: 'Contas a Pagar', color: 'bg-red-600' };
+    case 'contas-a-receber':
+      return { initial: '💰', title: 'Contas a Receber', color: 'bg-green-600' };
+    case 'pagamento-efetuado':
+      return { initial: '✅', title: 'Pagamento Efetuado', color: 'bg-blue-600' };
+    case 'pagamento-recebido':
+      return { initial: '💸', title: 'Pagamento Recebido', color: 'bg-emerald-600' };
     default:
       return { initial: 'A', title: 'Assistente IA (Geral)', color: 'bg-gray-500' };
   }
