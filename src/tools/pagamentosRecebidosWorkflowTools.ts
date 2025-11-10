@@ -60,7 +60,7 @@ export const buscarContaReceber = tool({
     ];
 
     // Filtrar com base nos critérios fornecidos
-    let resultado = mockContasReceber.find(conta => {
+    const resultado = mockContasReceber.find(conta => {
       if (numero_nota_fiscal && conta.numero_nota_fiscal === numero_nota_fiscal) return true;
       if (cliente_id && conta.cliente_id === cliente_id) return true;
       if (cliente_nome && conta.cliente_nome.toLowerCase().includes(cliente_nome.toLowerCase())) return true;
