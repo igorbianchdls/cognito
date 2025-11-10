@@ -166,6 +166,9 @@ import BalanceTAccountView from '@/components/contabilidade/BalanceTAccountView'
 import ClassificacoesFinanceirasResult from '../tools/workflow/ClassificacoesFinanceirasResult';
 import FornecedorResult from '../tools/workflow/FornecedorResult';
 import ContaPagarCriadaResult from '../tools/workflow/ContaPagarCriadaResult';
+import BuscarClienteResult from '../tools/workflow/BuscarClienteResult';
+import CriarClienteResult from '../tools/workflow/CriarClienteResult';
+import ContaReceberCriadaResult from '../tools/workflow/ContaReceberCriadaResult';
 
 // Workflow Tools Output Types
 type BuscarClassificacoesFinanceirasOutput = {
@@ -234,6 +237,72 @@ type CriarContaPagarOutput = {
     natureza_financeira_id?: string | null;
     valor: number;
     valor_pago: number;
+    valor_pendente: number;
+    data_vencimento: string;
+    data_emissao: string;
+    data_cadastro: string;
+    numero_nota_fiscal?: string | null;
+    descricao?: string;
+    status: string;
+    itens: ItemRow[];
+    quantidade_itens: number;
+  };
+  message: string;
+  title?: string;
+  resumo: {
+    id: string;
+    valor_formatado: string;
+    data_vencimento: string;
+    status_vencimento: string;
+    dias_para_vencimento: number;
+    numero_nota_fiscal: string;
+    quantidade_itens: number;
+  };
+  error?: string;
+};
+
+type ClienteRow = {
+  id: string;
+  nome: string;
+  cpf_cnpj: string;
+  tipo_pessoa?: string;
+  endereco?: string;
+  telefone?: string;
+  email?: string;
+  data_cadastro?: string;
+  status?: string;
+  observacoes?: string;
+  [key: string]: unknown;
+};
+
+type BuscarClienteOutput = {
+  success: boolean;
+  cliente_encontrado?: boolean;
+  data: ClienteRow | null;
+  message: string;
+  title?: string;
+  error?: string;
+};
+
+type CriarClienteOutput = {
+  success: boolean;
+  data: ClienteRow | null;
+  message: string;
+  title?: string;
+  error?: string;
+  cpf_cnpj_formatado?: string;
+};
+
+type ContaReceberCriadaOutput = {
+  success: boolean;
+  data: {
+    id: string;
+    cliente_id: string;
+    categoria_id: string;
+    centro_custo_id: string;
+    natureza_financeira_id?: string | null;
+    valor: number;
+    valor_recebido: number;
     valor_pendente: number;
     data_vencimento: string;
     data_emissao: string;
@@ -4539,6 +4608,75 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
               </Tool>
               {tool.state === 'output-available' && (
                 <ContaPagarCriadaResult result={tool.output as CriarContaPagarOutput} />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-buscarCliente') {
+          const tool = part as NexusToolUIPart;
+          const callId = tool.toolCallId;
+          const shouldBeOpen = tool.state === 'output-available' || tool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-buscarCliente" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && (
+                    <ToolOutput output={null} errorText={tool.errorText} />
+                  )}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && (
+                <BuscarClienteResult result={tool.output as BuscarClienteOutput} />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-criarCliente') {
+          const tool = part as NexusToolUIPart;
+          const callId = tool.toolCallId;
+          const shouldBeOpen = tool.state === 'output-available' || tool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-criarCliente" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && (
+                    <ToolOutput output={null} errorText={tool.errorText} />
+                  )}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && (
+                <CriarClienteResult result={tool.output as CriarClienteOutput} />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-criarContaReceber') {
+          const tool = part as NexusToolUIPart;
+          const callId = tool.toolCallId;
+          const shouldBeOpen = tool.state === 'output-available' || tool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-criarContaReceber" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && (
+                    <ToolOutput output={null} errorText={tool.errorText} />
+                  )}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && (
+                <ContaReceberCriadaResult result={tool.output as ContaReceberCriadaOutput} />
               )}
             </div>
           );
