@@ -2,8 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Search } from 'lucide-react';
 
 interface AgentDropdownProps {
-  currentAgent: string;
-  onAgentSelect: (agentId: string) => void;
+  currentAgent: string | null;
+  onAgentSelect: (agentId: string | null) => void;
   onClose: () => void;
 }
 
