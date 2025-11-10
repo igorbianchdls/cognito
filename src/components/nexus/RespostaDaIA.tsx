@@ -167,6 +167,76 @@ import ClassificacoesFinanceirasResult from '../tools/workflow/ClassificacoesFin
 import FornecedorResult from '../tools/workflow/FornecedorResult';
 import ContaPagarCriadaResult from '../tools/workflow/ContaPagarCriadaResult';
 
+// Workflow Tools Output Types
+type BuscarClassificacoesFinanceirasOutput = {
+  success: boolean;
+  message: string;
+  title?: string;
+  data: {
+    categorias_financeiras: Array<{ id: string; nome: string; tipo: string; descricao: string }>;
+    centros_custo: Array<{ id: string; nome: string; descricao: string }>;
+    naturezas_financeiras: Array<{ id: string; nome: string; tipo: string }>;
+  };
+  counts: {
+    categorias: number;
+    centros_custo: number;
+    naturezas: number;
+  };
+  error?: string;
+};
+
+type BuscarFornecedorOutput = {
+  success: boolean;
+  fornecedor_encontrado?: boolean;
+  data: Record<string, unknown> | null;
+  message: string;
+  title?: string;
+  error?: string;
+};
+
+type CriarFornecedorOutput = {
+  success: boolean;
+  data: Record<string, unknown> | null;
+  message: string;
+  title?: string;
+  error?: string;
+  cnpj_formatado?: string;
+};
+
+type CriarContaPagarOutput = {
+  success: boolean;
+  data: {
+    id: string;
+    fornecedor_id: string;
+    categoria_id: string;
+    centro_custo_id: string;
+    natureza_financeira_id?: string | null;
+    valor: number;
+    valor_pago: number;
+    valor_pendente: number;
+    data_vencimento: string;
+    data_emissao: string;
+    data_cadastro: string;
+    numero_nota_fiscal?: string | null;
+    descricao?: string;
+    status: string;
+    itens: Array<Record<string, unknown>>;
+    quantidade_itens: number;
+  };
+  message: string;
+  title?: string;
+  resumo: {
+    id: string;
+    valor_formatado: string;
+    data_vencimento: string;
+    status_vencimento: string;
+    dias_para_vencimento: number;
+    numero_nota_fiscal: string;
+    quantidade_itens: number;
+  };
+  error?: string;
+};
+
 // Contabilidade — componentes dedicados (inline)
 type LancRow = Record<string, unknown> & {
   lancamento_id?: number | string;
@@ -4378,7 +4448,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                 </ToolContent>
               </Tool>
               {tool.state === 'output-available' && (
-                <ClassificacoesFinanceirasResult result={tool.output as any} />
+                <ClassificacoesFinanceirasResult result={tool.output as BuscarClassificacoesFinanceirasOutput} />
               )}
             </div>
           );
@@ -4401,7 +4471,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                 </ToolContent>
               </Tool>
               {tool.state === 'output-available' && (
-                <FornecedorResult result={tool.output as any} />
+                <FornecedorResult result={tool.output as BuscarFornecedorOutput} />
               )}
             </div>
           );
@@ -4424,7 +4494,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                 </ToolContent>
               </Tool>
               {tool.state === 'output-available' && (
-                <FornecedorResult result={tool.output as any} />
+                <FornecedorResult result={tool.output as CriarFornecedorOutput} />
               )}
             </div>
           );
@@ -4447,7 +4517,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                 </ToolContent>
               </Tool>
               {tool.state === 'output-available' && (
-                <ContaPagarCriadaResult result={tool.output as any} />
+                <ContaPagarCriadaResult result={tool.output as CriarContaPagarOutput} />
               )}
             </div>
           );
