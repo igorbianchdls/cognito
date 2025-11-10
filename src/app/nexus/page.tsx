@@ -27,9 +27,14 @@ import DashboardChatPanel from '../../components/nexus/DashboardChatPanel';
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import type { UIMessage } from 'ai';
 import { currentAgent, setCurrentAgent } from '../../stores/nexus/agentStore';
+import { currentWorkflow } from '../../stores/nexus/workflowStore';
 
 export default function Page() {
   const selectedAgent = useStore(currentAgent);
+  const selectedWorkflow = useStore(currentWorkflow);
+
+  // Se há workflow selecionado, use ele. Caso contrário, use o agent
+  const activeAgentOrWorkflow = selectedWorkflow || selectedAgent;
 
   // Array unificado que guarda TODAS as mensagens em ordem cronológica
   const [allMessages, setAllMessages] = useState<(UIMessage & { agent: string })[]>([]);
@@ -40,9 +45,10 @@ export default function Page() {
   // State para controlar o modo de visualização
   const [viewMode, setViewMode] = useState<'chat' | 'split' | 'dashboard'>('chat');
 
-  // Helper function to get API URL based on agent
-  const getApiUrl = (agent: string) => {
-    switch (agent) {
+  // Helper function to get API URL based on agent or workflow
+  const getApiUrl = (agentOrWorkflow: string) => {
+    switch (agentOrWorkflow) {
+      // Agents
       case 'salesAgent': return '/api/claudeAgents/sales';
       case 'contasAReceberAgent': return '/api/claudeAgents/contas-a-receber';
       case 'inventoryAgent': return '/api/claudeAgents/inventory';
@@ -59,17 +65,22 @@ export default function Page() {
       case 'funcionariosAgent': return '/api/claudeAgents/funcionarios';
       case 'gestorDeVendasB2BAgent': return '/api/claudeAgents/gestor-de-vendas-b2b';
       case 'contabilidadeAgent': return '/api/claudeAgents/contabilidade';
+      // Workflows
+      case 'contas-a-pagar': return '/api/workflows/contas-a-pagar';
+      case 'contas-a-receber': return '/api/workflows/contas-a-receber';
+      case 'pagamento-efetuado': return '/api/workflows/pagamento-efetuado';
+      case 'pagamento-recebido': return '/api/workflows/pagamento-recebido';
       default: return '/api/claudeAgents/sales';
     }
   };
 
-  // Dynamic useChat hook that changes API based on selectedAgent
+  // Dynamic useChat hook that changes API based on active agent/workflow
   const { messages, sendMessage, status } = useChat({
-    transport: new DefaultChatTransport({ api: getApiUrl(selectedAgent) }),
-    id: selectedAgent,
+    transport: new DefaultChatTransport({ api: getApiUrl(activeAgentOrWorkflow) }),
+    id: activeAgentOrWorkflow,
     onFinish: ({ message }) => {
-      console.log(`${selectedAgent.toUpperCase()} terminou:`, message);
-      setAllMessages(prev => [...prev, { ...message, agent: selectedAgent }]);
+      console.log(`${activeAgentOrWorkflow.toUpperCase()} terminou:`, message);
+      setAllMessages(prev => [...prev, { ...message, agent: activeAgentOrWorkflow }]);
     },
     onError: (error) => {
       try {
@@ -78,8 +89,8 @@ export default function Page() {
         const assistantErrorMessage = {
           id: `error-${Date.now()}`,
           role: 'assistant' as const,
-          parts: [{ type: 'text' as const, text: `Erro no agente (${selectedAgent}): ${text}` }],
-          agent: selectedAgent,
+          parts: [{ type: 'text' as const, text: `Erro (${activeAgentOrWorkflow}): ${text}` }],
+          agent: activeAgentOrWorkflow,
         };
         setAllMessages(prev => [...prev, assistantErrorMessage]);
       } catch (e) {
@@ -95,7 +106,7 @@ export default function Page() {
       // Para mensagens do usuário: só mostrar se não existe no allMessages
       if (msg.role === 'user') {
         return !allMessages.some(existing => {
-          if (existing.role !== 'user' || existing.agent !== selectedAgent) return false;
+          if (existing.role !== 'user' || existing.agent !== activeAgentOrWorkflow) return false;
           
           const existingText = existing.parts?.find(p => p.type === 'text')?.text;
           const msgText = msg.parts?.find(p => p.type === 'text')?.text;
@@ -153,7 +164,7 @@ export default function Page() {
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (input.trim()) {
-      console.log('Enviando mensagem via:', selectedAgent);
+      console.log('Enviando mensagem via:', activeAgentOrWorkflow);
       
       // Separate display text from AI data
       let displayText = input;
@@ -175,7 +186,7 @@ export default function Page() {
         id: `user-${Date.now()}`,
         role: 'user' as const,
         parts: [{ type: 'text' as const, text: displayText }], // User sees clean/summary version
-        agent: selectedAgent
+        agent: activeAgentOrWorkflow
       };
       setAllMessages(prev => [...prev, userMessage]);
       
@@ -213,11 +224,11 @@ export default function Page() {
     const analysisMessage = {
       id: `analysis-${Date.now()}`,
       role: 'user' as const,
-      parts: [{ 
-        type: 'text' as const, 
+      parts: [{
+        type: 'text' as const,
         text: `Analise esses dados da query SQL: "${query}"\n\nDados (${data.length} registros):\n${JSON.stringify(data, null, 2)}`
       }],
-      agent: selectedAgent
+      agent: activeAgentOrWorkflow
     };
 
     // Adicionar mensagem resumida visível ao chat
@@ -225,7 +236,7 @@ export default function Page() {
       id: `user-${Date.now()}`,
       role: 'user' as const,
       parts: [{ type: 'text' as const, text: displayMessage }],
-      agent: selectedAgent
+      agent: activeAgentOrWorkflow
     };
     
     setAllMessages(prev => [...prev, userMessage]);
@@ -290,7 +301,7 @@ export default function Page() {
 
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, [selectedAgent]);
+  }, [activeAgentOrWorkflow]);
 
   return (
     <SidebarProvider>

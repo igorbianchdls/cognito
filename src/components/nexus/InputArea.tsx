@@ -81,11 +81,12 @@ const models = [
   { id: 'contabilidadeAgent', name: 'Agente de Contabilidade', icon: iconMap['contabilidadeAgent'] },
 ];
 
-// Array mock de workflows (por enquanto vazio, será populado posteriormente)
+// Workflows disponíveis
 const workflows = [
-  { id: 'workflow-example-1', name: 'Análise de Vendas', icon: TrendingUp },
-  { id: 'workflow-example-2', name: 'Relatório Financeiro', icon: DollarSign },
-  { id: 'workflow-example-3', name: 'Gestão de Estoque', icon: Package },
+  { id: 'contas-a-pagar', name: 'Contas a Pagar', icon: ArrowDownLeft },
+  { id: 'contas-a-receber', name: 'Contas a Receber', icon: ArrowUpRight },
+  { id: 'pagamento-efetuado', name: 'Pagamento Efetuado', icon: DollarSign },
+  { id: 'pagamento-recebido', name: 'Pagamento Recebido', icon: TrendingUp },
 ];
 
 export default function InputArea({ input, setInput, onSubmit, status, selectedAgent, onAgentChange, onFileSelected }: InputAreaProps) {
