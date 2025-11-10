@@ -10,7 +10,7 @@ import { currentAgent as agentStore, setCurrentAgent } from '@/stores/nexus/agen
 export default function Home() {
   // Estado global do agente via nanostore
   const agent = useStore(agentStore);
-  const [selectedAgent, setSelectedAgent] = useState('nexus');
+  const [selectedAgent, setSelectedAgent] = useState<string | null>('nexus');
   
   console.log('🔍 [page.tsx] agent do nanostore:', agent);
   
