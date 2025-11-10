@@ -216,6 +216,14 @@ type CriarFornecedorOutput = {
   cnpj_formatado?: string;
 };
 
+type ItemRow = {
+  descricao: string;
+  quantidade: number;
+  valor_unitario: number;
+  valor_total: number;
+  [key: string]: unknown;
+};
+
 type CriarContaPagarOutput = {
   success: boolean;
   data: {
@@ -233,7 +241,7 @@ type CriarContaPagarOutput = {
     numero_nota_fiscal?: string | null;
     descricao?: string;
     status: string;
-    itens: Array<Record<string, unknown>>;
+    itens: ItemRow[];
     quantidade_itens: number;
   };
   message: string;
