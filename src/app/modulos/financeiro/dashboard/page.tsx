@@ -57,6 +57,9 @@ function fontVar(name?: string) {
   if (name === 'IBM Plex Mono') return 'var(--font-ibm-plex-mono), "IBM Plex Mono", monospace'
   if (name === 'Avenir') return 'var(--font-avenir), Avenir, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif'
   if (name === 'Space Mono') return 'var(--font-space-mono), "Space Mono", monospace'
+  if (name === 'EB Garamond') return 'var(--font-eb-garamond), "EB Garamond", serif'
+  if (name === 'Libre Baskerville') return 'var(--font-libre-baskerville), "Libre Baskerville", serif'
+  if (name === 'Barlow') return 'var(--font-barlow), "Barlow", sans-serif'
   return name
 }
 
@@ -1152,6 +1155,9 @@ export default function FinanceiroDashboardPage() {
                   <option>IBM Plex Mono</option>
                   <option>Avenir</option>
                   <option>Space Mono</option>
+                  <option>EB Garamond</option>
+                  <option>Libre Baskerville</option>
+                  <option>Barlow</option>
                 </select>
               </div>
               <div className="flex items-center gap-2 mb-2">
@@ -1191,6 +1197,9 @@ export default function FinanceiroDashboardPage() {
                   <option>IBM Plex Mono</option>
                   <option>Avenir</option>
                   <option>Space Mono</option>
+                  <option>EB Garamond</option>
+                  <option>Libre Baskerville</option>
+                  <option>Barlow</option>
                 </select>
               </div>
               <div className="flex items-center gap-2 mb-2">
