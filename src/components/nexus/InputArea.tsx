@@ -43,12 +43,8 @@ interface InputAreaProps {
 
 // Mapeamento de ícones dos agentes
 const iconMap: Record<string, React.ComponentType<{ className?: string }> | null> = {
-  'analistaDados': null,
-  'claudeAgent': null,
   'salesAgent': TrendingUp,
   'contasAReceberAgent': ArrowDownLeft,
-  'receiptsAgent': Receipt,
-  'nfeAgent': FileText,
   'inventoryAgent': Package,
   'ecommerceSalesAgentV2': TrendingUp,
   'webAnalyticsAgent': Activity,
@@ -65,13 +61,9 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }> | null
 };
 
 const models = [
-  { id: 'analistaDados', name: 'Analista de Dados', icon: iconMap['analistaDados'] },
-  { id: 'claudeAgent', name: 'Assistente IA (Geral)', icon: iconMap['claudeAgent'] },
   { id: 'ecommerceSalesAgentV2', name: 'Gestor de E-commerce', icon: iconMap['ecommerceSalesAgentV2'] },
   { id: 'salesAgent', name: 'Executivo de Vendas', icon: iconMap['salesAgent'] },
   { id: 'contasAReceberAgent', name: 'Contas a Pagar e Receber', icon: iconMap['contasAReceberAgent'] },
-  { id: 'receiptsAgent', name: 'Analista de Despesas', icon: iconMap['receiptsAgent'] },
-  { id: 'nfeAgent', name: 'Analista Fiscal (NF-e)', icon: iconMap['nfeAgent'] },
   { id: 'inventoryAgent', name: 'Gestor de Estoque', icon: iconMap['inventoryAgent'] },
   { id: 'logisticsAgent', name: 'Coordenador de Logística', icon: iconMap['logisticsAgent'] },
   { id: 'funcionariosAgent', name: 'Analista de RH', icon: iconMap['funcionariosAgent'] },
@@ -83,7 +75,6 @@ const models = [
   { id: 'gestorDeServicosAgent', name: 'Gestor de Serviços', icon: iconMap['gestorDeServicosAgent'] },
   { id: 'gestorDeVendasB2BAgent', name: 'Gerente de Vendas B2B', icon: iconMap['gestorDeVendasB2BAgent'] },
   { id: 'crmAgent', name: 'Analista de CRM', icon: iconMap['crmAgent'] },
-  { id: 'automationAgent', name: 'Arquiteto de Automação', icon: Wrench },
   { id: 'contabilidadeAgent', name: 'Agente de Contabilidade', icon: iconMap['contabilidadeAgent'] },
 ];
 
@@ -149,12 +140,8 @@ export default function InputArea({ input, setInput, onSubmit, status, selectedA
             // Mapear ID do agente para nome legível
             const getAgentName = (id: string) => {
               switch (id) {
-                case 'analistaDados': return 'Analista de Dados';
-                case 'claudeAgent': return 'Assistente IA (Geral)';
                 case 'salesAgent': return 'Executivo de Vendas';
                 case 'contasAReceberAgent': return 'Contas a Pagar e Receber';
-                case 'receiptsAgent': return 'Analista de Despesas';
-                case 'nfeAgent': return 'Analista Fiscal (NF-e)';
                 case 'inventoryAgent': return 'Gestor de Estoque';
                 case 'ecommerceSalesAgentV2': return 'Gestor de E-commerce';
                 case 'webAnalyticsAgent': return 'Analista de Web Analytics';
@@ -167,7 +154,6 @@ export default function InputArea({ input, setInput, onSubmit, status, selectedA
                 case 'gestorDeVendasB2BAgent': return 'Gerente de Vendas B2B';
                 case 'funcionariosAgent': return 'Analista de RH';
                 case 'crmAgent': return 'Analista de CRM';
-                case 'automationAgent': return 'Arquiteto de Automação';
                 case 'contabilidadeAgent': return 'Agente de Contabilidade';
                 default: return id;
               }

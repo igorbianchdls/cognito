@@ -2871,24 +2871,16 @@ const getAgentInfo = (agent: string) => {
       return { initial: 'Y', title: 'Analista de Campanhas Google Ads', color: 'bg-blue-700', icon: <GoogleAdsIcon className="w-full h-full" /> };
     case 'metaCampaignAnalyst':
       return { initial: 'B', title: 'Analista de Campanhas Meta Ads', color: 'bg-blue-800', icon: <MetaIcon className="w-full h-full" /> };
-    case 'analistaDados':
-      return { initial: 'A', title: 'Analista de Dados', color: 'bg-indigo-500' };
     case 'salesAgent':
       return { initial: 'V', title: 'Executivo de Vendas', color: 'bg-indigo-600' };
     case 'contasAReceberAgent':
       return { initial: 'C', title: 'Contas a Pagar e Receber', color: 'bg-teal-600' };
-    case 'receiptsAgent':
-      return { initial: 'R', title: 'Analista de Despesas', color: 'bg-orange-600' };
-    case 'nfeAgent':
-      return { initial: 'N', title: 'Analista Fiscal (NF-e)', color: 'bg-emerald-600' };
     case 'inventoryAgent':
       return { initial: 'I', title: 'Gestor de Estoque', color: 'bg-blue-600' };
     case 'ecommerceSalesAgent':
       return { initial: 'E', title: 'Gestor de E-commerce', color: 'bg-emerald-600' };
     case 'ecommerceSalesAgentV2':
       return { initial: 'E', title: 'Gestor de E-commerce', color: 'bg-emerald-700' };
-    case 'claudeAgent':
-      return { initial: 'A', title: 'Assistente IA (Geral)', color: 'bg-gray-500' };
     case 'webAnalyticsAgent':
       return { initial: 'W', title: 'Analista de Web Analytics', color: 'bg-blue-600' };
     case 'logisticsAgent':
@@ -2909,8 +2901,6 @@ const getAgentInfo = (agent: string) => {
       return { initial: 'R', title: 'Analista de RH', color: 'bg-rose-600' };
     case 'crmAgent':
       return { initial: 'C', title: 'Analista de CRM', color: 'bg-sky-600' };
-    case 'automationAgent':
-      return { initial: 'A', title: 'Arquiteto de Automação', color: 'bg-slate-600' };
     case 'contabilidadeAgent':
       return { initial: 'C', title: 'Agente de Contabilidade', color: 'bg-emerald-600' };
     default:

@@ -9,14 +9,10 @@ interface AgentDropdownProps {
 
 // Lista de agentes disponíveis com suas informações visuais
 const agents = [
-  { id: 'analistaDados', name: 'Analista de Dados', icon: 'D', color: 'text-blue-600' },
-  { id: 'claudeAgent', name: 'Assistente IA (Geral)', icon: 'C', color: 'text-purple-600' },
   { id: 'ecommerceSalesAgentV2', name: 'Gestor de E-commerce', icon: 'E', color: 'text-emerald-600' },
   { id: 'salesAgent', name: 'Executivo de Vendas', icon: 'S', color: 'text-indigo-600' },
   { id: 'contasAReceberAgent', name: 'Contas a Pagar e Receber', icon: 'R', color: 'text-teal-600' },
-  { id: 'receiptsAgent', name: 'Analista de Despesas', icon: 'R', color: 'text-orange-600' },
   { id: 'reembolsoAgent', name: 'Gestor de Reembolsos', icon: 'R', color: 'text-green-600' },
-  { id: 'nfeAgent', name: 'Analista Fiscal (NF-e)', icon: 'N', color: 'text-emerald-600' },
   { id: 'inventoryAgent', name: 'Gestor de Estoque', icon: 'I', color: 'text-blue-600' },
   { id: 'logisticsAgent', name: 'Coordenador de Logística', icon: 'L', color: 'text-cyan-600' },
   { id: 'funcionariosAgent', name: 'Analista de RH', icon: 'F', color: 'text-purple-600' },

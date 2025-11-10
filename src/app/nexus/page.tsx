@@ -43,12 +43,8 @@ export default function Page() {
   // Helper function to get API URL based on agent
   const getApiUrl = (agent: string) => {
     switch (agent) {
-      case 'claudeAgent': return '/api/claudeAgents/simple';
-      case 'analistaDados': return '/api/agents/analista-dados';
       case 'salesAgent': return '/api/claudeAgents/sales';
       case 'contasAReceberAgent': return '/api/claudeAgents/contas-a-receber';
-      case 'receiptsAgent': return '/api/claudeAgents/receipts';
-      case 'nfeAgent': return '/api/claudeAgents/nfe';
       case 'inventoryAgent': return '/api/claudeAgents/inventory';
       case 'ecommerceSalesAgent': return '/api/claudeAgents/ecommerce-sales';
       case 'ecommerceSalesAgentV2': return '/api/claudeAgents/ecommerce-sales-v2';
@@ -62,9 +58,8 @@ export default function Page() {
       case 'gestorDeServicosAgent': return '/api/claudeAgents/gestor-de-servicos';
       case 'funcionariosAgent': return '/api/claudeAgents/funcionarios';
       case 'gestorDeVendasB2BAgent': return '/api/claudeAgents/gestor-de-vendas-b2b';
-      case 'automationAgent': return '/api/claudeAgents/automation';
       case 'contabilidadeAgent': return '/api/claudeAgents/contabilidade';
-      default: return '/api/agents/analista-dados';
+      default: return '/api/claudeAgents/sales';
     }
   };
 
