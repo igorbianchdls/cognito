@@ -174,6 +174,10 @@ import BuscarContaReceberResult from '../tools/workflow/BuscarContaReceberResult
 import PagamentoRecebidoCriadoResult from '../tools/workflow/PagamentoRecebidoCriadoResult';
 import BuscarContaPagarResult from '../tools/workflow/BuscarContaPagarResult';
 import PagamentoEfetuadoCriadoResult from '../tools/workflow/PagamentoEfetuadoCriadoResult';
+import ExtratoProcessadoResult from '../tools/workflow/ExtratoProcessadoResult';
+import ExtratoBancarioCriadoResult from '../tools/workflow/ExtratoBancarioCriadoResult';
+import LancamentosFinanceirosResult from '../tools/workflow/LancamentosFinanceirosResult';
+import ConciliacaoRealizadaResult from '../tools/workflow/ConciliacaoRealizadaResult';
 
 // Workflow Tools Output Types
 type BuscarClassificacoesFinanceirasOutput = {
@@ -498,6 +502,160 @@ type PagamentoEfetuadoCriadoOutput = {
     multa: number;
     desconto: number;
     total: number;
+  };
+  error?: string;
+};
+
+type TransacaoExtratoRow = {
+  data: string;
+  descricao: string;
+  valor: number;
+  tipo: 'debito' | 'credito';
+  saldo_apos?: number;
+  [key: string]: unknown;
+};
+
+type ExtratoProcessadoOutput = {
+  success: boolean;
+  data: {
+    banco: string;
+    conta: string;
+    agencia?: string;
+    periodo: {
+      data_inicio: string;
+      data_fim: string;
+      dias: number;
+    };
+    saldos: {
+      inicial: number;
+      final: number;
+      calculado: number;
+      conferido: boolean;
+    };
+    totais: {
+      transacoes: number;
+      debitos: number;
+      creditos: number;
+      quantidade_debitos: number;
+      quantidade_creditos: number;
+    };
+    transacoes: TransacaoExtratoRow[];
+  };
+  message: string;
+  title?: string;
+  resumo: {
+    banco: string;
+    conta: string;
+    periodo: string;
+    total_transacoes: number;
+    saldo_conferido: boolean;
+  };
+  error?: string;
+};
+
+type ExtratoBancarioCriadoOutput = {
+  success: boolean;
+  data: {
+    id: string;
+    banco: string;
+    conta: string;
+    agencia: string;
+    data_inicio: string;
+    data_fim: string;
+    saldo_inicial: number;
+    saldo_final: number;
+    total_debitos: number;
+    total_creditos: number;
+    quantidade_transacoes: number;
+    status: string;
+    data_cadastro: string;
+  };
+  message: string;
+  title?: string;
+  resumo: {
+    id: string;
+    banco: string;
+    conta: string;
+    periodo: string;
+    total_transacoes: number;
+    status: string;
+  };
+  error?: string;
+};
+
+type LancamentoFinanceiroRow = {
+  id: string;
+  tipo: string;
+  data: string;
+  descricao: string;
+  valor: number;
+  forma_pagamento: string;
+  status: string;
+  conciliado: boolean;
+  [key: string]: unknown;
+};
+
+type LancamentosFinanceirosOutput = {
+  success: boolean;
+  data: LancamentoFinanceiroRow[];
+  message: string;
+  title?: string;
+  periodo: {
+    data_inicio: string;
+    data_fim: string;
+  };
+  totais: {
+    total_lancamentos: number;
+    pagamentos_efetuados: number;
+    pagamentos_recebidos: number;
+    valor_saidas: number;
+    valor_entradas: number;
+  };
+  error?: string;
+};
+
+type ConciliadaRow = {
+  data: string;
+  descricao: string;
+  valor: number;
+  lancamento_id: string;
+  score?: number;
+};
+
+type PossivelRow = {
+  data: string;
+  descricao: string;
+  valor: number;
+  possivel_lancamento: string;
+  score?: number;
+};
+
+type DivergenciaRow = {
+  data: string;
+  descricao: string;
+  valor: number;
+};
+
+type ConciliacaoRealizadaOutput = {
+  success: boolean;
+  data: {
+    extrato_id: string;
+    conciliacoes: unknown[];
+    data_conciliacao: string;
+  };
+  message: string;
+  title?: string;
+  resumo: {
+    total: number;
+    conciliadas: number;
+    possiveis_matches: number;
+    divergencias: number;
+    taxa_conciliacao: string;
+  };
+  detalhamento: {
+    conciliadas: ConciliadaRow[];
+    possiveis: PossivelRow[];
+    divergencias: DivergenciaRow[];
   };
   error?: string;
 };
@@ -4944,6 +5102,98 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
               </Tool>
               {tool.state === 'output-available' && (
                 <PagamentoEfetuadoCriadoResult result={tool.output as PagamentoEfetuadoCriadoOutput} />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-processarExtratoBancario') {
+          const tool = part as NexusToolUIPart;
+          const callId = tool.toolCallId;
+          const shouldBeOpen = tool.state === 'output-available' || tool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-processarExtratoBancario" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && (
+                    <ToolOutput output={null} errorText={tool.errorText} />
+                  )}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && (
+                <ExtratoProcessadoResult result={tool.output as ExtratoProcessadoOutput} />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-criarExtratoBancario') {
+          const tool = part as NexusToolUIPart;
+          const callId = tool.toolCallId;
+          const shouldBeOpen = tool.state === 'output-available' || tool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-criarExtratoBancario" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && (
+                    <ToolOutput output={null} errorText={tool.errorText} />
+                  )}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && (
+                <ExtratoBancarioCriadoResult result={tool.output as ExtratoBancarioCriadoOutput} />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-buscarLancamentosFinanceiros') {
+          const tool = part as NexusToolUIPart;
+          const callId = tool.toolCallId;
+          const shouldBeOpen = tool.state === 'output-available' || tool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-buscarLancamentosFinanceiros" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && (
+                    <ToolOutput output={null} errorText={tool.errorText} />
+                  )}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && (
+                <LancamentosFinanceirosResult result={tool.output as LancamentosFinanceirosOutput} />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-conciliarTransacoes') {
+          const tool = part as NexusToolUIPart;
+          const callId = tool.toolCallId;
+          const shouldBeOpen = tool.state === 'output-available' || tool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-conciliarTransacoes" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && (
+                    <ToolOutput output={null} errorText={tool.errorText} />
+                  )}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && (
+                <ConciliacaoRealizadaResult result={tool.output as ConciliacaoRealizadaOutput} />
               )}
             </div>
           );

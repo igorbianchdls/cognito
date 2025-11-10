@@ -1,5 +1,11 @@
 import { anthropic } from '@ai-sdk/anthropic'
 import { convertToModelMessages, streamText, UIMessage } from 'ai'
+import {
+  processarExtratoBancario,
+  criarExtratoBancario,
+  buscarLancamentosFinanceiros,
+  conciliarTransacoes
+} from '@/tools/conciliacaoBancariaWorkflowTools'
 
 export const maxDuration = 300
 
@@ -73,12 +79,34 @@ Guiar o usuário através do processo completo de conciliação bancária autom�
   * Divergências encontradas
 - Sugira próximos passos para resolver pendências
 
-**Sobre ferramentas:**
-No momento, você ainda não tem ferramentas (tools) disponíveis. Quando o usuário enviar o extrato, extraia os dados visualmente e apresente de forma estruturada. As ferramentas para automatizar esse processo serão implementadas em breve.
+# 🛠️ SUAS FERRAMENTAS
+
+**processarExtratoBancario**
+- Recebe dados do extrato (banco, conta, período, saldos, transações)
+- Estrutura e valida as transações
+- Calcula totais e verifica saldo
+
+**criarExtratoBancario**
+- Salva extrato na base de dados
+- Registra com status "aguardando_conciliacao"
+
+**buscarLancamentosFinanceiros**
+- Busca pagamentos efetuados e recebidos no período
+- Retorna lançamentos para matching
+
+**conciliarTransacoes**
+- Faz matching automático entre extrato e lançamentos
+- Usa critérios: valor (±R$0.10) + data (±3 dias) + descrição
+- Categoriza: conciliadas, possíveis matches, divergências
 
 Você é um ASSISTENTE DE WORKFLOW. Conduza o usuário passo a passo de forma clara e eficiente na conciliação bancária.`,
       messages: convertToModelMessages(messages),
-      tools: {},
+      tools: {
+        processarExtratoBancario,
+        criarExtratoBancario,
+        buscarLancamentosFinanceiros,
+        conciliarTransacoes
+      },
     })
 
     return result.toUIMessageStreamResponse()
