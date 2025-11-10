@@ -9,8 +9,8 @@ interface ChatContainerProps {
   setInput: (value: string) => void;
   onSubmit: (e: FormEvent) => void;
   status: string;
-  selectedAgent: string;
-  onAgentChange: (agent: string) => void;
+  selectedAgent: string | null;
+  onAgentChange: (agent: string | null) => void;
   onFileSelected?: (dataUrl: string, mime: string) => void;
 }
 
