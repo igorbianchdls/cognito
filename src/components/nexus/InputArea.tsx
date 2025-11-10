@@ -25,11 +25,14 @@ import {
   ArrowUpRight,
   Activity,
   DollarSign,
-  BookOpen
+  BookOpen,
+  Workflow
 } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 import type { ChatStatus } from 'ai';
 import AgentDropdown from './AgentDropdown';
+import { useStore } from '@nanostores/react';
+import { currentWorkflow, setCurrentWorkflow } from '@/stores/nexus/workflowStore';
 
 interface InputAreaProps {
   input: string;
@@ -78,13 +81,24 @@ const models = [
   { id: 'contabilidadeAgent', name: 'Agente de Contabilidade', icon: iconMap['contabilidadeAgent'] },
 ];
 
+// Array mock de workflows (por enquanto vazio, será populado posteriormente)
+const workflows = [
+  { id: 'workflow-example-1', name: 'Análise de Vendas', icon: TrendingUp },
+  { id: 'workflow-example-2', name: 'Relatório Financeiro', icon: DollarSign },
+  { id: 'workflow-example-3', name: 'Gestão de Estoque', icon: Package },
+];
+
 export default function InputArea({ input, setInput, onSubmit, status, selectedAgent, onAgentChange, onFileSelected }: InputAreaProps) {
   // Estado para controlar a exibição do dropdown de agentes quando "/" é digitado
   const [showAgentDropdown, setShowAgentDropdown] = useState(false);
   // Armazena a posição exata onde o "/" foi digitado no texto
   const [slashPosition, setSlashPosition] = useState(-1);
-  
+
+  // Workflow store
+  const selectedWorkflow = useStore(currentWorkflow);
+
   console.log('🎤 [InputArea] Agent via prop:', selectedAgent);
+  console.log('🔄 [InputArea] Workflow via store:', selectedWorkflow);
 
   // Função para handle upload de documentos
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -219,6 +233,30 @@ export default function InputArea({ input, setInput, onSubmit, status, selectedA
                       <model.icon className="w-4 h-4" />
                     )}
                     <span>{model.name}</span>
+                  </div>
+                </PromptInputModelSelectItem>
+              ))}
+            </PromptInputModelSelectContent>
+          </PromptInputModelSelect>
+
+          <PromptInputModelSelect
+            onValueChange={(value) => {
+              console.log('🔄 [InputArea] Workflow changed:', value);
+              setCurrentWorkflow(value);
+            }}
+            value={selectedWorkflow || ''}
+          >
+            <PromptInputModelSelectTrigger>
+              <PromptInputModelSelectValue placeholder="Workflow" />
+            </PromptInputModelSelectTrigger>
+            <PromptInputModelSelectContent>
+              {workflows.map((workflow) => (
+                <PromptInputModelSelectItem key={workflow.id} value={workflow.id}>
+                  <div className="flex items-center gap-2">
+                    {workflow.icon && (
+                      <workflow.icon className="w-4 h-4" />
+                    )}
+                    <span>{workflow.name}</span>
                   </div>
                 </PromptInputModelSelectItem>
               ))}
