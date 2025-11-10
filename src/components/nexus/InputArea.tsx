@@ -39,8 +39,8 @@ interface InputAreaProps {
   setInput: (value: string) => void;
   onSubmit: (e: FormEvent) => void;
   status: string;
-  selectedAgent: string;
-  onAgentChange: (agent: string) => void;
+  selectedAgent: string | null;
+  onAgentChange: (agent: string | null) => void;
   onFileSelected?: (dataUrl: string, mime: string) => void;
 }
 
@@ -220,8 +220,9 @@ export default function InputArea({ input, setInput, onSubmit, status, selectedA
             onValueChange={(value) => {
               console.log('🎤 [InputArea] onValueChange chamado:', value);
               onAgentChange(value);
+              setCurrentWorkflow(null);  // Limpar workflow quando agente é selecionado
             }}
-            value={selectedAgent}
+            value={selectedAgent || ''}
           >
             <PromptInputModelSelectTrigger
               className={selectedAgent ? 'text-blue-600 hover:text-blue-700' : ''}
@@ -246,6 +247,7 @@ export default function InputArea({ input, setInput, onSubmit, status, selectedA
             onValueChange={(value) => {
               console.log('🔄 [InputArea] Workflow changed:', value);
               setCurrentWorkflow(value);
+              onAgentChange(null);  // Limpar agente quando workflow é selecionado
             }}
             value={selectedWorkflow || ''}
           >

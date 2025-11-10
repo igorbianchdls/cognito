@@ -33,8 +33,8 @@ export default function Page() {
   const selectedAgent = useStore(currentAgent);
   const selectedWorkflow = useStore(currentWorkflow);
 
-  // Se há workflow selecionado, use ele. Caso contrário, use o agent
-  const activeAgentOrWorkflow = selectedWorkflow || selectedAgent;
+  // Se há workflow selecionado, use ele. Caso contrário, use o agent. Se ambos null, fallback para salesAgent
+  const activeAgentOrWorkflow = selectedWorkflow || selectedAgent || 'salesAgent';
 
   // Array unificado que guarda TODAS as mensagens em ordem cronológica
   const [allMessages, setAllMessages] = useState<(UIMessage & { agent: string })[]>([]);
