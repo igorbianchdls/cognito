@@ -27,6 +27,7 @@ export type FinanceiroDashboardUIState = {
   cardShadowPreset: 'none' | '1' | '2' | '3' | '4' | '5'
   pageBgColor: string
   filtersIconColor: string
+  kpiIconColor: string
 }
 
 export type FinanceiroDashboardFiltersState = {
@@ -50,6 +51,7 @@ const DEFAULT_UI: FinanceiroDashboardUIState = {
   cardShadowPreset: 'none',
   pageBgColor: '#ffffff',
   filtersIconColor: '#6b7280',
+  kpiIconColor: '#6b7280',
 }
 
 const DEFAULT_FILTERS: FinanceiroDashboardFiltersState = {

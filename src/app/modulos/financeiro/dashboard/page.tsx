@@ -114,6 +114,7 @@ export default function FinanceiroDashboardPage() {
   const cardShadow = ui.cardShadow // legacy flag (kept for compatibility)
   const pageBgColor = ui.pageBgColor
   const filtersIconColor = ui.filtersIconColor
+  const kpiIconColor = ui.kpiIconColor
   const cardShadowPreset = ui.cardShadowPreset
   // Patch-like setters to keep UI code similar
   const setFonts = (
@@ -127,6 +128,7 @@ export default function FinanceiroDashboardPage() {
   const setCardBorderColor = (v: string) => financeiroDashboardActions.setUI({ cardBorderColor: v })
   const setPageBgColor = (v: string) => financeiroDashboardActions.setUI({ pageBgColor: v })
   const setFiltersIconColor = (v: string) => financeiroDashboardActions.setUI({ filtersIconColor: v })
+  const setKpiIconColor = (v: string) => financeiroDashboardActions.setUI({ kpiIconColor: v })
   const dateRange: DateRange | undefined = useMemo(() => {
     const from = filters.dateRange?.from ? new Date(filters.dateRange.from) : undefined
     const to = filters.dateRange?.to ? new Date(filters.dateRange.to) : undefined
@@ -727,28 +729,28 @@ export default function FinanceiroDashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor, boxShadow: cardBoxShadow }}>
           <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleKpiTitle}>
-            <ArrowDownCircle className="w-4 h-4 text-emerald-600" />A Receber no mês ({kpiLabel})
+            <ArrowDownCircle className="w-4 h-4" style={{ color: kpiIconColor }} />A Receber no mês ({kpiLabel})
           </div>
           <div className="text-2xl font-bold text-emerald-600" style={styleValues}>{formatBRL(kpis.arMes)}</div>
           <div className="text-xs text-gray-400 mt-1" style={styleText}>Vencimento dentro do período</div>
         </div>
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor, boxShadow: cardBoxShadow }}>
           <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleKpiTitle}>
-            <ArrowUpCircle className="w-4 h-4 text-rose-600" />A Pagar no mês ({kpiLabel})
+            <ArrowUpCircle className="w-4 h-4" style={{ color: kpiIconColor }} />A Pagar no mês ({kpiLabel})
           </div>
           <div className="text-2xl font-bold text-rose-600" style={styleValues}>{formatBRL(kpis.apMes)}</div>
           <div className="text-xs text-gray-400 mt-1" style={styleText}>Vencimento dentro do período</div>
         </div>
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor, boxShadow: cardBoxShadow }}>
           <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleKpiTitle}>
-            <Wallet className="w-4 h-4 text-emerald-600" />Recebido no mês ({kpiLabel})
+            <Wallet className="w-4 h-4" style={{ color: kpiIconColor }} />Recebido no mês ({kpiLabel})
           </div>
           <div className="text-2xl font-bold text-emerald-600" style={styleValues}>{formatBRL(kpis.recebidosMes)}</div>
           <div className="text-xs text-gray-400 mt-1" style={styleText}>Recebimentos realizados no período</div>
         </div>
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor, boxShadow: cardBoxShadow }}>
           <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleKpiTitle}>
-            <CalendarCheck className="w-4 h-4 text-rose-600" />Pago no mês ({kpiLabel})
+            <CalendarCheck className="w-4 h-4" style={{ color: kpiIconColor }} />Pago no mês ({kpiLabel})
           </div>
           <div className="text-2xl font-bold text-rose-600" style={styleValues}>{formatBRL(kpis.pagosMes)}</div>
           <div className="text-xs text-gray-400 mt-1" style={styleText}>Pagamentos realizados no período</div>
@@ -1445,6 +1447,15 @@ export default function FinanceiroDashboardPage() {
                 className="border rounded w-8 h-6"
                 value={sidebarItemTextColor}
                 onChange={(e) => setSidebarItemTextColor(e.target.value)}
+              />
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="text-xs text-gray-500">Ícones dos Cards KPI</div>
+              <input
+                type="color"
+                className="border rounded w-8 h-6"
+                value={kpiIconColor}
+                onChange={(e) => setKpiIconColor(e.target.value)}
               />
             </div>
           </div>
