@@ -226,9 +226,24 @@ export const conciliarTransacoes = tool({
   }),
   execute: async ({ extrato_id, transacoes_extrato, lancamentos }) => {
     // Mock conciliação automática
+    type TransacaoExtrato = {
+      data: string;
+      descricao: string;
+      valor: number;
+      tipo: 'debito' | 'credito';
+    };
+
+    type Lancamento = {
+      id: string;
+      tipo: string;
+      data: string;
+      descricao: string;
+      valor: number;
+    };
+
     const conciliacoes: Array<{
-      transacao_extrato: any;
-      lancamento?: any;
+      transacao_extrato: TransacaoExtrato;
+      lancamento?: Lancamento;
       status: 'conciliado' | 'possivel_match' | 'divergencia';
       score?: number;
     }> = [];
