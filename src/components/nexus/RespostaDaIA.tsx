@@ -165,6 +165,7 @@ import DRETable, { type DRENode } from '@/components/relatorios/DRETable';
 import BalanceTAccountView from '@/components/contabilidade/BalanceTAccountView';
 import ClassificacoesFinanceirasResult from '../tools/workflow/ClassificacoesFinanceirasResult';
 import FornecedorResult from '../tools/workflow/FornecedorResult';
+import CriarFornecedorResult from '../tools/workflow/CriarFornecedorResult';
 import ContaPagarCriadaResult from '../tools/workflow/ContaPagarCriadaResult';
 import BuscarClienteResult from '../tools/workflow/BuscarClienteResult';
 import CriarClienteResult from '../tools/workflow/CriarClienteResult';
@@ -4584,7 +4585,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                 </ToolContent>
               </Tool>
               {tool.state === 'output-available' && (
-                <FornecedorResult result={tool.output as CriarFornecedorOutput} />
+                <CriarFornecedorResult result={tool.output as CriarFornecedorOutput} />
               )}
             </div>
           );
