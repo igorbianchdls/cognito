@@ -185,10 +185,23 @@ type BuscarClassificacoesFinanceirasOutput = {
   error?: string;
 };
 
+type FornecedorRow = {
+  id: string;
+  nome: string;
+  cnpj: string;
+  endereco?: string;
+  telefone?: string;
+  email?: string;
+  data_cadastro?: string;
+  status?: string;
+  observacoes?: string;
+  [key: string]: unknown;
+};
+
 type BuscarFornecedorOutput = {
   success: boolean;
   fornecedor_encontrado?: boolean;
-  data: Record<string, unknown> | null;
+  data: FornecedorRow | null;
   message: string;
   title?: string;
   error?: string;
@@ -196,7 +209,7 @@ type BuscarFornecedorOutput = {
 
 type CriarFornecedorOutput = {
   success: boolean;
-  data: Record<string, unknown> | null;
+  data: FornecedorRow | null;
   message: string;
   title?: string;
   error?: string;
