@@ -228,7 +228,22 @@ export default function InputArea({ input, setInput, onSubmit, status, selectedA
             <PromptInputModelSelectTrigger
               className={selectedAgent ? 'text-blue-600 hover:text-blue-700' : ''}
             >
-              <PromptInputModelSelectValue placeholder="Agentes" />
+              {selectedAgent ? (
+                <div className="flex items-center gap-2">
+                  {(() => {
+                    const model = models.find(m => m.id === selectedAgent);
+                    const Icon = model?.icon;
+                    return (
+                      <>
+                        {Icon && <Icon className="w-4 h-4" />}
+                        <span>{model?.name}</span>
+                      </>
+                    );
+                  })()}
+                </div>
+              ) : (
+                <PromptInputModelSelectValue placeholder="Agentes" />
+              )}
             </PromptInputModelSelectTrigger>
             <PromptInputModelSelectContent>
               {models.map((model) => (
@@ -255,7 +270,22 @@ export default function InputArea({ input, setInput, onSubmit, status, selectedA
             <PromptInputModelSelectTrigger
               className={selectedWorkflow ? 'text-blue-600 hover:text-blue-700' : ''}
             >
-              <PromptInputModelSelectValue placeholder="Workflow" />
+              {selectedWorkflow ? (
+                <div className="flex items-center gap-2">
+                  {(() => {
+                    const workflow = workflows.find(w => w.id === selectedWorkflow);
+                    const Icon = workflow?.icon;
+                    return (
+                      <>
+                        {Icon && <Icon className="w-4 h-4" />}
+                        <span>{workflow?.name}</span>
+                      </>
+                    );
+                  })()}
+                </div>
+              ) : (
+                <PromptInputModelSelectValue placeholder="Workflow" />
+              )}
             </PromptInputModelSelectTrigger>
             <PromptInputModelSelectContent>
               {workflows.map((workflow) => (
