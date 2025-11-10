@@ -330,7 +330,7 @@ type ContaReceberCriadaOutput = {
   error?: string;
 };
 
-type ContaReceberRow = {
+type ContaReceberWorkflowRow = {
   id: string;
   cliente_id: string;
   cliente_nome: string;
@@ -353,7 +353,7 @@ type ContaReceberRow = {
 type BuscarContaReceberOutput = {
   success: boolean;
   conta_encontrada?: boolean;
-  data: ContaReceberRow | null;
+  data: ContaReceberWorkflowRow | null;
   message: string;
   title?: string;
   error?: string;

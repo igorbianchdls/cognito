@@ -7,7 +7,7 @@ import { ColumnDef } from '@tanstack/react-table'
 import { FileText, CheckCircle, AlertCircle } from 'lucide-react'
 import { useMemo } from 'react'
 
-type ContaReceberRow = {
+type ContaReceberWorkflowRow = {
   id: string;
   cliente_id: string;
   cliente_nome: string;
@@ -30,7 +30,7 @@ type ContaReceberRow = {
 type BuscarContaReceberOutput = {
   success: boolean;
   conta_encontrada?: boolean;
-  data: ContaReceberRow | null;
+  data: ContaReceberWorkflowRow | null;
   message: string;
   title?: string;
   error?: string;
@@ -47,11 +47,11 @@ type BuscarContaReceberOutput = {
 
 export default function BuscarContaReceberResult({ result }: { result: BuscarContaReceberOutput }) {
   // Convert single conta to array for table display
-  const tableRows: ContaReceberRow[] = useMemo(() => {
+  const tableRows: ContaReceberWorkflowRow[] = useMemo(() => {
     return result.data ? [result.data] : [];
   }, [result.data]);
 
-  const columns: ColumnDef<ContaReceberRow>[] = useMemo(() => [
+  const columns: ColumnDef<ContaReceberWorkflowRow>[] = useMemo(() => [
     {
       accessorKey: 'numero_nota_fiscal',
       header: 'NF',
