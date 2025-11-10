@@ -163,6 +163,9 @@ import DeteccaoAnomaliasTaxaConversaoResult from '../tools/paid-traffic/Deteccao
 import AdPerformanceForecastResult from '../tools/paid-traffic/AdPerformanceForecastResult';
 import DRETable, { type DRENode } from '@/components/relatorios/DRETable';
 import BalanceTAccountView from '@/components/contabilidade/BalanceTAccountView';
+import ClassificacoesFinanceirasResult from '../tools/workflow/ClassificacoesFinanceirasResult';
+import FornecedorResult from '../tools/workflow/FornecedorResult';
+import ContaPagarCriadaResult from '../tools/workflow/ContaPagarCriadaResult';
 
 // Contabilidade — componentes dedicados (inline)
 type LancRow = Record<string, unknown> & {
@@ -4353,6 +4356,98 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                 <ContasAPagarResult
                   result={contasAPagarTool.output as GetContasAPagarToolOutput}
                 />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-buscarClassificacoesFinanceiras') {
+          const tool = part as NexusToolUIPart;
+          const callId = tool.toolCallId;
+          const shouldBeOpen = tool.state === 'output-available' || tool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-buscarClassificacoesFinanceiras" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && (
+                    <ToolOutput output={null} errorText={tool.errorText} />
+                  )}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && (
+                <ClassificacoesFinanceirasResult result={tool.output as any} />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-buscarFornecedor') {
+          const tool = part as NexusToolUIPart;
+          const callId = tool.toolCallId;
+          const shouldBeOpen = tool.state === 'output-available' || tool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-buscarFornecedor" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && (
+                    <ToolOutput output={null} errorText={tool.errorText} />
+                  )}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && (
+                <FornecedorResult result={tool.output as any} />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-criarFornecedor') {
+          const tool = part as NexusToolUIPart;
+          const callId = tool.toolCallId;
+          const shouldBeOpen = tool.state === 'output-available' || tool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-criarFornecedor" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && (
+                    <ToolOutput output={null} errorText={tool.errorText} />
+                  )}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && (
+                <FornecedorResult result={tool.output as any} />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-criarContaPagar') {
+          const tool = part as NexusToolUIPart;
+          const callId = tool.toolCallId;
+          const shouldBeOpen = tool.state === 'output-available' || tool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-criarContaPagar" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && (
+                    <ToolOutput output={null} errorText={tool.errorText} />
+                  )}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && (
+                <ContaPagarCriadaResult result={tool.output as any} />
               )}
             </div>
           );
