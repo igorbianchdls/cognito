@@ -153,7 +153,8 @@ export default function InputArea({ input, setInput, onSubmit, status, selectedA
           currentAgent={selectedAgent}
           onAgentSelect={(agentId) => {
             // Mapear ID do agente para nome legível
-            const getAgentName = (id: string) => {
+            const getAgentName = (id: string | null) => {
+              if (!id) return 'Agente';
               switch (id) {
                 case 'salesAgent': return 'Executivo de Vendas';
                 case 'contasAReceberAgent': return 'Contas a Pagar e Receber';
