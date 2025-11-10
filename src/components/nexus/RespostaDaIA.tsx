@@ -172,6 +172,8 @@ import CriarClienteResult from '../tools/workflow/CriarClienteResult';
 import ContaReceberCriadaResult from '../tools/workflow/ContaReceberCriadaResult';
 import BuscarContaReceberResult from '../tools/workflow/BuscarContaReceberResult';
 import PagamentoRecebidoCriadoResult from '../tools/workflow/PagamentoRecebidoCriadoResult';
+import BuscarContaPagarResult from '../tools/workflow/BuscarContaPagarResult';
+import PagamentoEfetuadoCriadoResult from '../tools/workflow/PagamentoEfetuadoCriadoResult';
 
 // Workflow Tools Output Types
 type BuscarClassificacoesFinanceirasOutput = {
@@ -403,6 +405,91 @@ type PagamentoRecebidoCriadoOutput = {
     conta_financeira: string;
     nota_fiscal: string;
     cliente: string;
+    status_conta: string;
+  };
+  detalhamento: {
+    valor_principal: number;
+    juros: number;
+    multa: number;
+    desconto: number;
+    total: number;
+  };
+  error?: string;
+};
+
+type ContaPagarWorkflowRow = {
+  id: string;
+  fornecedor_id: string;
+  fornecedor_nome: string;
+  numero_nota_fiscal?: string;
+  valor: number;
+  valor_pago: number;
+  valor_pendente: number;
+  data_emissao: string;
+  data_vencimento: string;
+  status: string;
+  categoria_id?: string;
+  categoria_nome?: string;
+  centro_custo_id?: string;
+  centro_custo_nome?: string;
+  descricao?: string;
+  quantidade_itens?: number;
+  [key: string]: unknown;
+};
+
+type BuscarContaPagarOutput = {
+  success: boolean;
+  conta_encontrada?: boolean;
+  data: ContaPagarWorkflowRow | null;
+  message: string;
+  title?: string;
+  error?: string;
+  valor_formatado?: string;
+  resumo?: {
+    id: string;
+    numero_nota_fiscal: string;
+    fornecedor: string;
+    valor: number;
+    status: string;
+    vencimento: string;
+  };
+};
+
+type PagamentoEfetuadoCriadoOutput = {
+  success: boolean;
+  data: {
+    id: string;
+    conta_pagar_id: string;
+    valor_pago: number;
+    valor_juros: number;
+    valor_multa: number;
+    valor_desconto: number;
+    valor_total: number;
+    data_pagamento: string;
+    forma_pagamento: string;
+    conta_financeira_id: string;
+    conta_financeira_nome: string;
+    observacoes: string;
+    status: string;
+    data_cadastro: string;
+    conta_pagar: {
+      numero_nota_fiscal: string;
+      fornecedor_nome: string;
+      valor_original: number;
+      status_anterior: string;
+      status_atual: string;
+    };
+  };
+  message: string;
+  title?: string;
+  resumo: {
+    id: string;
+    valor_formatado: string;
+    data_pagamento: string;
+    forma_pagamento: string;
+    conta_financeira: string;
+    nota_fiscal: string;
+    fornecedor: string;
     status_conta: string;
   };
   detalhamento: {
@@ -4811,6 +4898,52 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
               </Tool>
               {tool.state === 'output-available' && (
                 <PagamentoRecebidoCriadoResult result={tool.output as PagamentoRecebidoCriadoOutput} />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-buscarContaPagar') {
+          const tool = part as NexusToolUIPart;
+          const callId = tool.toolCallId;
+          const shouldBeOpen = tool.state === 'output-available' || tool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-buscarContaPagar" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && (
+                    <ToolOutput output={null} errorText={tool.errorText} />
+                  )}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && (
+                <BuscarContaPagarResult result={tool.output as BuscarContaPagarOutput} />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-criarPagamentoEfetuado') {
+          const tool = part as NexusToolUIPart;
+          const callId = tool.toolCallId;
+          const shouldBeOpen = tool.state === 'output-available' || tool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-criarPagamentoEfetuado" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && (
+                    <ToolOutput output={null} errorText={tool.errorText} />
+                  )}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && (
+                <PagamentoEfetuadoCriadoResult result={tool.output as PagamentoEfetuadoCriadoOutput} />
               )}
             </div>
           );
