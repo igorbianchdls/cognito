@@ -28,6 +28,7 @@ export type FinanceiroDashboardUIState = {
   pageBgColor: string
   filtersIconColor: string
   kpiIconColor: string
+  chartIconColor: string
 }
 
 export type FinanceiroDashboardFiltersState = {
@@ -52,6 +53,7 @@ const DEFAULT_UI: FinanceiroDashboardUIState = {
   pageBgColor: '#ffffff',
   filtersIconColor: '#6b7280',
   kpiIconColor: '#6b7280',
+  chartIconColor: '#6b7280',
 }
 
 const DEFAULT_FILTERS: FinanceiroDashboardFiltersState = {

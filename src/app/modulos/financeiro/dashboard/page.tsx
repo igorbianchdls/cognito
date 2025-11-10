@@ -115,6 +115,7 @@ export default function FinanceiroDashboardPage() {
   const pageBgColor = ui.pageBgColor
   const filtersIconColor = ui.filtersIconColor
   const kpiIconColor = ui.kpiIconColor
+  const chartIconColor = ui.chartIconColor
   const cardShadowPreset = ui.cardShadowPreset
   // Patch-like setters to keep UI code similar
   const setFonts = (
@@ -129,6 +130,7 @@ export default function FinanceiroDashboardPage() {
   const setPageBgColor = (v: string) => financeiroDashboardActions.setUI({ pageBgColor: v })
   const setFiltersIconColor = (v: string) => financeiroDashboardActions.setUI({ filtersIconColor: v })
   const setKpiIconColor = (v: string) => financeiroDashboardActions.setUI({ kpiIconColor: v })
+  const setChartIconColor = (v: string) => financeiroDashboardActions.setUI({ chartIconColor: v })
   const dateRange: DateRange | undefined = useMemo(() => {
     const from = filters.dateRange?.from ? new Date(filters.dateRange.from) : undefined
     const to = filters.dateRange?.to ? new Date(filters.dateRange.to) : undefined
@@ -760,11 +762,11 @@ export default function FinanceiroDashboardPage() {
       {/* Charts — Row 1 (Fluxo de Caixa) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor, boxShadow: cardBoxShadow }}>
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><BarChart3 className="w-5 h-5 text-indigo-600" />Fluxo de Caixa — Realizado</h3>
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><BarChart3 className="w-5 h-5" style={{ color: chartIconColor }} />Fluxo de Caixa — Realizado</h3>
           <CashGroupedBar data={cashRealized.map(d => ({ label: periodToLabel(d.period), entradas: d.entradas, saidas: d.saidas }))} />
         </div>
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor, boxShadow: cardBoxShadow }}>
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><Wallet className="w-5 h-5 text-blue-600" />Fluxo de Caixa — Projetado</h3>
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><Wallet className="w-5 h-5" style={{ color: chartIconColor }} />Fluxo de Caixa — Projetado</h3>
           <div className="flex items-center justify-between text-xs text-gray-600 mb-1" style={styleText}>
             <span>Saldo Projetado</span>
             <span>Último: {formatBRL(cashProjected.at(-1)?.saldo_projetado ?? 0)}</span>
@@ -777,7 +779,7 @@ export default function FinanceiroDashboardPage() {
           </div>
         </div>
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><Clock className="w-5 h-5 text-emerald-600" />Aging A Receber</h3>
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><Clock className="w-5 h-5" style={{ color: chartIconColor }} />Aging A Receber</h3>
           <SimpleHorizontalBar items={arAging.map(b => ({ label: b.label, value: b.value }))} color="#059669" />
         </div>
       </div>
@@ -785,15 +787,15 @@ export default function FinanceiroDashboardPage() {
       {/* Charts — Row 2 (Aging AP + Tops Fornecedores/Clientes) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><Clock className="w-5 h-5 text-rose-600" />Aging A Pagar</h3>
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><Clock className="w-5 h-5" style={{ color: chartIconColor }} />Aging A Pagar</h3>
           <SimpleHorizontalBar items={apAging.map(b => ({ label: b.label, value: b.value }))} color="#ef4444" />
         </div>
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><Star className="w-5 h-5 text-amber-500" />Top 5 Fornecedores</h3>
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><Star className="w-5 h-5" style={{ color: chartIconColor }} />Top 5 Fornecedores</h3>
           <SimpleHorizontalBar items={topFornecedores} color="#10b981" />
         </div>
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><CalendarCheck className="w-5 h-5 text-rose-600" />Top 5 Clientes</h3>
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><CalendarCheck className="w-5 h-5" style={{ color: chartIconColor }} />Top 5 Clientes</h3>
           <SimpleHorizontalBar items={topClientes} color="#8b5cf6" />
         </div>
       </div>
@@ -801,15 +803,15 @@ export default function FinanceiroDashboardPage() {
       {/* Charts — Row 3 (Top 5 por dimensão) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><BarChart3 className="w-5 h-5 text-indigo-600" />Top 5 Centros de Custo</h3>
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><BarChart3 className="w-5 h-5" style={{ color: chartIconColor }} />Top 5 Centros de Custo</h3>
           <SimpleHorizontalBar items={topCC} color="#6366f1" />
         </div>
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><BarChart3 className="w-5 h-5 text-rose-600" />Top 5 Categorias</h3>
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><BarChart3 className="w-5 h-5" style={{ color: chartIconColor }} />Top 5 Categorias</h3>
           <SimpleHorizontalBar items={topCategorias} color="#f43f5e" />
         </div>
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><BarChart3 className="w-5 h-5 text-amber-600" />Top 5 Departamentos</h3>
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><BarChart3 className="w-5 h-5" style={{ color: chartIconColor }} />Top 5 Departamentos</h3>
           <SimpleHorizontalBar items={topDepartamentos} color="#f59e0b" />
         </div>
       </div>
@@ -817,15 +819,15 @@ export default function FinanceiroDashboardPage() {
       {/* Charts — Row 4 (Top 5 por dimensão) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><BarChart3 className="w-5 h-5 text-emerald-600" />Top 5 Centros de Lucro</h3>
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><BarChart3 className="w-5 h-5" style={{ color: chartIconColor }} />Top 5 Centros de Lucro</h3>
           <SimpleHorizontalBar items={topLucros} color="#10b981" />
         </div>
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><BarChart3 className="w-5 h-5 text-purple-600" />Top 5 Projetos</h3>
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><BarChart3 className="w-5 h-5" style={{ color: chartIconColor }} />Top 5 Projetos</h3>
           <SimpleHorizontalBar items={topProjetos} color="#8b5cf6" />
         </div>
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><BarChart3 className="w-5 h-5 text-teal-600" />Top 5 Filiais</h3>
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><BarChart3 className="w-5 h-5" style={{ color: chartIconColor }} />Top 5 Filiais</h3>
           <SimpleHorizontalBar items={topFiliais} color="#14b8a6" />
         </div>
       </div>
@@ -1456,6 +1458,15 @@ export default function FinanceiroDashboardPage() {
                 className="border rounded w-8 h-6"
                 value={kpiIconColor}
                 onChange={(e) => setKpiIconColor(e.target.value)}
+              />
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="text-xs text-gray-500">Ícones dos Charts</div>
+              <input
+                type="color"
+                className="border rounded w-8 h-6"
+                value={chartIconColor}
+                onChange={(e) => setChartIconColor(e.target.value)}
               />
             </div>
           </div>
