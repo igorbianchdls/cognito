@@ -2919,13 +2919,13 @@ const getAgentInfo = (agent: string) => {
 
 interface RespostaDaIAProps {
   message: UIMessage;
-  selectedAgent: string;
+  selectedAgent: string | null;
 }
 
 export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAProps) {
   // Usar o agente da própria mensagem, se não tiver usa o selectedAgent atual
-  const messageAgent = (message as UIMessage & { agent?: string }).agent || selectedAgent;
-  
+  const messageAgent = (message as UIMessage & { agent?: string }).agent || selectedAgent || 'salesAgent';
+
   const agentInfo = getAgentInfo(messageAgent);
   
   // Função para analisar dados com IA

@@ -4,7 +4,7 @@ import RespostaDaIA from './RespostaDaIA';
 
 interface MessageListProps {
   messages: UIMessage[];
-  selectedAgent: string;
+  selectedAgent: string | null;
 }
 
 export default function MessageList({ messages, selectedAgent }: MessageListProps) {
