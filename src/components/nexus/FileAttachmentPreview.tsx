@@ -14,6 +14,8 @@ interface FileAttachmentPreviewProps {
 }
 
 export default function FileAttachmentPreview({ files, onRemove }: FileAttachmentPreviewProps) {
+  console.log('🖼️ [FileAttachmentPreview] Renderizando com', files.length, 'arquivos');
+
   if (files.length === 0) return null;
 
   const formatFileSize = (bytes: number): string => {

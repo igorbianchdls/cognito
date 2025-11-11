@@ -108,23 +108,40 @@ export default function InputArea({ input, setInput, onSubmit, status, selectedA
     const files = event.target.files;
     if (!files || files.length === 0) return;
 
+    console.log('📎 [InputArea] Arquivos selecionados:', files.length);
+
+    const allowed = ['application/pdf', 'image/png', 'image/jpeg', 'image/webp'];
+    const filesArray = Array.from(files);
+
+    // Filtrar arquivos válidos e inválidos
+    const validFiles = filesArray.filter(file => allowed.includes(file.type));
+    const invalidFiles = filesArray.filter(file => !allowed.includes(file.type));
+
+    // Mostrar alert se houver arquivos inválidos
+    if (invalidFiles.length > 0) {
+      const invalidNames = invalidFiles.map(f => f.name).join(', ');
+      alert(`Arquivos não suportados: ${invalidNames}\nApenas PDF e imagens (PNG/JPG/WebP) são permitidos.`);
+    }
+
+    // Se não houver arquivos válidos, retornar
+    if (validFiles.length === 0) {
+      event.target.value = '';
+      return;
+    }
+
     // Validar limite de 5 arquivos
-    if (attachedFiles.length + files.length > 5) {
+    if (attachedFiles.length + validFiles.length > 5) {
       alert('Você pode anexar no máximo 5 arquivos por mensagem');
       event.target.value = '';
       return;
     }
 
-    const allowed = ['application/pdf', 'image/png', 'image/jpeg', 'image/webp'];
+    console.log('📎 [InputArea] Arquivos válidos:', validFiles.length);
+
     const newFiles: AttachedFile[] = [];
     let filesProcessed = 0;
 
-    Array.from(files).forEach((file) => {
-      if (!allowed.includes(file.type)) {
-        alert(`${file.name}: Envie apenas PDF ou imagem (PNG/JPG/WebP)`);
-        return;
-      }
-
+    validFiles.forEach((file) => {
       const reader = new FileReader();
       reader.onload = (e) => {
         const dataUrl = e.target?.result as string;
@@ -137,7 +154,10 @@ export default function InputArea({ input, setInput, onSubmit, status, selectedA
         });
 
         filesProcessed++;
-        if (filesProcessed === files.length) {
+        console.log(`📎 [InputArea] Arquivo processado: ${filesProcessed}/${validFiles.length}`);
+
+        if (filesProcessed === validFiles.length) {
+          console.log('📎 [InputArea] Todos arquivos processados, chamando onFilesChange');
           onFilesChange([...attachedFiles, ...newFiles]);
         }
       };
