@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { tool } from 'ai';
 import { runQuery } from '@/lib/postgres';
+import { runQuery } from '@/lib/postgres';
 
 // ============================================
 // WORKFLOW TOOLS - PAGAMENTOS RECEBIDOS
@@ -119,84 +120,60 @@ export const buscarContaReceber = tool({
  * Registra o recebimento e o sistema baixa a conta automaticamente
  */
 export const criarPagamentoRecebido = tool({
-  description: '[WORKFLOW] Cria registro de pagamento recebido e vincula à conta a receber. O sistema baixa a conta automaticamente.',
+  description: '[WORKFLOW] Prévia de Pagamento Recebido. IA preenche dados; usuário confirma na UI para criar e baixar a AR.',
   inputSchema: z.object({
-    conta_receber_id: z.string().describe('ID da conta a receber'),
-    valor_recebido: z.number().describe('Valor recebido'),
-    data_recebimento: z.string().describe('Data do recebimento (YYYY-MM-DD)'),
-    forma_pagamento: z.enum(['dinheiro', 'pix', 'transferencia', 'boleto', 'cartao_credito', 'cartao_debito', 'cheque']).describe('Forma de pagamento'),
-    conta_financeira_id: z.string().describe('ID da conta financeira que recebeu'),
-    observacoes: z.string().optional().describe('Observações sobre o recebimento'),
-    juros: z.number().optional().describe('Valor de juros recebidos'),
-    multa: z.number().optional().describe('Valor de multa recebida'),
-    desconto: z.number().optional().describe('Valor de desconto concedido'),
+    lancamento_origem_id: z.string().describe('ID da conta a receber (lf.id)'),
+    conta_financeira_id: z.string().describe('Conta financeira a creditar'),
+    metodo_pagamento_id: z.string().describe('Método de pagamento'),
+    descricao: z.string().describe('Descrição do recebimento'),
   }),
-  execute: async ({ conta_receber_id, valor_recebido, data_recebimento, forma_pagamento, conta_financeira_id, observacoes, juros, multa, desconto }) => {
-    // Mock data - será substituído por insert real no BigQuery
-
-    // Calcular valores
-    const valor_juros = juros || 0;
-    const valor_multa = multa || 0;
-    const valor_desconto = desconto || 0;
-    const valor_total = valor_recebido + valor_juros + valor_multa - valor_desconto;
-
-    const pagamentoCriado = {
-      id: `pgto-rec-${Date.now()}`,
-      conta_receber_id,
-      valor_recebido,
-      valor_juros,
-      valor_multa,
-      valor_desconto,
-      valor_total,
-      data_recebimento,
-      forma_pagamento,
-      conta_financeira_id,
-      conta_financeira_nome: 'Banco do Brasil - CC 12345-6',
-      observacoes: observacoes || '',
-      status: 'recebido',
-      data_cadastro: new Date().toISOString(),
-      // Dados da conta a receber vinculada
-      conta_receber: {
-        numero_nota_fiscal: 'NF-2024-001',
-        cliente_nome: 'Tech Solutions LTDA',
-        valor_original: 5500.00,
-        status_anterior: 'pendente',
-        status_atual: 'pago'
+  execute: async ({ lancamento_origem_id, conta_financeira_id, metodo_pagamento_id, descricao }) => {
+    try {
+      const arSql = `
+        SELECT lf.tenant_id, lf.valor::numeric AS total,
+               COALESCE(
+                 (SELECT SUM(r.valor)::numeric FROM financeiro.lancamentos_financeiros r
+                   WHERE LOWER(r.tipo) = 'pagamento_recebido' AND r.lancamento_origem_id = lf.id), 0
+               ) AS recebidos
+          FROM financeiro.lancamentos_financeiros lf
+         WHERE lf.id = $1 AND LOWER(lf.tipo) = 'conta_a_receber'
+         LIMIT 1
+      `.replace(/\n\s+/g, ' ').trim()
+      const rows = await runQuery<{ tenant_id: number | null; total: number; recebidos: number }>(arSql, [lancamento_origem_id])
+      if (!rows.length) {
+        return { success: false, preview: true, message: 'Conta a receber não encontrada', title: 'Pagamento Recebido (Prévia)', payload: null, validations: [{ field: 'lancamento_origem_id', status: 'error', message: 'Conta a receber inexistente' }], metadata: { commitEndpoint: '/api/modulos/financeiro/pagamentos-recebidos' } } as const
       }
-    };
+      const { tenant_id, total, recebidos } = rows[0]
+      const pendente = Math.max(0, Number(total || 0) - Number(recebidos || 0))
+      const hoje = new Date().toISOString().slice(0, 10)
 
-    const formasPagamentoLabels: Record<string, string> = {
-      dinheiro: 'Dinheiro',
-      pix: 'PIX',
-      transferencia: 'Transferência Bancária',
-      boleto: 'Boleto',
-      cartao_credito: 'Cartão de Crédito',
-      cartao_debito: 'Cartão de Débito',
-      cheque: 'Cheque'
-    };
+      const validations: Array<{ field: string; status: 'ok'|'warn'|'error'; message?: string }> = []
+      if (!conta_financeira_id) validations.push({ field: 'conta_financeira_id', status: 'error', message: 'Conta financeira é obrigatória' })
+      if (!metodo_pagamento_id) validations.push({ field: 'metodo_pagamento_id', status: 'error', message: 'Método de pagamento é obrigatório' })
+      if (!descricao || !descricao.trim()) validations.push({ field: 'descricao', status: 'error', message: 'Descrição é obrigatória' })
+      if (pendente <= 0) validations.push({ field: 'valor', status: 'error', message: 'Título já está totalmente recebido' })
 
-    return {
-      success: true,
-      data: pagamentoCriado,
-      message: `Pagamento recebido com sucesso! Conta a receber ${pagamentoCriado.conta_receber.numero_nota_fiscal} baixada automaticamente.`,
-      title: '💰 Pagamento Recebido',
-      resumo: {
-        id: pagamentoCriado.id,
-        valor_formatado: valor_total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
-        data_recebimento,
-        forma_pagamento: formasPagamentoLabels[forma_pagamento],
-        conta_financeira: pagamentoCriado.conta_financeira_nome,
-        nota_fiscal: pagamentoCriado.conta_receber.numero_nota_fiscal,
-        cliente: pagamentoCriado.conta_receber.cliente_nome,
-        status_conta: 'Baixada automaticamente'
-      },
-      detalhamento: {
-        valor_principal: valor_recebido,
-        juros: valor_juros,
-        multa: valor_multa,
-        desconto: valor_desconto,
-        total: valor_total
+      const payload = {
+        lancamento_origem_id,
+        conta_financeira_id,
+        metodo_pagamento_id,
+        descricao,
+        valor: pendente,
+        data_recebimento: hoje,
+        tenant_id: tenant_id ?? 1,
       }
-    };
+
+      return {
+        success: true,
+        preview: true,
+        title: 'Pagamento Recebido (Prévia)',
+        message: pendente > 0 ? `Recebimento proposto de ${pendente.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}` : 'Título sem valor pendente',
+        payload,
+        validations,
+        metadata: { commitEndpoint: '/api/modulos/financeiro/pagamentos-recebidos' }
+      } as const
+    } catch (error) {
+      return { success: false, preview: true, message: error instanceof Error ? error.message : String(error), title: 'Pagamento Recebido (Prévia)', payload: null, validations: [{ field: 'lancamento_origem_id', status: 'error', message: 'Falha ao calcular pendente' }], metadata: { commitEndpoint: '/api/modulos/financeiro/pagamentos-recebidos' } } as const
+    }
   }
 });
