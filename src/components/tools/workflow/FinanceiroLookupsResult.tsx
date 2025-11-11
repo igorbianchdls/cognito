@@ -2,6 +2,7 @@
 
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable'
 import { ColumnDef } from '@tanstack/react-table'
+import { Wallet } from 'lucide-react'
 
 type LookupRow = {
   tipo: 'metodo_pagamento' | 'conta_financeira' | string
@@ -43,7 +44,7 @@ export default function FinanceiroLookupsResult({ result }: { result: Financeiro
       data={result.rows || []}
       columns={columns}
       title={result.title || 'Contas e Métodos'}
-      icon={undefined as unknown as any}
+      icon={Wallet}
       iconColor="text-blue-600"
       message={result.message}
       success={result.success}
@@ -54,4 +55,3 @@ export default function FinanceiroLookupsResult({ result }: { result: Financeiro
     />
   )
 }
-
