@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { tool } from 'ai';
+import { runQuery } from '@/lib/postgres';
 
 // ============================================
 // WORKFLOW TOOLS - PAGAMENTOS EFETUADOS
@@ -10,91 +11,90 @@ import { tool } from 'ai';
  * Permite buscar por NF, fornecedor, valor ou vencimento
  */
 export const buscarContaPagar = tool({
-  description: '[WORKFLOW] Busca conta a pagar existente no sistema por número de NF, fornecedor, valor ou data de vencimento',
+  description: '[WORKFLOW] Busca conta a pagar existente no sistema por fornecedor, valor ou vencimento (consulta ao banco)',
   inputSchema: z.object({
-    numero_nota_fiscal: z.string().optional().describe('Número da nota fiscal'),
     fornecedor_id: z.string().optional().describe('ID do fornecedor'),
-    fornecedor_nome: z.string().optional().describe('Nome do fornecedor para busca'),
-    valor: z.number().optional().describe('Valor da conta a pagar'),
+    fornecedor_nome: z.string().optional().describe('Nome do fornecedor para busca (parcial)'),
+    valor: z.number().optional().describe('Valor da conta a pagar (igualdade exata)'),
     data_vencimento: z.string().optional().describe('Data de vencimento (YYYY-MM-DD)'),
   }),
-  execute: async ({ numero_nota_fiscal, fornecedor_id, fornecedor_nome, valor, data_vencimento }) => {
-    // Mock data - será substituído por query real do BigQuery
-    const mockContasPagar = [
-      {
-        id: 'cp-001',
-        fornecedor_id: 'forn-001',
-        fornecedor_nome: 'Fornecedor ABC LTDA',
-        numero_nota_fiscal: 'NF-FN-2024-001',
-        valor: 8500.00,
-        valor_pago: 0,
-        valor_pendente: 8500.00,
-        data_emissao: '2024-01-10',
-        data_vencimento: '2024-02-10',
-        status: 'pendente',
-        categoria_id: 'cat-003',
-        categoria_nome: 'Fornecedores',
-        centro_custo_id: 'cc-002',
-        centro_custo_nome: 'Operações',
-        descricao: 'Material de escritório',
-        quantidade_itens: 5
-      },
-      {
-        id: 'cp-002',
-        fornecedor_id: 'forn-002',
-        fornecedor_nome: 'Serviços Tech XYZ',
-        numero_nota_fiscal: 'NF-FN-2024-002',
-        valor: 4200.00,
-        valor_pago: 0,
-        valor_pendente: 4200.00,
-        data_emissao: '2024-01-15',
-        data_vencimento: '2024-02-15',
-        status: 'pendente',
-        categoria_id: 'cat-004',
-        categoria_nome: 'Serviços de TI',
-        centro_custo_id: 'cc-003',
-        centro_custo_nome: 'Tecnologia',
-        descricao: 'Manutenção de servidores',
-        quantidade_itens: 2
-      }
-    ];
+  execute: async ({ fornecedor_id, fornecedor_nome, valor, data_vencimento }) => {
+    // SQL base (conforme especificação enviada)
+    let sql = `
+      SELECT 
+        lf.id AS conta_id,
+        lf.descricao AS descricao_conta,
+        lf.valor AS valor_a_pagar,
+        lf.status AS status_conta,
+        f.nome AS fornecedor_nome
+      FROM financeiro.lancamentos_financeiros lf
+      LEFT JOIN entidades.fornecedores f 
+             ON lf.fornecedor_id = f.id
+      WHERE lf.tipo = 'conta_a_pagar'
+    `.replace(/\n\s+/g, ' ')
 
-    // Filtrar com base nos critérios fornecidos
-    const resultado = mockContasPagar.find(conta => {
-      if (numero_nota_fiscal && conta.numero_nota_fiscal === numero_nota_fiscal) return true;
-      if (fornecedor_id && conta.fornecedor_id === fornecedor_id) return true;
-      if (fornecedor_nome && conta.fornecedor_nome.toLowerCase().includes(fornecedor_nome.toLowerCase())) return true;
-      if (valor && Math.abs(conta.valor - valor) < 0.01) return true;
-      if (data_vencimento && conta.data_vencimento === data_vencimento) return true;
-      return false;
-    });
+    const conditions: string[] = []
+    const params: unknown[] = []
+    let i = 1
 
-    if (resultado) {
-      return {
-        success: true,
-        conta_encontrada: true,
-        data: resultado,
-        message: `Conta a pagar encontrada: ${resultado.numero_nota_fiscal} - ${resultado.fornecedor_nome}`,
-        title: '✅ Conta a Pagar Encontrada',
-        valor_formatado: resultado.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
-        resumo: {
-          id: resultado.id,
-          numero_nota_fiscal: resultado.numero_nota_fiscal,
-          fornecedor: resultado.fornecedor_nome,
-          valor: resultado.valor,
-          status: resultado.status,
-          vencimento: resultado.data_vencimento
-        }
-      };
-    } else {
+    if (fornecedor_id) { conditions.push(`lf.fornecedor_id = $${i++}`); params.push(fornecedor_id) }
+    if (fornecedor_nome) { conditions.push(`f.nome ILIKE $${i++}`); params.push(`%${fornecedor_nome}%`) }
+    if (typeof valor === 'number') { conditions.push(`lf.valor = $${i++}`); params.push(valor) }
+    if (data_vencimento) { conditions.push(`lf.data_vencimento = $${i++}`); params.push(data_vencimento) }
+
+    if (conditions.length) sql += ' AND ' + conditions.join(' AND ')
+    sql += ' ORDER BY lf.id DESC LIMIT 1'
+
+    type Row = { conta_id: string | number; descricao_conta: string | null; valor_a_pagar: number | null; status_conta: string | null; fornecedor_nome: string | null }
+    const rows = await runQuery<Row>(sql.trim(), params)
+
+    if (!rows.length) {
       return {
         success: true,
         conta_encontrada: false,
         data: null,
         message: 'Nenhuma conta a pagar encontrada com os critérios informados',
         title: '⚠️ Conta Não Encontrada',
-      };
+      } as const
     }
+
+    const r = rows[0]
+    const valorNum = Number(r.valor_a_pagar || 0)
+    const data = {
+      id: String(r.conta_id),
+      fornecedor_id: '',
+      fornecedor_nome: r.fornecedor_nome || '-',
+      numero_nota_fiscal: undefined,
+      valor: valorNum,
+      valor_pago: 0,
+      valor_pendente: valorNum,
+      data_emissao: '',
+      data_vencimento: '',
+      status: r.status_conta || '',
+      categoria_id: undefined,
+      categoria_nome: undefined,
+      centro_custo_id: undefined,
+      centro_custo_nome: undefined,
+      descricao: r.descricao_conta || '',
+      quantidade_itens: undefined,
+    }
+
+    return {
+      success: true,
+      conta_encontrada: true,
+      data,
+      message: `Conta a pagar encontrada: ${data.descricao || data.id} - ${data.fornecedor_nome}`,
+      title: '✅ Conta a Pagar Encontrada',
+      valor_formatado: valorNum.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
+      resumo: {
+        id: data.id,
+        numero_nota_fiscal: data.numero_nota_fiscal || '-',
+        fornecedor: data.fornecedor_nome,
+        valor: valorNum,
+        status: data.status,
+        vencimento: data.data_vencimento || '-',
+      }
+    } as const
   }
 });
 
