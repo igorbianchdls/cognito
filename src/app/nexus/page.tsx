@@ -181,11 +181,21 @@ export default function Page() {
         }
       }
       
-      // Add message to chat display (always use displayText for what user sees)
+      // Prepare file parts if there are attached files
+      const fileParts = attachedFiles.map(file => ({
+        type: 'file' as const,
+        mediaType: file.type,
+        url: file.dataUrl,
+      }));
+
+      // Add message to chat display with files included
       const userMessage = {
         id: `user-${Date.now()}`,
         role: 'user' as const,
-        parts: [{ type: 'text' as const, text: displayText }], // User sees clean/summary version
+        parts: [
+          { type: 'text' as const, text: displayText },
+          ...fileParts  // Include file parts in display
+        ],
         agent: activeAgentOrWorkflow
       };
       setAllMessages(prev => [...prev, userMessage]);
@@ -193,11 +203,6 @@ export default function Page() {
       // Send to AI with optional file attachments (multiple files support)
       if (attachedFiles.length > 0) {
         const textPart = { type: 'text' as const, text: messageForAI };
-        const fileParts = attachedFiles.map(file => ({
-          type: 'file' as const,
-          mediaType: file.type,
-          url: file.dataUrl,
-        }));
 
         sendMessage({
           role: 'user',

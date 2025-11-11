@@ -41,14 +41,16 @@ export default function Home() {
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (input.trim()) {
+      // Prepare file parts if there are attached files
+      const fileParts = attachedFiles.map(file => ({
+        type: 'file' as const,
+        mediaType: file.type,
+        url: file.dataUrl,
+      }));
+
       // Send to AI with optional file attachments (multiple files support)
       if (attachedFiles.length > 0) {
         const textPart = { type: 'text' as const, text: input };
-        const fileParts = attachedFiles.map(file => ({
-          type: 'file' as const,
-          mediaType: file.type,
-          url: file.dataUrl,
-        }));
 
         sendMessage({
           role: 'user',
