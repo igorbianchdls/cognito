@@ -21,7 +21,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
 
-export function NavModulos({ groupLabelStyle }: { groupLabelStyle?: React.CSSProperties } = {}) {
+export function NavModulos({ groupLabelStyle, itemTextStyle }: { groupLabelStyle?: React.CSSProperties; itemTextStyle?: React.CSSProperties } = {}) {
   const router = useRouter()
   const pathname = usePathname()
 
@@ -43,7 +43,7 @@ export function NavModulos({ groupLabelStyle }: { groupLabelStyle?: React.CSSPro
               <CollapsibleTrigger asChild>
                 <SidebarMenuButton tooltip="Financeiro">
                   <DollarSign />
-                  <span>Financeiro</span>
+                  <span style={itemTextStyle}>Financeiro</span>
                   <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                 </SidebarMenuButton>
               </CollapsibleTrigger>
@@ -52,14 +52,14 @@ export function NavModulos({ groupLabelStyle }: { groupLabelStyle?: React.CSSPro
                   <SidebarMenuSubItem>
                     <SidebarMenuSubButton asChild isActive={pathname === "/modulos/financeiro"}>
                       <a href="/modulos/financeiro">
-                        <span>Gestão</span>
+                        <span style={itemTextStyle}>Gestão</span>
                       </a>
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
                   <SidebarMenuSubItem>
                     <SidebarMenuSubButton asChild isActive={pathname === "/modulos/financeiro/dashboard"}>
                       <a href="/modulos/financeiro/dashboard">
-                        <span>Dashboard</span>
+                        <span style={itemTextStyle}>Dashboard</span>
                       </a>
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
@@ -78,7 +78,7 @@ export function NavModulos({ groupLabelStyle }: { groupLabelStyle?: React.CSSPro
               <CollapsibleTrigger asChild>
                 <SidebarMenuButton tooltip="Contabilidade">
                   <BookOpen />
-                  <span>Contabilidade</span>
+                  <span style={itemTextStyle}>Contabilidade</span>
                   <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                 </SidebarMenuButton>
               </CollapsibleTrigger>
@@ -87,14 +87,14 @@ export function NavModulos({ groupLabelStyle }: { groupLabelStyle?: React.CSSPro
                   <SidebarMenuSubItem>
                     <SidebarMenuSubButton asChild isActive={pathname === "/modulos/contabilidade"}>
                       <a href="/modulos/contabilidade">
-                        <span>Gestão</span>
+                        <span style={itemTextStyle}>Gestão</span>
                       </a>
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
                   <SidebarMenuSubItem>
                     <SidebarMenuSubButton asChild isActive={pathname === "/modulos/contabilidade/dashboard"}>
                       <a href="/modulos/contabilidade/dashboard">
-                        <span>Dashboard</span>
+                        <span style={itemTextStyle}>Dashboard</span>
                       </a>
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
@@ -113,7 +113,7 @@ export function NavModulos({ groupLabelStyle }: { groupLabelStyle?: React.CSSPro
               <CollapsibleTrigger asChild>
                 <SidebarMenuButton tooltip="Recursos Humanos">
                   <Briefcase />
-                  <span>Recursos Humanos</span>
+                  <span style={itemTextStyle}>Recursos Humanos</span>
                   <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                 </SidebarMenuButton>
               </CollapsibleTrigger>
@@ -122,14 +122,14 @@ export function NavModulos({ groupLabelStyle }: { groupLabelStyle?: React.CSSPro
                   <SidebarMenuSubItem>
                     <SidebarMenuSubButton asChild isActive={pathname === "/modulos/recursos-humanos"}>
                       <a href="/modulos/recursos-humanos">
-                        <span>Gestão</span>
+                        <span style={itemTextStyle}>Gestão</span>
                       </a>
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
                   <SidebarMenuSubItem>
                     <SidebarMenuSubButton asChild isActive={pathname === "/modulos/recursos-humanos/dashboard"}>
                       <a href="/modulos/recursos-humanos/dashboard">
-                        <span>Dashboard</span>
+                        <span style={itemTextStyle}>Dashboard</span>
                       </a>
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
@@ -203,14 +203,14 @@ export function NavModulos({ groupLabelStyle }: { groupLabelStyle?: React.CSSPro
                   <SidebarMenuSubItem>
                     <SidebarMenuSubButton asChild isActive={pathname === "/modulos/vendas"}>
                       <a href="/modulos/vendas">
-                        <span>Gestão</span>
+                        <span style={itemTextStyle}>Gestão</span>
                       </a>
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
                   <SidebarMenuSubItem>
                     <SidebarMenuSubButton asChild isActive={pathname === "/modulos/vendas/dashboard"}>
                       <a href="/modulos/vendas/dashboard">
-                        <span>Dashboard</span>
+                        <span style={itemTextStyle}>Dashboard</span>
                       </a>
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
@@ -237,14 +237,14 @@ export function NavModulos({ groupLabelStyle }: { groupLabelStyle?: React.CSSPro
                   <SidebarMenuSubItem>
                     <SidebarMenuSubButton asChild isActive={pathname === "/modulos/crm"}>
                       <a href="/modulos/crm">
-                        <span>Gestão</span>
+                        <span style={itemTextStyle}>Gestão</span>
                       </a>
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
                   <SidebarMenuSubItem>
                     <SidebarMenuSubButton asChild isActive={pathname === "/modulos/crm/dashboard"}>
                       <a href="/modulos/crm/dashboard">
-                        <span>Dashboard</span>
+                        <span style={itemTextStyle}>Dashboard</span>
                       </a>
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
@@ -271,14 +271,14 @@ export function NavModulos({ groupLabelStyle }: { groupLabelStyle?: React.CSSPro
                   <SidebarMenuSubItem>
                     <SidebarMenuSubButton asChild isActive={pathname === "/modulos/servicos"}>
                       <a href="/modulos/servicos">
-                        <span>Gestão</span>
+                        <span style={itemTextStyle}>Gestão</span>
                       </a>
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
                   <SidebarMenuSubItem>
                     <SidebarMenuSubButton asChild isActive={pathname === "/modulos/servicos/dashboard"}>
                       <a href="/modulos/servicos/dashboard">
-                        <span>Dashboard</span>
+                        <span style={itemTextStyle}>Dashboard</span>
                       </a>
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
@@ -306,7 +306,7 @@ export function NavModulos({ groupLabelStyle }: { groupLabelStyle?: React.CSSPro
                   <SidebarMenuSubItem>
                     <SidebarMenuSubButton asChild isActive={pathname === "/modulos/manutencao"}>
                       <a href="/modulos/manutencao">
-                        <span>Gestão</span>
+                        <span style={itemTextStyle}>Gestão</span>
                       </a>
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
@@ -338,14 +338,14 @@ export function NavModulos({ groupLabelStyle }: { groupLabelStyle?: React.CSSPro
                   <SidebarMenuSubItem>
                     <SidebarMenuSubButton asChild isActive={pathname === "/modulos/marketing"}>
                       <a href="/modulos/marketing">
-                        <span>Gestão</span>
+                        <span style={itemTextStyle}>Gestão</span>
                       </a>
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
                   <SidebarMenuSubItem>
                     <SidebarMenuSubButton asChild isActive={pathname === "/modulos/marketing/dashboard"}>
                       <a href="/modulos/marketing/dashboard">
-                        <span>Dashboard</span>
+                        <span style={itemTextStyle}>Dashboard</span>
                       </a>
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
@@ -372,14 +372,14 @@ export function NavModulos({ groupLabelStyle }: { groupLabelStyle?: React.CSSPro
                   <SidebarMenuSubItem>
                     <SidebarMenuSubButton asChild isActive={pathname === "/modulos/trafego-pago"}>
                       <a href="/modulos/trafego-pago">
-                        <span>Gestão</span>
+                        <span style={itemTextStyle}>Gestão</span>
                       </a>
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
                   <SidebarMenuSubItem>
                     <SidebarMenuSubButton asChild isActive={pathname === "/modulos/trafego-pago/dashboard"}>
                       <a href="/modulos/trafego-pago/dashboard">
-                        <span>Dashboard</span>
+                        <span style={itemTextStyle}>Dashboard</span>
                       </a>
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
@@ -406,14 +406,14 @@ export function NavModulos({ groupLabelStyle }: { groupLabelStyle?: React.CSSPro
                   <SidebarMenuSubItem>
                     <SidebarMenuSubButton asChild isActive={pathname === "/modulos/web-analytics"}>
                       <a href="/modulos/web-analytics">
-                        <span>Gestão</span>
+                        <span style={itemTextStyle}>Gestão</span>
                       </a>
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
                   <SidebarMenuSubItem>
                     <SidebarMenuSubButton asChild isActive={pathname === "/modulos/web-analytics/dashboard"}>
                       <a href="/modulos/web-analytics/dashboard">
-                        <span>Dashboard</span>
+                        <span style={itemTextStyle}>Dashboard</span>
                       </a>
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
@@ -446,14 +446,14 @@ export function NavModulos({ groupLabelStyle }: { groupLabelStyle?: React.CSSPro
                   <SidebarMenuSubItem>
                     <SidebarMenuSubButton asChild isActive={pathname === "/modulos/estoque"}>
                       <a href="/modulos/estoque">
-                        <span>Gestão</span>
+                        <span style={itemTextStyle}>Gestão</span>
                       </a>
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
                   <SidebarMenuSubItem>
                     <SidebarMenuSubButton asChild isActive={pathname === "/modulos/estoque/dashboard"}>
                       <a href="/modulos/estoque/dashboard">
-                        <span>Dashboard</span>
+                        <span style={itemTextStyle}>Dashboard</span>
                       </a>
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
@@ -481,14 +481,14 @@ export function NavModulos({ groupLabelStyle }: { groupLabelStyle?: React.CSSPro
                   <SidebarMenuSubItem>
                     <SidebarMenuSubButton asChild isActive={pathname === "/modulos/compras"}>
                       <a href="/modulos/compras">
-                        <span>Gestão</span>
+                        <span style={itemTextStyle}>Gestão</span>
                       </a>
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
                   <SidebarMenuSubItem>
                     <SidebarMenuSubButton asChild isActive={pathname === "/modulos/compras/dashboard"}>
                       <a href="/modulos/compras/dashboard">
-                        <span>Dashboard</span>
+                        <span style={itemTextStyle}>Dashboard</span>
                       </a>
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>

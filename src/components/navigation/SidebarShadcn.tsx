@@ -98,7 +98,7 @@ const navigationData = {
   ],
 }
 
-export function SidebarShadcn({ bgColor, textColor, itemTextColor, sectionTitleStyle, style, ...props }: React.ComponentProps<typeof Sidebar> & { bgColor?: string; textColor?: string; itemTextColor?: string; sectionTitleStyle?: React.CSSProperties }) {
+export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle, sectionTitleStyle, style, ...props }: React.ComponentProps<typeof Sidebar> & { bgColor?: string; textColor?: string; itemTextColor?: string; itemTextStyle?: React.CSSProperties; sectionTitleStyle?: React.CSSProperties }) {
   const pathname = usePathname()
 
   // Update active state based on current path
@@ -126,8 +126,8 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, sectionTitleS
         <TeamSwitcher teams={dataWithActiveState.teams} />
       </SidebarHeader>
       <SidebarContent>
-        <NavMainSimple items={dataWithActiveState.navMain} groupLabelStyle={sectionTitleStyle} />
-        <NavModulos groupLabelStyle={sectionTitleStyle} />
+        <NavMainSimple items={dataWithActiveState.navMain} groupLabelStyle={sectionTitleStyle} itemTextStyle={itemTextStyle} />
+        <NavModulos groupLabelStyle={sectionTitleStyle} itemTextStyle={itemTextStyle} />
         
         <SidebarGroup>
           <SidebarGroupLabel style={sectionTitleStyle}>Integrações</SidebarGroupLabel>
@@ -136,7 +136,7 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, sectionTitleS
               <SidebarMenuItem key={integration.title}>
                 <SidebarMenuButton tooltip={integration.title}>
                   <integration.icon className="w-4 h-4" backgroundColor="transparent" />
-                  <span>{integration.title}</span>
+                  <span style={itemTextStyle}>{integration.title}</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             ))}

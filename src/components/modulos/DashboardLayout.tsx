@@ -23,6 +23,7 @@ interface DashboardLayoutProps {
   sidebarBgColor?: string
   sidebarTextColor?: string
   sidebarItemTextColor?: string
+  sidebarItemTextStyle?: React.CSSProperties
   sidebarSectionTitleStyle?: React.CSSProperties
   contentClassName?: string
 }
@@ -44,6 +45,7 @@ export default function DashboardLayout({
   sidebarBgColor,
   sidebarTextColor,
   sidebarItemTextColor,
+  sidebarItemTextStyle,
   sidebarSectionTitleStyle,
   contentClassName = 'flex-1 p-6',
 }: DashboardLayoutProps) {
@@ -53,6 +55,7 @@ export default function DashboardLayout({
         bgColor={sidebarBgColor}
         textColor={sidebarTextColor}
         itemTextColor={sidebarItemTextColor}
+        itemTextStyle={sidebarItemTextStyle}
         sectionTitleStyle={sidebarSectionTitleStyle}
       />
       <SidebarInset

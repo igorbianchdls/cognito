@@ -219,6 +219,15 @@ export default function FinanceiroDashboardPage() {
     textTransform: fonts.sidebarSectionTitle.transform === 'uppercase' ? 'uppercase' : 'none',
   }), [fonts.sidebarSectionTitle])
 
+  const styleSidebarItemText = useMemo<React.CSSProperties>(() => ({
+    fontFamily: fontVar(fonts.sidebarItemText.family),
+    fontWeight: fonts.sidebarItemText.weight as React.CSSProperties['fontWeight'],
+    letterSpacing: typeof fonts.sidebarItemText.letterSpacing === 'number' ? `${fonts.sidebarItemText.letterSpacing}px` : undefined,
+    color: fonts.sidebarItemText.color || undefined,
+    fontSize: typeof fonts.sidebarItemText.size === 'number' ? `${fonts.sidebarItemText.size}px` : undefined,
+    textTransform: fonts.sidebarItemText.transform === 'uppercase' ? 'uppercase' : 'none',
+  }), [fonts.sidebarItemText])
+
   // Header right actions (date range + generic data filter)
   const rangeLabel = useMemo(() => {
     if (dateRange?.from && dateRange?.to) {
@@ -722,6 +731,7 @@ export default function FinanceiroDashboardPage() {
       sidebarBgColor={sidebarBgColor}
       sidebarTextColor={sidebarTextColor}
       sidebarItemTextColor={sidebarItemTextColor}
+      sidebarItemTextStyle={styleSidebarItemText}
       sidebarSectionTitleStyle={styleSidebarSectionTitle}
       userAvatarUrl="https://i.pravatar.cc/80?img=12"
     >
@@ -1301,6 +1311,87 @@ export default function FinanceiroDashboardPage() {
                   className="border rounded w-8 h-6"
                   value={fonts.sidebarSectionTitle.color || '#6b7280'}
                   onChange={(e) => setFonts((f) => ({ ...f, sidebarSectionTitle: { ...f.sidebarSectionTitle, color: e.target.value } }))}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="mt-6">
+          <h5 className="text-xs font-semibold text-gray-700 mb-2">Sidebar — Itens (Financeiro, Dashboard, etc.)</h5>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <div className="text-xs text-gray-500 mb-2">Tipografia dos itens do menu</div>
+              <div className="flex items-center gap-2 mb-2">
+                <label className="text-xs text-gray-600 w-20">Fonte</label>
+                <select
+                  className="border rounded px-2 py-1 text-xs"
+                  value={fonts.sidebarItemText.family}
+                  onChange={(e) => setFonts((f) => ({ ...f, sidebarItemText: { ...f.sidebarItemText, family: e.target.value } }))}
+                >
+                  <option>Inter</option>
+                  <option>Geist</option>
+                  <option>Geist Mono</option>
+                  <option>Roboto Mono</option>
+                  <option>IBM Plex Mono</option>
+                  <option>Avenir</option>
+                  <option>Space Mono</option>
+                  <option>EB Garamond</option>
+                  <option>Libre Baskerville</option>
+                  <option>Barlow</option>
+                </select>
+              </div>
+              <div className="flex items-center gap-2 mb-2">
+                <label className="text-xs text-gray-600 w-20">Caixa</label>
+                <select
+                  className="border rounded px-2 py-1 text-xs w-28"
+                  value={fonts.sidebarItemText.transform}
+                  onChange={(e) => setFonts((f) => ({ ...f, sidebarItemText: { ...f.sidebarItemText, transform: e.target.value as 'none' | 'uppercase' } }))}
+                >
+                  <option value="none">Normal</option>
+                  <option value="uppercase">UPPERCASE</option>
+                </select>
+              </div>
+              <div className="flex items-center gap-2 mb-2">
+                <label className="text-xs text-gray-600 w-20">Peso</label>
+                <input
+                  type="number"
+                  className="border rounded px-2 py-1 text-xs w-24"
+                  value={fonts.sidebarItemText.weight ?? 400}
+                  min={100}
+                  max={900}
+                  step={100}
+                  onChange={(e) => setFonts((f) => ({ ...f, sidebarItemText: { ...f.sidebarItemText, weight: Number(e.target.value) } }))}
+                />
+              </div>
+              <div className="flex items-center gap-2 mb-2">
+                <label className="text-xs text-gray-600 w-20">Tamanho</label>
+                <input
+                  type="number"
+                  className="border rounded px-2 py-1 text-xs w-24"
+                  value={fonts.sidebarItemText.size ?? 14}
+                  min={8}
+                  max={32}
+                  step={1}
+                  onChange={(e) => setFonts((f) => ({ ...f, sidebarItemText: { ...f.sidebarItemText, size: Number(e.target.value) } }))}
+                />
+              </div>
+              <div className="flex items-center gap-2 mb-2">
+                <label className="text-xs text-gray-600 w-20">Espaço</label>
+                <input
+                  type="number"
+                  className="border rounded px-2 py-1 text-xs w-24"
+                  value={fonts.sidebarItemText.letterSpacing ?? 0}
+                  step={0.5}
+                  onChange={(e) => setFonts((f) => ({ ...f, sidebarItemText: { ...f.sidebarItemText, letterSpacing: Number(e.target.value) } }))}
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="text-xs text-gray-600 w-20">Cor</label>
+                <input
+                  type="color"
+                  className="border rounded w-8 h-6"
+                  value={fonts.sidebarItemText.color || '#0f172a'}
+                  onChange={(e) => setFonts((f) => ({ ...f, sidebarItemText: { ...f.sidebarItemText, color: e.target.value } }))}
                 />
               </div>
             </div>

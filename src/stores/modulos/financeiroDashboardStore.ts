@@ -21,6 +21,7 @@ export type FinanceiroDashboardUIState = {
     headerTitle: Typography
     headerSubtitle: Typography
     sidebarSectionTitle: Typography
+    sidebarItemText: Typography
   }
   cardBorderColor: string
   cardShadow: boolean
@@ -42,10 +43,11 @@ const DEFAULT_UI: FinanceiroDashboardUIState = {
     kpiTitle: { family: 'Geist Mono', weight: 500, letterSpacing: 0, color: 'rgb(179, 179, 179)', size: 12, transform: 'uppercase' },
     chartTitle: { family: 'Geist Mono', weight: 500, letterSpacing: -1, color: 'rgb(125, 125, 125)', size: 16, transform: 'none' },
     text: { family: 'Inter', weight: 400, letterSpacing: 0, color: '#6b7280', size: 12, transform: 'none' },
-    filters: { family: 'Inter', weight: 400, letterSpacing: 0, color: 'rgb(122, 122, 122)', size: 13, transform: 'none' },
+    filters: { family: 'Geist Mono', weight: 400, letterSpacing: 0, color: 'rgb(122, 122, 122)', size: 12, transform: 'uppercase' },
     headerTitle: { family: 'Geist Mono', weight: 700, letterSpacing: -1, color: '#111827', size: 25, transform: 'none' },
-    headerSubtitle: { family: 'Geist', weight: 400, letterSpacing: 0, color: '#6b7280', size: 12, transform: 'none' },
+    headerSubtitle: { family: 'Barlow', weight: 400, letterSpacing: 0, color: 'rgb(168, 168, 168)', size: 14, transform: 'none' },
     sidebarSectionTitle: { family: 'Space Mono', weight: 500, letterSpacing: 0, color: '#808080', size: 12, transform: 'uppercase' },
+    sidebarItemText: { family: 'Inter', weight: 400, letterSpacing: 0, color: '#0f172a', size: 14, transform: 'none' },
   },
   cardBorderColor: 'rgb(233, 233, 233)',
   cardShadow: false,

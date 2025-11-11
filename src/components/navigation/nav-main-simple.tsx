@@ -14,6 +14,7 @@ import {
 export function NavMainSimple({
   items,
   groupLabelStyle,
+  itemTextStyle,
 }: {
   items: {
     title: string
@@ -22,6 +23,7 @@ export function NavMainSimple({
     isActive?: boolean
   }[]
   groupLabelStyle?: React.CSSProperties
+  itemTextStyle?: React.CSSProperties
 }) {
   const router = useRouter()
 
@@ -41,7 +43,7 @@ export function NavMainSimple({
               isActive={item.isActive}
             >
               {item.icon && <item.icon />}
-              <span>{item.title}</span>
+              <span style={itemTextStyle}>{item.title}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         ))}
