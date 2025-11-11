@@ -15,87 +15,133 @@
 
 import { z } from 'zod';
 import { tool } from 'ai';
+import { runQuery } from '@/lib/postgres';
 
 // ========================================
 // WORKFLOW TOOL 1: Buscar Classificações Financeiras
 // ========================================
 export const buscarClassificacoesFinanceiras = tool({
-  description: '[WORKFLOW] Busca todas as classificações financeiras disponíveis: categorias financeiras, centros de custo e naturezas financeiras. Use esta tool para mostrar as opções disponíveis ao usuário antes de criar uma conta a pagar.',
+  description:
+    '[WORKFLOW] Busca todas as classificações financeiras disponíveis (categorias financeiras, centros de custo, naturezas financeiras, centros de lucro, departamentos, filiais e projetos). Use esta tool para mostrar as opções ao usuário antes de criar uma conta a pagar.',
 
   inputSchema: z.object({
-    termo_busca: z.string().optional()
-      .describe('Termo opcional para filtrar as classificações. Se não informado, retorna todas.')
+    termo_busca: z
+      .string()
+      .optional()
+      .describe('Termo opcional para filtrar por nome/tipo. Se não informado, retorna todas.'),
   }),
 
   execute: async ({ termo_busca }) => {
-    // TODO: Integrar com BigQuery
-    // Tabelas esperadas: categorias_financeiras, centros_custo, naturezas_financeiras
+    try {
+      const hasFilter = Boolean(termo_busca && termo_busca.trim().length > 0);
+      const searchParam = hasFilter ? `%${termo_busca!.trim()}%` : undefined;
 
-    // Mock data estruturado
-    const categoriasFinanceiras = [
-      { id: 'cat-001', nome: 'Fornecedores', tipo: 'despesa', descricao: 'Pagamentos a fornecedores' },
-      { id: 'cat-002', nome: 'Salários e Encargos', tipo: 'despesa', descricao: 'Folha de pagamento' },
-      { id: 'cat-003', nome: 'Impostos', tipo: 'despesa', descricao: 'Tributos e impostos' },
-      { id: 'cat-004', nome: 'Aluguel', tipo: 'despesa', descricao: 'Aluguel de imóveis' },
-      { id: 'cat-005', nome: 'Serviços de Terceiros', tipo: 'despesa', descricao: 'Serviços contratados' },
-      { id: 'cat-006', nome: 'Energia e Água', tipo: 'despesa', descricao: 'Contas de consumo' },
-      { id: 'cat-007', nome: 'Telefonia e Internet', tipo: 'despesa', descricao: 'Comunicação' },
-      { id: 'cat-008', nome: 'Marketing e Publicidade', tipo: 'despesa', descricao: 'Investimentos em marketing' },
-    ];
+      const sql = `
+        SELECT * FROM (
+          SELECT 'categoria_financeira'::text AS tipo, id::text AS id, nome::text AS nome FROM financeiro.categorias_financeiras
+          UNION ALL
+          SELECT 'natureza_financeira'::text AS tipo, id::text AS id, nome::text AS nome FROM financeiro.naturezas_financeiras
+          UNION ALL
+          SELECT 'projeto'::text AS tipo, id::text AS id, nome::text AS nome FROM financeiro.projetos
+          UNION ALL
+          SELECT 'filial'::text AS tipo, id::text AS id, nome::text AS nome FROM empresa.filiais
+          UNION ALL
+          SELECT 'centro_custo'::text AS tipo, id::text AS id, nome::text AS nome FROM empresa.centros_custo
+          UNION ALL
+          SELECT 'centro_lucro'::text AS tipo, id::text AS id, nome::text AS nome FROM empresa.centros_lucro
+          UNION ALL
+          SELECT 'departamento'::text AS tipo, id::text AS id, nome::text AS nome FROM empresa.departamentos
+        ) u
+        ${hasFilter ? 'WHERE u.nome ILIKE $1 OR u.tipo ILIKE $1' : ''}
+        ORDER BY u.tipo, u.nome
+      `.replace(/\n\s+/g, ' ').trim();
 
-    const centrosCusto = [
-      { id: 'cc-001', nome: 'Administrativo', descricao: 'Despesas administrativas gerais' },
-      { id: 'cc-002', nome: 'Comercial', descricao: 'Departamento de vendas' },
-      { id: 'cc-003', nome: 'Operações', descricao: 'Operações e produção' },
-      { id: 'cc-004', nome: 'TI', descricao: 'Tecnologia da Informação' },
-      { id: 'cc-005', nome: 'RH', descricao: 'Recursos Humanos' },
-      { id: 'cc-006', nome: 'Financeiro', descricao: 'Departamento financeiro' },
-      { id: 'cc-007', nome: 'Marketing', descricao: 'Marketing e comunicação' },
-    ];
+      type Row = { tipo: string; id: string; nome: string };
+      const rows = await runQuery<Row>(sql, hasFilter ? [searchParam] : undefined);
 
-    const naturezasFinanceiras = [
-      { id: 'nat-001', nome: 'Despesa Fixa', tipo: 'despesa' },
-      { id: 'nat-002', nome: 'Despesa Variável', tipo: 'despesa' },
-      { id: 'nat-003', nome: 'Investimento', tipo: 'despesa' },
-      { id: 'nat-004', nome: 'Custo Operacional', tipo: 'despesa' },
-    ];
+      // Buckets principais exigidos pelo UI atual
+      const categorias_financeiras: Array<{ id: string; nome: string; tipo: string; descricao: string }> = [];
+      const centros_custo: Array<{ id: string; nome: string; descricao: string }> = [];
+      const naturezas_financeiras: Array<{ id: string; nome: string; tipo: string }> = [];
 
-    // Filtrar se termo_busca foi fornecido
-    let categoriasFiltradas = categoriasFinanceiras;
-    let centrosFiltrados = centrosCusto;
-    let naturezasFiltradas = naturezasFinanceiras;
+      // Buckets adicionais (para uso futuro)
+      const centros_lucro: Array<{ id: string; nome: string }> = [];
+      const departamentos: Array<{ id: string; nome: string }> = [];
+      const filiais: Array<{ id: string; nome: string }> = [];
+      const projetos: Array<{ id: string; nome: string }> = [];
 
-    if (termo_busca) {
-      const termo = termo_busca.toLowerCase();
-      categoriasFiltradas = categoriasFinanceiras.filter(c =>
-        c.nome.toLowerCase().includes(termo) || c.descricao.toLowerCase().includes(termo)
-      );
-      centrosFiltrados = centrosCusto.filter(cc =>
-        cc.nome.toLowerCase().includes(termo) || cc.descricao.toLowerCase().includes(termo)
-      );
-      naturezasFiltradas = naturezasFinanceiras.filter(n =>
-        n.nome.toLowerCase().includes(termo)
-      );
-    }
-
-    return {
-      success: true,
-      message: termo_busca
-        ? `Encontradas ${categoriasFiltradas.length} categorias, ${centrosFiltrados.length} centros de custo e ${naturezasFiltradas.length} naturezas financeiras para "${termo_busca}"`
-        : `${categoriasFinanceiras.length} categorias financeiras, ${centrosCusto.length} centros de custo e ${naturezasFinanceiras.length} naturezas financeiras disponíveis`,
-      title: 'Classificações Financeiras',
-      data: {
-        categorias_financeiras: categoriasFiltradas,
-        centros_custo: centrosFiltrados,
-        naturezas_financeiras: naturezasFiltradas
-      },
-      counts: {
-        categorias: categoriasFiltradas.length,
-        centros_custo: centrosFiltrados.length,
-        naturezas: naturezasFiltradas.length
+      for (const r of rows) {
+        switch (r.tipo) {
+          case 'categoria_financeira':
+            categorias_financeiras.push({ id: r.id, nome: r.nome, tipo: '', descricao: '' });
+            break;
+          case 'natureza_financeira':
+            naturezas_financeiras.push({ id: r.id, nome: r.nome, tipo: '' });
+            break;
+          case 'centro_custo':
+            centros_custo.push({ id: r.id, nome: r.nome, descricao: '' });
+            break;
+          case 'centro_lucro':
+            centros_lucro.push({ id: r.id, nome: r.nome });
+            break;
+          case 'departamento':
+            departamentos.push({ id: r.id, nome: r.nome });
+            break;
+          case 'filial':
+            filiais.push({ id: r.id, nome: r.nome });
+            break;
+          case 'projeto':
+            projetos.push({ id: r.id, nome: r.nome });
+            break;
+          default:
+            break;
+        }
       }
-    };
-  }
+
+      const msgBase = `${categorias_financeiras.length} categorias financeiras, ${centros_custo.length} centros de custo e ${naturezas_financeiras.length} naturezas financeiras disponíveis`;
+      const message = hasFilter
+        ? `Encontradas ${categorias_financeiras.length} categorias, ${centros_custo.length} centros de custo e ${naturezas_financeiras.length} naturezas para "${termo_busca}"`
+        : msgBase;
+
+      return {
+        success: true,
+        message,
+        title: 'Classificações Financeiras',
+        data: {
+          categorias_financeiras,
+          centros_custo,
+          naturezas_financeiras,
+          // extras (para evolução futura do UI)
+          centros_lucro,
+          departamentos,
+          filiais,
+          projetos,
+        },
+        counts: {
+          categorias: categorias_financeiras.length,
+          centros_custo: centros_custo.length,
+          naturezas: naturezas_financeiras.length,
+        },
+      };
+    } catch (err) {
+      return {
+        success: false,
+        message: 'Falha ao buscar classificações financeiras',
+        title: 'Classificações Financeiras',
+        data: {
+          categorias_financeiras: [],
+          centros_custo: [],
+          naturezas_financeiras: [],
+          centros_lucro: [],
+          departamentos: [],
+          filiais: [],
+          projetos: [],
+        },
+        counts: { categorias: 0, centros_custo: 0, naturezas: 0 },
+        error: err instanceof Error ? err.message : String(err),
+      } as const;
+    }
+  },
 });
 
 // ========================================
