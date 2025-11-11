@@ -55,25 +55,25 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
   },
   'pagamentos-recebidos': {
     id: 'lf.id',
-    recebimento_id: 'lf.id',
-    titulo_id: 'ar.id',
-    cliente: 'cli_ar.nome',
+    pagamento_id: 'lf.id',
+    origem_id: 'orig.id',
+    cliente_nome: 'c.nome_fantasia',
     data_lancamento: 'lf.data_lancamento',
-    data_recebimento: 'lf.data_lancamento',
-    vencimento_titulo: 'ar.data_vencimento',
+    data_pagamento: 'lf.data_lancamento',
+    descricao_pagamento: 'lf.descricao',
+    descricao_origem: 'orig.descricao',
     valor: 'lf.valor',
-    valor_total: 'lf.valor',
-    valor_titulo: 'ar.valor',
-    status: 'lf.status',
-    conta_financeira: 'cf.nome_conta',
-    categoria: 'cat_ar.nome',
-    categoria_financeira: 'cat_ar.nome',
-    metodo_pagamento: 'mp.nome',
-    centro_lucro: 'cl_ar.nome',
-    departamento: 'dep_ar.nome',
-    filial: 'fil_ar.nome',
-    projeto: 'prj_ar.nome',
-    natureza_financeira: 'nf.nome',
+    valor_recebido: 'lf.valor',
+    status_pagamento: 'lf.status',
+    tipo_pagamento: 'lf.tipo',
+    observacao: 'lf.observacao',
+    conta_financeira_nome: 'cf2.nome_conta',
+    categoria_nome: 'cf.nome',
+    metodo_pagamento_nome: 'mp.nome',
+    centro_lucro_nome: 'cl.nome',
+    departamento_nome: 'dep.nome',
+    filial_nome: 'fi.nome',
+    projeto_nome: 'pr.nome',
   },
   conciliacao: {
     conciliacao_id: 'cb.id',
@@ -613,42 +613,47 @@ export async function GET(req: NextRequest) {
       if (valor_min !== undefined) push('lf.valor >=', valor_min);
       if (valor_max !== undefined) push('lf.valor <=', valor_max);
     } else if (view === 'pagamentos-recebidos') {
-      // Pagamentos Recebidos – dimensões vindas do cabeçalho (conta_a_receber)
+      // Pagamentos Recebidos – nova estrutura com dados herdados da origem
       baseSql = `FROM financeiro.lancamentos_financeiros lf
-                 JOIN financeiro.lancamentos_financeiros ar ON ar.id = lf.lancamento_origem_id
-                 LEFT JOIN financeiro.metodos_pagamento mp ON mp.id = ar.metodo_pagamento_id
-                 LEFT JOIN financeiro.contas_financeiras cf ON cf.id = ar.conta_financeira_id
-                 LEFT JOIN financeiro.categorias_financeiras cat_ar ON cat_ar.id = ar.categoria_id
-                 LEFT JOIN financeiro.naturezas_financeiras nf ON nf.id = cat_ar.natureza_id
-                 LEFT JOIN empresa.centros_lucro cl_ar ON cl_ar.id = ar.centro_lucro_id
-                 LEFT JOIN empresa.departamentos dep_ar ON dep_ar.id = ar.departamento_id
-                 LEFT JOIN empresa.filiais fil_ar ON fil_ar.id = ar.filial_id
-                 LEFT JOIN financeiro.projetos prj_ar ON prj_ar.id = ar.projeto_id
-                 LEFT JOIN entidades.clientes cli_ar ON cli_ar.id = ar.cliente_id`;
+                 LEFT JOIN financeiro.lancamentos_financeiros orig
+                        ON lf.lancamento_origem_id = orig.id
+                 LEFT JOIN financeiro.categorias_financeiras cf
+                        ON orig.categoria_id = cf.id
+                 LEFT JOIN empresa.centros_lucro cl
+                        ON orig.centro_lucro_id = cl.id
+                 LEFT JOIN empresa.departamentos dep
+                        ON orig.departamento_id = dep.id
+                 LEFT JOIN empresa.filiais fi
+                        ON orig.filial_id = fi.id
+                 LEFT JOIN financeiro.projetos pr
+                        ON orig.projeto_id = pr.id
+                 LEFT JOIN entidades.clientes c
+                        ON orig.cliente_id = c.id
+                 LEFT JOIN financeiro.contas_financeiras cf2
+                        ON lf.conta_financeira_id = cf2.id
+                 LEFT JOIN financeiro.metodos_pagamento mp
+                        ON lf.metodo_pagamento_id = mp.id`;
       selectSql = `SELECT
-                          lf.id AS recebimento_id,
-                          ar.id AS titulo_id,
-                          lf.data_lancamento AS data_recebimento,
-                          ar.data_vencimento AS vencimento_titulo,
-                          ar.valor AS valor_titulo,
+                          lf.id AS pagamento_id,
+                          lf.tipo AS tipo_pagamento,
+                          lf.descricao AS descricao_pagamento,
                           lf.valor AS valor_recebido,
-                          lf.valor AS valor_total,
-                          lf.descricao AS descricao,
-                          'ENTRADA' AS natureza,
-                          mp.nome AS metodo_pagamento,
-                          cf.nome_conta AS conta_financeira,
-                          cat_ar.nome AS categoria,
-                          cl_ar.nome AS centro_lucro,
-                          dep_ar.nome AS departamento,
-                          fil_ar.nome AS filial,
-                          prj_ar.nome AS projeto,
-                          cli_ar.nome AS cliente,
-                          cli_ar.imagem_url AS cliente_imagem_url,
-                          cat_ar.nome AS cliente_categoria,
-                          nf.nome AS natureza_financeira`;
+                          lf.status AS status_pagamento,
+                          lf.data_lancamento AS data_pagamento,
+                          lf.observacao,
+                          orig.id AS origem_id,
+                          orig.descricao AS descricao_origem,
+                          cf.nome AS categoria_nome,
+                          cl.nome AS centro_lucro_nome,
+                          dep.nome AS departamento_nome,
+                          fi.nome AS filial_nome,
+                          pr.nome AS projeto_nome,
+                          c.nome_fantasia AS cliente_nome,
+                          mp.nome AS metodo_pagamento_nome,
+                          cf2.nome_conta AS conta_financeira_nome`;
       whereDateCol = 'lf.data_lancamento';
       conditions.push(`lf.tipo = 'pagamento_recebido'`);
-      if (cliente_id) push('ar.cliente_id =', cliente_id);
+      if (cliente_id) push('orig.cliente_id =', cliente_id);
       if (status) push('LOWER(lf.status) =', status.toLowerCase());
       if (valor_min !== undefined) push('lf.valor >=', valor_min);
       if (valor_max !== undefined) push('lf.valor <=', valor_max);
