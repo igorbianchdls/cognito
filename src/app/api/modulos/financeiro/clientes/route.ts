@@ -7,6 +7,8 @@ export const revalidate = 0
 type ClientePayload = {
   nome: string
   cpf_cnpj?: string | null
+  cnpj_cpf?: string | null
+  tenant_id?: number | null
   email?: string | null
   telefone?: string | null
   endereco?: string | null
@@ -19,10 +21,10 @@ export async function POST(req: Request) {
     const nome = String(body.nome || '').trim()
     if (!nome) return Response.json({ success: false, message: 'nome é obrigatório' }, { status: 400 })
 
-    // Inserção mínima usando colunas existentes: nome_fantasia e cnpj_cpf (quando enviado)
+    // Inserção mínima usando colunas existentes: tenant_id, nome_fantasia e cnpj_cpf (quando enviado)
     const insertSql = `
-      INSERT INTO entidades.clientes (nome_fantasia, cnpj_cpf)
-      VALUES ($1, $2)
+      INSERT INTO entidades.clientes (tenant_id, nome_fantasia, cnpj_cpf)
+      VALUES ($1, $2, $3)
       RETURNING id::text AS id,
                 COALESCE(nome_fantasia, '')::text AS nome,
                 COALESCE(cnpj_cpf, '')::text AS cpf_cnpj
@@ -31,7 +33,8 @@ export async function POST(req: Request) {
     const cnpjCpfRaw = typeof body.cnpj_cpf === 'string' && body.cnpj_cpf
       ? body.cnpj_cpf.trim()
       : (body.cpf_cnpj ? String(body.cpf_cnpj).trim() : '')
-    const params = [ nome, cnpjCpfRaw || null ]
+    const tenant = typeof body.tenant_id === 'number' && !Number.isNaN(body.tenant_id) ? body.tenant_id : 1
+    const params = [ tenant, nome, cnpjCpfRaw || null ]
 
     const [row] = await runQuery<{ id: string; nome: string; cpf_cnpj: string }>(insertSql, params)
     if (!row) throw new Error('Falha ao criar cliente')
