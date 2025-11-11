@@ -13,25 +13,27 @@ export default function PerguntaDoUsuario({ message }: PerguntaDoUsuarioProps) {
 
   return (
     <Message from="user">
-      {/* Thumbnails acima do container preto */}
-      {fileParts.length > 0 && (
-        <div className="mb-2 flex flex-wrap gap-2">
-          {fileParts.map((part, index) => (
-            <MessageFileAttachment
-              key={index}
-              mediaType={part.mediaType || 'application/octet-stream'}
-              url={part.url || ''}
-            />
-          ))}
-        </div>
-      )}
+      <div>
+        {/* Thumbnails acima do container preto */}
+        {fileParts.length > 0 && (
+          <div className="mb-2 flex flex-wrap gap-2">
+            {fileParts.map((part, index) => (
+              <MessageFileAttachment
+                key={index}
+                mediaType={part.mediaType || 'application/octet-stream'}
+                url={part.url || ''}
+              />
+            ))}
+          </div>
+        )}
 
-      {/* Container preto apenas com texto */}
-      <MessageContent>
-        {textParts.map((part, index) => (
-          <span key={index}>{part.text}</span>
-        ))}
-      </MessageContent>
+        {/* Container preto apenas com texto */}
+        <MessageContent>
+          {textParts.map((part, index) => (
+            <span key={index}>{part.text}</span>
+          ))}
+        </MessageContent>
+      </div>
     </Message>
   );
 }
