@@ -1,7 +1,6 @@
 import { z } from 'zod';
 import { tool } from 'ai';
 import { runQuery } from '@/lib/postgres';
-import { runQuery } from '@/lib/postgres';
 
 // ============================================
 // WORKFLOW TOOLS - PAGAMENTOS RECEBIDOS
