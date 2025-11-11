@@ -48,7 +48,7 @@ export const buscarCliente = tool({
       if (nome) {
         const term = nome.trim()
         if (term.length > 0) {
-          conds.push(`LOWER(COALESCE(c.nome_fantasia, c.razao_social, c.nome)) LIKE LOWER($${i++})`)
+          conds.push(`c.nome_fantasia ILIKE $${i++}`)
           params.push(`%${term}%`)
         }
       }
@@ -59,17 +59,14 @@ export const buscarCliente = tool({
 
       const sql = `
         SELECT c.id::text AS id,
-               COALESCE(c.nome_fantasia, c.razao_social, c.nome, '')::text AS nome,
-               COALESCE(c.cpf_cnpj, '')::text AS cpf_cnpj,
-               COALESCE(c.email, '')::text AS email,
-               COALESCE(c.telefone, '')::text AS telefone
+               c.nome_fantasia::text AS nome
           FROM entidades.clientes c
           ${where}
-         ORDER BY COALESCE(c.nome_fantasia, c.razao_social, c.nome) ASC
+         ORDER BY c.nome_fantasia ASC
          ${limitClause}
       `.replace(/\n\s+/g, ' ').trim()
 
-      type Row = { id: string; nome: string; cpf_cnpj: string; email: string; telefone: string }
+      type Row = { id: string; nome: string }
       const rows = await runQuery<Row>(sql, params)
 
       if (listAll) {
