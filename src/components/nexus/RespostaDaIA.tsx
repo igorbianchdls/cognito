@@ -497,6 +497,8 @@ type BuscarContaPagarOutput = {
   success: boolean;
   conta_encontrada?: boolean;
   data: ContaPagarWorkflowRow | null;
+  rows?: ContaPagarWorkflowRow[];
+  count?: number;
   message: string;
   title?: string;
   error?: string;

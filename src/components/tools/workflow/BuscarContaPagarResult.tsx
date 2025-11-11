@@ -31,6 +31,8 @@ type BuscarContaPagarOutput = {
   success: boolean;
   conta_encontrada?: boolean;
   data: ContaPagarWorkflowRow | null;
+  rows?: ContaPagarWorkflowRow[];
+  count?: number;
   message: string;
   title?: string;
   error?: string;
@@ -46,10 +48,11 @@ type BuscarContaPagarOutput = {
 }
 
 export default function BuscarContaPagarResult({ result }: { result: BuscarContaPagarOutput }) {
-  // Convert single conta to array for table display
+  // Convert single or multiple to array for table display
   const tableRows: ContaPagarWorkflowRow[] = useMemo(() => {
+    if (Array.isArray(result.rows)) return result.rows;
     return result.data ? [result.data] : [];
-  }, [result.data]);
+  }, [result.data, result.rows]);
 
   const columns: ColumnDef<ContaPagarWorkflowRow>[] = useMemo(() => [
     {
