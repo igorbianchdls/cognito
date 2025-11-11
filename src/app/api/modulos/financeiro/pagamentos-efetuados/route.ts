@@ -29,7 +29,7 @@ export async function POST(req: Request) {
             LIMIT 1`,
           [apId]
         )
-        if (apRow.rowCount === 0) throw new Error('Conta a pagar não encontrada')
+        if (!apRow.rows || apRow.rows.length === 0) throw new Error('Conta a pagar não encontrada')
         const ap = apRow.rows[0] as { id: number; tenant_id: number | null; total: number; entidade_id: number | null; categoria_id: number | null }
 
         const pagosRow = await client.query(
