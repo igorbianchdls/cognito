@@ -6,6 +6,7 @@ import { useState, FormEvent, useMemo } from 'react';
 import { useStore } from '@nanostores/react';
 import ChatContainer from '@/components/nexus/ChatContainer';
 import { currentAgent as agentStore, setCurrentAgent } from '@/stores/nexus/agentStore';
+import type { AttachedFile } from '@/components/nexus/FileAttachmentPreview';
 
 export default function Home() {
   // Estado global do agente via nanostore
@@ -34,13 +35,30 @@ export default function Home() {
     transport,
   });
   const [input, setInput] = useState('');
-  
-  
+  const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([]);
+
+
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (input.trim()) {
-      sendMessage({ text: input });
+      // Send to AI with optional file attachments (multiple files support)
+      if (attachedFiles.length > 0) {
+        const textPart = { type: 'text' as const, text: input };
+        const fileParts = attachedFiles.map(file => ({
+          type: 'file' as const,
+          mediaType: file.type,
+          url: file.dataUrl,
+        }));
+
+        sendMessage({
+          role: 'user',
+          parts: [textPart, ...fileParts],
+        });
+      } else {
+        sendMessage({ text: input });
+      }
       setInput('');
+      setAttachedFiles([]);
     }
   };
 
@@ -54,6 +72,8 @@ export default function Home() {
         status={status}
         selectedAgent={selectedAgent}
         onAgentChange={setSelectedAgent}
+        attachedFiles={attachedFiles}
+        onFilesChange={setAttachedFiles}
       />
     </div>
   );
