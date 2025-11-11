@@ -131,7 +131,7 @@ export const buscarCliente = tool({
 // WORKFLOW TOOL 2: Criar Cliente
 // ========================================
 export const criarCliente = tool({
-  description: '[WORKFLOW] Cria novo cliente no sistema. Use quando buscarCliente não encontrar o cliente e for necessário cadastrá-lo antes de criar a conta a receber.',
+  description: '[WORKFLOW] Prévia de criação de cliente. A IA preenche os campos; o usuário revisa e confirma na UI para criar de fato.',
 
   inputSchema: z.object({
     nome: z.string()
@@ -151,48 +151,40 @@ export const criarCliente = tool({
   }),
 
   execute: async ({ nome, cpf_cnpj, tipo_pessoa, endereco, telefone, email, observacoes }) => {
-    // TODO: Integrar com BigQuery
-    // Tabela esperada: clientes
-    // Query: INSERT INTO clientes (...) VALUES (...) RETURNING *
-
-    // Validação básica de CPF/CNPJ (apenas formato)
-    const docLimpo = cpf_cnpj.replace(/[^\d]/g, '');
-    if (docLimpo.length !== 11 && docLimpo.length !== 14) {
-      return {
-        success: false,
-        data: null,
-        message: 'CPF/CNPJ inválido. CPF deve ter 11 dígitos e CNPJ deve ter 14 dígitos.',
-        error: 'Validação falhou'
-      };
-    }
-
-    // Auto-detectar tipo de pessoa se não informado
-    let tipoPessoaFinal = tipo_pessoa;
-    if (!tipoPessoaFinal) {
-      tipoPessoaFinal = docLimpo.length === 11 ? 'fisica' : 'juridica';
-    }
-
-    // Simular criação com ID gerado
-    const novoCliente = {
-      id: `cli-${Date.now()}`, // Simula UUID
-      nome,
-      cpf_cnpj,
-      tipo_pessoa: tipoPessoaFinal,
-      endereco: endereco || 'Não informado',
-      telefone: telefone || 'Não informado',
-      email: email || 'Não informado',
-      observacoes: observacoes || '',
-      data_cadastro: new Date().toISOString().split('T')[0],
-      status: 'ativo'
+    const payload = {
+      nome: String(nome || '').trim(),
+      cpf_cnpj: String(cpf_cnpj || '').trim(),
+      tipo_pessoa: tipo_pessoa,
+      endereco: endereco ? String(endereco).trim() : '',
+      telefone: telefone ? String(telefone).trim() : '',
+      email: email ? String(email).trim() : '',
+      observacoes: observacoes ? String(observacoes).trim() : ''
     };
+
+    const validations: Array<{ field: string; status: 'ok' | 'warn' | 'error'; message?: string }> = [];
+    if (!payload.nome) validations.push({ field: 'nome', status: 'error', message: 'Nome é obrigatório' });
+    if (payload.cpf_cnpj) {
+      const digits = payload.cpf_cnpj.replace(/\D/g, '');
+      if (digits.length !== 11 && digits.length !== 14) validations.push({ field: 'cpf_cnpj', status: 'warn', message: 'Documento deve ter 11 (CPF) ou 14 (CNPJ) dígitos' });
+    } else {
+      validations.push({ field: 'cpf_cnpj', status: 'warn', message: 'CPF/CNPJ ausente' });
+    }
+    // Inferir tipo_pessoa se ausente
+    if (!payload.tipo_pessoa && payload.cpf_cnpj) {
+      const d = payload.cpf_cnpj.replace(/\D/g, '');
+      if (d.length === 11) payload.tipo_pessoa = 'fisica';
+      else if (d.length === 14) payload.tipo_pessoa = 'juridica';
+    }
 
     return {
       success: true,
-      data: novoCliente,
-      message: `Cliente "${nome}" criado com sucesso! ID: ${novoCliente.id}`,
-      title: 'Cliente Criado',
-      cpf_cnpj_formatado: cpf_cnpj
-    };
+      preview: true,
+      title: 'Cliente (Prévia)',
+      message: 'Revise os dados e clique em Criar para confirmar.',
+      payload,
+      validations,
+      metadata: { entity: 'cliente', action: 'create', commitEndpoint: '/api/modulos/financeiro/clientes' }
+    } as const;
   }
 });
 
@@ -200,7 +192,7 @@ export const criarCliente = tool({
 // WORKFLOW TOOL 3: Criar Conta a Receber
 // ========================================
 export const criarContaReceber = tool({
-  description: '[WORKFLOW] Cria nova conta a receber no sistema. Esta é a etapa final do fluxo. Usa as informações extraídas do documento e os IDs obtidos das tools anteriores (cliente, categoria, centro de custo).',
+  description: '[WORKFLOW] Prévia de criação de Conta a Receber. A IA preenche os campos; o usuário revisa e confirma na UI para criar de fato.',
 
   inputSchema: z.object({
     cliente_id: z.string()
@@ -211,6 +203,8 @@ export const criarContaReceber = tool({
       .describe('ID do centro de custo (obtido de buscarClassificacoesFinanceiras)'),
     natureza_financeira_id: z.string().optional()
       .describe('ID da natureza financeira (opcional, obtido de buscarClassificacoesFinanceiras)'),
+    tenant_id: z.number().optional()
+      .describe('Tenant ID (se não informado, assume 1 por padrão).'),
     valor: z.number()
       .describe('Valor total da conta a receber'),
     data_vencimento: z.string()
@@ -235,6 +229,7 @@ export const criarContaReceber = tool({
     categoria_id,
     centro_custo_id,
     natureza_financeira_id,
+    tenant_id,
     valor,
     data_vencimento,
     data_emissao,
@@ -242,102 +237,48 @@ export const criarContaReceber = tool({
     descricao,
     itens
   }) => {
-    // TODO: Integrar com BigQuery
-    // Tabelas esperadas: contas_a_receber, contas_a_receber_itens
-    // Query 1: INSERT INTO contas_a_receber (...) VALUES (...) RETURNING *
-    // Query 2: INSERT INTO contas_a_receber_itens (...) VALUES (...) (se itens existirem)
-
-    // Validações básicas
-    if (valor <= 0) {
-      return {
-        success: false,
-        data: null,
-        message: 'O valor da conta deve ser maior que zero',
-        error: 'Validação falhou'
-      };
-    }
-
-    // Validar data de vencimento
-    const vencimento = new Date(data_vencimento);
-    if (isNaN(vencimento.getTime())) {
-      return {
-        success: false,
-        data: null,
-        message: 'Data de vencimento inválida',
-        error: 'Validação falhou'
-      };
-    }
-
-    // Calcular total dos itens se existirem
-    let valorTotalItens = 0;
-    const itensProcessados = itens?.map(item => {
-      const valorTotalItem = item.valor_total || (item.quantidade * item.valor_unitario);
-      valorTotalItens += valorTotalItem;
-      return {
-        ...item,
-        valor_total: valorTotalItem
-      };
-    });
-
-    // Verificar se soma dos itens bate com o valor total (com margem de erro de R$ 0.10)
-    if (itensProcessados && Math.abs(valorTotalItens - valor) > 0.10) {
-      return {
-        success: false,
-        data: null,
-        message: `A soma dos itens (R$ ${valorTotalItens.toFixed(2)}) não corresponde ao valor total (R$ ${valor.toFixed(2)})`,
-        error: 'Validação falhou'
-      };
-    }
-
-    // Simular criação da conta a receber
-    const novaContaReceber = {
-      id: `cr-${Date.now()}`, // Simula UUID
-      cliente_id,
-      categoria_id,
-      centro_custo_id,
-      natureza_financeira_id: natureza_financeira_id || null,
-      valor,
-      valor_recebido: 0,
-      valor_pendente: valor,
-      data_vencimento,
-      data_emissao: data_emissao || new Date().toISOString().split('T')[0],
-      data_cadastro: new Date().toISOString(),
-      numero_nota_fiscal: numero_nota_fiscal || null,
-      descricao: descricao || '',
-      status: 'pendente',
-      itens: itensProcessados || [],
-      quantidade_itens: itensProcessados?.length || 0
+    const payload = {
+      cliente_id: String(cliente_id || ''),
+      categoria_id: String(categoria_id || ''),
+      centro_custo_id: String(centro_custo_id || ''),
+      natureza_financeira_id: natureza_financeira_id ? String(natureza_financeira_id) : '',
+      tenant_id: typeof tenant_id === 'number' ? tenant_id : 1,
+      valor: Number(valor || 0),
+      data_vencimento: String(data_vencimento || ''),
+      data_emissao: String(data_emissao || ''),
+      numero_nota_fiscal: numero_nota_fiscal ? String(numero_nota_fiscal) : '',
+      descricao: descricao ? String(descricao) : '',
+      itens: (itens || []).map((it) => ({
+        descricao: String(it.descricao || ''),
+        quantidade: Number(it.quantidade || 0),
+        valor_unitario: Number(it.valor_unitario || 0),
+        valor_total: it.valor_total ? Number(it.valor_total) : undefined,
+      })),
     };
 
-    // Determinar se está vencida
-    const hoje = new Date();
-    const diasParaVencimento = Math.floor((vencimento.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
+    const validations: Array<{ field: string; status: 'ok' | 'warn' | 'error'; message?: string }> = [];
+    if (!payload.cliente_id) validations.push({ field: 'cliente_id', status: 'error', message: 'Cliente é obrigatório' });
+    if (!payload.data_vencimento) validations.push({ field: 'data_vencimento', status: 'error', message: 'Data de vencimento é obrigatória' });
+    if (!payload.valor || payload.valor <= 0) validations.push({ field: 'valor', status: 'error', message: 'Valor deve ser maior que zero' });
+    if (tenant_id === undefined || tenant_id === null) validations.push({ field: 'tenant_id', status: 'warn', message: 'Tenant ID não informado. Assumido padrão 1.' });
 
-    let statusVencimento = '';
-    if (diasParaVencimento < 0) {
-      statusVencimento = `⚠️ VENCIDA há ${Math.abs(diasParaVencimento)} dias`;
-    } else if (diasParaVencimento === 0) {
-      statusVencimento = '⚠️ Vence HOJE';
-    } else if (diasParaVencimento <= 7) {
-      statusVencimento = `🔔 Vence em ${diasParaVencimento} dias`;
-    } else {
-      statusVencimento = `✅ Vence em ${diasParaVencimento} dias`;
+    let valorTotalItens = 0;
+    for (const item of payload.itens) {
+      const vt = (item.valor_total ?? (item.quantidade * item.valor_unitario)) || 0;
+      valorTotalItens += vt;
+    }
+    if (payload.itens.length > 0 && Math.abs(valorTotalItens - payload.valor) > 0.1) {
+      validations.push({ field: 'itens', status: 'warn', message: `Soma dos itens (R$ ${valorTotalItens.toFixed(2)}) difere do total (R$ ${payload.valor.toFixed(2)})` });
     }
 
     return {
       success: true,
-      data: novaContaReceber,
-      message: `Conta a receber criada com sucesso! ID: ${novaContaReceber.id}`,
-      title: 'Conta a Receber Criada',
-      resumo: {
-        id: novaContaReceber.id,
-        valor_formatado: valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
-        data_vencimento,
-        status_vencimento: statusVencimento,
-        dias_para_vencimento: diasParaVencimento,
-        numero_nota_fiscal: numero_nota_fiscal || 'Não informado',
-        quantidade_itens: novaContaReceber.quantidade_itens
-      }
-    };
+      preview: true,
+      title: 'Conta a Receber (Prévia)',
+      message: 'Revise os dados e clique em Criar para confirmar.',
+      payload,
+      validations,
+      metadata: { entity: 'conta_a_receber', action: 'create', commitEndpoint: '/api/modulos/financeiro/contas-a-receber' }
+    } as const;
   }
 });

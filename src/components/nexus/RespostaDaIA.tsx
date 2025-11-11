@@ -323,6 +323,12 @@ type BuscarClienteOutput = {
 
 type CriarClienteOutput = {
   success: boolean;
+  // preview
+  preview?: boolean;
+  payload?: Partial<ClienteRow> & { nome?: string; cpf_cnpj?: string; tipo_pessoa?: string };
+  validations?: Array<{ field: string; status: 'ok' | 'warn' | 'error'; message?: string }>;
+  metadata?: { entity?: string; action?: string; commitEndpoint?: string };
+  // created
   data: ClienteRow | null;
   message: string;
   title?: string;
@@ -332,6 +338,24 @@ type CriarClienteOutput = {
 
 type ContaReceberCriadaOutput = {
   success: boolean;
+  // preview
+  preview?: boolean;
+  payload?: {
+    cliente_id: string;
+    categoria_id?: string;
+    centro_custo_id?: string;
+    natureza_financeira_id?: string;
+    tenant_id?: number | string;
+    valor: number;
+    data_vencimento: string;
+    data_emissao?: string;
+    numero_nota_fiscal?: string;
+    descricao?: string;
+    itens?: ItemRow[];
+  };
+  validations?: Array<{ field: string; status: 'ok' | 'warn' | 'error'; message?: string }>;
+  metadata?: { entity?: string; action?: string; commitEndpoint?: string };
+  // created
   data: {
     id: string;
     cliente_id: string;

@@ -26,7 +26,7 @@ export async function POST(req: Request) {
     const conta_financeira_id_raw = String(form.get('conta_financeira_id') || '').trim()
     const status = String(form.get('status') || '').trim() || 'pendente'
 
-    const tenant_id = tenant_id_raw ? Number(tenant_id_raw) : null
+    const tenant_id = tenant_id_raw ? Number(tenant_id_raw) : 1
     const entidade_id = entidade_id_raw ? Number(entidade_id_raw) : null
     const categoria_id = categoria_id_raw ? Number(categoria_id_raw) : null
     const conta_financeira_id = conta_financeira_id_raw ? Number(conta_financeira_id_raw) : null
@@ -51,4 +51,3 @@ export async function POST(req: Request) {
     return Response.json({ success: false, message: msg }, { status: 400 })
   }
 }
-

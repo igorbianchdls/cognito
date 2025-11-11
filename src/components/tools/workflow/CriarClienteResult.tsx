@@ -5,7 +5,8 @@ import EntityDisplay from '@/components/modulos/EntityDisplay'
 import StatusBadge from '@/components/modulos/StatusBadge'
 import { ColumnDef } from '@tanstack/react-table'
 import { UserPlus, CheckCircle } from 'lucide-react'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
+import { Button } from '@/components/ui/button'
 
 type ClienteRow = {
   id: string;
@@ -23,6 +24,12 @@ type ClienteRow = {
 
 type CriarClienteOutput = {
   success: boolean;
+  // preview mode
+  preview?: boolean;
+  payload?: Partial<ClienteRow> & { nome?: string; cpf_cnpj?: string; tipo_pessoa?: string };
+  validations?: Array<{ field: string; status: 'ok' | 'warn' | 'error'; message?: string }>;
+  metadata?: { entity?: string; action?: string; commitEndpoint?: string };
+  // created mode
   data: ClienteRow | null;
   message: string;
   title?: string;
@@ -31,10 +38,28 @@ type CriarClienteOutput = {
 }
 
 export default function CriarClienteResult({ result }: { result: CriarClienteOutput }) {
+  const [creating, setCreating] = useState(false)
+  const [created, setCreated] = useState<ClienteRow | null>(null)
+  const isPreview = result.preview && result.payload && !created
   // Convert single cliente to array for table display
   const tableRows: ClienteRow[] = useMemo(() => {
-    return result.data ? [result.data] : [];
-  }, [result.data]);
+    if (created) return [created]
+    if (isPreview) {
+      const p = result.payload || {}
+      return [{
+        id: '',
+        nome: String(p.nome || ''),
+        cpf_cnpj: String(p.cpf_cnpj || ''),
+        tipo_pessoa: p.tipo_pessoa ? String(p.tipo_pessoa) : undefined,
+        endereco: p.endereco ? String(p.endereco) : undefined,
+        telefone: p.telefone ? String(p.telefone) : undefined,
+        email: p.email ? String(p.email) : undefined,
+        status: undefined,
+        data_cadastro: undefined,
+      }]
+    }
+    return result.data ? [result.data] : []
+  }, [created, isPreview, result.payload, result.data]);
 
   const columns: ColumnDef<ClienteRow>[] = useMemo(() => [
     {
@@ -113,19 +138,59 @@ export default function CriarClienteResult({ result }: { result: CriarClienteOut
     }
   ], []);
 
+  const commit = async () => {
+    if (!result.metadata?.commitEndpoint || !result.payload) return
+    try {
+      setCreating(true)
+      const res = await fetch(result.metadata.commitEndpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nome: result.payload.nome,
+          cpf_cnpj: result.payload.cpf_cnpj,
+          email: result.payload.email,
+          telefone: result.payload.telefone,
+          endereco: result.payload.endereco,
+          observacoes: result.payload.observacoes,
+        })
+      })
+      const json = await res.json()
+      if (!res.ok || !json?.success) {
+        alert(json?.message || 'Falha ao criar cliente')
+        setCreating(false)
+        return
+      }
+      setCreated(json.data as ClienteRow)
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Erro ao criar cliente')
+    } finally {
+      setCreating(false)
+    }
+  }
+
   return (
-    <ArtifactDataTable
-      data={tableRows}
-      columns={columns}
-      title={result.title ?? 'Cliente Criado'}
-      icon={CheckCircle}
-      iconColor="text-green-600"
-      message={result.message}
-      success={result.success}
-      count={tableRows.length}
-      error={result.error}
-      exportFileName="cliente_criado"
-      pageSize={10}
-    />
+    <div className="space-y-3">
+      <ArtifactDataTable
+        data={tableRows}
+        columns={columns}
+        title={isPreview ? (result.title ?? 'Cliente (Prévia)') : (result.title ?? 'Cliente Criado')}
+        icon={isPreview ? UserPlus : CheckCircle}
+        iconColor={isPreview ? 'text-blue-600' : 'text-green-600'}
+        message={result.message}
+        success={result.success}
+        count={tableRows.length}
+        error={result.error}
+        exportFileName={isPreview ? 'cliente_previa' : 'cliente_criado'}
+        pageSize={10}
+      />
+
+      {isPreview && (
+        <div className="flex items-center justify-end gap-2">
+          <Button onClick={commit} disabled={creating}>
+            {creating ? 'Criando…' : 'Criar Cliente'}
+          </Button>
+        </div>
+      )}
+    </div>
   );
 }
