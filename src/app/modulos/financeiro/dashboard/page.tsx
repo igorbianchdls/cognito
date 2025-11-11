@@ -804,10 +804,12 @@ export default function FinanceiroDashboardPage() {
           <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><Clock className="w-5 h-5" style={{ color: chartIconColor }} />Aging A Pagar</h3>
           <SimpleHorizontalBar items={apAging.map(b => ({ label: b.label, value: b.value }))} color="#ef4444" />
         </div>
-        <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><Star className="w-5 h-5" style={{ color: chartIconColor }} />Top 5 Fornecedores</h3>
-          <BarChartHorizontalRecharts items={topFornecedores} color="#10b981" />
-        </div>
+        <BarChartHorizontalRecharts
+          items={topFornecedores}
+          title="Top 5 Fornecedores"
+          icon={<Star className="w-5 h-5" />}
+          color="#10b981"
+        />
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
           <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><CalendarCheck className="w-5 h-5" style={{ color: chartIconColor }} />Top 5 Clientes</h3>
           <SimpleHorizontalBar items={topClientes} color="#8b5cf6" />

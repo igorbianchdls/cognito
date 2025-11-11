@@ -1,24 +1,33 @@
 "use client"
 
 import { useMemo } from "react"
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer } from "recharts"
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts"
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import {
   ChartConfig,
   ChartContainer,
   ChartTooltip,
-  ChartTooltipContent,
 } from "@/components/ui/chart"
 
 interface BarChartHorizontalRechartsProps {
   items: Array<{ label: string; value: number }>
+  title: string
+  icon?: React.ReactNode
   color?: string
   height?: number
 }
 
 export function BarChartHorizontalRecharts({
   items,
+  title,
+  icon,
   color = '#64748b',
-  height = 180
+  height = 240
 }: BarChartHorizontalRechartsProps) {
   const data = useMemo(() =>
     items.map(it => ({
@@ -41,15 +50,21 @@ export function BarChartHorizontalRecharts({
   } satisfies ChartConfig
 
   return (
-    <div style={{ height, overflow: 'hidden' }}>
-      <ChartContainer config={chartConfig}>
-        <ResponsiveContainer width="100%" height={height}>
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-lg font-semibold flex items-center gap-2">
+          {icon}
+          {title}
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <ChartContainer config={chartConfig} style={{ height }}>
           <BarChart
             accessibilityLayer
             data={data}
             layout="horizontal"
             margin={{
-              left: 80,
+              left: 0,
               right: 12,
               top: 10,
               bottom: 10,
@@ -62,7 +77,6 @@ export function BarChartHorizontalRecharts({
               tickLine={false}
               tickMargin={6}
               axisLine={false}
-              width={80}
               style={{ fontSize: '12px' }}
             />
             <XAxis
@@ -104,8 +118,8 @@ export function BarChartHorizontalRecharts({
               radius={[0, 4, 4, 0]}
             />
           </BarChart>
-        </ResponsiveContainer>
-      </ChartContainer>
-    </div>
+        </ChartContainer>
+      </CardContent>
+    </Card>
   )
 }
