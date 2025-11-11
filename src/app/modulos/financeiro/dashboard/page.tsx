@@ -154,7 +154,7 @@ export default function FinanceiroDashboardPage() {
   const styleValues = useMemo<React.CSSProperties>(() => ({
     fontFamily: fontVar(fonts.values.family),
     fontWeight: fonts.values.weight as React.CSSProperties['fontWeight'],
-    letterSpacing: typeof fonts.values.letterSpacing === 'number' ? `${fonts.values.letterSpacing}px` : undefined,
+    letterSpacing: typeof fonts.values.letterSpacing === 'number' ? `${fonts.values.letterSpacing}em` : undefined,
     color: fonts.values.color || undefined,
     fontSize: typeof fonts.values.size === 'number' ? `${fonts.values.size}px` : undefined,
     textTransform: fonts.values.transform === 'uppercase' ? 'uppercase' : 'none',
@@ -162,7 +162,7 @@ export default function FinanceiroDashboardPage() {
   const styleKpiTitle = useMemo<React.CSSProperties>(() => ({
     fontFamily: fontVar(fonts.kpiTitle.family),
     fontWeight: fonts.kpiTitle.weight as React.CSSProperties['fontWeight'],
-    letterSpacing: typeof fonts.kpiTitle.letterSpacing === 'number' ? `${fonts.kpiTitle.letterSpacing}px` : undefined,
+    letterSpacing: typeof fonts.kpiTitle.letterSpacing === 'number' ? `${fonts.kpiTitle.letterSpacing}em` : undefined,
     color: fonts.kpiTitle.color || undefined,
     fontSize: typeof fonts.kpiTitle.size === 'number' ? `${fonts.kpiTitle.size}px` : undefined,
     textTransform: fonts.kpiTitle.transform === 'uppercase' ? 'uppercase' : 'none',
@@ -170,7 +170,7 @@ export default function FinanceiroDashboardPage() {
   const styleChartTitle = useMemo<React.CSSProperties>(() => ({
     fontFamily: fontVar(fonts.chartTitle.family),
     fontWeight: fonts.chartTitle.weight as React.CSSProperties['fontWeight'],
-    letterSpacing: typeof fonts.chartTitle.letterSpacing === 'number' ? `${fonts.chartTitle.letterSpacing}px` : undefined,
+    letterSpacing: typeof fonts.chartTitle.letterSpacing === 'number' ? `${fonts.chartTitle.letterSpacing}em` : undefined,
     color: fonts.chartTitle.color || undefined,
     fontSize: typeof fonts.chartTitle.size === 'number' ? `${fonts.chartTitle.size}px` : undefined,
     textTransform: fonts.chartTitle.transform === 'uppercase' ? 'uppercase' : 'none',
@@ -178,7 +178,7 @@ export default function FinanceiroDashboardPage() {
   const styleText = useMemo<React.CSSProperties>(() => ({
     fontFamily: fontVar(fonts.text.family),
     fontWeight: fonts.text.weight as React.CSSProperties['fontWeight'],
-    letterSpacing: typeof fonts.text.letterSpacing === 'number' ? `${fonts.text.letterSpacing}px` : undefined,
+    letterSpacing: typeof fonts.text.letterSpacing === 'number' ? `${fonts.text.letterSpacing}em` : undefined,
     color: fonts.text.color || undefined,
     fontSize: typeof fonts.text.size === 'number' ? `${fonts.text.size}px` : undefined,
     textTransform: fonts.text.transform === 'uppercase' ? 'uppercase' : 'none',
@@ -187,7 +187,7 @@ export default function FinanceiroDashboardPage() {
   const styleHeaderTitle = useMemo<React.CSSProperties>(() => ({
     fontFamily: fontVar(fonts.headerTitle.family),
     fontWeight: fonts.headerTitle.weight as React.CSSProperties['fontWeight'],
-    letterSpacing: typeof fonts.headerTitle.letterSpacing === 'number' ? `${fonts.headerTitle.letterSpacing}px` : undefined,
+    letterSpacing: typeof fonts.headerTitle.letterSpacing === 'number' ? `${fonts.headerTitle.letterSpacing}em` : undefined,
     color: fonts.headerTitle.color || undefined,
     fontSize: typeof fonts.headerTitle.size === 'number' ? `${fonts.headerTitle.size}px` : undefined,
     textTransform: fonts.headerTitle.transform === 'uppercase' ? 'uppercase' : 'none',
@@ -195,7 +195,7 @@ export default function FinanceiroDashboardPage() {
   const styleHeaderSubtitle = useMemo<React.CSSProperties>(() => ({
     fontFamily: fontVar(fonts.headerSubtitle.family),
     fontWeight: fonts.headerSubtitle.weight as React.CSSProperties['fontWeight'],
-    letterSpacing: typeof fonts.headerSubtitle.letterSpacing === 'number' ? `${fonts.headerSubtitle.letterSpacing}px` : undefined,
+    letterSpacing: typeof fonts.headerSubtitle.letterSpacing === 'number' ? `${fonts.headerSubtitle.letterSpacing}em` : undefined,
     color: fonts.headerSubtitle.color || undefined,
     fontSize: typeof fonts.headerSubtitle.size === 'number' ? `${fonts.headerSubtitle.size}px` : undefined,
     textTransform: fonts.headerSubtitle.transform === 'uppercase' ? 'uppercase' : 'none',
@@ -204,7 +204,7 @@ export default function FinanceiroDashboardPage() {
   const styleFilters = useMemo<React.CSSProperties>(() => ({
     fontFamily: fontVar(fonts.filters.family),
     fontWeight: fonts.filters.weight as React.CSSProperties['fontWeight'],
-    letterSpacing: typeof fonts.filters.letterSpacing === 'number' ? `${fonts.filters.letterSpacing}px` : undefined,
+    letterSpacing: typeof fonts.filters.letterSpacing === 'number' ? `${fonts.filters.letterSpacing}em` : undefined,
     color: fonts.filters.color || undefined,
     fontSize: typeof fonts.filters.size === 'number' ? `${fonts.filters.size}px` : undefined,
     textTransform: fonts.filters.transform === 'uppercase' ? 'uppercase' : 'none',
@@ -213,7 +213,7 @@ export default function FinanceiroDashboardPage() {
   const styleSidebarSectionTitle = useMemo<React.CSSProperties>(() => ({
     fontFamily: fontVar(fonts.sidebarSectionTitle.family),
     fontWeight: fonts.sidebarSectionTitle.weight as React.CSSProperties['fontWeight'],
-    letterSpacing: typeof fonts.sidebarSectionTitle.letterSpacing === 'number' ? `${fonts.sidebarSectionTitle.letterSpacing}px` : undefined,
+    letterSpacing: typeof fonts.sidebarSectionTitle.letterSpacing === 'number' ? `${fonts.sidebarSectionTitle.letterSpacing}em` : undefined,
     color: fonts.sidebarSectionTitle.color || undefined,
     fontSize: typeof fonts.sidebarSectionTitle.size === 'number' ? `${fonts.sidebarSectionTitle.size}px` : undefined,
     textTransform: fonts.sidebarSectionTitle.transform === 'uppercase' ? 'uppercase' : 'none',
@@ -222,7 +222,7 @@ export default function FinanceiroDashboardPage() {
   const styleSidebarItemText = useMemo<React.CSSProperties>(() => ({
     fontFamily: fontVar(fonts.sidebarItemText.family),
     fontWeight: fonts.sidebarItemText.weight as React.CSSProperties['fontWeight'],
-    letterSpacing: typeof fonts.sidebarItemText.letterSpacing === 'number' ? `${fonts.sidebarItemText.letterSpacing}px` : undefined,
+    letterSpacing: typeof fonts.sidebarItemText.letterSpacing === 'number' ? `${fonts.sidebarItemText.letterSpacing}em` : undefined,
     color: fonts.sidebarItemText.color || undefined,
     fontSize: typeof fonts.sidebarItemText.size === 'number' ? `${fonts.sidebarItemText.size}px` : undefined,
     textTransform: fonts.sidebarItemText.transform === 'uppercase' ? 'uppercase' : 'none',
@@ -1180,7 +1180,7 @@ export default function FinanceiroDashboardPage() {
               </div>
               <div className="flex items-center gap-2 mb-2">
                 <label className="text-xs text-gray-600 w-16">Espaço</label>
-                <input type="number" className="border rounded px-2 py-1 text-xs w-24" value={fonts.headerTitle.letterSpacing ?? 0} step={0.5} onChange={(e) => setFonts((f) => ({ ...f, headerTitle: { ...f.headerTitle, letterSpacing: Number(e.target.value) } }))} />
+                <input type="number" className="border rounded px-2 py-1 text-xs w-24" value={fonts.headerTitle.letterSpacing ?? 0} min={-0.1} max={0.1} step={0.01} onChange={(e) => setFonts((f) => ({ ...f, headerTitle: { ...f.headerTitle, letterSpacing: Number(e.target.value) } }))} />
               </div>
               <div className="flex items-center gap-2 mb-2">
                 <label className="text-xs text-gray-600 w-16">Caixa</label>
@@ -1222,7 +1222,7 @@ export default function FinanceiroDashboardPage() {
               </div>
               <div className="flex items-center gap-2 mb-2">
                 <label className="text-xs text-gray-600 w-16">Espaço</label>
-                <input type="number" className="border rounded px-2 py-1 text-xs w-24" value={fonts.headerSubtitle.letterSpacing ?? 0} step={0.5} onChange={(e) => setFonts((f) => ({ ...f, headerSubtitle: { ...f.headerSubtitle, letterSpacing: Number(e.target.value) } }))} />
+                <input type="number" className="border rounded px-2 py-1 text-xs w-24" value={fonts.headerSubtitle.letterSpacing ?? 0} min={-0.1} max={0.1} step={0.01} onChange={(e) => setFonts((f) => ({ ...f, headerSubtitle: { ...f.headerSubtitle, letterSpacing: Number(e.target.value) } }))} />
               </div>
               <div className="flex items-center gap-2 mb-2">
                 <label className="text-xs text-gray-600 w-16">Caixa</label>
