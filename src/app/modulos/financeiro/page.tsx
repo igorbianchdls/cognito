@@ -528,7 +528,19 @@ export default function ModulosFinanceiroPage() {
                   data={data}
                   enableExpand={tabs.selected === 'extrato'}
                   renderDetail={tabs.selected === 'extrato' ? (row => {
-                    const items = Array.isArray(row['transacoes']) ? (row['transacoes'] as any[]) : []
+                    type ExtratoTransacao = {
+                      transacao_id?: string | number | null
+                      tipo_transacao?: string | null
+                      data_transacao?: string | null
+                      descricao_transacao?: string | null
+                      valor_transacao?: number | string | null
+                      origem_transacao?: string | null
+                      transacao_conciliada?: boolean | string | null
+                    }
+                    const raw = row['transacoes'] as unknown
+                    const items: ExtratoTransacao[] = Array.isArray(raw)
+                      ? raw.filter((it: unknown): it is ExtratoTransacao => typeof it === 'object' && it !== null)
+                      : []
                     if (!items.length) return <div className="text-xs text-gray-500">Sem transações neste extrato.</div>
                     return (
                       <div className="overflow-auto">
