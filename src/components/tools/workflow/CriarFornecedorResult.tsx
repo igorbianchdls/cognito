@@ -5,7 +5,8 @@ import EntityDisplay from '@/components/modulos/EntityDisplay'
 import StatusBadge from '@/components/modulos/StatusBadge'
 import { ColumnDef } from '@tanstack/react-table'
 import { UserPlus, CheckCircle } from 'lucide-react'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
+import { Button } from '@/components/ui/button'
 
 type FornecedorRow = {
   id: string;
@@ -22,6 +23,12 @@ type FornecedorRow = {
 
 type CriarFornecedorOutput = {
   success: boolean;
+  // preview mode
+  preview?: boolean;
+  payload?: Partial<FornecedorRow> & { nome?: string; cnpj?: string };
+  validations?: Array<{ field: string; status: 'ok' | 'warn' | 'error'; message?: string }>;
+  metadata?: { entity?: string; action?: string; commitEndpoint?: string };
+  // created mode
   data: FornecedorRow | null;
   message: string;
   title?: string;
@@ -30,10 +37,29 @@ type CriarFornecedorOutput = {
 }
 
 export default function CriarFornecedorResult({ result }: { result: CriarFornecedorOutput }) {
-  // Convert single fornecedor to array for table display
+  const [creating, setCreating] = useState(false)
+  const [created, setCreated] = useState<FornecedorRow | null>(null)
+
+  const isPreview = result.preview && result.payload && !created
+
+  // Table rows: created data OR preview payload as a single-row projection
   const tableRows: FornecedorRow[] = useMemo(() => {
-    return result.data ? [result.data] : [];
-  }, [result.data]);
+    if (created) return [created]
+    if (isPreview) {
+      const p = result.payload || {}
+      return [{
+        id: '',
+        nome: String(p.nome || ''),
+        cnpj: String(p.cnpj || ''),
+        endereco: p.endereco ? String(p.endereco) : undefined,
+        telefone: p.telefone ? String(p.telefone) : undefined,
+        email: p.email ? String(p.email) : undefined,
+        status: undefined,
+        data_cadastro: undefined,
+      }]
+    }
+    return result.data ? [result.data] : []
+  }, [created, isPreview, result.payload, result.data])
 
   const columns: ColumnDef<FornecedorRow>[] = useMemo(() => [
     {
@@ -91,19 +117,54 @@ export default function CriarFornecedorResult({ result }: { result: CriarFornece
     }
   ], []);
 
+  const commit = async () => {
+    if (!result.metadata?.commitEndpoint || !result.payload) return
+    try {
+      setCreating(true)
+      const res = await fetch(result.metadata.commitEndpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(result.payload)
+      })
+      const json = await res.json()
+      if (!res.ok || !json?.success) {
+        alert(json?.message || 'Falha ao criar fornecedor')
+        setCreating(false)
+        return
+      }
+      // Atualiza para modo criado
+      const row = json.data as FornecedorRow
+      setCreated(row)
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Erro ao criar fornecedor')
+    } finally {
+      setCreating(false)
+    }
+  }
+
   return (
-    <ArtifactDataTable
-      data={tableRows}
-      columns={columns}
-      title={result.title ?? 'Fornecedor Criado'}
-      icon={CheckCircle}
-      iconColor="text-green-600"
-      message={result.message}
-      success={result.success}
-      count={tableRows.length}
-      error={result.error}
-      exportFileName="fornecedor_criado"
-      pageSize={10}
-    />
-  );
+    <div className="space-y-3">
+      <ArtifactDataTable
+        data={tableRows}
+        columns={columns}
+        title={isPreview ? (result.title ?? 'Fornecedor (Prévia)') : (result.title ?? 'Fornecedor Criado')}
+        icon={isPreview ? UserPlus : CheckCircle}
+        iconColor={isPreview ? 'text-blue-600' : 'text-green-600'}
+        message={result.message}
+        success={result.success}
+        count={tableRows.length}
+        error={result.error}
+        exportFileName={isPreview ? 'fornecedor_previa' : 'fornecedor_criado'}
+        pageSize={10}
+      />
+
+      {isPreview && (
+        <div className="flex items-center justify-end gap-2">
+          <Button onClick={commit} disabled={creating}>
+            {creating ? 'Criando…' : 'Criar Fornecedor'}
+          </Button>
+        </div>
+      )}
+    </div>
+  )
 }

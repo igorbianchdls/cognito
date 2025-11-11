@@ -292,7 +292,7 @@ export const buscarFornecedor = tool({
 // WORKFLOW TOOL 3: Criar Fornecedor
 // ========================================
 export const criarFornecedor = tool({
-  description: '[WORKFLOW] Cria novo fornecedor no sistema. Use quando buscarFornecedor não encontrar o fornecedor e for necessário cadastrá-lo antes de criar a conta a pagar.',
+  description: '[WORKFLOW] Prévia de criação de fornecedor. A IA preenche os campos; o usuário revisa e confirma na UI para criar de fato.',
 
   inputSchema: z.object({
     nome: z.string()
@@ -310,41 +310,33 @@ export const criarFornecedor = tool({
   }),
 
   execute: async ({ nome, cnpj, endereco, telefone, email, observacoes }) => {
-    // TODO: Integrar com BigQuery
-    // Tabela esperada: fornecedores
-    // Query: INSERT INTO fornecedores (...) VALUES (...) RETURNING *
-
-    // Validação básica de CNPJ (apenas formato)
-    const cnpjLimpo = cnpj.replace(/[^\d]/g, '');
-    if (cnpjLimpo.length !== 14) {
-      return {
-        success: false,
-        data: null,
-        message: 'CNPJ inválido. O CNPJ deve conter 14 dígitos.',
-        error: 'Validação falhou'
-      };
-    }
-
-    // Simular criação com ID gerado
-    const novoFornecedor = {
-      id: `forn-${Date.now()}`, // Simula UUID
-      nome,
-      cnpj,
-      endereco: endereco || 'Não informado',
-      telefone: telefone || 'Não informado',
-      email: email || 'Não informado',
-      observacoes: observacoes || '',
-      data_cadastro: new Date().toISOString().split('T')[0],
-      status: 'ativo'
+    const payload = {
+      nome: String(nome || '').trim(),
+      cnpj: String(cnpj || '').trim(),
+      endereco: endereco ? String(endereco).trim() : '',
+      telefone: telefone ? String(telefone).trim() : '',
+      email: email ? String(email).trim() : '',
+      observacoes: observacoes ? String(observacoes).trim() : ''
     };
+
+    const validations: Array<{ field: string; status: 'ok' | 'warn' | 'error'; message?: string }> = [];
+    if (!payload.nome) validations.push({ field: 'nome', status: 'error', message: 'Nome é obrigatório' });
+    if (payload.cnpj) {
+      const digits = payload.cnpj.replace(/\D/g, '');
+      if (digits.length !== 14) validations.push({ field: 'cnpj', status: 'warn', message: 'CNPJ com formato incompleto (14 dígitos esperados)' });
+    } else {
+      validations.push({ field: 'cnpj', status: 'warn', message: 'CNPJ ausente' });
+    }
 
     return {
       success: true,
-      data: novoFornecedor,
-      message: `Fornecedor "${nome}" criado com sucesso! ID: ${novoFornecedor.id}`,
-      title: 'Fornecedor Criado',
-      cnpj_formatado: cnpj
-    };
+      preview: true,
+      title: 'Fornecedor (Prévia)',
+      message: 'Revise os dados e clique em Criar para confirmar.',
+      payload,
+      validations,
+      metadata: { entity: 'fornecedor', action: 'create', commitEndpoint: '/api/modulos/financeiro/fornecedores' }
+    } as const;
   }
 });
 
@@ -352,7 +344,7 @@ export const criarFornecedor = tool({
 // WORKFLOW TOOL 4: Criar Conta a Pagar
 // ========================================
 export const criarContaPagar = tool({
-  description: '[WORKFLOW] Cria nova conta a pagar no sistema. Esta é a etapa final do fluxo. Usa as informações extraídas do documento e os IDs obtidos das tools anteriores (fornecedor, categoria, centro de custo).',
+  description: '[WORKFLOW] Prévia de criação de Conta a Pagar. A IA preenche os campos; o usuário revisa e confirma na UI para criar de fato.',
 
   inputSchema: z.object({
     fornecedor_id: z.string()
@@ -394,102 +386,46 @@ export const criarContaPagar = tool({
     descricao,
     itens
   }) => {
-    // TODO: Integrar com BigQuery
-    // Tabelas esperadas: contas_a_pagar, contas_a_pagar_itens
-    // Query 1: INSERT INTO contas_a_pagar (...) VALUES (...) RETURNING *
-    // Query 2: INSERT INTO contas_a_pagar_itens (...) VALUES (...) (se itens existirem)
-
-    // Validações básicas
-    if (valor <= 0) {
-      return {
-        success: false,
-        data: null,
-        message: 'O valor da conta deve ser maior que zero',
-        error: 'Validação falhou'
-      };
-    }
-
-    // Validar data de vencimento
-    const vencimento = new Date(data_vencimento);
-    if (isNaN(vencimento.getTime())) {
-      return {
-        success: false,
-        data: null,
-        message: 'Data de vencimento inválida',
-        error: 'Validação falhou'
-      };
-    }
-
-    // Calcular total dos itens se existirem
-    let valorTotalItens = 0;
-    const itensProcessados = itens?.map(item => {
-      const valorTotalItem = item.valor_total || (item.quantidade * item.valor_unitario);
-      valorTotalItens += valorTotalItem;
-      return {
-        ...item,
-        valor_total: valorTotalItem
-      };
-    });
-
-    // Verificar se soma dos itens bate com o valor total (com margem de erro de R$ 0.10)
-    if (itensProcessados && Math.abs(valorTotalItens - valor) > 0.10) {
-      return {
-        success: false,
-        data: null,
-        message: `A soma dos itens (R$ ${valorTotalItens.toFixed(2)}) não corresponde ao valor total (R$ ${valor.toFixed(2)})`,
-        error: 'Validação falhou'
-      };
-    }
-
-    // Simular criação da conta a pagar
-    const novaContaPagar = {
-      id: `cp-${Date.now()}`, // Simula UUID
-      fornecedor_id,
-      categoria_id,
-      centro_custo_id,
-      natureza_financeira_id: natureza_financeira_id || null,
-      valor,
-      valor_pago: 0,
-      valor_pendente: valor,
-      data_vencimento,
-      data_emissao: data_emissao || new Date().toISOString().split('T')[0],
-      data_cadastro: new Date().toISOString(),
-      numero_nota_fiscal: numero_nota_fiscal || null,
-      descricao: descricao || '',
-      status: 'pendente',
-      itens: itensProcessados || [],
-      quantidade_itens: itensProcessados?.length || 0
+    const payload = {
+      fornecedor_id: String(fornecedor_id || ''),
+      categoria_id: String(categoria_id || ''),
+      centro_custo_id: String(centro_custo_id || ''),
+      natureza_financeira_id: natureza_financeira_id ? String(natureza_financeira_id) : '',
+      valor: Number(valor || 0),
+      data_vencimento: String(data_vencimento || ''),
+      data_emissao: String(data_emissao || ''),
+      numero_nota_fiscal: numero_nota_fiscal ? String(numero_nota_fiscal) : '',
+      descricao: descricao ? String(descricao) : '',
+      itens: (itens || []).map((it) => ({
+        descricao: String(it.descricao || ''),
+        quantidade: Number(it.quantidade || 0),
+        valor_unitario: Number(it.valor_unitario || 0),
+        valor_total: it.valor_total ? Number(it.valor_total) : undefined,
+      })),
     };
 
-    // Determinar se está vencida
-    const hoje = new Date();
-    const diasParaVencimento = Math.floor((vencimento.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
+    const validations: Array<{ field: string; status: 'ok' | 'warn' | 'error'; message?: string }> = [];
+    if (!payload.fornecedor_id) validations.push({ field: 'fornecedor_id', status: 'error', message: 'Fornecedor é obrigatório' });
+    if (!payload.data_vencimento) validations.push({ field: 'data_vencimento', status: 'error', message: 'Data de vencimento é obrigatória' });
+    if (!payload.valor || payload.valor <= 0) validations.push({ field: 'valor', status: 'error', message: 'Valor deve ser maior que zero' });
 
-    let statusVencimento = '';
-    if (diasParaVencimento < 0) {
-      statusVencimento = `⚠️ VENCIDA há ${Math.abs(diasParaVencimento)} dias`;
-    } else if (diasParaVencimento === 0) {
-      statusVencimento = '⚠️ Vence HOJE';
-    } else if (diasParaVencimento <= 7) {
-      statusVencimento = `🔔 Vence em ${diasParaVencimento} dias`;
-    } else {
-      statusVencimento = `✅ Vence em ${diasParaVencimento} dias`;
+    let valorTotalItens = 0;
+    for (const item of payload.itens) {
+      const vt = (item.valor_total ?? (item.quantidade * item.valor_unitario)) || 0;
+      valorTotalItens += vt;
+    }
+    if (payload.itens.length > 0 && Math.abs(valorTotalItens - payload.valor) > 0.1) {
+      validations.push({ field: 'itens', status: 'warn', message: `Soma dos itens (R$ ${valorTotalItens.toFixed(2)}) difere do total (R$ ${payload.valor.toFixed(2)})` });
     }
 
     return {
       success: true,
-      data: novaContaPagar,
-      message: `Conta a pagar criada com sucesso! ID: ${novaContaPagar.id}`,
-      title: 'Conta a Pagar Criada',
-      resumo: {
-        id: novaContaPagar.id,
-        valor_formatado: valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
-        data_vencimento,
-        status_vencimento: statusVencimento,
-        dias_para_vencimento: diasParaVencimento,
-        numero_nota_fiscal: numero_nota_fiscal || 'Não informado',
-        quantidade_itens: novaContaPagar.quantidade_itens
-      }
-    };
+      preview: true,
+      title: 'Conta a Pagar (Prévia)',
+      message: 'Revise os dados e clique em Criar para confirmar.',
+      payload,
+      validations,
+      metadata: { entity: 'conta_a_pagar', action: 'create', commitEndpoint: '/api/modulos/financeiro/contas-a-pagar' }
+    } as const;
   }
 });

@@ -223,6 +223,12 @@ type BuscarFornecedorOutput = {
 
 type CriarFornecedorOutput = {
   success: boolean;
+  // preview
+  preview?: boolean;
+  payload?: Partial<FornecedorRow> & { nome?: string; cnpj?: string };
+  validations?: Array<{ field: string; status: 'ok' | 'warn' | 'error'; message?: string }>;
+  metadata?: { entity?: string; action?: string; commitEndpoint?: string };
+  // created
   data: FornecedorRow | null;
   message: string;
   title?: string;
@@ -240,6 +246,23 @@ type ItemRow = {
 
 type CriarContaPagarOutput = {
   success: boolean;
+  // preview
+  preview?: boolean;
+  payload?: {
+    fornecedor_id: string;
+    categoria_id?: string;
+    centro_custo_id?: string;
+    natureza_financeira_id?: string;
+    valor: number;
+    data_vencimento: string;
+    data_emissao?: string;
+    numero_nota_fiscal?: string;
+    descricao?: string;
+    itens?: ItemRow[];
+  };
+  validations?: Array<{ field: string; status: 'ok' | 'warn' | 'error'; message?: string }>;
+  metadata?: { entity?: string; action?: string; commitEndpoint?: string };
+  // created
   data: {
     id: string;
     fornecedor_id: string;
