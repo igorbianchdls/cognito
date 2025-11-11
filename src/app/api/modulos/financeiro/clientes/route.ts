@@ -15,7 +15,7 @@ type ClientePayload = {
 
 export async function POST(req: Request) {
   try {
-    const body = (await req.json()) as Partial<ClientePayload>
+    const body = (await req.json()) as Partial<ClientePayload> & { cnpj_cpf?: string | null }
     const nome = String(body.nome || '').trim()
     if (!nome) return Response.json({ success: false, message: 'nome é obrigatório' }, { status: 400 })
 
@@ -28,7 +28,9 @@ export async function POST(req: Request) {
                 COALESCE(cnpj_cpf, '')::text AS cpf_cnpj
     `.replace(/\n\s+/g, ' ').trim()
 
-    const cnpjCpfRaw = (body as any).cnpj_cpf ? String((body as any).cnpj_cpf).trim() : (body.cpf_cnpj ? String(body.cpf_cnpj).trim() : '')
+    const cnpjCpfRaw = typeof body.cnpj_cpf === 'string' && body.cnpj_cpf
+      ? body.cnpj_cpf.trim()
+      : (body.cpf_cnpj ? String(body.cpf_cnpj).trim() : '')
     const params = [ nome, cnpjCpfRaw || null ]
 
     const [row] = await runQuery<{ id: string; nome: string; cpf_cnpj: string }>(insertSql, params)
