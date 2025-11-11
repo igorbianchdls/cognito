@@ -413,6 +413,8 @@ type BuscarContaReceberOutput = {
   success: boolean;
   conta_encontrada?: boolean;
   data: ContaReceberWorkflowRow | null;
+  rows?: ContaReceberWorkflowRow[];
+  count?: number;
   message: string;
   title?: string;
   error?: string;

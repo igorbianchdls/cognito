@@ -31,6 +31,8 @@ type BuscarContaReceberOutput = {
   success: boolean;
   conta_encontrada?: boolean;
   data: ContaReceberWorkflowRow | null;
+  rows?: ContaReceberWorkflowRow[];
+  count?: number;
   message: string;
   title?: string;
   error?: string;
@@ -46,10 +48,11 @@ type BuscarContaReceberOutput = {
 }
 
 export default function BuscarContaReceberResult({ result }: { result: BuscarContaReceberOutput }) {
-  // Convert single conta to array for table display
+  // Convert single or multiple to array for table display
   const tableRows: ContaReceberWorkflowRow[] = useMemo(() => {
+    if (Array.isArray(result.rows)) return result.rows;
     return result.data ? [result.data] : [];
-  }, [result.data]);
+  }, [result.data, result.rows]);
 
   const columns: ColumnDef<ContaReceberWorkflowRow>[] = useMemo(() => [
     {

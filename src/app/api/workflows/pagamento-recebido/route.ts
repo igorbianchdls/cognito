@@ -1,9 +1,7 @@
 import { anthropic } from '@ai-sdk/anthropic'
 import { convertToModelMessages, streamText, UIMessage } from 'ai'
-import {
-  buscarContaReceber,
-  criarPagamentoRecebido
-} from '@/tools/pagamentosRecebidosWorkflowTools'
+import { buscarContaReceber, criarPagamentoRecebido } from '@/tools/pagamentosRecebidosWorkflowTools'
+import { buscarFinanceiroLookups } from '@/tools/financeiroLookupsTools'
 
 export const maxDuration = 300
 
@@ -85,6 +83,7 @@ Você é um ASSISTENTE DE WORKFLOW. Conduza o usuário passo a passo de forma cl
       messages: convertToModelMessages(messages),
       tools: {
         buscarContaReceber,
+        buscarFinanceiroLookups,
         criarPagamentoRecebido
       },
     })
