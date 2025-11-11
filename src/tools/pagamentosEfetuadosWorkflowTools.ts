@@ -120,84 +120,61 @@ export const buscarContaPagar = tool({
  * Registra o pagamento e o sistema baixa a conta automaticamente
  */
 export const criarPagamentoEfetuado = tool({
-  description: '[WORKFLOW] Cria registro de pagamento efetuado e vincula à conta a pagar. O sistema baixa a conta automaticamente.',
+  description: '[WORKFLOW] Prévia de Pagamento Efetuado. IA preenche dados; usuário confirma na UI para criar e baixar a AP.',
   inputSchema: z.object({
-    conta_pagar_id: z.string().describe('ID da conta a pagar'),
-    valor_pago: z.number().describe('Valor pago'),
-    data_pagamento: z.string().describe('Data do pagamento (YYYY-MM-DD)'),
-    forma_pagamento: z.enum(['dinheiro', 'pix', 'transferencia', 'boleto', 'cartao_credito', 'cartao_debito', 'cheque']).describe('Forma de pagamento'),
-    conta_financeira_id: z.string().describe('ID da conta financeira que efetuou o pagamento'),
-    observacoes: z.string().optional().describe('Observações sobre o pagamento'),
-    juros: z.number().optional().describe('Valor de juros pagos'),
-    multa: z.number().optional().describe('Valor de multa paga'),
-    desconto: z.number().optional().describe('Valor de desconto obtido'),
+    lancamento_origem_id: z.string().describe('ID da conta a pagar (lf.id)'),
+    conta_financeira_id: z.string().describe('Conta financeira a debitar'),
+    metodo_pagamento_id: z.string().describe('Método de pagamento'),
+    descricao: z.string().describe('Descrição do pagamento'),
   }),
-  execute: async ({ conta_pagar_id, valor_pago, data_pagamento, forma_pagamento, conta_financeira_id, observacoes, juros, multa, desconto }) => {
-    // Mock data - será substituído por insert real no BigQuery
-
-    // Calcular valores
-    const valor_juros = juros || 0;
-    const valor_multa = multa || 0;
-    const valor_desconto = desconto || 0;
-    const valor_total = valor_pago + valor_juros + valor_multa - valor_desconto;
-
-    const pagamentoCriado = {
-      id: `pgto-efet-${Date.now()}`,
-      conta_pagar_id,
-      valor_pago,
-      valor_juros,
-      valor_multa,
-      valor_desconto,
-      valor_total,
-      data_pagamento,
-      forma_pagamento,
-      conta_financeira_id,
-      conta_financeira_nome: 'Banco do Brasil - CC 12345-6',
-      observacoes: observacoes || '',
-      status: 'pago',
-      data_cadastro: new Date().toISOString(),
-      // Dados da conta a pagar vinculada
-      conta_pagar: {
-        numero_nota_fiscal: 'NF-FN-2024-001',
-        fornecedor_nome: 'Fornecedor ABC LTDA',
-        valor_original: 8500.00,
-        status_anterior: 'pendente',
-        status_atual: 'pago'
+  execute: async ({ lancamento_origem_id, conta_financeira_id, metodo_pagamento_id, descricao }) => {
+    // Buscar dados da AP: tenant, valor total e soma de pagamentos anteriores
+    try {
+      const apSql = `
+        SELECT lf.tenant_id, lf.valor::numeric AS total,
+               COALESCE(
+                 (SELECT SUM(p.valor)::numeric FROM financeiro.lancamentos_financeiros p
+                   WHERE LOWER(p.tipo) = 'pagamento_efetuado' AND p.lancamento_origem_id = lf.id), 0
+               ) AS pagos
+          FROM financeiro.lancamentos_financeiros lf
+         WHERE lf.id = $1 AND LOWER(lf.tipo) = 'conta_a_pagar'
+         LIMIT 1
+      `.replace(/\n\s+/g, ' ').trim()
+      const rows = await runQuery<{ tenant_id: number | null; total: number; pagos: number }>(apSql, [lancamento_origem_id])
+      if (!rows.length) {
+        return { success: false, preview: true, message: 'Conta a pagar não encontrada', title: 'Pagamento Efetuado (Prévia)', payload: null, validations: [{ field: 'lancamento_origem_id', status: 'error', message: 'Conta a pagar inexistente' }], metadata: { commitEndpoint: '/api/modulos/financeiro/pagamentos-efetuados' } } as const
       }
-    };
+      const { tenant_id, total, pagos } = rows[0]
+      const pendente = Math.max(0, Number(total || 0) - Number(pagos || 0))
+      const hoje = new Date().toISOString().slice(0, 10)
 
-    const formasPagamentoLabels: Record<string, string> = {
-      dinheiro: 'Dinheiro',
-      pix: 'PIX',
-      transferencia: 'Transferência Bancária',
-      boleto: 'Boleto',
-      cartao_credito: 'Cartão de Crédito',
-      cartao_debito: 'Cartão de Débito',
-      cheque: 'Cheque'
-    };
+      const validations: Array<{ field: string; status: 'ok'|'warn'|'error'; message?: string }> = []
+      if (!conta_financeira_id) validations.push({ field: 'conta_financeira_id', status: 'error', message: 'Conta financeira é obrigatória' })
+      if (!metodo_pagamento_id) validations.push({ field: 'metodo_pagamento_id', status: 'error', message: 'Método de pagamento é obrigatório' })
+      if (!descricao || !descricao.trim()) validations.push({ field: 'descricao', status: 'error', message: 'Descrição é obrigatória' })
+      if (pendente <= 0) validations.push({ field: 'valor', status: 'error', message: 'Título já está totalmente pago' })
 
-    return {
-      success: true,
-      data: pagamentoCriado,
-      message: `Pagamento efetuado com sucesso! Conta a pagar ${pagamentoCriado.conta_pagar.numero_nota_fiscal} baixada automaticamente.`,
-      title: '💸 Pagamento Efetuado',
-      resumo: {
-        id: pagamentoCriado.id,
-        valor_formatado: valor_total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
-        data_pagamento,
-        forma_pagamento: formasPagamentoLabels[forma_pagamento],
-        conta_financeira: pagamentoCriado.conta_financeira_nome,
-        nota_fiscal: pagamentoCriado.conta_pagar.numero_nota_fiscal,
-        fornecedor: pagamentoCriado.conta_pagar.fornecedor_nome,
-        status_conta: 'Baixada automaticamente'
-      },
-      detalhamento: {
-        valor_principal: valor_pago,
-        juros: valor_juros,
-        multa: valor_multa,
-        desconto: valor_desconto,
-        total: valor_total
+      const payload = {
+        lancamento_origem_id,
+        conta_financeira_id,
+        metodo_pagamento_id,
+        descricao,
+        valor: pendente,
+        data_pagamento: hoje,
+        tenant_id: tenant_id ?? 1,
       }
-    };
+
+      return {
+        success: true,
+        preview: true,
+        title: 'Pagamento Efetuado (Prévia)',
+        message: pendente > 0 ? `Pagamento proposto de ${pendente.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}` : 'Título sem valor pendente',
+        payload,
+        validations,
+        metadata: { commitEndpoint: '/api/modulos/financeiro/pagamentos-efetuados' }
+      } as const
+    } catch (error) {
+      return { success: false, preview: true, message: error instanceof Error ? error.message : String(error), title: 'Pagamento Efetuado (Prévia)', payload: null, validations: [{ field: 'lancamento_origem_id', status: 'error', message: 'Falha ao calcular pendente' }], metadata: { commitEndpoint: '/api/modulos/financeiro/pagamentos-efetuados' } } as const
+    }
   }
 });

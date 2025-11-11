@@ -6,8 +6,85 @@ export const revalidate = 0
 
 export async function POST(req: Request) {
   try {
-    const form = await req.formData()
+    const ct = req.headers.get('content-type') || ''
+    // JSON commit path (preview → criar)
+    if (ct.includes('application/json')) {
+      const body = await req.json() as {
+        lancamento_origem_id: string
+        conta_financeira_id: string
+        metodo_pagamento_id: string
+        descricao: string
+      }
+      const apId = Number(body.lancamento_origem_id)
+      if (!apId || !body.conta_financeira_id || !body.metodo_pagamento_id || !body.descricao) {
+        return Response.json({ success: false, message: 'lancamento_origem_id, conta_financeira_id, metodo_pagamento_id e descricao são obrigatórios' }, { status: 400 })
+      }
 
+      const result = await withTransaction(async (client) => {
+        // 1) Buscar AP (valor total, tenant, entidade, categoria) e soma de pagamentos
+        const apRow = await client.query(
+          `SELECT lf.id, lf.tenant_id, lf.valor::numeric AS total, lf.entidade_id, lf.categoria_id
+             FROM financeiro.lancamentos_financeiros lf
+            WHERE lf.id = $1 AND LOWER(lf.tipo) = 'conta_a_pagar'
+            LIMIT 1`,
+          [apId]
+        )
+        if (apRow.rowCount === 0) throw new Error('Conta a pagar não encontrada')
+        const ap = apRow.rows[0] as { id: number; tenant_id: number | null; total: number; entidade_id: number | null; categoria_id: number | null }
+
+        const pagosRow = await client.query(
+          `SELECT COALESCE(SUM(valor),0)::numeric AS pagos
+             FROM financeiro.lancamentos_financeiros
+            WHERE LOWER(tipo) = 'pagamento_efetuado' AND lancamento_origem_id = $1`,
+          [apId]
+        )
+        const pagos: number = Number(pagosRow.rows[0]?.pagos || 0)
+        const pendente = Math.max(0, Number(ap.total || 0) - pagos)
+        if (pendente <= 0) throw new Error('Título já está totalmente pago')
+
+        const today = new Date().toISOString().slice(0, 10)
+        const tenant = ap.tenant_id ?? 1
+
+        // 2) Atualizar AP com conta_financeira_id e metodo_pagamento_id
+        await client.query(
+          `UPDATE financeiro.lancamentos_financeiros
+              SET conta_financeira_id = $1, metodo_pagamento_id = $2
+            WHERE id = $3`,
+          [Number(body.conta_financeira_id), Number(body.metodo_pagamento_id), apId]
+        )
+
+        // 3) Inserir pagamento
+        const ins = await client.query(
+          `INSERT INTO financeiro.lancamentos_financeiros (
+             tenant_id, tipo, descricao, valor, data_lancamento, data_vencimento, status,
+             entidade_id, categoria_id, conta_financeira_id, lancamento_origem_id
+           ) VALUES ($1, 'pagamento_efetuado', $2, $3, $4, NULL, 'pago', $5, $6, $7, $8)
+           RETURNING id`,
+          [tenant, `Pagamento AP #${apId} - ${body.descricao}`.slice(0, 255), Math.abs(pendente), today,
+           ap.entidade_id ?? null, ap.categoria_id ?? null, Number(body.conta_financeira_id), apId]
+        )
+        const pagamentoId = Number(ins.rows[0]?.id)
+        if (!pagamentoId) throw new Error('Falha ao criar pagamento efetuado')
+
+        // 4) Baixar status da AP
+        const pagos2Row = await client.query(
+          `SELECT COALESCE(SUM(valor),0)::numeric AS pagos
+             FROM financeiro.lancamentos_financeiros
+            WHERE LOWER(tipo) = 'pagamento_efetuado' AND lancamento_origem_id = $1`,
+          [apId]
+        )
+        const pagos2: number = Number(pagos2Row.rows[0]?.pagos || 0)
+        const novoStatus = pagos2 >= Number(ap.total || 0) ? 'pago' : (pagos2 > 0 ? 'parcial' : 'pendente')
+        await client.query(`UPDATE financeiro.lancamentos_financeiros SET status = $1 WHERE id = $2`, [novoStatus, apId])
+
+        return { id: pagamentoId }
+      })
+
+      return Response.json({ success: true, id: result.id })
+    }
+
+    // Mantém compatibilidade com FormData (caminho antigo)
+    const form = await req.formData()
     const descricao = String(form.get('descricao') || '').trim()
     const valorRaw = String(form.get('valor') || '').trim()
     const data_lancamento = String(form.get('data_lancamento') || '').trim()

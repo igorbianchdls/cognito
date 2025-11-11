@@ -1,9 +1,25 @@
 'use client'
 
 import { CheckCircle2, TrendingDown, Receipt } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { useState } from 'react'
 
 type PagamentoEfetuadoCriadoOutput = {
   success: boolean;
+  // preview
+  preview?: boolean;
+  payload?: {
+    lancamento_origem_id: string;
+    conta_financeira_id: string;
+    metodo_pagamento_id: string;
+    descricao: string;
+    valor?: number;
+    data_pagamento?: string;
+    tenant_id?: number | string;
+  } | null;
+  validations?: Array<{ field: string; status: 'ok' | 'warn' | 'error'; message?: string }>;
+  metadata?: { commitEndpoint?: string };
+  // created
   data: {
     id: string;
     conta_pagar_id: string;
@@ -50,6 +66,81 @@ type PagamentoEfetuadoCriadoOutput = {
 }
 
 export default function PagamentoEfetuadoCriadoResult({ result }: { result: PagamentoEfetuadoCriadoOutput }) {
+  const [creating, setCreating] = useState(false)
+  const [createdId, setCreatedId] = useState<string | null>(null)
+  const isPreview = result.preview && result.payload && !createdId
+
+  const commit = async () => {
+    if (!result.metadata?.commitEndpoint || !result.payload) return
+    try {
+      setCreating(true)
+      const res = await fetch(result.metadata.commitEndpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          lancamento_origem_id: result.payload.lancamento_origem_id,
+          conta_financeira_id: result.payload.conta_financeira_id,
+          metodo_pagamento_id: result.payload.metodo_pagamento_id,
+          descricao: result.payload.descricao,
+        })
+      })
+      const json = await res.json()
+      if (!res.ok || !json?.success) {
+        alert(json?.message || 'Falha ao criar pagamento efetuado')
+        setCreating(false)
+        return
+      }
+      setCreatedId(String(json.id))
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Erro ao criar pagamento')
+    } finally {
+      setCreating(false)
+    }
+  }
+
+  if (isPreview) {
+    const valor = result.payload?.valor || 0
+    return (
+      <div className="space-y-4">
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-start gap-3">
+            <CheckCircle2 className="h-6 w-6 text-blue-600 mt-0.5" />
+            <div className="flex-1">
+              <h3 className="font-semibold text-blue-900 mb-2">Pagamento Efetuado (Prévia)</h3>
+              <p className="text-sm text-blue-700 mb-3">{result.message}</p>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="text-blue-700 font-medium">Valor Proposto:</span>
+                  <div className="text-blue-900 font-bold text-lg">{Number(valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
+                </div>
+                <div>
+                  <span className="text-blue-700 font-medium">Data Pagamento:</span>
+                  <div className="text-blue-900">{result.payload?.data_pagamento || '-'}</div>
+                </div>
+                <div>
+                  <span className="text-blue-700 font-medium">Conta Financeira ID:</span>
+                  <div className="text-blue-900 text-xs">{result.payload?.conta_financeira_id}</div>
+                </div>
+                <div>
+                  <span className="text-blue-700 font-medium">Método Pagamento ID:</span>
+                  <div className="text-blue-900 text-xs">{result.payload?.metodo_pagamento_id}</div>
+                </div>
+                <div className="col-span-2">
+                  <span className="text-blue-700 font-medium">Descrição:</span>
+                  <div className="text-blue-900">{result.payload?.descricao}</div>
+                </div>
+              </div>
+              <div className="mt-4 flex justify-end">
+                <Button onClick={commit} disabled={creating}>
+                  {creating ? 'Criando…' : 'Criar Pagamento'}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
   return (
     <div className="space-y-4">
       {/* Success Card */}

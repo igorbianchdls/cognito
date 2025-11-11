@@ -515,6 +515,20 @@ type BuscarContaPagarOutput = {
 
 type PagamentoEfetuadoCriadoOutput = {
   success: boolean;
+  // preview
+  preview?: boolean;
+  payload?: {
+    lancamento_origem_id: string;
+    conta_financeira_id: string;
+    metodo_pagamento_id: string;
+    descricao: string;
+    valor?: number;
+    data_pagamento?: string;
+    tenant_id?: number | string;
+  } | null;
+  validations?: Array<{ field: string; status: 'ok' | 'warn' | 'error'; message?: string }>;
+  metadata?: { commitEndpoint?: string };
+  // created
   data: {
     id: string;
     conta_pagar_id: string;
