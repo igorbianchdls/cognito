@@ -7,24 +7,30 @@ interface PerguntaDoUsuarioProps {
 }
 
 export default function PerguntaDoUsuario({ message }: PerguntaDoUsuarioProps) {
+  // Separar file parts e text parts
+  const fileParts = message.parts.filter(part => part.type === 'file');
+  const textParts = message.parts.filter(part => part.type === 'text');
+
   return (
     <Message from="user">
+      {/* Thumbnails acima do container preto */}
+      {fileParts.length > 0 && (
+        <div className="mb-2 flex flex-wrap gap-2">
+          {fileParts.map((part, index) => (
+            <MessageFileAttachment
+              key={index}
+              mediaType={part.mediaType || 'application/octet-stream'}
+              url={part.url || ''}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Container preto apenas com texto */}
       <MessageContent>
-        {message.parts.map((part, index) => {
-          if (part.type === 'text') {
-            return <span key={index}>{part.text}</span>;
-          }
-          if (part.type === 'file') {
-            return (
-              <MessageFileAttachment
-                key={index}
-                mediaType={part.mediaType || 'application/octet-stream'}
-                url={part.url || ''}
-              />
-            );
-          }
-          return null;
-        })}
+        {textParts.map((part, index) => (
+          <span key={index}>{part.text}</span>
+        ))}
       </MessageContent>
     </Message>
   );
