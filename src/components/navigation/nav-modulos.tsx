@@ -146,7 +146,7 @@ export function NavModulos({ groupLabelStyle, itemTextStyle }: { groupLabelStyle
               isActive={pathname.startsWith("/modulos/empresa")}
             >
               <Building2 />
-              <span>Empresa</span>
+              <span style={itemTextStyle}>Empresa</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
@@ -156,7 +156,7 @@ export function NavModulos({ groupLabelStyle, itemTextStyle }: { groupLabelStyle
               isActive={pathname.startsWith("/modulos/admnistrativo")}
             >
               <Building2 />
-              <span>Administrativo</span>
+              <span style={itemTextStyle}>Administrativo</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
@@ -166,7 +166,7 @@ export function NavModulos({ groupLabelStyle, itemTextStyle }: { groupLabelStyle
               isActive={pathname.startsWith("/modulos/documentos")}
             >
               <FileText />
-              <span>Documentos</span>
+              <span style={itemTextStyle}>Documentos</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -181,7 +181,7 @@ export function NavModulos({ groupLabelStyle, itemTextStyle }: { groupLabelStyle
               isActive={pathname.startsWith("/modulos/produtos")}
             >
               <Package />
-              <span>Produtos</span>
+              <span style={itemTextStyle}>Produtos</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
           <Collapsible
@@ -194,7 +194,7 @@ export function NavModulos({ groupLabelStyle, itemTextStyle }: { groupLabelStyle
               <CollapsibleTrigger asChild>
                 <SidebarMenuButton tooltip="Vendas">
                   <ShoppingCart />
-                  <span>Vendas</span>
+                  <span style={itemTextStyle}>Vendas</span>
                   <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                 </SidebarMenuButton>
               </CollapsibleTrigger>
@@ -228,7 +228,7 @@ export function NavModulos({ groupLabelStyle, itemTextStyle }: { groupLabelStyle
               <CollapsibleTrigger asChild>
                 <SidebarMenuButton tooltip="CRM">
                   <Users />
-                  <span>CRM</span>
+                  <span style={itemTextStyle}>CRM</span>
                   <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                 </SidebarMenuButton>
               </CollapsibleTrigger>
@@ -262,7 +262,7 @@ export function NavModulos({ groupLabelStyle, itemTextStyle }: { groupLabelStyle
               <CollapsibleTrigger asChild>
                 <SidebarMenuButton tooltip="Serviços">
                   <Wrench />
-                  <span>Serviços</span>
+                  <span style={itemTextStyle}>Serviços</span>
                   <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                 </SidebarMenuButton>
               </CollapsibleTrigger>
@@ -297,7 +297,7 @@ export function NavModulos({ groupLabelStyle, itemTextStyle }: { groupLabelStyle
               <CollapsibleTrigger asChild>
                 <SidebarMenuButton tooltip="Manutenção">
                   <Settings />
-                  <span>Manutenção</span>
+                  <span style={itemTextStyle}>Manutenção</span>
                   <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                 </SidebarMenuButton>
               </CollapsibleTrigger>
@@ -329,7 +329,7 @@ export function NavModulos({ groupLabelStyle, itemTextStyle }: { groupLabelStyle
               <CollapsibleTrigger asChild>
                 <SidebarMenuButton tooltip="Marketing Orgânico">
                   <Megaphone />
-                  <span>Marketing Orgânico</span>
+                  <span style={itemTextStyle}>Marketing Orgânico</span>
                   <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                 </SidebarMenuButton>
               </CollapsibleTrigger>
@@ -363,7 +363,7 @@ export function NavModulos({ groupLabelStyle, itemTextStyle }: { groupLabelStyle
               <CollapsibleTrigger asChild>
                 <SidebarMenuButton tooltip="Tráfego Pago">
                   <Megaphone />
-                  <span>Tráfego Pago</span>
+                  <span style={itemTextStyle}>Tráfego Pago</span>
                   <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                 </SidebarMenuButton>
               </CollapsibleTrigger>
@@ -397,7 +397,7 @@ export function NavModulos({ groupLabelStyle, itemTextStyle }: { groupLabelStyle
               <CollapsibleTrigger asChild>
                 <SidebarMenuButton tooltip="Web Analytics">
                   <BarChart3 />
-                  <span>Web Analytics</span>
+                  <span style={itemTextStyle}>Web Analytics</span>
                   <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                 </SidebarMenuButton>
               </CollapsibleTrigger>
@@ -437,7 +437,7 @@ export function NavModulos({ groupLabelStyle, itemTextStyle }: { groupLabelStyle
               <CollapsibleTrigger asChild>
                 <SidebarMenuButton tooltip="Estoque">
                   <Package />
-                  <span>Estoque</span>
+                  <span style={itemTextStyle}>Estoque</span>
                   <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                 </SidebarMenuButton>
               </CollapsibleTrigger>
@@ -472,7 +472,7 @@ export function NavModulos({ groupLabelStyle, itemTextStyle }: { groupLabelStyle
               <CollapsibleTrigger asChild>
                 <SidebarMenuButton tooltip="Compras">
                   <ShoppingBag />
-                  <span>Compras</span>
+                  <span style={itemTextStyle}>Compras</span>
                   <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                 </SidebarMenuButton>
               </CollapsibleTrigger>
@@ -503,7 +503,7 @@ export function NavModulos({ groupLabelStyle, itemTextStyle }: { groupLabelStyle
               isActive={pathname.startsWith("/modulos/transportes")}
             >
               <Truck />
-              <span>Transportes</span>
+              <span style={itemTextStyle}>Transportes</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
