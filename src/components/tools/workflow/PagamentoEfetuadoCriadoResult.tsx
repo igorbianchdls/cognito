@@ -67,8 +67,8 @@ type PagamentoEfetuadoCriadoOutput = {
 
 export default function PagamentoEfetuadoCriadoResult({ result }: { result: PagamentoEfetuadoCriadoOutput }) {
   const [creating, setCreating] = useState(false)
-  const [createdId, setCreatedId] = useState<string | null>(null)
-  const isPreview = result.preview && result.payload && !createdId
+  const [created, setCreated] = useState<PagamentoEfetuadoCriadoOutput | null>(null)
+  const isPreview = result.preview && result.payload && !created
 
   const commit = async () => {
     if (!result.metadata?.commitEndpoint || !result.payload) return
@@ -84,13 +84,13 @@ export default function PagamentoEfetuadoCriadoResult({ result }: { result: Paga
           descricao: result.payload.descricao,
         })
       })
-      const json = await res.json()
+      const json = await res.json() as PagamentoEfetuadoCriadoOutput
       if (!res.ok || !json?.success) {
         alert(json?.message || 'Falha ao criar pagamento efetuado')
         setCreating(false)
         return
       }
-      setCreatedId(String(json.id))
+      setCreated(json)
     } catch (e) {
       alert(e instanceof Error ? e.message : 'Erro ao criar pagamento')
     } finally {
@@ -141,6 +141,8 @@ export default function PagamentoEfetuadoCriadoResult({ result }: { result: Paga
       </div>
     )
   }
+  const createdView = created || result
+
   return (
     <div className="space-y-4">
       {/* Success Card */}
@@ -149,30 +151,30 @@ export default function PagamentoEfetuadoCriadoResult({ result }: { result: Paga
           <CheckCircle2 className="h-6 w-6 text-red-600 mt-0.5" />
           <div className="flex-1">
             <h3 className="font-semibold text-red-900 mb-2">
-              {result.title || 'Pagamento Efetuado'}
+              {createdView.title || 'Pagamento Efetuado'}
             </h3>
-            <p className="text-sm text-red-700 mb-3">{result.message}</p>
+            <p className="text-sm text-red-700 mb-3">{createdView.message}</p>
 
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <span className="text-red-700 font-medium">Valor Total:</span>
                 <div className="text-red-900 font-bold text-lg">
-                  {result.resumo.valor_formatado}
+                  {createdView.resumo.valor_formatado}
                 </div>
               </div>
               <div>
                 <span className="text-red-700 font-medium">Data Pagamento:</span>
                 <div className="text-red-900">
-                  {new Date(result.resumo.data_pagamento).toLocaleDateString('pt-BR')}
+                  {new Date(createdView.resumo.data_pagamento).toLocaleDateString('pt-BR')}
                 </div>
               </div>
               <div>
                 <span className="text-red-700 font-medium">Forma Pagamento:</span>
-                <div className="text-red-900">{result.resumo.forma_pagamento}</div>
+                <div className="text-red-900">{createdView.resumo.forma_pagamento}</div>
               </div>
               <div>
                 <span className="text-red-700 font-medium">Conta Financeira:</span>
-                <div className="text-red-900 text-xs">{result.resumo.conta_financeira}</div>
+                <div className="text-red-900 text-xs">{createdView.resumo.conta_financeira}</div>
               </div>
             </div>
           </div>
@@ -188,17 +190,17 @@ export default function PagamentoEfetuadoCriadoResult({ result }: { result: Paga
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div>
                 <span className="text-blue-700 font-medium">Nota Fiscal:</span>
-                <div className="text-blue-900 font-mono">{result.resumo.nota_fiscal}</div>
+                <div className="text-blue-900 font-mono">{createdView.resumo.nota_fiscal}</div>
               </div>
               <div>
                 <span className="text-blue-700 font-medium">Fornecedor:</span>
-                <div className="text-blue-900">{result.resumo.fornecedor}</div>
+                <div className="text-blue-900">{createdView.resumo.fornecedor}</div>
               </div>
               <div className="col-span-2">
                 <span className="text-blue-700 font-medium">Status:</span>
                 <div className="text-blue-900 flex items-center gap-2">
                   <span className="inline-flex items-center px-2 py-1 rounded bg-green-100 text-green-700 text-xs font-medium">
-                    {result.resumo.status_conta}
+                    {createdView.resumo.status_conta}
                   </span>
                 </div>
               </div>
@@ -208,7 +210,7 @@ export default function PagamentoEfetuadoCriadoResult({ result }: { result: Paga
       </div>
 
       {/* Detalhamento de Valores */}
-      {(result.detalhamento.juros > 0 || result.detalhamento.multa > 0 || result.detalhamento.desconto > 0) && (
+      {(createdView.detalhamento.juros > 0 || createdView.detalhamento.multa > 0 || createdView.detalhamento.desconto > 0) && (
         <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
           <div className="flex items-start gap-3">
             <TrendingDown className="h-5 w-5 text-slate-600 mt-0.5" />
@@ -218,37 +220,37 @@ export default function PagamentoEfetuadoCriadoResult({ result }: { result: Paga
                 <div className="flex justify-between">
                   <span className="text-slate-600">Valor Principal:</span>
                   <span className="font-semibold text-slate-900">
-                    {result.detalhamento.valor_principal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                    {createdView.detalhamento.valor_principal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                   </span>
                 </div>
-                {result.detalhamento.juros > 0 && (
+                {createdView.detalhamento.juros > 0 && (
                   <div className="flex justify-between">
                     <span className="text-slate-600">Juros:</span>
                     <span className="font-semibold text-orange-600">
-                      + {result.detalhamento.juros.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                      + {createdView.detalhamento.juros.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                     </span>
                   </div>
                 )}
-                {result.detalhamento.multa > 0 && (
+                {createdView.detalhamento.multa > 0 && (
                   <div className="flex justify-between">
                     <span className="text-slate-600">Multa:</span>
                     <span className="font-semibold text-orange-600">
-                      + {result.detalhamento.multa.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                      + {createdView.detalhamento.multa.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                     </span>
                   </div>
                 )}
-                {result.detalhamento.desconto > 0 && (
+                {createdView.detalhamento.desconto > 0 && (
                   <div className="flex justify-between">
                     <span className="text-slate-600">Desconto:</span>
                     <span className="font-semibold text-green-600">
-                      - {result.detalhamento.desconto.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                      - {createdView.detalhamento.desconto.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                     </span>
                   </div>
                 )}
                 <div className="flex justify-between pt-2 border-t border-slate-300">
                   <span className="font-semibold text-slate-900">Total Pago:</span>
                   <span className="font-bold text-red-600 text-lg">
-                    {result.detalhamento.total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                    {createdView.detalhamento.total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                   </span>
                 </div>
               </div>
@@ -259,7 +261,7 @@ export default function PagamentoEfetuadoCriadoResult({ result }: { result: Paga
 
       {/* ID do Pagamento */}
       <div className="text-xs text-muted-foreground text-center">
-        ID do Pagamento: <span className="font-mono">{result.resumo.id}</span>
+        ID do Pagamento: <span className="font-mono">{createdView.resumo.id}</span>
       </div>
     </div>
   );

@@ -23,14 +23,14 @@ export async function POST(req: Request) {
       const result = await withTransaction(async (client) => {
         // 1) Buscar AP (valor total, tenant, entidade, categoria) e soma de pagamentos
         const apRow = await client.query(
-          `SELECT lf.id, lf.tenant_id, lf.valor::numeric AS total, lf.entidade_id, lf.categoria_id
+          `SELECT lf.id, lf.tenant_id, lf.valor::numeric AS total, lf.entidade_id, lf.categoria_id, lf.status
              FROM financeiro.lancamentos_financeiros lf
             WHERE lf.id = $1 AND LOWER(lf.tipo) = 'conta_a_pagar'
             LIMIT 1`,
           [apId]
         )
         if (!apRow.rows || apRow.rows.length === 0) throw new Error('Conta a pagar não encontrada')
-        const ap = apRow.rows[0] as { id: number; tenant_id: number | null; total: number; entidade_id: number | null; categoria_id: number | null }
+        const ap = apRow.rows[0] as { id: number; tenant_id: number | null; total: number; entidade_id: number | null; categoria_id: number | null; status: string | null }
 
         const pagosRow = await client.query(
           `SELECT COALESCE(SUM(valor),0)::numeric AS pagos
@@ -77,10 +77,69 @@ export async function POST(req: Request) {
         const novoStatus = pagos2 >= Number(ap.total || 0) ? 'pago' : (pagos2 > 0 ? 'parcial' : 'pendente')
         await client.query(`UPDATE financeiro.lancamentos_financeiros SET status = $1 WHERE id = $2`, [novoStatus, apId])
 
-        return { id: pagamentoId }
+        // 5) Montar resposta completa (detalhes)
+        const cfRow = await client.query(`SELECT nome_conta FROM financeiro.contas_financeiras WHERE id = $1`, [Number(body.conta_financeira_id)])
+        const mpRow = await client.query(`SELECT nome FROM financeiro.metodos_pagamento WHERE id = $1`, [Number(body.metodo_pagamento_id)])
+        const fornNameRow = ap.entidade_id ? await client.query(`SELECT nome FROM entidades.fornecedores WHERE id = $1`, [ap.entidade_id]) : { rows: [] as Record<string, unknown>[] }
+
+        const conta_financeira_nome = String(cfRow.rows?.[0]?.nome_conta || `Conta #${body.conta_financeira_id}`)
+        const forma_pagamento_nome = String(mpRow.rows?.[0]?.nome || `Método #${body.metodo_pagamento_id}`)
+        const fornecedor_nome = String(fornNameRow.rows?.[0]?.nome || '-')
+
+        const valor_formatado = Math.abs(pendente).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+
+        return {
+          id: pagamentoId,
+          response: {
+            success: true,
+            data: {
+              id: String(pagamentoId),
+              conta_pagar_id: String(apId),
+              valor_pago: Math.abs(pendente),
+              valor_juros: 0,
+              valor_multa: 0,
+              valor_desconto: 0,
+              valor_total: Math.abs(pendente),
+              data_pagamento: today,
+              forma_pagamento: forma_pagamento_nome,
+              conta_financeira_id: String(body.conta_financeira_id),
+              conta_financeira_nome,
+              observacoes: body.descricao,
+              status: 'pago',
+              data_cadastro: new Date().toISOString(),
+              conta_pagar: {
+                numero_nota_fiscal: '-',
+                fornecedor_nome,
+                valor_original: Number(ap.total || 0),
+                status_anterior: ap.status || 'pendente',
+                status_atual: novoStatus,
+              },
+            },
+            message: `Pagamento efetuado com sucesso! Conta a pagar baixada automaticamente.`,
+            title: '💸 Pagamento Efetuado',
+            resumo: {
+              id: String(pagamentoId),
+              valor_formatado,
+              data_pagamento: today,
+              forma_pagamento: forma_pagamento_nome,
+              conta_financeira: conta_financeira_nome,
+              nota_fiscal: '-',
+              fornecedor: fornecedor_nome,
+              status_conta: novoStatus,
+            },
+            detalhamento: {
+              valor_principal: Math.abs(pendente),
+              juros: 0,
+              multa: 0,
+              desconto: 0,
+              total: Math.abs(pendente),
+            }
+          }
+        }
       })
 
-      return Response.json({ success: true, id: result.id })
+      if (!result) throw new Error('Falha ao criar pagamento efetuado')
+      return Response.json(result.response)
     }
 
     // Mantém compatibilidade com FormData (caminho antigo)
