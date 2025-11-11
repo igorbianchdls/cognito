@@ -148,75 +148,94 @@ export const buscarClassificacoesFinanceiras = tool({
 // WORKFLOW TOOL 2: Buscar Fornecedor
 // ========================================
 export const buscarFornecedor = tool({
-  description: '[WORKFLOW] Busca fornecedor existente no sistema por CNPJ ou nome. Use após extrair os dados do documento para verificar se o fornecedor já está cadastrado.',
+  description:
+    '[WORKFLOW] Busca fornecedor existente no sistema por CNPJ ou nome (schema entidades). Use após extrair os dados do documento para verificar se o fornecedor já está cadastrado.',
 
   inputSchema: z.object({
-    cnpj: z.string().optional()
-      .describe('CNPJ do fornecedor (formato: 00.000.000/0000-00 ou apenas números)'),
-    nome: z.string().optional()
-      .describe('Nome do fornecedor para busca caso CNPJ não esteja disponível')
+    cnpj: z
+      .string()
+      .optional()
+      .describe('CNPJ do fornecedor (formato livre; apenas dígitos serão considerados)'),
+    nome: z
+      .string()
+      .optional()
+      .describe('Nome do fornecedor para busca caso CNPJ não esteja disponível'),
   }),
 
   execute: async ({ cnpj, nome }) => {
-    // TODO: Integrar com BigQuery
-    // Tabela esperada: fornecedores
-    // Query: SELECT * FROM fornecedores WHERE cnpj = ? OR nome ILIKE ?
-
     if (!cnpj && !nome) {
       return {
         success: false,
         fornecedor_encontrado: false,
         data: null,
         message: 'É necessário informar CNPJ ou nome do fornecedor',
-        error: 'Parâmetros insuficientes'
-      };
+        error: 'Parâmetros insuficientes',
+      } as const;
     }
 
-    // Mock data: simular alguns fornecedores cadastrados
-    const fornecedoresMock = [
-      {
-        id: 'forn-001',
-        nome: 'Acme Suprimentos Ltda',
-        cnpj: '12.345.678/0001-90',
-        endereco: 'Rua das Flores, 123 - São Paulo, SP',
-        telefone: '(11) 1234-5678',
-        email: 'contato@acme.com.br',
-        data_cadastro: '2024-01-15'
-      },
-      {
-        id: 'forn-002',
-        nome: 'Tech Solutions Brasil S.A.',
-        cnpj: '98.765.432/0001-10',
-        endereco: 'Av. Paulista, 1000 - São Paulo, SP',
-        telefone: '(11) 9876-5432',
-        email: 'contato@techsolutions.com.br',
-        data_cadastro: '2024-03-20'
+    try {
+      // Monta condições dinâmicas
+      const conds: string[] = [];
+      const params: unknown[] = [];
+      let i = 1;
+
+      if (cnpj) {
+        const cnpjDigits = cnpj.replace(/\D/g, '');
+        if (cnpjDigits.length > 0) {
+          conds.push(`REPLACE(REPLACE(REPLACE(f.cnpj, '.', ''), '/', ''), '-', '') = $${i++}`);
+          params.push(cnpjDigits);
+        }
       }
-    ];
+      if (nome) {
+        const term = nome.trim();
+        if (term.length > 0) {
+          conds.push(`LOWER(f.nome) LIKE LOWER($${i++})`);
+          params.push(`%${term}%`);
+        }
+      }
 
-    // Simular busca
-    const cnpjLimpo = cnpj?.replace(/[^\d]/g, '');
-    let fornecedorEncontrado = null;
+      if (conds.length === 0) {
+        return {
+          success: false,
+          fornecedor_encontrado: false,
+          data: null,
+          message: 'Informe um CNPJ válido (com dígitos) ou um nome para busca',
+          error: 'Parâmetros inválidos',
+        } as const;
+      }
 
-    if (cnpjLimpo) {
-      fornecedorEncontrado = fornecedoresMock.find(f =>
-        f.cnpj.replace(/[^\d]/g, '') === cnpjLimpo
-      );
-    } else if (nome) {
-      fornecedorEncontrado = fornecedoresMock.find(f =>
-        f.nome.toLowerCase().includes(nome.toLowerCase())
-      );
-    }
+      const where = `WHERE ${conds.join(' AND ')}`;
+      const sql = `
+        SELECT f.id::text AS id,
+               COALESCE(f.nome, '')::text AS nome,
+               COALESCE(f.cnpj, '')::text AS cnpj,
+               COALESCE(f.email, '')::text AS email,
+               COALESCE(f.telefone, '')::text AS telefone
+          FROM entidades.fornecedores f
+          ${where}
+         ORDER BY f.nome ASC
+         LIMIT 1
+      `.replace(/\n\s+/g, ' ').trim();
 
-    if (fornecedorEncontrado) {
-      return {
-        success: true,
-        fornecedor_encontrado: true,
-        data: fornecedorEncontrado,
-        message: `Fornecedor encontrado: ${fornecedorEncontrado.nome}`,
-        title: 'Fornecedor Encontrado'
-      };
-    } else {
+      type Row = { id: string; nome: string; cnpj: string; email: string; telefone: string };
+      const [row] = await runQuery<Row>(sql, params);
+
+      if (row) {
+        return {
+          success: true,
+          fornecedor_encontrado: true,
+          data: {
+            id: row.id,
+            nome: row.nome,
+            cnpj: row.cnpj,
+            email: row.email || undefined,
+            telefone: row.telefone || undefined,
+          },
+          message: `Fornecedor encontrado: ${row.nome}`,
+          title: 'Fornecedor Encontrado',
+        };
+      }
+
       return {
         success: true,
         fornecedor_encontrado: false,
@@ -224,10 +243,19 @@ export const buscarFornecedor = tool({
         message: cnpj
           ? `Nenhum fornecedor encontrado com CNPJ ${cnpj}. Será necessário criar um novo cadastro.`
           : `Nenhum fornecedor encontrado com o nome "${nome}". Será necessário criar um novo cadastro.`,
-        title: 'Fornecedor Não Encontrado'
-      };
+        title: 'Fornecedor Não Encontrado',
+      } as const;
+    } catch (error) {
+      return {
+        success: false,
+        fornecedor_encontrado: false,
+        data: null,
+        message: 'Erro ao buscar fornecedor',
+        error: error instanceof Error ? error.message : String(error),
+        title: 'Fornecedor (Erro na Busca)',
+      } as const;
     }
-  }
+  },
 });
 
 // ========================================
