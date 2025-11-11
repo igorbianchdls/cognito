@@ -41,7 +41,7 @@ export const buscarCliente = tool({
       if (cpf_cnpj) {
         const digits = cpf_cnpj.replace(/\D/g, '')
         if (digits.length > 0) {
-          conds.push(`REPLACE(REPLACE(REPLACE(c.cpf_cnpj, '.', ''), '/', ''), '-', '') = $${i++}`)
+          conds.push(`REPLACE(REPLACE(REPLACE(c.cnpj_cpf, '.', ''), '/', ''), '-', '') = $${i++}`)
           params.push(digits)
         }
       }
@@ -59,14 +59,15 @@ export const buscarCliente = tool({
 
       const sql = `
         SELECT c.id::text AS id,
-               c.nome_fantasia::text AS nome
+               c.nome_fantasia::text AS nome,
+               COALESCE(c.cnpj_cpf, '')::text AS cpf_cnpj
           FROM entidades.clientes c
           ${where}
          ORDER BY c.nome_fantasia ASC
          ${limitClause}
       `.replace(/\n\s+/g, ' ').trim()
 
-      type Row = { id: string; nome: string }
+      type Row = { id: string; nome: string; cpf_cnpj: string }
       const rows = await runQuery<Row>(sql, params)
 
       if (listAll) {

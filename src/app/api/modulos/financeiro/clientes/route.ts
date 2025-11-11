@@ -19,36 +19,19 @@ export async function POST(req: Request) {
     const nome = String(body.nome || '').trim()
     if (!nome) return Response.json({ success: false, message: 'nome é obrigatório' }, { status: 400 })
 
-    const cpfCnpjRaw = body.cpf_cnpj ? String(body.cpf_cnpj).trim() : ''
-    const docDigits = cpfCnpjRaw.replace(/\D/g, '')
-
-    if (docDigits) {
-      const dupSql = `SELECT 1 FROM entidades.clientes WHERE REPLACE(REPLACE(REPLACE(cpf_cnpj, '.', ''), '/', ''), '-', '') = $1 LIMIT 1`
-      const dup = await runQuery<{ exists: number }>(dupSql, [docDigits])
-      if (dup && dup.length > 0) {
-        return Response.json({ success: false, message: 'Cliente já cadastrado para este CPF/CNPJ' }, { status: 409 })
-      }
-    }
-
-    // Inserção mínima; usa nome_fantasia como nome exibido
+    // Inserção mínima usando colunas existentes: nome_fantasia e cnpj_cpf (quando enviado)
     const insertSql = `
-      INSERT INTO entidades.clientes (nome_fantasia, cpf_cnpj, email, telefone)
-      VALUES ($1, $2, $3, $4)
+      INSERT INTO entidades.clientes (nome_fantasia, cnpj_cpf)
+      VALUES ($1, $2)
       RETURNING id::text AS id,
                 COALESCE(nome_fantasia, '')::text AS nome,
-                COALESCE(cpf_cnpj, '')::text AS cpf_cnpj,
-                COALESCE(email, '')::text AS email,
-                COALESCE(telefone, '')::text AS telefone
+                COALESCE(cnpj_cpf, '')::text AS cpf_cnpj
     `.replace(/\n\s+/g, ' ').trim()
 
-    const params = [
-      nome,
-      cpfCnpjRaw || null,
-      body.email ? String(body.email) : null,
-      body.telefone ? String(body.telefone) : null,
-    ]
+    const cnpjCpfRaw = (body as any).cnpj_cpf ? String((body as any).cnpj_cpf).trim() : (body.cpf_cnpj ? String(body.cpf_cnpj).trim() : '')
+    const params = [ nome, cnpjCpfRaw || null ]
 
-    const [row] = await runQuery<{ id: string; nome: string; cpf_cnpj: string; email: string | null; telefone: string | null }>(insertSql, params)
+    const [row] = await runQuery<{ id: string; nome: string; cpf_cnpj: string }>(insertSql, params)
     if (!row) throw new Error('Falha ao criar cliente')
 
     return Response.json({ success: true, data: row, message: `Cliente criado: ${row.nome}` })
@@ -58,4 +41,3 @@ export async function POST(req: Request) {
     return Response.json({ success: false, message: msg }, { status: 400 })
   }
 }
-
