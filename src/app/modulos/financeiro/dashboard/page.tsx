@@ -5,6 +5,7 @@ import { useStore } from '@nanostores/react'
 import DashboardLayout from '@/components/modulos/DashboardLayout'
 import { ArrowDownCircle, ArrowUpCircle, AlertTriangle, BarChart3, Wallet, Clock, Star, CalendarCheck, Calendar as CalendarIcon } from 'lucide-react'
 import { CashGroupedBar, ProjectedLine, SimpleHorizontalBar } from '@/components/modulos/financeiro/NivoCharts'
+import { BarChartHorizontalRecharts } from '@/components/charts/BarChartHorizontalRecharts'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
@@ -805,7 +806,7 @@ export default function FinanceiroDashboardPage() {
         </div>
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
           <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><Star className="w-5 h-5" style={{ color: chartIconColor }} />Top 5 Fornecedores</h3>
-          <SimpleHorizontalBar items={topFornecedores} color="#10b981" />
+          <BarChartHorizontalRecharts items={topFornecedores} color="#10b981" />
         </div>
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
           <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><CalendarCheck className="w-5 h-5" style={{ color: chartIconColor }} />Top 5 Clientes</h3>
