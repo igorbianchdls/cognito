@@ -38,12 +38,12 @@ export type FinanceiroDashboardFiltersState = {
 
 const DEFAULT_UI: FinanceiroDashboardUIState = {
   fonts: {
-    values: { family: 'Space Mono', weight: 700, letterSpacing: 0, color: '#111827', size: 24, transform: 'none' },
-    kpiTitle: { family: 'Space Mono', weight: 500, letterSpacing: 0, color: 'rgb(145, 145, 145)', size: 13, transform: 'uppercase' },
-    chartTitle: { family: 'Space Mono', weight: 500, letterSpacing: 0, color: 'rgb(145, 145, 145)', size: 13, transform: 'uppercase' },
+    values: { family: 'Geist Mono', weight: 700, letterSpacing: 0, color: '#111827', size: 24, transform: 'none' },
+    kpiTitle: { family: 'Geist Mono', weight: 500, letterSpacing: 0, color: 'rgb(179, 179, 179)', size: 12, transform: 'uppercase' },
+    chartTitle: { family: 'Geist Mono', weight: 500, letterSpacing: -1, color: 'rgb(125, 125, 125)', size: 16, transform: 'none' },
     text: { family: 'Inter', weight: 400, letterSpacing: 0, color: '#6b7280', size: 12, transform: 'none' },
     filters: { family: 'Inter', weight: 400, letterSpacing: 0, color: 'rgb(122, 122, 122)', size: 13, transform: 'none' },
-    headerTitle: { family: 'Geist', weight: 700, letterSpacing: 0, color: '#111827', size: 25, transform: 'none' },
+    headerTitle: { family: 'Geist Mono', weight: 700, letterSpacing: -1, color: '#111827', size: 25, transform: 'none' },
     headerSubtitle: { family: 'Geist', weight: 400, letterSpacing: 0, color: '#6b7280', size: 12, transform: 'none' },
     sidebarSectionTitle: { family: 'Space Mono', weight: 500, letterSpacing: 0, color: '#808080', size: 12, transform: 'uppercase' },
   },

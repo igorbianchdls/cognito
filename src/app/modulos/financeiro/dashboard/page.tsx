@@ -1150,8 +1150,8 @@ export default function FinanceiroDashboardPage() {
                 <select className="border rounded px-2 py-1 text-xs" value={fonts.headerTitle.family} onChange={(e) => setFonts((f) => ({ ...f, headerTitle: { ...f.headerTitle, family: e.target.value } }))}>
                   <option>Inter</option>
                   <option>Geist</option>
-                  <option>Roboto Mono</option>
                   <option>Geist Mono</option>
+                  <option>Roboto Mono</option>
                   <option>IBM Plex Mono</option>
                   <option>Avenir</option>
                   <option>Space Mono</option>
@@ -1192,8 +1192,8 @@ export default function FinanceiroDashboardPage() {
                 <select className="border rounded px-2 py-1 text-xs" value={fonts.headerSubtitle.family} onChange={(e) => setFonts((f) => ({ ...f, headerSubtitle: { ...f.headerSubtitle, family: e.target.value } }))}>
                   <option>Inter</option>
                   <option>Geist</option>
-                  <option>Roboto Mono</option>
                   <option>Geist Mono</option>
+                  <option>Roboto Mono</option>
                   <option>IBM Plex Mono</option>
                   <option>Avenir</option>
                   <option>Space Mono</option>
