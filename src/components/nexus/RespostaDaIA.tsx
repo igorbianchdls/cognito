@@ -214,6 +214,8 @@ type BuscarFornecedorOutput = {
   success: boolean;
   fornecedor_encontrado?: boolean;
   data: FornecedorRow | null;
+  rows?: FornecedorRow[];
+  count?: number;
   message: string;
   title?: string;
   error?: string;

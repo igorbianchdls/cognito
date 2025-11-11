@@ -24,6 +24,8 @@ type FornecedorOutput = {
   success: boolean;
   fornecedor_encontrado?: boolean; // only for buscarFornecedor
   data: FornecedorRow | null;
+  rows?: FornecedorRow[]; // listagem múltipla
+  count?: number;
   message: string;
   title?: string;
   error?: string;
@@ -33,8 +35,9 @@ type FornecedorOutput = {
 export default function FornecedorResult({ result }: { result: FornecedorOutput }) {
   // Convert single fornecedor to array for table display
   const tableRows: FornecedorRow[] = useMemo(() => {
+    if (Array.isArray(result.rows)) return result.rows;
     return result.data ? [result.data] : [];
-  }, [result.data]);
+  }, [result.data, result.rows]);
 
   const columns: ColumnDef<FornecedorRow>[] = useMemo(() => [
     {

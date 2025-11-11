@@ -159,20 +159,17 @@ export const buscarFornecedor = tool({
     nome: z
       .string()
       .optional()
-      .describe('Nome do fornecedor para busca caso CNPJ não esteja disponível'),
+      .describe('Nome do fornecedor para busca (parcial ou completo). Se não informado e sem CNPJ, lista todos.'),
+    limite: z
+      .number()
+      .int()
+      .positive()
+      .max(10000)
+      .optional()
+      .describe('Limite opcional de resultados ao listar (default: sem limite).'),
   }),
 
-  execute: async ({ cnpj, nome }) => {
-    if (!cnpj && !nome) {
-      return {
-        success: false,
-        fornecedor_encontrado: false,
-        data: null,
-        message: 'É necessário informar CNPJ ou nome do fornecedor',
-        error: 'Parâmetros insuficientes',
-      } as const;
-    }
-
+  execute: async ({ cnpj, nome, limite }) => {
     try {
       // Monta condições dinâmicas
       const conds: string[] = [];
@@ -194,17 +191,11 @@ export const buscarFornecedor = tool({
         }
       }
 
-      if (conds.length === 0) {
-        return {
-          success: false,
-          fornecedor_encontrado: false,
-          data: null,
-          message: 'Informe um CNPJ válido (com dígitos) ou um nome para busca',
-          error: 'Parâmetros inválidos',
-        } as const;
-      }
+      // Se não houver filtros, listar todos (com limite opcional)
+      const listAll = conds.length === 0;
+      const where = listAll ? '' : `WHERE ${conds.join(' AND ')}`;
+      const limitClause = listAll && limite ? `LIMIT ${Math.max(1, Math.min(10000, limite))}` : listAll ? '' : '';
 
-      const where = `WHERE ${conds.join(' AND ')}`;
       const sql = `
         SELECT f.id::text AS id,
                COALESCE(f.nome, '')::text AS nome,
@@ -214,32 +205,71 @@ export const buscarFornecedor = tool({
           FROM entidades.fornecedores f
           ${where}
          ORDER BY f.nome ASC
-         LIMIT 1
+         ${limitClause}
       `.replace(/\n\s+/g, ' ').trim();
 
       type Row = { id: string; nome: string; cnpj: string; email: string; telefone: string };
-      const [row] = await runQuery<Row>(sql, params);
+      const rows = await runQuery<Row>(sql, params);
 
-      if (row) {
+      if (listAll) {
+        return {
+          success: true,
+          fornecedor_encontrado: rows.length > 0,
+          data: null,
+          rows: rows.map(r => ({
+            id: r.id,
+            nome: r.nome,
+            cnpj: r.cnpj,
+            email: r.email || undefined,
+            telefone: r.telefone || undefined,
+          })),
+          count: rows.length,
+          message: rows.length ? `${rows.length} fornecedor(es) encontrado(s)` : 'Nenhum fornecedor cadastrado',
+          title: 'Fornecedores',
+        } as const;
+      }
+
+      if (rows.length === 1) {
+        const r = rows[0];
         return {
           success: true,
           fornecedor_encontrado: true,
           data: {
-            id: row.id,
-            nome: row.nome,
-            cnpj: row.cnpj,
-            email: row.email || undefined,
-            telefone: row.telefone || undefined,
+            id: r.id,
+            nome: r.nome,
+            cnpj: r.cnpj,
+            email: r.email || undefined,
+            telefone: r.telefone || undefined,
           },
-          message: `Fornecedor encontrado: ${row.nome}`,
+          message: `Fornecedor encontrado: ${r.nome}`,
           title: 'Fornecedor Encontrado',
-        };
+        } as const;
+      }
+
+      if (rows.length > 1) {
+        return {
+          success: true,
+          fornecedor_encontrado: true,
+          data: null,
+          rows: rows.map(r => ({
+            id: r.id,
+            nome: r.nome,
+            cnpj: r.cnpj,
+            email: r.email || undefined,
+            telefone: r.telefone || undefined,
+          })),
+          count: rows.length,
+          message: `${rows.length} fornecedores encontrados para o filtro`,
+          title: 'Fornecedores',
+        } as const;
       }
 
       return {
         success: true,
         fornecedor_encontrado: false,
         data: null,
+        rows: [],
+        count: 0,
         message: cnpj
           ? `Nenhum fornecedor encontrado com CNPJ ${cnpj}. Será necessário criar um novo cadastro.`
           : `Nenhum fornecedor encontrado com o nome "${nome}". Será necessário criar um novo cadastro.`,
