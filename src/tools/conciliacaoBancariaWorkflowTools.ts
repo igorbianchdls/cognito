@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { tool } from 'ai';
+import { runQuery } from '@/lib/postgres';
 
 // ============================================
 // WORKFLOW TOOLS - CONCILIAÇÃO BANCÁRIA
@@ -139,66 +140,71 @@ export const criarExtratoBancario = tool({
  * [WORKFLOW] Busca lançamentos financeiros do período
  */
 export const buscarLancamentosFinanceiros = tool({
-  description: '[WORKFLOW] Busca todos os lançamentos financeiros (pagamentos efetuados e recebidos) no período do extrato',
+  description: '[WORKFLOW] Busca lançamentos financeiros (pagamentos efetuados/recebidos) com filtro por tipo',
   inputSchema: z.object({
-    data_inicio: z.string().describe('Data início (YYYY-MM-DD)'),
-    data_fim: z.string().describe('Data fim (YYYY-MM-DD)'),
+    tipo: z.enum(['pagamento_recebido', 'pagamento_efetuado', 'todos']).optional()
+      .describe('Tipo do lançamento (recebido, efetuado ou todos). Default: todos'),
+    limite: z.number().int().positive().max(1000).optional()
+      .describe('Limite de registros. Default 20')
   }),
-  execute: async ({ data_inicio, data_fim }) => {
-    // Mock data - será substituído por query real do BigQuery
+  execute: async ({ tipo, limite }) => {
+    const lim = Math.max(1, Math.min(1000, limite || 20));
 
-    const mockLancamentos = [
-      {
-        id: 'lanc-001',
-        tipo: 'pagamento_efetuado',
-        data: '2024-01-15',
-        descricao: 'Fornecedor ABC LTDA',
-        valor: 8500.00,
-        forma_pagamento: 'transferencia',
-        status: 'pago',
-        conciliado: false
-      },
-      {
-        id: 'lanc-002',
-        tipo: 'pagamento_recebido',
-        data: '2024-01-18',
-        descricao: 'Tech Solutions LTDA',
-        valor: 5500.00,
-        forma_pagamento: 'pix',
-        status: 'recebido',
-        conciliado: false
-      },
-      {
-        id: 'lanc-003',
-        tipo: 'pagamento_efetuado',
-        data: '2024-01-20',
-        descricao: 'Serviços Tech XYZ',
-        valor: 4200.00,
-        forma_pagamento: 'boleto',
-        status: 'pago',
-        conciliado: false
-      }
-    ];
+    const baseReceb = `
+      SELECT 'pagamento_recebido'::text AS tipo,
+             lf.id::text AS pagamento_id,
+             lf.descricao AS descricao_pagamento,
+             lf.valor AS valor,
+             lf.status AS status_pagamento,
+             c.nome_fantasia AS cliente_nome,
+             f.nome AS fornecedor_nome
+        FROM financeiro.lancamentos_financeiros lf
+        LEFT JOIN financeiro.lancamentos_financeiros orig 
+               ON lf.lancamento_origem_id = orig.id
+        LEFT JOIN entidades.clientes c 
+               ON orig.cliente_id = c.id
+        LEFT JOIN entidades.fornecedores f 
+               ON lf.fornecedor_id = f.id
+       WHERE lf.tipo = 'pagamento_recebido'
+    `.replace(/\n\s+/g, ' ').trim();
 
-    const pagamentos_efetuados = mockLancamentos.filter(l => l.tipo === 'pagamento_efetuado');
-    const pagamentos_recebidos = mockLancamentos.filter(l => l.tipo === 'pagamento_recebido');
+    const baseEfet = `
+      SELECT 'pagamento_efetuado'::text AS tipo,
+             lf.id::text AS pagamento_id,
+             lf.descricao AS descricao_pagamento,
+             lf.valor AS valor,
+             lf.status AS status_pagamento,
+             c.nome_fantasia AS cliente_nome,
+             f.nome AS fornecedor_nome
+        FROM financeiro.lancamentos_financeiros lf
+        LEFT JOIN financeiro.lancamentos_financeiros orig 
+               ON lf.lancamento_origem_id = orig.id
+        LEFT JOIN entidades.fornecedores f 
+               ON orig.fornecedor_id = f.id
+        LEFT JOIN entidades.clientes c 
+               ON lf.entidade_id = c.id
+       WHERE lf.tipo = 'pagamento_efetuado'
+    `.replace(/\n\s+/g, ' ').trim();
 
+    let sql: string;
+    if (tipo === 'pagamento_recebido') {
+      sql = `${baseReceb} ORDER BY lf.id DESC LIMIT ${lim}`;
+    } else if (tipo === 'pagamento_efetuado') {
+      sql = `${baseEfet} ORDER BY lf.id DESC LIMIT ${lim}`;
+    } else {
+      sql = `SELECT * FROM ( ${baseReceb} UNION ALL ${baseEfet} ) u ORDER BY u.pagamento_id::bigint DESC LIMIT ${lim}`;
+    }
+
+    type Row = { tipo: string; pagamento_id: string; descricao_pagamento: string | null; valor: number | null; status_pagamento: string | null; cliente_nome: string | null; fornecedor_nome: string | null };
+    const rows = await runQuery<Row>(sql);
+
+    const msgTipo = tipo ? (tipo === 'todos' ? 'pagamentos' : tipo.replace('_', ' ')) : 'pagamentos';
     return {
       success: true,
-      data: mockLancamentos,
-      message: `${mockLancamentos.length} lançamentos encontrados no período`,
       title: '📊 Lançamentos Financeiros',
-      periodo: {
-        data_inicio,
-        data_fim
-      },
-      totais: {
-        total_lancamentos: mockLancamentos.length,
-        pagamentos_efetuados: pagamentos_efetuados.length,
-        pagamentos_recebidos: pagamentos_recebidos.length,
-        valor_saidas: pagamentos_efetuados.reduce((sum, l) => sum + l.valor, 0),
-        valor_entradas: pagamentos_recebidos.reduce((sum, l) => sum + l.valor, 0)
-      }
+      message: `${rows.length} ${msgTipo} encontrados`,
+      rows,
+      count: rows.length
     };
   }
 });
