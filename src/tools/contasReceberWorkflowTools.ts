@@ -15,91 +15,117 @@
 
 import { z } from 'zod';
 import { tool } from 'ai';
+import { runQuery } from '@/lib/postgres';
 
 // ========================================
 // WORKFLOW TOOL 1: Buscar Cliente
 // ========================================
 export const buscarCliente = tool({
-  description: '[WORKFLOW] Busca cliente existente no sistema por CPF/CNPJ ou nome. Use após extrair os dados do documento para verificar se o cliente já está cadastrado.',
+  description: '[WORKFLOW] Busca cliente no banco por CPF/CNPJ, nome ou lista todos quando não houver filtro.',
 
   inputSchema: z.object({
     cpf_cnpj: z.string().optional()
       .describe('CPF (11 dígitos) ou CNPJ (14 dígitos) do cliente'),
     nome: z.string().optional()
-      .describe('Nome do cliente para busca caso CPF/CNPJ não esteja disponível')
+      .describe('Nome do cliente (parcial ou completo). Se ausente e sem CPF/CNPJ, lista todos.'),
+    limite: z.number().int().positive().max(10000).optional()
+      .describe('Limite de resultados na listagem geral (default sem limite).')
   }),
 
-  execute: async ({ cpf_cnpj, nome }) => {
-    // TODO: Integrar com BigQuery
-    // Tabela esperada: clientes
-    // Query: SELECT * FROM clientes WHERE cpf_cnpj = ? OR nome ILIKE ?
+  execute: async ({ cpf_cnpj, nome, limite }) => {
+    try {
+      const conds: string[] = []
+      const params: unknown[] = []
+      let i = 1
 
-    if (!cpf_cnpj && !nome) {
-      return {
-        success: false,
-        cliente_encontrado: false,
-        data: null,
-        message: 'É necessário informar CPF/CNPJ ou nome do cliente',
-        error: 'Parâmetros insuficientes'
-      };
-    }
-
-    // Mock data: simular alguns clientes cadastrados
-    const clientesMock = [
-      {
-        id: 'cli-001',
-        nome: 'João Silva',
-        cpf_cnpj: '123.456.789-00',
-        tipo_pessoa: 'fisica',
-        endereco: 'Rua das Palmeiras, 456 - São Paulo, SP',
-        telefone: '(11) 98765-4321',
-        email: 'joao.silva@email.com',
-        data_cadastro: '2024-02-10'
-      },
-      {
-        id: 'cli-002',
-        nome: 'Empresa XYZ Ltda',
-        cpf_cnpj: '12.345.678/0001-90',
-        tipo_pessoa: 'juridica',
-        endereco: 'Av. Comercial, 789 - São Paulo, SP',
-        telefone: '(11) 3456-7890',
-        email: 'contato@empresaxyz.com.br',
-        data_cadastro: '2024-04-15'
+      if (cpf_cnpj) {
+        const digits = cpf_cnpj.replace(/\D/g, '')
+        if (digits.length > 0) {
+          conds.push(`REPLACE(REPLACE(REPLACE(c.cpf_cnpj, '.', ''), '/', ''), '-', '') = $${i++}`)
+          params.push(digits)
+        }
       }
-    ];
+      if (nome) {
+        const term = nome.trim()
+        if (term.length > 0) {
+          conds.push(`LOWER(COALESCE(c.nome_fantasia, c.razao_social, c.nome)) LIKE LOWER($${i++})`)
+          params.push(`%${term}%`)
+        }
+      }
 
-    // Simular busca
-    const docLimpo = cpf_cnpj?.replace(/[^\d]/g, '');
-    let clienteEncontrado = null;
+      const listAll = conds.length === 0
+      const where = listAll ? '' : `WHERE ${conds.join(' AND ')}`
+      const limitClause = listAll && limite ? `LIMIT ${Math.max(1, Math.min(10000, limite))}` : ''
 
-    if (docLimpo) {
-      clienteEncontrado = clientesMock.find(c =>
-        c.cpf_cnpj.replace(/[^\d]/g, '') === docLimpo
-      );
-    } else if (nome) {
-      clienteEncontrado = clientesMock.find(c =>
-        c.nome.toLowerCase().includes(nome.toLowerCase())
-      );
-    }
+      const sql = `
+        SELECT c.id::text AS id,
+               COALESCE(c.nome_fantasia, c.razao_social, c.nome, '')::text AS nome,
+               COALESCE(c.cpf_cnpj, '')::text AS cpf_cnpj,
+               COALESCE(c.email, '')::text AS email,
+               COALESCE(c.telefone, '')::text AS telefone
+          FROM entidades.clientes c
+          ${where}
+         ORDER BY COALESCE(c.nome_fantasia, c.razao_social, c.nome) ASC
+         ${limitClause}
+      `.replace(/\n\s+/g, ' ').trim()
 
-    if (clienteEncontrado) {
-      return {
-        success: true,
-        cliente_encontrado: true,
-        data: clienteEncontrado,
-        message: `Cliente encontrado: ${clienteEncontrado.nome}`,
-        title: 'Cliente Encontrado'
-      };
-    } else {
+      type Row = { id: string; nome: string; cpf_cnpj: string; email: string; telefone: string }
+      const rows = await runQuery<Row>(sql, params)
+
+      if (listAll) {
+        return {
+          success: true,
+          cliente_encontrado: rows.length > 0,
+          data: null,
+          rows,
+          count: rows.length,
+          message: rows.length ? `${rows.length} cliente(s) encontrado(s)` : 'Nenhum cliente cadastrado',
+          title: 'Clientes'
+        } as const
+      }
+
+      if (rows.length === 1) {
+        return {
+          success: true,
+          cliente_encontrado: true,
+          data: rows[0],
+          message: `Cliente encontrado: ${rows[0].nome}`,
+          title: 'Cliente Encontrado'
+        } as const
+      }
+
+      if (rows.length > 1) {
+        return {
+          success: true,
+          cliente_encontrado: true,
+          data: null,
+          rows,
+          count: rows.length,
+          message: `${rows.length} clientes encontrados para o filtro`,
+          title: 'Clientes'
+        } as const
+      }
+
       return {
         success: true,
         cliente_encontrado: false,
         data: null,
+        rows: [],
+        count: 0,
         message: cpf_cnpj
           ? `Nenhum cliente encontrado com CPF/CNPJ ${cpf_cnpj}. Será necessário criar um novo cadastro.`
           : `Nenhum cliente encontrado com o nome "${nome}". Será necessário criar um novo cadastro.`,
         title: 'Cliente Não Encontrado'
-      };
+      } as const
+    } catch (error) {
+      return {
+        success: false,
+        cliente_encontrado: false,
+        data: null,
+        message: 'Erro ao buscar cliente',
+        error: error instanceof Error ? error.message : String(error),
+        title: 'Cliente (Erro na Busca)'
+      } as const
     }
   }
 });

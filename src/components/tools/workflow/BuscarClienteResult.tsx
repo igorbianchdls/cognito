@@ -25,6 +25,8 @@ type BuscarClienteOutput = {
   success: boolean;
   cliente_encontrado?: boolean;
   data: ClienteRow | null;
+  rows?: ClienteRow[];
+  count?: number;
   message: string;
   title?: string;
   error?: string;
@@ -33,8 +35,9 @@ type BuscarClienteOutput = {
 export default function BuscarClienteResult({ result }: { result: BuscarClienteOutput }) {
   // Convert single cliente to array for table display
   const tableRows: ClienteRow[] = useMemo(() => {
+    if (Array.isArray(result.rows)) return result.rows;
     return result.data ? [result.data] : [];
-  }, [result.data]);
+  }, [result.data, result.rows]);
 
   const columns: ColumnDef<ClienteRow>[] = useMemo(() => [
     {

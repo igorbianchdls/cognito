@@ -314,6 +314,8 @@ type BuscarClienteOutput = {
   success: boolean;
   cliente_encontrado?: boolean;
   data: ClienteRow | null;
+  rows?: ClienteRow[];
+  count?: number;
   message: string;
   title?: string;
   error?: string;
