@@ -162,21 +162,6 @@ export default function ModulosFinanceiroPage() {
           { accessorKey: 'total_debitos', header: 'Débitos', cell: ({ row }) => formatBRL(row.original['total_debitos']) },
           { accessorKey: 'saldo_final', header: 'Saldo Final', cell: ({ row }) => formatBRL(row.original['saldo_final']) },
           { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
-          { accessorKey: 'transacao_id', header: 'Transação' },
-          { accessorKey: 'data_transacao', header: 'Data Transação', cell: ({ row }) => formatDate(row.original['data_transacao']) },
-          {
-            accessorKey: 'tipo_transacao',
-            header: 'Tipo Transação',
-            cell: ({ row }) => <StatusBadge value={row.original['tipo_transacao']} type="fin_transacao" />
-          },
-          { accessorKey: 'descricao_transacao', header: 'Descrição Transação' },
-          { accessorKey: 'valor_transacao', header: 'Valor Transação', cell: ({ row }) => formatBRL(row.original['valor_transacao']) },
-          { accessorKey: 'origem_transacao', header: 'Origem' },
-          {
-            accessorKey: 'transacao_conciliada',
-            header: 'Conciliada',
-            cell: ({ row }) => <StatusBadge value={row.original['transacao_conciliada']} type="bool" />
-          },
         ]
       case 'contas-a-receber':
         return [
@@ -354,6 +339,7 @@ export default function ModulosFinanceiroPage() {
         }
         params.set('page', String(page))
         params.set('pageSize', String(pageSize))
+        if (tabs.selected === 'extrato') params.set('grouped', '1')
         const url = `/api/modulos/financeiro?${params.toString()}`
         const res = await fetch(url, { cache: 'no-store', signal: controller.signal })
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
@@ -540,6 +526,39 @@ export default function ModulosFinanceiroPage() {
                   key={tabs.selected}
                   columns={columns}
                   data={data}
+                  enableExpand={tabs.selected === 'extrato'}
+                  renderDetail={tabs.selected === 'extrato' ? (row => {
+                    const items = Array.isArray(row['transacoes']) ? (row['transacoes'] as any[]) : []
+                    if (!items.length) return <div className="text-xs text-gray-500">Sem transações neste extrato.</div>
+                    return (
+                      <div className="overflow-auto">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="text-gray-600">
+                              <th className="text-left p-2">Data</th>
+                              <th className="text-left p-2">Tipo</th>
+                              <th className="text-left p-2">Descrição</th>
+                              <th className="text-right p-2">Valor</th>
+                              <th className="text-left p-2">Origem</th>
+                              <th className="text-left p-2">Conciliada</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {items.map((t, i) => (
+                              <tr key={String(t.transacao_id ?? i)} className="border-t border-gray-200">
+                                <td className="p-2">{formatDate(t.data_transacao)}</td>
+                                <td className="p-2"><StatusBadge value={t.tipo_transacao} type="fin_transacao" /></td>
+                                <td className="p-2">{t.descricao_transacao}</td>
+                                <td className="p-2 text-right">{formatBRL(t.valor_transacao)}</td>
+                                <td className="p-2">{t.origem_transacao}</td>
+                                <td className="p-2"><StatusBadge value={t.transacao_conciliada} type="bool" /></td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )
+                  }) : undefined}
                   enableSearch={tabelaUI.enableSearch}
                   showColumnToggle={tabelaUI.enableColumnToggle}
                   showPagination={tabelaUI.showPagination}

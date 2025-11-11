@@ -54,6 +54,9 @@ export type TableData = {
 interface DataTableProps<TData extends TableData> {
   columns: ColumnDef<TData>[]
   data: TData[]
+  // Row expansion (optional)
+  enableExpand?: boolean
+  renderDetail?: (row: TData) => React.ReactNode
   searchPlaceholder?: string
   showColumnToggle?: boolean
   showPagination?: boolean
@@ -144,6 +147,8 @@ interface DataTableProps<TData extends TableData> {
 export function DataTable<TData extends TableData>({
   columns,
   data,
+  enableExpand = false,
+  renderDetail,
   searchPlaceholder = "Filtrar...",
   showColumnToggle = true,
   showPagination = true,
@@ -218,6 +223,7 @@ export function DataTable<TData extends TableData>({
   const [modifiedCells, setModifiedCells] = React.useState<Set<string>>(new Set())
   const [tableData, setTableData] = React.useState<TData[]>(data)
   const [newRows, setNewRows] = React.useState<Set<number>>(new Set())
+  const [expandedRows, setExpandedRows] = React.useState<Set<string>>(new Set())
   
   // Update table data when external data changes
   React.useEffect(() => {
@@ -362,6 +368,40 @@ export function DataTable<TData extends TableData>({
   const tableColumns = React.useMemo(() => {
     let cols = [...columns]
     
+    if (enableExpand) {
+      cols = [
+        {
+          id: 'expand',
+          size: 32,
+          header: '',
+          enableHiding: false,
+          cell: ({ row }) => {
+            const isExpanded = expandedRows.has(row.id)
+            return (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 w-6 p-0"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setExpandedRows(prev => {
+                    const next = new Set(prev)
+                    if (next.has(row.id)) next.delete(row.id)
+                    else next.add(row.id)
+                    return next
+                  })
+                }}
+                title={isExpanded ? 'Recolher' : 'Expandir'}
+              >
+                <ChevronDown className={`h-4 w-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+              </Button>
+            )
+          },
+        } as ColumnDef<TData>,
+        ...cols,
+      ]
+    }
+
     if (enableRowSelection) {
       cols = [createSelectionColumn<TData>({ width: selectionColumnWidth }), ...cols]
     }
@@ -549,8 +589,8 @@ export function DataTable<TData extends TableData>({
             <TableBody>
               {table.getRowModel().rows?.length ? (
                 table.getRowModel().rows.map((row) => (
-                  <TableRow
-                    key={row.id}
+                  <React.Fragment key={row.id}>
+                    <TableRow
                     data-state={row.getIsSelected() && "selected"}
                     className={cn(
                       "hover:bg-gray-50 transition-colors",
@@ -599,7 +639,7 @@ export function DataTable<TData extends TableData>({
                             hasError && showValidationErrors && "border-red-300"
                           )}
                           style={{ 
-                            padding: columnKey === 'select' ? '4px' : `${padding}px`,
+                            padding: columnKey === 'select' || columnKey === 'expand' ? '4px' : `${padding}px`,
                             borderColor,
                             fontSize: `${cellFontSize || fontSize}px`,
                             fontFamily: cellFontFamily !== 'inherit' ? cellFontFamily : undefined,
@@ -670,6 +710,14 @@ export function DataTable<TData extends TableData>({
                       )
                     })}
                   </TableRow>
+                  {enableExpand && renderDetail && expandedRows.has(row.id) && (
+                    <TableRow>
+                      <TableCell colSpan={tableColumns.length} style={{ padding: `${padding}px` }}>
+                        {renderDetail(row.original as TData)}
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </React.Fragment>
                 ))
               ) : (
                 <TableRow>
