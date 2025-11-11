@@ -65,9 +65,11 @@ type ContaPagarCriadaOutput = {
   error?: string;
 }
 
+type CreatedData = ContaPagarCriadaOutput['data']
+
 export default function ContaPagarCriadaResult({ result }: { result: ContaPagarCriadaOutput }) {
   const [creating, setCreating] = useState(false)
-  const [created, setCreated] = useState<typeof result.data | null>(null)
+  const [created, setCreated] = useState<CreatedData | null>(null)
   const isPreview = result.preview && result.payload && !created
   // Display items in the table
   const tableRows: ItemRow[] = useMemo(() => {
@@ -146,7 +148,7 @@ export default function ContaPagarCriadaResult({ result }: { result: ContaPagarC
         return
       }
       // Minimal created response: buscar novamente não é possível; compor resumo simples
-      const createdData = {
+      const createdData: CreatedData = {
         id: String(json.id),
         fornecedor_id: result.payload.fornecedor_id || '',
         categoria_id: result.payload.categoria_id || '',
@@ -164,7 +166,7 @@ export default function ContaPagarCriadaResult({ result }: { result: ContaPagarC
         itens: result.payload.itens || [],
         quantidade_itens: (result.payload.itens || []).length
       }
-      setCreated(createdData as any)
+      setCreated(createdData)
     } catch (e) {
       alert(e instanceof Error ? e.message : 'Erro ao criar conta a pagar')
     } finally {
