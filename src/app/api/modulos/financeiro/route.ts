@@ -26,11 +26,20 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
   },
   'contas-a-receber': {
     id: 'lf.id',
-    cliente: 'c.nome',
+    conta_id: 'lf.id',
+    tipo_conta: 'lf.tipo',
+    descricao_conta: 'lf.descricao',
+    valor_a_receber: 'lf.valor',
+    status_conta: 'lf.status',
     data_lancamento: 'lf.data_lancamento',
     data_vencimento: 'lf.data_vencimento',
-    valor_total: 'lf.valor',
-    status: 'lf.status',
+    observacao: 'lf.observacao',
+    categoria_nome: 'cf.nome',
+    centro_lucro_nome: 'cl.nome',
+    departamento_nome: 'dep.nome',
+    filial_nome: 'fi.nome',
+    projeto_nome: 'pr.nome',
+    cliente_nome: 'c.nome_fantasia',
   },
   'pagamentos-efetuados': {
     id: 'lf.id',
@@ -658,35 +667,39 @@ export async function GET(req: NextRequest) {
       if (valor_min !== undefined) push('lf.valor >=', valor_min);
       if (valor_max !== undefined) push('lf.valor <=', valor_max);
     } else if (view === 'contas-a-receber') {
-      // Contas a Receber – query mais completa, mantendo campos esperados pela UI
+      // Contas a Receber – nova estrutura simplificada
       baseSql = `FROM financeiro.lancamentos_financeiros lf
-                 LEFT JOIN financeiro.categorias_financeiras cf ON cf.id = lf.categoria_id
-                 LEFT JOIN empresa.centros_lucro cl ON cl.id = lf.centro_lucro_id
-                 LEFT JOIN empresa.departamentos dp ON dp.id = lf.departamento_id
-                 LEFT JOIN empresa.filiais fl ON fl.id = lf.filial_id
-                 LEFT JOIN financeiro.projetos pj ON pj.id = lf.projeto_id
-                 LEFT JOIN entidades.clientes c ON c.id = lf.entidade_id`;
+                 LEFT JOIN financeiro.categorias_financeiras cf
+                        ON lf.categoria_id = cf.id
+                 LEFT JOIN empresa.centros_lucro cl
+                        ON lf.centro_lucro_id = cl.id
+                 LEFT JOIN empresa.departamentos dep
+                        ON lf.departamento_id = dep.id
+                 LEFT JOIN empresa.filiais fi
+                        ON lf.filial_id = fi.id
+                 LEFT JOIN financeiro.projetos pr
+                        ON lf.projeto_id = pr.id
+                 LEFT JOIN entidades.clientes c
+                        ON lf.cliente_id = c.id`;
       selectSql = `SELECT
-                          lf.id AS lancamento_id,
-                          lf.entidade_id AS cliente_id,
-                          lf.descricao AS descricao,
+                          lf.id AS conta_id,
+                          lf.tipo AS tipo_conta,
+                          lf.descricao AS descricao_conta,
+                          lf.valor AS valor_a_receber,
+                          lf.status AS status_conta,
                           lf.data_lancamento,
                           lf.data_vencimento,
-                          lf.valor AS valor_total,
-                          lf.status,
-
+                          lf.observacao,
                           cf.nome AS categoria_nome,
-                          cf.nome AS cliente_categoria,
                           cl.nome AS centro_lucro_nome,
-                          dp.nome AS departamento_nome,
-                          fl.nome AS filial_nome,
-                          pj.nome AS projeto_nome,
-                          c.nome AS cliente,
-                          c.imagem_url AS cliente_imagem_url`;
+                          dep.nome AS departamento_nome,
+                          fi.nome AS filial_nome,
+                          pr.nome AS projeto_nome,
+                          c.nome_fantasia AS cliente_nome`;
       // Filtro principal por data: vencimento
       whereDateCol = 'lf.data_vencimento';
-      conditions.push(`LOWER(lf.tipo) = 'conta_a_receber'`);
-      if (cliente_id) push('lf.entidade_id =', cliente_id);
+      conditions.push(`lf.tipo = 'conta_a_receber'`);
+      if (cliente_id) push('lf.cliente_id =', cliente_id);
       if (status) push('LOWER(lf.status) =', status.toLowerCase());
       if (valor_min !== undefined) push('lf.valor >=', valor_min);
       if (valor_max !== undefined) push('lf.valor <=', valor_max);

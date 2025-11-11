@@ -181,23 +181,25 @@ export default function ModulosFinanceiroPage() {
       case 'contas-a-receber':
         return [
           {
-            accessorKey: 'cliente',
+            accessorKey: 'cliente_nome',
             header: 'Cliente',
             cell: ({ row }) => (
               <EntityDisplay
-                name={row.original['cliente'] ? String(row.original['cliente']) : 'Sem nome'}
-                subtitle={row.original['cliente_categoria'] ? String(row.original['cliente_categoria']) : 'Sem categoria'}
-                imageUrl={row.original['cliente_imagem_url'] ? String(row.original['cliente_imagem_url']) : undefined}
+                name={row.original['cliente_nome'] ? String(row.original['cliente_nome']) : 'Sem nome'}
+                subtitle={row.original['categoria_nome'] ? String(row.original['categoria_nome']) : 'Sem categoria'}
+                imageUrl={undefined}
                 onClick={() => openClienteEditor(row.original)}
                 clickable
               />
             )
           },
-          { accessorKey: 'descricao', header: 'Descrição' },
+          { accessorKey: 'descricao_conta', header: 'Descrição' },
           { accessorKey: 'data_lancamento', header: 'Lançamento', cell: ({ row }) => formatDate(row.original['data_lancamento']) },
           { accessorKey: 'data_vencimento', header: 'Vencimento', cell: ({ row }) => formatDate(row.original['data_vencimento']) },
-          { accessorKey: 'valor_total', header: 'Valor', cell: ({ row }) => formatBRL(row.original['valor_total']) },
-          { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
+          { accessorKey: 'valor_a_receber', header: 'Valor', cell: ({ row }) => formatBRL(row.original['valor_a_receber']) },
+          { accessorKey: 'status_conta', header: 'Status', cell: ({ row }) => <StatusBadge value={row.original['status_conta']} type="status" /> },
+          { accessorKey: 'tipo_conta', header: 'Tipo' },
+          { accessorKey: 'observacao', header: 'Observação' },
           { accessorKey: 'categoria_nome', header: 'Categoria' },
           { accessorKey: 'centro_lucro_nome', header: 'Centro de Lucro' },
           { accessorKey: 'departamento_nome', header: 'Departamento' },
