@@ -269,24 +269,30 @@ export default function ModulosFinanceiroPage() {
       default:
         return [
           {
-            accessorKey: 'fornecedor',
+            accessorKey: 'fornecedor_nome',
             header: 'Fornecedor',
             cell: ({ row }) => (
               <EntityDisplay
-                name={row.original['fornecedor'] ? String(row.original['fornecedor']) : 'Sem nome'}
-                subtitle={row.original['fornecedor_categoria'] ? String(row.original['fornecedor_categoria']) : 'Sem categoria'}
-                imageUrl={row.original['fornecedor_imagem_url'] ? String(row.original['fornecedor_imagem_url']) : undefined}
+                name={row.original['fornecedor_nome'] ? String(row.original['fornecedor_nome']) : 'Sem nome'}
+                subtitle={row.original['categoria_nome'] ? String(row.original['categoria_nome']) : 'Sem categoria'}
+                imageUrl={undefined}
                 onClick={() => openEditor(row.original)}
                 clickable
               />
             )
           },
-          { accessorKey: 'descricao', header: 'Descrição' },
-          { accessorKey: 'natureza_nome', header: 'Natureza' },
-          { accessorKey: 'natureza_tipo', header: 'Tipo Natureza' },
+          { accessorKey: 'descricao_conta', header: 'Descrição' },
+          { accessorKey: 'data_lancamento', header: 'Lançamento', cell: ({ row }) => formatDate(row.original['data_lancamento']) },
           { accessorKey: 'data_vencimento', header: 'Vencimento', cell: ({ row }) => formatDate(row.original['data_vencimento']) },
-          { accessorKey: 'valor_total', header: 'Valor', cell: ({ row }) => formatBRL(row.original['valor_total']) },
-          { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
+          { accessorKey: 'valor_a_pagar', header: 'Valor', cell: ({ row }) => formatBRL(row.original['valor_a_pagar']) },
+          { accessorKey: 'status_conta', header: 'Status', cell: ({ row }) => <StatusBadge value={row.original['status_conta']} type="status" /> },
+          { accessorKey: 'tipo_conta', header: 'Tipo' },
+          { accessorKey: 'observacao', header: 'Observação' },
+          { accessorKey: 'categoria_nome', header: 'Categoria' },
+          { accessorKey: 'centro_lucro_nome', header: 'Centro de Lucro' },
+          { accessorKey: 'departamento_nome', header: 'Departamento' },
+          { accessorKey: 'filial_nome', header: 'Filial' },
+          { accessorKey: 'projeto_nome', header: 'Projeto' },
         ]
     }
   }, [tabs.selected])

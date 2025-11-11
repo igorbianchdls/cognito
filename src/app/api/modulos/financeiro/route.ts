@@ -8,19 +8,21 @@ export const revalidate = 0;
 // Safeguard: whitelist order by columns per view
 const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
   'contas-a-pagar': {
-    lancamento_id: 'lf.id',
-    descricao: 'lf.descricao',
-    descricao_lancamento: 'lf.descricao',
-    valor_total: 'lf.valor',
+    id: 'lf.id',
+    conta_id: 'lf.id',
+    tipo_conta: 'lf.tipo',
+    descricao_conta: 'lf.descricao',
+    valor_a_pagar: 'lf.valor',
+    status_conta: 'lf.status',
     data_lancamento: 'lf.data_lancamento',
     data_vencimento: 'lf.data_vencimento',
-    status: 'lf.status',
-    categoria_financeira: 'cf.nome',
+    observacao: 'lf.observacao',
     categoria_nome: 'cf.nome',
-    natureza_nome: 'nf.nome',
-    natureza_tipo: 'nf.tipo',
-    fornecedor: 'f.nome',
-    centro_custo: 'cc.nome',
+    centro_lucro_nome: 'cl.nome',
+    departamento_nome: 'dep.nome',
+    filial_nome: 'fi.nome',
+    projeto_nome: 'pr.nome',
+    fornecedor_nome: 'f.nome',
   },
   'contas-a-receber': {
     id: 'lf.id',
@@ -533,40 +535,38 @@ export async function GET(req: NextRequest) {
       const rows = await runQuery<{ label: string; total: number | null }>(sql, params);
       return Response.json({ success: true, rows, sql_query: sql, sql_params: params });
     } else if (view === 'contas-a-pagar') {
-      // Contas a Pagar – query mais completa, mantendo campos esperados pela UI
+      // Contas a Pagar – nova estrutura simplificada
       baseSql = `FROM financeiro.lancamentos_financeiros lf
-                 LEFT JOIN financeiro.categorias_financeiras cf ON cf.id = lf.categoria_id
-                 LEFT JOIN financeiro.naturezas_financeiras nf ON nf.id = cf.natureza_id
-                 LEFT JOIN empresa.centros_custo cc ON cc.id = lf.centro_custo_id
-                 LEFT JOIN entidades.fornecedores f ON f.id = lf.entidade_id
-                 LEFT JOIN empresa.centros_lucro cl ON cl.id = lf.centro_lucro_id
-                 LEFT JOIN empresa.departamentos dp ON dp.id = lf.departamento_id
-                 LEFT JOIN empresa.filiais fl ON fl.id = lf.filial_id
-                 LEFT JOIN financeiro.projetos pj ON pj.id = lf.projeto_id`;
+                 LEFT JOIN financeiro.categorias_financeiras cf
+                        ON lf.categoria_id = cf.id
+                 LEFT JOIN empresa.centros_lucro cl
+                        ON lf.centro_lucro_id = cl.id
+                 LEFT JOIN empresa.departamentos dep
+                        ON lf.departamento_id = dep.id
+                 LEFT JOIN empresa.filiais fi
+                        ON lf.filial_id = fi.id
+                 LEFT JOIN financeiro.projetos pr
+                        ON lf.projeto_id = pr.id
+                 LEFT JOIN entidades.fornecedores f
+                        ON lf.fornecedor_id = f.id`;
       selectSql = `SELECT
-                        lf.id AS lancamento_id,
                         lf.id AS conta_id,
-                        lf.entidade_id AS fornecedor_id,
-                        lf.descricao AS descricao,
+                        lf.tipo AS tipo_conta,
+                        lf.descricao AS descricao_conta,
+                        lf.valor AS valor_a_pagar,
+                        lf.status AS status_conta,
                         lf.data_lancamento,
                         lf.data_vencimento,
-                        lf.valor AS valor_total,
-                        lf.status,
-
+                        lf.observacao,
                         cf.nome AS categoria_nome,
-                        nf.nome AS natureza_nome,
-                        nf.tipo AS natureza_tipo,
-                        cf.nome AS fornecedor_categoria,
-                        cc.nome AS centro_custo_nome,
-                        f.nome AS fornecedor,
-                        f.imagem_url AS fornecedor_imagem_url,
                         cl.nome AS centro_lucro_nome,
-                        dp.nome AS departamento_nome,
-                        fl.nome AS filial_nome,
-                        pj.nome AS projeto_nome`;
+                        dep.nome AS departamento_nome,
+                        fi.nome AS filial_nome,
+                        pr.nome AS projeto_nome,
+                        f.nome AS fornecedor_nome`;
       whereDateCol = 'lf.data_vencimento';
-      conditions.push(`LOWER(lf.tipo) = 'conta_a_pagar'`);
-      if (fornecedor_id) push('lf.entidade_id =', fornecedor_id);
+      conditions.push(`lf.tipo = 'conta_a_pagar'`);
+      if (fornecedor_id) push('lf.fornecedor_id =', fornecedor_id);
       if (status) push('LOWER(lf.status) =', status.toLowerCase());
       if (valor_min !== undefined) push('lf.valor >=', valor_min);
       if (valor_max !== undefined) push('lf.valor <=', valor_max);
