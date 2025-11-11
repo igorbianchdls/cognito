@@ -192,22 +192,16 @@ export default function Page() {
 
       // Send to AI with optional file attachments (multiple files support)
       if (attachedFiles.length > 0) {
-        const parts: Array<{ type: 'text' | 'file'; text?: string; mediaType?: string; url?: string }> = [
-          { type: 'text' as const, text: messageForAI }
-        ];
-
-        // Add all attached files as file parts
-        attachedFiles.forEach(file => {
-          parts.push({
-            type: 'file' as const,
-            mediaType: file.type,
-            url: file.dataUrl,
-          });
-        });
+        const textPart = { type: 'text' as const, text: messageForAI };
+        const fileParts = attachedFiles.map(file => ({
+          type: 'file' as const,
+          mediaType: file.type,
+          url: file.dataUrl,
+        }));
 
         sendMessage({
           role: 'user',
-          parts,
+          parts: [textPart, ...fileParts],
         });
       } else {
         sendMessage({ text: messageForAI });
