@@ -172,6 +172,7 @@ import CriarClienteResult from '../tools/workflow/CriarClienteResult';
 import ContaReceberCriadaResult from '../tools/workflow/ContaReceberCriadaResult';
 import BuscarContaReceberResult from '../tools/workflow/BuscarContaReceberResult';
 import PagamentoRecebidoCriadoResult from '../tools/workflow/PagamentoRecebidoCriadoResult';
+import FinanceiroLookupsResult from '../tools/workflow/FinanceiroLookupsResult';
 import BuscarContaPagarResult from '../tools/workflow/BuscarContaPagarResult';
 import PagamentoEfetuadoCriadoResult from '../tools/workflow/PagamentoEfetuadoCriadoResult';
 import ExtratoProcessadoResult from '../tools/workflow/ExtratoProcessadoResult';
@@ -571,6 +572,15 @@ type PagamentoEfetuadoCriadoOutput = {
     desconto: number;
     total: number;
   };
+  error?: string;
+};
+
+type BuscarFinanceiroLookupsOutput = {
+  success: boolean;
+  title?: string;
+  message: string;
+  rows: { tipo: string; id: string; nome: string }[];
+  counts?: { contas?: number; metodos?: number };
   error?: string;
 };
 
@@ -5170,6 +5180,29 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
               </Tool>
               {tool.state === 'output-available' && (
                 <PagamentoEfetuadoCriadoResult result={tool.output as PagamentoEfetuadoCriadoOutput} />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-buscarFinanceiroLookups') {
+          const tool = part as NexusToolUIPart;
+          const callId = tool.toolCallId;
+          const shouldBeOpen = tool.state === 'output-available' || tool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-buscarFinanceiroLookups" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && (
+                    <ToolOutput output={null} errorText={tool.errorText} />
+                  )}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && (
+                <FinanceiroLookupsResult result={tool.output as BuscarFinanceiroLookupsOutput} />
               )}
             </div>
           );
