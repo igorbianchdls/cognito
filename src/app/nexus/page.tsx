@@ -28,6 +28,7 @@ import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import type { UIMessage } from 'ai';
 import { currentAgent, setCurrentAgent } from '../../stores/nexus/agentStore';
 import { currentWorkflow } from '../../stores/nexus/workflowStore';
+import type { AttachedFile } from '../../components/nexus/FileAttachmentPreview';
 
 export default function Page() {
   const selectedAgent = useStore(currentAgent);
@@ -134,8 +135,7 @@ export default function Page() {
   ];
 
   const [input, setInput] = useState('');
-  const [pendingFileDataUrl, setPendingFileDataUrl] = useState<string | null>(null);
-  const [pendingFileMime, setPendingFileMime] = useState<string | null>(null);
+  const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([]);
   
   // COMENTADO TEMPORARIAMENTE - localStorage
   /*
@@ -189,22 +189,31 @@ export default function Page() {
         agent: activeAgentOrWorkflow
       };
       setAllMessages(prev => [...prev, userMessage]);
-      
-      // Send to AI with optional file attachment
-      if (pendingFileDataUrl && pendingFileMime) {
+
+      // Send to AI with optional file attachments (multiple files support)
+      if (attachedFiles.length > 0) {
+        const parts: Array<{ type: 'text' | 'file'; text?: string; mediaType?: string; url?: string }> = [
+          { type: 'text' as const, text: messageForAI }
+        ];
+
+        // Add all attached files as file parts
+        attachedFiles.forEach(file => {
+          parts.push({
+            type: 'file' as const,
+            mediaType: file.type,
+            url: file.dataUrl,
+          });
+        });
+
         sendMessage({
           role: 'user',
-          parts: [
-            { type: 'text' as const, text: messageForAI },
-            { type: 'file' as const, mediaType: pendingFileMime, url: pendingFileDataUrl },
-          ],
+          parts,
         });
       } else {
         sendMessage({ text: messageForAI });
       }
       setInput('');
-      setPendingFileDataUrl(null);
-      setPendingFileMime(null);
+      setAttachedFiles([]);
       
       // Clear pending data after sending
       if (pendingAnalysisData) {
@@ -368,10 +377,8 @@ export default function Page() {
                     status={status}
                     selectedAgent={selectedAgent}
                     onAgentChange={setCurrentAgent}
-                    onFileSelected={(dataUrl: string, mime: string) => {
-                      setPendingFileDataUrl(dataUrl);
-                      setPendingFileMime(mime);
-                    }}
+                    attachedFiles={attachedFiles}
+                    onFilesChange={setAttachedFiles}
                   />
                 </div>
               </div>
@@ -442,10 +449,8 @@ export default function Page() {
                       status={status}
                       selectedAgent={selectedAgent}
                       onAgentChange={setCurrentAgent}
-                      onFileSelected={(dataUrl: string, mime: string) => {
-                        setPendingFileDataUrl(dataUrl);
-                        setPendingFileMime(mime);
-                      }}
+                      attachedFiles={attachedFiles}
+                      onFilesChange={setAttachedFiles}
                     />
                   </div>
                 </div>

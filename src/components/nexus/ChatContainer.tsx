@@ -2,6 +2,7 @@ import { UIMessage } from 'ai';
 import { FormEvent } from 'react';
 import MessageList from './MessageList';
 import InputArea from './InputArea';
+import type { AttachedFile } from './FileAttachmentPreview';
 
 interface ChatContainerProps {
   messages: UIMessage[];
@@ -11,18 +12,20 @@ interface ChatContainerProps {
   status: string;
   selectedAgent: string | null;
   onAgentChange: (agent: string | null) => void;
-  onFileSelected?: (dataUrl: string, mime: string) => void;
+  attachedFiles: AttachedFile[];
+  onFilesChange: (files: AttachedFile[]) => void;
 }
 
-export default function ChatContainer({ 
-  messages, 
-  input, 
-  setInput, 
-  onSubmit, 
+export default function ChatContainer({
+  messages,
+  input,
+  setInput,
+  onSubmit,
   status,
   selectedAgent,
   onAgentChange,
-  onFileSelected
+  attachedFiles,
+  onFilesChange
 }: ChatContainerProps) {
   console.log('📦 [ChatContainer] Props recebidas:', { 
     messagesCount: messages.length 
@@ -40,14 +43,15 @@ export default function ChatContainer({
           </p>
         </div>
         <div className="w-full">
-          <InputArea 
+          <InputArea
             input={input}
             setInput={setInput}
             onSubmit={onSubmit}
             status={status}
             selectedAgent={selectedAgent}
             onAgentChange={onAgentChange}
-            onFileSelected={onFileSelected}
+            attachedFiles={attachedFiles}
+            onFilesChange={onFilesChange}
           />
         </div>
       </div>
@@ -61,14 +65,15 @@ export default function ChatContainer({
         <MessageList messages={messages} selectedAgent={selectedAgent} />
       </div>
       <div className="pb-2" style={{backgroundColor: 'white'}}>
-        <InputArea 
+        <InputArea
           input={input}
           setInput={setInput}
           onSubmit={onSubmit}
           status={status}
           selectedAgent={selectedAgent}
           onAgentChange={onAgentChange}
-          onFileSelected={onFileSelected}
+          attachedFiles={attachedFiles}
+          onFilesChange={onFilesChange}
         />
       </div>
     </div>

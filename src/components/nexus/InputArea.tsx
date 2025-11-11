@@ -33,6 +33,7 @@ import type { ChatStatus } from 'ai';
 import AgentDropdown from './AgentDropdown';
 import { useStore } from '@nanostores/react';
 import { currentWorkflow, setCurrentWorkflow } from '@/stores/nexus/workflowStore';
+import FileAttachmentPreview, { type AttachedFile } from './FileAttachmentPreview';
 
 interface InputAreaProps {
   input: string;
@@ -41,7 +42,8 @@ interface InputAreaProps {
   status: string;
   selectedAgent: string | null;
   onAgentChange: (agent: string | null) => void;
-  onFileSelected?: (dataUrl: string, mime: string) => void;
+  attachedFiles: AttachedFile[];
+  onFilesChange: (files: AttachedFile[]) => void;
 }
 
 // Mapeamento de ícones dos agentes
@@ -89,7 +91,7 @@ const workflows = [
   { id: 'pagamento-recebido', name: 'Pagamento Recebido', icon: TrendingUp },
 ];
 
-export default function InputArea({ input, setInput, onSubmit, status, selectedAgent, onAgentChange, onFileSelected }: InputAreaProps) {
+export default function InputArea({ input, setInput, onSubmit, status, selectedAgent, onAgentChange, attachedFiles, onFilesChange }: InputAreaProps) {
   // Estado para controlar a exibição do dropdown de agentes quando "/" é digitado
   const [showAgentDropdown, setShowAgentDropdown] = useState(false);
   // Armazena a posição exata onde o "/" foi digitado no texto
@@ -101,30 +103,54 @@ export default function InputArea({ input, setInput, onSubmit, status, selectedA
   console.log('🎤 [InputArea] Agent via prop:', selectedAgent);
   console.log('🔄 [InputArea] Workflow via store:', selectedWorkflow);
 
-  // Função para handle upload de documentos
+  // Função para handle upload de documentos (múltiplos arquivos)
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
 
-    const allowed = ['application/pdf', 'image/png', 'image/jpeg', 'image/webp'];
-    if (!allowed.includes(file.type)) {
-      alert('Envie um PDF ou imagem (PNG/JPG/WebP)');
+    // Validar limite de 5 arquivos
+    if (attachedFiles.length + files.length > 5) {
+      alert('Você pode anexar no máximo 5 arquivos por mensagem');
       event.target.value = '';
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const dataUrl = e.target?.result as string;
-      // Atualiza o input com referência leve ao arquivo
-      setInput((input ? input + '\n\n' : '') + `[Documento anexado: ${file.name}]`);
-      // Notifica o pai para anexar como file part no envio
-      onFileSelected?.(dataUrl, file.type);
-    };
-    reader.readAsDataURL(file);
+    const allowed = ['application/pdf', 'image/png', 'image/jpeg', 'image/webp'];
+    const newFiles: AttachedFile[] = [];
+    let filesProcessed = 0;
+
+    Array.from(files).forEach((file) => {
+      if (!allowed.includes(file.type)) {
+        alert(`${file.name}: Envie apenas PDF ou imagem (PNG/JPG/WebP)`);
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const dataUrl = e.target?.result as string;
+        newFiles.push({
+          id: `${Date.now()}-${Math.random()}`,
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          dataUrl,
+        });
+
+        filesProcessed++;
+        if (filesProcessed === files.length) {
+          onFilesChange([...attachedFiles, ...newFiles]);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
 
     // Reset input file
     event.target.value = '';
+  };
+
+  // Função para remover arquivo individual
+  const handleRemoveFile = (fileId: string) => {
+    onFilesChange(attachedFiles.filter(f => f.id !== fileId));
   };
 
   // Handler que detecta quando o usuário digita "/" para mostrar o dropdown de agentes
@@ -147,6 +173,12 @@ export default function InputArea({ input, setInput, onSubmit, status, selectedA
 
   return (
     <div className="relative">
+      {/* Preview dos arquivos anexados */}
+      <FileAttachmentPreview
+        files={attachedFiles}
+        onRemove={handleRemoveFile}
+      />
+
       {/* Dropdown que aparece quando o usuário digita "/" */}
       {showAgentDropdown && (
         <AgentDropdown
@@ -208,6 +240,7 @@ export default function InputArea({ input, setInput, onSubmit, status, selectedA
             accept=".pdf,image/png,image/jpeg,image/webp"
             className="hidden"
             onChange={handleFileUpload}
+            multiple
           />
 
           <PromptInputButton>
