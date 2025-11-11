@@ -355,6 +355,8 @@ export const criarContaPagar = tool({
       .describe('ID do centro de custo (obtido de buscarClassificacoesFinanceiras)'),
     natureza_financeira_id: z.string().optional()
       .describe('ID da natureza financeira (opcional, obtido de buscarClassificacoesFinanceiras)'),
+    tenant_id: z.number().optional()
+      .describe('Tenant ID (se não informado, assume 1 por padrão).'),
     valor: z.number()
       .describe('Valor total da conta a pagar'),
     data_vencimento: z.string()
@@ -379,6 +381,7 @@ export const criarContaPagar = tool({
     categoria_id,
     centro_custo_id,
     natureza_financeira_id,
+    tenant_id,
     valor,
     data_vencimento,
     data_emissao,
@@ -391,6 +394,7 @@ export const criarContaPagar = tool({
       categoria_id: String(categoria_id || ''),
       centro_custo_id: String(centro_custo_id || ''),
       natureza_financeira_id: natureza_financeira_id ? String(natureza_financeira_id) : '',
+      tenant_id: typeof tenant_id === 'number' ? tenant_id : 1,
       valor: Number(valor || 0),
       data_vencimento: String(data_vencimento || ''),
       data_emissao: String(data_emissao || ''),
@@ -408,6 +412,7 @@ export const criarContaPagar = tool({
     if (!payload.fornecedor_id) validations.push({ field: 'fornecedor_id', status: 'error', message: 'Fornecedor é obrigatório' });
     if (!payload.data_vencimento) validations.push({ field: 'data_vencimento', status: 'error', message: 'Data de vencimento é obrigatória' });
     if (!payload.valor || payload.valor <= 0) validations.push({ field: 'valor', status: 'error', message: 'Valor deve ser maior que zero' });
+    if (tenant_id === undefined || tenant_id === null) validations.push({ field: 'tenant_id', status: 'warn', message: 'Tenant ID não informado. Assumido padrão 1.' });
 
     let valorTotalItens = 0;
     for (const item of payload.itens) {

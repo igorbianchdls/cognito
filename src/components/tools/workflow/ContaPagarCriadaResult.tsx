@@ -23,6 +23,7 @@ type ContaPagarCriadaOutput = {
     categoria_id?: string;
     centro_custo_id?: string;
     natureza_financeira_id?: string;
+    tenant_id?: number | string;
     valor: number;
     data_vencimento: string;
     data_emissao?: string;
@@ -71,6 +72,7 @@ export default function ContaPagarCriadaResult({ result }: { result: ContaPagarC
   const [creating, setCreating] = useState(false)
   const [created, setCreated] = useState<CreatedData | null>(null)
   const isPreview = result.preview && result.payload && !created
+  const hasErrors = (result.validations || []).some(v => v.status === 'error')
   // Display items in the table
   const tableRows: ItemRow[] = useMemo(() => {
     if (created) return created.itens || []
@@ -138,6 +140,8 @@ export default function ContaPagarCriadaResult({ result }: { result: ContaPagarC
       fd.set('status', 'pendente')
       if (result.payload.fornecedor_id) fd.set('entidade_id', result.payload.fornecedor_id)
       if (result.payload.categoria_id) fd.set('categoria_id', result.payload.categoria_id)
+      // tenant default = 1 se não vier no payload
+      fd.set('tenant_id', String(result.payload.tenant_id ?? 1))
       // conta_financeira_id opcional - não disponível em payload
 
       const res = await fetch(result.metadata.commitEndpoint, { method: 'POST', body: fd })
@@ -214,7 +218,7 @@ export default function ContaPagarCriadaResult({ result }: { result: ContaPagarC
           </div>
           {isPreview && (
             <div className="ml-auto">
-              <Button onClick={commit} disabled={creating}>
+              <Button onClick={commit} disabled={creating || hasErrors}>
                 {creating ? 'Criando…' : 'Criar Conta a Pagar'}
               </Button>
             </div>

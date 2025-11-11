@@ -253,6 +253,7 @@ type CriarContaPagarOutput = {
     categoria_id?: string;
     centro_custo_id?: string;
     natureza_financeira_id?: string;
+    tenant_id?: string | number;
     valor: number;
     data_vencimento: string;
     data_emissao?: string;
