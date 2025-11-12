@@ -617,7 +617,7 @@ export async function GET(req: NextRequest) {
       const rows = await runQuery<{ label: string; total: number | null }>(sql, params);
       return Response.json({ success: true, rows, sql_query: sql, sql_params: params });
     } else if (view === 'top-receitas') {
-      // Top N receitas por cliente (pagamentos recebidos no período)
+      // Top N receitas por cliente (contas a receber no período)
       const dim = (searchParams.get('dim') || '').toLowerCase();
       const limit = Math.max(1, Math.min(50, parseNumber(searchParams.get('limit'), 5) || 5));
       if (dim !== 'cliente') {
@@ -627,20 +627,21 @@ export async function GET(req: NextRequest) {
       const tenantId = parseNumber(searchParams.get('tenant_id'));
       const params: unknown[] = [];
       let idx = 1;
-      let where = `WHERE lf.tipo = 'pagamento_recebido'`;
-      if (de) { where += ` AND lf.data_lancamento >= $${idx++}`; params.push(de); }
-      if (ate) { where += ` AND lf.data_lancamento <= $${idx++}`; params.push(ate); }
-      if (tenantId) { where += ` AND lf.tenant_id = $${idx++}`; params.push(tenantId); }
+      let where = `WHERE l.tipo = 'conta_a_receber' AND (l.status IS NULL OR l.status NOT IN ('cancelado'))`;
+      if (de) { where += ` AND l.data_vencimento >= $${idx++}`; params.push(de); }
+      if (ate) { where += ` AND l.data_vencimento <= $${idx++}`; params.push(ate); }
+      if (tenantId) { where += ` AND l.tenant_id = $${idx++}`; params.push(tenantId); }
 
       const sql = `
-        SELECT COALESCE(cli_ar.nome, 'Sem cliente') AS label, COALESCE(SUM(lf.valor), 0) AS total
-          FROM financeiro.lancamentos_financeiros lf
-          JOIN financeiro.lancamentos_financeiros ar ON ar.id = lf.lancamento_origem_id
-          LEFT JOIN entidades.clientes cli_ar ON cli_ar.id = ar.cliente_id
-          ${where}
-          GROUP BY 1
-          ORDER BY total DESC
-          LIMIT ${limit}
+        SELECT
+          COALESCE(c.nome_fantasia, 'Sem cliente') AS label,
+          COALESCE(SUM(l.valor), 0) AS total
+        FROM financeiro.lancamentos_financeiros l
+        LEFT JOIN entidades.clientes c ON c.id = l.cliente_id
+        ${where}
+        GROUP BY c.nome_fantasia
+        ORDER BY total DESC
+        LIMIT ${limit}
       `.replace(/\n\s+/g, ' ').trim();
 
       const rows = await runQuery<{ label: string; total: number | null }>(sql, params);
