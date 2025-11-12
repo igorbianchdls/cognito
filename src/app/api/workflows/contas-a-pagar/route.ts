@@ -1,5 +1,5 @@
 import { anthropic } from '@ai-sdk/anthropic'
-import { convertToModelMessages, streamText, UIMessage } from 'ai'
+import { convertToModelMessages, streamText, UIMessage, stepCountIs, hasToolCall } from 'ai'
 import {
   buscarClassificacoesFinanceiras,
   buscarFornecedor,
@@ -9,45 +9,10 @@ import {
 
 export const maxDuration = 300
 
-export async function POST(req: Request) {
-  console.log('💳 WORKFLOW CONTAS A PAGAR: Request recebido!')
-  const { messages }: { messages: UIMessage[] } = await req.json()
-  console.log('💳 WORKFLOW CONTAS A PAGAR: Messages:', messages?.length)
-
-  try {
-    const result = streamText({
-      model: anthropic('claude-sonnet-4-20250514'),
-      providerOptions: {
-        anthropic: {
-          thinking: { type: 'enabled', budgetTokens: 8000 },
-        },
-      },
-      system: `Você é um assistente especializado em WORKFLOW de criação de Contas a Pagar.
+const baseSystem = `Você é um assistente especializado em WORKFLOW de criação de Contas a Pagar.
 
 # 🎯 OBJETIVO
 Guiar o usuário através do processo completo de criação de uma conta a pagar, desde o upload do documento até o registro final no sistema.
-
-# 📋 FLUXO DO WORKFLOW (4 ETAPAS)
-
-## 1️⃣ RECEBIMENTO DO DOCUMENTO
-- O usuário enviará uma imagem ou PDF de nota fiscal/boleto
-- Você consegue VER o documento diretamente (é multimodal)
-- Extraia TODOS os dados: fornecedor (nome + CNPJ), valor, vencimento, data emissão, número NF, itens (se houver)
-
-## 2️⃣ BUSCAR CLASSIFICAÇÕES (Tool: buscarClassificacoesFinanceiras)
-- Use esta tool para mostrar as opções disponíveis ao usuário
-- Retorna: categorias financeiras, centros de custo, naturezas financeiras
-- Ajude o usuário a escolher as classificações corretas com base na descrição da despesa
-
-## 3️⃣ BUSCAR/CRIAR FORNECEDOR
-- **Tool: buscarFornecedor** - Use o CNPJ extraído para verificar se existe
-- Se NÃO existir → **Tool: criarFornecedor** - Crie com os dados extraídos
-- Se existir → Prossiga para próxima etapa
-
-## 4️⃣ CRIAR CONTA A PAGAR (Tool: criarContaPagar)
-- Use os IDs obtidos nas etapas anteriores
-- Passe TODOS os dados: fornecedor_id, categoria_id, centro_custo_id, valor, vencimento, NF, itens
-- IMPORTANTE: esta tool gera apenas a PRÉVIA (não persiste). A criação real acontece quando o usuário clica em "Criar" na UI.
 
 # 🛠️ SUAS FERRAMENTAS
 
@@ -69,29 +34,155 @@ Guiar o usuário através do processo completo de criação de uma conta a pagar
 
 # ✅ INSTRUÇÕES IMPORTANTES
 
-1. **Quando receber documento:**
-   - Analise cuidadosamente e extraia TODOS os dados
-   - Liste os dados extraídos para o usuário confirmar
+**Quando receber documento:**
+- Analise cuidadosamente e extraia TODOS os dados
+- Liste os dados extraídos para o usuário confirmar
 
-2. **Ordem das tools:**
-   - SEMPRE siga: buscarClassificacoesFinanceiras → buscarFornecedor → (criarFornecedor se necessário, em PRÉVIA) → criarContaPagar (em PRÉVIA)
+**Interação com usuário:**
+- Peça confirmação dos dados extraídos quando necessário
+- Ajude a escolher categoria/centro de custo corretos
+- Seja proativo e conduza o fluxo naturalmente
 
-3. **Interação com usuário:**
-   - Peça confirmação dos dados extraídos
-   - Ajude a escolher categoria/centro de custo corretos
-   - Seja proativo e conduza o fluxo naturalmente
+**Ao final:**
+- Após a confirmação do usuário (clique em Criar na UI), confirme que a conta foi criada com sucesso e mostre o resumo (ID, valor, vencimento, status)
 
-4. **Ao final:**
-   - Após a confirmação do usuário (clique em Criar na UI), confirme que a conta foi criada com sucesso e mostre o resumo (ID, valor, vencimento, status)
+Você é um ASSISTENTE DE WORKFLOW. Conduza o usuário passo a passo de forma clara e eficiente.`
 
-Você é um ASSISTENTE DE WORKFLOW. Conduza o usuário passo a passo de forma clara e eficiente.`,
-      messages: convertToModelMessages(messages),
-      tools: {
-        buscarClassificacoesFinanceiras,
-        buscarFornecedor,
-        criarFornecedor,
-        criarContaPagar
+export async function POST(req: Request) {
+  console.log('💳 WORKFLOW CONTAS A PAGAR: Request recebido!')
+  const { messages }: { messages: UIMessage[] } = await req.json()
+  console.log('💳 WORKFLOW CONTAS A PAGAR: Messages:', messages?.length)
+
+  try {
+    const result = streamText({
+      model: anthropic('claude-sonnet-4-20250514'),
+      providerOptions: {
+        anthropic: {
+          thinking: { type: 'enabled', budgetTokens: 8000 },
+        },
       },
+      system: baseSystem,
+      messages: convertToModelMessages(messages),
+      maxSteps: 20,
+      stopWhen: [stepCountIs(20), hasToolCall('criarContaPagar')],
+      prepareStep: ({ step }) => {
+        if (step === 1) {
+          return {
+            system: baseSystem + `
+
+# 📍 STEP 1: EXTRAIR DADOS DO DOCUMENTO + BUSCAR FORNECEDOR
+
+**Seu objetivo neste step:**
+1. Se o usuário enviou um documento (imagem/PDF), extraia TODOS os dados:
+   - Fornecedor (nome + CNPJ)
+   - Valor total
+   - Data de vencimento
+   - Data de emissão
+   - Número da nota fiscal
+   - Itens/descrição (se houver)
+2. Liste os dados extraídos para o usuário confirmar
+3. Use a tool **buscarFornecedor** com o CNPJ extraído para verificar se o fornecedor já existe no sistema
+
+**Tools disponíveis:**
+- buscarFornecedor
+
+**Próximo step:**
+- Se fornecedor NÃO existe: Step 2 (criar fornecedor)
+- Se fornecedor existe: Step 3 (buscar classificações)`,
+            tools: {
+              buscarFornecedor
+            }
+          }
+        }
+
+        if (step === 2) {
+          return {
+            system: baseSystem + `
+
+# 📍 STEP 2: CRIAR FORNECEDOR (PRÉVIA)
+
+**Seu objetivo neste step:**
+1. O fornecedor não existe no sistema
+2. Use a tool **criarFornecedor** com os dados extraídos do documento
+3. IMPORTANTE: Esta tool gera apenas uma PRÉVIA. A criação real acontece quando o usuário clica em "Criar" na UI
+4. Mostre a prévia do fornecedor ao usuário
+
+**Tools disponíveis:**
+- criarFornecedor
+
+**Próximo step:**
+- Após criar a prévia do fornecedor: Step 3 (buscar classificações)`,
+            tools: {
+              criarFornecedor
+            }
+          }
+        }
+
+        if (step === 3) {
+          return {
+            system: baseSystem + `
+
+# 📍 STEP 3: BUSCAR CLASSIFICAÇÕES FINANCEIRAS
+
+**Seu objetivo neste step:**
+1. Use a tool **buscarClassificacoesFinanceiras** para mostrar as opções disponíveis
+2. Retorna: categorias financeiras, centros de custo, naturezas financeiras
+3. Com base na descrição da despesa/itens do documento, ajude o usuário a escolher:
+   - Categoria financeira correta
+   - Centro de custo adequado
+   - Natureza financeira (se aplicável)
+4. Aguarde o usuário informar suas escolhas (IDs)
+
+**Tools disponíveis:**
+- buscarClassificacoesFinanceiras
+
+**Próximo step:**
+- Após usuário escolher classificações: Step 4 (criar conta a pagar)`,
+            tools: {
+              buscarClassificacoesFinanceiras
+            }
+          }
+        }
+
+        if (step === 4) {
+          return {
+            system: baseSystem + `
+
+# 📍 STEP 4: CRIAR CONTA A PAGAR (PRÉVIA)
+
+**Seu objetivo neste step:**
+1. Você tem TODOS os dados necessários:
+   - Fornecedor ID (do step 1 ou 2)
+   - Categoria ID (do step 3)
+   - Centro de custo ID (do step 3)
+   - Dados do documento (valor, vencimento, NF, etc.)
+2. Use a tool **criarContaPagar** com TODOS esses dados
+3. IMPORTANTE: Esta tool gera apenas a PRÉVIA. A criação real acontece quando o usuário clica em "Criar" na UI
+4. Mostre o resumo completo da conta a pagar ao usuário
+
+**Tools disponíveis:**
+- criarContaPagar
+
+**Final do workflow:**
+- Após gerar a prévia, aguarde o usuário clicar em "Criar" na UI
+- Confirme o sucesso e mostre o resumo final`,
+            tools: {
+              criarContaPagar
+            }
+          }
+        }
+
+        // Default: todas as tools disponíveis
+        return {
+          system: baseSystem,
+          tools: {
+            buscarClassificacoesFinanceiras,
+            buscarFornecedor,
+            criarFornecedor,
+            criarContaPagar
+          }
+        }
+      }
     })
 
     return result.toUIMessageStreamResponse()
