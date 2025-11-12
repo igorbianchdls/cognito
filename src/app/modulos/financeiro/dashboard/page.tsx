@@ -810,10 +810,12 @@ export default function FinanceiroDashboardPage() {
           icon={<Star className="w-5 h-5" />}
           color="#10b981"
         />
-        <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><CalendarCheck className="w-5 h-5" style={{ color: chartIconColor }} />Top 5 Clientes</h3>
-          <SimpleHorizontalBar items={topClientes} color="#8b5cf6" />
-        </div>
+        <BarChartHorizontalRecharts
+          items={topClientes}
+          title="Top 5 Clientes"
+          icon={<CalendarCheck className="w-5 h-5" />}
+          color="#8b5cf6"
+        />
       </div>
 
       {/* Charts — Row 3 (Top 5 por dimensão) */}
@@ -840,18 +842,24 @@ export default function FinanceiroDashboardPage() {
 
       {/* Charts — Row 4 (Top 5 por dimensão) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><BarChart3 className="w-5 h-5" style={{ color: chartIconColor }} />Top 5 Centros de Lucro</h3>
-          <SimpleHorizontalBar items={topLucros} color="#10b981" />
-        </div>
-        <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><BarChart3 className="w-5 h-5" style={{ color: chartIconColor }} />Top 5 Projetos</h3>
-          <SimpleHorizontalBar items={topProjetos} color="#8b5cf6" />
-        </div>
-        <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><BarChart3 className="w-5 h-5" style={{ color: chartIconColor }} />Top 5 Filiais</h3>
-          <SimpleHorizontalBar items={topFiliais} color="#14b8a6" />
-        </div>
+        <BarChartHorizontalRecharts
+          items={topLucros}
+          title="Top 5 Centros de Lucro"
+          icon={<BarChart3 className="w-5 h-5" />}
+          color="#10b981"
+        />
+        <BarChartHorizontalRecharts
+          items={topProjetos}
+          title="Top 5 Projetos"
+          icon={<BarChart3 className="w-5 h-5" />}
+          color="#8b5cf6"
+        />
+        <BarChartHorizontalRecharts
+          items={topFiliais}
+          title="Top 5 Filiais"
+          icon={<BarChart3 className="w-5 h-5" />}
+          color="#14b8a6"
+        />
       </div>
 
       {/* Tipografia - Controles */}
