@@ -3,8 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useStore } from '@nanostores/react'
 import DashboardLayout from '@/components/modulos/DashboardLayout'
-import { ArrowDownCircle, ArrowUpCircle, AlertTriangle, BarChart3, Wallet, Clock, Star, CalendarCheck, Calendar as CalendarIcon } from 'lucide-react'
-import { CashGroupedBar, ProjectedLine, SimpleHorizontalBar } from '@/components/modulos/financeiro/NivoCharts'
+import { ArrowDownCircle, ArrowUpCircle, AlertTriangle, BarChart3, Wallet, Star, CalendarCheck, Calendar as CalendarIcon } from 'lucide-react'
 import { BarChartHorizontalRecharts } from '@/components/charts/BarChartHorizontalRecharts'
 import { BarChartMultipleRecharts } from '@/components/charts/BarChartMultipleRecharts'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -99,8 +98,6 @@ export default function FinanceiroDashboardPage() {
   const [apRows, setApRows] = useState<APRow[]>([])
   const [prRows, setPrRows] = useState<RecebidoRow[]>([])
   const [peRows, setPeRows] = useState<EfetuadoRow[]>([])
-  const [arAging, setArAging] = useState<Bucket[]>([])
-  const [apAging, setApAging] = useState<Bucket[]>([])
   const [topCC, setTopCC] = useState<{ label: string; value: number }[]>([])
   const [topCategorias, setTopCategorias] = useState<{ label: string; value: number }[]>([])
   const [topDepartamentos, setTopDepartamentos] = useState<{ label: string; value: number }[]>([])
@@ -329,14 +326,12 @@ export default function FinanceiroDashboardPage() {
       setError(null)
       try {
         const qs = (view: string) => `/api/modulos/financeiro?view=${view}&page=1&pageSize=1000`
-        const [arRes, apRes, prRes, peRes, kpisRes, agingArRes, agingApRes, topCcRes, topCatRes, topDepRes, topLucroRes, topProjRes, topFilialRes, cfRealRes, cfProjRes, topFornRes, topCliRes] = await Promise.allSettled([
+        const [arRes, apRes, prRes, peRes, kpisRes, topCcRes, topCatRes, topDepRes, topLucroRes, topProjRes, topFilialRes, cfRealRes, topFornRes, topCliRes] = await Promise.allSettled([
           fetch(qs('contas-a-receber'), { cache: 'no-store' }),
           fetch(qs('contas-a-pagar'), { cache: 'no-store' }),
           fetch(qs('pagamentos-recebidos'), { cache: 'no-store' }),
           fetch(qs('pagamentos-efetuados'), { cache: 'no-store' }),
           fetch(`/api/modulos/financeiro?view=kpis&de=${kpiDe}&ate=${kpiAte}`, { cache: 'no-store' }),
-          fetch(`/api/modulos/financeiro?view=aging&tipo=ar&ref=${kpiAte}`, { cache: 'no-store' }),
-          fetch(`/api/modulos/financeiro?view=aging&tipo=ap&ref=${kpiAte}`, { cache: 'no-store' }),
           fetch(`/api/modulos/financeiro?view=top-despesas&dim=centro_custo&de=${kpiDe}&ate=${kpiAte}`, { cache: 'no-store' }),
           fetch(`/api/modulos/financeiro?view=top-despesas&dim=categoria&de=${kpiDe}&ate=${kpiAte}`, { cache: 'no-store' }),
           fetch(`/api/modulos/financeiro?view=top-despesas&dim=departamento&de=${kpiDe}&ate=${kpiAte}`, { cache: 'no-store' }),
@@ -344,7 +339,6 @@ export default function FinanceiroDashboardPage() {
           fetch(`/api/modulos/financeiro?view=top-despesas&dim=projeto&de=${kpiDe}&ate=${kpiAte}`, { cache: 'no-store' }),
           fetch(`/api/modulos/financeiro?view=top-despesas&dim=filial&de=${kpiDe}&ate=${kpiAte}`, { cache: 'no-store' }),
           fetch(`/api/modulos/financeiro?view=cashflow-realized&de=${kpiDe}&ate=${kpiAte}&group_by=${groupBy}`, { cache: 'no-store' }),
-          fetch(`/api/modulos/financeiro?view=cashflow-projected&de=${kpiDe}&ate=${kpiAte}&group_by=${groupBy}`, { cache: 'no-store' }),
           fetch(`/api/modulos/financeiro?view=top-despesas&dim=fornecedor&de=${kpiDe}&ate=${kpiAte}`, { cache: 'no-store' }),
           fetch(`/api/modulos/financeiro?view=top-receitas&dim=cliente&de=${kpiDe}&ate=${kpiAte}`, { cache: 'no-store' }),
         ])
@@ -417,30 +411,11 @@ export default function FinanceiroDashboardPage() {
           }
         }
 
-        // Aging via API (fallback para cálculo local)
-        let arAgingData: Bucket[] | null = null
-        let apAgingData: Bucket[] | null = null
-        if (agingArRes.status === 'fulfilled' && agingArRes.value.ok) {
-          const j = await agingArRes.value.json() as { rows?: Array<{ bucket?: string; total?: number }> }
-          if (Array.isArray(j?.rows)) {
-            arAgingData = j.rows.map(r => ({ label: String(r.bucket || ''), value: Number(r.total || 0) }))
-          }
-        }
-        if (agingApRes.status === 'fulfilled' && agingApRes.value.ok) {
-          const j = await agingApRes.value.json() as { rows?: Array<{ bucket?: string; total?: number }> }
-          if (Array.isArray(j?.rows)) {
-            apAgingData = j.rows.map(r => ({ label: String(r.bucket || ''), value: Number(r.total || 0) }))
-          }
-        }
-
         if (!cancelled) {
           setArRows(ar)
           setApRows(ap)
           setPrRows(pr)
           setPeRows(pe)
-          // Aplicar aging (com fallback para cálculo local)
-          setArAging(arAgingData && arAgingData.length ? arAgingData : buildAging(ar))
-          setApAging(apAgingData && apAgingData.length ? apAgingData : buildAging(ap))
           // Top 5 (CC, Categoria, Departamento)
           if (topCcRes.status === 'fulfilled' && topCcRes.value.ok) {
             const j = await topCcRes.value.json() as { rows?: Array<{ label?: string; total?: number }> }
@@ -471,10 +446,6 @@ export default function FinanceiroDashboardPage() {
             const j = await cfRealRes.value.json() as { rows?: Array<{ period: string; entradas: number; saidas: number; net: number }> }
             setCashRealized(Array.isArray(j?.rows) ? j.rows : [])
           } else setCashRealized([])
-          if (cfProjRes.status === 'fulfilled' && cfProjRes.value.ok) {
-            const j = await cfProjRes.value.json() as { rows?: Array<{ period: string; entradas: number; saidas: number; net: number; saldo_projetado?: number }> }
-            setCashProjected(Array.isArray(j?.rows) ? j.rows : [])
-          } else setCashProjected([])
 
           // Top fornecedores e clientes
           if (topFornRes.status === 'fulfilled' && topFornRes.value.ok) {
@@ -518,32 +489,6 @@ export default function FinanceiroDashboardPage() {
     return { arMes, apMes, recebidosMes, pagosMes }
   }, [kpisMonth, arRows, apRows, prRows, peRows])
 
-  // Aging buckets (valor em BRL por faixa)
-  type Bucket = { label: string; value: number }
-  function buildAging<T extends BaseRow>(rows: T[]): Bucket[] {
-    const buckets: Record<string, number> = {
-      'Vencido >30': 0,
-      'Vencido 1–30': 0,
-      'Vence 1–7': 0,
-      'Vence 8–15': 0,
-      'Vence 16–30': 0,
-    }
-    for (const r of rows) {
-      if (isPaid(r.status)) continue
-      const v = Number(r.valor_total) || 0
-      const dd = daysDiffFromToday(String(r.data_vencimento))
-      if (dd == null) continue
-      if (dd < -30) buckets['Vencido >30'] += v
-      else if (dd < 0) buckets['Vencido 1–30'] += v
-      else if (dd <= 7) buckets['Vence 1–7'] += v
-      else if (dd <= 15) buckets['Vence 8–15'] += v
-      else if (dd <= 30) buckets['Vence 16–30'] += v
-    }
-    return Object.entries(buckets).map(([label, value]) => ({ label, value }))
-  }
-
-  // aging agora vem do endpoint; mantemos fallback via buildAging() ao carregar
-
   const topReceber = useMemo(() => {
     const rows = arRows.filter(r => !isPaid(r.status))
     return rows
@@ -570,32 +515,6 @@ export default function FinanceiroDashboardPage() {
       .sort((a, b) => b.valor - a.valor)
       .slice(0, 5)
   }, [apRows])
-
-  function AgingBar({ data }: { data: Bucket[] }) {
-    const total = data.reduce((acc, b) => acc + b.value, 0)
-    return (
-      <div className="space-y-3">
-        {data.map((b) => {
-          const pct = total > 0 ? Math.max(2, Math.round((b.value / total) * 100)) : 0
-          const color = b.label.includes('Vencido') ? 'bg-red-500' : 'bg-amber-500'
-          return (
-            <div key={b.label} className="">
-              <div className="flex justify-between text-xs text-gray-600 mb-1" style={styleText}>
-                <span>{b.label}</span>
-                <span>{formatBRL(b.value)}</span>
-              </div>
-              <div className="w-full h-2.5 bg-gray-100 rounded">
-                <div className={`${color} h-2.5 rounded`} style={{ width: `${pct}%` }} />
-              </div>
-            </div>
-          )
-        })}
-        {total === 0 && (
-          <div className="text-xs text-gray-400" style={styleText}>Sem valores pendentes</div>
-        )}
-      </div>
-    )
-  }
 
   // ---- Charts: Receitas vs Despesas & Saldo no final do mês ----
   function monthKey(d: Date) {
@@ -625,10 +544,9 @@ export default function FinanceiroDashboardPage() {
   }
   const meses = useMemo(() => lastMonths(6), [])
 
-  // Cashflow (realizado/projetado) - estados
-  type CashRow = { period: string; entradas: number; saidas: number; net: number; saldo_projetado?: number }
+  // Cashflow (realizado) - estados
+  type CashRow = { period: string; entradas: number; saidas: number; net: number }
   const [cashRealized, setCashRealized] = useState<CashRow[]>([])
-  const [cashProjected, setCashProjected] = useState<CashRow[]>([])
 
   // Helpers to display cashflow labels
   function periodToLabel(s: string) {
@@ -775,7 +693,7 @@ export default function FinanceiroDashboardPage() {
       </div>
 
       {/* Charts — Row 1 (Fluxo de Caixa) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-1 gap-6 mb-6">
         <BarChartMultipleRecharts
           items={cashRealized.map(d => ({
             label: periodToLabel(d.period),
@@ -789,31 +707,10 @@ export default function FinanceiroDashboardPage() {
             { key: "saidas", label: "Saídas", color: "#ef4444" }
           ]}
         />
-        <div className={cardContainerClass} style={{ borderColor: cardBorderColor, boxShadow: cardBoxShadow }}>
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><Wallet className="w-5 h-5" style={{ color: chartIconColor }} />Fluxo de Caixa — Projetado</h3>
-          <div className="flex items-center justify-between text-xs text-gray-600 mb-1" style={styleText}>
-            <span>Saldo Projetado</span>
-            <span>Último: {formatBRL(cashProjected.at(-1)?.saldo_projetado ?? 0)}</span>
-          </div>
-          <ProjectedLine points={cashProjected.map(d => ({ x: periodToLabel(d.period), y: d.saldo_projetado || 0 }))} />
-          <div className="grid grid-cols-6 gap-3 mt-1">
-            {cashProjected.map((d, idx) => (
-              <div key={`${d.period}-${idx}`} className="text-[11px] text-gray-600 text-center" style={styleText}>{periodToLabel(d.period)}</div>
-            ))}
-          </div>
-        </div>
-        <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><Clock className="w-5 h-5" style={{ color: chartIconColor }} />Aging A Receber</h3>
-          <SimpleHorizontalBar items={arAging.map(b => ({ label: b.label, value: b.value }))} color="#059669" />
-        </div>
       </div>
 
-      {/* Charts — Row 2 (Aging AP + Tops Fornecedores/Clientes) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><Clock className="w-5 h-5" style={{ color: chartIconColor }} />Aging A Pagar</h3>
-          <SimpleHorizontalBar items={apAging.map(b => ({ label: b.label, value: b.value }))} color="#ef4444" />
-        </div>
+      {/* Charts — Row 2 (Tops Fornecedores/Clientes) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <BarChartHorizontalRecharts
           items={topFornecedores}
           title="Top 5 Fornecedores"
