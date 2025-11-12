@@ -429,10 +429,8 @@ export default function ContabilidadeDashboardPage() {
       {/* DRE em largura total (igual à aba DRE) */}
       {dre && (
         <div className="mb-6">
-          <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
-            <h3 className="text-lg font-semibold mb-4" style={styleChartTitle}>DRE</h3>
-            <DRETable data={dre.nodes} periods={dre.periods} />
-          </div>
+          <h3 className="text-lg font-semibold mb-4" style={styleChartTitle}>DRE</h3>
+          <DRETable data={dre.nodes} periods={dre.periods} />
         </div>
       )}
 
