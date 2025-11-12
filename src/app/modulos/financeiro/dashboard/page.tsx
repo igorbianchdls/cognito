@@ -818,18 +818,24 @@ export default function FinanceiroDashboardPage() {
 
       {/* Charts — Row 3 (Top 5 por dimensão) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><BarChart3 className="w-5 h-5" style={{ color: chartIconColor }} />Top 5 Centros de Custo</h3>
-          <SimpleHorizontalBar items={topCC} color="#6366f1" />
-        </div>
-        <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><BarChart3 className="w-5 h-5" style={{ color: chartIconColor }} />Top 5 Categorias</h3>
-          <SimpleHorizontalBar items={topCategorias} color="#f43f5e" />
-        </div>
-        <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><BarChart3 className="w-5 h-5" style={{ color: chartIconColor }} />Top 5 Departamentos</h3>
-          <SimpleHorizontalBar items={topDepartamentos} color="#f59e0b" />
-        </div>
+        <BarChartHorizontalRecharts
+          items={topCC}
+          title="Top 5 Centros de Custo"
+          icon={<BarChart3 className="w-5 h-5" />}
+          color="#6366f1"
+        />
+        <BarChartHorizontalRecharts
+          items={topCategorias}
+          title="Top 5 Categorias"
+          icon={<BarChart3 className="w-5 h-5" />}
+          color="#f43f5e"
+        />
+        <BarChartHorizontalRecharts
+          items={topDepartamentos}
+          title="Top 5 Departamentos"
+          icon={<BarChart3 className="w-5 h-5" />}
+          color="#f59e0b"
+        />
       </div>
 
       {/* Charts — Row 4 (Top 5 por dimensão) */}
