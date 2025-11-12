@@ -1,6 +1,6 @@
 "use client"
 
-import { Bar, BarChart, CartesianGrid, XAxis } from "recharts"
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Legend } from "recharts"
 import {
   Card,
   CardContent,
@@ -54,7 +54,11 @@ export function BarChartMultipleRecharts({
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig} style={{ height }}>
-          <BarChart accessibilityLayer data={items}>
+          <BarChart
+            accessibilityLayer
+            data={items}
+            margin={{ top: 10, right: 12, bottom: 30, left: 12 }}
+          >
             <CartesianGrid vertical={false} />
             <XAxis
               dataKey="label"
@@ -66,9 +70,28 @@ export function BarChartMultipleRecharts({
                 return value.length > 10 ? value.slice(0, 10) + '...' : value
               }}
             />
+            <YAxis
+              tickLine={false}
+              axisLine={false}
+              tickMargin={8}
+              tickFormatter={(value) => {
+                // Format as currency
+                return new Intl.NumberFormat('pt-BR', {
+                  style: 'currency',
+                  currency: 'BRL',
+                  minimumFractionDigits: 0,
+                  maximumFractionDigits: 0,
+                }).format(value)
+              }}
+            />
             <ChartTooltip
               cursor={false}
               content={<ChartTooltipContent indicator="dashed" />}
+            />
+            <Legend
+              verticalAlign="bottom"
+              height={36}
+              iconType="rect"
             />
             {series.map((s) => (
               <Bar
