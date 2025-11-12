@@ -433,67 +433,6 @@ export default function ContabilidadeDashboardPage() {
           <DRETable data={dre.nodes} periods={dre.periods} />
         </div>
       )}
-
-      {/* Evolução Mensal + Waterfall (DRE) */}
-      {dre && dreResumo.length > 0 && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
-            <h3 className="text-lg font-semibold mb-4" style={styleChartTitle}>Evolução Mensal (Receita, COGS, Opex, Lucro)</h3>
-            <MultiLine
-              series={[
-                { id: 'Receita', color: '#10b981', points: dreResumo.map(d => ({ x: d.label, y: d.receita })) },
-                { id: 'COGS', color: '#ef4444', points: dreResumo.map(d => ({ x: d.label, y: d.cogs })) },
-                { id: 'Opex', color: '#6366f1', points: dreResumo.map(d => ({ x: d.label, y: d.opex })) },
-                { id: 'Lucro', color: '#2563eb', points: dreResumo.map(d => ({ x: d.label, y: d.lucro })) },
-              ]}
-            />
-          </div>
-          <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
-            <h3 className="text-lg font-semibold mb-4" style={styleChartTitle}>Waterfall (Período Atual)</h3>
-            {(() => {
-              const last = dreResumo.at(-1)!;
-              return (
-                <WaterfallDRE
-                  receita={last.receita}
-                  cogs={-Math.abs(last.cogs)}
-                  opex={-Math.abs(last.opex)}
-                  lucro={last.lucro}
-                />
-              );
-            })()}
-          </div>
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
-          <h3 className="text-lg font-semibold mb-4" style={styleChartTitle}>Últimos Lançamentos</h3>
-          <div className="space-y-3">
-            {ultimosLanc.length === 0 ? (
-              <div className="text-sm text-gray-400" style={styleText}>Sem lançamentos</div>
-            ) : ultimosLanc.map((l, idx) => (
-              <div key={`${l.lancamento_id}-${idx}`} className="flex justify-between items-center pb-2 border-b last:border-b-0" style={{ borderColor: cardBorderColor }}>
-                <div>
-                  <div className="font-medium text-sm" style={styleText}>{l.historico || 'Lançamento'}</div>
-                  <div className="text-xs text-gray-500" style={styleText}>{l.data_lancamento ? new Date(l.data_lancamento).toLocaleDateString('pt-BR') : '—'} • {l.conta_codigo || ''} {l.conta_nome || ''}</div>
-                </div>
-                <div className="text-right text-xs">
-                  <div className="text-rose-600">{Number(l.debito||0) > 0 ? `D ${formatBRL(Number(l.debito))}` : ''}</div>
-                  <div className="text-emerald-600">{Number(l.credito||0) > 0 ? `C ${formatBRL(Number(l.credito))}` : ''}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
-          <h3 className="text-lg font-semibold mb-4" style={styleChartTitle}>Observações</h3>
-          <ul className="text-sm text-gray-600 space-y-2 list-disc pl-5" style={styleText}>
-            <li>Considere revisar regras contábeis automáticas para CAP/AR/Payments.</li>
-            <li>Valide mapeamento do plano de contas para DRE e BP.</li>
-            <li>Concilie lançamentos pendentes antes do fechamento.</li>
-          </ul>
-        </div>
-      </div>
     </DashboardLayout>
   )
 }
