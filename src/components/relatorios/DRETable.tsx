@@ -152,7 +152,12 @@ export default function DRETable({ data = DEFAULT_DATA, periods = [
   const profitByPeriod = useMemo(() => {
     const map: Record<string, number> = {}
     for (const p of periods) {
-      map[p.key] = data.reduce((acc, n) => acc + computeNodeValueForPeriod(n, p.key), 0)
+      const receita = computeNodeValueForPeriod(data.find(n => n.id === 'receita') || { id: '', name: '' }, p.key)
+      const cogs = computeNodeValueForPeriod(data.find(n => n.id === 'cogs') || { id: '', name: '' }, p.key)
+      const opex = computeNodeValueForPeriod(data.find(n => n.id === 'opex') || { id: '', name: '' }, p.key)
+      const outros = data.filter(n => !['receita', 'cogs', 'opex'].includes(n.id))
+        .reduce((acc, n) => acc + computeNodeValueForPeriod(n, p.key), 0)
+      map[p.key] = receita - cogs - opex + outros
     }
     return map
   }, [data, periods])
