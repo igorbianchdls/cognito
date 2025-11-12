@@ -213,7 +213,7 @@ export async function GET(req: NextRequest) {
       const resRows = await runQuery<{ resultado: number }>(resultadoSql, [from, to])
       const lucro = Number(resRows[0]?.resultado || 0)
 
-      // Receita do período (para margem líquida)
+      // Receita do período (contas 4.x)
       const receitaSql = `
         SELECT COALESCE(SUM(lcl.credito - lcl.debito),0) AS receita
         FROM contabilidade.lancamentos_contabeis lc
@@ -221,9 +221,21 @@ export async function GET(req: NextRequest) {
         JOIN contabilidade.plano_contas pc ON pc.id = lcl.conta_id
         WHERE lc.data_lancamento BETWEEN $1::date AND $2::date
           AND pc.aceita_lancamento = TRUE
-          AND pc.tipo_conta = 'Receita'`;
+          AND pc.codigo LIKE '4.%'`;
       const recRows = await runQuery<{ receita: number }>(receitaSql, [from, to])
       const receita = Number(recRows[0]?.receita || 0)
+
+      // Despesa do período (contas 5.x e 6.x)
+      const despesaSql = `
+        SELECT COALESCE(SUM(lcl.debito - lcl.credito),0) AS despesa
+        FROM contabilidade.lancamentos_contabeis lc
+        JOIN contabilidade.lancamentos_contabeis_linhas lcl ON lcl.lancamento_id = lc.id
+        JOIN contabilidade.plano_contas pc ON pc.id = lcl.conta_id
+        WHERE lc.data_lancamento BETWEEN $1::date AND $2::date
+          AND pc.aceita_lancamento = TRUE
+          AND (pc.codigo LIKE '5.%' OR pc.codigo LIKE '6.%')`;
+      const despRows = await runQuery<{ despesa: number }>(despesaSql, [from, to])
+      const despesa = Number(despRows[0]?.despesa || 0)
 
       const capitalDeGiro = acTotal - pcTotal
       const liquidezCorrente = pcTotal !== 0 ? (acTotal / pcTotal) : null
@@ -235,13 +247,15 @@ export async function GET(req: NextRequest) {
         de: from,
         ate: to,
         kpis: {
+          receita,
+          despesa,
           lucro,
           margem_liquida: margemLiquida,
           capital_de_giro: capitalDeGiro,
           liquidez_corrente: liquidezCorrente,
           endividamento,
         },
-        sql_query: { bpSql, resultadoSql, receitaSql },
+        sql_query: { bpSql, resultadoSql, receitaSql, despesaSql },
       }, { headers: { 'Cache-Control': 'no-store' } })
     }
 
