@@ -252,9 +252,10 @@ export async function GET(req: NextRequest) {
       const from = de || firstDay
       const to = ate || new Date().toISOString().slice(0, 10)
 
-      const bpSql = `
+      // Query para ATIVO (Circulante + Não Circulante)
+      const ativoSql = `
         WITH base AS (
-          SELECT 
+          SELECT
             lc.data_lancamento::date AS data_lancamento,
             pc.codigo,
             pc.nome,
@@ -262,26 +263,33 @@ export async function GET(req: NextRequest) {
             pc.aceita_lancamento,
             COALESCE(lcl.debito,0) AS debito,
             COALESCE(lcl.credito,0) AS credito
-          FROM contabilidade.lancamentos_contabeis lc
-          JOIN contabilidade.lancamentos_contabeis_linhas lcl ON lcl.lancamento_id = lc.id
-          JOIN contabilidade.plano_contas pc ON pc.id = lcl.conta_id
+          FROM contabilidade.plano_contas pc
+          LEFT JOIN contabilidade.lancamentos_contabeis_linhas lcl ON pc.id = lcl.conta_id
+          LEFT JOIN contabilidade.lancamentos_contabeis lc ON lc.id = lcl.lancamento_id
+          WHERE pc.codigo ~ '^1\\.1' OR pc.codigo ~ '^1\\.2'
         ),
         inicial AS (
           SELECT codigo, nome, tipo_conta,
-            SUM(CASE WHEN tipo_conta IN ('Receita','Passivo','Patrimônio Líquido') THEN (credito - debito) ELSE (debito - credito) END) AS saldo_inicial
+            SUM(CASE WHEN tipo_conta IN ('Receita','Passivo','Patrimônio Líquido')
+                THEN (credito - debito)
+                ELSE (debito - credito)
+            END) AS saldo_inicial
           FROM base
-          WHERE data_lancamento < $1::date AND aceita_lancamento = TRUE
+          WHERE (data_lancamento < $1::date OR data_lancamento IS NULL) AND aceita_lancamento = TRUE
           GROUP BY codigo, nome, tipo_conta
         ),
         movimentos AS (
           SELECT codigo, nome, tipo_conta,
-            SUM(CASE WHEN tipo_conta IN ('Receita','Passivo','Patrimônio Líquido') THEN (credito - debito) ELSE (debito - credito) END) AS movimentos
+            SUM(CASE WHEN tipo_conta IN ('Receita','Passivo','Patrimônio Líquido')
+                THEN (credito - debito)
+                ELSE (debito - credito)
+            END) AS movimentos
           FROM base
-          WHERE data_lancamento BETWEEN $1::date AND $2::date AND aceita_lancamento = TRUE
+          WHERE (data_lancamento BETWEEN $1::date AND $2::date OR data_lancamento IS NULL) AND aceita_lancamento = TRUE
           GROUP BY codigo, nome, tipo_conta
         ),
         final AS (
-          SELECT 
+          SELECT
             COALESCE(i.codigo, m.codigo) AS codigo,
             COALESCE(i.nome, m.nome) AS nome,
             COALESCE(i.tipo_conta, m.tipo_conta) AS tipo_conta,
@@ -295,21 +303,136 @@ export async function GET(req: NextRequest) {
           SELECT
             f.codigo, f.nome, f.tipo_conta, f.saldo_inicial, f.movimentos, f.saldo_final,
             CASE
-              WHEN f.codigo ~ '^1\\.1\\.' THEN 'Ativo Circulante'
-              WHEN f.codigo ~ '^1\\.2\\.' THEN 'Ativo Não Circulante'
-              WHEN f.codigo ~ '^2\\.1\\.' THEN 'Passivo Circulante'
-              WHEN f.codigo ~ '^2\\.2\\.' THEN 'Passivo Não Circulante'
-              WHEN f.codigo ~ '^3\\.' THEN 'Patrimônio Líquido'
-              ELSE NULL
+              WHEN f.codigo ~ '^1\\.1' THEN 'Ativo Circulante'
+              WHEN f.codigo ~ '^1\\.2' THEN 'Ativo Não Circulante'
             END AS grupo
           FROM final f
         )
         SELECT * FROM classificados WHERE grupo IS NOT NULL
         ORDER BY codigo::text COLLATE "C"`;
 
-      const rows = await runQuery<{
-        codigo: string; nome: string; tipo_conta: string; saldo_final: number; grupo: string
-      }>(bpSql, [from, to])
+      // Query para PASSIVO (Circulante + Não Circulante)
+      const passivoSql = `
+        WITH base AS (
+          SELECT
+            lc.data_lancamento::date AS data_lancamento,
+            pc.codigo,
+            pc.nome,
+            pc.tipo_conta,
+            pc.aceita_lancamento,
+            COALESCE(lcl.debito,0) AS debito,
+            COALESCE(lcl.credito,0) AS credito
+          FROM contabilidade.plano_contas pc
+          LEFT JOIN contabilidade.lancamentos_contabeis_linhas lcl ON pc.id = lcl.conta_id
+          LEFT JOIN contabilidade.lancamentos_contabeis lc ON lc.id = lcl.lancamento_id
+          WHERE pc.codigo ~ '^2\\.1' OR pc.codigo ~ '^2\\.2'
+        ),
+        inicial AS (
+          SELECT codigo, nome, tipo_conta,
+            SUM(CASE WHEN tipo_conta IN ('Receita','Passivo','Patrimônio Líquido')
+                THEN (credito - debito)
+                ELSE (debito - credito)
+            END) AS saldo_inicial
+          FROM base
+          WHERE (data_lancamento < $1::date OR data_lancamento IS NULL) AND aceita_lancamento = TRUE
+          GROUP BY codigo, nome, tipo_conta
+        ),
+        movimentos AS (
+          SELECT codigo, nome, tipo_conta,
+            SUM(CASE WHEN tipo_conta IN ('Receita','Passivo','Patrimônio Líquido')
+                THEN (credito - debito)
+                ELSE (debito - credito)
+            END) AS movimentos
+          FROM base
+          WHERE (data_lancamento BETWEEN $1::date AND $2::date OR data_lancamento IS NULL) AND aceita_lancamento = TRUE
+          GROUP BY codigo, nome, tipo_conta
+        ),
+        final AS (
+          SELECT
+            COALESCE(i.codigo, m.codigo) AS codigo,
+            COALESCE(i.nome, m.nome) AS nome,
+            COALESCE(i.tipo_conta, m.tipo_conta) AS tipo_conta,
+            COALESCE(i.saldo_inicial,0) AS saldo_inicial,
+            COALESCE(m.movimentos,0) AS movimentos,
+            COALESCE(i.saldo_inicial,0) + COALESCE(m.movimentos,0) AS saldo_final
+          FROM inicial i
+          FULL JOIN movimentos m USING (codigo, nome, tipo_conta)
+        ),
+        classificados AS (
+          SELECT
+            f.codigo, f.nome, f.tipo_conta, f.saldo_inicial, f.movimentos, f.saldo_final,
+            CASE
+              WHEN f.codigo ~ '^2\\.1' THEN 'Passivo Circulante'
+              WHEN f.codigo ~ '^2\\.2' THEN 'Passivo Não Circulante'
+            END AS grupo
+          FROM final f
+        )
+        SELECT * FROM classificados WHERE grupo IS NOT NULL
+        ORDER BY codigo::text COLLATE "C"`;
+
+      // Query para PATRIMÔNIO LÍQUIDO
+      const plSql = `
+        WITH base AS (
+          SELECT
+            lc.data_lancamento::date AS data_lancamento,
+            pc.codigo,
+            pc.nome,
+            pc.tipo_conta,
+            pc.aceita_lancamento,
+            COALESCE(lcl.debito,0) AS debito,
+            COALESCE(lcl.credito,0) AS credito
+          FROM contabilidade.plano_contas pc
+          LEFT JOIN contabilidade.lancamentos_contabeis_linhas lcl ON pc.id = lcl.conta_id
+          LEFT JOIN contabilidade.lancamentos_contabeis lc ON lc.id = lcl.lancamento_id
+          WHERE pc.codigo ~ '^3\\.'
+        ),
+        inicial AS (
+          SELECT codigo, nome, tipo_conta,
+            SUM(CASE WHEN tipo_conta IN ('Receita','Passivo','Patrimônio Líquido')
+                THEN (credito - debito)
+                ELSE (debito - credito)
+            END) AS saldo_inicial
+          FROM base
+          WHERE (data_lancamento < $1::date OR data_lancamento IS NULL) AND aceita_lancamento = TRUE
+          GROUP BY codigo, nome, tipo_conta
+        ),
+        movimentos AS (
+          SELECT codigo, nome, tipo_conta,
+            SUM(CASE WHEN tipo_conta IN ('Receita','Passivo','Patrimônio Líquido')
+                THEN (credito - debito)
+                ELSE (debito - credito)
+            END) AS movimentos
+          FROM base
+          WHERE (data_lancamento BETWEEN $1::date AND $2::date OR data_lancamento IS NULL) AND aceita_lancamento = TRUE
+          GROUP BY codigo, nome, tipo_conta
+        ),
+        final AS (
+          SELECT
+            COALESCE(i.codigo, m.codigo) AS codigo,
+            COALESCE(i.nome, m.nome) AS nome,
+            COALESCE(i.tipo_conta, m.tipo_conta) AS tipo_conta,
+            COALESCE(i.saldo_inicial,0) AS saldo_inicial,
+            COALESCE(m.movimentos,0) AS movimentos,
+            COALESCE(i.saldo_inicial,0) + COALESCE(m.movimentos,0) AS saldo_final
+          FROM inicial i
+          FULL JOIN movimentos m USING (codigo, nome, tipo_conta)
+        ),
+        classificados AS (
+          SELECT
+            f.codigo, f.nome, f.tipo_conta, f.saldo_inicial, f.movimentos, f.saldo_final,
+            'Patrimônio Líquido' AS grupo
+          FROM final f
+        )
+        SELECT * FROM classificados WHERE grupo IS NOT NULL
+        ORDER BY codigo::text COLLATE "C"`;
+
+      // Executar as 3 queries em paralelo
+      type BPRow = { codigo: string; nome: string; tipo_conta: string; saldo_final: number; grupo: string }
+      const [ativoRows, passivoRows, plRows] = await Promise.all([
+        runQuery<BPRow>(ativoSql, [from, to]),
+        runQuery<BPRow>(passivoSql, [from, to]),
+        runQuery<BPRow>(plSql, [from, to])
+      ])
 
       // Resultado do período (Receitas - Custos/Despesas) dentro do intervalo [from..to]
       const resultadoSql = `
@@ -329,19 +452,18 @@ export async function GET(req: NextRequest) {
       const resultadoPeriodo = Number(resRows[0]?.resultado || 0)
 
       const toLinha = (r: { codigo: string; nome: string; saldo_final: number }) => ({ conta: `${r.codigo} ${r.nome}`, valor: Number(r.saldo_final || 0) })
-      const groupBy = (list: typeof rows, pred: (g: string) => boolean): { [k: string]: { nome: string; linhas: { conta: string; valor: number }[] } } => {
+      const groupBy = (list: BPRow[]): { [k: string]: { nome: string; linhas: { conta: string; valor: number }[] } } => {
         const out: Record<string, { nome: string; linhas: { conta: string; valor: number }[] }> = {}
         for (const r of list) {
-          if (!pred(r.grupo)) continue
           const key = r.grupo
           if (!out[key]) out[key] = { nome: key, linhas: [] }
           out[key].linhas.push(toLinha(r))
         }
         return out
       }
-      const ativos = Object.values(groupBy(rows, (g) => g.startsWith('Ativo')))
-      const passivos = Object.values(groupBy(rows, (g) => g.startsWith('Passivo')))
-      const pls = Object.values(groupBy(rows, (g) => g === 'Patrimônio Líquido'))
+      const ativos = Object.values(groupBy(ativoRows))
+      const passivos = Object.values(groupBy(passivoRows))
+      const pls = Object.values(groupBy(plRows))
       if (resultadoPeriodo !== 0) {
         pls.push({ nome: 'Resultado do Período', linhas: [{ conta: 'Resultado do Exercício', valor: resultadoPeriodo }] })
       }
