@@ -24,24 +24,10 @@ export default function BPTabela({
 
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const toggle = (key: string) => setCollapsed(prev => ({ ...prev, [key]: !prev[key] }));
-  const expandAll = () => {
-    const next: Record<string, boolean> = {};
-    secoes.forEach((s, i) => { next[`${s.nome}-${i}`] = false; });
-    setCollapsed(next);
-  };
-  const collapseAll = () => {
-    const next: Record<string, boolean> = {};
-    secoes.forEach((s, i) => { next[`${s.nome}-${i}`] = true; });
-    setCollapsed(next);
-  };
 
   return (
     <div className={className}>
       <div className="text-lg font-semibold mb-3 text-gray-800">{title}</div>
-      <div className="flex items-center justify-end gap-2 mb-2">
-        <button onClick={expandAll} className="text-xs px-2 py-1 rounded border border-gray-200 hover:bg-gray-50">Expandir tudo</button>
-        <button onClick={collapseAll} className="text-xs px-2 py-1 rounded border border-gray-200 hover:bg-gray-50">Contrair tudo</button>
-      </div>
 
       <div className="space-y-4">
         {secoes.map((sec, i) => {
