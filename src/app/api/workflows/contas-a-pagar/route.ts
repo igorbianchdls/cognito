@@ -63,7 +63,6 @@ export async function POST(req: Request) {
       },
       system: baseSystem,
       messages: convertToModelMessages(messages),
-      maxSteps: 20,
       stopWhen: [stepCountIs(20), hasToolCall('criarContaPagar')],
       prepareStep: ({ step }) => {
         if (step === 1) {
