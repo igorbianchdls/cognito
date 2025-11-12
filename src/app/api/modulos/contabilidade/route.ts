@@ -169,13 +169,13 @@ export async function GET(req: NextRequest) {
           FULL JOIN movimentos m USING (codigo, nome, tipo_conta)
         ),
         classificados AS (
-          SELECT 
+          SELECT
             f.codigo, f.nome, f.tipo_conta, f.saldo_inicial, f.movimentos, f.saldo_final,
-            CASE 
-              WHEN f.codigo ~ '^1\\.0*1\\.' THEN 'Ativo Circulante'
-              WHEN f.codigo ~ '^1\\.' THEN 'Ativo Não Circulante'
-              WHEN f.codigo ~ '^2\\.0*1\\.' THEN 'Passivo Circulante'
-              WHEN f.codigo ~ '^2\\.' THEN 'Passivo Não Circulante'
+            CASE
+              WHEN f.codigo ~ '^1\\.1\\.' THEN 'Ativo Circulante'
+              WHEN f.codigo ~ '^1\\.2\\.' THEN 'Ativo Não Circulante'
+              WHEN f.codigo ~ '^2\\.1\\.' THEN 'Passivo Circulante'
+              WHEN f.codigo ~ '^2\\.2\\.' THEN 'Passivo Não Circulante'
               WHEN f.codigo ~ '^3\\.' THEN 'Patrimônio Líquido'
               ELSE NULL
             END AS grupo
@@ -292,13 +292,13 @@ export async function GET(req: NextRequest) {
           FULL JOIN movimentos m USING (codigo, nome, tipo_conta)
         ),
         classificados AS (
-          SELECT 
+          SELECT
             f.codigo, f.nome, f.tipo_conta, f.saldo_inicial, f.movimentos, f.saldo_final,
-            CASE 
-              WHEN f.codigo ~ '^1\\.0*1\\.' THEN 'Ativo Circulante'
-              WHEN f.codigo ~ '^1\\.' THEN 'Ativo Não Circulante'
-              WHEN f.codigo ~ '^2\\.0*1\\.' THEN 'Passivo Circulante'
-              WHEN f.codigo ~ '^2\\.' THEN 'Passivo Não Circulante'
+            CASE
+              WHEN f.codigo ~ '^1\\.1\\.' THEN 'Ativo Circulante'
+              WHEN f.codigo ~ '^1\\.2\\.' THEN 'Ativo Não Circulante'
+              WHEN f.codigo ~ '^2\\.1\\.' THEN 'Passivo Circulante'
+              WHEN f.codigo ~ '^2\\.2\\.' THEN 'Passivo Não Circulante'
               WHEN f.codigo ~ '^3\\.' THEN 'Patrimônio Líquido'
               ELSE NULL
             END AS grupo
