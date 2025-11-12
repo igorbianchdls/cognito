@@ -197,9 +197,11 @@ export async function GET(req: NextRequest) {
       // Resultado (lucro/prejuízo) do período
       const resultadoSql = `
         SELECT COALESCE(SUM(
-          CASE WHEN pc.tipo_conta IN ('Receita','Passivo','Patrimônio Líquido')
+          CASE WHEN pc.tipo_conta = 'Receita'
                  THEN (lcl.credito - lcl.debito)
-               ELSE (lcl.debito - lcl.credito)
+               WHEN pc.tipo_conta IN ('Despesa', 'Custo')
+                 THEN (lcl.debito - lcl.credito) * -1
+               ELSE (lcl.debito - lcl.credito) * -1
           END
         ),0) AS resultado
         FROM contabilidade.lancamentos_contabeis lc
