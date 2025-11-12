@@ -64,8 +64,8 @@ export async function POST(req: Request) {
       system: baseSystem,
       messages: convertToModelMessages(messages),
       stopWhen: [stepCountIs(20), hasToolCall('criarContaPagar')],
-      prepareStep: ({ step }) => {
-        if (step === 1) {
+      prepareStep: ({ stepNumber }) => {
+        if (stepNumber === 1) {
           return {
             system: baseSystem + `
 
@@ -94,7 +94,7 @@ export async function POST(req: Request) {
           }
         }
 
-        if (step === 2) {
+        if (stepNumber === 2) {
           return {
             system: baseSystem + `
 
@@ -117,7 +117,7 @@ export async function POST(req: Request) {
           }
         }
 
-        if (step === 3) {
+        if (stepNumber === 3) {
           return {
             system: baseSystem + `
 
@@ -143,7 +143,7 @@ export async function POST(req: Request) {
           }
         }
 
-        if (step === 4) {
+        if (stepNumber === 4) {
           return {
             system: baseSystem + `
 
