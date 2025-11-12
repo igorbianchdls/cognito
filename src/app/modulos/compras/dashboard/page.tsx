@@ -3,11 +3,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useStore } from '@nanostores/react'
 import DashboardLayout from '@/components/modulos/DashboardLayout'
+import BarChartHorizontalRecharts from '@/components/charts/BarChartHorizontalRecharts'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Calendar as CalendarIcon, Handshake, ShoppingCart, PackagePlus, FileCheck2 } from 'lucide-react'
+import { Calendar as CalendarIcon, Handshake, ShoppingCart, PackagePlus, FileCheck2, Building2, DollarSign, Users, MapPin, Tag, FolderKanban } from 'lucide-react'
 import type { DateRange } from 'react-day-picker'
 import { $financeiroDashboardUI, $financeiroDashboardFilters, financeiroDashboardActions } from '@/stores/modulos/financeiroDashboardStore'
 
@@ -130,6 +131,55 @@ export default function ComprasDashboardPage() {
   const transacoes = useMemo(() => 156, [])
   const pedidosCompra = useMemo(() => 42, [])
 
+  // Charts (mock data)
+  const comprasPorDepartamento = useMemo(() => [
+    { label: 'TI', value: 125000 },
+    { label: 'Operações', value: 98000 },
+    { label: 'Administrativo', value: 75000 },
+    { label: 'Vendas', value: 68000 },
+    { label: 'Marketing', value: 42000 }
+  ], [])
+
+  const comprasPorCentroCusto = useMemo(() => [
+    { label: 'Infraestrutura', value: 145000 },
+    { label: 'Manutenção', value: 98000 },
+    { label: 'Logística', value: 87000 },
+    { label: 'RH', value: 56000 },
+    { label: 'Facilities', value: 38000 }
+  ], [])
+
+  const comprasPorFornecedores = useMemo(() => [
+    { label: 'Fornecedor A', value: 156000 },
+    { label: 'Fornecedor B', value: 112000 },
+    { label: 'Fornecedor C', value: 89000 },
+    { label: 'Fornecedor D', value: 67000 },
+    { label: 'Fornecedor E', value: 45000 }
+  ], [])
+
+  const comprasPorFiliais = useMemo(() => [
+    { label: 'São Paulo', value: 178000 },
+    { label: 'Rio de Janeiro', value: 134000 },
+    { label: 'Belo Horizonte', value: 92000 },
+    { label: 'Curitiba', value: 67000 },
+    { label: 'Porto Alegre', value: 54000 }
+  ], [])
+
+  const comprasPorCategorias = useMemo(() => [
+    { label: 'Equipamentos', value: 165000 },
+    { label: 'Materiais', value: 123000 },
+    { label: 'Serviços', value: 98000 },
+    { label: 'Software', value: 76000 },
+    { label: 'Consumíveis', value: 42000 }
+  ], [])
+
+  const comprasPorProjetos = useMemo(() => [
+    { label: 'Projeto Alpha', value: 142000 },
+    { label: 'Projeto Beta', value: 108000 },
+    { label: 'Projeto Gamma', value: 87000 },
+    { label: 'Projeto Delta', value: 65000 },
+    { label: 'Projeto Epsilon', value: 48000 }
+  ], [])
+
   // Charts
   const gastoPorFornecedor = useMemo(() => {
     const m = new Map<string, number>()
@@ -204,57 +254,48 @@ export default function ComprasDashboardPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
-          <h3 className="text-lg font-semibold mb-4" style={styleChartTitle}>Gasto por Fornecedor</h3>
-          <HBars items={gastoPorFornecedor} color="bg-indigo-500" />
-        </div>
-        <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
-          <h3 className="text-lg font-semibold mb-4" style={styleChartTitle}>Pedidos por Status</h3>
-          <HBars items={pedidosPorStatus} color="bg-sky-500" />
-        </div>
+      {/* Row 1: Departamento, Centro de Custo, Fornecedores */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        <BarChartHorizontalRecharts
+          items={comprasPorDepartamento}
+          title="Compras por Departamento"
+          icon={<Building2 className="w-5 h-5" />}
+          color="#3b82f6"
+        />
+        <BarChartHorizontalRecharts
+          items={comprasPorCentroCusto}
+          title="Compras por Centro de Custo"
+          icon={<DollarSign className="w-5 h-5" />}
+          color="#10b981"
+        />
+        <BarChartHorizontalRecharts
+          items={comprasPorFornecedores}
+          title="Compras por Fornecedores"
+          icon={<Users className="w-5 h-5" />}
+          color="#8b5cf6"
+        />
       </div>
 
+      {/* Row 2: Filiais, Categorias, Projetos */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
-          <h3 className="text-lg font-semibold mb-4" style={styleChartTitle}>Pedidos por Mês</h3>
-          <div className="grid grid-cols-6 gap-3 h-44 items-end">
-            {pedidosMesSeries.map(m => {
-              const max = Math.max(1, ...pedidosMesSeries.map(x => x.value))
-              const h = Math.round((m.value / max) * 100)
-              return (
-                <div key={m.key} className="flex flex-col items-center justify-end gap-1">
-                  <div className="w-full bg-indigo-500/80 rounded" style={{ height: `${h}%` }} />
-                  <div className="text-[11px] text-gray-600" style={styleText}>{m.label}</div>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-        <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
-          <h3 className="text-lg font-semibold mb-4" style={styleChartTitle}>Recebimentos Recentes</h3>
-          <div className="space-y-3">
-            {recebimentos.length === 0 ? (
-              <div className="text-sm text-gray-400" style={styleText}>Sem recebimentos</div>
-            ) : recebimentos.slice(0,5).map((r, idx) => (
-              <div key={idx} className="flex justify-between items-center pb-2 border-b last:border-b-0" style={{ borderColor: cardBorderColor }}>
-                <div>
-                  <div className="font-medium text-sm" style={styleText}>{r.numero_nf || 'NF'} • {r.fornecedor || '—'}</div>
-                  <div className="text-xs text-gray-500" style={styleText}>{r.data_recebimento || '—'}</div>
-                </div>
-                <div className="text-emerald-700 font-semibold text-sm">{formatBRL(Number(r.valor_total)||0)}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
-          <h3 className="text-lg font-semibold mb-4" style={styleChartTitle}>Notas</h3>
-          <ul className="text-sm text-gray-600 space-y-2 list-disc pl-5" style={styleText}>
-            <li>Monitore pedidos em aprovação e atrasos.</li>
-            <li>Revise fornecedores com maior gasto.</li>
-            <li>Acompanhe recebimentos para conciliação.</li>
-          </ul>
-        </div>
+        <BarChartHorizontalRecharts
+          items={comprasPorFiliais}
+          title="Compras por Filiais"
+          icon={<MapPin className="w-5 h-5" />}
+          color="#f59e0b"
+        />
+        <BarChartHorizontalRecharts
+          items={comprasPorCategorias}
+          title="Compras por Categorias"
+          icon={<Tag className="w-5 h-5" />}
+          color="#ec4899"
+        />
+        <BarChartHorizontalRecharts
+          items={comprasPorProjetos}
+          title="Compras por Projetos"
+          icon={<FolderKanban className="w-5 h-5" />}
+          color="#6366f1"
+        />
       </div>
     </DashboardLayout>
   )
