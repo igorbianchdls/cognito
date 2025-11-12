@@ -104,7 +104,7 @@ export function SimpleHorizontalBar({ items, color = '#64748b', height = 180 }: 
         keys={["Valor"]}
         indexBy="label"
         layout="horizontal"
-        margin={{ top: 10, right: 12, bottom: 10, left: 120 }}
+        margin={{ top: 10, right: 12, bottom: 10, left: 0 }}
         padding={0.3}
         colors={[color]}
         enableGridY={false}

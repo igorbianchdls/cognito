@@ -62,7 +62,7 @@ export function BarChartHorizontalRecharts({
           <BarChart
             accessibilityLayer
             data={data}
-            layout="horizontal"
+            layout="vertical"
             margin={{
               left: 0,
               right: 12,
