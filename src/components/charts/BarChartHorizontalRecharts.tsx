@@ -64,7 +64,7 @@ export function BarChartHorizontalRecharts({
             data={data}
             layout="vertical"
             margin={{
-              left: 8,
+              left: 12,
               right: 12,
               top: 10,
               bottom: 10,

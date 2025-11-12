@@ -6,6 +6,7 @@ import DashboardLayout from '@/components/modulos/DashboardLayout'
 import { ArrowDownCircle, ArrowUpCircle, AlertTriangle, BarChart3, Wallet, Clock, Star, CalendarCheck, Calendar as CalendarIcon } from 'lucide-react'
 import { CashGroupedBar, ProjectedLine, SimpleHorizontalBar } from '@/components/modulos/financeiro/NivoCharts'
 import { BarChartHorizontalRecharts } from '@/components/charts/BarChartHorizontalRecharts'
+import { BarChartMultipleRecharts } from '@/components/charts/BarChartMultipleRecharts'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
@@ -775,10 +776,19 @@ export default function FinanceiroDashboardPage() {
 
       {/* Charts — Row 1 (Fluxo de Caixa) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        <div className={cardContainerClass} style={{ borderColor: cardBorderColor, boxShadow: cardBoxShadow }}>
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><BarChart3 className="w-5 h-5" style={{ color: chartIconColor }} />Fluxo de Caixa — Realizado</h3>
-          <CashGroupedBar data={cashRealized.map(d => ({ label: periodToLabel(d.period), entradas: d.entradas, saidas: d.saidas }))} />
-        </div>
+        <BarChartMultipleRecharts
+          items={cashRealized.map(d => ({
+            label: periodToLabel(d.period),
+            entradas: d.entradas,
+            saidas: d.saidas
+          }))}
+          title="Fluxo de Caixa — Realizado"
+          icon={<BarChart3 className="w-5 h-5" />}
+          series={[
+            { key: "entradas", label: "Entradas", color: "#10b981" },
+            { key: "saidas", label: "Saídas", color: "#ef4444" }
+          ]}
+        />
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor, boxShadow: cardBoxShadow }}>
           <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={styleChartTitle}><Wallet className="w-5 h-5" style={{ color: chartIconColor }} />Fluxo de Caixa — Projetado</h3>
           <div className="flex items-center justify-between text-xs text-gray-600 mb-1" style={styleText}>
