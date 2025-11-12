@@ -276,7 +276,7 @@ export default function ContabilidadeDashboardPage() {
       const receita = getSum('receita', p.key)
       const cogs = getSum('cogs', p.key)
       const opex = getSum('opex', p.key)
-      const lucro = receita - cogs - opex
+      const lucro = receita + cogs + opex
       const margem = receita > 0 ? (lucro / receita) * 100 : 0
       return { key: p.key, label: p.label, receita, cogs, opex, lucro, margem }
     })
