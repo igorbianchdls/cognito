@@ -478,13 +478,11 @@ export async function GET(req: NextRequest) {
       const passivos = Object.values(groupBy(passivoRows))
       const pls = Object.values(groupBy(plRows))
 
-      // Adicionar Receita, Despesa e Resultado ao Patrimônio Líquido
-      if (receitaPeriodo !== 0 || despesaPeriodo !== 0) {
+      // Adicionar Resultado ao Patrimônio Líquido
+      if (resultadoPeriodo !== 0) {
         pls.push({
           nome: 'Resultado do Período',
           linhas: [
-            { conta: 'Receita', valor: receitaPeriodo },
-            { conta: 'Despesa', valor: -despesaPeriodo }, // Negativo para mostrar como dedução
             { conta: 'Resultado do Exercício', valor: resultadoPeriodo }
           ]
         })
