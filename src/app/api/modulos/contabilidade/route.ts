@@ -304,7 +304,7 @@ export async function GET(req: NextRequest) {
             END AS grupo
           FROM final f
         )
-        SELECT * FROM classificados WHERE grupo IS NOT NULL AND saldo_final <> 0
+        SELECT * FROM classificados WHERE grupo IS NOT NULL
         ORDER BY codigo::text COLLATE "C"`;
 
       const rows = await runQuery<{
