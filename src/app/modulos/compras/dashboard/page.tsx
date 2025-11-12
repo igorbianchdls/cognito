@@ -124,11 +124,11 @@ export default function ComprasDashboardPage() {
     </div>
   )
 
-  // KPIs
-  const pedidosAbertos = useMemo(() => pedidos.filter(p => (p.status||'').toLowerCase().includes('abert') || (p.status||'').toLowerCase().includes('aprova')).length, [pedidos])
-  const valorPedidosMes = useMemo(() => { const mk = monthKey(new Date()); return pedidos.filter(p => (p.data_emissao||'').startsWith(mk)).reduce((acc,p)=> acc + (Number(p.valor_total)||0), 0) }, [pedidos])
-  const recebimentosMes = useMemo(() => { const mk = monthKey(new Date()); return recebimentos.filter(r => (r.data_recebimento||'').startsWith(mk)).reduce((acc,r)=> acc + (Number(r.valor_total)||0), 0) }, [recebimentos])
-  const fornecedoresAtivos = useMemo(() => { const set = new Set(pedidos.map(p => p.fornecedor || '—')); return set.size }, [pedidos])
+  // KPIs (mock data)
+  const gasto = useMemo(() => 450000, [])
+  const fornecedores = useMemo(() => 28, [])
+  const transacoes = useMemo(() => 156, [])
+  const pedidosCompra = useMemo(() => 42, [])
 
   // Charts
   const gastoPorFornecedor = useMemo(() => {
@@ -183,24 +183,24 @@ export default function ComprasDashboardPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
-          <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleKpiTitle}><ShoppingCart className="w-4 h-4 text-blue-600" />Valor de Pedidos (mês)</div>
-          <div className="text-2xl font-bold text-blue-600" style={styleValues}>{formatBRL(valorPedidosMes)}</div>
-          <div className="text-xs text-gray-400 mt-1" style={styleText}>Soma do mês corrente</div>
+          <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleKpiTitle}><ShoppingCart className="w-4 h-4 text-blue-600" />Gasto</div>
+          <div className="text-2xl font-bold text-blue-600" style={styleValues}>{formatBRL(gasto)}</div>
+          <div className="text-xs text-gray-400 mt-1" style={styleText}>Total de gastos</div>
         </div>
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
-          <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleKpiTitle}><FileCheck2 className="w-4 h-4 text-emerald-600" />Recebimentos (mês)</div>
-          <div className="text-2xl font-bold text-emerald-600" style={styleValues}>{formatBRL(recebimentosMes)}</div>
-          <div className="text-xs text-gray-400 mt-1" style={styleText}>Notas recebidas</div>
+          <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleKpiTitle}><Handshake className="w-4 h-4 text-emerald-600" />Fornecedores</div>
+          <div className="text-2xl font-bold text-emerald-600" style={styleValues}>{fornecedores}</div>
+          <div className="text-xs text-gray-400 mt-1" style={styleText}>Fornecedores ativos</div>
         </div>
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
-          <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleKpiTitle}><PackagePlus className="w-4 h-4 text-purple-600" />Pedidos Abertos</div>
-          <div className="text-2xl font-bold text-purple-600" style={styleValues}>{pedidosAbertos}</div>
-          <div className="text-xs text-gray-400 mt-1" style={styleText}>Em aberto/aprovação</div>
+          <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleKpiTitle}><FileCheck2 className="w-4 h-4 text-purple-600" />Transações</div>
+          <div className="text-2xl font-bold text-purple-600" style={styleValues}>{transacoes}</div>
+          <div className="text-xs text-gray-400 mt-1" style={styleText}>Total de transações</div>
         </div>
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
-          <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleKpiTitle}><Handshake className="w-4 h-4 text-amber-600" />Fornecedores Ativos</div>
-          <div className="text-2xl font-bold text-amber-600" style={styleValues}>{fornecedoresAtivos}</div>
-          <div className="text-xs text-gray-400 mt-1" style={styleText}>No período</div>
+          <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleKpiTitle}><PackagePlus className="w-4 h-4 text-amber-600" />Pedidos de Compra</div>
+          <div className="text-2xl font-bold text-amber-600" style={styleValues}>{pedidosCompra}</div>
+          <div className="text-xs text-gray-400 mt-1" style={styleText}>Total de pedidos</div>
         </div>
       </div>
 
