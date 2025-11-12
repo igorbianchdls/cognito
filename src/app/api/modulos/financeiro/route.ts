@@ -646,6 +646,31 @@ export async function GET(req: NextRequest) {
 
       const rows = await runQuery<{ label: string; total: number | null }>(sql, params);
       return Response.json({ success: true, rows, sql_query: sql, sql_params: params });
+    } else if (view === 'top-receitas-centro-lucro') {
+      // Top N centros de lucro por contas a receber
+      const limit = Math.max(1, Math.min(50, parseNumber(searchParams.get('limit'), 5) || 5));
+      const tenantId = parseNumber(searchParams.get('tenant_id'));
+      const params: unknown[] = [];
+      let idx = 1;
+      let where = `WHERE l.tipo = 'conta_a_receber' AND (l.status IS NULL OR l.status NOT IN ('cancelado'))`;
+      if (de) { where += ` AND l.data_vencimento >= $${idx++}`; params.push(de); }
+      if (ate) { where += ` AND l.data_vencimento <= $${idx++}`; params.push(ate); }
+      if (tenantId) { where += ` AND l.tenant_id = $${idx++}`; params.push(tenantId); }
+
+      const sql = `
+        SELECT
+          COALESCE(cl.nome, 'Sem centro de lucro') AS label,
+          COALESCE(SUM(l.valor), 0) AS total
+        FROM financeiro.lancamentos_financeiros l
+        LEFT JOIN empresa.centros_lucro cl ON cl.id = l.centro_lucro_id
+        ${where}
+        GROUP BY cl.nome
+        ORDER BY total DESC
+        LIMIT ${limit}
+      `.replace(/\n\s+/g, ' ').trim();
+
+      const rows = await runQuery<{ label: string; total: number | null }>(sql, params);
+      return Response.json({ success: true, rows, sql_query: sql, sql_params: params });
     } else if (view === 'contas-a-pagar') {
       // Contas a Pagar – nova estrutura simplificada
       baseSql = `FROM financeiro.lancamentos_financeiros lf

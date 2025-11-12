@@ -335,7 +335,7 @@ export default function FinanceiroDashboardPage() {
           fetch(`/api/modulos/financeiro?view=top-despesas&dim=centro_custo&de=${kpiDe}&ate=${kpiAte}`, { cache: 'no-store' }),
           fetch(`/api/modulos/financeiro?view=top-despesas&dim=categoria&de=${kpiDe}&ate=${kpiAte}`, { cache: 'no-store' }),
           fetch(`/api/modulos/financeiro?view=top-despesas&dim=departamento&de=${kpiDe}&ate=${kpiAte}`, { cache: 'no-store' }),
-          fetch(`/api/modulos/financeiro?view=top-despesas&dim=centro_lucro&de=${kpiDe}&ate=${kpiAte}`, { cache: 'no-store' }),
+          fetch(`/api/modulos/financeiro?view=top-receitas-centro-lucro&de=${kpiDe}&ate=${kpiAte}`, { cache: 'no-store' }),
           fetch(`/api/modulos/financeiro?view=top-despesas&dim=projeto&de=${kpiDe}&ate=${kpiAte}`, { cache: 'no-store' }),
           fetch(`/api/modulos/financeiro?view=top-despesas&dim=filial&de=${kpiDe}&ate=${kpiAte}`, { cache: 'no-store' }),
           fetch(`/api/modulos/financeiro?view=cashflow-realized&de=${kpiDe}&ate=${kpiAte}&group_by=${groupBy}`, { cache: 'no-store' }),
