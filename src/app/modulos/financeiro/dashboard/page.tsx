@@ -692,8 +692,8 @@ export default function FinanceiroDashboardPage() {
         </div>
       </div>
 
-      {/* Charts — Row 1 (Fluxo de Caixa) */}
-      <div className="grid grid-cols-1 lg:grid-cols-1 gap-6 mb-6">
+      {/* Charts — Row 1 (Fluxo de Caixa + Fornecedores + Clientes) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <BarChartMultipleRecharts
           items={cashRealized.map(d => ({
             label: periodToLabel(d.period),
@@ -707,10 +707,6 @@ export default function FinanceiroDashboardPage() {
             { key: "saidas", label: "Saídas", color: "#ef4444" }
           ]}
         />
-      </div>
-
-      {/* Charts — Row 2 (Tops Fornecedores/Clientes) */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <BarChartHorizontalRecharts
           items={topFornecedores}
           title="Top 5 Fornecedores"
@@ -725,7 +721,7 @@ export default function FinanceiroDashboardPage() {
         />
       </div>
 
-      {/* Charts — Row 3 (Top 5 por dimensão) */}
+      {/* Charts — Row 2 (Top 5 por dimensão) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <BarChartHorizontalRecharts
           items={topCC}
@@ -747,7 +743,7 @@ export default function FinanceiroDashboardPage() {
         />
       </div>
 
-      {/* Charts — Row 4 (Top 5 por dimensão) */}
+      {/* Charts — Row 3 (Top 5 por dimensão) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <BarChartHorizontalRecharts
           items={topLucros}
