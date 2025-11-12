@@ -437,21 +437,32 @@ export async function GET(req: NextRequest) {
       ])
 
       // Resultado do período (Receitas - Custos/Despesas) dentro do intervalo [from..to]
-      const resultadoSql = `
-        SELECT COALESCE(SUM(
-          CASE WHEN pc.tipo_conta IN ('Receita','Passivo','Patrimônio Líquido')
-                 THEN (lcl.credito - lcl.debito)
-               ELSE (lcl.debito - lcl.credito)
-          END
-        ),0) AS resultado
+      // Receita do período (contas 4.x)
+      const receitaSql = `
+        SELECT COALESCE(SUM(lcl.credito - lcl.debito),0) AS receita
         FROM contabilidade.lancamentos_contabeis lc
         JOIN contabilidade.lancamentos_contabeis_linhas lcl ON lcl.lancamento_id = lc.id
         JOIN contabilidade.plano_contas pc ON pc.id = lcl.conta_id
         WHERE lc.data_lancamento BETWEEN $1::date AND $2::date
           AND pc.aceita_lancamento = TRUE
-          AND (pc.codigo LIKE '4.%' OR pc.codigo LIKE '5.%' OR pc.codigo LIKE '6.%')`;
-      const resRows = await runQuery<{ resultado: number }>(resultadoSql, [from, to])
-      const resultadoPeriodo = Number(resRows[0]?.resultado || 0)
+          AND pc.codigo LIKE '4.%'`;
+      const receitaRows = await runQuery<{ receita: number }>(receitaSql, [from, to])
+      const receitaPeriodo = Number(receitaRows[0]?.receita || 0)
+
+      // Despesa do período (contas 5.x e 6.x)
+      const despesaSql = `
+        SELECT COALESCE(SUM(lcl.debito - lcl.credito),0) AS despesa
+        FROM contabilidade.lancamentos_contabeis lc
+        JOIN contabilidade.lancamentos_contabeis_linhas lcl ON lcl.lancamento_id = lc.id
+        JOIN contabilidade.plano_contas pc ON pc.id = lcl.conta_id
+        WHERE lc.data_lancamento BETWEEN $1::date AND $2::date
+          AND pc.aceita_lancamento = TRUE
+          AND (pc.codigo LIKE '5.%' OR pc.codigo LIKE '6.%')`;
+      const despesaRows = await runQuery<{ despesa: number }>(despesaSql, [from, to])
+      const despesaPeriodo = Number(despesaRows[0]?.despesa || 0)
+
+      // Resultado = Receita - Despesa
+      const resultadoPeriodo = receitaPeriodo - despesaPeriodo
 
       const toLinha = (r: { codigo: string; nome: string; saldo_final: number }) => ({ conta: `${r.codigo} ${r.nome}`, valor: Number(r.saldo_final || 0) })
       const groupBy = (list: BPRow[]): { [k: string]: { nome: string; linhas: { conta: string; valor: number }[] } } => {
@@ -466,8 +477,17 @@ export async function GET(req: NextRequest) {
       const ativos = Object.values(groupBy(ativoRows))
       const passivos = Object.values(groupBy(passivoRows))
       const pls = Object.values(groupBy(plRows))
-      if (resultadoPeriodo !== 0) {
-        pls.push({ nome: 'Resultado do Período', linhas: [{ conta: 'Resultado do Exercício', valor: resultadoPeriodo }] })
+
+      // Adicionar Receita, Despesa e Resultado ao Patrimônio Líquido
+      if (receitaPeriodo !== 0 || despesaPeriodo !== 0) {
+        pls.push({
+          nome: 'Resultado do Período',
+          linhas: [
+            { conta: 'Receita', valor: receitaPeriodo },
+            { conta: 'Despesa', valor: -despesaPeriodo }, // Negativo para mostrar como dedução
+            { conta: 'Resultado do Exercício', valor: resultadoPeriodo }
+          ]
+        })
       }
 
       return Response.json({
