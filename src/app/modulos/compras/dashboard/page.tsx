@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useStore } from '@nanostores/react'
 import DashboardLayout from '@/components/modulos/DashboardLayout'
-import BarChartHorizontalRecharts from '@/components/charts/BarChartHorizontalRecharts'
+import { BarChartHorizontalRecharts } from '@/components/charts/BarChartHorizontalRecharts'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
