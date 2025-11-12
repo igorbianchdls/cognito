@@ -57,7 +57,7 @@ export function BarChartMultipleRecharts({
           <BarChart
             accessibilityLayer
             data={items}
-            margin={{ top: 10, right: 12, bottom: 10, left: 12 }}
+            margin={{ top: 10, right: 12, bottom: 0, left: 12 }}
           >
             <CartesianGrid vertical={false} />
             <XAxis
