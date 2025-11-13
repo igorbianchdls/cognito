@@ -101,7 +101,7 @@ export async function GET(req: NextRequest) {
         LEFT JOIN comercial.territorios t ON t.id = p.territorio_id
         LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
         LEFT JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
-        LEFT JOIN produtos.produtos pr ON pr.id = pi.produto_id`
+        LEFT JOIN produtos.produto pr ON pr.id = pi.produto_id`
       orderClause = orderBy ? `ORDER BY ${orderBy} ${orderDir}, pi.id ASC` : 'ORDER BY p.id ASC, pi.id ASC'
     } else if (view === 'devolucoes') {
       selectSql = `SELECT
