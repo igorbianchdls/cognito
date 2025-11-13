@@ -93,8 +93,8 @@ export type ToolbarUIState = {
 const DEFAULT_TITULO: TituloState = {
   title: 'Módulo',
   subtitle: 'Selecione uma opção para visualizar os dados',
-  titleFontFamily: 'Geist',
-  titleFontSize: 32,
+  titleFontFamily: 'Barlow',
+  titleFontSize: 42,
   titleFontWeight: '600',
   titleColor: '#111827',
   titleLetterSpacing: 0,
@@ -103,14 +103,14 @@ const DEFAULT_TITULO: TituloState = {
 const DEFAULT_TABS: TabsState = {
   options: [],
   selected: 'default',
-  fontFamily: 'Geist',
-  fontSize: 14,
+  fontFamily: 'Barlow',
+  fontSize: 15,
   fontWeight: '400',
-  color: 'rgb(180, 180, 180)',
+  color: 'rgb(99, 99, 99)',
   letterSpacing: -0.3,
   iconSize: 16,
-  leftOffset: 20,
-  labelOffsetY: 6,
+  leftOffset: 22,
+  labelOffsetY: 8,
   activeColor: 'rgb(41, 41, 41)',
   activeFontWeight: '500',
   activeBorderColor: 'rgb(41, 41, 41)',
@@ -127,11 +127,11 @@ const DEFAULT_TABELA_UI: TabelaUIState = {
   headerBg: '#ffffff',
   headerText: '#aaaaaa',
   cellText: '#1f2937',
-  headerFontSize: 13,
-  cellFontSize: 13,
-  headerFontFamily: 'Inter',
+  headerFontSize: 14,
+  cellFontSize: 14,
+  headerFontFamily: 'Barlow',
   headerFontWeight: '500',
-  cellFontFamily: 'Inter',
+  cellFontFamily: 'Barlow',
   cellFontWeight: '400',
   headerLetterSpacing: -0.28,
   cellLetterSpacing: -0.28,
@@ -144,7 +144,7 @@ const DEFAULT_TABELA_UI: TabelaUIState = {
   defaultSortDirection: 'asc',
 }
 
-export const $titulo = atom<TituloState>({ ...DEFAULT_TITULO, subtitleFontFamily: 'Inter', subtitleLetterSpacing: -0.28 })
+export const $titulo = atom<TituloState>({ ...DEFAULT_TITULO, subtitleFontFamily: 'Barlow', subtitleFontSize: 16, subtitleLetterSpacing: -0.28 })
 export const $tabs = atom<TabsState>({ ...DEFAULT_TABS })
 export const $tabelaUI = atom<TabelaUIState>({ ...DEFAULT_TABELA_UI })
 export const $layout = atom<LayoutState>({ mbTitle: 16, mbTabs: 8, mbTable: 24, contentBg: 'rgb(253, 253, 253)', contentTopGap: 8 })
@@ -174,7 +174,7 @@ export const moduleUiActions = {
   setToolbarUI: (partial: Partial<ToolbarUIState>) => $toolbarUI.set({ ...$toolbarUI.get(), ...partial }),
   setLayout: (partial: Partial<LayoutState>) => $layout.set({ ...$layout.get(), ...partial }),
   resetAll: () => {
-    $titulo.set({ ...DEFAULT_TITULO, subtitleFontFamily: 'Inter', subtitleLetterSpacing: -0.28 })
+    $titulo.set({ ...DEFAULT_TITULO, subtitleFontFamily: 'Barlow', subtitleFontSize: 16, subtitleLetterSpacing: -0.28 })
     $tabs.set({ ...DEFAULT_TABS })
     $tabelaUI.set({ ...DEFAULT_TABELA_UI })
     $toolbarUI.set({
