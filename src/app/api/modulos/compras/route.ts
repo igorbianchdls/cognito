@@ -11,7 +11,7 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
     numero_oc: 'c.numero_oc',
     data_emissao: 'c.data_emissao',
     data_entrega_prevista: 'c.data_entrega_prevista',
-    fornecedor: 'f.nome_fantasia',
+    fornecedor: 'f.nome',
     filial: 'fil.nome',
     centro_custo: 'cc.nome',
     projeto: 'pr.nome',
@@ -84,7 +84,7 @@ export async function GET(req: NextRequest) {
         c.valor_total,
         c.observacoes,
         c.criado_em,
-        f.nome_fantasia AS fornecedor,
+        f.nome AS fornecedor,
         fil.nome AS filial,
         cc.nome AS centro_custo,
         pr.nome AS projeto,
@@ -107,7 +107,7 @@ export async function GET(req: NextRequest) {
       if (status) push('LOWER(c.status) =', status.toLowerCase());
       if (fornecedor_id) push('c.fornecedor_id =', fornecedor_id);
       if (q) {
-        conditions.push(`(c.numero_oc ILIKE '%' || $${i} || '%' OR f.nome_fantasia ILIKE '%' || $${i} || '%' OR p.nome ILIKE '%' || $${i} || '%' OR c.observacoes ILIKE '%' || $${i} || '%')`);
+        conditions.push(`(c.numero_oc ILIKE '%' || $${i} || '%' OR f.nome ILIKE '%' || $${i} || '%' OR p.nome ILIKE '%' || $${i} || '%' OR c.observacoes ILIKE '%' || $${i} || '%')`);
         params.push(q);
         i += 1;
       }
