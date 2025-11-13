@@ -35,6 +35,28 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
     criado_em: 'l.criado_em',
     atualizado_em: 'l.atualizado_em',
   },
+  atividades: {
+    atividade: 'a.id',
+    lead: 'l.nome',
+    oportunidade: 'o.id',
+    responsavel: 'f.nome',
+    tipo: 'a.tipo',
+    data_prevista: 'a.data_prevista',
+    data_conclusao: 'a.data_conclusao',
+    status: 'a.status',
+    criado_em: 'a.criado_em',
+    atualizado_em: 'a.atualizado_em',
+  },
+  interacoes: {
+    interacao: 'i.id',
+    lead: 'l.nome',
+    oportunidade: 'o.id',
+    responsavel: 'f.nome',
+    canal: 'i.canal',
+    data_interacao: 'i.data_interacao',
+    criado_em: 'i.criado_em',
+    atualizado_em: 'i.atualizado_em',
+  },
 };
 
 const parseNumber = (v: string | null, fb?: number) => (v ? Number(v) : fb);
@@ -54,6 +76,8 @@ export async function GET(req: NextRequest) {
     // Specific filters
     const status = searchParams.get('status') || undefined;
     const origem = searchParams.get('origem') || undefined;
+    const tipo = searchParams.get('tipo') || undefined;
+    const canal = searchParams.get('canal') || undefined;
 
     // Pagination
     const page = Math.max(1, parseNumber(searchParams.get('page'), 1) || 1);
@@ -142,6 +166,57 @@ export async function GET(req: NextRequest) {
         params.push(q);
         i += 1;
       }
+    } else if (view === 'atividades') {
+      selectSql = `SELECT
+        a.id AS atividade,
+        l.nome AS lead,
+        o.id AS oportunidade,
+        f.nome AS responsavel,
+        a.tipo,
+        a.descricao,
+        a.data_prevista,
+        a.data_conclusao,
+        a.status,
+        a.criado_em,
+        a.atualizado_em`;
+      baseSql = `FROM crm.atividades a
+        LEFT JOIN crm.leads l ON l.id = a.lead_id
+        LEFT JOIN crm.oportunidades o ON o.id = a.oportunidade_id
+        LEFT JOIN comercial.vendedores v ON v.id = a.responsavel_id
+        LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id`;
+      whereDateCol = 'a.data_prevista';
+      if (status) push('LOWER(a.status) =', status.toLowerCase());
+      if (tipo) push('LOWER(a.tipo) =', tipo.toLowerCase());
+      if (responsavel_id) push('v.funcionario_id =', responsavel_id);
+      if (q) {
+        conditions.push(`(a.descricao ILIKE '%' || $${i} || '%' OR l.nome ILIKE '%' || $${i} || '%' OR f.nome ILIKE '%' || $${i} || '%')`);
+        params.push(q);
+        i += 1;
+      }
+    } else if (view === 'interacoes') {
+      selectSql = `SELECT
+        i.id AS interacao,
+        l.nome AS lead,
+        o.id AS oportunidade,
+        f.nome AS responsavel,
+        i.canal,
+        i.conteudo,
+        i.data_interacao,
+        i.criado_em,
+        i.atualizado_em`;
+      baseSql = `FROM crm.interacoes i
+        LEFT JOIN crm.leads l ON l.id = i.lead_id
+        LEFT JOIN crm.oportunidades o ON o.id = i.oportunidade_id
+        LEFT JOIN comercial.vendedores v ON v.id = i.responsavel_id
+        LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id`;
+      whereDateCol = 'i.data_interacao';
+      if (canal) push('LOWER(i.canal) =', canal.toLowerCase());
+      if (responsavel_id) push('v.funcionario_id =', responsavel_id);
+      if (q) {
+        conditions.push(`(i.conteudo ILIKE '%' || $${i} || '%' OR l.nome ILIKE '%' || $${i} || '%' OR f.nome ILIKE '%' || $${i} || '%')`);
+        params.push(q);
+        i += 1;
+      }
     } else {
       return Response.json({ success: false, message: `View inválida: ${view}` }, { status: 400 });
     }
@@ -158,6 +233,8 @@ export async function GET(req: NextRequest) {
       else {
         if (view === 'oportunidades') orderClause = 'ORDER BY o.id DESC';
         else if (view === 'leads') orderClause = 'ORDER BY l.id ASC';
+        else if (view === 'atividades') orderClause = 'ORDER BY a.id ASC';
+        else if (view === 'interacoes') orderClause = 'ORDER BY i.id ASC';
       }
     }
 

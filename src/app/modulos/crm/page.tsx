@@ -16,7 +16,7 @@ import CadastroLeadSheet from '@/components/crm/CadastroLeadSheet'
 import StatusBadge from '@/components/modulos/StatusBadge'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/stores/modulos/moduleUiStore'
 import type { Opcao } from '@/components/modulos/TabsNav'
-import { Briefcase, UserPlus } from 'lucide-react'
+import { Briefcase, UserPlus, CalendarClock, MessageSquare } from 'lucide-react'
 
 type Row = TableData
 
@@ -33,6 +33,8 @@ export default function ModulosCrmPage() {
       options: [
         { value: 'oportunidades', label: 'Oportunidades' },
         { value: 'leads', label: 'Leads' },
+        { value: 'atividades', label: 'Atividades' },
+        { value: 'interacoes', label: 'Interações' },
       ],
       selected: 'oportunidades',
     })
@@ -87,6 +89,32 @@ export default function ModulosCrmPage() {
           { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
           { accessorKey: 'tag', header: 'Tag' },
           { accessorKey: 'descricao', header: 'Descrição' },
+          { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em'], true) },
+          { accessorKey: 'atualizado_em', header: 'Atualizado em', cell: ({ row }) => formatDate(row.original['atualizado_em'], true) },
+        ]
+      case 'atividades':
+        return [
+          { accessorKey: 'atividade', header: 'ID' },
+          { accessorKey: 'lead', header: 'Lead' },
+          { accessorKey: 'oportunidade', header: 'Oportunidade' },
+          { accessorKey: 'responsavel', header: 'Responsável' },
+          { accessorKey: 'tipo', header: 'Tipo' },
+          { accessorKey: 'descricao', header: 'Descrição' },
+          { accessorKey: 'data_prevista', header: 'Data Prevista', cell: ({ row }) => formatDate(row.original['data_prevista']) },
+          { accessorKey: 'data_conclusao', header: 'Data Conclusão', cell: ({ row }) => formatDate(row.original['data_conclusao']) },
+          { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
+          { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em'], true) },
+          { accessorKey: 'atualizado_em', header: 'Atualizado em', cell: ({ row }) => formatDate(row.original['atualizado_em'], true) },
+        ]
+      case 'interacoes':
+        return [
+          { accessorKey: 'interacao', header: 'ID' },
+          { accessorKey: 'lead', header: 'Lead' },
+          { accessorKey: 'oportunidade', header: 'Oportunidade' },
+          { accessorKey: 'responsavel', header: 'Responsável' },
+          { accessorKey: 'canal', header: 'Canal' },
+          { accessorKey: 'conteudo', header: 'Conteúdo' },
+          { accessorKey: 'data_interacao', header: 'Data Interação', cell: ({ row }) => formatDate(row.original['data_interacao'], true) },
           { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em'], true) },
           { accessorKey: 'atualizado_em', header: 'Atualizado em', cell: ({ row }) => formatDate(row.original['atualizado_em'], true) },
         ]
@@ -167,6 +195,10 @@ export default function ModulosCrmPage() {
           return <Briefcase className="h-4 w-4" />
         case 'leads':
           return <UserPlus className="h-4 w-4" />
+        case 'atividades':
+          return <CalendarClock className="h-4 w-4" />
+        case 'interacoes':
+          return <MessageSquare className="h-4 w-4" />
         default:
           return null
       }
