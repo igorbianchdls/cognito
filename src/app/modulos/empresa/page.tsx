@@ -584,6 +584,51 @@ export default function ModulosEmpresaPage() {
                 </div>
               </div>
 
+              {/* SEÇÃO: Tabela */}
+              <div className="mb-8">
+                <h4 className="text-sm font-medium mb-4 text-gray-700">Tabela</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs text-gray-600 mb-1 block">Font Family Header</label>
+                    <select
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                      value={tabelaUI.headerFontFamily || 'Inter'}
+                      onChange={(e) => moduleUiActions.setTabelaUI({ headerFontFamily: e.target.value })}
+                    >
+                      <option>Inter</option>
+                      <option>Geist</option>
+                      <option>Roboto Mono</option>
+                      <option>Geist Mono</option>
+                      <option>IBM Plex Mono</option>
+                      <option>Avenir</option>
+                      <option>Space Mono</option>
+                      <option>EB Garamond</option>
+                      <option>Libre Baskerville</option>
+                      <option>Barlow</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-600 mb-1 block">Font Family Células</label>
+                    <select
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                      value={tabelaUI.cellFontFamily || 'Inter'}
+                      onChange={(e) => moduleUiActions.setTabelaUI({ cellFontFamily: e.target.value })}
+                    >
+                      <option>Inter</option>
+                      <option>Geist</option>
+                      <option>Roboto Mono</option>
+                      <option>Geist Mono</option>
+                      <option>IBM Plex Mono</option>
+                      <option>Avenir</option>
+                      <option>Space Mono</option>
+                      <option>EB Garamond</option>
+                      <option>Libre Baskerville</option>
+                      <option>Barlow</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
               {/* Botão Reset */}
               <div className="flex justify-end">
                 <Button
