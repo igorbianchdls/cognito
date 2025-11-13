@@ -9,7 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Calendar as CalendarIcon, TrendingUp, Users, CalendarDays, Target } from 'lucide-react'
+import { Calendar as CalendarIcon, TrendingUp, Users, CalendarDays, Target, UserCheck, XCircle, Clock, Filter, Activity, Star, Award } from 'lucide-react'
 import type { DateRange } from 'react-day-picker'
 import { $financeiroDashboardUI, $financeiroDashboardFilters, financeiroDashboardActions } from '@/stores/modulos/financeiroDashboardStore'
 
@@ -210,6 +210,70 @@ export default function CRMDashboardPage() {
     { label: 'Eventos', value: 52.7 },
     { label: 'Cold Call', value: 12.4 }
   ].sort((a, b) => b.value - a.value), [])
+
+  // Conversão por Vendedor (mock data - valores em %)
+  const conversaoPorVendedor = useMemo(() => [
+    { label: 'João Silva', value: 48.2 },
+    { label: 'Maria Santos', value: 42.5 },
+    { label: 'Pedro Costa', value: 35.8 },
+    { label: 'Ana Oliveira', value: 28.3 },
+    { label: 'Carlos Souza', value: 15.7 }
+  ], [])
+
+  // Motivos de Perda (mock data - contagem)
+  const motivosPerda = useMemo(() => [
+    { label: 'Preço alto', value: 45 },
+    { label: 'Concorrente', value: 32 },
+    { label: 'Sem orçamento', value: 28 },
+    { label: 'Timing ruim', value: 18 },
+    { label: 'Prazo', value: 12 },
+    { label: 'Outros', value: 8 }
+  ].sort((a, b) => b.value - a.value), [])
+
+  // Lead Velocity - tempo em dias por etapa (mock data)
+  const leadVelocity = useMemo(() => [
+    { label: 'Negociação', value: 15 },
+    { label: 'Apresentação', value: 12 },
+    { label: 'Prospecção', value: 8 },
+    { label: 'Proposta', value: 7 },
+    { label: 'Qualificação', value: 5 }
+  ], [])
+
+  // Conversão por Etapa do Funil (mock data - valores em %)
+  const conversaoPorEtapa = useMemo(() => [
+    { label: 'Negociação → Fechamento', value: 71.3 },
+    { label: 'Apresentação → Proposta', value: 68.5 },
+    { label: 'Qualificação → Apresentação', value: 52.8 },
+    { label: 'Proposta → Negociação', value: 45.2 },
+    { label: 'Prospecção → Qualificação', value: 35.7 }
+  ], [])
+
+  // Atividades por Vendedor (mock data - contagem)
+  const atividadesPorVendedor = useMemo(() => [
+    { label: 'João Silva', value: 87 },
+    { label: 'Maria Santos', value: 76 },
+    { label: 'Pedro Costa', value: 64 },
+    { label: 'Ana Oliveira', value: 52 },
+    { label: 'Carlos Souza', value: 41 }
+  ], [])
+
+  // Lead Scoring (mock data - contagem)
+  const leadScoring = useMemo(() => [
+    { label: 'Score B', value: 78 },
+    { label: 'Score C', value: 52 },
+    { label: 'Score A', value: 45 },
+    { label: 'Score D', value: 23 }
+  ], [])
+
+  // Qualidade dos Canais (mock data - score 0-100)
+  const qualidadeCanais = useMemo(() => [
+    { label: 'Indicação', value: 87 },
+    { label: 'Eventos', value: 78 },
+    { label: 'LinkedIn', value: 65 },
+    { label: 'Website', value: 58 },
+    { label: 'Email Marketing', value: 49 },
+    { label: 'Cold Call', value: 42 }
+  ], [])
 
   // Fontes de leads (contagem)
   const fontesLeads = useMemo(() => {
@@ -436,6 +500,64 @@ export default function CRMDashboardPage() {
           title="Taxa de Conversão por Canal"
           icon={<Target className="w-5 h-5" />}
           color="#f59e0b"
+          height={280}
+        />
+        <BarChartHorizontalPercent
+          items={conversaoPorVendedor}
+          title="Conversão por Vendedor"
+          icon={<UserCheck className="w-5 h-5" />}
+          color="#10b981"
+          height={280}
+        />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <BarChartHorizontalRecharts
+          items={motivosPerda}
+          title="Motivos de Perda"
+          icon={<XCircle className="w-5 h-5" />}
+          color="#ef4444"
+          height={280}
+        />
+        <BarChartHorizontalRecharts
+          items={leadVelocity}
+          title="Lead Velocity (Tempo por Etapa)"
+          icon={<Clock className="w-5 h-5" />}
+          color="#3b82f6"
+          height={280}
+        />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <BarChartHorizontalPercent
+          items={conversaoPorEtapa}
+          title="Conversão por Etapa do Funil"
+          icon={<Filter className="w-5 h-5" />}
+          color="#8b5cf6"
+          height={280}
+        />
+        <BarChartHorizontalRecharts
+          items={atividadesPorVendedor}
+          title="Atividades por Vendedor"
+          icon={<Activity className="w-5 h-5" />}
+          color="#f59e0b"
+          height={280}
+        />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <BarChartHorizontalRecharts
+          items={leadScoring}
+          title="Distribuição de Lead Scoring"
+          icon={<Star className="w-5 h-5" />}
+          color="#eab308"
+          height={240}
+        />
+        <BarChartHorizontalRecharts
+          items={qualidadeCanais}
+          title="Qualidade dos Canais (Score)"
+          icon={<Award className="w-5 h-5" />}
+          color="#6366f1"
           height={280}
         />
       </div>
