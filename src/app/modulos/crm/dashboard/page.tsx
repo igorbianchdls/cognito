@@ -72,7 +72,7 @@ export default function CRMDashboardPage() {
   const [ativs, setAtivs] = useState<AtividadeRow[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [kpis, setKpis] = useState<{ faturamento: number; vendas: number; totalLeads: number; taxaConversao: number }>({ faturamento: 0, vendas: 0, totalLeads: 0, taxaConversao: 0 })
+  const [kpis, setKpis] = useState<{ faturamento: number; vendas: number; oportunidades: number; totalLeads: number; taxaConversao: number }>({ faturamento: 0, vendas: 0, oportunidades: 0, totalLeads: 0, taxaConversao: 0 })
 
   useEffect(() => {
     let cancelled = false
@@ -106,6 +106,7 @@ export default function CRMDashboardPage() {
           setKpis({
             faturamento: Number(kk.faturamento || 0),
             vendas: Number(kk.vendas || 0),
+            oportunidades: Number(kk.oportunidades || 0),
             totalLeads: Number(kk.totalLeads || 0),
             taxaConversao: Number(kk.taxaConversao || 0),
           })
@@ -431,9 +432,14 @@ export default function CRMDashboardPage() {
     >
       {loading ? (<div className="p-4 text-sm text-gray-500">Carregando…</div>) : error ? (<div className="p-4 text-sm text-red-600">{error}</div>) : null}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
         {(() => { const cls = `bg-white p-6 rounded-lg border border-gray-100${cardShadow ? ' shadow-sm' : ''}`; return (
           <>
+            <div className={cls} style={{ borderColor: cardBorderColor }}>
+              <div className="text-sm font-medium text-gray-500 mb-2" style={styleKpiTitle}>Oportunidades</div>
+              <div className="text-2xl font-bold text-indigo-600" style={styleValues}>{kpis.oportunidades}</div>
+              <div className="text-xs text-gray-400 mt-1" style={styleText}>Total no período</div>
+            </div>
             <div className={cls} style={{ borderColor: cardBorderColor }}>
               <div className="text-sm font-medium text-gray-500 mb-2" style={styleKpiTitle}>Faturamento</div>
               <div className="text-2xl font-bold text-green-600" style={styleValues}>{formatBRL(kpis.faturamento)}</div>
@@ -442,7 +448,7 @@ export default function CRMDashboardPage() {
             <div className={cls} style={{ borderColor: cardBorderColor }}>
               <div className="text-sm font-medium text-gray-500 mb-2" style={styleKpiTitle}>Vendas</div>
               <div className="text-2xl font-bold text-blue-600" style={styleValues}>{kpis.vendas}</div>
-              <div className="text-xs text-gray-400 mt-1" style={styleText}>Oportunidades ganhas</div>
+              <div className="text-xs text-gray-400 mt-1" style={styleText}>Oportunidades com fase Fechado</div>
             </div>
             <div className={cls} style={{ borderColor: cardBorderColor }}>
               <div className="text-sm font-medium text-gray-500 mb-2" style={styleKpiTitle}>Leads</div>
@@ -452,7 +458,7 @@ export default function CRMDashboardPage() {
             <div className={cls} style={{ borderColor: cardBorderColor }}>
               <div className="text-sm font-medium text-gray-500 mb-2" style={styleKpiTitle}>Taxa de Conversão</div>
               <div className="text-2xl font-bold text-orange-600" style={styleValues}>{kpis.taxaConversao.toFixed(1)}%</div>
-              <div className="text-xs text-gray-400 mt-1" style={styleText}>Leads → Vendas</div>
+              <div className="text-xs text-gray-400 mt-1" style={styleText}>Vendas (Fechado) / Leads</div>
             </div>
           </>
         )})()}

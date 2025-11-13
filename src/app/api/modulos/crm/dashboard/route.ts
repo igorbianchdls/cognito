@@ -46,11 +46,8 @@ export async function GET(req: NextRequest) {
     }
     const lWhere = lConds.length ? `WHERE ${lConds.join(' AND ')}` : ''
 
-    // Closed Won predicate (status or fase do pipeline)
-    const closedWonPredicate = `(
-      LOWER(o.status) LIKE '%ganh%' OR LOWER(o.status) LIKE '%won%'
-      OR LOWER(fp.nome) LIKE '%ganh%' OR LOWER(fp.nome) LIKE '%won%'
-    )`
+    // Fase fechada: coluna fase (fp.nome) com texto 'Fechado'
+    const faseFechadaPredicate = `LOWER(fp.nome) = 'fechado'`
 
     // KPIs queries
     const faturamentoSql = `SELECT COALESCE(SUM(o.valor_estimado),0)::float AS faturamento
@@ -60,7 +57,7 @@ export async function GET(req: NextRequest) {
       LEFT JOIN comercial.vendedores v ON v.id = o.vendedor_id
       LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id
       LEFT JOIN crm.fases_pipeline fp ON fp.id = o.fase_pipeline_id
-      ${oWhere ? oWhere + ' AND ' : 'WHERE '}${closedWonPredicate}`
+      ${oWhere ? oWhere + ' AND ' : 'WHERE '}${faseFechadaPredicate}`
 
     const vendasSql = `SELECT COUNT(DISTINCT o.id)::int AS vendas
       FROM crm.oportunidades o
@@ -69,7 +66,16 @@ export async function GET(req: NextRequest) {
       LEFT JOIN comercial.vendedores v ON v.id = o.vendedor_id
       LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id
       LEFT JOIN crm.fases_pipeline fp ON fp.id = o.fase_pipeline_id
-      ${oWhere ? oWhere + ' AND ' : 'WHERE '}${closedWonPredicate}`
+      ${oWhere ? oWhere + ' AND ' : 'WHERE '}${faseFechadaPredicate}`
+
+    const oportunidadesSql = `SELECT COUNT(DISTINCT o.id)::int AS oportunidades
+      FROM crm.oportunidades o
+      LEFT JOIN crm.leads l ON l.id = o.lead_id
+      LEFT JOIN entidades.clientes cli ON cli.id = o.cliente_id
+      LEFT JOIN comercial.vendedores v ON v.id = o.vendedor_id
+      LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id
+      LEFT JOIN crm.fases_pipeline fp ON fp.id = o.fase_pipeline_id
+      ${oWhere}`
 
     const leadsSql = `SELECT COUNT(DISTINCT l.id)::int AS leads
       FROM crm.leads l
@@ -80,11 +86,13 @@ export async function GET(req: NextRequest) {
 
     const [{ faturamento }] = await runQuery<{ faturamento: number }>(faturamentoSql, oParams)
     const [{ vendas }] = await runQuery<{ vendas: number }>(vendasSql, oParams)
+    const [{ oportunidades }] = await runQuery<{ oportunidades: number }>(oportunidadesSql, oParams)
     const [{ leads }] = await runQuery<{ leads: number }>(leadsSql, lParams)
 
     const totalLeads = Number(leads ?? 0) || 0
     const vendasNum = Number(vendas ?? 0) || 0
     const faturamentoNum = Number(faturamento ?? 0) || 0
+    const oportunidadesNum = Number(oportunidades ?? 0) || 0
     const taxaConversao = totalLeads > 0 ? (vendasNum / totalLeads) * 100 : 0
 
     return Response.json(
@@ -93,6 +101,7 @@ export async function GET(req: NextRequest) {
         kpis: {
           faturamento: faturamentoNum,
           vendas: vendasNum,
+          oportunidades: oportunidadesNum,
           totalLeads,
           taxaConversao,
         },
@@ -107,4 +116,3 @@ export async function GET(req: NextRequest) {
     )
   }
 }
-
