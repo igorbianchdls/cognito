@@ -30,6 +30,14 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
     compra_valor_total: 'c.valor_total',
     criado_em: 'r.criado_em',
   },
+  solicitacoes_compra: {
+    solicitacao_id: 'sc.id',
+    solicitado_por: 'sc.solicitado_por',
+    status: 'sc.status',
+    urgencia: 'sc.urgencia',
+    departamento: 'd.nome',
+    criado_em: 'sc.criado_em',
+  },
 };
 
 const parseNumber = (v: string | null, fb?: number) => (v ? Number(v) : fb);
@@ -140,6 +148,34 @@ export async function GET(req: NextRequest) {
         params.push(q);
         i += 1;
       }
+    } else if (view === 'solicitacoes_compra') {
+      selectSql = `SELECT
+        sc.id AS solicitacao_id,
+        sc.solicitado_por,
+        sc.status,
+        sc.urgencia,
+        sc.observacoes,
+        sc.criado_em,
+        d.nome AS departamento,
+        sci.id AS solicitacao_linha_id,
+        COALESCE(p.nome, sci.descricao) AS produto,
+        sci.quantidade,
+        sci.unidade_medida,
+        cc.nome AS centro_custo,
+        pr.nome AS projeto`;
+      baseSql = `FROM compras.solicitacoes_compra sc
+        LEFT JOIN empresa.departamentos d ON d.id = sc.departamento_id
+        LEFT JOIN compras.solicitacoes_compra_itens sci ON sci.solicitacao_id = sc.id
+        LEFT JOIN produtos.produto p ON p.id = sci.produto_id
+        LEFT JOIN empresa.centros_custo cc ON cc.id = sci.centro_custo_id
+        LEFT JOIN financeiro.projetos pr ON pr.id = sci.projeto_id`;
+      whereDateCol = 'sc.criado_em';
+      if (status) push('LOWER(sc.status) =', status.toLowerCase());
+      if (q) {
+        conditions.push(`(sc.observacoes ILIKE '%' || $${i} || '%' OR p.nome ILIKE '%' || $${i} || '%' OR sci.descricao ILIKE '%' || $${i} || '%')`);
+        params.push(q);
+        i += 1;
+      }
     } else {
       return Response.json({ success: false, message: `View inválida: ${view}` }, { status: 400 });
     }
@@ -155,10 +191,12 @@ export async function GET(req: NextRequest) {
       if (orderBy) {
         if (view === 'compras') orderClause = `ORDER BY ${orderBy} ${orderDir}, l.id ASC`;
         else if (view === 'recebimentos') orderClause = `ORDER BY ${orderBy} ${orderDir}, rl.id ASC`;
+        else if (view === 'solicitacoes_compra') orderClause = `ORDER BY ${orderBy} ${orderDir}, sci.id ASC`;
         else orderClause = `ORDER BY ${orderBy} ${orderDir}`;
       } else {
         if (view === 'compras') orderClause = 'ORDER BY c.id DESC, l.id ASC';
         else if (view === 'recebimentos') orderClause = 'ORDER BY r.id DESC, rl.id ASC';
+        else if (view === 'solicitacoes_compra') orderClause = 'ORDER BY sc.id DESC, sci.id ASC';
       }
     }
 
@@ -291,10 +329,64 @@ export async function GET(req: NextRequest) {
       rows = Array.from(recebimentosMap.values())
     }
 
+    // Aggregate: group itens by solicitacao
+    if (view === 'solicitacoes_compra') {
+      type SolicitacaoAgregada = {
+        solicitacao_id: unknown
+        solicitado_por: unknown
+        status: unknown
+        urgencia: unknown
+        observacoes: unknown
+        criado_em: unknown
+        departamento: unknown
+        itens: Array<{
+          solicitacao_linha_id: unknown
+          produto: unknown
+          quantidade: unknown
+          unidade_medida: unknown
+          centro_custo: unknown
+          projeto: unknown
+        }>
+      }
+      const solicitacoesMap = new Map<number, SolicitacaoAgregada>()
+
+      for (const row of rows) {
+        const solicitacaoKey = Number(row.solicitacao_id)
+
+        if (!solicitacoesMap.has(solicitacaoKey)) {
+          solicitacoesMap.set(solicitacaoKey, {
+            solicitacao_id: row.solicitacao_id,
+            solicitado_por: row.solicitado_por,
+            status: row.status,
+            urgencia: row.urgencia,
+            observacoes: row.observacoes,
+            criado_em: row.criado_em,
+            departamento: row.departamento,
+            itens: []
+          })
+        }
+
+        if (row.solicitacao_linha_id) {
+          solicitacoesMap.get(solicitacaoKey)!.itens.push({
+            solicitacao_linha_id: row.solicitacao_linha_id,
+            produto: row.produto,
+            quantidade: row.quantidade,
+            unidade_medida: row.unidade_medida,
+            centro_custo: row.centro_custo,
+            projeto: row.projeto,
+          })
+        }
+      }
+
+      rows = Array.from(solicitacoesMap.values())
+    }
+
     const totalSql = view === 'compras'
       ? `SELECT COUNT(DISTINCT c.id)::int AS total FROM compras.compras c ${whereClause.replace(/c\./g, 'c.').replace(/f\./g, 'f.')}`
       : view === 'recebimentos'
       ? `SELECT COUNT(DISTINCT r.id)::int AS total FROM compras.recebimentos r ${whereClause.replace(/r\./g, 'r.')}`
+      : view === 'solicitacoes_compra'
+      ? `SELECT COUNT(DISTINCT sc.id)::int AS total FROM compras.solicitacoes_compra sc ${whereClause.replace(/sc\./g, 'sc.')}`
       : `SELECT COUNT(*)::int AS total ${baseSql} ${whereClause}`;
     const totalRows = await runQuery<{ total: number }>(totalSql, params);
     const total = totalRows[0]?.total ?? 0;

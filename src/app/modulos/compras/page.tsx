@@ -14,7 +14,7 @@ import DataToolbar from '@/components/modulos/DataToolbar'
 import StatusBadge from '@/components/modulos/StatusBadge'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/stores/modulos/moduleUiStore'
 import type { Opcao } from '@/components/modulos/TabsNav'
-import { ShoppingCart, PackageCheck } from 'lucide-react'
+import { ShoppingCart, PackageCheck, ClipboardList } from 'lucide-react'
 
 type Row = TableData
 
@@ -43,6 +43,19 @@ type RecebimentoRow = Row & {
   linhas?: RecebimentoLinhaItem[]
 }
 
+type SolicitacaoItemItem = {
+  solicitacao_linha_id: number
+  produto: string | null
+  quantidade: number | null
+  unidade_medida: string | null
+  centro_custo: string | null
+  projeto: string | null
+}
+
+type SolicitacaoRow = Row & {
+  itens?: SolicitacaoItemItem[]
+}
+
 export default function ModulosComprasPage() {
   const titulo = useStore($titulo)
   const tabs = useStore($tabs)
@@ -59,6 +72,7 @@ export default function ModulosComprasPage() {
       options: [
         { value: 'compras', label: 'Compras' },
         { value: 'recebimentos', label: 'Recebimentos' },
+        { value: 'solicitacoes_compra', label: 'Solicitações de Compra' },
       ],
       selected: 'compras',
     })
@@ -164,6 +178,41 @@ export default function ModulosComprasPage() {
     )
   }
 
+  const renderSolicitacaoItens = (row: Row) => {
+    const solicitacaoRow = row as SolicitacaoRow
+    const itens = solicitacaoRow.itens || []
+
+    if (itens.length === 0) return null
+
+    return (
+      <div className="p-4 bg-gray-50">
+        <h4 className="text-sm font-semibold mb-2">Itens da Solicitação</h4>
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b">
+              <th className="text-left py-2 px-3">Produto</th>
+              <th className="text-right py-2 px-3">Quantidade</th>
+              <th className="text-left py-2 px-3">Unidade</th>
+              <th className="text-left py-2 px-3">Centro de Custo</th>
+              <th className="text-left py-2 px-3">Projeto</th>
+            </tr>
+          </thead>
+          <tbody>
+            {itens.map((item, idx) => (
+              <tr key={idx} className="border-b last:border-0">
+                <td className="py-2 px-3">{item.produto ?? '-'}</td>
+                <td className="text-right py-2 px-3">{item.quantidade ?? '-'}</td>
+                <td className="py-2 px-3">{item.unidade_medida ?? '-'}</td>
+                <td className="py-2 px-3">{item.centro_custo ?? '-'}</td>
+                <td className="py-2 px-3">{item.projeto ?? '-'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )
+  }
+
   const columns: ColumnDef<Row>[] = useMemo(() => {
     if (tabs.selected === 'recebimentos') {
       return [
@@ -174,6 +223,18 @@ export default function ModulosComprasPage() {
         { accessorKey: 'fornecedor', header: 'Fornecedor' },
         { accessorKey: 'compra_valor_total', header: 'Valor Compra', cell: ({ row }) => formatBRL(row.original['compra_valor_total']) },
         { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
+        { accessorKey: 'observacoes', header: 'Observações' },
+        { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em']) },
+      ]
+    }
+
+    if (tabs.selected === 'solicitacoes_compra') {
+      return [
+        { accessorKey: 'solicitacao_id', header: 'ID' },
+        { accessorKey: 'solicitado_por', header: 'Solicitado Por' },
+        { accessorKey: 'departamento', header: 'Departamento' },
+        { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
+        { accessorKey: 'urgencia', header: 'Urgência' },
         { accessorKey: 'observacoes', header: 'Observações' },
         { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em']) },
       ]
@@ -235,6 +296,8 @@ export default function ModulosComprasPage() {
           return <ShoppingCart className="h-4 w-4" />
         case 'recebimentos':
           return <PackageCheck className="h-4 w-4" />
+        case 'solicitacoes_compra':
+          return <ClipboardList className="h-4 w-4" />
         default:
           return null
       }
@@ -316,7 +379,13 @@ export default function ModulosComprasPage() {
                   columns={columns}
                   data={data}
                   enableExpand={true}
-                  renderDetail={tabs.selected === 'compras' ? renderCompraLinhas : renderRecebimentoLinhas}
+                  renderDetail={
+                    tabs.selected === 'compras'
+                      ? renderCompraLinhas
+                      : tabs.selected === 'recebimentos'
+                      ? renderRecebimentoLinhas
+                      : renderSolicitacaoItens
+                  }
                   enableSearch={tabelaUI.enableSearch}
                   showColumnToggle={tabelaUI.enableColumnToggle}
                   showPagination={tabelaUI.showPagination}
