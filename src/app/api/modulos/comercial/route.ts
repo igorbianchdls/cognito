@@ -10,17 +10,46 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
   territorios: {
     territorio: 't.nome',
     descricao: 't.descricao',
+    territorio_pai: 'tp.nome',
     ativo: 't.ativo',
     criado_em: 't.criado_em',
+    atualizado_em: 't.atualizado_em',
   },
   vendedores: {
-    vendedor: 'v.nome',
-    email: 'v.email',
-    telefone: 'v.telefone',
+    vendedor: 'f.nome',
+    email: 'f.email',
+    telefone: 'f.telefone',
     territorio: 't.nome',
-    comissao: 'v.comissao',
-    ativo: 'v.ativo',
+    comissao: 'v.comissao_padrao',
+    vendedor_ativo: 'v.ativo',
     criado_em: 'v.criado_em',
+    atualizado_em: 'v.atualizado_em',
+  },
+  meta_vendedores: {
+    vendedor: 'f.nome',
+    territorio: 't.nome',
+    periodo: 'mv.periodo',
+    meta: 'mv.valor_meta',
+    criado_em: 'mv.criado_em',
+    atualizado_em: 'mv.atualizado_em',
+  },
+  meta_territorios: {
+    territorio: 't.nome',
+    territorio_descricao: 't.descricao',
+    periodo: 'mt.periodo',
+    meta: 'mt.valor_meta',
+    criado_em: 'mt.criado_em',
+    atualizado_em: 'mt.atualizado_em',
+  },
+  regras_comissoes: {
+    regra: 'rc.nome',
+    descricao: 'rc.descricao',
+    percentual_padrao: 'rc.percentual_default',
+    percentual_minimo: 'rc.percentual_min',
+    percentual_maximo: 'rc.percentual_max',
+    regra_ativa: 'rc.ativo',
+    criado_em: 'rc.criado_em',
+    atualizado_em: 'rc.atualizado_em',
   },
 }
 
@@ -47,15 +76,67 @@ export async function GET(req: NextRequest) {
     let orderClause = ''
 
     if (view === 'territorios') {
-      // Query será fornecida pelo usuário - por enquanto retorna vazio
-      selectSql = `SELECT NULL AS territorio LIMIT 0`
-      baseSql = ''
-      orderClause = ''
+      selectSql = `SELECT
+        t.nome AS territorio,
+        t.descricao,
+        tp.nome AS territorio_pai,
+        t.ativo,
+        t.criado_em,
+        t.atualizado_em`
+      baseSql = `FROM comercial.territorios t
+        LEFT JOIN comercial.territorios tp ON tp.id = t.territorio_pai_id`
+      orderClause = orderBy ? `ORDER BY ${orderBy} ${orderDir}` : 'ORDER BY t.nome ASC'
     } else if (view === 'vendedores') {
-      // Query será fornecida pelo usuário - por enquanto retorna vazio
-      selectSql = `SELECT NULL AS vendedor LIMIT 0`
-      baseSql = ''
-      orderClause = ''
+      selectSql = `SELECT
+        f.nome AS vendedor,
+        f.email AS email,
+        f.telefone AS telefone,
+        t.nome AS territorio,
+        t.descricao AS territorio_descricao,
+        v.comissao_padrao AS comissao,
+        v.ativo AS vendedor_ativo,
+        v.criado_em,
+        v.atualizado_em`
+      baseSql = `FROM comercial.vendedores v
+        LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id
+        LEFT JOIN comercial.territorios t ON t.id = v.territorio_id`
+      orderClause = orderBy ? `ORDER BY ${orderBy} ${orderDir}` : 'ORDER BY f.nome ASC'
+    } else if (view === 'meta_vendedores') {
+      selectSql = `SELECT
+        f.nome AS vendedor,
+        t.nome AS territorio,
+        mv.periodo AS periodo,
+        mv.valor_meta AS meta,
+        mv.criado_em,
+        mv.atualizado_em`
+      baseSql = `FROM comercial.metas_vendedores mv
+        LEFT JOIN comercial.vendedores v ON v.id = mv.vendedor_id
+        LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id
+        LEFT JOIN comercial.territorios t ON t.id = v.territorio_id`
+      orderClause = orderBy ? `ORDER BY ${orderBy} ${orderDir}` : 'ORDER BY mv.periodo DESC, f.nome ASC'
+    } else if (view === 'meta_territorios') {
+      selectSql = `SELECT
+        t.nome AS territorio,
+        t.descricao AS territorio_descricao,
+        mt.periodo AS periodo,
+        mt.valor_meta AS meta,
+        mt.criado_em,
+        mt.atualizado_em`
+      baseSql = `FROM comercial.metas_territorios mt
+        LEFT JOIN comercial.territorios t ON t.id = mt.territorio_id`
+      orderClause = orderBy ? `ORDER BY ${orderBy} ${orderDir}` : 'ORDER BY mt.periodo DESC, t.nome ASC'
+    } else if (view === 'regras_comissoes') {
+      selectSql = `SELECT
+        rc.nome AS regra,
+        rc.descricao AS descricao,
+        rc.percentual_default AS percentual_padrao,
+        rc.percentual_min AS percentual_minimo,
+        rc.percentual_max AS percentual_maximo,
+        rc.ativo AS regra_ativa,
+        rc.criado_em,
+        rc.atualizado_em`
+      baseSql = `FROM comercial.regras_comissao rc`
+      orderClause = orderBy ? `ORDER BY ${orderBy} ${orderDir}` : 'ORDER BY rc.nome ASC'
     } else {
       return Response.json({ success: false, message: `View inválida: ${view}` }, { status: 400 })
     }

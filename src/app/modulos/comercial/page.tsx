@@ -49,6 +49,9 @@ export default function ModulosComercialPage() {
       options: [
         { value: 'territorios', label: 'Territórios' },
         { value: 'vendedores', label: 'Vendedores' },
+        { value: 'meta_vendedores', label: 'Meta Vendedores' },
+        { value: 'meta_territorios', label: 'Meta Territórios' },
+        { value: 'regras_comissoes', label: 'Regras de Comissões' },
       ],
       selected: 'territorios',
     })
@@ -72,6 +75,7 @@ export default function ModulosComercialPage() {
         return [
           { accessorKey: 'territorio', header: 'Território' },
           { accessorKey: 'descricao', header: 'Descrição' },
+          { accessorKey: 'territorio_pai', header: 'Território Pai' },
           { accessorKey: 'ativo', header: 'Ativo' },
           { accessorKey: 'criado_em', header: 'Criado Em', cell: ({ getValue }) => formatDate(getValue()) },
           { accessorKey: 'atualizado_em', header: 'Atualizado Em', cell: ({ getValue }) => formatDate(getValue()) },
@@ -86,6 +90,36 @@ export default function ModulosComercialPage() {
           { accessorKey: 'comissao', header: 'Comissão (%)' },
           { accessorKey: 'vendedor_ativo', header: 'Ativo' },
           { accessorKey: 'criado_em', header: 'Criado Em', cell: ({ getValue }) => formatDate(getValue()) },
+          { accessorKey: 'atualizado_em', header: 'Atualizado Em', cell: ({ getValue }) => formatDate(getValue()) },
+        ]
+      case 'meta_vendedores':
+        return [
+          { accessorKey: 'vendedor', header: 'Vendedor' },
+          { accessorKey: 'territorio', header: 'Território' },
+          { accessorKey: 'periodo', header: 'Período' },
+          { accessorKey: 'meta', header: 'Meta' },
+          { accessorKey: 'criado_em', header: 'Criado Em', cell: ({ getValue }) => formatDate(getValue()) },
+          { accessorKey: 'atualizado_em', header: 'Atualizado Em', cell: ({ getValue }) => formatDate(getValue()) },
+        ]
+      case 'meta_territorios':
+        return [
+          { accessorKey: 'territorio', header: 'Território' },
+          { accessorKey: 'territorio_descricao', header: 'Descrição Território' },
+          { accessorKey: 'periodo', header: 'Período' },
+          { accessorKey: 'meta', header: 'Meta' },
+          { accessorKey: 'criado_em', header: 'Criado Em', cell: ({ getValue }) => formatDate(getValue()) },
+          { accessorKey: 'atualizado_em', header: 'Atualizado Em', cell: ({ getValue }) => formatDate(getValue()) },
+        ]
+      case 'regras_comissoes':
+        return [
+          { accessorKey: 'regra', header: 'Regra' },
+          { accessorKey: 'descricao', header: 'Descrição' },
+          { accessorKey: 'percentual_padrao', header: 'Percentual Padrão (%)' },
+          { accessorKey: 'percentual_minimo', header: 'Percentual Mínimo (%)' },
+          { accessorKey: 'percentual_maximo', header: 'Percentual Máximo (%)' },
+          { accessorKey: 'regra_ativa', header: 'Ativo' },
+          { accessorKey: 'criado_em', header: 'Criado Em', cell: ({ getValue }) => formatDate(getValue()) },
+          { accessorKey: 'atualizado_em', header: 'Atualizado Em', cell: ({ getValue }) => formatDate(getValue()) },
         ]
       default:
         return []
