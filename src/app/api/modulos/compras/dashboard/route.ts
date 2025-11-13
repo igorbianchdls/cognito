@@ -5,7 +5,6 @@ export const maxDuration = 300
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
-const parseNumber = (v: string | null) => (v ? Number(v) : undefined)
 
 export async function GET(req: NextRequest) {
   try {
@@ -76,4 +75,3 @@ export async function GET(req: NextRequest) {
     )
   }
 }
-

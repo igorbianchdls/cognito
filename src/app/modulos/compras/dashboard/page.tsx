@@ -13,14 +13,9 @@ import type { DateRange } from 'react-day-picker'
 import { $financeiroDashboardUI, $financeiroDashboardFilters, financeiroDashboardActions } from '@/stores/modulos/financeiroDashboardStore'
 
 type PedidoRow = { numero?: string; fornecedor?: string; status?: string; data_emissao?: string; valor_total?: number | string }
-type RecebimentoRow = { numero_nf?: string; fornecedor?: string; data_recebimento?: string; valor_total?: number | string }
+type ApiComprasRow = { numero_oc?: string; fornecedor?: string; status?: string; data_emissao?: string; valor_total?: number | string }
 
-function toDateOnly(d: Date) { const yyyy=d.getFullYear(); const mm=String(d.getMonth()+1).padStart(2,'0'); const dd=String(d.getDate()).padStart(2,'0'); return `${yyyy}-${mm}-${dd}` }
-function monthKey(d: Date) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}` }
-function monthLabel(key: string) { const [y,m]=key.split('-').map(Number); const d=new Date(y,(m||1)-1,1); return d.toLocaleDateString('pt-BR',{month:'short',year:'2-digit'}) }
-function lastMonths(n: number) { const arr:string[]=[]; const base=new Date(); for(let i=n-1;i>=0;i--){ const d=new Date(base.getFullYear(), base.getMonth()-i, 1); arr.push(monthKey(d)) } return arr }
 function formatBRL(n?: number) { return (Number(n||0)).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) }
-function parseDate(s?: string) { if(!s) return null; const d=new Date(s); return isNaN(d.getTime())?null:d }
 
 export default function ComprasDashboardPage() {
   // Global UI & Filters
@@ -33,7 +28,6 @@ export default function ComprasDashboardPage() {
   const filtersIconColor = ui.filtersIconColor
 
   const [pedidos, setPedidos] = useState<PedidoRow[]>([])
-  const [recebimentos, setRecebimentos] = useState<RecebimentoRow[]>([])
   // KPIs (reais)
   const [gasto, setGasto] = useState<number>(0)
   const [fornecedores, setFornecedores] = useState<number>(0)
@@ -48,13 +42,11 @@ export default function ComprasDashboardPage() {
       setLoading(true); setError(null)
       try {
         const base = '/api/modulos/compras'
-        const [kRes, pRes, rRes] = await Promise.allSettled([
+        const [kRes, pRes] = await Promise.allSettled([
           fetch(`/api/modulos/compras/dashboard`, { cache: 'no-store' }),
           fetch(`${base}?view=compras&page=1&pageSize=1000`, { cache: 'no-store' }),
-          fetch(`${base}?view=recebimentos&page=1&pageSize=1000`, { cache: 'no-store' }),
         ])
         let ps: PedidoRow[] = []
-        let rs: RecebimentoRow[] = []
         if (kRes.status === 'fulfilled' && kRes.value.ok) {
           const j = await kRes.value.json()
           const k = j?.kpis || {}
@@ -65,17 +57,16 @@ export default function ComprasDashboardPage() {
         }
         if (pRes.status === 'fulfilled' && pRes.value.ok) {
           const j = await pRes.value.json();
-          const rows = Array.isArray(j?.rows) ? j.rows as any[] : []
+          const rows = Array.isArray(j?.rows) ? (j.rows as ApiComprasRow[]) : []
           ps = rows.map((r) => ({
-            numero: r?.numero_oc ?? r?.numero ?? undefined,
-            fornecedor: r?.fornecedor,
-            status: r?.status,
-            data_emissao: r?.data_emissao,
-            valor_total: r?.valor_total,
+            numero: r.numero_oc ?? undefined,
+            fornecedor: r.fornecedor,
+            status: r.status,
+            data_emissao: r.data_emissao,
+            valor_total: r.valor_total,
           }))
         }
-        if (rRes.status === 'fulfilled' && rRes.value.ok) { const j = await rRes.value.json(); rs = Array.isArray(j?.rows) ? j.rows as RecebimentoRow[] : [] }
-        if (!cancelled) { setPedidos(ps); setRecebimentos(rs) }
+        if (!cancelled) { setPedidos(ps) }
       } catch { if (!cancelled) setError('Falha ao carregar dados') } finally { if (!cancelled) setLoading(false) }
     }
     load(); return () => { cancelled = true }
@@ -142,17 +133,7 @@ export default function ComprasDashboardPage() {
     for (const p of pedidos) { const k=p.fornecedor||'—'; m.set(k,(m.get(k)||0)+(Number(p.valor_total)||0)) }
     return Array.from(m, ([label, value]) => ({ label, value })).sort((a,b)=> b.value-a.value).slice(0,6)
   }, [pedidos])
-  const pedidosPorStatus = useMemo(() => {
-    const m = new Map<string, number>()
-    for (const p of pedidos) { const k=(p.status||'—'); m.set(k,(m.get(k)||0)+1) }
-    return Array.from(m, ([label, value]) => ({ label, value })).sort((a,b)=> b.value-a.value)
-  }, [pedidos])
-  const meses = useMemo(() => lastMonths(6), [])
-  const pedidosMesSeries = useMemo(() => {
-    const m = new Map<string, number>(); for (const k of meses) m.set(k,0)
-    for (const p of pedidos) { const d = parseDate(p.data_emissao); if(!d) continue; const k=monthKey(d); if(m.has(k)) m.set(k, (m.get(k)||0)+1) }
-    return meses.map(k=>({ key:k, label:monthLabel(k), value:m.get(k)||0 }))
-  }, [pedidos, meses])
+  // (outros gráficos derivados podem ser adicionados futuramente)
 
   // Charts: sem mocks. Enquanto não houver agregações reais,
   // mantemos arrays vazios (ou derivados do que temos em memória).
@@ -164,23 +145,7 @@ export default function ComprasDashboardPage() {
   const comprasPorCategorias: { label: string; value: number }[] = []
   const comprasPorProjetos: { label: string; value: number }[] = []
 
-  function HBars({ items, color = 'bg-indigo-500' }: { items: { label: string; value: number }[]; color?: string }) {
-    const max = Math.max(1, ...items.map(i => i.value))
-    return (
-      <div className="space-y-3">
-        {items.map((it) => {
-          const pct = Math.round((it.value / max) * 100)
-          return (
-            <div key={it.label}>
-              <div className="flex justify-between text-xs text-gray-600 mb-1" style={styleText}><span>{it.label}</span><span>{formatBRL(it.value)}</span></div>
-              <div className="w-full h-2.5 bg-gray-100 rounded"><div className={`${color} h-2.5 rounded`} style={{ width: `${pct}%` }} /></div>
-            </div>
-          )
-        })}
-        {items.length === 0 && <div className="text-xs text-gray-400" style={styleText}>Sem dados</div>}
-      </div>
-    )
-  }
+  
 
   const cardContainerClass = `bg-white p-6 rounded-lg border border-gray-100${cardShadow ? ' shadow-sm' : ''}`
 
