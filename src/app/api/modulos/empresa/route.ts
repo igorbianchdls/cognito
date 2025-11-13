@@ -46,31 +46,6 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
     nivel: 'c.nivel',
     ativo: 'c.ativo',
   },
-  funcionarios: {
-    funcionario: 'f.nome',
-    email: 'f.email',
-    telefone: 'f.telefone',
-    cargo: 'c.nome',
-    departamento: 'd.nome',
-    filial: 'fi.nome',
-    criado_em: 'f.criado_em',
-  },
-  vendedores: {
-    vendedor: 'f.nome',
-    email: 'f.email',
-    telefone: 'f.telefone',
-    territorio: 't.nome',
-    comissao: 'v.comissao_padrao',
-    vendedor_ativo: 'v.ativo',
-    criado_em: 'v.criado_em',
-  },
-  territorios: {
-    territorio: 't.nome',
-    descricao: 't.descricao',
-    territorio_pai: 'tp.nome',
-    ativo: 't.ativo',
-    criado_em: 't.criado_em',
-  },
 }
 
 export async function GET(req: NextRequest) {
@@ -149,45 +124,6 @@ export async function GET(req: NextRequest) {
         c.ativo`
       baseSql = 'FROM empresa.cargos c'
       orderClause = orderBy ? `ORDER BY ${orderBy} ${orderDir}` : 'ORDER BY c.departamento_id ASC, c.nivel ASC'
-    } else if (view === 'funcionarios') {
-      selectSql = `SELECT
-        f.nome AS funcionario,
-        f.email,
-        f.telefone,
-        c.nome AS cargo,
-        d.nome AS departamento,
-        fi.nome AS filial,
-        f.criado_em,
-        f.atualizado_em`
-      baseSql = `FROM empresa.funcionarios f
-        LEFT JOIN empresa.cargos c        ON c.id = f.cargo_id
-        LEFT JOIN empresa.departamentos d ON d.id = f.departamento_id
-        LEFT JOIN empresa.filiais fi      ON fi.id = f.filial_id`
-      orderClause = orderBy ? `ORDER BY ${orderBy} ${orderDir}` : 'ORDER BY f.nome ASC'
-    } else if (view === 'vendedores') {
-      selectSql = `SELECT
-        f.nome AS vendedor,
-        f.email AS email,
-        f.telefone AS telefone,
-        t.nome AS territorio,
-        t.descricao AS territorio_descricao,
-        v.comissao_padrao AS comissao,
-        v.ativo AS vendedor_ativo,
-        v.criado_em`
-      baseSql = `FROM empresa.vendedores v
-        LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id
-        LEFT JOIN empresa.territorios t  ON t.id = v.territorio_id`
-      orderClause = orderBy ? `ORDER BY ${orderBy} ${orderDir}` : 'ORDER BY f.nome ASC'
-    } else if (view === 'territorios') {
-      selectSql = `SELECT
-        t.nome AS territorio,
-        t.descricao,
-        tp.nome AS territorio_pai,
-        t.ativo,
-        t.criado_em`
-      baseSql = `FROM empresa.territorios t
-        LEFT JOIN empresa.territorios tp ON tp.id = t.territorio_pai_id`
-      orderClause = orderBy ? `ORDER BY ${orderBy} ${orderDir}` : 'ORDER BY t.nome ASC'
     } else {
       return Response.json({ success: false, message: `View inválida: ${view}` }, { status: 400 })
     }
