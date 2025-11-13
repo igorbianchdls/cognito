@@ -5,47 +5,20 @@ export const maxDuration = 300;
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-// Safeguard: whitelist order-by columns per view
 const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
-  fornecedores: {
-    id: 'f.id',
-    nome_fantasia: 'f.nome_fantasia',
-    razao_social: 'f.razao_social',
-    cnpj: 'f.cnpj',
-    pais: 'f.pais',
-    status: 'f.ativo',
-    cadastrado_em: 'f.criado_em',
-  },
-  pedidos: {
-    id: 'p.id',
-    numero_pedido: 'p.numero_pedido',
+  compras: {
+    compra_id: 'c.id',
+    numero_oc: 'c.numero_oc',
+    data_emissao: 'c.data_emissao',
+    data_entrega_prevista: 'c.data_entrega_prevista',
     fornecedor: 'f.nome_fantasia',
-    condicao_pagamento: 'cp.descricao',
-    data_pedido: 'p.data_pedido',
-    status: 'p.status',
-    valor_total: 'p.valor_total',
-  },
-  recebimentos: {
-    id: 'r.id',
-    pedido: 'p.numero_pedido',
-    fornecedor: 'f.nome_fantasia',
-    data_recebimento: 'r.data_recebimento',
-    nota_fiscal: 'r.numero_nota_fiscal',
-    status: 'r.status',
-  },
-  'solicitacoes-compra': {
-    id: 's.id',
-    data_solicitacao: 's.data_solicitacao',
-    status: 's.status',
-    itens_solicitados: 'itens_solicitados',
-  },
-  'cotacoes-compra': {
-    id: 'c.id',
-    fornecedor: 'f.nome_fantasia',
-    data_envio: 'c.data_envio',
-    data_retorno: 'c.data_retorno',
+    filial: 'fil.nome',
+    centro_custo: 'cc.nome',
+    projeto: 'pr.nome',
+    categoria_financeira: 'cat.nome',
     status: 'c.status',
-    valor_cotado: 'valor_cotado',
+    valor_total: 'c.valor_total',
+    criado_em: 'c.criado_em',
   },
 };
 
@@ -54,28 +27,17 @@ const parseNumber = (v: string | null, fb?: number) => (v ? Number(v) : fb);
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    let view = (searchParams.get('view') || '').toLowerCase();
+    const view = (searchParams.get('view') || '').toLowerCase();
     if (!view) return Response.json({ success: false, message: 'Parâmetro view é obrigatório' }, { status: 400 });
 
-    // Allow aliases
-    if (view === 'solicitacoes' || view === 'solicitacoes-de-compra') view = 'solicitacoes-compra';
-    if (view === 'cotacoes' || view === 'cotacoes-de-compra') view = 'cotacoes-compra';
-
     // Common filters
-    const de = searchParams.get('de') || undefined; // YYYY-MM-DD
-    const ate = searchParams.get('ate') || undefined; // YYYY-MM-DD
-    const q = searchParams.get('q') || undefined; // search
+    const de = searchParams.get('de') || undefined;
+    const ate = searchParams.get('ate') || undefined;
+    const q = searchParams.get('q') || undefined;
 
     // Specific filters
     const status = searchParams.get('status') || undefined;
     const fornecedor_id = searchParams.get('fornecedor_id') || undefined;
-    const condicao_pagamento_id = searchParams.get('condicao_pagamento_id') || undefined;
-    const pedido_id = searchParams.get('pedido_id') || undefined;
-    const nota = searchParams.get('nota') || undefined; // recebimentos
-    const pais = searchParams.get('pais') || undefined; // fornecedores
-    const ativo = searchParams.get('ativo') || undefined; // fornecedores: 'true'|'false'
-    const valor_min = parseNumber(searchParams.get('valor_min'));
-    const valor_max = parseNumber(searchParams.get('valor_max'));
 
     // Pagination
     const page = Math.max(1, parseNumber(searchParams.get('page'), 1) || 1);
@@ -100,110 +62,42 @@ export async function GET(req: NextRequest) {
 
     let selectSql = '';
     let baseSql = '';
-    let groupBy = '';
     let whereDateCol = '';
 
-    if (view === 'fornecedores') {
-      selectSql = `SELECT f.id AS id,
-                          f.nome_fantasia AS nome_fantasia,
-                          f.razao_social AS razao_social,
-                          f.cnpj AS cnpj,
-                          (f.cidade || ' - ' || f.estado) AS cidade_uf,
-                          f.telefone AS telefone,
-                          f.email AS email,
-                          f.pais AS pais,
-                          CASE WHEN f.ativo THEN 'Ativo' ELSE 'Inativo' END AS status,
-                          f.criado_em AS cadastrado_em`;
-      baseSql = `FROM compras.fornecedores f`;
-      whereDateCol = 'f.criado_em';
-      if (status) push(`LOWER(CASE WHEN f.ativo THEN 'ativo' ELSE 'inativo' END) =`, status.toLowerCase());
-      if (ativo) push('CAST(f.ativo AS TEXT) =', ativo);
-      if (pais) push('LOWER(f.pais) =', pais.toLowerCase());
-      if (q) {
-        conditions.push(`(f.nome_fantasia ILIKE '%' || $${i} || '%' OR f.razao_social ILIKE '%' || $${i} || '%' OR f.cnpj ILIKE '%' || $${i} || '%' OR f.email ILIKE '%' || $${i} || '%')`);
-        params.push(q);
-        i += 1;
-      }
-    } else if (view === 'pedidos') {
-      selectSql = `SELECT p.id AS id,
-                          p.numero_pedido AS numero_pedido,
-                          p.fornecedor_id AS fornecedor_id,
-                          f.nome_fantasia AS fornecedor,
-                          f.imagem_url AS fornecedor_imagem_url,
-                          f.categoria AS categoria_fornecedor,
-                          cp.descricao AS condicao_pagamento,
-                          p.data_pedido AS data_pedido,
-                          p.status AS status,
-                          p.valor_total AS valor_total,
-                          p.observacoes AS observacoes`;
-      baseSql = `FROM compras.pedidos_compra p
-                 LEFT JOIN compras.fornecedores f ON p.fornecedor_id = f.id
-                 LEFT JOIN compras.condicoes_pagamento cp ON p.condicao_pagamento_id = cp.id`;
-      whereDateCol = 'p.data_pedido';
-      if (status) push('LOWER(p.status) =', status.toLowerCase());
-      if (fornecedor_id) push('p.fornecedor_id =', fornecedor_id);
-      if (condicao_pagamento_id) push('p.condicao_pagamento_id =', condicao_pagamento_id);
-      if (valor_min !== undefined) push('p.valor_total >=', valor_min);
-      if (valor_max !== undefined) push('p.valor_total <=', valor_max);
-      if (q) {
-        conditions.push(`(p.numero_pedido ILIKE '%' || $${i} || '%' OR COALESCE(p.observacoes,'') ILIKE '%' || $${i} || '%')`);
-        params.push(q);
-        i += 1;
-      }
-    } else if (view === 'recebimentos') {
-      selectSql = `SELECT r.id AS id,
-                          p.numero_pedido AS pedido,
-                          f.nome_fantasia AS fornecedor,
-                          r.data_recebimento AS data_recebimento,
-                          r.numero_nota_fiscal AS nota_fiscal,
-                          r.status AS status,
-                          r.observacoes AS observacoes`;
-      baseSql = `FROM compras.recebimentos_compra r
-                 LEFT JOIN compras.pedidos_compra p ON r.pedido_id = p.id
-                 LEFT JOIN compras.fornecedores f ON p.fornecedor_id = f.id`;
-      whereDateCol = 'r.data_recebimento';
-      if (status) push('LOWER(r.status) =', status.toLowerCase());
-      if (pedido_id) push('r.pedido_id =', pedido_id);
-      if (fornecedor_id) push('p.fornecedor_id =', fornecedor_id);
-      if (nota) push('r.numero_nota_fiscal ILIKE', `%${nota}%`);
-      if (q) {
-        conditions.push(`(p.numero_pedido ILIKE '%' || $${i} || '%' OR f.nome_fantasia ILIKE '%' || $${i} || '%' OR r.numero_nota_fiscal ILIKE '%' || $${i} || '%')`);
-        params.push(q);
-        i += 1;
-      }
-    } else if (view === 'solicitacoes-compra') {
-      selectSql = `SELECT s.id AS id,
-                          s.data_solicitacao AS data_solicitacao,
-                          s.status AS status,
-                          s.observacoes AS observacoes,
-                          COUNT(si.id) AS itens_solicitados`;
-      baseSql = `FROM compras.solicitacoes_compra s
-                 LEFT JOIN compras.solicitacoes_itens si ON si.solicitacao_id = s.id`;
-      whereDateCol = 's.data_solicitacao';
-      groupBy = 'GROUP BY s.id, s.data_solicitacao, s.status, s.observacoes';
-      if (status) push('LOWER(s.status) =', status.toLowerCase());
-      if (q) {
-        conditions.push(`(COALESCE(s.observacoes,'') ILIKE '%' || $${i} || '%')`);
-        params.push(q);
-        i += 1;
-      }
-    } else if (view === 'cotacoes-compra') {
-      selectSql = `SELECT c.id AS id,
-                          f.nome_fantasia AS fornecedor,
-                          c.data_envio AS data_envio,
-                          c.data_retorno AS data_retorno,
-                          c.status AS status,
-                          COALESCE(SUM(ci.quantidade * ci.preco_unitario), 0) AS valor_cotado,
-                          c.observacoes AS observacoes`;
-      baseSql = `FROM compras.cotacoes_compra c
-                 LEFT JOIN compras.cotacoes_itens ci ON ci.cotacao_id = c.id
-                 LEFT JOIN compras.fornecedores f ON c.fornecedor_id = f.id`;
-      whereDateCol = 'c.data_envio';
-      groupBy = 'GROUP BY c.id, f.nome_fantasia, c.data_envio, c.data_retorno, c.status, c.observacoes';
+    if (view === 'compras') {
+      selectSql = `SELECT
+        c.id AS compra_id,
+        c.numero_oc,
+        c.data_emissao,
+        c.data_entrega_prevista,
+        c.status,
+        c.valor_total,
+        c.observacoes,
+        c.criado_em,
+        f.nome_fantasia AS fornecedor,
+        fil.nome AS filial,
+        cc.nome AS centro_custo,
+        pr.nome AS projeto,
+        cat.nome AS categoria_financeira,
+        l.id AS linha_id,
+        p.nome AS produto,
+        l.quantidade,
+        l.unidade_medida,
+        l.preco_unitario,
+        l.total AS total_linha`;
+      baseSql = `FROM compras.compras c
+        LEFT JOIN entidades.fornecedores f ON f.id = c.fornecedor_id
+        LEFT JOIN empresa.filiais fil ON fil.id = c.filial_id
+        LEFT JOIN empresa.centros_custo cc ON cc.id = c.centro_custo_id
+        LEFT JOIN financeiro.projetos pr ON pr.id = c.projeto_id
+        LEFT JOIN financeiro.categorias_financeiras cat ON cat.id = c.categoria_financeira_id
+        LEFT JOIN compras.compras_linhas l ON l.compra_id = c.id
+        LEFT JOIN produtos.produto p ON p.id = l.produto_id`;
+      whereDateCol = 'c.data_emissao';
       if (status) push('LOWER(c.status) =', status.toLowerCase());
       if (fornecedor_id) push('c.fornecedor_id =', fornecedor_id);
       if (q) {
-        conditions.push(`(f.nome_fantasia ILIKE '%' || $${i} || '%' OR COALESCE(c.observacoes,'') ILIKE '%' || $${i} || '%')`);
+        conditions.push(`(c.numero_oc ILIKE '%' || $${i} || '%' OR f.nome_fantasia ILIKE '%' || $${i} || '%' OR p.nome ILIKE '%' || $${i} || '%' OR c.observacoes ILIKE '%' || $${i} || '%')`);
         params.push(q);
         i += 1;
       }
@@ -216,40 +110,93 @@ export async function GET(req: NextRequest) {
 
     const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
 
-    // Default ordering when not provided
+    // Default ordering
     let orderClause = '';
-    if (Object.keys(ORDER_BY_WHITELIST[view] || {}).length) {
-      if (orderBy) orderClause = `ORDER BY ${orderBy} ${orderDir}`;
-      else {
-        if (view === 'fornecedores') orderClause = 'ORDER BY f.nome_fantasia ASC';
-        else if (view === 'pedidos') orderClause = 'ORDER BY p.data_pedido DESC';
-        else if (view === 'recebimentos') orderClause = 'ORDER BY r.data_recebimento DESC';
-        else if (view === 'solicitacoes-compra') orderClause = 'ORDER BY s.data_solicitacao DESC';
-        else if (view === 'cotacoes-compra') orderClause = 'ORDER BY c.data_envio DESC';
-      }
+    if (ORDER_BY_WHITELIST[view] && Object.keys(ORDER_BY_WHITELIST[view]).length) {
+      if (orderBy) orderClause = `ORDER BY ${orderBy} ${orderDir}, l.id ASC`;
+      else orderClause = 'ORDER BY c.id DESC, l.id ASC';
     }
 
-    // Pagination: for aggregated views (GROUP BY), do not paginate
-    const paginate = !(groupBy && groupBy.length);
-    const limitOffset = paginate ? `LIMIT $${i}::int OFFSET $${i + 1}::int` : '';
-    const paramsWithPage = paginate ? [...params, pageSize, offset] : params;
+    const limitOffset = `LIMIT $${i}::int OFFSET $${i + 1}::int`;
+    const paramsWithPage = [...params, pageSize, offset];
 
     const listSql = `${selectSql}
                      ${baseSql}
                      ${whereClause}
-                     ${groupBy}
                      ${orderClause}
                      ${limitOffset}`.replace(/\s+$/m, '').trim();
 
-    const rows = await runQuery<Record<string, unknown>>(listSql, paramsWithPage);
+    let rows = await runQuery<Record<string, unknown>>(listSql, paramsWithPage);
 
-    // total: for aggregated (groupBy) rely on rows.length; otherwise run COUNT(*)
-    let total = rows.length;
-    if (!groupBy) {
-      const totalSql = `SELECT COUNT(*)::int AS total ${baseSql} ${whereClause}`;
-      const totalRows = await runQuery<{ total: number }>(totalSql, params);
-      total = totalRows[0]?.total ?? 0;
+    // Aggregate: group linhas by compra
+    if (view === 'compras') {
+      type CompraAgregada = {
+        compra_id: unknown
+        numero_oc: unknown
+        data_emissao: unknown
+        data_entrega_prevista: unknown
+        status: unknown
+        valor_total: unknown
+        observacoes: unknown
+        criado_em: unknown
+        fornecedor: unknown
+        filial: unknown
+        centro_custo: unknown
+        projeto: unknown
+        categoria_financeira: unknown
+        linhas: Array<{
+          linha_id: unknown
+          produto: unknown
+          quantidade: unknown
+          unidade_medida: unknown
+          preco_unitario: unknown
+          total_linha: unknown
+        }>
+      }
+      const comprasMap = new Map<number, CompraAgregada>()
+
+      for (const row of rows) {
+        const compraKey = Number(row.compra_id)
+
+        if (!comprasMap.has(compraKey)) {
+          comprasMap.set(compraKey, {
+            compra_id: row.compra_id,
+            numero_oc: row.numero_oc,
+            data_emissao: row.data_emissao,
+            data_entrega_prevista: row.data_entrega_prevista,
+            status: row.status,
+            valor_total: row.valor_total,
+            observacoes: row.observacoes,
+            criado_em: row.criado_em,
+            fornecedor: row.fornecedor,
+            filial: row.filial,
+            centro_custo: row.centro_custo,
+            projeto: row.projeto,
+            categoria_financeira: row.categoria_financeira,
+            linhas: []
+          })
+        }
+
+        if (row.linha_id) {
+          comprasMap.get(compraKey)!.linhas.push({
+            linha_id: row.linha_id,
+            produto: row.produto,
+            quantidade: row.quantidade,
+            unidade_medida: row.unidade_medida,
+            preco_unitario: row.preco_unitario,
+            total_linha: row.total_linha,
+          })
+        }
+      }
+
+      rows = Array.from(comprasMap.values())
     }
+
+    const totalSql = view === 'compras'
+      ? `SELECT COUNT(DISTINCT c.id)::int AS total FROM compras.compras c ${whereClause.replace(/c\./g, 'c.').replace(/f\./g, 'f.')}`
+      : `SELECT COUNT(*)::int AS total ${baseSql} ${whereClause}`;
+    const totalRows = await runQuery<{ total: number }>(totalSql, params);
+    const total = totalRows[0]?.total ?? 0;
 
     return Response.json({
       success: true,
