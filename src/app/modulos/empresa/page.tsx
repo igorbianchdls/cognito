@@ -198,6 +198,9 @@ export default function ModulosEmpresaPage() {
               titleColor={titulo.titleColor}
               titleLetterSpacing={titulo.titleLetterSpacing}
               subtitleFontFamily={fontVar(titulo.subtitleFontFamily)}
+              subtitleFontSize={titulo.subtitleFontSize}
+              subtitleFontWeight={titulo.subtitleFontWeight}
+              subtitleColor={titulo.subtitleColor}
               subtitleLetterSpacing={titulo.subtitleLetterSpacing}
             />
           </div>
@@ -586,10 +589,10 @@ export default function ModulosEmpresaPage() {
 
               {/* SEÇÃO: Tabela */}
               <div className="mb-8">
-                <h4 className="text-sm font-medium mb-4 text-gray-700">Tabela</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <h4 className="text-sm font-medium mb-4 text-gray-700">Tabela - Header</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                   <div>
-                    <label className="text-xs text-gray-600 mb-1 block">Font Family Header</label>
+                    <label className="text-xs text-gray-600 mb-1 block">Font Family</label>
                     <select
                       className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
                       value={tabelaUI.headerFontFamily || 'Inter'}
@@ -608,7 +611,39 @@ export default function ModulosEmpresaPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="text-xs text-gray-600 mb-1 block">Font Family Células</label>
+                    <label className="text-xs text-gray-600 mb-1 block">Font Size (px)</label>
+                    <input
+                      type="number"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                      value={tabelaUI.headerFontSize || 13}
+                      onChange={(e) => moduleUiActions.setTabelaUI({ headerFontSize: Number(e.target.value) })}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-600 mb-1 block">Color</label>
+                    <input
+                      type="color"
+                      className="w-full h-10 px-1 py-1 border border-gray-300 rounded-md"
+                      value={tabelaUI.headerText || '#aaaaaa'}
+                      onChange={(e) => moduleUiActions.setTabelaUI({ headerText: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-600 mb-1 block">Letter Spacing (em)</label>
+                    <input
+                      type="number"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                      step="0.01"
+                      value={tabelaUI.headerLetterSpacing || -0.28}
+                      onChange={(e) => moduleUiActions.setTabelaUI({ headerLetterSpacing: Number(e.target.value) })}
+                    />
+                  </div>
+                </div>
+
+                <h4 className="text-sm font-medium mb-4 text-gray-700">Tabela - Células</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="text-xs text-gray-600 mb-1 block">Font Family</label>
                     <select
                       className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
                       value={tabelaUI.cellFontFamily || 'Inter'}
@@ -625,6 +660,34 @@ export default function ModulosEmpresaPage() {
                       <option>Libre Baskerville</option>
                       <option>Barlow</option>
                     </select>
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-600 mb-1 block">Font Size (px)</label>
+                    <input
+                      type="number"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                      value={tabelaUI.cellFontSize || 13}
+                      onChange={(e) => moduleUiActions.setTabelaUI({ cellFontSize: Number(e.target.value) })}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-600 mb-1 block">Color</label>
+                    <input
+                      type="color"
+                      className="w-full h-10 px-1 py-1 border border-gray-300 rounded-md"
+                      value={tabelaUI.cellText || '#1f2937'}
+                      onChange={(e) => moduleUiActions.setTabelaUI({ cellText: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-600 mb-1 block">Letter Spacing (em)</label>
+                    <input
+                      type="number"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                      step="0.01"
+                      value={tabelaUI.cellLetterSpacing || -0.28}
+                      onChange={(e) => moduleUiActions.setTabelaUI({ cellLetterSpacing: Number(e.target.value) })}
+                    />
                   </div>
                 </div>
               </div>
