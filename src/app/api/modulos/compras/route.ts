@@ -20,6 +20,16 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
     valor_total: 'c.valor_total',
     criado_em: 'c.criado_em',
   },
+  recebimentos: {
+    recebimento_id: 'r.id',
+    data_recebimento: 'r.data_recebimento',
+    status: 'r.status',
+    numero_oc: 'c.numero_oc',
+    compra_data: 'c.data_emissao',
+    fornecedor: 'f.nome',
+    compra_valor_total: 'c.valor_total',
+    criado_em: 'r.criado_em',
+  },
 };
 
 const parseNumber = (v: string | null, fb?: number) => (v ? Number(v) : fb);
@@ -101,6 +111,35 @@ export async function GET(req: NextRequest) {
         params.push(q);
         i += 1;
       }
+    } else if (view === 'recebimentos') {
+      selectSql = `SELECT
+        r.id AS recebimento_id,
+        r.data_recebimento,
+        r.status,
+        r.observacoes,
+        r.criado_em,
+        c.numero_oc,
+        c.data_emissao AS compra_data,
+        c.valor_total AS compra_valor_total,
+        f.nome AS fornecedor,
+        rl.id AS recebimento_linha_id,
+        p.nome AS produto,
+        rl.quantidade_recebida,
+        rl.lote,
+        rl.validade`;
+      baseSql = `FROM compras.recebimentos r
+        LEFT JOIN compras.compras c ON c.id = r.compra_id
+        LEFT JOIN entidades.fornecedores f ON f.id = c.fornecedor_id
+        LEFT JOIN compras.recebimentos_linhas rl ON rl.recebimento_id = r.id
+        LEFT JOIN compras.compras_linhas cl ON cl.id = rl.compra_linha_id
+        LEFT JOIN produtos.produto p ON p.id = cl.produto_id`;
+      whereDateCol = 'r.data_recebimento';
+      if (status) push('LOWER(r.status) =', status.toLowerCase());
+      if (q) {
+        conditions.push(`(c.numero_oc ILIKE '%' || $${i} || '%' OR f.nome ILIKE '%' || $${i} || '%' OR p.nome ILIKE '%' || $${i} || '%' OR r.observacoes ILIKE '%' || $${i} || '%')`);
+        params.push(q);
+        i += 1;
+      }
     } else {
       return Response.json({ success: false, message: `View inválida: ${view}` }, { status: 400 });
     }
@@ -113,8 +152,14 @@ export async function GET(req: NextRequest) {
     // Default ordering
     let orderClause = '';
     if (ORDER_BY_WHITELIST[view] && Object.keys(ORDER_BY_WHITELIST[view]).length) {
-      if (orderBy) orderClause = `ORDER BY ${orderBy} ${orderDir}, l.id ASC`;
-      else orderClause = 'ORDER BY c.id DESC, l.id ASC';
+      if (orderBy) {
+        if (view === 'compras') orderClause = `ORDER BY ${orderBy} ${orderDir}, l.id ASC`;
+        else if (view === 'recebimentos') orderClause = `ORDER BY ${orderBy} ${orderDir}, rl.id ASC`;
+        else orderClause = `ORDER BY ${orderBy} ${orderDir}`;
+      } else {
+        if (view === 'compras') orderClause = 'ORDER BY c.id DESC, l.id ASC';
+        else if (view === 'recebimentos') orderClause = 'ORDER BY r.id DESC, rl.id ASC';
+      }
     }
 
     const limitOffset = `LIMIT $${i}::int OFFSET $${i + 1}::int`;
@@ -192,8 +237,64 @@ export async function GET(req: NextRequest) {
       rows = Array.from(comprasMap.values())
     }
 
+    // Aggregate: group linhas by recebimento
+    if (view === 'recebimentos') {
+      type RecebimentoAgregado = {
+        recebimento_id: unknown
+        data_recebimento: unknown
+        status: unknown
+        observacoes: unknown
+        criado_em: unknown
+        numero_oc: unknown
+        compra_data: unknown
+        compra_valor_total: unknown
+        fornecedor: unknown
+        linhas: Array<{
+          recebimento_linha_id: unknown
+          produto: unknown
+          quantidade_recebida: unknown
+          lote: unknown
+          validade: unknown
+        }>
+      }
+      const recebimentosMap = new Map<number, RecebimentoAgregado>()
+
+      for (const row of rows) {
+        const recebimentoKey = Number(row.recebimento_id)
+
+        if (!recebimentosMap.has(recebimentoKey)) {
+          recebimentosMap.set(recebimentoKey, {
+            recebimento_id: row.recebimento_id,
+            data_recebimento: row.data_recebimento,
+            status: row.status,
+            observacoes: row.observacoes,
+            criado_em: row.criado_em,
+            numero_oc: row.numero_oc,
+            compra_data: row.compra_data,
+            compra_valor_total: row.compra_valor_total,
+            fornecedor: row.fornecedor,
+            linhas: []
+          })
+        }
+
+        if (row.recebimento_linha_id) {
+          recebimentosMap.get(recebimentoKey)!.linhas.push({
+            recebimento_linha_id: row.recebimento_linha_id,
+            produto: row.produto,
+            quantidade_recebida: row.quantidade_recebida,
+            lote: row.lote,
+            validade: row.validade,
+          })
+        }
+      }
+
+      rows = Array.from(recebimentosMap.values())
+    }
+
     const totalSql = view === 'compras'
       ? `SELECT COUNT(DISTINCT c.id)::int AS total FROM compras.compras c ${whereClause.replace(/c\./g, 'c.').replace(/f\./g, 'f.')}`
+      : view === 'recebimentos'
+      ? `SELECT COUNT(DISTINCT r.id)::int AS total FROM compras.recebimentos r ${whereClause.replace(/r\./g, 'r.')}`
       : `SELECT COUNT(*)::int AS total ${baseSql} ${whereClause}`;
     const totalRows = await runQuery<{ total: number }>(totalSql, params);
     const total = totalRows[0]?.total ?? 0;

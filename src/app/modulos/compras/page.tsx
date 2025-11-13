@@ -14,7 +14,7 @@ import DataToolbar from '@/components/modulos/DataToolbar'
 import StatusBadge from '@/components/modulos/StatusBadge'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/stores/modulos/moduleUiStore'
 import type { Opcao } from '@/components/modulos/TabsNav'
-import { ShoppingCart } from 'lucide-react'
+import { ShoppingCart, PackageCheck } from 'lucide-react'
 
 type Row = TableData
 
@@ -31,6 +31,18 @@ type CompraRow = Row & {
   linhas?: CompraLinhaItem[]
 }
 
+type RecebimentoLinhaItem = {
+  recebimento_linha_id: number
+  produto: string | null
+  quantidade_recebida: number | null
+  lote: string | null
+  validade: string | null
+}
+
+type RecebimentoRow = Row & {
+  linhas?: RecebimentoLinhaItem[]
+}
+
 export default function ModulosComprasPage() {
   const titulo = useStore($titulo)
   const tabs = useStore($tabs)
@@ -41,11 +53,12 @@ export default function ModulosComprasPage() {
   useEffect(() => {
     moduleUiActions.setTitulo({
       title: 'Compras',
-      subtitle: 'Gestão de ordens de compra'
+      subtitle: 'Gestão de ordens de compra e recebimentos'
     })
     moduleUiActions.setTabs({
       options: [
         { value: 'compras', label: 'Compras' },
+        { value: 'recebimentos', label: 'Recebimentos' },
       ],
       selected: 'compras',
     })
@@ -118,7 +131,55 @@ export default function ModulosComprasPage() {
     )
   }
 
-  const columns: ColumnDef<Row>[] = useMemo(() => [
+  const renderRecebimentoLinhas = (row: Row) => {
+    const recebimentoRow = row as RecebimentoRow
+    const linhas = recebimentoRow.linhas || []
+
+    if (linhas.length === 0) return null
+
+    return (
+      <div className="p-4 bg-gray-50">
+        <h4 className="text-sm font-semibold mb-2">Linhas do Recebimento</h4>
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b">
+              <th className="text-left py-2 px-3">Produto</th>
+              <th className="text-right py-2 px-3">Quantidade Recebida</th>
+              <th className="text-left py-2 px-3">Lote</th>
+              <th className="text-left py-2 px-3">Validade</th>
+            </tr>
+          </thead>
+          <tbody>
+            {linhas.map((item, idx) => (
+              <tr key={idx} className="border-b last:border-0">
+                <td className="py-2 px-3">{item.produto ?? '-'}</td>
+                <td className="text-right py-2 px-3">{item.quantidade_recebida ?? '-'}</td>
+                <td className="py-2 px-3">{item.lote ?? '-'}</td>
+                <td className="py-2 px-3">{item.validade ? formatDate(item.validade) : '-'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )
+  }
+
+  const columns: ColumnDef<Row>[] = useMemo(() => {
+    if (tabs.selected === 'recebimentos') {
+      return [
+        { accessorKey: 'recebimento_id', header: 'ID' },
+        { accessorKey: 'data_recebimento', header: 'Data Recebimento', cell: ({ row }) => formatDate(row.original['data_recebimento']) },
+        { accessorKey: 'numero_oc', header: 'Número OC' },
+        { accessorKey: 'compra_data', header: 'Data Compra', cell: ({ row }) => formatDate(row.original['compra_data']) },
+        { accessorKey: 'fornecedor', header: 'Fornecedor' },
+        { accessorKey: 'compra_valor_total', header: 'Valor Compra', cell: ({ row }) => formatBRL(row.original['compra_valor_total']) },
+        { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
+        { accessorKey: 'observacoes', header: 'Observações' },
+        { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em']) },
+      ]
+    }
+
+    return [
     { accessorKey: 'compra_id', header: 'ID' },
     { accessorKey: 'numero_oc', header: 'Número OC' },
     { accessorKey: 'data_emissao', header: 'Data Emissão', cell: ({ row }) => formatDate(row.original['data_emissao']) },
@@ -132,7 +193,7 @@ export default function ModulosComprasPage() {
     { accessorKey: 'valor_total', header: 'Valor Total', cell: ({ row }) => formatBRL(row.original['valor_total']) },
     { accessorKey: 'observacoes', header: 'Observações' },
     { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em']) },
-  ], [])
+  ]}, [tabs.selected])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -141,7 +202,7 @@ export default function ModulosComprasPage() {
       setError(null)
       try {
         const params = new URLSearchParams()
-        params.set('view', 'compras')
+        params.set('view', tabs.selected)
         params.set('page', String(page))
         params.set('pageSize', String(pageSize))
         const url = `/api/modulos/compras?${params.toString()}`
@@ -163,13 +224,23 @@ export default function ModulosComprasPage() {
     }
     load()
     return () => controller.abort()
-  }, [page, pageSize, refreshKey])
+  }, [tabs.selected, page, pageSize, refreshKey])
 
-  useEffect(() => { setPage(1) }, [])
+  useEffect(() => { setPage(1) }, [tabs.selected])
 
-  const tabOptions: Opcao[] = useMemo(() => [
-    { value: 'compras', label: 'Compras', icon: <ShoppingCart className="h-4 w-4" /> }
-  ], [])
+  const tabOptions: Opcao[] = useMemo(() => {
+    const iconFor = (v: string) => {
+      switch (v) {
+        case 'compras':
+          return <ShoppingCart className="h-4 w-4" />
+        case 'recebimentos':
+          return <PackageCheck className="h-4 w-4" />
+        default:
+          return null
+      }
+    }
+    return tabs.options.map((opt) => ({ ...opt, icon: iconFor(opt.value) })) as Opcao[]
+  }, [tabs.options])
 
   return (
     <SidebarProvider>
@@ -241,11 +312,11 @@ export default function ModulosComprasPage() {
                 <div className="p-6 text-sm text-red-600">Erro ao carregar: {error}</div>
               ) : (
                 <DataTable
-                  key="compras"
+                  key={tabs.selected}
                   columns={columns}
                   data={data}
                   enableExpand={true}
-                  renderDetail={renderCompraLinhas}
+                  renderDetail={tabs.selected === 'compras' ? renderCompraLinhas : renderRecebimentoLinhas}
                   enableSearch={tabelaUI.enableSearch}
                   showColumnToggle={tabelaUI.enableColumnToggle}
                   showPagination={tabelaUI.showPagination}
