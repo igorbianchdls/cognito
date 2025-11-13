@@ -51,6 +51,16 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
     criado_em: 'rc.criado_em',
     atualizado_em: 'rc.atualizado_em',
   },
+  campanhas_vendas: {
+    campanha: 'cv.nome',
+    tipo: 'cv.tipo',
+    descricao: 'cv.descricao',
+    data_inicio: 'cv.data_inicio',
+    data_fim: 'cv.data_fim',
+    ativo: 'cv.ativo',
+    criado_em: 'cv.criado_em',
+    atualizado_em: 'cv.atualizado_em',
+  },
 }
 
 export async function GET(req: NextRequest) {
@@ -137,15 +147,88 @@ export async function GET(req: NextRequest) {
         rc.atualizado_em`
       baseSql = `FROM comercial.regras_comissao rc`
       orderClause = orderBy ? `ORDER BY ${orderBy} ${orderDir}` : 'ORDER BY rc.nome ASC'
+    } else if (view === 'campanhas_vendas') {
+      selectSql = `SELECT
+        cv.nome AS campanha,
+        cv.tipo,
+        cv.descricao,
+        cv.data_inicio,
+        cv.data_fim,
+        cv.ativo,
+        pr.nome AS produto,
+        cvp.incentivo_percentual,
+        cvp.incentivo_valor,
+        cvp.meta_quantidade,
+        cvp.id AS item_id,
+        cv.criado_em,
+        cv.atualizado_em`
+      baseSql = `FROM comercial.campanhas_vendas cv
+        LEFT JOIN comercial.campanhas_vendas_produtos cvp ON cvp.campanha_id = cv.id
+        LEFT JOIN produtos.produto pr ON pr.id = cvp.produto_id`
+      orderClause = orderBy ? `ORDER BY ${orderBy} ${orderDir}, cvp.id ASC` : 'ORDER BY cv.id ASC, cvp.id ASC'
     } else {
       return Response.json({ success: false, message: `View inválida: ${view}` }, { status: 400 })
     }
 
     const listSql = orderClause ? `${selectSql} ${baseSql} ${orderClause} LIMIT $1::int OFFSET $2::int`.trim() : `${selectSql} LIMIT $1::int OFFSET $2::int`.trim()
-    const rows = await runQuery<Record<string, unknown>>(listSql, [pageSize, offset])
+    let rows = await runQuery<Record<string, unknown>>(listSql, [pageSize, offset])
+
+    // Para campanhas_vendas, agrupar produtos
+    if (view === 'campanhas_vendas') {
+      type CampanhaAgregada = {
+        campanha: unknown
+        tipo: unknown
+        descricao: unknown
+        data_inicio: unknown
+        data_fim: unknown
+        ativo: unknown
+        criado_em: unknown
+        atualizado_em: unknown
+        produtos: Array<{
+          produto: unknown
+          incentivo_percentual: unknown
+          incentivo_valor: unknown
+          meta_quantidade: unknown
+        }>
+      }
+      const campanhasMap = new Map<string, CampanhaAgregada>()
+
+      for (const row of rows) {
+        const campanhaKey = String(row.campanha)
+
+        if (!campanhasMap.has(campanhaKey)) {
+          // Primeira vez vendo esta campanha
+          campanhasMap.set(campanhaKey, {
+            campanha: row.campanha,
+            tipo: row.tipo,
+            descricao: row.descricao,
+            data_inicio: row.data_inicio,
+            data_fim: row.data_fim,
+            ativo: row.ativo,
+            criado_em: row.criado_em,
+            atualizado_em: row.atualizado_em,
+            produtos: []
+          })
+        }
+
+        // Adicionar produto se existir
+        if (row.item_id) {
+          campanhasMap.get(campanhaKey)!.produtos.push({
+            produto: row.produto,
+            incentivo_percentual: row.incentivo_percentual,
+            incentivo_valor: row.incentivo_valor,
+            meta_quantidade: row.meta_quantidade,
+          })
+        }
+      }
+
+      rows = Array.from(campanhasMap.values())
+    }
 
     // Total simples (sem filtros)
-    const totalSql = baseSql ? `SELECT COUNT(*)::int AS total ${baseSql}` : `SELECT 0::int AS total`
+    const totalSql = view === 'campanhas_vendas'
+      ? `SELECT COUNT(DISTINCT cv.id)::int AS total FROM comercial.campanhas_vendas cv`
+      : baseSql ? `SELECT COUNT(*)::int AS total ${baseSql}` : `SELECT 0::int AS total`
     const totalRows = await runQuery<{ total: number }>(totalSql)
     const total = totalRows[0]?.total ?? 0
 

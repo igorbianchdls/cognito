@@ -16,6 +16,17 @@ import { List } from 'lucide-react'
 
 type Row = TableData
 
+type CampanhaItem = {
+  produto: string
+  incentivo_percentual: number | null
+  incentivo_valor: number | null
+  meta_quantidade: number | null
+}
+
+type CampanhaRow = Row & {
+  produtos?: CampanhaItem[]
+}
+
 export default function ModulosComercialPage() {
   const titulo = useStore($titulo)
   const tabs = useStore($tabs)
@@ -52,6 +63,7 @@ export default function ModulosComercialPage() {
         { value: 'meta_vendedores', label: 'Meta Vendedores' },
         { value: 'meta_territorios', label: 'Meta Territórios' },
         { value: 'regras_comissoes', label: 'Regras de Comissões' },
+        { value: 'campanhas_vendas', label: 'Campanhas de Vendas' },
       ],
       selected: 'territorios',
     })
@@ -67,6 +79,39 @@ export default function ModulosComercialPage() {
       if (isNaN(d.getTime())) return String(value)
       return d.toLocaleDateString('pt-BR')
     } catch { return String(value) }
+  }
+
+  const renderCampanhaProdutos = (row: Row) => {
+    const campanhaRow = row as CampanhaRow
+    const produtos = campanhaRow.produtos || []
+
+    if (produtos.length === 0) return null
+
+    return (
+      <div className="p-4 bg-gray-50">
+        <h4 className="text-sm font-semibold mb-2">Produtos da Campanha</h4>
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b">
+              <th className="text-left py-2 px-3">Produto</th>
+              <th className="text-right py-2 px-3">Incentivo %</th>
+              <th className="text-right py-2 px-3">Incentivo Valor</th>
+              <th className="text-right py-2 px-3">Meta Quantidade</th>
+            </tr>
+          </thead>
+          <tbody>
+            {produtos.map((item, idx) => (
+              <tr key={idx} className="border-b last:border-0">
+                <td className="py-2 px-3">{item.produto}</td>
+                <td className="text-right py-2 px-3">{item.incentivo_percentual ?? '-'}</td>
+                <td className="text-right py-2 px-3">{item.incentivo_valor ?? '-'}</td>
+                <td className="text-right py-2 px-3">{item.meta_quantidade ?? '-'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )
   }
 
   const columns: ColumnDef<Row>[] = useMemo(() => {
@@ -118,6 +163,17 @@ export default function ModulosComercialPage() {
           { accessorKey: 'percentual_minimo', header: 'Percentual Mínimo (%)' },
           { accessorKey: 'percentual_maximo', header: 'Percentual Máximo (%)' },
           { accessorKey: 'regra_ativa', header: 'Ativo' },
+          { accessorKey: 'criado_em', header: 'Criado Em', cell: ({ getValue }) => formatDate(getValue()) },
+          { accessorKey: 'atualizado_em', header: 'Atualizado Em', cell: ({ getValue }) => formatDate(getValue()) },
+        ]
+      case 'campanhas_vendas':
+        return [
+          { accessorKey: 'campanha', header: 'Campanha' },
+          { accessorKey: 'tipo', header: 'Tipo' },
+          { accessorKey: 'descricao', header: 'Descrição' },
+          { accessorKey: 'data_inicio', header: 'Data Início', cell: ({ getValue }) => formatDate(getValue()) },
+          { accessorKey: 'data_fim', header: 'Data Fim', cell: ({ getValue }) => formatDate(getValue()) },
+          { accessorKey: 'ativo', header: 'Ativo' },
           { accessorKey: 'criado_em', header: 'Criado Em', cell: ({ getValue }) => formatDate(getValue()) },
           { accessorKey: 'atualizado_em', header: 'Atualizado Em', cell: ({ getValue }) => formatDate(getValue()) },
         ]
@@ -239,6 +295,12 @@ export default function ModulosComercialPage() {
                   key={tabs.selected}
                   columns={columns}
                   data={data}
+                  enableExpand={tabs.selected === 'campanhas_vendas'}
+                  renderDetail={
+                    tabs.selected === 'campanhas_vendas'
+                      ? renderCampanhaProdutos
+                      : undefined
+                  }
                   enableSearch={tabelaUI.enableSearch}
                   showColumnToggle={tabelaUI.enableColumnToggle}
                   showPagination={tabelaUI.showPagination}
