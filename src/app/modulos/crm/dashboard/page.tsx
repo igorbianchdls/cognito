@@ -129,6 +129,7 @@ export default function CRMDashboardPage() {
   }, [])
 
   // KPIs
+  const openOpps = useMemo(() => opps.filter(o => !isClosed(o.estagio)), [opps])
   const kpis = useMemo(() => {
     // Faturamento: soma de valores de oportunidades ganhas
     const faturamento = opps
