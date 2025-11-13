@@ -12,8 +12,7 @@ import { Calendar as CalendarIcon, Handshake, ShoppingCart, PackagePlus, FileChe
 import type { DateRange } from 'react-day-picker'
 import { $financeiroDashboardUI, $financeiroDashboardFilters, financeiroDashboardActions } from '@/stores/modulos/financeiroDashboardStore'
 
-type PedidoRow = { numero?: string; fornecedor?: string; status?: string; data_emissao?: string; valor_total?: number | string }
-type ApiComprasRow = { numero_oc?: string; fornecedor?: string; status?: string; data_emissao?: string; valor_total?: number | string }
+type ChartItem = { label: string; value: number }
 
 function formatBRL(n?: number) { return (Number(n||0)).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) }
 
@@ -27,7 +26,6 @@ export default function ComprasDashboardPage() {
   const cardShadow = ui.cardShadow
   const filtersIconColor = ui.filtersIconColor
 
-  const [pedidos, setPedidos] = useState<PedidoRow[]>([])
   // KPIs (reais)
   const [gasto, setGasto] = useState<number>(0)
   const [fornecedores, setFornecedores] = useState<number>(0)
@@ -35,42 +33,45 @@ export default function ComprasDashboardPage() {
   const [pedidosCompra, setPedidosCompra] = useState<number>(0)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // Charts (reais)
+  const [chartFornecedores, setChartFornecedores] = useState<ChartItem[]>([])
+  const [chartCentroCusto, setChartCentroCusto] = useState<ChartItem[]>([])
+  const [chartFiliais, setChartFiliais] = useState<ChartItem[]>([])
+  const [chartCategorias, setChartCategorias] = useState<ChartItem[]>([])
+  const [chartProjetos, setChartProjetos] = useState<ChartItem[]>([])
+  const [chartDepartamentos, setChartDepartamentos] = useState<ChartItem[]>([])
 
   useEffect(() => {
     let cancelled = false
     async function load() {
       setLoading(true); setError(null)
       try {
-        const base = '/api/modulos/compras'
-        const [kRes, pRes] = await Promise.allSettled([
-          fetch(`/api/modulos/compras/dashboard`, { cache: 'no-store' }),
-          fetch(`${base}?view=compras&page=1&pageSize=1000`, { cache: 'no-store' }),
-        ])
-        let ps: PedidoRow[] = []
-        if (kRes.status === 'fulfilled' && kRes.value.ok) {
-          const j = await kRes.value.json()
+        const params = new URLSearchParams()
+        params.set('limit', '6')
+        if (filters?.dateRange?.from) params.set('de', filters.dateRange.from)
+        if (filters?.dateRange?.to) params.set('ate', filters.dateRange.to)
+        if (filters?.dataFilter && filters.dataFilter !== 'todos') params.set('status', filters.dataFilter)
+
+        const res = await fetch(`/api/modulos/compras/dashboard?${params.toString()}`, { cache: 'no-store' })
+        if (res.ok) {
+          const j = await res.json()
           const k = j?.kpis || {}
+          const charts = j?.charts || {}
           setGasto(Number(k.gasto || 0))
           setFornecedores(Number(k.fornecedores || 0))
           setTransacoes(Number(k.transacoes || 0))
           setPedidosCompra(Number(k.pedidos || 0))
+          setChartFornecedores(Array.isArray(charts?.fornecedores) ? charts.fornecedores as ChartItem[] : [])
+          setChartCentroCusto(Array.isArray(charts?.centro_custo) ? charts.centro_custo as ChartItem[] : [])
+          setChartFiliais(Array.isArray(charts?.filiais) ? charts.filiais as ChartItem[] : [])
+          setChartCategorias(Array.isArray(charts?.categorias) ? charts.categorias as ChartItem[] : [])
+          setChartProjetos(Array.isArray(charts?.projetos) ? charts.projetos as ChartItem[] : [])
+          setChartDepartamentos(Array.isArray(charts?.departamentos) ? charts.departamentos as ChartItem[] : [])
         }
-        if (pRes.status === 'fulfilled' && pRes.value.ok) {
-          const j = await pRes.value.json();
-          const rows = Array.isArray(j?.rows) ? (j.rows as ApiComprasRow[]) : []
-          ps = rows.map((r) => ({
-            numero: r.numero_oc ?? undefined,
-            fornecedor: r.fornecedor,
-            status: r.status,
-            data_emissao: r.data_emissao,
-            valor_total: r.valor_total,
-          }))
-        }
-        if (!cancelled) { setPedidos(ps) }
       } catch { if (!cancelled) setError('Falha ao carregar dados') } finally { if (!cancelled) setLoading(false) }
     }
     load(); return () => { cancelled = true }
-  }, [])
+  }, [filters.dateRange, filters.dataFilter])
 
   // Fonts mapping
   function fontVar(name?: string) {
@@ -128,22 +129,13 @@ export default function ComprasDashboardPage() {
   // KPIs agora vêm do endpoint (mantidos em state)
 
   // Charts
-  const gastoPorFornecedor = useMemo(() => {
-    const m = new Map<string, number>()
-    for (const p of pedidos) { const k=p.fornecedor||'—'; m.set(k,(m.get(k)||0)+(Number(p.valor_total)||0)) }
-    return Array.from(m, ([label, value]) => ({ label, value })).sort((a,b)=> b.value-a.value).slice(0,6)
-  }, [pedidos])
-  // (outros gráficos derivados podem ser adicionados futuramente)
-
-  // Charts: sem mocks. Enquanto não houver agregações reais,
-  // mantemos arrays vazios (ou derivados do que temos em memória).
-  const comprasPorDepartamento: { label: string; value: number }[] = []
-  const comprasPorCentroCusto: { label: string; value: number }[] = []
-  // Aproveitamos o cálculo real de gasto por fornecedor a partir dos pedidos carregados
-  const comprasPorFornecedores = useMemo(() => gastoPorFornecedor, [gastoPorFornecedor])
-  const comprasPorFiliais: { label: string; value: number }[] = []
-  const comprasPorCategorias: { label: string; value: number }[] = []
-  const comprasPorProjetos: { label: string; value: number }[] = []
+  // Charts: usar dados do endpoint
+  const comprasPorFornecedores = chartFornecedores
+  const comprasPorCentroCusto = chartCentroCusto
+  const comprasPorFiliais = chartFiliais
+  const comprasPorCategorias = chartCategorias
+  const comprasPorProjetos = chartProjetos
+  const comprasPorDepartamento = chartDepartamentos
 
   
 
