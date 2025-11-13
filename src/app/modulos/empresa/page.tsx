@@ -13,6 +13,7 @@ import DataToolbar from '@/components/modulos/DataToolbar'
 import DataTable, { type TableData } from '@/components/widgets/Table'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/stores/modulos/moduleUiStore'
 import { List } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 import CadastroEmpresaSheet from '@/components/empresa/CadastroEmpresaSheet'
 import CadastroFilialSheet from '@/components/empresa/CadastroFilialSheet'
@@ -315,6 +316,252 @@ export default function ModulosEmpresaPage() {
               )}
             </div>
           </div>
+
+          {/* Controles de UI */}
+          <div className="px-4 md:px-6 mt-8 mb-8">
+            <div className="bg-white p-6 rounded-lg border border-gray-200">
+              <h3 className="text-lg font-semibold mb-6">Configurações de UI</h3>
+
+              {/* SEÇÃO: Título */}
+              <div className="mb-8">
+                <h4 className="text-sm font-medium mb-4 text-gray-700">Título do Header</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="text-xs text-gray-600 mb-1 block">Font Family</label>
+                    <select
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                      value={titulo.titleFontFamily || 'Inter'}
+                      onChange={(e) => moduleUiActions.setTitulo({ titleFontFamily: e.target.value })}
+                    >
+                      <option>Inter</option>
+                      <option>Geist</option>
+                      <option>Roboto Mono</option>
+                      <option>Geist Mono</option>
+                      <option>IBM Plex Mono</option>
+                      <option>Avenir</option>
+                      <option>Space Mono</option>
+                      <option>EB Garamond</option>
+                      <option>Libre Baskerville</option>
+                      <option>Barlow</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-600 mb-1 block">Font Size (px)</label>
+                    <input
+                      type="number"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                      value={titulo.titleFontSize || 32}
+                      onChange={(e) => moduleUiActions.setTitulo({ titleFontSize: Number(e.target.value) })}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-600 mb-1 block">Font Weight</label>
+                    <input
+                      type="number"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                      min="100"
+                      max="900"
+                      step="100"
+                      value={titulo.titleFontWeight || '600'}
+                      onChange={(e) => moduleUiActions.setTitulo({ titleFontWeight: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-600 mb-1 block">Color</label>
+                    <input
+                      type="color"
+                      className="w-full h-10 px-1 py-1 border border-gray-300 rounded-md"
+                      value={titulo.titleColor || '#111827'}
+                      onChange={(e) => moduleUiActions.setTitulo({ titleColor: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-600 mb-1 block">Letter Spacing (em)</label>
+                    <input
+                      type="number"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                      step="0.01"
+                      value={titulo.titleLetterSpacing || 0}
+                      onChange={(e) => moduleUiActions.setTitulo({ titleLetterSpacing: Number(e.target.value) })}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* SEÇÃO: Subtítulo */}
+              <div className="mb-8">
+                <h4 className="text-sm font-medium mb-4 text-gray-700">Subtítulo do Header</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="text-xs text-gray-600 mb-1 block">Font Family</label>
+                    <select
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                      value={titulo.subtitleFontFamily || 'Inter'}
+                      onChange={(e) => moduleUiActions.setTitulo({ subtitleFontFamily: e.target.value })}
+                    >
+                      <option>Inter</option>
+                      <option>Geist</option>
+                      <option>Roboto Mono</option>
+                      <option>Geist Mono</option>
+                      <option>IBM Plex Mono</option>
+                      <option>Avenir</option>
+                      <option>Space Mono</option>
+                      <option>EB Garamond</option>
+                      <option>Libre Baskerville</option>
+                      <option>Barlow</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-600 mb-1 block">Font Size (px)</label>
+                    <input
+                      type="number"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                      value={titulo.subtitleFontSize || 14}
+                      onChange={(e) => moduleUiActions.setTitulo({ subtitleFontSize: Number(e.target.value) })}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-600 mb-1 block">Font Weight</label>
+                    <input
+                      type="number"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                      min="100"
+                      max="900"
+                      step="100"
+                      value={titulo.subtitleFontWeight || '400'}
+                      onChange={(e) => moduleUiActions.setTitulo({ subtitleFontWeight: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-600 mb-1 block">Color</label>
+                    <input
+                      type="color"
+                      className="w-full h-10 px-1 py-1 border border-gray-300 rounded-md"
+                      value={titulo.subtitleColor || '#666666'}
+                      onChange={(e) => moduleUiActions.setTitulo({ subtitleColor: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-600 mb-1 block">Letter Spacing (em)</label>
+                    <input
+                      type="number"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                      step="0.01"
+                      value={titulo.subtitleLetterSpacing || -0.28}
+                      onChange={(e) => moduleUiActions.setTitulo({ subtitleLetterSpacing: Number(e.target.value) })}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* SEÇÃO: Tabs */}
+              <div className="mb-8">
+                <h4 className="text-sm font-medium mb-4 text-gray-700">Tabs</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="text-xs text-gray-600 mb-1 block">Font Family</label>
+                    <select
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                      value={tabs.fontFamily || 'Geist'}
+                      onChange={(e) => moduleUiActions.setTabs({ fontFamily: e.target.value })}
+                    >
+                      <option>Inter</option>
+                      <option>Geist</option>
+                      <option>Roboto Mono</option>
+                      <option>Geist Mono</option>
+                      <option>IBM Plex Mono</option>
+                      <option>Avenir</option>
+                      <option>Space Mono</option>
+                      <option>EB Garamond</option>
+                      <option>Libre Baskerville</option>
+                      <option>Barlow</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-600 mb-1 block">Font Size (px)</label>
+                    <input
+                      type="number"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                      value={tabs.fontSize || 14}
+                      onChange={(e) => moduleUiActions.setTabs({ fontSize: Number(e.target.value) })}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-600 mb-1 block">Font Weight</label>
+                    <input
+                      type="number"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                      min="100"
+                      max="900"
+                      step="100"
+                      value={tabs.fontWeight || '400'}
+                      onChange={(e) => moduleUiActions.setTabs({ fontWeight: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-600 mb-1 block">Color (Inactive)</label>
+                    <input
+                      type="color"
+                      className="w-full h-10 px-1 py-1 border border-gray-300 rounded-md"
+                      value={tabs.color || 'rgb(180, 180, 180)'}
+                      onChange={(e) => moduleUiActions.setTabs({ color: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-600 mb-1 block">Active Color</label>
+                    <input
+                      type="color"
+                      className="w-full h-10 px-1 py-1 border border-gray-300 rounded-md"
+                      value={tabs.activeColor || 'rgb(41, 41, 41)'}
+                      onChange={(e) => moduleUiActions.setTabs({ activeColor: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-600 mb-1 block">Letter Spacing (em)</label>
+                    <input
+                      type="number"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                      step="0.01"
+                      value={tabs.letterSpacing || -0.3}
+                      onChange={(e) => moduleUiActions.setTabs({ letterSpacing: Number(e.target.value) })}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-600 mb-1 block">Icon Size (px)</label>
+                    <input
+                      type="number"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                      value={tabs.iconSize || 16}
+                      onChange={(e) => moduleUiActions.setTabs({ iconSize: Number(e.target.value) })}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-600 mb-1 block">Active Font Weight</label>
+                    <input
+                      type="number"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                      min="100"
+                      max="900"
+                      step="100"
+                      value={tabs.activeFontWeight || '500'}
+                      onChange={(e) => moduleUiActions.setTabs({ activeFontWeight: e.target.value })}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Botão Reset */}
+              <div className="flex justify-end">
+                <Button
+                  variant="outline"
+                  onClick={() => moduleUiActions.resetAll()}
+                >
+                  Resetar Padrões
+                </Button>
+              </div>
+            </div>
+          </div>
+
         </div>
       </SidebarInset>
     </SidebarProvider>
