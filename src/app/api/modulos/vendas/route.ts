@@ -150,7 +150,28 @@ export async function GET(req: NextRequest) {
 
     // Para pedidos, agrupar itens
     if (view === 'pedidos') {
-      const pedidosMap = new Map<number, any>()
+      type PedidoAgregado = {
+        pedido: unknown
+        cliente: unknown
+        vendedor: unknown
+        territorio: unknown
+        canal_venda: unknown
+        data_pedido: unknown
+        status: unknown
+        pedido_subtotal: unknown
+        desconto_total: unknown
+        valor_total: unknown
+        criado_em: unknown
+        atualizado_em: unknown
+        itens: Array<{
+          produto: unknown
+          quantidade: unknown
+          preco_unitario: unknown
+          desconto_item: unknown
+          subtotal_item: unknown
+        }>
+      }
+      const pedidosMap = new Map<number, PedidoAgregado>()
 
       for (const row of rows) {
         const pedidoId = Number(row.pedido)
