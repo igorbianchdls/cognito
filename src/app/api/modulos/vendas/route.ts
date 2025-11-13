@@ -83,9 +83,15 @@ export async function GET(req: NextRequest) {
         cv.nome AS canal_venda,
         p.data_pedido,
         p.status,
-        p.subtotal,
+        p.subtotal AS pedido_subtotal,
         p.desconto_total,
         p.valor_total,
+        pr.nome AS produto,
+        pi.quantidade,
+        pi.preco_unitario,
+        pi.desconto AS desconto_item,
+        pi.subtotal AS subtotal_item,
+        pi.id AS item_id,
         p.criado_em,
         p.atualizado_em`
       baseSql = `FROM vendas.pedidos p
@@ -93,8 +99,10 @@ export async function GET(req: NextRequest) {
         LEFT JOIN comercial.vendedores v ON v.id = p.vendedor_id
         LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id
         LEFT JOIN comercial.territorios t ON t.id = p.territorio_id
-        LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id`
-      orderClause = orderBy ? `ORDER BY ${orderBy} ${orderDir}` : 'ORDER BY p.id ASC'
+        LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+        LEFT JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+        LEFT JOIN produtos.produtos pr ON pr.id = pi.produto_id`
+      orderClause = orderBy ? `ORDER BY ${orderBy} ${orderDir}, pi.id ASC` : 'ORDER BY p.id ASC, pi.id ASC'
     } else if (view === 'devolucoes') {
       selectSql = `SELECT
         d.id AS devolucao,
@@ -138,10 +146,53 @@ export async function GET(req: NextRequest) {
     }
 
     const listSql = `${selectSql} ${baseSql} ${orderClause} LIMIT $1::int OFFSET $2::int`.trim()
-    const rows = await runQuery<Record<string, unknown>>(listSql, [pageSize, offset])
+    let rows = await runQuery<Record<string, unknown>>(listSql, [pageSize, offset])
 
-    // Total
-    const totalSql = `SELECT COUNT(*)::int AS total ${baseSql}`
+    // Para pedidos, agrupar itens
+    if (view === 'pedidos') {
+      const pedidosMap = new Map<number, any>()
+
+      for (const row of rows) {
+        const pedidoId = Number(row.pedido)
+
+        if (!pedidosMap.has(pedidoId)) {
+          // Primeira vez vendo este pedido
+          pedidosMap.set(pedidoId, {
+            pedido: row.pedido,
+            cliente: row.cliente,
+            vendedor: row.vendedor,
+            territorio: row.territorio,
+            canal_venda: row.canal_venda,
+            data_pedido: row.data_pedido,
+            status: row.status,
+            pedido_subtotal: row.pedido_subtotal,
+            desconto_total: row.desconto_total,
+            valor_total: row.valor_total,
+            criado_em: row.criado_em,
+            atualizado_em: row.atualizado_em,
+            itens: []
+          })
+        }
+
+        // Adicionar item se existir
+        if (row.item_id) {
+          pedidosMap.get(pedidoId)!.itens.push({
+            produto: row.produto,
+            quantidade: row.quantidade,
+            preco_unitario: row.preco_unitario,
+            desconto_item: row.desconto_item,
+            subtotal_item: row.subtotal_item,
+          })
+        }
+      }
+
+      rows = Array.from(pedidosMap.values())
+    }
+
+    // Total - para pedidos, contar apenas pedidos distintos
+    const totalSql = view === 'pedidos'
+      ? `SELECT COUNT(DISTINCT p.id)::int AS total FROM vendas.pedidos p`
+      : `SELECT COUNT(*)::int AS total ${baseSql}`
     const totalRows = await runQuery<{ total: number }>(totalSql)
     const total = totalRows[0]?.total ?? 0
 

@@ -16,6 +16,18 @@ import { ShoppingCart, RotateCcw, Ticket, LayoutGrid } from 'lucide-react'
 
 type Row = TableData
 
+type PedidoItem = {
+  produto: string
+  quantidade: number
+  preco_unitario: number
+  desconto_item: number
+  subtotal_item: number
+}
+
+type PedidoRow = Row & {
+  itens?: PedidoItem[]
+}
+
 export default function ModulosVendasPage() {
   const titulo = useStore($titulo)
   const tabs = useStore($tabs)
@@ -80,6 +92,41 @@ export default function ModulosVendasPage() {
     return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
   }
 
+  const renderPedidoItems = (row: Row) => {
+    const pedidoRow = row as PedidoRow
+    const itens = pedidoRow.itens || []
+
+    if (itens.length === 0) return null
+
+    return (
+      <div className="p-4 bg-gray-50">
+        <h4 className="text-sm font-semibold mb-2">Itens do Pedido</h4>
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b">
+              <th className="text-left py-2 px-3">Produto</th>
+              <th className="text-right py-2 px-3">Quantidade</th>
+              <th className="text-right py-2 px-3">Preço Unitário</th>
+              <th className="text-right py-2 px-3">Desconto</th>
+              <th className="text-right py-2 px-3">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            {itens.map((item, idx) => (
+              <tr key={idx} className="border-b last:border-0">
+                <td className="py-2 px-3">{item.produto}</td>
+                <td className="text-right py-2 px-3">{item.quantidade}</td>
+                <td className="text-right py-2 px-3">{formatBRL(item.preco_unitario)}</td>
+                <td className="text-right py-2 px-3">{formatBRL(item.desconto_item)}</td>
+                <td className="text-right py-2 px-3">{formatBRL(item.subtotal_item)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )
+  }
+
   const columns: ColumnDef<Row>[] = useMemo(() => {
     switch (tabs.selected) {
       case 'pedidos':
@@ -91,7 +138,7 @@ export default function ModulosVendasPage() {
           { accessorKey: 'canal_venda', header: 'Canal' },
           { accessorKey: 'data_pedido', header: 'Data Pedido', cell: ({ getValue }) => formatDate(getValue()) },
           { accessorKey: 'status', header: 'Status' },
-          { accessorKey: 'subtotal', header: 'Subtotal', cell: ({ getValue }) => formatBRL(getValue()) },
+          { accessorKey: 'pedido_subtotal', header: 'Subtotal', cell: ({ getValue }) => formatBRL(getValue()) },
           { accessorKey: 'desconto_total', header: 'Desconto', cell: ({ getValue }) => formatBRL(getValue()) },
           { accessorKey: 'valor_total', header: 'Total', cell: ({ getValue }) => formatBRL(getValue()) },
           { accessorKey: 'criado_em', header: 'Criado Em', cell: ({ getValue }) => formatDate(getValue()) },
@@ -248,6 +295,8 @@ export default function ModulosVendasPage() {
                   key={tabs.selected}
                   columns={columns}
                   data={data}
+                  enableExpand={tabs.selected === 'pedidos'}
+                  renderDetail={tabs.selected === 'pedidos' ? renderPedidoItems : undefined}
                   enableSearch={tabelaUI.enableSearch}
                   showColumnToggle={tabelaUI.enableColumnToggle}
                   showPagination={tabelaUI.showPagination}
