@@ -122,25 +122,25 @@ export default function ModulosEmpresaPage() {
         ]
       case 'funcionarios':
         return [
-          { accessorKey: 'codigo', header: 'Código' },
-          { accessorKey: 'nome', header: 'Nome' },
-          { accessorKey: 'cargo', header: 'Cargo' },
-          { accessorKey: 'departamento', header: 'Departamento' },
+          { accessorKey: 'funcionario', header: 'Funcionário' },
           { accessorKey: 'email', header: 'E-mail' },
           { accessorKey: 'telefone', header: 'Telefone' },
-          { accessorKey: 'data_admissao', header: 'Data Admissão', cell: ({ getValue }) => formatDate(getValue()) },
-          { accessorKey: 'status', header: 'Status' },
+          { accessorKey: 'cargo', header: 'Cargo' },
+          { accessorKey: 'departamento', header: 'Departamento' },
+          { accessorKey: 'filial', header: 'Filial' },
+          { accessorKey: 'criado_em', header: 'Criado Em', cell: ({ getValue }) => formatDate(getValue()) },
+          { accessorKey: 'atualizado_em', header: 'Atualizado Em', cell: ({ getValue }) => formatDate(getValue()) },
         ]
       case 'vendedores':
         return [
-          { accessorKey: 'codigo', header: 'Código' },
-          { accessorKey: 'nome', header: 'Nome' },
+          { accessorKey: 'vendedor', header: 'Vendedor' },
           { accessorKey: 'email', header: 'E-mail' },
           { accessorKey: 'telefone', header: 'Telefone' },
           { accessorKey: 'territorio', header: 'Território' },
-          { accessorKey: 'meta_mensal', header: 'Meta Mensal' },
+          { accessorKey: 'territorio_descricao', header: 'Descrição Território' },
           { accessorKey: 'comissao', header: 'Comissão (%)' },
-          { accessorKey: 'status', header: 'Status' },
+          { accessorKey: 'vendedor_ativo', header: 'Ativo' },
+          { accessorKey: 'criado_em', header: 'Criado Em', cell: ({ getValue }) => formatDate(getValue()) },
         ]
       case 'equipe_comercial':
         return [
@@ -154,13 +154,11 @@ export default function ModulosEmpresaPage() {
         ]
       case 'territorios':
         return [
-          { accessorKey: 'codigo', header: 'Código' },
-          { accessorKey: 'nome', header: 'Nome' },
-          { accessorKey: 'regiao', header: 'Região' },
-          { accessorKey: 'responsavel', header: 'Responsável' },
-          { accessorKey: 'estados', header: 'Estados' },
-          { accessorKey: 'cidades', header: 'Cidades' },
-          { accessorKey: 'status', header: 'Status' },
+          { accessorKey: 'territorio', header: 'Território' },
+          { accessorKey: 'descricao', header: 'Descrição' },
+          { accessorKey: 'territorio_pai', header: 'Território Pai' },
+          { accessorKey: 'ativo', header: 'Ativo' },
+          { accessorKey: 'criado_em', header: 'Criado Em', cell: ({ getValue }) => formatDate(getValue()) },
         ]
       default:
         return []
