@@ -86,15 +86,16 @@ export default function VendasDashboardPage() {
     load(); return () => { cancelled = true }
   }, [])
 
-  // KPIs
+  // KPIs (mock data)
   const kpis = useMemo(() => {
-    const total = rows.reduce((acc, r) => acc + (Number(r.valor_total_pedido) || 0), 0)
-    const pedidos = rows.length
-    const completos = rows.filter(r => isCompleted(r.status)).length
-    const ticket = pedidos > 0 ? total / pedidos : 0
-    const conv = pedidos > 0 ? (completos / pedidos) * 100 : 0
-    return { total, pedidos, ticket, conv }
-  }, [rows])
+    const meta = 500000
+    const vendas = 410000
+    const percentMeta = (vendas / meta) * 100
+    const ticket = 2850
+    const cogs = 180000
+    const margemBruta = ((vendas - cogs) / vendas) * 100
+    return { meta, vendas, percentMeta, ticket, cogs, margemBruta }
+  }, [])
 
   // Vendas por Canal / Vendedor / Cliente / Cidade
   const vendasPorCanal = useMemo(() => {
@@ -300,26 +301,36 @@ export default function VendasDashboardPage() {
     >
       <div className="flex-1">
           {loading ? (<div className="p-4 text-sm text-gray-500">Carregando…</div>) : error ? (<div className="p-4 text-sm text-red-600">{error}</div>) : null}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
-              <div className="text-sm font-medium text-gray-500 mb-2" style={styleKpiTitle}>Total Vendas (6m)</div>
-              <div className="text-2xl font-bold text-blue-600" style={styleValues}>{formatBRL(kpis.total)}</div>
-              <div className="text-xs text-gray-400 mt-1" style={styleText}>Soma de pedidos</div>
+              <div className="text-sm font-medium text-gray-500 mb-2" style={styleKpiTitle}>Meta de Vendas</div>
+              <div className="text-2xl font-bold text-blue-600" style={styleValues}>{formatBRL(kpis.meta)}</div>
+              <div className="text-xs text-gray-400 mt-1" style={styleText}>Meta estabelecida</div>
+            </div>
+        <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
+              <div className="text-sm font-medium text-gray-500 mb-2" style={styleKpiTitle}>Vendas</div>
+              <div className="text-2xl font-bold text-green-600" style={styleValues}>{formatBRL(kpis.vendas)}</div>
+              <div className="text-xs text-gray-400 mt-1" style={styleText}>Total realizado</div>
+            </div>
+        <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
+              <div className="text-sm font-medium text-gray-500 mb-2" style={styleKpiTitle}>% da Meta</div>
+              <div className="text-2xl font-bold text-purple-600" style={styleValues}>{kpis.percentMeta.toFixed(1)}%</div>
+              <div className="text-xs text-gray-400 mt-1" style={styleText}>Alcançado da meta</div>
             </div>
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
               <div className="text-sm font-medium text-gray-500 mb-2" style={styleKpiTitle}>Ticket Médio</div>
-              <div className="text-2xl font-bold text-green-600" style={styleValues}>{formatBRL(kpis.ticket)}</div>
-              <div className="text-xs text-gray-400 mt-1" style={styleText}>Total / pedidos</div>
+              <div className="text-2xl font-bold text-orange-600" style={styleValues}>{formatBRL(kpis.ticket)}</div>
+              <div className="text-xs text-gray-400 mt-1" style={styleText}>Valor médio por pedido</div>
             </div>
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
-              <div className="text-sm font-medium text-gray-500 mb-2" style={styleKpiTitle}>Pedidos</div>
-              <div className="text-2xl font-bold text-purple-600" style={styleValues}>{kpis.pedidos}</div>
-              <div className="text-xs text-gray-400 mt-1" style={styleText}>Registros no período</div>
+              <div className="text-sm font-medium text-gray-500 mb-2" style={styleKpiTitle}>COGS</div>
+              <div className="text-2xl font-bold text-rose-600" style={styleValues}>{formatBRL(kpis.cogs)}</div>
+              <div className="text-xs text-gray-400 mt-1" style={styleText}>Custo dos produtos</div>
             </div>
-            <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
-              <div className="text-sm font-medium text-gray-500 mb-2" style={styleKpiTitle}>Taxa de Conversão</div>
-              <div className="text-2xl font-bold text-orange-600" style={styleValues}>{kpis.conv.toFixed(1)}%</div>
-              <div className="text-xs text-gray-400 mt-1" style={styleText}>Concluídos / total</div>
+        <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
+              <div className="text-sm font-medium text-gray-500 mb-2" style={styleKpiTitle}>Margem Bruta</div>
+              <div className="text-2xl font-bold text-indigo-600" style={styleValues}>{kpis.margemBruta.toFixed(1)}%</div>
+              <div className="text-xs text-gray-400 mt-1" style={styleText}>(Vendas - COGS) / Vendas</div>
             </div>
           </div>
 
