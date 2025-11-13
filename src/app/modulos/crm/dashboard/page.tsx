@@ -9,7 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Calendar as CalendarIcon, TrendingUp, Users, CalendarDays, Target, UserCheck, XCircle, Clock, Filter, Activity, Star, Award } from 'lucide-react'
+import { Calendar as CalendarIcon, TrendingUp, Users, CalendarDays, Target, UserCheck, XCircle, Clock, Filter, Activity, Star, Award, Flame, Radio } from 'lucide-react'
 import type { DateRange } from 'react-day-picker'
 import { $financeiroDashboardUI, $financeiroDashboardFilters, financeiroDashboardActions } from '@/stores/modulos/financeiroDashboardStore'
 
@@ -297,11 +297,13 @@ export default function CRMDashboardPage() {
     return withScore.sort((a,b)=> b.score - a.score).slice(0,5)
   }, [openOpps])
 
-  const recentAtivs = useMemo(() => {
-    return [...ativs]
-      .sort((a,b)=> new Date(b.data_vencimento || 0).getTime() - new Date(a.data_vencimento || 0).getTime())
-      .slice(0,3)
-  }, [ativs])
+  // Preparar dados de Oportunidades Quentes para chart
+  const oportunidadesQuentesChart = useMemo(() => {
+    return hotOpps.map(o => ({
+      label: o.oportunidade || o.conta || 'Oportunidade',
+      value: Number(o.valor) || 0
+    }))
+  }, [hotOpps])
 
   // Fonts mapping
   function fontVar(name?: string) {
@@ -494,7 +496,7 @@ export default function CRMDashboardPage() {
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <BarChartHorizontalPercent
           items={taxaConversaoPorCanal}
           title="Taxa de Conversão por Canal"
@@ -509,9 +511,6 @@ export default function CRMDashboardPage() {
           color="#10b981"
           height={280}
         />
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <BarChartHorizontalRecharts
           items={motivosPerda}
           title="Motivos de Perda"
@@ -519,6 +518,9 @@ export default function CRMDashboardPage() {
           color="#ef4444"
           height={280}
         />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <BarChartHorizontalRecharts
           items={leadVelocity}
           title="Lead Velocity (Tempo por Etapa)"
@@ -526,9 +528,6 @@ export default function CRMDashboardPage() {
           color="#3b82f6"
           height={280}
         />
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <BarChartHorizontalPercent
           items={conversaoPorEtapa}
           title="Conversão por Etapa do Funil"
@@ -545,7 +544,7 @@ export default function CRMDashboardPage() {
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <BarChartHorizontalRecharts
           items={leadScoring}
           title="Distribuição de Lead Scoring"
@@ -558,61 +557,25 @@ export default function CRMDashboardPage() {
           title="Qualidade dos Canais (Score)"
           icon={<Award className="w-5 h-5" />}
           color="#6366f1"
-          height={280}
+          height={240}
+        />
+        <BarChartHorizontalRecharts
+          items={oportunidadesQuentesChart}
+          title="Oportunidades Quentes"
+          icon={<Flame className="w-5 h-5" />}
+          color="#10b981"
+          height={240}
         />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className={`bg-white p-6 rounded-lg border border-gray-100${cardShadow ? ' shadow-sm' : ''}`} style={{ borderColor: cardBorderColor }}>
-          <h3 className="text-lg font-semibold mb-4" style={styleChartTitle}>Oportunidades Quentes</h3>
-          <div className="space-y-3">
-            {hotOpps.length === 0 ? (
-              <div className="text-sm text-gray-400" style={styleText}>Sem oportunidades</div>
-            ) : hotOpps.map((o, idx) => (
-              <div key={idx} className="flex justify-between items-center pb-2 border-b last:border-b-0" style={{ borderColor: cardBorderColor }}>
-                <div>
-                  <div className="font-medium text-sm" style={styleText}>{o.oportunidade || o.conta || 'Oportunidade'}</div>
-                  <div className="text-xs text-gray-500" style={styleText}>{o.estagio || '—'} • {o.probabilidade ?? '—'}%</div>
-                </div>
-                <div className="font-semibold text-green-700">{formatBRL(o.valor)}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className={`bg-white p-6 rounded-lg border border-gray-100${cardShadow ? ' shadow-sm' : ''}`} style={{ borderColor: cardBorderColor }}>
-          <h3 className="text-lg font-semibold mb-4" style={styleChartTitle}>Top Fontes de Leads</h3>
-          <div className="space-y-3">
-            {fontesLeads.length === 0 ? (
-              <div className="text-sm text-gray-400" style={styleText}>Sem dados</div>
-            ) : fontesLeads.map((f) => (
-              <div key={f.label} className="flex justify-between items-center">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-sky-500"></div>
-                  <span className="text-sm" style={styleText}>{f.label}</span>
-                </div>
-                <span className="font-semibold text-sm" style={styleText}>{f.value}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className={`bg-white p-6 rounded-lg border border-gray-100${cardShadow ? ' shadow-sm' : ''}`} style={{ borderColor: cardBorderColor }}>
-          <h3 className="text-lg font-semibold mb-4" style={styleChartTitle}>Últimas Atividades</h3>
-          <div className="space-y-3">
-            {recentAtivs.length === 0 ? (
-              <div className="text-sm text-gray-400" style={styleText}>Sem atividades</div>
-            ) : recentAtivs.map((a, idx) => (
-              <div key={idx} className="flex justify-between items-center pb-2 border-b last:border-b-0" style={{ borderColor: cardBorderColor }}>
-                <div>
-                  <div className="font-medium text-sm" style={styleText}>{a.assunto || a.tipo || 'Atividade'}</div>
-                  <div className="text-xs text-gray-500" style={styleText}>{a.conta || a.lead || a.oportunidade || '—'}</div>
-                </div>
-                <div className="text-xs text-gray-400">{a.data_vencimento ? new Date(a.data_vencimento).toLocaleDateString('pt-BR') : '—'}</div>
-              </div>
-            ))}
-          </div>
-        </div>
+        <BarChartHorizontalRecharts
+          items={fontesLeads}
+          title="Top Fontes de Leads"
+          icon={<Radio className="w-5 h-5" />}
+          color="#3b82f6"
+          height={240}
+        />
       </div>
     </DashboardLayout>
   )
