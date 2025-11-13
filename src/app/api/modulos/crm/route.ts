@@ -123,19 +123,22 @@ export async function GET(req: NextRequest) {
         l.empresa,
         l.email,
         l.telefone,
-        l.origem,
-        l.responsavel,
+        ol.nome AS origem,
+        f.nome AS responsavel,
         l.status,
         l.tag,
         l.descricao,
         l.criado_em,
         l.atualizado_em`;
-      baseSql = `FROM crm.leads l`;
+      baseSql = `FROM crm.leads l
+        LEFT JOIN crm.origens_lead ol ON ol.id = l.origem_id
+        LEFT JOIN comercial.vendedores v ON v.id = l.responsavel_id
+        LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id`;
       if (status) push('LOWER(l.status) =', status.toLowerCase());
-      if (origem) push('LOWER(l.origem) =', origem.toLowerCase());
-      if (responsavel_id) push('l.responsavel ILIKE', `%${responsavel_id}%`);
+      if (origem) push('LOWER(ol.nome) =', origem.toLowerCase());
+      if (responsavel_id) push('v.funcionario_id =', responsavel_id);
       if (q) {
-        conditions.push(`(l.nome ILIKE '%' || $${i} || '%' OR l.empresa ILIKE '%' || $${i} || '%' OR l.email ILIKE '%' || $${i} || '%' OR l.responsavel ILIKE '%' || $${i} || '%')`);
+        conditions.push(`(l.nome ILIKE '%' || $${i} || '%' OR l.empresa ILIKE '%' || $${i} || '%' OR l.email ILIKE '%' || $${i} || '%' OR f.nome ILIKE '%' || $${i} || '%')`);
         params.push(q);
         i += 1;
       }
@@ -154,7 +157,7 @@ export async function GET(req: NextRequest) {
       if (orderBy) orderClause = `ORDER BY ${orderBy} ${orderDir}`;
       else {
         if (view === 'oportunidades') orderClause = 'ORDER BY o.id DESC';
-        else if (view === 'leads') orderClause = 'ORDER BY l.criado_em DESC';
+        else if (view === 'leads') orderClause = 'ORDER BY l.id ASC';
       }
     }
 
