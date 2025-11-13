@@ -28,6 +28,17 @@ type PedidoRow = Row & {
   itens?: PedidoItem[]
 }
 
+type DevolucaoItem = {
+  produto: string
+  quantidade: number
+  valor_unitario: number
+  subtotal: number
+}
+
+type DevolucaoRow = Row & {
+  itens?: DevolucaoItem[]
+}
+
 export default function ModulosVendasPage() {
   const titulo = useStore($titulo)
   const tabs = useStore($tabs)
@@ -119,6 +130,39 @@ export default function ModulosVendasPage() {
                 <td className="text-right py-2 px-3">{formatBRL(item.preco_unitario)}</td>
                 <td className="text-right py-2 px-3">{formatBRL(item.desconto_item)}</td>
                 <td className="text-right py-2 px-3">{formatBRL(item.subtotal_item)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )
+  }
+
+  const renderDevolucaoItems = (row: Row) => {
+    const devolucaoRow = row as DevolucaoRow
+    const itens = devolucaoRow.itens || []
+
+    if (itens.length === 0) return null
+
+    return (
+      <div className="p-4 bg-gray-50">
+        <h4 className="text-sm font-semibold mb-2">Itens da Devolução</h4>
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b">
+              <th className="text-left py-2 px-3">Produto</th>
+              <th className="text-right py-2 px-3">Quantidade</th>
+              <th className="text-right py-2 px-3">Valor Unitário</th>
+              <th className="text-right py-2 px-3">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            {itens.map((item, idx) => (
+              <tr key={idx} className="border-b last:border-0">
+                <td className="py-2 px-3">{item.produto}</td>
+                <td className="text-right py-2 px-3">{item.quantidade}</td>
+                <td className="text-right py-2 px-3">{formatBRL(item.valor_unitario)}</td>
+                <td className="text-right py-2 px-3">{formatBRL(item.subtotal)}</td>
               </tr>
             ))}
           </tbody>
@@ -295,8 +339,14 @@ export default function ModulosVendasPage() {
                   key={tabs.selected}
                   columns={columns}
                   data={data}
-                  enableExpand={tabs.selected === 'pedidos'}
-                  renderDetail={tabs.selected === 'pedidos' ? renderPedidoItems : undefined}
+                  enableExpand={tabs.selected === 'pedidos' || tabs.selected === 'devolucoes'}
+                  renderDetail={
+                    tabs.selected === 'pedidos'
+                      ? renderPedidoItems
+                      : tabs.selected === 'devolucoes'
+                      ? renderDevolucaoItems
+                      : undefined
+                  }
                   enableSearch={tabelaUI.enableSearch}
                   showColumnToggle={tabelaUI.enableColumnToggle}
                   showPagination={tabelaUI.showPagination}

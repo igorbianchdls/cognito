@@ -111,12 +111,19 @@ export async function GET(req: NextRequest) {
         d.motivo,
         d.data_devolucao,
         d.valor_total,
+        pr.nome AS produto,
+        di.quantidade,
+        di.valor_unitario,
+        di.subtotal,
+        di.id AS item_id,
         d.criado_em,
         d.atualizado_em`
       baseSql = `FROM vendas.devolucoes d
         LEFT JOIN vendas.pedidos p ON p.id = d.pedido_id
-        LEFT JOIN entidades.clientes c ON c.id = p.cliente_id`
-      orderClause = orderBy ? `ORDER BY ${orderBy} ${orderDir}` : 'ORDER BY d.id ASC'
+        LEFT JOIN entidades.clientes c ON c.id = p.cliente_id
+        LEFT JOIN vendas.devolucoes_itens di ON di.devolucao_id = d.id
+        LEFT JOIN produtos.produto pr ON pr.id = di.produto_id`
+      orderClause = orderBy ? `ORDER BY ${orderBy} ${orderDir}, di.id ASC` : 'ORDER BY d.id ASC, di.id ASC'
     } else if (view === 'cupons') {
       selectSql = `SELECT
         c.codigo AS cupom,
@@ -210,9 +217,63 @@ export async function GET(req: NextRequest) {
       rows = Array.from(pedidosMap.values())
     }
 
-    // Total - para pedidos, contar apenas pedidos distintos
+    // Para devolucoes, agrupar itens
+    if (view === 'devolucoes') {
+      type DevolucaoAgregada = {
+        devolucao: unknown
+        pedido: unknown
+        cliente: unknown
+        motivo: unknown
+        data_devolucao: unknown
+        valor_total: unknown
+        criado_em: unknown
+        atualizado_em: unknown
+        itens: Array<{
+          produto: unknown
+          quantidade: unknown
+          valor_unitario: unknown
+          subtotal: unknown
+        }>
+      }
+      const devolucoesMap = new Map<number, DevolucaoAgregada>()
+
+      for (const row of rows) {
+        const devolucaoId = Number(row.devolucao)
+
+        if (!devolucoesMap.has(devolucaoId)) {
+          // Primeira vez vendo esta devolução
+          devolucoesMap.set(devolucaoId, {
+            devolucao: row.devolucao,
+            pedido: row.pedido,
+            cliente: row.cliente,
+            motivo: row.motivo,
+            data_devolucao: row.data_devolucao,
+            valor_total: row.valor_total,
+            criado_em: row.criado_em,
+            atualizado_em: row.atualizado_em,
+            itens: []
+          })
+        }
+
+        // Adicionar item se existir
+        if (row.item_id) {
+          devolucoesMap.get(devolucaoId)!.itens.push({
+            produto: row.produto,
+            quantidade: row.quantidade,
+            valor_unitario: row.valor_unitario,
+            subtotal: row.subtotal,
+          })
+        }
+      }
+
+      rows = Array.from(devolucoesMap.values())
+    }
+
+    // Total - para pedidos e devolucoes, contar apenas registros distintos
     const totalSql = view === 'pedidos'
       ? `SELECT COUNT(DISTINCT p.id)::int AS total FROM vendas.pedidos p`
+      : view === 'devolucoes'
+      ? `SELECT COUNT(DISTINCT d.id)::int AS total FROM vendas.devolucoes d`
       : `SELECT COUNT(*)::int AS total ${baseSql}`
     const totalRows = await runQuery<{ total: number }>(totalSql)
     const total = totalRows[0]?.total ?? 0
