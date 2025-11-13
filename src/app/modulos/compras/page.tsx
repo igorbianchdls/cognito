@@ -14,7 +14,7 @@ import DataToolbar from '@/components/modulos/DataToolbar'
 import StatusBadge from '@/components/modulos/StatusBadge'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/stores/modulos/moduleUiStore'
 import type { Opcao } from '@/components/modulos/TabsNav'
-import { ShoppingCart, PackageCheck, ClipboardList } from 'lucide-react'
+import { ShoppingCart, PackageCheck, ClipboardList, FileText } from 'lucide-react'
 
 type Row = TableData
 
@@ -56,6 +56,33 @@ type SolicitacaoRow = Row & {
   itens?: SolicitacaoItemItem[]
 }
 
+type CotacaoFornecedorItem = {
+  cotacao_fornecedor_id: number
+  fornecedor: string | null
+  status_fornecedor: string | null
+  data_envio: string | null
+  data_resposta: string | null
+  resposta_data: string | null
+  resposta_validade: string | null
+  resposta_prazo: string | null
+  resposta_pagamento: string | null
+  preco_ofertado: number | null
+  desconto: number | null
+  prazo_item: string | null
+}
+
+type CotacaoLinhaItem = {
+  cotacao_linha_id: number
+  produto: string | null
+  quantidade: number | null
+  unidade_medida: string | null
+  fornecedores: CotacaoFornecedorItem[]
+}
+
+type CotacaoRow = Row & {
+  linhas?: CotacaoLinhaItem[]
+}
+
 export default function ModulosComprasPage() {
   const titulo = useStore($titulo)
   const tabs = useStore($tabs)
@@ -73,6 +100,7 @@ export default function ModulosComprasPage() {
         { value: 'compras', label: 'Compras' },
         { value: 'recebimentos', label: 'Recebimentos' },
         { value: 'solicitacoes_compra', label: 'Solicitações de Compra' },
+        { value: 'cotacoes', label: 'Cotações' },
       ],
       selected: 'compras',
     })
@@ -213,6 +241,58 @@ export default function ModulosComprasPage() {
     )
   }
 
+  const renderCotacaoLinhas = (row: Row) => {
+    const cotacaoRow = row as CotacaoRow
+    const linhas = cotacaoRow.linhas || []
+
+    if (linhas.length === 0) return null
+
+    return (
+      <div className="p-4 bg-gray-50">
+        <h4 className="text-sm font-semibold mb-2">Linhas da Cotação</h4>
+        {linhas.map((linha, idx) => (
+          <div key={idx} className="mb-4 last:mb-0">
+            <div className="bg-white p-3 rounded mb-2">
+              <div className="grid grid-cols-3 gap-2 text-sm">
+                <div><span className="font-semibold">Produto:</span> {linha.produto ?? '-'}</div>
+                <div><span className="font-semibold">Quantidade:</span> {linha.quantidade ?? '-'}</div>
+                <div><span className="font-semibold">Unidade:</span> {linha.unidade_medida ?? '-'}</div>
+              </div>
+            </div>
+            {linha.fornecedores && linha.fornecedores.length > 0 && (
+              <table className="w-full text-sm ml-4">
+                <thead>
+                  <tr className="border-b bg-gray-100">
+                    <th className="text-left py-2 px-3">Fornecedor</th>
+                    <th className="text-left py-2 px-3">Status</th>
+                    <th className="text-right py-2 px-3">Preço</th>
+                    <th className="text-right py-2 px-3">Desconto</th>
+                    <th className="text-left py-2 px-3">Prazo Item</th>
+                    <th className="text-left py-2 px-3">Data Envio</th>
+                    <th className="text-left py-2 px-3">Data Resposta</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {linha.fornecedores.map((forn, fidx) => (
+                    <tr key={fidx} className="border-b last:border-0">
+                      <td className="py-2 px-3">{forn.fornecedor ?? '-'}</td>
+                      <td className="py-2 px-3">{forn.status_fornecedor ?? '-'}</td>
+                      <td className="text-right py-2 px-3">{forn.preco_ofertado ? formatBRL(forn.preco_ofertado) : '-'}</td>
+                      <td className="text-right py-2 px-3">{forn.desconto ?? '-'}</td>
+                      <td className="py-2 px-3">{forn.prazo_item ?? '-'}</td>
+                      <td className="py-2 px-3">{forn.data_envio ? formatDate(forn.data_envio) : '-'}</td>
+                      <td className="py-2 px-3">{forn.data_resposta ? formatDate(forn.data_resposta) : '-'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        ))}
+      </div>
+    )
+  }
+
   const columns: ColumnDef<Row>[] = useMemo(() => {
     if (tabs.selected === 'recebimentos') {
       return [
@@ -235,6 +315,18 @@ export default function ModulosComprasPage() {
         { accessorKey: 'departamento', header: 'Departamento' },
         { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
         { accessorKey: 'urgencia', header: 'Urgência' },
+        { accessorKey: 'observacoes', header: 'Observações' },
+        { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em']) },
+      ]
+    }
+
+    if (tabs.selected === 'cotacoes') {
+      return [
+        { accessorKey: 'cotacao_id', header: 'ID' },
+        { accessorKey: 'numero_cotacao', header: 'Número Cotação' },
+        { accessorKey: 'data_solicitacao', header: 'Data Solicitação', cell: ({ row }) => formatDate(row.original['data_solicitacao']) },
+        { accessorKey: 'prazo_resposta', header: 'Prazo Resposta', cell: ({ row }) => formatDate(row.original['prazo_resposta']) },
+        { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
         { accessorKey: 'observacoes', header: 'Observações' },
         { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em']) },
       ]
@@ -298,6 +390,8 @@ export default function ModulosComprasPage() {
           return <PackageCheck className="h-4 w-4" />
         case 'solicitacoes_compra':
           return <ClipboardList className="h-4 w-4" />
+        case 'cotacoes':
+          return <FileText className="h-4 w-4" />
         default:
           return null
       }
@@ -384,7 +478,9 @@ export default function ModulosComprasPage() {
                       ? renderCompraLinhas
                       : tabs.selected === 'recebimentos'
                       ? renderRecebimentoLinhas
-                      : renderSolicitacaoItens
+                      : tabs.selected === 'solicitacoes_compra'
+                      ? renderSolicitacaoItens
+                      : renderCotacaoLinhas
                   }
                   enableSearch={tabelaUI.enableSearch}
                   showColumnToggle={tabelaUI.enableColumnToggle}

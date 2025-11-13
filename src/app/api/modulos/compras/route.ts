@@ -38,6 +38,15 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
     departamento: 'd.nome',
     criado_em: 'sc.criado_em',
   },
+  cotacoes: {
+    cotacao_id: 'c.id',
+    numero_cotacao: 'c.numero_cotacao',
+    data_solicitacao: 'c.data_solicitacao',
+    prazo_resposta: 'c.prazo_resposta',
+    status: 'c.status',
+    fornecedor: 'f.nome',
+    criado_em: 'c.criado_em',
+  },
 };
 
 const parseNumber = (v: string | null, fb?: number) => (v ? Number(v) : fb);
@@ -176,6 +185,45 @@ export async function GET(req: NextRequest) {
         params.push(q);
         i += 1;
       }
+    } else if (view === 'cotacoes') {
+      selectSql = `SELECT
+        c.id AS cotacao_id,
+        c.numero_cotacao,
+        c.data_solicitacao,
+        c.prazo_resposta,
+        c.status,
+        c.observacoes,
+        c.criado_em,
+        f.nome AS fornecedor,
+        cf.id AS cotacao_fornecedor_id,
+        cf.status AS status_fornecedor,
+        cf.data_envio,
+        cf.data_resposta,
+        cl.id AS cotacao_linha_id,
+        COALESCE(p.nome, cl.descricao) AS produto,
+        cl.quantidade,
+        cl.unidade_medida,
+        cr.data_resposta AS resposta_data,
+        cr.validade_data AS resposta_validade,
+        cr.prazo_entrega AS resposta_prazo,
+        cr.condicao_pagamento AS resposta_pagamento,
+        crl.preco_unitario AS preco_ofertado,
+        crl.desconto,
+        crl.prazo_entrega_item AS prazo_item`;
+      baseSql = `FROM compras.cotacoes c
+        LEFT JOIN compras.cotacoes_fornecedores cf ON cf.cotacao_id = c.id
+        LEFT JOIN entidades.fornecedores f ON f.id = cf.fornecedor_id
+        LEFT JOIN compras.cotacoes_linhas cl ON cl.cotacao_id = c.id
+        LEFT JOIN produtos.produto p ON p.id = cl.produto_id
+        LEFT JOIN compras.cotacoes_respostas cr ON cr.cotacao_fornecedor_id = cf.id
+        LEFT JOIN compras.cotacoes_respostas_linhas crl ON crl.cotacao_resposta_id = cr.id AND crl.cotacao_linha_id = cl.id`;
+      whereDateCol = 'c.data_solicitacao';
+      if (status) push('LOWER(c.status) =', status.toLowerCase());
+      if (q) {
+        conditions.push(`(c.numero_cotacao ILIKE '%' || $${i} || '%' OR f.nome ILIKE '%' || $${i} || '%' OR p.nome ILIKE '%' || $${i} || '%' OR c.observacoes ILIKE '%' || $${i} || '%')`);
+        params.push(q);
+        i += 1;
+      }
     } else {
       return Response.json({ success: false, message: `View inválida: ${view}` }, { status: 400 });
     }
@@ -192,11 +240,13 @@ export async function GET(req: NextRequest) {
         if (view === 'compras') orderClause = `ORDER BY ${orderBy} ${orderDir}, l.id ASC`;
         else if (view === 'recebimentos') orderClause = `ORDER BY ${orderBy} ${orderDir}, rl.id ASC`;
         else if (view === 'solicitacoes_compra') orderClause = `ORDER BY ${orderBy} ${orderDir}, sci.id ASC`;
+        else if (view === 'cotacoes') orderClause = `ORDER BY ${orderBy} ${orderDir}, cf.id ASC, cl.id ASC`;
         else orderClause = `ORDER BY ${orderBy} ${orderDir}`;
       } else {
         if (view === 'compras') orderClause = 'ORDER BY c.id DESC, l.id ASC';
         else if (view === 'recebimentos') orderClause = 'ORDER BY r.id DESC, rl.id ASC';
         else if (view === 'solicitacoes_compra') orderClause = 'ORDER BY sc.id DESC, sci.id ASC';
+        else if (view === 'cotacoes') orderClause = 'ORDER BY c.id DESC, cf.id ASC, cl.id ASC';
       }
     }
 
@@ -381,12 +431,105 @@ export async function GET(req: NextRequest) {
       rows = Array.from(solicitacoesMap.values())
     }
 
+    // Aggregate: group linhas by cotacao
+    if (view === 'cotacoes') {
+      type CotacaoAgregada = {
+        cotacao_id: unknown
+        numero_cotacao: unknown
+        data_solicitacao: unknown
+        prazo_resposta: unknown
+        status: unknown
+        observacoes: unknown
+        criado_em: unknown
+        linhas: Array<{
+          cotacao_linha_id: unknown
+          produto: unknown
+          quantidade: unknown
+          unidade_medida: unknown
+          fornecedores: Array<{
+            cotacao_fornecedor_id: unknown
+            fornecedor: unknown
+            status_fornecedor: unknown
+            data_envio: unknown
+            data_resposta: unknown
+            resposta_data: unknown
+            resposta_validade: unknown
+            resposta_prazo: unknown
+            resposta_pagamento: unknown
+            preco_ofertado: unknown
+            desconto: unknown
+            prazo_item: unknown
+          }>
+        }>
+      }
+      const cotacoesMap = new Map<number, CotacaoAgregada>()
+
+      for (const row of rows) {
+        const cotacaoKey = Number(row.cotacao_id)
+
+        if (!cotacoesMap.has(cotacaoKey)) {
+          cotacoesMap.set(cotacaoKey, {
+            cotacao_id: row.cotacao_id,
+            numero_cotacao: row.numero_cotacao,
+            data_solicitacao: row.data_solicitacao,
+            prazo_resposta: row.prazo_resposta,
+            status: row.status,
+            observacoes: row.observacoes,
+            criado_em: row.criado_em,
+            linhas: []
+          })
+        }
+
+        const cotacao = cotacoesMap.get(cotacaoKey)!
+
+        if (row.cotacao_linha_id) {
+          let linha = cotacao.linhas.find(l => l.cotacao_linha_id === row.cotacao_linha_id)
+
+          if (!linha) {
+            linha = {
+              cotacao_linha_id: row.cotacao_linha_id,
+              produto: row.produto,
+              quantidade: row.quantidade,
+              unidade_medida: row.unidade_medida,
+              fornecedores: []
+            }
+            cotacao.linhas.push(linha)
+          }
+
+          if (row.cotacao_fornecedor_id) {
+            const fornecedorExists = linha.fornecedores.some(f => f.cotacao_fornecedor_id === row.cotacao_fornecedor_id)
+
+            if (!fornecedorExists) {
+              linha.fornecedores.push({
+                cotacao_fornecedor_id: row.cotacao_fornecedor_id,
+                fornecedor: row.fornecedor,
+                status_fornecedor: row.status_fornecedor,
+                data_envio: row.data_envio,
+                data_resposta: row.data_resposta,
+                resposta_data: row.resposta_data,
+                resposta_validade: row.resposta_validade,
+                resposta_prazo: row.resposta_prazo,
+                resposta_pagamento: row.resposta_pagamento,
+                preco_ofertado: row.preco_ofertado,
+                desconto: row.desconto,
+                prazo_item: row.prazo_item,
+              })
+            }
+          }
+        }
+      }
+
+      rows = Array.from(cotacoesMap.values())
+    }
+
     const totalSql = view === 'compras'
       ? `SELECT COUNT(DISTINCT c.id)::int AS total FROM compras.compras c ${whereClause.replace(/c\./g, 'c.').replace(/f\./g, 'f.')}`
       : view === 'recebimentos'
       ? `SELECT COUNT(DISTINCT r.id)::int AS total FROM compras.recebimentos r ${whereClause.replace(/r\./g, 'r.')}`
       : view === 'solicitacoes_compra'
       ? `SELECT COUNT(DISTINCT sc.id)::int AS total FROM compras.solicitacoes_compra sc ${whereClause.replace(/sc\./g, 'sc.')}`
+      : view === 'cotacoes'
+      ? `SELECT COUNT(DISTINCT c.id)::int AS total FROM compras.cotacoes c ${whereClause.replace(/c\./g, 'c.')}`
       : `SELECT COUNT(*)::int AS total ${baseSql} ${whereClause}`;
     const totalRows = await runQuery<{ total: number }>(totalSql, params);
     const total = totalRows[0]?.total ?? 0;
