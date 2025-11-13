@@ -53,18 +53,7 @@ export async function GET(req: NextRequest) {
 
     // Specific filters
     const status = searchParams.get('status') || undefined;
-    const estagio = searchParams.get('estagio') || undefined;
-    const prob_min = parseNumber(searchParams.get('prob_min'));
-    const prob_max = parseNumber(searchParams.get('prob_max'));
-    const valor_min = parseNumber(searchParams.get('valor_min'));
-    const valor_max = parseNumber(searchParams.get('valor_max'));
     const origem = searchParams.get('origem') || undefined;
-    const setor = searchParams.get('setor') || undefined;
-    const conta_id = searchParams.get('conta_id') || undefined;
-    const oportunidade_id = searchParams.get('oportunidade_id') || undefined;
-    const lead_id = searchParams.get('lead_id') || undefined;
-    const contato_id = searchParams.get('contato_id') || undefined;
-    const tipo = searchParams.get('tipo') || undefined; // atividades/campanhas
 
     // Pagination
     const page = Math.max(1, parseNumber(searchParams.get('page'), 1) || 1);
