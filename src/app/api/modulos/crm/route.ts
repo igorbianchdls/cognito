@@ -78,7 +78,7 @@ export async function GET(req: NextRequest) {
 
     let selectSql = '';
     let baseSql = '';
-    let groupBy = '';
+    const groupBy = '';
     let whereDateCol = '';
 
     if (view === 'oportunidades') {
