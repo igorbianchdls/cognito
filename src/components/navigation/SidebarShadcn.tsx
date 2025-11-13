@@ -34,6 +34,41 @@ import {
   SidebarMenuButton,
 } from "@/components/ui/sidebar"
 
+// Font variable mapping helper
+function fontVar(name?: string) {
+  if (!name) return undefined
+  if (name === 'Space Mono') return 'var(--font-space-mono), "Space Mono", monospace'
+  if (name === 'Barlow') return 'var(--font-barlow), "Barlow", sans-serif'
+  if (name === 'Inter') return 'var(--font-inter)'
+  if (name === 'Geist') return 'var(--font-geist-sans)'
+  if (name === 'Roboto Mono') return 'var(--font-roboto-mono)'
+  if (name === 'Geist Mono') return 'var(--font-geist-mono)'
+  if (name === 'IBM Plex Mono') return 'var(--font-ibm-plex-mono), "IBM Plex Mono", monospace'
+  if (name === 'Avenir') return 'var(--font-avenir), Avenir, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif'
+  if (name === 'EB Garamond') return 'var(--font-eb-garamond), "EB Garamond", serif'
+  if (name === 'Libre Baskerville') return 'var(--font-libre-baskerville), "Libre Baskerville", serif'
+  return name
+}
+
+// Default styles matching financeiro dashboard
+const DEFAULT_SECTION_TITLE_STYLE: React.CSSProperties = {
+  fontFamily: fontVar('Space Mono'),
+  fontWeight: 500,
+  fontSize: '12px',
+  color: '#808080',
+  letterSpacing: '0em',
+  textTransform: 'uppercase',
+}
+
+const DEFAULT_ITEM_TEXT_STYLE: React.CSSProperties = {
+  fontFamily: fontVar('Barlow'),
+  fontWeight: 400,
+  fontSize: '15px',
+  color: 'rgb(64, 64, 64)',
+  letterSpacing: '-0.03em',
+  textTransform: 'none',
+}
+
 // Navigation data adapted to shadcn format
 const navigationData = {
   user: {
@@ -112,12 +147,19 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
     navMain: navMainWithActiveState
   }
 
+  // Apply default values from financeiro dashboard
+  const finalBgColor = bgColor ?? '#fdfdfd'
+  const finalTextColor = textColor ?? '#717171'
+  const finalItemTextColor = itemTextColor ?? '#0f172a'
+  const finalSectionTitleStyle = sectionTitleStyle ?? DEFAULT_SECTION_TITLE_STYLE
+  const finalItemTextStyle = itemTextStyle ?? DEFAULT_ITEM_TEXT_STYLE
+
   // Inline CSS variable overrides for sidebar theme
   const inlineStyle = {
     ...(style || {}),
-    ...(bgColor ? ({ ["--sidebar"]: bgColor } as React.CSSProperties) : {}),
-    ...(textColor ? ({ ["--sidebar-foreground"]: textColor } as React.CSSProperties) : {}),
-    ...(itemTextColor ? ({ ["--sidebar-accent-foreground"]: itemTextColor } as React.CSSProperties) : {}),
+    ["--sidebar"]: finalBgColor,
+    ["--sidebar-foreground"]: finalTextColor,
+    ["--sidebar-accent-foreground"]: finalItemTextColor,
   } as React.CSSProperties
 
   return (
@@ -126,17 +168,17 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
         <TeamSwitcher teams={dataWithActiveState.teams} />
       </SidebarHeader>
       <SidebarContent>
-        <NavMainSimple items={dataWithActiveState.navMain} groupLabelStyle={sectionTitleStyle} itemTextStyle={itemTextStyle} />
-        <NavModulos groupLabelStyle={sectionTitleStyle} itemTextStyle={itemTextStyle} />
-        
+        <NavMainSimple items={dataWithActiveState.navMain} groupLabelStyle={finalSectionTitleStyle} itemTextStyle={finalItemTextStyle} />
+        <NavModulos groupLabelStyle={finalSectionTitleStyle} itemTextStyle={finalItemTextStyle} />
+
         <SidebarGroup>
-          <SidebarGroupLabel style={sectionTitleStyle}>Integrações</SidebarGroupLabel>
+          <SidebarGroupLabel style={finalSectionTitleStyle}>Integrações</SidebarGroupLabel>
           <SidebarMenu>
             {navigationData.integrations.map((integration) => (
               <SidebarMenuItem key={integration.title}>
                 <SidebarMenuButton tooltip={integration.title}>
                   <integration.icon className="w-4 h-4" backgroundColor="transparent" />
-                  <span style={itemTextStyle}>{integration.title}</span>
+                  <span style={finalItemTextStyle}>{integration.title}</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             ))}
