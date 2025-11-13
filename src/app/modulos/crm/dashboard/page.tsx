@@ -129,18 +129,23 @@ export default function CRMDashboardPage() {
   }, [])
 
   // KPIs
-  const openOpps = useMemo(() => opps.filter(o => !isClosed(o.estagio)), [opps])
-  const pipelineValue = useMemo(() => openOpps.reduce((acc, o) => acc + (Number(o.valor) || 0), 0), [openOpps])
-  const winStats = useMemo(() => {
-    const closed = opps.filter(o => isClosed(o.estagio))
-    const won = closed.filter(o => isClosedWon(o.estagio)).length
-    const total = closed.length || 1
-    return { won, total, rate: (won / total) * 100 }
-  }, [opps])
-  const pendingActivitiesToday = useMemo(() => {
-    const today = toDateOnly(new Date())
-    return ativs.filter(a => (a.data_vencimento ? toDateOnly(new Date(a.data_vencimento)) === today : false) && !(a.status || '').toLowerCase().includes('concl')).length
-  }, [ativs])
+  const kpis = useMemo(() => {
+    // Faturamento: soma de valores de oportunidades ganhas
+    const faturamento = opps
+      .filter(o => isClosedWon(o.estagio))
+      .reduce((acc, o) => acc + (Number(o.valor) || 0), 0)
+
+    // Vendas: contagem de oportunidades ganhas
+    const vendas = opps.filter(o => isClosedWon(o.estagio)).length
+
+    // Leads: total de leads
+    const totalLeads = leads.length
+
+    // Taxa de conversão: (vendas / leads) * 100
+    const taxaConversao = totalLeads > 0 ? (vendas / totalLeads) * 100 : 0
+
+    return { faturamento, vendas, totalLeads, taxaConversao }
+  }, [opps, leads])
 
   // Funil por estágio (soma de valor)
   const stageOrder = (s?: string) => {
@@ -373,24 +378,24 @@ export default function CRMDashboardPage() {
         {(() => { const cls = `bg-white p-6 rounded-lg border border-gray-100${cardShadow ? ' shadow-sm' : ''}`; return (
           <>
             <div className={cls} style={{ borderColor: cardBorderColor }}>
-              <div className="text-sm font-medium text-gray-500 mb-2" style={styleKpiTitle}>Oportunidades Abertas</div>
-              <div className="text-2xl font-bold text-blue-600" style={styleValues}>{openOpps.length}</div>
-              <div className="text-xs text-gray-400 mt-1" style={styleText}>No pipeline atual</div>
+              <div className="text-sm font-medium text-gray-500 mb-2" style={styleKpiTitle}>Faturamento</div>
+              <div className="text-2xl font-bold text-green-600" style={styleValues}>{formatBRL(kpis.faturamento)}</div>
+              <div className="text-xs text-gray-400 mt-1" style={styleText}>Oportunidades fechadas/ganhas</div>
             </div>
             <div className={cls} style={{ borderColor: cardBorderColor }}>
-              <div className="text-sm font-medium text-gray-500 mb-2" style={styleKpiTitle}>Valor do Pipeline</div>
-              <div className="text-2xl font-bold text-purple-600" style={styleValues}>{formatBRL(pipelineValue)}</div>
-              <div className="text-xs text-gray-400 mt-1" style={styleText}>Soma de oportunidades abertas</div>
+              <div className="text-sm font-medium text-gray-500 mb-2" style={styleKpiTitle}>Vendas</div>
+              <div className="text-2xl font-bold text-blue-600" style={styleValues}>{kpis.vendas}</div>
+              <div className="text-xs text-gray-400 mt-1" style={styleText}>Oportunidades ganhas</div>
             </div>
             <div className={cls} style={{ borderColor: cardBorderColor }}>
-              <div className="text-sm font-medium text-gray-500 mb-2" style={styleKpiTitle}>Taxa de Ganho (6m)</div>
-              <div className="text-2xl font-bold text-green-600" style={styleValues}>{winStats.rate.toFixed(1)}%</div>
-              <div className="text-xs text-gray-400 mt-1" style={styleText}>{winStats.won}/{winStats.total} fechadas como ganho</div>
+              <div className="text-sm font-medium text-gray-500 mb-2" style={styleKpiTitle}>Leads</div>
+              <div className="text-2xl font-bold text-purple-600" style={styleValues}>{kpis.totalLeads}</div>
+              <div className="text-xs text-gray-400 mt-1" style={styleText}>Total de leads ativos</div>
             </div>
             <div className={cls} style={{ borderColor: cardBorderColor }}>
-              <div className="text-sm font-medium text-gray-500 mb-2" style={styleKpiTitle}>Atividades Hoje</div>
-              <div className="text-2xl font-bold text-orange-600" style={styleValues}>{pendingActivitiesToday}</div>
-              <div className="text-xs text-gray-400 mt-1" style={styleText}>Pendentes para hoje</div>
+              <div className="text-sm font-medium text-gray-500 mb-2" style={styleKpiTitle}>Taxa de Conversão</div>
+              <div className="text-2xl font-bold text-orange-600" style={styleValues}>{kpis.taxaConversao.toFixed(1)}%</div>
+              <div className="text-xs text-gray-400 mt-1" style={styleText}>Leads → Vendas</div>
             </div>
           </>
         )})()}
