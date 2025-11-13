@@ -3,11 +3,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useStore } from '@nanostores/react'
 import DashboardLayout from '@/components/modulos/DashboardLayout'
+import { BarChartHorizontalRecharts } from '@/components/charts/BarChartHorizontalRecharts'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Calendar as CalendarIcon } from 'lucide-react'
+import { Calendar as CalendarIcon, Users, UsersRound, Package, MapPin } from 'lucide-react'
 import type { DateRange } from 'react-day-picker'
 import { $financeiroDashboardUI, $financeiroDashboardFilters, financeiroDashboardActions } from '@/stores/modulos/financeiroDashboardStore'
 
@@ -96,6 +97,39 @@ export default function VendasDashboardPage() {
     const margemBruta = ((vendas - cogs) / vendas) * 100
     return { meta, vendas, percentMeta, ticket, cogs, margemBruta }
   }, [])
+
+  // Charts (mock data)
+  const top5Vendedores = useMemo(() => [
+    { label: 'João Silva', value: 145000 },
+    { label: 'Maria Santos', value: 128000 },
+    { label: 'Pedro Costa', value: 112000 },
+    { label: 'Ana Oliveira', value: 98000 },
+    { label: 'Carlos Souza', value: 85000 }
+  ], [])
+
+  const top5Equipes = useMemo(() => [
+    { label: 'Equipe Alpha', value: 340000 },
+    { label: 'Equipe Beta', value: 298000 },
+    { label: 'Equipe Gamma', value: 265000 },
+    { label: 'Equipe Delta', value: 234000 },
+    { label: 'Equipe Epsilon', value: 210000 }
+  ], [])
+
+  const top5Produtos = useMemo(() => [
+    { label: 'Produto Premium X', value: 175000 },
+    { label: 'Produto Standard Y', value: 142000 },
+    { label: 'Produto Plus Z', value: 128000 },
+    { label: 'Produto Básico W', value: 96000 },
+    { label: 'Produto Essencial V', value: 78000 }
+  ], [])
+
+  const rankingFiliais = useMemo(() => [
+    { label: 'São Paulo', value: 280000 },
+    { label: 'Rio de Janeiro', value: 235000 },
+    { label: 'Belo Horizonte', value: 198000 },
+    { label: 'Curitiba', value: 167000 },
+    { label: 'Porto Alegre', value: 145000 }
+  ], [])
 
   // Vendas por Canal / Vendedor / Cliente / Cidade
   const vendasPorCanal = useMemo(() => {
@@ -334,15 +368,36 @@ export default function VendasDashboardPage() {
             </div>
           </div>
 
+          {/* Row 1: Top 5 Vendedores, Top 5 Equipes */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
-              <h3 className="text-lg font-semibold mb-4" style={styleChartTitle}>Vendas por Canal</h3>
-              <HBars items={vendasPorCanal} color="bg-blue-500" />
-            </div>
-            <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
-              <h3 className="text-lg font-semibold mb-4" style={styleChartTitle}>Performance da Equipe</h3>
-              <HBars items={vendasPorVendedor} color="bg-emerald-500" />
-            </div>
+            <BarChartHorizontalRecharts
+              items={top5Vendedores}
+              title="Top 5 Vendedores"
+              icon={<Users className="w-5 h-5" />}
+              color="#3b82f6"
+            />
+            <BarChartHorizontalRecharts
+              items={top5Equipes}
+              title="Top 5 Equipes de Venda"
+              icon={<UsersRound className="w-5 h-5" />}
+              color="#10b981"
+            />
+          </div>
+
+          {/* Row 2: Top 5 Produtos, Ranking Filiais */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <BarChartHorizontalRecharts
+              items={top5Produtos}
+              title="Top 5 Produtos"
+              icon={<Package className="w-5 h-5" />}
+              color="#8b5cf6"
+            />
+            <BarChartHorizontalRecharts
+              items={rankingFiliais}
+              title="Ranking de Vendas por Filiais"
+              icon={<MapPin className="w-5 h-5" />}
+              color="#f59e0b"
+            />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
