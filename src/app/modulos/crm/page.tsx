@@ -13,15 +13,10 @@ import DataTable, { type TableData } from '@/components/widgets/Table'
 import DataToolbar from '@/components/modulos/DataToolbar'
 import CadastroOportunidadeSheet from '@/components/crm/CadastroOportunidadeSheet'
 import CadastroLeadSheet from '@/components/crm/CadastroLeadSheet'
-import CadastroContaSheet from '@/components/crm/CadastroContaSheet'
-import CadastroContatoSheet from '@/components/crm/CadastroContatoSheet'
-import CadastroAtividadeSheet from '@/components/crm/CadastroAtividadeSheet'
-import CadastroCampanhaSheet from '@/components/crm/CadastroCampanhaSheet'
 import StatusBadge from '@/components/modulos/StatusBadge'
-import EntityDisplay from '@/components/modulos/EntityDisplay'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/stores/modulos/moduleUiStore'
 import type { Opcao } from '@/components/modulos/TabsNav'
-import { Briefcase, UserPlus, Building2, UserCircle2, CalendarClock, Megaphone } from 'lucide-react'
+import { Briefcase, UserPlus } from 'lucide-react'
 
 type Row = TableData
 
@@ -38,10 +33,6 @@ export default function ModulosCrmPage() {
       options: [
         { value: 'oportunidades', label: 'Oportunidades' },
         { value: 'leads', label: 'Leads' },
-        { value: 'contas', label: 'Contas' },
-        { value: 'contatos', label: 'Contatos' },
-        { value: 'atividades', label: 'Atividades' },
-        { value: 'campanhas', label: 'Campanhas' },
       ],
       selected: 'oportunidades',
     })
@@ -86,91 +77,39 @@ export default function ModulosCrmPage() {
     switch (tabs.selected) {
       case 'leads':
         return [
-          { accessorKey: 'id', header: 'ID' },
-          { accessorKey: 'lead', header: 'Lead' },
+          { accessorKey: 'lead', header: 'ID' },
+          { accessorKey: 'nome', header: 'Nome' },
           { accessorKey: 'empresa', header: 'Empresa' },
           { accessorKey: 'email', header: 'Email' },
           { accessorKey: 'telefone', header: 'Telefone' },
           { accessorKey: 'origem', header: 'Origem' },
+          { accessorKey: 'responsavel', header: 'Responsável' },
           { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
-          { accessorKey: 'responsavel', header: 'Responsável' },
-        ]
-      case 'contas':
-        return [
-          { accessorKey: 'id', header: 'ID' },
-          { accessorKey: 'conta', header: 'Conta' },
-          { accessorKey: 'setor', header: 'Setor' },
-          { accessorKey: 'site', header: 'Site' },
-          { accessorKey: 'telefone', header: 'Telefone' },
-          { accessorKey: 'endereco_cobranca', header: 'Endereço de Cobrança' },
-          { accessorKey: 'responsavel', header: 'Responsável' },
-        ]
-      case 'contatos':
-        return [
-          { accessorKey: 'id', header: 'ID' },
-          { accessorKey: 'contato', header: 'Contato' },
-          { accessorKey: 'cargo', header: 'Cargo' },
-          { accessorKey: 'email', header: 'Email' },
-          { accessorKey: 'telefone', header: 'Telefone' },
-          { accessorKey: 'conta', header: 'Conta' },
-          { accessorKey: 'responsavel', header: 'Responsável' },
-        ]
-      case 'atividades':
-        return [
-          { accessorKey: 'id', header: 'ID' },
-          { accessorKey: 'assunto', header: 'Assunto' },
-          { accessorKey: 'tipo', header: 'Tipo' },
-          { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
-          { accessorKey: 'data_vencimento', header: 'Data Vencimento', cell: ({ row }) => formatDate(row.original['data_vencimento'], true) },
-          { accessorKey: 'conta', header: 'Conta' },
-          { accessorKey: 'contato', header: 'Contato' },
-          { accessorKey: 'lead', header: 'Lead' },
-          { accessorKey: 'oportunidade', header: 'Oportunidade' },
-          { accessorKey: 'responsavel', header: 'Responsável' },
-          { accessorKey: 'anotacoes', header: 'Anotações' },
-        ]
-      case 'campanhas':
-        return [
-          { accessorKey: 'id', header: 'ID' },
-          { accessorKey: 'campanha', header: 'Campanha' },
-          { accessorKey: 'tipo', header: 'Tipo' },
-          { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
-          { accessorKey: 'inicio', header: 'Início', cell: ({ row }) => formatDate(row.original['inicio']) },
-          { accessorKey: 'fim', header: 'Fim', cell: ({ row }) => formatDate(row.original['fim']) },
-          { accessorKey: 'responsavel', header: 'Responsável' },
-          { accessorKey: 'total_membros', header: 'Total Membros' },
+          { accessorKey: 'tag', header: 'Tag' },
+          { accessorKey: 'descricao', header: 'Descrição' },
+          { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em'], true) },
+          { accessorKey: 'atualizado_em', header: 'Atualizado em', cell: ({ row }) => formatDate(row.original['atualizado_em'], true) },
         ]
       case 'oportunidades':
       default:
         return [
-          { accessorKey: 'id', header: 'ID' },
-          { accessorKey: 'oportunidade', header: 'Oportunidade' },
-          {
-            accessorKey: 'conta',
-            header: 'Conta',
-            size: 250,
-            minSize: 200,
-            cell: ({ row }) => (
-              <EntityDisplay
-                name={row.original['conta'] ? String(row.original['conta']) : 'Sem conta'}
-                subtitle={row.original['segmento_conta'] ? String(row.original['segmento_conta']) : 'Sem segmento'}
-              />
-            )
-          },
-          { accessorKey: 'responsavel', header: 'Responsável' },
-          {
-            accessorKey: 'estagio',
-            header: 'Estágio',
-            cell: ({ row }) => <StatusBadge value={row.original['estagio']} type="estagio" />
-          },
-          { accessorKey: 'valor', header: 'Valor (R$)', cell: ({ row }) => formatBRL(row.original['valor']) },
+          { accessorKey: 'oportunidade', header: 'ID' },
+          { accessorKey: 'lead', header: 'Lead' },
+          { accessorKey: 'lead_empresa', header: 'Lead Empresa' },
+          { accessorKey: 'cliente', header: 'Cliente' },
+          { accessorKey: 'vendedor', header: 'Vendedor' },
+          { accessorKey: 'territorio', header: 'Território' },
+          { accessorKey: 'fase', header: 'Fase' },
+          { accessorKey: 'ordem_fase', header: 'Ordem Fase' },
+          { accessorKey: 'probabilidade_fase', header: '% Prob. Fase' },
+          { accessorKey: 'valor_estimado', header: 'Valor Estimado', cell: ({ row }) => formatBRL(row.original['valor_estimado']) },
           { accessorKey: 'probabilidade', header: '% Probabilidade' },
-          { accessorKey: 'data_fechamento', header: 'Data Fechamento', cell: ({ row }) => formatDate(row.original['data_fechamento']) },
-          {
-            accessorKey: 'prioridade',
-            header: 'Prioridade',
-            cell: ({ row }) => <StatusBadge value={row.original['prioridade']} type="prioridade" />
-          },
+          { accessorKey: 'data_prevista', header: 'Data Prevista', cell: ({ row }) => formatDate(row.original['data_prevista']) },
+          { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
+          { accessorKey: 'motivo_perda', header: 'Motivo Perda' },
+          { accessorKey: 'descricao', header: 'Descrição' },
+          { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em'], true) },
+          { accessorKey: 'atualizado_em', header: 'Atualizado em', cell: ({ row }) => formatDate(row.original['atualizado_em'], true) },
         ]
     }
   }, [tabs.selected])
@@ -183,8 +122,8 @@ export default function ModulosCrmPage() {
       try {
         const params = new URLSearchParams()
         params.set('view', tabs.selected)
-        // Date range em Oportunidades (data_fechamento), Atividades (data_vencimento), Campanhas (inicio)
-        if (['oportunidades', 'atividades', 'campanhas'].includes(tabs.selected)) {
+        // Date range em Oportunidades (data_prevista)
+        if (tabs.selected === 'oportunidades') {
           if (dateRange?.from) {
             const d = dateRange.from
             params.set('de', `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`)
@@ -194,11 +133,9 @@ export default function ModulosCrmPage() {
             params.set('ate', `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`)
           }
         }
-        // Server-side pagination (exceto 'campanhas', que retorna agrupado sem paginação)
-        if (tabs.selected !== 'campanhas') {
-          params.set('page', String(page))
-          params.set('pageSize', String(pageSize))
-        }
+        // Server-side pagination
+        params.set('page', String(page))
+        params.set('pageSize', String(pageSize))
         const url = `/api/modulos/crm?${params.toString()}`
         const res = await fetch(url, { cache: 'no-store', signal: controller.signal })
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
@@ -230,14 +167,6 @@ export default function ModulosCrmPage() {
           return <Briefcase className="h-4 w-4" />
         case 'leads':
           return <UserPlus className="h-4 w-4" />
-        case 'contas':
-          return <Building2 className="h-4 w-4" />
-        case 'contatos':
-          return <UserCircle2 className="h-4 w-4" />
-        case 'atividades':
-          return <CalendarClock className="h-4 w-4" />
-        case 'campanhas':
-          return <Megaphone className="h-4 w-4" />
         default:
           return null
       }
@@ -286,11 +215,11 @@ export default function ModulosCrmPage() {
         <div style={{ paddingTop: (layout.contentTopGap || 0) + (layout.mbTabs || 0) }}>
           <div className="px-4 md:px-6" style={{ marginBottom: 8 }}>
             <DataToolbar
-              from={(tabs.selected !== 'campanhas' ? total : data.length) === 0 ? 0 : (page - 1) * pageSize + 1}
-              to={(tabs.selected !== 'campanhas' ? total : data.length) === 0 ? 0 : Math.min(page * pageSize, (tabs.selected !== 'campanhas' ? total : data.length))}
-              total={tabs.selected !== 'campanhas' ? total : data.length}
-              dateRange={['oportunidades', 'atividades', 'campanhas'].includes(tabs.selected) ? dateRange : undefined}
-              onDateRangeChange={['oportunidades', 'atividades', 'campanhas'].includes(tabs.selected) ? setDateRange : undefined}
+              from={total === 0 ? 0 : (page - 1) * pageSize + 1}
+              to={total === 0 ? 0 : Math.min(page * pageSize, total)}
+              total={total}
+              dateRange={tabs.selected === 'oportunidades' ? dateRange : undefined}
+              onDateRangeChange={tabs.selected === 'oportunidades' ? setDateRange : undefined}
               fontFamily={fontVar(toolbarUI.fontFamily)}
               fontSize={toolbarUI.fontSize}
               fontWeight={toolbarUI.fontWeight}
@@ -312,14 +241,6 @@ export default function ModulosCrmPage() {
                   <CadastroOportunidadeSheet triggerLabel="Cadastrar" onCreated={() => setRefreshKey((k) => k + 1)} />
                 ) : tabs.selected === 'leads' ? (
                   <CadastroLeadSheet triggerLabel="Cadastrar" onCreated={() => setRefreshKey((k) => k + 1)} />
-                ) : tabs.selected === 'contas' ? (
-                  <CadastroContaSheet triggerLabel="Cadastrar" onCreated={() => setRefreshKey((k) => k + 1)} />
-                ) : tabs.selected === 'contatos' ? (
-                  <CadastroContatoSheet triggerLabel="Cadastrar" onCreated={() => setRefreshKey((k) => k + 1)} />
-                ) : tabs.selected === 'atividades' ? (
-                  <CadastroAtividadeSheet triggerLabel="Cadastrar" onCreated={() => setRefreshKey((k) => k + 1)} />
-                ) : tabs.selected === 'campanhas' ? (
-                  <CadastroCampanhaSheet triggerLabel="Cadastrar" onCreated={() => setRefreshKey((k) => k + 1)} />
                 ) : undefined
               }
             />
@@ -339,9 +260,9 @@ export default function ModulosCrmPage() {
                   showColumnToggle={tabelaUI.enableColumnToggle}
                   showPagination={tabelaUI.showPagination}
                   pageSize={pageSize}
-                  pageIndex={tabs.selected !== 'campanhas' ? page - 1 : undefined}
-                  serverSidePagination={tabs.selected !== 'campanhas'}
-                  serverTotalRows={tabs.selected !== 'campanhas' ? total : undefined}
+                  pageIndex={page - 1}
+                  serverSidePagination={true}
+                  serverTotalRows={total}
                   headerBackground={tabelaUI.headerBg}
                   headerTextColor={tabelaUI.headerText}
                   cellTextColor={tabelaUI.cellText}

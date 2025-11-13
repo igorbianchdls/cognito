@@ -7,60 +7,33 @@ export const revalidate = 0;
 
 const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
   oportunidades: {
-    id: 'o.oportunidadeid',
-    oportunidade: 'o.nome',
-    conta: 'c.nome',
-    responsavel: 'u.nome',
-    estagio: 'o.estagio',
-    valor: 'o.valor',
+    oportunidade: 'o.id',
+    lead: 'l.nome',
+    lead_empresa: 'l.empresa',
+    cliente: 'cli.nome_fantasia',
+    vendedor: 'f.nome',
+    territorio: 't.nome',
+    fase: 'fp.nome',
+    ordem_fase: 'fp.ordem',
+    valor_estimado: 'o.valor_estimado',
     probabilidade: 'o.probabilidade',
-    data_fechamento: 'o.datadefechamento',
-    prioridade: 'prioridade',
+    data_prevista: 'o.data_prevista',
+    status: 'o.status',
+    criado_em: 'o.criado_em',
+    atualizado_em: 'o.atualizado_em',
   },
   leads: {
-    id: 'l.leadid',
-    lead: 'l.primeironome',
+    lead: 'l.id',
+    nome: 'l.nome',
     empresa: 'l.empresa',
     email: 'l.email',
     telefone: 'l.telefone',
-    origem: 'l.fontedolead',
+    origem: 'l.origem',
+    responsavel: 'l.responsavel',
     status: 'l.status',
-    responsavel: 'u.nome',
-  },
-  contas: {
-    id: 'c.contaid',
-    conta: 'c.nome',
-    setor: 'c.setor',
-    site: 'c.site',
-    telefone: 'c.telefone',
-    responsavel: 'u.nome',
-  },
-  contatos: {
-    id: 'ct.contatoid',
-    contato: 'ct.primeironome',
-    cargo: 'ct.cargo',
-    email: 'ct.email',
-    telefone: 'ct.telefone',
-    conta: 'c.nome',
-    responsavel: 'u.nome',
-  },
-  atividades: {
-    id: 'a.atividadeid',
-    assunto: 'a.assunto',
-    tipo: 'a.tipo',
-    status: 'a.status',
-    data_vencimento: 'a.datadevencimento',
-    responsavel: 'u.nome',
-  },
-  campanhas: {
-    id: 'camp.campanhaid',
-    campanha: 'camp.nome',
-    tipo: 'camp.tipo',
-    status: 'camp.status',
-    inicio: 'camp.datainicio',
-    fim: 'camp.datafim',
-    responsavel: 'u.nome',
-    total_membros: 'total_membros',
+    tag: 'l.tag',
+    criado_em: 'l.criado_em',
+    atualizado_em: 'l.atualizado_em',
   },
 };
 
@@ -120,140 +93,63 @@ export async function GET(req: NextRequest) {
     let whereDateCol = '';
 
     if (view === 'oportunidades') {
-      selectSql = `SELECT o.oportunidadeid AS id,
-                          o.nome AS oportunidade,
-                          c.nome AS conta,
-                          u.nome AS responsavel,
-                          o.estagio,
-                          o.valor,
-                          o.probabilidade,
-                          o.datadefechamento AS data_fechamento,
-                          CASE WHEN o.probabilidade >= 80 THEN 'Alta'
-                               WHEN o.probabilidade >= 50 THEN 'Média'
-                               ELSE 'Baixa' END AS prioridade`;
+      selectSql = `SELECT
+        o.id AS oportunidade,
+        l.nome AS lead,
+        l.empresa AS lead_empresa,
+        cli.nome_fantasia AS cliente,
+        f.nome AS vendedor,
+        t.nome AS territorio,
+        fp.nome AS fase,
+        fp.ordem AS ordem_fase,
+        fp.probabilidade_padrao AS probabilidade_fase,
+        o.valor_estimado,
+        o.probabilidade,
+        o.data_prevista,
+        o.status,
+        mp.nome AS motivo_perda,
+        o.descricao,
+        o.criado_em,
+        o.atualizado_em`;
       baseSql = `FROM crm.oportunidades o
-                 LEFT JOIN crm.contas c ON o.contaid = c.contaid
-                 LEFT JOIN gestaovendas.vendedores u ON o.usuarioid = u.id`;
-      whereDateCol = 'o.datadefechamento';
+        LEFT JOIN crm.leads l ON l.id = o.lead_id
+        LEFT JOIN entidades.clientes cli ON cli.id = o.cliente_id
+        LEFT JOIN comercial.vendedores v ON v.id = o.vendedor_id
+        LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id
+        LEFT JOIN comercial.territorios t ON t.id = o.territorio_id
+        LEFT JOIN crm.fases_pipeline fp ON fp.id = o.fase_pipeline_id
+        LEFT JOIN crm.motivos_perda mp ON mp.id = o.motivo_perda_id`;
+      whereDateCol = 'o.data_prevista';
       if (status) push('LOWER(o.status) =', status.toLowerCase());
-      if (estagio) push('LOWER(o.estagio) =', estagio.toLowerCase());
-      if (prob_min !== undefined) push('o.probabilidade >=', prob_min);
-      if (prob_max !== undefined) push('o.probabilidade <=', prob_max);
-      if (valor_min !== undefined) push('o.valor >=', valor_min);
-      if (valor_max !== undefined) push('o.valor <=', valor_max);
-      if (responsavel_id) push('o.usuarioid =', responsavel_id);
+      if (responsavel_id) push('v.funcionario_id =', responsavel_id);
       if (q) {
-        conditions.push(`(o.nome ILIKE '%' || $${i} || '%' OR c.nome ILIKE '%' || $${i} || '%')`);
+        conditions.push(`(l.nome ILIKE '%' || $${i} || '%' OR l.empresa ILIKE '%' || $${i} || '%' OR cli.nome_fantasia ILIKE '%' || $${i} || '%' OR f.nome ILIKE '%' || $${i} || '%')`);
         params.push(q);
         i += 1;
       }
     } else if (view === 'leads') {
-      selectSql = `SELECT l.leadid AS id,
-                          (l.primeironome || ' ' || l.sobrenome) AS lead,
-                          l.empresa,
-                          l.email,
-                          l.telefone,
-                          l.fontedolead AS origem,
-                          l.status,
-                          u.nome AS responsavel`;
-      baseSql = `FROM crm.leads l
-                 LEFT JOIN gestaovendas.vendedores u ON l.usuarioid = u.id`;
+      selectSql = `SELECT
+        l.id AS lead,
+        l.nome,
+        l.empresa,
+        l.email,
+        l.telefone,
+        l.origem,
+        l.responsavel,
+        l.status,
+        l.tag,
+        l.descricao,
+        l.criado_em,
+        l.atualizado_em`;
+      baseSql = `FROM crm.leads l`;
       if (status) push('LOWER(l.status) =', status.toLowerCase());
-      if (origem) push('LOWER(l.fontedolead) =', origem.toLowerCase());
-      if (responsavel_id) push('l.usuarioid =', responsavel_id);
+      if (origem) push('LOWER(l.origem) =', origem.toLowerCase());
+      if (responsavel_id) push('l.responsavel ILIKE', `%${responsavel_id}%`);
       if (q) {
-        conditions.push(`(l.primeironome ILIKE '%' || $${i} || '%' OR l.sobrenome ILIKE '%' || $${i} || '%' OR l.empresa ILIKE '%' || $${i} || '%' OR l.email ILIKE '%' || $${i} || '%')`);
+        conditions.push(`(l.nome ILIKE '%' || $${i} || '%' OR l.empresa ILIKE '%' || $${i} || '%' OR l.email ILIKE '%' || $${i} || '%' OR l.responsavel ILIKE '%' || $${i} || '%')`);
         params.push(q);
         i += 1;
       }
-    } else if (view === 'contas') {
-      selectSql = `SELECT c.contaid AS id,
-                          c.nome AS conta,
-                          c.setor,
-                          c.site,
-                          c.telefone,
-                          c.enderecocobranca AS endereco_cobranca,
-                          u.nome AS responsavel`;
-      baseSql = `FROM crm.contas c
-                 LEFT JOIN gestaovendas.vendedores u ON c.usuarioid = u.id`;
-      if (setor) push('LOWER(c.setor) =', setor.toLowerCase());
-      if (responsavel_id) push('c.usuarioid =', responsavel_id);
-      if (q) {
-        conditions.push(`(c.nome ILIKE '%' || $${i} || '%' OR c.site ILIKE '%' || $${i} || '%' OR c.telefone ILIKE '%' || $${i} || '%')`);
-        params.push(q);
-        i += 1;
-      }
-    } else if (view === 'contatos') {
-      selectSql = `SELECT ct.contatoid AS id,
-                          (ct.primeironome || ' ' || ct.sobrenome) AS contato,
-                          ct.cargo,
-                          ct.email,
-                          ct.telefone,
-                          c.nome AS conta,
-                          u.nome AS responsavel`;
-      baseSql = `FROM crm.contatos ct
-                 LEFT JOIN crm.contas c ON ct.contaid = c.contaid
-                 LEFT JOIN gestaovendas.vendedores u ON ct.usuarioid = u.id`;
-      if (conta_id) push('ct.contaid =', conta_id);
-      if (responsavel_id) push('ct.usuarioid =', responsavel_id);
-      if (q) {
-        conditions.push(`(ct.primeironome ILIKE '%' || $${i} || '%' OR ct.sobrenome ILIKE '%' || $${i} || '%' OR ct.email ILIKE '%' || $${i} || '%' OR ct.telefone ILIKE '%' || $${i} || '%')`);
-        params.push(q);
-        i += 1;
-      }
-    } else if (view === 'atividades') {
-      selectSql = `SELECT a.atividadeid AS id,
-                          a.assunto,
-                          a.tipo,
-                          a.status,
-                          a.datadevencimento AS data_vencimento,
-                          COALESCE(c.nome, '—') AS conta,
-                          COALESCE(ct.primeironome || ' ' || ct.sobrenome, '—') AS contato,
-                          COALESCE(l.primeironome || ' ' || l.sobrenome, '—') AS lead,
-                          COALESCE(o.nome, '—') AS oportunidade,
-                          u.nome AS responsavel,
-                          a.anotacoes`;
-      baseSql = `FROM crm.atividades a
-                 LEFT JOIN crm.contas c ON a.contaid = c.contaid
-                 LEFT JOIN crm.contatos ct ON a.contatoid = ct.contatoid
-                 LEFT JOIN crm.leads l ON a.leadid = l.leadid
-                 LEFT JOIN crm.oportunidades o ON a.oportunidadeid = o.oportunidadeid
-                 LEFT JOIN gestaovendas.vendedores u ON a.usuarioid = u.id`;
-      whereDateCol = 'a.datadevencimento';
-      if (status) push('LOWER(a.status) =', status.toLowerCase());
-      if (tipo) push('LOWER(a.tipo) =', tipo.toLowerCase());
-      if (responsavel_id) push('a.usuarioid =', responsavel_id);
-      if (oportunidade_id) push('a.oportunidadeid =', oportunidade_id);
-      if (conta_id) push('a.contaid =', conta_id);
-      if (lead_id) push('a.leadid =', lead_id);
-      if (contato_id) push('a.contatoid =', contato_id);
-      if (q) {
-        conditions.push(`(a.assunto ILIKE '%' || $${i} || '%' OR a.anotacoes ILIKE '%' || $${i} || '%')`);
-        params.push(q);
-        i += 1;
-      }
-    } else if (view === 'campanhas') {
-      selectSql = `SELECT camp.campanhaid AS id,
-                          camp.nome AS campanha,
-                          camp.tipo,
-                          camp.status,
-                          camp.datainicio AS inicio,
-                          camp.datafim AS fim,
-                          u.nome AS responsavel,
-                          COUNT(DISTINCT mc.contatoid) + COUNT(DISTINCT mc.leadid) AS total_membros`;
-      baseSql = `FROM crm.campanhas camp
-                 LEFT JOIN crm.membrosdecampanha mc ON camp.campanhaid = mc.campanhaid
-                 LEFT JOIN gestaovendas.vendedores u ON camp.usuarioid = u.id`;
-      whereDateCol = 'camp.datainicio';
-      if (status) push('LOWER(camp.status) =', status.toLowerCase());
-      if (tipo) push('LOWER(camp.tipo) =', tipo.toLowerCase());
-      if (responsavel_id) push('camp.usuarioid =', responsavel_id);
-      if (q) {
-        conditions.push(`(camp.nome ILIKE '%' || $${i} || '%')`);
-        params.push(q);
-        i += 1;
-      }
-      groupBy = 'GROUP BY camp.campanhaid, camp.nome, camp.tipo, camp.status, camp.datainicio, camp.datafim, u.nome';
     } else {
       return Response.json({ success: false, message: `View inválida: ${view}` }, { status: 400 });
     }
@@ -268,17 +164,13 @@ export async function GET(req: NextRequest) {
     if (ORDER_BY_WHITELIST[view] && Object.keys(ORDER_BY_WHITELIST[view]).length) {
       if (orderBy) orderClause = `ORDER BY ${orderBy} ${orderDir}`;
       else {
-        if (view === 'oportunidades') orderClause = 'ORDER BY o.datadefechamento DESC NULLS LAST';
-        else if (view === 'leads') orderClause = 'ORDER BY l.status ASC, l.primeironome ASC';
-        else if (view === 'contas') orderClause = 'ORDER BY c.nome ASC';
-        else if (view === 'contatos') orderClause = 'ORDER BY ct.primeironome ASC';
-        else if (view === 'atividades') orderClause = 'ORDER BY a.datadevencimento DESC NULLS LAST';
-        else if (view === 'campanhas') orderClause = 'ORDER BY camp.datainicio DESC';
+        if (view === 'oportunidades') orderClause = 'ORDER BY o.id DESC';
+        else if (view === 'leads') orderClause = 'ORDER BY l.criado_em DESC';
       }
     }
 
-    const limitOffset = view === 'campanhas' ? '' : `LIMIT $${i}::int OFFSET $${i + 1}::int`;
-    const paramsWithPage = limitOffset ? [...params, pageSize, offset] : params;
+    const limitOffset = `LIMIT $${i}::int OFFSET $${i + 1}::int`;
+    const paramsWithPage = [...params, pageSize, offset];
 
     const listSql = `${selectSql}
                      ${baseSql}
@@ -289,12 +181,9 @@ export async function GET(req: NextRequest) {
 
     const rows = await runQuery<Record<string, unknown>>(listSql, paramsWithPage);
 
-    let total = rows.length;
-    if (!groupBy) {
-      const totalSql = `SELECT COUNT(*)::int AS total ${baseSql} ${whereClause}`;
-      const totalRows = await runQuery<{ total: number }>(totalSql, params);
-      total = totalRows[0]?.total ?? 0;
-    }
+    const totalSql = `SELECT COUNT(*)::int AS total ${baseSql} ${whereClause}`;
+    const totalRows = await runQuery<{ total: number }>(totalSql, params);
+    const total = totalRows[0]?.total ?? 0;
 
     return Response.json({
       success: true,
