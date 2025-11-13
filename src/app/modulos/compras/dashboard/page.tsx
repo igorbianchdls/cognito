@@ -34,6 +34,11 @@ export default function ComprasDashboardPage() {
 
   const [pedidos, setPedidos] = useState<PedidoRow[]>([])
   const [recebimentos, setRecebimentos] = useState<RecebimentoRow[]>([])
+  // KPIs (reais)
+  const [gasto, setGasto] = useState<number>(0)
+  const [fornecedores, setFornecedores] = useState<number>(0)
+  const [transacoes, setTransacoes] = useState<number>(0)
+  const [pedidosCompra, setPedidosCompra] = useState<number>(0)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -43,29 +48,33 @@ export default function ComprasDashboardPage() {
       setLoading(true); setError(null)
       try {
         const base = '/api/modulos/compras'
-        const [pRes, rRes] = await Promise.allSettled([
-          fetch(`${base}?view=pedidos&page=1&pageSize=1000`, { cache: 'no-store' }),
+        const [kRes, pRes, rRes] = await Promise.allSettled([
+          fetch(`/api/modulos/compras/dashboard`, { cache: 'no-store' }),
+          fetch(`${base}?view=compras&page=1&pageSize=1000`, { cache: 'no-store' }),
           fetch(`${base}?view=recebimentos&page=1&pageSize=1000`, { cache: 'no-store' }),
         ])
         let ps: PedidoRow[] = []
         let rs: RecebimentoRow[] = []
-        if (pRes.status === 'fulfilled' && pRes.value.ok) { const j = await pRes.value.json(); ps = Array.isArray(j?.rows) ? j.rows as PedidoRow[] : [] }
-        if (rRes.status === 'fulfilled' && rRes.value.ok) { const j = await rRes.value.json(); rs = Array.isArray(j?.rows) ? j.rows as RecebimentoRow[] : [] }
-        if (ps.length === 0 && rs.length === 0) {
-          // Mocks coerentes
-          const d0 = toDateOnly(new Date())
-          const d1 = toDateOnly(new Date(Date.now()-86400000))
-          const d2 = toDateOnly(new Date(Date.now()-2*86400000))
-          ps = [
-            { numero: 'PC-1001', fornecedor: 'Fornecedor X', status: 'aberto', data_emissao: d2, valor_total: 3500 },
-            { numero: 'PC-1002', fornecedor: 'Fornecedor Y', status: 'em aprovação', data_emissao: d1, valor_total: 1200 },
-            { numero: 'PC-1003', fornecedor: 'Fornecedor Z', status: 'fechado', data_emissao: d0, valor_total: 980 },
-          ]
-          rs = [
-            { numero_nf: 'NF-889', fornecedor: 'Fornecedor W', data_recebimento: d0, valor_total: 2600 },
-            { numero_nf: 'NF-874', fornecedor: 'Fornecedor X', data_recebimento: d1, valor_total: 4300 },
-          ]
+        if (kRes.status === 'fulfilled' && kRes.value.ok) {
+          const j = await kRes.value.json()
+          const k = j?.kpis || {}
+          setGasto(Number(k.gasto || 0))
+          setFornecedores(Number(k.fornecedores || 0))
+          setTransacoes(Number(k.transacoes || 0))
+          setPedidosCompra(Number(k.pedidos || 0))
         }
+        if (pRes.status === 'fulfilled' && pRes.value.ok) {
+          const j = await pRes.value.json();
+          const rows = Array.isArray(j?.rows) ? j.rows as any[] : []
+          ps = rows.map((r) => ({
+            numero: r?.numero_oc ?? r?.numero ?? undefined,
+            fornecedor: r?.fornecedor,
+            status: r?.status,
+            data_emissao: r?.data_emissao,
+            valor_total: r?.valor_total,
+          }))
+        }
+        if (rRes.status === 'fulfilled' && rRes.value.ok) { const j = await rRes.value.json(); rs = Array.isArray(j?.rows) ? j.rows as RecebimentoRow[] : [] }
         if (!cancelled) { setPedidos(ps); setRecebimentos(rs) }
       } catch { if (!cancelled) setError('Falha ao carregar dados') } finally { if (!cancelled) setLoading(false) }
     }
@@ -125,60 +134,7 @@ export default function ComprasDashboardPage() {
     </div>
   )
 
-  // KPIs (mock data)
-  const gasto = useMemo(() => 450000, [])
-  const fornecedores = useMemo(() => 28, [])
-  const transacoes = useMemo(() => 156, [])
-  const pedidosCompra = useMemo(() => 42, [])
-
-  // Charts (mock data)
-  const comprasPorDepartamento = useMemo(() => [
-    { label: 'TI', value: 125000 },
-    { label: 'Operações', value: 98000 },
-    { label: 'Administrativo', value: 75000 },
-    { label: 'Vendas', value: 68000 },
-    { label: 'Marketing', value: 42000 }
-  ], [])
-
-  const comprasPorCentroCusto = useMemo(() => [
-    { label: 'Infraestrutura', value: 145000 },
-    { label: 'Manutenção', value: 98000 },
-    { label: 'Logística', value: 87000 },
-    { label: 'RH', value: 56000 },
-    { label: 'Facilities', value: 38000 }
-  ], [])
-
-  const comprasPorFornecedores = useMemo(() => [
-    { label: 'Fornecedor A', value: 156000 },
-    { label: 'Fornecedor B', value: 112000 },
-    { label: 'Fornecedor C', value: 89000 },
-    { label: 'Fornecedor D', value: 67000 },
-    { label: 'Fornecedor E', value: 45000 }
-  ], [])
-
-  const comprasPorFiliais = useMemo(() => [
-    { label: 'São Paulo', value: 178000 },
-    { label: 'Rio de Janeiro', value: 134000 },
-    { label: 'Belo Horizonte', value: 92000 },
-    { label: 'Curitiba', value: 67000 },
-    { label: 'Porto Alegre', value: 54000 }
-  ], [])
-
-  const comprasPorCategorias = useMemo(() => [
-    { label: 'Equipamentos', value: 165000 },
-    { label: 'Materiais', value: 123000 },
-    { label: 'Serviços', value: 98000 },
-    { label: 'Software', value: 76000 },
-    { label: 'Consumíveis', value: 42000 }
-  ], [])
-
-  const comprasPorProjetos = useMemo(() => [
-    { label: 'Projeto Alpha', value: 142000 },
-    { label: 'Projeto Beta', value: 108000 },
-    { label: 'Projeto Gamma', value: 87000 },
-    { label: 'Projeto Delta', value: 65000 },
-    { label: 'Projeto Epsilon', value: 48000 }
-  ], [])
+  // KPIs agora vêm do endpoint (mantidos em state)
 
   // Charts
   const gastoPorFornecedor = useMemo(() => {
@@ -197,6 +153,16 @@ export default function ComprasDashboardPage() {
     for (const p of pedidos) { const d = parseDate(p.data_emissao); if(!d) continue; const k=monthKey(d); if(m.has(k)) m.set(k, (m.get(k)||0)+1) }
     return meses.map(k=>({ key:k, label:monthLabel(k), value:m.get(k)||0 }))
   }, [pedidos, meses])
+
+  // Charts: sem mocks. Enquanto não houver agregações reais,
+  // mantemos arrays vazios (ou derivados do que temos em memória).
+  const comprasPorDepartamento: { label: string; value: number }[] = []
+  const comprasPorCentroCusto: { label: string; value: number }[] = []
+  // Aproveitamos o cálculo real de gasto por fornecedor a partir dos pedidos carregados
+  const comprasPorFornecedores = useMemo(() => gastoPorFornecedor, [gastoPorFornecedor])
+  const comprasPorFiliais: { label: string; value: number }[] = []
+  const comprasPorCategorias: { label: string; value: number }[] = []
+  const comprasPorProjetos: { label: string; value: number }[] = []
 
   function HBars({ items, color = 'bg-indigo-500' }: { items: { label: string; value: number }[]; color?: string }) {
     const max = Math.max(1, ...items.map(i => i.value))
