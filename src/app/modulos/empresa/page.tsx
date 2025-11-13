@@ -56,6 +56,10 @@ export default function ModulosEmpresaPage() {
         { value: 'filiais', label: 'Filiais' },
         { value: 'departamentos', label: 'Departamentos' },
         { value: 'cargos', label: 'Cargos' },
+        { value: 'funcionarios', label: 'Funcionários' },
+        { value: 'vendedores', label: 'Vendedores' },
+        { value: 'equipe_comercial', label: 'Equipe Comercial' },
+        { value: 'territorios', label: 'Territórios' },
       ],
       selected: 'dados',
     })
@@ -109,7 +113,6 @@ export default function ModulosEmpresaPage() {
           { accessorKey: 'ativo', header: 'Ativo' },
         ]
       case 'cargos':
-      default:
         return [
           { accessorKey: 'codigo', header: 'Código' },
           { accessorKey: 'nome', header: 'Nome' },
@@ -117,6 +120,50 @@ export default function ModulosEmpresaPage() {
           { accessorKey: 'descricao', header: 'Descrição' },
           { accessorKey: 'ativo', header: 'Ativo' },
         ]
+      case 'funcionarios':
+        return [
+          { accessorKey: 'codigo', header: 'Código' },
+          { accessorKey: 'nome', header: 'Nome' },
+          { accessorKey: 'cargo', header: 'Cargo' },
+          { accessorKey: 'departamento', header: 'Departamento' },
+          { accessorKey: 'email', header: 'E-mail' },
+          { accessorKey: 'telefone', header: 'Telefone' },
+          { accessorKey: 'data_admissao', header: 'Data Admissão', cell: ({ getValue }) => formatDate(getValue()) },
+          { accessorKey: 'status', header: 'Status' },
+        ]
+      case 'vendedores':
+        return [
+          { accessorKey: 'codigo', header: 'Código' },
+          { accessorKey: 'nome', header: 'Nome' },
+          { accessorKey: 'email', header: 'E-mail' },
+          { accessorKey: 'telefone', header: 'Telefone' },
+          { accessorKey: 'territorio', header: 'Território' },
+          { accessorKey: 'meta_mensal', header: 'Meta Mensal' },
+          { accessorKey: 'comissao', header: 'Comissão (%)' },
+          { accessorKey: 'status', header: 'Status' },
+        ]
+      case 'equipe_comercial':
+        return [
+          { accessorKey: 'codigo', header: 'Código' },
+          { accessorKey: 'nome_time', header: 'Nome do Time' },
+          { accessorKey: 'lider', header: 'Líder' },
+          { accessorKey: 'regiao', header: 'Região' },
+          { accessorKey: 'meta_time', header: 'Meta do Time' },
+          { accessorKey: 'membros_count', header: 'Nº Membros' },
+          { accessorKey: 'status', header: 'Status' },
+        ]
+      case 'territorios':
+        return [
+          { accessorKey: 'codigo', header: 'Código' },
+          { accessorKey: 'nome', header: 'Nome' },
+          { accessorKey: 'regiao', header: 'Região' },
+          { accessorKey: 'responsavel', header: 'Responsável' },
+          { accessorKey: 'estados', header: 'Estados' },
+          { accessorKey: 'cidades', header: 'Cidades' },
+          { accessorKey: 'status', header: 'Status' },
+        ]
+      default:
+        return []
     }
   }, [tabs.selected])
 
@@ -269,6 +316,11 @@ export default function ModulosEmpresaPage() {
                     triggerLabel="Cadastrar"
                     onCreated={() => setRefreshKey((k) => k + 1)}
                   />
+                ) : (tabs.selected === 'funcionarios' ||
+                     tabs.selected === 'vendedores' ||
+                     tabs.selected === 'equipe_comercial' ||
+                     tabs.selected === 'territorios') ? (
+                  undefined // Botões de cadastro para novas tabs podem ser adicionados depois
                 ) : undefined
               }
             />
