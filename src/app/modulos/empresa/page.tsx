@@ -547,6 +547,40 @@ export default function ModulosEmpresaPage() {
                       onChange={(e) => moduleUiActions.setTabs({ activeFontWeight: e.target.value })}
                     />
                   </div>
+                  <div>
+                    <label className="text-xs text-gray-600 mb-1 block">Padding Left Primeira Tab (px)</label>
+                    <input
+                      type="number"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                      value={tabs.leftOffset || 20}
+                      onChange={(e) => moduleUiActions.setTabs({ leftOffset: Number(e.target.value) })}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-600 mb-1 block">Padding Bottom Título/Ícone (px)</label>
+                    <input
+                      type="number"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                      value={tabs.labelOffsetY || 6}
+                      onChange={(e) => moduleUiActions.setTabs({ labelOffsetY: Number(e.target.value) })}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* SEÇÃO: Layout */}
+              <div className="mb-8">
+                <h4 className="text-sm font-medium mb-4 text-gray-700">Layout</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="text-xs text-gray-600 mb-1 block">Cor de Fundo (área abaixo das tabs)</label>
+                    <input
+                      type="color"
+                      className="w-full h-10 px-1 py-1 border border-gray-300 rounded-md"
+                      value={layout.contentBg || 'rgb(253, 253, 253)'}
+                      onChange={(e) => moduleUiActions.setLayout({ contentBg: e.target.value })}
+                    />
+                  </div>
                 </div>
               </div>
 
