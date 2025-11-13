@@ -3,11 +3,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useStore } from '@nanostores/react'
 import DashboardLayout from '@/components/modulos/DashboardLayout'
+import { BarChartHorizontalRecharts } from '@/components/charts/BarChartHorizontalRecharts'
+import { BarChartHorizontalPercent } from '@/components/charts/BarChartHorizontalPercent'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Calendar as CalendarIcon } from 'lucide-react'
+import { Calendar as CalendarIcon, TrendingUp, Users, CalendarDays, Target } from 'lucide-react'
 import type { DateRange } from 'react-day-picker'
 import { $financeiroDashboardUI, $financeiroDashboardFilters, financeiroDashboardActions } from '@/stores/modulos/financeiroDashboardStore'
 
@@ -171,18 +173,43 @@ export default function CRMDashboardPage() {
       .sort((a,b)=> a.order - b.order)
   }, [opps])
 
-  // Conversões (ganhos) por mês (6m)
-  const meses = useMemo(() => lastMonths(6), [])
-  const winsMes = useMemo(() => {
-    const m = new Map<string, number>()
-    for (const k of meses) m.set(k, 0)
-    for (const o of opps) {
-      if (!isClosedWon(o.estagio)) continue
-      const k = monthKeyFromStr(o.data_fechamento)
-      if (k && m.has(k)) m.set(k, (m.get(k) || 0) + 1)
+  // Pipeline por Vendedor (mock data)
+  const pipelinePorVendedor = useMemo(() => [
+    { label: 'João Silva', value: 285000 },
+    { label: 'Maria Santos', value: 242000 },
+    { label: 'Pedro Costa', value: 198000 },
+    { label: 'Ana Oliveira', value: 165000 },
+    { label: 'Carlos Souza', value: 127000 }
+  ], [])
+
+  // Forecast Mensal - próximos 6 meses (mock data)
+  const forecastMensal = useMemo(() => {
+    const base = new Date()
+    const months = []
+    for (let i = 0; i < 6; i++) {
+      const d = new Date(base.getFullYear(), base.getMonth() + i, 1)
+      const label = d.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' })
+      months.push(label)
     }
-    return meses.map(k => ({ key: k, label: monthLabel(k), value: m.get(k) || 0 }))
-  }, [opps, meses])
+    return [
+      { label: months[0], value: 145000 },
+      { label: months[1], value: 198000 },
+      { label: months[2], value: 234000 },
+      { label: months[3], value: 187000 },
+      { label: months[4], value: 156000 },
+      { label: months[5], value: 124000 }
+    ]
+  }, [])
+
+  // Taxa de Conversão por Canal (mock data - valores em %)
+  const taxaConversaoPorCanal = useMemo(() => [
+    { label: 'Website', value: 28.5 },
+    { label: 'Indicação', value: 45.2 },
+    { label: 'LinkedIn', value: 32.8 },
+    { label: 'Email Marketing', value: 18.3 },
+    { label: 'Eventos', value: 52.7 },
+    { label: 'Cold Call', value: 12.4 }
+  ].sort((a, b) => b.value - a.value), [])
 
   // Fontes de leads (contagem)
   const fontesLeads = useMemo(() => {
@@ -342,26 +369,6 @@ export default function CRMDashboardPage() {
     </div>
   )
 
-  // Simple bars (currency)
-
-  function HBarsCurrency({ items, color }: { items: { label: string; value: number }[]; color: string }) {
-    const max = Math.max(1, ...items.map(i => i.value))
-    return (
-      <div className="space-y-3">
-        {items.map((it) => {
-          const pct = Math.round((it.value / max) * 100)
-          return (
-            <div key={it.label}>
-              <div className="flex justify-between text-xs text-gray-600 mb-1"><span>{it.label}</span><span>{formatBRL(it.value)}</span></div>
-              <div className="w-full h-2.5 bg-gray-100 rounded"><div className={`${color} h-2.5 rounded`} style={{ width: `${pct}%` }} /></div>
-            </div>
-          )
-        })}
-        {items.length === 0 && <div className="text-xs text-gray-400">Sem dados</div>}
-      </div>
-    )
-  }
-
   return (
     <DashboardLayout
       title="Olá, Igor Bianch"
@@ -402,26 +409,35 @@ export default function CRMDashboardPage() {
         )})()}
       </div>
 
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        <BarChartHorizontalRecharts
+          items={funnel.map(f => ({ label: f.label, value: f.value }))}
+          title="Pipeline de Vendas"
+          icon={<TrendingUp className="w-5 h-5" />}
+          color="#3b82f6"
+        />
+        <BarChartHorizontalRecharts
+          items={pipelinePorVendedor}
+          title="Pipeline por Vendedor"
+          icon={<Users className="w-5 h-5" />}
+          color="#10b981"
+        />
+        <BarChartHorizontalRecharts
+          items={forecastMensal}
+          title="Forecast Mês a Mês"
+          icon={<CalendarDays className="w-5 h-5" />}
+          color="#8b5cf6"
+        />
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <div className={`bg-white p-6 rounded-lg border border-gray-100${cardShadow ? ' shadow-sm' : ''}`} style={{ borderColor: cardBorderColor }}>
-          <h3 className="text-lg font-semibold mb-4" style={styleChartTitle}>Funil de Vendas</h3>
-          <HBarsCurrency items={funnel.map(f => ({ label: f.label, value: f.value }))} color="bg-cyan-500" />
-        </div>
-        <div className={`bg-white p-6 rounded-lg border border-gray-100${cardShadow ? ' shadow-sm' : ''}`} style={{ borderColor: cardBorderColor }}>
-          <h3 className="text-lg font-semibold mb-4" style={styleChartTitle}>Conversões por Mês</h3>
-          <div className="grid grid-cols-6 gap-3 h-44 items-end">
-            {winsMes.map(m => {
-              const max = Math.max(1, ...winsMes.map(x => x.value))
-              const h = Math.round((m.value / max) * 100)
-              return (
-                <div key={m.key} className="flex flex-col items-center justify-end gap-1">
-                  <div className="w-full bg-indigo-500/80 rounded" style={{ height: `${h}%` }} />
-                  <div className="text-[11px] text-gray-600" style={styleText}>{m.label}</div>
-                </div>
-              )
-            })}
-          </div>
-        </div>
+        <BarChartHorizontalPercent
+          items={taxaConversaoPorCanal}
+          title="Taxa de Conversão por Canal"
+          icon={<Target className="w-5 h-5" />}
+          color="#f59e0b"
+          height={280}
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
