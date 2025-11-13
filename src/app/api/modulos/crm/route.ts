@@ -57,6 +57,37 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
     criado_em: 'i.criado_em',
     atualizado_em: 'i.atualizado_em',
   },
+  oportunidades_produtos: {
+    oportunidade: 'o.id',
+    lead: 'l.nome',
+    empresa_lead: 'l.empresa',
+    vendedor: 'f.nome',
+    territorio: 't.nome',
+    fase: 'fp.nome',
+    ordem_fase: 'fp.ordem',
+    produto: 'pr.nome',
+    valor_estimado: 'o.valor_estimado',
+    status: 'o.status',
+    data_prevista: 'o.data_prevista',
+    criado_em: 'o.criado_em',
+    atualizado_em: 'o.atualizado_em',
+  },
+  pipeline: {
+    pipeline: 'p.nome',
+    fase: 'fp.nome',
+    ordem_fase: 'fp.ordem',
+    oportunidade: 'o.id',
+    lead: 'l.nome',
+    empresa_lead: 'l.empresa',
+    vendedor: 'f.nome',
+    territorio: 't.nome',
+    valor_estimado: 'o.valor_estimado',
+    probabilidade: 'o.probabilidade',
+    status: 'o.status',
+    data_prevista: 'o.data_prevista',
+    criado_em: 'o.criado_em',
+    atualizado_em: 'o.atualizado_em',
+  },
 };
 
 const parseNumber = (v: string | null, fb?: number) => (v ? Number(v) : fb);
@@ -217,6 +248,81 @@ export async function GET(req: NextRequest) {
         params.push(q);
         i += 1;
       }
+    } else if (view === 'oportunidades_produtos') {
+      selectSql = `SELECT
+        o.id AS oportunidade,
+        l.nome AS lead,
+        l.empresa AS empresa_lead,
+        f.nome AS vendedor,
+        t.nome AS territorio,
+        fp.nome AS fase,
+        fp.ordem AS ordem_fase,
+        fp.probabilidade_padrao AS probabilidade_fase,
+        pr.nome AS produto,
+        op.quantidade,
+        op.preco,
+        op.subtotal,
+        o.valor_estimado,
+        o.status,
+        mp.nome AS motivo_perda,
+        o.data_prevista,
+        o.descricao,
+        o.criado_em,
+        o.atualizado_em,
+        op.id AS item_id`;
+      baseSql = `FROM crm.oportunidades_produtos op
+        LEFT JOIN crm.oportunidades o ON o.id = op.oportunidade_id
+        LEFT JOIN crm.leads l ON l.id = o.lead_id
+        LEFT JOIN comercial.vendedores v ON v.id = o.vendedor_id
+        LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id
+        LEFT JOIN comercial.territorios t ON t.id = o.territorio_id
+        LEFT JOIN crm.fases_pipeline fp ON fp.id = o.fase_pipeline_id
+        LEFT JOIN produtos.produto pr ON pr.id = op.produto_id
+        LEFT JOIN crm.motivos_perda mp ON mp.id = o.motivo_perda_id`;
+      whereDateCol = 'o.data_prevista';
+      if (status) push('LOWER(o.status) =', status.toLowerCase());
+      if (responsavel_id) push('v.funcionario_id =', responsavel_id);
+      if (q) {
+        conditions.push(`(l.nome ILIKE '%' || $${i} || '%' OR l.empresa ILIKE '%' || $${i} || '%' OR f.nome ILIKE '%' || $${i} || '%' OR pr.nome ILIKE '%' || $${i} || '%')`);
+        params.push(q);
+        i += 1;
+      }
+    } else if (view === 'pipeline') {
+      selectSql = `SELECT
+        p.nome AS pipeline,
+        fp.nome AS fase,
+        fp.ordem AS ordem_fase,
+        fp.probabilidade_padrao AS probabilidade_fase,
+        o.id AS oportunidade,
+        l.nome AS lead,
+        l.empresa AS empresa_lead,
+        f.nome AS vendedor,
+        t.nome AS territorio,
+        o.valor_estimado,
+        o.probabilidade,
+        o.data_prevista,
+        o.status,
+        mp.nome AS motivo_perda,
+        o.descricao,
+        o.criado_em,
+        o.atualizado_em,
+        fp.id AS fase_id`;
+      baseSql = `FROM crm.fases_pipeline fp
+        LEFT JOIN crm.pipelines p ON p.id = fp.pipeline_id
+        LEFT JOIN crm.oportunidades o ON o.fase_pipeline_id = fp.id
+        LEFT JOIN crm.leads l ON l.id = o.lead_id
+        LEFT JOIN comercial.vendedores v ON v.id = o.vendedor_id
+        LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id
+        LEFT JOIN comercial.territorios t ON t.id = o.territorio_id
+        LEFT JOIN crm.motivos_perda mp ON mp.id = o.motivo_perda_id`;
+      whereDateCol = 'o.data_prevista';
+      if (status) push('LOWER(o.status) =', status.toLowerCase());
+      if (responsavel_id) push('v.funcionario_id =', responsavel_id);
+      if (q) {
+        conditions.push(`(p.nome ILIKE '%' || $${i} || '%' OR fp.nome ILIKE '%' || $${i} || '%' OR l.nome ILIKE '%' || $${i} || '%' OR f.nome ILIKE '%' || $${i} || '%')`);
+        params.push(q);
+        i += 1;
+      }
     } else {
       return Response.json({ success: false, message: `View inválida: ${view}` }, { status: 400 });
     }
@@ -235,6 +341,8 @@ export async function GET(req: NextRequest) {
         else if (view === 'leads') orderClause = 'ORDER BY l.id ASC';
         else if (view === 'atividades') orderClause = 'ORDER BY a.id ASC';
         else if (view === 'interacoes') orderClause = 'ORDER BY i.id ASC';
+        else if (view === 'oportunidades_produtos') orderClause = 'ORDER BY o.id ASC, op.id ASC';
+        else if (view === 'pipeline') orderClause = 'ORDER BY p.id ASC, fp.ordem ASC, o.id ASC';
       }
     }
 
@@ -248,9 +356,137 @@ export async function GET(req: NextRequest) {
                      ${orderClause}
                      ${limitOffset}`.replace(/\s+$/m, '').trim();
 
-    const rows = await runQuery<Record<string, unknown>>(listSql, paramsWithPage);
+    let rows = await runQuery<Record<string, unknown>>(listSql, paramsWithPage);
 
-    const totalSql = `SELECT COUNT(*)::int AS total ${baseSql} ${whereClause}`;
+    // Aggregate for oportunidades_produtos: group products by oportunidade
+    if (view === 'oportunidades_produtos') {
+      type OportunidadeAgregada = {
+        oportunidade: unknown
+        lead: unknown
+        empresa_lead: unknown
+        vendedor: unknown
+        territorio: unknown
+        fase: unknown
+        ordem_fase: unknown
+        probabilidade_fase: unknown
+        valor_estimado: unknown
+        status: unknown
+        motivo_perda: unknown
+        data_prevista: unknown
+        descricao: unknown
+        criado_em: unknown
+        atualizado_em: unknown
+        produtos: Array<{
+          produto: unknown
+          quantidade: unknown
+          preco: unknown
+          subtotal: unknown
+        }>
+      }
+      const oportunidadesMap = new Map<number, OportunidadeAgregada>()
+
+      for (const row of rows) {
+        const oportunidadeKey = Number(row.oportunidade)
+
+        if (!oportunidadesMap.has(oportunidadeKey)) {
+          oportunidadesMap.set(oportunidadeKey, {
+            oportunidade: row.oportunidade,
+            lead: row.lead,
+            empresa_lead: row.empresa_lead,
+            vendedor: row.vendedor,
+            territorio: row.territorio,
+            fase: row.fase,
+            ordem_fase: row.ordem_fase,
+            probabilidade_fase: row.probabilidade_fase,
+            valor_estimado: row.valor_estimado,
+            status: row.status,
+            motivo_perda: row.motivo_perda,
+            data_prevista: row.data_prevista,
+            descricao: row.descricao,
+            criado_em: row.criado_em,
+            atualizado_em: row.atualizado_em,
+            produtos: []
+          })
+        }
+
+        if (row.item_id) {
+          oportunidadesMap.get(oportunidadeKey)!.produtos.push({
+            produto: row.produto,
+            quantidade: row.quantidade,
+            preco: row.preco,
+            subtotal: row.subtotal,
+          })
+        }
+      }
+
+      rows = Array.from(oportunidadesMap.values())
+    }
+
+    // Aggregate for pipeline: group oportunidades by fase
+    if (view === 'pipeline') {
+      type FaseAgregada = {
+        pipeline: unknown
+        fase: unknown
+        ordem_fase: unknown
+        probabilidade_fase: unknown
+        oportunidades: Array<{
+          oportunidade: unknown
+          lead: unknown
+          empresa_lead: unknown
+          vendedor: unknown
+          territorio: unknown
+          valor_estimado: unknown
+          probabilidade: unknown
+          data_prevista: unknown
+          status: unknown
+          motivo_perda: unknown
+          descricao: unknown
+          criado_em: unknown
+          atualizado_em: unknown
+        }>
+      }
+      const fasesMap = new Map<number, FaseAgregada>()
+
+      for (const row of rows) {
+        const faseKey = Number(row.fase_id)
+
+        if (!fasesMap.has(faseKey)) {
+          fasesMap.set(faseKey, {
+            pipeline: row.pipeline,
+            fase: row.fase,
+            ordem_fase: row.ordem_fase,
+            probabilidade_fase: row.probabilidade_fase,
+            oportunidades: []
+          })
+        }
+
+        if (row.oportunidade) {
+          fasesMap.get(faseKey)!.oportunidades.push({
+            oportunidade: row.oportunidade,
+            lead: row.lead,
+            empresa_lead: row.empresa_lead,
+            vendedor: row.vendedor,
+            territorio: row.territorio,
+            valor_estimado: row.valor_estimado,
+            probabilidade: row.probabilidade,
+            data_prevista: row.data_prevista,
+            status: row.status,
+            motivo_perda: row.motivo_perda,
+            descricao: row.descricao,
+            criado_em: row.criado_em,
+            atualizado_em: row.atualizado_em,
+          })
+        }
+      }
+
+      rows = Array.from(fasesMap.values())
+    }
+
+    const totalSql = view === 'oportunidades_produtos'
+      ? `SELECT COUNT(DISTINCT o.id)::int AS total FROM crm.oportunidades_produtos op LEFT JOIN crm.oportunidades o ON o.id = op.oportunidade_id ${whereClause.replace(/op\./g, 'op.').replace(/o\./g, 'o.')}`
+      : view === 'pipeline'
+      ? `SELECT COUNT(DISTINCT fp.id)::int AS total FROM crm.fases_pipeline fp LEFT JOIN crm.pipelines p ON p.id = fp.pipeline_id LEFT JOIN crm.oportunidades o ON o.fase_pipeline_id = fp.id ${whereClause.replace(/fp\./g, 'fp.').replace(/o\./g, 'o.')}`
+      : `SELECT COUNT(*)::int AS total ${baseSql} ${whereClause}`;
     const totalRows = await runQuery<{ total: number }>(totalSql, params);
     const total = totalRows[0]?.total ?? 0;
 

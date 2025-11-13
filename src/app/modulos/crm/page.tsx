@@ -16,9 +16,40 @@ import CadastroLeadSheet from '@/components/crm/CadastroLeadSheet'
 import StatusBadge from '@/components/modulos/StatusBadge'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/stores/modulos/moduleUiStore'
 import type { Opcao } from '@/components/modulos/TabsNav'
-import { Briefcase, UserPlus, CalendarClock, MessageSquare } from 'lucide-react'
+import { Briefcase, UserPlus, CalendarClock, MessageSquare, Package, GitBranch } from 'lucide-react'
 
 type Row = TableData
+
+type OportunidadeProdutoItem = {
+  produto: string
+  quantidade: number | null
+  preco: number | null
+  subtotal: number | null
+}
+
+type OportunidadeProdutosRow = Row & {
+  produtos?: OportunidadeProdutoItem[]
+}
+
+type PipelineOportunidadeItem = {
+  oportunidade: number
+  lead: string | null
+  empresa_lead: string | null
+  vendedor: string | null
+  territorio: string | null
+  valor_estimado: number | null
+  probabilidade: number | null
+  data_prevista: string | null
+  status: string | null
+  motivo_perda: string | null
+  descricao: string | null
+  criado_em: string | null
+  atualizado_em: string | null
+}
+
+type PipelineRow = Row & {
+  oportunidades?: PipelineOportunidadeItem[]
+}
 
 export default function ModulosCrmPage() {
   const titulo = useStore($titulo)
@@ -35,6 +66,8 @@ export default function ModulosCrmPage() {
         { value: 'leads', label: 'Leads' },
         { value: 'atividades', label: 'Atividades' },
         { value: 'interacoes', label: 'Interações' },
+        { value: 'oportunidades_produtos', label: 'Oportunidades + Produtos' },
+        { value: 'pipeline', label: 'Pipeline' },
       ],
       selected: 'oportunidades',
     })
@@ -73,7 +106,77 @@ export default function ModulosCrmPage() {
     return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
   }
 
-  
+  const renderOportunidadeProdutos = (row: Row) => {
+    const oportunidadeRow = row as OportunidadeProdutosRow
+    const produtos = oportunidadeRow.produtos || []
+
+    if (produtos.length === 0) return null
+
+    return (
+      <div className="p-4 bg-gray-50">
+        <h4 className="text-sm font-semibold mb-2">Produtos da Oportunidade</h4>
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b">
+              <th className="text-left py-2 px-3">Produto</th>
+              <th className="text-right py-2 px-3">Quantidade</th>
+              <th className="text-right py-2 px-3">Preço</th>
+              <th className="text-right py-2 px-3">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            {produtos.map((item, idx) => (
+              <tr key={idx} className="border-b last:border-0">
+                <td className="py-2 px-3">{item.produto}</td>
+                <td className="text-right py-2 px-3">{item.quantidade ?? '-'}</td>
+                <td className="text-right py-2 px-3">{item.preco ? formatBRL(item.preco) : '-'}</td>
+                <td className="text-right py-2 px-3">{item.subtotal ? formatBRL(item.subtotal) : '-'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )
+  }
+
+  const renderPipelineOportunidades = (row: Row) => {
+    const pipelineRow = row as PipelineRow
+    const oportunidades = pipelineRow.oportunidades || []
+
+    if (oportunidades.length === 0) return null
+
+    return (
+      <div className="p-4 bg-gray-50">
+        <h4 className="text-sm font-semibold mb-2">Oportunidades da Fase</h4>
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b">
+              <th className="text-left py-2 px-3">ID</th>
+              <th className="text-left py-2 px-3">Lead</th>
+              <th className="text-left py-2 px-3">Empresa</th>
+              <th className="text-left py-2 px-3">Vendedor</th>
+              <th className="text-right py-2 px-3">Valor Estimado</th>
+              <th className="text-center py-2 px-3">Status</th>
+              <th className="text-left py-2 px-3">Data Prevista</th>
+            </tr>
+          </thead>
+          <tbody>
+            {oportunidades.map((item, idx) => (
+              <tr key={idx} className="border-b last:border-0">
+                <td className="py-2 px-3">{item.oportunidade}</td>
+                <td className="py-2 px-3">{item.lead ?? '-'}</td>
+                <td className="py-2 px-3">{item.empresa_lead ?? '-'}</td>
+                <td className="py-2 px-3">{item.vendedor ?? '-'}</td>
+                <td className="text-right py-2 px-3">{item.valor_estimado ? formatBRL(item.valor_estimado) : '-'}</td>
+                <td className="text-center py-2 px-3"><StatusBadge value={item.status} type="status" /></td>
+                <td className="py-2 px-3">{item.data_prevista ? formatDate(item.data_prevista) : '-'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )
+  }
 
   const columns: ColumnDef<Row>[] = useMemo(() => {
     switch (tabs.selected) {
@@ -117,6 +220,31 @@ export default function ModulosCrmPage() {
           { accessorKey: 'data_interacao', header: 'Data Interação', cell: ({ row }) => formatDate(row.original['data_interacao'], true) },
           { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em'], true) },
           { accessorKey: 'atualizado_em', header: 'Atualizado em', cell: ({ row }) => formatDate(row.original['atualizado_em'], true) },
+        ]
+      case 'oportunidades_produtos':
+        return [
+          { accessorKey: 'oportunidade', header: 'ID' },
+          { accessorKey: 'lead', header: 'Lead' },
+          { accessorKey: 'empresa_lead', header: 'Empresa Lead' },
+          { accessorKey: 'vendedor', header: 'Vendedor' },
+          { accessorKey: 'territorio', header: 'Território' },
+          { accessorKey: 'fase', header: 'Fase' },
+          { accessorKey: 'ordem_fase', header: 'Ordem Fase' },
+          { accessorKey: 'probabilidade_fase', header: '% Prob. Fase' },
+          { accessorKey: 'valor_estimado', header: 'Valor Estimado', cell: ({ row }) => formatBRL(row.original['valor_estimado']) },
+          { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
+          { accessorKey: 'motivo_perda', header: 'Motivo Perda' },
+          { accessorKey: 'data_prevista', header: 'Data Prevista', cell: ({ row }) => formatDate(row.original['data_prevista']) },
+          { accessorKey: 'descricao', header: 'Descrição' },
+          { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em'], true) },
+          { accessorKey: 'atualizado_em', header: 'Atualizado em', cell: ({ row }) => formatDate(row.original['atualizado_em'], true) },
+        ]
+      case 'pipeline':
+        return [
+          { accessorKey: 'pipeline', header: 'Pipeline' },
+          { accessorKey: 'fase', header: 'Fase' },
+          { accessorKey: 'ordem_fase', header: 'Ordem' },
+          { accessorKey: 'probabilidade_fase', header: '% Probabilidade' },
         ]
       case 'oportunidades':
       default:
@@ -199,6 +327,10 @@ export default function ModulosCrmPage() {
           return <CalendarClock className="h-4 w-4" />
         case 'interacoes':
           return <MessageSquare className="h-4 w-4" />
+        case 'oportunidades_produtos':
+          return <Package className="h-4 w-4" />
+        case 'pipeline':
+          return <GitBranch className="h-4 w-4" />
         default:
           return null
       }
@@ -288,6 +420,14 @@ export default function ModulosCrmPage() {
                   key={tabs.selected}
                   columns={columns}
                   data={data}
+                  enableExpand={tabs.selected === 'oportunidades_produtos' || tabs.selected === 'pipeline'}
+                  renderDetail={
+                    tabs.selected === 'oportunidades_produtos'
+                      ? renderOportunidadeProdutos
+                      : tabs.selected === 'pipeline'
+                      ? renderPipelineOportunidades
+                      : undefined
+                  }
                   enableSearch={tabelaUI.enableSearch}
                   showColumnToggle={tabelaUI.enableColumnToggle}
                   showPagination={tabelaUI.showPagination}
