@@ -72,22 +72,44 @@ export default function CRMDashboardPage() {
   const [ativs, setAtivs] = useState<AtividadeRow[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [kpis, setKpis] = useState<{ faturamento: number; vendas: number; totalLeads: number; taxaConversao: number }>({ faturamento: 0, vendas: 0, totalLeads: 0, taxaConversao: 0 })
 
   useEffect(() => {
     let cancelled = false
     async function load() {
       setLoading(true); setError(null)
       try {
-        const de = toDateOnly(new Date(new Date().getFullYear(), new Date().getMonth() - 5, 1))
+        const params = new URLSearchParams()
+        const from = filters.dateRange?.from
+        const to = filters.dateRange?.to
+        if (from) params.set('de', from)
+        if (to) params.set('ate', to)
+
+        const deDefault = toDateOnly(new Date(new Date().getFullYear(), new Date().getMonth() - 5, 1))
         const urls = [
-          `/api/modulos/crm?view=oportunidades&page=1&pageSize=1000&de=${de}`,
+          `/api/modulos/crm?view=oportunidades&page=1&pageSize=1000&de=${from ?? deDefault}`,
           `/api/modulos/crm?view=leads&page=1&pageSize=1000`,
-          `/api/modulos/crm?view=atividades&page=1&pageSize=1000&de=${de}`,
+          `/api/modulos/crm?view=atividades&page=1&pageSize=1000&de=${from ?? deDefault}`,
         ]
-        const [oRes, lRes, aRes] = await Promise.allSettled(urls.map(u => fetch(u, { cache: 'no-store' })))
+        const [kRes, oRes, lRes, aRes] = await Promise.allSettled([
+          fetch(`/api/modulos/crm/dashboard?${params.toString()}`, { cache: 'no-store' }),
+          fetch(urls[0], { cache: 'no-store' }),
+          fetch(urls[1], { cache: 'no-store' }),
+          fetch(urls[2], { cache: 'no-store' }),
+        ])
         let os: OportunidadeRow[] = []
         let ls: LeadRow[] = []
         let as: AtividadeRow[] = []
+        if (kRes.status === 'fulfilled' && kRes.value.ok) {
+          const j = await kRes.value.json()
+          const kk = j?.kpis || {}
+          setKpis({
+            faturamento: Number(kk.faturamento || 0),
+            vendas: Number(kk.vendas || 0),
+            totalLeads: Number(kk.totalLeads || 0),
+            taxaConversao: Number(kk.taxaConversao || 0),
+          })
+        }
         if (oRes.status === 'fulfilled' && oRes.value.ok) {
           const j = (await oRes.value.json()) as { rows?: unknown[] }
           os = Array.isArray(j?.rows) ? (j.rows as unknown as OportunidadeRow[]) : []
@@ -100,55 +122,16 @@ export default function CRMDashboardPage() {
           const j = (await aRes.value.json()) as { rows?: unknown[] }
           as = Array.isArray(j?.rows) ? (j.rows as unknown as AtividadeRow[]) : []
         }
-        if (os.length === 0 && ls.length === 0 && as.length === 0) {
-          // mocks
-          const base = new Date()
-          const m0 = toDateOnly(base)
-          const m1 = toDateOnly(new Date(base.getFullYear(), base.getMonth(), base.getDate()-3))
-          os = [
-            { oportunidade: 'Tech Corp', conta: 'Tech Corp Ltda', estagio: 'Negociação', valor: 85000, probabilidade: 70, data_fechamento: m0 },
-            { oportunidade: 'Comércio Global', conta: 'Comércio Global', estagio: 'Proposta', valor: 62500, probabilidade: 60, data_fechamento: m1 },
-            { oportunidade: 'Indústria XYZ', conta: 'Indústria XYZ', estagio: 'Apresentação', valor: 120000, probabilidade: 50, data_fechamento: m0 },
-            { oportunidade: 'Fechado ACME', conta: 'ACME', estagio: 'Fechado - Ganho', valor: 40000, probabilidade: 100, data_fechamento: m1 },
-          ]
-          ls = [
-            { lead: 'João Silva', empresa: 'Alpha', origem: 'Website', status: 'Novo' },
-            { lead: 'Maria Lima', empresa: 'Beta', origem: 'Indicação', status: 'Em contato' },
-            { lead: 'Pedro Souza', empresa: 'Gama', origem: 'LinkedIn', status: 'Qualificado' },
-            { lead: 'Carla Dias', empresa: 'Delta', origem: 'Email Marketing', status: 'Novo' },
-          ]
-          as = [
-            { assunto: 'Reunião', tipo: 'Reunião', status: 'Pendente', data_vencimento: m0, conta: 'Tech Corp' },
-            { assunto: 'Email de proposta', tipo: 'Email', status: 'Concluída', data_vencimento: m1, conta: 'Comércio Global' },
-          ]
-        }
         if (!cancelled) { setOpps(os); setLeads(ls); setAtivs(as) }
       } catch {
         if (!cancelled) setError('Falha ao carregar dados')
       } finally { if (!cancelled) setLoading(false) }
     }
     load(); return () => { cancelled = true }
-  }, [])
+  }, [filters.dateRange])
 
-  // KPIs
+  // KPIs (reais)
   const openOpps = useMemo(() => opps.filter(o => !isClosed(o.estagio)), [opps])
-  const kpis = useMemo(() => {
-    // Faturamento: soma de valores de oportunidades ganhas
-    const faturamento = opps
-      .filter(o => isClosedWon(o.estagio))
-      .reduce((acc, o) => acc + (Number(o.valor) || 0), 0)
-
-    // Vendas: contagem de oportunidades ganhas
-    const vendas = opps.filter(o => isClosedWon(o.estagio)).length
-
-    // Leads: total de leads
-    const totalLeads = leads.length
-
-    // Taxa de conversão: (vendas / leads) * 100
-    const taxaConversao = totalLeads > 0 ? (vendas / totalLeads) * 100 : 0
-
-    return { faturamento, vendas, totalLeads, taxaConversao }
-  }, [opps, leads])
 
   // Funil por estágio (soma de valor)
   const stageOrder = (s?: string) => {
