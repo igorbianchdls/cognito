@@ -8,7 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Calendar as CalendarIcon, Users, UsersRound, Package, MapPin } from 'lucide-react'
+import { Calendar as CalendarIcon, Users, UsersRound, Package, MapPin, Globe, Tag } from 'lucide-react'
 import type { DateRange } from 'react-day-picker'
 import { $financeiroDashboardUI, $financeiroDashboardFilters, financeiroDashboardActions } from '@/stores/modulos/financeiroDashboardStore'
 
@@ -129,6 +129,22 @@ export default function VendasDashboardPage() {
     { label: 'Belo Horizonte', value: 198000 },
     { label: 'Curitiba', value: 167000 },
     { label: 'Porto Alegre', value: 145000 }
+  ], [])
+
+  const vendasPorTerritorio = useMemo(() => [
+    { label: 'Sudeste', value: 450000 },
+    { label: 'Sul', value: 320000 },
+    { label: 'Nordeste', value: 285000 },
+    { label: 'Centro-Oeste', value: 198000 },
+    { label: 'Norte', value: 165000 }
+  ], [])
+
+  const vendasPorCategoria = useMemo(() => [
+    { label: 'Eletrônicos', value: 420000 },
+    { label: 'Vestuário', value: 345000 },
+    { label: 'Alimentos', value: 298000 },
+    { label: 'Móveis', value: 234000 },
+    { label: 'Cosméticos', value: 185000 }
   ], [])
 
   // Vendas por Canal / Vendedor / Cliente / Cidade
@@ -397,6 +413,22 @@ export default function VendasDashboardPage() {
               title="Ranking de Vendas por Filiais"
               icon={<MapPin className="w-5 h-5" />}
               color="#f59e0b"
+            />
+          </div>
+
+          {/* Row 3: Vendas por Território, Vendas por Categoria */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <BarChartHorizontalRecharts
+              items={vendasPorTerritorio}
+              title="Vendas por Território"
+              icon={<Globe className="w-5 h-5" />}
+              color="#ec4899"
+            />
+            <BarChartHorizontalRecharts
+              items={vendasPorCategoria}
+              title="Vendas por Categoria"
+              icon={<Tag className="w-5 h-5" />}
+              color="#6366f1"
             />
           </div>
 
