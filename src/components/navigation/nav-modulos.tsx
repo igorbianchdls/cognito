@@ -252,6 +252,21 @@ export function NavModulos({ groupLabelStyle, itemTextStyle }: { groupLabelStyle
               </CollapsibleContent>
             </SidebarMenuItem>
           </Collapsible>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              tooltip="Comercial"
+              onClick={() => router.push("/modulos/comercial")}
+              isActive={pathname.startsWith("/modulos/comercial")}
+            >
+              <Users />
+              <span style={itemTextStyle}>Comercial</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarGroup>
+      <SidebarGroup>
+        <SidebarGroupLabel style={groupLabelStyle}>Pós-Vendas</SidebarGroupLabel>
+        <SidebarMenu>
           <Collapsible
             key="servicos"
             asChild
@@ -286,7 +301,6 @@ export function NavModulos({ groupLabelStyle, itemTextStyle }: { groupLabelStyle
               </CollapsibleContent>
             </SidebarMenuItem>
           </Collapsible>
-          {/* Manutenção dentro de Vendas */}
           <Collapsible
             key="manutencao"
             asChild
