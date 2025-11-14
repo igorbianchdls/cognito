@@ -140,22 +140,16 @@ export default function ModulosFiscalPage() {
         />
         <TabsNav
           options={tabs.options}
-          selected={tabs.selected}
-          onSelect={(value) => {
+          value={tabs.selected}
+          onValueChange={(value) => {
             moduleUiActions.setTabs({ ...tabs, selected: value })
             setPage(1)
           }}
           fontFamily={fontVar(tabs.fontFamily)}
           fontSize={tabs.fontSize}
           fontWeight={tabs.fontWeight}
-          fontColor={tabs.fontColor}
+          color={tabs.fontColor}
           letterSpacing={tabs.letterSpacing}
-          borderBottomWidth={tabs.borderBottomWidth}
-          borderBottomColor={tabs.borderBottomColor}
-          borderDistanceTop={tabs.borderDistanceTop}
-          underlineColor={tabs.underlineColor}
-          underlineWidth={tabs.underlineWidth}
-          underlineOffsetTop={tabs.underlineOffsetTop}
         />
         <div style={{ paddingTop: (layout.contentTopGap || 0) + (layout.mbTabs || 0) }}>
           <div className="px-4 md:px-6" style={{ marginBottom: 8 }}>
