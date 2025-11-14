@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useStore } from '@nanostores/react'
 import DashboardLayout from '@/components/modulos/DashboardLayout'
 import { BarChartHorizontalRecharts } from '@/components/charts/BarChartHorizontalRecharts'
+import { BarChartHorizontalPercent } from '@/components/charts/BarChartHorizontalPercent'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
@@ -61,6 +62,8 @@ export default function VendasDashboardPage() {
   const [chartCanais, setChartCanais] = useState<ChartItem[]>([])
   const [chartTopClientes, setChartTopClientes] = useState<{ cliente: string; total: number; pedidos: number }[]>([])
   const [chartVendasCidade, setChartVendasCidade] = useState<{ cidade: string; total: number }[]>([])
+  const [chartDevolucaoCanal, setChartDevolucaoCanal] = useState<{ label: string; value: number }[]>([])
+  const [chartDevolucaoCliente, setChartDevolucaoCliente] = useState<{ label: string; value: number }[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -120,6 +123,8 @@ export default function VendasDashboardPage() {
           setChartCanais(Array.isArray(charts?.canais) ? charts.canais as ChartItem[] : [])
           setChartTopClientes(Array.isArray(charts?.clientes) ? charts.clientes as { cliente: string; total: number; pedidos: number }[] : [])
           setChartVendasCidade(Array.isArray(charts?.cidades) ? charts.cidades as { cidade: string; total: number }[] : [])
+          setChartDevolucaoCanal(Array.isArray(charts?.devolucao_canal) ? charts.devolucao_canal as { label: string; value: number }[] : [])
+          setChartDevolucaoCliente(Array.isArray(charts?.devolucao_cliente) ? charts.devolucao_cliente as { label: string; value: number }[] : [])
         } else {
           setKpis({ meta: 0, vendas: 0, percentMeta: 0, ticket: 0, cogs: 0, margemBruta: 0 })
         }
@@ -139,15 +144,12 @@ export default function VendasDashboardPage() {
   const vendasPorTerritorio = chartTerritorios
   const vendasPorCategoria = chartCategorias
 
-  // Vendas por Canal / Vendedor / Cliente / Cidade
-  const vendasPorCanal = useMemo(() => {
-    const m = new Map<string, number>()
-    for (const r of rows) {
-      const k = r.canal_venda || 'Sem canal'
-      m.set(k, (m.get(k) || 0) + (Number(r.valor_total_pedido) || 0))
-    }
-    return Array.from(m, ([label, value]) => ({ label, value })).sort((a,b)=>b.value-a.value).slice(0,6)
-  }, [rows])
+  // Dados reais para Vendas por Canal (do endpoint agregado)
+  const vendasPorCanalItems = useMemo(() => {
+    return Array.isArray(chartCanais)
+      ? chartCanais.map(it => ({ label: it.label || '—', value: Number(it.value || 0) }))
+      : []
+  }, [chartCanais])
   // vendasPorVendedor não utilizado diretamente (Top Vendedores vem do endpoint)
   const topClientes = chartTopClientes
   const vendasPorCidade = chartVendasCidade
@@ -384,7 +386,7 @@ export default function VendasDashboardPage() {
             />
           </div>
 
-          {/* Row 2: Top 5 Produtos, Ranking Filiais */}
+          {/* Row 2: Top 5 Produtos, Vendas por Canal */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <BarChartHorizontalRecharts
               items={top5Produtos}
@@ -393,9 +395,9 @@ export default function VendasDashboardPage() {
               color="#8b5cf6"
             />
             <BarChartHorizontalRecharts
-              items={rankingFiliais}
-              title="Ranking de Vendas por Filiais"
-              icon={<MapPin className="w-5 h-5" />}
+              items={vendasPorCanalItems}
+              title="Vendas por Canal"
+              icon={<Tag className="w-5 h-5" />}
               color="#f59e0b"
             />
           </div>
@@ -413,6 +415,24 @@ export default function VendasDashboardPage() {
               title="Vendas por Categoria"
               icon={<Tag className="w-5 h-5" />}
               color="#6366f1"
+            />
+          </div>
+
+          {/* Row 3.1: Taxas de Devolução */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <BarChartHorizontalPercent
+              items={chartDevolucaoCanal}
+              title="Taxa de Devolução por Canal"
+              icon={<Tag className="w-5 h-5" />}
+              color="#ef4444"
+              height={240}
+            />
+            <BarChartHorizontalPercent
+              items={chartDevolucaoCliente}
+              title="Taxa de Devolução por Cliente"
+              icon={<Users className="w-5 h-5" />}
+              color="#f97316"
+              height={240}
             />
           </div>
 

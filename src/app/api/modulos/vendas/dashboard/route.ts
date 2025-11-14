@@ -21,6 +21,14 @@ export async function GET(req: NextRequest) {
     if (ate) { pConds.push(`p.data_pedido <= $${pi++}`); pParams.push(ate) }
     const pWhere = pConds.length ? `WHERE ${pConds.join(' AND ')}` : ''
 
+    // WHERE for devolucoes (d)
+    const dConds: string[] = []
+    const dParams: unknown[] = []
+    let di = 1
+    if (de) { dConds.push(`d.data_devolucao >= $${di++}`); dParams.push(de) }
+    if (ate) { dConds.push(`d.data_devolucao <= $${di++}`); dParams.push(ate) }
+    const dWhere = dConds.length ? `WHERE ${dConds.join(' AND ')}` : ''
+
     // KPI: vendas, pedidos, descontos
     const vendasSql = `SELECT COALESCE(SUM(p.valor_total),0)::float AS vendas,
                               COUNT(DISTINCT p.id)::int AS pedidos,
@@ -155,6 +163,58 @@ export async function GET(req: NextRequest) {
     let vendasCidade: { cidade: string; total: number }[] = []
     try { vendasCidade = await runQuery<{ cidade: string; total: number }>(cidadeSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard cidades error:', e); vendasCidade = [] }
 
+    // Devolução por Canal (% = valor_devolucao / vendas)
+    const devolCanalSql = `SELECT COALESCE(cv.nome,'—') AS canal, COALESCE(SUM(d.valor_total),0)::float AS devolucoes
+                           FROM vendas.devolucoes d
+                           LEFT JOIN vendas.pedidos p ON p.id = d.pedido_id
+                           LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+                           ${dWhere}
+                           GROUP BY 1`;
+    let devolucoesPorCanal: { canal: string; devolucoes: number }[] = []
+    try { devolucoesPorCanal = await runQuery<{ canal: string; devolucoes: number }>(devolCanalSql, dParams) } catch (e) { console.error('🛒 VENDAS dashboard devolução canal error:', e); devolucoesPorCanal = [] }
+    const vendasCanalFullSql = `SELECT COALESCE(cv.nome,'—') AS canal, COALESCE(SUM(p.valor_total),0)::float AS vendas
+                                FROM vendas.pedidos p
+                                LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+                                ${pWhere}
+                                GROUP BY 1`;
+    let vendasPorCanalFull: { canal: string; vendas: number }[] = []
+    try { vendasPorCanalFull = await runQuery<{ canal: string; vendas: number }>(vendasCanalFullSql, pParams) } catch (e) { console.error('🛒 VENDAS dashboard vendas canal full error:', e); vendasPorCanalFull = [] }
+    const vendasCanalMap = new Map<string, number>(vendasPorCanalFull.map(r => [r.canal || '—', Number(r.vendas || 0)]))
+    const taxaDevolucaoCanal = Array.from(new Set([...devolucoesPorCanal.map(r=>r.canal||'—'), ...vendasPorCanalFull.map(r=>r.canal||'—')]))
+      .map(label => {
+        const dev = Number((devolucoesPorCanal.find(r => (r.canal||'—') === label)?.devolucoes) || 0)
+        const ven = Number(vendasCanalMap.get(label) || 0)
+        return { label, value: ven > 0 ? (dev / ven) * 100 : 0 }
+      })
+      .sort((a,b)=> b.value - a.value)
+      .slice(0, limit)
+
+    // Devolução por Cliente (% = valor_devolucao / vendas)
+    const devolClienteSql = `SELECT COALESCE(c.nome_fantasia,'—') AS cliente, COALESCE(SUM(d.valor_total),0)::float AS devolucoes
+                             FROM vendas.devolucoes d
+                             LEFT JOIN vendas.pedidos p ON p.id = d.pedido_id
+                             LEFT JOIN entidades.clientes c ON c.id = p.cliente_id
+                             ${dWhere}
+                             GROUP BY 1`;
+    let devolucoesPorCliente: { cliente: string; devolucoes: number }[] = []
+    try { devolucoesPorCliente = await runQuery<{ cliente: string; devolucoes: number }>(devolClienteSql, dParams) } catch (e) { console.error('🛒 VENDAS dashboard devolução cliente error:', e); devolucoesPorCliente = [] }
+    const vendasClienteFullSql = `SELECT COALESCE(c.nome_fantasia,'—') AS cliente, COALESCE(SUM(p.valor_total),0)::float AS vendas
+                                  FROM vendas.pedidos p
+                                  LEFT JOIN entidades.clientes c ON c.id = p.cliente_id
+                                  ${pWhere}
+                                  GROUP BY 1`;
+    let vendasPorClienteFull: { cliente: string; vendas: number }[] = []
+    try { vendasPorClienteFull = await runQuery<{ cliente: string; vendas: number }>(vendasClienteFullSql, pParams) } catch (e) { console.error('🛒 VENDAS dashboard vendas cliente full error:', e); vendasPorClienteFull = [] }
+    const vendasClienteMap = new Map<string, number>(vendasPorClienteFull.map(r => [r.cliente || '—', Number(r.vendas || 0)]))
+    const taxaDevolucaoCliente = Array.from(new Set([...devolucoesPorCliente.map(r=>r.cliente||'—'), ...vendasPorClienteFull.map(r=>r.cliente||'—')]))
+      .map(label => {
+        const dev = Number((devolucoesPorCliente.find(r => (r.cliente||'—') === label)?.devolucoes) || 0)
+        const ven = Number(vendasClienteMap.get(label) || 0)
+        return { label, value: ven > 0 ? (dev / ven) * 100 : 0 }
+      })
+      .sort((a,b)=> b.value - a.value)
+      .slice(0, limit)
+
     return Response.json(
       {
         success: true,
@@ -177,6 +237,8 @@ export async function GET(req: NextRequest) {
           canais,
           clientes: topClientes,
           cidades: vendasCidade,
+          devolucao_canal: taxaDevolucaoCanal,
+          devolucao_cliente: taxaDevolucaoCliente,
         },
       },
       { headers: { 'Cache-Control': 'no-store' } }
