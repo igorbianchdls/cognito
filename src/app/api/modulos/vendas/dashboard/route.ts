@@ -121,13 +121,12 @@ export async function GET(req: NextRequest) {
     try { produtos = await runQuery<ChartItem>(prodSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard produtos error:', e); produtos = [] }
 
     // Territórios
-    const terrSql = `SELECT COALESCE(t.nome,'—') AS label, COALESCE(SUM(pi.subtotal),0)::float AS value
-                     FROM vendas.pedidos p
-                     LEFT JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
-                     LEFT JOIN comercial.territorios t ON t.id = p.territorio_id
+    const terrSql = `SELECT territorio_nome AS label,
+                     SUM(item_subtotal)::float AS value
+                     FROM vendas.vw_pedidos_completo
                      ${pWhere}
-                     GROUP BY 1
-                     ORDER BY 2 DESC
+                     GROUP BY territorio_nome
+                     ORDER BY value DESC
                      LIMIT $${pParams.length + 1}::int`;
     let territorios: ChartItem[] = []
     try { territorios = await runQuery<ChartItem>(terrSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard territorios error:', e); territorios = [] }
