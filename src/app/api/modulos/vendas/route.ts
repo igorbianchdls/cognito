@@ -12,6 +12,9 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
     vendedor: 'f.nome',
     territorio: 't.nome',
     canal_venda: 'cv.nome',
+    canal_distribuicao: 'cd.nome',
+    campanha_venda: 'camp.nome',
+    centro_lucro: 'cc2.nome',
     cupom: 'cup.codigo',
     data_pedido: 'p.data_pedido',
     status: 'p.status',
@@ -118,6 +121,9 @@ export async function GET(req: NextRequest) {
         f.nome AS vendedor,
         t.nome AS territorio,
         cv.nome AS canal_venda,
+        cd.nome AS canal_distribuicao,
+        camp.nome AS campanha_venda,
+        cc2.nome AS centro_lucro,
         cup.codigo AS cupom,
         p.data_pedido,
         p.status,
@@ -138,6 +144,9 @@ export async function GET(req: NextRequest) {
         LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id
         LEFT JOIN comercial.territorios t ON t.id = p.territorio_id
         LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+        LEFT JOIN vendas.canais_distribuicao cd ON cd.id = cv.canal_distribuicao_id
+        LEFT JOIN comercial.campanhas_vendas camp ON camp.id = p.campanha_venda_id
+        LEFT JOIN empresa.centros_custo cc2 ON cc2.id = p.centro_custo_id
         LEFT JOIN vendas.cupons cup ON cup.id = p.cupom_id
         LEFT JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
         LEFT JOIN produtos.produto pr ON pr.id = pi.produto_id`
