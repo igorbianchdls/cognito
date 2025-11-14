@@ -163,6 +163,17 @@ export async function GET(req: NextRequest) {
     let vendasCidade: { cidade: string; total: number }[] = []
     try { vendasCidade = await runQuery<{ cidade: string; total: number }>(cidadeSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard cidades error:', e); vendasCidade = [] }
 
+    // Vendas por Estado (c.estado)
+    const estadoSql = `SELECT COALESCE(c.estado, '—') AS label, COALESCE(SUM(p.valor_total),0)::float AS value
+                       FROM vendas.pedidos p
+                       LEFT JOIN entidades.clientes c ON c.id = p.cliente_id
+                       ${pWhere}
+                       GROUP BY 1
+                       ORDER BY 2 DESC
+                       LIMIT $${pParams.length + 1}::int`;
+    let estados: ChartItem[] = []
+    try { estados = await runQuery<ChartItem>(estadoSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard estados error:', e); estados = [] }
+
     // Devolução por Canal (% = valor_devolucao / vendas)
     const devolCanalSql = `SELECT COALESCE(cv.nome,'—') AS canal, COALESCE(SUM(d.valor_total),0)::float AS devolucoes
                            FROM vendas.devolucoes d
@@ -237,6 +248,7 @@ export async function GET(req: NextRequest) {
           canais,
           clientes: topClientes,
           cidades: vendasCidade,
+          estados,
           devolucao_canal: taxaDevolucaoCanal,
           devolucao_cliente: taxaDevolucaoCliente,
         },

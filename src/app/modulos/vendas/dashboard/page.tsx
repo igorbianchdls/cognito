@@ -64,6 +64,7 @@ export default function VendasDashboardPage() {
   const [chartVendasCidade, setChartVendasCidade] = useState<{ cidade: string; total: number }[]>([])
   const [chartDevolucaoCanal, setChartDevolucaoCanal] = useState<{ label: string; value: number }[]>([])
   const [chartDevolucaoCliente, setChartDevolucaoCliente] = useState<{ label: string; value: number }[]>([])
+  const [chartEstados, setChartEstados] = useState<ChartItem[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -125,6 +126,7 @@ export default function VendasDashboardPage() {
           setChartVendasCidade(Array.isArray(charts?.cidades) ? charts.cidades as { cidade: string; total: number }[] : [])
           setChartDevolucaoCanal(Array.isArray(charts?.devolucao_canal) ? charts.devolucao_canal as { label: string; value: number }[] : [])
           setChartDevolucaoCliente(Array.isArray(charts?.devolucao_cliente) ? charts.devolucao_cliente as { label: string; value: number }[] : [])
+          setChartEstados(Array.isArray(charts?.estados) ? charts.estados as ChartItem[] : [])
         } else {
           setKpis({ meta: 0, vendas: 0, percentMeta: 0, ticket: 0, cogs: 0, margemBruta: 0 })
         }
@@ -432,6 +434,17 @@ export default function VendasDashboardPage() {
               title="Taxa de Devolução por Cliente"
               icon={<Users className="w-5 h-5" />}
               color="#f97316"
+              height={240}
+            />
+          </div>
+
+          {/* Row 3.2: Vendas por Estado */}
+          <div className="grid grid-cols-1 lg:grid-cols-1 gap-6 mb-6">
+            <BarChartHorizontalRecharts
+              items={chartEstados}
+              title="Vendas por Estado"
+              icon={<MapPin className="w-5 h-5" />}
+              color="#22c55e"
               height={240}
             />
           </div>
