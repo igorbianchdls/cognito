@@ -67,6 +67,7 @@ export default function VendasDashboardPage() {
   const [chartCentroLucro, setChartCentroLucro] = useState<ChartItem[]>([])
   const [chartCampanhasVendas, setChartCampanhasVendas] = useState<ChartItem[]>([])
   const [chartCanaisDistribuicao, setChartCanaisDistribuicao] = useState<ChartItem[]>([])
+  const [chartMarcas, setChartMarcas] = useState<ChartItem[]>([])
   const [chartMetaTerritorio, setChartMetaTerritorio] = useState<Array<{ label: string; meta: number; faturamento: number }>>([])
   const [chartCupons, setChartCupons] = useState<ChartItem[]>([])
   const [loading, setLoading] = useState(false)
@@ -133,6 +134,7 @@ export default function VendasDashboardPage() {
           setChartCentroLucro(Array.isArray(charts?.centros_lucro) ? charts.centros_lucro as ChartItem[] : [])
           setChartCampanhasVendas(Array.isArray(charts?.campanhas_vendas) ? charts.campanhas_vendas as ChartItem[] : [])
           setChartCanaisDistribuicao(Array.isArray(charts?.canais_distribuicao) ? charts.canais_distribuicao as ChartItem[] : [])
+          setChartMarcas(Array.isArray(charts?.marcas) ? charts.marcas as ChartItem[] : [])
           setChartMetaTerritorio(Array.isArray(charts?.meta_territorio) ? charts.meta_territorio as Array<{ label: string; meta: number; faturamento: number }> : [])
           setChartCupons(Array.isArray(charts?.cupons) ? charts.cupons as ChartItem[] : [])
         } else {
@@ -456,7 +458,7 @@ export default function VendasDashboardPage() {
             />
           </div>
 
-          {/* Row 5: Vendas por Campanha de Vendas e por Canal de Distribuição */}
+          {/* Row 5: Vendas por Campanha de Vendas, por Canal de Distribuição e por Marca */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
             <BarChartHorizontalRecharts
               items={chartCampanhasVendas}
@@ -470,6 +472,13 @@ export default function VendasDashboardPage() {
               title="Faturamento por Canal de Distribuição"
               icon={<Tag className="w-5 h-5" />}
               color="#0ea5e9"
+              height={240}
+            />
+            <BarChartHorizontalRecharts
+              items={chartMarcas}
+              title="Faturamento por Marca"
+              icon={<Package className="w-5 h-5" />}
+              color="#f59e0b"
               height={240}
             />
           </div>

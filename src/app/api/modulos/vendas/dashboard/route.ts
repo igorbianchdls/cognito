@@ -197,6 +197,19 @@ export async function GET(req: NextRequest) {
     let canaisDistribuicao: ChartItem[] = []
     try { canaisDistribuicao = await runQuery<ChartItem>(canalDistribuicaoSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard canais_distribuicao error:', e); canaisDistribuicao = [] }
 
+    // Faturamento por Marca
+    const marcasSql = `SELECT COALESCE(m.nome,'—') AS label, COALESCE(SUM(pi.quantidade * pi.preco_unitario),0)::float AS value
+                       FROM vendas.pedidos p
+                       JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+                       LEFT JOIN produtos.produto pr ON pr.id = pi.produto_id
+                       LEFT JOIN produtos.marcas m ON m.id = pr.marca_id
+                       ${pWhere}
+                       GROUP BY 1
+                       ORDER BY 2 DESC
+                       LIMIT $${pParams.length + 1}::int`;
+    let marcas: ChartItem[] = []
+    try { marcas = await runQuery<ChartItem>(marcasSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard marcas error:', e); marcas = [] }
+
     // Meta x Faturamento por Território
     const metaTerrSql = `SELECT COALESCE(t.nome,'—') AS label, COALESCE(SUM(mt.valor_meta),0)::float AS meta
                          FROM comercial.metas_territorios mt
@@ -321,6 +334,7 @@ export async function GET(req: NextRequest) {
           centros_lucro: centrosLucro,
           campanhas_vendas: campanhasVendas,
           canais_distribuicao: canaisDistribuicao,
+          marcas,
           estados,
           devolucao_canal: taxaDevolucaoCanal,
           devolucao_cliente: taxaDevolucaoCliente,
