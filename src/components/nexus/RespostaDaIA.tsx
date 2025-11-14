@@ -8016,8 +8016,6 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   success={Boolean((tool.output as Record<string, unknown>).success)}
                   message={String((tool.output as Record<string, unknown>).message || '')}
                   data={(tool.output as Record<string, unknown>).data as AnalisTerritorioData}
-                  filters={(tool.output as Record<string, unknown>).filters as { territorio_nome?: string; data_de?: string; data_ate?: string }}
-                  sql_query={String((tool.output as Record<string, unknown>).sql_query || '')}
                 />
               )}
             </div>
