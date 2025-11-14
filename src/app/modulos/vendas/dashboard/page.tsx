@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useStore } from '@nanostores/react'
 import DashboardLayout from '@/components/modulos/DashboardLayout'
 import { BarChartHorizontalRecharts } from '@/components/charts/BarChartHorizontalRecharts'
+import { BarChartMultipleRecharts } from '@/components/charts/BarChartMultipleRecharts'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { BarChartHorizontalPercent } from '@/components/charts/BarChartHorizontalPercent'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -66,6 +67,7 @@ export default function VendasDashboardPage() {
   const [chartDevolucaoCanal, setChartDevolucaoCanal] = useState<{ label: string; value: number }[]>([])
   const [chartDevolucaoCliente, setChartDevolucaoCliente] = useState<{ label: string; value: number }[]>([])
   const [chartEstados, setChartEstados] = useState<ChartItem[]>([])
+  const [chartMetaTerritorio, setChartMetaTerritorio] = useState<Array<{ label: string; meta: number; faturamento: number }>>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -128,6 +130,7 @@ export default function VendasDashboardPage() {
           setChartDevolucaoCanal(Array.isArray(charts?.devolucao_canal) ? charts.devolucao_canal as { label: string; value: number }[] : [])
           setChartDevolucaoCliente(Array.isArray(charts?.devolucao_cliente) ? charts.devolucao_cliente as { label: string; value: number }[] : [])
           setChartEstados(Array.isArray(charts?.estados) ? charts.estados as ChartItem[] : [])
+          setChartMetaTerritorio(Array.isArray(charts?.meta_territorio) ? charts.meta_territorio as Array<{ label: string; meta: number; faturamento: number }> : [])
         } else {
           setKpis({ meta: 0, vendas: 0, percentMeta: 0, ticket: 0, cogs: 0, margemBruta: 0 })
         }
@@ -389,7 +392,7 @@ export default function VendasDashboardPage() {
             />
           </div>
 
-          {/* Row 2: Top 5 Produtos, Vendas por Canal */}
+          {/* Row 2: Top 5 Produtos, Vendas por Canal, Meta x Faturamento por Território */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
             <BarChartHorizontalRecharts
               items={top5Produtos}
@@ -402,6 +405,16 @@ export default function VendasDashboardPage() {
               title="Vendas por Canal"
               icon={<Tag className="w-5 h-5" />}
               color="#f59e0b"
+            />
+            <BarChartMultipleRecharts
+              items={chartMetaTerritorio as any}
+              title="Meta x Faturamento por Território"
+              icon={<Globe className="w-5 h-5" />}
+              series={[
+                { key: 'meta', label: 'Meta', color: '#60a5fa' },
+                { key: 'faturamento', label: 'Faturamento', color: '#10b981' },
+              ]}
+              height={240}
             />
           </div>
 

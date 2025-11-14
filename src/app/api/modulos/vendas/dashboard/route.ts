@@ -163,6 +163,31 @@ export async function GET(req: NextRequest) {
     let vendasCidade: { cidade: string; total: number }[] = []
     try { vendasCidade = await runQuery<{ cidade: string; total: number }>(cidadeSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard cidades error:', e); vendasCidade = [] }
 
+    // Meta x Faturamento por Território
+    const metaTerrSql = `SELECT COALESCE(t.nome,'—') AS label, COALESCE(SUM(mt.valor_meta),0)::float AS meta
+                         FROM comercial.metas_territorios mt
+                         LEFT JOIN comercial.territorios t ON t.id = mt.territorio_id
+                         ${mtWhere}
+                         GROUP BY 1`;
+    let metasPorTerr: { label: string; meta: number }[] = []
+    try { metasPorTerr = await runQuery<{ label: string; meta: number }>(metaTerrSql, mtParams) } catch (e) { console.error('🛒 VENDAS dashboard metas por território error:', e); metasPorTerr = [] }
+
+    const fatTerrSql = `SELECT COALESCE(t.nome,'—') AS label, COALESCE(SUM(p.valor_total),0)::float AS faturamento
+                        FROM vendas.pedidos p
+                        LEFT JOIN comercial.territorios t ON t.id = p.territorio_id
+                        ${pWhere}
+                        GROUP BY 1`;
+    let fatPorTerr: { label: string; faturamento: number }[] = []
+    try { fatPorTerr = await runQuery<{ label: string; faturamento: number }>(fatTerrSql, pParams) } catch (e) { console.error('🛒 VENDAS dashboard faturamento por território error:', e); fatPorTerr = [] }
+
+    const fatMap = new Map<string, number>(fatPorTerr.map(r => [r.label || '—', Number(r.faturamento || 0)]))
+    const allTerrLabels = Array.from(new Set([ ...metasPorTerr.map(r => r.label || '—'), ...fatPorTerr.map(r => r.label || '—') ]))
+    const metaTerritorio = allTerrLabels.map(label => ({
+      label,
+      meta: Number((metasPorTerr.find(r => (r.label||'—') === label)?.meta) || 0),
+      faturamento: Number(fatMap.get(label) || 0),
+    })).sort((a,b)=> (b.faturamento + b.meta) - (a.faturamento + a.meta)).slice(0, limit)
+
     // Vendas por Estado (c.estado)
     const estadoSql = `SELECT COALESCE(c.estado, '—') AS label, COALESCE(SUM(p.valor_total),0)::float AS value
                        FROM vendas.pedidos p
@@ -251,6 +276,7 @@ export async function GET(req: NextRequest) {
           estados,
           devolucao_canal: taxaDevolucaoCanal,
           devolucao_cliente: taxaDevolucaoCliente,
+          meta_territorio: metaTerritorio,
         },
       },
       { headers: { 'Cache-Control': 'no-store' } }
