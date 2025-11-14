@@ -157,6 +157,22 @@ export default function VendasDashboardPage() {
       .slice(0,3)
   }, [rows])
 
+  // Map real data for horizontal bar charts
+  const topClientesItems = useMemo(() => {
+    // chartTopClientes comes from the dashboard endpoint
+    // Fallback to derived list if not loaded yet
+    const arr = chartTopClientes?.length
+      ? chartTopClientes.map(c => ({ label: c.cliente || '—', value: Number(c.total || 0) }))
+      : []
+    return arr
+  }, [chartTopClientes])
+  const vendasPorCidadeItems = useMemo(() => {
+    const arr = chartVendasCidade?.length
+      ? chartVendasCidade.map(x => ({ label: x.cidade || '—', value: Number(x.total || 0) }))
+      : []
+    return arr
+  }, [chartVendasCidade])
+
   // Simple horizontal bars
   function HBars({ items, color }: { items: { label: string; value: number }[]; color: string }) {
     const max = Math.max(1, ...items.map(i => i.value))
@@ -401,40 +417,20 @@ export default function VendasDashboardPage() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
-              <h3 className="text-lg font-semibold mb-4" style={styleChartTitle}>Top Clientes</h3>
-              <div className="space-y-3">
-                {topClientes.length === 0 ? (
-                  <div className="text-sm text-gray-400" style={styleText}>Sem dados</div>
-                ) : topClientes.map((c) => (
-                  <div key={c.cliente} className="flex justify-between items-center pb-2 border-b last:border-b-0" style={{ borderColor: cardBorderColor }}>
-                    <div>
-                      <div className="font-medium text-sm" style={styleText}>{c.cliente}</div>
-                      <div className="text-xs text-gray-500" style={styleText}>{c.pedidos} pedidos</div>
-                    </div>
-                    <div className="font-semibold text-blue-600">{formatBRL(c.total)}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
-              <h3 className="text-lg font-semibold mb-4" style={styleChartTitle}>Vendas por Cidade/UF</h3>
-              <div className="space-y-3">
-                {vendasPorCidade.length === 0 ? (
-                  <div className="text-sm text-gray-400" style={styleText}>Sem dados</div>
-                ) : vendasPorCidade.map((x) => (
-                  <div key={x.cidade} className="flex justify-between items-center">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-indigo-500"></div>
-                      <span className="text-sm" style={styleText}>{x.cidade}</span>
-                    </div>
-                    <span className="font-semibold text-sm" style={styleText}>{formatBRL(x.total)}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
+            <BarChartHorizontalRecharts
+              items={topClientesItems}
+              title="Top Clientes"
+              icon={<Users className="w-5 h-5" />}
+              color="#3b82f6"
+              height={240}
+            />
+            <BarChartHorizontalRecharts
+              items={vendasPorCidadeItems}
+              title="Vendas por Cidade/UF"
+              icon={<MapPin className="w-5 h-5" />}
+              color="#8b5cf6"
+              height={240}
+            />
             <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
               <h3 className="text-lg font-semibold mb-4" style={styleChartTitle}>Pedidos Recentes</h3>
               <div className="space-y-3">
