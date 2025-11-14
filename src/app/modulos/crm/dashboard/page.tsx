@@ -81,6 +81,7 @@ export default function CRMDashboardPage() {
   const [chartConversaoCanal, setChartConversaoCanal] = useState<ChartItem[]>([])
   const [chartConversaoVendedor, setChartConversaoVendedor] = useState<ChartItem[]>([])
   const [chartConversaoEtapa, setChartConversaoEtapa] = useState<ChartItem[]>([])
+  const [chartConversaoEtapaInside, setChartConversaoEtapaInside] = useState<ChartItem[]>([])
   const [chartMotivosPerda, setChartMotivosPerda] = useState<ChartItem[]>([])
   const [chartAtividadesVendedor, setChartAtividadesVendedor] = useState<ChartItem[]>([])
   const [chartFontesLeads, setChartFontesLeads] = useState<ChartItem[]>([])
@@ -125,6 +126,7 @@ export default function CRMDashboardPage() {
           setChartMotivosPerda(Array.isArray(charts?.motivos_perda) ? charts.motivos_perda as ChartItem[] : [])
           setChartAtividadesVendedor(Array.isArray(charts?.atividades_vendedor) ? charts.atividades_vendedor as ChartItem[] : [])
           setChartFontesLeads(Array.isArray(charts?.fontes_leads) ? charts.fontes_leads as ChartItem[] : [])
+          setChartConversaoEtapaInside(Array.isArray(charts?.conversao_etapa_inside) ? charts.conversao_etapa_inside as ChartItem[] : [])
         }
         if (oRes.status === 'fulfilled' && oRes.value.ok) {
           const j = (await oRes.value.json()) as { rows?: unknown[] }
@@ -145,7 +147,6 @@ export default function CRMDashboardPage() {
   const forecastMensalItems = useMemo(() => chartForecastMensal.map(it => ({ label: monthLabel(it.key), value: it.value })), [chartForecastMensal])
 
   // Charts não implementados no back-end (mantidos vazios)
-  const leadVelocity: ChartItem[] = []
   const conversaoPorEtapa: ChartItem[] = chartConversaoEtapa
   const leadScoring: ChartItem[] = []
   const qualidadeCanais: ChartItem[] = []
@@ -391,16 +392,16 @@ export default function CRMDashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        <BarChartHorizontalRecharts
-          items={leadVelocity}
-          title="Lead Velocity (Tempo por Etapa)"
-          icon={<Clock className="w-5 h-5" />}
+        <BarChartHorizontalPercent
+          items={chartConversaoEtapaInside}
+          title="Conversão por Etapa do Funil (Inside Sales)"
+          icon={<Filter className="w-5 h-5" />}
           color="#3b82f6"
           height={280}
         />
         <BarChartHorizontalPercent
           items={conversaoPorEtapa}
-          title="Conversão por Etapa do Funil"
+          title="Conversão por Etapa do Funil (B2B)"
           icon={<Filter className="w-5 h-5" />}
           color="#8b5cf6"
           height={280}

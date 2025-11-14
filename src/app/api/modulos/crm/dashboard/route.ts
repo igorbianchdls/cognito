@@ -272,6 +272,7 @@ export async function GET(req: NextRequest) {
       atividades_vendedor: ChartItem[]
       fontes_leads: ChartItem[]
       conversao_etapa: ChartItem[]
+      conversao_etapa_inside: ChartItem[]
     } = {
       funil_fase: funil.map(({ label, value }) => ({ label, value })),
       pipeline_vendedor: pipelineVendedor,
@@ -282,50 +283,60 @@ export async function GET(req: NextRequest) {
       atividades_vendedor: atividadesVendedor,
       fontes_leads: fontesLeads,
       conversao_etapa: [],
+      conversao_etapa_inside: [],
     }
 
     // Conversão por Etapa do Funil (aproximação por snapshot atual)
-    // Fases alvo e ordem fixa
-    const targetStages = [
-      'contato inicial',
-      'diagnóstico',
-      'proposta enviada',
-      'negociação',
-      'fechado',
-    ]
-    const stageCountsSql = `SELECT LOWER(fp.nome) AS nome, COUNT(DISTINCT o.id)::int AS total
+    // Suporta dois pipelines: B2B e Inside Sales
+    const stageCountsSql = `SELECT LOWER(fp.nome) AS nome, LOWER(p.nome) AS pipeline, COUNT(DISTINCT o.id)::int AS total
                             FROM crm.oportunidades o
                             LEFT JOIN crm.fases_pipeline fp ON fp.id = o.fase_pipeline_id
+                            LEFT JOIN crm.pipelines p ON p.id = fp.pipeline_id
                             LEFT JOIN crm.leads l ON l.id = o.lead_id
                             LEFT JOIN comercial.vendedores v ON v.id = o.vendedor_id
                             LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id
                             LEFT JOIN entidades.clientes cli ON cli.id = o.cliente_id
                             ${oWhere}
-                            GROUP BY 1`;
-    const stageCounts = await runQuery<{ nome: string; total: number }>(stageCountsSql, oParams)
-    const totalsByStage = new Map<string, number>()
-    for (const s of targetStages) totalsByStage.set(s, 0)
-    for (const row of stageCounts) {
-      const n = (row.nome || '').toLowerCase()
-      if (totalsByStage.has(n)) totalsByStage.set(n, Number(row.total || 0))
+                            GROUP BY 1,2`;
+    const stageCounts = await runQuery<{ nome: string; pipeline: string | null; total: number }>(stageCountsSql, oParams)
+
+    const computeConversion = (stages: string[], pipelineName: string | null) => {
+      const totals = new Map<string, number>()
+      for (const s of stages) totals.set(s, 0)
+      for (const row of stageCounts) {
+        const n = (row.nome || '').toLowerCase()
+        const p = (row.pipeline || '').toLowerCase()
+        if (pipelineName) {
+          if (p !== pipelineName) continue
+        }
+        if (totals.has(n)) totals.set(n, (totals.get(n) || 0) + Number(row.total || 0))
+      }
+      const totalsArr = stages.map(s => totals.get(s) || 0)
+      const suffixPairs: Array<[string, string]> = []
+      for (let i = 0; i < stages.length - 1; i++) {
+        suffixPairs.push([stages[i], stages[i + 1]])
+      }
+      // Para aproximar a conversão etapa->etapa com snapshot, usamos a soma dos estágios a partir do atual como denominador
+      const conv: { label: string; value: number }[] = []
+      for (let i = 0; i < stages.length - 1; i++) {
+        const denom = totalsArr.slice(i).reduce((a, b) => a + b, 0)
+        const numer = totalsArr.slice(i + 1).reduce((a, b) => a + b, 0)
+        const label = `${capitalize(stages[i])} → ${capitalize(stages[i + 1])}`
+        conv.push({ label, value: denom > 0 ? (numer / denom) * 100 : 0 })
+      }
+      return conv
     }
-    const ci = totalsByStage.get('contato inicial') || 0
-    const dg = totalsByStage.get('diagnóstico') || 0
-    const pe = totalsByStage.get('proposta enviada') || 0
-    const ng = totalsByStage.get('negociação') || 0
-    const fc = totalsByStage.get('fechado') || 0
-    const atContato = ci + dg + pe + ng + fc
-    const atDiag = dg + pe + ng + fc
-    const atProp = pe + ng + fc
-    const atNego = ng + fc
-    const atFech = fc
-    const convEtapa = [
-      { label: 'Contato Inicial → Diagnóstico', value: atContato > 0 ? (atDiag / atContato) * 100 : 0 },
-      { label: 'Diagnóstico → Proposta Enviada', value: atDiag > 0 ? (atProp / atDiag) * 100 : 0 },
-      { label: 'Proposta Enviada → Negociação', value: atProp > 0 ? (atNego / atProp) * 100 : 0 },
-      { label: 'Negociação → Fechado', value: atNego > 0 ? (atFech / atNego) * 100 : 0 },
-    ]
-    charts['conversao_etapa'] = convEtapa
+
+    const capitalize = (s: string) => s.length ? s.charAt(0).toUpperCase() + s.slice(1) : s
+
+    const stagesB2B = ['contato inicial', 'diagnóstico', 'proposta enviada', 'negociação', 'fechado']
+    const convB2B = computeConversion(stagesB2B, 'b2b')
+
+    const stagesInside = ['qualificação', 'apresentação', 'proposta', 'fechamento']
+    const convInside = computeConversion(stagesInside, 'inside sales')
+
+    charts.conversao_etapa = convB2B
+    charts.conversao_etapa_inside = convInside
 
     return Response.json(
       {
