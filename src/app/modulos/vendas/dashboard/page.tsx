@@ -48,6 +48,7 @@ export default function VendasDashboardPage() {
   const cardShadow = ui.cardShadow
   const filtersIconColor = ui.filtersIconColor
   const [rows, setRows] = useState<PedidoRow[]>([])
+  const [kpis, setKpis] = useState<{ meta: number; vendas: number; percentMeta: number; ticket: number; cogs: number; margemBruta: number }>({ meta: 0, vendas: 0, percentMeta: 0, ticket: 0, cogs: 0, margemBruta: 0 })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -87,16 +88,40 @@ export default function VendasDashboardPage() {
     load(); return () => { cancelled = true }
   }, [])
 
-  // KPIs (mock data)
-  const kpis = useMemo(() => {
-    const meta = 500000
-    const vendas = 410000
-    const percentMeta = (vendas / meta) * 100
-    const ticket = 2850
-    const cogs = 180000
-    const margemBruta = ((vendas - cogs) / vendas) * 100
-    return { meta, vendas, percentMeta, ticket, cogs, margemBruta }
-  }, [])
+  // KPIs (reais)
+  useEffect(() => {
+    let cancelled = false
+    async function loadKpis() {
+      try {
+        const params = new URLSearchParams()
+        const from = filters.dateRange?.from
+        const to = filters.dateRange?.to
+        if (from) params.set('de', from)
+        if (to) params.set('ate', to)
+        const res = await fetch(`/api/modulos/vendas/dashboard?${params.toString()}`, { cache: 'no-store' })
+        if (res.ok) {
+          const j = await res.json()
+          const kk = j?.kpis || {}
+          const vendas = Number(kk.vendas || 0)
+          const meta = Number(kk.meta || 0)
+          setKpis({
+            meta,
+            vendas,
+            percentMeta: Number(kk.percentMeta || (meta > 0 ? (vendas / meta) * 100 : 0)),
+            ticket: Number(kk.ticketMedio || 0),
+            cogs: Number(kk.cogs || 0),
+            margemBruta: Number(kk.margemBruta || 0),
+          })
+        } else {
+          setKpis({ meta: 0, vendas: 0, percentMeta: 0, ticket: 0, cogs: 0, margemBruta: 0 })
+        }
+      } catch {
+        setKpis({ meta: 0, vendas: 0, percentMeta: 0, ticket: 0, cogs: 0, margemBruta: 0 })
+      }
+    }
+    loadKpis()
+    return () => { cancelled = true }
+  }, [filters.dateRange])
 
   // Charts (mock data)
   const top5Vendedores = useMemo(() => [
