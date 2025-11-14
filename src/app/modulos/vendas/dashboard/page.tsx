@@ -98,6 +98,13 @@ export default function VendasDashboardPage() {
         const to = filters.dateRange?.to
         if (from) params.set('de', from)
         if (to) params.set('ate', to)
+        if (!from && !to) {
+          const base = new Date()
+          const deDefault = toDateOnly(new Date(base.getFullYear(), base.getMonth() - 5, 1))
+          const ateDefault = toDateOnly(base)
+          params.set('de', deDefault)
+          params.set('ate', ateDefault)
+        }
         const res = await fetch(`/api/modulos/vendas/dashboard?${params.toString()}`, { cache: 'no-store' })
         if (res.ok) {
           const j = await res.json()
