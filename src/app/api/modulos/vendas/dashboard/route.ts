@@ -34,7 +34,9 @@ export async function GET(req: NextRequest) {
                       FROM vendas.pedidos_itens pi
                       JOIN vendas.pedidos p ON p.id = pi.pedido_id
                       ${pWhere}`
-    const [{ itens }] = await runQuery<{ itens: number }>(itensSql, pParams)
+    let itensRes: { itens: number }[] = []
+    try { itensRes = await runQuery<{ itens: number }>(itensSql, pParams) } catch (e) { console.error('🛒 VENDAS dashboard itensSql error:', e); itensRes = [{ itens: 0 }] }
+    const [{ itens }] = itensRes
 
     // KPI: meta (somatório de todas as metas de territórios)
     // Se houver período, somar metas cujos períodos estejam entre o mês de 'de' e o mês de 'ate'.
@@ -51,7 +53,9 @@ export async function GET(req: NextRequest) {
     const metaSql = `SELECT COALESCE(SUM(mt.valor_meta),0)::float AS meta
                      FROM comercial.metas_territorios mt
                      ${mtWhere}`
-    const [{ meta }] = await runQuery<{ meta: number }>(metaSql, mtParams)
+    let metaRes: { meta: number }[] = []
+    try { metaRes = await runQuery<{ meta: number }>(metaSql, mtParams) } catch (e) { console.error('🛒 VENDAS dashboard metaSql error:', e); metaRes = [{ meta: 0 }] }
+    const [{ meta }] = metaRes
 
     const vendasNum = Number(vendas || 0)
     const pedidosNum = Number(pedidos || 0)
@@ -77,7 +81,8 @@ export async function GET(req: NextRequest) {
                      GROUP BY 1
                      ORDER BY 2 DESC
                      LIMIT $${pParams.length + 1}::int`;
-    const vendedores = await runQuery<ChartItem>(vendSql, [...pParams, limit])
+    let vendedores: ChartItem[] = []
+    try { vendedores = await runQuery<ChartItem>(vendSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard vendedores error:', e); vendedores = [] }
 
     // Produtos (por subtotal do item)
     const prodSql = `SELECT COALESCE(pr.nome,'—') AS label, COALESCE(SUM(pi.subtotal),0)::float AS value
@@ -88,7 +93,8 @@ export async function GET(req: NextRequest) {
                      GROUP BY 1
                      ORDER BY 2 DESC
                      LIMIT $${pParams.length + 1}::int`;
-    const produtos = await runQuery<ChartItem>(prodSql, [...pParams, limit])
+    let produtos: ChartItem[] = []
+    try { produtos = await runQuery<ChartItem>(prodSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard produtos error:', e); produtos = [] }
 
     // Territórios
     const terrSql = `SELECT COALESCE(t.nome,'—') AS label, COALESCE(SUM(p.valor_total),0)::float AS value
@@ -98,7 +104,8 @@ export async function GET(req: NextRequest) {
                      GROUP BY 1
                      ORDER BY 2 DESC
                      LIMIT $${pParams.length + 1}::int`;
-    const territorios = await runQuery<ChartItem>(terrSql, [...pParams, limit])
+    let territorios: ChartItem[] = []
+    try { territorios = await runQuery<ChartItem>(terrSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard territorios error:', e); territorios = [] }
 
     // Categorias de produto
     const catSql = `SELECT COALESCE(cat.nome,'—') AS label, COALESCE(SUM(pi.subtotal),0)::float AS value
@@ -110,7 +117,8 @@ export async function GET(req: NextRequest) {
                     GROUP BY 1
                     ORDER BY 2 DESC
                     LIMIT $${pParams.length + 1}::int`;
-    const categorias = await runQuery<ChartItem>(catSql, [...pParams, limit])
+    let categorias: ChartItem[] = []
+    try { categorias = await runQuery<ChartItem>(catSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard categorias error:', e); categorias = [] }
 
     // Canais de venda
     const canaisSql = `SELECT COALESCE(cv.nome,'—') AS label, COALESCE(SUM(p.valor_total),0)::float AS value
@@ -120,7 +128,8 @@ export async function GET(req: NextRequest) {
                        GROUP BY 1
                        ORDER BY 2 DESC
                        LIMIT $${pParams.length + 1}::int`;
-    const canais = await runQuery<ChartItem>(canaisSql, [...pParams, limit])
+    let canais: ChartItem[] = []
+    try { canais = await runQuery<ChartItem>(canaisSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard canais error:', e); canais = [] }
 
     // Top clientes
     const topClientesSql = `SELECT COALESCE(c.nome_fantasia,'—') AS cliente,
@@ -132,7 +141,8 @@ export async function GET(req: NextRequest) {
                             GROUP BY 1
                             ORDER BY 2 DESC
                             LIMIT $${pParams.length + 1}::int`;
-    const topClientes = await runQuery<{ cliente: string; total: number; pedidos: number }>(topClientesSql, [...pParams, limit])
+    let topClientes: { cliente: string; total: number; pedidos: number }[] = []
+    try { topClientes = await runQuery<{ cliente: string; total: number; pedidos: number }>(topClientesSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard clientes error:', e); topClientes = [] }
 
     // Vendas por Cidade/UF
     const cidadeSql = `SELECT COALESCE(CONCAT_WS(' - ', c.cidade, c.uf), '—') AS cidade, COALESCE(SUM(p.valor_total),0)::float AS total
@@ -142,7 +152,8 @@ export async function GET(req: NextRequest) {
                        GROUP BY 1
                        ORDER BY 2 DESC
                        LIMIT $${pParams.length + 1}::int`;
-    const vendasCidade = await runQuery<{ cidade: string; total: number }>(cidadeSql, [...pParams, limit])
+    let vendasCidade: { cidade: string; total: number }[] = []
+    try { vendasCidade = await runQuery<{ cidade: string; total: number }>(cidadeSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard cidades error:', e); vendasCidade = [] }
 
     return Response.json(
       {
