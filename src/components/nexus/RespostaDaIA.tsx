@@ -99,6 +99,27 @@ import CotacoesCompraResult from '../tools/compras/CotacoesCompraResult';
 import KpisComprasResult from '../tools/compras/KpisComprasResult';
 import PedidosVendasResult from '../tools/vendas-b2b/PedidosVendasResult';
 import AnalisTerritorioResult from '../tools/vendas-analytics/AnalisTerritorioResult';
+
+type AnalisTerritorioData = {
+  summary: Array<{
+    territorio: string;
+    total_pedidos: number;
+    receita_total: number;
+    ticket_medio: number;
+    total_clientes: number;
+    total_vendedores: number;
+  }>;
+  topVendedores: Array<{
+    vendedor_nome: string;
+    total_pedidos: number;
+    receita_total: number;
+  }>;
+  topProdutos: Array<{
+    produto_nome: string;
+    quantidade_vendida: number;
+    receita_total: number;
+  }>;
+};
 import ClientesVendasResult from '../tools/vendas-b2b/ClientesVendasResult';
 import TerritoriosVendasResult from '../tools/vendas-b2b/TerritoriosVendasResult';
 import EquipesVendasResult from '../tools/vendas-b2b/EquipesVendasResult';
@@ -7998,13 +8019,13 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
                 </ToolContent>
               </Tool>
-              {tool.state === 'output-available' && (
+              {tool.state === 'output-available' && tool.output && (
                 <AnalisTerritorioResult
-                  success={(tool.output as any).success}
-                  message={(tool.output as any).message}
-                  data={(tool.output as any).data}
-                  filters={(tool.output as any).filters}
-                  sql_query={(tool.output as any).sql_query}
+                  success={Boolean((tool.output as Record<string, unknown>).success)}
+                  message={String((tool.output as Record<string, unknown>).message || '')}
+                  data={(tool.output as Record<string, unknown>).data as AnalisTerritorioData}
+                  filters={(tool.output as Record<string, unknown>).filters as { territorio_nome?: string; data_de?: string; data_ate?: string }}
+                  sql_query={String((tool.output as Record<string, unknown>).sql_query || '')}
                 />
               )}
             </div>
