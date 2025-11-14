@@ -45,29 +45,8 @@ interface Props {
   sql_query?: string
 }
 
-export default function AnalisTerritorioResult({ success, message, data, filters, sql_query }: Props) {
-  if (!success || !data) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Globe className="w-5 h-5 text-purple-600" />
-            Análise de Território
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-red-600">{message}</p>
-        </CardContent>
-      </Card>
-    )
-  }
-
-  const { summary, topVendedores, topProdutos } = data
-
-  // Summary KPI cards
-  const summaryData = summary[0]
-
-  // Columns for top sellers table
+export default function AnalisTerritorioResult({ success, message, data, filters }: Props) {
+  // Hooks must be at the top level
   const vendedoresColumns: ColumnDef<VendedorRow>[] = useMemo(() => [
     {
       accessorKey: 'vendedor_nome',
@@ -89,7 +68,6 @@ export default function AnalisTerritorioResult({ success, message, data, filters
     },
   ], [])
 
-  // Columns for top products table
   const produtosColumns: ColumnDef<ProdutoRow>[] = useMemo(() => [
     {
       accessorKey: 'produto_nome',
@@ -110,6 +88,26 @@ export default function AnalisTerritorioResult({ success, message, data, filters
       }),
     },
   ], [])
+
+  // Early return after hooks
+  if (!success || !data) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Globe className="w-5 h-5 text-purple-600" />
+            Análise de Território
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-red-600">{message}</p>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  const { summary, topVendedores, topProdutos } = data
+  const summaryData = summary[0]
 
   return (
     <div className="space-y-4">
