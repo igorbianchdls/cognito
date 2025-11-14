@@ -43,7 +43,8 @@ export async function GET(req: NextRequest) {
       const ateMonth = ate ? `date_trunc('month', $${mtParams.push(ate)})` : `date_trunc('month', CURRENT_DATE)`
       mtWhere = `WHERE mt.periodo >= ${deMonth} AND mt.periodo <= ${ateMonth}`
     } else {
-      mtWhere = `WHERE mt.periodo = date_trunc('month', CURRENT_DATE)`
+      // Sem período, considerar todas as metas (todos os territórios)
+      mtWhere = ''
     }
     const metaSql = `SELECT COALESCE(SUM(mt.valor_meta),0)::float AS meta
                      FROM comercial.metas_territorios mt
@@ -88,4 +89,3 @@ export async function GET(req: NextRequest) {
     )
   }
 }
-
