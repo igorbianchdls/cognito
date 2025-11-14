@@ -163,10 +163,10 @@ export async function GET(req: NextRequest) {
     let vendasCidade: { cidade: string; total: number }[] = []
     try { vendasCidade = await runQuery<{ cidade: string; total: number }>(cidadeSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard cidades error:', e); vendasCidade = [] }
 
-    // Vendas por Centro de Lucro
-    const centroLucroSql = `SELECT COALESCE(cc2.nome,'—') AS label, COALESCE(SUM(p.valor_total),0)::float AS value
+    // Vendas por Centro de Lucro (corrigido para centros_lucro)
+    const centroLucroSql = `SELECT COALESCE(cl.nome,'—') AS label, COALESCE(SUM(p.valor_total),0)::float AS value
                             FROM vendas.pedidos p
-                            LEFT JOIN empresa.centros_custo cc2 ON cc2.id = p.centro_custo_id
+                            LEFT JOIN empresa.centros_lucro cl ON cl.id = p.centro_lucro_id
                             ${pWhere}
                             GROUP BY 1
                             ORDER BY 2 DESC
@@ -184,6 +184,18 @@ export async function GET(req: NextRequest) {
                               LIMIT $${pParams.length + 1}::int`;
     let campanhasVendas: ChartItem[] = []
     try { campanhasVendas = await runQuery<ChartItem>(campanhaVendaSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard campanhas_vendas error:', e); campanhasVendas = [] }
+
+    // Vendas por Canal de Distribuição
+    const canalDistribuicaoSql = `SELECT COALESCE(cd.nome,'—') AS label, COALESCE(SUM(p.valor_total),0)::float AS value
+                                  FROM vendas.pedidos p
+                                  LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+                                  LEFT JOIN vendas.canais_distribuicao cd ON cd.id = cv.canal_distribuicao_id
+                                  ${pWhere}
+                                  GROUP BY 1
+                                  ORDER BY 2 DESC
+                                  LIMIT $${pParams.length + 1}::int`;
+    let canaisDistribuicao: ChartItem[] = []
+    try { canaisDistribuicao = await runQuery<ChartItem>(canalDistribuicaoSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard canais_distribuicao error:', e); canaisDistribuicao = [] }
 
     // Meta x Faturamento por Território
     const metaTerrSql = `SELECT COALESCE(t.nome,'—') AS label, COALESCE(SUM(mt.valor_meta),0)::float AS meta
@@ -308,6 +320,7 @@ export async function GET(req: NextRequest) {
           cidades: vendasCidade,
           centros_lucro: centrosLucro,
           campanhas_vendas: campanhasVendas,
+          canais_distribuicao: canaisDistribuicao,
           estados,
           devolucao_canal: taxaDevolucaoCanal,
           devolucao_cliente: taxaDevolucaoCliente,
