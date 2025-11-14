@@ -98,6 +98,7 @@ import SolicitacoesCompraResult from '../tools/compras/SolicitacoesCompraResult'
 import CotacoesCompraResult from '../tools/compras/CotacoesCompraResult';
 import KpisComprasResult from '../tools/compras/KpisComprasResult';
 import PedidosVendasResult from '../tools/vendas-b2b/PedidosVendasResult';
+import AnalisTerritorioResult from '../tools/vendas-analytics/AnalisTerritorioResult';
 import ClientesVendasResult from '../tools/vendas-b2b/ClientesVendasResult';
 import TerritoriosVendasResult from '../tools/vendas-b2b/TerritoriosVendasResult';
 import EquipesVendasResult from '../tools/vendas-b2b/EquipesVendasResult';
@@ -7980,6 +7981,32 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   />
                 );
               })()}
+            </div>
+          );
+        }
+
+        // Vendas Analytics: Análise de Território
+        if (part.type === 'tool-analiseTerritorio') {
+          const tool = part as NexusToolUIPart;
+          const open = tool.state === 'output-available' || tool.state === 'output-error';
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={open}>
+                <ToolHeader type={part.type} state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && (
+                <AnalisTerritorioResult
+                  success={(tool.output as any).success}
+                  message={(tool.output as any).message}
+                  data={(tool.output as any).data}
+                  filters={(tool.output as any).filters}
+                  sql_query={(tool.output as any).sql_query}
+                />
+              )}
             </div>
           );
         }
