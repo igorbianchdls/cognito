@@ -68,11 +68,21 @@ export default function CRMDashboardPage() {
   const cardShadow = ui.cardShadow
   const filtersIconColor = ui.filtersIconColor
   const [opps, setOpps] = useState<OportunidadeRow[]>([])
-  const [leads, setLeads] = useState<LeadRow[]>([])
-  const [ativs, setAtivs] = useState<AtividadeRow[]>([])
+  // Removido: listas de leads/atividades para KPIs e charts (usamos endpoint agregado)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [kpis, setKpis] = useState<{ faturamento: number; vendas: number; oportunidades: number; totalLeads: number; taxaConversao: number }>({ faturamento: 0, vendas: 0, oportunidades: 0, totalLeads: 0, taxaConversao: 0 })
+  // Charts
+  type ChartItem = { label: string; value: number }
+  type ForecastItem = { key: string; value: number }
+  const [chartFunilFase, setChartFunilFase] = useState<ChartItem[]>([])
+  const [chartPipelineVendedor, setChartPipelineVendedor] = useState<ChartItem[]>([])
+  const [chartForecastMensal, setChartForecastMensal] = useState<ForecastItem[]>([])
+  const [chartConversaoCanal, setChartConversaoCanal] = useState<ChartItem[]>([])
+  const [chartConversaoVendedor, setChartConversaoVendedor] = useState<ChartItem[]>([])
+  const [chartMotivosPerda, setChartMotivosPerda] = useState<ChartItem[]>([])
+  const [chartAtividadesVendedor, setChartAtividadesVendedor] = useState<ChartItem[]>([])
+  const [chartFontesLeads, setChartFontesLeads] = useState<ChartItem[]>([])
 
   useEffect(() => {
     let cancelled = false
@@ -88,21 +98,16 @@ export default function CRMDashboardPage() {
         const deDefault = toDateOnly(new Date(new Date().getFullYear(), new Date().getMonth() - 5, 1))
         const urls = [
           `/api/modulos/crm?view=oportunidades&page=1&pageSize=1000&de=${from ?? deDefault}`,
-          `/api/modulos/crm?view=leads&page=1&pageSize=1000`,
-          `/api/modulos/crm?view=atividades&page=1&pageSize=1000&de=${from ?? deDefault}`,
         ]
-        const [kRes, oRes, lRes, aRes] = await Promise.allSettled([
+        const [kRes, oRes] = await Promise.allSettled([
           fetch(`/api/modulos/crm/dashboard?${params.toString()}`, { cache: 'no-store' }),
           fetch(urls[0], { cache: 'no-store' }),
-          fetch(urls[1], { cache: 'no-store' }),
-          fetch(urls[2], { cache: 'no-store' }),
         ])
         let os: OportunidadeRow[] = []
-        let ls: LeadRow[] = []
-        let as: AtividadeRow[] = []
         if (kRes.status === 'fulfilled' && kRes.value.ok) {
           const j = await kRes.value.json()
           const kk = j?.kpis || {}
+          const charts = j?.charts || {}
           setKpis({
             faturamento: Number(kk.faturamento || 0),
             vendas: Number(kk.vendas || 0),
@@ -110,20 +115,20 @@ export default function CRMDashboardPage() {
             totalLeads: Number(kk.totalLeads || 0),
             taxaConversao: Number(kk.taxaConversao || 0),
           })
+          setChartFunilFase(Array.isArray(charts?.funil_fase) ? charts.funil_fase as ChartItem[] : [])
+          setChartPipelineVendedor(Array.isArray(charts?.pipeline_vendedor) ? charts.pipeline_vendedor as ChartItem[] : [])
+          setChartForecastMensal(Array.isArray(charts?.forecast_mensal) ? charts.forecast_mensal as ForecastItem[] : [])
+          setChartConversaoCanal(Array.isArray(charts?.conversao_canal) ? charts.conversao_canal as ChartItem[] : [])
+          setChartConversaoVendedor(Array.isArray(charts?.conversao_vendedor) ? charts.conversao_vendedor as ChartItem[] : [])
+          setChartMotivosPerda(Array.isArray(charts?.motivos_perda) ? charts.motivos_perda as ChartItem[] : [])
+          setChartAtividadesVendedor(Array.isArray(charts?.atividades_vendedor) ? charts.atividades_vendedor as ChartItem[] : [])
+          setChartFontesLeads(Array.isArray(charts?.fontes_leads) ? charts.fontes_leads as ChartItem[] : [])
         }
         if (oRes.status === 'fulfilled' && oRes.value.ok) {
           const j = (await oRes.value.json()) as { rows?: unknown[] }
           os = Array.isArray(j?.rows) ? (j.rows as unknown as OportunidadeRow[]) : []
         }
-        if (lRes.status === 'fulfilled' && lRes.value.ok) {
-          const j = (await lRes.value.json()) as { rows?: unknown[] }
-          ls = Array.isArray(j?.rows) ? (j.rows as unknown as LeadRow[]) : []
-        }
-        if (aRes.status === 'fulfilled' && aRes.value.ok) {
-          const j = (await aRes.value.json()) as { rows?: unknown[] }
-          as = Array.isArray(j?.rows) ? (j.rows as unknown as AtividadeRow[]) : []
-        }
-        if (!cancelled) { setOpps(os); setLeads(ls); setAtivs(as) }
+        if (!cancelled) { setOpps(os) }
       } catch {
         if (!cancelled) setError('Falha ao carregar dados')
       } finally { if (!cancelled) setLoading(false) }
@@ -134,140 +139,14 @@ export default function CRMDashboardPage() {
   // KPIs (reais)
   const openOpps = useMemo(() => opps.filter(o => !isClosed(o.estagio)), [opps])
 
-  // Funil por estágio (soma de valor)
-  const stageOrder = (s?: string) => {
-    const x = (s || '').toLowerCase()
-    if (x.includes('pros') || x.includes('desc')) return 1
-    if (x.includes('qual')) return 2
-    if (x.includes('apre') || x.includes('demo')) return 3
-    if (x.includes('prop') || x.includes('proposta')) return 4
-    if (x.includes('nego')) return 5
-    if (isClosedWon(s)) return 6
-    if (isClosedLost(s)) return 7
-    if (x.includes('fech')) return 8
-    return 9
-  }
-  const funnel = useMemo(() => {
-    const m = new Map<string, number>()
-    for (const o of opps) {
-      const k = o.estagio || '—'
-      m.set(k, (m.get(k) || 0) + (Number(o.valor) || 0))
-    }
-    return Array.from(m, ([label, value]) => ({ label, value, order: stageOrder(label) }))
-      .sort((a,b)=> a.order - b.order)
-  }, [opps])
+  // Map forecast labels
+  const forecastMensalItems = useMemo(() => chartForecastMensal.map(it => ({ label: monthLabel(it.key), value: it.value })), [chartForecastMensal])
 
-  // Pipeline por Vendedor (mock data)
-  const pipelinePorVendedor = useMemo(() => [
-    { label: 'João Silva', value: 285000 },
-    { label: 'Maria Santos', value: 242000 },
-    { label: 'Pedro Costa', value: 198000 },
-    { label: 'Ana Oliveira', value: 165000 },
-    { label: 'Carlos Souza', value: 127000 }
-  ], [])
-
-  // Forecast Mensal - próximos 6 meses (mock data)
-  const forecastMensal = useMemo(() => {
-    const base = new Date()
-    const months = []
-    for (let i = 0; i < 6; i++) {
-      const d = new Date(base.getFullYear(), base.getMonth() + i, 1)
-      const label = d.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' })
-      months.push(label)
-    }
-    return [
-      { label: months[0], value: 145000 },
-      { label: months[1], value: 198000 },
-      { label: months[2], value: 234000 },
-      { label: months[3], value: 187000 },
-      { label: months[4], value: 156000 },
-      { label: months[5], value: 124000 }
-    ]
-  }, [])
-
-  // Taxa de Conversão por Canal (mock data - valores em %)
-  const taxaConversaoPorCanal = useMemo(() => [
-    { label: 'Website', value: 28.5 },
-    { label: 'Indicação', value: 45.2 },
-    { label: 'LinkedIn', value: 32.8 },
-    { label: 'Email Marketing', value: 18.3 },
-    { label: 'Eventos', value: 52.7 },
-    { label: 'Cold Call', value: 12.4 }
-  ].sort((a, b) => b.value - a.value), [])
-
-  // Conversão por Vendedor (mock data - valores em %)
-  const conversaoPorVendedor = useMemo(() => [
-    { label: 'João Silva', value: 48.2 },
-    { label: 'Maria Santos', value: 42.5 },
-    { label: 'Pedro Costa', value: 35.8 },
-    { label: 'Ana Oliveira', value: 28.3 },
-    { label: 'Carlos Souza', value: 15.7 }
-  ], [])
-
-  // Motivos de Perda (mock data - contagem)
-  const motivosPerda = useMemo(() => [
-    { label: 'Preço alto', value: 45 },
-    { label: 'Concorrente', value: 32 },
-    { label: 'Sem orçamento', value: 28 },
-    { label: 'Timing ruim', value: 18 },
-    { label: 'Prazo', value: 12 },
-    { label: 'Outros', value: 8 }
-  ].sort((a, b) => b.value - a.value), [])
-
-  // Lead Velocity - tempo em dias por etapa (mock data)
-  const leadVelocity = useMemo(() => [
-    { label: 'Negociação', value: 15 },
-    { label: 'Apresentação', value: 12 },
-    { label: 'Prospecção', value: 8 },
-    { label: 'Proposta', value: 7 },
-    { label: 'Qualificação', value: 5 }
-  ], [])
-
-  // Conversão por Etapa do Funil (mock data - valores em %)
-  const conversaoPorEtapa = useMemo(() => [
-    { label: 'Negociação → Fechamento', value: 71.3 },
-    { label: 'Apresentação → Proposta', value: 68.5 },
-    { label: 'Qualificação → Apresentação', value: 52.8 },
-    { label: 'Proposta → Negociação', value: 45.2 },
-    { label: 'Prospecção → Qualificação', value: 35.7 }
-  ], [])
-
-  // Atividades por Vendedor (mock data - contagem)
-  const atividadesPorVendedor = useMemo(() => [
-    { label: 'João Silva', value: 87 },
-    { label: 'Maria Santos', value: 76 },
-    { label: 'Pedro Costa', value: 64 },
-    { label: 'Ana Oliveira', value: 52 },
-    { label: 'Carlos Souza', value: 41 }
-  ], [])
-
-  // Lead Scoring (mock data - contagem)
-  const leadScoring = useMemo(() => [
-    { label: 'Score B', value: 78 },
-    { label: 'Score C', value: 52 },
-    { label: 'Score A', value: 45 },
-    { label: 'Score D', value: 23 }
-  ], [])
-
-  // Qualidade dos Canais (mock data - score 0-100)
-  const qualidadeCanais = useMemo(() => [
-    { label: 'Indicação', value: 87 },
-    { label: 'Eventos', value: 78 },
-    { label: 'LinkedIn', value: 65 },
-    { label: 'Website', value: 58 },
-    { label: 'Email Marketing', value: 49 },
-    { label: 'Cold Call', value: 42 }
-  ], [])
-
-  // Fontes de leads (contagem)
-  const fontesLeads = useMemo(() => {
-    const m = new Map<string, number>()
-    for (const l of leads) {
-      const k = l.origem || '—'
-      m.set(k, (m.get(k) || 0) + 1)
-    }
-    return Array.from(m, ([label, value]) => ({ label, value })).sort((a,b)=> b.value - a.value).slice(0, 5)
-  }, [leads])
+  // Charts não implementados no back-end (mantidos vazios)
+  const leadVelocity: ChartItem[] = []
+  const conversaoPorEtapa: ChartItem[] = []
+  const leadScoring: ChartItem[] = []
+  const qualidadeCanais: ChartItem[] = []
 
   // Oportunidades quentes (alta prob. e próximas)
   const hotOpps = useMemo(() => {
@@ -466,19 +345,19 @@ export default function CRMDashboardPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <BarChartHorizontalRecharts
-          items={funnel.map(f => ({ label: f.label, value: f.value }))}
+          items={chartFunilFase}
           title="Pipeline de Vendas"
           icon={<TrendingUp className="w-5 h-5" />}
           color="#3b82f6"
         />
         <BarChartHorizontalRecharts
-          items={pipelinePorVendedor}
+          items={chartPipelineVendedor}
           title="Pipeline por Vendedor"
           icon={<Users className="w-5 h-5" />}
           color="#10b981"
         />
         <BarChartHorizontalRecharts
-          items={forecastMensal}
+          items={forecastMensalItems}
           title="Forecast Mês a Mês"
           icon={<CalendarDays className="w-5 h-5" />}
           color="#8b5cf6"
@@ -487,21 +366,21 @@ export default function CRMDashboardPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <BarChartHorizontalPercent
-          items={taxaConversaoPorCanal}
+          items={chartConversaoCanal}
           title="Taxa de Conversão por Canal"
           icon={<Target className="w-5 h-5" />}
           color="#f59e0b"
           height={280}
         />
         <BarChartHorizontalPercent
-          items={conversaoPorVendedor}
+          items={chartConversaoVendedor}
           title="Conversão por Vendedor"
           icon={<UserCheck className="w-5 h-5" />}
           color="#10b981"
           height={280}
         />
         <BarChartHorizontalRecharts
-          items={motivosPerda}
+          items={chartMotivosPerda}
           title="Motivos de Perda"
           icon={<XCircle className="w-5 h-5" />}
           color="#ef4444"
@@ -525,7 +404,7 @@ export default function CRMDashboardPage() {
           height={280}
         />
         <BarChartHorizontalRecharts
-          items={atividadesPorVendedor}
+          items={chartAtividadesVendedor}
           title="Atividades por Vendedor"
           icon={<Activity className="w-5 h-5" />}
           color="#f59e0b"
@@ -559,7 +438,7 @@ export default function CRMDashboardPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <BarChartHorizontalRecharts
-          items={fontesLeads}
+          items={chartFontesLeads}
           title="Top Fontes de Leads"
           icon={<Radio className="w-5 h-5" />}
           color="#3b82f6"

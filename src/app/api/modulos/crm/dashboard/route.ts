@@ -15,6 +15,10 @@ export async function GET(req: NextRequest) {
     const responsavelId = searchParams.get('responsavel_id') || undefined
     const origem = searchParams.get('origem') || undefined
     const q = searchParams.get('q') || undefined
+    const limitParam = searchParams.get('limit') || undefined
+    const monthsParam = searchParams.get('months') || undefined
+    const limit = Math.max(1, Math.min(50, limitParam ? Number(limitParam) : 6))
+    const months = Math.max(1, Math.min(24, monthsParam ? Number(monthsParam) : 6))
 
     // Oportunidades WHERE
     const oConds: string[] = []
@@ -45,6 +49,20 @@ export async function GET(req: NextRequest) {
       li += 1
     }
     const lWhere = lConds.length ? `WHERE ${lConds.join(' AND ')}` : ''
+
+    // Atividades WHERE
+    const aConds: string[] = []
+    const aParams: unknown[] = []
+    let ai = 1
+    if (de) { aConds.push(`a.data_prevista >= $${ai++}`); aParams.push(de) }
+    if (ate) { aConds.push(`a.data_prevista <= $${ai++}`); aParams.push(ate) }
+    if (responsavelId) { aConds.push(`v.funcionario_id = $${ai++}`); aParams.push(responsavelId) }
+    if (q) {
+      aConds.push(`(a.descricao ILIKE '%' || $${ai} || '%' OR a.tipo ILIKE '%' || $${ai} || '%')`)
+      aParams.push(q)
+      ai += 1
+    }
+    const aWhere = aConds.length ? `WHERE ${aConds.join(' AND ')}` : ''
 
     // Fase fechada: coluna fase (fp.nome) com texto 'Fechado'
     const faseFechadaPredicate = `LOWER(fp.nome) = 'fechado'`
@@ -95,6 +113,166 @@ export async function GET(req: NextRequest) {
     const oportunidadesNum = Number(oportunidades ?? 0) || 0
     const taxaConversao = totalLeads > 0 ? (vendasNum / totalLeads) * 100 : 0
 
+    // Charts
+    type ChartItem = { label: string; value: number }
+    // 1) Funil por fase (ordenado pela ordem da fase)
+    const funilSql = `SELECT COALESCE(fp.nome, '—') AS label, COALESCE(SUM(o.valor_estimado),0)::float AS value, MIN(fp.ordem) AS ordem
+                      FROM crm.oportunidades o
+                      LEFT JOIN crm.fases_pipeline fp ON fp.id = o.fase_pipeline_id
+                      LEFT JOIN crm.leads l ON l.id = o.lead_id
+                      LEFT JOIN comercial.vendedores v ON v.id = o.vendedor_id
+                      LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id
+                      LEFT JOIN entidades.clientes cli ON cli.id = o.cliente_id
+                      ${oWhere}
+                      GROUP BY fp.nome
+                      ORDER BY ordem ASC NULLS LAST, value DESC`;
+    const funil = await runQuery<{ label: string; value: number; ordem: number | null }>(funilSql, oParams)
+
+    // 2) Pipeline por vendedor (top N)
+    const vendSql = `SELECT COALESCE(f.nome, '—') AS label, COALESCE(SUM(o.valor_estimado),0)::float AS value
+                     FROM crm.oportunidades o
+                     LEFT JOIN comercial.vendedores v ON v.id = o.vendedor_id
+                     LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id
+                     LEFT JOIN crm.fases_pipeline fp ON fp.id = o.fase_pipeline_id
+                     LEFT JOIN crm.leads l ON l.id = o.lead_id
+                     LEFT JOIN entidades.clientes cli ON cli.id = o.cliente_id
+                     ${oWhere}
+                     GROUP BY f.nome
+                     ORDER BY value DESC
+                     LIMIT $${oParams.length + 1}::int`;
+    const pipelineVendedor = await runQuery<ChartItem>(vendSql, [...oParams, limit])
+
+    // 3) Forecast mensal
+    // Se não tiver de/ate informado, considera próximos N meses de current_date
+    const forecastExtraConds: string[] = []
+    const forecastParams: unknown[] = [...oParams]
+    if (!de && !ate) {
+      forecastExtraConds.push(`o.data_prevista >= CURRENT_DATE`)
+      forecastExtraConds.push(`o.data_prevista < (CURRENT_DATE + ($${forecastParams.length + 1})::text::interval)`)
+      forecastParams.push(`${months} months`)
+    }
+    const forecastWhere = (oWhere ? `${oWhere} ${forecastExtraConds.length ? 'AND ' + forecastExtraConds.join(' AND ') : ''}` : (forecastExtraConds.length ? 'WHERE ' + forecastExtraConds.join(' AND ') : ''))
+    const forecastSql = `SELECT TO_CHAR(DATE_TRUNC('month', o.data_prevista), 'YYYY-MM') AS key, COALESCE(SUM(o.valor_estimado),0)::float AS value
+                         FROM crm.oportunidades o
+                         LEFT JOIN crm.fases_pipeline fp ON fp.id = o.fase_pipeline_id
+                         LEFT JOIN crm.leads l ON l.id = o.lead_id
+                         LEFT JOIN comercial.vendedores v ON v.id = o.vendedor_id
+                         LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id
+                         LEFT JOIN entidades.clientes cli ON cli.id = o.cliente_id
+                         ${forecastWhere}
+                         GROUP BY 1
+                         ORDER BY 1 ASC`;
+    const forecastMensal = await runQuery<{ key: string; value: number }>(forecastSql, forecastParams)
+
+    // 4) Conversão por canal
+    const leadsPorCanalSql = `SELECT COALESCE(ol.nome, '—') AS canal, COUNT(*)::int AS leads
+                              FROM crm.leads l
+                              LEFT JOIN crm.origens_lead ol ON ol.id = l.origem_id
+                              LEFT JOIN comercial.vendedores v ON v.id = l.responsavel_id
+                              LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id
+                              ${lWhere}
+                              GROUP BY 1`;
+    const vendasPorCanalSql = `SELECT COALESCE(ol.nome, '—') AS canal, COUNT(DISTINCT o.id)::int AS vendas
+                               FROM crm.oportunidades o
+                               LEFT JOIN crm.leads l ON l.id = o.lead_id
+                               LEFT JOIN crm.origens_lead ol ON ol.id = l.origem_id
+                               LEFT JOIN comercial.vendedores v ON v.id = o.vendedor_id
+                               LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id
+                               LEFT JOIN crm.fases_pipeline fp ON fp.id = o.fase_pipeline_id
+                               ${oWhere ? oWhere + ' AND ' : 'WHERE '}${faseFechadaPredicate}
+                               GROUP BY 1`;
+    const leadsPorCanal = await runQuery<{ canal: string; leads: number }>(leadsPorCanalSql, lParams)
+    const vendasPorCanal = await runQuery<{ canal: string; vendas: number }>(vendasPorCanalSql, oParams)
+    const convCanalMap = new Map<string, { leads: number; vendas: number }>()
+    for (const l of leadsPorCanal) convCanalMap.set(l.canal, { leads: l.leads, vendas: 0 })
+    for (const v of vendasPorCanal) {
+      const curr = convCanalMap.get(v.canal) || { leads: 0, vendas: 0 }
+      curr.vendas = v.vendas
+      convCanalMap.set(v.canal, curr)
+    }
+    const conversaoCanal = Array.from(convCanalMap, ([label, kv]) => ({ label, value: kv.leads > 0 ? (kv.vendas / kv.leads) * 100 : 0 }))
+      .sort((a,b)=> b.value - a.value)
+      .slice(0, limit)
+
+    // 5) Conversão por vendedor
+    const oppsPorVendedorSql = `SELECT COALESCE(f.nome, '—') AS vendedor, COUNT(DISTINCT o.id)::int AS total
+                                FROM crm.oportunidades o
+                                LEFT JOIN comercial.vendedores v ON v.id = o.vendedor_id
+                                LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id
+                                LEFT JOIN crm.fases_pipeline fp ON fp.id = o.fase_pipeline_id
+                                LEFT JOIN crm.leads l ON l.id = o.lead_id
+                                ${oWhere}
+                                GROUP BY 1`;
+    const vendasPorVendedorSql = `SELECT COALESCE(f.nome, '—') AS vendedor, COUNT(DISTINCT o.id)::int AS vendas
+                                  FROM crm.oportunidades o
+                                  LEFT JOIN comercial.vendedores v ON v.id = o.vendedor_id
+                                  LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id
+                                  LEFT JOIN crm.fases_pipeline fp ON fp.id = o.fase_pipeline_id
+                                  LEFT JOIN crm.leads l ON l.id = o.lead_id
+                                  ${oWhere ? oWhere + ' AND ' : 'WHERE '}${faseFechadaPredicate}
+                                  GROUP BY 1`;
+    const oppsPorVendedor = await runQuery<{ vendedor: string; total: number }>(oppsPorVendedorSql, oParams)
+    const vendasPorVendedor = await runQuery<{ vendedor: string; vendas: number }>(vendasPorVendedorSql, oParams)
+    const convVendMap = new Map<string, { total: number; vendas: number }>()
+    for (const o of oppsPorVendedor) convVendMap.set(o.vendedor, { total: o.total, vendas: 0 })
+    for (const v of vendasPorVendedor) {
+      const curr = convVendMap.get(v.vendedor) || { total: 0, vendas: 0 }
+      curr.vendas = v.vendas
+      convVendMap.set(v.vendedor, curr)
+    }
+    const conversaoVendedor = Array.from(convVendMap, ([label, kv]) => ({ label, value: kv.total > 0 ? (kv.vendas / kv.total) * 100 : 0 }))
+      .sort((a,b)=> b.value - a.value)
+      .slice(0, limit)
+
+    // 6) Motivos de perda (contagem)
+    const motivosPerdaSql = `SELECT COALESCE(mp.nome, '—') AS label, COUNT(*)::int AS value
+                             FROM crm.oportunidades o
+                             LEFT JOIN crm.motivos_perda mp ON mp.id = o.motivo_perda_id
+                             LEFT JOIN crm.fases_pipeline fp ON fp.id = o.fase_pipeline_id
+                             LEFT JOIN crm.leads l ON l.id = o.lead_id
+                             LEFT JOIN comercial.vendedores v ON v.id = o.vendedor_id
+                             LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id
+                             LEFT JOIN entidades.clientes cli ON cli.id = o.cliente_id
+                             ${oWhere}
+                             GROUP BY 1
+                             ORDER BY value DESC
+                             LIMIT $${oParams.length + 1}::int`;
+    const motivosPerda = await runQuery<ChartItem>(motivosPerdaSql, [...oParams, limit])
+
+    // 7) Atividades por vendedor
+    const atividadesVendSql = `SELECT COALESCE(f.nome, '—') AS label, COUNT(*)::int AS value
+                               FROM crm.atividades a
+                               LEFT JOIN comercial.vendedores v ON v.id = a.responsavel_id
+                               LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id
+                               ${aWhere}
+                               GROUP BY 1
+                               ORDER BY value DESC
+                               LIMIT $${aParams.length + 1}::int`;
+    const atividadesVendedor = await runQuery<ChartItem>(atividadesVendSql, [...aParams, limit])
+
+    // 8) Fontes de leads
+    const fontesLeadsSql = `SELECT COALESCE(ol.nome, '—') AS label, COUNT(*)::int AS value
+                            FROM crm.leads l
+                            LEFT JOIN crm.origens_lead ol ON ol.id = l.origem_id
+                            LEFT JOIN comercial.vendedores v ON v.id = l.responsavel_id
+                            LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id
+                            ${lWhere}
+                            GROUP BY 1
+                            ORDER BY value DESC
+                            LIMIT $${lParams.length + 1}::int`;
+    const fontesLeads = await runQuery<ChartItem>(fontesLeadsSql, [...lParams, limit])
+
+    const charts = {
+      funil_fase: funil.map(({ label, value }) => ({ label, value })),
+      pipeline_vendedor: pipelineVendedor,
+      forecast_mensal: forecastMensal, // [{ key, value }]
+      conversao_canal: conversaoCanal, // percent values
+      conversao_vendedor: conversaoVendedor, // percent values
+      motivos_perda: motivosPerda,
+      atividades_vendedor: atividadesVendedor,
+      fontes_leads: fontesLeads,
+    }
+
     return Response.json(
       {
         success: true,
@@ -105,6 +283,7 @@ export async function GET(req: NextRequest) {
           totalLeads,
           taxaConversao,
         },
+        charts,
       },
       { headers: { 'Cache-Control': 'no-store' } }
     )
