@@ -102,23 +102,15 @@ import AnalisTerritorioResult from '../tools/vendas-analytics/AnalisTerritorioRe
 
 type AnalisTerritorioData = {
   summary: Array<{
-    territorio: string;
+    territorio_nome: string;
+    faturamento_total: number;
     total_pedidos: number;
-    receita_total: number;
+    total_itens: number;
     ticket_medio: number;
-    total_clientes: number;
-    total_vendedores: number;
+    participacao_faturamento: number;
   }>;
-  topVendedores: Array<{
-    vendedor_nome: string;
-    total_pedidos: number;
-    receita_total: number;
-  }>;
-  topProdutos: Array<{
-    produto_nome: string;
-    quantidade_vendida: number;
-    receita_total: number;
-  }>;
+  topVendedores: unknown[];
+  topProdutos: unknown[];
 };
 import ClientesVendasResult from '../tools/vendas-b2b/ClientesVendasResult';
 import TerritoriosVendasResult from '../tools/vendas-b2b/TerritoriosVendasResult';
