@@ -11,8 +11,8 @@ export const analiseTerritorio = tool({
   }),
   execute: async ({ territorio_nome, data_de, data_ate }) => {
     try {
-      const params: any[] = [];
-      let whereConditions: string[] = [];
+      const params: (string | number)[] = [];
+      const whereConditions: string[] = [];
       let paramCounter = 1;
 
       // Build WHERE clause
@@ -103,11 +103,12 @@ export const analiseTerritorio = tool({
         sql_query: summaryQuery,
         sql_params: JSON.stringify(params),
       };
-    } catch (error: any) {
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       return {
         success: false,
-        message: `Erro ao analisar território: ${error.message}`,
-        error: error.message,
+        message: `Erro ao analisar território: ${errorMessage}`,
+        error: errorMessage,
       };
     }
   },
