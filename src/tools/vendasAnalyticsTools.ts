@@ -9,7 +9,7 @@ export const analiseTerritorio = tool({
     data_de: z.string().optional().describe('Data inicial no formato YYYY-MM-DD'),
     data_ate: z.string().optional().describe('Data final no formato YYYY-MM-DD'),
   }),
-  execute: async ({ territorio_nome, data_de, data_ate }) => {
+  execute: async ({ territorio_nome, data_de, data_ate }: { territorio_nome?: string; data_de?: string; data_ate?: string }) => {
     try {
       const params: (string | number)[] = [];
       const whereConditions: string[] = [];
