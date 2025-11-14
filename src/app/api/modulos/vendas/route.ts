@@ -71,7 +71,19 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
     criado_em: 'pr.criado_em',
     atualizado_em: 'pr.atualizado_em',
   },
-  regras_desconto: {},
+  regras_desconto: {
+    regra: 'rd.id',
+    nome_regra: 'rd.nome',
+    tipo_regra: 'rd.tipo',
+    quantidade_minima: 'rd.quantidade_minima',
+    valor_minimo: 'rd.valor_minimo',
+    tipo_desconto: 'rd.tipo_desconto',
+    valor_desconto: 'rd.valor_desconto',
+    ativo: 'rd.ativo',
+    referencia: 'cv.nome', // ordering by joined coalesce is complex; fallback to cv.nome
+    criado_em: 'rd.criado_em',
+    atualizado_em: 'rd.atualizado_em',
+  },
 }
 
 export async function GET(req: NextRequest) {
@@ -206,8 +218,23 @@ export async function GET(req: NextRequest) {
         LEFT JOIN produtos.produto p ON p.id = pp.produto_id`
       orderClause = orderBy ? `ORDER BY ${orderBy} ${orderDir}, p.nome ASC` : 'ORDER BY pr.id ASC, p.nome ASC'
     } else if (view === 'regras_desconto') {
-      selectSql = `SELECT NULL::text AS regra, NULL::text AS descricao, NULL::numeric AS percentual, NULL::text AS aplica_em, NULL::boolean AS ativo`
-      baseSql = `FROM (SELECT 1) x WHERE false`
+      selectSql = `SELECT
+        rd.id AS regra,
+        rd.nome AS nome_regra,
+        rd.tipo AS tipo_regra,
+        rd.quantidade_minima,
+        rd.valor_minimo,
+        rd.tipo_desconto,
+        rd.valor_desconto,
+        rd.ativo,
+        COALESCE(cv.nome, fp.nome, cat.nome) AS referencia,
+        rd.criado_em,
+        rd.atualizado_em`
+      baseSql = `FROM vendas.regras_desconto rd
+        LEFT JOIN vendas.canais_venda cv ON rd.tipo = 'canal' AND cv.id = rd.referencia_id
+        LEFT JOIN financeiro.metodos_pagamento fp ON rd.tipo = 'pagamento' AND fp.id = rd.referencia_id
+        LEFT JOIN produtos.categorias cat ON rd.tipo = 'categoria' AND cat.id = rd.referencia_id`
+      orderClause = orderBy ? `ORDER BY ${orderBy} ${orderDir}` : 'ORDER BY rd.id ASC'
     } else {
       return Response.json({ success: false, message: `View inválida: ${view}` }, { status: 400 })
     }
@@ -416,6 +443,8 @@ export async function GET(req: NextRequest) {
       ? `SELECT COUNT(DISTINCT tp.id)::int AS total FROM vendas.tabelas_preco tp`
       : view === 'promocoes'
       ? `SELECT COUNT(DISTINCT pr.id)::int AS total FROM vendas.promocoes pr`
+      : view === 'regras_desconto'
+      ? `SELECT COUNT(DISTINCT rd.id)::int AS total FROM vendas.regras_desconto rd`
       : `SELECT COUNT(*)::int AS total ${baseSql}`
     const totalRows = await runQuery<{ total: number }>(totalSql)
     const total = totalRows[0]?.total ?? 0

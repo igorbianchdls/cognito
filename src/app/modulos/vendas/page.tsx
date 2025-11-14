@@ -318,11 +318,17 @@ export default function ModulosVendasPage() {
         ]
       case 'regras_desconto':
         return [
-          { accessorKey: 'regra', header: 'Regra' },
-          { accessorKey: 'descricao', header: 'Descrição' },
-          { accessorKey: 'percentual', header: 'Percentual (%)' },
-          { accessorKey: 'aplica_em', header: 'Aplica em' },
+          { accessorKey: 'regra', header: 'ID' },
+          { accessorKey: 'nome_regra', header: 'Regra' },
+          { accessorKey: 'tipo_regra', header: 'Tipo' },
+          { accessorKey: 'quantidade_minima', header: 'Qtd. Mínima' },
+          { accessorKey: 'valor_minimo', header: 'Valor Mínimo', cell: ({ getValue }) => formatBRL(getValue()) },
+          { accessorKey: 'tipo_desconto', header: 'Tipo Desc.' },
+          { accessorKey: 'valor_desconto', header: 'Valor Desconto', cell: ({ getValue }) => formatBRL(getValue()) },
+          { accessorKey: 'referencia', header: 'Referência' },
           { accessorKey: 'ativo', header: 'Ativo' },
+          { accessorKey: 'criado_em', header: 'Criado Em', cell: ({ getValue }) => formatDate(getValue()) },
+          { accessorKey: 'atualizado_em', header: 'Atualizado Em', cell: ({ getValue }) => formatDate(getValue()) },
         ]
       default:
         return []
