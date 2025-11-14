@@ -136,6 +136,9 @@ export async function GET(req: NextRequest) {
         pi.desconto AS desconto_item,
         pi.subtotal AS subtotal_item,
         pi.id AS item_id,
+        pc.custo AS custo_unitario,
+        pc.metodo_custo,
+        (pi.quantidade * COALESCE(pc.custo, 0))::float AS custo_total_item,
         p.criado_em,
         p.atualizado_em`
       baseSql = `FROM vendas.pedidos p
@@ -149,7 +152,14 @@ export async function GET(req: NextRequest) {
         LEFT JOIN empresa.centros_custo cc2 ON cc2.id = p.centro_custo_id
         LEFT JOIN vendas.cupons cup ON cup.id = p.cupom_id
         LEFT JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
-        LEFT JOIN produtos.produto pr ON pr.id = pi.produto_id`
+        LEFT JOIN produtos.produto pr ON pr.id = pi.produto_id
+        LEFT JOIN LATERAL (
+          SELECT custo, metodo_custo
+          FROM produtos.produto_custos
+          WHERE produto_id = pi.produto_id
+          ORDER BY data_referencia DESC
+          LIMIT 1
+        ) pc ON true`
       orderClause = orderBy ? `ORDER BY ${orderBy} ${orderDir}, pi.id ASC` : 'ORDER BY p.id ASC, pi.id ASC'
     } else if (view === 'devolucoes') {
       selectSql = `SELECT
@@ -281,6 +291,8 @@ export async function GET(req: NextRequest) {
         pedido_subtotal: unknown
         desconto_total: unknown
         valor_total: unknown
+        custo_total_pedido: number
+        margem_bruta_pedido: number
         criado_em: unknown
         atualizado_em: unknown
         itens: Array<{
@@ -289,6 +301,8 @@ export async function GET(req: NextRequest) {
           preco_unitario: unknown
           desconto_item: unknown
           subtotal_item: unknown
+          custo_unitario: unknown
+          custo_total_item: unknown
         }>
       }
       const pedidosMap = new Map<number, PedidoAgregado>()
@@ -309,6 +323,8 @@ export async function GET(req: NextRequest) {
             pedido_subtotal: row.pedido_subtotal,
             desconto_total: row.desconto_total,
             valor_total: row.valor_total,
+            custo_total_pedido: 0,
+            margem_bruta_pedido: 0,
             criado_em: row.criado_em,
             atualizado_em: row.atualizado_em,
             itens: []
@@ -317,13 +333,27 @@ export async function GET(req: NextRequest) {
 
         // Adicionar item se existir
         if (row.item_id) {
+          const custoTotalItem = Number(row.custo_total_item || 0)
           pedidosMap.get(pedidoId)!.itens.push({
             produto: row.produto,
             quantidade: row.quantidade,
             preco_unitario: row.preco_unitario,
             desconto_item: row.desconto_item,
             subtotal_item: row.subtotal_item,
+            custo_unitario: row.custo_unitario,
+            custo_total_item: row.custo_total_item,
           })
+          // Acumular custo total do pedido
+          pedidosMap.get(pedidoId)!.custo_total_pedido += custoTotalItem
+        }
+      }
+
+      // Calcular margem bruta para cada pedido
+      for (const pedido of pedidosMap.values()) {
+        const valorTotal = Number(pedido.valor_total || 0)
+        const custoTotal = pedido.custo_total_pedido
+        if (valorTotal > 0) {
+          pedido.margem_bruta_pedido = ((valorTotal - custoTotal) / valorTotal) * 100
         }
       }
 

@@ -74,9 +74,23 @@ export async function GET(req: NextRequest) {
     const ticketMedio = pedidosNum > 0 ? vendasNum / pedidosNum : 0
     const percentMeta = metaNum > 0 ? (vendasNum / metaNum) * 100 : 0
 
-    // COGS/Margem: placeholders (0) até termos custo real
-    const cogs = 0
-    const margemBruta = vendasNum > 0 ? ((vendasNum - cogs) / vendasNum) * 100 : 0
+    // COGS (Cost of Goods Sold) - Custo real dos produtos vendidos
+    const cogsSql = `SELECT COALESCE(SUM(pi.quantidade * pc.custo), 0)::float AS cogs
+                     FROM vendas.pedidos p
+                     JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+                     LEFT JOIN LATERAL (
+                       SELECT custo
+                       FROM produtos.produto_custos
+                       WHERE produto_id = pi.produto_id
+                       ORDER BY data_referencia DESC
+                       LIMIT 1
+                     ) pc ON true
+                     ${pWhere}`
+    let cogsRes: { cogs: number }[] = []
+    try { cogsRes = await runQuery<{ cogs: number }>(cogsSql, pParams) } catch (e) { console.error('🛒 VENDAS dashboard cogsSql error:', e); cogsRes = [{ cogs: 0 }] }
+    const [{ cogs }] = cogsRes
+    const cogsNum = Number(cogs || 0)
+    const margemBruta = vendasNum > 0 ? ((vendasNum - cogsNum) / vendasNum) * 100 : 0
 
     // Charts
     type ChartItem = { label: string; value: number }
@@ -353,7 +367,7 @@ export async function GET(req: NextRequest) {
           meta: metaNum,
           ticketMedio,
           percentMeta,
-          cogs,
+          cogs: cogsNum,
           margemBruta,
         },
         charts: {

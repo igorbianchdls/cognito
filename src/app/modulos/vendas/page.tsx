@@ -22,6 +22,8 @@ type PedidoItem = {
   preco_unitario: number
   desconto_item: number
   subtotal_item: number
+  custo_unitario: number
+  custo_total_item: number
 }
 
 type PedidoRow = Row & {
@@ -141,6 +143,8 @@ export default function ModulosVendasPage() {
               <th className="text-right py-2 px-3">Preço Unitário</th>
               <th className="text-right py-2 px-3">Desconto</th>
               <th className="text-right py-2 px-3">Subtotal</th>
+              <th className="text-right py-2 px-3">Custo Unit.</th>
+              <th className="text-right py-2 px-3">Custo Total</th>
             </tr>
           </thead>
           <tbody>
@@ -151,6 +155,8 @@ export default function ModulosVendasPage() {
                 <td className="text-right py-2 px-3">{formatBRL(item.preco_unitario)}</td>
                 <td className="text-right py-2 px-3">{formatBRL(item.desconto_item)}</td>
                 <td className="text-right py-2 px-3">{formatBRL(item.subtotal_item)}</td>
+                <td className="text-right py-2 px-3">{formatBRL(item.custo_unitario)}</td>
+                <td className="text-right py-2 px-3">{formatBRL(item.custo_total_item)}</td>
               </tr>
             ))}
           </tbody>
@@ -262,6 +268,18 @@ export default function ModulosVendasPage() {
           { accessorKey: 'pedido_subtotal', header: 'Subtotal', cell: ({ getValue }) => formatBRL(getValue()) },
           { accessorKey: 'desconto_total', header: 'Desconto', cell: ({ getValue }) => formatBRL(getValue()) },
           { accessorKey: 'valor_total', header: 'Total', cell: ({ getValue }) => formatBRL(getValue()) },
+          { accessorKey: 'custo_total_pedido', header: 'Custo Total', cell: ({ getValue }) => formatBRL(getValue()) },
+          {
+            accessorKey: 'margem_bruta_pedido',
+            header: 'Margem %',
+            cell: ({ getValue }) => {
+              const value = getValue() as number
+              if (value == null || isNaN(value)) return '—'
+              const formatted = value.toFixed(1) + '%'
+              const color = value >= 30 ? 'text-green-600' : value >= 15 ? 'text-yellow-600' : 'text-red-600'
+              return <span className={color}>{formatted}</span>
+            }
+          },
           { accessorKey: 'criado_em', header: 'Criado Em', cell: ({ getValue }) => formatDate(getValue()) },
           { accessorKey: 'atualizado_em', header: 'Atualizado Em', cell: ({ getValue }) => formatDate(getValue()) },
         ]
