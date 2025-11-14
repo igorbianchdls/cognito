@@ -138,6 +138,18 @@ export function NavModulos({ groupLabelStyle, itemTextStyle }: { groupLabelStyle
             </SidebarMenuItem>
           </Collapsible>
 
+          {/* Fiscal */}
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              tooltip="Fiscal"
+              onClick={() => router.push("/modulos/fiscal")}
+              isActive={pathname.startsWith("/modulos/fiscal")}
+            >
+              <FileText />
+              <span style={itemTextStyle}>Fiscal</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+
           {/* Demais itens */}
           <SidebarMenuItem>
             <SidebarMenuButton
