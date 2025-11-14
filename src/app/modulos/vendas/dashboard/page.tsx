@@ -63,7 +63,8 @@ export default function VendasDashboardPage() {
   const [chartVendasCidade, setChartVendasCidade] = useState<{ cidade: string; total: number }[]>([])
   const [chartDevolucaoCanal, setChartDevolucaoCanal] = useState<{ label: string; value: number }[]>([])
   const [chartDevolucaoCliente, setChartDevolucaoCliente] = useState<{ label: string; value: number }[]>([])
-  const [chartEstados, setChartEstados] = useState<ChartItem[]>([])
+  // const [chartEstados, setChartEstados] = useState<ChartItem[]>([])
+  const [chartCentroLucro, setChartCentroLucro] = useState<ChartItem[]>([])
   const [chartMetaTerritorio, setChartMetaTerritorio] = useState<Array<{ label: string; meta: number; faturamento: number }>>([])
   const [chartCupons, setChartCupons] = useState<ChartItem[]>([])
   const [loading, setLoading] = useState(false)
@@ -126,7 +127,8 @@ export default function VendasDashboardPage() {
           setChartVendasCidade(Array.isArray(charts?.cidades) ? charts.cidades as { cidade: string; total: number }[] : [])
           setChartDevolucaoCanal(Array.isArray(charts?.devolucao_canal) ? charts.devolucao_canal as { label: string; value: number }[] : [])
           setChartDevolucaoCliente(Array.isArray(charts?.devolucao_cliente) ? charts.devolucao_cliente as { label: string; value: number }[] : [])
-          setChartEstados(Array.isArray(charts?.estados) ? charts.estados as ChartItem[] : [])
+          // setChartEstados(Array.isArray(charts?.estados) ? charts.estados as ChartItem[] : [])
+          setChartCentroLucro(Array.isArray(charts?.centros_lucro) ? charts.centros_lucro as ChartItem[] : [])
           setChartMetaTerritorio(Array.isArray(charts?.meta_territorio) ? charts.meta_territorio as Array<{ label: string; meta: number; faturamento: number }> : [])
           setChartCupons(Array.isArray(charts?.cupons) ? charts.cupons as ChartItem[] : [])
         } else {
@@ -400,7 +402,7 @@ export default function VendasDashboardPage() {
             />
           </div>
 
-          {/* Row 3: Top Clientes, Vendas por Cidade, Vendas por Estado */}
+          {/* Row 3: Top Clientes, Vendas por Cidade, Vendas por Centro de Lucro */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
             <BarChartHorizontalRecharts
               items={topClientesItems}
@@ -417,9 +419,9 @@ export default function VendasDashboardPage() {
               height={240}
             />
             <BarChartHorizontalRecharts
-              items={chartEstados}
-              title="Vendas por Estado"
-              icon={<MapPin className="w-5 h-5" />}
+              items={chartCentroLucro}
+              title="Vendas por Centro de Lucro"
+              icon={<Tag className="w-5 h-5" />}
               color="#22c55e"
               height={240}
             />
