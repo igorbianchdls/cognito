@@ -330,10 +330,11 @@ export async function GET(req: NextRequest) {
     const capitalize = (s: string) => s.length ? s.charAt(0).toUpperCase() + s.slice(1) : s
 
     const stagesB2B = ['contato inicial', 'diagnóstico', 'proposta enviada', 'negociação', 'fechado']
-    const convB2B = computeConversion(stagesB2B, 'b2b')
+    // Não filtrar por nome de pipeline para evitar zeros quando o nome diverge
+    const convB2B = computeConversion(stagesB2B, null)
 
     const stagesInside = ['qualificação', 'apresentação', 'proposta', 'fechamento']
-    const convInside = computeConversion(stagesInside, 'inside sales')
+    const convInside = computeConversion(stagesInside, null)
 
     charts.conversao_etapa = convB2B
     charts.conversao_etapa_inside = convInside
