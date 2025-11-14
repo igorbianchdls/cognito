@@ -373,18 +373,21 @@ export default function VendasDashboardPage() {
               title="Faturamento por Vendedor"
               icon={<Users className="w-5 h-5" />}
               color="#3b82f6"
+              height={360}
             />
             <BarChartHorizontalRecharts
               items={top5Produtos}
               title="Top 5 Produtos"
               icon={<Package className="w-5 h-5" />}
               color="#8b5cf6"
+              height={360}
             />
             <BarChartHorizontalRecharts
               items={vendasPorCanalItems}
               title="Vendas por Canal"
               icon={<Tag className="w-5 h-5" />}
               color="#f59e0b"
+              height={360}
             />
           </div>
 
@@ -395,12 +398,14 @@ export default function VendasDashboardPage() {
               title="Vendas por Território"
               icon={<Globe className="w-5 h-5" />}
               color="#ec4899"
+              height={360}
             />
             <BarChartHorizontalRecharts
               items={vendasPorCategoria}
               title="Faturamento por Categoria"
               icon={<Tag className="w-5 h-5" />}
               color="#6366f1"
+              height={360}
             />
             <BarChartMultipleRecharts
               items={chartMetaTerritorio}
@@ -410,7 +415,7 @@ export default function VendasDashboardPage() {
                 { key: 'meta', label: 'Meta', color: '#60a5fa' },
                 { key: 'faturamento', label: 'Faturamento', color: '#10b981' },
               ]}
-              height={240}
+              height={360}
             />
           </div>
 
@@ -421,21 +426,21 @@ export default function VendasDashboardPage() {
               title="Top Clientes"
               icon={<Users className="w-5 h-5" />}
               color="#3b82f6"
-              height={240}
+              height={360}
             />
             <BarChartHorizontalRecharts
               items={vendasPorCidadeItems}
               title="Vendas por Cidade"
               icon={<MapPin className="w-5 h-5" />}
               color="#8b5cf6"
-              height={240}
+              height={360}
             />
             <BarChartHorizontalRecharts
               items={chartCentroLucro}
               title="Vendas por Centro de Lucro"
               icon={<Tag className="w-5 h-5" />}
               color="#22c55e"
-              height={240}
+              height={360}
             />
           </div>
 
@@ -446,21 +451,21 @@ export default function VendasDashboardPage() {
               title="Taxa de Devolução por Canal"
               icon={<Tag className="w-5 h-5" />}
               color="#ef4444"
-              height={240}
+              height={360}
             />
             <BarChartHorizontalPercent
               items={chartDevolucaoCliente}
               title="Taxa de Devolução por Cliente"
               icon={<Users className="w-5 h-5" />}
               color="#f97316"
-              height={240}
+              height={360}
             />
             <BarChartHorizontalRecharts
               items={chartCupons}
               title="Vendas por Cupom"
               icon={<Tag className="w-5 h-5" />}
               color="#06b6d4"
-              height={240}
+              height={360}
             />
           </div>
 
@@ -471,21 +476,21 @@ export default function VendasDashboardPage() {
               title="Vendas por Campanha de Vendas"
               icon={<Globe className="w-5 h-5" />}
               color="#a855f7"
-              height={240}
+              height={360}
             />
             <BarChartHorizontalRecharts
               items={chartCanaisDistribuicao}
               title="Faturamento por Canal de Distribuição"
               icon={<Tag className="w-5 h-5" />}
               color="#0ea5e9"
-              height={240}
+              height={360}
             />
             <BarChartHorizontalRecharts
               items={chartMarcas}
               title="Faturamento por Marca"
               icon={<Package className="w-5 h-5" />}
               color="#f59e0b"
-              height={240}
+              height={360}
             />
           </div>
 
@@ -496,21 +501,21 @@ export default function VendasDashboardPage() {
               title="Faturamento por Filial"
               icon={<Building2 className="w-5 h-5" />}
               color="#14b8a6"
-              height={240}
+              height={360}
             />
             <BarChartHorizontalRecharts
               items={chartUnidadesNegocio}
               title="Vendas por Business Unit"
               icon={<Briefcase className="w-5 h-5" />}
               color="#8b5cf6"
-              height={240}
+              height={360}
             />
             <BarChartHorizontalRecharts
               items={chartSalesOffices}
               title="Faturamento por Sales Office"
               icon={<Store className="w-5 h-5" />}
               color="#ec4899"
-              height={240}
+              height={360}
             />
           </div>
 
