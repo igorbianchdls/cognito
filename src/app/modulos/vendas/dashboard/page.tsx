@@ -11,7 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Calendar as CalendarIcon, Users, UsersRound, Package, MapPin, Globe, Tag } from 'lucide-react'
+import { Calendar as CalendarIcon, Users, Package, MapPin, Globe, Tag } from 'lucide-react'
 import type { DateRange } from 'react-day-picker'
 import { $financeiroDashboardUI, $financeiroDashboardFilters, financeiroDashboardActions } from '@/stores/modulos/financeiroDashboardStore'
 
@@ -152,8 +152,6 @@ export default function VendasDashboardPage() {
       : []
   }, [chartCanais])
   // vendasPorVendedor não utilizado diretamente (Top Vendedores vem do endpoint)
-  const topClientes = chartTopClientes
-  const vendasPorCidade = chartVendasCidade
   const pedidosRecentes = useMemo(() => {
     return [...rows]
       .sort((a,b)=> new Date(b.data_pedido || 0).getTime() - new Date(a.data_pedido || 0).getTime())

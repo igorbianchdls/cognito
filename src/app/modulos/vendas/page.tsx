@@ -39,6 +39,15 @@ type DevolucaoRow = Row & {
   itens?: DevolucaoItem[]
 }
 
+type TabelaPrecoItem = {
+  produto: string
+  preco_produto: number | null
+}
+
+type TabelaPrecoRow = Row & {
+  itens?: TabelaPrecoItem[]
+}
+
 export default function ModulosVendasPage() {
   const titulo = useStore($titulo)
   const tabs = useStore($tabs)
@@ -74,6 +83,9 @@ export default function ModulosVendasPage() {
         { value: 'devolucoes', label: 'Devoluções' },
         { value: 'cupons', label: 'Cupons' },
         { value: 'canais', label: 'Canais de Venda' },
+        { value: 'tabelas_preco', label: 'Tabelas de Preço' },
+        { value: 'promocoes', label: 'Promoções' },
+        { value: 'regras_desconto', label: 'Regras de Desconto' },
       ],
       selected: 'pedidos',
     })
@@ -171,6 +183,33 @@ export default function ModulosVendasPage() {
     )
   }
 
+  const renderTabelaPrecoItems = (row: Row) => {
+    const tpRow = row as TabelaPrecoRow
+    const itens = tpRow.itens || []
+    if (itens.length === 0) return null
+    return (
+      <div className="p-4 bg-gray-50">
+        <h4 className="text-sm font-semibold mb-2">Itens da Tabela</h4>
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b">
+              <th className="text-left py-2 px-3">Produto</th>
+              <th className="text-right py-2 px-3">Preço</th>
+            </tr>
+          </thead>
+          <tbody>
+            {itens.map((item, idx) => (
+              <tr key={idx} className="border-b last:border-0">
+                <td className="py-2 px-3">{item.produto}</td>
+                <td className="text-right py-2 px-3">{item.preco_produto != null ? formatBRL(item.preco_produto) : '-'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )
+  }
+
   const columns: ColumnDef<Row>[] = useMemo(() => {
     switch (tabs.selected) {
       case 'pedidos':
@@ -221,6 +260,31 @@ export default function ModulosVendasPage() {
           { accessorKey: 'ativo', header: 'Ativo' },
           { accessorKey: 'criado_em', header: 'Criado Em', cell: ({ getValue }) => formatDate(getValue()) },
           { accessorKey: 'atualizado_em', header: 'Atualizado Em', cell: ({ getValue }) => formatDate(getValue()) },
+        ]
+      case 'tabelas_preco':
+        return [
+          { accessorKey: 'tabela_preco', header: 'ID' },
+          { accessorKey: 'nome_tabela', header: 'Tabela de Preço' },
+          { accessorKey: 'descricao', header: 'Descrição' },
+          { accessorKey: 'ativo', header: 'Ativo' },
+          { accessorKey: 'criado_em', header: 'Criado Em', cell: ({ getValue }) => formatDate(getValue()) },
+          { accessorKey: 'atualizado_em', header: 'Atualizado Em', cell: ({ getValue }) => formatDate(getValue()) },
+        ]
+      case 'promocoes':
+        return [
+          { accessorKey: 'promocao', header: 'Promoção' },
+          { accessorKey: 'tipo', header: 'Tipo' },
+          { accessorKey: 'inicio', header: 'Início', cell: ({ getValue }) => formatDate(getValue()) },
+          { accessorKey: 'fim', header: 'Fim', cell: ({ getValue }) => formatDate(getValue()) },
+          { accessorKey: 'ativo', header: 'Ativo' },
+        ]
+      case 'regras_desconto':
+        return [
+          { accessorKey: 'regra', header: 'Regra' },
+          { accessorKey: 'descricao', header: 'Descrição' },
+          { accessorKey: 'percentual', header: 'Percentual (%)' },
+          { accessorKey: 'aplica_em', header: 'Aplica em' },
+          { accessorKey: 'ativo', header: 'Ativo' },
         ]
       default:
         return []
@@ -340,12 +404,14 @@ export default function ModulosVendasPage() {
                   key={tabs.selected}
                   columns={columns}
                   data={data}
-                  enableExpand={tabs.selected === 'pedidos' || tabs.selected === 'devolucoes'}
+                  enableExpand={tabs.selected === 'pedidos' || tabs.selected === 'devolucoes' || tabs.selected === 'tabelas_preco'}
                   renderDetail={
                     tabs.selected === 'pedidos'
                       ? renderPedidoItems
                       : tabs.selected === 'devolucoes'
                       ? renderDevolucaoItems
+                      : tabs.selected === 'tabelas_preco'
+                      ? renderTabelaPrecoItems
                       : undefined
                   }
                   enableSearch={tabelaUI.enableSearch}

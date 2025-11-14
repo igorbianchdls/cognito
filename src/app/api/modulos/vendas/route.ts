@@ -51,6 +51,16 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
     criado_em: 'cv.criado_em',
     atualizado_em: 'cv.atualizado_em',
   },
+  tabelas_preco: {
+    tabela_preco: 'tp.id',
+    nome_tabela: 'tp.nome',
+    descricao: 'tp.descricao',
+    ativo: 'tp.ativo',
+    criado_em: 'tp.criado_em',
+    atualizado_em: 'tp.atualizado_em',
+  },
+  promocoes: {},
+  regras_desconto: {},
 }
 
 export async function GET(req: NextRequest) {
@@ -151,6 +161,27 @@ export async function GET(req: NextRequest) {
         cv.atualizado_em`
       baseSql = `FROM vendas.canais_venda cv`
       orderClause = orderBy ? `ORDER BY ${orderBy} ${orderDir}` : 'ORDER BY cv.nome ASC'
+    } else if (view === 'tabelas_preco') {
+      selectSql = `SELECT
+        tp.id AS tabela_preco,
+        tp.nome AS nome_tabela,
+        tp.descricao,
+        tp.ativo,
+        tp.criado_em,
+        tp.atualizado_em,
+        p.nome AS produto,
+        tpi.preco AS preco_produto,
+        tpi.id AS item_id`
+      baseSql = `FROM vendas.tabelas_preco tp
+        LEFT JOIN vendas.tabelas_preco_itens tpi ON tpi.tabela_preco_id = tp.id
+        LEFT JOIN produtos.produto p ON p.id = tpi.produto_id`
+      orderClause = orderBy ? `ORDER BY ${orderBy} ${orderDir}, p.nome ASC` : 'ORDER BY tp.id ASC, p.nome ASC'
+    } else if (view === 'promocoes') {
+      selectSql = `SELECT NULL::text AS promocao, NULL::text AS tipo, NULL::date AS inicio, NULL::date AS fim, NULL::boolean AS ativo`
+      baseSql = `FROM (SELECT 1) x WHERE false`
+    } else if (view === 'regras_desconto') {
+      selectSql = `SELECT NULL::text AS regra, NULL::text AS descricao, NULL::numeric AS percentual, NULL::text AS aplica_em, NULL::boolean AS ativo`
+      baseSql = `FROM (SELECT 1) x WHERE false`
     } else {
       return Response.json({ success: false, message: `View inválida: ${view}` }, { status: 400 })
     }
@@ -272,11 +303,51 @@ export async function GET(req: NextRequest) {
       rows = Array.from(devolucoesMap.values())
     }
 
+    // Para tabelas_preco, agrupar itens (produtos)
+    if (view === 'tabelas_preco') {
+      type TabelaAgregada = {
+        tabela_preco: unknown
+        nome_tabela: unknown
+        descricao: unknown
+        ativo: unknown
+        criado_em: unknown
+        atualizado_em: unknown
+        itens: Array<{
+          produto: unknown
+          preco_produto: unknown
+        }>
+      }
+      const tabelasMap = new Map<number, TabelaAgregada>()
+      for (const row of rows) {
+        const tpId = Number(row.tabela_preco)
+        if (!tabelasMap.has(tpId)) {
+          tabelasMap.set(tpId, {
+            tabela_preco: row.tabela_preco,
+            nome_tabela: row.nome_tabela,
+            descricao: row.descricao,
+            ativo: row.ativo,
+            criado_em: row.criado_em,
+            atualizado_em: row.atualizado_em,
+            itens: []
+          })
+        }
+        if (row.item_id) {
+          tabelasMap.get(tpId)!.itens.push({
+            produto: row.produto,
+            preco_produto: row.preco_produto,
+          })
+        }
+      }
+      rows = Array.from(tabelasMap.values())
+    }
+
     // Total - para pedidos e devolucoes, contar apenas registros distintos
     const totalSql = view === 'pedidos'
       ? `SELECT COUNT(DISTINCT p.id)::int AS total FROM vendas.pedidos p`
       : view === 'devolucoes'
       ? `SELECT COUNT(DISTINCT d.id)::int AS total FROM vendas.devolucoes d`
+      : view === 'tabelas_preco'
+      ? `SELECT COUNT(DISTINCT tp.id)::int AS total FROM vendas.tabelas_preco tp`
       : `SELECT COUNT(*)::int AS total ${baseSql}`
     const totalRows = await runQuery<{ total: number }>(totalSql)
     const total = totalRows[0]?.total ?? 0
