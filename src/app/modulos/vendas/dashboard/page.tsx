@@ -72,6 +72,7 @@ export default function VendasDashboardPage() {
   const [chartUnidadesNegocio, setChartUnidadesNegocio] = useState<ChartItem[]>([])
   const [chartSalesOffices, setChartSalesOffices] = useState<ChartItem[]>([])
   const [chartMetaTerritorio, setChartMetaTerritorio] = useState<Array<{ label: string; meta: number; faturamento: number }>>([])
+  const [chartMetaVendedor, setChartMetaVendedor] = useState<Array<{ label: string; meta: number; faturamento: number }>>([])
   const [chartCupons, setChartCupons] = useState<ChartItem[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -142,6 +143,7 @@ export default function VendasDashboardPage() {
           setChartUnidadesNegocio(Array.isArray(charts?.unidades_negocio) ? charts.unidades_negocio as ChartItem[] : [])
           setChartSalesOffices(Array.isArray(charts?.sales_offices) ? charts.sales_offices as ChartItem[] : [])
           setChartMetaTerritorio(Array.isArray(charts?.meta_territorio) ? charts.meta_territorio as Array<{ label: string; meta: number; faturamento: number }> : [])
+          setChartMetaVendedor(Array.isArray(charts?.meta_vendedor) ? charts.meta_vendedor as Array<{ label: string; meta: number; faturamento: number }> : [])
           setChartCupons(Array.isArray(charts?.cupons) ? charts.cupons as ChartItem[] : [])
         } else {
           setKpis({ meta: 0, vendas: 0, percentMeta: 0, ticket: 0, cogs: 0, margemBruta: 0 })
@@ -411,6 +413,20 @@ export default function VendasDashboardPage() {
               items={chartMetaTerritorio}
               title="Meta x Faturamento por Território"
               icon={<Globe className="w-5 h-5" />}
+              series={[
+                { key: 'meta', label: 'Meta', color: '#60a5fa' },
+                { key: 'faturamento', label: 'Faturamento', color: '#10b981' },
+              ]}
+              height={360}
+            />
+          </div>
+
+          {/* Row 2.5: Meta e Faturamento por Vendedor */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            <BarChartMultipleRecharts
+              items={chartMetaVendedor}
+              title="Meta x Faturamento por Vendedor"
+              icon={<Users className="w-5 h-5" />}
               series={[
                 { key: 'meta', label: 'Meta', color: '#60a5fa' },
                 { key: 'faturamento', label: 'Faturamento', color: '#10b981' },

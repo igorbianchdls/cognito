@@ -473,8 +473,8 @@ export default function ModulosVendasPage() {
               dateRangeWidth={toolbarUI.dateRangeWidth}
             />
           </div>
-          <div className="flex-1 min-h-0 overflow-auto" style={{ marginBottom: layout.mbTable }}>
-            <div className="border-y bg-background" style={{ borderColor: tabelaUI.borderColor }}>
+          <div className="flex-1 min-h-0 overflow-auto px-4 md:px-6" style={{ marginBottom: layout.mbTable }}>
+            <div className="rounded-lg border bg-white">
               {isLoading ? (
                 <div className="p-6 text-sm text-gray-500">Carregando dados…</div>
               ) : error ? (

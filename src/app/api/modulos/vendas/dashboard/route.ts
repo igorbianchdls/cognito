@@ -295,6 +295,34 @@ export async function GET(req: NextRequest) {
       faturamento: Number(fatMap.get(label) || 0),
     })).sort((a,b)=> (b.faturamento + b.meta) - (a.faturamento + a.meta)).slice(0, limit)
 
+    // Meta x Faturamento por Vendedor
+    const metaVendSql = `SELECT f.nome AS label, COALESCE(m.valor_meta,0)::float AS meta
+                         FROM comercial.metas_vendedores m
+                         LEFT JOIN comercial.vendedores v ON v.id = m.vendedor_id
+                         LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id
+                         ${mtWhere}
+                         GROUP BY f.nome, m.valor_meta`;
+    let metasPorVend: { label: string; meta: number }[] = []
+    try { metasPorVend = await runQuery<{ label: string; meta: number }>(metaVendSql, mtParams) } catch (e) { console.error('🛒 VENDAS dashboard metas por vendedor error:', e); metasPorVend = [] }
+
+    const fatVendSql = `SELECT f.nome AS label, COALESCE(SUM(pi.quantidade * pi.preco_unitario),0)::float AS faturamento
+                        FROM comercial.vendedores v
+                        LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id
+                        LEFT JOIN vendas.pedidos p ON p.vendedor_id = v.id
+                        LEFT JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+                        ${pWhere}
+                        GROUP BY f.nome`;
+    let fatPorVend: { label: string; faturamento: number }[] = []
+    try { fatPorVend = await runQuery<{ label: string; faturamento: number }>(fatVendSql, pParams) } catch (e) { console.error('🛒 VENDAS dashboard faturamento por vendedor error:', e); fatPorVend = [] }
+
+    const fatVendMap = new Map<string, number>(fatPorVend.map(r => [r.label || '—', Number(r.faturamento || 0)]))
+    const allVendLabels = Array.from(new Set([ ...metasPorVend.map(r => r.label || '—'), ...fatPorVend.map(r => r.label || '—') ]))
+    const metaVendedor = allVendLabels.map(label => ({
+      label,
+      meta: Number((metasPorVend.find(r => (r.label||'—') === label)?.meta) || 0),
+      faturamento: Number(fatVendMap.get(label) || 0),
+    })).sort((a,b)=> (b.faturamento + b.meta) - (a.faturamento + a.meta)).slice(0, limit)
+
     // Vendas por Cupom
     const cupomSql = `SELECT COALESCE(cup.codigo, '—') AS label, COALESCE(SUM(pi.subtotal),0)::float AS value
                       FROM vendas.pedidos p
@@ -406,6 +434,7 @@ export async function GET(req: NextRequest) {
           devolucao_canal: taxaDevolucaoCanal,
           devolucao_cliente: taxaDevolucaoCliente,
           meta_territorio: metaTerritorio,
+          meta_vendedor: metaVendedor,
           cupons,
         },
       },
