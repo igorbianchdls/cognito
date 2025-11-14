@@ -12,6 +12,7 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
     vendedor: 'f.nome',
     territorio: 't.nome',
     canal_venda: 'cv.nome',
+    cupom: 'cup.codigo',
     data_pedido: 'p.data_pedido',
     status: 'p.status',
     subtotal: 'p.subtotal',
@@ -81,6 +82,7 @@ export async function GET(req: NextRequest) {
         f.nome AS vendedor,
         t.nome AS territorio,
         cv.nome AS canal_venda,
+        cup.codigo AS cupom,
         p.data_pedido,
         p.status,
         p.subtotal AS pedido_subtotal,
@@ -100,6 +102,7 @@ export async function GET(req: NextRequest) {
         LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id
         LEFT JOIN comercial.territorios t ON t.id = p.territorio_id
         LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+        LEFT JOIN vendas.cupons cup ON cup.id = p.cupom_id
         LEFT JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
         LEFT JOIN produtos.produto pr ON pr.id = pi.produto_id`
       orderClause = orderBy ? `ORDER BY ${orderBy} ${orderDir}, pi.id ASC` : 'ORDER BY p.id ASC, pi.id ASC'

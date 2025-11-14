@@ -180,6 +180,7 @@ export default function ModulosVendasPage() {
           { accessorKey: 'vendedor', header: 'Vendedor' },
           { accessorKey: 'territorio', header: 'Território' },
           { accessorKey: 'canal_venda', header: 'Canal' },
+          { accessorKey: 'cupom', header: 'Cupom' },
           { accessorKey: 'data_pedido', header: 'Data Pedido', cell: ({ getValue }) => formatDate(getValue()) },
           { accessorKey: 'status', header: 'Status' },
           { accessorKey: 'pedido_subtotal', header: 'Subtotal', cell: ({ getValue }) => formatBRL(getValue()) },

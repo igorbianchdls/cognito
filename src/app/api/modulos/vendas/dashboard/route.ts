@@ -188,6 +188,17 @@ export async function GET(req: NextRequest) {
       faturamento: Number(fatMap.get(label) || 0),
     })).sort((a,b)=> (b.faturamento + b.meta) - (a.faturamento + a.meta)).slice(0, limit)
 
+    // Vendas por Cupom
+    const cupomSql = `SELECT COALESCE(cup.codigo, '—') AS label, COALESCE(SUM(p.valor_total),0)::float AS value
+                      FROM vendas.pedidos p
+                      LEFT JOIN vendas.cupons cup ON cup.id = p.cupom_id
+                      ${pWhere}
+                      GROUP BY 1
+                      ORDER BY 2 DESC
+                      LIMIT $${pParams.length + 1}::int`;
+    let cupons: ChartItem[] = []
+    try { cupons = await runQuery<ChartItem>(cupomSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard cupons error:', e); cupons = [] }
+
     // Vendas por Estado (c.estado)
     const estadoSql = `SELECT COALESCE(c.estado, '—') AS label, COALESCE(SUM(p.valor_total),0)::float AS value
                        FROM vendas.pedidos p
@@ -277,6 +288,7 @@ export async function GET(req: NextRequest) {
           devolucao_canal: taxaDevolucaoCanal,
           devolucao_cliente: taxaDevolucaoCliente,
           meta_territorio: metaTerritorio,
+          cupons,
         },
       },
       { headers: { 'Cache-Control': 'no-store' } }

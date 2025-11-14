@@ -65,6 +65,7 @@ export default function VendasDashboardPage() {
   const [chartDevolucaoCliente, setChartDevolucaoCliente] = useState<{ label: string; value: number }[]>([])
   const [chartEstados, setChartEstados] = useState<ChartItem[]>([])
   const [chartMetaTerritorio, setChartMetaTerritorio] = useState<Array<{ label: string; meta: number; faturamento: number }>>([])
+  const [chartCupons, setChartCupons] = useState<ChartItem[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -127,6 +128,7 @@ export default function VendasDashboardPage() {
           setChartDevolucaoCliente(Array.isArray(charts?.devolucao_cliente) ? charts.devolucao_cliente as { label: string; value: number }[] : [])
           setChartEstados(Array.isArray(charts?.estados) ? charts.estados as ChartItem[] : [])
           setChartMetaTerritorio(Array.isArray(charts?.meta_territorio) ? charts.meta_territorio as Array<{ label: string; meta: number; faturamento: number }> : [])
+          setChartCupons(Array.isArray(charts?.cupons) ? charts.cupons as ChartItem[] : [])
         } else {
           setKpis({ meta: 0, vendas: 0, percentMeta: 0, ticket: 0, cogs: 0, margemBruta: 0 })
         }
@@ -425,7 +427,7 @@ export default function VendasDashboardPage() {
             />
           </div>
 
-          {/* Row 4: Taxas de Devolução e Pedidos Recentes */}
+          {/* Row 4: Taxas de Devolução e Vendas por Cupom */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
             <BarChartHorizontalPercent
               items={chartDevolucaoCanal}
@@ -441,6 +443,17 @@ export default function VendasDashboardPage() {
               color="#f97316"
               height={240}
             />
+            <BarChartHorizontalRecharts
+              items={chartCupons}
+              title="Vendas por Cupom"
+              icon={<Tag className="w-5 h-5" />}
+              color="#06b6d4"
+              height={240}
+            />
+          </div>
+
+          {/* Row 5: Pedidos Recentes */}
+          <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
             <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
               <h3 className="text-lg font-semibold mb-4" style={styleChartTitle}>Pedidos Recentes</h3>
               {pedidosRecentes.length === 0 ? (
