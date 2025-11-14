@@ -102,12 +102,10 @@ import AnalisTerritorioResult from '../tools/vendas-analytics/AnalisTerritorioRe
 
 type AnalisTerritorioData = {
   summary: Array<{
-    territorio_nome: string;
+    nivel: number;
+    nome: string;
+    vendedor_nome: string | null;
     faturamento_total: number;
-    total_pedidos: number;
-    total_itens: number;
-    ticket_medio: number;
-    participacao_faturamento: number;
   }>;
   topVendedores: unknown[];
   topProdutos: unknown[];

@@ -3,7 +3,7 @@ import { tool } from 'ai'
 import { runQuery } from '@/lib/postgres'
 
 export const analiseTerritorio = tool({
-  description: 'Analisa território',
+  description: 'Analisa território com drill-down para vendedores',
   inputSchema: z.object({
     data_de: z.string().optional(),
     data_ate: z.string().optional(),
@@ -19,22 +19,28 @@ export const analiseTerritorio = tool({
       }
 
       const sql = `
-        SELECT
-          territorio_nome,
-          SUM(item_subtotal) AS faturamento_total,
-          COUNT(DISTINCT pedido_id) AS total_pedidos,
-          SUM(quantidade) AS total_itens,
-          CASE WHEN COUNT(DISTINCT pedido_id) > 0
-               THEN SUM(item_subtotal) / COUNT(DISTINCT pedido_id)
-               ELSE 0 END AS ticket_medio,
-          ROUND(
-            SUM(item_subtotal) * 100.0 / SUM(SUM(item_subtotal)) OVER(),
-            2
-          ) AS participacao_faturamento
-        FROM vendas.vw_pedidos_completo
-        ${whereClause}
-        GROUP BY territorio_nome
-        ORDER BY faturamento_total DESC
+        (
+          SELECT
+            1 AS nivel,
+            territorio_nome AS nome,
+            NULL AS vendedor_nome,
+            SUM(item_subtotal) AS faturamento_total
+          FROM vendas.vw_pedidos_completo
+          ${whereClause}
+          GROUP BY territorio_nome
+        )
+        UNION ALL
+        (
+          SELECT
+            2 AS nivel,
+            territorio_nome AS nome,
+            vendedor_nome,
+            SUM(item_subtotal) AS faturamento_total
+          FROM vendas.vw_pedidos_completo
+          ${whereClause}
+          GROUP BY territorio_nome, vendedor_nome
+        )
+        ORDER BY nome, nivel, faturamento_total DESC
       `
 
       const rows = await runQuery(sql, params)
