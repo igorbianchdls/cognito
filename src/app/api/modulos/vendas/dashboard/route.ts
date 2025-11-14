@@ -30,10 +30,11 @@ export async function GET(req: NextRequest) {
     const dWhere = dConds.length ? `WHERE ${dConds.join(' AND ')}` : ''
 
     // KPI: vendas, pedidos, descontos
-    const vendasSql = `SELECT COALESCE(SUM(p.valor_total),0)::float AS vendas,
+    const vendasSql = `SELECT COALESCE(SUM(pi.subtotal),0)::float AS vendas,
                               COUNT(DISTINCT p.id)::int AS pedidos,
-                              COALESCE(SUM(p.desconto_total),0)::float AS descontos
+                              COALESCE(SUM(pi.desconto),0)::float AS descontos
                        FROM vendas.pedidos p
+                       LEFT JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
                        ${pWhere}`
     const [{ vendas, pedidos, descontos }] = await runQuery<{ vendas: number; pedidos: number; descontos: number }>(vendasSql, pParams)
 
@@ -95,8 +96,9 @@ export async function GET(req: NextRequest) {
     // Charts
     type ChartItem = { label: string; value: number }
     // Vendedores
-    const vendSql = `SELECT COALESCE(f.nome_razao_social,'—') AS label, COALESCE(SUM(p.valor_total),0)::float AS value
+    const vendSql = `SELECT COALESCE(f.nome_razao_social,'—') AS label, COALESCE(SUM(pi.subtotal),0)::float AS value
                      FROM vendas.pedidos p
+                     LEFT JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
                      LEFT JOIN comercial.vendedores v ON v.id = p.vendedor_id
                      LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id
                      ${pWhere}
@@ -119,8 +121,9 @@ export async function GET(req: NextRequest) {
     try { produtos = await runQuery<ChartItem>(prodSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard produtos error:', e); produtos = [] }
 
     // Territórios
-    const terrSql = `SELECT COALESCE(t.nome,'—') AS label, COALESCE(SUM(p.valor_total),0)::float AS value
+    const terrSql = `SELECT COALESCE(t.nome,'—') AS label, COALESCE(SUM(pi.subtotal),0)::float AS value
                      FROM vendas.pedidos p
+                     LEFT JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
                      LEFT JOIN comercial.territorios t ON t.id = p.territorio_id
                      ${pWhere}
                      GROUP BY 1
@@ -143,8 +146,9 @@ export async function GET(req: NextRequest) {
     try { categorias = await runQuery<ChartItem>(catSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard categorias error:', e); categorias = [] }
 
     // Canais de venda
-    const canaisSql = `SELECT COALESCE(cv.nome,'—') AS label, COALESCE(SUM(p.valor_total),0)::float AS value
+    const canaisSql = `SELECT COALESCE(cv.nome,'—') AS label, COALESCE(SUM(pi.subtotal),0)::float AS value
                        FROM vendas.pedidos p
+                       LEFT JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
                        LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
                        ${pWhere}
                        GROUP BY 1
@@ -155,9 +159,10 @@ export async function GET(req: NextRequest) {
 
     // Top clientes
     const topClientesSql = `SELECT COALESCE(c.nome_fantasia,'—') AS cliente,
-                                   COALESCE(SUM(p.valor_total),0)::float AS total,
+                                   COALESCE(SUM(pi.subtotal),0)::float AS total,
                                    COUNT(DISTINCT p.id)::int AS pedidos
                             FROM vendas.pedidos p
+                            LEFT JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
                             LEFT JOIN entidades.clientes c ON c.id = p.cliente_id
                             ${pWhere}
                             GROUP BY 1
@@ -167,8 +172,9 @@ export async function GET(req: NextRequest) {
     try { topClientes = await runQuery<{ cliente: string; total: number; pedidos: number }>(topClientesSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard clientes error:', e); topClientes = [] }
 
     // Vendas por Cidade (somente c.cidade, sem UF)
-    const cidadeSql = `SELECT COALESCE(c.cidade, '—') AS cidade, COALESCE(SUM(p.valor_total),0)::float AS total
+    const cidadeSql = `SELECT COALESCE(c.cidade, '—') AS cidade, COALESCE(SUM(pi.subtotal),0)::float AS total
                        FROM vendas.pedidos p
+                       LEFT JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
                        LEFT JOIN entidades.clientes c ON c.id = p.cliente_id
                        ${pWhere}
                        GROUP BY 1
@@ -178,8 +184,9 @@ export async function GET(req: NextRequest) {
     try { vendasCidade = await runQuery<{ cidade: string; total: number }>(cidadeSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard cidades error:', e); vendasCidade = [] }
 
     // Vendas por Centro de Lucro (corrigido para centros_lucro)
-    const centroLucroSql = `SELECT COALESCE(cl.nome,'—') AS label, COALESCE(SUM(p.valor_total),0)::float AS value
+    const centroLucroSql = `SELECT COALESCE(cl.nome,'—') AS label, COALESCE(SUM(pi.subtotal),0)::float AS value
                             FROM vendas.pedidos p
+                            LEFT JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
                             LEFT JOIN empresa.centros_lucro cl ON cl.id = p.centro_lucro_id
                             ${pWhere}
                             GROUP BY 1
@@ -189,8 +196,9 @@ export async function GET(req: NextRequest) {
     try { centrosLucro = await runQuery<ChartItem>(centroLucroSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard centros_lucro error:', e); centrosLucro = [] }
 
     // Vendas por Campanha de Vendas
-    const campanhaVendaSql = `SELECT COALESCE(camp.nome,'—') AS label, COALESCE(SUM(p.valor_total),0)::float AS value
+    const campanhaVendaSql = `SELECT COALESCE(camp.nome,'—') AS label, COALESCE(SUM(pi.subtotal),0)::float AS value
                               FROM vendas.pedidos p
+                              LEFT JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
                               LEFT JOIN comercial.campanhas_vendas camp ON camp.id = p.campanha_venda_id
                               ${pWhere}
                               GROUP BY 1
@@ -200,8 +208,9 @@ export async function GET(req: NextRequest) {
     try { campanhasVendas = await runQuery<ChartItem>(campanhaVendaSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard campanhas_vendas error:', e); campanhasVendas = [] }
 
     // Vendas por Canal de Distribuição
-    const canalDistribuicaoSql = `SELECT COALESCE(cd.nome,'—') AS label, COALESCE(SUM(p.valor_total),0)::float AS value
+    const canalDistribuicaoSql = `SELECT COALESCE(cd.nome,'—') AS label, COALESCE(SUM(pi.subtotal),0)::float AS value
                                   FROM vendas.pedidos p
+                                  LEFT JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
                                   LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
                                   LEFT JOIN vendas.canais_distribuicao cd ON cd.id = cv.canal_distribuicao_id
                                   ${pWhere}
@@ -225,8 +234,9 @@ export async function GET(req: NextRequest) {
     try { marcas = await runQuery<ChartItem>(marcasSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard marcas error:', e); marcas = [] }
 
     // Faturamento por Filial
-    const filiaisSql = `SELECT COALESCE(f.nome,'—') AS label, COALESCE(SUM(p.valor_total),0)::float AS value
+    const filiaisSql = `SELECT COALESCE(f.nome,'—') AS label, COALESCE(SUM(pi.subtotal),0)::float AS value
                         FROM vendas.pedidos p
+                        LEFT JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
                         LEFT JOIN empresa.filiais f ON f.id = p.filial_id
                         ${pWhere}
                         GROUP BY 1
@@ -236,8 +246,9 @@ export async function GET(req: NextRequest) {
     try { filiais = await runQuery<ChartItem>(filiaisSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard filiais error:', e); filiais = [] }
 
     // Vendas por Business Unit (Unidade de Negócio)
-    const unidadesNegocioSql = `SELECT COALESCE(un.nome,'—') AS label, COALESCE(SUM(p.valor_total),0)::float AS value
+    const unidadesNegocioSql = `SELECT COALESCE(un.nome,'—') AS label, COALESCE(SUM(pi.subtotal),0)::float AS value
                                 FROM vendas.pedidos p
+                                LEFT JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
                                 LEFT JOIN empresa.unidades_negocio un ON un.id = p.unidade_negocio_id
                                 ${pWhere}
                                 GROUP BY 1
@@ -247,8 +258,9 @@ export async function GET(req: NextRequest) {
     try { unidadesNegocio = await runQuery<ChartItem>(unidadesNegocioSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard unidades_negocio error:', e); unidadesNegocio = [] }
 
     // Faturamento por Sales Office
-    const salesOfficesSql = `SELECT COALESCE(so.nome,'—') AS label, COALESCE(SUM(p.valor_total),0)::float AS value
+    const salesOfficesSql = `SELECT COALESCE(so.nome,'—') AS label, COALESCE(SUM(pi.subtotal),0)::float AS value
                              FROM vendas.pedidos p
+                             LEFT JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
                              LEFT JOIN comercial.sales_offices so ON so.id = p.sales_office_id
                              ${pWhere}
                              GROUP BY 1
@@ -266,8 +278,9 @@ export async function GET(req: NextRequest) {
     let metasPorTerr: { label: string; meta: number }[] = []
     try { metasPorTerr = await runQuery<{ label: string; meta: number }>(metaTerrSql, mtParams) } catch (e) { console.error('🛒 VENDAS dashboard metas por território error:', e); metasPorTerr = [] }
 
-    const fatTerrSql = `SELECT COALESCE(t.nome,'—') AS label, COALESCE(SUM(p.valor_total),0)::float AS faturamento
+    const fatTerrSql = `SELECT COALESCE(t.nome,'—') AS label, COALESCE(SUM(pi.subtotal),0)::float AS faturamento
                         FROM vendas.pedidos p
+                        LEFT JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
                         LEFT JOIN comercial.territorios t ON t.id = p.territorio_id
                         ${pWhere}
                         GROUP BY 1`;
@@ -283,8 +296,9 @@ export async function GET(req: NextRequest) {
     })).sort((a,b)=> (b.faturamento + b.meta) - (a.faturamento + a.meta)).slice(0, limit)
 
     // Vendas por Cupom
-    const cupomSql = `SELECT COALESCE(cup.codigo, '—') AS label, COALESCE(SUM(p.valor_total),0)::float AS value
+    const cupomSql = `SELECT COALESCE(cup.codigo, '—') AS label, COALESCE(SUM(pi.subtotal),0)::float AS value
                       FROM vendas.pedidos p
+                      LEFT JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
                       LEFT JOIN vendas.cupons cup ON cup.id = p.cupom_id
                       ${pWhere}
                       GROUP BY 1
@@ -294,8 +308,9 @@ export async function GET(req: NextRequest) {
     try { cupons = await runQuery<ChartItem>(cupomSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard cupons error:', e); cupons = [] }
 
     // Vendas por Estado (c.estado)
-    const estadoSql = `SELECT COALESCE(c.estado, '—') AS label, COALESCE(SUM(p.valor_total),0)::float AS value
+    const estadoSql = `SELECT COALESCE(c.estado, '—') AS label, COALESCE(SUM(pi.subtotal),0)::float AS value
                        FROM vendas.pedidos p
+                       LEFT JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
                        LEFT JOIN entidades.clientes c ON c.id = p.cliente_id
                        ${pWhere}
                        GROUP BY 1
@@ -313,8 +328,9 @@ export async function GET(req: NextRequest) {
                            GROUP BY 1`;
     let devolucoesPorCanal: { canal: string; devolucoes: number }[] = []
     try { devolucoesPorCanal = await runQuery<{ canal: string; devolucoes: number }>(devolCanalSql, dParams) } catch (e) { console.error('🛒 VENDAS dashboard devolução canal error:', e); devolucoesPorCanal = [] }
-    const vendasCanalFullSql = `SELECT COALESCE(cv.nome,'—') AS canal, COALESCE(SUM(p.valor_total),0)::float AS vendas
+    const vendasCanalFullSql = `SELECT COALESCE(cv.nome,'—') AS canal, COALESCE(SUM(pi.subtotal),0)::float AS vendas
                                 FROM vendas.pedidos p
+                                LEFT JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
                                 LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
                                 ${pWhere}
                                 GROUP BY 1`;
@@ -339,8 +355,9 @@ export async function GET(req: NextRequest) {
                              GROUP BY 1`;
     let devolucoesPorCliente: { cliente: string; devolucoes: number }[] = []
     try { devolucoesPorCliente = await runQuery<{ cliente: string; devolucoes: number }>(devolClienteSql, dParams) } catch (e) { console.error('🛒 VENDAS dashboard devolução cliente error:', e); devolucoesPorCliente = [] }
-    const vendasClienteFullSql = `SELECT COALESCE(c.nome_fantasia,'—') AS cliente, COALESCE(SUM(p.valor_total),0)::float AS vendas
+    const vendasClienteFullSql = `SELECT COALESCE(c.nome_fantasia,'—') AS cliente, COALESCE(SUM(pi.subtotal),0)::float AS vendas
                                   FROM vendas.pedidos p
+                                  LEFT JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
                                   LEFT JOIN entidades.clientes c ON c.id = p.cliente_id
                                   ${pWhere}
                                   GROUP BY 1`;
