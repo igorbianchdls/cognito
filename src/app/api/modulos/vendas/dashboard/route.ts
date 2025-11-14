@@ -10,6 +10,8 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url)
     const de = searchParams.get('de') || undefined
     const ate = searchParams.get('ate') || undefined
+    const limitParam = searchParams.get('limit') || undefined
+    const limit = Math.max(1, Math.min(50, limitParam ? Number(limitParam) : 5))
 
     // WHERE for pedidos (p)
     const pConds: string[] = []
@@ -64,6 +66,84 @@ export async function GET(req: NextRequest) {
     const cogs = 0
     const margemBruta = vendasNum > 0 ? ((vendasNum - cogs) / vendasNum) * 100 : 0
 
+    // Charts
+    type ChartItem = { label: string; value: number }
+    // Vendedores
+    const vendSql = `SELECT COALESCE(f.nome,'—') AS label, COALESCE(SUM(p.valor_total),0)::float AS value
+                     FROM vendas.pedidos p
+                     LEFT JOIN comercial.vendedores v ON v.id = p.vendedor_id
+                     LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id
+                     ${pWhere}
+                     GROUP BY 1
+                     ORDER BY 2 DESC
+                     LIMIT $${pParams.length + 1}::int`;
+    const vendedores = await runQuery<ChartItem>(vendSql, [...pParams, limit])
+
+    // Produtos (por subtotal do item)
+    const prodSql = `SELECT COALESCE(pr.nome,'—') AS label, COALESCE(SUM(pi.subtotal),0)::float AS value
+                     FROM vendas.pedidos p
+                     JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+                     LEFT JOIN produtos.produto pr ON pr.id = pi.produto_id
+                     ${pWhere}
+                     GROUP BY 1
+                     ORDER BY 2 DESC
+                     LIMIT $${pParams.length + 1}::int`;
+    const produtos = await runQuery<ChartItem>(prodSql, [...pParams, limit])
+
+    // Territórios
+    const terrSql = `SELECT COALESCE(t.nome,'—') AS label, COALESCE(SUM(p.valor_total),0)::float AS value
+                     FROM vendas.pedidos p
+                     LEFT JOIN comercial.territorios t ON t.id = p.territorio_id
+                     ${pWhere}
+                     GROUP BY 1
+                     ORDER BY 2 DESC
+                     LIMIT $${pParams.length + 1}::int`;
+    const territorios = await runQuery<ChartItem>(terrSql, [...pParams, limit])
+
+    // Categorias de produto
+    const catSql = `SELECT COALESCE(cat.nome,'—') AS label, COALESCE(SUM(pi.subtotal),0)::float AS value
+                    FROM vendas.pedidos p
+                    JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+                    LEFT JOIN produtos.produto pr ON pr.id = pi.produto_id
+                    LEFT JOIN produtos.categorias cat ON cat.id = pr.categoria_id
+                    ${pWhere}
+                    GROUP BY 1
+                    ORDER BY 2 DESC
+                    LIMIT $${pParams.length + 1}::int`;
+    const categorias = await runQuery<ChartItem>(catSql, [...pParams, limit])
+
+    // Canais de venda
+    const canaisSql = `SELECT COALESCE(cv.nome,'—') AS label, COALESCE(SUM(p.valor_total),0)::float AS value
+                       FROM vendas.pedidos p
+                       LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+                       ${pWhere}
+                       GROUP BY 1
+                       ORDER BY 2 DESC
+                       LIMIT $${pParams.length + 1}::int`;
+    const canais = await runQuery<ChartItem>(canaisSql, [...pParams, limit])
+
+    // Top clientes
+    const topClientesSql = `SELECT COALESCE(c.nome_fantasia,'—') AS cliente,
+                                   COALESCE(SUM(p.valor_total),0)::float AS total,
+                                   COUNT(DISTINCT p.id)::int AS pedidos
+                            FROM vendas.pedidos p
+                            LEFT JOIN entidades.clientes c ON c.id = p.cliente_id
+                            ${pWhere}
+                            GROUP BY 1
+                            ORDER BY 2 DESC
+                            LIMIT $${pParams.length + 1}::int`;
+    const topClientes = await runQuery<{ cliente: string; total: number; pedidos: number }>(topClientesSql, [...pParams, limit])
+
+    // Vendas por Cidade/UF
+    const cidadeSql = `SELECT COALESCE(CONCAT_WS(' - ', c.cidade, c.uf), '—') AS cidade, COALESCE(SUM(p.valor_total),0)::float AS total
+                       FROM vendas.pedidos p
+                       LEFT JOIN entidades.clientes c ON c.id = p.cliente_id
+                       ${pWhere}
+                       GROUP BY 1
+                       ORDER BY 2 DESC
+                       LIMIT $${pParams.length + 1}::int`;
+    const vendasCidade = await runQuery<{ cidade: string; total: number }>(cidadeSql, [...pParams, limit])
+
     return Response.json(
       {
         success: true,
@@ -77,6 +157,15 @@ export async function GET(req: NextRequest) {
           percentMeta,
           cogs,
           margemBruta,
+        },
+        charts: {
+          vendedores,
+          produtos,
+          territorios,
+          categorias,
+          canais,
+          clientes: topClientes,
+          cidades: vendasCidade,
         },
       },
       { headers: { 'Cache-Control': 'no-store' } }

@@ -49,6 +49,17 @@ export default function VendasDashboardPage() {
   const filtersIconColor = ui.filtersIconColor
   const [rows, setRows] = useState<PedidoRow[]>([])
   const [kpis, setKpis] = useState<{ meta: number; vendas: number; percentMeta: number; ticket: number; cogs: number; margemBruta: number }>({ meta: 0, vendas: 0, percentMeta: 0, ticket: 0, cogs: 0, margemBruta: 0 })
+  // Charts (reais)
+  type ChartItem = { label: string; value: number }
+  const [chartVendedores, setChartVendedores] = useState<ChartItem[]>([])
+  const [chartEquipes, setChartEquipes] = useState<ChartItem[]>([])
+  const [chartProdutos, setChartProdutos] = useState<ChartItem[]>([])
+  const [chartFiliais, setChartFiliais] = useState<ChartItem[]>([])
+  const [chartTerritorios, setChartTerritorios] = useState<ChartItem[]>([])
+  const [chartCategorias, setChartCategorias] = useState<ChartItem[]>([])
+  const [chartCanais, setChartCanais] = useState<ChartItem[]>([])
+  const [chartTopClientes, setChartTopClientes] = useState<{ cliente: string; total: number; pedidos: number }[]>([])
+  const [chartVendasCidade, setChartVendasCidade] = useState<{ cidade: string; total: number }[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -65,19 +76,7 @@ export default function VendasDashboardPage() {
           const j = (await res.json()) as { rows?: unknown[] }
           data = Array.isArray(j?.rows) ? (j.rows as unknown as PedidoRow[]) : []
         }
-        if (data.length === 0) {
-          // Fallback mock
-          const base = new Date()
-          const m0 = toDateOnly(base)
-          const m1 = toDateOnly(new Date(base.getFullYear(), base.getMonth(), base.getDate()-1))
-          const m2 = toDateOnly(new Date(base.getFullYear(), base.getMonth(), base.getDate()-2))
-          data = [
-            { numero_pedido: '#PED-1003', cliente: 'Cliente ABC', canal_venda: 'E-commerce', vendedor: 'Ana', valor_total_pedido: 5800, status: 'concluído', data_pedido: m0, cidade_uf: 'São Paulo - SP' },
-            { numero_pedido: '#PED-1002', cliente: 'Empresa XYZ', canal_venda: 'Marketplace', vendedor: 'Bruno', valor_total_pedido: 3200, status: 'pendente', data_pedido: m0, cidade_uf: 'Rio de Janeiro - RJ' },
-            { numero_pedido: '#PED-1001', cliente: 'Distribuidora DEF', canal_venda: 'Representante', vendedor: 'Carla', valor_total_pedido: 7450, status: 'concluído', data_pedido: m1, cidade_uf: 'Belo Horizonte - MG' },
-            { numero_pedido: '#PED-0999', cliente: 'Comércio GHI', canal_venda: 'E-commerce', vendedor: 'Ana', valor_total_pedido: 4200, status: 'concluído', data_pedido: m2, cidade_uf: 'Curitiba - PR' },
-          ]
-        }
+        // Sem mocks: se não houver dados, manter lista vazia
         if (!cancelled) setRows(data)
       } catch (e) {
         if (!cancelled) setError('Falha ao carregar dados')
@@ -102,6 +101,7 @@ export default function VendasDashboardPage() {
         if (res.ok) {
           const j = await res.json()
           const kk = j?.kpis || {}
+          const charts = j?.charts || {}
           const vendas = Number(kk.vendas || 0)
           const meta = Number(kk.meta || 0)
           setKpis({
@@ -112,6 +112,13 @@ export default function VendasDashboardPage() {
             cogs: Number(kk.cogs || 0),
             margemBruta: Number(kk.margemBruta || 0),
           })
+          setChartVendedores(Array.isArray(charts?.vendedores) ? charts.vendedores as ChartItem[] : [])
+          setChartProdutos(Array.isArray(charts?.produtos) ? charts.produtos as ChartItem[] : [])
+          setChartTerritorios(Array.isArray(charts?.territorios) ? charts.territorios as ChartItem[] : [])
+          setChartCategorias(Array.isArray(charts?.categorias) ? charts.categorias as ChartItem[] : [])
+          setChartCanais(Array.isArray(charts?.canais) ? charts.canais as ChartItem[] : [])
+          setChartTopClientes(Array.isArray(charts?.clientes) ? charts.clientes as { cliente: string; total: number; pedidos: number }[] : [])
+          setChartVendasCidade(Array.isArray(charts?.cidades) ? charts.cidades as { cidade: string; total: number }[] : [])
         } else {
           setKpis({ meta: 0, vendas: 0, percentMeta: 0, ticket: 0, cogs: 0, margemBruta: 0 })
         }
@@ -123,54 +130,13 @@ export default function VendasDashboardPage() {
     return () => { cancelled = true }
   }, [filters.dateRange])
 
-  // Charts (mock data)
-  const top5Vendedores = useMemo(() => [
-    { label: 'João Silva', value: 145000 },
-    { label: 'Maria Santos', value: 128000 },
-    { label: 'Pedro Costa', value: 112000 },
-    { label: 'Ana Oliveira', value: 98000 },
-    { label: 'Carlos Souza', value: 85000 }
-  ], [])
-
-  const top5Equipes = useMemo(() => [
-    { label: 'Equipe Alpha', value: 340000 },
-    { label: 'Equipe Beta', value: 298000 },
-    { label: 'Equipe Gamma', value: 265000 },
-    { label: 'Equipe Delta', value: 234000 },
-    { label: 'Equipe Epsilon', value: 210000 }
-  ], [])
-
-  const top5Produtos = useMemo(() => [
-    { label: 'Produto Premium X', value: 175000 },
-    { label: 'Produto Standard Y', value: 142000 },
-    { label: 'Produto Plus Z', value: 128000 },
-    { label: 'Produto Básico W', value: 96000 },
-    { label: 'Produto Essencial V', value: 78000 }
-  ], [])
-
-  const rankingFiliais = useMemo(() => [
-    { label: 'São Paulo', value: 280000 },
-    { label: 'Rio de Janeiro', value: 235000 },
-    { label: 'Belo Horizonte', value: 198000 },
-    { label: 'Curitiba', value: 167000 },
-    { label: 'Porto Alegre', value: 145000 }
-  ], [])
-
-  const vendasPorTerritorio = useMemo(() => [
-    { label: 'Sudeste', value: 450000 },
-    { label: 'Sul', value: 320000 },
-    { label: 'Nordeste', value: 285000 },
-    { label: 'Centro-Oeste', value: 198000 },
-    { label: 'Norte', value: 165000 }
-  ], [])
-
-  const vendasPorCategoria = useMemo(() => [
-    { label: 'Eletrônicos', value: 420000 },
-    { label: 'Vestuário', value: 345000 },
-    { label: 'Alimentos', value: 298000 },
-    { label: 'Móveis', value: 234000 },
-    { label: 'Cosméticos', value: 185000 }
-  ], [])
+  // Charts (reais)
+  const top5Vendedores = chartVendedores
+  const top5Equipes = chartEquipes
+  const top5Produtos = chartProdutos
+  const rankingFiliais = chartFiliais
+  const vendasPorTerritorio = chartTerritorios
+  const vendasPorCategoria = chartCategorias
 
   // Vendas por Canal / Vendedor / Cliente / Cidade
   const vendasPorCanal = useMemo(() => {
@@ -181,33 +147,9 @@ export default function VendasDashboardPage() {
     }
     return Array.from(m, ([label, value]) => ({ label, value })).sort((a,b)=>b.value-a.value).slice(0,6)
   }, [rows])
-  const vendasPorVendedor = useMemo(() => {
-    const m = new Map<string, number>()
-    for (const r of rows) {
-      const k = r.vendedor || 'Sem vendedor'
-      m.set(k, (m.get(k) || 0) + (Number(r.valor_total_pedido) || 0))
-    }
-    return Array.from(m, ([label, value]) => ({ label, value })).sort((a,b)=>b.value-a.value).slice(0,6)
-  }, [rows])
-  const topClientes = useMemo(() => {
-    const m = new Map<string, { total: number; pedidos: number }>()
-    for (const r of rows) {
-      const k = r.cliente || 'Cliente'
-      const cur = m.get(k) || { total: 0, pedidos: 0 }
-      cur.total += Number(r.valor_total_pedido) || 0; cur.pedidos += 1
-      m.set(k, cur)
-    }
-    return Array.from(m, ([cliente, { total, pedidos }]) => ({ cliente, total, pedidos }))
-      .sort((a,b)=>b.total-a.total).slice(0,5)
-  }, [rows])
-  const vendasPorCidade = useMemo(() => {
-    const m = new Map<string, number>()
-    for (const r of rows) {
-      const k = r.cidade_uf || '—'
-      m.set(k, (m.get(k) || 0) + (Number(r.valor_total_pedido) || 0))
-    }
-    return Array.from(m, ([cidade, total]) => ({ cidade, total })).sort((a,b)=>b.total-a.total).slice(0,4)
-  }, [rows])
+  // vendasPorVendedor não utilizado diretamente (Top Vendedores vem do endpoint)
+  const topClientes = chartTopClientes
+  const vendasPorCidade = chartVendasCidade
   const pedidosRecentes = useMemo(() => {
     return [...rows]
       .sort((a,b)=> new Date(b.data_pedido || 0).getTime() - new Date(a.data_pedido || 0).getTime())
