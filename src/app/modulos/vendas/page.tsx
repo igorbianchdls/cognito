@@ -48,6 +48,14 @@ type TabelaPrecoRow = Row & {
   itens?: TabelaPrecoItem[]
 }
 
+type PromocaoItem = {
+  produto: string
+}
+
+type PromocaoRow = Row & {
+  itens?: PromocaoItem[]
+}
+
 export default function ModulosVendasPage() {
   const titulo = useStore($titulo)
   const tabs = useStore($tabs)
@@ -210,6 +218,31 @@ export default function ModulosVendasPage() {
     )
   }
 
+  const renderPromocaoItems = (row: Row) => {
+    const promRow = row as PromocaoRow
+    const itens = promRow.itens || []
+    if (itens.length === 0) return null
+    return (
+      <div className="p-4 bg-gray-50">
+        <h4 className="text-sm font-semibold mb-2">Produtos da Promoção</h4>
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b">
+              <th className="text-left py-2 px-3">Produto</th>
+            </tr>
+          </thead>
+          <tbody>
+            {itens.map((item, idx) => (
+              <tr key={idx} className="border-b last:border-0">
+                <td className="py-2 px-3">{item.produto}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )
+  }
+
   const columns: ColumnDef<Row>[] = useMemo(() => {
     switch (tabs.selected) {
       case 'pedidos':
@@ -272,11 +305,16 @@ export default function ModulosVendasPage() {
         ]
       case 'promocoes':
         return [
-          { accessorKey: 'promocao', header: 'Promoção' },
-          { accessorKey: 'tipo', header: 'Tipo' },
-          { accessorKey: 'inicio', header: 'Início', cell: ({ getValue }) => formatDate(getValue()) },
-          { accessorKey: 'fim', header: 'Fim', cell: ({ getValue }) => formatDate(getValue()) },
+          { accessorKey: 'promocao', header: 'ID' },
+          { accessorKey: 'nome_promocao', header: 'Promoção' },
+          { accessorKey: 'tipo_desconto', header: 'Tipo' },
+          { accessorKey: 'valor_desconto', header: 'Valor Desconto', cell: ({ getValue }) => formatBRL(getValue()) },
+          { accessorKey: 'valor_minimo', header: 'Valor Mínimo', cell: ({ getValue }) => formatBRL(getValue()) },
+          { accessorKey: 'data_inicio', header: 'Início', cell: ({ getValue }) => formatDate(getValue()) },
+          { accessorKey: 'data_fim', header: 'Fim', cell: ({ getValue }) => formatDate(getValue()) },
           { accessorKey: 'ativo', header: 'Ativo' },
+          { accessorKey: 'criado_em', header: 'Criado Em', cell: ({ getValue }) => formatDate(getValue()) },
+          { accessorKey: 'atualizado_em', header: 'Atualizado Em', cell: ({ getValue }) => formatDate(getValue()) },
         ]
       case 'regras_desconto':
         return [
@@ -404,7 +442,7 @@ export default function ModulosVendasPage() {
                   key={tabs.selected}
                   columns={columns}
                   data={data}
-                  enableExpand={tabs.selected === 'pedidos' || tabs.selected === 'devolucoes' || tabs.selected === 'tabelas_preco'}
+                  enableExpand={tabs.selected === 'pedidos' || tabs.selected === 'devolucoes' || tabs.selected === 'tabelas_preco' || tabs.selected === 'promocoes'}
                   renderDetail={
                     tabs.selected === 'pedidos'
                       ? renderPedidoItems
@@ -412,6 +450,8 @@ export default function ModulosVendasPage() {
                       ? renderDevolucaoItems
                       : tabs.selected === 'tabelas_preco'
                       ? renderTabelaPrecoItems
+                      : tabs.selected === 'promocoes'
+                      ? renderPromocaoItems
                       : undefined
                   }
                   enableSearch={tabelaUI.enableSearch}
