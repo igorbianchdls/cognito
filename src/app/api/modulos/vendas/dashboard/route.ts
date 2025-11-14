@@ -174,6 +174,17 @@ export async function GET(req: NextRequest) {
     let centrosLucro: ChartItem[] = []
     try { centrosLucro = await runQuery<ChartItem>(centroLucroSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard centros_lucro error:', e); centrosLucro = [] }
 
+    // Vendas por Campanha de Vendas
+    const campanhaVendaSql = `SELECT COALESCE(camp.nome,'—') AS label, COALESCE(SUM(p.valor_total),0)::float AS value
+                              FROM vendas.pedidos p
+                              LEFT JOIN comercial.campanhas_vendas camp ON camp.id = p.campanha_venda_id
+                              ${pWhere}
+                              GROUP BY 1
+                              ORDER BY 2 DESC
+                              LIMIT $${pParams.length + 1}::int`;
+    let campanhasVendas: ChartItem[] = []
+    try { campanhasVendas = await runQuery<ChartItem>(campanhaVendaSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard campanhas_vendas error:', e); campanhasVendas = [] }
+
     // Meta x Faturamento por Território
     const metaTerrSql = `SELECT COALESCE(t.nome,'—') AS label, COALESCE(SUM(mt.valor_meta),0)::float AS meta
                          FROM comercial.metas_territorios mt
@@ -296,6 +307,7 @@ export async function GET(req: NextRequest) {
           clientes: topClientes,
           cidades: vendasCidade,
           centros_lucro: centrosLucro,
+          campanhas_vendas: campanhasVendas,
           estados,
           devolucao_canal: taxaDevolucaoCanal,
           devolucao_cliente: taxaDevolucaoCliente,

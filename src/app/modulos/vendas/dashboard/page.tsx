@@ -65,6 +65,7 @@ export default function VendasDashboardPage() {
   const [chartDevolucaoCliente, setChartDevolucaoCliente] = useState<{ label: string; value: number }[]>([])
   // const [chartEstados, setChartEstados] = useState<ChartItem[]>([])
   const [chartCentroLucro, setChartCentroLucro] = useState<ChartItem[]>([])
+  const [chartCampanhasVendas, setChartCampanhasVendas] = useState<ChartItem[]>([])
   const [chartMetaTerritorio, setChartMetaTerritorio] = useState<Array<{ label: string; meta: number; faturamento: number }>>([])
   const [chartCupons, setChartCupons] = useState<ChartItem[]>([])
   const [loading, setLoading] = useState(false)
@@ -129,6 +130,7 @@ export default function VendasDashboardPage() {
           setChartDevolucaoCliente(Array.isArray(charts?.devolucao_cliente) ? charts.devolucao_cliente as { label: string; value: number }[] : [])
           // setChartEstados(Array.isArray(charts?.estados) ? charts.estados as ChartItem[] : [])
           setChartCentroLucro(Array.isArray(charts?.centros_lucro) ? charts.centros_lucro as ChartItem[] : [])
+          setChartCampanhasVendas(Array.isArray(charts?.campanhas_vendas) ? charts.campanhas_vendas as ChartItem[] : [])
           setChartMetaTerritorio(Array.isArray(charts?.meta_territorio) ? charts.meta_territorio as Array<{ label: string; meta: number; faturamento: number }> : [])
           setChartCupons(Array.isArray(charts?.cupons) ? charts.cupons as ChartItem[] : [])
         } else {
@@ -448,6 +450,17 @@ export default function VendasDashboardPage() {
               title="Vendas por Cupom"
               icon={<Tag className="w-5 h-5" />}
               color="#06b6d4"
+              height={240}
+            />
+          </div>
+
+          {/* Row 5: Vendas por Campanha de Vendas */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            <BarChartHorizontalRecharts
+              items={chartCampanhasVendas}
+              title="Vendas por Campanha de Vendas"
+              icon={<Globe className="w-5 h-5" />}
+              color="#a855f7"
               height={240}
             />
           </div>
