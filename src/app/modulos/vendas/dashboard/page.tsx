@@ -11,7 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Calendar as CalendarIcon, Users, Package, MapPin, Globe, Tag, Building2 } from 'lucide-react'
+import { Calendar as CalendarIcon, Users, Package, MapPin, Globe, Tag, Building2, Briefcase, Store } from 'lucide-react'
 import type { DateRange } from 'react-day-picker'
 import { $financeiroDashboardUI, $financeiroDashboardFilters, financeiroDashboardActions } from '@/stores/modulos/financeiroDashboardStore'
 
@@ -69,6 +69,8 @@ export default function VendasDashboardPage() {
   const [chartCanaisDistribuicao, setChartCanaisDistribuicao] = useState<ChartItem[]>([])
   const [chartMarcas, setChartMarcas] = useState<ChartItem[]>([])
   const [chartFiliais, setChartFiliais] = useState<ChartItem[]>([])
+  const [chartUnidadesNegocio, setChartUnidadesNegocio] = useState<ChartItem[]>([])
+  const [chartSalesOffices, setChartSalesOffices] = useState<ChartItem[]>([])
   const [chartMetaTerritorio, setChartMetaTerritorio] = useState<Array<{ label: string; meta: number; faturamento: number }>>([])
   const [chartCupons, setChartCupons] = useState<ChartItem[]>([])
   const [loading, setLoading] = useState(false)
@@ -137,6 +139,8 @@ export default function VendasDashboardPage() {
           setChartCanaisDistribuicao(Array.isArray(charts?.canais_distribuicao) ? charts.canais_distribuicao as ChartItem[] : [])
           setChartMarcas(Array.isArray(charts?.marcas) ? charts.marcas as ChartItem[] : [])
           setChartFiliais(Array.isArray(charts?.filiais) ? charts.filiais as ChartItem[] : [])
+          setChartUnidadesNegocio(Array.isArray(charts?.unidades_negocio) ? charts.unidades_negocio as ChartItem[] : [])
+          setChartSalesOffices(Array.isArray(charts?.sales_offices) ? charts.sales_offices as ChartItem[] : [])
           setChartMetaTerritorio(Array.isArray(charts?.meta_territorio) ? charts.meta_territorio as Array<{ label: string; meta: number; faturamento: number }> : [])
           setChartCupons(Array.isArray(charts?.cupons) ? charts.cupons as ChartItem[] : [])
         } else {
@@ -485,13 +489,27 @@ export default function VendasDashboardPage() {
             />
           </div>
 
-          {/* Row 6: Faturamento por Filial */}
+          {/* Row 6: Faturamento por Filial, Vendas por Business Unit e Faturamento por Sales Office */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
             <BarChartHorizontalRecharts
               items={chartFiliais}
               title="Faturamento por Filial"
               icon={<Building2 className="w-5 h-5" />}
               color="#14b8a6"
+              height={240}
+            />
+            <BarChartHorizontalRecharts
+              items={chartUnidadesNegocio}
+              title="Vendas por Business Unit"
+              icon={<Briefcase className="w-5 h-5" />}
+              color="#8b5cf6"
+              height={240}
+            />
+            <BarChartHorizontalRecharts
+              items={chartSalesOffices}
+              title="Faturamento por Sales Office"
+              icon={<Store className="w-5 h-5" />}
+              color="#ec4899"
               height={240}
             />
           </div>

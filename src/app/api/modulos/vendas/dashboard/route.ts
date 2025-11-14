@@ -221,6 +221,28 @@ export async function GET(req: NextRequest) {
     let filiais: ChartItem[] = []
     try { filiais = await runQuery<ChartItem>(filiaisSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard filiais error:', e); filiais = [] }
 
+    // Vendas por Business Unit (Unidade de Negócio)
+    const unidadesNegocioSql = `SELECT COALESCE(un.nome,'—') AS label, COALESCE(SUM(p.valor_total),0)::float AS value
+                                FROM vendas.pedidos p
+                                LEFT JOIN empresa.unidades_negocio un ON un.id = p.unidade_negocio_id
+                                ${pWhere}
+                                GROUP BY 1
+                                ORDER BY 2 DESC
+                                LIMIT $${pParams.length + 1}::int`;
+    let unidadesNegocio: ChartItem[] = []
+    try { unidadesNegocio = await runQuery<ChartItem>(unidadesNegocioSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard unidades_negocio error:', e); unidadesNegocio = [] }
+
+    // Faturamento por Sales Office
+    const salesOfficesSql = `SELECT COALESCE(so.nome,'—') AS label, COALESCE(SUM(p.valor_total),0)::float AS value
+                             FROM vendas.pedidos p
+                             LEFT JOIN comercial.sales_offices so ON so.id = p.sales_office_id
+                             ${pWhere}
+                             GROUP BY 1
+                             ORDER BY 2 DESC
+                             LIMIT $${pParams.length + 1}::int`;
+    let salesOffices: ChartItem[] = []
+    try { salesOffices = await runQuery<ChartItem>(salesOfficesSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard sales_offices error:', e); salesOffices = [] }
+
     // Meta x Faturamento por Território
     const metaTerrSql = `SELECT COALESCE(t.nome,'—') AS label, COALESCE(SUM(mt.valor_meta),0)::float AS meta
                          FROM comercial.metas_territorios mt
@@ -347,6 +369,8 @@ export async function GET(req: NextRequest) {
           canais_distribuicao: canaisDistribuicao,
           marcas,
           filiais,
+          unidades_negocio: unidadesNegocio,
+          sales_offices: salesOffices,
           estados,
           devolucao_canal: taxaDevolucaoCanal,
           devolucao_cliente: taxaDevolucaoCliente,
