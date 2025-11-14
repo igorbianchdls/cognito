@@ -81,7 +81,7 @@ export async function GET(req: NextRequest) {
     // Charts
     type ChartItem = { label: string; value: number }
     // Vendedores
-    const vendSql = `SELECT COALESCE(f.nome,'—') AS label, COALESCE(SUM(p.valor_total),0)::float AS value
+    const vendSql = `SELECT COALESCE(f.nome_razao_social,'—') AS label, COALESCE(SUM(p.valor_total),0)::float AS value
                      FROM vendas.pedidos p
                      LEFT JOIN comercial.vendedores v ON v.id = p.vendedor_id
                      LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id

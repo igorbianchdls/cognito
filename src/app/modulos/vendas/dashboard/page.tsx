@@ -362,7 +362,7 @@ export default function VendasDashboardPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
             <BarChartHorizontalRecharts
               items={top5Vendedores}
-              title="Top 5 Vendedores"
+              title="Faturamento por Vendedor"
               icon={<Users className="w-5 h-5" />}
               color="#3b82f6"
             />
