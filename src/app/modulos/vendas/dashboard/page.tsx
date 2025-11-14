@@ -11,7 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Calendar as CalendarIcon, Users, Package, MapPin, Globe, Tag } from 'lucide-react'
+import { Calendar as CalendarIcon, Users, Package, MapPin, Globe, Tag, Building2 } from 'lucide-react'
 import type { DateRange } from 'react-day-picker'
 import { $financeiroDashboardUI, $financeiroDashboardFilters, financeiroDashboardActions } from '@/stores/modulos/financeiroDashboardStore'
 
@@ -68,6 +68,7 @@ export default function VendasDashboardPage() {
   const [chartCampanhasVendas, setChartCampanhasVendas] = useState<ChartItem[]>([])
   const [chartCanaisDistribuicao, setChartCanaisDistribuicao] = useState<ChartItem[]>([])
   const [chartMarcas, setChartMarcas] = useState<ChartItem[]>([])
+  const [chartFiliais, setChartFiliais] = useState<ChartItem[]>([])
   const [chartMetaTerritorio, setChartMetaTerritorio] = useState<Array<{ label: string; meta: number; faturamento: number }>>([])
   const [chartCupons, setChartCupons] = useState<ChartItem[]>([])
   const [loading, setLoading] = useState(false)
@@ -135,6 +136,7 @@ export default function VendasDashboardPage() {
           setChartCampanhasVendas(Array.isArray(charts?.campanhas_vendas) ? charts.campanhas_vendas as ChartItem[] : [])
           setChartCanaisDistribuicao(Array.isArray(charts?.canais_distribuicao) ? charts.canais_distribuicao as ChartItem[] : [])
           setChartMarcas(Array.isArray(charts?.marcas) ? charts.marcas as ChartItem[] : [])
+          setChartFiliais(Array.isArray(charts?.filiais) ? charts.filiais as ChartItem[] : [])
           setChartMetaTerritorio(Array.isArray(charts?.meta_territorio) ? charts.meta_territorio as Array<{ label: string; meta: number; faturamento: number }> : [])
           setChartCupons(Array.isArray(charts?.cupons) ? charts.cupons as ChartItem[] : [])
         } else {
@@ -479,6 +481,17 @@ export default function VendasDashboardPage() {
               title="Faturamento por Marca"
               icon={<Package className="w-5 h-5" />}
               color="#f59e0b"
+              height={240}
+            />
+          </div>
+
+          {/* Row 6: Faturamento por Filial */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            <BarChartHorizontalRecharts
+              items={chartFiliais}
+              title="Faturamento por Filial"
+              icon={<Building2 className="w-5 h-5" />}
+              color="#14b8a6"
               height={240}
             />
           </div>

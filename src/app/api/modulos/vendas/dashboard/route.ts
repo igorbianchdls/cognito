@@ -210,6 +210,17 @@ export async function GET(req: NextRequest) {
     let marcas: ChartItem[] = []
     try { marcas = await runQuery<ChartItem>(marcasSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard marcas error:', e); marcas = [] }
 
+    // Faturamento por Filial
+    const filiaisSql = `SELECT COALESCE(f.nome,'—') AS label, COALESCE(SUM(p.valor_total),0)::float AS value
+                        FROM vendas.pedidos p
+                        LEFT JOIN empresa.filiais f ON f.id = p.filial_id
+                        ${pWhere}
+                        GROUP BY 1
+                        ORDER BY 2 DESC
+                        LIMIT $${pParams.length + 1}::int`;
+    let filiais: ChartItem[] = []
+    try { filiais = await runQuery<ChartItem>(filiaisSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard filiais error:', e); filiais = [] }
+
     // Meta x Faturamento por Território
     const metaTerrSql = `SELECT COALESCE(t.nome,'—') AS label, COALESCE(SUM(mt.valor_meta),0)::float AS meta
                          FROM comercial.metas_territorios mt
@@ -335,6 +346,7 @@ export async function GET(req: NextRequest) {
           campanhas_vendas: campanhasVendas,
           canais_distribuicao: canaisDistribuicao,
           marcas,
+          filiais,
           estados,
           devolucao_canal: taxaDevolucaoCanal,
           devolucao_cliente: taxaDevolucaoCliente,
