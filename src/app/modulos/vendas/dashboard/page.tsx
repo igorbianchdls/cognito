@@ -390,7 +390,7 @@ export default function VendasDashboardPage() {
             />
             <BarChartHorizontalRecharts
               items={vendasPorCategoria}
-              title="Vendas por Categoria"
+              title="Faturamento por Categoria"
               icon={<Tag className="w-5 h-5" />}
               color="#6366f1"
             />

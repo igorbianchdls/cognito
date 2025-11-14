@@ -115,8 +115,8 @@ export async function GET(req: NextRequest) {
     let territorios: ChartItem[] = []
     try { territorios = await runQuery<ChartItem>(terrSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard territorios error:', e); territorios = [] }
 
-    // Categorias de produto
-    const catSql = `SELECT COALESCE(cat.nome,'—') AS label, COALESCE(SUM(pi.subtotal),0)::float AS value
+    // Faturamento por categoria (SUM(quantidade * preco_unitario))
+    const catSql = `SELECT COALESCE(cat.nome,'—') AS label, COALESCE(SUM(pi.quantidade * pi.preco_unitario),0)::float AS value
                     FROM vendas.pedidos p
                     JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
                     LEFT JOIN produtos.produto pr ON pr.id = pi.produto_id
