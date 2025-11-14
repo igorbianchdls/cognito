@@ -60,7 +60,7 @@ export function BarChartHorizontalPercent({
             layout="vertical"
             margin={{
               left: 12,
-              right: 12,
+              right: 32,
               top: 10,
               bottom: 10,
             }}
