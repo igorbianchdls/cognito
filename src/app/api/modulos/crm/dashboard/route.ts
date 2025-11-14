@@ -273,6 +273,49 @@ export async function GET(req: NextRequest) {
       fontes_leads: fontesLeads,
     }
 
+    // Conversão por Etapa do Funil (aproximação por snapshot atual)
+    // Fases alvo e ordem fixa
+    const targetStages = [
+      'contato inicial',
+      'diagnóstico',
+      'proposta enviada',
+      'negociação',
+      'fechado',
+    ]
+    const stageCountsSql = `SELECT LOWER(fp.nome) AS nome, COUNT(DISTINCT o.id)::int AS total
+                            FROM crm.oportunidades o
+                            LEFT JOIN crm.fases_pipeline fp ON fp.id = o.fase_pipeline_id
+                            LEFT JOIN crm.leads l ON l.id = o.lead_id
+                            LEFT JOIN comercial.vendedores v ON v.id = o.vendedor_id
+                            LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id
+                            LEFT JOIN entidades.clientes cli ON cli.id = o.cliente_id
+                            ${oWhere}
+                            GROUP BY 1`;
+    const stageCounts = await runQuery<{ nome: string; total: number }>(stageCountsSql, oParams)
+    const totalsByStage = new Map<string, number>()
+    for (const s of targetStages) totalsByStage.set(s, 0)
+    for (const row of stageCounts) {
+      const n = (row.nome || '').toLowerCase()
+      if (totalsByStage.has(n)) totalsByStage.set(n, Number(row.total || 0))
+    }
+    const ci = totalsByStage.get('contato inicial') || 0
+    const dg = totalsByStage.get('diagnóstico') || 0
+    const pe = totalsByStage.get('proposta enviada') || 0
+    const ng = totalsByStage.get('negociação') || 0
+    const fc = totalsByStage.get('fechado') || 0
+    const atContato = ci + dg + pe + ng + fc
+    const atDiag = dg + pe + ng + fc
+    const atProp = pe + ng + fc
+    const atNego = ng + fc
+    const atFech = fc
+    const convEtapa = [
+      { label: 'Contato Inicial → Diagnóstico', value: atContato > 0 ? (atDiag / atContato) * 100 : 0 },
+      { label: 'Diagnóstico → Proposta Enviada', value: atDiag > 0 ? (atProp / atDiag) * 100 : 0 },
+      { label: 'Proposta Enviada → Negociação', value: atProp > 0 ? (atNego / atProp) * 100 : 0 },
+      { label: 'Negociação → Fechado', value: atNego > 0 ? (atFech / atNego) * 100 : 0 },
+    ]
+    charts['conversao_etapa'] = convEtapa
+
     return Response.json(
       {
         success: true,

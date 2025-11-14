@@ -80,6 +80,7 @@ export default function CRMDashboardPage() {
   const [chartForecastMensal, setChartForecastMensal] = useState<ForecastItem[]>([])
   const [chartConversaoCanal, setChartConversaoCanal] = useState<ChartItem[]>([])
   const [chartConversaoVendedor, setChartConversaoVendedor] = useState<ChartItem[]>([])
+  const [chartConversaoEtapa, setChartConversaoEtapa] = useState<ChartItem[]>([])
   const [chartMotivosPerda, setChartMotivosPerda] = useState<ChartItem[]>([])
   const [chartAtividadesVendedor, setChartAtividadesVendedor] = useState<ChartItem[]>([])
   const [chartFontesLeads, setChartFontesLeads] = useState<ChartItem[]>([])
@@ -120,6 +121,7 @@ export default function CRMDashboardPage() {
           setChartForecastMensal(Array.isArray(charts?.forecast_mensal) ? charts.forecast_mensal as ForecastItem[] : [])
           setChartConversaoCanal(Array.isArray(charts?.conversao_canal) ? charts.conversao_canal as ChartItem[] : [])
           setChartConversaoVendedor(Array.isArray(charts?.conversao_vendedor) ? charts.conversao_vendedor as ChartItem[] : [])
+          setChartConversaoEtapa(Array.isArray(charts?.conversao_etapa) ? charts.conversao_etapa as ChartItem[] : [])
           setChartMotivosPerda(Array.isArray(charts?.motivos_perda) ? charts.motivos_perda as ChartItem[] : [])
           setChartAtividadesVendedor(Array.isArray(charts?.atividades_vendedor) ? charts.atividades_vendedor as ChartItem[] : [])
           setChartFontesLeads(Array.isArray(charts?.fontes_leads) ? charts.fontes_leads as ChartItem[] : [])
@@ -144,7 +146,7 @@ export default function CRMDashboardPage() {
 
   // Charts não implementados no back-end (mantidos vazios)
   const leadVelocity: ChartItem[] = []
-  const conversaoPorEtapa: ChartItem[] = []
+  const conversaoPorEtapa: ChartItem[] = chartConversaoEtapa
   const leadScoring: ChartItem[] = []
   const qualidadeCanais: ChartItem[] = []
 
