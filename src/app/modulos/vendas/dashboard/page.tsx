@@ -36,10 +36,7 @@ function toDateOnly(d: Date) {
   const yyyy = d.getFullYear(); const mm = String(d.getMonth() + 1).padStart(2, '0'); const dd = String(d.getDate()).padStart(2, '0')
   return `${yyyy}-${mm}-${dd}`
 }
-function monthKey(d: Date) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}` }
-function monthKeyFromStr(s?: string) { if (!s) return null; const d = new Date(s); return isNaN(d.getTime()) ? null : monthKey(d) }
-function monthLabel(key: string) { const [y, m] = key.split('-').map(Number); const d = new Date(y, (m || 1) - 1, 1); return d.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' }) }
-function lastMonths(n: number) { const arr: string[] = []; const base = new Date(); for (let i= n-1;i>=0;i--){ const d=new Date(base.getFullYear(), base.getMonth()-i, 1); arr.push(monthKey(d)) } return arr }
+// helpers removidos
 function isCompleted(status?: string) { if (!status) return false; const s = status.toLowerCase(); return s.includes('conclu') || s.includes('fatur') || s.includes('pago') || s.includes('final') }
 
 export default function VendasDashboardPage() {
@@ -56,9 +53,9 @@ export default function VendasDashboardPage() {
   // Charts (reais)
   type ChartItem = { label: string; value: number }
   const [chartVendedores, setChartVendedores] = useState<ChartItem[]>([])
-  const [chartEquipes, setChartEquipes] = useState<ChartItem[]>([])
+  // const [chartEquipes, setChartEquipes] = useState<ChartItem[]>([])
   const [chartProdutos, setChartProdutos] = useState<ChartItem[]>([])
-  const [chartFiliais, setChartFiliais] = useState<ChartItem[]>([])
+  // const [chartFiliais, setChartFiliais] = useState<ChartItem[]>([])
   const [chartTerritorios, setChartTerritorios] = useState<ChartItem[]>([])
   const [chartCategorias, setChartCategorias] = useState<ChartItem[]>([])
   const [chartCanais, setChartCanais] = useState<ChartItem[]>([])
@@ -97,7 +94,6 @@ export default function VendasDashboardPage() {
 
   // KPIs (reais)
   useEffect(() => {
-    let cancelled = false
     async function loadKpis() {
       try {
         const params = new URLSearchParams()
@@ -139,14 +135,11 @@ export default function VendasDashboardPage() {
       }
     }
     loadKpis()
-    return () => { cancelled = true }
   }, [filters.dateRange])
 
   // Charts (reais)
   const top5Vendedores = chartVendedores
-  const top5Equipes = chartEquipes
   const top5Produtos = chartProdutos
-  const rankingFiliais = chartFiliais
   const vendasPorTerritorio = chartTerritorios
   const vendasPorCategoria = chartCategorias
 
@@ -181,24 +174,7 @@ export default function VendasDashboardPage() {
     return arr
   }, [chartVendasCidade])
 
-  // Simple horizontal bars
-  function HBars({ items, color }: { items: { label: string; value: number }[]; color: string }) {
-    const max = Math.max(1, ...items.map(i => i.value))
-    return (
-      <div className="space-y-3">
-        {items.map((it) => {
-          const pct = Math.round((it.value / max) * 100)
-          return (
-            <div key={it.label}>
-              <div className="flex justify-between text-xs text-gray-600 mb-1"><span>{it.label}</span><span>{formatBRL(it.value)}</span></div>
-              <div className="w-full h-2.5 bg-gray-100 rounded"><div className={`${color} h-2.5 rounded`} style={{ width: `${pct}%` }} /></div>
-            </div>
-          )
-        })}
-        {items.length === 0 && <div className="text-xs text-gray-400">Sem dados</div>}
-      </div>
-    )
-  }
+  //
 
   // Fonts and header styles
   function fontVar(name?: string) {
@@ -413,7 +389,7 @@ export default function VendasDashboardPage() {
               color="#6366f1"
             />
             <BarChartMultipleRecharts
-              items={chartMetaTerritorio as any}
+              items={chartMetaTerritorio}
               title="Meta x Faturamento por Território"
               icon={<Globe className="w-5 h-5" />}
               series={[
