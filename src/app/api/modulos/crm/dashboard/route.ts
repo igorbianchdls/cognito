@@ -262,7 +262,17 @@ export async function GET(req: NextRequest) {
                             LIMIT $${lParams.length + 1}::int`;
     const fontesLeads = await runQuery<ChartItem>(fontesLeadsSql, [...lParams, limit])
 
-    const charts = {
+    const charts: {
+      funil_fase: ChartItem[]
+      pipeline_vendedor: ChartItem[]
+      forecast_mensal: { key: string; value: number }[]
+      conversao_canal: ChartItem[]
+      conversao_vendedor: ChartItem[]
+      motivos_perda: ChartItem[]
+      atividades_vendedor: ChartItem[]
+      fontes_leads: ChartItem[]
+      conversao_etapa: ChartItem[]
+    } = {
       funil_fase: funil.map(({ label, value }) => ({ label, value })),
       pipeline_vendedor: pipelineVendedor,
       forecast_mensal: forecastMensal, // [{ key, value }]
@@ -271,6 +281,7 @@ export async function GET(req: NextRequest) {
       motivos_perda: motivosPerda,
       atividades_vendedor: atividadesVendedor,
       fontes_leads: fontesLeads,
+      conversao_etapa: [],
     }
 
     // Conversão por Etapa do Funil (aproximação por snapshot atual)
