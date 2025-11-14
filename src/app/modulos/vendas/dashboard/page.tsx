@@ -376,7 +376,7 @@ export default function VendasDashboardPage() {
             </div>
           </div>
 
-          {/* Row 1: Top 5 Vendedores, Top 5 Equipes */}
+          {/* Row 1: Top 5 Vendedores, Top 5 Produtos, Vendas por Canal */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
             <BarChartHorizontalRecharts
               items={top5Vendedores}
@@ -384,16 +384,6 @@ export default function VendasDashboardPage() {
               icon={<Users className="w-5 h-5" />}
               color="#3b82f6"
             />
-            <BarChartHorizontalRecharts
-              items={top5Equipes}
-              title="Top 5 Equipes de Venda"
-              icon={<UsersRound className="w-5 h-5" />}
-              color="#10b981"
-            />
-          </div>
-
-          {/* Row 2: Top 5 Produtos, Vendas por Canal, Meta x Faturamento por Território */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
             <BarChartHorizontalRecharts
               items={top5Produtos}
               title="Top 5 Produtos"
@@ -406,19 +396,9 @@ export default function VendasDashboardPage() {
               icon={<Tag className="w-5 h-5" />}
               color="#f59e0b"
             />
-            <BarChartMultipleRecharts
-              items={chartMetaTerritorio as any}
-              title="Meta x Faturamento por Território"
-              icon={<Globe className="w-5 h-5" />}
-              series={[
-                { key: 'meta', label: 'Meta', color: '#60a5fa' },
-                { key: 'faturamento', label: 'Faturamento', color: '#10b981' },
-              ]}
-              height={240}
-            />
           </div>
 
-          {/* Row 3: Vendas por Território, Vendas por Categoria */}
+          {/* Row 2: Vendas por Território, Vendas por Categoria, Meta x Faturamento por Território */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
             <BarChartHorizontalRecharts
               items={vendasPorTerritorio}
@@ -432,9 +412,44 @@ export default function VendasDashboardPage() {
               icon={<Tag className="w-5 h-5" />}
               color="#6366f1"
             />
+            <BarChartMultipleRecharts
+              items={chartMetaTerritorio as any}
+              title="Meta x Faturamento por Território"
+              icon={<Globe className="w-5 h-5" />}
+              series={[
+                { key: 'meta', label: 'Meta', color: '#60a5fa' },
+                { key: 'faturamento', label: 'Faturamento', color: '#10b981' },
+              ]}
+              height={240}
+            />
           </div>
 
-          {/* Row 4: Taxas de Devolução e Vendas por Estado */}
+          {/* Row 3: Top Clientes, Vendas por Cidade, Vendas por Estado */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            <BarChartHorizontalRecharts
+              items={topClientesItems}
+              title="Top Clientes"
+              icon={<Users className="w-5 h-5" />}
+              color="#3b82f6"
+              height={240}
+            />
+            <BarChartHorizontalRecharts
+              items={vendasPorCidadeItems}
+              title="Vendas por Cidade"
+              icon={<MapPin className="w-5 h-5" />}
+              color="#8b5cf6"
+              height={240}
+            />
+            <BarChartHorizontalRecharts
+              items={chartEstados}
+              title="Vendas por Estado"
+              icon={<MapPin className="w-5 h-5" />}
+              color="#22c55e"
+              height={240}
+            />
+          </div>
+
+          {/* Row 4: Taxas de Devolução e Pedidos Recentes */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
             <BarChartHorizontalPercent
               items={chartDevolucaoCanal}
@@ -448,30 +463,6 @@ export default function VendasDashboardPage() {
               title="Taxa de Devolução por Cliente"
               icon={<Users className="w-5 h-5" />}
               color="#f97316"
-              height={240}
-            />
-            <BarChartHorizontalRecharts
-              items={chartEstados}
-              title="Vendas por Estado"
-              icon={<MapPin className="w-5 h-5" />}
-              color="#22c55e"
-              height={240}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <BarChartHorizontalRecharts
-              items={topClientesItems}
-              title="Top Clientes"
-              icon={<Users className="w-5 h-5" />}
-              color="#3b82f6"
-              height={240}
-            />
-            <BarChartHorizontalRecharts
-              items={vendasPorCidadeItems}
-              title="Vendas por Cidade/UF"
-              icon={<MapPin className="w-5 h-5" />}
-              color="#8b5cf6"
               height={240}
             />
             <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
