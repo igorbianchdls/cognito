@@ -20,6 +20,7 @@ interface BarChartHorizontalRechartsProps {
   icon?: React.ReactNode
   color?: string
   height?: number
+  onBarClick?: (item: { label: string; value: number }) => void
 }
 
 export function BarChartHorizontalRecharts({
@@ -27,7 +28,8 @@ export function BarChartHorizontalRecharts({
   title,
   icon,
   color = '#64748b',
-  height = 240
+  height = 240,
+  onBarClick
 }: BarChartHorizontalRechartsProps) {
   const data = useMemo(() =>
     items.map(it => ({
@@ -116,6 +118,14 @@ export function BarChartHorizontalRecharts({
               dataKey="value"
               fill={color}
               radius={[0, 4, 4, 0]}
+              onClick={(data) => {
+                if (onBarClick) {
+                  onBarClick(data.payload)
+                }
+              }}
+              style={{
+                cursor: onBarClick ? 'pointer' : 'default'
+              }}
             />
           </BarChart>
         </ChartContainer>
