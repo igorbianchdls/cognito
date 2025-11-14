@@ -14,6 +14,7 @@ import { $financeiroDashboardUI, $financeiroDashboardFilters, financeiroDashboar
 
 type PedidoRow = {
   valor_total_pedido?: number | string
+  valor_total?: number | string
   data_pedido?: string
   canal_venda?: string
   vendedor?: string
@@ -446,7 +447,7 @@ export default function VendasDashboardPage() {
                       <div className="text-xs text-gray-500" style={styleText}>{p.cliente || '—'} • {new Date(p.data_pedido || '').toLocaleDateString('pt-BR')}</div>
                     </div>
                     <div>
-                      <div className={`font-semibold text-sm ${isCompleted(p.status) ? 'text-green-600' : 'text-orange-600'}`}>{formatBRL(p.valor_total_pedido)}</div>
+                      <div className={`font-semibold text-sm ${isCompleted(p.status) ? 'text-green-600' : 'text-orange-600'}`}>{formatBRL(p.valor_total_pedido ?? p.valor_total)}</div>
                       <div className={`text-xs text-right ${isCompleted(p.status) ? 'text-green-600' : 'text-orange-600'}`}>{p.status || '—'}</div>
                     </div>
                   </div>
