@@ -125,7 +125,6 @@ export default function ModulosFiscalPage() {
       <SidebarShadcn />
       <SidebarInset className="overflow-hidden">
         <PageHeader
-          icon={<FileText className="w-6 h-6" />}
           title={titulo.title}
           subtitle={titulo.subtitle}
           fontFamily={fontVar(titulo.fontFamily)}
