@@ -148,7 +148,7 @@ export default function ModulosFiscalPage() {
           fontFamily={fontVar(tabs.fontFamily)}
           fontSize={tabs.fontSize}
           fontWeight={tabs.fontWeight}
-          color={tabs.fontColor}
+          color={tabs.color}
           letterSpacing={tabs.letterSpacing}
         />
         <div style={{ paddingTop: (layout.contentTopGap || 0) + (layout.mbTabs || 0) }}>
