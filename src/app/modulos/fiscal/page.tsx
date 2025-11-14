@@ -53,38 +53,21 @@ export default function ModulosFiscalPage() {
     })
   }, [])
 
-  // Fetch data when tab, page, or filters change
   useEffect(() => {
     async function fetchData() {
       if (!tabs.selected) return
-
       setIsLoading(true)
       setError(null)
-
       try {
         const params = new URLSearchParams({
           view: tabs.selected,
           page: String(page),
           pageSize: String(pageSize),
         })
-
-        if (dateRange?.from) {
-          const de = dateRange.from.toISOString().split('T')[0]
-          params.set('de', de)
-        }
-        if (dateRange?.to) {
-          const ate = dateRange.to.toISOString().split('T')[0]
-          params.set('ate', ate)
-        }
-
-        const res = await fetch(`/api/modulos/fiscal?${params.toString()}`, {
-          cache: 'no-store'
-        })
-
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status}`)
-        }
-
+        if (dateRange?.from) params.set('de', dateRange.from.toISOString().split('T')[0])
+        if (dateRange?.to) params.set('ate', dateRange.to.toISOString().split('T')[0])
+        const res = await fetch('/api/modulos/fiscal?' + params.toString(), { cache: 'no-store' })
+        if (!res.ok) throw new Error('HTTP ' + res.status)
         const json = await res.json()
         setData(json.rows || [])
         setTotal(json.total || 0)
@@ -96,7 +79,6 @@ export default function ModulosFiscalPage() {
         setIsLoading(false)
       }
     }
-
     fetchData()
   }, [tabs.selected, page, pageSize, dateRange])
 
@@ -117,7 +99,6 @@ export default function ModulosFiscalPage() {
     return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
   }
 
-  // Define columns based on selected tab
   const columns: ColumnDef<Row>[] =
     tabs.selected === 'notas_fiscais'
       ? [

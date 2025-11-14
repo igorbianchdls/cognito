@@ -18,19 +18,15 @@ export async function GET(req: NextRequest) {
       )
     }
 
-    // Common filters
     const de = searchParams.get('de') || undefined
     const ate = searchParams.get('ate') || undefined
     const q = searchParams.get('q') || undefined
 
-    // Pagination
     const page = Math.max(1, parseNumber(searchParams.get('page'), 1) || 1)
     const pageSize = Math.max(1, Math.min(1000, parseNumber(searchParams.get('pageSize'), 20) || 20))
     const offset = (page - 1) * pageSize
 
-    // Placeholder responses - queries will be added later
     if (view === 'notas_fiscais') {
-      // Placeholder data for Notas Fiscais
       return Response.json({
         success: true,
         rows: [],
@@ -42,7 +38,6 @@ export async function GET(req: NextRequest) {
     }
 
     if (view === 'notas_fiscais_servico') {
-      // Placeholder data for Notas Fiscais de Serviço
       return Response.json({
         success: true,
         rows: [],
@@ -54,7 +49,7 @@ export async function GET(req: NextRequest) {
     }
 
     return Response.json(
-      { success: false, message: `View "${view}" não reconhecida` },
+      { success: false, message: 'View não reconhecida: ' + view },
       { status: 400 }
     )
   } catch (error) {
