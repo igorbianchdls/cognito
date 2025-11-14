@@ -94,6 +94,7 @@ export default function ModulosVendasPage() {
         { value: 'tabelas_preco', label: 'Tabelas de Preço' },
         { value: 'promocoes', label: 'Promoções' },
         { value: 'regras_desconto', label: 'Regras de Desconto' },
+        { value: 'canais_distribuicao', label: 'Canais de Distribuição' },
       ],
       selected: 'pedidos',
     })
@@ -288,7 +289,19 @@ export default function ModulosVendasPage() {
         ]
       case 'canais':
         return [
-          { accessorKey: 'canal', header: 'Canal' },
+          { accessorKey: 'canal_venda', header: 'ID' },
+          { accessorKey: 'nome_canal_venda', header: 'Canal de Venda' },
+          { accessorKey: 'descricao_canal_venda', header: 'Descrição Canal Venda' },
+          { accessorKey: 'ativo', header: 'Ativo' },
+          { accessorKey: 'canal_distribuicao', header: 'Canal de Distribuição' },
+          { accessorKey: 'descricao_canal_distribuicao', header: 'Descrição Canal Distribuição' },
+          { accessorKey: 'criado_em', header: 'Criado Em', cell: ({ getValue }) => formatDate(getValue()) },
+          { accessorKey: 'atualizado_em', header: 'Atualizado Em', cell: ({ getValue }) => formatDate(getValue()) },
+        ]
+      case 'canais_distribuicao':
+        return [
+          { accessorKey: 'canal_distribuicao', header: 'ID' },
+          { accessorKey: 'nome_canal', header: 'Canal de Distribuição' },
           { accessorKey: 'descricao', header: 'Descrição' },
           { accessorKey: 'ativo', header: 'Ativo' },
           { accessorKey: 'criado_em', header: 'Criado Em', cell: ({ getValue }) => formatDate(getValue()) },

@@ -45,9 +45,12 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
     atualizado_em: 'c.atualizado_em',
   },
   canais: {
-    canal: 'cv.nome',
-    descricao: 'cv.descricao',
+    canal_venda: 'cv.id',
+    nome_canal_venda: 'cv.nome',
+    descricao_canal_venda: 'cv.descricao',
     ativo: 'cv.ativo',
+    canal_distribuicao: 'cd.nome',
+    descricao_canal_distribuicao: 'cd.descricao',
     criado_em: 'cv.criado_em',
     atualizado_em: 'cv.atualizado_em',
   },
@@ -177,13 +180,17 @@ export async function GET(req: NextRequest) {
       orderClause = orderBy ? `ORDER BY ${orderBy} ${orderDir}` : 'ORDER BY c.codigo ASC'
     } else if (view === 'canais') {
       selectSql = `SELECT
-        cv.nome AS canal,
-        cv.descricao,
+        cv.id AS canal_venda,
+        cv.nome AS nome_canal_venda,
+        cv.descricao AS descricao_canal_venda,
         cv.ativo,
+        cd.nome AS canal_distribuicao,
+        cd.descricao AS descricao_canal_distribuicao,
         cv.criado_em,
         cv.atualizado_em`
-      baseSql = `FROM vendas.canais_venda cv`
-      orderClause = orderBy ? `ORDER BY ${orderBy} ${orderDir}` : 'ORDER BY cv.nome ASC'
+      baseSql = `FROM vendas.canais_venda cv
+        LEFT JOIN vendas.canais_distribuicao cd ON cd.id = cv.canal_distribuicao_id`
+      orderClause = orderBy ? `ORDER BY ${orderBy} ${orderDir}` : 'ORDER BY cd.nome ASC, cv.nome ASC'
     } else if (view === 'tabelas_preco') {
       selectSql = `SELECT
         tp.id AS tabela_preco,
@@ -235,6 +242,16 @@ export async function GET(req: NextRequest) {
         LEFT JOIN financeiro.metodos_pagamento fp ON rd.tipo = 'pagamento' AND fp.id = rd.referencia_id
         LEFT JOIN produtos.categorias cat ON rd.tipo = 'categoria' AND cat.id = rd.referencia_id`
       orderClause = orderBy ? `ORDER BY ${orderBy} ${orderDir}` : 'ORDER BY rd.id ASC'
+    } else if (view === 'canais_distribuicao') {
+      selectSql = `SELECT
+        cd.id AS canal_distribuicao,
+        cd.nome AS nome_canal,
+        cd.descricao,
+        cd.ativo,
+        cd.criado_em,
+        cd.atualizado_em`
+      baseSql = `FROM vendas.canais_distribuicao cd`
+      orderClause = orderBy ? `ORDER BY ${orderBy} ${orderDir}` : 'ORDER BY cd.nome ASC'
     } else {
       return Response.json({ success: false, message: `View inválida: ${view}` }, { status: 400 })
     }
@@ -443,6 +460,8 @@ export async function GET(req: NextRequest) {
       ? `SELECT COUNT(DISTINCT tp.id)::int AS total FROM vendas.tabelas_preco tp`
       : view === 'promocoes'
       ? `SELECT COUNT(DISTINCT pr.id)::int AS total FROM vendas.promocoes pr`
+      : view === 'canais_distribuicao'
+      ? `SELECT COUNT(DISTINCT cd.id)::int AS total FROM vendas.canais_distribuicao cd`
       : view === 'regras_desconto'
       ? `SELECT COUNT(DISTINCT rd.id)::int AS total FROM vendas.regras_desconto rd`
       : `SELECT COUNT(*)::int AS total ${baseSql}`
