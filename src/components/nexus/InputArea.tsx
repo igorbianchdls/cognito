@@ -63,6 +63,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }> | null
   'funcionariosAgent': Users,
   'crmAgent': Users,
   'contabilidadeAgent': BookOpen,
+  'analistaVendas': TrendingUp,
 };
 
 const models = [
@@ -81,6 +82,7 @@ const models = [
   { id: 'gestorDeVendasB2BAgent', name: 'Gerente de Vendas B2B', icon: iconMap['gestorDeVendasB2BAgent'] },
   { id: 'crmAgent', name: 'Analista de CRM', icon: iconMap['crmAgent'] },
   { id: 'contabilidadeAgent', name: 'Agente de Contabilidade', icon: iconMap['contabilidadeAgent'] },
+  { id: 'analistaVendas', name: 'Analista de Vendas', icon: iconMap['analistaVendas'] },
 ];
 
 // Workflows disponíveis
@@ -223,6 +225,7 @@ export default function InputArea({ input, setInput, onSubmit, status, selectedA
                 case 'funcionariosAgent': return 'Analista de RH';
                 case 'crmAgent': return 'Analista de CRM';
                 case 'contabilidadeAgent': return 'Agente de Contabilidade';
+                case 'analistaVendas': return 'Analista de Vendas';
                 default: return id;
               }
             };
