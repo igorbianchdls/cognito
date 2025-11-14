@@ -116,50 +116,40 @@ export async function GET(req: NextRequest) {
 
     if (view === 'pedidos') {
       selectSql = `SELECT
-        p.id AS pedido,
-        c.nome_fantasia AS cliente,
-        f.nome AS vendedor,
-        t.nome AS territorio,
-        cv.nome AS canal_venda,
-        cd.nome AS canal_distribuicao,
-        camp.nome AS campanha_venda,
-        cc2.nome AS centro_lucro,
-        cup.codigo AS cupom,
+        p.id AS pedido_id,
         p.data_pedido,
         p.status,
-        p.subtotal AS pedido_subtotal,
-        p.desconto_total,
-        p.valor_total,
-        pr.nome AS produto,
+        cli.nome_fantasia AS cliente_nome,
+        func.nome AS vendedor_nome,
+        terr.nome AS territorio_nome,
+        canal.nome AS canal_venda_nome,
+        cl.nome AS centro_lucro_nome,
+        camp.nome AS campanha_venda_nome,
+        f.nome AS filial_nome,
+        un.nome AS unidade_negocio_nome,
+        so.nome AS sales_office_nome,
+        prod.nome AS produto_nome,
         pi.quantidade,
         pi.preco_unitario,
-        pi.desconto AS desconto_item,
-        pi.subtotal AS subtotal_item,
-        pi.id AS item_id,
-        pc.custo AS custo_unitario,
-        pc.metodo_custo,
-        (pi.quantidade * COALESCE(pc.custo, 0))::float AS custo_total_item,
+        pi.desconto,
+        pi.subtotal AS item_subtotal,
+        pc.custo AS produto_custo,
         p.criado_em,
         p.atualizado_em`
       baseSql = `FROM vendas.pedidos p
-        LEFT JOIN entidades.clientes c ON c.id = p.cliente_id
-        LEFT JOIN comercial.vendedores v ON v.id = p.vendedor_id
-        LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id
-        LEFT JOIN comercial.territorios t ON t.id = p.territorio_id
-        LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
-        LEFT JOIN vendas.canais_distribuicao cd ON cd.id = cv.canal_distribuicao_id
+        LEFT JOIN entidades.clientes cli ON cli.id = p.cliente_id
+        LEFT JOIN comercial.vendedores vend ON vend.id = p.vendedor_id
+        LEFT JOIN entidades.funcionarios func ON func.id = vend.funcionario_id
+        LEFT JOIN comercial.territorios terr ON terr.id = p.territorio_id
+        LEFT JOIN vendas.canais_venda canal ON canal.id = p.canal_venda_id
+        LEFT JOIN empresa.centros_lucro cl ON cl.id = p.centro_lucro_id
         LEFT JOIN comercial.campanhas_vendas camp ON camp.id = p.campanha_venda_id
-        LEFT JOIN empresa.centros_custo cc2 ON cc2.id = p.centro_custo_id
-        LEFT JOIN vendas.cupons cup ON cup.id = p.cupom_id
+        LEFT JOIN empresa.filiais f ON f.id = p.filial_id
+        LEFT JOIN empresa.unidades_negocio un ON un.id = p.unidade_negocio_id
+        LEFT JOIN comercial.sales_offices so ON so.id = p.sales_office_id
         LEFT JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
-        LEFT JOIN produtos.produto pr ON pr.id = pi.produto_id
-        LEFT JOIN LATERAL (
-          SELECT custo, metodo_custo
-          FROM produtos.produto_custos
-          WHERE produto_id = pi.produto_id
-          ORDER BY data_referencia DESC
-          LIMIT 1
-        ) pc ON true`
+        LEFT JOIN produtos.produto prod ON prod.id = pi.produto_id
+        LEFT JOIN produtos.produto_custos pc ON pc.produto_id = prod.id`
       orderClause = orderBy ? `ORDER BY ${orderBy} ${orderDir}, pi.id ASC` : 'ORDER BY p.id ASC, pi.id ASC'
     } else if (view === 'devolucoes') {
       selectSql = `SELECT
@@ -286,11 +276,17 @@ export async function GET(req: NextRequest) {
         vendedor: unknown
         territorio: unknown
         canal_venda: unknown
+        canal_distribuicao: unknown
+        campanha_venda: unknown
+        centro_lucro: unknown
+        filial: unknown
+        unidade_negocio: unknown
+        sales_office: unknown
         data_pedido: unknown
         status: unknown
-        pedido_subtotal: unknown
-        desconto_total: unknown
-        valor_total: unknown
+        pedido_subtotal: number
+        desconto_total: number
+        valor_total: number
         custo_total_pedido: number
         margem_bruta_pedido: number
         criado_em: unknown
@@ -308,21 +304,27 @@ export async function GET(req: NextRequest) {
       const pedidosMap = new Map<number, PedidoAgregado>()
 
       for (const row of rows) {
-        const pedidoId = Number(row.pedido)
+        const pedidoId = Number(row.pedido_id)
 
         if (!pedidosMap.has(pedidoId)) {
           // Primeira vez vendo este pedido
           pedidosMap.set(pedidoId, {
-            pedido: row.pedido,
-            cliente: row.cliente,
-            vendedor: row.vendedor,
-            territorio: row.territorio,
-            canal_venda: row.canal_venda,
+            pedido: row.pedido_id,
+            cliente: row.cliente_nome,
+            vendedor: row.vendedor_nome,
+            territorio: row.territorio_nome,
+            canal_venda: row.canal_venda_nome,
+            canal_distribuicao: row.canal_distribuicao_nome,
+            campanha_venda: row.campanha_venda_nome,
+            centro_lucro: row.centro_lucro_nome,
+            filial: row.filial_nome,
+            unidade_negocio: row.unidade_negocio_nome,
+            sales_office: row.sales_office_nome,
             data_pedido: row.data_pedido,
             status: row.status,
-            pedido_subtotal: row.pedido_subtotal,
-            desconto_total: row.desconto_total,
-            valor_total: row.valor_total,
+            pedido_subtotal: 0,
+            desconto_total: 0,
+            valor_total: 0,
             custo_total_pedido: 0,
             margem_bruta_pedido: 0,
             criado_em: row.criado_em,
@@ -332,18 +334,24 @@ export async function GET(req: NextRequest) {
         }
 
         // Adicionar item se existir
-        if (row.item_id) {
-          const custoTotalItem = Number(row.custo_total_item || 0)
+        if (row.produto_nome) {
+          const quantidade = Number(row.quantidade || 0)
+          const produtoCusto = Number(row.produto_custo || 0)
+          const custoTotalItem = quantidade * produtoCusto
+          const subtotalItem = Number(row.item_subtotal || 0)
+
           pedidosMap.get(pedidoId)!.itens.push({
-            produto: row.produto,
+            produto: row.produto_nome,
             quantidade: row.quantidade,
             preco_unitario: row.preco_unitario,
-            desconto_item: row.desconto_item,
-            subtotal_item: row.subtotal_item,
-            custo_unitario: row.custo_unitario,
-            custo_total_item: row.custo_total_item,
+            desconto_item: row.desconto,
+            subtotal_item: row.item_subtotal,
+            custo_unitario: row.produto_custo,
+            custo_total_item: custoTotalItem,
           })
-          // Acumular custo total do pedido
+          // Acumular valores do pedido
+          pedidosMap.get(pedidoId)!.pedido_subtotal += subtotalItem
+          pedidosMap.get(pedidoId)!.valor_total += subtotalItem
           pedidosMap.get(pedidoId)!.custo_total_pedido += custoTotalItem
         }
       }
