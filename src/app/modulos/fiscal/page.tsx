@@ -127,7 +127,7 @@ export default function ModulosFiscalPage() {
         <PageHeader
           title={titulo.title}
           subtitle={titulo.subtitle}
-          fontFamily={fontVar(titulo.fontFamily)}
+          titleFontFamily={fontVar(titulo.fontFamily)}
           titleFontSize={titulo.titleFontSize}
           titleFontWeight={titulo.titleFontWeight}
           titleColor={titulo.titleColor}
@@ -136,9 +136,6 @@ export default function ModulosFiscalPage() {
           subtitleFontWeight={titulo.subtitleFontWeight}
           subtitleColor={titulo.subtitleColor}
           subtitleLetterSpacing={titulo.subtitleLetterSpacing}
-          backgroundColor={titulo.backgroundColor}
-          bottomBorderColor={titulo.bottomBorderColor}
-          bottomBorderWidth={titulo.bottomBorderWidth}
         />
         <TabsNav
           options={tabs.options}
