@@ -96,14 +96,14 @@ export async function GET(req: NextRequest) {
     // Charts
     type ChartItem = { label: string; value: number }
     // Vendedores
-    const vendSql = `SELECT COALESCE(f.nome_razao_social,'—') AS label, COALESCE(SUM(pi.subtotal),0)::float AS value
-                     FROM vendas.pedidos p
-                     LEFT JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
-                     LEFT JOIN comercial.vendedores v ON v.id = p.vendedor_id
+    const vendSql = `SELECT f.nome AS label, COALESCE(SUM(pi.quantidade * pi.preco_unitario),0)::float AS value
+                     FROM comercial.vendedores v
                      LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id
+                     LEFT JOIN vendas.pedidos p ON p.vendedor_id = v.id
+                     LEFT JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
                      ${pWhere}
-                     GROUP BY 1
-                     ORDER BY 2 DESC
+                     GROUP BY f.nome
+                     ORDER BY value DESC
                      LIMIT $${pParams.length + 1}::int`;
     let vendedores: ChartItem[] = []
     try { vendedores = await runQuery<ChartItem>(vendSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard vendedores error:', e); vendedores = [] }
