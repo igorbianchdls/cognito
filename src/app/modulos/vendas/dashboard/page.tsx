@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useStore } from '@nanostores/react'
 import DashboardLayout from '@/components/modulos/DashboardLayout'
 import { BarChartHorizontalRecharts } from '@/components/charts/BarChartHorizontalRecharts'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { BarChartHorizontalPercent } from '@/components/charts/BarChartHorizontalPercent'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
@@ -373,7 +374,7 @@ export default function VendasDashboardPage() {
           </div>
 
           {/* Row 1: Top 5 Vendedores, Top 5 Equipes */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
             <BarChartHorizontalRecharts
               items={top5Vendedores}
               title="Top 5 Vendedores"
@@ -389,7 +390,7 @@ export default function VendasDashboardPage() {
           </div>
 
           {/* Row 2: Top 5 Produtos, Vendas por Canal */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
             <BarChartHorizontalRecharts
               items={top5Produtos}
               title="Top 5 Produtos"
@@ -405,7 +406,7 @@ export default function VendasDashboardPage() {
           </div>
 
           {/* Row 3: Vendas por Território, Vendas por Categoria */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
             <BarChartHorizontalRecharts
               items={vendasPorTerritorio}
               title="Vendas por Território"
@@ -420,8 +421,8 @@ export default function VendasDashboardPage() {
             />
           </div>
 
-          {/* Row 3.1: Taxas de Devolução */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          {/* Row 4: Taxas de Devolução e Vendas por Estado */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
             <BarChartHorizontalPercent
               items={chartDevolucaoCanal}
               title="Taxa de Devolução por Canal"
@@ -436,10 +437,6 @@ export default function VendasDashboardPage() {
               color="#f97316"
               height={240}
             />
-          </div>
-
-          {/* Row 3.2: Vendas por Estado */}
-          <div className="grid grid-cols-1 lg:grid-cols-1 gap-6 mb-6">
             <BarChartHorizontalRecharts
               items={chartEstados}
               title="Vendas por Estado"
@@ -466,22 +463,40 @@ export default function VendasDashboardPage() {
             />
             <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
               <h3 className="text-lg font-semibold mb-4" style={styleChartTitle}>Pedidos Recentes</h3>
-              <div className="space-y-3">
-                {pedidosRecentes.length === 0 ? (
-                  <div className="text-sm text-gray-400" style={styleText}>Sem pedidos recentes</div>
-                ) : pedidosRecentes.map((p) => (
-                  <div key={p.numero_pedido ?? `${p.cliente}-${p.data_pedido}`} className="flex justify-between items-center pb-2 border-b last:border-b-0" style={{ borderColor: cardBorderColor }}>
-                    <div>
-                      <div className="font-medium text-sm" style={styleText}>{p.numero_pedido || 'Pedido'}</div>
-                      <div className="text-xs text-gray-500" style={styleText}>{p.cliente || '—'} • {new Date(p.data_pedido || '').toLocaleDateString('pt-BR')}</div>
-                    </div>
-                    <div>
-                      <div className={`font-semibold text-sm ${isCompleted(p.status) ? 'text-green-600' : 'text-orange-600'}`}>{formatBRL(p.valor_total_pedido ?? p.valor_total)}</div>
-                      <div className={`text-xs text-right ${isCompleted(p.status) ? 'text-green-600' : 'text-orange-600'}`}>{p.status || '—'}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              {pedidosRecentes.length === 0 ? (
+                <div className="text-sm text-gray-400" style={styleText}>Sem pedidos recentes</div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader className="bg-gray-50">
+                      <TableRow>
+                        <TableHead className="w-[110px]">Pedido</TableHead>
+                        <TableHead>Cliente</TableHead>
+                        <TableHead>Canal</TableHead>
+                        <TableHead>Vendedor</TableHead>
+                        <TableHead className="text-right">Total</TableHead>
+                        <TableHead>Data</TableHead>
+                        <TableHead>Status</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {pedidosRecentes.slice(0, 6).map((p) => (
+                        <TableRow key={p.numero_pedido ?? `${p.cliente}-${p.data_pedido}`}>
+                          <TableCell className="font-medium">{p.numero_pedido || '—'}</TableCell>
+                          <TableCell>{p.cliente || '—'}</TableCell>
+                          <TableCell>{p.canal_venda || '—'}</TableCell>
+                          <TableCell>{p.vendedor || '—'}</TableCell>
+                          <TableCell className="text-right">{formatBRL(p.valor_total_pedido ?? p.valor_total)}</TableCell>
+                          <TableCell>{p.data_pedido ? new Date(p.data_pedido).toLocaleDateString('pt-BR') : '—'}</TableCell>
+                          <TableCell>
+                            <span className={`${isCompleted(p.status) ? 'text-green-600' : 'text-orange-600'}`}>{p.status || '—'}</span>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
             </div>
           </div>
       </div>
