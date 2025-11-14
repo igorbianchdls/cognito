@@ -152,8 +152,8 @@ export async function GET(req: NextRequest) {
     let topClientes: { cliente: string; total: number; pedidos: number }[] = []
     try { topClientes = await runQuery<{ cliente: string; total: number; pedidos: number }>(topClientesSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard clientes error:', e); topClientes = [] }
 
-    // Vendas por Cidade/UF
-    const cidadeSql = `SELECT COALESCE(CONCAT_WS(' - ', c.cidade, c.uf), '—') AS cidade, COALESCE(SUM(p.valor_total),0)::float AS total
+    // Vendas por Cidade (somente c.cidade, sem UF)
+    const cidadeSql = `SELECT COALESCE(c.cidade, '—') AS cidade, COALESCE(SUM(p.valor_total),0)::float AS total
                        FROM vendas.pedidos p
                        LEFT JOIN entidades.clientes c ON c.id = p.cliente_id
                        ${pWhere}
