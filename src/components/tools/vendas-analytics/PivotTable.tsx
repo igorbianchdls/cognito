@@ -47,16 +47,16 @@ export default function PivotTable({ success, message, data }: Props) {
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
   const [showChart, setShowChart] = useState(false)
   const [level, setLevel] = useState<1 | 2 | 3>(1)
-  const [path, setPath] = useState<{ territorio?: string; dim2?: string }>({})
+  const [path, setPath] = useState<{ level1?: string; level2?: string }>({})
 
-  const { territorios, mapa } = useMemo(() => {
-    const territorios: string[] = []
+  const { level1Values, mapa } = useMemo(() => {
+    const level1Values: string[] = []
     const mapa = new Map<string, { total: number; dim2: Map<string, { total: number; filhos: SummaryRow[] }> }>()
     const rows = data?.summary || []
 
     for (const row of rows) {
       if (row.nivel === 1) {
-        if (!territorios.includes(row.nome)) territorios.push(row.nome)
+        if (!level1Values.includes(row.nome)) level1Values.push(row.nome)
         if (!mapa.has(row.nome)) mapa.set(row.nome, { total: 0, dim2: new Map() })
         const agg = mapa.get(row.nome)!
         agg.total = Number(row.valor || 0)
@@ -77,9 +77,9 @@ export default function PivotTable({ success, message, data }: Props) {
         if (!agg.dim2.has(key)) agg.dim2.set(key, { total: 0, filhos: [] })
         agg.dim2.get(key)!.filhos.push(row)
       }
-      }
+    }
 
-    return { territorios, mapa }
+    return { level1Values, mapa }
   }, [data])
 
   // ----- Chart data (drill-down) -----
@@ -87,11 +87,11 @@ export default function PivotTable({ success, message, data }: Props) {
   const rows = useMemo<SummaryRow[]>(() => data?.summary ?? [], [data])
   const measure = data?.meta?.measure || 'faturamento'
   const rowsL1 = useMemo(() => rows.filter(r => r.nivel === 1), [rows])
-  const rowsL2 = useMemo(() => (path.territorio ? rows.filter(r => r.nivel === 2 && r.nome === path.territorio) : []), [rows, path.territorio])
-  const rowsL3 = useMemo(() => (path.territorio && path.dim2
-      ? rows.filter(r => r.nivel === 3 && r.nome === path.territorio && String(r.detalhe1_nome || '—') === path.dim2)
+  const rowsL2 = useMemo(() => (path.level1 ? rows.filter(r => r.nivel === 2 && r.nome === path.level1) : []), [rows, path.level1])
+  const rowsL3 = useMemo(() => (path.level1 && path.level2
+      ? rows.filter(r => r.nivel === 3 && r.nome === path.level1 && String(r.detalhe1_nome || '—') === path.level2)
       : []
-    ), [rows, path.territorio, path.dim2])
+    ), [rows, path.level1, path.level2])
   const chartData = useMemo<ChartDatum[]>(() => {
     const fmt = (n: unknown) => Number(n || 0)
     if (level === 1) return rowsL1.map(r => ({ categoria: r.nome, valor: fmt(r.valor) })).sort((a, b) => b.valor - a.valor)
@@ -104,10 +104,10 @@ export default function PivotTable({ success, message, data }: Props) {
   }
   const handleCategoryClick = (cat: string) => {
     if (level === 1) {
-      setPath({ territorio: cat })
+      setPath({ level1: cat })
       setLevel(2)
     } else if (level === 2) {
-      setPath(prev => ({ ...prev, dim2: cat }))
+      setPath(prev => ({ ...prev, level2: cat }))
       setLevel(3)
     }
   }
@@ -115,7 +115,7 @@ export default function PivotTable({ success, message, data }: Props) {
   const goBack = () => {
     if (level === 3) {
       setLevel(2)
-      setPath(prev => ({ territorio: prev.territorio }))
+      setPath(prev => ({ level1: prev.level1 }))
     } else if (level === 2) {
       setLevel(1)
       setPath({})
@@ -123,10 +123,11 @@ export default function PivotTable({ success, message, data }: Props) {
   }
   const breadcrumb = useMemo(() => {
     if (!showChart) return null
-    if (level === 1) return 'Territórios'
-    if (level === 2) return `Território: ${path.territorio}`
-    return `Território: ${path.territorio} • ${data?.meta?.nivel2_dim || 'Dim 2'}: ${path.dim2}`
-  }, [showChart, level, path, data?.meta?.nivel2_dim])
+    const dim1Label = data?.meta?.nivel1_dim || 'Dim 1'
+    if (level === 1) return dim1Label
+    if (level === 2) return `${dim1Label}: ${path.level1}`
+    return `${dim1Label}: ${path.level1} • ${data?.meta?.nivel2_dim || 'Dim 2'}: ${path.level2}`
+  }, [showChart, level, path, data?.meta?.nivel1_dim, data?.meta?.nivel2_dim])
   const colors = [
     '#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#84cc16', '#ec4899', '#22c55e', '#a855f7', '#f97316', '#0ea5e9'
   ]
@@ -176,17 +177,17 @@ export default function PivotTable({ success, message, data }: Props) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {territorios.map((t) => {
-                  const info = mapa.get(t)
+                {level1Values.map((dim1) => {
+                  const info = mapa.get(dim1)
                   if (!info) return null
                   const isOpen = expanded.has(t)
                   return (
-                    <Fragment key={`group-${t}`}>
+                    <Fragment key={`group-${dim1}`}>
                       <TableRow className="bg-white">
                         <TableCell className="align-middle">
                           <button
                             type="button"
-                            onClick={() => toggle(t)}
+                            onClick={() => toggle(dim1)}
                             className="inline-flex items-center gap-2 hover:opacity-80"
                           >
                             {isOpen ? (
@@ -194,7 +195,7 @@ export default function PivotTable({ success, message, data }: Props) {
                             ) : (
                               <ChevronRight className="h-4 w-4" />
                             )}
-                            <span className="font-semibold">{t}</span>
+                            <span className="font-semibold">{dim1}</span>
                           </button>
                         </TableCell>
                         <TableCell className={
@@ -210,59 +211,59 @@ export default function PivotTable({ success, message, data }: Props) {
                           .sort((a, b) => b[1].total - a[1].total)
                           .map(([dim2Key, dim2Info]) => {
                             const hasChildren = dim2Info.filhos.length > 0
-                            const key = `${t}||${dim2Key}`
-                            const isOpenL2 = expanded.has(key)
-                            return (
-                              <Fragment key={`l2-${key}`}>
-                                <TableRow className="bg-gray-50/60">
-                                  <TableCell className="pl-8">
-                                    {hasChildren ? (
-                                      <button
-                                        type="button"
-                                        onClick={() => {
-                                          const next = new Set(expanded)
-                                          if (next.has(key)) next.delete(key); else next.add(key)
-                                          setExpanded(next)
-                                        }}
-                                        className="inline-flex items-center gap-2 hover:opacity-80"
-                                      >
-                                        {isOpenL2 ? (
-                                          <ChevronDown className="h-4 w-4" />
-                                        ) : (
-                                          <ChevronRight className="h-4 w-4" />
-                                        )}
-                                        <span>{dim2Key}</span>
-                                      </button>
-                                    ) : (
-                                      <span className="pl-6 inline-block">{dim2Key}</span>
-                                    )}
-                                  </TableCell>
-                                  <TableCell className="text-right">
-                                    {data?.meta?.measure === 'faturamento' || !data?.meta?.measure
-                                      ? Number(dim2Info.total || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-                                      : Number(dim2Info.total || 0).toLocaleString('pt-BR')}
-                                  </TableCell>
-                                </TableRow>
-                                {isOpenL2 && dim2Info.filhos.map((v, idx) => (
-                                  <TableRow key={`l3-${key}-${idx}`} className="bg-gray-50/80">
-                                    <TableCell className="pl-14">{v.detalhe2_nome || '—'}</TableCell>
-                                    <TableCell className="text-right">
-                                      {data?.meta?.measure === 'faturamento' || !data?.meta?.measure
-                                        ? Number(v.valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-                                        : Number(v.valor || 0).toLocaleString('pt-BR')}
-                                    </TableCell>
-                                  </TableRow>
-                                ))}
-                              </Fragment>
-                            )
-                          })
+                            const key = `${dim1}||${dim2Key}`
+                             const isOpenL2 = expanded.has(key)
+                             return (
+                               <Fragment key={`l2-${key}`}>
+                                 <TableRow className="bg-gray-50/60">
+                                   <TableCell className="pl-8">
+                                     {hasChildren ? (
+                                       <button
+                                         type="button"
+                                         onClick={() => {
+                                           const next = new Set(expanded)
+                                           if (next.has(key)) next.delete(key); else next.add(key)
+                                           setExpanded(next)
+                                         }}
+                                         className="inline-flex items-center gap-2 hover:opacity-80"
+                                       >
+                                         {isOpenL2 ? (
+                                           <ChevronDown className="h-4 w-4" />
+                                         ) : (
+                                           <ChevronRight className="h-4 w-4" />
+                                         )}
+                                         <span>{dim2Key}</span>
+                                       </button>
+                                     ) : (
+                                       <span className="pl-6 inline-block">{dim2Key}</span>
+                                     )}
+                                   </TableCell>
+                                   <TableCell className="text-right">
+                                     {data?.meta?.measure === 'faturamento' || !data?.meta?.measure
+                                       ? Number(dim2Info.total || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+                                       : Number(dim2Info.total || 0).toLocaleString('pt-BR')}
+                                   </TableCell>
+                                 </TableRow>
+                                 {isOpenL2 && dim2Info.filhos.map((v, idx) => (
+                                    <TableRow key={`l3-${key}-${idx}`} className="bg-gray-50/80">
+                                      <TableCell className="pl-14">{v.detalhe2_nome || '—'}</TableCell>
+                                      <TableCell className="text-right">
+                                        {data?.meta?.measure === 'faturamento' || !data?.meta?.measure
+                                          ? Number(v.valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+                                          : Number(v.valor || 0).toLocaleString('pt-BR')}
+                                      </TableCell>
+                                    </TableRow>
+                                  ))}
+                                </Fragment>
+                              )
+                            })
                       )}
                     </Fragment>
                   )
                 })}
               </TableBody>
             </Table>
-            {territorios.length === 0 && (
+            {level1Values.length === 0 && (
               <div className="p-4 text-sm text-muted-foreground">Nenhum dado encontrado.</div>
             )}
           </div>

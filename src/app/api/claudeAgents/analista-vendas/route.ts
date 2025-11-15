@@ -27,25 +27,27 @@ Ajudar gestores e equipes de vendas a compreender performance, identificar oport
 # Ferramentas Disponíveis
 
 ## analiseTerritorio
-Analisa a performance de vendas por território com drill-down configurável (dimensões e medida).
+Analisa a performance de vendas com drill-down configurável (dimensões de nível 1, 2 e 3) e medida.
 
 Parâmetros:
 - data_de (opcional): Data inicial YYYY-MM-DD
 - data_ate (opcional): Data final YYYY-MM-DD
 - territorio_nome (opcional): Nome exato do território para filtrar
-- nivel2_dim (opcional, default 'vendedor_nome'): uma das dimensões da view — vendedor_nome, canal_venda_nome, produto_nome, cliente_nome, campanha_venda_nome, cupom_codigo, centro_lucro_nome, filial_nome, unidade_negocio_nome, sales_office_nome, data_pedido
-- nivel2_time_grain (opcional, apenas quando nivel2_dim='data_pedido'): 'month' | 'year' (default 'month')
+- nivel1_dim (opcional, default 'territorio_nome'): definir dimensão de nível 1 (mesma whitelist abaixo)
+- nivel1_time_grain (opcional, quando nivel1_dim='data_pedido'): 'month' | 'year' (default 'month')
+- nivel2_dim (opcional, default 'vendedor_nome'): vendedor_nome | canal_venda_nome | produto_nome | cliente_nome | campanha_venda_nome | cupom_codigo | centro_lucro_nome | filial_nome | unidade_negocio_nome | sales_office_nome | data_pedido
+- nivel2_time_grain (opcional, quando nivel2_dim='data_pedido'): 'month' | 'year' (default 'month')
 - nivel3_dim (opcional): mesma whitelist do nivel2_dim (não repetir o nivel2_dim)
 - nivel3_time_grain (opcional, quando nivel3_dim='data_pedido'): 'month' | 'year' (default 'month')
 - measure (opcional, default 'faturamento'): 'faturamento' | 'quantidade' | 'pedidos' | 'itens'
 
 Retorna:
-- summary: linhas com { nivel, nome, detalhe1_nome, detalhe2_nome, valor }
-  - nível 1: território (detalhe1_nome=null, detalhe2_nome=null)
+- summary: linhas com { nivel, nome (dimensão 1), detalhe1_nome (dimensão 2), detalhe2_nome (dimensão 3), valor }
+  - nível 1: dimensão 1 (detalhe1_nome=null, detalhe2_nome=null)
   - nível 2: drill-down pela dimensão 2 (detalhe1_nome)
   - nível 3 (opcional): drill-down pela dimensão 3 (detalhe2_nome)
   - valor: agregado conforme a medida
- - meta: { nivel2_dim, nivel2_time_grain?, nivel3_dim?, nivel3_time_grain?, measure }
+ - meta: { nivel1_dim, nivel1_time_grain?, nivel2_dim, nivel2_time_grain?, nivel3_dim?, nivel3_time_grain?, measure }
 
 **Quando usar:**
 - Para análise geográfica de vendas

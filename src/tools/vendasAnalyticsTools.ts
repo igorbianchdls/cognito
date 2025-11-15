@@ -8,6 +8,21 @@ export const analiseTerritorio = tool({
     data_de: z.string().optional(),
     data_ate: z.string().optional(),
     territorio_nome: z.string().optional(),
+    nivel1_dim: z.enum([
+      'territorio_nome',
+      'vendedor_nome',
+      'canal_venda_nome',
+      'produto_nome',
+      'cliente_nome',
+      'campanha_venda_nome',
+      'cupom_codigo',
+      'centro_lucro_nome',
+      'filial_nome',
+      'unidade_negocio_nome',
+      'sales_office_nome',
+      'data_pedido',
+    ] as const).default('territorio_nome').optional(),
+    nivel1_time_grain: z.enum(['month', 'year']).optional(),
     nivel2_dim: z.enum([
       'vendedor_nome',
       'canal_venda_nome',
@@ -38,7 +53,7 @@ export const analiseTerritorio = tool({
     nivel3_time_grain: z.enum(['month', 'year']).optional(),
     measure: z.enum(['faturamento', 'quantidade', 'pedidos', 'itens']).default('faturamento').optional(),
   }),
-  execute: async ({ data_de, data_ate, territorio_nome, nivel2_dim = 'vendedor_nome', nivel2_time_grain, nivel3_dim, nivel3_time_grain, measure = 'faturamento' }) => {
+  execute: async ({ data_de, data_ate, territorio_nome, nivel1_dim = 'territorio_nome', nivel1_time_grain, nivel2_dim = 'vendedor_nome', nivel2_time_grain, nivel3_dim, nivel3_time_grain, measure = 'faturamento' }) => {
     try {
       const params: string[] = []
       const whereParts: string[] = []
@@ -55,15 +70,26 @@ export const analiseTerritorio = tool({
 
       const whereClause = whereParts.length ? `WHERE ${whereParts.join(' AND ')}` : ''
 
+      // Dimensão de nível 1 (expressão e agrupamento)
+      let dim1Expr = ''
+      let groupByDim1 = ''
+      if (nivel1_dim === 'data_pedido') {
+        const grain1 = nivel1_time_grain === 'year' ? 'year' : 'month'
+        const truncExpr1 = `date_trunc('${grain1}', data_pedido)`
+        dim1Expr = grain1 === 'year' ? `to_char(${truncExpr1}, 'YYYY')` : `to_char(${truncExpr1}, 'YYYY-MM')`
+        groupByDim1 = dim1Expr
+      } else {
+        dim1Expr = nivel1_dim
+        groupByDim1 = nivel1_dim
+      }
+
       // Dimensão de nível 2 (expressão e agrupamento), com whitelist
       let detail1Expr = ''
       let groupBy1Expr = ''
       if (nivel2_dim === 'data_pedido') {
         const grain = nivel2_time_grain === 'year' ? 'year' : 'month'
         const truncExpr = `date_trunc('${grain}', data_pedido)`
-        detail1Expr = grain === 'year'
-          ? `to_char(${truncExpr}, 'YYYY')`
-          : `to_char(${truncExpr}, 'YYYY-MM')`
+        detail1Expr = grain === 'year' ? `to_char(${truncExpr}, 'YYYY')` : `to_char(${truncExpr}, 'YYYY-MM')`
         groupBy1Expr = detail1Expr
       } else {
         detail1Expr = nivel2_dim
@@ -109,37 +135,37 @@ export const analiseTerritorio = tool({
         (
           SELECT
             1 AS nivel,
-            territorio_nome AS nome,
+            ${dim1Expr} AS nome,
             NULL::text AS detalhe1_nome,
             NULL::text AS detalhe2_nome,
             ${measureExpr} AS valor
           FROM vendas.vw_pedidos_completo
           ${whereClause}
-          GROUP BY territorio_nome
+          GROUP BY ${groupByDim1}
         )
         UNION ALL
         (
           SELECT
             2 AS nivel,
-            territorio_nome AS nome,
+            ${dim1Expr} AS nome,
             ${detail1Expr} AS detalhe1_nome,
             NULL::text AS detalhe2_nome,
             ${measureExpr} AS valor
           FROM vendas.vw_pedidos_completo
           ${whereClause}
-          GROUP BY territorio_nome, ${groupBy1Expr}
+          GROUP BY ${groupByDim1}, ${groupBy1Expr}
         )
         ${hasLevel3 ? `UNION ALL
         (
           SELECT
             3 AS nivel,
-            territorio_nome AS nome,
+            ${dim1Expr} AS nome,
             ${detail1Expr} AS detalhe1_nome,
             ${detail2Expr} AS detalhe2_nome,
             ${measureExpr} AS valor
           FROM vendas.vw_pedidos_completo
           ${whereClause}
-          GROUP BY territorio_nome, ${groupBy1Expr}, ${groupBy2Expr}
+          GROUP BY ${groupByDim1}, ${groupBy1Expr}, ${groupBy2Expr}
         )` : ''}
         ORDER BY nome, nivel, detalhe1_nome NULLS FIRST, valor DESC
       `
@@ -153,7 +179,7 @@ export const analiseTerritorio = tool({
           summary: rows,
           topVendedores: [],
           topProdutos: [],
-          meta: { nivel2_dim, nivel2_time_grain, nivel3_dim: hasLevel3 ? nivel3_dim : undefined, nivel3_time_grain: hasLevel3 ? nivel3_time_grain : undefined, measure },
+          meta: { nivel1_dim, nivel1_time_grain, nivel2_dim, nivel2_time_grain, nivel3_dim: hasLevel3 ? nivel3_dim : undefined, nivel3_time_grain: hasLevel3 ? nivel3_time_grain : undefined, measure },
         }
       }
     } catch (error) {
@@ -164,7 +190,7 @@ export const analiseTerritorio = tool({
           summary: [],
           topVendedores: [],
           topProdutos: [],
-          meta: { nivel2_dim, nivel2_time_grain, nivel3_dim: nivel3_dim, nivel3_time_grain, measure },
+          meta: { nivel1_dim, nivel1_time_grain, nivel2_dim, nivel2_time_grain, nivel3_dim: nivel3_dim, nivel3_time_grain, measure },
         }
       }
     }
