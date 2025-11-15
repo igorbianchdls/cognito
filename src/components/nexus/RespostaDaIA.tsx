@@ -104,7 +104,8 @@ type AnalisTerritorioData = {
   summary: Array<{
     nivel: number;
     nome: string;
-    detalhe_nome: string | null;
+    detalhe1_nome: string | null;
+    detalhe2_nome: string | null;
     valor: number;
   }>;
   topVendedores: unknown[];
@@ -112,6 +113,8 @@ type AnalisTerritorioData = {
   meta?: {
     nivel2_dim?: string;
     nivel2_time_grain?: 'month' | 'year';
+    nivel3_dim?: string;
+    nivel3_time_grain?: 'month' | 'year';
     measure?: 'faturamento' | 'quantidade' | 'pedidos' | 'itens';
   };
 };

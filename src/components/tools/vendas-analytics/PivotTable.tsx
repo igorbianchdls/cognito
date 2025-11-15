@@ -14,7 +14,8 @@ import { useMemo, useState, Fragment } from 'react'
 type SummaryRow = {
   nivel: number
   nome: string
-  detalhe_nome: string | null
+  detalhe1_nome: string | null
+  detalhe2_nome: string | null
   valor: number
 }
 
@@ -25,6 +26,8 @@ interface AnalisTerritorioData {
   meta?: {
     nivel2_dim?: string
     nivel2_time_grain?: 'month' | 'year'
+    nivel3_dim?: string
+    nivel3_time_grain?: 'month' | 'year'
     measure?: 'faturamento' | 'quantidade' | 'pedidos' | 'itens'
   }
 }
@@ -40,18 +43,31 @@ export default function PivotTable({ success, message, data }: Props) {
 
   const { territorios, mapa } = useMemo(() => {
     const territorios: string[] = []
-    const mapa = new Map<string, { total: number; vendedores: SummaryRow[] }>()
+    const mapa = new Map<string, { total: number; dim2: Map<string, { total: number; filhos: SummaryRow[] }> }>()
     const rows = data?.summary || []
 
     for (const row of rows) {
       if (row.nivel === 1) {
         if (!territorios.includes(row.nome)) territorios.push(row.nome)
-        if (!mapa.has(row.nome)) mapa.set(row.nome, { total: 0, vendedores: [] })
+        if (!mapa.has(row.nome)) mapa.set(row.nome, { total: 0, dim2: new Map() })
         const agg = mapa.get(row.nome)!
         agg.total = Number(row.valor || 0)
       } else if (row.nivel === 2) {
-        if (!mapa.has(row.nome)) mapa.set(row.nome, { total: 0, vendedores: [] })
-        mapa.get(row.nome)!.vendedores.push(row)
+        if (!mapa.has(row.nome)) mapa.set(row.nome, { total: 0, dim2: new Map() })
+        const agg = mapa.get(row.nome)!
+        const key = String(row.detalhe1_nome || '—')
+        if (!agg.dim2.has(key)) agg.dim2.set(key, { total: Number(row.valor || 0), filhos: [] })
+        else {
+          const d = agg.dim2.get(key)!
+          d.total = Number(row.valor || 0) // usa o valor do nível 2
+        }
+      }
+      else if (row.nivel === 3) {
+        if (!mapa.has(row.nome)) mapa.set(row.nome, { total: 0, dim2: new Map() })
+        const agg = mapa.get(row.nome)!
+        const key = String(row.detalhe1_nome || '—')
+        if (!agg.dim2.has(key)) agg.dim2.set(key, { total: 0, filhos: [] })
+        agg.dim2.get(key)!.filhos.push(row)
       }
     }
 
@@ -119,16 +135,58 @@ export default function PivotTable({ success, message, data }: Props) {
                             : Number(info.total || 0).toLocaleString('pt-BR')}
                         </TableCell>
                       </TableRow>
-                      {isOpen && info.vendedores.map((v, idx) => (
-                        <TableRow key={`vend-${t}-${idx}`} className="bg-gray-50/60">
-                          <TableCell className="pl-10">{v.detalhe_nome || '—'}</TableCell>
-                          <TableCell className="text-right">
-                            {data?.meta?.measure === 'faturamento' || !data?.meta?.measure
-                              ? Number(v.valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-                              : Number(v.valor || 0).toLocaleString('pt-BR')}
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                      {isOpen && (
+                        Array.from(info.dim2.entries())
+                          .sort((a, b) => b[1].total - a[1].total)
+                          .map(([dim2Key, dim2Info]) => {
+                            const hasChildren = dim2Info.filhos.length > 0
+                            const key = `${t}||${dim2Key}`
+                            const isOpenL2 = expanded.has(key)
+                            return (
+                              <Fragment key={`l2-${key}`}>
+                                <TableRow className="bg-gray-50/60">
+                                  <TableCell className="pl-8">
+                                    {hasChildren ? (
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          const next = new Set(expanded)
+                                          if (next.has(key)) next.delete(key); else next.add(key)
+                                          setExpanded(next)
+                                        }}
+                                        className="inline-flex items-center gap-2 hover:opacity-80"
+                                      >
+                                        {isOpenL2 ? (
+                                          <ChevronDown className="h-4 w-4" />
+                                        ) : (
+                                          <ChevronRight className="h-4 w-4" />
+                                        )}
+                                        <span>{dim2Key}</span>
+                                      </button>
+                                    ) : (
+                                      <span className="pl-6 inline-block">{dim2Key}</span>
+                                    )}
+                                  </TableCell>
+                                  <TableCell className="text-right">
+                                    {data?.meta?.measure === 'faturamento' || !data?.meta?.measure
+                                      ? Number(dim2Info.total || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+                                      : Number(dim2Info.total || 0).toLocaleString('pt-BR')}
+                                  </TableCell>
+                                </TableRow>
+                                {isOpenL2 && dim2Info.filhos.map((v, idx) => (
+                                  <TableRow key={`l3-${key}-${idx}`} className="bg-gray-50/80">
+                                    <TableCell className="pl-14">{v.detalhe2_nome || '—'}</TableCell>
+                                    <TableCell className="text-right">
+                                      {data?.meta?.measure === 'faturamento' || !data?.meta?.measure
+                                        ? Number(v.valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+                                        : Number(v.valor || 0).toLocaleString('pt-BR')}
+                                    </TableCell>
+                                  </TableRow>
+                                ))}
+                              </Fragment>
+                            )
+                          })
+                      )}
                     </Fragment>
                   )
                 })}
