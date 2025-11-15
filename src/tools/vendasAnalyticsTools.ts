@@ -73,7 +73,7 @@ export const analiseTerritorio = tool({
       // Dimensão de nível 3 (opcional)
       let detail2Expr = ''
       let groupBy2Expr = ''
-      const hasLevel3 = Boolean(nivel3_dim && nivel3_dim !== nivel2_dim && nivel3_dim !== 'territorio_nome')
+      const hasLevel3 = Boolean(nivel3_dim && nivel3_dim !== nivel2_dim)
       if (hasLevel3 && nivel3_dim) {
         if (nivel3_dim === 'data_pedido') {
           const grain3 = nivel3_time_grain === 'year' ? 'year' : 'month'
