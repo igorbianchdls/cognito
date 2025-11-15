@@ -182,7 +182,7 @@ export default function PivotTable({ success, message, data }: Props) {
                 {level1Values.map((dim1) => {
                   const info = mapa.get(dim1)
                   if (!info) return null
-                  const isOpen = expanded.has(t)
+                  const isOpen = expanded.has(dim1)
                   return (
                     <Fragment key={`group-${dim1}`}>
                       <TableRow className="bg-white">
