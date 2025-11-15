@@ -111,6 +111,8 @@ type AnalisTerritorioData = {
   topVendedores: unknown[];
   topProdutos: unknown[];
   meta?: {
+    nivel1_dim?: string;
+    nivel1_time_grain?: 'month' | 'year';
     nivel2_dim?: string;
     nivel2_time_grain?: 'month' | 'year';
     nivel3_dim?: string;
