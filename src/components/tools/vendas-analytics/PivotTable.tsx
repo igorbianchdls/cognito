@@ -80,9 +80,8 @@ export default function PivotTable({ success, message, data }: Props) {
             <Table>
               <TableHeader className="bg-gray-50">
                 <TableRow>
-                  <TableHead className="w-[50%]">Território</TableHead>
-                  <TableHead className="w-[35%]">Vendedor</TableHead>
-                  <TableHead className="text-right w-[15%]">Faturamento</TableHead>
+                  <TableHead className="w-[75%]">Dimensão</TableHead>
+                  <TableHead className="text-right w-[25%]">Faturamento</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -107,7 +106,6 @@ export default function PivotTable({ success, message, data }: Props) {
                             <span className="font-semibold">{t}</span>
                           </button>
                         </TableCell>
-                        <TableCell className="text-muted-foreground">—</TableCell>
                         <TableCell className="text-right font-bold text-green-600">
                           {Number(info.total || 0).toLocaleString('pt-BR', {
                             style: 'currency',
@@ -117,8 +115,7 @@ export default function PivotTable({ success, message, data }: Props) {
                       </TableRow>
                       {isOpen && info.vendedores.map((v, idx) => (
                         <TableRow key={`vend-${t}-${idx}`} className="bg-gray-50/60">
-                          <TableCell className="pl-10 text-muted-foreground">{t}</TableCell>
-                          <TableCell className="">{v.vendedor_nome || 'Sem vendedor'}</TableCell>
+                          <TableCell className="pl-10">{v.vendedor_nome || 'Sem vendedor'}</TableCell>
                           <TableCell className="text-right">
                             {Number(v.faturamento_total || 0).toLocaleString('pt-BR', {
                               style: 'currency',
