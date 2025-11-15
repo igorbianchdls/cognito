@@ -15,13 +15,18 @@ type SummaryRow = {
   nivel: number
   nome: string
   detalhe_nome: string | null
-  faturamento_total: number
+  valor: number
 }
 
 interface AnalisTerritorioData {
   summary: SummaryRow[]
   topVendedores: unknown[]
   topProdutos: unknown[]
+  meta?: {
+    nivel2_dim?: string
+    nivel2_time_grain?: 'month' | 'year'
+    measure?: 'faturamento' | 'quantidade' | 'pedidos' | 'itens'
+  }
 }
 
 interface Props {
@@ -43,7 +48,7 @@ export default function PivotTable({ success, message, data }: Props) {
         if (!territorios.includes(row.nome)) territorios.push(row.nome)
         if (!mapa.has(row.nome)) mapa.set(row.nome, { total: 0, vendedores: [] })
         const agg = mapa.get(row.nome)!
-        agg.total = Number(row.faturamento_total || 0)
+        agg.total = Number(row.valor || 0)
       } else if (row.nivel === 2) {
         if (!mapa.has(row.nome)) mapa.set(row.nome, { total: 0, vendedores: [] })
         mapa.get(row.nome)!.vendedores.push(row)
@@ -81,7 +86,7 @@ export default function PivotTable({ success, message, data }: Props) {
               <TableHeader className="bg-gray-50">
                 <TableRow>
                   <TableHead className="w-[75%]">Dimensão</TableHead>
-                  <TableHead className="text-right w-[25%]">Faturamento</TableHead>
+                  <TableHead className="text-right w-[25%]">{data?.meta?.measure === 'faturamento' || !data?.meta?.measure ? 'Faturamento' : 'Valor'}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -106,21 +111,21 @@ export default function PivotTable({ success, message, data }: Props) {
                             <span className="font-semibold">{t}</span>
                           </button>
                         </TableCell>
-                        <TableCell className="text-right font-bold text-green-600">
-                          {Number(info.total || 0).toLocaleString('pt-BR', {
-                            style: 'currency',
-                            currency: 'BRL',
-                          })}
+                        <TableCell className={
+                          `text-right font-bold ${data?.meta?.measure === 'faturamento' || !data?.meta?.measure ? 'text-green-600' : 'text-slate-700'}`
+                        }>
+                          {data?.meta?.measure === 'faturamento' || !data?.meta?.measure
+                            ? Number(info.total || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+                            : Number(info.total || 0).toLocaleString('pt-BR')}
                         </TableCell>
                       </TableRow>
                       {isOpen && info.vendedores.map((v, idx) => (
                         <TableRow key={`vend-${t}-${idx}`} className="bg-gray-50/60">
                           <TableCell className="pl-10">{v.detalhe_nome || '—'}</TableCell>
                           <TableCell className="text-right">
-                            {Number(v.faturamento_total || 0).toLocaleString('pt-BR', {
-                              style: 'currency',
-                              currency: 'BRL',
-                            })}
+                            {data?.meta?.measure === 'faturamento' || !data?.meta?.measure
+                              ? Number(v.valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+                              : Number(v.valor || 0).toLocaleString('pt-BR')}
                           </TableCell>
                         </TableRow>
                       ))}

@@ -105,10 +105,15 @@ type AnalisTerritorioData = {
     nivel: number;
     nome: string;
     detalhe_nome: string | null;
-    faturamento_total: number;
+    valor: number;
   }>;
   topVendedores: unknown[];
   topProdutos: unknown[];
+  meta?: {
+    nivel2_dim?: string;
+    nivel2_time_grain?: 'month' | 'year';
+    measure?: 'faturamento' | 'quantidade' | 'pedidos' | 'itens';
+  };
 };
 import ClientesVendasResult from '../tools/vendas-b2b/ClientesVendasResult';
 import TerritoriosVendasResult from '../tools/vendas-b2b/TerritoriosVendasResult';

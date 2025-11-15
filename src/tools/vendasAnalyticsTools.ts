@@ -3,14 +3,28 @@ import { tool } from 'ai'
 import { runQuery } from '@/lib/postgres'
 
 export const analiseTerritorio = tool({
-  description: 'Analisa território com drill-down (vendedor ou canal de venda) e filtros de período/território',
+  description: 'Analisa território com drill-down flexível (dimensão nível 2 e medida) e filtros de período/território',
   inputSchema: z.object({
     data_de: z.string().optional(),
     data_ate: z.string().optional(),
     territorio_nome: z.string().optional(),
-    nivel2: z.enum(['vendedor', 'canal']).default('vendedor').optional(),
+    nivel2_dim: z.enum([
+      'vendedor_nome',
+      'canal_venda_nome',
+      'produto_nome',
+      'cliente_nome',
+      'campanha_venda_nome',
+      'cupom_codigo',
+      'centro_lucro_nome',
+      'filial_nome',
+      'unidade_negocio_nome',
+      'sales_office_nome',
+      'data_pedido',
+    ] as const).default('vendedor_nome').optional(),
+    nivel2_time_grain: z.enum(['month', 'year']).optional(),
+    measure: z.enum(['faturamento', 'quantidade', 'pedidos', 'itens']).default('faturamento').optional(),
   }),
-  execute: async ({ data_de, data_ate, territorio_nome, nivel2 = 'vendedor' }) => {
+  execute: async ({ data_de, data_ate, territorio_nome, nivel2_dim = 'vendedor_nome', nivel2_time_grain, measure = 'faturamento' }) => {
     try {
       const params: string[] = []
       const whereParts: string[] = []
@@ -27,16 +41,45 @@ export const analiseTerritorio = tool({
 
       const whereClause = whereParts.length ? `WHERE ${whereParts.join(' AND ')}` : ''
 
-      // Whitelist para evitar SQL injection em nome de coluna
-      const detailCol = nivel2 === 'canal' ? 'canal_venda_nome' : 'vendedor_nome'
+      // Dimensão de nível 2 (expressão e agrupamento), com whitelist
+      let detailExpr = ''
+      let groupByExpr = ''
+      if (nivel2_dim === 'data_pedido') {
+        const grain = nivel2_time_grain === 'year' ? 'year' : 'month'
+        const truncExpr = `date_trunc('${grain}', data_pedido)`
+        detailExpr = grain === 'year'
+          ? `to_char(${truncExpr}, 'YYYY')`
+          : `to_char(${truncExpr}, 'YYYY-MM')`
+        groupByExpr = detailExpr
+      } else {
+        detailExpr = nivel2_dim
+        groupByExpr = nivel2_dim
+      }
+
+      // Medida (expressão agregada), com cast para numeric para unificar tipo
+      let measureExpr = ''
+      switch (measure) {
+        case 'quantidade':
+          measureExpr = 'SUM(quantidade)::numeric'
+          break
+        case 'pedidos':
+          measureExpr = 'COUNT(DISTINCT pedido_id)::numeric'
+          break
+        case 'itens':
+          measureExpr = 'COUNT(item_id)::numeric'
+          break
+        case 'faturamento':
+        default:
+          measureExpr = 'SUM(item_subtotal)::numeric'
+      }
 
       const sql = `
         (
           SELECT
             1 AS nivel,
             territorio_nome AS nome,
-            NULL AS detalhe_nome,
-            SUM(item_subtotal) AS faturamento_total
+            NULL::text AS detalhe_nome,
+            ${measureExpr} AS valor
           FROM vendas.vw_pedidos_completo
           ${whereClause}
           GROUP BY territorio_nome
@@ -46,13 +89,13 @@ export const analiseTerritorio = tool({
           SELECT
             2 AS nivel,
             territorio_nome AS nome,
-            ${detailCol} AS detalhe_nome,
-            SUM(item_subtotal) AS faturamento_total
+            ${detailExpr} AS detalhe_nome,
+            ${measureExpr} AS valor
           FROM vendas.vw_pedidos_completo
           ${whereClause}
-          GROUP BY territorio_nome, ${detailCol}
+          GROUP BY territorio_nome, ${groupByExpr}
         )
-        ORDER BY nome, nivel, faturamento_total DESC
+        ORDER BY nome, nivel, valor DESC
       `
 
       const rows = await runQuery(sql, params)
@@ -64,7 +107,7 @@ export const analiseTerritorio = tool({
           summary: rows,
           topVendedores: [],
           topProdutos: [],
-          nivel2,
+          meta: { nivel2_dim, nivel2_time_grain, measure },
         }
       }
     } catch (error) {
@@ -75,7 +118,7 @@ export const analiseTerritorio = tool({
           summary: [],
           topVendedores: [],
           topProdutos: [],
-          nivel2,
+          meta: { nivel2_dim, nivel2_time_grain, measure },
         }
       }
     }
