@@ -12,17 +12,9 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { ChevronDown, ChevronRight, Globe, BarChart3, ChevronLeft } from 'lucide-react'
 import { useMemo, useState, Fragment } from 'react'
-import {
-  ResponsiveContainer,
-  BarChart,
-  CartesianGrid,
-  XAxis,
-  YAxis,
-  Tooltip,
-  Legend,
-  Bar,
-  Cell,
-} from 'recharts'
+import { BarChart, CartesianGrid, XAxis, YAxis, Bar, Cell } from 'recharts'
+import { ChartContainer, ChartTooltip } from '@/components/ui/chart'
+import type { ChartConfig } from '@/components/ui/chart'
 
 type SummaryRow = {
   nivel: number
@@ -275,26 +267,51 @@ export default function PivotTable({ success, message, data }: Props) {
             )}
           </div>
         ) : (
-          <div className="w-full h-[360px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="categoria" />
-                <YAxis tickFormatter={(v) => formatValue(Number(v))} />
-                <Tooltip formatter={(value: number) => formatValue(Number(value))} />
-                <Legend />
-                <Bar dataKey="valor" name={measure === 'faturamento' ? 'Faturamento' : 'Valor'}>
-                  {chartData.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={colors[index % colors.length]}
-                      cursor={level < 3 ? 'pointer' : 'default'}
-                      onClick={() => level < 3 && handleCategoryClick(entry.categoria)}
+          <div className="w-full">
+            {(() => {
+              const chartConfig: ChartConfig = {
+                valor: {
+                  label: measure === 'faturamento' ? 'Faturamento' : 'Valor',
+                  color: '#10b981',
+                },
+              }
+              return (
+                <ChartContainer config={chartConfig} style={{ height: 360 }}>
+                  <BarChart data={chartData}>
+                    <CartesianGrid vertical={false} />
+                    <XAxis dataKey="categoria" tickLine={false} axisLine={false} tickMargin={6} />
+                    <YAxis tickFormatter={(v) => formatValue(Number(v))} tickLine={false} axisLine={false} tickMargin={6} />
+                    <ChartTooltip
+                      cursor={false}
+                      content={({ active, payload }) => {
+                        if (!active || !payload || !payload.length) return null
+                        const d = payload[0].payload as { categoria: string; valor: number }
+                        return (
+                          <div className="rounded-lg border bg-background p-2 shadow-sm">
+                            <div className="font-semibold mb-1 max-w-[240px] truncate">{d.categoria}</div>
+                            <div className="text-sm">
+                              {measure === 'faturamento'
+                                ? formatValue(Number(d.valor))
+                                : Number(d.valor).toLocaleString('pt-BR')}
+                            </div>
+                          </div>
+                        )
+                      }}
                     />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+                    <Bar dataKey="valor" name={measure === 'faturamento' ? 'Faturamento' : 'Valor'}>
+                      {chartData.map((entry, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={colors[index % colors.length]}
+                          cursor={level < 3 ? 'pointer' : 'default'}
+                          onClick={() => level < 3 && handleCategoryClick(entry.categoria)}
+                        />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ChartContainer>
+              )
+            })()}
             <p className="mt-2 text-xs text-muted-foreground">Clique nas barras para detalhar; use Voltar para subir o nível.</p>
           </div>
         )}
