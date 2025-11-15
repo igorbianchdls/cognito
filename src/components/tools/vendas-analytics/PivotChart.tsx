@@ -31,6 +31,8 @@ type SummaryRow = {
   valor: number
 }
 
+type ChartDatum = { categoria: string; valor: number }
+
 interface AnalisTerritorioData {
   summary: SummaryRow[]
   topVendedores: unknown[]
@@ -51,50 +53,28 @@ interface Props {
   title?: string
 }
 
+const CATEGORY_KEY = 'categoria' as const
+
 export default function PivotChart({ success, message, data, title = 'Análise de Territórios (Gráfico)' }: Props) {
   const [showChart, setShowChart] = useState(false)
   const [level, setLevel] = useState<1 | 2 | 3>(1)
   const [path, setPath] = useState<{ territorio?: string; dim2?: string }>({})
 
-  const rows = data?.summary || []
+  const rows = useMemo<SummaryRow[]>(() => data?.summary ?? [], [data])
   const measure = data?.meta?.measure || 'faturamento'
 
   const rowsL1 = useMemo(() => rows.filter(r => r.nivel === 1), [rows])
-  const rowsL2 = useMemo(() =>
-    path.territorio ? rows.filter(r => r.nivel === 2 && r.nome === path.territorio) : [],
-    [rows, path.territorio]
-  )
-  const rowsL3 = useMemo(() =>
-    path.territorio && path.dim2
+  const rowsL2 = useMemo(() => (path.territorio ? rows.filter(r => r.nivel === 2 && r.nome === path.territorio) : []), [rows, path.territorio])
+  const rowsL3 = useMemo(() => (path.territorio && path.dim2
       ? rows.filter(r => r.nivel === 3 && r.nome === path.territorio && String(r.detalhe1_nome || '—') === path.dim2)
-      : [],
-    [rows, path.territorio, path.dim2]
-  )
+      : []
+    ), [rows, path.territorio, path.dim2])
 
-  const { chartData, categoryKey } = useMemo(() => {
+  const chartData = useMemo<ChartDatum[]>(() => {
     const fmt = (n: unknown) => Number(n || 0)
-    if (level === 1) {
-      return {
-        categoryKey: 'categoria' as const,
-        chartData: rowsL1
-          .map(r => ({ categoria: r.nome, valor: fmt(r.valor) }))
-          .sort((a, b) => b.valor - a.valor),
-      }
-    }
-    if (level === 2) {
-      return {
-        categoryKey: 'categoria' as const,
-        chartData: rowsL2
-          .map(r => ({ categoria: String(r.detalhe1_nome || '—'), valor: fmt(r.valor) }))
-          .sort((a, b) => b.valor - a.valor),
-      }
-    }
-    return {
-      categoryKey: 'categoria' as const,
-      chartData: rowsL3
-        .map(r => ({ categoria: String(r.detalhe2_nome || '—'), valor: fmt(r.valor) }))
-        .sort((a, b) => b.valor - a.valor),
-    }
+    if (level === 1) return rowsL1.map(r => ({ categoria: r.nome, valor: fmt(r.valor) })).sort((a, b) => b.valor - a.valor)
+    if (level === 2) return rowsL2.map(r => ({ categoria: String(r.detalhe1_nome || '—'), valor: fmt(r.valor) })).sort((a, b) => b.valor - a.valor)
+    return rowsL3.map(r => ({ categoria: String(r.detalhe2_nome || '—'), valor: fmt(r.valor) })).sort((a, b) => b.valor - a.valor)
   }, [level, rowsL1, rowsL2, rowsL3])
 
   const formatValue = (v: number) => {
@@ -102,9 +82,7 @@ export default function PivotChart({ success, message, data, title = 'Análise d
     return v.toLocaleString('pt-BR')
   }
 
-  const handleBarClick = (payload: any) => {
-    if (!payload || !payload.payload) return
-    const cat = String(payload.payload[categoryKey])
+  const handleCategoryClick = (cat: string) => {
     if (level === 1) {
       setPath({ territorio: cat })
       setLevel(2)
@@ -164,15 +142,20 @@ export default function PivotChart({ success, message, data, title = 'Análise d
         ) : (
           <div className="w-full h-[360px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData} onClick={handleBarClick}>
+              <BarChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey={categoryKey} />
+                <XAxis dataKey={CATEGORY_KEY} />
                 <YAxis tickFormatter={(v) => formatValue(Number(v))} />
                 <Tooltip formatter={(value: number) => formatValue(Number(value))} />
                 <Legend />
                 <Bar dataKey="valor" name={measure === 'faturamento' ? 'Faturamento' : 'Valor'}>
                   {chartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={colors[index % colors.length]} cursor={level < 3 ? 'pointer' : 'default'} />
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={colors[index % colors.length]}
+                      cursor={level < 3 ? 'pointer' : 'default'}
+                      onClick={() => level < 3 && handleCategoryClick(entry.categoria)}
+                    />
                   ))}
                 </Bar>
               </BarChart>
@@ -184,4 +167,3 @@ export default function PivotChart({ success, message, data, title = 'Análise d
     </Artifact>
   )
 }
-
