@@ -104,7 +104,7 @@ type AnalisTerritorioData = {
   summary: Array<{
     nivel: number;
     nome: string;
-    vendedor_nome: string | null;
+    detalhe_nome: string | null;
     faturamento_total: number;
   }>;
   topVendedores: unknown[];

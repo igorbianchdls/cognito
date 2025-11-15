@@ -14,7 +14,7 @@ import { useMemo, useState, Fragment } from 'react'
 type SummaryRow = {
   nivel: number
   nome: string
-  vendedor_nome: string | null
+  detalhe_nome: string | null
   faturamento_total: number
 }
 
@@ -115,7 +115,7 @@ export default function PivotTable({ success, message, data }: Props) {
                       </TableRow>
                       {isOpen && info.vendedores.map((v, idx) => (
                         <TableRow key={`vend-${t}-${idx}`} className="bg-gray-50/60">
-                          <TableCell className="pl-10">{v.vendedor_nome || 'Sem vendedor'}</TableCell>
+                          <TableCell className="pl-10">{v.detalhe_nome || '—'}</TableCell>
                           <TableCell className="text-right">
                             {Number(v.faturamento_total || 0).toLocaleString('pt-BR', {
                               style: 'currency',
