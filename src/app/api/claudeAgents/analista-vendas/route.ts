@@ -47,7 +47,8 @@ Retorna:
   - nível 2: drill-down pela dimensão 2 (detalhe1_nome)
   - nível 3 (opcional): drill-down pela dimensão 3 (detalhe2_nome)
   - valor: agregado conforme a medida
- - meta: { nivel1_dim, nivel1_time_grain?, nivel2_dim, nivel2_time_grain?, nivel3_dim?, nivel3_time_grain?, measure }
+- meta: { nivel1_dim, nivel1_time_grain?, nivel2_dim, nivel2_time_grain?, nivel3_dim?, nivel3_time_grain?, measure }
+ - meta: { nivel1_dim, nivel1_time_grain?, nivel2_dim, nivel2_time_grain?, nivel3_dim?, nivel3_time_grain?, nivel4_dim?, nivel4_time_grain?, nivel5_dim?, nivel5_time_grain?, measure }
 
 **Quando usar:**
 - Para análise geográfica de vendas

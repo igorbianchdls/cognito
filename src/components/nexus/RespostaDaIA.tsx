@@ -106,6 +106,8 @@ type AnalisTerritorioData = {
     nome: string;
     detalhe1_nome: string | null;
     detalhe2_nome: string | null;
+    detalhe3_nome: string | null;
+    detalhe4_nome: string | null;
     valor: number;
   }>;
   topVendedores: unknown[];
@@ -117,6 +119,10 @@ type AnalisTerritorioData = {
     nivel2_time_grain?: 'month' | 'year';
     nivel3_dim?: string;
     nivel3_time_grain?: 'month' | 'year';
+    nivel4_dim?: string;
+    nivel4_time_grain?: 'month' | 'year';
+    nivel5_dim?: string;
+    nivel5_time_grain?: 'month' | 'year';
     measure?: 'faturamento' | 'quantidade' | 'pedidos' | 'itens';
   };
 };
