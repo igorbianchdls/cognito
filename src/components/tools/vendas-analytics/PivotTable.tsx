@@ -277,7 +277,7 @@ export default function PivotTable({ success, message, data }: Props) {
               }
               return (
                 <ChartContainer config={chartConfig} style={{ height: 360 }}>
-                  <BarChart data={chartData}>
+                  <BarChart data={chartData} margin={{ left: 12, right: 12, top: 12, bottom: 12 }}>
                     <CartesianGrid vertical={false} />
                     <XAxis dataKey="categoria" tickLine={false} axisLine={false} tickMargin={6} />
                     <YAxis tickFormatter={(v) => formatValue(Number(v))} tickLine={false} axisLine={false} tickMargin={6} />
