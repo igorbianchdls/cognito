@@ -37,7 +37,7 @@ export default function DashboardChatPanel() {
   const [selectedViewport, setSelectedViewport] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
   const [selectedDashboard, setSelectedDashboard] = useState('Dashboard Builder');
   const [selectedTheme, setSelectedTheme] = useState<ThemeName>('branco');
-  const [selectedFont, setSelectedFont] = useState<FontPresetKey>('inter');
+  const [selectedFont, setSelectedFont] = useState<FontPresetKey>('barlow');
   const [selectedFontSize, setSelectedFontSize] = useState<FontSizeKey>('lg');
   const [selectedBackground, setSelectedBackground] = useState<BackgroundPresetKey>('fundo-branco');
   const [selectedBorderType, setSelectedBorderType] = useState<BorderPresetKey>('suave');

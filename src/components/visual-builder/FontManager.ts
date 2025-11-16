@@ -68,6 +68,15 @@ const FONT_PRESETS: Record<string, FontPreset> = {
     weight: 'medium',
     style: 'modern'
   },
+  barlow: {
+    key: 'barlow',
+    name: 'Barlow',
+    description: 'Modern geometric sans-serif with excellent readability',
+    family: 'var(--font-barlow), Barlow, sans-serif',
+    category: 'sans-serif',
+    weight: 'medium',
+    style: 'modern'
+  },
 
   // System Fonts
   arial: {
@@ -132,7 +141,7 @@ const THEME_FONT_MAPPING: Record<string, string> = {
   platinum: 'merriweather'
 };
 
-export type FontPresetKey = 'inter' | 'opensans' | 'roboto' | 'lato' | 'montserrat' | 'geist' | 'arial' | 'segoe' | 'georgia' | 'merriweather' | 'playfair';
+export type FontPresetKey = 'inter' | 'opensans' | 'roboto' | 'lato' | 'montserrat' | 'geist' | 'barlow' | 'arial' | 'segoe' | 'georgia' | 'merriweather' | 'playfair';
 
 export interface FontPreview {
   key: FontPresetKey;
@@ -256,7 +265,7 @@ export class FontManager {
    * Gets the default font (fallback)
    */
   static getDefaultFont(): FontPresetKey {
-    return 'inter';
+    return 'barlow';
   }
 
   /**

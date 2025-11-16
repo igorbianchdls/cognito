@@ -223,6 +223,26 @@ const TYPOGRAPHY_PRESETS = {
       semibold: 600,
       bold: 700
     }
+  },
+  barlow: {
+    fontFamily: {
+      primary: 'var(--font-barlow), Barlow, -apple-system, BlinkMacSystemFont, sans-serif',
+      mono: 'JetBrains Mono, Consolas, Monaco, monospace'
+    },
+    fontSize: {
+      xs: 12,
+      sm: 14,
+      md: 16,
+      lg: 18,
+      xl: 24,
+      xxl: 32
+    },
+    fontWeight: {
+      normal: 400,
+      medium: 500,
+      semibold: 600,
+      bold: 700
+    }
   }
 };
 
@@ -520,7 +540,7 @@ export const DARK_TOKENS: DesignTokens = {
     accentColor: '#bbb'
   },
 
-  typography: TYPOGRAPHY_PRESETS.inter,
+  typography: TYPOGRAPHY_PRESETS.barlow,
 
   effects: {
     opacity: {
@@ -632,7 +652,7 @@ export const LIGHT_TOKENS: DesignTokens = {
     color: '#ddd',
     accentColor: '#ccc'
   },
-  typography: TYPOGRAPHY_PRESETS.geist, // Usando Geist
+  typography: TYPOGRAPHY_PRESETS.barlow,
 
   effects: {
     opacity: {
