@@ -25,6 +25,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { FileText, BarChart3, Palette, Check, Type, Square, Paintbrush, Monitor, Tablet, Smartphone, ChevronDown, Layout } from 'lucide-react';
@@ -354,293 +357,250 @@ export default function DashboardChatPanel() {
             variant={activeTab === 'dashboard' ? 'outline' : 'ghost'}
           />
 
-          {/* Theme Selector */}
+          {/* Consolidated Tema Selector */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <div>
                 <ArtifactAction
                   icon={Palette}
-                  tooltip={`Theme: ${ThemeManager.getThemePreview(selectedTheme).name}`}
+                  tooltip="Configurações de aparência"
                   variant="ghost"
                 />
               </div>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-64">
-              <div className="px-2 py-1.5 text-sm font-medium text-muted-foreground">
-                Select Theme
-              </div>
-              <DropdownMenuSeparator />
+            <DropdownMenuContent align="end" className="w-56">
+              {/* Tema Submenu */}
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                  <Palette className="w-4 h-4 mr-2" />
+                  Tema
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent>
+                  {(['branco', 'cinza-claro', 'preto', 'cinza-escuro'] as ThemeName[]).map((theme) => {
+                    const preview = ThemeManager.getThemePreview(theme);
+                    return (
+                      <DropdownMenuItem
+                        key={theme}
+                        onClick={() => handleThemeChange(theme)}
+                        className="flex items-center justify-between py-2"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div
+                            className="w-4 h-4 rounded border border-gray-200"
+                            style={{ backgroundColor: preview.primaryColor }}
+                          />
+                          <div>
+                            <div className="font-medium">{preview.name}</div>
+                            <div className="text-xs text-muted-foreground truncate max-w-40">
+                              {preview.description}
+                            </div>
+                          </div>
+                        </div>
+                        {selectedTheme === theme && (
+                          <Check className="w-4 h-4 text-blue-600" />
+                        )}
+                      </DropdownMenuItem>
+                    );
+                  })}
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
 
-              {/* Temas disponíveis */}
-              <div className="px-2 py-1 text-xs font-medium text-muted-foreground">
-                Temas
-              </div>
-              {(['branco', 'cinza-claro', 'preto', 'cinza-escuro'] as ThemeName[]).map((theme) => {
-                const preview = ThemeManager.getThemePreview(theme);
-                return (
-                  <DropdownMenuItem
-                    key={theme}
-                    onClick={() => handleThemeChange(theme)}
-                    className="flex items-center justify-between py-2"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="w-4 h-4 rounded border border-gray-200"
-                        style={{ backgroundColor: preview.primaryColor }}
-                      />
-                      <div>
-                        <div className="font-medium">{preview.name}</div>
-                        <div className="text-xs text-muted-foreground truncate max-w-40">
-                          {preview.description}
+              {/* Fonte Submenu */}
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                  <Type className="w-4 h-4 mr-2" />
+                  Fonte
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent>
+                  {/* Font Family nested submenu */}
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>Font Family</DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent>
+                      {availableFonts.map((font) => (
+                        <DropdownMenuItem
+                          key={font.key}
+                          onClick={() => handleFontChange(font.key)}
+                          className="flex items-center justify-between py-2"
+                        >
+                          <span style={{ fontFamily: font.family }} className="text-sm">
+                            {font.name}
+                          </span>
+                          {selectedFont === font.key && (
+                            <Check className="w-4 h-4 text-blue-600" />
+                          )}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
+
+                  <DropdownMenuSeparator />
+
+                  {/* Title Size nested submenu */}
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>Title Size</DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent>
+                      {availableFontSizes.map((size) => (
+                        <DropdownMenuItem
+                          key={size.key}
+                          onClick={() => handleFontSizeChange(size.key)}
+                          className="flex items-center justify-between py-2"
+                        >
+                          <div className="flex flex-col">
+                            <span className="text-sm font-medium">{size.name}</span>
+                            <span className="text-xs text-muted-foreground">{size.value}px • {size.usage}</span>
+                          </div>
+                          {selectedFontSize === size.key && (
+                            <Check className="w-4 h-4 text-blue-600" />
+                          )}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+
+              {/* Header Style Submenu */}
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                  <Layout className="w-4 h-4 mr-2" />
+                  Header Style
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent>
+                  <DropdownMenuItem onClick={() => headerUiActions.setVariant('auto')} className="flex items-center justify-between py-2">
+                    <span>Auto</span>
+                    {headerUi.variant === 'auto' && <Check className="w-4 h-4 text-blue-600" />}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => headerUiActions.setVariant('light')} className="flex items-center justify-between py-2">
+                    <span>Light</span>
+                    {headerUi.variant === 'light' && <Check className="w-4 h-4 text-blue-600" />}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => headerUiActions.setVariant('dark')} className="flex items-center justify-between py-2">
+                    <span>Dark</span>
+                    {headerUi.variant === 'dark' && <Check className="w-4 h-4 text-blue-600" />}
+                  </DropdownMenuItem>
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+
+              {/* Background Submenu */}
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                  <Square className="w-4 h-4 mr-2" />
+                  Background
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent>
+                  {availableBackgrounds.map((background) => (
+                    <DropdownMenuItem
+                      key={background.key}
+                      onClick={() => handleBackgroundChange(background.key)}
+                      className="flex items-center justify-between py-2"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="w-6 h-6 rounded border border-gray-200"
+                          style={background.previewStyle}
+                        />
+                        <div>
+                          <div className="font-medium text-sm">{background.name}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {background.description}
+                          </div>
                         </div>
                       </div>
+                      {selectedBackground === background.key && (
+                        <Check className="w-4 h-4 text-blue-600" />
+                      )}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+
+              {/* Border Submenu */}
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                  <Paintbrush className="w-4 h-4 mr-2" />
+                  Border
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent className="w-72">
+                  <div className="px-2 py-1.5 text-sm font-medium text-muted-foreground">Tipo</div>
+                  <DropdownMenuSeparator />
+                  {BorderManager.getAvailableBorders().map((b) => (
+                    <DropdownMenuItem key={b.key} onClick={() => handleBorderTypeChange(b.key)} className="flex items-center justify-between py-2">
+                      <div className="flex flex-col">
+                        <span className="font-medium text-sm">{b.name}</span>
+                        <span className="text-xs text-muted-foreground">{b.description}</span>
+                      </div>
+                      {selectedBorderType === b.key && <Check className="w-4 h-4 text-blue-600" />}
+                    </DropdownMenuItem>
+                  ))}
+                  <DropdownMenuSeparator />
+                  <div className="px-2 py-1.5 text-sm font-medium text-muted-foreground">Propriedades</div>
+                  <div className="px-3 py-2 text-xs text-muted-foreground space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <span>Cor</span>
+                      <input type="color" value={borderColor} onChange={(e) => handleBorderPropChange('borderColor', e.target.value)} />
                     </div>
-                    {selectedTheme === theme && (
-                      <Check className="w-4 h-4 text-blue-600" />
+                    <div className="flex items-center justify-between gap-2">
+                      <span>Largura</span>
+                      <input className="w-20 border rounded px-2 py-1" type="number" value={borderWidth} onChange={(e) => handleBorderPropChange('borderWidth', Number(e.target.value))} />
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                      <span>Raio</span>
+                      <input className="w-20 border rounded px-2 py-1" type="number" value={borderRadius} onChange={(e) => handleBorderPropChange('borderRadius', Number(e.target.value))} />
+                    </div>
+                    {selectedBorderType === 'acentuada' && (
+                      <div className="flex items-center justify-between gap-2">
+                        <span>Cor dos cantos</span>
+                        <input type="color" value={borderAccentColor} onChange={(e) => handleBorderPropChange('borderAccentColor', e.target.value)} />
+                      </div>
                     )}
-                  </DropdownMenuItem>
-                );
-              })}
-
-              
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          {/* Font Selector */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <div>
-                <ArtifactAction
-                  icon={Type}
-                  tooltip={`Font: ${availableFonts.find(f => f.key === selectedFont)?.name || 'Unknown'} (${FontManager.getFontSizeValue(selectedFontSize)}px)`}
-                  variant="ghost"
-                />
-              </div>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              {/* Font Selection Section */}
-              <div className="px-2 py-1.5 text-sm font-medium text-muted-foreground">
-                Font Family
-              </div>
-              <DropdownMenuSeparator />
-
-              {availableFonts.map((font) => (
-                <DropdownMenuItem
-                  key={font.key}
-                  onClick={() => handleFontChange(font.key)}
-                  className="flex items-center justify-between py-2"
-                >
-                  <span style={{ fontFamily: font.family }} className="text-sm">
-                    {font.name}
-                  </span>
-                  {selectedFont === font.key && (
-                    <Check className="w-4 h-4 text-blue-600" />
-                  )}
-                </DropdownMenuItem>
-              ))}
-
-              <DropdownMenuSeparator />
-
-              {/* Font Size Selection Section */}
-              <div className="px-2 py-1.5 text-sm font-medium text-muted-foreground">
-                Title Size
-              </div>
-              <DropdownMenuSeparator />
-
-              {availableFontSizes.map((size) => (
-                <DropdownMenuItem
-                  key={size.key}
-                  onClick={() => handleFontSizeChange(size.key)}
-                  className="flex items-center justify-between py-2"
-                >
-                  <div className="flex flex-col">
-                    <span className="text-sm font-medium">{size.name}</span>
-                    <span className="text-xs text-muted-foreground">{size.value}px • {size.usage}</span>
-                  </div>
-                  {selectedFontSize === size.key && (
-                    <Check className="w-4 h-4 text-blue-600" />
-                  )}
-                </DropdownMenuItem>
-              ))}
-          </DropdownMenuContent>
-          </DropdownMenu>
-
-          {/* Header Style Selector */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <div>
-                <ArtifactAction
-                  icon={Layout}
-                  tooltip={headerTooltip}
-                  variant="ghost"
-                />
-              </div>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <div className="px-2 py-1.5 text-sm font-medium text-muted-foreground">
-                Header Style
-              </div>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => headerUiActions.setVariant('auto')} className="flex items-center justify-between py-2">
-                <span>Auto</span>
-                {headerUi.variant === 'auto' && <Check className="w-4 h-4 text-blue-600" />}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => headerUiActions.setVariant('light')} className="flex items-center justify-between py-2">
-                <span>Light</span>
-                {headerUi.variant === 'light' && <Check className="w-4 h-4 text-blue-600" />}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => headerUiActions.setVariant('dark')} className="flex items-center justify-between py-2">
-                <span>Dark</span>
-                {headerUi.variant === 'dark' && <Check className="w-4 h-4 text-blue-600" />}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          {/* Background Selector */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <div>
-                <ArtifactAction
-                  icon={Square}
-                  tooltip={`Background: ${availableBackgrounds.find(b => b.key === selectedBackground)?.name || 'Unknown'}`}
-                  variant="ghost"
-                />
-              </div>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <div className="px-2 py-1.5 text-sm font-medium text-muted-foreground">
-                Select Background
-              </div>
-              <DropdownMenuSeparator />
-
-              {availableBackgrounds.map((background) => (
-                <DropdownMenuItem
-                  key={background.key}
-                  onClick={() => handleBackgroundChange(background.key)}
-                  className="flex items-center justify-between py-2"
-                >
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="w-6 h-6 rounded border border-gray-200"
-                      style={background.previewStyle}
-                    />
-                    <div>
-                      <div className="font-medium text-sm">{background.name}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {background.description}
+                    {selectedBorderType === 'suave' && (
+                      <div className="flex items-center justify-between gap-2">
+                        <span>Sombra</span>
+                        <input type="checkbox" checked={borderShadow} onChange={(e) => handleBorderPropChange('borderShadow', e.target.checked)} />
                       </div>
-                    </div>
+                    )}
                   </div>
-                  {selectedBackground === background.key && (
-                    <Check className="w-4 h-4 text-blue-600" />
-                  )}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
 
-          {/* Border Selector */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <div>
-                <ArtifactAction
-                  icon={Paintbrush}
-                  tooltip={`Borda: ${selectedBorderType}`}
-                  variant="ghost"
-                />
-              </div>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-72">
-              <div className="px-2 py-1.5 text-sm font-medium text-muted-foreground">Borda</div>
-              <DropdownMenuSeparator />
-              {BorderManager.getAvailableBorders().map((b) => (
-                <DropdownMenuItem key={b.key} onClick={() => handleBorderTypeChange(b.key)} className="flex items-center justify-between py-2">
-                  <div className="flex flex-col">
-                    <span className="font-medium text-sm">{b.name}</span>
-                    <span className="text-xs text-muted-foreground">{b.description}</span>
-                  </div>
-                  {selectedBorderType === b.key && <Check className="w-4 h-4 text-blue-600" />}
-                </DropdownMenuItem>
-              ))}
-              <DropdownMenuSeparator />
-              <div className="px-2 py-1.5 text-sm font-medium text-muted-foreground">Propriedades</div>
-              <div className="px-3 py-2 text-xs text-muted-foreground space-y-2">
-                <div className="flex items-center justify-between gap-2">
-                  <span>Cor</span>
-                  <input type="color" value={borderColor} onChange={(e) => handleBorderPropChange('borderColor', e.target.value)} />
-                </div>
-                <div className="flex items-center justify-between gap-2">
-                  <span>Largura</span>
-                  <input className="w-20 border rounded px-2 py-1" type="number" value={borderWidth} onChange={(e) => handleBorderPropChange('borderWidth', Number(e.target.value))} />
-                </div>
-                <div className="flex items-center justify-between gap-2">
-                  <span>Raio</span>
-                  <input className="w-20 border rounded px-2 py-1" type="number" value={borderRadius} onChange={(e) => handleBorderPropChange('borderRadius', Number(e.target.value))} />
-                </div>
-                {selectedBorderType === 'acentuada' && (
-                  <div className="flex items-center justify-between gap-2">
-                    <span>Cor dos cantos</span>
-                    <input type="color" value={borderAccentColor} onChange={(e) => handleBorderPropChange('borderAccentColor', e.target.value)} />
-                  </div>
-                )}
-                {selectedBorderType === 'suave' && (
-                  <div className="flex items-center justify-between gap-2">
-                    <span>Sombra</span>
-                    <input type="checkbox" checked={borderShadow} onChange={(e) => handleBorderPropChange('borderShadow', e.target.checked)} />
-                  </div>
-                )}
-              </div>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          
-
-          {/* Color Selector - Show for all themes */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <div>
-                <ArtifactAction
-                  icon={Paintbrush}
-                  tooltip={`Color: ${availableColorPalettes.find(c => c.key === selectedCorporateColor)?.name || 'Unknown'}`}
-                  variant="ghost"
-                />
-              </div>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <div className="px-2 py-1.5 text-sm font-medium text-muted-foreground">
-                Select Color Palette
-              </div>
-              <DropdownMenuSeparator />
-
-              {availableColorPalettes.map((colorPalette) => (
-                <DropdownMenuItem
-                  key={colorPalette.key}
-                  onClick={() => handleCorporateColorChange(colorPalette.key)}
-                  className="flex items-center justify-between py-2"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="flex gap-1">
-                      <div
-                        className="w-3 h-3 rounded-full border border-gray-200"
-                        style={{ backgroundColor: colorPalette.primary }}
-                      />
-                      <div
-                        className="w-3 h-3 rounded-full border border-gray-200"
-                        style={{ backgroundColor: colorPalette.secondary }}
-                      />
-                    </div>
-                    <div>
-                      <div className="font-medium text-sm">{colorPalette.name}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {colorPalette.description}
+              {/* Color Palette Submenu */}
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                  <Paintbrush className="w-4 h-4 mr-2" />
+                  Color Palette
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent>
+                  {availableColorPalettes.map((colorPalette) => (
+                    <DropdownMenuItem
+                      key={colorPalette.key}
+                      onClick={() => handleCorporateColorChange(colorPalette.key)}
+                      className="flex items-center justify-between py-2"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="flex gap-1">
+                          <div
+                            className="w-3 h-3 rounded-full border border-gray-200"
+                            style={{ backgroundColor: colorPalette.primary }}
+                          />
+                          <div
+                            className="w-3 h-3 rounded-full border border-gray-200"
+                            style={{ backgroundColor: colorPalette.secondary }}
+                          />
+                        </div>
+                        <div>
+                          <div className="font-medium text-sm">{colorPalette.name}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {colorPalette.description}
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                  {selectedCorporateColor === colorPalette.key && (
-                    <Check className="w-4 h-4 text-blue-600" />
-                  )}
-                </DropdownMenuItem>
-              ))}
+                      {selectedCorporateColor === colorPalette.key && (
+                        <Check className="w-4 h-4 text-blue-600" />
+                      )}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
             </DropdownMenuContent>
           </DropdownMenu>
 
