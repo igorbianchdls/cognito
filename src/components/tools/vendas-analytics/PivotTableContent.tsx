@@ -148,93 +148,104 @@ export default function PivotTableContent({ success, message, data }: Props) {
                                 : Number(dim2Node.total || 0).toLocaleString('pt-BR')}
                             </TableCell>
                           </TableRow>
-                          {openL2 && Array.from(dim2Node.children.entries()).sort((a,b)=> b[1].total-a[1].total).map(([dim3Key, dim3Node]) => {
-                            const keyL3 = `${keyL2}||${dim3Key}`
-                            const openL3 = expanded.has(keyL3)
-                            const hasChildrenL4 = dim3Node.children.size > 0
-                            return (
-                              <Fragment key={`l3-${keyL3}`}>
-                                <TableRow className="bg-gray-50/80">
-                                  <TableCell style={{ paddingLeft: '3rem' }}>
-                                    {hasChildrenL4 ? (
-                                      <button
-                                        type="button"
-                                        onClick={() => {
-                                          const next = new Set(expanded)
-                                          if (next.has(keyL3)) next.delete(keyL3); else next.add(keyL3)
-                                          setExpanded(next)
-                                        }}
-                                        className="inline-flex items-center gap-2 hover:opacity-80"
-                                      >
-                                        {openL3 ? (
-                                          <ChevronDown className="h-4 w-4" />
+                          {openL2 && (
+                            Array.from(dim2Node.children.entries())
+                              .sort((a,b)=> b[1].total-a[1].total)
+                              .map(([dim3Key, dim3Node]) => {
+                                const keyL3 = `${keyL2}||${dim3Key}`
+                                const openL3 = expanded.has(keyL3)
+                                const hasChildrenL4 = dim3Node.children.size > 0
+                                return (
+                                  <Fragment key={`l3-${keyL3}`}>
+                                    <TableRow className="bg-gray-50/80">
+                                      <TableCell style={{ paddingLeft: '3rem' }}>
+                                        {hasChildrenL4 ? (
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              const next = new Set(expanded)
+                                              if (next.has(keyL3)) next.delete(keyL3); else next.add(keyL3)
+                                              setExpanded(next)
+                                            }}
+                                            className="inline-flex items-center gap-2 hover:opacity-80"
+                                          >
+                                            {openL3 ? (
+                                              <ChevronDown className="h-4 w-4" />
+                                            ) : (
+                                              <ChevronRight className="h-4 w-4" />
+                                            )}
+                                            <span>{dim3Key}</span>
+                                          </button>
                                         ) : (
-                                          <ChevronRight className="h-4 w-4" />
+                                          <span className="pl-6 inline-block">{dim3Key}</span>
                                         )}
-                                        <span>{dim3Key}</span>
-                                      </button>
-                                    ) : (
-                                      <span className="pl-6 inline-block">{dim3Key}</span>
-                                    )}
-                                  </TableCell>
-                                  <TableCell className="text-right">
-                                    {measure === 'faturamento'
-                                      ? Number(dim3Node.total || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-                                      : Number(dim3Node.total || 0).toLocaleString('pt-BR')}
-                                  </TableCell>
-                                </TableRow>
-                                {openL3 && Array.from(dim3Node.children.entries()).sort((a,b)=> b[1].total-a[1].total).map(([dim4Key, dim4Node]) => {
-                                  const keyL4 = `${keyL3}||${dim4Key}`
-                                  const openL4 = expanded.has(keyL4)
-                                  const hasChildrenL5 = dim4Node.children.size > 0
-                                  return (
-                                    <Fragment key={`l4-${keyL4}`}>
-                                      <TableRow className="bg-gray-50">
-                                        <TableCell style={{ paddingLeft: '4rem' }}>
-                                          {hasChildrenL5 ? (
-                                            <button
-                                              type="button"
-                                              onClick={() => {
-                                                const next = new Set(expanded)
-                                                if (next.has(keyL4)) next.delete(keyL4); else next.add(keyL4)
-                                                setExpanded(next)
-                                              }}
-                                              className="inline-flex items-center gap-2 hover:opacity-80"
-                                            >
-                                              {openL4 ? (
-                                                <ChevronDown className="h-4 w-4" />
-                                              ) : (
-                                                <ChevronRight className="h-4 w-4" />
+                                      </TableCell>
+                                      <TableCell className="text-right">
+                                        {measure === 'faturamento'
+                                          ? Number(dim3Node.total || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+                                          : Number(dim3Node.total || 0).toLocaleString('pt-BR')}
+                                      </TableCell>
+                                    </TableRow>
+                                    {openL3 && (
+                                      Array.from(dim3Node.children.entries())
+                                        .sort((a,b)=> b[1].total-a[1].total)
+                                        .map(([dim4Key, dim4Node]) => {
+                                          const keyL4 = `${keyL3}||${dim4Key}`
+                                          const openL4 = expanded.has(keyL4)
+                                          const hasChildrenL5 = dim4Node.children.size > 0
+                                          return (
+                                            <Fragment key={`l4-${keyL4}`}>
+                                              <TableRow className="bg-gray-50">
+                                                <TableCell style={{ paddingLeft: '4rem' }}>
+                                                  {hasChildrenL5 ? (
+                                                    <button
+                                                      type="button"
+                                                      onClick={() => {
+                                                        const next = new Set(expanded)
+                                                        if (next.has(keyL4)) next.delete(keyL4); else next.add(keyL4)
+                                                        setExpanded(next)
+                                                      }}
+                                                      className="inline-flex items-center gap-2 hover:opacity-80"
+                                                    >
+                                                      {openL4 ? (
+                                                        <ChevronDown className="h-4 w-4" />
+                                                      ) : (
+                                                        <ChevronRight className="h-4 w-4" />
+                                                      )}
+                                                      <span>{dim4Key}</span>
+                                                    </button>
+                                                  ) : (
+                                                    <span className="pl-6 inline-block">{dim4Key}</span>
+                                                  )}
+                                                </TableCell>
+                                                <TableCell className="text-right">
+                                                  {measure === 'faturamento'
+                                                    ? Number(dim4Node.total || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+                                                    : Number(dim4Node.total || 0).toLocaleString('pt-BR')}
+                                                </TableCell>
+                                              </TableRow>
+                                              {openL4 && (
+                                                Array.from(dim4Node.children.entries())
+                                                  .sort((a,b)=> b[1].total-a[1].total)
+                                                  .map(([dim5Key, dim5Node]) => (
+                                                    <TableRow key={`l5-${keyL4}||${dim5Key}`} className="bg-gray-50">
+                                                      <TableCell style={{ paddingLeft: '5rem' }}>{dim5Key}</TableCell>
+                                                      <TableCell className="text-right">
+                                                        {measure === 'faturamento'
+                                                          ? Number(dim5Node.total || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+                                                          : Number(dim5Node.total || 0).toLocaleString('pt-BR')}
+                                                      </TableCell>
+                                                    </TableRow>
+                                                  ))
                                               )}
-                                              <span>{dim4Key}</span>
-                                            </button>
-                                          ) : (
-                                            <span className="pl-6 inline-block">{dim4Key}</span>
-                                          )}
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                          {measure === 'faturamento'
-                                            ? Number(dim4Node.total || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-                                            : Number(dim4Node.total || 0).toLocaleString('pt-BR')}
-                                        </TableCell>
-                                      </TableRow>
-                                      {openL4 && Array.from(dim4Node.children.entries()).sort((a,b)=> b[1].total-a[1].total).map(([dim5Key, dim5Node]) => (
-                                        <TableRow key={`l5-${keyL4}||${dim5Key}`} className="bg-gray-50">
-                                          <TableCell style={{ paddingLeft: '5rem' }}>{dim5Key}</TableCell>
-                                          <TableCell className="text-right">
-                                            {measure === 'faturamento'
-                                              ? Number(dim5Node.total || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-                                              : Number(dim5Node.total || 0).toLocaleString('pt-BR')}
-                                          </TableCell>
-                                        </TableRow>
-                                      ))}
-                                    </Fragment>
-                                  )
-                                })}
-                              </Fragment>
-                            )
-                          })}
-                        )}
+                                            </Fragment>
+                                          )
+                                        })
+                                    )}
+                                  </Fragment>
+                                )
+                              })
+                          )}
               </Fragment>
             )
           })}
@@ -246,4 +257,3 @@ export default function PivotTableContent({ success, message, data }: Props) {
     </div>
   )
 }
-
