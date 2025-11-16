@@ -32,7 +32,7 @@ export const MessageContent = ({
 }: MessageContentProps) => (
   <div
     className={cn(
-      'flex flex-col gap-2 rounded-lg text-base text-foreground px-4 py-3 overflow-hidden',
+      'flex flex-col gap-2 rounded-lg text-lg text-foreground px-4 py-3 overflow-hidden',
       'group-[.is-user]:bg-primary group-[.is-user]:text-primary-foreground',
       'group-[.is-assistant]:bg-secondary group-[.is-assistant]:text-foreground',
       className,
