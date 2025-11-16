@@ -29,6 +29,7 @@ import type { UIMessage } from 'ai';
 import { currentAgent, setCurrentAgent } from '../../stores/nexus/agentStore';
 import { currentWorkflow } from '../../stores/nexus/workflowStore';
 import type { AttachedFile } from '../../components/nexus/FileAttachmentPreview';
+import NexusHeader from '@/components/nexus/NexusHeader';
 
 export default function Page() {
   const selectedAgent = useStore(currentAgent);
@@ -319,52 +320,7 @@ export default function Page() {
           {viewMode === 'chat' && (
             // Modo Chat Only - Header + ChatContainer
             <div className="flex flex-col h-full w-full">
-              <header className="flex h-16 shrink-0 items-center gap-2 px-4">
-                <SidebarTrigger className="-ml-1" />
-                <Separator
-                  orientation="vertical"
-                  className="mr-2 data-[orientation=vertical]:h-4"
-                />
-                <Breadcrumb>
-                  <BreadcrumbList>
-                    <BreadcrumbItem className="hidden md:block">
-                      <BreadcrumbLink href="#">
-                        Creatto
-                      </BreadcrumbLink>
-                    </BreadcrumbItem>
-                    <BreadcrumbSeparator className="hidden md:block" />
-                    <BreadcrumbItem>
-                      <BreadcrumbPage>Nexus</BreadcrumbPage>
-                    </BreadcrumbItem>
-                  </BreadcrumbList>
-                </Breadcrumb>
-
-                {/* View Mode Dropdown */}
-                <div className="ml-auto">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:bg-gray-100 transition-colors">
-                        <MessageSquare className="w-4 h-4" /> Chat
-                        <ChevronDown className="w-4 h-4" />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => setViewMode('chat')}>
-                        <MessageSquare className="w-4 h-4 mr-2" />
-                        Chat
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setViewMode('split')}>
-                        <Layout className="w-4 h-4 mr-2" />
-                        Workspace
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setViewMode('dashboard')}>
-                        <BarChart3 className="w-4 h-4 mr-2" />
-                        Dashboard
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </header>
+              <NexusHeader viewMode={viewMode} onChangeViewMode={setViewMode} />
 
               <div className="flex-1 overflow-hidden p-4" data-page="nexus">
                 <div className="mx-auto w-full max-w-5xl h-full">
@@ -390,53 +346,8 @@ export default function Page() {
               {/* Coluna Esquerda: Header + Chat */}
               <Panel defaultSize={33} minSize={25}>
                 <div className="flex flex-col h-full">
-                  {/* Header da coluna esquerda */}
-                  <header className="flex h-16 shrink-0 items-center gap-2 px-4">
-                    <SidebarTrigger className="-ml-1" />
-                    <Separator
-                      orientation="vertical"
-                      className="mr-2 data-[orientation=vertical]:h-4"
-                    />
-                    <Breadcrumb>
-                      <BreadcrumbList>
-                        <BreadcrumbItem className="hidden md:block">
-                          <BreadcrumbLink href="#">
-                            Creatto
-                          </BreadcrumbLink>
-                        </BreadcrumbItem>
-                        <BreadcrumbSeparator className="hidden md:block" />
-                        <BreadcrumbItem>
-                          <BreadcrumbPage>Nexus</BreadcrumbPage>
-                        </BreadcrumbItem>
-                      </BreadcrumbList>
-                    </Breadcrumb>
-
-                    {/* View Mode Dropdown */}
-                    <div className="ml-auto">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <button className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:bg-gray-100 transition-colors">
-                            <Layout className="w-4 h-4" /> Workspace
-                            <ChevronDown className="w-4 h-4" />
-                          </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => setViewMode('chat')}>
-                            <MessageSquare className="w-4 h-4 mr-2" />
-                            Chat
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => setViewMode('split')}>
-                            <Layout className="w-4 h-4 mr-2" />
-                            Workspace
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => setViewMode('dashboard')}>
-                            <BarChart3 className="w-4 h-4 mr-2" />
-                            Dashboard
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </header>
+              {/* Header da coluna esquerda */}
+              <NexusHeader viewMode={viewMode} onChangeViewMode={setViewMode} />
 
                   {/* Chat Container */}
                   <div className="flex-1 overflow-hidden p-4" data-page="nexus">
@@ -465,9 +376,12 @@ export default function Page() {
           )}
 
           {viewMode === 'dashboard' && (
-            // Modo Dashboard Only - Tela inteira
-            <div className="h-full w-full">
-              <DashboardChatPanel />
+            // Modo Dashboard Only - Header + Tela inteira
+            <div className="flex flex-col h-full w-full">
+              <NexusHeader viewMode={viewMode} onChangeViewMode={setViewMode} />
+              <div className="flex-1 min-h-0">
+                <DashboardChatPanel />
+              </div>
             </div>
           )}
         </div>
