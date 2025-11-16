@@ -108,7 +108,7 @@ export default function PivotWrapper({ success, message, data, title, defaultMod
         </div>
       </ArtifactHeader>
 
-      <ArtifactContent>
+      <ArtifactContent className="p-0">
         {mode === 'table' ? (
           <PivotTableContent success={success} message={message} data={data} />
         ) : (
