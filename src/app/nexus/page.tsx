@@ -341,38 +341,39 @@ export default function Page() {
           )}
 
           {viewMode === 'split' && (
-            // Modo Split - Header + Chat | Dashboard
-            <PanelGroup direction="horizontal">
-              {/* Coluna Esquerda: Header + Chat */}
-              <Panel defaultSize={33} minSize={25}>
-                <div className="flex flex-col h-full">
-              {/* Header da coluna esquerda */}
+            // Modo Split - Header global + Workspaces lado a lado
+            <div className="flex flex-col h-full w-full">
               <NexusHeader viewMode={viewMode} onChangeViewMode={setViewMode} />
+              <div className="flex-1 min-h-0">
+                <PanelGroup direction="horizontal">
+                  {/* Coluna Esquerda: Chat */}
+                  <Panel defaultSize={33} minSize={25}>
+                    <div className="h-full">
+                      <div className="h-full overflow-hidden p-4" data-page="nexus">
+                        <ChatContainer
+                          messages={displayedMessages}
+                          input={input}
+                          setInput={setInput}
+                          onSubmit={handleSubmit}
+                          status={status}
+                          selectedAgent={selectedAgent}
+                          onAgentChange={setCurrentAgent}
+                          attachedFiles={attachedFiles}
+                          onFilesChange={setAttachedFiles}
+                        />
+                      </div>
+                    </div>
+                  </Panel>
 
-                  {/* Chat Container */}
-                  <div className="flex-1 overflow-hidden p-4" data-page="nexus">
-                    <ChatContainer
-                      messages={displayedMessages}
-                      input={input}
-                      setInput={setInput}
-                      onSubmit={handleSubmit}
-                      status={status}
-                      selectedAgent={selectedAgent}
-                      onAgentChange={setCurrentAgent}
-                      attachedFiles={attachedFiles}
-                      onFilesChange={setAttachedFiles}
-                    />
-                  </div>
-                </div>
-              </Panel>
-
-              {/* Coluna Direita: Dashboard altura completa */}
-              <Panel defaultSize={67} minSize={40}>
-                <div className="h-full">
-                  <DashboardChatPanel />
-                </div>
-              </Panel>
-            </PanelGroup>
+                  {/* Coluna Direita: Dashboard altura completa */}
+                  <Panel defaultSize={67} minSize={40}>
+                    <div className="h-full">
+                      <DashboardChatPanel />
+                    </div>
+                  </Panel>
+                </PanelGroup>
+              </div>
+            </div>
           )}
 
           {viewMode === 'dashboard' && (
