@@ -292,14 +292,15 @@ export const Response = memo(
         ? parseIncompleteMarkdown(children)
         : children;
 
-    return (
-      <div
-        className={cn(
-          'size-full [&>*:first-child]:mt-0 [&>*:last-child]:mb-0',
-          className,
-        )}
-        {...props}
-      >
+  return (
+    <div
+      className={cn(
+        'size-full [&>*:first-child]:mt-0 [&>*:last-child]:mb-0',
+        className,
+      )}
+      style={{ fontFamily: 'var(--font-barlow), Barlow, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif' }}
+      {...props}
+    >
         <HardenedMarkdown
           components={components}
           rehypePlugins={[rehypeKatex]}

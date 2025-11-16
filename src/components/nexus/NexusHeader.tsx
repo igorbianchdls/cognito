@@ -34,7 +34,7 @@ export default function NexusHeader({ viewMode, onChangeViewMode, showBreadcrumb
   )
 
   return (
-    <header className="flex h-16 shrink-0 items-center gap-2 px-4 bg-white border-b">
+    <header className="flex h-16 shrink-0 items-center gap-2 px-4 bg-[#fdfdfd] border-b">
       <SidebarTrigger className="-ml-1" />
       <Separator orientation="vertical" className="mr-2 data-[orientation=vertical]:h-4" />
       {showBreadcrumb && (
@@ -77,4 +77,3 @@ export default function NexusHeader({ viewMode, onChangeViewMode, showBreadcrumb
     </header>
   )
 }
-

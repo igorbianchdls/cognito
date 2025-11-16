@@ -243,7 +243,7 @@ export default function InputArea({ input, setInput, onSubmit, status, selectedA
         />
       )}
       
-      <PromptInput onSubmit={onSubmit} className="mt-4 border-gray-100">
+      <PromptInput onSubmit={onSubmit} className="mt-4 border-gray-100" style={{ fontFamily: 'var(--font-barlow), Barlow, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif' }}>
         <PromptInputTextarea
           onChange={handleInputChange}
           value={input}

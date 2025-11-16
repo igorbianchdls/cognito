@@ -164,7 +164,7 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
 
   return (
     <Sidebar collapsible="icon" style={inlineStyle} {...props}>
-      <SidebarHeader className="h-16 border-b bg-white">
+      <SidebarHeader className="h-16 border-b bg-[#fdfdfd]">
         <TeamSwitcher teams={dataWithActiveState.teams} />
       </SidebarHeader>
       <SidebarContent>

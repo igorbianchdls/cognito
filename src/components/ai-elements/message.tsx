@@ -37,6 +37,7 @@ export const MessageContent = ({
       'group-[.is-assistant]:bg-secondary group-[.is-assistant]:text-foreground',
       className,
     )}
+    style={{ fontFamily: 'var(--font-barlow), Barlow, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif' }}
     {...props}
   >
     <div className="is-user:dark">{children}</div>
