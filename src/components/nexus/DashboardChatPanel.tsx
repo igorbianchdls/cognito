@@ -36,7 +36,7 @@ import { $headerUi, headerUiActions } from '@/stores/ui/headerUiStore';
 
 export default function DashboardChatPanel() {
   const headerUi = useNanoStore($headerUi);
-  const [activeTab, setActiveTab] = useState<'editor' | 'dashboard'>('editor');
+  const [activeTab, setActiveTab] = useState<'editor' | 'dashboard'>('dashboard');
   const [selectedViewport, setSelectedViewport] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
   const [selectedDashboard, setSelectedDashboard] = useState('Dashboard Builder');
   const [selectedTheme, setSelectedTheme] = useState<ThemeName>('branco');
@@ -344,18 +344,23 @@ export default function DashboardChatPanel() {
         </div>
 
         <ArtifactActions>
-          <ArtifactAction
-            icon={FileText}
-            onClick={() => setActiveTab('editor')}
-            tooltip="Editor"
-            variant={activeTab === 'editor' ? 'outline' : 'ghost'}
-          />
-          <ArtifactAction
-            icon={BarChart3}
-            onClick={() => setActiveTab('dashboard')}
-            tooltip="Dashboard"
-            variant={activeTab === 'dashboard' ? 'outline' : 'ghost'}
-          />
+          <Button
+            variant="ghost"
+            className="flex items-center gap-2 px-3 py-2"
+            onClick={() => setActiveTab(activeTab === 'editor' ? 'dashboard' : 'editor')}
+          >
+            {activeTab === 'editor' ? (
+              <>
+                <FileText className="w-4 h-4" />
+                <span>Editor</span>
+              </>
+            ) : (
+              <>
+                <BarChart3 className="w-4 h-4" />
+                <span>Dashboard</span>
+              </>
+            )}
+          </Button>
 
           {/* Consolidated Tema Selector */}
           <DropdownMenu>
