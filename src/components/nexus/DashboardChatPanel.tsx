@@ -46,7 +46,7 @@ export default function DashboardChatPanel() {
   const [selectedBorderType, setSelectedBorderType] = useState<BorderPresetKey>('suave');
   const [borderColor, setBorderColor] = useState<string>('#e5e7eb');
   const [borderWidth, setBorderWidth] = useState<number>(1);
-  const [borderRadius, setBorderRadius] = useState<number>(12);
+  const [borderRadius, setBorderRadius] = useState<number>(0);
   const [borderAccentColor, setBorderAccentColor] = useState<string>('#bbb');
   const [borderShadow, setBorderShadow] = useState<boolean>(true);
   const [selectedCorporateColor, setSelectedCorporateColor] = useState<ColorPresetKey>('corporate');
