@@ -98,7 +98,7 @@ import SolicitacoesCompraResult from '../tools/compras/SolicitacoesCompraResult'
 import CotacoesCompraResult from '../tools/compras/CotacoesCompraResult';
 import KpisComprasResult from '../tools/compras/KpisComprasResult';
 import PedidosVendasResult from '../tools/vendas-b2b/PedidosVendasResult';
-import PivotTable from '../tools/vendas-analytics/PivotTable';
+import PivotWrapper from '../tools/vendas-analytics/PivotWrapper';
 
 type AnalisTerritorioData = {
   summary: Array<{
@@ -8026,10 +8026,11 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                 </ToolContent>
               </Tool>
               {tool.state === 'output-available' && tool.output && (
-                <PivotTable
+                <PivotWrapper
                   success={Boolean((tool.output as Record<string, unknown>).success)}
                   message={String((tool.output as Record<string, unknown>).message || '')}
                   data={(tool.output as Record<string, unknown>).data as AnalisTerritorioData}
+                  title="Pivot de Vendas"
                 />
               )}
             </div>
