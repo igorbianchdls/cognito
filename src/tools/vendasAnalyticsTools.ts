@@ -98,18 +98,7 @@ export const analiseTerritorio = tool({
 
       const whereClause = whereParts.length ? `WHERE ${whereParts.join(' AND ')}` : ''
 
-      // Dimensão de nível 1 (expressão e agrupamento)
-      let dim1Expr = ''
-      let groupByDim1 = ''
-      if (nivel1_dim === 'data_pedido') {
-        const grain1 = nivel1_time_grain === 'year' ? 'year' : 'month'
-        const truncExpr1 = `date_trunc('${grain1}', data_pedido)`
-        dim1Expr = grain1 === 'year' ? `to_char(${truncExpr1}, 'YYYY')` : `to_char(${truncExpr1}, 'YYYY-MM')`
-        groupByDim1 = dim1Expr
-      } else {
-        dim1Expr = nivel1_dim
-        groupByDim1 = nivel1_dim
-      }
+      // Dimensões serão construídas via helper buildDimExpr abaixo
 
       // Helpers para montar expressões de dimensão
       const buildDimExpr = (dim?: string, grain?: 'month' | 'year') => {
