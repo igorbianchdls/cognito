@@ -3514,6 +3514,10 @@ const getAgentInfo = (agent: string) => {
       return { initial: '✅', title: 'Pagamento Efetuado', color: 'bg-blue-600' };
     case 'pagamento-recebido':
       return { initial: '💸', title: 'Pagamento Recebido', color: 'bg-emerald-600' };
+    case 'reembolsoAgent':
+      return { initial: 'R', title: 'Gestor de Reembolsos', color: 'bg-green-600' };
+    case 'analistaVendas':
+      return { initial: 'AV', title: 'Analista de Vendas', color: 'bg-purple-600' };
     default:
       return { initial: 'A', title: 'Assistente IA (Geral)', color: 'bg-gray-500' };
   }
@@ -3561,7 +3565,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
         <div className={`w-8 h-8 rounded-md ${agentInfo.color} text-white font-semibold flex items-center justify-center`}>
           {agentInfo.icon || agentInfo.initial}
         </div>
-        <h3 className="font-bold text-gray-900">{agentInfo.title}</h3>
+        <h3 className="font-bold text-gray-900 text-lg">{agentInfo.title}</h3>
       </div>
       {message.parts.map((part, index) => {
         if (part.type === 'text') {
