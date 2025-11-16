@@ -215,7 +215,7 @@ export default function PivotTableContent({ success, message, data }: Props) {
   return (
     <div className="w-full">
       <Table>
-        <TableHeader className="bg-gray-50">
+        <TableHeader className="bg-white">
           <TableRow>
             <TableHead className="w-[75%]">Dimensão</TableHead>
             <TableHead className="text-right w-[25%]">{measure === 'faturamento' ? 'Faturamento' : 'Valor'}</TableHead>

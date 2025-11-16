@@ -82,10 +82,10 @@ export default function PivotWrapper({ success, message, data, title, defaultMod
 
   return (
     <Artifact className="w-full">
-      <ArtifactHeader>
+      <ArtifactHeader className="bg-gray-50">
         <div className="flex items-center gap-2">
-          <Globe className="h-5 w-5 text-purple-600" />
-          <ArtifactTitle>{computedTitle}</ArtifactTitle>
+          <Globe className="h-5 w-5 text-gray-600" />
+          <ArtifactTitle className="text-gray-700">{computedTitle}</ArtifactTitle>
         </div>
         <div className="ml-auto flex items-center gap-2">
           <ArtifactDescription className="text-right">
