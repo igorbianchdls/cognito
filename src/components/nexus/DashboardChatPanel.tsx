@@ -360,13 +360,10 @@ export default function DashboardChatPanel() {
           {/* Consolidated Tema Selector */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <div>
-                <ArtifactAction
-                  icon={Palette}
-                  tooltip="Configurações de aparência"
-                  variant="ghost"
-                />
-              </div>
+              <Button variant="ghost" className="flex items-center gap-2 px-3 py-2">
+                <Palette className="w-4 h-4" />
+                <span>Tema</span>
+              </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               {/* Tema Submenu */}
