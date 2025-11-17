@@ -272,8 +272,9 @@ export class ThemeManager {
 
     if (!clonedWidget.barConfig.styling) {
       // Preserve any user-provided styling (e.g., barColor, colors)
-      const userStyling = widget.barConfig?.styling ? { ...widget.barConfig.styling } : {} as Partial<BarChartConfig>['styling'];
-      clonedWidget.barConfig.styling = { ...DEFAULT_CHART_STYLING, ...(userStyling || {}) } as any;
+      const userStyling: Partial<BarChartConfig['styling']> = widget.barConfig?.styling ? { ...(widget.barConfig.styling as BarChartConfig['styling']) } : {};
+      const defaultStyling: Partial<BarChartConfig['styling']> = { ...DEFAULT_CHART_STYLING } as Partial<BarChartConfig['styling']>;
+      clonedWidget.barConfig.styling = { ...defaultStyling, ...userStyling } as BarChartConfig['styling'];
     }
 
     // Apply design tokens to Bar Chart with direct assignment (like KPI - always applies theme)
