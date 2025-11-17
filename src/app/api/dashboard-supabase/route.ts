@@ -101,11 +101,11 @@ const generatePostgreSQLQuery = (
   // Build qualified table name for PostgreSQL
   const qualifiedTable = `"${schema}"."${tabela}"`;
 
-  // Build date filter condition (default to marketing.view_trafego_pago date column)
+  // Build date filter condition (using vendas.vw_pedidos_completo date column)
   let dateCondition = '';
   if (dateFilter) {
     const { startDate, endDate } = calculateDateRange(dateFilter);
-    dateCondition = ` AND "data_metricas" >= '${startDate}' AND "data_metricas" <= '${endDate}'`;
+    dateCondition = ` AND "data_pedido" >= '${startDate}' AND "data_pedido" <= '${endDate}'`;
   }
 
   switch (tipo) {
@@ -212,11 +212,11 @@ export async function POST(request: NextRequest) {
       const sqlKPI = `WITH current AS (
         SELECT ${agg}("${yCol}") AS total
         FROM ${qualifiedTable}
-        WHERE "data_metricas" >= '${startDate}' AND "data_metricas" <= '${endDate}'
+        WHERE "data_pedido" >= '${startDate}' AND "data_pedido" <= '${endDate}'
       ), previous AS (
         SELECT ${agg}("${yCol}") AS total
         FROM ${qualifiedTable}
-        WHERE "data_metricas" >= '${fmt(prevStart)}' AND "data_metricas" <= '${fmt(prevEnd)}'
+        WHERE "data_pedido" >= '${fmt(prevStart)}' AND "data_pedido" <= '${fmt(prevEnd)}'
       )
       SELECT current.total AS current_value, previous.total AS previous_value FROM current, previous`;
 
