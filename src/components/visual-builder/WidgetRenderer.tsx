@@ -333,7 +333,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
   // Loading state - only for BigQuery widgets
   if (needsBigQueryData(widget.type) && loading) {
     return (
-      <div className="h-full w-full p-2 flex items-center justify-center">
+      <div className="h-full w-full px-0 py-2 flex items-center justify-center">
         <div className="text-center text-gray-500">
           <div className="text-2xl mb-2">⏳</div>
           <div className="text-sm">Loading data...</div>
@@ -345,7 +345,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
   // Error state - show error, no fallback data - only for BigQuery widgets
   if (needsBigQueryData(widget.type) && error) {
     return (
-      <div className="h-full w-full p-2 flex items-center justify-center bg-red-50 rounded">
+      <div className="h-full w-full px-0 py-2 flex items-center justify-center bg-red-50 rounded">
         <div className="text-center text-red-600">
           <div className="text-2xl mb-2">⚠️</div>
           <div className="text-sm font-medium mb-1">Supabase Error</div>
@@ -358,7 +358,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
   // Empty data state - only for BigQuery widgets
   if (needsBigQueryData(widget.type) && !loading && (!data || (Array.isArray(data) && data.length === 0))) {
     return (
-      <div className="h-full w-full p-2 flex items-center justify-center bg-gray-50 rounded">
+      <div className="h-full w-full px-0 py-2 flex items-center justify-center bg-gray-50 rounded">
         <div className="text-center text-gray-500">
           <div className="text-2xl mb-2">📊</div>
           <div className="text-sm font-medium mb-1">No Data</div>
@@ -408,7 +408,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
       });
 
       widgetContent = (
-        <div className="h-full w-full p-2 relative group">
+        <div className="h-full w-full px-0 py-2 relative group">
           {renderSQLButton()}
           <BarChart
             {...commonChartProps}
@@ -472,7 +472,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
 
     case 'line':
       widgetContent = (
-        <div className="h-full w-full p-2 relative group">
+        <div className="h-full w-full px-0 py-2 relative group">
           {renderSQLButton()}
           <LineChart
             {...commonChartProps}
@@ -504,7 +504,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
 
     case 'pie':
       widgetContent = (
-        <div className="h-full w-full p-2 relative group">
+        <div className="h-full w-full px-0 py-2 relative group">
           {renderSQLButton()}
           <PieChart
             {...commonChartProps}
@@ -533,7 +533,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
 
     case 'area':
       widgetContent = (
-        <div className="h-full w-full p-2 relative group">
+        <div className="h-full w-full px-0 py-2 relative group">
           {renderSQLButton()}
           <AreaChart
             {...commonChartProps}
@@ -589,7 +589,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
 
     case 'insights':
       widgetContent = (
-        <div className="h-full w-full p-2">
+        <div className="h-full w-full px-0 py-2">
           <InsightsCard
             title={widget.title}
             useGlobalStore={widget.insightsConfig?.useGlobalStore ?? true}
@@ -605,7 +605,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
 
     case 'alerts':
       widgetContent = (
-        <div className="h-full w-full p-2">
+        <div className="h-full w-full px-0 py-2">
           <AlertasCard
             title={widget.title}
             useGlobalStore={widget.alertsConfig?.useGlobalStore ?? true}
@@ -628,7 +628,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
       ]
 
       widgetContent = (
-        <div className="h-full w-full p-2">
+        <div className="h-full w-full px-0 py-2">
           <InsightsHeroCarousel
             items={items}
             variant={widget.insightsHeroConfig?.variant || 'aurora'}
@@ -643,7 +643,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
 
     case 'recommendations':
       widgetContent = (
-        <div className="h-full w-full p-2">
+        <div className="h-full w-full px-0 py-2">
           <RecomendacoesCard
             title={widget.title}
             useGlobalStore={widget.recommendationsConfig?.useGlobalStore ?? true}
@@ -661,7 +661,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
     case 'stackedbar':
       if (multipleLoading) {
         widgetContent = (
-          <div className="h-full w-full p-2 flex items-center justify-center">
+          <div className="h-full w-full px-0 py-2 flex items-center justify-center">
             <div className="text-center text-gray-500">
               <div className="text-2xl mb-2">⏳</div>
               <div className="text-sm">Loading grouped data...</div>
@@ -670,7 +670,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
         );
       } else if (multipleError) {
         widgetContent = (
-          <div className="h-full w-full p-2 flex items-center justify-center bg-red-50 rounded">
+          <div className="h-full w-full px-0 py-2 flex items-center justify-center bg-red-50 rounded">
             <div className="text-center text-red-600">
               <div className="text-2xl mb-2">⚠️</div>
               <div className="text-sm font-medium mb-1">Error</div>
@@ -680,7 +680,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
         );
       } else if (multipleData && multipleData.items.length > 0) {
         widgetContent = (
-          <div className="h-full w-full p-2 relative group">
+          <div className="h-full w-full px-0 py-2 relative group">
             {renderSQLButton()}
             <StackedBarChart
               {...(widget.stackedBarConfig?.styling || {})}
@@ -754,7 +754,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
         );
       } else {
         widgetContent = (
-          <div className="h-full w-full p-2 flex items-center justify-center bg-gray-50 rounded">
+          <div className="h-full w-full px-0 py-2 flex items-center justify-center bg-gray-50 rounded">
             <div className="text-center text-gray-500">
               <div className="text-2xl mb-2">📊</div>
               <div className="text-sm">No grouped data available</div>
@@ -767,7 +767,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
     case 'groupedbar':
       if (multipleLoading) {
         widgetContent = (
-          <div className="h-full w-full p-2 flex items-center justify-center">
+          <div className="h-full w-full px-0 py-2 flex items-center justify-center">
             <div className="text-center text-gray-500">
               <div className="text-2xl mb-2">⏳</div>
               <div className="text-sm">Loading grouped data...</div>
@@ -776,7 +776,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
         );
       } else if (multipleError) {
         widgetContent = (
-          <div className="h-full w-full p-2 flex items-center justify-center bg-red-50 rounded">
+          <div className="h-full w-full px-0 py-2 flex items-center justify-center bg-red-50 rounded">
             <div className="text-center text-red-600">
               <div className="text-2xl mb-2">⚠️</div>
               <div className="text-sm font-medium mb-1">Error</div>
@@ -786,7 +786,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
         );
       } else if (multipleData && multipleData.items.length > 0) {
         widgetContent = (
-          <div className="h-full w-full p-2 relative group">
+          <div className="h-full w-full px-0 py-2 relative group">
             {renderSQLButton()}
             <GroupedBarChart
               {...(widget.groupedBarConfig?.styling || {})}
@@ -860,7 +860,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
         );
       } else {
         widgetContent = (
-          <div className="h-full w-full p-2 flex items-center justify-center bg-gray-50 rounded">
+          <div className="h-full w-full px-0 py-2 flex items-center justify-center bg-gray-50 rounded">
             <div className="text-center text-gray-500">
               <div className="text-2xl mb-2">📊</div>
               <div className="text-sm">No grouped data available</div>
@@ -872,7 +872,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
     case 'pivotbar':
       if (multipleLoading) {
         widgetContent = (
-          <div className="h-full w-full p-2 flex items-center justify-center">
+          <div className="h-full w-full px-0 py-2 flex items-center justify-center">
             <div className="text-center text-gray-500">
               <div className="text-2xl mb-2">⏳</div>
               <div className="text-sm">Loading grouped data...</div>
@@ -881,7 +881,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
         );
       } else if (multipleError) {
         widgetContent = (
-          <div className="h-full w-full p-2 flex items-center justify-center bg-red-50 rounded">
+          <div className="h-full w-full px-0 py-2 flex items-center justify-center bg-red-50 rounded">
             <div className="text-center text-red-600">
               <div className="text-2xl mb-2">⚠️</div>
               <div className="text-sm font-medium mb-1">Error</div>
@@ -893,7 +893,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
         const keys = multipleData.series.map(s => s.key);
         const seriesMetadata = multipleData.series;
         widgetContent = (
-          <div className="h-full w-full p-2 relative group">
+          <div className="h-full w-full px-0 py-2 relative group">
             {renderSQLButton()}
             {pivotDrilled && (
               <button onClick={drillPivotBack} className="absolute top-2 right-2 z-10 px-2 py-1 text-xs bg-white border border-gray-200 rounded shadow">Voltar</button>
@@ -941,7 +941,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
         );
       } else {
         widgetContent = (
-          <div className="h-full w-full p-2 flex items-center justify-center bg-gray-50 rounded">
+          <div className="h-full w-full px-0 py-2 flex items-center justify-center bg-gray-50 rounded">
             <div className="text-center text-gray-500">
               <div className="text-2xl mb-2">📊</div>
               <div className="text-sm">No grouped data available</div>
@@ -1117,7 +1117,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
 
     default:
       widgetContent = (
-        <div className="h-full w-full p-2 flex items-center justify-center bg-gray-100 rounded">
+        <div className="h-full w-full px-0 py-2 flex items-center justify-center bg-gray-100 rounded">
           <div className="text-center text-gray-500">
             <div className="text-2xl mb-2">❓</div>
             <div className="text-sm">Unknown widget type: {widget.type}</div>
