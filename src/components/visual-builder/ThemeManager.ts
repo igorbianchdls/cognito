@@ -595,49 +595,49 @@ export class ThemeManager {
     }
 
     if (!clonedWidget.stackedLinesConfig.styling) {
-      clonedWidget.stackedLinesConfig.styling = { ...DEFAULT_CHART_STYLING } as any;
+      clonedWidget.stackedLinesConfig.styling = { ...DEFAULT_CHART_STYLING };
     }
 
     // Background
-    clonedWidget.stackedLinesConfig.styling.backgroundColor = tokens.colors.surface as any;
+    clonedWidget.stackedLinesConfig.styling.backgroundColor = tokens.colors.surface;
 
     // Title styling
-    clonedWidget.stackedLinesConfig.styling.titleColor = tokens.colors.text.primary as any;
-    clonedWidget.stackedLinesConfig.styling.titleFontSize = tokens.typography.fontSize.lg as any;
-    clonedWidget.stackedLinesConfig.styling.titleFontWeight = tokens.typography.fontWeight.semibold as any;
-    clonedWidget.stackedLinesConfig.styling.titleFontFamily = tokens.typography.fontFamily.primary as any;
-    clonedWidget.stackedLinesConfig.styling.titleMarginTop = 0 as any;
-    clonedWidget.stackedLinesConfig.styling.titleMarginRight = 0 as any;
-    clonedWidget.stackedLinesConfig.styling.titleMarginBottom = 8 as any;
-    clonedWidget.stackedLinesConfig.styling.titleMarginLeft = 0 as any;
+    clonedWidget.stackedLinesConfig.styling.titleColor = tokens.colors.text.primary;
+    clonedWidget.stackedLinesConfig.styling.titleFontSize = tokens.typography.fontSize.lg;
+    clonedWidget.stackedLinesConfig.styling.titleFontWeight = tokens.typography.fontWeight.semibold;
+    clonedWidget.stackedLinesConfig.styling.titleFontFamily = tokens.typography.fontFamily.primary;
+    clonedWidget.stackedLinesConfig.styling.titleMarginTop = 0;
+    clonedWidget.stackedLinesConfig.styling.titleMarginRight = 0;
+    clonedWidget.stackedLinesConfig.styling.titleMarginBottom = 8;
+    clonedWidget.stackedLinesConfig.styling.titleMarginLeft = 0;
 
     // Subtitle styling
-    clonedWidget.stackedLinesConfig.styling.subtitleFontFamily = tokens.typography.fontFamily.primary as any;
-    clonedWidget.stackedLinesConfig.styling.subtitleFontSize = tokens.typography.fontSize.sm as any;
-    clonedWidget.stackedLinesConfig.styling.subtitleFontWeight = tokens.typography.fontWeight.normal as any;
-    clonedWidget.stackedLinesConfig.styling.subtitleColor = tokens.colors.text.secondary as any;
-    clonedWidget.stackedLinesConfig.styling.subtitleMarginTop = 0 as any;
-    clonedWidget.stackedLinesConfig.styling.subtitleMarginRight = 0 as any;
-    clonedWidget.stackedLinesConfig.styling.subtitleMarginBottom = 16 as any;
-    clonedWidget.stackedLinesConfig.styling.subtitleMarginLeft = 0 as any;
+    clonedWidget.stackedLinesConfig.styling.subtitleFontFamily = tokens.typography.fontFamily.primary;
+    clonedWidget.stackedLinesConfig.styling.subtitleFontSize = tokens.typography.fontSize.sm;
+    clonedWidget.stackedLinesConfig.styling.subtitleFontWeight = tokens.typography.fontWeight.normal;
+    clonedWidget.stackedLinesConfig.styling.subtitleColor = tokens.colors.text.secondary;
+    clonedWidget.stackedLinesConfig.styling.subtitleMarginTop = 0;
+    clonedWidget.stackedLinesConfig.styling.subtitleMarginRight = 0;
+    clonedWidget.stackedLinesConfig.styling.subtitleMarginBottom = 16;
+    clonedWidget.stackedLinesConfig.styling.subtitleMarginLeft = 0;
 
     // Axis & grid
-    clonedWidget.stackedLinesConfig.styling.axisTextColor = tokens.colors.chart.axis as any;
-    clonedWidget.stackedLinesConfig.styling.axisFontSize = tokens.typography.fontSize.sm as any;
-    clonedWidget.stackedLinesConfig.styling.gridColor = tokens.colors.chart.grid as any;
-    clonedWidget.stackedLinesConfig.styling.gridStrokeWidth = 0.5 as any;
+    clonedWidget.stackedLinesConfig.styling.axisTextColor = tokens.colors.chart.axis;
+    clonedWidget.stackedLinesConfig.styling.axisFontSize = tokens.typography.fontSize.sm;
+    clonedWidget.stackedLinesConfig.styling.gridColor = tokens.colors.chart.grid;
+    clonedWidget.stackedLinesConfig.styling.gridStrokeWidth = 0.5;
 
     // Line defaults
-    clonedWidget.stackedLinesConfig.styling.colors = [tokens.colors.chartElements.line.stroke] as any;
-    clonedWidget.stackedLinesConfig.styling.lineWidth = 2 as any;
-    clonedWidget.stackedLinesConfig.styling.enablePoints = true as any;
-    clonedWidget.stackedLinesConfig.styling.pointSize = 6 as any;
-    clonedWidget.stackedLinesConfig.styling.curve = 'cardinal' as any;
-    clonedWidget.stackedLinesConfig.styling.enableArea = true as any;
-    clonedWidget.stackedLinesConfig.styling.areaOpacity = 0.15 as any;
+    clonedWidget.stackedLinesConfig.styling.colors = [tokens.colors.chartElements.line.stroke];
+    clonedWidget.stackedLinesConfig.styling.lineWidth = 2;
+    clonedWidget.stackedLinesConfig.styling.enablePoints = true;
+    clonedWidget.stackedLinesConfig.styling.pointSize = 6;
+    clonedWidget.stackedLinesConfig.styling.curve = 'cardinal';
+    clonedWidget.stackedLinesConfig.styling.enableArea = true;
+    clonedWidget.stackedLinesConfig.styling.areaOpacity = 0.15;
 
     // Effects
-    clonedWidget.stackedLinesConfig.styling.containerOpacity = tokens.effects.opacity.medium as any;
+    clonedWidget.stackedLinesConfig.styling.containerOpacity = tokens.effects.opacity.medium;
     if (tokens.effects.gradient) {
       clonedWidget.stackedLinesConfig.styling.backgroundGradient = {
         enabled: true,
@@ -645,19 +645,19 @@ export class ThemeManager {
         direction: tokens.effects.gradient.direction,
         startColor: tokens.effects.gradient.startColor,
         endColor: tokens.effects.gradient.endColor
-      } as any;
+      };
     } else {
       clonedWidget.stackedLinesConfig.styling.backgroundGradient = undefined;
     }
     if (tokens.effects.backdrop) {
-      clonedWidget.stackedLinesConfig.styling.containerBackdropFilter = `blur(${tokens.effects.backdrop.blur}px) saturate(${tokens.effects.backdrop.saturate}%) brightness(${tokens.effects.backdrop.brightness}%)` as any;
+      clonedWidget.stackedLinesConfig.styling.containerBackdropFilter = `blur(${tokens.effects.backdrop.blur}px) saturate(${tokens.effects.backdrop.saturate}%) brightness(${tokens.effects.backdrop.brightness}%)`;
     } else {
       clonedWidget.stackedLinesConfig.styling.containerBackdropFilter = undefined;
     }
     if (tokens.effects.shadow.color === '#00ffff') {
-      clonedWidget.stackedLinesConfig.styling.containerBoxShadow = 'none' as any;
+      clonedWidget.stackedLinesConfig.styling.containerBoxShadow = 'none';
     } else {
-      clonedWidget.stackedLinesConfig.styling.containerBoxShadow = `${tokens.effects.shadow.offsetX}px ${tokens.effects.shadow.offsetY}px ${tokens.effects.shadow.blur}px rgba(0, 0, 0, ${tokens.effects.shadow.opacity})` as any;
+      clonedWidget.stackedLinesConfig.styling.containerBoxShadow = `${tokens.effects.shadow.offsetX}px ${tokens.effects.shadow.offsetY}px ${tokens.effects.shadow.blur}px rgba(0, 0, 0, ${tokens.effects.shadow.opacity})`;
     }
 
     // Border
@@ -669,12 +669,12 @@ export class ThemeManager {
       accentColor: borderOptions?.accentColor,
       shadow: borderOptions?.shadow,
     })
-    clonedWidget.stackedLinesConfig.styling.containerBorderColor = bStyle.color as any;
-    clonedWidget.stackedLinesConfig.styling.containerBorderAccentColor = bStyle.accentColor as any;
-    clonedWidget.stackedLinesConfig.styling.containerBorderWidth = bStyle.width as any;
-    clonedWidget.stackedLinesConfig.styling.containerBorderRadius = bStyle.radius as any;
-    clonedWidget.stackedLinesConfig.styling.containerBoxShadow = bStyle.shadow ? (clonedWidget.stackedLinesConfig.styling.containerBoxShadow || '0 1px 2px rgba(0,0,0,.06)') : 'none' as any;
-    clonedWidget.stackedLinesConfig.styling.containerBorderVariant = bStyle.type === 'acentuada' ? 'accent' : (bStyle.type === 'sem-borda' ? 'none' : 'smooth') as any;
+    clonedWidget.stackedLinesConfig.styling.containerBorderColor = bStyle.color;
+    clonedWidget.stackedLinesConfig.styling.containerBorderAccentColor = bStyle.accentColor;
+    clonedWidget.stackedLinesConfig.styling.containerBorderWidth = bStyle.width;
+    clonedWidget.stackedLinesConfig.styling.containerBorderRadius = bStyle.radius;
+    clonedWidget.stackedLinesConfig.styling.containerBoxShadow = bStyle.shadow ? (clonedWidget.stackedLinesConfig.styling.containerBoxShadow || '0 1px 2px rgba(0,0,0,.06)') : 'none';
+    clonedWidget.stackedLinesConfig.styling.containerBorderVariant = bStyle.type === 'acentuada' ? 'accent' : (bStyle.type === 'sem-borda' ? 'none' : 'smooth');
 
     return clonedWidget;
   }
