@@ -250,8 +250,8 @@ export function GroupedBarChart(props: GroupedBarChartProps) {
 
     // Bar Visual Effects - CSS Only
     barOpacity,
-    _barHoverOpacity,
-    _borderOpacity,
+    barHoverOpacity: _barHoverOpacity,
+    borderOpacity: _borderOpacity,
 
     // Bar CSS Filters
     barBrightness,
@@ -277,8 +277,8 @@ export function GroupedBarChart(props: GroupedBarChartProps) {
     labelSkipWidth,
     labelSkipHeight,
     labelTextColor,
-    _labelFormat,
-    _labelOffset,
+    labelFormat: _labelFormat,
+    labelOffset: _labelOffset,
     animate,
     motionConfig,
     axisBottom,
