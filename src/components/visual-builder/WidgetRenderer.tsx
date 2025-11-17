@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Database } from 'lucide-react';
+import type { ChartConfig as RechartsChartConfig } from '@/components/ui/chart';
 import { BarChart } from '@/components/charts/BarChart';
 import { LineChart } from '@/components/charts/LineChart';
 import { PieChart } from '@/components/charts/PieChart';
@@ -812,10 +813,10 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
         });
         const dataRow: Record<string, number> = keys.reduce((acc, k) => ({ ...acc, [k]: totals[k] }), {} as Record<string, number>);
 
-        const config = multipleData.series.reduce((acc, s) => {
-          acc[s.key] = { label: s.label, color: s.color } as any;
+        const config: RechartsChartConfig = multipleData.series.reduce((acc, s) => {
+          acc[s.key] = { label: s.label, color: s.color };
           return acc;
-        }, {} as Record<string, { label?: string; color?: string }>);
+        }, {} as RechartsChartConfig);
 
         widgetContent = (
           <div className="h-full w-full p-2 relative group">
