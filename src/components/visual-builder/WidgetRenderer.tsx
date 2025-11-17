@@ -593,15 +593,16 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
           <div className="h-full w-full p-2 relative group">
             {renderSQLButton()}
             <StackedBarChart
+              {...(widget.stackedBarConfig?.styling || {})}
+              // Pass margin and legends from JSON config
+              margin={widget.stackedBarConfig?.margin}
+              legends={widget.stackedBarConfig?.legends}
+              // Data props (override any styling defaults)
               data={multipleData.items}
               keys={multipleData.series.map(s => s.key)}
               title={widget.title || 'Chart'}
               colors={multipleData.series.map(s => s.color)}
               seriesMetadata={multipleData.series}
-              {...(widget.stackedBarConfig?.styling || {})}
-              // Pass margin and legends from JSON config
-              margin={widget.stackedBarConfig?.margin}
-              legends={widget.stackedBarConfig?.legends}
               // Container Glass Effect & Modern Styles
               containerBackground={widget.stackedBarConfig?.styling?.containerBackground}
               backgroundGradient={widget.stackedBarConfig?.styling?.backgroundGradient}
