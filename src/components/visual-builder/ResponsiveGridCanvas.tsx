@@ -277,7 +277,7 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig, globalFilter
       return '140px';
     }
 
-    if (['bar', 'line', 'pie', 'area'].includes(widget.type)) {
+    if (['bar', 'line', 'pie', 'area', 'stackedbar', 'groupedbar'].includes(widget.type)) {
       return '500px';
     }
 

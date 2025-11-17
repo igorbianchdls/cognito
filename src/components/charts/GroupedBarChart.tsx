@@ -364,6 +364,7 @@ export function GroupedBarChart(props: GroupedBarChartProps) {
         position: 'relative',
         flexDirection: 'column',
         alignItems: 'stretch',
+        height: '100%',
         minWidth: 0,
         ...(containerClassName ? {} : {
           ...containerStyles,
