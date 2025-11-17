@@ -597,6 +597,8 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
               // Pass margin and legends from JSON config
               margin={widget.stackedBarConfig?.margin}
               legends={widget.stackedBarConfig?.legends}
+              // Orientation (vertical | horizontal)
+              layout={widget.stackedBarConfig?.styling?.layout || 'vertical'}
               // Data props (override any styling defaults)
               data={multipleData.items}
               keys={multipleData.series.map(s => s.key)}

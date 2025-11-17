@@ -69,6 +69,11 @@ const initialCode = `{
       "desktop": 1,
       "tablet": 1,
       "mobile": 1
+    },
+    "6": {
+      "desktop": 1,
+      "tablet": 1,
+      "mobile": 1
     }
   },
   "widgets": [
@@ -371,6 +376,41 @@ const initialCode = `{
         "field": "item_subtotal",
         "aggregation": "SUM",
         "limit": 5
+      },
+      "stackedBarConfig": {
+        "styling": {
+          "layout": "vertical",
+          "enableGridX": false,
+          "enableGridY": true,
+          "marginBottom": 40
+        }
+      }
+    },
+    {
+      "id": "vendedores_por_territorio_horizontal",
+      "type": "stackedbar",
+      "position": { "x": 0, "y": 22, "w": 12, "h": 4 },
+      "row": "6",
+      "span": { "desktop": 1, "tablet": 1, "mobile": 1 },
+      "order": 14,
+      "heightPx": 360,
+      "title": "🏆 Top 5 Vendedores por Território (Horizontal)",
+      "dataSource": {
+        "schema": "vendas",
+        "table": "vw_pedidos_completo",
+        "dimension1": "territorio_nome",
+        "dimension2": "vendedor_nome",
+        "field": "item_subtotal",
+        "aggregation": "SUM",
+        "limit": 5
+      },
+      "stackedBarConfig": {
+        "styling": {
+          "layout": "horizontal",
+          "enableGridX": true,
+          "enableGridY": false,
+          "marginBottom": 50
+        }
       }
     }
   ]
