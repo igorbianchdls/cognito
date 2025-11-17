@@ -5,6 +5,7 @@ import type { BarChartConfig } from '@/stores/apps/barChartStore';
 import type { LineChartConfig } from '@/stores/apps/lineChartStore';
 import type { PieChartConfig } from '@/stores/apps/pieChartStore';
 import type { AreaChartConfig } from '@/stores/apps/areaChartStore';
+import type { StackedBarChartConfig } from '@/stores/apps/stackedBarChartStore';
 
 // Widget types configurations
 export interface InsightsConfig {
@@ -185,6 +186,7 @@ export interface Widget {
   lineConfig?: Partial<LineChartConfig>;
   pieConfig?: Partial<PieChartConfig>;
   areaConfig?: Partial<AreaChartConfig>;
+  stackedBarConfig?: Partial<StackedBarChartConfig>;
   insightsConfig?: InsightsConfig;
   // New: Insights hero (Swiper carousel variant)
   insightsHeroConfig?: InsightsHeroConfig;

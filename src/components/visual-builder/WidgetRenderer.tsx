@@ -590,13 +590,72 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
         );
       } else if (multipleData && multipleData.items.length > 0) {
         widgetContent = (
-          <div className="h-full w-full" style={{ height: `${widget.heightPx || 320}px` }}>
+          <div className="h-full w-full p-2 relative group">
+            {renderSQLButton()}
             <StackedBarChart
               data={multipleData.items}
               keys={multipleData.series.map(s => s.key)}
               title={widget.title || 'Chart'}
               colors={multipleData.series.map(s => s.color)}
               seriesMetadata={multipleData.series}
+              {...(widget.stackedBarConfig?.styling || {})}
+              // Pass margin and legends from JSON config
+              margin={widget.stackedBarConfig?.margin}
+              legends={widget.stackedBarConfig?.legends}
+              // Container Glass Effect & Modern Styles
+              containerBackground={widget.stackedBarConfig?.styling?.containerBackground}
+              backgroundGradient={widget.stackedBarConfig?.styling?.backgroundGradient}
+              containerOpacity={widget.stackedBarConfig?.styling?.containerOpacity}
+              containerBackdropFilter={widget.stackedBarConfig?.styling?.containerBackdropFilter}
+              containerFilter={widget.stackedBarConfig?.styling?.containerFilter}
+              containerBoxShadow={widget.stackedBarConfig?.styling?.containerBoxShadow}
+              containerTransform={widget.stackedBarConfig?.styling?.containerTransform}
+              containerTransition={widget.stackedBarConfig?.styling?.containerTransition}
+              // Bar Visual Effects
+              barBrightness={widget.stackedBarConfig?.styling?.barBrightness}
+              barSaturate={widget.stackedBarConfig?.styling?.barSaturate}
+              barContrast={widget.stackedBarConfig?.styling?.barContrast}
+              barBlur={widget.stackedBarConfig?.styling?.barBlur}
+              barBoxShadow={widget.stackedBarConfig?.styling?.barBoxShadow}
+              hoverBrightness={widget.stackedBarConfig?.styling?.hoverBrightness}
+              hoverSaturate={widget.stackedBarConfig?.styling?.hoverSaturate}
+              hoverScale={widget.stackedBarConfig?.styling?.hoverScale}
+              hoverBlur={widget.stackedBarConfig?.styling?.hoverBlur}
+              transitionDuration={widget.stackedBarConfig?.styling?.transitionDuration}
+              transitionEasing={widget.stackedBarConfig?.styling?.transitionEasing}
+              // Typography - Title
+              titleFontFamily={widget.stackedBarConfig?.styling?.titleFontFamily}
+              titleFontSize={widget.stackedBarConfig?.styling?.titleFontSize}
+              titleFontWeight={widget.stackedBarConfig?.styling?.titleFontWeight}
+              titleColor={widget.stackedBarConfig?.styling?.titleColor}
+              titleMarginTop={widget.stackedBarConfig?.styling?.titleMarginTop}
+              titleMarginLeft={widget.stackedBarConfig?.styling?.titleMarginLeft}
+              titleMarginBottom={widget.stackedBarConfig?.styling?.titleMarginBottom}
+              // Typography - Subtitle
+              subtitleFontFamily={widget.stackedBarConfig?.styling?.subtitleFontFamily}
+              subtitleFontSize={widget.stackedBarConfig?.styling?.subtitleFontSize}
+              subtitleFontWeight={widget.stackedBarConfig?.styling?.subtitleFontWeight}
+              subtitleColor={widget.stackedBarConfig?.styling?.subtitleColor}
+              subtitleMarginTop={widget.stackedBarConfig?.styling?.subtitleMarginTop}
+              subtitleMarginLeft={widget.stackedBarConfig?.styling?.subtitleMarginLeft}
+              subtitleMarginBottom={widget.stackedBarConfig?.styling?.subtitleMarginBottom}
+              // Grid & Style
+              enableGridX={widget.stackedBarConfig?.styling?.enableGridX ?? false}
+              enableGridY={widget.stackedBarConfig?.styling?.enableGridY ?? true}
+              gridColor={widget.stackedBarConfig?.styling?.gridColor}
+              gridStrokeWidth={widget.stackedBarConfig?.styling?.gridStrokeWidth}
+              borderRadius={widget.stackedBarConfig?.styling?.borderRadius}
+              backgroundColor={widget.stackedBarConfig?.styling?.backgroundColor}
+              // Positioning
+              translateY={widget.stackedBarConfig?.styling?.translateY}
+              marginBottom={widget.stackedBarConfig?.styling?.marginBottom}
+              // Container Border
+              containerBorderWidth={widget.stackedBarConfig?.styling?.containerBorderWidth}
+              containerBorderColor={widget.stackedBarConfig?.styling?.containerBorderColor}
+              containerBorderAccentColor={widget.stackedBarConfig?.styling?.containerBorderAccentColor}
+              containerBorderRadius={widget.stackedBarConfig?.styling?.containerBorderRadius}
+              containerBorderVariant={widget.stackedBarConfig?.styling?.containerBorderVariant}
+              containerPadding={widget.stackedBarConfig?.styling?.containerPadding}
             />
           </div>
         );
