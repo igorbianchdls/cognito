@@ -154,6 +154,8 @@ export interface StackedLinesChartConfig {
     containerOpacity?: number
     containerBackdropFilter?: string
     containerBoxShadow?: string
+    containerTransform?: string
+    containerTransition?: string
 
     // Container Shadow
     containerShadowColor?: string
@@ -316,4 +318,3 @@ export const stackedLinesChartActions = {
     $stackedLinesChartStore.set({ ...current, stackedLinesCharts: updated })
   }
 }
-
