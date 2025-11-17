@@ -590,33 +590,33 @@ export class ThemeManager {
   ): Widget {
     const clonedWidget = { ...widget };
     if (!clonedWidget.pivotBarConfig) {
-      clonedWidget.pivotBarConfig = {} as any;
+      clonedWidget.pivotBarConfig = {} as Partial<PivotBarChartConfig>;
     }
     if (!clonedWidget.pivotBarConfig.styling) {
-      clonedWidget.pivotBarConfig.styling = { ...DEFAULT_CHART_STYLING } as any;
+      clonedWidget.pivotBarConfig.styling = {} as PivotBarChartConfig['styling'];
     }
 
     // Background
-    clonedWidget.pivotBarConfig.styling.backgroundColor = tokens.colors.surface as any;
+    clonedWidget.pivotBarConfig.styling.backgroundColor = tokens.colors.surface;
 
     // Title styling
-    clonedWidget.pivotBarConfig.styling.titleColor = tokens.colors.text.primary as any;
-    clonedWidget.pivotBarConfig.styling.titleFontSize = tokens.typography.fontSize.lg as any;
-    clonedWidget.pivotBarConfig.styling.titleFontWeight = tokens.typography.fontWeight.semibold as any;
-    clonedWidget.pivotBarConfig.styling.titleFontFamily = tokens.typography.fontFamily.primary as any;
+    clonedWidget.pivotBarConfig.styling.titleColor = tokens.colors.text.primary;
+    clonedWidget.pivotBarConfig.styling.titleFontSize = tokens.typography.fontSize.lg;
+    clonedWidget.pivotBarConfig.styling.titleFontWeight = tokens.typography.fontWeight.semibold;
+    clonedWidget.pivotBarConfig.styling.titleFontFamily = tokens.typography.fontFamily.primary;
 
     // Subtitle
-    clonedWidget.pivotBarConfig.styling.subtitleFontFamily = tokens.typography.fontFamily.primary as any;
-    clonedWidget.pivotBarConfig.styling.subtitleFontSize = tokens.typography.fontSize.sm as any;
-    clonedWidget.pivotBarConfig.styling.subtitleFontWeight = tokens.typography.fontWeight.normal as any;
-    clonedWidget.pivotBarConfig.styling.subtitleColor = tokens.colors.text.secondary as any;
+    clonedWidget.pivotBarConfig.styling.subtitleFontFamily = tokens.typography.fontFamily.primary;
+    clonedWidget.pivotBarConfig.styling.subtitleFontSize = tokens.typography.fontSize.sm;
+    clonedWidget.pivotBarConfig.styling.subtitleFontWeight = tokens.typography.fontWeight.normal;
+    clonedWidget.pivotBarConfig.styling.subtitleColor = tokens.colors.text.secondary;
 
     // Grid
-    clonedWidget.pivotBarConfig.styling.gridColor = tokens.colors.chart.grid as any;
-    clonedWidget.pivotBarConfig.styling.gridStrokeWidth = 0.5 as any;
+    clonedWidget.pivotBarConfig.styling.gridColor = tokens.colors.chart.grid;
+    clonedWidget.pivotBarConfig.styling.gridStrokeWidth = 0.5;
 
     // Effects
-    clonedWidget.pivotBarConfig.styling.containerOpacity = tokens.effects.opacity.medium as any;
+    clonedWidget.pivotBarConfig.styling.containerOpacity = tokens.effects.opacity.medium;
     if (tokens.effects.gradient) {
       clonedWidget.pivotBarConfig.styling.backgroundGradient = {
         enabled: true,
@@ -624,19 +624,19 @@ export class ThemeManager {
         direction: tokens.effects.gradient.direction,
         startColor: tokens.effects.gradient.startColor,
         endColor: tokens.effects.gradient.endColor
-      } as any;
+      };
     } else {
       clonedWidget.pivotBarConfig.styling.backgroundGradient = undefined;
     }
     if (tokens.effects.backdrop) {
-      clonedWidget.pivotBarConfig.styling.containerBackdropFilter = `blur(${tokens.effects.backdrop.blur}px) saturate(${tokens.effects.backdrop.saturate}%) brightness(${tokens.effects.backdrop.brightness}%)` as any;
+      clonedWidget.pivotBarConfig.styling.containerBackdropFilter = `blur(${tokens.effects.backdrop.blur}px) saturate(${tokens.effects.backdrop.saturate}%) brightness(${tokens.effects.backdrop.brightness}%)`;
     } else {
       clonedWidget.pivotBarConfig.styling.containerBackdropFilter = undefined;
     }
     if (tokens.effects.shadow.color === '#00ffff') {
-      clonedWidget.pivotBarConfig.styling.containerBoxShadow = 'none' as any;
+      clonedWidget.pivotBarConfig.styling.containerBoxShadow = 'none';
     } else {
-      clonedWidget.pivotBarConfig.styling.containerBoxShadow = `${tokens.effects.shadow.offsetX}px ${tokens.effects.shadow.offsetY}px ${tokens.effects.shadow.blur}px rgba(0, 0, 0, ${tokens.effects.shadow.opacity})` as any;
+      clonedWidget.pivotBarConfig.styling.containerBoxShadow = `${tokens.effects.shadow.offsetX}px ${tokens.effects.shadow.offsetY}px ${tokens.effects.shadow.blur}px rgba(0, 0, 0, ${tokens.effects.shadow.opacity})`;
     }
 
     // Border via BorderManager
@@ -648,12 +648,12 @@ export class ThemeManager {
       accentColor: borderOptions?.accentColor,
       shadow: borderOptions?.shadow,
     })
-    clonedWidget.pivotBarConfig.styling.containerBorderColor = bStyle.color as any;
-    clonedWidget.pivotBarConfig.styling.containerBorderAccentColor = bStyle.accentColor as any;
-    clonedWidget.pivotBarConfig.styling.containerBorderWidth = bStyle.width as any;
-    clonedWidget.pivotBarConfig.styling.containerBorderRadius = bStyle.radius as any;
-    clonedWidget.pivotBarConfig.styling.containerBoxShadow = bStyle.shadow ? (clonedWidget.pivotBarConfig.styling.containerBoxShadow || '0 1px 2px rgba(0,0,0,.06)') : 'none' as any;
-    clonedWidget.pivotBarConfig.styling.containerBorderVariant = bStyle.type === 'acentuada' ? 'accent' : (bStyle.type === 'sem-borda' ? 'none' : 'smooth') as any;
+    clonedWidget.pivotBarConfig.styling.containerBorderColor = bStyle.color;
+    clonedWidget.pivotBarConfig.styling.containerBorderAccentColor = bStyle.accentColor;
+    clonedWidget.pivotBarConfig.styling.containerBorderWidth = bStyle.width;
+    clonedWidget.pivotBarConfig.styling.containerBorderRadius = bStyle.radius;
+    clonedWidget.pivotBarConfig.styling.containerBoxShadow = bStyle.shadow ? (clonedWidget.pivotBarConfig.styling.containerBoxShadow || '0 1px 2px rgba(0,0,0,.06)') : 'none';
+    clonedWidget.pivotBarConfig.styling.containerBorderVariant = bStyle.type === 'acentuada' ? 'accent' : (bStyle.type === 'sem-borda' ? 'none' : 'smooth');
 
     return clonedWidget;
   }
