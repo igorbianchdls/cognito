@@ -8,11 +8,7 @@ import { createElegantTheme } from './theme';
 import type { LegendConfig } from '@/types/apps/chartWidgets';
 
 export interface ChartData {
-  x?: string;
-  y?: number;
-  label?: string;
-  value?: number;
-  color?: string;
+  label: string;
   [key: string]: string | number; // Para suporte a múltiplas séries
 }
 
