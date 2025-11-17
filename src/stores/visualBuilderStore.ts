@@ -64,6 +64,11 @@ const initialCode = `{
       "desktop": 2,
       "tablet": 2,
       "mobile": 1
+    },
+    "5": {
+      "desktop": 1,
+      "tablet": 1,
+      "mobile": 1
     }
   },
   "widgets": [
@@ -347,6 +352,24 @@ const initialCode = `{
           "translateY": 0,
           "marginBottom": 40
         }
+      }
+    },
+    {
+      "id": "vendedores_por_territorio",
+      "type": "barMultiple",
+      "row": "5",
+      "span": { "desktop": 1, "tablet": 1, "mobile": 1 },
+      "order": 13,
+      "heightPx": 360,
+      "title": "🏆 Top 5 Vendedores por Território",
+      "dataSource": {
+        "schema": "vendas",
+        "table": "vw_pedidos_completo",
+        "dimension1": "territorio_nome",
+        "dimension2": "vendedor_nome",
+        "field": "item_subtotal",
+        "aggregation": "SUM",
+        "limit": 5
       }
     }
   ]

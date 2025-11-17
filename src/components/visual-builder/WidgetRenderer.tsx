@@ -11,6 +11,7 @@ import InsightsCard from '@/components/widgets/InsightsCard';
 import AlertasCard from '@/components/widgets/AlertasCard';
 import RecomendacoesCard from '@/components/widgets/RecomendacoesCard';
 import InsightsHeroCarousel from '@/components/widgets/InsightsHeroCarousel';
+import { BarChartMultipleRecharts } from '@/components/charts/BarChartMultipleRecharts';
 import SQLModal from './SQLModal';
 import type { Widget } from '../visual-builder/ConfigParser';
 import type { GlobalFilters } from '@/stores/visualBuilderStore';
@@ -511,6 +512,94 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
         </div>
       );
       break;
+
+    case 'barMultiple': {
+      const [multipleData, setMultipleData] = useState<{ items: any[]; series: any[] } | null>(null);
+      const [multipleLoading, setMultipleLoading] = useState(true);
+      const [multipleError, setMultipleError] = useState<string | null>(null);
+
+      useEffect(() => {
+        async function fetchGroupedData() {
+          if (!widget.dataSource) {
+            setMultipleError('No dataSource configured');
+            setMultipleLoading(false);
+            return;
+          }
+
+          try {
+            setMultipleLoading(true);
+            setMultipleError(null);
+
+            const response = await fetch('/api/dashboard-supabase/grouped', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                ...widget.dataSource,
+                filters: globalFilters
+              })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+              setMultipleData({ items: result.items, series: result.series });
+              setSqlQuery(result.sql_query || null);
+            } else {
+              throw new Error(result.error || 'Failed to fetch grouped data');
+            }
+          } catch (err) {
+            console.error('Error fetching barMultiple data:', err);
+            setMultipleError(err instanceof Error ? err.message : 'Unknown error');
+          } finally {
+            setMultipleLoading(false);
+          }
+        }
+
+        fetchGroupedData();
+      }, [widget.id, widget.dataSource, globalFilters]);
+
+      if (multipleLoading) {
+        widgetContent = (
+          <div className="h-full w-full p-2 flex items-center justify-center">
+            <div className="text-center text-gray-500">
+              <div className="text-2xl mb-2">⏳</div>
+              <div className="text-sm">Loading grouped data...</div>
+            </div>
+          </div>
+        );
+      } else if (multipleError) {
+        widgetContent = (
+          <div className="h-full w-full p-2 flex items-center justify-center bg-red-50 rounded">
+            <div className="text-center text-red-600">
+              <div className="text-2xl mb-2">⚠️</div>
+              <div className="text-sm font-medium mb-1">Error</div>
+              <div className="text-xs">{multipleError}</div>
+            </div>
+          </div>
+        );
+      } else if (multipleData && multipleData.items.length > 0) {
+        widgetContent = (
+          <div className="h-full w-full p-2">
+            <BarChartMultipleRecharts
+              items={multipleData.items}
+              series={multipleData.series}
+              title={widget.title}
+              height={widget.heightPx || 320}
+            />
+          </div>
+        );
+      } else {
+        widgetContent = (
+          <div className="h-full w-full p-2 flex items-center justify-center bg-gray-50 rounded">
+            <div className="text-center text-gray-500">
+              <div className="text-2xl mb-2">📊</div>
+              <div className="text-sm">No grouped data available</div>
+            </div>
+          </div>
+        );
+      }
+      break;
+    }
 
     default:
       widgetContent = (

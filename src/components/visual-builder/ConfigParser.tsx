@@ -204,7 +204,7 @@ export interface ParseResult {
 }
 
 export class ConfigParser {
-  private static VALID_TYPES = ['bar', 'line', 'pie', 'area', 'kpi', 'insights', 'alerts', 'recommendations', 'insightsHero'];
+  private static VALID_TYPES = ['bar', 'line', 'pie', 'area', 'kpi', 'insights', 'alerts', 'recommendations', 'insightsHero', 'barMultiple'];
   private static DEFAULT_GRID_CONFIG: GridConfig = {
     maxRows: 12,
     rowHeight: 30,
