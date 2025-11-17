@@ -13,7 +13,7 @@ export interface ChartData {
   label?: string;
   value?: number;
   color?: string;
-  [key: string]: string | number | undefined; // Para suporte a múltiplas séries
+  [key: string]: string | number; // Para suporte a múltiplas séries
 }
 
 export interface StackedBarChartProps {
