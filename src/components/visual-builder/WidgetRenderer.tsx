@@ -566,7 +566,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
 
     case 'kpi':
       widgetContent = (
-        <div className="h-full w-full p-2 relative group">
+        <div className="h-full w-full px-0 py-2 relative group">
           {renderSQLButton()}
           <KPICard
             variant="tile"
