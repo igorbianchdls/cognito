@@ -25,6 +25,8 @@ interface GroupedRequest {
     startDate?: string;
     endDate?: string;
   };
+  // Drill simples: filtro por uma dimensão/valor
+  filter?: { dim: string; value: string };
 }
 
 export async function POST(request: NextRequest) {
@@ -41,7 +43,8 @@ export async function POST(request: NextRequest) {
       aggregation,
       measure,
       limit = 10,
-      dateFilter
+      dateFilter,
+      filter
     } = body;
 
     console.log('📥 Grouped API request:', {
@@ -55,6 +58,12 @@ export async function POST(request: NextRequest) {
     let dateCondition = '';
     if (dateFilter?.startDate && dateFilter?.endDate) {
       dateCondition = ` AND "data_pedido" >= '${dateFilter.startDate}' AND "data_pedido" <= '${dateFilter.endDate}'`;
+    }
+    if (filter && filter.dim && typeof filter.value === 'string') {
+      // Filtro simples para drill (igualdade)
+      const dim = filter.dim.replace(/[^a-zA-Z0-9_]/g, '');
+      const val = filter.value.replace(/'/g, "''");
+      dateCondition += ` AND "${dim}" = '${val}'`;
     }
 
     // Mapear measure → field/agg padrão se informado

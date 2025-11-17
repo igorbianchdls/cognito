@@ -55,6 +55,56 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
   const [multipleLoading, setMultipleLoading] = useState(false);
   const [multipleError, setMultipleError] = useState<string | null>(null);
 
+  // Drill state for pivotbar
+  const [pivotDrilled, setPivotDrilled] = useState<{ value: string; dim: string } | null>(null);
+
+  async function drillPivot(category: string) {
+    if (!widget.dataSource) return;
+    try {
+      setMultipleLoading(true);
+      setMultipleError(null);
+      const body: any = {
+        schema: (widget.dataSource as any).schema,
+        table: (widget.dataSource as any).table,
+        // next level: use dimension2 as new X (fallback to dimension1)
+        dimension1: (widget.dataSource as any).dimension2 || (widget.dataSource as any).dimension1,
+        measure: (widget.dataSource as any).measure,
+        aggregation: (widget.dataSource as any).aggregation,
+        limit: (widget.dataSource as any).limit || 10,
+        filter: { dim: (widget.dataSource as any).dimension1, value: category },
+        filters: globalFilters
+      };
+      const response = await fetch('/api/dashboard-supabase/grouped', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      const result = await response.json();
+      if (result.success) {
+        setMultipleData({ items: result.items, series: result.series });
+        setSqlQuery(result.sql_query || null);
+        setPivotDrilled({ value: category, dim: (widget.dataSource as any).dimension1 || 'dim1' });
+      } else {
+        throw new Error(result.error || 'Failed to fetch drill data');
+      }
+    } catch (err) {
+      setMultipleError(err instanceof Error ? err.message : 'Unknown error');
+    } finally {
+      setMultipleLoading(false);
+    }
+  }
+
+  async function drillPivotBack() {
+    if (!widget.dataSource) return;
+    setPivotDrilled(null);
+    try {
+      setMultipleLoading(true);
+      const response = await fetch('/api/dashboard-supabase/grouped', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...(widget.dataSource as any), filters: globalFilters }) });
+      const result = await response.json();
+      if (result.success) {
+        setMultipleData({ items: result.items, series: result.series });
+        setSqlQuery(result.sql_query || null);
+      }
+    } catch {}
+    finally { setMultipleLoading(false); }
+  }
+
   // 🔄 Component initialization log
   console.log('🔄 WidgetRenderer mounted:', {
     id: widget.id,
@@ -810,6 +860,9 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
         widgetContent = (
           <div className="h-full w-full p-2 relative group">
             {renderSQLButton()}
+            {pivotDrilled && (
+              <button onClick={drillPivotBack} className="absolute top-2 right-2 z-10 px-2 py-1 text-xs bg-white border border-gray-200 rounded shadow">Voltar</button>
+            )}
             <PivotBarChart
               items={multipleData.items}
               keys={keys}
@@ -837,6 +890,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
               containerBorderRadius={widget.pivotBarConfig?.styling?.containerBorderRadius}
               containerBorderVariant={widget.pivotBarConfig?.styling?.containerBorderVariant}
               containerPadding={widget.pivotBarConfig?.styling?.containerPadding}
+              onBarClick={(category) => drillPivot(category)}
             />
           </div>
         );
