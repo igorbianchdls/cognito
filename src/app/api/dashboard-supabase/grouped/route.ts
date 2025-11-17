@@ -107,7 +107,9 @@ export async function POST(request: NextRequest) {
     console.log('🔍 Generated SQL:', sqlQuery);
 
     // Execute query
-    const rawData = await runQuery<any>(sqlQuery);
+    type TwoDimRow = { dim1: string; dim2: string; value: number };
+    type OneDimRow = { dim1: string; value: number };
+    const rawData = await runQuery<TwoDimRow | OneDimRow>(sqlQuery);
 
     console.log('📊 Raw query result:', { rowCount: rawData.length, sample: rawData.slice(0, 3) });
 
@@ -115,7 +117,8 @@ export async function POST(request: NextRequest) {
     let series: Array<{ key: string; label: string; color: string }> = [];
 
     if (dimension2 && dimension2.trim().length > 0) {
-      const dimension2Totals = rawData.reduce((acc: Record<string, number>, row: any) => {
+      const rows2 = rawData as TwoDimRow[];
+      const dimension2Totals = rows2.reduce((acc: Record<string, number>, row) => {
         acc[row.dim2] = (acc[row.dim2] || 0) + Number(row.value || 0);
         return acc;
       }, {} as Record<string, number>);
@@ -128,7 +131,7 @@ export async function POST(request: NextRequest) {
       console.log(`📌 Top ${limit} dimension2 values:`, topDimension2);
 
       const pivotMap = new Map<string, Record<string, string | number>>();
-      rawData.forEach((row: any) => {
+      rows2.forEach((row) => {
         if (!topDimension2.includes(row.dim2)) return;
         if (!pivotMap.has(row.dim1)) pivotMap.set(row.dim1, { label: row.dim1 });
         const item = pivotMap.get(row.dim1)!;
@@ -142,7 +145,8 @@ export async function POST(request: NextRequest) {
         color: SERIES_COLORS[index % SERIES_COLORS.length]
       }));
     } else {
-      items = rawData.map((row: any) => ({ label: row.dim1, value: Number(row.value || 0) }));
+      const rows1 = rawData as OneDimRow[];
+      items = rows1.map((row) => ({ label: row.dim1, value: Number(row.value || 0) }));
       const labelMap: Record<PivotMeasure, string> = {
         faturamento: 'Faturamento', quantidade: 'Quantidade', pedidos: 'Pedidos', itens: 'Itens'
       };
