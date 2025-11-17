@@ -28,7 +28,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
     if (widget) {
       setFormData({
         type: widget.type,
-        title: widget.title,
+        title: widget.title || '',
         heightPx: widget.heightPx || 320,
         dataSource: {
           table: widget.dataSource?.table || '',
