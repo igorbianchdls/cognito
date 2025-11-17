@@ -395,7 +395,7 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig, globalFilter
 
         {/* Responsive Grid Layout - Grouped by Rows */}
         {widgets.length > 0 && (
-          <div className="p-4 space-y-4">
+          <div className="px-0 py-4 space-y-2">
             {Object.keys(widgetGroups)
               .sort((a, b) => parseInt(a) - parseInt(b)) // Sort rows numerically
               .map((rowKey) => {

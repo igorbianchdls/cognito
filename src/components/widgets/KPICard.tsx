@@ -388,7 +388,7 @@ export function KPICard({
 
     return (
       <div
-        className={kpiContainerClassName || `${borderVariant === 'accent' ? '' : (borderVariant === 'smooth' ? 'border border-gray-200' : '')} ${borderVariant === 'accent' ? 'shadow-none' : (borderVariant === 'none' ? 'shadow-none' : 'shadow-sm')} relative ${s.pad}`}
+        className={kpiContainerClassName || `${borderVariant === 'smooth' ? 'border border-gray-200' : ''} ${(borderVariant === 'accent' || borderVariant === 'smooth' || borderVariant === 'none') ? 'shadow-none' : 'shadow-sm'} relative ${s.pad}`}
         style={(() => {
           if (tilePadding !== undefined) return { padding: `${tilePadding}px` } as React.CSSProperties
           const style: React.CSSProperties = {}
@@ -426,8 +426,8 @@ export function KPICard({
             style.borderRadius = 0
           }
           if (typeof kpiContainerShadow === 'boolean') style.boxShadow = kpiContainerShadow ? '0 1px 2px rgba(0,0,0,.06), 0 8px 24px rgba(0,0,0,.06)' : 'none'
-          // Force no shadow for accent variant
-          if (borderVariant === 'accent') style.boxShadow = 'none'
+          // Force no shadow for accent and smooth variants
+          if (borderVariant === 'accent' || borderVariant === 'smooth') style.boxShadow = 'none'
           return Object.keys(style).length ? style : undefined
         })()}
       >
@@ -455,7 +455,7 @@ export function KPICard({
         <div
           className={`font-semibold ${!kpiValueColor ? 'text-slate-900' : ''} leading-none ${s.value}`}
           style={{
-            ...(tileValuePaddingY !== undefined ? { paddingTop: tileValuePaddingY, paddingBottom: tileValuePaddingY } : { paddingTop: 16, paddingBottom: 16 }),
+            ...(tileValuePaddingY !== undefined ? { paddingTop: tileValuePaddingY, paddingBottom: tileValuePaddingY } : { paddingTop: 12, paddingBottom: 12 }),
             color: kpiValueColor || undefined
           }}
         >
