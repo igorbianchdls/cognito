@@ -54,6 +54,16 @@ const initialCode = `{
       "desktop": 2,
       "tablet": 2,
       "mobile": 1
+    },
+    "3": {
+      "desktop": 2,
+      "tablet": 2,
+      "mobile": 1
+    },
+    "4": {
+      "desktop": 2,
+      "tablet": 2,
+      "mobile": 1
     }
   },
   "widgets": [
@@ -234,6 +244,106 @@ const initialCode = `{
         "styling": {
           "showLegend": true,
           "showGrid": false,
+          "translateY": 0,
+          "marginBottom": 40
+        }
+      }
+    },
+    {
+      "id": "vendas_vendedor",
+      "type": "bar",
+      "position": { "x": 0, "y": 10, "w": 6, "h": 4 },
+      "row": "3",
+      "span": { "desktop": 1, "tablet": 2, "mobile": 1 },
+      "order": 9,
+      "heightPx": 320,
+      "title": "👤 Vendas por Vendedor",
+      "dataSource": {
+        "schema": "vendas",
+        "table": "vw_pedidos_completo",
+        "x": "vendedor_nome",
+        "y": "item_subtotal",
+        "aggregation": "SUM"
+      },
+      "barConfig": {
+        "styling": {
+          "showLegend": false,
+          "showGrid": true,
+          "translateY": 0,
+          "marginBottom": 40
+        }
+      }
+    },
+    {
+      "id": "vendas_filial",
+      "type": "bar",
+      "position": { "x": 6, "y": 10, "w": 6, "h": 4 },
+      "row": "3",
+      "span": { "desktop": 1, "tablet": 2, "mobile": 1 },
+      "order": 10,
+      "heightPx": 320,
+      "title": "🏢 Vendas por Filial",
+      "dataSource": {
+        "schema": "vendas",
+        "table": "vw_pedidos_completo",
+        "x": "filial_nome",
+        "y": "item_subtotal",
+        "aggregation": "SUM"
+      },
+      "barConfig": {
+        "styling": {
+          "showLegend": false,
+          "showGrid": true,
+          "translateY": 0,
+          "marginBottom": 40
+        }
+      }
+    },
+    {
+      "id": "vendas_centro_lucro",
+      "type": "bar",
+      "position": { "x": 0, "y": 14, "w": 6, "h": 4 },
+      "row": "4",
+      "span": { "desktop": 1, "tablet": 2, "mobile": 1 },
+      "order": 11,
+      "heightPx": 320,
+      "title": "💼 Vendas por Centro de Lucro",
+      "dataSource": {
+        "schema": "vendas",
+        "table": "vw_pedidos_completo",
+        "x": "centro_lucro_nome",
+        "y": "item_subtotal",
+        "aggregation": "SUM"
+      },
+      "barConfig": {
+        "styling": {
+          "showLegend": false,
+          "showGrid": true,
+          "translateY": 0,
+          "marginBottom": 40
+        }
+      }
+    },
+    {
+      "id": "vendas_campanha",
+      "type": "bar",
+      "position": { "x": 6, "y": 14, "w": 6, "h": 4 },
+      "row": "4",
+      "span": { "desktop": 1, "tablet": 2, "mobile": 1 },
+      "order": 12,
+      "heightPx": 320,
+      "title": "🎯 Vendas por Campanha",
+      "dataSource": {
+        "schema": "vendas",
+        "table": "vw_pedidos_completo",
+        "x": "campanha_venda_nome",
+        "y": "item_subtotal",
+        "aggregation": "SUM"
+      },
+      "barConfig": {
+        "styling": {
+          "showLegend": false,
+          "showGrid": true,
           "translateY": 0,
           "marginBottom": 40
         }
