@@ -455,7 +455,7 @@ export function KPICard({
         <div
           className={`font-semibold ${!kpiValueColor ? 'text-slate-900' : ''} leading-none ${s.value}`}
           style={{
-            ...(tileValuePaddingY !== undefined ? { paddingTop: tileValuePaddingY, paddingBottom: tileValuePaddingY } : { paddingTop: 4, paddingBottom: 4 }),
+            ...(tileValuePaddingY !== undefined ? { paddingTop: tileValuePaddingY, paddingBottom: tileValuePaddingY } : { paddingTop: 8, paddingBottom: 8 }),
             color: kpiValueColor || undefined
           }}
         >
