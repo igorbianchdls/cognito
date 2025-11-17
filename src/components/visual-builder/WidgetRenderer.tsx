@@ -6,12 +6,12 @@ import { BarChart } from '@/components/charts/BarChart';
 import { LineChart } from '@/components/charts/LineChart';
 import { PieChart } from '@/components/charts/PieChart';
 import { AreaChart } from '@/components/charts/AreaChart';
+import { StackedBarChart } from '@/components/charts/StackedBarChart';
 import { KPICard } from '@/components/widgets/KPICard';
 import InsightsCard from '@/components/widgets/InsightsCard';
 import AlertasCard from '@/components/widgets/AlertasCard';
 import RecomendacoesCard from '@/components/widgets/RecomendacoesCard';
 import InsightsHeroCarousel from '@/components/widgets/InsightsHeroCarousel';
-import { BarChartMultipleRecharts } from '@/components/charts/BarChartMultipleRecharts';
 import SQLModal from './SQLModal';
 import type { Widget } from '../visual-builder/ConfigParser';
 import type { GlobalFilters } from '@/stores/visualBuilderStore';
@@ -590,12 +590,12 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
         );
       } else if (multipleData && multipleData.items.length > 0) {
         widgetContent = (
-          <div className="h-full w-full p-2">
-            <BarChartMultipleRecharts
-              items={multipleData.items}
-              series={multipleData.series}
+          <div className="h-full w-full" style={{ height: `${widget.heightPx || 320}px` }}>
+            <StackedBarChart
+              data={multipleData.items}
+              keys={multipleData.series.map(s => s.key)}
               title={widget.title || 'Chart'}
-              height={widget.heightPx || 320}
+              colors={multipleData.series.map(s => s.color)}
             />
           </div>
         );
