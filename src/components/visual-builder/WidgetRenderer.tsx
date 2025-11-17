@@ -58,20 +58,39 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
   // Drill state for pivotbar
   const [pivotDrilled, setPivotDrilled] = useState<{ value: string; dim: string } | null>(null);
 
+  type PivotMeasure = 'faturamento' | 'quantidade' | 'pedidos' | 'itens';
+  type PivotGroupedRequest = {
+    schema?: string;
+    table: string;
+    dimension1: string;
+    dimension2?: string;
+    measure?: PivotMeasure;
+    aggregation?: 'SUM' | 'COUNT' | 'AVG' | 'MIN' | 'MAX';
+    limit?: number;
+    filter?: { dim: string; value: string };
+    filters?: GlobalFilters;
+  };
+
   async function drillPivot(category: string) {
     if (!widget.dataSource) return;
     try {
       setMultipleLoading(true);
       setMultipleError(null);
-      const body: any = {
-        schema: (widget.dataSource as any).schema,
-        table: (widget.dataSource as any).table,
-        // next level: use dimension2 as new X (fallback to dimension1)
-        dimension1: (widget.dataSource as any).dimension2 || (widget.dataSource as any).dimension1,
-        measure: (widget.dataSource as any).measure,
-        aggregation: (widget.dataSource as any).aggregation,
-        limit: (widget.dataSource as any).limit || 10,
-        filter: { dim: (widget.dataSource as any).dimension1, value: category },
+      const ds = widget.dataSource as Partial<{
+        schema: string; table: string; dimension1: string; dimension2: string;
+        measure: PivotMeasure; aggregation: 'SUM' | 'COUNT' | 'AVG' | 'MIN' | 'MAX'; limit: number;
+      }>;
+      if (!ds.table) return;
+      const dim1 = ds.dimension1 || '';
+      const nextDim = ds.dimension2 || dim1;
+      const body: PivotGroupedRequest = {
+        schema: ds.schema,
+        table: ds.table,
+        dimension1: nextDim,
+        measure: ds.measure,
+        aggregation: ds.aggregation,
+        limit: ds.limit ?? 10,
+        filter: { dim: dim1, value: category },
         filters: globalFilters
       };
       const response = await fetch('/api/dashboard-supabase/grouped', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
@@ -79,7 +98,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
       if (result.success) {
         setMultipleData({ items: result.items, series: result.series });
         setSqlQuery(result.sql_query || null);
-        setPivotDrilled({ value: category, dim: (widget.dataSource as any).dimension1 || 'dim1' });
+        setPivotDrilled({ value: category, dim: dim1 || 'dim1' });
       } else {
         throw new Error(result.error || 'Failed to fetch drill data');
       }
@@ -95,7 +114,22 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
     setPivotDrilled(null);
     try {
       setMultipleLoading(true);
-      const response = await fetch('/api/dashboard-supabase/grouped', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...(widget.dataSource as any), filters: globalFilters }) });
+      const ds = widget.dataSource as Partial<{
+        schema: string; table: string; dimension1: string; dimension2?: string;
+        measure?: PivotMeasure; aggregation?: 'SUM' | 'COUNT' | 'AVG' | 'MIN' | 'MAX'; limit?: number;
+      }>;
+      if (!ds.table || !ds.dimension1) return;
+      const originalBody: PivotGroupedRequest = {
+        schema: ds.schema,
+        table: ds.table,
+        dimension1: ds.dimension1,
+        dimension2: ds.dimension2,
+        measure: ds.measure,
+        aggregation: ds.aggregation,
+        limit: ds.limit,
+        filters: globalFilters
+      };
+      const response = await fetch('/api/dashboard-supabase/grouped', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(originalBody) });
       const result = await response.json();
       if (result.success) {
         setMultipleData({ items: result.items, series: result.series });
@@ -947,7 +981,12 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
               data={dataRow}
               keys={keys}
               config={config}
-              className="max-w-[300px]"
+              className="max-w-[320px]"
+              title={widget.title || 'Radial Stacked'}
+              containerBackground={'#ffffff'}
+              containerBorderColor={'#e5e7eb'}
+              containerBorderWidth={1}
+              containerBorderRadius={12}
               startAngle={widget.radialStackedConfig?.styling?.startAngle}
               endAngle={widget.radialStackedConfig?.styling?.endAngle}
               innerRadius={widget.radialStackedConfig?.styling?.innerRadius}
