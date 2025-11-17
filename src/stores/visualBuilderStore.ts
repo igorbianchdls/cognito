@@ -66,8 +66,8 @@ const initialCode = `{
       "mobile": 1
     },
     "5": {
-      "desktop": 1,
-      "tablet": 1,
+      "desktop": 2,
+      "tablet": 2,
       "mobile": 1
     },
     "6": {
@@ -390,7 +390,7 @@ const initialCode = `{
       "id": "vendedores_por_territorio_horizontal",
       "type": "stackedbar",
       "position": { "x": 0, "y": 22, "w": 12, "h": 4 },
-      "row": "6",
+      "row": "5",
       "span": { "desktop": 1, "tablet": 1, "mobile": 1 },
       "order": 14,
       "heightPx": 360,
