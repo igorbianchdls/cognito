@@ -594,7 +594,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
             <BarChartMultipleRecharts
               items={multipleData.items}
               series={multipleData.series}
-              title={widget.title}
+              title={widget.title || 'Chart'}
               height={widget.heightPx || 320}
             />
           </div>
@@ -629,7 +629,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
       isOpen={showSQLModal}
       onClose={() => setShowSQLModal(false)}
       sqlQuery={sqlQuery || ''}
-      widgetTitle={widget.title}
+      widgetTitle={widget.title || 'Widget'}
     />
   );
 
