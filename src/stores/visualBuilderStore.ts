@@ -71,8 +71,8 @@ const initialCode = `{
       "mobile": 1
     },
     "6": {
-      "desktop": 1,
-      "tablet": 1,
+      "desktop": 2,
+      "tablet": 2,
       "mobile": 1
     }
   },
@@ -437,6 +437,33 @@ const initialCode = `{
           "enableGridX": false,
           "enableGridY": true,
           "marginBottom": 40
+        }
+      }
+    },
+    {
+      "id": "comparativo_territorio_vendedor_grouped_horizontal",
+      "type": "groupedbar",
+      "position": { "x": 6, "y": 26, "w": 12, "h": 4 },
+      "row": "6",
+      "span": { "desktop": 1, "tablet": 1, "mobile": 1 },
+      "order": 16,
+      "heightPx": 360,
+      "title": "📊 Comparativo Vendedores por Território (Grouped • Horizontal)",
+      "dataSource": {
+        "schema": "vendas",
+        "table": "vw_pedidos_completo",
+        "dimension1": "territorio_nome",
+        "dimension2": "vendedor_nome",
+        "field": "item_subtotal",
+        "aggregation": "SUM",
+        "limit": 5
+      },
+      "groupedBarConfig": {
+        "styling": {
+          "layout": "horizontal",
+          "enableGridX": true,
+          "enableGridY": false,
+          "marginBottom": 50
         }
       }
     }
