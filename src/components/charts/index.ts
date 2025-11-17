@@ -11,6 +11,7 @@ export { RadarChart } from './RadarChart';
 export { StreamChart } from './StreamChart';
 export { GroupedBarChart } from './GroupedBarChart';
 export { StackedLinesChart } from './StackedLinesChart';
+export { RadialStackedChart } from './RadialStackedChart';
 
 // Container Component
 export { ChartContainer } from './ChartContainer';
