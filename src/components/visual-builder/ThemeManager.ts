@@ -597,8 +597,8 @@ export class ThemeManager {
       clonedWidget.pivotBarConfig.styling = {} as PivotBarChartConfig['styling'];
     }
 
-    // Background
-    clonedWidget.pivotBarConfig.styling.backgroundColor = tokens.colors.surface;
+    // Background (use container background for pivot bar)
+    clonedWidget.pivotBarConfig.styling.containerBackground = tokens.colors.surface;
 
     // Title styling
     clonedWidget.pivotBarConfig.styling.titleColor = tokens.colors.text.primary;
@@ -618,17 +618,6 @@ export class ThemeManager {
 
     // Effects
     clonedWidget.pivotBarConfig.styling.containerOpacity = tokens.effects.opacity.medium;
-    if (tokens.effects.gradient) {
-      clonedWidget.pivotBarConfig.styling.backgroundGradient = {
-        enabled: true,
-        type: tokens.effects.gradient.type,
-        direction: tokens.effects.gradient.direction,
-        startColor: tokens.effects.gradient.startColor,
-        endColor: tokens.effects.gradient.endColor
-      };
-    } else {
-      clonedWidget.pivotBarConfig.styling.backgroundGradient = undefined;
-    }
     if (tokens.effects.backdrop) {
       clonedWidget.pivotBarConfig.styling.containerBackdropFilter = `blur(${tokens.effects.backdrop.blur}px) saturate(${tokens.effects.backdrop.saturate}%) brightness(${tokens.effects.backdrop.brightness}%)`;
     } else {
