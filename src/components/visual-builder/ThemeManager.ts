@@ -10,6 +10,7 @@ import type { StackedBarChartConfig } from '@/stores/apps/stackedBarChartStore';
 import type { GroupedBarChartConfig } from '@/stores/apps/groupedBarChartStore';
 import type { StackedLinesChartConfig } from '@/stores/apps/stackedLinesChartStore';
 import type { PivotBarChartConfig } from '@/stores/apps/pivotBarChartStore';
+import type { RadialStackedChartConfig } from '@/stores/apps/radialStackedChartStore';
 import { THEME_TOKENS, TYPOGRAPHY_PRESETS, THEME_BACKGROUND_MAPPING, type ThemeTokenName, type DesignTokens } from './DesignTokens';
 import { BackgroundManager } from './BackgroundManager';
 import { BorderManager, type BorderPresetKey } from './BorderManager';
@@ -756,6 +757,66 @@ export class ThemeManager {
   }
 
   /**
+   * Applies design tokens to a single Radial Stacked Chart widget
+   */
+  private static applyThemeToRadialStackedChart(
+    widget: Widget,
+    tokens: DesignTokens,
+    _themeName: ThemeName,
+    borderOptions?: {
+      type?: BorderPresetKey;
+      color?: string;
+      width?: number;
+      radius?: number;
+      accentColor?: string;
+      shadow?: boolean;
+    }
+  ): Widget {
+    const clonedWidget = { ...widget };
+
+    if (!clonedWidget.radialStackedConfig) {
+      clonedWidget.radialStackedConfig = {} as Partial<RadialStackedChartConfig>;
+    }
+    if (!clonedWidget.radialStackedConfig.styling) {
+      clonedWidget.radialStackedConfig.styling = {} as RadialStackedChartConfig['styling'];
+    }
+
+    // Background
+    clonedWidget.radialStackedConfig.styling.containerBackground = tokens.colors.surface;
+
+    // Effects (kept for consistency even if component uses minimal props)
+    clonedWidget.radialStackedConfig.styling.containerOpacity = tokens.effects.opacity.medium;
+    if (tokens.effects.backdrop) {
+      clonedWidget.radialStackedConfig.styling.containerBackdropFilter = `blur(${tokens.effects.backdrop.blur}px) saturate(${tokens.effects.backdrop.saturate}%) brightness(${tokens.effects.backdrop.brightness}%)`;
+    } else {
+      clonedWidget.radialStackedConfig.styling.containerBackdropFilter = undefined;
+    }
+    if (tokens.effects.shadow.color === '#00ffff') {
+      clonedWidget.radialStackedConfig.styling.containerBoxShadow = 'none';
+    } else {
+      clonedWidget.radialStackedConfig.styling.containerBoxShadow = `${tokens.effects.shadow.offsetX}px ${tokens.effects.shadow.offsetY}px ${tokens.effects.shadow.blur}px rgba(0, 0, 0, ${tokens.effects.shadow.opacity})`;
+    }
+
+    // Border via BorderManager
+    const presetB: BorderPresetKey = (borderOptions?.type && BorderManager.isValid(borderOptions.type)) ? borderOptions.type : 'suave'
+    const bStyle = BorderManager.getStyle(presetB, {
+      color: borderOptions?.color,
+      width: borderOptions?.width,
+      radius: borderOptions?.radius,
+      accentColor: borderOptions?.accentColor,
+      shadow: borderOptions?.shadow,
+    })
+    clonedWidget.radialStackedConfig.styling.containerBorderColor = bStyle.color;
+    clonedWidget.radialStackedConfig.styling.containerBorderAccentColor = bStyle.accentColor;
+    clonedWidget.radialStackedConfig.styling.containerBorderWidth = bStyle.width;
+    clonedWidget.radialStackedConfig.styling.containerBorderRadius = bStyle.radius;
+    clonedWidget.radialStackedConfig.styling.containerBoxShadow = bStyle.shadow ? (clonedWidget.radialStackedConfig.styling.containerBoxShadow || '0 1px 2px rgba(0,0,0,.06)') : 'none';
+    clonedWidget.radialStackedConfig.styling.containerBorderVariant = bStyle.type === 'acentuada' ? 'accent' : (bStyle.type === 'sem-borda' ? 'none' : 'smooth');
+
+    return clonedWidget;
+  }
+
+  /**
    * Applies design tokens to a single Line Chart widget
    */
   private static applyThemeToLineChart(
@@ -1309,6 +1370,14 @@ export class ThemeManager {
       }
       case 'groupedbar': {
         themed = this.applyThemeToGroupedBarChart(widget, tokens, themeName, borderOptions);
+        return themed;
+      }
+      case 'radialstacked': {
+        themed = this.applyThemeToRadialStackedChart(widget, tokens, themeName, borderOptions);
+        return themed;
+      }
+      case 'stackedlines': {
+        themed = this.applyThemeToStackedLinesChart(widget, tokens, themeName, borderOptions);
         return themed;
       }
       case 'pivotbar': {
