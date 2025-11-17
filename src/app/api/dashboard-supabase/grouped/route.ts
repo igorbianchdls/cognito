@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
     console.log(`📌 Top ${limit} dimension2 values:`, topDimension2);
 
     // Pivot data: create items with dynamic keys
-    const pivotMap = new Map<string, Record<string, number>>();
+    const pivotMap = new Map<string, Record<string, string | number>>();
 
     rawData.forEach(row => {
       if (!topDimension2.includes(row.dim2)) return; // Only include top N
