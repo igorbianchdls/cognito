@@ -74,6 +74,11 @@ const initialCode = `{
       "desktop": 2,
       "tablet": 2,
       "mobile": 1
+    },
+    "7": {
+      "desktop": 2,
+      "tablet": 2,
+      "mobile": 1
     }
   },
   "widgets": [
@@ -434,6 +439,60 @@ const initialCode = `{
       "groupedBarConfig": {
         "styling": {
           "layout": "vertical",
+          "enableGridX": false,
+          "enableGridY": true,
+          "marginBottom": 40
+        }
+      }
+    },
+    {
+      "id": "evolucao_empilhada_vendedores",
+      "type": "stackedlines",
+      "position": { "x": 0, "y": 30, "w": 12, "h": 4 },
+      "row": "7",
+      "span": { "desktop": 1, "tablet": 1, "mobile": 1 },
+      "order": 17,
+      "heightPx": 360,
+      "title": "📈 Evolução (Empilhado) por Vendedor",
+      "dataSource": {
+        "schema": "vendas",
+        "table": "vw_pedidos_completo",
+        "dimension1": "territorio_nome",
+        "dimension2": "vendedor_nome",
+        "field": "item_subtotal",
+        "aggregation": "SUM",
+        "limit": 5
+      },
+      "stackedLinesConfig": {
+        "styling": {
+          "enableArea": true,
+          "enableGridX": false,
+          "enableGridY": true,
+          "marginBottom": 40
+        }
+      }
+    },
+    {
+      "id": "evolucao_empilhada_vendedores_sem_area",
+      "type": "stackedlines",
+      "position": { "x": 6, "y": 30, "w": 12, "h": 4 },
+      "row": "7",
+      "span": { "desktop": 1, "tablet": 1, "mobile": 1 },
+      "order": 18,
+      "heightPx": 360,
+      "title": "📈 Evolução (Empilhado) por Vendedor • Sem Área",
+      "dataSource": {
+        "schema": "vendas",
+        "table": "vw_pedidos_completo",
+        "dimension1": "territorio_nome",
+        "dimension2": "vendedor_nome",
+        "field": "item_subtotal",
+        "aggregation": "SUM",
+        "limit": 5
+      },
+      "stackedLinesConfig": {
+        "styling": {
+          "enableArea": false,
           "enableGridX": false,
           "enableGridY": true,
           "marginBottom": 40

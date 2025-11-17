@@ -7,6 +7,7 @@ import { LineChart } from '@/components/charts/LineChart';
 import { PieChart } from '@/components/charts/PieChart';
 import { AreaChart } from '@/components/charts/AreaChart';
 import { StackedBarChart } from '@/components/charts/StackedBarChart';
+import { StackedLinesChart } from '@/components/charts/StackedLinesChart';
 import { GroupedBarChart } from '@/components/charts/GroupedBarChart';
 import { KPICard } from '@/components/widgets/KPICard';
 import InsightsCard from '@/components/widgets/InsightsCard';
@@ -141,9 +142,9 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
     fetchData();
   }, [widget.id, widget.dataSource, widget.type, globalFilters]); // Re-executar quando widget ou filtros mudarem
 
-  // Fetch data for stackedbar/groupedbar widgets
+  // Fetch data for stackedbar/groupedbar/stackedlines widgets
   useEffect(() => {
-    if (widget.type !== 'stackedbar' && widget.type !== 'groupedbar') {
+    if (widget.type !== 'stackedbar' && widget.type !== 'groupedbar' && widget.type !== 'stackedlines') {
       return;
     }
 
@@ -766,6 +767,90 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
               containerBorderRadius={widget.groupedBarConfig?.styling?.containerBorderRadius}
               containerBorderVariant={widget.groupedBarConfig?.styling?.containerBorderVariant}
               containerPadding={widget.groupedBarConfig?.styling?.containerPadding}
+            />
+          </div>
+        );
+      } else {
+        widgetContent = (
+          <div className="h-full w-full p-2 flex items-center justify-center bg-gray-50 rounded">
+            <div className="text-center text-gray-500">
+              <div className="text-2xl mb-2">📊</div>
+              <div className="text-sm">No grouped data available</div>
+            </div>
+          </div>
+        );
+      }
+      break;
+
+    case 'stackedlines':
+      if (multipleLoading) {
+        widgetContent = (
+          <div className="h-full w-full p-2 flex items-center justify-center">
+            <div className="text-center text-gray-500">
+              <div className="text-2xl mb-2">⏳</div>
+              <div className="text-sm">Loading grouped data...</div>
+            </div>
+          </div>
+        );
+      } else if (multipleError) {
+        widgetContent = (
+          <div className="h-full w-full p-2 flex items-center justify-center bg-red-50 rounded">
+            <div className="text-center text-red-600">
+              <div className="text-2xl mb-2">⚠️</div>
+              <div className="text-sm font-medium mb-1">Error</div>
+              <div className="text-xs">{multipleError}</div>
+            </div>
+          </div>
+        );
+      } else if (multipleData && multipleData.items.length > 0) {
+        widgetContent = (
+          <div className="h-full w-full p-2 relative group">
+            {renderSQLButton()}
+            <StackedLinesChart
+              {...(widget.stackedLinesConfig?.styling || {})}
+              margin={widget.stackedLinesConfig?.margin}
+              legends={widget.stackedLinesConfig?.legends}
+              data={multipleData.items}
+              keys={multipleData.series.map(s => s.key)}
+              title={widget.title || 'Chart'}
+              colors={multipleData.series.map(s => s.color)}
+              seriesMetadata={multipleData.series}
+              // Container styles
+              containerBackground={widget.stackedLinesConfig?.styling?.containerBackground}
+              backgroundGradient={widget.stackedLinesConfig?.styling?.backgroundGradient}
+              containerOpacity={widget.stackedLinesConfig?.styling?.containerOpacity}
+              containerBackdropFilter={widget.stackedLinesConfig?.styling?.containerBackdropFilter}
+              containerBoxShadow={widget.stackedLinesConfig?.styling?.containerBoxShadow}
+              containerTransform={widget.stackedLinesConfig?.styling?.containerTransform}
+              containerTransition={widget.stackedLinesConfig?.styling?.containerTransition}
+              // Grid & axis
+              enableGridX={widget.stackedLinesConfig?.styling?.enableGridX ?? false}
+              enableGridY={widget.stackedLinesConfig?.styling?.enableGridY ?? true}
+              gridColor={widget.stackedLinesConfig?.styling?.gridColor}
+              gridStrokeWidth={widget.stackedLinesConfig?.styling?.gridStrokeWidth}
+              // Typography - Title
+              titleFontFamily={widget.stackedLinesConfig?.styling?.titleFontFamily}
+              titleFontSize={widget.stackedLinesConfig?.styling?.titleFontSize}
+              titleFontWeight={widget.stackedLinesConfig?.styling?.titleFontWeight}
+              titleColor={widget.stackedLinesConfig?.styling?.titleColor}
+              titleMarginTop={widget.stackedLinesConfig?.styling?.titleMarginTop}
+              titleMarginLeft={widget.stackedLinesConfig?.styling?.titleMarginLeft}
+              titleMarginBottom={widget.stackedLinesConfig?.styling?.titleMarginBottom}
+              // Typography - Subtitle
+              subtitleFontFamily={widget.stackedLinesConfig?.styling?.subtitleFontFamily}
+              subtitleFontSize={widget.stackedLinesConfig?.styling?.subtitleFontSize}
+              subtitleFontWeight={widget.stackedLinesConfig?.styling?.subtitleFontWeight}
+              subtitleColor={widget.stackedLinesConfig?.styling?.subtitleColor}
+              subtitleMarginTop={widget.stackedLinesConfig?.styling?.subtitleMarginTop}
+              subtitleMarginLeft={widget.stackedLinesConfig?.styling?.subtitleMarginLeft}
+              subtitleMarginBottom={widget.stackedLinesConfig?.styling?.subtitleMarginBottom}
+              // Container Border
+              containerBorderWidth={widget.stackedLinesConfig?.styling?.containerBorderWidth}
+              containerBorderColor={widget.stackedLinesConfig?.styling?.containerBorderColor}
+              containerBorderAccentColor={widget.stackedLinesConfig?.styling?.containerBorderAccentColor}
+              containerBorderRadius={widget.stackedLinesConfig?.styling?.containerBorderRadius}
+              containerBorderVariant={widget.stackedLinesConfig?.styling?.containerBorderVariant}
+              containerPadding={widget.stackedLinesConfig?.styling?.containerPadding}
             />
           </div>
         );

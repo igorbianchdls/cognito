@@ -10,6 +10,7 @@ export { HeatmapChart } from './HeatmapChart';
 export { RadarChart } from './RadarChart';
 export { StreamChart } from './StreamChart';
 export { GroupedBarChart } from './GroupedBarChart';
+export { StackedLinesChart } from './StackedLinesChart';
 
 // Container Component
 export { ChartContainer } from './ChartContainer';
