@@ -271,7 +271,9 @@ export class ThemeManager {
     }
 
     if (!clonedWidget.barConfig.styling) {
-      clonedWidget.barConfig.styling = { ...DEFAULT_CHART_STYLING };
+      // Preserve any user-provided styling (e.g., barColor, colors)
+      const userStyling = widget.barConfig?.styling ? { ...widget.barConfig.styling } : {} as Partial<BarChartConfig>['styling'];
+      clonedWidget.barConfig.styling = { ...DEFAULT_CHART_STYLING, ...(userStyling || {}) } as any;
     }
 
     // Apply design tokens to Bar Chart with direct assignment (like KPI - always applies theme)
