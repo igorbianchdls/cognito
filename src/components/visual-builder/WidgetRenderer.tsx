@@ -46,7 +46,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
   const [showSQLModal, setShowSQLModal] = useState(false);
 
   // State for barMultiple widgets
-  const [multipleData, setMultipleData] = useState<{ items: Record<string, unknown>[]; series: Array<{ key: string; label: string; color: string }> } | null>(null);
+  const [multipleData, setMultipleData] = useState<{ items: Array<{ label: string; [key: string]: string | number }>; series: Array<{ key: string; label: string; color: string }> } | null>(null);
   const [multipleLoading, setMultipleLoading] = useState(false);
   const [multipleError, setMultipleError] = useState<string | null>(null);
 
