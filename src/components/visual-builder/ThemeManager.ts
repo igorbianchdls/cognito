@@ -304,9 +304,12 @@ export class ThemeManager {
     clonedWidget.barConfig.styling.gridColor = tokens.colors.chart.grid;
     clonedWidget.barConfig.styling.gridStrokeWidth = 0.5;
 
-    clonedWidget.barConfig.styling.colors = [
-      tokens.colors.chartElements.bar.fill
-    ];
+    // Respect user-defined color overrides from JSON
+    const userBarColor = widget.barConfig?.styling?.barColor;
+    const userColors = widget.barConfig?.styling?.colors;
+    if (!userBarColor && !userColors) {
+      clonedWidget.barConfig.styling.colors = [ tokens.colors.chartElements.bar.fill ];
+    }
     clonedWidget.barConfig.styling.containerShadowColor = tokens.shadows.medium;
 
     // Apply advanced effects from tokens

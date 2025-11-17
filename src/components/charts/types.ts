@@ -39,6 +39,7 @@ export interface BarChartProps extends BaseChartProps {
   // Colors & Style
   colors?: OrdinalColorScaleConfig<ComputedDatum<BarDatum>> | string;
   barColor?: string;
+  showLegend?: boolean;
   borderColor?: string | { from: string; modifiers: Array<[string, number]> };
   borderWidth?: number;
   

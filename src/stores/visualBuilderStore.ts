@@ -215,7 +215,8 @@ const initialCode = `{
           "showLegend": false,
           "showGrid": true,
           "translateY": 0,
-          "marginBottom": 40
+          "marginBottom": 40,
+          "barColor": "#3b82f6"
         }
       }
     },
@@ -240,7 +241,8 @@ const initialCode = `{
           "showLegend": false,
           "showGrid": true,
           "translateY": 0,
-          "marginBottom": 40
+          "marginBottom": 40,
+          "barColor": "#ef4444"
         }
       }
     },
@@ -290,7 +292,8 @@ const initialCode = `{
           "showLegend": false,
           "showGrid": true,
           "translateY": 0,
-          "marginBottom": 40
+          "marginBottom": 40,
+          "barColor": "#10b981"
         }
       }
     },
@@ -315,7 +318,8 @@ const initialCode = `{
           "showLegend": false,
           "showGrid": true,
           "translateY": 0,
-          "marginBottom": 40
+          "marginBottom": 40,
+          "barColor": "#f59e0b"
         }
       }
     },
@@ -340,7 +344,8 @@ const initialCode = `{
           "showLegend": false,
           "showGrid": true,
           "translateY": 0,
-          "marginBottom": 40
+          "marginBottom": 40,
+          "barColor": "#8b5cf6"
         }
       }
     },
@@ -365,7 +370,8 @@ const initialCode = `{
           "showLegend": false,
           "showGrid": true,
           "translateY": 0,
-          "marginBottom": 40
+          "marginBottom": 40,
+          "barColor": "#ec4899"
         }
       }
     },

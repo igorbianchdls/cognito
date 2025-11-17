@@ -416,6 +416,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
             // Pass margin and legends from JSON config
             margin={widget.barConfig?.margin || commonChartProps.margin}
             legends={widget.barConfig?.legends}
+            showLegend={widget.barConfig?.styling?.showLegend}
             // Container Glass Effect & Modern Styles - DIRECT PROPS
             containerBackground={widget.barConfig?.styling?.containerBackground}
             backgroundGradient={widget.barConfig?.styling?.backgroundGradient}

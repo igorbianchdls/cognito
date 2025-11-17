@@ -89,6 +89,7 @@ export function BarChart(props: BarChartProps) {
     axisBottom,
     axisLeft,
     legends,
+    showLegend,
     // Typography props
     axisFontFamily,
     axisFontSize,
@@ -480,18 +481,16 @@ export function BarChart(props: BarChartProps) {
             </div>
           )}
           
-          // Legendas configuráveis
+          // Legendas configuráveis (desativadas por padrão)
           legends={(() => {
+            if (!showLegend) return undefined;
             // Se legends é array (BarLegendProps[]), usar diretamente
             if (Array.isArray(legends)) {
               return legends;
             }
-            
             // Se legends é LegendConfig, converter para BarLegendProps[]
             if (legends && typeof legends === 'object' && !Array.isArray(legends)) {
-              // Type guard para LegendConfig
               const legendConfig = legends as Record<string, unknown>;
-              
               return [
                 {
                   dataFrom: 'keys' as const,
@@ -508,17 +507,11 @@ export function BarChart(props: BarChartProps) {
                   symbolSize: legendConfig.symbolSize || 12,
                   symbolShape: legendConfig.symbolShape || 'circle',
                   effects: [
-                    {
-                      on: 'hover',
-                      style: {
-                        itemOpacity: 1
-                      }
-                    }
+                    { on: 'hover', style: { itemOpacity: 1 } }
                   ]
                 }
               ];
             }
-            
             // Configuração padrão se legends não especificado
             return [
               {
@@ -535,14 +528,7 @@ export function BarChart(props: BarChartProps) {
                 itemOpacity: 0.8,
                 symbolSize: 12,
                 symbolShape: 'circle',
-                effects: [
-                  {
-                    on: 'hover',
-                    style: {
-                      itemOpacity: 1
-                    }
-                  }
-                ]
+                effects: [ { on: 'hover', style: { itemOpacity: 1 } } ]
               }
             ];
           })()}
