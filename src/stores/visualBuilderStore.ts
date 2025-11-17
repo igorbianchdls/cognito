@@ -79,6 +79,11 @@ const initialCode = `{
       "desktop": 2,
       "tablet": 2,
       "mobile": 1
+    },
+    "8": {
+      "desktop": 2,
+      "tablet": 2,
+      "mobile": 1
     }
   },
   "widgets": [
@@ -523,6 +528,34 @@ const initialCode = `{
           "enableGridX": true,
           "enableGridY": false,
           "marginBottom": 50
+        }
+      }
+    },
+    {
+      "id": "radial_stacked_canais",
+      "type": "radialstacked",
+      "position": { "x": 0, "y": 34, "w": 12, "h": 4 },
+      "row": "8",
+      "span": { "desktop": 1, "tablet": 1, "mobile": 1 },
+      "order": 19,
+      "heightPx": 320,
+      "title": "🧭 Distribuição de Vendas por Canal (Radial Stacked)",
+      "dataSource": {
+        "schema": "vendas",
+        "table": "vw_pedidos_completo",
+        "dimension1": "territorio_nome",
+        "dimension2": "canal_venda_nome",
+        "field": "item_subtotal",
+        "aggregation": "SUM",
+        "limit": 2
+      },
+      "radialStackedConfig": {
+        "styling": {
+          "startAngle": 180,
+          "endAngle": 0,
+          "innerRadius": 80,
+          "outerRadius": 130,
+          "cornerRadius": 5
         }
       }
     }

@@ -9,6 +9,7 @@ import { AreaChart } from '@/components/charts/AreaChart';
 import { StackedBarChart } from '@/components/charts/StackedBarChart';
 import { StackedLinesChart } from '@/components/charts/StackedLinesChart';
 import { GroupedBarChart } from '@/components/charts/GroupedBarChart';
+import { RadialStackedChart } from '@/components/charts/RadialStackedChart';
 import { KPICard } from '@/components/widgets/KPICard';
 import InsightsCard from '@/components/widgets/InsightsCard';
 import AlertasCard from '@/components/widgets/AlertasCard';
@@ -142,9 +143,9 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
     fetchData();
   }, [widget.id, widget.dataSource, widget.type, globalFilters]); // Re-executar quando widget ou filtros mudarem
 
-  // Fetch data for stackedbar/groupedbar/stackedlines widgets
+  // Fetch data for stackedbar/groupedbar/stackedlines/radialstacked widgets
   useEffect(() => {
-    if (widget.type !== 'stackedbar' && widget.type !== 'groupedbar' && widget.type !== 'stackedlines') {
+    if (widget.type !== 'stackedbar' && widget.type !== 'groupedbar' && widget.type !== 'stackedlines' && widget.type !== 'radialstacked') {
       return;
     }
 
@@ -767,6 +768,69 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
               containerBorderRadius={widget.groupedBarConfig?.styling?.containerBorderRadius}
               containerBorderVariant={widget.groupedBarConfig?.styling?.containerBorderVariant}
               containerPadding={widget.groupedBarConfig?.styling?.containerPadding}
+            />
+          </div>
+        );
+      } else {
+        widgetContent = (
+          <div className="h-full w-full p-2 flex items-center justify-center bg-gray-50 rounded">
+            <div className="text-center text-gray-500">
+              <div className="text-2xl mb-2">📊</div>
+              <div className="text-sm">No grouped data available</div>
+            </div>
+          </div>
+        );
+      }
+      break;
+
+    case 'radialstacked':
+      if (multipleLoading) {
+        widgetContent = (
+          <div className="h-full w-full p-2 flex items-center justify-center">
+            <div className="text-center text-gray-500">
+              <div className="text-2xl mb-2">⏳</div>
+              <div className="text-sm">Loading grouped data...</div>
+            </div>
+          </div>
+        );
+      } else if (multipleError) {
+        widgetContent = (
+          <div className="h-full w-full p-2 flex items-center justify-center bg-red-50 rounded">
+            <div className="text-center text-red-600">
+              <div className="text-2xl mb-2">⚠️</div>
+              <div className="text-sm font-medium mb-1">Error</div>
+              <div className="text-xs">{multipleError}</div>
+            </div>
+          </div>
+        );
+      } else if (multipleData && multipleData.items.length > 0) {
+        const keys = multipleData.series.map(s => s.key);
+        const totals: Record<string, number> = {};
+        keys.forEach(k => { totals[k] = 0; });
+        multipleData.items.forEach(item => {
+          keys.forEach(k => { totals[k] += Number(item[k] || 0) || 0; });
+        });
+        const dataRow: Record<string, number> = keys.reduce((acc, k) => ({ ...acc, [k]: totals[k] }), {} as Record<string, number>);
+
+        const config = multipleData.series.reduce((acc, s) => {
+          acc[s.key] = { label: s.label, color: s.color } as any;
+          return acc;
+        }, {} as Record<string, { label?: string; color?: string }>);
+
+        widgetContent = (
+          <div className="h-full w-full p-2 relative group">
+            {renderSQLButton()}
+            <RadialStackedChart
+              data={dataRow}
+              keys={keys}
+              config={config}
+              className="max-w-[300px]"
+              startAngle={widget.radialStackedConfig?.styling?.startAngle}
+              endAngle={widget.radialStackedConfig?.styling?.endAngle}
+              innerRadius={widget.radialStackedConfig?.styling?.innerRadius}
+              outerRadius={widget.radialStackedConfig?.styling?.outerRadius}
+              cornerRadius={widget.radialStackedConfig?.styling?.cornerRadius}
+              stackId={widget.radialStackedConfig?.styling?.stackId}
             />
           </div>
         );
