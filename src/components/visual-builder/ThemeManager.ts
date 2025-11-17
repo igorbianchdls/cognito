@@ -9,6 +9,7 @@ import type { AreaChartConfig } from '@/stores/apps/areaChartStore';
 import type { StackedBarChartConfig } from '@/stores/apps/stackedBarChartStore';
 import type { GroupedBarChartConfig } from '@/stores/apps/groupedBarChartStore';
 import type { StackedLinesChartConfig } from '@/stores/apps/stackedLinesChartStore';
+import type { PivotBarChartConfig } from '@/stores/apps/pivotBarChartStore';
 import { THEME_TOKENS, TYPOGRAPHY_PRESETS, THEME_BACKGROUND_MAPPING, type ThemeTokenName, type DesignTokens } from './DesignTokens';
 import { BackgroundManager } from './BackgroundManager';
 import { BorderManager, type BorderPresetKey } from './BorderManager';
