@@ -7,6 +7,7 @@ import type { LineChartConfig } from '@/stores/apps/lineChartStore';
 import type { PieChartConfig } from '@/stores/apps/pieChartStore';
 import type { AreaChartConfig } from '@/stores/apps/areaChartStore';
 import type { StackedBarChartConfig } from '@/stores/apps/stackedBarChartStore';
+import type { GroupedBarChartConfig } from '@/stores/apps/groupedBarChartStore';
 import { THEME_TOKENS, TYPOGRAPHY_PRESETS, THEME_BACKGROUND_MAPPING, type ThemeTokenName, type DesignTokens } from './DesignTokens';
 import { BackgroundManager } from './BackgroundManager';
 import { BorderManager, type BorderPresetKey } from './BorderManager';
@@ -463,6 +464,109 @@ export class ThemeManager {
     clonedWidget.stackedBarConfig.styling.containerBorderRadius = bStyle.radius;
     clonedWidget.stackedBarConfig.styling.containerBoxShadow = bStyle.shadow ? (clonedWidget.stackedBarConfig.styling.containerBoxShadow || '0 1px 2px rgba(0,0,0,.06)') : 'none';
     clonedWidget.stackedBarConfig.styling.containerBorderVariant = bStyle.type === 'acentuada' ? 'accent' : (bStyle.type === 'sem-borda' ? 'none' : 'smooth')
+
+    return clonedWidget;
+  }
+
+  /**
+   * Applies design tokens to a single Grouped Bar Chart widget
+   */
+  private static applyThemeToGroupedBarChart(
+    widget: Widget,
+    tokens: DesignTokens,
+    _themeName: ThemeName,
+    borderOptions?: {
+      type?: BorderPresetKey;
+      color?: string;
+      width?: number;
+      radius?: number;
+      accentColor?: string;
+      shadow?: boolean;
+    }
+  ): Widget {
+    const clonedWidget = { ...widget };
+
+    if (!clonedWidget.groupedBarConfig) {
+      clonedWidget.groupedBarConfig = {} as Partial<GroupedBarChartConfig>;
+    }
+
+    if (!clonedWidget.groupedBarConfig.styling) {
+      // @ts-expect-error: using default styling shape
+      clonedWidget.groupedBarConfig.styling = { ...DEFAULT_CHART_STYLING } as any;
+    }
+
+    // Background
+    clonedWidget.groupedBarConfig.styling.backgroundColor = tokens.colors.surface as any;
+
+    // Title styling
+    clonedWidget.groupedBarConfig.styling.titleColor = tokens.colors.text.primary as any;
+    clonedWidget.groupedBarConfig.styling.titleFontSize = tokens.typography.fontSize.lg as any;
+    clonedWidget.groupedBarConfig.styling.titleFontWeight = tokens.typography.fontWeight.semibold as any;
+    clonedWidget.groupedBarConfig.styling.titleFontFamily = tokens.typography.fontFamily.primary as any;
+    clonedWidget.groupedBarConfig.styling.titleMarginTop = 0 as any;
+    clonedWidget.groupedBarConfig.styling.titleMarginRight = 0 as any;
+    clonedWidget.groupedBarConfig.styling.titleMarginBottom = 8 as any;
+    clonedWidget.groupedBarConfig.styling.titleMarginLeft = 0 as any;
+
+    // Subtitle styling
+    clonedWidget.groupedBarConfig.styling.subtitleFontFamily = tokens.typography.fontFamily.primary as any;
+    clonedWidget.groupedBarConfig.styling.subtitleFontSize = tokens.typography.fontSize.sm as any;
+    clonedWidget.groupedBarConfig.styling.subtitleFontWeight = tokens.typography.fontWeight.normal as any;
+    clonedWidget.groupedBarConfig.styling.subtitleColor = tokens.colors.text.secondary as any;
+    clonedWidget.groupedBarConfig.styling.subtitleMarginTop = 0 as any;
+    clonedWidget.groupedBarConfig.styling.subtitleMarginRight = 0 as any;
+    clonedWidget.groupedBarConfig.styling.subtitleMarginBottom = 16 as any;
+    clonedWidget.groupedBarConfig.styling.subtitleMarginLeft = 0 as any;
+
+    // Axis & grid
+    clonedWidget.groupedBarConfig.styling.axisTextColor = tokens.colors.chart.axis as any;
+    clonedWidget.groupedBarConfig.styling.axisFontSize = tokens.typography.fontSize.sm as any;
+    clonedWidget.groupedBarConfig.styling.gridColor = tokens.colors.chart.grid as any;
+    clonedWidget.groupedBarConfig.styling.gridStrokeWidth = 0.5 as any;
+
+    // Colors
+    clonedWidget.groupedBarConfig.styling.colors = [tokens.colors.chartElements.bar.fill] as any;
+    clonedWidget.groupedBarConfig.styling.containerShadowColor = tokens.shadows.medium as any;
+
+    // Effects
+    clonedWidget.groupedBarConfig.styling.containerOpacity = tokens.effects.opacity.medium as any;
+    if (tokens.effects.gradient) {
+      clonedWidget.groupedBarConfig.styling.backgroundGradient = {
+        enabled: true,
+        type: tokens.effects.gradient.type,
+        direction: tokens.effects.gradient.direction,
+        startColor: tokens.effects.gradient.startColor,
+        endColor: tokens.effects.gradient.endColor
+      } as any;
+    } else {
+      clonedWidget.groupedBarConfig.styling.backgroundGradient = undefined;
+    }
+    if (tokens.effects.backdrop) {
+      clonedWidget.groupedBarConfig.styling.containerBackdropFilter = `blur(${tokens.effects.backdrop.blur}px) saturate(${tokens.effects.backdrop.saturate}%) brightness(${tokens.effects.backdrop.brightness}%)` as any;
+    } else {
+      clonedWidget.groupedBarConfig.styling.containerBackdropFilter = undefined;
+    }
+    if (tokens.effects.shadow.color === '#00ffff') {
+      clonedWidget.groupedBarConfig.styling.containerBoxShadow = 'none' as any;
+    } else {
+      clonedWidget.groupedBarConfig.styling.containerBoxShadow = `${tokens.effects.shadow.offsetX}px ${tokens.effects.shadow.offsetY}px ${tokens.effects.shadow.blur}px rgba(0, 0, 0, ${tokens.effects.shadow.opacity})` as any;
+    }
+
+    // Border
+    const presetB: BorderPresetKey = (borderOptions?.type && BorderManager.isValid(borderOptions.type)) ? borderOptions.type : 'suave'
+    const bStyle = BorderManager.getStyle(presetB, {
+      color: borderOptions?.color,
+      width: borderOptions?.width,
+      radius: borderOptions?.radius,
+      accentColor: borderOptions?.accentColor,
+      shadow: borderOptions?.shadow,
+    })
+    clonedWidget.groupedBarConfig.styling.containerBorderColor = bStyle.color as any;
+    clonedWidget.groupedBarConfig.styling.containerBorderAccentColor = bStyle.accentColor as any;
+    clonedWidget.groupedBarConfig.styling.containerBorderWidth = bStyle.width as any;
+    clonedWidget.groupedBarConfig.styling.containerBorderRadius = bStyle.radius as any;
+    clonedWidget.groupedBarConfig.styling.containerBoxShadow = bStyle.shadow ? (clonedWidget.groupedBarConfig.styling.containerBoxShadow || '0 1px 2px rgba(0,0,0,.06)') : 'none' as any;
+    clonedWidget.groupedBarConfig.styling.containerBorderVariant = bStyle.type === 'acentuada' ? 'accent' : (bStyle.type === 'sem-borda' ? 'none' : 'smooth') as any;
 
     return clonedWidget;
   }
@@ -1017,6 +1121,10 @@ export class ThemeManager {
       }
       case 'stackedbar': {
         themed = this.applyThemeToStackedBarChart(widget, tokens, themeName, borderOptions);
+        return themed;
+      }
+      case 'groupedbar': {
+        themed = this.applyThemeToGroupedBarChart(widget, tokens, themeName, borderOptions);
         return themed;
       }
       case 'insights': {

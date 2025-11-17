@@ -6,6 +6,7 @@ import type { LineChartConfig } from '@/stores/apps/lineChartStore';
 import type { PieChartConfig } from '@/stores/apps/pieChartStore';
 import type { AreaChartConfig } from '@/stores/apps/areaChartStore';
 import type { StackedBarChartConfig } from '@/stores/apps/stackedBarChartStore';
+import type { GroupedBarChartConfig } from '@/stores/apps/groupedBarChartStore';
 
 // Widget types configurations
 export interface InsightsConfig {
@@ -140,7 +141,7 @@ export interface WidgetSpan {
 
 export interface Widget {
   id: string;
-  type: 'bar' | 'line' | 'pie' | 'area' | 'kpi' | 'insights' | 'alerts' | 'recommendations' | 'insightsHero' | 'stackedbar';
+  type: 'bar' | 'line' | 'pie' | 'area' | 'kpi' | 'insights' | 'alerts' | 'recommendations' | 'insightsHero' | 'stackedbar' | 'groupedbar';
   position: {
     x: number;
     y: number;
@@ -187,6 +188,7 @@ export interface Widget {
   pieConfig?: Partial<PieChartConfig>;
   areaConfig?: Partial<AreaChartConfig>;
   stackedBarConfig?: Partial<StackedBarChartConfig>;
+  groupedBarConfig?: Partial<GroupedBarChartConfig>;
   insightsConfig?: InsightsConfig;
   // New: Insights hero (Swiper carousel variant)
   insightsHeroConfig?: InsightsHeroConfig;
@@ -212,7 +214,7 @@ export interface ParseResult {
 }
 
 export class ConfigParser {
-  private static VALID_TYPES = ['bar', 'line', 'pie', 'area', 'kpi', 'insights', 'alerts', 'recommendations', 'insightsHero', 'stackedbar'];
+  private static VALID_TYPES = ['bar', 'line', 'pie', 'area', 'kpi', 'insights', 'alerts', 'recommendations', 'insightsHero', 'stackedbar', 'groupedbar'];
   private static DEFAULT_GRID_CONFIG: GridConfig = {
     maxRows: 12,
     rowHeight: 30,

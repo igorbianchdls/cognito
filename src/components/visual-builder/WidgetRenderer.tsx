@@ -7,6 +7,7 @@ import { LineChart } from '@/components/charts/LineChart';
 import { PieChart } from '@/components/charts/PieChart';
 import { AreaChart } from '@/components/charts/AreaChart';
 import { StackedBarChart } from '@/components/charts/StackedBarChart';
+import { GroupedBarChart } from '@/components/charts/GroupedBarChart';
 import { KPICard } from '@/components/widgets/KPICard';
 import InsightsCard from '@/components/widgets/InsightsCard';
 import AlertasCard from '@/components/widgets/AlertasCard';
@@ -140,9 +141,9 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
     fetchData();
   }, [widget.id, widget.dataSource, widget.type, globalFilters]); // Re-executar quando widget ou filtros mudarem
 
-  // Fetch data for stackedbar widgets
+  // Fetch data for stackedbar/groupedbar widgets
   useEffect(() => {
-    if (widget.type !== 'stackedbar') {
+    if (widget.type !== 'stackedbar' && widget.type !== 'groupedbar') {
       return;
     }
 
@@ -179,7 +180,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
           throw new Error(result.error || 'Failed to fetch grouped data');
         }
       } catch (err) {
-        console.error('❌ Error fetching stackedbar data:', err);
+        console.error('❌ Error fetching grouped data:', err);
         setMultipleError(err instanceof Error ? err.message : 'Unknown error');
         setMultipleData(null);
       } finally {
@@ -659,6 +660,112 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
               containerBorderRadius={widget.stackedBarConfig?.styling?.containerBorderRadius}
               containerBorderVariant={widget.stackedBarConfig?.styling?.containerBorderVariant}
               containerPadding={widget.stackedBarConfig?.styling?.containerPadding}
+            />
+          </div>
+        );
+      } else {
+        widgetContent = (
+          <div className="h-full w-full p-2 flex items-center justify-center bg-gray-50 rounded">
+            <div className="text-center text-gray-500">
+              <div className="text-2xl mb-2">📊</div>
+              <div className="text-sm">No grouped data available</div>
+            </div>
+          </div>
+        );
+      }
+      break;
+
+    case 'groupedbar':
+      if (multipleLoading) {
+        widgetContent = (
+          <div className="h-full w-full p-2 flex items-center justify-center">
+            <div className="text-center text-gray-500">
+              <div className="text-2xl mb-2">⏳</div>
+              <div className="text-sm">Loading grouped data...</div>
+            </div>
+          </div>
+        );
+      } else if (multipleError) {
+        widgetContent = (
+          <div className="h-full w-full p-2 flex items-center justify-center bg-red-50 rounded">
+            <div className="text-center text-red-600">
+              <div className="text-2xl mb-2">⚠️</div>
+              <div className="text-sm font-medium mb-1">Error</div>
+              <div className="text-xs">{multipleError}</div>
+            </div>
+          </div>
+        );
+      } else if (multipleData && multipleData.items.length > 0) {
+        widgetContent = (
+          <div className="h-full w-full p-2 relative group">
+            {renderSQLButton()}
+            <GroupedBarChart
+              {...(widget.groupedBarConfig?.styling || {})}
+              // Pass margin and legends from JSON config
+              margin={widget.groupedBarConfig?.margin}
+              legends={widget.groupedBarConfig?.legends}
+              // Orientation (vertical | horizontal)
+              layout={widget.groupedBarConfig?.styling?.layout || 'vertical'}
+              // Data props (override any styling defaults)
+              data={multipleData.items}
+              keys={multipleData.series.map(s => s.key)}
+              title={widget.title || 'Chart'}
+              colors={multipleData.series.map(s => s.color)}
+              seriesMetadata={multipleData.series}
+              // Container Glass Effect & Modern Styles
+              containerBackground={widget.groupedBarConfig?.styling?.containerBackground}
+              backgroundGradient={widget.groupedBarConfig?.styling?.backgroundGradient}
+              containerOpacity={widget.groupedBarConfig?.styling?.containerOpacity}
+              containerBackdropFilter={widget.groupedBarConfig?.styling?.containerBackdropFilter}
+              containerFilter={widget.groupedBarConfig?.styling?.containerFilter}
+              containerBoxShadow={widget.groupedBarConfig?.styling?.containerBoxShadow}
+              containerTransform={widget.groupedBarConfig?.styling?.containerTransform}
+              containerTransition={widget.groupedBarConfig?.styling?.containerTransition}
+              // Bar Visual Effects
+              barBrightness={widget.groupedBarConfig?.styling?.barBrightness}
+              barSaturate={widget.groupedBarConfig?.styling?.barSaturate}
+              barContrast={widget.groupedBarConfig?.styling?.barContrast}
+              barBlur={widget.groupedBarConfig?.styling?.barBlur}
+              barBoxShadow={widget.groupedBarConfig?.styling?.barBoxShadow}
+              hoverBrightness={widget.groupedBarConfig?.styling?.hoverBrightness}
+              hoverSaturate={widget.groupedBarConfig?.styling?.hoverSaturate}
+              hoverScale={widget.groupedBarConfig?.styling?.hoverScale}
+              hoverBlur={widget.groupedBarConfig?.styling?.hoverBlur}
+              transitionDuration={widget.groupedBarConfig?.styling?.transitionDuration}
+              transitionEasing={widget.groupedBarConfig?.styling?.transitionEasing}
+              // Typography - Title
+              titleFontFamily={widget.groupedBarConfig?.styling?.titleFontFamily}
+              titleFontSize={widget.groupedBarConfig?.styling?.titleFontSize}
+              titleFontWeight={widget.groupedBarConfig?.styling?.titleFontWeight}
+              titleColor={widget.groupedBarConfig?.styling?.titleColor}
+              titleMarginTop={widget.groupedBarConfig?.styling?.titleMarginTop}
+              titleMarginLeft={widget.groupedBarConfig?.styling?.titleMarginLeft}
+              titleMarginBottom={widget.groupedBarConfig?.styling?.titleMarginBottom}
+              // Typography - Subtitle
+              subtitleFontFamily={widget.groupedBarConfig?.styling?.subtitleFontFamily}
+              subtitleFontSize={widget.groupedBarConfig?.styling?.subtitleFontSize}
+              subtitleFontWeight={widget.groupedBarConfig?.styling?.subtitleFontWeight}
+              subtitleColor={widget.groupedBarConfig?.styling?.subtitleColor}
+              subtitleMarginTop={widget.groupedBarConfig?.styling?.subtitleMarginTop}
+              subtitleMarginLeft={widget.groupedBarConfig?.styling?.subtitleMarginLeft}
+              subtitleMarginBottom={widget.groupedBarConfig?.styling?.subtitleMarginBottom}
+              // Grid & Style
+              enableGridX={widget.groupedBarConfig?.styling?.enableGridX ?? false}
+              enableGridY={widget.groupedBarConfig?.styling?.enableGridY ?? true}
+              gridColor={widget.groupedBarConfig?.styling?.gridColor}
+              gridStrokeWidth={widget.groupedBarConfig?.styling?.gridStrokeWidth}
+              borderRadius={widget.groupedBarConfig?.styling?.borderRadius}
+              backgroundColor={widget.groupedBarConfig?.styling?.backgroundColor}
+              // Positioning
+              translateY={widget.groupedBarConfig?.styling?.translateY}
+              marginBottom={widget.groupedBarConfig?.styling?.marginBottom}
+              // Container Border
+              containerBorderWidth={widget.groupedBarConfig?.styling?.containerBorderWidth}
+              containerBorderColor={widget.groupedBarConfig?.styling?.containerBorderColor}
+              containerBorderAccentColor={widget.groupedBarConfig?.styling?.containerBorderAccentColor}
+              containerBorderRadius={widget.groupedBarConfig?.styling?.containerBorderRadius}
+              containerBorderVariant={widget.groupedBarConfig?.styling?.containerBorderVariant}
+              containerPadding={widget.groupedBarConfig?.styling?.containerPadding}
             />
           </div>
         );
