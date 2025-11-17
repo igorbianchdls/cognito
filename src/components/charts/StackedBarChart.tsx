@@ -327,24 +327,9 @@ export function StackedBarChart(props: StackedBarChartProps) {
     legends,
     // Typography props
     axisFontFamily,
-    axisFontSize,
-    axisFontWeight,
     axisTextColor,
-    axisLegendFontSize,
-    axisLegendFontWeight,
-    labelsFontFamily,
-    labelsFontSize,
-    labelsFontWeight,
-    labelsTextColor,
-    legendsFontFamily,
-    legendsFontSize,
-    legendsFontWeight,
-    legendsTextColor,
-    tooltipFontSize,
-    tooltipFontFamily,
     // Spacing props - Title/Subtitle
     titleMarginTop,
-    titleMarginRight,
     titleMarginBottom,
     titleMarginLeft,
     titlePaddingTop,
@@ -352,7 +337,6 @@ export function StackedBarChart(props: StackedBarChartProps) {
     titlePaddingBottom,
     titlePaddingLeft,
     subtitleMarginTop,
-    subtitleMarginRight,
     subtitleMarginBottom,
     subtitleMarginLeft,
     subtitlePaddingTop,
@@ -370,12 +354,6 @@ export function StackedBarChart(props: StackedBarChartProps) {
     containerBorderRadius,
     containerPadding,
     containerBorderVariant,
-    // Container Shadow props
-    containerShadowColor,
-    containerShadowOpacity,
-    containerShadowBlur,
-    containerShadowOffsetX,
-    containerShadowOffsetY,
     // Positioning props
     translateY,
     marginBottom,
@@ -701,23 +679,23 @@ export function StackedBarChart(props: StackedBarChartProps) {
             }
 
             // Configuração padrão se legends não especificado
-            const legendConfig: any = {
+            const baseLegendConfig = {
               dataFrom: 'keys' as const,
-              anchor: 'bottom',
-              direction: 'row',
+              anchor: 'bottom' as const,
+              direction: 'row' as const,
               justify: false,
               translateX: 0,
               translateY: translateY !== undefined ? translateY : DEFAULT_TRANSLATE_Y,
               itemsSpacing: 20,
               itemWidth: 80,
               itemHeight: 18,
-              itemDirection: 'left-to-right',
+              itemDirection: 'left-to-right' as const,
               itemOpacity: 0.8,
               symbolSize: 12,
-              symbolShape: 'circle',
+              symbolShape: 'circle' as const,
               effects: [
                 {
-                  on: 'hover',
+                  on: 'hover' as const,
                   style: {
                     itemOpacity: 1
                   }
@@ -727,14 +705,17 @@ export function StackedBarChart(props: StackedBarChartProps) {
 
             // If we have series metadata, use custom data to show proper labels
             if (seriesMetadata && seriesMetadata.length > 0) {
-              legendConfig.data = seriesMetadata.map((series, index) => ({
-                id: series.key,
-                label: series.label,
-                color: series.color
-              }));
+              return [{
+                ...baseLegendConfig,
+                data: seriesMetadata.map((series) => ({
+                  id: series.key,
+                  label: series.label,
+                  color: series.color
+                }))
+              }];
             }
 
-            return [legendConfig];
+            return [baseLegendConfig];
           })()}
           />
         </div>
