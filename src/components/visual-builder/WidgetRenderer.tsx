@@ -45,6 +45,11 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
   const [sqlQuery, setSqlQuery] = useState<string | null>(null);
   const [showSQLModal, setShowSQLModal] = useState(false);
 
+  // State for barMultiple widgets
+  const [multipleData, setMultipleData] = useState<{ items: Record<string, unknown>[]; series: Array<{ key: string; label: string; color: string }> } | null>(null);
+  const [multipleLoading, setMultipleLoading] = useState(false);
+  const [multipleError, setMultipleError] = useState<string | null>(null);
+
   // 🔄 Component initialization log
   console.log('🔄 WidgetRenderer mounted:', {
     id: widget.id,
@@ -134,6 +139,56 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
 
     fetchData();
   }, [widget.id, widget.dataSource, widget.type, globalFilters]); // Re-executar quando widget ou filtros mudarem
+
+  // Fetch data for barMultiple widgets
+  useEffect(() => {
+    if (widget.type !== 'barMultiple') {
+      return;
+    }
+
+    async function fetchGroupedData() {
+      if (!widget.dataSource) {
+        setMultipleError('No dataSource configured');
+        setMultipleLoading(false);
+        return;
+      }
+
+      try {
+        setMultipleLoading(true);
+        setMultipleError(null);
+
+        console.log('📊 Fetching grouped data for widget:', widget.id);
+
+        const response = await fetch('/api/dashboard-supabase/grouped', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ...widget.dataSource,
+            filters: globalFilters
+          })
+        });
+
+        const result = await response.json();
+
+        console.log('📥 Grouped API response:', result);
+
+        if (result.success) {
+          setMultipleData({ items: result.items, series: result.series });
+          setSqlQuery(result.sql_query || null);
+        } else {
+          throw new Error(result.error || 'Failed to fetch grouped data');
+        }
+      } catch (err) {
+        console.error('❌ Error fetching barMultiple data:', err);
+        setMultipleError(err instanceof Error ? err.message : 'Unknown error');
+        setMultipleData(null);
+      } finally {
+        setMultipleLoading(false);
+      }
+    }
+
+    fetchGroupedData();
+  }, [widget.id, widget.dataSource, widget.type, globalFilters]);
 
   // Type guard function for KPI data
   const isKPIData = (data: WidgetData): data is KPIData => {
@@ -513,51 +568,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
       );
       break;
 
-    case 'barMultiple': {
-      const [multipleData, setMultipleData] = useState<{ items: any[]; series: any[] } | null>(null);
-      const [multipleLoading, setMultipleLoading] = useState(true);
-      const [multipleError, setMultipleError] = useState<string | null>(null);
-
-      useEffect(() => {
-        async function fetchGroupedData() {
-          if (!widget.dataSource) {
-            setMultipleError('No dataSource configured');
-            setMultipleLoading(false);
-            return;
-          }
-
-          try {
-            setMultipleLoading(true);
-            setMultipleError(null);
-
-            const response = await fetch('/api/dashboard-supabase/grouped', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                ...widget.dataSource,
-                filters: globalFilters
-              })
-            });
-
-            const result = await response.json();
-
-            if (result.success) {
-              setMultipleData({ items: result.items, series: result.series });
-              setSqlQuery(result.sql_query || null);
-            } else {
-              throw new Error(result.error || 'Failed to fetch grouped data');
-            }
-          } catch (err) {
-            console.error('Error fetching barMultiple data:', err);
-            setMultipleError(err instanceof Error ? err.message : 'Unknown error');
-          } finally {
-            setMultipleLoading(false);
-          }
-        }
-
-        fetchGroupedData();
-      }, [widget.id, widget.dataSource, globalFilters]);
-
+    case 'barMultiple':
       if (multipleLoading) {
         widgetContent = (
           <div className="h-full w-full p-2 flex items-center justify-center">
@@ -599,7 +610,6 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
         );
       }
       break;
-    }
 
     default:
       widgetContent = (
