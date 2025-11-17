@@ -86,13 +86,13 @@ const initialCode = `{
       "span": { "desktop": 1, "tablet": 1, "mobile": 1 },
       "order": 2,
       "heightPx": 150,
-      "title": "📦 Total de Pedidos",
+      "title": "📦 Total de Itens",
       "dataSource": {
         "schema": "vendas",
         "table": "vw_pedidos_completo",
-        "x": "pedido_id",
-        "y": "pedido_id",
-        "aggregation": "COUNT_DISTINCT"
+        "x": "item_id",
+        "y": "item_id",
+        "aggregation": "COUNT"
       },
       "kpiConfig": {
         "visualizationType": "card"
