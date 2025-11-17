@@ -328,8 +328,8 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig, globalFilter
 
   // Generate grid layout classes for a specific row (only fixed classes)
   const getGridClassesForRow = (): string => {
-    // Keep horizontal gap 16px and vertical gap 8px for consistent vertical spacing
-    return 'grid gap-x-4 gap-y-2 auto-rows-min';
+    // Keep horizontal gap 16px and vertical gap 0px; wrappers provide vertical spacing
+    return 'grid gap-x-4 gap-y-0 auto-rows-min';
   };
 
   // Get device-specific styles
