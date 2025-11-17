@@ -491,45 +491,46 @@ export class ThemeManager {
     }
 
     if (!clonedWidget.groupedBarConfig.styling) {
-      // @ts-expect-error: using default styling shape
-      clonedWidget.groupedBarConfig.styling = { ...DEFAULT_CHART_STYLING } as any;
+      clonedWidget.groupedBarConfig.styling = { ...DEFAULT_CHART_STYLING };
     }
 
     // Background
-    clonedWidget.groupedBarConfig.styling.backgroundColor = tokens.colors.surface as any;
+    clonedWidget.groupedBarConfig.styling.backgroundColor = tokens.colors.surface;
 
-    // Title styling
-    clonedWidget.groupedBarConfig.styling.titleColor = tokens.colors.text.primary as any;
-    clonedWidget.groupedBarConfig.styling.titleFontSize = tokens.typography.fontSize.lg as any;
-    clonedWidget.groupedBarConfig.styling.titleFontWeight = tokens.typography.fontWeight.semibold as any;
-    clonedWidget.groupedBarConfig.styling.titleFontFamily = tokens.typography.fontFamily.primary as any;
-    clonedWidget.groupedBarConfig.styling.titleMarginTop = 0 as any;
-    clonedWidget.groupedBarConfig.styling.titleMarginRight = 0 as any;
-    clonedWidget.groupedBarConfig.styling.titleMarginBottom = 8 as any;
-    clonedWidget.groupedBarConfig.styling.titleMarginLeft = 0 as any;
+    // Title styling - complete props
+    clonedWidget.groupedBarConfig.styling.titleColor = tokens.colors.text.primary;
+    clonedWidget.groupedBarConfig.styling.titleFontSize = tokens.typography.fontSize.lg;
+    clonedWidget.groupedBarConfig.styling.titleFontWeight = tokens.typography.fontWeight.semibold;
+    clonedWidget.groupedBarConfig.styling.titleFontFamily = tokens.typography.fontFamily.primary;
+    clonedWidget.groupedBarConfig.styling.titleMarginTop = 0;
+    clonedWidget.groupedBarConfig.styling.titleMarginRight = 0;
+    clonedWidget.groupedBarConfig.styling.titleMarginBottom = 8;
+    clonedWidget.groupedBarConfig.styling.titleMarginLeft = 0;
 
-    // Subtitle styling
-    clonedWidget.groupedBarConfig.styling.subtitleFontFamily = tokens.typography.fontFamily.primary as any;
-    clonedWidget.groupedBarConfig.styling.subtitleFontSize = tokens.typography.fontSize.sm as any;
-    clonedWidget.groupedBarConfig.styling.subtitleFontWeight = tokens.typography.fontWeight.normal as any;
-    clonedWidget.groupedBarConfig.styling.subtitleColor = tokens.colors.text.secondary as any;
-    clonedWidget.groupedBarConfig.styling.subtitleMarginTop = 0 as any;
-    clonedWidget.groupedBarConfig.styling.subtitleMarginRight = 0 as any;
-    clonedWidget.groupedBarConfig.styling.subtitleMarginBottom = 16 as any;
-    clonedWidget.groupedBarConfig.styling.subtitleMarginLeft = 0 as any;
+    // Subtitle styling - complete props
+    clonedWidget.groupedBarConfig.styling.subtitleFontFamily = tokens.typography.fontFamily.primary;
+    clonedWidget.groupedBarConfig.styling.subtitleFontSize = tokens.typography.fontSize.sm;
+    clonedWidget.groupedBarConfig.styling.subtitleFontWeight = tokens.typography.fontWeight.normal;
+    clonedWidget.groupedBarConfig.styling.subtitleColor = tokens.colors.text.secondary;
+    clonedWidget.groupedBarConfig.styling.subtitleMarginTop = 0;
+    clonedWidget.groupedBarConfig.styling.subtitleMarginRight = 0;
+    clonedWidget.groupedBarConfig.styling.subtitleMarginBottom = 16;
+    clonedWidget.groupedBarConfig.styling.subtitleMarginLeft = 0;
 
     // Axis & grid
-    clonedWidget.groupedBarConfig.styling.axisTextColor = tokens.colors.chart.axis as any;
-    clonedWidget.groupedBarConfig.styling.axisFontSize = tokens.typography.fontSize.sm as any;
-    clonedWidget.groupedBarConfig.styling.gridColor = tokens.colors.chart.grid as any;
-    clonedWidget.groupedBarConfig.styling.gridStrokeWidth = 0.5 as any;
+    clonedWidget.groupedBarConfig.styling.axisTextColor = tokens.colors.chart.axis;
+    clonedWidget.groupedBarConfig.styling.axisFontSize = tokens.typography.fontSize.sm;
+    clonedWidget.groupedBarConfig.styling.gridColor = tokens.colors.chart.grid;
+    clonedWidget.groupedBarConfig.styling.gridStrokeWidth = 0.5;
 
-    // Colors
-    clonedWidget.groupedBarConfig.styling.colors = [tokens.colors.chartElements.bar.fill] as any;
-    clonedWidget.groupedBarConfig.styling.containerShadowColor = tokens.shadows.medium as any;
+    // Series colors
+    clonedWidget.groupedBarConfig.styling.colors = [
+      tokens.colors.chartElements.bar.fill
+    ];
+    clonedWidget.groupedBarConfig.styling.containerShadowColor = tokens.shadows.medium;
 
     // Effects
-    clonedWidget.groupedBarConfig.styling.containerOpacity = tokens.effects.opacity.medium as any;
+    clonedWidget.groupedBarConfig.styling.containerOpacity = tokens.effects.opacity.medium;
     if (tokens.effects.gradient) {
       clonedWidget.groupedBarConfig.styling.backgroundGradient = {
         enabled: true,
@@ -537,19 +538,19 @@ export class ThemeManager {
         direction: tokens.effects.gradient.direction,
         startColor: tokens.effects.gradient.startColor,
         endColor: tokens.effects.gradient.endColor
-      } as any;
+      };
     } else {
       clonedWidget.groupedBarConfig.styling.backgroundGradient = undefined;
     }
     if (tokens.effects.backdrop) {
-      clonedWidget.groupedBarConfig.styling.containerBackdropFilter = `blur(${tokens.effects.backdrop.blur}px) saturate(${tokens.effects.backdrop.saturate}%) brightness(${tokens.effects.backdrop.brightness}%)` as any;
+      clonedWidget.groupedBarConfig.styling.containerBackdropFilter = `blur(${tokens.effects.backdrop.blur}px) saturate(${tokens.effects.backdrop.saturate}%) brightness(${tokens.effects.backdrop.brightness}%)`;
     } else {
       clonedWidget.groupedBarConfig.styling.containerBackdropFilter = undefined;
     }
     if (tokens.effects.shadow.color === '#00ffff') {
-      clonedWidget.groupedBarConfig.styling.containerBoxShadow = 'none' as any;
+      clonedWidget.groupedBarConfig.styling.containerBoxShadow = 'none';
     } else {
-      clonedWidget.groupedBarConfig.styling.containerBoxShadow = `${tokens.effects.shadow.offsetX}px ${tokens.effects.shadow.offsetY}px ${tokens.effects.shadow.blur}px rgba(0, 0, 0, ${tokens.effects.shadow.opacity})` as any;
+      clonedWidget.groupedBarConfig.styling.containerBoxShadow = `${tokens.effects.shadow.offsetX}px ${tokens.effects.shadow.offsetY}px ${tokens.effects.shadow.blur}px rgba(0, 0, 0, ${tokens.effects.shadow.opacity})`;
     }
 
     // Border
@@ -561,12 +562,12 @@ export class ThemeManager {
       accentColor: borderOptions?.accentColor,
       shadow: borderOptions?.shadow,
     })
-    clonedWidget.groupedBarConfig.styling.containerBorderColor = bStyle.color as any;
-    clonedWidget.groupedBarConfig.styling.containerBorderAccentColor = bStyle.accentColor as any;
-    clonedWidget.groupedBarConfig.styling.containerBorderWidth = bStyle.width as any;
-    clonedWidget.groupedBarConfig.styling.containerBorderRadius = bStyle.radius as any;
-    clonedWidget.groupedBarConfig.styling.containerBoxShadow = bStyle.shadow ? (clonedWidget.groupedBarConfig.styling.containerBoxShadow || '0 1px 2px rgba(0,0,0,.06)') : 'none' as any;
-    clonedWidget.groupedBarConfig.styling.containerBorderVariant = bStyle.type === 'acentuada' ? 'accent' : (bStyle.type === 'sem-borda' ? 'none' : 'smooth') as any;
+    clonedWidget.groupedBarConfig.styling.containerBorderColor = bStyle.color;
+    clonedWidget.groupedBarConfig.styling.containerBorderAccentColor = bStyle.accentColor;
+    clonedWidget.groupedBarConfig.styling.containerBorderWidth = bStyle.width;
+    clonedWidget.groupedBarConfig.styling.containerBorderRadius = bStyle.radius;
+    clonedWidget.groupedBarConfig.styling.containerBoxShadow = bStyle.shadow ? (clonedWidget.groupedBarConfig.styling.containerBoxShadow || '0 1px 2px rgba(0,0,0,.06)') : 'none';
+    clonedWidget.groupedBarConfig.styling.containerBorderVariant = bStyle.type === 'acentuada' ? 'accent' : (bStyle.type === 'sem-borda' ? 'none' : 'smooth');
 
     return clonedWidget;
   }
