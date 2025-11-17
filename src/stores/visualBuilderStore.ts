@@ -34,8 +34,8 @@ interface VisualBuilderState {
 
 const initialCode = `{
   "theme": "branco",
-  "dashboardTitle": "Live Dashboard",
-  "dashboardSubtitle": "Real-time visualization with Supabase data",
+  "dashboardTitle": "Dashboard de Vendas",
+  "dashboardSubtitle": "Análise de desempenho comercial",
   "config": {
     "maxRows": 25,
     "rowHeight": 30,
@@ -54,81 +54,108 @@ const initialCode = `{
       "desktop": 2,
       "tablet": 2,
       "mobile": 1
-    },
-    "3": {
-      "desktop": 4,
-      "tablet": 2,
-      "mobile": 1
     }
   },
   "widgets": [
     {
-      "id": "gasto_por_plataforma",
-      "type": "bar",
-      "position": { "x": 0, "y": 0, "w": 6, "h": 4 },
-      "row": "1",
-      "span": { "desktop": 2, "tablet": 2, "mobile": 1 },
-      "order": 1,
-      "heightPx": 320,
-      "title": "📊 Gasto por Plataforma",
-      "dataSource": {
-        "schema": "marketing",
-        "table": "view_trafego_pago",
-        "x": "plataforma_conta",
-        "y": "gasto",
-        "aggregation": "SUM"
-      },
-      "barConfig": {
-        "styling": {
-          "showLegend": true,
-          "showGrid": true,
-          "translateY": 0,
-          "marginBottom": 40
-        }
-      }
-    },
-    {
-      "id": "total_gasto",
+      "id": "faturamento_total",
       "type": "kpi",
-      "position": { "x": 6, "y": 0, "w": 3, "h": 2 },
+      "position": { "x": 0, "y": 0, "w": 3, "h": 2 },
       "row": "1",
       "span": { "desktop": 1, "tablet": 1, "mobile": 1 },
-      "order": 2,
+      "order": 1,
       "heightPx": 150,
-      "title": "💰 Gasto Total",
+      "title": "💰 Faturamento Total",
       "dataSource": {
-        "schema": "marketing",
-        "table": "view_trafego_pago",
-        "x": "gasto",
-        "y": "gasto",
+        "schema": "vendas",
+        "table": "vw_pedidos_completo",
+        "x": "item_subtotal",
+        "y": "item_subtotal",
         "aggregation": "SUM"
       },
       "kpiConfig": {
         "unit": "R$",
-        "target": 50000,
-        "showTarget": true,
-        "trend": "increasing",
-        "visualizationType": "card",
-        "status": "on-target"
+        "visualizationType": "card"
       }
     },
     {
-      "id": "impressoes_tempo",
-      "type": "bar",
-      "position": { "x": 0, "y": 4, "w": 9, "h": 4 },
-      "row": "2",
-      "span": { "desktop": 1, "tablet": 2, "mobile": 1 },
-      "order": 4,
-      "heightPx": 320,
-      "title": "📊 ROAS por Plataforma",
+      "id": "total_pedidos",
+      "type": "kpi",
+      "position": { "x": 3, "y": 0, "w": 3, "h": 2 },
+      "row": "1",
+      "span": { "desktop": 1, "tablet": 1, "mobile": 1 },
+      "order": 2,
+      "heightPx": 150,
+      "title": "📦 Total de Pedidos",
       "dataSource": {
-        "schema": "marketing",
-        "table": "view_trafego_pago",
-        "x": "plataforma_conta",
-        "y": "roas_calculado",
+        "schema": "vendas",
+        "table": "vw_pedidos_completo",
+        "x": "pedido_id",
+        "y": "pedido_id",
+        "aggregation": "COUNT_DISTINCT"
+      },
+      "kpiConfig": {
+        "visualizationType": "card"
+      }
+    },
+    {
+      "id": "ticket_medio",
+      "type": "kpi",
+      "position": { "x": 6, "y": 0, "w": 3, "h": 2 },
+      "row": "1",
+      "span": { "desktop": 1, "tablet": 1, "mobile": 1 },
+      "order": 3,
+      "heightPx": 150,
+      "title": "🎯 Ticket Médio",
+      "dataSource": {
+        "schema": "vendas",
+        "table": "vw_pedidos_completo",
+        "x": "item_subtotal",
+        "y": "item_subtotal",
         "aggregation": "AVG"
       },
-      "barConfig": {
+      "kpiConfig": {
+        "unit": "R$",
+        "visualizationType": "card"
+      }
+    },
+    {
+      "id": "itens_vendidos",
+      "type": "kpi",
+      "position": { "x": 9, "y": 0, "w": 3, "h": 2 },
+      "row": "1",
+      "span": { "desktop": 1, "tablet": 1, "mobile": 1 },
+      "order": 4,
+      "heightPx": 150,
+      "title": "📊 Itens Vendidos",
+      "dataSource": {
+        "schema": "vendas",
+        "table": "vw_pedidos_completo",
+        "x": "quantidade",
+        "y": "quantidade",
+        "aggregation": "SUM"
+      },
+      "kpiConfig": {
+        "visualizationType": "card"
+      }
+    },
+    {
+      "id": "faturamento_mensal",
+      "type": "line",
+      "position": { "x": 0, "y": 2, "w": 6, "h": 4 },
+      "row": "1",
+      "span": { "desktop": 2, "tablet": 2, "mobile": 1 },
+      "order": 5,
+      "heightPx": 320,
+      "title": "📈 Faturamento Mensal",
+      "dataSource": {
+        "schema": "vendas",
+        "table": "vw_pedidos_completo",
+        "x": "data_pedido",
+        "y": "item_subtotal",
+        "aggregation": "SUM"
+      },
+      "lineConfig": {
         "styling": {
           "showLegend": false,
           "showGrid": true,
@@ -138,19 +165,19 @@ const initialCode = `{
       }
     },
     {
-      "id": "impressoes_tempo_bar",
+      "id": "top_produtos",
       "type": "bar",
-      "position": { "x": 0, "y": 8, "w": 6, "h": 4 },
-      "row": "2",
-      "span": { "desktop": 1, "tablet": 2, "mobile": 1 },
-      "order": 5,
-      "heightPx": 280,
-      "title": "📊 Impressões ao Longo do Tempo (Barras)",
+      "position": { "x": 6, "y": 2, "w": 6, "h": 4 },
+      "row": "1",
+      "span": { "desktop": 2, "tablet": 2, "mobile": 1 },
+      "order": 6,
+      "heightPx": 320,
+      "title": "🏆 Top 10 Produtos",
       "dataSource": {
-        "schema": "marketing",
-        "table": "view_trafego_pago",
-        "x": "data_metricas",
-        "y": "impressao",
+        "schema": "vendas",
+        "table": "vw_pedidos_completo",
+        "x": "produto_nome",
+        "y": "item_subtotal",
         "aggregation": "SUM"
       },
       "barConfig": {
@@ -163,19 +190,44 @@ const initialCode = `{
       }
     },
     {
-      "id": "conversoes_por_dispositivo",
-      "type": "pie",
-      "position": { "x": 9, "y": 0, "w": 3, "h": 4 },
-      "row": "1",
-      "span": { "desktop": 1, "tablet": 1, "mobile": 1 },
-      "order": 3,
-      "heightPx": 280,
-      "title": "🏆 Top 10 Campanhas por Gasto",
+      "id": "vendas_territorio",
+      "type": "bar",
+      "position": { "x": 0, "y": 6, "w": 6, "h": 4 },
+      "row": "2",
+      "span": { "desktop": 1, "tablet": 2, "mobile": 1 },
+      "order": 7,
+      "heightPx": 320,
+      "title": "🌎 Vendas por Território",
       "dataSource": {
-        "schema": "marketing",
-        "table": "view_trafego_pago",
-        "x": "campanha_nome",
-        "y": "gasto",
+        "schema": "vendas",
+        "table": "vw_pedidos_completo",
+        "x": "territorio_nome",
+        "y": "item_subtotal",
+        "aggregation": "SUM"
+      },
+      "barConfig": {
+        "styling": {
+          "showLegend": false,
+          "showGrid": true,
+          "translateY": 0,
+          "marginBottom": 40
+        }
+      }
+    },
+    {
+      "id": "vendas_canal",
+      "type": "pie",
+      "position": { "x": 6, "y": 6, "w": 6, "h": 4 },
+      "row": "2",
+      "span": { "desktop": 1, "tablet": 2, "mobile": 1 },
+      "order": 8,
+      "heightPx": 320,
+      "title": "📱 Vendas por Canal",
+      "dataSource": {
+        "schema": "vendas",
+        "table": "vw_pedidos_completo",
+        "x": "canal_venda_nome",
+        "y": "item_subtotal",
         "aggregation": "SUM"
       },
       "pieConfig": {
@@ -185,95 +237,6 @@ const initialCode = `{
           "translateY": 0,
           "marginBottom": 40
         }
-      }
-    },
-    {
-      "id": "roas_medio",
-      "type": "kpi",
-      "position": { "x": 9, "y": 4, "w": 3, "h": 2 },
-      "row": "2",
-      "span": { "desktop": 1, "tablet": 1, "mobile": 1 },
-      "order": 5,
-      "heightPx": 150,
-      "title": "🎯 ROAS Médio",
-      "dataSource": {
-        "schema": "marketing",
-        "table": "view_trafego_pago",
-        "x": "roas",
-        "y": "roas",
-        "aggregation": "AVG"
-      },
-      "kpiConfig": {
-        "unit": "x",
-        "target": 3.0,
-        "showTarget": true,
-        "trend": "increasing",
-        "visualizationType": "card",
-        "status": "on-target"
-      }
-    },
-    {
-      "id": "insights_hero_1",
-      "type": "insightsHero",
-      "position": { "x": 0, "y": 12, "w": 3, "h": 6 },
-      "row": "3",
-      "span": { "desktop": 1, "tablet": 1, "mobile": 1 },
-      "order": 7,
-      "heightPx": 400,
-      "title": "💡 AI Insights (Crimson)",
-      "insightsHeroConfig": {
-        "variant": "crimsonGlow",
-        "autoplayDelay": 5000,
-        "showArrows": true,
-        "loop": true
-      }
-    },
-    {
-      "id": "insights_hero_2",
-      "type": "insightsHero",
-      "position": { "x": 3, "y": 12, "w": 3, "h": 6 },
-      "row": "3",
-      "span": { "desktop": 1, "tablet": 1, "mobile": 1 },
-      "order": 8,
-      "heightPx": 400,
-      "title": "💡 AI Insights (Rose)",
-      "insightsHeroConfig": {
-        "variant": "roseDawn",
-        "autoplayDelay": 6000,
-        "showArrows": true,
-        "loop": true
-      }
-    },
-    {
-      "id": "insights_hero_3",
-      "type": "insightsHero",
-      "position": { "x": 6, "y": 12, "w": 3, "h": 6 },
-      "row": "3",
-      "span": { "desktop": 1, "tablet": 1, "mobile": 1 },
-      "order": 9,
-      "heightPx": 400,
-      "title": "💡 AI Insights (Obsidian)",
-      "insightsHeroConfig": {
-        "variant": "obsidianBlack",
-        "autoplayDelay": 6000,
-        "showArrows": true,
-        "loop": true
-      }
-    },
-    {
-      "id": "insights_hero_4",
-      "type": "insightsHero",
-      "position": { "x": 9, "y": 12, "w": 3, "h": 6 },
-      "row": "3",
-      "span": { "desktop": 1, "tablet": 1, "mobile": 1 },
-      "order": 10,
-      "heightPx": 400,
-      "title": "💡 AI Insights (Aurora)",
-      "insightsHeroConfig": {
-        "variant": "aurora",
-        "autoplayDelay": 5000,
-        "showArrows": true,
-        "loop": true
       }
     }
   ]
