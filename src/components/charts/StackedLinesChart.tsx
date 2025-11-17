@@ -333,8 +333,8 @@ export function StackedLinesChart(props: StackedLinesChartProps) {
           useMesh={true}
           tooltip={({ point }) => (
             <div className="bg-white px-3 py-2 shadow-lg rounded-lg border border-gray-200 text-xs">
-              <div className="font-medium text-gray-900">{keyToLabelMap[String(point.serieId)] || point.serieId}</div>
-              <div className="text-blue-600 font-mono font-medium tabular-nums">{formatValue(Number(point.data.y))}</div>
+              <div className="font-medium text-gray-900">{keyToLabelMap[String(point.seriesId as string)] || String(point.seriesId)}</div>
+              <div className="text-blue-600 font-mono font-medium tabular-nums">{formatValue(Number(point.data.y as number))}</div>
             </div>
           )}
           legends={(() => {
