@@ -238,6 +238,9 @@ export interface StackedBarChartProps {
 
   // Series Label (for dynamic legend)
   seriesLabel?: string;
+
+  // Series metadata (key to label mapping)
+  seriesMetadata?: Array<{ key: string; label: string; color: string }>;
 }
 
 // Valores padrão robustos e flexíveis
@@ -377,7 +380,8 @@ export function StackedBarChart(props: StackedBarChartProps) {
     translateY,
     marginBottom,
     keys,
-    indexBy
+    indexBy,
+    seriesMetadata
   } = props;
 
   // Debug: Log do que StackedBarChart recebe
@@ -398,6 +402,12 @@ export function StackedBarChart(props: StackedBarChartProps) {
   // Para stacked bar chart, esperamos que os dados já venham formatados com múltiplas keys
   // Exemplo: [{ label: 'Jan', series1: 100, series2: 200 }, ...]
   const chartData = data;
+
+  // Create mapping from keys to labels for legend formatting
+  const keyToLabelMap = seriesMetadata?.reduce((acc, series) => {
+    acc[series.key] = series.label;
+    return acc;
+  }, {} as Record<string, string>) || {};
 
   // Inverter dados automaticamente para layout horizontal (maior valor no topo)
   const finalData = layout === 'horizontal' ? [...chartData].reverse() : chartData;
@@ -644,7 +654,7 @@ export function StackedBarChart(props: StackedBarChartProps) {
           // Tooltip elegante
           tooltip={({ id, value }) => (
             <div className="bg-white px-3 py-2 shadow-lg rounded-lg border border-gray-200 text-xs">
-              <div className="font-medium text-gray-900">{id}</div>
+              <div className="font-medium text-gray-900">{keyToLabelMap[String(id)] || id}</div>
               <div className="text-blue-600 font-mono font-medium tabular-nums">
                 {formatValue(Number(value))}
               </div>
@@ -691,31 +701,40 @@ export function StackedBarChart(props: StackedBarChartProps) {
             }
 
             // Configuração padrão se legends não especificado
-            return [
-              {
-                dataFrom: 'keys' as const,
-                anchor: 'bottom',
-                direction: 'row',
-                justify: false,
-                translateX: 0,
-                translateY: translateY !== undefined ? translateY : DEFAULT_TRANSLATE_Y,
-                itemsSpacing: 20,
-                itemWidth: 80,
-                itemHeight: 18,
-                itemDirection: 'left-to-right',
-                itemOpacity: 0.8,
-                symbolSize: 12,
-                symbolShape: 'circle',
-                effects: [
-                  {
-                    on: 'hover',
-                    style: {
-                      itemOpacity: 1
-                    }
+            const legendConfig: any = {
+              dataFrom: 'keys' as const,
+              anchor: 'bottom',
+              direction: 'row',
+              justify: false,
+              translateX: 0,
+              translateY: translateY !== undefined ? translateY : DEFAULT_TRANSLATE_Y,
+              itemsSpacing: 20,
+              itemWidth: 80,
+              itemHeight: 18,
+              itemDirection: 'left-to-right',
+              itemOpacity: 0.8,
+              symbolSize: 12,
+              symbolShape: 'circle',
+              effects: [
+                {
+                  on: 'hover',
+                  style: {
+                    itemOpacity: 1
                   }
-                ]
-              }
-            ];
+                }
+              ]
+            };
+
+            // If we have series metadata, use custom data to show proper labels
+            if (seriesMetadata && seriesMetadata.length > 0) {
+              legendConfig.data = seriesMetadata.map((series, index) => ({
+                id: series.key,
+                label: series.label,
+                color: series.color
+              }));
+            }
+
+            return [legendConfig];
           })()}
           />
         </div>

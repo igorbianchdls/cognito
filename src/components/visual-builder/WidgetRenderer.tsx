@@ -596,6 +596,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
               keys={multipleData.series.map(s => s.key)}
               title={widget.title || 'Chart'}
               colors={multipleData.series.map(s => s.color)}
+              seriesMetadata={multipleData.series}
             />
           </div>
         );
