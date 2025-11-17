@@ -902,6 +902,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
               keys={keys}
               seriesMetadata={seriesMetadata}
               title={widget.title}
+              showLegend={pivotDrilled ? false : undefined}
               layout={widget.pivotBarConfig?.styling?.layout || 'vertical'}
               groupMode={widget.pivotBarConfig?.styling?.groupMode || 'grouped'}
               enableGridX={widget.pivotBarConfig?.styling?.enableGridX}

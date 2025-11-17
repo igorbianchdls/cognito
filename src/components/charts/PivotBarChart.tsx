@@ -28,6 +28,7 @@ export interface PivotBarChartProps {
 
   // Legends
   legends?: readonly BarLegendProps[]
+  showLegend?: boolean
   translateY?: number
 
   // Styling
@@ -260,7 +261,7 @@ export function PivotBarChart(props: PivotBarChartProps) {
               <div className="text-gray-500 mt-1">{String(indexValue)}</div>
             </div>
           )}
-          legends={legends || autoLegends}
+          legends={props.showLegend === false ? undefined : (legends || autoLegends)}
           onClick={(d) => onBarClick && onBarClick(String(d.indexValue), String(d.id))}
         />
       </div>
@@ -269,4 +270,3 @@ export function PivotBarChart(props: PivotBarChartProps) {
 }
 
 export default PivotBarChart;
-
