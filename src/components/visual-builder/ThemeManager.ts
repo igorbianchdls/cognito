@@ -6,6 +6,7 @@ import type { BarChartConfig } from '@/stores/apps/barChartStore';
 import type { LineChartConfig } from '@/stores/apps/lineChartStore';
 import type { PieChartConfig } from '@/stores/apps/pieChartStore';
 import type { AreaChartConfig } from '@/stores/apps/areaChartStore';
+import type { StackedBarChartConfig } from '@/stores/apps/stackedBarChartStore';
 import { THEME_TOKENS, TYPOGRAPHY_PRESETS, THEME_BACKGROUND_MAPPING, type ThemeTokenName, type DesignTokens } from './DesignTokens';
 import { BackgroundManager } from './BackgroundManager';
 import { BorderManager, type BorderPresetKey } from './BorderManager';
@@ -350,6 +351,118 @@ export class ThemeManager {
     clonedWidget.barConfig.styling.containerBorderRadius = bStyle.radius;
     clonedWidget.barConfig.styling.containerBoxShadow = bStyle.shadow ? (clonedWidget.barConfig.styling.containerBoxShadow || '0 1px 2px rgba(0,0,0,.06)') : 'none';
     clonedWidget.barConfig.styling.containerBorderVariant = bStyle.type === 'acentuada' ? 'accent' : (bStyle.type === 'sem-borda' ? 'none' : 'smooth')
+
+    return clonedWidget;
+  }
+
+  /**
+   * Applies design tokens to a single Stacked Bar Chart widget
+   */
+  private static applyThemeToStackedBarChart(
+    widget: Widget,
+    tokens: DesignTokens,
+    _themeName: ThemeName,
+    borderOptions?: {
+      type?: BorderPresetKey;
+      color?: string;
+      width?: number;
+      radius?: number;
+      accentColor?: string;
+      shadow?: boolean;
+    }
+  ): Widget {
+    const clonedWidget = { ...widget };
+
+    if (!clonedWidget.stackedBarConfig) {
+      clonedWidget.stackedBarConfig = {} as Partial<StackedBarChartConfig>;
+    }
+
+    if (!clonedWidget.stackedBarConfig.styling) {
+      clonedWidget.stackedBarConfig.styling = { ...DEFAULT_CHART_STYLING };
+    }
+
+    // Apply design tokens to Stacked Bar Chart
+    clonedWidget.stackedBarConfig.styling.backgroundColor = tokens.colors.surface;
+
+    // Title styling - complete props
+    clonedWidget.stackedBarConfig.styling.titleColor = tokens.colors.text.primary;
+    clonedWidget.stackedBarConfig.styling.titleFontSize = tokens.typography.fontSize.lg;
+    clonedWidget.stackedBarConfig.styling.titleFontWeight = tokens.typography.fontWeight.semibold;
+    clonedWidget.stackedBarConfig.styling.titleFontFamily = tokens.typography.fontFamily.primary;
+    clonedWidget.stackedBarConfig.styling.titleMarginTop = 0;
+    clonedWidget.stackedBarConfig.styling.titleMarginRight = 0;
+    clonedWidget.stackedBarConfig.styling.titleMarginBottom = 8;
+    clonedWidget.stackedBarConfig.styling.titleMarginLeft = 0;
+
+    // Subtitle styling - complete props
+    clonedWidget.stackedBarConfig.styling.subtitleFontFamily = tokens.typography.fontFamily.primary;
+    clonedWidget.stackedBarConfig.styling.subtitleFontSize = tokens.typography.fontSize.sm;
+    clonedWidget.stackedBarConfig.styling.subtitleFontWeight = tokens.typography.fontWeight.normal;
+    clonedWidget.stackedBarConfig.styling.subtitleColor = tokens.colors.text.secondary;
+    clonedWidget.stackedBarConfig.styling.subtitleMarginTop = 0;
+    clonedWidget.stackedBarConfig.styling.subtitleMarginRight = 0;
+    clonedWidget.stackedBarConfig.styling.subtitleMarginBottom = 16;
+    clonedWidget.stackedBarConfig.styling.subtitleMarginLeft = 0;
+
+    clonedWidget.stackedBarConfig.styling.axisTextColor = tokens.colors.chart.axis;
+    clonedWidget.stackedBarConfig.styling.axisFontSize = tokens.typography.fontSize.sm;
+
+    // Grid styling - apply theme grid properties
+    clonedWidget.stackedBarConfig.styling.gridColor = tokens.colors.chart.grid;
+    clonedWidget.stackedBarConfig.styling.gridStrokeWidth = 0.5;
+
+    clonedWidget.stackedBarConfig.styling.colors = [
+      tokens.colors.chartElements.bar.fill
+    ];
+    clonedWidget.stackedBarConfig.styling.containerShadowColor = tokens.shadows.medium;
+
+    // Apply advanced effects from tokens
+    clonedWidget.stackedBarConfig.styling.containerOpacity = tokens.effects.opacity.medium;
+
+    // Always apply gradient props directly
+    if (tokens.effects.gradient) {
+      clonedWidget.stackedBarConfig.styling.backgroundGradient = {
+        enabled: true,
+        type: tokens.effects.gradient.type,
+        direction: tokens.effects.gradient.direction,
+        startColor: tokens.effects.gradient.startColor,
+        endColor: tokens.effects.gradient.endColor
+      };
+    } else {
+      clonedWidget.stackedBarConfig.styling.backgroundGradient = undefined;
+    }
+
+    // Always apply backdrop filter
+    if (tokens.effects.backdrop) {
+      clonedWidget.stackedBarConfig.styling.containerBackdropFilter = `blur(${tokens.effects.backdrop.blur}px) saturate(${tokens.effects.backdrop.saturate}%) brightness(${tokens.effects.backdrop.brightness}%)`;
+    } else {
+      clonedWidget.stackedBarConfig.styling.containerBackdropFilter = undefined;
+    }
+
+    // Create enhanced shadow
+    if (tokens.effects.shadow.color === '#00ffff') {
+      // Hightech theme: No shadow
+      clonedWidget.stackedBarConfig.styling.containerBoxShadow = 'none';
+    } else {
+      // Other themes: Standard shadow
+      clonedWidget.stackedBarConfig.styling.containerBoxShadow = `${tokens.effects.shadow.offsetX}px ${tokens.effects.shadow.offsetY}px ${tokens.effects.shadow.blur}px rgba(0, 0, 0, ${tokens.effects.shadow.opacity})`;
+    }
+
+    // Apply border via BorderManager
+    const presetB: BorderPresetKey = (borderOptions?.type && BorderManager.isValid(borderOptions.type)) ? borderOptions.type : 'suave'
+    const bStyle = BorderManager.getStyle(presetB, {
+      color: borderOptions?.color,
+      width: borderOptions?.width,
+      radius: borderOptions?.radius,
+      accentColor: borderOptions?.accentColor,
+      shadow: borderOptions?.shadow,
+    })
+    clonedWidget.stackedBarConfig.styling.containerBorderColor = bStyle.color;
+    clonedWidget.stackedBarConfig.styling.containerBorderAccentColor = bStyle.accentColor;
+    clonedWidget.stackedBarConfig.styling.containerBorderWidth = bStyle.width;
+    clonedWidget.stackedBarConfig.styling.containerBorderRadius = bStyle.radius;
+    clonedWidget.stackedBarConfig.styling.containerBoxShadow = bStyle.shadow ? (clonedWidget.stackedBarConfig.styling.containerBoxShadow || '0 1px 2px rgba(0,0,0,.06)') : 'none';
+    clonedWidget.stackedBarConfig.styling.containerBorderVariant = bStyle.type === 'acentuada' ? 'accent' : (bStyle.type === 'sem-borda' ? 'none' : 'smooth')
 
     return clonedWidget;
   }
@@ -900,6 +1013,10 @@ export class ThemeManager {
       }
       case 'area': {
         themed = this.applyThemeToAreaChart(widget, tokens, themeName, borderOptions);
+        return themed;
+      }
+      case 'barMultiple': {
+        themed = this.applyThemeToStackedBarChart(widget, tokens, themeName, borderOptions);
         return themed;
       }
       case 'insights': {
