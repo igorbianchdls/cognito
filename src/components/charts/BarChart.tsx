@@ -10,7 +10,7 @@ import { createElegantTheme } from './theme';
 const DEFAULT_MARGIN = { top: 40, right: 40, bottom: 50, left: 80 };
 const DEFAULT_ENABLE_GRID_X = false;
 const DEFAULT_ENABLE_GRID_Y = false;
-const DEFAULT_TRANSLATE_Y = 50;
+const DEFAULT_TRANSLATE_Y = 65;
 
 export function BarChart(props: BarChartProps) {
   const {
