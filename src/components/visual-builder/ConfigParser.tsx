@@ -139,14 +139,14 @@ export interface WidgetSpan {
 
 export interface Widget {
   id: string;
-  type: 'bar' | 'line' | 'pie' | 'area' | 'kpi' | 'insights' | 'alerts' | 'recommendations' | 'insightsHero';
+  type: 'bar' | 'line' | 'pie' | 'area' | 'kpi' | 'insights' | 'alerts' | 'recommendations' | 'insightsHero' | 'barMultiple';
   position: {
     x: number;
     y: number;
     w: number;
     h: number;
   };
-  title: string;
+  title?: string;
 
   // Responsive layout properties (for ResponsiveGridCanvas)
   row?: string;           // Reference to layoutRows key (e.g., "1", "2")
@@ -161,9 +161,15 @@ export interface Widget {
   unit?: string;
   dataSource?: {
     table: string;
-    x: string;
+    schema?: string;
+    x?: string;
     y?: string;
     aggregation?: 'SUM' | 'COUNT' | 'AVG' | 'MAX' | 'MIN';
+    // For barMultiple widgets
+    dimension1?: string;
+    dimension2?: string;
+    field?: string;
+    limit?: number;
   };
   styling?: {
     colors?: string[];
