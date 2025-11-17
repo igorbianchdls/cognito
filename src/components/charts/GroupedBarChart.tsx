@@ -250,8 +250,8 @@ export function GroupedBarChart(props: GroupedBarChartProps) {
 
     // Bar Visual Effects - CSS Only
     barOpacity,
-    barHoverOpacity,
-    borderOpacity,
+    _barHoverOpacity,
+    _borderOpacity,
 
     // Bar CSS Filters
     barBrightness,
@@ -277,8 +277,8 @@ export function GroupedBarChart(props: GroupedBarChartProps) {
     labelSkipWidth,
     labelSkipHeight,
     labelTextColor,
-    labelFormat,
-    labelOffset,
+    _labelFormat,
+    _labelOffset,
     animate,
     motionConfig,
     axisBottom,
@@ -372,8 +372,8 @@ export function GroupedBarChart(props: GroupedBarChartProps) {
           border: containerBorderVariant === 'none'
             ? 'none'
             : (containerBorderWidth !== undefined
-                ? `${containerBorderWidth}px solid ${containerBorderColor || '#e5e7eb'}`
-                : `1px solid ${containerBorderColor || '#e5e7eb'}`),
+                ? (containerBorder ?? `${containerBorderWidth}px solid ${containerBorderColor || '#e5e7eb'}`)
+                : (containerBorder ?? `1px solid ${containerBorderColor || '#e5e7eb'}`)),
           borderRadius: containerBorderVariant === 'accent' ? 0 : (containerBorderRadius !== undefined ? `${containerBorderRadius}px` : '12px'),
         })
       }}
@@ -528,22 +528,22 @@ export function GroupedBarChart(props: GroupedBarChartProps) {
               if (Array.isArray(legends)) return legends;
 
               if (legends && typeof legends === 'object') {
-                const cfg = legends as Record<string, unknown>;
+                const cfg = legends as LegendConfig;
                 return [
                   {
                     dataFrom: 'keys' as const,
-                    anchor: (cfg.anchor as any) || 'bottom',
-                    direction: (cfg.direction as any) || 'row',
+                    anchor: (cfg.anchor ?? 'bottom') as BarLegendProps['anchor'],
+                    direction: (cfg.direction ?? 'row') as BarLegendProps['direction'],
                     justify: false,
-                    translateX: (cfg.translateX as number) || 0,
-                    translateY: translateY !== undefined ? translateY : ((cfg.translateY as number) || 50),
-                    itemsSpacing: (cfg.itemsSpacing as number) || 20,
-                    itemWidth: (cfg.itemWidth as number) || 80,
-                    itemHeight: (cfg.itemHeight as number) || 18,
-                    itemDirection: (cfg.itemDirection as any) || 'left-to-right',
+                    translateX: (cfg.translateX ?? 0),
+                    translateY: translateY !== undefined ? translateY : (cfg.translateY ?? 50),
+                    itemsSpacing: (cfg.itemsSpacing ?? 20),
+                    itemWidth: (cfg.itemWidth ?? 80),
+                    itemHeight: (cfg.itemHeight ?? 18),
+                    itemDirection: (cfg.itemDirection ?? 'left-to-right') as BarLegendProps['itemDirection'],
                     itemOpacity: 0.8,
-                    symbolSize: (cfg.symbolSize as number) || 12,
-                    symbolShape: (cfg.symbolShape as any) || 'circle',
+                    symbolSize: (cfg.symbolSize ?? 12),
+                    symbolShape: (cfg.symbolShape ?? 'circle') as BarLegendProps['symbolShape'],
                     effects: [{ on: 'hover' as const, style: { itemOpacity: 1 } }]
                   }
                 ];
@@ -582,4 +582,3 @@ export function GroupedBarChart(props: GroupedBarChartProps) {
 }
 
 export default GroupedBarChart;
-
