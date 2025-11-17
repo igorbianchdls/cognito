@@ -203,8 +203,9 @@ export function StackedLinesChart(props: StackedLinesChartProps) {
 
   // Transform table-like data into Nivo Line series
   type LineSerie = { id: string | number; data: Array<{ x: string | number; y: number }> };
+  const labelByKey = new Map<string, string>((seriesMetadata || []).map(s => [s.key, s.label]));
   const series: LineSerie[] = keys.map((k) => ({
-    id: k,
+    id: labelByKey.get(k) ?? k,
     data: data.map((row) => ({ x: String(row[indexBy] ?? row.label), y: Number(row[k] ?? 0) }))
   }));
 
@@ -333,7 +334,7 @@ export function StackedLinesChart(props: StackedLinesChartProps) {
           useMesh={true}
           tooltip={({ point }) => (
             <div className="bg-white px-3 py-2 shadow-lg rounded-lg border border-gray-200 text-xs">
-              <div className="font-medium text-gray-900">{keyToLabelMap[String(point.seriesId as string)] || String(point.seriesId)}</div>
+              <div className="font-medium text-gray-900">{String(point.seriesId)}</div>
               <div className="text-blue-600 font-mono font-medium tabular-nums">{formatValue(Number(point.data.y as number))}</div>
             </div>
           )}
