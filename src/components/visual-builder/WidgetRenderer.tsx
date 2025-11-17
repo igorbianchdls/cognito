@@ -10,6 +10,7 @@ import { AreaChart } from '@/components/charts/AreaChart';
 import { StackedBarChart } from '@/components/charts/StackedBarChart';
 import { StackedLinesChart } from '@/components/charts/StackedLinesChart';
 import { GroupedBarChart } from '@/components/charts/GroupedBarChart';
+import { PivotBarChart } from '@/components/charts/PivotBarChart';
 import { RadialStackedChart } from '@/components/charts/RadialStackedChart';
 import { KPICard } from '@/components/widgets/KPICard';
 import InsightsCard from '@/components/widgets/InsightsCard';
@@ -144,9 +145,9 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
     fetchData();
   }, [widget.id, widget.dataSource, widget.type, globalFilters]); // Re-executar quando widget ou filtros mudarem
 
-  // Fetch data for stackedbar/groupedbar/stackedlines/radialstacked widgets
+  // Fetch data for stackedbar/groupedbar/stackedlines/radialstacked/pivotbar widgets
   useEffect(() => {
-    if (widget.type !== 'stackedbar' && widget.type !== 'groupedbar' && widget.type !== 'stackedlines' && widget.type !== 'radialstacked') {
+    if (widget.type !== 'stackedbar' && widget.type !== 'groupedbar' && widget.type !== 'stackedlines' && widget.type !== 'radialstacked' && widget.type !== 'pivotbar') {
       return;
     }
 
@@ -769,6 +770,73 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
               containerBorderRadius={widget.groupedBarConfig?.styling?.containerBorderRadius}
               containerBorderVariant={widget.groupedBarConfig?.styling?.containerBorderVariant}
               containerPadding={widget.groupedBarConfig?.styling?.containerPadding}
+            />
+          </div>
+        );
+      } else {
+        widgetContent = (
+          <div className="h-full w-full p-2 flex items-center justify-center bg-gray-50 rounded">
+            <div className="text-center text-gray-500">
+              <div className="text-2xl mb-2">📊</div>
+              <div className="text-sm">No grouped data available</div>
+            </div>
+          </div>
+        );
+      }
+      break;
+    case 'pivotbar':
+      if (multipleLoading) {
+        widgetContent = (
+          <div className="h-full w-full p-2 flex items-center justify-center">
+            <div className="text-center text-gray-500">
+              <div className="text-2xl mb-2">⏳</div>
+              <div className="text-sm">Loading grouped data...</div>
+            </div>
+          </div>
+        );
+      } else if (multipleError) {
+        widgetContent = (
+          <div className="h-full w-full p-2 flex items-center justify-center bg-red-50 rounded">
+            <div className="text-center text-red-600">
+              <div className="text-2xl mb-2">⚠️</div>
+              <div className="text-sm font-medium mb-1">Error</div>
+              <div className="text-xs">{multipleError}</div>
+            </div>
+          </div>
+        );
+      } else if (multipleData && multipleData.items.length > 0) {
+        const keys = multipleData.series.map(s => s.key);
+        const seriesMetadata = multipleData.series;
+        widgetContent = (
+          <div className="h-full w-full p-2 relative group">
+            {renderSQLButton()}
+            <PivotBarChart
+              items={multipleData.items}
+              keys={keys}
+              seriesMetadata={seriesMetadata}
+              title={widget.title}
+              layout={widget.pivotBarConfig?.styling?.layout || 'vertical'}
+              groupMode={widget.pivotBarConfig?.styling?.groupMode || 'grouped'}
+              enableGridX={widget.pivotBarConfig?.styling?.enableGridX}
+              enableGridY={widget.pivotBarConfig?.styling?.enableGridY}
+              gridColor={widget.pivotBarConfig?.styling?.gridColor}
+              gridStrokeWidth={widget.pivotBarConfig?.styling?.gridStrokeWidth}
+              borderRadius={widget.pivotBarConfig?.styling?.borderRadius}
+              borderWidth={widget.pivotBarConfig?.styling?.borderWidth}
+              containerBackground={widget.pivotBarConfig?.styling?.containerBackground}
+              containerOpacity={widget.pivotBarConfig?.styling?.containerOpacity}
+              containerBackdropFilter={widget.pivotBarConfig?.styling?.containerBackdropFilter}
+              containerFilter={widget.pivotBarConfig?.styling?.containerFilter}
+              containerBoxShadow={widget.pivotBarConfig?.styling?.containerBoxShadow}
+              containerBorder={widget.pivotBarConfig?.styling?.containerBorder}
+              containerTransform={widget.pivotBarConfig?.styling?.containerTransform}
+              containerTransition={widget.pivotBarConfig?.styling?.containerTransition}
+              containerBorderWidth={widget.pivotBarConfig?.styling?.containerBorderWidth}
+              containerBorderColor={widget.pivotBarConfig?.styling?.containerBorderColor}
+              containerBorderAccentColor={widget.pivotBarConfig?.styling?.containerBorderAccentColor}
+              containerBorderRadius={widget.pivotBarConfig?.styling?.containerBorderRadius}
+              containerBorderVariant={widget.pivotBarConfig?.styling?.containerBorderVariant}
+              containerPadding={widget.pivotBarConfig?.styling?.containerPadding}
             />
           </div>
         );

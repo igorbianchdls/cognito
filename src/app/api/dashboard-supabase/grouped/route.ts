@@ -7,13 +7,18 @@ const SERIES_COLORS = [
   '#ec4899', '#14b8a6', '#f97316', '#06b6d4', '#a855f7'
 ];
 
+type PivotMeasure = 'faturamento' | 'quantidade' | 'pedidos' | 'itens'
+
 interface GroupedRequest {
   schema?: string;
   table: string;
   dimension1: string;  // Label (eixo X)
   dimension2: string;  // Series (barras agrupadas)
-  field: string;
-  aggregation: 'SUM' | 'COUNT' | 'AVG' | 'MIN' | 'MAX';
+  // Novo: medida de negócio (opcional)
+  measure?: PivotMeasure;
+  // Compat: ainda aceitar field direto
+  field?: string;
+  aggregation?: 'SUM' | 'COUNT' | 'AVG' | 'MIN' | 'MAX';
   limit?: number;
   dateFilter?: {
     type: string;
@@ -34,6 +39,7 @@ export async function POST(request: NextRequest) {
       dimension2,
       field,
       aggregation,
+      measure,
       limit = 10,
       dateFilter
     } = body;
@@ -51,12 +57,41 @@ export async function POST(request: NextRequest) {
       dateCondition = ` AND "data_pedido" >= '${dateFilter.startDate}' AND "data_pedido" <= '${dateFilter.endDate}'`;
     }
 
+    // Mapear measure → field/agg padrão se informado
+    let usedField = field;
+    let usedAgg = aggregation;
+    if (measure && !field) {
+      switch (measure) {
+        case 'faturamento':
+          usedField = 'item_subtotal';
+          usedAgg = usedAgg || 'SUM';
+          break;
+        case 'quantidade':
+          usedField = 'quantidade';
+          usedAgg = usedAgg || 'SUM';
+          break;
+        case 'pedidos':
+          // COUNT DISTINCT por pedido
+          usedField = 'pedido_id';
+          usedAgg = usedAgg || 'COUNT';
+          break;
+        case 'itens':
+          usedField = 'item_id';
+          usedAgg = usedAgg || 'COUNT';
+          break;
+      }
+    }
+
+    if (!usedField) {
+      return NextResponse.json({ success: false, error: 'Campo de medida não definido (use measure ou field)' }, { status: 400 });
+    }
+
     // Build SQL query with 2 dimensions
     const sqlQuery = `
       SELECT
         "${dimension1}" as dim1,
         "${dimension2}" as dim2,
-        ${aggregation}("${field}") as value
+        ${usedAgg}("${usedField}") as value
       FROM ${qualifiedTable}
       WHERE 1=1${dateCondition}
       GROUP BY "${dimension1}", "${dimension2}"

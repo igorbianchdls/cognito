@@ -572,6 +572,91 @@ export class ThemeManager {
 
     return clonedWidget;
   }
+  /**
+   * Applies design tokens to a single Pivot Bar Chart widget
+   */
+  private static applyThemeToPivotBarChart(
+    widget: Widget,
+    tokens: DesignTokens,
+    _themeName: ThemeName,
+    borderOptions?: {
+      type?: BorderPresetKey;
+      color?: string;
+      width?: number;
+      radius?: number;
+      accentColor?: string;
+      shadow?: boolean;
+    }
+  ): Widget {
+    const clonedWidget = { ...widget };
+    if (!clonedWidget.pivotBarConfig) {
+      clonedWidget.pivotBarConfig = {} as any;
+    }
+    if (!clonedWidget.pivotBarConfig.styling) {
+      clonedWidget.pivotBarConfig.styling = { ...DEFAULT_CHART_STYLING } as any;
+    }
+
+    // Background
+    clonedWidget.pivotBarConfig.styling.backgroundColor = tokens.colors.surface as any;
+
+    // Title styling
+    clonedWidget.pivotBarConfig.styling.titleColor = tokens.colors.text.primary as any;
+    clonedWidget.pivotBarConfig.styling.titleFontSize = tokens.typography.fontSize.lg as any;
+    clonedWidget.pivotBarConfig.styling.titleFontWeight = tokens.typography.fontWeight.semibold as any;
+    clonedWidget.pivotBarConfig.styling.titleFontFamily = tokens.typography.fontFamily.primary as any;
+
+    // Subtitle
+    clonedWidget.pivotBarConfig.styling.subtitleFontFamily = tokens.typography.fontFamily.primary as any;
+    clonedWidget.pivotBarConfig.styling.subtitleFontSize = tokens.typography.fontSize.sm as any;
+    clonedWidget.pivotBarConfig.styling.subtitleFontWeight = tokens.typography.fontWeight.normal as any;
+    clonedWidget.pivotBarConfig.styling.subtitleColor = tokens.colors.text.secondary as any;
+
+    // Grid
+    clonedWidget.pivotBarConfig.styling.gridColor = tokens.colors.chart.grid as any;
+    clonedWidget.pivotBarConfig.styling.gridStrokeWidth = 0.5 as any;
+
+    // Effects
+    clonedWidget.pivotBarConfig.styling.containerOpacity = tokens.effects.opacity.medium as any;
+    if (tokens.effects.gradient) {
+      clonedWidget.pivotBarConfig.styling.backgroundGradient = {
+        enabled: true,
+        type: tokens.effects.gradient.type,
+        direction: tokens.effects.gradient.direction,
+        startColor: tokens.effects.gradient.startColor,
+        endColor: tokens.effects.gradient.endColor
+      } as any;
+    } else {
+      clonedWidget.pivotBarConfig.styling.backgroundGradient = undefined;
+    }
+    if (tokens.effects.backdrop) {
+      clonedWidget.pivotBarConfig.styling.containerBackdropFilter = `blur(${tokens.effects.backdrop.blur}px) saturate(${tokens.effects.backdrop.saturate}%) brightness(${tokens.effects.backdrop.brightness}%)` as any;
+    } else {
+      clonedWidget.pivotBarConfig.styling.containerBackdropFilter = undefined;
+    }
+    if (tokens.effects.shadow.color === '#00ffff') {
+      clonedWidget.pivotBarConfig.styling.containerBoxShadow = 'none' as any;
+    } else {
+      clonedWidget.pivotBarConfig.styling.containerBoxShadow = `${tokens.effects.shadow.offsetX}px ${tokens.effects.shadow.offsetY}px ${tokens.effects.shadow.blur}px rgba(0, 0, 0, ${tokens.effects.shadow.opacity})` as any;
+    }
+
+    // Border via BorderManager
+    const presetB: BorderPresetKey = (borderOptions?.type && BorderManager.isValid(borderOptions.type)) ? borderOptions.type : 'suave'
+    const bStyle = BorderManager.getStyle(presetB, {
+      color: borderOptions?.color,
+      width: borderOptions?.width,
+      radius: borderOptions?.radius,
+      accentColor: borderOptions?.accentColor,
+      shadow: borderOptions?.shadow,
+    })
+    clonedWidget.pivotBarConfig.styling.containerBorderColor = bStyle.color as any;
+    clonedWidget.pivotBarConfig.styling.containerBorderAccentColor = bStyle.accentColor as any;
+    clonedWidget.pivotBarConfig.styling.containerBorderWidth = bStyle.width as any;
+    clonedWidget.pivotBarConfig.styling.containerBorderRadius = bStyle.radius as any;
+    clonedWidget.pivotBarConfig.styling.containerBoxShadow = bStyle.shadow ? (clonedWidget.pivotBarConfig.styling.containerBoxShadow || '0 1px 2px rgba(0,0,0,.06)') : 'none' as any;
+    clonedWidget.pivotBarConfig.styling.containerBorderVariant = bStyle.type === 'acentuada' ? 'accent' : (bStyle.type === 'sem-borda' ? 'none' : 'smooth') as any;
+
+    return clonedWidget;
+  }
 
   /**
    * Applies design tokens to a single Stacked Lines Chart widget
@@ -1234,6 +1319,10 @@ export class ThemeManager {
       }
       case 'groupedbar': {
         themed = this.applyThemeToGroupedBarChart(widget, tokens, themeName, borderOptions);
+        return themed;
+      }
+      case 'pivotbar': {
+        themed = this.applyThemeToPivotBarChart(widget, tokens, themeName, borderOptions);
         return themed;
       }
       case 'insights': {
