@@ -9,6 +9,7 @@ export { TreeMapChart } from './TreeMapChart';
 export { HeatmapChart } from './HeatmapChart';
 export { RadarChart } from './RadarChart';
 export { StreamChart } from './StreamChart';
+export { GroupedBarChart } from './GroupedBarChart';
 
 // Container Component
 export { ChartContainer } from './ChartContainer';
