@@ -53,6 +53,14 @@ export interface RadialStackedChartProps {
   containerBorderColor?: string;
   containerBorderWidth?: number;
   containerBorderRadius?: number;
+  containerBorderVariant?: 'smooth' | 'accent' | 'none';
+  containerBorderAccentColor?: string;
+  containerPadding?: number;
+  containerOpacity?: number;
+  containerBackdropFilter?: string;
+  containerBoxShadow?: string;
+  containerTransform?: string;
+  containerTransition?: string;
 }
 
 export function RadialStackedChart({
@@ -84,6 +92,14 @@ export function RadialStackedChart({
   containerBorderColor = '#e5e7eb',
   containerBorderWidth = 1,
   containerBorderRadius = 12,
+  containerBorderVariant = 'smooth',
+  containerBorderAccentColor = '#bbb',
+  containerPadding = 16,
+  containerOpacity,
+  containerBackdropFilter,
+  containerBoxShadow,
+  containerTransform,
+  containerTransition,
 }: RadialStackedChartProps) {
   const chartData = Array.isArray(data) ? data : [data];
   const first = chartData[0] || {};
@@ -96,13 +112,28 @@ export function RadialStackedChart({
 
   return (
     <div
-      className={cn('relative flex flex-col min-w-0 p-4', className)}
+      className={cn('relative flex flex-col min-w-0', className)}
       style={{
         background: containerBackground,
-        border: `${containerBorderWidth}px solid ${containerBorderColor}`,
-        borderRadius: `${containerBorderRadius}px`
+        opacity: containerOpacity,
+        backdropFilter: containerBackdropFilter,
+        boxShadow: containerBoxShadow,
+        transform: containerTransform,
+        transition: containerTransition,
+        border: containerBorderVariant === 'none' ? 'none' : `${containerBorderWidth}px solid ${containerBorderColor}`,
+        borderRadius: containerBorderVariant === 'accent' ? 0 : `${containerBorderRadius}px`,
+        padding: `${containerPadding}px`
       }}
     >
+      {/* Accent corners for 'accent' variant (like KPI & Pivot) */}
+      {containerBorderVariant === 'accent' && (
+        <>
+          <div className="absolute w-3 h-3" style={{ top: '-0.5px', left: '-0.5px', borderTop: `0.5px solid ${containerBorderAccentColor}`, borderLeft: `0.5px solid ${containerBorderAccentColor}` }} />
+          <div className="absolute w-3 h-3" style={{ top: '-0.5px', right: '-0.5px', borderTop: `0.5px solid ${containerBorderAccentColor}`, borderRight: `0.5px solid ${containerBorderAccentColor}` }} />
+          <div className="absolute w-3 h-3" style={{ bottom: '-0.5px', left: '-0.5px', borderBottom: `0.5px solid ${containerBorderAccentColor}`, borderLeft: `0.5px solid ${containerBorderAccentColor}` }} />
+          <div className="absolute w-3 h-3" style={{ bottom: '-0.5px', right: '-0.5px', borderBottom: `0.5px solid ${containerBorderAccentColor}`, borderRight: `0.5px solid ${containerBorderAccentColor}` }} />
+        </>
+      )}
       {title && (
         <h3
           className="mb-2"

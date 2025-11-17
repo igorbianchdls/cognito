@@ -1006,6 +1006,9 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
               containerBorderColor={widget.radialStackedConfig?.styling?.containerBorderColor || '#e5e7eb'}
               containerBorderWidth={widget.radialStackedConfig?.styling?.containerBorderWidth ?? 1}
               containerBorderRadius={widget.radialStackedConfig?.styling?.containerBorderRadius ?? 12}
+              containerBorderVariant={widget.radialStackedConfig?.styling?.containerBorderVariant}
+              containerBorderAccentColor={widget.radialStackedConfig?.styling?.containerBorderAccentColor}
+              containerPadding={widget.radialStackedConfig?.styling?.containerPadding}
               startAngle={widget.radialStackedConfig?.styling?.startAngle}
               endAngle={widget.radialStackedConfig?.styling?.endAngle}
               innerRadius={widget.radialStackedConfig?.styling?.innerRadius}
