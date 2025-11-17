@@ -14,7 +14,20 @@ export interface RadialStackedChartProps {
 
   // Title/Description (optional external wrappers can render these too)
   title?: string;
-  description?: string;
+  subtitle?: string;
+  description?: string; // backward-compat alias for subtitle
+
+  // Typography - Title
+  titleFontFamily?: string;
+  titleFontSize?: number;
+  titleFontWeight?: number | string;
+  titleColor?: string;
+
+  // Typography - Subtitle
+  subtitleFontFamily?: string;
+  subtitleFontSize?: number;
+  subtitleFontWeight?: number | string;
+  subtitleColor?: string;
 
   // Layout / geometry
   startAngle?: number;
@@ -46,7 +59,16 @@ export function RadialStackedChart({
   data,
   keys,
   title,
+  subtitle,
   description,
+  titleFontFamily,
+  titleFontSize = 18,
+  titleFontWeight = 700,
+  titleColor = '#222',
+  subtitleFontFamily,
+  subtitleFontSize = 14,
+  subtitleFontWeight = 400,
+  subtitleColor = '#6b7280',
   startAngle = 180,
   endAngle = 0,
   innerRadius = 80,
@@ -82,12 +104,30 @@ export function RadialStackedChart({
       }}
     >
       {title && (
-        <h3 className="mb-2" style={{ fontWeight: 700 }}>
+        <h3
+          className="mb-2"
+          style={{
+            fontFamily: titleFontFamily,
+            fontSize: `${titleFontSize}px`,
+            fontWeight: titleFontWeight,
+            color: titleColor
+          }}
+        >
           {title}
         </h3>
       )}
-      {description && (
-        <div className="mb-3 text-sm text-gray-500">{description}</div>
+      {(subtitle || description) && (
+        <div
+          className="mb-3"
+          style={{
+            fontFamily: subtitleFontFamily,
+            fontSize: `${subtitleFontSize}px`,
+            fontWeight: subtitleFontWeight,
+            color: subtitleColor
+          }}
+        >
+          {subtitle || description}
+        </div>
       )}
       <ChartContainer
         config={config}

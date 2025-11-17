@@ -902,6 +902,15 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
               keys={keys}
               seriesMetadata={seriesMetadata}
               title={widget.title}
+              // Typography
+              titleFontFamily={widget.pivotBarConfig?.styling?.titleFontFamily}
+              titleFontSize={widget.pivotBarConfig?.styling?.titleFontSize}
+              titleFontWeight={widget.pivotBarConfig?.styling?.titleFontWeight}
+              titleColor={widget.pivotBarConfig?.styling?.titleColor}
+              subtitleFontFamily={widget.pivotBarConfig?.styling?.subtitleFontFamily}
+              subtitleFontSize={widget.pivotBarConfig?.styling?.subtitleFontSize}
+              subtitleFontWeight={widget.pivotBarConfig?.styling?.subtitleFontWeight}
+              subtitleColor={widget.pivotBarConfig?.styling?.subtitleColor}
               showLegend={pivotDrilled ? false : undefined}
               layout={widget.pivotBarConfig?.styling?.layout || 'vertical'}
               groupMode={widget.pivotBarConfig?.styling?.groupMode || 'grouped'}
@@ -984,6 +993,15 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
               config={config}
               className="max-w-[320px]"
               title={widget.title || 'Radial Stacked'}
+              // Typography
+              titleFontFamily={widget.radialStackedConfig?.styling?.titleFontFamily}
+              titleFontSize={widget.radialStackedConfig?.styling?.titleFontSize}
+              titleFontWeight={widget.radialStackedConfig?.styling?.titleFontWeight}
+              titleColor={widget.radialStackedConfig?.styling?.titleColor}
+              subtitleFontFamily={widget.radialStackedConfig?.styling?.subtitleFontFamily}
+              subtitleFontSize={widget.radialStackedConfig?.styling?.subtitleFontSize}
+              subtitleFontWeight={widget.radialStackedConfig?.styling?.subtitleFontWeight}
+              subtitleColor={widget.radialStackedConfig?.styling?.subtitleColor}
               containerBackground={widget.radialStackedConfig?.styling?.containerBackground || '#ffffff'}
               containerBorderColor={widget.radialStackedConfig?.styling?.containerBorderColor || '#e5e7eb'}
               containerBorderWidth={widget.radialStackedConfig?.styling?.containerBorderWidth ?? 1}

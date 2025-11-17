@@ -387,10 +387,16 @@ export function KPICard({
     const innerIconSize = tileIconSize ?? Math.max(16, circleSize - 8)
 
     return (
-      <div className={kpiContainerClassName || `bg-white ${borderVariant === 'accent' ? '' : (borderVariant === 'smooth' ? 'border border-gray-200' : '')} ${borderVariant === 'accent' ? 'shadow-none' : (borderVariant === 'none' ? 'shadow-none' : 'shadow-sm')} relative ${s.pad}`}
+      <div
+        className={kpiContainerClassName || `${borderVariant === 'accent' ? '' : (borderVariant === 'smooth' ? 'border border-gray-200' : '')} ${borderVariant === 'accent' ? 'shadow-none' : (borderVariant === 'none' ? 'shadow-none' : 'shadow-sm')} relative ${s.pad}`}
         style={(() => {
           if (tilePadding !== undefined) return { padding: `${tilePadding}px` } as React.CSSProperties
           const style: React.CSSProperties = {}
+          // Themed background and effects (from ThemeManager)
+          const bg = getAdvancedBackground()
+          if (bg) style.background = bg
+          const bf = getBackdropFilter()
+          if (bf) style.backdropFilter = bf
           if (tilePaddingX !== undefined) { style.paddingLeft = tilePaddingX; style.paddingRight = tilePaddingX }
           if (tilePaddingY !== undefined) { style.paddingTop = tilePaddingY; style.paddingBottom = tilePaddingY }
           // Apply custom border for smooth variant only
@@ -427,7 +433,12 @@ export function KPICard({
       >
         {/* Header */}
         <div className="flex items-start justify-between">
-          <div className={`font-medium text-slate-800 leading-none ${s.label}`}>{name || 'KPI'}</div>
+          <div
+            className={`font-medium ${!kpiNameColor ? 'text-slate-800' : ''} leading-none ${s.label}`}
+            style={{ color: kpiNameColor || undefined }}
+          >
+            {name || 'KPI'}
+          </div>
           {React.isValidElement(icon) ? (
             <div
               className="flex items-center justify-center rounded-full"
@@ -441,7 +452,13 @@ export function KPICard({
           ) : null}
         </div>
         {/* Value */}
-        <div className={`font-semibold text-slate-900 leading-none ${s.value}`} style={tileValuePaddingY !== undefined ? { paddingTop: tileValuePaddingY, paddingBottom: tileValuePaddingY } : { paddingTop: 4, paddingBottom: 4 }}>
+        <div
+          className={`font-semibold ${!kpiValueColor ? 'text-slate-900' : ''} leading-none ${s.value}`}
+          style={{
+            ...(tileValuePaddingY !== undefined ? { paddingTop: tileValuePaddingY, paddingBottom: tileValuePaddingY } : { paddingTop: 4, paddingBottom: 4 }),
+            color: kpiValueColor || undefined
+          }}
+        >
           {formatValue(currentValue, unit)}
         </div>
         {/* Footer */}

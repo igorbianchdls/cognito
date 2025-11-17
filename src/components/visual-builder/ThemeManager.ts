@@ -783,6 +783,18 @@ export class ThemeManager {
 
     // Background
     clonedWidget.radialStackedConfig.styling.containerBackground = tokens.colors.surface;
+    
+    // Title styling
+    clonedWidget.radialStackedConfig.styling.titleColor = tokens.colors.text.primary;
+    clonedWidget.radialStackedConfig.styling.titleFontSize = tokens.typography.fontSize.lg;
+    clonedWidget.radialStackedConfig.styling.titleFontWeight = tokens.typography.fontWeight.semibold;
+    clonedWidget.radialStackedConfig.styling.titleFontFamily = tokens.typography.fontFamily.primary;
+    
+    // Subtitle styling
+    clonedWidget.radialStackedConfig.styling.subtitleFontFamily = tokens.typography.fontFamily.primary;
+    clonedWidget.radialStackedConfig.styling.subtitleFontSize = tokens.typography.fontSize.sm;
+    clonedWidget.radialStackedConfig.styling.subtitleFontWeight = tokens.typography.fontWeight.normal;
+    clonedWidget.radialStackedConfig.styling.subtitleColor = tokens.colors.text.secondary;
 
     // Effects (kept for consistency even if component uses minimal props)
     clonedWidget.radialStackedConfig.styling.containerOpacity = tokens.effects.opacity.medium;
