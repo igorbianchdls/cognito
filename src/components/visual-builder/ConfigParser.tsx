@@ -145,7 +145,8 @@ export interface WidgetSpan {
 export interface Widget {
   id: string;
   type: 'bar' | 'line' | 'pie' | 'area' | 'kpi' | 'insights' | 'alerts' | 'recommendations' | 'insightsHero' | 'stackedbar' | 'groupedbar' | 'stackedlines' | 'radialstacked' | 'pivotbar';
-  position: {
+  // Legacy absolute grid position (optional; not required by responsive layout)
+  position?: {
     x: number;
     y: number;
     w: number;
@@ -301,16 +302,17 @@ export class ConfigParser {
 
       // Step 4: Basic filter for runtime safety only
       const validWidgets = widgets.filter(widget => {
-        return widget &&
-               typeof widget.id === 'string' &&
-               typeof widget.type === 'string' &&
-               this.VALID_TYPES.includes(widget.type) &&
-               widget.position &&
-               typeof widget.position.x === 'number' &&
-               typeof widget.position.y === 'number' &&
-               typeof widget.position.w === 'number' &&
-               typeof widget.position.h === 'number' &&
-               typeof widget.title === 'string';
+        // Basic safety checks only; 'position' is optional for responsive layout
+        const hasBasic = widget && typeof widget.id === 'string' && typeof widget.type === 'string' && this.VALID_TYPES.includes(widget.type);
+        const hasTitle = typeof widget.title === 'string' || widget.title === undefined;
+        // If a legacy 'position' is provided, it must be numeric; otherwise ignore
+        const validPosition = !widget.position || (
+          typeof widget.position.x === 'number' &&
+          typeof widget.position.y === 'number' &&
+          typeof widget.position.w === 'number' &&
+          typeof widget.position.h === 'number'
+        );
+        return Boolean(hasBasic && hasTitle && validPosition);
       });
 
       // Step 5: Apply theme to widgets and grid if theme is specified and valid

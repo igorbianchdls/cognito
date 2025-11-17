@@ -79,10 +79,10 @@ export default function WidgetEditorNew() {
         description: `Bar chart from ${selectedBarChart.bigqueryData.selectedTable}`,
         defaultWidth: 4,
         defaultHeight: 3,
-        x: selectedBarChart.position.x,
-        y: selectedBarChart.position.y,
-        w: selectedBarChart.position.w,
-        h: selectedBarChart.position.h,
+        x: selectedBarChart.position?.x ?? 0,
+        y: selectedBarChart.position?.y ?? 0,
+        w: selectedBarChart.position?.w ?? 12,
+        h: selectedBarChart.position?.h ?? 2,
         barChartConfig: selectedBarChart,
         config: {
           barChartConfig: selectedBarChart
@@ -100,10 +100,10 @@ export default function WidgetEditorNew() {
         description: `Horizontal bar chart from ${selectedHorizontalBarChart.bigqueryData.selectedTable}`,
         defaultWidth: 4,
         defaultHeight: 3,
-        x: selectedHorizontalBarChart.position.x,
-        y: selectedHorizontalBarChart.position.y,
-        w: selectedHorizontalBarChart.position.w,
-        h: selectedHorizontalBarChart.position.h,
+        x: selectedHorizontalBarChart.position?.x ?? 0,
+        y: selectedHorizontalBarChart.position?.y ?? 0,
+        w: selectedHorizontalBarChart.position?.w ?? 12,
+        h: selectedHorizontalBarChart.position?.h ?? 2,
         horizontalBarChartConfig: selectedHorizontalBarChart,
         config: {
           horizontalBarChartConfig: selectedHorizontalBarChart
@@ -121,10 +121,10 @@ export default function WidgetEditorNew() {
         description: `Line chart from ${selectedLineChart.bigqueryData.selectedTable}`,
         defaultWidth: 4,
         defaultHeight: 3,
-        x: selectedLineChart.position.x,
-        y: selectedLineChart.position.y,
-        w: selectedLineChart.position.w,
-        h: selectedLineChart.position.h,
+        x: selectedLineChart.position?.x ?? 0,
+        y: selectedLineChart.position?.y ?? 0,
+        w: selectedLineChart.position?.w ?? 12,
+        h: selectedLineChart.position?.h ?? 2,
         lineChartConfig: selectedLineChart,
         config: {
           lineChartConfig: selectedLineChart
@@ -142,10 +142,10 @@ export default function WidgetEditorNew() {
         description: `Pie chart from ${selectedPieChart.bigqueryData.selectedTable}`,
         defaultWidth: 4,
         defaultHeight: 3,
-        x: selectedPieChart.position.x,
-        y: selectedPieChart.position.y,
-        w: selectedPieChart.position.w,
-        h: selectedPieChart.position.h,
+        x: selectedPieChart.position?.x ?? 0,
+        y: selectedPieChart.position?.y ?? 0,
+        w: selectedPieChart.position?.w ?? 12,
+        h: selectedPieChart.position?.h ?? 2,
         pieChartConfig: selectedPieChart,
         config: {
           pieChartConfig: selectedPieChart
@@ -163,10 +163,10 @@ export default function WidgetEditorNew() {
         description: `Area chart from ${selectedAreaChart.bigqueryData.selectedTable}`,
         defaultWidth: 4,
         defaultHeight: 3,
-        x: selectedAreaChart.position.x,
-        y: selectedAreaChart.position.y,
-        w: selectedAreaChart.position.w,
-        h: selectedAreaChart.position.h,
+        x: selectedAreaChart.position?.x ?? 0,
+        y: selectedAreaChart.position?.y ?? 0,
+        w: selectedAreaChart.position?.w ?? 12,
+        h: selectedAreaChart.position?.h ?? 2,
         areaChartConfig: selectedAreaChart,
         config: {
           areaChartConfig: selectedAreaChart

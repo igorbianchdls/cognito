@@ -190,15 +190,16 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig, globalFilter
       mobileSpan = widget.span.mobile || 1;
     } else {
       // Fallback: calculate span based on widget width (original logic)
-      desktopSpan = widget.position.w >= 6 ? Math.min(2, layoutConfig.desktop) : 1;
-      tabletSpan = widget.position.w >= 4 ? Math.min(2, layoutConfig.tablet) : 1;
+      const w = widget.position?.w ?? 1;
+      desktopSpan = w >= 6 ? Math.min(2, layoutConfig.desktop) : 1;
+      tabletSpan = w >= 4 ? Math.min(2, layoutConfig.tablet) : 1;
       mobileSpan = 1; // Always 1 on mobile
     }
 
     // Use explicit order or calculate from position
     const order = widget.order !== undefined
       ? widget.order
-      : widget.position.y * 12 + widget.position.x;
+      : (widget.position ? (widget.position.y * 12 + widget.position.x) : 0);
 
     return {
       desktopSpan,

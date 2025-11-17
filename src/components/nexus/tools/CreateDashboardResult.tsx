@@ -142,9 +142,11 @@ export default function CreateDashboardResult({
                   {widget.dataSource.y && <span> | Y: {widget.dataSource.y}</span>}
                   {widget.dataSource.aggregation && <span> | Agg: {widget.dataSource.aggregation}</span>}
                 </div>
-                <div className="text-xs text-gray-500 mt-1">
-                  Position: ({widget.position.x}, {widget.position.y}) | Size: {widget.position.w}×{widget.position.h}
-                </div>
+                {widget.position && (
+                  <div className="text-xs text-gray-500 mt-1">
+                    Position: ({widget.position.x}, {widget.position.y}) | Size: {widget.position.w}×{widget.position.h}
+                  </div>
+                )}
               </div>
             ))}
           </div>

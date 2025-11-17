@@ -65,7 +65,9 @@ export default function CanvasWidgets({ widgets, totalWidgets, summary, success 
                 <p className="text-sm text-gray-600 mb-2">{widget.description}</p>
                 <div className="flex gap-4 text-xs text-gray-500">
                   <span>🆔 ID: {widget.widgetId}</span>
-                  <span>📍 Position: ({widget.position.x}, {widget.position.y})</span>
+                  {widget.position && (
+                    <span>📍 Position: ({widget.position.x}, {widget.position.y})</span>
+                  )}
                   <span>📏 Size: {widget.size.width}×{widget.size.height}</span>
                 </div>
               </div>

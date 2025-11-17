@@ -90,7 +90,6 @@ const initialCode = `{
     {
       "id": "faturamento_total",
       "type": "kpi",
-      "position": { "x": 0, "y": 0, "w": 3, "h": 2 },
       "row": "1",
       "span": { "desktop": 1, "tablet": 1, "mobile": 1 },
       "order": 1,
@@ -111,7 +110,6 @@ const initialCode = `{
     {
       "id": "total_pedidos",
       "type": "kpi",
-      "position": { "x": 3, "y": 0, "w": 3, "h": 2 },
       "row": "1",
       "span": { "desktop": 1, "tablet": 1, "mobile": 1 },
       "order": 2,
@@ -131,7 +129,6 @@ const initialCode = `{
     {
       "id": "ticket_medio",
       "type": "kpi",
-      "position": { "x": 6, "y": 0, "w": 3, "h": 2 },
       "row": "1",
       "span": { "desktop": 1, "tablet": 1, "mobile": 1 },
       "order": 3,
@@ -152,7 +149,6 @@ const initialCode = `{
     {
       "id": "itens_vendidos",
       "type": "kpi",
-      "position": { "x": 9, "y": 0, "w": 3, "h": 2 },
       "row": "1",
       "span": { "desktop": 1, "tablet": 1, "mobile": 1 },
       "order": 4,
@@ -172,7 +168,6 @@ const initialCode = `{
     {
       "id": "faturamento_mensal",
       "type": "line",
-      "position": { "x": 0, "y": 2, "w": 6, "h": 4 },
       "row": "1",
       "span": { "desktop": 2, "tablet": 2, "mobile": 1 },
       "order": 5,
@@ -197,7 +192,6 @@ const initialCode = `{
     {
       "id": "top_produtos",
       "type": "bar",
-      "position": { "x": 6, "y": 2, "w": 6, "h": 4 },
       "row": "1",
       "span": { "desktop": 2, "tablet": 2, "mobile": 1 },
       "order": 6,
@@ -223,7 +217,6 @@ const initialCode = `{
     {
       "id": "vendas_territorio",
       "type": "bar",
-      "position": { "x": 0, "y": 6, "w": 6, "h": 4 },
       "row": "2",
       "span": { "desktop": 1, "tablet": 2, "mobile": 1 },
       "order": 7,
@@ -249,7 +242,6 @@ const initialCode = `{
     {
       "id": "vendas_canal",
       "type": "pie",
-      "position": { "x": 6, "y": 6, "w": 6, "h": 4 },
       "row": "2",
       "span": { "desktop": 1, "tablet": 2, "mobile": 1 },
       "order": 8,
@@ -274,7 +266,6 @@ const initialCode = `{
     {
       "id": "vendas_vendedor",
       "type": "bar",
-      "position": { "x": 0, "y": 10, "w": 6, "h": 4 },
       "row": "3",
       "span": { "desktop": 1, "tablet": 2, "mobile": 1 },
       "order": 9,
@@ -300,7 +291,6 @@ const initialCode = `{
     {
       "id": "vendas_filial",
       "type": "bar",
-      "position": { "x": 6, "y": 10, "w": 6, "h": 4 },
       "row": "3",
       "span": { "desktop": 1, "tablet": 2, "mobile": 1 },
       "order": 10,
@@ -326,7 +316,6 @@ const initialCode = `{
     {
       "id": "vendas_centro_lucro",
       "type": "bar",
-      "position": { "x": 0, "y": 14, "w": 6, "h": 4 },
       "row": "4",
       "span": { "desktop": 1, "tablet": 2, "mobile": 1 },
       "order": 11,
@@ -352,7 +341,6 @@ const initialCode = `{
     {
       "id": "vendas_campanha",
       "type": "bar",
-      "position": { "x": 6, "y": 14, "w": 6, "h": 4 },
       "row": "4",
       "span": { "desktop": 1, "tablet": 2, "mobile": 1 },
       "order": 12,
@@ -378,7 +366,6 @@ const initialCode = `{
     {
       "id": "vendedores_por_territorio",
       "type": "stackedbar",
-      "position": { "x": 0, "y": 18, "w": 12, "h": 4 },
       "row": "5",
       "span": { "desktop": 1, "tablet": 1, "mobile": 1 },
       "order": 13,
@@ -405,7 +392,6 @@ const initialCode = `{
     {
       "id": "vendedores_por_territorio_horizontal",
       "type": "stackedbar",
-      "position": { "x": 0, "y": 22, "w": 12, "h": 4 },
       "row": "5",
       "span": { "desktop": 1, "tablet": 1, "mobile": 1 },
       "order": 14,
@@ -432,7 +418,6 @@ const initialCode = `{
     {
       "id": "comparativo_territorio_vendedor_grouped",
       "type": "groupedbar",
-      "position": { "x": 0, "y": 26, "w": 12, "h": 4 },
       "row": "6",
       "span": { "desktop": 1, "tablet": 1, "mobile": 1 },
       "order": 15,
@@ -459,7 +444,6 @@ const initialCode = `{
     {
       "id": "evolucao_empilhada_vendedores",
       "type": "stackedlines",
-      "position": { "x": 0, "y": 30, "w": 12, "h": 4 },
       "row": "7",
       "span": { "desktop": 1, "tablet": 1, "mobile": 1 },
       "order": 17,
@@ -486,7 +470,6 @@ const initialCode = `{
     {
       "id": "evolucao_empilhada_vendedores_sem_area",
       "type": "stackedlines",
-      "position": { "x": 6, "y": 30, "w": 12, "h": 4 },
       "row": "7",
       "span": { "desktop": 1, "tablet": 1, "mobile": 1 },
       "order": 18,
@@ -513,7 +496,6 @@ const initialCode = `{
     {
       "id": "comparativo_territorio_vendedor_grouped_horizontal",
       "type": "groupedbar",
-      "position": { "x": 6, "y": 26, "w": 12, "h": 4 },
       "row": "6",
       "span": { "desktop": 1, "tablet": 1, "mobile": 1 },
       "order": 16,
@@ -540,7 +522,6 @@ const initialCode = `{
     {
       "id": "radial_stacked_canais",
       "type": "radialstacked",
-      "position": { "x": 0, "y": 34, "w": 12, "h": 4 },
       "row": "8",
       "span": { "desktop": 1, "tablet": 1, "mobile": 1 },
       "order": 19,
@@ -568,7 +549,6 @@ const initialCode = `{
     {
       "id": "pivot_vendedor_canal",
       "type": "pivotbar",
-      "position": { "x": 6, "y": 34, "w": 12, "h": 4 },
       "row": "8",
       "span": { "desktop": 1, "tablet": 1, "mobile": 1 },
       "order": 20,

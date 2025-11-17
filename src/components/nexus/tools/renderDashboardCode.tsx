@@ -129,8 +129,12 @@ export default function RenderDashboardCode({ success }: RenderDashboardCodeProp
                 )}
                 <div className="flex gap-4 text-xs text-gray-500">
                   <span>🆔 ID: {widget.id}</span>
-                  <span>📍 Position: ({widget.position.x}, {widget.position.y})</span>
-                  <span>📏 Size: {widget.position.w}×{widget.position.h}</span>
+                  {widget.position && (
+                    <>
+                      <span>📍 Position: ({widget.position.x}, {widget.position.y})</span>
+                      <span>📏 Size: {widget.position.w}×{widget.position.h}</span>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
