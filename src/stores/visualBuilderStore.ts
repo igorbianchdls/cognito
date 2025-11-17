@@ -558,6 +558,35 @@ const initialCode = `{
           "cornerRadius": 5
         }
       }
+    },
+    {
+      "id": "pivot_vendedor_canal",
+      "type": "pivotbar",
+      "position": { "x": 6, "y": 34, "w": 12, "h": 4 },
+      "row": "8",
+      "span": { "desktop": 1, "tablet": 1, "mobile": 1 },
+      "order": 20,
+      "heightPx": 360,
+      "title": "Vendedor x Canal • Faturamento",
+      "dataSource": {
+        "schema": "vendas",
+        "table": "vw_pedidos_completo",
+        "dimension1": "vendedor_nome",
+        "dimension2": "canal_venda_nome",
+        "measure": "faturamento",
+        "aggregation": "SUM",
+        "limit": 8
+      },
+      "pivotBarConfig": {
+        "styling": {
+          "layout": "vertical",
+          "groupMode": "grouped",
+          "enableGridX": false,
+          "enableGridY": true,
+          "containerBorderVariant": "smooth",
+          "containerBorderWidth": 1
+        }
+      }
     }
   ]
 }`

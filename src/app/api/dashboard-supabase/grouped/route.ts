@@ -13,7 +13,7 @@ interface GroupedRequest {
   schema?: string;
   table: string;
   dimension1: string;  // Label (eixo X)
-  dimension2: string;  // Series (barras agrupadas)
+  dimension2?: string;  // Series (barras agrupadas)
   // Novo: medida de negócio (opcional)
   measure?: PivotMeasure;
   // Compat: ainda aceitar field direto
@@ -86,65 +86,69 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Campo de medida não definido (use measure ou field)' }, { status: 400 });
     }
 
-    // Build SQL query with 2 dimensions
-    const sqlQuery = `
-      SELECT
-        "${dimension1}" as dim1,
-        "${dimension2}" as dim2,
-        ${usedAgg}("${usedField}") as value
-      FROM ${qualifiedTable}
-      WHERE 1=1${dateCondition}
-      GROUP BY "${dimension1}", "${dimension2}"
-      ORDER BY dim1, value DESC
-    `;
+    const isCountDistinct = (measure === 'pedidos') && (usedAgg === 'COUNT');
+    const valueExpr = isCountDistinct
+      ? `COUNT(DISTINCT "${usedField}")`
+      : `${usedAgg}("${usedField}")`;
+
+    const sqlQuery = (dimension2 && dimension2.trim().length > 0)
+      ? `SELECT "${dimension1}" as dim1, "${dimension2}" as dim2, ${valueExpr} as value
+         FROM ${qualifiedTable}
+         WHERE 1=1${dateCondition}
+         GROUP BY "${dimension1}", "${dimension2}"
+         ORDER BY dim1, value DESC`
+      : `SELECT "${dimension1}" as dim1, ${valueExpr} as value
+         FROM ${qualifiedTable}
+         WHERE 1=1${dateCondition}
+         GROUP BY "${dimension1}"
+         ORDER BY value DESC
+         LIMIT ${limit}`;
 
     console.log('🔍 Generated SQL:', sqlQuery);
 
     // Execute query
-    const rawData = await runQuery<{ dim1: string; dim2: string; value: number }>(sqlQuery);
+    const rawData = await runQuery<any>(sqlQuery);
 
     console.log('📊 Raw query result:', { rowCount: rawData.length, sample: rawData.slice(0, 3) });
 
-    // Get unique dimension2 values (top N by total value)
-    const dimension2Totals = rawData.reduce((acc, row) => {
-      acc[row.dim2] = (acc[row.dim2] || 0) + Number(row.value || 0);
-      return acc;
-    }, {} as Record<string, number>);
+    let items: Array<Record<string, string | number>> = [];
+    let series: Array<{ key: string; label: string; color: string }> = [];
 
-    const topDimension2 = Object.entries(dimension2Totals)
-      .sort(([, a], [, b]) => b - a)
-      .slice(0, limit)
-      .map(([key]) => key);
+    if (dimension2 && dimension2.trim().length > 0) {
+      const dimension2Totals = rawData.reduce((acc: Record<string, number>, row: any) => {
+        acc[row.dim2] = (acc[row.dim2] || 0) + Number(row.value || 0);
+        return acc;
+      }, {} as Record<string, number>);
 
-    console.log(`📌 Top ${limit} dimension2 values:`, topDimension2);
+      const topDimension2 = Object.entries(dimension2Totals)
+        .sort(([, a], [, b]) => b - a)
+        .slice(0, limit)
+        .map(([key]) => key);
 
-    // Pivot data: create items with dynamic keys
-    const pivotMap = new Map<string, Record<string, string | number>>();
+      console.log(`📌 Top ${limit} dimension2 values:`, topDimension2);
 
-    rawData.forEach(row => {
-      if (!topDimension2.includes(row.dim2)) return; // Only include top N
-
-      if (!pivotMap.has(row.dim1)) {
-        pivotMap.set(row.dim1, { label: row.dim1 });
-      }
-
-      const item = pivotMap.get(row.dim1)!;
-      // Create safe key (remove spaces, special chars)
-      const safeKey = row.dim2.toLowerCase().replace(/[^a-z0-9]/g, '_');
-      item[safeKey] = Number(row.value || 0);
-    });
-
-    const items = Array.from(pivotMap.values());
-
-    // Generate series dynamically
-    const series = topDimension2.map((dim2Value, index) => {
-      const safeKey = dim2Value.toLowerCase().replace(/[^a-z0-9]/g, '_');
-      return {
-        key: safeKey,
+      const pivotMap = new Map<string, Record<string, string | number>>();
+      rawData.forEach((row: any) => {
+        if (!topDimension2.includes(row.dim2)) return;
+        if (!pivotMap.has(row.dim1)) pivotMap.set(row.dim1, { label: row.dim1 });
+        const item = pivotMap.get(row.dim1)!;
+        const safeKey = String(row.dim2).toLowerCase().replace(/[^a-z0-9]/g, '_');
+        item[safeKey] = Number(row.value || 0);
+      });
+      items = Array.from(pivotMap.values());
+      series = topDimension2.map((dim2Value, index) => ({
+        key: String(dim2Value).toLowerCase().replace(/[^a-z0-9]/g, '_'),
         label: dim2Value,
         color: SERIES_COLORS[index % SERIES_COLORS.length]
+      }));
+    } else {
+      items = rawData.map((row: any) => ({ label: row.dim1, value: Number(row.value || 0) }));
+      const labelMap: Record<PivotMeasure, string> = {
+        faturamento: 'Faturamento', quantidade: 'Quantidade', pedidos: 'Pedidos', itens: 'Itens'
       };
-    });
+      const label = measure ? labelMap[measure] : 'Valor';
+      series = [{ key: 'value', label, color: SERIES_COLORS[0] }];
+    }
 
     console.log('✅ Pivot result:', {
       itemsCount: items.length,
@@ -153,20 +157,7 @@ export async function POST(request: NextRequest) {
       series
     });
 
-    return NextResponse.json({
-      success: true,
-      items,
-      series,
-      sql_query: sqlQuery,
-      metadata: {
-        generatedAt: new Date().toISOString(),
-        dataSource: 'supabase',
-        schema,
-        table,
-        dimension1,
-        dimension2
-      }
-    });
+    return NextResponse.json({ success: true, items, series, sql_query: sqlQuery, metadata: { generatedAt: new Date().toISOString(), dataSource: 'supabase', schema, table, dimension1, dimension2 } });
 
   } catch (error) {
     console.error('❌ Error in grouped dashboard API:', error);
