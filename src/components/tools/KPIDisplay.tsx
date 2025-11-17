@@ -1,5 +1,7 @@
 'use client';
 
+import GaugeChart from '@/components/charts/GaugeChart'
+
 interface KPIDisplayProps {
   kpiId?: string;
   name?: string;
@@ -221,25 +223,21 @@ export default function KPIDisplay({
         {/* Visualization Preview */}
         {visualization?.chartType === 'gauge' && (
           <div className="flex items-center justify-center">
-            <div className="relative w-32 h-16">
-              <svg className="w-32 h-16" viewBox="0 0 128 64">
-                <path
-                  d="M 16 48 A 32 32 0 0 1 112 48"
-                  stroke="#e5e7eb"
-                  strokeWidth="8"
-                  fill="none"
-                />
-                <path
-                  d="M 16 48 A 32 32 0 0 1 112 48"
-                  stroke={visualization.color === 'green' ? '#22c55e' : visualization.color === 'orange' ? '#f59e0b' : '#3b82f6'}
-                  strokeWidth="8"
-                  fill="none"
-                  strokeDasharray={`${(getProgressPercentage() / 100) * 150.8} 150.8`}
-                  className="transition-all duration-500"
-                />
-                <circle cx="64" cy="48" r="2" fill="#6b7280" />
-              </svg>
-            </div>
+            <GaugeChart
+              value={currentValue}
+              target={target}
+              percent={getProgressPercentage()}
+              progressColor={visualization.color === 'green' ? '#22c55e' : visualization.color === 'orange' ? '#f59e0b' : '#3b82f6'}
+              trackColor="#e5e7eb"
+              radius={48}
+              thickness={8}
+              containerBorderVariant={'smooth'}
+              containerBorderWidth={1}
+              containerBorderColor={'#e5e7eb'}
+              containerBorderRadius={12}
+              containerPadding={8}
+              className="w-[160px]"
+            />
           </div>
         )}
       </div>

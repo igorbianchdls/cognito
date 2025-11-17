@@ -192,6 +192,15 @@ export function PivotBarChart(props: PivotBarChartProps) {
         })
       }}
     >
+      {/* Corner accents for 'accent' variant (like KPI) */}
+      {containerBorderVariant === 'accent' && (
+        <>
+          <div className="absolute w-3 h-3" style={{ top: '-0.5px', left: '-0.5px', borderTop: `0.5px solid ${containerBorderAccentColor || '#bbb'}`, borderLeft: `0.5px solid ${containerBorderAccentColor || '#bbb'}` }} />
+          <div className="absolute w-3 h-3" style={{ top: '-0.5px', right: '-0.5px', borderTop: `0.5px solid ${containerBorderAccentColor || '#bbb'}`, borderRight: `0.5px solid ${containerBorderAccentColor || '#bbb'}` }} />
+          <div className="absolute w-3 h-3" style={{ bottom: '-0.5px', left: '-0.5px', borderBottom: `0.5px solid ${containerBorderAccentColor || '#bbb'}`, borderLeft: `0.5px solid ${containerBorderAccentColor || '#bbb'}` }} />
+          <div className="absolute w-3 h-3" style={{ bottom: '-0.5px', right: '-0.5px', borderBottom: `0.5px solid ${containerBorderAccentColor || '#bbb'}`, borderRight: `0.5px solid ${containerBorderAccentColor || '#bbb'}` }} />
+        </>
+      )}
       {title && (
         <h3 style={{
           margin: `0 0 8px 0`,
