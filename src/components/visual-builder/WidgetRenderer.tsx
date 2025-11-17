@@ -45,7 +45,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
   const [sqlQuery, setSqlQuery] = useState<string | null>(null);
   const [showSQLModal, setShowSQLModal] = useState(false);
 
-  // State for barMultiple widgets
+  // State for stackedbar widgets
   const [multipleData, setMultipleData] = useState<{ items: Array<{ label: string; [key: string]: string | number }>; series: Array<{ key: string; label: string; color: string }> } | null>(null);
   const [multipleLoading, setMultipleLoading] = useState(false);
   const [multipleError, setMultipleError] = useState<string | null>(null);
@@ -140,9 +140,9 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
     fetchData();
   }, [widget.id, widget.dataSource, widget.type, globalFilters]); // Re-executar quando widget ou filtros mudarem
 
-  // Fetch data for barMultiple widgets
+  // Fetch data for stackedbar widgets
   useEffect(() => {
-    if (widget.type !== 'barMultiple') {
+    if (widget.type !== 'stackedbar') {
       return;
     }
 
@@ -179,7 +179,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
           throw new Error(result.error || 'Failed to fetch grouped data');
         }
       } catch (err) {
-        console.error('❌ Error fetching barMultiple data:', err);
+        console.error('❌ Error fetching stackedbar data:', err);
         setMultipleError(err instanceof Error ? err.message : 'Unknown error');
         setMultipleData(null);
       } finally {
@@ -568,7 +568,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
       );
       break;
 
-    case 'barMultiple':
+    case 'stackedbar':
       if (multipleLoading) {
         widgetContent = (
           <div className="h-full w-full p-2 flex items-center justify-center">

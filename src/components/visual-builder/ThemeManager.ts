@@ -1015,7 +1015,7 @@ export class ThemeManager {
         themed = this.applyThemeToAreaChart(widget, tokens, themeName, borderOptions);
         return themed;
       }
-      case 'barMultiple': {
+      case 'stackedbar': {
         themed = this.applyThemeToStackedBarChart(widget, tokens, themeName, borderOptions);
         return themed;
       }

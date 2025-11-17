@@ -356,7 +356,7 @@ const initialCode = `{
     },
     {
       "id": "vendedores_por_territorio",
-      "type": "barMultiple",
+      "type": "stackedbar",
       "position": { "x": 0, "y": 18, "w": 12, "h": 4 },
       "row": "5",
       "span": { "desktop": 1, "tablet": 1, "mobile": 1 },

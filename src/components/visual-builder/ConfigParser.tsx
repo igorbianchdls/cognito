@@ -140,7 +140,7 @@ export interface WidgetSpan {
 
 export interface Widget {
   id: string;
-  type: 'bar' | 'line' | 'pie' | 'area' | 'kpi' | 'insights' | 'alerts' | 'recommendations' | 'insightsHero' | 'barMultiple';
+  type: 'bar' | 'line' | 'pie' | 'area' | 'kpi' | 'insights' | 'alerts' | 'recommendations' | 'insightsHero' | 'stackedbar';
   position: {
     x: number;
     y: number;
@@ -166,7 +166,7 @@ export interface Widget {
     x?: string;
     y?: string;
     aggregation?: 'SUM' | 'COUNT' | 'AVG' | 'MAX' | 'MIN';
-    // For barMultiple widgets
+    // For stackedbar widgets
     dimension1?: string;
     dimension2?: string;
     field?: string;
@@ -212,7 +212,7 @@ export interface ParseResult {
 }
 
 export class ConfigParser {
-  private static VALID_TYPES = ['bar', 'line', 'pie', 'area', 'kpi', 'insights', 'alerts', 'recommendations', 'insightsHero', 'barMultiple'];
+  private static VALID_TYPES = ['bar', 'line', 'pie', 'area', 'kpi', 'insights', 'alerts', 'recommendations', 'insightsHero', 'stackedbar'];
   private static DEFAULT_GRID_CONFIG: GridConfig = {
     maxRows: 12,
     rowHeight: 30,
