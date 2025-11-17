@@ -1,10 +1,10 @@
 'use client';
 
-import { ResponsiveLine, Serie } from '@nivo/line';
+import { ResponsiveLine } from '@nivo/line';
 import { formatValue } from './utils';
 import { EmptyState } from './EmptyState';
 import { createElegantTheme } from './theme';
-import type { BarLegendProps } from '@nivo/bar';
+import type { LegendProps } from '@nivo/legends';
 import type { LegendConfig } from '@/types/apps/chartWidgets';
 
 export interface ChartDataItem {
@@ -79,7 +79,7 @@ export interface StackedLinesChartProps {
   } | null;
 
   // Legends
-  legends?: readonly BarLegendProps[] | LegendConfig;
+  legends?: readonly LegendProps[] | LegendConfig;
   translateY?: number;
 
   // Typography - Title
@@ -202,7 +202,8 @@ export function StackedLinesChart(props: StackedLinesChartProps) {
   }
 
   // Transform table-like data into Nivo Line series
-  const series: Serie[] = keys.map((k) => ({
+  type LineSerie = { id: string | number; data: Array<{ x: string | number; y: number }> };
+  const series: LineSerie[] = keys.map((k) => ({
     id: k,
     data: data.map((row) => ({ x: String(row[indexBy] ?? row.label), y: Number(row[k] ?? 0) }))
   }));
@@ -342,26 +343,24 @@ export function StackedLinesChart(props: StackedLinesChartProps) {
               const cfg = legends as LegendConfig;
               return [
                 {
-                  dataFrom: 'keys' as const,
-                  anchor: (cfg.anchor ?? 'bottom') as BarLegendProps['anchor'],
-                  direction: (cfg.direction ?? 'row') as BarLegendProps['direction'],
+                  anchor: (cfg.anchor ?? 'bottom') as LegendProps['anchor'],
+                  direction: (cfg.direction ?? 'row') as LegendProps['direction'],
                   justify: false,
                   translateX: (cfg.translateX ?? 0),
                   translateY: translateY !== undefined ? translateY : (cfg.translateY ?? 50),
                   itemsSpacing: (cfg.itemsSpacing ?? 20),
                   itemWidth: (cfg.itemWidth ?? 80),
                   itemHeight: (cfg.itemHeight ?? 18),
-                  itemDirection: (cfg.itemDirection ?? 'left-to-right') as BarLegendProps['itemDirection'],
+                  itemDirection: (cfg.itemDirection ?? 'left-to-right') as LegendProps['itemDirection'],
                   itemOpacity: 0.8,
                   symbolSize: (cfg.symbolSize ?? 12),
-                  symbolShape: (cfg.symbolShape ?? 'circle') as BarLegendProps['symbolShape'],
+                  symbolShape: (cfg.symbolShape ?? 'circle') as LegendProps['symbolShape'],
                   effects: [{ on: 'hover' as const, style: { itemOpacity: 1 } }]
                 }
               ];
             }
             return [
               {
-                dataFrom: 'keys' as const,
                 anchor: 'bottom' as const,
                 direction: 'row' as const,
                 justify: false,
@@ -385,4 +384,3 @@ export function StackedLinesChart(props: StackedLinesChartProps) {
 }
 
 export default StackedLinesChart;
-
