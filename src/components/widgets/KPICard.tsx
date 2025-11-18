@@ -572,44 +572,48 @@ export function KPICard({
         <CardHeader className="!text-left !items-start">
           <CardDescription
             className={kpiNameClassName || "!text-left !justify-start"}
-            style={kpiNameClassName ? {} : {
-              color: kpiNameColor || undefined,
-              fontSize: kpiNameFontSize ? `${kpiNameFontSize}px` : undefined,
-              fontWeight: kpiNameFontWeight || undefined,
-              fontFamily: kpiNameFontFamily !== 'inherit' ? kpiNameFontFamily : undefined,
-              textAlign: kpiNameAlign || kpiContainerTextAlign || 'left',
-              marginTop: kpiNameMarginTop !== undefined ? `${kpiNameMarginTop}px` : '12px',
-              marginRight: kpiNameMarginRight ? `${kpiNameMarginRight}px` : undefined,
-              marginBottom: kpiNameMarginBottom ? `${kpiNameMarginBottom}px` : undefined,
-              marginLeft: kpiNameMarginLeft ? `${kpiNameMarginLeft}px` : undefined,
-              paddingTop: kpiNamePaddingTop ? `${kpiNamePaddingTop}px` : undefined,
-              paddingRight: kpiNamePaddingRight ? `${kpiNamePaddingRight}px` : undefined,
-              paddingBottom: kpiNamePaddingBottom ? `${kpiNamePaddingBottom}px` : undefined,
-              paddingLeft: kpiNamePaddingLeft ? `${kpiNamePaddingLeft}px` : undefined,
-              letterSpacing: kpiNameLetterSpacing ? `${kpiNameLetterSpacing}px` : undefined,
-              lineHeight: kpiNameLineHeight || undefined
+            style={{
+              ...(kpiNameClassName ? {} : {
+                color: kpiNameColor || undefined,
+                fontSize: kpiNameFontSize ? `${kpiNameFontSize}px` : undefined,
+                fontWeight: kpiNameFontWeight || undefined,
+                textAlign: kpiNameAlign || kpiContainerTextAlign || 'left',
+                marginTop: kpiNameMarginTop !== undefined ? `${kpiNameMarginTop}px` : '12px',
+                marginRight: kpiNameMarginRight ? `${kpiNameMarginRight}px` : undefined,
+                marginBottom: kpiNameMarginBottom ? `${kpiNameMarginBottom}px` : undefined,
+                marginLeft: kpiNameMarginLeft ? `${kpiNameMarginLeft}px` : undefined,
+                paddingTop: kpiNamePaddingTop ? `${kpiNamePaddingTop}px` : undefined,
+                paddingRight: kpiNamePaddingRight ? `${kpiNamePaddingRight}px` : undefined,
+                paddingBottom: kpiNamePaddingBottom ? `${kpiNamePaddingBottom}px` : undefined,
+                paddingLeft: kpiNamePaddingLeft ? `${kpiNamePaddingLeft}px` : undefined,
+                letterSpacing: kpiNameLetterSpacing ? `${kpiNameLetterSpacing}px` : undefined,
+                lineHeight: kpiNameLineHeight || undefined
+              }),
+              fontFamily: kpiNameFontFamily !== 'inherit' ? kpiNameFontFamily : undefined
             }}>
             {name || 'KPI'}
           </CardDescription>
           <CardTitle
             className={kpiValueClassName || "text-2xl font-semibold tabular-nums @[250px]/card:text-3xl !text-left"}
-            style={kpiValueClassName ? {} : {
-              color: kpiValueColor || undefined,
-              fontSize: kpiValueFontSize ? `${kpiValueFontSize}px` : undefined,
-              fontWeight: kpiValueFontWeight || undefined,
-              fontFamily: kpiValueFontFamily !== 'inherit' ? kpiValueFontFamily : undefined,
-              textAlign: kpiValueAlign || kpiContainerTextAlign || 'left',
-              marginTop: kpiValueMarginTop ? `${kpiValueMarginTop}px` : undefined,
-              marginRight: kpiValueMarginRight ? `${kpiValueMarginRight}px` : undefined,
-              marginBottom: kpiValueMarginBottom ? `${kpiValueMarginBottom}px` : undefined,
-              marginLeft: kpiValueMarginLeft ? `${kpiValueMarginLeft}px` : undefined,
-              paddingTop: kpiValuePaddingTop ? `${kpiValuePaddingTop}px` : undefined,
-              paddingRight: kpiValuePaddingRight ? `${kpiValuePaddingRight}px` : undefined,
-              paddingBottom: kpiValuePaddingBottom ? `${kpiValuePaddingBottom}px` : undefined,
-              paddingLeft: kpiValuePaddingLeft ? `${kpiValuePaddingLeft}px` : undefined,
-              letterSpacing: kpiValueLetterSpacing ? `${kpiValueLetterSpacing}px` : undefined,
-              lineHeight: kpiValueLineHeight || undefined
-            }}
+            style={{
+              ...(kpiValueClassName ? {} : {
+                color: kpiValueColor || undefined,
+                fontSize: kpiValueFontSize ? `${kpiValueFontSize}px` : undefined,
+                fontWeight: kpiValueFontWeight || undefined,
+                textAlign: kpiValueAlign || kpiContainerTextAlign || 'left',
+                marginTop: kpiValueMarginTop ? `${kpiValueMarginTop}px` : undefined,
+                marginRight: kpiValueMarginRight ? `${kpiValueMarginRight}px` : undefined,
+                marginBottom: kpiValueMarginBottom ? `${kpiValueMarginBottom}px` : undefined,
+                marginLeft: kpiValueMarginLeft ? `${kpiValueMarginLeft}px` : undefined,
+                paddingTop: kpiValuePaddingTop ? `${kpiValuePaddingTop}px` : undefined,
+                paddingRight: kpiValuePaddingRight ? `${kpiValuePaddingRight}px` : undefined,
+                paddingBottom: kpiValuePaddingBottom ? `${kpiValuePaddingBottom}px` : undefined,
+                paddingLeft: kpiValuePaddingLeft ? `${kpiValuePaddingLeft}px` : undefined,
+                letterSpacing: kpiValueLetterSpacing ? `${kpiValueLetterSpacing}px` : undefined,
+                lineHeight: kpiValueLineHeight || undefined
+              }),
+              fontFamily: kpiValueFontFamily !== 'inherit' ? kpiValueFontFamily : undefined
+            }
           >
             {formatValue(currentValue, unit || '')}
           </CardTitle>
