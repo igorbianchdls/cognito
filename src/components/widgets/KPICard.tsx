@@ -435,7 +435,10 @@ export function KPICard({
         <div className="flex items-start justify-between">
           <div
             className={`font-medium ${!kpiNameColor ? 'text-slate-800' : ''} leading-none ${s.label}`}
-            style={{ color: kpiNameColor || undefined }}
+            style={{
+              color: kpiNameColor || undefined,
+              fontFamily: kpiNameFontFamily !== 'inherit' ? kpiNameFontFamily : undefined
+            }}
           >
             {name || 'KPI'}
           </div>
@@ -456,7 +459,8 @@ export function KPICard({
           className={`font-semibold ${!kpiValueColor ? 'text-slate-900' : ''} leading-none ${s.value}`}
           style={{
             ...(tileValuePaddingY !== undefined ? { paddingTop: tileValuePaddingY, paddingBottom: tileValuePaddingY } : { paddingTop: 16, paddingBottom: 16 }),
-            color: kpiValueColor || undefined
+            color: kpiValueColor || undefined,
+            fontFamily: kpiValueFontFamily !== 'inherit' ? kpiValueFontFamily : undefined
           }}
         >
           {formatValue(currentValue, unit)}
@@ -467,7 +471,8 @@ export function KPICard({
           <span style={{ color: appliedChangeColor }} className="font-medium text-[12px] leading-none">
             {Math.abs(effectiveChangePct || 0).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%
           </span>
-          <span className={`uppercase tracking-wide leading-none ${s.micro}`} style={{ color: neutralColor }}>
+          <span className={`uppercase tracking-wide leading-none ${s.micro}`}
+            style={{ color: neutralColor, fontFamily: kpiNameFontFamily !== 'inherit' ? kpiNameFontFamily : undefined }}>
             {comparisonLabel}
           </span>
         </div>
