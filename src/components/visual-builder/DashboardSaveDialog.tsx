@@ -54,7 +54,11 @@ export default function DashboardSaveDialog({ open, onOpenChange, initialTitle, 
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium mb-1">Visibilidade</label>
-              <select className="w-full border rounded px-2 py-2 text-sm" value={visibility} onChange={e => setVisibility(e.target.value as any)}>
+              <select
+                className="w-full border rounded px-2 py-2 text-sm"
+                value={visibility}
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setVisibility(e.target.value as 'private' | 'org' | 'public')}
+              >
                 <option value="private">Privado</option>
                 <option value="org">Organização</option>
                 <option value="public">Público</option>
