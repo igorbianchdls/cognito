@@ -163,16 +163,22 @@ export class ThemeManager {
     }
 
     // Apply design tokens to KPI with semantic meaning
-    clonedWidget.kpiConfig.kpiContainerBackgroundColor = tokens.colors.surface;
+    if (clonedWidget.kpiConfig.kpiContainerBackgroundColor === undefined) {
+      clonedWidget.kpiConfig.kpiContainerBackgroundColor = tokens.colors.surface;
+    }
 
     // KPI Value styling (fixed values to match dark cards)
-    clonedWidget.kpiConfig.kpiValueColor = tokens.colors.text.primary;
+    if (clonedWidget.kpiConfig.kpiValueColor === undefined) {
+      clonedWidget.kpiConfig.kpiValueColor = tokens.colors.text.primary;
+    }
     clonedWidget.kpiConfig.kpiValueFontSize = 28; // Fixed size to match dark cards
     clonedWidget.kpiConfig.kpiValueFontWeight = 600; // Fixed weight to match dark cards
     clonedWidget.kpiConfig.kpiValueFontFamily = tokens.typography.fontFamily.primary;
 
     // KPI Name styling (fixed size, default weight like dark cards)
-    clonedWidget.kpiConfig.kpiNameColor = tokens.colors.text.secondary;
+    if (clonedWidget.kpiConfig.kpiNameColor === undefined) {
+      clonedWidget.kpiConfig.kpiNameColor = tokens.colors.text.secondary;
+    }
     clonedWidget.kpiConfig.kpiNameFontSize = 14; // Fixed size to match dark cards
     clonedWidget.kpiConfig.kpiNameFontFamily = tokens.typography.fontFamily.primary;
 
@@ -281,7 +287,9 @@ export class ThemeManager {
     clonedWidget.barConfig.styling.backgroundColor = tokens.colors.surface;
 
     // Title styling - complete props
-    clonedWidget.barConfig.styling.titleColor = tokens.colors.text.primary;
+    if (clonedWidget.barConfig.styling.titleColor === undefined) {
+      clonedWidget.barConfig.styling.titleColor = tokens.colors.text.primary;
+    }
     clonedWidget.barConfig.styling.titleFontSize = tokens.typography.fontSize.lg;
     clonedWidget.barConfig.styling.titleFontWeight = tokens.typography.fontWeight.semibold;
     clonedWidget.barConfig.styling.titleFontFamily = tokens.typography.fontFamily.primary;
@@ -395,7 +403,9 @@ export class ThemeManager {
     clonedWidget.stackedBarConfig.styling.backgroundColor = tokens.colors.surface;
 
     // Title styling - complete props
-    clonedWidget.stackedBarConfig.styling.titleColor = tokens.colors.text.primary;
+    if (clonedWidget.stackedBarConfig.styling.titleColor === undefined) {
+      clonedWidget.stackedBarConfig.styling.titleColor = tokens.colors.text.primary;
+    }
     clonedWidget.stackedBarConfig.styling.titleFontSize = tokens.typography.fontSize.lg;
     clonedWidget.stackedBarConfig.styling.titleFontWeight = tokens.typography.fontWeight.semibold;
     clonedWidget.stackedBarConfig.styling.titleFontFamily = tokens.typography.fontFamily.primary;
@@ -507,7 +517,9 @@ export class ThemeManager {
     clonedWidget.groupedBarConfig.styling.backgroundColor = tokens.colors.surface;
 
     // Title styling - complete props
-    clonedWidget.groupedBarConfig.styling.titleColor = tokens.colors.text.primary;
+    if (clonedWidget.groupedBarConfig.styling.titleColor === undefined) {
+      clonedWidget.groupedBarConfig.styling.titleColor = tokens.colors.text.primary;
+    }
     clonedWidget.groupedBarConfig.styling.titleFontSize = tokens.typography.fontSize.lg;
     clonedWidget.groupedBarConfig.styling.titleFontWeight = tokens.typography.fontWeight.semibold;
     clonedWidget.groupedBarConfig.styling.titleFontFamily = tokens.typography.fontFamily.primary;
@@ -605,10 +617,14 @@ export class ThemeManager {
     }
 
     // Background (use container background for pivot bar)
-    clonedWidget.pivotBarConfig.styling.containerBackground = tokens.colors.surface;
+    if (clonedWidget.pivotBarConfig.styling.containerBackground === undefined) {
+      clonedWidget.pivotBarConfig.styling.containerBackground = tokens.colors.surface;
+    }
 
     // Title styling
-    clonedWidget.pivotBarConfig.styling.titleColor = tokens.colors.text.primary;
+    if (clonedWidget.pivotBarConfig.styling.titleColor === undefined) {
+      clonedWidget.pivotBarConfig.styling.titleColor = tokens.colors.text.primary;
+    }
     clonedWidget.pivotBarConfig.styling.titleFontSize = tokens.typography.fontSize.lg;
     clonedWidget.pivotBarConfig.styling.titleFontWeight = tokens.typography.fontWeight.semibold;
     clonedWidget.pivotBarConfig.styling.titleFontFamily = tokens.typography.fontFamily.primary;
@@ -685,7 +701,9 @@ export class ThemeManager {
     clonedWidget.stackedLinesConfig.styling.backgroundColor = tokens.colors.surface;
 
     // Title styling
-    clonedWidget.stackedLinesConfig.styling.titleColor = tokens.colors.text.primary;
+    if (clonedWidget.stackedLinesConfig.styling.titleColor === undefined) {
+      clonedWidget.stackedLinesConfig.styling.titleColor = tokens.colors.text.primary;
+    }
     clonedWidget.stackedLinesConfig.styling.titleFontSize = tokens.typography.fontSize.lg;
     clonedWidget.stackedLinesConfig.styling.titleFontWeight = tokens.typography.fontWeight.semibold;
     clonedWidget.stackedLinesConfig.styling.titleFontFamily = tokens.typography.fontFamily.primary;
@@ -788,10 +806,14 @@ export class ThemeManager {
     }
 
     // Background
-    clonedWidget.radialStackedConfig.styling.containerBackground = tokens.colors.surface;
+    if (clonedWidget.radialStackedConfig.styling.containerBackground === undefined) {
+      clonedWidget.radialStackedConfig.styling.containerBackground = tokens.colors.surface;
+    }
     
     // Title styling
-    clonedWidget.radialStackedConfig.styling.titleColor = tokens.colors.text.primary;
+    if (clonedWidget.radialStackedConfig.styling.titleColor === undefined) {
+      clonedWidget.radialStackedConfig.styling.titleColor = tokens.colors.text.primary;
+    }
     clonedWidget.radialStackedConfig.styling.titleFontSize = tokens.typography.fontSize.lg;
     clonedWidget.radialStackedConfig.styling.titleFontWeight = tokens.typography.fontWeight.semibold;
     clonedWidget.radialStackedConfig.styling.titleFontFamily = tokens.typography.fontFamily.primary;
@@ -864,7 +886,9 @@ export class ThemeManager {
     clonedWidget.lineConfig.styling.backgroundColor = tokens.colors.surface;
 
     // Title styling - complete props
-    clonedWidget.lineConfig.styling.titleColor = tokens.colors.text.primary;
+    if (clonedWidget.lineConfig.styling.titleColor === undefined) {
+      clonedWidget.lineConfig.styling.titleColor = tokens.colors.text.primary;
+    }
     clonedWidget.lineConfig.styling.titleFontSize = tokens.typography.fontSize.lg;
     clonedWidget.lineConfig.styling.titleFontWeight = tokens.typography.fontWeight.semibold;
     clonedWidget.lineConfig.styling.titleFontFamily = tokens.typography.fontFamily.primary;
@@ -976,7 +1000,9 @@ export class ThemeManager {
     clonedWidget.pieConfig.styling.backgroundColor = tokens.colors.surface;
 
     // Title styling - complete props
-    clonedWidget.pieConfig.styling.titleColor = tokens.colors.text.primary;
+    if (clonedWidget.pieConfig.styling.titleColor === undefined) {
+      clonedWidget.pieConfig.styling.titleColor = tokens.colors.text.primary;
+    }
     clonedWidget.pieConfig.styling.titleFontSize = tokens.typography.fontSize.lg;
     clonedWidget.pieConfig.styling.titleFontWeight = tokens.typography.fontWeight.semibold;
     clonedWidget.pieConfig.styling.titleFontFamily = tokens.typography.fontFamily.primary;
@@ -1092,7 +1118,9 @@ export class ThemeManager {
     clonedWidget.areaConfig.styling.backgroundColor = tokens.colors.surface;
 
     // Title styling - complete props
-    clonedWidget.areaConfig.styling.titleColor = tokens.colors.text.primary;
+    if (clonedWidget.areaConfig.styling.titleColor === undefined) {
+      clonedWidget.areaConfig.styling.titleColor = tokens.colors.text.primary;
+    }
     clonedWidget.areaConfig.styling.titleFontSize = tokens.typography.fontSize.lg;
     clonedWidget.areaConfig.styling.titleFontWeight = tokens.typography.fontWeight.semibold;
     clonedWidget.areaConfig.styling.titleFontFamily = tokens.typography.fontFamily.primary;
