@@ -8,7 +8,7 @@ import { $visualBuilderState, visualBuilderActions } from '@/stores/visualBuilde
 import type { Widget } from '@/stores/visualBuilderStore';
 import { ThemeManager, type ThemeName } from '@/components/visual-builder/ThemeManager';
 import { BackgroundManager, type BackgroundPresetKey } from '@/components/visual-builder/BackgroundManager';
-import { ColorManager, type ColorPresetKey } from '@/components/visual-builder/ColorManager';
+// Removed ColorManager palette UI
 import { FontManager, type FontPresetKey, type FontSizeKey } from '@/components/visual-builder/FontManager';
 import {
   Artifact,
@@ -30,7 +30,7 @@ import {
   DropdownMenuSubContent,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { FileText, BarChart3, Palette, Check, Type, Square, Paintbrush, Monitor, Tablet, Smartphone, ChevronDown, Layout } from 'lucide-react';
+import { FileText, BarChart3, Palette, Check, Type, Square, Monitor, Tablet, Smartphone, ChevronDown, Layout } from 'lucide-react';
 import { BorderManager, type BorderPresetKey } from '@/components/visual-builder/BorderManager';
 import { $headerUi, headerUiActions } from '@/stores/ui/headerUiStore';
 
@@ -44,21 +44,26 @@ export default function DashboardChatPanel() {
   const [selectedFontSize, setSelectedFontSize] = useState<FontSizeKey>('lg');
   const [selectedLetterSpacing, setSelectedLetterSpacing] = useState<number>(-0.02);
   const [selectedBackground, setSelectedBackground] = useState<BackgroundPresetKey>('fundo-branco');
+  // Colors section states
+  const [dashboardBgColor, setDashboardBgColor] = useState<string>('#171717');
+  const [cardsBgColor, setCardsBgColor] = useState<string>('#1B1B1B');
+  const [chartTitleColor, setChartTitleColor] = useState<string>('#ffffff');
+  const [kpiValueColor, setKpiValueColor] = useState<string>('#ffffff');
+  const [kpiTitleColor, setKpiTitleColor] = useState<string>('#d1d5db');
   const [selectedBorderType, setSelectedBorderType] = useState<BorderPresetKey>('suave');
   const [borderColor, setBorderColor] = useState<string>('#e5e7eb');
   const [borderWidth, setBorderWidth] = useState<number>(1);
   const [borderRadius, setBorderRadius] = useState<number>(0);
   const [borderAccentColor, setBorderAccentColor] = useState<string>('#bbb');
   const [borderShadow, setBorderShadow] = useState<boolean>(true);
-  const [selectedCorporateColor, setSelectedCorporateColor] = useState<ColorPresetKey>('corporate');
+  // Removed corporate color state (palette UI disabled)
   const visualBuilderState = useNanoStore($visualBuilderState);
 
   // Available backgrounds
   const availableBackgrounds = BackgroundManager.getAvailableBackgrounds();
   const themePreview = ThemeManager.getThemePreview(selectedTheme);
 
-  // Available corporate color palettes
-  const availableColorPalettes = ColorManager.getAvailableColorPalettes();
+  // Color palette UI removed
 
   // Available fonts and sizes from FontManager
   const availableFonts = FontManager.getAvailableFonts();
@@ -150,6 +155,10 @@ export default function DashboardChatPanel() {
         // Default background
         setSelectedBackground(BackgroundManager.getDefaultBackground());
       }
+      // Dashboard background color (raw)
+      if (config.config && typeof config.config.backgroundColor === 'string') {
+        setDashboardBgColor(config.config.backgroundColor);
+      }
     } catch (error) {
       // Invalid JSON, keep current background
     }
@@ -168,22 +177,7 @@ export default function DashboardChatPanel() {
     } catch {}
   }, [visualBuilderState.code])
 
-  // Detect current corporate color from code and initialize based on theme
-  useEffect(() => {
-    try {
-      const config = JSON.parse(visualBuilderState.code);
-
-      // If corporate color is set, use it
-      if (config.corporateColor && ColorManager.isValidPreset(config.corporateColor)) {
-        setSelectedCorporateColor(config.corporateColor);
-      } else if (config.theme && ColorManager.isValidPreset(config.theme)) {
-        // Otherwise, use theme name as default color palette
-        setSelectedCorporateColor(config.theme);
-      }
-    } catch (error) {
-      // Invalid JSON, keep current color
-    }
-  }, [visualBuilderState.code]);
+  // Removed corporate color detection (palette UI disabled)
 
   const handleCodeChange = (newCode: string) => {
     visualBuilderActions.updateCode(newCode);
@@ -242,6 +236,119 @@ export default function DashboardChatPanel() {
     } catch (error) {
       console.error('Error updating font size:', error);
     }
+  };
+
+  // Colors handlers
+  const handleDashboardBgColorChange = (color: string) => {
+    try {
+      const cfg = JSON.parse(visualBuilderState.code);
+      const updated = {
+        ...cfg,
+        config: {
+          ...(cfg.config || {}),
+          backgroundColor: color,
+          backgroundGradient: undefined
+        }
+      };
+      visualBuilderActions.updateCode(JSON.stringify(updated, null, 2));
+      setDashboardBgColor(color);
+    } catch (e) {
+      console.error('Error updating dashboard background color', e);
+    }
+  };
+
+  const mapChartConfigs = (widget: Widget) => {
+    const w: any = { ...widget };
+    const set = (path: string[], value: any) => {
+      let obj = w;
+      for (let i = 0; i < path.length - 1; i++) {
+        const key = path[i];
+        obj[key] = obj[key] || {};
+        obj = obj[key];
+      }
+      obj[path[path.length - 1]] = value;
+    };
+    return { w, set };
+  };
+
+  const updateAllWidgets = (updater: (widget: Widget) => Widget) => {
+    try {
+      const cfg = JSON.parse(visualBuilderState.code);
+      const widgets: Widget[] = (cfg.widgets || []).map((w: Widget) => updater(w));
+      const updated = { ...cfg, widgets };
+      visualBuilderActions.updateCode(JSON.stringify(updated, null, 2));
+    } catch (e) {
+      console.error('Error updating widgets colors', e);
+    }
+  };
+
+  const handleCardsBgColorChange = (color: string) => {
+    setCardsBgColor(color);
+    updateAllWidgets((widget) => {
+      const { w, set } = mapChartConfigs(widget);
+      switch (w.type) {
+        case 'bar': set(['barConfig','styling','containerBackground'], color); break;
+        case 'line': set(['lineConfig','styling','containerBackground'], color); break;
+        case 'pie': set(['pieConfig','styling','containerBackground'], color); break;
+        case 'area': set(['areaConfig','styling','containerBackground'], color); break;
+        case 'stackedbar': set(['stackedBarConfig','styling','containerBackground'], color); break;
+        case 'groupedbar': set(['groupedBarConfig','styling','containerBackground'], color); break;
+        case 'stackedlines': set(['stackedLinesConfig','styling','containerBackground'], color); break;
+        case 'radialstacked': set(['radialStackedConfig','styling','containerBackground'], color); break;
+        case 'pivotbar': set(['pivotBarConfig','styling','containerBackground'], color); break;
+        case 'kpi':
+          w.kpiConfig = w.kpiConfig || {} as any;
+          w.kpiConfig.kpiContainerBackgroundColor = color;
+          break;
+        default:
+          break;
+      }
+      return w as Widget;
+    });
+  };
+
+  const handleChartTitleColorChange = (color: string) => {
+    setChartTitleColor(color);
+    updateAllWidgets((widget) => {
+      const { w, set } = mapChartConfigs(widget);
+      switch (w.type) {
+        case 'bar': set(['barConfig','styling','titleColor'], color); break;
+        case 'line': set(['lineConfig','styling','titleColor'], color); break;
+        case 'pie': set(['pieConfig','styling','titleColor'], color); break;
+        case 'area': set(['areaConfig','styling','titleColor'], color); break;
+        case 'stackedbar': set(['stackedBarConfig','styling','titleColor'], color); break;
+        case 'groupedbar': set(['groupedBarConfig','styling','titleColor'], color); break;
+        case 'stackedlines': set(['stackedLinesConfig','styling','titleColor'], color); break;
+        case 'radialstacked': set(['radialStackedConfig','styling','titleColor'], color); break;
+        case 'pivotbar': set(['pivotBarConfig','styling','titleColor'], color); break;
+        default: break;
+      }
+      return w as Widget;
+    });
+  };
+
+  const handleKpiValueColorChange = (color: string) => {
+    setKpiValueColor(color);
+    updateAllWidgets((widget) => {
+      const w = { ...widget } as any;
+      if (w.type === 'kpi') {
+        w.kpiConfig = w.kpiConfig || {};
+        w.kpiConfig.kpiValueColor = color;
+      }
+      return w as Widget;
+    });
+  };
+
+  const handleKpiTitleColorChange = (color: string) => {
+    setKpiTitleColor(color);
+    updateAllWidgets((widget) => {
+      const w = { ...widget } as any;
+      if (w.type === 'kpi') {
+        w.kpiConfig = w.kpiConfig || {};
+        w.kpiConfig.kpiNameColor = color;
+      }
+      return w as Widget;
+    });
   };
 
   const handleLetterSpacingChange = (value: number) => {
@@ -306,20 +413,7 @@ export default function DashboardChatPanel() {
     }
   };
 
-  const handleCorporateColorChange = (colorKey: ColorPresetKey) => {
-    try {
-      const config = JSON.parse(visualBuilderState.code);
-      const updatedConfig = {
-        ...config,
-        corporateColor: colorKey
-      };
-      visualBuilderActions.updateCode(JSON.stringify(updatedConfig, null, 2));
-      setSelectedCorporateColor(colorKey);
-      console.log('🎨 Corporate color changed to:', colorKey);
-    } catch (error) {
-      console.error('Error applying corporate color:', error);
-    }
-  };
+  // Removed handler for corporate color changes
 
   
 
@@ -570,6 +664,41 @@ export default function DashboardChatPanel() {
                 </DropdownMenuSubContent>
               </DropdownMenuSub>
 
+              {/* Colors Submenu */}
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                  <Square className="w-4 h-4 mr-2" />
+                  Colors
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent className="w-64">
+                  <div className="px-3 py-2 text-xs text-muted-foreground">Dashboard</div>
+                  <div className="px-3 py-2 flex items-center justify-between gap-2">
+                    <span className="text-sm">Background</span>
+                    <input type="color" value={dashboardBgColor} onChange={(e) => handleDashboardBgColorChange(e.target.value)} />
+                  </div>
+                  <DropdownMenuSeparator />
+                  <div className="px-3 py-2 text-xs text-muted-foreground">Cards</div>
+                  <div className="px-3 py-2 flex items-center justify-between gap-2">
+                    <span className="text-sm">Cards Background</span>
+                    <input type="color" value={cardsBgColor} onChange={(e) => handleCardsBgColorChange(e.target.value)} />
+                  </div>
+                  <div className="px-3 py-2 flex items-center justify-between gap-2">
+                    <span className="text-sm">Chart Title</span>
+                    <input type="color" value={chartTitleColor} onChange={(e) => handleChartTitleColorChange(e.target.value)} />
+                  </div>
+                  <DropdownMenuSeparator />
+                  <div className="px-3 py-2 text-xs text-muted-foreground">KPI</div>
+                  <div className="px-3 py-2 flex items-center justify-between gap-2">
+                    <span className="text-sm">KPI Value</span>
+                    <input type="color" value={kpiValueColor} onChange={(e) => handleKpiValueColorChange(e.target.value)} />
+                  </div>
+                  <div className="px-3 py-2 flex items-center justify-between gap-2">
+                    <span className="text-sm">KPI Title</span>
+                    <input type="color" value={kpiTitleColor} onChange={(e) => handleKpiTitleColorChange(e.target.value)} />
+                  </div>
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+
               {/* Border Submenu */}
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger>
@@ -619,44 +748,7 @@ export default function DashboardChatPanel() {
                 </DropdownMenuSubContent>
               </DropdownMenuSub>
 
-              {/* Color Palette Submenu */}
-              <DropdownMenuSub>
-                <DropdownMenuSubTrigger>
-                  <Paintbrush className="w-4 h-4 mr-2" />
-                  Color Palette
-                </DropdownMenuSubTrigger>
-                <DropdownMenuSubContent>
-                  {availableColorPalettes.map((colorPalette) => (
-                    <DropdownMenuItem
-                      key={colorPalette.key}
-                      onClick={() => handleCorporateColorChange(colorPalette.key)}
-                      className="flex items-center justify-between py-2"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="flex gap-1">
-                          <div
-                            className="w-3 h-3 rounded-full border border-gray-200"
-                            style={{ backgroundColor: colorPalette.primary }}
-                          />
-                          <div
-                            className="w-3 h-3 rounded-full border border-gray-200"
-                            style={{ backgroundColor: colorPalette.secondary }}
-                          />
-                        </div>
-                        <div>
-                          <div className="font-medium text-sm">{colorPalette.name}</div>
-                          <div className="text-xs text-muted-foreground">
-                            {colorPalette.description}
-                          </div>
-                        </div>
-                      </div>
-                      {selectedCorporateColor === colorPalette.key && (
-                        <Check className="w-4 h-4 text-blue-600" />
-                      )}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuSubContent>
-              </DropdownMenuSub>
+              {/* Color Palette Submenu removed */}
             </DropdownMenuContent>
           </DropdownMenu>
 

@@ -1475,10 +1475,17 @@ export class ThemeManager {
       backgroundStyle = BackgroundManager.getBackgroundStyle(backgroundPresetKey);
     }
 
+    // Merge background with preference for explicit gridConfig values
+    const mergedBackground = {
+      ...backgroundStyle,
+      ...(gridConfig.backgroundColor ? { backgroundColor: gridConfig.backgroundColor } : {}),
+      ...(gridConfig.backgroundGradient ? { backgroundGradient: gridConfig.backgroundGradient } : {}),
+    };
+
     return {
       ...gridConfig,
-      // Apply background from BackgroundManager instead of hardcoded values
-      ...backgroundStyle,
+      // Apply background with explicit overrides taking precedence
+      ...mergedBackground,
 
       // Fixed border style (gray, no shadow)
       borderColor: '#d1d5db',
