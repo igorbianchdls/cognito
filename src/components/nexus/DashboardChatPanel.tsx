@@ -254,58 +254,85 @@ export default function DashboardChatPanel() {
     const w = { ...widget };
     switch (w.type) {
       case 'bar':
-        w.barConfig = {
-          ...(w.barConfig || {}),
-          styling: { ...(w.barConfig?.styling || {}), containerBackground: color }
-        };
+        {
+          const prev = (w.barConfig?.styling ?? {}) as unknown as import('@/stores/apps/barChartStore').BarChartConfig['styling'];
+          w.barConfig = {
+            ...(w.barConfig || {}),
+            styling: { ...prev, containerBackground: color } as unknown as import('@/stores/apps/barChartStore').BarChartConfig['styling']
+          };
+        }
         break;
       case 'line':
-        w.lineConfig = {
-          ...(w.lineConfig || {}),
-          styling: { ...(w.lineConfig?.styling || {}), containerBackground: color }
-        };
+        {
+          const prev = (w.lineConfig?.styling ?? {}) as unknown as import('@/stores/apps/lineChartStore').LineChartConfig['styling'];
+          w.lineConfig = {
+            ...(w.lineConfig || {}),
+            styling: { ...prev, containerBackground: color } as unknown as import('@/stores/apps/lineChartStore').LineChartConfig['styling']
+          };
+        }
         break;
       case 'pie':
-        w.pieConfig = {
-          ...(w.pieConfig || {}),
-          styling: { ...(w.pieConfig?.styling || {}), containerBackground: color }
-        };
+        {
+          const prev = (w.pieConfig?.styling ?? {}) as unknown as import('@/stores/apps/pieChartStore').PieChartConfig['styling'];
+          w.pieConfig = {
+            ...(w.pieConfig || {}),
+            styling: { ...prev, containerBackground: color } as unknown as import('@/stores/apps/pieChartStore').PieChartConfig['styling']
+          };
+        }
         break;
       case 'area':
-        w.areaConfig = {
-          ...(w.areaConfig || {}),
-          styling: { ...(w.areaConfig?.styling || {}), containerBackground: color }
-        };
+        {
+          const prev = (w.areaConfig?.styling ?? {}) as unknown as import('@/stores/apps/areaChartStore').AreaChartConfig['styling'];
+          w.areaConfig = {
+            ...(w.areaConfig || {}),
+            styling: { ...prev, containerBackground: color } as unknown as import('@/stores/apps/areaChartStore').AreaChartConfig['styling']
+          };
+        }
         break;
       case 'stackedbar':
-        w.stackedBarConfig = {
-          ...(w.stackedBarConfig || {}),
-          styling: { ...(w.stackedBarConfig?.styling || {}), containerBackground: color }
-        };
+        {
+          const prev = (w.stackedBarConfig?.styling ?? {}) as unknown as import('@/stores/apps/stackedBarChartStore').StackedBarChartConfig['styling'];
+          w.stackedBarConfig = {
+            ...(w.stackedBarConfig || {}),
+            styling: { ...prev, containerBackground: color } as unknown as import('@/stores/apps/stackedBarChartStore').StackedBarChartConfig['styling']
+          };
+        }
         break;
       case 'groupedbar':
-        w.groupedBarConfig = {
-          ...(w.groupedBarConfig || {}),
-          styling: { ...(w.groupedBarConfig?.styling || {}), containerBackground: color }
-        };
+        {
+          const prev = (w.groupedBarConfig?.styling ?? {}) as unknown as import('@/stores/apps/groupedBarChartStore').GroupedBarChartConfig['styling'];
+          w.groupedBarConfig = {
+            ...(w.groupedBarConfig || {}),
+            styling: { ...prev, containerBackground: color } as unknown as import('@/stores/apps/groupedBarChartStore').GroupedBarChartConfig['styling']
+          };
+        }
         break;
       case 'stackedlines':
-        w.stackedLinesConfig = {
-          ...(w.stackedLinesConfig || {}),
-          styling: { ...(w.stackedLinesConfig?.styling || {}), containerBackground: color }
-        };
+        {
+          const prev = (w.stackedLinesConfig?.styling ?? {}) as unknown as import('@/stores/apps/stackedLinesChartStore').StackedLinesChartConfig['styling'];
+          w.stackedLinesConfig = {
+            ...(w.stackedLinesConfig || {}),
+            styling: { ...prev, containerBackground: color } as unknown as import('@/stores/apps/stackedLinesChartStore').StackedLinesChartConfig['styling']
+          };
+        }
         break;
       case 'radialstacked':
-        w.radialStackedConfig = {
-          ...(w.radialStackedConfig || {}),
-          styling: { ...(w.radialStackedConfig?.styling || {}), containerBackground: color }
-        };
+        {
+          const prev = (w.radialStackedConfig?.styling ?? {}) as unknown as import('@/stores/apps/radialStackedChartStore').RadialStackedChartConfig['styling'];
+          w.radialStackedConfig = {
+            ...(w.radialStackedConfig || {}),
+            styling: { ...prev, containerBackground: color } as unknown as import('@/stores/apps/radialStackedChartStore').RadialStackedChartConfig['styling']
+          };
+        }
         break;
       case 'pivotbar':
-        w.pivotBarConfig = {
-          ...(w.pivotBarConfig || {}),
-          styling: { ...(w.pivotBarConfig?.styling || {}), containerBackground: color }
-        };
+        {
+          const prev = (w.pivotBarConfig?.styling ?? {}) as unknown as import('@/stores/apps/pivotBarChartStore').PivotBarChartConfig['styling'];
+          w.pivotBarConfig = {
+            ...(w.pivotBarConfig || {}),
+            styling: { ...prev, containerBackground: color } as unknown as import('@/stores/apps/pivotBarChartStore').PivotBarChartConfig['styling']
+          };
+        }
         break;
       case 'kpi':
         w.kpiConfig = { ...(w.kpiConfig || {}), kpiContainerBackgroundColor: color };
@@ -320,31 +347,58 @@ export default function DashboardChatPanel() {
     const w = { ...widget };
     switch (w.type) {
       case 'bar':
-        w.barConfig = { ...(w.barConfig || {}), styling: { ...(w.barConfig?.styling || {}), titleColor: color } };
+        {
+          const prev = (w.barConfig?.styling ?? {}) as unknown as import('@/stores/apps/barChartStore').BarChartConfig['styling'];
+          w.barConfig = { ...(w.barConfig || {}), styling: { ...prev, titleColor: color } as unknown as import('@/stores/apps/barChartStore').BarChartConfig['styling'] };
+        }
         break;
       case 'line':
-        w.lineConfig = { ...(w.lineConfig || {}), styling: { ...(w.lineConfig?.styling || {}), titleColor: color } };
+        {
+          const prev = (w.lineConfig?.styling ?? {}) as unknown as import('@/stores/apps/lineChartStore').LineChartConfig['styling'];
+          w.lineConfig = { ...(w.lineConfig || {}), styling: { ...prev, titleColor: color } as unknown as import('@/stores/apps/lineChartStore').LineChartConfig['styling'] };
+        }
         break;
       case 'pie':
-        w.pieConfig = { ...(w.pieConfig || {}), styling: { ...(w.pieConfig?.styling || {}), titleColor: color } };
+        {
+          const prev = (w.pieConfig?.styling ?? {}) as unknown as import('@/stores/apps/pieChartStore').PieChartConfig['styling'];
+          w.pieConfig = { ...(w.pieConfig || {}), styling: { ...prev, titleColor: color } as unknown as import('@/stores/apps/pieChartStore').PieChartConfig['styling'] };
+        }
         break;
       case 'area':
-        w.areaConfig = { ...(w.areaConfig || {}), styling: { ...(w.areaConfig?.styling || {}), titleColor: color } };
+        {
+          const prev = (w.areaConfig?.styling ?? {}) as unknown as import('@/stores/apps/areaChartStore').AreaChartConfig['styling'];
+          w.areaConfig = { ...(w.areaConfig || {}), styling: { ...prev, titleColor: color } as unknown as import('@/stores/apps/areaChartStore').AreaChartConfig['styling'] };
+        }
         break;
       case 'stackedbar':
-        w.stackedBarConfig = { ...(w.stackedBarConfig || {}), styling: { ...(w.stackedBarConfig?.styling || {}), titleColor: color } };
+        {
+          const prev = (w.stackedBarConfig?.styling ?? {}) as unknown as import('@/stores/apps/stackedBarChartStore').StackedBarChartConfig['styling'];
+          w.stackedBarConfig = { ...(w.stackedBarConfig || {}), styling: { ...prev, titleColor: color } as unknown as import('@/stores/apps/stackedBarChartStore').StackedBarChartConfig['styling'] };
+        }
         break;
       case 'groupedbar':
-        w.groupedBarConfig = { ...(w.groupedBarConfig || {}), styling: { ...(w.groupedBarConfig?.styling || {}), titleColor: color } };
+        {
+          const prev = (w.groupedBarConfig?.styling ?? {}) as unknown as import('@/stores/apps/groupedBarChartStore').GroupedBarChartConfig['styling'];
+          w.groupedBarConfig = { ...(w.groupedBarConfig || {}), styling: { ...prev, titleColor: color } as unknown as import('@/stores/apps/groupedBarChartStore').GroupedBarChartConfig['styling'] };
+        }
         break;
       case 'stackedlines':
-        w.stackedLinesConfig = { ...(w.stackedLinesConfig || {}), styling: { ...(w.stackedLinesConfig?.styling || {}), titleColor: color } };
+        {
+          const prev = (w.stackedLinesConfig?.styling ?? {}) as unknown as import('@/stores/apps/stackedLinesChartStore').StackedLinesChartConfig['styling'];
+          w.stackedLinesConfig = { ...(w.stackedLinesConfig || {}), styling: { ...prev, titleColor: color } as unknown as import('@/stores/apps/stackedLinesChartStore').StackedLinesChartConfig['styling'] };
+        }
         break;
       case 'radialstacked':
-        w.radialStackedConfig = { ...(w.radialStackedConfig || {}), styling: { ...(w.radialStackedConfig?.styling || {}), titleColor: color } };
+        {
+          const prev = (w.radialStackedConfig?.styling ?? {}) as unknown as import('@/stores/apps/radialStackedChartStore').RadialStackedChartConfig['styling'];
+          w.radialStackedConfig = { ...(w.radialStackedConfig || {}), styling: { ...prev, titleColor: color } as unknown as import('@/stores/apps/radialStackedChartStore').RadialStackedChartConfig['styling'] };
+        }
         break;
       case 'pivotbar':
-        w.pivotBarConfig = { ...(w.pivotBarConfig || {}), styling: { ...(w.pivotBarConfig?.styling || {}), titleColor: color } };
+        {
+          const prev = (w.pivotBarConfig?.styling ?? {}) as unknown as import('@/stores/apps/pivotBarChartStore').PivotBarChartConfig['styling'];
+          w.pivotBarConfig = { ...(w.pivotBarConfig || {}), styling: { ...prev, titleColor: color } as unknown as import('@/stores/apps/pivotBarChartStore').PivotBarChartConfig['styling'] };
+        }
         break;
     }
     return w;
