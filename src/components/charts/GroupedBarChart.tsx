@@ -175,11 +175,21 @@ export interface GroupedBarChartProps {
   axisLegendFontSize?: number;
   axisLegendFontWeight?: number;
 
+  // Typography - Labels
+  labelsFontFamily?: string;
+  labelsFontSize?: number;
+  labelsFontWeight?: number;
+  labelsTextColor?: string;
+
   // Typography - Legends
   legendsFontFamily?: string;
   legendsFontSize?: number;
   legendsFontWeight?: number;
   legendsTextColor?: string;
+
+  // Typography - Tooltip
+  tooltipFontSize?: number;
+  tooltipFontFamily?: string;
 
   // Container Border
   containerBorderWidth?: number;
@@ -286,6 +296,21 @@ export function GroupedBarChart(props: GroupedBarChartProps) {
     legends,
     // Typography props
     axisTextColor,
+    axisFontFamily,
+    axisFontSize,
+    axisFontWeight,
+    axisLegendFontSize,
+    axisLegendFontWeight,
+    labelsFontFamily,
+    labelsFontSize,
+    labelsFontWeight,
+    labelsTextColor,
+    legendsFontFamily,
+    legendsFontSize,
+    legendsFontWeight,
+    legendsTextColor,
+    tooltipFontSize,
+    tooltipFontFamily,
     // Spacing props - Title/Subtitle
     titleMarginTop,
     titleMarginBottom,
