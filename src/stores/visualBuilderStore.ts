@@ -163,6 +163,21 @@ const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas" subtit
     </widget>
   </row>
 
+  <row id="4" cols-d="2" cols-t="2" cols-m="1" gap-x="16" gap-y="16">
+    <widget id="vendas_centro_lucro" type="bar" order="1" span-d="1" span-t="1" span-m="1" height="320" title="💼 Vendas por Centro de Lucro">
+      <config>
+        {"dataSource":{"schema":"vendas","table":"vw_pedidos_completo","x":"centro_lucro_nome","y":"item_subtotal","aggregation":"SUM"},
+         "barConfig":{"styling":{"showLegend":false,"showGrid":true,"marginBottom":40,"barColor":"#8b5cf6"}}}
+      </config>
+    </widget>
+    <widget id="vendas_campanha" type="bar" order="2" span-d="1" span-t="1" span-m="1" height="320" title="🎯 Vendas por Campanha">
+      <config>
+        {"dataSource":{"schema":"vendas","table":"vw_pedidos_completo","x":"campanha_venda_nome","y":"item_subtotal","aggregation":"SUM"},
+         "barConfig":{"styling":{"showLegend":false,"showGrid":true,"marginBottom":40,"barColor":"#ec4899"}}}
+      </config>
+    </widget>
+  </row>
+
   <row id="2" cols-d="3" cols-t="1" cols-m="1" gap-x="16" gap-y="16">
     <widget id="faturamento_mensal" type="line" order="1" span-d="1" span-t="1" span-m="1" height="320" title="📈 Faturamento Mensal">
       <config>
@@ -195,6 +210,60 @@ const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas" subtit
       <config>
         {"dataSource":{"schema":"vendas","table":"vw_pedidos_completo","x":"filial_nome","y":"item_subtotal","aggregation":"SUM"},
          "barConfig":{}}
+      </config>
+    </widget>
+  </row>
+
+  <row id="5" cols-d="2" cols-t="2" cols-m="1" gap-x="16" gap-y="16">
+    <widget id="vendedores_por_territorio" type="stackedbar" order="1" span-d="1" span-t="1" span-m="1" height="360" title="🏆 Top 5 Vendedores por Território">
+      <config>
+        {"dataSource":{"schema":"vendas","table":"vw_pedidos_completo","dimension1":"territorio_nome","dimension2":"vendedor_nome","field":"item_subtotal","aggregation":"SUM","limit":5},
+         "stackedBarConfig":{"styling":{"layout":"vertical","enableGridX":false,"enableGridY":true,"marginBottom":40}}}
+      </config>
+    </widget>
+    <widget id="vendedores_por_territorio_horizontal" type="stackedbar" order="2" span-d="1" span-t="1" span-m="1" height="360" title="🏆 Top 5 Vendedores por Território (Horizontal)">
+      <config>
+        {"dataSource":{"schema":"vendas","table":"vw_pedidos_completo","dimension1":"territorio_nome","dimension2":"vendedor_nome","field":"item_subtotal","aggregation":"SUM","limit":5},
+         "stackedBarConfig":{"styling":{"layout":"horizontal","enableGridX":true,"enableGridY":false,"marginBottom":50}}}
+      </config>
+    </widget>
+  </row>
+
+  <row id="6" cols-d="2" cols-t="2" cols-m="1" gap-x="16" gap-y="16">
+    <widget id="comparativo_territorio_vendedor_grouped" type="groupedbar" order="1" span-d="1" span-t="1" span-m="1" height="360" title="📊 Comparativo Vendedores por Território (Grouped)">
+      <config>
+        {"dataSource":{"schema":"vendas","table":"vw_pedidos_completo","dimension1":"territorio_nome","dimension2":"vendedor_nome","field":"item_subtotal","aggregation":"SUM","limit":5},
+         "groupedBarConfig":{"styling":{"layout":"vertical","enableGridX":false,"enableGridY":true,"marginBottom":40}}}
+      </config>
+    </widget>
+    <widget id="comparativo_territorio_vendedor_grouped_horizontal" type="groupedbar" order="2" span-d="1" span-t="1" span-m="1" height="360" title="📊 Comparativo Vendedores por Território (Grouped • Horizontal)">
+      <config>
+        {"dataSource":{"schema":"vendas","table":"vw_pedidos_completo","dimension1":"territorio_nome","dimension2":"vendedor_nome","field":"item_subtotal","aggregation":"SUM","limit":5},
+         "groupedBarConfig":{"styling":{"layout":"horizontal","enableGridX":true,"enableGridY":false,"marginBottom":50}}}
+      </config>
+    </widget>
+  </row>
+
+  <row id="7" cols-d="2" cols-t="2" cols-m="1" gap-x="16" gap-y="16">
+    <widget id="evolucao_empilhado_sem_area" type="stackedlines" order="1" span-d="2" span-t="2" span-m="1" height="360" title="📈 Evolução (Empilhado) por Vendedor • Sem Área">
+      <config>
+        {"dataSource":{"schema":"vendas","table":"vw_pedidos_completo","dimension1":"territorio_nome","dimension2":"vendedor_nome","field":"item_subtotal","aggregation":"SUM","limit":5},
+         "stackedLinesConfig":{"styling":{"enableArea":false,"enableGridX":false,"enableGridY":true,"marginBottom":40}}}
+      </config>
+    </widget>
+  </row>
+
+  <row id="8" cols-d="2" cols-t="2" cols-m="1" gap-x="16" gap-y="16">
+    <widget id="radial_stacked_canais" type="radialstacked" order="1" span-d="1" span-t="1" span-m="1" height="320" title="🧭 Distribuição de Vendas por Canal (Radial Stacked)">
+      <config>
+        {"dataSource":{"schema":"vendas","table":"vw_pedidos_completo","dimension1":"territorio_nome","dimension2":"canal_venda_nome","field":"item_subtotal","aggregation":"SUM","limit":2},
+         "radialStackedConfig":{"styling":{"startAngle":180,"endAngle":0,"innerRadius":80,"outerRadius":130,"cornerRadius":5}}}
+      </config>
+    </widget>
+    <widget id="pivot_vendedor_canal" type="pivotbar" order="2" span-d="1" span-t="1" span-m="1" height="360" title="Vendedor x Canal • Faturamento">
+      <config>
+        {"dataSource":{"schema":"vendas","table":"vw_pedidos_completo","dimension1":"vendedor_nome","dimension2":"canal_venda_nome","measure":"faturamento","aggregation":"SUM","limit":8},
+         "pivotBarConfig":{"styling":{"layout":"vertical","groupMode":"grouped","enableGridX":false,"enableGridY":true,"containerBorderVariant":"smooth","containerBorderWidth":1}}}
       </config>
     </widget>
   </row>
