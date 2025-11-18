@@ -13,8 +13,6 @@ import { FontManager, type FontPresetKey, type FontSizeKey } from '@/components/
 import {
   Artifact,
   ArtifactHeader,
-  ArtifactTitle,
-  ArtifactDescription,
   ArtifactActions,
   ArtifactAction,
   ArtifactContent
@@ -61,7 +59,7 @@ export default function DashboardChatPanel() {
 
   // Available backgrounds
   const availableBackgrounds = BackgroundManager.getAvailableBackgrounds();
-  const themePreview = ThemeManager.getThemePreview(selectedTheme);
+  // Removed unused theme preview
 
   // Color palette UI removed
 
@@ -70,11 +68,7 @@ export default function DashboardChatPanel() {
   const availableFontSizes = FontManager.getAvailableFontSizes();
 
   // Header tooltip without nested template literals
-  const isLightTheme = selectedTheme === 'branco' || selectedTheme === 'cinza-claro';
-  const headerVariantLabel = headerUi.variant === 'auto'
-    ? 'Auto (' + (isLightTheme ? 'light' : 'dark') + ')'
-    : headerUi.variant;
-  const headerTooltip = 'Header: ' + headerVariantLabel;
+  // Removed unused header tooltip
 
   // Initialize store on mount
   useEffect(() => {
@@ -88,7 +82,7 @@ export default function DashboardChatPanel() {
       if (config.theme && ThemeManager.isValidTheme(config.theme)) {
         setSelectedTheme(config.theme);
       }
-    } catch (error) {
+    } catch {
       // Invalid JSON, keep current theme
     }
   }, [visualBuilderState.code]);
@@ -107,7 +101,7 @@ export default function DashboardChatPanel() {
         // Otherwise, use theme default font from FontManager
         setSelectedFont(FontManager.getThemeDefaultFont(config.theme));
       }
-    } catch (error) {
+    } catch {
       // Invalid JSON, keep current font
     }
   }, [visualBuilderState.code]);
@@ -124,7 +118,7 @@ export default function DashboardChatPanel() {
         // Otherwise, use default font size
         setSelectedFontSize(FontManager.getDefaultFontSize());
       }
-    } catch (error) {
+    } catch {
       // Invalid JSON, keep current font size
     }
   }, [visualBuilderState.code]);
@@ -138,7 +132,7 @@ export default function DashboardChatPanel() {
       } else {
         setSelectedLetterSpacing(-0.02);
       }
-    } catch (error) {
+    } catch {
       // keep current spacing
     }
   }, [visualBuilderState.code]);
@@ -159,7 +153,7 @@ export default function DashboardChatPanel() {
       if (config.config && typeof config.config.backgroundColor === 'string') {
         setDashboardBgColor(config.config.backgroundColor);
       }
-    } catch (error) {
+    } catch {
       // Invalid JSON, keep current background
     }
   }, [visualBuilderState.code]);
@@ -183,9 +177,7 @@ export default function DashboardChatPanel() {
     visualBuilderActions.updateCode(newCode);
   };
 
-  const handleLayoutChange = (updatedWidgets: Widget[]) => {
-    visualBuilderActions.updateWidgets(updatedWidgets);
-  };
+  // Removed unused handleLayoutChange; pass action directly where needed
 
   const handleThemeChange = (themeName: ThemeName) => {
     try {
@@ -257,18 +249,105 @@ export default function DashboardChatPanel() {
     }
   };
 
-  const mapChartConfigs = (widget: Widget) => {
-    const w: any = { ...widget };
-    const set = (path: string[], value: any) => {
-      let obj = w;
-      for (let i = 0; i < path.length - 1; i++) {
-        const key = path[i];
-        obj[key] = obj[key] || {};
-        obj = obj[key];
-      }
-      obj[path[path.length - 1]] = value;
-    };
-    return { w, set };
+  // Update helpers per widget type (typed, without any)
+  const setChartContainerBg = (widget: Widget, color: string): Widget => {
+    const w = { ...widget };
+    switch (w.type) {
+      case 'bar':
+        w.barConfig = {
+          ...(w.barConfig || {}),
+          styling: { ...(w.barConfig?.styling || {}), containerBackground: color }
+        };
+        break;
+      case 'line':
+        w.lineConfig = {
+          ...(w.lineConfig || {}),
+          styling: { ...(w.lineConfig?.styling || {}), containerBackground: color }
+        };
+        break;
+      case 'pie':
+        w.pieConfig = {
+          ...(w.pieConfig || {}),
+          styling: { ...(w.pieConfig?.styling || {}), containerBackground: color }
+        };
+        break;
+      case 'area':
+        w.areaConfig = {
+          ...(w.areaConfig || {}),
+          styling: { ...(w.areaConfig?.styling || {}), containerBackground: color }
+        };
+        break;
+      case 'stackedbar':
+        w.stackedBarConfig = {
+          ...(w.stackedBarConfig || {}),
+          styling: { ...(w.stackedBarConfig?.styling || {}), containerBackground: color }
+        };
+        break;
+      case 'groupedbar':
+        w.groupedBarConfig = {
+          ...(w.groupedBarConfig || {}),
+          styling: { ...(w.groupedBarConfig?.styling || {}), containerBackground: color }
+        };
+        break;
+      case 'stackedlines':
+        w.stackedLinesConfig = {
+          ...(w.stackedLinesConfig || {}),
+          styling: { ...(w.stackedLinesConfig?.styling || {}), containerBackground: color }
+        };
+        break;
+      case 'radialstacked':
+        w.radialStackedConfig = {
+          ...(w.radialStackedConfig || {}),
+          styling: { ...(w.radialStackedConfig?.styling || {}), containerBackground: color }
+        };
+        break;
+      case 'pivotbar':
+        w.pivotBarConfig = {
+          ...(w.pivotBarConfig || {}),
+          styling: { ...(w.pivotBarConfig?.styling || {}), containerBackground: color }
+        };
+        break;
+      case 'kpi':
+        w.kpiConfig = { ...(w.kpiConfig || {}), kpiContainerBackgroundColor: color };
+        break;
+      default:
+        break;
+    }
+    return w;
+  };
+
+  const setChartTitleCol = (widget: Widget, color: string): Widget => {
+    const w = { ...widget };
+    switch (w.type) {
+      case 'bar':
+        w.barConfig = { ...(w.barConfig || {}), styling: { ...(w.barConfig?.styling || {}), titleColor: color } };
+        break;
+      case 'line':
+        w.lineConfig = { ...(w.lineConfig || {}), styling: { ...(w.lineConfig?.styling || {}), titleColor: color } };
+        break;
+      case 'pie':
+        w.pieConfig = { ...(w.pieConfig || {}), styling: { ...(w.pieConfig?.styling || {}), titleColor: color } };
+        break;
+      case 'area':
+        w.areaConfig = { ...(w.areaConfig || {}), styling: { ...(w.areaConfig?.styling || {}), titleColor: color } };
+        break;
+      case 'stackedbar':
+        w.stackedBarConfig = { ...(w.stackedBarConfig || {}), styling: { ...(w.stackedBarConfig?.styling || {}), titleColor: color } };
+        break;
+      case 'groupedbar':
+        w.groupedBarConfig = { ...(w.groupedBarConfig || {}), styling: { ...(w.groupedBarConfig?.styling || {}), titleColor: color } };
+        break;
+      case 'stackedlines':
+        w.stackedLinesConfig = { ...(w.stackedLinesConfig || {}), styling: { ...(w.stackedLinesConfig?.styling || {}), titleColor: color } };
+        break;
+      case 'radialstacked':
+        w.radialStackedConfig = { ...(w.radialStackedConfig || {}), styling: { ...(w.radialStackedConfig?.styling || {}), titleColor: color } };
+        break;
+      case 'pivotbar':
+        w.pivotBarConfig = { ...(w.pivotBarConfig || {}), styling: { ...(w.pivotBarConfig?.styling || {}), titleColor: color } };
+        break;
+    }
+    return w;
   };
 
   const updateAllWidgets = (updater: (widget: Widget) => Widget) => {
@@ -284,70 +363,33 @@ export default function DashboardChatPanel() {
 
   const handleCardsBgColorChange = (color: string) => {
     setCardsBgColor(color);
-    updateAllWidgets((widget) => {
-      const { w, set } = mapChartConfigs(widget);
-      switch (w.type) {
-        case 'bar': set(['barConfig','styling','containerBackground'], color); break;
-        case 'line': set(['lineConfig','styling','containerBackground'], color); break;
-        case 'pie': set(['pieConfig','styling','containerBackground'], color); break;
-        case 'area': set(['areaConfig','styling','containerBackground'], color); break;
-        case 'stackedbar': set(['stackedBarConfig','styling','containerBackground'], color); break;
-        case 'groupedbar': set(['groupedBarConfig','styling','containerBackground'], color); break;
-        case 'stackedlines': set(['stackedLinesConfig','styling','containerBackground'], color); break;
-        case 'radialstacked': set(['radialStackedConfig','styling','containerBackground'], color); break;
-        case 'pivotbar': set(['pivotBarConfig','styling','containerBackground'], color); break;
-        case 'kpi':
-          w.kpiConfig = w.kpiConfig || {} as any;
-          w.kpiConfig.kpiContainerBackgroundColor = color;
-          break;
-        default:
-          break;
-      }
-      return w as Widget;
-    });
+    updateAllWidgets((widget) => setChartContainerBg(widget, color));
   };
 
   const handleChartTitleColorChange = (color: string) => {
     setChartTitleColor(color);
-    updateAllWidgets((widget) => {
-      const { w, set } = mapChartConfigs(widget);
-      switch (w.type) {
-        case 'bar': set(['barConfig','styling','titleColor'], color); break;
-        case 'line': set(['lineConfig','styling','titleColor'], color); break;
-        case 'pie': set(['pieConfig','styling','titleColor'], color); break;
-        case 'area': set(['areaConfig','styling','titleColor'], color); break;
-        case 'stackedbar': set(['stackedBarConfig','styling','titleColor'], color); break;
-        case 'groupedbar': set(['groupedBarConfig','styling','titleColor'], color); break;
-        case 'stackedlines': set(['stackedLinesConfig','styling','titleColor'], color); break;
-        case 'radialstacked': set(['radialStackedConfig','styling','titleColor'], color); break;
-        case 'pivotbar': set(['pivotBarConfig','styling','titleColor'], color); break;
-        default: break;
-      }
-      return w as Widget;
-    });
+    updateAllWidgets((widget) => setChartTitleCol(widget, color));
   };
 
   const handleKpiValueColorChange = (color: string) => {
     setKpiValueColor(color);
     updateAllWidgets((widget) => {
-      const w = { ...widget } as any;
+      const w = { ...widget };
       if (w.type === 'kpi') {
-        w.kpiConfig = w.kpiConfig || {};
-        w.kpiConfig.kpiValueColor = color;
+        w.kpiConfig = { ...(w.kpiConfig || {}), kpiValueColor: color };
       }
-      return w as Widget;
+      return w;
     });
   };
 
   const handleKpiTitleColorChange = (color: string) => {
     setKpiTitleColor(color);
     updateAllWidgets((widget) => {
-      const w = { ...widget } as any;
+      const w = { ...widget };
       if (w.type === 'kpi') {
-        w.kpiConfig = w.kpiConfig || {};
-        w.kpiConfig.kpiNameColor = color;
+        w.kpiConfig = { ...(w.kpiConfig || {}), kpiNameColor: color };
       }
-      return w as Widget;
+      return w;
     });
   };
 
@@ -702,7 +744,7 @@ export default function DashboardChatPanel() {
               {/* Border Submenu */}
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger>
-                  <Paintbrush className="w-4 h-4 mr-2" />
+                  <Square className="w-4 h-4 mr-2" />
                   Border
                 </DropdownMenuSubTrigger>
                 <DropdownMenuSubContent className="w-72">
