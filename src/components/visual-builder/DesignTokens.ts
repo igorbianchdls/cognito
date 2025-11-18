@@ -243,6 +243,66 @@ const TYPOGRAPHY_PRESETS = {
       semibold: 600,
       bold: 700
     }
+  },
+  geistmono: {
+    fontFamily: {
+      primary: 'var(--font-geist-mono), Geist Mono, monospace',
+      mono: 'var(--font-geist-mono), Geist Mono, monospace'
+    },
+    fontSize: {
+      xs: 12,
+      sm: 14,
+      md: 16,
+      lg: 18,
+      xl: 24,
+      xxl: 32
+    },
+    fontWeight: {
+      normal: 400,
+      medium: 500,
+      semibold: 600,
+      bold: 700
+    }
+  },
+  spacemono: {
+    fontFamily: {
+      primary: 'var(--font-space-mono), Space Mono, monospace',
+      mono: 'var(--font-space-mono), Space Mono, monospace'
+    },
+    fontSize: {
+      xs: 12,
+      sm: 14,
+      md: 16,
+      lg: 18,
+      xl: 24,
+      xxl: 32
+    },
+    fontWeight: {
+      normal: 400,
+      medium: 500,
+      semibold: 600,
+      bold: 700
+    }
+  },
+  ibmplexmono: {
+    fontFamily: {
+      primary: 'var(--font-ibm-plex-mono), IBM Plex Mono, monospace',
+      mono: 'var(--font-ibm-plex-mono), IBM Plex Mono, monospace'
+    },
+    fontSize: {
+      xs: 12,
+      sm: 14,
+      md: 16,
+      lg: 18,
+      xl: 24,
+      xxl: 32
+    },
+    fontWeight: {
+      normal: 400,
+      medium: 500,
+      semibold: 600,
+      bold: 700
+    }
   }
 };
 

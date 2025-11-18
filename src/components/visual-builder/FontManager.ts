@@ -127,6 +127,34 @@ const FONT_PRESETS: Record<string, FontPreset> = {
     category: 'display',
     weight: 'bold',
     style: 'elegant'
+  },
+  // Monospace Fonts
+  geistmono: {
+    key: 'geistmono',
+    name: 'Geist Mono',
+    description: 'Geist Mono, clean monospaced for data/metrics',
+    family: 'var(--font-geist-mono), Geist Mono, monospace',
+    category: 'display',
+    weight: 'medium',
+    style: 'technical'
+  },
+  spacemono: {
+    key: 'spacemono',
+    name: 'Space Mono',
+    description: 'Space Mono, geometric monospaced font',
+    family: 'var(--font-space-mono), Space Mono, monospace',
+    category: 'display',
+    weight: 'normal',
+    style: 'technical'
+  },
+  ibmplexmono: {
+    key: 'ibmplexmono',
+    name: 'IBM Plex Mono',
+    description: 'IBM Plex Mono, technical and readable',
+    family: 'var(--font-ibm-plex-mono), IBM Plex Mono, monospace',
+    category: 'display',
+    weight: 'normal',
+    style: 'technical'
   }
 };
 
@@ -141,7 +169,7 @@ const THEME_FONT_MAPPING: Record<string, string> = {
   platinum: 'merriweather'
 };
 
-export type FontPresetKey = 'inter' | 'opensans' | 'roboto' | 'lato' | 'montserrat' | 'geist' | 'barlow' | 'arial' | 'segoe' | 'georgia' | 'merriweather' | 'playfair';
+export type FontPresetKey = 'inter' | 'opensans' | 'roboto' | 'lato' | 'montserrat' | 'geist' | 'barlow' | 'arial' | 'segoe' | 'georgia' | 'merriweather' | 'playfair' | 'geistmono' | 'spacemono' | 'ibmplexmono';
 
 export interface FontPreview {
   key: FontPresetKey;
