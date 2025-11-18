@@ -272,11 +272,14 @@ export const visualBuilderActions = {
     let dashboardTitle: string | undefined
     let dashboardSubtitle: string | undefined
     try {
-      const parsedCode = JSON.parse(currentState.code)
-      currentTheme = (parsedCode as any).theme || null
-      currentConfig = (parsedCode as any).config || null
-      dashboardTitle = (parsedCode as any).dashboardTitle
-      dashboardSubtitle = (parsedCode as any).dashboardSubtitle
+      const parsedUnknown: unknown = JSON.parse(currentState.code)
+      if (parsedUnknown && typeof parsedUnknown === 'object') {
+        const obj = parsedUnknown as { theme?: unknown; config?: unknown; dashboardTitle?: unknown; dashboardSubtitle?: unknown }
+        currentTheme = typeof obj.theme === 'string' ? obj.theme : null
+        currentConfig = (obj.config && typeof obj.config === 'object') ? (obj.config as GridConfig) : null
+        dashboardTitle = typeof obj.dashboardTitle === 'string' ? obj.dashboardTitle : undefined
+        dashboardSubtitle = typeof obj.dashboardSubtitle === 'string' ? obj.dashboardSubtitle : undefined
+      }
     } catch {
       currentConfig = currentState.gridConfig
     }
@@ -367,8 +370,11 @@ export const visualBuilderActions = {
     // Extrair tema atual do código
     let currentTheme = 'branco'
     try {
-      const parsedCode = JSON.parse(currentState.code)
-      currentTheme = (parsedCode as any).theme || 'branco'
+      const parsedUnknown: unknown = JSON.parse(currentState.code)
+      if (parsedUnknown && typeof parsedUnknown === 'object') {
+        const obj = parsedUnknown as { theme?: unknown }
+        if (typeof obj.theme === 'string') currentTheme = obj.theme
+      }
     } catch {
       // ignore
     }
@@ -415,4 +421,3 @@ export const visualBuilderActions = {
     })
   }
 }
-
