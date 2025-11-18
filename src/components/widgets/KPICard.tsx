@@ -613,7 +613,7 @@ export function KPICard({
                 lineHeight: kpiValueLineHeight || undefined
               }),
               fontFamily: kpiValueFontFamily !== 'inherit' ? kpiValueFontFamily : undefined
-            }
+            }}
           >
             {formatValue(currentValue, unit || '')}
           </CardTitle>
