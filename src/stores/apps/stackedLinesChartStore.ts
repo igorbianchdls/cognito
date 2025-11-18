@@ -116,6 +116,12 @@ export interface StackedLinesChartConfig {
     axisLegendFontSize?: number
     axisLegendFontWeight?: number
     
+    // Typography - Labels
+    labelsFontFamily?: string
+    labelsFontSize?: number
+    labelsFontWeight?: number
+    labelsTextColor?: string
+
     // Typography - Legends
     legendsFontFamily?: string
     legendsFontSize?: number
