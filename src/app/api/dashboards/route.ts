@@ -1,26 +1,50 @@
 import { NextRequest } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-const supabase = createClient(supabaseUrl, supabaseServiceKey)
+import { runQuery } from '@/lib/postgres'
 
 export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url)
-  const q = (searchParams.get('q') || '').trim()
-  const visibility = (searchParams.get('visibility') || '').trim()
-  const limit = Number(searchParams.get('limit') || '20')
-  const offset = Number(searchParams.get('offset') || '0')
+  try {
+    const { searchParams } = new URL(req.url)
+    const q = (searchParams.get('q') || '').trim()
+    const visibility = (searchParams.get('visibility') || '').trim()
+    const limit = Number(searchParams.get('limit') || '20')
+    const offset = Number(searchParams.get('offset') || '0')
 
-  let query = supabase.from('apps.dashboards').select('id,title,description,visibility,version,created_at,updated_at', { count: 'estimated' })
-  if (visibility) query = query.eq('visibility', visibility)
-  if (q) query = query.or(`title.ilike.%${q}%,description.ilike.%${q}%`)
-  if (!Number.isNaN(limit)) query = query.limit(limit)
-  if (!Number.isNaN(offset)) query = query.range(offset, offset + limit - 1)
+    const params: unknown[] = []
+    const where: string[] = []
+    if (visibility) {
+      params.push(visibility)
+      where.push(`visibility = $${params.length}`)
+    }
+    if (q) {
+      params.push(`%${q}%`)
+      const idx = params.length
+      where.push(`(title ILIKE $${idx} OR COALESCE(description,'') ILIKE $${idx})`)
+    }
 
-  const { data, error, count } = await query
-  if (error) return Response.json({ success: false, error: error.message }, { status: 500 })
-  return Response.json({ success: true, items: data, count: count ?? data?.length ?? 0 })
+    const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : ''
+    // items query
+    const itemsSql = `
+      SELECT id, title, description, visibility, version, created_at, updated_at
+      FROM apps.dashboards
+      ${whereSql}
+      ORDER BY created_at DESC
+      LIMIT $${params.length + 1} OFFSET $${params.length + 2}
+    `
+    const items = await runQuery<{ id: string; title: string; description: string | null; visibility: string; version: number; created_at: string; updated_at: string }>(
+      itemsSql,
+      [...params, Number.isFinite(limit) ? limit : 20, Number.isFinite(offset) ? offset : 0]
+    )
+
+    // count query
+    const countSql = `SELECT COUNT(*)::int AS count FROM apps.dashboards ${whereSql}`
+    const countRows = await runQuery<{ count: number }>(countSql, params)
+    const count = countRows?.[0]?.count ?? items.length
+
+    return Response.json({ success: true, items, count })
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : 'Erro ao listar dashboards'
+    return Response.json({ success: false, error: msg }, { status: 500 })
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -30,16 +54,21 @@ export async function POST(req: NextRequest) {
 
     if (!title || typeof title !== 'string') return Response.json({ success: false, error: 'title é obrigatório' }, { status: 400 })
     if (!sourcecode || typeof sourcecode !== 'string') return Response.json({ success: false, error: 'sourcecode é obrigatório' }, { status: 400 })
-    const vis = visibility || 'private'
+    const vis: 'private'|'org'|'public' = visibility || 'private'
     if (!['private','org','public'].includes(vis)) return Response.json({ success: false, error: 'visibility inválida' }, { status: 400 })
     const ver = Number.isFinite(Number(version)) && Number(version) > 0 ? Number(version) : 1
 
-    const payload = { title, description: description || null, sourcecode, visibility: vis, version: ver }
-    const { data, error } = await supabase.from('apps.dashboards').insert([payload]).select('*').single()
-    if (error) return Response.json({ success: false, error: error.message }, { status: 500 })
-    return Response.json({ success: true, item: data }, { status: 201 })
+    const insertSql = `
+      INSERT INTO apps.dashboards (title, description, sourcecode, visibility, version)
+      VALUES ($1, $2, $3, $4, $5)
+      RETURNING id, title, description, sourcecode, visibility, version, created_at, updated_at
+    `
+    const rows = await runQuery<{
+      id: string; title: string; description: string | null; sourcecode: string; visibility: string; version: number; created_at: string; updated_at: string
+    }>(insertSql, [title, description || null, sourcecode, vis, ver])
+    const item = rows?.[0]
+    return Response.json({ success: true, item }, { status: 201 })
   } catch (e) {
     return Response.json({ success: false, error: (e as Error).message || 'Erro ao criar' }, { status: 500 })
   }
 }
-
