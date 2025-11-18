@@ -27,6 +27,21 @@ interface AreaChartProps extends BaseChartProps {
   enablePoints?: boolean
   curve?: 'linear' | 'cardinal' | 'catmullRom' | 'monotoneX'
   axisTextColor?: string
+  axisFontFamily?: string
+  axisFontSize?: number
+  axisFontWeight?: number
+  axisLegendFontSize?: number
+  axisLegendFontWeight?: number
+  labelsFontFamily?: string
+  labelsFontSize?: number
+  labelsFontWeight?: number
+  labelsTextColor?: string
+  legendsFontFamily?: string
+  legendsFontSize?: number
+  legendsFontWeight?: number
+  legendsTextColor?: string
+  tooltipFontSize?: number
+  tooltipFontFamily?: string
   animate?: boolean
   motionConfig?: 'default' | 'gentle' | 'wobbly' | 'stiff' | 'slow'
   margin?: { top?: number; right?: number; bottom?: number; left?: number }
@@ -156,6 +171,21 @@ export function AreaChart({
   enablePoints,
   curve,
   axisTextColor,
+  axisFontFamily,
+  axisFontSize,
+  axisFontWeight,
+  axisLegendFontSize,
+  axisLegendFontWeight,
+  labelsFontFamily,
+  labelsFontSize,
+  labelsFontWeight,
+  labelsTextColor,
+  legendsFontFamily,
+  legendsFontSize,
+  legendsFontWeight,
+  legendsTextColor,
+  tooltipFontSize,
+  tooltipFontFamily,
   animate,
   motionConfig,
   margin,

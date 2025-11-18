@@ -27,6 +27,21 @@ interface LineChartProps extends BaseChartProps {
   pointColor?: string
   pointBorderColor?: string
   axisTextColor?: string
+  axisFontFamily?: string
+  axisFontSize?: number
+  axisFontWeight?: number
+  axisLegendFontSize?: number
+  axisLegendFontWeight?: number
+  labelsFontFamily?: string
+  labelsFontSize?: number
+  labelsFontWeight?: number
+  labelsTextColor?: string
+  legendsFontFamily?: string
+  legendsFontSize?: number
+  legendsFontWeight?: number
+  legendsTextColor?: string
+  tooltipFontSize?: number
+  tooltipFontFamily?: string
   animate?: boolean
   motionConfig?: 'default' | 'gentle' | 'wobbly' | 'stiff' | 'slow'
   margin?: { top?: number; right?: number; bottom?: number; left?: number }
@@ -166,6 +181,21 @@ export function LineChart({
   enablePointLabels,
   pointLabelTextColor,
   axisTextColor,
+  axisFontFamily,
+  axisFontSize,
+  axisFontWeight,
+  axisLegendFontSize,
+  axisLegendFontWeight,
+  labelsFontFamily,
+  labelsFontSize,
+  labelsFontWeight,
+  labelsTextColor,
+  legendsFontFamily,
+  legendsFontSize,
+  legendsFontWeight,
+  legendsTextColor,
+  tooltipFontSize,
+  tooltipFontFamily,
   // Typography - Title/Subtitle
   title,
   subtitle,
