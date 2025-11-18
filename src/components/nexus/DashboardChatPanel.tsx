@@ -42,6 +42,7 @@ export default function DashboardChatPanel() {
   const [selectedTheme, setSelectedTheme] = useState<ThemeName>('branco');
   const [selectedFont, setSelectedFont] = useState<FontPresetKey>('barlow');
   const [selectedFontSize, setSelectedFontSize] = useState<FontSizeKey>('lg');
+  const [selectedLetterSpacing, setSelectedLetterSpacing] = useState<number>(-0.02);
   const [selectedBackground, setSelectedBackground] = useState<BackgroundPresetKey>('fundo-branco');
   const [selectedBorderType, setSelectedBorderType] = useState<BorderPresetKey>('suave');
   const [borderColor, setBorderColor] = useState<string>('#e5e7eb');
@@ -120,6 +121,20 @@ export default function DashboardChatPanel() {
       }
     } catch (error) {
       // Invalid JSON, keep current font size
+    }
+  }, [visualBuilderState.code]);
+
+  // Detect current letter spacing from code
+  useEffect(() => {
+    try {
+      const config = JSON.parse(visualBuilderState.code);
+      if (typeof config.customLetterSpacing === 'number') {
+        setSelectedLetterSpacing(config.customLetterSpacing);
+      } else {
+        setSelectedLetterSpacing(-0.02);
+      }
+    } catch (error) {
+      // keep current spacing
     }
   }, [visualBuilderState.code]);
 
@@ -226,6 +241,21 @@ export default function DashboardChatPanel() {
       console.log('🎨 Font size changed to:', sizeKey, `(${FontManager.getFontSizeValue(sizeKey)}px)`);
     } catch (error) {
       console.error('Error updating font size:', error);
+    }
+  };
+
+  const handleLetterSpacingChange = (value: number) => {
+    try {
+      const config = JSON.parse(visualBuilderState.code);
+      const updatedConfig = {
+        ...config,
+        customLetterSpacing: value,
+      };
+      visualBuilderActions.updateCode(JSON.stringify(updatedConfig, null, 2));
+      setSelectedLetterSpacing(value);
+      console.log('🔤 Letter spacing changed to:', value);
+    } catch (error) {
+      console.error('Error updating letter spacing:', error);
     }
   };
 
@@ -452,6 +482,30 @@ export default function DashboardChatPanel() {
                             <span className="text-xs text-muted-foreground">{size.value}px • {size.usage}</span>
                           </div>
                           {selectedFontSize === size.key && (
+                            <Check className="w-4 h-4 text-blue-600" />
+                          )}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
+
+                  <DropdownMenuSeparator />
+
+                  {/* Letter Spacing submenu */}
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>Letter Spacing</DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent>
+                      {[-0.05,-0.04,-0.03,-0.02,-0.01,0,0.01,0.02,0.03,0.04,0.05].map(v => (
+                        <DropdownMenuItem
+                          key={v}
+                          onClick={() => handleLetterSpacingChange(v)}
+                          className="flex items-center justify-between py-2"
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm">{v.toFixed(2)}em</span>
+                            <span className="text-xs text-muted-foreground">tracking</span>
+                          </div>
+                          {Math.abs(selectedLetterSpacing - v) < 1e-6 && (
                             <Check className="w-4 h-4 text-blue-600" />
                           )}
                         </DropdownMenuItem>

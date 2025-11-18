@@ -1455,7 +1455,8 @@ export class ThemeManager {
     gridConfig: GridConfig,
     themeName: ThemeName,
     corporateColorKey?: string,
-    customBackground?: string
+    customBackground?: string,
+    customLetterSpacing?: number
   ): GridConfig {
     if (!this.isValidTheme(themeName)) {
       console.warn(`Invalid theme: ${themeName}. Skipping grid theme application.`);
@@ -1487,6 +1488,9 @@ export class ThemeManager {
       // Spacing
       padding: gridConfig.padding || tokens.spacing.md,
       margin: gridConfig.margin || tokens.spacing.sm,
+
+      // Typography override — letter spacing in em (applied by container)
+      letterSpacing: typeof customLetterSpacing === 'number' ? customLetterSpacing : gridConfig.letterSpacing,
 
       // Keep advanced effects if they were already set manually
       backgroundOpacity: gridConfig.backgroundOpacity || tokens.effects.opacity.subtle

@@ -93,6 +93,8 @@ export interface GridConfig {
   containerHeight?: number;
   backgroundColor?: string;
   borderColor?: string;
+  // Typography overrides applied to dashboard container
+  letterSpacing?: number; // em units (e.g., -0.02 → '-0.02em')
 
   // Advanced Background Effects (same as widgets)
   backgroundOpacity?: number;
@@ -265,6 +267,7 @@ export class ConfigParser {
       const theme = config.theme as ThemeName;
       const customFont = config.customFont as string;
       const customFontSize = config.customFontSize as string;
+      const customLetterSpacing = typeof config.customLetterSpacing === 'number' ? config.customLetterSpacing : undefined;
       const customBackground = config.customBackground as string;
       const corporateColor = config.corporateColor as string;
       const layoutRows = (config.layoutRows || rawGridConfig.layoutRows) as Record<string, LayoutRow> | undefined;
@@ -329,8 +332,8 @@ export class ConfigParser {
 
       // Step 6: Apply theme to grid (now handles custom background internally)
       const themedGridConfig = (theme && ThemeManager.isValidTheme(theme))
-        ? ThemeManager.applyThemeToGrid(gridConfig, theme, corporateColor, customBackground)
-        : gridConfig;
+        ? ThemeManager.applyThemeToGrid(gridConfig, theme, corporateColor, customBackground, customLetterSpacing)
+        : { ...gridConfig, letterSpacing: customLetterSpacing };
 
       return {
         widgets: themedWidgets,

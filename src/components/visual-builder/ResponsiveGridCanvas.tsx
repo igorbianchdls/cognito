@@ -146,6 +146,7 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig, globalFilter
     paddingRight: `${pad}px`,
     paddingBottom: `${pad}px`,
     margin: gridConfig.margin ? `${gridConfig.margin}px` : undefined,
+    letterSpacing: typeof gridConfig.letterSpacing === 'number' ? `${gridConfig.letterSpacing}em` : undefined,
   };
 
   // Helper function to convert hex to RGB
