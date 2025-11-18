@@ -434,7 +434,7 @@ export class ConfigParser {
       } as NonNullable<GridConfig['layout']>['columns'];
 
       // Parse widgets (self-closing and pair with <config>)
-      const parseWidgetAttributes = (attrStr: string, innerConfig?: string) => {
+      const parseWidgetAttributes = (attrStr: string, innerConfig?: string, defaultStart?: number) => {
         const wa = parseAttrs(attrStr || '');
         const id = wa['id'];
         const type = wa['type'] as Widget['type'];
@@ -459,7 +459,13 @@ export class ConfigParser {
           ...(typeof heightPx === 'number' ? { heightPx } : {}),
           ...(title ? { title } : {}),
           ...(spanD || spanT || spanM ? { span: { ...(spanD ? { desktop: spanD } : {}), ...(spanT ? { tablet: spanT } : {}), ...(spanM ? { mobile: spanM } : {}) } } : {}),
-          ...(colD || colT || colM ? { gridStart: { ...(colD ? { desktop: colD } : {}), ...(colT ? { tablet: colT } : {}), ...(colM ? { mobile: colM } : {}) } } : {})
+          ...((colD || colT || colM || defaultStart)
+              ? { gridStart: {
+                    ...(colD ? { desktop: colD } : (defaultStart ? { desktop: defaultStart } : {})),
+                    ...(colT ? { tablet: colT } : (defaultStart ? { tablet: defaultStart } : {})),
+                    ...(colM ? { mobile: colM } : (defaultStart ? { mobile: defaultStart } : {}))
+                 } }
+              : {})
         } as Widget;
 
         if (innerConfig) {
@@ -473,19 +479,49 @@ export class ConfigParser {
         widgets.push(widget);
       };
 
-      // Self-closing
-      const widgetSelfRegex = /<widget\b([^>]*)\/>/gi;
-      let wSelf: RegExpExecArray | null;
-      while ((wSelf = widgetSelfRegex.exec(dsl)) !== null) {
-        parseWidgetAttributes(wSelf[1]);
-      }
-      // Paired
-      const widgetPairRegex = /<widget\b([^>]*)>([\s\S]*?)<\/widget>/gi;
-      let wPair: RegExpExecArray | null;
-      while ((wPair = widgetPairRegex.exec(dsl)) !== null) {
-        const inner = wPair[2] || '';
-        const cfgMatch = inner.match(/<config\b[^>]*>([\s\S]*?)<\/config>/i);
-        parseWidgetAttributes(wPair[1], cfgMatch && cfgMatch[1] ? cfgMatch[1] : undefined);
+      // Prefer columns if present; fallback to global scanning
+      const hasColumns = /<column\b/i.test(dsl);
+      if (hasColumns) {
+        const columnRegex = /<column\b([^>]*)>([\s\S]*?)<\/column>/gi;
+        let colMatch: RegExpExecArray | null;
+        while ((colMatch = columnRegex.exec(dsl)) !== null) {
+          const colAttrs = parseAttrs(colMatch[1] || '');
+          const colIdStr = colAttrs['id'];
+          const colId = colIdStr ? Number(colIdStr) : NaN;
+          if (!colIdStr || !Number.isFinite(colId) || colId < 1) {
+            errors.push({ line: 1, column: 1, message: 'Column missing valid id (>=1)', type: 'validation' });
+            continue;
+          }
+          const content = colMatch[2] || '';
+          // self-closing widgets inside column
+          const ws = /<widget\b([^>]*)\/>/gi;
+          let wSelf: RegExpExecArray | null;
+          while ((wSelf = ws.exec(content)) !== null) {
+            parseWidgetAttributes(wSelf[1], undefined, colId);
+          }
+          // paired widgets inside column
+          const wp = /<widget\b([^>]*)>([\s\S]*?)<\/widget>/gi;
+          let wPair: RegExpExecArray | null;
+          while ((wPair = wp.exec(content)) !== null) {
+            const inner = wPair[2] || '';
+            const cfgMatch = inner.match(/<config\b[^>]*>([\s\S]*?)<\/config>/i);
+            parseWidgetAttributes(wPair[1], cfgMatch && cfgMatch[1] ? cfgMatch[1] : undefined, colId);
+          }
+        }
+      } else {
+        // Global: scan all widgets
+        const widgetSelfRegex = /<widget\b([^>]*)\/>/gi;
+        let wSelf: RegExpExecArray | null;
+        while ((wSelf = widgetSelfRegex.exec(dsl)) !== null) {
+          parseWidgetAttributes(wSelf[1]);
+        }
+        const widgetPairRegex = /<widget\b([^>]*)>([\s\S]*?)<\/widget>/gi;
+        let wPair: RegExpExecArray | null;
+        while ((wPair = widgetPairRegex.exec(dsl)) !== null) {
+          const inner = wPair[2] || '';
+          const cfgMatch = inner.match(/<config\b[^>]*>([\s\S]*?)<\/config>/i);
+          parseWidgetAttributes(wPair[1], cfgMatch && cfgMatch[1] ? cfgMatch[1] : undefined);
+        }
       }
 
       // Build grid config, apply theme, return

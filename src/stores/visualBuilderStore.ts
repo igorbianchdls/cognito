@@ -271,44 +271,50 @@ export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas"
 
 // Example in grid-per-column mode
 export const initialDslColumns = `<dashboard theme="branco" title="Dashboard (Colunas)" subtitle="Layout por colunas" layout-mode="grid-per-column" cols-d="3" cols-t="2" cols-m="1" gap-x="16" gap-y="16">
-  <widget id="kpi_faturamento" type="kpi" order="1" col-d="1" span-d="1" height="150" title="💰 Faturamento Total">
-    <config>
-      {"dataSource":{"schema":"vendas","table":"vw_pedidos_completo","x":"item_subtotal","y":"item_subtotal","aggregation":"SUM"},
-       "kpiConfig":{"unit":"R$","visualizationType":"card"}}
-    </config>
-  </widget>
-  <widget id="kpi_total_itens" type="kpi" order="1" col-d="2" span-d="1" height="150" title="📦 Total de Itens">
-    <config>
-      {"dataSource":{"schema":"vendas","table":"vw_pedidos_completo","x":"item_id","y":"item_id","aggregation":"COUNT"},
-       "kpiConfig":{"visualizationType":"card"}}
-    </config>
-  </widget>
-  <widget id="kpi_ticket_medio" type="kpi" order="1" col-d="3" span-d="1" height="150" title="🎯 Ticket Médio">
-    <config>
-      {"dataSource":{"schema":"vendas","table":"vw_pedidos_completo","x":"item_subtotal","y":"item_subtotal","aggregation":"AVG"},
-       "kpiConfig":{"unit":"R$","visualizationType":"card"}}
-    </config>
-  </widget>
-
-  <widget id="chart_faturamento_mensal" type="line" order="2" col-d="1" span-d="2" height="320" title="📈 Faturamento Mensal">
-    <config>
-      {"dataSource":{"schema":"vendas","table":"vw_pedidos_completo","x":"data_pedido","y":"item_subtotal","aggregation":"SUM"},
-       "lineConfig":{"styling":{"showLegend":false,"showGrid":true,"marginBottom":40}}}
-    </config>
-  </widget>
-  <widget id="chart_vendas_canal" type="pie" order="2" col-d="3" span-d="1" height="320" title="📱 Vendas por Canal">
-    <config>
-      {"dataSource":{"schema":"vendas","table":"vw_pedidos_completo","x":"canal_venda_nome","y":"item_subtotal","aggregation":"SUM"},
-       "pieConfig":{"styling":{"showLegend":true,"showGrid":false,"marginBottom":40}}}
-    </config>
-  </widget>
-
-  <widget id="chart_top_produtos" type="bar" order="3" col-d="2" span-d="1" height="320" title="🏆 Top 10 Produtos">
-    <config>
-      {"dataSource":{"schema":"vendas","table":"vw_pedidos_completo","x":"produto_nome","y":"item_subtotal","aggregation":"SUM"},
-       "barConfig":{"styling":{"showLegend":false,"showGrid":true,"marginBottom":40,"barColor":"#3b82f6"}}}
-    </config>
-  </widget>
+  <columns>
+    <column id="1">
+      <widget id="kpi_faturamento" type="kpi" order="1" span-d="1" height="150" title="💰 Faturamento Total">
+        <config>
+          {"dataSource":{"schema":"vendas","table":"vw_pedidos_completo","x":"item_subtotal","y":"item_subtotal","aggregation":"SUM"},
+           "kpiConfig":{"unit":"R$","visualizationType":"card"}}
+        </config>
+      </widget>
+      <widget id="chart_faturamento_mensal" type="line" order="2" span-d="2" height="320" title="📈 Faturamento Mensal">
+        <config>
+          {"dataSource":{"schema":"vendas","table":"vw_pedidos_completo","x":"data_pedido","y":"item_subtotal","aggregation":"SUM"},
+           "lineConfig":{"styling":{"showLegend":false,"showGrid":true,"marginBottom":40}}}
+        </config>
+      </widget>
+    </column>
+    <column id="2">
+      <widget id="kpi_total_itens" type="kpi" order="1" span-d="1" height="150" title="📦 Total de Itens">
+        <config>
+          {"dataSource":{"schema":"vendas","table":"vw_pedidos_completo","x":"item_id","y":"item_id","aggregation":"COUNT"},
+           "kpiConfig":{"visualizationType":"card"}}
+        </config>
+      </widget>
+      <widget id="chart_top_produtos" type="bar" order="3" span-d="1" height="320" title="🏆 Top 10 Produtos">
+        <config>
+          {"dataSource":{"schema":"vendas","table":"vw_pedidos_completo","x":"produto_nome","y":"item_subtotal","aggregation":"SUM"},
+           "barConfig":{"styling":{"showLegend":false,"showGrid":true,"marginBottom":40,"barColor":"#3b82f6"}}}
+        </config>
+      </widget>
+    </column>
+    <column id="3">
+      <widget id="kpi_ticket_medio" type="kpi" order="1" span-d="1" height="150" title="🎯 Ticket Médio">
+        <config>
+          {"dataSource":{"schema":"vendas","table":"vw_pedidos_completo","x":"item_subtotal","y":"item_subtotal","aggregation":"AVG"},
+           "kpiConfig":{"unit":"R$","visualizationType":"card"}}
+        </config>
+      </widget>
+      <widget id="chart_vendas_canal" type="pie" order="2" span-d="1" height="320" title="📱 Vendas por Canal">
+        <config>
+          {"dataSource":{"schema":"vendas","table":"vw_pedidos_completo","x":"canal_venda_nome","y":"item_subtotal","aggregation":"SUM"},
+           "pieConfig":{"styling":{"showLegend":true,"showGrid":false,"marginBottom":40}}}
+        </config>
+      </widget>
+    </column>
+  </columns>
 </dashboard>`
 
 // Parse do código inicial para ter widgets desde o início
@@ -408,7 +414,42 @@ export const visualBuilderActions = {
     )
 
     const newCode = isDslCode(currentState.code)
-      ? currentState.code // keep DSL source untouched
+      ? (() => {
+          // Serialize DSL: update order and (in per-column mode) column (col-d)
+          let dsl = currentState.code
+          const isPerColumn = /layout-mode\s*=\s*"grid-per-column"/.test(dsl)
+
+          const escapeId = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+          const setAttrOnWidget = (source: string, id: string, name: string, value: string): string => {
+            const re = new RegExp(`(<widget\\b[^>]*\\bid=\"${escapeId(id)}\"[^>]*)(\\/?>)`, 'g')
+            return source.replace(re, (match, attrs: string, end: string) => {
+              const attrRe = new RegExp(`\\b${name}\\=\"[^\"]*\"`)
+              let newAttrs = attrs
+              if (attrRe.test(attrs)) {
+                newAttrs = attrs.replace(attrRe, `${name}="${value}"`)
+              } else {
+                newAttrs = `${attrs} ${name}="${value}` + `"`
+              }
+              return newAttrs + end
+            })
+          }
+
+          // Apply updates
+          widgets.forEach(w => {
+            if (w.id) {
+              if (typeof w.order === 'number') {
+                dsl = setAttrOnWidget(dsl, w.id, 'order', String(w.order))
+              }
+              if (isPerColumn) {
+                const col = w.gridStart?.desktop
+                if (typeof col === 'number' && col >= 1) {
+                  dsl = setAttrOnWidget(dsl, w.id, 'col-d', String(col))
+                }
+              }
+            }
+          })
+          return dsl
+        })()
       : compactWidgetHeaders(compactJsonSections(compactLayoutRows(reorderWidgetKeysInCode(newCodeRaw))))
 
     $visualBuilderState.set({
