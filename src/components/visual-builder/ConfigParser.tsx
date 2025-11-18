@@ -272,6 +272,11 @@ export class ConfigParser {
 
   static parse(jsonString: string): ParseResult {
     try {
+      const raw = String(jsonString || '').trim();
+      // DSL detection: starts with tag and contains <row
+      if (raw.startsWith('<') && /<row\b/i.test(raw)) {
+        return this.parseDsl(raw);
+      }
       // Step 1: Parse JSON (same as chart stores)
       const config = JSON.parse(jsonString);
 
@@ -375,6 +380,178 @@ export class ConfigParser {
         }],
         isValid: false
       };
+    }
+  }
+
+  /**
+   * Parse HTML-like DSL into ParseResult
+   * Supported tags: <dashboard>, <row>, <widget>, <config>
+   */
+  private static parseDsl(dsl: string): ParseResult {
+    const errors: ParseError[] = [];
+    const widgets: Widget[] = [];
+    const layoutRows: NonNullable<GridConfig['layout']>['rows'] = {};
+
+    const attrRegex = /(\w[\w-]*)\s*=\s*"([^"]*)"/g;
+    const parseAttrs = (s: string): Record<string, string> => {
+      const map: Record<string, string> = {};
+      for (const m of s.matchAll(attrRegex)) {
+        map[m[1]] = m[2];
+      }
+      return map;
+    };
+
+    const dashMatch = dsl.match(/<dashboard\b([^>]*)>/i);
+    const dashAttrs = dashMatch ? parseAttrs(dashMatch[1]) : {};
+    const theme = dashAttrs['theme'] as ThemeName | undefined;
+    const dashboardTitle = dashAttrs['title'];
+    const dashboardSubtitle = dashAttrs['subtitle'];
+    const layoutMode = (dashAttrs['layout-mode'] as 'grid' | 'grid-per-row' | undefined) || 'grid-per-row';
+
+    // Rows
+    const rowRegex = /<row\b([^>]*)>([\s\S]*?)<\/row>/gi;
+    let rowMatch: RegExpExecArray | null;
+    while ((rowMatch = rowRegex.exec(dsl)) !== null) {
+      const rowAttrs = parseAttrs(rowMatch[1] || '');
+      const rowId = rowAttrs['id'];
+      if (!rowId) {
+        errors.push({ line: 1, column: 1, message: 'Row missing id attribute', type: 'validation' });
+        continue;
+      }
+      const colsD = Number(rowAttrs['cols-d'] || '0');
+      const colsT = Number(rowAttrs['cols-t'] || '0');
+      const colsM = Number(rowAttrs['cols-m'] || '0');
+      if (!colsD || !colsT || !colsM) {
+        errors.push({ line: 1, column: 1, message: `Row ${rowId}: cols-d/cols-t/cols-m are required`, type: 'validation' });
+      }
+      const gapXStr = rowAttrs['gap-x'];
+      const gapYStr = rowAttrs['gap-y'];
+      const arStr = rowAttrs['auto-row-height'];
+      const gapX = gapXStr !== undefined ? Number(gapXStr) : undefined;
+      const gapY = gapYStr !== undefined ? Number(gapYStr) : undefined;
+      const autoRowHeight = arStr !== undefined ? Number(arStr) : undefined;
+
+      layoutRows[rowId] = {
+        desktop: { columns: Math.max(colsD || 1, 1), gapX, gapY, autoRowHeight },
+        tablet: { columns: Math.max(colsT || 1, 1), gapX, gapY, autoRowHeight },
+        mobile: { columns: Math.max(colsM || 1, 1), gapX, gapY, autoRowHeight }
+      };
+
+      const rowContent = rowMatch[2] || '';
+
+      // Self-closing widgets
+      const widgetSelfRegex = /<widget\b([^>]*)\/>/gi;
+      let wMatch: RegExpExecArray | null;
+      while ((wMatch = widgetSelfRegex.exec(rowContent)) !== null) {
+        const wa = parseAttrs(wMatch[1] || '');
+        const widget = this.buildWidgetFromAttrs(wa, rowId, errors);
+        if (widget) widgets.push(widget);
+      }
+
+      // Pair widgets with optional <config>
+      const widgetPairRegex = /<widget\b([^>]*)>([\s\S]*?)<\/widget>/gi;
+      let wpMatch: RegExpExecArray | null;
+      while ((wpMatch = widgetPairRegex.exec(rowContent)) !== null) {
+        const wa = parseAttrs(wpMatch[1] || '');
+        const inner = wpMatch[2] || '';
+        const widget = this.buildWidgetFromAttrs(wa, rowId, errors);
+        if (!widget) continue;
+        // Extract <config> JSON
+        const cfgMatch = inner.match(/<config\b[^>]*>([\s\S]*?)<\/config>/i);
+        if (cfgMatch && cfgMatch[1]) {
+          try {
+            const cfgJson = JSON.parse(cfgMatch[1].trim());
+            this.applyWidgetConfig(widget, cfgJson);
+          } catch (e) {
+            errors.push({ line: 1, column: 1, message: `Widget ${widget.id}: invalid <config> JSON`, type: 'validation' });
+          }
+        }
+        widgets.push(widget);
+      }
+    }
+
+    // Build grid config
+    const baseGrid: GridConfig = {
+      maxRows: this.DEFAULT_GRID_CONFIG.maxRows,
+      rowHeight: this.DEFAULT_GRID_CONFIG.rowHeight,
+      cols: this.DEFAULT_GRID_CONFIG.cols,
+      layout: { mode: layoutMode, rows: layoutRows }
+    } as GridConfig;
+
+    // Theme application
+    const themedGrid = (theme && ThemeManager.isValidTheme(theme))
+      ? ThemeManager.applyThemeToGrid(baseGrid, theme)
+      : baseGrid;
+    const themedWidgets = (theme && ThemeManager.isValidTheme(theme))
+      ? this.applyThemeToWidgets(widgets, theme)
+      : widgets;
+
+    return {
+      widgets: themedWidgets,
+      gridConfig: themedGrid,
+      errors,
+      isValid: errors.length === 0,
+      dashboardTitle,
+      dashboardSubtitle
+    };
+  }
+
+  private static buildWidgetFromAttrs(attrs: Record<string, string>, rowId: string, errors: ParseError[]): Widget | null {
+    const id = attrs['id'];
+    const type = attrs['type'] as Widget['type'];
+    if (!id || !type) {
+      errors.push({ line: 1, column: 1, message: `Widget missing id or type in row ${rowId}`, type: 'validation' });
+      return null;
+    }
+    const order = attrs['order'] ? Number(attrs['order']) : undefined;
+    const heightPx = attrs['height'] ? Number(attrs['height']) : undefined;
+    const spanD = attrs['span-d'] ? Number(attrs['span-d']) : undefined;
+    const spanT = attrs['span-t'] ? Number(attrs['span-t']) : undefined;
+    const spanM = attrs['span-m'] ? Number(attrs['span-m']) : undefined;
+    const title = attrs['title'];
+
+    const widget: Widget = {
+      id,
+      type,
+      row: rowId,
+      ...(typeof order === 'number' ? { order } : {}),
+      ...(typeof heightPx === 'number' ? { heightPx } : {}),
+      ...(title ? { title } : {}),
+    } as Widget;
+
+    if (spanD || spanT || spanM) {
+      widget.span = {
+        ...(spanD ? { desktop: spanD } : {}),
+        ...(spanT ? { tablet: spanT } : {}),
+        ...(spanM ? { mobile: spanM } : {}),
+      };
+    }
+    return widget;
+  }
+
+  private static applyWidgetConfig(widget: Widget, cfg: Record<string, unknown>): void {
+    // dataSource mapping
+    if (cfg['dataSource'] && typeof cfg['dataSource'] === 'object') {
+      widget.dataSource = cfg['dataSource'] as Widget['dataSource'];
+    }
+    const map: Array<[keyof Widget, string[]]> = [
+      ['kpiConfig', ['kpiConfig']],
+      ['barConfig', ['barConfig']],
+      ['lineConfig', ['lineConfig']],
+      ['pieConfig', ['pieConfig']],
+      ['areaConfig', ['areaConfig']],
+      ['stackedBarConfig', ['stackedBarConfig']],
+      ['groupedBarConfig', ['groupedBarConfig']],
+      ['stackedLinesConfig', ['stackedLinesConfig']],
+      ['radialStackedConfig', ['radialStackedConfig']],
+      ['pivotBarConfig', ['pivotBarConfig']],
+    ];
+    for (const [prop, keys] of map) {
+      for (const k of keys) {
+        if (cfg[k] && typeof cfg[k] === 'object') {
+          (widget as Record<string, unknown>)[prop as string] = cfg[k] as unknown;
+        }
+      }
     }
   }
 

@@ -25,11 +25,17 @@ export default function MonacoEditor({
     if (newValue !== undefined) {
       // Validate JSON if language is json
       if (language === 'json') {
-        try {
-          JSON.parse(newValue);
+        const trimmed = newValue.trim();
+        // If DSL (HTML-like), skip JSON validation
+        if (trimmed.startsWith('<')) {
           setIsValidJson(true);
-        } catch {
-          setIsValidJson(false);
+        } else {
+          try {
+            JSON.parse(newValue);
+            setIsValidJson(true);
+          } catch {
+            setIsValidJson(false);
+          }
         }
       }
       onChange(newValue);
