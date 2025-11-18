@@ -36,6 +36,23 @@ export interface PivotBarChartConfig {
     enableGridY?: boolean
     gridColor?: string
     gridStrokeWidth?: number
+    // Axis & Body Typography (optional, align with other charts)
+    axisFontFamily?: string
+    axisFontSize?: number
+    axisFontWeight?: number
+    axisTextColor?: string
+    axisLegendFontSize?: number
+    axisLegendFontWeight?: number
+    labelsFontFamily?: string
+    labelsFontSize?: number
+    labelsFontWeight?: number
+    labelsTextColor?: string
+    legendsFontFamily?: string
+    legendsFontSize?: number
+    legendsFontWeight?: number
+    legendsTextColor?: string
+    tooltipFontSize?: number
+    tooltipFontFamily?: string
     // Title/Subtitle
     titleFontFamily?: string
     titleFontSize?: number
@@ -140,4 +157,3 @@ export const pivotBarChartActions = {
     $pivotBarChartStore.set({ ...cur, pivotBarCharts: updated })
   }
 }
-
