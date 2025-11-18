@@ -70,6 +70,21 @@ export interface PivotBarChartProps {
   subtitleFontWeight?: number | string
   subtitleColor?: string
   axisTextColor?: string
+  axisFontFamily?: string
+  axisFontSize?: number
+  axisFontWeight?: number
+  axisLegendFontSize?: number
+  axisLegendFontWeight?: number
+  labelsFontFamily?: string
+  labelsFontSize?: number
+  labelsFontWeight?: number
+  labelsTextColor?: string
+  legendsFontFamily?: string
+  legendsFontSize?: number
+  legendsFontWeight?: number
+  legendsTextColor?: string
+  tooltipFontSize?: number
+  tooltipFontFamily?: string
 
   // Events
   onBarClick?: (category: string, seriesKey?: string) => void
@@ -128,6 +143,21 @@ export function PivotBarChart(props: PivotBarChartProps) {
     subtitleFontWeight = 400,
     subtitleColor = '#6b7280',
     axisTextColor,
+    axisFontFamily,
+    axisFontSize,
+    axisFontWeight,
+    axisLegendFontSize,
+    axisLegendFontWeight,
+    labelsFontFamily,
+    labelsFontSize,
+    labelsFontWeight,
+    labelsTextColor,
+    legendsFontFamily,
+    legendsFontSize,
+    legendsFontWeight,
+    legendsTextColor,
+    tooltipFontSize,
+    tooltipFontFamily,
     onBarClick
   } = props;
 
@@ -148,7 +178,26 @@ export function PivotBarChart(props: PivotBarChartProps) {
   };
 
   // Nivo theme
-  const theme = createElegantTheme({ axisTextColor: axisTextColor || '#6b7280', gridColor, gridStrokeWidth })
+  const theme = createElegantTheme({
+    axisFontFamily,
+    axisFontSize,
+    axisFontWeight,
+    axisTextColor: axisTextColor || '#6b7280',
+    axisLegendFontSize,
+    axisLegendFontWeight,
+    labelsFontFamily,
+    labelsFontSize,
+    labelsFontWeight,
+    labelsTextColor,
+    legendsFontFamily,
+    legendsFontSize,
+    legendsFontWeight,
+    legendsTextColor,
+    tooltipFontSize,
+    tooltipFontFamily,
+    gridColor,
+    gridStrokeWidth
+  })
 
   // Legend config: prefer provided legends; else build from metadata
   const autoLegends: readonly BarLegendProps[] = [

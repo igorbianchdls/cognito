@@ -244,7 +244,9 @@ export class ConfigParser {
       radius?: number;
       accentColor?: string;
       shadow?: boolean;
-    }
+    },
+    customChartFontFamily?: string,
+    customChartTextColor?: string
   ): Widget[] {
     return ThemeManager.applyThemeToWidgets(
       widgets,
@@ -252,7 +254,9 @@ export class ConfigParser {
       customFont,
       corporateColor,
       customFontSize,
-      borderOptions
+      borderOptions,
+      customChartFontFamily,
+      customChartTextColor
     );
   }
 
@@ -269,6 +273,8 @@ export class ConfigParser {
       const customFontSize = config.customFontSize as string;
       const customLetterSpacing = typeof config.customLetterSpacing === 'number' ? config.customLetterSpacing : undefined;
       const customBackground = config.customBackground as string;
+      const customChartFontFamily = typeof config.customChartFontFamily === 'string' ? config.customChartFontFamily : undefined;
+      const customChartTextColor = typeof config.customChartTextColor === 'string' ? config.customChartTextColor : undefined;
       const corporateColor = config.corporateColor as string;
       const layoutRows = (config.layoutRows || rawGridConfig.layoutRows) as Record<string, LayoutRow> | undefined;
       const dashboardTitle = typeof config.dashboardTitle === 'string' ? config.dashboardTitle : undefined;
@@ -327,7 +333,7 @@ export class ConfigParser {
             radius: borderRadius,
             accentColor: borderAccentColor,
             shadow: borderShadow,
-          })
+          }, customChartFontFamily, customChartTextColor)
         : validWidgets;
 
       // Step 6: Apply theme to grid (now handles custom background internally)

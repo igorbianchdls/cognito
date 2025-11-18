@@ -624,7 +624,22 @@ export function StackedBarChart(props: StackedBarChartProps) {
           animate={animate ?? false}
           motionConfig={motionConfig || "gentle"}
           theme={createElegantTheme({
+            axisFontFamily,
+            axisFontSize,
+            axisFontWeight,
             axisTextColor: axisTextColor || '#6b7280',
+            axisLegendFontSize,
+            axisLegendFontWeight,
+            labelsFontFamily,
+            labelsFontSize,
+            labelsFontWeight,
+            labelsTextColor,
+            legendsFontFamily,
+            legendsFontSize,
+            legendsFontWeight,
+            legendsTextColor,
+            tooltipFontSize,
+            tooltipFontFamily,
             gridColor,
             gridStrokeWidth
           })}

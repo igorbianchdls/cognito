@@ -2,7 +2,7 @@
 
 import { ResponsivePie } from '@nivo/pie';
 import { BaseChartProps } from './types';
-import { elegantTheme } from './theme';
+import { createElegantTheme, elegantTheme } from './theme';
 import { formatValue } from './utils';
 import { EmptyState } from './EmptyState';
 import type { LegendConfig } from '@/types/apps/chartWidgets';
@@ -38,6 +38,17 @@ interface PieChartProps extends BaseChartProps {
   subtitleFontSize?: number
   subtitleFontWeight?: string | number
   subtitleColor?: string
+  // Typography - internal chart (labels/legends/tooltip)
+  labelsFontFamily?: string
+  labelsFontSize?: number
+  labelsFontWeight?: number
+  labelsTextColor?: string
+  legendsFontFamily?: string
+  legendsFontSize?: number
+  legendsFontWeight?: number
+  legendsTextColor?: string
+  tooltipFontSize?: number
+  tooltipFontFamily?: string
 
   // Spacing - Title/Subtitle
   titleMarginTop?: number
@@ -143,6 +154,16 @@ export function PieChart({
   subtitleFontSize = 14,
   subtitleFontWeight = 400,
   subtitleColor = '#6b7280',
+  labelsFontFamily,
+  labelsFontSize,
+  labelsFontWeight,
+  labelsTextColor,
+  legendsFontFamily,
+  legendsFontSize,
+  legendsFontWeight,
+  legendsTextColor,
+  tooltipFontSize,
+  tooltipFontFamily,
   // Spacing - Title/Subtitle
   titleMarginTop,
   titleMarginRight,
@@ -391,7 +412,18 @@ export function PieChart({
         
         animate={animate ?? false}
         motionConfig={motionConfig || "gentle"}
-        theme={elegantTheme}
+        theme={createElegantTheme({
+          labelsFontFamily,
+          labelsFontSize,
+          labelsFontWeight,
+          labelsTextColor,
+          legendsFontFamily,
+          legendsFontSize,
+          legendsFontWeight,
+          legendsTextColor,
+          tooltipFontSize,
+          tooltipFontFamily
+        })}
         
         // Tooltip elegante
         tooltip={({ datum }) => (

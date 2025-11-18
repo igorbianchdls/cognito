@@ -66,6 +66,8 @@ export default function DashboardChatPanel() {
   // Available fonts and sizes from FontManager
   const availableFonts = FontManager.getAvailableFonts();
   const availableFontSizes = FontManager.getAvailableFontSizes();
+  const [chartBodyFontFamily, setChartBodyFontFamily] = useState<FontPresetKey>('geist');
+  const [chartBodyTextColor, setChartBodyTextColor] = useState<string>('#6b7280');
 
   // Header tooltip without nested template literals
   // Removed unused header tooltip
@@ -135,6 +137,19 @@ export default function DashboardChatPanel() {
     } catch {
       // keep current spacing
     }
+  }, [visualBuilderState.code]);
+
+  // Detect current chart body font/color from code
+  useEffect(() => {
+    try {
+      const config = JSON.parse(visualBuilderState.code);
+      if (config.customChartFontFamily && FontManager.isValidFont(config.customChartFontFamily)) {
+        setChartBodyFontFamily(config.customChartFontFamily);
+      }
+      if (typeof config.customChartTextColor === 'string') {
+        setChartBodyTextColor(config.customChartTextColor);
+      }
+    } catch {}
   }, [visualBuilderState.code]);
 
   // Detect current background from code
@@ -462,6 +477,36 @@ export default function DashboardChatPanel() {
     }
   };
 
+  const handleChartBodyFontChange = (fontKey: FontPresetKey) => {
+    try {
+      const config = JSON.parse(visualBuilderState.code);
+      const updatedConfig = {
+        ...config,
+        customChartFontFamily: fontKey,
+      };
+      visualBuilderActions.updateCode(JSON.stringify(updatedConfig, null, 2));
+      setChartBodyFontFamily(fontKey);
+      console.log('🅰️ Chart body font changed to:', fontKey);
+    } catch (error) {
+      console.error('Error updating chart body font:', error);
+    }
+  };
+
+  const handleChartBodyTextColorChange = (color: string) => {
+    try {
+      const config = JSON.parse(visualBuilderState.code);
+      const updatedConfig = {
+        ...config,
+        customChartTextColor: color,
+      };
+      visualBuilderActions.updateCode(JSON.stringify(updatedConfig, null, 2));
+      setChartBodyTextColor(color);
+      console.log('🎨 Chart body text color changed to:', color);
+    } catch (error) {
+      console.error('Error updating chart body text color:', error);
+    }
+  };
+
   const handleBackgroundChange = (backgroundKey: BackgroundPresetKey) => {
     try {
       const config = JSON.parse(visualBuilderState.code);
@@ -702,6 +747,29 @@ export default function DashboardChatPanel() {
                       ))}
                     </DropdownMenuSubContent>
                   </DropdownMenuSub>
+
+                  <DropdownMenuSeparator />
+
+                  {/* Chart Body Font Family */}
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>Chart Body Font</DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent>
+                      {availableFonts.map((font) => (
+                        <DropdownMenuItem
+                          key={font.key}
+                          onClick={() => handleChartBodyFontChange(font.key)}
+                          className="flex items-center justify-between py-2"
+                        >
+                          <span style={{ fontFamily: font.family }} className="text-sm">
+                            {font.name}
+                          </span>
+                          {chartBodyFontFamily === font.key && (
+                            <Check className="w-4 h-4 text-blue-600" />
+                          )}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
                 </DropdownMenuSubContent>
               </DropdownMenuSub>
 
@@ -781,6 +849,10 @@ export default function DashboardChatPanel() {
                   <div className="px-3 py-2 flex items-center justify-between gap-2">
                     <span className="text-sm">Chart Title</span>
                     <input type="color" value={chartTitleColor} onChange={(e) => handleChartTitleColorChange(e.target.value)} />
+                  </div>
+                  <div className="px-3 py-2 flex items-center justify-between gap-2">
+                    <span className="text-sm">Chart Text</span>
+                    <input type="color" value={chartBodyTextColor} onChange={(e) => handleChartBodyTextColorChange(e.target.value)} />
                   </div>
                   <DropdownMenuSeparator />
                   <div className="px-3 py-2 text-xs text-muted-foreground">KPI</div>

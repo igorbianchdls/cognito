@@ -25,6 +25,8 @@ export const nivoTheme = {
 
 // Typography configuration interface
 interface TypographyConfig {
+  bodyFontFamily?: string
+  bodyTextColor?: string
   axisFontFamily?: string
   axisFontSize?: number
   axisFontWeight?: number
@@ -48,22 +50,24 @@ interface TypographyConfig {
 // Create elegant theme with custom typography
 export const createElegantTheme = (typography: TypographyConfig = {}) => {
   const {
-    axisFontFamily = 'Geist, sans-serif',
+    bodyFontFamily,
+    bodyTextColor,
+    axisFontFamily = bodyFontFamily || 'Geist, sans-serif',
     axisFontSize = 12,
     axisFontWeight = 400,
-    axisTextColor = '#6b7280',
+    axisTextColor = bodyTextColor || '#6b7280',
     axisLegendFontSize = 14,
     axisLegendFontWeight = 500,
-    labelsFontFamily = 'Geist, sans-serif',
+    labelsFontFamily = bodyFontFamily || 'Geist, sans-serif',
     labelsFontSize = 11,
     labelsFontWeight = 500,
-    labelsTextColor = '#1f2937',
-    legendsFontFamily = 'Geist, sans-serif',
+    labelsTextColor = bodyTextColor || '#1f2937',
+    legendsFontFamily = bodyFontFamily || 'Geist, sans-serif',
     legendsFontSize = 12,
     legendsFontWeight = 400,
-    legendsTextColor = '#6b7280',
+    legendsTextColor = bodyTextColor || '#6b7280',
     tooltipFontSize = 12,
-    tooltipFontFamily = 'Geist, sans-serif',
+    tooltipFontFamily = bodyFontFamily || 'Geist, sans-serif',
     gridColor = '#f1f5f9',
     gridStrokeWidth = 1
   } = typography

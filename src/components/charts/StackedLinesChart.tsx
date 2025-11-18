@@ -115,6 +115,21 @@ export interface StackedLinesChartProps {
 
   // Axis typography
   axisTextColor?: string;
+  axisFontFamily?: string;
+  axisFontSize?: number;
+  axisFontWeight?: number;
+  axisLegendFontSize?: number;
+  axisLegendFontWeight?: number;
+  labelsFontFamily?: string;
+  labelsFontSize?: number;
+  labelsFontWeight?: number;
+  labelsTextColor?: string;
+  legendsFontFamily?: string;
+  legendsFontSize?: number;
+  legendsFontWeight?: number;
+  legendsTextColor?: string;
+  tooltipFontSize?: number;
+  tooltipFontFamily?: string;
 
   // Animation
   animate?: boolean;
@@ -192,6 +207,21 @@ export function StackedLinesChart(props: StackedLinesChartProps) {
     subtitlePaddingBottom,
     subtitlePaddingLeft,
     axisTextColor,
+    axisFontFamily,
+    axisFontSize,
+    axisFontWeight,
+    axisLegendFontSize,
+    axisLegendFontWeight,
+    labelsFontFamily,
+    labelsFontSize,
+    labelsFontWeight,
+    labelsTextColor,
+    legendsFontFamily,
+    legendsFontSize,
+    legendsFontWeight,
+    legendsTextColor,
+    tooltipFontSize,
+    tooltipFontFamily,
     animate = false,
     motionConfig = 'gentle',
     seriesMetadata
@@ -328,7 +358,26 @@ export function StackedLinesChart(props: StackedLinesChartProps) {
           }}
           enableGridX={enableGridX}
           enableGridY={enableGridY}
-          theme={createElegantTheme({ axisTextColor: axisTextColor || '#6b7280', gridColor, gridStrokeWidth })}
+          theme={createElegantTheme({
+            axisFontFamily,
+            axisFontSize,
+            axisFontWeight,
+            axisTextColor: axisTextColor || '#6b7280',
+            axisLegendFontSize,
+            axisLegendFontWeight,
+            labelsFontFamily,
+            labelsFontSize,
+            labelsFontWeight,
+            labelsTextColor,
+            legendsFontFamily,
+            legendsFontSize,
+            legendsFontWeight,
+            legendsTextColor,
+            tooltipFontSize,
+            tooltipFontFamily,
+            gridColor,
+            gridStrokeWidth
+          })}
           animate={animate}
           motionConfig={motionConfig}
           useMesh={true}

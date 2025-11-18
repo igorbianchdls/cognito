@@ -268,7 +268,9 @@ export class ThemeManager {
       radius?: number;
       accentColor?: string;
       shadow?: boolean;
-    }
+    },
+    chartBodyFontFamily?: string,
+    chartBodyTextColor?: string
   ): Widget {
     const clonedWidget = { ...widget };
 
@@ -308,8 +310,28 @@ export class ThemeManager {
     clonedWidget.barConfig.styling.subtitleMarginBottom = 16;
     clonedWidget.barConfig.styling.subtitleMarginLeft = 0;
 
-    clonedWidget.barConfig.styling.axisTextColor = tokens.colors.chart.axis;
+    if (clonedWidget.barConfig.styling.axisTextColor === undefined) {
+      clonedWidget.barConfig.styling.axisTextColor = chartBodyTextColor || tokens.colors.chart.axis;
+    }
     clonedWidget.barConfig.styling.axisFontSize = tokens.typography.fontSize.sm;
+    if (clonedWidget.barConfig.styling.axisFontFamily === undefined && chartBodyFontFamily) {
+      clonedWidget.barConfig.styling.axisFontFamily = chartBodyFontFamily;
+    }
+    if (clonedWidget.barConfig.styling.labelsFontFamily === undefined && chartBodyFontFamily) {
+      clonedWidget.barConfig.styling.labelsFontFamily = chartBodyFontFamily;
+    }
+    if (clonedWidget.barConfig.styling.legendsFontFamily === undefined && chartBodyFontFamily) {
+      clonedWidget.barConfig.styling.legendsFontFamily = chartBodyFontFamily;
+    }
+    if (clonedWidget.barConfig.styling.tooltipFontFamily === undefined && chartBodyFontFamily) {
+      clonedWidget.barConfig.styling.tooltipFontFamily = chartBodyFontFamily;
+    }
+    if (clonedWidget.barConfig.styling.labelsTextColor === undefined && chartBodyTextColor) {
+      clonedWidget.barConfig.styling.labelsTextColor = chartBodyTextColor;
+    }
+    if (clonedWidget.barConfig.styling.legendsTextColor === undefined && chartBodyTextColor) {
+      clonedWidget.barConfig.styling.legendsTextColor = chartBodyTextColor;
+    }
 
     // Grid styling - apply theme grid properties
     clonedWidget.barConfig.styling.gridColor = tokens.colors.chart.grid;
@@ -387,7 +409,9 @@ export class ThemeManager {
       radius?: number;
       accentColor?: string;
       shadow?: boolean;
-    }
+    },
+    chartBodyFontFamily?: string,
+    chartBodyTextColor?: string
   ): Widget {
     const clonedWidget = { ...widget };
 
@@ -424,8 +448,16 @@ export class ThemeManager {
     clonedWidget.stackedBarConfig.styling.subtitleMarginBottom = 16;
     clonedWidget.stackedBarConfig.styling.subtitleMarginLeft = 0;
 
-    clonedWidget.stackedBarConfig.styling.axisTextColor = tokens.colors.chart.axis;
+    if (clonedWidget.stackedBarConfig.styling.axisTextColor === undefined) {
+      clonedWidget.stackedBarConfig.styling.axisTextColor = chartBodyTextColor || tokens.colors.chart.axis;
+    }
     clonedWidget.stackedBarConfig.styling.axisFontSize = tokens.typography.fontSize.sm;
+    if (clonedWidget.stackedBarConfig.styling.axisFontFamily === undefined && chartBodyFontFamily) clonedWidget.stackedBarConfig.styling.axisFontFamily = chartBodyFontFamily;
+    if (clonedWidget.stackedBarConfig.styling.labelsFontFamily === undefined && chartBodyFontFamily) clonedWidget.stackedBarConfig.styling.labelsFontFamily = chartBodyFontFamily;
+    if (clonedWidget.stackedBarConfig.styling.legendsFontFamily === undefined && chartBodyFontFamily) clonedWidget.stackedBarConfig.styling.legendsFontFamily = chartBodyFontFamily;
+    if (clonedWidget.stackedBarConfig.styling.tooltipFontFamily === undefined && chartBodyFontFamily) clonedWidget.stackedBarConfig.styling.tooltipFontFamily = chartBodyFontFamily;
+    if (clonedWidget.stackedBarConfig.styling.labelsTextColor === undefined && chartBodyTextColor) clonedWidget.stackedBarConfig.styling.labelsTextColor = chartBodyTextColor;
+    if (clonedWidget.stackedBarConfig.styling.legendsTextColor === undefined && chartBodyTextColor) clonedWidget.stackedBarConfig.styling.legendsTextColor = chartBodyTextColor;
 
     // Grid styling - apply theme grid properties
     clonedWidget.stackedBarConfig.styling.gridColor = tokens.colors.chart.grid;
@@ -501,7 +533,9 @@ export class ThemeManager {
       radius?: number;
       accentColor?: string;
       shadow?: boolean;
-    }
+    },
+    chartBodyFontFamily?: string,
+    chartBodyTextColor?: string
   ): Widget {
     const clonedWidget = { ...widget };
 
@@ -539,8 +573,16 @@ export class ThemeManager {
     clonedWidget.groupedBarConfig.styling.subtitleMarginLeft = 0;
 
     // Axis & grid
-    clonedWidget.groupedBarConfig.styling.axisTextColor = tokens.colors.chart.axis;
+    if (clonedWidget.groupedBarConfig.styling.axisTextColor === undefined) {
+      clonedWidget.groupedBarConfig.styling.axisTextColor = chartBodyTextColor || tokens.colors.chart.axis;
+    }
     clonedWidget.groupedBarConfig.styling.axisFontSize = tokens.typography.fontSize.sm;
+    if (clonedWidget.groupedBarConfig.styling.axisFontFamily === undefined && chartBodyFontFamily) clonedWidget.groupedBarConfig.styling.axisFontFamily = chartBodyFontFamily;
+    if (clonedWidget.groupedBarConfig.styling.labelsFontFamily === undefined && chartBodyFontFamily) clonedWidget.groupedBarConfig.styling.labelsFontFamily = chartBodyFontFamily;
+    if (clonedWidget.groupedBarConfig.styling.legendsFontFamily === undefined && chartBodyFontFamily) clonedWidget.groupedBarConfig.styling.legendsFontFamily = chartBodyFontFamily;
+    if (clonedWidget.groupedBarConfig.styling.tooltipFontFamily === undefined && chartBodyFontFamily) clonedWidget.groupedBarConfig.styling.tooltipFontFamily = chartBodyFontFamily;
+    if (clonedWidget.groupedBarConfig.styling.labelsTextColor === undefined && chartBodyTextColor) clonedWidget.groupedBarConfig.styling.labelsTextColor = chartBodyTextColor;
+    if (clonedWidget.groupedBarConfig.styling.legendsTextColor === undefined && chartBodyTextColor) clonedWidget.groupedBarConfig.styling.legendsTextColor = chartBodyTextColor;
     clonedWidget.groupedBarConfig.styling.gridColor = tokens.colors.chart.grid;
     clonedWidget.groupedBarConfig.styling.gridStrokeWidth = 0.5;
 
@@ -606,7 +648,9 @@ export class ThemeManager {
       radius?: number;
       accentColor?: string;
       shadow?: boolean;
-    }
+    },
+    chartBodyFontFamily?: string,
+    chartBodyTextColor?: string
   ): Widget {
     const clonedWidget = { ...widget };
     if (!clonedWidget.pivotBarConfig) {
@@ -623,7 +667,13 @@ export class ThemeManager {
 
     // Title styling
     if (clonedWidget.pivotBarConfig.styling.titleColor === undefined) {
+    if (clonedWidget.pivotBarConfig.styling.titleColor === undefined) {
       clonedWidget.pivotBarConfig.styling.titleColor = tokens.colors.text.primary;
+    }
+    if (clonedWidget.pivotBarConfig.styling.axisTextColor === undefined && chartBodyTextColor) clonedWidget.pivotBarConfig.styling.axisTextColor = chartBodyTextColor;
+    if (clonedWidget.pivotBarConfig.styling.axisFontFamily === undefined && chartBodyFontFamily) clonedWidget.pivotBarConfig.styling.axisFontFamily = chartBodyFontFamily;
+    if (clonedWidget.pivotBarConfig.styling.legendsFontFamily === undefined && chartBodyFontFamily) clonedWidget.pivotBarConfig.styling.legendsFontFamily = chartBodyFontFamily;
+    if (clonedWidget.pivotBarConfig.styling.legendsTextColor === undefined && chartBodyTextColor) clonedWidget.pivotBarConfig.styling.legendsTextColor = chartBodyTextColor;
     }
     clonedWidget.pivotBarConfig.styling.titleFontSize = tokens.typography.fontSize.lg;
     clonedWidget.pivotBarConfig.styling.titleFontWeight = tokens.typography.fontWeight.semibold;
@@ -685,7 +735,9 @@ export class ThemeManager {
       radius?: number;
       accentColor?: string;
       shadow?: boolean;
-    }
+    },
+    chartBodyFontFamily?: string,
+    chartBodyTextColor?: string
   ): Widget {
     const clonedWidget = { ...widget };
 
@@ -702,7 +754,15 @@ export class ThemeManager {
 
     // Title styling
     if (clonedWidget.stackedLinesConfig.styling.titleColor === undefined) {
+    if (clonedWidget.stackedLinesConfig.styling.titleColor === undefined) {
       clonedWidget.stackedLinesConfig.styling.titleColor = tokens.colors.text.primary;
+    }
+    if (clonedWidget.stackedLinesConfig.styling.axisTextColor === undefined && chartBodyTextColor) clonedWidget.stackedLinesConfig.styling.axisTextColor = chartBodyTextColor;
+    if (clonedWidget.stackedLinesConfig.styling.axisFontFamily === undefined && chartBodyFontFamily) clonedWidget.stackedLinesConfig.styling.axisFontFamily = chartBodyFontFamily;
+    if (clonedWidget.stackedLinesConfig.styling.labelsFontFamily === undefined && chartBodyFontFamily) clonedWidget.stackedLinesConfig.styling.labelsFontFamily = chartBodyFontFamily;
+    if (clonedWidget.stackedLinesConfig.styling.legendsFontFamily === undefined && chartBodyFontFamily) clonedWidget.stackedLinesConfig.styling.legendsFontFamily = chartBodyFontFamily;
+    if (clonedWidget.stackedLinesConfig.styling.labelsTextColor === undefined && chartBodyTextColor) clonedWidget.stackedLinesConfig.styling.labelsTextColor = chartBodyTextColor;
+    if (clonedWidget.stackedLinesConfig.styling.legendsTextColor === undefined && chartBodyTextColor) clonedWidget.stackedLinesConfig.styling.legendsTextColor = chartBodyTextColor;
     }
     clonedWidget.stackedLinesConfig.styling.titleFontSize = tokens.typography.fontSize.lg;
     clonedWidget.stackedLinesConfig.styling.titleFontWeight = tokens.typography.fontWeight.semibold;
@@ -870,7 +930,9 @@ export class ThemeManager {
       radius?: number;
       accentColor?: string;
       shadow?: boolean;
-    }
+    },
+    chartBodyFontFamily?: string,
+    chartBodyTextColor?: string
   ): Widget {
     const clonedWidget = { ...widget };
 
@@ -907,8 +969,16 @@ export class ThemeManager {
     clonedWidget.lineConfig.styling.subtitleMarginBottom = 16;
     clonedWidget.lineConfig.styling.subtitleMarginLeft = 0;
 
-    clonedWidget.lineConfig.styling.axisTextColor = tokens.colors.chart.axis;
+    if (clonedWidget.lineConfig.styling.axisTextColor === undefined) {
+      clonedWidget.lineConfig.styling.axisTextColor = chartBodyTextColor || tokens.colors.chart.axis;
+    }
     clonedWidget.lineConfig.styling.axisFontSize = tokens.typography.fontSize.sm;
+    if (clonedWidget.lineConfig.styling.axisFontFamily === undefined && chartBodyFontFamily) clonedWidget.lineConfig.styling.axisFontFamily = chartBodyFontFamily;
+    if (clonedWidget.lineConfig.styling.labelsFontFamily === undefined && chartBodyFontFamily) clonedWidget.lineConfig.styling.labelsFontFamily = chartBodyFontFamily;
+    if (clonedWidget.lineConfig.styling.legendsFontFamily === undefined && chartBodyFontFamily) clonedWidget.lineConfig.styling.legendsFontFamily = chartBodyFontFamily;
+    if (clonedWidget.lineConfig.styling.tooltipFontFamily === undefined && chartBodyFontFamily) clonedWidget.lineConfig.styling.tooltipFontFamily = chartBodyFontFamily;
+    if (clonedWidget.lineConfig.styling.labelsTextColor === undefined && chartBodyTextColor) clonedWidget.lineConfig.styling.labelsTextColor = chartBodyTextColor;
+    if (clonedWidget.lineConfig.styling.legendsTextColor === undefined && chartBodyTextColor) clonedWidget.lineConfig.styling.legendsTextColor = chartBodyTextColor;
 
     // Grid styling - apply theme grid properties
     clonedWidget.lineConfig.styling.gridColor = tokens.colors.chart.grid;
@@ -984,7 +1054,9 @@ export class ThemeManager {
       radius?: number;
       accentColor?: string;
       shadow?: boolean;
-    }
+    },
+    chartBodyFontFamily?: string,
+    chartBodyTextColor?: string
   ): Widget {
     const clonedWidget = { ...widget };
 
@@ -1037,6 +1109,15 @@ export class ThemeManager {
     clonedWidget.pieConfig.styling.containerBorderRadius = tokens.borders.radius.md;
     clonedWidget.pieConfig.styling.arcLabelsTextColor = tokens.colors.chartElements.pie.arcLabel;
     clonedWidget.pieConfig.styling.arcLinkLabelsTextColor = tokens.colors.chartElements.pie.arcLinkLabel;
+    if (chartBodyFontFamily) {
+      if (clonedWidget.pieConfig.styling.legendsFontFamily === undefined) clonedWidget.pieConfig.styling.legendsFontFamily = chartBodyFontFamily;
+      if (clonedWidget.pieConfig.styling.labelsFontFamily === undefined) clonedWidget.pieConfig.styling.labelsFontFamily = chartBodyFontFamily;
+      if (clonedWidget.pieConfig.styling.tooltipFontFamily === undefined) clonedWidget.pieConfig.styling.tooltipFontFamily = chartBodyFontFamily;
+    }
+    if (chartBodyTextColor) {
+      if (clonedWidget.pieConfig.styling.legendsTextColor === undefined) clonedWidget.pieConfig.styling.legendsTextColor = chartBodyTextColor;
+      if (clonedWidget.pieConfig.styling.labelsTextColor === undefined) clonedWidget.pieConfig.styling.labelsTextColor = chartBodyTextColor;
+    }
 
     // Apply advanced effects from tokens
     clonedWidget.pieConfig.styling.containerOpacity = tokens.effects.opacity.medium;
@@ -1102,7 +1183,9 @@ export class ThemeManager {
       radius?: number;
       accentColor?: string;
       shadow?: boolean;
-    }
+    },
+    chartBodyFontFamily?: string,
+    chartBodyTextColor?: string
   ): Widget {
     const clonedWidget = { ...widget };
 
@@ -1139,8 +1222,16 @@ export class ThemeManager {
     clonedWidget.areaConfig.styling.subtitleMarginBottom = 16;
     clonedWidget.areaConfig.styling.subtitleMarginLeft = 0;
 
-    clonedWidget.areaConfig.styling.axisTextColor = tokens.colors.chart.axis;
+    if (clonedWidget.areaConfig.styling.axisTextColor === undefined) {
+      clonedWidget.areaConfig.styling.axisTextColor = chartBodyTextColor || tokens.colors.chart.axis;
+    }
     clonedWidget.areaConfig.styling.axisFontSize = tokens.typography.fontSize.sm;
+    if (clonedWidget.areaConfig.styling.axisFontFamily === undefined && chartBodyFontFamily) clonedWidget.areaConfig.styling.axisFontFamily = chartBodyFontFamily;
+    if (clonedWidget.areaConfig.styling.labelsFontFamily === undefined && chartBodyFontFamily) clonedWidget.areaConfig.styling.labelsFontFamily = chartBodyFontFamily;
+    if (clonedWidget.areaConfig.styling.legendsFontFamily === undefined && chartBodyFontFamily) clonedWidget.areaConfig.styling.legendsFontFamily = chartBodyFontFamily;
+    if (clonedWidget.areaConfig.styling.tooltipFontFamily === undefined && chartBodyFontFamily) clonedWidget.areaConfig.styling.tooltipFontFamily = chartBodyFontFamily;
+    if (clonedWidget.areaConfig.styling.labelsTextColor === undefined && chartBodyTextColor) clonedWidget.areaConfig.styling.labelsTextColor = chartBodyTextColor;
+    if (clonedWidget.areaConfig.styling.legendsTextColor === undefined && chartBodyTextColor) clonedWidget.areaConfig.styling.legendsTextColor = chartBodyTextColor;
 
     // Grid styling - apply theme grid properties
     clonedWidget.areaConfig.styling.gridColor = tokens.colors.chart.grid;
@@ -1354,7 +1445,9 @@ export class ThemeManager {
       radius?: number;
       accentColor?: string;
       shadow?: boolean;
-    }
+    },
+    customChartFontFamilyKey?: string,
+    customChartTextColor?: string
   ): Widget {
     if (!this.isValidTheme(themeName)) {
       console.warn(`Invalid theme: ${themeName}. Skipping theme application.`);
@@ -1388,6 +1481,12 @@ export class ThemeManager {
       };
     }
 
+    // Resolve chart body font family (from preset key)
+    let chartBodyFontFamily: string | undefined = undefined;
+    if (customChartFontFamilyKey && FontManager.isValidFont(customChartFontFamilyKey)) {
+      chartBodyFontFamily = FontManager.getFontFamily(customChartFontFamilyKey);
+    }
+
     // Apply theme per widget type
     let themed = widget;
     switch (widget.type) {
@@ -1395,27 +1494,27 @@ export class ThemeManager {
         themed = this.applyThemeToKPI(widget, tokens, themeName, borderOptions);
         return themed;
       case 'bar': {
-        themed = this.applyThemeToBarChart(widget, tokens, themeName, borderOptions);
+        themed = this.applyThemeToBarChart(widget, tokens, themeName, borderOptions, chartBodyFontFamily, customChartTextColor);
         return themed;
       }
       case 'line': {
-        themed = this.applyThemeToLineChart(widget, tokens, themeName, borderOptions);
+        themed = this.applyThemeToLineChart(widget, tokens, themeName, borderOptions, chartBodyFontFamily, customChartTextColor);
         return themed;
       }
       case 'pie': {
-        themed = this.applyThemeToPieChart(widget, tokens, themeName, borderOptions);
+        themed = this.applyThemeToPieChart(widget, tokens, themeName, borderOptions, chartBodyFontFamily, customChartTextColor);
         return themed;
       }
       case 'area': {
-        themed = this.applyThemeToAreaChart(widget, tokens, themeName, borderOptions);
+        themed = this.applyThemeToAreaChart(widget, tokens, themeName, borderOptions, chartBodyFontFamily, customChartTextColor);
         return themed;
       }
       case 'stackedbar': {
-        themed = this.applyThemeToStackedBarChart(widget, tokens, themeName, borderOptions);
+        themed = this.applyThemeToStackedBarChart(widget, tokens, themeName, borderOptions, chartBodyFontFamily, customChartTextColor);
         return themed;
       }
       case 'groupedbar': {
-        themed = this.applyThemeToGroupedBarChart(widget, tokens, themeName, borderOptions);
+        themed = this.applyThemeToGroupedBarChart(widget, tokens, themeName, borderOptions, chartBodyFontFamily, customChartTextColor);
         return themed;
       }
       case 'radialstacked': {
@@ -1423,11 +1522,11 @@ export class ThemeManager {
         return themed;
       }
       case 'stackedlines': {
-        themed = this.applyThemeToStackedLinesChart(widget, tokens, themeName, borderOptions);
+        themed = this.applyThemeToStackedLinesChart(widget, tokens, themeName, borderOptions, chartBodyFontFamily, customChartTextColor);
         return themed;
       }
       case 'pivotbar': {
-        themed = this.applyThemeToPivotBarChart(widget, tokens, themeName, borderOptions);
+        themed = this.applyThemeToPivotBarChart(widget, tokens, themeName, borderOptions, chartBodyFontFamily, customChartTextColor);
         return themed;
       }
       case 'insights': {
@@ -1464,7 +1563,9 @@ export class ThemeManager {
       radius?: number;
       accentColor?: string;
       shadow?: boolean;
-    }
+    },
+    customChartFontFamily?: string,
+    customChartTextColor?: string
   ): Widget[] {
     return widgets.map(widget => this.applyThemeToWidget(
       widget,
@@ -1472,7 +1573,9 @@ export class ThemeManager {
       customFont,
       corporateColorKey,
       customFontSize,
-      borderOptions
+      borderOptions,
+      customChartFontFamily,
+      customChartTextColor
     ));
   }
 
