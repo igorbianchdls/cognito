@@ -72,6 +72,7 @@ export default function Page() {
       case 'contas-a-receber': return '/api/workflows/contas-a-receber';
       case 'pagamento-efetuado': return '/api/workflows/pagamento-efetuado';
       case 'pagamento-recebido': return '/api/workflows/pagamento-recebido';
+      case 'criador-de-dashboard': return '/api/workflows/criador-de-dashboard';
       default: return '/api/claudeAgents/sales';
     }
   };
