@@ -28,7 +28,8 @@ import {
   DropdownMenuSubContent,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { FileText, BarChart3, Palette, Check, Type, Square, Monitor, Tablet, Smartphone, ChevronDown, Layout } from 'lucide-react';
+import { FileText, BarChart3, Palette, Check, Type, Square, Monitor, Tablet, Smartphone, ChevronDown, Layout, Save } from 'lucide-react';
+import DashboardSaveDialog from '@/components/visual-builder/DashboardSaveDialog';
 import { BorderManager, type BorderPresetKey } from '@/components/visual-builder/BorderManager';
 import { $headerUi, headerUiActions } from '@/stores/ui/headerUiStore';
 
@@ -56,6 +57,7 @@ export default function DashboardChatPanel() {
   const [borderShadow, setBorderShadow] = useState<boolean>(true);
   // Removed corporate color state (palette UI disabled)
   const visualBuilderState = useNanoStore($visualBuilderState);
+  const [showSave, setShowSave] = useState(false);
 
   // Available backgrounds
   const availableBackgrounds = BackgroundManager.getAvailableBackgrounds();
@@ -609,6 +611,9 @@ export default function DashboardChatPanel() {
         </div>
 
         <ArtifactActions>
+          <ArtifactAction onClick={() => setShowSave(true)} tooltip="Salvar dashboard">
+            <Save className="w-4 h-4" />
+          </ArtifactAction>
           <Button
             variant="ghost"
             className="flex items-center gap-2 px-3 py-2"
@@ -938,6 +943,12 @@ export default function DashboardChatPanel() {
           </button>
         </ArtifactActions>
       </ArtifactHeader>
+      <DashboardSaveDialog
+        open={showSave}
+        onOpenChange={setShowSave}
+        sourcecode={visualBuilderState.code}
+        onSaved={() => setShowSave(false)}
+      />
 
       <ArtifactContent className="p-0 overflow-auto">
         {/* Editor Tab */}

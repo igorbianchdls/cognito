@@ -3,6 +3,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useStore } from '@nanostores/react';
 import Link from 'next/link';
+import DashboardSaveDialog from '@/components/visual-builder/DashboardSaveDialog';
+import DashboardOpenDialog from '@/components/visual-builder/DashboardOpenDialog';
+import { dashboardsApi, type Dashboard } from '@/stores/dashboardsStore';
 import MonacoEditor from '@/components/visual-builder/MonacoEditor';
 import ResponsiveGridCanvas from '@/components/visual-builder/ResponsiveGridCanvas';
 import { $visualBuilderState, visualBuilderActions } from '@/stores/visualBuilderStore';
@@ -15,6 +18,8 @@ export default function VisualBuilderPage() {
   const [activeTab, setActiveTab] = useState<'editor' | 'responsive'>('editor');
   const [viewportMode, setViewportMode] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
   const [isFilterLoading, setIsFilterLoading] = useState(false);
+  const [showSave, setShowSave] = useState(false);
+  const [showOpen, setShowOpen] = useState(false);
   const currentThemeName: ThemeName = useMemo<ThemeName>(() => {
     try {
       const cfg = JSON.parse(visualBuilderState.code);
@@ -69,6 +74,18 @@ export default function VisualBuilderPage() {
           </div>
           <div className="flex items-center gap-3">
             <button
+              className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              onClick={() => setShowSave(true)}
+            >
+              Salvar como…
+            </button>
+            <button
+              className="px-4 py-2 text-sm border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              onClick={() => setShowOpen(true)}
+            >
+              Abrir…
+            </button>
+            <button
               className="px-4 py-2 text-sm border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
               onClick={() => visualBuilderActions.updateCode(initialDsl)}
             >
@@ -118,6 +135,27 @@ export default function VisualBuilderPage() {
 
       {/* Main Content - Tab Based */}
       <div className="h-[calc(100vh-81px-49px)]">
+        <DashboardSaveDialog
+          open={showSave}
+          onOpenChange={setShowSave}
+          sourcecode={visualBuilderState.code}
+          onSaved={(id) => {
+            setShowSave(false)
+          }}
+        />
+        <DashboardOpenDialog
+          open={showOpen}
+          onOpenChange={setShowOpen}
+          onOpen={async (item: Dashboard) => {
+            setShowOpen(false)
+            try {
+              const { item: full } = await dashboardsApi.get(item.id)
+              visualBuilderActions.updateCode(full.sourcecode)
+            } catch {
+              // ignore
+            }
+          }}
+        />
         {/* Editor Tab */}
         {activeTab === 'editor' && (
           <div className="h-full bg-white">
