@@ -534,7 +534,19 @@ export class ConfigParser {
     if (cfg['dataSource'] && typeof cfg['dataSource'] === 'object') {
       widget.dataSource = cfg['dataSource'] as Widget['dataSource'];
     }
-    const map: Array<[keyof Widget, string[]]> = [
+    type WidgetConfigKey =
+      | 'kpiConfig'
+      | 'barConfig'
+      | 'lineConfig'
+      | 'pieConfig'
+      | 'areaConfig'
+      | 'stackedBarConfig'
+      | 'groupedBarConfig'
+      | 'stackedLinesConfig'
+      | 'radialStackedConfig'
+      | 'pivotBarConfig';
+
+    const map: Array<[WidgetConfigKey, string[]]> = [
       ['kpiConfig', ['kpiConfig']],
       ['barConfig', ['barConfig']],
       ['lineConfig', ['lineConfig']],
@@ -546,10 +558,13 @@ export class ConfigParser {
       ['radialStackedConfig', ['radialStackedConfig']],
       ['pivotBarConfig', ['pivotBarConfig']],
     ];
+
+    // Assign config keys in a type-safe way without using 'any'
+    const wcfg = widget as unknown as { [K in WidgetConfigKey]?: unknown };
     for (const [prop, keys] of map) {
       for (const k of keys) {
         if (cfg[k] && typeof cfg[k] === 'object') {
-          (widget as Record<string, unknown>)[prop as string] = cfg[k] as unknown;
+          wcfg[prop] = cfg[k] as unknown;
         }
       }
     }
