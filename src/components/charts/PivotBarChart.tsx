@@ -75,7 +75,7 @@ export interface PivotBarChartProps {
   onBarClick?: (category: string, seriesKey?: string) => void
 }
 
-const DEFAULT_MARGIN = { top: 40, right: 40, bottom: 50, left: 80 };
+const DEFAULT_MARGIN = { top: 40, right: 40, bottom: 50, left: 50 };
 
 export function PivotBarChart(props: PivotBarChartProps) {
   const {

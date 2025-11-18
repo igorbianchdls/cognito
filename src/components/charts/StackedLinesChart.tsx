@@ -124,7 +124,7 @@ export interface StackedLinesChartProps {
   seriesMetadata?: Array<{ key: string; label: string; color: string }>;
 }
 
-const DEFAULT_MARGIN = { top: 40, right: 40, bottom: 50, left: 80 };
+const DEFAULT_MARGIN = { top: 40, right: 40, bottom: 50, left: 50 };
 
 export function StackedLinesChart(props: StackedLinesChartProps) {
   const {
