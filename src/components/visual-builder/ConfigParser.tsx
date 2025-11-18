@@ -125,6 +125,16 @@ export interface GridConfig {
 
   // Responsive layout rows (for ResponsiveGridCanvas)
   layoutRows?: Record<string, LayoutRow>;
+
+  // New grid layout definition (preferred over layoutRows when present)
+  layout?: {
+    mode?: 'grid' | 'grid-per-row';
+    rows?: Record<string, {
+      desktop?: { columns: number; gapX?: number; gapY?: number; autoRowHeight?: number };
+      tablet?: { columns: number; gapX?: number; gapY?: number; autoRowHeight?: number };
+      mobile?: { columns: number; gapX?: number; gapY?: number; autoRowHeight?: number };
+    }>;
+  };
 }
 
 // Theme types are now managed by ThemeManager
@@ -277,6 +287,8 @@ export class ConfigParser {
       const customChartTextColor = typeof config.customChartTextColor === 'string' ? config.customChartTextColor : undefined;
       const corporateColor = config.corporateColor as string;
       const layoutRows = (config.layoutRows || rawGridConfig.layoutRows) as Record<string, LayoutRow> | undefined;
+      // New layout definition (top-level or inside config)
+      const layoutDef = (config.layout || rawGridConfig.layout) as GridConfig['layout'] | undefined;
       const dashboardTitle = typeof config.dashboardTitle === 'string' ? config.dashboardTitle : undefined;
       const dashboardSubtitle = typeof config.dashboardSubtitle === 'string' ? config.dashboardSubtitle : undefined;
 
@@ -306,7 +318,9 @@ export class ConfigParser {
           ? rawGridConfig.borderColor : undefined,
 
         // Add responsive layout rows
-        layoutRows: layoutRows
+        layoutRows: layoutRows,
+        // New grid layout definition
+        layout: layoutDef
       };
 
       // Step 4: Basic filter for runtime safety only

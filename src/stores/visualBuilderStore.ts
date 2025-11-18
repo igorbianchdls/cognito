@@ -129,6 +129,19 @@ const initialCode = `{
   "theme": "branco",
   "dashboardTitle": "Dashboard de Vendas",
   "dashboardSubtitle": "Análise de desempenho comercial",
+  "layout": {
+    "mode": "grid-per-row",
+    "rows": {
+      "1": { "desktop": { "columns": 4, "gapX": 16, "gapY": 16 }, "tablet": { "columns": 2, "gapX": 12, "gapY": 12 }, "mobile": { "columns": 1, "gapX": 8, "gapY": 8 } },
+      "2": { "desktop": { "columns": 3, "gapX": 16, "gapY": 16 }, "tablet": { "columns": 1, "gapX": 12, "gapY": 12 }, "mobile": { "columns": 1, "gapX": 8, "gapY": 8 } },
+      "3": { "desktop": { "columns": 2, "gapX": 16, "gapY": 16 }, "tablet": { "columns": 2, "gapX": 12, "gapY": 12 }, "mobile": { "columns": 1, "gapX": 8, "gapY": 8 } },
+      "4": { "desktop": { "columns": 2, "gapX": 16, "gapY": 16 }, "tablet": { "columns": 2, "gapX": 12, "gapY": 12 }, "mobile": { "columns": 1, "gapX": 8, "gapY": 8 } },
+      "5": { "desktop": { "columns": 2, "gapX": 16, "gapY": 16 }, "tablet": { "columns": 2, "gapX": 12, "gapY": 12 }, "mobile": { "columns": 1, "gapX": 8, "gapY": 8 } },
+      "6": { "desktop": { "columns": 2, "gapX": 16, "gapY": 16 }, "tablet": { "columns": 2, "gapX": 12, "gapY": 12 }, "mobile": { "columns": 1, "gapX": 8, "gapY": 8 } },
+      "7": { "desktop": { "columns": 2, "gapX": 16, "gapY": 16 }, "tablet": { "columns": 2, "gapX": 12, "gapY": 12 }, "mobile": { "columns": 1, "gapX": 8, "gapY": 8 } },
+      "8": { "desktop": { "columns": 2, "gapX": 16, "gapY": 16 }, "tablet": { "columns": 2, "gapX": 12, "gapY": 12 }, "mobile": { "columns": 1, "gapX": 8, "gapY": 8 } }
+    }
+  },
   "config": {
     "maxRows": 25,
     "rowHeight": 30,
@@ -137,48 +150,7 @@ const initialCode = `{
     "backgroundColor": "#171717",
     "borderColor": "#404040"
   },
-  "layoutRows": {
-    "1": {
-      "desktop": 4,
-      "tablet": 2,
-      "mobile": 1
-    },
-    "2": {
-      "desktop": 2,
-      "tablet": 2,
-      "mobile": 1
-    },
-    "3": {
-      "desktop": 2,
-      "tablet": 2,
-      "mobile": 1
-    },
-    "4": {
-      "desktop": 2,
-      "tablet": 2,
-      "mobile": 1
-    },
-    "5": {
-      "desktop": 2,
-      "tablet": 2,
-      "mobile": 1
-    },
-    "6": {
-      "desktop": 2,
-      "tablet": 2,
-      "mobile": 1
-    },
-    "7": {
-      "desktop": 2,
-      "tablet": 2,
-      "mobile": 1
-    },
-    "8": {
-      "desktop": 2,
-      "tablet": 2,
-      "mobile": 1
-    }
-  },
+  
   "widgets": [
     {
       "id": "faturamento_total",

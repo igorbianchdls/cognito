@@ -307,30 +307,44 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig, globalFilter
     return 'transition-all duration-200';
   };
 
-  // Get columns value for row based on viewportMode
+  // New layout helpers (prefer new layout definition when present)
   const getColumnsValue = (rowKey: string): number => {
-    // Get specific layout for this row or use default
-    const layoutConfig = gridConfig.layoutRows?.[rowKey] || {
-      desktop: 4,
-      tablet: 2,
-      mobile: 1
-    };
-
+    // Prefer new layout per row if provided
+    const layoutRows = gridConfig.layout?.rows;
+    if (layoutRows && layoutRows[rowKey]) {
+      const row = layoutRows[rowKey];
+      const spec = viewportMode === 'mobile' ? row.mobile : viewportMode === 'tablet' ? row.tablet : row.desktop;
+      if (spec?.columns && spec.columns > 0) return spec.columns;
+    }
+    // Fallback to legacy layoutRows
+    const legacy = gridConfig.layoutRows?.[rowKey] || { desktop: 4, tablet: 2, mobile: 1 };
     switch (viewportMode) {
       case 'mobile':
-        return layoutConfig.mobile;
+        return legacy.mobile;
       case 'tablet':
-        return layoutConfig.tablet;
+        return legacy.tablet;
       case 'desktop':
       default:
-        return layoutConfig.desktop;
+        return legacy.desktop;
     }
+  };
+
+  const getRowGaps = (rowKey: string): { gapX: number; gapY: number; autoRowHeight?: number } => {
+    const layoutRows = gridConfig.layout?.rows;
+    if (layoutRows && layoutRows[rowKey]) {
+      const row = layoutRows[rowKey];
+      const spec = viewportMode === 'mobile' ? row.mobile : viewportMode === 'tablet' ? row.tablet : row.desktop;
+      if (spec) {
+        return { gapX: spec.gapX ?? 16, gapY: spec.gapY ?? 0, autoRowHeight: spec.autoRowHeight };
+      }
+    }
+    return { gapX: 16, gapY: 0 };
   };
 
   // Generate grid layout classes for a specific row (only fixed classes)
   const getGridClassesForRow = (): string => {
-    // Keep horizontal gap 16px and vertical gap 0px; wrappers provide vertical spacing
-    return 'grid gap-x-4 gap-y-0 auto-rows-min';
+    // Use inline style gaps; keep minimal classes here
+    return 'grid auto-rows-min';
   };
 
   // Get device-specific styles
@@ -415,7 +429,10 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig, globalFilter
                         className={getGridClassesForRow()}
                         style={{
                           gridTemplateColumns: `repeat(${getColumnsValue(rowKey)}, 1fr)`,
-                          width: '100%'
+                          width: '100%',
+                          columnGap: `${getRowGaps(rowKey).gapX}px`,
+                          rowGap: `${getRowGaps(rowKey).gapY}px`,
+                          gridAutoRows: getRowGaps(rowKey).autoRowHeight ? `${getRowGaps(rowKey).autoRowHeight}px` : undefined,
                         }}
                       >
                         {rowWidgets.map((widget) => (
