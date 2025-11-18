@@ -49,6 +49,21 @@ const compactJsonSections = (code: string): string => {
     .replace(/("styling"\s*:\s*\{[\s\S]*?\})/g, collapse);
 };
 
+// Helper: compact each item under layoutRows ("1": {...}) to one line
+const compactLayoutRows = (code: string): string => {
+  const collapse = (match: string) =>
+    match
+      .replace(/\n\s*/g, ' ')
+      .replace(/\s{2,}/g, ' ')
+      .replace(/\{\s+/g, '{ ')
+      .replace(/\s+\}/g, ' }')
+      .replace(/,\s+/g, ', ');
+
+  return code.replace(/(\"layoutRows\"\s*:\s*\{[\s\S]*?\})/g, (block) =>
+    block.replace(/(\"[^\"]+\"\s*:\s*\{[\s\S]*?\})/g, collapse)
+  );
+};
+
 const initialCode = `{
   "theme": "branco",
   "dashboardTitle": "Dashboard de Vendas",
@@ -598,7 +613,7 @@ const initialCode = `{
 const initialParseResult = ConfigParser.parse(initialCode)
 
 // Use a compact view of the JSON in the editor
-const compactInitialCode = compactJsonSections(initialCode)
+const compactInitialCode = compactLayoutRows(compactJsonSections(initialCode))
 
 const initialState: VisualBuilderState = {
   widgets: initialParseResult.widgets,
@@ -688,7 +703,7 @@ export const visualBuilderActions = {
       ...(dashboardSubtitle ? { dashboardSubtitle } : {}),
       widgets
     }, null, 2)
-    const newCode = compactJsonSections(newCodeRaw)
+    const newCode = compactLayoutRows(compactJsonSections(newCodeRaw))
 
     console.log('🎨 Visual Builder: Updating widgets', { count: widgets.length })
 
@@ -786,7 +801,7 @@ export const visualBuilderActions = {
       config: currentState.gridConfig,
       widgets: updatedWidgets
     }, null, 2)
-    const newCode = compactJsonSections(newCodeRaw)
+    const newCode = compactLayoutRows(compactJsonSections(newCodeRaw))
 
     $visualBuilderState.set({
       ...currentState,
