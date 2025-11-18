@@ -75,23 +75,30 @@ const compactLayoutRows = (code: string): string => {
 // Helper: reorder widget keys so id,type,row,span,heightPx come first
 const reorderWidgetKeysInCode = (code: string): string => {
   try {
-    const obj = JSON.parse(code) as any;
-    if (obj && Array.isArray(obj.widgets)) {
-      obj.widgets = obj.widgets.map((w: any) => {
+    const parsed: unknown = JSON.parse(code);
+    if (
+      parsed &&
+      typeof parsed === 'object' &&
+      Array.isArray((parsed as { widgets?: unknown }).widgets)
+    ) {
+      const root = parsed as { widgets: Array<Record<string, unknown>>; [k: string]: unknown };
+      const desired = ['id', 'type', 'row', 'span', 'heightPx'] as const;
+      root.widgets = root.widgets.map((w) => {
         if (!w || typeof w !== 'object') return w;
-        const desired = ['id', 'type', 'row', 'span', 'heightPx'];
-        const newW: any = {};
+        const newW: Record<string, unknown> = {};
         // Add desired keys first if present
         for (const key of desired) {
-          if (Object.prototype.hasOwnProperty.call(w, key)) newW[key] = w[key];
+          if (Object.prototype.hasOwnProperty.call(w, key)) newW[key] = (w as Record<string, unknown>)[key];
         }
         // Preserve original order for the rest
         for (const key of Object.keys(w)) {
-          if (!desired.includes(key)) newW[key] = w[key];
+          if (!desired.includes(key as typeof desired[number])) {
+            newW[key] = (w as Record<string, unknown>)[key];
+          }
         }
         return newW;
       });
-      return JSON.stringify(obj, null, 2);
+      return JSON.stringify(root, null, 2);
     }
     return code;
   } catch {
