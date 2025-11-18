@@ -7,7 +7,7 @@ export async function GET(req: NextRequest) {
   const id = parts[parts.length - 1]
   const rows = await runQuery(`
     SELECT id, title, description, sourcecode, visibility, version, created_at, updated_at
-    FROM apps.dashboards WHERE id = $1 LIMIT 1
+    FROM apps.dashboards WHERE id = $1 AND tenant_id = 1 LIMIT 1
   `, [id])
   const item = rows?.[0]
   if (!item) return Response.json({ success: false, error: 'Dashboard não encontrado' }, { status: 404 })
@@ -38,7 +38,7 @@ export async function PUT(req: NextRequest) {
 
   const sql = `
     UPDATE apps.dashboards SET ${setParts.join(', ')}
-    WHERE id = $${idx}
+    WHERE id = $${idx} AND tenant_id = 1
     RETURNING id, title, description, sourcecode, visibility, version, created_at, updated_at
   `
   const rows = await runQuery(sql, params)
@@ -51,6 +51,6 @@ export async function DELETE(req: NextRequest) {
   const url = new URL(req.url)
   const parts = url.pathname.split('/').filter(Boolean)
   const id = parts[parts.length - 1]
-  await runQuery('DELETE FROM apps.dashboards WHERE id = $1', [id])
+  await runQuery('DELETE FROM apps.dashboards WHERE id = $1 AND tenant_id = 1', [id])
   return Response.json({ success: true })
 }

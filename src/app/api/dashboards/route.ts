@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
     const offset = Number(searchParams.get('offset') || '0')
 
     const params: unknown[] = []
-    const where: string[] = []
+    const where: string[] = ['tenant_id = 1']
     if (visibility) {
       params.push(visibility)
       where.push(`visibility = $${params.length}`)
@@ -59,8 +59,8 @@ export async function POST(req: NextRequest) {
     const ver = Number.isFinite(Number(version)) && Number(version) > 0 ? Number(version) : 1
 
     const insertSql = `
-      INSERT INTO apps.dashboards (title, description, sourcecode, visibility, version)
-      VALUES ($1, $2, $3, $4, $5)
+      INSERT INTO apps.dashboards (tenant_id, title, description, sourcecode, visibility, version)
+      VALUES (1, $1, $2, $3, $4, $5)
       RETURNING id, title, description, sourcecode, visibility, version, created_at, updated_at
     `
     const rows = await runQuery<{
