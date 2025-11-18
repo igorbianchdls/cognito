@@ -236,6 +236,36 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig, globalFilter
   const widgetGroups = groupWidgetsByRow();
   const perColumnMode = gridConfig.layout?.mode === 'grid-per-column';
 
+  // Helpers for per-column wrappers
+  const getTemplateColumnsString = (): string | undefined => {
+    const tmpl = gridConfig.layout?.columnsTemplate;
+    const str = tmpl ? (viewportMode === 'mobile' ? tmpl.mobile : viewportMode === 'tablet' ? tmpl.tablet : tmpl.desktop) : undefined;
+    return str;
+  };
+
+  const getColumnIds = (): number[] => {
+    const tmpl = getTemplateColumnsString();
+    if (tmpl) {
+      const count = tmpl.trim().split(/\s+/).length;
+      return Array.from({ length: count }, (_, i) => i + 1);
+    }
+    const inner = gridConfig.layout?.columnsInner ? Object.keys(gridConfig.layout.columnsInner).map(k => Number(k)).filter(n => Number.isFinite(n)) : [];
+    if (inner.length > 0) return inner.sort((a, b) => a - b);
+    // fallback from widgets
+    const starts = widgets.map(w => getStartValue(w) || 1);
+    const maxStart = starts.length ? Math.max(...starts) : 1;
+    return Array.from({ length: maxStart }, (_, i) => i + 1);
+  };
+
+  const getInnerColsForColumn = (colId: number): number => {
+    const inner = gridConfig.layout?.columnsInner?.[String(colId)];
+    if (inner) {
+      const val = viewportMode === 'mobile' ? inner.mobile : viewportMode === 'tablet' ? inner.tablet : inner.desktop;
+      if (typeof val === 'number' && val > 0) return val;
+    }
+    return 1;
+  };
+
   // Handle drag end - reorder widgets within the same row
   const handleDragEnd = (event: DragEndEvent, rowKey: string) => {
     const { active, over } = event;
@@ -490,43 +520,56 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig, globalFilter
         )}
         {widgets.length > 0 && perColumnMode && (
           <div className="px-0 py-4">
-            <DndContext collisionDetection={closestCenter} onDragEnd={() => { /* TODO: reorder across all */ }}>
-              <SortableContext items={widgets.map(w => w.id)} strategy={horizontalListSortingStrategy}>
-                <div
-                  className={getGridClassesForRow()}
-                  style={{
-                    gridTemplateColumns: `repeat(${getGlobalColumns()}, 1fr)`,
-                    width: '100%',
-                    columnGap: `${getGlobalGaps().gapX}px`,
-                    rowGap: `${getGlobalGaps().gapY}px`,
-                    gridAutoRows: getGlobalGaps().autoRowHeight ? `${getGlobalGaps().autoRowHeight}px` : undefined,
-                  }}
-                >
-                  {widgets
-                    .slice()
-                    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
-                    .map((widget) => {
-                      const { desktopSpan, tabletSpan, mobileSpan } = adaptWidgetForResponsive(widget);
-                      const spanValue = viewportMode === 'mobile' ? mobileSpan : viewportMode === 'tablet' ? tabletSpan : desktopSpan;
-                      const startValue = getStartValue(widget);
-                      const minHeight = getWidgetHeight(widget);
-                      const spanClasses = getSpanClasses();
-                      return (
-                        <DraggableWidget
-                          key={widget.id}
-                          widget={widget}
-                          spanClasses={spanClasses}
-                          spanValue={spanValue}
-                          startValue={startValue}
-                          minHeight={minHeight}
-                          globalFilters={globalFilters}
-                          onEdit={handleEditWidget}
-                        />
-                      );
-                    })}
-                </div>
-              </SortableContext>
-            </DndContext>
+            <div
+              className={getGridClassesForRow()}
+              style={{
+                gridTemplateColumns: getTemplateColumnsString() || `repeat(${getGlobalColumns()}, 1fr)`,
+                width: '100%',
+                columnGap: `${getGlobalGaps().gapX}px`,
+                rowGap: `${getGlobalGaps().gapY}px`,
+                gridAutoRows: getGlobalGaps().autoRowHeight ? `${getGlobalGaps().autoRowHeight}px` : undefined,
+              }}
+            >
+              {getColumnIds().map((colId) => {
+                // Widgets for this column
+                const colWidgets = widgets
+                  .filter((w) => (getStartValue(w) || 1) === colId)
+                  .slice()
+                  .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+                const innerCols = getInnerColsForColumn(colId);
+                return (
+                  <div key={`col-${colId}`} style={{ gridColumn: `${colId} / span 1` }}>
+                    <div
+                      className={getGridClassesForRow()}
+                      style={{
+                        gridTemplateColumns: `repeat(${innerCols}, 1fr)`,
+                        width: '100%',
+                        columnGap: `${getGlobalGaps().gapX}px`,
+                        rowGap: `${getGlobalGaps().gapY}px`,
+                      }}
+                    >
+                      {colWidgets.map((widget) => {
+                        const { desktopSpan, tabletSpan, mobileSpan } = adaptWidgetForResponsive(widget);
+                        const spanValue = viewportMode === 'mobile' ? mobileSpan : viewportMode === 'tablet' ? tabletSpan : desktopSpan;
+                        const minHeight = getWidgetHeight(widget);
+                        const spanClasses = getSpanClasses();
+                        return (
+                          <DraggableWidget
+                            key={widget.id}
+                            widget={widget}
+                            spanClasses={spanClasses}
+                            spanValue={spanValue}
+                            minHeight={minHeight}
+                            globalFilters={globalFilters}
+                            onEdit={handleEditWidget}
+                          />
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
 

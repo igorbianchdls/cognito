@@ -139,6 +139,17 @@ export interface GridConfig {
       tablet?: { columns: number; gapX?: number; gapY?: number; autoRowHeight?: number };
       mobile?: { columns: number; gapX?: number; gapY?: number; autoRowHeight?: number };
     };
+    columnsTemplate?: {
+      desktop?: string;
+      tablet?: string;
+      mobile?: string;
+    };
+    columnsInner?: Record<string, {
+      desktop?: number;
+      tablet?: number;
+      mobile?: number;
+      label?: string;
+    }>;
   };
 }
 
@@ -433,6 +444,18 @@ export class ConfigParser {
         mobile: { columns: Math.max(colsM || 1, 1), gapX, gapY, autoRowHeight }
       } as NonNullable<GridConfig['layout']>['columns'];
 
+      // Optional template strings for explicit column widths (e.g., "1fr 4fr")
+      const tmplD = dashAttrs['template-d'];
+      const tmplT = dashAttrs['template-t'];
+      const tmplM = dashAttrs['template-m'];
+      const columnsTemplate: NonNullable<GridConfig['layout']>['columnsTemplate'] = {};
+      if (tmplD) columnsTemplate.desktop = tmplD;
+      if (tmplT) columnsTemplate.tablet = tmplT;
+      if (tmplM) columnsTemplate.mobile = tmplM;
+
+      // Column inner grid mapping (from <column cols-*> attributes)
+      const columnsInner: NonNullable<GridConfig['layout']>['columnsInner'] = {};
+
       // Parse widgets (self-closing and pair with <config>)
       const parseWidgetAttributes = (attrStr: string, innerConfig?: string, defaultStart?: number) => {
         const wa = parseAttrs(attrStr || '');
@@ -492,6 +515,16 @@ export class ConfigParser {
             errors.push({ line: 1, column: 1, message: 'Column missing valid id (>=1)', type: 'validation' });
             continue;
           }
+          const cD = colAttrs['cols-d'] ? Number(colAttrs['cols-d']) : undefined;
+          const cT = colAttrs['cols-t'] ? Number(colAttrs['cols-t']) : undefined;
+          const cM = colAttrs['cols-m'] ? Number(colAttrs['cols-m']) : undefined;
+          const label = colAttrs['label'];
+          columnsInner[String(colId)] = {
+            ...(cD ? { desktop: cD } : {}),
+            ...(cT ? { tablet: cT } : {}),
+            ...(cM ? { mobile: cM } : {}),
+            ...(label ? { label } : {})
+          };
           const content = colMatch[2] || '';
           // self-closing widgets inside column
           const ws = /<widget\b([^>]*)\/>/gi;
@@ -529,7 +562,7 @@ export class ConfigParser {
         maxRows: this.DEFAULT_GRID_CONFIG.maxRows,
         rowHeight: this.DEFAULT_GRID_CONFIG.rowHeight,
         cols: this.DEFAULT_GRID_CONFIG.cols,
-        layout: { mode: 'grid-per-column', columns }
+        layout: { mode: 'grid-per-column', columns, ...(Object.keys(columnsTemplate).length ? { columnsTemplate } : {}), ...(Object.keys(columnsInner).length ? { columnsInner } : {}) }
       } as GridConfig;
 
       const themedGrid = (theme && ThemeManager.isValidTheme(theme))
