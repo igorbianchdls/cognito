@@ -6,6 +6,7 @@ import Link from 'next/link';
 import MonacoEditor from '@/components/visual-builder/MonacoEditor';
 import ResponsiveGridCanvas from '@/components/visual-builder/ResponsiveGridCanvas';
 import { $visualBuilderState, visualBuilderActions } from '@/stores/visualBuilderStore';
+import { initialDsl, initialDslColumns } from '@/stores/visualBuilderStore';
 import { ThemeManager, type ThemeName } from '@/components/visual-builder/ThemeManager';
 import type { Widget, GlobalFilters } from '@/stores/visualBuilderStore';
 
@@ -67,6 +68,18 @@ export default function VisualBuilderPage() {
             </p>
           </div>
           <div className="flex items-center gap-3">
+            <button
+              className="px-4 py-2 text-sm border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              onClick={() => visualBuilderActions.updateCode(initialDsl)}
+            >
+              Exemplo por Linhas
+            </button>
+            <button
+              className="px-4 py-2 text-sm border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              onClick={() => visualBuilderActions.updateCode(initialDslColumns)}
+            >
+              Exemplo por Colunas
+            </button>
             <button className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
               Export Config
             </button>

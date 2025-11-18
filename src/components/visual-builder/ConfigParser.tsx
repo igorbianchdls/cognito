@@ -128,12 +128,17 @@ export interface GridConfig {
 
   // New grid layout definition (preferred over layoutRows when present)
   layout?: {
-    mode?: 'grid' | 'grid-per-row';
+    mode?: 'grid' | 'grid-per-row' | 'grid-per-column';
     rows?: Record<string, {
       desktop?: { columns: number; gapX?: number; gapY?: number; autoRowHeight?: number };
       tablet?: { columns: number; gapX?: number; gapY?: number; autoRowHeight?: number };
       mobile?: { columns: number; gapX?: number; gapY?: number; autoRowHeight?: number };
     }>;
+    columns?: {
+      desktop?: { columns: number; gapX?: number; gapY?: number; autoRowHeight?: number };
+      tablet?: { columns: number; gapX?: number; gapY?: number; autoRowHeight?: number };
+      mobile?: { columns: number; gapX?: number; gapY?: number; autoRowHeight?: number };
+    };
   };
 }
 
@@ -169,6 +174,8 @@ export interface Widget {
   // Responsive layout properties (for ResponsiveGridCanvas)
   row?: string;           // Reference to layoutRows key (e.g., "1", "2")
   span?: WidgetSpan;      // How many columns to span on each breakpoint
+  // For grid-per-column: column start per breakpoint (1-based)
+  gridStart?: WidgetSpan;
   order?: number;         // Display order
   heightPx?: number;      // Height in pixels for responsive layout
   data?: {
@@ -406,7 +413,102 @@ export class ConfigParser {
     const theme = dashAttrs['theme'] as ThemeName | undefined;
     const dashboardTitle = dashAttrs['title'];
     const dashboardSubtitle = dashAttrs['subtitle'];
-    const layoutMode = (dashAttrs['layout-mode'] as 'grid' | 'grid-per-row' | undefined) || 'grid-per-row';
+    const layoutMode = (dashAttrs['layout-mode'] as 'grid' | 'grid-per-row' | 'grid-per-column' | undefined) || 'grid-per-row';
+
+    // grid-per-column mode: parse dashboard-level columns and widgets directly
+    if (layoutMode === 'grid-per-column') {
+      const colsD = Number(dashAttrs['cols-d'] || '0');
+      const colsT = Number(dashAttrs['cols-t'] || '0');
+      const colsM = Number(dashAttrs['cols-m'] || '0');
+      const gapX = dashAttrs['gap-x'] ? Number(dashAttrs['gap-x']) : undefined;
+      const gapY = dashAttrs['gap-y'] ? Number(dashAttrs['gap-y']) : undefined;
+      const autoRowHeight = dashAttrs['auto-row-height'] ? Number(dashAttrs['auto-row-height']) : undefined;
+
+      const columns = {
+        desktop: { columns: Math.max(colsD || 1, 1), gapX, gapY, autoRowHeight },
+        tablet: { columns: Math.max(colsT || 1, 1), gapX, gapY, autoRowHeight },
+        mobile: { columns: Math.max(colsM || 1, 1), gapX, gapY, autoRowHeight }
+      } as NonNullable<GridConfig['layout']>['columns'];
+
+      // Parse widgets (self-closing and pair with <config>)
+      const parseWidgetAttributes = (attrStr: string, innerConfig?: string) => {
+        const wa = parseAttrs(attrStr || '');
+        const id = wa['id'];
+        const type = wa['type'] as Widget['type'];
+        if (!id || !type) {
+          errors.push({ line: 1, column: 1, message: 'Widget missing id or type', type: 'validation' });
+          return;
+        }
+        const order = wa['order'] ? Number(wa['order']) : undefined;
+        const heightPx = wa['height'] ? Number(wa['height']) : undefined;
+        const title = wa['title'];
+        const spanD = wa['span-d'] ? Number(wa['span-d']) : undefined;
+        const spanT = wa['span-t'] ? Number(wa['span-t']) : undefined;
+        const spanM = wa['span-m'] ? Number(wa['span-m']) : undefined;
+        const colD = wa['col-d'] ? Number(wa['col-d']) : undefined;
+        const colT = wa['col-t'] ? Number(wa['col-t']) : undefined;
+        const colM = wa['col-m'] ? Number(wa['col-m']) : undefined;
+
+        const widget: Widget = {
+          id,
+          type,
+          ...(typeof order === 'number' ? { order } : {}),
+          ...(typeof heightPx === 'number' ? { heightPx } : {}),
+          ...(title ? { title } : {}),
+          ...(spanD || spanT || spanM ? { span: { ...(spanD ? { desktop: spanD } : {}), ...(spanT ? { tablet: spanT } : {}), ...(spanM ? { mobile: spanM } : {}) } } : {}),
+          ...(colD || colT || colM ? { gridStart: { ...(colD ? { desktop: colD } : {}), ...(colT ? { tablet: colT } : {}), ...(colM ? { mobile: colM } : {}) } } : {})
+        } as Widget;
+
+        if (innerConfig) {
+          try {
+            const cfgJson = JSON.parse(innerConfig.trim());
+            this.applyWidgetConfig(widget, cfgJson);
+          } catch {
+            errors.push({ line: 1, column: 1, message: `Widget ${widget.id}: invalid <config> JSON`, type: 'validation' });
+          }
+        }
+        widgets.push(widget);
+      };
+
+      // Self-closing
+      const widgetSelfRegex = /<widget\b([^>]*)\/>/gi;
+      let wSelf: RegExpExecArray | null;
+      while ((wSelf = widgetSelfRegex.exec(dsl)) !== null) {
+        parseWidgetAttributes(wSelf[1]);
+      }
+      // Paired
+      const widgetPairRegex = /<widget\b([^>]*)>([\s\S]*?)<\/widget>/gi;
+      let wPair: RegExpExecArray | null;
+      while ((wPair = widgetPairRegex.exec(dsl)) !== null) {
+        const inner = wPair[2] || '';
+        const cfgMatch = inner.match(/<config\b[^>]*>([\s\S]*?)<\/config>/i);
+        parseWidgetAttributes(wPair[1], cfgMatch && cfgMatch[1] ? cfgMatch[1] : undefined);
+      }
+
+      // Build grid config, apply theme, return
+      const baseGrid: GridConfig = {
+        maxRows: this.DEFAULT_GRID_CONFIG.maxRows,
+        rowHeight: this.DEFAULT_GRID_CONFIG.rowHeight,
+        cols: this.DEFAULT_GRID_CONFIG.cols,
+        layout: { mode: 'grid-per-column', columns }
+      } as GridConfig;
+
+      const themedGrid = (theme && ThemeManager.isValidTheme(theme))
+        ? ThemeManager.applyThemeToGrid(baseGrid, theme)
+        : baseGrid;
+      const themedWidgets = (theme && ThemeManager.isValidTheme(theme))
+        ? this.applyThemeToWidgets(widgets, theme)
+        : widgets;
+
+      return {
+        widgets: themedWidgets,
+        gridConfig: themedGrid,
+        errors,
+        isValid: errors.length === 0,
+        dashboardTitle,
+        dashboardSubtitle
+      };
+    }
 
     // Rows
     const rowRegex = /<row\b([^>]*)>([\s\S]*?)<\/row>/gi;

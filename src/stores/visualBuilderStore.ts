@@ -135,7 +135,7 @@ const compactWidgetHeaders = (code: string): string => {
 }
 
 // New DSL initial code (HTML-like)
-const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas" subtitle="Análise de desempenho comercial" layout-mode="grid-per-row">
+export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas" subtitle="Análise de desempenho comercial" layout-mode="grid-per-row">
   <row id="1" cols-d="4" cols-t="2" cols-m="1" gap-x="16" gap-y="16">
     <widget id="faturamento_total" type="kpi" order="1" span-d="1" span-t="1" span-m="1" height="150" title="💰 Faturamento Total">
       <config>
@@ -267,6 +267,48 @@ const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas" subtit
       </config>
     </widget>
   </row>
+</dashboard>`
+
+// Example in grid-per-column mode
+export const initialDslColumns = `<dashboard theme="branco" title="Dashboard (Colunas)" subtitle="Layout por colunas" layout-mode="grid-per-column" cols-d="3" cols-t="2" cols-m="1" gap-x="16" gap-y="16">
+  <widget id="kpi_faturamento" type="kpi" order="1" col-d="1" span-d="1" height="150" title="💰 Faturamento Total">
+    <config>
+      {"dataSource":{"schema":"vendas","table":"vw_pedidos_completo","x":"item_subtotal","y":"item_subtotal","aggregation":"SUM"},
+       "kpiConfig":{"unit":"R$","visualizationType":"card"}}
+    </config>
+  </widget>
+  <widget id="kpi_total_itens" type="kpi" order="1" col-d="2" span-d="1" height="150" title="📦 Total de Itens">
+    <config>
+      {"dataSource":{"schema":"vendas","table":"vw_pedidos_completo","x":"item_id","y":"item_id","aggregation":"COUNT"},
+       "kpiConfig":{"visualizationType":"card"}}
+    </config>
+  </widget>
+  <widget id="kpi_ticket_medio" type="kpi" order="1" col-d="3" span-d="1" height="150" title="🎯 Ticket Médio">
+    <config>
+      {"dataSource":{"schema":"vendas","table":"vw_pedidos_completo","x":"item_subtotal","y":"item_subtotal","aggregation":"AVG"},
+       "kpiConfig":{"unit":"R$","visualizationType":"card"}}
+    </config>
+  </widget>
+
+  <widget id="chart_faturamento_mensal" type="line" order="2" col-d="1" span-d="2" height="320" title="📈 Faturamento Mensal">
+    <config>
+      {"dataSource":{"schema":"vendas","table":"vw_pedidos_completo","x":"data_pedido","y":"item_subtotal","aggregation":"SUM"},
+       "lineConfig":{"styling":{"showLegend":false,"showGrid":true,"marginBottom":40}}}
+    </config>
+  </widget>
+  <widget id="chart_vendas_canal" type="pie" order="2" col-d="3" span-d="1" height="320" title="📱 Vendas por Canal">
+    <config>
+      {"dataSource":{"schema":"vendas","table":"vw_pedidos_completo","x":"canal_venda_nome","y":"item_subtotal","aggregation":"SUM"},
+       "pieConfig":{"styling":{"showLegend":true,"showGrid":false,"marginBottom":40}}}
+    </config>
+  </widget>
+
+  <widget id="chart_top_produtos" type="bar" order="3" col-d="2" span-d="1" height="320" title="🏆 Top 10 Produtos">
+    <config>
+      {"dataSource":{"schema":"vendas","table":"vw_pedidos_completo","x":"produto_nome","y":"item_subtotal","aggregation":"SUM"},
+       "barConfig":{"styling":{"showLegend":false,"showGrid":true,"marginBottom":40,"barColor":"#3b82f6"}}}
+    </config>
+  </widget>
 </dashboard>`
 
 // Parse do código inicial para ter widgets desde o início

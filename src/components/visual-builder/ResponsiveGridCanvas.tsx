@@ -28,12 +28,13 @@ interface DraggableWidgetProps {
   widget: Widget;
   spanClasses: string;
   spanValue: number;
+  startValue?: number;
   minHeight: string;
   globalFilters?: GlobalFilters;
   onEdit: (widget: Widget) => void;
 }
 
-function DraggableWidget({ widget, spanClasses, spanValue, minHeight, globalFilters, onEdit }: DraggableWidgetProps) {
+function DraggableWidget({ widget, spanClasses, spanValue, startValue, minHeight, globalFilters, onEdit }: DraggableWidgetProps) {
   const {
     attributes,
     listeners,
@@ -47,7 +48,7 @@ function DraggableWidget({ widget, spanClasses, spanValue, minHeight, globalFilt
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
-    gridColumn: `span ${spanValue}`, // CSS Grid native span
+    gridColumn: startValue ? `${startValue} / span ${spanValue}` : `span ${spanValue}`,
   };
 
   return (
@@ -232,8 +233,8 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig, globalFilter
 
     return groups;
   };
-
   const widgetGroups = groupWidgetsByRow();
+  const perColumnMode = gridConfig.layout?.mode === 'grid-per-column';
 
   // Handle drag end - reorder widgets within the same row
   const handleDragEnd = (event: DragEndEvent, rowKey: string) => {
@@ -410,7 +411,7 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig, globalFilter
         )}
 
         {/* Responsive Grid Layout - Grouped by Rows */}
-        {widgets.length > 0 && (
+        {widgets.length > 0 && !perColumnMode && (
           <div className="px-0 py-4 space-y-2">
             {Object.keys(widgetGroups)
               .sort((a, b) => parseInt(a) - parseInt(b)) // Sort rows numerically
@@ -452,6 +453,47 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig, globalFilter
                 );
               })
             }
+          </div>
+        )}
+        {widgets.length > 0 && perColumnMode && (
+          <div className="px-0 py-4">
+            <DndContext collisionDetection={closestCenter} onDragEnd={() => { /* TODO: reorder across all */ }}>
+              <SortableContext items={widgets.map(w => w.id)} strategy={horizontalListSortingStrategy}>
+                <div
+                  className={getGridClassesForRow()}
+                  style={{
+                    gridTemplateColumns: `repeat(${getGlobalColumns()}, 1fr)`,
+                    width: '100%',
+                    columnGap: `${getGlobalGaps().gapX}px`,
+                    rowGap: `${getGlobalGaps().gapY}px`,
+                    gridAutoRows: getGlobalGaps().autoRowHeight ? `${getGlobalGaps().autoRowHeight}px` : undefined,
+                  }}
+                >
+                  {widgets
+                    .slice()
+                    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+                    .map((widget) => {
+                      const { desktopSpan, tabletSpan, mobileSpan } = adaptWidgetForResponsive(widget);
+                      const spanValue = viewportMode === 'mobile' ? mobileSpan : viewportMode === 'tablet' ? tabletSpan : desktopSpan;
+                      const startValue = getStartValue(widget);
+                      const minHeight = getWidgetHeight(widget);
+                      const spanClasses = getSpanClasses();
+                      return (
+                        <DraggableWidget
+                          key={widget.id}
+                          widget={widget}
+                          spanClasses={spanClasses}
+                          spanValue={spanValue}
+                          startValue={startValue}
+                          minHeight={minHeight}
+                          globalFilters={globalFilters}
+                          onEdit={handleEditWidget}
+                        />
+                      );
+                    })}
+                </div>
+              </SortableContext>
+            </DndContext>
           </div>
         )}
 
