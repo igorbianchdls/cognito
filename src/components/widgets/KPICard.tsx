@@ -168,7 +168,7 @@ interface KPICardProps {
 
 export function KPICard({
   variant = 'classic',
-  size = 'md',
+  size = 'lg',
   borderVariant = 'smooth',
   // Data props
   kpiId,
@@ -455,7 +455,7 @@ export function KPICard({
         <div
           className={`font-semibold ${!kpiValueColor ? 'text-slate-900' : ''} leading-none ${s.value}`}
           style={{
-            ...(tileValuePaddingY !== undefined ? { paddingTop: tileValuePaddingY, paddingBottom: tileValuePaddingY } : { paddingTop: 12, paddingBottom: 12 }),
+            ...(tileValuePaddingY !== undefined ? { paddingTop: tileValuePaddingY, paddingBottom: tileValuePaddingY } : { paddingTop: 16, paddingBottom: 16 }),
             color: kpiValueColor || undefined
           }}
         >
