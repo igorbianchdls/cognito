@@ -1,9 +1,9 @@
 'use client';
 
-import { Calendar as CalendarIcon, RefreshCw } from 'lucide-react';
+import { Calendar as CalendarIcon } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Button } from '@/components/ui/button';
+ 
 import type { DateRangeFilter, DateRangeType } from '@/stores/visualBuilderStore';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
