@@ -3,13 +3,7 @@
 import { Calendar as CalendarIcon, RefreshCw } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
 import type { DateRangeFilter, DateRangeType } from '@/stores/visualBuilderStore';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
@@ -86,9 +80,12 @@ export default function DashboardInCanvasHeader({
   };
 
   const currentLabel = useMemo(() => {
+    if (currentFilter.type === 'custom' && currentFilter.startDate && currentFilter.endDate) {
+      return `${currentFilter.startDate} - ${currentFilter.endDate}`;
+    }
     const option = DATE_RANGE_OPTIONS.find(opt => opt.value === currentFilter.type);
-    return option?.label || 'Periodo personalizado';
-  }, [currentFilter.type]);
+    return option?.label || 'Selecionar período';
+  }, [currentFilter.type, currentFilter.startDate, currentFilter.endDate]);
 
   const dateRangeDescription = useMemo(() => {
     const today = new Date();
@@ -149,19 +146,19 @@ export default function DashboardInCanvasHeader({
       }}
     >
       <div
-        className="flex items-center justify-between py-5 md:py-6"
+        className="flex items-center justify-between py-4 md:py-6"
         style={{ paddingLeft: containerPadding, paddingRight: containerPadding }}
       >
         <div className="min-w-0 flex flex-col space-y-0.5">
           <h2
-            className="text-lg md:text-xl font-semibold leading-tight tracking-tight truncate"
+            className="text-base md:text-lg font-semibold leading-tight truncate"
             style={{ color: headerStyle.textPrimary }}
           >
             {title}
           </h2>
           {subtitle && (
             <p
-              className="text-xs md:text-sm leading-snug truncate"
+              className="text-xs md:text-sm truncate"
               style={{ color: headerStyle.textSecondary }}
             >
               {subtitle}
@@ -169,97 +166,44 @@ export default function DashboardInCanvasHeader({
           )}
         </div>
         <div className="flex items-center gap-3 md:gap-4">
-          <div className="flex items-center gap-2">
-            <div className="hidden sm:flex items-center gap-2">
-              <CalendarIcon className="h-4 w-4" style={{ color: headerStyle.textSecondary }} />
-              <span className="text-sm font-medium" style={{ color: headerStyle.textSecondary }}>Periodo</span>
-            </div>
-            <Select value={selectedType} onValueChange={handleFilterTypeChange} disabled={isLoading}>
-              <SelectTrigger
-                className="w-44 sm:w-56 h-9 rounded-md"
-                style={{
-                  backgroundColor: 'transparent',
-                  color: headerStyle.textPrimary,
-                  borderColor: headerStyle.borderBottomColor,
-                }}
-              >
-                <SelectValue placeholder="Periodo" />
-              </SelectTrigger>
-              <SelectContent
-                className="rounded-md border"
-                style={{
-                  backgroundColor: headerStyle.background,
-                  color: headerStyle.textPrimary,
-                  borderColor: headerStyle.borderBottomColor,
-                }}
-              >
-                {DATE_RANGE_OPTIONS.map(opt => (
-                  <SelectItem
-                    key={opt.value}
-                    value={opt.value}
-                    className={isDark ? 'hover:bg-gray-800 focus:bg-gray-800' : 'hover:bg-gray-100 focus:bg-gray-100'}
-                    style={{ color: headerStyle.textPrimary }}
-                  >
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {/* Custom date range popover */}
-            <Popover open={showCustomPicker} onOpenChange={setShowCustomPicker}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-9"
-                  disabled={selectedType !== 'custom' || isLoading}
-                  style={{
-                    backgroundColor: 'transparent',
-                    color: headerStyle.textPrimary,
-                    borderColor: headerStyle.borderBottomColor,
-                  }}
-                >
-                  Selecionar datas
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent align="start" sideOffset={8} className="p-2">
-                <Calendar
-                  mode="range"
-                  numberOfMonths={2}
-                  selected={customRange}
-                  onSelect={(range?: DateRange) => {
-                    setCustomRange(range);
-                    if (range?.from && range?.to) {
-                      const toISO = (d: Date) => d.toISOString().split('T')[0];
-                      onFilterChange({ type: 'custom', startDate: toISO(range.from), endDate: toISO(range.to) });
-                      setShowCustomPicker(false);
-                    }
-                  }}
-                />
-              </PopoverContent>
-            </Popover>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleRefresh}
-              disabled={isLoading}
-              className="flex items-center gap-1 h-9"
-              style={{
-                backgroundColor: 'transparent',
-                color: headerStyle.textPrimary,
-                borderColor: headerStyle.borderBottomColor,
-              }}
-            >
-              <RefreshCw className={`h-3 w-3 ${isLoading ? 'animate-spin' : ''}`} />
-              Atualizar
-            </Button>
-          </div>
           <div className="hidden lg:block text-sm" style={{ color: headerStyle.textSecondary }}>
             <span className="font-medium" style={{ color: headerStyle.textPrimary }}>{currentLabel}</span>
             {dateRangeDescription && (
               <span className="ml-2">({dateRangeDescription})</span>
             )}
           </div>
+          <Popover open={showCustomPicker} onOpenChange={setShowCustomPicker}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 px-3"
+                style={{
+                  backgroundColor: 'transparent',
+                  color: headerStyle.textPrimary,
+                  borderColor: headerStyle.borderBottomColor,
+                }}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                <span className="whitespace-nowrap">{currentLabel}</span>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" sideOffset={8} className="p-2 w-auto">
+              <Calendar
+                mode="range"
+                numberOfMonths={2}
+                selected={customRange}
+                onSelect={(range?: DateRange) => {
+                  setCustomRange(range);
+                  if (range?.from && range?.to) {
+                    const toISO = (d: Date) => d.toISOString().split('T')[0];
+                    onFilterChange({ type: 'custom', startDate: toISO(range.from), endDate: toISO(range.to) });
+                    setShowCustomPicker(false);
+                  }
+                }}
+              />
+            </PopoverContent>
+          </Popover>
           {rightExtras}
         </div>
       </div>
