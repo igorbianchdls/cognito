@@ -32,6 +32,23 @@ interface VisualBuilderState {
   dashboardSubtitle?: string
 }
 
+// Helper: compact specific sections inside a JSON string to one line
+const compactJsonSections = (code: string): string => {
+  const collapse = (match: string) =>
+    match
+      .replace(/\n\s*/g, ' ')
+      .replace(/\s{2,}/g, ' ')
+      .replace(/\{\s+/g, '{ ')
+      .replace(/\s+\}/g, ' }')
+      .replace(/,\s+/g, ', ');
+
+  return code
+    .replace(/("config"\s*:\s*\{[\s\S]*?\})/g, collapse)
+    .replace(/("dataSource"\s*:\s*\{[\s\S]*?\})/g, collapse)
+    .replace(/("span"\s*:\s*\{[\s\S]*?\})/g, collapse)
+    .replace(/("styling"\s*:\s*\{[\s\S]*?\})/g, collapse);
+};
+
 const initialCode = `{
   "theme": "branco",
   "dashboardTitle": "Dashboard de Vendas",
@@ -580,10 +597,13 @@ const initialCode = `{
 // Parse do código inicial para ter widgets desde o início
 const initialParseResult = ConfigParser.parse(initialCode)
 
+// Use a compact view of the JSON in the editor
+const compactInitialCode = compactJsonSections(initialCode)
+
 const initialState: VisualBuilderState = {
   widgets: initialParseResult.widgets,
   gridConfig: initialParseResult.gridConfig,
-  code: initialCode,
+  code: compactInitialCode,
   parseErrors: initialParseResult.errors,
   isValid: initialParseResult.isValid,
   dashboardTitle: initialParseResult.dashboardTitle,
@@ -661,13 +681,14 @@ export const visualBuilderActions = {
       currentConfig = currentState.gridConfig // fallback
     }
 
-    const newCode = JSON.stringify({
+    const newCodeRaw = JSON.stringify({
       ...(currentTheme && { theme: currentTheme }),
       config: currentConfig,
       ...(dashboardTitle ? { dashboardTitle } : {}),
       ...(dashboardSubtitle ? { dashboardSubtitle } : {}),
       widgets
     }, null, 2)
+    const newCode = compactJsonSections(newCodeRaw)
 
     console.log('🎨 Visual Builder: Updating widgets', { count: widgets.length })
 
@@ -712,7 +733,7 @@ export const visualBuilderActions = {
     $visualBuilderState.set({
       widgets: parseResult.widgets,
       gridConfig: parseResult.gridConfig,
-      code: initialCode,
+      code: compactInitialCode,
       parseErrors: parseResult.errors,
       isValid: parseResult.isValid,
       dashboardTitle: parseResult.dashboardTitle,
@@ -760,11 +781,12 @@ export const visualBuilderActions = {
       console.warn('Erro ao extrair tema do código atual:', error)
     }
 
-    const newCode = JSON.stringify({
+    const newCodeRaw = JSON.stringify({
       theme: currentTheme,
       config: currentState.gridConfig,
       widgets: updatedWidgets
     }, null, 2)
+    const newCode = compactJsonSections(newCodeRaw)
 
     $visualBuilderState.set({
       ...currentState,
