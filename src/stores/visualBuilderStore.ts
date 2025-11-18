@@ -52,23 +52,36 @@ const compactJsonSections = (code: string): string => {
 // Helper: compact layoutRows block to a single line
 const compactLayoutRows = (code: string): string => {
   try {
-    const obj = JSON.parse(code);
-    if (obj && typeof obj === 'object' && obj.layoutRows && typeof obj.layoutRows === 'object') {
-      const pretty = JSON.stringify(obj, null, 2);
-      const layoutCompact = `"layoutRows": ${JSON.stringify(obj.layoutRows)}`;
-      return pretty.replace(/"layoutRows"\s*:\s*\{[\s\S]*?\}/, layoutCompact);
+    const parsed: unknown = JSON.parse(code);
+    if (
+      parsed &&
+      typeof parsed === 'object' &&
+      (parsed as { layoutRows?: unknown }).layoutRows &&
+      typeof (parsed as { layoutRows?: unknown }).layoutRows === 'object'
+    ) {
+      const pretty = JSON.stringify(parsed, null, 2);
+      const start = pretty.indexOf('"layoutRows"');
+      if (start === -1) return code;
+      const braceStart = pretty.indexOf('{', start);
+      if (braceStart === -1) return code;
+      let i = braceStart;
+      let depth = 0;
+      for (; i < pretty.length; i++) {
+        const ch = pretty[i];
+        if (ch === '{') depth++;
+        else if (ch === '}') {
+          depth--;
+          if (depth === 0) break;
+        }
+      }
+      if (depth !== 0) return code;
+      const end = i; // index of matching closing brace
+      const inline = `"layoutRows": ${JSON.stringify((parsed as { layoutRows: unknown }).layoutRows)}`;
+      return pretty.slice(0, start) + inline + pretty.slice(end + 1);
     }
     return code;
   } catch {
-    // Fallback: collapse whitespace inside the first layoutRows block occurrence
-    return code.replace(/(\"layoutRows\"\s*:\s*\{[\s\S]*?\})/g, (m) =>
-      m
-        .replace(/\n\s*/g, ' ')
-        .replace(/\s{2,}/g, ' ')
-        .replace(/\{\s+/g, '{ ')
-        .replace(/\s+\}/g, ' }')
-        .replace(/,\s+/g, ', ')
-    );
+    return code;
   }
 };
 
