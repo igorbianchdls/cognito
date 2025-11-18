@@ -280,8 +280,11 @@ export class ConfigParser {
   static parse(jsonString: string): ParseResult {
     try {
       const raw = String(jsonString || '').trim();
-      // DSL detection: starts with tag and contains <row
-      if (raw.startsWith('<') && /<row\b/i.test(raw)) {
+      // DSL detection: starts with tag and contains <row or <dashboard or <widget
+      if (
+        raw.startsWith('<') &&
+        (/<row\b/i.test(raw) || /<dashboard\b/i.test(raw) || /<widget\b/i.test(raw))
+      ) {
         return this.parseDsl(raw);
       }
       // Step 1: Parse JSON (same as chart stores)
