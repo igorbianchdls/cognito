@@ -342,6 +342,39 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig, globalFilter
     return { gapX: 16, gapY: 0 };
   };
 
+  // Global helpers for grid-per-column
+  const getGlobalColumns = (): number => {
+    const cols = gridConfig.layout?.columns;
+    if (cols) {
+      const spec = viewportMode === 'mobile' ? cols.mobile : viewportMode === 'tablet' ? cols.tablet : cols.desktop;
+      if (spec?.columns && spec.columns > 0) return spec.columns;
+    }
+    return viewportMode === 'desktop' ? 4 : viewportMode === 'tablet' ? 2 : 1;
+  };
+
+  const getGlobalGaps = (): { gapX: number; gapY: number; autoRowHeight?: number } => {
+    const cols = gridConfig.layout?.columns;
+    if (cols) {
+      const spec = viewportMode === 'mobile' ? cols.mobile : viewportMode === 'tablet' ? cols.tablet : cols.desktop;
+      if (spec) return { gapX: spec.gapX ?? 16, gapY: spec.gapY ?? 0, autoRowHeight: spec.autoRowHeight };
+    }
+    return { gapX: 16, gapY: 0 };
+  };
+
+  const getStartValue = (widget: Widget): number | undefined => {
+    const start = widget.gridStart;
+    if (!start) return undefined;
+    switch (viewportMode) {
+      case 'mobile':
+        return start.mobile;
+      case 'tablet':
+        return start.tablet;
+      case 'desktop':
+      default:
+        return start.desktop;
+    }
+  };
+
   // Generate grid layout classes for a specific row (only fixed classes)
   const getGridClassesForRow = (): string => {
     // Use inline style gaps; keep minimal classes here
