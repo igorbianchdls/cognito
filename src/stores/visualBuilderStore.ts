@@ -49,19 +49,60 @@ const compactJsonSections = (code: string): string => {
     .replace(/("styling"\s*:\s*\{[\s\S]*?\})/g, collapse);
 };
 
-// Helper: compact each item under layoutRows ("1": {...}) to one line
+// Helper: compact layoutRows block to a single line
 const compactLayoutRows = (code: string): string => {
-  const collapse = (match: string) =>
-    match
-      .replace(/\n\s*/g, ' ')
-      .replace(/\s{2,}/g, ' ')
-      .replace(/\{\s+/g, '{ ')
-      .replace(/\s+\}/g, ' }')
-      .replace(/,\s+/g, ', ');
+  try {
+    const obj = JSON.parse(code);
+    if (obj && typeof obj === 'object' && obj.layoutRows && typeof obj.layoutRows === 'object') {
+      const pretty = JSON.stringify(obj, null, 2);
+      const layoutCompact = `"layoutRows": ${JSON.stringify(obj.layoutRows)}`;
+      return pretty.replace(/"layoutRows"\s*:\s*\{[\s\S]*?\}/, layoutCompact);
+    }
+    return code;
+  } catch {
+    // Fallback: collapse whitespace inside the first layoutRows block occurrence
+    return code.replace(/(\"layoutRows\"\s*:\s*\{[\s\S]*?\})/g, (m) =>
+      m
+        .replace(/\n\s*/g, ' ')
+        .replace(/\s{2,}/g, ' ')
+        .replace(/\{\s+/g, '{ ')
+        .replace(/\s+\}/g, ' }')
+        .replace(/,\s+/g, ', ')
+    );
+  }
+};
 
-  return code.replace(/(\"layoutRows\"\s*:\s*\{[\s\S]*?\})/g, (block) =>
-    block.replace(/(\"[^\"]+\"\s*:\s*\{[\s\S]*?\})/g, collapse)
-  );
+// Helper: reorder widget keys so id,type,row,span,heightPx come first
+const reorderWidgetKeysInCode = (code: string): string => {
+  try {
+    const obj = JSON.parse(code) as any;
+    if (obj && Array.isArray(obj.widgets)) {
+      obj.widgets = obj.widgets.map((w: any) => {
+        if (!w || typeof w !== 'object') return w;
+        const desired = ['id', 'type', 'row', 'span', 'heightPx'];
+        const newW: any = {};
+        // Add desired keys first if present
+        for (const key of desired) {
+          if (Object.prototype.hasOwnProperty.call(w, key)) newW[key] = w[key];
+        }
+        // Preserve original order for the rest
+        for (const key of Object.keys(w)) {
+          if (!desired.includes(key)) newW[key] = w[key];
+        }
+        return newW;
+      });
+      return JSON.stringify(obj, null, 2);
+    }
+    return code;
+  } catch {
+    return code;
+  }
+};
+
+// Helper: compact widget header lines (id, type, row, span, heightPx) into one line
+const compactWidgetHeaders = (code: string): string => {
+  // This expects the ordered keys to be the first lines inside each widget object
+  return code.replace(/\{\s*\n\s*"id": [^,\n]+,\s*\n\s*"type": [^,\n]+,\s*\n\s*"row": [^,\n]+,\s*\n\s*"span": \{[\s\S]*?\},\s*\n\s*"heightPx": [^,\n]+,/g, (m) => m.replace(/\n\s*/g, ' '));
 };
 
 const initialCode = `{
@@ -613,7 +654,13 @@ const initialCode = `{
 const initialParseResult = ConfigParser.parse(initialCode)
 
 // Use a compact view of the JSON in the editor
-const compactInitialCode = compactLayoutRows(compactJsonSections(initialCode))
+const compactInitialCode = compactWidgetHeaders(
+  compactJsonSections(
+    compactLayoutRows(
+      reorderWidgetKeysInCode(initialCode)
+    )
+  )
+)
 
 const initialState: VisualBuilderState = {
   widgets: initialParseResult.widgets,
@@ -703,7 +750,13 @@ export const visualBuilderActions = {
       ...(dashboardSubtitle ? { dashboardSubtitle } : {}),
       widgets
     }, null, 2)
-    const newCode = compactLayoutRows(compactJsonSections(newCodeRaw))
+    const newCode = compactWidgetHeaders(
+      compactJsonSections(
+        compactLayoutRows(
+          reorderWidgetKeysInCode(newCodeRaw)
+        )
+      )
+    )
 
     console.log('🎨 Visual Builder: Updating widgets', { count: widgets.length })
 
@@ -801,7 +854,13 @@ export const visualBuilderActions = {
       config: currentState.gridConfig,
       widgets: updatedWidgets
     }, null, 2)
-    const newCode = compactLayoutRows(compactJsonSections(newCodeRaw))
+    const newCode = compactWidgetHeaders(
+      compactJsonSections(
+        compactLayoutRows(
+          reorderWidgetKeysInCode(newCodeRaw)
+        )
+      )
+    )
 
     $visualBuilderState.set({
       ...currentState,
