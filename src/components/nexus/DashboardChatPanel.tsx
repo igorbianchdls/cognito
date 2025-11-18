@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useStore as useNanoStore } from '@nanostores/react';
 import MonacoEditor from '@/components/visual-builder/MonacoEditor';
 import ResponsiveGridCanvas from '@/components/visual-builder/ResponsiveGridCanvas';
@@ -32,8 +33,10 @@ import { FileText, BarChart3, Palette, Check, Type, Square, Monitor, Tablet, Sma
 import DashboardSaveDialog from '@/components/visual-builder/DashboardSaveDialog';
 import { BorderManager, type BorderPresetKey } from '@/components/visual-builder/BorderManager';
 import { $headerUi, headerUiActions } from '@/stores/ui/headerUiStore';
+import { dashboardsApi, type Dashboard } from '@/stores/dashboardsStore';
 
 export default function DashboardChatPanel() {
+  const searchParams = useSearchParams();
   const headerUi = useNanoStore($headerUi);
   const [activeTab, setActiveTab] = useState<'editor' | 'dashboard'>('dashboard');
   const [selectedViewport, setSelectedViewport] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
@@ -58,6 +61,10 @@ export default function DashboardChatPanel() {
   // Removed corporate color state (palette UI disabled)
   const visualBuilderState = useNanoStore($visualBuilderState);
   const [showSave, setShowSave] = useState(false);
+  const [dashboardId, setDashboardId] = useState<string | null>(null);
+  const [dashboardMeta, setDashboardMeta] = useState<{ title: string; description: string | null } | null>(null);
+  const [loadingDashboard, setLoadingDashboard] = useState(false);
+  const [dashboardError, setDashboardError] = useState<string | null>(null);
 
   // Available backgrounds
   const availableBackgrounds = BackgroundManager.getAvailableBackgrounds();
@@ -78,6 +85,38 @@ export default function DashboardChatPanel() {
   useEffect(() => {
     visualBuilderActions.initialize();
   }, []);
+
+  // Derive dashboardId from URL query (?dashboardId=... or ?dashboard=...)
+  useEffect(() => {
+    const fromQuery = searchParams?.get('dashboardId') || searchParams?.get('dashboard');
+    if (fromQuery && fromQuery !== dashboardId) {
+      setDashboardId(fromQuery);
+    }
+  }, [searchParams]);
+
+  // Load dashboard meta and sourcecode when dashboardId changes
+  useEffect(() => {
+    const load = async (id: string) => {
+      setLoadingDashboard(true);
+      setDashboardError(null);
+      try {
+        const { item } = await dashboardsApi.get(id);
+        // Update header meta
+        setDashboardMeta({ title: item.title, description: item.description ?? null });
+        // Reflect fetched code into editor/renderer
+        if (item.sourcecode) {
+          visualBuilderActions.updateCode(item.sourcecode);
+        }
+        // Update dropdown label for now
+        setSelectedDashboard(item.title);
+      } catch (e) {
+        setDashboardError((e as Error).message || 'Falha ao carregar dashboard');
+      } finally {
+        setLoadingDashboard(false);
+      }
+    };
+    if (dashboardId) load(dashboardId);
+  }, [dashboardId]);
 
   // Detect current theme from code
   useEffect(() => {
@@ -567,7 +606,7 @@ export default function DashboardChatPanel() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors">
-                {selectedDashboard}
+                {dashboardMeta?.title || selectedDashboard}
                 <ChevronDown className="w-4 h-4" />
               </button>
             </DropdownMenuTrigger>
@@ -947,7 +986,10 @@ export default function DashboardChatPanel() {
         open={showSave}
         onOpenChange={setShowSave}
         sourcecode={visualBuilderState.code}
-        onSaved={() => setShowSave(false)}
+        onSaved={(id) => {
+          setShowSave(false);
+          if (id) setDashboardId(id);
+        }}
       />
 
       <ArtifactContent className="p-0 overflow-auto">
@@ -966,13 +1008,19 @@ export default function DashboardChatPanel() {
         {/* Dashboard Tab */}
         {activeTab === 'dashboard' && (
           <div className="h-full bg-gray-50 py-2 px-4 overflow-auto">
+            {loadingDashboard && (
+              <div className="text-sm text-gray-500 mb-2">Carregando dashboard...</div>
+            )}
+            {dashboardError && (
+              <div className="text-sm text-red-600 mb-2">{dashboardError}</div>
+            )}
             <ResponsiveGridCanvas
               widgets={visualBuilderState.widgets}
               gridConfig={visualBuilderState.gridConfig}
               viewportMode={selectedViewport}
               onLayoutChange={visualBuilderActions.updateWidgets}
-              headerTitle={visualBuilderState.dashboardTitle || 'Live Dashboard'}
-              headerSubtitle={visualBuilderState.dashboardSubtitle || 'Real-time visualization with Supabase data'}
+              headerTitle={dashboardMeta?.title || visualBuilderState.dashboardTitle || 'Live Dashboard'}
+              headerSubtitle={(dashboardMeta?.description ?? undefined) || visualBuilderState.dashboardSubtitle || 'Real-time visualization with Supabase data'}
             />
           </div>
         )}
