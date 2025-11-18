@@ -275,7 +275,7 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig, globalFilter
 
     // Priority 2: Default height by widget type
     if (widget.type === 'kpi') {
-      return '140px';
+      return '120px';
     }
 
     if (['bar', 'line', 'pie', 'area', 'stackedbar', 'groupedbar', 'stackedlines', 'radialstacked', 'pivotbar'].includes(widget.type)) {
