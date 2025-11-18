@@ -247,7 +247,7 @@ export interface StackedBarChartProps {
 const DEFAULT_MARGIN = { top: 40, right: 40, bottom: 50, left: 50 };
 const DEFAULT_ENABLE_GRID_X = false;
 const DEFAULT_ENABLE_GRID_Y = false;
-const DEFAULT_TRANSLATE_Y = 50;
+const DEFAULT_TRANSLATE_Y = 40;
 
 export function StackedBarChart(props: StackedBarChartProps) {
   const {
