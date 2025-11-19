@@ -22,7 +22,7 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
     departamento_nome: 'dep.nome',
     filial_nome: 'fi.nome',
     projeto_nome: 'pr.nome',
-    fornecedor_nome: 'f.nome',
+    fornecedor_nome: 'f.nome_fantasia',
   },
   'contas-a-receber': {
     id: 'lf.id',
@@ -53,7 +53,7 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
     data_pagamento: 'lf.data_lancamento',
     vencimento_titulo: 'ap.data_vencimento',
     status: 'lf.status',
-    fornecedor: 'forn_ap.nome',
+    fornecedor: 'forn_ap.nome_fantasia',
     categoria_financeira: 'cat_ap.nome',
     categoria: 'cat_ap.nome',
     conta_financeira: 'cf.nome_conta',
@@ -700,7 +700,7 @@ export async function GET(req: NextRequest) {
                         dep.nome AS departamento_nome,
                         fi.nome AS filial_nome,
                         pr.nome AS projeto_nome,
-                        f.nome AS fornecedor_nome`;
+                        f.nome_fantasia AS fornecedor_nome`;
       whereDateCol = 'lf.data_vencimento';
       conditions.push(`lf.tipo = 'conta_a_pagar'`);
       if (fornecedor_id) push('lf.fornecedor_id =', fornecedor_id);
@@ -737,7 +737,7 @@ export async function GET(req: NextRequest) {
                         dep_ap.nome AS departamento,
                         fil_ap.nome AS filial,
                         prj_ap.nome AS projeto,
-                        forn_ap.nome AS fornecedor,
+                        forn_ap.nome_fantasia AS fornecedor,
                         forn_ap.imagem_url AS fornecedor_imagem_url,
                         ap.descricao AS titulo_descricao,
                         lf.descricao AS pagamento_descricao,
