@@ -49,7 +49,7 @@ import { type ContaReceberRow } from '../tools/ContasAReceberTable';
 import ReceiptsList from '../tools/ReceiptsList';
 import NotasFiscaisList from '../tools/NotasFiscaisList';
 import InventoryList from '../tools/InventoryList';
-// import FluxoCaixaResult, { type FluxoCaixaRow } from '../tools/FluxoCaixaResult';
+import type { FluxoCaixaRow } from '../tools/FluxoCaixaResult';
 import GenericResultTable from '../tools/GenericResultTable';
 import RankingPorDimensaoFinanceiroResult from '../tools/RankingPorDimensaoFinanceiroResult';
 import AgingFinanceiroResult from '../tools/AgingFinanceiroResult';
