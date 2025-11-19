@@ -76,6 +76,79 @@ export default function DashboardChatPanel() {
   const [updateError, setUpdateError] = useState<string | null>(null);
   const [updateOk, setUpdateOk] = useState(false);
 
+  // Header helpers (variant + colors persisted in DSL/JSON)
+  const resolvedHeaderKind: 'light' | 'dark' = (headerUi.variant === 'auto'
+    ? (selectedTheme === 'branco' || selectedTheme === 'cinza-claro' ? 'light' : 'dark')
+    : headerUi.variant);
+
+  const currentHeaderStyle = headerUi.styles[resolvedHeaderKind];
+
+  const setHeaderVariant = (variant: 'auto' | 'light' | 'dark') => {
+    try {
+      headerUiActions.setVariant(variant);
+      const code = visualBuilderState.code;
+      if (isDsl(code)) {
+        const next = writeStyleToDsl(code, { headerVariant: variant });
+        visualBuilderActions.updateCode(next);
+      } else {
+        const cfg = JSON.parse(code || '{}');
+        const updatedCfg = {
+          ...cfg,
+          config: {
+            ...(cfg.config || {}),
+            header: {
+              ...(cfg.config?.header || {}),
+              variant,
+            },
+          },
+        };
+        visualBuilderActions.updateCode(JSON.stringify(updatedCfg, null, 2));
+      }
+    } catch (e) {
+      console.error('Falha ao definir variante do cabeçalho:', e);
+    }
+  };
+
+  const handleHeaderColorChange = (
+    key: 'background' | 'textPrimary' | 'textSecondary' | 'borderBottomColor',
+    value: string
+  ) => {
+    try {
+      const code = visualBuilderState.code;
+      const kind = resolvedHeaderKind; // 'light' | 'dark'
+      // Update store immediately for preview
+      headerUiActions.setStyle(kind, { [key]: value } as Record<string, string> as any);
+      // Persist into sourcecode (DSL or JSON)
+      if (isDsl(code)) {
+        const style = readStyleFromDsl(code) || {};
+        const headerKey = kind === 'light' ? 'headerLight' : 'headerDark';
+        const current = (style[headerKey] as Record<string, unknown>) || {};
+        const nextHeader = { ...current, [key]: value };
+        const next = writeStyleToDsl(code, { [headerKey]: nextHeader } as Record<string, unknown>);
+        visualBuilderActions.updateCode(next);
+      } else {
+        const cfg = JSON.parse(code || '{}');
+        const prevHeader = (cfg.config?.header || {});
+        const updatedCfg = {
+          ...cfg,
+          config: {
+            ...(cfg.config || {}),
+            header: {
+              ...prevHeader,
+              [kind]: {
+                ...(prevHeader[kind] || {}),
+                [key]: value,
+              },
+            },
+          },
+        };
+        visualBuilderActions.updateCode(JSON.stringify(updatedCfg, null, 2));
+      }
+    } catch (e) {
+      console.error('Erro ao alterar cor do cabeçalho:', e);
+    }
+  };
+
   // Helpers: detect DSL vs JSON
   const isDsl = (code: string) => code.trim().startsWith('<');
 
@@ -203,7 +276,62 @@ export default function DashboardChatPanel() {
       if (typeof st['customChartTextColor'] === 'string') setChartBodyTextColor(st['customChartTextColor'] as string);
       const cbf = st['customChartFontFamily'];
       if (typeof cbf === 'string' && FontManager.isValidFont(cbf)) setChartBodyFontFamily(cbf as FontPresetKey);
+
+      // Header variant + styles from DSL
+      const hv = st['headerVariant'];
+      if (hv === 'auto' || hv === 'light' || hv === 'dark') {
+        headerUiActions.setVariant(hv);
+      }
+      const hLight = st['headerLight'] as Record<string, string> | undefined;
+      if (hLight && typeof hLight === 'object') {
+        const partial: Record<string, string> = {};
+        if (typeof hLight['background'] === 'string') partial['background'] = hLight['background'];
+        if (typeof hLight['textPrimary'] === 'string') partial['textPrimary'] = hLight['textPrimary'];
+        if (typeof hLight['textSecondary'] === 'string') partial['textSecondary'] = hLight['textSecondary'];
+        if (typeof hLight['borderBottomColor'] === 'string') partial['borderBottomColor'] = hLight['borderBottomColor'];
+        if (Object.keys(partial).length) headerUiActions.setStyle('light', partial as any);
+      }
+      const hDark = st['headerDark'] as Record<string, string> | undefined;
+      if (hDark && typeof hDark === 'object') {
+        const partial: Record<string, string> = {};
+        if (typeof hDark['background'] === 'string') partial['background'] = hDark['background'];
+        if (typeof hDark['textPrimary'] === 'string') partial['textPrimary'] = hDark['textPrimary'];
+        if (typeof hDark['textSecondary'] === 'string') partial['textSecondary'] = hDark['textSecondary'];
+        if (typeof hDark['borderBottomColor'] === 'string') partial['borderBottomColor'] = hDark['borderBottomColor'];
+        if (Object.keys(partial).length) headerUiActions.setStyle('dark', partial as any);
+      }
     }
+  }, [visualBuilderState.code]);
+
+  // Sync header from JSON when code is JSON
+  useEffect(() => {
+    const code = visualBuilderState.code;
+    if (!code || isDsl(code)) return;
+    try {
+      const cfg = JSON.parse(code) as { config?: { header?: any }, theme?: string };
+      const header = cfg.config?.header || {};
+      if (header?.variant === 'auto' || header?.variant === 'light' || header?.variant === 'dark') {
+        headerUiActions.setVariant(header.variant);
+      }
+      if (header?.light && typeof header.light === 'object') {
+        const l = header.light;
+        const p: Record<string, string> = {};
+        if (typeof l.background === 'string') p['background'] = l.background;
+        if (typeof l.textPrimary === 'string') p['textPrimary'] = l.textPrimary;
+        if (typeof l.textSecondary === 'string') p['textSecondary'] = l.textSecondary;
+        if (typeof l.borderBottomColor === 'string') p['borderBottomColor'] = l.borderBottomColor;
+        if (Object.keys(p).length) headerUiActions.setStyle('light', p as any);
+      }
+      if (header?.dark && typeof header.dark === 'object') {
+        const d = header.dark;
+        const p: Record<string, string> = {};
+        if (typeof d.background === 'string') p['background'] = d.background;
+        if (typeof d.textPrimary === 'string') p['textPrimary'] = d.textPrimary;
+        if (typeof d.textSecondary === 'string') p['textSecondary'] = d.textSecondary;
+        if (typeof d.borderBottomColor === 'string') p['borderBottomColor'] = d.borderBottomColor;
+        if (Object.keys(p).length) headerUiActions.setStyle('dark', p as any);
+      }
+    } catch {}
   }, [visualBuilderState.code]);
 
   // Derive dashboardId from URL query (?dashboardId=... or ?dashboard=...)
@@ -1094,18 +1222,40 @@ export default function DashboardChatPanel() {
                   Estilo do Cabeçalho
                 </DropdownMenuSubTrigger>
                 <DropdownMenuSubContent>
-                  <DropdownMenuItem onClick={() => headerUiActions.setVariant('auto')} className="flex items-center justify-between py-2">
-                    <span>Automático</span>
-                    {headerUi.variant === 'auto' && <Check className="w-4 h-4 text-blue-600" />}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => headerUiActions.setVariant('light')} className="flex items-center justify-between py-2">
-                    <span>Claro</span>
-                    {headerUi.variant === 'light' && <Check className="w-4 h-4 text-blue-600" />}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => headerUiActions.setVariant('dark')} className="flex items-center justify-between py-2">
-                    <span>Escuro</span>
-                    {headerUi.variant === 'dark' && <Check className="w-4 h-4 text-blue-600" />}
-                  </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setHeaderVariant('auto')} className="flex items-center justify-between py-2">
+                <span>Automático</span>
+                {headerUi.variant === 'auto' && <Check className="w-4 h-4 text-blue-600" />}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setHeaderVariant('light')} className="flex items-center justify-between py-2">
+                <span>Claro</span>
+                {headerUi.variant === 'light' && <Check className="w-4 h-4 text-blue-600" />}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setHeaderVariant('dark')} className="flex items-center justify-between py-2">
+                <span>Escuro</span>
+                {headerUi.variant === 'dark' && <Check className="w-4 h-4 text-blue-600" />}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <div className="px-3 py-2 text-xs text-muted-foreground">
+                Cores do Cabeçalho ({resolvedHeaderKind === 'light' ? 'Claro' : 'Escuro'})
+              </div>
+              <div className="px-3 py-2 text-xs text-muted-foreground space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <span>Fundo</span>
+                  <input type="color" value={currentHeaderStyle.background} onChange={(e) => handleHeaderColorChange('background', e.target.value)} />
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <span>Texto primário</span>
+                  <input type="color" value={currentHeaderStyle.textPrimary} onChange={(e) => handleHeaderColorChange('textPrimary', e.target.value)} />
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <span>Texto secundário</span>
+                  <input type="color" value={currentHeaderStyle.textSecondary} onChange={(e) => handleHeaderColorChange('textSecondary', e.target.value)} />
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <span>Borda inferior</span>
+                  <input type="color" value={currentHeaderStyle.borderBottomColor} onChange={(e) => handleHeaderColorChange('borderBottomColor', e.target.value)} />
+                </div>
+              </div>
                 </DropdownMenuSubContent>
               </DropdownMenuSub>
 
