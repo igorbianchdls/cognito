@@ -267,6 +267,21 @@ export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas"
       </config>
     </widget>
   </row>
+
+  <row id="9" cols-d="1" cols-t="1" cols-m="1" gap-x="16" gap-y="16">
+    <widget id="insights_card_2" type="insights2" order="1" span-d="1" span-t="1" span-m="1" height="140" title="Insights">
+      <config>
+        {"insights2Config":{
+          "title":"Insights",
+          "items":[
+            {"id":"i1","variant":"risk","label":"Supply Risk","link":{"text":"Ethiopia Yirgacheffe"},"tail":"may run out in less than 3 days"},
+            {"id":"i2","variant":"slow","label":"Slow Stock","link":{"text":"Costa Rican Tarrazú"},"tail":"sitting unsold in inventory"}
+          ],
+          "styling": {"compact": true, "borderRadius": 8}
+        }}
+      </config>
+    </widget>
+  </row>
 </dashboard>`
 
 // Example in grid-per-column mode
