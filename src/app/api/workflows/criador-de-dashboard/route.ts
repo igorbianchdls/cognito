@@ -1,5 +1,6 @@
 import { anthropic } from '@ai-sdk/anthropic'
 import { convertToModelMessages, streamText, type UIMessage } from 'ai'
+import { listDashboards } from './tools/dashboard'
 
 export const maxDuration = 300
 
@@ -13,7 +14,7 @@ const baseSystem = `Você é um workflow de IA chamado "Criador de Dashboard".
   2) JSON equivalente, quando o usuário preferir.
 
 # Regras
-- Sem utilizar tools por enquanto. Conduza por texto, exemplos e códigos prontos.
+- Você pode utilizar tools para listar/consultar dashboards quando necessário.
 - O DSL deve ser válido e minimalista, pronto para colar no editor do Visual Builder.
 - Se o usuário enviar dados/tabulações, proponha mapeamento para dataSource e configs coerentes.
 - Pergunte quando houver ambiguidade (tabela, colunas, agregações, cores, spans, etc.).
@@ -32,6 +33,9 @@ export async function POST(req: Request) {
       },
       system: baseSystem,
       messages: convertToModelMessages(messages),
+      tools: {
+        listDashboards,
+      },
     })
 
     return result.toUIMessageStreamResponse()
@@ -40,4 +44,3 @@ export async function POST(req: Request) {
     throw error
   }
 }
-

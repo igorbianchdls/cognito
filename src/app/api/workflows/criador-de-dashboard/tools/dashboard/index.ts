@@ -1,0 +1,2 @@
+export { listDashboards } from './list';
+
