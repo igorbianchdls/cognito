@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { useStore as useNanoStore } from '@nanostores/react';
 import MonacoEditor from '@/components/visual-builder/MonacoEditor';
 import ResponsiveGridCanvas from '@/components/visual-builder/ResponsiveGridCanvas';
@@ -37,6 +37,8 @@ import { dashboardsApi, type Dashboard } from '@/stores/dashboardsStore';
 
 export default function DashboardChatPanel() {
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
   const headerUi = useNanoStore($headerUi);
   const [activeTab, setActiveTab] = useState<'editor' | 'dashboard'>('dashboard');
   const [selectedViewport, setSelectedViewport] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
@@ -65,6 +67,10 @@ export default function DashboardChatPanel() {
   const [dashboardMeta, setDashboardMeta] = useState<{ title: string; description: string | null } | null>(null);
   const [loadingDashboard, setLoadingDashboard] = useState(false);
   const [dashboardError, setDashboardError] = useState<string | null>(null);
+  const [dashListOpen, setDashListOpen] = useState(false);
+  const [dashboards, setDashboards] = useState<Dashboard[]>([]);
+  const [dashboardsLoading, setDashboardsLoading] = useState(false);
+  const [dashboardsError, setDashboardsError] = useState<string | null>(null);
 
   // Available backgrounds
   const availableBackgrounds = BackgroundManager.getAvailableBackgrounds();
@@ -117,6 +123,35 @@ export default function DashboardChatPanel() {
     };
     if (dashboardId) load(dashboardId);
   }, [dashboardId]);
+
+  // Load dashboards list when dropdown opens
+  useEffect(() => {
+    const loadList = async () => {
+      setDashboardsLoading(true);
+      setDashboardsError(null);
+      try {
+        const res = await dashboardsApi.list({ limit: 50 });
+        setDashboards(res.items);
+      } catch (e) {
+        setDashboardsError((e as Error).message || 'Falha ao listar dashboards');
+      } finally {
+        setDashboardsLoading(false);
+      }
+    };
+    if (dashListOpen) loadList();
+  }, [dashListOpen]);
+
+  const selectDashboard = (id: string, title?: string) => {
+    setDashboardId(id);
+    if (title) setSelectedDashboard(title);
+    // Persist in URL for refreshes
+    try {
+      const sp = new URLSearchParams(Array.from(searchParams?.entries?.() || []));
+      sp.set('dashboardId', id);
+      router.replace(`${pathname}?${sp.toString()}`, { scroll: false });
+    } catch {}
+    setDashListOpen(false);
+  };
 
   // Detect current theme from code
   useEffect(() => {
@@ -603,26 +638,31 @@ export default function DashboardChatPanel() {
     <Artifact className="h-full">
       <ArtifactHeader className="bg-white">
         <div>
-          <DropdownMenu>
+          <DropdownMenu open={dashListOpen} onOpenChange={setDashListOpen}>
             <DropdownMenuTrigger asChild>
               <button className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors">
                 {dashboardMeta?.title || selectedDashboard}
                 <ChevronDown className="w-4 h-4" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start">
-              <DropdownMenuItem onClick={() => setSelectedDashboard('Dashboard Builder')}>
-                Dashboard Builder
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setSelectedDashboard('Sales Dashboard')}>
-                Sales Dashboard
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setSelectedDashboard('Analytics Dashboard')}>
-                Analytics Dashboard
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setSelectedDashboard('E-commerce Dashboard')}>
-                E-commerce Dashboard
-              </DropdownMenuItem>
+            <DropdownMenuContent align="start" className="min-w-64">
+              {dashboardsLoading && (
+                <div className="px-3 py-2 text-sm text-muted-foreground">Carregando...</div>
+              )}
+              {dashboardsError && (
+                <div className="px-3 py-2 text-sm text-red-600">{dashboardsError}</div>
+              )}
+              {!dashboardsLoading && !dashboardsError && dashboards.length === 0 && (
+                <div className="px-3 py-2 text-sm text-muted-foreground">Nenhum dashboard encontrado</div>
+              )}
+              {!dashboardsLoading && !dashboardsError && dashboards.map((d) => (
+                <DropdownMenuItem key={d.id} onClick={() => selectDashboard(d.id, d.title)}>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium">{d.title}</span>
+                    {d.description && <span className="text-xs text-muted-foreground line-clamp-1">{d.description}</span>}
+                  </div>
+                </DropdownMenuItem>
+              ))}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -988,7 +1028,10 @@ export default function DashboardChatPanel() {
         sourcecode={visualBuilderState.code}
         onSaved={(id) => {
           setShowSave(false);
-          if (id) setDashboardId(id);
+          if (id) {
+            // update id and persist in URL
+            selectDashboard(id);
+          }
         }}
       />
 
