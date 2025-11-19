@@ -17,6 +17,9 @@ import InsightsCard from '@/components/widgets/InsightsCard';
 import AlertasCard from '@/components/widgets/AlertasCard';
 import RecomendacoesCard from '@/components/widgets/RecomendacoesCard';
 import InsightsHeroCarousel from '@/components/widgets/InsightsHeroCarousel';
+import InsightsCard2 from '@/components/widgets/InsightsCard2';
+import { $insights2 } from '@/stores/nexus/insights2Store';
+import { useStore as useNanoStore } from '@nanostores/react';
 import SQLModal from './SQLModal';
 import type { Widget } from '../visual-builder/ConfigParser';
 import type { GlobalFilters } from '@/stores/visualBuilderStore';
@@ -44,6 +47,7 @@ interface WidgetRendererProps {
 }
 
 export default function WidgetRenderer({ widget, globalFilters }: WidgetRendererProps) {
+  const insights2State = useNanoStore($insights2);
   const [data, setData] = useState<WidgetData>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -657,6 +661,33 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
         </div>
       );
       break;
+
+    case 'insights2': {
+      // Try to infer dashboardId from URL (query string)
+      let dashboardId: string | null = null;
+      if (typeof window !== 'undefined') {
+        try {
+          const sp = new URLSearchParams(window.location.search);
+          dashboardId = sp.get('dashboardId');
+        } catch {}
+      }
+      const itemsFromStore = dashboardId ? insights2State[dashboardId]?.[widget.id]?.items : undefined;
+      const items = itemsFromStore || widget.insights2Config?.items || [];
+      const styling = widget.insights2Config?.styling || {};
+      widgetContent = (
+        <div className="h-full w-full px-0 py-2">
+          <InsightsCard2
+            title={widget.insights2Config?.title || widget.title || 'Insights'}
+            items={items}
+            compact={styling.compact ?? true}
+            backgroundColor={styling.backgroundColor}
+            borderColor={styling.borderColor}
+            borderRadius={styling.borderRadius}
+          />
+        </div>
+      );
+      break;
+    }
 
     case 'stackedbar':
       if (multipleLoading) {
