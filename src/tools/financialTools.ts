@@ -105,7 +105,7 @@ export const getContasAReceber = tool({
       const listSql = `
         SELECT
           lf.id,
-          e.nome AS cliente,
+          e.nome_fantasia AS cliente,
           lf.descricao,
           lf.valor AS valor_total,
           lf.data_lancamento AS data_emissao,
@@ -115,7 +115,7 @@ export const getContasAReceber = tool({
           lf.criado_em
         FROM financeiro.lancamentos_financeiros AS lf
         LEFT JOIN entidades.clientes AS e ON e.id = lf.entidade_id
-        LEFT JOIN administrativo.categorias_financeiras cf ON cf.id = lf.categoria_id
+        LEFT JOIN financeiro.categorias_financeiras cf ON cf.id = lf.categoria_id
         ${whereClause}
         ORDER BY lf.data_vencimento ASC
         LIMIT $${index}
@@ -129,7 +129,7 @@ export const getContasAReceber = tool({
           COUNT(*) AS total_registros
         FROM financeiro.lancamentos_financeiros AS lf
         LEFT JOIN entidades.clientes AS e ON e.id = lf.entidade_id
-        LEFT JOIN administrativo.categorias_financeiras cf ON cf.id = lf.categoria_id
+        LEFT JOIN financeiro.categorias_financeiras cf ON cf.id = lf.categoria_id
         ${whereClause}
       `.trim();
 
@@ -263,7 +263,7 @@ export const getPagamentosRecebidos = tool({
       const listSql = `
         SELECT
           pr.id,
-          ent.nome AS cliente,
+          ent.nome_fantasia AS cliente,
           pr.descricao,
           pr.valor AS valor_total,
           pr.data_vencimento,
@@ -271,7 +271,7 @@ export const getPagamentosRecebidos = tool({
           pr.status
         FROM financeiro.lancamentos_financeiros AS pr
         LEFT JOIN entidades.clientes AS ent ON ent.id = pr.entidade_id
-        LEFT JOIN administrativo.categorias_financeiras cat ON cat.id = pr.categoria_id
+        LEFT JOIN financeiro.categorias_financeiras cat ON cat.id = pr.categoria_id
         LEFT JOIN financeiro.contas_financeiras cf ON cf.id = pr.conta_financeira_id
         ${whereClause}
         ORDER BY pr.data_lancamento DESC
@@ -286,7 +286,7 @@ export const getPagamentosRecebidos = tool({
           COUNT(*) AS total_registros
         FROM financeiro.lancamentos_financeiros AS pr
         LEFT JOIN entidades.clientes AS ent ON ent.id = pr.entidade_id
-        LEFT JOIN administrativo.categorias_financeiras cat ON cat.id = pr.categoria_id
+        LEFT JOIN financeiro.categorias_financeiras cat ON cat.id = pr.categoria_id
         LEFT JOIN financeiro.contas_financeiras cf ON cf.id = pr.conta_financeira_id
         ${whereClause}
       `.trim();
@@ -422,7 +422,7 @@ export const getContasAPagar = tool({
       const listSql = `
         SELECT
           lf.id,
-          f.nome AS fornecedor,
+          f.nome_fantasia AS fornecedor,
           lf.descricao,
           lf.valor AS valor_total,
           lf.data_lancamento AS data_emissao,
@@ -432,7 +432,7 @@ export const getContasAPagar = tool({
           lf.criado_em
         FROM financeiro.lancamentos_financeiros AS lf
         LEFT JOIN entidades.fornecedores AS f ON f.id = lf.entidade_id
-        LEFT JOIN administrativo.categorias_financeiras cf ON cf.id = lf.categoria_id
+        LEFT JOIN financeiro.categorias_financeiras cf ON cf.id = lf.categoria_id
         ${whereClause}
         ORDER BY lf.data_vencimento ASC
         LIMIT $${index}
@@ -446,7 +446,7 @@ export const getContasAPagar = tool({
           COUNT(*) AS total_registros
         FROM financeiro.lancamentos_financeiros AS lf
         LEFT JOIN entidades.fornecedores AS f ON f.id = lf.entidade_id
-        LEFT JOIN administrativo.categorias_financeiras cf ON cf.id = lf.categoria_id
+        LEFT JOIN financeiro.categorias_financeiras cf ON cf.id = lf.categoria_id
         ${whereClause}
       `.trim();
 
@@ -578,7 +578,7 @@ export const getPagamentosEfetuados = tool({
       const listSql = `
         SELECT
           pe.id,
-          f.nome AS fornecedor,
+          f.nome_fantasia AS fornecedor,
           pe.descricao,
           pe.valor AS valor_total,
           pe.data_lancamento AS data_pagamento,
@@ -586,7 +586,7 @@ export const getPagamentosEfetuados = tool({
           pe.status
         FROM financeiro.lancamentos_financeiros AS pe
         LEFT JOIN entidades.fornecedores AS f ON f.id = pe.entidade_id
-        LEFT JOIN administrativo.categorias_financeiras cat ON cat.id = pe.categoria_id
+        LEFT JOIN financeiro.categorias_financeiras cat ON cat.id = pe.categoria_id
         LEFT JOIN financeiro.contas_financeiras cf ON cf.id = pe.conta_financeira_id
         ${whereClause}
         ORDER BY pe.data_lancamento DESC
@@ -601,7 +601,7 @@ export const getPagamentosEfetuados = tool({
           COUNT(*) AS total_registros
         FROM financeiro.lancamentos_financeiros AS pe
         LEFT JOIN entidades.fornecedores AS f ON f.id = pe.entidade_id
-        LEFT JOIN administrativo.categorias_financeiras cat ON cat.id = pe.categoria_id
+        LEFT JOIN financeiro.categorias_financeiras cat ON cat.id = pe.categoria_id
         LEFT JOIN financeiro.contas_financeiras cf ON cf.id = pe.conta_financeira_id
         ${whereClause}
       `.trim();
