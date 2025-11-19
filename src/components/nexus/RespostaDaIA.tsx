@@ -3467,6 +3467,28 @@ type NexusToolUIPart = ToolUIPart<{
     input: GetReceiptsToolInput;
     output: GetReceiptsToolOutput;
   };
+  analiseFinanceiroPivot: {
+    input: Record<string, unknown>;
+    output: {
+      success: boolean;
+      message: string;
+      data?: {
+        summary: Array<{
+          nivel: number;
+          nome: string;
+          detalhe1_nome: string | null;
+          detalhe2_nome: string | null;
+          detalhe3_nome: string | null;
+          detalhe4_nome: string | null;
+          valor: number;
+        }>;
+        meta?: Record<string, unknown>;
+      };
+      sql_query?: string;
+      sql_params?: unknown[];
+      error?: string;
+    };
+  };
   // Criador de Dashboard (workflow)
   listDashboards: {
     input: ListDashboardsToolInput;
@@ -4939,6 +4961,36 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   data={(reelsTool.output as GetReelsContentToolOutput).data}
                   message={(reelsTool.output as GetReelsContentToolOutput).message}
                   error={(reelsTool.output as GetReelsContentToolOutput).error}
+                />
+              )}
+            </div>
+          );
+        }
+
+        // Financeiro: Pivot (view financeiro.vw_transacoes_simples)
+        if (part.type === 'tool-analiseFinanceiroPivot') {
+          const t = part as NexusToolUIPart;
+          const callId = t.toolCallId;
+          const shouldBeOpen = t.state === 'output-available' || t.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-analiseFinanceiroPivot" state={t.state} />
+                <ToolContent>
+                  {t.input && (<ToolInput input={t.input} />)}
+                  {t.state === 'output-error' && (
+                    <ToolOutput output={null} errorText={t.errorText} />
+                  )}
+                </ToolContent>
+              </Tool>
+              {t.state === 'output-available' && (
+                <PivotWrapper
+                  success={(t.output as { success: boolean })?.success}
+                  message={(t.output as { message: string })?.message}
+                  data={(t.output as { data?: { summary: Array<{ nivel: number; nome: string; detalhe1_nome: string | null; detalhe2_nome: string | null; detalhe3_nome: string | null; detalhe4_nome: string | null; valor: number }>; meta?: Record<string, unknown> } })?.data}
+                  title={undefined}
+                  defaultMode={'table'}
                 />
               )}
             </div>

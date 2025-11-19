@@ -12,6 +12,7 @@ import {
   rankingPorCategoriaFinanceira,
 } from '@/tools/financialTools';
 import { createDashboardTool } from '@/tools/apps/createDashboardTool';
+import { analiseFinanceiroPivot } from '@/tools/financialPivotTools';
 
 export const maxDuration = 300;
 
@@ -618,6 +619,7 @@ Seja sempre profissional, orientado a dados e ofereça insights acionáveis. Pri
         obterDespesasPorCentroCusto,
         analisarInadimplencia,
         rankingPorCategoriaFinanceira,
+        analiseFinanceiroPivot,
         createDashboardTool,
       }
     });
