@@ -834,7 +834,7 @@ export default function DashboardChatPanel() {
   return (
     <Artifact className="h-full">
       <ArtifactHeader className="bg-white">
-        <div>
+        <div className="flex items-center gap-2">
           <DropdownMenu open={dashListOpen} onOpenChange={setDashListOpen}>
             <DropdownMenuTrigger asChild>
               <button className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors">
@@ -862,6 +862,27 @@ export default function DashboardChatPanel() {
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
+
+          {/* Toggle Dashboard/Editor — ao lado do dropdown (lado esquerdo) */}
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-2"
+            onClick={() => setActiveTab(activeTab === 'editor' ? 'dashboard' : 'editor')}
+            title={activeTab === 'editor' ? 'Ir para Dashboard' : 'Ir para Editor'}
+          >
+            {activeTab === 'editor' ? (
+              <>
+                <FileText className="w-4 h-4" />
+                <span>Editor</span>
+              </>
+            ) : (
+              <>
+                <BarChart3 className="w-4 h-4" />
+                <span>Dashboard</span>
+              </>
+            )}
+          </Button>
         </div>
 
         {/* Viewport Selector - NO MEIO */}
@@ -887,27 +908,6 @@ export default function DashboardChatPanel() {
         </div>
 
         <ArtifactActions>
-          {/* Toggle Dashboard/Editor — primeiro da fila */}
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex items-center gap-2"
-            onClick={() => setActiveTab(activeTab === 'editor' ? 'dashboard' : 'editor')}
-            title={activeTab === 'editor' ? 'Ir para Dashboard' : 'Ir para Editor'}
-          >
-            {activeTab === 'editor' ? (
-              <>
-                <FileText className="w-4 h-4" />
-                <span>Editor</span>
-              </>
-            ) : (
-              <>
-                <BarChart3 className="w-4 h-4" />
-                <span>Dashboard</span>
-              </>
-            )}
-          </Button>
-
           {/* Criar (INSERT) */}
           <Button
             variant="outline"
@@ -1233,16 +1233,6 @@ export default function DashboardChatPanel() {
               {/* Color Palette Submenu removed */}
             </DropdownMenuContent>
           </DropdownMenu>
-
-          {/* Preview com mesmo padrão de UI */}
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex items-center gap-2"
-            onClick={() => {}}
-          >
-            <span>Preview</span>
-          </Button>
 
           {/* Compartilhar com mesmo padrão de UI */}
           <Button
