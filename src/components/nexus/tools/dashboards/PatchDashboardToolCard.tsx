@@ -2,10 +2,12 @@
 
 import MonacoEditor from '@/components/visual-builder/MonacoEditor';
 import { Button } from '@/components/ui/button';
-import { visualBuilderActions } from '@/stores/visualBuilderStore';
+import { visualBuilderActions, $visualBuilderState } from '@/stores/visualBuilderStore';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, Wrench, Rocket } from 'lucide-react';
+import { CheckCircle, Wrench, Rocket, Columns } from 'lucide-react';
 import { useState } from 'react';
+import { DiffEditor } from '@monaco-editor/react';
+import { useStore } from '@nanostores/react';
 
 type Operation =
   | { type: 'update-widget-attrs'; widgetId: string; attrs: Record<string, string | number | boolean> }
@@ -24,6 +26,8 @@ interface PatchDashboardToolCardProps {
 export default function PatchDashboardToolCard({ success, previewDsl = '', operations = [], message, error }: PatchDashboardToolCardProps) {
   const [code, setCode] = useState(previewDsl);
   const [applied, setApplied] = useState(false);
+  const [view, setView] = useState<'editor' | 'diff'>('editor');
+  const vbState = useStore($visualBuilderState);
 
   const apply = () => {
     visualBuilderActions.updateCode(code);
@@ -65,8 +69,37 @@ export default function PatchDashboardToolCard({ success, previewDsl = '', opera
         </div>
       )}
 
+      {/* View toggle */}
+      <div className="flex items-center justify-between px-3 py-2 border-b bg-white">
+        <div className="text-xs text-gray-600">Visualização</div>
+        <div className="flex gap-2">
+          <Button size="sm" variant={view === 'editor' ? 'default' : 'secondary'} onClick={() => setView('editor')}>
+            Editor
+          </Button>
+          <Button size="sm" variant={view === 'diff' ? 'default' : 'secondary'} onClick={() => setView('diff')}>
+            <Columns className="w-3.5 h-3.5 mr-1" /> Diff
+          </Button>
+        </div>
+      </div>
+
       <div className="h-96">
-        <MonacoEditor value={code} onChange={setCode} language="html" height="100%" />
+        {view === 'editor' ? (
+          <MonacoEditor value={code} onChange={setCode} language="html" height="100%" />
+        ) : (
+          <DiffEditor
+            height="100%"
+            language="html"
+            original={vbState.code || ''}
+            modified={code}
+            options={{
+              readOnly: false,
+              renderIndicators: true,
+              renderOverviewRuler: true,
+              minimap: { enabled: false },
+              originalEditable: false,
+            }}
+          />
+        )}
       </div>
 
       <div className="border-t bg-gray-50 p-3 flex items-center justify-end">
@@ -77,4 +110,3 @@ export default function PatchDashboardToolCard({ success, previewDsl = '', opera
     </div>
   );
 }
-
