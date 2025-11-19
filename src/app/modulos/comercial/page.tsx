@@ -62,6 +62,7 @@ export default function ModulosComercialPage() {
         { value: 'vendedores', label: 'Vendedores' },
         { value: 'meta_vendedores', label: 'Meta Vendedores' },
         { value: 'meta_territorios', label: 'Meta Territórios' },
+        { value: 'metas', label: 'Metas' },
         { value: 'regras_comissoes', label: 'Regras de Comissões' },
         { value: 'campanhas_vendas', label: 'Campanhas de Vendas' },
       ],
@@ -163,6 +164,23 @@ export default function ModulosComercialPage() {
           { accessorKey: 'percentual_minimo', header: 'Percentual Mínimo (%)' },
           { accessorKey: 'percentual_maximo', header: 'Percentual Máximo (%)' },
           { accessorKey: 'regra_ativa', header: 'Ativo' },
+          { accessorKey: 'criado_em', header: 'Criado Em', cell: ({ getValue }) => formatDate(getValue()) },
+          { accessorKey: 'atualizado_em', header: 'Atualizado Em', cell: ({ getValue }) => formatDate(getValue()) },
+        ]
+      case 'metas':
+        return [
+          { accessorKey: 'vendedor_nome', header: 'Vendedor' },
+          { accessorKey: 'ano', header: 'Ano' },
+          { accessorKey: 'mes', header: 'Mês' },
+          { accessorKey: 'tipo_meta', header: 'Tipo Meta' },
+          { accessorKey: 'tipo_valor', header: 'Tipo Valor' },
+          { accessorKey: 'valor_meta', header: 'Valor Meta' },
+          { accessorKey: 'meta_percentual', header: '% Meta' },
+          { accessorKey: 'territorio_nome', header: 'Território' },
+          { accessorKey: 'canal_venda_nome', header: 'Canal de Venda' },
+          { accessorKey: 'filial_nome', header: 'Filial' },
+          { accessorKey: 'unidade_negocio_nome', header: 'Unid. Negócio' },
+          { accessorKey: 'sales_office_nome', header: 'Sales Office' },
           { accessorKey: 'criado_em', header: 'Criado Em', cell: ({ getValue }) => formatDate(getValue()) },
           { accessorKey: 'atualizado_em', header: 'Atualizado Em', cell: ({ getValue }) => formatDate(getValue()) },
         ]

@@ -61,6 +61,23 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
     criado_em: 'cv.criado_em',
     atualizado_em: 'cv.atualizado_em',
   },
+  metas: {
+    meta_id: 'm.id',
+    mes: 'm.mes',
+    ano: 'm.ano',
+    vendedor_nome: 'func.nome',
+    tipo_meta: 'tm.nome',
+    tipo_valor: 'tm.tipo_valor',
+    valor_meta: 'm.valor_meta',
+    meta_percentual: 'm.meta_percentual',
+    territorio_nome: 'terr.nome',
+    canal_venda_nome: 'cv.nome',
+    filial_nome: 'fil.nome',
+    unidade_negocio_nome: 'un.nome',
+    sales_office_nome: 'so.nome',
+    criado_em: 'm.criado_em',
+    atualizado_em: 'm.atualizado_em',
+  },
 }
 
 export async function GET(req: NextRequest) {
@@ -166,6 +183,35 @@ export async function GET(req: NextRequest) {
         LEFT JOIN comercial.campanhas_vendas_produtos cvp ON cvp.campanha_id = cv.id
         LEFT JOIN produtos.produto pr ON pr.id = cvp.produto_id`
       orderClause = orderBy ? `ORDER BY ${orderBy} ${orderDir}, cvp.id ASC` : 'ORDER BY cv.id ASC, cvp.id ASC'
+    } else if (view === 'metas') {
+      selectSql = `SELECT
+        m.id AS meta_id,
+        m.mes,
+        m.ano,
+        m.vendedor_id,
+        func.nome AS vendedor_nome,
+        tm.nome AS tipo_meta,
+        tm.tipo_valor,
+        m.valor_meta,
+        m.meta_percentual,
+        terr.nome AS territorio_nome,
+        cv.nome   AS canal_venda_nome,
+        fil.nome  AS filial_nome,
+        un.nome   AS unidade_negocio_nome,
+        so.nome   AS sales_office_nome,
+        m.criado_em,
+        m.atualizado_em`;
+      baseSql = `FROM comercial.metas m
+        LEFT JOIN comercial.tipos_metas tm ON tm.id = m.tipo_meta_id
+        LEFT JOIN comercial.vendedores v ON v.id = m.vendedor_id
+        LEFT JOIN entidades.funcionarios func ON func.id = v.funcionario_id
+        LEFT JOIN comercial.territorios terr ON terr.id = m.territorio_id
+        LEFT JOIN vendas.canais_venda cv ON cv.id = m.canal_venda_id
+        LEFT JOIN empresa.filiais fil ON fil.id = m.filial_id
+        LEFT JOIN empresa.unidades_negocio un ON un.id = m.unidade_negocio_id
+        LEFT JOIN comercial.sales_offices so ON so.id = m.sales_office_id
+        WHERE m.vendedor_id IS NOT NULL`;
+      orderClause = orderBy ? `ORDER BY ${orderBy} ${orderDir}` : 'ORDER BY vendedor_nome ASC, m.ano ASC, m.mes ASC'
     } else {
       return Response.json({ success: false, message: `View inválida: ${view}` }, { status: 400 })
     }
