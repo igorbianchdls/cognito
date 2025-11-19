@@ -4988,7 +4988,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                 <PivotWrapper
                   success={(t.output as { success: boolean })?.success}
                   message={(t.output as { message: string })?.message}
-                  data={(t.output as { data?: { summary: Array<{ nivel: number; nome: string; detalhe1_nome: string | null; detalhe2_nome: string | null; detalhe3_nome: string | null; detalhe4_nome: string | null; valor: number }>; meta?: Record<string, unknown> } })?.data}
+                  data={(t.output as { data?: { summary: Array<{ nivel: number; nome: string; detalhe1_nome: string | null; detalhe2_nome: string | null; detalhe3_nome: string | null; detalhe4_nome: string | null; valor: number }>; meta?: Record<string, unknown>; topVendedores: unknown[]; topProdutos: unknown[] } })?.data}
                   title={undefined}
                   defaultMode={'table'}
                 />
