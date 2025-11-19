@@ -993,9 +993,9 @@ export default function DashboardChatPanel() {
                   Fonte
                 </DropdownMenuSubTrigger>
                 <DropdownMenuSubContent>
-                  {/* Font Family nested submenu */}
+                  {/* Família da Fonte submenu */}
                   <DropdownMenuSub>
-                    <DropdownMenuSubTrigger>Font Family</DropdownMenuSubTrigger>
+                    <DropdownMenuSubTrigger>Família da Fonte</DropdownMenuSubTrigger>
                     <DropdownMenuSubContent>
                       {availableFonts.map((font) => (
                         <DropdownMenuItem
@@ -1016,9 +1016,9 @@ export default function DashboardChatPanel() {
 
                   <DropdownMenuSeparator />
 
-                  {/* Title Size nested submenu */}
+                  {/* Tamanho da Fonte submenu */}
                   <DropdownMenuSub>
-                    <DropdownMenuSubTrigger>Title Size</DropdownMenuSubTrigger>
+                    <DropdownMenuSubTrigger>Tamanho da Fonte</DropdownMenuSubTrigger>
                     <DropdownMenuSubContent>
                       {availableFontSizes.map((size) => (
                         <DropdownMenuItem
@@ -1091,19 +1091,19 @@ export default function DashboardChatPanel() {
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger>
                   <Layout className="w-4 h-4 mr-2" />
-                  Header Style
+                  Estilo do Cabeçalho
                 </DropdownMenuSubTrigger>
                 <DropdownMenuSubContent>
                   <DropdownMenuItem onClick={() => headerUiActions.setVariant('auto')} className="flex items-center justify-between py-2">
-                    <span>Auto</span>
+                    <span>Automático</span>
                     {headerUi.variant === 'auto' && <Check className="w-4 h-4 text-blue-600" />}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => headerUiActions.setVariant('light')} className="flex items-center justify-between py-2">
-                    <span>Light</span>
+                    <span>Claro</span>
                     {headerUi.variant === 'light' && <Check className="w-4 h-4 text-blue-600" />}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => headerUiActions.setVariant('dark')} className="flex items-center justify-between py-2">
-                    <span>Dark</span>
+                    <span>Escuro</span>
                     {headerUi.variant === 'dark' && <Check className="w-4 h-4 text-blue-600" />}
                   </DropdownMenuItem>
                 </DropdownMenuSubContent>
@@ -1113,7 +1113,7 @@ export default function DashboardChatPanel() {
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger>
                   <Square className="w-4 h-4 mr-2" />
-                  Background
+                  Fundo
                 </DropdownMenuSubTrigger>
                 <DropdownMenuSubContent>
                   {availableBackgrounds.map((background) => (
@@ -1146,36 +1146,36 @@ export default function DashboardChatPanel() {
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger>
                   <Square className="w-4 h-4 mr-2" />
-                  Colors
+                  Cores
                 </DropdownMenuSubTrigger>
                 <DropdownMenuSubContent className="w-64">
-                  <div className="px-3 py-2 text-xs text-muted-foreground">Dashboard</div>
+                  <div className="px-3 py-2 text-xs text-muted-foreground">Painel</div>
                   <div className="px-3 py-2 flex items-center justify-between gap-2">
-                    <span className="text-sm">Background</span>
+                    <span className="text-sm">Fundo</span>
                     <input type="color" value={dashboardBgColor} onChange={(e) => handleDashboardBgColorChange(e.target.value)} />
                   </div>
                   <DropdownMenuSeparator />
-                  <div className="px-3 py-2 text-xs text-muted-foreground">Cards</div>
+                  <div className="px-3 py-2 text-xs text-muted-foreground">Cartões</div>
                   <div className="px-3 py-2 flex items-center justify-between gap-2">
-                    <span className="text-sm">Cards Background</span>
+                    <span className="text-sm">Fundo dos Cartões</span>
                     <input type="color" value={cardsBgColor} onChange={(e) => handleCardsBgColorChange(e.target.value)} />
                   </div>
                   <div className="px-3 py-2 flex items-center justify-between gap-2">
-                    <span className="text-sm">Chart Title</span>
+                    <span className="text-sm">Título do Gráfico</span>
                     <input type="color" value={chartTitleColor} onChange={(e) => handleChartTitleColorChange(e.target.value)} />
                   </div>
                   <div className="px-3 py-2 flex items-center justify-between gap-2">
-                    <span className="text-sm">Chart Text</span>
+                    <span className="text-sm">Texto do Gráfico</span>
                     <input type="color" value={chartBodyTextColor} onChange={(e) => handleChartBodyTextColorChange(e.target.value)} />
                   </div>
                   <DropdownMenuSeparator />
                   <div className="px-3 py-2 text-xs text-muted-foreground">KPI</div>
                   <div className="px-3 py-2 flex items-center justify-between gap-2">
-                    <span className="text-sm">KPI Value</span>
+                    <span className="text-sm">Valor do KPI</span>
                     <input type="color" value={kpiValueColor} onChange={(e) => handleKpiValueColorChange(e.target.value)} />
                   </div>
                   <div className="px-3 py-2 flex items-center justify-between gap-2">
-                    <span className="text-sm">KPI Title</span>
+                    <span className="text-sm">Título do KPI</span>
                     <input type="color" value={kpiTitleColor} onChange={(e) => handleKpiTitleColorChange(e.target.value)} />
                   </div>
                 </DropdownMenuSubContent>
@@ -1185,7 +1185,7 @@ export default function DashboardChatPanel() {
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger>
                   <Square className="w-4 h-4 mr-2" />
-                  Border
+                  Borda
                 </DropdownMenuSubTrigger>
                 <DropdownMenuSubContent className="w-72">
                   <div className="px-2 py-1.5 text-sm font-medium text-muted-foreground">Tipo</div>
