@@ -888,18 +888,29 @@ export default function DashboardChatPanel() {
 
         <ArtifactActions>
           {/* Criar (INSERT) */}
-          <ArtifactAction onClick={() => setShowSave(true)} tooltip="Salvar dashboard (criar)">
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-2"
+            title="Criar dashboard"
+            onClick={() => setShowSave(true)}
+          >
             <Save className="w-4 h-4" />
-          </ArtifactAction>
+            <span>Criar</span>
+          </Button>
           {/* Atualizar (UPDATE) — visível apenas quando houver dashboardId */}
           {dashboardId && (
-            <ArtifactAction
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2"
+              title={updating ? 'Atualizando...' : 'Atualizar dashboard'}
               onClick={handleUpdate}
-              tooltip={updating ? 'Atualizando...' : 'Atualizar dashboard'}
               disabled={updating}
             >
               <Check className="w-4 h-4" />
-            </ArtifactAction>
+              <span>{updating ? 'Atualizando...' : 'Atualizar'}</span>
+            </Button>
           )}
           {/* Feedback rápido de update */}
           {updateOk && (
