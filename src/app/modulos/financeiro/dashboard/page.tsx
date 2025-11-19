@@ -12,7 +12,7 @@ import { Calendar } from '@/components/ui/calendar'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import type { DateRange } from 'react-day-picker'
-import { $financeiroDashboardUI, $financeiroDashboardFilters, financeiroDashboardActions } from '@/stores/modulos/financeiroDashboardStore'
+import { $financeiroDashboardUI, $financeiroDashboardFilters, financeiroDashboardActions, type FontSection } from '@/stores/modulos/financeiroDashboardStore'
 import type { FinanceiroDashboardUIState } from '@/stores/modulos/financeiroDashboardStore'
 
 type BaseRow = {
@@ -119,6 +119,23 @@ export default function FinanceiroDashboardPage() {
   const kpiIconColor = ui.kpiIconColor
   const chartIconColor = ui.chartIconColor
   const cardShadowPreset = ui.cardShadowPreset
+  // Forçar fonte Barlow em todas as seções de tipografia deste dashboard
+  useEffect(() => {
+    const sections: FontSection[] = [
+      'values',
+      'kpiTitle',
+      'chartTitle',
+      'text',
+      'filters',
+      'headerTitle',
+      'headerSubtitle',
+      'sidebarSectionTitle',
+      'sidebarItemText',
+    ]
+    sections.forEach((s) => financeiroDashboardActions.setFont(s, { family: 'Barlow' }))
+    // run once on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
   // Patch-like setters to keep UI code similar
   const setFonts = (
     updater: (
