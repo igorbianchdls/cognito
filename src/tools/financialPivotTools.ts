@@ -28,9 +28,13 @@ function buildDateExpr(col: typeof DATE_COLS[number], grain?: Grain) {
   return g === 'year' ? `to_char(${trunc}, 'YYYY')` : `to_char(${trunc}, 'YYYY-MM')`
 }
 
+function isDateDim(dim: Dim | undefined): dim is typeof DATE_COLS[number] {
+  return !!dim && (DATE_COLS as readonly string[]).includes(dim as unknown as string)
+}
+
 function buildDimExpr(dim?: Dim, grain?: Grain) {
   if (!dim) return ''
-  if (DATE_COLS.includes(dim as any)) return buildDateExpr(dim as any, grain)
+  if (isDateDim(dim)) return buildDateExpr(dim, grain)
   return dim
 }
 
@@ -233,4 +237,3 @@ export const analiseFinanceiroPivot = tool({
     }
   }
 })
-
