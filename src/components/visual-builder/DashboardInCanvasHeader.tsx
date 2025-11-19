@@ -143,6 +143,7 @@ export default function DashboardInCanvasHeader({
         borderBottomColor: headerStyle.borderBottomColor,
         borderBottomWidth: 1,
         borderBottomStyle: 'solid',
+        fontFamily: headerStyle.fontFamily,
       }}
     >
       <div
@@ -181,7 +182,7 @@ export default function DashboardInCanvasHeader({
                 style={{
                   backgroundColor: 'transparent',
                   color: headerStyle.textPrimary,
-                  borderColor: headerStyle.borderBottomColor,
+                  borderColor: headerStyle.datePickerBorderColor || headerStyle.borderBottomColor,
                 }}
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />

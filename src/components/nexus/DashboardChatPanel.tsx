@@ -110,6 +110,46 @@ export default function DashboardChatPanel() {
     }
   };
 
+  const handleHeaderFontChange = (fontKey: FontPresetKey) => {
+    try {
+      const font = FontManager.getAvailableFonts().find(f => f.key === fontKey);
+      const family = font ? font.family : fontKey;
+      const code = visualBuilderState.code;
+      const kind = resolvedHeaderKind;
+      // Update store immediately
+      const stylePatch: Partial<HeaderStyle> = { fontFamily: family };
+      headerUiActions.setStyle(kind, stylePatch);
+      // Persist to sourcecode
+      if (isDsl(code)) {
+        const headerKey = kind === 'light' ? 'headerLight' : 'headerDark';
+        const style = readStyleFromDsl(code) || {};
+        const current = (style[headerKey] as Record<string, unknown>) || {};
+        const nextHeader = { ...current, fontFamily: family };
+        const next = writeStyleToDsl(code, { [headerKey]: nextHeader } as Record<string, unknown>);
+        visualBuilderActions.updateCode(next);
+      } else {
+        const cfg = JSON.parse(code || '{}');
+        const prevHeader = (cfg.config?.header || {});
+        const updatedCfg = {
+          ...cfg,
+          config: {
+            ...(cfg.config || {}),
+            header: {
+              ...prevHeader,
+              [kind]: {
+                ...(prevHeader[kind] || {}),
+                fontFamily: family,
+              },
+            },
+          },
+        };
+        visualBuilderActions.updateCode(JSON.stringify(updatedCfg, null, 2));
+      }
+    } catch (e) {
+      console.error('Erro ao alterar a fonte do cabeçalho:', e);
+    }
+  };
+
   const handleHeaderColorChange = (
     key: keyof HeaderStyle,
     value: string
@@ -293,18 +333,22 @@ export default function DashboardChatPanel() {
       }
       if (hLight && typeof hLight === 'object') {
         const partial: Partial<HeaderStyle> = {};
-        if (typeof hLight['background'] === 'string') partial['background'] = hLight['background'];
-        if (typeof hLight['textPrimary'] === 'string') partial['textPrimary'] = hLight['textPrimary'];
-        if (typeof hLight['textSecondary'] === 'string') partial['textSecondary'] = hLight['textSecondary'];
-        if (typeof hLight['borderBottomColor'] === 'string') partial['borderBottomColor'] = hLight['borderBottomColor'];
+        if (typeof hLight.background === 'string') partial.background = hLight.background;
+        if (typeof hLight.textPrimary === 'string') partial.textPrimary = hLight.textPrimary;
+        if (typeof hLight.textSecondary === 'string') partial.textSecondary = hLight.textSecondary;
+        if (typeof hLight.borderBottomColor === 'string') partial.borderBottomColor = hLight.borderBottomColor;
+        if (typeof hLight.datePickerBorderColor === 'string') partial.datePickerBorderColor = hLight.datePickerBorderColor;
+        if (typeof hLight.fontFamily === 'string') partial.fontFamily = hLight.fontFamily;
         if (Object.keys(partial).length) headerUiActions.setStyle('light', partial);
       }
       if (hDark && typeof hDark === 'object') {
         const partial: Partial<HeaderStyle> = {};
-        if (typeof hDark['background'] === 'string') partial['background'] = hDark['background'];
-        if (typeof hDark['textPrimary'] === 'string') partial['textPrimary'] = hDark['textPrimary'];
-        if (typeof hDark['textSecondary'] === 'string') partial['textSecondary'] = hDark['textSecondary'];
-        if (typeof hDark['borderBottomColor'] === 'string') partial['borderBottomColor'] = hDark['borderBottomColor'];
+        if (typeof hDark.background === 'string') partial.background = hDark.background;
+        if (typeof hDark.textPrimary === 'string') partial.textPrimary = hDark.textPrimary;
+        if (typeof hDark.textSecondary === 'string') partial.textSecondary = hDark.textSecondary;
+        if (typeof hDark.borderBottomColor === 'string') partial.borderBottomColor = hDark.borderBottomColor;
+        if (typeof hDark.datePickerBorderColor === 'string') partial.datePickerBorderColor = hDark.datePickerBorderColor;
+        if (typeof hDark.fontFamily === 'string') partial.fontFamily = hDark.fontFamily;
         if (Object.keys(partial).length) headerUiActions.setStyle('dark', partial);
       }
     }
@@ -328,19 +372,23 @@ export default function DashboardChatPanel() {
       if (header?.light && typeof header.light === 'object') {
         const l = header.light as Partial<HeaderStyle>;
         const p: Partial<HeaderStyle> = {};
-        if (typeof l.background === 'string') p['background'] = l.background;
-        if (typeof l.textPrimary === 'string') p['textPrimary'] = l.textPrimary;
-        if (typeof l.textSecondary === 'string') p['textSecondary'] = l.textSecondary;
-        if (typeof l.borderBottomColor === 'string') p['borderBottomColor'] = l.borderBottomColor;
+        if (typeof l.background === 'string') p.background = l.background;
+        if (typeof l.textPrimary === 'string') p.textPrimary = l.textPrimary;
+        if (typeof l.textSecondary === 'string') p.textSecondary = l.textSecondary;
+        if (typeof l.borderBottomColor === 'string') p.borderBottomColor = l.borderBottomColor;
+        if (typeof l.datePickerBorderColor === 'string') p.datePickerBorderColor = l.datePickerBorderColor;
+        if (typeof l.fontFamily === 'string') p.fontFamily = l.fontFamily;
         if (Object.keys(p).length) headerUiActions.setStyle('light', p);
       }
       if (header?.dark && typeof header.dark === 'object') {
         const d = header.dark as Partial<HeaderStyle>;
         const p: Partial<HeaderStyle> = {};
-        if (typeof d.background === 'string') p['background'] = d.background;
-        if (typeof d.textPrimary === 'string') p['textPrimary'] = d.textPrimary;
-        if (typeof d.textSecondary === 'string') p['textSecondary'] = d.textSecondary;
-        if (typeof d.borderBottomColor === 'string') p['borderBottomColor'] = d.borderBottomColor;
+        if (typeof d.background === 'string') p.background = d.background;
+        if (typeof d.textPrimary === 'string') p.textPrimary = d.textPrimary;
+        if (typeof d.textSecondary === 'string') p.textSecondary = d.textSecondary;
+        if (typeof d.borderBottomColor === 'string') p.borderBottomColor = d.borderBottomColor;
+        if (typeof d.datePickerBorderColor === 'string') p.datePickerBorderColor = d.datePickerBorderColor;
+        if (typeof d.fontFamily === 'string') p.fontFamily = d.fontFamily;
         if (Object.keys(p).length) headerUiActions.setStyle('dark', p);
       }
     } catch {}
@@ -1267,7 +1315,35 @@ export default function DashboardChatPanel() {
                   <span>Borda inferior</span>
                   <input type="color" value={currentHeaderStyle.borderBottomColor} onChange={(e) => handleHeaderColorChange('borderBottomColor', e.target.value)} />
                 </div>
+                <div className="flex items-center justify-between gap-2">
+                  <span>Borda do seletor de data</span>
+                  <input type="color" value={currentHeaderStyle.datePickerBorderColor || currentHeaderStyle.borderBottomColor} onChange={(e) => handleHeaderColorChange('datePickerBorderColor', e.target.value)} />
+                </div>
               </div>
+              <DropdownMenuSeparator />
+              <div className="px-3 py-2 text-xs text-muted-foreground">Fonte do Cabeçalho</div>
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                  <Type className="w-4 h-4 mr-2" />
+                  Selecionar fonte
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent>
+                  {availableFonts.map((font) => (
+                    <DropdownMenuItem
+                      key={font.key}
+                      onClick={() => handleHeaderFontChange(font.key)}
+                      className="flex items-center justify-between py-2"
+                    >
+                      <span style={{ fontFamily: font.family }} className="text-sm">
+                        {font.name}
+                      </span>
+                      {currentHeaderStyle.fontFamily === font.family && (
+                        <Check className="w-4 h-4 text-blue-600" />
+                      )}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
                 </DropdownMenuSubContent>
               </DropdownMenuSub>
 

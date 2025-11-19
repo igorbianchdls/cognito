@@ -9,6 +9,9 @@ export interface HeaderStyle {
   textPrimary: string
   textSecondary: string
   borderBottomColor: string
+  // Optional enhancements
+  datePickerBorderColor?: string
+  fontFamily?: string
 }
 
 export interface HeaderUiState {
