@@ -57,6 +57,7 @@ interface DataTableProps<TData extends TableData> {
   // Row expansion (optional)
   enableExpand?: boolean
   renderDetail?: (row: TData) => React.ReactNode
+  rowCanExpand?: (row: TData) => boolean
   searchPlaceholder?: string
   showColumnToggle?: boolean
   showPagination?: boolean
@@ -149,6 +150,7 @@ export function DataTable<TData extends TableData>({
   data,
   enableExpand = false,
   renderDetail,
+  rowCanExpand,
   searchPlaceholder = "Filtrar...",
   showColumnToggle = true,
   showPagination = true,
@@ -377,6 +379,8 @@ export function DataTable<TData extends TableData>({
           enableHiding: false,
           cell: ({ row }) => {
             const isExpanded = expandedRows.has(row.id)
+            const canExpand = rowCanExpand ? rowCanExpand(row.original as TData) : true
+            if (!canExpand) return <span />
             return (
               <Button
                 variant="ghost"
@@ -710,7 +714,7 @@ export function DataTable<TData extends TableData>({
                       )
                     })}
                   </TableRow>
-                  {enableExpand && renderDetail && expandedRows.has(row.id) && (
+                  {enableExpand && renderDetail && expandedRows.has(row.id) && (!rowCanExpand || rowCanExpand(row.original as TData)) && (
                     <TableRow>
                       <TableCell colSpan={tableColumns.length} style={{ padding: `${padding}px` }}>
                         {renderDetail(row.original as TData)}

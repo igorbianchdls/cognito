@@ -115,6 +115,71 @@ export default function ModulosComercialPage() {
     )
   }
 
+  // Detalhe colapsável para a aba "Metas"
+  const renderMetaDetail = (row: Row) => {
+    const isParent = Boolean(row['parent_flag'])
+    if (!isParent) return null
+
+    const vendedor = String(row['vendedor_nome'] || '')
+    const children = data.filter(r => String(r['vendedor_nome'] || '') === vendedor && Number(r['nivel'] || 0) === 2)
+
+    const labelForDim = (dim?: unknown) => {
+      const m: Record<string, string> = {
+        sales_office_nome: 'Sales Office',
+        unidade_negocio_nome: 'Unidade de Negócio',
+        filial_nome: 'Filial',
+        canal_venda_nome: 'Canal de Venda',
+        territorio_nome: 'Território',
+      }
+      const k = String(dim || '')
+      return m[k] || k || 'Dimensão'
+    }
+
+    return (
+      <div className="p-3 bg-gray-50 rounded border border-gray-200">
+        <div className="text-sm font-medium text-gray-700 mb-2">Metas específicas — {vendedor}</div>
+        {children.length === 0 ? (
+          <div className="text-xs text-gray-500">Sem metas específicas para este vendedor nesta página.</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left py-2 px-3">Dimensão</th>
+                  <th className="text-left py-2 px-3">Valor</th>
+                  <th className="text-right py-2 px-3">Ano</th>
+                  <th className="text-right py-2 px-3">Mês</th>
+                  <th className="text-left py-2 px-3">Tipo Meta</th>
+                  <th className="text-left py-2 px-3">Tipo Valor</th>
+                  <th className="text-right py-2 px-3">Valor Meta</th>
+                  <th className="text-right py-2 px-3">% Meta</th>
+                  <th className="text-left py-2 px-3">Criado</th>
+                  <th className="text-left py-2 px-3">Atualizado</th>
+                </tr>
+              </thead>
+              <tbody>
+                {children.map((c, idx) => (
+                  <tr key={idx} className="border-b last:border-0">
+                    <td className="py-2 px-3">{labelForDim(c['child_dim'])}</td>
+                    <td className="py-2 px-3">{String(c['child_label'] || '—')}</td>
+                    <td className="text-right py-2 px-3">{c['ano'] ?? ''}</td>
+                    <td className="text-right py-2 px-3">{c['mes'] ?? ''}</td>
+                    <td className="py-2 px-3">{String(c['tipo_meta'] || '')}</td>
+                    <td className="py-2 px-3">{String(c['tipo_valor'] || '')}</td>
+                    <td className="text-right py-2 px-3">{String(c['valor_meta'] ?? '')}</td>
+                    <td className="text-right py-2 px-3">{String(c['meta_percentual'] ?? '')}</td>
+                    <td className="py-2 px-3">{formatDate(c['criado_em'])}</td>
+                    <td className="py-2 px-3">{formatDate(c['atualizado_em'])}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    )
+  }
+
   const columns: ColumnDef<Row>[] = useMemo(() => {
     switch (tabs.selected) {
       case 'territorios':
@@ -313,10 +378,17 @@ export default function ModulosComercialPage() {
                   key={tabs.selected}
                   columns={columns}
                   data={data}
-                  enableExpand={tabs.selected === 'campanhas_vendas'}
+                  enableExpand={tabs.selected === 'campanhas_vendas' || tabs.selected === 'metas'}
                   renderDetail={
                     tabs.selected === 'campanhas_vendas'
                       ? renderCampanhaProdutos
+                      : tabs.selected === 'metas'
+                        ? renderMetaDetail
+                        : undefined
+                  }
+                  rowCanExpand={
+                    tabs.selected === 'metas'
+                      ? (r) => Boolean(r['parent_flag'])
                       : undefined
                   }
                   enableSearch={tabelaUI.enableSearch}
