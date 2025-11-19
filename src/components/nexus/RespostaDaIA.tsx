@@ -141,6 +141,7 @@ import TopClientesPorReceitaResult, { type TopClienteRow } from '../tools/ecomme
 import ListDashboardsCard from './tools/dashboards/ListDashboardsCard';
 import DashboardDetailsCard from './tools/dashboards/DashboardDetailsCard';
 import DashboardCreatedCard from './tools/dashboards/DashboardCreatedCard';
+import PatchDashboardToolCard from './tools/dashboards/PatchDashboardToolCard';
 import ValorVidaClienteResult, { type ValorVidaClienteRow } from '../tools/ecommerce/ValorVidaClienteResult';
 import ClientesNovosRecorrentesResult, { type ClientesNovosRecorrentesRow } from '../tools/ecommerce/ClientesNovosRecorrentesResult';
 import PerformanceLancamentoResult, { type PerformanceLancamentoRow } from '../tools/ecommerce/PerformanceLancamentoResult';
@@ -3476,6 +3477,24 @@ type NexusToolUIPart = ToolUIPart<{
     input: CreateDashboardWFInput;
     output: CreateDashboardWFOutput;
   };
+  patchDashboard: {
+    input: {
+      id: string;
+      operations: Array<
+        | { type: 'update-widget-attrs'; widgetId: string; attrs: Record<string, string | number | boolean> }
+        | { type: 'update-widget-config'; widgetId: string; configText: string }
+        | { type: 'remove-widget'; widgetId: string }
+        | { type: 'insert-widget-after'; targetWidgetId: string; widgetHtml: string }
+      >;
+    };
+    output: {
+      success: boolean;
+      previewDsl?: string;
+      operations?: Array<unknown>;
+      message?: string;
+      error?: string;
+    };
+  };
   getNotasFiscais: {
     input: GetNotasFiscaisToolInput;
     output: GetNotasFiscaisToolOutput;
@@ -4854,6 +4873,36 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   success={(t.output as CreateDashboardWFOutput)?.success}
                   item={(t.output as CreateDashboardWFOutput)?.item}
                   error={(t.output as CreateDashboardWFOutput)?.error}
+                />
+              )}
+            </div>
+          );
+        }
+
+        // Workflow: Criador de Dashboard — patchDashboard (local preview)
+        if (part.type === 'tool-patchDashboard') {
+          const t = part as NexusToolUIPart;
+          const callId = t.toolCallId;
+          const shouldBeOpen = t.state === 'output-available' || t.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-patchDashboard" state={t.state} />
+                <ToolContent>
+                  {t.input && (<ToolInput input={t.input} />)}
+                  {t.state === 'output-error' && (
+                    <ToolOutput output={null} errorText={t.errorText} />
+                  )}
+                </ToolContent>
+              </Tool>
+              {t.state === 'output-available' && (
+                <PatchDashboardToolCard
+                  success={(t.output as { success: boolean })?.success}
+                  previewDsl={(t.output as { previewDsl?: string })?.previewDsl}
+                  operations={(t.output as { operations?: any[] })?.operations}
+                  message={(t.output as { message?: string })?.message}
+                  error={(t.output as { error?: string })?.error}
                 />
               )}
             </div>

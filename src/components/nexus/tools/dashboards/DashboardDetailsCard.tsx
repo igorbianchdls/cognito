@@ -4,7 +4,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import MonacoEditor from '@/components/visual-builder/MonacoEditor';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle2, Copy, Edit, Eye, Save, X } from 'lucide-react';
+import { CheckCircle2, Copy, Edit, Eye, Save, X, Rocket } from 'lucide-react';
+import { visualBuilderActions } from '@/stores/visualBuilderStore';
 
 type Visibility = 'private' | 'org' | 'public' | string;
 
@@ -68,19 +69,11 @@ export default function DashboardDetailsCard({ success, item, error }: Dashboard
 
   const hasChanges = Object.keys(changes).length > 0;
 
-  const copyPayload = async () => {
-    if (!item) return;
-    const payload = { id: item.id, ...changes };
-    try { await navigator.clipboard.writeText(JSON.stringify(payload, null, 2)); } catch {}
-  };
-
-  const stageUpdateInChat = () => {
-    if (!item) return;
-    const payload = { id: item.id, ...changes };
-    const text = `Por favor, chame a tool updateDashboard com este payload:\n${JSON.stringify(payload, null, 2)}`;
-    window.postMessage({ type: 'SET_CHAT_INPUT', text }, window.location.origin);
+  const copyCode = async () => { try { await navigator.clipboard.writeText(code); } catch {} };
+  const applyToEditor = () => {
+    visualBuilderActions.updateCode(code);
     setJustSaved(true);
-    setTimeout(() => setJustSaved(false), 2500);
+    setTimeout(() => setJustSaved(false), 2000);
   };
 
   if (!success) {
@@ -116,27 +109,24 @@ export default function DashboardDetailsCard({ success, item, error }: Dashboard
               <Edit className="w-3.5 h-3.5 mr-1" /> Editar
             </Button>
           ) : (
-            <>
-              <Button size="sm" variant="secondary" onClick={() => {
-                setEditing(false);
-                // reset fields to snapshot
-                if (snapshot.current) {
-                  setTitle(snapshot.current.title);
-                  setDescription(snapshot.current.description ?? '');
-                  setVisibility(snapshot.current.visibility);
-                  setVersion(snapshot.current.version);
-                  setCode(snapshot.current.sourcecode);
-                }
-              }}>
-                <X className="w-3.5 h-3.5 mr-1" /> Cancelar
-              </Button>
-              <Button size="sm" disabled={!hasChanges} onClick={stageUpdateInChat}>
-                <Save className="w-3.5 h-3.5 mr-1" /> Salvar (preparar tool)
-              </Button>
-            </>
+            <Button size="sm" variant="secondary" onClick={() => {
+              setEditing(false);
+              if (snapshot.current) {
+                setTitle(snapshot.current.title);
+                setDescription(snapshot.current.description ?? '');
+                setVisibility(snapshot.current.visibility);
+                setVersion(snapshot.current.version);
+                setCode(snapshot.current.sourcecode);
+              }
+            }}>
+              <X className="w-3.5 h-3.5 mr-1" /> Cancelar
+            </Button>
           )}
-          <Button size="sm" variant="secondary" onClick={copyPayload} disabled={!hasChanges}>
-            <Copy className="w-3.5 h-3.5 mr-1" /> Copiar payload
+          <Button size="sm" onClick={applyToEditor}>
+            <Rocket className="w-3.5 h-3.5 mr-1" /> Aplicar ao Editor
+          </Button>
+          <Button size="sm" variant="secondary" onClick={copyCode}>
+            <Copy className="w-3.5 h-3.5 mr-1" /> Copiar Código
           </Button>
           <a href="/nexus" className="inline-flex"><Button size="sm" variant="secondary"><Eye className="w-3.5 h-3.5 mr-1" /> Abrir no Builder</Button></a>
         </div>
@@ -192,16 +182,15 @@ export default function DashboardDetailsCard({ success, item, error }: Dashboard
         </div>
         {justSaved && (
           <div className="mt-2 inline-flex items-center gap-1 text-green-700 bg-green-50 border border-green-200 rounded px-2 py-1 text-xs">
-            <CheckCircle2 className="w-3.5 h-3.5" /> Payload preparado no input do chat.
+            <CheckCircle2 className="w-3.5 h-3.5" /> Código aplicado ao editor.
           </div>
         )}
       </div>
 
       {/* Editor */}
       <div className="h-96">
-        <MonacoEditor value={code} onChange={setCode} language="json" height="100%" />
+        <MonacoEditor value={code} onChange={setCode} language="html" height="100%" />
       </div>
     </div>
   );
 }
-

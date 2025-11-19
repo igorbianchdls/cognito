@@ -30,18 +30,12 @@ export default function DashboardCreatedCard({ success, item, error }: Dashboard
   const [applied, setApplied] = useState(false);
 
   const handleCopyId = async () => { if (item) { try { await navigator.clipboard.writeText(item.id); } catch {} } };
-  const handleCopyJSON = async () => { if (item) { try { await navigator.clipboard.writeText(item.sourcecode); } catch {} } };
+  const handleCopyCode = async () => { if (item) { try { await navigator.clipboard.writeText(item.sourcecode); } catch {} } };
   const handleApply = () => {
     if (!item) return;
-    // Tenta aplicar apenas se for JSON válido
-    try {
-      JSON.parse(item.sourcecode);
-      visualBuilderActions.updateCode(item.sourcecode);
-      setApplied(true);
-      setTimeout(() => setApplied(false), 2500);
-    } catch {
-      alert('O código não é um JSON válido. Só é possível aplicar automaticamente quando o sourcecode é JSON.');
-    }
+    visualBuilderActions.updateCode(item.sourcecode);
+    setApplied(true);
+    setTimeout(() => setApplied(false), 2500);
   };
 
   const visBadge = (v: Visibility) => {
@@ -97,17 +91,17 @@ export default function DashboardCreatedCard({ success, item, error }: Dashboard
         </div>
       </div>
 
-      {/* Editor (read-only visualização) */}
+      {/* Editor (visualização) */}
       <div className="h-96">
-        <MonacoEditor value={item.sourcecode} onChange={() => {}} language="json" height="100%" />
+        <MonacoEditor value={item.sourcecode} onChange={() => {}} language="html" height="100%" />
       </div>
 
       {/* Actions */}
       <div className="border-t bg-gray-50 p-3 flex items-center justify-between">
         <div className="text-xs text-gray-600">Criado em {new Date(item.created_at).toLocaleString()}</div>
         <div className="flex gap-2">
-          <Button size="sm" variant="secondary" onClick={handleCopyJSON}>
-            <Copy className="w-3.5 h-3.5 mr-1" /> Copiar JSON
+          <Button size="sm" variant="secondary" onClick={handleCopyCode}>
+            <Copy className="w-3.5 h-3.5 mr-1" /> Copiar Código
           </Button>
           <Button size="sm" onClick={handleApply} className={applied ? 'bg-green-600 hover:bg-green-600' : ''}>
             {applied ? (<><CheckCircle className="w-3.5 h-3.5 mr-1" /> Aplicado</>) : (<><LayoutDashboard className="w-3.5 h-3.5 mr-1" /> Aplicar ao Builder</>)}
@@ -117,4 +111,3 @@ export default function DashboardCreatedCard({ success, item, error }: Dashboard
     </div>
   );
 }
-

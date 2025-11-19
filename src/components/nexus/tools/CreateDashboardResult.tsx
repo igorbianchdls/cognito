@@ -55,17 +55,15 @@ export default function CreateDashboardResult({
   const [isApplied, setIsApplied] = useState(false);
 
   const handleApplyToDashboard = async () => {
-    if (!generatedJson || !dashboardConfig) return;
-
+    if (!generatedJson) return;
     setIsApplying(true);
     try {
-      // Apply the generated JSON to the visual builder store
+      // Aplica o código (DSL) ao Visual Builder
       visualBuilderActions.updateCode(generatedJson);
-
       setIsApplied(true);
-      console.log('🎨 Dashboard applied to Visual Builder successfully');
+      console.log('🎨 Código aplicado ao Visual Builder com sucesso');
     } catch (error) {
-      console.error('❌ Error applying dashboard:', error);
+      console.error('❌ Erro ao aplicar código:', error);
     } finally {
       setIsApplying(false);
     }
@@ -122,7 +120,7 @@ export default function CreateDashboardResult({
         </div>
       )}
 
-      {/* Widget Summary */}
+      {/* Resumo dos Widgets */}
       {dashboardConfig && dashboardConfig.widgets.length > 0 && (
         <div className="mb-3">
           <h4 className="text-sm font-medium text-gray-800 mb-2">Created Widgets:</h4>
@@ -155,14 +153,14 @@ export default function CreateDashboardResult({
 
       {generatedJson && (
         <div className="bg-white rounded-lg border border-gray-200 p-3">
-          <h4 className="text-sm font-medium text-gray-700 mb-2">Generated Dashboard JSON</h4>
+          <h4 className="text-sm font-medium text-gray-700 mb-2">Código Gerado do Dashboard</h4>
           <pre className="text-xs text-gray-600 bg-gray-50 rounded p-2 overflow-x-auto max-h-96 overflow-y-auto">
-            {JSON.stringify(JSON.parse(generatedJson), null, 2)}
+            {generatedJson}
           </pre>
           <div className="mt-2 flex gap-2 flex-wrap">
             <button
               onClick={handleApplyToDashboard}
-              disabled={isApplying || isApplied || !dashboardConfig}
+              disabled={isApplying || isApplied}
               className={`px-3 py-1 text-xs rounded transition-colors flex items-center gap-1 ${
                 isApplied
                   ? 'bg-gray-100 text-gray-700 border border-gray-300'
@@ -174,17 +172,17 @@ export default function CreateDashboardResult({
               {isApplying ? (
                 <>
                   <Loader2 className="w-3 h-3 animate-spin" />
-                  Applying...
+                  Aplicando...
                 </>
               ) : isApplied ? (
                 <>
                   <CheckCircle className="w-3 h-3" />
-                  Applied to Dashboard
+                  Aplicado ao Editor
                 </>
               ) : (
                 <>
                   <LayoutDashboard className="w-3 h-3" />
-                  Apply to Dashboard
+                  Aplicar ao Editor
                 </>
               )}
             </button>
@@ -204,15 +202,15 @@ export default function CreateDashboardResult({
               className="px-3 py-1 bg-gray-600 text-white text-xs rounded hover:bg-gray-700 transition-colors flex items-center gap-1"
             >
               <Copy className="w-3 h-3" />
-              Copy JSON
+              Copiar Código
             </button>
             <button
               onClick={() => {
-                const blob = new Blob([generatedJson], { type: 'application/json' });
+                const blob = new Blob([generatedJson], { type: 'text/plain' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = 'dashboard.json';
+                a.download = 'dashboard.txt';
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
@@ -221,7 +219,7 @@ export default function CreateDashboardResult({
               className="px-3 py-1 bg-gray-600 text-white text-xs rounded hover:bg-gray-700 transition-colors flex items-center gap-1"
             >
               <Download className="w-3 h-3" />
-              Download JSON
+              Baixar Código
             </button>
           </div>
         </div>

@@ -24,20 +24,10 @@ export default function CreateDashboardTool({
   const [isApplied, setIsApplied] = useState(false);
 
   const handleApplyDashboard = () => {
-    try {
-      // Valida JSON antes de aplicar
-      JSON.parse(editableJson);
-
-      // Aplica o JSON ao Visual Builder (mesmo que Monaco Editor faz)
-      visualBuilderActions.updateCode(editableJson);
-
-      setIsApplied(true);
-
-      // Reset após 3 segundos
-      setTimeout(() => setIsApplied(false), 3000);
-    } catch (error) {
-      alert('Invalid JSON. Please fix the syntax errors.');
-    }
+    // Aplica o código (DSL) ao Visual Builder
+    visualBuilderActions.updateCode(editableJson);
+    setIsApplied(true);
+    setTimeout(() => setIsApplied(false), 3000);
   };
 
   if (!success) {
@@ -54,7 +44,7 @@ export default function CreateDashboardTool({
       <div className="bg-blue-50 border-b border-blue-200 p-4">
         <div className="flex items-center gap-2 mb-2">
           <Code className="w-5 h-5 text-blue-600" />
-          <h3 className="font-medium text-blue-900">Generated Dashboard</h3>
+          <h3 className="font-medium text-blue-900">Código do Dashboard (Draft)</h3>
         </div>
         <p className="text-sm text-blue-700">{description}</p>
         {message && (
@@ -64,19 +54,14 @@ export default function CreateDashboardTool({
 
       {/* Monaco Editor */}
       <div className="h-80">
-        <MonacoEditor
-          value={editableJson}
-          onChange={setEditableJson}
-          language="json"
-          height="100%"
-        />
+        <MonacoEditor value={editableJson} onChange={setEditableJson} language="html" height="100%" />
       </div>
 
       {/* Actions */}
       <div className="border-t border-gray-200 p-4 bg-gray-50">
         <div className="flex items-center justify-between">
           <div className="text-sm text-gray-600">
-            You can edit the JSON above before applying to the dashboard
+            Você pode editar o código acima antes de aplicar no editor
           </div>
 
           <Button
@@ -91,12 +76,12 @@ export default function CreateDashboardTool({
             {isApplied ? (
               <>
                 <CheckCircle className="w-4 h-4" />
-                Applied!
+                Aplicado!
               </>
             ) : (
               <>
                 <Play className="w-4 h-4" />
-                Apply to Dashboard
+                Aplicar ao Editor
               </>
             )}
           </Button>
