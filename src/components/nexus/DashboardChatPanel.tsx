@@ -1236,9 +1236,9 @@ export default function DashboardChatPanel() {
 
           {/* Compartilhar com mesmo padrão de UI */}
           <Button
-            variant="outline"
+            variant="default"
             size="sm"
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 bg-black text-white hover:bg-black/90"
             onClick={() => {}}
           >
             <span>Compartilhar</span>
