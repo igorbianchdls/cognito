@@ -1,10 +1,10 @@
 import { UIMessage, type ToolUIPart } from 'ai';
 import { Response } from '@/components/ai-elements/response';
 import { Reasoning, ReasoningTrigger, ReasoningContent } from '@/components/ai-elements/reasoning';
-import { Actions, Action } from '@/components/ai-elements/actions';
+// import { Actions, Action } from '@/components/ai-elements/actions';
 import { Tool, ToolHeader, ToolContent, ToolInput, ToolOutput } from '@/components/ai-elements/tool';
 import { ToolInputStreaming } from '@/components/ai-elements/tool-input-streaming';
-import { CopyIcon, ThumbsUpIcon, ThumbsDownIcon } from 'lucide-react';
+// import { CopyIcon, ThumbsUpIcon, ThumbsDownIcon } from 'lucide-react';
 import MetaIcon from '@/components/icons/MetaIcon';
 import GoogleAnalyticsIcon from '@/components/icons/GoogleAnalyticsIcon';
 import GoogleAdsIcon from '@/components/icons/GoogleAdsIcon';
@@ -49,7 +49,7 @@ import { type ContaReceberRow } from '../tools/ContasAReceberTable';
 import ReceiptsList from '../tools/ReceiptsList';
 import NotasFiscaisList from '../tools/NotasFiscaisList';
 import InventoryList from '../tools/InventoryList';
-import FluxoCaixaResult, { type FluxoCaixaRow } from '../tools/FluxoCaixaResult';
+// import FluxoCaixaResult, { type FluxoCaixaRow } from '../tools/FluxoCaixaResult';
 import GenericResultTable from '../tools/GenericResultTable';
 import RankingPorDimensaoFinanceiroResult from '../tools/RankingPorDimensaoFinanceiroResult';
 import AgingFinanceiroResult from '../tools/AgingFinanceiroResult';
@@ -57,11 +57,11 @@ import ContasAReceberResult from '../tools/ContasAReceberResult';
 import ContasAPagarResult, { type ContaPagarRow } from '../tools/ContasAPagarResult';
 import PagamentosRecebidosResult from '../tools/PagamentosRecebidosResult';
 import PagamentosEfetuadosResult from '../tools/PagamentosEfetuadosResult';
-import MovimentosResult, { type GetMovimentosOutput } from '../tools/MovimentosResult';
-import MovimentosPorCentroCustoResult, { type GetMovimentosPorCentroCustoOutput } from '../tools/MovimentosPorCentroCustoResult';
-import TransacoesExtratoResult, { type GetTransacoesExtratoOutput } from '../tools/TransacoesExtratoResult';
-import SaldoBancarioResult, { type ObterSaldoBancarioOutput } from '../tools/SaldoBancarioResult';
-import DespesasCentroCustoResult, { type ObterDespesasPorCentroCustoOutput } from '../tools/DespesasCentroCustoResult';
+// import MovimentosResult, { type GetMovimentosOutput } from '../tools/MovimentosResult';
+// import MovimentosPorCentroCustoResult, { type GetMovimentosPorCentroCustoOutput } from '../tools/MovimentosPorCentroCustoResult';
+// import TransacoesExtratoResult, { type GetTransacoesExtratoOutput } from '../tools/TransacoesExtratoResult';
+// import SaldoBancarioResult, { type ObterSaldoBancarioOutput } from '../tools/SaldoBancarioResult';
+// import DespesasCentroCustoResult, { type ObterDespesasPorCentroCustoOutput } from '../tools/DespesasCentroCustoResult';
 import InadimplenciaResult, { type AnalisarInadimplenciaOutput } from '../tools/InadimplenciaResult';
 import AutomationResultCard from './tools/AutomationResultCard';
 import type { AutomationSummaryOutput } from '@/tools/automationTools';
@@ -3279,6 +3279,13 @@ type UpdateDashboardWFOutput = {
   error?: string;
 };
 
+// DSL patch operation type (local preview)
+type PatchOperation =
+  | { type: 'update-widget-attrs'; widgetId: string; attrs: Record<string, string | number | boolean> }
+  | { type: 'update-widget-config'; widgetId: string; configText: string }
+  | { type: 'remove-widget'; widgetId: string }
+  | { type: 'insert-widget-after'; targetWidgetId: string; widgetHtml: string };
+
 type CreateDashboardWFInput = {
   title: string;
   sourcecode: string;
@@ -3480,17 +3487,12 @@ type NexusToolUIPart = ToolUIPart<{
   patchDashboard: {
     input: {
       id: string;
-      operations: Array<
-        | { type: 'update-widget-attrs'; widgetId: string; attrs: Record<string, string | number | boolean> }
-        | { type: 'update-widget-config'; widgetId: string; configText: string }
-        | { type: 'remove-widget'; widgetId: string }
-        | { type: 'insert-widget-after'; targetWidgetId: string; widgetHtml: string }
-      >;
+      operations: Array<PatchOperation>;
     };
     output: {
       success: boolean;
       previewDsl?: string;
-      operations?: Array<unknown>;
+      operations?: Array<PatchOperation>;
       message?: string;
       error?: string;
     };
@@ -4900,7 +4902,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                 <PatchDashboardToolCard
                   success={(t.output as { success: boolean })?.success}
                   previewDsl={(t.output as { previewDsl?: string })?.previewDsl}
-                  operations={(t.output as { operations?: any[] })?.operations}
+                  operations={(t.output as { operations?: PatchOperation[] })?.operations}
                   message={(t.output as { message?: string })?.message}
                   error={(t.output as { error?: string })?.error}
                 />
