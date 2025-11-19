@@ -140,6 +140,7 @@ import LTVClienteResult, { type LTVClienteRow } from '../tools/ecommerce/LTVClie
 import TopClientesPorReceitaResult, { type TopClienteRow } from '../tools/ecommerce/TopClientesPorReceitaResult';
 import ListDashboardsCard from './tools/dashboards/ListDashboardsCard';
 import DashboardDetailsCard from './tools/dashboards/DashboardDetailsCard';
+import DashboardCreatedCard from './tools/dashboards/DashboardCreatedCard';
 import ValorVidaClienteResult, { type ValorVidaClienteRow } from '../tools/ecommerce/ValorVidaClienteResult';
 import ClientesNovosRecorrentesResult, { type ClientesNovosRecorrentesRow } from '../tools/ecommerce/ClientesNovosRecorrentesResult';
 import PerformanceLancamentoResult, { type PerformanceLancamentoRow } from '../tools/ecommerce/PerformanceLancamentoResult';
@@ -3277,6 +3278,21 @@ type UpdateDashboardWFOutput = {
   error?: string;
 };
 
+type CreateDashboardWFInput = {
+  title: string;
+  sourcecode: string;
+  description?: string | null;
+  visibility?: 'private' | 'org' | 'public';
+  version?: number;
+};
+type CreateDashboardWFOutput = {
+  success: boolean;
+  item?: {
+    id: string; title: string; description: string | null; sourcecode: string; visibility: string; version: number; created_at: string; updated_at: string;
+  };
+  error?: string;
+};
+
 type NexusToolUIPart = ToolUIPart<{
   displayWeather: {
     input: WeatherToolInput;
@@ -3455,6 +3471,10 @@ type NexusToolUIPart = ToolUIPart<{
   updateDashboard: {
     input: UpdateDashboardWFInput;
     output: UpdateDashboardWFOutput;
+  };
+  createDashboard: {
+    input: CreateDashboardWFInput;
+    output: CreateDashboardWFOutput;
   };
   getNotasFiscais: {
     input: GetNotasFiscaisToolInput;
@@ -4806,6 +4826,34 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   success={(t.output as UpdateDashboardWFOutput)?.success}
                   item={(t.output as UpdateDashboardWFOutput)?.item}
                   error={(t.output as UpdateDashboardWFOutput)?.error}
+                />
+              )}
+            </div>
+          );
+        }
+
+        // Workflow: Criador de Dashboard — createDashboard
+        if (part.type === 'tool-createDashboard') {
+          const t = part as NexusToolUIPart;
+          const callId = t.toolCallId;
+          const shouldBeOpen = t.state === 'output-available' || t.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-createDashboard" state={t.state} />
+                <ToolContent>
+                  {t.input && (<ToolInput input={t.input} />)}
+                  {t.state === 'output-error' && (
+                    <ToolOutput output={null} errorText={t.errorText} />
+                  )}
+                </ToolContent>
+              </Tool>
+              {t.state === 'output-available' && (
+                <DashboardCreatedCard
+                  success={(t.output as CreateDashboardWFOutput)?.success}
+                  item={(t.output as CreateDashboardWFOutput)?.item}
+                  error={(t.output as CreateDashboardWFOutput)?.error}
                 />
               )}
             </div>

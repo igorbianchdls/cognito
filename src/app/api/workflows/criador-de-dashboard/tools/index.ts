@@ -69,6 +69,25 @@ async function updateDashboardByIdQuery(id: string, payload: { title?: string; d
 // Tools (single file)
 const VisibilityEnum = z.enum(['private', 'org', 'public']);
 
+// Create (insert) — returns created row
+async function createDashboardQuery(payload: {
+  title: string;
+  description: string | null;
+  sourcecode: string;
+  visibility: Visibility;
+  version: number;
+}) {
+  const rows = await runQuery<{
+    id: string; title: string; description: string | null; sourcecode: string; visibility: string; version: number; created_at: string; updated_at: string
+  }>(
+    `INSERT INTO apps.dashboards (tenant_id, title, description, sourcecode, visibility, version)
+     VALUES (1, $1, $2, $3, $4, $5)
+     RETURNING id, title, description, sourcecode, visibility, version, created_at, updated_at`,
+    [payload.title, payload.description, payload.sourcecode, payload.visibility, Number(payload.version)]
+  );
+  return rows?.[0] || null;
+}
+
 export const listDashboards = tool({
   description: 'Lista dashboards disponíveis com filtros opcionais (q, visibility) e paginação.',
   inputSchema: z.object({
@@ -114,3 +133,29 @@ export const updateDashboard = tool({
   }
 });
 
+export const createDashboard = tool({
+  description: 'Cria um novo dashboard (title, sourcecode, description?, visibility?, version?).',
+  inputSchema: z.object({
+    title: z.string().trim().min(1, 'title é obrigatório'),
+    sourcecode: z.string().min(1, 'sourcecode é obrigatório'),
+    description: z.string().nullable().optional(),
+    visibility: VisibilityEnum.default('private').optional(),
+    version: z.number().int().positive().default(1).optional(),
+  }),
+  execute: async ({ title, sourcecode, description, visibility = 'private', version = 1 }) => {
+    try {
+      // Sanitização básica
+      const desc = (description === '' ? null : description ?? null);
+      const code = sourcecode;
+      // Limite de tamanho (1MB)
+      if (code && code.length > 1_000_000) {
+        return { success: false as const, error: 'sourcecode excede o limite de 1MB' };
+      }
+      const item = await createDashboardQuery({ title, sourcecode: code, description: desc, visibility, version });
+      if (!item) return { success: false as const, error: 'Falha ao criar dashboard' };
+      return { success: true as const, item };
+    } catch (e) {
+      return { success: false as const, error: (e as Error).message || 'Erro ao criar dashboard' };
+    }
+  }
+});
