@@ -110,16 +110,19 @@ export default function DashboardChatPanel() {
   };
 
   // Parse theme name from code (JSON or DSL)
-  const getThemeFromCode = (code: string): string | undefined => {
+  const getThemeFromCode = (code: string): ThemeName | undefined => {
     if (!code) return undefined;
     if (isDsl(code)) {
       const style = readStyleFromDsl(code);
-      if (style && typeof style['theme'] === 'string') return style['theme'] as string;
+      if (style && typeof style['theme'] === 'string' && ThemeManager.isValidTheme(style['theme'] as string)) return style['theme'] as ThemeName;
       const m = code.match(/<dashboard\b[^>]*\btheme=\"([^\"]+)\"/i);
-      if (m && m[1]) return m[1];
+      if (m && m[1] && ThemeManager.isValidTheme(m[1])) return m[1] as ThemeName;
       return undefined;
     }
-    try { const cfg = JSON.parse(code); return typeof cfg.theme === 'string' ? cfg.theme : undefined; } catch { return undefined; }
+    try {
+      const cfg = JSON.parse(code) as { theme?: string };
+      return cfg.theme && ThemeManager.isValidTheme(cfg.theme) ? (cfg.theme as ThemeName) : undefined;
+    } catch { return undefined; }
   };
 
   // Update <config> JSON for all widgets in DSL
@@ -137,8 +140,8 @@ export default function DashboardChatPanel() {
         // no config -> no update
         return full;
       }
-      let before = inner.slice(0, cfgMatch.index);
-      let after = inner.slice(cfgMatch.index + cfgMatch[0].length);
+      const before = inner.slice(0, cfgMatch.index);
+      const after = inner.slice(cfgMatch.index + cfgMatch[0].length);
       let cfg: Record<string, unknown> = {};
       try { cfg = JSON.parse((cfgMatch[1] || '').trim()); } catch { return full; }
       const nextCfg = updater(cfg, attrs);
@@ -174,20 +177,28 @@ export default function DashboardChatPanel() {
     if (!isDsl(code)) return;
     const style = readStyleFromDsl(code);
     if (style) {
-      if (typeof style['theme'] === 'string') setSelectedTheme(style['theme'] as ThemeName);
-      if (typeof style['customFont'] === 'string') setSelectedFont(style['customFont'] as any);
-      if (typeof style['customFontSize'] === 'string') setSelectedFontSize(style['customFontSize'] as any);
-      if (typeof style['customLetterSpacing'] === 'number') setSelectedLetterSpacing(style['customLetterSpacing'] as number);
-      if (typeof style['customBackground'] === 'string') setSelectedBackground(style['customBackground'] as any);
-      if (typeof style['borderType'] === 'string') setSelectedBorderType(style['borderType'] as any);
-      if (typeof style['borderColor'] === 'string') setBorderColor(style['borderColor'] as string);
-      if (typeof style['borderWidth'] === 'number') setBorderWidth(style['borderWidth'] as number);
-      if (typeof style['borderRadius'] === 'number') setBorderRadius(style['borderRadius'] as number);
-      if (typeof style['borderAccentColor'] === 'string') setBorderAccentColor(style['borderAccentColor'] as string);
-      if (typeof style['borderShadow'] === 'boolean') setBorderShadow(style['borderShadow'] as boolean);
-      if (typeof style['backgroundColor'] === 'string') setDashboardBgColor(style['backgroundColor'] as string);
-      if (typeof style['customChartTextColor'] === 'string') setChartBodyTextColor(style['customChartTextColor'] as string);
-      if (typeof style['customChartFontFamily'] === 'string') setChartBodyFontFamily(style['customChartFontFamily'] as any);
+      const st = style as Record<string, unknown>;
+      const theme = st['theme'];
+      if (typeof theme === 'string' && ThemeManager.isValidTheme(theme)) setSelectedTheme(theme as ThemeName);
+      const cf = st['customFont'];
+      if (typeof cf === 'string' && FontManager.isValidFont(cf)) setSelectedFont(cf as FontPresetKey);
+      const cfs = st['customFontSize'];
+      if (typeof cfs === 'string' && FontManager.isValidFontSize(cfs)) setSelectedFontSize(cfs as FontSizeKey);
+      const ls = st['customLetterSpacing'];
+      if (typeof ls === 'number') setSelectedLetterSpacing(ls);
+      const bg = st['customBackground'];
+      if (typeof bg === 'string' && BackgroundManager.isValidBackground(bg)) setSelectedBackground(bg as BackgroundPresetKey);
+      const bt = st['borderType'];
+      if (typeof bt === 'string' && BorderManager.isValid(bt)) setSelectedBorderType(bt as BorderPresetKey);
+      if (typeof st['borderColor'] === 'string') setBorderColor(st['borderColor'] as string);
+      if (typeof st['borderWidth'] === 'number') setBorderWidth(st['borderWidth'] as number);
+      if (typeof st['borderRadius'] === 'number') setBorderRadius(st['borderRadius'] as number);
+      if (typeof st['borderAccentColor'] === 'string') setBorderAccentColor(st['borderAccentColor'] as string);
+      if (typeof st['borderShadow'] === 'boolean') setBorderShadow(st['borderShadow'] as boolean);
+      if (typeof st['backgroundColor'] === 'string') setDashboardBgColor(st['backgroundColor'] as string);
+      if (typeof st['customChartTextColor'] === 'string') setChartBodyTextColor(st['customChartTextColor'] as string);
+      const cbf = st['customChartFontFamily'];
+      if (typeof cbf === 'string' && FontManager.isValidFont(cbf)) setChartBodyFontFamily(cbf as FontPresetKey);
     }
   }, [visualBuilderState.code]);
 
@@ -197,7 +208,7 @@ export default function DashboardChatPanel() {
     if (fromQuery && fromQuery !== dashboardId) {
       setDashboardId(fromQuery);
     }
-  }, [searchParams]);
+  }, [searchParams, dashboardId]);
 
   // Load dashboard meta and sourcecode when dashboardId changes
   useEffect(() => {
@@ -605,12 +616,34 @@ export default function DashboardChatPanel() {
           // Build a pseudo widget object to reuse updater logic is complex; instead, map specific common cases
           // Determine type from attrs
           const type = (attrs['type'] || '').toLowerCase();
-          const w: any = { type, barConfig: cfgObj.barConfig, lineConfig: cfgObj.lineConfig, pieConfig: cfgObj.pieConfig, areaConfig: cfgObj.areaConfig, stackedBarConfig: cfgObj.stackedBarConfig, groupedBarConfig: cfgObj.groupedBarConfig, stackedLinesConfig: cfgObj.stackedLinesConfig, radialStackedConfig: cfgObj.radialStackedConfig, pivotBarConfig: cfgObj.pivotBarConfig, kpiConfig: cfgObj.kpiConfig };
-          const wUpdated = updater(w as Widget) as any;
+          type UpdateWidget = {
+            type: Widget['type'];
+            barConfig?: unknown; lineConfig?: unknown; pieConfig?: unknown; areaConfig?: unknown;
+            stackedBarConfig?: unknown; groupedBarConfig?: unknown; stackedLinesConfig?: unknown; radialStackedConfig?: unknown; pivotBarConfig?: unknown;
+            kpiConfig?: unknown;
+          };
+          const w: UpdateWidget = {
+            type: type as Widget['type'],
+            barConfig: (cfgObj as Record<string, unknown>)['barConfig'],
+            lineConfig: (cfgObj as Record<string, unknown>)['lineConfig'],
+            pieConfig: (cfgObj as Record<string, unknown>)['pieConfig'],
+            areaConfig: (cfgObj as Record<string, unknown>)['areaConfig'],
+            stackedBarConfig: (cfgObj as Record<string, unknown>)['stackedBarConfig'],
+            groupedBarConfig: (cfgObj as Record<string, unknown>)['groupedBarConfig'],
+            stackedLinesConfig: (cfgObj as Record<string, unknown>)['stackedLinesConfig'],
+            radialStackedConfig: (cfgObj as Record<string, unknown>)['radialStackedConfig'],
+            pivotBarConfig: (cfgObj as Record<string, unknown>)['pivotBarConfig'],
+            kpiConfig: (cfgObj as Record<string, unknown>)['kpiConfig'],
+          };
+          const wUpdated = updater(w as unknown as Widget) as unknown;
           // Merge back into cfgObj
           const out: Record<string, unknown> = { ...cfgObj };
-          const keys = ['barConfig','lineConfig','pieConfig','areaConfig','stackedBarConfig','groupedBarConfig','stackedLinesConfig','radialStackedConfig','pivotBarConfig','kpiConfig'];
-          for (const k of keys) if (wUpdated[k] !== undefined) out[k] = wUpdated[k];
+          const keys = ['barConfig','lineConfig','pieConfig','areaConfig','stackedBarConfig','groupedBarConfig','stackedLinesConfig','radialStackedConfig','pivotBarConfig','kpiConfig'] as const;
+          const updatedMap = wUpdated as Record<string, unknown>;
+          for (const k of keys) {
+            const updatedVal = updatedMap[k as string];
+            if (updatedVal !== undefined) out[k] = updatedVal;
+          }
           return out;
         });
         visualBuilderActions.updateCode(next);
@@ -753,8 +786,8 @@ export default function DashboardChatPanel() {
         const next = writeStyleToDsl(code, { [prop]: value } as Record<string, unknown>);
         visualBuilderActions.updateCode(next);
       } else {
-        const config = JSON.parse(code);
-        const updatedConfig = { ...config, [prop]: value } as any;
+        const config = JSON.parse(code) as Record<string, unknown>;
+        const updatedConfig: Record<string, unknown> = { ...config, [prop]: value };
         visualBuilderActions.updateCode(JSON.stringify(updatedConfig, null, 2));
       }
       if (prop === 'borderColor') setBorderColor(String(value))
@@ -1201,7 +1234,7 @@ export default function DashboardChatPanel() {
               onLayoutChange={visualBuilderActions.updateWidgets}
               headerTitle={dashboardMeta?.title || visualBuilderState.dashboardTitle || 'Live Dashboard'}
               headerSubtitle={(dashboardMeta?.description ?? undefined) || visualBuilderState.dashboardSubtitle || 'Real-time visualization with Supabase data'}
-              themeName={getThemeFromCode(visualBuilderState.code) as any}
+              themeName={getThemeFromCode(visualBuilderState.code)}
             />
           </div>
         )}
