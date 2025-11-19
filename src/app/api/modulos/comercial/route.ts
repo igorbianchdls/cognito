@@ -199,6 +199,21 @@ export async function GET(req: NextRequest) {
         fil.nome  AS filial_nome,
         un.nome   AS unidade_negocio_nome,
         so.nome   AS sales_office_nome,
+        -- Derivados para colapsável
+        (terr.nome IS NULL AND cv.nome IS NULL AND fil.nome IS NULL AND un.nome IS NULL AND so.nome IS NULL) AS parent_flag,
+        CASE
+          WHEN so.nome   IS NOT NULL THEN 'sales_office_nome'
+          WHEN un.nome   IS NOT NULL THEN 'unidade_negocio_nome'
+          WHEN fil.nome  IS NOT NULL THEN 'filial_nome'
+          WHEN cv.nome   IS NOT NULL THEN 'canal_venda_nome'
+          WHEN terr.nome IS NOT NULL THEN 'territorio_nome'
+          ELSE NULL
+        END AS child_dim,
+        COALESCE(so.nome, un.nome, fil.nome, cv.nome, terr.nome) AS child_label,
+        CASE
+          WHEN (terr.nome IS NULL AND cv.nome IS NULL AND fil.nome IS NULL AND un.nome IS NULL AND so.nome IS NULL)
+            THEN 1 ELSE 2
+        END AS nivel,
         m.criado_em,
         m.atualizado_em`;
       baseSql = `FROM comercial.metas m
@@ -211,7 +226,8 @@ export async function GET(req: NextRequest) {
         LEFT JOIN empresa.unidades_negocio un ON un.id = m.unidade_negocio_id
         LEFT JOIN comercial.sales_offices so ON so.id = m.sales_office_id
         WHERE m.vendedor_id IS NOT NULL`;
-      orderClause = orderBy ? `ORDER BY ${orderBy} ${orderDir}` : 'ORDER BY vendedor_nome ASC, m.ano ASC, m.mes ASC'
+      // Ordem fixa por vendedor, depois nível (Meta Geral antes), ano, mês e rótulo do detalhe
+      orderClause = 'ORDER BY vendedor_nome ASC, nivel ASC, m.ano ASC, m.mes ASC, child_label ASC, meta_id ASC'
     } else {
       return Response.json({ success: false, message: `View inválida: ${view}` }, { status: 400 })
     }
