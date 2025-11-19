@@ -72,6 +72,82 @@ export default function DashboardChatPanel() {
   const [dashboardsLoading, setDashboardsLoading] = useState(false);
   const [dashboardsError, setDashboardsError] = useState<string | null>(null);
 
+  // Helpers: detect DSL vs JSON
+  const isDsl = (code: string) => code.trim().startsWith('<');
+
+  // Parse <style> JSON from DSL
+  const readStyleFromDsl = (dsl: string): Record<string, unknown> | null => {
+    const m = dsl.match(/<style\b[^>]*>([\s\S]*?)<\/style>/i);
+    if (!m || !m[1]) return null;
+    try { return JSON.parse(m[1].trim()) as Record<string, unknown>; } catch { return null; }
+  };
+
+  // Ensure <style>{}</style> exists right after <dashboard ...>
+  const ensureStyleBlock = (dsl: string): string => {
+    if (/<style\b[^>]*>[\s\S]*?<\/style>/i.test(dsl)) return dsl;
+    const dashOpen = dsl.match(/<dashboard\b[^>]*>/i);
+    if (!dashOpen || dashOpen.index === undefined) return dsl;
+    const insertAt = dashOpen.index + dashOpen[0].length;
+    const prefix = dsl.slice(0, insertAt);
+    const suffix = dsl.slice(insertAt);
+    const block = `\n  <style>{}\n  </style>`;
+    return prefix + block + suffix;
+  };
+
+  // Update <style> JSON with partial keys
+  const writeStyleToDsl = (dsl: string, partial: Record<string, unknown>): string => {
+    let next = ensureStyleBlock(dsl);
+    const re = /<style\b[^>]*>([\s\S]*?)<\/style>/i;
+    const m = next.match(re);
+    if (!m || m.index === undefined) return dsl;
+    let current: Record<string, unknown> = {};
+    try { current = m[1] ? JSON.parse(m[1].trim()) : {}; } catch { current = {}; }
+    const updated = { ...current, ...partial };
+    const json = JSON.stringify(updated, null, 2);
+    const replacement = `<style>\n${json}\n</style>`;
+    next = next.replace(re, replacement);
+    return next;
+  };
+
+  // Parse theme name from code (JSON or DSL)
+  const getThemeFromCode = (code: string): string | undefined => {
+    if (!code) return undefined;
+    if (isDsl(code)) {
+      const style = readStyleFromDsl(code);
+      if (style && typeof style['theme'] === 'string') return style['theme'] as string;
+      const m = code.match(/<dashboard\b[^>]*\btheme=\"([^\"]+)\"/i);
+      if (m && m[1]) return m[1];
+      return undefined;
+    }
+    try { const cfg = JSON.parse(code); return typeof cfg.theme === 'string' ? cfg.theme : undefined; } catch { return undefined; }
+  };
+
+  // Update <config> JSON for all widgets in DSL
+  const updateWidgetsInDsl = (dsl: string, updater: (cfg: Record<string, unknown>, attrs: Record<string, string>) => Record<string, unknown> | null): string => {
+    const parseAttrs = (s: string): Record<string, string> => {
+      const map: Record<string, string> = {};
+      for (const m of s.matchAll(/(\w[\w-]*)\s*=\s*\"([^\"]*)\"/g)) { map[m[1]] = m[2]; }
+      return map;
+    };
+    const pairRe = /<widget\b([^>]*)>([\s\S]*?)<\/widget>/gi;
+    return dsl.replace(pairRe, (full, attrsStr: string, inner: string) => {
+      const attrs = parseAttrs(attrsStr || '');
+      const cfgMatch = inner.match(/<config\b[^>]*>([\s\S]*?)<\/config>/i);
+      if (!cfgMatch || cfgMatch.index === undefined) {
+        // no config -> no update
+        return full;
+      }
+      let before = inner.slice(0, cfgMatch.index);
+      let after = inner.slice(cfgMatch.index + cfgMatch[0].length);
+      let cfg: Record<string, unknown> = {};
+      try { cfg = JSON.parse((cfgMatch[1] || '').trim()); } catch { return full; }
+      const nextCfg = updater(cfg, attrs);
+      if (!nextCfg) return full;
+      const newInner = `${before}<config>${JSON.stringify(nextCfg, null, 2)}</config>${after}`;
+      return `<widget${attrsStr}>${newInner}</widget>`;
+    });
+  };
+
   // Available backgrounds
   const availableBackgrounds = BackgroundManager.getAvailableBackgrounds();
   // Removed unused theme preview
@@ -91,6 +167,29 @@ export default function DashboardChatPanel() {
   useEffect(() => {
     visualBuilderActions.initialize();
   }, []);
+
+  // Sync UI selectors from DSL <style> when code is DSL
+  useEffect(() => {
+    const code = visualBuilderState.code;
+    if (!isDsl(code)) return;
+    const style = readStyleFromDsl(code);
+    if (style) {
+      if (typeof style['theme'] === 'string') setSelectedTheme(style['theme'] as ThemeName);
+      if (typeof style['customFont'] === 'string') setSelectedFont(style['customFont'] as any);
+      if (typeof style['customFontSize'] === 'string') setSelectedFontSize(style['customFontSize'] as any);
+      if (typeof style['customLetterSpacing'] === 'number') setSelectedLetterSpacing(style['customLetterSpacing'] as number);
+      if (typeof style['customBackground'] === 'string') setSelectedBackground(style['customBackground'] as any);
+      if (typeof style['borderType'] === 'string') setSelectedBorderType(style['borderType'] as any);
+      if (typeof style['borderColor'] === 'string') setBorderColor(style['borderColor'] as string);
+      if (typeof style['borderWidth'] === 'number') setBorderWidth(style['borderWidth'] as number);
+      if (typeof style['borderRadius'] === 'number') setBorderRadius(style['borderRadius'] as number);
+      if (typeof style['borderAccentColor'] === 'string') setBorderAccentColor(style['borderAccentColor'] as string);
+      if (typeof style['borderShadow'] === 'boolean') setBorderShadow(style['borderShadow'] as boolean);
+      if (typeof style['backgroundColor'] === 'string') setDashboardBgColor(style['backgroundColor'] as string);
+      if (typeof style['customChartTextColor'] === 'string') setChartBodyTextColor(style['customChartTextColor'] as string);
+      if (typeof style['customChartFontFamily'] === 'string') setChartBodyFontFamily(style['customChartFontFamily'] as any);
+    }
+  }, [visualBuilderState.code]);
 
   // Derive dashboardId from URL query (?dashboardId=... or ?dashboard=...)
   useEffect(() => {
@@ -272,17 +371,15 @@ export default function DashboardChatPanel() {
 
   const handleThemeChange = (themeName: ThemeName) => {
     try {
-      // Parse current config
-      const currentConfig = JSON.parse(visualBuilderState.code);
-
-      // Update with new theme
-      const updatedConfig = {
-        ...currentConfig,
-        theme: themeName
-      };
-
-      // Apply to editor
-      visualBuilderActions.updateCode(JSON.stringify(updatedConfig, null, 2));
+      const code = visualBuilderState.code;
+      if (isDsl(code)) {
+        const next = writeStyleToDsl(code, { theme: themeName });
+        visualBuilderActions.updateCode(next);
+      } else {
+        const currentConfig = JSON.parse(code);
+        const updatedConfig = { ...currentConfig, theme: themeName };
+        visualBuilderActions.updateCode(JSON.stringify(updatedConfig, null, 2));
+      }
       setSelectedTheme(themeName);
 
       console.log(`🎨 Theme changed to: ${themeName}`);
@@ -293,12 +390,15 @@ export default function DashboardChatPanel() {
 
   const handleFontChange = (fontKey: FontPresetKey) => {
     try {
-      const config = JSON.parse(visualBuilderState.code);
-      const updatedConfig = {
-        ...config,
-        customFont: fontKey
-      };
-      visualBuilderActions.updateCode(JSON.stringify(updatedConfig, null, 2));
+      const code = visualBuilderState.code;
+      if (isDsl(code)) {
+        const next = writeStyleToDsl(code, { customFont: fontKey });
+        visualBuilderActions.updateCode(next);
+      } else {
+        const config = JSON.parse(code);
+        const updatedConfig = { ...config, customFont: fontKey };
+        visualBuilderActions.updateCode(JSON.stringify(updatedConfig, null, 2));
+      }
       setSelectedFont(fontKey);
       console.log('🎨 Font changed to:', fontKey);
     } catch (error) {
@@ -308,12 +408,15 @@ export default function DashboardChatPanel() {
 
   const handleFontSizeChange = (sizeKey: FontSizeKey) => {
     try {
-      const config = JSON.parse(visualBuilderState.code);
-      const updatedConfig = {
-        ...config,
-        customFontSize: sizeKey
-      };
-      visualBuilderActions.updateCode(JSON.stringify(updatedConfig, null, 2));
+      const code = visualBuilderState.code;
+      if (isDsl(code)) {
+        const next = writeStyleToDsl(code, { customFontSize: sizeKey });
+        visualBuilderActions.updateCode(next);
+      } else {
+        const config = JSON.parse(code);
+        const updatedConfig = { ...config, customFontSize: sizeKey };
+        visualBuilderActions.updateCode(JSON.stringify(updatedConfig, null, 2));
+      }
       setSelectedFontSize(sizeKey);
       console.log('🎨 Font size changed to:', sizeKey, `(${FontManager.getFontSizeValue(sizeKey)}px)`);
     } catch (error) {
@@ -324,16 +427,15 @@ export default function DashboardChatPanel() {
   // Colors handlers
   const handleDashboardBgColorChange = (color: string) => {
     try {
-      const cfg = JSON.parse(visualBuilderState.code);
-      const updated = {
-        ...cfg,
-        config: {
-          ...(cfg.config || {}),
-          backgroundColor: color,
-          backgroundGradient: undefined
-        }
-      };
-      visualBuilderActions.updateCode(JSON.stringify(updated, null, 2));
+      const code = visualBuilderState.code;
+      if (isDsl(code)) {
+        const next = writeStyleToDsl(code, { backgroundColor: color });
+        visualBuilderActions.updateCode(next);
+      } else {
+        const cfg = JSON.parse(code);
+        const updated = { ...cfg, config: { ...(cfg.config || {}), backgroundColor: color, backgroundGradient: undefined } };
+        visualBuilderActions.updateCode(JSON.stringify(updated, null, 2));
+      }
       setDashboardBgColor(color);
     } catch (e) {
       console.error('Error updating dashboard background color', e);
@@ -497,10 +599,27 @@ export default function DashboardChatPanel() {
 
   const updateAllWidgets = (updater: (widget: Widget) => Widget) => {
     try {
-      const cfg = JSON.parse(visualBuilderState.code);
-      const widgets: Widget[] = (cfg.widgets || []).map((w: Widget) => updater(w));
-      const updated = { ...cfg, widgets };
-      visualBuilderActions.updateCode(JSON.stringify(updated, null, 2));
+      const code = visualBuilderState.code;
+      if (isDsl(code)) {
+        const next = updateWidgetsInDsl(code, (cfgObj, attrs) => {
+          // Build a pseudo widget object to reuse updater logic is complex; instead, map specific common cases
+          // Determine type from attrs
+          const type = (attrs['type'] || '').toLowerCase();
+          const w: any = { type, barConfig: cfgObj.barConfig, lineConfig: cfgObj.lineConfig, pieConfig: cfgObj.pieConfig, areaConfig: cfgObj.areaConfig, stackedBarConfig: cfgObj.stackedBarConfig, groupedBarConfig: cfgObj.groupedBarConfig, stackedLinesConfig: cfgObj.stackedLinesConfig, radialStackedConfig: cfgObj.radialStackedConfig, pivotBarConfig: cfgObj.pivotBarConfig, kpiConfig: cfgObj.kpiConfig };
+          const wUpdated = updater(w as Widget) as any;
+          // Merge back into cfgObj
+          const out: Record<string, unknown> = { ...cfgObj };
+          const keys = ['barConfig','lineConfig','pieConfig','areaConfig','stackedBarConfig','groupedBarConfig','stackedLinesConfig','radialStackedConfig','pivotBarConfig','kpiConfig'];
+          for (const k of keys) if (wUpdated[k] !== undefined) out[k] = wUpdated[k];
+          return out;
+        });
+        visualBuilderActions.updateCode(next);
+      } else {
+        const cfg = JSON.parse(code);
+        const widgets: Widget[] = (cfg.widgets || []).map((w: Widget) => updater(w));
+        const updated = { ...cfg, widgets };
+        visualBuilderActions.updateCode(JSON.stringify(updated, null, 2));
+      }
     } catch (e) {
       console.error('Error updating widgets colors', e);
     }
@@ -540,12 +659,15 @@ export default function DashboardChatPanel() {
 
   const handleLetterSpacingChange = (value: number) => {
     try {
-      const config = JSON.parse(visualBuilderState.code);
-      const updatedConfig = {
-        ...config,
-        customLetterSpacing: value,
-      };
-      visualBuilderActions.updateCode(JSON.stringify(updatedConfig, null, 2));
+      const code = visualBuilderState.code;
+      if (isDsl(code)) {
+        const next = writeStyleToDsl(code, { customLetterSpacing: value });
+        visualBuilderActions.updateCode(next);
+      } else {
+        const config = JSON.parse(code);
+        const updatedConfig = { ...config, customLetterSpacing: value };
+        visualBuilderActions.updateCode(JSON.stringify(updatedConfig, null, 2));
+      }
       setSelectedLetterSpacing(value);
       console.log('🔤 Letter spacing changed to:', value);
     } catch (error) {
@@ -555,12 +677,15 @@ export default function DashboardChatPanel() {
 
   const handleChartBodyFontChange = (fontKey: FontPresetKey) => {
     try {
-      const config = JSON.parse(visualBuilderState.code);
-      const updatedConfig = {
-        ...config,
-        customChartFontFamily: fontKey,
-      };
-      visualBuilderActions.updateCode(JSON.stringify(updatedConfig, null, 2));
+      const code = visualBuilderState.code;
+      if (isDsl(code)) {
+        const next = writeStyleToDsl(code, { customChartFontFamily: fontKey });
+        visualBuilderActions.updateCode(next);
+      } else {
+        const config = JSON.parse(code);
+        const updatedConfig = { ...config, customChartFontFamily: fontKey };
+        visualBuilderActions.updateCode(JSON.stringify(updatedConfig, null, 2));
+      }
       setChartBodyFontFamily(fontKey);
       console.log('🅰️ Chart body font changed to:', fontKey);
     } catch (error) {
@@ -570,12 +695,15 @@ export default function DashboardChatPanel() {
 
   const handleChartBodyTextColorChange = (color: string) => {
     try {
-      const config = JSON.parse(visualBuilderState.code);
-      const updatedConfig = {
-        ...config,
-        customChartTextColor: color,
-      };
-      visualBuilderActions.updateCode(JSON.stringify(updatedConfig, null, 2));
+      const code = visualBuilderState.code;
+      if (isDsl(code)) {
+        const next = writeStyleToDsl(code, { customChartTextColor: color });
+        visualBuilderActions.updateCode(next);
+      } else {
+        const config = JSON.parse(code);
+        const updatedConfig = { ...config, customChartTextColor: color };
+        visualBuilderActions.updateCode(JSON.stringify(updatedConfig, null, 2));
+      }
       setChartBodyTextColor(color);
       console.log('🎨 Chart body text color changed to:', color);
     } catch (error) {
@@ -585,12 +713,15 @@ export default function DashboardChatPanel() {
 
   const handleBackgroundChange = (backgroundKey: BackgroundPresetKey) => {
     try {
-      const config = JSON.parse(visualBuilderState.code);
-      const updatedConfig = {
-        ...config,
-        customBackground: backgroundKey
-      };
-      visualBuilderActions.updateCode(JSON.stringify(updatedConfig, null, 2));
+      const code = visualBuilderState.code;
+      if (isDsl(code)) {
+        const next = writeStyleToDsl(code, { customBackground: backgroundKey });
+        visualBuilderActions.updateCode(next);
+      } else {
+        const config = JSON.parse(code);
+        const updatedConfig = { ...config, customBackground: backgroundKey };
+        visualBuilderActions.updateCode(JSON.stringify(updatedConfig, null, 2));
+      }
       setSelectedBackground(backgroundKey);
       console.log('🎨 Background changed to:', backgroundKey);
     } catch (error) {
@@ -600,12 +731,15 @@ export default function DashboardChatPanel() {
 
   const handleBorderTypeChange = (type: BorderPresetKey) => {
     try {
-      const config = JSON.parse(visualBuilderState.code);
-      const updatedConfig = {
-        ...config,
-        borderType: type
-      };
-      visualBuilderActions.updateCode(JSON.stringify(updatedConfig, null, 2));
+      const code = visualBuilderState.code;
+      if (isDsl(code)) {
+        const next = writeStyleToDsl(code, { borderType: type });
+        visualBuilderActions.updateCode(next);
+      } else {
+        const config = JSON.parse(code);
+        const updatedConfig = { ...config, borderType: type };
+        visualBuilderActions.updateCode(JSON.stringify(updatedConfig, null, 2));
+      }
       setSelectedBorderType(type);
     } catch (error) {
       console.error('Error updating border type:', error);
@@ -614,12 +748,15 @@ export default function DashboardChatPanel() {
 
   const handleBorderPropChange = (prop: 'borderColor'|'borderWidth'|'borderRadius'|'borderAccentColor'|'borderShadow', value: string | number | boolean) => {
     try {
-      const config = JSON.parse(visualBuilderState.code);
-      const updatedConfig = {
-        ...config,
-        [prop]: value
-      };
-      visualBuilderActions.updateCode(JSON.stringify(updatedConfig, null, 2));
+      const code = visualBuilderState.code;
+      if (isDsl(code)) {
+        const next = writeStyleToDsl(code, { [prop]: value } as Record<string, unknown>);
+        visualBuilderActions.updateCode(next);
+      } else {
+        const config = JSON.parse(code);
+        const updatedConfig = { ...config, [prop]: value } as any;
+        visualBuilderActions.updateCode(JSON.stringify(updatedConfig, null, 2));
+      }
       if (prop === 'borderColor') setBorderColor(String(value))
       if (prop === 'borderWidth') setBorderWidth(Number(value))
       if (prop === 'borderRadius') setBorderRadius(Number(value))
@@ -1064,6 +1201,7 @@ export default function DashboardChatPanel() {
               onLayoutChange={visualBuilderActions.updateWidgets}
               headerTitle={dashboardMeta?.title || visualBuilderState.dashboardTitle || 'Live Dashboard'}
               headerSubtitle={(dashboardMeta?.description ?? undefined) || visualBuilderState.dashboardSubtitle || 'Real-time visualization with Supabase data'}
+              themeName={getThemeFromCode(visualBuilderState.code) as any}
             />
           </div>
         )}

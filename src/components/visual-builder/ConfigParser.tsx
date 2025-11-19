@@ -424,10 +424,22 @@ export class ConfigParser {
 
     const dashMatch = dsl.match(/<dashboard\b([^>]*)>/i);
     const dashAttrs = dashMatch ? parseAttrs(dashMatch[1]) : {};
-    const theme = dashAttrs['theme'] as ThemeName | undefined;
+    const themeAttr = dashAttrs['theme'] as ThemeName | undefined;
     const dashboardTitle = dashAttrs['title'];
     const dashboardSubtitle = dashAttrs['subtitle'];
     const layoutMode = (dashAttrs['layout-mode'] as 'grid' | 'grid-per-row' | 'grid-per-column' | undefined) || 'grid-per-row';
+
+    // Optional dashboard-level <style>{ ...json... }</style>
+    const styleMatch = dsl.match(/<style\b[^>]*>([\s\S]*?)<\/style>/i);
+    let styleObj: Record<string, unknown> | null = null;
+    if (styleMatch && styleMatch[1]) {
+      try {
+        const parsed = JSON.parse(styleMatch[1].trim());
+        if (parsed && typeof parsed === 'object') styleObj = parsed as Record<string, unknown>;
+      } catch {
+        // ignore malformed style JSON, fall back to attributes
+      }
+    }
 
     // grid-per-column mode: parse dashboard-level columns and widgets directly
     if (layoutMode === 'grid-per-column') {
@@ -652,17 +664,51 @@ export class ConfigParser {
       layout: { mode: layoutMode, rows: layoutRows }
     } as GridConfig;
 
-    // Theme application
-    const themedGrid = (theme && ThemeManager.isValidTheme(theme))
-      ? ThemeManager.applyThemeToGrid(baseGrid, theme)
-      : baseGrid;
-    const themedWidgets = (theme && ThemeManager.isValidTheme(theme))
-      ? this.applyThemeToWidgets(widgets, theme)
+    // Resolve theme and style options
+    const effectiveTheme = (styleObj?.['theme'] as string | undefined) || themeAttr;
+    const corporateColor = styleObj?.['corporateColor'] as string | undefined;
+    const customBackground = styleObj?.['customBackground'] as string | undefined;
+    const customLetterSpacing = typeof styleObj?.['customLetterSpacing'] === 'number' ? (styleObj!['customLetterSpacing'] as number) : undefined;
+    const customFont = styleObj?.['customFont'] as string | undefined;
+    const customFontSize = styleObj?.['customFontSize'] as string | undefined;
+    const borderType = typeof styleObj?.['borderType'] === 'string' ? (styleObj!['borderType'] as import('./BorderManager').BorderPresetKey) : undefined;
+    const borderColor = typeof styleObj?.['borderColor'] === 'string' ? (styleObj!['borderColor'] as string) : undefined;
+    const borderWidth = typeof styleObj?.['borderWidth'] === 'number' ? (styleObj!['borderWidth'] as number) : undefined;
+    const borderRadius = typeof styleObj?.['borderRadius'] === 'number' ? (styleObj!['borderRadius'] as number) : undefined;
+    const borderAccentColor = typeof styleObj?.['borderAccentColor'] === 'string' ? (styleObj!['borderAccentColor'] as string) : undefined;
+    const borderShadow = typeof styleObj?.['borderShadow'] === 'boolean' ? (styleObj!['borderShadow'] as boolean) : undefined;
+    const customChartFontFamily = typeof styleObj?.['customChartFontFamily'] === 'string' ? (styleObj!['customChartFontFamily'] as string) : undefined;
+    const customChartTextColor = typeof styleObj?.['customChartTextColor'] === 'string' ? (styleObj!['customChartTextColor'] as string) : undefined;
+    const styleBackgroundColor = typeof styleObj?.['backgroundColor'] === 'string' ? (styleObj!['backgroundColor'] as string) : undefined;
+
+    // Theme application with style options
+    const themedGrid = (effectiveTheme && ThemeManager.isValidTheme(effectiveTheme))
+      ? ThemeManager.applyThemeToGrid(baseGrid, effectiveTheme, corporateColor, customBackground, customLetterSpacing)
+      : { ...baseGrid, letterSpacing: customLetterSpacing };
+
+    // Override grid border/background from styleObj if provided
+    const themedGridWithOverrides: GridConfig = {
+      ...themedGrid,
+      ...(styleBackgroundColor ? { backgroundColor: styleBackgroundColor } : {}),
+      ...(borderColor ? { borderColor } : {}),
+      ...(typeof borderWidth === 'number' ? { borderWidth } : {}),
+      ...(typeof borderRadius === 'number' ? { borderRadius } : {}),
+    };
+
+    const themedWidgets = (effectiveTheme && ThemeManager.isValidTheme(effectiveTheme))
+      ? this.applyThemeToWidgets(widgets, effectiveTheme, customFont, corporateColor, customFontSize, {
+          type: borderType,
+          color: borderColor,
+          width: borderWidth,
+          radius: borderRadius,
+          accentColor: borderAccentColor,
+          shadow: borderShadow,
+        }, customChartFontFamily, customChartTextColor)
       : widgets;
 
     return {
       widgets: themedWidgets,
-      gridConfig: themedGrid,
+      gridConfig: themedGridWithOverrides,
       errors,
       isValid: errors.length === 0,
       dashboardTitle,
