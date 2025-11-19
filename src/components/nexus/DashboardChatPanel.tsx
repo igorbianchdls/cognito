@@ -71,6 +71,10 @@ export default function DashboardChatPanel() {
   const [dashboards, setDashboards] = useState<Dashboard[]>([]);
   const [dashboardsLoading, setDashboardsLoading] = useState(false);
   const [dashboardsError, setDashboardsError] = useState<string | null>(null);
+  // Update (PUT) states
+  const [updating, setUpdating] = useState(false);
+  const [updateError, setUpdateError] = useState<string | null>(null);
+  const [updateOk, setUpdateOk] = useState(false);
 
   // Helpers: detect DSL vs JSON
   const isDsl = (code: string) => code.trim().startsWith('<');
@@ -261,6 +265,29 @@ export default function DashboardChatPanel() {
       router.replace(`${pathname}?${sp.toString()}`, { scroll: false });
     } catch {}
     setDashListOpen(false);
+  };
+
+  const handleUpdate = async () => {
+    if (!dashboardId) {
+      // Se não há dashboard, abra o diálogo de salvar (CREATE)
+      setShowSave(true);
+      return;
+    }
+    setUpdating(true);
+    setUpdateOk(false);
+    setUpdateError(null);
+    try {
+      const { item } = await dashboardsApi.update(dashboardId, { sourcecode: visualBuilderState.code });
+      if (item?.id) {
+        setUpdateOk(true);
+        // feedback temporário
+        setTimeout(() => setUpdateOk(false), 2000);
+      }
+    } catch (e) {
+      setUpdateError((e as Error).message || 'Falha ao atualizar');
+    } finally {
+      setUpdating(false);
+    }
   };
 
   // Detect current theme from code
@@ -860,9 +887,27 @@ export default function DashboardChatPanel() {
         </div>
 
         <ArtifactActions>
-          <ArtifactAction onClick={() => setShowSave(true)} tooltip="Salvar dashboard">
+          {/* Criar (INSERT) */}
+          <ArtifactAction onClick={() => setShowSave(true)} tooltip="Salvar dashboard (criar)">
             <Save className="w-4 h-4" />
           </ArtifactAction>
+          {/* Atualizar (UPDATE) — visível apenas quando houver dashboardId */}
+          {dashboardId && (
+            <ArtifactAction
+              onClick={handleUpdate}
+              tooltip={updating ? 'Atualizando...' : 'Atualizar dashboard'}
+              disabled={updating}
+            >
+              <Check className="w-4 h-4" />
+            </ArtifactAction>
+          )}
+          {/* Feedback rápido de update */}
+          {updateOk && (
+            <span className="text-xs text-green-600 px-2">Atualizado</span>
+          )}
+          {updateError && (
+            <span className="text-xs text-red-600 px-2">{updateError}</span>
+          )}
           <Button
             variant="ghost"
             className="flex items-center gap-2 px-3 py-2"
