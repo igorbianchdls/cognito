@@ -281,10 +281,16 @@ export default function DashboardChatPanel() {
 
       // Header variant + styles from DSL
       const hv = st['headerVariant'];
+      const hLight = st['headerLight'] as Partial<HeaderStyle> | undefined;
+      const hDark = st['headerDark'] as Partial<HeaderStyle> | undefined;
+      const hasHeaderStyles = (hLight && typeof hLight === 'object') || (hDark && typeof hDark === 'object');
+      if (!hasHeaderStyles) {
+        // Reset to defaults to avoid leaking styles across dashboards
+        headerUiActions.resetAll();
+      }
       if (hv === 'auto' || hv === 'light' || hv === 'dark') {
         headerUiActions.setVariant(hv);
       }
-      const hLight = st['headerLight'] as Partial<HeaderStyle> | undefined;
       if (hLight && typeof hLight === 'object') {
         const partial: Partial<HeaderStyle> = {};
         if (typeof hLight['background'] === 'string') partial['background'] = hLight['background'];
@@ -293,7 +299,6 @@ export default function DashboardChatPanel() {
         if (typeof hLight['borderBottomColor'] === 'string') partial['borderBottomColor'] = hLight['borderBottomColor'];
         if (Object.keys(partial).length) headerUiActions.setStyle('light', partial);
       }
-      const hDark = st['headerDark'] as Partial<HeaderStyle> | undefined;
       if (hDark && typeof hDark === 'object') {
         const partial: Partial<HeaderStyle> = {};
         if (typeof hDark['background'] === 'string') partial['background'] = hDark['background'];
@@ -313,6 +318,10 @@ export default function DashboardChatPanel() {
       type HeaderConfig = { variant?: 'auto' | 'light' | 'dark'; light?: Partial<HeaderStyle>; dark?: Partial<HeaderStyle> };
       const cfg = JSON.parse(code) as { config?: { header?: HeaderConfig }, theme?: string };
       const header = (cfg.config?.header || {}) as HeaderConfig;
+      const hasHeaderStyles = (header.light && typeof header.light === 'object') || (header.dark && typeof header.dark === 'object');
+      if (!hasHeaderStyles) {
+        headerUiActions.resetAll();
+      }
       if (header?.variant === 'auto' || header?.variant === 'light' || header?.variant === 'dark') {
         headerUiActions.setVariant(header.variant);
       }

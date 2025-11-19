@@ -71,6 +71,18 @@ export const headerUiActions = {
     const current = $headerUi.get()
     const next: HeaderStyle = { ...current.styles[kind], ...partial }
     $headerUi.set({ ...current, styles: { ...current.styles, [kind]: next } })
+  },
+  resetStyles(kind?: 'light' | 'dark') {
+    const current = $headerUi.get()
+    if (kind) {
+      const next: HeaderStyle = { ...DEFAULT_STYLES[kind] }
+      $headerUi.set({ ...current, styles: { ...current.styles, [kind]: next } })
+    } else {
+      $headerUi.set({ ...current, styles: { light: { ...DEFAULT_STYLES.light }, dark: { ...DEFAULT_STYLES.dark } } })
+    }
+  },
+  resetAll() {
+    $headerUi.set({ variant: 'auto', styles: { light: { ...DEFAULT_STYLES.light }, dark: { ...DEFAULT_STYLES.dark } } })
   }
 }
 
