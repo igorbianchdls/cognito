@@ -887,6 +887,27 @@ export default function DashboardChatPanel() {
         </div>
 
         <ArtifactActions>
+          {/* Toggle Dashboard/Editor — primeiro da fila */}
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-2"
+            onClick={() => setActiveTab(activeTab === 'editor' ? 'dashboard' : 'editor')}
+            title={activeTab === 'editor' ? 'Ir para Dashboard' : 'Ir para Editor'}
+          >
+            {activeTab === 'editor' ? (
+              <>
+                <FileText className="w-4 h-4" />
+                <span>Editor</span>
+              </>
+            ) : (
+              <>
+                <BarChart3 className="w-4 h-4" />
+                <span>Dashboard</span>
+              </>
+            )}
+          </Button>
+
           {/* Criar (INSERT) */}
           <Button
             variant="outline"
@@ -919,28 +940,11 @@ export default function DashboardChatPanel() {
           {updateError && (
             <span className="text-xs text-red-600 px-2">{updateError}</span>
           )}
-          <Button
-            variant="ghost"
-            className="flex items-center gap-2 px-3 py-2"
-            onClick={() => setActiveTab(activeTab === 'editor' ? 'dashboard' : 'editor')}
-          >
-            {activeTab === 'editor' ? (
-              <>
-                <FileText className="w-4 h-4" />
-                <span>Editor</span>
-              </>
-            ) : (
-              <>
-                <BarChart3 className="w-4 h-4" />
-                <span>Dashboard</span>
-              </>
-            )}
-          </Button>
 
-          {/* Consolidated Tema Selector */}
+          {/* Selector de Tema com mesma UI dos botões */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="flex items-center gap-2 px-3 py-2">
+              <Button variant="outline" size="sm" className="flex items-center gap-2">
                 <Palette className="w-4 h-4" />
                 <span>Tema</span>
               </Button>
@@ -1230,22 +1234,25 @@ export default function DashboardChatPanel() {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* Outline Button */}
+          {/* Preview com mesmo padrão de UI */}
           <Button
             variant="outline"
-            className="px-2 py-1 text-xs font-medium"
+            size="sm"
+            className="flex items-center gap-2"
             onClick={() => {}}
           >
-            Preview
+            <span>Preview</span>
           </Button>
 
-          {/* Compartilhar Button */}
-          <button
-            className="px-2 py-2 bg-black text-white rounded-lg text-xs font-medium hover:bg-gray-800 transition-colors"
+          {/* Compartilhar com mesmo padrão de UI */}
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-2"
             onClick={() => {}}
           >
-            Compartilhar
-          </button>
+            <span>Compartilhar</span>
+          </Button>
         </ArtifactActions>
       </ArtifactHeader>
       <DashboardSaveDialog
