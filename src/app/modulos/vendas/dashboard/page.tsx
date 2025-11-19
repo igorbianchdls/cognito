@@ -13,7 +13,7 @@ import { Calendar } from '@/components/ui/calendar'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Calendar as CalendarIcon, Users, Package, MapPin, Globe, Tag, Building2, Briefcase, Store } from 'lucide-react'
 import type { DateRange } from 'react-day-picker'
-import { $financeiroDashboardUI, $financeiroDashboardFilters, financeiroDashboardActions } from '@/stores/modulos/financeiroDashboardStore'
+import { $financeiroDashboardUI, $financeiroDashboardFilters, financeiroDashboardActions, type FontSection } from '@/stores/modulos/financeiroDashboardStore'
 
 type PedidoRow = {
   valor_total_pedido?: number | string
@@ -48,6 +48,22 @@ export default function VendasDashboardPage() {
   const pageBgColor = ui.pageBgColor
   const cardShadow = ui.cardShadow
   const filtersIconColor = ui.filtersIconColor
+  // Forçar fonte Barlow neste dashboard
+  useEffect(() => {
+    const sections: FontSection[] = [
+      'values',
+      'kpiTitle',
+      'chartTitle',
+      'text',
+      'filters',
+      'headerTitle',
+      'headerSubtitle',
+      'sidebarSectionTitle',
+      'sidebarItemText',
+    ]
+    sections.forEach((s) => financeiroDashboardActions.setFont(s, { family: 'Barlow' }))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
   const [rows, setRows] = useState<PedidoRow[]>([])
   const [kpis, setKpis] = useState<{ meta: number; vendas: number; percentMeta: number; ticket: number; cogs: number; margemBruta: number }>({ meta: 0, vendas: 0, percentMeta: 0, ticket: 0, cogs: 0, margemBruta: 0 })
   // Charts (reais)
