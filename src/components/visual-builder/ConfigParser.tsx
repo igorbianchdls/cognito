@@ -577,16 +577,47 @@ export class ConfigParser {
         layout: { mode: 'grid-per-column', columns, ...(Object.keys(columnsTemplate).length ? { columnsTemplate } : {}), ...(Object.keys(columnsInner).length ? { columnsInner } : {}) }
       } as GridConfig;
 
-      const themedGrid = (theme && ThemeManager.isValidTheme(theme))
-        ? ThemeManager.applyThemeToGrid(baseGrid, theme)
-        : baseGrid;
-      const themedWidgets = (theme && ThemeManager.isValidTheme(theme))
-        ? this.applyThemeToWidgets(widgets, theme)
+      // Apply style/theme options (same precedence as rows mode)
+      const effectiveThemeGpc = (styleObj?.['theme'] as string | undefined) || themeAttr;
+      const corporateColorGpc = styleObj?.['corporateColor'] as string | undefined;
+      const customBackgroundGpc = styleObj?.['customBackground'] as string | undefined;
+      const customLetterSpacingGpc = typeof styleObj?.['customLetterSpacing'] === 'number' ? (styleObj!['customLetterSpacing'] as number) : undefined;
+      const customFontGpc = styleObj?.['customFont'] as string | undefined;
+      const customFontSizeGpc = styleObj?.['customFontSize'] as string | undefined;
+      const borderTypeGpc = typeof styleObj?.['borderType'] === 'string' ? (styleObj!['borderType'] as import('./BorderManager').BorderPresetKey) : undefined;
+      const borderColorGpc = typeof styleObj?.['borderColor'] === 'string' ? (styleObj!['borderColor'] as string) : undefined;
+      const borderWidthGpc = typeof styleObj?.['borderWidth'] === 'number' ? (styleObj!['borderWidth'] as number) : undefined;
+      const borderRadiusGpc = typeof styleObj?.['borderRadius'] === 'number' ? (styleObj!['borderRadius'] as number) : undefined;
+      const borderAccentColorGpc = typeof styleObj?.['borderAccentColor'] === 'string' ? (styleObj!['borderAccentColor'] as string) : undefined;
+      const borderShadowGpc = typeof styleObj?.['borderShadow'] === 'boolean' ? (styleObj!['borderShadow'] as boolean) : undefined;
+      const customChartFontFamilyGpc = typeof styleObj?.['customChartFontFamily'] === 'string' ? (styleObj!['customChartFontFamily'] as string) : undefined;
+      const customChartTextColorGpc = typeof styleObj?.['customChartTextColor'] === 'string' ? (styleObj!['customChartTextColor'] as string) : undefined;
+      const styleBackgroundColorGpc = typeof styleObj?.['backgroundColor'] === 'string' ? (styleObj!['backgroundColor'] as string) : undefined;
+
+      const themedGridGpc = (effectiveThemeGpc && ThemeManager.isValidTheme(effectiveThemeGpc))
+        ? ThemeManager.applyThemeToGrid(baseGrid, effectiveThemeGpc, corporateColorGpc, customBackgroundGpc, customLetterSpacingGpc)
+        : { ...baseGrid, letterSpacing: customLetterSpacingGpc };
+      const themedGridWithOverridesGpc: GridConfig = {
+        ...themedGridGpc,
+        ...(styleBackgroundColorGpc ? { backgroundColor: styleBackgroundColorGpc } : {}),
+        ...(borderColorGpc ? { borderColor: borderColorGpc } : {}),
+        ...(typeof borderWidthGpc === 'number' ? { borderWidth: borderWidthGpc } : {}),
+        ...(typeof borderRadiusGpc === 'number' ? { borderRadius: borderRadiusGpc } : {}),
+      };
+      const themedWidgetsGpc = (effectiveThemeGpc && ThemeManager.isValidTheme(effectiveThemeGpc))
+        ? this.applyThemeToWidgets(widgets, effectiveThemeGpc, customFontGpc, corporateColorGpc, customFontSizeGpc, {
+            type: borderTypeGpc,
+            color: borderColorGpc,
+            width: borderWidthGpc,
+            radius: borderRadiusGpc,
+            accentColor: borderAccentColorGpc,
+            shadow: borderShadowGpc,
+          }, customChartFontFamilyGpc, customChartTextColorGpc)
         : widgets;
 
       return {
-        widgets: themedWidgets,
-        gridConfig: themedGrid,
+        widgets: themedWidgetsGpc,
+        gridConfig: themedGridWithOverridesGpc,
         errors,
         isValid: errors.length === 0,
         dashboardTitle,
