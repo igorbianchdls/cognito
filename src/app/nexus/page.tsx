@@ -306,6 +306,17 @@ export default function Page() {
         }
       }
 
+      if (event.data.type === 'SET_CHAT_INPUT') {
+        try {
+          const text: unknown = event.data.text;
+          if (typeof text === 'string' && text.trim().length > 0) {
+            setInput(text);
+          }
+        } catch (e) {
+          console.error('Failed to set chat input from message:', e);
+        }
+      }
+
       // (removido: handler específico de paid-traffic para evitar acoplamento na página /nexus)
     };
 

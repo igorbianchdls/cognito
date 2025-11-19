@@ -138,6 +138,8 @@ import AnalisePerformanceCategoriaResult, { type AnalisePerformanceCategoriaRow 
 import DesempenhoCanalVendaResult, { type DesempenhoCanalVendaRow } from '../tools/ecommerce/DesempenhoCanalVendaResult';
 import LTVClienteResult, { type LTVClienteRow } from '../tools/ecommerce/LTVClienteResult';
 import TopClientesPorReceitaResult, { type TopClienteRow } from '../tools/ecommerce/TopClientesPorReceitaResult';
+import ListDashboardsCard from './tools/dashboards/ListDashboardsCard';
+import DashboardDetailsCard from './tools/dashboards/DashboardDetailsCard';
 import ValorVidaClienteResult, { type ValorVidaClienteRow } from '../tools/ecommerce/ValorVidaClienteResult';
 import ClientesNovosRecorrentesResult, { type ClientesNovosRecorrentesRow } from '../tools/ecommerce/ClientesNovosRecorrentesResult';
 import PerformanceLancamentoResult, { type PerformanceLancamentoRow } from '../tools/ecommerce/PerformanceLancamentoResult';
@@ -3234,6 +3236,47 @@ type UpdateDashboardToolOutput = {
   message: string;
 };
 
+// Criador de Dashboard (workflow) — tipos das tools do workflow
+type ListDashboardsToolInput = {
+  q?: string;
+  visibility?: 'private' | 'org' | 'public';
+  limit?: number;
+  offset?: number;
+};
+type ListDashboardsToolOutput = {
+  success: boolean;
+  items?: Array<{
+    id: string; title: string; description: string | null; visibility: string; version: number; created_at: string; updated_at: string;
+  }>;
+  count?: number;
+  error?: string;
+};
+
+type GetDashboardToolInput = { id: string };
+type GetDashboardToolOutput = {
+  success: boolean;
+  item?: {
+    id: string; title: string; description: string | null; sourcecode: string; visibility: string; version: number; created_at: string; updated_at: string;
+  } | null;
+  error?: string;
+};
+
+type UpdateDashboardWFInput = {
+  id: string;
+  title?: string;
+  description?: string | null;
+  sourcecode?: string;
+  visibility?: 'private' | 'org' | 'public';
+  version?: number;
+};
+type UpdateDashboardWFOutput = {
+  success: boolean;
+  item?: {
+    id: string; title: string; description: string | null; sourcecode: string; visibility: string; version: number; created_at: string; updated_at: string;
+  };
+  error?: string;
+};
+
 type NexusToolUIPart = ToolUIPart<{
   displayWeather: {
     input: WeatherToolInput;
@@ -3399,6 +3442,19 @@ type NexusToolUIPart = ToolUIPart<{
   getReceipts: {
     input: GetReceiptsToolInput;
     output: GetReceiptsToolOutput;
+  };
+  // Criador de Dashboard (workflow)
+  listDashboards: {
+    input: ListDashboardsToolInput;
+    output: ListDashboardsToolOutput;
+  };
+  getDashboard: {
+    input: GetDashboardToolInput;
+    output: GetDashboardToolOutput;
+  };
+  updateDashboard: {
+    input: UpdateDashboardWFInput;
+    output: UpdateDashboardWFOutput;
   };
   getNotasFiscais: {
     input: GetNotasFiscaisToolInput;
@@ -4664,6 +4720,92 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   data={(youtubeTool.output as GetYouTubeContentToolOutput).data}
                   message={(youtubeTool.output as GetYouTubeContentToolOutput).message}
                   error={(youtubeTool.output as GetYouTubeContentToolOutput).error}
+                />
+              )}
+            </div>
+          );
+        }
+
+        // Workflow: Criador de Dashboard — listDashboards
+        if (part.type === 'tool-listDashboards') {
+          const t = part as NexusToolUIPart;
+          const callId = t.toolCallId;
+          const shouldBeOpen = t.state === 'output-available' || t.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-listDashboards" state={t.state} />
+                <ToolContent>
+                  {t.input && (<ToolInput input={t.input} />)}
+                  {t.state === 'output-error' && (
+                    <ToolOutput output={null} errorText={t.errorText} />
+                  )}
+                </ToolContent>
+              </Tool>
+              {t.state === 'output-available' && (
+                <ListDashboardsCard
+                  success={(t.output as ListDashboardsToolOutput)?.success}
+                  items={(t.output as ListDashboardsToolOutput)?.items}
+                  count={(t.output as ListDashboardsToolOutput)?.count}
+                  input={t.input as ListDashboardsToolInput}
+                  error={(t.output as ListDashboardsToolOutput)?.error}
+                />
+              )}
+            </div>
+          );
+        }
+
+        // Workflow: Criador de Dashboard — getDashboard
+        if (part.type === 'tool-getDashboard') {
+          const t = part as NexusToolUIPart;
+          const callId = t.toolCallId;
+          const shouldBeOpen = t.state === 'output-available' || t.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-getDashboard" state={t.state} />
+                <ToolContent>
+                  {t.input && (<ToolInput input={t.input} />)}
+                  {t.state === 'output-error' && (
+                    <ToolOutput output={null} errorText={t.errorText} />
+                  )}
+                </ToolContent>
+              </Tool>
+              {t.state === 'output-available' && (
+                <DashboardDetailsCard
+                  success={(t.output as GetDashboardToolOutput)?.success}
+                  item={(t.output as GetDashboardToolOutput)?.item}
+                  error={(t.output as GetDashboardToolOutput)?.error}
+                />
+              )}
+            </div>
+          );
+        }
+
+        // Workflow: Criador de Dashboard — updateDashboard
+        if (part.type === 'tool-updateDashboard') {
+          const t = part as NexusToolUIPart;
+          const callId = t.toolCallId;
+          const shouldBeOpen = t.state === 'output-available' || t.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-updateDashboard" state={t.state} />
+                <ToolContent>
+                  {t.input && (<ToolInput input={t.input} />)}
+                  {t.state === 'output-error' && (
+                    <ToolOutput output={null} errorText={t.errorText} />
+                  )}
+                </ToolContent>
+              </Tool>
+              {t.state === 'output-available' && (
+                <DashboardDetailsCard
+                  success={(t.output as UpdateDashboardWFOutput)?.success}
+                  item={(t.output as UpdateDashboardWFOutput)?.item}
+                  error={(t.output as UpdateDashboardWFOutput)?.error}
                 />
               )}
             </div>
