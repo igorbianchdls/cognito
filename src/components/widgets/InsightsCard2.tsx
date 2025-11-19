@@ -32,22 +32,21 @@ export default function InsightsCard2({ title = 'Insights', items, compact = tru
 
   return (
     <div
-      className={cn('w-full border', className)}
+      className={cn('w-full', className)}
       style={{
-        backgroundColor: backgroundColor || '#fff',
-        borderColor: borderColor || '#eee',
+        backgroundColor: backgroundColor || 'transparent',
+        borderColor: borderColor || 'transparent',
         borderRadius: borderRadius ? `${borderRadius}px` : '8px',
       }}
     >
-      <div className={cn('text-sm font-semibold text-gray-800 px-3 pt-3')}>{title}</div>
+      <div className={cn('text-base font-semibold text-gray-900 px-3 pt-3')}>{title}</div>
       <div className="px-2 pb-2">
         <ul role="list" className="flex flex-col gap-2">
           {items.map((it) => (
             <li
               role="listitem"
               key={it.id}
-              className={cn('flex items-start gap-3 rounded-md bg-white', padY, padX)}
-              style={{ boxShadow: '0 1px 0 rgba(17, 24, 39, 0.04)' }}
+              className={cn('flex items-start gap-3 rounded-md bg-white border border-gray-200', padY, padX)}
             >
               <div className="shrink-0 rounded-md w-6 h-6 bg-yellow-100 flex items-center justify-center">
                 <IconForVariant variant={it.variant} />
@@ -72,4 +71,3 @@ export default function InsightsCard2({ title = 'Insights', items, compact = tru
     </div>
   );
 }
-

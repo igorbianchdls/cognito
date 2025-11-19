@@ -268,7 +268,7 @@ export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas"
     </widget>
   </row>
 
-  <row id="9" cols-d="1" cols-t="1" cols-m="1" gap-x="16" gap-y="16">
+  <row id="9" cols-d="2" cols-t="2" cols-m="1" gap-x="16" gap-y="16">
     <widget id="insights_card_2" type="insights2" order="1" span-d="1" span-t="1" span-m="1" height="140" title="Insights">
       <config>
         {"insights2Config":{
