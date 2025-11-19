@@ -11,7 +11,7 @@ import { Calendar } from '@/components/ui/calendar'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Calendar as CalendarIcon, TrendingUp, Users, CalendarDays, Target, UserCheck, XCircle, Clock, Filter, Activity, Star, Award, Flame, Radio } from 'lucide-react'
 import type { DateRange } from 'react-day-picker'
-import { $financeiroDashboardUI, $financeiroDashboardFilters, financeiroDashboardActions } from '@/stores/modulos/financeiroDashboardStore'
+import { $financeiroDashboardUI, $financeiroDashboardFilters, financeiroDashboardActions, type FontSection } from '@/stores/modulos/financeiroDashboardStore'
 
 type OportunidadeRow = {
   oportunidade?: string
@@ -67,6 +67,22 @@ export default function CRMDashboardPage() {
   const pageBgColor = ui.pageBgColor
   const cardShadow = ui.cardShadow
   const filtersIconColor = ui.filtersIconColor
+  // Forçar fonte Barlow neste dashboard
+  useEffect(() => {
+    const sections: FontSection[] = [
+      'values',
+      'kpiTitle',
+      'chartTitle',
+      'text',
+      'filters',
+      'headerTitle',
+      'headerSubtitle',
+      'sidebarSectionTitle',
+      'sidebarItemText',
+    ]
+    sections.forEach((s) => financeiroDashboardActions.setFont(s, { family: 'Barlow' }))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
   const [opps, setOpps] = useState<OportunidadeRow[]>([])
   // Removido: listas de leads/atividades para KPIs e charts (usamos endpoint agregado)
   const [loading, setLoading] = useState(false)
