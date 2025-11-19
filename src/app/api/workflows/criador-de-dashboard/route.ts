@@ -1,6 +1,6 @@
 import { anthropic } from '@ai-sdk/anthropic'
 import { convertToModelMessages, streamText, type UIMessage } from 'ai'
-import { listDashboards } from './tools/dashboard'
+import { listDashboards, getDashboard, updateDashboard } from './tools/dashboard'
 
 export const maxDuration = 300
 
@@ -35,6 +35,8 @@ export async function POST(req: Request) {
       messages: convertToModelMessages(messages),
       tools: {
         listDashboards,
+        getDashboard,
+        updateDashboard,
       },
     })
 
