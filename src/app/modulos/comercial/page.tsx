@@ -377,7 +377,7 @@ export default function ModulosComercialPage() {
                 <DataTable
                   key={tabs.selected}
                   columns={columns}
-                  data={data}
+                  data={tabs.selected === 'metas' ? data.filter(r => Boolean(r['parent_flag'])) : data}
                   enableExpand={tabs.selected === 'campanhas_vendas' || tabs.selected === 'metas'}
                   renderDetail={
                     tabs.selected === 'campanhas_vendas'
