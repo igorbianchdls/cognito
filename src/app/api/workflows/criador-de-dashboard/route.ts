@@ -1,6 +1,6 @@
 import { anthropic } from '@ai-sdk/anthropic'
 import { convertToModelMessages, streamText, type UIMessage } from 'ai'
-import { listDashboards, getDashboard, updateDashboard } from './tools/dashboard'
+import { listDashboards, getDashboard, updateDashboard } from './tools'
 
 export const maxDuration = 300
 
