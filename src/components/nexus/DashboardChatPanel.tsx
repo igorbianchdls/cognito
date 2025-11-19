@@ -33,6 +33,7 @@ import { FileText, BarChart3, Palette, Check, Type, Square, Monitor, Tablet, Sma
 import DashboardSaveDialog from '@/components/visual-builder/DashboardSaveDialog';
 import { BorderManager, type BorderPresetKey } from '@/components/visual-builder/BorderManager';
 import { $headerUi, headerUiActions } from '@/stores/ui/headerUiStore';
+import type { HeaderStyle } from '@/stores/ui/headerUiStore';
 import { dashboardsApi, type Dashboard } from '@/stores/dashboardsStore';
 
 export default function DashboardChatPanel() {
@@ -110,14 +111,15 @@ export default function DashboardChatPanel() {
   };
 
   const handleHeaderColorChange = (
-    key: 'background' | 'textPrimary' | 'textSecondary' | 'borderBottomColor',
+    key: keyof HeaderStyle,
     value: string
   ) => {
     try {
       const code = visualBuilderState.code;
       const kind = resolvedHeaderKind; // 'light' | 'dark'
       // Update store immediately for preview
-      headerUiActions.setStyle(kind, { [key]: value } as Record<string, string> as any);
+      const stylePatch: Partial<HeaderStyle> = { [key]: value } as Partial<HeaderStyle>;
+      headerUiActions.setStyle(kind, stylePatch);
       // Persist into sourcecode (DSL or JSON)
       if (isDsl(code)) {
         const style = readStyleFromDsl(code) || {};
@@ -282,23 +284,23 @@ export default function DashboardChatPanel() {
       if (hv === 'auto' || hv === 'light' || hv === 'dark') {
         headerUiActions.setVariant(hv);
       }
-      const hLight = st['headerLight'] as Record<string, string> | undefined;
+      const hLight = st['headerLight'] as Partial<HeaderStyle> | undefined;
       if (hLight && typeof hLight === 'object') {
-        const partial: Record<string, string> = {};
+        const partial: Partial<HeaderStyle> = {};
         if (typeof hLight['background'] === 'string') partial['background'] = hLight['background'];
         if (typeof hLight['textPrimary'] === 'string') partial['textPrimary'] = hLight['textPrimary'];
         if (typeof hLight['textSecondary'] === 'string') partial['textSecondary'] = hLight['textSecondary'];
         if (typeof hLight['borderBottomColor'] === 'string') partial['borderBottomColor'] = hLight['borderBottomColor'];
-        if (Object.keys(partial).length) headerUiActions.setStyle('light', partial as any);
+        if (Object.keys(partial).length) headerUiActions.setStyle('light', partial);
       }
-      const hDark = st['headerDark'] as Record<string, string> | undefined;
+      const hDark = st['headerDark'] as Partial<HeaderStyle> | undefined;
       if (hDark && typeof hDark === 'object') {
-        const partial: Record<string, string> = {};
+        const partial: Partial<HeaderStyle> = {};
         if (typeof hDark['background'] === 'string') partial['background'] = hDark['background'];
         if (typeof hDark['textPrimary'] === 'string') partial['textPrimary'] = hDark['textPrimary'];
         if (typeof hDark['textSecondary'] === 'string') partial['textSecondary'] = hDark['textSecondary'];
         if (typeof hDark['borderBottomColor'] === 'string') partial['borderBottomColor'] = hDark['borderBottomColor'];
-        if (Object.keys(partial).length) headerUiActions.setStyle('dark', partial as any);
+        if (Object.keys(partial).length) headerUiActions.setStyle('dark', partial);
       }
     }
   }, [visualBuilderState.code]);
@@ -308,28 +310,29 @@ export default function DashboardChatPanel() {
     const code = visualBuilderState.code;
     if (!code || isDsl(code)) return;
     try {
-      const cfg = JSON.parse(code) as { config?: { header?: any }, theme?: string };
-      const header = cfg.config?.header || {};
+      type HeaderConfig = { variant?: 'auto' | 'light' | 'dark'; light?: Partial<HeaderStyle>; dark?: Partial<HeaderStyle> };
+      const cfg = JSON.parse(code) as { config?: { header?: HeaderConfig }, theme?: string };
+      const header = (cfg.config?.header || {}) as HeaderConfig;
       if (header?.variant === 'auto' || header?.variant === 'light' || header?.variant === 'dark') {
         headerUiActions.setVariant(header.variant);
       }
       if (header?.light && typeof header.light === 'object') {
-        const l = header.light;
-        const p: Record<string, string> = {};
+        const l = header.light as Partial<HeaderStyle>;
+        const p: Partial<HeaderStyle> = {};
         if (typeof l.background === 'string') p['background'] = l.background;
         if (typeof l.textPrimary === 'string') p['textPrimary'] = l.textPrimary;
         if (typeof l.textSecondary === 'string') p['textSecondary'] = l.textSecondary;
         if (typeof l.borderBottomColor === 'string') p['borderBottomColor'] = l.borderBottomColor;
-        if (Object.keys(p).length) headerUiActions.setStyle('light', p as any);
+        if (Object.keys(p).length) headerUiActions.setStyle('light', p);
       }
       if (header?.dark && typeof header.dark === 'object') {
-        const d = header.dark;
-        const p: Record<string, string> = {};
+        const d = header.dark as Partial<HeaderStyle>;
+        const p: Partial<HeaderStyle> = {};
         if (typeof d.background === 'string') p['background'] = d.background;
         if (typeof d.textPrimary === 'string') p['textPrimary'] = d.textPrimary;
         if (typeof d.textSecondary === 'string') p['textSecondary'] = d.textSecondary;
         if (typeof d.borderBottomColor === 'string') p['borderBottomColor'] = d.borderBottomColor;
-        if (Object.keys(p).length) headerUiActions.setStyle('dark', p as any);
+        if (Object.keys(p).length) headerUiActions.setStyle('dark', p);
       }
     } catch {}
   }, [visualBuilderState.code]);
