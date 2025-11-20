@@ -322,6 +322,42 @@ export async function GET(req: NextRequest) {
       faturamento: Number(fatVendMap.get(label) || 0),
     })).sort((a,b)=> (b.faturamento + b.meta) - (a.faturamento + a.meta)).slice(0, limit)
 
+    // Meta x Faturamento por Vendedor (via vw_metas_detalhe)
+    const metaVendVwSql = `
+      SELECT
+          m.meta_id,
+          m.vendedor_id,
+          m.vendedor,
+          m.mes,
+          m.ano,
+          m.valor_meta,
+          COALESCE(SUM(m.subtotal), 0) AS realizado
+      FROM comercial.vw_metas_detalhe m
+      WHERE m.tipo_meta = 'faturamento'
+      GROUP BY
+          m.meta_id,
+          m.vendedor_id,
+          m.vendedor,
+          m.mes,
+          m.ano,
+          m.valor_meta
+      ORDER BY m.vendedor`;
+    type MetaVendVwRow = { meta_id: number; vendedor_id: number; vendedor: string; mes: number; ano: number; valor_meta: number; realizado: number }
+    let metaVendVwRows: MetaVendVwRow[] = []
+    try { metaVendVwRows = await runQuery<MetaVendVwRow>(metaVendVwSql) } catch (e) { console.error('🛒 VENDAS dashboard meta_vendedor_vw error:', e); metaVendVwRows = [] }
+
+    const metaVendVWMap = new Map<string, { label: string; meta: number; faturamento: number }>()
+    for (const r of metaVendVwRows) {
+      const label = r.vendedor || '—'
+      const cur = metaVendVWMap.get(label) || { label, meta: 0, faturamento: 0 }
+      cur.meta += Number(r.valor_meta || 0)
+      cur.faturamento += Number(r.realizado || 0)
+      metaVendVWMap.set(label, cur)
+    }
+    const metaVendedorVW = Array.from(metaVendVWMap.values())
+      .sort((a,b)=> (b.faturamento + b.meta) - (a.faturamento + a.meta))
+      .slice(0, limit)
+
     // Vendas por Cupom
     const cupomSql = `SELECT COALESCE(cup.codigo, '—') AS label, COALESCE(SUM(pi.subtotal),0)::float AS value
                       FROM vendas.pedidos p
@@ -434,6 +470,7 @@ export async function GET(req: NextRequest) {
           devolucao_cliente: taxaDevolucaoCliente,
           meta_territorio: metaTerritorio,
           meta_vendedor: metaVendedor,
+          meta_vendedor_vw: metaVendedorVW,
           cupons,
         },
       },
