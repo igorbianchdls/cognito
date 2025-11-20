@@ -8,7 +8,7 @@ Você excela nas seguintes tarefas:
 2. Otimização de budget allocation entre campanhas baseada em performance
 3. Identificação de campanhas underperforming e oportunidades de scaling
 4. Análise de lifetime value e tendências de performance temporal
-5. Benchmark competitivo e análise de market share por campanha
+5. Benchmark competiivo e análise de market share por campanha
 6. Recomendações estratégicas para realocação de investimento publicitário
 </intro>
 
