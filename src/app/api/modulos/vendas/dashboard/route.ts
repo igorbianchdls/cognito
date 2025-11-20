@@ -358,6 +358,21 @@ export async function GET(req: NextRequest) {
       .sort((a,b)=> (b.faturamento + b.meta) - (a.faturamento + a.meta))
       .slice(0, limit)
 
+    // Meta x Ticket Médio por Vendedor (via vw_metas_detalhe)
+    const metaTicketVendSql = `
+      SELECT
+        m.vendedor AS label,
+        AVG(m.valor_meta)::float AS meta,
+        CASE WHEN COUNT(DISTINCT m.pedido_id) > 0
+             THEN ROUND(SUM(m.subtotal)::numeric / NULLIF(COUNT(DISTINCT m.pedido_id), 0), 2)
+             ELSE 0 END AS realizado
+      FROM comercial.vw_metas_detalhe m
+      WHERE m.tipo_meta = 'ticket_medio'
+      GROUP BY m.vendedor
+      ORDER BY m.vendedor`;
+    let metaTicketMedioVendedor: { label: string; meta: number; realizado: number }[] = []
+    try { metaTicketMedioVendedor = await runQuery<{ label: string; meta: number; realizado: number }>(metaTicketVendSql) } catch (e) { console.error('🛒 VENDAS dashboard meta_ticket_medio_vw error:', e); metaTicketMedioVendedor = [] }
+
     // Vendas por Cupom
     const cupomSql = `SELECT COALESCE(cup.codigo, '—') AS label, COALESCE(SUM(pi.subtotal),0)::float AS value
                       FROM vendas.pedidos p
@@ -471,6 +486,7 @@ export async function GET(req: NextRequest) {
           meta_territorio: metaTerritorio,
           meta_vendedor: metaVendedor,
           meta_vendedor_vw: metaVendedorVW,
+          meta_ticket_medio_vw: metaTicketMedioVendedor,
           cupons,
         },
       },
