@@ -164,13 +164,13 @@ export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas"
   </row>
 
   <row id="4" cols-d="2" cols-t="2" cols-m="1" gap-x="16" gap-y="16">
-    <widget id="vendas_centro_lucro" type="bar" order="1" span-d="1" span-t="1" span-m="1" height="360" title="💼 Vendas por Centro de Lucro">
+    <widget id="vendas_centro_lucro" type="bar" order="1" span-d="1" span-t="1" span-m="1" height="420" title="💼 Vendas por Centro de Lucro">
       <config>
         {"dataSource":{"schema":"vendas","table":"vw_pedidos_completo","x":"centro_lucro_nome","y":"item_subtotal","aggregation":"SUM"},
          "barConfig":{"styling":{"showLegend":false,"showGrid":true,"marginBottom":40,"barColor":"#8b5cf6"}}}
       </config>
     </widget>
-    <widget id="vendas_campanha" type="bar" order="2" span-d="1" span-t="1" span-m="1" height="360" title="🎯 Vendas por Campanha">
+    <widget id="vendas_campanha" type="bar" order="2" span-d="1" span-t="1" span-m="1" height="420" title="🎯 Vendas por Campanha">
       <config>
         {"dataSource":{"schema":"vendas","table":"vw_pedidos_completo","x":"campanha_venda_nome","y":"item_subtotal","aggregation":"SUM"},
          "barConfig":{"styling":{"showLegend":false,"showGrid":true,"marginBottom":40,"barColor":"#ec4899"}}}
@@ -179,19 +179,19 @@ export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas"
   </row>
 
   <row id="2" cols-d="3" cols-t="1" cols-m="1" gap-x="16" gap-y="16">
-    <widget id="faturamento_mensal" type="line" order="1" span-d="1" span-t="1" span-m="1" height="360" title="📈 Faturamento Mensal">
+    <widget id="faturamento_mensal" type="line" order="1" span-d="1" span-t="1" span-m="1" height="420" title="📈 Faturamento Mensal">
       <config>
         {"dataSource":{"schema":"vendas","table":"vw_pedidos_completo","x":"data_pedido","y":"item_subtotal","aggregation":"SUM"},
          "lineConfig":{"styling":{"showLegend":false,"showGrid":true,"marginBottom":40}}}
       </config>
     </widget>
-    <widget id="top_produtos" type="bar" order="2" span-d="1" span-t="1" span-m="1" height="360" title="🏆 Top 10 Produtos">
+    <widget id="top_produtos" type="bar" order="2" span-d="1" span-t="1" span-m="1" height="420" title="🏆 Top 10 Produtos">
       <config>
         {"dataSource":{"schema":"vendas","table":"vw_pedidos_completo","x":"produto_nome","y":"item_subtotal","aggregation":"SUM"},
          "barConfig":{"styling":{"showLegend":false,"showGrid":true,"marginBottom":40,"barColor":"#3b82f6"}}}
       </config>
     </widget>
-    <widget id="vendas_canal" type="pie" order="3" span-d="1" span-t="1" span-m="1" height="360" title="📱 Vendas por Canal">
+    <widget id="vendas_canal" type="pie" order="3" span-d="1" span-t="1" span-m="1" height="420" title="📱 Vendas por Canal">
       <config>
         {"dataSource":{"schema":"vendas","table":"vw_pedidos_completo","x":"canal_venda_nome","y":"item_subtotal","aggregation":"SUM"},
          "pieConfig":{"styling":{"showLegend":true,"showGrid":false,"marginBottom":40}}}
@@ -200,13 +200,13 @@ export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas"
   </row>
 
   <row id="3" cols-d="2" cols-t="2" cols-m="1" gap-x="16" gap-y="16">
-    <widget id="vendas_vendedor" type="bar" order="1" span-d="1" span-t="1" span-m="1" height="360" title="👤 Vendas por Vendedor">
+    <widget id="vendas_vendedor" type="bar" order="1" span-d="1" span-t="1" span-m="1" height="420" title="👤 Vendas por Vendedor">
       <config>
         {"dataSource":{"schema":"vendas","table":"vw_pedidos_completo","x":"vendedor_nome","y":"item_subtotal","aggregation":"SUM"},
          "barConfig":{}}
       </config>
     </widget>
-    <widget id="vendas_filial" type="bar" order="2" span-d="1" span-t="1" span-m="1" height="360" title="🏢 Vendas por Filial">
+    <widget id="vendas_filial" type="bar" order="2" span-d="1" span-t="1" span-m="1" height="420" title="🏢 Vendas por Filial">
       <config>
         {"dataSource":{"schema":"vendas","table":"vw_pedidos_completo","x":"filial_nome","y":"item_subtotal","aggregation":"SUM"},
          "barConfig":{}}
@@ -215,13 +215,13 @@ export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas"
   </row>
 
   <row id="5" cols-d="2" cols-t="2" cols-m="1" gap-x="16" gap-y="16">
-    <widget id="vendedores_por_territorio" type="stackedbar" order="1" span-d="1" span-t="1" span-m="1" height="360" title="🏆 Top 5 Vendedores por Território">
+    <widget id="vendedores_por_territorio" type="stackedbar" order="1" span-d="1" span-t="1" span-m="1" height="420" title="🏆 Top 5 Vendedores por Território">
       <config>
         {"dataSource":{"schema":"vendas","table":"vw_pedidos_completo","dimension1":"territorio_nome","dimension2":"vendedor_nome","field":"item_subtotal","aggregation":"SUM","limit":5},
          "stackedBarConfig":{"styling":{"layout":"vertical","enableGridX":false,"enableGridY":true,"marginBottom":40}}}
       </config>
     </widget>
-    <widget id="vendedores_por_territorio_horizontal" type="stackedbar" order="2" span-d="1" span-t="1" span-m="1" height="360" title="🏆 Top 5 Vendedores por Território (Horizontal)">
+    <widget id="vendedores_por_territorio_horizontal" type="stackedbar" order="2" span-d="1" span-t="1" span-m="1" height="420" title="🏆 Top 5 Vendedores por Território (Horizontal)">
       <config>
         {"dataSource":{"schema":"vendas","table":"vw_pedidos_completo","dimension1":"territorio_nome","dimension2":"vendedor_nome","field":"item_subtotal","aggregation":"SUM","limit":5},
          "stackedBarConfig":{"styling":{"layout":"horizontal","enableGridX":true,"enableGridY":false,"marginBottom":50}}}
@@ -230,13 +230,13 @@ export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas"
   </row>
 
   <row id="6" cols-d="2" cols-t="2" cols-m="1" gap-x="16" gap-y="16">
-    <widget id="comparativo_territorio_vendedor_grouped" type="groupedbar" order="1" span-d="1" span-t="1" span-m="1" height="360" title="📊 Comparativo Vendedores por Território (Grouped)">
+    <widget id="comparativo_territorio_vendedor_grouped" type="groupedbar" order="1" span-d="1" span-t="1" span-m="1" height="420" title="📊 Comparativo Vendedores por Território (Grouped)">
       <config>
         {"dataSource":{"schema":"vendas","table":"vw_pedidos_completo","dimension1":"territorio_nome","dimension2":"vendedor_nome","field":"item_subtotal","aggregation":"SUM","limit":5},
          "groupedBarConfig":{"styling":{"layout":"vertical","enableGridX":false,"enableGridY":true,"marginBottom":40}}}
       </config>
     </widget>
-    <widget id="comparativo_territorio_vendedor_grouped_horizontal" type="groupedbar" order="2" span-d="1" span-t="1" span-m="1" height="360" title="📊 Comparativo Vendedores por Território (Grouped • Horizontal)">
+    <widget id="comparativo_territorio_vendedor_grouped_horizontal" type="groupedbar" order="2" span-d="1" span-t="1" span-m="1" height="420" title="📊 Comparativo Vendedores por Território (Grouped • Horizontal)">
       <config>
         {"dataSource":{"schema":"vendas","table":"vw_pedidos_completo","dimension1":"territorio_nome","dimension2":"vendedor_nome","field":"item_subtotal","aggregation":"SUM","limit":5},
          "groupedBarConfig":{"styling":{"layout":"horizontal","enableGridX":true,"enableGridY":false,"marginBottom":50}}}
@@ -245,7 +245,7 @@ export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas"
   </row>
 
   <row id="7" cols-d="2" cols-t="2" cols-m="1" gap-x="16" gap-y="16">
-    <widget id="evolucao_empilhado_sem_area" type="stackedlines" order="1" span-d="2" span-t="2" span-m="1" height="360" title="📈 Evolução (Empilhado) por Vendedor • Sem Área">
+    <widget id="evolucao_empilhado_sem_area" type="stackedlines" order="1" span-d="2" span-t="2" span-m="1" height="420" title="📈 Evolução (Empilhado) por Vendedor • Sem Área">
       <config>
         {"dataSource":{"schema":"vendas","table":"vw_pedidos_completo","dimension1":"territorio_nome","dimension2":"vendedor_nome","field":"item_subtotal","aggregation":"SUM","limit":5},
          "stackedLinesConfig":{"styling":{"enableArea":false,"enableGridX":false,"enableGridY":true,"marginBottom":40}}}
@@ -254,13 +254,13 @@ export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas"
   </row>
 
   <row id="8" cols-d="2" cols-t="2" cols-m="1" gap-x="16" gap-y="16">
-    <widget id="radial_stacked_canais" type="radialstacked" order="1" span-d="1" span-t="1" span-m="1" height="320" title="🧭 Distribuição de Vendas por Canal (Radial Stacked)">
+    <widget id="radial_stacked_canais" type="radialstacked" order="1" span-d="1" span-t="1" span-m="1" height="420" title="🧭 Distribuição de Vendas por Canal (Radial Stacked)">
       <config>
         {"dataSource":{"schema":"vendas","table":"vw_pedidos_completo","dimension1":"territorio_nome","dimension2":"canal_venda_nome","field":"item_subtotal","aggregation":"SUM","limit":2},
          "radialStackedConfig":{"styling":{"startAngle":180,"endAngle":0,"innerRadius":80,"outerRadius":130,"cornerRadius":5}}}
       </config>
     </widget>
-    <widget id="pivot_vendedor_canal" type="pivotbar" order="2" span-d="1" span-t="1" span-m="1" height="360" title="Vendedor x Canal • Faturamento">
+    <widget id="pivot_vendedor_canal" type="pivotbar" order="2" span-d="1" span-t="1" span-m="1" height="420" title="Vendedor x Canal • Faturamento">
       <config>
         {"dataSource":{"schema":"vendas","table":"vw_pedidos_completo","dimension1":"vendedor_nome","dimension2":"canal_venda_nome","measure":"faturamento","aggregation":"SUM","limit":8},
          "pivotBarConfig":{"styling":{"layout":"vertical","groupMode":"grouped","enableGridX":false,"enableGridY":true,"containerBorderVariant":"smooth","containerBorderWidth":1}}}
@@ -301,7 +301,7 @@ export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas"
 
   <!-- Exemplo: Meta x Realizado (Novos Clientes) por Vendedor -->
   <row id="10" cols-d="3" cols-t="1" cols-m="1" gap-x="16" gap-y="16">
-    <widget id="meta_novos_clientes" type="comparebar" order="1" span-d="1" span-t="1" span-m="1" height="360" title="👥 Meta x Realizado • Novos Clientes por Vendedor">
+    <widget id="meta_novos_clientes" type="comparebar" order="1" span-d="1" span-t="1" span-m="1" height="420" title="👥 Meta x Realizado • Novos Clientes por Vendedor">
       <config>
         {"dataSource":{
             "schema":"comercial",
@@ -315,7 +315,7 @@ export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas"
       </config>
     </widget>
 
-    <widget id="meta_faturamento" type="comparebar" order="2" span-d="1" span-t="1" span-m="1" height="360" title="💰 Meta x Realizado • Faturamento por Vendedor">
+    <widget id="meta_faturamento" type="comparebar" order="2" span-d="1" span-t="1" span-m="1" height="420" title="💰 Meta x Realizado • Faturamento por Vendedor">
       <config>
         {"dataSource":{
             "schema":"comercial",
@@ -329,7 +329,7 @@ export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas"
       </config>
     </widget>
 
-    <widget id="meta_ticket_medio" type="comparebar" order="3" span-d="1" span-t="1" span-m="1" height="360" title="🎯 Meta x Realizado • Ticket Médio por Vendedor">
+    <widget id="meta_ticket_medio" type="comparebar" order="3" span-d="1" span-t="1" span-m="1" height="420" title="🎯 Meta x Realizado • Ticket Médio por Vendedor">
       <config>
         {"dataSource":{
             "schema":"comercial",
@@ -355,7 +355,7 @@ export const initialDslColumns = `<dashboard theme="branco" title="Dashboard (Co
            "kpiConfig":{"unit":"R$","visualizationType":"card"}}
         </config>
       </widget>
-      <widget id="chart_faturamento_mensal" type="line" order="2" span-d="2" height="320" title="📈 Faturamento Mensal">
+      <widget id="chart_faturamento_mensal" type="line" order="2" span-d="2" height="420" title="📈 Faturamento Mensal">
         <config>
           {"dataSource":{"schema":"vendas","table":"vw_pedidos_completo","x":"data_pedido","y":"item_subtotal","aggregation":"SUM"},
            "lineConfig":{"styling":{"showLegend":false,"showGrid":true,"marginBottom":40}}}
@@ -369,7 +369,7 @@ export const initialDslColumns = `<dashboard theme="branco" title="Dashboard (Co
            "kpiConfig":{"visualizationType":"card"}}
         </config>
       </widget>
-      <widget id="chart_top_produtos" type="bar" order="3" span-d="1" height="320" title="🏆 Top 10 Produtos">
+      <widget id="chart_top_produtos" type="bar" order="3" span-d="1" height="420" title="🏆 Top 10 Produtos">
         <config>
           {"dataSource":{"schema":"vendas","table":"vw_pedidos_completo","x":"produto_nome","y":"item_subtotal","aggregation":"SUM"},
            "barConfig":{"styling":{"showLegend":false,"showGrid":true,"marginBottom":40,"barColor":"#3b82f6"}}}
@@ -383,7 +383,7 @@ export const initialDslColumns = `<dashboard theme="branco" title="Dashboard (Co
            "kpiConfig":{"unit":"R$","visualizationType":"card"}}
         </config>
       </widget>
-      <widget id="chart_vendas_canal" type="pie" order="2" span-d="1" height="320" title="📱 Vendas por Canal">
+      <widget id="chart_vendas_canal" type="pie" order="2" span-d="1" height="420" title="📱 Vendas por Canal">
         <config>
           {"dataSource":{"schema":"vendas","table":"vw_pedidos_completo","x":"canal_venda_nome","y":"item_subtotal","aggregation":"SUM"},
            "pieConfig":{"styling":{"showLegend":true,"showGrid":false,"marginBottom":40}}}
