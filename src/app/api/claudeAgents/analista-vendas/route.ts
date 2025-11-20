@@ -8,7 +8,7 @@ export const maxDuration = 300;
 export async function POST(req: Request) {
   const { messages }: { messages: UIMessage[] } = await req.json();
 
-  const system = `Você é um Analista de Vendas Senior especializado em análise de dados comerciais e estratégias de crescimento.
+  const SYSTEM_PROMPT = `Você é um Analista de Vendas Senior especializado em análise de dados comerciais e estratégias de crescimento.
 
 # Sua Missão
 Ajudar gestores e equipes de vendas a compreender performance, identificar oportunidades e tomar decisões baseadas em dados.
@@ -92,42 +92,37 @@ Retorna { success, rows, count, page, pageSize, message, sql_query, sql_params }
 
 Responda sempre em português de forma clara e profissional.`
 
-  // Função auxiliar para detectar overload
   const isOverloaded = (err: unknown) => {
-    const msg = (err instanceof Error ? err.message : String(err || '')) || ''
-    return /overloaded/i.test(msg) || /rate.?limit/i.test(msg)
+    const anyErr = err as { type?: string; message?: string } | undefined
+    const t = (anyErr?.type || '').toString().toLowerCase()
+    const m = (anyErr?.message || '').toString().toLowerCase()
+    return t.includes('overload') || m.includes('overload') || m.includes('rate limit') || m.includes('503') || m.includes('529') || m.includes('timeout')
   }
+  const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
-  try {
-    const result = streamText({
-      model: anthropic('claude-sonnet-4-20250514'),
-      providerOptions: {
-        anthropic: {
-          thinking: { type: 'enabled', budgetTokens: 3000 },
-        },
-      },
-      system,
-      messages: convertToModelMessages(messages),
-      tools: { analiseTerritorio, getMetas, getDesempenho },
-    })
-    return result.toUIMessageStreamResponse()
-  } catch (err) {
-    console.error('⚠️ analista-vendas primary model error:', err)
-    if (!isOverloaded(err)) {
-      return new Response(JSON.stringify({ success: false, message: 'Erro interno', error: err instanceof Error ? err.message : String(err) }), { status: 500 })
-    }
-    // Fallback: modelo mais leve e sem thinking
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    const useFallbackModel = attempt === 3
+    const modelName = useFallbackModel ? 'claude-3-5-sonnet-20241022' : 'claude-sonnet-4-20250514'
+    const thinkingBudget = attempt === 1 ? 8000 : attempt === 2 ? 3000 : undefined
     try {
-      const result2 = streamText({
-        model: anthropic('claude-3-5-sonnet-latest'),
-        system,
+      const result = streamText({
+        model: anthropic(modelName),
+        providerOptions: thinkingBudget ? { anthropic: { thinking: { type: 'enabled', budgetTokens: thinkingBudget } } } : {},
+        system: SYSTEM_PROMPT,
         messages: convertToModelMessages(messages),
         tools: { analiseTerritorio, getMetas, getDesempenho },
       })
-      return result2.toUIMessageStreamResponse()
-    } catch (err2) {
-      console.error('⚠️ analista-vendas fallback model error:', err2)
-      return new Response(JSON.stringify({ success: false, message: 'Serviço temporariamente sobrecarregado. Tente novamente em instantes.' }), { status: 503 })
+      return result.toUIMessageStreamResponse()
+    } catch (err) {
+      console.error(`⚠️ analista-vendas tentativa ${attempt} falhou:`, err)
+      if (isOverloaded(err) && attempt < 3) {
+        await sleep(1000 * attempt)
+        continue
+      }
+      if (!isOverloaded(err)) {
+        return new Response(JSON.stringify({ success: false, message: 'Erro interno', error: err instanceof Error ? err.message : String(err) }), { status: 500 })
+      }
     }
   }
+  return new Response(JSON.stringify({ success: false, message: 'Serviço sobrecarregado. Tente novamente em instantes.' }), { status: 503 })
 }
