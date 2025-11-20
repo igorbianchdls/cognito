@@ -65,6 +65,7 @@ export default function ModulosComercialPage() {
         { value: 'vendedores', label: 'Vendedores' },
         { value: 'meta_vendedores', label: 'Meta Vendedores' },
         { value: 'meta_territorios', label: 'Meta Territórios' },
+        { value: 'metas_territorios', label: 'Metas Territórios' },
         { value: 'metas', label: 'Metas' },
         { value: 'tipos_metas', label: 'Tipos de Metas' },
         { value: 'desempenho', label: 'Desempenho' },
@@ -248,11 +249,6 @@ export default function ModulosComercialPage() {
           { accessorKey: 'tipo_valor', header: 'Tipo Valor' },
           { accessorKey: 'valor_meta', header: 'Valor Meta' },
           { accessorKey: 'meta_percentual', header: '% Meta' },
-          { accessorKey: 'territorio_nome', header: 'Território' },
-          { accessorKey: 'canal_venda_nome', header: 'Canal de Venda' },
-          { accessorKey: 'filial_nome', header: 'Filial' },
-          { accessorKey: 'unidade_negocio_nome', header: 'Unid. Negócio' },
-          { accessorKey: 'sales_office_nome', header: 'Sales Office' },
           { accessorKey: 'criado_em', header: 'Criado Em', cell: ({ getValue }) => formatDate(getValue()) },
           { accessorKey: 'atualizado_em', header: 'Atualizado Em', cell: ({ getValue }) => formatDate(getValue()) },
         ]
@@ -465,8 +461,12 @@ export default function ModulosComercialPage() {
                 <DataTable
                   key={tabs.selected}
                   columns={columns}
-                  data={tabs.selected === 'metas' ? data.filter(r => Boolean(r['parent_flag'])) : tabs.selected === 'desempenho' ? data.filter(r => Boolean(r['parent_flag'])) : data}
-                  enableExpand={tabs.selected === 'campanhas_vendas' || tabs.selected === 'metas' || tabs.selected === 'desempenho'}
+                  data={
+                    tabs.selected === 'metas' || tabs.selected === 'desempenho' || tabs.selected === 'metas_territorios'
+                      ? data.filter(r => Boolean(r['parent_flag']))
+                      : data
+                  }
+                  enableExpand={tabs.selected === 'campanhas_vendas' || tabs.selected === 'metas' || tabs.selected === 'desempenho' || tabs.selected === 'metas_territorios'}
                   renderDetail={
                     tabs.selected === 'campanhas_vendas'
                       ? renderCampanhaProdutos
@@ -512,6 +512,44 @@ export default function ModulosComercialPage() {
                                 </div>
                               )
                             }
+                          : tabs.selected === 'metas_territorios'
+                            ? (row) => {
+                                const isParent = Boolean(row['parent_flag'])
+                                if (!isParent) return null
+                                const metaId = row['meta_id']
+                                const children = data.filter(r => r['meta_id'] === metaId && r['meta_item_id'])
+                                return (
+                                  <div className="p-3 bg-gray-50 rounded border border-gray-200">
+                                    <div className="text-sm font-medium text-gray-700 mb-2">Itens da Meta — {String(row['territorio_nome'] || '')}</div>
+                                    {children.length === 0 ? (
+                                      <div className="text-xs text-gray-500">Sem itens para esta meta.</div>
+                                    ) : (
+                                      <div className="overflow-x-auto">
+                                        <table className="w-full text-sm">
+                                          <thead>
+                                            <tr className="border-b">
+                                              <th className="text-left py-2 px-3">Tipo Meta</th>
+                                              <th className="text-right py-2 px-3">Valor Meta</th>
+                                              <th className="text-right py-2 px-3">% Meta</th>
+                                              <th className="text-left py-2 px-3">Tipo Valor</th>
+                                            </tr>
+                                          </thead>
+                                          <tbody>
+                                            {children.map((c, idx) => (
+                                              <tr key={idx} className="border-b last:border-0">
+                                                <td className="py-2 px-3">{String(c['tipo_meta_nome'] || '')}</td>
+                                                <td className="text-right py-2 px-3">{String(c['valor_meta'] ?? '')}</td>
+                                                <td className="text-right py-2 px-3">{String(c['meta_percentual'] ?? '')}</td>
+                                                <td className="py-2 px-3">{String(c['tipo_meta_valor'] || '')}</td>
+                                              </tr>
+                                            ))}
+                                          </tbody>
+                                        </table>
+                                      </div>
+                                    )}
+                                  </div>
+                                )
+                              }
                         : undefined
                   }
                   rowCanExpand={
@@ -519,6 +557,8 @@ export default function ModulosComercialPage() {
                       ? (r) => Boolean(r['parent_flag'])
                       : tabs.selected === 'desempenho'
                         ? (r) => Boolean(r['parent_flag'])
+                        : tabs.selected === 'metas_territorios'
+                          ? (r) => Boolean(r['parent_flag'])
                       : undefined
                   }
                   enableSearch={tabs.selected === 'metas' ? false : tabelaUI.enableSearch}
@@ -561,3 +601,11 @@ export default function ModulosComercialPage() {
     </SidebarProvider>
   )
 }
+      case 'metas_territorios':
+        return [
+          { accessorKey: 'territorio_nome', header: 'Território' },
+          { accessorKey: 'ano', header: 'Ano' },
+          { accessorKey: 'mes', header: 'Mês' },
+          { accessorKey: 'criado_em', header: 'Criado Em', cell: ({ getValue }) => formatDate(getValue()) },
+          { accessorKey: 'atualizado_em', header: 'Atualizado Em', cell: ({ getValue }) => formatDate(getValue()) },
+        ]

@@ -78,6 +78,14 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
     criado_em: 'm.criado_em',
     atualizado_em: 'm.atualizado_em',
   },
+  metas_territorios: {
+    meta_id: 'm.id',
+    mes: 'm.mes',
+    ano: 'm.ano',
+    territorio_nome: 't.nome',
+    criado_em: 'm.criado_em',
+    atualizado_em: 'm.atualizado_em',
+  },
   tipos_metas: {
     tipo_meta_id: 'tm.id',
     tipo_meta_nome: 'tm.nome',
@@ -351,6 +359,63 @@ export async function GET(req: NextRequest) {
         tm.atualizado_em`
       baseSql = `FROM comercial.tipos_metas tm`
       orderClause = orderBy ? `ORDER BY ${orderBy} ${orderDir}` : 'ORDER BY tm.id ASC'
+    } else if (view === 'metas_territorios') {
+      const anoParam = searchParams.get('ano')
+      const mesParam = searchParams.get('mes')
+      const ano = anoParam ? Number(anoParam) : undefined
+      const mes = mesParam ? Number(mesParam) : undefined
+
+      const filtros: string[] = ["m.territorio_id IS NOT NULL"]
+      if (ano && String(ano).length === 4) filtros.push(`m.ano = ${ano}`)
+      if (mes && mes >= 1 && mes <= 12) filtros.push(`m.mes = ${mes}`)
+      const where = `WHERE ${filtros.join(' AND ')}`
+
+      selectSql = `SELECT * FROM (
+        WITH parents AS (
+          SELECT
+            m.id AS meta_id,
+            m.mes,
+            m.ano,
+            t.nome AS territorio_nome,
+            m.criado_em,
+            m.atualizado_em,
+            TRUE AS parent_flag,
+            NULL::bigint AS meta_item_id,
+            NULL::bigint AS tipo_meta_id,
+            NULL::text AS tipo_meta_nome,
+            NULL::text AS tipo_meta_valor,
+            NULL::numeric AS valor_meta,
+            NULL::numeric AS meta_percentual
+          FROM comercial.metas m
+          LEFT JOIN comercial.territorios t ON t.id = m.territorio_id
+          ${where}
+        ), items AS (
+          SELECT
+            m.id AS meta_id,
+            m.mes,
+            m.ano,
+            t.nome AS territorio_nome,
+            m.criado_em,
+            m.atualizado_em,
+            FALSE AS parent_flag,
+            mi.id AS meta_item_id,
+            tm.id AS tipo_meta_id,
+            tm.nome AS tipo_meta_nome,
+            tm.tipo_valor AS tipo_meta_valor,
+            mi.valor_meta,
+            mi.meta_percentual
+          FROM comercial.metas m
+          LEFT JOIN comercial.metas_itens mi ON mi.meta_id = m.id
+          LEFT JOIN comercial.tipos_metas tm ON tm.id = mi.tipo_meta_id
+          LEFT JOIN comercial.territorios t ON t.id = m.territorio_id
+          ${where}
+        )
+        SELECT * FROM parents
+        UNION ALL
+        SELECT * FROM items
+      ) d`
+      baseSql = ''
+      orderClause = 'ORDER BY territorio_nome ASC, meta_id ASC, parent_flag DESC, meta_item_id ASC'
     } else {
       return Response.json({ success: false, message: `View inválida: ${view}` }, { status: 400 })
     }
@@ -415,9 +480,11 @@ export async function GET(req: NextRequest) {
       ? `SELECT COUNT(DISTINCT cv.id)::int AS total FROM comercial.campanhas_vendas cv`
       : view === 'desempenho'
         ? `SELECT COUNT(*)::int AS total FROM (${selectSql}) t`
-        : view === 'metas'
-          ? `SELECT COUNT(*)::int AS total FROM (${selectSql}) t WHERE t.parent_flag IS TRUE`
-        : baseSql ? `SELECT COUNT(*)::int AS total ${baseSql}` : `SELECT 0::int AS total`
+      : view === 'metas'
+        ? `SELECT COUNT(*)::int AS total FROM (${selectSql}) t WHERE t.parent_flag IS TRUE`
+      : view === 'metas_territorios'
+        ? `SELECT COUNT(*)::int AS total FROM (${selectSql}) t WHERE t.parent_flag IS TRUE`
+      : baseSql ? `SELECT COUNT(*)::int AS total ${baseSql}` : `SELECT 0::int AS total`
     const totalRows = await runQuery<{ total: number }>(totalSql)
     const total = totalRows[0]?.total ?? 0
 
