@@ -929,6 +929,50 @@ export default function DashboardChatPanel() {
     compact: boolean;
   };
 
+  // Row reordering (DSL-first)
+  const getRowsFromDsl = (dsl: string): Array<{ id: string; block: string; index: number; start: number; end: number }> => {
+    const rows: Array<{ id: string; block: string; index: number; start: number; end: number }> = [];
+    const rowRe = /<row\b([^>]*)>([\s\S]*?)<\/row>/gi;
+    let m: RegExpExecArray | null;
+    let idx = 0;
+    while ((m = rowRe.exec(dsl)) !== null) {
+      const attrs = m[1] || '';
+      const idMatch = attrs.match(/\bid=\"([^\"]+)\"/i);
+      const id = idMatch ? idMatch[1] : String(idx + 1);
+      rows.push({ id, block: m[0], index: idx++, start: m.index!, end: m.index! + m[0].length });
+    }
+    return rows;
+  };
+  const reorderRowsInDsl = (dsl: string, newOrder: string[]): string => {
+    const rows = getRowsFromDsl(dsl);
+    if (!rows.length) return dsl;
+    const first = rows[0];
+    const last = rows[rows.length - 1];
+    const header = dsl.slice(0, first.start);
+    const footer = dsl.slice(last.end);
+    const byId = new Map(rows.map(r => [r.id, r.block] as const));
+    const orderedBlocks = newOrder.map(id => byId.get(id)).filter(Boolean) as string[];
+    return header + orderedBlocks.join('\n') + footer;
+  };
+  const getRowOrder = (): string[] => {
+    const code = visualBuilderState.code;
+    if (!isDsl(code)) return [];
+    return getRowsFromDsl(code).map(r => r.id);
+  };
+  const moveRow = (rowId: string, direction: 'up' | 'down') => {
+    const code = visualBuilderState.code;
+    if (!isDsl(code)) return;
+    const order = getRowsFromDsl(code).map(r => r.id);
+    const i = order.indexOf(rowId);
+    if (i === -1) return;
+    const j = direction === 'up' ? i - 1 : i + 1;
+    if (j < 0 || j >= order.length) return;
+    const next = [...order];
+    const tmp = next[i]; next[i] = next[j]; next[j] = tmp;
+    const dsl = reorderRowsInDsl(code, next);
+    visualBuilderActions.updateCode(dsl);
+  };
+
   const setInsightsStyleOnWidget = (widget: Widget): Widget => {
     const w: Widget = { ...widget };
     if (w.type !== 'insights2') return w as Widget;
@@ -1593,6 +1637,29 @@ export default function DashboardChatPanel() {
                       <input type="checkbox" checked={insightsCompact} onChange={(e) => onInsightsStyleChange({ compact: e.target.checked })} />
                     </div>
                   </div>
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+
+              {/* Rows ordering submenu */}
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                  <Layout className="w-4 h-4 mr-2" />
+                  Reordenar Linhas
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent className="w-72">
+                  <div className="px-3 py-2 text-xs text-muted-foreground">Mover linhas verticalmente (DSL)</div>
+                  {getRowOrder().map((rid) => (
+                    <div key={rid} className="px-3 py-1.5 flex items-center justify-between gap-2">
+                      <span className="text-sm">Row {rid}</span>
+                      <div className="flex items-center gap-1">
+                        <Button size="sm" variant="outline" className="h-7 px-2" onClick={() => moveRow(rid, 'up')}>↑</Button>
+                        <Button size="sm" variant="outline" className="h-7 px-2" onClick={() => moveRow(rid, 'down')}>↓</Button>
+                      </div>
+                    </div>
+                  ))}
+                  {getRowOrder().length === 0 && (
+                    <div className="px-3 py-2 text-xs text-muted-foreground">Sem rows (ou código JSON)</div>
+                  )}
                 </DropdownMenuSubContent>
               </DropdownMenuSub>
 
