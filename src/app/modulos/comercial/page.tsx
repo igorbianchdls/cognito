@@ -128,11 +128,8 @@ export default function ModulosComercialPage() {
 
   // Detalhe colapsável para a aba "Metas"
   const renderMetaDetail = (row: Row) => {
-    const isParent = Boolean(row['parent_flag'])
-    if (!isParent) return null
-
     const metaId = row['meta_id']
-    const children = data.filter(r => r['meta_id'] === metaId && r['meta_item_id'])
+    const children = data.filter(r => r['meta_id'] === metaId && r !== row)
 
     const labelForDim = (dim?: unknown) => {
       const m: Record<string, string> = {
