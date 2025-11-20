@@ -19,6 +19,9 @@ interface InsightsCard2Props {
   titleFontWeight?: string | number;
   titleColor?: string;
   titleMarginBottom?: number;
+  // Body typography
+  bodyFontFamily?: string;
+  bodyTextColor?: string;
 }
 
 function IconForVariant({ variant }: { variant?: Insight2Item['variant'] }) {
@@ -33,7 +36,7 @@ function IconForVariant({ variant }: { variant?: Insight2Item['variant'] }) {
   }
 }
 
-export default function InsightsCard2({ title = 'Insights', items, compact = true, backgroundColor, backgroundOpacity, borderColor, borderRadius, className, titleFontFamily, titleFontSize, titleFontWeight, titleColor, titleMarginBottom }: InsightsCard2Props) {
+export default function InsightsCard2({ title = 'Insights', items, compact = true, backgroundColor, backgroundOpacity, borderColor, borderRadius, className, titleFontFamily, titleFontSize, titleFontWeight, titleColor, titleMarginBottom, bodyFontFamily, bodyTextColor }: InsightsCard2Props) {
   const padY = compact ? 'py-2' : 'py-3';
   const padX = 'px-3';
 
@@ -75,7 +78,7 @@ export default function InsightsCard2({ title = 'Insights', items, compact = tru
       >
         {title}
       </div>
-      <div className="px-2 pb-2">
+      <div className="px-2 pb-2" style={{ fontFamily: bodyFontFamily, color: bodyTextColor }}>
         <ul role="list" className="flex flex-col gap-2">
           {items.map((it) => (
             <li

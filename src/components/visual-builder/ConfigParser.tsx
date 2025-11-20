@@ -193,6 +193,9 @@ export interface Insights2Config {
     titleFontWeight?: string | number;
     titleColor?: string;
     titleMarginBottom?: number;
+    // Body typography for card items
+    bodyFontFamily?: string;
+    bodyTextColor?: string;
   };
 }
 

@@ -1548,6 +1548,9 @@ export class ThemeManager {
         if (st.titleFontWeight === undefined) st.titleFontWeight = tokens.typography.fontWeight.semibold;
         if (st.titleFontFamily === undefined) st.titleFontFamily = tokens.typography.fontFamily.primary;
         if (st.titleMarginBottom === undefined) st.titleMarginBottom = 8;
+        // Body typography: use chart body font if provided, else theme primary
+        if (st.bodyFontFamily === undefined) st.bodyFontFamily = chartBodyFontFamily || tokens.typography.fontFamily.primary;
+        if (st.bodyTextColor === undefined) st.bodyTextColor = tokens.colors.text.primary;
         return cloned;
       }
       case 'alerts': {

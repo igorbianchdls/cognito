@@ -686,6 +686,8 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
             backgroundOpacity={styling.backgroundOpacity}
             borderColor={styling.borderColor}
             borderRadius={styling.borderRadius}
+            bodyFontFamily={styling.bodyFontFamily}
+            bodyTextColor={styling.bodyTextColor}
             titleFontFamily={styling.titleFontFamily}
             titleFontSize={styling.titleFontSize}
             titleFontWeight={styling.titleFontWeight}
