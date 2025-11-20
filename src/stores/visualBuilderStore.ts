@@ -307,7 +307,7 @@ export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas"
             "schema":"comercial",
             "table":"vw_metas_detalhe",
             "dimension":"vendedor",
-            "topic":"novos_clientes",
+            "meta":"novos_clientes",
             "limit":20
           },
          "compareBarConfig":{"styling":{"groupMode":"grouped","layout":"horizontal","showLegend":true,"marginBottom":40}}
@@ -321,7 +321,7 @@ export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas"
             "schema":"comercial",
             "table":"vw_metas_detalhe",
             "dimension":"vendedor",
-            "topic":"faturamento",
+            "meta":"faturamento",
             "limit":20
           },
          "compareBarConfig":{"styling":{"groupMode":"grouped","layout":"horizontal","showLegend":true,"marginBottom":40}}
@@ -335,7 +335,7 @@ export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas"
             "schema":"comercial",
             "table":"vw_metas_detalhe",
             "dimension":"vendedor",
-            "topic":"ticket_medio",
+            "meta":"ticket_medio",
             "limit":20
           },
          "compareBarConfig":{"styling":{"groupMode":"grouped","layout":"horizontal","showLegend":true,"marginBottom":40}}

@@ -254,13 +254,15 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
         console.log('📊 Fetching grouped data for widget:', widget.id);
 
         const endpoint = widget.type === 'comparebar' ? '/api/dashboard-supabase/compare' : '/api/dashboard-supabase/grouped';
+        // For comparebar, map dataSource.meta -> topic (API expects `topic`)
+        const dsAny = (widget.dataSource || {}) as Record<string, unknown>;
+        const payload = widget.type === 'comparebar'
+          ? { ...dsAny, topic: (dsAny['topic'] as unknown) ?? (dsAny['meta'] as unknown), filters: globalFilters }
+          : { ...dsAny, filters: globalFilters };
         const response = await fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            ...widget.dataSource,
-            filters: globalFilters
-          })
+          body: JSON.stringify(payload)
         });
 
         const result = await response.json();

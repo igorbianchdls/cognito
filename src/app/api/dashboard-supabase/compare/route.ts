@@ -34,6 +34,7 @@ interface CompareRequest {
   measure1Ratio?: MeasureRatioDef
   measure2Ratio?: MeasureRatioDef
   topic?: CompareTopic
+  meta?: CompareTopic // alias para topic
   // Optional date filters passthrough (not applied in v1)
   filters?: unknown
 }
@@ -64,8 +65,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Defaults tailored for "novos_clientes" use case
-    const topic: CompareTopic | undefined = body.topic && ['novos_clientes','faturamento','ticket_medio'].includes(String(body.topic))
-      ? (body.topic as CompareTopic)
+    const incomingTopic = (body.topic ?? body.meta) as string | undefined
+    const topic: CompareTopic | undefined = incomingTopic && ['novos_clientes','faturamento','ticket_medio'].includes(String(incomingTopic))
+      ? (incomingTopic as CompareTopic)
       : undefined
     const m1: MeasureDef = body.measure1 || { field: 'valor_meta', aggregation: 'SUM', label: 'Meta' }
     const m2: MeasureDef = body.measure2 || { field: 'cliente_id', aggregation: 'COUNT_DISTINCT', label: 'Realizado' }
