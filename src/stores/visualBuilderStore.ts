@@ -269,7 +269,7 @@ export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas"
   </row>
 
   <row id="9" cols-d="2" cols-t="2" cols-m="1" gap-x="16" gap-y="16">
-    <widget id="insights_card_2" type="insights2" order="1" span-d="1" span-t="1" span-m="1" height="300" title="Insights">
+    <widget id="insights_card_2" type="insights2" order="1" span-d="1" span-t="1" span-m="1" height="320" title="Insights">
       <config>
         {"insights2Config":{
           "title":"Insights",
@@ -284,7 +284,7 @@ export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas"
         }}
       </config>
     </widget>
-    <widget id="insights_card_3" type="insights2" order="2" span-d="1" span-t="1" span-m="1" height="300" title="Insights Extras">
+    <widget id="insights_card_3" type="insights2" order="2" span-d="1" span-t="1" span-m="1" height="320" title="Insights Extras">
       <config>
         {"insights2Config":{
           "title":"Insights Extras",

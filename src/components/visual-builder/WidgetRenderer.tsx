@@ -685,6 +685,11 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
             backgroundColor={styling.backgroundColor}
             borderColor={styling.borderColor}
             borderRadius={styling.borderRadius}
+            titleFontFamily={styling.titleFontFamily}
+            titleFontSize={styling.titleFontSize}
+            titleFontWeight={styling.titleFontWeight}
+            titleColor={styling.titleColor}
+            titleMarginBottom={styling.titleMarginBottom}
           />
         </div>
       );

@@ -12,6 +12,12 @@ interface InsightsCard2Props {
   borderColor?: string;
   borderRadius?: number;
   className?: string;
+  // Title typography
+  titleFontFamily?: string;
+  titleFontSize?: number;
+  titleFontWeight?: string | number;
+  titleColor?: string;
+  titleMarginBottom?: number;
 }
 
 function IconForVariant({ variant }: { variant?: Insight2Item['variant'] }) {
@@ -26,7 +32,7 @@ function IconForVariant({ variant }: { variant?: Insight2Item['variant'] }) {
   }
 }
 
-export default function InsightsCard2({ title = 'Insights', items, compact = true, backgroundColor, borderColor, borderRadius, className }: InsightsCard2Props) {
+export default function InsightsCard2({ title = 'Insights', items, compact = true, backgroundColor, borderColor, borderRadius, className, titleFontFamily, titleFontSize, titleFontWeight, titleColor, titleMarginBottom }: InsightsCard2Props) {
   const padY = compact ? 'py-2' : 'py-3';
   const padX = 'px-3';
 
@@ -39,7 +45,18 @@ export default function InsightsCard2({ title = 'Insights', items, compact = tru
         borderRadius: borderRadius ? `${borderRadius}px` : '8px',
       }}
     >
-      <div className={cn('text-lg font-semibold text-gray-900 px-3 pt-3 mb-2')}>{title}</div>
+      <div
+        className={cn('px-3 pt-3')}
+        style={{
+          fontFamily: titleFontFamily,
+          fontSize: titleFontSize ? `${titleFontSize}px` : undefined,
+          fontWeight: titleFontWeight as React.CSSProperties['fontWeight'],
+          color: titleColor || '#111827',
+          marginBottom: titleMarginBottom ?? 8,
+        }}
+      >
+        {title}
+      </div>
       <div className="px-2 pb-2">
         <ul role="list" className="flex flex-col gap-2">
           {items.map((it) => (

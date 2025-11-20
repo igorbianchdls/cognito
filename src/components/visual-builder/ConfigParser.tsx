@@ -186,6 +186,12 @@ export interface Insights2Config {
     borderColor?: string;
     borderRadius?: number;
     compact?: boolean;
+    // Title typography (to align with chart titles / FontManager)
+    titleFontFamily?: string;
+    titleFontSize?: number;
+    titleFontWeight?: string | number;
+    titleColor?: string;
+    titleMarginBottom?: number;
   };
 }
 

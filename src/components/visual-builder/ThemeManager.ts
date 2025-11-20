@@ -1533,6 +1533,23 @@ export class ThemeManager {
         themed = this.applyThemeToInsights(widget, tokens, themeName);
         return themed;
       }
+      case 'insights2': {
+        // Apply theme to Insights v2 (card list) using title typography from tokens
+        const cloned = { ...widget } as Widget;
+        if (!cloned.insights2Config) cloned.insights2Config = {} as any;
+        const st = (cloned.insights2Config.styling = cloned.insights2Config.styling || {} as any);
+        // Background and borders
+        if (st.backgroundColor === undefined) st.backgroundColor = tokens.colors.surface;
+        if (st.borderColor === undefined) st.borderColor = tokens.borders.color;
+        if (st.borderRadius === undefined) st.borderRadius = tokens.borders.radius.md;
+        // Title typography (align with chart titles)
+        if (st.titleColor === undefined) st.titleColor = tokens.colors.text.primary;
+        if (st.titleFontSize === undefined) st.titleFontSize = tokens.typography.fontSize.lg;
+        if (st.titleFontWeight === undefined) st.titleFontWeight = tokens.typography.fontWeight.semibold;
+        if (st.titleFontFamily === undefined) st.titleFontFamily = tokens.typography.fontFamily.primary;
+        if (st.titleMarginBottom === undefined) st.titleMarginBottom = 8;
+        return cloned;
+      }
       case 'alerts': {
         themed = this.applyThemeToAlerts(widget, tokens, themeName);
         return themed;
