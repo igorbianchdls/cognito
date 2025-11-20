@@ -67,6 +67,7 @@ export default function Page() {
       case 'gestorDeVendasB2BAgent': return '/api/claudeAgents/gestor-de-vendas-b2b';
       case 'contabilidadeAgent': return '/api/claudeAgents/contabilidade';
       case 'analistaVendas': return '/api/claudeAgents/analista-vendas';
+      case 'analistaDeVendas': return '/api/claudeAgents/analistaDeVendas';
       // Workflows
       case 'contas-a-pagar': return '/api/workflows/contas-a-pagar';
       case 'contas-a-receber': return '/api/workflows/contas-a-receber';
