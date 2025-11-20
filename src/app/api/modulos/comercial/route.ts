@@ -215,65 +215,30 @@ export async function GET(req: NextRequest) {
       const ano = anoParam ? Number(anoParam) : undefined
       const mes = mesParam ? Number(mesParam) : undefined
 
-      const filtrosMetas: string[] = ["m.vendedor_id IS NOT NULL"]
-      if (ano && String(ano).length === 4) filtrosMetas.push(`m.ano = ${ano}`)
-      if (mes && mes >= 1 && mes <= 12) filtrosMetas.push(`m.mes = ${mes}`)
-      const whereMetas = `WHERE ${filtrosMetas.join(' AND ')}`
+      const filtros: string[] = ["vendedor_id IS NOT NULL"]
+      if (ano && String(ano).length === 4) filtros.push(`ano = ${ano}`)
+      if (mes && mes >= 1 && mes <= 12) filtros.push(`mes = ${mes}`)
+      const where = `WHERE ${filtros.join(' AND ')}`
 
-      // Pais: cabeçalhos das metas (uma por meta_id)
-      // Filhos: itens da meta (metas_itens)
-      selectSql = `SELECT * FROM (
-        WITH parents AS (
-          SELECT
-            m.id AS meta_id,
-            m.tenant_id,
-            m.mes,
-            m.ano,
-            m.vendedor_id,
-            func.nome AS vendedor_nome,
-            NULL::bigint AS meta_item_id,
-            NULL::numeric AS valor_meta,
-            NULL::numeric AS meta_percentual,
-            NULL::bigint AS tipo_meta_id,
-            NULL::text AS tipo_meta_nome,
-            NULL::text AS tipo_meta_valor,
-            NULL::text AS calculo_realizado_sql,
-            m.criado_em,
-            m.atualizado_em,
-            TRUE AS parent_flag
-          FROM comercial.metas m
-          LEFT JOIN comercial.vendedores v ON v.id = m.vendedor_id
-          LEFT JOIN entidades.funcionarios func ON func.id = v.funcionario_id
-          ${whereMetas}
-        ), items AS (
-          SELECT
-            m.id AS meta_id,
-            m.tenant_id,
-            m.mes,
-            m.ano,
-            m.vendedor_id,
-            func.nome AS vendedor_nome,
-            mi.id AS meta_item_id,
-            mi.valor_meta,
-            mi.meta_percentual,
-            tm.id AS tipo_meta_id,
-            tm.nome AS tipo_meta_nome,
-            tm.tipo_valor AS tipo_meta_valor,
-            tm.medida_sql AS calculo_realizado_sql,
-            m.criado_em,
-            m.atualizado_em,
-            FALSE AS parent_flag
-          FROM comercial.metas m
-          LEFT JOIN comercial.metas_itens mi ON mi.meta_id = m.id
-          LEFT JOIN comercial.tipos_metas tm ON tm.id = mi.tipo_meta_id
-          LEFT JOIN comercial.vendedores v ON v.id = m.vendedor_id
-          LEFT JOIN entidades.funcionarios func ON func.id = v.funcionario_id
-          ${whereMetas}
-        )
-        SELECT * FROM parents
-        UNION ALL
-        SELECT * FROM items
-      ) d`
+      // Usando a view comercial.vw_metas para retornar pais (meta_item_id NULL) e filhos (meta_item_id NOT NULL)
+      selectSql = `SELECT
+        meta_id,
+        mes,
+        ano,
+        vendedor_id,
+        vendedor AS vendedor_nome,
+        meta_item_id,
+        tipo_meta_id,
+        tipo_meta AS tipo_meta_nome,
+        tipo_valor AS tipo_meta_valor,
+        valor_meta,
+        meta_percentual,
+        medida_sql AS calculo_realizado_sql,
+        criado_em,
+        atualizado_em,
+        (meta_item_id IS NULL) AS parent_flag
+      FROM comercial.vw_metas
+      ${where}`
       baseSql = ''
       orderClause = 'ORDER BY vendedor_nome ASC, meta_id ASC, parent_flag DESC, meta_item_id ASC'
     } else if (view === 'desempenho') {
