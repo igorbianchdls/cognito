@@ -683,6 +683,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
             items={items}
             compact={styling.compact ?? true}
             backgroundColor={styling.backgroundColor}
+            backgroundOpacity={styling.backgroundOpacity}
             borderColor={styling.borderColor}
             borderRadius={styling.borderRadius}
             titleFontFamily={styling.titleFontFamily}

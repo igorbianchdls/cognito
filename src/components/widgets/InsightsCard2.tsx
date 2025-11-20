@@ -9,6 +9,7 @@ interface InsightsCard2Props {
   items: Insight2Item[];
   compact?: boolean;
   backgroundColor?: string;
+  backgroundOpacity?: number; // only affects background, not text
   borderColor?: string;
   borderRadius?: number;
   className?: string;
@@ -32,15 +33,32 @@ function IconForVariant({ variant }: { variant?: Insight2Item['variant'] }) {
   }
 }
 
-export default function InsightsCard2({ title = 'Insights', items, compact = true, backgroundColor, borderColor, borderRadius, className, titleFontFamily, titleFontSize, titleFontWeight, titleColor, titleMarginBottom }: InsightsCard2Props) {
+export default function InsightsCard2({ title = 'Insights', items, compact = true, backgroundColor, backgroundOpacity, borderColor, borderRadius, className, titleFontFamily, titleFontSize, titleFontWeight, titleColor, titleMarginBottom }: InsightsCard2Props) {
   const padY = compact ? 'py-2' : 'py-3';
   const padX = 'px-3';
+
+  const computeBg = (color?: string, opacity?: number) => {
+    if (!color || color === 'transparent') return 'transparent';
+    const op = typeof opacity === 'number' ? Math.min(1, Math.max(0, opacity)) : 1;
+    // handle hex #rgb or #rrggbb
+    const hex = color.trim();
+    if (/^#([0-9a-f]{3}){1,2}$/i.test(hex)) {
+      const raw = hex.substring(1);
+      const full = raw.length === 3 ? raw.split('').map(c => c + c).join('') : raw;
+      const r = parseInt(full.substring(0,2), 16);
+      const g = parseInt(full.substring(2,4), 16);
+      const b = parseInt(full.substring(4,6), 16);
+      return `rgba(${r}, ${g}, ${b}, ${op})`;
+    }
+    // if color already rgb/rgba or named, fallback to color (opacity not applied to preserve text)
+    return color;
+  };
 
   return (
     <div
       className={cn('w-full', className)}
       style={{
-        backgroundColor: backgroundColor || 'transparent',
+        backgroundColor: computeBg(backgroundColor, backgroundOpacity),
         borderColor: borderColor || 'transparent',
         borderRadius: borderRadius ? `${borderRadius}px` : '8px',
       }}

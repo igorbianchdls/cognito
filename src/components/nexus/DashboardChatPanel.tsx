@@ -64,6 +64,7 @@ export default function DashboardChatPanel() {
   const [borderShadow, setBorderShadow] = useState<boolean>(true);
   // Insights Card Style (global defaults across dashboards)
   const [insightsBgColor, setInsightsBgColor] = useState<string>('#ffffff');
+  const [insightsBgOpacity, setInsightsBgOpacity] = useState<number>(1);
   const [insightsBorderColor, setInsightsBorderColor] = useState<string>('#e5e7eb');
   const [insightsTitleColor, setInsightsTitleColor] = useState<string>('#111827');
   const [insightsBorderRadius, setInsightsBorderRadius] = useState<number>(8);
@@ -919,6 +920,7 @@ export default function DashboardChatPanel() {
   // Insights Card Style handlers (persist via source code only)
   type InsightsStyleDefaults = {
     backgroundColor: string;
+    backgroundOpacity: number;
     borderColor: string;
     titleColor: string;
     borderRadius: number;
@@ -936,6 +938,7 @@ export default function DashboardChatPanel() {
       styling: {
         ...prev,
         backgroundColor: insightsBgColor,
+        backgroundOpacity: insightsBgOpacity,
         borderColor: insightsBorderColor,
         borderRadius: insightsBorderRadius,
         titleColor: insightsTitleColor,
@@ -950,6 +953,7 @@ export default function DashboardChatPanel() {
   const applyInsightsDefaultsToDashboard = (defaults: InsightsStyleDefaults) => {
     setInsightsBgColor(defaults.backgroundColor);
     setInsightsBorderColor(defaults.borderColor);
+    setInsightsBgOpacity(typeof defaults.backgroundOpacity === 'number' ? defaults.backgroundOpacity : 1);
     setInsightsTitleColor(defaults.titleColor);
     setInsightsBorderRadius(defaults.borderRadius);
     setInsightsTitleSize(defaults.titleFontSize);
@@ -961,6 +965,7 @@ export default function DashboardChatPanel() {
   const onInsightsStyleChange = (patch: Partial<InsightsStyleDefaults>) => {
     const next: InsightsStyleDefaults = {
       backgroundColor: insightsBgColor,
+      backgroundOpacity: insightsBgOpacity,
       borderColor: insightsBorderColor,
       titleColor: insightsTitleColor,
       borderRadius: insightsBorderRadius,
@@ -1547,6 +1552,17 @@ export default function DashboardChatPanel() {
                     <div className="flex items-center justify-between gap-2">
                       <span>Fundo</span>
                       <input type="color" value={insightsBgColor} onChange={(e) => onInsightsStyleChange({ backgroundColor: e.target.value })} />
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                      <span>Transparência</span>
+                      <div className="flex items-center gap-2">
+                        <input className="w-24 border rounded px-2 py-1" type="number" min={0} max={100} value={Math.round(insightsBgOpacity * 100)} onChange={(e) => {
+                          const val = Math.max(0, Math.min(100, Number(e.target.value) || 0));
+                          setInsightsBgOpacity(val / 100);
+                          onInsightsStyleChange({ backgroundOpacity: val / 100 });
+                        }} />
+                        <span>%</span>
+                      </div>
                     </div>
                     <div className="flex items-center justify-between gap-2">
                       <span>Borda</span>

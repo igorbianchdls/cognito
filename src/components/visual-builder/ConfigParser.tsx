@@ -183,6 +183,7 @@ export interface Insights2Config {
   }>;
   styling?: {
     backgroundColor?: string;
+    backgroundOpacity?: number;
     borderColor?: string;
     borderRadius?: number;
     compact?: boolean;
