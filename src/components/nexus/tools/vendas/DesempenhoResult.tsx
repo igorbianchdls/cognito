@@ -67,20 +67,23 @@ export default function DesempenhoResult({ result }: { result: GetDesempenhoOutp
               valueKeys: ['realizado', 'valor_meta', 'diferenca'],
               title: 'Desempenho por Tipo de Meta',
               seriesLabel: 'Valor',
-              transform: (rows) => {
+              transform: (rows: Array<Record<string, unknown>>) => {
                 const acc = new Map<string, { tipo_meta: string; realizado: number; valor_meta: number; diferenca: number }>()
                 for (const r of rows) {
-                  const k = String((r as any).tipo_meta || '')
+                  const k = String(r['tipo_meta'] ?? '')
                   const cur = acc.get(k) || { tipo_meta: k, realizado: 0, valor_meta: 0, diferenca: 0 }
-                  const real = Number((r as any).realizado ?? 0)
-                  const meta = Number((r as any).valor_meta ?? 0)
-                  const dif = Number((r as any).diferenca ?? (real - meta))
+                  const realRaw = r['realizado']
+                  const metaRaw = r['valor_meta']
+                  const difRaw = r['diferenca']
+                  const real = typeof realRaw === 'number' ? realRaw : Number(realRaw)
+                  const meta = typeof metaRaw === 'number' ? metaRaw : Number(metaRaw)
+                  const dif = typeof difRaw === 'number' ? difRaw : Number(difRaw ?? (Number.isFinite(real) && Number.isFinite(meta) ? real - meta : 0))
                   cur.realizado += Number.isFinite(real) ? real : 0
                   cur.valor_meta += Number.isFinite(meta) ? meta : 0
                   cur.diferenca += Number.isFinite(dif) ? dif : 0
                   acc.set(k, cur)
                 }
-                return Array.from(acc.values()) as any
+                return Array.from(acc.values()) as Array<Record<string, unknown>>
               },
             }}
           />

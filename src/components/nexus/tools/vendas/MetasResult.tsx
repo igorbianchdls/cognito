@@ -62,16 +62,17 @@ export default function MetasResult({ result }: { result: GetMetasOutput }) {
               valueKeys: ['valor_meta'],
               title: 'Metas por Tipo',
               seriesLabel: 'Meta',
-              transform: (rows) => {
+              transform: (rows: Array<Record<string, unknown>>) => {
                 const acc = new Map<string, { tipo_meta: string; valor_meta: number }>()
                 for (const r of rows) {
-                  const k = String((r as any).tipo_meta || '')
-                  const v = Number((r as any).valor_meta ?? 0)
+                  const k = String(r['tipo_meta'] ?? '')
+                  const rawV = r['valor_meta']
+                  const numV = typeof rawV === 'number' ? rawV : Number(rawV)
                   const cur = acc.get(k) || { tipo_meta: k, valor_meta: 0 }
-                  cur.valor_meta += Number.isFinite(v) ? v : 0
+                  cur.valor_meta += Number.isFinite(numV) ? numV : 0
                   acc.set(k, cur)
                 }
-                return Array.from(acc.values()) as any
+                return Array.from(acc.values()) as Array<Record<string, unknown>>
               },
             }}
           />
