@@ -1,6 +1,7 @@
 import { anthropic } from '@ai-sdk/anthropic';
 import { convertToModelMessages, streamText, UIMessage } from 'ai';
 import { analiseTerritorio } from '@/tools/vendasAnalyticsTools';
+import { getMetas, getDesempenho } from '@/tools/analistaVendasTools';
 
 export const maxDuration = 300;
 
@@ -75,12 +76,40 @@ Retorna:
 - Sugira análises complementares quando relevante
 - Após usar a ferramenta, interprete os resultados e forneça insights
 
+## getMetas
+Lista metas comerciais (por vendedor), com filtros opcionais de período e vendedor.
+
+Parâmetros:
+- ano (opcional): número com 4 dígitos
+- mes (opcional): 1..12
+- vendedor_id (opcional)
+- page, pageSize (opcional)
+- order_by (opcional): vendedor | ano | mes | tipo_meta | valor_meta | meta_percentual
+- order_dir (opcional): asc | desc
+
+Retorna { success, rows, count, page, pageSize, message, sql_query, sql_params }
+
+## getDesempenho
+Desempenho por meta e tipo_meta usando a função comercial.fn_calcular_realizado_meta(meta_id, tipo_meta), com filtros opcionais de período e vendedor.
+
+Parâmetros:
+- ano (opcional): número com 4 dígitos
+- mes (opcional): 1..12
+- vendedor_id (opcional)
+- page, pageSize (opcional)
+- order_by (opcional): vendedor | ano | mes | tipo_meta | valor_meta | realizado | atingimento_percentual
+- order_dir (opcional): asc | desc
+
+Retorna { success, rows, count, page, pageSize, message, sql_query, sql_params }
+
 Responda sempre em português de forma clara e profissional.`,
 
     messages: convertToModelMessages(messages),
 
     tools: {
       analiseTerritorio,
+      getMetas,
+      getDesempenho,
     }
   });
 

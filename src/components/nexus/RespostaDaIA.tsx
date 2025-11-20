@@ -68,6 +68,9 @@ import type { AutomationSummaryOutput } from '@/tools/automationTools';
 import OportunidadesResult from './tools/crm/OportunidadesResult';
 import AtividadesResult from './tools/crm/AtividadesResult';
 import type { GetCrmOportunidadesOutput, GetCrmAtividadesOutput } from '@/tools/crmTools';
+import MetasResult from './tools/vendas/MetasResult';
+import DesempenhoResult from './tools/vendas/DesempenhoResult';
+import type { GetMetasOutput, GetDesempenhoOutput } from '@/tools/analistaVendasTools';
 import { BarChart3, DollarSign, LineChart, TrendingUp, AlertTriangle, FileText } from 'lucide-react';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
 import type { ColumnDef } from '@tanstack/react-table';
@@ -8329,6 +8332,46 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   data={(tool.output as Record<string, unknown>).data as AnalisTerritorioData}
                   title="Pivot de Vendas"
                 />
+              )}
+            </div>
+          );
+        }
+
+        // Analista de Vendas: getMetas
+        if (part.type === 'tool-getMetas') {
+          const tool = part as NexusToolUIPart;
+          const open = tool.state === 'output-available' || tool.state === 'output-error';
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={open}>
+                <ToolHeader type={part.type} state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && (
+                <MetasResult result={tool.output as GetMetasOutput} />
+              )}
+            </div>
+          );
+        }
+
+        // Analista de Vendas: getDesempenho
+        if (part.type === 'tool-getDesempenho') {
+          const tool = part as NexusToolUIPart;
+          const open = tool.state === 'output-available' || tool.state === 'output-error';
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={open}>
+                <ToolHeader type={part.type} state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && (
+                <DesempenhoResult result={tool.output as GetDesempenhoOutput} />
               )}
             </div>
           );
