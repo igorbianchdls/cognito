@@ -61,6 +61,14 @@ export default function DashboardChatPanel() {
   const [borderRadius, setBorderRadius] = useState<number>(0);
   const [borderAccentColor, setBorderAccentColor] = useState<string>('#bbb');
   const [borderShadow, setBorderShadow] = useState<boolean>(true);
+  // Insights Card Style (global defaults across dashboards)
+  const [insightsBgColor, setInsightsBgColor] = useState<string>('#ffffff');
+  const [insightsBorderColor, setInsightsBorderColor] = useState<string>('#e5e7eb');
+  const [insightsTitleColor, setInsightsTitleColor] = useState<string>('#111827');
+  const [insightsBorderRadius, setInsightsBorderRadius] = useState<number>(8);
+  const [insightsTitleSize, setInsightsTitleSize] = useState<number>(18);
+  const [insightsTitleMargin, setInsightsTitleMargin] = useState<number>(8);
+  const [insightsCompact, setInsightsCompact] = useState<boolean>(true);
   // Removed corporate color state (palette UI disabled)
   const visualBuilderState = useNanoStore($visualBuilderState);
   const [showSave, setShowSave] = useState(false);
@@ -836,6 +844,7 @@ export default function DashboardChatPanel() {
             barConfig?: unknown; lineConfig?: unknown; pieConfig?: unknown; areaConfig?: unknown;
             stackedBarConfig?: unknown; groupedBarConfig?: unknown; stackedLinesConfig?: unknown; radialStackedConfig?: unknown; pivotBarConfig?: unknown;
             kpiConfig?: unknown;
+            insights2Config?: unknown;
           };
           const w: UpdateWidget = {
             type: type as Widget['type'],
@@ -849,11 +858,12 @@ export default function DashboardChatPanel() {
             radialStackedConfig: (cfgObj as Record<string, unknown>)['radialStackedConfig'],
             pivotBarConfig: (cfgObj as Record<string, unknown>)['pivotBarConfig'],
             kpiConfig: (cfgObj as Record<string, unknown>)['kpiConfig'],
+            insights2Config: (cfgObj as Record<string, unknown>)['insights2Config'],
           };
           const wUpdated = updater(w as unknown as Widget) as unknown;
           // Merge back into cfgObj
           const out: Record<string, unknown> = { ...cfgObj };
-          const keys = ['barConfig','lineConfig','pieConfig','areaConfig','stackedBarConfig','groupedBarConfig','stackedLinesConfig','radialStackedConfig','pivotBarConfig','kpiConfig'] as const;
+          const keys = ['barConfig','lineConfig','pieConfig','areaConfig','stackedBarConfig','groupedBarConfig','stackedLinesConfig','radialStackedConfig','pivotBarConfig','kpiConfig','insights2Config'] as const;
           const updatedMap = wUpdated as Record<string, unknown>;
           for (const k of keys) {
             const updatedVal = updatedMap[k as string];
@@ -903,6 +913,62 @@ export default function DashboardChatPanel() {
       }
       return w;
     });
+  };
+
+  // Insights Card Style handlers (persist via source code only)
+  type InsightsStyleDefaults = {
+    backgroundColor: string;
+    borderColor: string;
+    titleColor: string;
+    borderRadius: number;
+    titleFontSize: number;
+    titleMarginBottom: number;
+    compact: boolean;
+  };
+
+  const setInsightsStyleOnWidget = (widget: Widget): Widget => {
+    const w = { ...widget } as Widget & { insights2Config?: any };
+    if (w.type !== 'insights2') return w as Widget;
+    const prev = (w.insights2Config?.styling || {}) as Record<string, unknown>;
+    w.insights2Config = {
+      ...(w.insights2Config || {}),
+      styling: {
+        ...prev,
+        backgroundColor: insightsBgColor,
+        borderColor: insightsBorderColor,
+        borderRadius: insightsBorderRadius,
+        titleColor: insightsTitleColor,
+        titleFontSize: insightsTitleSize,
+        titleMarginBottom: insightsTitleMargin,
+        compact: insightsCompact,
+      }
+    };
+    return w as unknown as Widget;
+  };
+
+  const applyInsightsDefaultsToDashboard = (defaults: InsightsStyleDefaults) => {
+    setInsightsBgColor(defaults.backgroundColor);
+    setInsightsBorderColor(defaults.borderColor);
+    setInsightsTitleColor(defaults.titleColor);
+    setInsightsBorderRadius(defaults.borderRadius);
+    setInsightsTitleSize(defaults.titleFontSize);
+    setInsightsTitleMargin(defaults.titleMarginBottom);
+    setInsightsCompact(defaults.compact);
+    updateAllWidgets(setInsightsStyleOnWidget);
+  };
+
+  const onInsightsStyleChange = (patch: Partial<InsightsStyleDefaults>) => {
+    const next: InsightsStyleDefaults = {
+      backgroundColor: insightsBgColor,
+      borderColor: insightsBorderColor,
+      titleColor: insightsTitleColor,
+      borderRadius: insightsBorderRadius,
+      titleFontSize: insightsTitleSize,
+      titleMarginBottom: insightsTitleMargin,
+      compact: insightsCompact,
+      ...patch,
+    };
+    applyInsightsDefaultsToDashboard(next);
   };
 
   const handleLetterSpacingChange = (value: number) => {
@@ -1464,6 +1530,51 @@ export default function DashboardChatPanel() {
                         <input type="checkbox" checked={borderShadow} onChange={(e) => handleBorderPropChange('borderShadow', e.target.checked)} />
                       </div>
                     )}
+                  </div>
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+
+              {/* Insights Card Style Submenu */}
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                  <BarChart3 className="w-4 h-4 mr-2" />
+                  Estilo do Insights Card
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent className="w-80">
+                  <div className="px-2 py-1.5 text-sm font-medium text-muted-foreground">Cores</div>
+                  <div className="px-3 py-2 text-xs text-muted-foreground space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <span>Fundo</span>
+                      <input type="color" value={insightsBgColor} onChange={(e) => onInsightsStyleChange({ backgroundColor: e.target.value })} />
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                      <span>Borda</span>
+                      <input type="color" value={insightsBorderColor} onChange={(e) => onInsightsStyleChange({ borderColor: e.target.value })} />
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                      <span>Título</span>
+                      <input type="color" value={insightsTitleColor} onChange={(e) => onInsightsStyleChange({ titleColor: e.target.value })} />
+                    </div>
+                  </div>
+                  <DropdownMenuSeparator />
+                  <div className="px-2 py-1.5 text-sm font-medium text-muted-foreground">Bordas e Tipografia</div>
+                  <div className="px-3 py-2 text-xs text-muted-foreground space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <span>Raio</span>
+                      <input className="w-20 border rounded px-2 py-1" type="number" min={0} max={32} value={insightsBorderRadius} onChange={(e) => onInsightsStyleChange({ borderRadius: Number(e.target.value) })} />
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                      <span>Tam. título</span>
+                      <input className="w-20 border rounded px-2 py-1" type="number" min={10} max={36} value={insightsTitleSize} onChange={(e) => onInsightsStyleChange({ titleFontSize: Number(e.target.value) })} />
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                      <span>Margem título</span>
+                      <input className="w-20 border rounded px-2 py-1" type="number" min={0} max={24} value={insightsTitleMargin} onChange={(e) => onInsightsStyleChange({ titleMarginBottom: Number(e.target.value) })} />
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                      <span>Compacto</span>
+                      <input type="checkbox" checked={insightsCompact} onChange={(e) => onInsightsStyleChange({ compact: e.target.checked })} />
+                    </div>
                   </div>
                 </DropdownMenuSubContent>
               </DropdownMenuSub>
