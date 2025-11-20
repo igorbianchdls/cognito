@@ -286,11 +286,17 @@ export async function GET(req: NextRequest) {
 
       selectSql = `SELECT * FROM (
         WITH metas AS (
-          SELECT m.vendedor_id, func.nome AS vendedor_nome, m.ano, m.mes, SUM(m.valor_meta)::numeric AS valor_meta
+          SELECT m.vendedor_id,
+                 func.nome AS vendedor_nome,
+                 m.ano,
+                 m.mes,
+                 SUM(mi.valor_meta)::numeric AS valor_meta
           FROM comercial.metas m
+          LEFT JOIN comercial.metas_itens mi ON mi.meta_id = m.id
+          LEFT JOIN comercial.tipos_metas tm ON tm.id = mi.tipo_meta_id
           LEFT JOIN comercial.vendedores v ON v.id = m.vendedor_id
           LEFT JOIN entidades.funcionarios func ON func.id = v.funcionario_id
-          ${whereMetas}
+          ${whereMetas} AND mi.tipo_meta_id = 1
           GROUP BY m.vendedor_id, func.nome, m.ano, m.mes
         ), ped AS (
           SELECT p.vendedor_id, func.nome AS vendedor_nome,
