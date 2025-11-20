@@ -220,25 +220,25 @@ export async function GET(req: NextRequest) {
       if (mes && mes >= 1 && mes <= 12) filtros.push(`mes = ${mes}`)
       const where = `WHERE ${filtros.join(' AND ')}`
 
-      // Usando a view comercial.vw_metas_detalhe (pais e filhos em uma só)
+      // Usando exatamente a query solicitada (sem alias adicionais, sem colunas extras)
       selectSql = `SELECT DISTINCT
         meta_id,
         mes,
         ano,
         vendedor_id,
-        vendedor AS vendedor_nome,
+        vendedor,
         meta_item_id,
         tipo_meta,
         tipo_valor,
         valor_meta,
         meta_percentual,
         criado_em,
-        atualizado_em,
-        (meta_item_id IS NULL) AS parent_flag
+        atualizado_em
       FROM comercial.vw_metas_detalhe
-      ${where}`
+      ${where}
+      ORDER BY vendedor, meta_id, meta_item_id`
       baseSql = ''
-      orderClause = 'ORDER BY vendedor_nome ASC, meta_id ASC, parent_flag DESC, meta_item_id ASC'
+      orderClause = ''
     } else if (view === 'desempenho') {
       const anoParam = searchParams.get('ano')
       const mesParam = searchParams.get('mes')
@@ -444,7 +444,7 @@ export async function GET(req: NextRequest) {
       : view === 'desempenho'
         ? `SELECT COUNT(*)::int AS total FROM (${selectSql}) t`
       : view === 'metas'
-        ? `SELECT COUNT(*)::int AS total FROM (${selectSql}) t WHERE t.parent_flag IS TRUE`
+        ? `SELECT COUNT(*)::int AS total FROM (${selectSql}) t WHERE t.meta_item_id IS NULL`
       : view === 'metas_territorios'
         ? `SELECT COUNT(*)::int AS total FROM (${selectSql}) t WHERE t.parent_flag IS TRUE`
       : baseSql ? `SELECT COUNT(*)::int AS total ${baseSql}` : `SELECT 0::int AS total`

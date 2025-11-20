@@ -148,7 +148,7 @@ export default function ModulosComercialPage() {
 
     return (
       <div className="p-3 bg-gray-50 rounded border border-gray-200">
-        <div className="text-sm font-medium text-gray-700 mb-2">Itens da Meta — {String(row['vendedor_nome'] || '')}</div>
+          <div className="text-sm font-medium text-gray-700 mb-2">Itens da Meta — {String(row['vendedor'] || '')}</div>
         {children.length === 0 ? (
           <div className="text-xs text-gray-500">Sem metas específicas para este vendedor nesta página.</div>
         ) : (
@@ -169,7 +169,7 @@ export default function ModulosComercialPage() {
               <tbody>
                 {children.map((c, idx) => (
                   <tr key={idx} className="border-b last:border-0">
-                    <td className="py-2 px-3">{String(c['tipo_meta_nome'] || '')}</td>
+                    <td className="py-2 px-3">{String(c['tipo_meta'] || '')}</td>
                     <td className="text-right py-2 px-3">{c['ano'] ?? ''}</td>
                     <td className="text-right py-2 px-3">{c['mes'] ?? ''}</td>
                     <td className="py-2 px-3">{String(c['tipo_meta_valor'] || '')}</td>
@@ -232,7 +232,7 @@ export default function ModulosComercialPage() {
         ]
       case 'metas':
         return [
-          { accessorKey: 'vendedor_nome', header: 'Vendedor' },
+          { accessorKey: 'vendedor', header: 'Vendedor' },
           { accessorKey: 'ano', header: 'Ano' },
           { accessorKey: 'mes', header: 'Mês' },
           { accessorKey: 'tipo_meta', header: 'Tipo Meta' },
@@ -452,9 +452,11 @@ export default function ModulosComercialPage() {
                   key={tabs.selected}
                   columns={columns}
                   data={
-                    tabs.selected === 'metas' || tabs.selected === 'desempenho' || tabs.selected === 'metas_territorios'
-                      ? data.filter(r => Boolean(r['parent_flag']))
-                      : data
+                    tabs.selected === 'metas'
+                      ? data.filter(r => r['meta_item_id'] == null)
+                      : tabs.selected === 'desempenho' || tabs.selected === 'metas_territorios'
+                        ? data.filter(r => Boolean(r['parent_flag']))
+                        : data
                   }
                   enableExpand={tabs.selected === 'campanhas_vendas' || tabs.selected === 'metas' || tabs.selected === 'desempenho' || tabs.selected === 'metas_territorios'}
                   renderDetail={
@@ -544,7 +546,7 @@ export default function ModulosComercialPage() {
                   }
                   rowCanExpand={
                     tabs.selected === 'metas'
-                      ? (r) => Boolean(r['parent_flag'])
+                      ? (r) => r['meta_item_id'] == null
                       : tabs.selected === 'desempenho'
                         ? (r) => Boolean(r['parent_flag'])
                         : tabs.selected === 'metas_territorios'
