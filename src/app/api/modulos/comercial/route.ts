@@ -241,7 +241,7 @@ export async function GET(req: NextRequest) {
       baseSql = ''
       orderClause = ''
     } else if (view === 'desempenho') {
-      // Query para desempenho com CTE base e métricas por tipo_meta; filtros opcionais ano/mês
+      // Query para desempenho usando função comercial.fn_calcular_realizado_meta(meta_id, tipo_meta)
       const anoParam = searchParams.get('ano')
       const mesParam = searchParams.get('mes')
       const ano = anoParam ? Number(anoParam) : undefined
@@ -252,70 +252,36 @@ export async function GET(req: NextRequest) {
       if (mes && mes >= 1 && mes <= 12) whereParts.push(`mes = ${mes}`)
       const where = whereParts.length ? `WHERE ${whereParts.join(' AND ')}` : ''
 
-      selectSql = `WITH base AS (
-        SELECT
-          meta_id,
-          vendedor_id,
-          vendedor,
-          mes,
-          ano,
-          tipo_meta,
-          valor_meta,
-          pedido_id,
-          cliente_id,
-          subtotal
-        FROM comercial.vw_metas_detalhe
-        ${where}
-      )
-      SELECT
-        meta_id,
-        vendedor_id,
-        vendedor,
-        mes,
-        ano,
-        tipo_meta,
-        valor_meta,
+      selectSql = `SELECT
+        m.meta_id,
+        m.vendedor_id,
+        m.vendedor,
+        m.mes,
+        m.ano,
+        m.tipo_meta,
+        m.valor_meta,
+        comercial.fn_calcular_realizado_meta(m.meta_id, m.tipo_meta) AS realizado,
+        comercial.fn_calcular_realizado_meta(m.meta_id, m.tipo_meta) - m.valor_meta AS diferenca,
         CASE 
-          WHEN tipo_meta = 'faturamento' THEN COALESCE(SUM(subtotal), 0)
-          WHEN tipo_meta = 'ticket_medio' THEN (
-            CASE WHEN COUNT(DISTINCT pedido_id) > 0 
-                 THEN ROUND(SUM(subtotal) * 1.0 / COUNT(DISTINCT pedido_id), 2)
-                 ELSE 0 END
-          )
-          WHEN tipo_meta = 'novos_clientes' THEN COUNT(DISTINCT cliente_id)
-        END AS realizado,
-        CASE 
-          WHEN tipo_meta = 'faturamento' THEN COALESCE(SUM(subtotal), 0) - valor_meta
-          WHEN tipo_meta = 'ticket_medio' THEN (
-            (CASE WHEN COUNT(DISTINCT pedido_id) > 0 
-                  THEN ROUND(SUM(subtotal) * 1.0 / COUNT(DISTINCT pedido_id), 2)
-                  ELSE 0 END) - valor_meta
-          )
-          WHEN tipo_meta = 'novos_clientes' THEN COUNT(DISTINCT cliente_id) - valor_meta
-        END AS diferenca,
-        CASE 
-          WHEN valor_meta > 0 THEN ROUND((
-            CASE 
-              WHEN tipo_meta = 'faturamento' THEN COALESCE(SUM(subtotal), 0)
-              WHEN tipo_meta = 'ticket_medio' THEN (
-                CASE WHEN COUNT(DISTINCT pedido_id) > 0 
-                     THEN ROUND(SUM(subtotal) * 1.0 / COUNT(DISTINCT pedido_id), 2)
-                     ELSE 0 END
-              )
-              WHEN tipo_meta = 'novos_clientes' THEN COUNT(DISTINCT cliente_id)
-            END
-          ) * 100.0 / valor_meta, 2)
-          ELSE 0
+            WHEN m.valor_meta > 0 THEN 
+                ROUND(
+                    comercial.fn_calcular_realizado_meta(m.meta_id, m.tipo_meta) 
+                    / m.valor_meta * 100
+                , 2)
+            ELSE 0 
         END AS atingimento_percentual
-      FROM base
-      GROUP BY
-        meta_id,
-        vendedor_id,
-        vendedor,
-        mes,
-        ano,
-        tipo_meta,
-        valor_meta
+      FROM (
+          SELECT DISTINCT
+              meta_id,
+              vendedor_id,
+              vendedor,
+              mes,
+              ano,
+              tipo_meta,
+              valor_meta
+          FROM comercial.vw_metas_detalhe
+          ${where}
+      ) m
       ORDER BY vendedor, tipo_meta`
       baseSql = ''
       orderClause = ''
