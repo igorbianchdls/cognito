@@ -14,6 +14,13 @@ interface MeasureDef {
   measure?: 'faturamento' | 'quantidade' | 'pedidos' | 'itens'
 }
 
+interface MeasureRatioDef {
+  numerator: MeasureDef
+  denominator: MeasureDef
+  label?: string
+  round?: number
+}
+
 interface CompareRequest {
   schema?: string
   table: string
@@ -22,6 +29,8 @@ interface CompareRequest {
   limit?: number
   measure1?: MeasureDef
   measure2?: MeasureDef
+  measure1Ratio?: MeasureRatioDef
+  measure2Ratio?: MeasureRatioDef
   // Optional date filters passthrough (not applied in v1)
   filters?: unknown
 }
@@ -54,6 +63,8 @@ export async function POST(request: NextRequest) {
     // Defaults tailored for "novos_clientes" use case
     const m1: MeasureDef = body.measure1 || { field: 'valor_meta', aggregation: 'SUM', label: 'Meta' }
     const m2: MeasureDef = body.measure2 || { field: 'cliente_id', aggregation: 'COUNT_DISTINCT', label: 'Realizado' }
+    const m1Ratio: MeasureRatioDef | undefined = body.measure1Ratio
+    const m2Ratio: MeasureRatioDef | undefined = body.measure2Ratio
 
     const qSchema = sanitizeIdent(schema)
     const qTable = sanitizeIdent(table)
@@ -71,8 +82,15 @@ export async function POST(request: NextRequest) {
       return `${agg}("${field}")`
     }
 
-    const m1Expr = aggExpr(m1)
-    const m2Expr = aggExpr(m2)
+    const ratioExpr = (mr: MeasureRatioDef) => {
+      const round = Number.isFinite(mr.round) ? mr.round! : 2
+      const num = aggExpr(mr.numerator)
+      const den = aggExpr(mr.denominator)
+      return `ROUND( (${num})::numeric / NULLIF((${den})::numeric, 0), ${round} )`
+    }
+
+    const m1Expr = m1Ratio ? ratioExpr(m1Ratio) : aggExpr(m1)
+    const m2Expr = m2Ratio ? ratioExpr(m2Ratio) : aggExpr(m2)
     const whereClause = sanitizeWhere(where)
 
     const qualifiedTable = `"${qSchema}"."${qTable}"`
@@ -88,8 +106,8 @@ export async function POST(request: NextRequest) {
 
     const items = rows.map(r => ({ label: r.label, meta: Number(r.m1 || 0), realizado: Number(r.m2 || 0) }))
     const series = [
-      { key: 'meta', label: m1.label || 'Meta', color: SERIES_COLORS[0] },
-      { key: 'realizado', label: m2.label || 'Realizado', color: SERIES_COLORS[1] },
+      { key: 'meta', label: (m1Ratio?.label || m1.label) || 'Meta', color: SERIES_COLORS[0] },
+      { key: 'realizado', label: (m2Ratio?.label || m2.label) || 'Realizado', color: SERIES_COLORS[1] },
     ]
 
     return NextResponse.json({ success: true, items, series, sql_query: sql, metadata: { schema: qSchema, table: qTable, dimension: qDim } })
@@ -98,4 +116,3 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: false, error: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 })
   }
 }
-

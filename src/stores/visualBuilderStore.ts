@@ -284,8 +284,8 @@ export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas"
   </row>
 
   <!-- Exemplo: Meta x Realizado (Novos Clientes) por Vendedor -->
-  <row id="10" cols-d="2" cols-t="2" cols-m="1" gap-x="16" gap-y="16">
-    <widget id="meta_novos_clientes" type="comparebar" order="1" span-d="2" span-t="2" span-m="1" height="320" title="👥 Meta x Realizado • Novos Clientes por Vendedor">
+  <row id="10" cols-d="3" cols-t="1" cols-m="1" gap-x="16" gap-y="16">
+    <widget id="meta_novos_clientes" type="comparebar" order="1" span-d="1" span-t="1" span-m="1" height="320" title="👥 Meta x Realizado • Novos Clientes por Vendedor">
       <config>
         {"dataSource":{
             "schema":"comercial",
@@ -295,6 +295,43 @@ export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas"
             "limit":20,
             "measure1":{"field":"valor_meta","aggregation":"SUM","label":"Meta"},
             "measure2":{"field":"cliente_id","aggregation":"COUNT_DISTINCT","label":"Realizado"}
+          },
+         "compareBarConfig":{"styling":{"groupMode":"grouped","layout":"vertical","showLegend":true,"marginBottom":40}}
+        }
+      </config>
+    </widget>
+
+    <widget id="meta_faturamento" type="comparebar" order="2" span-d="1" span-t="1" span-m="1" height="320" title="💰 Meta x Realizado • Faturamento por Vendedor">
+      <config>
+        {"dataSource":{
+            "schema":"comercial",
+            "table":"vw_metas_detalhe",
+            "dimension":"vendedor",
+            "where":"tipo_meta = 'faturamento'",
+            "limit":20,
+            "measure1":{"field":"valor_meta","aggregation":"SUM","label":"Meta"},
+            "measure2":{"field":"subtotal","aggregation":"SUM","label":"Realizado"}
+          },
+         "compareBarConfig":{"styling":{"groupMode":"grouped","layout":"vertical","showLegend":true,"marginBottom":40}}
+        }
+      </config>
+    </widget>
+
+    <widget id="meta_ticket_medio" type="comparebar" order="3" span-d="1" span-t="1" span-m="1" height="320" title="🎯 Meta x Realizado • Ticket Médio por Vendedor">
+      <config>
+        {"dataSource":{
+            "schema":"comercial",
+            "table":"vw_metas_detalhe",
+            "dimension":"vendedor",
+            "where":"tipo_meta = 'ticket_medio'",
+            "limit":20,
+            "measure1":{"field":"valor_meta","aggregation":"AVG","label":"Meta"},
+            "measure2Ratio":{
+              "numerator":{"field":"subtotal","aggregation":"SUM"},
+              "denominator":{"field":"pedido_id","aggregation":"COUNT_DISTINCT"},
+              "label":"Realizado",
+              "round":2
+            }
           },
          "compareBarConfig":{"styling":{"groupMode":"grouped","layout":"vertical","showLegend":true,"marginBottom":40}}
         }
