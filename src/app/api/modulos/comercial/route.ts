@@ -220,24 +220,22 @@ export async function GET(req: NextRequest) {
       if (mes && mes >= 1 && mes <= 12) filtros.push(`mes = ${mes}`)
       const where = `WHERE ${filtros.join(' AND ')}`
 
-      // Usando a view comercial.vw_metas para retornar pais (meta_item_id NULL) e filhos (meta_item_id NOT NULL)
-      selectSql = `SELECT
+      // Usando a view comercial.vw_metas_detalhe (pais e filhos em uma só)
+      selectSql = `SELECT DISTINCT
         meta_id,
         mes,
         ano,
         vendedor_id,
         vendedor AS vendedor_nome,
         meta_item_id,
-        tipo_meta_id,
-        tipo_meta AS tipo_meta_nome,
-        tipo_valor AS tipo_meta_valor,
+        tipo_meta,
+        tipo_valor,
         valor_meta,
         meta_percentual,
-        medida_sql AS calculo_realizado_sql,
         criado_em,
         atualizado_em,
         (meta_item_id IS NULL) AS parent_flag
-      FROM comercial.vw_metas
+      FROM comercial.vw_metas_detalhe
       ${where}`
       baseSql = ''
       orderClause = 'ORDER BY vendedor_nome ASC, meta_id ASC, parent_flag DESC, meta_item_id ASC'
