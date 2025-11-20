@@ -1,6 +1,6 @@
 'use client';
 
-import { ComponentProps, useState, useEffect } from 'react';
+import { ComponentProps, useState, useEffect, useRef } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import type { ToolUIPart } from 'ai';
@@ -15,6 +15,11 @@ export type ToolInputStreamingProps = ComponentProps<'div'> & {
   streamingData?: StreamingData;
 };
 
+// Guard rails to avoid UI jank on very large payloads
+const LARGE_TEXT_THRESHOLD = 1000; // characters
+const STREAM_THROTTLE_MS = 200; // min interval between renders while streaming
+const STREAM_PREVIEW_SLICE = 800; // show only the first N chars during streaming for large strings
+
 const TypewriterText = ({
   text,
   isStreaming,
@@ -28,9 +33,10 @@ const TypewriterText = ({
 }) => {
   const [displayText, setDisplayText] = useState('');
   const [currentIndex, setCurrentIndex] = useState(0);
+  const isLarge = text.length > 512; // disable typewriter for larger strings
 
   useEffect(() => {
-    if (!isStreaming) {
+    if (!isStreaming || isLarge) {
       setDisplayText(text);
       return;
     }
@@ -48,12 +54,47 @@ const TypewriterText = ({
   return (
     <span className={className}>
       {displayText}
-      {isStreaming && currentIndex < text.length && (
+      {isStreaming && !isLarge && currentIndex < text.length && (
         <span className="animate-pulse">|</span>
       )}
     </span>
   );
 };
+
+// Throttle helper hook to reduce re-render frequency while streaming
+function useThrottledValue<T>(value: T, isStreaming: boolean, interval = STREAM_THROTTLE_MS): T {
+  const [throttled, setThrottled] = useState(value);
+  const lastUpdateRef = useRef(0);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (!isStreaming) {
+      // immediate update when not streaming
+      setThrottled(value);
+      return;
+    }
+    const now = Date.now();
+    const elapsed = now - lastUpdateRef.current;
+    if (elapsed >= interval) {
+      lastUpdateRef.current = now;
+      setThrottled(value);
+    } else {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      timeoutRef.current = setTimeout(() => {
+        lastUpdateRef.current = Date.now();
+        setThrottled(value);
+      }, interval - elapsed);
+    }
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+    };
+  }, [value, isStreaming, interval]);
+
+  return throttled;
+}
 
 const StreamingJsonRenderer = ({
   data,
@@ -62,16 +103,8 @@ const StreamingJsonRenderer = ({
   data: unknown;
   isStreaming: boolean;
 }) => {
-  const [displayData, setDisplayData] = useState<unknown>({});
-
-  useEffect(() => {
-    if (!isStreaming) {
-      setDisplayData(data);
-    } else {
-      // Gradualmente mostrar os dados conforme chegam
-      setDisplayData(data);
-    }
-  }, [data, isStreaming]);
+  // Throttle high-frequency updates during streaming
+  const displayData = useThrottledValue(data, isStreaming);
 
   const renderValue = (value: unknown, key?: string, level = 0): React.ReactNode => {
     const indent = '  '.repeat(level);
@@ -80,15 +113,17 @@ const StreamingJsonRenderer = ({
     if (value === undefined) return '';
 
     if (typeof value === 'string') {
+      const isLarge = value.length > LARGE_TEXT_THRESHOLD;
+      const showPreview = isStreaming && isLarge;
+      const shown = showPreview ? value.slice(0, STREAM_PREVIEW_SLICE) : value;
       return (
         <span className="text-green-600">
-          &quot;{isStreaming ? (
-            <TypewriterText
-              text={value}
-              isStreaming={isStreaming && level > 0}
-              delay={20}
-            />
-          ) : value}&quot;
+          &quot;{isStreaming && !isLarge ? (
+            <TypewriterText text={value} isStreaming={isStreaming && level > 0} delay={20} />
+          ) : shown}&quot;
+          {showPreview && (
+            <span className="text-gray-500"> … (preview durante streaming)</span>
+          )}
         </span>
       );
     }
