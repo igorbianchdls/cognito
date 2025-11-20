@@ -96,22 +96,6 @@ export const listDashboards = tool({
     limit: z.number().int().positive().max(100).default(20).describe('Limite de itens por página (máx 100)'),
     offset: z.number().int().nonnegative().default(0).describe('Deslocamento para paginação')
   }),
-  outputSchema: z.union([
-    z.object({
-      success: z.literal(true),
-      items: z.array(z.object({
-        id: z.string(),
-        title: z.string(),
-        description: z.string().nullable(),
-        visibility: VisibilityEnum,
-        version: z.number(),
-        created_at: z.string(),
-        updated_at: z.string(),
-      })),
-      count: z.number(),
-    }),
-    z.object({ success: z.literal(false), error: z.string() }),
-  ]),
   execute: async ({ q, visibility, limit, offset }) => {
     const { items, count } = await listDashboardsQuery({ q, visibility, limit, offset });
     return { success: true as const, items, count };
@@ -121,22 +105,6 @@ export const listDashboards = tool({
 export const getDashboard = tool({
   description: 'Obtém um dashboard pelo ID, incluindo title/description/sourcecode/visibility/version.',
   inputSchema: z.object({ id: z.string().min(1, 'id é obrigatório') }),
-  outputSchema: z.union([
-    z.object({
-      success: z.literal(true),
-      item: z.object({
-        id: z.string(),
-        title: z.string(),
-        description: z.string().nullable(),
-        sourcecode: z.string(),
-        visibility: VisibilityEnum,
-        version: z.number(),
-        created_at: z.string(),
-        updated_at: z.string(),
-      }),
-    }),
-    z.object({ success: z.literal(false), error: z.string() }),
-  ]),
   execute: async ({ id }) => {
     const item = await getDashboardByIdQuery(id);
     if (!item) return { success: false as const, error: 'Dashboard não encontrado' };
@@ -154,22 +122,6 @@ export const updateDashboard = tool({
     visibility: VisibilityEnum.optional(),
     version: z.number().int().positive().optional(),
   }),
-  outputSchema: z.union([
-    z.object({
-      success: z.literal(true),
-      item: z.object({
-        id: z.string(),
-        title: z.string(),
-        description: z.string().nullable(),
-        sourcecode: z.string(),
-        visibility: VisibilityEnum,
-        version: z.number(),
-        created_at: z.string(),
-        updated_at: z.string(),
-      }),
-    }),
-    z.object({ success: z.literal(false), error: z.string() }),
-  ]),
   execute: async ({ id, title, description, sourcecode, visibility, version }) => {
     try {
       const item = await updateDashboardByIdQuery(id, { title, description: description ?? undefined, sourcecode, visibility, version });
@@ -190,22 +142,6 @@ export const createDashboard = tool({
     visibility: VisibilityEnum.default('private').optional(),
     version: z.number().int().positive().default(1).optional(),
   }),
-  outputSchema: z.union([
-    z.object({
-      success: z.literal(true),
-      item: z.object({
-        id: z.string(),
-        title: z.string(),
-        description: z.string().nullable(),
-        sourcecode: z.string(),
-        visibility: VisibilityEnum,
-        version: z.number(),
-        created_at: z.string(),
-        updated_at: z.string(),
-      }),
-    }),
-    z.object({ success: z.literal(false), error: z.string() }),
-  ]),
   execute: async ({ title, sourcecode, description, visibility = 'private', version = 1 }) => {
     try {
       // Sanitização básica
