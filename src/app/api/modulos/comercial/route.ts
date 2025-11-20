@@ -184,6 +184,10 @@ export async function GET(req: NextRequest) {
         LEFT JOIN produtos.produto pr ON pr.id = cvp.produto_id`
       orderClause = orderBy ? `ORDER BY ${orderBy} ${orderDir}, cvp.id ASC` : 'ORDER BY cv.id ASC, cvp.id ASC'
     } else if (view === 'metas') {
+      const anoParam = searchParams.get('ano')
+      const mesParam = searchParams.get('mes')
+      const ano = anoParam ? Number(anoParam) : undefined
+      const mes = mesParam ? Number(mesParam) : undefined
       selectSql = `SELECT
         m.id AS meta_id,
         m.mes,
@@ -226,6 +230,12 @@ export async function GET(req: NextRequest) {
         LEFT JOIN empresa.unidades_negocio un ON un.id = m.unidade_negocio_id
         LEFT JOIN comercial.sales_offices so ON so.id = m.sales_office_id
         WHERE m.vendedor_id IS NOT NULL`;
+      if (ano && String(ano).length === 4) {
+        baseSql += ` AND m.ano = ${ano}`
+      }
+      if (mes && mes >= 1 && mes <= 12) {
+        baseSql += ` AND m.mes = ${mes}`
+      }
       // Ordem fixa por vendedor, depois nível (Meta Geral antes), ano, mês e rótulo do detalhe
       orderClause = 'ORDER BY vendedor_nome ASC, nivel ASC, m.ano ASC, m.mes ASC, child_label ASC, meta_id ASC'
     } else {
@@ -288,8 +298,8 @@ export async function GET(req: NextRequest) {
     }
 
     // Total simples (sem filtros)
-    const totalSql = view === 'campanhas_vendas'
-      ? `SELECT COUNT(DISTINCT cv.id)::int AS total FROM comercial.campanhas_vendas cv`
+      const totalSql = view === 'campanhas_vendas'
+        ? `SELECT COUNT(DISTINCT cv.id)::int AS total FROM comercial.campanhas_vendas cv`
       : baseSql ? `SELECT COUNT(*)::int AS total ${baseSql}` : `SELECT 0::int AS total`
     const totalRows = await runQuery<{ total: number }>(totalSql)
     const total = totalRows[0]?.total ?? 0

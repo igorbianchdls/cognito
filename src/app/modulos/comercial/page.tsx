@@ -42,6 +42,9 @@ export default function ModulosComercialPage() {
   const [pageSize, setPageSize] = useState<number>(20)
   const [total, setTotal] = useState<number>(0)
   const [refreshKey, setRefreshKey] = useState(0)
+  // Filtros específicos (aba Metas)
+  const [metaAno, setMetaAno] = useState<number | 'todos'>('todos')
+  const [metaMes, setMetaMes] = useState<number | 'todos'>('todos')
 
   const fontVar = (name?: string) => {
     if (!name) return undefined
@@ -279,6 +282,10 @@ export default function ModulosComercialPage() {
         params.set('view', tabs.selected)
         params.set('page', String(page))
         params.set('pageSize', String(pageSize))
+        if (tabs.selected === 'metas') {
+          if (metaAno !== 'todos') params.set('ano', String(metaAno))
+          if (metaMes !== 'todos') params.set('mes', String(metaMes))
+        }
         const url = `/api/modulos/comercial?${params.toString()}`
         const res = await fetch(url, { cache: 'no-store', signal: controller.signal })
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
@@ -298,7 +305,7 @@ export default function ModulosComercialPage() {
     }
     load()
     return () => controller.abort()
-  }, [tabs.selected, page, pageSize, refreshKey])
+  }, [tabs.selected, page, pageSize, refreshKey, metaAno, metaMes])
 
   return (
     <SidebarProvider>
@@ -343,29 +350,86 @@ export default function ModulosComercialPage() {
         </div>
         <div style={{ paddingTop: (layout.contentTopGap || 0) + (layout.mbTabs || 0) }}>
           <div className="px-4 md:px-6" style={{ marginBottom: 8 }}>
-            <DataToolbar
-              from={total === 0 ? 0 : (page - 1) * pageSize + 1}
-              to={total === 0 ? 0 : Math.min(page * pageSize, total)}
-              total={total}
-              dateRange={dateRange}
-              onDateRangeChange={setDateRange}
-              fontFamily={fontVar(tabs.fontFamily)}
-              fontSize={toolbarUI.fontSize}
-              fontWeight={toolbarUI.fontWeight}
-              fontColor={toolbarUI.fontColor}
-              letterSpacing={toolbarUI.letterSpacing}
-              borderBottomWidth={toolbarUI.borderBottomWidth}
-              borderBottomColor={toolbarUI.borderBottomColor}
-              borderDistanceTop={toolbarUI.borderDistanceTop}
-              underlineColor={toolbarUI.underlineColor}
-              underlineWidth={toolbarUI.underlineWidth}
-              underlineOffsetTop={toolbarUI.underlineOffsetTop}
-              iconGap={toolbarUI.iconGap}
-              iconColor={toolbarUI.iconColor}
-              iconSize={toolbarUI.iconSize}
-              searchWidth={toolbarUI.searchWidth}
-              dateRangeWidth={toolbarUI.dateRangeWidth}
-            />
+            {tabs.selected === 'metas' ? (
+              <div className="w-full">
+                <div className="flex items-center justify-between gap-3 pb-2 border-b border-gray-200">
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
+                      <label className="text-sm text-gray-600">Ano</label>
+                      <select
+                        className="h-8 px-2 border rounded text-sm"
+                        value={metaAno === 'todos' ? '' : String(metaAno)}
+                        onChange={(e) => setMetaAno(e.target.value ? Number(e.target.value) : 'todos')}
+                      >
+                        <option value="">Todos</option>
+                        {Array.from({ length: 7 }).map((_, i) => {
+                          const y = new Date().getFullYear() - i
+                          return <option key={y} value={y}>{y}</option>
+                        })}
+                      </select>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <label className="text-sm text-gray-600">Mês</label>
+                      <select
+                        className="h-8 px-2 border rounded text-sm"
+                        value={metaMes === 'todos' ? '' : String(metaMes)}
+                        onChange={(e) => setMetaMes(e.target.value ? Number(e.target.value) : 'todos')}
+                      >
+                        <option value="">Todos</option>
+                        {Array.from({ length: 12 }).map((_, i) => (
+                          <option key={i+1} value={i+1}>{i+1}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      className="h-7 w-7 p-0 border rounded text-sm"
+                      onClick={() => setPage((p) => Math.max(1, p - 1))}
+                      disabled={page <= 1}
+                      title="Anterior"
+                    >
+                      ‹
+                    </button>
+                    <div className="mx-1 min-w-[96px] text-center text-sm">
+                      {total === 0 ? 0 : (page - 1) * pageSize + 1}–{total === 0 ? 0 : Math.min(page * pageSize, total)} de {total}
+                    </div>
+                    <button
+                      className="h-7 w-7 p-0 border rounded text-sm"
+                      onClick={() => setPage((p) => p + 1)}
+                      disabled={page * pageSize >= total}
+                      title="Próxima"
+                    >
+                      ›
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <DataToolbar
+                from={total === 0 ? 0 : (page - 1) * pageSize + 1}
+                to={total === 0 ? 0 : Math.min(page * pageSize, total)}
+                total={total}
+                dateRange={dateRange}
+                onDateRangeChange={setDateRange}
+                fontFamily={fontVar(tabs.fontFamily)}
+                fontSize={toolbarUI.fontSize}
+                fontWeight={toolbarUI.fontWeight}
+                fontColor={toolbarUI.fontColor}
+                letterSpacing={toolbarUI.letterSpacing}
+                borderBottomWidth={toolbarUI.borderBottomWidth}
+                borderBottomColor={toolbarUI.borderBottomColor}
+                borderDistanceTop={toolbarUI.borderDistanceTop}
+                underlineColor={toolbarUI.underlineColor}
+                underlineWidth={toolbarUI.underlineWidth}
+                underlineOffsetTop={toolbarUI.underlineOffsetTop}
+                iconGap={toolbarUI.iconGap}
+                iconColor={toolbarUI.iconColor}
+                iconSize={toolbarUI.iconSize}
+                searchWidth={toolbarUI.searchWidth}
+                dateRangeWidth={toolbarUI.dateRangeWidth}
+              />
+            )}
           </div>
           <div className="flex-1 min-h-0 overflow-auto" style={{ marginBottom: layout.mbTable }}>
             <div className="border-y bg-background" style={{ borderColor: tabelaUI.borderColor }}>
@@ -391,7 +455,7 @@ export default function ModulosComercialPage() {
                       ? (r) => Boolean(r['parent_flag'])
                       : undefined
                   }
-                  enableSearch={tabelaUI.enableSearch}
+                  enableSearch={tabs.selected === 'metas' ? false : tabelaUI.enableSearch}
                   showColumnToggle={tabelaUI.enableColumnToggle}
                   showPagination={tabelaUI.showPagination}
                   pageSize={pageSize}
