@@ -64,7 +64,6 @@ export default function ModulosComercialPage() {
         { value: 'territorios', label: 'Territórios' },
         { value: 'vendedores', label: 'Vendedores' },
         { value: 'meta_vendedores', label: 'Meta Vendedores' },
-        { value: 'meta_territorios', label: 'Meta Territórios' },
         { value: 'metas_territorios', label: 'Metas Territórios' },
         { value: 'metas', label: 'Metas' },
         { value: 'tipos_metas', label: 'Tipos de Metas' },
@@ -215,15 +214,6 @@ export default function ModulosComercialPage() {
         return [
           { accessorKey: 'vendedor', header: 'Vendedor' },
           { accessorKey: 'territorio', header: 'Território' },
-          { accessorKey: 'periodo', header: 'Período' },
-          { accessorKey: 'meta', header: 'Meta' },
-          { accessorKey: 'criado_em', header: 'Criado Em', cell: ({ getValue }) => formatDate(getValue()) },
-          { accessorKey: 'atualizado_em', header: 'Atualizado Em', cell: ({ getValue }) => formatDate(getValue()) },
-        ]
-      case 'meta_territorios':
-        return [
-          { accessorKey: 'territorio', header: 'Território' },
-          { accessorKey: 'territorio_descricao', header: 'Descrição Território' },
           { accessorKey: 'periodo', header: 'Período' },
           { accessorKey: 'meta', header: 'Meta' },
           { accessorKey: 'criado_em', header: 'Criado Em', cell: ({ getValue }) => formatDate(getValue()) },
