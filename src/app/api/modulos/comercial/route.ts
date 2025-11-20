@@ -444,7 +444,7 @@ export async function GET(req: NextRequest) {
       : view === 'desempenho'
         ? `SELECT COUNT(*)::int AS total FROM (${selectSql}) t`
       : view === 'metas'
-        ? `SELECT COUNT(*)::int AS total FROM (${selectSql}) t WHERE t.meta_item_id IS NULL`
+        ? `SELECT COUNT(DISTINCT meta_id)::int AS total FROM comercial.vw_metas_detalhe ${where}`
       : view === 'metas_territorios'
         ? `SELECT COUNT(*)::int AS total FROM (${selectSql}) t WHERE t.parent_flag IS TRUE`
       : baseSql ? `SELECT COUNT(*)::int AS total ${baseSql}` : `SELECT 0::int AS total`

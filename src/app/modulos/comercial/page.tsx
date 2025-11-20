@@ -453,7 +453,17 @@ export default function ModulosComercialPage() {
                   columns={columns}
                   data={
                     tabs.selected === 'metas'
-                      ? data.filter(r => r['meta_item_id'] == null)
+                      ? (() => {
+                          // Mostrar apenas uma linha por meta_id (cabeçalho sintético)
+                          const seen = new Set<string | number>()
+                          const heads: Row[] = []
+                          for (const r of data) {
+                            const k = r['meta_id'] as string | number | undefined
+                            if (k == null) continue
+                            if (!seen.has(k)) { seen.add(k); heads.push(r) }
+                          }
+                          return heads
+                        })()
                       : tabs.selected === 'desempenho' || tabs.selected === 'metas_territorios'
                         ? data.filter(r => Boolean(r['parent_flag']))
                         : data
@@ -546,7 +556,7 @@ export default function ModulosComercialPage() {
                   }
                   rowCanExpand={
                     tabs.selected === 'metas'
-                      ? (r) => r['meta_item_id'] == null
+                      ? (r) => true
                       : tabs.selected === 'desempenho'
                         ? (r) => Boolean(r['parent_flag'])
                         : tabs.selected === 'metas_territorios'
