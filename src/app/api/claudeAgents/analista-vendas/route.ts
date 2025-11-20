@@ -8,19 +8,7 @@ export const maxDuration = 300;
 export async function POST(req: Request) {
   const { messages }: { messages: UIMessage[] } = await req.json();
 
-  const result = streamText({
-    model: anthropic('claude-sonnet-4-20250514'),
-
-    providerOptions: {
-      anthropic: {
-        thinking: {
-          type: 'enabled',
-          budgetTokens: 10000
-        }
-      }
-    },
-
-    system: `Você é um Analista de Vendas Senior especializado em análise de dados comerciais e estratégias de crescimento.
+  const system = `Você é um Analista de Vendas Senior especializado em análise de dados comerciais e estratégias de crescimento.
 
 # Sua Missão
 Ajudar gestores e equipes de vendas a compreender performance, identificar oportunidades e tomar decisões baseadas em dados.
@@ -102,16 +90,44 @@ Parâmetros:
 
 Retorna { success, rows, count, page, pageSize, message, sql_query, sql_params }
 
-Responda sempre em português de forma clara e profissional.`,
+Responda sempre em português de forma clara e profissional.`
 
-    messages: convertToModelMessages(messages),
+  // Função auxiliar para detectar overload
+  const isOverloaded = (err: unknown) => {
+    const msg = (err instanceof Error ? err.message : String(err || '')) || ''
+    return /overloaded/i.test(msg) || /rate.?limit/i.test(msg)
+  }
 
-    tools: {
-      analiseTerritorio,
-      getMetas,
-      getDesempenho,
+  try {
+    const result = streamText({
+      model: anthropic('claude-sonnet-4-20250514'),
+      providerOptions: {
+        anthropic: {
+          thinking: { type: 'enabled', budgetTokens: 3000 },
+        },
+      },
+      system,
+      messages: convertToModelMessages(messages),
+      tools: { analiseTerritorio, getMetas, getDesempenho },
+    })
+    return result.toUIMessageStreamResponse()
+  } catch (err) {
+    console.error('⚠️ analista-vendas primary model error:', err)
+    if (!isOverloaded(err)) {
+      return new Response(JSON.stringify({ success: false, message: 'Erro interno', error: err instanceof Error ? err.message : String(err) }), { status: 500 })
     }
-  });
-
-  return result.toUIMessageStreamResponse();
+    // Fallback: modelo mais leve e sem thinking
+    try {
+      const result2 = streamText({
+        model: anthropic('claude-3-5-sonnet-latest'),
+        system,
+        messages: convertToModelMessages(messages),
+        tools: { analiseTerritorio, getMetas, getDesempenho },
+      })
+      return result2.toUIMessageStreamResponse()
+    } catch (err2) {
+      console.error('⚠️ analista-vendas fallback model error:', err2)
+      return new Response(JSON.stringify({ success: false, message: 'Serviço temporariamente sobrecarregado. Tente novamente em instantes.' }), { status: 503 })
+    }
+  }
 }
