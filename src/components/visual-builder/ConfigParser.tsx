@@ -225,6 +225,9 @@ export interface Widget {
     dimension2?: string;
     field?: string;
     limit?: number;
+    // For comparebar and simplified configs
+    dimension?: string;
+    topic?: string;
   };
   styling?: {
     colors?: string[];

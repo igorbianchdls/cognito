@@ -21,6 +21,8 @@ interface MeasureRatioDef {
   round?: number
 }
 
+type CompareTopic = 'novos_clientes' | 'faturamento' | 'ticket_medio'
+
 interface CompareRequest {
   schema?: string
   table: string
@@ -31,6 +33,7 @@ interface CompareRequest {
   measure2?: MeasureDef
   measure1Ratio?: MeasureRatioDef
   measure2Ratio?: MeasureRatioDef
+  topic?: CompareTopic
   // Optional date filters passthrough (not applied in v1)
   filters?: unknown
 }
@@ -61,6 +64,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Defaults tailored for "novos_clientes" use case
+    const topic: CompareTopic | undefined = body.topic && ['novos_clientes','faturamento','ticket_medio'].includes(String(body.topic))
+      ? (body.topic as CompareTopic)
+      : undefined
     const m1: MeasureDef = body.measure1 || { field: 'valor_meta', aggregation: 'SUM', label: 'Meta' }
     const m2: MeasureDef = body.measure2 || { field: 'cliente_id', aggregation: 'COUNT_DISTINCT', label: 'Realizado' }
     const m1Ratio: MeasureRatioDef | undefined = body.measure1Ratio
@@ -89,9 +95,28 @@ export async function POST(request: NextRequest) {
       return `ROUND( (${num})::numeric / NULLIF((${den})::numeric, 0), ${round} )`
     }
 
-    const m1Expr = m1Ratio ? ratioExpr(m1Ratio) : aggExpr(m1)
-    const m2Expr = m2Ratio ? ratioExpr(m2Ratio) : aggExpr(m2)
-    const whereClause = sanitizeWhere(where)
+    let m1Expr = m1Ratio ? ratioExpr(m1Ratio) : aggExpr(m1)
+    let m2Expr = m2Ratio ? ratioExpr(m2Ratio) : aggExpr(m2)
+    if (topic) {
+      switch (topic) {
+        case 'novos_clientes':
+          m1Expr = 'COALESCE(SUM("valor_meta"),0)'
+          m2Expr = 'COUNT(DISTINCT "cliente_id")'
+          break
+        case 'faturamento':
+          m1Expr = 'COALESCE(SUM("valor_meta"),0)'
+          m2Expr = 'COALESCE(SUM("subtotal"),0)'
+          break
+        case 'ticket_medio':
+          m1Expr = 'COALESCE(AVG("valor_meta"),0)'
+          m2Expr = 'ROUND(COALESCE(SUM("subtotal"),0)::numeric / NULLIF(COUNT(DISTINCT "pedido_id"), 0), 2)'
+          break
+      }
+    }
+    const whereClauseUser = sanitizeWhere(where)
+    // Build default WHERE for topics
+    const whereClauseTopic = topic ? `"tipo_meta" = '${topic}'` : ''
+    const whereClause = [whereClauseTopic, whereClauseUser].filter(Boolean).join(' AND ')
 
     const qualifiedTable = `"${qSchema}"."${qTable}"`
     const sql = `SELECT "${qDim}" AS label, ${m1Expr} AS m1, ${m2Expr} AS m2
@@ -105,10 +130,17 @@ export async function POST(request: NextRequest) {
     const rows = await runQuery<Row>(sql)
 
     const items = rows.map(r => ({ label: r.label, meta: Number(r.m1 || 0), realizado: Number(r.m2 || 0) }))
+    const defaultLabelsByTopic: Record<string, { m1: string; m2: string }> = {
+      novos_clientes: { m1: 'Meta', m2: 'Realizado' },
+      faturamento: { m1: 'Meta', m2: 'Realizado' },
+      ticket_medio: { m1: 'Meta', m2: 'Realizado' },
+    }
+    const labels = topic ? defaultLabelsByTopic[topic] : undefined
     const series = [
-      { key: 'meta', label: (m1Ratio?.label || m1.label) || 'Meta', color: SERIES_COLORS[0] },
-      { key: 'realizado', label: (m2Ratio?.label || m2.label) || 'Realizado', color: SERIES_COLORS[1] },
+      { key: 'meta', label: labels?.m1 || (m1Ratio?.label || m1.label) || 'Meta', color: SERIES_COLORS[0] },
+      { key: 'realizado', label: labels?.m2 || (m2Ratio?.label || m2.label) || 'Realizado', color: SERIES_COLORS[1] },
     ]
+
 
     return NextResponse.json({ success: true, items, series, sql_query: sql, metadata: { schema: qSchema, table: qTable, dimension: qDim } })
   } catch (error) {

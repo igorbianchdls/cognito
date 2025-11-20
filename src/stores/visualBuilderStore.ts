@@ -291,10 +291,8 @@ export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas"
             "schema":"comercial",
             "table":"vw_metas_detalhe",
             "dimension":"vendedor",
-            "where":"tipo_meta = 'novos_clientes'",
-            "limit":20,
-            "measure1":{"field":"valor_meta","aggregation":"SUM","label":"Meta"},
-            "measure2":{"field":"cliente_id","aggregation":"COUNT_DISTINCT","label":"Realizado"}
+            "topic":"novos_clientes",
+            "limit":20
           },
          "compareBarConfig":{"styling":{"groupMode":"grouped","layout":"vertical","showLegend":true,"marginBottom":40}}
         }
@@ -307,10 +305,8 @@ export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas"
             "schema":"comercial",
             "table":"vw_metas_detalhe",
             "dimension":"vendedor",
-            "where":"tipo_meta = 'faturamento'",
-            "limit":20,
-            "measure1":{"field":"valor_meta","aggregation":"SUM","label":"Meta"},
-            "measure2":{"field":"subtotal","aggregation":"SUM","label":"Realizado"}
+            "topic":"faturamento",
+            "limit":20
           },
          "compareBarConfig":{"styling":{"groupMode":"grouped","layout":"vertical","showLegend":true,"marginBottom":40}}
         }
@@ -323,15 +319,8 @@ export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas"
             "schema":"comercial",
             "table":"vw_metas_detalhe",
             "dimension":"vendedor",
-            "where":"tipo_meta = 'ticket_medio'",
-            "limit":20,
-            "measure1":{"field":"valor_meta","aggregation":"AVG","label":"Meta"},
-            "measure2Ratio":{
-              "numerator":{"field":"subtotal","aggregation":"SUM"},
-              "denominator":{"field":"pedido_id","aggregation":"COUNT_DISTINCT"},
-              "label":"Realizado",
-              "round":2
-            }
+            "topic":"ticket_medio",
+            "limit":20
           },
          "compareBarConfig":{"styling":{"groupMode":"grouped","layout":"vertical","showLegend":true,"marginBottom":40}}
         }
