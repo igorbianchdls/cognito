@@ -196,56 +196,68 @@ export async function GET(req: NextRequest) {
       const mesParam = searchParams.get('mes')
       const ano = anoParam ? Number(anoParam) : undefined
       const mes = mesParam ? Number(mesParam) : undefined
-      selectSql = `SELECT
-        m.id AS meta_id,
-        m.mes,
-        m.ano,
-        m.vendedor_id,
-        func.nome AS vendedor_nome,
-        tm.nome AS tipo_meta,
-        tm.tipo_valor,
-        m.valor_meta,
-        m.meta_percentual,
-        terr.nome AS territorio_nome,
-        cv.nome   AS canal_venda_nome,
-        fil.nome  AS filial_nome,
-        un.nome   AS unidade_negocio_nome,
-        so.nome   AS sales_office_nome,
-        -- Derivados para colapsável
-        (terr.nome IS NULL AND cv.nome IS NULL AND fil.nome IS NULL AND un.nome IS NULL AND so.nome IS NULL) AS parent_flag,
-        CASE
-          WHEN so.nome   IS NOT NULL THEN 'sales_office_nome'
-          WHEN un.nome   IS NOT NULL THEN 'unidade_negocio_nome'
-          WHEN fil.nome  IS NOT NULL THEN 'filial_nome'
-          WHEN cv.nome   IS NOT NULL THEN 'canal_venda_nome'
-          WHEN terr.nome IS NOT NULL THEN 'territorio_nome'
-          ELSE NULL
-        END AS child_dim,
-        COALESCE(so.nome, un.nome, fil.nome, cv.nome, terr.nome) AS child_label,
-        CASE
-          WHEN (terr.nome IS NULL AND cv.nome IS NULL AND fil.nome IS NULL AND un.nome IS NULL AND so.nome IS NULL)
-            THEN 1 ELSE 2
-        END AS nivel,
-        m.criado_em,
-        m.atualizado_em`;
-      baseSql = `FROM comercial.metas m
-        LEFT JOIN comercial.tipos_metas tm ON tm.id = m.tipo_meta_id
-        LEFT JOIN comercial.vendedores v ON v.id = m.vendedor_id
-        LEFT JOIN entidades.funcionarios func ON func.id = v.funcionario_id
-        LEFT JOIN comercial.territorios terr ON terr.id = m.territorio_id
-        LEFT JOIN vendas.canais_venda cv ON cv.id = m.canal_venda_id
-        LEFT JOIN empresa.filiais fil ON fil.id = m.filial_id
-        LEFT JOIN empresa.unidades_negocio un ON un.id = m.unidade_negocio_id
-        LEFT JOIN comercial.sales_offices so ON so.id = m.sales_office_id
-        WHERE m.vendedor_id IS NOT NULL`;
-      if (ano && String(ano).length === 4) {
-        baseSql += ` AND m.ano = ${ano}`
-      }
-      if (mes && mes >= 1 && mes <= 12) {
-        baseSql += ` AND m.mes = ${mes}`
-      }
-      // Ordem fixa por vendedor, depois nível (Meta Geral antes), ano, mês e rótulo do detalhe
-      orderClause = 'ORDER BY vendedor_nome ASC, nivel ASC, m.ano ASC, m.mes ASC, child_label ASC, meta_id ASC'
+
+      const filtrosMetas: string[] = ["m.vendedor_id IS NOT NULL"]
+      if (ano && String(ano).length === 4) filtrosMetas.push(`m.ano = ${ano}`)
+      if (mes && mes >= 1 && mes <= 12) filtrosMetas.push(`m.mes = ${mes}`)
+      const whereMetas = `WHERE ${filtrosMetas.join(' AND ')}`
+
+      // Pais: cabeçalhos das metas (uma por meta_id)
+      // Filhos: itens da meta (metas_itens)
+      selectSql = `SELECT * FROM (
+        WITH parents AS (
+          SELECT
+            m.id AS meta_id,
+            m.tenant_id,
+            m.mes,
+            m.ano,
+            m.vendedor_id,
+            func.nome AS vendedor_nome,
+            NULL::bigint AS meta_item_id,
+            NULL::numeric AS valor_meta,
+            NULL::numeric AS meta_percentual,
+            NULL::bigint AS tipo_meta_id,
+            NULL::text AS tipo_meta_nome,
+            NULL::text AS tipo_meta_valor,
+            NULL::text AS calculo_realizado_sql,
+            m.criado_em,
+            m.atualizado_em,
+            TRUE AS parent_flag
+          FROM comercial.metas m
+          LEFT JOIN comercial.vendedores v ON v.id = m.vendedor_id
+          LEFT JOIN entidades.funcionarios func ON func.id = v.funcionario_id
+          ${whereMetas}
+        ), items AS (
+          SELECT
+            m.id AS meta_id,
+            m.tenant_id,
+            m.mes,
+            m.ano,
+            m.vendedor_id,
+            func.nome AS vendedor_nome,
+            mi.id AS meta_item_id,
+            mi.valor_meta,
+            mi.meta_percentual,
+            tm.id AS tipo_meta_id,
+            tm.nome AS tipo_meta_nome,
+            tm.tipo_valor AS tipo_meta_valor,
+            tm.medida_sql AS calculo_realizado_sql,
+            m.criado_em,
+            m.atualizado_em,
+            FALSE AS parent_flag
+          FROM comercial.metas m
+          LEFT JOIN comercial.metas_itens mi ON mi.meta_id = m.id
+          LEFT JOIN comercial.tipos_metas tm ON tm.id = mi.tipo_meta_id
+          LEFT JOIN comercial.vendedores v ON v.id = m.vendedor_id
+          LEFT JOIN entidades.funcionarios func ON func.id = v.funcionario_id
+          ${whereMetas}
+        )
+        SELECT * FROM parents
+        UNION ALL
+        SELECT * FROM items
+      ) d`
+      baseSql = ''
+      orderClause = 'ORDER BY vendedor_nome ASC, meta_id ASC, parent_flag DESC, meta_item_id ASC'
     } else if (view === 'desempenho') {
       const anoParam = searchParams.get('ano')
       const mesParam = searchParams.get('mes')
@@ -359,6 +371,8 @@ export async function GET(req: NextRequest) {
       ? `SELECT COUNT(DISTINCT cv.id)::int AS total FROM comercial.campanhas_vendas cv`
       : view === 'desempenho'
         ? `SELECT COUNT(*)::int AS total FROM (${selectSql}) t`
+        : view === 'metas'
+          ? `SELECT COUNT(*)::int AS total FROM (${selectSql}) t WHERE t.parent_flag IS TRUE`
         : baseSql ? `SELECT COUNT(*)::int AS total ${baseSql}` : `SELECT 0::int AS total`
     const totalRows = await runQuery<{ total: number }>(totalSql)
     const total = totalRows[0]?.total ?? 0

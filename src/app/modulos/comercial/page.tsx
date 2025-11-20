@@ -130,8 +130,8 @@ export default function ModulosComercialPage() {
     const isParent = Boolean(row['parent_flag'])
     if (!isParent) return null
 
-    const vendedor = String(row['vendedor_nome'] || '')
-    const children = data.filter(r => String(r['vendedor_nome'] || '') === vendedor && Number(r['nivel'] || 0) === 2)
+    const metaId = row['meta_id']
+    const children = data.filter(r => r['meta_id'] === metaId && r['meta_item_id'])
 
     const labelForDim = (dim?: unknown) => {
       const m: Record<string, string> = {
@@ -147,7 +147,7 @@ export default function ModulosComercialPage() {
 
     return (
       <div className="p-3 bg-gray-50 rounded border border-gray-200">
-        <div className="text-sm font-medium text-gray-700 mb-2">Metas específicas — {vendedor}</div>
+        <div className="text-sm font-medium text-gray-700 mb-2">Itens da Meta — {String(row['vendedor_nome'] || '')}</div>
         {children.length === 0 ? (
           <div className="text-xs text-gray-500">Sem metas específicas para este vendedor nesta página.</div>
         ) : (
@@ -155,11 +155,9 @@ export default function ModulosComercialPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b">
-                  <th className="text-left py-2 px-3">Dimensão</th>
-                  <th className="text-left py-2 px-3">Valor</th>
+                  <th className="text-left py-2 px-3">Tipo Meta</th>
                   <th className="text-right py-2 px-3">Ano</th>
                   <th className="text-right py-2 px-3">Mês</th>
-                  <th className="text-left py-2 px-3">Tipo Meta</th>
                   <th className="text-left py-2 px-3">Tipo Valor</th>
                   <th className="text-right py-2 px-3">Valor Meta</th>
                   <th className="text-right py-2 px-3">% Meta</th>
@@ -170,12 +168,10 @@ export default function ModulosComercialPage() {
               <tbody>
                 {children.map((c, idx) => (
                   <tr key={idx} className="border-b last:border-0">
-                    <td className="py-2 px-3">{labelForDim(c['child_dim'])}</td>
-                    <td className="py-2 px-3">{String(c['child_label'] || '—')}</td>
+                    <td className="py-2 px-3">{String(c['tipo_meta_nome'] || '')}</td>
                     <td className="text-right py-2 px-3">{c['ano'] ?? ''}</td>
                     <td className="text-right py-2 px-3">{c['mes'] ?? ''}</td>
-                    <td className="py-2 px-3">{String(c['tipo_meta'] || '')}</td>
-                    <td className="py-2 px-3">{String(c['tipo_valor'] || '')}</td>
+                    <td className="py-2 px-3">{String(c['tipo_meta_valor'] || '')}</td>
                     <td className="text-right py-2 px-3">{String(c['valor_meta'] ?? '')}</td>
                     <td className="text-right py-2 px-3">{String(c['meta_percentual'] ?? '')}</td>
                     <td className="py-2 px-3">{formatDate(c['criado_em'])}</td>
