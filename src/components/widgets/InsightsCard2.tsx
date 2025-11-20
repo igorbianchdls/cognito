@@ -39,7 +39,7 @@ export default function InsightsCard2({ title = 'Insights', items, compact = tru
         borderRadius: borderRadius ? `${borderRadius}px` : '8px',
       }}
     >
-      <div className={cn('text-base font-semibold text-gray-900 px-3 pt-3')}>{title}</div>
+      <div className={cn('text-lg font-semibold text-gray-900 px-3 pt-3 mb-2')}>{title}</div>
       <div className="px-2 pb-2">
         <ul role="list" className="flex flex-col gap-2">
           {items.map((it) => (
