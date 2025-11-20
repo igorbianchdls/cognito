@@ -139,25 +139,25 @@ export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas"
   <row id="1" cols-d="4" cols-t="2" cols-m="1" gap-x="16" gap-y="16">
     <widget id="faturamento_total" type="kpi" order="1" span-d="1" span-t="1" span-m="1" height="150" title="💰 Faturamento Total">
       <config>
-        {"dataSource":{"schema":"vendas","table":"vw_pedidos_completo","x":"item_subtotal","y":"item_subtotal","aggregation":"SUM"},
+        {"dataSource":{"schema":"vendas","table":"vw_pedidos_completo","y":"item_subtotal","aggregation":"SUM"},
          "kpiConfig":{"unit":"R$","visualizationType":"card"}}
       </config>
     </widget>
     <widget id="total_pedidos" type="kpi" order="2" span-d="1" span-t="1" span-m="1" height="150" title="📦 Total de Itens">
       <config>
-        {"dataSource":{"schema":"vendas","table":"vw_pedidos_completo","x":"item_id","y":"item_id","aggregation":"COUNT"},
+        {"dataSource":{"schema":"vendas","table":"vw_pedidos_completo","y":"item_id","aggregation":"COUNT"},
          "kpiConfig":{"visualizationType":"card"}}
       </config>
     </widget>
     <widget id="ticket_medio" type="kpi" order="3" span-d="1" span-t="1" span-m="1" height="150" title="🎯 Ticket Médio">
       <config>
-        {"dataSource":{"schema":"vendas","table":"vw_pedidos_completo","x":"item_subtotal","y":"item_subtotal","aggregation":"AVG"},
+        {"dataSource":{"schema":"vendas","table":"vw_pedidos_completo","y":"item_subtotal","aggregation":"AVG"},
          "kpiConfig":{"unit":"R$","visualizationType":"card"}}
       </config>
     </widget>
     <widget id="itens_vendidos" type="kpi" order="4" span-d="1" span-t="1" span-m="1" height="150" title="📊 Itens Vendidos">
       <config>
-        {"dataSource":{"schema":"vendas","table":"vw_pedidos_completo","x":"quantidade","y":"quantidade","aggregation":"SUM"},
+        {"dataSource":{"schema":"vendas","table":"vw_pedidos_completo","y":"quantidade","aggregation":"SUM"},
          "kpiConfig":{"visualizationType":"card"}}
       </config>
     </widget>
@@ -351,7 +351,7 @@ export const initialDslColumns = `<dashboard theme="branco" title="Dashboard (Co
     <column id="1">
       <widget id="kpi_faturamento" type="kpi" order="1" span-d="1" height="150" title="💰 Faturamento Total">
         <config>
-          {"dataSource":{"schema":"vendas","table":"vw_pedidos_completo","x":"item_subtotal","y":"item_subtotal","aggregation":"SUM"},
+          {"dataSource":{"schema":"vendas","table":"vw_pedidos_completo","y":"item_subtotal","aggregation":"SUM"},
            "kpiConfig":{"unit":"R$","visualizationType":"card"}}
         </config>
       </widget>
@@ -365,7 +365,7 @@ export const initialDslColumns = `<dashboard theme="branco" title="Dashboard (Co
     <column id="2">
       <widget id="kpi_total_itens" type="kpi" order="1" span-d="1" height="150" title="📦 Total de Itens">
         <config>
-          {"dataSource":{"schema":"vendas","table":"vw_pedidos_completo","x":"item_id","y":"item_id","aggregation":"COUNT"},
+          {"dataSource":{"schema":"vendas","table":"vw_pedidos_completo","y":"item_id","aggregation":"COUNT"},
            "kpiConfig":{"visualizationType":"card"}}
         </config>
       </widget>
@@ -379,7 +379,7 @@ export const initialDslColumns = `<dashboard theme="branco" title="Dashboard (Co
     <column id="3">
       <widget id="kpi_ticket_medio" type="kpi" order="1" span-d="1" height="150" title="🎯 Ticket Médio">
         <config>
-          {"dataSource":{"schema":"vendas","table":"vw_pedidos_completo","x":"item_subtotal","y":"item_subtotal","aggregation":"AVG"},
+          {"dataSource":{"schema":"vendas","table":"vw_pedidos_completo","y":"item_subtotal","aggregation":"AVG"},
            "kpiConfig":{"unit":"R$","visualizationType":"card"}}
         </config>
       </widget>
