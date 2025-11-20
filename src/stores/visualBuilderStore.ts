@@ -275,7 +275,23 @@ export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas"
           "title":"Insights",
           "items":[
             {"id":"i1","variant":"risk","label":"Supply Risk","link":{"text":"Ethiopia Yirgacheffe"},"tail":"may run out in less than 3 days"},
-            {"id":"i2","variant":"slow","label":"Slow Stock","link":{"text":"Costa Rican Tarrazú"},"tail":"sitting unsold in inventory"}
+            {"id":"i2","variant":"slow","label":"Slow Stock","link":{"text":"Costa Rican Tarrazú"},"tail":"sitting unsold in inventory"},
+            {"id":"i3","variant":"info","label":"Revenue Uplift","link":{"text":"Mobile cohort 20–22h"},"tail":"continues to outperform"},
+            {"id":"i4","variant":"custom","label":"UX Impact","link":{"text":"Homepage update"},"tail":"bounce rate –12%"},
+            {"id":"i5","variant":"info","label":"Conversion","link":{"text":"Paid campaigns"},"tail":"+8% WoW"}
+          ],
+          "styling": {"compact": true, "borderRadius": 8}
+        }}
+      </config>
+    </widget>
+    <widget id="insights_card_3" type="insights2" order="2" span-d="1" span-t="1" span-m="1" height="140" title="Insights Extras">
+      <config>
+        {"insights2Config":{
+          "title":"Insights Extras",
+          "items":[
+            {"id":"e1","variant":"info","label":"Top Seller","link":{"text":"Alice Silva"},"tail":"R$ 180k este mês"},
+            {"id":"e2","variant":"risk","label":"Meta Atrasada","link":{"text":"Território Sul"},"tail":"62% concluído"},
+            {"id":"e3","variant":"slow","label":"Campanha Fraca","link":{"text":"Outono"},"tail":"CTR 0,9%"}
           ],
           "styling": {"compact": true, "borderRadius": 8}
         }}
@@ -294,7 +310,7 @@ export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas"
             "topic":"novos_clientes",
             "limit":20
           },
-         "compareBarConfig":{"styling":{"groupMode":"grouped","layout":"vertical","showLegend":true,"marginBottom":40}}
+         "compareBarConfig":{"styling":{"groupMode":"grouped","layout":"horizontal","showLegend":true,"marginBottom":40}}
         }
       </config>
     </widget>
@@ -308,7 +324,7 @@ export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas"
             "topic":"faturamento",
             "limit":20
           },
-         "compareBarConfig":{"styling":{"groupMode":"grouped","layout":"vertical","showLegend":true,"marginBottom":40}}
+         "compareBarConfig":{"styling":{"groupMode":"grouped","layout":"horizontal","showLegend":true,"marginBottom":40}}
         }
       </config>
     </widget>
@@ -322,7 +338,7 @@ export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas"
             "topic":"ticket_medio",
             "limit":20
           },
-         "compareBarConfig":{"styling":{"groupMode":"grouped","layout":"vertical","showLegend":true,"marginBottom":40}}
+         "compareBarConfig":{"styling":{"groupMode":"grouped","layout":"horizontal","showLegend":true,"marginBottom":40}}
         }
       </config>
     </widget>
