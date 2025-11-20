@@ -601,11 +601,3 @@ export default function ModulosComercialPage() {
     </SidebarProvider>
   )
 }
-      case 'metas_territorios':
-        return [
-          { accessorKey: 'territorio_nome', header: 'Território' },
-          { accessorKey: 'ano', header: 'Ano' },
-          { accessorKey: 'mes', header: 'Mês' },
-          { accessorKey: 'criado_em', header: 'Criado Em', cell: ({ getValue }) => formatDate(getValue()) },
-          { accessorKey: 'atualizado_em', header: 'Atualizado Em', cell: ({ getValue }) => formatDate(getValue()) },
-        ]
