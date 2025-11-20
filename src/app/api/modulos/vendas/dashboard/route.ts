@@ -358,6 +358,19 @@ export async function GET(req: NextRequest) {
       .sort((a,b)=> (b.faturamento + b.meta) - (a.faturamento + a.meta))
       .slice(0, limit)
 
+    // Meta x Realizado (Novos Clientes) por Vendedor (via vw_metas_detalhe)
+    const metaNovosClientesVendSql = `
+      SELECT
+        m.vendedor AS label,
+        COALESCE(SUM(m.valor_meta),0)::float AS meta,
+        COUNT(DISTINCT m.cliente_id) AS realizado
+      FROM comercial.vw_metas_detalhe m
+      WHERE m.tipo_meta = 'novos_clientes'
+      GROUP BY m.vendedor
+      ORDER BY m.vendedor`;
+    let metaNovosClientesVendedor: { label: string; meta: number; realizado: number }[] = []
+    try { metaNovosClientesVendedor = await runQuery<{ label: string; meta: number; realizado: number }>(metaNovosClientesVendSql) } catch (e) { console.error('🛒 VENDAS dashboard meta_novos_clientes_vw error:', e); metaNovosClientesVendedor = [] }
+
     // Meta x Ticket Médio por Vendedor (via vw_metas_detalhe)
     const metaTicketVendSql = `
       SELECT
@@ -486,6 +499,7 @@ export async function GET(req: NextRequest) {
           meta_territorio: metaTerritorio,
           meta_vendedor: metaVendedor,
           meta_vendedor_vw: metaVendedorVW,
+          meta_novos_clientes_vw: metaNovosClientesVendedor,
           meta_ticket_medio_vw: metaTicketMedioVendedor,
           cupons,
         },

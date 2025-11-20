@@ -90,6 +90,7 @@ export default function VendasDashboardPage() {
   const [chartMetaTerritorio, setChartMetaTerritorio] = useState<Array<{ label: string; meta: number; faturamento: number }>>([])
   const [chartMetaVendedor, setChartMetaVendedor] = useState<Array<{ label: string; meta: number; faturamento: number }>>([])
   const [chartMetaVendedorVW, setChartMetaVendedorVW] = useState<Array<{ label: string; meta: number; faturamento: number }>>([])
+  const [chartMetaNovosClientesVW, setChartMetaNovosClientesVW] = useState<Array<{ label: string; meta: number; realizado: number }>>([])
   const [chartMetaTicketMedioVW, setChartMetaTicketMedioVW] = useState<Array<{ label: string; meta: number; realizado: number }>>([])
   const [chartCupons, setChartCupons] = useState<ChartItem[]>([])
   const [loading, setLoading] = useState(false)
@@ -164,6 +165,7 @@ export default function VendasDashboardPage() {
           setChartMetaVendedor(Array.isArray(charts?.meta_vendedor) ? charts.meta_vendedor as Array<{ label: string; meta: number; faturamento: number }> : [])
           setChartMetaVendedorVW(Array.isArray(charts?.meta_vendedor_vw) ? charts.meta_vendedor_vw as Array<{ label: string; meta: number; faturamento: number }> : [])
           setChartMetaTicketMedioVW(Array.isArray(charts?.meta_ticket_medio_vw) ? charts.meta_ticket_medio_vw as Array<{ label: string; meta: number; realizado: number }> : [])
+          setChartMetaNovosClientesVW(Array.isArray(charts?.meta_novos_clientes_vw) ? charts.meta_novos_clientes_vw as Array<{ label: string; meta: number; realizado: number }> : [])
           setChartCupons(Array.isArray(charts?.cupons) ? charts.cupons as ChartItem[] : [])
         } else {
           setKpis({ meta: 0, vendas: 0, percentMeta: 0, ticket: 0, cogs: 0, margemBruta: 0 })
@@ -386,6 +388,20 @@ export default function VendasDashboardPage() {
               <div className="text-2xl font-bold text-indigo-600" style={styleValues}>{kpis.margemBruta.toFixed(1)}%</div>
               <div className="text-xs text-gray-400 mt-1" style={styleText}>(Vendas - COGS) / Vendas</div>
             </div>
+          </div>
+
+          {/* Row 2.6: Meta x Realizado (Novos Clientes) por Vendedor */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            <BarChartMultipleRecharts
+              items={chartMetaNovosClientesVW as unknown as Array<{ label: string; [key: string]: string | number }>}
+              title="Meta x Realizado (Novos Clientes) por Vendedor"
+              icon={<Users className="w-5 h-5" />}
+              series={[
+                { key: 'meta', label: 'Meta', color: '#60a5fa' },
+                { key: 'realizado', label: 'Realizado', color: '#10b981' },
+              ]}
+              height={360}
+            />
           </div>
 
           {/* Row 1: Top 5 Vendedores, Top 5 Produtos, Vendas por Canal */}
