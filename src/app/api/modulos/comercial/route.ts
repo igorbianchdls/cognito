@@ -78,6 +78,16 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
     criado_em: 'm.criado_em',
     atualizado_em: 'm.atualizado_em',
   },
+  tipos_metas: {
+    tipo_meta_id: 'tm.id',
+    tipo_meta_nome: 'tm.nome',
+    descricao: 'tm.descricao',
+    tipo_valor: 'tm.tipo_valor',
+    medida_sql: 'tm.medida_sql',
+    ativo: 'tm.ativo',
+    criado_em: 'tm.criado_em',
+    atualizado_em: 'tm.atualizado_em',
+  },
   desempenho: {
     vendedor_nome: 'vendedor_nome',
     ano: 'ano',
@@ -307,6 +317,18 @@ export async function GET(req: NextRequest) {
       ) d`
       baseSql = ''
       orderClause = 'ORDER BY vendedor_nome ASC, ano ASC, mes ASC'
+    } else if (view === 'tipos_metas') {
+      selectSql = `SELECT
+        tm.id AS tipo_meta_id,
+        tm.nome AS tipo_meta_nome,
+        tm.descricao,
+        tm.tipo_valor,
+        tm.medida_sql,
+        tm.ativo,
+        tm.criado_em,
+        tm.atualizado_em`
+      baseSql = `FROM comercial.tipos_metas tm`
+      orderClause = orderBy ? `ORDER BY ${orderBy} ${orderDir}` : 'ORDER BY tm.id ASC'
     } else {
       return Response.json({ success: false, message: `View inválida: ${view}` }, { status: 400 })
     }

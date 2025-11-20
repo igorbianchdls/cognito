@@ -66,6 +66,7 @@ export default function ModulosComercialPage() {
         { value: 'meta_vendedores', label: 'Meta Vendedores' },
         { value: 'meta_territorios', label: 'Meta Territórios' },
         { value: 'metas', label: 'Metas' },
+        { value: 'tipos_metas', label: 'Tipos de Metas' },
         { value: 'desempenho', label: 'Desempenho' },
         { value: 'regras_comissoes', label: 'Regras de Comissões' },
         { value: 'campanhas_vendas', label: 'Campanhas de Vendas' },
@@ -263,6 +264,17 @@ export default function ModulosComercialPage() {
           { accessorKey: 'valor_meta', header: 'Meta' },
           { accessorKey: 'valor_atingido', header: 'Atingido' },
           { accessorKey: 'atingimento_percent', header: 'Atingimento (%)', cell: ({ getValue }) => formatPercent(getValue()) },
+        ]
+      case 'tipos_metas':
+        return [
+          { accessorKey: 'tipo_meta_id', header: 'ID' },
+          { accessorKey: 'tipo_meta_nome', header: 'Nome' },
+          { accessorKey: 'descricao', header: 'Descrição' },
+          { accessorKey: 'tipo_valor', header: 'Tipo Valor' },
+          { accessorKey: 'medida_sql', header: 'Medida SQL' },
+          { accessorKey: 'ativo', header: 'Ativo' },
+          { accessorKey: 'criado_em', header: 'Criado Em', cell: ({ getValue }) => formatDate(getValue()) },
+          { accessorKey: 'atualizado_em', header: 'Atualizado Em', cell: ({ getValue }) => formatDate(getValue()) },
         ]
       case 'campanhas_vendas':
         return [
