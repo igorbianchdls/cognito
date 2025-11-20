@@ -296,7 +296,7 @@ export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas"
             "measure1":{"field":"valor_meta","aggregation":"SUM","label":"Meta"},
             "measure2":{"field":"cliente_id","aggregation":"COUNT_DISTINCT","label":"Realizado"}
           },
-         "compareBarConfig":{"styling":{"showLegend":true,"marginBottom":40}}
+         "compareBarConfig":{"styling":{"groupMode":"grouped","layout":"vertical","showLegend":true,"marginBottom":40}}
         }
       </config>
     </widget>

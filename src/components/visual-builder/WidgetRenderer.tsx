@@ -1148,7 +1148,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
       }
       break;
 
-    case 'comparebar':
+    case 'comparebar': {
       if (multipleLoading) {
         widgetContent = (
           <div className="h-full w-full p-2 flex items-center justify-center">
@@ -1158,7 +1158,9 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
             </div>
           </div>
         );
-      } else if (multipleError) {
+        break;
+      }
+      if (multipleError) {
         widgetContent = (
           <div className="h-full w-full p-2 flex items-center justify-center bg-red-50 rounded">
             <div className="text-center text-red-600">
@@ -1168,16 +1170,44 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
             </div>
           </div>
         );
-      } else if (multipleData && multipleData.items.length > 0) {
+        break;
+      }
+      if (multipleData && multipleData.items.length > 0) {
+        const keys = multipleData.series.map(s => s.key)
+        const colors = multipleData.series.map(s => s.color)
+        const seriesMetadata = multipleData.series
+        const groupMode = widget.compareBarConfig?.styling?.groupMode || 'grouped'
+        const layout = widget.compareBarConfig?.styling?.layout || 'vertical'
         widgetContent = (
           <div className="h-full w-full p-2 relative group">
             {renderSQLButton()}
-            <BarChartMultipleRecharts
-              items={multipleData.items}
-              title={widget.title || 'Meta x Realizado'}
-              series={multipleData.series}
-              height={widget.heightPx || 320}
-            />
+            {groupMode === 'stacked' ? (
+              <StackedBarChart
+                data={multipleData.items}
+                keys={keys}
+                title={widget.title || 'Meta x Realizado'}
+                colors={colors}
+                seriesMetadata={seriesMetadata}
+                layout={layout}
+                // Style
+                gridColor={widget.compareBarConfig?.styling?.gridColor}
+                backgroundColor={widget.compareBarConfig?.styling?.backgroundColor}
+                marginBottom={widget.compareBarConfig?.styling?.marginBottom}
+              />
+            ) : (
+              <GroupedBarChart
+                data={multipleData.items}
+                keys={keys}
+                title={widget.title || 'Meta x Realizado'}
+                colors={colors}
+                seriesMetadata={seriesMetadata}
+                layout={layout}
+                // Style
+                gridColor={widget.compareBarConfig?.styling?.gridColor}
+                backgroundColor={widget.compareBarConfig?.styling?.backgroundColor}
+                marginBottom={widget.compareBarConfig?.styling?.marginBottom}
+              />
+            )}
           </div>
         );
       } else {
@@ -1191,6 +1221,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
         );
       }
       break;
+    }
 
     default:
       widgetContent = (

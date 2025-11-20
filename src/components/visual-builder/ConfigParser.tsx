@@ -253,6 +253,9 @@ export interface Widget {
       colors?: string[];
       backgroundColor?: string;
       gridColor?: string;
+      // Nivo options
+      groupMode?: 'grouped' | 'stacked';
+      layout?: 'vertical' | 'horizontal';
     };
   };
   insightsConfig?: InsightsConfig;
