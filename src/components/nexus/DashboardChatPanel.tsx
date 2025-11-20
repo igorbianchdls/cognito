@@ -1087,7 +1087,7 @@ export default function DashboardChatPanel() {
   
 
   return (
-    <Artifact className="h-full">
+    <Artifact className="h-full" hideTopBorder>
       <ArtifactHeader className="bg-white">
         <div className="flex items-center gap-2">
           <DropdownMenu open={dashListOpen} onOpenChange={setDashListOpen}>

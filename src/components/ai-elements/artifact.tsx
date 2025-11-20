@@ -11,12 +11,15 @@ import { cn } from "@/lib/utils";
 import { type LucideIcon, XIcon } from "lucide-react";
 import type { ComponentProps, HTMLAttributes } from "react";
 
-export type ArtifactProps = HTMLAttributes<HTMLDivElement>;
+export type ArtifactProps = HTMLAttributes<HTMLDivElement> & {
+  hideTopBorder?: boolean;
+};
 
-export const Artifact = ({ className, ...props }: ArtifactProps) => (
+export const Artifact = ({ className, hideTopBorder, ...props }: ArtifactProps) => (
   <div
     className={cn(
       "flex flex-col overflow-hidden rounded-none border-t border-b border-l border-r bg-background shadow-sm",
+      hideTopBorder && "border-t-0",
       className
     )}
     {...props}
