@@ -299,7 +299,11 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig, globalFilter
       opacity: isDragging ? 0.8 : 1,
     } as React.CSSProperties;
     return (
-      <div ref={setNodeRef} style={style} className="group relative rounded-md hover:ring-2 hover:ring-blue-400">
+      <div
+        ref={setNodeRef}
+        style={style}
+        className="group relative rounded-md border border-black/30 hover:ring-2 hover:ring-black"
+      >
         <div
           {...attributes}
           {...listeners}
