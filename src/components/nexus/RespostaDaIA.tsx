@@ -4856,14 +4856,24 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
         if (part.type === 'tool-updateDashboard') {
           const t = part as NexusToolUIPart;
           const callId = t.toolCallId;
-          const shouldBeOpen = t.state === 'output-available' || t.state === 'output-error';
+          const shouldBeOpen = t.state === 'output-available' || t.state === 'output-error' || t.state === 'input-streaming' || t.state === 'input-available';
 
           return (
             <div key={callId}>
               <Tool defaultOpen={shouldBeOpen}>
                 <ToolHeader type="tool-updateDashboard" state={t.state} />
                 <ToolContent>
-                  {t.input && (<ToolInput input={t.input} />)}
+                  {/* Stream input parameters while the model composes them */}
+                  {t.state === 'input-streaming' && (
+                    <ToolInputStreaming input={t.input} isStreaming={true} />
+                  )}
+                  {t.state === 'input-available' && (
+                    <ToolInputStreaming input={t.input} isStreaming={false} />
+                  )}
+                  {/* Fallback (legacy) */}
+                  {t.input && (t.state !== 'input-streaming' && t.state !== 'input-available') && (
+                    <ToolInput input={t.input} />
+                  )}
                   {t.state === 'output-error' && (
                     <ToolOutput output={null} errorText={t.errorText} />
                   )}
@@ -4884,14 +4894,24 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
         if (part.type === 'tool-createDashboard') {
           const t = part as NexusToolUIPart;
           const callId = t.toolCallId;
-          const shouldBeOpen = t.state === 'output-available' || t.state === 'output-error';
+          const shouldBeOpen = t.state === 'output-available' || t.state === 'output-error' || t.state === 'input-streaming' || t.state === 'input-available';
 
           return (
             <div key={callId}>
               <Tool defaultOpen={shouldBeOpen}>
                 <ToolHeader type="tool-createDashboard" state={t.state} />
                 <ToolContent>
-                  {t.input && (<ToolInput input={t.input} />)}
+                  {/* Stream input parameters while the model composes them */}
+                  {t.state === 'input-streaming' && (
+                    <ToolInputStreaming input={t.input} isStreaming={true} />
+                  )}
+                  {t.state === 'input-available' && (
+                    <ToolInputStreaming input={t.input} isStreaming={false} />
+                  )}
+                  {/* Fallback (legacy) */}
+                  {t.input && (t.state !== 'input-streaming' && t.state !== 'input-available') && (
+                    <ToolInput input={t.input} />
+                  )}
                   {t.state === 'output-error' && (
                     <ToolOutput output={null} errorText={t.errorText} />
                   )}

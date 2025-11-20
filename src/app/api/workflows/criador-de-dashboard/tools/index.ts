@@ -122,6 +122,22 @@ export const updateDashboard = tool({
     visibility: VisibilityEnum.optional(),
     version: z.number().int().positive().optional(),
   }),
+  outputSchema: z.union([
+    z.object({
+      success: z.literal(true),
+      item: z.object({
+        id: z.string(),
+        title: z.string(),
+        description: z.string().nullable(),
+        sourcecode: z.string(),
+        visibility: VisibilityEnum,
+        version: z.number(),
+        created_at: z.string(),
+        updated_at: z.string(),
+      }),
+    }),
+    z.object({ success: z.literal(false), error: z.string() }),
+  ]),
   execute: async ({ id, title, description, sourcecode, visibility, version }) => {
     try {
       const item = await updateDashboardByIdQuery(id, { title, description: description ?? undefined, sourcecode, visibility, version });
@@ -142,6 +158,22 @@ export const createDashboard = tool({
     visibility: VisibilityEnum.default('private').optional(),
     version: z.number().int().positive().default(1).optional(),
   }),
+  outputSchema: z.union([
+    z.object({
+      success: z.literal(true),
+      item: z.object({
+        id: z.string(),
+        title: z.string(),
+        description: z.string().nullable(),
+        sourcecode: z.string(),
+        visibility: VisibilityEnum,
+        version: z.number(),
+        created_at: z.string(),
+        updated_at: z.string(),
+      }),
+    }),
+    z.object({ success: z.literal(false), error: z.string() }),
+  ]),
   execute: async ({ title, sourcecode, description, visibility = 'private', version = 1 }) => {
     try {
       // Sanitização básica
