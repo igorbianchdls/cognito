@@ -86,6 +86,12 @@ export default function ModulosComercialPage() {
     } catch { return String(value) }
   }
 
+  const formatPercent = (value?: unknown) => {
+    const n = Number(value)
+    if (Number.isFinite(n)) return `${n.toFixed(1)}%`
+    return ''
+  }
+
   const renderCampanhaProdutos = (row: Row) => {
     const campanhaRow = row as CampanhaRow
     const produtos = campanhaRow.produtos || []
@@ -260,7 +266,7 @@ export default function ModulosComercialPage() {
           { accessorKey: 'mes', header: 'Mês' },
           { accessorKey: 'valor_meta', header: 'Meta' },
           { accessorKey: 'valor_atingido', header: 'Atingido' },
-          { accessorKey: 'atingimento_percent', header: 'Atingimento (%)' },
+          { accessorKey: 'atingimento_percent', header: 'Atingimento (%)', cell: ({ getValue }) => formatPercent(getValue()) },
         ]
       case 'campanhas_vendas':
         return [
