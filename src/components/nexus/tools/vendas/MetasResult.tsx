@@ -2,10 +2,13 @@
 
 import { useMemo, useState } from 'react'
 import { Target, ChevronDown, ChevronRight } from 'lucide-react'
-import { Artifact, ArtifactHeader, ArtifactTitle, ArtifactDescription, ArtifactContent } from '@/components/ai-elements/artifact'
+import { Artifact, ArtifactHeader, ArtifactTitle, ArtifactDescription, ArtifactContent, ArtifactActions, ArtifactAction } from '@/components/ai-elements/artifact'
+import { Table as TableIcon, BarChart3 } from 'lucide-react'
+import { ChartSwitcher } from '@/components/charts/ChartSwitcher'
 import type { GetMetasOutput, MetaRow } from '@/tools/analistaVendasTools'
 
 export default function MetasResult({ result }: { result: GetMetasOutput }) {
+  const [viewMode, setViewMode] = useState<'table' | 'chart'>('table')
   const groups = useMemo(() => {
     const map = new Map<string | number, { head: MetaRow; rows: MetaRow[] }>()
     for (const r of result.rows || []) {
@@ -31,8 +34,48 @@ export default function MetasResult({ result }: { result: GetMetasOutput }) {
           </div>
           <ArtifactDescription className="mt-1">{result.message} — {result.count} metas</ArtifactDescription>
         </div>
+        <ArtifactActions>
+          <ArtifactAction
+            icon={TableIcon}
+            tooltip="Ver tabela"
+            variant="ghost"
+            size="icon"
+            className={viewMode === 'table' ? 'bg-slate-200/80 text-slate-900' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100/70'}
+            onClick={() => setViewMode('table')}
+          />
+          <ArtifactAction
+            icon={BarChart3}
+            tooltip="Ver gráfico"
+            variant="ghost"
+            size="icon"
+            className={viewMode === 'chart' ? 'bg-slate-200/80 text-slate-900' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100/70'}
+            onClick={() => setViewMode('chart')}
+          />
+        </ArtifactActions>
       </ArtifactHeader>
-      <ArtifactContent className="p-0">
+      <ArtifactContent className={viewMode === 'chart' ? 'p-4' : 'p-0'}>
+        {viewMode === 'chart' ? (
+          <ChartSwitcher
+            rows={(result.rows || []) as Array<Record<string, unknown>>}
+            options={{
+              xKey: 'tipo_meta',
+              valueKeys: ['valor_meta'],
+              title: 'Metas por Tipo',
+              seriesLabel: 'Meta',
+              transform: (rows) => {
+                const acc = new Map<string, { tipo_meta: string; valor_meta: number }>()
+                for (const r of rows) {
+                  const k = String((r as any).tipo_meta || '')
+                  const v = Number((r as any).valor_meta ?? 0)
+                  const cur = acc.get(k) || { tipo_meta: k, valor_meta: 0 }
+                  cur.valor_meta += Number.isFinite(v) ? v : 0
+                  acc.set(k, cur)
+                }
+                return Array.from(acc.values()) as any
+              },
+            }}
+          />
+        ) : (
         <div className="divide-y">
           {groups.map(({ head, rows }) => {
             const key = head.meta_id
@@ -85,6 +128,7 @@ export default function MetasResult({ result }: { result: GetMetasOutput }) {
             <div className="p-4 text-sm text-gray-500">Nenhum resultado.</div>
           )}
         </div>
+        )}
       </ArtifactContent>
     </Artifact>
   )

@@ -2,10 +2,13 @@
 
 import { useMemo, useState } from 'react'
 import { TrendingUp, ChevronDown, ChevronRight } from 'lucide-react'
-import { Artifact, ArtifactHeader, ArtifactTitle, ArtifactDescription, ArtifactContent } from '@/components/ai-elements/artifact'
+import { Artifact, ArtifactHeader, ArtifactTitle, ArtifactDescription, ArtifactContent, ArtifactActions, ArtifactAction } from '@/components/ai-elements/artifact'
+import { Table as TableIcon, BarChart3 } from 'lucide-react'
+import { ChartSwitcher } from '@/components/charts/ChartSwitcher'
 import type { GetDesempenhoOutput, DesempenhoRow } from '@/tools/analistaVendasTools'
 
 export default function DesempenhoResult({ result }: { result: GetDesempenhoOutput }) {
+  const [viewMode, setViewMode] = useState<'table' | 'chart'>('table')
   const groups = useMemo(() => {
     const map = new Map<string | number, { head: DesempenhoRow; rows: DesempenhoRow[] }>()
     for (const r of result.rows || []) {
@@ -36,8 +39,52 @@ export default function DesempenhoResult({ result }: { result: GetDesempenhoOutp
           </div>
           <ArtifactDescription className="mt-1">{result.message} — {result.count} metas</ArtifactDescription>
         </div>
+        <ArtifactActions>
+          <ArtifactAction
+            icon={TableIcon}
+            tooltip="Ver tabela"
+            variant="ghost"
+            size="icon"
+            className={viewMode === 'table' ? 'bg-slate-200/80 text-slate-900' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100/70'}
+            onClick={() => setViewMode('table')}
+          />
+          <ArtifactAction
+            icon={BarChart3}
+            tooltip="Ver gráfico"
+            variant="ghost"
+            size="icon"
+            className={viewMode === 'chart' ? 'bg-slate-200/80 text-slate-900' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100/70'}
+            onClick={() => setViewMode('chart')}
+          />
+        </ArtifactActions>
       </ArtifactHeader>
-      <ArtifactContent className="p-0">
+      <ArtifactContent className={viewMode === 'chart' ? 'p-4' : 'p-0'}>
+        {viewMode === 'chart' ? (
+          <ChartSwitcher
+            rows={(result.rows || []) as Array<Record<string, unknown>>}
+            options={{
+              xKey: 'tipo_meta',
+              valueKeys: ['realizado', 'valor_meta', 'diferenca'],
+              title: 'Desempenho por Tipo de Meta',
+              seriesLabel: 'Valor',
+              transform: (rows) => {
+                const acc = new Map<string, { tipo_meta: string; realizado: number; valor_meta: number; diferenca: number }>()
+                for (const r of rows) {
+                  const k = String((r as any).tipo_meta || '')
+                  const cur = acc.get(k) || { tipo_meta: k, realizado: 0, valor_meta: 0, diferenca: 0 }
+                  const real = Number((r as any).realizado ?? 0)
+                  const meta = Number((r as any).valor_meta ?? 0)
+                  const dif = Number((r as any).diferenca ?? (real - meta))
+                  cur.realizado += Number.isFinite(real) ? real : 0
+                  cur.valor_meta += Number.isFinite(meta) ? meta : 0
+                  cur.diferenca += Number.isFinite(dif) ? dif : 0
+                  acc.set(k, cur)
+                }
+                return Array.from(acc.values()) as any
+              },
+            }}
+          />
+        ) : (
         <div className="divide-y">
           {groups.map(({ head, rows }) => {
             const key = head.meta_id
@@ -88,6 +135,7 @@ export default function DesempenhoResult({ result }: { result: GetDesempenhoOutp
             <div className="p-4 text-sm text-gray-500">Nenhum resultado.</div>
           )}
         </div>
+        )}
       </ArtifactContent>
     </Artifact>
   )
