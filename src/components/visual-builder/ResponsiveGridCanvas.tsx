@@ -302,7 +302,7 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig, globalFilter
       <div
         ref={setNodeRef}
         style={style}
-        className="group relative rounded-md border border-black/30 hover:ring-2 hover:ring-black"
+        className="group relative rounded-md hover:ring-2 hover:ring-black"
       >
         <div
           {...attributes}
