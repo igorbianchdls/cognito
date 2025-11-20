@@ -78,6 +78,14 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
     criado_em: 'm.criado_em',
     atualizado_em: 'm.atualizado_em',
   },
+  desempenho: {
+    vendedor_nome: 'vendedor_nome',
+    ano: 'ano',
+    mes: 'mes',
+    valor_meta: 'valor_meta',
+    valor_atingido: 'valor_atingido',
+    atingimento_percent: 'atingimento_percent',
+  },
 }
 
 export async function GET(req: NextRequest) {
@@ -238,6 +246,55 @@ export async function GET(req: NextRequest) {
       }
       // Ordem fixa por vendedor, depois nível (Meta Geral antes), ano, mês e rótulo do detalhe
       orderClause = 'ORDER BY vendedor_nome ASC, nivel ASC, m.ano ASC, m.mes ASC, child_label ASC, meta_id ASC'
+    } else if (view === 'desempenho') {
+      const anoParam = searchParams.get('ano')
+      const mesParam = searchParams.get('mes')
+      const ano = anoParam ? Number(anoParam) : undefined
+      const mes = mesParam ? Number(mesParam) : undefined
+
+      const filtrosMetas: string[] = ["m.vendedor_id IS NOT NULL"]
+      if (ano && String(ano).length === 4) filtrosMetas.push(`m.ano = ${ano}`)
+      if (mes && mes >= 1 && mes <= 12) filtrosMetas.push(`m.mes = ${mes}`)
+      const whereMetas = `WHERE ${filtrosMetas.join(' AND ')}`
+
+      const filtrosPedidos: string[] = []
+      if (ano && String(ano).length === 4) filtrosPedidos.push(`EXTRACT(YEAR FROM p.data_pedido) = ${ano}`)
+      if (mes && mes >= 1 && mes <= 12) filtrosPedidos.push(`EXTRACT(MONTH FROM p.data_pedido) = ${mes}`)
+      const wherePedidos = filtrosPedidos.length ? `WHERE ${filtrosPedidos.join(' AND ')}` : ''
+
+      selectSql = `SELECT * FROM (
+        WITH metas AS (
+          SELECT m.vendedor_id, func.nome AS vendedor_nome, m.ano, m.mes, SUM(m.valor_meta)::numeric AS valor_meta
+          FROM comercial.metas m
+          LEFT JOIN comercial.vendedores v ON v.id = m.vendedor_id
+          LEFT JOIN entidades.funcionarios func ON func.id = v.funcionario_id
+          ${whereMetas}
+          GROUP BY m.vendedor_id, func.nome, m.ano, m.mes
+        ), ped AS (
+          SELECT p.vendedor_id, func.nome AS vendedor_nome,
+                 EXTRACT(YEAR FROM p.data_pedido)::int AS ano,
+                 EXTRACT(MONTH FROM p.data_pedido)::int AS mes,
+                 SUM(p.valor_total)::numeric AS valor_atingido
+          FROM vendas.pedidos p
+          LEFT JOIN comercial.vendedores v ON v.id = p.vendedor_id
+          LEFT JOIN entidades.funcionarios func ON func.id = v.funcionario_id
+          ${wherePedidos}
+          GROUP BY p.vendedor_id, func.nome, EXTRACT(YEAR FROM p.data_pedido), EXTRACT(MONTH FROM p.data_pedido)
+        )
+        SELECT COALESCE(m.vendedor_id, ped.vendedor_id) AS vendedor_id,
+               COALESCE(m.vendedor_nome, ped.vendedor_nome) AS vendedor_nome,
+               COALESCE(m.ano, ped.ano) AS ano,
+               COALESCE(m.mes, ped.mes) AS mes,
+               COALESCE(m.valor_meta, 0)::numeric AS valor_meta,
+               COALESCE(ped.valor_atingido, 0)::numeric AS valor_atingido,
+               CASE WHEN COALESCE(m.valor_meta, 0) > 0
+                    THEN (COALESCE(ped.valor_atingido, 0) / COALESCE(m.valor_meta, 0)) * 100
+                    ELSE NULL END AS atingimento_percent
+        FROM metas m
+        FULL JOIN ped ON ped.vendedor_id = m.vendedor_id AND ped.ano = m.ano AND ped.mes = m.mes
+      ) d`
+      baseSql = ''
+      orderClause = 'ORDER BY vendedor_nome ASC, ano ASC, mes ASC'
     } else {
       return Response.json({ success: false, message: `View inválida: ${view}` }, { status: 400 })
     }
@@ -297,10 +354,12 @@ export async function GET(req: NextRequest) {
       rows = Array.from(campanhasMap.values())
     }
 
-    // Total simples (sem filtros)
-      const totalSql = view === 'campanhas_vendas'
-        ? `SELECT COUNT(DISTINCT cv.id)::int AS total FROM comercial.campanhas_vendas cv`
-      : baseSql ? `SELECT COUNT(*)::int AS total ${baseSql}` : `SELECT 0::int AS total`
+    // Total
+    const totalSql = view === 'campanhas_vendas'
+      ? `SELECT COUNT(DISTINCT cv.id)::int AS total FROM comercial.campanhas_vendas cv`
+      : view === 'desempenho'
+        ? `SELECT COUNT(*)::int AS total FROM (${selectSql}) t`
+        : baseSql ? `SELECT COUNT(*)::int AS total ${baseSql}` : `SELECT 0::int AS total`
     const totalRows = await runQuery<{ total: number }>(totalSql)
     const total = totalRows[0]?.total ?? 0
 

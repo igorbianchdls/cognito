@@ -66,6 +66,7 @@ export default function ModulosComercialPage() {
         { value: 'meta_vendedores', label: 'Meta Vendedores' },
         { value: 'meta_territorios', label: 'Meta Territórios' },
         { value: 'metas', label: 'Metas' },
+        { value: 'desempenho', label: 'Desempenho' },
         { value: 'regras_comissoes', label: 'Regras de Comissões' },
         { value: 'campanhas_vendas', label: 'Campanhas de Vendas' },
       ],
@@ -252,6 +253,15 @@ export default function ModulosComercialPage() {
           { accessorKey: 'criado_em', header: 'Criado Em', cell: ({ getValue }) => formatDate(getValue()) },
           { accessorKey: 'atualizado_em', header: 'Atualizado Em', cell: ({ getValue }) => formatDate(getValue()) },
         ]
+      case 'desempenho':
+        return [
+          { accessorKey: 'vendedor_nome', header: 'Vendedor' },
+          { accessorKey: 'ano', header: 'Ano' },
+          { accessorKey: 'mes', header: 'Mês' },
+          { accessorKey: 'valor_meta', header: 'Meta' },
+          { accessorKey: 'valor_atingido', header: 'Atingido' },
+          { accessorKey: 'atingimento_percent', header: 'Atingimento (%)' },
+        ]
       case 'campanhas_vendas':
         return [
           { accessorKey: 'campanha', header: 'Campanha' },
@@ -350,7 +360,7 @@ export default function ModulosComercialPage() {
         </div>
         <div style={{ paddingTop: (layout.contentTopGap || 0) + (layout.mbTabs || 0) }}>
           <div className="px-4 md:px-6" style={{ marginBottom: 8 }}>
-            {tabs.selected === 'metas' ? (
+            {tabs.selected === 'metas' || tabs.selected === 'desempenho' ? (
               <div className="w-full">
                 <div className="flex items-center justify-between gap-3 pb-2 border-b border-gray-200">
                   <div className="flex items-center gap-3">
@@ -391,7 +401,7 @@ export default function ModulosComercialPage() {
                     >
                       ‹
                     </button>
-                    <div className="mx-1 min-w-[96px] text-center text-sm">
+                    <div className="mx-1 min-w-[120px] text-center text-sm">
                       {total === 0 ? 0 : (page - 1) * pageSize + 1}–{total === 0 ? 0 : Math.min(page * pageSize, total)} de {total}
                     </div>
                     <button
