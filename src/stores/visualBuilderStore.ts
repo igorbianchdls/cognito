@@ -282,6 +282,25 @@ export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas"
       </config>
     </widget>
   </row>
+
+  <!-- Exemplo: Meta x Realizado (Novos Clientes) por Vendedor -->
+  <row id="10" cols-d="2" cols-t="2" cols-m="1" gap-x="16" gap-y="16">
+    <widget id="meta_novos_clientes" type="comparebar" order="1" span-d="2" span-t="2" span-m="1" height="320" title="👥 Meta x Realizado • Novos Clientes por Vendedor">
+      <config>
+        {"dataSource":{
+            "schema":"comercial",
+            "table":"vw_metas_detalhe",
+            "dimension":"vendedor",
+            "where":"tipo_meta = 'novos_clientes'",
+            "limit":20,
+            "measure1":{"field":"valor_meta","aggregation":"SUM","label":"Meta"},
+            "measure2":{"field":"cliente_id","aggregation":"COUNT_DISTINCT","label":"Realizado"}
+          },
+         "compareBarConfig":{"styling":{"showLegend":true,"marginBottom":40}}
+        }
+      </config>
+    </widget>
+  </row>
 </dashboard>`
 
 // Example in grid-per-column mode

@@ -191,7 +191,7 @@ export interface Insights2Config {
 
 export interface Widget {
   id: string;
-  type: 'bar' | 'line' | 'pie' | 'area' | 'kpi' | 'insights' | 'alerts' | 'recommendations' | 'insightsHero' | 'insights2' | 'stackedbar' | 'groupedbar' | 'stackedlines' | 'radialstacked' | 'pivotbar';
+  type: 'bar' | 'line' | 'pie' | 'area' | 'kpi' | 'insights' | 'alerts' | 'recommendations' | 'insightsHero' | 'insights2' | 'stackedbar' | 'groupedbar' | 'stackedlines' | 'radialstacked' | 'pivotbar' | 'comparebar';
   // Legacy absolute grid position (optional; not required by responsive layout)
   position?: {
     x: number;
@@ -245,6 +245,16 @@ export interface Widget {
   stackedLinesConfig?: Partial<StackedLinesChartConfig>;
   radialStackedConfig?: Partial<RadialStackedChartConfig>;
   pivotBarConfig?: Partial<PivotBarChartConfig>;
+  // Compare chart (two measures vs one dimension)
+  compareBarConfig?: {
+    styling?: {
+      showLegend?: boolean;
+      marginBottom?: number;
+      colors?: string[];
+      backgroundColor?: string;
+      gridColor?: string;
+    };
+  };
   insightsConfig?: InsightsConfig;
   // New: Insights hero (Swiper carousel variant)
   insightsHeroConfig?: InsightsHeroConfig;
@@ -271,7 +281,7 @@ export interface ParseResult {
 }
 
 export class ConfigParser {
-  private static VALID_TYPES = ['bar', 'line', 'pie', 'area', 'kpi', 'insights', 'alerts', 'recommendations', 'insightsHero', 'insights2', 'stackedbar', 'groupedbar', 'stackedlines', 'radialstacked', 'pivotbar'];
+  private static VALID_TYPES = ['bar', 'line', 'pie', 'area', 'kpi', 'insights', 'alerts', 'recommendations', 'insightsHero', 'insights2', 'stackedbar', 'groupedbar', 'stackedlines', 'radialstacked', 'pivotbar', 'comparebar'];
   private static DEFAULT_GRID_CONFIG: GridConfig = {
     maxRows: 12,
     rowHeight: 30,
@@ -816,6 +826,7 @@ export class ConfigParser {
       | 'stackedLinesConfig'
       | 'radialStackedConfig'
       | 'pivotBarConfig'
+      | 'compareBarConfig'
       | 'insights2Config';
 
     const map: Array<[WidgetConfigKey, string[]]> = [
@@ -829,6 +840,7 @@ export class ConfigParser {
       ['stackedLinesConfig', ['stackedLinesConfig']],
       ['radialStackedConfig', ['radialStackedConfig']],
       ['pivotBarConfig', ['pivotBarConfig']],
+      ['compareBarConfig', ['compareBarConfig']],
       ['insights2Config', ['insights2Config', 'insights2']],
     ];
 

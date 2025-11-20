@@ -12,6 +12,7 @@ import { StackedLinesChart } from '@/components/charts/StackedLinesChart';
 import { GroupedBarChart } from '@/components/charts/GroupedBarChart';
 import { PivotBarChart } from '@/components/charts/PivotBarChart';
 import { RadialStackedChart } from '@/components/charts/RadialStackedChart';
+import { BarChartMultipleRecharts } from '@/components/charts/BarChartMultipleRecharts';
 import { KPICard } from '@/components/widgets/KPICard';
 import InsightsCard from '@/components/widgets/InsightsCard';
 import AlertasCard from '@/components/widgets/AlertasCard';
@@ -233,9 +234,9 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
     fetchData();
   }, [widget.id, widget.dataSource, widget.type, globalFilters]); // Re-executar quando widget ou filtros mudarem
 
-  // Fetch data for stackedbar/groupedbar/stackedlines/radialstacked/pivotbar widgets
+  // Fetch data for multi-series widgets (stacked/grouped/pivot/compare)
   useEffect(() => {
-    if (widget.type !== 'stackedbar' && widget.type !== 'groupedbar' && widget.type !== 'stackedlines' && widget.type !== 'radialstacked' && widget.type !== 'pivotbar') {
+    if (widget.type !== 'stackedbar' && widget.type !== 'groupedbar' && widget.type !== 'stackedlines' && widget.type !== 'radialstacked' && widget.type !== 'pivotbar' && widget.type !== 'comparebar') {
       return;
     }
 
@@ -252,7 +253,8 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
 
         console.log('📊 Fetching grouped data for widget:', widget.id);
 
-        const response = await fetch('/api/dashboard-supabase/grouped', {
+        const endpoint = widget.type === 'comparebar' ? '/api/dashboard-supabase/compare' : '/api/dashboard-supabase/grouped';
+        const response = await fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -278,7 +280,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
       } finally {
         setMultipleLoading(false);
       }
-    }
+      }
 
     fetchGroupedData();
   }, [widget.id, widget.dataSource, widget.type, globalFilters]);
@@ -1140,6 +1142,50 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
             <div className="text-center text-gray-500">
               <div className="text-2xl mb-2">📊</div>
               <div className="text-sm">No grouped data available</div>
+            </div>
+          </div>
+        );
+      }
+      break;
+
+    case 'comparebar':
+      if (multipleLoading) {
+        widgetContent = (
+          <div className="h-full w-full p-2 flex items-center justify-center">
+            <div className="text-center text-gray-500">
+              <div className="text-2xl mb-2">⏳</div>
+              <div className="text-sm">Loading data...</div>
+            </div>
+          </div>
+        );
+      } else if (multipleError) {
+        widgetContent = (
+          <div className="h-full w-full p-2 flex items-center justify-center bg-red-50 rounded">
+            <div className="text-center text-red-600">
+              <div className="text-2xl mb-2">⚠️</div>
+              <div className="text-sm font-medium mb-1">Error</div>
+              <div className="text-xs">{multipleError}</div>
+            </div>
+          </div>
+        );
+      } else if (multipleData && multipleData.items.length > 0) {
+        widgetContent = (
+          <div className="h-full w-full p-2 relative group">
+            {renderSQLButton()}
+            <BarChartMultipleRecharts
+              items={multipleData.items}
+              title={widget.title || 'Meta x Realizado'}
+              series={multipleData.series}
+              height={widget.heightPx || 320}
+            />
+          </div>
+        );
+      } else {
+        widgetContent = (
+          <div className="h-full w-full p-2 flex items-center justify-center bg-gray-50 rounded">
+            <div className="text-center text-gray-500">
+              <div className="text-2xl mb-2">📊</div>
+              <div className="text-sm">No data available</div>
             </div>
           </div>
         );
