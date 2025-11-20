@@ -7,6 +7,7 @@ import MonacoEditor from '@/components/visual-builder/MonacoEditor';
 import ResponsiveGridCanvas from '@/components/visual-builder/ResponsiveGridCanvas';
 import { $visualBuilderState, visualBuilderActions } from '@/stores/visualBuilderStore';
 import type { Widget } from '@/stores/visualBuilderStore';
+import type { Insights2Config } from '@/components/visual-builder/ConfigParser';
 import { ThemeManager, type ThemeName } from '@/components/visual-builder/ThemeManager';
 import { BackgroundManager, type BackgroundPresetKey } from '@/components/visual-builder/BackgroundManager';
 // Removed ColorManager palette UI
@@ -927,9 +928,9 @@ export default function DashboardChatPanel() {
   };
 
   const setInsightsStyleOnWidget = (widget: Widget): Widget => {
-    const w = { ...widget } as Widget & { insights2Config?: any };
+    const w: Widget = { ...widget };
     if (w.type !== 'insights2') return w as Widget;
-    const prev = (w.insights2Config?.styling || {}) as Record<string, unknown>;
+    const prev: Partial<NonNullable<Insights2Config['styling']>> = (w.insights2Config?.styling || {});
     w.insights2Config = {
       ...(w.insights2Config || {}),
       styling: {
@@ -943,7 +944,7 @@ export default function DashboardChatPanel() {
         compact: insightsCompact,
       }
     };
-    return w as unknown as Widget;
+    return w;
   };
 
   const applyInsightsDefaultsToDashboard = (defaults: InsightsStyleDefaults) => {
