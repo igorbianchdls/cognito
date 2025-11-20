@@ -241,48 +241,82 @@ export async function GET(req: NextRequest) {
       baseSql = ''
       orderClause = ''
     } else if (view === 'desempenho') {
-      // Query exata solicitada para desempenho (faturamento) com filtros opcionais de ano/mês
+      // Query para desempenho com CTE base e métricas por tipo_meta; filtros opcionais ano/mês
       const anoParam = searchParams.get('ano')
       const mesParam = searchParams.get('mes')
       const ano = anoParam ? Number(anoParam) : undefined
       const mes = mesParam ? Number(mesParam) : undefined
 
-      const filtros: string[] = [
-        "vendedor_id IS NOT NULL",
-        "tipo_meta = 'faturamento'"
-      ]
-      if (ano && String(ano).length === 4) filtros.push(`ano = ${ano}`)
-      if (mes && mes >= 1 && mes <= 12) filtros.push(`mes = ${mes}`)
-      const where = `WHERE ${filtros.join(' AND ')}`
+      const whereParts: string[] = []
+      if (ano && String(ano).length === 4) whereParts.push(`ano = ${ano}`)
+      if (mes && mes >= 1 && mes <= 12) whereParts.push(`mes = ${mes}`)
+      const where = whereParts.length ? `WHERE ${whereParts.join(' AND ')}` : ''
 
-      selectSql = `SELECT
+      selectSql = `WITH base AS (
+        SELECT
+          meta_id,
+          vendedor_id,
+          vendedor,
+          mes,
+          ano,
+          tipo_meta,
+          valor_meta,
+          pedido_id,
+          cliente_id,
+          subtotal
+        FROM comercial.vw_metas_detalhe
+        ${where}
+      )
+      SELECT
         meta_id,
-        mes,
-        ano,
         vendedor_id,
         vendedor,
-        meta_item_id,
+        mes,
+        ano,
         tipo_meta,
         valor_meta,
-        COALESCE(SUM(subtotal), 0) AS realizado,
-        COALESCE(SUM(subtotal), 0) - valor_meta AS diferenca,
         CASE 
-            WHEN valor_meta > 0 
-            THEN ROUND((COALESCE(SUM(subtotal), 0) / valor_meta) * 100, 2)
-            ELSE 0
+          WHEN tipo_meta = 'faturamento' THEN COALESCE(SUM(subtotal), 0)
+          WHEN tipo_meta = 'ticket_medio' THEN (
+            CASE WHEN COUNT(DISTINCT pedido_id) > 0 
+                 THEN ROUND(SUM(subtotal) * 1.0 / COUNT(DISTINCT pedido_id), 2)
+                 ELSE 0 END
+          )
+          WHEN tipo_meta = 'novos_clientes' THEN COUNT(DISTINCT cliente_id)
+        END AS realizado,
+        CASE 
+          WHEN tipo_meta = 'faturamento' THEN COALESCE(SUM(subtotal), 0) - valor_meta
+          WHEN tipo_meta = 'ticket_medio' THEN (
+            (CASE WHEN COUNT(DISTINCT pedido_id) > 0 
+                  THEN ROUND(SUM(subtotal) * 1.0 / COUNT(DISTINCT pedido_id), 2)
+                  ELSE 0 END) - valor_meta
+          )
+          WHEN tipo_meta = 'novos_clientes' THEN COUNT(DISTINCT cliente_id) - valor_meta
+        END AS diferenca,
+        CASE 
+          WHEN valor_meta > 0 THEN ROUND((
+            CASE 
+              WHEN tipo_meta = 'faturamento' THEN COALESCE(SUM(subtotal), 0)
+              WHEN tipo_meta = 'ticket_medio' THEN (
+                CASE WHEN COUNT(DISTINCT pedido_id) > 0 
+                     THEN ROUND(SUM(subtotal) * 1.0 / COUNT(DISTINCT pedido_id), 2)
+                     ELSE 0 END
+              )
+              WHEN tipo_meta = 'novos_clientes' THEN COUNT(DISTINCT cliente_id)
+            END
+          ) * 100.0 / valor_meta, 2)
+          ELSE 0
         END AS atingimento_percentual
-      FROM comercial.vw_metas_detalhe
-      ${where}
-      GROUP BY 
+      FROM base
+      GROUP BY
         meta_id,
-        mes,
-        ano,
         vendedor_id,
         vendedor,
-        meta_item_id,
+        mes,
+        ano,
         tipo_meta,
         valor_meta
-      ORDER BY vendedor, meta_id`
+      ORDER BY vendedor, tipo_meta`
       baseSql = ''
       orderClause = ''
     } else if (view === 'tipos_metas') {
@@ -417,7 +451,7 @@ export async function GET(req: NextRequest) {
     const totalSql = view === 'campanhas_vendas'
       ? `SELECT COUNT(DISTINCT cv.id)::int AS total FROM comercial.campanhas_vendas cv`
       : view === 'desempenho'
-        ? `SELECT COUNT(*)::int AS total FROM (${selectSql}) t`
+        ? `SELECT COUNT(DISTINCT meta_id)::int AS total FROM (${selectSql}) t`
       : view === 'metas'
         ? `SELECT COUNT(DISTINCT meta_id)::int AS total FROM (${selectSql}) t`
       : view === 'metas_territorios'

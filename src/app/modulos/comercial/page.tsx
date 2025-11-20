@@ -450,7 +450,7 @@ export default function ModulosComercialPage() {
                   key={tabs.selected}
                   columns={columns}
                   data={
-                    tabs.selected === 'metas'
+                    (tabs.selected === 'metas' || tabs.selected === 'desempenho')
                       ? (() => {
                           // Mostrar apenas uma linha por meta_id (cabeçalho sintético)
                           const seen = new Set<string | number>()
@@ -466,12 +466,51 @@ export default function ModulosComercialPage() {
                         ? data.filter(r => Boolean(r['parent_flag']))
                         : data
                   }
-                  enableExpand={tabs.selected === 'campanhas_vendas' || tabs.selected === 'metas' || tabs.selected === 'metas_territorios'}
+                  enableExpand={tabs.selected === 'campanhas_vendas' || tabs.selected === 'metas' || tabs.selected === 'desempenho' || tabs.selected === 'metas_territorios'}
                   renderDetail={
                     tabs.selected === 'campanhas_vendas'
                       ? renderCampanhaProdutos
                       : tabs.selected === 'metas'
                         ? renderMetaDetail
+                        : tabs.selected === 'desempenho'
+                          ? (row) => {
+                              const metaId = row['meta_id']
+                              const vendedor = String(row['vendedor'] || '')
+                              const children = data.filter(r => r['meta_id'] === metaId)
+                              return (
+                                <div className="p-3 bg-gray-50 rounded border border-gray-200">
+                                  <div className="text-sm font-medium text-gray-700 mb-2">Desempenho por Tipo de Meta — {vendedor}</div>
+                                  {children.length === 0 ? (
+                                    <div className="text-xs text-gray-500">Sem itens de meta para este período.</div>
+                                  ) : (
+                                    <div className="overflow-x-auto">
+                                      <table className="w-full text-sm">
+                                        <thead>
+                                          <tr className="border-b">
+                                            <th className="text-left py-2 px-3">Tipo Meta</th>
+                                            <th className="text-right py-2 px-3">Meta</th>
+                                            <th className="text-right py-2 px-3">Realizado</th>
+                                            <th className="text-right py-2 px-3">Diferença</th>
+                                            <th className="text-right py-2 px-3">Atingimento</th>
+                                          </tr>
+                                        </thead>
+                                        <tbody>
+                                          {children.map((c, idx) => (
+                                            <tr key={idx} className="border-b last:border-0">
+                                              <td className="py-2 px-3">{String(c['tipo_meta'] || '')}</td>
+                                              <td className="text-right py-2 px-3">{String(c['valor_meta'] ?? '')}</td>
+                                              <td className="text-right py-2 px-3">{String(c['realizado'] ?? '')}</td>
+                                              <td className="text-right py-2 px-3">{String(c['diferenca'] ?? '')}</td>
+                                              <td className="text-right py-2 px-3">{formatPercent(c['atingimento_percentual'])}</td>
+                                            </tr>
+                                          ))}
+                                        </tbody>
+                                      </table>
+                                    </div>
+                                  )}
+                                </div>
+                              )
+                            }
                         : tabs.selected === 'metas_territorios'
                           ? (row) => {
                               const isParent = Boolean(row['parent_flag'])
@@ -513,7 +552,7 @@ export default function ModulosComercialPage() {
                         : undefined
                   }
                   rowCanExpand={
-                    tabs.selected === 'metas'
+                    (tabs.selected === 'metas' || tabs.selected === 'desempenho')
                       ? (r) => true
                       : tabs.selected === 'metas_territorios'
                         ? (r) => Boolean(r['parent_flag'])
