@@ -465,18 +465,60 @@ export default function ModulosComercialPage() {
                 <DataTable
                   key={tabs.selected}
                   columns={columns}
-                  data={tabs.selected === 'metas' ? data.filter(r => Boolean(r['parent_flag'])) : data}
-                  enableExpand={tabs.selected === 'campanhas_vendas' || tabs.selected === 'metas'}
+                  data={tabs.selected === 'metas' ? data.filter(r => Boolean(r['parent_flag'])) : tabs.selected === 'desempenho' ? data.filter(r => Boolean(r['parent_flag'])) : data}
+                  enableExpand={tabs.selected === 'campanhas_vendas' || tabs.selected === 'metas' || tabs.selected === 'desempenho'}
                   renderDetail={
                     tabs.selected === 'campanhas_vendas'
                       ? renderCampanhaProdutos
                       : tabs.selected === 'metas'
                         ? renderMetaDetail
+                        : tabs.selected === 'desempenho'
+                          ? (row) => {
+                              const isParent = Boolean(row['parent_flag'])
+                              if (!isParent) return null
+                              const ano = row['ano']
+                              const mes = row['mes']
+                              const vendedor = String(row['vendedor_nome'] || '')
+                              const children = data.filter(r => String(r['vendedor_nome'] || '') === vendedor && r['ano'] === ano && r['mes'] === mes && !r['parent_flag'])
+                              return (
+                                <div className="p-3 bg-gray-50 rounded border border-gray-200">
+                                  <div className="text-sm font-medium text-gray-700 mb-2">Desempenho por Tipo de Meta — {vendedor}</div>
+                                  {children.length === 0 ? (
+                                    <div className="text-xs text-gray-500">Sem itens de meta para este período.</div>
+                                  ) : (
+                                    <div className="overflow-x-auto">
+                                      <table className="w-full text-sm">
+                                        <thead>
+                                          <tr className="border-b">
+                                            <th className="text-left py-2 px-3">Tipo Meta</th>
+                                            <th className="text-right py-2 px-3">Meta</th>
+                                            <th className="text-right py-2 px-3">Atingido</th>
+                                            <th className="text-right py-2 px-3">Atingimento</th>
+                                          </tr>
+                                        </thead>
+                                        <tbody>
+                                          {children.map((c, idx) => (
+                                            <tr key={idx} className="border-b last:border-0">
+                                              <td className="py-2 px-3">{String(c['tipo_meta_nome'] || '')}</td>
+                                              <td className="text-right py-2 px-3">{String(c['valor_meta'] ?? '')}</td>
+                                              <td className="text-right py-2 px-3">{String(c['valor_atingido'] ?? '')}</td>
+                                              <td className="text-right py-2 px-3">{formatPercent(c['atingimento_percent'])}</td>
+                                            </tr>
+                                          ))}
+                                        </tbody>
+                                      </table>
+                                    </div>
+                                  )}
+                                </div>
+                              )
+                            }
                         : undefined
                   }
                   rowCanExpand={
                     tabs.selected === 'metas'
                       ? (r) => Boolean(r['parent_flag'])
+                      : tabs.selected === 'desempenho'
+                        ? (r) => Boolean(r['parent_flag'])
                       : undefined
                   }
                   enableSearch={tabs.selected === 'metas' ? false : tabelaUI.enableSearch}

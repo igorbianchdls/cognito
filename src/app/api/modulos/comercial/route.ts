@@ -285,44 +285,60 @@ export async function GET(req: NextRequest) {
       const wherePedidos = filtrosPedidos.length ? `WHERE ${filtrosPedidos.join(' AND ')}` : ''
 
       selectSql = `SELECT * FROM (
-        WITH metas AS (
-          SELECT m.vendedor_id,
-                 func.nome AS vendedor_nome,
-                 m.ano,
-                 m.mes,
-                 SUM(mi.valor_meta)::numeric AS valor_meta
+        WITH itens AS (
+          SELECT m.vendedor_id, func.nome AS vendedor_nome, m.ano, m.mes,
+                 mi.id AS meta_item_id, mi.valor_meta, mi.meta_percentual,
+                 tm.id AS tipo_meta_id, tm.nome AS tipo_meta_nome, tm.tipo_valor, tm.medida_sql
           FROM comercial.metas m
           LEFT JOIN comercial.metas_itens mi ON mi.meta_id = m.id
           LEFT JOIN comercial.tipos_metas tm ON tm.id = mi.tipo_meta_id
           LEFT JOIN comercial.vendedores v ON v.id = m.vendedor_id
           LEFT JOIN entidades.funcionarios func ON func.id = v.funcionario_id
-          ${whereMetas} AND mi.tipo_meta_id = 1
-          GROUP BY m.vendedor_id, func.nome, m.ano, m.mes
+          ${whereMetas}
         ), ped AS (
           SELECT p.vendedor_id, func.nome AS vendedor_nome,
                  EXTRACT(YEAR FROM p.data_pedido)::int AS ano,
                  EXTRACT(MONTH FROM p.data_pedido)::int AS mes,
-                 SUM(p.valor_total)::numeric AS valor_atingido
+                 SUM(p.valor_total)::numeric AS faturamento
           FROM vendas.pedidos p
           LEFT JOIN comercial.vendedores v ON v.id = p.vendedor_id
           LEFT JOIN entidades.funcionarios func ON func.id = v.funcionario_id
           ${wherePedidos}
           GROUP BY p.vendedor_id, func.nome, EXTRACT(YEAR FROM p.data_pedido), EXTRACT(MONTH FROM p.data_pedido)
+        ), parents AS (
+          SELECT i.vendedor_id, i.vendedor_nome, i.ano, i.mes,
+                 SUM(CASE WHEN i.tipo_meta_id = 1 THEN i.valor_meta ELSE 0 END)::numeric AS valor_meta,
+                 COALESCE(p.faturamento, 0)::numeric AS valor_atingido,
+                 CASE WHEN SUM(CASE WHEN i.tipo_meta_id = 1 THEN i.valor_meta ELSE 0 END) > 0
+                      THEN (COALESCE(p.faturamento, 0) / SUM(CASE WHEN i.tipo_meta_id = 1 THEN i.valor_meta ELSE 0 END)) * 100
+                      ELSE NULL END AS atingimento_percent,
+                 TRUE AS parent_flag,
+                 NULL::bigint AS meta_item_id,
+                 NULL::int AS tipo_meta_id,
+                 NULL::text AS tipo_meta_nome
+          FROM itens i
+          LEFT JOIN ped p ON p.vendedor_id = i.vendedor_id AND p.ano = i.ano AND p.mes = i.mes
+          GROUP BY i.vendedor_id, i.vendedor_nome, i.ano, i.mes, p.faturamento
+        ), children AS (
+          SELECT i.vendedor_id, i.vendedor_nome, i.ano, i.mes,
+                 i.valor_meta AS valor_meta,
+                 CASE WHEN i.tipo_meta_id = 1 THEN COALESCE(p.faturamento, 0)::numeric ELSE NULL END AS valor_atingido,
+                 CASE WHEN i.tipo_meta_id = 1 AND i.valor_meta > 0
+                      THEN (COALESCE(p.faturamento, 0) / i.valor_meta) * 100
+                      ELSE NULL END AS atingimento_percent,
+                 FALSE AS parent_flag,
+                 i.meta_item_id,
+                 i.tipo_meta_id,
+                 i.tipo_meta_nome
+          FROM itens i
+          LEFT JOIN ped p ON p.vendedor_id = i.vendedor_id AND p.ano = i.ano AND p.mes = i.mes
         )
-        SELECT COALESCE(m.vendedor_id, ped.vendedor_id) AS vendedor_id,
-               COALESCE(m.vendedor_nome, ped.vendedor_nome) AS vendedor_nome,
-               COALESCE(m.ano, ped.ano) AS ano,
-               COALESCE(m.mes, ped.mes) AS mes,
-               COALESCE(m.valor_meta, 0)::numeric AS valor_meta,
-               COALESCE(ped.valor_atingido, 0)::numeric AS valor_atingido,
-               CASE WHEN COALESCE(m.valor_meta, 0) > 0
-                    THEN (COALESCE(ped.valor_atingido, 0) / COALESCE(m.valor_meta, 0)) * 100
-                    ELSE NULL END AS atingimento_percent
-        FROM metas m
-        FULL JOIN ped ON ped.vendedor_id = m.vendedor_id AND ped.ano = m.ano AND ped.mes = m.mes
+        SELECT * FROM parents
+        UNION ALL
+        SELECT * FROM children
       ) d`
       baseSql = ''
-      orderClause = 'ORDER BY vendedor_nome ASC, ano ASC, mes ASC'
+      orderClause = 'ORDER BY vendedor_nome ASC, ano ASC, mes ASC, parent_flag DESC, tipo_meta_id NULLS FIRST'
     } else if (view === 'tipos_metas') {
       selectSql = `SELECT
         tm.id AS tipo_meta_id,
