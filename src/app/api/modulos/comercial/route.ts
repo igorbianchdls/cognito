@@ -97,12 +97,13 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
     atualizado_em: 'tm.atualizado_em',
   },
   desempenho: {
-    vendedor_nome: 'vendedor_nome',
+    vendedor: 'vendedor',
     ano: 'ano',
     mes: 'mes',
     valor_meta: 'valor_meta',
-    valor_atingido: 'valor_atingido',
-    atingimento_percent: 'atingimento_percent',
+    realizado: 'realizado',
+    diferenca: 'diferenca',
+    atingimento_percentual: 'atingimento_percentual',
   },
 }
 
@@ -240,76 +241,50 @@ export async function GET(req: NextRequest) {
       baseSql = ''
       orderClause = ''
     } else if (view === 'desempenho') {
+      // Query exata solicitada para desempenho (faturamento) com filtros opcionais de ano/mês
       const anoParam = searchParams.get('ano')
       const mesParam = searchParams.get('mes')
       const ano = anoParam ? Number(anoParam) : undefined
       const mes = mesParam ? Number(mesParam) : undefined
 
-      const filtrosMetas: string[] = ["m.vendedor_id IS NOT NULL"]
-      if (ano && String(ano).length === 4) filtrosMetas.push(`m.ano = ${ano}`)
-      if (mes && mes >= 1 && mes <= 12) filtrosMetas.push(`m.mes = ${mes}`)
-      const whereMetas = `WHERE ${filtrosMetas.join(' AND ')}`
+      const filtros: string[] = [
+        "vendedor_id IS NOT NULL",
+        "tipo_meta = 'faturamento'"
+      ]
+      if (ano && String(ano).length === 4) filtros.push(`ano = ${ano}`)
+      if (mes && mes >= 1 && mes <= 12) filtros.push(`mes = ${mes}`)
+      const where = `WHERE ${filtros.join(' AND ')}`
 
-      const filtrosPedidos: string[] = []
-      if (ano && String(ano).length === 4) filtrosPedidos.push(`EXTRACT(YEAR FROM p.data_pedido) = ${ano}`)
-      if (mes && mes >= 1 && mes <= 12) filtrosPedidos.push(`EXTRACT(MONTH FROM p.data_pedido) = ${mes}`)
-      const wherePedidos = filtrosPedidos.length ? `WHERE ${filtrosPedidos.join(' AND ')}` : ''
-
-      selectSql = `SELECT * FROM (
-        WITH itens AS (
-          SELECT m.vendedor_id, func.nome AS vendedor_nome, m.ano, m.mes,
-                 mi.id AS meta_item_id, mi.valor_meta, mi.meta_percentual,
-                 tm.id AS tipo_meta_id, tm.nome AS tipo_meta_nome, tm.tipo_valor, tm.medida_sql
-          FROM comercial.metas m
-          LEFT JOIN comercial.metas_itens mi ON mi.meta_id = m.id
-          LEFT JOIN comercial.tipos_metas tm ON tm.id = mi.tipo_meta_id
-          LEFT JOIN comercial.vendedores v ON v.id = m.vendedor_id
-          LEFT JOIN entidades.funcionarios func ON func.id = v.funcionario_id
-          ${whereMetas}
-        ), ped AS (
-          SELECT p.vendedor_id, func.nome AS vendedor_nome,
-                 EXTRACT(YEAR FROM p.data_pedido)::int AS ano,
-                 EXTRACT(MONTH FROM p.data_pedido)::int AS mes,
-                 SUM(p.valor_total)::numeric AS faturamento
-          FROM vendas.pedidos p
-          LEFT JOIN comercial.vendedores v ON v.id = p.vendedor_id
-          LEFT JOIN entidades.funcionarios func ON func.id = v.funcionario_id
-          ${wherePedidos}
-          GROUP BY p.vendedor_id, func.nome, EXTRACT(YEAR FROM p.data_pedido), EXTRACT(MONTH FROM p.data_pedido)
-        ), parents AS (
-          SELECT i.vendedor_id, i.vendedor_nome, i.ano, i.mes,
-                 SUM(CASE WHEN i.tipo_meta_id = 1 THEN i.valor_meta ELSE 0 END)::numeric AS valor_meta,
-                 COALESCE(p.faturamento, 0)::numeric AS valor_atingido,
-                 CASE WHEN SUM(CASE WHEN i.tipo_meta_id = 1 THEN i.valor_meta ELSE 0 END) > 0
-                      THEN (COALESCE(p.faturamento, 0) / SUM(CASE WHEN i.tipo_meta_id = 1 THEN i.valor_meta ELSE 0 END)) * 100
-                      ELSE NULL END AS atingimento_percent,
-                 TRUE AS parent_flag,
-                 NULL::bigint AS meta_item_id,
-                 NULL::int AS tipo_meta_id,
-                 NULL::text AS tipo_meta_nome
-          FROM itens i
-          LEFT JOIN ped p ON p.vendedor_id = i.vendedor_id AND p.ano = i.ano AND p.mes = i.mes
-          GROUP BY i.vendedor_id, i.vendedor_nome, i.ano, i.mes, p.faturamento
-        ), children AS (
-          SELECT i.vendedor_id, i.vendedor_nome, i.ano, i.mes,
-                 i.valor_meta AS valor_meta,
-                 CASE WHEN i.tipo_meta_id = 1 THEN COALESCE(p.faturamento, 0)::numeric ELSE NULL END AS valor_atingido,
-                 CASE WHEN i.tipo_meta_id = 1 AND i.valor_meta > 0
-                      THEN (COALESCE(p.faturamento, 0) / i.valor_meta) * 100
-                      ELSE NULL END AS atingimento_percent,
-                 FALSE AS parent_flag,
-                 i.meta_item_id,
-                 i.tipo_meta_id,
-                 i.tipo_meta_nome
-          FROM itens i
-          LEFT JOIN ped p ON p.vendedor_id = i.vendedor_id AND p.ano = i.ano AND p.mes = i.mes
-        )
-        SELECT * FROM parents
-        UNION ALL
-        SELECT * FROM children
-      ) d`
+      selectSql = `SELECT
+        meta_id,
+        mes,
+        ano,
+        vendedor_id,
+        vendedor,
+        meta_item_id,
+        tipo_meta,
+        valor_meta,
+        COALESCE(SUM(subtotal), 0) AS realizado,
+        COALESCE(SUM(subtotal), 0) - valor_meta AS diferenca,
+        CASE 
+            WHEN valor_meta > 0 
+            THEN ROUND((COALESCE(SUM(subtotal), 0) / valor_meta) * 100, 2)
+            ELSE 0
+        END AS atingimento_percentual
+      FROM comercial.vw_metas_detalhe
+      ${where}
+      GROUP BY 
+        meta_id,
+        mes,
+        ano,
+        vendedor_id,
+        vendedor,
+        meta_item_id,
+        tipo_meta,
+        valor_meta
+      ORDER BY vendedor, meta_id`
       baseSql = ''
-      orderClause = 'ORDER BY vendedor_nome ASC, ano ASC, mes ASC, parent_flag DESC, tipo_meta_id NULLS FIRST'
+      orderClause = ''
     } else if (view === 'tipos_metas') {
       selectSql = `SELECT
         tm.id AS tipo_meta_id,

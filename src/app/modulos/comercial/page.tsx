@@ -241,12 +241,13 @@ export default function ModulosComercialPage() {
         ]
       case 'desempenho':
         return [
-          { accessorKey: 'vendedor_nome', header: 'Vendedor' },
+          { accessorKey: 'vendedor', header: 'Vendedor' },
           { accessorKey: 'ano', header: 'Ano' },
           { accessorKey: 'mes', header: 'Mês' },
           { accessorKey: 'valor_meta', header: 'Meta' },
-          { accessorKey: 'valor_atingido', header: 'Atingido' },
-          { accessorKey: 'atingimento_percent', header: 'Atingimento (%)', cell: ({ getValue }) => formatPercent(getValue()) },
+          { accessorKey: 'realizado', header: 'Realizado' },
+          { accessorKey: 'diferenca', header: 'Diferença' },
+          { accessorKey: 'atingimento_percentual', header: 'Atingimento (%)', cell: ({ getValue }) => formatPercent(getValue()) },
         ]
       case 'tipos_metas':
         return [
@@ -289,7 +290,7 @@ export default function ModulosComercialPage() {
         params.set('view', tabs.selected)
         params.set('page', String(page))
         params.set('pageSize', String(pageSize))
-        if (tabs.selected === 'metas') {
+        if (tabs.selected === 'metas' || tabs.selected === 'desempenho') {
           if (metaAno !== 'todos') params.set('ano', String(metaAno))
           if (metaMes !== 'todos') params.set('mes', String(metaMes))
         }
@@ -461,78 +462,38 @@ export default function ModulosComercialPage() {
                           }
                           return heads
                         })()
-                      : tabs.selected === 'desempenho' || tabs.selected === 'metas_territorios'
+                      : tabs.selected === 'metas_territorios'
                         ? data.filter(r => Boolean(r['parent_flag']))
                         : data
                   }
-                  enableExpand={tabs.selected === 'campanhas_vendas' || tabs.selected === 'metas' || tabs.selected === 'desempenho' || tabs.selected === 'metas_territorios'}
+                  enableExpand={tabs.selected === 'campanhas_vendas' || tabs.selected === 'metas' || tabs.selected === 'metas_territorios'}
                   renderDetail={
                     tabs.selected === 'campanhas_vendas'
                       ? renderCampanhaProdutos
                       : tabs.selected === 'metas'
                         ? renderMetaDetail
-                        : tabs.selected === 'desempenho'
+                        : tabs.selected === 'metas_territorios'
                           ? (row) => {
                               const isParent = Boolean(row['parent_flag'])
                               if (!isParent) return null
-                              const ano = row['ano']
-                              const mes = row['mes']
-                              const vendedor = String(row['vendedor_nome'] || '')
-                              const children = data.filter(r => String(r['vendedor_nome'] || '') === vendedor && r['ano'] === ano && r['mes'] === mes && !r['parent_flag'])
+                              const metaId = row['meta_id']
+                              const children = data.filter(r => r['meta_id'] === metaId && r['meta_item_id'])
                               return (
                                 <div className="p-3 bg-gray-50 rounded border border-gray-200">
-                                  <div className="text-sm font-medium text-gray-700 mb-2">Desempenho por Tipo de Meta — {vendedor}</div>
+                                  <div className="text-sm font-medium text-gray-700 mb-2">Itens da Meta — {String(row['territorio_nome'] || '')}</div>
                                   {children.length === 0 ? (
-                                    <div className="text-xs text-gray-500">Sem itens de meta para este período.</div>
+                                    <div className="text-xs text-gray-500">Sem itens para esta meta.</div>
                                   ) : (
                                     <div className="overflow-x-auto">
                                       <table className="w-full text-sm">
                                         <thead>
                                           <tr className="border-b">
                                             <th className="text-left py-2 px-3">Tipo Meta</th>
-                                            <th className="text-right py-2 px-3">Meta</th>
-                                            <th className="text-right py-2 px-3">Atingido</th>
-                                            <th className="text-right py-2 px-3">Atingimento</th>
+                                            <th className="text-right py-2 px-3">Valor Meta</th>
+                                            <th className="text-right py-2 px-3">% Meta</th>
+                                            <th className="text-left py-2 px-3">Tipo Valor</th>
                                           </tr>
                                         </thead>
-                                        <tbody>
-                                          {children.map((c, idx) => (
-                                            <tr key={idx} className="border-b last:border-0">
-                                              <td className="py-2 px-3">{String(c['tipo_meta_nome'] || '')}</td>
-                                              <td className="text-right py-2 px-3">{String(c['valor_meta'] ?? '')}</td>
-                                              <td className="text-right py-2 px-3">{String(c['valor_atingido'] ?? '')}</td>
-                                              <td className="text-right py-2 px-3">{formatPercent(c['atingimento_percent'])}</td>
-                                            </tr>
-                                          ))}
-                                        </tbody>
-                                      </table>
-                                    </div>
-                                  )}
-                                </div>
-                              )
-                            }
-                          : tabs.selected === 'metas_territorios'
-                            ? (row) => {
-                                const isParent = Boolean(row['parent_flag'])
-                                if (!isParent) return null
-                                const metaId = row['meta_id']
-                                const children = data.filter(r => r['meta_id'] === metaId && r['meta_item_id'])
-                                return (
-                                  <div className="p-3 bg-gray-50 rounded border border-gray-200">
-                                    <div className="text-sm font-medium text-gray-700 mb-2">Itens da Meta — {String(row['territorio_nome'] || '')}</div>
-                                    {children.length === 0 ? (
-                                      <div className="text-xs text-gray-500">Sem itens para esta meta.</div>
-                                    ) : (
-                                      <div className="overflow-x-auto">
-                                        <table className="w-full text-sm">
-                                          <thead>
-                                            <tr className="border-b">
-                                              <th className="text-left py-2 px-3">Tipo Meta</th>
-                                              <th className="text-right py-2 px-3">Valor Meta</th>
-                                              <th className="text-right py-2 px-3">% Meta</th>
-                                              <th className="text-left py-2 px-3">Tipo Valor</th>
-                                            </tr>
-                                          </thead>
                                           <tbody>
                                             {children.map((c, idx) => (
                                               <tr key={idx} className="border-b last:border-0">
@@ -554,10 +515,8 @@ export default function ModulosComercialPage() {
                   rowCanExpand={
                     tabs.selected === 'metas'
                       ? (r) => true
-                      : tabs.selected === 'desempenho'
+                      : tabs.selected === 'metas_territorios'
                         ? (r) => Boolean(r['parent_flag'])
-                        : tabs.selected === 'metas_territorios'
-                          ? (r) => Boolean(r['parent_flag'])
                       : undefined
                   }
                   enableSearch={tabs.selected === 'metas' ? false : tabelaUI.enableSearch}
