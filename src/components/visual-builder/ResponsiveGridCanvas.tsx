@@ -2,12 +2,14 @@
 
 import { useRef, useState } from 'react';
 import { DndContext, closestCenter, DragEndEvent } from '@dnd-kit/core';
-import { SortableContext, useSortable, horizontalListSortingStrategy } from '@dnd-kit/sortable';
+import { SortableContext, useSortable, horizontalListSortingStrategy, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import WidgetRenderer from './WidgetRenderer';
 import WidgetEditorModal from './WidgetEditorModal';
 import DashboardInCanvasHeader from './DashboardInCanvasHeader';
 import type { Widget, GridConfig, LayoutRow } from './ConfigParser';
+import { useStore as useNanoStore } from '@nanostores/react';
+import { $visualBuilderState, visualBuilderActions } from '@/stores/visualBuilderStore';
 import type { GlobalFilters, DateRangeFilter } from '@/stores/visualBuilderStore';
 
 interface ResponsiveGridCanvasProps {
@@ -99,6 +101,7 @@ function DraggableWidget({ widget, spanClasses, spanValue, startValue, minHeight
 export default function ResponsiveGridCanvas({ widgets, gridConfig, globalFilters, viewportMode = 'desktop', onLayoutChange, headerTitle, headerSubtitle, onFilterChange, isFilterLoading, themeName }: ResponsiveGridCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [editingWidget, setEditingWidget] = useState<Widget | null>(null);
+  const visualBuilderState = useNanoStore($visualBuilderState);
 
   // Handle widget edit
   const handleEditWidget = (widget: Widget) => {
@@ -235,6 +238,79 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig, globalFilter
   };
   const widgetGroups = groupWidgetsByRow();
   const perColumnMode = gridConfig.layout?.mode === 'grid-per-column';
+
+  // --- Row DnD helpers (DSL-first) ---
+  const isDsl = (code: string) => code.trim().startsWith('<');
+  const getRowsFromDsl = (dsl: string): Array<{ id: string; start: number; end: number; block: string }> => {
+    const rows: Array<{ id: string; start: number; end: number; block: string }> = [];
+    const re = /<row\b([^>]*)>([\s\S]*?)<\/row>/gi;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(dsl)) !== null) {
+      const attrs = m[1] || '';
+      const idMatch = attrs.match(/\bid=\"([^\"]+)\"/i);
+      const id = idMatch ? idMatch[1] : String(rows.length + 1);
+      rows.push({ id, start: m.index!, end: m.index! + m[0].length, block: m[0] });
+    }
+    return rows;
+  };
+  const getRowOrderFromCode = (): string[] => {
+    const code = visualBuilderState.code || '';
+    if (!isDsl(code)) {
+      // fallback numeric order from groups
+      return Object.keys(widgetGroups).sort((a, b) => parseInt(a) - parseInt(b));
+    }
+    const rows = getRowsFromDsl(code);
+    return rows.map(r => r.id);
+  };
+  const rowOrder = getRowOrderFromCode();
+
+  const reorderRowsInDsl = (dsl: string, newOrder: string[]): string => {
+    const rows = getRowsFromDsl(dsl);
+    if (rows.length === 0) return dsl;
+    const header = dsl.slice(0, rows[0].start);
+    const footer = dsl.slice(rows[rows.length - 1].end);
+    const byId = new Map(rows.map(r => [r.id, r.block] as const));
+    const orderedBlocks = newOrder.map(id => byId.get(id)).filter(Boolean) as string[];
+    return header + orderedBlocks.join('\n') + footer;
+  };
+
+  const handleRowDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const current = [...rowOrder];
+    const oldIndex = current.indexOf(String(active.id));
+    const newIndex = current.indexOf(String(over.id));
+    if (oldIndex === -1 || newIndex === -1) return;
+    const next = [...current];
+    const [moved] = next.splice(oldIndex, 1);
+    next.splice(newIndex, 0, moved);
+    const code = visualBuilderState.code || '';
+    if (isDsl(code)) {
+      const nextCode = reorderRowsInDsl(code, next);
+      visualBuilderActions.updateCode(nextCode);
+    }
+  };
+
+  function DraggableRow({ id, children }: { id: string; children: React.ReactNode }) {
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+    const style = {
+      transform: CSS.Transform.toString(transform),
+      transition,
+      opacity: isDragging ? 0.8 : 1,
+    } as React.CSSProperties;
+    return (
+      <div ref={setNodeRef} style={style} className="group relative rounded-md hover:ring-2 hover:ring-blue-400">
+        <div
+          {...attributes}
+          {...listeners}
+          className="absolute -left-1 -top-3 opacity-0 group-hover:opacity-100 transition-opacity z-10 bg-gray-700 text-white px-2 py-0.5 rounded cursor-grab active:cursor-grabbing text-xs"
+        >
+          ⇅ Row {id}
+        </div>
+        {children}
+      </div>
+    );
+  }
 
   // Helpers for per-column wrappers
   const getTemplateColumnsString = (): string | undefined => {
@@ -476,15 +552,15 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig, globalFilter
         {/* Responsive Grid Layout - Grouped by Rows */}
         {widgets.length > 0 && !perColumnMode && (
           <div className="px-0 py-4 space-y-2">
-            {Object.keys(widgetGroups)
-              .sort((a, b) => parseInt(a) - parseInt(b)) // Sort rows numerically
-              .map((rowKey) => {
+            <DndContext collisionDetection={closestCenter} onDragEnd={handleRowDragEnd}>
+              <SortableContext items={rowOrder} strategy={verticalListSortingStrategy}>
+              {rowOrder.map((rowKey) => {
                 const rowWidgets = widgetGroups[rowKey];
                 const widgetIds = rowWidgets.map(w => w.id);
 
                 return (
+                  <DraggableRow id={rowKey} key={`row-${rowKey}`}>
                   <DndContext
-                    key={`dnd-${rowKey}`}
                     collisionDetection={closestCenter}
                     onDragEnd={(event) => handleDragEnd(event, rowKey)}
                   >
@@ -513,9 +589,11 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig, globalFilter
                       </div>
                     </SortableContext>
                   </DndContext>
+                  </DraggableRow>
                 );
-              })
-            }
+              })}
+              </SortableContext>
+            </DndContext>
           </div>
         )}
         {widgets.length > 0 && perColumnMode && (
