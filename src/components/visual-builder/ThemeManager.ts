@@ -1,6 +1,6 @@
 'use client';
 
-import type { Widget, GridConfig } from './ConfigParser';
+import type { Widget, GridConfig, Insights2Config } from './ConfigParser';
 import type { KPIConfig } from '@/types/apps/kpiWidgets';
 import type { BarChartConfig } from '@/stores/apps/barChartStore';
 import type { LineChartConfig } from '@/stores/apps/lineChartStore';
@@ -1303,7 +1303,7 @@ export class ThemeManager {
   /**
    * Applies design tokens to a single Insights widget
    */
-  private static applyThemeToInsights(widget: Widget, tokens: DesignTokens, _themeName: ThemeName): Widget {
+  private static applyThemeToInsights(widget: Widget, tokens: DesignTokens): Widget {
     const clonedWidget = { ...widget };
 
     if (!clonedWidget.insightsConfig) {
@@ -1346,7 +1346,7 @@ export class ThemeManager {
   /**
    * Applies design tokens to a single Alerts widget
    */
-  private static applyThemeToAlerts(widget: Widget, tokens: DesignTokens, _themeName: ThemeName): Widget {
+  private static applyThemeToAlerts(widget: Widget, tokens: DesignTokens): Widget {
     const clonedWidget = { ...widget };
 
     if (!clonedWidget.alertsConfig) {
@@ -1389,7 +1389,7 @@ export class ThemeManager {
   /**
    * Applies design tokens to a single Recommendations widget
    */
-  private static applyThemeToRecommendations(widget: Widget, tokens: DesignTokens, _themeName: ThemeName): Widget {
+  private static applyThemeToRecommendations(widget: Widget, tokens: DesignTokens): Widget {
     const clonedWidget = { ...widget };
 
     if (!clonedWidget.recommendationsConfig) {
@@ -1530,14 +1530,14 @@ export class ThemeManager {
         return themed;
       }
       case 'insights': {
-        themed = this.applyThemeToInsights(widget, tokens, themeName);
+        themed = this.applyThemeToInsights(widget, tokens);
         return themed;
       }
       case 'insights2': {
         // Apply theme to Insights v2 (card list) using title typography from tokens
-        const cloned = { ...widget } as Widget;
-        if (!cloned.insights2Config) cloned.insights2Config = {} as any;
-        const st = (cloned.insights2Config.styling = cloned.insights2Config.styling || {} as any);
+        const cloned: Widget = { ...widget };
+        if (!cloned.insights2Config) cloned.insights2Config = {} as Insights2Config;
+        const st: NonNullable<Insights2Config['styling']> = (cloned.insights2Config.styling = (cloned.insights2Config.styling || {}) as NonNullable<Insights2Config['styling']>);
         // Background and borders
         if (st.backgroundColor === undefined) st.backgroundColor = tokens.colors.surface;
         if (st.borderColor === undefined) st.borderColor = tokens.borders.color;
@@ -1551,11 +1551,11 @@ export class ThemeManager {
         return cloned;
       }
       case 'alerts': {
-        themed = this.applyThemeToAlerts(widget, tokens, themeName);
+        themed = this.applyThemeToAlerts(widget, tokens);
         return themed;
       }
       case 'recommendations': {
-        themed = this.applyThemeToRecommendations(widget, tokens, themeName);
+        themed = this.applyThemeToRecommendations(widget, tokens);
         return themed;
       }
       default:
