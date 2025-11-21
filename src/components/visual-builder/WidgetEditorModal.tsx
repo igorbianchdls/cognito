@@ -217,46 +217,34 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
     const t = formData.type as Widget['type'];
     const applyBarStyling = (cfg?: Partial<BarChartConfig>): Partial<BarChartConfig> => {
       const next: Partial<BarChartConfig> = { ...(cfg || {}) };
-      next.styling = {
-        colors: colorsArray.length ? colorsArray : (cfg?.styling?.colors || []),
-        showLegend: cfg?.styling?.showLegend ?? true,
-        showGrid: cfg?.styling?.showGrid ?? true,
-        ...(cfg?.styling || {})
-      };
-      next.margin = { ...(cfg?.margin || {}), left: Number.isFinite(styleData.marginLeft) ? styleData.marginLeft : 40 };
+      next.styling = { ...(cfg?.styling || {}) } as BarChartConfig['styling'];
+      if (colorsArray.length) (next.styling as BarChartConfig['styling']).colors = colorsArray;
+      next.margin = { ...(cfg?.margin || {}) };
+      if (Number.isFinite(styleData.marginLeft)) (next.margin as NonNullable<BarChartConfig['margin']>).left = styleData.marginLeft;
       return next;
     };
     const applyLineStyling = (cfg?: Partial<LineChartConfig>): Partial<LineChartConfig> => {
       const next: Partial<LineChartConfig> = { ...(cfg || {}) };
-      next.styling = {
-        colors: colorsArray.length ? colorsArray : (cfg?.styling?.colors || []),
-        showLegend: cfg?.styling?.showLegend ?? true,
-        showGrid: cfg?.styling?.showGrid ?? true,
-        ...(cfg?.styling || {})
-      } as LineChartConfig['styling'];
-      next.margin = { ...(cfg?.margin || {}), left: Number.isFinite(styleData.marginLeft) ? styleData.marginLeft : 40 };
+      next.styling = { ...(cfg?.styling || {}) } as LineChartConfig['styling'];
+      if (colorsArray.length) (next.styling as LineChartConfig['styling']).colors = colorsArray;
+      next.margin = { ...(cfg?.margin || {}) } as NonNullable<LineChartConfig['margin']>;
+      if (Number.isFinite(styleData.marginLeft)) (next.margin as NonNullable<LineChartConfig['margin']>).left = styleData.marginLeft;
       return next;
     };
     const applyPieStyling = (cfg?: Partial<PieChartConfig>): Partial<PieChartConfig> => {
       const next: Partial<PieChartConfig> = { ...(cfg || {}) };
-      next.styling = {
-        colors: colorsArray.length ? colorsArray : (cfg?.styling?.colors || []),
-        showLegend: cfg?.styling?.showLegend ?? true,
-        showGrid: cfg?.styling?.showGrid ?? true,
-        ...(cfg?.styling || {})
-      } as PieChartConfig['styling'];
-      next.margin = { ...(cfg?.margin || {}), left: Number.isFinite(styleData.marginLeft) ? styleData.marginLeft : 40 };
+      next.styling = { ...(cfg?.styling || {}) } as PieChartConfig['styling'];
+      if (colorsArray.length) (next.styling as PieChartConfig['styling']).colors = colorsArray;
+      next.margin = { ...(cfg?.margin || {}) } as NonNullable<PieChartConfig['margin']>;
+      if (Number.isFinite(styleData.marginLeft)) (next.margin as NonNullable<PieChartConfig['margin']>).left = styleData.marginLeft;
       return next;
     };
     const applyAreaStyling = (cfg?: Partial<AreaChartConfig>): Partial<AreaChartConfig> => {
       const next: Partial<AreaChartConfig> = { ...(cfg || {}) };
-      next.styling = {
-        colors: colorsArray.length ? colorsArray : (cfg?.styling?.colors || []),
-        showLegend: cfg?.styling?.showLegend ?? true,
-        showGrid: cfg?.styling?.showGrid ?? true,
-        ...(cfg?.styling || {})
-      } as AreaChartConfig['styling'];
-      next.margin = { ...(cfg?.margin || {}), left: Number.isFinite(styleData.marginLeft) ? styleData.marginLeft : 40 };
+      next.styling = { ...(cfg?.styling || {}) } as AreaChartConfig['styling'];
+      if (colorsArray.length) (next.styling as AreaChartConfig['styling']).colors = colorsArray;
+      next.margin = { ...(cfg?.margin || {}) } as NonNullable<AreaChartConfig['margin']>;
+      if (Number.isFinite(styleData.marginLeft)) (next.margin as NonNullable<AreaChartConfig['margin']>).left = styleData.marginLeft;
       return next;
     };
 
