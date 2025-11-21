@@ -103,7 +103,7 @@ const DraggableWidget = memo(function DraggableWidget({ widget, spanClasses, spa
   );
 });
 
-export default function ResponsiveGridCanvas({ widgets, gridConfig, globalFilters, viewportMode = 'desktop', onLayoutChange, headerTitle, headerSubtitle, onFilterChange, isFilterLoading, themeName, onEdit, renderHeader = true }: ResponsiveGridCanvasProps) {
+function ResponsiveGridCanvas({ widgets, gridConfig, globalFilters, viewportMode = 'desktop', onLayoutChange, headerTitle, headerSubtitle, onFilterChange, isFilterLoading, themeName, onEdit, renderHeader = true }: ResponsiveGridCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   // Internal editor state used only when onEdit is not provided by parent
   const [editingWidget, setEditingWidget] = useState<Widget | null>(null);
@@ -683,3 +683,23 @@ const DraggableRow = memo(function DraggableRow({ id, children }: { id: string; 
     </div>
   );
 }
+
+// Shallow props comparator to avoid re-rendering the canvas when opening the modal
+const propsAreEqual = (prev: ResponsiveGridCanvasProps, next: ResponsiveGridCanvasProps) => {
+  return (
+    prev.widgets === next.widgets &&
+    prev.gridConfig === next.gridConfig &&
+    prev.globalFilters === next.globalFilters &&
+    prev.viewportMode === next.viewportMode &&
+    prev.headerTitle === next.headerTitle &&
+    prev.headerSubtitle === next.headerSubtitle &&
+    prev.isFilterLoading === next.isFilterLoading &&
+    prev.themeName === next.themeName &&
+    prev.onEdit === next.onEdit &&
+    prev.onFilterChange === next.onFilterChange &&
+    prev.onLayoutChange === next.onLayoutChange &&
+    prev.renderHeader === next.renderHeader
+  );
+};
+
+export default memo(ResponsiveGridCanvas, propsAreEqual);

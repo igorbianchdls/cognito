@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from '@nanostores/react';
 import Link from 'next/link';
 import DashboardSaveDialog from '@/components/visual-builder/DashboardSaveDialog';
@@ -60,11 +60,11 @@ export default function VisualBuilderPage() {
     }, 500);
   };
 
-  const handleLayoutChange = (updatedWidgets: Widget[]) => {
+  const handleLayoutChange = useCallback((updatedWidgets: Widget[]) => {
     visualBuilderActions.updateWidgets(updatedWidgets);
-  };
+  }, []);
 
-  const handleOpenEdit = (widget: Widget) => {
+  const handleOpenEdit = useCallback((widget: Widget) => {
     // Capture current scroll position of the scroll container
     prevScrollTopRef.current = scrollRef.current?.scrollTop || 0;
     setEditingWidget(widget);
@@ -72,7 +72,7 @@ export default function VisualBuilderPage() {
     requestAnimationFrame(() => {
       if (scrollRef.current) scrollRef.current.scrollTop = prevScrollTopRef.current;
     });
-  };
+  }, []);
 
   const handleSaveWidget = (updatedWidget: Widget) => {
     // Update widgets in store
@@ -89,7 +89,7 @@ export default function VisualBuilderPage() {
     });
   };
 
-  const handleFilterChange = (filters: GlobalFilters) => {
+  const handleFilterChange = useCallback((filters: GlobalFilters) => {
     setIsFilterLoading(true);
     visualBuilderActions.updateGlobalFilters(filters);
     
@@ -97,7 +97,7 @@ export default function VisualBuilderPage() {
     setTimeout(() => {
       setIsFilterLoading(false);
     }, 1000);
-  };
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50">
