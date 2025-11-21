@@ -24,7 +24,6 @@ const agents = [
   { id: 'gestorDeServicosAgent', name: 'Gestor de Serviços', icon: 'S', color: 'text-teal-600' },
   { id: 'gestorDeVendasB2BAgent', name: 'Gerente de Vendas B2B', icon: 'V', color: 'text-rose-600' },
   { id: 'analistaVendas', name: 'Analista de Vendas', icon: 'AV', color: 'text-purple-600' },
-  { id: 'analistaDeVendas', name: 'Analista de Vendas (Simples)', icon: 'AV', color: 'text-purple-600' },
 ];
 
 // Dropdown elegante que aparece quando o usuário digita "/" no input

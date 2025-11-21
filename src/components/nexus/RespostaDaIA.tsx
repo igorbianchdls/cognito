@@ -3649,8 +3649,6 @@ const getAgentInfo = (agent: string) => {
       return { initial: 'R', title: 'Gestor de Reembolsos', color: 'bg-green-600' };
     case 'analistaVendas':
       return { initial: 'AV', title: 'Analista de Vendas', color: 'bg-purple-600' };
-    case 'analistaDeVendas':
-      return { initial: 'AV', title: 'Analista de Vendas (Simples)', color: 'bg-purple-600' };
     default:
       return { initial: 'A', title: 'Assistente IA (Geral)', color: 'bg-gray-500' };
   }

@@ -65,7 +65,6 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }> | null
   'crmAgent': Users,
   'contabilidadeAgent': BookOpen,
   'analistaVendas': TrendingUp,
-  'analistaDeVendas': TrendingUp,
 };
 
 const models = [
@@ -85,7 +84,6 @@ const models = [
   { id: 'crmAgent', name: 'Analista de CRM', icon: iconMap['crmAgent'] },
   { id: 'contabilidadeAgent', name: 'Agente de Contabilidade', icon: iconMap['contabilidadeAgent'] },
   { id: 'analistaVendas', name: 'Analista de Vendas', icon: iconMap['analistaVendas'] },
-  { id: 'analistaDeVendas', name: 'Analista de Vendas (Simples)', icon: iconMap['analistaDeVendas'] },
 ];
 
 // Workflows disponíveis
