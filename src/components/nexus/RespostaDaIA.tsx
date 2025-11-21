@@ -3297,12 +3297,20 @@ type CreateDashboardWFInput = {
   visibility?: 'private' | 'org' | 'public';
   version?: number;
 };
+type CreateDashboardPreview = {
+  title: string;
+  description: string | null;
+  sourcecode: string;
+  visibility: string;
+  version: number;
+};
 type CreateDashboardWFOutput = {
   success: boolean;
   item?: {
     id: string; title: string; description: string | null; sourcecode: string; visibility: string; version: number; created_at: string; updated_at: string;
   };
   error?: string;
+  preview?: CreateDashboardPreview;
 };
 
 type NexusToolUIPart = ToolUIPart<{
@@ -4935,9 +4943,9 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                 </ToolContent>
               </Tool>
               {t.state === 'output-available' && (() => {
-                const out = t.output as any;
-                if (out?.preview) {
-                  const p = out.preview as { title: string; description: string | null; sourcecode: string; visibility: string; version: number };
+                const out = t.output as CreateDashboardWFOutput;
+                if (out.preview) {
+                  const p = out.preview;
                   return (
                     <DashboardCreatePreviewCard
                       title={p.title}
@@ -4949,11 +4957,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   );
                 }
                 return (
-                  <DashboardCreatedCard
-                    success={out?.success}
-                    item={out?.item}
-                    error={out?.error}
-                  />
+                  <DashboardCreatedCard success={out.success} item={out.item} error={out.error} />
                 );
               })()}
             </div>
