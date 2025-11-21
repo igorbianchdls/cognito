@@ -81,6 +81,7 @@ function DraggableWidget({ widget, spanClasses, spanValue, startValue, minHeight
         {/* Edit Button - Right Side */}
         <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
           <button
+            type="button"
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
