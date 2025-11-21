@@ -12,7 +12,7 @@ import { StackedLinesChart } from '@/components/charts/StackedLinesChart';
 import { GroupedBarChart } from '@/components/charts/GroupedBarChart';
 import { PivotBarChart } from '@/components/charts/PivotBarChart';
 import { RadialStackedChart } from '@/components/charts/RadialStackedChart';
-import { BarChartMultipleRecharts } from '@/components/charts/BarChartMultipleRecharts';
+// Removed unused BarChartMultipleRecharts import
 import { KPICard } from '@/components/widgets/KPICard';
 import InsightsCard from '@/components/widgets/InsightsCard';
 import AlertasCard from '@/components/widgets/AlertasCard';
@@ -22,6 +22,11 @@ import InsightsCard2 from '@/components/widgets/InsightsCard2';
 import { $insights2 } from '@/stores/nexus/insights2Store';
 import { useStore as useNanoStore } from '@nanostores/react';
 import { $visualBuilderState } from '@/stores/visualBuilderStore';
+
+// Module-level caches to avoid 'any' casting and persist across mounts
+type GroupedCacheValue = { items: Array<{ label: string; [key: string]: string | number }>; series: Array<{ key: string; label: string; color: string }> };
+const widgetDataCache = new Map<string, WidgetData>();
+const widgetGroupedCache = new Map<string, GroupedCacheValue>();
 import type { Widget } from '../visual-builder/ConfigParser';
 import type { GlobalFilters } from '@/stores/visualBuilderStore';
 
@@ -156,11 +161,9 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
     return ['bar', 'line', 'pie', 'area', 'kpi'].includes(type);
   };
 
-  // Simple in-memory caches per signature
-  const dataCache: Map<string, WidgetData> = (WidgetRenderer as any)._dataCache || new Map();
-  (WidgetRenderer as any)._dataCache = dataCache;
-  const groupedCache: Map<string, { items: Array<{ label: string; [key: string]: string | number }>; series: Array<{ key: string; label: string; color: string }> }> = (WidgetRenderer as any)._groupedCache || new Map();
-  (WidgetRenderer as any)._groupedCache = groupedCache;
+  // Simple in-memory caches per signature (module-level)
+  const dataCache = widgetDataCache;
+  const groupedCache = widgetGroupedCache;
 
   const buildSimpleSignature = () => {
     const ds = (widget.dataSource || {}) as Record<string, unknown>;
