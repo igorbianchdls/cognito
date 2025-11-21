@@ -124,7 +124,7 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig, globalFilter
 
   // Advanced container styles (same as original GridCanvas)
   const pad = gridConfig.padding ?? 16;
-  const DEFAULT_BORDER_RADIUS = 12; // px, fallback when not provided by config/theme
+  const DEFAULT_BORDER_RADIUS = 8; // px, fallback when not provided by config/theme
   const containerStyles = {
     // Background: priority to gradient, fallback to backgroundColor
     background: gridConfig.backgroundGradient?.enabled

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Widget } from './ConfigParser';
 
 interface WidgetEditorModalProps {
@@ -11,6 +11,63 @@ interface WidgetEditorModalProps {
 }
 
 export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: WidgetEditorModalProps) {
+  // Known datasets from system prompt (dimensions and measures)
+  type FieldOptions = { dimensions: string[]; measures: string[] };
+  const KNOWN_TABLES: Record<string, FieldOptions> = {
+    // Padrão: vendas.vw_pedidos_completo
+    'vendas.vw_pedidos_completo': {
+      dimensions: [
+        'data_pedido',
+        'status',
+        'cliente_nome',
+        'vendedor_nome',
+        'territorio_nome',
+        'canal_venda_nome',
+        'cupom_codigo',
+        'centro_lucro_nome',
+        'campanha_venda_nome',
+        'filial_nome',
+        'unidade_negocio_nome',
+        'sales_office_nome',
+        'produto_nome',
+        'pedido_id',
+        'item_id',
+        'pedido_criado_em',
+        'pedido_atualizado_em',
+        'item_criado_em',
+        'item_atualizado_em',
+      ],
+      measures: [
+        'pedido_subtotal',
+        'desconto_total',
+        'pedido_valor_total',
+        'quantidade',
+        'preco_unitario',
+        'item_desconto',
+        'item_subtotal',
+        // IDs úteis para COUNT/COUNT_DISTINCT
+        'pedido_id',
+        'item_id',
+      ],
+    },
+    // Metas: comercial.vw_metas_detalhe
+    'comercial.vw_metas_detalhe': {
+      dimensions: ['vendedor', 'territorio'],
+      measures: [
+        'valor_meta',
+        'subtotal',
+        'ticket_medio',
+        // campos comuns para contagens quando aplicável
+        'cliente_id',
+        'pedido_id',
+      ],
+    },
+  };
+
+  const KNOWN_TABLE_KEYS = Object.keys(KNOWN_TABLES);
+  const DEFAULT_TABLE = 'vendas.vw_pedidos_completo';
+  const CUSTOM_VALUE = '__custom__';
+
   const [formData, setFormData] = useState({
     type: widget?.type || 'bar',
     title: widget?.title || '',
@@ -22,6 +79,21 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
       aggregation: widget?.dataSource?.aggregation || 'SUM'
     }
   });
+
+  // Derive selected table UI state
+  const selectedTableValue = useMemo(() => {
+    const t = formData.dataSource.table?.trim();
+    if (!t) return DEFAULT_TABLE;
+    return KNOWN_TABLE_KEYS.includes(t) ? t : CUSTOM_VALUE;
+  }, [formData.dataSource.table]);
+
+  const isCustomTable = selectedTableValue === CUSTOM_VALUE;
+
+  const fieldOptions = useMemo<FieldOptions>(() => {
+    const t = formData.dataSource.table?.trim();
+    const key = t && KNOWN_TABLE_KEYS.includes(t) ? t : DEFAULT_TABLE;
+    return KNOWN_TABLES[key];
+  }, [formData.dataSource.table]);
 
   // Update form when widget changes
   useEffect(() => {
@@ -133,23 +205,46 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
           {/* Data Source Section */}
           <div className="border-t pt-4">
             <h3 className="text-sm font-semibold text-gray-900 mb-3">Fonte de Dados</h3>
-
             <div className="grid grid-cols-2 gap-4">
               {/* Table */}
-              <div>
+              <div className="col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Tabela
                 </label>
-                <input
-                  type="text"
-                  value={formData.dataSource.table}
-                  onChange={(e) => setFormData({
-                    ...formData,
-                    dataSource: { ...formData.dataSource, table: e.target.value }
-                  })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="nome_tabela"
-                />
+                <div className="flex gap-2">
+                  <select
+                    value={selectedTableValue}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      if (v === CUSTOM_VALUE) {
+                        // Keep existing table value (if any); user will type below
+                        setFormData({ ...formData, dataSource: { ...formData.dataSource } });
+                      } else {
+                        setFormData({ ...formData, dataSource: { ...formData.dataSource, table: v, x: '', y: '' } });
+                      }
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value={DEFAULT_TABLE}>vendas.vw_pedidos_completo</option>
+                    <option value="comercial.vw_metas_detalhe">comercial.vw_metas_detalhe</option>
+                    <option value={CUSTOM_VALUE}>Custom…</option>
+                  </select>
+                </div>
+                {isCustomTable && (
+                  <div className="mt-2">
+                    <input
+                      type="text"
+                      value={formData.dataSource.table}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        dataSource: { ...formData.dataSource, table: e.target.value }
+                      })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="schema.tabela ou nome_tabela"
+                    />
+                    <p className="mt-1 text-xs text-gray-500">Para usar dropdowns de campos, selecione uma tabela conhecida.</p>
+                  </div>
+                )}
               </div>
 
               {/* Aggregation */}
@@ -173,41 +268,75 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
                 </select>
               </div>
 
-              {/* X Field */}
+              {/* X Field (Dimension) */}
               {!['kpi', 'insights', 'alerts', 'recommendations'].includes(formData.type) && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Campo X (Dimensão)
                   </label>
-                  <input
-                    type="text"
-                    value={formData.dataSource.x}
-                    onChange={(e) => setFormData({
-                      ...formData,
-                      dataSource: { ...formData.dataSource, x: e.target.value }
-                    })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="categoria"
-                  />
+                  {isCustomTable ? (
+                    <input
+                      type="text"
+                      value={formData.dataSource.x}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        dataSource: { ...formData.dataSource, x: e.target.value }
+                      })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="categoria (dimensão)"
+                    />
+                  ) : (
+                    <select
+                      value={formData.dataSource.x || ''}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        dataSource: { ...formData.dataSource, x: e.target.value }
+                      })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">Selecione…</option>
+                      {fieldOptions.dimensions.map((d) => (
+                        <option key={d} value={d}>{d}</option>
+                      ))}
+                    </select>
+                  )}
                 </div>
               )}
 
-              {/* Y Field */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Campo Y (Métrica)
-                </label>
-                <input
-                  type="text"
-                  value={formData.dataSource.y}
-                  onChange={(e) => setFormData({
-                    ...formData,
-                    dataSource: { ...formData.dataSource, y: e.target.value }
-                  })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="valor"
-                />
-              </div>
+              {/* Y Field (Measure) */}
+              {!['insights', 'alerts', 'recommendations'].includes(formData.type) && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Campo Y (Métrica)
+                  </label>
+                  {isCustomTable ? (
+                    <input
+                      type="text"
+                      value={formData.dataSource.y}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        dataSource: { ...formData.dataSource, y: e.target.value }
+                      })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="valor (métrica)"
+                    />
+                  ) : (
+                    <select
+                      value={formData.dataSource.y || ''}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        dataSource: { ...formData.dataSource, y: e.target.value }
+                      })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">Selecione…</option>
+                      {fieldOptions.measures.map((m) => (
+                        <option key={m} value={m}>{m}</option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
