@@ -178,9 +178,16 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
         console.log('📊 Fetching Supabase data for widget:', widget.id);
 
         // 📤 API request log
+        // Map DSL dimension/measure -> API x/y for simple charts
+        const ds = widget.dataSource as Partial<{ schema: string; table: string; x: string; y: string; aggregation: string; dimension: string; measure: string }>;
+        const mappedDataSource = {
+          ...ds,
+          ...(ds.dimension ? { x: ds.dimension } : {}),
+          ...(ds.measure ? { y: ds.measure } : {}),
+        };
         const requestPayload = {
           type: widget.type,
-          dataSource: widget.dataSource,
+          dataSource: mappedDataSource,
           filters: globalFilters
         };
         console.log('📤 Making API request:', {
