@@ -144,6 +144,7 @@ import TopClientesPorReceitaResult, { type TopClienteRow } from '../tools/ecomme
 import ListDashboardsCard from './tools/dashboards/ListDashboardsCard';
 import DashboardDetailsCard from './tools/dashboards/DashboardDetailsCard';
 import DashboardCreatedCard from './tools/dashboards/DashboardCreatedCard';
+import DashboardCreatePreviewCard from './tools/dashboards/DashboardCreatePreviewCard';
 import PatchDashboardToolCard from './tools/dashboards/PatchDashboardToolCard';
 import ValorVidaClienteResult, { type ValorVidaClienteRow } from '../tools/ecommerce/ValorVidaClienteResult';
 import ClientesNovosRecorrentesResult, { type ClientesNovosRecorrentesRow } from '../tools/ecommerce/ClientesNovosRecorrentesResult';
@@ -4933,13 +4934,28 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   )}
                 </ToolContent>
               </Tool>
-              {t.state === 'output-available' && (
-                <DashboardCreatedCard
-                  success={(t.output as CreateDashboardWFOutput)?.success}
-                  item={(t.output as CreateDashboardWFOutput)?.item}
-                  error={(t.output as CreateDashboardWFOutput)?.error}
-                />
-              )}
+              {t.state === 'output-available' && (() => {
+                const out = t.output as any;
+                if (out?.preview) {
+                  const p = out.preview as { title: string; description: string | null; sourcecode: string; visibility: string; version: number };
+                  return (
+                    <DashboardCreatePreviewCard
+                      title={p.title}
+                      description={p.description}
+                      sourcecode={p.sourcecode}
+                      visibility={p.visibility}
+                      version={p.version}
+                    />
+                  );
+                }
+                return (
+                  <DashboardCreatedCard
+                    success={out?.success}
+                    item={out?.item}
+                    error={out?.error}
+                  />
+                );
+              })()}
             </div>
           );
         }

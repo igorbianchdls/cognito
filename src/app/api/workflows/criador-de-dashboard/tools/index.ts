@@ -134,15 +134,16 @@ export const updateDashboard = tool({
 });
 
 export const createDashboard = tool({
-  description: 'Cria um novo dashboard (title, sourcecode, description?, visibility?, version?).',
+  description: 'Prepara a criação de um novo dashboard (preview). Só cria no banco quando explicitamente solicitado.',
   inputSchema: z.object({
     title: z.string().trim().min(1, 'title é obrigatório'),
     sourcecode: z.string().min(1, 'sourcecode é obrigatório'),
     description: z.string().nullable().optional(),
     visibility: VisibilityEnum.default('private').optional(),
     version: z.number().int().positive().default(1).optional(),
+    apply: z.boolean().default(false).optional().describe('Se true, persiste imediatamente; default false (apenas preview)')
   }),
-  execute: async ({ title, sourcecode, description, visibility = 'private', version = 1 }) => {
+  execute: async ({ title, sourcecode, description, visibility = 'private', version = 1, apply = false }) => {
     try {
       // Sanitização básica
       const desc = (description === '' ? null : description ?? null);
@@ -151,6 +152,20 @@ export const createDashboard = tool({
       if (code && code.length > 1_000_000) {
         return { success: false as const, error: 'sourcecode excede o limite de 1MB' };
       }
+      if (!apply) {
+        // Apenas preview: não persiste
+        return {
+          success: true as const,
+          preview: {
+            title,
+            description: desc,
+            sourcecode: code,
+            visibility,
+            version
+          }
+        };
+      }
+      // Persistência explícita
       const item = await createDashboardQuery({ title, sourcecode: code, description: desc, visibility, version });
       if (!item) return { success: false as const, error: 'Falha ao criar dashboard' };
       return { success: true as const, item };

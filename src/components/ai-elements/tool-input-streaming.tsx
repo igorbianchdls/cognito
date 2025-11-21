@@ -114,12 +114,15 @@ const StreamingJsonRenderer = ({
 
     if (typeof value === 'string') {
       const isLarge = value.length > LARGE_TEXT_THRESHOLD;
-      const showPreview = isStreaming && isLarge;
+      const isSource = (key === 'sourcecode' || key === 'code' || key === 'sourceCode');
+      // For source code, do not truncate during streaming
+      const showPreview = isStreaming && isLarge && !isSource;
       const shown = showPreview ? value.slice(0, STREAM_PREVIEW_SLICE) : value;
+      const allowTypewriter = isStreaming && !isLarge && !isSource && level > 0;
       return (
         <span className="text-green-600">
-          &quot;{isStreaming && !isLarge ? (
-            <TypewriterText text={value} isStreaming={isStreaming && level > 0} delay={20} />
+          &quot;{allowTypewriter ? (
+            <TypewriterText text={value} isStreaming={allowTypewriter} delay={20} />
           ) : shown}&quot;
           {showPreview && (
             <span className="text-gray-500"> … (preview durante streaming)</span>
