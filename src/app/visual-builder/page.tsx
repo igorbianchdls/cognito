@@ -8,6 +8,7 @@ import DashboardOpenDialog from '@/components/visual-builder/DashboardOpenDialog
 import { dashboardsApi, type Dashboard } from '@/stores/dashboardsStore';
 import MonacoEditor from '@/components/visual-builder/MonacoEditor';
 import ResponsiveGridCanvas from '@/components/visual-builder/ResponsiveGridCanvas';
+import WidgetEditorModal from '@/components/visual-builder/WidgetEditorModal';
 import { $visualBuilderState, visualBuilderActions } from '@/stores/visualBuilderStore';
 import { initialDsl, initialDslColumns } from '@/stores/visualBuilderStore';
 import { ThemeManager, type ThemeName } from '@/components/visual-builder/ThemeManager';
@@ -20,6 +21,7 @@ export default function VisualBuilderPage() {
   const [isFilterLoading, setIsFilterLoading] = useState(false);
   const [showSave, setShowSave] = useState(false);
   const [showOpen, setShowOpen] = useState(false);
+  const [editingWidget, setEditingWidget] = useState<Widget | null>(null);
   const currentThemeName: ThemeName = useMemo<ThemeName>(() => {
     try {
       const cfg = JSON.parse(visualBuilderState.code);
@@ -43,6 +45,19 @@ export default function VisualBuilderPage() {
 
   const handleLayoutChange = (updatedWidgets: Widget[]) => {
     visualBuilderActions.updateWidgets(updatedWidgets);
+  };
+
+  const handleOpenEdit = (widget: Widget) => {
+    setEditingWidget(widget);
+  };
+
+  const handleSaveWidget = (updatedWidget: Widget) => {
+    // Update widgets in store
+    const updated = visualBuilderState.widgets.map(w =>
+      w.id === updatedWidget.id ? updatedWidget : w
+    );
+    visualBuilderActions.updateWidgets(updated);
+    setEditingWidget(null);
   };
 
   const handleFilterChange = (filters: GlobalFilters) => {
@@ -242,11 +257,20 @@ export default function VisualBuilderPage() {
                 onFilterChange={handleFilterChange}
                 isFilterLoading={isFilterLoading}
                 themeName={currentThemeName}
+                onEdit={handleOpenEdit}
               />
             </div>
           </div>
         )}
       </div>
+
+      {/* Editor modal lifted to page (prevents grid remount/scroll change) */}
+      <WidgetEditorModal
+        widget={editingWidget}
+        isOpen={!!editingWidget}
+        onClose={() => setEditingWidget(null)}
+        onSave={handleSaveWidget}
+      />
     </div>
   );
 }

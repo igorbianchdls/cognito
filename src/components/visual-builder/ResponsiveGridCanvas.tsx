@@ -23,6 +23,8 @@ interface ResponsiveGridCanvasProps {
   onFilterChange?: (filters: GlobalFilters) => void;
   isFilterLoading?: boolean;
   themeName?: import('./ThemeManager').ThemeName;
+  // Optional external handler to open editor outside the canvas (prevents grid remount)
+  onEdit?: (widget: Widget) => void;
 }
 
 // Draggable Widget Component
@@ -99,14 +101,19 @@ function DraggableWidget({ widget, spanClasses, spanValue, startValue, minHeight
   );
 }
 
-export default function ResponsiveGridCanvas({ widgets, gridConfig, globalFilters, viewportMode = 'desktop', onLayoutChange, headerTitle, headerSubtitle, onFilterChange, isFilterLoading, themeName }: ResponsiveGridCanvasProps) {
+export default function ResponsiveGridCanvas({ widgets, gridConfig, globalFilters, viewportMode = 'desktop', onLayoutChange, headerTitle, headerSubtitle, onFilterChange, isFilterLoading, themeName, onEdit }: ResponsiveGridCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  // Internal editor state used only when onEdit is not provided by parent
   const [editingWidget, setEditingWidget] = useState<Widget | null>(null);
   const visualBuilderState = useNanoStore($visualBuilderState);
 
   // Handle widget edit
   const handleEditWidget = (widget: Widget) => {
-    setEditingWidget(widget);
+    if (onEdit) {
+      onEdit(widget);
+    } else {
+      setEditingWidget(widget);
+    }
   };
 
   // Handle save widget changes
@@ -659,13 +666,15 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig, globalFilter
 
       </div>
 
-      {/* Widget Editor Modal */}
-      <WidgetEditorModal
-        widget={editingWidget}
-        isOpen={!!editingWidget}
-        onClose={() => setEditingWidget(null)}
-        onSave={handleSaveWidget}
-      />
+      {/* Widget Editor Modal (fallback, only when parent didn't provide onEdit) */}
+      {!onEdit && (
+        <WidgetEditorModal
+          widget={editingWidget}
+          isOpen={!!editingWidget}
+          onClose={() => setEditingWidget(null)}
+          onSave={handleSaveWidget}
+        />
+      )}
     </div>
   );
 }
