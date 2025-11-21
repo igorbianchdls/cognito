@@ -559,15 +559,24 @@ export const visualBuilderActions = {
                 dsl = setConfigOnWidget(dsl, w.id, (cfg) => {
                   const prev = (cfg[key] as Record<string, unknown>) || {}
                   const prevStyling = (prev['styling'] as Record<string, unknown>) || {}
-                  const prevMargin = (prev['margin'] as Record<string, unknown>) || {}
+                  const prevMargin = (prev['margin'] as { top?: number; right?: number; bottom?: number; left?: number } | undefined) || {}
                   const nextStyling = { ...prevStyling, ...(colors && colors.length ? { colors } : {}) }
-                  const nextMargin = { ...prevMargin, ...(typeof marginLeft === 'number' ? { left: marginLeft } : {}) }
+                  const baseMargin = {
+                    top: typeof prevMargin.top === 'number' ? prevMargin.top : 20,
+                    right: typeof prevMargin.right === 'number' ? prevMargin.right : 20,
+                    bottom: typeof prevMargin.bottom === 'number' ? prevMargin.bottom : 40,
+                    left: typeof prevMargin.left === 'number' ? prevMargin.left : 40,
+                  }
+                  const nextMargin = {
+                    ...baseMargin,
+                    ...(typeof marginLeft === 'number' ? { left: marginLeft } : {}),
+                  }
                   return {
                     ...cfg,
                     [key]: {
                       ...prev,
                       ...(Object.keys(nextStyling).length ? { styling: nextStyling } : {}),
-                      ...(Object.keys(nextMargin).length ? { margin: nextMargin } : {}),
+                      margin: nextMargin,
                     }
                   }
                 })

@@ -219,32 +219,32 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
       const next: Partial<BarChartConfig> = { ...(cfg || {}) };
       next.styling = { ...(cfg?.styling || {}) } as BarChartConfig['styling'];
       if (colorsArray.length) (next.styling as BarChartConfig['styling']).colors = colorsArray;
-      next.margin = { ...(cfg?.margin || {}) };
-      if (Number.isFinite(styleData.marginLeft)) (next.margin as NonNullable<BarChartConfig['margin']>).left = styleData.marginLeft;
+      const base = (cfg?.margin || { top: 20, right: 20, bottom: 40, left: 40 }) as NonNullable<BarChartConfig['margin']>;
+      next.margin = { ...base, left: Number.isFinite(styleData.marginLeft) ? styleData.marginLeft : base.left };
       return next;
     };
     const applyLineStyling = (cfg?: Partial<LineChartConfig>): Partial<LineChartConfig> => {
       const next: Partial<LineChartConfig> = { ...(cfg || {}) };
       next.styling = { ...(cfg?.styling || {}) } as LineChartConfig['styling'];
       if (colorsArray.length) (next.styling as LineChartConfig['styling']).colors = colorsArray;
-      next.margin = { ...(cfg?.margin || {}) } as NonNullable<LineChartConfig['margin']>;
-      if (Number.isFinite(styleData.marginLeft)) (next.margin as NonNullable<LineChartConfig['margin']>).left = styleData.marginLeft;
+      const base = (cfg?.margin || { top: 20, right: 20, bottom: 40, left: 40 }) as NonNullable<LineChartConfig['margin']>;
+      next.margin = { ...base, left: Number.isFinite(styleData.marginLeft) ? styleData.marginLeft : base.left } as NonNullable<LineChartConfig['margin']>;
       return next;
     };
     const applyPieStyling = (cfg?: Partial<PieChartConfig>): Partial<PieChartConfig> => {
       const next: Partial<PieChartConfig> = { ...(cfg || {}) };
       next.styling = { ...(cfg?.styling || {}) } as PieChartConfig['styling'];
       if (colorsArray.length) (next.styling as PieChartConfig['styling']).colors = colorsArray;
-      next.margin = { ...(cfg?.margin || {}) } as NonNullable<PieChartConfig['margin']>;
-      if (Number.isFinite(styleData.marginLeft)) (next.margin as NonNullable<PieChartConfig['margin']>).left = styleData.marginLeft;
+      const base = (cfg?.margin || { top: 20, right: 20, bottom: 40, left: 40 }) as NonNullable<PieChartConfig['margin']>;
+      next.margin = { ...base, left: Number.isFinite(styleData.marginLeft) ? styleData.marginLeft : base.left } as NonNullable<PieChartConfig['margin']>;
       return next;
     };
     const applyAreaStyling = (cfg?: Partial<AreaChartConfig>): Partial<AreaChartConfig> => {
       const next: Partial<AreaChartConfig> = { ...(cfg || {}) };
       next.styling = { ...(cfg?.styling || {}) } as AreaChartConfig['styling'];
       if (colorsArray.length) (next.styling as AreaChartConfig['styling']).colors = colorsArray;
-      next.margin = { ...(cfg?.margin || {}) } as NonNullable<AreaChartConfig['margin']>;
-      if (Number.isFinite(styleData.marginLeft)) (next.margin as NonNullable<AreaChartConfig['margin']>).left = styleData.marginLeft;
+      const base = (cfg?.margin || { top: 20, right: 20, bottom: 40, left: 40 }) as NonNullable<AreaChartConfig['margin']>;
+      next.margin = { ...base, left: Number.isFinite(styleData.marginLeft) ? styleData.marginLeft : base.left } as NonNullable<AreaChartConfig['margin']>;
       return next;
     };
 
