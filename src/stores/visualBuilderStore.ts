@@ -462,14 +462,14 @@ export const visualBuilderActions = {
 
           const normalizeSchemaTable = (schema?: string, table?: string): { schema?: string; table?: string } => {
             const s = (schema || '').trim()
-            let t = (table || '').trim()
-            if (t.includes('.')) {
-              const i = t.indexOf('.')
-              const s2 = t.slice(0, i)
-              const t2 = t.slice(i + 1)
+            const tbl = (table || '').trim()
+            if (tbl.includes('.')) {
+              const i = tbl.indexOf('.')
+              const s2 = tbl.slice(0, i)
+              const t2 = tbl.slice(i + 1)
               return { schema: s || s2, table: t2 }
             }
-            return { schema: s || undefined, table: t || undefined }
+            return { schema: s || undefined, table: tbl || undefined }
           }
 
           // Apply updates
@@ -496,13 +496,13 @@ export const visualBuilderActions = {
               }
               // Update datasource for simple charts and KPI
               const t = w.type
-              const ds = w.dataSource || undefined
-              if (ds) {
-                const norm = normalizeSchemaTable((ds as any).schema as string | undefined, (ds as any).table as string | undefined)
-                const xDim = ((ds as any).dimension as string) || ((ds as any).x as string) || ''
-                const yMetric = ((ds as any).measure as string) || ((ds as any).y as string) || ''
-                const agg = ((ds as any).aggregation as string) || ''
-                const measureExpr = (ds as any).measure ? (ds as any).measure as string : buildMeasureExpr(yMetric, agg)
+              if (w.dataSource) {
+                const ds = w.dataSource as NonNullable<Widget['dataSource']>
+                const norm = normalizeSchemaTable(ds.schema as string | undefined, ds.table as string | undefined)
+                const xDim = (ds.dimension as string | undefined) ?? (ds.x as string | undefined) ?? ''
+                const yMetric = (ds.measure as string | undefined) ?? (ds.y as string | undefined) ?? ''
+                const agg = (ds.aggregation as ("SUM"|"COUNT"|"AVG"|"MIN"|"MAX") | undefined) ?? ''
+                const measureExpr = ds.measure ? String(ds.measure) : buildMeasureExpr(yMetric, String(agg))
                 const dsAttrs: Record<string, string | undefined> = {
                   schema: norm.schema,
                   table: norm.table,
@@ -513,15 +513,15 @@ export const visualBuilderActions = {
                 } else if (t === 'kpi') {
                   dsAttrs['measure'] = measureExpr
                 } else if (['stackedbar','groupedbar','stackedlines','radialstacked','pivotbar'].includes(t)) {
-                  const dim1 = ((ds as any).dimension1 as string) || xDim || ''
-                  const dim2 = ((ds as any).dimension2 as string) || ''
+                  const dim1 = (ds.dimension1 as string | undefined) ?? xDim ?? ''
+                  const dim2 = (ds.dimension2 as string | undefined) ?? ''
                   dsAttrs['dimension1'] = dim1 || undefined
                   dsAttrs['dimension2'] = dim2 || undefined
                   dsAttrs['measure'] = measureExpr
                 } else if (t === 'comparebar') {
-                  const cDim = ((ds as any).dimension as string) || xDim || ''
-                  const goal = ((ds as any).measureGoal as string) || ''
-                  const actual = ((ds as any).measureActual as string) || ''
+                  const cDim = (ds.dimension as string | undefined) ?? xDim ?? ''
+                  const goal = (ds.measureGoal as string | undefined) ?? ''
+                  const actual = (ds.measureActual as string | undefined) ?? ''
                   dsAttrs['dimension'] = cDim || undefined
                   dsAttrs['measureGoal'] = goal || undefined
                   dsAttrs['measureActual'] = actual || undefined
