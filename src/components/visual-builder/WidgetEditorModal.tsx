@@ -15,10 +15,9 @@ interface WidgetEditorModalProps {
   onSave: (updatedWidget: Widget) => void;
 }
 
-export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: WidgetEditorModalProps) {
-  // Known datasets from system prompt (dimensions and measures)
-  type FieldOptions = { dimensions: string[]; measures: string[] };
-  const KNOWN_TABLES: Record<string, FieldOptions> = {
+// Known datasets from system prompt (stable at module scope)
+type FieldOptions = { dimensions: string[]; measures: string[] };
+const KNOWN_TABLES: Record<string, FieldOptions> = {
     // Padrão: vendas.vw_pedidos_completo
     'vendas.vw_pedidos_completo': {
       dimensions: [
@@ -68,8 +67,10 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
       ],
     },
   };
+const KNOWN_TABLE_KEYS = Object.keys(KNOWN_TABLES);
 
-  const KNOWN_TABLE_KEYS = Object.keys(KNOWN_TABLES);
+export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: WidgetEditorModalProps) {
+
   const DEFAULT_KNOWN_KEY = 'vendas.vw_pedidos_completo';
   const CUSTOM_VALUE = '__custom__';
 
@@ -263,11 +264,11 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
     onClose();
   };
 
-  if (!isOpen || !widget) return null;
-
-  // Render modal in a portal to avoid parent scroll jumps on focus
+  // Portal mounting state
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); return () => setMounted(false); }, []);
+
+  if (!isOpen || !widget) return null;
   const modal = (
     <div className="fixed inset-0 z-50 pointer-events-none">
       <div className="absolute top-20 right-8 w-96 bg-white rounded-lg shadow-2xl border border-gray-200 p-6 pointer-events-auto max-h-[85vh] overflow-hidden flex flex-col">
