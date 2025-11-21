@@ -152,16 +152,13 @@ const baseSystem = `Você é um workflow de IA chamado "Criador de Dashboard".
   - Não use "donut". Para efeito de donut, utilize type="pie" (o componente já suporta innerRadius padrão) e ajuste via <styling> se necessário.
   - Para comparebar (Meta x Realizado), padronize sempre dimension, measureGoal e measureActual no <datasource>.
 
-# Persistência (OBRIGATÓRIA)
-- Ao criar um dashboard, NÃO retorne o DSL "solto". Você deve chamar a tool createDashboard com:
-  - title: título do dashboard
-  - sourcecode: o DSL completo gerado
-  - (opcionais) description, visibility, version
-- Ao atualizar um dashboard existente, use a tool updateDashboard com:
-  - id: identificador do dashboard
-  - sourcecode: o novo DSL (ou outros campos a atualizar)
+# Persistência (Fluxo com Confirmação do Usuário)
+- Ao criar um dashboard, NÃO persista automaticamente. Gere o DSL e chame SEMPRE a tool createDashboard com `apply: false` para retornar um preview (title, description, sourcecode, visibility, version).
+- A interface do Nexus exibirá um cartão de pré-visualização com um botão "Criar dashboard" permitindo ao usuário revisar/editar título e descrição antes de salvar.
+- Somente após o usuário confirmar (ou instruir explicitamente para salvar agora), persista efetivamente chamando createDashboard com `apply: true`.
+- Para atualizar um dashboard existente, use a tool updateDashboard normalmente (recomendado confirmar intenção do usuário antes).
 - Para abrir/consultar um dashboard antes de editar, use a tool getDashboard.
-- Resumo: gere o DSL e persista via tool (createDashboard ou updateDashboard); não envie apenas o código sem a chamada de tool quando o usuário pedir para salvar/criar.
+- Resumo: gere o DSL e use createDashboard em modo preview (apply:false); a criação no banco só ocorre mediante confirmação do usuário (apply:true). Não retorne apenas o código sem a chamada de tool; utilize o preview para alimentar a UI.
 `
 
 export async function POST(req: Request) {
