@@ -1742,17 +1742,7 @@ export default function DashboardChatPanel() {
         {/* Dashboard Tab */}
         {activeTab === 'dashboard' && (
           <div className="h-full bg-gray-50 py-2 px-4">
-            {/* Header moved out of canvas to avoid scroll reset */}
-            <DashboardInCanvasHeader
-              title={dashboardMeta?.title || visualBuilderState.dashboardTitle || 'Live Dashboard'}
-              subtitle={(dashboardMeta?.description ?? undefined) || visualBuilderState.dashboardSubtitle || 'Real-time visualization with Supabase data'}
-              currentFilter={visualBuilderState.globalFilters?.dateRange || { type: 'last_30_days' }}
-              onFilterChange={(dateRange) => visualBuilderActions.updateGlobalFilters({ ...(visualBuilderState.globalFilters || {}), dateRange })}
-              isLoading={false}
-              containerPadding={visualBuilderState.gridConfig.padding ?? 16}
-              themeName={getThemeFromCode(visualBuilderState.code)}
-            />
-            <div className="h-[calc(100%-56px)] overflow-auto" ref={scrollRef} style={{ overflowAnchor: 'none' }}>
+            <div className="h-full overflow-auto" ref={scrollRef} style={{ overflowAnchor: 'none' }}>
               {loadingDashboard && (
                 <div className="text-sm text-gray-500 mb-2">Carregando dashboard...</div>
               )}
@@ -1768,7 +1758,6 @@ export default function DashboardChatPanel() {
                 headerSubtitle={(dashboardMeta?.description ?? undefined) || visualBuilderState.dashboardSubtitle || 'Real-time visualization with Supabase data'}
                 themeName={getThemeFromCode(visualBuilderState.code)}
                 onEdit={handleOpenEdit}
-                renderHeader={false}
               />
             </div>
             <WidgetEditorModal
