@@ -80,6 +80,8 @@ export default function VisualBuilderPage() {
       w.id === updatedWidget.id ? updatedWidget : w
     );
     visualBuilderActions.updateWidgets(updated);
+    // Force refetch for this widget only
+    visualBuilderActions.bumpReloadTick(updatedWidget.id);
     setEditingWidget(null);
     // Restore scroll after store update
     requestAnimationFrame(() => {

@@ -21,6 +21,7 @@ import InsightsHeroCarousel from '@/components/widgets/InsightsHeroCarousel';
 import InsightsCard2 from '@/components/widgets/InsightsCard2';
 import { $insights2 } from '@/stores/nexus/insights2Store';
 import { useStore as useNanoStore } from '@nanostores/react';
+import { $visualBuilderState } from '@/stores/visualBuilderStore';
 import type { Widget } from '../visual-builder/ConfigParser';
 import type { GlobalFilters } from '@/stores/visualBuilderStore';
 
@@ -48,6 +49,8 @@ interface WidgetRendererProps {
 
 export default function WidgetRenderer({ widget, globalFilters }: WidgetRendererProps) {
   const insights2State = useNanoStore($insights2);
+  const vbState = useNanoStore($visualBuilderState);
+  const reloadTick = (vbState.reloadTicks && vbState.reloadTicks[widget.id]) || 0;
   const [data, setData] = useState<WidgetData>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -153,6 +156,40 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
     return ['bar', 'line', 'pie', 'area', 'kpi'].includes(type);
   };
 
+  // Simple in-memory caches per signature
+  const dataCache: Map<string, WidgetData> = (WidgetRenderer as any)._dataCache || new Map();
+  (WidgetRenderer as any)._dataCache = dataCache;
+  const groupedCache: Map<string, { items: Array<{ label: string; [key: string]: string | number }>; series: Array<{ key: string; label: string; color: string }> }> = (WidgetRenderer as any)._groupedCache || new Map();
+  (WidgetRenderer as any)._groupedCache = groupedCache;
+
+  const buildSimpleSignature = () => {
+    const ds = (widget.dataSource || {}) as Record<string, unknown>;
+    return JSON.stringify({
+      id: widget.id,
+      type: widget.type,
+      schema: ds['schema'] || '',
+      table: ds['table'] || '',
+      x: ds['x'] || ds['dimension'] || '',
+      y: ds['y'] || ds['measure'] || '',
+      agg: ds['aggregation'] || ''
+    });
+  };
+
+  const buildGroupedSignature = () => {
+    const ds = (widget.dataSource || {}) as Record<string, unknown>;
+    return JSON.stringify({
+      id: widget.id,
+      type: widget.type,
+      schema: ds['schema'] || '',
+      table: ds['table'] || '',
+      d1: ds['dimension1'] || ds['dimension'] || '',
+      d2: ds['dimension2'] || '',
+      m: ds['measure'] || '',
+      agg: ds['aggregation'] || '',
+      limit: ds['limit'] || ''
+    });
+  };
+
   // Fetch ONLY BigQuery data - no mock data ever
   useEffect(() => {
     // Skip data fetching for widgets that don't need BigQuery data
@@ -161,6 +198,13 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
     }
 
     const fetchData = async () => {
+      const sig = buildSimpleSignature();
+      if (dataCache.has(sig) && reloadTick === 0) {
+        setData(dataCache.get(sig) ?? null);
+        setError(null);
+        setLoading(false);
+        return;
+      }
       // Se não tem dataSource, não busca nada
       if (!widget.dataSource) {
         setError('No dataSource configured');
@@ -236,6 +280,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
 
         if (result.success) {
           setData(result.data);
+          dataCache.set(sig, result.data);
           console.log(`✅ Widget data set successfully:`, {
             widgetId: widget.id,
             totalRecords: result.totalRecords,
@@ -256,7 +301,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
     };
 
     fetchData();
-  }, [widget.id, widget.dataSource, widget.type, globalFilters]); // Re-executar quando widget ou filtros mudarem
+  }, [widget.id, reloadTick]);
 
   // Fetch data for multi-series widgets (stacked/grouped/pivot/compare)
   useEffect(() => {
@@ -265,6 +310,13 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
     }
 
     async function fetchGroupedData() {
+      const sig = buildGroupedSignature();
+      if (groupedCache.has(sig) && reloadTick === 0) {
+        setMultipleData(groupedCache.get(sig) ?? null);
+        setMultipleError(null);
+        setMultipleLoading(false);
+        return;
+      }
       if (!widget.dataSource) {
         setMultipleError('No dataSource configured');
         setMultipleLoading(false);
@@ -322,6 +374,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
 
         if (result.success) {
           setMultipleData({ items: result.items, series: result.series });
+          groupedCache.set(sig, { items: result.items, series: result.series });
         } else {
           throw new Error(result.error || 'Failed to fetch grouped data');
         }
@@ -335,7 +388,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
       }
 
     fetchGroupedData();
-  }, [widget.id, widget.dataSource, widget.type, globalFilters]);
+  }, [widget.id, reloadTick]);
 
   // Type guard function for KPI data
   const isKPIData = (data: WidgetData): data is KPIData => {

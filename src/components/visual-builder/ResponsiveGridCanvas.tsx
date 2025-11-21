@@ -126,6 +126,7 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig, globalFilter
       w.id === updatedWidget.id ? updatedWidget : w
     );
     onLayoutChange(updatedWidgets);
+    try { visualBuilderActions.bumpReloadTick(updatedWidget.id); } catch {}
   }, [onLayoutChange, widgets]);
 
   // Extract theme colors from gridConfig

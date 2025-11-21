@@ -39,6 +39,8 @@ interface VisualBuilderState {
   globalFilters: GlobalFilters
   dashboardTitle?: string
   dashboardSubtitle?: string
+  // Controls when widgets should explicitly refetch (only when bumped)
+  reloadTicks?: Record<string, number>
 }
 
 // Helper: compact specific sections inside a JSON string to one line
@@ -327,7 +329,8 @@ const initialState: VisualBuilderState = {
     dateRange: {
       type: 'last_30_days'
     }
-  }
+  },
+  reloadTicks: {}
 }
 
 const STORAGE_KEY = 'cognito_visual_builder_state'
@@ -627,7 +630,8 @@ export const visualBuilderActions = {
       isValid: parseResult.isValid,
       dashboardTitle: parseResult.dashboardTitle,
       dashboardSubtitle: parseResult.dashboardSubtitle,
-      globalFilters: currentState.globalFilters
+      globalFilters: currentState.globalFilters,
+      reloadTicks: currentState.reloadTicks || {}
     })
   },
 
@@ -652,7 +656,8 @@ export const visualBuilderActions = {
         dateRange: {
           type: 'last_30_days'
         }
-      }
+      },
+      reloadTicks: {}
     })
   },
 
@@ -702,7 +707,8 @@ export const visualBuilderActions = {
     $visualBuilderState.set({
       ...currentState,
       widgets: updatedWidgets,
-      code: newCode
+      code: newCode,
+      reloadTicks: currentState.reloadTicks || {}
     })
   },
 
@@ -726,5 +732,13 @@ export const visualBuilderActions = {
         }
       }
     })
+  },
+
+  // Bump reload tick for a specific widget (forces data refetch)
+  bumpReloadTick: (widgetId: string) => {
+    const currentState = $visualBuilderState.get()
+    const nextTicks = { ...(currentState.reloadTicks || {}) }
+    nextTicks[widgetId] = (nextTicks[widgetId] || 0) + 1
+    $visualBuilderState.set({ ...currentState, reloadTicks: nextTicks })
   }
 }
