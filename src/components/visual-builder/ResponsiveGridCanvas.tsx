@@ -124,6 +124,7 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig, globalFilter
 
   // Advanced container styles (same as original GridCanvas)
   const pad = gridConfig.padding ?? 16;
+  const DEFAULT_BORDER_RADIUS = 12; // px, fallback when not provided by config/theme
   const containerStyles = {
     // Background: priority to gradient, fallback to backgroundColor
     background: gridConfig.backgroundGradient?.enabled
@@ -139,7 +140,7 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig, globalFilter
     // Border & Shadow
     borderWidth: gridConfig.borderWidth ? `${gridConfig.borderWidth}px` : '1px',
     borderColor: borderColor,
-    borderRadius: gridConfig.borderRadius ? `${gridConfig.borderRadius}px` : undefined,
+    borderRadius: `${typeof gridConfig.borderRadius === 'number' ? gridConfig.borderRadius : DEFAULT_BORDER_RADIUS}px`,
     boxShadow: gridConfig.containerShadowColor
       ? `${gridConfig.containerShadowOffsetX || 0}px ${gridConfig.containerShadowOffsetY || 4}px ${gridConfig.containerShadowBlur || 8}px rgba(${hexToRgb(gridConfig.containerShadowColor)}, ${gridConfig.containerShadowOpacity || 0.1})`
       : undefined,
