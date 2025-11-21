@@ -602,15 +602,76 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
             <h3 className="text-sm font-semibold text-gray-900 mb-3">Estilo</h3>
             <div className="grid grid-cols-2 gap-4">
               <div className="col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Cores (separadas por vírgula)</label>
-                <input
-                  type="text"
-                  value={styleData.colors}
-                  onChange={(e) => setStyleData({ ...styleData, colors: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="#3b82f6, #10b981, #f59e0b"
-                />
-                <p className="text-xs text-gray-500 mt-1">Ex.: #3b82f6, #10b981, #f59e0b (ordem aplicada às séries)</p>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Cores das Séries</label>
+                {/* Lista de cores com color picker */}
+                <div className="space-y-2">
+                  {(styleData.colors.split(',').map(c => c.trim()).filter(Boolean).length > 0
+                    ? styleData.colors.split(',').map(c => c.trim()).filter(Boolean)
+                    : ['#3b82f6']
+                  ).map((color, idx, arr) => (
+                    <div key={`${color}-${idx}`} className="flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={/^#([0-9a-f]{3}){1,2}$/i.test(color) ? color : '#3b82f6'}
+                        onChange={(e) => {
+                          const list = (styleData.colors || '')
+                            .split(',')
+                            .map(s => s.trim())
+                            .filter(Boolean);
+                          if (list.length === 0) list.push(e.target.value);
+                          else list[idx] = e.target.value;
+                          setStyleData({ ...styleData, colors: list.join(', ') });
+                        }}
+                        className="w-8 h-8 p-0 border rounded"
+                      />
+                      <input
+                        type="text"
+                        value={color}
+                        onChange={(e) => {
+                          const list = (styleData.colors || '')
+                            .split(',')
+                            .map(s => s.trim())
+                            .filter(Boolean);
+                          if (list.length === 0) list.push(e.target.value);
+                          else list[idx] = e.target.value;
+                          setStyleData({ ...styleData, colors: list.join(', ') });
+                        }}
+                        placeholder="#3b82f6"
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                      {arr.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const list = (styleData.colors || '')
+                              .split(',')
+                              .map(s => s.trim())
+                              .filter(Boolean);
+                            list.splice(idx, 1);
+                            setStyleData({ ...styleData, colors: list.join(', ') });
+                          }}
+                          className="px-2 py-1 text-xs border border-gray-300 rounded hover:bg-gray-50"
+                        >
+                          Remover
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const list = (styleData.colors || '')
+                        .split(',')
+                        .map(s => s.trim())
+                        .filter(Boolean);
+                      list.push('#10b981');
+                      setStyleData({ ...styleData, colors: list.join(', ') });
+                    }}
+                    className="px-3 py-1.5 text-xs border border-gray-300 rounded hover:bg-gray-50"
+                  >
+                    + Adicionar cor
+                  </button>
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Margin Left (px)</label>
