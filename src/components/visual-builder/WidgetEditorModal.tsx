@@ -65,7 +65,9 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
   };
 
   const KNOWN_TABLE_KEYS = Object.keys(KNOWN_TABLES);
-  const DEFAULT_TABLE = 'vendas.vw_pedidos_completo';
+  const DEFAULT_KNOWN_KEY = 'vendas.vw_pedidos_completo';
+  const DEFAULT_SCHEMA = 'vendas';
+  const DEFAULT_TABLE_ONLY = 'vw_pedidos_completo';
   const CUSTOM_VALUE = '__custom__';
 
   const [formData, setFormData] = useState({
@@ -73,6 +75,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
     title: widget?.title || '',
     heightPx: widget?.heightPx || 320,
     dataSource: {
+      schema: widget?.dataSource?.schema || '',
       table: widget?.dataSource?.table || '',
       x: widget?.dataSource?.x || '',
       y: widget?.dataSource?.y || '',
@@ -82,18 +85,22 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
 
   // Derive selected table UI state
   const selectedTableValue = useMemo(() => {
-    const t = formData.dataSource.table?.trim();
-    if (!t) return DEFAULT_TABLE;
-    return KNOWN_TABLE_KEYS.includes(t) ? t : CUSTOM_VALUE;
-  }, [formData.dataSource.table]);
+    const schema = formData.dataSource.schema?.trim();
+    const table = formData.dataSource.table?.trim();
+    const full = table ? (schema ? `${schema}.${table}` : table) : '';
+    if (!full) return DEFAULT_KNOWN_KEY;
+    return KNOWN_TABLE_KEYS.includes(full) ? full : CUSTOM_VALUE;
+  }, [formData.dataSource.schema, formData.dataSource.table]);
 
   const isCustomTable = selectedTableValue === CUSTOM_VALUE;
 
   const fieldOptions = useMemo<FieldOptions>(() => {
-    const t = formData.dataSource.table?.trim();
-    const key = t && KNOWN_TABLE_KEYS.includes(t) ? t : DEFAULT_TABLE;
+    const schema = formData.dataSource.schema?.trim();
+    const table = formData.dataSource.table?.trim();
+    const full = table ? (schema ? `${schema}.${table}` : table) : '';
+    const key = full && KNOWN_TABLE_KEYS.includes(full) ? full : DEFAULT_KNOWN_KEY;
     return KNOWN_TABLES[key];
-  }, [formData.dataSource.table]);
+  }, [formData.dataSource.schema, formData.dataSource.table]);
 
   // Update form when widget changes
   useEffect(() => {
@@ -103,6 +110,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
         title: widget.title || '',
         heightPx: widget.heightPx || 320,
         dataSource: {
+          schema: widget.dataSource?.schema || '',
           table: widget.dataSource?.table || '',
           x: widget.dataSource?.x || '',
           y: widget.dataSource?.y || '',
@@ -217,15 +225,22 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
                     onChange={(e) => {
                       const v = e.target.value;
                       if (v === CUSTOM_VALUE) {
-                        // Keep existing table value (if any); user will type below
+                        // Switch to custom mode; don't alter current schema/table values
                         setFormData({ ...formData, dataSource: { ...formData.dataSource } });
-                      } else {
-                        setFormData({ ...formData, dataSource: { ...formData.dataSource, table: v, x: '', y: '' } });
+                        return;
                       }
+                      // v is like 'schema.table' -> split
+                      const dot = v.indexOf('.');
+                      const nextSchema = dot > 0 ? v.slice(0, dot) : '';
+                      const nextTable = dot > 0 ? v.slice(dot + 1) : v;
+                      setFormData({
+                        ...formData,
+                        dataSource: { ...formData.dataSource, schema: nextSchema, table: nextTable, x: '', y: '' }
+                      });
                     }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
-                    <option value={DEFAULT_TABLE}>vendas.vw_pedidos_completo</option>
+                    <option value={DEFAULT_KNOWN_KEY}>vendas.vw_pedidos_completo</option>
                     <option value="comercial.vw_metas_detalhe">comercial.vw_metas_detalhe</option>
                     <option value={CUSTOM_VALUE}>Custom…</option>
                   </select>
@@ -234,11 +249,18 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
                   <div className="mt-2">
                     <input
                       type="text"
-                      value={formData.dataSource.table}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        dataSource: { ...formData.dataSource, table: e.target.value }
-                      })}
+                      value={formData.dataSource.schema && formData.dataSource.table ? `${formData.dataSource.schema}.${formData.dataSource.table}` : (formData.dataSource.table || '')}
+                      onChange={(e) => {
+                        const raw = e.target.value.trim();
+                        if (raw.includes('.')) {
+                          const idx = raw.indexOf('.');
+                          const s = raw.slice(0, idx);
+                          const t = raw.slice(idx + 1);
+                          setFormData({ ...formData, dataSource: { ...formData.dataSource, schema: s, table: t } });
+                        } else {
+                          setFormData({ ...formData, dataSource: { ...formData.dataSource, schema: '', table: raw } });
+                        }
+                      }}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="schema.tabela ou nome_tabela"
                     />

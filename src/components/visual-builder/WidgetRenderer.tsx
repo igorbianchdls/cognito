@@ -185,10 +185,31 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
           ...ds,
           ...(ds.dimension ? { x: ds.dimension } : {}),
           ...(ds.measure ? { y: ds.measure } : {}),
+        } as Partial<{ schema: string; table: string; x: string; y: string }>;
+
+        // Normalize schema/table in case table contains schema prefix
+        const normalizeSchemaTable = (src: Partial<{ schema?: string; table?: string }>) => {
+          const out: Record<string, unknown> = { ...src };
+          const schema = (src.schema || '').toString().trim();
+          const table = (src.table || '').toString().trim();
+          if (table.includes('.')) {
+            const dotIdx = table.indexOf('.');
+            const tSchema = table.slice(0, dotIdx);
+            const tTable = table.slice(dotIdx + 1);
+            if (!schema) {
+              out.schema = tSchema;
+              out.table = tTable;
+            } else {
+              // If schema already set and table also has schema, strip duplicate
+              out.table = tSchema === schema ? tTable : table.split('.').pop();
+            }
+          }
+          return out;
         };
+        const normalizedDataSource = normalizeSchemaTable(mappedDataSource);
         const requestPayload = {
           type: widget.type,
-          dataSource: mappedDataSource,
+          dataSource: normalizedDataSource,
           filters: globalFilters
         };
         console.log('📤 Making API request:', {
@@ -264,7 +285,26 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
         const endpoint = widget.type === 'comparebar' ? '/api/dashboard-supabase/compare' : '/api/dashboard-supabase/grouped';
         // For comparebar, prefer standardized fields: dimension, measureGoal, measureActual.
         // Fallback to meta/topic if measures are not provided.
-        const dsAny = (widget.dataSource || {}) as Record<string, unknown>;
+        const dsAnyRaw = (widget.dataSource || {}) as Record<string, unknown>;
+        // Normalize schema/table for grouped endpoints as well
+        const normalizeSchemaTableAny = (src: Record<string, unknown>) => {
+          const out = { ...src } as Record<string, unknown>;
+          const schema = (out['schema'] || '').toString().trim();
+          const table = (out['table'] || '').toString().trim();
+          if (table.includes('.')) {
+            const idx = table.indexOf('.');
+            const tSchema = table.slice(0, idx);
+            const tTable = table.slice(idx + 1);
+            if (!schema) {
+              out['schema'] = tSchema;
+              out['table'] = tTable;
+            } else {
+              out['table'] = tSchema === schema ? tTable : table.split('.').pop();
+            }
+          }
+          return out;
+        };
+        const dsAny = normalizeSchemaTableAny(dsAnyRaw);
         const payload = widget.type === 'comparebar'
           ? {
               ...dsAny,
