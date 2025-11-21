@@ -472,6 +472,31 @@ export const visualBuilderActions = {
             return { schema: s || undefined, table: tbl || undefined }
           }
 
+          // Insert or update <config>{...}</config> for a widget id
+          const setConfigOnWidget = (source: string, id: string, updater: (cfg: Record<string, unknown>) => Record<string, unknown>): string => {
+            const reWidget = new RegExp(`(<widget\\b[^>]*\\bid=\"${escapeId(id)}\"[^>]*>)([\\s\\S]*?)(<\\/widget>)`, 'i')
+            return source.replace(reWidget, (match: string, open: string, inner: string, close: string) => {
+              const cfgRe = /<config\b[^>]*>([\s\S]*?)<\/config>/i
+              const cfgMatch = inner.match(cfgRe)
+              let current: Record<string, unknown> = {}
+              if (cfgMatch && cfgMatch[1]) {
+                try {
+                  current = JSON.parse(cfgMatch[1].trim()) as Record<string, unknown>
+                } catch {
+                  current = {}
+                }
+              }
+              const nextCfg = updater(current)
+              const json = JSON.stringify(nextCfg, null, 2)
+              if (cfgMatch) {
+                inner = inner.replace(cfgRe, `<config>\n${json}\n</config>`)
+              } else {
+                inner = `<config>\n${json}\n</config>\n` + inner
+              }
+              return open + inner + close
+            })
+          }
+
           // Apply updates
           widgets.forEach(w => {
             if (w.id) {
@@ -525,8 +550,47 @@ export const visualBuilderActions = {
                   dsAttrs['dimension'] = cDim || undefined
                   dsAttrs['measureGoal'] = goal || undefined
                   dsAttrs['measureActual'] = actual || undefined
-                }
-                dsl = setAttrOnDatasource(dsl, w.id, dsAttrs)
+              }
+              dsl = setAttrOnDatasource(dsl, w.id, dsAttrs)
+
+              // Persist styling colors and margin.left into <config> for basic chart types
+              const updateChartConfig = (key: 'barConfig'|'lineConfig'|'pieConfig'|'areaConfig', colors?: string[], marginLeft?: number) => {
+                if ((!colors || colors.length === 0) && (marginLeft === undefined)) return
+                dsl = setConfigOnWidget(dsl, w.id, (cfg) => {
+                  const prev = (cfg[key] as Record<string, unknown>) || {}
+                  const prevStyling = (prev['styling'] as Record<string, unknown>) || {}
+                  const prevMargin = (prev['margin'] as Record<string, unknown>) || {}
+                  const nextStyling = { ...prevStyling, ...(colors && colors.length ? { colors } : {}) }
+                  const nextMargin = { ...prevMargin, ...(typeof marginLeft === 'number' ? { left: marginLeft } : {}) }
+                  return {
+                    ...cfg,
+                    [key]: {
+                      ...prev,
+                      ...(Object.keys(nextStyling).length ? { styling: nextStyling } : {}),
+                      ...(Object.keys(nextMargin).length ? { margin: nextMargin } : {}),
+                    }
+                  }
+                })
+              }
+
+              // Read colors and margin from widget object (already updated by modal)
+              if (t === 'bar') {
+                const colors = w.barConfig?.styling?.colors as string[] | undefined
+                const mLeft = w.barConfig?.margin?.left as number | undefined
+                updateChartConfig('barConfig', colors, mLeft)
+              } else if (t === 'line') {
+                const colors = w.lineConfig?.styling?.colors as string[] | undefined
+                const mLeft = (w.lineConfig?.margin as { left?: number } | undefined)?.left
+                updateChartConfig('lineConfig', colors, mLeft)
+              } else if (t === 'pie') {
+                const colors = w.pieConfig?.styling?.colors as string[] | undefined
+                const mLeft = (w.pieConfig?.margin as { left?: number } | undefined)?.left
+                updateChartConfig('pieConfig', colors, mLeft)
+              } else if (t === 'area') {
+                const colors = w.areaConfig?.styling?.colors as string[] | undefined
+                const mLeft = (w.areaConfig?.margin as { left?: number } | undefined)?.left
+                updateChartConfig('areaConfig', colors, mLeft)
+              }
               }
             }
           })
