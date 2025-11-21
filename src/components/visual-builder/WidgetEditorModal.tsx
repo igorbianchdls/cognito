@@ -233,8 +233,8 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
         showLegend: cfg?.styling?.showLegend ?? true,
         showGrid: cfg?.styling?.showGrid ?? true,
         ...(cfg?.styling || {})
-      } as Partial<LineChartConfig['styling']>;
-      next.margin = { ...(cfg?.margin || {}), left: Number.isFinite(styleData.marginLeft) ? styleData.marginLeft : 40 } as Partial<NonNullable<LineChartConfig['margin']>>;
+      } as LineChartConfig['styling'];
+      next.margin = { ...(cfg?.margin || {}), left: Number.isFinite(styleData.marginLeft) ? styleData.marginLeft : 40 };
       return next;
     };
     const applyPieStyling = (cfg?: Partial<PieChartConfig>): Partial<PieChartConfig> => {
@@ -244,8 +244,8 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
         showLegend: cfg?.styling?.showLegend ?? true,
         showGrid: cfg?.styling?.showGrid ?? true,
         ...(cfg?.styling || {})
-      } as Partial<PieChartConfig['styling']>;
-      next.margin = { ...(cfg?.margin || {}), left: Number.isFinite(styleData.marginLeft) ? styleData.marginLeft : 40 } as Partial<NonNullable<PieChartConfig['margin']>>;
+      } as PieChartConfig['styling'];
+      next.margin = { ...(cfg?.margin || {}), left: Number.isFinite(styleData.marginLeft) ? styleData.marginLeft : 40 };
       return next;
     };
     const applyAreaStyling = (cfg?: Partial<AreaChartConfig>): Partial<AreaChartConfig> => {
@@ -255,8 +255,8 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
         showLegend: cfg?.styling?.showLegend ?? true,
         showGrid: cfg?.styling?.showGrid ?? true,
         ...(cfg?.styling || {})
-      } as Partial<AreaChartConfig['styling']>;
-      next.margin = { ...(cfg?.margin || {}), left: Number.isFinite(styleData.marginLeft) ? styleData.marginLeft : 40 } as Partial<NonNullable<AreaChartConfig['margin']>>;
+      } as AreaChartConfig['styling'];
+      next.margin = { ...(cfg?.margin || {}), left: Number.isFinite(styleData.marginLeft) ? styleData.marginLeft : 40 };
       return next;
     };
 
