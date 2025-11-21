@@ -278,7 +278,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
 
   return (
     <div className="fixed inset-0 z-50 pointer-events-none">
-      <div className="absolute top-20 right-8 w-96 bg-white rounded-lg shadow-2xl border border-gray-200 p-6 pointer-events-auto">
+      <div className="absolute top-20 right-8 w-96 bg-white rounded-lg shadow-2xl border border-gray-200 p-6 pointer-events-auto max-h-[85vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-gray-900">Editar Widget</h2>
@@ -292,6 +292,8 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
           </button>
         </div>
 
+        {/* Scrollable Body */}
+        <div className="flex-1 overflow-y-auto pr-2">
         {/* Form */}
         <div className="space-y-4">
           {/* Widget Type */}
@@ -688,6 +690,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
           </div>
         )}
 
+        </div>
         {/* Footer */}
         <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
           <button
