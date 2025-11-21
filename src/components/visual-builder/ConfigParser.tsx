@@ -239,6 +239,7 @@ export interface Widget {
     dimension?: string;
     topic?: string;
     meta?: string;
+    measure?: string;
   };
   styling?: {
     colors?: string[];
