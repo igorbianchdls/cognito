@@ -1,10 +1,12 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { useStore as useNanoStore } from '@nanostores/react';
 import MonacoEditor from '@/components/visual-builder/MonacoEditor';
 import ResponsiveGridCanvas from '@/components/visual-builder/ResponsiveGridCanvas';
+import DashboardInCanvasHeader from '@/components/visual-builder/DashboardInCanvasHeader';
+import WidgetEditorModal from '@/components/visual-builder/WidgetEditorModal';
 import { $visualBuilderState, visualBuilderActions } from '@/stores/visualBuilderStore';
 import type { Widget } from '@/stores/visualBuilderStore';
 import type { Insights2Config } from '@/components/visual-builder/ConfigParser';
@@ -1143,6 +1145,31 @@ export default function DashboardChatPanel() {
 
   
 
+  // Modal + scroll state for in-panel editor
+  const [editingWidget, setEditingWidget] = useState<Widget | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const prevScrollTopRef = useRef(0);
+
+  const handleOpenEdit = useCallback((widget: Widget) => {
+    prevScrollTopRef.current = scrollRef.current?.scrollTop || 0;
+    setEditingWidget(widget);
+    requestAnimationFrame(() => {
+      if (scrollRef.current) scrollRef.current.scrollTop = prevScrollTopRef.current;
+    });
+  }, []);
+
+  const handleSaveWidget = useCallback((updatedWidget: Widget) => {
+    const updated = visualBuilderState.widgets.map(w =>
+      w.id === updatedWidget.id ? updatedWidget : w
+    );
+    visualBuilderActions.updateWidgets(updated);
+    try { visualBuilderActions.bumpReloadTick(updatedWidget.id); } catch {}
+    setEditingWidget(null);
+    requestAnimationFrame(() => {
+      if (scrollRef.current) scrollRef.current.scrollTop = prevScrollTopRef.current;
+    });
+  }, [visualBuilderState.widgets]);
+
   return (
     <Artifact className="h-full" hideTopBorder>
       <ArtifactHeader className="bg-white">
@@ -1714,21 +1741,41 @@ export default function DashboardChatPanel() {
 
         {/* Dashboard Tab */}
         {activeTab === 'dashboard' && (
-          <div className="h-full bg-gray-50 py-2 px-4 overflow-auto">
-            {loadingDashboard && (
-              <div className="text-sm text-gray-500 mb-2">Carregando dashboard...</div>
-            )}
-            {dashboardError && (
-              <div className="text-sm text-red-600 mb-2">{dashboardError}</div>
-            )}
-            <ResponsiveGridCanvas
-              widgets={visualBuilderState.widgets}
-              gridConfig={visualBuilderState.gridConfig}
-              viewportMode={selectedViewport}
-              onLayoutChange={visualBuilderActions.updateWidgets}
-              headerTitle={dashboardMeta?.title || visualBuilderState.dashboardTitle || 'Live Dashboard'}
-              headerSubtitle={(dashboardMeta?.description ?? undefined) || visualBuilderState.dashboardSubtitle || 'Real-time visualization with Supabase data'}
+          <div className="h-full bg-gray-50 py-2 px-4">
+            {/* Header moved out of canvas to avoid scroll reset */}
+            <DashboardInCanvasHeader
+              title={dashboardMeta?.title || visualBuilderState.dashboardTitle || 'Live Dashboard'}
+              subtitle={(dashboardMeta?.description ?? undefined) || visualBuilderState.dashboardSubtitle || 'Real-time visualization with Supabase data'}
+              currentFilter={visualBuilderState.globalFilters?.dateRange || { type: 'last_30_days' }}
+              onFilterChange={(dateRange) => visualBuilderActions.updateGlobalFilters({ ...(visualBuilderState.globalFilters || {}), dateRange })}
+              isLoading={false}
+              containerPadding={visualBuilderState.gridConfig.padding ?? 16}
               themeName={getThemeFromCode(visualBuilderState.code)}
+            />
+            <div className="h-[calc(100%-56px)] overflow-auto" ref={scrollRef} style={{ overflowAnchor: 'none' }}>
+              {loadingDashboard && (
+                <div className="text-sm text-gray-500 mb-2">Carregando dashboard...</div>
+              )}
+              {dashboardError && (
+                <div className="text-sm text-red-600 mb-2">{dashboardError}</div>
+              )}
+              <ResponsiveGridCanvas
+                widgets={visualBuilderState.widgets}
+                gridConfig={visualBuilderState.gridConfig}
+                viewportMode={selectedViewport}
+                onLayoutChange={visualBuilderActions.updateWidgets}
+                headerTitle={dashboardMeta?.title || visualBuilderState.dashboardTitle || 'Live Dashboard'}
+                headerSubtitle={(dashboardMeta?.description ?? undefined) || visualBuilderState.dashboardSubtitle || 'Real-time visualization with Supabase data'}
+                themeName={getThemeFromCode(visualBuilderState.code)}
+                onEdit={handleOpenEdit}
+                renderHeader={false}
+              />
+            </div>
+            <WidgetEditorModal
+              widget={editingWidget}
+              isOpen={!!editingWidget}
+              onClose={() => setEditingWidget(null)}
+              onSave={handleSaveWidget}
             />
           </div>
         )}
