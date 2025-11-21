@@ -594,8 +594,11 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
                   </div>
                 </>
               )}
-          )}
+              {/* Close grid and data source section containers */}
+            </div>
+          </div>
         </div>
+          )}
 
         {/* Style Section */}
         {tab === 'estilo' && (isSimpleChart(formData.type) || isKpi(formData.type) || isMultiSeries(formData.type)) && (
