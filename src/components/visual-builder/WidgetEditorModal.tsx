@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { Widget } from './ConfigParser';
 import type { BarChartConfig } from '@/stores/apps/barChartStore';
 import type { LineChartConfig } from '@/stores/apps/lineChartStore';
@@ -264,7 +265,10 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
 
   if (!isOpen || !widget) return null;
 
-  return (
+  // Render modal in a portal to avoid parent scroll jumps on focus
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); return () => setMounted(false); }, []);
+  const modal = (
     <div className="fixed inset-0 z-50 pointer-events-none">
       <div className="absolute top-20 right-8 w-96 bg-white rounded-lg shadow-2xl border border-gray-200 p-6 pointer-events-auto max-h-[85vh] overflow-hidden flex flex-col">
         {/* Header */}
@@ -697,4 +701,6 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
       </div>
     </div>
   );
+
+  return mounted && typeof document !== 'undefined' ? createPortal(modal, document.body) : null;
 }
