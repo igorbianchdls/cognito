@@ -240,6 +240,8 @@ export interface Widget {
     topic?: string;
     meta?: string;
     measure?: string;
+    measureGoal?: string;
+    measureActual?: string;
   };
   styling?: {
     colors?: string[];
