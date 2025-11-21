@@ -41,11 +41,15 @@ export default function NexusHeader({ viewMode, onChangeViewMode, showBreadcrumb
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem className="hidden md:block">
-              <BreadcrumbLink href="#">Creatto</BreadcrumbLink>
+              <BreadcrumbLink href="#" className="text-[15px] md:text-base text-gray-500 hover:text-gray-700">
+                Navegação
+              </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator className="hidden md:block" />
             <BreadcrumbItem>
-              <BreadcrumbPage>Nexus</BreadcrumbPage>
+              <BreadcrumbPage className="text-[15px] md:text-base font-semibold text-gray-900">
+                {current.label}
+              </BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
