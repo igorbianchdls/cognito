@@ -25,6 +25,9 @@ export default function VisualBuilderPage() {
   const [editingWidget, setEditingWidget] = useState<Widget | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const prevScrollTopRef = useRef<number>(0);
+  // Local editor draft + debounce timer
+  const [editorCode, setEditorCode] = useState<string>(visualBuilderState.code);
+  const codeDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const currentThemeName: ThemeName = useMemo<ThemeName>(() => {
     try {
       const cfg = JSON.parse(visualBuilderState.code);
@@ -42,8 +45,19 @@ export default function VisualBuilderPage() {
     visualBuilderActions.initialize(); // Initialize visual builder store
   }, []);
 
+  // Keep local editor value in sync when store changes externally
+  useEffect(() => {
+    setEditorCode(visualBuilderState.code);
+  }, [visualBuilderState.code]);
+
   const handleCodeChange = (newCode: string) => {
-    visualBuilderActions.updateCode(newCode);
+    // Update local editor value immediately
+    setEditorCode(newCode);
+    // Debounce store update to avoid updates on every keystroke
+    if (codeDebounceRef.current) clearTimeout(codeDebounceRef.current);
+    codeDebounceRef.current = setTimeout(() => {
+      visualBuilderActions.updateCode(newCode);
+    }, 500);
   };
 
   const handleLayoutChange = (updatedWidgets: Widget[]) => {
@@ -193,7 +207,7 @@ export default function VisualBuilderPage() {
             </div>
             <div className="h-[calc(100%-73px)]">
               <MonacoEditor
-                value={visualBuilderState.code}
+                value={editorCode}
                 onChange={handleCodeChange}
                 language="json"
                 errors={visualBuilderState.parseErrors}

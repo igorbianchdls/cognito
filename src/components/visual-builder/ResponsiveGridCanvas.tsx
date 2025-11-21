@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import React, { memo, useCallback, useMemo, useRef, useState } from 'react';
 import { DndContext, closestCenter, DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, useSortable, horizontalListSortingStrategy, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -40,7 +40,7 @@ interface DraggableWidgetProps {
   onEdit: (widget: Widget) => void;
 }
 
-function DraggableWidget({ widget, spanClasses, spanValue, startValue, minHeight, globalFilters, onEdit }: DraggableWidgetProps) {
+const DraggableWidget = memo(function DraggableWidget({ widget, spanClasses, spanValue, startValue, minHeight, globalFilters, onEdit }: DraggableWidgetProps) {
   const {
     attributes,
     listeners,
@@ -101,7 +101,7 @@ function DraggableWidget({ widget, spanClasses, spanValue, startValue, minHeight
       </div>
     </div>
   );
-}
+});
 
 export default function ResponsiveGridCanvas({ widgets, gridConfig, globalFilters, viewportMode = 'desktop', onLayoutChange, headerTitle, headerSubtitle, onFilterChange, isFilterLoading, themeName, onEdit, renderHeader = true }: ResponsiveGridCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -110,23 +110,23 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig, globalFilter
   const visualBuilderState = useNanoStore($visualBuilderState);
 
   // Handle widget edit
-  const handleEditWidget = (widget: Widget) => {
+  const handleEditWidget = useCallback((widget: Widget) => {
     if (onEdit) {
       onEdit(widget);
     } else {
       setEditingWidget(widget);
     }
-  };
+  }, [onEdit]);
 
   // Handle save widget changes
-  const handleSaveWidget = (updatedWidget: Widget) => {
+  const handleSaveWidget = useCallback((updatedWidget: Widget) => {
     if (!onLayoutChange) return;
 
     const updatedWidgets = widgets.map(w =>
       w.id === updatedWidget.id ? updatedWidget : w
     );
     onLayoutChange(updatedWidgets);
-  };
+  }, [onLayoutChange, widgets]);
 
   // Extract theme colors from gridConfig
   const backgroundColor = gridConfig.backgroundColor || '#ffffff';
@@ -247,7 +247,7 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig, globalFilter
 
     return groups;
   };
-  const widgetGroups = groupWidgetsByRow();
+  const widgetGroups = useMemo(groupWidgetsByRow, [widgets, gridConfig.layoutRows]);
   const perColumnMode = gridConfig.layout?.mode === 'grid-per-column';
 
   // --- Row DnD helpers (DSL-first) ---
@@ -273,7 +273,7 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig, globalFilter
     const rows = getRowsFromDsl(code);
     return rows.map(r => r.id);
   };
-  const rowOrder = getRowOrderFromCode();
+  const rowOrder = useMemo(() => getRowOrderFromCode(), [visualBuilderState.code, widgetGroups]);
 
   const reorderRowsInDsl = (dsl: string, newOrder: string[]): string => {
     const rows = getRowsFromDsl(dsl);
@@ -285,7 +285,7 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig, globalFilter
     return header + orderedBlocks.join('\n') + footer;
   };
 
-  const handleRowDragEnd = (event: DragEndEvent) => {
+  const handleRowDragEnd = useCallback((event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
     const current = [...rowOrder];
@@ -300,32 +300,32 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig, globalFilter
       const nextCode = reorderRowsInDsl(code, next);
       visualBuilderActions.updateCode(nextCode);
     }
-  };
+  }, [rowOrder, visualBuilderState.code]);
 
-  function DraggableRow({ id, children }: { id: string; children: React.ReactNode }) {
-    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
-    const style = {
-      transform: CSS.Transform.toString(transform),
-      transition,
-      opacity: isDragging ? 0.8 : 1,
-    } as React.CSSProperties;
-    return (
+const DraggableRow = memo(function DraggableRow({ id, children }: { id: string; children: React.ReactNode }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.8 : 1,
+  } as React.CSSProperties;
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="group relative rounded-md hover:ring-2 hover:ring-black"
+    >
       <div
-        ref={setNodeRef}
-        style={style}
-        className="group relative rounded-md hover:ring-2 hover:ring-black"
+        {...attributes}
+        {...listeners}
+        className="absolute -left-1 -top-3 opacity-0 group-hover:opacity-100 transition-opacity z-10 bg-gray-700 text-white px-2 py-0.5 rounded cursor-grab active:cursor-grabbing text-xs"
       >
-        <div
-          {...attributes}
-          {...listeners}
-          className="absolute -left-1 -top-3 opacity-0 group-hover:opacity-100 transition-opacity z-10 bg-gray-700 text-white px-2 py-0.5 rounded cursor-grab active:cursor-grabbing text-xs"
-        >
-          ⇅ Row {id}
-        </div>
-        {children}
+        ⇅ Row {id}
       </div>
-    );
-  }
+      {children}
+    </div>
+  );
+});
 
   // Helpers for per-column wrappers
   const getTemplateColumnsString = (): string | undefined => {
@@ -358,7 +358,7 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig, globalFilter
   };
 
   // Handle drag end - reorder widgets within the same row
-  const handleDragEnd = (event: DragEndEvent, rowKey: string) => {
+  const handleDragEnd = useCallback((event: DragEndEvent, rowKey: string) => {
     const { active, over } = event;
 
     if (!over || active.id === over.id || !onLayoutChange) return;
@@ -387,7 +387,7 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig, globalFilter
 
     // Call parent callback
     onLayoutChange(updatedWidgets);
-  };
+  }, [onLayoutChange, widgetGroups, widgets]);
 
   // Calculate widget height based on heightPx or fallback logic
   const getWidgetHeight = (widget: Widget): string => {

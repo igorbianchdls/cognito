@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { useStore as useNanoStore } from '@nanostores/react';
 import MonacoEditor from '@/components/visual-builder/MonacoEditor';
+import { useEffect, useRef, useState } from 'react';
 import ResponsiveGridCanvas from '@/components/visual-builder/ResponsiveGridCanvas';
 import { $visualBuilderState, visualBuilderActions } from '@/stores/visualBuilderStore';
 import type { Widget } from '@/stores/visualBuilderStore';
@@ -599,8 +600,16 @@ export default function DashboardChatPanel() {
 
   // Removed corporate color detection (palette UI disabled)
 
+  // Debounced editor for the embedded code editor
+  const [panelCode, setPanelCode] = useState<string>(visualBuilderState.code);
+  const panelDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => { setPanelCode(visualBuilderState.code); }, [visualBuilderState.code]);
   const handleCodeChange = (newCode: string) => {
-    visualBuilderActions.updateCode(newCode);
+    setPanelCode(newCode);
+    if (panelDebounceRef.current) clearTimeout(panelDebounceRef.current);
+    panelDebounceRef.current = setTimeout(() => {
+      visualBuilderActions.updateCode(newCode);
+    }, 500);
   };
 
   // Removed unused handleLayoutChange; pass action directly where needed
@@ -1696,7 +1705,7 @@ export default function DashboardChatPanel() {
         {activeTab === 'editor' && (
           <div className="h-full">
             <MonacoEditor
-              value={visualBuilderState.code}
+              value={panelCode}
               onChange={handleCodeChange}
               language="json"
               errors={visualBuilderState.parseErrors}
