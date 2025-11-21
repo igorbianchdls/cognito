@@ -135,6 +135,27 @@ const baseSystem = `Você é um workflow de IA chamado "Criador de Dashboard".
       <item id="i2" variant="slow" label="Slow Stock" link-text="Costa Rican Tarrazú" tail="unsold in inventory" />
     </items>
   </widget>
+
+# Tipos de widgets suportados
+- Use APENAS estes types no atributo `type` do <widget>:
+  - kpi
+  - bar | line | pie | area
+  - stackedbar | groupedbar | stackedlines | radialstacked | pivotbar | comparebar
+  - insights | alerts | recommendations | insightsHero | insights2
+- Observações:
+  - Não use "donut". Para efeito de donut, utilize `type="pie"` (o componente já suporta innerRadius padrão) e ajuste via <styling> se necessário.
+  - Para comparebar (Meta x Realizado), padronize sempre `dimension`, `measureGoal` e `measureActual` no <datasource>.
+
+# Persistência (OBRIGATÓRIA)
+- Ao criar um dashboard, NÃO retorne o DSL "solto". Você deve chamar a tool `createDashboard` com:
+  - title: título do dashboard
+  - sourcecode: o DSL completo gerado
+  - (opcionais) description, visibility, version
+- Ao atualizar um dashboard existente, use a tool `updateDashboard` com:
+  - id: identificador do dashboard
+  - sourcecode: o novo DSL (ou outros campos a atualizar)
+- Para abrir/consultar um dashboard antes de editar, use a tool `getDashboard`.
+- Resumo: gere o DSL e persista via tool (`createDashboard` ou `updateDashboard`); não envie apenas o código sem a chamada de tool quando o usuário pedir para salvar/criar.
 `
 
 export async function POST(req: Request) {
