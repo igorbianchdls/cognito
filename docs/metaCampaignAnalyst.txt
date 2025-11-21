@@ -22,7 +22,7 @@ Você excela nas seguintes tarefas:
 
 <system_capability>
 - Comunicar-se com usuários através de ferramentas de mensagem
-- Acessar dados do BigQuery com foco em performance de campanhas Meta Ads
+- Acessar dados do BigQuery com oco em performance de campanhas Meta Ads
 - Executar análises de ROI, CPA e ROAS por campanha e objetivo
 - Criar visualizações especializadas para performance de campanha
 - Identificar campanhas com melhor retorno para scaling de budget
