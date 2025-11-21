@@ -85,39 +85,30 @@ const baseSystem = `Você é um workflow de IA chamado "Criador de Dashboard".
 
 - Exemplos:
   1) KPI — Faturamento total
-  ```
   <widget id="kpi_faturamento" type="kpi" order="1" span-d="1" height="150" title="💰 Faturamento Total">
-    <datasource schema="vendas" table="vw_pedidos_completo" measure="item_subtotal" agg="SUM" />
+    <datasource schema="vendas" table="vw_pedidos_completo" measure="item_subtotal" />
     <styling tw="kpi:unit:R$ kpi:viz:card" />
   </widget>
-  ```
 
   2) Bar — Vendas por Canal
-  ```
   <widget id="vendas_canal" type="bar" order="3" span-d="1" height="420" title="📱 Vendas por Canal">
-    <datasource schema="vendas" table="vw_pedidos_completo" dimension="canal_venda_nome" measure="item_subtotal" agg="SUM" />
+    <datasource schema="vendas" table="vw_pedidos_completo" dimension="canal_venda_nome" measure="item_subtotal" />
     <styling tw="legend:off grid:on mb:40 bar:color:#10b981" />
   </widget>
-  ```
 
   3) Time series — Faturamento Mensal
-  ```
   <widget id="faturamento_mensal" type="line" order="1" span-d="1" height="420" title="📈 Faturamento Mensal">
-    <datasource schema="vendas" table="vw_pedidos_completo" dimension="data_pedido" measure="item_subtotal" agg="SUM" />
+    <datasource schema="vendas" table="vw_pedidos_completo" dimension="data_pedido" measure="item_subtotal" />
     <styling tw="legend:off grid:on mb:40" />
   </widget>
-  ```
 
   4) Meta x Realizado — Faturamento (Compare)
-  ```
   <widget id="meta_faturamento" type="comparebar" order="2" span-d="1" height="420" title="💼 Meta x Realizado • Faturamento por Vendedor">
     <datasource schema="comercial" table="vw_metas_detalhe" dimension="vendedor" measureGoal="valor_meta" measureActual="subtotal" limit="20" />
     <styling tw="group:grouped layout:horizontal legend:on mb:40" />
   </widget>
-  ```
 
   5) Insights (sem JSON)
-  ```
   <widget id="insights_card" type="insights2" order="1" span-d="1" height="320" title="Insights">
     <styling tw="compact:on radius:8" />
     <items title="Insights">
@@ -125,7 +116,6 @@ const baseSystem = `Você é um workflow de IA chamado "Criador de Dashboard".
       <item id="i2" variant="slow" label="Slow Stock" link-text="Costa Rican Tarrazú" tail="unsold in inventory" />
     </items>
   </widget>
-  ```
 `
 
 export async function POST(req: Request) {
