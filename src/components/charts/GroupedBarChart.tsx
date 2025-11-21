@@ -216,7 +216,7 @@ export interface GroupedBarChartProps {
   seriesMetadata?: Array<{ key: string; label: string; color: string }>;
 }
 
-const DEFAULT_MARGIN = { top: 40, right: 40, bottom: 50, left: 40 };
+const DEFAULT_MARGIN = { top: 40, right: 40, bottom: 50, left: 60 };
 
 export function GroupedBarChart(props: GroupedBarChartProps) {
   const {

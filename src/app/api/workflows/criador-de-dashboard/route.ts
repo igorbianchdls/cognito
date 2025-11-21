@@ -65,6 +65,12 @@ const baseSystem = `Você é um workflow de IA chamado "Criador de Dashboard".
 - Time series: use data_pedido como dimension.
 - Sempre referencie schema "vendas" e table "vw_pedidos_completo" em dataSource (exceto metas).
 
+# Layout recomendado (UX)
+- KPIs no topo: inclua pelo menos 4 KPIs na primeira linha do dashboard (ex.: faturamento total, total de itens, ticket médio, itens vendidos).
+- Charts abaixo dos KPIs: organize em linhas com pelo menos 2 gráficos por linha.
+- Responsividade: idealmente 3 gráficos por linha em desktop, 2 em tablet e 1 em mobile (ajuste cols-d/cols-t/cols-m nas tags <row>). Alturas consistentes (ex.: 420px) ajudam na leitura.
+- Mantenha títulos claros e margens inferior (mb) adequadas para eixos/legendas (ex.: mb:40).
+
 # Metas (Meta x Realizado)
 - Para visualizações de metas (ex.: Meta x Realizado), use a view/composição de dados "comercial.vw_metas_detalhe".
 - Padronize SEMPRE três parâmetros em comparebar: dimension, measureGoal e measureActual.
