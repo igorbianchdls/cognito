@@ -16,7 +16,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { ChevronDown, MessageSquare, Layout, BarChart3 } from 'lucide-react'
+import { ChevronDown, MessageSquare, Layout, BarChart3, Bell, BookOpen } from 'lucide-react'
 
 type ViewMode = 'chat' | 'split' | 'dashboard'
 
@@ -50,7 +50,7 @@ export default function NexusHeader({ viewMode, onChangeViewMode, showBreadcrumb
           </BreadcrumbList>
         </Breadcrumb>
       )}
-      <div className="ml-auto">
+      <div className="ml-auto flex items-center gap-2">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:bg-gray-100 transition-colors">
@@ -73,6 +73,38 @@ export default function NexusHeader({ viewMode, onChangeViewMode, showBreadcrumb
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+
+        {/* Quick actions cluster to the right of the selector */}
+        <div className="flex items-center gap-2 pl-3 border-l">
+          {/* Notifications */}
+          <button
+            type="button"
+            aria-label="Notificações"
+            className="relative h-9 w-9 rounded-full border bg-white text-gray-600 hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+          >
+            <Bell className="w-4 h-4 mx-auto" />
+            <span className="absolute -top-0.5 -right-0.5 h-3 w-3 rounded-full bg-blue-600 ring-2 ring-white" />
+          </button>
+          {/* Docs */}
+          <button
+            type="button"
+            aria-label="Documentação"
+            title="Documentação"
+            onClick={() => { try { window.open('https://docs.creatto.app', '_blank'); } catch {} }}
+            className="h-9 w-9 rounded-full border bg-white text-gray-600 hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+          >
+            <BookOpen className="w-4 h-4 mx-auto" />
+          </button>
+          {/* User avatar (gradient) */}
+          <button
+            type="button"
+            aria-label="Conta"
+            title="Conta"
+            className="h-9 w-9 rounded-full ring-2 ring-white"
+          >
+            <div className="h-full w-full rounded-full bg-[conic-gradient(at_50%_50%,#6366f1_0%,#22c55e_50%,#ec4899_100%)]" />
+          </button>
+        </div>
       </div>
     </header>
   )
