@@ -1,10 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { useStore as useNanoStore } from '@nanostores/react';
 import MonacoEditor from '@/components/visual-builder/MonacoEditor';
-import { useEffect, useRef, useState } from 'react';
 import ResponsiveGridCanvas from '@/components/visual-builder/ResponsiveGridCanvas';
 import { $visualBuilderState, visualBuilderActions } from '@/stores/visualBuilderStore';
 import type { Widget } from '@/stores/visualBuilderStore';
