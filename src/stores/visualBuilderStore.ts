@@ -423,6 +423,55 @@ export const visualBuilderActions = {
             })
           }
 
+          const escapeHtml = (s: string) => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;')
+          const setAttrOnDatasource = (source: string, id: string, attrs: Record<string, string | undefined>): string => {
+            const idRe = new RegExp(`<widget\\b([^>]*)\\bid=\"${escapeId(id)}\"[^>]*>([\\s\\S]*?)<\\/widget>`, 'i')
+            return source.replace(idRe, (match: string, wAttrs: string, inner: string) => {
+              const dsRe = /<datasource\b([^>]*)\/>/i
+              const dsMatch = inner.match(dsRe)
+              if (!dsMatch) {
+                // No datasource; nothing to update
+                return match
+              }
+              const dsAttrs = dsMatch[1] || ''
+              const setAttr = (attrString: string, name: string, value: string | undefined) => {
+                if (value === undefined || value === '') return attrString
+                const re = new RegExp(`(\\b${name}\\=\")[^\"]*(\")`, 'i')
+                if (re.test(attrString)) {
+                  return attrString.replace(re, `$1${escapeHtml(value)}$2`)
+                }
+                return `${attrString} ${name}=\"${escapeHtml(value)}\"`
+              }
+              let nextDsAttrs = dsAttrs
+              for (const [k, v] of Object.entries(attrs)) {
+                nextDsAttrs = setAttr(nextDsAttrs, k, v)
+              }
+              const updatedInner = inner.replace(dsRe, `<datasource${nextDsAttrs ? ' ' + nextDsAttrs : ''} />`)
+              return match.replace(inner, updatedInner)
+            })
+          }
+
+          const buildMeasureExpr = (metric?: string, agg?: string): string | undefined => {
+            const m = (metric || '').trim()
+            const a = (agg || '').trim().toUpperCase()
+            if (!m) return undefined
+            if (!a) return `SUM(${m})`
+            if (["SUM","COUNT","AVG","MIN","MAX"].includes(a)) return `${a}(${m})`
+            return `SUM(${m})`
+          }
+
+          const normalizeSchemaTable = (schema?: string, table?: string): { schema?: string; table?: string } => {
+            const s = (schema || '').trim()
+            let t = (table || '').trim()
+            if (t.includes('.')) {
+              const i = t.indexOf('.')
+              const s2 = t.slice(0, i)
+              const t2 = t.slice(i + 1)
+              return { schema: s || s2, table: t2 }
+            }
+            return { schema: s || undefined, table: t || undefined }
+          }
+
           // Apply updates
           widgets.forEach(w => {
             if (w.id) {
@@ -434,6 +483,50 @@ export const visualBuilderActions = {
                 if (typeof col === 'number' && col >= 1) {
                   dsl = setAttrOnWidget(dsl, w.id, 'col-d', String(col))
                 }
+              }
+              // Update common widget attrs
+              if (typeof w.heightPx === 'number') {
+                dsl = setAttrOnWidget(dsl, w.id, 'height', String(w.heightPx))
+              }
+              if (typeof w.title === 'string' && w.title.length > 0) {
+                dsl = setAttrOnWidget(dsl, w.id, 'title', w.title)
+              }
+              if (typeof w.type === 'string' && w.type.length > 0) {
+                dsl = setAttrOnWidget(dsl, w.id, 'type', w.type)
+              }
+              // Update datasource for simple charts and KPI
+              const t = w.type
+              const ds = w.dataSource || undefined
+              if (ds) {
+                const norm = normalizeSchemaTable((ds as any).schema as string | undefined, (ds as any).table as string | undefined)
+                const xDim = ((ds as any).dimension as string) || ((ds as any).x as string) || ''
+                const yMetric = ((ds as any).measure as string) || ((ds as any).y as string) || ''
+                const agg = ((ds as any).aggregation as string) || ''
+                const measureExpr = (ds as any).measure ? (ds as any).measure as string : buildMeasureExpr(yMetric, agg)
+                const dsAttrs: Record<string, string | undefined> = {
+                  schema: norm.schema,
+                  table: norm.table,
+                }
+                if (['bar','line','pie','area'].includes(t)) {
+                  dsAttrs['dimension'] = xDim || undefined
+                  dsAttrs['measure'] = measureExpr
+                } else if (t === 'kpi') {
+                  dsAttrs['measure'] = measureExpr
+                } else if (['stackedbar','groupedbar','stackedlines','radialstacked','pivotbar'].includes(t)) {
+                  const dim1 = ((ds as any).dimension1 as string) || xDim || ''
+                  const dim2 = ((ds as any).dimension2 as string) || ''
+                  dsAttrs['dimension1'] = dim1 || undefined
+                  dsAttrs['dimension2'] = dim2 || undefined
+                  dsAttrs['measure'] = measureExpr
+                } else if (t === 'comparebar') {
+                  const cDim = ((ds as any).dimension as string) || xDim || ''
+                  const goal = ((ds as any).measureGoal as string) || ''
+                  const actual = ((ds as any).measureActual as string) || ''
+                  dsAttrs['dimension'] = cDim || undefined
+                  dsAttrs['measureGoal'] = goal || undefined
+                  dsAttrs['measureActual'] = actual || undefined
+                }
+                dsl = setAttrOnDatasource(dsl, w.id, dsAttrs)
               }
             }
           })

@@ -71,15 +71,22 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
   const CUSTOM_VALUE = '__custom__';
 
   const [formData, setFormData] = useState({
-    type: widget?.type || 'bar',
+    type: (widget?.type as Widget['type']) || 'bar',
     title: widget?.title || '',
     heightPx: widget?.heightPx || 320,
     dataSource: {
       schema: widget?.dataSource?.schema || '',
       table: widget?.dataSource?.table || '',
-      x: widget?.dataSource?.x || '',
-      y: widget?.dataSource?.y || '',
-      aggregation: widget?.dataSource?.aggregation || 'SUM'
+      x: (widget?.dataSource as any)?.x || (widget?.dataSource as any)?.dimension || '',
+      y: (widget?.dataSource as any)?.y || (widget?.dataSource as any)?.measure || '',
+      aggregation: (widget?.dataSource as any)?.aggregation || 'SUM',
+      // multi-series
+      dimension1: (widget?.dataSource as any)?.dimension1 || '',
+      dimension2: (widget?.dataSource as any)?.dimension2 || '',
+      // compare
+      dimension: (widget?.dataSource as any)?.dimension || '',
+      measureGoal: (widget?.dataSource as any)?.measureGoal || '',
+      measureActual: (widget?.dataSource as any)?.measureActual || ''
     }
   });
 
@@ -102,6 +109,12 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
     return KNOWN_TABLES[key];
   }, [formData.dataSource.schema, formData.dataSource.table]);
 
+  // Helpers by type
+  const isSimpleChart = (t: string) => ['bar', 'line', 'pie', 'area'].includes(t);
+  const isKpi = (t: string) => t === 'kpi';
+  const isMultiSeries = (t: string) => ['stackedbar', 'groupedbar', 'stackedlines', 'radialstacked', 'pivotbar'].includes(t);
+  const isCompare = (t: string) => t === 'comparebar';
+
   // Update form when widget changes
   useEffect(() => {
     if (widget) {
@@ -112,9 +125,14 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
         dataSource: {
           schema: widget.dataSource?.schema || '',
           table: widget.dataSource?.table || '',
-          x: widget.dataSource?.x || '',
-          y: widget.dataSource?.y || '',
-          aggregation: widget.dataSource?.aggregation || 'SUM'
+          x: (widget.dataSource as any)?.x || (widget.dataSource as any)?.dimension || '',
+          y: (widget.dataSource as any)?.y || (widget.dataSource as any)?.measure || '',
+          aggregation: (widget.dataSource as any)?.aggregation || 'SUM',
+          dimension1: (widget.dataSource as any)?.dimension1 || '',
+          dimension2: (widget.dataSource as any)?.dimension2 || '',
+          dimension: (widget.dataSource as any)?.dimension || '',
+          measureGoal: (widget.dataSource as any)?.measureGoal || '',
+          measureActual: (widget.dataSource as any)?.measureActual || ''
         }
       });
     }
@@ -123,15 +141,38 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
   const handleSave = () => {
     if (!widget) return;
 
+    const dsPatch: Record<string, unknown> = {
+      schema: formData.dataSource.schema,
+      table: formData.dataSource.table,
+    };
+    if (isSimpleChart(formData.type)) {
+      dsPatch['x'] = formData.dataSource.x;
+      dsPatch['dimension'] = formData.dataSource.x;
+      dsPatch['y'] = formData.dataSource.y;
+      dsPatch['aggregation'] = formData.dataSource.aggregation;
+    } else if (isKpi(formData.type)) {
+      dsPatch['y'] = formData.dataSource.y;
+      dsPatch['aggregation'] = formData.dataSource.aggregation;
+    } else if (isMultiSeries(formData.type)) {
+      dsPatch['dimension1'] = formData.dataSource.dimension1;
+      if (formData.dataSource.dimension2) dsPatch['dimension2'] = formData.dataSource.dimension2;
+      dsPatch['y'] = formData.dataSource.y;
+      dsPatch['aggregation'] = formData.dataSource.aggregation;
+    } else if (isCompare(formData.type)) {
+      dsPatch['dimension'] = formData.dataSource.dimension || formData.dataSource.x;
+      dsPatch['measureGoal'] = formData.dataSource.measureGoal;
+      dsPatch['measureActual'] = formData.dataSource.measureActual;
+    }
+
     const updatedWidget: Widget = {
       ...widget,
-      type: formData.type as 'bar' | 'line' | 'pie' | 'area' | 'kpi' | 'insights' | 'alerts' | 'recommendations',
+      type: formData.type,
       title: formData.title,
       heightPx: formData.heightPx,
       dataSource: {
-        ...widget.dataSource,
-        ...formData.dataSource
-      }
+        ...(widget.dataSource || {}),
+        ...dsPatch
+      } as Widget['dataSource']
     };
 
     onSave(updatedWidget);
@@ -167,7 +208,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
               value={formData.type}
               onChange={(e) => setFormData({
                 ...formData,
-                type: e.target.value as 'bar' | 'line' | 'pie' | 'area' | 'kpi' | 'insights' | 'alerts' | 'recommendations'
+                type: e.target.value as Widget['type']
               })}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
@@ -176,6 +217,12 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
               <option value="pie">Pie Chart</option>
               <option value="area">Area Chart</option>
               <option value="kpi">KPI</option>
+              <option value="stackedbar">Stacked Bar</option>
+              <option value="groupedbar">Grouped Bar</option>
+              <option value="stackedlines">Stacked Lines</option>
+              <option value="radialstacked">Radial Stacked</option>
+              <option value="pivotbar">Pivot Bar</option>
+              <option value="comparebar">Compare Bar</option>
               <option value="insights">Insights</option>
               <option value="alerts">Alerts</option>
               <option value="recommendations">Recommendations</option>
@@ -269,7 +316,8 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
                 )}
               </div>
 
-              {/* Aggregation */}
+              {/* Aggregation (except compare) */}
+              {(!isCompare(formData.type)) && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Agregação
@@ -289,9 +337,10 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
                   <option value="MAX">MAX</option>
                 </select>
               </div>
+              )}
 
-              {/* X Field (Dimension) */}
-              {!['kpi', 'insights', 'alerts', 'recommendations'].includes(formData.type) && (
+              {/* X Field (Dimension) for simple charts */}
+              {isSimpleChart(formData.type) && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Campo X (Dimensão)
@@ -325,8 +374,8 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
                 </div>
               )}
 
-              {/* Y Field (Measure) */}
-              {!['insights', 'alerts', 'recommendations'].includes(formData.type) && (
+              {/* Y Field (Measure) for simple charts and KPI and multi-series */}
+              {(isSimpleChart(formData.type) || isKpi(formData.type) || isMultiSeries(formData.type)) && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Campo Y (Métrica)
@@ -358,6 +407,95 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
                     </select>
                   )}
                 </div>
+              )}
+
+              {/* Multi-series: dimension1/dimension2 */}
+              {isMultiSeries(formData.type) && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Dimensão 1</label>
+                    {isCustomTable ? (
+                      <input type="text" value={formData.dataSource.dimension1}
+                        onChange={(e) => setFormData({ ...formData, dataSource: { ...formData.dataSource, dimension1: e.target.value } })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="dimensão principal" />
+                    ) : (
+                      <select value={formData.dataSource.dimension1 || ''}
+                        onChange={(e) => setFormData({ ...formData, dataSource: { ...formData.dataSource, dimension1: e.target.value } })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Selecione…</option>
+                        {fieldOptions.dimensions.map((d) => (<option key={d} value={d}>{d}</option>))}
+                      </select>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Dimensão 2 (Séries)</label>
+                    {isCustomTable ? (
+                      <input type="text" value={formData.dataSource.dimension2}
+                        onChange={(e) => setFormData({ ...formData, dataSource: { ...formData.dataSource, dimension2: e.target.value } })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="opcional" />
+                    ) : (
+                      <select value={formData.dataSource.dimension2 || ''}
+                        onChange={(e) => setFormData({ ...formData, dataSource: { ...formData.dataSource, dimension2: e.target.value } })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">(Nenhuma)</option>
+                        {fieldOptions.dimensions.map((d) => (<option key={d} value={d}>{d}</option>))}
+                      </select>
+                    )}
+                  </div>
+                </>
+              )}
+
+              {/* Comparebar: dimension + goal/actual */}
+              {isCompare(formData.type) && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Dimensão</label>
+                    {isCustomTable ? (
+                      <input type="text" value={formData.dataSource.dimension}
+                        onChange={(e) => setFormData({ ...formData, dataSource: { ...formData.dataSource, dimension: e.target.value } })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="ex.: vendedor" />
+                    ) : (
+                      <select value={formData.dataSource.dimension || ''}
+                        onChange={(e) => setFormData({ ...formData, dataSource: { ...formData.dataSource, dimension: e.target.value } })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Selecione…</option>
+                        {fieldOptions.dimensions.map((d) => (<option key={d} value={d}>{d}</option>))}
+                      </select>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Meta (measureGoal)</label>
+                    {isCustomTable ? (
+                      <input type="text" value={formData.dataSource.measureGoal}
+                        onChange={(e) => setFormData({ ...formData, dataSource: { ...formData.dataSource, measureGoal: e.target.value } })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="ex.: valor_meta" />
+                    ) : (
+                      <select value={formData.dataSource.measureGoal || ''}
+                        onChange={(e) => setFormData({ ...formData, dataSource: { ...formData.dataSource, measureGoal: e.target.value } })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Selecione…</option>
+                        {fieldOptions.measures.map((m) => (<option key={m} value={m}>{m}</option>))}
+                      </select>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Realizado (measureActual)</label>
+                    {isCustomTable ? (
+                      <input type="text" value={formData.dataSource.measureActual}
+                        onChange={(e) => setFormData({ ...formData, dataSource: { ...formData.dataSource, measureActual: e.target.value } })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="ex.: subtotal | novos_clientes | ticket_medio" />
+                    ) : (
+                      <select value={formData.dataSource.measureActual || ''}
+                        onChange={(e) => setFormData({ ...formData, dataSource: { ...formData.dataSource, measureActual: e.target.value } })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Selecione…</option>
+                        <option value="novos_clientes">novos_clientes</option>
+                        <option value="ticket_medio">ticket_medio</option>
+                        {fieldOptions.measures.map((m) => (<option key={m} value={m}>{m}</option>))}
+                      </select>
+                    )}
+                  </div>
+                </>
               )}
             </div>
           </div>
