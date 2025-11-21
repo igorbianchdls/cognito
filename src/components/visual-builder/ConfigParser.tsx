@@ -238,6 +238,7 @@ export interface Widget {
     // For comparebar and simplified configs
     dimension?: string;
     topic?: string;
+    meta?: string;
   };
   styling?: {
     colors?: string[];
@@ -487,6 +488,174 @@ export class ConfigParser {
       }
     }
 
+    // Helpers for new tags: <datasource /> and <styling tw="..." />
+    const applyDataSourceAttrs = (widget: Widget, attrs: Record<string, string>) => {
+      const ds: NonNullable<Widget['dataSource']> = {
+        ...(widget.dataSource || {}),
+      } as NonNullable<Widget['dataSource']>;
+      const setStr = (k: keyof NonNullable<Widget['dataSource']>, v?: string) => {
+        if (v !== undefined && v !== '') (ds as Record<string, unknown>)[k] = v;
+      };
+      const setNum = (k: keyof NonNullable<Widget['dataSource']>, v?: string) => {
+        if (v !== undefined && v !== '' && !Number.isNaN(Number(v))) (ds as Record<string, unknown>)[k] = Number(v);
+      };
+      setStr('schema', attrs['schema']);
+      setStr('table', attrs['table']);
+      setStr('x', attrs['x']);
+      setStr('y', attrs['y']);
+      // Accept agg or aggregation
+      setStr('aggregation', attrs['agg'] || attrs['aggregation']);
+      setStr('dimension1', attrs['dimension1']);
+      setStr('dimension2', attrs['dimension2']);
+      setStr('dimension', attrs['dimension']);
+      setStr('measure', attrs['measure']);
+      setStr('field', attrs['field']);
+      setStr('topic', attrs['topic']);
+      setStr('meta', attrs['meta']);
+      setNum('limit', attrs['limit']);
+      widget.dataSource = ds;
+    };
+
+    const ensureStylingTarget = (widget: Widget): { target: Record<string, unknown>; where: 'widget' | 'bar' | 'line' | 'pie' | 'area' | 'stackedbar' | 'groupedbar' | 'stackedlines' | 'radialstacked' | 'pivotbar' | 'comparebar' | 'kpi' | 'insights2' } => {
+      const w = widget as unknown as {
+        styling?: Record<string, unknown>;
+        barConfig?: { styling?: Record<string, unknown> };
+        lineConfig?: { styling?: Record<string, unknown> };
+        pieConfig?: { styling?: Record<string, unknown> };
+        areaConfig?: { styling?: Record<string, unknown> };
+        stackedBarConfig?: { styling?: Record<string, unknown> };
+        groupedBarConfig?: { styling?: Record<string, unknown> };
+        stackedLinesConfig?: { styling?: Record<string, unknown> };
+        radialStackedConfig?: { styling?: Record<string, unknown> };
+        pivotBarConfig?: { styling?: Record<string, unknown> };
+        compareBarConfig?: { styling?: Record<string, unknown> };
+        kpiConfig?: Record<string, unknown>;
+        insights2Config?: { styling?: Record<string, unknown> };
+      };
+      switch (widget.type) {
+        case 'bar':
+          w.barConfig = w.barConfig || {};
+          w.barConfig.styling = w.barConfig.styling || {};
+          return { target: w.barConfig.styling!, where: 'bar' };
+        case 'line':
+          w.lineConfig = w.lineConfig || {};
+          w.lineConfig.styling = w.lineConfig.styling || {};
+          return { target: w.lineConfig.styling!, where: 'line' };
+        case 'pie':
+          w.pieConfig = w.pieConfig || {};
+          w.pieConfig.styling = w.pieConfig.styling || {};
+          return { target: w.pieConfig.styling!, where: 'pie' };
+        case 'area':
+          w.areaConfig = w.areaConfig || {};
+          w.areaConfig.styling = w.areaConfig.styling || {};
+          return { target: w.areaConfig.styling!, where: 'area' };
+        case 'stackedbar':
+          w.stackedBarConfig = w.stackedBarConfig || {};
+          w.stackedBarConfig.styling = w.stackedBarConfig.styling || {};
+          return { target: w.stackedBarConfig.styling!, where: 'stackedbar' };
+        case 'groupedbar':
+          w.groupedBarConfig = w.groupedBarConfig || {};
+          w.groupedBarConfig.styling = w.groupedBarConfig.styling || {};
+          return { target: w.groupedBarConfig.styling!, where: 'groupedbar' };
+        case 'stackedlines':
+          w.stackedLinesConfig = w.stackedLinesConfig || {};
+          w.stackedLinesConfig.styling = w.stackedLinesConfig.styling || {};
+          return { target: w.stackedLinesConfig.styling!, where: 'stackedlines' };
+        case 'radialstacked':
+          w.radialStackedConfig = w.radialStackedConfig || {};
+          w.radialStackedConfig.styling = w.radialStackedConfig.styling || {};
+          return { target: w.radialStackedConfig.styling!, where: 'radialstacked' };
+        case 'pivotbar':
+          w.pivotBarConfig = w.pivotBarConfig || {};
+          w.pivotBarConfig.styling = w.pivotBarConfig.styling || {};
+          return { target: w.pivotBarConfig.styling!, where: 'pivotbar' };
+        case 'comparebar':
+          w.compareBarConfig = w.compareBarConfig || {};
+          w.compareBarConfig.styling = w.compareBarConfig.styling || {};
+          return { target: w.compareBarConfig.styling!, where: 'comparebar' };
+        case 'kpi':
+          w.kpiConfig = w.kpiConfig || {};
+          return { target: w.kpiConfig!, where: 'kpi' };
+        case 'insights2':
+          w.insights2Config = w.insights2Config || {};
+          w.insights2Config.styling = w.insights2Config.styling || {};
+          return { target: w.insights2Config.styling!, where: 'insights2' };
+        default:
+          w.styling = w.styling || {};
+          return { target: w.styling!, where: 'widget' };
+      }
+    };
+
+    const applyStylingTokens = (widget: Widget, tw: string) => {
+      if (!tw || !tw.trim()) return;
+      const { target, where } = ensureStylingTarget(widget);
+      const set = (k: string, v: unknown) => {
+        (target as Record<string, unknown>)[k] = v;
+      };
+
+      const tokens = tw.trim().split(/\s+/);
+      for (const tk of tokens) {
+        const parts = tk.split(':');
+        if (parts.length === 0) continue;
+        const [p0, p1, p2] = parts;
+        const key0 = p0?.toLowerCase();
+        const key1 = p1?.toLowerCase();
+        const val = p2 ?? p1; // for simple pairs like mb:40 p1 holds value
+
+        // Generic booleans and numbers
+        if (key0 === 'legend') { set('showLegend', key1 === 'on'); continue; }
+        if (key0 === 'grid') { set('showGrid', key1 === 'on'); continue; }
+        if (key0 === 'gridx') { set('enableGridX', key1 === 'on'); continue; }
+        if (key0 === 'gridy') { set('enableGridY', key1 === 'on'); continue; }
+        if (key0 === 'area') { set('enableArea', key1 === 'on'); continue; }
+        if (key0 === 'mb') { const n = Number(val); if (!Number.isNaN(n)) set('marginBottom', n); continue; }
+        if (key0 === 'compact') { set('compact', key1 === 'on'); continue; }
+        if (key0 === 'radius') { const n = Number(val); if (!Number.isNaN(n)) set('borderRadius', n); continue; }
+        if (key0 === 'layout') { set('layout', key1); continue; }
+        if (key0 === 'group') { set('groupMode', key1 === 'stacked' ? 'stacked' : 'grouped'); continue; }
+        if (key0 === 'color') { set('colors', [val]); continue; }
+
+        // Type-prefixed color, e.g., bar:color:#10b981
+        if ((key0 === 'bar' || key0 === 'line' || key0 === 'pie' || key0 === 'area') && key1 === 'color') {
+          set('colors', [val]);
+          continue;
+        }
+
+        // Radial tokens: radial:start:180 radial:end:0 radial:inner:80 radial:outer:130 radial:corner:5
+        if (key0 === 'radial') {
+          const n = Number(val);
+          if (key1 === 'start' && !Number.isNaN(n)) { set('startAngle', n); continue; }
+          if (key1 === 'end' && !Number.isNaN(n)) { set('endAngle', n); continue; }
+          if (key1 === 'inner' && !Number.isNaN(n)) { set('innerRadius', n); continue; }
+          if (key1 === 'outer' && !Number.isNaN(n)) { set('outerRadius', n); continue; }
+          if (key1 === 'corner' && !Number.isNaN(n)) { set('cornerRadius', n); continue; }
+        }
+
+        // Title tokens: title:font:600, title:size:14, title:color:#333, title:mb:12
+        if (key0 === 'title') {
+          if (key1 === 'font') { const n = Number(val); set('titleFontWeight', Number.isNaN(n) ? val : n); continue; }
+          if (key1 === 'size') { const n = Number(val); if (!Number.isNaN(n)) set('titleFontSize', n); continue; }
+          if (key1 === 'color') { set('titleColor', val); continue; }
+          if (key1 === 'mb') { const n = Number(val); if (!Number.isNaN(n)) set('titleMarginBottom', n); continue; }
+        }
+
+        // KPI tokens: kpi:viz:card, kpi:unit:R$
+        if (key0 === 'kpi') {
+          const w = widget as unknown as { kpiConfig?: Record<string, unknown> };
+          w.kpiConfig = w.kpiConfig || {};
+          if (key1 === 'viz') { (w.kpiConfig as Record<string, unknown>)['visualizationType'] = val; continue; }
+          if (key1 === 'unit') { (w.kpiConfig as Record<string, unknown>)['unit'] = val; continue; }
+        }
+
+        // Border variants: border:variant:smooth
+        if (key0 === 'border' && key1 === 'variant') { set('containerBorderVariant', val); continue; }
+        if (key0 === 'border' && key1 === 'width') { const n = Number(val); if (!Number.isNaN(n)) set('containerBorderWidth', n); continue; }
+        if (key0 === 'border' && key1 === 'color') { set('containerBorderColor', val); continue; }
+        // Background color: bg:#ffffff
+        if (key0 === 'bg') { set('backgroundColor', val); continue; }
+      }
+    };
+
     // grid-per-column mode: parse dashboard-level columns and widgets directly
     if (layoutMode === 'grid-per-column') {
       const colsD = Number(dashAttrs['cols-d'] || '0');
@@ -515,7 +684,7 @@ export class ConfigParser {
       const columnsInner: NonNullable<GridConfig['layout']>['columnsInner'] = {};
 
       // Parse widgets (self-closing and pair with <config>)
-      const parseWidgetAttributes = (attrStr: string, innerConfig?: string, defaultStart?: number) => {
+      const parseWidgetAttributes = (attrStr: string, innerContent?: string, defaultStart?: number) => {
         const wa = parseAttrs(attrStr || '');
         const id = wa['id'];
         const type = wa['type'] as Widget['type'];
@@ -549,12 +718,29 @@ export class ConfigParser {
               : {})
         } as Widget;
 
-        if (innerConfig) {
-          try {
-            const cfgJson = JSON.parse(innerConfig.trim());
-            this.applyWidgetConfig(widget, cfgJson);
-          } catch {
-            errors.push({ line: 1, column: 1, message: `Widget ${widget.id}: invalid <config> JSON`, type: 'validation' });
+        if (innerContent) {
+          // Parse <config> JSON if present
+          const cfgMatchInner = innerContent.match(/<config\b[^>]*>([\s\S]*?)<\/config>/i);
+          if (cfgMatchInner && cfgMatchInner[1]) {
+            try {
+              const cfgJson = JSON.parse(cfgMatchInner[1].trim());
+              this.applyWidgetConfig(widget, cfgJson);
+            } catch {
+              errors.push({ line: 1, column: 1, message: `Widget ${widget.id}: invalid <config> JSON`, type: 'validation' });
+            }
+          }
+          // Parse <datasource .../>
+          const dsMatch = innerContent.match(/<datasource\b([^>]*)\/>/i);
+          if (dsMatch && dsMatch[1]) {
+            const dsAttrs = parseAttrs(dsMatch[1]);
+            applyDataSourceAttrs(widget, dsAttrs);
+          }
+          // Parse <styling .../?> (self-closing or paired)
+          const stMatch = innerContent.match(/<styling\b([^>]*?)(?:\/>|>\s*<\/styling>)/i);
+          if (stMatch && stMatch[1]) {
+            const stAttrs = parseAttrs(stMatch[1]);
+            const tw = stAttrs['tw'] || '';
+            applyStylingTokens(widget, tw);
           }
         }
         widgets.push(widget);
@@ -594,12 +780,11 @@ export class ConfigParser {
           const wp = /<widget\b([^>]*)>([\s\S]*?)<\/widget>/gi;
           let wPair: RegExpExecArray | null;
           while ((wPair = wp.exec(content)) !== null) {
-            const inner = wPair[2] || '';
-            const cfgMatch = inner.match(/<config\b[^>]*>([\s\S]*?)<\/config>/i);
-            parseWidgetAttributes(wPair[1], cfgMatch && cfgMatch[1] ? cfgMatch[1] : undefined, colId);
-          }
+          const inner = wPair[2] || '';
+          parseWidgetAttributes(wPair[1], inner, colId);
         }
-      } else {
+      }
+    } else {
         // Global: scan all widgets
         const widgetSelfRegex = /<widget\b([^>]*)\/>/gi;
         let wSelf: RegExpExecArray | null;
@@ -610,8 +795,7 @@ export class ConfigParser {
         let wPair: RegExpExecArray | null;
         while ((wPair = widgetPairRegex.exec(dsl)) !== null) {
           const inner = wPair[2] || '';
-          const cfgMatch = inner.match(/<config\b[^>]*>([\s\S]*?)<\/config>/i);
-          parseWidgetAttributes(wPair[1], cfgMatch && cfgMatch[1] ? cfgMatch[1] : undefined);
+          parseWidgetAttributes(wPair[1], inner);
         }
       }
 
@@ -711,7 +895,7 @@ export class ConfigParser {
         if (widget) widgets.push(widget);
       }
 
-      // Pair widgets with optional <config>
+      // Pair widgets with optional <config>, <datasource/>, <styling/>
       const widgetPairRegex = /<widget\b([^>]*)>([\s\S]*?)<\/widget>/gi;
       let wpMatch: RegExpExecArray | null;
       while ((wpMatch = widgetPairRegex.exec(rowContent)) !== null) {
@@ -728,6 +912,19 @@ export class ConfigParser {
           } catch (e) {
             errors.push({ line: 1, column: 1, message: `Widget ${widget.id}: invalid <config> JSON`, type: 'validation' });
           }
+        }
+        // New: parse <datasource .../>
+        const dsMatch = inner.match(/<datasource\b([^>]*)\/>/i);
+        if (dsMatch && dsMatch[1]) {
+          const dsAttrs = parseAttrs(dsMatch[1]);
+          applyDataSourceAttrs(widget, dsAttrs);
+        }
+        // New: parse <styling .../?> (self-closing or paired)
+        const stMatch = inner.match(/<styling\b([^>]*?)(?:\/>|>\s*<\/styling>)/i);
+        if (stMatch && stMatch[1]) {
+          const stAttrs = parseAttrs(stMatch[1]);
+          const tw = stAttrs['tw'] || '';
+          applyStylingTokens(widget, tw);
         }
         widgets.push(widget);
       }
