@@ -287,6 +287,11 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
 
         {/* Scrollable Body */}
         <div className="flex-1 overflow-y-auto pr-2">
+          <div className="border-b pb-2 mb-3 flex gap-3">
+            <button type="button" className={`text-sm pb-1 border-b-2 ${tab === 'data' ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-600 hover:text-gray-900'}`} onClick={() => setTab('data')}>Data</button>
+            <button type="button" className={`text-sm pb-1 border-b-2 ${tab === 'estilo' ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-600 hover:text-gray-900'}`} onClick={() => setTab('estilo')}>Estilo</button>
+          </div>
+          {tab === 'data' && (
         {/* Form */}
         <div className="space-y-4">
           {/* Widget Type */}
@@ -589,11 +594,12 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
               )}
             </div>
           </div>
+          )}
         </div>
 
         {/* Style Section */}
-        {(isSimpleChart(formData.type) || isKpi(formData.type) || isMultiSeries(formData.type)) && (
-          <div className="border-t pt-4 mt-4">
+        {tab === 'estilo' && (isSimpleChart(formData.type) || isKpi(formData.type) || isMultiSeries(formData.type)) && (
+          <div className="pt-1">
             <h3 className="text-sm font-semibold text-gray-900 mb-3">Estilo</h3>
             <div className="grid grid-cols-2 gap-4">
               <div className="col-span-2">
