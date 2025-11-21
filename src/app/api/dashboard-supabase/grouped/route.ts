@@ -14,8 +14,10 @@ interface GroupedRequest {
   table: string;
   dimension1: string;  // Label (eixo X)
   dimension2?: string;  // Series (barras agrupadas)
-  // Novo: medida de negócio (opcional)
-  measure?: PivotMeasure;
+  // Medida: pode ser semântica (faturamento/quantidade/pedidos/itens),
+  // um nome de coluna simples (SUM aplicado por padrão),
+  // ou uma expressão com funções (ex.: SUM(item_subtotal)/COUNT_DISTINCT(pedido_id))
+  measure?: string;
   // Compat: ainda aceitar field direto
   field?: string;
   aggregation?: 'SUM' | 'COUNT' | 'AVG' | 'MIN' | 'MAX';
@@ -27,6 +29,30 @@ interface GroupedRequest {
   };
   // Drill simples: filtro por uma dimensão/valor
   filter?: { dim: string; value: string };
+}
+
+// Constrói expressão SQL segura a partir de uma medida DSL
+function buildMeasureExpression(measure: string | undefined): string | null {
+  if (!measure) return null;
+  const s = measure.trim();
+  if (!s) return null;
+  // EXPRESSÃO com funções
+  if (s.includes('(')) {
+    let expr = s;
+    expr = expr.replace(/COUNT\s*\(\s*\*\s*\)/gi, 'COUNT(*)');
+    expr = expr.replace(/COUNT_DISTINCT\s*\(\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\)/gi, 'COUNT(DISTINCT "$1")');
+    expr = expr.replace(/SUM\s*\(\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\)/gi, 'SUM("$1")');
+    expr = expr.replace(/AVG\s*\(\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\)/gi, 'AVG("$1")');
+    expr = expr.replace(/MIN\s*\(\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\)/gi, 'MIN("$1")');
+    expr = expr.replace(/MAX\s*\(\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\)/gi, 'MAX("$1")');
+    expr = expr.replace(/COUNT\s*\(\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\)/gi, 'COUNT("$1")');
+    return expr;
+  }
+  // Coluna simples → SUM por padrão
+  if (/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(s)) {
+    return `SUM("${s}")`;
+  }
+  return null;
 }
 
 export async function POST(request: NextRequest) {
@@ -66,39 +92,21 @@ export async function POST(request: NextRequest) {
       dateCondition += ` AND "${dim}" = '${val}'`;
     }
 
-    // Mapear measure → field/agg padrão se informado
-    let usedField = field;
-    let usedAgg = aggregation;
-    if (measure && !field) {
-      switch (measure) {
-        case 'faturamento':
-          usedField = 'item_subtotal';
-          usedAgg = usedAgg || 'SUM';
-          break;
-        case 'quantidade':
-          usedField = 'quantidade';
-          usedAgg = usedAgg || 'SUM';
-          break;
-        case 'pedidos':
-          // COUNT DISTINCT por pedido
-          usedField = 'pedido_id';
-          usedAgg = usedAgg || 'COUNT';
-          break;
-        case 'itens':
-          usedField = 'item_id';
-          usedAgg = usedAgg || 'COUNT';
-          break;
+    // Resolver expressão de medida
+    let valueExpr: string | null = buildMeasureExpression(measure);
+    if (!valueExpr) {
+      // Sem expressão → mapear semânticas ou field/aggregation
+      if (measure === 'faturamento') valueExpr = 'SUM("item_subtotal")';
+      else if (measure === 'quantidade') valueExpr = 'SUM("quantidade")';
+      else if (measure === 'pedidos') valueExpr = 'COUNT(DISTINCT "pedido_id")';
+      else if (measure === 'itens') valueExpr = 'COUNT(DISTINCT "item_id")';
+      else if (field) {
+        const agg = String(aggregation || 'SUM').toUpperCase();
+        valueExpr = (agg === 'COUNT_DISTINCT') ? `COUNT(DISTINCT "${field}")` : `${agg}("${field}")`;
+      } else {
+        return NextResponse.json({ success: false, error: 'Medida inválida: forneça measure como expressão/coluna, ou use field/aggregation.' }, { status: 400 });
       }
     }
-
-    if (!usedField) {
-      return NextResponse.json({ success: false, error: 'Campo de medida não definido (use measure ou field)' }, { status: 400 });
-    }
-
-    const isCountDistinct = (measure === 'pedidos') && (usedAgg === 'COUNT');
-    const valueExpr = isCountDistinct
-      ? `COUNT(DISTINCT "${usedField}")`
-      : `${usedAgg}("${usedField}")`;
 
     const sqlQuery = (dimension2 && dimension2.trim().length > 0)
       ? `SELECT "${dimension1}" as dim1, "${dimension2}" as dim2, ${valueExpr} as value
@@ -156,10 +164,10 @@ export async function POST(request: NextRequest) {
     } else {
       const rows1 = rawData as OneDimRow[];
       items = rows1.map((row) => ({ label: row.dim1, value: Number(row.value || 0) }));
-      const labelMap: Record<PivotMeasure, string> = {
+      const labelMap: Record<string, string> = {
         faturamento: 'Faturamento', quantidade: 'Quantidade', pedidos: 'Pedidos', itens: 'Itens'
       };
-      const label = measure ? labelMap[measure] : 'Valor';
+      const label = measure && labelMap[measure] ? labelMap[measure] : 'Valor';
       series = [{ key: 'value', label, color: SERIES_COLORS[0] }];
     }
 

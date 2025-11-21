@@ -179,7 +179,8 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
 
         // 📤 API request log
         // Map DSL dimension/measure -> API x/y for simple charts
-        const ds = widget.dataSource as Partial<{ schema: string; table: string; x: string; y: string; aggregation: string; dimension: string; measure: string }>;
+        const ds = widget.dataSource as Partial<{ schema: string; table: string; x: string; y: string; dimension: string; measure: string }>;
+        // Send measure expression as 'y' and map dimension -> x
         const mappedDataSource = {
           ...ds,
           ...(ds.dimension ? { x: ds.dimension } : {}),

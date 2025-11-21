@@ -95,9 +95,7 @@ const generatePostgreSQLQuery = (
   schema = 'marketing',
   dateFilter?: DateRangeFilter
 ): string => {
-  const defaultAgregacao = tipo === 'pie' ? 'COUNT' : 'SUM';
-  const funcaoAgregacaoRaw = agregacao || defaultAgregacao;
-  const funcaoAgregacao = String(funcaoAgregacaoRaw).toUpperCase();
+  const yExpr = buildMeasureExpression(y);
 
   // Build qualified table name for PostgreSQL
   const qualifiedTable = `"${schema}"."${tabela}"`;
@@ -112,44 +110,20 @@ const generatePostgreSQLQuery = (
   switch (tipo) {
     case 'bar':
     case 'horizontal-bar':
-      if (funcaoAgregacao === 'COUNT') {
-        return `SELECT "${x}", COUNT(*) as count FROM ${qualifiedTable} WHERE 1=1${dateCondition} GROUP BY "${x}" ORDER BY count DESC LIMIT 50`;
-      }
-      if (funcaoAgregacao === 'COUNT_DISTINCT') {
-        return `SELECT "${x}", COUNT(DISTINCT "${y}") as value FROM ${qualifiedTable} WHERE 1=1${dateCondition} GROUP BY "${x}" ORDER BY value DESC LIMIT 50`;
-      }
-      return `SELECT "${x}", ${funcaoAgregacao}("${y}") as value FROM ${qualifiedTable} WHERE 1=1${dateCondition} GROUP BY "${x}" ORDER BY value DESC LIMIT 50`;
+      return `SELECT "${x}", (${yExpr}) as value FROM ${qualifiedTable} WHERE 1=1${dateCondition} GROUP BY "${x}" ORDER BY value DESC LIMIT 50`;
     
     case 'line':
     case 'area':
-      if (funcaoAgregacao === 'COUNT') {
-        return `SELECT "${x}", COUNT(*) as count FROM ${qualifiedTable} WHERE 1=1${dateCondition} GROUP BY "${x}" ORDER BY "${x}" LIMIT 50`;
-      }
-      if (funcaoAgregacao === 'COUNT_DISTINCT') {
-        return `SELECT "${x}", COUNT(DISTINCT "${y}") as value FROM ${qualifiedTable} WHERE 1=1${dateCondition} GROUP BY "${x}" ORDER BY "${x}" LIMIT 50`;
-      }
-      return `SELECT "${x}", ${funcaoAgregacao}("${y}") as value FROM ${qualifiedTable} WHERE 1=1${dateCondition} GROUP BY "${x}" ORDER BY "${x}" LIMIT 50`;
+      return `SELECT "${x}", (${yExpr}) as value FROM ${qualifiedTable} WHERE 1=1${dateCondition} GROUP BY "${x}" ORDER BY "${x}" LIMIT 50`;
     
     case 'pie':
-      if (funcaoAgregacao === 'COUNT') {
-        return `SELECT "${x}", COUNT(*) as count FROM ${qualifiedTable} WHERE 1=1${dateCondition} GROUP BY "${x}" ORDER BY count DESC LIMIT 10`;
-      }
-      if (funcaoAgregacao === 'COUNT_DISTINCT') {
-        return `SELECT "${x}", COUNT(DISTINCT "${y}") as value FROM ${qualifiedTable} WHERE 1=1${dateCondition} GROUP BY "${x}" ORDER BY value DESC LIMIT 10`;
-      }
-      return `SELECT "${x}", ${funcaoAgregacao}("${y}") as value FROM ${qualifiedTable} WHERE 1=1${dateCondition} GROUP BY "${x}" ORDER BY value DESC LIMIT 10`;
+      return `SELECT "${x}", (${yExpr}) as value FROM ${qualifiedTable} WHERE 1=1${dateCondition} GROUP BY "${x}" ORDER BY value DESC LIMIT 10`;
     
     case 'kpi':
-      if (funcaoAgregacao === 'COUNT') {
-        return `SELECT COUNT(*) as total FROM ${qualifiedTable} WHERE 1=1${dateCondition}`;
-      }
-      if (funcaoAgregacao === 'COUNT_DISTINCT') {
-        return `SELECT COUNT(DISTINCT "${y}") as total FROM ${qualifiedTable} WHERE 1=1${dateCondition}`;
-      }
-      return `SELECT ${funcaoAgregacao}("${y}") as total FROM ${qualifiedTable} WHERE 1=1${dateCondition}`;
+      return `SELECT (${yExpr}) as total FROM ${qualifiedTable} WHERE 1=1${dateCondition}`;
     
     default:
-      return `SELECT "${x}", "${y}" FROM ${qualifiedTable} WHERE 1=1${dateCondition} LIMIT 50`;
+      return `SELECT "${x}", (${yExpr}) as value FROM ${qualifiedTable} WHERE 1=1${dateCondition} LIMIT 50`;
   }
 };
 
@@ -209,17 +183,7 @@ export async function POST(request: NextRequest) {
 
     // KPIs: calcular período atual vs período anterior
     if (type === 'kpi') {
-      const yCol = y || 'impressao';
-      // Infer aggregation when not provided: if column looks like an ID or a name, use COUNT_DISTINCT; else SUM.
-      let agg = (aggregation || '').toString();
-      if (!agg) {
-        const lower = String(yCol).toLowerCase();
-        agg = (lower.endsWith('_id') || lower.endsWith('id') || lower.endsWith('nome')) ? 'COUNT_DISTINCT' : 'SUM';
-      }
-      const aggUpper = agg.toUpperCase();
-      const aggExpr = (col: string) => (aggUpper === 'COUNT')
-        ? 'COUNT(*)'
-        : (aggUpper === 'COUNT_DISTINCT') ? `COUNT(DISTINCT "${col}")` : `${aggUpper}("${col}")`;
+      const expr = buildMeasureExpression(y || 'impressao');
       const { startDate, endDate } = calculateDateRange(dateFilter || { type: 'last_30_days' });
       const start = new Date(startDate);
       const end = new Date(endDate);
@@ -232,11 +196,11 @@ export async function POST(request: NextRequest) {
 
       const qualifiedTable = `"${schema}"."${table}"`;
       const sqlKPI = `WITH current AS (
-        SELECT ${aggExpr(yCol)} AS total
+        SELECT (${expr}) AS total
         FROM ${qualifiedTable}
         WHERE "data_pedido" >= '${startDate}' AND "data_pedido" <= '${endDate}'
       ), previous AS (
-        SELECT ${aggExpr(yCol)} AS total
+        SELECT (${expr}) AS total
         FROM ${qualifiedTable}
         WHERE "data_pedido" >= '${fmt(prevStart)}' AND "data_pedido" <= '${fmt(prevEnd)}'
       )
@@ -354,4 +318,35 @@ function generateMockData(type: string, x: string, y: string, table: string) {
     label: `Item ${i + 1}`,
     value: Math.floor(Math.random() * 1000) + 100
   }));
+}
+// Build SQL-safe measure expression from a DSL measure string
+function buildMeasureExpression(measure: string | undefined, fallbackColumn = 'impressao'): string {
+  let s = (measure || '').trim();
+  if (!s) {
+    return `SUM("${fallbackColumn}")`;
+  }
+  // If the expression contains parentheses, map functions and quote identifiers
+  if (s.includes('(')) {
+    // COUNT(*) stays as-is
+    s = s.replace(/COUNT\s*\(\s*\*\s*\)/gi, 'COUNT(*)');
+    // COUNT_DISTINCT(col) -> COUNT(DISTINCT "col")
+    s = s.replace(/COUNT_DISTINCT\s*\(\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\)/gi, 'COUNT(DISTINCT "$1")');
+    // SUM(col) -> SUM("col")
+    s = s.replace(/SUM\s*\(\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\)/gi, 'SUM("$1")');
+    // AVG(col) -> AVG("col")
+    s = s.replace(/AVG\s*\(\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\)/gi, 'AVG("$1")');
+    // MIN(col) -> MIN("col")
+    s = s.replace(/MIN\s*\(\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\)/gi, 'MIN("$1")');
+    // MAX(col) -> MAX("col")
+    s = s.replace(/MAX\s*\(\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\)/gi, 'MAX("$1")');
+    // COUNT(col) -> COUNT("col")
+    s = s.replace(/COUNT\s*\(\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\)/gi, 'COUNT("$1")');
+    return s;
+  }
+  // If it's just a column name, wrap with SUM by default
+  if (/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(s)) {
+    return `SUM("${s}")`;
+  }
+  // Fallback
+  return s;
 }
