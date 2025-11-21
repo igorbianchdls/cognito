@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from '@nanostores/react';
 import Link from 'next/link';
 import DashboardSaveDialog from '@/components/visual-builder/DashboardSaveDialog';
@@ -23,6 +23,8 @@ export default function VisualBuilderPage() {
   const [showSave, setShowSave] = useState(false);
   const [showOpen, setShowOpen] = useState(false);
   const [editingWidget, setEditingWidget] = useState<Widget | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const prevScrollTopRef = useRef<number>(0);
   const currentThemeName: ThemeName = useMemo<ThemeName>(() => {
     try {
       const cfg = JSON.parse(visualBuilderState.code);
@@ -49,7 +51,13 @@ export default function VisualBuilderPage() {
   };
 
   const handleOpenEdit = (widget: Widget) => {
+    // Capture current scroll position of the scroll container
+    prevScrollTopRef.current = scrollRef.current?.scrollTop || 0;
     setEditingWidget(widget);
+    // Restore scroll on next frame to neutralize any remount-induced jump
+    requestAnimationFrame(() => {
+      if (scrollRef.current) scrollRef.current.scrollTop = prevScrollTopRef.current;
+    });
   };
 
   const handleSaveWidget = (updatedWidget: Widget) => {
@@ -59,6 +67,10 @@ export default function VisualBuilderPage() {
     );
     visualBuilderActions.updateWidgets(updated);
     setEditingWidget(null);
+    // Restore scroll after store update
+    requestAnimationFrame(() => {
+      if (scrollRef.current) scrollRef.current.scrollTop = prevScrollTopRef.current;
+    });
   };
 
   const handleFilterChange = (filters: GlobalFilters) => {
@@ -256,7 +268,11 @@ export default function VisualBuilderPage() {
               containerPadding={visualBuilderState.gridConfig.padding ?? 16}
               themeName={currentThemeName}
             />
-            <div className="h-[calc(100%-73px)] p-6 overflow-auto">
+            <div
+              className="h-[calc(100%-73px)] p-6 overflow-auto"
+              ref={scrollRef}
+              style={{ overflowAnchor: 'none' }}
+            >
               <ResponsiveGridCanvas
                 widgets={visualBuilderState.widgets}
                 gridConfig={visualBuilderState.gridConfig}
