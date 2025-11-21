@@ -96,7 +96,8 @@ const generatePostgreSQLQuery = (
   dateFilter?: DateRangeFilter
 ): string => {
   const defaultAgregacao = tipo === 'pie' ? 'COUNT' : 'SUM';
-  const funcaoAgregacao = agregacao || defaultAgregacao;
+  const funcaoAgregacaoRaw = agregacao || defaultAgregacao;
+  const funcaoAgregacao = String(funcaoAgregacaoRaw).toUpperCase();
 
   // Build qualified table name for PostgreSQL
   const qualifiedTable = `"${schema}"."${tabela}"`;
@@ -114,6 +115,9 @@ const generatePostgreSQLQuery = (
       if (funcaoAgregacao === 'COUNT') {
         return `SELECT "${x}", COUNT(*) as count FROM ${qualifiedTable} WHERE 1=1${dateCondition} GROUP BY "${x}" ORDER BY count DESC LIMIT 50`;
       }
+      if (funcaoAgregacao === 'COUNT_DISTINCT') {
+        return `SELECT "${x}", COUNT(DISTINCT "${y}") as value FROM ${qualifiedTable} WHERE 1=1${dateCondition} GROUP BY "${x}" ORDER BY value DESC LIMIT 50`;
+      }
       return `SELECT "${x}", ${funcaoAgregacao}("${y}") as value FROM ${qualifiedTable} WHERE 1=1${dateCondition} GROUP BY "${x}" ORDER BY value DESC LIMIT 50`;
     
     case 'line':
@@ -121,17 +125,26 @@ const generatePostgreSQLQuery = (
       if (funcaoAgregacao === 'COUNT') {
         return `SELECT "${x}", COUNT(*) as count FROM ${qualifiedTable} WHERE 1=1${dateCondition} GROUP BY "${x}" ORDER BY "${x}" LIMIT 50`;
       }
+      if (funcaoAgregacao === 'COUNT_DISTINCT') {
+        return `SELECT "${x}", COUNT(DISTINCT "${y}") as value FROM ${qualifiedTable} WHERE 1=1${dateCondition} GROUP BY "${x}" ORDER BY "${x}" LIMIT 50`;
+      }
       return `SELECT "${x}", ${funcaoAgregacao}("${y}") as value FROM ${qualifiedTable} WHERE 1=1${dateCondition} GROUP BY "${x}" ORDER BY "${x}" LIMIT 50`;
     
     case 'pie':
       if (funcaoAgregacao === 'COUNT') {
         return `SELECT "${x}", COUNT(*) as count FROM ${qualifiedTable} WHERE 1=1${dateCondition} GROUP BY "${x}" ORDER BY count DESC LIMIT 10`;
       }
+      if (funcaoAgregacao === 'COUNT_DISTINCT') {
+        return `SELECT "${x}", COUNT(DISTINCT "${y}") as value FROM ${qualifiedTable} WHERE 1=1${dateCondition} GROUP BY "${x}" ORDER BY value DESC LIMIT 10`;
+      }
       return `SELECT "${x}", ${funcaoAgregacao}("${y}") as value FROM ${qualifiedTable} WHERE 1=1${dateCondition} GROUP BY "${x}" ORDER BY value DESC LIMIT 10`;
     
     case 'kpi':
       if (funcaoAgregacao === 'COUNT') {
         return `SELECT COUNT(*) as total FROM ${qualifiedTable} WHERE 1=1${dateCondition}`;
+      }
+      if (funcaoAgregacao === 'COUNT_DISTINCT') {
+        return `SELECT COUNT(DISTINCT "${y}") as total FROM ${qualifiedTable} WHERE 1=1${dateCondition}`;
       }
       return `SELECT ${funcaoAgregacao}("${y}") as total FROM ${qualifiedTable} WHERE 1=1${dateCondition}`;
     
@@ -197,7 +210,16 @@ export async function POST(request: NextRequest) {
     // KPIs: calcular período atual vs período anterior
     if (type === 'kpi') {
       const yCol = y || 'impressao';
-      const agg = aggregation || 'SUM';
+      // Infer aggregation when not provided: if column looks like an ID or a name, use COUNT_DISTINCT; else SUM.
+      let agg = (aggregation || '').toString();
+      if (!agg) {
+        const lower = String(yCol).toLowerCase();
+        agg = (lower.endsWith('_id') || lower.endsWith('id') || lower.endsWith('nome')) ? 'COUNT_DISTINCT' : 'SUM';
+      }
+      const aggUpper = agg.toUpperCase();
+      const aggExpr = (col: string) => (aggUpper === 'COUNT')
+        ? 'COUNT(*)'
+        : (aggUpper === 'COUNT_DISTINCT') ? `COUNT(DISTINCT "${col}")` : `${aggUpper}("${col}")`;
       const { startDate, endDate } = calculateDateRange(dateFilter || { type: 'last_30_days' });
       const start = new Date(startDate);
       const end = new Date(endDate);
@@ -210,11 +232,11 @@ export async function POST(request: NextRequest) {
 
       const qualifiedTable = `"${schema}"."${table}"`;
       const sqlKPI = `WITH current AS (
-        SELECT ${agg}("${yCol}") AS total
+        SELECT ${aggExpr(yCol)} AS total
         FROM ${qualifiedTable}
         WHERE "data_pedido" >= '${startDate}' AND "data_pedido" <= '${endDate}'
       ), previous AS (
-        SELECT ${agg}("${yCol}") AS total
+        SELECT ${aggExpr(yCol)} AS total
         FROM ${qualifiedTable}
         WHERE "data_pedido" >= '${fmt(prevStart)}' AND "data_pedido" <= '${fmt(prevEnd)}'
       )
