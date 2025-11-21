@@ -88,6 +88,37 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
     }
   });
 
+  // Simple styling controls for charts (colors and left margin)
+  const [styleData, setStyleData] = useState<{ colors: string; marginLeft: number }>({ colors: '', marginLeft: 40 });
+
+  // Initialize styling controls on widget or type change
+  useEffect(() => {
+    if (!widget) return;
+    try {
+      const t = widget.type as Widget['type'];
+      // Helper getters per type
+      const getColors = (): string[] | undefined => {
+        if (t === 'bar') return widget.barConfig?.styling?.colors;
+        if (t === 'line') return widget.lineConfig?.styling?.colors;
+        if (t === 'pie') return widget.pieConfig?.styling?.colors;
+        if (t === 'area') return widget.areaConfig?.styling?.colors;
+        return widget.styling?.colors as string[] | undefined;
+      };
+      const getMarginLeft = (): number | undefined => {
+        if (t === 'bar') return widget.barConfig?.margin?.left;
+        if (t === 'line') return (widget.lineConfig as Partial<{ margin?: { left?: number } }> | undefined)?.margin?.left;
+        if (t === 'pie') return (widget.pieConfig as Partial<{ margin?: { left?: number } }> | undefined)?.margin?.left;
+        if (t === 'area') return (widget.areaConfig as Partial<{ margin?: { left?: number } }> | undefined)?.margin?.left;
+        return undefined;
+      };
+      const colorsArr = getColors() || [];
+      const marginLeft = getMarginLeft();
+      setStyleData({ colors: colorsArr.join(', '), marginLeft: typeof marginLeft === 'number' ? marginLeft : 40 });
+    } catch {
+      setStyleData({ colors: '', marginLeft: 40 });
+    }
+  }, [widget]);
+
   // Derive selected table UI state
   const selectedTableValue = useMemo(() => {
     const schema = formData.dataSource.schema?.trim();
@@ -162,7 +193,13 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
       dsPatch['measureActual'] = formData.dataSource.measureActual;
     }
 
-    const updatedWidget: Widget = {
+    // Patch style: colors and margin.left per chart type
+    const colorsArray = styleData.colors
+      .split(',')
+      .map(s => s.trim())
+      .filter(Boolean);
+
+    let updatedWidget: Widget = {
       ...widget,
       type: formData.type,
       title: formData.title,
@@ -172,6 +209,26 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
         ...dsPatch
       } as Widget['dataSource']
     };
+
+    const t = formData.type as Widget['type'];
+    const applyColorsAndMargin = <T extends { styling?: { colors?: string[] }; margin?: { left?: number } }>(cfg: T | undefined): T => {
+      const next: T = { ...(cfg || {}) } as T;
+      (next as { styling?: { colors?: string[] } }).styling = { ...(cfg?.styling || {}) } as { colors?: string[] };
+      if (colorsArray.length) (next.styling as { colors?: string[] }).colors = colorsArray;
+      (next as { margin?: { left?: number } }).margin = { ...(cfg?.margin || {}) } as { left?: number };
+      (next.margin as { left?: number }).left = Number.isFinite(styleData.marginLeft) ? styleData.marginLeft : 40;
+      return next;
+    };
+
+    if (t === 'bar') {
+      updatedWidget = { ...updatedWidget, barConfig: applyColorsAndMargin(updatedWidget.barConfig as Partial<{ styling?: { colors?: string[] }; margin?: { left?: number } }>) };
+    } else if (t === 'line') {
+      updatedWidget = { ...updatedWidget, lineConfig: applyColorsAndMargin(updatedWidget.lineConfig as Partial<{ styling?: { colors?: string[] }; margin?: { left?: number } }>) };
+    } else if (t === 'pie') {
+      updatedWidget = { ...updatedWidget, pieConfig: applyColorsAndMargin(updatedWidget.pieConfig as Partial<{ styling?: { colors?: string[] }; margin?: { left?: number } }>) };
+    } else if (t === 'area') {
+      updatedWidget = { ...updatedWidget, areaConfig: applyColorsAndMargin(updatedWidget.areaConfig as Partial<{ styling?: { colors?: string[] }; margin?: { left?: number } }>) };
+    }
 
     onSave(updatedWidget);
     onClose();
@@ -498,6 +555,37 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
             </div>
           </div>
         </div>
+
+        {/* Style Section */}
+        {(isSimpleChart(formData.type) || isKpi(formData.type) || isMultiSeries(formData.type)) && (
+          <div className="border-t pt-4 mt-4">
+            <h3 className="text-sm font-semibold text-gray-900 mb-3">Estilo</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Cores (separadas por vírgula)</label>
+                <input
+                  type="text"
+                  value={styleData.colors}
+                  onChange={(e) => setStyleData({ ...styleData, colors: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="#3b82f6, #10b981, #f59e0b"
+                />
+                <p className="text-xs text-gray-500 mt-1">Ex.: #3b82f6, #10b981, #f59e0b (ordem aplicada às séries)</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Margin Left (px)</label>
+                <input
+                  type="number"
+                  min={0}
+                  value={styleData.marginLeft}
+                  onChange={(e) => setStyleData({ ...styleData, marginLeft: parseInt(e.target.value || '0') || 0 })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <p className="text-xs text-gray-500 mt-1">Espaço para eixo Y/labels do gráfico.</p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Footer */}
         <div className="flex justify-end gap-3 mt-6 pt-4 border-t">

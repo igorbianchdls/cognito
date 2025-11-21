@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Database } from 'lucide-react';
+// SQL viewer removed
 import type { ChartConfig as RechartsChartConfig } from '@/components/ui/chart';
 import { BarChart } from '@/components/charts/BarChart';
 import { LineChart } from '@/components/charts/LineChart';
@@ -21,7 +21,6 @@ import InsightsHeroCarousel from '@/components/widgets/InsightsHeroCarousel';
 import InsightsCard2 from '@/components/widgets/InsightsCard2';
 import { $insights2 } from '@/stores/nexus/insights2Store';
 import { useStore as useNanoStore } from '@nanostores/react';
-import SQLModal from './SQLModal';
 import type { Widget } from '../visual-builder/ConfigParser';
 import type { GlobalFilters } from '@/stores/visualBuilderStore';
 
@@ -52,8 +51,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
   const [data, setData] = useState<WidgetData>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [sqlQuery, setSqlQuery] = useState<string | null>(null);
-  const [showSQLModal, setShowSQLModal] = useState(false);
+  // Removed SQL modal state
 
   // State for stackedbar widgets
   const [multipleData, setMultipleData] = useState<{ items: Array<{ label: string; [key: string]: string | number }>; series: Array<{ key: string; label: string; color: string }> } | null>(null);
@@ -102,7 +100,6 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
       const result = await response.json();
       if (result.success) {
         setMultipleData({ items: result.items, series: result.series });
-        setSqlQuery(result.sql_query || null);
         setPivotDrilled({ value: category, dim: dim1 || 'dim1' });
       } else {
         throw new Error(result.error || 'Failed to fetch drill data');
@@ -138,7 +135,6 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
       const result = await response.json();
       if (result.success) {
         setMultipleData({ items: result.items, series: result.series });
-        setSqlQuery(result.sql_query || null);
       }
     } catch {}
     finally { setMultipleLoading(false); }
@@ -240,7 +236,6 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
 
         if (result.success) {
           setData(result.data);
-          setSqlQuery(result.sql_query || null);
           console.log(`✅ Widget data set successfully:`, {
             widgetId: widget.id,
             totalRecords: result.totalRecords,
@@ -327,7 +322,6 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
 
         if (result.success) {
           setMultipleData({ items: result.items, series: result.series });
-          setSqlQuery(result.sql_query || null);
         } else {
           throw new Error(result.error || 'Failed to fetch grouped data');
         }
@@ -432,20 +426,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
     );
   }
 
-  // SQL Debug Button - only show for widgets that have SQL queries
-  const renderSQLButton = () => {
-    if (!sqlQuery || !needsBigQueryData(widget.type)) return null;
-    
-    return (
-      <button
-        onClick={() => setShowSQLModal(true)}
-        className="absolute top-2 right-16 z-10 p-1.5 bg-white/90 hover:bg-white border border-gray-200 rounded-md shadow-sm hover:shadow-md transition-all duration-200 opacity-0 group-hover:opacity-100"
-        title="Ver SQL gerado"
-      >
-        <Database className="w-4 h-4 text-gray-600 group-hover:text-blue-600" />
-      </button>
-    );
-  };
+  // SQL Debug Button removed
 
   // Store widget content
   let widgetContent;
@@ -473,7 +454,6 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
 
       widgetContent = (
         <div className="h-full w-full px-0 py-2 relative group">
-          {renderSQLButton()}
           <BarChart
             {...commonChartProps}
             {...(widget.barConfig?.styling || {})}
@@ -537,7 +517,6 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
     case 'line':
       widgetContent = (
         <div className="h-full w-full px-0 py-2 relative group">
-          {renderSQLButton()}
           <LineChart
             {...commonChartProps}
             {...(widget.lineConfig?.styling || {})}
@@ -569,7 +548,6 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
     case 'pie':
       widgetContent = (
         <div className="h-full w-full px-0 py-2 relative group">
-          {renderSQLButton()}
           <PieChart
             {...commonChartProps}
             {...(widget.pieConfig?.styling || {})}
@@ -598,7 +576,6 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
     case 'area':
       widgetContent = (
         <div className="h-full w-full px-0 py-2 relative group">
-          {renderSQLButton()}
           <AreaChart
             {...commonChartProps}
             {...(widget.areaConfig?.styling || {})}
@@ -631,7 +608,6 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
     case 'kpi':
       widgetContent = (
         <div className="h-full w-full px-0 py-2 relative group">
-          {renderSQLButton()}
           <KPICard
             variant="tile"
             name={widget.title}
@@ -780,7 +756,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
       } else if (multipleData && multipleData.items.length > 0) {
         widgetContent = (
           <div className="h-full w-full px-0 py-2 relative group">
-            {renderSQLButton()}
+            
             <StackedBarChart
               {...(widget.stackedBarConfig?.styling || {})}
               // Pass margin and legends from JSON config
@@ -886,7 +862,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
       } else if (multipleData && multipleData.items.length > 0) {
         widgetContent = (
           <div className="h-full w-full px-0 py-2 relative group">
-            {renderSQLButton()}
+            
             <GroupedBarChart
               {...(widget.groupedBarConfig?.styling || {})}
               // Pass margin and legends from JSON config
@@ -993,7 +969,6 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
         const seriesMetadata = multipleData.series;
         widgetContent = (
           <div className="h-full w-full px-0 py-2 relative group">
-            {renderSQLButton()}
             {pivotDrilled && (
               <button onClick={drillPivotBack} className="absolute top-2 right-2 z-10 px-2 py-1 text-xs bg-white border border-gray-200 rounded shadow">Voltar</button>
             )}
@@ -1086,7 +1061,6 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
 
         widgetContent = (
           <div className="h-full w-full p-2 relative group">
-            {renderSQLButton()}
             <RadialStackedChart
               data={dataRow}
               keys={keys}
@@ -1153,7 +1127,6 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
       } else if (multipleData && multipleData.items.length > 0) {
         widgetContent = (
           <div className="h-full w-full p-2 relative group">
-            {renderSQLButton()}
             <StackedLinesChart
               {...(widget.stackedLinesConfig?.styling || {})}
               margin={widget.stackedLinesConfig?.margin}
@@ -1246,7 +1219,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
         const layout = widget.compareBarConfig?.styling?.layout || 'vertical'
         widgetContent = (
           <div className="h-full w-full p-2 relative group">
-            {renderSQLButton()}
+            
             {groupMode === 'stacked' ? (
               <StackedBarChart
                 data={multipleData.items}
@@ -1301,21 +1274,6 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
       break;
   }
 
-  // Render the SQL Modal
-  const sqlModal = (
-    <SQLModal
-      isOpen={showSQLModal}
-      onClose={() => setShowSQLModal(false)}
-      sqlQuery={sqlQuery || ''}
-      widgetTitle={widget.title || 'Widget'}
-    />
-  );
-
-  // Return the widget content with modal
-  return (
-    <>
-      {widgetContent}
-      {sqlModal}
-    </>
-  );
+  // Return the widget content
+  return widgetContent;
 }
