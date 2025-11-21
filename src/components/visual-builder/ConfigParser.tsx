@@ -454,7 +454,8 @@ export class ConfigParser {
 
   /**
    * Parse HTML-like DSL into ParseResult
-   * Supported tags: <dashboard>, <row>, <widget>, <config>
+   * Supported tags: <dashboard>, <row>, <widget>, <datasource/>, <styling/>, <items><item/></items>
+   * (Legacy <config> JSON is still accepted as fallback when present.)
    */
   private static parseDsl(dsl: string): ParseResult {
     const errors: ParseError[] = [];
@@ -742,6 +743,37 @@ export class ConfigParser {
             const stAttrs = parseAttrs(stMatch[1]);
             const tw = stAttrs['tw'] || '';
             applyStylingTokens(widget, tw);
+          }
+          // Parse <items> for insights2
+          const itemsMatch = innerContent.match(/<items\b([^>]*)>([\s\S]*?)<\/items>/i);
+          if (itemsMatch) {
+            const itemsAttrs = parseAttrs(itemsMatch[1] || '');
+            const itemsBody = itemsMatch[2] || '';
+            const w = widget as unknown as { insights2Config?: { title?: string; items?: Array<{ id: string; variant?: string; icon?: string; label: string; link?: { text: string; url?: string }; tail?: string }>; styling?: Record<string, unknown> } };
+            w.insights2Config = w.insights2Config || {};
+            if (itemsAttrs['title']) w.insights2Config.title = itemsAttrs['title'];
+            const itemRegex = /<item\b([^>]*)\/>/gi;
+            let im: RegExpExecArray | null;
+            const collected: Array<{ id: string; variant?: string; icon?: string; label: string; link?: { text: string; url?: string }; tail?: string }> = [];
+            while ((im = itemRegex.exec(itemsBody)) !== null) {
+              const ia = parseAttrs(im[1] || '');
+              const id = ia['id'] || `${Date.now()}-${Math.random()}`;
+              const label = ia['label'] || '';
+              const variant = ia['variant'];
+              const icon = ia['icon'];
+              const linkText = ia['link-text'] || ia['linkText'];
+              const linkUrl = ia['link-url'] || ia['linkUrl'];
+              const tail = ia['tail'];
+              const item: { id: string; variant?: string; icon?: string; label: string; link?: { text: string; url?: string }; tail?: string } = { id, label };
+              if (variant) item.variant = variant;
+              if (icon) item.icon = icon;
+              if (linkText || linkUrl) item.link = { text: linkText || '', url: linkUrl };
+              if (tail) item.tail = tail;
+              collected.push(item);
+            }
+            if (collected.length) {
+              w.insights2Config.items = collected;
+            }
           }
         }
         widgets.push(widget);

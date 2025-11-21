@@ -233,31 +233,21 @@ export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas"
   <row id="9" cols-d="2" cols-t="2" cols-m="1" gap-x="16" gap-y="16">
     <widget id="insights_card_2" type="insights2" order="1" span-d="1" span-t="1" span-m="1" height="320" title="Insights">
       <styling tw="compact:on radius:8" />
-      <config>
-        {"insights2Config":{
-          "title":"Insights",
-          "items":[
-            {"id":"i1","variant":"risk","label":"Supply Risk","link":{"text":"Ethiopia Yirgacheffe"},"tail":"may run out in less than 3 days"},
-            {"id":"i2","variant":"slow","label":"Slow Stock","link":{"text":"Costa Rican Tarrazú"},"tail":"sitting unsold in inventory"},
-            {"id":"i3","variant":"info","label":"Revenue Uplift","link":{"text":"Mobile cohort 20–22h"},"tail":"continues to outperform"},
-            {"id":"i4","variant":"custom","label":"UX Impact","link":{"text":"Homepage update"},"tail":"bounce rate –12%"},
-            {"id":"i5","variant":"info","label":"Conversion","link":{"text":"Paid campaigns"},"tail":"+8% WoW"}
-          ]
-        }}
-      </config>
+      <items title="Insights">
+        <item id="i1" variant="risk" label="Supply Risk" link-text="Ethiopia Yirgacheffe" tail="may run out in less than 3 days" />
+        <item id="i2" variant="slow" label="Slow Stock" link-text="Costa Rican Tarrazú" tail="sitting unsold in inventory" />
+        <item id="i3" variant="info" label="Revenue Uplift" link-text="Mobile cohort 20–22h" tail="continues to outperform" />
+        <item id="i4" variant="custom" label="UX Impact" link-text="Homepage update" tail="bounce rate –12%" />
+        <item id="i5" variant="info" label="Conversion" link-text="Paid campaigns" tail="+8% WoW" />
+      </items>
     </widget>
     <widget id="insights_card_3" type="insights2" order="2" span-d="1" span-t="1" span-m="1" height="320" title="Insights Extras">
       <styling tw="compact:on radius:8" />
-      <config>
-        {"insights2Config":{
-          "title":"Insights Extras",
-          "items":[
-            {"id":"e1","variant":"info","label":"Top Seller","link":{"text":"Alice Silva"},"tail":"R$ 180k este mês"},
-            {"id":"e2","variant":"risk","label":"Meta Atrasada","link":{"text":"Território Sul"},"tail":"62% concluído"},
-            {"id":"e3","variant":"slow","label":"Campanha Fraca","link":{"text":"Outono"},"tail":"CTR 0,9%"}
-          ]
-        }}
-      </config>
+      <items title="Insights Extras">
+        <item id="e1" variant="info" label="Top Seller" link-text="Alice Silva" tail="R$ 180k este mês" />
+        <item id="e2" variant="risk" label="Meta Atrasada" link-text="Território Sul" tail="62% concluído" />
+        <item id="e3" variant="slow" label="Campanha Fraca" link-text="Outono" tail="CTR 0,9%" />
+      </items>
     </widget>
   </row>
 
