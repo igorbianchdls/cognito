@@ -25,6 +25,8 @@ interface ResponsiveGridCanvasProps {
   themeName?: import('./ThemeManager').ThemeName;
   // Optional external handler to open editor outside the canvas (prevents grid remount)
   onEdit?: (widget: Widget) => void;
+  // Control whether the canvas renders its own sticky header
+  renderHeader?: boolean;
 }
 
 // Draggable Widget Component
@@ -101,7 +103,7 @@ function DraggableWidget({ widget, spanClasses, spanValue, startValue, minHeight
   );
 }
 
-export default function ResponsiveGridCanvas({ widgets, gridConfig, globalFilters, viewportMode = 'desktop', onLayoutChange, headerTitle, headerSubtitle, onFilterChange, isFilterLoading, themeName, onEdit }: ResponsiveGridCanvasProps) {
+export default function ResponsiveGridCanvas({ widgets, gridConfig, globalFilters, viewportMode = 'desktop', onLayoutChange, headerTitle, headerSubtitle, onFilterChange, isFilterLoading, themeName, onEdit, renderHeader = true }: ResponsiveGridCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   // Internal editor state used only when onEdit is not provided by parent
   const [editingWidget, setEditingWidget] = useState<Widget | null>(null);
@@ -539,15 +541,17 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig, globalFilter
         className="relative overflow-hidden"
         style={getDeviceStyles()}
       >
-        <DashboardInCanvasHeader
-          title={headerTitle || 'Dashboard'}
-          subtitle={headerSubtitle}
-          currentFilter={globalFilters?.dateRange || { type: 'last_30_days' }}
-          onFilterChange={(dateRange: DateRangeFilter) => onFilterChange?.({ dateRange })}
-          isLoading={!!isFilterLoading}
-          containerPadding={gridConfig.padding ?? 16}
-          themeName={themeName}
-        />
+        {renderHeader && (
+          <DashboardInCanvasHeader
+            title={headerTitle || 'Dashboard'}
+            subtitle={headerSubtitle}
+            currentFilter={globalFilters?.dateRange || { type: 'last_30_days' }}
+            onFilterChange={(dateRange: DateRangeFilter) => onFilterChange?.({ dateRange })}
+            isLoading={!!isFilterLoading}
+            containerPadding={gridConfig.padding ?? 16}
+            themeName={themeName}
+          />
+        )}
         {/* Empty State */}
         {widgets.length === 0 && (
           <div className="absolute inset-0 flex items-center justify-center">

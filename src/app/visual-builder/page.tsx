@@ -8,6 +8,7 @@ import DashboardOpenDialog from '@/components/visual-builder/DashboardOpenDialog
 import { dashboardsApi, type Dashboard } from '@/stores/dashboardsStore';
 import MonacoEditor from '@/components/visual-builder/MonacoEditor';
 import ResponsiveGridCanvas from '@/components/visual-builder/ResponsiveGridCanvas';
+import DashboardInCanvasHeader from '@/components/visual-builder/DashboardInCanvasHeader';
 import WidgetEditorModal from '@/components/visual-builder/WidgetEditorModal';
 import { $visualBuilderState, visualBuilderActions } from '@/stores/visualBuilderStore';
 import { initialDsl, initialDslColumns } from '@/stores/visualBuilderStore';
@@ -245,6 +246,16 @@ export default function VisualBuilderPage() {
                 </div>
               </div>
             </div>
+            {/* Sticky header moved out of canvas to avoid scroll reset on remount */}
+            <DashboardInCanvasHeader
+              title={visualBuilderState.dashboardTitle || 'Responsive Dashboard'}
+              subtitle={visualBuilderState.dashboardSubtitle || 'Preview different device layouts'}
+              currentFilter={visualBuilderState.globalFilters?.dateRange || { type: 'last_30_days' }}
+              onFilterChange={(dateRange) => handleFilterChange({ ...(visualBuilderState.globalFilters || {}), dateRange })}
+              isLoading={isFilterLoading}
+              containerPadding={visualBuilderState.gridConfig.padding ?? 16}
+              themeName={currentThemeName}
+            />
             <div className="h-[calc(100%-73px)] p-6 overflow-auto">
               <ResponsiveGridCanvas
                 widgets={visualBuilderState.widgets}
@@ -258,6 +269,7 @@ export default function VisualBuilderPage() {
                 isFilterLoading={isFilterLoading}
                 themeName={currentThemeName}
                 onEdit={handleOpenEdit}
+                renderHeader={false}
               />
             </div>
           </div>
