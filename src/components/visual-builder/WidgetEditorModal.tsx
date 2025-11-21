@@ -66,8 +66,6 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
 
   const KNOWN_TABLE_KEYS = Object.keys(KNOWN_TABLES);
   const DEFAULT_KNOWN_KEY = 'vendas.vw_pedidos_completo';
-  const DEFAULT_SCHEMA = 'vendas';
-  const DEFAULT_TABLE_ONLY = 'vw_pedidos_completo';
   const CUSTOM_VALUE = '__custom__';
 
   const [formData, setFormData] = useState({
@@ -77,16 +75,16 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
     dataSource: {
       schema: widget?.dataSource?.schema || '',
       table: widget?.dataSource?.table || '',
-      x: (widget?.dataSource as any)?.x || (widget?.dataSource as any)?.dimension || '',
-      y: (widget?.dataSource as any)?.y || (widget?.dataSource as any)?.measure || '',
-      aggregation: (widget?.dataSource as any)?.aggregation || 'SUM',
+      x: ((widget?.dataSource ?? {}) as Partial<NonNullable<Widget['dataSource']>>).x || ((widget?.dataSource ?? {}) as Partial<NonNullable<Widget['dataSource']>>).dimension || '',
+      y: ((widget?.dataSource ?? {}) as Partial<NonNullable<Widget['dataSource']>>).y || ((widget?.dataSource ?? {}) as Partial<NonNullable<Widget['dataSource']>>).measure || '',
+      aggregation: ((widget?.dataSource ?? {}) as Partial<NonNullable<Widget['dataSource']>>).aggregation || 'SUM',
       // multi-series
-      dimension1: (widget?.dataSource as any)?.dimension1 || '',
-      dimension2: (widget?.dataSource as any)?.dimension2 || '',
+      dimension1: ((widget?.dataSource ?? {}) as Partial<NonNullable<Widget['dataSource']>>).dimension1 || '',
+      dimension2: ((widget?.dataSource ?? {}) as Partial<NonNullable<Widget['dataSource']>>).dimension2 || '',
       // compare
-      dimension: (widget?.dataSource as any)?.dimension || '',
-      measureGoal: (widget?.dataSource as any)?.measureGoal || '',
-      measureActual: (widget?.dataSource as any)?.measureActual || ''
+      dimension: ((widget?.dataSource ?? {}) as Partial<NonNullable<Widget['dataSource']>>).dimension || '',
+      measureGoal: ((widget?.dataSource ?? {}) as Partial<NonNullable<Widget['dataSource']>>).measureGoal || '',
+      measureActual: ((widget?.dataSource ?? {}) as Partial<NonNullable<Widget['dataSource']>>).measureActual || ''
     }
   });
 
@@ -97,7 +95,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
     const full = table ? (schema ? `${schema}.${table}` : table) : '';
     if (!full) return DEFAULT_KNOWN_KEY;
     return KNOWN_TABLE_KEYS.includes(full) ? full : CUSTOM_VALUE;
-  }, [formData.dataSource.schema, formData.dataSource.table]);
+  }, [formData.dataSource.schema, formData.dataSource.table, KNOWN_TABLE_KEYS]);
 
   const isCustomTable = selectedTableValue === CUSTOM_VALUE;
 
@@ -107,7 +105,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
     const full = table ? (schema ? `${schema}.${table}` : table) : '';
     const key = full && KNOWN_TABLE_KEYS.includes(full) ? full : DEFAULT_KNOWN_KEY;
     return KNOWN_TABLES[key];
-  }, [formData.dataSource.schema, formData.dataSource.table]);
+  }, [formData.dataSource.schema, formData.dataSource.table, KNOWN_TABLES, KNOWN_TABLE_KEYS]);
 
   // Helpers by type
   const isSimpleChart = (t: string) => ['bar', 'line', 'pie', 'area'].includes(t);
@@ -125,14 +123,14 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
         dataSource: {
           schema: widget.dataSource?.schema || '',
           table: widget.dataSource?.table || '',
-          x: (widget.dataSource as any)?.x || (widget.dataSource as any)?.dimension || '',
-          y: (widget.dataSource as any)?.y || (widget.dataSource as any)?.measure || '',
-          aggregation: (widget.dataSource as any)?.aggregation || 'SUM',
-          dimension1: (widget.dataSource as any)?.dimension1 || '',
-          dimension2: (widget.dataSource as any)?.dimension2 || '',
-          dimension: (widget.dataSource as any)?.dimension || '',
-          measureGoal: (widget.dataSource as any)?.measureGoal || '',
-          measureActual: (widget.dataSource as any)?.measureActual || ''
+          x: ((widget.dataSource ?? {}) as Partial<NonNullable<Widget['dataSource']>>).x || ((widget.dataSource ?? {}) as Partial<NonNullable<Widget['dataSource']>>).dimension || '',
+          y: ((widget.dataSource ?? {}) as Partial<NonNullable<Widget['dataSource']>>).y || ((widget.dataSource ?? {}) as Partial<NonNullable<Widget['dataSource']>>).measure || '',
+          aggregation: ((widget.dataSource ?? {}) as Partial<NonNullable<Widget['dataSource']>>).aggregation || 'SUM',
+          dimension1: ((widget.dataSource ?? {}) as Partial<NonNullable<Widget['dataSource']>>).dimension1 || '',
+          dimension2: ((widget.dataSource ?? {}) as Partial<NonNullable<Widget['dataSource']>>).dimension2 || '',
+          dimension: ((widget.dataSource ?? {}) as Partial<NonNullable<Widget['dataSource']>>).dimension || '',
+          measureGoal: ((widget.dataSource ?? {}) as Partial<NonNullable<Widget['dataSource']>>).measureGoal || '',
+          measureActual: ((widget.dataSource ?? {}) as Partial<NonNullable<Widget['dataSource']>>).measureActual || ''
         }
       });
     }
