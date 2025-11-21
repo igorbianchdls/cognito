@@ -74,6 +74,9 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
   const DEFAULT_KNOWN_KEY = 'vendas.vw_pedidos_completo';
   const CUSTOM_VALUE = '__custom__';
 
+  // Local tab state for the editor sections
+  const [tab, setTab] = useState<'data' | 'estilo'>('data');
+
   const [formData, setFormData] = useState({
     type: (widget?.type as Widget['type']) || 'bar',
     title: widget?.title || '',
@@ -292,8 +295,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
             <button type="button" className={`text-sm pb-1 border-b-2 ${tab === 'estilo' ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-600 hover:text-gray-900'}`} onClick={() => setTab('estilo')}>Estilo</button>
           </div>
           {tab === 'data' && (
-        {/* Form */}
-        <div className="space-y-4">
+              <div className="space-y-4">
           {/* Widget Type */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -592,8 +594,6 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
                   </div>
                 </>
               )}
-            </div>
-          </div>
           )}
         </div>
 
