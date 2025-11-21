@@ -50,12 +50,22 @@ const baseSystem = `Você é um workflow de IA chamado "Criador de Dashboard".
   - item_criado_em (timestamp)
   - item_atualizado_em (timestamp)
 
+# Dimensões e Medidas (Views)
+## vendas.vw_pedidos_completo
+- Dimensões (para agrupar/filtrar): data_pedido, status, cliente_nome, vendedor_nome, territorio_nome, canal_venda_nome, cupom_codigo, centro_lucro_nome, campanha_venda_nome, filial_nome, unidade_negocio_nome, sales_office_nome, produto_nome, pedido_id (id), item_id (id), pedido_criado_em, pedido_atualizado_em, item_criado_em, item_atualizado_em.
+- Medidas (para agregação): pedido_subtotal, desconto_total, pedido_valor_total, quantidade, preco_unitario, item_desconto, item_subtotal.
+- Contagens úteis: COUNT(*), COUNT(DISTINCT pedido_id), COUNT(DISTINCT item_id).
+
+## comercial.vw_metas_detalhe (Meta x Realizado)
+- Dimensões: vendedor, territorio.
+- Medidas: valor_meta (meta), subtotal (realizado). Para contagens use COUNT(DISTINCT cliente_id) e COUNT(DISTINCT pedido_id) quando aplicável (ex.: novos_clientes, pedidos, ticket_medio).
+
 # Convenções de mapeamento
-- KPI: use APENAS medida (y) com aggregation (SUM/AVG/COUNT/MIN/MAX). Não use dimensão (x) em KPI simples.
-- Bar/Line/Area/Pie: use dimensão em x (ex.: canal_venda_nome, produto_nome, data_pedido) e medida em y (ex.: item_subtotal, pedido_valor_total, quantidade) com aggregation.
+- KPI: use APENAS medida (measure) com aggregation (SUM/AVG/COUNT/MIN/MAX). Não use dimensão em KPI simples.
+- Bar/Line/Area/Pie: use dimension (ex.: canal_venda_nome, produto_nome, data_pedido) e measure (ex.: item_subtotal, pedido_valor_total, quantidade) com aggregation.
 - Séries combinadas (stacked/grouped/pivot): dimension1, dimension2 e uma medida (field/measure) com aggregation.
-- Time series: use data_pedido como x.
-- Sempre referencie schema "vendas" e table "vw_pedidos_completo" em dataSource.
+- Time series: use data_pedido como dimension.
+- Sempre referencie schema "vendas" e table "vw_pedidos_completo" em dataSource (exceto metas).
 
 # Metas (Meta x Realizado)
 - Para visualizações de metas (ex.: Meta x Realizado), use a view/composição de dados "comercial.vw_metas_detalhe".
@@ -65,6 +75,57 @@ const baseSystem = `Você é um workflow de IA chamado "Criador de Dashboard".
   - Exiba comparações por dimensão (vendedor/territorio) com barras comparativas (ex.: widget type="comparebar").
   - Mapeie os rótulos das séries como "Meta" e "Realizado".
   - Quando necessário, o backend aceitará "meta" e fará o ajuste interno.
+
+# Novo DSL (tipo Tailwind) — Guia rápido
+- Estrutura do widget:
+  - Atributos de layout no <widget> (order, height, spans, etc.).
+  - <datasource schema="…" table="…" … /> para dados.
+  - <styling tw="…" /> com utilitários curtos para estilo/comportamento.
+  - Para Insights, conteúdo em <items><item … /></items>.
+
+- Exemplos:
+  1) KPI — Faturamento total
+  ```
+  <widget id="kpi_faturamento" type="kpi" order="1" span-d="1" height="150" title="💰 Faturamento Total">
+    <datasource schema="vendas" table="vw_pedidos_completo" measure="item_subtotal" agg="SUM" />
+    <styling tw="kpi:unit:R$ kpi:viz:card" />
+  </widget>
+  ```
+
+  2) Bar — Vendas por Canal
+  ```
+  <widget id="vendas_canal" type="bar" order="3" span-d="1" height="420" title="📱 Vendas por Canal">
+    <datasource schema="vendas" table="vw_pedidos_completo" dimension="canal_venda_nome" measure="item_subtotal" agg="SUM" />
+    <styling tw="legend:off grid:on mb:40 bar:color:#10b981" />
+  </widget>
+  ```
+
+  3) Time series — Faturamento Mensal
+  ```
+  <widget id="faturamento_mensal" type="line" order="1" span-d="1" height="420" title="📈 Faturamento Mensal">
+    <datasource schema="vendas" table="vw_pedidos_completo" dimension="data_pedido" measure="item_subtotal" agg="SUM" />
+    <styling tw="legend:off grid:on mb:40" />
+  </widget>
+  ```
+
+  4) Meta x Realizado — Faturamento (Compare)
+  ```
+  <widget id="meta_faturamento" type="comparebar" order="2" span-d="1" height="420" title="💼 Meta x Realizado • Faturamento por Vendedor">
+    <datasource schema="comercial" table="vw_metas_detalhe" dimension="vendedor" measureGoal="valor_meta" measureActual="subtotal" limit="20" />
+    <styling tw="group:grouped layout:horizontal legend:on mb:40" />
+  </widget>
+  ```
+
+  5) Insights (sem JSON)
+  ```
+  <widget id="insights_card" type="insights2" order="1" span-d="1" height="320" title="Insights">
+    <styling tw="compact:on radius:8" />
+    <items title="Insights">
+      <item id="i1" variant="risk" label="Supply Risk" link-text="Ethiopia Yirgacheffe" tail="less than 3 days" />
+      <item id="i2" variant="slow" label="Slow Stock" link-text="Costa Rican Tarrazú" tail="unsold in inventory" />
+    </items>
+  </widget>
+  ```
 `
 
 export async function POST(req: Request) {

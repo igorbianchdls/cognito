@@ -29,6 +29,9 @@ interface CompareRequest {
   dimension: string
   where?: string
   limit?: number
+  // Standardized measures (preferred)
+  measureGoal?: string
+  measureActual?: string
   measure1?: MeasureDef
   measure2?: MeasureDef
   measure1Ratio?: MeasureRatioDef
@@ -99,7 +102,30 @@ export async function POST(request: NextRequest) {
 
     let m1Expr = m1Ratio ? ratioExpr(m1Ratio) : aggExpr(m1)
     let m2Expr = m2Ratio ? ratioExpr(m2Ratio) : aggExpr(m2)
-    if (topic) {
+
+    // Preferred: dimension + measureGoal + measureActual (no agg in payload)
+    if (!topic && (body.measureGoal || body.measureActual)) {
+      const goal = sanitizeIdent(body.measureGoal || '')
+      const actual = sanitizeIdent(body.measureActual || '')
+      // Default aggregation heuristic
+      const aggFor = (field: string): Aggregation => (field.endsWith('_id') ? 'COUNT' : 'SUM')
+
+      if (goal) m1Expr = aggExpr({ field: goal, aggregation: aggFor(goal) })
+
+      if (actual === 'novos_clientes') {
+        m2Expr = 'COUNT(DISTINCT "cliente_id")'
+      } else if (actual === 'ticket_medio') {
+        m2Expr = 'ROUND(COALESCE(SUM("subtotal"),0)::numeric / NULLIF(COUNT(DISTINCT "pedido_id"), 0), 2)'
+      } else if (actual) {
+        const aggA = aggFor(actual)
+        if (aggA === 'COUNT') {
+          m2Expr = `COUNT(DISTINCT "${actual}")`
+        } else {
+          m2Expr = `${aggA}("${actual}")`
+        }
+      }
+    } else if (topic) {
+      // Legacy: topic/meta
       switch (topic) {
         case 'novos_clientes':
           m1Expr = 'COALESCE(SUM("valor_meta"),0)'
@@ -116,8 +142,16 @@ export async function POST(request: NextRequest) {
       }
     }
     const whereClauseUser = sanitizeWhere(where)
+    // Resolve meta type from measures when topic is not provided
+    let inferredTopic: CompareTopic | undefined = topic
+    if (!inferredTopic && (body.measureGoal || body.measureActual)) {
+      const actual = sanitizeIdent(body.measureActual || '')
+      if (actual === 'novos_clientes') inferredTopic = 'novos_clientes'
+      else if (actual === 'ticket_medio') inferredTopic = 'ticket_medio'
+      else if (actual) inferredTopic = 'faturamento'
+    }
     // Build default WHERE for topics
-    const whereClauseTopic = topic ? `"tipo_meta" = '${topic}'` : ''
+    const whereClauseTopic = inferredTopic ? `"tipo_meta" = '${inferredTopic}'` : ''
     const whereClause = [whereClauseTopic, whereClauseUser].filter(Boolean).join(' AND ')
 
     const qualifiedTable = `"${qSchema}"."${qTable}"`

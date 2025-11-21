@@ -254,17 +254,17 @@ export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas"
   <!-- Exemplo: Meta x Realizado (Novos Clientes) por Vendedor -->
   <row id="10" cols-d="3" cols-t="1" cols-m="1" gap-x="16" gap-y="16">
     <widget id="meta_novos_clientes" type="comparebar" order="1" span-d="1" span-t="1" span-m="1" height="420" title="👥 Meta x Realizado • Novos Clientes por Vendedor">
-      <datasource schema="comercial" table="vw_metas_detalhe" dimension="vendedor" meta="novos_clientes" limit="20" />
+      <datasource schema="comercial" table="vw_metas_detalhe" dimension="vendedor" measureGoal="valor_meta" measureActual="novos_clientes" limit="20" />
       <styling tw="group:grouped layout:horizontal legend:on mb:40" />
     </widget>
 
     <widget id="meta_faturamento" type="comparebar" order="2" span-d="1" span-t="1" span-m="1" height="420" title="💰 Meta x Realizado • Faturamento por Vendedor">
-      <datasource schema="comercial" table="vw_metas_detalhe" dimension="vendedor" meta="faturamento" limit="20" />
+      <datasource schema="comercial" table="vw_metas_detalhe" dimension="vendedor" measureGoal="valor_meta" measureActual="subtotal" limit="20" />
       <styling tw="group:grouped layout:horizontal legend:on mb:40" />
     </widget>
 
     <widget id="meta_ticket_medio" type="comparebar" order="3" span-d="1" span-t="1" span-m="1" height="420" title="🎯 Meta x Realizado • Ticket Médio por Vendedor">
-      <datasource schema="comercial" table="vw_metas_detalhe" dimension="vendedor" meta="ticket_medio" limit="20" />
+      <datasource schema="comercial" table="vw_metas_detalhe" dimension="vendedor" measureGoal="valor_meta" measureActual="ticket_medio" limit="20" />
       <styling tw="group:grouped layout:horizontal legend:on mb:40" />
     </widget>
   </row>

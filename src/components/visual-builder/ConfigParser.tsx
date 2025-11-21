@@ -511,6 +511,8 @@ export class ConfigParser {
       setStr('dimension2', attrs['dimension2']);
       setStr('dimension', attrs['dimension']);
       setStr('measure', attrs['measure']);
+      setStr('measureGoal', attrs['measureGoal']);
+      setStr('measureActual', attrs['measureActual']);
       setStr('field', attrs['field']);
       setStr('topic', attrs['topic']);
       setStr('meta', attrs['meta']);

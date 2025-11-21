@@ -261,10 +261,18 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
         console.log('📊 Fetching grouped data for widget:', widget.id);
 
         const endpoint = widget.type === 'comparebar' ? '/api/dashboard-supabase/compare' : '/api/dashboard-supabase/grouped';
-        // For comparebar, map dataSource.meta -> topic (API expects `topic`)
+        // For comparebar, prefer standardized fields: dimension, measureGoal, measureActual.
+        // Fallback to meta/topic if measures are not provided.
         const dsAny = (widget.dataSource || {}) as Record<string, unknown>;
         const payload = widget.type === 'comparebar'
-          ? { ...dsAny, topic: (dsAny['topic'] as unknown) ?? (dsAny['meta'] as unknown), filters: globalFilters }
+          ? {
+              ...dsAny,
+              ...(dsAny['measureGoal'] || dsAny['measureActual']
+                ? {}
+                : { topic: (dsAny['topic'] as unknown) ?? (dsAny['meta'] as unknown) }
+              ),
+              filters: globalFilters
+            }
           : { ...dsAny, filters: globalFilters };
         const response = await fetch(endpoint, {
           method: 'POST',
