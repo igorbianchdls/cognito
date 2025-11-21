@@ -100,9 +100,14 @@ export default function NexusHeader({ viewMode, onChangeViewMode, showBreadcrumb
             type="button"
             aria-label="Conta"
             title="Conta"
-            className="h-9 w-9 rounded-full ring-2 ring-white"
+            className="h-8 w-8 rounded-full ring-2 ring-white overflow-hidden"
           >
-            <div className="h-full w-full rounded-full bg-[conic-gradient(at_50%_50%,#6366f1_0%,#22c55e_50%,#ec4899_100%)]" />
+            <img
+              src="https://i.pravatar.cc/80?img=12"
+              alt="Avatar"
+              className="h-full w-full object-cover"
+              loading="lazy"
+            />
           </button>
         </div>
       </div>
