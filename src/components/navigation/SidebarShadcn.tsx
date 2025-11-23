@@ -5,8 +5,8 @@ import { usePathname } from "next/navigation"
 import {
   MessageSquare,
   LayoutGrid,
-  GalleryVerticalEnd,
   Plug,
+  Cpu,
 } from "lucide-react"
 
 import MetaIcon from "@/components/icons/MetaIcon"
@@ -79,7 +79,7 @@ const navigationData = {
   teams: [
     {
       name: "Creatto",
-      logo: GalleryVerticalEnd,
+      logo: Cpu,
       plan: "Professional",
     },
   ],
