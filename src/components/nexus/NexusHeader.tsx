@@ -79,7 +79,7 @@ export default function NexusHeader({ viewMode, onChangeViewMode, showBreadcrumb
         </DropdownMenu>
 
         {/* Quick actions cluster to the right of the selector */}
-        <div className="flex items-center gap-2 pl-3 border-l">
+        <div className="flex items-center gap-2">
           {/* Notifications */}
           <button
             type="button"
