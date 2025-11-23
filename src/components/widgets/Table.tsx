@@ -74,6 +74,8 @@ interface DataTableProps<TData extends TableData> {
   borderWidth?: number
   fontSize?: number
   padding?: number
+  // Header padding (if different from cell padding)
+  headerPadding?: number
   // Header typography props
   headerFontSize?: number
   headerFontFamily?: string
@@ -166,6 +168,7 @@ export function DataTable<TData extends TableData>({
   borderWidth = 1,
   fontSize = 14,
   padding = 12,
+  headerPadding,
   // Header typography props with defaults
   headerFontSize = 14,
   headerFontFamily = 'inherit',
@@ -547,7 +550,7 @@ export function DataTable<TData extends TableData>({
                         key={header.id}
                         style={{ 
                           color: headerTextColor,
-                          padding: header.column.id === 'select' ? '4px' : `${padding}px`,
+                          padding: header.column.id === 'select' ? '4px' : `${(headerPadding ?? padding)}px`,
                           width: header.getSize(),
                           position: 'relative',
                           fontSize: `${headerFontSize}px`,

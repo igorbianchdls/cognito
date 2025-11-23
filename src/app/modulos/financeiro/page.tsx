@@ -526,6 +526,7 @@ export default function ModulosFinanceiroPage() {
                   key={tabs.selected}
                   columns={columns}
                   data={data}
+                  headerPadding={6}
                   enableExpand={tabs.selected === 'extrato'}
                   renderDetail={tabs.selected === 'extrato' ? (row => {
                     type ExtratoTransacao = {
