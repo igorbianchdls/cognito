@@ -28,7 +28,7 @@ export const categories = [
   'All',
   'Fors',
   's', 
-  'Ls',
+  's',
   'e',
   'Comts',
   'Logi & gn Up',
