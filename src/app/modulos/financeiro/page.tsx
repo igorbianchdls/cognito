@@ -551,6 +551,8 @@ export default function ModulosFinanceiroPage() {
                     metodo_pagamento_nome: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
                     // Cliente (Contas a Receber e Pagamentos Recebidos)
                     cliente_nome: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 140 },
+                    // Banco (Extrato)
+                    banco: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 140 },
                   }}
                   enableExpand={tabs.selected === 'extrato'}
                   renderDetail={tabs.selected === 'extrato' ? (row => {
