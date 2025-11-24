@@ -527,7 +527,7 @@ export default function ModulosFinanceiroPage() {
                   key={tabs.selected}
                   columns={columns}
                   data={data}
-                  headerPadding={6}
+                  headerPadding={8}
                   columnOptions={{
                     // Fornecedor (diversas visões)
                     fornecedor_nome: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
