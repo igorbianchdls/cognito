@@ -14,6 +14,7 @@ import DataToolbar from '@/components/modulos/DataToolbar'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/stores/modulos/moduleUiStore'
 import type { Opcao } from '@/components/modulos/TabsNav'
 import { CreditCard, ArrowDownCircle, ArrowUpCircle, List, Landmark, Wallet, Activity, CheckCheck, Receipt, Building2, FileText, Calendar, CalendarClock, DollarSign, CheckCircle2, Tag, Folder, PieChart, Building, User } from 'lucide-react'
+import DocumentViewer from '@/components/documentos/DocumentViewer'
 import IconLabelHeader from '@/components/widgets/IconLabelHeader'
 import EntityDisplay from '@/components/modulos/EntityDisplay'
 import StatusBadge from '@/components/modulos/StatusBadge'
@@ -275,8 +276,25 @@ export default function ModulosFinanceiroPage() {
             cell: ({ row }) => {
               const raw = (row.original['descricao_conta'] ?? row.original['descricao']) as unknown
               const text = raw ? String(raw) : 'Sem descrição'
+              const mockUrl = 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf'
+              const handleClick: React.MouseEventHandler<HTMLDivElement> = (e) => {
+                if (e.altKey) {
+                  window.open(mockUrl, '_blank', 'noopener,noreferrer')
+                  return
+                }
+                setDocUrl(mockUrl)
+                setDocName(text || 'documento.pdf')
+                setDocType('application/pdf')
+                setDocViewerOpen(true)
+              }
               return (
-                <div className="flex items-center gap-2 min-w-0" title={text}>
+                <div
+                  className="flex items-center gap-2 min-w-0 cursor-pointer hover:opacity-90"
+                  title={text}
+                  onClick={handleClick}
+                  role="button"
+                  aria-label={`Abrir documento: ${text}`}
+                >
                   <FileText className="h-4 w-4 text-gray-500 shrink-0" aria-hidden="true" />
                   <span className="truncate">{text}</span>
                 </div>
@@ -305,6 +323,12 @@ export default function ModulosFinanceiroPage() {
   const [page, setPage] = useState<number>(1)
   const [pageSize, setPageSize] = useState<number>(20)
   const [total, setTotal] = useState<number>(0)
+
+  // Visualizador de Documento (mock)
+  const [docViewerOpen, setDocViewerOpen] = useState(false)
+  const [docUrl, setDocUrl] = useState<string | null>(null)
+  const [docName, setDocName] = useState<string | null>(null)
+  const [docType, setDocType] = useState<string | null>(null)
 
   // Editor (fornecedor + conta)
   const [editorOpen, setEditorOpen] = useState(false)
@@ -670,6 +694,13 @@ export default function ModulosFinanceiroPage() {
         bancoId={selectedBancoId}
         prefill={bancoPrefill}
         onSaved={() => setReloadKey((k) => k + 1)}
+      />
+      <DocumentViewer
+        open={docViewerOpen}
+        onOpenChange={setDocViewerOpen}
+        url={docUrl ?? undefined}
+        fileName={docName ?? undefined}
+        contentType={docType ?? undefined}
       />
     </SidebarProvider>
   )
