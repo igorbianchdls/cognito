@@ -142,8 +142,8 @@ export default function StatusBadge({ value, type }: StatusBadgeProps) {
       style={{
         display: 'inline-flex',
         alignItems: 'center',
-        padding: '4px 12px',
-        borderRadius: 9999,
+        padding: '4px 4px',
+        borderRadius: 2,
         fontSize: 12,
         fontWeight: 500,
         backgroundColor: bgColor,
