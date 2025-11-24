@@ -12,7 +12,8 @@ import TabsNav, { type Opcao } from '@/components/modulos/TabsNav'
 import DataToolbar from '@/components/modulos/DataToolbar'
 import DataTable, { type TableData } from '@/components/widgets/Table'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/stores/modulos/moduleUiStore'
-import { List } from 'lucide-react'
+import { List, Building2, Tag, FileText, Globe, MapPin, Flag, CheckCircle2, BookOpen, Briefcase } from 'lucide-react'
+import IconLabelHeader from '@/components/widgets/IconLabelHeader'
 import { Button } from '@/components/ui/button'
 
 import CadastroEmpresaSheet from '@/components/empresa/CadastroEmpresaSheet'
@@ -77,45 +78,45 @@ export default function ModulosEmpresaPage() {
     switch (tabs.selected) {
       case 'dados':
         return [
-          { accessorKey: 'razao_social', header: 'Razão Social' },
-          { accessorKey: 'nome_fantasia', header: 'Nome Fantasia' },
-          { accessorKey: 'cnpj', header: 'CNPJ' },
-          { accessorKey: 'inscricao_estadual', header: 'Inscrição Estadual' },
-          { accessorKey: 'regime_tributario', header: 'Regime Tributário' },
-          { accessorKey: 'endereco', header: 'Endereço' },
-          { accessorKey: 'cidade', header: 'Cidade' },
-          { accessorKey: 'estado', header: 'Estado' },
-          { accessorKey: 'pais', header: 'País' },
-          { accessorKey: 'ativo', header: 'Ativo' },
+          { accessorKey: 'razao_social', header: () => <IconLabelHeader icon={<Building2 className="h-3.5 w-3.5" />} label="Razão Social" /> },
+          { accessorKey: 'nome_fantasia', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Nome Fantasia" /> },
+          { accessorKey: 'cnpj', header: () => <IconLabelHeader icon={<FileText className="h-3.5 w-3.5" />} label="CNPJ" /> },
+          { accessorKey: 'inscricao_estadual', header: () => <IconLabelHeader icon={<FileText className="h-3.5 w-3.5" />} label="Inscrição Estadual" /> },
+          { accessorKey: 'regime_tributario', header: () => <IconLabelHeader icon={<BookOpen className="h-3.5 w-3.5" />} label="Regime Tributário" /> },
+          { accessorKey: 'endereco', header: () => <IconLabelHeader icon={<MapPin className="h-3.5 w-3.5" />} label="Endereço" /> },
+          { accessorKey: 'cidade', header: () => <IconLabelHeader icon={<MapPin className="h-3.5 w-3.5" />} label="Cidade" /> },
+          { accessorKey: 'estado', header: () => <IconLabelHeader icon={<Flag className="h-3.5 w-3.5" />} label="Estado" /> },
+          { accessorKey: 'pais', header: () => <IconLabelHeader icon={<Globe className="h-3.5 w-3.5" />} label="País" /> },
+          { accessorKey: 'ativo', header: () => <IconLabelHeader icon={<CheckCircle2 className="h-3.5 w-3.5" />} label="Ativo" /> },
         ]
       case 'filiais':
         return [
-          { accessorKey: 'codigo', header: 'Código' },
-          { accessorKey: 'nome', header: 'Nome' },
-          { accessorKey: 'cnpj', header: 'CNPJ' },
-          { accessorKey: 'inscricao_estadual', header: 'Inscrição Estadual' },
-          { accessorKey: 'endereco', header: 'Endereço' },
-          { accessorKey: 'cidade', header: 'Cidade' },
-          { accessorKey: 'estado', header: 'Estado' },
-          { accessorKey: 'pais', header: 'País' },
-          { accessorKey: 'matriz', header: 'Matriz' },
-          { accessorKey: 'ativo', header: 'Ativo' },
+          { accessorKey: 'codigo', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Código" /> },
+          { accessorKey: 'nome', header: () => <IconLabelHeader icon={<Building2 className="h-3.5 w-3.5" />} label="Nome" /> },
+          { accessorKey: 'cnpj', header: () => <IconLabelHeader icon={<FileText className="h-3.5 w-3.5" />} label="CNPJ" /> },
+          { accessorKey: 'inscricao_estadual', header: () => <IconLabelHeader icon={<FileText className="h-3.5 w-3.5" />} label="Inscrição Estadual" /> },
+          { accessorKey: 'endereco', header: () => <IconLabelHeader icon={<MapPin className="h-3.5 w-3.5" />} label="Endereço" /> },
+          { accessorKey: 'cidade', header: () => <IconLabelHeader icon={<MapPin className="h-3.5 w-3.5" />} label="Cidade" /> },
+          { accessorKey: 'estado', header: () => <IconLabelHeader icon={<Flag className="h-3.5 w-3.5" />} label="Estado" /> },
+          { accessorKey: 'pais', header: () => <IconLabelHeader icon={<Globe className="h-3.5 w-3.5" />} label="País" /> },
+          { accessorKey: 'matriz', header: () => <IconLabelHeader icon={<Building2 className="h-3.5 w-3.5" />} label="Matriz" /> },
+          { accessorKey: 'ativo', header: () => <IconLabelHeader icon={<CheckCircle2 className="h-3.5 w-3.5" />} label="Ativo" /> },
         ]
       case 'departamentos':
         return [
-          { accessorKey: 'codigo', header: 'Código' },
-          { accessorKey: 'nome', header: 'Nome' },
-          { accessorKey: 'responsavel', header: 'Responsável' },
-          { accessorKey: 'ativo', header: 'Ativo' },
+          { accessorKey: 'codigo', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Código" /> },
+          { accessorKey: 'nome', header: () => <IconLabelHeader icon={<Briefcase className="h-3.5 w-3.5" />} label="Nome" /> },
+          { accessorKey: 'responsavel', header: () => <IconLabelHeader icon={<Briefcase className="h-3.5 w-3.5" />} label="Responsável" /> },
+          { accessorKey: 'ativo', header: () => <IconLabelHeader icon={<CheckCircle2 className="h-3.5 w-3.5" />} label="Ativo" /> },
         ]
       case 'cargos':
       default:
         return [
-          { accessorKey: 'codigo', header: 'Código' },
-          { accessorKey: 'nome', header: 'Nome' },
-          { accessorKey: 'nivel', header: 'Nível' },
-          { accessorKey: 'descricao', header: 'Descrição' },
-          { accessorKey: 'ativo', header: 'Ativo' },
+          { accessorKey: 'codigo', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Código" /> },
+          { accessorKey: 'nome', header: () => <IconLabelHeader icon={<Briefcase className="h-3.5 w-3.5" />} label="Nome" /> },
+          { accessorKey: 'nivel', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Nível" /> },
+          { accessorKey: 'descricao', header: () => <IconLabelHeader icon={<FileText className="h-3.5 w-3.5" />} label="Descrição" /> },
+          { accessorKey: 'ativo', header: () => <IconLabelHeader icon={<CheckCircle2 className="h-3.5 w-3.5" />} label="Ativo" /> },
         ]
     }
   }, [tabs.selected])
@@ -284,6 +285,20 @@ export default function ModulosEmpresaPage() {
                   key={tabs.selected}
                   columns={columns}
                   data={data}
+                  columnOptions={{
+                    // Dados cadastrais
+                    razao_social: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 160 },
+                    nome_fantasia: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 160 },
+                    regime_tributario: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 160 },
+                    endereco: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 180 },
+                    cidade: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 140 },
+                    estado: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
+                    pais: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
+                    // Filiais / Departamentos / Cargos
+                    nome: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 160 },
+                    responsavel: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 160 },
+                    descricao: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 180 },
+                  }}
                   enableSearch={tabelaUI.enableSearch}
                   showColumnToggle={tabelaUI.enableColumnToggle}
                   showPagination={tabelaUI.showPagination}

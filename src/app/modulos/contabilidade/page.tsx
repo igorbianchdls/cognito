@@ -13,7 +13,8 @@ import DRETable from '@/components/relatorios/DRETable'
 import BalanceTAccountView from '@/components/contabilidade/BalanceTAccountView'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
-import { FileText, Landmark, BarChart3, BookOpen, Wrench } from 'lucide-react'
+import { FileText, Landmark, BarChart3, BookOpen, Wrench, Calendar, CalendarClock, CheckCircle2, DollarSign, Tag, Briefcase } from 'lucide-react'
+import IconLabelHeader from '@/components/widgets/IconLabelHeader'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/stores/modulos/moduleUiStore'
 
 type Row = TableData
@@ -139,15 +140,15 @@ export default function ModulosContabilidadePage() {
     switch (tabs.selected) {
       case 'lancamentos':
         return [
-          { accessorKey: 'data_lancamento', header: 'Data', cell: ({ row }) => formatDate(row.original['data_lancamento']) },
-          { accessorKey: 'historico', header: 'Histórico' },
-          { accessorKey: 'linha_id', header: 'Linha' },
-          { accessorKey: 'conta_id', header: 'Conta' },
-          { accessorKey: 'debito', header: 'Débito', cell: ({ row }) => formatBRL(row.original['debito']) },
-          { accessorKey: 'credito', header: 'Crédito', cell: ({ row }) => formatBRL(row.original['credito']) },
-          { accessorKey: 'historico_linha', header: 'Histórico Linha' },
-          { accessorKey: 'total_debitos', header: 'Total Débitos', cell: ({ row }) => formatBRL(row.original['total_debitos']) },
-          { accessorKey: 'total_creditos', header: 'Total Créditos', cell: ({ row }) => formatBRL(row.original['total_creditos']) },
+          { accessorKey: 'data_lancamento', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Data" />, cell: ({ row }) => formatDate(row.original['data_lancamento']) },
+          { accessorKey: 'historico', header: () => <IconLabelHeader icon={<FileText className="h-3.5 w-3.5" />} label="Histórico" /> },
+          { accessorKey: 'linha_id', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Linha" /> },
+          { accessorKey: 'conta_id', header: () => <IconLabelHeader icon={<BookOpen className="h-3.5 w-3.5" />} label="Conta" /> },
+          { accessorKey: 'debito', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Débito" />, cell: ({ row }) => formatBRL(row.original['debito']) },
+          { accessorKey: 'credito', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Crédito" />, cell: ({ row }) => formatBRL(row.original['credito']) },
+          { accessorKey: 'historico_linha', header: () => <IconLabelHeader icon={<FileText className="h-3.5 w-3.5" />} label="Histórico Linha" /> },
+          { accessorKey: 'total_debitos', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Total Débitos" />, cell: ({ row }) => formatBRL(row.original['total_debitos']) },
+          { accessorKey: 'total_creditos', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Total Créditos" />, cell: ({ row }) => formatBRL(row.original['total_creditos']) },
         ]
       case 'balanco-patrimonial':
         return [
@@ -187,15 +188,15 @@ export default function ModulosContabilidadePage() {
         ]
       case 'plano-contas':
         return [
-          { accessorKey: 'codigo', header: 'Código' },
-          { accessorKey: 'nome', header: 'Nome' },
-          { accessorKey: 'grupo_principal', header: 'Grupo' },
-          { accessorKey: 'nivel', header: 'Nível' },
-          { accessorKey: 'aceita_lancamento', header: 'Aceita Lançamento' },
-          { accessorKey: 'codigo_pai', header: 'Código Pai' },
-          { accessorKey: 'conta_pai', header: 'Conta Pai' },
-          { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em']) },
-          { accessorKey: 'atualizado_em', header: 'Atualizado em', cell: ({ row }) => formatDate(row.original['atualizado_em']) },
+          { accessorKey: 'codigo', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Código" /> },
+          { accessorKey: 'nome', header: () => <IconLabelHeader icon={<BookOpen className="h-3.5 w-3.5" />} label="Nome" /> },
+          { accessorKey: 'grupo_principal', header: () => <IconLabelHeader icon={<Briefcase className="h-3.5 w-3.5" />} label="Grupo" /> },
+          { accessorKey: 'nivel', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Nível" /> },
+          { accessorKey: 'aceita_lancamento', header: () => <IconLabelHeader icon={<CheckCircle2 className="h-3.5 w-3.5" />} label="Aceita Lançamento" /> },
+          { accessorKey: 'codigo_pai', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Código Pai" /> },
+          { accessorKey: 'conta_pai', header: () => <IconLabelHeader icon={<BookOpen className="h-3.5 w-3.5" />} label="Conta Pai" /> },
+          { accessorKey: 'criado_em', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Criado em" />, cell: ({ row }) => formatDate(row.original['criado_em']) },
+          { accessorKey: 'atualizado_em', header: () => <IconLabelHeader icon={<CalendarClock className="h-3.5 w-3.5" />} label="Atualizado em" />, cell: ({ row }) => formatDate(row.original['atualizado_em']) },
         ]
       case 'categorias':
         return [
@@ -215,18 +216,18 @@ export default function ModulosContabilidadePage() {
         ]
       case 'regras-contabeis':
         return [
-          { accessorKey: 'id', header: 'ID' },
-          { accessorKey: 'origem', header: 'Origem' },
-          { accessorKey: 'subtipo', header: 'Subtipo' },
-          { accessorKey: 'categoria_financeira', header: 'Categoria' },
-          { accessorKey: 'codigo_conta_debito', header: 'Cód. Débito' },
-          { accessorKey: 'conta_debito', header: 'Conta Débito' },
-          { accessorKey: 'codigo_conta_credito', header: 'Cód. Crédito' },
-          { accessorKey: 'conta_credito', header: 'Conta Crédito' },
-          { accessorKey: 'descricao', header: 'Descrição' },
-          { accessorKey: 'automatico', header: 'Automático' },
-          { accessorKey: 'ativo', header: 'Ativo' },
-          { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em']) },
+          { accessorKey: 'id', header: () => <IconLabelHeader icon={<Wrench className="h-3.5 w-3.5" />} label="ID" /> },
+          { accessorKey: 'origem', header: () => <IconLabelHeader icon={<FileText className="h-3.5 w-3.5" />} label="Origem" /> },
+          { accessorKey: 'subtipo', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Subtipo" /> },
+          { accessorKey: 'categoria_financeira', header: () => <IconLabelHeader icon={<Briefcase className="h-3.5 w-3.5" />} label="Categoria" /> },
+          { accessorKey: 'codigo_conta_debito', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Cód. Débito" /> },
+          { accessorKey: 'conta_debito', header: () => <IconLabelHeader icon={<BookOpen className="h-3.5 w-3.5" />} label="Conta Débito" /> },
+          { accessorKey: 'codigo_conta_credito', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Cód. Crédito" /> },
+          { accessorKey: 'conta_credito', header: () => <IconLabelHeader icon={<BookOpen className="h-3.5 w-3.5" />} label="Conta Crédito" /> },
+          { accessorKey: 'descricao', header: () => <IconLabelHeader icon={<FileText className="h-3.5 w-3.5" />} label="Descrição" /> },
+          { accessorKey: 'automatico', header: () => <IconLabelHeader icon={<CheckCircle2 className="h-3.5 w-3.5" />} label="Automático" /> },
+          { accessorKey: 'ativo', header: () => <IconLabelHeader icon={<CheckCircle2 className="h-3.5 w-3.5" />} label="Ativo" /> },
+          { accessorKey: 'criado_em', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Criado em" />, cell: ({ row }) => formatDate(row.original['criado_em']) },
         ]
       default:
         return [

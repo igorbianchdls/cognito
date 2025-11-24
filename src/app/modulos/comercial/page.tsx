@@ -12,7 +12,8 @@ import TabsNav, { type Opcao } from '@/components/modulos/TabsNav'
 import DataToolbar from '@/components/modulos/DataToolbar'
 import DataTable, { type TableData } from '@/components/widgets/Table'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/stores/modulos/moduleUiStore'
-import { List } from 'lucide-react'
+import { List, Users, Briefcase, LayoutGrid, Calendar, CalendarClock, CheckCircle2, DollarSign, Tag, TrendingUp, FileText } from 'lucide-react'
+import IconLabelHeader from '@/components/widgets/IconLabelHeader'
 
 type Row = TableData
 
@@ -241,35 +242,35 @@ export default function ModulosComercialPage() {
         ]
       case 'desempenho':
         return [
-          { accessorKey: 'vendedor', header: 'Vendedor' },
-          { accessorKey: 'ano', header: 'Ano' },
-          { accessorKey: 'mes', header: 'Mês' },
-          { accessorKey: 'valor_meta', header: 'Meta' },
-          { accessorKey: 'realizado', header: 'Realizado' },
-          { accessorKey: 'diferenca', header: 'Diferença' },
-          { accessorKey: 'atingimento_percentual', header: 'Atingimento (%)', cell: ({ getValue }) => formatPercent(getValue()) },
+          { accessorKey: 'vendedor', header: () => <IconLabelHeader icon={<Users className="h-3.5 w-3.5" />} label="Vendedor" /> },
+          { accessorKey: 'ano', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Ano" /> },
+          { accessorKey: 'mes', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Mês" /> },
+          { accessorKey: 'valor_meta', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Meta" /> },
+          { accessorKey: 'realizado', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Realizado" /> },
+          { accessorKey: 'diferenca', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Diferença" /> },
+          { accessorKey: 'atingimento_percentual', header: () => <IconLabelHeader icon={<TrendingUp className="h-3.5 w-3.5" />} label="Atingimento (%)" />, cell: ({ getValue }) => formatPercent(getValue()) },
         ]
       case 'tipos_metas':
         return [
-          { accessorKey: 'tipo_meta_id', header: 'ID' },
-          { accessorKey: 'tipo_meta_nome', header: 'Nome' },
-          { accessorKey: 'descricao', header: 'Descrição' },
-          { accessorKey: 'tipo_valor', header: 'Tipo Valor' },
-          { accessorKey: 'medida_sql', header: 'Medida SQL' },
-          { accessorKey: 'ativo', header: 'Ativo' },
-          { accessorKey: 'criado_em', header: 'Criado Em', cell: ({ getValue }) => formatDate(getValue()) },
-          { accessorKey: 'atualizado_em', header: 'Atualizado Em', cell: ({ getValue }) => formatDate(getValue()) },
+          { accessorKey: 'tipo_meta_id', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="ID" /> },
+          { accessorKey: 'tipo_meta_nome', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Nome" /> },
+          { accessorKey: 'descricao', header: () => <IconLabelHeader icon={<FileText className="h-3.5 w-3.5" />} label="Descrição" /> },
+          { accessorKey: 'tipo_valor', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Tipo Valor" /> },
+          { accessorKey: 'medida_sql', header: () => <IconLabelHeader icon={<FileText className="h-3.5 w-3.5" />} label="Medida SQL" /> },
+          { accessorKey: 'ativo', header: () => <IconLabelHeader icon={<CheckCircle2 className="h-3.5 w-3.5" />} label="Ativo" /> },
+          { accessorKey: 'criado_em', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Criado Em" />, cell: ({ getValue }) => formatDate(getValue()) },
+          { accessorKey: 'atualizado_em', header: () => <IconLabelHeader icon={<CalendarClock className="h-3.5 w-3.5" />} label="Atualizado Em" />, cell: ({ getValue }) => formatDate(getValue()) },
         ]
       case 'campanhas_vendas':
         return [
-          { accessorKey: 'campanha', header: 'Campanha' },
-          { accessorKey: 'tipo', header: 'Tipo' },
-          { accessorKey: 'descricao', header: 'Descrição' },
-          { accessorKey: 'data_inicio', header: 'Data Início', cell: ({ getValue }) => formatDate(getValue()) },
-          { accessorKey: 'data_fim', header: 'Data Fim', cell: ({ getValue }) => formatDate(getValue()) },
-          { accessorKey: 'ativo', header: 'Ativo' },
-          { accessorKey: 'criado_em', header: 'Criado Em', cell: ({ getValue }) => formatDate(getValue()) },
-          { accessorKey: 'atualizado_em', header: 'Atualizado Em', cell: ({ getValue }) => formatDate(getValue()) },
+          { accessorKey: 'campanha', header: () => <IconLabelHeader icon={<Briefcase className="h-3.5 w-3.5" />} label="Campanha" /> },
+          { accessorKey: 'tipo', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Tipo" /> },
+          { accessorKey: 'descricao', header: () => <IconLabelHeader icon={<FileText className="h-3.5 w-3.5" />} label="Descrição" /> },
+          { accessorKey: 'data_inicio', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Data Início" />, cell: ({ getValue }) => formatDate(getValue()) },
+          { accessorKey: 'data_fim', header: () => <IconLabelHeader icon={<CalendarClock className="h-3.5 w-3.5" />} label="Data Fim" />, cell: ({ getValue }) => formatDate(getValue()) },
+          { accessorKey: 'ativo', header: () => <IconLabelHeader icon={<CheckCircle2 className="h-3.5 w-3.5" />} label="Ativo" /> },
+          { accessorKey: 'criado_em', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Criado Em" />, cell: ({ getValue }) => formatDate(getValue()) },
+          { accessorKey: 'atualizado_em', header: () => <IconLabelHeader icon={<CalendarClock className="h-3.5 w-3.5" />} label="Atualizado Em" />, cell: ({ getValue }) => formatDate(getValue()) },
         ]
       default:
         return []
@@ -466,6 +467,13 @@ export default function ModulosComercialPage() {
                         ? data.filter(r => Boolean(r['parent_flag']))
                         : data
                   }
+                  columnOptions={{
+                    territorio: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 160 },
+                    vendedor: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 160 },
+                    tipo_meta: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 140 },
+                    campanha: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 160 },
+                    descricao: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 180 },
+                  }}
                   enableExpand={tabs.selected === 'campanhas_vendas' || tabs.selected === 'metas' || tabs.selected === 'desempenho' || tabs.selected === 'metas_territorios'}
                   renderDetail={
                     tabs.selected === 'campanhas_vendas'
