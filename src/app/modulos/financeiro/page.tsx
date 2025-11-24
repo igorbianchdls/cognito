@@ -527,6 +527,10 @@ export default function ModulosFinanceiroPage() {
                   columns={columns}
                   data={data}
                   headerPadding={6}
+                  columnOptions={{
+                    fornecedor_nome: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
+                    fornecedor: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
+                  }}
                   enableExpand={tabs.selected === 'extrato'}
                   renderDetail={tabs.selected === 'extrato' ? (row => {
                     type ExtratoTransacao = {

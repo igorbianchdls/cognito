@@ -81,6 +81,15 @@ interface DataTableProps<TData extends TableData> {
   headerFontFamily?: string
   headerFontWeight?: string
   headerLetterSpacing?: number
+  // Per-column options
+  columnOptions?: Record<string, {
+    headerNoWrap?: boolean
+    cellNoWrap?: boolean
+    widthMode?: 'auto' | 'fixed'
+    fixedWidth?: number
+    minWidth?: number
+    maxWidth?: number
+  }>
   // Cell typography props
   cellFontSize?: number
   cellFontFamily?: string
@@ -174,6 +183,7 @@ export function DataTable<TData extends TableData>({
   headerFontFamily = 'inherit',
   headerFontWeight = 'normal',
   headerLetterSpacing,
+  columnOptions,
   // Cell typography props with defaults
   cellFontSize = 14,
   cellFontFamily = 'inherit',
@@ -551,7 +561,13 @@ export function DataTable<TData extends TableData>({
                         style={{ 
                           color: headerTextColor,
                           padding: header.column.id === 'select' ? '4px' : `${(headerPadding ?? padding)}px`,
-                          width: header.getSize(),
+                          width: (columnOptions && columnOptions[header.column.id]?.widthMode === 'auto')
+                            ? undefined
+                            : (columnOptions && columnOptions[header.column.id]?.widthMode === 'fixed' && typeof columnOptions[header.column.id]?.fixedWidth === 'number')
+                              ? columnOptions[header.column.id]!.fixedWidth
+                              : header.getSize(),
+                          minWidth: columnOptions?.[header.column.id]?.minWidth,
+                          maxWidth: columnOptions?.[header.column.id]?.maxWidth,
                           position: 'relative',
                           fontSize: `${headerFontSize}px`,
                           fontFamily: headerFontFamily !== 'inherit' ? headerFontFamily : undefined,
@@ -559,6 +575,9 @@ export function DataTable<TData extends TableData>({
                           borderColor,
                           letterSpacing: typeof headerLetterSpacing === 'number' ? `${headerLetterSpacing}px` : undefined,
                           textAlign: header.column.id === 'select' ? 'center' as const : undefined,
+                          whiteSpace: columnOptions?.[header.column.id]?.headerNoWrap ? 'nowrap' : undefined,
+                          overflow: columnOptions?.[header.column.id]?.headerNoWrap ? 'hidden' : undefined,
+                          textOverflow: columnOptions?.[header.column.id]?.headerNoWrap ? 'ellipsis' : undefined,
                         }}
                       >
                         {header.isPlaceholder
@@ -656,6 +675,16 @@ export function DataTable<TData extends TableData>({
                             position: 'relative',
                             letterSpacing: typeof cellLetterSpacing === 'number' ? `${cellLetterSpacing}px` : undefined,
                             textAlign: columnKey === 'select' ? 'center' as const : undefined,
+                            width: (columnOptions && columnOptions[columnKey]?.widthMode === 'auto')
+                              ? undefined
+                              : (columnOptions && columnOptions[columnKey]?.widthMode === 'fixed' && typeof columnOptions[columnKey]?.fixedWidth === 'number')
+                                ? columnOptions[columnKey]!.fixedWidth
+                                : undefined,
+                            minWidth: columnOptions?.[columnKey]?.minWidth,
+                            maxWidth: columnOptions?.[columnKey]?.maxWidth,
+                            whiteSpace: columnOptions?.[columnKey]?.cellNoWrap ? 'nowrap' : undefined,
+                            overflow: columnOptions?.[columnKey]?.cellNoWrap ? 'hidden' : undefined,
+                            textOverflow: columnOptions?.[columnKey]?.cellNoWrap ? 'ellipsis' : undefined,
                           }}
                           onClick={(e) => {
                             if (editTrigger === 'click' && !isEditing) {
