@@ -13,7 +13,7 @@ import DataTable, { type TableData } from '@/components/widgets/Table'
 import DataToolbar from '@/components/modulos/DataToolbar'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/stores/modulos/moduleUiStore'
 import type { Opcao } from '@/components/modulos/TabsNav'
-import { CreditCard, ArrowDownCircle, ArrowUpCircle, List, Landmark, Wallet, Activity, CheckCheck, Receipt, Building2, FileText, Calendar, CalendarClock, DollarSign, CheckCircle2, Tag, Folder, PieChart, Building } from 'lucide-react'
+import { CreditCard, ArrowDownCircle, ArrowUpCircle, List, Landmark, Wallet, Activity, CheckCheck, Receipt, Building2, FileText, Calendar, CalendarClock, DollarSign, CheckCircle2, Tag, Folder, PieChart, Building, User } from 'lucide-react'
 import IconLabelHeader from '@/components/widgets/IconLabelHeader'
 import EntityDisplay from '@/components/modulos/EntityDisplay'
 import StatusBadge from '@/components/modulos/StatusBadge'
@@ -168,7 +168,7 @@ export default function ModulosFinanceiroPage() {
         return [
           {
             accessorKey: 'cliente_nome',
-            header: 'Cliente',
+            header: () => <IconLabelHeader icon={<User className="h-3.5 w-3.5" />} label="Cliente" />,
             cell: ({ row }) => (
               <EntityDisplay
                 name={row.original['cliente_nome'] ? String(row.original['cliente_nome']) : 'Sem nome'}
@@ -179,24 +179,24 @@ export default function ModulosFinanceiroPage() {
               />
             )
           },
-          { accessorKey: 'descricao_conta', header: 'Descrição' },
-          { accessorKey: 'data_lancamento', header: 'Lançamento', cell: ({ row }) => formatDate(row.original['data_lancamento']) },
-          { accessorKey: 'data_vencimento', header: 'Vencimento', cell: ({ row }) => formatDate(row.original['data_vencimento']) },
-          { accessorKey: 'valor_a_receber', header: 'Valor', cell: ({ row }) => formatBRL(row.original['valor_a_receber']) },
-          { accessorKey: 'status_conta', header: 'Status', cell: ({ row }) => <StatusBadge value={row.original['status_conta']} type="status" /> },
-          { accessorKey: 'tipo_conta', header: 'Tipo' },
-          { accessorKey: 'observacao', header: 'Observação' },
-          { accessorKey: 'categoria_nome', header: 'Categoria' },
-          { accessorKey: 'centro_lucro_nome', header: 'Centro de Lucro' },
-          { accessorKey: 'departamento_nome', header: 'Departamento' },
-          { accessorKey: 'filial_nome', header: 'Filial' },
-          { accessorKey: 'projeto_nome', header: 'Projeto' },
+          { accessorKey: 'descricao_conta', header: () => <IconLabelHeader icon={<FileText className="h-3.5 w-3.5" />} label="Descrição" /> },
+          { accessorKey: 'data_lancamento', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Lançamento" />, cell: ({ row }) => formatDate(row.original['data_lancamento']) },
+          { accessorKey: 'data_vencimento', header: () => <IconLabelHeader icon={<CalendarClock className="h-3.5 w-3.5" />} label="Vencimento" />, cell: ({ row }) => formatDate(row.original['data_vencimento']) },
+          { accessorKey: 'valor_a_receber', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Valor" />, cell: ({ row }) => formatBRL(row.original['valor_a_receber']) },
+          { accessorKey: 'status_conta', header: () => <IconLabelHeader icon={<CheckCircle2 className="h-3.5 w-3.5" />} label="Status" />, cell: ({ row }) => <StatusBadge value={row.original['status_conta']} type="status" /> },
+          { accessorKey: 'tipo_conta', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Tipo" /> },
+          { accessorKey: 'observacao', header: () => <IconLabelHeader icon={<FileText className="h-3.5 w-3.5" />} label="Observação" /> },
+          { accessorKey: 'categoria_nome', header: () => <IconLabelHeader icon={<Folder className="h-3.5 w-3.5" />} label="Categoria" /> },
+          { accessorKey: 'centro_lucro_nome', header: () => <IconLabelHeader icon={<PieChart className="h-3.5 w-3.5" />} label="Centro de Lucro" /> },
+          { accessorKey: 'departamento_nome', header: () => <IconLabelHeader icon={<Building className="h-3.5 w-3.5" />} label="Departamento" /> },
+          { accessorKey: 'filial_nome', header: () => <IconLabelHeader icon={<Building2 className="h-3.5 w-3.5" />} label="Filial" /> },
+          { accessorKey: 'projeto_nome', header: () => <IconLabelHeader icon={<Folder className="h-3.5 w-3.5" />} label="Projeto" /> },
         ]
       case 'pagamentos-efetuados':
         return [
           {
             accessorKey: 'fornecedor',
-            header: 'Fornecedor',
+            header: () => <IconLabelHeader icon={<Building2 className="h-3.5 w-3.5" />} label="Fornecedor" />,
             cell: ({ row }) => (
               <EntityDisplay
                 name={row.original['fornecedor'] ? String(row.original['fornecedor']) : 'Sem nome'}
@@ -205,22 +205,22 @@ export default function ModulosFinanceiroPage() {
               />
             )
           },
-          { accessorKey: 'descricao_pagamento', header: 'Descrição' },
-          { accessorKey: 'data_pagamento', header: 'Pago em', cell: ({ row }) => formatDate(row.original['data_pagamento']) },
-          { accessorKey: 'valor_pago', header: 'Valor', cell: ({ row }) => formatBRL(row.original['valor_pago']) },
-          { accessorKey: 'conta_financeira', header: 'Conta' },
-          { accessorKey: 'metodo_pagamento', header: 'Método' },
-          { accessorKey: 'categoria_financeira', header: 'Categoria' },
-          { accessorKey: 'centro_custo', header: 'Centro de Custo' },
-          { accessorKey: 'departamento', header: 'Departamento' },
-          { accessorKey: 'filial', header: 'Filial' },
-          { accessorKey: 'projeto', header: 'Projeto' },
+          { accessorKey: 'descricao_pagamento', header: () => <IconLabelHeader icon={<FileText className="h-3.5 w-3.5" />} label="Descrição" /> },
+          { accessorKey: 'data_pagamento', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Pago em" />, cell: ({ row }) => formatDate(row.original['data_pagamento']) },
+          { accessorKey: 'valor_pago', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Valor" />, cell: ({ row }) => formatBRL(row.original['valor_pago']) },
+          { accessorKey: 'conta_financeira', header: () => <IconLabelHeader icon={<Wallet className="h-3.5 w-3.5" />} label="Conta" /> },
+          { accessorKey: 'metodo_pagamento', header: () => <IconLabelHeader icon={<CreditCard className="h-3.5 w-3.5" />} label="Método" /> },
+          { accessorKey: 'categoria_financeira', header: () => <IconLabelHeader icon={<Folder className="h-3.5 w-3.5" />} label="Categoria" /> },
+          { accessorKey: 'centro_custo', header: () => <IconLabelHeader icon={<PieChart className="h-3.5 w-3.5" />} label="Centro de Custo" /> },
+          { accessorKey: 'departamento', header: () => <IconLabelHeader icon={<Building className="h-3.5 w-3.5" />} label="Departamento" /> },
+          { accessorKey: 'filial', header: () => <IconLabelHeader icon={<Building2 className="h-3.5 w-3.5" />} label="Filial" /> },
+          { accessorKey: 'projeto', header: () => <IconLabelHeader icon={<Folder className="h-3.5 w-3.5" />} label="Projeto" /> },
         ]
       case 'pagamentos-recebidos':
         return [
           {
             accessorKey: 'cliente_nome',
-            header: 'Cliente',
+            header: () => <IconLabelHeader icon={<User className="h-3.5 w-3.5" />} label="Cliente" />,
             cell: ({ row }) => (
               <EntityDisplay
                 name={row.original['cliente_nome'] ? String(row.original['cliente_nome']) : 'Sem nome'}
@@ -231,19 +231,19 @@ export default function ModulosFinanceiroPage() {
               />
             )
           },
-          { accessorKey: 'descricao_pagamento', header: 'Descrição' },
-          { accessorKey: 'data_pagamento', header: 'Recebido em', cell: ({ row }) => formatDate(row.original['data_pagamento']) },
-          { accessorKey: 'valor_recebido', header: 'Valor', cell: ({ row }) => formatBRL(row.original['valor_recebido']) },
-          { accessorKey: 'status_pagamento', header: 'Status', cell: ({ row }) => <StatusBadge value={row.original['status_pagamento']} type="status" /> },
-          { accessorKey: 'tipo_pagamento', header: 'Tipo' },
-          { accessorKey: 'observacao', header: 'Observação' },
-          { accessorKey: 'metodo_pagamento_nome', header: 'Método' },
-          { accessorKey: 'conta_financeira_nome', header: 'Conta' },
-          { accessorKey: 'categoria_nome', header: 'Categoria' },
-          { accessorKey: 'centro_lucro_nome', header: 'Centro de Lucro' },
-          { accessorKey: 'departamento_nome', header: 'Departamento' },
-          { accessorKey: 'filial_nome', header: 'Filial' },
-          { accessorKey: 'projeto_nome', header: 'Projeto' },
+          { accessorKey: 'descricao_pagamento', header: () => <IconLabelHeader icon={<FileText className="h-3.5 w-3.5" />} label="Descrição" /> },
+          { accessorKey: 'data_pagamento', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Recebido em" />, cell: ({ row }) => formatDate(row.original['data_pagamento']) },
+          { accessorKey: 'valor_recebido', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Valor" />, cell: ({ row }) => formatBRL(row.original['valor_recebido']) },
+          { accessorKey: 'status_pagamento', header: () => <IconLabelHeader icon={<CheckCircle2 className="h-3.5 w-3.5" />} label="Status" />, cell: ({ row }) => <StatusBadge value={row.original['status_pagamento']} type="status" /> },
+          { accessorKey: 'tipo_pagamento', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Tipo" /> },
+          { accessorKey: 'observacao', header: () => <IconLabelHeader icon={<FileText className="h-3.5 w-3.5" />} label="Observação" /> },
+          { accessorKey: 'metodo_pagamento_nome', header: () => <IconLabelHeader icon={<CreditCard className="h-3.5 w-3.5" />} label="Método" /> },
+          { accessorKey: 'conta_financeira_nome', header: () => <IconLabelHeader icon={<Wallet className="h-3.5 w-3.5" />} label="Conta" /> },
+          { accessorKey: 'categoria_nome', header: () => <IconLabelHeader icon={<Folder className="h-3.5 w-3.5" />} label="Categoria" /> },
+          { accessorKey: 'centro_lucro_nome', header: () => <IconLabelHeader icon={<PieChart className="h-3.5 w-3.5" />} label="Centro de Lucro" /> },
+          { accessorKey: 'departamento_nome', header: () => <IconLabelHeader icon={<Building className="h-3.5 w-3.5" />} label="Departamento" /> },
+          { accessorKey: 'filial_nome', header: () => <IconLabelHeader icon={<Building2 className="h-3.5 w-3.5" />} label="Filial" /> },
+          { accessorKey: 'projeto_nome', header: () => <IconLabelHeader icon={<Folder className="h-3.5 w-3.5" />} label="Projeto" /> },
         ]
       case 'movimentos':
         return [
