@@ -52,7 +52,10 @@ export default function CadastroContaAReceberSheet({ triggerLabel = "Cadastrar",
       fd.set('valor', valor)
       fd.set('data_lancamento', dataLanc)
       fd.set('data_vencimento', dataVenc)
-      if (clienteId) fd.set('entidade_id', clienteId)
+      if (clienteId) {
+        fd.set('entidade_id', clienteId) // compat
+        fd.set('cliente_id', clienteId) // novo schema
+      }
       if (categoriaId) fd.set('categoria_id', categoriaId)
       if (contaId) fd.set('conta_financeira_id', contaId)
       if (status) fd.set('status', status.trim())

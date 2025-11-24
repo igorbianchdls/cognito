@@ -52,7 +52,10 @@ export default function CadastroContaAPagarSheet({ triggerLabel = "Cadastrar", o
       fd.set('valor', valor)
       fd.set('data_lancamento', dataLanc)
       fd.set('data_vencimento', dataVenc)
-      if (fornecedorId) fd.set('entidade_id', fornecedorId)
+      if (fornecedorId) {
+        fd.set('entidade_id', fornecedorId) // compat
+        fd.set('fornecedor_id', fornecedorId) // novo schema
+      }
       if (categoriaId) fd.set('categoria_id', categoriaId)
       if (contaId) fd.set('conta_financeira_id', contaId)
       if (status) fd.set('status', status.trim())

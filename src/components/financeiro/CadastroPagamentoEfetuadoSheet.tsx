@@ -50,7 +50,10 @@ export default function CadastroPagamentoEfetuadoSheet({ triggerLabel = "Cadastr
       fd.set('descricao', descricao.trim())
       fd.set('valor', valor)
       fd.set('data_lancamento', dataLanc)
-      if (fornecedorId) fd.set('entidade_id', fornecedorId)
+      if (fornecedorId) {
+        fd.set('entidade_id', fornecedorId)
+        fd.set('fornecedor_id', fornecedorId)
+      }
       if (categoriaId) fd.set('categoria_id', categoriaId)
       if (contaId) fd.set('conta_financeira_id', contaId)
       if (status) fd.set('status', status.trim())
