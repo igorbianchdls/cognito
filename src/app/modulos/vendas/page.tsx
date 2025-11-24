@@ -486,6 +486,15 @@ export default function ModulosVendasPage() {
                   columns={columns}
                   data={data}
                   headerPadding={8}
+                  columnOptions={{
+                    // Pedidos: evitar quebra de linha
+                    cliente: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 140 },
+                    canal_venda: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 140 },
+                    canal_distribuicao: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 140 },
+                    campanha_venda: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 160 },
+                    filial: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 140 },
+                    sales_office: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 140 },
+                  }}
                   enableExpand={tabs.selected === 'pedidos' || tabs.selected === 'devolucoes' || tabs.selected === 'tabelas_preco' || tabs.selected === 'promocoes'}
                   renderDetail={
                     tabs.selected === 'pedidos'
