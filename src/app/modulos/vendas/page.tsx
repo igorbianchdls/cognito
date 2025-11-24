@@ -12,7 +12,8 @@ import TabsNav, { type Opcao } from '@/components/modulos/TabsNav'
 import DataToolbar from '@/components/modulos/DataToolbar'
 import DataTable, { type TableData } from '@/components/widgets/Table'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/stores/modulos/moduleUiStore'
-import { ShoppingCart, RotateCcw, Ticket, LayoutGrid } from 'lucide-react'
+import { ShoppingCart, RotateCcw, Ticket, LayoutGrid, User, Users, Building2, Building, Calendar, CalendarClock, CheckCircle2, DollarSign, Percent, Coins, TrendingUp, Truck, FileText, Tag, Table, Bookmark, Settings, Megaphone, Star, Hash } from 'lucide-react'
+import IconLabelHeader from '@/components/widgets/IconLabelHeader'
 
 type Row = TableData
 
@@ -254,26 +255,26 @@ export default function ModulosVendasPage() {
     switch (tabs.selected) {
       case 'pedidos':
         return [
-          { accessorKey: 'pedido', header: 'Pedido' },
-          { accessorKey: 'cliente', header: 'Cliente' },
-          { accessorKey: 'vendedor', header: 'Vendedor' },
-          { accessorKey: 'territorio', header: 'Território' },
-          { accessorKey: 'canal_venda', header: 'Canal' },
-          { accessorKey: 'canal_distribuicao', header: 'Canal Distribuição' },
-          { accessorKey: 'campanha_venda', header: 'Campanha de Venda' },
-          { accessorKey: 'centro_lucro', header: 'Centro de Lucro' },
-          { accessorKey: 'filial', header: 'Filial' },
-          { accessorKey: 'unidade_negocio', header: 'Business Unit' },
-          { accessorKey: 'sales_office', header: 'Sales Office' },
-          { accessorKey: 'data_pedido', header: 'Data Pedido', cell: ({ getValue }) => formatDate(getValue()) },
-          { accessorKey: 'status', header: 'Status' },
-          { accessorKey: 'pedido_subtotal', header: 'Subtotal', cell: ({ getValue }) => formatBRL(getValue()) },
-          { accessorKey: 'desconto_total', header: 'Desconto', cell: ({ getValue }) => formatBRL(getValue()) },
-          { accessorKey: 'valor_total', header: 'Total', cell: ({ getValue }) => formatBRL(getValue()) },
-          { accessorKey: 'custo_total_pedido', header: 'Custo Total', cell: ({ getValue }) => formatBRL(getValue()) },
+          { accessorKey: 'pedido', header: () => <IconLabelHeader icon={<ShoppingCart className="h-3.5 w-3.5" />} label="Pedido" /> },
+          { accessorKey: 'cliente', header: () => <IconLabelHeader icon={<User className="h-3.5 w-3.5" />} label="Cliente" /> },
+          { accessorKey: 'vendedor', header: () => <IconLabelHeader icon={<Users className="h-3.5 w-3.5" />} label="Vendedor" /> },
+          { accessorKey: 'territorio', header: () => <IconLabelHeader icon={<Building2 className="h-3.5 w-3.5" />} label="Território" /> },
+          { accessorKey: 'canal_venda', header: () => <IconLabelHeader icon={<LayoutGrid className="h-3.5 w-3.5" />} label="Canal" /> },
+          { accessorKey: 'canal_distribuicao', header: () => <IconLabelHeader icon={<Truck className="h-3.5 w-3.5" />} label="Canal Distribuição" /> },
+          { accessorKey: 'campanha_venda', header: () => <IconLabelHeader icon={<Megaphone className="h-3.5 w-3.5" />} label="Campanha de Venda" /> },
+          { accessorKey: 'centro_lucro', header: () => <IconLabelHeader icon={<TrendingUp className="h-3.5 w-3.5" />} label="Centro de Lucro" /> },
+          { accessorKey: 'filial', header: () => <IconLabelHeader icon={<Building2 className="h-3.5 w-3.5" />} label="Filial" /> },
+          { accessorKey: 'unidade_negocio', header: () => <IconLabelHeader icon={<Building className="h-3.5 w-3.5" />} label="Business Unit" /> },
+          { accessorKey: 'sales_office', header: () => <IconLabelHeader icon={<Building className="h-3.5 w-3.5" />} label="Sales Office" /> },
+          { accessorKey: 'data_pedido', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Data Pedido" />, cell: ({ getValue }) => formatDate(getValue()) },
+          { accessorKey: 'status', header: () => <IconLabelHeader icon={<CheckCircle2 className="h-3.5 w-3.5" />} label="Status" /> },
+          { accessorKey: 'pedido_subtotal', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Subtotal" />, cell: ({ getValue }) => formatBRL(getValue()) },
+          { accessorKey: 'desconto_total', header: () => <IconLabelHeader icon={<Percent className="h-3.5 w-3.5" />} label="Desconto" />, cell: ({ getValue }) => formatBRL(getValue()) },
+          { accessorKey: 'valor_total', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Total" />, cell: ({ getValue }) => formatBRL(getValue()) },
+          { accessorKey: 'custo_total_pedido', header: () => <IconLabelHeader icon={<Coins className="h-3.5 w-3.5" />} label="Custo Total" />, cell: ({ getValue }) => formatBRL(getValue()) },
           {
             accessorKey: 'margem_bruta_pedido',
-            header: 'Margem %',
+            header: () => <IconLabelHeader icon={<TrendingUp className="h-3.5 w-3.5" />} label="Margem %" />,
             cell: ({ getValue }) => {
               const value = getValue() as number
               if (value == null || isNaN(value)) return '—'
@@ -282,89 +283,89 @@ export default function ModulosVendasPage() {
               return <span className={color}>{formatted}</span>
             }
           },
-          { accessorKey: 'criado_em', header: 'Criado Em', cell: ({ getValue }) => formatDate(getValue()) },
-          { accessorKey: 'atualizado_em', header: 'Atualizado Em', cell: ({ getValue }) => formatDate(getValue()) },
+          { accessorKey: 'criado_em', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Criado Em" />, cell: ({ getValue }) => formatDate(getValue()) },
+          { accessorKey: 'atualizado_em', header: () => <IconLabelHeader icon={<CalendarClock className="h-3.5 w-3.5" />} label="Atualizado Em" />, cell: ({ getValue }) => formatDate(getValue()) },
         ]
       case 'devolucoes':
         return [
-          { accessorKey: 'devolucao', header: 'Devolução' },
-          { accessorKey: 'pedido', header: 'Pedido' },
-          { accessorKey: 'cliente', header: 'Cliente' },
-          { accessorKey: 'motivo', header: 'Motivo' },
-          { accessorKey: 'data_devolucao', header: 'Data Devolução', cell: ({ getValue }) => formatDate(getValue()) },
-          { accessorKey: 'valor_total', header: 'Valor', cell: ({ getValue }) => formatBRL(getValue()) },
-          { accessorKey: 'criado_em', header: 'Criado Em', cell: ({ getValue }) => formatDate(getValue()) },
-          { accessorKey: 'atualizado_em', header: 'Atualizado Em', cell: ({ getValue }) => formatDate(getValue()) },
+          { accessorKey: 'devolucao', header: () => <IconLabelHeader icon={<RotateCcw className="h-3.5 w-3.5" />} label="Devolução" /> },
+          { accessorKey: 'pedido', header: () => <IconLabelHeader icon={<ShoppingCart className="h-3.5 w-3.5" />} label="Pedido" /> },
+          { accessorKey: 'cliente', header: () => <IconLabelHeader icon={<User className="h-3.5 w-3.5" />} label="Cliente" /> },
+          { accessorKey: 'motivo', header: () => <IconLabelHeader icon={<FileText className="h-3.5 w-3.5" />} label="Motivo" /> },
+          { accessorKey: 'data_devolucao', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Data Devolução" />, cell: ({ getValue }) => formatDate(getValue()) },
+          { accessorKey: 'valor_total', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Valor" />, cell: ({ getValue }) => formatBRL(getValue()) },
+          { accessorKey: 'criado_em', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Criado Em" />, cell: ({ getValue }) => formatDate(getValue()) },
+          { accessorKey: 'atualizado_em', header: () => <IconLabelHeader icon={<CalendarClock className="h-3.5 w-3.5" />} label="Atualizado Em" />, cell: ({ getValue }) => formatDate(getValue()) },
         ]
       case 'cupons':
         return [
-          { accessorKey: 'cupom', header: 'Cupom' },
-          { accessorKey: 'tipo_desconto', header: 'Tipo' },
-          { accessorKey: 'valor_desconto', header: 'Valor Desconto' },
-          { accessorKey: 'valor_minimo', header: 'Valor Mínimo', cell: ({ getValue }) => formatBRL(getValue()) },
-          { accessorKey: 'limite_uso_total', header: 'Limite Total' },
-          { accessorKey: 'limite_uso_por_cliente', header: 'Limite/Cliente' },
-          { accessorKey: 'data_inicio', header: 'Data Início', cell: ({ getValue }) => formatDate(getValue()) },
-          { accessorKey: 'data_fim', header: 'Data Fim', cell: ({ getValue }) => formatDate(getValue()) },
-          { accessorKey: 'ativo', header: 'Ativo' },
-          { accessorKey: 'criado_em', header: 'Criado Em', cell: ({ getValue }) => formatDate(getValue()) },
-          { accessorKey: 'atualizado_em', header: 'Atualizado Em', cell: ({ getValue }) => formatDate(getValue()) },
+          { accessorKey: 'cupom', header: () => <IconLabelHeader icon={<Ticket className="h-3.5 w-3.5" />} label="Cupom" /> },
+          { accessorKey: 'tipo_desconto', header: () => <IconLabelHeader icon={<Percent className="h-3.5 w-3.5" />} label="Tipo" /> },
+          { accessorKey: 'valor_desconto', header: () => <IconLabelHeader icon={<Percent className="h-3.5 w-3.5" />} label="Valor Desconto" /> },
+          { accessorKey: 'valor_minimo', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Valor Mínimo" />, cell: ({ getValue }) => formatBRL(getValue()) },
+          { accessorKey: 'limite_uso_total', header: () => <IconLabelHeader icon={<Hash className="h-3.5 w-3.5" />} label="Limite Total" /> },
+          { accessorKey: 'limite_uso_por_cliente', header: () => <IconLabelHeader icon={<Users className="h-3.5 w-3.5" />} label="Limite/Cliente" /> },
+          { accessorKey: 'data_inicio', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Data Início" />, cell: ({ getValue }) => formatDate(getValue()) },
+          { accessorKey: 'data_fim', header: () => <IconLabelHeader icon={<CalendarClock className="h-3.5 w-3.5" />} label="Data Fim" />, cell: ({ getValue }) => formatDate(getValue()) },
+          { accessorKey: 'ativo', header: () => <IconLabelHeader icon={<CheckCircle2 className="h-3.5 w-3.5" />} label="Ativo" /> },
+          { accessorKey: 'criado_em', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Criado Em" />, cell: ({ getValue }) => formatDate(getValue()) },
+          { accessorKey: 'atualizado_em', header: () => <IconLabelHeader icon={<CalendarClock className="h-3.5 w-3.5" />} label="Atualizado Em" />, cell: ({ getValue }) => formatDate(getValue()) },
         ]
       case 'canais':
         return [
-          { accessorKey: 'canal_venda', header: 'ID' },
-          { accessorKey: 'nome_canal_venda', header: 'Canal de Venda' },
-          { accessorKey: 'descricao_canal_venda', header: 'Descrição Canal Venda' },
-          { accessorKey: 'ativo', header: 'Ativo' },
-          { accessorKey: 'canal_distribuicao', header: 'Canal de Distribuição' },
-          { accessorKey: 'descricao_canal_distribuicao', header: 'Descrição Canal Distribuição' },
-          { accessorKey: 'criado_em', header: 'Criado Em', cell: ({ getValue }) => formatDate(getValue()) },
-          { accessorKey: 'atualizado_em', header: 'Atualizado Em', cell: ({ getValue }) => formatDate(getValue()) },
+          { accessorKey: 'canal_venda', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="ID" /> },
+          { accessorKey: 'nome_canal_venda', header: () => <IconLabelHeader icon={<LayoutGrid className="h-3.5 w-3.5" />} label="Canal de Venda" /> },
+          { accessorKey: 'descricao_canal_venda', header: () => <IconLabelHeader icon={<FileText className="h-3.5 w-3.5" />} label="Descrição Canal Venda" /> },
+          { accessorKey: 'ativo', header: () => <IconLabelHeader icon={<CheckCircle2 className="h-3.5 w-3.5" />} label="Ativo" /> },
+          { accessorKey: 'canal_distribuicao', header: () => <IconLabelHeader icon={<Truck className="h-3.5 w-3.5" />} label="Canal de Distribuição" /> },
+          { accessorKey: 'descricao_canal_distribuicao', header: () => <IconLabelHeader icon={<FileText className="h-3.5 w-3.5" />} label="Descrição Canal Distribuição" /> },
+          { accessorKey: 'criado_em', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Criado Em" />, cell: ({ getValue }) => formatDate(getValue()) },
+          { accessorKey: 'atualizado_em', header: () => <IconLabelHeader icon={<CalendarClock className="h-3.5 w-3.5" />} label="Atualizado Em" />, cell: ({ getValue }) => formatDate(getValue()) },
         ]
       case 'canais_distribuicao':
         return [
-          { accessorKey: 'canal_distribuicao', header: 'ID' },
-          { accessorKey: 'nome_canal', header: 'Canal de Distribuição' },
-          { accessorKey: 'descricao', header: 'Descrição' },
-          { accessorKey: 'ativo', header: 'Ativo' },
-          { accessorKey: 'criado_em', header: 'Criado Em', cell: ({ getValue }) => formatDate(getValue()) },
-          { accessorKey: 'atualizado_em', header: 'Atualizado Em', cell: ({ getValue }) => formatDate(getValue()) },
+          { accessorKey: 'canal_distribuicao', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="ID" /> },
+          { accessorKey: 'nome_canal', header: () => <IconLabelHeader icon={<Truck className="h-3.5 w-3.5" />} label="Canal de Distribuição" /> },
+          { accessorKey: 'descricao', header: () => <IconLabelHeader icon={<FileText className="h-3.5 w-3.5" />} label="Descrição" /> },
+          { accessorKey: 'ativo', header: () => <IconLabelHeader icon={<CheckCircle2 className="h-3.5 w-3.5" />} label="Ativo" /> },
+          { accessorKey: 'criado_em', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Criado Em" />, cell: ({ getValue }) => formatDate(getValue()) },
+          { accessorKey: 'atualizado_em', header: () => <IconLabelHeader icon={<CalendarClock className="h-3.5 w-3.5" />} label="Atualizado Em" />, cell: ({ getValue }) => formatDate(getValue()) },
         ]
       case 'tabelas_preco':
         return [
-          { accessorKey: 'tabela_preco', header: 'ID' },
-          { accessorKey: 'nome_tabela', header: 'Tabela de Preço' },
-          { accessorKey: 'descricao', header: 'Descrição' },
-          { accessorKey: 'ativo', header: 'Ativo' },
-          { accessorKey: 'criado_em', header: 'Criado Em', cell: ({ getValue }) => formatDate(getValue()) },
-          { accessorKey: 'atualizado_em', header: 'Atualizado Em', cell: ({ getValue }) => formatDate(getValue()) },
+          { accessorKey: 'tabela_preco', header: () => <IconLabelHeader icon={<Table className="h-3.5 w-3.5" />} label="ID" /> },
+          { accessorKey: 'nome_tabela', header: () => <IconLabelHeader icon={<Table className="h-3.5 w-3.5" />} label="Tabela de Preço" /> },
+          { accessorKey: 'descricao', header: () => <IconLabelHeader icon={<FileText className="h-3.5 w-3.5" />} label="Descrição" /> },
+          { accessorKey: 'ativo', header: () => <IconLabelHeader icon={<CheckCircle2 className="h-3.5 w-3.5" />} label="Ativo" /> },
+          { accessorKey: 'criado_em', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Criado Em" />, cell: ({ getValue }) => formatDate(getValue()) },
+          { accessorKey: 'atualizado_em', header: () => <IconLabelHeader icon={<CalendarClock className="h-3.5 w-3.5" />} label="Atualizado Em" />, cell: ({ getValue }) => formatDate(getValue()) },
         ]
       case 'promocoes':
         return [
-          { accessorKey: 'promocao', header: 'ID' },
-          { accessorKey: 'nome_promocao', header: 'Promoção' },
-          { accessorKey: 'tipo_desconto', header: 'Tipo' },
-          { accessorKey: 'valor_desconto', header: 'Valor Desconto', cell: ({ getValue }) => formatBRL(getValue()) },
-          { accessorKey: 'valor_minimo', header: 'Valor Mínimo', cell: ({ getValue }) => formatBRL(getValue()) },
-          { accessorKey: 'data_inicio', header: 'Início', cell: ({ getValue }) => formatDate(getValue()) },
-          { accessorKey: 'data_fim', header: 'Fim', cell: ({ getValue }) => formatDate(getValue()) },
-          { accessorKey: 'ativo', header: 'Ativo' },
-          { accessorKey: 'criado_em', header: 'Criado Em', cell: ({ getValue }) => formatDate(getValue()) },
-          { accessorKey: 'atualizado_em', header: 'Atualizado Em', cell: ({ getValue }) => formatDate(getValue()) },
+          { accessorKey: 'promocao', header: () => <IconLabelHeader icon={<Percent className="h-3.5 w-3.5" />} label="ID" /> },
+          { accessorKey: 'nome_promocao', header: () => <IconLabelHeader icon={<Star className="h-3.5 w-3.5" />} label="Promoção" /> },
+          { accessorKey: 'tipo_desconto', header: () => <IconLabelHeader icon={<Percent className="h-3.5 w-3.5" />} label="Tipo" /> },
+          { accessorKey: 'valor_desconto', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Valor Desconto" />, cell: ({ getValue }) => formatBRL(getValue()) },
+          { accessorKey: 'valor_minimo', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Valor Mínimo" />, cell: ({ getValue }) => formatBRL(getValue()) },
+          { accessorKey: 'data_inicio', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Início" />, cell: ({ getValue }) => formatDate(getValue()) },
+          { accessorKey: 'data_fim', header: () => <IconLabelHeader icon={<CalendarClock className="h-3.5 w-3.5" />} label="Fim" />, cell: ({ getValue }) => formatDate(getValue()) },
+          { accessorKey: 'ativo', header: () => <IconLabelHeader icon={<CheckCircle2 className="h-3.5 w-3.5" />} label="Ativo" /> },
+          { accessorKey: 'criado_em', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Criado Em" />, cell: ({ getValue }) => formatDate(getValue()) },
+          { accessorKey: 'atualizado_em', header: () => <IconLabelHeader icon={<CalendarClock className="h-3.5 w-3.5" />} label="Atualizado Em" />, cell: ({ getValue }) => formatDate(getValue()) },
         ]
       case 'regras_desconto':
         return [
-          { accessorKey: 'regra', header: 'ID' },
-          { accessorKey: 'nome_regra', header: 'Regra' },
-          { accessorKey: 'tipo_regra', header: 'Tipo' },
-          { accessorKey: 'quantidade_minima', header: 'Qtd. Mínima' },
-          { accessorKey: 'valor_minimo', header: 'Valor Mínimo', cell: ({ getValue }) => formatBRL(getValue()) },
-          { accessorKey: 'tipo_desconto', header: 'Tipo Desc.' },
-          { accessorKey: 'valor_desconto', header: 'Valor Desconto', cell: ({ getValue }) => formatBRL(getValue()) },
-          { accessorKey: 'referencia', header: 'Referência' },
-          { accessorKey: 'ativo', header: 'Ativo' },
-          { accessorKey: 'criado_em', header: 'Criado Em', cell: ({ getValue }) => formatDate(getValue()) },
-          { accessorKey: 'atualizado_em', header: 'Atualizado Em', cell: ({ getValue }) => formatDate(getValue()) },
+          { accessorKey: 'regra', header: () => <IconLabelHeader icon={<Settings className="h-3.5 w-3.5" />} label="ID" /> },
+          { accessorKey: 'nome_regra', header: () => <IconLabelHeader icon={<Settings className="h-3.5 w-3.5" />} label="Regra" /> },
+          { accessorKey: 'tipo_regra', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Tipo" /> },
+          { accessorKey: 'quantidade_minima', header: () => <IconLabelHeader icon={<Hash className="h-3.5 w-3.5" />} label="Qtd. Mínima" /> },
+          { accessorKey: 'valor_minimo', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Valor Mínimo" />, cell: ({ getValue }) => formatBRL(getValue()) },
+          { accessorKey: 'tipo_desconto', header: () => <IconLabelHeader icon={<Percent className="h-3.5 w-3.5" />} label="Tipo Desc." /> },
+          { accessorKey: 'valor_desconto', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Valor Desconto" />, cell: ({ getValue }) => formatBRL(getValue()) },
+          { accessorKey: 'referencia', header: () => <IconLabelHeader icon={<Bookmark className="h-3.5 w-3.5" />} label="Referência" /> },
+          { accessorKey: 'ativo', header: () => <IconLabelHeader icon={<CheckCircle2 className="h-3.5 w-3.5" />} label="Ativo" /> },
+          { accessorKey: 'criado_em', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Criado Em" />, cell: ({ getValue }) => formatDate(getValue()) },
+          { accessorKey: 'atualizado_em', header: () => <IconLabelHeader icon={<CalendarClock className="h-3.5 w-3.5" />} label="Atualizado Em" />, cell: ({ getValue }) => formatDate(getValue()) },
         ]
       default:
         return []
