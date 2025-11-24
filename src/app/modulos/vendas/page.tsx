@@ -474,8 +474,8 @@ export default function ModulosVendasPage() {
               dateRangeWidth={toolbarUI.dateRangeWidth}
             />
           </div>
-          <div className="flex-1 min-h-0 overflow-auto px-4 md:px-6" style={{ marginBottom: layout.mbTable }}>
-            <div className="rounded-lg bg-white">
+          <div className="flex-1 min-h-0 overflow-auto" style={{ marginBottom: layout.mbTable }}>
+            <div className="border-y bg-background" style={{ borderColor: tabelaUI.borderColor }}>
               {isLoading ? (
                 <div className="p-6 text-sm text-gray-500">Carregando dados…</div>
               ) : error ? (
@@ -485,6 +485,7 @@ export default function ModulosVendasPage() {
                   key={tabs.selected}
                   columns={columns}
                   data={data}
+                  headerPadding={8}
                   enableExpand={tabs.selected === 'pedidos' || tabs.selected === 'devolucoes' || tabs.selected === 'tabelas_preco' || tabs.selected === 'promocoes'}
                   renderDetail={
                     tabs.selected === 'pedidos'
