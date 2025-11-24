@@ -258,7 +258,7 @@ export default function ModulosFinanceiroPage() {
         return [
           {
             accessorKey: 'fornecedor_nome',
-            header: <IconLabelHeader icon={<Building2 className="h-3.5 w-3.5" />} label="Fornecedor" />,
+            header: () => <IconLabelHeader icon={<Building2 className="h-3.5 w-3.5" />} label="Fornecedor" />,
             cell: ({ row }) => (
               <EntityDisplay
                 name={row.original['fornecedor_nome'] ? String(row.original['fornecedor_nome']) : 'Sem nome'}
@@ -269,18 +269,18 @@ export default function ModulosFinanceiroPage() {
               />
             )
           },
-          { accessorKey: 'descricao_conta', header: <IconLabelHeader icon={<FileText className="h-3.5 w-3.5" />} label="Descrição" /> },
-          { accessorKey: 'data_lancamento', header: <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Lançamento" />, cell: ({ row }) => formatDate(row.original['data_lancamento']) },
-          { accessorKey: 'data_vencimento', header: <IconLabelHeader icon={<CalendarClock className="h-3.5 w-3.5" />} label="Vencimento" />, cell: ({ row }) => formatDate(row.original['data_vencimento']) },
-          { accessorKey: 'valor_a_pagar', header: <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Valor" />, cell: ({ row }) => formatBRL(row.original['valor_a_pagar']) },
-          { accessorKey: 'status_conta', header: <IconLabelHeader icon={<CheckCircle2 className="h-3.5 w-3.5" />} label="Status" />, cell: ({ row }) => <StatusBadge value={row.original['status_conta']} type="status" /> },
-          { accessorKey: 'tipo_conta', header: <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Tipo" /> },
-          { accessorKey: 'observacao', header: <IconLabelHeader icon={<FileText className="h-3.5 w-3.5" />} label="Observação" /> },
-          { accessorKey: 'categoria_nome', header: <IconLabelHeader icon={<Folder className="h-3.5 w-3.5" />} label="Categoria" /> },
-          { accessorKey: 'centro_lucro_nome', header: <IconLabelHeader icon={<PieChart className="h-3.5 w-3.5" />} label="Centro de Lucro" /> },
-          { accessorKey: 'departamento_nome', header: <IconLabelHeader icon={<Building className="h-3.5 w-3.5" />} label="Departamento" /> },
-          { accessorKey: 'filial_nome', header: <IconLabelHeader icon={<Building2 className="h-3.5 w-3.5" />} label="Filial" /> },
-          { accessorKey: 'projeto_nome', header: <IconLabelHeader icon={<Folder className="h-3.5 w-3.5" />} label="Projeto" /> },
+          { accessorKey: 'descricao_conta', header: () => <IconLabelHeader icon={<FileText className="h-3.5 w-3.5" />} label="Descrição" /> },
+          { accessorKey: 'data_lancamento', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Lançamento" />, cell: ({ row }) => formatDate(row.original['data_lancamento']) },
+          { accessorKey: 'data_vencimento', header: () => <IconLabelHeader icon={<CalendarClock className="h-3.5 w-3.5" />} label="Vencimento" />, cell: ({ row }) => formatDate(row.original['data_vencimento']) },
+          { accessorKey: 'valor_a_pagar', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Valor" />, cell: ({ row }) => formatBRL(row.original['valor_a_pagar']) },
+          { accessorKey: 'status_conta', header: () => <IconLabelHeader icon={<CheckCircle2 className="h-3.5 w-3.5" />} label="Status" />, cell: ({ row }) => <StatusBadge value={row.original['status_conta']} type="status" /> },
+          { accessorKey: 'tipo_conta', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Tipo" /> },
+          { accessorKey: 'observacao', header: () => <IconLabelHeader icon={<FileText className="h-3.5 w-3.5" />} label="Observação" /> },
+          { accessorKey: 'categoria_nome', header: () => <IconLabelHeader icon={<Folder className="h-3.5 w-3.5" />} label="Categoria" /> },
+          { accessorKey: 'centro_lucro_nome', header: () => <IconLabelHeader icon={<PieChart className="h-3.5 w-3.5" />} label="Centro de Lucro" /> },
+          { accessorKey: 'departamento_nome', header: () => <IconLabelHeader icon={<Building className="h-3.5 w-3.5" />} label="Departamento" /> },
+          { accessorKey: 'filial_nome', header: () => <IconLabelHeader icon={<Building2 className="h-3.5 w-3.5" />} label="Filial" /> },
+          { accessorKey: 'projeto_nome', header: () => <IconLabelHeader icon={<Folder className="h-3.5 w-3.5" />} label="Projeto" /> },
         ]
     }
   }, [tabs.selected])
