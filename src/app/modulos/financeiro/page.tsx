@@ -543,6 +543,11 @@ export default function ModulosFinanceiroPage() {
                     // Filial (variações por view)
                     filial_nome: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
                     filial: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
+                    // Conta e Método (Pagamentos Efetuados/Recebidos)
+                    conta_financeira: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
+                    conta_financeira_nome: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
+                    metodo_pagamento: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
+                    metodo_pagamento_nome: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
                   }}
                   enableExpand={tabs.selected === 'extrato'}
                   renderDetail={tabs.selected === 'extrato' ? (row => {
