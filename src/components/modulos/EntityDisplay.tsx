@@ -55,7 +55,7 @@ export default function EntityDisplay({ name, subtitle, imageUrl, onClick, click
         )}
       </div>
       <div>
-        <div style={{ fontSize: 15, fontWeight: 500, color: '#111827' }}>{displayName}</div>
+        <div style={{ fontSize: 14, fontWeight: 500, color: '#111827' }}>{displayName}</div>
         {subtitle && (
           <div style={{ fontSize: 12, fontWeight: 400, color: '#6b7280' }}>{subtitle}</div>
         )}
