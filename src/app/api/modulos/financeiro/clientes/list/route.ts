@@ -7,11 +7,22 @@ export const revalidate = 0
 
 export async function GET(req: NextRequest) {
   try {
-    const rows = await runQuery<{ id: number; nome: string }>(
-      `SELECT id, COALESCE(nome_fantasia, razao_social, nome) AS nome
+    let rows = await runQuery<{ id: number; nome: string }>(
+      `SELECT id, nome_fantasia AS nome
          FROM entidades.clientes
-        ORDER BY 2 ASC`
+        ORDER BY nome_fantasia ASC`
     )
+    if (!rows?.length) {
+      // Fallback: clientes presentes nos lançamentos
+      rows = await runQuery<{ id: number; nome: string }>(
+        `SELECT DISTINCT lf.cliente_id AS id,
+                COALESCE(c.nome_fantasia, 'Cliente #' || lf.cliente_id::text) AS nome
+           FROM financeiro.lancamentos_financeiros lf
+           LEFT JOIN entidades.clientes c ON c.id = lf.cliente_id
+          WHERE lf.cliente_id IS NOT NULL
+          ORDER BY 2 ASC`
+      )
+    }
     return Response.json({ success: true, rows }, { headers: { 'Cache-Control': 'no-store' } })
   } catch (error) {
     console.error('💸 API /api/modulos/financeiro/clientes/list error:', error)
