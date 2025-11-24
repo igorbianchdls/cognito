@@ -88,24 +88,24 @@ export default function ModulosFinanceiroPage() {
     switch (tabs.selected) {
       case 'contas':
         return [
-          { accessorKey: 'conta_id', header: 'Conta ID' },
-          { accessorKey: 'nome_conta', header: 'Nome' },
-          { accessorKey: 'tipo_conta', header: 'Tipo' },
-          { accessorKey: 'agencia', header: 'Agência' },
-          { accessorKey: 'numero_conta', header: 'Número Conta' },
-          { accessorKey: 'pix_chave', header: 'Pix' },
-          { accessorKey: 'saldo_inicial', header: 'Saldo Inicial', cell: ({ row }) => formatBRL(row.original['saldo_inicial']) },
-          { accessorKey: 'saldo_atual', header: 'Saldo Atual', cell: ({ row }) => formatBRL(row.original['saldo_atual']) },
-          { accessorKey: 'data_abertura', header: 'Abertura', cell: ({ row }) => formatDate(row.original['data_abertura']) },
-          { accessorKey: 'ativo', header: 'Ativa' },
-          { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em']) },
-          { accessorKey: 'atualizado_em', header: 'Atualizado em', cell: ({ row }) => formatDate(row.original['atualizado_em']) },
+          { accessorKey: 'conta_id', header: () => <IconLabelHeader icon={<Wallet className="h-3.5 w-3.5" />} label="Conta ID" /> },
+          { accessorKey: 'nome_conta', header: () => <IconLabelHeader icon={<Wallet className="h-3.5 w-3.5" />} label="Nome" /> },
+          { accessorKey: 'tipo_conta', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Tipo" /> },
+          { accessorKey: 'agencia', header: () => <IconLabelHeader icon={<Building className="h-3.5 w-3.5" />} label="Agência" /> },
+          { accessorKey: 'numero_conta', header: () => <IconLabelHeader icon={<Wallet className="h-3.5 w-3.5" />} label="Número Conta" /> },
+          { accessorKey: 'pix_chave', header: () => <IconLabelHeader icon={<CreditCard className="h-3.5 w-3.5" />} label="Pix" /> },
+          { accessorKey: 'saldo_inicial', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Saldo Inicial" />, cell: ({ row }) => formatBRL(row.original['saldo_inicial']) },
+          { accessorKey: 'saldo_atual', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Saldo Atual" />, cell: ({ row }) => formatBRL(row.original['saldo_atual']) },
+          { accessorKey: 'data_abertura', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Abertura" />, cell: ({ row }) => formatDate(row.original['data_abertura']) },
+          { accessorKey: 'ativo', header: () => <IconLabelHeader icon={<CheckCircle2 className="h-3.5 w-3.5" />} label="Ativa" /> },
+          { accessorKey: 'criado_em', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Criado em" />, cell: ({ row }) => formatDate(row.original['criado_em']) },
+          { accessorKey: 'atualizado_em', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Atualizado em" />, cell: ({ row }) => formatDate(row.original['atualizado_em']) },
         ]
       case 'bancos':
         return [
           {
             accessorKey: 'nome_banco',
-            header: 'Banco',
+            header: () => <IconLabelHeader icon={<Landmark className="h-3.5 w-3.5" />} label="Banco" />,
             cell: ({ row }) => (
               <EntityDisplay
                 name={row.original['nome_banco'] ? String(row.original['nome_banco']) : 'Sem nome'}
@@ -115,34 +115,34 @@ export default function ModulosFinanceiroPage() {
               />
             )
           },
-          { accessorKey: 'numero_banco', header: 'Número' },
-          { accessorKey: 'agencia', header: 'Agência' },
-          { accessorKey: 'endereco', header: 'Endereço' },
-          { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em']) },
-          { accessorKey: 'atualizado_em', header: 'Atualizado em', cell: ({ row }) => formatDate(row.original['atualizado_em']) },
+          { accessorKey: 'numero_banco', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Número" /> },
+          { accessorKey: 'agencia', header: () => <IconLabelHeader icon={<Building className="h-3.5 w-3.5" />} label="Agência" /> },
+          { accessorKey: 'endereco', header: () => <IconLabelHeader icon={<Building2 className="h-3.5 w-3.5" />} label="Endereço" /> },
+          { accessorKey: 'criado_em', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Criado em" />, cell: ({ row }) => formatDate(row.original['criado_em']) },
+          { accessorKey: 'atualizado_em', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Atualizado em" />, cell: ({ row }) => formatDate(row.original['atualizado_em']) },
         ]
       case 'conciliacao':
         return [
-          { accessorKey: 'conciliacao_id', header: 'Conciliação' },
-          { accessorKey: 'periodo_inicio', header: 'Início', cell: ({ row }) => formatDate(row.original['periodo_inicio']) },
-          { accessorKey: 'periodo_fim', header: 'Fim', cell: ({ row }) => formatDate(row.original['periodo_fim']) },
-          { accessorKey: 'banco', header: 'Banco' },
-          { accessorKey: 'conta_financeira', header: 'Conta' },
-          { accessorKey: 'tipo_conta', header: 'Tipo Conta' },
-          { accessorKey: 'saldo_inicial', header: 'Saldo Inicial', cell: ({ row }) => formatBRL(row.original['saldo_inicial']) },
-          { accessorKey: 'saldo_extrato', header: 'Saldo Extrato', cell: ({ row }) => formatBRL(row.original['saldo_extrato']) },
-          { accessorKey: 'saldo_sistema', header: 'Saldo Sistema', cell: ({ row }) => formatBRL(row.original['saldo_sistema']) },
-          { accessorKey: 'diferenca', header: 'Diferença', cell: ({ row }) => formatBRL(row.original['diferenca']) },
-          { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
-          { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em']) },
+          { accessorKey: 'conciliacao_id', header: () => <IconLabelHeader icon={<CheckCheck className="h-3.5 w-3.5" />} label="Conciliação" /> },
+          { accessorKey: 'periodo_inicio', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Início" />, cell: ({ row }) => formatDate(row.original['periodo_inicio']) },
+          { accessorKey: 'periodo_fim', header: () => <IconLabelHeader icon={<CalendarClock className="h-3.5 w-3.5" />} label="Fim" />, cell: ({ row }) => formatDate(row.original['periodo_fim']) },
+          { accessorKey: 'banco', header: () => <IconLabelHeader icon={<Landmark className="h-3.5 w-3.5" />} label="Banco" /> },
+          { accessorKey: 'conta_financeira', header: () => <IconLabelHeader icon={<Wallet className="h-3.5 w-3.5" />} label="Conta" /> },
+          { accessorKey: 'tipo_conta', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Tipo Conta" /> },
+          { accessorKey: 'saldo_inicial', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Saldo Inicial" />, cell: ({ row }) => formatBRL(row.original['saldo_inicial']) },
+          { accessorKey: 'saldo_extrato', header: () => <IconLabelHeader icon={<Receipt className="h-3.5 w-3.5" />} label="Saldo Extrato" />, cell: ({ row }) => formatBRL(row.original['saldo_extrato']) },
+          { accessorKey: 'saldo_sistema', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Saldo Sistema" />, cell: ({ row }) => formatBRL(row.original['saldo_sistema']) },
+          { accessorKey: 'diferenca', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Diferença" />, cell: ({ row }) => formatBRL(row.original['diferenca']) },
+          { accessorKey: 'status', header: () => <IconLabelHeader icon={<CheckCircle2 className="h-3.5 w-3.5" />} label="Status" />, cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
+          { accessorKey: 'criado_em', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Criado em" />, cell: ({ row }) => formatDate(row.original['criado_em']) },
         ]
       case 'extrato':
         return [
-          { accessorKey: 'extrato_id', header: 'Extrato' },
-          { accessorKey: 'data_extrato', header: 'Data Extrato', cell: ({ row }) => formatDate(row.original['data_extrato']) },
+          { accessorKey: 'extrato_id', header: () => <IconLabelHeader icon={<Receipt className="h-3.5 w-3.5" />} label="Extrato" /> },
+          { accessorKey: 'data_extrato', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Data Extrato" />, cell: ({ row }) => formatDate(row.original['data_extrato']) },
           {
             accessorKey: 'banco',
-            header: 'Banco',
+            header: () => <IconLabelHeader icon={<Landmark className="h-3.5 w-3.5" />} label="Banco" />,
             cell: ({ row }) => (
               <EntityDisplay
                 name={row.original['banco'] ? String(row.original['banco']) : 'Sem nome'}
@@ -152,17 +152,17 @@ export default function ModulosFinanceiroPage() {
               />
             )
           },
-          { accessorKey: 'conta_financeira', header: 'Conta' },
+          { accessorKey: 'conta_financeira', header: () => <IconLabelHeader icon={<Wallet className="h-3.5 w-3.5" />} label="Conta" /> },
           {
             accessorKey: 'tipo_conta',
-            header: 'Tipo Conta',
+            header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Tipo Conta" />,
             cell: ({ row }) => <StatusBadge value={row.original['tipo_conta']} type="fin_tipo_conta" />
           },
-          { accessorKey: 'saldo_inicial', header: 'Saldo Inicial', cell: ({ row }) => formatBRL(row.original['saldo_inicial']) },
-          { accessorKey: 'total_creditos', header: 'Créditos', cell: ({ row }) => formatBRL(row.original['total_creditos']) },
-          { accessorKey: 'total_debitos', header: 'Débitos', cell: ({ row }) => formatBRL(row.original['total_debitos']) },
-          { accessorKey: 'saldo_final', header: 'Saldo Final', cell: ({ row }) => formatBRL(row.original['saldo_final']) },
-          { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
+          { accessorKey: 'saldo_inicial', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Saldo Inicial" />, cell: ({ row }) => formatBRL(row.original['saldo_inicial']) },
+          { accessorKey: 'total_creditos', header: () => <IconLabelHeader icon={<ArrowDownCircle className="h-3.5 w-3.5" />} label="Créditos" />, cell: ({ row }) => formatBRL(row.original['total_creditos']) },
+          { accessorKey: 'total_debitos', header: () => <IconLabelHeader icon={<ArrowUpCircle className="h-3.5 w-3.5" />} label="Débitos" />, cell: ({ row }) => formatBRL(row.original['total_debitos']) },
+          { accessorKey: 'saldo_final', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Saldo Final" />, cell: ({ row }) => formatBRL(row.original['saldo_final']) },
+          { accessorKey: 'status', header: () => <IconLabelHeader icon={<CheckCircle2 className="h-3.5 w-3.5" />} label="Status" />, cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
         ]
       case 'contas-a-receber':
         return [
@@ -247,11 +247,11 @@ export default function ModulosFinanceiroPage() {
         ]
       case 'movimentos':
         return [
-          { accessorKey: 'data', header: 'Data', cell: ({ row }) => formatDate(row.original['data']) },
-          { accessorKey: 'tipo', header: 'Tipo' },
-          { accessorKey: 'valor', header: 'Valor', cell: ({ row }) => formatBRL(row.original['valor']) },
-          { accessorKey: 'categoria_nome', header: 'Categoria' },
-          { accessorKey: 'conta_nome', header: 'Conta' },
+          { accessorKey: 'data', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Data" />, cell: ({ row }) => formatDate(row.original['data']) },
+          { accessorKey: 'tipo', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Tipo" /> },
+          { accessorKey: 'valor', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Valor" />, cell: ({ row }) => formatBRL(row.original['valor']) },
+          { accessorKey: 'categoria_nome', header: () => <IconLabelHeader icon={<Folder className="h-3.5 w-3.5" />} label="Categoria" /> },
+          { accessorKey: 'conta_nome', header: () => <IconLabelHeader icon={<Wallet className="h-3.5 w-3.5" />} label="Conta" /> },
         ]
       case 'contas-a-pagar':
       default:
