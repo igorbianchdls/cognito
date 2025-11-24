@@ -13,7 +13,7 @@ type Props = {
 export default function IconLabelHeader({ icon, label, size = 14, title, className }: Props) {
   return (
     <span
-      className={`inline-flex items-center gap-2 whitespace-nowrap ${className ?? ''}`}
+      className={`inline-flex items-center gap-3 whitespace-nowrap ${className ?? ''}`}
       title={title || label}
       style={{ lineHeight: 1 }}
     >
