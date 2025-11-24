@@ -180,7 +180,37 @@ export default function ModulosFinanceiroPage() {
               />
             )
           },
-          { accessorKey: 'descricao_conta', header: () => <IconLabelHeader icon={<FileText className="h-3.5 w-3.5" />} label="Descrição" /> },
+          {
+            accessorKey: 'descricao_conta',
+            header: () => <IconLabelHeader icon={<FileText className="h-3.5 w-3.5" />} label="Descrição" />,
+            cell: ({ row }) => {
+              const raw = (row.original['descricao_conta'] ?? row.original['descricao']) as unknown
+              const text = raw ? String(raw) : 'Sem descrição'
+              const mockUrl = 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf'
+              const handleClick: React.MouseEventHandler<HTMLDivElement> = (e) => {
+                if (e.altKey) {
+                  window.open(mockUrl, '_blank', 'noopener,noreferrer')
+                  return
+                }
+                setDocUrl(mockUrl)
+                setDocName(text || 'documento.pdf')
+                setDocType('application/pdf')
+                setDocViewerOpen(true)
+              }
+              return (
+                <div
+                  className="flex items-center gap-2 min-w-0 cursor-pointer hover:opacity-90"
+                  title={text}
+                  onClick={handleClick}
+                  role="button"
+                  aria-label={`Abrir documento: ${text}`}
+                >
+                  <FileText className="h-4 w-4 text-gray-500 shrink-0" aria-hidden="true" />
+                  <span className="truncate">{text}</span>
+                </div>
+              )
+            }
+          },
           { accessorKey: 'data_lancamento', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Lançamento" />, cell: ({ row }) => formatDate(row.original['data_lancamento']) },
           { accessorKey: 'data_vencimento', header: () => <IconLabelHeader icon={<CalendarClock className="h-3.5 w-3.5" />} label="Vencimento" />, cell: ({ row }) => formatDate(row.original['data_vencimento']) },
           { accessorKey: 'valor_a_receber', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Valor" />, cell: ({ row }) => formatBRL(row.original['valor_a_receber']) },
@@ -206,7 +236,37 @@ export default function ModulosFinanceiroPage() {
               />
             )
           },
-          { accessorKey: 'descricao_pagamento', header: () => <IconLabelHeader icon={<FileText className="h-3.5 w-3.5" />} label="Descrição" /> },
+          {
+            accessorKey: 'descricao_pagamento',
+            header: () => <IconLabelHeader icon={<FileText className="h-3.5 w-3.5" />} label="Descrição" />,
+            cell: ({ row }) => {
+              const raw = (row.original['descricao_pagamento'] ?? row.original['descricao']) as unknown
+              const text = raw ? String(raw) : 'Sem descrição'
+              const mockUrl = 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf'
+              const handleClick: React.MouseEventHandler<HTMLDivElement> = (e) => {
+                if (e.altKey) {
+                  window.open(mockUrl, '_blank', 'noopener,noreferrer')
+                  return
+                }
+                setDocUrl(mockUrl)
+                setDocName(text || 'documento.pdf')
+                setDocType('application/pdf')
+                setDocViewerOpen(true)
+              }
+              return (
+                <div
+                  className="flex items-center gap-2 min-w-0 cursor-pointer hover:opacity-90"
+                  title={text}
+                  onClick={handleClick}
+                  role="button"
+                  aria-label={`Abrir documento: ${text}`}
+                >
+                  <FileText className="h-4 w-4 text-gray-500 shrink-0" aria-hidden="true" />
+                  <span className="truncate">{text}</span>
+                </div>
+              )
+            }
+          },
           { accessorKey: 'data_pagamento', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Pago em" />, cell: ({ row }) => formatDate(row.original['data_pagamento']) },
           { accessorKey: 'valor_pago', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Valor" />, cell: ({ row }) => formatBRL(row.original['valor_pago']) },
           { accessorKey: 'conta_financeira', header: () => <IconLabelHeader icon={<Wallet className="h-3.5 w-3.5" />} label="Conta" /> },
@@ -232,7 +292,37 @@ export default function ModulosFinanceiroPage() {
               />
             )
           },
-          { accessorKey: 'descricao_pagamento', header: () => <IconLabelHeader icon={<FileText className="h-3.5 w-3.5" />} label="Descrição" /> },
+          {
+            accessorKey: 'descricao_pagamento',
+            header: () => <IconLabelHeader icon={<FileText className="h-3.5 w-3.5" />} label="Descrição" />,
+            cell: ({ row }) => {
+              const raw = (row.original['descricao_pagamento'] ?? row.original['descricao']) as unknown
+              const text = raw ? String(raw) : 'Sem descrição'
+              const mockUrl = 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf'
+              const handleClick: React.MouseEventHandler<HTMLDivElement> = (e) => {
+                if (e.altKey) {
+                  window.open(mockUrl, '_blank', 'noopener,noreferrer')
+                  return
+                }
+                setDocUrl(mockUrl)
+                setDocName(text || 'documento.pdf')
+                setDocType('application/pdf')
+                setDocViewerOpen(true)
+              }
+              return (
+                <div
+                  className="flex items-center gap-2 min-w-0 cursor-pointer hover:opacity-90"
+                  title={text}
+                  onClick={handleClick}
+                  role="button"
+                  aria-label={`Abrir documento: ${text}`}
+                >
+                  <FileText className="h-4 w-4 text-gray-500 shrink-0" aria-hidden="true" />
+                  <span className="truncate">{text}</span>
+                </div>
+              )
+            }
+          },
           { accessorKey: 'data_pagamento', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Recebido em" />, cell: ({ row }) => formatDate(row.original['data_pagamento']) },
           { accessorKey: 'valor_recebido', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Valor" />, cell: ({ row }) => formatBRL(row.original['valor_recebido']) },
           { accessorKey: 'status_pagamento', header: () => <IconLabelHeader icon={<CheckCircle2 className="h-3.5 w-3.5" />} label="Status" />, cell: ({ row }) => <StatusBadge value={row.original['status_pagamento']} type="status" /> },
