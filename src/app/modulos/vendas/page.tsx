@@ -504,6 +504,7 @@ export default function ModulosVendasPage() {
                   columnOptions={{
                     // Pedidos: evitar quebra de linha
                     cliente: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 140 },
+                    vendedor: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 140 },
                     canal_venda: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 140 },
                     canal_distribuicao: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 140 },
                     campanha_venda: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 160 },

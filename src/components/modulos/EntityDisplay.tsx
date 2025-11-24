@@ -38,8 +38,8 @@ export default function EntityDisplay({ name, subtitle, imageUrl, onClick, click
       <div
         className="flex items-center justify-center mr-3"
         style={{
-          width: 40,
-          height: 40,
+          width: 24,
+          height: 24,
           borderRadius: 8,
           overflow: 'hidden',
           backgroundColor: colors.bg,
@@ -49,13 +49,13 @@ export default function EntityDisplay({ name, subtitle, imageUrl, onClick, click
         {imageUrl ? (
           <img src={imageUrl} alt={displayName} className="w-full h-full object-cover" />
         ) : (
-          <div style={{ fontSize: 18, fontWeight: 600, color: colors.text }}>
+          <div style={{ fontSize: 12, fontWeight: 600, color: colors.text }}>
             {displayName.charAt(0).toUpperCase()}
           </div>
         )}
       </div>
       <div>
-        <div style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}>{displayName}</div>
+        <div style={{ fontSize: 15, fontWeight: 500, color: '#111827' }}>{displayName}</div>
         {subtitle && (
           <div style={{ fontSize: 12, fontWeight: 400, color: '#6b7280' }}>{subtitle}</div>
         )}
