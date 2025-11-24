@@ -118,7 +118,7 @@ export default function CRMDashboardPage() {
           `/api/modulos/crm?view=oportunidades&page=1&pageSize=1000&de=${from ?? deDefault}`,
         ]
         const [kRes, oRes] = await Promise.allSettled([
-          fetch(`/api/modulos/crm/dashboard?${params.toString()}`, { cache: 'no-store' }),
+          fetch(`/api/modulos/crm/relatorio?${params.toString()}`, { cache: 'no-store' }),
           fetch(urls[0], { cache: 'no-store' }),
         ])
         let os: OportunidadeRow[] = []

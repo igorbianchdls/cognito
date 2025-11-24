@@ -354,7 +354,7 @@ export async function GET(req: NextRequest) {
       { headers: { 'Cache-Control': 'no-store' } }
     )
   } catch (error) {
-    console.error('📇 API /api/modulos/crm/dashboard error:', error)
+    console.error('📇 API /api/modulos/crm/relatorio error:', error)
     return Response.json(
       { success: false, message: 'Erro interno', error: error instanceof Error ? error.message : 'Erro desconhecido' },
       { status: 500 }

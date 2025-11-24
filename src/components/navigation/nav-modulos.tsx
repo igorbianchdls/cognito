@@ -254,8 +254,8 @@ export function NavModulos({ groupLabelStyle, itemTextStyle }: { groupLabelStyle
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
                   <SidebarMenuSubItem>
-                    <SidebarMenuSubButton asChild isActive={pathname === "/modulos/crm/dashboard"}>
-                      <a href="/modulos/crm/dashboard">
+                    <SidebarMenuSubButton asChild isActive={pathname === "/modulos/crm/relatorio"}>
+                      <a href="/modulos/crm/relatorio">
                         <span style={itemTextStyle}>Dashboard</span>
                       </a>
                     </SidebarMenuSubButton>
