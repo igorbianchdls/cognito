@@ -528,8 +528,21 @@ export default function ModulosFinanceiroPage() {
                   data={data}
                   headerPadding={6}
                   columnOptions={{
+                    // Fornecedor (diversas visões)
                     fornecedor_nome: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
                     fornecedor: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
+                    // Descrição
+                    descricao_conta: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
+                    descricao_pagamento: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
+                    // Observação
+                    observacao: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
+                    // Categoria (variações por view)
+                    categoria_nome: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
+                    categoria_financeira: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
+                    categoria: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
+                    // Filial (variações por view)
+                    filial_nome: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
+                    filial: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
                   }}
                   enableExpand={tabs.selected === 'extrato'}
                   renderDetail={tabs.selected === 'extrato' ? (row => {
