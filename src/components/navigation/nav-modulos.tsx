@@ -57,9 +57,9 @@ export function NavModulos({ groupLabelStyle, itemTextStyle }: { groupLabelStyle
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
                   <SidebarMenuSubItem>
-                    <SidebarMenuSubButton asChild isActive={pathname === "/modulos/financeiro/dashboard"}>
-                      <a href="/modulos/financeiro/dashboard">
-                        <span style={itemTextStyle}>Dashboard</span>
+                    <SidebarMenuSubButton asChild isActive={pathname === "/modulos/financeiro/relatorio"}>
+                      <a href="/modulos/financeiro/relatorio">
+                        <span style={itemTextStyle}>Relatório</span>
                       </a>
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
@@ -92,9 +92,9 @@ export function NavModulos({ groupLabelStyle, itemTextStyle }: { groupLabelStyle
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
                   <SidebarMenuSubItem>
-                    <SidebarMenuSubButton asChild isActive={pathname === "/modulos/contabilidade/dashboard"}>
-                      <a href="/modulos/contabilidade/dashboard">
-                        <span style={itemTextStyle}>Dashboard</span>
+                    <SidebarMenuSubButton asChild isActive={pathname === "/modulos/contabilidade/relatorio"}>
+                      <a href="/modulos/contabilidade/relatorio">
+                        <span style={itemTextStyle}>Relatório</span>
                       </a>
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
@@ -127,9 +127,9 @@ export function NavModulos({ groupLabelStyle, itemTextStyle }: { groupLabelStyle
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
                   <SidebarMenuSubItem>
-                    <SidebarMenuSubButton asChild isActive={pathname === "/modulos/recursos-humanos/dashboard"}>
-                      <a href="/modulos/recursos-humanos/dashboard">
-                        <span style={itemTextStyle}>Dashboard</span>
+                    <SidebarMenuSubButton asChild isActive={pathname === "/modulos/recursos-humanos/relatorio"}>
+                      <a href="/modulos/recursos-humanos/relatorio">
+                        <span style={itemTextStyle}>Relatório</span>
                       </a>
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
@@ -220,9 +220,9 @@ export function NavModulos({ groupLabelStyle, itemTextStyle }: { groupLabelStyle
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
                   <SidebarMenuSubItem>
-                    <SidebarMenuSubButton asChild isActive={pathname === "/modulos/vendas/dashboard"}>
-                      <a href="/modulos/vendas/dashboard">
-                        <span style={itemTextStyle}>Dashboard</span>
+                    <SidebarMenuSubButton asChild isActive={pathname === "/modulos/vendas/relatorio"}>
+                      <a href="/modulos/vendas/relatorio">
+                        <span style={itemTextStyle}>Relatório</span>
                       </a>
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
@@ -256,7 +256,7 @@ export function NavModulos({ groupLabelStyle, itemTextStyle }: { groupLabelStyle
                   <SidebarMenuSubItem>
                     <SidebarMenuSubButton asChild isActive={pathname === "/modulos/crm/relatorio"}>
                       <a href="/modulos/crm/relatorio">
-                        <span style={itemTextStyle}>Dashboard</span>
+                        <span style={itemTextStyle}>Relatório</span>
                       </a>
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
@@ -303,9 +303,9 @@ export function NavModulos({ groupLabelStyle, itemTextStyle }: { groupLabelStyle
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
                   <SidebarMenuSubItem>
-                    <SidebarMenuSubButton asChild isActive={pathname === "/modulos/servicos/dashboard"}>
-                      <a href="/modulos/servicos/dashboard">
-                        <span style={itemTextStyle}>Dashboard</span>
+                    <SidebarMenuSubButton asChild isActive={pathname === "/modulos/servicos/relatorio"}>
+                      <a href="/modulos/servicos/relatorio">
+                        <span style={itemTextStyle}>Relatório</span>
                       </a>
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
@@ -369,9 +369,9 @@ export function NavModulos({ groupLabelStyle, itemTextStyle }: { groupLabelStyle
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
                   <SidebarMenuSubItem>
-                    <SidebarMenuSubButton asChild isActive={pathname === "/modulos/marketing/dashboard"}>
-                      <a href="/modulos/marketing/dashboard">
-                        <span style={itemTextStyle}>Dashboard</span>
+                    <SidebarMenuSubButton asChild isActive={pathname === "/modulos/marketing/relatorio"}>
+                      <a href="/modulos/marketing/relatorio">
+                        <span style={itemTextStyle}>Relatório</span>
                       </a>
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
@@ -403,9 +403,9 @@ export function NavModulos({ groupLabelStyle, itemTextStyle }: { groupLabelStyle
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
                   <SidebarMenuSubItem>
-                    <SidebarMenuSubButton asChild isActive={pathname === "/modulos/trafego-pago/dashboard"}>
-                      <a href="/modulos/trafego-pago/dashboard">
-                        <span style={itemTextStyle}>Dashboard</span>
+                    <SidebarMenuSubButton asChild isActive={pathname === "/modulos/trafego-pago/relatorio"}>
+                      <a href="/modulos/trafego-pago/relatorio">
+                        <span style={itemTextStyle}>Relatório</span>
                       </a>
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
@@ -437,9 +437,9 @@ export function NavModulos({ groupLabelStyle, itemTextStyle }: { groupLabelStyle
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
                   <SidebarMenuSubItem>
-                    <SidebarMenuSubButton asChild isActive={pathname === "/modulos/web-analytics/dashboard"}>
-                      <a href="/modulos/web-analytics/dashboard">
-                        <span style={itemTextStyle}>Dashboard</span>
+                    <SidebarMenuSubButton asChild isActive={pathname === "/modulos/web-analytics/relatorio"}>
+                      <a href="/modulos/web-analytics/relatorio">
+                        <span style={itemTextStyle}>Relatório</span>
                       </a>
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
@@ -477,9 +477,9 @@ export function NavModulos({ groupLabelStyle, itemTextStyle }: { groupLabelStyle
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
                   <SidebarMenuSubItem>
-                    <SidebarMenuSubButton asChild isActive={pathname === "/modulos/estoque/dashboard"}>
-                      <a href="/modulos/estoque/dashboard">
-                        <span style={itemTextStyle}>Dashboard</span>
+                    <SidebarMenuSubButton asChild isActive={pathname === "/modulos/estoque/relatorio"}>
+                      <a href="/modulos/estoque/relatorio">
+                        <span style={itemTextStyle}>Relatório</span>
                       </a>
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
@@ -512,9 +512,9 @@ export function NavModulos({ groupLabelStyle, itemTextStyle }: { groupLabelStyle
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
                   <SidebarMenuSubItem>
-                    <SidebarMenuSubButton asChild isActive={pathname === "/modulos/compras/dashboard"}>
-                      <a href="/modulos/compras/dashboard">
-                        <span style={itemTextStyle}>Dashboard</span>
+                    <SidebarMenuSubButton asChild isActive={pathname === "/modulos/compras/relatorio"}>
+                      <a href="/modulos/compras/relatorio">
+                        <span style={itemTextStyle}>Relatório</span>
                       </a>
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
