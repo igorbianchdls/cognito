@@ -269,7 +269,20 @@ export default function ModulosFinanceiroPage() {
               />
             )
           },
-          { accessorKey: 'descricao_conta', header: () => <IconLabelHeader icon={<FileText className="h-3.5 w-3.5" />} label="Descrição" /> },
+          {
+            accessorKey: 'descricao_conta',
+            header: () => <IconLabelHeader icon={<FileText className="h-3.5 w-3.5" />} label="Descrição" />,
+            cell: ({ row }) => {
+              const raw = (row.original['descricao_conta'] ?? row.original['descricao']) as unknown
+              const text = raw ? String(raw) : 'Sem descrição'
+              return (
+                <div className="flex items-center gap-2 min-w-0" title={text}>
+                  <FileText className="h-4 w-4 text-gray-500 shrink-0" aria-hidden="true" />
+                  <span className="truncate">{text}</span>
+                </div>
+              )
+            }
+          },
           { accessorKey: 'data_lancamento', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Lançamento" />, cell: ({ row }) => formatDate(row.original['data_lancamento']) },
           { accessorKey: 'data_vencimento', header: () => <IconLabelHeader icon={<CalendarClock className="h-3.5 w-3.5" />} label="Vencimento" />, cell: ({ row }) => formatDate(row.original['data_vencimento']) },
           { accessorKey: 'valor_a_pagar', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Valor" />, cell: ({ row }) => formatBRL(row.original['valor_a_pagar']) },
