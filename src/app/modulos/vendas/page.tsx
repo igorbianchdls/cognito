@@ -14,6 +14,7 @@ import DataTable, { type TableData } from '@/components/widgets/Table'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/stores/modulos/moduleUiStore'
 import { ShoppingCart, RotateCcw, Ticket, LayoutGrid, User, Users, Building2, Building, Calendar, CalendarClock, CheckCircle2, DollarSign, Percent, Coins, TrendingUp, Truck, FileText, Tag, Table, Bookmark, Settings, Megaphone, Star, Hash } from 'lucide-react'
 import IconLabelHeader from '@/components/widgets/IconLabelHeader'
+import EntityDisplay from '@/components/modulos/EntityDisplay'
 
 type Row = TableData
 
@@ -256,8 +257,22 @@ export default function ModulosVendasPage() {
       case 'pedidos':
         return [
           { accessorKey: 'pedido', header: () => <IconLabelHeader icon={<ShoppingCart className="h-3.5 w-3.5" />} label="Pedido" /> },
-          { accessorKey: 'cliente', header: () => <IconLabelHeader icon={<User className="h-3.5 w-3.5" />} label="Cliente" /> },
-          { accessorKey: 'vendedor', header: () => <IconLabelHeader icon={<Users className="h-3.5 w-3.5" />} label="Vendedor" /> },
+          { accessorKey: 'cliente', header: () => <IconLabelHeader icon={<User className="h-3.5 w-3.5" />} label="Cliente" />,
+            cell: ({ row }) => (
+              <EntityDisplay
+                name={row.original['cliente'] ? String(row.original['cliente']) : 'Sem nome'}
+                imageUrl={row.original['cliente_imagem_url'] ? String(row.original['cliente_imagem_url']) : undefined}
+              />
+            )
+          },
+          { accessorKey: 'vendedor', header: () => <IconLabelHeader icon={<Users className="h-3.5 w-3.5" />} label="Vendedor" />,
+            cell: ({ row }) => (
+              <EntityDisplay
+                name={row.original['vendedor'] ? String(row.original['vendedor']) : 'Sem nome'}
+                imageUrl={row.original['vendedor_imagem_url'] ? String(row.original['vendedor_imagem_url']) : undefined}
+              />
+            )
+          },
           { accessorKey: 'territorio', header: () => <IconLabelHeader icon={<Building2 className="h-3.5 w-3.5" />} label="Território" /> },
           { accessorKey: 'canal_venda', header: () => <IconLabelHeader icon={<LayoutGrid className="h-3.5 w-3.5" />} label="Canal" /> },
           { accessorKey: 'canal_distribuicao', header: () => <IconLabelHeader icon={<Truck className="h-3.5 w-3.5" />} label="Canal Distribuição" /> },
