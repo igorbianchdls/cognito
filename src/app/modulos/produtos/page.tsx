@@ -14,7 +14,8 @@ import DataTable, { type TableData } from '@/components/widgets/Table'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/stores/modulos/moduleUiStore'
 import EntityDisplay from '@/components/modulos/EntityDisplay'
 import StatusBadge from '@/components/modulos/StatusBadge'
-import { List } from 'lucide-react'
+import { List, Package, FileText, Tag, CheckCircle2, DollarSign, Ruler, Globe } from 'lucide-react'
+import IconLabelHeader from '@/components/widgets/IconLabelHeader'
 import CadastroProdutoSheet from '@/components/produtos/CadastroProdutoSheet'
 import CadastroVariacaoSheet from '@/components/produtos/CadastroVariacaoSheet'
 import CadastroDadosFiscaisSheet from '@/components/produtos/CadastroDadosFiscaisSheet'
@@ -88,7 +89,7 @@ export default function ModulosProdutosPage() {
         return [
           {
             accessorKey: 'nome',
-            header: 'Produto',
+            header: () => <IconLabelHeader icon={<Package className="h-3.5 w-3.5" />} label="Produto" />,
             cell: ({ row }) => (
               <EntityDisplay
                 name={row.original['nome'] ? String(row.original['nome']) : 'Sem nome'}
@@ -97,30 +98,30 @@ export default function ModulosProdutosPage() {
               />
             )
           },
-          { accessorKey: 'descricao', header: 'Descrição' },
-          { accessorKey: 'marca', header: 'Marca' },
-          { accessorKey: 'ativo', header: 'Ativo', cell: ({ row }) => <StatusBadge value={row.original['ativo']} type="bool" /> },
+          { accessorKey: 'descricao', header: () => <IconLabelHeader icon={<FileText className="h-3.5 w-3.5" />} label="Descrição" /> },
+          { accessorKey: 'marca', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Marca" /> },
+          { accessorKey: 'ativo', header: () => <IconLabelHeader icon={<CheckCircle2 className="h-3.5 w-3.5" />} label="Ativo" />, cell: ({ row }) => <StatusBadge value={row.original['ativo']} type="bool" /> },
         ]
       case 'variacoes':
         return [
-          { accessorKey: 'produto_pai', header: 'Produto' },
-          { accessorKey: 'sku', header: 'SKU' },
-          { accessorKey: 'preco_base', header: 'Preço Base', cell: ({ row }) => formatBRL(row.original['preco_base']) },
-          { accessorKey: 'peso_kg', header: 'Peso (kg)' },
-          { accessorKey: 'altura_cm', header: 'Altura (cm)' },
-          { accessorKey: 'largura_cm', header: 'Largura (cm)' },
-          { accessorKey: 'profundidade_cm', header: 'Profundidade (cm)' },
-          { accessorKey: 'ativo', header: 'Ativo', cell: ({ row }) => <StatusBadge value={row.original['ativo']} type="bool" /> },
+          { accessorKey: 'produto_pai', header: () => <IconLabelHeader icon={<Package className="h-3.5 w-3.5" />} label="Produto" /> },
+          { accessorKey: 'sku', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="SKU" /> },
+          { accessorKey: 'preco_base', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Preço Base" />, cell: ({ row }) => formatBRL(row.original['preco_base']) },
+          { accessorKey: 'peso_kg', header: () => <IconLabelHeader icon={<Ruler className="h-3.5 w-3.5" />} label="Peso (kg)" /> },
+          { accessorKey: 'altura_cm', header: () => <IconLabelHeader icon={<Ruler className="h-3.5 w-3.5" />} label="Altura (cm)" /> },
+          { accessorKey: 'largura_cm', header: () => <IconLabelHeader icon={<Ruler className="h-3.5 w-3.5" />} label="Largura (cm)" /> },
+          { accessorKey: 'profundidade_cm', header: () => <IconLabelHeader icon={<Ruler className="h-3.5 w-3.5" />} label="Profundidade (cm)" /> },
+          { accessorKey: 'ativo', header: () => <IconLabelHeader icon={<CheckCircle2 className="h-3.5 w-3.5" />} label="Ativo" />, cell: ({ row }) => <StatusBadge value={row.original['ativo']} type="bool" /> },
         ]
       case 'dados-fiscais':
         return [
-          { accessorKey: 'produto', header: 'Produto' },
-          { accessorKey: 'sku', header: 'SKU' },
-          { accessorKey: 'ncm', header: 'NCM' },
-          { accessorKey: 'cest', header: 'CEST' },
-          { accessorKey: 'cfop', header: 'CFOP' },
-          { accessorKey: 'cst', header: 'CST' },
-          { accessorKey: 'origem', header: 'Origem' },
+          { accessorKey: 'produto', header: () => <IconLabelHeader icon={<Package className="h-3.5 w-3.5" />} label="Produto" /> },
+          { accessorKey: 'sku', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="SKU" /> },
+          { accessorKey: 'ncm', header: () => <IconLabelHeader icon={<FileText className="h-3.5 w-3.5" />} label="NCM" /> },
+          { accessorKey: 'cest', header: () => <IconLabelHeader icon={<FileText className="h-3.5 w-3.5" />} label="CEST" /> },
+          { accessorKey: 'cfop', header: () => <IconLabelHeader icon={<FileText className="h-3.5 w-3.5" />} label="CFOP" /> },
+          { accessorKey: 'cst', header: () => <IconLabelHeader icon={<FileText className="h-3.5 w-3.5" />} label="CST" /> },
+          { accessorKey: 'origem', header: () => <IconLabelHeader icon={<Globe className="h-3.5 w-3.5" />} label="Origem" /> },
           { accessorKey: 'aliquota_icms', header: 'ICMS (%)' },
           { accessorKey: 'aliquota_ipi', header: 'IPI (%)' },
           { accessorKey: 'aliquota_pis', header: 'PIS (%)' },
