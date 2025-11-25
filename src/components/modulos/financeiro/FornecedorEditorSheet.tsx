@@ -34,6 +34,8 @@ export default function FornecedorEditorSheet({ open, onOpenChange, conta, forne
   const [error, setError] = useState<string | null>(null)
 
   const [fornecedor, setFornecedor] = useState<FornecedorPrefill>({ nome_fornecedor: '', imagem_url: '' })
+  const [avatarFile, setAvatarFile] = useState<File | null>(null)
+  const [avatarUploading, setAvatarUploading] = useState(false)
   const [contaForm, setContaForm] = useState<Conta>({ id: '', descricao: '', data_vencimento: '', valor_total: '', status: '' })
 
   const initialFornecedorRef = useRef<FornecedorPrefill>({})
@@ -118,6 +120,24 @@ export default function FornecedorEditorSheet({ open, onOpenChange, conta, forne
   }
   const onChangeConta = (k: keyof Conta, v: string | number) => {
     setContaForm((prev) => ({ ...prev, [k]: v }))
+  }
+
+  const uploadAvatar = async () => {
+    if (!fornecedorId || !avatarFile) return
+    setAvatarUploading(true)
+    try {
+      const fd = new FormData()
+      fd.set('file', avatarFile)
+      const res = await fetch(`/api/modulos/financeiro/fornecedores/${fornecedorId}/avatar`, { method: 'POST', body: fd })
+      const json = await res.json()
+      if (!res.ok || !json?.success) throw new Error(json?.message || 'Falha ao enviar foto')
+      setFornecedor((prev) => ({ ...prev, imagem_url: String(json.imagem_url || prev.imagem_url || '') }))
+      setAvatarFile(null)
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Falha ao enviar foto')
+    } finally {
+      setAvatarUploading(false)
+    }
   }
 
   type FornecedorKeys = 'nome_fornecedor' | 'imagem_url'
@@ -205,6 +225,22 @@ export default function FornecedorEditorSheet({ open, onOpenChange, conta, forne
           <div>
             <h3 className="text-sm font-semibold text-gray-900 mb-3">Fornecedor</h3>
             <div className="space-y-3">
+              <div className="grid gap-2">
+                <Label>Foto do Fornecedor</Label>
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-md overflow-hidden bg-gray-100 flex items-center justify-center">
+                    {fornecedor.imagem_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={fornecedor.imagem_url} alt="Avatar" className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-xs text-gray-500">Sem foto</span>
+                    )}
+                  </div>
+                  <input type="file" accept="image/*" onChange={(e) => setAvatarFile(e.target.files?.[0] || null)} />
+                  <Button onClick={uploadAvatar} disabled={!avatarFile || avatarUploading || !fornecedorId}>{avatarUploading ? 'Enviando...' : 'Enviar'}</Button>
+                </div>
+                <p className="text-xs text-gray-500">Você também pode colar um link abaixo.</p>
+              </div>
               <div className="grid gap-2">
                 <Label htmlFor="nome_fornecedor">Nome</Label>
                 <Input id="nome_fornecedor" value={fornecedor.nome_fornecedor ?? ''} onChange={(e) => onChangeFornecedor('nome_fornecedor', e.target.value)} placeholder="Digite o nome do fornecedor" />

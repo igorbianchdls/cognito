@@ -26,6 +26,8 @@ export default function ClienteEditorSheet({ open, onOpenChange, clienteId, pref
 
   const [form, setForm] = useState<Cliente>({ id: '', nome_cliente: '', imagem_url: '' })
   const initialRef = useRef<Cliente>({ id: '' })
+  const [avatarFile, setAvatarFile] = useState<File | null>(null)
+  const [avatarUploading, setAvatarUploading] = useState(false)
 
   const canSave = useMemo(() => !loading && !!clienteId, [loading, clienteId])
 
@@ -57,6 +59,24 @@ export default function ClienteEditorSheet({ open, onOpenChange, clienteId, pref
   }, [open, clienteId, prefill?.nome_cliente, prefill?.imagem_url])
 
   const onChange = (k: keyof Cliente, v: string) => setForm((prev) => ({ ...prev, [k]: v }))
+
+  const uploadAvatar = async () => {
+    if (!clienteId || !avatarFile) return
+    setAvatarUploading(true)
+    try {
+      const fd = new FormData()
+      fd.set('file', avatarFile)
+      const res = await fetch(`/api/modulos/financeiro/clientes/${clienteId}/avatar`, { method: 'POST', body: fd })
+      const json = await res.json()
+      if (!res.ok || !json?.success) throw new Error(json?.message || 'Falha ao enviar foto')
+      setForm((prev) => ({ ...prev, imagem_url: String(json.imagem_url || prev.imagem_url || '') }))
+      setAvatarFile(null)
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Falha ao enviar foto')
+    } finally {
+      setAvatarUploading(false)
+    }
+  }
 
   const getPatch = () => {
     const out: Record<string, unknown> = {}
@@ -95,6 +115,22 @@ export default function ClienteEditorSheet({ open, onOpenChange, clienteId, pref
         {error && <div className="mt-4 mb-2 text-sm text-red-600 border border-red-200 bg-red-50 px-3 py-2 rounded">{error}</div>}
         <div className="mt-4 space-y-4">
           <div className="grid gap-2">
+            <Label>Foto do Cliente</Label>
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-md overflow-hidden bg-gray-100 flex items-center justify-center">
+                {form.imagem_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={form.imagem_url} alt="Avatar" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-xs text-gray-500">Sem foto</span>
+                )}
+              </div>
+              <input type="file" accept="image/*" onChange={(e) => setAvatarFile(e.target.files?.[0] || null)} />
+              <Button onClick={uploadAvatar} disabled={!avatarFile || avatarUploading || !clienteId}>{avatarUploading ? 'Enviando...' : 'Enviar'}</Button>
+            </div>
+            <p className="text-xs text-gray-500">Você também pode colar um link abaixo.</p>
+          </div>
+          <div className="grid gap-2">
             <Label htmlFor="nome_cliente">Nome</Label>
             <Input id="nome_cliente" value={form.nome_cliente ?? ''} onChange={(e) => onChange('nome_cliente', e.target.value)} />
           </div>
@@ -114,4 +150,3 @@ export default function ClienteEditorSheet({ open, onOpenChange, clienteId, pref
     </Sheet>
   )
 }
-
