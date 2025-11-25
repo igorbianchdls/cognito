@@ -188,7 +188,7 @@ export default function ModulosFinanceiroPage() {
               const text = raw ? String(raw) : 'Sem descrição'
               const storageKey = row.original['storage_key'] as string | undefined
               const contentType = row.original['content_type'] as string | undefined
-              const fileName = (row.original['nome_arquivo'] as string | undefined) || (text || 'documento')
+              const fileName = (row.original['nome_arquivo'] as string | null | undefined) ?? (text || 'documento')
               const lancIdRaw = row.original['conta_id'] as unknown
               const lancId = Number(lancIdRaw)
               const handleClick: React.MouseEventHandler<HTMLDivElement> = (e) => {
@@ -204,10 +204,10 @@ export default function ModulosFinanceiroPage() {
                 void (async () => {
                   const res = await fetch(`/api/modulos/financeiro/lancamentos/${lancId}/arquivo/preview`)
                   const json = await res.json()
-                  if (json?.success && json?.url) {
-                    setDocUrl(json.url)
+                  if (json?.success) {
+                    setDocUrl(json?.url ?? null)
                     setDocName(fileName)
-                    setDocType(contentType || undefined)
+                    setDocType(contentType ?? null)
                     setDocViewerOpen(true)
                   }
                 })()
@@ -260,7 +260,7 @@ export default function ModulosFinanceiroPage() {
               const text = raw ? String(raw) : 'Sem descrição'
               const storageKey = row.original['storage_key'] as string | undefined
               const contentType = row.original['content_type'] as string | undefined
-              const fileName = (row.original['nome_arquivo'] as string | undefined) || (text || 'documento')
+              const fileName = (row.original['nome_arquivo'] as string | null | undefined) ?? (text || 'documento')
               const lancIdRaw = row.original['pagamento_id'] as unknown
               const lancId = Number(lancIdRaw)
               const handleClick: React.MouseEventHandler<HTMLDivElement> = (e) => {
@@ -276,10 +276,10 @@ export default function ModulosFinanceiroPage() {
                 void (async () => {
                   const res = await fetch(`/api/modulos/financeiro/lancamentos/${lancId}/arquivo/preview`)
                   const json = await res.json()
-                  if (json?.success && json?.url) {
-                    setDocUrl(json.url)
+                  if (json?.success) {
+                    setDocUrl(json?.url ?? null)
                     setDocName(fileName)
-                    setDocType(contentType || undefined)
+                    setDocType(contentType ?? null)
                     setDocViewerOpen(true)
                   }
                 })()
@@ -332,7 +332,7 @@ export default function ModulosFinanceiroPage() {
               const text = raw ? String(raw) : 'Sem descrição'
               const storageKey = row.original['storage_key'] as string | undefined
               const contentType = row.original['content_type'] as string | undefined
-              const fileName = (row.original['nome_arquivo'] as string | undefined) || (text || 'documento')
+              const fileName = (row.original['nome_arquivo'] as string | null | undefined) ?? (text || 'documento')
               const lancIdRaw = row.original['pagamento_id'] as unknown
               const lancId = Number(lancIdRaw)
               const handleClick: React.MouseEventHandler<HTMLDivElement> = (e) => {
@@ -348,10 +348,10 @@ export default function ModulosFinanceiroPage() {
                 void (async () => {
                   const res = await fetch(`/api/modulos/financeiro/lancamentos/${lancId}/arquivo/preview`)
                   const json = await res.json()
-                  if (json?.success && json?.url) {
-                    setDocUrl(json.url)
+                  if (json?.success) {
+                    setDocUrl(json?.url ?? null)
                     setDocName(fileName)
-                    setDocType(contentType || undefined)
+                    setDocType(contentType ?? null)
                     setDocViewerOpen(true)
                   }
                 })()
@@ -416,7 +416,7 @@ export default function ModulosFinanceiroPage() {
               const text = raw ? String(raw) : 'Sem descrição'
               const storageKey = row.original['storage_key'] as string | undefined
               const contentType = row.original['content_type'] as string | undefined
-              const fileName = (row.original['nome_arquivo'] as string | undefined) || (text || 'documento')
+              const fileName = (row.original['nome_arquivo'] as string | null | undefined) ?? (text || 'documento')
               const lancIdRaw = row.original['conta_id'] as unknown
               const lancId = Number(lancIdRaw)
               const handleClick: React.MouseEventHandler<HTMLDivElement> = (e) => {
@@ -432,10 +432,10 @@ export default function ModulosFinanceiroPage() {
                 void (async () => {
                   const res = await fetch(`/api/modulos/financeiro/lancamentos/${lancId}/arquivo/preview`)
                   const json = await res.json()
-                  if (json?.success && json?.url) {
-                    setDocUrl(json.url)
+                  if (json?.success) {
+                    setDocUrl(json?.url ?? null)
                     setDocName(fileName)
-                    setDocType(contentType || undefined)
+                    setDocType(contentType ?? null)
                     setDocViewerOpen(true)
                   }
                 })()
