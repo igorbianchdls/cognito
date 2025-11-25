@@ -126,31 +126,38 @@ export default function OrdensDeServicosPage() {
           { accessorKey: 'admissao', header: 'Admissão', cell: ({ row }) => formatDate(row.original['admissao']) },
         ]
       case 'servicos-executados':
+        // Alinhado exatamente aos campos da query de serviços executados
         return [
-          { accessorKey: 'numero_os', header: 'Nº OS' },
-          { accessorKey: 'servico', header: 'Serviço' },
-          { accessorKey: 'cliente', header: 'Cliente' },
-          { accessorKey: 'tecnico', header: 'Técnico' },
+          { accessorKey: 'id', header: 'ID' },
+          { accessorKey: 'ordem_servico_id', header: 'OS' },
+          { accessorKey: 'servico_nome', header: 'Serviço' },
+          { accessorKey: 'categoria_servico', header: 'Categoria' },
           { accessorKey: 'quantidade', header: 'Qtd.' },
-          { accessorKey: 'valor_total', header: 'Valor (R$)', cell: ({ row }) => formatBRL(row.original['valor_total']) },
-          { accessorKey: 'data_execucao', header: 'Data Execução', cell: ({ row }) => formatDate(row.original['data_execucao']) },
+          { accessorKey: 'valor_unitario', header: 'Valor Unit. (R$)', cell: ({ row }) => formatBRL(row.original['valor_unitario']) },
+          { accessorKey: 'valor_total', header: 'Valor Total (R$)', cell: ({ row }) => formatBRL(row.original['valor_total']) },
+          { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em']) },
         ]
       case 'itens-materiais':
+        // Alinhado exatamente aos campos da query de itens materiais
         return [
-          { accessorKey: 'numero_os', header: 'Nº OS' },
-          { accessorKey: 'item', header: 'Item' },
-          { accessorKey: 'categoria', header: 'Categoria' },
+          { accessorKey: 'id', header: 'ID' },
+          { accessorKey: 'ordem_servico_id', header: 'OS' },
+          { accessorKey: 'produto_nome', header: 'Produto' },
           { accessorKey: 'quantidade', header: 'Qtd.' },
-          { accessorKey: 'custo_unitario', header: 'Custo Unit.', cell: ({ row }) => formatBRL(row.original['custo_unitario']) },
+          { accessorKey: 'custo_unitario', header: 'Custo Unit. (R$)', cell: ({ row }) => formatBRL(row.original['custo_unitario']) },
           { accessorKey: 'custo_total', header: 'Total (R$)', cell: ({ row }) => formatBRL(row.original['custo_total']) },
+          { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em']) },
         ]
       case 'checklist':
+        // Alinhado exatamente aos campos da query de checklist
         return [
-          { accessorKey: 'item', header: 'Item de Verificação' },
-          { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
-          { accessorKey: 'responsavel', header: 'Responsável' },
-          { accessorKey: 'data', header: 'Data', cell: ({ row }) => formatDate(row.original['data']) },
-          { accessorKey: 'observacoes', header: 'Observações' },
+          { accessorKey: 'id', header: 'ID' },
+          { accessorKey: 'ordem_servico_id', header: 'OS' },
+          { accessorKey: 'item', header: 'Item' },
+          { accessorKey: 'concluido', header: 'Concluído', cell: ({ row }) => <StatusBadge value={row.original['concluido'] ? 'Concluído' : 'Pendente'} type="status" /> },
+          { accessorKey: 'observacao', header: 'Observação' },
+          { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em']) },
+          { accessorKey: 'atualizado_em', header: 'Atualizado em', cell: ({ row }) => formatDate(row.original['atualizado_em']) },
         ]
       case 'ordens-servico':
       default:
@@ -170,7 +177,7 @@ export default function OrdensDeServicosPage() {
     }
   }, [tabs.selected])
 
-  const fetchableViews = new Set(['ordens-servico', 'tecnicos'])
+  const fetchableViews = new Set(['ordens-servico', 'servicos-executados', 'itens-materiais', 'checklist', 'tecnicos'])
 
   useEffect(() => {
     const controller = new AbortController()

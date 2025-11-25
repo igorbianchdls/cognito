@@ -137,46 +137,62 @@ LEFT JOIN entidades.funcionarios func
 
 ORDER BY os.id DESC;`
     } else if (view === 'servicos-executados') {
-      selectSql = `SELECT os.numero_os,
-                          s.nome AS servico,
-                          c.nome_fantasia AS cliente,
-                          t.nome AS tecnico,
-                          ose.quantidade,
-                          ose.valor_total,
-                          ose.criado_em AS data_execucao`;
-      baseSql = `FROM servicos.os_servicos_executados ose
-                 LEFT JOIN servicos.ordens_servico os ON os.id = ose.ordem_servico_id
-                 LEFT JOIN servicos.servicos s ON s.id = ose.servico_id
-                 LEFT JOIN servicos.clientes c ON c.id = os.cliente_id
-                 LEFT JOIN servicos.tecnicos t ON t.id = os.tecnico_responsavel_id`;
-      whereDateCol = 'ose.criado_em'
-      if (tenant_id) push('os.tenant_id =', tenant_id)
-      if (cliente_id) push('os.cliente_id =', cliente_id)
-      if (tecnico_id) push('os.tecnico_responsavel_id =', tecnico_id)
-      if (q) {
-        conditions.push(`(os.numero_os ILIKE '%' || $${i} || '%' OR COALESCE(s.nome,'') ILIKE '%' || $${i} || '%' OR COALESCE(c.nome_fantasia,'') ILIKE '%' || $${i} || '%' OR COALESCE(t.nome,'') ILIKE '%' || $${i} || '%')`)
-        params.push(q)
-        i += 1
-      }
+      // Usa EXATAMENTE a query fornecida para Serviços Executados
+      rawSql = `SELECT
+    ose.id,
+    ose.tenant_id,
+
+    -- Ordem de Serviço
+    ose.ordem_servico_id,
+
+    -- Serviço
+    ose.servico_id,
+    serv.nome AS servico_nome,
+
+    -- Categoria do serviço
+    cat.nome AS categoria_servico,
+
+    -- Quantidade e valores
+    ose.quantidade,
+    ose.valor_unitario,
+    ose.valor_total,
+
+    ose.criado_em,
+    ose.atualizado_em
+
+FROM servicos.os_servicos_executados ose
+LEFT JOIN servicos.catalogo_servicos serv
+       ON serv.id = ose.servico_id
+LEFT JOIN servicos.categorias_servicos cat
+       ON cat.id = serv.categoria_id
+
+ORDER BY ose.id DESC;`
     } else if (view === 'itens-materiais') {
-      selectSql = `SELECT os.numero_os,
-                          p.nome AS item,
-                          cat.nome AS categoria,
-                          oim.quantidade,
-                          oim.custo_unitario,
-                          oim.custo_total`;
-      baseSql = `FROM servicos.os_itens_materiais oim
-                 LEFT JOIN servicos.ordens_servico os ON os.id = oim.ordem_servico_id
-                 LEFT JOIN produtos.produto p ON p.id = oim.produto_id
-                 LEFT JOIN produtos.categorias cat ON cat.id = p.categoria_id`;
-      whereDateCol = 'oim.criado_em'
-      if (tenant_id) push('os.tenant_id =', tenant_id)
-      if (cliente_id) push('os.cliente_id =', cliente_id)
-      if (q) {
-        conditions.push(`(os.numero_os ILIKE '%' || $${i} || '%' OR COALESCE(p.nome,'') ILIKE '%' || $${i} || '%')`)
-        params.push(q)
-        i += 1
-      }
+      // Usa EXATAMENTE a query fornecida para Itens Materiais
+      rawSql = `SELECT
+    osm.id,
+    osm.tenant_id,
+
+    -- Ordem de Serviço
+    osm.ordem_servico_id,
+
+    -- Produto
+    osm.produto_id,
+    prod.nome AS produto_nome,
+
+    -- Quantidades e custos
+    osm.quantidade,
+    osm.custo_unitario,
+    osm.custo_total,
+
+    osm.criado_em,
+    osm.atualizado_em
+
+FROM servicos.os_itens_materiais osm
+LEFT JOIN produtos.produto prod
+       ON prod.id = osm.produto_id
+
+ORDER BY osm.id DESC;`
     } else if (view === 'tecnicos') {
       // Técnicos com contagem de OS e somatório de horas a partir de os_tecnicos
       selectSql = `SELECT tec.id AS id,
@@ -205,21 +221,24 @@ ORDER BY os.id DESC;`
         i += 1
       }
     } else if (view === 'checklist') {
-      selectSql = `SELECT oc.item,
-                          CASE WHEN oc.concluido THEN 'Concluído' ELSE 'Pendente' END AS status,
-                          COALESCE(t.nome, '—') AS responsavel,
-                          COALESCE(oc.atualizado_em, oc.criado_em) AS data,
-                          oc.observacao AS observacoes`;
-      baseSql = `FROM servicos.os_checklist oc
-                 LEFT JOIN servicos.ordens_servico os ON os.id = oc.ordem_servico_id
-                 LEFT JOIN servicos.tecnicos t ON t.id = os.tecnico_responsavel_id`;
-      whereDateCol = 'oc.atualizado_em'
-      if (tenant_id) push('os.tenant_id =', tenant_id)
-      if (q) {
-        conditions.push(`(oc.item ILIKE '%' || $${i} || '%' OR COALESCE(oc.observacao,'') ILIKE '%' || $${i} || '%')`)
-        params.push(q)
-        i += 1
-      }
+      // Usa EXATAMENTE a query fornecida para Checklist
+      rawSql = `SELECT
+    chk.id,
+    chk.tenant_id,
+
+    -- Ordem de Serviço
+    chk.ordem_servico_id,
+
+    -- Dados do checklist
+    chk.item,
+    chk.concluido,
+    chk.observacao,
+
+    chk.criado_em,
+    chk.atualizado_em
+
+FROM servicos.os_checklist chk
+ORDER BY chk.id DESC;`
     } else {
       return Response.json({ success: false, message: `View inválida: ${view}` }, { status: 400 })
     }
