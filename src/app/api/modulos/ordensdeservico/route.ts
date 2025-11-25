@@ -194,32 +194,31 @@ LEFT JOIN produtos.produto prod
 
 ORDER BY osm.id DESC;`
     } else if (view === 'tecnicos') {
-      // Técnicos com contagem de OS e somatório de horas a partir de os_tecnicos
-      selectSql = `SELECT tec.id AS id,
-                          tec.nome AS tecnico,
-                          tec.imagem_url AS tecnico_imagem_url,
-                          tec.cargo,
-                          tec.especialidade,
-                          tec.custo_hora,
-                          tec.telefone,
-                          tec.email,
-                          tec.status,
-                          COUNT(DISTINCT os.id) AS ordens_servico,
-                          COALESCE(SUM(ot.horas_trabalhadas), 0) AS horas_trabalhadas,
-                          tec.data_admissao AS admissao`;
-      baseSql = `FROM servicos.tecnicos tec
-                 LEFT JOIN servicos.os_tecnicos ot ON ot.tecnico_id = tec.id
-                 LEFT JOIN servicos.ordens_servico os ON os.id = ot.ordem_servico_id`;
-      whereDateCol = 'tec.data_admissao'
-      // Se houver tenant_id, filtramos por relação em os_tecnicos
-      if (tenant_id) push('ot.tenant_id =', tenant_id)
-      groupBy = 'GROUP BY tec.id, tec.nome, tec.imagem_url, tec.cargo, tec.especialidade, tec.custo_hora, tec.telefone, tec.email, tec.status, tec.data_admissao'
-      if (status) push('LOWER(tec.status) =', status.toLowerCase())
-      if (q) {
-        conditions.push(`(tec.nome ILIKE '%' || $${i} || '%' OR tec.especialidade ILIKE '%' || $${i} || '%')`)
-        params.push(q)
-        i += 1
-      }
+      // Usa EXATAMENTE a query fornecida para Técnicos da OS
+      rawSql = `SELECT
+    ost.id,
+    ost.tenant_id,
+
+    -- Ordem de Serviço
+    ost.ordem_servico_id,
+
+    -- Técnico
+    ost.tecnico_id,
+    func.nome AS tecnico_nome,
+
+    -- Horários
+    ost.hora_inicio,
+    ost.hora_fim,
+    ost.horas_trabalhadas,
+
+    ost.criado_em,
+    ost.atualizado_em
+
+FROM servicos.os_tecnicos ost
+LEFT JOIN entidades.funcionarios func
+       ON func.id = ost.tecnico_id
+
+ORDER BY ost.id DESC;`
     } else if (view === 'checklist') {
       // Usa EXATAMENTE a query fornecida para Checklist
       rawSql = `SELECT

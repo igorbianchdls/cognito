@@ -98,32 +98,17 @@ export default function OrdensDeServicosPage() {
   const columns: ColumnDef<Row>[] = useMemo(() => {
     switch (tabs.selected) {
       case 'tecnicos':
+        // Alinhado aos campos da query de técnicos (os_tecnicos + funcionarios)
         return [
           { accessorKey: 'id', header: 'ID' },
-          {
-            accessorKey: 'tecnico',
-            header: 'Técnico',
-            size: 250,
-            minSize: 200,
-            cell: ({ row }) => (
-              <EntityDisplay
-                name={row.original['tecnico'] ? String(row.original['tecnico']) : 'Sem nome'}
-                subtitle={row.original['cargo'] ? String(row.original['cargo']) : 'Sem cargo'}
-                imageUrl={row.original['tecnico_imagem_url'] ? String(row.original['tecnico_imagem_url']) : undefined}
-                onClick={() => openImagemEditor('tecnico', row.original['id'] as string | number, { nome: String(row.original['tecnico'] || ''), imagem_url: row.original['tecnico_imagem_url'] ? String(row.original['tecnico_imagem_url']) : undefined })}
-                clickable
-              />
-            )
-          },
-          { accessorKey: 'cargo', header: 'Cargo' },
-          { accessorKey: 'especialidade', header: 'Especialidade' },
-          { accessorKey: 'custo_hora', header: 'Custo/Hora (R$)', cell: ({ row }) => formatBRL(row.original['custo_hora']) },
-          { accessorKey: 'telefone', header: 'Telefone' },
-          { accessorKey: 'email', header: 'Email' },
-          { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
-          { accessorKey: 'ordens_servico', header: 'Ordens de Serviço' },
+          { accessorKey: 'ordem_servico_id', header: 'OS' },
+          { accessorKey: 'tecnico_id', header: 'ID Técnico' },
+          { accessorKey: 'tecnico_nome', header: 'Técnico' },
+          { accessorKey: 'hora_inicio', header: 'Início', cell: ({ row }) => formatDate(row.original['hora_inicio'], true) },
+          { accessorKey: 'hora_fim', header: 'Fim', cell: ({ row }) => formatDate(row.original['hora_fim'], true) },
           { accessorKey: 'horas_trabalhadas', header: 'Horas Trabalhadas' },
-          { accessorKey: 'admissao', header: 'Admissão', cell: ({ row }) => formatDate(row.original['admissao']) },
+          { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em'], true) },
+          { accessorKey: 'atualizado_em', header: 'Atualizado em', cell: ({ row }) => formatDate(row.original['atualizado_em'], true) },
         ]
       case 'servicos-executados':
         // Alinhado exatamente aos campos da query de serviços executados
