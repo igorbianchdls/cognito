@@ -9,16 +9,14 @@ export const revalidate = 0
 const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
   'ordens-servico': {
     id: 'os.id',
-    numero_os: 'os.numero_os',
-    cliente: 'c.nome_fantasia',
-    tecnico_responsavel: 't.nome',
+    numero_os: 'os.id',
+    cliente: 'cli.nome_fantasia',
+    tecnico_responsavel: 'func.nome',
     status: 'os.status',
     prioridade: 'os.prioridade',
     data_abertura: 'os.data_abertura',
-    data_prevista: 'os.data_prevista',
+    data_prevista: 'os.data_agendada',
     data_conclusao: 'os.data_conclusao',
-    valor_estimado: 'os.valor_estimado',
-    valor_final: 'os.valor_final',
   },
   'servicos-executados': {
     numero_os: 'os.numero_os',
@@ -70,6 +68,7 @@ export async function GET(req: NextRequest) {
     const q = searchParams.get('q') || undefined
 
     // Filtros específicos de OS
+    const tenant_id = searchParams.get('tenant_id') || undefined
     const status = searchParams.get('status') || undefined
     const prioridade = searchParams.get('prioridade') || undefined
     const cliente_id = searchParams.get('cliente_id') || undefined
@@ -102,35 +101,36 @@ export async function GET(req: NextRequest) {
     let whereDateCol = ''
 
     if (view === 'ordens-servico') {
-      selectSql = `SELECT os.id AS id,
-                          os.numero_os,
-                          os.cliente_id AS cliente_id,
-                          c.nome_fantasia AS cliente,
-                          c.imagem_url AS cliente_imagem_url,
-                          os.tecnico_responsavel_id AS tecnico_id,
-                          t.nome AS tecnico_responsavel,
-                          t.imagem_url AS tecnico_imagem_url,
-                          os.status,
-                          os.prioridade,
-                          os.descricao_problema,
-                          os.data_abertura,
-                          os.data_prevista,
-                          os.data_conclusao,
-                          os.valor_estimado,
-                          os.valor_final,
-                          os.observacoes`;
+      // Query alinhada ao modelo fornecido pelo usuário
+      selectSql = `SELECT
+        os.id AS id,
+        os.tenant_id,
+        os.cliente_id AS cliente_id,
+        cli.nome_fantasia AS cliente,
+        os.tecnico_responsavel_id AS tecnico_id,
+        func.nome AS tecnico_responsavel,
+        os.pedido_id,
+        os.data_abertura,
+        os.data_agendada AS data_prevista,
+        os.data_conclusao,
+        os.status,
+        os.prioridade,
+        os.descricao_problema,
+        os.observacoes,
+        os.criado_em,
+        os.atualizado_em,
+        os.id::text AS numero_os`;
       baseSql = `FROM servicos.ordens_servico os
-                 LEFT JOIN servicos.clientes c ON os.cliente_id = c.id
-                 LEFT JOIN servicos.tecnicos t ON os.tecnico_responsavel_id = t.id`;
+                 LEFT JOIN entidades.clientes cli ON cli.id = os.cliente_id
+                 LEFT JOIN entidades.funcionarios func ON func.id = os.tecnico_responsavel_id`;
       whereDateCol = 'os.data_abertura'
+      if (tenant_id) push('os.tenant_id =', tenant_id)
       if (status) push('LOWER(os.status) =', status.toLowerCase())
       if (prioridade) push('LOWER(os.prioridade) =', prioridade.toLowerCase())
       if (cliente_id) push('os.cliente_id =', cliente_id)
       if (tecnico_id) push('os.tecnico_responsavel_id =', tecnico_id)
-      if (valor_min !== undefined) push('COALESCE(os.valor_final, os.valor_estimado) >=', valor_min)
-      if (valor_max !== undefined) push('COALESCE(os.valor_final, os.valor_estimado) <=', valor_max)
       if (q) {
-        conditions.push(`(os.numero_os ILIKE '%' || $${i} || '%' OR COALESCE(os.descricao_problema,'') ILIKE '%' || $${i} || '%' OR COALESCE(c.nome_fantasia,'') ILIKE '%' || $${i} || '%' OR COALESCE(t.nome,'') ILIKE '%' || $${i} || '%')`)
+        conditions.push(`(CAST(os.id AS TEXT) ILIKE '%' || $${i} || '%' OR COALESCE(os.descricao_problema,'') ILIKE '%' || $${i} || '%' OR COALESCE(cli.nome_fantasia,'') ILIKE '%' || $${i} || '%' OR COALESCE(func.nome,'') ILIKE '%' || $${i} || '%')`)
         params.push(q)
         i += 1
       }
@@ -148,6 +148,7 @@ export async function GET(req: NextRequest) {
                  LEFT JOIN servicos.clientes c ON c.id = os.cliente_id
                  LEFT JOIN servicos.tecnicos t ON t.id = os.tecnico_responsavel_id`;
       whereDateCol = 'ose.criado_em'
+      if (tenant_id) push('os.tenant_id =', tenant_id)
       if (cliente_id) push('os.cliente_id =', cliente_id)
       if (tecnico_id) push('os.tecnico_responsavel_id =', tecnico_id)
       if (q) {
@@ -167,6 +168,7 @@ export async function GET(req: NextRequest) {
                  LEFT JOIN produtos.produto p ON p.id = oim.produto_id
                  LEFT JOIN produtos.categorias cat ON cat.id = p.categoria_id`;
       whereDateCol = 'oim.criado_em'
+      if (tenant_id) push('os.tenant_id =', tenant_id)
       if (cliente_id) push('os.cliente_id =', cliente_id)
       if (q) {
         conditions.push(`(os.numero_os ILIKE '%' || $${i} || '%' OR COALESCE(p.nome,'') ILIKE '%' || $${i} || '%')`)
@@ -191,6 +193,8 @@ export async function GET(req: NextRequest) {
                  LEFT JOIN servicos.os_tecnicos ot ON ot.tecnico_id = tec.id
                  LEFT JOIN servicos.ordens_servico os ON os.id = ot.ordem_servico_id`;
       whereDateCol = 'tec.data_admissao'
+      // Se houver tenant_id, filtramos por relação em os_tecnicos
+      if (tenant_id) push('ot.tenant_id =', tenant_id)
       groupBy = 'GROUP BY tec.id, tec.nome, tec.imagem_url, tec.cargo, tec.especialidade, tec.custo_hora, tec.telefone, tec.email, tec.status, tec.data_admissao'
       if (status) push('LOWER(tec.status) =', status.toLowerCase())
       if (q) {
@@ -208,6 +212,7 @@ export async function GET(req: NextRequest) {
                  LEFT JOIN servicos.ordens_servico os ON os.id = oc.ordem_servico_id
                  LEFT JOIN servicos.tecnicos t ON t.id = os.tecnico_responsavel_id`;
       whereDateCol = 'oc.atualizado_em'
+      if (tenant_id) push('os.tenant_id =', tenant_id)
       if (q) {
         conditions.push(`(oc.item ILIKE '%' || $${i} || '%' OR COALESCE(oc.observacao,'') ILIKE '%' || $${i} || '%')`)
         params.push(q)
@@ -225,7 +230,7 @@ export async function GET(req: NextRequest) {
     let orderClause = ''
     if (orderBy) orderClause = `ORDER BY ${orderBy} ${orderDir}`
     else {
-      if (view === 'ordens-servico') orderClause = 'ORDER BY os.data_abertura DESC'
+      if (view === 'ordens-servico') orderClause = 'ORDER BY os.id DESC'
       else if (view === 'servicos-executados') orderClause = 'ORDER BY ose.criado_em DESC'
       else if (view === 'itens-materiais') orderClause = 'ORDER BY oim.criado_em DESC'
       else if (view === 'tecnicos') orderClause = 'ORDER BY tec.nome ASC'
@@ -271,4 +276,3 @@ export async function GET(req: NextRequest) {
     )
   }
 }
-
