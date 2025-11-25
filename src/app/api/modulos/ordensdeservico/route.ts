@@ -59,8 +59,7 @@ const parseNumber = (v: string | null, fb?: number) => (v ? Number(v) : fb)
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
-    const view = (searchParams.get('view') || '').toLowerCase()
-    if (!view) return Response.json({ success: false, message: 'Parâmetro view é obrigatório' }, { status: 400 })
+    const view = (searchParams.get('view') || 'ordens-servico').toLowerCase()
 
     // Filtros comuns
     const de = searchParams.get('de') || undefined
@@ -99,41 +98,44 @@ export async function GET(req: NextRequest) {
     let baseSql = ''
     let groupBy = ''
     let whereDateCol = ''
+    let rawSql: string | null = null
 
     if (view === 'ordens-servico') {
-      // Query alinhada ao modelo fornecido pelo usuário
-      selectSql = `SELECT
-        os.id AS id,
-        os.tenant_id,
-        os.cliente_id AS cliente_id,
-        cli.nome_fantasia AS cliente,
-        os.tecnico_responsavel_id AS tecnico_id,
-        func.nome AS tecnico_responsavel,
-        os.pedido_id,
-        os.data_abertura,
-        os.data_agendada AS data_prevista,
-        os.data_conclusao,
-        os.status,
-        os.prioridade,
-        os.descricao_problema,
-        os.observacoes,
-        os.criado_em,
-        os.atualizado_em,
-        os.id::text AS numero_os`;
-      baseSql = `FROM servicos.ordens_servico os
-                 LEFT JOIN entidades.clientes cli ON cli.id = os.cliente_id
-                 LEFT JOIN entidades.funcionarios func ON func.id = os.tecnico_responsavel_id`;
-      whereDateCol = 'os.data_abertura'
-      if (tenant_id) push('os.tenant_id =', tenant_id)
-      if (status) push('LOWER(os.status) =', status.toLowerCase())
-      if (prioridade) push('LOWER(os.prioridade) =', prioridade.toLowerCase())
-      if (cliente_id) push('os.cliente_id =', cliente_id)
-      if (tecnico_id) push('os.tecnico_responsavel_id =', tecnico_id)
-      if (q) {
-        conditions.push(`(CAST(os.id AS TEXT) ILIKE '%' || $${i} || '%' OR COALESCE(os.descricao_problema,'') ILIKE '%' || $${i} || '%' OR COALESCE(cli.nome_fantasia,'') ILIKE '%' || $${i} || '%' OR COALESCE(func.nome,'') ILIKE '%' || $${i} || '%')`)
-        params.push(q)
-        i += 1
-      }
+      // Usa EXATAMENTE a query fornecida, sem alterar, filtrar ou paginar
+      rawSql = `SELECT
+    os.id,
+    os.tenant_id,
+
+    -- Cliente
+    os.cliente_id,
+    cli.nome_fantasia AS cliente_nome,
+
+    -- Técnico responsável
+    os.tecnico_responsavel_id,
+    func.nome AS tecnico_nome,
+
+    os.pedido_id,
+    os.data_abertura,
+    os.data_agendada,
+    os.data_conclusao,
+    os.status,
+    os.prioridade,
+    os.descricao_problema,
+    os.observacoes,
+    os.criado_em,
+    os.atualizado_em
+
+FROM servicos.ordens_servico os
+
+-- JOIN cliente
+LEFT JOIN entidades.clientes cli
+       ON cli.id = os.cliente_id
+
+-- JOIN técnico
+LEFT JOIN entidades.funcionarios func
+       ON func.id = os.tecnico_responsavel_id
+
+ORDER BY os.id DESC;`
     } else if (view === 'servicos-executados') {
       selectSql = `SELECT os.numero_os,
                           s.nome AS servico,
@@ -228,21 +230,22 @@ export async function GET(req: NextRequest) {
     const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''
 
     let orderClause = ''
-    if (orderBy) orderClause = `ORDER BY ${orderBy} ${orderDir}`
-    else {
-      if (view === 'ordens-servico') orderClause = 'ORDER BY os.id DESC'
-      else if (view === 'servicos-executados') orderClause = 'ORDER BY ose.criado_em DESC'
-      else if (view === 'itens-materiais') orderClause = 'ORDER BY oim.criado_em DESC'
-      else if (view === 'tecnicos') orderClause = 'ORDER BY tec.nome ASC'
-      else if (view === 'checklist') orderClause = 'ORDER BY COALESCE(oc.atualizado_em, oc.criado_em) DESC'
+    if (!rawSql) {
+      if (orderBy) orderClause = `ORDER BY ${orderBy} ${orderDir}`
+      else {
+        if (view === 'servicos-executados') orderClause = 'ORDER BY ose.criado_em DESC'
+        else if (view === 'itens-materiais') orderClause = 'ORDER BY oim.criado_em DESC'
+        else if (view === 'tecnicos') orderClause = 'ORDER BY tec.nome ASC'
+        else if (view === 'checklist') orderClause = 'ORDER BY COALESCE(oc.atualizado_em, oc.criado_em) DESC'
+      }
     }
 
-    // Paginação: somente para lista principal de OS
-    const paginate = view === 'ordens-servico'
-    const limitOffset = paginate ? `LIMIT $${i}::int OFFSET $${i + 1}::int` : ''
-    const paramsWithPage = paginate ? [...params, pageSize, offset] : params
+    // Paginação: NENHUMA para ordens-servico (rawSql). Para demais views, sem paginação por ora
+    const paginate = false
+    const limitOffset = ''
+    const paramsWithPage = params
 
-    const listSql = `${selectSql}
+    const listSql = rawSql ?? `${selectSql}
                      ${baseSql}
                      ${whereClause}
                      ${groupBy}
@@ -252,11 +255,6 @@ export async function GET(req: NextRequest) {
     const rows = await runQuery<Record<string, unknown>>(listSql, paramsWithPage)
 
     let total = rows.length
-    if (!groupBy && paginate) {
-      const totalSql = `SELECT COUNT(*)::int AS total ${baseSql} ${whereClause}`
-      const totalRows = await runQuery<{ total: number }>(totalSql, params)
-      total = totalRows[0]?.total ?? 0
-    }
 
     return Response.json({
       success: true,

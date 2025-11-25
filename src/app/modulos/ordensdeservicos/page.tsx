@@ -154,55 +154,17 @@ export default function OrdensDeServicosPage() {
         ]
       case 'ordens-servico':
       default:
+        // Alinhado exatamente aos campos da query fornecida (sem imagens/segmento/valores)
         return [
-          { accessorKey: 'id', header: 'ID' },
-          { accessorKey: 'numero_os', header: 'Nº OS' },
-          {
-            accessorKey: 'cliente',
-            header: 'Cliente',
-            size: 250,
-            minSize: 200,
-            cell: ({ row }) => (
-              <EntityDisplay
-                name={row.original['cliente'] ? String(row.original['cliente']) : 'Sem nome'}
-                subtitle={row.original['segmento'] ? String(row.original['segmento']) : 'Sem segmento'}
-                imageUrl={row.original['cliente_imagem_url'] ? String(row.original['cliente_imagem_url']) : undefined}
-                onClick={() => openImagemEditor('cliente', row.original['cliente_id'] as string | number | undefined, { nome: String(row.original['cliente'] || ''), imagem_url: row.original['cliente_imagem_url'] ? String(row.original['cliente_imagem_url']) : undefined })}
-                clickable
-              />
-            )
-          },
-          {
-            accessorKey: 'tecnico_responsavel',
-            header: 'Técnico Responsável',
-            size: 250,
-            minSize: 200,
-            cell: ({ row }) => (
-              <EntityDisplay
-                name={row.original['tecnico_responsavel'] ? String(row.original['tecnico_responsavel']) : 'Sem nome'}
-                subtitle={row.original['cargo_tecnico'] ? String(row.original['cargo_tecnico']) : 'Sem cargo'}
-                imageUrl={row.original['tecnico_imagem_url'] ? String(row.original['tecnico_imagem_url']) : undefined}
-                onClick={() => openImagemEditor('tecnico', row.original['tecnico_id'] as string | number | undefined, { nome: String(row.original['tecnico_responsavel'] || ''), imagem_url: row.original['tecnico_imagem_url'] ? String(row.original['tecnico_imagem_url']) : undefined })}
-                clickable
-              />
-            )
-          },
-          {
-            accessorKey: 'status',
-            header: 'Status',
-            cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" />
-          },
-          {
-            accessorKey: 'prioridade',
-            header: 'Prioridade',
-            cell: ({ row }) => <StatusBadge value={row.original['prioridade']} type="prioridade" />
-          },
+          { accessorKey: 'id', header: 'Nº OS' },
+          { accessorKey: 'cliente_nome', header: 'Cliente' },
+          { accessorKey: 'tecnico_nome', header: 'Técnico Responsável' },
+          { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
+          { accessorKey: 'prioridade', header: 'Prioridade', cell: ({ row }) => <StatusBadge value={row.original['prioridade']} type="prioridade" /> },
           { accessorKey: 'descricao_problema', header: 'Descrição do Problema' },
           { accessorKey: 'data_abertura', header: 'Abertura', cell: ({ row }) => formatDate(row.original['data_abertura']) },
-          { accessorKey: 'data_prevista', header: 'Previsão', cell: ({ row }) => formatDate(row.original['data_prevista']) },
+          { accessorKey: 'data_agendada', header: 'Agendada', cell: ({ row }) => formatDate(row.original['data_agendada']) },
           { accessorKey: 'data_conclusao', header: 'Conclusão', cell: ({ row }) => formatDate(row.original['data_conclusao']) },
-          { accessorKey: 'valor_estimado', header: 'Valor Estimado (R$)', cell: ({ row }) => formatBRL(row.original['valor_estimado']) },
-          { accessorKey: 'valor_final', header: 'Valor Final (R$)', cell: ({ row }) => formatBRL(row.original['valor_final']) },
           { accessorKey: 'observacoes', header: 'Observações' },
         ]
     }
@@ -239,7 +201,7 @@ export default function OrdensDeServicosPage() {
           params.set('page', String(page))
           params.set('pageSize', String(pageSize))
         }
-        const url = `/api/modulos/servicos?${params.toString()}`
+        const url = `/api/modulos/ordensdeservico?${params.toString()}`
         const res = await fetch(url, { cache: 'no-store', signal: controller.signal })
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
         const json = await res.json()
@@ -362,9 +324,9 @@ export default function OrdensDeServicosPage() {
                   showColumnToggle={tabelaUI.enableColumnToggle}
                   showPagination={tabelaUI.showPagination}
                   pageSize={pageSize}
-                  pageIndex={tabs.selected === 'ordens-servico' ? page - 1 : undefined}
-                  serverSidePagination={tabs.selected === 'ordens-servico'}
-                  serverTotalRows={tabs.selected === 'ordens-servico' ? total : undefined}
+                  pageIndex={undefined}
+                  serverSidePagination={false}
+                  serverTotalRows={undefined}
                   headerBackground={tabelaUI.headerBg}
                   headerTextColor={tabelaUI.headerText}
                   cellTextColor={tabelaUI.cellText}
