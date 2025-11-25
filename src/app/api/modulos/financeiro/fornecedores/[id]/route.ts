@@ -13,7 +13,7 @@ export async function GET(req: Request) {
     const sql = `
       SELECT
         id,
-        nome AS nome_fornecedor,
+        nome_fantasia AS nome_fornecedor,
         imagem_url,
         cnpj,
         email,
@@ -69,7 +69,7 @@ export async function PATCH(req: Request) {
     const paramsArr: unknown[] = []
     for (const [key, value] of entries) {
       // Map front-end keys to DB columns
-      const column = key === 'nome_fornecedor' ? 'nome' : key
+      const column = key === 'nome_fornecedor' ? 'nome_fantasia' : key
       sets.push(`${column} = $${idx}`)
       paramsArr.push(value)
       idx += 1

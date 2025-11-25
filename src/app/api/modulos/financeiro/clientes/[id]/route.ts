@@ -11,7 +11,7 @@ export async function GET(req: Request) {
     if (!id) return Response.json({ success: false, message: 'ID é obrigatório' }, { status: 400 })
 
     const sql = `
-      SELECT id, nome AS nome_cliente, imagem_url
+      SELECT id, nome_fantasia AS nome_cliente, imagem_url
       FROM entidades.clientes
       WHERE id = $1
       LIMIT 1
@@ -58,7 +58,7 @@ export async function PATCH(req: Request) {
     const sets: string[] = []
     const paramsArr: unknown[] = []
     for (const [key, value] of entries) {
-      const column = key === 'nome_cliente' ? 'nome' : key
+      const column = key === 'nome_cliente' ? 'nome_fantasia' : key
       sets.push(`${column} = $${idx}`)
       paramsArr.push(value)
       idx += 1
@@ -74,4 +74,3 @@ export async function PATCH(req: Request) {
     return Response.json({ success: false, message: 'Erro interno' }, { status: 500 })
   }
 }
-
