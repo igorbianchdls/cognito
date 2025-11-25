@@ -94,10 +94,10 @@ export async function GET(req: NextRequest) {
       i += 1
     }
 
-    let selectSql = ''
-    let baseSql = ''
-    let groupBy = ''
-    let whereDateCol = ''
+    const selectSql = ''
+    const baseSql = ''
+    const groupBy = ''
+    const whereDateCol = ''
     let rawSql: string | null = null
 
     if (view === 'ordens-servico') {
@@ -258,8 +258,7 @@ ORDER BY chk.id DESC;`
       }
     }
 
-    // Paginação: NENHUMA para ordens-servico (rawSql). Para demais views, sem paginação por ora
-    const paginate = false
+    // Sem paginação quando usando RAW SQL; parâmetros ignorados
     const limitOffset = ''
     const paramsWithPage = params
 
