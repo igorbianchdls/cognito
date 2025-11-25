@@ -196,6 +196,16 @@ export function NavModulos({ groupLabelStyle, itemTextStyle }: { groupLabelStyle
               <span style={itemTextStyle}>Produtos</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              tooltip="Serviços"
+              onClick={() => router.push("/modulos/ordensdeservicos")}
+              isActive={pathname.startsWith("/modulos/servicos") || pathname.startsWith("/modulos/ordensdeservicos")}
+            >
+              <Wrench />
+              <span style={itemTextStyle}>Serviços</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
           <Collapsible
             key="vendas"
             asChild
