@@ -226,6 +226,13 @@ export function NavModulos({ groupLabelStyle, itemTextStyle }: { groupLabelStyle
                       </a>
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
+                  <SidebarMenuSubItem>
+                    <SidebarMenuSubButton asChild isActive={pathname === "/modulos/servicos"}>
+                      <a href="/modulos/servicos">
+                        <span style={itemTextStyle}>Serviços</span>
+                      </a>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
                 </SidebarMenuSub>
               </CollapsibleContent>
             </SidebarMenuItem>
@@ -282,29 +289,29 @@ export function NavModulos({ groupLabelStyle, itemTextStyle }: { groupLabelStyle
           <Collapsible
             key="servicos"
             asChild
-            defaultOpen={pathname.startsWith("/modulos/servicos")}
+            defaultOpen={pathname.startsWith("/modulos/servicos") || pathname.startsWith("/modulos/ordensdeservicos")}
             className="group/collapsible"
           >
             <SidebarMenuItem>
               <CollapsibleTrigger asChild>
-                <SidebarMenuButton tooltip="Serviços">
+                <SidebarMenuButton tooltip="Ordens de Serviço">
                   <Wrench />
-                  <span style={itemTextStyle}>Serviços</span>
+                  <span style={itemTextStyle}>Ordens de Serviço</span>
                   <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                 </SidebarMenuButton>
               </CollapsibleTrigger>
               <CollapsibleContent>
                 <SidebarMenuSub>
                   <SidebarMenuSubItem>
-                    <SidebarMenuSubButton asChild isActive={pathname === "/modulos/servicos"}>
-                      <a href="/modulos/servicos">
+                    <SidebarMenuSubButton asChild isActive={pathname === "/modulos/ordensdeservicos" || pathname === "/modulos/servicos"}>
+                      <a href="/modulos/ordensdeservicos">
                         <span style={itemTextStyle}>Gestão</span>
                       </a>
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
                   <SidebarMenuSubItem>
-                    <SidebarMenuSubButton asChild isActive={pathname === "/modulos/servicos/relatorio"}>
-                      <a href="/modulos/servicos/relatorio">
+                    <SidebarMenuSubButton asChild isActive={pathname === "/modulos/ordensdeservicos/relatorio" || pathname === "/modulos/servicos/relatorio"}>
+                      <a href="/modulos/ordensdeservicos/relatorio">
                         <span style={itemTextStyle}>Relatório</span>
                       </a>
                     </SidebarMenuSubButton>
