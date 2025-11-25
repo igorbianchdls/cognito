@@ -248,7 +248,23 @@ export default function FornecedorEditorSheet({ open, onOpenChange, conta, forne
               <div className="grid gap-2">
                 <Label htmlFor="imagem_url">Link da imagem (https)</Label>
                 <Input id="imagem_url" value={fornecedor.imagem_url ?? ''} onChange={(e) => onChangeFornecedor('imagem_url', e.target.value)} placeholder="https://exemplo.com/foto.jpg" />
-                <p className="text-xs text-gray-500">Cole um link público (jpg, png, webp). Usamos diretamente no &lt;img&gt;.</p>
+                <div className="flex items-center gap-3">
+                  <p className="text-xs text-gray-500 flex-1">Cole um link público (jpg, png, webp) ou use o upload acima.</p>
+                  {fornecedor.imagem_url && (
+                    <Button type="button" variant="destructive" onClick={async () => {
+                      if (!fornecedorId) return
+                      if (!confirm('Remover foto do fornecedor?')) return
+                      try {
+                        const res = await fetch(`/api/modulos/financeiro/fornecedores/${fornecedorId}/avatar`, { method: 'DELETE' })
+                        const json = await res.json()
+                        if (!res.ok || !json?.success) throw new Error(json?.message || 'Falha ao remover foto')
+                        setFornecedor((prev) => ({ ...prev, imagem_url: '' }))
+                      } catch (e) {
+                        alert(e instanceof Error ? e.message : 'Falha ao remover foto')
+                      }
+                    }}>Remover foto</Button>
+                  )}
+                </div>
               </div>
             </div>
           </div>

@@ -137,7 +137,23 @@ export default function ClienteEditorSheet({ open, onOpenChange, clienteId, pref
           <div className="grid gap-2">
             <Label htmlFor="imagem_url">Imagem (URL)</Label>
             <Input id="imagem_url" value={form.imagem_url ?? ''} onChange={(e) => onChange('imagem_url', e.target.value)} placeholder="https://..." />
-            <p className="text-xs text-gray-500">Use um link público (jpg, png, webp).</p>
+            <div className="flex items-center gap-3">
+              <p className="text-xs text-gray-500 flex-1">Use um link público (jpg, png, webp) ou envie um arquivo.</p>
+              {form.imagem_url && (
+                <Button type="button" variant="destructive" onClick={async () => {
+                  if (!clienteId) return
+                  if (!confirm('Remover foto do cliente?')) return
+                  try {
+                    const res = await fetch(`/api/modulos/financeiro/clientes/${clienteId}/avatar`, { method: 'DELETE' })
+                    const json = await res.json()
+                    if (!res.ok || !json?.success) throw new Error(json?.message || 'Falha ao remover foto')
+                    setForm((prev) => ({ ...prev, imagem_url: '' }))
+                  } catch (e) {
+                    alert(e instanceof Error ? e.message : 'Falha ao remover foto')
+                  }
+                }}>Remover foto</Button>
+              )}
+            </div>
           </div>
         </div>
         <SheetFooter className="mt-6">

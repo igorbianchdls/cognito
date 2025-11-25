@@ -77,3 +77,25 @@ export async function POST(req: Request) {
   }
 }
 
+export async function DELETE(req: Request) {
+  try {
+    const clienteId = parseId(req)
+    await withTransaction(async (client) => {
+      const cur = await client.query(`SELECT imagem_url FROM entidades.clientes WHERE id = $1`, [clienteId])
+      const currentUrl = (cur.rows?.[0]?.imagem_url as string | null) || null
+      if (currentUrl && currentUrl.includes('/storage/v1/object/public/documentos/')) {
+        const prefix = '/storage/v1/object/public/documentos/'
+        const idx = currentUrl.indexOf(prefix)
+        if (idx >= 0) {
+          const key = currentUrl.substring(idx + prefix.length)
+          await supabase.storage.from('documentos').remove([key]).catch(() => {})
+        }
+      }
+      await client.query(`UPDATE entidades.clientes SET imagem_url = NULL WHERE id = $1`, [clienteId])
+    })
+    return Response.json({ success: true })
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : 'Erro desconhecido'
+    return Response.json({ success: false, message: msg }, { status: 400 })
+  }
+}
