@@ -113,6 +113,7 @@ export default function ModulosFinanceiroPage() {
                 imageUrl={row.original['banco_imagem_url'] || row.original['imagem_url'] ? String(row.original['banco_imagem_url'] || row.original['imagem_url']) : undefined}
                 onClick={() => openBancoEditor(row.original)}
                 clickable
+                size={32}
               />
             )
           },
@@ -150,6 +151,7 @@ export default function ModulosFinanceiroPage() {
                 imageUrl={row.original['banco_imagem_url'] ? String(row.original['banco_imagem_url']) : undefined}
                 onClick={() => openBancoEditor(row.original)}
                 clickable
+                size={32}
               />
             )
           },
@@ -177,6 +179,7 @@ export default function ModulosFinanceiroPage() {
                 imageUrl={undefined}
                 onClick={() => openClienteEditor(row.original)}
                 clickable
+                size={32}
               />
             )
           },
@@ -256,6 +259,7 @@ export default function ModulosFinanceiroPage() {
                 name={row.original['fornecedor'] ? String(row.original['fornecedor']) : 'Sem nome'}
                 subtitle={row.original['categoria_financeira'] ? String(row.original['categoria_financeira']) : (row.original['categoria'] ? String(row.original['categoria']) : 'Sem categoria')}
                 imageUrl={row.original['fornecedor_imagem_url'] ? String(row.original['fornecedor_imagem_url']) : undefined}
+                size={32}
               />
             )
           },
@@ -335,6 +339,7 @@ export default function ModulosFinanceiroPage() {
                 imageUrl={undefined}
                 onClick={() => openClienteEditor(row.original)}
                 clickable
+                size={32}
               />
             )
           },
@@ -426,6 +431,7 @@ export default function ModulosFinanceiroPage() {
                 imageUrl={undefined}
                 onClick={() => openEditor(row.original)}
                 clickable
+                size={32}
               />
             )
           },

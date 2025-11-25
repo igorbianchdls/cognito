@@ -6,6 +6,7 @@ type EntityDisplayProps = {
   imageUrl?: string
   onClick?: () => void
   clickable?: boolean
+  size?: number // avatar size in px (default 24)
 }
 
 const getColorFromName = (name: string) => {
@@ -29,18 +30,21 @@ const getColorFromName = (name: string) => {
   return colors[index]
 }
 
-export default function EntityDisplay({ name, subtitle, imageUrl, onClick, clickable }: EntityDisplayProps) {
+export default function EntityDisplay({ name, subtitle, imageUrl, onClick, clickable, size = 24 }: EntityDisplayProps) {
   const displayName = name || 'Sem nome'
   const colors = getColorFromName(displayName)
+  const avatarSize = Number.isFinite(size) && size > 8 ? size : 24
+  const radius = Math.round(avatarSize / 3)
+  const initialFont = Math.max(10, Math.round(avatarSize * 0.5))
 
   const content = (
     <div className="flex items-center">
       <div
         className="flex items-center justify-center mr-3"
         style={{
-          width: 24,
-          height: 24,
-          borderRadius: 8,
+          width: avatarSize,
+          height: avatarSize,
+          borderRadius: radius,
           overflow: 'hidden',
           backgroundColor: colors.bg,
           cursor: clickable || onClick ? 'pointer' : undefined,
@@ -49,7 +53,7 @@ export default function EntityDisplay({ name, subtitle, imageUrl, onClick, click
         {imageUrl ? (
           <img src={imageUrl} alt={displayName} className="w-full h-full object-cover" />
         ) : (
-          <div style={{ fontSize: 12, fontWeight: 600, color: colors.text }}>
+          <div style={{ fontSize: initialFont, fontWeight: 600, color: colors.text, lineHeight: 1 }}>
             {displayName.charAt(0).toUpperCase()}
           </div>
         )}
