@@ -259,6 +259,8 @@ export default function ModulosFinanceiroPage() {
                 name={row.original['fornecedor'] ? String(row.original['fornecedor']) : 'Sem nome'}
                 subtitle={row.original['categoria_financeira'] ? String(row.original['categoria_financeira']) : (row.original['categoria'] ? String(row.original['categoria']) : 'Sem categoria')}
                 imageUrl={row.original['fornecedor_imagem_url'] ? String(row.original['fornecedor_imagem_url']) : undefined}
+                onClick={() => openEditor(row.original)}
+                clickable
                 size={32}
               />
             )
@@ -596,10 +598,9 @@ export default function ModulosFinanceiroPage() {
   const openEditor = (row: Row) => {
     const fornecedorId = row['fornecedor_id']
     const contaId = row['conta_id']
-    if (!contaId) return
     setSelectedFornecedorId(fornecedorId ? String(fornecedorId) : null)
     setSelectedConta({
-      id: String(contaId),
+      id: contaId ? String(contaId) : '',
       descricao: String(row['descricao'] ?? ''),
       data_vencimento: String(row['data_vencimento'] ?? ''),
       valor_total: (row['valor_total'] as number) ?? '',

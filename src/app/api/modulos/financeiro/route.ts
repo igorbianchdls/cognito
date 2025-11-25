@@ -704,7 +704,8 @@ export async function GET(req: NextRequest) {
                         dep.nome AS departamento_nome,
                         fi.nome AS filial_nome,
                         pr.nome AS projeto_nome,
-                        f.nome_fantasia AS fornecedor_nome`;
+                        f.nome_fantasia AS fornecedor_nome,
+                        lf.fornecedor_id AS fornecedor_id`;
       whereDateCol = 'lf.data_vencimento';
       conditions.push(`lf.tipo = 'conta_a_pagar'`);
       if (fornecedor_id) push('lf.fornecedor_id =', fornecedor_id);
@@ -746,6 +747,7 @@ export async function GET(req: NextRequest) {
                         lf.content_type AS content_type,
                         lf.tamanho_bytes AS tamanho_bytes,
                         forn_ap.nome_fantasia AS fornecedor,
+                        ap.fornecedor_id AS fornecedor_id,
                         forn_ap.imagem_url AS fornecedor_imagem_url,
                         ap.descricao AS titulo_descricao,
                         lf.descricao AS pagamento_descricao,
@@ -791,6 +793,7 @@ export async function GET(req: NextRequest) {
                           lf.content_type AS content_type,
                           lf.tamanho_bytes AS tamanho_bytes,
                           orig.id AS origem_id,
+                          orig.cliente_id AS cliente_id,
                           orig.descricao AS descricao_origem,
                           cf.nome AS categoria_nome,
                           cl.nome AS centro_lucro_nome,
@@ -839,7 +842,8 @@ export async function GET(req: NextRequest) {
                           dep.nome AS departamento_nome,
                           fi.nome AS filial_nome,
                           pr.nome AS projeto_nome,
-                          c.nome_fantasia AS cliente_nome`;
+                          c.nome_fantasia AS cliente_nome,
+                          lf.cliente_id AS cliente_id`;
       // Filtro principal por data: vencimento
       whereDateCol = 'lf.data_vencimento';
       conditions.push(`lf.tipo = 'conta_a_receber'`);
@@ -855,6 +859,7 @@ export async function GET(req: NextRequest) {
       selectSql = `SELECT eb.id AS extrato_id,
                           eb.data_extrato,
                           b.nome_banco AS banco,
+                          b.id AS banco_id,
                           b.imagem_url AS banco_imagem_url,
                           cf.nome_conta AS conta_financeira,
                           cf.tipo_conta,
