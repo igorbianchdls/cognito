@@ -254,7 +254,7 @@ ORDER BY os.id DESC;`
 
     const rows = await runQuery<Record<string, unknown>>(listSql, paramsWithPage)
 
-    let total = rows.length
+    const total = rows.length
 
     return Response.json({
       success: true,
