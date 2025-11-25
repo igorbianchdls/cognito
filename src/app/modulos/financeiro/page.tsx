@@ -192,8 +192,10 @@ export default function ModulosFinanceiroPage() {
               const lancIdRaw = row.original['conta_id'] as unknown
               const lancId = Number(lancIdRaw)
               const handleClick: React.MouseEventHandler<HTMLDivElement> = (e) => {
-                if (!lancId || Number.isNaN(lancId) || !storageKey) return
+                if (!lancId || Number.isNaN(lancId)) return
+                setDocLancId(lancId)
                 if (e.altKey) {
+                  if (!storageKey) return
                   void (async () => {
                     const res = await fetch(`/api/modulos/financeiro/lancamentos/${lancId}/arquivo/download`)
                     const json = await res.json()
@@ -201,16 +203,21 @@ export default function ModulosFinanceiroPage() {
                   })()
                   return
                 }
-                void (async () => {
-                  const res = await fetch(`/api/modulos/financeiro/lancamentos/${lancId}/arquivo/preview`)
-                  const json = await res.json()
-                  if (json?.success) {
-                    setDocUrl(json?.url ?? null)
+                if (storageKey) {
+                  void (async () => {
+                    const res = await fetch(`/api/modulos/financeiro/lancamentos/${lancId}/arquivo/preview`)
+                    const json = await res.json()
+                    if (json?.success) setDocUrl(json?.url ?? null)
                     setDocName(fileName)
                     setDocType(contentType ?? null)
                     setDocViewerOpen(true)
-                  }
-                })()
+                  })()
+                } else {
+                  setDocUrl(null)
+                  setDocName(fileName)
+                  setDocType(contentType ?? null)
+                  setDocViewerOpen(true)
+                }
               }
               return (
                 <div
@@ -264,8 +271,10 @@ export default function ModulosFinanceiroPage() {
               const lancIdRaw = row.original['pagamento_id'] as unknown
               const lancId = Number(lancIdRaw)
               const handleClick: React.MouseEventHandler<HTMLDivElement> = (e) => {
-                if (!lancId || Number.isNaN(lancId) || !storageKey) return
+                if (!lancId || Number.isNaN(lancId)) return
+                setDocLancId(lancId)
                 if (e.altKey) {
+                  if (!storageKey) return
                   void (async () => {
                     const res = await fetch(`/api/modulos/financeiro/lancamentos/${lancId}/arquivo/download`)
                     const json = await res.json()
@@ -273,16 +282,21 @@ export default function ModulosFinanceiroPage() {
                   })()
                   return
                 }
-                void (async () => {
-                  const res = await fetch(`/api/modulos/financeiro/lancamentos/${lancId}/arquivo/preview`)
-                  const json = await res.json()
-                  if (json?.success) {
-                    setDocUrl(json?.url ?? null)
+                if (storageKey) {
+                  void (async () => {
+                    const res = await fetch(`/api/modulos/financeiro/lancamentos/${lancId}/arquivo/preview`)
+                    const json = await res.json()
+                    if (json?.success) setDocUrl(json?.url ?? null)
                     setDocName(fileName)
                     setDocType(contentType ?? null)
                     setDocViewerOpen(true)
-                  }
-                })()
+                  })()
+                } else {
+                  setDocUrl(null)
+                  setDocName(fileName)
+                  setDocType(contentType ?? null)
+                  setDocViewerOpen(true)
+                }
               }
               return (
                 <div
@@ -336,8 +350,10 @@ export default function ModulosFinanceiroPage() {
               const lancIdRaw = row.original['pagamento_id'] as unknown
               const lancId = Number(lancIdRaw)
               const handleClick: React.MouseEventHandler<HTMLDivElement> = (e) => {
-                if (!lancId || Number.isNaN(lancId) || !storageKey) return
+                if (!lancId || Number.isNaN(lancId)) return
+                setDocLancId(lancId)
                 if (e.altKey) {
+                  if (!storageKey) return
                   void (async () => {
                     const res = await fetch(`/api/modulos/financeiro/lancamentos/${lancId}/arquivo/download`)
                     const json = await res.json()
@@ -345,16 +361,21 @@ export default function ModulosFinanceiroPage() {
                   })()
                   return
                 }
-                void (async () => {
-                  const res = await fetch(`/api/modulos/financeiro/lancamentos/${lancId}/arquivo/preview`)
-                  const json = await res.json()
-                  if (json?.success) {
-                    setDocUrl(json?.url ?? null)
+                if (storageKey) {
+                  void (async () => {
+                    const res = await fetch(`/api/modulos/financeiro/lancamentos/${lancId}/arquivo/preview`)
+                    const json = await res.json()
+                    if (json?.success) setDocUrl(json?.url ?? null)
                     setDocName(fileName)
                     setDocType(contentType ?? null)
                     setDocViewerOpen(true)
-                  }
-                })()
+                  })()
+                } else {
+                  setDocUrl(null)
+                  setDocName(fileName)
+                  setDocType(contentType ?? null)
+                  setDocViewerOpen(true)
+                }
               }
               return (
                 <div
@@ -420,8 +441,10 @@ export default function ModulosFinanceiroPage() {
               const lancIdRaw = row.original['conta_id'] as unknown
               const lancId = Number(lancIdRaw)
               const handleClick: React.MouseEventHandler<HTMLDivElement> = (e) => {
-                if (!lancId || Number.isNaN(lancId) || !storageKey) return
+                if (!lancId || Number.isNaN(lancId)) return
+                setDocLancId(lancId)
                 if (e.altKey) {
+                  if (!storageKey) return
                   void (async () => {
                     const res = await fetch(`/api/modulos/financeiro/lancamentos/${lancId}/arquivo/download`)
                     const json = await res.json()
@@ -429,16 +452,21 @@ export default function ModulosFinanceiroPage() {
                   })()
                   return
                 }
-                void (async () => {
-                  const res = await fetch(`/api/modulos/financeiro/lancamentos/${lancId}/arquivo/preview`)
-                  const json = await res.json()
-                  if (json?.success) {
-                    setDocUrl(json?.url ?? null)
+                if (storageKey) {
+                  void (async () => {
+                    const res = await fetch(`/api/modulos/financeiro/lancamentos/${lancId}/arquivo/preview`)
+                    const json = await res.json()
+                    if (json?.success) setDocUrl(json?.url ?? null)
                     setDocName(fileName)
                     setDocType(contentType ?? null)
                     setDocViewerOpen(true)
-                  }
-                })()
+                  })()
+                } else {
+                  setDocUrl(null)
+                  setDocName(fileName)
+                  setDocType(contentType ?? null)
+                  setDocViewerOpen(true)
+                }
               }
               return (
                 <div
@@ -483,6 +511,7 @@ export default function ModulosFinanceiroPage() {
   const [docUrl, setDocUrl] = useState<string | null>(null)
   const [docName, setDocName] = useState<string | null>(null)
   const [docType, setDocType] = useState<string | null>(null)
+  const [docLancId, setDocLancId] = useState<number | null>(null)
 
   // Editor (fornecedor + conta)
   const [editorOpen, setEditorOpen] = useState(false)
@@ -858,6 +887,8 @@ export default function ModulosFinanceiroPage() {
         url={docUrl ?? undefined}
         fileName={docName ?? undefined}
         contentType={docType ?? undefined}
+        lancamentoId={docLancId ?? undefined}
+        onChanged={() => setReloadKey((k) => k + 1)}
       />
     </SidebarProvider>
   )
