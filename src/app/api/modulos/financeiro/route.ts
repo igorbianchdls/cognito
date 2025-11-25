@@ -705,7 +705,8 @@ export async function GET(req: NextRequest) {
                         fi.nome AS filial_nome,
                         pr.nome AS projeto_nome,
                         f.nome_fantasia AS fornecedor_nome,
-                        lf.fornecedor_id AS fornecedor_id`;
+                        lf.fornecedor_id AS fornecedor_id,
+                        f.imagem_url AS fornecedor_imagem_url`;
       whereDateCol = 'lf.data_vencimento';
       conditions.push(`lf.tipo = 'conta_a_pagar'`);
       if (fornecedor_id) push('lf.fornecedor_id =', fornecedor_id);
@@ -801,6 +802,7 @@ export async function GET(req: NextRequest) {
                           fi.nome AS filial_nome,
                           pr.nome AS projeto_nome,
                           c.nome_fantasia AS cliente_nome,
+                          c.imagem_url AS cliente_imagem_url,
                           mp.nome AS metodo_pagamento_nome,
                           cf2.nome_conta AS conta_financeira_nome`;
       whereDateCol = 'lf.data_lancamento';
@@ -843,6 +845,7 @@ export async function GET(req: NextRequest) {
                           fi.nome AS filial_nome,
                           pr.nome AS projeto_nome,
                           c.nome_fantasia AS cliente_nome,
+                          c.imagem_url AS cliente_imagem_url,
                           lf.cliente_id AS cliente_id`;
       // Filtro principal por data: vencimento
       whereDateCol = 'lf.data_vencimento';
