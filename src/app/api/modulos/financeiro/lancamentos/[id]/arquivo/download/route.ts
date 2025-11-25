@@ -1,4 +1,3 @@
-import { NextRequest } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { runQuery } from '@/lib/postgres'
 
@@ -10,9 +9,13 @@ export const maxDuration = 300
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
-export async function GET(_req: NextRequest, ctx: { params: { id: string } }) {
+export async function GET(req: Request) {
   try {
-    const id = Number(ctx.params.id)
+    const url = new URL(req.url)
+    const parts = url.pathname.split('/').filter(Boolean)
+    const idx = parts.findIndex((p) => p === 'lancamentos')
+    const idStr = idx >= 0 && parts[idx + 1] ? parts[idx + 1] : ''
+    const id = Number(idStr)
     if (!id || Number.isNaN(id)) {
       return Response.json({ success: false, message: 'id inválido' }, { status: 400 })
     }
@@ -39,4 +42,3 @@ export async function GET(_req: NextRequest, ctx: { params: { id: string } }) {
     return Response.json({ success: false, message: msg }, { status: 500 })
   }
 }
-
