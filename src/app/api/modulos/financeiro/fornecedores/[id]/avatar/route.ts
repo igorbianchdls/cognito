@@ -43,10 +43,9 @@ export async function POST(req: Request) {
       const currentUrl = (cur.rows?.[0]?.imagem_url as string | null) || null
 
       const storagePath = buildPath(fornecedorId, file.name || 'avatar')
-      const ab = await file.arrayBuffer()
       const { error: uploadError } = await supabase.storage
         .from('documentos')
-        .upload(storagePath, ab, { contentType: file.type || 'application/octet-stream', upsert: false })
+        .upload(storagePath, file, { contentType: file.type || 'application/octet-stream', upsert: false })
       if (uploadError) throw new Error(`Falha no upload: ${uploadError.message}`)
 
       const { data: pub } = supabase.storage.from('documentos').getPublicUrl(storagePath)

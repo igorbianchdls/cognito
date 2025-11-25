@@ -29,10 +29,9 @@ export async function POST(req: Request) {
     // Padroniza o caminho dentro do bucket 'documentos': sem prefixo 'documentos/' duplicado
     const storagePath = `financeiro/${documentoId}/${yyyy}/${mm}/${Date.now()}-${rand}.${ext}`
 
-    const ab = await file.arrayBuffer()
     const { error: uploadError } = await supabase.storage
       .from('documentos')
-      .upload(storagePath, ab, { contentType: file.type || 'application/octet-stream', upsert: false })
+      .upload(storagePath, file, { contentType: file.type || 'application/octet-stream', upsert: false })
     if (uploadError) {
       return Response.json({ success: false, message: 'Falha no upload', error: uploadError.message }, { status: 500 })
     }

@@ -42,10 +42,9 @@ export async function POST(req: Request) {
       if (exists) throw new Error('Lançamento já possui arquivo. Use PUT para substituir.')
 
       const storagePath = buildPath(lancId, file.name || 'arquivo')
-      const ab = await file.arrayBuffer()
       const { error: uploadError } = await supabase.storage
         .from('documentos')
-        .upload(storagePath, ab, { contentType: file.type || 'application/octet-stream', upsert: false })
+        .upload(storagePath, file, { contentType: file.type || 'application/octet-stream', upsert: false })
       if (uploadError) throw new Error(`Falha no upload: ${uploadError.message}`)
 
       await client.query(
@@ -77,10 +76,9 @@ export async function PUT(req: Request) {
       const oldKey = (cur.rows?.[0]?.storage_key as string | null) || null
 
       const storagePath = buildPath(lancId, file.name || 'arquivo')
-      const ab = await file.arrayBuffer()
       const { error: uploadError } = await supabase.storage
         .from('documentos')
-        .upload(storagePath, ab, { contentType: file.type || 'application/octet-stream', upsert: false })
+        .upload(storagePath, file, { contentType: file.type || 'application/octet-stream', upsert: false })
       if (uploadError) throw new Error(`Falha no upload: ${uploadError.message}`)
 
       await client.query(
@@ -130,4 +128,3 @@ export async function DELETE(req: Request) {
     return Response.json({ success: false, message: msg }, { status: 400 })
   }
 }
-
