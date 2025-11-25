@@ -39,13 +39,12 @@ export default function ModulosServicosPage() {
     })
     moduleUiActions.setTabs({
       options: [
-        { value: 'ordens-servico', label: 'Ordens de Serviço' },
-        { value: 'agendamentos', label: 'Agendamentos' },
-        { value: 'tecnicos', label: 'Técnicos' },
-        { value: 'clientes', label: 'Clientes' },
-        { value: 'servicos', label: 'Serviços' },
+        { value: 'catalogo', label: 'Catálogo de Serviços' },
+        { value: 'categorias', label: 'Categorias' },
+        { value: 'tabelas-preco', label: 'Tabelas de Preço' },
+        { value: 'slas', label: 'SLAs' },
       ],
-      selected: 'ordens-servico',
+      selected: 'catalogo',
     })
   }, [])
 
@@ -104,6 +103,46 @@ export default function ModulosServicosPage() {
 
   const columns: ColumnDef<Row>[] = useMemo(() => {
     switch (tabs.selected) {
+      case 'categorias':
+        return [
+          { accessorKey: 'id', header: 'ID' },
+          { accessorKey: 'nome', header: 'Categoria' },
+          { accessorKey: 'descricao', header: 'Descrição' },
+          { accessorKey: 'categoria_pai_id', header: 'Categoria Pai' },
+          { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em']) },
+          { accessorKey: 'atualizado_em', header: 'Atualizado em', cell: ({ row }) => formatDate(row.original['atualizado_em']) },
+        ]
+      case 'tabelas-preco':
+        return [
+          { accessorKey: 'id', header: 'ID' },
+          { accessorKey: 'nome', header: 'Tabela' },
+          { accessorKey: 'descricao', header: 'Descrição' },
+          { accessorKey: 'ativo', header: 'Status' },
+          { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em']) },
+          { accessorKey: 'atualizado_em', header: 'Atualizado em', cell: ({ row }) => formatDate(row.original['atualizado_em']) },
+        ]
+      case 'slas':
+        return [
+          { accessorKey: 'id', header: 'ID' },
+          { accessorKey: 'servico', header: 'Serviço' },
+          { accessorKey: 'tempo_estimado', header: 'Tempo Estimado' },
+          { accessorKey: 'descricao', header: 'Descrição' },
+          { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em']) },
+          { accessorKey: 'atualizado_em', header: 'Atualizado em', cell: ({ row }) => formatDate(row.original['atualizado_em']) },
+        ]
+      case 'catalogo':
+        return [
+          { accessorKey: 'id', header: 'ID' },
+          { accessorKey: 'nome', header: 'Serviço' },
+          { accessorKey: 'descricao', header: 'Descrição' },
+          { accessorKey: 'categoria_nome', header: 'Categoria' },
+          { accessorKey: 'unidade_medida', header: 'Unidade' },
+          { accessorKey: 'preco_padrao', header: 'Preço Padrão', cell: ({ row }) => formatBRL(row.original['preco_padrao']) },
+          { accessorKey: 'ativo', header: 'Status' },
+          { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em']) },
+          { accessorKey: 'atualizado_em', header: 'Atualizado em', cell: ({ row }) => formatDate(row.original['atualizado_em']) },
+        ]
+      // Legacy cases retained for now (if needed)
       case 'agendamentos':
         return [
           { accessorKey: 'id', header: 'ID' },
@@ -168,18 +207,6 @@ export default function ModulosServicosPage() {
           { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
           { accessorKey: 'total_ordens', header: 'Total de Ordens' },
           { accessorKey: 'ultima_os', header: 'Última OS', cell: ({ row }) => formatDate(row.original['ultima_os']) },
-        ]
-      case 'servicos':
-        return [
-          { accessorKey: 'id', header: 'ID' },
-          { accessorKey: 'servico', header: 'Serviço' },
-          { accessorKey: 'descricao', header: 'Descrição' },
-          { accessorKey: 'categoria', header: 'Categoria' },
-          { accessorKey: 'unidade_medida', header: 'Unidade de Medida' },
-          { accessorKey: 'preco_base', header: 'Preço Base (R$)', cell: ({ row }) => formatBRL(row.original['preco_base']) },
-          { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
-          { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em']) },
-          { accessorKey: 'atualizado_em', header: 'Atualizado em', cell: ({ row }) => formatDate(row.original['atualizado_em']) },
         ]
       case 'ordens-servico':
       default:
@@ -286,16 +313,14 @@ export default function ModulosServicosPage() {
   const tabOptions: Opcao[] = useMemo(() => {
     const iconFor = (v: string) => {
       switch (v) {
-        case 'ordens-servico':
-          return <Wrench className="h-4 w-4" />
-        case 'agendamentos':
-          return <Calendar className="h-4 w-4" />
-        case 'tecnicos':
-          return <User className="h-4 w-4" />
-        case 'clientes':
-          return <Users className="h-4 w-4" />
-        case 'servicos':
+        case 'catalogo':
           return <List className="h-4 w-4" />
+        case 'categorias':
+          return <List className="h-4 w-4" />
+        case 'tabelas-preco':
+          return <List className="h-4 w-4" />
+        case 'slas':
+          return <Wrench className="h-4 w-4" />
         default:
           return null
       }
@@ -347,8 +372,8 @@ export default function ModulosServicosPage() {
               from={(tabs.selected !== 'tecnicos' && tabs.selected !== 'clientes' ? total : data.length) === 0 ? 0 : (page - 1) * pageSize + 1}
               to={(tabs.selected !== 'tecnicos' && tabs.selected !== 'clientes' ? total : data.length) === 0 ? 0 : Math.min(page * pageSize, (tabs.selected !== 'tecnicos' && tabs.selected !== 'clientes' ? total : data.length))}
               total={tabs.selected !== 'tecnicos' && tabs.selected !== 'clientes' ? total : data.length}
-              dateRange={['ordens-servico', 'agendamentos', 'servicos'].includes(tabs.selected) ? dateRange : undefined}
-              onDateRangeChange={['ordens-servico', 'agendamentos', 'servicos'].includes(tabs.selected) ? setDateRange : undefined}
+              dateRange={['ordens-servico', 'agendamentos'].includes(tabs.selected) ? dateRange : undefined}
+              onDateRangeChange={['ordens-servico', 'agendamentos'].includes(tabs.selected) ? setDateRange : undefined}
               fontFamily={fontVar(toolbarUI.fontFamily)}
               fontSize={toolbarUI.fontSize}
               fontWeight={toolbarUI.fontWeight}
@@ -365,19 +390,7 @@ export default function ModulosServicosPage() {
               iconSize={toolbarUI.iconSize}
               searchWidth={toolbarUI.searchWidth}
               dateRangeWidth={toolbarUI.dateRangeWidth}
-              actionComponent={
-                tabs.selected === 'ordens-servico' ? (
-                  <CadastroOrdemServicoSheet triggerLabel="Cadastrar" onCreated={() => setReloadKey((k) => k + 1)} />
-                ) : tabs.selected === 'agendamentos' ? (
-                  <CadastroAgendamentoSheet triggerLabel="Cadastrar" onCreated={() => setReloadKey((k) => k + 1)} />
-                ) : tabs.selected === 'tecnicos' ? (
-                  <CadastroTecnicoSheet triggerLabel="Cadastrar" onCreated={() => setReloadKey((k) => k + 1)} />
-                ) : tabs.selected === 'clientes' ? (
-                  <CadastroClienteSheet triggerLabel="Cadastrar" onCreated={() => setReloadKey((k) => k + 1)} />
-                ) : tabs.selected === 'servicos' ? (
-                  <CadastroServicoSheet triggerLabel="Cadastrar" onCreated={() => setReloadKey((k) => k + 1)} />
-                ) : undefined
-              }
+              actionComponent={undefined}
             />
           </div>
           <div className="flex-1 min-h-0 overflow-auto" style={{ marginBottom: layout.mbTable }}>

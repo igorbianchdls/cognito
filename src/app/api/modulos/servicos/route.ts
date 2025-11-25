@@ -6,6 +6,41 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
+  'catalogo': {
+    id: 's.id',
+    nome: 's.nome',
+    descricao: 's.descricao',
+    categoria_nome: 'cat.nome',
+    unidade_medida: 's.unidade_medida',
+    preco_padrao: 's.preco_padrao',
+    ativo: 's.ativo',
+    criado_em: 's.criado_em',
+    atualizado_em: 's.atualizado_em',
+  },
+  'categorias': {
+    id: 'cat.id',
+    nome: 'cat.nome',
+    descricao: 'cat.descricao',
+    categoria_pai_id: 'cat.categoria_pai_id',
+    criado_em: 'cat.criado_em',
+    atualizado_em: 'cat.atualizado_em',
+  },
+  'tabelas-preco': {
+    id: 'tp.id',
+    nome: 'tp.nome',
+    descricao: 'tp.descricao',
+    ativo: 'tp.ativo',
+    criado_em: 'tp.criado_em',
+    atualizado_em: 'tp.atualizado_em',
+  },
+  'slas': {
+    id: 'sla.id',
+    servico: 's.nome',
+    tempo_estimado: 'sla.tempo_estimado',
+    descricao: 'sla.descricao',
+    criado_em: 'sla.criado_em',
+    atualizado_em: 'sla.atualizado_em',
+  },
   'ordens-servico': {
     id: 'os.id',
     numero_os: 'os.numero_os',
@@ -101,7 +136,77 @@ export async function GET(req: NextRequest) {
     let groupBy = '';
     let whereDateCol = '';
 
-    if (view === 'ordens-servico') {
+    if (view === 'catalogo') {
+      selectSql = `SELECT s.id,
+                          s.nome,
+                          s.descricao,
+                          s.categoria_id,
+                          cat.nome AS categoria_nome,
+                          s.unidade_medida,
+                          s.preco_padrao,
+                          CASE WHEN s.ativo THEN 'Ativo' ELSE 'Inativo' END AS ativo,
+                          s.criado_em,
+                          s.atualizado_em`;
+      baseSql = `FROM servicos.catalogo_servicos s
+                 LEFT JOIN servicos.categorias_servicos cat ON cat.id = s.categoria_id`;
+      whereDateCol = 's.criado_em';
+      if (categoria) push('s.categoria_id =', categoria);
+      if (ativo) push('CAST(s.ativo AS TEXT) =', ativo);
+      const precoMin = parseNumber(searchParams.get('preco_min'));
+      const precoMax = parseNumber(searchParams.get('preco_max'));
+      if (precoMin !== undefined) push('s.preco_padrao >=', precoMin);
+      if (precoMax !== undefined) push('s.preco_padrao <=', precoMax);
+      if (q) {
+        conditions.push(`(s.nome ILIKE '%' || $${i} || '%' OR s.descricao ILIKE '%' || $${i} || '%')`);
+        params.push(q);
+        i += 1;
+      }
+    } else if (view === 'categorias') {
+      selectSql = `SELECT cat.id,
+                          cat.nome,
+                          cat.descricao,
+                          cat.categoria_pai_id,
+                          cat.criado_em,
+                          cat.atualizado_em`;
+      baseSql = `FROM servicos.categorias_servicos cat`;
+      whereDateCol = 'cat.criado_em';
+      if (q) {
+        conditions.push(`(cat.nome ILIKE '%' || $${i} || '%' OR cat.descricao ILIKE '%' || $${i} || '%')`);
+        params.push(q);
+        i += 1;
+      }
+    } else if (view === 'tabelas-preco') {
+      selectSql = `SELECT tp.id,
+                          tp.nome,
+                          tp.descricao,
+                          CASE WHEN tp.ativo THEN 'Ativo' ELSE 'Inativo' END AS ativo,
+                          tp.criado_em,
+                          tp.atualizado_em`;
+      baseSql = `FROM servicos.tabelas_preco tp`;
+      whereDateCol = 'tp.criado_em';
+      if (ativo) push('CAST(tp.ativo AS TEXT) =', ativo);
+      if (q) {
+        conditions.push(`(tp.nome ILIKE '%' || $${i} || '%' OR tp.descricao ILIKE '%' || $${i} || '%')`);
+        params.push(q);
+        i += 1;
+      }
+    } else if (view === 'slas') {
+      selectSql = `SELECT sla.id,
+                          sla.servico_id,
+                          s.nome AS servico,
+                          sla.tempo_estimado,
+                          sla.descricao,
+                          sla.criado_em,
+                          sla.atualizado_em`;
+      baseSql = `FROM servicos.slas sla
+                 LEFT JOIN servicos.catalogo_servicos s ON s.id = sla.servico_id`;
+      whereDateCol = 'sla.criado_em';
+      if (q) {
+        conditions.push(`(s.nome ILIKE '%' || $${i} || '%' OR sla.descricao ILIKE '%' || $${i} || '%')`);
+        params.push(q);
+        i += 1;
+      }
+    } else if (view === 'ordens-servico') {
       selectSql = `SELECT os.id AS id,
                           os.numero_os,
                           os.cliente_id AS cliente_id,
