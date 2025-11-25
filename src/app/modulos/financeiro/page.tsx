@@ -222,6 +222,14 @@ export default function ModulosFinanceiroPage() {
           { accessorKey: 'departamento_nome', header: () => <IconLabelHeader icon={<Building className="h-3.5 w-3.5" />} label="Departamento" /> },
           { accessorKey: 'filial_nome', header: () => <IconLabelHeader icon={<Building2 className="h-3.5 w-3.5" />} label="Filial" /> },
           { accessorKey: 'projeto_nome', header: () => <IconLabelHeader icon={<Folder className="h-3.5 w-3.5" />} label="Projeto" /> },
+          { accessorKey: 'anexos', header: 'Anexos', cell: ({ row }) => {
+            const rawId = row.original['conta_id'] as unknown
+            const lancId = Number(rawId)
+            if (!lancId || Number.isNaN(lancId)) return <span className="text-gray-400">-</span>
+            return (
+              <button className="text-blue-600 underline" onClick={() => openAnexosForLancamento(lancId)}>Ver anexos</button>
+            )
+          } },
         ]
       case 'pagamentos-efetuados':
         return [
@@ -276,6 +284,14 @@ export default function ModulosFinanceiroPage() {
           { accessorKey: 'departamento', header: () => <IconLabelHeader icon={<Building className="h-3.5 w-3.5" />} label="Departamento" /> },
           { accessorKey: 'filial', header: () => <IconLabelHeader icon={<Building2 className="h-3.5 w-3.5" />} label="Filial" /> },
           { accessorKey: 'projeto', header: () => <IconLabelHeader icon={<Folder className="h-3.5 w-3.5" />} label="Projeto" /> },
+          { accessorKey: 'anexos', header: 'Anexos', cell: ({ row }) => {
+            const rawId = row.original['pagamento_id'] as unknown
+            const lancId = Number(rawId)
+            if (!lancId || Number.isNaN(lancId)) return <span className="text-gray-400">-</span>
+            return (
+              <button className="text-blue-600 underline" onClick={() => openAnexosForLancamento(lancId)}>Ver anexos</button>
+            )
+          } },
         ]
       case 'pagamentos-recebidos':
         return [
@@ -335,6 +351,14 @@ export default function ModulosFinanceiroPage() {
           { accessorKey: 'departamento_nome', header: () => <IconLabelHeader icon={<Building className="h-3.5 w-3.5" />} label="Departamento" /> },
           { accessorKey: 'filial_nome', header: () => <IconLabelHeader icon={<Building2 className="h-3.5 w-3.5" />} label="Filial" /> },
           { accessorKey: 'projeto_nome', header: () => <IconLabelHeader icon={<Folder className="h-3.5 w-3.5" />} label="Projeto" /> },
+          { accessorKey: 'anexos', header: 'Anexos', cell: ({ row }) => {
+            const rawId = row.original['pagamento_id'] as unknown
+            const lancId = Number(rawId)
+            if (!lancId || Number.isNaN(lancId)) return <span className="text-gray-400">-</span>
+            return (
+              <button className="text-blue-600 underline" onClick={() => openAnexosForLancamento(lancId)}>Ver anexos</button>
+            )
+          } },
         ]
       case 'movimentos':
         return [
@@ -402,6 +426,14 @@ export default function ModulosFinanceiroPage() {
           { accessorKey: 'departamento_nome', header: () => <IconLabelHeader icon={<Building className="h-3.5 w-3.5" />} label="Departamento" /> },
           { accessorKey: 'filial_nome', header: () => <IconLabelHeader icon={<Building2 className="h-3.5 w-3.5" />} label="Filial" /> },
           { accessorKey: 'projeto_nome', header: () => <IconLabelHeader icon={<Folder className="h-3.5 w-3.5" />} label="Projeto" /> },
+          { accessorKey: 'anexos', header: 'Anexos', cell: ({ row }) => {
+            const rawId = row.original['conta_id'] as unknown
+            const lancId = Number(rawId)
+            if (!lancId || Number.isNaN(lancId)) return <span className="text-gray-400">-</span>
+            return (
+              <button className="text-blue-600 underline" onClick={() => openAnexosForLancamento(lancId)}>Ver anexos</button>
+            )
+          } },
         ]
     }
   }, [tabs.selected])
@@ -442,6 +474,68 @@ export default function ModulosFinanceiroPage() {
   const [bancoEditorOpen, setBancoEditorOpen] = useState(false)
   const [selectedBancoId, setSelectedBancoId] = useState<string | number | null>(null)
   const [bancoPrefill, setBancoPrefill] = useState<{ nome_banco?: string; imagem_url?: string } | undefined>(undefined)
+
+  // Anexos por lançamento (drawer)
+  type Anexo = { anexo_id?: number; documento_id?: number; doc_financeiro_id?: number; nome_arquivo?: string; tipo_arquivo?: string; arquivo_url?: string; tamanho_bytes?: number; criado_em?: string }
+  const [anexosOpenForLanc, setAnexosOpenForLanc] = useState<number | null>(null)
+  const [anexosLanc, setAnexosLanc] = useState<Anexo[]>([])
+  const [anexosLoading, setAnexosLoading] = useState(false)
+  const [anexoUpload, setAnexoUpload] = useState<File | null>(null)
+  const [docFinIdForUpload, setDocFinIdForUpload] = useState<number | null>(null)
+
+  const openAnexosForLancamento = async (lancId: number) => {
+    if (!lancId) return
+    setAnexosOpenForLanc(lancId)
+    setAnexosLoading(true)
+    try {
+      const res = await fetch(`/api/modulos/financeiro/documentos?lancamento_id=${lancId}`, { cache: 'no-store' })
+      const json = await res.json()
+      const items = Array.isArray(json?.rows) ? (json.rows as Anexo[]) : []
+      setAnexosLanc(items)
+      const firstDocFin = items.find(i => typeof i.doc_financeiro_id === 'number' && i.doc_financeiro_id! > 0)
+      setDocFinIdForUpload(firstDocFin?.doc_financeiro_id ?? null)
+    } catch {
+      setAnexosLanc([])
+      setDocFinIdForUpload(null)
+    } finally {
+      setAnexosLoading(false)
+    }
+  }
+
+  const downloadAnexo = async (anexoId?: number) => {
+    if (!anexoId) return
+    try {
+      const res = await fetch(`/api/documentos/anexos/download?id=${anexoId}`)
+      const json = await res.json()
+      if (json?.success && json?.url) window.open(json.url, '_blank', 'noopener,noreferrer')
+    } catch {}
+  }
+
+  const deleteAnexo = async (anexoId?: number) => {
+    if (!anexoId) return
+    if (!confirm('Excluir anexo?')) return
+    try {
+      const res = await fetch(`/api/documentos/anexos/delete?id=${anexoId}`, { method: 'DELETE' })
+      const json = await res.json()
+      if (json?.success && anexosOpenForLanc) await openAnexosForLancamento(anexosOpenForLanc)
+    } catch {}
+  }
+
+  const uploadAnexoForLanc = async () => {
+    if (!docFinIdForUpload || !anexoUpload) return
+    try {
+      const fd = new FormData()
+      fd.set('domain', 'financeiro')
+      fd.set('domain_id', String(docFinIdForUpload))
+      fd.set('file', anexoUpload)
+      const res = await fetch('/api/documentos/anexos/upload-by-domain', { method: 'POST', body: fd })
+      const json = await res.json()
+      if (json?.success && anexosOpenForLanc) {
+        setAnexoUpload(null)
+        await openAnexosForLancamento(anexosOpenForLanc)
+      }
+    } catch {}
+  }
 
   useEffect(() => {
     const controller = new AbortController()
@@ -785,6 +879,67 @@ export default function ModulosFinanceiroPage() {
         prefill={bancoPrefill}
         onSaved={() => setReloadKey((k) => k + 1)}
       />
+      {anexosOpenForLanc && (
+        <div className="fixed inset-0 bg-black/30 flex justify-end z-50" onClick={() => setAnexosOpenForLanc(null)}>
+          <div className="w-full max-w-md bg-white h-full shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <div className="p-4 border-b">
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold">Anexos do Lançamento #{anexosOpenForLanc}</h3>
+                <button className="text-gray-500" onClick={() => setAnexosOpenForLanc(null)}>Fechar</button>
+              </div>
+              <div className="mt-3 flex items-center gap-2">
+                <input type="file" onChange={(e) => setAnexoUpload(e.target.files?.[0] || null)} />
+                <button
+                  className="px-3 py-1 bg-blue-600 text-white rounded disabled:opacity-50"
+                  onClick={uploadAnexoForLanc}
+                  disabled={!anexoUpload || !docFinIdForUpload}
+                  title={!docFinIdForUpload ? 'Sem documento financeiro associado para upload' : 'Enviar anexo'}
+                >
+                  Enviar
+                </button>
+              </div>
+            </div>
+            <div className="p-4 overflow-auto h-[calc(100%-100px)]">
+              {anexosLoading ? (
+                <div className="text-sm text-gray-500">Carregando…</div>
+              ) : (
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-left">
+                      <th className="p-2">Arquivo</th>
+                      <th className="p-2">Tipo</th>
+                      <th className="p-2">Data</th>
+                      <th className="p-2">Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {anexosLanc.length === 0 && (
+                      <tr><td className="p-2 text-gray-500" colSpan={4}>Nenhum anexo</td></tr>
+                    )}
+                    {anexosLanc.map((a, i) => (
+                      <tr key={String(a.anexo_id ?? i)} className="border-t">
+                        <td className="p-2">{a.nome_arquivo || '-'}</td>
+                        <td className="p-2">{a.tipo_arquivo || '-'}</td>
+                        <td className="p-2">{a.criado_em ? new Date(a.criado_em).toLocaleString('pt-BR') : '-'}</td>
+                        <td className="p-2 flex items-center gap-3">
+                          {a.anexo_id ? (
+                            <>
+                              <button className="text-blue-600 underline" onClick={() => downloadAnexo(a.anexo_id)}>Baixar</button>
+                              <button className="text-red-600 underline" onClick={() => deleteAnexo(a.anexo_id)}>Excluir</button>
+                            </>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
       <DocumentViewer
         open={docViewerOpen}
         onOpenChange={setDocViewerOpen}
