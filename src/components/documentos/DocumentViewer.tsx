@@ -1,9 +1,9 @@
 "use client";
 
-import { useMemo } from 'react'
+import React, { useMemo, useState, useEffect, useRef } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { ExternalLink, Download, Trash2, Upload, Replace } from 'lucide-react'
+import { ExternalLink, Download, Trash2, Upload, RefreshCw } from 'lucide-react'
 
 export type DocumentViewerProps = {
   open: boolean
@@ -16,11 +16,11 @@ export type DocumentViewerProps = {
 }
 
 export default function DocumentViewer({ open, onOpenChange, url, fileName, contentType, lancamentoId, onChanged }: DocumentViewerProps) {
-  const [currentUrl, setCurrentUrl] = React.useState<string | null | undefined>(url)
-  const [busy, setBusy] = React.useState(false)
-  const fileInputRef = React.useRef<HTMLInputElement | null>(null)
+  const [currentUrl, setCurrentUrl] = useState<string | null | undefined>(url)
+  const [busy, setBusy] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
 
-  React.useEffect(() => { setCurrentUrl(url) }, [url])
+  useEffect(() => { setCurrentUrl(url) }, [url])
   const type = useMemo(() => {
     if (contentType) return contentType.toLowerCase()
     if (!url) return ''
@@ -139,7 +139,7 @@ export default function DocumentViewer({ open, onOpenChange, url, fileName, cont
           {lancamentoId && (
             <>
               <Button variant="outline" onClick={handleChooseFile} disabled={busy} title={currentUrl ? 'Substituir arquivo' : 'Enviar arquivo'}>
-                {currentUrl ? <Replace className="h-4 w-4 mr-2" /> : <Upload className="h-4 w-4 mr-2" />}
+                {currentUrl ? <RefreshCw className="h-4 w-4 mr-2" /> : <Upload className="h-4 w-4 mr-2" />}
                 {currentUrl ? 'Substituir' : 'Enviar'}
               </Button>
               {currentUrl && (
