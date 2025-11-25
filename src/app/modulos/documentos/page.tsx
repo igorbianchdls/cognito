@@ -149,6 +149,18 @@ export default function ModulosDocumentosPage() {
           { accessorKey: 'tipo_documento', header: 'Tipo' },
           { accessorKey: 'numero', header: 'Número' },
           { accessorKey: 'descricao', header: 'Descrição' },
+          { accessorKey: 'nome_arquivo', header: 'Arquivo' },
+          { accessorKey: 'content_type', header: 'Tipo Arquivo' },
+          { accessorKey: 'tamanho_bytes', header: 'Tamanho', cell: ({ row }) => {
+            const n = Number(row.original['tamanho_bytes'] ?? 0)
+            return Number.isFinite(n) && n > 0 ? n.toLocaleString('pt-BR') + ' bytes' : '-'
+          } },
+          { accessorKey: 'arquivo_url', header: 'URL', cell: ({ row }) => {
+            const url = row.original['arquivo_url'] as string | undefined
+            return url ? (
+              <a className="text-blue-600 underline" href={url} target="_blank" rel="noreferrer">Abrir</a>
+            ) : <span className="text-gray-400">-</span>
+          } },
           { accessorKey: 'meio_pagamento', header: 'Meio de Pagamento' },
           { accessorKey: 'banco_id', header: 'Banco' },
           { accessorKey: 'codigo_barras', header: 'Código de Barras' },

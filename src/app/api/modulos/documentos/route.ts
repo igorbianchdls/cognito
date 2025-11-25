@@ -101,6 +101,10 @@ export async function GET(req: NextRequest) {
         f.codigo_barras,
         f.data_liquidacao,
         f.valor_pago,
+        d.nome_arquivo,
+        d.content_type,
+        d.tamanho_bytes,
+        d.arquivo_url,
         d.criado_em,
         d.atualizado_em
       FROM documentos.documento d
