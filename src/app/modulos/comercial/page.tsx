@@ -69,6 +69,7 @@ export default function ModulosComercialPage() {
         { value: 'territorios', label: 'Territórios' },
         { value: 'vendedores', label: 'Vendedores' },
         { value: 'desempenho', label: 'Desempenho' },
+        { value: 'resultados', label: 'Resultados' },
         { value: 'metas', label: 'Metas' },
         { value: 'tipos_metas', label: 'Tipos de Metas' },
         { value: 'regras_comissoes', label: 'Regras de Comissões' },
@@ -256,6 +257,16 @@ export default function ModulosComercialPage() {
               { accessorKey: 'quantidade_servicos', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Serviços" /> },
               { accessorKey: 'ticket_medio', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Ticket Médio" />, cell: ({ getValue }) => formatBRL(getValue()) },
             ]
+      case 'resultados':
+        return [
+          { accessorKey: 'vendedor_nome', header: () => <IconLabelHeader icon={<Users className="h-3.5 w-3.5" />} label="Vendedor" /> },
+          { accessorKey: 'meta_faturamento', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Meta Faturamento" />, cell: ({ getValue }) => formatBRL(getValue()) },
+          { accessorKey: 'realizado_faturamento', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Faturamento" />, cell: ({ getValue }) => formatBRL(getValue()) },
+          { accessorKey: 'meta_ticket_medio', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Meta Ticket Médio" />, cell: ({ getValue }) => formatBRL(getValue()) },
+          { accessorKey: 'realizado_ticket_medio', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Ticket Médio" />, cell: ({ getValue }) => formatBRL(getValue()) },
+          { accessorKey: 'meta_novos_clientes', header: () => <IconLabelHeader icon={<Users className="h-3.5 w-3.5" />} label="Meta Novos Clientes" /> },
+          { accessorKey: 'realizado_novos_clientes', header: () => <IconLabelHeader icon={<Users className="h-3.5 w-3.5" />} label="Novos Clientes" /> },
+        ]
       case 'tipos_metas':
         return [
           { accessorKey: 'tipo_meta_id', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="ID" /> },
