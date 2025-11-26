@@ -141,7 +141,10 @@ export async function GET(req: NextRequest) {
         LEFT JOIN comercial.territorios tp ON tp.id = t.territorio_pai_id`
       orderClause = orderBy ? `ORDER BY ${orderBy} ${orderDir}` : 'ORDER BY t.nome ASC'
     } else if (view === 'vendedores') {
+      // Ajustado para usar a origem correta de funcionários (entidades.funcionarios)
+      // e manter aliases compatíveis com o front
       selectSql = `SELECT
+        v.id AS vendedor_id,
         f.nome AS vendedor,
         f.email AS email,
         f.telefone AS telefone,
@@ -152,7 +155,7 @@ export async function GET(req: NextRequest) {
         v.criado_em,
         v.atualizado_em`
       baseSql = `FROM comercial.vendedores v
-        LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id
+        LEFT JOIN entidades.funcionarios f ON f.id = v.funcionario_id
         LEFT JOIN comercial.territorios t ON t.id = v.territorio_id`
       orderClause = orderBy ? `ORDER BY ${orderBy} ${orderDir}` : 'ORDER BY f.nome ASC'
     } else if (view === 'meta_vendedores') {

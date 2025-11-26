@@ -12,8 +12,10 @@ import TabsNav, { type Opcao } from '@/components/modulos/TabsNav'
 import DataToolbar from '@/components/modulos/DataToolbar'
 import DataTable, { type TableData } from '@/components/widgets/Table'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/stores/modulos/moduleUiStore'
-import { List, Users, Briefcase, LayoutGrid, Calendar, CalendarClock, CheckCircle2, DollarSign, Tag, TrendingUp, FileText } from 'lucide-react'
+import { List, Users, Briefcase, LayoutGrid, Calendar, CalendarClock, CheckCircle2, DollarSign, Tag, TrendingUp, FileText, Mail, Phone, Percent, Settings } from 'lucide-react'
 import IconLabelHeader from '@/components/widgets/IconLabelHeader'
+import EntityDisplay from '@/components/modulos/EntityDisplay'
+import StatusBadge from '@/components/modulos/StatusBadge'
 
 type Row = TableData
 
@@ -189,56 +191,66 @@ export default function ModulosComercialPage() {
     switch (tabs.selected) {
       case 'territorios':
         return [
-          { accessorKey: 'territorio', header: 'Território' },
-          { accessorKey: 'descricao', header: 'Descrição' },
-          { accessorKey: 'territorio_pai', header: 'Território Pai' },
-          { accessorKey: 'ativo', header: 'Ativo' },
-          { accessorKey: 'criado_em', header: 'Criado Em', cell: ({ getValue }) => formatDate(getValue()) },
-          { accessorKey: 'atualizado_em', header: 'Atualizado Em', cell: ({ getValue }) => formatDate(getValue()) },
+          { accessorKey: 'territorio', header: () => <IconLabelHeader icon={<LayoutGrid className="h-3.5 w-3.5" />} label="Território" /> },
+          { accessorKey: 'descricao', header: () => <IconLabelHeader icon={<FileText className="h-3.5 w-3.5" />} label="Descrição" /> },
+          { accessorKey: 'territorio_pai', header: () => <IconLabelHeader icon={<LayoutGrid className="h-3.5 w-3.5" />} label="Território Pai" /> },
+          { accessorKey: 'ativo', header: () => <IconLabelHeader icon={<CheckCircle2 className="h-3.5 w-3.5" />} label="Ativo" /> },
+          { accessorKey: 'criado_em', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Criado Em" />, cell: ({ getValue }) => formatDate(getValue()) },
+          { accessorKey: 'atualizado_em', header: () => <IconLabelHeader icon={<CalendarClock className="h-3.5 w-3.5" />} label="Atualizado Em" />, cell: ({ getValue }) => formatDate(getValue()) },
         ]
       case 'vendedores':
         return [
-          { accessorKey: 'vendedor', header: 'Vendedor' },
-          { accessorKey: 'email', header: 'E-mail' },
-          { accessorKey: 'telefone', header: 'Telefone' },
-          { accessorKey: 'territorio', header: 'Território' },
-          { accessorKey: 'territorio_descricao', header: 'Descrição Território' },
-          { accessorKey: 'comissao', header: 'Comissão (%)' },
-          { accessorKey: 'vendedor_ativo', header: 'Ativo' },
-          { accessorKey: 'criado_em', header: 'Criado Em', cell: ({ getValue }) => formatDate(getValue()) },
-          { accessorKey: 'atualizado_em', header: 'Atualizado Em', cell: ({ getValue }) => formatDate(getValue()) },
+          { accessorKey: 'vendedor', header: () => <IconLabelHeader icon={<Users className="h-3.5 w-3.5" />} label="Vendedor" />,
+            cell: ({ row }) => (
+              <EntityDisplay
+                name={row.original['vendedor'] ? String(row.original['vendedor']) : '—'}
+              />
+            )
+          },
+          { accessorKey: 'email', header: () => <IconLabelHeader icon={<Mail className="h-3.5 w-3.5" />} label="E-mail" /> },
+          { accessorKey: 'telefone', header: () => <IconLabelHeader icon={<Phone className="h-3.5 w-3.5" />} label="Telefone" /> },
+          { accessorKey: 'territorio', header: () => <IconLabelHeader icon={<LayoutGrid className="h-3.5 w-3.5" />} label="Território" />,
+            cell: ({ row }) => (
+              <StatusBadge value={row.original['territorio']} type="status" />
+            )
+          },
+          { accessorKey: 'territorio_descricao', header: () => <IconLabelHeader icon={<FileText className="h-3.5 w-3.5" />} label="Descrição Território" /> },
+          { accessorKey: 'comissao', header: () => <IconLabelHeader icon={<Percent className="h-3.5 w-3.5" />} label="Comissão (%)" /> },
+          { accessorKey: 'vendedor_ativo', header: () => <IconLabelHeader icon={<CheckCircle2 className="h-3.5 w-3.5" />} label="Ativo" /> },
+          { accessorKey: 'criado_em', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Criado Em" />, cell: ({ getValue }) => formatDate(getValue()) },
+          { accessorKey: 'atualizado_em', header: () => <IconLabelHeader icon={<CalendarClock className="h-3.5 w-3.5" />} label="Atualizado Em" />, cell: ({ getValue }) => formatDate(getValue()) },
         ]
       case 'meta_vendedores':
         return [
-          { accessorKey: 'vendedor', header: 'Vendedor' },
-          { accessorKey: 'territorio', header: 'Território' },
-          { accessorKey: 'periodo', header: 'Período' },
-          { accessorKey: 'meta', header: 'Meta' },
-          { accessorKey: 'criado_em', header: 'Criado Em', cell: ({ getValue }) => formatDate(getValue()) },
-          { accessorKey: 'atualizado_em', header: 'Atualizado Em', cell: ({ getValue }) => formatDate(getValue()) },
+          { accessorKey: 'vendedor', header: () => <IconLabelHeader icon={<Users className="h-3.5 w-3.5" />} label="Vendedor" /> },
+          { accessorKey: 'territorio', header: () => <IconLabelHeader icon={<LayoutGrid className="h-3.5 w-3.5" />} label="Território" /> },
+          { accessorKey: 'periodo', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Período" /> },
+          { accessorKey: 'meta', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Meta" /> },
+          { accessorKey: 'criado_em', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Criado Em" />, cell: ({ getValue }) => formatDate(getValue()) },
+          { accessorKey: 'atualizado_em', header: () => <IconLabelHeader icon={<CalendarClock className="h-3.5 w-3.5" />} label="Atualizado Em" />, cell: ({ getValue }) => formatDate(getValue()) },
         ]
       case 'regras_comissoes':
         return [
-          { accessorKey: 'regra', header: 'Regra' },
-          { accessorKey: 'descricao', header: 'Descrição' },
-          { accessorKey: 'percentual_padrao', header: 'Percentual Padrão (%)' },
-          { accessorKey: 'percentual_minimo', header: 'Percentual Mínimo (%)' },
-          { accessorKey: 'percentual_maximo', header: 'Percentual Máximo (%)' },
-          { accessorKey: 'regra_ativa', header: 'Ativo' },
-          { accessorKey: 'criado_em', header: 'Criado Em', cell: ({ getValue }) => formatDate(getValue()) },
-          { accessorKey: 'atualizado_em', header: 'Atualizado Em', cell: ({ getValue }) => formatDate(getValue()) },
+          { accessorKey: 'regra', header: () => <IconLabelHeader icon={<Settings className="h-3.5 w-3.5" />} label="Regra" /> },
+          { accessorKey: 'descricao', header: () => <IconLabelHeader icon={<FileText className="h-3.5 w-3.5" />} label="Descrição" /> },
+          { accessorKey: 'percentual_padrao', header: () => <IconLabelHeader icon={<Percent className="h-3.5 w-3.5" />} label="Percentual Padrão (%)" /> },
+          { accessorKey: 'percentual_minimo', header: () => <IconLabelHeader icon={<Percent className="h-3.5 w-3.5" />} label="Percentual Mínimo (%)" /> },
+          { accessorKey: 'percentual_maximo', header: () => <IconLabelHeader icon={<Percent className="h-3.5 w-3.5" />} label="Percentual Máximo (%)" /> },
+          { accessorKey: 'regra_ativa', header: () => <IconLabelHeader icon={<CheckCircle2 className="h-3.5 w-3.5" />} label="Ativo" /> },
+          { accessorKey: 'criado_em', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Criado Em" />, cell: ({ getValue }) => formatDate(getValue()) },
+          { accessorKey: 'atualizado_em', header: () => <IconLabelHeader icon={<CalendarClock className="h-3.5 w-3.5" />} label="Atualizado Em" />, cell: ({ getValue }) => formatDate(getValue()) },
         ]
       case 'metas':
         return [
-          { accessorKey: 'vendedor', header: 'Vendedor' },
-          { accessorKey: 'ano', header: 'Ano' },
-          { accessorKey: 'mes', header: 'Mês' },
-          { accessorKey: 'tipo_meta', header: 'Tipo Meta' },
-          { accessorKey: 'tipo_valor', header: 'Tipo Valor' },
-          { accessorKey: 'valor_meta', header: 'Valor Meta' },
-          { accessorKey: 'meta_percentual', header: '% Meta' },
-          { accessorKey: 'criado_em', header: 'Criado Em', cell: ({ getValue }) => formatDate(getValue()) },
-          { accessorKey: 'atualizado_em', header: 'Atualizado Em', cell: ({ getValue }) => formatDate(getValue()) },
+          { accessorKey: 'vendedor', header: () => <IconLabelHeader icon={<Users className="h-3.5 w-3.5" />} label="Vendedor" /> },
+          { accessorKey: 'ano', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Ano" /> },
+          { accessorKey: 'mes', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Mês" /> },
+          { accessorKey: 'tipo_meta', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Tipo Meta" /> },
+          { accessorKey: 'tipo_valor', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Tipo Valor" /> },
+          { accessorKey: 'valor_meta', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Valor Meta" /> },
+          { accessorKey: 'meta_percentual', header: () => <IconLabelHeader icon={<Percent className="h-3.5 w-3.5" />} label="% Meta" /> },
+          { accessorKey: 'criado_em', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Criado Em" />, cell: ({ getValue }) => formatDate(getValue()) },
+          { accessorKey: 'atualizado_em', header: () => <IconLabelHeader icon={<CalendarClock className="h-3.5 w-3.5" />} label="Atualizado Em" />, cell: ({ getValue }) => formatDate(getValue()) },
         ]
       case 'desempenho':
         return [
@@ -276,6 +288,18 @@ export default function ModulosComercialPage() {
         return []
     }
   }, [tabs.selected])
+
+  // Forçar no-wrap em TODAS as colunas da tabela atual
+  const allNoWrapOptions = useMemo(() => {
+    const opts: Record<string, { headerNoWrap: boolean; cellNoWrap: boolean; widthMode: 'auto'; minWidth?: number }> = {}
+    for (const col of columns) {
+      const key = (col as any)?.accessorKey || (col as any)?.id
+      if (key) {
+        opts[String(key)] = { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto' }
+      }
+    }
+    return opts
+  }, [columns])
 
   // Reset page when tab changes
   useEffect(() => { setPage(1) }, [tabs.selected])
@@ -468,11 +492,12 @@ export default function ModulosComercialPage() {
                         : data
                   }
                   columnOptions={{
-                    territorio: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 160 },
-                    vendedor: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 160 },
-                    tipo_meta: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 140 },
-                    campanha: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 160 },
-                    descricao: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 180 },
+                    ...allNoWrapOptions,
+                    ...(allNoWrapOptions['territorio'] ? { territorio: { ...allNoWrapOptions['territorio'], minWidth: 160 } } : {}),
+                    ...(allNoWrapOptions['vendedor'] ? { vendedor: { ...allNoWrapOptions['vendedor'], minWidth: 160 } } : {}),
+                    ...(allNoWrapOptions['tipo_meta'] ? { tipo_meta: { ...allNoWrapOptions['tipo_meta'], minWidth: 140 } } : {}),
+                    ...(allNoWrapOptions['campanha'] ? { campanha: { ...allNoWrapOptions['campanha'], minWidth: 160 } } : {}),
+                    ...(allNoWrapOptions['descricao'] ? { descricao: { ...allNoWrapOptions['descricao'], minWidth: 180 } } : {}),
                   }}
                   enableExpand={tabs.selected === 'campanhas_vendas' || tabs.selected === 'metas' || tabs.selected === 'desempenho' || tabs.selected === 'metas_territorios'}
                   renderDetail={
