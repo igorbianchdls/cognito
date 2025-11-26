@@ -61,6 +61,10 @@ export default function VendasDashboardPage() {
       'sidebarItemText',
     ]
     sections.forEach((s) => financeiroDashboardActions.setFont(s, { family: 'Barlow' }))
+    // Definir período padrão: Novembro de 2025
+    financeiroDashboardActions.setFilters({
+      dateRange: { from: '2025-11-01', to: '2025-11-30' },
+    })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
   const [rows, setRows] = useState<PedidoRow[]>([])

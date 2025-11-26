@@ -380,6 +380,19 @@ export async function GET(req: NextRequest) {
     })).sort((a,b)=> (b.faturamento + b.meta) - (a.faturamento + a.meta)).slice(0, limit)
 
     // Meta x Faturamento por Vendedor (via vw_metas_detalhe)
+    // Meta x Faturamento por Vendedor (via vw_metas_detalhe) – filtra por mês/ano quando de/ate fornecidos
+    const ym = (() => {
+      if (de) {
+        const d = new Date(de)
+        if (!isNaN(d.getTime())) return { ano: d.getUTCFullYear(), mes: d.getUTCMonth() + 1 }
+      }
+      if (ate) {
+        const d = new Date(ate)
+        if (!isNaN(d.getTime())) return { ano: d.getUTCFullYear(), mes: d.getUTCMonth() + 1 }
+      }
+      // Default para Novembro/2025
+      return { ano: 2025, mes: 11 }
+    })()
     const metaVendVwSql = `
       SELECT
           m.meta_id,
@@ -390,7 +403,7 @@ export async function GET(req: NextRequest) {
           m.valor_meta,
           COALESCE(SUM(m.subtotal), 0) AS realizado
       FROM comercial.vw_metas_detalhe m
-      WHERE m.tipo_meta = 'faturamento'
+      WHERE m.tipo_meta = 'faturamento' AND m.ano = ${ym.ano} AND m.mes = ${ym.mes}
       GROUP BY
           m.meta_id,
           m.vendedor_id,
@@ -422,7 +435,7 @@ export async function GET(req: NextRequest) {
         COALESCE(SUM(m.valor_meta),0)::float AS meta,
         COUNT(DISTINCT m.cliente_id) AS realizado
       FROM comercial.vw_metas_detalhe m
-      WHERE m.tipo_meta = 'novos_clientes'
+      WHERE m.tipo_meta = 'novos_clientes' AND m.ano = ${ym.ano} AND m.mes = ${ym.mes}
       GROUP BY m.vendedor
       ORDER BY m.vendedor`;
     let metaNovosClientesVendedor: { label: string; meta: number; realizado: number }[] = []
@@ -437,7 +450,7 @@ export async function GET(req: NextRequest) {
              THEN ROUND(SUM(m.subtotal)::numeric / NULLIF(COUNT(DISTINCT m.pedido_id), 0), 2)
              ELSE 0 END AS realizado
       FROM comercial.vw_metas_detalhe m
-      WHERE m.tipo_meta = 'ticket_medio'
+      WHERE m.tipo_meta = 'ticket_medio' AND m.ano = ${ym.ano} AND m.mes = ${ym.mes}
       GROUP BY m.vendedor
       ORDER BY m.vendedor`;
     let metaTicketMedioVendedor: { label: string; meta: number; realizado: number }[] = []
