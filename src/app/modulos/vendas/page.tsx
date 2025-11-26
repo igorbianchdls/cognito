@@ -19,13 +19,10 @@ import EntityDisplay from '@/components/modulos/EntityDisplay'
 type Row = TableData
 
 type PedidoItem = {
-  produto: string
+  servico: string
   quantidade: number
   preco_unitario: number
-  desconto_item: number
-  subtotal_item: number
-  custo_unitario: number
-  custo_total_item: number
+  subtotal: number
 }
 
 type PedidoRow = Row & {
@@ -140,25 +137,19 @@ export default function ModulosVendasPage() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b">
-              <th className="text-left py-2 px-3">Produto</th>
+              <th className="text-left py-2 px-3">Serviço</th>
               <th className="text-right py-2 px-3">Quantidade</th>
               <th className="text-right py-2 px-3">Preço Unitário</th>
-              <th className="text-right py-2 px-3">Desconto</th>
               <th className="text-right py-2 px-3">Subtotal</th>
-              <th className="text-right py-2 px-3">Custo Unit.</th>
-              <th className="text-right py-2 px-3">Custo Total</th>
             </tr>
           </thead>
           <tbody>
             {itens.map((item, idx) => (
               <tr key={idx} className="border-b last:border-0">
-                <td className="py-2 px-3">{item.produto}</td>
+                <td className="py-2 px-3">{item.servico}</td>
                 <td className="text-right py-2 px-3">{item.quantidade}</td>
                 <td className="text-right py-2 px-3">{formatBRL(item.preco_unitario)}</td>
-                <td className="text-right py-2 px-3">{formatBRL(item.desconto_item)}</td>
-                <td className="text-right py-2 px-3">{formatBRL(item.subtotal_item)}</td>
-                <td className="text-right py-2 px-3">{formatBRL(item.custo_unitario)}</td>
-                <td className="text-right py-2 px-3">{formatBRL(item.custo_total_item)}</td>
+                <td className="text-right py-2 px-3">{formatBRL(item.subtotal)}</td>
               </tr>
             ))}
           </tbody>
@@ -265,41 +256,9 @@ export default function ModulosVendasPage() {
               />
             )
           },
-          { accessorKey: 'vendedor', header: () => <IconLabelHeader icon={<Users className="h-3.5 w-3.5" />} label="Vendedor" />,
-            cell: ({ row }) => (
-              <EntityDisplay
-                name={row.original['vendedor'] ? String(row.original['vendedor']) : 'Sem nome'}
-                imageUrl={row.original['vendedor_imagem_url'] ? String(row.original['vendedor_imagem_url']) : undefined}
-              />
-            )
-          },
-          { accessorKey: 'territorio', header: () => <IconLabelHeader icon={<Building2 className="h-3.5 w-3.5" />} label="Território" /> },
-          { accessorKey: 'canal_venda', header: () => <IconLabelHeader icon={<LayoutGrid className="h-3.5 w-3.5" />} label="Canal" /> },
-          { accessorKey: 'canal_distribuicao', header: () => <IconLabelHeader icon={<Truck className="h-3.5 w-3.5" />} label="Canal Distribuição" /> },
-          { accessorKey: 'campanha_venda', header: () => <IconLabelHeader icon={<Megaphone className="h-3.5 w-3.5" />} label="Campanha de Venda" /> },
-          { accessorKey: 'centro_lucro', header: () => <IconLabelHeader icon={<TrendingUp className="h-3.5 w-3.5" />} label="Centro de Lucro" /> },
-          { accessorKey: 'filial', header: () => <IconLabelHeader icon={<Building2 className="h-3.5 w-3.5" />} label="Filial" /> },
-          { accessorKey: 'unidade_negocio', header: () => <IconLabelHeader icon={<Building className="h-3.5 w-3.5" />} label="Business Unit" /> },
-          { accessorKey: 'sales_office', header: () => <IconLabelHeader icon={<Building className="h-3.5 w-3.5" />} label="Sales Office" /> },
           { accessorKey: 'data_pedido', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Data Pedido" />, cell: ({ getValue }) => formatDate(getValue()) },
           { accessorKey: 'status', header: () => <IconLabelHeader icon={<CheckCircle2 className="h-3.5 w-3.5" />} label="Status" /> },
-          { accessorKey: 'pedido_subtotal', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Subtotal" />, cell: ({ getValue }) => formatBRL(getValue()) },
-          { accessorKey: 'desconto_total', header: () => <IconLabelHeader icon={<Percent className="h-3.5 w-3.5" />} label="Desconto" />, cell: ({ getValue }) => formatBRL(getValue()) },
           { accessorKey: 'valor_total', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Total" />, cell: ({ getValue }) => formatBRL(getValue()) },
-          { accessorKey: 'custo_total_pedido', header: () => <IconLabelHeader icon={<Coins className="h-3.5 w-3.5" />} label="Custo Total" />, cell: ({ getValue }) => formatBRL(getValue()) },
-          {
-            accessorKey: 'margem_bruta_pedido',
-            header: () => <IconLabelHeader icon={<TrendingUp className="h-3.5 w-3.5" />} label="Margem %" />,
-            cell: ({ getValue }) => {
-              const value = getValue() as number
-              if (value == null || isNaN(value)) return '—'
-              const formatted = value.toFixed(1) + '%'
-              const color = value >= 30 ? 'text-green-600' : value >= 15 ? 'text-yellow-600' : 'text-red-600'
-              return <span className={color}>{formatted}</span>
-            }
-          },
-          { accessorKey: 'criado_em', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Criado Em" />, cell: ({ getValue }) => formatDate(getValue()) },
-          { accessorKey: 'atualizado_em', header: () => <IconLabelHeader icon={<CalendarClock className="h-3.5 w-3.5" />} label="Atualizado Em" />, cell: ({ getValue }) => formatDate(getValue()) },
         ]
       case 'devolucoes':
         return [

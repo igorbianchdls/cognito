@@ -8,21 +8,10 @@ export const revalidate = 0
 const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
   pedidos: {
     pedido: 'p.id',
-    cliente: 'c.nome_fantasia',
-    vendedor: 'f.nome',
-    territorio: 't.nome',
-    canal_venda: 'cv.nome',
-    canal_distribuicao: 'cd.nome',
-    campanha_venda: 'camp.nome',
-    centro_lucro: 'cc2.nome',
-    cupom: 'cup.codigo',
+    cliente: 'cli.nome_fantasia',
     data_pedido: 'p.data_pedido',
     status: 'p.status',
-    subtotal: 'p.subtotal',
-    desconto_total: 'p.desconto_total',
     valor_total: 'p.valor_total',
-    criado_em: 'p.criado_em',
-    atualizado_em: 'p.atualizado_em',
   },
   devolucoes: {
     devolucao: 'd.id',
@@ -115,42 +104,30 @@ export async function GET(req: NextRequest) {
     let orderClause = ''
 
     if (view === 'pedidos') {
+      // Query fornecida pelo usuário para cabeçalho e linhas (itens)
       selectSql = `SELECT
         p.id AS pedido_id,
         p.data_pedido,
         p.status,
+        p.valor_total,
+        p.filial_id,
+        p.vendedor_id,
+        p.territorio_id,
+        p.canal_venda_id,
         cli.nome_fantasia AS cliente_nome,
-        func.nome AS vendedor_nome,
-        terr.nome AS territorio_nome,
-        canal.nome AS canal_venda_nome,
-        cl.nome AS centro_lucro_nome,
-        camp.nome AS campanha_venda_nome,
-        f.nome AS filial_nome,
-        un.nome AS unidade_negocio_nome,
-        so.nome AS sales_office_nome,
-        prod.nome AS produto_nome,
-        pi.quantidade,
-        pi.preco_unitario,
-        pi.desconto,
-        pi.subtotal AS item_subtotal,
-        pc.custo AS produto_custo,
-        p.criado_em,
-        p.atualizado_em`
+
+        -- ITENS
+        i.id AS item_id,
+        i.servico_id,
+        s.nome AS servico_nome,
+        i.quantidade,
+        i.preco_unitario,
+        i.subtotal`
       baseSql = `FROM vendas.pedidos p
+        LEFT JOIN vendas.pedidos_itens i ON i.pedido_id = p.id
         LEFT JOIN entidades.clientes cli ON cli.id = p.cliente_id
-        LEFT JOIN comercial.vendedores vend ON vend.id = p.vendedor_id
-        LEFT JOIN entidades.funcionarios func ON func.id = vend.funcionario_id
-        LEFT JOIN comercial.territorios terr ON terr.id = p.territorio_id
-        LEFT JOIN vendas.canais_venda canal ON canal.id = p.canal_venda_id
-        LEFT JOIN empresa.centros_lucro cl ON cl.id = p.centro_lucro_id
-        LEFT JOIN comercial.campanhas_vendas camp ON camp.id = p.campanha_venda_id
-        LEFT JOIN empresa.filiais f ON f.id = p.filial_id
-        LEFT JOIN empresa.unidades_negocio un ON un.id = p.unidade_negocio_id
-        LEFT JOIN comercial.sales_offices so ON so.id = p.sales_office_id
-        LEFT JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
-        LEFT JOIN produtos.produto prod ON prod.id = pi.produto_id
-        LEFT JOIN produtos.produto_custos pc ON pc.produto_id = prod.id`
-      orderClause = orderBy ? `ORDER BY ${orderBy} ${orderDir}, pi.id ASC` : 'ORDER BY p.id ASC, pi.id ASC'
+        LEFT JOIN servicos.catalogo_servicos s ON s.id = i.servico_id`
+      orderClause = orderBy ? `ORDER BY ${orderBy} ${orderDir}, i.id ASC` : 'ORDER BY p.id ASC, i.id ASC'
     } else if (view === 'devolucoes') {
       selectSql = `SELECT
         d.id AS devolucao,
@@ -268,38 +245,27 @@ export async function GET(req: NextRequest) {
     const listSql = `${selectSql} ${baseSql} ${orderClause} LIMIT $1::int OFFSET $2::int`.trim()
     let rows = await runQuery<Record<string, unknown>>(listSql, [pageSize, offset])
 
-    // Para pedidos, agrupar itens
+    // Para pedidos, agrupar itens (cabeçalho + linhas) usando a query fornecida
     if (view === 'pedidos') {
+      type PedidoItem = {
+        item_id: unknown
+        servico_id: unknown
+        servico: unknown
+        quantidade: unknown
+        preco_unitario: unknown
+        subtotal: unknown
+      }
       type PedidoAgregado = {
         pedido: unknown
         cliente: unknown
-        vendedor: unknown
-        territorio: unknown
-        canal_venda: unknown
-        canal_distribuicao: unknown
-        campanha_venda: unknown
-        centro_lucro: unknown
-        filial: unknown
-        unidade_negocio: unknown
-        sales_office: unknown
         data_pedido: unknown
         status: unknown
-        pedido_subtotal: number
-        desconto_total: number
         valor_total: number
-        custo_total_pedido: number
-        margem_bruta_pedido: number
-        criado_em: unknown
-        atualizado_em: unknown
-        itens: Array<{
-          produto: unknown
-          quantidade: unknown
-          preco_unitario: unknown
-          desconto_item: unknown
-          subtotal_item: unknown
-          custo_unitario: unknown
-          custo_total_item: unknown
-        }>
+        filial_id: unknown
+        vendedor_id: unknown
+        territorio_id: unknown
+        canal_venda_id: unknown
+        itens: PedidoItem[]
       }
       const pedidosMap = new Map<number, PedidoAgregado>()
 
@@ -307,61 +273,30 @@ export async function GET(req: NextRequest) {
         const pedidoId = Number(row.pedido_id)
 
         if (!pedidosMap.has(pedidoId)) {
-          // Primeira vez vendo este pedido
           pedidosMap.set(pedidoId, {
             pedido: row.pedido_id,
             cliente: row.cliente_nome,
-            vendedor: row.vendedor_nome,
-            territorio: row.territorio_nome,
-            canal_venda: row.canal_venda_nome,
-            canal_distribuicao: row.canal_distribuicao_nome,
-            campanha_venda: row.campanha_venda_nome,
-            centro_lucro: row.centro_lucro_nome,
-            filial: row.filial_nome,
-            unidade_negocio: row.unidade_negocio_nome,
-            sales_office: row.sales_office_nome,
             data_pedido: row.data_pedido,
             status: row.status,
-            pedido_subtotal: 0,
-            desconto_total: 0,
-            valor_total: 0,
-            custo_total_pedido: 0,
-            margem_bruta_pedido: 0,
-            criado_em: row.criado_em,
-            atualizado_em: row.atualizado_em,
+            valor_total: Number(row.valor_total || 0),
+            filial_id: row.filial_id,
+            vendedor_id: row.vendedor_id,
+            territorio_id: row.territorio_id,
+            canal_venda_id: row.canal_venda_id,
             itens: []
           })
         }
 
         // Adicionar item se existir
-        if (row.produto_nome) {
-          const quantidade = Number(row.quantidade || 0)
-          const produtoCusto = Number(row.produto_custo || 0)
-          const custoTotalItem = quantidade * produtoCusto
-          const subtotalItem = Number(row.item_subtotal || 0)
-
+        if (row.item_id) {
           pedidosMap.get(pedidoId)!.itens.push({
-            produto: row.produto_nome,
+            item_id: row.item_id,
+            servico_id: row.servico_id,
+            servico: row.servico_nome,
             quantidade: row.quantidade,
             preco_unitario: row.preco_unitario,
-            desconto_item: row.desconto,
-            subtotal_item: row.item_subtotal,
-            custo_unitario: row.produto_custo,
-            custo_total_item: custoTotalItem,
+            subtotal: row.subtotal,
           })
-          // Acumular valores do pedido
-          pedidosMap.get(pedidoId)!.pedido_subtotal += subtotalItem
-          pedidosMap.get(pedidoId)!.valor_total += subtotalItem
-          pedidosMap.get(pedidoId)!.custo_total_pedido += custoTotalItem
-        }
-      }
-
-      // Calcular margem bruta para cada pedido
-      for (const pedido of pedidosMap.values()) {
-        const valorTotal = Number(pedido.valor_total || 0)
-        const custoTotal = pedido.custo_total_pedido
-        if (valorTotal > 0) {
-          pedido.margem_bruta_pedido = ((valorTotal - custoTotal) / valorTotal) * 100
         }
       }
 
