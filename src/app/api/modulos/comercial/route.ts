@@ -63,6 +63,7 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
   },
   resultados: {
     vendedor_nome: 'vendedor_nome',
+    territorio_nome: 'territorio_nome',
     meta_faturamento: 'meta_faturamento',
     realizado_faturamento: 'realizado_faturamento',
     meta_ticket_medio: 'meta_ticket_medio',
@@ -313,7 +314,71 @@ GROUP BY v.id, f.nome, t.nome`
         orderClause = orderBy ? `ORDER BY ${orderBy} ${orderDir}` : 'ORDER BY faturamento_total DESC'
       }
     } else if (view === 'resultados') {
-      selectSql = `WITH metas_por_vendedor AS (
+      const scope = (searchParams.get('scope') || 'vendedores').toLowerCase()
+      if (scope === 'territorios') {
+        selectSql = `WITH metas_por_territorio AS (
+    SELECT
+        m.id AS meta_id,
+        m.territorio_id,
+        t.nome AS territorio_nome,
+        MAX(CASE WHEN mi.tipo_meta_id = 1 THEN mi.valor_meta END) AS meta_faturamento,
+        MAX(CASE WHEN mi.tipo_meta_id = 5 THEN mi.valor_meta END) AS meta_ticket_medio,
+        MAX(CASE WHEN mi.tipo_meta_id = 4 THEN mi.valor_meta END) AS meta_novos_clientes
+    FROM comercial.metas m
+    LEFT JOIN comercial.metas_itens mi 
+        ON mi.meta_id = m.id
+    LEFT JOIN comercial.territorios t 
+        ON t.id = m.territorio_id
+    WHERE m.ano = 2025
+      AND m.mes = 11
+      AND m.territorio_id IS NOT NULL
+    GROUP BY m.id, m.territorio_id, t.nome
+),
+realizado AS (
+    SELECT
+        p.territorio_id,
+        SUM(i.subtotal) AS realizado_faturamento,
+        CASE 
+            WHEN COUNT(DISTINCT p.id) > 0 
+                THEN SUM(i.subtotal) / COUNT(DISTINCT p.id)
+            ELSE 0
+        END AS realizado_ticket_medio,
+        COUNT(DISTINCT p.cliente_id) FILTER (
+            WHERE p.data_pedido >= '2025-11-01'
+              AND p.data_pedido <  '2025-12-01'
+              AND p.cliente_id IN (
+                  SELECT cliente_id
+                  FROM vendas.pedidos
+                  GROUP BY cliente_id
+                  HAVING MIN(data_pedido) >= '2025-11-01'
+                     AND MIN(data_pedido) <  '2025-12-01'
+              )
+        ) AS realizado_novos_clientes
+    FROM vendas.pedidos p
+    LEFT JOIN vendas.pedidos_itens i 
+        ON i.pedido_id = p.id
+    WHERE p.status = 'concluido'
+      AND p.data_pedido >= '2025-11-01'
+      AND p.data_pedido <  '2025-12-01'
+    GROUP BY p.territorio_id
+)
+
+SELECT
+    mt.territorio_id,
+    mt.territorio_nome,
+    mt.meta_faturamento,
+    mt.meta_ticket_medio,
+    mt.meta_novos_clientes,
+    COALESCE(r.realizado_faturamento, 0) AS realizado_faturamento,
+    COALESCE(r.realizado_ticket_medio, 0) AS realizado_ticket_medio,
+    COALESCE(r.realizado_novos_clientes, 0) AS realizado_novos_clientes
+FROM metas_por_territorio mt
+LEFT JOIN realizado r 
+       ON r.territorio_id = mt.territorio_id`
+        baseSql = ''
+        orderClause = orderBy ? `ORDER BY ${orderBy} ${orderDir}` : 'ORDER BY mt.territorio_id ASC'
+      } else {
+        selectSql = `WITH metas_por_vendedor AS (
     SELECT
         m.id AS meta_id,
         m.vendedor_id,
@@ -367,8 +432,9 @@ SELECT
     COALESCE(r.realizado_novos_clientes, 0) AS realizado_novos_clientes
 FROM metas_por_vendedor mv
 LEFT JOIN realizado r ON r.vendedor_id = mv.vendedor_id`
-      baseSql = ''
-      orderClause = orderBy ? `ORDER BY ${orderBy} ${orderDir}` : 'ORDER BY vendedor_nome ASC'
+        baseSql = ''
+        orderClause = orderBy ? `ORDER BY ${orderBy} ${orderDir}` : 'ORDER BY vendedor_nome ASC'
+      }
     } else if (view === 'tipos_metas') {
       selectSql = `SELECT
         tm.id AS tipo_meta_id,

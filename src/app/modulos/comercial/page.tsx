@@ -50,6 +50,8 @@ export default function ModulosComercialPage() {
   const [metaMes, setMetaMes] = useState<number | 'todos'>('todos')
   // Escopo do desempenho: vendedores | territorios
   const [perfScope, setPerfScope] = useState<'vendedores' | 'territorios'>('vendedores')
+  // Escopo dos resultados: vendedores | territorios
+  const [resScope, setResScope] = useState<'vendedores' | 'territorios'>('vendedores')
 
   const fontVar = (name?: string) => {
     if (!name) return undefined
@@ -258,15 +260,25 @@ export default function ModulosComercialPage() {
               { accessorKey: 'ticket_medio', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Ticket Médio" />, cell: ({ getValue }) => formatBRL(getValue()) },
             ]
       case 'resultados':
-        return [
-          { accessorKey: 'vendedor_nome', header: () => <IconLabelHeader icon={<Users className="h-3.5 w-3.5" />} label="Vendedor" /> },
-          { accessorKey: 'meta_faturamento', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Meta Faturamento" />, cell: ({ getValue }) => formatBRL(getValue()) },
-          { accessorKey: 'realizado_faturamento', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Faturamento" />, cell: ({ getValue }) => formatBRL(getValue()) },
-          { accessorKey: 'meta_ticket_medio', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Meta Ticket Médio" />, cell: ({ getValue }) => formatBRL(getValue()) },
-          { accessorKey: 'realizado_ticket_medio', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Ticket Médio" />, cell: ({ getValue }) => formatBRL(getValue()) },
-          { accessorKey: 'meta_novos_clientes', header: () => <IconLabelHeader icon={<Users className="h-3.5 w-3.5" />} label="Meta Novos Clientes" /> },
-          { accessorKey: 'realizado_novos_clientes', header: () => <IconLabelHeader icon={<Users className="h-3.5 w-3.5" />} label="Novos Clientes" /> },
-        ]
+        return resScope === 'vendedores'
+          ? [
+              { accessorKey: 'vendedor_nome', header: () => <IconLabelHeader icon={<Users className="h-3.5 w-3.5" />} label="Vendedor" /> },
+              { accessorKey: 'meta_faturamento', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Meta Faturamento" />, cell: ({ getValue }) => formatBRL(getValue()) },
+              { accessorKey: 'realizado_faturamento', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Faturamento" />, cell: ({ getValue }) => formatBRL(getValue()) },
+              { accessorKey: 'meta_ticket_medio', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Meta Ticket Médio" />, cell: ({ getValue }) => formatBRL(getValue()) },
+              { accessorKey: 'realizado_ticket_medio', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Ticket Médio" />, cell: ({ getValue }) => formatBRL(getValue()) },
+              { accessorKey: 'meta_novos_clientes', header: () => <IconLabelHeader icon={<Users className="h-3.5 w-3.5" />} label="Meta Novos Clientes" /> },
+              { accessorKey: 'realizado_novos_clientes', header: () => <IconLabelHeader icon={<Users className="h-3.5 w-3.5" />} label="Novos Clientes" /> },
+            ]
+          : [
+              { accessorKey: 'territorio_nome', header: () => <IconLabelHeader icon={<LayoutGrid className="h-3.5 w-3.5" />} label="Território" /> },
+              { accessorKey: 'meta_faturamento', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Meta Faturamento" />, cell: ({ getValue }) => formatBRL(getValue()) },
+              { accessorKey: 'realizado_faturamento', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Faturamento" />, cell: ({ getValue }) => formatBRL(getValue()) },
+              { accessorKey: 'meta_ticket_medio', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Meta Ticket Médio" />, cell: ({ getValue }) => formatBRL(getValue()) },
+              { accessorKey: 'realizado_ticket_medio', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Ticket Médio" />, cell: ({ getValue }) => formatBRL(getValue()) },
+              { accessorKey: 'meta_novos_clientes', header: () => <IconLabelHeader icon={<Users className="h-3.5 w-3.5" />} label="Meta Novos Clientes" /> },
+              { accessorKey: 'realizado_novos_clientes', header: () => <IconLabelHeader icon={<Users className="h-3.5 w-3.5" />} label="Novos Clientes" /> },
+            ]
       case 'tipos_metas':
         return [
           { accessorKey: 'tipo_meta_id', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="ID" /> },
@@ -328,6 +340,8 @@ export default function ModulosComercialPage() {
           if (metaMes !== 'todos') params.set('mes', String(metaMes))
         } else if (tabs.selected === 'desempenho') {
           params.set('scope', perfScope)
+        } else if (tabs.selected === 'resultados') {
+          params.set('scope', resScope)
         }
         const url = `/api/modulos/comercial?${params.toString()}`
         const res = await fetch(url, { cache: 'no-store', signal: controller.signal })
@@ -348,7 +362,7 @@ export default function ModulosComercialPage() {
     }
     load()
     return () => controller.abort()
-  }, [tabs.selected, page, pageSize, refreshKey, metaAno, metaMes, perfScope])
+  }, [tabs.selected, page, pageSize, refreshKey, metaAno, metaMes, perfScope, resScope])
 
   return (
     <SidebarProvider>
@@ -455,13 +469,17 @@ export default function ModulosComercialPage() {
                 total={total}
                 dateRange={dateRange}
                 onDateRangeChange={setDateRange}
-                leftExtra={tabs.selected === 'desempenho' ? (
+                leftExtra={(tabs.selected === 'desempenho' || tabs.selected === 'resultados') ? (
                   <div className="flex items-center gap-2">
                     <label className="text-sm text-gray-600">Agrupar</label>
                     <select
                       className="h-8 px-2 border rounded text-sm"
-                      value={perfScope}
-                      onChange={(e) => setPerfScope(e.target.value as 'vendedores' | 'territorios')}
+                      value={tabs.selected === 'desempenho' ? perfScope : resScope}
+                      onChange={(e) => {
+                        const v = e.target.value as 'vendedores' | 'territorios'
+                        if (tabs.selected === 'desempenho') setPerfScope(v)
+                        else setResScope(v)
+                      }}
                     >
                       <option value="vendedores">Vendedores</option>
                       <option value="territorios">Territórios</option>
