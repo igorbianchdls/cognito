@@ -96,6 +96,12 @@ export default function ModulosComercialPage() {
     return ''
   }
 
+  const formatBRL = (value?: unknown) => {
+    const n = Number(value ?? 0)
+    if (isNaN(n)) return String(value ?? '')
+    return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+  }
+
   const renderCampanhaProdutos = (row: Row) => {
     const campanhaRow = row as CampanhaRow
     const produtos = campanhaRow.produtos || []
@@ -244,13 +250,12 @@ export default function ModulosComercialPage() {
         ]
       case 'desempenho':
         return [
-          { accessorKey: 'vendedor', header: () => <IconLabelHeader icon={<Users className="h-3.5 w-3.5" />} label="Vendedor" /> },
-          { accessorKey: 'ano', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Ano" /> },
-          { accessorKey: 'mes', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Mês" /> },
-          { accessorKey: 'valor_meta', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Meta" /> },
-          { accessorKey: 'realizado', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Realizado" /> },
-          { accessorKey: 'diferenca', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Diferença" /> },
-          { accessorKey: 'atingimento_percentual', header: () => <IconLabelHeader icon={<TrendingUp className="h-3.5 w-3.5" />} label="Atingimento (%)" />, cell: ({ getValue }) => formatPercent(getValue()) },
+          { accessorKey: 'vendedor_nome', header: () => <IconLabelHeader icon={<Users className="h-3.5 w-3.5" />} label="Vendedor" /> },
+          { accessorKey: 'territorio_nome', header: () => <IconLabelHeader icon={<LayoutGrid className="h-3.5 w-3.5" />} label="Território" /> },
+          { accessorKey: 'faturamento_total', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Faturamento" /> , cell: ({ getValue }) => formatBRL(getValue()) },
+          { accessorKey: 'total_pedidos', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Pedidos" /> },
+          { accessorKey: 'quantidade_servicos', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Serviços" /> },
+          { accessorKey: 'ticket_medio', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Ticket Médio" />, cell: ({ getValue }) => formatBRL(getValue()) },
         ]
       case 'tipos_metas':
         return [
@@ -308,7 +313,7 @@ export default function ModulosComercialPage() {
         params.set('view', tabs.selected)
         params.set('page', String(page))
         params.set('pageSize', String(pageSize))
-        if (tabs.selected === 'metas' || tabs.selected === 'desempenho') {
+        if (tabs.selected === 'metas') {
           if (metaAno !== 'todos') params.set('ano', String(metaAno))
           if (metaMes !== 'todos') params.set('mes', String(metaMes))
         }
@@ -376,7 +381,7 @@ export default function ModulosComercialPage() {
         </div>
         <div style={{ paddingTop: (layout.contentTopGap || 0) + (layout.mbTabs || 0) }}>
           <div className="px-4 md:px-6" style={{ marginBottom: 8 }}>
-            {tabs.selected === 'metas' || tabs.selected === 'desempenho' ? (
+            {tabs.selected === 'metas' ? (
               <div className="w-full">
                 <div className="flex items-center justify-between gap-3 pb-2 border-b border-gray-200">
                   <div className="flex items-center gap-3">
@@ -468,7 +473,7 @@ export default function ModulosComercialPage() {
                   key={tabs.selected}
                   columns={columns}
                   data={
-                    (tabs.selected === 'metas' || tabs.selected === 'desempenho')
+                    (tabs.selected === 'metas')
                       ? (() => {
                           // Mostrar apenas uma linha por meta_id (cabeçalho sintético)
                           const seen = new Set<string | number>()
@@ -492,51 +497,13 @@ export default function ModulosComercialPage() {
                     ...(allNoWrapOptions['campanha'] ? { campanha: { ...allNoWrapOptions['campanha'], minWidth: 160 } } : {}),
                     ...(allNoWrapOptions['descricao'] ? { descricao: { ...allNoWrapOptions['descricao'], minWidth: 180 } } : {}),
                   }}
-                  enableExpand={tabs.selected === 'campanhas_vendas' || tabs.selected === 'metas' || tabs.selected === 'desempenho' || tabs.selected === 'metas_territorios'}
+                  enableExpand={tabs.selected === 'campanhas_vendas' || tabs.selected === 'metas' || tabs.selected === 'metas_territorios'}
                   renderDetail={
                     tabs.selected === 'campanhas_vendas'
                       ? renderCampanhaProdutos
                       : tabs.selected === 'metas'
                         ? renderMetaDetail
-                        : tabs.selected === 'desempenho'
-                          ? (row) => {
-                              const metaId = row['meta_id']
-                              const vendedor = String(row['vendedor'] || '')
-                              const children = data.filter(r => r['meta_id'] === metaId)
-                              return (
-                                <div className="p-3 bg-gray-50 rounded border border-gray-200">
-                                  <div className="text-sm font-medium text-gray-700 mb-2">Desempenho por Tipo de Meta — {vendedor}</div>
-                                  {children.length === 0 ? (
-                                    <div className="text-xs text-gray-500">Sem itens de meta para este período.</div>
-                                  ) : (
-                                    <div className="overflow-x-auto">
-                                      <table className="w-full text-sm">
-                                        <thead>
-                                          <tr className="border-b">
-                                            <th className="text-left py-2 px-3">Tipo Meta</th>
-                                            <th className="text-right py-2 px-3">Meta</th>
-                                            <th className="text-right py-2 px-3">Realizado</th>
-                                            <th className="text-right py-2 px-3">Diferença</th>
-                                            <th className="text-right py-2 px-3">Atingimento</th>
-                                          </tr>
-                                        </thead>
-                                        <tbody>
-                                          {children.map((c, idx) => (
-                                            <tr key={idx} className="border-b last:border-0">
-                                              <td className="py-2 px-3">{String(c['tipo_meta'] || '')}</td>
-                                              <td className="text-right py-2 px-3">{String(c['valor_meta'] ?? '')}</td>
-                                              <td className="text-right py-2 px-3">{String(c['realizado'] ?? '')}</td>
-                                              <td className="text-right py-2 px-3">{String(c['diferenca'] ?? '')}</td>
-                                              <td className="text-right py-2 px-3">{formatPercent(c['atingimento_percentual'])}</td>
-                                            </tr>
-                                          ))}
-                                        </tbody>
-                                      </table>
-                                    </div>
-                                  )}
-                                </div>
-                              )
-                            }
+                        : undefined
                         : tabs.selected === 'metas_territorios'
                           ? (row) => {
                               const isParent = Boolean(row['parent_flag'])
@@ -578,7 +545,7 @@ export default function ModulosComercialPage() {
                         : undefined
                   }
                   rowCanExpand={
-                    (tabs.selected === 'metas' || tabs.selected === 'desempenho')
+                    (tabs.selected === 'metas')
                       ? () => true
                       : tabs.selected === 'metas_territorios'
                         ? (r) => Boolean(r['parent_flag'])

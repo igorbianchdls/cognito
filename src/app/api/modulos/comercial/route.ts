@@ -97,13 +97,12 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
     atualizado_em: 'tm.atualizado_em',
   },
   desempenho: {
-    vendedor: 'vendedor',
-    ano: 'ano',
-    mes: 'mes',
-    valor_meta: 'valor_meta',
-    realizado: 'realizado',
-    diferenca: 'diferenca',
-    atingimento_percentual: 'atingimento_percentual',
+    vendedor_nome: 'vendedor_nome',
+    territorio_nome: 'territorio_nome',
+    faturamento_total: 'faturamento_total',
+    total_pedidos: 'total_pedidos',
+    quantidade_servicos: 'quantidade_servicos',
+    ticket_medio: 'ticket_medio',
   },
 }
 
@@ -244,50 +243,37 @@ export async function GET(req: NextRequest) {
       baseSql = ''
       orderClause = ''
     } else if (view === 'desempenho') {
-      // Query para desempenho usando função comercial.fn_calcular_realizado_meta(meta_id, tipo_meta)
-      const anoParam = searchParams.get('ano')
-      const mesParam = searchParams.get('mes')
-      const ano = anoParam ? Number(anoParam) : undefined
-      const mes = mesParam ? Number(mesParam) : undefined
-
-      const whereParts: string[] = []
-      if (ano && String(ano).length === 4) whereParts.push(`ano = ${ano}`)
-      if (mes && mes >= 1 && mes <= 12) whereParts.push(`mes = ${mes}`)
-      const where = whereParts.length ? `WHERE ${whereParts.join(' AND ')}` : ''
-
+      // Desempenho por vendedor usando pedidos concluídos
       selectSql = `SELECT
-        m.meta_id,
-        m.vendedor_id,
-        m.vendedor,
-        m.mes,
-        m.ano,
-        m.tipo_meta,
-        m.valor_meta,
-        comercial.fn_calcular_realizado_meta(m.meta_id, m.tipo_meta) AS realizado,
-        comercial.fn_calcular_realizado_meta(m.meta_id, m.tipo_meta) - m.valor_meta AS diferenca,
-        CASE 
-            WHEN m.valor_meta > 0 THEN 
-                ROUND(
-                    comercial.fn_calcular_realizado_meta(m.meta_id, m.tipo_meta) 
-                    / m.valor_meta * 100
-                , 2)
-            ELSE 0 
-        END AS atingimento_percentual
-      FROM (
-          SELECT DISTINCT
-              meta_id,
-              vendedor_id,
-              vendedor,
-              mes,
-              ano,
-              tipo_meta,
-              valor_meta
-          FROM comercial.vw_metas_detalhe
-          ${where}
-      ) m
-      ORDER BY vendedor, tipo_meta`
+    v.id AS vendedor_id,
+    f.nome AS vendedor_nome,
+    t.nome AS territorio_nome,
+
+    SUM(i.subtotal) AS faturamento_total,
+    COUNT(DISTINCT p.id) AS total_pedidos,
+    SUM(i.quantidade) AS quantidade_servicos,
+    CASE 
+        WHEN COUNT(DISTINCT p.id) > 0 THEN 
+            SUM(i.subtotal) / COUNT(DISTINCT p.id)
+        ELSE 0
+    END AS ticket_medio
+
+FROM comercial.vendedores v
+LEFT JOIN entidades.funcionarios f
+       ON f.id = v.funcionario_id
+LEFT JOIN comercial.territorios t
+       ON t.id = v.territorio_id
+
+LEFT JOIN vendas.pedidos p
+       ON p.vendedor_id = v.id
+      AND p.status = 'concluido'
+
+LEFT JOIN vendas.pedidos_itens i
+       ON i.pedido_id = p.id
+
+GROUP BY v.id, f.nome, t.nome`
       baseSql = ''
-      orderClause = ''
+      orderClause = orderBy ? `ORDER BY ${orderBy} ${orderDir}` : 'ORDER BY faturamento_total DESC'
     } else if (view === 'tipos_metas') {
       selectSql = `SELECT
         tm.id AS tipo_meta_id,
@@ -420,7 +406,7 @@ export async function GET(req: NextRequest) {
     const totalSql = view === 'campanhas_vendas'
       ? `SELECT COUNT(DISTINCT cv.id)::int AS total FROM comercial.campanhas_vendas cv`
       : view === 'desempenho'
-        ? `SELECT COUNT(DISTINCT meta_id)::int AS total FROM (${selectSql}) t`
+        ? `SELECT COUNT(*)::int AS total FROM (${selectSql} ${baseSql}) t`
       : view === 'metas'
         ? `SELECT COUNT(DISTINCT meta_id)::int AS total FROM (${selectSql}) t`
       : view === 'metas_territorios'
