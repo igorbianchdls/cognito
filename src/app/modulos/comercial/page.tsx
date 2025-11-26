@@ -68,11 +68,11 @@ export default function ModulosComercialPage() {
       options: [
         { value: 'territorios', label: 'Territórios' },
         { value: 'vendedores', label: 'Vendedores' },
+        { value: 'desempenho', label: 'Desempenho' },
         { value: 'meta_vendedores', label: 'Meta Vendedores' },
         { value: 'metas_territorios', label: 'Metas Territórios' },
         { value: 'metas', label: 'Metas' },
         { value: 'tipos_metas', label: 'Tipos de Metas' },
-        { value: 'desempenho', label: 'Desempenho' },
         { value: 'regras_comissoes', label: 'Regras de Comissões' },
         { value: 'campanhas_vendas', label: 'Campanhas de Vendas' },
       ],
