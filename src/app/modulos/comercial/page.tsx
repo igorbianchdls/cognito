@@ -44,7 +44,7 @@ export default function ModulosComercialPage() {
   const [page, setPage] = useState<number>(1)
   const [pageSize, setPageSize] = useState<number>(20)
   const [total, setTotal] = useState<number>(0)
-  const [refreshKey, setRefreshKey] = useState(0)
+  const [refreshKey] = useState(0)
   // Filtros específicos (aba Metas)
   const [metaAno, setMetaAno] = useState<number | 'todos'>('todos')
   const [metaMes, setMetaMes] = useState<number | 'todos'>('todos')
@@ -78,7 +78,7 @@ export default function ModulosComercialPage() {
     })
   }, [])
 
-  const iconFor = (v: string) => <List className="h-4 w-4" />
+  const iconFor = (_v: string) => <List className="h-4 w-4" />
   const tabOptions: Opcao[] = useMemo(() => (tabs.options.map((opt) => ({ ...opt, icon: iconFor(opt.value) })) as Opcao[]), [tabs.options])
 
   const formatDate = (value?: unknown) => {
@@ -134,17 +134,7 @@ export default function ModulosComercialPage() {
     const metaId = row['meta_id']
     const children = data.filter(r => r['meta_id'] === metaId && r !== row)
 
-    const labelForDim = (dim?: unknown) => {
-      const m: Record<string, string> = {
-        sales_office_nome: 'Sales Office',
-        unidade_negocio_nome: 'Unidade de Negócio',
-        filial_nome: 'Filial',
-        canal_venda_nome: 'Canal de Venda',
-        territorio_nome: 'Território',
-      }
-      const k = String(dim || '')
-      return m[k] || k || 'Dimensão'
-    }
+    // (dim label map removido por não uso)
 
     return (
       <div className="p-3 bg-gray-50 rounded border border-gray-200">
@@ -291,11 +281,14 @@ export default function ModulosComercialPage() {
 
   // Forçar no-wrap em TODAS as colunas da tabela atual
   const allNoWrapOptions = useMemo(() => {
-    const opts: Record<string, { headerNoWrap: boolean; cellNoWrap: boolean; widthMode: 'auto'; minWidth?: number }> = {}
+    const opts: Record<string, { cellNoWrap: boolean; widthMode: 'auto'; minWidth?: number }> = {}
     for (const col of columns) {
-      const key = (col as any)?.accessorKey || (col as any)?.id
+      const def = col as ColumnDef<Row>
+      const ak = (def as { accessorKey?: string | keyof Row }).accessorKey
+      const id = (def as { id?: string }).id
+      const key = typeof ak === 'string' ? ak : id
       if (key) {
-        opts[String(key)] = { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto' }
+        opts[String(key)] = { cellNoWrap: true, widthMode: 'auto' }
       }
     }
     return opts
@@ -586,7 +579,7 @@ export default function ModulosComercialPage() {
                   }
                   rowCanExpand={
                     (tabs.selected === 'metas' || tabs.selected === 'desempenho')
-                      ? (r) => true
+                      ? () => true
                       : tabs.selected === 'metas_territorios'
                         ? (r) => Boolean(r['parent_flag'])
                       : undefined
