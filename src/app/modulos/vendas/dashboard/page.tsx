@@ -71,6 +71,7 @@ export default function VendasDashboardPage() {
   const [chartVendedores, setChartVendedores] = useState<ChartItem[]>([])
   // const [chartEquipes, setChartEquipes] = useState<ChartItem[]>([])
   const [chartProdutos, setChartProdutos] = useState<ChartItem[]>([])
+  const [chartServicos, setChartServicos] = useState<ChartItem[]>([])
   // const [chartFiliais, setChartFiliais] = useState<ChartItem[]>([])
   const [chartTerritorios, setChartTerritorios] = useState<ChartItem[]>([])
   const [chartCategorias, setChartCategorias] = useState<ChartItem[]>([])
@@ -87,6 +88,9 @@ export default function VendasDashboardPage() {
   const [chartFiliais, setChartFiliais] = useState<ChartItem[]>([])
   const [chartUnidadesNegocio, setChartUnidadesNegocio] = useState<ChartItem[]>([])
   const [chartSalesOffices, setChartSalesOffices] = useState<ChartItem[]>([])
+  const [chartServCatFat, setChartServCatFat] = useState<ChartItem[]>([])
+  const [chartServCatTicket, setChartServCatTicket] = useState<ChartItem[]>([])
+  const [chartServCatPedidos, setChartServCatPedidos] = useState<ChartItem[]>([])
   const [chartMetaTerritorio, setChartMetaTerritorio] = useState<Array<{ label: string; meta: number; faturamento: number }>>([])
   const [chartMetaVendedor, setChartMetaVendedor] = useState<Array<{ label: string; meta: number; faturamento: number }>>([])
   const [chartMetaVendedorVW, setChartMetaVendedorVW] = useState<Array<{ label: string; meta: number; faturamento: number }>>([])
@@ -146,6 +150,7 @@ export default function VendasDashboardPage() {
           })
           setChartVendedores(Array.isArray(charts?.vendedores) ? charts.vendedores as ChartItem[] : [])
           setChartProdutos(Array.isArray(charts?.produtos) ? charts.produtos as ChartItem[] : [])
+          setChartServicos(Array.isArray(charts?.servicos) ? charts.servicos as ChartItem[] : [])
           setChartTerritorios(Array.isArray(charts?.territorios) ? charts.territorios as ChartItem[] : [])
           setChartCategorias(Array.isArray(charts?.categorias) ? charts.categorias as ChartItem[] : [])
           setChartCanais(Array.isArray(charts?.canais) ? charts.canais as ChartItem[] : [])
@@ -167,6 +172,9 @@ export default function VendasDashboardPage() {
           setChartMetaTicketMedioVW(Array.isArray(charts?.meta_ticket_medio_vw) ? charts.meta_ticket_medio_vw as Array<{ label: string; meta: number; realizado: number }> : [])
           setChartMetaNovosClientesVW(Array.isArray(charts?.meta_novos_clientes_vw) ? charts.meta_novos_clientes_vw as Array<{ label: string; meta: number; realizado: number }> : [])
           setChartCupons(Array.isArray(charts?.cupons) ? charts.cupons as ChartItem[] : [])
+          setChartServCatFat(Array.isArray(charts?.servicos_categorias_faturamento) ? charts.servicos_categorias_faturamento as ChartItem[] : [])
+          setChartServCatTicket(Array.isArray(charts?.servicos_categorias_ticket) ? charts.servicos_categorias_ticket as ChartItem[] : [])
+          setChartServCatPedidos(Array.isArray(charts?.servicos_categorias_pedidos) ? charts.servicos_categorias_pedidos as ChartItem[] : [])
         } else {
           setKpis({ meta: 0, vendas: 0, percentMeta: 0, ticket: 0, cogs: 0, margemBruta: 0 })
         }
@@ -180,6 +188,7 @@ export default function VendasDashboardPage() {
   // Charts (reais)
   const top5Vendedores = chartVendedores
   const top5Produtos = chartProdutos
+  const vendasPorServico = chartServicos
   const vendasPorTerritorio = chartTerritorios
   const vendasPorCategoria = chartCategorias
 
@@ -420,11 +429,47 @@ export default function VendasDashboardPage() {
               color="#8b5cf6"
               height={360}
             />
+          <BarChartHorizontalRecharts
+            items={vendasPorCanalItems}
+            title="Vendas por Canal"
+            icon={<Tag className="w-5 h-5" />}
+            color="#f59e0b"
+            height={360}
+          />
+        </div>
+
+          {/* Row 1.5: Vendas por Serviço */}
+          <div className="grid grid-cols-1 lg:grid-cols-1 gap-6 mb-6">
             <BarChartHorizontalRecharts
-              items={vendasPorCanalItems}
-              title="Vendas por Canal"
-              icon={<Tag className="w-5 h-5" />}
+              items={vendasPorServico}
+              title="Vendas por Serviço"
+              icon={<Briefcase className="w-5 h-5" />}
+              color="#10b981"
+              height={360}
+            />
+          </div>
+
+          {/* Row 1.6: Categorias de Serviços (Faturamento, Ticket Médio, Pedidos) */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            <BarChartHorizontalRecharts
+              items={chartServCatFat}
+              title="Faturamento por Categoria de Serviço"
+              icon={<Briefcase className="w-5 h-5" />}
+              color="#06b6d4"
+              height={360}
+            />
+            <BarChartHorizontalRecharts
+              items={chartServCatTicket}
+              title="Ticket Médio por Categoria de Serviço"
+              icon={<Briefcase className="w-5 h-5" />}
               color="#f59e0b"
+              height={360}
+            />
+            <BarChartHorizontalRecharts
+              items={chartServCatPedidos}
+              title="Pedidos por Categoria de Serviço"
+              icon={<Briefcase className="w-5 h-5" />}
+              color="#8b5cf6"
               height={360}
             />
           </div>

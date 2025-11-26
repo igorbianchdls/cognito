@@ -120,6 +120,18 @@ export async function GET(req: NextRequest) {
     let produtos: ChartItem[] = []
     try { produtos = await runQuery<ChartItem>(prodSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard produtos error:', e); produtos = [] }
 
+    // Serviços (por subtotal do item)
+    const servSql = `SELECT COALESCE(s.nome,'—') AS label, COALESCE(SUM(i.subtotal),0)::float AS value
+                     FROM vendas.pedidos p
+                     JOIN vendas.pedidos_itens i ON i.pedido_id = p.id
+                     LEFT JOIN servicos.catalogo_servicos s ON s.id = i.servico_id
+                     ${pWhere}
+                     GROUP BY 1
+                     ORDER BY 2 DESC
+                     LIMIT $${pParams.length + 1}::int`;
+    let servicos: ChartItem[] = []
+    try { servicos = await runQuery<ChartItem>(servSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard servicos error:', e); servicos = [] }
+
     // Territórios
     const terrSql = `SELECT territorio_nome AS label,
                      SUM(item_subtotal)::float AS value
@@ -267,6 +279,30 @@ export async function GET(req: NextRequest) {
                              LIMIT $${pParams.length + 1}::int`;
     let salesOffices: ChartItem[] = []
     try { salesOffices = await runQuery<ChartItem>(salesOfficesSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard sales_offices error:', e); salesOffices = [] }
+
+    // Categorias de Serviços: faturamento, ticket médio (por item), e número de pedidos por categoria
+    const servCatWhere = pWhere ? `${pWhere} AND p.status = 'concluido'` : `WHERE p.status = 'concluido'`
+    const servCatSql = `SELECT
+                          COALESCE(cat.id, 0)::int AS categoria_id,
+                          COALESCE(cat.nome, '—') AS categoria_nome,
+                          COALESCE(SUM(i.subtotal), 0)::float AS faturamento_total,
+                          COALESCE(SUM(i.quantidade), 0)::float AS quantidade_total,
+                          COALESCE(AVG(i.subtotal), 0)::float AS ticket_medio_item,
+                          COUNT(DISTINCT p.id)::int AS pedidos_distintos
+                        FROM vendas.pedidos_itens i
+                        LEFT JOIN vendas.pedidos p ON p.id = i.pedido_id
+                        LEFT JOIN servicos.catalogo_servicos s ON s.id = i.servico_id
+                        LEFT JOIN servicos.categorias_servicos cat ON cat.id = s.categoria_id
+                        ${servCatWhere}
+                        GROUP BY cat.id, cat.nome
+                        ORDER BY faturamento_total DESC
+                        LIMIT $${pParams.length + 1}::int`;
+    type ServCatRow = { categoria_nome: string; faturamento_total: number; quantidade_total: number; ticket_medio_item: number; pedidos_distintos: number }
+    let servCatRows: ServCatRow[] = []
+    try { servCatRows = await runQuery<ServCatRow>(servCatSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard servicos categorias error:', e); servCatRows = [] }
+    const servicosCategoriasFaturamento: ChartItem[] = servCatRows.map(r => ({ label: r.categoria_nome || '—', value: Number(r.faturamento_total || 0) }))
+    const servicosCategoriasTicket: ChartItem[] = servCatRows.map(r => ({ label: r.categoria_nome || '—', value: Number(r.ticket_medio_item || 0) }))
+    const servicosCategoriasPedidos: ChartItem[] = servCatRows.map(r => ({ label: r.categoria_nome || '—', value: Number(r.pedidos_distintos || 0) }))
 
     // Meta x Faturamento por Território
     const metaTerrSql = `SELECT COALESCE(t.nome,'—') AS label, COALESCE(SUM(mt.valor_meta),0)::float AS meta
@@ -481,6 +517,7 @@ export async function GET(req: NextRequest) {
         charts: {
           vendedores,
           produtos,
+          servicos,
           territorios,
           categorias,
           canais,
@@ -496,6 +533,9 @@ export async function GET(req: NextRequest) {
           estados,
           devolucao_canal: taxaDevolucaoCanal,
           devolucao_cliente: taxaDevolucaoCliente,
+          servicos_categorias_faturamento: servicosCategoriasFaturamento,
+          servicos_categorias_ticket: servicosCategoriasTicket,
+          servicos_categorias_pedidos: servicosCategoriasPedidos,
           meta_territorio: metaTerritorio,
           meta_vendedor: metaVendedor,
           meta_vendedor_vw: metaVendedorVW,
