@@ -69,8 +69,6 @@ export default function ModulosComercialPage() {
         { value: 'territorios', label: 'Territórios' },
         { value: 'vendedores', label: 'Vendedores' },
         { value: 'desempenho', label: 'Desempenho' },
-        { value: 'meta_vendedores', label: 'Meta Vendedores' },
-        { value: 'metas_territorios', label: 'Metas Territórios' },
         { value: 'metas', label: 'Metas' },
         { value: 'tipos_metas', label: 'Tipos de Metas' },
         { value: 'regras_comissoes', label: 'Regras de Comissões' },
@@ -215,15 +213,6 @@ export default function ModulosComercialPage() {
           { accessorKey: 'territorio_descricao', header: () => <IconLabelHeader icon={<FileText className="h-3.5 w-3.5" />} label="Descrição Território" /> },
           { accessorKey: 'comissao', header: () => <IconLabelHeader icon={<Percent className="h-3.5 w-3.5" />} label="Comissão (%)" /> },
           { accessorKey: 'vendedor_ativo', header: () => <IconLabelHeader icon={<CheckCircle2 className="h-3.5 w-3.5" />} label="Ativo" /> },
-          { accessorKey: 'criado_em', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Criado Em" />, cell: ({ getValue }) => formatDate(getValue()) },
-          { accessorKey: 'atualizado_em', header: () => <IconLabelHeader icon={<CalendarClock className="h-3.5 w-3.5" />} label="Atualizado Em" />, cell: ({ getValue }) => formatDate(getValue()) },
-        ]
-      case 'meta_vendedores':
-        return [
-          { accessorKey: 'vendedor', header: () => <IconLabelHeader icon={<Users className="h-3.5 w-3.5" />} label="Vendedor" /> },
-          { accessorKey: 'territorio', header: () => <IconLabelHeader icon={<LayoutGrid className="h-3.5 w-3.5" />} label="Território" /> },
-          { accessorKey: 'periodo', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Período" /> },
-          { accessorKey: 'meta', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Meta" /> },
           { accessorKey: 'criado_em', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Criado Em" />, cell: ({ getValue }) => formatDate(getValue()) },
           { accessorKey: 'atualizado_em', header: () => <IconLabelHeader icon={<CalendarClock className="h-3.5 w-3.5" />} label="Atualizado Em" />, cell: ({ getValue }) => formatDate(getValue()) },
         ]
@@ -510,9 +499,7 @@ export default function ModulosComercialPage() {
                           }
                           return heads
                         })()
-                      : tabs.selected === 'metas_territorios'
-                        ? data.filter(r => Boolean(r['parent_flag']))
-                        : data
+                      : data
                   }
                   columnOptions={{
                     ...allNoWrapOptions,
@@ -522,59 +509,13 @@ export default function ModulosComercialPage() {
                     ...(allNoWrapOptions['campanha'] ? { campanha: { ...allNoWrapOptions['campanha'], minWidth: 160 } } : {}),
                     ...(allNoWrapOptions['descricao'] ? { descricao: { ...allNoWrapOptions['descricao'], minWidth: 180 } } : {}),
                   }}
-                  enableExpand={tabs.selected === 'campanhas_vendas' || tabs.selected === 'metas' || tabs.selected === 'metas_territorios'}
+                  enableExpand={tabs.selected === 'campanhas_vendas' || tabs.selected === 'metas'}
                   renderDetail={
-                    tabs.selected === 'campanhas_vendas'
-                      ? renderCampanhaProdutos
-                      : tabs.selected === 'metas'
-                        ? renderMetaDetail
-                        : tabs.selected === 'metas_territorios'
-                          ? (row) => {
-                              const isParent = Boolean(row['parent_flag'])
-                              if (!isParent) return null
-                              const metaId = row['meta_id']
-                              const children = data.filter(r => r['meta_id'] === metaId && r['meta_item_id'])
-                              return (
-                                <div className="p-3 bg-gray-50 rounded border border-gray-200">
-                                  <div className="text-sm font-medium text-gray-700 mb-2">Itens da Meta — {String(row['territorio_nome'] || '')}</div>
-                                  {children.length === 0 ? (
-                                    <div className="text-xs text-gray-500">Sem itens para esta meta.</div>
-                                  ) : (
-                                    <div className="overflow-x-auto">
-                                      <table className="w-full text-sm">
-                                        <thead>
-                                          <tr className="border-b">
-                                            <th className="text-left py-2 px-3">Tipo Meta</th>
-                                            <th className="text-right py-2 px-3">Valor Meta</th>
-                                            <th className="text-right py-2 px-3">% Meta</th>
-                                            <th className="text-left py-2 px-3">Tipo Valor</th>
-                                          </tr>
-                                        </thead>
-                                          <tbody>
-                                            {children.map((c, idx) => (
-                                              <tr key={idx} className="border-b last:border-0">
-                                                <td className="py-2 px-3">{String(c['tipo_meta_nome'] || '')}</td>
-                                                <td className="text-right py-2 px-3">{String(c['valor_meta'] ?? '')}</td>
-                                                <td className="text-right py-2 px-3">{String(c['meta_percentual'] ?? '')}</td>
-                                                <td className="py-2 px-3">{String(c['tipo_meta_valor'] || '')}</td>
-                                              </tr>
-                                            ))}
-                                          </tbody>
-                                        </table>
-                                      </div>
-                                    )}
-                                  </div>
-                                )
-                              }
-                        : undefined
+                    tabs.selected === 'campanhas_vendas' ? renderCampanhaProdutos
+                    : tabs.selected === 'metas' ? renderMetaDetail
+                    : undefined
                   }
-                  rowCanExpand={
-                    (tabs.selected === 'metas')
-                      ? () => true
-                      : tabs.selected === 'metas_territorios'
-                        ? (r) => Boolean(r['parent_flag'])
-                      : undefined
-                  }
+                  rowCanExpand={tabs.selected === 'metas' ? () => true : undefined}
                   enableSearch={tabs.selected === 'metas' ? false : tabelaUI.enableSearch}
                   showColumnToggle={tabelaUI.enableColumnToggle}
                   showPagination={tabelaUI.showPagination}
