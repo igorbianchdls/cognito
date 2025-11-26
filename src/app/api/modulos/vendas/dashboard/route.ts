@@ -413,6 +413,51 @@ LIMIT $1::int`;
     try { metaTicketTerrRows = await runQuery<MetaTicketTerrLinha>(metaTicketTerrSQL, [limit]) } catch (e) { console.error('🛒 VENDAS dashboard meta_ticket_territorio error:', e); metaTicketTerrRows = [] }
     const metaTicketMedioTerritorio = metaTicketTerrRows.map(r => ({ label: r.territorio_nome || '—', meta: Number(r.meta || 0), realizado: Number(r.realizado || 0) }))
 
+    // Meta x Novos Clientes por Território (Novembro/2025)
+    const metaNovosTerrSQL = `WITH metas AS (
+    SELECT
+        m.territorio_id,
+        t.nome AS territorio_nome,
+        mi.valor_meta AS meta_novos_clientes
+    FROM comercial.metas m
+    JOIN comercial.metas_itens mi ON mi.meta_id = m.id
+    JOIN comercial.territorios t ON t.id = m.territorio_id
+    WHERE m.ano = 2025
+      AND m.mes = 11
+      AND m.territorio_id IS NOT NULL
+      AND mi.tipo_meta_id = 4
+),
+realizado AS (
+    SELECT
+        p.territorio_id,
+        COUNT(DISTINCT p.cliente_id) AS novos_clientes_realizados
+    FROM vendas.pedidos p
+    WHERE p.status = 'concluido'
+      AND p.data_pedido >= '2025-11-01'
+      AND p.data_pedido <  '2025-12-01'
+      AND p.cliente_id IN (
+            SELECT cliente_id
+            FROM vendas.pedidos
+            GROUP BY cliente_id
+            HAVING MIN(data_pedido) >= '2025-11-01'
+               AND MIN(data_pedido) <  '2025-12-01'
+      )
+    GROUP BY p.territorio_id
+)
+SELECT
+    m.territorio_id,
+    m.territorio_nome,
+    m.meta_novos_clientes AS meta,
+    COALESCE(r.novos_clientes_realizados, 0) AS realizado
+FROM metas m
+LEFT JOIN realizado r ON r.territorio_id = m.territorio_id
+ORDER BY m.territorio_id
+LIMIT $1::int`;
+    type MetaNovosTerrLinha = { territorio_id: number; territorio_nome: string; meta: number; realizado: number }
+    let metaNovosTerrRows: MetaNovosTerrLinha[] = []
+    try { metaNovosTerrRows = await runQuery<MetaNovosTerrLinha>(metaNovosTerrSQL, [limit]) } catch (e) { console.error('🛒 VENDAS dashboard meta_novos_territorio error:', e); metaNovosTerrRows = [] }
+    const metaNovosClientesTerritorio = metaNovosTerrRows.map(r => ({ label: r.territorio_nome || '—', meta: Number(r.meta || 0), realizado: Number(r.realizado || 0) }))
+
     // Meta x Faturamento por Vendedor (Novembro/2025) — usa metas + realizado CTE
     const metaFatVendSQL = `WITH metas AS (
     SELECT
