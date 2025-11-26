@@ -368,33 +368,45 @@ LIMIT $1::int`;
     try { metaTerrRows = await runQuery<MetaTerrLinha>(metaFatTerrSQL, [limit]) } catch (e) { console.error('🛒 VENDAS dashboard meta_fat_territorio error:', e); metaTerrRows = [] }
     const metaTerritorio = metaTerrRows.map(r => ({ label: r.territorio_nome || '—', meta: Number(r.meta || 0), faturamento: Number(r.faturamento || 0) }))
 
-    // Meta x Faturamento por Vendedor
-    const metaVendSql = `SELECT f.nome AS label, COALESCE(m.valor_meta,0)::float AS meta
-                         FROM comercial.metas_vendedores m
-                         LEFT JOIN comercial.vendedores v ON v.id = m.vendedor_id
-                         LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id
-                         ${mvWhere}
-                         GROUP BY f.nome, m.valor_meta`;
-    let metasPorVend: { label: string; meta: number }[] = []
-    try { metasPorVend = await runQuery<{ label: string; meta: number }>(metaVendSql, mtParams) } catch (e) { console.error('🛒 VENDAS dashboard metas por vendedor error:', e); metasPorVend = [] }
-
-    const fatVendSql = `SELECT f.nome AS label, COALESCE(SUM(pi.quantidade * pi.preco_unitario),0)::float AS faturamento
-                        FROM comercial.vendedores v
-                        LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id
-                        LEFT JOIN vendas.pedidos p ON p.vendedor_id = v.id
-                        LEFT JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
-                        ${pWhere}
-                        GROUP BY f.nome`;
-    let fatPorVend: { label: string; faturamento: number }[] = []
-    try { fatPorVend = await runQuery<{ label: string; faturamento: number }>(fatVendSql, pParams) } catch (e) { console.error('🛒 VENDAS dashboard faturamento por vendedor error:', e); fatPorVend = [] }
-
-    const fatVendMap = new Map<string, number>(fatPorVend.map(r => [r.label || '—', Number(r.faturamento || 0)]))
-    const allVendLabels = Array.from(new Set([ ...metasPorVend.map(r => r.label || '—'), ...fatPorVend.map(r => r.label || '—') ]))
-    const metaVendedor = allVendLabels.map(label => ({
-      label,
-      meta: Number((metasPorVend.find(r => (r.label||'—') === label)?.meta) || 0),
-      faturamento: Number(fatVendMap.get(label) || 0),
-    })).sort((a,b)=> (b.faturamento + b.meta) - (a.faturamento + a.meta)).slice(0, limit)
+    // Meta x Faturamento por Vendedor (Novembro/2025) — usa metas + realizado CTE
+    const metaFatVendSQL = `WITH metas AS (
+    SELECT
+        m.vendedor_id,
+        f.nome AS vendedor_nome,
+        mi.valor_meta AS meta_faturamento
+    FROM comercial.metas m
+    JOIN comercial.metas_itens mi ON mi.meta_id = m.id
+    JOIN comercial.vendedores v ON v.id = m.vendedor_id
+    JOIN entidades.funcionarios f ON f.id = v.funcionario_id
+    WHERE m.ano = 2025
+      AND m.mes = 11
+      AND m.vendedor_id IS NOT NULL
+      AND mi.tipo_meta_id = 1
+),
+realizado AS (
+    SELECT
+        p.vendedor_id,
+        SUM(i.subtotal) AS faturamento_real
+    FROM vendas.pedidos p
+    JOIN vendas.pedidos_itens i ON i.pedido_id = p.id
+    WHERE p.status = 'concluido'
+      AND p.data_pedido >= '2025-11-01'
+      AND p.data_pedido <  '2025-12-01'
+    GROUP BY p.vendedor_id
+)
+SELECT
+    m.vendedor_id,
+    m.vendedor_nome,
+    m.meta_faturamento AS meta,
+    COALESCE(r.faturamento_real, 0) AS faturamento
+FROM metas m
+LEFT JOIN realizado r ON r.vendedor_id = m.vendedor_id
+ORDER BY m.vendedor_id
+LIMIT $1::int`;
+    type MetaVendLinha = { vendedor_id: number; vendedor_nome: string; meta: number; faturamento: number }
+    let metaVendRows: MetaVendLinha[] = []
+    try { metaVendRows = await runQuery<MetaVendLinha>(metaFatVendSQL, [limit]) } catch (e) { console.error('🛒 VENDAS dashboard meta_fat_vendedor error:', e); metaVendRows = [] }
+    const metaVendedor = metaVendRows.map(r => ({ label: r.vendedor_nome || '—', meta: Number(r.meta || 0), faturamento: Number(r.faturamento || 0) }))
 
     // Meta x Faturamento por Vendedor (via vw_metas_detalhe)
     // Meta x Faturamento por Vendedor (via vw_metas_detalhe) – filtra por mês/ano quando de/ate fornecidos
@@ -445,33 +457,91 @@ LIMIT $1::int`;
       .sort((a,b)=> (b.faturamento + b.meta) - (a.faturamento + a.meta))
       .slice(0, limit)
 
-    // Meta x Realizado (Novos Clientes) por Vendedor (via vw_metas_detalhe)
-    const metaNovosClientesVendSql = `
-      SELECT
-        m.vendedor AS label,
-        COALESCE(SUM(m.valor_meta),0)::float AS meta,
-        COUNT(DISTINCT m.cliente_id) AS realizado
-      FROM comercial.vw_metas_detalhe m
-      WHERE m.tipo_meta = 'novos_clientes' AND m.ano = ${ym.ano} AND m.mes = ${ym.mes}
-      GROUP BY m.vendedor
-      ORDER BY m.vendedor`;
+    // Meta x Realizado (Novos Clientes) por Vendedor (Novembro/2025) — usa CTE metas + realizado
+    const metaNovosClientesVendSql = `WITH metas AS (
+    SELECT
+        m.vendedor_id,
+        f.nome AS vendedor_nome,
+        mi.valor_meta AS meta_novos_clientes
+    FROM comercial.metas m
+    JOIN comercial.metas_itens mi ON mi.meta_id = m.id
+    JOIN comercial.vendedores v ON v.id = m.vendedor_id
+    JOIN entidades.funcionarios f ON f.id = v.funcionario_id
+    WHERE m.ano = 2025
+      AND m.mes = 11
+      AND m.vendedor_id IS NOT NULL
+      AND mi.tipo_meta_id = 4
+),
+realizado AS (
+    SELECT
+        p.vendedor_id,
+        COUNT(DISTINCT p.cliente_id) AS novos_clientes_realizados
+    FROM vendas.pedidos p
+    WHERE p.status = 'concluido'
+      AND p.data_pedido >= '2025-11-01'
+      AND p.data_pedido <  '2025-12-01'
+      AND p.cliente_id IN (
+            SELECT cliente_id
+            FROM vendas.pedidos
+            GROUP BY cliente_id
+            HAVING MIN(data_pedido) >= '2025-11-01'
+               AND MIN(data_pedido) <  '2025-12-01'
+      )
+    GROUP BY p.vendedor_id
+)
+SELECT
+    m.vendedor_nome AS label,
+    m.meta_novos_clientes::float AS meta,
+    COALESCE(r.novos_clientes_realizados, 0)::float AS realizado
+FROM metas m
+LEFT JOIN realizado r ON r.vendedor_id = m.vendedor_id
+ORDER BY m.vendedor_id
+LIMIT $1::int`;
     let metaNovosClientesVendedor: { label: string; meta: number; realizado: number }[] = []
-    try { metaNovosClientesVendedor = await runQuery<{ label: string; meta: number; realizado: number }>(metaNovosClientesVendSql) } catch (e) { console.error('🛒 VENDAS dashboard meta_novos_clientes_vw error:', e); metaNovosClientesVendedor = [] }
+    try { metaNovosClientesVendedor = await runQuery<{ label: string; meta: number; realizado: number }>(metaNovosClientesVendSql, [limit]) } catch (e) { console.error('🛒 VENDAS dashboard meta_novos_clientes_vw error:', e); metaNovosClientesVendedor = [] }
 
-    // Meta x Ticket Médio por Vendedor (via vw_metas_detalhe)
-    const metaTicketVendSql = `
-      SELECT
-        m.vendedor AS label,
-        AVG(m.valor_meta)::float AS meta,
-        CASE WHEN COUNT(DISTINCT m.pedido_id) > 0
-             THEN ROUND(SUM(m.subtotal)::numeric / NULLIF(COUNT(DISTINCT m.pedido_id), 0), 2)
-             ELSE 0 END AS realizado
-      FROM comercial.vw_metas_detalhe m
-      WHERE m.tipo_meta = 'ticket_medio' AND m.ano = ${ym.ano} AND m.mes = ${ym.mes}
-      GROUP BY m.vendedor
-      ORDER BY m.vendedor`;
+    // Meta x Realizado (Ticket Médio) por Vendedor (Novembro/2025) — usa CTE metas + realizado
+    const metaTicketVendSql = `WITH metas AS (
+    SELECT
+        m.vendedor_id,
+        f.nome AS vendedor_nome,
+        mi.valor_meta AS meta_ticket_medio
+    FROM comercial.metas m
+    JOIN comercial.metas_itens mi ON mi.meta_id = m.id
+    JOIN comercial.vendedores v ON v.id = m.vendedor_id
+    JOIN entidades.funcionarios f ON f.id = v.funcionario_id
+    WHERE m.ano = 2025
+      AND m.mes = 11
+      AND m.vendedor_id IS NOT NULL
+      AND mi.tipo_meta_id = 5
+),
+realizado AS (
+    SELECT
+        p.vendedor_id,
+        SUM(i.subtotal) AS faturamento_total,
+        COUNT(DISTINCT p.id) AS total_pedidos,
+        CASE 
+            WHEN COUNT(DISTINCT p.id) > 0 THEN 
+                SUM(i.subtotal) / COUNT(DISTINCT p.id)
+            ELSE 0
+        END AS ticket_medio_realizado
+    FROM vendas.pedidos p
+    JOIN vendas.pedidos_itens i ON i.pedido_id = p.id
+    WHERE p.status = 'concluido'
+      AND p.data_pedido >= '2025-11-01'
+      AND p.data_pedido <  '2025-12-01'
+    GROUP BY p.vendedor_id
+)
+SELECT
+    m.vendedor_nome AS label,
+    m.meta_ticket_medio::float AS meta,
+    COALESCE(r.ticket_medio_realizado, 0)::float AS realizado
+FROM metas m
+LEFT JOIN realizado r ON r.vendedor_id = m.vendedor_id
+ORDER BY m.vendedor_id
+LIMIT $1::int`;
     let metaTicketMedioVendedor: { label: string; meta: number; realizado: number }[] = []
-    try { metaTicketMedioVendedor = await runQuery<{ label: string; meta: number; realizado: number }>(metaTicketVendSql) } catch (e) { console.error('🛒 VENDAS dashboard meta_ticket_medio_vw error:', e); metaTicketMedioVendedor = [] }
+    try { metaTicketMedioVendedor = await runQuery<{ label: string; meta: number; realizado: number }>(metaTicketVendSql, [limit]) } catch (e) { console.error('🛒 VENDAS dashboard meta_ticket_medio_vw error:', e); metaTicketMedioVendedor = [] }
 
     // Vendas por Cupom
     const cupomSql = `SELECT COALESCE(cup.codigo, '—') AS label, COALESCE(SUM(pi.subtotal),0)::float AS value
