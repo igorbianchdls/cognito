@@ -368,6 +368,51 @@ LIMIT $1::int`;
     try { metaTerrRows = await runQuery<MetaTerrLinha>(metaFatTerrSQL, [limit]) } catch (e) { console.error('🛒 VENDAS dashboard meta_fat_territorio error:', e); metaTerrRows = [] }
     const metaTerritorio = metaTerrRows.map(r => ({ label: r.territorio_nome || '—', meta: Number(r.meta || 0), faturamento: Number(r.faturamento || 0) }))
 
+    // Meta x Ticket Médio por Território (Novembro/2025)
+    const metaTicketTerrSQL = `WITH metas AS (
+    SELECT
+        m.territorio_id,
+        t.nome AS territorio_nome,
+        mi.valor_meta AS meta_ticket_medio
+    FROM comercial.metas m
+    JOIN comercial.metas_itens mi ON mi.meta_id = m.id
+    JOIN comercial.territorios t ON t.id = m.territorio_id
+    WHERE m.ano = 2025
+      AND m.mes = 11
+      AND m.territorio_id IS NOT NULL
+      AND mi.tipo_meta_id = 5
+),
+realizado AS (
+    SELECT
+        p.territorio_id,
+        SUM(i.subtotal) AS faturamento_total,
+        COUNT(DISTINCT p.id) AS total_pedidos,
+        CASE 
+            WHEN COUNT(DISTINCT p.id) > 0 THEN
+                SUM(i.subtotal) / COUNT(DISTINCT p.id)
+            ELSE 0
+        END AS ticket_medio_realizado
+    FROM vendas.pedidos p
+    JOIN vendas.pedidos_itens i ON i.pedido_id = p.id
+    WHERE p.status = 'concluido'
+      AND p.data_pedido >= '2025-11-01'
+      AND p.data_pedido <  '2025-12-01'
+    GROUP BY p.territorio_id
+)
+SELECT
+    m.territorio_id,
+    m.territorio_nome,
+    m.meta_ticket_medio AS meta,
+    COALESCE(r.ticket_medio_realizado, 0) AS realizado
+FROM metas m
+LEFT JOIN realizado r ON r.territorio_id = m.territorio_id
+ORDER BY m.territorio_id
+LIMIT $1::int`;
+    type MetaTicketTerrLinha = { territorio_id: number; territorio_nome: string; meta: number; realizado: number }
+    let metaTicketTerrRows: MetaTicketTerrLinha[] = []
+    try { metaTicketTerrRows = await runQuery<MetaTicketTerrLinha>(metaTicketTerrSQL, [limit]) } catch (e) { console.error('🛒 VENDAS dashboard meta_ticket_territorio error:', e); metaTicketTerrRows = [] }
+    const metaTicketMedioTerritorio = metaTicketTerrRows.map(r => ({ label: r.territorio_nome || '—', meta: Number(r.meta || 0), realizado: Number(r.realizado || 0) }))
+
     // Meta x Faturamento por Vendedor (Novembro/2025) — usa metas + realizado CTE
     const metaFatVendSQL = `WITH metas AS (
     SELECT
@@ -664,6 +709,8 @@ LIMIT $1::int`;
           meta_vendedor_vw: metaVendedorVW,
           meta_novos_clientes_vw: metaNovosClientesVendedor,
           meta_ticket_medio_vw: metaTicketMedioVendedor,
+          meta_ticket_medio_territorio: metaTicketMedioTerritorio,
+          meta_novos_clientes_territorio: metaNovosClientesTerritorio,
           cupons,
         },
       },

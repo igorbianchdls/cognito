@@ -99,6 +99,8 @@ export default function VendasDashboardPage() {
   const [chartMetaVendedorVW, setChartMetaVendedorVW] = useState<Array<{ label: string; meta: number; faturamento: number }>>([])
   const [chartMetaNovosClientesVW, setChartMetaNovosClientesVW] = useState<Array<{ label: string; meta: number; realizado: number }>>([])
   const [chartMetaTicketMedioVW, setChartMetaTicketMedioVW] = useState<Array<{ label: string; meta: number; realizado: number }>>([])
+  const [chartMetaTicketMedioTerritorio, setChartMetaTicketMedioTerritorio] = useState<Array<{ label: string; meta: number; realizado: number }>>([])
+  const [chartMetaNovosClientesTerritorio, setChartMetaNovosClientesTerritorio] = useState<Array<{ label: string; meta: number; realizado: number }>>([])
   // Removido: vendas por cupom
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -173,6 +175,8 @@ export default function VendasDashboardPage() {
           setChartMetaVendedor(Array.isArray(charts?.meta_vendedor) ? charts.meta_vendedor as Array<{ label: string; meta: number; faturamento: number }> : [])
           setChartMetaVendedorVW(Array.isArray(charts?.meta_vendedor_vw) ? charts.meta_vendedor_vw as Array<{ label: string; meta: number; faturamento: number }> : [])
           setChartMetaTicketMedioVW(Array.isArray(charts?.meta_ticket_medio_vw) ? charts.meta_ticket_medio_vw as Array<{ label: string; meta: number; realizado: number }> : [])
+          setChartMetaTicketMedioTerritorio(Array.isArray(charts?.meta_ticket_medio_territorio) ? charts.meta_ticket_medio_territorio as Array<{ label: string; meta: number; realizado: number }> : [])
+          setChartMetaNovosClientesTerritorio(Array.isArray(charts?.meta_novos_clientes_territorio) ? charts.meta_novos_clientes_territorio as Array<{ label: string; meta: number; realizado: number }> : [])
           setChartMetaNovosClientesVW(Array.isArray(charts?.meta_novos_clientes_vw) ? charts.meta_novos_clientes_vw as Array<{ label: string; meta: number; realizado: number }> : [])
           // removido: cupons
           setChartServCatFat(Array.isArray(charts?.servicos_categorias_faturamento) ? charts.servicos_categorias_faturamento as ChartItem[] : [])
@@ -401,11 +405,31 @@ export default function VendasDashboardPage() {
             </div>
           </div>
 
-          {/* Row 2.6: Meta x Realizado (Novos Clientes) por Vendedor */}
+          {/* Meta x Realizado — Vendedor (Faturamento, Ticket Médio, Novos Clientes) */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
             <BarChartMultipleRecharts
+              items={chartMetaVendedor}
+              title="Meta x Faturamento por Vendedor"
+              icon={<Users className="w-5 h-5" />}
+              series={[
+                { key: 'meta', label: 'Meta', color: '#60a5fa' },
+                { key: 'faturamento', label: 'Faturamento', color: '#10b981' },
+              ]}
+              height={360}
+            />
+            <BarChartMultipleRecharts
+              items={chartMetaTicketMedioVW as unknown as Array<{ label: string; [key: string]: string | number }>}
+              title="Meta x Ticket Médio por Vendedor"
+              icon={<Users className="w-5 h-5" />}
+              series={[
+                { key: 'meta', label: 'Meta', color: '#60a5fa' },
+                { key: 'realizado', label: 'Realizado', color: '#10b981' },
+              ]}
+              height={360}
+            />
+            <BarChartMultipleRecharts
               items={chartMetaNovosClientesVW as unknown as Array<{ label: string; [key: string]: string | number }>}
-              title="Meta x Realizado (Novos Clientes) por Vendedor"
+              title="Meta x Novos Clientes por Vendedor"
               icon={<Users className="w-5 h-5" />}
               series={[
                 { key: 'meta', label: 'Meta', color: '#60a5fa' },
@@ -414,6 +438,42 @@ export default function VendasDashboardPage() {
               height={360}
             />
           </div>
+
+          {/* Meta x Realizado — Território (Faturamento, Ticket Médio, Novos Clientes) */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            <BarChartMultipleRecharts
+              items={chartMetaTerritorio}
+              title="Meta x Faturamento por Território"
+              icon={<Globe className="w-5 h-5" />}
+              series={[
+                { key: 'meta', label: 'Meta', color: '#60a5fa' },
+                { key: 'faturamento', label: 'Faturamento', color: '#10b981' },
+              ]}
+              height={360}
+            />
+            <BarChartMultipleRecharts
+              items={chartMetaTicketMedioTerritorio as unknown as Array<{ label: string; [key: string]: string | number }>}
+              title="Meta x Ticket Médio por Território"
+              icon={<Globe className="w-5 h-5" />}
+              series={[
+                { key: 'meta', label: 'Meta', color: '#60a5fa' },
+                { key: 'realizado', label: 'Realizado', color: '#10b981' },
+              ]}
+              height={360}
+            />
+            <BarChartMultipleRecharts
+              items={chartMetaNovosClientesTerritorio as unknown as Array<{ label: string; [key: string]: string | number }>}
+              title="Meta x Novos Clientes por Território"
+              icon={<Globe className="w-5 h-5" />}
+              series={[
+                { key: 'meta', label: 'Meta', color: '#60a5fa' },
+                { key: 'realizado', label: 'Realizado', color: '#10b981' },
+              ]}
+              height={360}
+            />
+          </div>
+
+          {/* (removido) meta x novos clientes duplicados — agora agrupados acima */}
 
           {/* Row 1: Faturamento por Vendedor e Vendas por Canal */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
@@ -469,8 +529,8 @@ export default function VendasDashboardPage() {
             />
           </div>
 
-          {/* Row 2: Vendas por Território, Vendas por Categoria, Meta x Faturamento por Território */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          {/* Row 2: Vendas por Território, Vendas por Categoria */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <BarChartHorizontalRecharts
               items={vendasPorTerritorio}
               title="Vendas por Território"
@@ -485,51 +545,9 @@ export default function VendasDashboardPage() {
               color="#6366f1"
               height={360}
             />
-            <BarChartMultipleRecharts
-              items={chartMetaTerritorio}
-              title="Meta x Faturamento por Território"
-              icon={<Globe className="w-5 h-5" />}
-              series={[
-                { key: 'meta', label: 'Meta', color: '#60a5fa' },
-                { key: 'faturamento', label: 'Faturamento', color: '#10b981' },
-              ]}
-              height={360}
-            />
           </div>
 
-          {/* Row 2.5: Meta e Faturamento por Vendedor (duas variações) + Meta x Ticket Médio por Vendedor */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-            <BarChartMultipleRecharts
-              items={chartMetaVendedor}
-              title="Meta x Faturamento por Vendedor"
-              icon={<Users className="w-5 h-5" />}
-              series={[
-                { key: 'meta', label: 'Meta', color: '#60a5fa' },
-                { key: 'faturamento', label: 'Faturamento', color: '#10b981' },
-              ]}
-              height={360}
-            />
-            <BarChartMultipleRecharts
-              items={chartMetaVendedorVW}
-              title="Meta x Faturamento por Vendedor (VW Detalhe)"
-              icon={<Users className="w-5 h-5" />}
-              series={[
-                { key: 'meta', label: 'Meta', color: '#60a5fa' },
-                { key: 'faturamento', label: 'Faturamento', color: '#10b981' },
-              ]}
-              height={360}
-            />
-            <BarChartMultipleRecharts
-              items={chartMetaTicketMedioVW as unknown as Array<{ label: string; [key: string]: string | number }>}
-              title="Meta x Ticket Médio por Vendedor"
-              icon={<Users className="w-5 h-5" />}
-              series={[
-                { key: 'meta', label: 'Meta', color: '#60a5fa' },
-                { key: 'realizado', label: 'Realizado', color: '#10b981' },
-              ]}
-              height={360}
-            />
-          </div>
+          {/* (removido) row antiga de meta por vendedor — agora agrupado acima */}
 
           {/* Row 3: Top Clientes, Vendas por Cidade, Vendas por Centro de Lucro */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
