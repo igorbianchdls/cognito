@@ -104,7 +104,7 @@ export async function GET(req: NextRequest) {
     let orderClause = ''
 
     if (view === 'pedidos') {
-      // Query fornecida pelo usuário para cabeçalho e linhas (itens)
+      // Paginação por cabeçalho (pedido) apenas
       selectSql = `SELECT
         p.id AS pedido_id,
         p.data_pedido,
@@ -114,20 +114,10 @@ export async function GET(req: NextRequest) {
         p.vendedor_id,
         p.territorio_id,
         p.canal_venda_id,
-        cli.nome_fantasia AS cliente_nome,
-
-        -- ITENS
-        i.id AS item_id,
-        i.servico_id,
-        s.nome AS servico_nome,
-        i.quantidade,
-        i.preco_unitario,
-        i.subtotal`
+        cli.nome_fantasia AS cliente_nome`
       baseSql = `FROM vendas.pedidos p
-        LEFT JOIN vendas.pedidos_itens i ON i.pedido_id = p.id
-        LEFT JOIN entidades.clientes cli ON cli.id = p.cliente_id
-        LEFT JOIN servicos.catalogo_servicos s ON s.id = i.servico_id`
-      orderClause = orderBy ? `ORDER BY ${orderBy} ${orderDir}, i.id ASC` : 'ORDER BY p.id ASC, i.id ASC'
+        LEFT JOIN entidades.clientes cli ON cli.id = p.cliente_id`
+      orderClause = orderBy ? `ORDER BY ${orderBy} ${orderDir}` : 'ORDER BY p.id ASC'
     } else if (view === 'devolucoes') {
       selectSql = `SELECT
         d.id AS devolucao,
@@ -245,7 +235,7 @@ export async function GET(req: NextRequest) {
     const listSql = `${selectSql} ${baseSql} ${orderClause} LIMIT $1::int OFFSET $2::int`.trim()
     let rows = await runQuery<Record<string, unknown>>(listSql, [pageSize, offset])
 
-    // Para pedidos, agrupar itens (cabeçalho + linhas) usando a query fornecida
+    // Para pedidos, agrupar itens (cabeçalho + linhas) com paginação por cabeçalho
     if (view === 'pedidos') {
       type PedidoItem = {
         item_id: unknown
@@ -267,35 +257,52 @@ export async function GET(req: NextRequest) {
         canal_venda_id: unknown
         itens: PedidoItem[]
       }
+
+      const headers = rows as Record<string, unknown>[]
       const pedidosMap = new Map<number, PedidoAgregado>()
-
-      for (const row of rows) {
+      const ids: number[] = []
+      for (const row of headers) {
         const pedidoId = Number(row.pedido_id)
+        ids.push(pedidoId)
+        pedidosMap.set(pedidoId, {
+          pedido: row.pedido_id,
+          cliente: row.cliente_nome,
+          data_pedido: row.data_pedido,
+          status: row.status,
+          valor_total: Number(row.valor_total || 0),
+          filial_id: row.filial_id,
+          vendedor_id: row.vendedor_id,
+          territorio_id: row.territorio_id,
+          canal_venda_id: row.canal_venda_id,
+          itens: []
+        })
+      }
 
-        if (!pedidosMap.has(pedidoId)) {
-          pedidosMap.set(pedidoId, {
-            pedido: row.pedido_id,
-            cliente: row.cliente_nome,
-            data_pedido: row.data_pedido,
-            status: row.status,
-            valor_total: Number(row.valor_total || 0),
-            filial_id: row.filial_id,
-            vendedor_id: row.vendedor_id,
-            territorio_id: row.territorio_id,
-            canal_venda_id: row.canal_venda_id,
-            itens: []
-          })
-        }
-
-        // Adicionar item se existir
-        if (row.item_id) {
-          pedidosMap.get(pedidoId)!.itens.push({
-            item_id: row.item_id,
-            servico_id: row.servico_id,
-            servico: row.servico_nome,
-            quantidade: row.quantidade,
-            preco_unitario: row.preco_unitario,
-            subtotal: row.subtotal,
+      if (ids.length > 0) {
+        const itemsSql = `SELECT
+          i.id AS item_id,
+          i.pedido_id,
+          i.servico_id,
+          s.nome AS servico_nome,
+          i.quantidade,
+          i.preco_unitario,
+          i.subtotal
+        FROM vendas.pedidos_itens i
+        LEFT JOIN servicos.catalogo_servicos s ON s.id = i.servico_id
+        WHERE i.pedido_id = ANY($1::int[])
+        ORDER BY i.pedido_id ASC, i.id ASC`
+        const itemsRows = await runQuery<Record<string, unknown>>(itemsSql, [ids])
+        for (const it of itemsRows) {
+          const pedidoId = Number(it.pedido_id)
+          const agg = pedidosMap.get(pedidoId)
+          if (!agg) continue
+          agg.itens.push({
+            item_id: it.item_id,
+            servico_id: it.servico_id,
+            servico: it.servico_nome,
+            quantidade: it.quantidade,
+            preco_unitario: it.preco_unitario,
+            subtotal: it.subtotal,
           })
         }
       }
