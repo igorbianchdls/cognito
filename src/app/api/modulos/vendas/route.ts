@@ -116,7 +116,8 @@ export async function GET(req: NextRequest) {
         cli.nome_fantasia AS cliente_nome,
         f.nome AS vendedor_nome,
         fil.nome AS filial_nome,
-        cv.nome AS canal_venda_nome`
+        cv.nome AS canal_venda_nome,
+        p.canal_venda_id AS canal_venda_id`
       baseSql = `FROM vendas.pedidos p
         -- CLIENTE
         LEFT JOIN entidades.clientes cli ON cli.id = p.cliente_id
@@ -261,6 +262,7 @@ export async function GET(req: NextRequest) {
         vendedor: unknown
         filial: unknown
         canal_venda: unknown
+        canal_venda_id?: unknown
         data_pedido: unknown
         status: unknown
         valor_total: number
@@ -279,6 +281,7 @@ export async function GET(req: NextRequest) {
           vendedor: row.vendedor_nome,
           filial: row.filial_nome,
           canal_venda: row.canal_venda_nome,
+          canal_venda_id: row.canal_venda_id,
           data_pedido: row.data_pedido,
           status: row.status,
           valor_total: Number(row.valor_total || 0),

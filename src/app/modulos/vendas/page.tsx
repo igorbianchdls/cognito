@@ -266,7 +266,7 @@ export default function ModulosVendasPage() {
           },
           { accessorKey: 'filial', header: () => <IconLabelHeader icon={<Building2 className="h-3.5 w-3.5" />} label="Filial" /> },
           { accessorKey: 'canal_venda', header: () => <IconLabelHeader icon={<LayoutGrid className="h-3.5 w-3.5" />} label="Canal de Venda" />, 
-            cell: ({ row }) => <StatusBadge value={row.original['canal_venda']} type="status" /> },
+            cell: ({ row }) => <StatusBadge value={row.original['canal_venda']} id={row.original['canal_venda_id'] as number} type="canal_venda" /> },
           { accessorKey: 'data_pedido', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Data Pedido" />, cell: ({ getValue }) => formatDate(getValue()) },
           { accessorKey: 'status', header: () => <IconLabelHeader icon={<CheckCircle2 className="h-3.5 w-3.5" />} label="Status" />,
             cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },

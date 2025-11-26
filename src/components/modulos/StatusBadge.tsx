@@ -11,9 +11,11 @@ type StatusBadgeProps = {
     | 'fin_tipo_conta'
     | 'fin_transacao'
     | 'bool'
+    | 'canal_venda'
+  id?: number | string
 }
 
-export default function StatusBadge({ value, type }: StatusBadgeProps) {
+export default function StatusBadge({ value, type, id }: StatusBadgeProps) {
   const valueStr = String(value || '').toLowerCase()
 
   let bgColor = '#f3f4f6'
@@ -94,6 +96,35 @@ export default function StatusBadge({ value, type }: StatusBadgeProps) {
       // inicial, qualificação, prospecção, etc (gray)
       bgColor = '#f3f4f6'
       textColor = '#6b7280'
+    }
+  }
+  
+  // Canal de venda por ID (1..10)
+  if (type === 'canal_venda') {
+    const idNum = Number(id)
+    switch (idNum) {
+      case 1: // vermelho
+        bgColor = '#fee2e2'; textColor = '#dc2626'; break
+      case 2: // verde
+        bgColor = '#dcfce7'; textColor = '#16a34a'; break
+      case 3: // azul
+        bgColor = '#dbeafe'; textColor = '#2563eb'; break
+      case 4: // amarelo
+        bgColor = '#fef3c7'; textColor = '#ca8a04'; break
+      case 5: // roxo
+        bgColor = '#e9d5ff'; textColor = '#7c3aed'; break
+      case 6: // rosa
+        bgColor = '#fce7f3'; textColor = '#db2777'; break
+      case 7: // teal
+        bgColor = '#d1fae5'; textColor = '#047857'; break
+      case 8: // laranja
+        bgColor = '#ffedd5'; textColor = '#ea580c'; break
+      case 9: // ciano
+        bgColor = '#cffafe'; textColor = '#0891b2'; break
+      case 10: // índigo claro
+        bgColor = '#e0e7ff'; textColor = '#4f46e5'; break
+      default:
+        bgColor = '#f3f4f6'; textColor = '#6b7280'; break
     }
   }
 
