@@ -304,7 +304,7 @@ export default function ModulosComercialPage() {
       default:
         return []
     }
-  }, [tabs.selected])
+  }, [tabs.selected, perfScope, resScope])
 
   // Forçar no-wrap em TODAS as colunas da tabela atual
   const allNoWrapOptions = useMemo(() => {
@@ -513,7 +513,7 @@ export default function ModulosComercialPage() {
                 <div className="p-6 text-sm text-red-600">Erro ao carregar: {error}</div>
               ) : (
                 <DataTable
-                  key={tabs.selected}
+                  key={`${tabs.selected}-${tabs.selected === 'desempenho' ? perfScope : tabs.selected === 'resultados' ? resScope : ''}`}
                   columns={columns}
                   data={
                     (tabs.selected === 'metas')
