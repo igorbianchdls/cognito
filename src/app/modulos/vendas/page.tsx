@@ -256,6 +256,9 @@ export default function ModulosVendasPage() {
               />
             )
           },
+          { accessorKey: 'vendedor', header: () => <IconLabelHeader icon={<Users className="h-3.5 w-3.5" />} label="Vendedor" /> },
+          { accessorKey: 'filial', header: () => <IconLabelHeader icon={<Building2 className="h-3.5 w-3.5" />} label="Filial" /> },
+          { accessorKey: 'canal_venda', header: () => <IconLabelHeader icon={<LayoutGrid className="h-3.5 w-3.5" />} label="Canal de Venda" /> },
           { accessorKey: 'data_pedido', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Data Pedido" />, cell: ({ getValue }) => formatDate(getValue()) },
           { accessorKey: 'status', header: () => <IconLabelHeader icon={<CheckCircle2 className="h-3.5 w-3.5" />} label="Status" /> },
           { accessorKey: 'valor_total', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Total" />, cell: ({ getValue }) => formatBRL(getValue()) },

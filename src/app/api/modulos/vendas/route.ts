@@ -9,6 +9,9 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
   pedidos: {
     pedido: 'p.id',
     cliente: 'cli.nome_fantasia',
+    vendedor: 'f.nome',
+    filial: 'fil.nome',
+    canal_venda: 'cv.nome',
     data_pedido: 'p.data_pedido',
     status: 'p.status',
     valor_total: 'p.valor_total',
@@ -104,19 +107,26 @@ export async function GET(req: NextRequest) {
     let orderClause = ''
 
     if (view === 'pedidos') {
-      // Paginação por cabeçalho (pedido) apenas
+      // Paginação por cabeçalho (pedido) apenas, com nomes de vendedor, filial e canal de venda
       selectSql = `SELECT
         p.id AS pedido_id,
         p.data_pedido,
         p.status,
         p.valor_total,
-        p.filial_id,
-        p.vendedor_id,
-        p.territorio_id,
-        p.canal_venda_id,
-        cli.nome_fantasia AS cliente_nome`
+        cli.nome_fantasia AS cliente_nome,
+        f.nome AS vendedor_nome,
+        fil.nome AS filial_nome,
+        cv.nome AS canal_venda_nome`
       baseSql = `FROM vendas.pedidos p
-        LEFT JOIN entidades.clientes cli ON cli.id = p.cliente_id`
+        -- CLIENTE
+        LEFT JOIN entidades.clientes cli ON cli.id = p.cliente_id
+        -- VENDEDOR
+        LEFT JOIN comercial.vendedores v ON v.id = p.vendedor_id
+        LEFT JOIN entidades.funcionarios f ON f.id = v.funcionario_id
+        -- FILIAL
+        LEFT JOIN empresa.filiais fil ON fil.id = p.filial_id
+        -- CANAL DE VENDA
+        LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id`
       orderClause = orderBy ? `ORDER BY ${orderBy} ${orderDir}` : 'ORDER BY p.id ASC'
     } else if (view === 'devolucoes') {
       selectSql = `SELECT
@@ -248,13 +258,12 @@ export async function GET(req: NextRequest) {
       type PedidoAgregado = {
         pedido: unknown
         cliente: unknown
+        vendedor: unknown
+        filial: unknown
+        canal_venda: unknown
         data_pedido: unknown
         status: unknown
         valor_total: number
-        filial_id: unknown
-        vendedor_id: unknown
-        territorio_id: unknown
-        canal_venda_id: unknown
         itens: PedidoItem[]
       }
 
@@ -267,13 +276,12 @@ export async function GET(req: NextRequest) {
         pedidosMap.set(pedidoId, {
           pedido: row.pedido_id,
           cliente: row.cliente_nome,
+          vendedor: row.vendedor_nome,
+          filial: row.filial_nome,
+          canal_venda: row.canal_venda_nome,
           data_pedido: row.data_pedido,
           status: row.status,
           valor_total: Number(row.valor_total || 0),
-          filial_id: row.filial_id,
-          vendedor_id: row.vendedor_id,
-          territorio_id: row.territorio_id,
-          canal_venda_id: row.canal_venda_id,
           itens: []
         })
       }
