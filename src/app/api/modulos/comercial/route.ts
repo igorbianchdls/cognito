@@ -243,8 +243,36 @@ export async function GET(req: NextRequest) {
       baseSql = ''
       orderClause = ''
     } else if (view === 'desempenho') {
-      // Desempenho por vendedor usando pedidos concluídos
-      selectSql = `SELECT
+      // Escopo: vendedores (default) ou territorios
+      const scope = (searchParams.get('scope') || 'vendedores').toLowerCase()
+      if (scope === 'territorios') {
+        selectSql = `SELECT
+    t.id AS territorio_id,
+    t.nome AS territorio_nome,
+
+    SUM(i.subtotal) AS faturamento_total,
+    COUNT(DISTINCT p.id) AS total_pedidos,
+    SUM(i.quantidade) AS quantidade_servicos,
+    CASE 
+        WHEN COUNT(DISTINCT p.id) > 0 THEN 
+            SUM(i.subtotal) / COUNT(DISTINCT p.id)
+        ELSE 0
+    END AS ticket_medio
+
+FROM comercial.territorios t
+LEFT JOIN vendas.pedidos p
+       ON p.territorio_id = t.id
+      AND p.status = 'concluido'
+
+LEFT JOIN vendas.pedidos_itens i
+       ON i.pedido_id = p.id
+
+GROUP BY t.id, t.nome`
+        baseSql = ''
+        orderClause = orderBy ? `ORDER BY ${orderBy} ${orderDir}` : 'ORDER BY faturamento_total DESC'
+      } else {
+        // vendedores
+        selectSql = `SELECT
     v.id AS vendedor_id,
     f.nome AS vendedor_nome,
     t.nome AS territorio_nome,
@@ -272,8 +300,9 @@ LEFT JOIN vendas.pedidos_itens i
        ON i.pedido_id = p.id
 
 GROUP BY v.id, f.nome, t.nome`
-      baseSql = ''
-      orderClause = orderBy ? `ORDER BY ${orderBy} ${orderDir}` : 'ORDER BY faturamento_total DESC'
+        baseSql = ''
+        orderClause = orderBy ? `ORDER BY ${orderBy} ${orderDir}` : 'ORDER BY faturamento_total DESC'
+      }
     } else if (view === 'tipos_metas') {
       selectSql = `SELECT
         tm.id AS tipo_meta_id,

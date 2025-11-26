@@ -19,6 +19,8 @@ type DataToolbarProps = {
   // Date range state
   dateRange?: PartialDateRange
   onDateRangeChange?: (range: PartialDateRange | undefined) => void
+  // Extra control near date picker (left side)
+  leftExtra?: React.ReactNode
   // Right side only
   from?: number
   to?: number
@@ -53,6 +55,7 @@ export default function DataToolbar({
   dateRangePlaceholder = "Date Range",
   dateRange,
   onDateRangeChange,
+  leftExtra,
   from = 0,
   to = 0,
   total = 0,
@@ -139,7 +142,13 @@ export default function DataToolbar({
                 }}
               />
             </PopoverContent>
-          </Popover>
+        </Popover>
+
+          {leftExtra && (
+            <div className="flex items-center">
+              {leftExtra}
+            </div>
+          )}
         </div>
 
         {/* Right group */}

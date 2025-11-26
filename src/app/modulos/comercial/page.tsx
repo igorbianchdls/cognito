@@ -48,6 +48,8 @@ export default function ModulosComercialPage() {
   // Filtros específicos (aba Metas)
   const [metaAno, setMetaAno] = useState<number | 'todos'>('todos')
   const [metaMes, setMetaMes] = useState<number | 'todos'>('todos')
+  // Escopo do desempenho: vendedores | territorios
+  const [perfScope, setPerfScope] = useState<'vendedores' | 'territorios'>('vendedores')
 
   const fontVar = (name?: string) => {
     if (!name) return undefined
@@ -249,14 +251,22 @@ export default function ModulosComercialPage() {
           { accessorKey: 'atualizado_em', header: () => <IconLabelHeader icon={<CalendarClock className="h-3.5 w-3.5" />} label="Atualizado Em" />, cell: ({ getValue }) => formatDate(getValue()) },
         ]
       case 'desempenho':
-        return [
-          { accessorKey: 'vendedor_nome', header: () => <IconLabelHeader icon={<Users className="h-3.5 w-3.5" />} label="Vendedor" /> },
-          { accessorKey: 'territorio_nome', header: () => <IconLabelHeader icon={<LayoutGrid className="h-3.5 w-3.5" />} label="Território" /> },
-          { accessorKey: 'faturamento_total', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Faturamento" /> , cell: ({ getValue }) => formatBRL(getValue()) },
-          { accessorKey: 'total_pedidos', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Pedidos" /> },
-          { accessorKey: 'quantidade_servicos', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Serviços" /> },
-          { accessorKey: 'ticket_medio', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Ticket Médio" />, cell: ({ getValue }) => formatBRL(getValue()) },
-        ]
+        return perfScope === 'vendedores'
+          ? [
+              { accessorKey: 'vendedor_nome', header: () => <IconLabelHeader icon={<Users className="h-3.5 w-3.5" />} label="Vendedor" /> },
+              { accessorKey: 'territorio_nome', header: () => <IconLabelHeader icon={<LayoutGrid className="h-3.5 w-3.5" />} label="Território" /> },
+              { accessorKey: 'faturamento_total', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Faturamento" /> , cell: ({ getValue }) => formatBRL(getValue()) },
+              { accessorKey: 'total_pedidos', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Pedidos" /> },
+              { accessorKey: 'quantidade_servicos', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Serviços" /> },
+              { accessorKey: 'ticket_medio', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Ticket Médio" />, cell: ({ getValue }) => formatBRL(getValue()) },
+            ]
+          : [
+              { accessorKey: 'territorio_nome', header: () => <IconLabelHeader icon={<LayoutGrid className="h-3.5 w-3.5" />} label="Território" /> },
+              { accessorKey: 'faturamento_total', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Faturamento" /> , cell: ({ getValue }) => formatBRL(getValue()) },
+              { accessorKey: 'total_pedidos', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Pedidos" /> },
+              { accessorKey: 'quantidade_servicos', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Serviços" /> },
+              { accessorKey: 'ticket_medio', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Ticket Médio" />, cell: ({ getValue }) => formatBRL(getValue()) },
+            ]
       case 'tipos_metas':
         return [
           { accessorKey: 'tipo_meta_id', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="ID" /> },
@@ -316,6 +326,8 @@ export default function ModulosComercialPage() {
         if (tabs.selected === 'metas') {
           if (metaAno !== 'todos') params.set('ano', String(metaAno))
           if (metaMes !== 'todos') params.set('mes', String(metaMes))
+        } else if (tabs.selected === 'desempenho') {
+          params.set('scope', perfScope)
         }
         const url = `/api/modulos/comercial?${params.toString()}`
         const res = await fetch(url, { cache: 'no-store', signal: controller.signal })
@@ -336,7 +348,7 @@ export default function ModulosComercialPage() {
     }
     load()
     return () => controller.abort()
-  }, [tabs.selected, page, pageSize, refreshKey, metaAno, metaMes])
+  }, [tabs.selected, page, pageSize, refreshKey, metaAno, metaMes, perfScope])
 
   return (
     <SidebarProvider>
@@ -443,6 +455,19 @@ export default function ModulosComercialPage() {
                 total={total}
                 dateRange={dateRange}
                 onDateRangeChange={setDateRange}
+                leftExtra={tabs.selected === 'desempenho' ? (
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm text-gray-600">Agrupar</label>
+                    <select
+                      className="h-8 px-2 border rounded text-sm"
+                      value={perfScope}
+                      onChange={(e) => setPerfScope(e.target.value as 'vendedores' | 'territorios')}
+                    >
+                      <option value="vendedores">Vendedores</option>
+                      <option value="territorios">Territórios</option>
+                    </select>
+                  </div>
+                ) : undefined}
                 fontFamily={fontVar(tabs.fontFamily)}
                 fontSize={toolbarUI.fontSize}
                 fontWeight={toolbarUI.fontWeight}
