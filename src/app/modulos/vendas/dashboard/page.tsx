@@ -81,6 +81,8 @@ export default function VendasDashboardPage() {
   const [chartCentroLucro, setChartCentroLucro] = useState<ChartItem[]>([])
   const [chartCampanhasVendas, setChartCampanhasVendas] = useState<ChartItem[]>([])
   const [chartCanaisDistribuicao, setChartCanaisDistribuicao] = useState<ChartItem[]>([])
+  const [chartCanaisDistribuicaoTicket, setChartCanaisDistribuicaoTicket] = useState<ChartItem[]>([])
+  const [chartCanaisDistribuicaoPedidos, setChartCanaisDistribuicaoPedidos] = useState<ChartItem[]>([])
   // Removido: faturamento por marca
   const [chartFiliais, setChartFiliais] = useState<ChartItem[]>([])
   const [chartUnidadesNegocio, setChartUnidadesNegocio] = useState<ChartItem[]>([])
@@ -157,6 +159,8 @@ export default function VendasDashboardPage() {
           setChartCentroLucro(Array.isArray(charts?.centros_lucro) ? charts.centros_lucro as ChartItem[] : [])
           setChartCampanhasVendas(Array.isArray(charts?.campanhas_vendas) ? charts.campanhas_vendas as ChartItem[] : [])
           setChartCanaisDistribuicao(Array.isArray(charts?.canais_distribuicao) ? charts.canais_distribuicao as ChartItem[] : [])
+          setChartCanaisDistribuicaoTicket(Array.isArray(charts?.canais_distribuicao_ticket) ? charts.canais_distribuicao_ticket as ChartItem[] : [])
+          setChartCanaisDistribuicaoPedidos(Array.isArray(charts?.canais_distribuicao_pedidos) ? charts.canais_distribuicao_pedidos as ChartItem[] : [])
           // removido: marcas
           setChartFiliais(Array.isArray(charts?.filiais) ? charts.filiais as ChartItem[] : [])
           setChartUnidadesNegocio(Array.isArray(charts?.unidades_negocio) ? charts.unidades_negocio as ChartItem[] : [])
@@ -564,6 +568,24 @@ export default function VendasDashboardPage() {
               title="Faturamento por Canal de Distribuição"
               icon={<Tag className="w-5 h-5" />}
               color="#0ea5e9"
+              height={360}
+            />
+          </div>
+
+          {/* Row 5.1: Canais de Distribuição - Ticket Médio e Pedidos */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <BarChartHorizontalRecharts
+              items={chartCanaisDistribuicaoTicket}
+              title="Ticket Médio por Canal de Distribuição"
+              icon={<Tag className="w-5 h-5" />}
+              color="#f59e0b"
+              height={360}
+            />
+            <BarChartHorizontalRecharts
+              items={chartCanaisDistribuicaoPedidos}
+              title="Pedidos por Canal de Distribuição"
+              icon={<Tag className="w-5 h-5" />}
+              color="#8b5cf6"
               height={360}
             />
           </div>

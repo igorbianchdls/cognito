@@ -231,6 +231,27 @@ export async function GET(req: NextRequest) {
     let canaisDistribuicao: ChartItem[] = []
     try { canaisDistribuicao = await runQuery<ChartItem>(canalDistribuicaoSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard canais_distribuicao error:', e); canaisDistribuicao = [] }
 
+    // Canais de Distribuição (agregado: faturamento, pedidos, ticket médio por pedido) somente concluídos
+    const cdWhere = pWhere ? `${pWhere} AND p.status = 'concluido'` : `WHERE p.status = 'concluido'`
+    const canaisDistribuicaoAggSql = `SELECT
+                                        COALESCE(cd.nome,'—') AS nome,
+                                        COALESCE(SUM(i.subtotal),0)::float AS faturamento_total,
+                                        COUNT(DISTINCT p.id)::int AS pedidos_distintos,
+                                        COALESCE(SUM(i.subtotal) / NULLIF(COUNT(DISTINCT p.id), 0), 0)::float AS ticket_medio
+                                      FROM vendas.pedidos_itens i
+                                      LEFT JOIN vendas.pedidos p ON p.id = i.pedido_id
+                                      LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+                                      LEFT JOIN vendas.canais_distribuicao cd ON cd.id = cv.canal_distribuicao_id
+                                      ${cdWhere}
+                                      GROUP BY 1
+                                      ORDER BY faturamento_total DESC
+                                      LIMIT $${pParams.length + 1}::int`;
+    type CanalDistribRow = { nome: string; faturamento_total: number; pedidos_distintos: number; ticket_medio: number }
+    let canaisDistribAgg: CanalDistribRow[] = []
+    try { canaisDistribAgg = await runQuery<CanalDistribRow>(canaisDistribuicaoAggSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard canais_distrib agg error:', e); canaisDistribAgg = [] }
+    const canaisDistribuicaoTicket: ChartItem[] = canaisDistribAgg.map(r => ({ label: r.nome || '—', value: Number(r.ticket_medio || 0) }))
+    const canaisDistribuicaoPedidos: ChartItem[] = canaisDistribAgg.map(r => ({ label: r.nome || '—', value: Number(r.pedidos_distintos || 0) }))
+
     // Faturamento por Marca
     const marcasSql = `SELECT COALESCE(m.nome,'—') AS label, COALESCE(SUM(pi.quantidade * pi.preco_unitario),0)::float AS value
                        FROM vendas.pedidos p
@@ -526,6 +547,8 @@ export async function GET(req: NextRequest) {
           centros_lucro: centrosLucro,
           campanhas_vendas: campanhasVendas,
           canais_distribuicao: canaisDistribuicao,
+          canais_distribuicao_ticket: canaisDistribuicaoTicket,
+          canais_distribuicao_pedidos: canaisDistribuicaoPedidos,
           marcas,
           filiais,
           unidades_negocio: unidadesNegocio,
