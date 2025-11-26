@@ -503,7 +503,6 @@ export default function ModulosComercialPage() {
                       ? renderCampanhaProdutos
                       : tabs.selected === 'metas'
                         ? renderMetaDetail
-                        : undefined
                         : tabs.selected === 'metas_territorios'
                           ? (row) => {
                               const isParent = Boolean(row['parent_flag'])
