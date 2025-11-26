@@ -329,31 +329,44 @@ export async function GET(req: NextRequest) {
     const servicosCategoriasTicket: ChartItem[] = servCatRows.map(r => ({ label: r.categoria_nome || '—', value: Number(r.ticket_medio_item || 0) }))
     const servicosCategoriasPedidos: ChartItem[] = servCatRows.map(r => ({ label: r.categoria_nome || '—', value: Number(r.pedidos_distintos || 0) }))
 
-    // Meta x Faturamento por Território
-    const metaTerrSql = `SELECT COALESCE(t.nome,'—') AS label, COALESCE(SUM(mt.valor_meta),0)::float AS meta
-                         FROM comercial.metas_territorios mt
-                         LEFT JOIN comercial.territorios t ON t.id = mt.territorio_id
-                         ${mtWhereMt}
-                         GROUP BY 1`;
-    let metasPorTerr: { label: string; meta: number }[] = []
-    try { metasPorTerr = await runQuery<{ label: string; meta: number }>(metaTerrSql, mtParams) } catch (e) { console.error('🛒 VENDAS dashboard metas por território error:', e); metasPorTerr = [] }
-
-    const fatTerrSql = `SELECT COALESCE(t.nome,'—') AS label, COALESCE(SUM(pi.subtotal),0)::float AS faturamento
-                        FROM vendas.pedidos p
-                        LEFT JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
-                        LEFT JOIN comercial.territorios t ON t.id = p.territorio_id
-                        ${pWhere}
-                        GROUP BY 1`;
-    let fatPorTerr: { label: string; faturamento: number }[] = []
-    try { fatPorTerr = await runQuery<{ label: string; faturamento: number }>(fatTerrSql, pParams) } catch (e) { console.error('🛒 VENDAS dashboard faturamento por território error:', e); fatPorTerr = [] }
-
-    const fatMap = new Map<string, number>(fatPorTerr.map(r => [r.label || '—', Number(r.faturamento || 0)]))
-    const allTerrLabels = Array.from(new Set([ ...metasPorTerr.map(r => r.label || '—'), ...fatPorTerr.map(r => r.label || '—') ]))
-    const metaTerritorio = allTerrLabels.map(label => ({
-      label,
-      meta: Number((metasPorTerr.find(r => (r.label||'—') === label)?.meta) || 0),
-      faturamento: Number(fatMap.get(label) || 0),
-    })).sort((a,b)=> (b.faturamento + b.meta) - (a.faturamento + a.meta)).slice(0, limit)
+    // Meta x Faturamento por Território (Novembro/2025) — usa metas + realizado CTE
+    const metaFatTerrSQL = `WITH metas AS (
+    SELECT
+        m.territorio_id,
+        t.nome AS territorio_nome,
+        mi.valor_meta AS meta_faturamento
+    FROM comercial.metas m
+    JOIN comercial.metas_itens mi ON mi.meta_id = m.id
+    JOIN comercial.territorios t ON t.id = m.territorio_id
+    WHERE m.ano = 2025
+      AND m.mes = 11
+      AND mi.tipo_meta_id = 1
+      AND m.territorio_id IS NOT NULL
+),
+realizado AS (
+    SELECT
+        p.territorio_id,
+        SUM(i.subtotal) AS faturamento_real
+    FROM vendas.pedidos p
+    JOIN vendas.pedidos_itens i ON i.pedido_id = p.id
+    WHERE p.status = 'concluido'
+      AND p.data_pedido >= '2025-11-01'
+      AND p.data_pedido <  '2025-12-01'
+    GROUP BY p.territorio_id
+)
+SELECT
+    m.territorio_id,
+    m.territorio_nome,
+    m.meta_faturamento AS meta,
+    COALESCE(r.faturamento_real, 0) AS faturamento
+FROM metas m
+LEFT JOIN realizado r ON r.territorio_id = m.territorio_id
+ORDER BY m.territorio_id
+LIMIT $1::int`;
+    type MetaTerrLinha = { territorio_id: number; territorio_nome: string; meta: number; faturamento: number }
+    let metaTerrRows: MetaTerrLinha[] = []
+    try { metaTerrRows = await runQuery<MetaTerrLinha>(metaFatTerrSQL, [limit]) } catch (e) { console.error('🛒 VENDAS dashboard meta_fat_territorio error:', e); metaTerrRows = [] }
+    const metaTerritorio = metaTerrRows.map(r => ({ label: r.territorio_nome || '—', meta: Number(r.meta || 0), faturamento: Number(r.faturamento || 0) }))
 
     // Meta x Faturamento por Vendedor
     const metaVendSql = `SELECT f.nome AS label, COALESCE(m.valor_meta,0)::float AS meta
