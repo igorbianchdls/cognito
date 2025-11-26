@@ -6,12 +6,11 @@ import DashboardLayout from '@/components/modulos/DashboardLayout'
 import { BarChartHorizontalRecharts } from '@/components/charts/BarChartHorizontalRecharts'
 import { BarChartMultipleRecharts } from '@/components/charts/BarChartMultipleRecharts'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { BarChartHorizontalPercent } from '@/components/charts/BarChartHorizontalPercent'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Calendar as CalendarIcon, Users, Package, MapPin, Globe, Tag, Building2, Briefcase, Store } from 'lucide-react'
+import { Calendar as CalendarIcon, Users, MapPin, Globe, Tag, Building2, Briefcase, Store } from 'lucide-react'
 import type { DateRange } from 'react-day-picker'
 import { $financeiroDashboardUI, $financeiroDashboardFilters, financeiroDashboardActions, type FontSection } from '@/stores/modulos/financeiroDashboardStore'
 
@@ -70,7 +69,6 @@ export default function VendasDashboardPage() {
   type ChartItem = { label: string; value: number }
   const [chartVendedores, setChartVendedores] = useState<ChartItem[]>([])
   // const [chartEquipes, setChartEquipes] = useState<ChartItem[]>([])
-  const [chartProdutos, setChartProdutos] = useState<ChartItem[]>([])
   const [chartServicos, setChartServicos] = useState<ChartItem[]>([])
   // const [chartFiliais, setChartFiliais] = useState<ChartItem[]>([])
   const [chartTerritorios, setChartTerritorios] = useState<ChartItem[]>([])
@@ -78,13 +76,12 @@ export default function VendasDashboardPage() {
   const [chartCanais, setChartCanais] = useState<ChartItem[]>([])
   const [chartTopClientes, setChartTopClientes] = useState<{ cliente: string; total: number; pedidos: number }[]>([])
   const [chartVendasCidade, setChartVendasCidade] = useState<{ cidade: string; total: number }[]>([])
-  const [chartDevolucaoCanal, setChartDevolucaoCanal] = useState<{ label: string; value: number }[]>([])
-  const [chartDevolucaoCliente, setChartDevolucaoCliente] = useState<{ label: string; value: number }[]>([])
+  // Removidos: gráficos de devolução por canal e cliente
   // const [chartEstados, setChartEstados] = useState<ChartItem[]>([])
   const [chartCentroLucro, setChartCentroLucro] = useState<ChartItem[]>([])
   const [chartCampanhasVendas, setChartCampanhasVendas] = useState<ChartItem[]>([])
   const [chartCanaisDistribuicao, setChartCanaisDistribuicao] = useState<ChartItem[]>([])
-  const [chartMarcas, setChartMarcas] = useState<ChartItem[]>([])
+  // Removido: faturamento por marca
   const [chartFiliais, setChartFiliais] = useState<ChartItem[]>([])
   const [chartUnidadesNegocio, setChartUnidadesNegocio] = useState<ChartItem[]>([])
   const [chartSalesOffices, setChartSalesOffices] = useState<ChartItem[]>([])
@@ -96,7 +93,7 @@ export default function VendasDashboardPage() {
   const [chartMetaVendedorVW, setChartMetaVendedorVW] = useState<Array<{ label: string; meta: number; faturamento: number }>>([])
   const [chartMetaNovosClientesVW, setChartMetaNovosClientesVW] = useState<Array<{ label: string; meta: number; realizado: number }>>([])
   const [chartMetaTicketMedioVW, setChartMetaTicketMedioVW] = useState<Array<{ label: string; meta: number; realizado: number }>>([])
-  const [chartCupons, setChartCupons] = useState<ChartItem[]>([])
+  // Removido: vendas por cupom
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -149,20 +146,18 @@ export default function VendasDashboardPage() {
             margemBruta: Number(kk.margemBruta || 0),
           })
           setChartVendedores(Array.isArray(charts?.vendedores) ? charts.vendedores as ChartItem[] : [])
-          setChartProdutos(Array.isArray(charts?.produtos) ? charts.produtos as ChartItem[] : [])
           setChartServicos(Array.isArray(charts?.servicos) ? charts.servicos as ChartItem[] : [])
           setChartTerritorios(Array.isArray(charts?.territorios) ? charts.territorios as ChartItem[] : [])
           setChartCategorias(Array.isArray(charts?.categorias) ? charts.categorias as ChartItem[] : [])
           setChartCanais(Array.isArray(charts?.canais) ? charts.canais as ChartItem[] : [])
           setChartTopClientes(Array.isArray(charts?.clientes) ? charts.clientes as { cliente: string; total: number; pedidos: number }[] : [])
           setChartVendasCidade(Array.isArray(charts?.cidades) ? charts.cidades as { cidade: string; total: number }[] : [])
-          setChartDevolucaoCanal(Array.isArray(charts?.devolucao_canal) ? charts.devolucao_canal as { label: string; value: number }[] : [])
-          setChartDevolucaoCliente(Array.isArray(charts?.devolucao_cliente) ? charts.devolucao_cliente as { label: string; value: number }[] : [])
+          // removidos: devolução canal/cliente
           // setChartEstados(Array.isArray(charts?.estados) ? charts.estados as ChartItem[] : [])
           setChartCentroLucro(Array.isArray(charts?.centros_lucro) ? charts.centros_lucro as ChartItem[] : [])
           setChartCampanhasVendas(Array.isArray(charts?.campanhas_vendas) ? charts.campanhas_vendas as ChartItem[] : [])
           setChartCanaisDistribuicao(Array.isArray(charts?.canais_distribuicao) ? charts.canais_distribuicao as ChartItem[] : [])
-          setChartMarcas(Array.isArray(charts?.marcas) ? charts.marcas as ChartItem[] : [])
+          // removido: marcas
           setChartFiliais(Array.isArray(charts?.filiais) ? charts.filiais as ChartItem[] : [])
           setChartUnidadesNegocio(Array.isArray(charts?.unidades_negocio) ? charts.unidades_negocio as ChartItem[] : [])
           setChartSalesOffices(Array.isArray(charts?.sales_offices) ? charts.sales_offices as ChartItem[] : [])
@@ -171,7 +166,7 @@ export default function VendasDashboardPage() {
           setChartMetaVendedorVW(Array.isArray(charts?.meta_vendedor_vw) ? charts.meta_vendedor_vw as Array<{ label: string; meta: number; faturamento: number }> : [])
           setChartMetaTicketMedioVW(Array.isArray(charts?.meta_ticket_medio_vw) ? charts.meta_ticket_medio_vw as Array<{ label: string; meta: number; realizado: number }> : [])
           setChartMetaNovosClientesVW(Array.isArray(charts?.meta_novos_clientes_vw) ? charts.meta_novos_clientes_vw as Array<{ label: string; meta: number; realizado: number }> : [])
-          setChartCupons(Array.isArray(charts?.cupons) ? charts.cupons as ChartItem[] : [])
+          // removido: cupons
           setChartServCatFat(Array.isArray(charts?.servicos_categorias_faturamento) ? charts.servicos_categorias_faturamento as ChartItem[] : [])
           setChartServCatTicket(Array.isArray(charts?.servicos_categorias_ticket) ? charts.servicos_categorias_ticket as ChartItem[] : [])
           setChartServCatPedidos(Array.isArray(charts?.servicos_categorias_pedidos) ? charts.servicos_categorias_pedidos as ChartItem[] : [])
@@ -187,7 +182,6 @@ export default function VendasDashboardPage() {
 
   // Charts (reais)
   const top5Vendedores = chartVendedores
-  const top5Produtos = chartProdutos
   const vendasPorServico = chartServicos
   const vendasPorTerritorio = chartTerritorios
   const vendasPorCategoria = chartCategorias
@@ -413,20 +407,13 @@ export default function VendasDashboardPage() {
             />
           </div>
 
-          {/* Row 1: Top 5 Vendedores, Top 5 Produtos, Vendas por Canal */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          {/* Row 1: Faturamento por Vendedor e Vendas por Canal */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <BarChartHorizontalRecharts
               items={top5Vendedores}
               title="Faturamento por Vendedor"
               icon={<Users className="w-5 h-5" />}
               color="#3b82f6"
-              height={360}
-            />
-            <BarChartHorizontalRecharts
-              items={top5Produtos}
-              title="Top 5 Produtos"
-              icon={<Package className="w-5 h-5" />}
-              color="#8b5cf6"
               height={360}
             />
           <BarChartHorizontalRecharts
@@ -561,33 +548,10 @@ export default function VendasDashboardPage() {
             />
           </div>
 
-          {/* Row 4: Taxas de Devolução e Vendas por Cupom */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-            <BarChartHorizontalPercent
-              items={chartDevolucaoCanal}
-              title="Taxa de Devolução por Canal"
-              icon={<Tag className="w-5 h-5" />}
-              color="#ef4444"
-              height={360}
-            />
-            <BarChartHorizontalPercent
-              items={chartDevolucaoCliente}
-              title="Taxa de Devolução por Cliente"
-              icon={<Users className="w-5 h-5" />}
-              color="#f97316"
-              height={360}
-            />
-            <BarChartHorizontalRecharts
-              items={chartCupons}
-              title="Vendas por Cupom"
-              icon={<Tag className="w-5 h-5" />}
-              color="#06b6d4"
-              height={360}
-            />
-          </div>
+          {/* Row 4: removido (devoluções e vendas por cupom) */}
 
-          {/* Row 5: Vendas por Campanha de Vendas, por Canal de Distribuição e por Marca */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          {/* Row 5: Vendas por Campanha de Vendas e por Canal de Distribuição */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <BarChartHorizontalRecharts
               items={chartCampanhasVendas}
               title="Vendas por Campanha de Vendas"
@@ -600,13 +564,6 @@ export default function VendasDashboardPage() {
               title="Faturamento por Canal de Distribuição"
               icon={<Tag className="w-5 h-5" />}
               color="#0ea5e9"
-              height={360}
-            />
-            <BarChartHorizontalRecharts
-              items={chartMarcas}
-              title="Faturamento por Marca"
-              icon={<Package className="w-5 h-5" />}
-              color="#f59e0b"
               height={360}
             />
           </div>
