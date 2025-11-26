@@ -48,20 +48,24 @@ export async function GET(req: NextRequest) {
     const [{ itens }] = itensRes
 
     // KPI: meta (somatório de todas as metas de territórios)
-    // Se houver período, somar metas cujos períodos estejam entre o mês de 'de' e o mês de 'ate'.
+    // Se houver período, considerar o mês de início até o início do mês seguinte de 'ate' (intervalo aberto à direita).
     const mtParams: unknown[] = []
-    let mtWhere = ''
+    let mtWhereMt = ''
+    let mvWhere = ''
     if (de || ate) {
-      const deMonth = de ? `date_trunc('month', $${mtParams.push(de)})` : `date_trunc('month', CURRENT_DATE)`
-      const ateMonth = ate ? `date_trunc('month', $${mtParams.push(ate)})` : `date_trunc('month', CURRENT_DATE)`
-      mtWhere = `WHERE mt.periodo >= ${deMonth} AND mt.periodo <= ${ateMonth}`
+      const fromVal = de || ate!
+      const toVal = ate || de!
+      const fromExprMt = `date_trunc('month', $${mtParams.push(fromVal)})`
+      const toExprMt = `date_trunc('month', $${mtParams.push(toVal)}) + interval '1 month'`
+      mtWhereMt = `WHERE mt.periodo >= ${fromExprMt} AND mt.periodo < ${toExprMt}`
+      mvWhere = `WHERE m.periodo >= ${fromExprMt} AND m.periodo < ${toExprMt}`
     } else {
-      // Sem período, considerar todas as metas (todos os territórios)
-      mtWhere = ''
+      mtWhereMt = ''
+      mvWhere = ''
     }
     const metaSql = `SELECT COALESCE(SUM(mt.valor_meta),0)::float AS meta
                      FROM comercial.metas_territorios mt
-                     ${mtWhere}`
+                     ${mtWhereMt}`
     let metaRes: { meta: number }[] = []
     try { metaRes = await runQuery<{ meta: number }>(metaSql, mtParams) } catch (e) { console.error('🛒 VENDAS dashboard metaSql error:', e); metaRes = [{ meta: 0 }] }
     const [{ meta }] = metaRes
@@ -329,7 +333,7 @@ export async function GET(req: NextRequest) {
     const metaTerrSql = `SELECT COALESCE(t.nome,'—') AS label, COALESCE(SUM(mt.valor_meta),0)::float AS meta
                          FROM comercial.metas_territorios mt
                          LEFT JOIN comercial.territorios t ON t.id = mt.territorio_id
-                         ${mtWhere}
+                         ${mtWhereMt}
                          GROUP BY 1`;
     let metasPorTerr: { label: string; meta: number }[] = []
     try { metasPorTerr = await runQuery<{ label: string; meta: number }>(metaTerrSql, mtParams) } catch (e) { console.error('🛒 VENDAS dashboard metas por território error:', e); metasPorTerr = [] }
@@ -356,7 +360,7 @@ export async function GET(req: NextRequest) {
                          FROM comercial.metas_vendedores m
                          LEFT JOIN comercial.vendedores v ON v.id = m.vendedor_id
                          LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id
-                         ${mtWhere}
+                         ${mvWhere}
                          GROUP BY f.nome, m.valor_meta`;
     let metasPorVend: { label: string; meta: number }[] = []
     try { metasPorVend = await runQuery<{ label: string; meta: number }>(metaVendSql, mtParams) } catch (e) { console.error('🛒 VENDAS dashboard metas por vendedor error:', e); metasPorVend = [] }
