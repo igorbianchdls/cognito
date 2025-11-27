@@ -108,7 +108,13 @@ export async function POST(request: NextRequest) {
       const goal = sanitizeIdent(body.measureGoal || '')
       const actual = sanitizeIdent(body.measureActual || '')
       // Default aggregation heuristic
-      const aggFor = (field: string): Aggregation => (field.endsWith('_id') ? 'COUNT' : 'SUM')
+      const aggFor = (field: string): Aggregation => {
+        if (!field) return 'SUM'
+        if (field.endsWith('_id')) return 'COUNT'
+        // metas devem usar MAX para evitar somar linhas repetidas
+        if (field.startsWith('meta_')) return 'MAX'
+        return 'SUM'
+      }
 
       if (goal) m1Expr = aggExpr({ field: goal, aggregation: aggFor(goal) })
 
