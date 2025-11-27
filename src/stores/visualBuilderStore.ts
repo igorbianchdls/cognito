@@ -546,13 +546,13 @@ export const visualBuilderActions = {
               dsl = setAttrOnDatasource(dsl, w.id, dsAttrs)
 
               // Persist styling colors and margin.left into <config> (supports simple and groupedbar)
-              const updateChartConfig = (key: 'barConfig'|'lineConfig'|'pieConfig'|'areaConfig'|'groupedBarConfig'|'compareBarConfig'|'stackedBarConfig', colors?: string[], marginLeft?: number, marginTop?: number, marginBottom?: number) => {
+              const updateChartConfig = (key: 'barConfig'|'lineConfig'|'pieConfig'|'areaConfig'|'groupedBarConfig'|'compareBarConfig'|'stackedBarConfig', colors?: string[], marginLeft?: number, marginTop?: number, marginBottom?: number, layout?: 'vertical'|'horizontal') => {
                 if ((!colors || colors.length === 0) && (marginLeft === undefined) && (marginTop === undefined) && (marginBottom === undefined)) return
                 dsl = setConfigOnWidget(dsl, w.id, (cfg) => {
                   const prev = (cfg[key] as Record<string, unknown>) || {}
                   const prevStyling = (prev['styling'] as Record<string, unknown>) || {}
                   const prevMargin = (prev['margin'] as { top?: number; right?: number; bottom?: number; left?: number } | undefined) || {}
-                  const nextStyling = { ...prevStyling, ...(colors && colors.length ? { colors } : {}) }
+                  const nextStyling = { ...prevStyling, ...(colors && colors.length ? { colors } : {}), ...(layout ? { layout } : {}) }
                   const baseMargin = {
                     top: typeof prevMargin.top === 'number' ? prevMargin.top : 20,
                     right: typeof prevMargin.right === 'number' ? prevMargin.right : 20,
@@ -600,8 +600,8 @@ export const visualBuilderActions = {
                 const s = (w as unknown as { stackedBarConfig?: { styling?: { colors?: string[] }, margin?: { left?: number; top?: number; bottom?: number } } }).stackedBarConfig
                 updateChartConfig('stackedBarConfig', s?.styling?.colors as string[] | undefined, s?.margin?.left, s?.margin?.top, s?.margin?.bottom)
               } else if (t === 'comparebar') {
-                const c = (w as unknown as { compareBarConfig?: { styling?: { colors?: string[] }, margin?: { left?: number; top?: number; bottom?: number } } }).compareBarConfig
-                updateChartConfig('compareBarConfig', c?.styling?.colors as string[] | undefined, c?.margin?.left, c?.margin?.top, c?.margin?.bottom)
+                const c = (w as unknown as { compareBarConfig?: { styling?: { colors?: string[]; layout?: 'vertical'|'horizontal' }, margin?: { left?: number; top?: number; bottom?: number } } }).compareBarConfig
+                updateChartConfig('compareBarConfig', c?.styling?.colors as string[] | undefined, c?.margin?.left, c?.margin?.top, c?.margin?.bottom, c?.styling?.layout as 'vertical'|'horizontal' | undefined)
               }
               }
             }

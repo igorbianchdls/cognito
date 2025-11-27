@@ -107,6 +107,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
 
   // Simple styling controls for charts (colors and left margin)
   const [styleData, setStyleData] = useState<{ colors: string; marginLeft: number; marginTop: number; marginBottom: number }>({ colors: '', marginLeft: 40, marginTop: 20, marginBottom: 40 });
+  const [compareLayout, setCompareLayout] = useState<'vertical' | 'horizontal'>('vertical');
 
   // Initialize styling controls on widget or type change
   useEffect(() => {
@@ -159,6 +160,11 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
       const marginLeft = getMarginLeft();
       const marginTop = getMarginTop();
       const marginBottom = getMarginBottom();
+      // comparebar layout initial
+      if (t === 'comparebar') {
+        const layout = (widget.compareBarConfig?.styling as { layout?: 'vertical'|'horizontal' } | undefined)?.layout;
+        setCompareLayout(layout === 'horizontal' ? 'horizontal' : 'vertical');
+      }
       // For comparebar, ensure at least two colors are visible by default
       if (t === 'comparebar' && colorsArr.length === 0) {
         colorsArr = ['#60a5fa', '#10b981'];
@@ -171,6 +177,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
       });
     } catch {
       setStyleData({ colors: '', marginLeft: 40, marginTop: 20, marginBottom: 40 });
+      setCompareLayout('vertical');
     }
   }, [widget]);
 
@@ -355,6 +362,8 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
       const next: Partial<CompareBarConfig> = { ...(cfg || {}) };
       next.styling = { ...(cfg?.styling || {}) };
       if (colorsArray.length) (next.styling as NonNullable<CompareBarConfig['styling']>).colors = colorsArray;
+      // Persist orientation
+      (next.styling as NonNullable<CompareBarConfig['styling']>).layout = compareLayout;
       const prevMargin = (cfg?.margin || {}) as NonNullable<CompareBarConfig['margin']>;
       const base = { top: prevMargin.top ?? 20, right: prevMargin.right ?? 20, bottom: prevMargin.bottom ?? 40, left: prevMargin.left ?? 40 };
       next.margin = {
@@ -728,6 +737,19 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
           <div className="pt-1">
             <h3 className="text-sm font-semibold text-gray-900 mb-3">Estilo</h3>
             <div className="grid grid-cols-2 gap-4">
+              {formData.type === 'comparebar' && (
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Orientação</label>
+                  <select
+                    value={compareLayout}
+                    onChange={(e) => setCompareLayout((e.target.value as 'vertical'|'horizontal') || 'vertical')}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="vertical">Vertical</option>
+                    <option value="horizontal">Horizontal</option>
+                  </select>
+                </div>
+              )}
               <div className="col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-2">Cores das Séries</label>
                 {/* Lista de cores com color picker */}
