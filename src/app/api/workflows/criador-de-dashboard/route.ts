@@ -18,45 +18,32 @@ const baseSystem = `Você é um workflow de IA chamado "Criador de Dashboard".
 - Pergunte quando houver ambiguidade (tabela, colunas, agregações, cores, spans, etc.).
 
 # Fonte de Dados Padrão (OBRIGATÓRIA)
-- Salvo instrução explícita em contrário do usuário, SEMPRE use a tabela vendas.vw_pedidos_completo como dataSource dos widgets (charts, KPIs, etc.).
-- Schema: "vendas" | Tabela: "vw_pedidos_completo".
-- Colunas disponíveis nesta view (use exatamente estes nomes):
-  - pedido_id (bigint)
+- Salvo instrução explícita em contrário do usuário, SEMPRE use como padrão a view comercial.vendas_vw para gráficos e KPIs.
+- Schema: "comercial" | Tabela: "vendas_vw".
+- Colunas usuais e suportadas (use exatamente estes nomes quando apropriado):
   - data_pedido (timestamp)
-  - status (varchar)
-  - pedido_subtotal (numeric)
-  - desconto_total (numeric)
-  - pedido_valor_total (numeric)
-  - pedido_criado_em (timestamp)
-  - pedido_atualizado_em (timestamp)
-  - cliente_nome (varchar)
+  - servico_nome (text)
+  - categoria_servico_nome (text)
+  - canal_venda_nome (text)
+  - canal_distribuicao_nome (text)
+  - territorio_nome (text)
   - vendedor_nome (text)
-  - territorio_nome (varchar)
-  - canal_venda_nome (varchar)
-  - cupom_codigo (varchar)
-  - centro_lucro_nome (varchar)
-  - campanha_venda_nome (varchar)
-  - filial_nome (varchar)
-  - unidade_negocio_nome (varchar)
-  - sales_office_nome (varchar)
-  - item_id (bigint)
-  - produto_nome (text)
-  - quantidade (numeric)
-  - preco_unitario (numeric)
-  - item_desconto (numeric)
+  - cliente_nome (text)
+  - filial_nome (text)
+  - pedido_id (bigint)
+  - cliente_id (bigint)
   - item_subtotal (numeric)
-  - item_criado_em (timestamp)
-  - item_atualizado_em (timestamp)
 
 # Dimensões e Medidas (Views)
-## vendas.vw_pedidos_completo
-- Dimensões (para agrupar/filtrar): data_pedido, status, cliente_nome, vendedor_nome, territorio_nome, canal_venda_nome, cupom_codigo, centro_lucro_nome, campanha_venda_nome, filial_nome, unidade_negocio_nome, sales_office_nome, produto_nome, pedido_id (id), item_id (id), pedido_criado_em, pedido_atualizado_em, item_criado_em, item_atualizado_em.
-- Medidas (para agregação): pedido_subtotal, desconto_total, pedido_valor_total, quantidade, preco_unitario, item_desconto, item_subtotal.
-- Contagens úteis: COUNT(*), COUNT(DISTINCT pedido_id), COUNT(DISTINCT item_id).
+## comercial.vendas_vw (padrão de Vendas)
+- Dimensões (para agrupar/filtrar): data_pedido, servico_nome, categoria_servico_nome, canal_venda_nome, canal_distribuicao_nome, territorio_nome, vendedor_nome, cliente_nome, filial_nome.
+- Medidas (agregação): item_subtotal.
+- Contagens úteis: COUNT(*), COUNT_DISTINCT(pedido_id), COUNT_DISTINCT(cliente_id).
 
-## comercial.vw_metas_detalhe (Meta x Realizado)
-- Dimensões: vendedor, territorio.
-- Medidas: valor_meta (meta), subtotal (realizado). Para contagens use COUNT(DISTINCT cliente_id) e COUNT(DISTINCT pedido_id) quando aplicável (ex.: novos_clientes, pedidos, ticket_medio).
+## comercial.vw_vendas_metas (Meta x Realizado)
+- Dimensões: vendedor_nome, territorio_nome, data_pedido.
+- Medidas de Meta (Goal): meta_faturamento_vendedor, meta_ticket_vendedor, meta_novos_clientes_vendedor, meta_faturamento_territorio, meta_ticket_territorio, meta_novos_clientes_territorio.
+- Medidas Realizadas (Actual): subtotal, ticket_medio, novos_clientes.
 
 - # Convenções de mapeamento
 - Agregadores suportados: SUM, AVG, COUNT, COUNT_DISTINCT, MIN, MAX. Sempre embuta a agregação na própria measure usando parênteses, por exemplo: SUM(item_subtotal), COUNT_DISTINCT(pedido_id) ou expressões como SUM(item_subtotal)/COUNT_DISTINCT(pedido_id). Não use atributo agg.
@@ -64,10 +51,10 @@ const baseSystem = `Você é um workflow de IA chamado "Criador de Dashboard".
 - Bar/Line/Area/Pie: use dimension (ex.: canal_venda_nome, produto_nome, data_pedido) e measure (ex.: SUM(item_subtotal)).
 - Séries combinadas (stacked/grouped/pivot): dimension1, dimension2 e uma medida (field/measure) com agregação inferida no backend.
 - Time series: use data_pedido como dimension.
-- Sempre referencie schema "vendas" e table "vw_pedidos_completo" em dataSource (exceto metas).
+- Sempre referencie schema "comercial" e table "vendas_vw" em dataSource (exceto metas, que usam "comercial"."vw_vendas_metas").
 
 # Edge cases (importante)
-- Evite usar pedido_valor_total em uma view por item para somatórios; prefira item_subtotal (cada linha representa um item, logo pedido_valor_total se repetirá por item e inflará SUM).
+- Prefira item_subtotal para somatórios na view comercial.vendas_vw (cada linha representa um item ou agrupamento por item).
 - COUNT_DISTINCT: use exatamente COUNT_DISTINCT (em maiúsculas) para contagens de cardinalidade (o SQL gerado usa COUNT(DISTINCT ...)).
 - Ticket Médio (KPI): é uma razão (SUM(item_subtotal)/COUNT_DISTINCT(pedido_id)). Para KPI, use measure como expressão completa. Para comparativos por vendedor/territorio, use comparebar com measureActual como expressão de razão.
 
@@ -129,7 +116,7 @@ const baseSystem = `Você é um workflow de IA chamado "Criador de Dashboard".
 
   4) Meta x Realizado — Faturamento (Compare)
   <widget id="meta_faturamento" type="comparebar" order="2" span-d="1" height="420" title="💼 Meta x Realizado • Faturamento por Vendedor">
-    <datasource schema="comercial" table="vw_metas_detalhe" dimension="vendedor" measureGoal="SUM(valor_meta)" measureActual="SUM(subtotal)" limit="20" />
+    <datasource schema="comercial" table="vw_vendas_metas" dimension="vendedor_nome" measureGoal="meta_faturamento_vendedor" measureActual="subtotal" limit="20" />
     <styling tw="group:grouped layout:horizontal legend:on mb:40" />
   </widget>
 
