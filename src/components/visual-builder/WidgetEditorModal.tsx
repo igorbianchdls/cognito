@@ -131,8 +131,12 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
         if (t === 'comparebar') return ((widget as unknown as { compareBarConfig?: { margin?: { left?: number } } }).compareBarConfig?.margin?.left);
         return undefined;
       };
-      const colorsArr = getColors() || [];
+      let colorsArr = getColors() || [];
       const marginLeft = getMarginLeft();
+      // For comparebar, ensure at least two colors are visible by default
+      if (t === 'comparebar' && colorsArr.length === 0) {
+        colorsArr = ['#60a5fa', '#10b981'];
+      }
       setStyleData({ colors: colorsArr.join(', '), marginLeft: typeof marginLeft === 'number' ? marginLeft : 40 });
     } catch {
       setStyleData({ colors: '', marginLeft: 40 });
@@ -650,7 +654,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
                 <div className="space-y-2">
                   {(styleData.colors.split(',').map(c => c.trim()).filter(Boolean).length > 0
                     ? styleData.colors.split(',').map(c => c.trim()).filter(Boolean)
-                    : ['#3b82f6']
+                    : (formData.type === 'comparebar' ? ['#60a5fa', '#10b981'] : ['#3b82f6'])
                   ).map((color, idx, arr) => (
                     <div key={`${color}-${idx}`} className="flex items-center gap-2">
                       <input
