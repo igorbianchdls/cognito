@@ -246,7 +246,7 @@ export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas"
     </widget>
   </row>
 
-  <!-- Agregados: Clientes, Filial, Marca -->
+  <!-- Agregados: Clientes e Filial -->
   <row id="agg_4" cols-d="3" cols-t="1" cols-m="1" gap-x="16" gap-y="16">
     <widget id="top_clientes" type="bar" order="1" span-d="1" span-t="1" span-m="1" height="360" title="Top Clientes">
       <datasource schema="comercial" table="vendas_vw" dimension="cliente_nome" measure="SUM(item_subtotal)" />
@@ -254,10 +254,6 @@ export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas"
     </widget>
     <widget id="fat_filial" type="bar" order="2" span-d="1" span-t="1" span-m="1" height="360" title="Faturamento por Filial">
       <datasource schema="comercial" table="vendas_vw" dimension="filial_nome" measure="SUM(item_subtotal)" />
-      <styling tw="legend:off grid:on mb:32" />
-    </widget>
-    <widget id="fat_marca" type="bar" order="3" span-d="1" span-t="1" span-m="1" height="360" title="Faturamento por Marca">
-      <datasource schema="comercial" table="vendas_vw" dimension="marca_nome" measure="SUM(item_subtotal)" />
       <styling tw="legend:off grid:on mb:32" />
     </widget>
   </row>
