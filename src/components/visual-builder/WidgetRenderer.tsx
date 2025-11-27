@@ -918,7 +918,6 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
       } else if (multipleData && multipleData.items.length > 0) {
         widgetContent = (
           <div className="h-full w-full px-0 py-2 relative group">
-            
             <GroupedBarChart
               {...(widget.groupedBarConfig?.styling || {})}
               // Pass margin and legends from JSON config
@@ -930,8 +929,17 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
               data={multipleData.items}
               keys={multipleData.series.map(s => s.key)}
               title={widget.title || 'Chart'}
-              colors={multipleData.series.map(s => s.color)}
-              seriesMetadata={multipleData.series}
+              {
+                // Apply override colors if provided in widget config
+              }
+              colors={(widget.groupedBarConfig?.styling?.colors as string[] | undefined)?.length
+                ? multipleData.series.map((s, i) => (widget.groupedBarConfig?.styling?.colors as string[])[i] || s.color)
+                : multipleData.series.map(s => s.color)
+              }
+              seriesMetadata={(widget.groupedBarConfig?.styling?.colors as string[] | undefined)?.length
+                ? multipleData.series.map((s, i) => ({ ...s, color: (widget.groupedBarConfig?.styling?.colors as string[])[i] || s.color }))
+                : multipleData.series
+              }
               // Container Glass Effect & Modern Styles
               containerBackground={widget.groupedBarConfig?.styling?.containerBackground}
               backgroundGradient={widget.groupedBarConfig?.styling?.backgroundGradient}

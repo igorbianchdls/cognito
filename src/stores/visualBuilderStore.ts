@@ -545,8 +545,8 @@ export const visualBuilderActions = {
               }
               dsl = setAttrOnDatasource(dsl, w.id, dsAttrs)
 
-              // Persist styling colors and margin.left into <config> for basic chart types
-              const updateChartConfig = (key: 'barConfig'|'lineConfig'|'pieConfig'|'areaConfig', colors?: string[], marginLeft?: number) => {
+              // Persist styling colors and margin.left into <config> (supports simple and groupedbar)
+              const updateChartConfig = (key: 'barConfig'|'lineConfig'|'pieConfig'|'areaConfig'|'groupedBarConfig', colors?: string[], marginLeft?: number) => {
                 if ((!colors || colors.length === 0) && (marginLeft === undefined)) return
                 dsl = setConfigOnWidget(dsl, w.id, (cfg) => {
                   const prev = (cfg[key] as Record<string, unknown>) || {}
@@ -591,6 +591,10 @@ export const visualBuilderActions = {
                 const colors = w.areaConfig?.styling?.colors as string[] | undefined
                 const mLeft = (w.areaConfig?.margin as { left?: number } | undefined)?.left
                 updateChartConfig('areaConfig', colors, mLeft)
+              } else if (t === 'groupedbar') {
+                const colors = (w as unknown as { groupedBarConfig?: { styling?: { colors?: string[] }, margin?: { left?: number } } }).groupedBarConfig?.styling?.colors as string[] | undefined
+                const mLeft = (w as unknown as { groupedBarConfig?: { margin?: { left?: number } } }).groupedBarConfig?.margin?.left as number | undefined
+                updateChartConfig('groupedBarConfig', colors, mLeft)
               }
               }
             }

@@ -7,6 +7,7 @@ import type { BarChartConfig } from '@/stores/apps/barChartStore';
 import type { LineChartConfig } from '@/stores/apps/lineChartStore';
 import type { PieChartConfig } from '@/stores/apps/pieChartStore';
 import type { AreaChartConfig } from '@/stores/apps/areaChartStore';
+import type { GroupedBarChartConfig } from '@/stores/apps/groupedBarChartStore';
 
 interface WidgetEditorModalProps {
   widget: Widget | null;
@@ -111,6 +112,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
         if (t === 'line') return widget.lineConfig?.styling?.colors;
         if (t === 'pie') return widget.pieConfig?.styling?.colors;
         if (t === 'area') return widget.areaConfig?.styling?.colors;
+        if (t === 'groupedbar') return widget.groupedBarConfig?.styling?.colors as string[] | undefined;
         return widget.styling?.colors as string[] | undefined;
       };
       const getMarginLeft = (): number | undefined => {
@@ -118,6 +120,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
         if (t === 'line') return (widget.lineConfig as Partial<{ margin?: { left?: number } }> | undefined)?.margin?.left;
         if (t === 'pie') return (widget.pieConfig as Partial<{ margin?: { left?: number } }> | undefined)?.margin?.left;
         if (t === 'area') return (widget.areaConfig as Partial<{ margin?: { left?: number } }> | undefined)?.margin?.left;
+        if (t === 'groupedbar') return (widget.groupedBarConfig?.margin as { left?: number } | undefined)?.left;
         return undefined;
       };
       const colorsArr = getColors() || [];
@@ -253,6 +256,18 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
       return next;
     };
 
+    const applyGroupedBarStyling = (cfg?: Partial<GroupedBarChartConfig>): Partial<GroupedBarChartConfig> => {
+      const next: Partial<GroupedBarChartConfig> = { ...(cfg || {}) };
+      // Ensure styling exists
+      // @ts-expect-error dynamic index
+      next.styling = { ...(cfg?.styling || {}) } as GroupedBarChartConfig['styling'];
+      if (colorsArray.length) (next.styling as GroupedBarChartConfig['styling']).colors = colorsArray;
+      const prevMargin = (cfg?.margin || {}) as NonNullable<GroupedBarChartConfig['margin']>;
+      const base = { top: prevMargin.top ?? 20, right: prevMargin.right ?? 20, bottom: prevMargin.bottom ?? 40, left: prevMargin.left ?? 40 };
+      next.margin = { ...base, left: Number.isFinite(styleData.marginLeft) ? styleData.marginLeft : base.left } as NonNullable<GroupedBarChartConfig['margin']>;
+      return next;
+    };
+
     if (t === 'bar') {
       updatedWidget = { ...updatedWidget, barConfig: applyBarStyling(updatedWidget.barConfig as Partial<BarChartConfig>) };
     } else if (t === 'line') {
@@ -261,6 +276,10 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
       updatedWidget = { ...updatedWidget, pieConfig: applyPieStyling(updatedWidget.pieConfig as Partial<PieChartConfig>) };
     } else if (t === 'area') {
       updatedWidget = { ...updatedWidget, areaConfig: applyAreaStyling(updatedWidget.areaConfig as Partial<AreaChartConfig>) };
+    } else if (t === 'groupedbar') {
+      // Persist groupedbar styling into widget
+      // @ts-expect-error dynamic index
+      updatedWidget = { ...updatedWidget, groupedBarConfig: applyGroupedBarStyling((updatedWidget as any).groupedBarConfig as Partial<GroupedBarChartConfig>) };
     }
 
     onSave(updatedWidget);
