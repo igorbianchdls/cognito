@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { tool } from 'ai'
 import { runQuery } from '@/lib/postgres'
 
-export const analiseTerritorio = tool({
+export const pivotSales = tool({
   description: 'Analisa território com drill-down flexível (dimensão nível 2 e medida) e filtros de período/território',
   inputSchema: z.object({
     data_de: z.string().optional(),

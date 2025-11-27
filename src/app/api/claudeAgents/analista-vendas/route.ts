@@ -1,6 +1,6 @@
 import { anthropic } from '@ai-sdk/anthropic';
 import { convertToModelMessages, streamText, UIMessage } from 'ai';
-import { analiseTerritorio } from '@/tools/vendasAnalyticsTools';
+import { pivotSales } from '@/tools/vendasAnalyticsTools';
 import { getMetas, getDesempenho } from '@/tools/analistaVendasTools';
 
 export const maxDuration = 300;
@@ -15,7 +15,7 @@ Ajudar gestores e equipes de vendas a compreender performance, identificar oport
 
 # Ferramentas Disponíveis
 
-## analiseTerritorio
+## pivotSales
 Analisa a performance de vendas (base comercial.vendas_vw) com drill-down configurável (dimensões de nível 1, 2 e 3) e medida.
 
 Parâmetros:
@@ -54,7 +54,7 @@ Retorna:
 - Forecasting e projeções de vendas
 
 # Como Você Deve Atuar
-- Use a ferramenta analiseTerritorio quando o usuário perguntar sobre territórios, regiões ou performance geográfica
+- Use a ferramenta pivotSales quando o usuário perguntar sobre territórios, regiões ou performance geográfica
 - Se o usuário pedir canais, use nivel2_dim='canal_venda_nome'; vendedores → nivel2_dim='vendedor_nome'; temporal → nivel2_dim='data_pedido' + nivel2_time_grain='month'|'year'
 - Para 3 níveis, combine: ex. Território → Canal → Vendedor (nivel2_dim='canal_venda_nome', nivel3_dim='vendedor_nome')
 - Faça perguntas para entender o contexto antes de dar recomendações
@@ -110,7 +110,7 @@ Responda sempre em português de forma clara e profissional.`
         providerOptions: thinkingBudget ? { anthropic: { thinking: { type: 'enabled', budgetTokens: thinkingBudget } } } : {},
         system: SYSTEM_PROMPT,
         messages: convertToModelMessages(messages),
-        tools: { analiseTerritorio, getMetas, getDesempenho },
+        tools: { pivotSales, getMetas, getDesempenho },
       })
       return result.toUIMessageStreamResponse()
     } catch (err) {

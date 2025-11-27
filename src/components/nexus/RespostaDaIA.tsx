@@ -8368,8 +8368,8 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
           );
         }
 
-        // Vendas Analytics: Análise de Território
-        if (part.type === 'tool-analiseTerritorio') {
+        // Vendas Analytics: Pivot de Vendas
+        if (part.type === 'tool-pivotSales') {
           const tool = part as NexusToolUIPart;
           const open = tool.state === 'output-available' || tool.state === 'output-error';
           return (
