@@ -151,7 +151,9 @@ export async function POST(request: NextRequest) {
       else if (actual) inferredTopic = 'faturamento'
     }
     // Build default WHERE for topics
-    const whereClauseTopic = inferredTopic ? `"tipo_meta" = '${inferredTopic}'` : ''
+    // Only apply tipo_meta filter when the table actually supports it (e.g., vw_metas_detalhe)
+    const applyTopic = !(qTable === 'vw_vendas_metas')
+    const whereClauseTopic = applyTopic && inferredTopic ? `"tipo_meta" = '${inferredTopic}'` : ''
     const whereClause = [whereClauseTopic, whereClauseUser].filter(Boolean).join(' AND ')
 
     const qualifiedTable = `"${qSchema}"."${qTable}"`

@@ -516,6 +516,7 @@ export class ConfigParser {
       setStr('measureGoal', attrs['measureGoal']);
       setStr('measureActual', attrs['measureActual']);
       setStr('field', attrs['field']);
+      setStr('where', attrs['where']);
       setStr('topic', attrs['topic']);
       setStr('meta', attrs['meta']);
       setNum('limit', attrs['limit']);
