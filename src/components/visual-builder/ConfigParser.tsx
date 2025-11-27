@@ -275,6 +275,7 @@ export interface Widget {
       groupMode?: 'grouped' | 'stacked';
       layout?: 'vertical' | 'horizontal';
     };
+    margin?: { top?: number; right?: number; bottom?: number; left?: number };
   };
   insightsConfig?: InsightsConfig;
   // New: Insights hero (Swiper carousel variant)
