@@ -591,27 +591,13 @@ export default function VendasDashboardPage() {
             />
           </div>
 
-          {/* Row 6: Faturamento por Filial, Vendas por Business Unit e Faturamento por Sales Office */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          {/* Row 6: Faturamento por Filial */}
+          <div className="grid grid-cols-1 lg:grid-cols-1 gap-6 mb-6">
             <BarChartHorizontalRecharts
               items={chartFiliais}
               title="Faturamento por Filial"
               icon={<Building2 className="w-5 h-5" />}
               color="#14b8a6"
-              height={360}
-            />
-            <BarChartHorizontalRecharts
-              items={chartUnidadesNegocio}
-              title="Vendas por Business Unit"
-              icon={<Briefcase className="w-5 h-5" />}
-              color="#8b5cf6"
-              height={360}
-            />
-            <BarChartHorizontalRecharts
-              items={chartSalesOffices}
-              title="Faturamento por Sales Office"
-              icon={<Store className="w-5 h-5" />}
-              color="#ec4899"
               height={360}
             />
           </div>
