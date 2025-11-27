@@ -242,6 +242,7 @@ export interface Widget {
     measure?: string;
     measureGoal?: string;
     measureActual?: string;
+    where?: string;
   };
   styling?: {
     colors?: string[];
