@@ -8,6 +8,12 @@ import type { LineChartConfig } from '@/stores/apps/lineChartStore';
 import type { PieChartConfig } from '@/stores/apps/pieChartStore';
 import type { AreaChartConfig } from '@/stores/apps/areaChartStore';
 import type { GroupedBarChartConfig } from '@/stores/apps/groupedBarChartStore';
+// Local minimal type for comparebar config to avoid any
+type CompareBarConfig = {
+  styling?: { colors?: string[]; [k: string]: unknown };
+  margin?: { top?: number; right?: number; bottom?: number; left?: number };
+  legends?: unknown;
+};
 
 interface WidgetEditorModalProps {
   widget: Widget | null;
@@ -113,6 +119,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
         if (t === 'pie') return widget.pieConfig?.styling?.colors;
         if (t === 'area') return widget.areaConfig?.styling?.colors;
         if (t === 'groupedbar') return widget.groupedBarConfig?.styling?.colors as string[] | undefined;
+        if (t === 'comparebar') return (widget.compareBarConfig?.styling as { colors?: string[] } | undefined)?.colors;
         return widget.styling?.colors as string[] | undefined;
       };
       const getMarginLeft = (): number | undefined => {
@@ -121,6 +128,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
         if (t === 'pie') return (widget.pieConfig as Partial<{ margin?: { left?: number } }> | undefined)?.margin?.left;
         if (t === 'area') return (widget.areaConfig as Partial<{ margin?: { left?: number } }> | undefined)?.margin?.left;
         if (t === 'groupedbar') return (widget.groupedBarConfig?.margin as { left?: number } | undefined)?.left;
+        if (t === 'comparebar') return (widget.compareBarConfig?.margin as { left?: number } | undefined)?.left;
         return undefined;
       };
       const colorsArr = getColors() || [];
@@ -267,6 +275,16 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
       return next;
     };
 
+    const applyCompareBarStyling = (cfg?: Partial<CompareBarConfig>): Partial<CompareBarConfig> => {
+      const next: Partial<CompareBarConfig> = { ...(cfg || {}) };
+      next.styling = { ...(cfg?.styling || {}) };
+      if (colorsArray.length) (next.styling as NonNullable<CompareBarConfig['styling']>).colors = colorsArray;
+      const prevMargin = (cfg?.margin || {}) as NonNullable<CompareBarConfig['margin']>;
+      const base = { top: prevMargin.top ?? 20, right: prevMargin.right ?? 20, bottom: prevMargin.bottom ?? 40, left: prevMargin.left ?? 40 };
+      next.margin = { ...base, left: Number.isFinite(styleData.marginLeft) ? styleData.marginLeft : base.left } as NonNullable<CompareBarConfig['margin']>;
+      return next;
+    };
+
     if (t === 'bar') {
       updatedWidget = { ...updatedWidget, barConfig: applyBarStyling(updatedWidget.barConfig as Partial<BarChartConfig>) };
     } else if (t === 'line') {
@@ -278,6 +296,9 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
     } else if (t === 'groupedbar') {
       // Persist groupedbar styling into widget
       updatedWidget = { ...updatedWidget, groupedBarConfig: applyGroupedBarStyling(updatedWidget.groupedBarConfig as Partial<GroupedBarChartConfig>) };
+    } else if (t === 'comparebar') {
+      // Persist comparebar styling into widget
+      updatedWidget = { ...updatedWidget, compareBarConfig: applyCompareBarStyling(updatedWidget.compareBarConfig as Partial<CompareBarConfig>) };
     }
 
     onSave(updatedWidget);
@@ -619,7 +640,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
           )}
 
         {/* Style Section */}
-        {tab === 'estilo' && (isSimpleChart(formData.type) || isKpi(formData.type) || isMultiSeries(formData.type)) && (
+        {tab === 'estilo' && (isSimpleChart(formData.type) || isKpi(formData.type) || isMultiSeries(formData.type) || isCompare(formData.type)) && (
           <div className="pt-1">
             <h3 className="text-sm font-semibold text-gray-900 mb-3">Estilo</h3>
             <div className="grid grid-cols-2 gap-4">

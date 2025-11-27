@@ -1274,8 +1274,13 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
       }
       if (multipleData && multipleData.items.length > 0) {
         const keys = multipleData.series.map(s => s.key)
-        const colors = multipleData.series.map(s => s.color)
-        const seriesMetadata = multipleData.series
+        const colorOverrides = (widget.compareBarConfig?.styling?.colors as string[] | undefined)
+        const colors = (colorOverrides && colorOverrides.length)
+          ? keys.map((_, i) => colorOverrides[i] || multipleData.series[i]?.color)
+          : multipleData.series.map(s => s.color)
+        const seriesMetadata = (colorOverrides && colorOverrides.length)
+          ? multipleData.series.map((s, i) => ({ ...s, color: colorOverrides[i] || s.color }))
+          : multipleData.series
         const groupMode = widget.compareBarConfig?.styling?.groupMode || 'grouped'
         const layout = widget.compareBarConfig?.styling?.layout || 'vertical'
         widgetContent = (
