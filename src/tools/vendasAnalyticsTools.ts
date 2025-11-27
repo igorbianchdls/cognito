@@ -12,74 +12,59 @@ export const analiseTerritorio = tool({
       'territorio_nome',
       'vendedor_nome',
       'canal_venda_nome',
-      'produto_nome',
+      'canal_distribuicao_nome',
+      'servico_nome',
+      'categoria_servico_nome',
       'cliente_nome',
-      'campanha_venda_nome',
-      'cupom_codigo',
-      'centro_lucro_nome',
       'filial_nome',
-      'unidade_negocio_nome',
-      'sales_office_nome',
       'data_pedido',
     ] as const).default('territorio_nome').optional(),
     nivel1_time_grain: z.enum(['month', 'year']).optional(),
     nivel2_dim: z.enum([
       'vendedor_nome',
       'canal_venda_nome',
-      'produto_nome',
+      'canal_distribuicao_nome',
+      'servico_nome',
+      'categoria_servico_nome',
       'cliente_nome',
-      'campanha_venda_nome',
-      'cupom_codigo',
-      'centro_lucro_nome',
       'filial_nome',
-      'unidade_negocio_nome',
-      'sales_office_nome',
       'data_pedido',
     ] as const).default('vendedor_nome').optional(),
     nivel2_time_grain: z.enum(['month', 'year']).optional(),
     nivel3_dim: z.enum([
       'vendedor_nome',
       'canal_venda_nome',
-      'produto_nome',
+      'canal_distribuicao_nome',
+      'servico_nome',
+      'categoria_servico_nome',
       'cliente_nome',
-      'campanha_venda_nome',
-      'cupom_codigo',
-      'centro_lucro_nome',
       'filial_nome',
-      'unidade_negocio_nome',
-      'sales_office_nome',
       'data_pedido',
     ] as const).optional(),
     nivel3_time_grain: z.enum(['month', 'year']).optional(),
     nivel4_dim: z.enum([
       'vendedor_nome',
       'canal_venda_nome',
-      'produto_nome',
+      'canal_distribuicao_nome',
+      'servico_nome',
+      'categoria_servico_nome',
       'cliente_nome',
-      'campanha_venda_nome',
-      'cupom_codigo',
-      'centro_lucro_nome',
       'filial_nome',
-      'unidade_negocio_nome',
-      'sales_office_nome',
       'data_pedido',
     ] as const).optional(),
     nivel4_time_grain: z.enum(['month', 'year']).optional(),
     nivel5_dim: z.enum([
       'vendedor_nome',
       'canal_venda_nome',
-      'produto_nome',
+      'canal_distribuicao_nome',
+      'servico_nome',
+      'categoria_servico_nome',
       'cliente_nome',
-      'campanha_venda_nome',
-      'cupom_codigo',
-      'centro_lucro_nome',
       'filial_nome',
-      'unidade_negocio_nome',
-      'sales_office_nome',
       'data_pedido',
     ] as const).optional(),
     nivel5_time_grain: z.enum(['month', 'year']).optional(),
-    measure: z.enum(['faturamento', 'quantidade', 'pedidos', 'itens']).default('faturamento').optional(),
+    measure: z.enum(['faturamento', 'pedidos', 'clientes', 'ticket_medio']).default('faturamento').optional(),
   }),
   execute: async ({ data_de, data_ate, territorio_nome, nivel1_dim = 'territorio_nome', nivel1_time_grain, nivel2_dim = 'vendedor_nome', nivel2_time_grain, nivel3_dim, nivel3_time_grain, nivel4_dim, nivel4_time_grain, nivel5_dim, nivel5_time_grain, measure = 'faturamento' }) => {
     try {
@@ -122,14 +107,14 @@ export const analiseTerritorio = tool({
       // Medida (expressão agregada), com cast para numeric para unificar tipo
       let measureExpr = ''
       switch (measure) {
-        case 'quantidade':
-          measureExpr = 'SUM(quantidade)::numeric'
-          break
         case 'pedidos':
           measureExpr = 'COUNT(DISTINCT pedido_id)::numeric'
           break
-        case 'itens':
-          measureExpr = 'COUNT(item_id)::numeric'
+        case 'clientes':
+          measureExpr = 'COUNT(DISTINCT cliente_id)::numeric'
+          break
+        case 'ticket_medio':
+          measureExpr = 'COALESCE(SUM(item_subtotal),0)::numeric / NULLIF(COUNT(DISTINCT pedido_id), 0)'
           break
         case 'faturamento':
         default:
@@ -157,7 +142,7 @@ export const analiseTerritorio = tool({
           ${nivelSQL} AS nivel,
           ${selectDims},
           ${measureExpr} AS valor
-        FROM vendas.vw_pedidos_completo
+        FROM comercial.vendas_vw
         ${whereClause}
         GROUP BY GROUPING SETS (${groupingSets})
         ORDER BY nome, detalhe1_nome, detalhe2_nome, detalhe3_nome, detalhe4_nome, nivel, valor DESC

@@ -16,7 +16,7 @@ Ajudar gestores e equipes de vendas a compreender performance, identificar oport
 # Ferramentas Disponíveis
 
 ## analiseTerritorio
-Analisa a performance de vendas com drill-down configurável (dimensões de nível 1, 2 e 3) e medida.
+Analisa a performance de vendas (base comercial.vendas_vw) com drill-down configurável (dimensões de nível 1, 2 e 3) e medida.
 
 Parâmetros:
 - data_de (opcional): Data inicial YYYY-MM-DD
@@ -24,11 +24,11 @@ Parâmetros:
 - territorio_nome (opcional): Nome exato do território para filtrar
 - nivel1_dim (opcional, default 'territorio_nome'): definir dimensão de nível 1 (mesma whitelist abaixo)
 - nivel1_time_grain (opcional, quando nivel1_dim='data_pedido'): 'month' | 'year' (default 'month')
-- nivel2_dim (opcional, default 'vendedor_nome'): vendedor_nome | canal_venda_nome | produto_nome | cliente_nome | campanha_venda_nome | cupom_codigo | centro_lucro_nome | filial_nome | unidade_negocio_nome | sales_office_nome | data_pedido
+- nivel2_dim (opcional, default 'vendedor_nome'): vendedor_nome | canal_venda_nome | canal_distribuicao_nome | servico_nome | categoria_servico_nome | cliente_nome | filial_nome | data_pedido
 - nivel2_time_grain (opcional, quando nivel2_dim='data_pedido'): 'month' | 'year' (default 'month')
 - nivel3_dim (opcional): mesma whitelist do nivel2_dim (não repetir o nivel2_dim)
 - nivel3_time_grain (opcional, quando nivel3_dim='data_pedido'): 'month' | 'year' (default 'month')
-- measure (opcional, default 'faturamento'): 'faturamento' | 'quantidade' | 'pedidos' | 'itens'
+- measure (opcional, default 'faturamento'): 'faturamento' | 'pedidos' | 'clientes' | 'ticket_medio'
 
 Retorna:
 - summary: linhas com { nivel, nome (dimensão 1), detalhe1_nome (dimensão 2), detalhe2_nome (dimensão 3), valor }
