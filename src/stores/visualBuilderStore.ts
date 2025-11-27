@@ -140,27 +140,27 @@ const compactWidgetHeaders = (code: string): string => {
 export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas" subtitle="Análise de desempenho comercial" layout-mode="grid-per-row">
   <!-- KPIs (6 em uma linha) - Foco: Novembro/2025 via filtros globais -->
   <row id="kpis" cols-d="6" cols-t="3" cols-m="2" gap-x="12" gap-y="12">
-    <widget id="kpi_meta" type="kpi" order="1" span-d="1" span-t="1" span-m="1" height="120" title="Meta de Vendas">
+    <widget id="kpi_meta" type="kpi" order="1" span-d="1" span-t="1" span-m="1" height="150" title="Meta de Vendas">
       <datasource schema="comercial" table="vw_vendas_metas" measure="SUM(meta_faturamento_territorio)" />
       <styling tw="kpi:viz:card kpi:unit:R$" />
     </widget>
-    <widget id="kpi_vendas" type="kpi" order="2" span-d="1" span-t="1" span-m="1" height="120" title="Vendas">
+    <widget id="kpi_vendas" type="kpi" order="2" span-d="1" span-t="1" span-m="1" height="150" title="Vendas">
       <datasource schema="comercial" table="vendas_vw" measure="SUM(item_subtotal)" />
       <styling tw="kpi:viz:card kpi:unit:R$" />
     </widget>
-    <widget id="kpi_percent_meta" type="kpi" order="3" span-d="1" span-t="1" span-m="1" height="120" title="% da Meta">
+    <widget id="kpi_percent_meta" type="kpi" order="3" span-d="1" span-t="1" span-m="1" height="150" title="% da Meta">
       <datasource schema="comercial" table="vw_vendas_metas" measure="(SUM(subtotal)/NULLIF(SUM(meta_faturamento_territorio),0))*100" />
       <styling tw="kpi:viz:card" />
     </widget>
-    <widget id="kpi_ticket_medio" type="kpi" order="4" span-d="1" span-t="1" span-m="1" height="120" title="Ticket Médio">
+    <widget id="kpi_ticket_medio" type="kpi" order="4" span-d="1" span-t="1" span-m="1" height="150" title="Ticket Médio">
       <datasource schema="comercial" table="vendas_vw" measure="SUM(item_subtotal)/COUNT_DISTINCT(pedido_id)" />
       <styling tw="kpi:viz:card kpi:unit:R$" />
     </widget>
-    <widget id="kpi_pedidos" type="kpi" order="5" span-d="1" span-t="1" span-m="1" height="120" title="Pedidos">
+    <widget id="kpi_pedidos" type="kpi" order="5" span-d="1" span-t="1" span-m="1" height="150" title="Pedidos">
       <datasource schema="comercial" table="vendas_vw" measure="COUNT_DISTINCT(pedido_id)" />
       <styling tw="kpi:viz:card" />
     </widget>
-    <widget id="kpi_clientes" type="kpi" order="6" span-d="1" span-t="1" span-m="1" height="120" title="Clientes">
+    <widget id="kpi_clientes" type="kpi" order="6" span-d="1" span-t="1" span-m="1" height="150" title="Clientes">
       <datasource schema="comercial" table="vendas_vw" measure="COUNT_DISTINCT(cliente_id)" />
       <styling tw="kpi:viz:card" />
     </widget>
