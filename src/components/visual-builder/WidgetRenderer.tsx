@@ -929,7 +929,6 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
               data={multipleData.items}
               keys={multipleData.series.map(s => s.key)}
               title={widget.title || 'Chart'}
-              {/* Apply override colors if provided in widget config */}
               colors={(widget.groupedBarConfig?.styling?.colors as string[] | undefined)?.length
                 ? multipleData.series.map((s, i) => (widget.groupedBarConfig?.styling?.colors as string[])[i] || s.color)
                 : multipleData.series.map(s => s.color)
