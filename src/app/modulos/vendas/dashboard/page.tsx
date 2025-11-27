@@ -549,8 +549,8 @@ export default function VendasDashboardPage() {
 
           {/* (removido) row antiga de meta por vendedor — agora agrupado acima */}
 
-          {/* Row 3: Top Clientes, Vendas por Cidade, Vendas por Centro de Lucro */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          {/* Row 3: Top Clientes */}
+          <div className="grid grid-cols-1 lg:grid-cols-1 gap-6 mb-6">
             <BarChartHorizontalRecharts
               items={topClientesItems}
               title="Top Clientes"
@@ -558,33 +558,12 @@ export default function VendasDashboardPage() {
               color="#3b82f6"
               height={360}
             />
-            <BarChartHorizontalRecharts
-              items={vendasPorCidadeItems}
-              title="Vendas por Cidade"
-              icon={<MapPin className="w-5 h-5" />}
-              color="#8b5cf6"
-              height={360}
-            />
-            <BarChartHorizontalRecharts
-              items={chartCentroLucro}
-              title="Vendas por Centro de Lucro"
-              icon={<Tag className="w-5 h-5" />}
-              color="#22c55e"
-              height={360}
-            />
           </div>
 
           {/* Row 4: removido (devoluções e vendas por cupom) */}
 
-          {/* Row 5: Vendas por Campanha de Vendas e por Canal de Distribuição */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <BarChartHorizontalRecharts
-              items={chartCampanhasVendas}
-              title="Vendas por Campanha de Vendas"
-              icon={<Globe className="w-5 h-5" />}
-              color="#a855f7"
-              height={360}
-            />
+          {/* Row 5: Faturamento por Canal de Distribuição */}
+          <div className="grid grid-cols-1 lg:grid-cols-1 gap-6 mb-6">
             <BarChartHorizontalRecharts
               items={chartCanaisDistribuicao}
               title="Faturamento por Canal de Distribuição"
