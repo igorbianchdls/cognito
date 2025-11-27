@@ -138,136 +138,127 @@ const compactWidgetHeaders = (code: string): string => {
 
 // New DSL initial code (HTML-like)
 export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas" subtitle="Análise de desempenho comercial" layout-mode="grid-per-row">
-  <row id="1" cols-d="4" cols-t="2" cols-m="1" gap-x="16" gap-y="16">
-    <widget id="faturamento_total" type="kpi" order="1" span-d="1" span-t="1" span-m="1" height="150" title="💰 Faturamento Total">
-      <datasource schema="vendas" table="vw_pedidos_completo" measure="SUM(item_subtotal)" />
-      <styling tw="kpi:unit:R$ kpi:viz:card" />
+  <!-- KPIs (6 em uma linha) - Foco: Novembro/2025 via filtros globais -->
+  <row id="kpis" cols-d="6" cols-t="3" cols-m="2" gap-x="12" gap-y="12">
+    <widget id="kpi_meta" type="kpi" order="1" span-d="1" span-t="1" span-m="1" height="120" title="Meta de Vendas">
+      <datasource schema="comercial" table="vw_vendas_metas" measure="SUM(meta_faturamento_territorio)" />
+      <styling tw="kpi:viz:card kpi:unit:R$" />
     </widget>
-    <widget id="total_pedidos" type="kpi" order="2" span-d="1" span-t="1" span-m="1" height="150" title="📦 Total de Itens">
-      <datasource schema="vendas" table="vw_pedidos_completo" measure="COUNT(item_id)" />
+    <widget id="kpi_vendas" type="kpi" order="2" span-d="1" span-t="1" span-m="1" height="120" title="Vendas">
+      <datasource schema="comercial" table="vendas_vw" measure="SUM(item_subtotal)" />
+      <styling tw="kpi:viz:card kpi:unit:R$" />
+    </widget>
+    <widget id="kpi_percent_meta" type="kpi" order="3" span-d="1" span-t="1" span-m="1" height="120" title="% da Meta">
+      <datasource schema="comercial" table="vw_vendas_metas" measure="(SUM(subtotal)/NULLIF(SUM(meta_faturamento_territorio),0))*100" />
       <styling tw="kpi:viz:card" />
     </widget>
-    <widget id="ticket_medio" type="kpi" order="3" span-d="1" span-t="1" span-m="1" height="150" title="🎯 Ticket Médio">
-      <datasource schema="vendas" table="vw_pedidos_completo" measure="SUM(item_subtotal)/COUNT_DISTINCT(pedido_id)" />
-      <styling tw="kpi:unit:R$ kpi:viz:card" />
+    <widget id="kpi_ticket_medio" type="kpi" order="4" span-d="1" span-t="1" span-m="1" height="120" title="Ticket Médio">
+      <datasource schema="comercial" table="vendas_vw" measure="SUM(item_subtotal)/COUNT_DISTINCT(pedido_id)" />
+      <styling tw="kpi:viz:card kpi:unit:R$" />
     </widget>
-    <widget id="itens_vendidos" type="kpi" order="4" span-d="1" span-t="1" span-m="1" height="150" title="📊 Itens Vendidos">
-      <datasource schema="vendas" table="vw_pedidos_completo" measure="SUM(quantidade)" />
+    <widget id="kpi_cogs" type="kpi" order="5" span-d="1" span-t="1" span-m="1" height="120" title="COGS">
+      <datasource schema="comercial" table="vendas_vw" measure="SUM(item_custo)" />
+      <styling tw="kpi:viz:card kpi:unit:R$" />
+    </widget>
+    <widget id="kpi_margem" type="kpi" order="6" span-d="1" span-t="1" span-m="1" height="120" title="Margem Bruta %">
+      <datasource schema="comercial" table="vendas_vw" measure="((SUM(item_subtotal)-SUM(item_custo))/NULLIF(SUM(item_subtotal),0))*100" />
       <styling tw="kpi:viz:card" />
     </widget>
   </row>
 
-  <row id="4" cols-d="2" cols-t="2" cols-m="1" gap-x="16" gap-y="16">
-    <widget id="vendas_centro_lucro" type="bar" order="1" span-d="1" span-t="1" span-m="1" height="420" title="💼 Vendas por Centro de Lucro">
-      <datasource schema="vendas" table="vw_pedidos_completo" dimension="centro_lucro_nome" measure="SUM(item_subtotal)" />
-      <styling tw="legend:off grid:on mb:40 bar:color:#8b5cf6" />
+  <!-- Meta x Realizado • Vendedor -->
+  <row id="mxr_vendedor" cols-d="3" cols-t="1" cols-m="1" gap-x="16" gap-y="16">
+    <widget id="mxr_vend_fat" type="comparebar" order="1" span-d="1" span-t="1" span-m="1" height="360" title="💰 Meta x Faturamento por Vendedor">
+      <datasource schema="comercial" table="vw_vendas_metas" dimension="vendedor_nome" measureGoal="MAX(meta_faturamento_vendedor)" measureActual="SUM(subtotal)" />
+      <styling tw="group:grouped layout:horizontal legend:on mb:32" />
     </widget>
-    <widget id="vendas_campanha" type="bar" order="2" span-d="1" span-t="1" span-m="1" height="420" title="🎯 Vendas por Campanha">
-      <datasource schema="vendas" table="vw_pedidos_completo" dimension="campanha_venda_nome" measure="SUM(item_subtotal)" />
-      <styling tw="legend:off grid:on mb:40 bar:color:#ec4899" />
+    <widget id="mxr_vend_ticket" type="comparebar" order="2" span-d="1" span-t="1" span-m="1" height="360" title="🎯 Meta x Ticket Médio por Vendedor">
+      <datasource schema="comercial" table="vw_vendas_metas" dimension="vendedor_nome" measureGoal="MAX(meta_ticket_vendedor)" measureActual="SUM(subtotal)/COUNT_DISTINCT(pedido_id)" />
+      <styling tw="group:grouped layout:horizontal legend:on mb:32" />
     </widget>
-  </row>
-
-  <row id="2" cols-d="3" cols-t="1" cols-m="1" gap-x="16" gap-y="16">
-    <widget id="faturamento_mensal" type="line" order="1" span-d="1" span-t="1" span-m="1" height="420" title="📈 Faturamento Mensal">
-      <datasource schema="vendas" table="vw_pedidos_completo" dimension="data_pedido" measure="SUM(item_subtotal)" />
-      <styling tw="legend:off grid:on mb:40" />
-    </widget>
-    <widget id="top_produtos" type="bar" order="2" span-d="1" span-t="1" span-m="1" height="420" title="🏆 Top 10 Produtos">
-      <datasource schema="vendas" table="vw_pedidos_completo" dimension="produto_nome" measure="SUM(item_subtotal)" />
-      <styling tw="legend:off grid:on mb:40 bar:color:#3b82f6" />
-    </widget>
-    <widget id="vendas_canal" type="pie" order="3" span-d="1" span-t="1" span-m="1" height="420" title="📱 Vendas por Canal">
-      <datasource schema="vendas" table="vw_pedidos_completo" dimension="canal_venda_nome" measure="SUM(item_subtotal)" />
-      <styling tw="legend:on grid:off mb:40" />
+    <widget id="mxr_vend_novos" type="comparebar" order="3" span-d="1" span-t="1" span-m="1" height="360" title="👥 Meta x Novos Clientes por Vendedor">
+      <datasource schema="comercial" table="vw_vendas_metas" dimension="vendedor_nome" measureGoal="MAX(meta_novos_clientes_vendedor)" measureActual="COUNT_DISTINCT(cliente_id)" topic="novos_clientes" />
+      <styling tw="group:grouped layout:horizontal legend:on mb:32" />
     </widget>
   </row>
 
-  <row id="3" cols-d="2" cols-t="2" cols-m="1" gap-x="16" gap-y="16">
-    <widget id="vendas_vendedor" type="bar" order="1" span-d="1" span-t="1" span-m="1" height="420" title="👤 Vendas por Vendedor">
-      <datasource schema="vendas" table="vw_pedidos_completo" dimension="vendedor_nome" measure="SUM(item_subtotal)" />
+  <!-- Meta x Realizado • Território -->
+  <row id="mxr_territorio" cols-d="3" cols-t="1" cols-m="1" gap-x="16" gap-y="16">
+    <widget id="mxr_terr_fat" type="comparebar" order="1" span-d="1" span-t="1" span-m="1" height="360" title="💰 Meta x Faturamento por Território">
+      <datasource schema="comercial" table="vw_vendas_metas" dimension="territorio_nome" measureGoal="MAX(meta_faturamento_territorio)" measureActual="SUM(subtotal)" />
+      <styling tw="group:grouped layout:horizontal legend:on mb:32" />
     </widget>
-    <widget id="vendas_filial" type="bar" order="2" span-d="1" span-t="1" span-m="1" height="420" title="🏢 Vendas por Filial">
-      <datasource schema="vendas" table="vw_pedidos_completo" dimension="filial_nome" measure="SUM(item_subtotal)" />
+    <widget id="mxr_terr_ticket" type="comparebar" order="2" span-d="1" span-t="1" span-m="1" height="360" title="🎯 Meta x Ticket Médio por Território">
+      <datasource schema="comercial" table="vw_vendas_metas" dimension="territorio_nome" measureGoal="MAX(meta_ticket_territorio)" measureActual="SUM(subtotal)/COUNT_DISTINCT(pedido_id)" />
+      <styling tw="group:grouped layout:horizontal legend:on mb:32" />
     </widget>
-  </row>
-
-  <row id="5" cols-d="2" cols-t="2" cols-m="1" gap-x="16" gap-y="16">
-    <widget id="vendedores_por_territorio" type="stackedbar" order="1" span-d="1" span-t="1" span-m="1" height="420" title="🏆 Top 5 Vendedores por Território">
-      <datasource schema="vendas" table="vw_pedidos_completo" dimension1="territorio_nome" dimension2="vendedor_nome" measure="SUM(item_subtotal)" limit="5" />
-      <styling tw="layout:vertical gridx:off gridy:on mb:40" />
-    </widget>
-    <widget id="vendedores_por_territorio_horizontal" type="stackedbar" order="2" span-d="1" span-t="1" span-m="1" height="420" title="🏆 Top 5 Vendedores por Território (Horizontal)">
-      <datasource schema="vendas" table="vw_pedidos_completo" dimension1="territorio_nome" dimension2="vendedor_nome" measure="SUM(item_subtotal)" limit="5" />
-      <styling tw="layout:horizontal gridx:on gridy:off mb:50" />
+    <widget id="mxr_terr_novos" type="comparebar" order="3" span-d="1" span-t="1" span-m="1" height="360" title="👥 Meta x Novos Clientes por Território">
+      <datasource schema="comercial" table="vw_vendas_metas" dimension="territorio_nome" measureGoal="MAX(meta_novos_clientes_territorio)" measureActual="COUNT_DISTINCT(cliente_id)" topic="novos_clientes" />
+      <styling tw="group:grouped layout:horizontal legend:on mb:32" />
     </widget>
   </row>
 
-  <row id="6" cols-d="2" cols-t="2" cols-m="1" gap-x="16" gap-y="16">
-    <widget id="comparativo_territorio_vendedor_grouped" type="groupedbar" order="1" span-d="1" span-t="1" span-m="1" height="420" title="📊 Comparativo Vendedores por Território (Grouped)">
-      <datasource schema="vendas" table="vw_pedidos_completo" dimension1="territorio_nome" dimension2="vendedor_nome" measure="SUM(item_subtotal)" limit="5" />
-      <styling tw="layout:vertical gridx:off gridy:on mb:40" />
+  <!-- Agregados: Serviços e Categorias (3 por linha) -->
+  <row id="agg_1" cols-d="3" cols-t="1" cols-m="1" gap-x="16" gap-y="16">
+    <widget id="vendas_servico" type="bar" order="1" span-d="1" span-t="1" span-m="1" height="360" title="Vendas por Serviço">
+      <datasource schema="comercial" table="vendas_vw" dimension="servico_nome" measure="SUM(item_subtotal)" />
+      <styling tw="legend:off grid:on mb:32" />
     </widget>
-    <widget id="comparativo_territorio_vendedor_grouped_horizontal" type="groupedbar" order="2" span-d="1" span-t="1" span-m="1" height="420" title="📊 Comparativo Vendedores por Território (Grouped • Horizontal)">
-      <datasource schema="vendas" table="vw_pedidos_completo" dimension1="territorio_nome" dimension2="vendedor_nome" measure="SUM(item_subtotal)" limit="5" />
-      <styling tw="layout:horizontal gridx:on gridy:off mb:50" />
+    <widget id="fat_categoria" type="bar" order="2" span-d="1" span-t="1" span-m="1" height="360" title="Faturamento por Categoria de Serviço">
+      <datasource schema="comercial" table="vendas_vw" dimension="categoria_servico_nome" measure="SUM(item_subtotal)" />
+      <styling tw="legend:off grid:on mb:32" />
     </widget>
-  </row>
-
-  <row id="7" cols-d="2" cols-t="2" cols-m="1" gap-x="16" gap-y="16">
-    <widget id="evolucao_empilhado_sem_area" type="stackedlines" order="1" span-d="2" span-t="2" span-m="1" height="420" title="📈 Evolução (Empilhado) por Vendedor • Sem Área">
-      <datasource schema="vendas" table="vw_pedidos_completo" dimension1="territorio_nome" dimension2="vendedor_nome" measure="SUM(item_subtotal)" limit="5" />
-      <styling tw="area:off gridx:off gridy:on mb:40" />
+    <widget id="ticket_categoria" type="bar" order="3" span-d="1" span-t="1" span-m="1" height="360" title="Ticket Médio por Categoria de Serviço">
+      <datasource schema="comercial" table="vendas_vw" dimension="categoria_servico_nome" measure="SUM(item_subtotal)/COUNT_DISTINCT(pedido_id)" />
+      <styling tw="legend:off grid:on mb:32" />
     </widget>
   </row>
 
-  <row id="8" cols-d="2" cols-t="2" cols-m="1" gap-x="16" gap-y="16">
-    <widget id="radial_stacked_canais" type="radialstacked" order="1" span-d="1" span-t="1" span-m="1" height="420" title="🧭 Distribuição de Vendas por Canal (Radial Stacked)">
-      <datasource schema="vendas" table="vw_pedidos_completo" dimension1="territorio_nome" dimension2="canal_venda_nome" measure="SUM(item_subtotal)" limit="2" />
-      <styling tw="radial:start:180 radial:end:0 radial:inner:80 radial:outer:130 radial:corner:5" />
+  <!-- Agregados: Categorias e Canais -->
+  <row id="agg_2" cols-d="3" cols-t="1" cols-m="1" gap-x="16" gap-y="16">
+    <widget id="pedidos_categoria" type="bar" order="1" span-d="1" span-t="1" span-m="1" height="360" title="Pedidos por Categoria de Serviço">
+      <datasource schema="comercial" table="vendas_vw" dimension="categoria_servico_nome" measure="COUNT_DISTINCT(pedido_id)" />
+      <styling tw="legend:off grid:on mb:32" />
     </widget>
-    <widget id="pivot_vendedor_canal" type="pivotbar" order="2" span-d="1" span-t="1" span-m="1" height="420" title="Vendedor x Canal • Faturamento">
-      <datasource schema="vendas" table="vw_pedidos_completo" dimension1="vendedor_nome" dimension2="canal_venda_nome" measure="SUM(item_subtotal)" limit="8" />
-      <styling tw="layout:vertical group:grouped gridx:off gridy:on border:variant:smooth border:width:1" />
+    <widget id="vendas_canal" type="bar" order="2" span-d="1" span-t="1" span-m="1" height="360" title="Vendas por Canal">
+      <datasource schema="comercial" table="vendas_vw" dimension="canal_venda_nome" measure="SUM(item_subtotal)" />
+      <styling tw="legend:off grid:on mb:32" />
     </widget>
-  </row>
-
-  <row id="9" cols-d="2" cols-t="2" cols-m="1" gap-x="16" gap-y="16">
-    <widget id="insights_card_2" type="insights2" order="1" span-d="1" span-t="1" span-m="1" height="320" title="Insights">
-      <styling tw="compact:on radius:8" />
-      <items title="Insights">
-        <item id="i1" variant="risk" label="Supply Risk" link-text="Ethiopia Yirgacheffe" tail="may run out in less than 3 days" />
-        <item id="i2" variant="slow" label="Slow Stock" link-text="Costa Rican Tarrazú" tail="sitting unsold in inventory" />
-        <item id="i3" variant="info" label="Revenue Uplift" link-text="Mobile cohort 20–22h" tail="continues to outperform" />
-        <item id="i4" variant="custom" label="UX Impact" link-text="Homepage update" tail="bounce rate –12%" />
-        <item id="i5" variant="info" label="Conversion" link-text="Paid campaigns" tail="+8% WoW" />
-      </items>
-    </widget>
-    <widget id="insights_card_3" type="insights2" order="2" span-d="1" span-t="1" span-m="1" height="320" title="Insights Extras">
-      <styling tw="compact:on radius:8" />
-      <items title="Insights Extras">
-        <item id="e1" variant="info" label="Top Seller" link-text="Alice Silva" tail="R$ 180k este mês" />
-        <item id="e2" variant="risk" label="Meta Atrasada" link-text="Território Sul" tail="62% concluído" />
-        <item id="e3" variant="slow" label="Campanha Fraca" link-text="Outono" tail="CTR 0,9%" />
-      </items>
+    <widget id="fat_canal_distrib" type="bar" order="3" span-d="1" span-t="1" span-m="1" height="360" title="Faturamento por Canal de Distribuição">
+      <datasource schema="comercial" table="vendas_vw" dimension="canal_distribuicao_nome" measure="SUM(item_subtotal)" />
+      <styling tw="legend:off grid:on mb:32" />
     </widget>
   </row>
 
-  <!-- Exemplo: Meta x Realizado (Novos Clientes) por Vendedor -->
-  <row id="10" cols-d="3" cols-t="1" cols-m="1" gap-x="16" gap-y="16">
-    <widget id="meta_novos_clientes" type="comparebar" order="1" span-d="1" span-t="1" span-m="1" height="420" title="👥 Meta x Realizado • Novos Clientes por Vendedor">
-      <datasource schema="comercial" table="vw_metas_detalhe" dimension="vendedor" measureGoal="valor_meta" measureActual="novos_clientes" limit="20" />
-      <styling tw="group:grouped layout:horizontal legend:on mb:40" />
+  <!-- Agregados: Canais de Distribuição e Territórios -->
+  <row id="agg_3" cols-d="3" cols-t="1" cols-m="1" gap-x="16" gap-y="16">
+    <widget id="ticket_canal_distrib" type="bar" order="1" span-d="1" span-t="1" span-m="1" height="360" title="Ticket Médio por Canal de Distribuição">
+      <datasource schema="comercial" table="vendas_vw" dimension="canal_distribuicao_nome" measure="SUM(item_subtotal)/COUNT_DISTINCT(pedido_id)" />
+      <styling tw="legend:off grid:on mb:32" />
     </widget>
-
-    <widget id="meta_faturamento" type="comparebar" order="2" span-d="1" span-t="1" span-m="1" height="420" title="💰 Meta x Realizado • Faturamento por Vendedor">
-      <datasource schema="comercial" table="vw_metas_detalhe" dimension="vendedor" measureGoal="valor_meta" measureActual="subtotal" limit="20" />
-      <styling tw="group:grouped layout:horizontal legend:on mb:40" />
+    <widget id="pedidos_canal_distrib" type="bar" order="2" span-d="1" span-t="1" span-m="1" height="360" title="Pedidos por Canal de Distribuição">
+      <datasource schema="comercial" table="vendas_vw" dimension="canal_distribuicao_nome" measure="COUNT_DISTINCT(pedido_id)" />
+      <styling tw="legend:off grid:on mb:32" />
     </widget>
+    <widget id="vendas_territorio" type="bar" order="3" span-d="1" span-t="1" span-m="1" height="360" title="Vendas por Território">
+      <datasource schema="comercial" table="vendas_vw" dimension="territorio_nome" measure="SUM(item_subtotal)" />
+      <styling tw="legend:off grid:on mb:32" />
+    </widget>
+  </row>
 
-    <widget id="meta_ticket_medio" type="comparebar" order="3" span-d="1" span-t="1" span-m="1" height="420" title="🎯 Meta x Realizado • Ticket Médio por Vendedor">
-      <datasource schema="comercial" table="vw_metas_detalhe" dimension="vendedor" measureGoal="valor_meta" measureActual="ticket_medio" limit="20" />
-      <styling tw="group:grouped layout:horizontal legend:on mb:40" />
+  <!-- Agregados: Clientes, Filial, Marca -->
+  <row id="agg_4" cols-d="3" cols-t="1" cols-m="1" gap-x="16" gap-y="16">
+    <widget id="top_clientes" type="bar" order="1" span-d="1" span-t="1" span-m="1" height="360" title="Top Clientes">
+      <datasource schema="comercial" table="vendas_vw" dimension="cliente_nome" measure="SUM(item_subtotal)" />
+      <styling tw="legend:off grid:on mb:32" />
+    </widget>
+    <widget id="fat_filial" type="bar" order="2" span-d="1" span-t="1" span-m="1" height="360" title="Faturamento por Filial">
+      <datasource schema="comercial" table="vendas_vw" dimension="filial_nome" measure="SUM(item_subtotal)" />
+      <styling tw="legend:off grid:on mb:32" />
+    </widget>
+    <widget id="fat_marca" type="bar" order="3" span-d="1" span-t="1" span-m="1" height="360" title="Faturamento por Marca">
+      <datasource schema="comercial" table="vendas_vw" dimension="marca_nome" measure="SUM(item_subtotal)" />
+      <styling tw="legend:off grid:on mb:32" />
     </widget>
   </row>
 </dashboard>`
@@ -327,7 +318,9 @@ const initialState: VisualBuilderState = {
   dashboardSubtitle: initialParseResult.dashboardSubtitle,
   globalFilters: {
     dateRange: {
-      type: 'last_30_days'
+      type: 'custom',
+      startDate: '2025-11-01',
+      endDate: '2025-11-30'
     }
   },
   reloadTicks: {}
