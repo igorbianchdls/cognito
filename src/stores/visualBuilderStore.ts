@@ -156,12 +156,12 @@ export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas"
       <datasource schema="comercial" table="vendas_vw" measure="SUM(item_subtotal)/COUNT_DISTINCT(pedido_id)" />
       <styling tw="kpi:viz:card kpi:unit:R$" />
     </widget>
-    <widget id="kpi_cogs" type="kpi" order="5" span-d="1" span-t="1" span-m="1" height="120" title="COGS">
-      <datasource schema="comercial" table="vendas_vw" measure="SUM(item_custo)" />
-      <styling tw="kpi:viz:card kpi:unit:R$" />
+    <widget id="kpi_pedidos" type="kpi" order="5" span-d="1" span-t="1" span-m="1" height="120" title="Pedidos">
+      <datasource schema="comercial" table="vendas_vw" measure="COUNT_DISTINCT(pedido_id)" />
+      <styling tw="kpi:viz:card" />
     </widget>
-    <widget id="kpi_margem" type="kpi" order="6" span-d="1" span-t="1" span-m="1" height="120" title="Margem Bruta %">
-      <datasource schema="comercial" table="vendas_vw" measure="((SUM(item_subtotal)-SUM(item_custo))/NULLIF(SUM(item_subtotal),0))*100" />
+    <widget id="kpi_clientes" type="kpi" order="6" span-d="1" span-t="1" span-m="1" height="120" title="Clientes">
+      <datasource schema="comercial" table="vendas_vw" measure="COUNT_DISTINCT(cliente_id)" />
       <styling tw="kpi:viz:card" />
     </widget>
   </row>
