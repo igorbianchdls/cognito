@@ -138,7 +138,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
     const full = table ? (schema ? `${schema}.${table}` : table) : '';
     if (!full) return DEFAULT_KNOWN_KEY;
     return KNOWN_TABLE_KEYS.includes(full) ? full : CUSTOM_VALUE;
-  }, [formData.dataSource.schema, formData.dataSource.table, KNOWN_TABLE_KEYS]);
+  }, [formData.dataSource.schema, formData.dataSource.table]);
 
   const isCustomTable = selectedTableValue === CUSTOM_VALUE;
 
@@ -148,7 +148,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
     const full = table ? (schema ? `${schema}.${table}` : table) : '';
     const key = full && KNOWN_TABLE_KEYS.includes(full) ? full : DEFAULT_KNOWN_KEY;
     return KNOWN_TABLES[key];
-  }, [formData.dataSource.schema, formData.dataSource.table, KNOWN_TABLES, KNOWN_TABLE_KEYS]);
+  }, [formData.dataSource.schema, formData.dataSource.table]);
 
   // Helpers by type
   const isSimpleChart = (t: string) => ['bar', 'line', 'pie', 'area'].includes(t);
@@ -278,8 +278,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
       updatedWidget = { ...updatedWidget, areaConfig: applyAreaStyling(updatedWidget.areaConfig as Partial<AreaChartConfig>) };
     } else if (t === 'groupedbar') {
       // Persist groupedbar styling into widget
-      // @ts-expect-error dynamic index
-      updatedWidget = { ...updatedWidget, groupedBarConfig: applyGroupedBarStyling((updatedWidget as any).groupedBarConfig as Partial<GroupedBarChartConfig>) };
+      updatedWidget = { ...updatedWidget, groupedBarConfig: applyGroupedBarStyling(updatedWidget.groupedBarConfig as Partial<GroupedBarChartConfig>) };
     }
 
     onSave(updatedWidget);
