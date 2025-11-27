@@ -259,7 +259,6 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
     const applyGroupedBarStyling = (cfg?: Partial<GroupedBarChartConfig>): Partial<GroupedBarChartConfig> => {
       const next: Partial<GroupedBarChartConfig> = { ...(cfg || {}) };
       // Ensure styling exists
-      // @ts-expect-error dynamic index
       next.styling = { ...(cfg?.styling || {}) } as GroupedBarChartConfig['styling'];
       if (colorsArray.length) (next.styling as GroupedBarChartConfig['styling']).colors = colorsArray;
       const prevMargin = (cfg?.margin || {}) as NonNullable<GroupedBarChartConfig['margin']>;
