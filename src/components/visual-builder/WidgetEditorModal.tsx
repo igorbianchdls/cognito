@@ -128,7 +128,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
         if (t === 'pie') return (widget.pieConfig as Partial<{ margin?: { left?: number } }> | undefined)?.margin?.left;
         if (t === 'area') return (widget.areaConfig as Partial<{ margin?: { left?: number } }> | undefined)?.margin?.left;
         if (t === 'groupedbar') return (widget.groupedBarConfig?.margin as { left?: number } | undefined)?.left;
-        if (t === 'comparebar') return (widget.compareBarConfig?.margin as { left?: number } | undefined)?.left;
+        if (t === 'comparebar') return ((widget as unknown as { compareBarConfig?: { margin?: { left?: number } } }).compareBarConfig?.margin?.left);
         return undefined;
       };
       const colorsArr = getColors() || [];
@@ -298,7 +298,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
       updatedWidget = { ...updatedWidget, groupedBarConfig: applyGroupedBarStyling(updatedWidget.groupedBarConfig as Partial<GroupedBarChartConfig>) };
     } else if (t === 'comparebar') {
       // Persist comparebar styling into widget
-      updatedWidget = { ...updatedWidget, compareBarConfig: applyCompareBarStyling(updatedWidget.compareBarConfig as Partial<CompareBarConfig>) };
+      updatedWidget = { ...updatedWidget, compareBarConfig: applyCompareBarStyling(updatedWidget.compareBarConfig as Partial<CompareBarConfig>) as unknown as Widget['compareBarConfig'] };
     }
 
     onSave(updatedWidget);
