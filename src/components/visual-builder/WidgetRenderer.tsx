@@ -1297,7 +1297,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
                 // Style
                 gridColor={widget.compareBarConfig?.styling?.gridColor}
                 backgroundColor={widget.compareBarConfig?.styling?.backgroundColor}
-                marginBottom={widget.compareBarConfig?.styling?.marginBottom}
+                margin={widget.compareBarConfig?.margin as { top?: number; right?: number; bottom?: number; left?: number }}
               />
             ) : (
               <GroupedBarChart
@@ -1310,7 +1310,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
                 // Style
                 gridColor={widget.compareBarConfig?.styling?.gridColor}
                 backgroundColor={widget.compareBarConfig?.styling?.backgroundColor}
-                marginBottom={widget.compareBarConfig?.styling?.marginBottom}
+                margin={widget.compareBarConfig?.margin as { top?: number; right?: number; bottom?: number; left?: number }}
               />
             )}
           </div>

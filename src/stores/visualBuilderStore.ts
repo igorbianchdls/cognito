@@ -546,8 +546,8 @@ export const visualBuilderActions = {
               dsl = setAttrOnDatasource(dsl, w.id, dsAttrs)
 
               // Persist styling colors and margin.left into <config> (supports simple and groupedbar)
-              const updateChartConfig = (key: 'barConfig'|'lineConfig'|'pieConfig'|'areaConfig'|'groupedBarConfig'|'compareBarConfig', colors?: string[], marginLeft?: number) => {
-                if ((!colors || colors.length === 0) && (marginLeft === undefined)) return
+              const updateChartConfig = (key: 'barConfig'|'lineConfig'|'pieConfig'|'areaConfig'|'groupedBarConfig'|'compareBarConfig'|'stackedBarConfig', colors?: string[], marginLeft?: number, marginTop?: number, marginBottom?: number) => {
+                if ((!colors || colors.length === 0) && (marginLeft === undefined) && (marginTop === undefined) && (marginBottom === undefined)) return
                 dsl = setConfigOnWidget(dsl, w.id, (cfg) => {
                   const prev = (cfg[key] as Record<string, unknown>) || {}
                   const prevStyling = (prev['styling'] as Record<string, unknown>) || {}
@@ -562,6 +562,8 @@ export const visualBuilderActions = {
                   const nextMargin = {
                     ...baseMargin,
                     ...(typeof marginLeft === 'number' ? { left: marginLeft } : {}),
+                    ...(typeof marginTop === 'number' ? { top: marginTop } : {}),
+                    ...(typeof marginBottom === 'number' ? { bottom: marginBottom } : {}),
                   }
                   return {
                     ...cfg,
@@ -577,28 +579,29 @@ export const visualBuilderActions = {
               // Read colors and margin from widget object (already updated by modal)
               if (t === 'bar') {
                 const colors = w.barConfig?.styling?.colors as string[] | undefined
-                const mLeft = w.barConfig?.margin?.left as number | undefined
-                updateChartConfig('barConfig', colors, mLeft)
+                const m = w.barConfig?.margin as { left?: number; top?: number; bottom?: number } | undefined
+                updateChartConfig('barConfig', colors, m?.left, m?.top, m?.bottom)
               } else if (t === 'line') {
                 const colors = w.lineConfig?.styling?.colors as string[] | undefined
-                const mLeft = (w.lineConfig?.margin as { left?: number } | undefined)?.left
-                updateChartConfig('lineConfig', colors, mLeft)
+                const m = w.lineConfig?.margin as { left?: number; top?: number; bottom?: number } | undefined
+                updateChartConfig('lineConfig', colors, m?.left, m?.top, m?.bottom)
               } else if (t === 'pie') {
                 const colors = w.pieConfig?.styling?.colors as string[] | undefined
-                const mLeft = (w.pieConfig?.margin as { left?: number } | undefined)?.left
-                updateChartConfig('pieConfig', colors, mLeft)
+                const m = w.pieConfig?.margin as { left?: number; top?: number; bottom?: number } | undefined
+                updateChartConfig('pieConfig', colors, m?.left, m?.top, m?.bottom)
               } else if (t === 'area') {
                 const colors = w.areaConfig?.styling?.colors as string[] | undefined
-                const mLeft = (w.areaConfig?.margin as { left?: number } | undefined)?.left
-                updateChartConfig('areaConfig', colors, mLeft)
+                const m = w.areaConfig?.margin as { left?: number; top?: number; bottom?: number } | undefined
+                updateChartConfig('areaConfig', colors, m?.left, m?.top, m?.bottom)
               } else if (t === 'groupedbar') {
-                const colors = (w as unknown as { groupedBarConfig?: { styling?: { colors?: string[] }, margin?: { left?: number } } }).groupedBarConfig?.styling?.colors as string[] | undefined
-                const mLeft = (w as unknown as { groupedBarConfig?: { margin?: { left?: number } } }).groupedBarConfig?.margin?.left as number | undefined
-                updateChartConfig('groupedBarConfig', colors, mLeft)
+                const g = (w as unknown as { groupedBarConfig?: { styling?: { colors?: string[] }, margin?: { left?: number; top?: number; bottom?: number } } }).groupedBarConfig
+                updateChartConfig('groupedBarConfig', g?.styling?.colors as string[] | undefined, g?.margin?.left, g?.margin?.top, g?.margin?.bottom)
+              } else if (t === 'stackedbar') {
+                const s = (w as unknown as { stackedBarConfig?: { styling?: { colors?: string[] }, margin?: { left?: number; top?: number; bottom?: number } } }).stackedBarConfig
+                updateChartConfig('stackedBarConfig', s?.styling?.colors as string[] | undefined, s?.margin?.left, s?.margin?.top, s?.margin?.bottom)
               } else if (t === 'comparebar') {
-                const colors = (w as unknown as { compareBarConfig?: { styling?: { colors?: string[] }, margin?: { left?: number } } }).compareBarConfig?.styling?.colors as string[] | undefined
-                const mLeft = (w as unknown as { compareBarConfig?: { margin?: { left?: number } } }).compareBarConfig?.margin?.left as number | undefined
-                updateChartConfig('compareBarConfig', colors, mLeft)
+                const c = (w as unknown as { compareBarConfig?: { styling?: { colors?: string[] }, margin?: { left?: number; top?: number; bottom?: number } } }).compareBarConfig
+                updateChartConfig('compareBarConfig', c?.styling?.colors as string[] | undefined, c?.margin?.left, c?.margin?.top, c?.margin?.bottom)
               }
               }
             }

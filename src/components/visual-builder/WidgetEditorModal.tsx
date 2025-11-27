@@ -8,6 +8,7 @@ import type { LineChartConfig } from '@/stores/apps/lineChartStore';
 import type { PieChartConfig } from '@/stores/apps/pieChartStore';
 import type { AreaChartConfig } from '@/stores/apps/areaChartStore';
 import type { GroupedBarChartConfig } from '@/stores/apps/groupedBarChartStore';
+import type { StackedBarChartConfig } from '@/stores/apps/stackedBarChartStore';
 // Local minimal type for comparebar config to avoid any
 type CompareBarConfig = {
   styling?: { colors?: string[]; [k: string]: unknown };
@@ -105,7 +106,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
   });
 
   // Simple styling controls for charts (colors and left margin)
-  const [styleData, setStyleData] = useState<{ colors: string; marginLeft: number }>({ colors: '', marginLeft: 40 });
+  const [styleData, setStyleData] = useState<{ colors: string; marginLeft: number; marginTop: number; marginBottom: number }>({ colors: '', marginLeft: 40, marginTop: 20, marginBottom: 40 });
 
   // Initialize styling controls on widget or type change
   useEffect(() => {
@@ -119,6 +120,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
         if (t === 'pie') return widget.pieConfig?.styling?.colors;
         if (t === 'area') return widget.areaConfig?.styling?.colors;
         if (t === 'groupedbar') return widget.groupedBarConfig?.styling?.colors as string[] | undefined;
+        if (t === 'stackedbar') return widget.stackedBarConfig?.styling?.colors as string[] | undefined;
         if (t === 'comparebar') return (widget.compareBarConfig?.styling as { colors?: string[] } | undefined)?.colors;
         return widget.styling?.colors as string[] | undefined;
       };
@@ -128,18 +130,47 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
         if (t === 'pie') return (widget.pieConfig as Partial<{ margin?: { left?: number } }> | undefined)?.margin?.left;
         if (t === 'area') return (widget.areaConfig as Partial<{ margin?: { left?: number } }> | undefined)?.margin?.left;
         if (t === 'groupedbar') return (widget.groupedBarConfig?.margin as { left?: number } | undefined)?.left;
+        if (t === 'stackedbar') return (widget.stackedBarConfig?.margin as { left?: number } | undefined)?.left;
         if (t === 'comparebar') return ((widget as unknown as { compareBarConfig?: { margin?: { left?: number } } }).compareBarConfig?.margin?.left);
         return undefined;
       };
+      const getMarginTop = (): number | undefined => {
+        if (t === 'bar') return widget.barConfig?.margin?.top;
+        if (t === 'line') return (widget.lineConfig as Partial<{ margin?: { top?: number } }> | undefined)?.margin?.top;
+        if (t === 'pie') return (widget.pieConfig as Partial<{ margin?: { top?: number } }> | undefined)?.margin?.top;
+        if (t === 'area') return (widget.areaConfig as Partial<{ margin?: { top?: number } }> | undefined)?.margin?.top;
+        if (t === 'groupedbar') return (widget.groupedBarConfig?.margin as { top?: number } | undefined)?.top;
+        if (t === 'stackedbar') return (widget.stackedBarConfig?.margin as { top?: number } | undefined)?.top;
+        if (t === 'comparebar') return ((widget as unknown as { compareBarConfig?: { margin?: { top?: number } } }).compareBarConfig?.margin?.top);
+        return undefined;
+      };
+      const getMarginBottom = (): number | undefined => {
+        if (t === 'bar') return widget.barConfig?.margin?.bottom;
+        if (t === 'line') return (widget.lineConfig as Partial<{ margin?: { bottom?: number } }> | undefined)?.margin?.bottom;
+        if (t === 'pie') return (widget.pieConfig as Partial<{ margin?: { bottom?: number } }> | undefined)?.margin?.bottom;
+        if (t === 'area') return (widget.areaConfig as Partial<{ margin?: { bottom?: number } }> | undefined)?.margin?.bottom;
+        if (t === 'groupedbar') return (widget.groupedBarConfig?.margin as { bottom?: number } | undefined)?.bottom;
+        if (t === 'stackedbar') return (widget.stackedBarConfig?.margin as { bottom?: number } | undefined)?.bottom;
+        if (t === 'comparebar') return ((widget as unknown as { compareBarConfig?: { margin?: { bottom?: number } } }).compareBarConfig?.margin?.bottom);
+        return undefined;
+      };
+
       let colorsArr = getColors() || [];
       const marginLeft = getMarginLeft();
+      const marginTop = getMarginTop();
+      const marginBottom = getMarginBottom();
       // For comparebar, ensure at least two colors are visible by default
       if (t === 'comparebar' && colorsArr.length === 0) {
         colorsArr = ['#60a5fa', '#10b981'];
       }
-      setStyleData({ colors: colorsArr.join(', '), marginLeft: typeof marginLeft === 'number' ? marginLeft : 40 });
+      setStyleData({
+        colors: colorsArr.join(', '),
+        marginLeft: typeof marginLeft === 'number' ? marginLeft : 40,
+        marginTop: typeof marginTop === 'number' ? marginTop : 20,
+        marginBottom: typeof marginBottom === 'number' ? marginBottom : 40,
+      });
     } catch {
-      setStyleData({ colors: '', marginLeft: 40 });
+      setStyleData({ colors: '', marginLeft: 40, marginTop: 20, marginBottom: 40 });
     }
   }, [widget]);
 
@@ -240,7 +271,12 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
       next.styling = { ...(cfg?.styling || {}) } as BarChartConfig['styling'];
       if (colorsArray.length) (next.styling as BarChartConfig['styling']).colors = colorsArray;
       const base = (cfg?.margin || { top: 20, right: 20, bottom: 40, left: 40 }) as NonNullable<BarChartConfig['margin']>;
-      next.margin = { ...base, left: Number.isFinite(styleData.marginLeft) ? styleData.marginLeft : base.left };
+      next.margin = {
+        ...base,
+        left: Number.isFinite(styleData.marginLeft) ? styleData.marginLeft : base.left,
+        top: Number.isFinite(styleData.marginTop) ? styleData.marginTop : base.top,
+        bottom: Number.isFinite(styleData.marginBottom) ? styleData.marginBottom : base.bottom,
+      };
       return next;
     };
     const applyLineStyling = (cfg?: Partial<LineChartConfig>): Partial<LineChartConfig> => {
@@ -248,7 +284,12 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
       next.styling = { ...(cfg?.styling || {}) } as LineChartConfig['styling'];
       if (colorsArray.length) (next.styling as LineChartConfig['styling']).colors = colorsArray;
       const base = (cfg?.margin || { top: 20, right: 20, bottom: 40, left: 40 }) as NonNullable<LineChartConfig['margin']>;
-      next.margin = { ...base, left: Number.isFinite(styleData.marginLeft) ? styleData.marginLeft : base.left } as NonNullable<LineChartConfig['margin']>;
+      next.margin = {
+        ...base,
+        left: Number.isFinite(styleData.marginLeft) ? styleData.marginLeft : base.left,
+        top: Number.isFinite(styleData.marginTop) ? styleData.marginTop : base.top,
+        bottom: Number.isFinite(styleData.marginBottom) ? styleData.marginBottom : base.bottom,
+      } as NonNullable<LineChartConfig['margin']>;
       return next;
     };
     const applyPieStyling = (cfg?: Partial<PieChartConfig>): Partial<PieChartConfig> => {
@@ -256,7 +297,12 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
       next.styling = { ...(cfg?.styling || {}) } as PieChartConfig['styling'];
       if (colorsArray.length) (next.styling as PieChartConfig['styling']).colors = colorsArray;
       const base = (cfg?.margin || { top: 20, right: 20, bottom: 40, left: 40 }) as NonNullable<PieChartConfig['margin']>;
-      next.margin = { ...base, left: Number.isFinite(styleData.marginLeft) ? styleData.marginLeft : base.left } as NonNullable<PieChartConfig['margin']>;
+      next.margin = {
+        ...base,
+        left: Number.isFinite(styleData.marginLeft) ? styleData.marginLeft : base.left,
+        top: Number.isFinite(styleData.marginTop) ? styleData.marginTop : base.top,
+        bottom: Number.isFinite(styleData.marginBottom) ? styleData.marginBottom : base.bottom,
+      } as NonNullable<PieChartConfig['margin']>;
       return next;
     };
     const applyAreaStyling = (cfg?: Partial<AreaChartConfig>): Partial<AreaChartConfig> => {
@@ -264,7 +310,12 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
       next.styling = { ...(cfg?.styling || {}) } as AreaChartConfig['styling'];
       if (colorsArray.length) (next.styling as AreaChartConfig['styling']).colors = colorsArray;
       const base = (cfg?.margin || { top: 20, right: 20, bottom: 40, left: 40 }) as NonNullable<AreaChartConfig['margin']>;
-      next.margin = { ...base, left: Number.isFinite(styleData.marginLeft) ? styleData.marginLeft : base.left } as NonNullable<AreaChartConfig['margin']>;
+      next.margin = {
+        ...base,
+        left: Number.isFinite(styleData.marginLeft) ? styleData.marginLeft : base.left,
+        top: Number.isFinite(styleData.marginTop) ? styleData.marginTop : base.top,
+        bottom: Number.isFinite(styleData.marginBottom) ? styleData.marginBottom : base.bottom,
+      } as NonNullable<AreaChartConfig['margin']>;
       return next;
     };
 
@@ -275,7 +326,28 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
       if (colorsArray.length) (next.styling as GroupedBarChartConfig['styling']).colors = colorsArray;
       const prevMargin = (cfg?.margin || {}) as NonNullable<GroupedBarChartConfig['margin']>;
       const base = { top: prevMargin.top ?? 20, right: prevMargin.right ?? 20, bottom: prevMargin.bottom ?? 40, left: prevMargin.left ?? 40 };
-      next.margin = { ...base, left: Number.isFinite(styleData.marginLeft) ? styleData.marginLeft : base.left } as NonNullable<GroupedBarChartConfig['margin']>;
+      next.margin = {
+        ...base,
+        left: Number.isFinite(styleData.marginLeft) ? styleData.marginLeft : base.left,
+        top: Number.isFinite(styleData.marginTop) ? styleData.marginTop : base.top,
+        bottom: Number.isFinite(styleData.marginBottom) ? styleData.marginBottom : base.bottom,
+      } as NonNullable<GroupedBarChartConfig['margin']>;
+      return next;
+    };
+
+    const applyStackedBarStyling = (cfg?: Partial<StackedBarChartConfig>): Partial<StackedBarChartConfig> => {
+      const next: Partial<StackedBarChartConfig> = { ...(cfg || {}) };
+      // Ensure styling exists
+      next.styling = { ...(cfg?.styling || {}) } as StackedBarChartConfig['styling'];
+      if (colorsArray.length) (next.styling as StackedBarChartConfig['styling']).colors = colorsArray;
+      const prevMargin = (cfg?.margin || {}) as NonNullable<StackedBarChartConfig['margin']>;
+      const base = { top: prevMargin.top ?? 20, right: prevMargin.right ?? 20, bottom: prevMargin.bottom ?? 40, left: prevMargin.left ?? 40 };
+      next.margin = {
+        ...base,
+        left: Number.isFinite(styleData.marginLeft) ? styleData.marginLeft : base.left,
+        top: Number.isFinite(styleData.marginTop) ? styleData.marginTop : base.top,
+        bottom: Number.isFinite(styleData.marginBottom) ? styleData.marginBottom : base.bottom,
+      } as NonNullable<StackedBarChartConfig['margin']>;
       return next;
     };
 
@@ -285,7 +357,12 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
       if (colorsArray.length) (next.styling as NonNullable<CompareBarConfig['styling']>).colors = colorsArray;
       const prevMargin = (cfg?.margin || {}) as NonNullable<CompareBarConfig['margin']>;
       const base = { top: prevMargin.top ?? 20, right: prevMargin.right ?? 20, bottom: prevMargin.bottom ?? 40, left: prevMargin.left ?? 40 };
-      next.margin = { ...base, left: Number.isFinite(styleData.marginLeft) ? styleData.marginLeft : base.left } as NonNullable<CompareBarConfig['margin']>;
+      next.margin = {
+        ...base,
+        left: Number.isFinite(styleData.marginLeft) ? styleData.marginLeft : base.left,
+        top: Number.isFinite(styleData.marginTop) ? styleData.marginTop : base.top,
+        bottom: Number.isFinite(styleData.marginBottom) ? styleData.marginBottom : base.bottom,
+      } as NonNullable<CompareBarConfig['margin']>;
       return next;
     };
 
@@ -300,6 +377,9 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
     } else if (t === 'groupedbar') {
       // Persist groupedbar styling into widget
       updatedWidget = { ...updatedWidget, groupedBarConfig: applyGroupedBarStyling(updatedWidget.groupedBarConfig as Partial<GroupedBarChartConfig>) };
+    } else if (t === 'stackedbar') {
+      // Persist stackedbar styling into widget
+      updatedWidget = { ...updatedWidget, stackedBarConfig: applyStackedBarStyling(updatedWidget.stackedBarConfig as Partial<StackedBarChartConfig>) };
     } else if (t === 'comparebar') {
       // Persist comparebar styling into widget
       updatedWidget = { ...updatedWidget, compareBarConfig: applyCompareBarStyling(updatedWidget.compareBarConfig as Partial<CompareBarConfig>) as unknown as Widget['compareBarConfig'] };
@@ -726,10 +806,30 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
                   type="number"
                   min={0}
                   value={styleData.marginLeft}
-                  onChange={(e) => setStyleData({ ...styleData, marginLeft: parseInt(e.target.value || '0') || 0 })}
+                  onChange={(e) => setStyleData({ ...styleData, marginLeft: Number.parseInt(e.target.value || '0') || 0 })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 <p className="text-xs text-gray-500 mt-1">Espaço para eixo Y/labels do gráfico.</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Margin Top (px)</label>
+                <input
+                  type="number"
+                  min={0}
+                  value={styleData.marginTop}
+                  onChange={(e) => setStyleData({ ...styleData, marginTop: Number.parseInt(e.target.value || '0') || 0 })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Margin Bottom (px)</label>
+                <input
+                  type="number"
+                  min={0}
+                  value={styleData.marginBottom}
+                  onChange={(e) => setStyleData({ ...styleData, marginBottom: Number.parseInt(e.target.value || '0') || 0 })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
               </div>
             </div>
           </div>
