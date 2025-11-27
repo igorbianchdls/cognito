@@ -99,18 +99,15 @@ export async function GET(req: NextRequest) {
 
     // Charts
     type ChartItem = { label: string; value: number }
-    // Vendedores
-    const vendSql = `SELECT f.nome AS label, COALESCE(SUM(pi.quantidade * pi.preco_unitario),0)::float AS value
-                     FROM comercial.vendedores v
-                     LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id
-                     LEFT JOIN vendas.pedidos p ON p.vendedor_id = v.id
-                     LEFT JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
-                     ${pWhere}
-                     GROUP BY f.nome
+    // Vendedores (via view comercial.vw_pedidos_completo, sem filtro de período)
+    const vendSql = `SELECT vendedor_nome AS label,
+                     COALESCE(SUM(item_subtotal),0)::float AS value
+                     FROM comercial.vw_pedidos_completo
+                     GROUP BY vendedor_nome
                      ORDER BY value DESC
-                     LIMIT $${pParams.length + 1}::int`;
+                     LIMIT $1::int`;
     let vendedores: ChartItem[] = []
-    try { vendedores = await runQuery<ChartItem>(vendSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard vendedores error:', e); vendedores = [] }
+    try { vendedores = await runQuery<ChartItem>(vendSql, [limit]) } catch (e) { console.error('🛒 VENDAS dashboard vendedores error:', e); vendedores = [] }
 
     // Produtos (por subtotal do item)
     const prodSql = `SELECT COALESCE(pr.nome,'—') AS label, COALESCE(SUM(pi.subtotal),0)::float AS value
@@ -124,53 +121,45 @@ export async function GET(req: NextRequest) {
     let produtos: ChartItem[] = []
     try { produtos = await runQuery<ChartItem>(prodSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard produtos error:', e); produtos = [] }
 
-    // Serviços (por subtotal do item)
-    const servSql = `SELECT COALESCE(s.nome,'—') AS label, COALESCE(SUM(i.subtotal),0)::float AS value
-                     FROM vendas.pedidos p
-                     JOIN vendas.pedidos_itens i ON i.pedido_id = p.id
-                     LEFT JOIN servicos.catalogo_servicos s ON s.id = i.servico_id
-                     ${pWhere}
-                     GROUP BY 1
-                     ORDER BY 2 DESC
-                     LIMIT $${pParams.length + 1}::int`;
+    // Serviços (via view comercial.vw_pedidos_completo, sem filtro de período)
+    const servSql = `SELECT servico_nome AS label,
+                     COALESCE(SUM(item_subtotal),0)::float AS value
+                     FROM comercial.vw_pedidos_completo
+                     GROUP BY servico_nome
+                     ORDER BY value DESC
+                     LIMIT $1::int`;
     let servicos: ChartItem[] = []
-    try { servicos = await runQuery<ChartItem>(servSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard servicos error:', e); servicos = [] }
+    try { servicos = await runQuery<ChartItem>(servSql, [limit]) } catch (e) { console.error('🛒 VENDAS dashboard servicos error:', e); servicos = [] }
 
-    // Territórios
+    // Territórios (via view comercial.vw_pedidos_completo, sem filtro de período)
     const terrSql = `SELECT territorio_nome AS label,
-                     SUM(item_subtotal)::float AS value
-                     FROM vendas.vw_pedidos_completo
-                     ${pWhere}
+                     COALESCE(SUM(item_subtotal),0)::float AS value
+                     FROM comercial.vw_pedidos_completo
                      GROUP BY territorio_nome
                      ORDER BY value DESC
-                     LIMIT $${pParams.length + 1}::int`;
+                     LIMIT $1::int`;
     let territorios: ChartItem[] = []
-    try { territorios = await runQuery<ChartItem>(terrSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard territorios error:', e); territorios = [] }
+    try { territorios = await runQuery<ChartItem>(terrSql, [limit]) } catch (e) { console.error('🛒 VENDAS dashboard territorios error:', e); territorios = [] }
 
-    // Faturamento por categoria (SUM(quantidade * preco_unitario))
-    const catSql = `SELECT COALESCE(cat.nome,'—') AS label, COALESCE(SUM(pi.quantidade * pi.preco_unitario),0)::float AS value
-                    FROM vendas.pedidos p
-                    JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
-                    LEFT JOIN produtos.produto pr ON pr.id = pi.produto_id
-                    LEFT JOIN produtos.categorias cat ON cat.id = pr.categoria_id
-                    ${pWhere}
-                    GROUP BY 1
-                    ORDER BY 2 DESC
-                    LIMIT $${pParams.length + 1}::int`;
+    // Faturamento por Categoria de Serviço (via view comercial.vw_pedidos_completo, sem filtro de período)
+    const catSql = `SELECT categoria_servico_nome AS label,
+                           COALESCE(SUM(item_subtotal),0)::float AS value
+                    FROM comercial.vw_pedidos_completo
+                    GROUP BY categoria_servico_nome
+                    ORDER BY value DESC
+                    LIMIT $1::int`;
     let categorias: ChartItem[] = []
-    try { categorias = await runQuery<ChartItem>(catSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard categorias error:', e); categorias = [] }
+    try { categorias = await runQuery<ChartItem>(catSql, [limit]) } catch (e) { console.error('🛒 VENDAS dashboard categorias error:', e); categorias = [] }
 
-    // Canais de venda
-    const canaisSql = `SELECT COALESCE(cv.nome,'—') AS label, COALESCE(SUM(pi.subtotal),0)::float AS value
-                       FROM vendas.pedidos p
-                       LEFT JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
-                       LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
-                       ${pWhere}
-                       GROUP BY 1
-                       ORDER BY 2 DESC
-                       LIMIT $${pParams.length + 1}::int`;
+    // Canais de venda (via view comercial.vw_pedidos_completo, sem filtro de período)
+    const canaisSql = `SELECT canal_venda_nome AS label,
+                       COALESCE(SUM(item_subtotal),0)::float AS value
+                       FROM comercial.vw_pedidos_completo
+                       GROUP BY canal_venda_nome
+                       ORDER BY value DESC
+                       LIMIT $1::int`;
     let canais: ChartItem[] = []
-    try { canais = await runQuery<ChartItem>(canaisSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard canais error:', e); canais = [] }
+    try { canais = await runQuery<ChartItem>(canaisSql, [limit]) } catch (e) { console.error('🛒 VENDAS dashboard canais error:', e); canais = [] }
 
     // Top clientes
     const topClientesSql = `SELECT COALESCE(c.nome_fantasia,'—') AS cliente,
@@ -326,8 +315,26 @@ export async function GET(req: NextRequest) {
     let servCatRows: ServCatRow[] = []
     try { servCatRows = await runQuery<ServCatRow>(servCatSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard servicos categorias error:', e); servCatRows = [] }
     const servicosCategoriasFaturamento: ChartItem[] = servCatRows.map(r => ({ label: r.categoria_nome || '—', value: Number(r.faturamento_total || 0) }))
-    const servicosCategoriasTicket: ChartItem[] = servCatRows.map(r => ({ label: r.categoria_nome || '—', value: Number(r.ticket_medio_item || 0) }))
-    const servicosCategoriasPedidos: ChartItem[] = servCatRows.map(r => ({ label: r.categoria_nome || '—', value: Number(r.pedidos_distintos || 0) }))
+
+    // Ticket médio por Categoria de Serviço (via view comercial.vw_pedidos_completo)
+    const servCatTicketViewSql = `SELECT categoria_servico_nome AS label,
+                                         COALESCE(SUM(item_subtotal) / NULLIF(COUNT(DISTINCT pedido_id), 0), 0)::float AS value
+                                  FROM comercial.vw_pedidos_completo
+                                  GROUP BY categoria_servico_nome
+                                  ORDER BY value DESC
+                                  LIMIT $1::int`;
+    let servicosCategoriasTicketView: ChartItem[] = []
+    try { servicosCategoriasTicketView = await runQuery<ChartItem>(servCatTicketViewSql, [limit]) } catch (e) { console.error('🛒 VENDAS dashboard serv_cat_ticket(view) error:', e); servicosCategoriasTicketView = [] }
+
+    // Pedidos por Categoria de Serviço (via view comercial.vw_pedidos_completo)
+    const servCatPedidosViewSql = `SELECT categoria_servico_nome AS label,
+                                          COUNT(DISTINCT pedido_id)::int AS value
+                                   FROM comercial.vw_pedidos_completo
+                                   GROUP BY categoria_servico_nome
+                                   ORDER BY value DESC
+                                   LIMIT $1::int`;
+    let servicosCategoriasPedidosView: ChartItem[] = []
+    try { servicosCategoriasPedidosView = await runQuery<ChartItem>(servCatPedidosViewSql, [limit]) } catch (e) { console.error('🛒 VENDAS dashboard serv_cat_pedidos(view) error:', e); servicosCategoriasPedidosView = [] }
 
     // Meta x Faturamento por Território (Novembro/2025) — via view comercial.vw_vendas_metas
     const metaFatTerrViewSQL = `
@@ -616,8 +623,8 @@ LIMIT $1::int`;
           devolucao_canal: taxaDevolucaoCanal,
           devolucao_cliente: taxaDevolucaoCliente,
           servicos_categorias_faturamento: servicosCategoriasFaturamento,
-          servicos_categorias_ticket: servicosCategoriasTicket,
-          servicos_categorias_pedidos: servicosCategoriasPedidos,
+          servicos_categorias_ticket: servicosCategoriasTicketView,
+          servicos_categorias_pedidos: servicosCategoriasPedidosView,
           meta_territorio: metaTerritorio,
           meta_vendedor: metaVendedor,
           meta_vendedor_vw: metaVendedorVW,
