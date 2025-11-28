@@ -412,6 +412,7 @@ export async function GET(req: NextRequest) {
           ap_mes: Number(apRow?.total ?? 0),
           recebidos_mes: Number(recRow?.total ?? 0),
           pagos_mes: Number(pagoRow?.total ?? 0),
+          geracao_caixa: Number(recRow?.total ?? 0) - Number(pagoRow?.total ?? 0),
         },
         sql_query: {
           a_receber_mes: arSql,
