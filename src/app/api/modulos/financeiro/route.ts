@@ -370,13 +370,12 @@ export async function GET(req: NextRequest) {
       const tenantFilter = tenantId ? ` AND lf.tenant_id = $${idxKpi++}` : '';
       const kpiParams: unknown[] = tenantId ? [...kpiParamsBase, tenantId] : [...kpiParamsBase];
 
-      // A RECEBER NO MÊS (vencimento dentro do período, pendente)
-      // Usa faixa half-open para melhor uso de índices (>= de, < ate+1)
+      // A RECEBER NO MÊS — usar exatamente a query solicitada (DATE() + BETWEEN, tipo/status literais)
       const arSql = `SELECT COALESCE(SUM(lf.valor), 0) AS total
                      FROM financeiro.lancamentos_financeiros lf
-                    WHERE LOWER(lf.tipo) = 'conta_a_receber'
-                      AND LOWER(lf.status) = 'pendente'
-                      AND lf.data_vencimento >= $1 AND lf.data_vencimento < ($2::date + INTERVAL '1 day')${tenantFilter}`.replace(/\s+/g, ' ');
+                    WHERE lf.tipo = 'conta_a_receber'
+                      AND lf.status = 'pendente'
+                      AND DATE(lf.data_vencimento) BETWEEN $1 AND $2${tenantFilter}`.replace(/\s+/g, ' ');
       const [arRow] = await runQuery<{ total: number | null }>(arSql, kpiParams);
 
       // A PAGAR NO MÊS (vencimento dentro do período, pendente)
@@ -387,11 +386,12 @@ export async function GET(req: NextRequest) {
                       AND lf.data_vencimento >= $1 AND lf.data_vencimento < ($2::date + INTERVAL '1 day')${tenantFilter}`.replace(/\s+/g, ' ');
       const [apRow] = await runQuery<{ total: number | null }>(apSql, kpiParams);
 
-      // RECEBIDO NO MÊS (pagamentos recebidos no período)
+      // RECEBIDO NO MÊS — usar exatamente a query solicitada (DATE() + BETWEEN, tipo/status por AR recebido)
       const recSql = `SELECT COALESCE(SUM(lf.valor), 0) AS total
                        FROM financeiro.lancamentos_financeiros lf
-                      WHERE LOWER(lf.tipo) = 'pagamento_recebido'
-                        AND lf.data_lancamento >= $1 AND lf.data_lancamento < ($2::date + INTERVAL '1 day')${tenantFilter}`.replace(/\s+/g, ' ');
+                      WHERE lf.tipo = 'conta_a_receber'
+                        AND lf.status = 'recebido'
+                        AND DATE(lf.data_vencimento) BETWEEN $1 AND $2${tenantFilter}`.replace(/\s+/g, ' ');
       const [recRow] = await runQuery<{ total: number | null }>(recSql, kpiParams);
 
       // PAGO NO MÊS (pagamentos efetuados no período)
