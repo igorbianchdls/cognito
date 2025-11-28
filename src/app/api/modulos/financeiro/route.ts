@@ -379,11 +379,12 @@ export async function GET(req: NextRequest) {
       const [arRow] = await runQuery<{ total: number | null }>(arSql, kpiParams);
 
       // A PAGAR NO MÊS (vencimento dentro do período, pendente)
+      // A PAGAR NO MÊS — usar exatamente a query solicitada (DATE() + BETWEEN, tipo/status literais)
       const apSql = `SELECT COALESCE(SUM(lf.valor), 0) AS total
                      FROM financeiro.lancamentos_financeiros lf
-                    WHERE LOWER(lf.tipo) = 'conta_a_pagar'
-                      AND LOWER(lf.status) = 'pendente'
-                      AND lf.data_vencimento >= $1 AND lf.data_vencimento < ($2::date + INTERVAL '1 day')${tenantFilter}`.replace(/\s+/g, ' ');
+                    WHERE lf.tipo = 'conta_a_pagar'
+                      AND lf.status = 'pendente'
+                      AND DATE(lf.data_vencimento) BETWEEN $1 AND $2${tenantFilter}`.replace(/\s+/g, ' ');
       const [apRow] = await runQuery<{ total: number | null }>(apSql, kpiParams);
 
       // RECEBIDO NO MÊS — usar exatamente a query solicitada (DATE() + BETWEEN, tipo/status por AR recebido)
@@ -394,11 +395,12 @@ export async function GET(req: NextRequest) {
                         AND DATE(lf.data_vencimento) BETWEEN $1 AND $2${tenantFilter}`.replace(/\s+/g, ' ');
       const [recRow] = await runQuery<{ total: number | null }>(recSql, kpiParams);
 
-      // PAGO NO MÊS (pagamentos efetuados no período)
+      // CONTAS PAGAS NO MÊS — usar exatamente a query solicitada (DATE() + BETWEEN, tipo/status literais)
       const pagoSql = `SELECT COALESCE(SUM(lf.valor), 0) AS total
                         FROM financeiro.lancamentos_financeiros lf
-                       WHERE LOWER(lf.tipo) = 'pagamento_efetuado'
-                         AND lf.data_lancamento >= $1 AND lf.data_lancamento < ($2::date + INTERVAL '1 day')${tenantFilter}`.replace(/\s+/g, ' ');
+                       WHERE lf.tipo = 'conta_a_pagar'
+                         AND lf.status = 'pago'
+                         AND DATE(lf.data_vencimento) BETWEEN $1 AND $2${tenantFilter}`.replace(/\s+/g, ' ');
       const [pagoRow] = await runQuery<{ total: number | null }>(pagoSql, kpiParams);
 
       return Response.json({
