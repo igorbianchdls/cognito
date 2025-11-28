@@ -169,15 +169,15 @@ export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas"
   <!-- Meta x Realizado • Vendedor -->
   <row id="mxr_vendedor" cols-d="3" cols-t="1" cols-m="1" gap-x="16" gap-y="16">
     <widget id="mxr_vend_fat" type="comparebar" order="1" span-d="1" span-t="1" span-m="1" height="360" title="💰 Meta x Faturamento por Vendedor">
-      <datasource schema="comercial" table="vw_vendas_metas" dimension="vendedor_nome" measureGoal="meta_faturamento_vendedor" measureActual="subtotal" where="EXTRACT(YEAR FROM data_pedido)=2025 AND EXTRACT(MONTH FROM data_pedido)=11" />
+      <datasource schema="comercial" table="vw_vendas_metas" dimension="vendedor_nome" measureGoal="meta_faturamento_vendedor" measureActual="subtotal" where="EXTRACT(YEAR FROM data_pedido)=2025 AND EXTRACT(MONTH FROM data_pedido)=12" />
       <styling tw="group:grouped layout:horizontal legend:on mb:32" />
     </widget>
     <widget id="mxr_vend_ticket" type="comparebar" order="2" span-d="1" span-t="1" span-m="1" height="360" title="🎯 Meta x Ticket Médio por Vendedor">
-      <datasource schema="comercial" table="vw_vendas_metas" dimension="vendedor_nome" measureGoal="meta_ticket_vendedor" measureActual="ticket_medio" where="EXTRACT(YEAR FROM data_pedido)=2025 AND EXTRACT(MONTH FROM data_pedido)=11" />
+      <datasource schema="comercial" table="vw_vendas_metas" dimension="vendedor_nome" measureGoal="meta_ticket_vendedor" measureActual="ticket_medio" where="EXTRACT(YEAR FROM data_pedido)=2025 AND EXTRACT(MONTH FROM data_pedido)=12" />
       <styling tw="group:grouped layout:horizontal legend:on mb:32" />
     </widget>
     <widget id="mxr_vend_novos" type="comparebar" order="3" span-d="1" span-t="1" span-m="1" height="360" title="👥 Meta x Novos Clientes por Vendedor">
-      <datasource schema="comercial" table="vw_vendas_metas" dimension="vendedor_nome" measureGoal="meta_novos_clientes_vendedor" measureActual="novos_clientes" where="EXTRACT(YEAR FROM data_pedido)=2025 AND EXTRACT(MONTH FROM data_pedido)=11" />
+      <datasource schema="comercial" table="vw_vendas_metas" dimension="vendedor_nome" measureGoal="meta_novos_clientes_vendedor" measureActual="novos_clientes" where="EXTRACT(YEAR FROM data_pedido)=2025 AND EXTRACT(MONTH FROM data_pedido)=12" />
       <styling tw="group:grouped layout:horizontal legend:on mb:32" />
     </widget>
   </row>
@@ -185,15 +185,15 @@ export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas"
   <!-- Meta x Realizado • Território -->
   <row id="mxr_territorio" cols-d="3" cols-t="1" cols-m="1" gap-x="16" gap-y="16">
     <widget id="mxr_terr_fat" type="comparebar" order="1" span-d="1" span-t="1" span-m="1" height="360" title="💰 Meta x Faturamento por Território">
-      <datasource schema="comercial" table="vw_vendas_metas" dimension="territorio_nome" measureGoal="meta_faturamento_territorio" measureActual="subtotal" where="EXTRACT(YEAR FROM data_pedido)=2025 AND EXTRACT(MONTH FROM data_pedido)=11" />
+      <datasource schema="comercial" table="vw_vendas_metas" dimension="territorio_nome" measureGoal="meta_faturamento_territorio" measureActual="subtotal" where="EXTRACT(YEAR FROM data_pedido)=2025 AND EXTRACT(MONTH FROM data_pedido)=12" />
       <styling tw="group:grouped layout:horizontal legend:on mb:32" />
     </widget>
     <widget id="mxr_terr_ticket" type="comparebar" order="2" span-d="1" span-t="1" span-m="1" height="360" title="🎯 Meta x Ticket Médio por Território">
-      <datasource schema="comercial" table="vw_vendas_metas" dimension="territorio_nome" measureGoal="meta_ticket_territorio" measureActual="ticket_medio" where="EXTRACT(YEAR FROM data_pedido)=2025 AND EXTRACT(MONTH FROM data_pedido)=11" />
+      <datasource schema="comercial" table="vw_vendas_metas" dimension="territorio_nome" measureGoal="meta_ticket_territorio" measureActual="ticket_medio" where="EXTRACT(YEAR FROM data_pedido)=2025 AND EXTRACT(MONTH FROM data_pedido)=12" />
       <styling tw="group:grouped layout:horizontal legend:on mb:32" />
     </widget>
     <widget id="mxr_terr_novos" type="comparebar" order="3" span-d="1" span-t="1" span-m="1" height="360" title="👥 Meta x Novos Clientes por Território">
-      <datasource schema="comercial" table="vw_vendas_metas" dimension="territorio_nome" measureGoal="meta_novos_clientes_territorio" measureActual="novos_clientes" where="EXTRACT(YEAR FROM data_pedido)=2025 AND EXTRACT(MONTH FROM data_pedido)=11" />
+      <datasource schema="comercial" table="vw_vendas_metas" dimension="territorio_nome" measureGoal="meta_novos_clientes_territorio" measureActual="novos_clientes" where="EXTRACT(YEAR FROM data_pedido)=2025 AND EXTRACT(MONTH FROM data_pedido)=12" />
       <styling tw="group:grouped layout:horizontal legend:on mb:32" />
     </widget>
   </row>
@@ -315,8 +315,8 @@ const initialState: VisualBuilderState = {
   globalFilters: {
     dateRange: {
       type: 'custom',
-      startDate: '2025-11-01',
-      endDate: '2025-11-30'
+      startDate: '2025-12-01',
+      endDate: '2025-12-31'
     }
   },
   reloadTicks: {}
