@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ChevronDown, MessageSquare, Layout, BarChart3 } from "lucide-react";
 import ChatContainer from '../../components/nexus/ChatContainer';
-import NexusContentContainer from '@/components/nexus/NexusContentContainer';
+import NexusPageContainer from '@/components/nexus/NexusPageContainer';
 import DashboardChatPanel from '../../components/nexus/DashboardChatPanel';
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import type { UIMessage } from 'ai';
@@ -335,9 +335,9 @@ export default function Page() {
             <div className="flex flex-col h-full w-full">
               <NexusHeader viewMode={viewMode} onChangeViewMode={setViewMode} borderless />
 
-              <div className="flex-1 overflow-hidden p-4" data-page="nexus">
-                <div className="mx-auto w-full max-w-5xl h-full">
-                  <NexusContentContainer className="h-full">
+              <div className="flex-1 min-h-0 p-4" data-page="nexus">
+                <NexusPageContainer className="h-full">
+                  <div className="mx-auto w-full max-w-5xl h-full">
                     <ChatContainer
                       messages={displayedMessages}
                       input={input}
@@ -349,8 +349,8 @@ export default function Page() {
                       attachedFiles={attachedFiles}
                       onFilesChange={setAttachedFiles}
                     />
-                  </NexusContentContainer>
-                </div>
+                  </div>
+                </NexusPageContainer>
               </div>
             </div>
           )}
@@ -359,38 +359,34 @@ export default function Page() {
             // Modo Split - Header global + Workspaces lado a lado
             <div className="flex flex-col h-full w-full">
               <NexusHeader viewMode={viewMode} onChangeViewMode={setViewMode} borderless />
-              <div className="flex-1 min-h-0">
-                <PanelGroup direction="horizontal">
+              <div className="flex-1 min-h-0 p-4">
+                <NexusPageContainer className="h-full">
+                  <PanelGroup direction="horizontal">
                   {/* Coluna Esquerda: Chat */}
                   <Panel defaultSize={33} minSize={25}>
-                    <div className="h-full">
-                      <div className="h-full overflow-hidden p-4" data-page="nexus">
-                        <NexusContentContainer className="h-full">
-                          <ChatContainer
-                            messages={displayedMessages}
-                            input={input}
-                            setInput={setInput}
-                            onSubmit={handleSubmit}
-                            status={status}
-                            selectedAgent={selectedAgent}
-                            onAgentChange={setCurrentAgent}
-                            attachedFiles={attachedFiles}
-                            onFilesChange={setAttachedFiles}
-                          />
-                        </NexusContentContainer>
-                      </div>
+                    <div className="h-full overflow-hidden" data-page="nexus">
+                      <ChatContainer
+                        messages={displayedMessages}
+                        input={input}
+                        setInput={setInput}
+                        onSubmit={handleSubmit}
+                        status={status}
+                        selectedAgent={selectedAgent}
+                        onAgentChange={setCurrentAgent}
+                        attachedFiles={attachedFiles}
+                        onFilesChange={setAttachedFiles}
+                      />
                     </div>
                   </Panel>
 
                   {/* Coluna Direita: Dashboard altura completa */}
                   <Panel defaultSize={67} minSize={40}>
-                    <div className="h-full p-4">
-                      <NexusContentContainer className="h-full">
-                        <DashboardChatPanel />
-                      </NexusContentContainer>
+                    <div className="h-full">
+                      <DashboardChatPanel />
                     </div>
                   </Panel>
                 </PanelGroup>
+                </NexusPageContainer>
               </div>
             </div>
           )}
@@ -400,9 +396,9 @@ export default function Page() {
             <div className="flex flex-col h-full w-full">
               <NexusHeader viewMode={viewMode} onChangeViewMode={setViewMode} borderless />
               <div className="flex-1 min-h-0 p-4">
-                <NexusContentContainer className="h-full">
+                <NexusPageContainer className="h-full">
                   <DashboardChatPanel />
-                </NexusContentContainer>
+                </NexusPageContainer>
               </div>
             </div>
           )}
