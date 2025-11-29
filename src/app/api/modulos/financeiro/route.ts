@@ -598,6 +598,81 @@ export async function GET(req: NextRequest) {
       const dim = (searchParams.get('dim') || '').toLowerCase();
       const limit = Math.max(1, Math.min(50, parseNumber(searchParams.get('limit'), 5) || 5));
 
+      // Caso específico: centros de custo com query fixa (sem alterações)
+      if (dim === 'centro_custo' || dim === 'centro-custo') {
+        const sqlFixed = `SELECT
+    cc.id AS centro_custo_id,
+    cc.nome AS centro_custo_nome,
+    SUM(lf.valor) AS total_gasto
+FROM financeiro.lancamentos_financeiros lf
+LEFT JOIN empresa.centros_custo cc 
+       ON cc.id = lf.centro_custo_id
+WHERE lf.tipo = 'conta_a_pagar'
+  AND lf.data_vencimento BETWEEN '2025-12-01' AND '2025-12-31'
+GROUP BY cc.id, cc.nome
+ORDER BY total_gasto DESC;`;
+        type Row = { centro_custo_id: string | number | null; centro_custo_nome: string | null; total_gasto: number | null };
+        const raw = await runQuery<Row>(sqlFixed, []);
+        const rows = raw.map(r => ({ label: String(r.centro_custo_nome ?? '—'), total: Number(r.total_gasto ?? 0) }));
+        return Response.json({ success: true, rows, sql_query: sqlFixed, sql_params: [] });
+      }
+
+      // Caso específico: departamentos com query fixa (sem alterações)
+      if (dim === 'departamento') {
+        const sqlFixed = `SELECT
+    d.id AS departamento_id,
+    d.nome AS departamento_nome,
+    SUM(lf.valor) AS total_gasto
+FROM financeiro.lancamentos_financeiros lf
+LEFT JOIN empresa.departamentos d 
+       ON d.id = lf.departamento_id
+WHERE lf.tipo = 'conta_a_pagar'
+  AND lf.data_vencimento BETWEEN '2025-12-01' AND '2025-12-31'
+GROUP BY d.id, d.nome
+ORDER BY total_gasto DESC;`;
+        type Row = { departamento_id: string | number | null; departamento_nome: string | null; total_gasto: number | null };
+        const raw = await runQuery<Row>(sqlFixed, []);
+        const rows = raw.map(r => ({ label: String(r.departamento_nome ?? '—'), total: Number(r.total_gasto ?? 0) }));
+        return Response.json({ success: true, rows, sql_query: sqlFixed, sql_params: [] });
+      }
+
+      // Caso específico: categorias com query fixa (sem alterações)
+      if (dim === 'categoria') {
+        const sqlFixed = `SELECT
+    cf.id AS categoria_id,
+    cf.nome AS categoria_nome,
+    cf.tipo AS categoria_tipo,
+    SUM(lf.valor) AS total_gasto
+FROM financeiro.lancamentos_financeiros lf
+LEFT JOIN financeiro.categorias_financeiras cf
+       ON cf.id = lf.categoria_id
+WHERE lf.tipo = 'conta_a_pagar'
+GROUP BY cf.id, cf.nome, cf.tipo
+ORDER BY total_gasto DESC;`;
+        type Row = { categoria_id: string | number | null; categoria_nome: string | null; categoria_tipo: string | null; total_gasto: number | null };
+        const raw = await runQuery<Row>(sqlFixed, []);
+        const rows = raw.map(r => ({ label: String(r.categoria_nome ?? '—'), total: Number(r.total_gasto ?? 0) }));
+        return Response.json({ success: true, rows, sql_query: sqlFixed, sql_params: [] });
+      }
+
+      // Caso específico: fornecedores com query fixa (sem alterações)
+      if (dim === 'fornecedor') {
+        const sqlFixed = `SELECT
+    f.id AS fornecedor_id,
+    f.nome_fantasia AS fornecedor_nome,
+    SUM(lf.valor) AS total_gasto
+FROM financeiro.lancamentos_financeiros lf
+LEFT JOIN entidades.fornecedores f
+       ON f.id = lf.fornecedor_id
+WHERE lf.tipo = 'conta_a_pagar'
+GROUP BY f.id, f.nome_fantasia
+ORDER BY total_gasto DESC;`;
+        type Row = { fornecedor_id: string | number | null; fornecedor_nome: string | null; total_gasto: number | null };
+        const raw = await runQuery<Row>(sqlFixed, []);
+        const rows = raw.map(r => ({ label: String(r.fornecedor_nome ?? '—'), total: Number(r.total_gasto ?? 0) }));
+        return Response.json({ success: true, rows, sql_query: sqlFixed, sql_params: [] });
+      }
+
       let dimExpr = '';
       if (dim === 'categoria') dimExpr = "COALESCE(cat_ap.nome, 'Sem categoria')";
       else if (dim === 'centro_custo' || dim === 'centro-custo') dimExpr = "COALESCE(cc_ap.nome, 'Sem centro de custo')";
