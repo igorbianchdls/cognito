@@ -310,7 +310,7 @@ export default function FinanceiroDashboardPage() {
   const cardBoxShadow = useMemo(() => (cardShadowPreset === 'none' ? 'none' : `var(--shadow-${cardShadowPreset})`), [cardShadowPreset])
 
   // KPIs do mês — dinâmico via date picker (header)
-  const [kpisMonth, setKpisMonth] = useState<{ arMes: number; apMes: number; recebidosMes: number; pagosMes: number; geracaoCaixa: number } | null>(null)
+  const [kpisMonth, setKpisMonth] = useState<{ arMes: number; apMes: number; recebidosMes: number; pagosMes: number; geracaoCaixa: number; receitaMes: number; despesasMes: number; lucroMes: number } | null>(null)
   const { kpiDe, kpiAte, kpiLabel } = useMemo(() => {
     const now = new Date()
     const firstDayOf = (d: Date) => new Date(d.getFullYear(), d.getMonth(), 1)
@@ -417,7 +417,7 @@ export default function FinanceiroDashboardPage() {
 
         // KPIs mês (API)
         if (kpisRes.status === 'fulfilled' && kpisRes.value.ok) {
-          const j = await kpisRes.value.json() as { kpis?: { ar_mes?: number; ap_mes?: number; recebidos_mes?: number; pagos_mes?: number; geracao_caixa?: number } }
+          const j = await kpisRes.value.json() as { kpis?: { ar_mes?: number; ap_mes?: number; recebidos_mes?: number; pagos_mes?: number; geracao_caixa?: number; receita_mes?: number; despesas_mes?: number; lucro_mes?: number } }
           if (j?.kpis) {
             setKpisMonth({
               arMes: Number(j.kpis.ar_mes || 0),
@@ -425,6 +425,9 @@ export default function FinanceiroDashboardPage() {
               recebidosMes: Number(j.kpis.recebidos_mes || 0),
               pagosMes: Number(j.kpis.pagos_mes || 0),
               geracaoCaixa: Number(j.kpis.geracao_caixa || 0),
+              receitaMes: Number(j.kpis.receita_mes || 0),
+              despesasMes: Number(j.kpis.despesas_mes || 0),
+              lucroMes: Number(j.kpis.lucro_mes || 0),
             })
           }
         }
@@ -505,7 +508,11 @@ export default function FinanceiroDashboardPage() {
     const recebidosMes = prRows.filter(r => inMonth(String(r.data_recebimento))).reduce((a, r) => a + (Number(r.valor_total) || 0), 0)
     const pagosMes = peRows.filter(r => inMonth(String(r.data_pagamento))).reduce((a, r) => a + (Number(r.valor_pago) || 0), 0)
     const geracaoCaixa = recebidosMes - pagosMes
-    return { arMes, apMes, recebidosMes, pagosMes, geracaoCaixa }
+    // receita/despesas: ignorar status, por vencimento no período
+    const receitaMes = arRows.filter(r => inMonth(String(r.data_vencimento))).reduce((a, r) => a + (Number(r.valor_total) || 0), 0)
+    const despesasMes = apRows.filter(r => inMonth(String(r.data_vencimento))).reduce((a, r) => a + (Number(r.valor_total) || 0), 0)
+    const lucroMes = receitaMes - despesasMes
+    return { arMes, apMes, recebidosMes, pagosMes, geracaoCaixa, receitaMes, despesasMes, lucroMes }
   }, [kpisMonth, arRows, apRows, prRows, peRows])
 
   const topReceber = useMemo(() => {
@@ -708,6 +715,37 @@ export default function FinanceiroDashboardPage() {
           </div>
           <div className="text-2xl font-bold text-rose-600" style={styleValues}>{formatBRL(kpis.pagosMes)}</div>
           <div className="text-xs text-gray-400 mt-1" style={styleText}>Pagamentos realizados no período</div>
+        </div>
+      </div>
+
+      {/* KPI: Receita, Despesas e Lucro do mês */}
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-4 mb-6">
+        <div className={cardContainerClass} style={{ borderColor: cardBorderColor, boxShadow: cardBoxShadow }}>
+          <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleKpiTitle}>
+            <Wallet className="w-4 h-4" style={{ color: kpiIconColor }} />Receita ({kpiLabel})
+          </div>
+          <div className="text-2xl font-bold text-emerald-600" style={styleValues}>{formatBRL(kpis.receitaMes)}</div>
+          <div className="text-xs text-gray-400 mt-1" style={styleText}>Contas a receber no período (sem status)</div>
+        </div>
+        <div className={cardContainerClass} style={{ borderColor: cardBorderColor, boxShadow: cardBoxShadow }}>
+          <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleKpiTitle}>
+            <ArrowUpCircle className="w-4 h-4" style={{ color: kpiIconColor }} />Despesas ({kpiLabel})
+          </div>
+          <div className="text-2xl font-bold text-rose-600" style={styleValues}>{formatBRL(kpis.despesasMes)}</div>
+          <div className="text-xs text-gray-400 mt-1" style={styleText}>Contas a pagar no período (sem status)</div>
+        </div>
+        <div className={cardContainerClass} style={{ borderColor: cardBorderColor, boxShadow: cardBoxShadow }}>
+          <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleKpiTitle}>
+            <BarChart3 className="w-4 h-4" style={{ color: kpiIconColor }} />Lucro ({kpiLabel})
+          </div>
+          {(() => {
+            const net = (kpis.lucroMes ?? (kpis.receitaMes - kpis.despesasMes))
+            const cls = net >= 0 ? 'text-emerald-600' : 'text-rose-600'
+            return (
+              <div className={`text-2xl font-bold ${cls}`} style={styleValues}>{formatBRL(net)}</div>
+            )
+          })()}
+          <div className="text-xs text-gray-400 mt-1" style={styleText}>Receita − Despesas</div>
         </div>
       </div>
 

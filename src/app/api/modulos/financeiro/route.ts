@@ -403,6 +403,20 @@ export async function GET(req: NextRequest) {
                          AND DATE(lf.data_vencimento) BETWEEN $1 AND $2${tenantFilter}`.replace(/\s+/g, ' ');
       const [pagoRow] = await runQuery<{ total: number | null }>(pagoSql, kpiParams);
 
+      // RECEITA NO MÊS (contas a receber por vencimento, sem filtro de status)
+      const receitaSql = `SELECT COALESCE(SUM(lf.valor), 0) AS total
+                           FROM financeiro.lancamentos_financeiros lf
+                          WHERE lf.tipo = 'conta_a_receber'
+                            AND DATE(lf.data_vencimento) BETWEEN $1 AND $2${tenantFilter}`.replace(/\s+/g, ' ');
+      const [receitaRow] = await runQuery<{ total: number | null }>(receitaSql, kpiParams);
+
+      // DESPESAS NO MÊS (contas a pagar por vencimento, sem filtro de status)
+      const despesasSql = `SELECT COALESCE(SUM(lf.valor), 0) AS total
+                            FROM financeiro.lancamentos_financeiros lf
+                           WHERE lf.tipo = 'conta_a_pagar'
+                             AND DATE(lf.data_vencimento) BETWEEN $1 AND $2${tenantFilter}`.replace(/\s+/g, ' ');
+      const [despesasRow] = await runQuery<{ total: number | null }>(despesasSql, kpiParams);
+
       return Response.json({
         success: true,
         de: deDate,
@@ -413,12 +427,17 @@ export async function GET(req: NextRequest) {
           recebidos_mes: Number(recRow?.total ?? 0),
           pagos_mes: Number(pagoRow?.total ?? 0),
           geracao_caixa: Number(recRow?.total ?? 0) - Number(pagoRow?.total ?? 0),
+          receita_mes: Number(receitaRow?.total ?? 0),
+          despesas_mes: Number(despesasRow?.total ?? 0),
+          lucro_mes: Number(receitaRow?.total ?? 0) - Number(despesasRow?.total ?? 0),
         },
         sql_query: {
           a_receber_mes: arSql,
           a_pagar_mes: apSql,
           recebidos_mes: recSql,
           pagos_mes: pagoSql,
+          receita_mes: receitaSql,
+          despesas_mes: despesasSql,
         },
         sql_params: kpiParams,
       });
