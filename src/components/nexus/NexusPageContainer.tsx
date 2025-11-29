@@ -12,7 +12,7 @@ export default function NexusPageContainer({ className, style, children }: Props
   return (
     <div
       className={cn(
-        "border border-gray-200 rounded-md bg-white h-full w-full overflow-hidden",
+        "border border-gray-200 rounded-md bg-white h-full w-full overflow-hidden p-4",
         className,
       )}
       style={style}
@@ -21,4 +21,3 @@ export default function NexusPageContainer({ className, style, children }: Props
     </div>
   )
 }
-
