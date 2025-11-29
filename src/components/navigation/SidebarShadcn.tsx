@@ -133,7 +133,9 @@ const navigationData = {
   ],
 }
 
-export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle, sectionTitleStyle, style, ...props }: React.ComponentProps<typeof Sidebar> & { bgColor?: string; textColor?: string; itemTextColor?: string; itemTextStyle?: React.CSSProperties; sectionTitleStyle?: React.CSSProperties }) {
+import { cn } from "@/lib/utils"
+
+export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle, sectionTitleStyle, style, borderless, headerBorderless, className, ...props }: React.ComponentProps<typeof Sidebar> & { bgColor?: string; textColor?: string; itemTextColor?: string; itemTextStyle?: React.CSSProperties; sectionTitleStyle?: React.CSSProperties; borderless?: boolean; headerBorderless?: boolean; className?: string }) {
   const pathname = usePathname()
 
   // Update active state based on current path
@@ -163,8 +165,8 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
   } as React.CSSProperties
 
   return (
-    <Sidebar collapsible="icon" style={inlineStyle} {...props}>
-      <SidebarHeader className="h-16 border-b bg-[#fdfdfd]">
+    <Sidebar collapsible="icon" style={inlineStyle} className={cn(borderless ? 'border-0' : undefined, className)} {...props}>
+      <SidebarHeader className={cn("h-16 bg-[#fdfdfd]", headerBorderless ? undefined : "border-b") }>
         <TeamSwitcher teams={dataWithActiveState.teams} />
       </SidebarHeader>
       <SidebarContent>

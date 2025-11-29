@@ -326,13 +326,13 @@ export default function Page() {
 
   return (
     <SidebarProvider>
-      <SidebarShadcn />
+      <SidebarShadcn borderless headerBorderless />
       <SidebarInset className="h-screen overflow-hidden">
         <div className="flex h-full overflow-hidden" style={{backgroundColor: 'white'}}>
           {viewMode === 'chat' && (
             // Modo Chat Only - Header + ChatContainer
             <div className="flex flex-col h-full w-full">
-              <NexusHeader viewMode={viewMode} onChangeViewMode={setViewMode} />
+              <NexusHeader viewMode={viewMode} onChangeViewMode={setViewMode} borderless />
 
               <div className="flex-1 overflow-hidden p-4" data-page="nexus">
                 <div className="mx-auto w-full max-w-5xl h-full">
@@ -355,7 +355,7 @@ export default function Page() {
           {viewMode === 'split' && (
             // Modo Split - Header global + Workspaces lado a lado
             <div className="flex flex-col h-full w-full">
-              <NexusHeader viewMode={viewMode} onChangeViewMode={setViewMode} />
+              <NexusHeader viewMode={viewMode} onChangeViewMode={setViewMode} borderless />
               <div className="flex-1 min-h-0">
                 <PanelGroup direction="horizontal">
                   {/* Coluna Esquerda: Chat */}
@@ -391,7 +391,7 @@ export default function Page() {
           {viewMode === 'dashboard' && (
             // Modo Dashboard Only - Header + Tela inteira
             <div className="flex flex-col h-full w-full">
-              <NexusHeader viewMode={viewMode} onChangeViewMode={setViewMode} />
+              <NexusHeader viewMode={viewMode} onChangeViewMode={setViewMode} borderless />
               <div className="flex-1 min-h-0">
                 <DashboardChatPanel />
               </div>
