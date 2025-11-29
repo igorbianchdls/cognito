@@ -12,7 +12,7 @@ export default function NexusPageContainer({ className, style, children }: Props
   return (
     <div
       className={cn(
-        "border border-gray-200 rounded-md bg-white h-full w-full overflow-hidden p-0 m-2",
+        "border border-gray-200 rounded-md bg-white h-full w-full overflow-hidden p-0 m-2 mt-0 mb-4 mr-4",
         className,
       )}
       style={style}
