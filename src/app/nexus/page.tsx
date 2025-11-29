@@ -333,7 +333,7 @@ export default function Page() {
           {viewMode === 'chat' && (
             // Modo Chat Only - Header + ChatContainer
             <div className="flex flex-col h-full w-full">
-              <NexusHeader viewMode={viewMode} onChangeViewMode={setViewMode} borderless />
+              <NexusHeader viewMode={viewMode} onChangeViewMode={setViewMode} borderless size="sm" />
 
               <div className="flex-1 min-h-0 pl-2 pr-2 pt-0 pb-2" data-page="nexus">
                 <NexusPageContainer className="h-full">
@@ -358,7 +358,7 @@ export default function Page() {
           {viewMode === 'split' && (
             // Modo Split - Header global + Workspaces lado a lado
             <div className="flex flex-col h-full w-full">
-              <NexusHeader viewMode={viewMode} onChangeViewMode={setViewMode} borderless />
+              <NexusHeader viewMode={viewMode} onChangeViewMode={setViewMode} borderless size="sm" />
               <div className="flex-1 min-h-0 pl-2 pr-2 pt-0 pb-2">
                 <NexusPageContainer className="h-full">
                   <PanelGroup direction="horizontal">
@@ -394,7 +394,7 @@ export default function Page() {
           {viewMode === 'dashboard' && (
             // Modo Dashboard Only - Header + Tela inteira
             <div className="flex flex-col h-full w-full">
-              <NexusHeader viewMode={viewMode} onChangeViewMode={setViewMode} borderless />
+              <NexusHeader viewMode={viewMode} onChangeViewMode={setViewMode} borderless size="sm" />
               <div className="flex-1 min-h-0 pl-2 pr-2 pt-0 pb-2">
                 <NexusPageContainer className="h-full">
                   <DashboardChatPanel />

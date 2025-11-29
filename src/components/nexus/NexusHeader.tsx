@@ -25,30 +25,38 @@ interface NexusHeaderProps {
   onChangeViewMode: (mode: ViewMode) => void
   showBreadcrumb?: boolean
   borderless?: boolean
+  size?: 'sm' | 'md'
 }
 
-export default function NexusHeader({ viewMode, onChangeViewMode, showBreadcrumb = true, borderless = false }: NexusHeaderProps) {
+export default function NexusHeader({ viewMode, onChangeViewMode, showBreadcrumb = true, borderless = false, size = 'md' }: NexusHeaderProps) {
   const current = (
-    viewMode === 'chat' ? { icon: <MessageSquare className="w-4 h-4" />, label: 'Chat' } :
-    viewMode === 'split' ? { icon: <Layout className="w-4 h-4" />, label: 'Workspace' } :
-    { icon: <BarChart3 className="w-4 h-4" />, label: 'Dashboard' }
+    viewMode === 'chat' ? { icon: <MessageSquare className={size === 'sm' ? 'w-3.5 h-3.5' : 'w-4 h-4'} />, label: 'Chat' } :
+    viewMode === 'split' ? { icon: <Layout className={size === 'sm' ? 'w-3.5 h-3.5' : 'w-4 h-4'} />, label: 'Workspace' } :
+    { icon: <BarChart3 className={size === 'sm' ? 'w-3.5 h-3.5' : 'w-4 h-4'} />, label: 'Dashboard' }
   )
 
+  const headerSizeClass = size === 'sm' ? 'h-14 px-3' : 'h-16 px-4'
+  const iconSize = size === 'sm' ? 'w-3.5 h-3.5' : 'w-4 h-4'
+  const mainBtnSize = size === 'sm' ? 'h-8 px-2.5' : 'h-9 px-3'
+  const circleBtnSize = size === 'sm' ? 'h-8 w-8' : 'h-9 w-9'
+  const breadcrumbTextLink = size === 'sm' ? 'text-sm' : 'text-[15px] md:text-base'
+  const breadcrumbTextPage = size === 'sm' ? 'text-sm' : 'text-[15px] md:text-base'
+
   return (
-    <header className={`flex h-16 shrink-0 items-center gap-2 px-4 bg-[#fdfdfd] ${borderless ? '' : 'border-b'}`}>
+    <header className={`flex ${headerSizeClass} shrink-0 items-center gap-2 bg-[#fdfdfd] ${borderless ? '' : 'border-b'}`}>
       <SidebarTrigger className="-ml-1" />
-      <Separator orientation="vertical" className="mr-2 data-[orientation=vertical]:h-4" />
+      <Separator orientation="vertical" className={size === 'sm' ? 'mr-1 data-[orientation=vertical]:h-4' : 'mr-2 data-[orientation=vertical]:h-4'} />
       {showBreadcrumb && (
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem className="hidden md:block">
-              <BreadcrumbLink href="#" className="text-[15px] md:text-base text-gray-500 hover:text-gray-700">
+              <BreadcrumbLink href="#" className={`${breadcrumbTextLink} text-gray-500 hover:text-gray-700`}>
                 Navegação
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator className="hidden md:block" />
             <BreadcrumbItem>
-              <BreadcrumbPage className="text-[15px] md:text-base font-semibold text-gray-900">
+              <BreadcrumbPage className={`${breadcrumbTextPage} font-semibold text-gray-900`}>
                 {current.label}
               </BreadcrumbPage>
             </BreadcrumbItem>
@@ -58,22 +66,22 @@ export default function NexusHeader({ viewMode, onChangeViewMode, showBreadcrumb
       <div className="ml-auto flex items-center gap-2">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:bg-gray-100 transition-colors">
+            <button className={`flex items-center gap-2 ${mainBtnSize} rounded-lg text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:bg-gray-100 transition-colors`}>
               {current.icon} {current.label}
-              <ChevronDown className="w-4 h-4" />
+              <ChevronDown className={iconSize} />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => onChangeViewMode('chat')}>
-              <MessageSquare className="w-4 h-4 mr-2" />
+              <MessageSquare className={`${iconSize} mr-2`} />
               Chat
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => onChangeViewMode('split')}>
-              <Layout className="w-4 h-4 mr-2" />
+              <Layout className={`${iconSize} mr-2`} />
               Workspace
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => onChangeViewMode('dashboard')}>
-              <BarChart3 className="w-4 h-4 mr-2" />
+              <BarChart3 className={`${iconSize} mr-2`} />
               Dashboard
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -85,9 +93,9 @@ export default function NexusHeader({ viewMode, onChangeViewMode, showBreadcrumb
           <button
             type="button"
             aria-label="Notificações"
-            className="relative h-9 w-9 rounded-full border bg-white text-gray-600 hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            className={`relative ${circleBtnSize} rounded-full border bg-white text-gray-600 hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500`}
           >
-            <Bell className="w-4 h-4 mx-auto" />
+            <Bell className={`${iconSize} mx-auto`} />
             <span className="absolute -top-0.5 -right-0.5 h-3 w-3 rounded-full bg-blue-600 ring-2 ring-white" />
           </button>
           {/* Docs */}
@@ -96,16 +104,16 @@ export default function NexusHeader({ viewMode, onChangeViewMode, showBreadcrumb
             aria-label="Documentação"
             title="Documentação"
             onClick={() => { try { window.open('https://docs.creatto.app', '_blank'); } catch {} }}
-            className="h-9 w-9 rounded-full border bg-white text-gray-600 hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            className={`${circleBtnSize} rounded-full border bg-white text-gray-600 hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500`}
           >
-            <BookOpen className="w-4 h-4 mx-auto" />
+            <BookOpen className={`${iconSize} mx-auto`} />
           </button>
           {/* User avatar (gradient) */}
           <button
             type="button"
             aria-label="Conta"
             title="Conta"
-            className="h-8 w-8 rounded-full ring-2 ring-white overflow-hidden"
+            className={`${size === 'sm' ? 'h-7 w-7' : 'h-8 w-8'} rounded-full ring-2 ring-white overflow-hidden`}
           >
             <img
               src="https://i.pravatar.cc/80?img=12"
