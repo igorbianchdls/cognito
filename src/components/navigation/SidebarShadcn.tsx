@@ -165,7 +165,12 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
   } as React.CSSProperties
 
   return (
-    <Sidebar collapsible="icon" style={inlineStyle} className={cn(borderless ? 'border-0' : undefined, className)} {...props}>
+    <Sidebar
+      collapsible="icon"
+      style={inlineStyle}
+      className={cn(borderless ? '!border-r-0 !border-l-0 !border-0' : undefined, className)}
+      {...props}
+    >
       <SidebarHeader className={cn("h-16 bg-[#fdfdfd]", headerBorderless ? undefined : "border-b") }>
         <TeamSwitcher teams={dataWithActiveState.teams} />
       </SidebarHeader>
