@@ -718,8 +718,8 @@ export default function FinanceiroDashboardPage() {
         </div>
       </div>
 
-      {/* KPI: Receita, Despesas e Lucro do mês */}
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-4 mb-6">
+      {/* KPI: Receita, Despesas, Lucro e Geração de Caixa do mês */}
+      <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-4 gap-4 mb-6">
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor, boxShadow: cardBoxShadow }}>
           <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleKpiTitle}>
             <Wallet className="w-4 h-4" style={{ color: kpiIconColor }} />Receita ({kpiLabel})
@@ -747,10 +747,6 @@ export default function FinanceiroDashboardPage() {
           })()}
           <div className="text-xs text-gray-400 mt-1" style={styleText}>Receita − Despesas</div>
         </div>
-      </div>
-
-      {/* KPI: Geração de Caixa no mês */}
-      <div className="grid grid-cols-1 lg:grid-cols-1 gap-4 mb-6">
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor, boxShadow: cardBoxShadow }}>
           <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleKpiTitle}>
             <BarChart3 className="w-4 h-4" style={{ color: kpiIconColor }} />Geração de Caixa ({kpiLabel})
