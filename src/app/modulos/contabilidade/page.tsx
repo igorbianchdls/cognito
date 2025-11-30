@@ -13,6 +13,8 @@ import DRETable from '@/components/relatorios/DRETable'
 import BalanceTAccountView from '@/components/contabilidade/BalanceTAccountView'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
+import NexusHeader from '@/components/nexus/NexusHeader'
+import NexusPageContainer from '@/components/nexus/NexusPageContainer'
 import { FileText, Landmark, BarChart3, BookOpen, Wrench, Calendar, CalendarClock, CheckCircle2, DollarSign, Tag, Briefcase } from 'lucide-react'
 import IconLabelHeader from '@/components/widgets/IconLabelHeader'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/stores/modulos/moduleUiStore'
@@ -240,118 +242,125 @@ export default function ModulosContabilidadePage() {
 
   return (
     <SidebarProvider>
-      <SidebarShadcn />
-      <SidebarInset className="min-h-screen flex flex-col overflow-y-auto" style={{ background: layout.contentBg }}>
-        <div style={{ background: 'white' }}>
-          <div style={{ marginBottom: layout.mbTitle }}>
-            <PageHeader
-              title={titulo.title}
-              subtitle={titulo.subtitle}
-              titleFontFamily={titulo.titleFontFamily}
-              titleFontSize={titulo.titleFontSize}
-              titleFontWeight={titulo.titleFontWeight}
-              titleColor={titulo.titleColor}
-              titleLetterSpacing={titulo.titleLetterSpacing}
-              subtitleFontFamily={titulo.subtitleFontFamily}
-              subtitleLetterSpacing={titulo.subtitleLetterSpacing}
-            />
-          </div>
-          <div style={{ marginBottom: 0 }}>
-            <TabsNav
-              options={tabOptions}
-              value={tabs.selected}
-              onValueChange={(v) => moduleUiActions.setTabs({ selected: v })}
-              fontFamily={tabs.fontFamily}
-              fontSize={tabs.fontSize}
-              fontWeight={tabs.fontWeight}
-              color={tabs.color}
-              letterSpacing={tabs.letterSpacing}
-              iconSize={tabs.iconSize}
-              labelOffsetY={tabs.labelOffsetY}
-              startOffset={tabs.leftOffset}
-              activeColor={tabs.activeColor}
-              activeFontWeight={tabs.activeFontWeight}
-              activeBorderColor={tabs.activeBorderColor}
-            />
-          </div>
-        </div>
-        <div style={{ paddingTop: (layout.contentTopGap || 0) + (layout.mbTabs || 0) }}>
-          <div className="px-4 md:px-6" style={{ marginBottom: 8 }}>
-            <DataToolbar
-              from={total === 0 ? 0 : (page - 1) * pageSize + 1}
-              to={total === 0 ? 0 : Math.min(page * pageSize, total)}
-              total={total}
-              dateRange={dateRange}
-              onDateRangeChange={setDateRange}
-              fontFamily={tabs.fontFamily}
-              fontSize={toolbarUI.fontSize}
-              fontWeight={toolbarUI.fontWeight}
-              fontColor={toolbarUI.fontColor}
-              letterSpacing={toolbarUI.letterSpacing}
-              borderBottomWidth={toolbarUI.borderBottomWidth}
-              borderBottomColor={toolbarUI.borderBottomColor}
-              borderDistanceTop={toolbarUI.borderDistanceTop}
-              underlineColor={toolbarUI.underlineColor}
-              underlineWidth={toolbarUI.underlineWidth}
-              underlineOffsetTop={toolbarUI.underlineOffsetTop}
-              iconGap={toolbarUI.iconGap}
-              iconColor={toolbarUI.iconColor}
-              iconSize={toolbarUI.iconSize}
-              searchWidth={toolbarUI.searchWidth}
-              dateRangeWidth={toolbarUI.dateRangeWidth}
-            />
-          </div>
-          <div className="flex-1 min-h-0 overflow-auto" style={{ marginBottom: layout.mbTable }}>
-            <div
-              className={`border-y ${tabs.selected === 'balanco-patrimonial' ? '' : 'bg-background'}`}
-              style={{ borderColor: tabelaUI.borderColor, background: tabs.selected === 'balanco-patrimonial' ? 'transparent' : undefined }}
-            >
-              {isLoading ? (
-                <div className="p-6 text-sm text-gray-500">Carregando dados…</div>
-              ) : error ? (
-                <div className="p-6 text-sm text-red-600">Erro ao carregar: {error}</div>
-              ) : tabs.selected === 'dre' ? (
-                <DRETable data={dreNodes} periods={drePeriods} />
-              ) : tabs.selected === 'balanco-patrimonial' ? (
-                <BalanceTAccountView data={bpData} />
-              ) : (
-                <DataTable
-                  key={tabs.selected}
-                  columns={columns}
-                  data={data}
-                  enableSearch={tabelaUI.enableSearch}
-                  showColumnToggle={tabelaUI.enableColumnToggle}
-                  showPagination={tabelaUI.showPagination}
-                  pageSize={pageSize}
-                  pageIndex={page - 1}
-                  serverSidePagination
-                  serverTotalRows={total}
-                  headerBackground={tabelaUI.headerBg}
-                  headerTextColor={tabelaUI.headerText}
-                  cellTextColor={tabelaUI.cellText}
-                  headerFontSize={tabelaUI.headerFontSize}
-                  headerFontFamily={tabelaUI.headerFontFamily}
-                  headerFontWeight={tabelaUI.headerFontWeight}
-                  headerLetterSpacing={tabelaUI.headerLetterSpacing}
-                  cellFontSize={tabelaUI.cellFontSize}
-                  cellFontFamily={tabelaUI.cellFontFamily}
-                  cellFontWeight={tabelaUI.cellFontWeight}
-                  cellLetterSpacing={tabelaUI.cellLetterSpacing}
-                  enableZebraStripes={tabelaUI.enableZebraStripes}
-                  rowAlternateBgColor={tabelaUI.rowAlternateBgColor}
-                  borderColor={tabelaUI.borderColor}
-                  borderWidth={tabelaUI.borderWidth}
-                  selectionColumnWidth={tabelaUI.selectionColumnWidth}
-                  enableRowSelection={tabelaUI.enableRowSelection}
-                  selectionMode={tabelaUI.selectionMode}
-                  defaultSortColumn={tabelaUI.defaultSortColumn}
-                  defaultSortDirection={tabelaUI.defaultSortDirection}
-                  onPaginationChange={({ pageIndex, pageSize: newSize }) => {
-                    setPage(pageIndex + 1)
-                    setPageSize(newSize)
-                  }}
-                />
-              )}
+      <SidebarShadcn borderless headerBorderless />
+      <SidebarInset className="h-screen overflow-hidden">
+        <div className="flex h-full overflow-hidden" style={{ backgroundColor: '#fdfdfd' }}>
+          <div className="flex flex-col h-full w-full">
+            <NexusHeader viewMode={'dashboard'} onChangeViewMode={() => {}} borderless size="sm" showBreadcrumb={false} />
+            <div className="flex-1 min-h-0 pl-2 pr-2 pt-0 pb-2" data-page="nexus">
+              <NexusPageContainer className="h-full">
+                <div style={{ marginBottom: layout.mbTitle }}>
+                  <PageHeader
+                    title={titulo.title}
+                    subtitle={titulo.subtitle}
+                    titleFontFamily={titulo.titleFontFamily}
+                    titleFontSize={titulo.titleFontSize}
+                    titleFontWeight={titulo.titleFontWeight}
+                    titleColor={titulo.titleColor}
+                    titleLetterSpacing={titulo.titleLetterSpacing}
+                    subtitleFontFamily={titulo.subtitleFontFamily}
+                    subtitleLetterSpacing={titulo.subtitleLetterSpacing}
+                  />
+                </div>
+                <div style={{ marginBottom: 0 }}>
+                  <TabsNav
+                    options={tabOptions}
+                    value={tabs.selected}
+                    onValueChange={(v) => moduleUiActions.setTabs({ selected: v })}
+                    fontFamily={tabs.fontFamily}
+                    fontSize={tabs.fontSize}
+                    fontWeight={tabs.fontWeight}
+                    color={tabs.color}
+                    letterSpacing={tabs.letterSpacing}
+                    iconSize={tabs.iconSize}
+                    labelOffsetY={tabs.labelOffsetY}
+                    startOffset={tabs.leftOffset}
+                    activeColor={tabs.activeColor}
+                    activeFontWeight={tabs.activeFontWeight}
+                    activeBorderColor={tabs.activeBorderColor}
+                  />
+                </div>
+                <div style={{ paddingTop: (layout.contentTopGap || 0) + (layout.mbTabs || 0) }}>
+                  <div className="px-4 md:px-6" style={{ marginBottom: 8 }}>
+                    <DataToolbar
+                      from={total === 0 ? 0 : (page - 1) * pageSize + 1}
+                      to={total === 0 ? 0 : Math.min(page * pageSize, total)}
+                      total={total}
+                      dateRange={dateRange}
+                      onDateRangeChange={setDateRange}
+                      fontFamily={tabs.fontFamily}
+                      fontSize={toolbarUI.fontSize}
+                      fontWeight={toolbarUI.fontWeight}
+                      fontColor={toolbarUI.fontColor}
+                      letterSpacing={toolbarUI.letterSpacing}
+                      borderBottomWidth={toolbarUI.borderBottomWidth}
+                      borderBottomColor={toolbarUI.borderBottomColor}
+                      borderDistanceTop={toolbarUI.borderDistanceTop}
+                      underlineColor={toolbarUI.underlineColor}
+                      underlineWidth={toolbarUI.underlineWidth}
+                      underlineOffsetTop={toolbarUI.underlineOffsetTop}
+                      iconGap={toolbarUI.iconGap}
+                      iconColor={toolbarUI.iconColor}
+                      iconSize={toolbarUI.iconSize}
+                      searchWidth={toolbarUI.searchWidth}
+                      dateRangeWidth={toolbarUI.dateRangeWidth}
+                    />
+                  </div>
+                  <div className="flex-1 min-h-0 overflow-auto" style={{ marginBottom: layout.mbTable }}>
+                    <div
+                      className={`border-y ${tabs.selected === 'balanco-patrimonial' ? '' : 'bg-background'}`}
+                      style={{ borderColor: tabelaUI.borderColor, background: tabs.selected === 'balanco-patrimonial' ? 'transparent' : undefined }}
+                    >
+                      {isLoading ? (
+                        <div className="p-6 text-sm text-gray-500">Carregando dados…</div>
+                      ) : error ? (
+                        <div className="p-6 text-sm text-red-600">Erro ao carregar: {error}</div>
+                      ) : tabs.selected === 'dre' ? (
+                        <DRETable data={dreNodes} periods={drePeriods} />
+                      ) : tabs.selected === 'balanco-patrimonial' ? (
+                        <BalanceTAccountView data={bpData} />
+                      ) : (
+                        <DataTable
+                          key={tabs.selected}
+                          columns={columns}
+                          data={data}
+                          enableSearch={tabelaUI.enableSearch}
+                          showColumnToggle={tabelaUI.enableColumnToggle}
+                          showPagination={tabelaUI.showPagination}
+                          pageSize={pageSize}
+                          pageIndex={page - 1}
+                          serverSidePagination
+                          serverTotalRows={total}
+                          headerBackground={tabelaUI.headerBg}
+                          headerTextColor={tabelaUI.headerText}
+                          cellTextColor={tabelaUI.cellText}
+                          headerFontSize={tabelaUI.headerFontSize}
+                          headerFontFamily={tabelaUI.headerFontFamily}
+                          headerFontWeight={tabelaUI.headerFontWeight}
+                          headerLetterSpacing={tabelaUI.headerLetterSpacing}
+                          cellFontSize={tabelaUI.cellFontSize}
+                          cellFontFamily={tabelaUI.cellFontFamily}
+                          cellFontWeight={tabelaUI.cellFontWeight}
+                          cellLetterSpacing={tabelaUI.cellLetterSpacing}
+                          enableZebraStripes={tabelaUI.enableZebraStripes}
+                          rowAlternateBgColor={tabelaUI.rowAlternateBgColor}
+                          borderColor={tabelaUI.borderColor}
+                          borderWidth={tabelaUI.borderWidth}
+                          selectionColumnWidth={tabelaUI.selectionColumnWidth}
+                          enableRowSelection={tabelaUI.enableRowSelection}
+                          selectionMode={tabelaUI.selectionMode}
+                          defaultSortColumn={tabelaUI.defaultSortColumn}
+                          defaultSortDirection={tabelaUI.defaultSortDirection}
+                          onPaginationChange={({ pageIndex, pageSize: newSize }) => {
+                            setPage(pageIndex + 1)
+                            setPageSize(newSize)
+                          }}
+                        />
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </NexusPageContainer>
             </div>
           </div>
         </div>
