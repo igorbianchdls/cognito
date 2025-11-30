@@ -68,8 +68,8 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }> | null
 };
 
 const models = [
+  { id: 'analistaVendas', name: 'Analista de Vendas', icon: iconMap['analistaVendas'] },
   { id: 'ecommerceSalesAgentV2', name: 'Gestor de E-commerce', icon: iconMap['ecommerceSalesAgentV2'] },
-  { id: 'salesAgent', name: 'Executivo de Vendas', icon: iconMap['salesAgent'] },
   { id: 'contasAReceberAgent', name: 'Contas a Pagar e Receber', icon: iconMap['contasAReceberAgent'] },
   { id: 'inventoryAgent', name: 'Gestor de Estoque', icon: iconMap['inventoryAgent'] },
   { id: 'logisticsAgent', name: 'Coordenador de Logística', icon: iconMap['logisticsAgent'] },
@@ -83,7 +83,6 @@ const models = [
   { id: 'gestorDeVendasB2BAgent', name: 'Gerente de Vendas B2B', icon: iconMap['gestorDeVendasB2BAgent'] },
   { id: 'crmAgent', name: 'Analista de CRM', icon: iconMap['crmAgent'] },
   { id: 'contabilidadeAgent', name: 'Agente de Contabilidade', icon: iconMap['contabilidadeAgent'] },
-  { id: 'analistaVendas', name: 'Analista de Vendas', icon: iconMap['analistaVendas'] },
 ];
 
 // Workflows disponíveis

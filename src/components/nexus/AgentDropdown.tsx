@@ -9,8 +9,8 @@ interface AgentDropdownProps {
 
 // Lista de agentes disponíveis com suas informações visuais
 const agents = [
+  { id: 'analistaVendas', name: 'Analista de Vendas', icon: 'AV', color: 'text-purple-600' },
   { id: 'ecommerceSalesAgentV2', name: 'Gestor de E-commerce', icon: 'E', color: 'text-emerald-600' },
-  { id: 'salesAgent', name: 'Executivo de Vendas', icon: 'S', color: 'text-indigo-600' },
   { id: 'contasAReceberAgent', name: 'Contas a Pagar e Receber', icon: 'R', color: 'text-teal-600' },
   { id: 'reembolsoAgent', name: 'Gestor de Reembolsos', icon: 'R', color: 'text-green-600' },
   { id: 'inventoryAgent', name: 'Gestor de Estoque', icon: 'I', color: 'text-blue-600' },
@@ -23,7 +23,6 @@ const agents = [
   { id: 'gestorDeProjetosAgent', name: 'Gerente de Projetos', icon: 'P', color: 'text-violet-600' },
   { id: 'gestorDeServicosAgent', name: 'Gestor de Serviços', icon: 'S', color: 'text-teal-600' },
   { id: 'gestorDeVendasB2BAgent', name: 'Gerente de Vendas B2B', icon: 'V', color: 'text-rose-600' },
-  { id: 'analistaVendas', name: 'Analista de Vendas', icon: 'AV', color: 'text-purple-600' },
 ];
 
 // Dropdown elegante que aparece quando o usuário digita "/" no input
