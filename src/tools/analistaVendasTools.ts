@@ -376,7 +376,10 @@ LEFT JOIN realizado r ON r.vendedor_id = mv.vendedor_id`
           ${idCol} AS id,
           ${labelCol} AS label,
           ${metaCol} AS ${metaCol},
-          ${realCol} AS ${realCol}
+          ${realCol} AS ${realCol},
+          CASE WHEN COALESCE(${metaCol}, 0) > 0
+               THEN ROUND(COALESCE(${realCol}, 0) / NULLIF(${metaCol}, 0) * 100, 2)
+               ELSE 0 END AS atingimento
         FROM (
           ${selectSql}
         ) base
@@ -390,6 +393,7 @@ LEFT JOIN realizado r ON r.vendedor_id = mv.vendedor_id`
         [metaCol]: metaCol,
         [realCol]: realCol,
         [labelCol]: 'label',
+        atingimento: 'atingimento',
       }
       const ob = order_by ? whitelist[order_by] : undefined
       const od = order_dir === 'desc' ? 'DESC' : 'ASC'
