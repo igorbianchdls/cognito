@@ -6,6 +6,8 @@ import type { ColumnDef } from '@tanstack/react-table'
 
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
+import NexusHeader from '@/components/nexus/NexusHeader'
+import NexusPageContainer from '@/components/nexus/NexusPageContainer'
 
 import PageHeader from '@/components/modulos/PageHeader'
 import TabsNav, { type Opcao } from '@/components/modulos/TabsNav'
@@ -395,46 +397,49 @@ export default function ModulosVendasPage() {
 
   return (
     <SidebarProvider>
-      <SidebarShadcn />
-      <SidebarInset className="min-h-screen flex flex-col overflow-y-auto" style={{ background: layout.contentBg }}>
-        <div style={{ background: 'white' }}>
-          <div style={{ marginBottom: layout.mbTitle }}>
-            <PageHeader
-              title={titulo.title}
-              subtitle={titulo.subtitle}
-              titleFontFamily={fontVar(titulo.titleFontFamily)}
-              titleFontSize={titulo.titleFontSize}
-              titleFontWeight={titulo.titleFontWeight}
-              titleColor={titulo.titleColor}
-              titleLetterSpacing={titulo.titleLetterSpacing}
-              subtitleFontFamily={fontVar(titulo.subtitleFontFamily)}
-              subtitleFontSize={titulo.subtitleFontSize}
-              subtitleFontWeight={titulo.subtitleFontWeight}
-              subtitleColor={titulo.subtitleColor}
-              subtitleLetterSpacing={titulo.subtitleLetterSpacing}
-            />
-          </div>
-          <div style={{ marginBottom: 0 }}>
-            <TabsNav
-              options={tabOptions}
-              value={tabs.selected}
-              onValueChange={(v) => moduleUiActions.setTabs({ selected: v })}
-              fontFamily={fontVar(tabs.fontFamily)}
-              fontSize={tabs.fontSize}
-              fontWeight={tabs.fontWeight}
-              color={tabs.color}
-              letterSpacing={tabs.letterSpacing}
-              iconSize={tabs.iconSize}
-              labelOffsetY={tabs.labelOffsetY}
-              startOffset={tabs.leftOffset}
-              activeColor={tabs.activeColor}
-              activeFontWeight={tabs.activeFontWeight}
-              activeBorderColor={tabs.activeBorderColor}
-              className="px-0 md:px-0"
-            />
-          </div>
-        </div>
-        <div style={{ paddingTop: (layout.contentTopGap || 0) + (layout.mbTabs || 0) }}>
+      <SidebarShadcn borderless headerBorderless />
+      <SidebarInset className="h-screen overflow-hidden">
+        <div className="flex h-full overflow-hidden" style={{ backgroundColor: '#fdfdfd' }}>
+          <div className="flex flex-col h-full w-full">
+            <NexusHeader viewMode={'dashboard'} onChangeViewMode={() => {}} borderless size="sm" showBreadcrumb={false} />
+            <div className="flex-1 min-h-0 pl-2 pr-2 pt-0 pb-2" data-page="nexus">
+              <NexusPageContainer className="h-full">
+                <div style={{ marginBottom: layout.mbTitle }}>
+                  <PageHeader
+                    title={titulo.title}
+                    subtitle={titulo.subtitle}
+                    titleFontFamily={fontVar(titulo.titleFontFamily)}
+                    titleFontSize={titulo.titleFontSize}
+                    titleFontWeight={titulo.titleFontWeight}
+                    titleColor={titulo.titleColor}
+                    titleLetterSpacing={titulo.titleLetterSpacing}
+                    subtitleFontFamily={fontVar(titulo.subtitleFontFamily)}
+                    subtitleFontSize={titulo.subtitleFontSize}
+                    subtitleFontWeight={titulo.subtitleFontWeight}
+                    subtitleColor={titulo.subtitleColor}
+                    subtitleLetterSpacing={titulo.subtitleLetterSpacing}
+                  />
+                </div>
+                <div style={{ marginBottom: 0 }}>
+                  <TabsNav
+                    options={tabOptions}
+                    value={tabs.selected}
+                    onValueChange={(v) => moduleUiActions.setTabs({ selected: v })}
+                    fontFamily={fontVar(tabs.fontFamily)}
+                    fontSize={tabs.fontSize}
+                    fontWeight={tabs.fontWeight}
+                    color={tabs.color}
+                    letterSpacing={tabs.letterSpacing}
+                    iconSize={tabs.iconSize}
+                    labelOffsetY={tabs.labelOffsetY}
+                    startOffset={tabs.leftOffset}
+                    activeColor={tabs.activeColor}
+                    activeFontWeight={tabs.activeFontWeight}
+                    activeBorderColor={tabs.activeBorderColor}
+                    className="px-0 md:px-0"
+                  />
+                </div>
+                <div style={{ paddingTop: (layout.contentTopGap || 0) + (layout.mbTabs || 0) }}>
           <div className="px-4 md:px-6" style={{ marginBottom: 8 }}>
             <DataToolbar
               from={total === 0 ? 0 : (page - 1) * pageSize + 1}
@@ -527,6 +532,10 @@ export default function ModulosVendasPage() {
                   }}
                 />
               )}
+            </div>
+          </div>
+                </div>
+              </NexusPageContainer>
             </div>
           </div>
         </div>
