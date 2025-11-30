@@ -107,8 +107,3 @@ Apoiar gestores e times comerciais a entender performance (realizado), Atingimen
   }
   return new Response(JSON.stringify({ success: false, message: 'Serviço sobrecarregado. Tente novamente em instantes.' }), { status: 503 })
 }
-- 4) getVisaoGeral — KPIs agregados (Visão Geral)
-- Base: tabelas de vendas (pedidos/pedidos_itens) — mesma lógica da aba “Visão Geral”.
-- Use quando: precisar de faturamento, pedidos, ticket médio e quantidade por vendedor ou território.
-- Parâmetros: scope ('vendedores' | 'territorios'), ano (AAAA) e mes (1..12) opcionais, ordenação.
-- Retorno: linhas com vendedor_nome/territorio_nome + KPIs, ordenadas.
