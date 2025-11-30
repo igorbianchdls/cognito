@@ -36,8 +36,8 @@ export default function Page() {
   const selectedAgent = useStore(currentAgent);
   const selectedWorkflow = useStore(currentWorkflow);
 
-  // Se há workflow selecionado, use ele. Caso contrário, use o agent. Se ambos null, fallback para salesAgent
-  const activeAgentOrWorkflow = selectedWorkflow || selectedAgent || 'salesAgent';
+  // Se há workflow selecionado, use ele. Caso contrário, use o agent. Se ambos null, fallback para analistaVendas
+  const activeAgentOrWorkflow = selectedWorkflow || selectedAgent || 'analistaVendas';
 
   // Array unificado que guarda TODAS as mensagens em ordem cronológica
   const [allMessages, setAllMessages] = useState<(UIMessage & { agent: string })[]>([]);
@@ -52,7 +52,6 @@ export default function Page() {
   const getApiUrl = (agentOrWorkflow: string) => {
     switch (agentOrWorkflow) {
       // Agents
-      case 'salesAgent': return '/api/claudeAgents/sales';
       case 'contasAReceberAgent': return '/api/claudeAgents/contas-a-receber';
       case 'inventoryAgent': return '/api/claudeAgents/inventory';
       case 'ecommerceSalesAgentV2': return '/api/claudeAgents/ecommerce-sales-v2';
@@ -74,7 +73,7 @@ export default function Page() {
       case 'pagamento-efetuado': return '/api/workflows/pagamento-efetuado';
       case 'pagamento-recebido': return '/api/workflows/pagamento-recebido';
       case 'criador-de-dashboard': return '/api/workflows/criador-de-dashboard';
-      default: return '/api/claudeAgents/sales';
+      default: return '/api/claudeAgents/analista-vendas';
     }
   };
 

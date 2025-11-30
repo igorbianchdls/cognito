@@ -49,7 +49,6 @@ interface InputAreaProps {
 
 // Mapeamento de ícones dos agentes
 const iconMap: Record<string, React.ComponentType<{ className?: string }> | null> = {
-  'salesAgent': TrendingUp,
   'contasAReceberAgent': ArrowDownLeft,
   'inventoryAgent': Package,
   'ecommerceSalesAgentV2': TrendingUp,
@@ -211,7 +210,6 @@ export default function InputArea({ input, setInput, onSubmit, status, selectedA
             const getAgentName = (id: string | null) => {
               if (!id) return 'Agente';
               switch (id) {
-                case 'salesAgent': return 'Executivo de Vendas';
                 case 'contasAReceberAgent': return 'Contas a Pagar e Receber';
                 case 'inventoryAgent': return 'Gestor de Estoque';
                 case 'ecommerceSalesAgentV2': return 'Gestor de E-commerce';

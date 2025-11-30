@@ -3606,8 +3606,7 @@ const getAgentInfo = (agent: string) => {
       return { initial: 'Y', title: 'Analista de Campanhas Google Ads', color: 'bg-blue-700', icon: <GoogleAdsIcon className="w-full h-full" /> };
     case 'metaCampaignAnalyst':
       return { initial: 'B', title: 'Analista de Campanhas Meta Ads', color: 'bg-blue-800', icon: <MetaIcon className="w-full h-full" /> };
-    case 'salesAgent':
-      return { initial: 'V', title: 'Executivo de Vendas', color: 'bg-indigo-600' };
+    
     case 'contasAReceberAgent':
       return { initial: 'C', title: 'Contas a Pagar e Receber', color: 'bg-teal-600' };
     case 'inventoryAgent':
@@ -3661,7 +3660,7 @@ interface RespostaDaIAProps {
 
 export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAProps) {
   // Usar o agente da própria mensagem, se não tiver usa o selectedAgent atual
-  const messageAgent = (message as UIMessage & { agent?: string }).agent || selectedAgent || 'salesAgent';
+  const messageAgent = (message as UIMessage & { agent?: string }).agent || selectedAgent || 'analistaVendas';
 
   const agentInfo = getAgentInfo(messageAgent);
   
