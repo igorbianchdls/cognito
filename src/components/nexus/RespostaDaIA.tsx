@@ -8412,7 +8412,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
           );
         }
 
-        // Analista de Vendas: getDesempenho
+        // Analista de Vendas: getDesempenho (Metas x Realizado)
         if (part.type === 'tool-getDesempenho') {
           const tool = part as NexusToolUIPart;
           const open = tool.state === 'output-available' || tool.state === 'output-error';
@@ -8427,6 +8427,34 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
               </Tool>
               {tool.state === 'output-available' && (
                 <DesempenhoResult result={tool.output as GetDesempenhoOutput} />
+              )}
+            </div>
+          );
+        }
+
+        // Analista de Vendas: getVisaoGeral (KPIs agregados)
+        if (part.type === 'tool-getVisaoGeral') {
+          const tool = part as NexusToolUIPart;
+          const open = tool.state === 'output-available' || tool.state === 'output-error';
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={open}>
+                <ToolHeader type={part.type} state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && (
+                <GenericResultTable
+                  title="Visão Geral"
+                  icon={TrendingUp}
+                  iconColor="text-emerald-600"
+                  success={(tool.output as GenericRowsToolOutput).success}
+                  message={(tool.output as GenericRowsToolOutput).message}
+                  rows={(tool.output as GenericRowsToolOutput).rows as Array<Record<string, unknown>>}
+                  sql_query={(tool.output as GenericRowsToolOutput).sql_query}
+                />
               )}
             </div>
           );

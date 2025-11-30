@@ -1,7 +1,7 @@
 import { anthropic } from '@ai-sdk/anthropic';
 import { convertToModelMessages, streamText, UIMessage } from 'ai';
 import { pivotSales } from '@/tools/vendasAnalyticsTools';
-import { getMetas, getDesempenho } from '@/tools/analistaVendasTools';
+import { getMetas, getDesempenho, getVisaoGeral } from '@/tools/analistaVendasTools';
 
 export const maxDuration = 300;
 
@@ -91,7 +91,7 @@ Apoiar gestores e times comerciais a entender performance (realizado), Atingimen
         providerOptions: thinkingBudget ? { anthropic: { thinking: { type: 'enabled', budgetTokens: thinkingBudget } } } : {},
         system: SYSTEM_PROMPT,
         messages: convertToModelMessages(messages),
-        tools: { pivotSales, getMetas, getDesempenho },
+        tools: { pivotSales, getMetas, getDesempenho, getVisaoGeral },
       })
       return result.toUIMessageStreamResponse()
     } catch (err) {
@@ -107,3 +107,8 @@ Apoiar gestores e times comerciais a entender performance (realizado), Atingimen
   }
   return new Response(JSON.stringify({ success: false, message: 'Serviço sobrecarregado. Tente novamente em instantes.' }), { status: 503 })
 }
+- 4) getVisaoGeral — KPIs agregados (Visão Geral)
+- Base: tabelas de vendas (pedidos/pedidos_itens) — mesma lógica da aba “Visão Geral”.
+- Use quando: precisar de faturamento, pedidos, ticket médio e quantidade por vendedor ou território.
+- Parâmetros: scope ('vendedores' | 'territorios'), ano (AAAA) e mes (1..12) opcionais, ordenação.
+- Retorno: linhas com vendedor_nome/territorio_nome + KPIs, ordenadas.

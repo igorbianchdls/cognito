@@ -133,6 +133,101 @@ export type GetDesempenhoOutput = {
   sql_params?: string
 }
 
+// ==========================
+// VISÃO GERAL (KPIs agregados)
+// ==========================
+export type VisaoGeralRow = Record<string, unknown>
+export type GetVisaoGeralOutput = {
+  success: boolean
+  rows: VisaoGeralRow[]
+  message: string
+  sql_query?: string
+  sql_params?: string
+}
+
+export const getVisaoGeral = tool({
+  description: 'KPIs de Visão Geral (faturamento, pedidos, ticket, etc) por vendedores ou territórios, com filtros opcionais de período (ano/mes) e ordenação',
+  inputSchema: z.object({
+    scope: z.enum(['vendedores', 'territorios']).default('vendedores').optional(),
+    ano: z.number().optional(),
+    mes: z.number().optional(),
+    order_by: z.string().optional(),
+    order_dir: z.enum(['asc', 'desc']).optional(),
+  }),
+  execute: async ({ scope = 'vendedores', ano, mes, order_by, order_dir }) => {
+    try {
+      const params: unknown[] = []
+      const whereParts: string[] = ["p.status = 'concluido'"]
+      if (ano && String(ano).length === 4) {
+        whereParts.push(`EXTRACT(YEAR FROM p.data_pedido) = $${params.length + 1}`)
+        params.push(ano)
+      }
+      if (mes && mes >= 1 && mes <= 12) {
+        whereParts.push(`EXTRACT(MONTH FROM p.data_pedido) = $${params.length + 1}`)
+        params.push(mes)
+      }
+      const whereClause = whereParts.length ? `WHERE ${whereParts.join(' AND ')}` : ''
+
+      let sql = ''
+      let defaultOrder = ''
+      if (scope === 'territorios') {
+        sql = `SELECT
+  t.id AS territorio_id,
+  t.nome AS territorio_nome,
+  COALESCE(SUM(i.subtotal), 0) AS faturamento_total,
+  COUNT(DISTINCT p.id) AS total_pedidos,
+  COALESCE(SUM(i.quantidade), 0) AS quantidade_servicos,
+  CASE WHEN COUNT(DISTINCT p.id) > 0
+       THEN COALESCE(SUM(i.subtotal),0) / COUNT(DISTINCT p.id)
+       ELSE 0 END AS ticket_medio
+FROM comercial.territorios t
+LEFT JOIN vendas.pedidos p ON p.territorio_id = t.id
+LEFT JOIN vendas.pedidos_itens i ON i.pedido_id = p.id
+${whereClause}
+GROUP BY t.id, t.nome`
+        defaultOrder = 'ORDER BY faturamento_total DESC'
+      } else {
+        sql = `SELECT
+  v.id AS vendedor_id,
+  f.nome AS vendedor_nome,
+  t.nome AS territorio_nome,
+  COALESCE(SUM(i.subtotal), 0) AS faturamento_total,
+  COUNT(DISTINCT p.id) AS total_pedidos,
+  COALESCE(SUM(i.quantidade), 0) AS quantidade_servicos,
+  CASE WHEN COUNT(DISTINCT p.id) > 0
+       THEN COALESCE(SUM(i.subtotal),0) / COUNT(DISTINCT p.id)
+       ELSE 0 END AS ticket_medio
+FROM comercial.vendedores v
+LEFT JOIN entidades.funcionarios f ON f.id = v.funcionario_id
+LEFT JOIN comercial.territorios t ON t.id = v.territorio_id
+LEFT JOIN vendas.pedidos p ON p.vendedor_id = v.id
+LEFT JOIN vendas.pedidos_itens i ON i.pedido_id = p.id
+${whereClause}
+GROUP BY v.id, f.nome, t.nome`
+        defaultOrder = 'ORDER BY faturamento_total DESC'
+      }
+
+      const whitelist: Record<string, string> = {
+        vendedor_nome: 'vendedor_nome',
+        territorio_nome: 'territorio_nome',
+        faturamento_total: 'faturamento_total',
+        total_pedidos: 'total_pedidos',
+        quantidade_servicos: 'quantidade_servicos',
+        ticket_medio: 'ticket_medio',
+      }
+      const ob = order_by ? whitelist[order_by] : undefined
+      const od = order_dir === 'desc' ? 'DESC' : 'ASC'
+      const orderClause = ob ? `ORDER BY ${ob} ${od}` : defaultOrder
+
+      const listSql = `${sql} ${orderClause}`.trim()
+      const rows = await runQuery<VisaoGeralRow>(listSql, params)
+      return { success: true, rows, message: 'OK', sql_query: listSql, sql_params: fmt(params) }
+    } catch (error) {
+      return { success: false, rows: [], message: `Erro ao obter visão geral: ${error instanceof Error ? error.message : String(error)}` }
+    }
+  }
+})
+
 export const getDesempenho = tool({
   description: 'Desempenho por meta e tipo de meta, usando comercial.fn_calcular_realizado_meta e filtros de período/vendedor',
   inputSchema: z.object({
