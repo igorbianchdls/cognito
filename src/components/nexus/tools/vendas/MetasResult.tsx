@@ -30,7 +30,7 @@ export default function MetasResult({ result }: { result: GetMetasOutput }) {
         <div>
           <div className="flex items-center gap-2">
             <Target className="h-5 w-5 text-gray-500" />
-            <ArtifactTitle>Metas Comerciais</ArtifactTitle>
+            <ArtifactTitle>Metas x Realizado</ArtifactTitle>
           </div>
           <ArtifactDescription className="mt-1">{result.message} — {result.count} metas</ArtifactDescription>
         </div>

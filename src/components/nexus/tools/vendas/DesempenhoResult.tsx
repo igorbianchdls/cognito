@@ -35,7 +35,7 @@ export default function DesempenhoResult({ result }: { result: GetDesempenhoOutp
         <div>
           <div className="flex items-center gap-2">
             <TrendingUp className="h-5 w-5 text-gray-500" />
-            <ArtifactTitle>Desempenho Comercial</ArtifactTitle>
+            <ArtifactTitle>Visão Geral</ArtifactTitle>
           </div>
           <ArtifactDescription className="mt-1">{result.message} — {result.count} metas</ArtifactDescription>
         </div>

@@ -74,6 +74,9 @@ export const ToolHeader = ({
       <WrenchIcon className="size-4 text-muted-foreground" />
       <span className="font-medium text-sm">{(() => {
         const labels: Record<string, string> = {
+          // Analista de Vendas (renomeados)
+          'tool-getDesempenho': 'Visão Geral',
+          'tool-getMetas': 'Metas x Realizado',
           'tool-getTopProdutosReceitaLiquida': 'Top produtos por receita líquida',
           'tool-getDesempenhoVendasMensal': 'Desempenho de Vendas Mensal',
           'tool-analiseDesempenhoCanalVenda': 'Desempenho por canal (rentabilidade)',

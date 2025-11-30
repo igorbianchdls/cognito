@@ -72,8 +72,8 @@ export default function ModulosComercialPage() {
       options: [
         { value: 'territorios', label: 'Territórios' },
         { value: 'vendedores', label: 'Vendedores' },
-        { value: 'desempenho', label: 'Desempenho' },
-        { value: 'resultados', label: 'Resultados' },
+        { value: 'desempenho', label: 'Visão Geral' },
+        { value: 'resultados', label: 'Metas x Realizado' },
         { value: 'metas', label: 'Metas' },
         { value: 'tipos_metas', label: 'Tipos de Metas' },
         { value: 'regras_comissoes', label: 'Regras de Comissões' },
