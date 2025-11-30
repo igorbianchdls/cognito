@@ -450,7 +450,7 @@ export default function ModulosComercialPage() {
                               disabled={page <= 1}
                               title="Anterior"
                             >
-                              ‹
+                              &lsaquo;
                             </button>
                             <div className="mx-1 min-w-[120px] text-center text-sm">
                               {total === 0 ? 0 : (page - 1) * pageSize + 1}–{total === 0 ? 0 : Math.min(page * pageSize, total)} de {total}
@@ -461,7 +461,7 @@ export default function ModulosComercialPage() {
                               disabled={page * pageSize >= total}
                               title="Próxima"
                             >
-                              ›
+                              &rsaquo;
                             </button>
                           </div>
                         </div>

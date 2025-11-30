@@ -6,6 +6,8 @@ import type { ColumnDef } from '@tanstack/react-table'
 
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
+import NexusHeader from '@/components/nexus/NexusHeader'
+import NexusPageContainer from '@/components/nexus/NexusPageContainer'
 
 import PageHeader from '@/components/modulos/PageHeader'
 import TabsNav from '@/components/modulos/TabsNav'
