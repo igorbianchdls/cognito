@@ -26,9 +26,10 @@ interface NexusHeaderProps {
   showBreadcrumb?: boolean
   borderless?: boolean
   size?: 'sm' | 'md'
+  rightActions?: React.ReactNode
 }
 
-export default function NexusHeader({ viewMode, onChangeViewMode, showBreadcrumb = true, borderless = false, size = 'md' }: NexusHeaderProps) {
+export default function NexusHeader({ viewMode, onChangeViewMode, showBreadcrumb = true, borderless = false, size = 'md', rightActions }: NexusHeaderProps) {
   const current = (
     viewMode === 'chat' ? { icon: <MessageSquare className={size === 'sm' ? 'w-3.5 h-3.5' : 'w-4 h-4'} />, label: 'Chat' } :
     viewMode === 'split' ? { icon: <Layout className={size === 'sm' ? 'w-3.5 h-3.5' : 'w-4 h-4'} />, label: 'Workspace' } :
@@ -66,6 +67,7 @@ export default function NexusHeader({ viewMode, onChangeViewMode, showBreadcrumb
         </Breadcrumb>
       )}
       <div className="ml-auto flex items-center gap-2">
+        {rightActions}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className={`flex items-center gap-2 ${mainBtnSize} rounded-lg text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:bg-gray-100 transition-colors`}>
