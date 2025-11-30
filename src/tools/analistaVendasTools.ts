@@ -228,6 +228,157 @@ GROUP BY v.id, f.nome, t.nome`
   }
 })
 
+// ==========================
+// METAS x REALIZADO (agregado por vendedor/território)
+// ==========================
+export type MetasXRealizadoRow = Record<string, unknown>
+export type GetMetasXRealizadoOutput = {
+  success: boolean
+  rows: MetasXRealizadoRow[]
+  count: number
+  message: string
+  sql_query?: string
+  sql_params?: string
+}
+
+export const getMetasXRealizado = tool({
+  description: 'Compara Metas x Realizado por vendedor ou território no mês/ano informados (mesma lógica da aba Metas x Realizado)'.trim(),
+  inputSchema: z.object({
+    scope: z.enum(['vendedores', 'territorios']).default('vendedores').optional(),
+    ano: z.number(),
+    mes: z.number().min(1).max(12),
+    order_by: z.string().optional(),
+    order_dir: z.enum(['asc', 'desc']).optional(),
+  }),
+  execute: async ({ scope = 'vendedores', ano, mes, order_by, order_dir }) => {
+    try {
+      const params: unknown[] = []
+      const anoVal = Number(ano)
+      const mesVal = Number(mes)
+      if (!Number.isFinite(anoVal) || String(anoVal).length !== 4 || !Number.isFinite(mesVal) || mesVal < 1 || mesVal > 12) {
+        return { success: false, rows: [], count: 0, message: 'Informe ano (AAAA) e mes (1..12) válidos' }
+      }
+
+      const de = `${String(anoVal).padStart(4,'0')}-${String(mesVal).padStart(2,'0')}-01`
+      const ate = mesVal === 12 ? `${String(anoVal + 1)}-01-01` : `${String(anoVal)}-${String(mesVal + 1).padStart(2,'0')}-01`
+
+      let selectSql = ''
+      if (scope === 'territorios') {
+        selectSql = `WITH metas_por_territorio AS (
+  SELECT
+      m.id AS meta_id,
+      m.territorio_id,
+      t.nome AS territorio_nome,
+      MAX(CASE WHEN mi.tipo_meta_id = 1 THEN mi.valor_meta END) AS meta_faturamento,
+      MAX(CASE WHEN mi.tipo_meta_id = 5 THEN mi.valor_meta END) AS meta_ticket_medio,
+      MAX(CASE WHEN mi.tipo_meta_id = 4 THEN mi.valor_meta END) AS meta_novos_clientes
+  FROM comercial.metas m
+  LEFT JOIN comercial.metas_itens mi ON mi.meta_id = m.id
+  LEFT JOIN comercial.territorios t ON t.id = m.territorio_id
+  WHERE m.ano = ${anoVal}
+    AND m.mes = ${mesVal}
+    AND m.territorio_id IS NOT NULL
+  GROUP BY m.id, m.territorio_id, t.nome
+),
+realizado AS (
+  SELECT
+      p.territorio_id,
+      SUM(i.subtotal) AS realizado_faturamento,
+      CASE WHEN COUNT(DISTINCT p.id) > 0 THEN SUM(i.subtotal) / COUNT(DISTINCT p.id) ELSE 0 END AS realizado_ticket_medio,
+      COUNT(DISTINCT p.cliente_id) FILTER (
+          WHERE p.data_pedido >= '${de}' AND p.data_pedido < '${ate}'
+            AND p.cliente_id IN (
+                SELECT cliente_id FROM vendas.pedidos GROUP BY cliente_id HAVING MIN(data_pedido) >= '${de}' AND MIN(data_pedido) < '${ate}'
+            )
+      ) AS realizado_novos_clientes
+  FROM vendas.pedidos p
+  LEFT JOIN vendas.pedidos_itens i ON i.pedido_id = p.id
+  WHERE p.status = 'concluido'
+    AND p.data_pedido >= '${de}' AND p.data_pedido < '${ate}'
+  GROUP BY p.territorio_id
+)
+SELECT
+  mt.territorio_id,
+  mt.territorio_nome,
+  mt.meta_faturamento,
+  mt.meta_ticket_medio,
+  mt.meta_novos_clientes,
+  COALESCE(r.realizado_faturamento, 0) AS realizado_faturamento,
+  COALESCE(r.realizado_ticket_medio, 0) AS realizado_ticket_medio,
+  COALESCE(r.realizado_novos_clientes, 0) AS realizado_novos_clientes
+FROM metas_por_territorio mt
+LEFT JOIN realizado r ON r.territorio_id = mt.territorio_id`
+      } else {
+        selectSql = `WITH metas_por_vendedor AS (
+  SELECT
+      m.id AS meta_id,
+      m.vendedor_id,
+      f.nome AS vendedor_nome,
+      MAX(CASE WHEN mi.tipo_meta_id = 1 THEN mi.valor_meta END) AS meta_faturamento,
+      MAX(CASE WHEN mi.tipo_meta_id = 5 THEN mi.valor_meta END) AS meta_ticket_medio,
+      MAX(CASE WHEN mi.tipo_meta_id = 4 THEN mi.valor_meta END) AS meta_novos_clientes
+  FROM comercial.metas m
+  LEFT JOIN comercial.metas_itens mi ON mi.meta_id = m.id
+  LEFT JOIN comercial.vendedores v ON v.id = m.vendedor_id
+  LEFT JOIN entidades.funcionarios f ON f.id = v.funcionario_id
+  WHERE m.ano = ${anoVal}
+    AND m.mes = ${mesVal}
+    AND m.vendedor_id IS NOT NULL
+  GROUP BY m.id, m.vendedor_id, f.nome
+),
+realizado AS (
+  SELECT
+      p.vendedor_id,
+      SUM(i.subtotal) AS realizado_faturamento,
+      CASE WHEN COUNT(DISTINCT p.id) > 0 THEN SUM(i.subtotal) / COUNT(DISTINCT p.id) ELSE 0 END AS realizado_ticket_medio,
+      COUNT(DISTINCT p.cliente_id) FILTER (
+          WHERE p.data_pedido >= '${de}' AND p.data_pedido < '${ate}'
+            AND p.cliente_id IN (
+                SELECT cliente_id FROM vendas.pedidos GROUP BY cliente_id HAVING MIN(data_pedido) >= '${de}' AND MIN(data_pedido) < '${ate}'
+            )
+      ) AS realizado_novos_clientes
+  FROM vendas.pedidos p
+  LEFT JOIN vendas.pedidos_itens i ON i.pedido_id = p.id
+  WHERE p.status = 'concluido'
+    AND p.data_pedido >= '${de}' AND p.data_pedido < '${ate}'
+  GROUP BY p.vendedor_id
+)
+SELECT
+  mv.vendedor_id,
+  mv.vendedor_nome,
+  mv.meta_faturamento,
+  mv.meta_ticket_medio,
+  mv.meta_novos_clientes,
+  COALESCE(r.realizado_faturamento, 0) AS realizado_faturamento,
+  COALESCE(r.realizado_ticket_medio, 0) AS realizado_ticket_medio,
+  COALESCE(r.realizado_novos_clientes, 0) AS realizado_novos_clientes
+FROM metas_por_vendedor mv
+LEFT JOIN realizado r ON r.vendedor_id = mv.vendedor_id`
+      }
+
+      const whitelist: Record<string, string> = {
+        vendedor_nome: 'vendedor_nome',
+        territorio_nome: 'territorio_nome',
+        meta_faturamento: 'meta_faturamento',
+        realizado_faturamento: 'realizado_faturamento',
+        meta_ticket_medio: 'meta_ticket_medio',
+        realizado_ticket_medio: 'realizado_ticket_medio',
+        meta_novos_clientes: 'meta_novos_clientes',
+        realizado_novos_clientes: 'realizado_novos_clientes',
+      }
+      const ob = order_by ? whitelist[order_by] : undefined
+      const od = order_dir === 'desc' ? 'DESC' : 'ASC'
+      const orderClause = ob ? ` ORDER BY ${ob} ${od}` : (scope === 'territorios' ? ' ORDER BY territorio_nome ASC' : ' ORDER BY vendedor_nome ASC')
+
+      const listSql = `${selectSql}${orderClause}`
+      const rows = await runQuery<MetasXRealizadoRow>(listSql, params)
+      return { success: true, rows, count: rows.length, message: 'OK', sql_query: listSql, sql_params: fmt(params) }
+    } catch (error) {
+      return { success: false, rows: [], count: 0, message: `Erro: ${error instanceof Error ? error.message : String(error)}` }
+    }
+  }
+})
+
 export const getDesempenho = tool({
   description: 'Desempenho por meta e tipo de meta, usando comercial.fn_calcular_realizado_meta e filtros de período/vendedor',
   inputSchema: z.object({
@@ -242,84 +393,94 @@ export const getDesempenho = tool({
   execute: async ({ ano, mes, vendedor_id, page = 1, pageSize = 20, order_by, order_dir }) => {
     try {
       const params: unknown[] = []
-      const filters: string[] = []
       let i = 1
-      // Filtros por período/vendedor (iguais aos usados nas abas)
-      if (ano && String(ano).length === 4) { filters.push(`m.ano = $${i++}`); params.push(ano) }
-      if (mes && mes >= 1 && mes <= 12) { filters.push(`m.mes = $${i++}`); params.push(mes) }
-      if (vendedor_id) { filters.push(`m.vendedor_id = $${i++}`); params.push(vendedor_id) }
-      const whereMetas = filters.length ? `WHERE ${filters.join(' AND ')}` : ''
+      // Datas do período
+      const anoVal = (ano && String(ano).length === 4) ? ano : undefined
+      const mesVal = (mes && mes >= 1 && mes <= 12) ? mes : undefined
+      const de = (anoVal && mesVal) ? `${String(anoVal).padStart(4, '0')}-${String(mesVal).padStart(2, '0')}-01` : null
+      const ate = (anoVal && mesVal) ? (mesVal === 12 ? `${String(anoVal + 1)}-01-01` : `${String(anoVal)}-${String(mesVal + 1).padStart(2, '0')}-01`) : null
 
-      // Datas (para cálculo de novos clientes e ticket médio por janela)
-      // Quando ano/mes não informados, mantém nulos e calcula sem janela específica
-      const de = (ano && mes) ? `${String(ano).padStart(4, '0')}-${String(mes).padStart(2, '0')}-01` : null
-      // próxima virada do mês
-      const ate = (ano && mes) ? (mes === 12 ? `${String(ano + 1)}-01-01` : `${String(ano)}-${String(mes + 1).padStart(2, '0')}-01`) : null
+      const whereMetas: string[] = ["m.vendedor_id IS NOT NULL"]
+      if (anoVal) whereMetas.push(`m.ano = $${i++}`), params.push(anoVal)
+      if (mesVal) whereMetas.push(`m.mes = $${i++}`), params.push(mesVal)
+      if (vendedor_id) whereMetas.push(`m.vendedor_id = $${i++}`), params.push(vendedor_id)
+      const whereMetasSql = whereMetas.length ? `WHERE ${whereMetas.join(' AND ')}` : ''
 
-      // Base: metas únicas por meta_id/tipo_meta (vendedor/periodo)
       const metasSql = `
-        WITH metas AS (
-          SELECT DISTINCT
-            m.meta_id,
-            m.vendedor_id,
-            m.vendedor,
+        WITH metas_por_vendedor AS (
+          SELECT
+            m.id AS meta_id,
             m.mes,
             m.ano,
-            m.tipo_meta,
-            m.valor_meta
-          FROM comercial.vw_metas_detalhe m
-          ${whereMetas}
+            m.vendedor_id,
+            f.nome AS vendedor_nome,
+            MAX(CASE WHEN mi.tipo_meta_id = 1 THEN mi.valor_meta END) AS meta_faturamento,
+            MAX(CASE WHEN mi.tipo_meta_id = 5 THEN mi.valor_meta END) AS meta_ticket_medio,
+            MAX(CASE WHEN mi.tipo_meta_id = 4 THEN mi.valor_meta END) AS meta_novos_clientes
+          FROM comercial.metas m
+          LEFT JOIN comercial.metas_itens mi ON mi.meta_id = m.id
+          LEFT JOIN comercial.vendedores v ON v.id = m.vendedor_id
+          LEFT JOIN entidades.funcionarios f ON f.id = v.funcionario_id
+          ${whereMetasSql}
+          GROUP BY m.id, m.mes, m.ano, m.vendedor_id, f.nome
         ),
-        realizado_vendedor AS (
-          SELECT
-            v.id AS vendedor_id,
-            SUM(i.subtotal) AS faturamento_total,
-            COUNT(DISTINCT p.id) AS pedidos_total
-          FROM comercial.vendedores v
-          LEFT JOIN vendas.pedidos p
-            ON p.vendedor_id = v.id
-           AND p.status = 'concluido'
-          ${de && ate ? `AND p.data_pedido >= '${de}' AND p.data_pedido < '${ate}'` : ''}
-          LEFT JOIN vendas.pedidos_itens i
-            ON i.pedido_id = p.id
-          GROUP BY v.id
-        ),
-        novos_clientes AS (
-          ${de && ate ? `
+        realizado AS (
           SELECT
             p.vendedor_id,
-            COUNT(DISTINCT p.cliente_id) AS novos
-          FROM vendas.pedidos p
-          WHERE p.status = 'concluido'
-            AND p.data_pedido >= '${de}' AND p.data_pedido < '${ate}'
-            AND p.cliente_id IN (
-              SELECT cliente_id
-              FROM vendas.pedidos
-              GROUP BY cliente_id
-              HAVING MIN(data_pedido) >= '${de}' AND MIN(data_pedido) < '${ate}'
+            SUM(i.subtotal) AS realizado_faturamento,
+            CASE WHEN COUNT(DISTINCT p.id) > 0 THEN SUM(i.subtotal) / COUNT(DISTINCT p.id) ELSE 0 END AS realizado_ticket_medio,
+            ${de && ate ? `
+            COUNT(DISTINCT p.cliente_id) FILTER (
+              WHERE p.data_pedido >= '${de}' AND p.data_pedido < '${ate}'
+                AND p.cliente_id IN (
+                  SELECT cliente_id FROM vendas.pedidos GROUP BY cliente_id HAVING MIN(data_pedido) >= '${de}' AND MIN(data_pedido) < '${ate}'
+                )
             )
+            ` : `0` } AS realizado_novos_clientes
+          FROM vendas.pedidos p
+          LEFT JOIN vendas.pedidos_itens i ON i.pedido_id = p.id
+          WHERE p.status = 'concluido'
+          ${de && ate ? `AND p.data_pedido >= '${de}' AND p.data_pedido < '${ate}'` : ''}
           GROUP BY p.vendedor_id
-          ` : `
-          SELECT 0::bigint AS vendedor_id, 0::int AS novos
-          `}
+        ),
+        linhas AS (
+          SELECT
+            mv.meta_id,
+            mv.vendedor_id,
+            mv.vendedor_nome AS vendedor,
+            mv.mes,
+            mv.ano,
+            'faturamento'::text AS tipo_meta,
+            COALESCE(mv.meta_faturamento, 0) AS valor_meta,
+            COALESCE(r.realizado_faturamento, 0) AS realizado
+          FROM metas_por_vendedor mv
+          LEFT JOIN realizado r ON r.vendedor_id = mv.vendedor_id
+          UNION ALL
+          SELECT
+            mv.meta_id,
+            mv.vendedor_id,
+            mv.vendedor_nome AS vendedor,
+            mv.mes,
+            mv.ano,
+            'ticket_medio'::text AS tipo_meta,
+            COALESCE(mv.meta_ticket_medio, 0) AS valor_meta,
+            COALESCE(r.realizado_ticket_medio, 0) AS realizado
+          FROM metas_por_vendedor mv
+          LEFT JOIN realizado r ON r.vendedor_id = mv.vendedor_id
+          UNION ALL
+          SELECT
+            mv.meta_id,
+            mv.vendedor_id,
+            mv.vendedor_nome AS vendedor,
+            mv.mes,
+            mv.ano,
+            'novos_clientes'::text AS tipo_meta,
+            COALESCE(mv.meta_novos_clientes, 0) AS valor_meta,
+            COALESCE(r.realizado_novos_clientes, 0) AS realizado
+          FROM metas_por_vendedor mv
+          LEFT JOIN realizado r ON r.vendedor_id = mv.vendedor_id
         )
-        SELECT
-          m.meta_id,
-          m.vendedor_id,
-          m.vendedor,
-          m.mes,
-          m.ano,
-          m.tipo_meta,
-          m.valor_meta,
-          CASE
-            WHEN m.tipo_meta = 'faturamento' THEN COALESCE(rv.faturamento_total, 0)
-            WHEN m.tipo_meta = 'ticket_medio' THEN CASE WHEN COALESCE(rv.pedidos_total, 0) > 0 THEN COALESCE(rv.faturamento_total, 0) / rv.pedidos_total ELSE 0 END
-            WHEN m.tipo_meta = 'novos_clientes' THEN COALESCE(nc.novos, 0)
-            ELSE 0
-          END AS realizado
-        FROM metas m
-        LEFT JOIN realizado_vendedor rv ON rv.vendedor_id = m.vendedor_id
-        LEFT JOIN novos_clientes nc ON nc.vendedor_id = m.vendedor_id
+        SELECT * FROM linhas
       `
 
       const whitelist: Record<string, string> = {
@@ -369,7 +530,7 @@ export const getDesempenho = tool({
         count,
         page,
         pageSize,
-        message: `Desempenho: ${rows.length} linhas (total ${count} metas)` + (ano && mes ? ` — ${String(mes).padStart(2,'0')}/${ano}` : ''),
+        message: `Desempenho: ${rows.length} linhas (total ${count} metas)` + (anoVal && mesVal ? ` — ${String(mesVal).padStart(2,'0')}/${anoVal}` : ''),
         sql_query: listSql,
         sql_params: fmt([...params, pageSize, offset]),
       }

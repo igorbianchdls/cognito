@@ -1,7 +1,7 @@
 import { anthropic } from '@ai-sdk/anthropic';
 import { convertToModelMessages, streamText, UIMessage } from 'ai';
 import { pivotSales } from '@/tools/vendasAnalyticsTools';
-import { getMetas, getDesempenho, getVisaoGeral } from '@/tools/analistaVendasTools';
+import { getMetas, getVisaoGeral, getMetasXRealizado } from '@/tools/analistaVendasTools';
 
 export const maxDuration = 300;
 
@@ -38,22 +38,16 @@ Apoiar gestores e times comerciais a entender performance (realizado), Atingimen
 - Retorno: { success, rows, count, page, pageSize, message, sql_query, sql_params }
 - Observação: rows incluem meta_id, vendedor, mes, ano, tipo_meta, valor_meta etc. Utilize para exibir “Metas” do período antes de comparar com realizado.
 
-3) getDesempenho — Meta x Real (por tipo de meta)
-- Base: comercial.vw_metas_detalhe + vendas (mesma lógica das abas de “Metas x Realizado/Visão Geral”).
-- Use quando: precisar comparar Meta x Real (por vendedor e tipo_meta) para um mês/ano específicos.
-- Parâmetros:
-  - ano (AAAA) e mes (1..12) — RECOMENDADO informar sempre, pois “novos_clientes” depende de janela temporal; sem ano/mês, o cálculo de novos clientes retorna 0 (e realizado pode considerar todo o histórico).
-  - vendedor_id (opcional), paginação e ordenação.
-- Cálculo (alinhado às abas):
-  - faturamento: SUM(subtotal) de pedidos concluídos no período.
-  - ticket_medio: faturamento_total / total_pedidos no período.
-  - novos_clientes: COUNT DISTINCT de clientes cuja primeira compra foi dentro do período.
-- Retorno: rows com { meta_id, vendedor_id, vendedor, mes, ano, tipo_meta, valor_meta, realizado, diferenca, atingimento_percentual } + count/page.
+3) getMetasXRealizado — Meta x Real (vendedores/territórios)
+- Base: comercial.metas/metas_itens + vendas.pedidos/pedidos_itens — idêntico à aba “Metas x Realizado”.
+- Use quando: comparar meta x realizado (faturamento, ticket médio, novos clientes) por vendedor ou por território no mês/ano.
+- Parâmetros: scope ('vendedores' | 'territorios'), ano (AAAA), mes (1..12), ordenação opcional.
+- Retorno: linhas agregadas por vendedor/território com colunas meta_*/realizado_*.
 
 # Como decidir qual ferramenta usar
 - “Quero ver por território/canal/vendedor ao longo do tempo” → pivotSales.
 - “Quais são as metas deste mês/ano?” → getMetas (com ano/mes).
-- “Comparar meta x realizado por vendedor (ou tipo de meta)” → getDesempenho (com ano/mes, e vendedor_id se focado em 1 vendedor).
+- “Comparar meta x realizado por vendedor/território no mês” → getMetasXRealizado (com ano/mes).
 - Para perguntas amplas: comece com pivotSales, depois complemente com getMetas/getDesempenho se houver metas para o período.
 
 # Boas práticas de interação
@@ -91,7 +85,7 @@ Apoiar gestores e times comerciais a entender performance (realizado), Atingimen
         providerOptions: thinkingBudget ? { anthropic: { thinking: { type: 'enabled', budgetTokens: thinkingBudget } } } : {},
         system: SYSTEM_PROMPT,
         messages: convertToModelMessages(messages),
-        tools: { pivotSales, getMetas, getDesempenho, getVisaoGeral },
+        tools: { pivotSales, getMetas, getMetasXRealizado, getVisaoGeral },
       })
       return result.toUIMessageStreamResponse()
     } catch (err) {

@@ -8412,8 +8412,8 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
           );
         }
 
-        // Analista de Vendas: getDesempenho (Metas x Realizado)
-        if (part.type === 'tool-getDesempenho') {
+        // Analista de Vendas: getMetasXRealizado (Metas x Realizado - agregado)
+        if (part.type === 'tool-getMetasXRealizado') {
           const tool = part as NexusToolUIPart;
           const open = tool.state === 'output-available' || tool.state === 'output-error';
           return (
@@ -8426,7 +8426,15 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                 </ToolContent>
               </Tool>
               {tool.state === 'output-available' && (
-                <DesempenhoResult result={tool.output as GetDesempenhoOutput} />
+                <GenericResultTable
+                  title="Metas x Realizado"
+                  icon={TrendingUp}
+                  iconColor="text-blue-600"
+                  success={(tool.output as GenericRowsToolOutput).success}
+                  message={(tool.output as GenericRowsToolOutput).message}
+                  rows={(tool.output as GenericRowsToolOutput).rows as Array<Record<string, unknown>>}
+                  sql_query={(tool.output as GenericRowsToolOutput).sql_query}
+                />
               )}
             </div>
           );

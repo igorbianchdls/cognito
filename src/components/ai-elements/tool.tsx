@@ -74,6 +74,7 @@ export const ToolHeader = ({
       <WrenchIcon className="size-4 text-muted-foreground" />
       <span className="font-medium text-sm">{(() => {
         const labels: Record<string, string> = {
+          'tool-getMetasXRealizado': 'Metas x Realizado',
           'tool-getVisaoGeral': 'Visão Geral',
           // Analista de Vendas (renomeados)
           'tool-getDesempenho': 'Visão Geral',
