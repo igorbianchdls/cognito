@@ -199,8 +199,8 @@ export function NavModulos({ groupLabelStyle, itemTextStyle }: { groupLabelStyle
           <SidebarMenuItem>
             <SidebarMenuButton
               tooltip="Serviços"
-              onClick={() => router.push("/modulos/ordensdeservicos")}
-              isActive={pathname.startsWith("/modulos/servicos") || pathname.startsWith("/modulos/ordensdeservicos")}
+              onClick={() => router.push("/modulos/servicos")}
+              isActive={pathname.startsWith("/modulos/servicos")}
             >
               <Wrench />
               <span style={itemTextStyle}>Serviços</span>
