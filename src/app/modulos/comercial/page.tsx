@@ -375,217 +375,214 @@ export default function ModulosComercialPage() {
             <NexusHeader viewMode={'dashboard'} onChangeViewMode={() => {}} borderless size="sm" showBreadcrumb={false} />
             <div className="flex-1 min-h-0 pl-2 pr-2 pt-0 pb-2" data-page="nexus">
               <NexusPageContainer className="h-full">
-                <div>
-          <div style={{ marginBottom: layout.mbTitle }}>
-            <PageHeader
-              title={titulo.title}
-              subtitle={titulo.subtitle}
-              titleFontFamily={fontVar(titulo.titleFontFamily)}
-              titleFontSize={titulo.titleFontSize}
-              titleFontWeight={titulo.titleFontWeight}
-              titleColor={titulo.titleColor}
-              titleLetterSpacing={titulo.titleLetterSpacing}
-              subtitleFontFamily={fontVar(titulo.subtitleFontFamily)}
-              subtitleFontSize={titulo.subtitleFontSize}
-              subtitleFontWeight={titulo.subtitleFontWeight}
-              subtitleColor={titulo.subtitleColor}
-              subtitleLetterSpacing={titulo.subtitleLetterSpacing}
-            />
-          </div>
-          <div style={{ marginBottom: 0 }}>
-            <TabsNav
-              options={tabOptions}
-              value={tabs.selected}
-              onValueChange={(v) => moduleUiActions.setTabs({ selected: v })}
-              fontFamily={fontVar(tabs.fontFamily)}
-              fontSize={tabs.fontSize}
-              fontWeight={tabs.fontWeight}
-              color={tabs.color}
-              letterSpacing={tabs.letterSpacing}
-              iconSize={tabs.iconSize}
-              labelOffsetY={tabs.labelOffsetY}
-              startOffset={tabs.leftOffset}
-              activeColor={tabs.activeColor}
-              activeFontWeight={tabs.activeFontWeight}
-              activeBorderColor={tabs.activeBorderColor}
-              className="px-0 md:px-0"
-            />
+                <div style={{ marginBottom: layout.mbTitle }}>
+                  <PageHeader
+                    title={titulo.title}
+                    subtitle={titulo.subtitle}
+                    titleFontFamily={fontVar(titulo.titleFontFamily)}
+                    titleFontSize={titulo.titleFontSize}
+                    titleFontWeight={titulo.titleFontWeight}
+                    titleColor={titulo.titleColor}
+                    titleLetterSpacing={titulo.titleLetterSpacing}
+                    subtitleFontFamily={fontVar(titulo.subtitleFontFamily)}
+                    subtitleFontSize={titulo.subtitleFontSize}
+                    subtitleFontWeight={titulo.subtitleFontWeight}
+                    subtitleColor={titulo.subtitleColor}
+                    subtitleLetterSpacing={titulo.subtitleLetterSpacing}
+                  />
+                </div>
+                <div style={{ marginBottom: 0 }}>
+                  <TabsNav
+                    options={tabOptions}
+                    value={tabs.selected}
+                    onValueChange={(v) => moduleUiActions.setTabs({ selected: v })}
+                    fontFamily={fontVar(tabs.fontFamily)}
+                    fontSize={tabs.fontSize}
+                    fontWeight={tabs.fontWeight}
+                    color={tabs.color}
+                    letterSpacing={tabs.letterSpacing}
+                    iconSize={tabs.iconSize}
+                    labelOffsetY={tabs.labelOffsetY}
+                    startOffset={tabs.leftOffset}
+                    activeColor={tabs.activeColor}
+                    activeFontWeight={tabs.activeFontWeight}
+                    activeBorderColor={tabs.activeBorderColor}
+                  />
                 </div>
                 <div style={{ paddingTop: (layout.contentTopGap || 0) + (layout.mbTabs || 0) }}>
-          <div className="px-4 md:px-6" style={{ marginBottom: 8 }}>
-            {tabs.selected === 'metas' ? (
-              <div className="w-full">
-                <div className="flex items-center justify-between gap-3 pb-2 border-b border-gray-200">
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-2">
-                      <label className="text-sm text-gray-600">Ano</label>
-                      <select
-                        className="h-8 px-2 border rounded text-sm"
-                        value={metaAno === 'todos' ? '' : String(metaAno)}
-                        onChange={(e) => setMetaAno(e.target.value ? Number(e.target.value) : 'todos')}
-                      >
-                        <option value="">Todos</option>
-                        {Array.from({ length: 7 }).map((_, i) => {
-                          const y = new Date().getFullYear() - i
-                          return <option key={y} value={y}>{y}</option>
-                        })}
-                      </select>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <label className="text-sm text-gray-600">Mês</label>
-                      <select
-                        className="h-8 px-2 border rounded text-sm"
-                        value={metaMes === 'todos' ? '' : String(metaMes)}
-                        onChange={(e) => setMetaMes(e.target.value ? Number(e.target.value) : 'todos')}
-                      >
-                        <option value="">Todos</option>
-                        {Array.from({ length: 12 }).map((_, i) => (
-                          <option key={i+1} value={i+1}>{i+1}</option>
-                        ))}
-                      </select>
-                    </div>
+                  <div className="px-4 md:px-6" style={{ marginBottom: 8 }}>
+                    {tabs.selected === 'metas' ? (
+                      <div className="w-full">
+                        <div className="flex items-center justify-between gap-3 pb-2 border-b border-gray-200">
+                          <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-2">
+                              <label className="text-sm text-gray-600">Ano</label>
+                              <select
+                                className="h-8 px-2 border rounded text-sm"
+                                value={metaAno === 'todos' ? '' : String(metaAno)}
+                                onChange={(e) => setMetaAno(e.target.value ? Number(e.target.value) : 'todos')}
+                              >
+                                <option value="">Todos</option>
+                                {Array.from({ length: 7 }).map((_, i) => {
+                                  const y = new Date().getFullYear() - i
+                                  return <option key={y} value={y}>{y}</option>
+                                })}
+                              </select>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <label className="text-sm text-gray-600">Mês</label>
+                              <select
+                                className="h-8 px-2 border rounded text-sm"
+                                value={metaMes === 'todos' ? '' : String(metaMes)}
+                                onChange={(e) => setMetaMes(e.target.value ? Number(e.target.value) : 'todos')}
+                              >
+                                <option value="">Todos</option>
+                                {Array.from({ length: 12 }).map((_, i) => (
+                                  <option key={i+1} value={i+1}>{i+1}</option>
+                                ))}
+                              </select>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button
+                              className="h-7 w-7 p-0 border rounded text-sm"
+                              onClick={() => setPage((p) => Math.max(1, p - 1))}
+                              disabled={page <= 1}
+                              title="Anterior"
+                            >
+                              ‹
+                            </button>
+                            <div className="mx-1 min-w-[120px] text-center text-sm">
+                              {total === 0 ? 0 : (page - 1) * pageSize + 1}–{total === 0 ? 0 : Math.min(page * pageSize, total)} de {total}
+                            </div>
+                            <button
+                              className="h-7 w-7 p-0 border rounded text-sm"
+                              onClick={() => setPage((p) => p + 1)}
+                              disabled={page * pageSize >= total}
+                              title="Próxima"
+                            >
+                              ›
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <DataToolbar
+                        from={total === 0 ? 0 : (page - 1) * pageSize + 1}
+                        to={total === 0 ? 0 : Math.min(page * pageSize, total)}
+                        total={total}
+                        dateRange={dateRange}
+                        onDateRangeChange={setDateRange}
+                        leftExtra={(tabs.selected === 'desempenho' || tabs.selected === 'resultados') ? (
+                          <div className="flex items-center gap-2">
+                            <label className="text-sm text-gray-600">Agrupar</label>
+                            <select
+                              className="h-8 px-2 border rounded text-sm"
+                              value={tabs.selected === 'desempenho' ? perfScope : resScope}
+                              onChange={(e) => {
+                                const v = e.target.value as 'vendedores' | 'territorios'
+                                if (tabs.selected === 'desempenho') setPerfScope(v)
+                                else setResScope(v)
+                              }}
+                            >
+                              <option value="vendedores">Vendedores</option>
+                              <option value="territorios">Territórios</option>
+                            </select>
+                          </div>
+                        ) : undefined}
+                        fontFamily={fontVar(tabs.fontFamily)}
+                        fontSize={toolbarUI.fontSize}
+                        fontWeight={toolbarUI.fontWeight}
+                        fontColor={toolbarUI.fontColor}
+                        letterSpacing={toolbarUI.letterSpacing}
+                        borderBottomWidth={toolbarUI.borderBottomWidth}
+                        borderBottomColor={toolbarUI.borderBottomColor}
+                        borderDistanceTop={toolbarUI.borderDistanceTop}
+                        underlineColor={toolbarUI.underlineColor}
+                        underlineWidth={toolbarUI.underlineWidth}
+                        underlineOffsetTop={toolbarUI.underlineOffsetTop}
+                        iconGap={toolbarUI.iconGap}
+                        iconColor={toolbarUI.iconColor}
+                        iconSize={toolbarUI.iconSize}
+                        searchWidth={toolbarUI.searchWidth}
+                        dateRangeWidth={toolbarUI.dateRangeWidth}
+                      />
+                    )}
                   </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      className="h-7 w-7 p-0 border rounded text-sm"
-                      onClick={() => setPage((p) => Math.max(1, p - 1))}
-                      disabled={page <= 1}
-                      title="Anterior"
-                    >
-                      ‹
-                    </button>
-                    <div className="mx-1 min-w-[120px] text-center text-sm">
-                      {total === 0 ? 0 : (page - 1) * pageSize + 1}–{total === 0 ? 0 : Math.min(page * pageSize, total)} de {total}
-                    </div>
-                    <button
-                      className="h-7 w-7 p-0 border rounded text-sm"
-                      onClick={() => setPage((p) => p + 1)}
-                      disabled={page * pageSize >= total}
-                      title="Próxima"
-                    >
-                      ›
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <DataToolbar
-                from={total === 0 ? 0 : (page - 1) * pageSize + 1}
-                to={total === 0 ? 0 : Math.min(page * pageSize, total)}
-                total={total}
-                dateRange={dateRange}
-                onDateRangeChange={setDateRange}
-                leftExtra={(tabs.selected === 'desempenho' || tabs.selected === 'resultados') ? (
-                  <div className="flex items-center gap-2">
-                    <label className="text-sm text-gray-600">Agrupar</label>
-                    <select
-                      className="h-8 px-2 border rounded text-sm"
-                      value={tabs.selected === 'desempenho' ? perfScope : resScope}
-                      onChange={(e) => {
-                        const v = e.target.value as 'vendedores' | 'territorios'
-                        if (tabs.selected === 'desempenho') setPerfScope(v)
-                        else setResScope(v)
-                      }}
-                    >
-                      <option value="vendedores">Vendedores</option>
-                      <option value="territorios">Territórios</option>
-                    </select>
-                  </div>
-                ) : undefined}
-                fontFamily={fontVar(tabs.fontFamily)}
-                fontSize={toolbarUI.fontSize}
-                fontWeight={toolbarUI.fontWeight}
-                fontColor={toolbarUI.fontColor}
-                letterSpacing={toolbarUI.letterSpacing}
-                borderBottomWidth={toolbarUI.borderBottomWidth}
-                borderBottomColor={toolbarUI.borderBottomColor}
-                borderDistanceTop={toolbarUI.borderDistanceTop}
-                underlineColor={toolbarUI.underlineColor}
-                underlineWidth={toolbarUI.underlineWidth}
-                underlineOffsetTop={toolbarUI.underlineOffsetTop}
-                iconGap={toolbarUI.iconGap}
-                iconColor={toolbarUI.iconColor}
-                iconSize={toolbarUI.iconSize}
-                searchWidth={toolbarUI.searchWidth}
-                dateRangeWidth={toolbarUI.dateRangeWidth}
-              />
-            )}
-          </div>
-          <div className="flex-1 min-h-0 overflow-auto" style={{ marginBottom: layout.mbTable }}>
-            <div className="border-y bg-background" style={{ borderColor: tabelaUI.borderColor }}>
-              {isLoading ? (
-                <div className="p-6 text-sm text-gray-500">Carregando dados…</div>
-              ) : error ? (
-                <div className="p-6 text-sm text-red-600">Erro ao carregar: {error}</div>
-              ) : (
-                <DataTable
-                  key={`${tabs.selected}-${tabs.selected === 'desempenho' ? perfScope : tabs.selected === 'resultados' ? resScope : ''}`}
-                  columns={columns}
-                  data={
-                    (tabs.selected === 'metas')
-                      ? (() => {
-                          // Mostrar apenas uma linha por meta_id (cabeçalho sintético)
-                          const seen = new Set<string | number>()
-                          const heads: Row[] = []
-                          for (const r of data) {
-                            const k = r['meta_id'] as string | number | undefined
-                            if (k == null) continue
-                            if (!seen.has(k)) { seen.add(k); heads.push(r) }
+                  <div className="flex-1 min-h-0 overflow-auto" style={{ marginBottom: layout.mbTable }}>
+                    <div className="border-y bg-background" style={{ borderColor: tabelaUI.borderColor }}>
+                      {isLoading ? (
+                        <div className="p-6 text-sm text-gray-500">Carregando dados…</div>
+                      ) : error ? (
+                        <div className="p-6 text-sm text-red-600">Erro ao carregar: {error}</div>
+                      ) : (
+                        <DataTable
+                          key={`${tabs.selected}-${tabs.selected === 'desempenho' ? perfScope : tabs.selected === 'resultados' ? resScope : ''}`}
+                          columns={columns}
+                          data={
+                            (tabs.selected === 'metas')
+                              ? (() => {
+                                  const seen = new Set<string | number>()
+                                  const heads: Row[] = []
+                                  for (const r of data) {
+                                    const k = r['meta_id'] as string | number | undefined
+                                    if (k == null) continue
+                                    if (!seen.has(k)) { seen.add(k); heads.push(r) }
+                                  }
+                                  return heads
+                                })()
+                              : data
                           }
-                          return heads
-                        })()
-                      : data
-                  }
-                  columnOptions={{
-                    ...allNoWrapOptions,
-                    ...(allNoWrapOptions['territorio'] ? { territorio: { ...allNoWrapOptions['territorio'], minWidth: 160 } } : {}),
-                    ...(allNoWrapOptions['vendedor'] ? { vendedor: { ...allNoWrapOptions['vendedor'], minWidth: 160 } } : {}),
-                    ...(allNoWrapOptions['tipo_meta'] ? { tipo_meta: { ...allNoWrapOptions['tipo_meta'], minWidth: 140 } } : {}),
-                    ...(allNoWrapOptions['campanha'] ? { campanha: { ...allNoWrapOptions['campanha'], minWidth: 160 } } : {}),
-                    ...(allNoWrapOptions['descricao'] ? { descricao: { ...allNoWrapOptions['descricao'], minWidth: 180 } } : {}),
-                  }}
-                  enableExpand={tabs.selected === 'campanhas_vendas' || tabs.selected === 'metas'}
-                  renderDetail={
-                    tabs.selected === 'campanhas_vendas' ? renderCampanhaProdutos
-                    : tabs.selected === 'metas' ? renderMetaDetail
-                    : undefined
-                  }
-                  rowCanExpand={tabs.selected === 'metas' ? () => true : undefined}
-                  enableSearch={tabs.selected === 'metas' ? false : tabelaUI.enableSearch}
-                  showColumnToggle={tabelaUI.enableColumnToggle}
-                  showPagination={tabelaUI.showPagination}
-                  pageSize={pageSize}
-                  pageIndex={page - 1}
-                  serverSidePagination
-                  serverTotalRows={total}
-                  headerBackground={tabelaUI.headerBg}
-                  headerTextColor={tabelaUI.headerText}
-                  cellTextColor={tabelaUI.cellText}
-                  headerFontSize={tabelaUI.headerFontSize}
-                  headerFontFamily={tabelaUI.headerFontFamily}
-                  headerFontWeight={tabelaUI.headerFontWeight}
-                  headerLetterSpacing={tabelaUI.headerLetterSpacing}
-                  cellFontSize={tabelaUI.cellFontSize}
-                  cellFontFamily={tabelaUI.cellFontFamily}
-                  cellFontWeight={tabelaUI.cellFontWeight}
-                  cellLetterSpacing={tabelaUI.cellLetterSpacing}
-                  enableZebraStripes={tabelaUI.enableZebraStripes}
-                  rowAlternateBgColor={tabelaUI.rowAlternateBgColor}
-                  borderColor={tabelaUI.borderColor}
-                  borderWidth={tabelaUI.borderWidth}
-                  selectionColumnWidth={tabelaUI.selectionColumnWidth}
-                  enableRowSelection={tabelaUI.enableRowSelection}
-                  selectionMode={tabelaUI.selectionMode}
-                  defaultSortColumn={tabelaUI.defaultSortColumn}
-                  defaultSortDirection={tabelaUI.defaultSortDirection}
-                  onPaginationChange={({ pageIndex, pageSize: newSize }) => {
-                    setPage(pageIndex + 1)
-                    setPageSize(newSize)
-                  }}
-                />
-              )}
-            </div>
-          </div>
+                          columnOptions={{
+                            ...allNoWrapOptions,
+                            ...(allNoWrapOptions['territorio'] ? { territorio: { ...allNoWrapOptions['territorio'], minWidth: 160 } } : {}),
+                            ...(allNoWrapOptions['vendedor'] ? { vendedor: { ...allNoWrapOptions['vendedor'], minWidth: 160 } } : {}),
+                            ...(allNoWrapOptions['tipo_meta'] ? { tipo_meta: { ...allNoWrapOptions['tipo_meta'], minWidth: 140 } } : {}),
+                            ...(allNoWrapOptions['campanha'] ? { campanha: { ...allNoWrapOptions['campanha'], minWidth: 160 } } : {}),
+                            ...(allNoWrapOptions['descricao'] ? { descricao: { ...allNoWrapOptions['descricao'], minWidth: 180 } } : {}),
+                          }}
+                          enableExpand={tabs.selected === 'campanhas_vendas' || tabs.selected === 'metas'}
+                          renderDetail={
+                            tabs.selected === 'campanhas_vendas' ? renderCampanhaProdutos
+                            : tabs.selected === 'metas' ? renderMetaDetail
+                            : undefined
+                          }
+                          rowCanExpand={tabs.selected === 'metas' ? () => true : undefined}
+                          enableSearch={tabs.selected === 'metas' ? false : tabelaUI.enableSearch}
+                          showColumnToggle={tabelaUI.enableColumnToggle}
+                          showPagination={tabelaUI.showPagination}
+                          pageSize={pageSize}
+                          pageIndex={page - 1}
+                          serverSidePagination
+                          serverTotalRows={total}
+                          headerBackground={tabelaUI.headerBg}
+                          headerTextColor={tabelaUI.headerText}
+                          cellTextColor={tabelaUI.cellText}
+                          headerFontSize={tabelaUI.headerFontSize}
+                          headerFontFamily={tabelaUI.headerFontFamily}
+                          headerFontWeight={tabelaUI.headerFontWeight}
+                          headerLetterSpacing={tabelaUI.headerLetterSpacing}
+                          cellFontSize={tabelaUI.cellFontSize}
+                          cellFontFamily={tabelaUI.cellFontFamily}
+                          cellFontWeight={tabelaUI.cellFontWeight}
+                          cellLetterSpacing={tabelaUI.cellLetterSpacing}
+                          enableZebraStripes={tabelaUI.enableZebraStripes}
+                          rowAlternateBgColor={tabelaUI.rowAlternateBgColor}
+                          borderColor={tabelaUI.borderColor}
+                          borderWidth={tabelaUI.borderWidth}
+                          selectionColumnWidth={tabelaUI.selectionColumnWidth}
+                          enableRowSelection={tabelaUI.enableRowSelection}
+                          selectionMode={tabelaUI.selectionMode}
+                          defaultSortColumn={tabelaUI.defaultSortColumn}
+                          defaultSortDirection={tabelaUI.defaultSortDirection}
+                          onPaginationChange={({ pageIndex, pageSize: newSize }) => {
+                            setPage(pageIndex + 1)
+                            setPageSize(newSize)
+                          }}
+                        />
+                      )}
+                    </div>
+                  </div>
                 </div>
               </NexusPageContainer>
             </div>
