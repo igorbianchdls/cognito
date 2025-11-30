@@ -141,7 +141,6 @@ export default function ModulosWebAnalyticsPage() {
               className="px-0 md:px-0"
             />
           </div>
-                </div>
                 <div style={{ paddingTop: (layout.contentTopGap || 0) + (layout.mbTabs || 0) }}>
           <div className="px-4 md:px-6" style={{ marginBottom: 8 }}>
             <DataToolbar
