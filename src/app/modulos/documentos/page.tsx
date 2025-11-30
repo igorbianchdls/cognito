@@ -16,6 +16,8 @@ import CadastroContratosDocumentoAnexoSheet from '@/components/documentos/Cadast
 import DataTable, { type TableData } from '@/components/widgets/Table'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
+import NexusHeader from '@/components/nexus/NexusHeader'
+import NexusPageContainer from '@/components/nexus/NexusPageContainer'
 import { List } from 'lucide-react'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/stores/modulos/moduleUiStore'
 
@@ -357,176 +359,183 @@ export default function ModulosDocumentosPage() {
 
   return (
     <SidebarProvider>
-      <SidebarShadcn />
-      <SidebarInset className="min-h-screen flex flex-col overflow-y-auto" style={{ background: layout.contentBg }}>
-        <div style={{ background: 'white' }}>
-          <div style={{ marginBottom: layout.mbTitle }}>
-            <PageHeader
-              title={titulo.title}
-              subtitle={titulo.subtitle}
-              titleFontFamily={titulo.titleFontFamily}
-              titleFontSize={titulo.titleFontSize}
-              titleFontWeight={titulo.titleFontWeight}
-              titleColor={titulo.titleColor}
-              titleLetterSpacing={titulo.titleLetterSpacing}
-              subtitleFontFamily={titulo.subtitleFontFamily}
-              subtitleLetterSpacing={titulo.subtitleLetterSpacing}
-            />
-          </div>
-          <div style={{ marginBottom: 0 }}>
-            <TabsNav
-              options={tabOptions}
-              value={tabs.selected}
-              onValueChange={(v) => moduleUiActions.setTabs({ selected: v })}
-              fontFamily={tabs.fontFamily}
-              fontSize={tabs.fontSize}
-              fontWeight={tabs.fontWeight}
-              color={tabs.color}
-              letterSpacing={tabs.letterSpacing}
-              iconSize={tabs.iconSize}
-              labelOffsetY={tabs.labelOffsetY}
-              startOffset={tabs.leftOffset}
-              activeColor={tabs.activeColor}
-              activeFontWeight={tabs.activeFontWeight}
-              activeBorderColor={tabs.activeBorderColor}
-            />
-          </div>
-        </div>
-        <div style={{ paddingTop: (layout.contentTopGap || 0) + (layout.mbTabs || 0) }}>
-          <div className="px-4 md:px-6" style={{ marginBottom: 8 }}>
-          <DataToolbar
-            from={0}
-            to={rows.length}
-            total={total}
-            dateRange={dateRange}
-            onDateRangeChange={setDateRange}
-            fontFamily={tabs.fontFamily}
-            fontSize={toolbarUI.fontSize}
-            fontWeight={toolbarUI.fontWeight}
-            fontColor={toolbarUI.fontColor}
-            letterSpacing={toolbarUI.letterSpacing}
-            borderBottomWidth={toolbarUI.borderBottomWidth}
-            borderBottomColor={toolbarUI.borderBottomColor}
-            borderDistanceTop={toolbarUI.borderDistanceTop}
-            underlineColor={toolbarUI.underlineColor}
-            underlineWidth={toolbarUI.underlineWidth}
-            underlineOffsetTop={toolbarUI.underlineOffsetTop}
-            iconGap={toolbarUI.iconGap}
-            iconColor={toolbarUI.iconColor}
-            iconSize={toolbarUI.iconSize}
-            searchWidth={toolbarUI.searchWidth}
-            dateRangeWidth={toolbarUI.dateRangeWidth}
-            actionComponent={
-              tabs.selected === 'fiscal' ? (
-                <CadastroFiscalDocumentoAnexoSheet
-                  triggerLabel="Cadastrar"
-                  onCreated={() => setRefreshKey((k) => k + 1)}
-                />
-              ) : tabs.selected === 'financeiro' ? (
-                <CadastroFinanceiroDocumentoAnexoSheet
-                  triggerLabel="Cadastrar"
-                  onCreated={() => setRefreshKey((k) => k + 1)}
-                />
-              ) : tabs.selected === 'operacional' ? (
-                <CadastroOperacionalDocumentoAnexoSheet
-                  triggerLabel="Cadastrar"
-                  onCreated={() => setRefreshKey((k) => k + 1)}
-                />
-              ) : tabs.selected === 'juridico' ? (
-                <CadastroJuridicoDocumentoAnexoSheet
-                  triggerLabel="Cadastrar"
-                  onCreated={() => setRefreshKey((k) => k + 1)}
-                />
-              ) : tabs.selected === 'rh' ? (
-                <CadastroRHDocumentoAnexoSheet
-                  triggerLabel="Cadastrar"
-                  onCreated={() => setRefreshKey((k) => k + 1)}
-                />
-              ) : tabs.selected === 'contratos' ? (
-                <CadastroContratosDocumentoAnexoSheet
-                  triggerLabel="Cadastrar"
-                  onCreated={() => setRefreshKey((k) => k + 1)}
-                />
-              ) : undefined
-            }
-          />
-          </div>
-          <div className="flex-1 min-h-0 overflow-auto" style={{ marginBottom: layout.mbTable }}>
-            <div className="border-y bg-background" style={{ borderColor: tabelaUI.borderColor }}>
-              <DataTable
-                columns={columns}
-                data={rows}
-                enableSearch={tabelaUI.enableSearch}
-                showColumnToggle={tabelaUI.enableColumnToggle}
-                showPagination={tabelaUI.showPagination}
-                pageSize={tabelaUI.pageSize}
-                headerBackground={tabelaUI.headerBg}
-                headerTextColor={tabelaUI.headerText}
-                cellTextColor={tabelaUI.cellText}
-                headerFontSize={tabelaUI.headerFontSize}
-                headerFontFamily={tabelaUI.headerFontFamily}
-                headerFontWeight={tabelaUI.headerFontWeight}
-                headerLetterSpacing={tabelaUI.headerLetterSpacing}
-                cellFontSize={tabelaUI.cellFontSize}
-                cellFontFamily={tabelaUI.cellFontFamily}
-                cellFontWeight={tabelaUI.cellFontWeight}
-                cellLetterSpacing={tabelaUI.cellLetterSpacing}
-                enableZebraStripes={tabelaUI.enableZebraStripes}
-                rowAlternateBgColor={tabelaUI.rowAlternateBgColor}
-                borderColor={tabelaUI.borderColor}
-                borderWidth={tabelaUI.borderWidth}
-                selectionColumnWidth={tabelaUI.selectionColumnWidth}
-                enableRowSelection={tabelaUI.enableRowSelection}
-                selectionMode={tabelaUI.selectionMode}
-                defaultSortColumn={tabelaUI.defaultSortColumn}
-                defaultSortDirection={tabelaUI.defaultSortDirection}
-              />
+      <SidebarShadcn borderless headerBorderless />
+      <SidebarInset className="h-screen overflow-hidden">
+        <div className="flex h-full overflow-hidden" style={{ backgroundColor: '#fdfdfd' }}>
+          <div className="flex flex-col h-full w-full">
+            <NexusHeader viewMode={'dashboard'} onChangeViewMode={() => {}} borderless size="sm" showBreadcrumb={false} />
+            <div className="flex-1 min-h-0 pl-2 pr-2 pt-0 pb-2" data-page="nexus">
+              <NexusPageContainer className="h-full">
+                <div style={{ marginBottom: layout.mbTitle }}>
+                  <PageHeader
+                    title={titulo.title}
+                    subtitle={titulo.subtitle}
+                    titleFontFamily={titulo.titleFontFamily}
+                    titleFontSize={titulo.titleFontSize}
+                    titleFontWeight={titulo.titleFontWeight}
+                    titleColor={titulo.titleColor}
+                    titleLetterSpacing={titulo.titleLetterSpacing}
+                    subtitleFontFamily={titulo.subtitleFontFamily}
+                    subtitleLetterSpacing={titulo.subtitleLetterSpacing}
+                  />
+                </div>
+                <div style={{ marginBottom: 0 }}>
+                  <TabsNav
+                    options={tabOptions}
+                    value={tabs.selected}
+                    onValueChange={(v) => moduleUiActions.setTabs({ selected: v })}
+                    fontFamily={tabs.fontFamily}
+                    fontSize={tabs.fontSize}
+                    fontWeight={tabs.fontWeight}
+                    color={tabs.color}
+                    letterSpacing={tabs.letterSpacing}
+                    iconSize={tabs.iconSize}
+                    labelOffsetY={tabs.labelOffsetY}
+                    startOffset={tabs.leftOffset}
+                    activeColor={tabs.activeColor}
+                    activeFontWeight={tabs.activeFontWeight}
+                    activeBorderColor={tabs.activeBorderColor}
+                  />
+                </div>
+                <div style={{ paddingTop: (layout.contentTopGap || 0) + (layout.mbTabs || 0) }}>
+                  <div className="px-4 md:px-6" style={{ marginBottom: 8 }}>
+                    <DataToolbar
+                      from={0}
+                      to={rows.length}
+                      total={total}
+                      dateRange={dateRange}
+                      onDateRangeChange={setDateRange}
+                      fontFamily={tabs.fontFamily}
+                      fontSize={toolbarUI.fontSize}
+                      fontWeight={toolbarUI.fontWeight}
+                      fontColor={toolbarUI.fontColor}
+                      letterSpacing={toolbarUI.letterSpacing}
+                      borderBottomWidth={toolbarUI.borderBottomWidth}
+                      borderBottomColor={toolbarUI.borderBottomColor}
+                      borderDistanceTop={toolbarUI.borderDistanceTop}
+                      underlineColor={toolbarUI.underlineColor}
+                      underlineWidth={toolbarUI.underlineWidth}
+                      underlineOffsetTop={toolbarUI.underlineOffsetTop}
+                      iconGap={toolbarUI.iconGap}
+                      iconColor={toolbarUI.iconColor}
+                      iconSize={toolbarUI.iconSize}
+                      searchWidth={toolbarUI.searchWidth}
+                      dateRangeWidth={toolbarUI.dateRangeWidth}
+                      actionComponent={
+                        tabs.selected === 'fiscal' ? (
+                          <CadastroFiscalDocumentoAnexoSheet
+                            triggerLabel="Cadastrar"
+                            onCreated={() => setRefreshKey((k) => k + 1)}
+                          />
+                        ) : tabs.selected === 'financeiro' ? (
+                          <CadastroFinanceiroDocumentoAnexoSheet
+                            triggerLabel="Cadastrar"
+                            onCreated={() => setRefreshKey((k) => k + 1)}
+                          />
+                        ) : tabs.selected === 'operacional' ? (
+                          <CadastroOperacionalDocumentoAnexoSheet
+                            triggerLabel="Cadastrar"
+                            onCreated={() => setRefreshKey((k) => k + 1)}
+                          />
+                        ) : tabs.selected === 'juridico' ? (
+                          <CadastroJuridicoDocumentoAnexoSheet
+                            triggerLabel="Cadastrar"
+                            onCreated={() => setRefreshKey((k) => k + 1)}
+                          />
+                        ) : tabs.selected === 'rh' ? (
+                          <CadastroRHDocumentoAnexoSheet
+                            triggerLabel="Cadastrar"
+                            onCreated={() => setRefreshKey((k) => k + 1)}
+                          />
+                        ) : tabs.selected === 'contratos' ? (
+                          <CadastroContratosDocumentoAnexoSheet
+                            triggerLabel="Cadastrar"
+                            onCreated={() => setRefreshKey((k) => k + 1)}
+                          />
+                        ) : undefined
+                      }
+                    />
+                  </div>
+                  <div className="flex-1 min-h-0 overflow-auto" style={{ marginBottom: layout.mbTable }}>
+                    <div className="border-y bg-background" style={{ borderColor: tabelaUI.borderColor }}>
+                      <DataTable
+                        columns={columns}
+                        data={rows}
+                        enableSearch={tabelaUI.enableSearch}
+                        showColumnToggle={tabelaUI.enableColumnToggle}
+                        showPagination={tabelaUI.showPagination}
+                        pageSize={tabelaUI.pageSize}
+                        headerBackground={tabelaUI.headerBg}
+                        headerTextColor={tabelaUI.headerText}
+                        cellTextColor={tabelaUI.cellText}
+                        headerFontSize={tabelaUI.headerFontSize}
+                        headerFontFamily={tabelaUI.headerFontFamily}
+                        headerFontWeight={tabelaUI.headerFontWeight}
+                        headerLetterSpacing={tabelaUI.headerLetterSpacing}
+                        cellFontSize={tabelaUI.cellFontSize}
+                        cellFontFamily={tabelaUI.cellFontFamily}
+                        cellFontWeight={tabelaUI.cellFontWeight}
+                        cellLetterSpacing={tabelaUI.cellLetterSpacing}
+                        enableZebraStripes={tabelaUI.enableZebraStripes}
+                        rowAlternateBgColor={tabelaUI.rowAlternateBgColor}
+                        borderColor={tabelaUI.borderColor}
+                        borderWidth={tabelaUI.borderWidth}
+                        selectionColumnWidth={tabelaUI.selectionColumnWidth}
+                        enableRowSelection={tabelaUI.enableRowSelection}
+                        selectionMode={tabelaUI.selectionMode}
+                        defaultSortColumn={tabelaUI.defaultSortColumn}
+                        defaultSortDirection={tabelaUI.defaultSortDirection}
+                      />
+                    </div>
+                  </div>
+                  {anexosOpenFor && (
+                    <div className="fixed inset-0 bg-black/30 flex justify-end z-50" onClick={() => setAnexosOpenFor(null)}>
+                      <div className="w-full max-w-md bg-white h-full shadow-xl" onClick={(e) => e.stopPropagation()}>
+                        <div className="p-4 border-b">
+                          <div className="flex items-center justify-between">
+                            <h3 className="font-semibold">Anexos do Documento #{anexosOpenFor}</h3>
+                            <button className="text-gray-500" onClick={() => setAnexosOpenFor(null)}>Fechar</button>
+                          </div>
+                          <div className="mt-3 flex items-center gap-2">
+                            <input type="file" onChange={(e) => setAnexoUpload(e.target.files?.[0] || null)} />
+                            <button className="px-3 py-1 bg-blue-600 text-white rounded disabled:opacity-50" onClick={uploadAnexo} disabled={!anexoUpload}>Enviar</button>
+                          </div>
+                        </div>
+                        <div className="p-4 overflow-auto h-[calc(100%-100px)]">
+                          <table className="w-full text-sm">
+                            <thead>
+                              <tr className="text-left">
+                                <th className="p-2">Arquivo</th>
+                                <th className="p-2">Tipo</th>
+                                <th className="p-2">Data</th>
+                                <th className="p-2">Ações</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {anexos.length === 0 && (
+                                <tr><td className="p-2 text-gray-500" colSpan={4}>Nenhum anexo</td></tr>
+                              )}
+                              {anexos.map((a) => (
+                                <tr key={a.id} className="border-t">
+                                  <td className="p-2">{a.nome_arquivo || '-'}</td>
+                                  <td className="p-2">{a.tipo_arquivo || '-'}</td>
+                                  <td className="p-2">{a.criado_em ? new Date(a.criado_em).toLocaleString('pt-BR') : '-'}</td>
+                                  <td className="p-2 flex items-center gap-3">
+                                    <button className="text-blue-600 underline" onClick={() => downloadAnexo(a.id)}>Baixar</button>
+                                    <button className="text-red-600 underline" onClick={() => deleteAnexo(a.id)}>Excluir</button>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </NexusPageContainer>
             </div>
           </div>
-          {anexosOpenFor && (
-            <div className="fixed inset-0 bg-black/30 flex justify-end z-50" onClick={() => setAnexosOpenFor(null)}>
-              <div className="w-full max-w-md bg-white h-full shadow-xl" onClick={(e) => e.stopPropagation()}>
-                <div className="p-4 border-b">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-semibold">Anexos do Documento #{anexosOpenFor}</h3>
-                    <button className="text-gray-500" onClick={() => setAnexosOpenFor(null)}>Fechar</button>
-                  </div>
-                  <div className="mt-3 flex items-center gap-2">
-                    <input type="file" onChange={(e) => setAnexoUpload(e.target.files?.[0] || null)} />
-                    <button className="px-3 py-1 bg-blue-600 text-white rounded disabled:opacity-50" onClick={uploadAnexo} disabled={!anexoUpload}>Enviar</button>
-                  </div>
-                </div>
-                <div className="p-4 overflow-auto h-[calc(100%-100px)]">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="text-left">
-                        <th className="p-2">Arquivo</th>
-                        <th className="p-2">Tipo</th>
-                        <th className="p-2">Data</th>
-                        <th className="p-2">Ações</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {anexos.length === 0 && (
-                        <tr><td className="p-2 text-gray-500" colSpan={4}>Nenhum anexo</td></tr>
-                      )}
-                      {anexos.map((a) => (
-                        <tr key={a.id} className="border-t">
-                          <td className="p-2">{a.nome_arquivo || '-'}</td>
-                          <td className="p-2">{a.tipo_arquivo || '-'}</td>
-                          <td className="p-2">{a.criado_em ? new Date(a.criado_em).toLocaleString('pt-BR') : '-'}</td>
-                          <td className="p-2 flex items-center gap-3">
-                            <button className="text-blue-600 underline" onClick={() => downloadAnexo(a.id)}>Baixar</button>
-                            <button className="text-red-600 underline" onClick={() => deleteAnexo(a.id)}>Excluir</button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </SidebarInset>
     </SidebarProvider>
