@@ -40,9 +40,13 @@ Apoiar gestores e times comerciais a entender performance (realizado), Atingimen
 
 3) getMetasXRealizado — Meta x Real (vendedores/territórios)
 - Base: comercial.metas/metas_itens + vendas.pedidos/pedidos_itens — idêntico à aba “Metas x Realizado”.
-- Use quando: comparar meta x realizado (faturamento, ticket médio, novos clientes) por vendedor ou por território no mês/ano.
-- Parâmetros: scope ('vendedores' | 'territorios'), ano (AAAA), mes (1..12), ordenação opcional.
-- Retorno: linhas agregadas por vendedor/território com colunas meta_*/realizado_*.
+- Use quando: comparar meta x realizado no mês/ano.
+- Parâmetros:
+  - scope: 'vendedores' | 'territorios'
+  - ano (AAAA), mes (1..12)
+  - metric: 'faturamento' | 'novos_clientes' | 'ticket_medio' — retorna apenas as 2 colunas correspondentes (ex.: meta_faturamento e realizado_faturamento)
+  - order_by (opcional): 'label' | 'meta' | 'realizado' (ou o nome exato da coluna); order_dir 'asc' | 'desc'
+- Retorno: linhas agregadas por vendedor/território com somente as colunas da métrica escolhida.
 
 # Como decidir qual ferramenta usar
 - “Quero ver por território/canal/vendedor ao longo do tempo” → pivotSales.

@@ -247,10 +247,11 @@ export const getMetasXRealizado = tool({
     scope: z.enum(['vendedores', 'territorios']).default('vendedores').optional(),
     ano: z.number(),
     mes: z.number().min(1).max(12),
+    metric: z.enum(['faturamento', 'novos_clientes', 'ticket_medio']).default('faturamento').optional(),
     order_by: z.string().optional(),
     order_dir: z.enum(['asc', 'desc']).optional(),
   }),
-  execute: async ({ scope = 'vendedores', ano, mes, order_by, order_dir }) => {
+  execute: async ({ scope = 'vendedores', ano, mes, metric = 'faturamento', order_by, order_dir }) => {
     try {
       const params: unknown[] = []
       const anoVal = Number(ano)
@@ -356,23 +357,48 @@ FROM metas_por_vendedor mv
 LEFT JOIN realizado r ON r.vendedor_id = mv.vendedor_id`
       }
 
+      // Projeção final apenas das colunas para a métrica pedida
+      const labelCol = scope === 'territorios' ? 'territorio_nome' : 'vendedor_nome'
+      const idCol = scope === 'territorios' ? 'territorio_id' : 'vendedor_id'
+      const metaCol = metric === 'faturamento'
+        ? 'meta_faturamento'
+        : metric === 'ticket_medio'
+          ? 'meta_ticket_medio'
+          : 'meta_novos_clientes'
+      const realCol = metric === 'faturamento'
+        ? 'realizado_faturamento'
+        : metric === 'ticket_medio'
+          ? 'realizado_ticket_medio'
+          : 'realizado_novos_clientes'
+
+      const projectionSql = `
+        SELECT
+          ${idCol} AS id,
+          ${labelCol} AS label,
+          ${metaCol} AS ${metaCol},
+          ${realCol} AS ${realCol}
+        FROM (
+          ${selectSql}
+        ) base
+      `
+
+      // Ordenação: permitir 'label' | 'meta' | 'realizado' (genéricos) e também os nomes exatos das colunas
       const whitelist: Record<string, string> = {
-        vendedor_nome: 'vendedor_nome',
-        territorio_nome: 'territorio_nome',
-        meta_faturamento: 'meta_faturamento',
-        realizado_faturamento: 'realizado_faturamento',
-        meta_ticket_medio: 'meta_ticket_medio',
-        realizado_ticket_medio: 'realizado_ticket_medio',
-        meta_novos_clientes: 'meta_novos_clientes',
-        realizado_novos_clientes: 'realizado_novos_clientes',
+        label: 'label',
+        meta: metaCol,
+        realizado: realCol,
+        [metaCol]: metaCol,
+        [realCol]: realCol,
+        [labelCol]: 'label',
       }
       const ob = order_by ? whitelist[order_by] : undefined
       const od = order_dir === 'desc' ? 'DESC' : 'ASC'
-      const orderClause = ob ? ` ORDER BY ${ob} ${od}` : (scope === 'territorios' ? ' ORDER BY territorio_nome ASC' : ' ORDER BY vendedor_nome ASC')
+      const defaultOrder = ` ORDER BY ${realCol} DESC`
+      const orderClause = ob ? ` ORDER BY ${ob} ${od}` : defaultOrder
 
-      const listSql = `${selectSql}${orderClause}`
+      const listSql = `${projectionSql}${orderClause}`
       const rows = await runQuery<MetasXRealizadoRow>(listSql, params)
-      return { success: true, rows, count: rows.length, message: 'OK', sql_query: listSql, sql_params: fmt(params) }
+      return { success: true, rows, count: rows.length, message: `OK — métrica: ${metric}`, sql_query: listSql, sql_params: fmt(params) }
     } catch (error) {
       return { success: false, rows: [], count: 0, message: `Erro: ${error instanceof Error ? error.message : String(error)}` }
     }
