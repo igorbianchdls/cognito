@@ -80,7 +80,10 @@ export async function POST(req: Request) {
    - Número da nota fiscal
    - Itens/descrição (se houver)
 2. Liste os dados extraídos para o usuário confirmar
-3. Use a tool **buscarFornecedor** com o CNPJ extraído para verificar se o fornecedor já existe no sistema
+3. Use a tool **buscarFornecedor** para verificar se o fornecedor já existe no sistema:
+   - Se tiver CNPJ: chame com o CNPJ (busca exata)
+   - Se tiver nome/razão social: chame com o nome (LIKE, parcial)
+   - Se NÃO tiver nenhum dado: chame SEM filtros para listar TODOS os fornecedores e deixar o usuário escolher
 
 **Tools disponíveis:**
 - buscarFornecedor
