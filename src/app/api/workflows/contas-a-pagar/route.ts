@@ -99,7 +99,42 @@ Regras obrigatórias:
             tools: { buscarFornecedor },
           };
         }
-        // Demais steps não são usados neste fluxo simplificado
+
+        if (stepNumber === 2) {
+          return {
+            system:
+              baseSystem + `
+
+# 🧭 Step 2 — Criar Fornecedor (Prévia)
+
+Objetivo: Quando o fornecedor não existir, gere uma PRÉVIA com **criarFornecedor** usando os dados extraídos (nome_fantasia/nome, cnpj, endereço, telefone, email).
+
+Regras obrigatórias:
+- NÃO escreva "function_calls"/"function_result" em texto. Invoque a tool real.
+- Esta tool gera apenas PRÉVIA; a criação real ocorre na UI.
+- NÃO invente payloads; a UI mostrará o cartão de prévia com os campos retornados.
+`,
+            tools: { criarFornecedor },
+          };
+        }
+
+        if (stepNumber === 3) {
+          return {
+            system:
+              baseSystem + `
+
+# 🧭 Step 3 — Buscar Classificações Financeiras
+
+Objetivo: Listar opções com **buscarClassificacoesFinanceiras** (categorias financeiras, centros de custo, naturezas). Use termo_busca opcional para filtrar.
+
+Regras obrigatórias:
+- NÃO escreva "function_calls"/"function_result" em texto. Invoque a tool real.
+- NÃO simule listas; a UI renderiza a tabela/grade a partir do retorno da tool.
+`,
+            tools: { buscarClassificacoesFinanceiras },
+          };
+        }
+
         return undefined;
       },
     })
