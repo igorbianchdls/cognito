@@ -218,14 +218,15 @@ export const buscarFornecedor = tool({
                COALESCE(f.nome_fantasia, '')::text AS nome,
                COALESCE(f.cnpj, '')::text AS cnpj,
                COALESCE(f.email, '')::text AS email,
-               COALESCE(f.telefone, '')::text AS telefone
+               COALESCE(f.telefone, '')::text AS telefone,
+               COALESCE(f.endereco, '')::text AS endereco
           FROM entidades.fornecedores f
           ${where}
          ORDER BY f.nome_fantasia ASC
          ${limitClause}
       `.replace(/\n\s+/g, ' ').trim();
 
-      type Row = { id: string; nome: string; cnpj: string; email: string; telefone: string };
+      type Row = { id: string; nome: string; cnpj: string; email: string; telefone: string; endereco?: string };
       const rows = await runQuery<Row>(sql, params);
 
       if (listAll) {

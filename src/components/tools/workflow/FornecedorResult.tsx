@@ -33,11 +33,22 @@ type FornecedorOutput = {
 }
 
 export default function FornecedorResult({ result }: { result: FornecedorOutput }) {
-  // Convert single fornecedor to array for table display
+  // Normalize rows: prefer result.rows; fallback to single data; legacy fallback to result.fornecedores
   const tableRows: FornecedorRow[] = useMemo(() => {
     if (Array.isArray(result.rows)) return result.rows;
+    if (result && (result as unknown as { fornecedores?: Array<Record<string, unknown>> }).fornecedores) {
+      const legacy = (result as unknown as { fornecedores: Array<Record<string, unknown>> }).fornecedores;
+      return legacy.map((r) => ({
+        id: String(r.id ?? r['fornecedor_id'] ?? ''),
+        nome: String(r.nome ?? r['nome_fantasia'] ?? ''),
+        cnpj: String(r.cnpj ?? ''),
+        email: r.email ? String(r.email) : '',
+        telefone: r.telefone ? String(r.telefone) : '',
+        endereco: r.endereco ? String(r.endereco) : '',
+      }));
+    }
     return result.data ? [result.data] : [];
-  }, [result.data, result.rows]);
+  }, [result]);
 
   const columns: ColumnDef<FornecedorRow>[] = useMemo(() => [
     {
@@ -105,7 +116,7 @@ export default function FornecedorResult({ result }: { result: FornecedorOutput 
     <ArtifactDataTable
       data={tableRows}
       columns={columns}
-      title={result.title ?? 'Fornecedor'}
+      title={result.title ?? 'Fornecedores'}
       icon={Icon}
       iconColor={iconColor}
       message={result.message}
