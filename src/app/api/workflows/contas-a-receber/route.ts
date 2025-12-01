@@ -34,6 +34,12 @@ Guiar o usuário através do processo completo de criação de uma conta a receb
 - Input: cliente_id, categoria_id, centro_custo_id, valor, data_vencimento, etc.
 - Gera PRÉVIA; a criação real ocorre após confirmação na UI.
 
+# ⚠️ REGRAS OBRIGATÓRIAS PARA CHAMADA DE TOOLS
+- Sempre que precisar listar classificações, CHAME a tool **buscarClassificacoesFinanceiras**. Não escreva blocos "function_calls"/"function_result" como texto.
+- Para buscar clientes, CHAME **buscarCliente** (usa nome_fantasia ILIKE e/ou CPF/CNPJ normalizado). Sem filtros, liste TODOS com limite padrão (ex.: 100).
+- NÃO invente arrays/listas em texto; a UI renderiza automaticamente o retorno das tools.
+- Respostas textuais devem ser sucintas (1–2 linhas) e nunca substituir a chamada real das tools.
+
 # ✅ INSTRUÇÕES IMPORTANTES
 
 **Quando receber documento:**
@@ -65,7 +71,12 @@ export async function POST(req: Request) {
       },
       system: baseSystem,
       messages: convertToModelMessages(messages),
-      tools: undefined,
+      tools: {
+        buscarClassificacoesFinanceiras,
+        buscarCliente,
+        criarCliente,
+        criarContaReceber,
+      },
     })
 
     return result.toUIMessageStreamResponse()
