@@ -152,6 +152,10 @@ export const buscarFornecedor = tool({
     '[WORKFLOW] Busca fornecedor existente no sistema por CNPJ ou nome (schema entidades). Use após extrair os dados do documento para verificar se o fornecedor já está cadastrado.',
 
   inputSchema: z.object({
+    query: z
+      .string()
+      .optional()
+      .describe('Alias genérico: se só dígitos, trata como CNPJ; caso contrário, filtra por nome_fantasia (LIKE).'),
     cnpj: z
       .string()
       .optional()
@@ -159,7 +163,7 @@ export const buscarFornecedor = tool({
     nome: z
       .string()
       .optional()
-      .describe('Nome do fornecedor para busca (parcial ou completo). Se não informado e sem CNPJ, lista todos.'),
+      .describe('Nome do fornecedor (nome_fantasia) para busca (parcial ou completo). Se não informado e sem CNPJ, lista todos.'),
     limite: z
       .number()
       .int()
@@ -169,8 +173,19 @@ export const buscarFornecedor = tool({
       .describe('Limite opcional de resultados ao listar (default: sem limite).'),
   }),
 
-  execute: async ({ cnpj, nome, limite }) => {
+  execute: async ({ query, cnpj, nome, limite }) => {
     try {
+      // Normaliza alias 'query' para cnpj/nome
+      if (query && query.trim().length > 0) {
+        const q = query.trim();
+        const digits = q.replace(/\D/g, '');
+        if (digits.length >= 11) {
+          // assume CNPJ/CPF conforme dígitos (usa igualdade exata sobre CNPJ)
+          cnpj = q;
+        } else {
+          nome = q;
+        }
+      }
       // Monta condições dinâmicas
       const conds: string[] = [];
       const params: unknown[] = [];
@@ -186,7 +201,7 @@ export const buscarFornecedor = tool({
       if (nome) {
         const term = nome.trim();
         if (term.length > 0) {
-          conds.push(`LOWER(f.nome) LIKE LOWER($${i++})`);
+          conds.push(`LOWER(f.nome_fantasia) LIKE LOWER($${i++})`);
           params.push(`%${term}%`);
         }
       }
@@ -194,17 +209,19 @@ export const buscarFornecedor = tool({
       // Se não houver filtros, listar todos (com limite opcional)
       const listAll = conds.length === 0;
       const where = listAll ? '' : `WHERE ${conds.join(' AND ')}`;
-      const limitClause = listAll && limite ? `LIMIT ${Math.max(1, Math.min(10000, limite))}` : listAll ? '' : '';
+      const defaultLimit = 100;
+      const effLimit = Math.max(1, Math.min(10000, typeof limite === 'number' ? limite : defaultLimit));
+      const limitClause = listAll ? `LIMIT ${effLimit}` : '';
 
       const sql = `
         SELECT f.id::text AS id,
-               COALESCE(f.nome, '')::text AS nome,
+               COALESCE(f.nome_fantasia, '')::text AS nome,
                COALESCE(f.cnpj, '')::text AS cnpj,
                COALESCE(f.email, '')::text AS email,
                COALESCE(f.telefone, '')::text AS telefone
           FROM entidades.fornecedores f
           ${where}
-         ORDER BY f.nome ASC
+         ORDER BY f.nome_fantasia ASC
          ${limitClause}
       `.replace(/\n\s+/g, ' ').trim();
 
