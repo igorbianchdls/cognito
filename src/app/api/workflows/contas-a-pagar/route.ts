@@ -78,6 +78,30 @@ export async function POST(req: Request) {
         criarFornecedor,
         criarContaPagar,
       },
+      // Reintroduz apenas o Step 1 (extração + busca de fornecedor), sem travas
+      prepareStep: ({ stepNumber }) => {
+        if (stepNumber === 1) {
+          return {
+            system:
+              baseSystem + `
+
+# 🧭 Step 1 — Extrair dados do documento e buscar fornecedor
+
+Objetivo: Se houver documento, extraia CNPJ e/ou nome_fantasia. Em seguida, CHAME a tool buscarFornecedor.
+
+Regras obrigatórias:
+- NÃO escreva "function_calls"/"function_result" em texto. Invoque a tool real.
+- Se tiver CNPJ: buscarFornecedor { cnpj } (normalizar apenas dígitos)
+- Se tiver nome fantasia: buscarFornecedor { nome } (LIKE case-insensitive na coluna nome_fantasia)
+- Se não houver dados suficientes: buscarFornecedor {} (lista TODOS com limite padrão)
+- NÃO simule listas; a UI renderiza a tabela a partir do retorno da tool
+`,
+            tools: { buscarFornecedor },
+          };
+        }
+        // Demais steps não são usados neste fluxo simplificado
+        return undefined;
+      },
     })
 
     return result.toUIMessageStreamResponse()
