@@ -94,7 +94,8 @@ export async function POST(req: Request) {
 - Se fornecedor existe: Step 3 (buscar classificações)`,
             tools: {
               buscarFornecedor
-            }
+            },
+            stopWhen: [hasToolCall('buscarFornecedor')]
           }
         }
 
@@ -117,7 +118,8 @@ export async function POST(req: Request) {
 - Após criar a prévia do fornecedor: Step 3 (buscar classificações)`,
             tools: {
               criarFornecedor
-            }
+            },
+            stopWhen: [hasToolCall('criarFornecedor')]
           }
         }
 
@@ -143,7 +145,8 @@ export async function POST(req: Request) {
 - Após usuário escolher classificações: Step 4 (criar conta a pagar)`,
             tools: {
               buscarClassificacoesFinanceiras
-            }
+            },
+            stopWhen: [hasToolCall('buscarClassificacoesFinanceiras')]
           }
         }
 
@@ -171,7 +174,8 @@ export async function POST(req: Request) {
 - Confirme o sucesso e mostre o resumo final`,
             tools: {
               criarContaPagar
-            }
+            },
+            stopWhen: [hasToolCall('criarContaPagar')]
           }
         }
 
