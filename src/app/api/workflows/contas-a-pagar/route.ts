@@ -134,7 +134,28 @@ Regras obrigatórias:
             tools: { buscarClassificacoesFinanceiras },
           };
         }
+        if (stepNumber === 4) {
+          return {
+            system:
+              baseSystem + `
 
+# 🧭 Step 4 — Criar Conta a Pagar (PRÉVIA)
+
+Objetivo: Consolidar IDs e dados e chamar **criarContaPagar** para gerar a PRÉVIA.
+
+Forneça (quando disponíveis):
+- fornecedor_id (do Step 1/2), categoria_id e centro_custo_id (do Step 3)
+- valor, data_vencimento, data_emissao, numero_nota_fiscal, descricao
+- itens (descricao, quantidade, valor_unitario, valor_total opcional)
+
+Regras obrigatórias:
+- NÃO escreva "function_calls"/"function_result" em texto. Invoque a tool real.
+- Esta tool gera apenas PRÉVIA; a criação real ocorre na UI.
+- NÃO invente payloads; a UI mostrará o cartão de prévia com os campos retornados.
+`,
+            tools: { criarContaPagar },
+          };
+        }
         return undefined;
       },
     })
