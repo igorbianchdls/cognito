@@ -68,6 +68,61 @@ export async function POST(req: Request) {
         buscarFinanceiroLookups,
         criarPagamentoEfetuado,
       },
+      // Steps reintroduzidos (sem travas), seguindo o padrão do agente de Contas a Pagar
+      prepareStep: ({ stepNumber }) => {
+        if (stepNumber === 1) {
+          return {
+            system: baseSystem + `
+
+# 🧭 Step 1 — Analisar documento e buscar conta a pagar
+
+Objetivo: Se houver comprovante/documento, extraia valor, data do pagamento e fornecedor. Em seguida, CHAME a tool **buscarContaPagar** para localizar o título a pagar correspondente.
+
+Regras obrigatórias:
+- NÃO escreva "function_calls"/"function_result" em texto. Invoque a tool real.
+- Use filtros adequados: fornecedor_id OU fornecedor_nome (nome_fantasia), valor/valor_min/valor_max, data_vencimento (ou de_vencimento/ate_vencimento) e status.
+- Sem dados suficientes: faça uma busca mais ampla (ex.: por intervalo de vencimento ou valor aproximado) e permita que o usuário escolha.
+- NÃO simule listas; a UI renderiza a tabela a partir do retorno da tool.
+`,
+            tools: { buscarContaPagar },
+          };
+        }
+
+        if (stepNumber === 2) {
+          return {
+            system: baseSystem + `
+
+# 🧭 Step 2 — Buscar Contas Financeiras e Métodos de Pagamento
+
+Objetivo: CHAMAR **buscarFinanceiroLookups** para listar contas financeiras e métodos (PIX, transferência, boleto, etc.).
+
+Regras obrigatórias:
+- NÃO escreva "function_calls"/"function_result" em texto. Invoque a tool real.
+- NÃO simule listas; a UI renderiza as opções retornadas pela tool.
+`,
+            tools: { buscarFinanceiroLookups },
+          };
+        }
+
+        if (stepNumber === 3) {
+          return {
+            system: baseSystem + `
+
+# 🧭 Step 3 — Criar Pagamento Efetuado (PRÉVIA)
+
+Objetivo: Consolidar dados (lancamento_origem_id da AP, conta_financeira_id, metodo_pagamento_id, descricao) e CHAMAR **criarPagamentoEfetuado** para gerar a PRÉVIA.
+
+Regras obrigatórias:
+- NÃO escreva "function_calls"/"function_result" em texto. Invoque a tool real.
+- Esta tool gera apenas PRÉVIA; a criação real acontece na UI e baixa automaticamente a AP ao confirmar.
+- NÃO invente payloads; a UI mostrará o cartão de prévia com os campos retornados.
+`,
+            tools: { criarPagamentoEfetuado },
+          };
+        }
+
+        return undefined;
+      },
     })
 
     return result.toUIMessageStreamResponse()
