@@ -88,12 +88,12 @@ import IndicadoresServicosResult from '../tools/servicos/IndicadoresServicosResu
 // import MovimentacoesEstoqueResult from '../tools/estoque/MovimentacoesEstoqueResult';
 // import TransferenciasEstoqueResult from '../tools/estoque/TransferenciasEstoqueResult';
 // import InventariosEstoqueResult from '../tools/estoque/InventariosEstoqueResult';
-import CustosEstoqueResult from '../tools/estoque/CustosEstoqueResult';
-import TiposMovimentacaoResult from '../tools/estoque/TiposMovimentacaoResult';
-import FuncionariosResult from '../tools/funcionarios/FuncionariosResult';
-import DepartamentosResult from '../tools/funcionarios/DepartamentosResult';
-import CargosResult from '../tools/funcionarios/CargosResult';
-import TiposAusenciaResult from '../tools/funcionarios/TiposAusenciaResult';
+// import CustosEstoqueResult from '../tools/estoque/CustosEstoqueResult';
+// import TiposMovimentacaoResult from '../tools/estoque/TiposMovimentacaoResult';
+// import FuncionariosResult from '../tools/funcionarios/FuncionariosResult';
+// import DepartamentosResult from '../tools/funcionarios/DepartamentosResult';
+// import CargosResult from '../tools/funcionarios/CargosResult';
+// import TiposAusenciaResult from '../tools/funcionarios/TiposAusenciaResult';
 import FornecedoresCompraResult from '../tools/compras/FornecedoresCompraResult';
 import PedidosCompraResult from '../tools/compras/PedidosCompraResult';
 import RecebimentosCompraResult from '../tools/compras/RecebimentosCompraResult';
@@ -2355,6 +2355,7 @@ type ForecastAdPerformanceToolOutput = {
   sql_params?: string;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type GetFuncionariosDataToolOutput = {
   success: boolean;
   count: number;
@@ -2519,6 +2520,7 @@ type GetAnalyticsDataToolInput = {
   data_ate?: string;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type GetAnalyticsDataToolOutput = {
   success: boolean;
   count: number;
@@ -2692,12 +2694,16 @@ type InventoryGenericToolOutput = {
   error?: string;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type CalculateInventoryMetricsToolOutput = InventoryGenericToolOutput;
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type AnalyzeStockMovementTrendsToolOutput = InventoryGenericToolOutput;
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type ForecastRestockNeedsToolOutput = InventoryGenericToolOutput;
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type IdentifySlowMovingItemsToolOutput = InventoryGenericToolOutput;
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -2706,6 +2712,7 @@ type CompareChannelPerformanceToolOutput = InventoryGenericToolOutput;
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 type GenerateABCAnalysisToolOutput = InventoryGenericToolOutput;
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type DetectAnomaliesToolOutput = InventoryGenericToolOutput;
 
 type CalcularRunwayToolInput = {
@@ -3699,7 +3706,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
       </div>
       {message.parts.map((part, index) => {
         if (part.type === 'text') {
-          const txt = (part as any).text as string;
+          const txt = (part as { type: 'text'; text?: string }).text ?? '';
           // Fallback: detectar blocos simulados de function_calls para buscarFornecedor e renderizar tabela real
           if (typeof txt === 'string' && txt.includes('function_calls') && txt.includes('buscarFornecedor') && txt.includes('<result>')) {
             try {
@@ -3721,7 +3728,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                       success: true,
                       fornecedor_encontrado: rows.length > 0,
                       data: null,
-                      rows: rows as any,
+                      rows: rows,
                       count: rows.length,
                       message: `${rows.length} fornecedor(es) encontrado(s)`,
                       title: 'Fornecedores',
@@ -3729,11 +3736,11 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   />
                 );
               }
-            } catch (e) {
+            } catch {
               // silencia e cai no rendering de texto abaixo
             }
           }
-          return <Response key={index}>{(part as any).text}</Response>;
+          return <Response key={index}>{txt}</Response>;
         }
 
         if (part.type === 'reasoning') {
