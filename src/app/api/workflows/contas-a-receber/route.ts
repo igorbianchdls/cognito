@@ -1,5 +1,5 @@
 import { anthropic } from '@ai-sdk/anthropic'
-import { convertToModelMessages, streamText, UIMessage, stepCountIs, hasToolCall } from 'ai'
+import { convertToModelMessages, streamText, UIMessage } from 'ai'
 import { buscarClassificacoesFinanceiras } from '@/tools/contasPagarWorkflowTools'
 import {
   buscarCliente,
@@ -65,127 +65,7 @@ export async function POST(req: Request) {
       },
       system: baseSystem,
       messages: convertToModelMessages(messages),
-      stopWhen: [stepCountIs(20), hasToolCall('criarContaReceber')],
-      prepareStep: ({ stepNumber }) => {
-        if (stepNumber === 1) {
-          return {
-            system: baseSystem + `
-
-# 📍 STEP 1: EXTRAIR DADOS DO DOCUMENTO + BUSCAR CLIENTE
-
-**Seu objetivo neste step:**
-1. Se o usuário enviou um documento (imagem/PDF), extraia TODOS os dados:
-   - Cliente (nome + CPF/CNPJ)
-   - Valor total
-   - Data de vencimento
-   - Data de emissão
-   - Número da nota fiscal
-   - Itens/descrição (se houver)
-2. Liste os dados extraídos para o usuário confirmar
-3. Use a tool **buscarCliente** com o CPF/CNPJ extraído para verificar se o cliente já existe no sistema
-4. IMPORTANTE: Identifique se é CPF (11 dígitos) ou CNPJ (14 dígitos)
-
-**Tools disponíveis:**
-- buscarCliente
-
-**Próximo step:**
-- Se cliente NÃO existe: Step 2 (criar cliente)
-- Se cliente existe: Step 3 (buscar classificações)`,
-            tools: {
-              buscarCliente
-            }
-          }
-        }
-
-        if (stepNumber === 2) {
-          return {
-            system: baseSystem + `
-
-# 📍 STEP 2: CRIAR CLIENTE (PRÉVIA)
-
-**Seu objetivo neste step:**
-1. O cliente não existe no sistema
-2. Use a tool **criarCliente** com os dados extraídos do documento
-3. Defina o tipo_pessoa: "fisica" para CPF (11 dígitos) ou "juridica" para CNPJ (14 dígitos)
-4. IMPORTANTE: Esta tool gera apenas uma PRÉVIA. A criação real acontece quando o usuário clica em "Criar" na UI
-5. Mostre a prévia do cliente ao usuário
-
-**Tools disponíveis:**
-- criarCliente
-
-**Próximo step:**
-- Após criar a prévia do cliente: Step 3 (buscar classificações)`,
-            tools: {
-              criarCliente
-            }
-          }
-        }
-
-        if (stepNumber === 3) {
-          return {
-            system: baseSystem + `
-
-# 📍 STEP 3: BUSCAR CLASSIFICAÇÕES FINANCEIRAS
-
-**Seu objetivo neste step:**
-1. Use a tool **buscarClassificacoesFinanceiras** para mostrar as opções disponíveis
-2. Retorna: categorias financeiras, centros de custo, naturezas financeiras
-3. Com base na descrição da receita/itens do documento, ajude o usuário a escolher:
-   - Categoria financeira correta
-   - Centro de custo adequado
-   - Natureza financeira (se aplicável)
-4. Aguarde o usuário informar suas escolhas (IDs)
-
-**Tools disponíveis:**
-- buscarClassificacoesFinanceiras
-
-**Próximo step:**
-- Após usuário escolher classificações: Step 4 (criar conta a receber)`,
-            tools: {
-              buscarClassificacoesFinanceiras
-            }
-          }
-        }
-
-        if (stepNumber === 4) {
-          return {
-            system: baseSystem + `
-
-# 📍 STEP 4: CRIAR CONTA A RECEBER (PRÉVIA)
-
-**Seu objetivo neste step:**
-1. Você tem TODOS os dados necessários:
-   - Cliente ID (do step 1 ou 2)
-   - Categoria ID (do step 3)
-   - Centro de custo ID (do step 3)
-   - Dados do documento (valor, vencimento, NF, etc.)
-2. Use a tool **criarContaReceber** com TODOS esses dados
-3. IMPORTANTE: Esta tool gera apenas a PRÉVIA. A criação real acontece quando o usuário clica em "Criar" na UI
-4. Mostre o resumo completo da conta a receber ao usuário
-
-**Tools disponíveis:**
-- criarContaReceber
-
-**Final do workflow:**
-- Após gerar a prévia, aguarde o usuário clicar em "Criar" na UI
-- Confirme o sucesso e mostre o resumo final`,
-            tools: {
-              criarContaReceber
-            }
-          }
-        }
-
-        // Default: todas as tools disponíveis
-        return {
-          system: baseSystem,
-          tools: {
-            buscarClassificacoesFinanceiras,
-            buscarCliente,
-            criarCliente,
-            criarContaReceber
-          }
-        }
-      }
+      tools: undefined,
     })
 
     return result.toUIMessageStreamResponse()

@@ -24,6 +24,8 @@ export const buscarCliente = tool({
   description: '[WORKFLOW] Busca cliente no banco por CPF/CNPJ, nome ou lista todos quando não houver filtro.',
 
   inputSchema: z.object({
+    query: z.string().optional()
+      .describe('Alias genérico: se apenas dígitos (11/14), trata como CPF/CNPJ; caso contrário, filtra por nome_fantasia.'),
     cpf_cnpj: z.string().optional()
       .describe('CPF (11 dígitos) ou CNPJ (14 dígitos) do cliente'),
     nome: z.string().optional()
@@ -32,8 +34,18 @@ export const buscarCliente = tool({
       .describe('Limite de resultados na listagem geral (default sem limite).')
   }),
 
-  execute: async ({ cpf_cnpj, nome, limite }) => {
+  execute: async ({ query, cpf_cnpj, nome, limite }) => {
     try {
+      // Normaliza 'query' para cpf_cnpj ou nome, conforme conteúdo
+      if (query && query.trim().length > 0) {
+        const q = query.trim();
+        const digits = q.replace(/\D/g, '');
+        if (digits.length >= 11) {
+          cpf_cnpj = q;
+        } else {
+          nome = q;
+        }
+      }
       const conds: string[] = []
       const params: unknown[] = []
       let i = 1
@@ -55,19 +67,24 @@ export const buscarCliente = tool({
 
       const listAll = conds.length === 0
       const where = listAll ? '' : `WHERE ${conds.join(' AND ')}`
-      const limitClause = listAll && limite ? `LIMIT ${Math.max(1, Math.min(10000, limite))}` : ''
+      const defaultLimit = 100
+      const effLimit = Math.max(1, Math.min(10000, typeof limite === 'number' ? limite : defaultLimit))
+      const limitClause = listAll ? `LIMIT ${effLimit}` : ''
 
       const sql = `
         SELECT c.id::text AS id,
                c.nome_fantasia::text AS nome,
-               COALESCE(c.cnpj_cpf, '')::text AS cpf_cnpj
+               COALESCE(c.cnpj_cpf, '')::text AS cpf_cnpj,
+               COALESCE(c.email, '')::text AS email,
+               COALESCE(c.telefone, '')::text AS telefone,
+               COALESCE(c.endereco, '')::text AS endereco
           FROM entidades.clientes c
           ${where}
          ORDER BY c.nome_fantasia ASC
          ${limitClause}
       `.replace(/\n\s+/g, ' ').trim()
 
-      type Row = { id: string; nome: string; cpf_cnpj: string }
+      type Row = { id: string; nome: string; cpf_cnpj: string; email?: string; telefone?: string; endereco?: string }
       const rows = await runQuery<Row>(sql, params)
 
       if (listAll) {
