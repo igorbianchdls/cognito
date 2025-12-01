@@ -3699,7 +3699,41 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
       </div>
       {message.parts.map((part, index) => {
         if (part.type === 'text') {
-          return <Response key={index}>{part.text}</Response>;
+          const txt = (part as any).text as string;
+          // Fallback: detectar blocos simulados de function_calls para buscarFornecedor e renderizar tabela real
+          if (typeof txt === 'string' && txt.includes('function_calls') && txt.includes('buscarFornecedor') && txt.includes('<result>')) {
+            try {
+              const m = txt.match(/<result>\s*(\[.*?\])\s*<\/result>/s);
+              if (m) {
+                const arr = JSON.parse(m[1]) as Array<Record<string, unknown>>;
+                const rows = arr.map((r) => ({
+                  id: String(r.id ?? r['fornecedor_id'] ?? ''),
+                  nome: String(r['nome_fantasia'] ?? r['nome'] ?? ''),
+                  cnpj: String(r['cnpj'] ?? ''),
+                  email: r['email'] ? String(r['email']) : '',
+                  telefone: r['telefone'] ? String(r['telefone']) : '',
+                  endereco: r['endereco'] ? String(r['endereco']) : '',
+                }));
+                return (
+                  <FornecedorResult
+                    key={`fornec-fallback-${index}`}
+                    result={{
+                      success: true,
+                      fornecedor_encontrado: rows.length > 0,
+                      data: null,
+                      rows: rows as any,
+                      count: rows.length,
+                      message: `${rows.length} fornecedor(es) encontrado(s)`,
+                      title: 'Fornecedores',
+                    }}
+                  />
+                );
+              }
+            } catch (e) {
+              // silencia e cai no rendering de texto abaixo
+            }
+          }
+          return <Response key={index}>{(part as any).text}</Response>;
         }
 
         if (part.type === 'reasoning') {
