@@ -3710,7 +3710,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
           // Fallback: detectar blocos simulados de function_calls para buscarFornecedor e renderizar tabela real
           if (typeof txt === 'string' && txt.includes('function_calls') && txt.includes('buscarFornecedor') && txt.includes('<result>')) {
             try {
-              const m = txt.match(/<result>\s*(\[.*?\])\s*<\/result>/s);
+              const m = txt.match(/<result>\s*(\[[\s\S]*?\])\s*<\/result>/);
               if (m) {
                 const arr = JSON.parse(m[1]) as Array<Record<string, unknown>>;
                 const rows = arr.map((r) => ({
