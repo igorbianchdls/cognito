@@ -77,6 +77,62 @@ export async function POST(req: Request) {
         criarCliente,
         criarContaReceber,
       },
+      // Reintrodução de 3 steps (sem travas), no padrão dos demais agentes
+      prepareStep: ({ stepNumber }) => {
+        if (stepNumber === 1) {
+          return {
+            system: baseSystem + `
+
+# 🧭 Step 1 — Analisar documento e buscar cliente
+
+Objetivo: Se houver documento, extraia CPF/CNPJ e/ou nome_fantasia do cliente. Em seguida, CHAME a tool **buscarCliente**.
+
+Regras obrigatórias:
+- NÃO escreva "function_calls"/"function_result" em texto. Invoque a tool real.
+- Se tiver CPF/CNPJ: buscarCliente { cpf_cnpj } (normalizar apenas dígitos)
+- Se tiver nome (nome fantasia): buscarCliente { nome } (ILIKE case-insensitive em nome_fantasia)
+- Sem dados: buscarCliente {} para listar TODOS (com limite padrão)
+- NÃO simule listas; a UI renderiza a tabela a partir do retorno da tool.
+`,
+            tools: { buscarCliente },
+          };
+        }
+
+        if (stepNumber === 2) {
+          return {
+            system: baseSystem + `
+
+# 🧭 Step 2 — Buscar Classificações Financeiras
+
+Objetivo: CHAMAR **buscarClassificacoesFinanceiras** para listar categorias financeiras, centros de custo e naturezas.
+
+Regras obrigatórias:
+- NÃO escreva "function_calls"/"function_result" em texto. Invoque a tool real.
+- NÃO simule listas; a UI renderiza a tabela/grade a partir do retorno da tool.
+`,
+            tools: { buscarClassificacoesFinanceiras },
+          };
+        }
+
+        if (stepNumber === 3) {
+          return {
+            system: baseSystem + `
+
+# 🧭 Step 3 — Criar Conta a Receber (PRÉVIA)
+
+Objetivo: Consolidar dados (cliente_id, categoria_id, centro_custo_id, valor, data_vencimento, data_emissao, descricao, itens) e CHAMAR **criarContaReceber** para gerar a PRÉVIA.
+
+Regras obrigatórias:
+- NÃO escreva "function_calls"/"function_result" em texto. Invoque a tool real.
+- Esta tool gera apenas PRÉVIA; a criação real acontece na UI.
+- NÃO invente payloads; a UI mostrará o cartão de prévia com os campos retornados.
+`,
+            tools: { criarContaReceber },
+          };
+        }
+
+        return undefined;
+      },
     })
 
     return result.toUIMessageStreamResponse()
