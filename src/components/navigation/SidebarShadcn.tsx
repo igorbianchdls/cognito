@@ -7,6 +7,7 @@ import {
   LayoutGrid,
   Plug,
   Cpu,
+  ChevronsUpDown,
 } from "lucide-react"
 
 import MetaIcon from "@/components/icons/MetaIcon"
@@ -33,6 +34,8 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from "@/components/ui/sidebar"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Badge } from "@/components/ui/badge"
 
 // Font variable mapping helper
 function fontVar(name?: string) {
@@ -135,7 +138,56 @@ const navigationData = {
 
 import { cn } from "@/lib/utils"
 
-export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle, sectionTitleStyle, style, borderless, headerBorderless, className, ...props }: React.ComponentProps<typeof Sidebar> & { bgColor?: string; textColor?: string; itemTextColor?: string; itemTextStyle?: React.CSSProperties; sectionTitleStyle?: React.CSSProperties; borderless?: boolean; headerBorderless?: boolean; className?: string }) {
+type HeaderVariant = 'default' | 'compact'
+
+function SidebarHeaderCompact({
+  teams,
+}: {
+  teams: { name: string; logo: React.ElementType; plan: string }[]
+}) {
+  const [activeTeam, setActiveTeam] = React.useState(teams[0])
+
+  if (!activeTeam) return null
+
+  const Logo = activeTeam.logo || Cpu
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          className="flex items-center h-10 gap-2 px-2 rounded-md text-gray-800 hover:bg-gray-50 focus-visible:outline-none"
+        >
+          <Logo className="w-4 h-4 text-gray-900" />
+          <span className="text-gray-300">/</span>
+          <span className="inline-flex items-center gap-2">
+            <span className="w-5 h-5 rounded-full bg-gradient-to-tr from-fuchsia-500 via-pink-500 to-purple-500" />
+            <span className="text-sm font-medium leading-none">{activeTeam.name}</span>
+            <Badge variant="secondary" className="text-xs px-2 py-0 h-5 rounded-md bg-gray-100 text-gray-700">
+              {activeTeam.plan}
+            </Badge>
+            <ChevronsUpDown className="w-4 h-4 text-gray-500" />
+          </span>
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" sideOffset={4} className="min-w-56">
+        {teams.map((team, index) => (
+          <DropdownMenuItem key={team.name} className="gap-2 p-2" onClick={() => setActiveTeam(team)}>
+            <div className="flex size-6 items-center justify-center rounded-md border">
+              <team.logo className="size-3.5 shrink-0" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-sm">{team.name}</span>
+              <span className="text-xs text-gray-500">{team.plan}</span>
+            </div>
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
+export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle, sectionTitleStyle, style, borderless, headerBorderless, className, headerVariant = 'default', ...props }: React.ComponentProps<typeof Sidebar> & { bgColor?: string; textColor?: string; itemTextColor?: string; itemTextStyle?: React.CSSProperties; sectionTitleStyle?: React.CSSProperties; borderless?: boolean; headerBorderless?: boolean; className?: string; headerVariant?: HeaderVariant }) {
   const pathname = usePathname()
 
   // Update active state based on current path
@@ -172,7 +224,13 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
       {...props}
     >
       <SidebarHeader className={cn("h-16 bg-[#fdfdfd]", headerBorderless ? undefined : "border-b") }>
-        <TeamSwitcher teams={dataWithActiveState.teams} />
+        {headerVariant === 'compact' ? (
+          <div className="h-full flex items-center px-2">
+            <SidebarHeaderCompact teams={dataWithActiveState.teams} />
+          </div>
+        ) : (
+          <TeamSwitcher teams={dataWithActiveState.teams} />
+        )}
       </SidebarHeader>
       <SidebarContent>
         <NavMainSimple items={dataWithActiveState.navMain} groupLabelStyle={finalSectionTitleStyle} itemTextStyle={finalItemTextStyle} />

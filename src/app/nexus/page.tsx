@@ -326,7 +326,7 @@ export default function Page() {
 
   return (
     <SidebarProvider>
-      <SidebarShadcn borderless headerBorderless />
+      <SidebarShadcn borderless headerBorderless headerVariant="compact" />
       <SidebarInset className="h-screen overflow-hidden">
         <div className="flex h-full overflow-hidden" style={{ backgroundColor: '#fdfdfd' }}>
           {viewMode === 'chat' && (
