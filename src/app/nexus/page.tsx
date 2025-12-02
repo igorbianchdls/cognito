@@ -335,7 +335,7 @@ export default function Page() {
               <NexusHeader viewMode={viewMode} onChangeViewMode={setViewMode} borderless size="sm" showBreadcrumb={false} />
 
               <div className="flex-1 min-h-0 pl-2 pr-2 pt-0 pb-2" data-page="nexus">
-                <NexusPageContainer className="h-full">
+                <NexusPageContainer className="h-full" showSidebarTrigger>
                   <div className="mx-auto w-full max-w-5xl h-full">
                     <ChatContainer
                       messages={displayedMessages}
@@ -359,7 +359,7 @@ export default function Page() {
             <div className="flex flex-col h-full w-full">
               <NexusHeader viewMode={viewMode} onChangeViewMode={setViewMode} borderless size="sm" showBreadcrumb={false} />
               <div className="flex-1 min-h-0 pl-2 pr-2 pt-0 pb-2">
-                <NexusPageContainer className="h-full">
+                <NexusPageContainer className="h-full" showSidebarTrigger>
                   <PanelGroup direction="horizontal">
                   {/* Coluna Esquerda: Chat */}
                   <Panel defaultSize={33} minSize={25}>
@@ -395,7 +395,7 @@ export default function Page() {
             <div className="flex flex-col h-full w-full">
               <NexusHeader viewMode={viewMode} onChangeViewMode={setViewMode} borderless size="sm" showBreadcrumb={false} />
               <div className="flex-1 min-h-0 pl-2 pr-2 pt-0 pb-2">
-                <NexusPageContainer className="h-full">
+                <NexusPageContainer className="h-full" showSidebarTrigger>
                   <DashboardChatPanel />
                 </NexusPageContainer>
               </div>
