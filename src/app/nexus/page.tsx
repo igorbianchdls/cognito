@@ -2,7 +2,7 @@
 
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
-import { useState, FormEvent, useEffect } from 'react';
+import { useState, FormEvent, useEffect, useRef } from 'react';
 import { useStore } from '@nanostores/react';
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
@@ -47,6 +47,9 @@ export default function Page() {
 
   // State para controlar o modo de visualização
   const [viewMode, setViewMode] = useState<'chat' | 'split' | 'dashboard'>('chat');
+
+  // Snapshot do agente no momento do envio para anotar mensagens de streaming
+  const streamAgentRef = useRef<string>(activeAgentOrWorkflow);
 
   // Helper function to get API URL based on agent or workflow
   const getApiUrl = (agentOrWorkflow: string) => {
@@ -103,9 +106,14 @@ export default function Page() {
   });
 
   // Combinar histórico + streaming atual (sem duplicatas)
+  // Anotar agente nas mensagens de streaming do assistente para evitar fallback de título
+  const streamingWithAgent = messages.map(msg => (
+    msg.role === 'assistant' ? { ...msg, agent: streamAgentRef.current } : msg
+  ));
+
   const displayedMessages = [
     ...allMessages,
-    ...messages.filter(msg => {
+    ...streamingWithAgent.filter(msg => {
       // Para mensagens do usuário: só mostrar se não existe no allMessages
       if (msg.role === 'user') {
         return !allMessages.some(existing => {
@@ -167,6 +175,8 @@ export default function Page() {
     e.preventDefault();
     if (input.trim()) {
       console.log('Enviando mensagem via:', activeAgentOrWorkflow);
+      // Fixar o agente atual para as mensagens de streaming desta interação
+      streamAgentRef.current = activeAgentOrWorkflow;
       
       // Separate display text from AI data
       let displayText = input;
