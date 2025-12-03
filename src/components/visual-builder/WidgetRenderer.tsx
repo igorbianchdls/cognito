@@ -215,6 +215,12 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
     if (!needsBigQueryData(widget.type)) {
       return;
     }
+    // Wait until dataSource is available to avoid false error states
+    if (!widget.dataSource) {
+      setLoading(false);
+      setError(null);
+      return;
+    }
 
     const fetchData = async () => {
       const sig = buildSimpleSignature();
@@ -321,11 +327,17 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
     };
 
     fetchData();
-  }, [widget.id, reloadTick, globalFilters]);
+  }, [widget.id, widget.dataSource, reloadTick, globalFilters]);
 
   // Fetch data for multi-series widgets (stacked/grouped/pivot/compare)
   useEffect(() => {
     if (widget.type !== 'stackedbar' && widget.type !== 'groupedbar' && widget.type !== 'stackedlines' && widget.type !== 'radialstacked' && widget.type !== 'pivotbar' && widget.type !== 'comparebar') {
+      return;
+    }
+    // Wait until dataSource is available to avoid false error states
+    if (!widget.dataSource) {
+      setMultipleLoading(false);
+      setMultipleError(null);
       return;
     }
 
@@ -337,11 +349,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
         setMultipleLoading(false);
         return;
       }
-      if (!widget.dataSource) {
-        setMultipleError('No dataSource configured');
-        setMultipleLoading(false);
-        return;
-      }
+      // widget.dataSource is guaranteed here due to early return above
 
       try {
         setMultipleLoading(true);
@@ -409,7 +417,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
       }
 
     fetchGroupedData();
-  }, [widget.id, reloadTick, globalFilters]);
+  }, [widget.id, widget.dataSource, reloadTick, globalFilters]);
 
   // Type guard function for KPI data
   const isKPIData = (data: WidgetData): data is KPIData => {
