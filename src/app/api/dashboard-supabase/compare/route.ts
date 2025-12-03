@@ -170,7 +170,18 @@ export async function POST(request: NextRequest) {
     }
     const whereClauseUser = sanitizeWhere(where)
     // Resolver data filter (dateFilter ou filters.dateRange)
-    const incomingDateFilter = body.dateFilter || (typeof body.filters === 'object' ? (body as any).filters?.dateRange : undefined)
+    const getDateRangeFromFilters = (f: unknown): { type: string; startDate?: string; endDate?: string } | undefined => {
+      if (!f || typeof f !== 'object') return undefined;
+      const maybe = (f as { dateRange?: unknown }).dateRange;
+      if (!maybe || typeof maybe !== 'object') return undefined;
+      const dr = maybe as { type?: unknown; startDate?: unknown; endDate?: unknown };
+      if (typeof dr.type !== 'string') return undefined;
+      const out: { type: string; startDate?: string; endDate?: string } = { type: dr.type };
+      if (typeof dr.startDate === 'string') out.startDate = dr.startDate;
+      if (typeof dr.endDate === 'string') out.endDate = dr.endDate;
+      return out;
+    };
+    const incomingDateFilter = body.dateFilter || getDateRangeFromFilters(body.filters)
     const dr = calculateDateRange(incomingDateFilter)
     const whereClauseDate = dr ? `"data_pedido" >= '${dr.startDate}' AND "data_pedido" <= '${dr.endDate}'` : ''
     // Resolve meta type from measures when topic is not provided

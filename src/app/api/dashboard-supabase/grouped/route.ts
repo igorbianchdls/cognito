@@ -7,7 +7,7 @@ const SERIES_COLORS = [
   '#ec4899', '#14b8a6', '#f97316', '#06b6d4', '#a855f7'
 ];
 
-type PivotMeasure = 'faturamento' | 'quantidade' | 'pedidos' | 'itens'
+// Removed unused: PivotMeasure
 
 interface GroupedRequest {
   schema?: string;
@@ -136,7 +136,18 @@ export async function POST(request: NextRequest) {
 
     // Resolver e aplicar filtro de datas
     let dateCondition = '';
-    const incomingDateFilter = dateFilter || (typeof (body as any).filters === 'object' ? (body as any).filters?.dateRange : undefined);
+    const getDateRangeFromFilters = (f: unknown): { type: string; startDate?: string; endDate?: string } | undefined => {
+      if (!f || typeof f !== 'object') return undefined;
+      const maybe = (f as { dateRange?: unknown }).dateRange;
+      if (!maybe || typeof maybe !== 'object') return undefined;
+      const dr = maybe as { type?: unknown; startDate?: unknown; endDate?: unknown };
+      if (typeof dr.type !== 'string') return undefined;
+      const out: { type: string; startDate?: string; endDate?: string } = { type: dr.type };
+      if (typeof dr.startDate === 'string') out.startDate = dr.startDate;
+      if (typeof dr.endDate === 'string') out.endDate = dr.endDate;
+      return out;
+    };
+    const incomingDateFilter = dateFilter || getDateRangeFromFilters((body as { filters?: unknown }).filters);
     const dr = calculateDateRange(incomingDateFilter);
     if (dr?.startDate && dr?.endDate) {
       dateCondition = ` AND "data_pedido" >= '${dr.startDate}' AND "data_pedido" <= '${dr.endDate}'`;
