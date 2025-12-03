@@ -189,8 +189,8 @@ export async function POST(request: NextRequest) {
       if (!whereClauseUserRaw) return ''
       if (dr) {
         return whereClauseUserRaw
-          .replace(/:start_date/gi, dr.startDate)
-          .replace(/:end_date/gi, dr.endDate)
+          .replace(/:start_date/gi, `'${dr.startDate}'`)
+          .replace(/:end_date/gi, `'${dr.endDate}'`)
       }
       return whereClauseUserRaw
     })()

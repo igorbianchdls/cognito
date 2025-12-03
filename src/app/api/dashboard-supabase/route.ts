@@ -118,7 +118,9 @@ const generatePostgreSQLQuery = (
   if (userWhere) {
     if (dateFilter) {
       const { startDate, endDate } = calculateDateRange(dateFilter);
-      userWhere = userWhere.replace(/:start_date/gi, startDate).replace(/:end_date/gi, endDate);
+      userWhere = userWhere
+        .replace(/:start_date/gi, `'${startDate}'`)
+        .replace(/:end_date/gi, `'${endDate}'`);
     }
     dateCondition += ` AND (${userWhere})`;
   }

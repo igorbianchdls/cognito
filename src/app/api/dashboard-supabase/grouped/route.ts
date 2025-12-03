@@ -163,7 +163,11 @@ export async function POST(request: NextRequest) {
     // Optional user WHERE (placeholders)
     if (where && typeof where === 'string' && where.trim().length > 0) {
       const safeWhere = where.replace(/[^a-zA-Z0-9_\s=.'()\-:,]/g, '');
-      const replaced = dr ? safeWhere.replace(/:start_date/gi, dr.startDate).replace(/:end_date/gi, dr.endDate) : safeWhere;
+      const replaced = dr
+        ? safeWhere
+            .replace(/:start_date/gi, `'${dr.startDate}'`)
+            .replace(/:end_date/gi, `'${dr.endDate}'`)
+        : safeWhere;
       dateCondition += ` AND (${replaced})`;
     }
 
