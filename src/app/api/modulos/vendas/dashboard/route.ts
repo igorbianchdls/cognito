@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
     const de = searchParams.get('de') || undefined
     const ate = searchParams.get('ate') || undefined
     const limitParam = searchParams.get('limit') || undefined
-    const limit = Math.max(1, Math.min(50, limitParam ? Number(limitParam) : 5))
+  const limit = Math.max(1, Math.min(50, limitParam ? Number(limitParam) : 5))
 
     // WHERE for pedidos (p)
     const pConds: string[] = []
@@ -20,6 +20,14 @@ export async function GET(req: NextRequest) {
     if (de) { pConds.push(`p.data_pedido >= $${pi++}`); pParams.push(de) }
     if (ate) { pConds.push(`p.data_pedido <= $${pi++}`); pParams.push(ate) }
     const pWhere = pConds.length ? `WHERE ${pConds.join(' AND ')}` : ''
+
+    // WHERE for comercial.vw_vendas_metas (vm)
+    const vmConds: string[] = []
+    const vmParams: unknown[] = []
+    // Keep param order consistent with pWhere (de then ate)
+    if (de) { vmConds.push(`data_pedido >= $${vmParams.length + 1}`); vmParams.push(de) }
+    if (ate) { vmConds.push(`data_pedido <= $${vmParams.length + 1}`); vmParams.push(ate) }
+    const vmWhere = vmConds.length ? `WHERE ${vmConds.join(' AND ')}` : ''
 
     // WHERE for devolucoes (d)
     const dConds: string[] = []
@@ -350,22 +358,21 @@ export async function GET(req: NextRequest) {
     let servicosCategoriasPedidosView: ChartItem[] = []
     try { servicosCategoriasPedidosView = await runQuery<ChartItem>(servCatPedidosViewSql, [limit]) } catch (e) { console.error('🛒 VENDAS dashboard serv_cat_pedidos(view) error:', e); servicosCategoriasPedidosView = [] }
 
-    // Meta x Faturamento por Território (Novembro/2025) — via view comercial.vw_vendas_metas
+    // Meta x Faturamento por Território — view comercial.vw_vendas_metas (respeita de/ate)
     const metaFatTerrViewSQL = `
       SELECT
         territorio_nome AS label,
         COALESCE(SUM(subtotal),0)::float AS faturamento,
         COALESCE(MAX(meta_faturamento_territorio),0)::float AS meta
       FROM comercial.vw_vendas_metas
-      WHERE EXTRACT(YEAR FROM data_pedido) = 2025
-        AND EXTRACT(MONTH FROM data_pedido) = 11
+      ${vmWhere}
       GROUP BY territorio_nome
       ORDER BY faturamento DESC
-      LIMIT $1::int`;
+      LIMIT $${vmParams.length + 1}::int`;
     let metaTerritorio: { label: string; meta: number; faturamento: number }[] = []
-    try { metaTerritorio = await runQuery<{ label: string; meta: number; faturamento: number }>(metaFatTerrViewSQL, [limit]) } catch (e) { console.error('🛒 VENDAS dashboard meta_fat_territorio(view) error:', e); metaTerritorio = [] }
+    try { metaTerritorio = await runQuery<{ label: string; meta: number; faturamento: number }>(metaFatTerrViewSQL, [...vmParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard meta_fat_territorio(view) error:', e); metaTerritorio = [] }
 
-    // Meta x Ticket Médio por Território (Novembro/2025) — via view comercial.vw_vendas_metas
+    // Meta x Ticket Médio por Território — view comercial.vw_vendas_metas (respeita de/ate)
     const metaTicketTerrViewSQL = `
       SELECT
         territorio_nome AS label,
@@ -374,28 +381,28 @@ export async function GET(req: NextRequest) {
              THEN COALESCE(SUM(subtotal),0)::float / NULLIF(COUNT(DISTINCT pedido_id), 0)
              ELSE 0 END AS realizado
       FROM comercial.vw_vendas_metas
-      WHERE EXTRACT(YEAR FROM data_pedido) = 2025
-        AND EXTRACT(MONTH FROM data_pedido) = 11
+      ${vmWhere}
       GROUP BY territorio_nome
       ORDER BY territorio_nome
-      LIMIT $1::int`;
+      LIMIT $${vmParams.length + 1}::int`;
     let metaTicketMedioTerritorio: { label: string; meta: number; realizado: number }[] = []
-    try { metaTicketMedioTerritorio = await runQuery<{ label: string; meta: number; realizado: number }>(metaTicketTerrViewSQL, [limit]) } catch (e) { console.error('🛒 VENDAS dashboard meta_ticket_territorio(view) error:', e); metaTicketMedioTerritorio = [] }
+    try { metaTicketMedioTerritorio = await runQuery<{ label: string; meta: number; realizado: number }>(metaTicketTerrViewSQL, [...vmParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard meta_ticket_territorio(view) error:', e); metaTicketMedioTerritorio = [] }
 
-    // Meta x Novos Clientes por Território (Novembro/2025) — via view comercial.vw_vendas_metas
+    // Meta x Novos Clientes por Território — view comercial.vw_vendas_metas (respeita de/ate)
+    const havingNovosTerr = (de && ate)
+      ? `HAVING MIN(data_pedido) >= $1 AND MIN(data_pedido) <= $2`
+      : de
+        ? `HAVING MIN(data_pedido) >= $1`
+        : ate
+          ? `HAVING MIN(data_pedido) <= $${de ? 2 : 1}`
+          : ''
     const metaNovosTerrViewSQL = `WITH novos AS (
     SELECT
         territorio_id,
         COUNT(DISTINCT cliente_id) AS novos_clientes_real
     FROM comercial.vw_vendas_metas
-    WHERE EXTRACT(YEAR FROM data_pedido) = 2025
-      AND EXTRACT(MONTH FROM data_pedido) = 11
-      AND cliente_id IN (
-            SELECT cliente_id
-            FROM vendas.pedidos
-            GROUP BY cliente_id
-            HAVING MIN(data_pedido) BETWEEN '2025-11-01' AND '2025-11-30'
-      )
+    ${vmWhere}
+      ${havingNovosTerr}
     GROUP BY territorio_id
 )
 SELECT
@@ -404,28 +411,26 @@ SELECT
     COALESCE(n.novos_clientes_real, 0)::float AS realizado
 FROM comercial.vw_vendas_metas vm
 LEFT JOIN novos n ON n.territorio_id = vm.territorio_id
-WHERE EXTRACT(YEAR FROM data_pedido) = 2025
-  AND EXTRACT(MONTH FROM data_pedido) = 11
+${vmWhere.replace(/\bdata_pedido\b/g, 'vm.data_pedido')}
 GROUP BY vm.territorio_nome, n.novos_clientes_real
 ORDER BY vm.territorio_nome
-LIMIT $1::int`;
+LIMIT $${vmParams.length + 1}::int`;
     let metaNovosClientesTerritorio: { label: string; meta: number; realizado: number }[] = []
-    try { metaNovosClientesTerritorio = await runQuery<{ label: string; meta: number; realizado: number }>(metaNovosTerrViewSQL, [limit]) } catch (e) { console.error('🛒 VENDAS dashboard meta_novos_territorio(view) error:', e); metaNovosClientesTerritorio = [] }
+    try { metaNovosClientesTerritorio = await runQuery<{ label: string; meta: number; realizado: number }>(metaNovosTerrViewSQL, [...vmParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard meta_novos_territorio(view) error:', e); metaNovosClientesTerritorio = [] }
 
-    // Meta x Faturamento por Vendedor (Novembro/2025) — via view comercial.vw_vendas_metas
+    // Meta x Faturamento por Vendedor — view comercial.vw_vendas_metas (respeita de/ate)
     const metaVendViewSql = `
       SELECT
         vendedor_nome AS label,
         COALESCE(SUM(subtotal),0)::float AS faturamento,
         COALESCE(MAX(meta_faturamento_vendedor),0)::float AS meta
       FROM comercial.vw_vendas_metas
-      WHERE EXTRACT(YEAR FROM data_pedido) = 2025
-        AND EXTRACT(MONTH FROM data_pedido) = 11
+      ${vmWhere}
       GROUP BY vendedor_nome
       ORDER BY faturamento DESC
-      LIMIT $1::int`;
+      LIMIT $${vmParams.length + 1}::int`;
     let metaVendedor: { label: string; meta: number; faturamento: number }[] = []
-    try { metaVendedor = await runQuery<{ label: string; meta: number; faturamento: number }>(metaVendViewSql, [limit]) } catch (e) { console.error('🛒 VENDAS dashboard meta_fat_vendedor(view) error:', e); metaVendedor = [] }
+    try { metaVendedor = await runQuery<{ label: string; meta: number; faturamento: number }>(metaVendViewSql, [...vmParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard meta_fat_vendedor(view) error:', e); metaVendedor = [] }
 
     // Meta x Faturamento por Vendedor (via vw_metas_detalhe)
     // Meta x Faturamento por Vendedor (via vw_metas_detalhe) – filtra por mês/ano quando de/ate fornecidos
@@ -477,19 +482,20 @@ LIMIT $1::int`;
       .slice(0, limit)
 
     // Meta x Novos Clientes por Vendedor (Novembro/2025) — via view comercial.vw_vendas_metas
+    const havingNovosVend = (de && ate)
+      ? `HAVING MIN(data_pedido) >= $1 AND MIN(data_pedido) <= $2`
+      : de
+        ? `HAVING MIN(data_pedido) >= $1`
+        : ate
+          ? `HAVING MIN(data_pedido) <= $${de ? 2 : 1}`
+          : ''
     const metaNovosClientesVendSql = `WITH novos AS (
     SELECT
         vendedor_id,
         COUNT(DISTINCT cliente_id) AS novos_clientes_real
     FROM comercial.vw_vendas_metas
-    WHERE EXTRACT(YEAR FROM data_pedido) = 2025
-      AND EXTRACT(MONTH FROM data_pedido) = 11
-      AND cliente_id IN (
-            SELECT cliente_id
-            FROM vendas.pedidos
-            GROUP BY cliente_id
-            HAVING MIN(data_pedido) BETWEEN '2025-11-01' AND '2025-11-30'
-      )
+    ${vmWhere}
+      ${havingNovosVend}
     GROUP BY vendedor_id
 )
 SELECT
@@ -498,13 +504,12 @@ SELECT
     COALESCE(n.novos_clientes_real, 0)::float AS realizado
 FROM comercial.vw_vendas_metas vm
 LEFT JOIN novos n ON n.vendedor_id = vm.vendedor_id
-WHERE EXTRACT(YEAR FROM data_pedido) = 2025
-  AND EXTRACT(MONTH FROM data_pedido) = 11
+${vmWhere.replace(/\bdata_pedido\b/g, 'vm.data_pedido')}
 GROUP BY vm.vendedor_nome, n.novos_clientes_real
 ORDER BY vm.vendedor_nome
-LIMIT $1::int`;
+LIMIT $${vmParams.length + 1}::int`;
     let metaNovosClientesVendedor: { label: string; meta: number; realizado: number }[] = []
-    try { metaNovosClientesVendedor = await runQuery<{ label: string; meta: number; realizado: number }>(metaNovosClientesVendSql, [limit]) } catch (e) { console.error('🛒 VENDAS dashboard meta_novos_clientes_vw error:', e); metaNovosClientesVendedor = [] }
+    try { metaNovosClientesVendedor = await runQuery<{ label: string; meta: number; realizado: number }>(metaNovosClientesVendSql, [...vmParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard meta_novos_clientes_vw error:', e); metaNovosClientesVendedor = [] }
 
     // Meta x Ticket Médio por Vendedor (Novembro/2025) — via view comercial.vw_vendas_metas
     const metaTicketVendSql = `
@@ -515,13 +520,12 @@ LIMIT $1::int`;
              THEN COALESCE(SUM(subtotal),0)::float / NULLIF(COUNT(DISTINCT pedido_id), 0)
              ELSE 0 END AS realizado
       FROM comercial.vw_vendas_metas
-      WHERE EXTRACT(YEAR FROM data_pedido) = 2025
-        AND EXTRACT(MONTH FROM data_pedido) = 11
+      ${vmWhere}
       GROUP BY vendedor_nome
       ORDER BY vendedor_nome
-      LIMIT $1::int`;
+      LIMIT $${vmParams.length + 1}::int`;
     let metaTicketMedioVendedor: { label: string; meta: number; realizado: number }[] = []
-    try { metaTicketMedioVendedor = await runQuery<{ label: string; meta: number; realizado: number }>(metaTicketVendSql, [limit]) } catch (e) { console.error('🛒 VENDAS dashboard meta_ticket_medio_vw error:', e); metaTicketMedioVendedor = [] }
+    try { metaTicketMedioVendedor = await runQuery<{ label: string; meta: number; realizado: number }>(metaTicketVendSql, [...vmParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard meta_ticket_medio_vw error:', e); metaTicketMedioVendedor = [] }
 
     // Vendas por Cupom
     const cupomSql = `SELECT COALESCE(cup.codigo, '—') AS label, COALESCE(SUM(pi.subtotal),0)::float AS value
