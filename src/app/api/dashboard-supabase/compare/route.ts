@@ -51,8 +51,8 @@ const sanitizeIdent = (s?: string) => {
 
 const sanitizeWhere = (w?: string) => {
   if (!w) return ''
-  // Allow a conservative set of characters to avoid SQL injection in simple equals clauses
-  const safe = w.replace(/[^a-zA-Z0-9_\s=.'()\-]/g, '')
+  // Allow a conservative set of characters plus ':' for placeholder replacement (:start_date/:end_date)
+  const safe = w.replace(/[^a-zA-Z0-9_\s=.'()\-:]/g, '')
   return safe
 }
 
