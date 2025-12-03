@@ -238,13 +238,13 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
 
         // 📤 API request log
         // Map DSL dimension/measure -> API x/y for simple charts
-        const ds = widget.dataSource as Partial<{ schema: string; table: string; x: string; y: string; dimension: string; measure: string }>;
+        const ds = widget.dataSource as Partial<{ schema: string; table: string; x: string; y: string; dimension: string; measure: string; where?: string }>;
         // Send measure expression as 'y' and map dimension -> x
         const mappedDataSource = {
           ...ds,
           ...(ds.dimension ? { x: ds.dimension } : {}),
           ...(ds.measure ? { y: ds.measure } : {}),
-        } as Partial<{ schema: string; table: string; x: string; y: string }>;
+        } as Partial<{ schema: string; table: string; x: string; y: string; where?: string }>;
 
         // Normalize schema/table in case table contains schema prefix
         const normalizeSchemaTable = (src: Partial<{ schema?: string; table?: string }>) => {

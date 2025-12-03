@@ -168,7 +168,17 @@ export async function POST(request: NextRequest) {
           break
       }
     }
-    const whereClauseUser = sanitizeWhere(where)
+    const whereClauseUserRaw = sanitizeWhere(where)
+    // Replace placeholders in user WHERE using date filter
+    const whereClauseUser = (() => {
+      if (!whereClauseUserRaw) return ''
+      if (dr) {
+        return whereClauseUserRaw
+          .replace(/:start_date/gi, dr.startDate)
+          .replace(/:end_date/gi, dr.endDate)
+      }
+      return whereClauseUserRaw
+    })()
     // Resolver data filter (dateFilter ou filters.dateRange)
     const getDateRangeFromFilters = (f: unknown): { type: string; startDate?: string; endDate?: string } | undefined => {
       if (!f || typeof f !== 'object') return undefined;

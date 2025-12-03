@@ -28,6 +28,7 @@ interface GroupedRequest {
     startDate?: string;
     endDate?: string;
   };
+  where?: string;
   // Drill simples: filtro por uma dimensão/valor
   filter?: { dim: string; value: string };
 }
@@ -124,6 +125,7 @@ export async function POST(request: NextRequest) {
       measure,
       limit = 10,
       dateFilter,
+      where,
       filter
     } = body;
 
@@ -157,6 +159,12 @@ export async function POST(request: NextRequest) {
       const dim = filter.dim.replace(/[^a-zA-Z0-9_]/g, '');
       const val = filter.value.replace(/'/g, "''");
       dateCondition += ` AND "${dim}" = '${val}'`;
+    }
+    // Optional user WHERE (placeholders)
+    if (where && typeof where === 'string' && where.trim().length > 0) {
+      const safeWhere = where.replace(/[^a-zA-Z0-9_\s=.'()\-:,]/g, '');
+      const replaced = dr ? safeWhere.replace(/:start_date/gi, dr.startDate).replace(/:end_date/gi, dr.endDate) : safeWhere;
+      dateCondition += ` AND (${replaced})`;
     }
 
     // Resolver expressão de medida

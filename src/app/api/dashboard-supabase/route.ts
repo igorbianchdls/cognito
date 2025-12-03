@@ -85,6 +85,12 @@ function calculateDateRange(filter: DateRangeFilter): { startDate: string, endDa
   }
 }
 
+// Sanitize a user-provided WHERE snippet and allow date placeholders
+const sanitizeWhere = (w?: string) => {
+  if (!w) return '';
+  return w.replace(/[^a-zA-Z0-9_\s=.'()\-:,]/g, '');
+};
+
 // Função para gerar SQL PostgreSQL automaticamente
 const generatePostgreSQLQuery = (
   tipo: string, 
@@ -93,7 +99,8 @@ const generatePostgreSQLQuery = (
   tabela: string, 
   agregacao?: string, 
   schema = 'marketing',
-  dateFilter?: DateRangeFilter
+  dateFilter?: DateRangeFilter,
+  where?: string
 ): string => {
   const yExpr = buildMeasureExpression(y);
 
@@ -105,6 +112,15 @@ const generatePostgreSQLQuery = (
   if (dateFilter) {
     const { startDate, endDate } = calculateDateRange(dateFilter);
     dateCondition = ` AND "data_pedido" >= '${startDate}' AND "data_pedido" <= '${endDate}'`;
+  }
+  // Optional user WHERE (placeholders :start_date / :end_date)
+  let userWhere = sanitizeWhere(where);
+  if (userWhere) {
+    if (dateFilter) {
+      const { startDate, endDate } = calculateDateRange(dateFilter);
+      userWhere = userWhere.replace(/:start_date/gi, startDate).replace(/:end_date/gi, endDate);
+    }
+    dateCondition += ` AND (${userWhere})`;
   }
 
   switch (tipo) {
@@ -148,7 +164,7 @@ export async function POST(request: NextRequest) {
   try {
     // Parse request body
     const { type, dataSource, filters, dateFilter: dateFilterBody } = await request.json();
-    const { table, x, y, aggregation, schema = 'marketing' } = dataSource;
+    const { table, x, y, aggregation, schema = 'marketing', where } = dataSource;
     const dateFilter = dateFilterBody || filters?.dateRange;
 
     // 📥 Request received log
@@ -169,7 +185,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: true,
         data: mockData,
-        sql_query: `-- Mock data: SUPABASE_DB_URL not configured\n-- Would execute: ${generatePostgreSQLQuery(type, x, y || 'impressao', table, aggregation, schema, dateFilter)}`,
+        sql_query: `-- Mock data: SUPABASE_DB_URL not configured\n-- Would execute: ${generatePostgreSQLQuery(type, x, y || 'impressao', table, aggregation, schema, dateFilter, where)}`,
         totalRecords: Array.isArray(mockData) ? mockData.length : 1,
         metadata: {
           generatedAt: new Date().toISOString(),
@@ -221,7 +237,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Gerar SQL automaticamente para PostgreSQL
-    const sqlQuery = generatePostgreSQLQuery(type, x, y || 'impressao', table, aggregation, schema, dateFilter);
+    const sqlQuery = generatePostgreSQLQuery(type, x, y || 'impressao', table, aggregation, schema, dateFilter, where);
 
     // 🔍 SQL generation log
     console.log('🔍 Generated PostgreSQL:', {

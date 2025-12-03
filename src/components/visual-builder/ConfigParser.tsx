@@ -300,6 +300,14 @@ export interface ParseResult {
   isValid: boolean;
   dashboardTitle?: string;
   dashboardSubtitle?: string;
+  // Optional global filters parsed from DSL or JSON
+  globalFilters?: {
+    dateRange: {
+      type: string;
+      startDate?: string;
+      endDate?: string;
+    }
+  };
 }
 
 export class ConfigParser {
@@ -481,6 +489,27 @@ export class ConfigParser {
     const dashboardTitle = dashAttrs['title'];
     const dashboardSubtitle = dashAttrs['subtitle'];
     const layoutMode = (dashAttrs['layout-mode'] as 'grid' | 'grid-per-row' | 'grid-per-column' | undefined) || 'grid-per-row';
+
+    // Dashboard-level date range support
+    const dateTypeRaw = dashAttrs['date-type'] || dashAttrs['data'];
+    let parsedGlobalFilters: ParseResult['globalFilters'] | undefined = undefined;
+    if (typeof dateTypeRaw === 'string' && dateTypeRaw.length > 0) {
+      let type = dateTypeRaw;
+      let startDate: string | undefined;
+      let endDate: string | undefined;
+      // Allow compact notation: data="custom:YYYY-MM-DD,YYYY-MM-DD"
+      if (/^custom:/i.test(type)) {
+        const m = type.split(':')[1] || '';
+        const parts = m.split(/[;,]/).map(s => s.trim());
+        type = 'custom';
+        if (parts[0]) startDate = parts[0];
+        if (parts[1]) endDate = parts[1];
+      } else if (type === 'custom') {
+        startDate = dashAttrs['date-start'];
+        endDate = dashAttrs['date-end'];
+      }
+      parsedGlobalFilters = { globalFilters: { dateRange: { type, ...(startDate ? { startDate } : {}), ...(endDate ? { endDate } : {}) } } }.globalFilters;
+    }
 
     // Optional dashboard-level <style>{ ...json... }</style>
     const styleMatch = dsl.match(/<style\b[^>]*>([\s\S]*?)<\/style>/i);
@@ -1026,7 +1055,8 @@ export class ConfigParser {
       errors,
       isValid: errors.length === 0,
       dashboardTitle,
-      dashboardSubtitle
+      dashboardSubtitle,
+      ...(parsedGlobalFilters ? { globalFilters: parsedGlobalFilters } : {})
     };
   }
 

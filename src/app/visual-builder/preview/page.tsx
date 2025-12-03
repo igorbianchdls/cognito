@@ -26,7 +26,7 @@ export default function PreviewPage() {
 
   const handleFilterChange = useCallback((filters: import('@/stores/visualBuilderStore').GlobalFilters) => {
     setIsFilterLoading(true);
-    visualBuilderActions.updateGlobalFilters(filters);
+    visualBuilderActions.updateGlobalDateInCode(filters);
     setTimeout(() => setIsFilterLoading(false), 600);
   }, []);
 

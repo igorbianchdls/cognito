@@ -91,8 +91,8 @@ export default function VisualBuilderPage() {
 
   const handleFilterChange = useCallback((filters: GlobalFilters) => {
     setIsFilterLoading(true);
-    visualBuilderActions.updateGlobalFilters(filters);
-    
+    // Persist into DSL and store
+    visualBuilderActions.updateGlobalDateInCode(filters);
     // Simulate loading time for better UX
     setTimeout(() => {
       setIsFilterLoading(false);

@@ -137,7 +137,7 @@ const compactWidgetHeaders = (code: string): string => {
 }
 
 // New DSL initial code (HTML-like)
-export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas" subtitle="Análise de desempenho comercial" layout-mode="grid-per-row">
+export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas" subtitle="Análise de desempenho comercial" layout-mode="grid-per-row" date-type="last_30_days">
   <!-- KPIs (6 em uma linha) - Foco: Novembro/2025 via filtros globais -->
   <row id="kpis" cols-d="6" cols-t="3" cols-m="2" gap-x="12" gap-y="12">
     <widget id="kpi_meta" type="kpi" order="1" span-d="1" span-t="1" span-m="1" height="150" title="Meta de Vendas">
@@ -169,15 +169,15 @@ export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas"
   <!-- Meta x Realizado • Vendedor -->
   <row id="mxr_vendedor" cols-d="3" cols-t="1" cols-m="1" gap-x="16" gap-y="16">
     <widget id="mxr_vend_fat" type="comparebar" order="1" span-d="1" span-t="1" span-m="1" height="360" title="💰 Meta x Faturamento por Vendedor">
-      <datasource schema="comercial" table="vw_vendas_metas" dimension="vendedor_nome" measureGoal="meta_faturamento_vendedor" measureActual="subtotal" where="EXTRACT(YEAR FROM data_pedido)=2025 AND EXTRACT(MONTH FROM data_pedido)=12" />
+      <datasource schema="comercial" table="vw_vendas_metas" dimension="vendedor_nome" measureGoal="meta_faturamento_vendedor" measureActual="subtotal" where="\"data_pedido\" >= :start_date AND \"data_pedido\" <= :end_date" />
       <styling tw="group:grouped layout:horizontal legend:on mb:32" />
     </widget>
     <widget id="mxr_vend_ticket" type="comparebar" order="2" span-d="1" span-t="1" span-m="1" height="360" title="🎯 Meta x Ticket Médio por Vendedor">
-      <datasource schema="comercial" table="vw_vendas_metas" dimension="vendedor_nome" measureGoal="meta_ticket_vendedor" measureActual="ticket_medio" where="EXTRACT(YEAR FROM data_pedido)=2025 AND EXTRACT(MONTH FROM data_pedido)=12" />
+      <datasource schema="comercial" table="vw_vendas_metas" dimension="vendedor_nome" measureGoal="meta_ticket_vendedor" measureActual="ticket_medio" where="\"data_pedido\" >= :start_date AND \"data_pedido\" <= :end_date" />
       <styling tw="group:grouped layout:horizontal legend:on mb:32" />
     </widget>
     <widget id="mxr_vend_novos" type="comparebar" order="3" span-d="1" span-t="1" span-m="1" height="360" title="👥 Meta x Novos Clientes por Vendedor">
-      <datasource schema="comercial" table="vw_vendas_metas" dimension="vendedor_nome" measureGoal="meta_novos_clientes_vendedor" measureActual="novos_clientes" where="EXTRACT(YEAR FROM data_pedido)=2025 AND EXTRACT(MONTH FROM data_pedido)=12" />
+      <datasource schema="comercial" table="vw_vendas_metas" dimension="vendedor_nome" measureGoal="meta_novos_clientes_vendedor" measureActual="novos_clientes" where="\"data_pedido\" >= :start_date AND \"data_pedido\" <= :end_date" />
       <styling tw="group:grouped layout:horizontal legend:on mb:32" />
     </widget>
   </row>
@@ -185,15 +185,15 @@ export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas"
   <!-- Meta x Realizado • Território -->
   <row id="mxr_territorio" cols-d="3" cols-t="1" cols-m="1" gap-x="16" gap-y="16">
     <widget id="mxr_terr_fat" type="comparebar" order="1" span-d="1" span-t="1" span-m="1" height="360" title="💰 Meta x Faturamento por Território">
-      <datasource schema="comercial" table="vw_vendas_metas" dimension="territorio_nome" measureGoal="meta_faturamento_territorio" measureActual="subtotal" where="EXTRACT(YEAR FROM data_pedido)=2025 AND EXTRACT(MONTH FROM data_pedido)=12" />
+      <datasource schema="comercial" table="vw_vendas_metas" dimension="territorio_nome" measureGoal="meta_faturamento_territorio" measureActual="subtotal" where="\"data_pedido\" >= :start_date AND \"data_pedido\" <= :end_date" />
       <styling tw="group:grouped layout:horizontal legend:on mb:32" />
     </widget>
     <widget id="mxr_terr_ticket" type="comparebar" order="2" span-d="1" span-t="1" span-m="1" height="360" title="🎯 Meta x Ticket Médio por Território">
-      <datasource schema="comercial" table="vw_vendas_metas" dimension="territorio_nome" measureGoal="meta_ticket_territorio" measureActual="ticket_medio" where="EXTRACT(YEAR FROM data_pedido)=2025 AND EXTRACT(MONTH FROM data_pedido)=12" />
+      <datasource schema="comercial" table="vw_vendas_metas" dimension="territorio_nome" measureGoal="meta_ticket_territorio" measureActual="ticket_medio" where="\"data_pedido\" >= :start_date AND \"data_pedido\" <= :end_date" />
       <styling tw="group:grouped layout:horizontal legend:on mb:32" />
     </widget>
     <widget id="mxr_terr_novos" type="comparebar" order="3" span-d="1" span-t="1" span-m="1" height="360" title="👥 Meta x Novos Clientes por Território">
-      <datasource schema="comercial" table="vw_vendas_metas" dimension="territorio_nome" measureGoal="meta_novos_clientes_territorio" measureActual="novos_clientes" where="EXTRACT(YEAR FROM data_pedido)=2025 AND EXTRACT(MONTH FROM data_pedido)=12" />
+      <datasource schema="comercial" table="vw_vendas_metas" dimension="territorio_nome" measureGoal="meta_novos_clientes_territorio" measureActual="novos_clientes" where="\"data_pedido\" >= :start_date AND \"data_pedido\" <= :end_date" />
       <styling tw="group:grouped layout:horizontal legend:on mb:32" />
     </widget>
   </row>
@@ -312,13 +312,7 @@ const initialState: VisualBuilderState = {
   isValid: initialParseResult.isValid,
   dashboardTitle: initialParseResult.dashboardTitle,
   dashboardSubtitle: initialParseResult.dashboardSubtitle,
-  globalFilters: {
-    dateRange: {
-      type: 'custom',
-      startDate: '2025-12-01',
-      endDate: '2025-12-31'
-    }
-  },
+  globalFilters: initialParseResult.globalFilters || { dateRange: { type: 'last_30_days' } },
   reloadTicks: {}
 }
 
@@ -630,7 +624,7 @@ export const visualBuilderActions = {
       isValid: parseResult.isValid,
       dashboardTitle: parseResult.dashboardTitle,
       dashboardSubtitle: parseResult.dashboardSubtitle,
-      globalFilters: currentState.globalFilters,
+      globalFilters: parseResult.globalFilters || currentState.globalFilters,
       reloadTicks: currentState.reloadTicks || {}
     })
   },
@@ -652,11 +646,7 @@ export const visualBuilderActions = {
       isValid: parseResult.isValid,
       dashboardTitle: parseResult.dashboardTitle,
       dashboardSubtitle: parseResult.dashboardSubtitle,
-      globalFilters: {
-        dateRange: {
-          type: 'last_30_days'
-        }
-      },
+      globalFilters: parseResult.globalFilters || { dateRange: { type: 'last_30_days' } },
       reloadTicks: {}
     })
   },
@@ -719,6 +709,46 @@ export const visualBuilderActions = {
       ...currentState,
       globalFilters: filters
     })
+  },
+
+  // Atualizar data no DSL (<dashboard ... date-type=... date-start=... date-end=...>) e refletir na store
+  updateGlobalDateInCode: (filters: GlobalFilters) => {
+    const currentState = $visualBuilderState.get()
+    const code = currentState.code || ''
+    if (!isDslCode(code)) {
+      // Fallback: apenas atualiza os filtros na store
+      visualBuilderActions.updateGlobalFilters(filters)
+      return
+    }
+    const m = code.match(/<dashboard\b[^>]*>/i)
+    if (!m) {
+      visualBuilderActions.updateGlobalFilters(filters)
+      return
+    }
+    const openTag = m[0]
+    const attrsStr = openTag.slice('<dashboard'.length, openTag.length - 1)
+    // Parse attrs
+    const attrRegex = /(\w[\w-]*)\s*=\s*"([^"]*)"/g
+    const attrs: Record<string, string> = {}
+    for (const match of attrsStr.matchAll(attrRegex)) {
+      attrs[match[1]] = match[2]
+    }
+    // Apply new date attrs
+    if (filters.dateRange.type === 'custom') {
+      attrs['date-type'] = 'custom'
+      if (filters.dateRange.startDate) attrs['date-start'] = filters.dateRange.startDate
+      if (filters.dateRange.endDate) attrs['date-end'] = filters.dateRange.endDate
+    } else {
+      attrs['date-type'] = filters.dateRange.type
+      delete attrs['date-start']
+      delete attrs['date-end']
+    }
+    // Rebuild tag
+    const kv = Object.entries(attrs).map(([k, v]) => `${k}="${v}"`).join(' ')
+    const newOpenTag = `<dashboard ${kv}>`
+    const newCode = code.replace(openTag, newOpenTag)
+    // Update via updateCode (to reparse widgets and globalFilters consistently)
+    visualBuilderActions.updateCode(newCode)
   },
 
   // Resetar filtros globais
