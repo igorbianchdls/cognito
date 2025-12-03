@@ -73,6 +73,8 @@ export default function DashboardInCanvasHeader({
     if (currentFilter.type === 'custom' && currentFilter.startDate && currentFilter.endDate) {
       setCustomRange({ from: new Date(currentFilter.startDate), to: new Date(currentFilter.endDate) });
     }
+    // Keep selected type synced with external filter
+    setSelectedType(currentFilter.type);
   }, [currentFilter]);
 
   const handleRefresh = () => {
@@ -80,15 +82,25 @@ export default function DashboardInCanvasHeader({
   };
 
   const currentLabel = useMemo(() => {
+    // Prefer showing the in-progress custom selection if available
+    const toISO = (d: Date) => d.toISOString().split('T')[0];
+    if (selectedType === 'custom' && customRange?.from && customRange?.to) {
+      return `${toISO(customRange.from)} - ${toISO(customRange.to)}`;
+    }
     if (currentFilter.type === 'custom' && currentFilter.startDate && currentFilter.endDate) {
       return `${currentFilter.startDate} - ${currentFilter.endDate}`;
     }
     const option = DATE_RANGE_OPTIONS.find(opt => opt.value === currentFilter.type);
     return option?.label || 'Selecionar período';
-  }, [currentFilter.type, currentFilter.startDate, currentFilter.endDate]);
+  }, [selectedType, customRange?.from, customRange?.to, currentFilter.type, currentFilter.startDate, currentFilter.endDate]);
 
   const dateRangeDescription = useMemo(() => {
     const today = new Date();
+    const toISO = (d: Date) => d.toISOString().split('T')[0];
+    // Show in-progress custom range if selecting
+    if (selectedType === 'custom' && customRange?.from && customRange?.to) {
+      return `${toISO(customRange.from).split('-').reverse().join('/')} - ${toISO(customRange.to).split('-').reverse().join('/')}`;
+    }
     switch (currentFilter.type) {
       case 'today': {
         return `${today.toLocaleDateString('pt-BR')} - ${today.toLocaleDateString('pt-BR')}`;
@@ -126,7 +138,7 @@ export default function DashboardInCanvasHeader({
       default:
         return '';
     }
-  }, [currentFilter]);
+  }, [selectedType, customRange?.from, customRange?.to, currentFilter]);
 
   const headerStyle = resolveHeaderStyle(themeName, headerUi.variant);
   const isLightTheme = themeName === 'branco' || themeName === 'cinza-claro';
