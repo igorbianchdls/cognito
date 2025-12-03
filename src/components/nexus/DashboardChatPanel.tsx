@@ -8,7 +8,7 @@ import ResponsiveGridCanvas from '@/components/visual-builder/ResponsiveGridCanv
 import DashboardInCanvasHeader from '@/components/visual-builder/DashboardInCanvasHeader';
 import WidgetEditorModal from '@/components/visual-builder/WidgetEditorModal';
 import { $visualBuilderState, visualBuilderActions } from '@/stores/visualBuilderStore';
-import type { Widget } from '@/stores/visualBuilderStore';
+import type { Widget, GlobalFilters } from '@/stores/visualBuilderStore';
 import type { Insights2Config } from '@/components/visual-builder/ConfigParser';
 import { ThemeManager, type ThemeName } from '@/components/visual-builder/ThemeManager';
 import { BackgroundManager, type BackgroundPresetKey } from '@/components/visual-builder/BackgroundManager';
@@ -88,6 +88,7 @@ export default function DashboardChatPanel() {
   const [updating, setUpdating] = useState(false);
   const [updateError, setUpdateError] = useState<string | null>(null);
   const [updateOk, setUpdateOk] = useState(false);
+  const [isFilterLoading, setIsFilterLoading] = useState(false);
 
   // Header helpers (variant + colors persisted in DSL/JSON)
   const resolvedHeaderKind: 'light' | 'dark' = (headerUi.variant === 'auto'
@@ -300,6 +301,13 @@ export default function DashboardChatPanel() {
   // Initialize store on mount
   useEffect(() => {
     visualBuilderActions.initialize();
+  }, []);
+
+  // Date range handler: persist into DSL and trigger refresh
+  const handleFilterChange = useCallback((filters: GlobalFilters) => {
+    setIsFilterLoading(true);
+    visualBuilderActions.updateGlobalDateInCode(filters);
+    setTimeout(() => setIsFilterLoading(false), 600);
   }, []);
 
   // Sync UI selectors from DSL <style> when code is DSL
@@ -1752,11 +1760,14 @@ export default function DashboardChatPanel() {
               <ResponsiveGridCanvas
                 widgets={visualBuilderState.widgets}
                 gridConfig={visualBuilderState.gridConfig}
+                globalFilters={visualBuilderState.globalFilters}
                 viewportMode={selectedViewport}
                 onLayoutChange={visualBuilderActions.updateWidgets}
                 headerTitle={dashboardMeta?.title || visualBuilderState.dashboardTitle || 'Live Dashboard'}
                 headerSubtitle={(dashboardMeta?.description ?? undefined) || visualBuilderState.dashboardSubtitle || 'Real-time visualization with Supabase data'}
                 themeName={getThemeFromCode(visualBuilderState.code)}
+                onFilterChange={handleFilterChange}
+                isFilterLoading={isFilterLoading}
                 onEdit={handleOpenEdit}
               />
             </div>
