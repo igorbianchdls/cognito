@@ -167,6 +167,13 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
 
   const buildSimpleSignature = () => {
     const ds = (widget.dataSource || {}) as Record<string, unknown>;
+    const dr = globalFilters?.dateRange
+      ? (
+          globalFilters.dateRange.type === 'custom'
+            ? { t: globalFilters.dateRange.type, s: globalFilters.dateRange.startDate, e: globalFilters.dateRange.endDate }
+            : { t: globalFilters.dateRange.type }
+        )
+      : undefined;
     return JSON.stringify({
       id: widget.id,
       type: widget.type,
@@ -174,12 +181,20 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
       table: ds['table'] || '',
       x: ds['x'] || ds['dimension'] || '',
       y: ds['y'] || ds['measure'] || '',
-      agg: ds['aggregation'] || ''
+      agg: ds['aggregation'] || '',
+      dr
     });
   };
 
   const buildGroupedSignature = () => {
     const ds = (widget.dataSource || {}) as Record<string, unknown>;
+    const dr = globalFilters?.dateRange
+      ? (
+          globalFilters.dateRange.type === 'custom'
+            ? { t: globalFilters.dateRange.type, s: globalFilters.dateRange.startDate, e: globalFilters.dateRange.endDate }
+            : { t: globalFilters.dateRange.type }
+        )
+      : undefined;
     return JSON.stringify({
       id: widget.id,
       type: widget.type,
@@ -189,7 +204,8 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
       d2: ds['dimension2'] || '',
       m: ds['measure'] || '',
       agg: ds['aggregation'] || '',
-      limit: ds['limit'] || ''
+      limit: ds['limit'] || '',
+      dr
     });
   };
 
@@ -253,7 +269,8 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
         const requestPayload = {
           type: widget.type,
           dataSource: normalizedDataSource,
-          filters: globalFilters
+          filters: globalFilters,
+          dateFilter: globalFilters?.dateRange
         };
         console.log('📤 Making API request:', {
           url: '/api/dashboard-supabase',
@@ -304,7 +321,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
     };
 
     fetchData();
-  }, [widget.id, reloadTick]);
+  }, [widget.id, reloadTick, globalFilters]);
 
   // Fetch data for multi-series widgets (stacked/grouped/pivot/compare)
   useEffect(() => {
@@ -362,9 +379,10 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
                 ? {}
                 : { topic: (dsAny['topic'] as unknown) ?? (dsAny['meta'] as unknown) }
               ),
-              filters: globalFilters
+              filters: globalFilters,
+              dateFilter: globalFilters?.dateRange
             }
-          : { ...dsAny, filters: globalFilters };
+          : { ...dsAny, filters: globalFilters, dateFilter: globalFilters?.dateRange };
         const response = await fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -391,7 +409,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
       }
 
     fetchGroupedData();
-  }, [widget.id, reloadTick]);
+  }, [widget.id, reloadTick, globalFilters]);
 
   // Type guard function for KPI data
   const isKPIData = (data: WidgetData): data is KPIData => {

@@ -40,6 +40,8 @@ interface CompareRequest {
   meta?: CompareTopic // alias para topic
   // Optional date filters passthrough (not applied in v1)
   filters?: unknown
+  // Padronizado: também aceitar dateFilter diretamente
+  dateFilter?: { type: string; startDate?: string; endDate?: string }
 }
 
 const sanitizeIdent = (s?: string) => {
@@ -52,6 +54,25 @@ const sanitizeWhere = (w?: string) => {
   // Allow a conservative set of characters to avoid SQL injection in simple equals clauses
   const safe = w.replace(/[^a-zA-Z0-9_\s=.'()\-]/g, '')
   return safe
+}
+
+// Helper para calcular intervalo de datas
+function calculateDateRange(filter: { type: string; startDate?: string; endDate?: string } | undefined) {
+  if (!filter) return undefined as undefined | { startDate: string; endDate: string };
+  const today = new Date();
+  const f = (d: Date) => d.toISOString().split('T')[0];
+  switch (filter.type) {
+    case 'today': return { startDate: f(today), endDate: f(today) };
+    case 'yesterday': { const y = new Date(today); y.setDate(today.getDate() - 1); return { startDate: f(y), endDate: f(y) }; }
+    case 'last_7_days': { const d = new Date(today); d.setDate(today.getDate() - 6); return { startDate: f(d), endDate: f(today) }; }
+    case 'last_14_days': { const d = new Date(today); d.setDate(today.getDate() - 13); return { startDate: f(d), endDate: f(today) }; }
+    case 'last_30_days': { const d = new Date(today); d.setDate(today.getDate() - 29); return { startDate: f(d), endDate: f(today) }; }
+    case 'last_90_days': { const d = new Date(today); d.setDate(today.getDate() - 89); return { startDate: f(d), endDate: f(today) }; }
+    case 'current_month': { const first = new Date(today.getFullYear(), today.getMonth(), 1); return { startDate: f(first), endDate: f(today) }; }
+    case 'last_month': { const s = new Date(today.getFullYear(), today.getMonth() - 1, 1); const e = new Date(today.getFullYear(), today.getMonth(), 0); return { startDate: f(s), endDate: f(e) }; }
+    case 'custom': return { startDate: filter.startDate || f(today), endDate: filter.endDate || f(today) };
+    default: { const d = new Date(today); d.setDate(today.getDate() - 29); return { startDate: f(d), endDate: f(today) }; }
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -148,6 +169,10 @@ export async function POST(request: NextRequest) {
       }
     }
     const whereClauseUser = sanitizeWhere(where)
+    // Resolver data filter (dateFilter ou filters.dateRange)
+    const incomingDateFilter = body.dateFilter || (typeof body.filters === 'object' ? (body as any).filters?.dateRange : undefined)
+    const dr = calculateDateRange(incomingDateFilter)
+    const whereClauseDate = dr ? `"data_pedido" >= '${dr.startDate}' AND "data_pedido" <= '${dr.endDate}'` : ''
     // Resolve meta type from measures when topic is not provided
     let inferredTopic: CompareTopic | undefined = topic
     if (!inferredTopic && (body.measureGoal || body.measureActual)) {
@@ -160,7 +185,7 @@ export async function POST(request: NextRequest) {
     // Only apply tipo_meta filter when the table actually supports it (e.g., vw_metas_detalhe)
     const applyTopic = !(qTable === 'vw_vendas_metas')
     const whereClauseTopic = applyTopic && inferredTopic ? `"tipo_meta" = '${inferredTopic}'` : ''
-    const whereClause = [whereClauseTopic, whereClauseUser].filter(Boolean).join(' AND ')
+    const whereClause = [whereClauseTopic, whereClauseUser, whereClauseDate].filter(Boolean).join(' AND ')
 
     const qualifiedTable = `"${qSchema}"."${qTable}"`
     const sql = `SELECT "${qDim}" AS label, ${m1Expr} AS m1, ${m2Expr} AS m2

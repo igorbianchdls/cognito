@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useStore } from '@nanostores/react';
 import Link from 'next/link';
 import ResponsiveGridCanvas from '@/components/visual-builder/ResponsiveGridCanvas';
@@ -10,6 +10,7 @@ import { $visualBuilderState, visualBuilderActions } from '@/stores/visualBuilde
 export default function PreviewPage() {
   const visualBuilderState = useStore($visualBuilderState);
   const [viewportMode, setViewportMode] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
+  const [isFilterLoading, setIsFilterLoading] = useState(false);
   const currentThemeName: ThemeName = (() => {
     try {
       const cfg = JSON.parse(visualBuilderState.code);
@@ -21,6 +22,12 @@ export default function PreviewPage() {
   // Initialize store on mount
   useEffect(() => {
     visualBuilderActions.initialize();
+  }, []);
+
+  const handleFilterChange = useCallback((filters: import('@/stores/visualBuilderStore').GlobalFilters) => {
+    setIsFilterLoading(true);
+    visualBuilderActions.updateGlobalFilters(filters);
+    setTimeout(() => setIsFilterLoading(false), 600);
   }, []);
 
   return (
@@ -80,6 +87,9 @@ export default function PreviewPage() {
           headerTitle={visualBuilderState.dashboardTitle || 'Live Dashboard'}
           headerSubtitle={visualBuilderState.dashboardSubtitle || 'Real-time visualization with Supabase data'}
           themeName={currentThemeName}
+          globalFilters={visualBuilderState.globalFilters}
+          onFilterChange={handleFilterChange}
+          isFilterLoading={isFilterLoading}
         />
       </div>
     </div>

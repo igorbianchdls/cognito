@@ -22,6 +22,7 @@ interface GroupedRequest {
   field?: string;
   aggregation?: 'SUM' | 'COUNT' | 'AVG' | 'MIN' | 'MAX';
   limit?: number;
+  // dateFilter padronizado, mas também aceitamos filters.dateRange
   dateFilter?: {
     type: string;
     startDate?: string;
@@ -29,6 +30,59 @@ interface GroupedRequest {
   };
   // Drill simples: filtro por uma dimensão/valor
   filter?: { dim: string; value: string };
+}
+
+// Helper para calcular intervalo de datas a partir de um tipo
+function calculateDateRange(filter: { type: string; startDate?: string; endDate?: string } | undefined) {
+  if (!filter) return undefined as undefined | { startDate: string; endDate: string };
+  const today = new Date();
+  const formatDate = (date: Date) => date.toISOString().split('T')[0];
+  switch (filter.type) {
+    case 'today':
+      return { startDate: formatDate(today), endDate: formatDate(today) };
+    case 'yesterday': {
+      const y = new Date(today);
+      y.setDate(today.getDate() - 1);
+      return { startDate: formatDate(y), endDate: formatDate(y) };
+    }
+    case 'last_7_days': {
+      const d = new Date(today);
+      d.setDate(today.getDate() - 6);
+      return { startDate: formatDate(d), endDate: formatDate(today) };
+    }
+    case 'last_14_days': {
+      const d = new Date(today);
+      d.setDate(today.getDate() - 13);
+      return { startDate: formatDate(d), endDate: formatDate(today) };
+    }
+    case 'last_30_days': {
+      const d = new Date(today);
+      d.setDate(today.getDate() - 29);
+      return { startDate: formatDate(d), endDate: formatDate(today) };
+    }
+    case 'last_90_days': {
+      const d = new Date(today);
+      d.setDate(today.getDate() - 89);
+      return { startDate: formatDate(d), endDate: formatDate(today) };
+    }
+    case 'current_month': {
+      const first = new Date(today.getFullYear(), today.getMonth(), 1);
+      return { startDate: formatDate(first), endDate: formatDate(today) };
+    }
+    case 'last_month': {
+      const start = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+      const end = new Date(today.getFullYear(), today.getMonth(), 0);
+      return { startDate: formatDate(start), endDate: formatDate(end) };
+    }
+    case 'custom': {
+      return { startDate: filter.startDate || formatDate(today), endDate: filter.endDate || formatDate(today) };
+    }
+    default: {
+      const d = new Date(today);
+      d.setDate(today.getDate() - 29);
+      return { startDate: formatDate(d), endDate: formatDate(today) };
+    }
+  }
 }
 
 // Constrói expressão SQL segura a partir de uma medida DSL
@@ -80,10 +134,12 @@ export async function POST(request: NextRequest) {
     // Build qualified table name
     const qualifiedTable = `"${schema}"."${table}"`;
 
-    // Build date filter if provided
+    // Resolver e aplicar filtro de datas
     let dateCondition = '';
-    if (dateFilter?.startDate && dateFilter?.endDate) {
-      dateCondition = ` AND "data_pedido" >= '${dateFilter.startDate}' AND "data_pedido" <= '${dateFilter.endDate}'`;
+    const incomingDateFilter = dateFilter || (typeof (body as any).filters === 'object' ? (body as any).filters?.dateRange : undefined);
+    const dr = calculateDateRange(incomingDateFilter);
+    if (dr?.startDate && dr?.endDate) {
+      dateCondition = ` AND "data_pedido" >= '${dr.startDate}' AND "data_pedido" <= '${dr.endDate}'`;
     }
     if (filter && filter.dim && typeof filter.value === 'string') {
       // Filtro simples para drill (igualdade)

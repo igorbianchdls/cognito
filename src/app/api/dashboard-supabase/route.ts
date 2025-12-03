@@ -147,9 +147,9 @@ export async function POST(request: NextRequest) {
 
   try {
     // Parse request body
-    const { type, dataSource, filters } = await request.json();
+    const { type, dataSource, filters, dateFilter: dateFilterBody } = await request.json();
     const { table, x, y, aggregation, schema = 'marketing' } = dataSource;
-    const dateFilter = filters?.dateRange;
+    const dateFilter = dateFilterBody || filters?.dateRange;
 
     // 📥 Request received log
     console.log('📥 API /dashboard-supabase called with:', {
