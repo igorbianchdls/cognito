@@ -168,17 +168,6 @@ export async function POST(request: NextRequest) {
           break
       }
     }
-    const whereClauseUserRaw = sanitizeWhere(where)
-    // Replace placeholders in user WHERE using date filter
-    const whereClauseUser = (() => {
-      if (!whereClauseUserRaw) return ''
-      if (dr) {
-        return whereClauseUserRaw
-          .replace(/:start_date/gi, dr.startDate)
-          .replace(/:end_date/gi, dr.endDate)
-      }
-      return whereClauseUserRaw
-    })()
     // Resolver data filter (dateFilter ou filters.dateRange)
     const getDateRangeFromFilters = (f: unknown): { type: string; startDate?: string; endDate?: string } | undefined => {
       if (!f || typeof f !== 'object') return undefined;
@@ -194,6 +183,17 @@ export async function POST(request: NextRequest) {
     const incomingDateFilter = body.dateFilter || getDateRangeFromFilters(body.filters)
     const dr = calculateDateRange(incomingDateFilter)
     const whereClauseDate = dr ? `"data_pedido" >= '${dr.startDate}' AND "data_pedido" <= '${dr.endDate}'` : ''
+    const whereClauseUserRaw = sanitizeWhere(where)
+    // Replace placeholders in user WHERE using date filter
+    const whereClauseUser = (() => {
+      if (!whereClauseUserRaw) return ''
+      if (dr) {
+        return whereClauseUserRaw
+          .replace(/:start_date/gi, dr.startDate)
+          .replace(/:end_date/gi, dr.endDate)
+      }
+      return whereClauseUserRaw
+    })()
     // Resolve meta type from measures when topic is not provided
     let inferredTopic: CompareTopic | undefined = topic
     if (!inferredTopic && (body.measureGoal || body.measureActual)) {
