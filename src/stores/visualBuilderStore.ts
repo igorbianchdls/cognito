@@ -29,6 +29,24 @@ export interface GlobalFilters {
   dateRange: DateRangeFilter
 }
 
+// Helper to coerce parser-provided globalFilters (string types) into our typed GlobalFilters
+const coerceGlobalFilters = (gf: ParseResult['globalFilters'] | undefined): GlobalFilters | undefined => {
+  if (!gf || !gf.dateRange) return undefined
+  const t = gf.dateRange.type
+  const allowed: DateRangeType[] = ['today','yesterday','last_7_days','last_14_days','last_30_days','last_90_days','current_month','last_month','custom']
+  if (!allowed.includes(t as DateRangeType)) return undefined
+  if (t === 'custom') {
+    return {
+      dateRange: {
+        type: 'custom',
+        startDate: gf.dateRange.startDate,
+        endDate: gf.dateRange.endDate,
+      }
+    }
+  }
+  return { dateRange: { type: t as DateRangeType } }
+}
+
 // Estado da store
 interface VisualBuilderState {
   widgets: Widget[]
@@ -312,7 +330,7 @@ const initialState: VisualBuilderState = {
   isValid: initialParseResult.isValid,
   dashboardTitle: initialParseResult.dashboardTitle,
   dashboardSubtitle: initialParseResult.dashboardSubtitle,
-  globalFilters: initialParseResult.globalFilters || { dateRange: { type: 'last_30_days' } },
+  globalFilters: coerceGlobalFilters(initialParseResult.globalFilters) || { dateRange: { type: 'last_30_days' } },
   reloadTicks: {}
 }
 
@@ -624,7 +642,7 @@ export const visualBuilderActions = {
       isValid: parseResult.isValid,
       dashboardTitle: parseResult.dashboardTitle,
       dashboardSubtitle: parseResult.dashboardSubtitle,
-      globalFilters: parseResult.globalFilters || currentState.globalFilters,
+      globalFilters: coerceGlobalFilters(parseResult.globalFilters) || currentState.globalFilters,
       reloadTicks: currentState.reloadTicks || {}
     })
   },
@@ -646,7 +664,7 @@ export const visualBuilderActions = {
       isValid: parseResult.isValid,
       dashboardTitle: parseResult.dashboardTitle,
       dashboardSubtitle: parseResult.dashboardSubtitle,
-      globalFilters: parseResult.globalFilters || { dateRange: { type: 'last_30_days' } },
+      globalFilters: coerceGlobalFilters(parseResult.globalFilters) || { dateRange: { type: 'last_30_days' } },
       reloadTicks: {}
     })
   },
