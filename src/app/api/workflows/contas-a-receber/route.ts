@@ -31,7 +31,9 @@ Guiar o usuário através do processo completo de criação de uma conta a receb
 - tipo_pessoa: "fisica" ou "juridica"
 
 **criarContaReceber**
-- Input: cliente_id, categoria_id, centro_custo_id, valor, data_vencimento, etc.
+- Input (cabeçalho): cliente_id, categoria_id, centro_lucro_id, valor, data_vencimento, data_emissao, numero_nota_fiscal, descricao
+- Itens: array de objetos com numero_item?, descricao, quantidade, unidade?, valor_unitario, desconto?, acrescimo?, valor_total?, categoria_id?, centro_lucro_id?, natureza_financeira_id?, observacao?
+- Observação: se os itens não forem enviados, a API criará 1 item padrão com base no cabeçalho. Enviar os itens é RECOMENDADO para que a expansão da lista mostre o detalhamento correto.
 - Gera PRÉVIA; a criação real ocorre após confirmação na UI.
 
 # ⚠️ REGRAS OBRIGATÓRIAS PARA CHAMADA DE TOOLS
@@ -43,13 +45,18 @@ Guiar o usuário através do processo completo de criação de uma conta a receb
 # ✅ INSTRUÇÕES IMPORTANTES
 
 **Quando receber documento:**
-- Analise cuidadosamente e extraia TODOS os dados
-- Liste os dados extraídos para o usuário confirmar quando necessário
+- Faça OCR do documento (nota/fatura) e EXTRAIA:
+  - Cabeçalho: nome_fantasia (cliente), CPF/CNPJ (apenas dígitos), numero_nota_fiscal, descricao, data_emissao (YYYY-MM-DD), data_vencimento (YYYY-MM-DD), valor_total (ponto como separador decimal)
+  - Itens: descricao, quantidade, unidade (opcional), valor_unitario, desconto (opcional), acrescimo (opcional), valor_total (se ausente, calcule: quantidade*valor_unitario + acrescimo - desconto)
+  - (Opcional) Parcelas: numero_parcela, data_vencimento, valor_liquido
+  - Normalização: usar “.” como separador decimal; datas em YYYY-MM-DD; se valor_total do cabeçalho não for confiável, adote a soma dos itens
 
 **Interação com usuário:**
-- Peça confirmação dos dados extraídos quando necessário
-- Ajude a escolher categoria/centro de custo corretos
-- Seja proativo e conduza o fluxo naturalmente
+- NÃO pergunte CPF/CNPJ se o NOME foi extraído com confiança — chame buscarCliente { nome } diretamente.
+- Ordem de busca: cpf_cnpj (se existir) > nome (se existir) > listagem geral (sem filtros, com limite).
+- Só peça CPF/CNPJ se a busca por NOME retornar múltiplos e for necessária para desambiguar.
+- Ajude a escolher categoria/centro de lucro corretos (e dimensões opcionais) no passo de classificações.
+- Seja proativo e conduza o fluxo naturalmente.
 
 **Ao final:**
 - Após a confirmação do usuário (clique em Criar na UI), confirme que a conta foi criada com sucesso e mostre o resumo (ID, valor, vencimento, status)
@@ -83,15 +90,14 @@ export async function POST(req: Request) {
           return {
             system: baseSystem + `
 
-# 🧭 Step 1 — Analisar documento e buscar cliente
+# 🧭 Step 1 — Extrair dados e buscar cliente
 
-Objetivo: Se houver documento, extraia CPF/CNPJ e/ou nome_fantasia do cliente. Em seguida, CHAME a tool **buscarCliente**.
+Objetivo: Se houver documento, FAÇA OCR e extraia nome_fantasia e/ou CPF/CNPJ do cliente. Em seguida, CHAME **buscarCliente**:
 
 Regras obrigatórias:
 - NÃO escreva "function_calls"/"function_result" em texto. Invoque a tool real.
-- Se tiver CPF/CNPJ: buscarCliente { cpf_cnpj } (normalizar apenas dígitos)
-- Se tiver nome (nome fantasia): buscarCliente { nome } (ILIKE case-insensitive em nome_fantasia)
-- Sem dados: buscarCliente {} para listar TODOS (com limite padrão)
+- Prioridade de chamada: (1) cpf_cnpj (normalizado) se existir; (2) nome (nome_fantasia) se existir; (3) listagem geral (sem filtros, limite padrão) se não houver dados.
+- NÃO pergunte CPF/CNPJ se o NOME foi extraído — execute buscarCliente { nome } diretamente. Só peça CPF/CNPJ se a busca por nome retornar múltiplos e precisar desambiguar.
 - NÃO simule listas; a UI renderiza a tabela a partir do retorno da tool.
 `,
             tools: { buscarCliente },
@@ -104,7 +110,11 @@ Regras obrigatórias:
 
 # 🧭 Step 2 — Buscar Classificações Financeiras
 
-Objetivo: CHAMAR **buscarClassificacoesFinanceiras** para listar categorias financeiras, centros de custo e naturezas.
+Objetivo: CHAMAR **buscarClassificacoesFinanceiras** para listar as opções necessárias:
+- Categoria Financeira (obrigatória)
+- Centro de Lucro (obrigatório para CR)
+- Naturezas financeiras (opcional)
+- Departamentos/Filiais/Projetos (opcionais)
 
 Regras obrigatórias:
 - NÃO escreva "function_calls"/"function_result" em texto. Invoque a tool real.
@@ -120,7 +130,13 @@ Regras obrigatórias:
 
 # 🧭 Step 3 — Criar Conta a Receber (PRÉVIA)
 
-Objetivo: Consolidar dados (cliente_id, categoria_id, centro_custo_id, valor, data_vencimento, data_emissao, descricao, itens) e CHAMAR **criarContaReceber** para gerar a PRÉVIA.
+Objetivo: Consolidar dados e CHAMAR **criarContaReceber** para gerar a PRÉVIA.
+
+Forneça (quando disponíveis):
+- cliente_id (do Step 1), categoria_id e centro_lucro_id (do Step 2)
+- Dimensões opcionais: departamento_id, filial_id, projeto_id
+- Cabeçalho: valor, data_vencimento, data_emissao, numero_nota_fiscal, descricao
+- Itens: numero_item?, descricao, quantidade, unidade?, valor_unitario, desconto?, acrescimo?, valor_total?, categoria_id?, centro_lucro_id?, natureza_financeira_id?, observacao?
 
 Regras obrigatórias:
 - NÃO escreva "function_calls"/"function_result" em texto. Invoque a tool real.
