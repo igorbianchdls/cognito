@@ -1,13 +1,15 @@
-import { NextRequest } from 'next/server'
 import { runQuery } from '@/lib/postgres'
 
 export const maxDuration = 300
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
-export async function GET(_req: NextRequest, ctx: { params: { id: string } }) {
+export async function GET(req: Request) {
   try {
-    const idStr = ctx.params?.id
+    const url = new URL(req.url)
+    const parts = url.pathname.split('/').filter(Boolean)
+    // Path: /api/modulos/financeiro/lancamentos/{id}/linhas -> id is the penultimate segment
+    const idStr = parts[parts.length - 2] || ''
     const lancamentoId = Number(idStr)
     if (!Number.isFinite(lancamentoId) || lancamentoId <= 0) {
       return Response.json({ success: false, message: 'lancamento_id inválido' }, { status: 400 })
@@ -62,4 +64,3 @@ export async function GET(_req: NextRequest, ctx: { params: { id: string } }) {
     return Response.json({ success: false, message: msg, rows: [], count: 0 }, { status: 500 })
   }
 }
-
