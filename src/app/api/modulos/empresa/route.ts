@@ -95,7 +95,6 @@ export async function GET(req: NextRequest) {
     } else if (view === 'centros-de-custo') {
       selectSql = `SELECT
         cc.id,
-        cc.empresa_id,
         cc.codigo,
         cc.nome,
         cc.descricao,
