@@ -43,8 +43,23 @@ Guiar o usuário através do processo completo de criação de uma conta a pagar
 # ✅ INSTRUÇÕES IMPORTANTES
 
 **Quando receber documento:**
-- Analise cuidadosamente e extraia TODOS os dados
-- Liste os dados extraídos para o usuário confirmar
+- Faça OCR do documento (PDF/Imagem) e EXTRAIA cabeçalho e linhas de pagamento seguindo estas regras:
+  - Cabeçalho (campos):
+    - fornecedor: CNPJ (14 dígitos, apenas números) e nome_fantasia (se disponível)
+    - numero_nota_fiscal (se houver), descricao (curta)
+    - data_emissao (YYYY-MM-DD), data_vencimento (YYYY-MM-DD)
+    - valor_total (número, separador decimal “.”)
+  - Linhas (financeiro.lancamentos_financeiros_linhas):
+    - Se houver parcelas explícitas, extraia: numero_parcela, data_vencimento, valor_liquido; opcionalmente juros, multa, desconto, status
+    - Se NÃO houver parcelas, crie 1 linha com: tipo_linha="parcela", numero_parcela=1, valor_liquido=valor_total, data_vencimento=cabeçalho.data_vencimento
+  - Normalização:
+    - Datas: sempre no formato YYYY-MM-DD
+    - Números: usar “.” como separador decimal
+    - valor do cabeçalho = soma(valor_liquido) das linhas (se divergente, sinalize)
+  - Fornecedor:
+    - Se tiver CNPJ ou nome_fantasia, CHAME buscarFornecedor para encontrar o fornecedor e obter o fornecedor_id
+    - Se não existir, gere PRÉVIA com criarFornecedor e use o fornecedor_id após criação
+- Liste os dados extraídos (cabeçalho + linhas) para o usuário confirmar
 
 **Interação com usuário:**
 - Peça confirmação dos dados extraídos quando necessário
@@ -81,13 +96,13 @@ export async function POST(req: Request) {
       // Reintroduz apenas o Step 1 (extração + busca de fornecedor), sem travas
       prepareStep: ({ stepNumber }) => {
         if (stepNumber === 1) {
-          return {
+      return {
             system:
               baseSystem + `
 
 # 🧭 Step 1 — Extrair dados do documento e buscar fornecedor
 
-Objetivo: Se houver documento, extraia CNPJ e/ou nome_fantasia. Em seguida, CHAME a tool buscarFornecedor.
+Objetivo: Se houver documento, FAÇA OCR e extraia cabeçalho (CNPJ, nome_fantasia, numero_nota_fiscal, descricao, data_emissao, data_vencimento, valor_total) e LINHAS de pagamento (parcelas: numero_parcela, data_vencimento, valor_liquido, juros/multa/desconto quando houver). Em seguida, CHAME a tool buscarFornecedor para obter fornecedor_id.
 
 Regras obrigatórias:
 - NÃO escreva "function_calls"/"function_result" em texto. Invoque a tool real.
