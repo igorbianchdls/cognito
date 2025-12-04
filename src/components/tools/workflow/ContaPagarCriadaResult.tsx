@@ -161,6 +161,8 @@ export default function ContaPagarCriadaResult({ result }: { result: ContaPagarC
           data_vencimento: result.payload.data_vencimento,
           status: 'pendente',
           tenant_id: result.payload.tenant_id ?? 1,
+          // Enviar itens para persistir em financeiro.lancamentos_financeiros_itens
+          itens: result.payload.itens,
           linhas,
         }
         res = await fetch(result.metadata.commitEndpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
