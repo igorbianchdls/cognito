@@ -37,29 +37,34 @@ Guiar o usuário através do processo completo de criação de uma conta a pagar
 - Gera PRÉVIA com os dados para revisão. A criação real acontece ao clicar em "Criar" na UI.
 
 **criarContaPagar**
-- Input: fornecedor_id, categoria_id, centro_custo_id, valor, data_vencimento, etc.
+- Input (cabeçalho): fornecedor_id, categoria_id, centro_custo_id, valor, data_vencimento, data_emissao, numero_nota_fiscal, descricao
+- Input (itens): array de objetos com numero_item?, descricao, quantidade, unidade?, valor_unitario, desconto?, acrescimo?, valor_total?, categoria_id?, centro_custo_id?, natureza_financeira_id?, observacao?
+- Observação: se os itens não forem enviados, a API criará 1 item padrão com base no cabeçalho. Enviar os itens é RECOMENDADO para que a expansão da lista mostre o detalhamento correto.
 - Gera PRÉVIA; a criação real ocorre após confirmação na UI.
 
 # ✅ INSTRUÇÕES IMPORTANTES
 
 **Quando receber documento:**
-- Faça OCR do documento (PDF/Imagem) e EXTRAIA cabeçalho e linhas de pagamento seguindo estas regras:
-  - Cabeçalho (campos):
+- Faça OCR do documento (PDF/Imagem) e EXTRAIA cabeçalho, ITENS da invoice e, se aplicável, PARCELAS (linhas de pagamento):
+  - Cabeçalho:
     - fornecedor: CNPJ (14 dígitos, apenas números) e nome_fantasia (se disponível)
     - numero_nota_fiscal (se houver), descricao (curta)
     - data_emissao (YYYY-MM-DD), data_vencimento (YYYY-MM-DD)
     - valor_total (número, separador decimal “.”)
-  - Linhas (financeiro.lancamentos_financeiros_linhas):
+  - Itens (financeiro.lancamentos_financeiros_itens):
+    - Para cada item: descricao, quantidade, unidade (opcional), valor_unitario, desconto (opcional), acrescimo (opcional), valor_total (se ausente, calcule: quantidade*valor_unitario + acrescimo - desconto)
+    - Opcionalmente: numero_item, categoria_id, centro_custo_id, natureza_financeira_id, observacao
+  - Parcelas (financeiro.lancamentos_financeiros_linhas) — opcional:
     - Se houver parcelas explícitas, extraia: numero_parcela, data_vencimento, valor_liquido; opcionalmente juros, multa, desconto, status
-    - Se NÃO houver parcelas, crie 1 linha com: tipo_linha="parcela", numero_parcela=1, valor_liquido=valor_total, data_vencimento=cabeçalho.data_vencimento
+    - Se NÃO houver parcelas, pode criar 1 linha única com: tipo_linha="parcela", numero_parcela=1, valor_liquido=valor_total, data_vencimento=cabeçalho.data_vencimento
   - Normalização:
     - Datas: sempre no formato YYYY-MM-DD
     - Números: usar “.” como separador decimal
-    - valor do cabeçalho = soma(valor_liquido) das linhas (se divergente, sinalize)
+    - Se valor_total do cabeçalho não for confiável, adote a soma dos itens.
   - Fornecedor:
     - Se tiver CNPJ ou nome_fantasia, CHAME buscarFornecedor para encontrar o fornecedor e obter o fornecedor_id
     - Se não existir, gere PRÉVIA com criarFornecedor e use o fornecedor_id após criação
-- Liste os dados extraídos (cabeçalho + linhas) para o usuário confirmar
+- Liste os dados extraídos (cabeçalho + itens + (opcional) parcelas) para o usuário confirmar
 
 **Interação com usuário:**
 - Peça confirmação dos dados extraídos quando necessário
@@ -102,7 +107,12 @@ export async function POST(req: Request) {
 
 # 🧭 Step 1 — Extrair dados do documento e buscar fornecedor
 
-Objetivo: Se houver documento, FAÇA OCR e extraia cabeçalho (CNPJ, nome_fantasia, numero_nota_fiscal, descricao, data_emissao, data_vencimento, valor_total) e LINHAS de pagamento (parcelas: numero_parcela, data_vencimento, valor_liquido, juros/multa/desconto quando houver). Em seguida, CHAME a tool buscarFornecedor para obter fornecedor_id.
+Objetivo: Se houver documento, FAÇA OCR e extraia:
+- Cabeçalho: CNPJ, nome_fantasia, numero_nota_fiscal, descricao, data_emissao, data_vencimento, valor_total
+- Itens: descricao, quantidade, unidade (opcional), valor_unitario, desconto (opcional), acrescimo (opcional), valor_total (calcule se ausente)
+- (Opcional) Parcelas: numero_parcela, data_vencimento, valor_liquido, juros/multa/desconto quando houver
+
+Em seguida, CHAME a tool buscarFornecedor para obter fornecedor_id.
 
 Regras obrigatórias:
 - NÃO escreva "function_calls"/"function_result" em texto. Invoque a tool real.
@@ -160,8 +170,8 @@ Objetivo: Consolidar IDs e dados e chamar **criarContaPagar** para gerar a PRÉV
 
 Forneça (quando disponíveis):
 - fornecedor_id (do Step 1/2), categoria_id e centro_custo_id (do Step 3)
-- valor, data_vencimento, data_emissao, numero_nota_fiscal, descricao
-- itens (descricao, quantidade, valor_unitario, valor_total opcional)
+- Cabeçalho: valor, data_vencimento, data_emissao, numero_nota_fiscal, descricao
+- Itens: numero_item?, descricao, quantidade, unidade?, valor_unitario, desconto?, acrescimo?, valor_total?, categoria_id?, centro_custo_id?, natureza_financeira_id?, observacao?
 
 Regras obrigatórias:
 - NÃO escreva "function_calls"/"function_result" em texto. Invoque a tool real.
