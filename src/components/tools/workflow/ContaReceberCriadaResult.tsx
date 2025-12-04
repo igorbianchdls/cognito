@@ -21,7 +21,7 @@ type ContaReceberCriadaOutput = {
   payload?: {
     cliente_id: string;
     categoria_id?: string;
-    centro_custo_id?: string;
+    centro_lucro_id?: string;
     natureza_financeira_id?: string;
     tenant_id?: number | string;
     valor: number;
@@ -38,7 +38,7 @@ type ContaReceberCriadaOutput = {
     id: string;
     cliente_id: string;
     categoria_id: string;
-    centro_custo_id: string;
+    centro_lucro_id: string;
     natureza_financeira_id?: string | null;
     valor: number;
     valor_recebido: number;
@@ -128,18 +128,57 @@ export default function ContaReceberCriadaResult({ result }: { result: ContaRece
     if (!result.metadata?.commitEndpoint || !result.payload) return
     try {
       setCreating(true)
-      const fd = new FormData()
-      fd.set('descricao', String(result.payload.descricao || 'Conta a receber'))
-      fd.set('valor', String(result.payload.valor))
+      const hasItens = Array.isArray(result.payload.itens) && result.payload.itens.length > 0
       const dataLanc = result.payload.data_emissao || new Date().toISOString().slice(0,10)
-      fd.set('data_lancamento', dataLanc)
-      fd.set('data_vencimento', result.payload.data_vencimento)
-      fd.set('status', 'pendente')
-      if (result.payload.cliente_id) fd.set('entidade_id', result.payload.cliente_id)
-      if (result.payload.categoria_id) fd.set('categoria_id', result.payload.categoria_id)
-      fd.set('tenant_id', String(result.payload.tenant_id ?? 1))
-
-      const res = await fetch(result.metadata.commitEndpoint, { method: 'POST', body: fd })
+      let res: Response
+      if (hasItens) {
+        // Opcional: gerar linhas a partir dos itens (parcela única por item)
+        const linhas = (result.payload.itens || []).map((it, idx) => {
+          const bruto = (typeof it.valor_total === 'number' ? it.valor_total : (it.quantidade || 0) * (it.valor_unitario || 0)) || 0
+          const liquido = (typeof it.valor_total === 'number' ? it.valor_total : (it.quantidade || 0) * (it.valor_unitario || 0)) || 0
+          return {
+            tipo_linha: 'parcela',
+            numero_parcela: idx + 1,
+            valor_bruto: bruto,
+            juros: 0,
+            multa: 0,
+            desconto: 0,
+            valor_liquido: liquido,
+            data_vencimento: result.payload!.data_vencimento,
+            status: 'pendente',
+            observacao: it.descricao || undefined,
+          }
+        })
+        const headerValor = Number(result.payload.valor || 0)
+        const valorFromLinhas = linhas.reduce((acc, ln) => acc + Number(ln.valor_liquido || 0), 0)
+        const body = {
+          cliente_id: result.payload.cliente_id,
+          categoria_id: result.payload.categoria_id || undefined,
+          centro_lucro_id: result.payload.centro_lucro_id || undefined,
+          descricao: result.payload.descricao || 'Conta a receber',
+          valor: headerValor > 0 ? headerValor : valorFromLinhas,
+          data_lancamento: dataLanc,
+          data_vencimento: result.payload.data_vencimento,
+          status: 'pendente',
+          tenant_id: result.payload.tenant_id ?? 1,
+          itens: result.payload.itens,
+          linhas,
+        }
+        res = await fetch(result.metadata.commitEndpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      } else {
+        // FormData legado (apenas cabeçalho)
+        const fd = new FormData()
+        fd.set('descricao', String(result.payload.descricao || 'Conta a receber'))
+        fd.set('valor', String(result.payload.valor))
+        fd.set('data_lancamento', dataLanc)
+        fd.set('data_vencimento', result.payload.data_vencimento)
+        fd.set('status', 'pendente')
+        if (result.payload.cliente_id) fd.set('entidade_id', result.payload.cliente_id)
+        if (result.payload.categoria_id) fd.set('categoria_id', result.payload.categoria_id)
+        if (result.payload.centro_lucro_id) fd.set('centro_lucro_id', result.payload.centro_lucro_id)
+        fd.set('tenant_id', String(result.payload.tenant_id ?? 1))
+        res = await fetch(result.metadata.commitEndpoint, { method: 'POST', body: fd })
+      }
       const json = await res.json()
       if (!res.ok || !json?.success) {
         alert(json?.message || 'Falha ao criar conta a receber')
@@ -150,7 +189,7 @@ export default function ContaReceberCriadaResult({ result }: { result: ContaRece
         id: String(json.id),
         cliente_id: result.payload.cliente_id || '',
         categoria_id: result.payload.categoria_id || '',
-        centro_custo_id: result.payload.centro_custo_id || '',
+        centro_lucro_id: result.payload.centro_lucro_id || '',
         natureza_financeira_id: result.payload.natureza_financeira_id || null,
         valor: result.payload.valor,
         valor_recebido: 0,

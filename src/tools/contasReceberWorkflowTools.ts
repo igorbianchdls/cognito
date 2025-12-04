@@ -217,8 +217,8 @@ export const criarContaReceber = tool({
       .describe('ID do cliente (obtido de buscarCliente ou criarCliente)'),
     categoria_id: z.string()
       .describe('ID da categoria financeira (obtido de buscarClassificacoesFinanceiras)'),
-    centro_custo_id: z.string()
-      .describe('ID do centro de custo (obtido de buscarClassificacoesFinanceiras)'),
+    centro_lucro_id: z.string()
+      .describe('ID do centro de lucro (obtido de buscarClassificacoesFinanceiras)'),
     natureza_financeira_id: z.string().optional()
       .describe('ID da natureza financeira (opcional, obtido de buscarClassificacoesFinanceiras)'),
     tenant_id: z.number().optional()
@@ -234,18 +234,26 @@ export const criarContaReceber = tool({
     descricao: z.string().optional()
       .describe('Descrição ou observações sobre a conta'),
     itens: z.array(z.object({
+      numero_item: z.number().int().positive().optional().describe('Número sequencial do item (1..N)'),
       descricao: z.string().describe('Descrição do item/serviço'),
       quantidade: z.number().describe('Quantidade'),
+      unidade: z.string().optional().describe('Unidade (ex.: un, h, kg)'),
       valor_unitario: z.number().describe('Valor unitário'),
-      valor_total: z.number().optional().describe('Valor total do item (quantidade * valor_unitario)')
+      desconto: z.number().optional().describe('Desconto do item'),
+      acrescimo: z.number().optional().describe('Acréscimo do item'),
+      valor_total: z.number().optional().describe('Valor total (qtd*valor_unitario + acrescimo - desconto)'),
+      categoria_id: z.union([z.string(), z.number()]).optional().describe('Categoria (opcional)'),
+      centro_lucro_id: z.union([z.string(), z.number()]).optional().describe('Centro de lucro (opcional)'),
+      natureza_financeira_id: z.union([z.string(), z.number()]).optional().describe('Natureza financeira (opcional)'),
+      observacao: z.string().optional().describe('Observações do item'),
     })).optional()
-      .describe('Itens detalhados da nota fiscal (opcional)')
+      .describe('Itens detalhados da nota fiscal (opcional). Se ausente, a API criará um item padrão com base no cabeçalho.')
   }),
 
   execute: async ({
     cliente_id,
     categoria_id,
-    centro_custo_id,
+    centro_lucro_id,
     natureza_financeira_id,
     tenant_id,
     valor,
@@ -258,7 +266,7 @@ export const criarContaReceber = tool({
     const payload = {
       cliente_id: String(cliente_id || ''),
       categoria_id: String(categoria_id || ''),
-      centro_custo_id: String(centro_custo_id || ''),
+      centro_lucro_id: String(centro_lucro_id || ''),
       natureza_financeira_id: natureza_financeira_id ? String(natureza_financeira_id) : '',
       tenant_id: typeof tenant_id === 'number' ? tenant_id : 1,
       valor: Number(valor || 0),
@@ -266,12 +274,27 @@ export const criarContaReceber = tool({
       data_emissao: String(data_emissao || ''),
       numero_nota_fiscal: numero_nota_fiscal ? String(numero_nota_fiscal) : '',
       descricao: descricao ? String(descricao) : '',
-      itens: (itens || []).map((it) => ({
-        descricao: String(it.descricao || ''),
-        quantidade: Number(it.quantidade || 0),
-        valor_unitario: Number(it.valor_unitario || 0),
-        valor_total: it.valor_total ? Number(it.valor_total) : undefined,
-      })),
+      itens: (itens || []).map((it, idx) => {
+        const qtd = Number(it.quantidade || 0)
+        const vu = Number(it.valor_unitario || 0)
+        const desconto = it.desconto !== undefined ? Number(it.desconto) : 0
+        const acrescimo = it.acrescimo !== undefined ? Number(it.acrescimo) : 0
+        const vt = it.valor_total !== undefined ? Number(it.valor_total) : (qtd * vu + acrescimo - desconto)
+        return {
+          numero_item: (typeof it.numero_item === 'number' && it.numero_item > 0) ? it.numero_item : (idx + 1),
+          descricao: String(it.descricao || ''),
+          quantidade: qtd,
+          unidade: it.unidade ? String(it.unidade) : undefined,
+          valor_unitario: vu,
+          desconto,
+          acrescimo,
+          valor_total: vt,
+          categoria_id: (it.categoria_id as unknown) ?? undefined,
+          centro_lucro_id: (it.centro_lucro_id as unknown) ?? undefined,
+          natureza_financeira_id: (it.natureza_financeira_id as unknown) ?? undefined,
+          observacao: it.observacao ? String(it.observacao) : undefined,
+        }
+      }),
     };
 
     const validations: Array<{ field: string; status: 'ok' | 'warn' | 'error'; message?: string }> = [];
@@ -282,7 +305,7 @@ export const criarContaReceber = tool({
 
     let valorTotalItens = 0;
     for (const item of payload.itens) {
-      const vt = (item.valor_total ?? (item.quantidade * item.valor_unitario)) || 0;
+      const vt = (item.valor_total ?? (item.quantidade * item.valor_unitario + (item.acrescimo || 0) - (item.desconto || 0))) || 0;
       valorTotalItens += vt;
     }
     if (payload.itens.length > 0 && Math.abs(valorTotalItens - payload.valor) > 0.1) {
