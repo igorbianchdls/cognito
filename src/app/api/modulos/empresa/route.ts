@@ -19,6 +19,12 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
     pais: 'e.pais',
     ativo: 'e.ativo',
   },
+  'centros-de-custo': {
+    id: 'cc.id',
+    codigo: 'cc.codigo',
+    nome: 'cc.nome',
+    ativo: 'cc.ativo',
+  },
   filiais: {
     id: 'f.id',
     codigo: 'f.codigo',
@@ -86,6 +92,16 @@ export async function GET(req: NextRequest) {
         e.ativo`
       baseSql = 'FROM empresa.empresas e'
       orderClause = orderBy ? `ORDER BY ${orderBy} ${orderDir}` : 'ORDER BY e.razao_social ASC'
+    } else if (view === 'centros-de-custo') {
+      selectSql = `SELECT
+        cc.id,
+        cc.empresa_id,
+        cc.codigo,
+        cc.nome,
+        cc.descricao,
+        cc.ativo`
+      baseSql = 'FROM empresa.centros_custo cc'
+      orderClause = orderBy ? `ORDER BY ${orderBy} ${orderDir}` : 'ORDER BY cc.codigo ASC'
     } else if (view === 'filiais') {
       selectSql = `SELECT
         f.id,
@@ -154,4 +170,3 @@ export async function GET(req: NextRequest) {
     )
   }
 }
-

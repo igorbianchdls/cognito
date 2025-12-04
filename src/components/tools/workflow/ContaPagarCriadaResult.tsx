@@ -84,26 +84,54 @@ export default function ContaPagarCriadaResult({ result }: { result: ContaPagarC
   // Dropdown state (fornecedores e categorias)
   const [fornecedorId, setFornecedorId] = useState<string>('')
   const [categoriaId, setCategoriaId] = useState<string>('')
+  const [centroCustoId, setCentroCustoId] = useState<string>('')
+  const [departamentoId, setDepartamentoId] = useState<string>('')
+  const [filialId, setFilialId] = useState<string>('')
+  const [projetoId, setProjetoId] = useState<string>('')
   const [fornOptions, setFornOptions] = useState<Array<{ value: string; label: string }>>([])
   const [catOptions, setCatOptions] = useState<Array<{ value: string; label: string }>>([])
+  const [ccOptions, setCcOptions] = useState<Array<{ value: string; label: string }>>([])
+  const [depOptions, setDepOptions] = useState<Array<{ value: string; label: string }>>([])
+  const [filialOptions, setFilialOptions] = useState<Array<{ value: string; label: string }>>([])
+  const [projOptions, setProjOptions] = useState<Array<{ value: string; label: string }>>([])
   const [loadingForn, setLoadingForn] = useState(false)
   const [loadingCat, setLoadingCat] = useState(false)
+  const [loadingCc, setLoadingCc] = useState(false)
+  const [loadingDep, setLoadingDep] = useState(false)
+  const [loadingFilial, setLoadingFilial] = useState(false)
+  const [loadingProj, setLoadingProj] = useState(false)
   const [errorForn, setErrorForn] = useState<string | null>(null)
   const [errorCat, setErrorCat] = useState<string | null>(null)
+  const [errorCc, setErrorCc] = useState<string | null>(null)
+  const [errorDep, setErrorDep] = useState<string | null>(null)
+  const [errorFilial, setErrorFilial] = useState<string | null>(null)
+  const [errorProj, setErrorProj] = useState<string | null>(null)
 
   // Initialize selected IDs from payload/created/data
   useEffect(() => {
     if (isPreview) {
       setFornecedorId(String(result.payload?.fornecedor_id || ''))
       setCategoriaId(String(result.payload?.categoria_id || ''))
+      setCentroCustoId(String(result.payload?.centro_custo_id || ''))
+      setDepartamentoId(String(result.payload?.departamento_id || ''))
+      setFilialId(String(result.payload?.filial_id || ''))
+      setProjetoId(String(result.payload?.projeto_id || ''))
     } else if (created) {
       setFornecedorId(String(created.fornecedor_id || ''))
       setCategoriaId(String(created.categoria_id || ''))
+      setCentroCustoId(String(created.centro_custo_id || ''))
+      setDepartamentoId(String(created.departamento_id || ''))
+      setFilialId(String(created.filial_id || ''))
+      setProjetoId(String(created.projeto_id || ''))
     } else {
       setFornecedorId(String(result.data?.fornecedor_id || ''))
       setCategoriaId(String(result.data?.categoria_id || ''))
+      setCentroCustoId(String(result.data?.centro_custo_id || ''))
+      setDepartamentoId(String(result.data?.departamento_id || ''))
+      setFilialId(String(result.data?.filial_id || ''))
+      setProjetoId(String(result.data?.projeto_id || ''))
     }
-  }, [isPreview, created, result.payload?.fornecedor_id, result.payload?.categoria_id, result.data])
+  }, [isPreview, created, result.payload?.fornecedor_id, result.payload?.categoria_id, result.payload?.centro_custo_id, result.payload?.departamento_id, result.payload?.filial_id, result.payload?.projeto_id, result.data])
 
   // Load fornecedores
   useEffect(() => {
@@ -136,6 +164,78 @@ export default function ContaPagarCriadaResult({ result }: { result: ContaPagarC
       } catch (e) {
         if (!cancelled) setErrorCat(e instanceof Error ? e.message : 'Falha ao carregar categorias')
       } finally { if (!cancelled) setLoadingCat(false) }
+    }
+    load()
+    return () => { cancelled = true }
+  }, [])
+
+  // Load centros de custo (empresa)
+  useEffect(() => {
+    let cancelled = false
+    async function load() {
+      try {
+        setLoadingCc(true); setErrorCc(null)
+        const res = await fetch('/api/modulos/empresa?view=centros-de-custo&pageSize=1000&order_by=codigo', { cache: 'no-store' })
+        const j = await res.json()
+        const rows = Array.isArray(j?.rows) ? (j.rows as Array<{ id: number; codigo?: string; nome: string }>) : []
+        if (!cancelled) setCcOptions(rows.map((r) => ({ value: String(r.id), label: r.codigo ? `${r.codigo} - ${r.nome}` : r.nome })))
+      } catch (e) {
+        if (!cancelled) setErrorCc(e instanceof Error ? e.message : 'Falha ao carregar centros de custo')
+      } finally { if (!cancelled) setLoadingCc(false) }
+    }
+    load()
+    return () => { cancelled = true }
+  }, [])
+
+  // Load departamentos (empresa)
+  useEffect(() => {
+    let cancelled = false
+    async function load() {
+      try {
+        setLoadingDep(true); setErrorDep(null)
+        const res = await fetch('/api/modulos/empresa?view=departamentos&pageSize=1000&order_by=codigo', { cache: 'no-store' })
+        const j = await res.json()
+        const rows = Array.isArray(j?.rows) ? (j.rows as Array<{ id: number; codigo?: string; nome: string }>) : []
+        if (!cancelled) setDepOptions(rows.map((r) => ({ value: String(r.id), label: r.codigo ? `${r.codigo} - ${r.nome}` : r.nome })))
+      } catch (e) {
+        if (!cancelled) setErrorDep(e instanceof Error ? e.message : 'Falha ao carregar departamentos')
+      } finally { if (!cancelled) setLoadingDep(false) }
+    }
+    load()
+    return () => { cancelled = true }
+  }, [])
+
+  // Load filiais (empresa)
+  useEffect(() => {
+    let cancelled = false
+    async function load() {
+      try {
+        setLoadingFilial(true); setErrorFilial(null)
+        const res = await fetch('/api/modulos/empresa?view=filiais&pageSize=1000&order_by=nome', { cache: 'no-store' })
+        const j = await res.json()
+        const rows = Array.isArray(j?.rows) ? (j.rows as Array<{ id: number; nome: string }>) : []
+        if (!cancelled) setFilialOptions(rows.map((r) => ({ value: String(r.id), label: r.nome })))
+      } catch (e) {
+        if (!cancelled) setErrorFilial(e instanceof Error ? e.message : 'Falha ao carregar filiais')
+      } finally { if (!cancelled) setLoadingFilial(false) }
+    }
+    load()
+    return () => { cancelled = true }
+  }, [])
+
+  // Load projetos (financeiro)
+  useEffect(() => {
+    let cancelled = false
+    async function load() {
+      try {
+        setLoadingProj(true); setErrorProj(null)
+        const res = await fetch('/api/modulos/financeiro?view=projetos&pageSize=1000&order_by=nome', { cache: 'no-store' })
+        const j = await res.json()
+        const rows = Array.isArray(j?.rows) ? (j.rows as Array<{ id: number; nome: string }>) : []
+        if (!cancelled) setProjOptions(rows.map((r) => ({ value: String(r.id), label: r.nome })))
+      } catch (e) {
+        if (!cancelled) setErrorProj(e instanceof Error ? e.message : 'Falha ao carregar projetos')
+      } finally { if (!cancelled) setLoadingProj(false) }
     }
     load()
     return () => { cancelled = true }
@@ -222,10 +322,10 @@ export default function ContaPagarCriadaResult({ result }: { result: ContaPagarC
         const body = {
           fornecedor_id: fornecedorId || result.payload.fornecedor_id,
           categoria_id: categoriaId || result.payload.categoria_id || undefined,
-          centro_custo_id: result.payload.centro_custo_id || undefined,
-          departamento_id: result.payload.departamento_id || undefined,
-          filial_id: result.payload.filial_id || undefined,
-          projeto_id: result.payload.projeto_id || undefined,
+          centro_custo_id: centroCustoId || result.payload.centro_custo_id || undefined,
+          departamento_id: departamentoId || result.payload.departamento_id || undefined,
+          filial_id: filialId || result.payload.filial_id || undefined,
+          projeto_id: projetoId || result.payload.projeto_id || undefined,
           descricao: result.payload.descricao || 'Conta a pagar',
           valor: headerValor > 0 ? headerValor : valorFromLinhas,
           data_lancamento: dataLanc,
@@ -398,25 +498,121 @@ export default function ContaPagarCriadaResult({ result }: { result: ContaPagarC
               </div>
               <div>
                 <span className={isPreview ? 'text-blue-700 font-medium' : 'text-green-700 font-medium'}>ID Centro de Custo:</span>
-                <div className={isPreview ? 'text-blue-900 font-mono text-xs' : 'text-green-900 font-mono text-xs'}>{summaryCentroCustoId}</div>
+                {isPreview ? (
+                  <Select value={centroCustoId} onValueChange={setCentroCustoId}>
+                    <SelectTrigger className="h-8 text-sm">
+                      <SelectValue placeholder={loadingCc ? 'Carregando...' : (errorCc ? 'Erro' : 'Selecione centro de custo')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {errorCc ? (
+                        <SelectItem value={summaryCentroCustoId as string} disabled>
+                          {`Selecionado (ID ${summaryCentroCustoId})`}
+                        </SelectItem>
+                      ) : (
+                        <>
+                          {centroCustoId && !ccOptions.some(o => o.value === centroCustoId) && (
+                            <SelectItem value={centroCustoId}>{`Selecionado (ID ${centroCustoId})`}</SelectItem>
+                          )}
+                          {ccOptions.map(opt => (
+                            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                          ))}
+                        </>
+                      )}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <div className={'font-mono text-xs ' + (isPreview ? 'text-blue-900' : 'text-green-900')}>{summaryCentroCustoId}</div>
+                )}
               </div>
               <div>
                 <span className={isPreview ? 'text-blue-700 font-medium' : 'text-green-700 font-medium'}>ID Departamento:</span>
-                <div className={isPreview ? 'text-blue-900 font-mono text-xs' : 'text-green-900 font-mono text-xs'}>{summaryDepartamentoId}</div>
+                {isPreview ? (
+                  <Select value={departamentoId} onValueChange={setDepartamentoId}>
+                    <SelectTrigger className="h-8 text-sm">
+                      <SelectValue placeholder={loadingDep ? 'Carregando...' : (errorDep ? 'Erro' : 'Selecione departamento')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {errorDep ? (
+                        <SelectItem value={summaryDepartamentoId as string} disabled>
+                          {`Selecionado (ID ${summaryDepartamentoId})`}
+                        </SelectItem>
+                      ) : (
+                        <>
+                          {departamentoId && !depOptions.some(o => o.value === departamentoId) && (
+                            <SelectItem value={departamentoId}>{`Selecionado (ID ${departamentoId})`}</SelectItem>
+                          )}
+                          {depOptions.map(opt => (
+                            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                          ))}
+                        </>
+                      )}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <div className={'font-mono text-xs ' + (isPreview ? 'text-blue-900' : 'text-green-900')}>{summaryDepartamentoId}</div>
+                )}
               </div>
               <div>
                 <span className={isPreview ? 'text-blue-700 font-medium' : 'text-green-700 font-medium'}>ID Filial:</span>
-                <div className={isPreview ? 'text-blue-900 font-mono text-xs' : 'text-green-900 font-mono text-xs'}>{summaryFilialId}</div>
+                {isPreview ? (
+                  <Select value={filialId} onValueChange={setFilialId}>
+                    <SelectTrigger className="h-8 text-sm">
+                      <SelectValue placeholder={loadingFilial ? 'Carregando...' : (errorFilial ? 'Erro' : 'Selecione filial')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {errorFilial ? (
+                        <SelectItem value={summaryFilialId as string} disabled>
+                          {`Selecionada (ID ${summaryFilialId})`}
+                        </SelectItem>
+                      ) : (
+                        <>
+                          {filialId && !filialOptions.some(o => o.value === filialId) && (
+                            <SelectItem value={filialId}>{`Selecionada (ID ${filialId})`}</SelectItem>
+                          )}
+                          {filialOptions.map(opt => (
+                            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                          ))}
+                        </>
+                      )}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <div className={'font-mono text-xs ' + (isPreview ? 'text-blue-900' : 'text-green-900')}>{summaryFilialId}</div>
+                )}
               </div>
               <div>
                 <span className={isPreview ? 'text-blue-700 font-medium' : 'text-green-700 font-medium'}>ID Projeto:</span>
-                <div className={isPreview ? 'text-blue-900 font-mono text-xs' : 'text-green-900 font-mono text-xs'}>{summaryProjetoId}</div>
+                {isPreview ? (
+                  <Select value={projetoId} onValueChange={setProjetoId}>
+                    <SelectTrigger className="h-8 text-sm">
+                      <SelectValue placeholder={loadingProj ? 'Carregando...' : (errorProj ? 'Erro' : 'Selecione projeto')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {errorProj ? (
+                        <SelectItem value={summaryProjetoId as string} disabled>
+                          {`Selecionado (ID ${summaryProjetoId})`}
+                        </SelectItem>
+                      ) : (
+                        <>
+                          {projetoId && !projOptions.some(o => o.value === projetoId) && (
+                            <SelectItem value={projetoId}>{`Selecionado (ID ${projetoId})`}</SelectItem>
+                          )}
+                          {projOptions.map(opt => (
+                            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                          ))}
+                        </>
+                      )}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <div className={'font-mono text-xs ' + (isPreview ? 'text-blue-900' : 'text-green-900')}>{summaryProjetoId}</div>
+                )}
               </div>
             </div>
           </div>
           {isPreview && (
             <div className="ml-auto">
-              <Button onClick={commit} disabled={creating || hasErrors}>
+              <Button onClick={commit} disabled={creating || hasErrors || !fornecedorId || !categoriaId || !centroCustoId}>
                 {creating ? 'Criando…' : 'Criar Conta a Pagar'}
               </Button>
             </div>
