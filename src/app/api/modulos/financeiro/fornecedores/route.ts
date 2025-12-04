@@ -32,11 +32,11 @@ export async function POST(req: Request) {
       }
     }
 
-    // Inserção básica (somente colunas garantidas)
+    // Inserção básica (ajustada para coluna nome_fantasia)
     const insertSql = `
-      INSERT INTO entidades.fornecedores (nome, cnpj, email, telefone)
+      INSERT INTO entidades.fornecedores (nome_fantasia, cnpj, email, telefone)
       VALUES ($1, $2, $3, $4)
-      RETURNING id::text AS id, COALESCE(nome, '')::text AS nome, COALESCE(cnpj, '')::text AS cnpj, COALESCE(email, '')::text AS email, COALESCE(telefone, '')::text AS telefone
+      RETURNING id::text AS id, COALESCE(nome_fantasia, '')::text AS nome, COALESCE(cnpj, '')::text AS cnpj, COALESCE(email, '')::text AS email, COALESCE(telefone, '')::text AS telefone
     `.replace(/\n\s+/g, ' ').trim()
 
     const params = [
@@ -56,4 +56,3 @@ export async function POST(req: Request) {
     return Response.json({ success: false, message: msg }, { status: 400 })
   }
 }
-
