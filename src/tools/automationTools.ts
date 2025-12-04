@@ -22,7 +22,7 @@ export const findFornecedor = tool({
         i += 1
       }
       if (nome) {
-        conditions.push(`LOWER(f.nome) LIKE LOWER($${i})`)
+        conditions.push(`LOWER(f.nome_fantasia) LIKE LOWER($${i})`)
         params.push(`%${nome}%`)
         i += 1
       }
@@ -33,10 +33,10 @@ export const findFornecedor = tool({
 
       const where = `WHERE ${conditions.join(' AND ')}`
       const sql = `
-        SELECT f.id, f.nome AS nome, f.cnpj, f.email, f.telefone
+        SELECT f.id, f.nome_fantasia AS nome, f.cnpj, f.email, f.telefone
         FROM entidades.fornecedores f
         ${where}
-        ORDER BY f.nome ASC
+        ORDER BY f.nome_fantasia ASC
         LIMIT 5
       `.trim()
 
@@ -59,9 +59,9 @@ export const createFornecedor = tool({
   execute: async ({ nome, cnpj, email, telefone }) => {
     try {
       const insertSql = `
-        INSERT INTO entidades.fornecedores (nome, cnpj, email, telefone)
+        INSERT INTO entidades.fornecedores (nome_fantasia, cnpj, email, telefone)
         VALUES ($1, $2, $3, $4)
-        RETURNING id, nome, cnpj, email, telefone
+        RETURNING id, nome_fantasia AS nome, cnpj, email, telefone
       `.trim()
       const params = [nome, cnpj ?? null, email ?? null, telefone ?? null]
       const [row] = await runQuery<{ id: string; nome: string; cnpj: string | null; email: string | null; telefone: string | null }>(insertSql, params)
