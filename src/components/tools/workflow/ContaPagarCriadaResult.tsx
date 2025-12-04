@@ -22,6 +22,9 @@ type ContaPagarCriadaOutput = {
     fornecedor_id: string;
     categoria_id?: string;
     centro_custo_id?: string;
+    departamento_id?: string;
+    filial_id?: string;
+    projeto_id?: string;
     natureza_financeira_id?: string;
     tenant_id?: number | string;
     valor: number;
@@ -39,6 +42,9 @@ type ContaPagarCriadaOutput = {
     fornecedor_id: string;
     categoria_id: string;
     centro_custo_id: string;
+    departamento_id?: string | null;
+    filial_id?: string | null;
+    projeto_id?: string | null;
     natureza_financeira_id?: string | null;
     valor: number;
     valor_pago: number;
@@ -155,6 +161,10 @@ export default function ContaPagarCriadaResult({ result }: { result: ContaPagarC
         const body = {
           fornecedor_id: result.payload.fornecedor_id,
           categoria_id: result.payload.categoria_id || undefined,
+          centro_custo_id: result.payload.centro_custo_id || undefined,
+          departamento_id: result.payload.departamento_id || undefined,
+          filial_id: result.payload.filial_id || undefined,
+          projeto_id: result.payload.projeto_id || undefined,
           descricao: result.payload.descricao || 'Conta a pagar',
           valor: headerValor > 0 ? headerValor : valorFromLinhas,
           data_lancamento: dataLanc,
@@ -191,6 +201,9 @@ export default function ContaPagarCriadaResult({ result }: { result: ContaPagarC
         fornecedor_id: result.payload.fornecedor_id || '',
         categoria_id: result.payload.categoria_id || '',
         centro_custo_id: result.payload.centro_custo_id || '',
+        departamento_id: result.payload.departamento_id || null,
+        filial_id: result.payload.filial_id || null,
+        projeto_id: result.payload.projeto_id || null,
         natureza_financeira_id: result.payload.natureza_financeira_id || null,
         valor: result.payload.valor,
         valor_pago: 0,
@@ -223,6 +236,21 @@ export default function ContaPagarCriadaResult({ result }: { result: ContaPagarC
     : (isPreview
         ? (result.payload?.fornecedor_id || '-')
         : (result.data?.fornecedor_id || '-'))
+  const summaryCategoriaId = created
+    ? (created.categoria_id || '-')
+    : (isPreview ? (result.payload?.categoria_id || '-') : (result.data?.categoria_id || '-'))
+  const summaryCentroCustoId = created
+    ? (created.centro_custo_id || '-')
+    : (isPreview ? (result.payload?.centro_custo_id || '-') : (result.data?.centro_custo_id || '-'))
+  const summaryDepartamentoId = created
+    ? (created.departamento_id || '-')
+    : (isPreview ? (result.payload?.departamento_id || '-') : (result.data?.departamento_id || '-'))
+  const summaryFilialId = created
+    ? (created.filial_id || '-')
+    : (isPreview ? (result.payload?.filial_id || '-') : (result.data?.filial_id || '-'))
+  const summaryProjetoId = created
+    ? (created.projeto_id || '-')
+    : (isPreview ? (result.payload?.projeto_id || '-') : (result.data?.projeto_id || '-'))
 
   return (
     <div className="space-y-4">
@@ -253,6 +281,26 @@ export default function ContaPagarCriadaResult({ result }: { result: ContaPagarC
               <div>
                 <span className={isPreview ? 'text-blue-700 font-medium' : 'text-green-700 font-medium'}>ID do Fornecedor:</span>
                 <div className={isPreview ? 'text-blue-900 font-mono text-xs' : 'text-green-900 font-mono text-xs'}>{summaryFornecedorId}</div>
+              </div>
+              <div>
+                <span className={isPreview ? 'text-blue-700 font-medium' : 'text-green-700 font-medium'}>ID Categoria:</span>
+                <div className={isPreview ? 'text-blue-900 font-mono text-xs' : 'text-green-900 font-mono text-xs'}>{summaryCategoriaId}</div>
+              </div>
+              <div>
+                <span className={isPreview ? 'text-blue-700 font-medium' : 'text-green-700 font-medium'}>ID Centro de Custo:</span>
+                <div className={isPreview ? 'text-blue-900 font-mono text-xs' : 'text-green-900 font-mono text-xs'}>{summaryCentroCustoId}</div>
+              </div>
+              <div>
+                <span className={isPreview ? 'text-blue-700 font-medium' : 'text-green-700 font-medium'}>ID Departamento:</span>
+                <div className={isPreview ? 'text-blue-900 font-mono text-xs' : 'text-green-900 font-mono text-xs'}>{summaryDepartamentoId}</div>
+              </div>
+              <div>
+                <span className={isPreview ? 'text-blue-700 font-medium' : 'text-green-700 font-medium'}>ID Filial:</span>
+                <div className={isPreview ? 'text-blue-900 font-mono text-xs' : 'text-green-900 font-mono text-xs'}>{summaryFilialId}</div>
+              </div>
+              <div>
+                <span className={isPreview ? 'text-blue-700 font-medium' : 'text-green-700 font-medium'}>ID Projeto:</span>
+                <div className={isPreview ? 'text-blue-900 font-mono text-xs' : 'text-green-900 font-mono text-xs'}>{summaryProjetoId}</div>
               </div>
             </div>
           </div>

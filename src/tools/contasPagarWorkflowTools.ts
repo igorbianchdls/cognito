@@ -374,6 +374,12 @@ export const criarContaPagar = tool({
       .describe('ID da categoria financeira (obtido de buscarClassificacoesFinanceiras)'),
     centro_custo_id: z.string()
       .describe('ID do centro de custo (obtido de buscarClassificacoesFinanceiras)'),
+    departamento_id: z.string().optional()
+      .describe('ID do departamento (opcional, obtido de buscarClassificacoesFinanceiras)'),
+    filial_id: z.string().optional()
+      .describe('ID da filial (opcional, obtido de buscarClassificacoesFinanceiras)'),
+    projeto_id: z.string().optional()
+      .describe('ID do projeto (opcional, obtido de buscarClassificacoesFinanceiras)'),
     natureza_financeira_id: z.string().optional()
       .describe('ID da natureza financeira (opcional, obtido de buscarClassificacoesFinanceiras)'),
     tenant_id: z.number().optional()
@@ -409,6 +415,9 @@ export const criarContaPagar = tool({
     fornecedor_id,
     categoria_id,
     centro_custo_id,
+    departamento_id,
+    filial_id,
+    projeto_id,
     natureza_financeira_id,
     tenant_id,
     valor,
@@ -422,6 +431,9 @@ export const criarContaPagar = tool({
       fornecedor_id: String(fornecedor_id || ''),
       categoria_id: String(categoria_id || ''),
       centro_custo_id: String(centro_custo_id || ''),
+      departamento_id: departamento_id ? String(departamento_id) : '',
+      filial_id: filial_id ? String(filial_id) : '',
+      projeto_id: projeto_id ? String(projeto_id) : '',
       natureza_financeira_id: natureza_financeira_id ? String(natureza_financeira_id) : '',
       tenant_id: typeof tenant_id === 'number' ? tenant_id : 1,
       valor: Number(valor || 0),

@@ -26,6 +26,11 @@ export async function POST(req: Request) {
       const linhas = Array.isArray(body['linhas']) ? (body['linhas'] as Array<Record<string, unknown>>) : []
       // Novo: itens detalhados do documento (notas, serviços, etc.)
       const itensRaw = Array.isArray(body['itens']) ? (body['itens'] as Array<Record<string, unknown>>) : []
+      // Dims adicionais (opcionais) no cabeçalho
+      const centro_custo_id = body['centro_custo_id'] !== undefined && body['centro_custo_id'] !== null ? toNum(body['centro_custo_id']) : null
+      const departamento_id = body['departamento_id'] !== undefined && body['departamento_id'] !== null ? toNum(body['departamento_id']) : null
+      const filial_id = body['filial_id'] !== undefined && body['filial_id'] !== null ? toNum(body['filial_id']) : null
+      const projeto_id = body['projeto_id'] !== undefined && body['projeto_id'] !== null ? toNum(body['projeto_id']) : null
       let valor = body['valor'] !== undefined && body['valor'] !== null ? toNum(body['valor']) : NaN
 
       if (!fornecedor_id || fornecedor_id <= 0) return Response.json({ success: false, message: 'fornecedor_id é obrigatório' }, { status: 400 })
@@ -50,11 +55,11 @@ export async function POST(req: Request) {
         const ins = await client.query(
           `INSERT INTO financeiro.lancamentos_financeiros (
              tenant_id, tipo, descricao, valor, data_lancamento, data_vencimento, status,
-             fornecedor_id, categoria_id
+             fornecedor_id, categoria_id, centro_custo_id, departamento_id, filial_id, projeto_id
            ) VALUES ($1, 'conta_a_pagar', $2, $3, $4, $5, $6,
-                     $7, $8)
-           RETURNING id`,
-          [tenant_id, descricao, Math.abs(valor), data_lancamento, data_vencimento, status, fornecedor_id, categoria_id]
+                      $7, $8, $9, $10, $11, $12)
+            RETURNING id`,
+          [tenant_id, descricao, Math.abs(valor), data_lancamento, data_vencimento, status, fornecedor_id, categoria_id, centro_custo_id, departamento_id, filial_id, projeto_id]
         )
         const id = Number(ins.rows[0]?.id)
         if (!id) throw new Error('Falha ao criar conta a pagar')
@@ -202,6 +207,10 @@ export async function POST(req: Request) {
     const fornecedor_id_raw = String(form.get('fornecedor_id') || '').trim() // novo schema
     const categoria_id_raw = String(form.get('categoria_id') || '').trim()
     const conta_financeira_id_raw = String(form.get('conta_financeira_id') || '').trim()
+    const centro_custo_id_raw = String(form.get('centro_custo_id') || '').trim()
+    const departamento_id_raw = String(form.get('departamento_id') || '').trim()
+    const filial_id_raw = String(form.get('filial_id') || '').trim()
+    const projeto_id_raw = String(form.get('projeto_id') || '').trim()
     const status = String(form.get('status') || '').trim() || 'pendente'
 
     const tenant_id = tenant_id_raw ? Number(tenant_id_raw) : 1
@@ -209,16 +218,23 @@ export async function POST(req: Request) {
     const fornecedor_id = fornecedor_id_raw ? Number(fornecedor_id_raw) : (entidade_id ?? null)
     const categoria_id = categoria_id_raw ? Number(categoria_id_raw) : null
     const conta_financeira_id = conta_financeira_id_raw ? Number(conta_financeira_id_raw) : null
+    const centro_custo_id = centro_custo_id_raw ? Number(centro_custo_id_raw) : null
+    const departamento_id = departamento_id_raw ? Number(departamento_id_raw) : null
+    const filial_id = filial_id_raw ? Number(filial_id_raw) : null
+    const projeto_id = projeto_id_raw ? Number(projeto_id_raw) : null
 
     const result = await withTransaction(async (client) => {
       const insert = await client.query(
         `INSERT INTO financeiro.lancamentos_financeiros (
            tenant_id, tipo, descricao, valor, data_lancamento, data_vencimento, status,
-           entidade_id, fornecedor_id, categoria_id, conta_financeira_id
+           entidade_id, fornecedor_id, categoria_id, conta_financeira_id,
+           centro_custo_id, departamento_id, filial_id, projeto_id
          ) VALUES ($1, 'conta_a_pagar', $2, $3, $4, $5, $6,
-                   $7, $8, $9, $10)
+                   $7, $8, $9, $10,
+                   $11, $12, $13, $14)
          RETURNING id`,
-        [tenant_id, descricao, Math.abs(valor), data_lancamento, data_vencimento, status, entidade_id, fornecedor_id, categoria_id, conta_financeira_id]
+        [tenant_id, descricao, Math.abs(valor), data_lancamento, data_vencimento, status, entidade_id, fornecedor_id, categoria_id, conta_financeira_id,
+         centro_custo_id, departamento_id, filial_id, projeto_id]
       )
       const id = Number(insert.rows[0]?.id)
       if (!id) throw new Error('Falha ao criar conta a pagar')
