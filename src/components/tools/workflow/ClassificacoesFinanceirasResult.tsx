@@ -11,7 +11,7 @@ type ClassificacaoRow = {
   nome: string;
   tipo?: string;
   descricao?: string;
-  categoria?: 'categoria' | 'centro_custo' | 'natureza';
+  categoria?: 'categoria' | 'centro_custo' | 'natureza' | 'departamento' | 'filial';
   [key: string]: unknown;
 }
 
@@ -23,6 +23,8 @@ type ClassificacoesFinanceirasOutput = {
     categorias_financeiras: Array<{ id: string; nome: string; tipo: string; descricao: string }>;
     centros_custo: Array<{ id: string; nome: string; descricao: string }>;
     naturezas_financeiras: Array<{ id: string; nome: string; tipo: string }>;
+    departamentos?: Array<{ id: string; nome: string }>;
+    filiais?: Array<{ id: string; nome: string }>;
   };
   counts: {
     categorias: number;
@@ -49,6 +51,16 @@ export default function ClassificacoesFinanceirasResult({ result }: { result: Cl
       rows.push({ ...nat, categoria: 'natureza' });
     });
 
+    // Departamentos
+    (result.data.departamentos || []).forEach(dep => {
+      rows.push({ ...dep, categoria: 'departamento', tipo: 'departamento' });
+    });
+
+    // Filiais
+    (result.data.filiais || []).forEach(fil => {
+      rows.push({ ...fil, categoria: 'filial', tipo: 'filial' });
+    });
+
     return rows;
   }, [result.data]);
 
@@ -62,12 +74,16 @@ export default function ClassificacoesFinanceirasResult({ result }: { result: Cl
         const labels = {
           categoria: 'Categoria Financeira',
           centro_custo: 'Centro de Custo',
-          natureza: 'Natureza Financeira'
+          natureza: 'Natureza Financeira',
+          departamento: 'Departamento',
+          filial: 'Filial'
         };
         const colors = {
           categoria: 'bg-blue-100 text-blue-700',
           centro_custo: 'bg-green-100 text-green-700',
-          natureza: 'bg-purple-100 text-purple-700'
+          natureza: 'bg-purple-100 text-purple-700',
+          departamento: 'bg-orange-100 text-orange-700',
+          filial: 'bg-teal-100 text-teal-700'
         };
         return (
           <span className={`px-2 py-1 rounded text-xs font-medium ${colors[cat || 'categoria']}`}>
