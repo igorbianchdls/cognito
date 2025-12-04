@@ -181,8 +181,13 @@ export default function ContaPagarCriadaResult({ result }: { result: ContaPagarC
   // Summary content (preview or created)
   const summaryValor = created ? created.valor : (isPreview ? (result.payload?.valor || 0) : (result.data?.valor || 0))
   const summaryVenc = created ? created.data_vencimento : (isPreview ? (result.payload?.data_vencimento || '') : result.resumo.data_vencimento)
-  const summaryId = created ? created.id : (isPreview ? '-' : result.resumo.id)
   const summaryNF = created ? (created.numero_nota_fiscal || '-') : (isPreview ? (result.payload?.numero_nota_fiscal || '-') : result.resumo.numero_nota_fiscal)
+  // Mostrar sempre o ID do fornecedor no 4º campo
+  const summaryFornecedorId = created
+    ? created.fornecedor_id
+    : (isPreview
+        ? (result.payload?.fornecedor_id || (result as any).fornecedor_id || '-')
+        : (result.resumo?.fornecedor_id || result.payload?.fornecedor_id || (result as any).fornecedor_id || '-'))
 
   return (
     <div className="space-y-4">
@@ -211,8 +216,8 @@ export default function ContaPagarCriadaResult({ result }: { result: ContaPagarC
                 <div className={isPreview ? 'text-blue-900' : 'text-green-900'}>{summaryNF}</div>
               </div>
               <div>
-                <span className={isPreview ? 'text-blue-700 font-medium' : 'text-green-700 font-medium'}>ID:</span>
-                <div className={isPreview ? 'text-blue-900 font-mono text-xs' : 'text-green-900 font-mono text-xs'}>{summaryId}</div>
+                <span className={isPreview ? 'text-blue-700 font-medium' : 'text-green-700 font-medium'}>ID do Fornecedor:</span>
+                <div className={isPreview ? 'text-blue-900 font-mono text-xs' : 'text-green-900 font-mono text-xs'}>{summaryFornecedorId}</div>
               </div>
             </div>
           </div>
