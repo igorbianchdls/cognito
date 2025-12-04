@@ -113,8 +113,8 @@ export default function ContaPagarCriadaResult({ result }: { result: ContaPagarC
         setLoadingForn(true); setErrorForn(null)
         const res = await fetch('/api/modulos/financeiro/fornecedores/list', { cache: 'no-store' })
         const j = await res.json()
-        const rows = Array.isArray(j?.rows) ? j.rows : []
-        if (!cancelled) setFornOptions(rows.map((r: any) => ({ value: String(r.id), label: String(r.nome || r.id) })))
+        const rows = Array.isArray(j?.rows) ? (j.rows as Array<{ id: number; nome: string }>) : []
+        if (!cancelled) setFornOptions(rows.map((r) => ({ value: String(r.id), label: String(r.nome || r.id) })))
       } catch (e) {
         if (!cancelled) setErrorForn(e instanceof Error ? e.message : 'Falha ao carregar fornecedores')
       } finally { if (!cancelled) setLoadingForn(false) }
@@ -131,8 +131,8 @@ export default function ContaPagarCriadaResult({ result }: { result: ContaPagarC
         setLoadingCat(true); setErrorCat(null)
         const res = await fetch('/api/modulos/financeiro/categorias/list', { cache: 'no-store' })
         const j = await res.json()
-        const rows = Array.isArray(j?.rows) ? j.rows : []
-        if (!cancelled) setCatOptions(rows.map((r: any) => ({ value: String(r.id), label: `${r.nome}${r.tipo ? ` (${r.tipo})` : ''}` })))
+        const rows = Array.isArray(j?.rows) ? (j.rows as Array<{ id: number; nome: string; tipo?: string }>) : []
+        if (!cancelled) setCatOptions(rows.map((r) => ({ value: String(r.id), label: `${r.nome}${r.tipo ? ` (${r.tipo})` : ''}` })))
       } catch (e) {
         if (!cancelled) setErrorCat(e instanceof Error ? e.message : 'Falha ao carregar categorias')
       } finally { if (!cancelled) setLoadingCat(false) }
