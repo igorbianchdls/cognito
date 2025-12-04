@@ -389,12 +389,20 @@ export const criarContaPagar = tool({
     descricao: z.string().optional()
       .describe('Descrição ou observações sobre a conta'),
     itens: z.array(z.object({
+      numero_item: z.number().int().positive().optional().describe('Número sequencial do item (1..N)'),
       descricao: z.string().describe('Descrição do item'),
       quantidade: z.number().describe('Quantidade'),
+      unidade: z.string().optional().describe('Unidade (ex.: un, kg, h)'),
       valor_unitario: z.number().describe('Valor unitário'),
-      valor_total: z.number().optional().describe('Valor total do item (quantidade * valor_unitario)')
+      desconto: z.number().optional().describe('Desconto do item'),
+      acrescimo: z.number().optional().describe('Acréscimo do item'),
+      valor_total: z.number().optional().describe('Valor total do item (qtd*valor_unitario + acrescimo - desconto)'),
+      categoria_id: z.union([z.string(), z.number()]).optional().describe('Categoria (opcional)'),
+      centro_custo_id: z.union([z.string(), z.number()]).optional().describe('Centro de custo (opcional)'),
+      natureza_financeira_id: z.union([z.string(), z.number()]).optional().describe('Natureza financeira (opcional)'),
+      observacao: z.string().optional().describe('Observações do item'),
     })).optional()
-      .describe('Itens detalhados da nota fiscal (opcional)')
+      .describe('Itens detalhados da nota fiscal (opcional). Se ausente, a API criará um item padrão com base no cabeçalho.')
   }),
 
   execute: async ({
@@ -421,13 +429,28 @@ export const criarContaPagar = tool({
       data_emissao: String(data_emissao || ''),
       numero_nota_fiscal: numero_nota_fiscal ? String(numero_nota_fiscal) : '',
       descricao: descricao ? String(descricao) : '',
-      itens: (itens || []).map((it) => ({
+    itens: (itens || []).map((it, idx) => {
+      const qtd = Number(it.quantidade || 0)
+      const vu = Number(it.valor_unitario || 0)
+      const desconto = it.desconto !== undefined ? Number(it.desconto) : 0
+      const acrescimo = it.acrescimo !== undefined ? Number(it.acrescimo) : 0
+      const vt = it.valor_total !== undefined ? Number(it.valor_total) : (qtd * vu + acrescimo - desconto)
+      return {
+        numero_item: (typeof it.numero_item === 'number' && it.numero_item > 0) ? it.numero_item : (idx + 1),
         descricao: String(it.descricao || ''),
-        quantidade: Number(it.quantidade || 0),
-        valor_unitario: Number(it.valor_unitario || 0),
-        valor_total: it.valor_total ? Number(it.valor_total) : undefined,
-      })),
-    };
+        quantidade: qtd,
+        unidade: it.unidade ? String(it.unidade) : undefined,
+        valor_unitario: vu,
+        desconto,
+        acrescimo,
+        valor_total: vt,
+        categoria_id: (it.categoria_id as unknown) ?? undefined,
+        centro_custo_id: (it.centro_custo_id as unknown) ?? undefined,
+        natureza_financeira_id: (it.natureza_financeira_id as unknown) ?? undefined,
+        observacao: it.observacao ? String(it.observacao) : undefined,
+      }
+    }),
+  };
 
     const validations: Array<{ field: string; status: 'ok' | 'warn' | 'error'; message?: string }> = [];
     if (!payload.fornecedor_id) validations.push({ field: 'fornecedor_id', status: 'error', message: 'Fornecedor é obrigatório' });
@@ -437,7 +460,7 @@ export const criarContaPagar = tool({
 
     let valorTotalItens = 0;
     for (const item of payload.itens) {
-      const vt = (item.valor_total ?? (item.quantidade * item.valor_unitario)) || 0;
+      const vt = (item.valor_total ?? (item.quantidade * item.valor_unitario + (item.acrescimo || 0) - (item.desconto || 0))) || 0;
       valorTotalItens += vt;
     }
     if (payload.itens.length > 0 && Math.abs(valorTotalItens - payload.valor) > 0.1) {

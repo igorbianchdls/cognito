@@ -24,14 +24,26 @@ export async function POST(req: Request) {
       const data_vencimento = toStr(body['data_vencimento'] || '')
       const tenant_id = body['tenant_id'] !== undefined && body['tenant_id'] !== null ? toNum(body['tenant_id']) : 1
       const linhas = Array.isArray(body['linhas']) ? (body['linhas'] as Array<Record<string, unknown>>) : []
+      // Novo: itens detalhados do documento (notas, serviços, etc.)
+      const itensRaw = Array.isArray(body['itens']) ? (body['itens'] as Array<Record<string, unknown>>) : []
       let valor = body['valor'] !== undefined && body['valor'] !== null ? toNum(body['valor']) : NaN
 
       if (!fornecedor_id || fornecedor_id <= 0) return Response.json({ success: false, message: 'fornecedor_id é obrigatório' }, { status: 400 })
       if (!data_vencimento) return Response.json({ success: false, message: 'data_vencimento é obrigatório' }, { status: 400 })
 
-      // If lines provided, compute sum of valor_liquido
+      // If items or lines provided, compute sums when header valor is missing
+      const somaItensEstimado = itensRaw.reduce((acc, it) => {
+        const q = Number(it['quantidade'] ?? 1) || 1
+        const vu = Number(it['valor_unitario'] ?? it['valor'] ?? 0) || 0
+        const desc = Number(it['desconto'] ?? 0) || 0
+        const acres = Number(it['acrescimo'] ?? 0) || 0
+        const vt = Number(it['valor_total'] ?? (q * vu + acres - desc)) || 0
+        return acc + vt
+      }, 0)
       const somaLinhas = linhas.reduce((acc, ln) => acc + (Number(ln['valor_liquido'] ?? 0) || 0), 0)
-      if (!Number.isFinite(valor)) valor = somaLinhas
+      if (!Number.isFinite(valor)) {
+        valor = Number.isFinite(somaItensEstimado) && somaItensEstimado > 0 ? somaItensEstimado : somaLinhas
+      }
 
       const result = await withTransaction(async (client) => {
         // Header
@@ -46,6 +58,91 @@ export async function POST(req: Request) {
         )
         const id = Number(ins.rows[0]?.id)
         if (!id) throw new Error('Falha ao criar conta a pagar')
+
+        // Novo: Itens do lançamento (financeiro.lancamentos_financeiros_itens)
+        let itensCount = 0
+        try {
+          const normalizarItens = () => {
+            const itensNorm = itensRaw.map((it, idx) => {
+              const q = Number(it['quantidade'] ?? 1) || 1
+              const vu = Number(it['valor_unitario'] ?? it['valor'] ?? 0) || 0
+              const desc = Number(it['desconto'] ?? 0) || 0
+              const acres = Number(it['acrescimo'] ?? 0) || 0
+              const vt = it['valor_total'] !== undefined && it['valor_total'] !== null
+                ? Number(it['valor_total'])
+                : (q * vu + acres - (desc || 0))
+              return {
+                numero_item: Number(it['numero_item'] ?? idx + 1) || (idx + 1),
+                descricao: toStr(it['descricao'] ?? descricao).trim(),
+                quantidade: q,
+                unidade: (it['unidade'] ?? null) as string | null,
+                valor_unitario: vu,
+                desconto: Number.isFinite(desc) ? desc : 0,
+                acrescimo: Number.isFinite(acres) ? acres : 0,
+                valor_total: Number.isFinite(vt) ? vt : 0,
+                categoria_id: it['categoria_id'] !== undefined && it['categoria_id'] !== null ? Number(it['categoria_id']) : null,
+                centro_custo_id: it['centro_custo_id'] !== undefined && it['centro_custo_id'] !== null ? Number(it['centro_custo_id']) : null,
+                natureza_financeira_id: it['natureza_financeira_id'] !== undefined && it['natureza_financeira_id'] !== null ? Number(it['natureza_financeira_id']) : null,
+                observacao: it['observacao'] ?? null,
+              }
+            })
+            if (itensNorm.length > 0) return itensNorm
+            // Se não vierem itens, gera 1 item padrão com o valor do cabeçalho
+            return [{
+              numero_item: 1,
+              descricao,
+              quantidade: 1,
+              unidade: null as string | null,
+              valor_unitario: Math.abs(valor),
+              desconto: 0,
+              acrescimo: 0,
+              valor_total: Math.abs(valor),
+              categoria_id: categoria_id,
+              centro_custo_id: null as number | null,
+              natureza_financeira_id: null as number | null,
+              observacao: null as string | null,
+            }]
+          }
+
+          const itens = normalizarItens()
+          if (itens.length > 0) {
+            const colsItens = [
+              'lancamento_id','numero_item','descricao','quantidade','unidade',
+              'valor_unitario','desconto','acrescimo','valor_total',
+              'categoria_id','centro_custo_id','natureza_financeira_id','observacao'
+            ]
+            const valuesSqlItens: string[] = []
+            const paramsItens: unknown[] = []
+            let pi = 1
+            for (const it of itens) {
+              valuesSqlItens.push(`($${pi++},$${pi++},$${pi++},$${pi++},$${pi++},$${pi++},$${pi++},$${pi++},$${pi++},$${pi++},$${pi++},$${pi++},$${pi++})`)
+              paramsItens.push(
+                id,
+                it.numero_item,
+                it.descricao,
+                it.quantidade,
+                it.unidade,
+                it.valor_unitario,
+                it.desconto,
+                it.acrescimo,
+                it.valor_total,
+                it.categoria_id,
+                it.centro_custo_id,
+                it.natureza_financeira_id,
+                it.observacao,
+              )
+            }
+            await client.query(
+              `INSERT INTO financeiro.lancamentos_financeiros_itens (${colsItens.join(',')})
+               VALUES ${valuesSqlItens.join(',')}`,
+              paramsItens
+            )
+            itensCount = itens.length
+          }
+        } catch (e) {
+          // Se falhar a inserção de itens por qualquer motivo, aborta transação via throw
+          throw e
+        }
 
         // Lines
         if (linhas.length > 0) {
@@ -79,10 +176,10 @@ export async function POST(req: Request) {
           )
         }
 
-        return { id, linhas_count: linhas.length }
+        return { id, linhas_count: linhas.length, itens_count: itensCount }
       })
 
-      return Response.json({ success: true, id: result.id, linhas_count: result.linhas_count })
+      return Response.json({ success: true, id: result.id, linhas_count: result.linhas_count, itens_count: result.itens_count })
     }
 
     // Default legacy FormData mode (header only)

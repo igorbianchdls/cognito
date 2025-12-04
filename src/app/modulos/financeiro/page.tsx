@@ -87,15 +87,15 @@ export default function ModulosFinanceiroPage() {
     return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
   }
 
-  // Nested detail component for Contas a Pagar: linhas do lançamento
-  function LinhasDoLancamento({ lancamentoId }: { lancamentoId: number }) {
+  // Nested detail component for Contas a Pagar: itens do lançamento
+  function ItensDoLancamento({ lancamentoId }: { lancamentoId: number }) {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [rows, setRows] = useState<Array<Record<string, unknown>>>([])
     // Simple cache per ID to avoid refetch on re-open
-    const cacheRef = (LinhasDoLancamento as unknown as { _cache?: Map<number, Array<Record<string, unknown>>> })._cache
+    const cacheRef = (ItensDoLancamento as unknown as { _cache?: Map<number, Array<Record<string, unknown>>> })._cache
       || new Map<number, Array<Record<string, unknown>>>()
-    ;(LinhasDoLancamento as unknown as { _cache?: Map<number, Array<Record<string, unknown>>> })._cache = cacheRef
+    ;(ItensDoLancamento as unknown as { _cache?: Map<number, Array<Record<string, unknown>>> })._cache = cacheRef
 
     useEffect(() => {
       let cancelled = false
@@ -106,7 +106,7 @@ export default function ModulosFinanceiroPage() {
             setRows(cacheRef.get(lancamentoId) || [])
             return
           }
-          const res = await fetch(`/api/modulos/financeiro/lancamentos/${lancamentoId}/linhas`, { cache: 'no-store' })
+          const res = await fetch(`/api/modulos/financeiro/lancamentos/${lancamentoId}/itens`, { cache: 'no-store' })
           const j = await res.json()
           if (!res.ok || !j?.success) throw new Error(j?.message || `HTTP ${res.status}`)
           const list: Array<Record<string, unknown>> = Array.isArray(j.rows) ? j.rows : []
@@ -124,41 +124,37 @@ export default function ModulosFinanceiroPage() {
       return () => { cancelled = true }
     }, [lancamentoId])
 
-    if (loading) return <div className="text-xs text-gray-500 p-3">Carregando linhas…</div>
+    if (loading) return <div className="text-xs text-gray-500 p-3">Carregando itens…</div>
     if (error) return <div className="text-xs text-red-600 p-3">{error}</div>
-    if (!rows.length) return <div className="text-xs text-gray-500 p-3">Sem linhas para este lançamento.</div>
+    if (!rows.length) return <div className="text-xs text-gray-500 p-3">Sem itens para este lançamento.</div>
 
     return (
       <div className="overflow-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="text-gray-600">
-              <th className="text-left p-2">Parcela</th>
-              <th className="text-left p-2">Tipo</th>
-              <th className="text-left p-2">Vencimento</th>
-              <th className="text-left p-2">Pagamento</th>
-              <th className="text-right p-2">Bruto</th>
-              <th className="text-right p-2">Juros</th>
-              <th className="text-right p-2">Multa</th>
+              <th className="text-left p-2">#</th>
+              <th className="text-left p-2">Descrição</th>
+              <th className="text-right p-2">Qtd</th>
+              <th className="text-left p-2">Unid.</th>
+              <th className="text-right p-2">Valor Unit.</th>
               <th className="text-right p-2">Desconto</th>
-              <th className="text-right p-2">Líquido</th>
-              <th className="text-left p-2">Status</th>
-              <th className="text-left p-2">Observação</th>
+              <th className="text-right p-2">Acréscimo</th>
+              <th className="text-right p-2">Total</th>
+              <th className="text-left p-2">Obs.</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((r, i) => (
               <tr key={String(r['id'] ?? i)} className="border-t border-gray-200">
-                <td className="p-2">{String(r['numero_parcela'] ?? '—')}</td>
-                <td className="p-2">{String(r['tipo_linha'] ?? '—')}</td>
-                <td className="p-2">{formatDate(r['data_vencimento'])}</td>
-                <td className="p-2">{formatDate(r['data_pagamento'])}</td>
-                <td className="p-2 text-right">{formatBRL(r['valor_bruto'])}</td>
-                <td className="p-2 text-right">{formatBRL(r['juros'])}</td>
-                <td className="p-2 text-right">{formatBRL(r['multa'])}</td>
+                <td className="p-2">{String(r['numero_item'] ?? i + 1)}</td>
+                <td className="p-2">{String(r['descricao'] ?? '—')}</td>
+                <td className="p-2 text-right">{String(r['quantidade'] ?? '0')}</td>
+                <td className="p-2">{String(r['unidade'] ?? '')}</td>
+                <td className="p-2 text-right">{formatBRL(r['valor_unitario'])}</td>
                 <td className="p-2 text-right">{formatBRL(r['desconto'])}</td>
-                <td className="p-2 text-right">{formatBRL(r['valor_liquido'])}</td>
-                <td className="p-2">{String(r['status'] ?? '—')}</td>
+                <td className="p-2 text-right">{formatBRL(r['acrescimo'])}</td>
+                <td className="p-2 text-right">{formatBRL(r['valor_total'])}</td>
                 <td className="p-2">{String(r['observacao'] ?? '')}</td>
               </tr>
             ))}
@@ -919,7 +915,7 @@ export default function ModulosFinanceiroPage() {
                     if (!Number.isFinite(lancId)) {
                       return <div className="text-xs text-gray-500 p-3">ID de lançamento inválido.</div>
                     }
-                    return <LinhasDoLancamento lancamentoId={lancId} />
+                    return <ItensDoLancamento lancamentoId={lancId} />
                   }) : undefined)}
                   enableSearch={tabelaUI.enableSearch}
                   showColumnToggle={tabelaUI.enableColumnToggle}
