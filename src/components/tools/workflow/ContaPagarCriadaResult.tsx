@@ -182,12 +182,13 @@ export default function ContaPagarCriadaResult({ result }: { result: ContaPagarC
   const summaryValor = created ? created.valor : (isPreview ? (result.payload?.valor || 0) : (result.data?.valor || 0))
   const summaryVenc = created ? created.data_vencimento : (isPreview ? (result.payload?.data_vencimento || '') : result.resumo.data_vencimento)
   const summaryNF = created ? (created.numero_nota_fiscal || '-') : (isPreview ? (result.payload?.numero_nota_fiscal || '-') : result.resumo.numero_nota_fiscal)
+  const summaryId = created ? created.id : (isPreview ? '-' : result.resumo.id)
   // Mostrar sempre o ID do fornecedor no 4º campo
   const summaryFornecedorId = created
     ? created.fornecedor_id
     : (isPreview
-        ? (result.payload?.fornecedor_id || (result as any).fornecedor_id || '-')
-        : (result.resumo?.fornecedor_id || result.payload?.fornecedor_id || (result as any).fornecedor_id || '-'))
+        ? (result.payload?.fornecedor_id || '-')
+        : (result.data?.fornecedor_id || '-'))
 
   return (
     <div className="space-y-4">
