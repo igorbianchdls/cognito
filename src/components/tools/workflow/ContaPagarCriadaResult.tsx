@@ -3,8 +3,9 @@
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable'
 import { ColumnDef } from '@tanstack/react-table'
 import { Receipt, CheckCircle2 } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 type ItemRow = {
   descricao: string;
@@ -79,6 +80,66 @@ export default function ContaPagarCriadaResult({ result }: { result: ContaPagarC
   const [created, setCreated] = useState<CreatedData | null>(null)
   const isPreview = result.preview && result.payload && !created
   const hasErrors = (result.validations || []).some(v => v.status === 'error')
+
+  // Dropdown state (fornecedores e categorias)
+  const [fornecedorId, setFornecedorId] = useState<string>('')
+  const [categoriaId, setCategoriaId] = useState<string>('')
+  const [fornOptions, setFornOptions] = useState<Array<{ value: string; label: string }>>([])
+  const [catOptions, setCatOptions] = useState<Array<{ value: string; label: string }>>([])
+  const [loadingForn, setLoadingForn] = useState(false)
+  const [loadingCat, setLoadingCat] = useState(false)
+  const [errorForn, setErrorForn] = useState<string | null>(null)
+  const [errorCat, setErrorCat] = useState<string | null>(null)
+
+  // Initialize selected IDs from payload/created/data
+  useEffect(() => {
+    if (isPreview) {
+      setFornecedorId(String(result.payload?.fornecedor_id || ''))
+      setCategoriaId(String(result.payload?.categoria_id || ''))
+    } else if (created) {
+      setFornecedorId(String(created.fornecedor_id || ''))
+      setCategoriaId(String(created.categoria_id || ''))
+    } else {
+      setFornecedorId(String(result.data?.fornecedor_id || ''))
+      setCategoriaId(String(result.data?.categoria_id || ''))
+    }
+  }, [isPreview, created, result.payload?.fornecedor_id, result.payload?.categoria_id, result.data])
+
+  // Load fornecedores
+  useEffect(() => {
+    let cancelled = false
+    async function load() {
+      try {
+        setLoadingForn(true); setErrorForn(null)
+        const res = await fetch('/api/modulos/financeiro/fornecedores/list', { cache: 'no-store' })
+        const j = await res.json()
+        const rows = Array.isArray(j?.rows) ? j.rows : []
+        if (!cancelled) setFornOptions(rows.map((r: any) => ({ value: String(r.id), label: String(r.nome || r.id) })))
+      } catch (e) {
+        if (!cancelled) setErrorForn(e instanceof Error ? e.message : 'Falha ao carregar fornecedores')
+      } finally { if (!cancelled) setLoadingForn(false) }
+    }
+    load()
+    return () => { cancelled = true }
+  }, [])
+
+  // Load categorias
+  useEffect(() => {
+    let cancelled = false
+    async function load() {
+      try {
+        setLoadingCat(true); setErrorCat(null)
+        const res = await fetch('/api/modulos/financeiro/categorias/list', { cache: 'no-store' })
+        const j = await res.json()
+        const rows = Array.isArray(j?.rows) ? j.rows : []
+        if (!cancelled) setCatOptions(rows.map((r: any) => ({ value: String(r.id), label: `${r.nome}${r.tipo ? ` (${r.tipo})` : ''}` })))
+      } catch (e) {
+        if (!cancelled) setErrorCat(e instanceof Error ? e.message : 'Falha ao carregar categorias')
+      } finally { if (!cancelled) setLoadingCat(false) }
+    }
+    load()
+    return () => { cancelled = true }
+  }, [])
   // Display items in the table
   const tableRows: ItemRow[] = useMemo(() => {
     if (created) return created.itens || []
@@ -159,8 +220,8 @@ export default function ContaPagarCriadaResult({ result }: { result: ContaPagarC
         const headerValor = Number(result.payload.valor || 0)
         const valorFromLinhas = linhas.reduce((acc, ln) => acc + Number(ln.valor_liquido || 0), 0)
         const body = {
-          fornecedor_id: result.payload.fornecedor_id,
-          categoria_id: result.payload.categoria_id || undefined,
+          fornecedor_id: fornecedorId || result.payload.fornecedor_id,
+          categoria_id: categoriaId || result.payload.categoria_id || undefined,
           centro_custo_id: result.payload.centro_custo_id || undefined,
           departamento_id: result.payload.departamento_id || undefined,
           filial_id: result.payload.filial_id || undefined,
@@ -198,8 +259,8 @@ export default function ContaPagarCriadaResult({ result }: { result: ContaPagarC
       // Minimal created response
       const createdData: CreatedData = {
         id: String(json.id),
-        fornecedor_id: result.payload.fornecedor_id || '',
-        categoria_id: result.payload.categoria_id || '',
+        fornecedor_id: fornecedorId || result.payload.fornecedor_id || '',
+        categoria_id: categoriaId || result.payload.categoria_id || '',
         centro_custo_id: result.payload.centro_custo_id || '',
         departamento_id: result.payload.departamento_id || null,
         filial_id: result.payload.filial_id || null,
@@ -279,12 +340,61 @@ export default function ContaPagarCriadaResult({ result }: { result: ContaPagarC
                 <div className={isPreview ? 'text-blue-900' : 'text-green-900'}>{summaryNF}</div>
               </div>
               <div>
-                <span className={isPreview ? 'text-blue-700 font-medium' : 'text-green-700 font-medium'}>ID do Fornecedor:</span>
-                <div className={isPreview ? 'text-blue-900 font-mono text-xs' : 'text-green-900 font-mono text-xs'}>{summaryFornecedorId}</div>
+                <span className={isPreview ? 'text-blue-700 font-medium' : 'text-green-700 font-medium'}>Fornecedor:</span>
+                {isPreview ? (
+                  <Select value={fornecedorId} onValueChange={setFornecedorId}>
+                    <SelectTrigger className="h-8 text-sm">
+                      <SelectValue placeholder={loadingForn ? 'Carregando...' : (errorForn ? 'Erro' : 'Selecione fornecedor')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {errorForn ? (
+                        <SelectItem value={summaryFornecedorId as string} disabled>
+                          {`Selecionado (ID ${summaryFornecedorId})`}
+                        </SelectItem>
+                      ) : (
+                        <>
+                          {/* Garantir que a seleção atual aparece mesmo se não estiver na lista */}
+                          {fornecedorId && !fornOptions.some(o => o.value === fornecedorId) && (
+                            <SelectItem value={fornecedorId}>{`Selecionado (ID ${fornecedorId})`}</SelectItem>
+                          )}
+                          {fornOptions.map(opt => (
+                            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                          ))}
+                        </>
+                      )}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <div className={'font-mono text-xs ' + (isPreview ? 'text-blue-900' : 'text-green-900')}>{summaryFornecedorId}</div>
+                )}
               </div>
               <div>
-                <span className={isPreview ? 'text-blue-700 font-medium' : 'text-green-700 font-medium'}>ID Categoria:</span>
-                <div className={isPreview ? 'text-blue-900 font-mono text-xs' : 'text-green-900 font-mono text-xs'}>{summaryCategoriaId}</div>
+                <span className={isPreview ? 'text-blue-700 font-medium' : 'text-green-700 font-medium'}>Categoria:</span>
+                {isPreview ? (
+                  <Select value={categoriaId} onValueChange={setCategoriaId}>
+                    <SelectTrigger className="h-8 text-sm">
+                      <SelectValue placeholder={loadingCat ? 'Carregando...' : (errorCat ? 'Erro' : 'Selecione categoria')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {errorCat ? (
+                        <SelectItem value={summaryCategoriaId as string} disabled>
+                          {`Selecionada (ID ${summaryCategoriaId})`}
+                        </SelectItem>
+                      ) : (
+                        <>
+                          {categoriaId && !catOptions.some(o => o.value === categoriaId) && (
+                            <SelectItem value={categoriaId}>{`Selecionada (ID ${categoriaId})`}</SelectItem>
+                          )}
+                          {catOptions.map(opt => (
+                            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                          ))}
+                        </>
+                      )}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <div className={'font-mono text-xs ' + (isPreview ? 'text-blue-900' : 'text-green-900')}>{summaryCategoriaId}</div>
+                )}
               </div>
               <div>
                 <span className={isPreview ? 'text-blue-700 font-medium' : 'text-green-700 font-medium'}>ID Centro de Custo:</span>
