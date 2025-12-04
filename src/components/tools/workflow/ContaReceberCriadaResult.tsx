@@ -3,8 +3,9 @@
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable'
 import { ColumnDef } from '@tanstack/react-table'
 import { Receipt, CheckCircle2 } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 type ItemRow = {
   descricao: string;
@@ -72,6 +73,140 @@ export default function ContaReceberCriadaResult({ result }: { result: ContaRece
   const [creating, setCreating] = useState(false)
   const [created, setCreated] = useState<CreatedData | null>(null)
   const isPreview = result.preview && result.payload && !created
+  // Dropdown state & options
+  const [clienteId, setClienteId] = useState<string>('')
+  const [categoriaId, setCategoriaId] = useState<string>('')
+  const [centroLucroId, setCentroLucroId] = useState<string>('')
+  const [departamentoId, setDepartamentoId] = useState<string>('')
+  const [filialId, setFilialId] = useState<string>('')
+  const [projetoId, setProjetoId] = useState<string>('')
+
+  const [cliOptions, setCliOptions] = useState<Array<{ value: string; label: string }>>([])
+  const [catOptions, setCatOptions] = useState<Array<{ value: string; label: string }>>([])
+  const [clOptions, setClOptions] = useState<Array<{ value: string; label: string }>>([])
+  const [depOptions, setDepOptions] = useState<Array<{ value: string; label: string }>>([])
+  const [filialOptions, setFilialOptions] = useState<Array<{ value: string; label: string }>>([])
+  const [projOptions, setProjOptions] = useState<Array<{ value: string; label: string }>>([])
+
+  const [loadingCli, setLoadingCli] = useState(false)
+  const [loadingCat, setLoadingCat] = useState(false)
+  const [loadingCl, setLoadingCl] = useState(false)
+  const [loadingDep, setLoadingDep] = useState(false)
+  const [loadingFilial, setLoadingFilial] = useState(false)
+  const [loadingProj, setLoadingProj] = useState(false)
+
+  const [errorCli, setErrorCli] = useState<string | null>(null)
+  const [errorCat, setErrorCat] = useState<string | null>(null)
+  const [errorCl, setErrorCl] = useState<string | null>(null)
+  const [errorDep, setErrorDep] = useState<string | null>(null)
+  const [errorFilial, setErrorFilial] = useState<string | null>(null)
+  const [errorProj, setErrorProj] = useState<string | null>(null)
+
+  // Initialize IDs from payload/created/data
+  useEffect(() => {
+    if (isPreview) {
+      setClienteId(String(result.payload?.cliente_id || ''))
+      setCategoriaId(String(result.payload?.categoria_id || ''))
+      setCentroLucroId(String(result.payload?.centro_lucro_id || ''))
+    } else if (created) {
+      setClienteId(String(created.cliente_id || ''))
+      setCategoriaId(String(created.categoria_id || ''))
+      setCentroLucroId(String(created.centro_lucro_id || ''))
+    } else {
+      setClienteId(String(result.data?.cliente_id || ''))
+      setCategoriaId(String(result.data?.categoria_id || ''))
+    }
+  }, [isPreview, created, result.payload?.cliente_id, result.payload?.categoria_id, result.payload?.centro_lucro_id, result.data])
+
+  // Load options
+  useEffect(() => {
+    let cancelled = false
+    async function load() {
+      try {
+        setLoadingCli(true); setErrorCli(null)
+        const res = await fetch('/api/modulos/financeiro/clientes/list', { cache: 'no-store' })
+        const j = await res.json()
+        const rows = Array.isArray(j?.rows) ? (j.rows as Array<{ id: number; nome: string }>) : []
+        if (!cancelled) setCliOptions(rows.map(r => ({ value: String(r.id), label: r.nome })))
+      } catch (e) {
+        if (!cancelled) setErrorCli(e instanceof Error ? e.message : 'Falha ao carregar clientes')
+      } finally { if (!cancelled) setLoadingCli(false) }
+    }
+    load(); return () => { cancelled = true }
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    async function load() {
+      try { setLoadingCat(true); setErrorCat(null)
+        const res = await fetch('/api/modulos/financeiro/categorias/list', { cache: 'no-store' })
+        const j = await res.json()
+        const rows = Array.isArray(j?.rows) ? (j.rows as Array<{ id: number; nome: string; tipo?: string }>) : []
+        if (!cancelled) setCatOptions(rows.map(r => ({ value: String(r.id), label: `${r.nome}${r.tipo ? ` (${r.tipo})` : ''}` })))
+      } catch (e) {
+        if (!cancelled) setErrorCat(e instanceof Error ? e.message : 'Falha ao carregar categorias')
+      } finally { if (!cancelled) setLoadingCat(false) }
+    }
+    load(); return () => { cancelled = true }
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    async function load() {
+      try { setLoadingCl(true); setErrorCl(null)
+        const res = await fetch('/api/modulos/financeiro?view=centros-de-lucro&pageSize=1000&order_by=codigo', { cache: 'no-store' })
+        const j = await res.json()
+        const rows = Array.isArray(j?.rows) ? (j.rows as Array<{ id: number; codigo?: string; nome: string }>) : []
+        if (!cancelled) setClOptions(rows.map(r => ({ value: String(r.id), label: r.codigo ? `${r.codigo} - ${r.nome}` : r.nome })))
+      } catch (e) {
+        if (!cancelled) setErrorCl(e instanceof Error ? e.message : 'Falha ao carregar centros de lucro')
+      } finally { if (!cancelled) setLoadingCl(false) }
+    }
+    load(); return () => { cancelled = true }
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    async function load() {
+      try { setLoadingDep(true); setErrorDep(null)
+        const res = await fetch('/api/modulos/empresa?view=departamentos&pageSize=1000&order_by=codigo', { cache: 'no-store' })
+        const j = await res.json()
+        const rows = Array.isArray(j?.rows) ? (j.rows as Array<{ id: number; codigo?: string; nome: string }>) : []
+        if (!cancelled) setDepOptions(rows.map(r => ({ value: String(r.id), label: r.codigo ? `${r.codigo} - ${r.nome}` : r.nome })))
+      } catch (e) {
+        if (!cancelled) setErrorDep(e instanceof Error ? e.message : 'Falha ao carregar departamentos')
+      } finally { if (!cancelled) setLoadingDep(false) }
+    }
+    load(); return () => { cancelled = true }
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    async function load() {
+      try { setLoadingFilial(true); setErrorFilial(null)
+        const res = await fetch('/api/modulos/empresa?view=filiais&pageSize=1000&order_by=nome', { cache: 'no-store' })
+        const j = await res.json()
+        const rows = Array.isArray(j?.rows) ? (j.rows as Array<{ id: number; nome: string }>) : []
+        if (!cancelled) setFilialOptions(rows.map(r => ({ value: String(r.id), label: r.nome })))
+      } catch (e) { if (!cancelled) setErrorFilial(e instanceof Error ? e.message : 'Falha ao carregar filiais') }
+      finally { if (!cancelled) setLoadingFilial(false) }
+    }
+    load(); return () => { cancelled = true }
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    async function load() {
+      try { setLoadingProj(true); setErrorProj(null)
+        const res = await fetch('/api/modulos/financeiro?view=projetos&pageSize=1000&order_by=nome', { cache: 'no-store' })
+        const j = await res.json()
+        const rows = Array.isArray(j?.rows) ? (j.rows as Array<{ id: number; nome: string }>) : []
+        if (!cancelled) setProjOptions(rows.map(r => ({ value: String(r.id), label: r.nome })))
+      } catch (e) { if (!cancelled) setErrorProj(e instanceof Error ? e.message : 'Falha ao carregar projetos') }
+      finally { if (!cancelled) setLoadingProj(false) }
+    }
+    load(); return () => { cancelled = true }
+  }, [])
   // Display items in the table
   const tableRows: ItemRow[] = useMemo(() => {
     if (created) return created.itens || []
