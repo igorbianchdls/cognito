@@ -87,6 +87,87 @@ export default function ModulosFinanceiroPage() {
     return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
   }
 
+  // Nested detail component for Contas a Pagar: linhas do lançamento
+  function LinhasDoLancamento({ lancamentoId }: { lancamentoId: number }) {
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
+    const [rows, setRows] = useState<Array<Record<string, unknown>>>([])
+    // Simple cache per ID to avoid refetch on re-open
+    const cacheRef = (LinhasDoLancamento as unknown as { _cache?: Map<number, Array<Record<string, unknown>>> })._cache
+      || new Map<number, Array<Record<string, unknown>>>()
+    ;(LinhasDoLancamento as unknown as { _cache?: Map<number, Array<Record<string, unknown>>> })._cache = cacheRef
+
+    useEffect(() => {
+      let cancelled = false
+      async function load() {
+        try {
+          setLoading(true); setError(null)
+          if (cacheRef.has(lancamentoId)) {
+            setRows(cacheRef.get(lancamentoId) || [])
+            return
+          }
+          const res = await fetch(`/api/modulos/financeiro/lancamentos/${lancamentoId}/linhas`, { cache: 'no-store' })
+          const j = await res.json()
+          if (!res.ok || !j?.success) throw new Error(j?.message || `HTTP ${res.status}`)
+          const list: Array<Record<string, unknown>> = Array.isArray(j.rows) ? j.rows : []
+          if (!cancelled) {
+            setRows(list)
+            cacheRef.set(lancamentoId, list)
+          }
+        } catch (e) {
+          if (!cancelled) setError(e instanceof Error ? e.message : 'Falha ao carregar linhas')
+        } finally {
+          if (!cancelled) setLoading(false)
+        }
+      }
+      load();
+      return () => { cancelled = true }
+    }, [lancamentoId])
+
+    if (loading) return <div className="text-xs text-gray-500 p-3">Carregando linhas…</div>
+    if (error) return <div className="text-xs text-red-600 p-3">{error}</div>
+    if (!rows.length) return <div className="text-xs text-gray-500 p-3">Sem linhas para este lançamento.</div>
+
+    return (
+      <div className="overflow-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-gray-600">
+              <th className="text-left p-2">Parcela</th>
+              <th className="text-left p-2">Tipo</th>
+              <th className="text-left p-2">Vencimento</th>
+              <th className="text-left p-2">Pagamento</th>
+              <th className="text-right p-2">Bruto</th>
+              <th className="text-right p-2">Juros</th>
+              <th className="text-right p-2">Multa</th>
+              <th className="text-right p-2">Desconto</th>
+              <th className="text-right p-2">Líquido</th>
+              <th className="text-left p-2">Status</th>
+              <th className="text-left p-2">Observação</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r, i) => (
+              <tr key={String(r['id'] ?? i)} className="border-t border-gray-200">
+                <td className="p-2">{String(r['numero_parcela'] ?? '—')}</td>
+                <td className="p-2">{String(r['tipo_linha'] ?? '—')}</td>
+                <td className="p-2">{formatDate(r['data_vencimento'])}</td>
+                <td className="p-2">{formatDate(r['data_pagamento'])}</td>
+                <td className="p-2 text-right">{formatBRL(r['valor_bruto'])}</td>
+                <td className="p-2 text-right">{formatBRL(r['juros'])}</td>
+                <td className="p-2 text-right">{formatBRL(r['multa'])}</td>
+                <td className="p-2 text-right">{formatBRL(r['desconto'])}</td>
+                <td className="p-2 text-right">{formatBRL(r['valor_liquido'])}</td>
+                <td className="p-2">{String(r['status'] ?? '—')}</td>
+                <td className="p-2">{String(r['observacao'] ?? '')}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )
+  }
+
   const columns: ColumnDef<Row>[] = useMemo(() => {
     switch (tabs.selected) {
       case 'contas':
@@ -788,7 +869,7 @@ export default function ModulosFinanceiroPage() {
                     // Banco (Extrato)
                     banco: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 140 },
                   }}
-                  enableExpand={tabs.selected === 'extrato'}
+                  enableExpand={tabs.selected === 'extrato' || tabs.selected === 'contas-a-pagar'}
                   renderDetail={tabs.selected === 'extrato' ? (row => {
                     type ExtratoTransacao = {
                       transacao_id?: string | number | null
@@ -832,7 +913,14 @@ export default function ModulosFinanceiroPage() {
                         </table>
                       </div>
                     )
-                  }) : undefined}
+                  }) : (tabs.selected === 'contas-a-pagar' ? (row => {
+                    const lancIdRaw = row['conta_id'] as string | number | undefined
+                    const lancId = lancIdRaw ? Number(lancIdRaw) : NaN
+                    if (!Number.isFinite(lancId)) {
+                      return <div className="text-xs text-gray-500 p-3">ID de lançamento inválido.</div>
+                    }
+                    return <LinhasDoLancamento lancamentoId={lancId} />
+                  }) : undefined)}
                   enableSearch={tabelaUI.enableSearch}
                   showColumnToggle={tabelaUI.enableColumnToggle}
                   showPagination={tabelaUI.showPagination}
