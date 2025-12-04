@@ -152,9 +152,12 @@ export default function ContaReceberCriadaResult({ result }: { result: ContaRece
         const headerValor = Number(result.payload.valor || 0)
         const valorFromLinhas = linhas.reduce((acc, ln) => acc + Number(ln.valor_liquido || 0), 0)
         const body = {
-          cliente_id: result.payload.cliente_id,
-          categoria_id: result.payload.categoria_id || undefined,
-          centro_lucro_id: result.payload.centro_lucro_id || undefined,
+          cliente_id: clienteId || result.payload.cliente_id,
+          categoria_id: categoriaId || result.payload.categoria_id || undefined,
+          centro_lucro_id: centroLucroId || result.payload.centro_lucro_id || undefined,
+          departamento_id: departamentoId || undefined,
+          filial_id: filialId || undefined,
+          projeto_id: projetoId || undefined,
           descricao: result.payload.descricao || 'Conta a receber',
           valor: headerValor > 0 ? headerValor : valorFromLinhas,
           data_lancamento: dataLanc,
@@ -187,9 +190,9 @@ export default function ContaReceberCriadaResult({ result }: { result: ContaRece
       }
       const createdData: CreatedData = {
         id: String(json.id),
-        cliente_id: result.payload.cliente_id || '',
-        categoria_id: result.payload.categoria_id || '',
-        centro_lucro_id: result.payload.centro_lucro_id || '',
+        cliente_id: clienteId || result.payload.cliente_id || '',
+        categoria_id: categoriaId || result.payload.categoria_id || '',
+        centro_lucro_id: centroLucroId || result.payload.centro_lucro_id || '',
         natureza_financeira_id: result.payload.natureza_financeira_id || null,
         valor: result.payload.valor,
         valor_recebido: 0,
@@ -218,7 +221,7 @@ export default function ContaReceberCriadaResult({ result }: { result: ContaRece
 
   return (
     <div className="space-y-4">
-      <div className={isPreview ? 'bg-blue-50 border border-blue-200 rounded-lg p-4' : 'bg-green-50 border border-green-200 rounded-lg p-4'}>
+      <div className={isPreview ? 'bg-gray-50 border border-gray-200 rounded-lg p-4' : 'bg-green-50 border border-green-200 rounded-lg p-4'}>
         <div className="flex items-start gap-3">
           <CheckCircle2 className={isPreview ? 'h-6 w-6 text-blue-600 mt-0.5' : 'h-6 w-6 text-green-600 mt-0.5'} />
           <div className="flex-1">
@@ -246,11 +249,185 @@ export default function ContaReceberCriadaResult({ result }: { result: ContaRece
                 <span className={isPreview ? 'text-blue-700 font-medium' : 'text-green-700 font-medium'}>ID:</span>
                 <div className={isPreview ? 'text-blue-900 font-mono text-xs' : 'text-green-900 font-mono text-xs'}>{summaryId}</div>
               </div>
+              {/* Cliente */}
+              <div>
+                <span className={isPreview ? 'text-blue-700 font-medium' : 'text-green-700 font-medium'}>Cliente:</span>
+                {isPreview ? (
+                  <Select value={clienteId} onValueChange={setClienteId}>
+                    <SelectTrigger className="h-8 text-sm">
+                      <SelectValue placeholder={loadingCli ? 'Carregando...' : (errorCli ? 'Erro' : 'Selecione cliente')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {errorCli ? (
+                        <SelectItem value={String(result.payload?.cliente_id || '')} disabled>
+                          {`Selecionado (ID ${result.payload?.cliente_id || '-'})`}
+                        </SelectItem>
+                      ) : (
+                        <>
+                          {clienteId && !cliOptions.some(o => o.value === clienteId) && (
+                            <SelectItem value={clienteId}>{`Selecionado (ID ${clienteId})`}</SelectItem>
+                          )}
+                          {cliOptions.map(opt => (
+                            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                          ))}
+                        </>
+                      )}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <div className={'font-mono text-xs ' + (isPreview ? 'text-blue-900' : 'text-green-900')}>{created?.cliente_id || result.data?.cliente_id}</div>
+                )}
+              </div>
+              {/* Categoria */}
+              <div>
+                <span className={isPreview ? 'text-blue-700 font-medium' : 'text-green-700 font-medium'}>Categoria:</span>
+                {isPreview ? (
+                  <Select value={categoriaId} onValueChange={setCategoriaId}>
+                    <SelectTrigger className="h-8 text-sm">
+                      <SelectValue placeholder={loadingCat ? 'Carregando...' : (errorCat ? 'Erro' : 'Selecione categoria')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {errorCat ? (
+                        <SelectItem value={String(result.payload?.categoria_id || '')} disabled>
+                          {`Selecionada (ID ${result.payload?.categoria_id || '-'})`}
+                        </SelectItem>
+                      ) : (
+                        <>
+                          {categoriaId && !catOptions.some(o => o.value === categoriaId) && (
+                            <SelectItem value={categoriaId}>{`Selecionada (ID ${categoriaId})`}</SelectItem>
+                          )}
+                          {catOptions.map(opt => (
+                            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                          ))}
+                        </>
+                      )}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <div className={'font-mono text-xs ' + (isPreview ? 'text-blue-900' : 'text-green-900')}>{created?.categoria_id || result.data?.categoria_id}</div>
+                )}
+              </div>
+              {/* Centro de Lucro */}
+              <div>
+                <span className={isPreview ? 'text-blue-700 font-medium' : 'text-green-700 font-medium'}>Centro de Lucro:</span>
+                {isPreview ? (
+                  <Select value={centroLucroId} onValueChange={setCentroLucroId}>
+                    <SelectTrigger className="h-8 text-sm">
+                      <SelectValue placeholder={loadingCl ? 'Carregando...' : (errorCl ? 'Erro' : 'Selecione centro de lucro')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {errorCl ? (
+                        <SelectItem value={String(result.payload?.centro_lucro_id || '')} disabled>
+                          {`Selecionado (ID ${result.payload?.centro_lucro_id || '-'})`}
+                        </SelectItem>
+                      ) : (
+                        <>
+                          {centroLucroId && !clOptions.some(o => o.value === centroLucroId) && (
+                            <SelectItem value={centroLucroId}>{`Selecionado (ID ${centroLucroId})`}</SelectItem>
+                          )}
+                          {clOptions.map(opt => (
+                            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                          ))}
+                        </>
+                      )}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <div className={'font-mono text-xs ' + (isPreview ? 'text-blue-900' : 'text-green-900')}>{created?.centro_lucro_id || ''}</div>
+                )}
+              </div>
+              {/* Departamento */}
+              <div>
+                <span className={isPreview ? 'text-blue-700 font-medium' : 'text-green-700 font-medium'}>Departamento:</span>
+                {isPreview ? (
+                  <Select value={departamentoId} onValueChange={setDepartamentoId}>
+                    <SelectTrigger className="h-8 text-sm">
+                      <SelectValue placeholder={loadingDep ? 'Carregando...' : (errorDep ? 'Erro' : 'Selecione departamento')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {errorDep ? (
+                        <SelectItem value={String('')} disabled>
+                          {`Selecionado (ID -)`}
+                        </SelectItem>
+                      ) : (
+                        <>
+                          {departamentoId && !depOptions.some(o => o.value === departamentoId) && (
+                            <SelectItem value={departamentoId}>{`Selecionado (ID ${departamentoId})`}</SelectItem>
+                          )}
+                          {depOptions.map(opt => (
+                            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                          ))}
+                        </>
+                      )}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <div className={'font-mono text-xs ' + (isPreview ? 'text-blue-900' : 'text-green-900')}>{departamentoId || '-'}</div>
+                )}
+              </div>
+              {/* Filial */}
+              <div>
+                <span className={isPreview ? 'text-blue-700 font-medium' : 'text-green-700 font-medium'}>Filial:</span>
+                {isPreview ? (
+                  <Select value={filialId} onValueChange={setFilialId}>
+                    <SelectTrigger className="h-8 text-sm">
+                      <SelectValue placeholder={loadingFilial ? 'Carregando...' : (errorFilial ? 'Erro' : 'Selecione filial')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {errorFilial ? (
+                        <SelectItem value={String('')} disabled>
+                          {`Selecionada (ID -)`}
+                        </SelectItem>
+                      ) : (
+                        <>
+                          {filialId && !filialOptions.some(o => o.value === filialId) && (
+                            <SelectItem value={filialId}>{`Selecionada (ID ${filialId})`}</SelectItem>
+                          )}
+                          {filialOptions.map(opt => (
+                            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                          ))}
+                        </>
+                      )}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <div className={'font-mono text-xs ' + (isPreview ? 'text-blue-900' : 'text-green-900')}>{filialId || '-'}</div>
+                )}
+              </div>
+              {/* Projeto */}
+              <div>
+                <span className={isPreview ? 'text-blue-700 font-medium' : 'text-green-700 font-medium'}>Projeto:</span>
+                {isPreview ? (
+                  <Select value={projetoId} onValueChange={setProjetoId}>
+                    <SelectTrigger className="h-8 text-sm">
+                      <SelectValue placeholder={loadingProj ? 'Carregando...' : (errorProj ? 'Erro' : 'Selecione projeto')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {errorProj ? (
+                        <SelectItem value={String('')} disabled>
+                          {`Selecionado (ID -)`}
+                        </SelectItem>
+                      ) : (
+                        <>
+                          {projetoId && !projOptions.some(o => o.value === projetoId) && (
+                            <SelectItem value={projetoId}>{`Selecionado (ID ${projetoId})`}</SelectItem>
+                          )}
+                          {projOptions.map(opt => (
+                            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                          ))}
+                        </>
+                      )}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <div className={'font-mono text-xs ' + (isPreview ? 'text-blue-900' : 'text-green-900')}>{projetoId || '-'}</div>
+                )}
+              </div>
             </div>
           </div>
           {isPreview && (
             <div className="ml-auto">
-              <Button onClick={commit} disabled={creating}>
+              <Button onClick={commit} disabled={creating || !clienteId || !categoriaId || !centroLucroId}>
                 {creating ? 'Criando…' : 'Criar Conta a Receber'}
               </Button>
             </div>
