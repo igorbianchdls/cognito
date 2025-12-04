@@ -380,7 +380,7 @@ type ContaReceberCriadaOutput = {
   payload?: {
     cliente_id: string;
     categoria_id?: string;
-    centro_custo_id?: string;
+    centro_lucro_id?: string;
     natureza_financeira_id?: string;
     tenant_id?: number | string;
     valor: number;
@@ -397,7 +397,7 @@ type ContaReceberCriadaOutput = {
     id: string;
     cliente_id: string;
     categoria_id: string;
-    centro_custo_id: string;
+    centro_lucro_id: string;
     natureza_financeira_id?: string | null;
     valor: number;
     valor_recebido: number;
