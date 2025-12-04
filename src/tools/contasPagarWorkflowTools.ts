@@ -236,6 +236,7 @@ export const buscarFornecedor = tool({
           data: null,
           rows: rows.map(r => ({
             id: r.id,
+            fornecedor_id: r.id,
             nome: r.nome,
             cnpj: r.cnpj,
             email: r.email || undefined,
@@ -253,6 +254,7 @@ export const buscarFornecedor = tool({
           success: true,
           fornecedor_encontrado: true,
           data: {
+            fornecedor_id: r.id,
             id: r.id,
             nome: r.nome,
             cnpj: r.cnpj,
@@ -271,6 +273,7 @@ export const buscarFornecedor = tool({
           data: null,
           rows: rows.map(r => ({
             id: r.id,
+            fornecedor_id: r.id,
             nome: r.nome,
             cnpj: r.cnpj,
             email: r.email || undefined,
@@ -446,6 +449,8 @@ export const criarContaPagar = tool({
       preview: true,
       title: 'Conta a Pagar (Prévia)',
       message: 'Revise os dados e clique em Criar para confirmar.',
+      // Echo explicit field for UI convenience
+      fornecedor_id: payload.fornecedor_id,
       payload,
       validations,
       metadata: { entity: 'conta_a_pagar', action: 'create', commitEndpoint: '/api/modulos/financeiro/contas-a-pagar' }
