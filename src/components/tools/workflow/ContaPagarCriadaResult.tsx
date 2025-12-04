@@ -415,7 +415,7 @@ export default function ContaPagarCriadaResult({ result }: { result: ContaPagarC
 
   return (
     <div className="space-y-4">
-      <div className={isPreview ? 'bg-blue-50 border border-blue-200 rounded-lg p-4' : 'bg-green-50 border border-green-200 rounded-lg p-4'}>
+      <div className={isPreview ? 'bg-gray-50 border border-gray-200 rounded-lg p-4' : 'bg-green-50 border border-green-200 rounded-lg p-4'}>
         <div className="flex items-start gap-3">
           <CheckCircle2 className={isPreview ? 'h-6 w-6 text-blue-600 mt-0.5' : 'h-6 w-6 text-green-600 mt-0.5'} />
           <div className="flex-1">
