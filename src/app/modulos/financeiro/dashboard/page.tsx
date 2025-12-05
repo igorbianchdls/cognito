@@ -639,6 +639,97 @@ export default function FinanceiroDashboardPage() {
     return { arMes, apMes, recebidosMes, pagosMes, geracaoCaixa, receitaMes, despesasMes, lucroMes, arCount, apCount }
   }, [kpisMonth, arRows, apRows, prRows, peRows])
 
+  // KPIs da primeira row: Hoje vs Ontem
+  const [kpisToday, setKpisToday] = useState<KPIs | null>(null)
+  const [kpisYesterday, setKpisYesterday] = useState<KPIs | null>(null)
+
+  useEffect(() => {
+    // Carrega KPIs de hoje e de ontem pela mesma API, para garantir consistência
+    const today = toDateOnly(new Date())
+    const yest = toDateOnly(new Date(Date.now() - 86400000))
+    Promise.allSettled([
+      fetch(`/api/modulos/financeiro?view=kpis&de=${today}&ate=${today}`, { cache: 'no-store' }),
+      fetch(`/api/modulos/financeiro?view=kpis&de=${yest}&ate=${yest}`, { cache: 'no-store' })
+    ]).then(async ([resToday, resYest]) => {
+      if (resToday.status === 'fulfilled' && resToday.value.ok) {
+        const j = await resToday.value.json() as { kpis?: Partial<KPIs> }
+        if (j?.kpis) setKpisToday({
+          arMes: Number(j.kpis.ar_mes || 0),
+          apMes: Number(j.kpis.ap_mes || 0),
+          recebidosMes: Number(j.kpis.recebidos_mes || 0),
+          pagosMes: Number(j.kpis.pagos_mes || 0),
+          geracaoCaixa: Number(j.kpis.geracao_caixa || 0),
+          receitaMes: Number(j.kpis.receita_mes || 0),
+          despesasMes: Number(j.kpis.despesas_mes || 0),
+          lucroMes: Number(j.kpis.lucro_mes || 0),
+          arCount: Number((j.kpis as any).ar_count || 0),
+          apCount: Number((j.kpis as any).ap_count || 0),
+        })
+      }
+      if (resYest.status === 'fulfilled' && resYest.value.ok) {
+        const j = await resYest.value.json() as { kpis?: Partial<KPIs> }
+        if (j?.kpis) setKpisYesterday({
+          arMes: Number(j.kpis.ar_mes || 0),
+          apMes: Number(j.kpis.ap_mes || 0),
+          recebidosMes: Number(j.kpis.recebidos_mes || 0),
+          pagosMes: Number(j.kpis.pagos_mes || 0),
+          geracaoCaixa: Number(j.kpis.geracao_caixa || 0),
+          receitaMes: Number(j.kpis.receita_mes || 0),
+          despesasMes: Number(j.kpis.despesas_mes || 0),
+          lucroMes: Number(j.kpis.lucro_mes || 0),
+          arCount: Number((j.kpis as any).ar_count || 0),
+          apCount: Number((j.kpis as any).ap_count || 0),
+        })
+      }
+    })
+  }, [])
+
+  const kpisRow1 = useMemo(() => {
+    if (kpisToday) return kpisToday
+    const today = toDateOnly(new Date())
+    const inToday = (ds?: string) => {
+      const d = parseDate(ds)
+      if (!d) return false
+      const s = toDateOnly(d)
+      return s === today
+    }
+    const sum = <T extends BaseRow>(arr: T[], pred: (r: T) => boolean) => arr.filter(pred).reduce((acc, r) => acc + toNum(r.valor_total), 0)
+    const arMes = sum(arRows, r => !isPaid(r.status) && inToday(String(r.data_vencimento)))
+    const apMes = sum(apRows, r => !isPaid(r.status) && inToday(String(r.data_vencimento)))
+    const recebidosMes = prRows.filter(r => inToday(String(r.data_recebimento))).reduce((a, r) => a + toNum(r.valor_total), 0)
+    const pagosMes = peRows.filter(r => inToday(String(r.data_pagamento))).reduce((a, r) => a + toNum(r.valor_pago), 0)
+    const geracaoCaixa = recebidosMes - pagosMes
+    const receitaMes = arRows.filter(r => inToday(String(r.data_vencimento))).reduce((a, r) => a + toNum(r.valor_total), 0)
+    const despesasMes = apRows.filter(r => inToday(String(r.data_vencimento))).reduce((a, r) => a + toNum(r.valor_total), 0)
+    const lucroMes = receitaMes - despesasMes
+    const arCount = arRows.filter(r => inToday(String(r.data_vencimento)) && String(r.status).toLowerCase() === 'pendente').length
+    const apCount = apRows.filter(r => inToday(String(r.data_vencimento)) && String(r.status).toLowerCase() === 'pendente').length
+    return { arMes, apMes, recebidosMes, pagosMes, geracaoCaixa, receitaMes, despesasMes, lucroMes, arCount, apCount }
+  }, [kpisToday, arRows, apRows, prRows, peRows])
+
+  const prevRow1 = useMemo(() => {
+    if (kpisYesterday) return kpisYesterday
+    const yest = toDateOnly(new Date(Date.now() - 86400000))
+    const inYest = (ds?: string) => {
+      const d = parseDate(ds)
+      if (!d) return false
+      const s = toDateOnly(d)
+      return s === yest
+    }
+    const sum = <T extends BaseRow>(arr: T[], pred: (r: T) => boolean) => arr.filter(pred).reduce((acc, r) => acc + toNum(r.valor_total), 0)
+    const arMes = sum(arRows, r => !isPaid(r.status) && inYest(String(r.data_vencimento)))
+    const apMes = sum(apRows, r => !isPaid(r.status) && inYest(String(r.data_vencimento)))
+    const recebidosMes = prRows.filter(r => inYest(String(r.data_recebimento))).reduce((a, r) => a + toNum(r.valor_total), 0)
+    const pagosMes = peRows.filter(r => inYest(String(r.data_pagamento))).reduce((a, r) => a + toNum(r.valor_pago), 0)
+    const geracaoCaixa = recebidosMes - pagosMes
+    const receitaMes = arRows.filter(r => inYest(String(r.data_vencimento))).reduce((a, r) => a + toNum(r.valor_total), 0)
+    const despesasMes = apRows.filter(r => inYest(String(r.data_vencimento))).reduce((a, r) => a + toNum(r.valor_total), 0)
+    const lucroMes = receitaMes - despesasMes
+    const arCount = arRows.filter(r => inYest(String(r.data_vencimento)) && String(r.status).toLowerCase() === 'pendente').length
+    const apCount = apRows.filter(r => inYest(String(r.data_vencimento)) && String(r.status).toLowerCase() === 'pendente').length
+    return { arMes, apMes, recebidosMes, pagosMes, geracaoCaixa, receitaMes, despesasMes, lucroMes, arCount, apCount }
+  }, [kpisYesterday, arRows, apRows, prRows, peRows])
+
   const topReceber = useMemo(() => {
     const rows = arRows.filter(r => !isPaid(r.status))
     return rows
@@ -853,7 +944,7 @@ export default function FinanceiroDashboardPage() {
           <PopoverTrigger asChild>
             <Button variant="outline" size="sm" className="h-8 px-3">
               <CalendarIcon className="mr-2 h-4 w-4" style={{ color: filtersIconColor }} />
-              <span className="whitespace-nowrap" style={styleFilters}>{rangeLabel}</span>
+              <span className="whitespace-nowrap" style={styleFilters}>Hoje</span>
             </Button>
           </PopoverTrigger>
           <PopoverContent align="end" className="p-2 w-auto">
@@ -876,50 +967,50 @@ export default function FinanceiroDashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor, boxShadow: cardBoxShadow }}>
           <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleKpiTitle}>
-            <ArrowDownCircle className="w-4 h-4" style={{ color: kpiIconColor }} />A Receber ({kpiLabel})
+            <ArrowDownCircle className="w-4 h-4" style={{ color: kpiIconColor }} />A Receber
           </div>
-          <div className="text-2xl font-bold text-emerald-600" style={styleValues}>{formatBRL(kpis.arMes)}</div>
-          <KPITrendBadge current={kpis.arMes} previous={prevTotals.arMes} invert label={`vs ${prevPeriod.prevLabel}`} />
+          <div className="text-2xl font-bold text-emerald-600" style={styleValues}>{formatBRL(kpisRow1.arMes)}</div>
+          <KPITrendBadge current={kpisRow1.arMes} previous={prevRow1.arMes} label={`vs ontem`} />
           <div className="text-xs text-gray-400 mt-1" style={styleText}>Vencimento dentro do período</div>
         </div>
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor, boxShadow: cardBoxShadow }}>
           <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleKpiTitle}>
-            <ArrowUpCircle className="w-4 h-4" style={{ color: kpiIconColor }} />A Pagar ({kpiLabel})
+            <ArrowUpCircle className="w-4 h-4" style={{ color: kpiIconColor }} />A Pagar
           </div>
-          <div className="text-2xl font-bold text-rose-600" style={styleValues}>{formatBRL(kpis.apMes)}</div>
-          <KPITrendBadge current={kpis.apMes} previous={prevTotals.apMes} invert label={`vs ${prevPeriod.prevLabel}`} />
+          <div className="text-2xl font-bold text-rose-600" style={styleValues}>{formatBRL(kpisRow1.apMes)}</div>
+          <KPITrendBadge current={kpisRow1.apMes} previous={prevRow1.apMes} label={`vs ontem`} />
           <div className="text-xs text-gray-400 mt-1" style={styleText}>Vencimento dentro do período</div>
         </div>
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor, boxShadow: cardBoxShadow }}>
           <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleKpiTitle}>
-            <Wallet className="w-4 h-4" style={{ color: kpiIconColor }} />Recebido ({kpiLabel})
+            <Wallet className="w-4 h-4" style={{ color: kpiIconColor }} />Recebido
           </div>
-          <div className="text-2xl font-bold text-emerald-600" style={styleValues}>{formatBRL(kpis.recebidosMes)}</div>
-          <KPITrendBadge current={kpis.recebidosMes} previous={prevTotals.recebidosMes} label={`vs ${prevPeriod.prevLabel}`} />
+          <div className="text-2xl font-bold text-emerald-600" style={styleValues}>{formatBRL(kpisRow1.recebidosMes)}</div>
+          <KPITrendBadge current={kpisRow1.recebidosMes} previous={prevRow1.recebidosMes} label={`vs ontem`} />
           <div className="text-xs text-gray-400 mt-1" style={styleText}>Recebimentos realizados no período</div>
         </div>
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor, boxShadow: cardBoxShadow }}>
           <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleKpiTitle}>
-            <CalendarCheck className="w-4 h-4" style={{ color: kpiIconColor }} />Pago ({kpiLabel})
+            <CalendarCheck className="w-4 h-4" style={{ color: kpiIconColor }} />Pago
           </div>
-          <div className="text-2xl font-bold text-rose-600" style={styleValues}>{formatBRL(kpis.pagosMes)}</div>
-          <KPITrendBadge current={kpis.pagosMes} previous={prevTotals.pagosMes} invert label={`vs ${prevPeriod.prevLabel}`} />
+          <div className="text-2xl font-bold text-rose-600" style={styleValues}>{formatBRL(kpisRow1.pagosMes)}</div>
+          <KPITrendBadge current={kpisRow1.pagosMes} previous={prevRow1.pagosMes} label={`vs ontem`} />
           <div className="text-xs text-gray-400 mt-1" style={styleText}>Pagamentos realizados no período</div>
         </div>
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor, boxShadow: cardBoxShadow }}>
           <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleKpiTitle}>
-            <ArrowDownCircle className="w-4 h-4" style={{ color: kpiIconColor }} />Qtd. A Receber ({kpiLabel})
+            <ArrowDownCircle className="w-4 h-4" style={{ color: kpiIconColor }} />Qtd. A Receber
           </div>
-          <div className="text-2xl font-bold text-slate-800" style={styleValues}>{(kpis.arCount ?? 0).toLocaleString('pt-BR')}</div>
-          <KPITrendBadge current={kpis.arCount ?? 0} previous={prevTotals.arCount ?? 0} label={`vs ${prevPeriod.prevLabel}`} />
+          <div className="text-2xl font-bold text-slate-800" style={styleValues}>{(kpisRow1.arCount ?? 0).toLocaleString('pt-BR')}</div>
+          <KPITrendBadge current={kpisRow1.arCount ?? 0} previous={prevRow1.arCount ?? 0} label={`vs ontem`} />
           <div className="text-xs text-gray-400 mt-1" style={styleText}>Títulos pendentes por vencimento</div>
         </div>
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor, boxShadow: cardBoxShadow }}>
           <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleKpiTitle}>
-            <ArrowUpCircle className="w-4 h-4" style={{ color: kpiIconColor }} />Qtd. A Pagar ({kpiLabel})
+            <ArrowUpCircle className="w-4 h-4" style={{ color: kpiIconColor }} />Qtd. A Pagar
           </div>
-          <div className="text-2xl font-bold text-slate-800" style={styleValues}>{(kpis.apCount ?? 0).toLocaleString('pt-BR')}</div>
-          <KPITrendBadge current={kpis.apCount ?? 0} previous={prevTotals.apCount ?? 0} label={`vs ${prevPeriod.prevLabel}`} />
+          <div className="text-2xl font-bold text-slate-800" style={styleValues}>{(kpisRow1.apCount ?? 0).toLocaleString('pt-BR')}</div>
+          <KPITrendBadge current={kpisRow1.apCount ?? 0} previous={prevRow1.apCount ?? 0} label={`vs ontem`} />
           <div className="text-xs text-gray-400 mt-1" style={styleText}>Títulos pendentes por vencimento</div>
         </div>
       </div>
@@ -955,7 +1046,7 @@ export default function FinanceiroDashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-4 gap-4 mb-6">
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor, boxShadow: cardBoxShadow }}>
           <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleKpiTitle}>
-            <Wallet className="w-4 h-4" style={{ color: kpiIconColor }} />Receita ({kpiLabel})
+            <Wallet className="w-4 h-4" style={{ color: kpiIconColor }} />Receita
           </div>
           <div className="text-2xl font-bold text-emerald-600" style={styleValues}>{formatBRL(kpis.receitaMes)}</div>
           <KPITrendBadge current={kpis.receitaMes} previous={prevTotals.receitaMes} label={`vs ${prevPeriod.prevLabel}`} />
@@ -963,7 +1054,7 @@ export default function FinanceiroDashboardPage() {
         </div>
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor, boxShadow: cardBoxShadow }}>
           <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleKpiTitle}>
-            <ArrowUpCircle className="w-4 h-4" style={{ color: kpiIconColor }} />Despesas ({kpiLabel})
+            <ArrowUpCircle className="w-4 h-4" style={{ color: kpiIconColor }} />Despesas
           </div>
           <div className="text-2xl font-bold text-rose-600" style={styleValues}>{formatBRL(kpis.despesasMes)}</div>
           <KPITrendBadge current={kpis.despesasMes} previous={prevTotals.despesasMes} invert label={`vs ${prevPeriod.prevLabel}`} />
@@ -971,7 +1062,7 @@ export default function FinanceiroDashboardPage() {
         </div>
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor, boxShadow: cardBoxShadow }}>
           <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleKpiTitle}>
-            <BarChart3 className="w-4 h-4" style={{ color: kpiIconColor }} />Lucro ({kpiLabel})
+            <BarChart3 className="w-4 h-4" style={{ color: kpiIconColor }} />Lucro
           </div>
           {(() => {
             const net = (kpis.lucroMes ?? (kpis.receitaMes - kpis.despesasMes))
@@ -985,7 +1076,7 @@ export default function FinanceiroDashboardPage() {
         </div>
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor, boxShadow: cardBoxShadow }}>
           <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleKpiTitle}>
-            <BarChart3 className="w-4 h-4" style={{ color: kpiIconColor }} />Geração de Caixa ({kpiLabel})
+            <BarChart3 className="w-4 h-4" style={{ color: kpiIconColor }} />Geração de Caixa
           </div>
           {(() => {
             const net = (kpis.geracaoCaixa ?? (kpis.recebidosMes - kpis.pagosMes))
