@@ -399,20 +399,47 @@ export default function FinanceiroDashboardPage() {
         let pe: EfetuadoRow[] = []
 
         if (arRes.status === 'fulfilled' && arRes.value.ok) {
-          const j = (await arRes.value.json()) as { rows?: unknown[] }
-          ar = Array.isArray(j?.rows) ? (j.rows as unknown as ARRow[]) : []
+          const j = (await arRes.value.json()) as { rows?: any[] }
+          ar = Array.isArray(j?.rows)
+            ? j.rows.map((r: any) => ({
+                valor_total: r.valor_a_receber ?? r.valor ?? r.valor_total,
+                data_vencimento: r.data_vencimento ?? r.vencimento ?? r.dv,
+                status: r.status_conta ?? r.status,
+                cliente: r.cliente_nome ?? r.cliente,
+                descricao: r.descricao_conta ?? r.descricao,
+              }))
+            : []
         }
         if (apRes.status === 'fulfilled' && apRes.value.ok) {
-          const j = (await apRes.value.json()) as { rows?: unknown[] }
-          ap = Array.isArray(j?.rows) ? (j.rows as unknown as APRow[]) : []
+          const j = (await apRes.value.json()) as { rows?: any[] }
+          ap = Array.isArray(j?.rows)
+            ? j.rows.map((r: any) => ({
+                valor_total: r.valor_a_pagar ?? r.valor ?? r.valor_total,
+                data_vencimento: r.data_vencimento ?? r.vencimento ?? r.dv,
+                status: r.status_conta ?? r.status,
+                fornecedor: r.fornecedor_nome ?? r.fornecedor,
+                descricao: r.descricao_conta ?? r.descricao,
+                descricao_lancamento: r.descricao_conta ?? r.descricao_lancamento ?? r.descricao,
+              }))
+            : []
         }
         if (prRes.status === 'fulfilled' && prRes.value.ok) {
-          const j = (await prRes.value.json()) as { rows?: unknown[] }
-          pr = Array.isArray(j?.rows) ? (j.rows as unknown as RecebidoRow[]) : []
+          const j = (await prRes.value.json()) as { rows?: any[] }
+          pr = Array.isArray(j?.rows)
+            ? j.rows.map((r: any) => ({
+                valor_total: r.valor_recebido ?? r.valor ?? r.valor_total,
+                data_recebimento: r.data_pagamento ?? r.data_recebimento ?? r.data_lancamento,
+              }))
+            : []
         }
         if (peRes.status === 'fulfilled' && peRes.value.ok) {
-          const j = (await peRes.value.json()) as { rows?: unknown[] }
-          pe = Array.isArray(j?.rows) ? (j.rows as unknown as EfetuadoRow[]) : []
+          const j = (await peRes.value.json()) as { rows?: any[] }
+          pe = Array.isArray(j?.rows)
+            ? j.rows.map((r: any) => ({
+                valor_pago: r.valor_pago ?? r.valor ?? r.valor_total,
+                data_pagamento: r.data_pagamento ?? r.data_lancamento ?? r.data,
+              }))
+            : []
         }
 
         // Fallback mock if nothing returned (ex: sem DB)
