@@ -289,10 +289,16 @@ export default function FinanceiroDashboardPage() {
   }, [dateRange])
 
   const [groupBy, setGroupBy] = useState<'day' | 'week' | 'month'>('month')
+  // Date range popover control + pending selection (aplica só ao salvar)
+  const [datePopoverOpen, setDatePopoverOpen] = useState(false)
+  const [pendingRange, setPendingRange] = useState<DateRange | undefined>(undefined)
 
   const headerActions = (
     <div className="flex items-center gap-2">
-      <Popover>
+      <Popover open={datePopoverOpen} onOpenChange={(open) => {
+        setDatePopoverOpen(open)
+        if (open) setPendingRange(dateRange)
+      }}>
         <PopoverTrigger asChild>
           <Button variant="outline" size="sm" className="h-9 px-3">
             <CalendarIcon className="mr-2 h-4 w-4" style={{ color: filtersIconColor }} />
@@ -302,13 +308,25 @@ export default function FinanceiroDashboardPage() {
         <PopoverContent align="end" className="p-2 w-auto">
           <Calendar
             mode="range"
-            selected={dateRange}
-            onSelect={setDateRange}
+            selected={pendingRange}
+            onSelect={setPendingRange}
             numberOfMonths={2}
             captionLayout="dropdown"
             showOutsideDays
             initialFocus
           />
+          <div className="flex justify-end gap-2 pt-2">
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => {
+                setDateRange(pendingRange)
+                setDatePopoverOpen(false)
+              }}
+            >
+              Salvar
+            </Button>
+          </div>
         </PopoverContent>
       </Popover>
       <Select value={dataFilter} onValueChange={setDataFilter}>
@@ -341,7 +359,9 @@ export default function FinanceiroDashboardPage() {
   const cardBoxShadow = useMemo(() => (cardShadowPreset === 'none' ? 'none' : `var(--shadow-${cardShadowPreset})`), [cardShadowPreset])
 
   // KPIs do mês — dinâmico via date picker (header)
-  const [kpisMonth, setKpisMonth] = useState<{ arMes: number; apMes: number; recebidosMes: number; pagosMes: number; geracaoCaixa: number; receitaMes: number; despesasMes: number; lucroMes: number } | null>(null)
+  type KPIs = { arMes: number; apMes: number; recebidosMes: number; pagosMes: number; geracaoCaixa: number; receitaMes: number; despesasMes: number; lucroMes: number }
+  const [kpisMonth, setKpisMonth] = useState<KPIs | null>(null)
+  const [kpisPrev, setKpisPrev] = useState<KPIs | null>(null)
   const { kpiDe, kpiAte, kpiLabel } = useMemo(() => {
     const now = new Date()
     const firstDayOf = (d: Date) => new Date(d.getFullYear(), d.getMonth(), 1)
@@ -360,10 +380,7 @@ export default function FinanceiroDashboardPage() {
     }
     const deIso = toDateOnly(start)
     const ateIso = toDateOnly(end)
-    const sameMonth = start.getFullYear() === end.getFullYear() && start.getMonth() === end.getMonth()
-    const label = sameMonth
-      ? start.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
-      : `${start.toLocaleDateString('pt-BR')} - ${end.toLocaleDateString('pt-BR')}`
+    const label = `${start.toLocaleDateString('pt-BR')} - ${end.toLocaleDateString('pt-BR')}`
     return { kpiDe: deIso, kpiAte: ateIso, kpiLabel: label }
   }, [dateRange])
 
@@ -374,12 +391,24 @@ export default function FinanceiroDashboardPage() {
       setError(null)
       try {
         const qs = (view: string) => `/api/modulos/financeiro?view=${view}&page=1&pageSize=1000`
-        const [arRes, apRes, prRes, peRes, kpisRes, topCcRes, topCatRes, topDepRes, topLucroRes, topProjRes, topFilialRes, cfRealRes, topFornRes, topCliRes] = await Promise.allSettled([
+        // período anterior com mesmo número de dias
+        const start = new Date(kpiDe)
+        const end = new Date(kpiAte)
+        const daysCount = Math.max(1, Math.floor((end.getTime() - start.getTime()) / 86400000) + 1)
+        const prevEndD = new Date(start)
+        prevEndD.setDate(prevEndD.getDate() - 1)
+        const prevStartD = new Date(start)
+        prevStartD.setDate(prevStartD.getDate() - daysCount)
+        const prevDe = toDateOnly(prevStartD)
+        const prevAte = toDateOnly(prevEndD)
+
+        const [arRes, apRes, prRes, peRes, kpisRes, kpisPrevRes, topCcRes, topCatRes, topDepRes, topLucroRes, topProjRes, topFilialRes, cfRealRes, topFornRes, topCliRes] = await Promise.allSettled([
           fetch(qs('contas-a-receber'), { cache: 'no-store' }),
           fetch(qs('contas-a-pagar'), { cache: 'no-store' }),
           fetch(qs('pagamentos-recebidos'), { cache: 'no-store' }),
           fetch(qs('pagamentos-efetuados'), { cache: 'no-store' }),
           fetch(`/api/modulos/financeiro?view=kpis&de=${kpiDe}&ate=${kpiAte}`, { cache: 'no-store' }),
+          fetch(`/api/modulos/financeiro?view=kpis&de=${prevDe}&ate=${prevAte}`, { cache: 'no-store' }),
           fetch(`/api/modulos/financeiro?view=top-despesas&dim=centro_custo&de=${kpiDe}&ate=${kpiAte}`, { cache: 'no-store' }),
           fetch(`/api/modulos/financeiro?view=top-despesas&dim=categoria&de=${kpiDe}&ate=${kpiAte}`, { cache: 'no-store' }),
           fetch(`/api/modulos/financeiro?view=top-despesas&dim=departamento&de=${kpiDe}&ate=${kpiAte}`, { cache: 'no-store' }),
@@ -492,6 +521,25 @@ export default function FinanceiroDashboardPage() {
               lucroMes: Number(j.kpis.lucro_mes || 0),
             })
           }
+        }
+        if (kpisPrevRes.status === 'fulfilled' && kpisPrevRes.value.ok) {
+          const j = await kpisPrevRes.value.json() as { kpis?: { ar_mes?: number; ap_mes?: number; recebidos_mes?: number; pagos_mes?: number; geracao_caixa?: number; receita_mes?: number; despesas_mes?: number; lucro_mes?: number } }
+          if (j?.kpis) {
+            setKpisPrev({
+              arMes: Number(j.kpis.ar_mes || 0),
+              apMes: Number(j.kpis.ap_mes || 0),
+              recebidosMes: Number(j.kpis.recebidos_mes || 0),
+              pagosMes: Number(j.kpis.pagos_mes || 0),
+              geracaoCaixa: Number(j.kpis.geracao_caixa || 0),
+              receitaMes: Number(j.kpis.receita_mes || 0),
+              despesasMes: Number(j.kpis.despesas_mes || 0),
+              lucroMes: Number(j.kpis.lucro_mes || 0),
+            })
+          } else {
+            setKpisPrev(null)
+          }
+        } else {
+          setKpisPrev(null)
         }
 
         if (!cancelled) {
@@ -649,16 +697,19 @@ export default function FinanceiroDashboardPage() {
 
   // Cálculo do período anterior (mesmo tamanho) e label
   const prevPeriod = useMemo(() => {
-    const start = parseDate(kpiDe) || new Date(kpiDe)
+    const start = new Date(kpiDe)
+    const end = new Date(kpiAte)
+    const daysCount = Math.max(1, Math.floor((end.getTime() - start.getTime()) / 86400000) + 1)
     const prevEnd = new Date(start)
     prevEnd.setDate(prevEnd.getDate() - 1)
     const prevStart = new Date(start)
-    // exatamente 7 dias anteriores ao início
-    prevStart.setDate(prevStart.getDate() - 7)
-    return { prevStart, prevEnd, prevLabel: `7 dias anteriores` }
-  }, [kpiDe])
+    prevStart.setDate(prevStart.getDate() - daysCount)
+    const fmt = (d: Date) => d.toLocaleDateString('pt-BR')
+    return { prevStart, prevEnd, prevLabel: `${fmt(prevStart)} - ${fmt(prevEnd)}` }
+  }, [kpiDe, kpiAte])
 
   const prevTotals = useMemo(() => {
+    if (kpisPrev) return kpisPrev
     const inPrevRange = (ds?: string) => {
       const d = parseDate(String(ds))
       if (!d) return false
@@ -675,7 +726,7 @@ export default function FinanceiroDashboardPage() {
     const lucroMes = receitaMes - despesasMes
     const geracaoCaixa = recebidosMes - pagosMes
     return { arMes, apMes, recebidosMes, pagosMes, receitaMes, despesasMes, lucroMes, geracaoCaixa }
-  }, [arRows, apRows, prRows, peRows, prevPeriod])
+  }, [kpisPrev, arRows, apRows, prRows, peRows, prevPeriod])
 
   function BarsReceitasDespesas({ items, max }: { items: { label: string; receita: number; despesa: number }[]; max: number }) {
     return (
@@ -784,7 +835,7 @@ export default function FinanceiroDashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor, boxShadow: cardBoxShadow }}>
           <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleKpiTitle}>
-            <ArrowDownCircle className="w-4 h-4" style={{ color: kpiIconColor }} />A Receber no mês ({kpiLabel})
+            <ArrowDownCircle className="w-4 h-4" style={{ color: kpiIconColor }} />A Receber ({kpiLabel})
           </div>
           <div className="text-2xl font-bold text-emerald-600" style={styleValues}>{formatBRL(kpis.arMes)}</div>
           <KPITrendBadge current={kpis.arMes} previous={prevTotals.arMes} invert label={`vs ${prevPeriod.prevLabel}`} />
@@ -792,7 +843,7 @@ export default function FinanceiroDashboardPage() {
         </div>
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor, boxShadow: cardBoxShadow }}>
           <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleKpiTitle}>
-            <ArrowUpCircle className="w-4 h-4" style={{ color: kpiIconColor }} />A Pagar no mês ({kpiLabel})
+            <ArrowUpCircle className="w-4 h-4" style={{ color: kpiIconColor }} />A Pagar ({kpiLabel})
           </div>
           <div className="text-2xl font-bold text-rose-600" style={styleValues}>{formatBRL(kpis.apMes)}</div>
           <KPITrendBadge current={kpis.apMes} previous={prevTotals.apMes} invert label={`vs ${prevPeriod.prevLabel}`} />
@@ -800,7 +851,7 @@ export default function FinanceiroDashboardPage() {
         </div>
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor, boxShadow: cardBoxShadow }}>
           <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleKpiTitle}>
-            <Wallet className="w-4 h-4" style={{ color: kpiIconColor }} />Recebido no mês ({kpiLabel})
+            <Wallet className="w-4 h-4" style={{ color: kpiIconColor }} />Recebido ({kpiLabel})
           </div>
           <div className="text-2xl font-bold text-emerald-600" style={styleValues}>{formatBRL(kpis.recebidosMes)}</div>
           <KPITrendBadge current={kpis.recebidosMes} previous={prevTotals.recebidosMes} label={`vs ${prevPeriod.prevLabel}`} />
@@ -808,7 +859,7 @@ export default function FinanceiroDashboardPage() {
         </div>
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor, boxShadow: cardBoxShadow }}>
           <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleKpiTitle}>
-            <CalendarCheck className="w-4 h-4" style={{ color: kpiIconColor }} />Pago no mês ({kpiLabel})
+            <CalendarCheck className="w-4 h-4" style={{ color: kpiIconColor }} />Pago ({kpiLabel})
           </div>
           <div className="text-2xl font-bold text-rose-600" style={styleValues}>{formatBRL(kpis.pagosMes)}</div>
           <KPITrendBadge current={kpis.pagosMes} previous={prevTotals.pagosMes} invert label={`vs ${prevPeriod.prevLabel}`} />
