@@ -59,7 +59,7 @@ const DEFAULT_UI: FinanceiroDashboardUIState = {
 }
 
 const DEFAULT_FILTERS: FinanceiroDashboardFiltersState = {
-  dateRange: { from: '2025-12-15', to: '2025-12-30' },
+  dateRange: { from: '2025-12-21', to: '2025-12-28' },
   dataFilter: 'todos',
 }
 

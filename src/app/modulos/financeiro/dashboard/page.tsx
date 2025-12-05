@@ -588,15 +588,13 @@ export default function FinanceiroDashboardPage() {
   // Cálculo do período anterior (mesmo tamanho) e label
   const prevPeriod = useMemo(() => {
     const start = new Date(kpiDe)
-    const end = new Date(kpiAte)
-    const daysCount = Math.max(1, Math.floor((end.getTime() - start.getTime()) / 86400000) + 1)
     const prevEnd = new Date(start)
     prevEnd.setDate(prevEnd.getDate() - 1)
     const prevStart = new Date(start)
-    prevStart.setDate(prevStart.getDate() - daysCount)
-    const fmt = (d: Date) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
-    return { prevStart, prevEnd, prevLabel: `${fmt(prevStart)} - ${fmt(prevEnd)}` }
-  }, [kpiDe, kpiAte])
+    // exatamente 7 dias anteriores ao início
+    prevStart.setDate(prevStart.getDate() - 7)
+    return { prevStart, prevEnd, prevLabel: `7 dias anteriores` }
+  }, [kpiDe])
 
   const prevTotals = useMemo(() => {
     const inPrevRange = (ds?: string) => {
