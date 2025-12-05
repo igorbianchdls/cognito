@@ -5,6 +5,7 @@ import { ColumnDef } from '@tanstack/react-table'
 import { Receipt, CheckCircle2 } from 'lucide-react'
 import { useMemo, useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 type ItemRow = {
@@ -80,6 +81,9 @@ export default function ContaPagarCriadaResult({ result }: { result: ContaPagarC
   const [created, setCreated] = useState<CreatedData | null>(null)
   const isPreview = result.preview && result.payload && !created
   const hasErrors = (result.validations || []).some(v => v.status === 'error')
+  // Editable fields in preview
+  const [descricao, setDescricao] = useState<string>('')
+  const [dataVenc, setDataVenc] = useState<string>('')
 
   // Dropdown state (fornecedores e categorias)
   const [fornecedorId, setFornecedorId] = useState<string>('')
@@ -116,6 +120,8 @@ export default function ContaPagarCriadaResult({ result }: { result: ContaPagarC
       setDepartamentoId(String(result.payload?.departamento_id || ''))
       setFilialId(String(result.payload?.filial_id || ''))
       setProjetoId(String(result.payload?.projeto_id || ''))
+      setDescricao(String(result.payload?.descricao || ''))
+      setDataVenc(String(result.payload?.data_vencimento || ''))
     } else if (created) {
       setFornecedorId(String(created.fornecedor_id || ''))
       setCategoriaId(String(created.categoria_id || ''))
@@ -150,6 +156,12 @@ export default function ContaPagarCriadaResult({ result }: { result: ContaPagarC
     load()
     return () => { cancelled = true }
   }, [])
+
+  const isValidDate = (v: string) => {
+    if (!v || !/^\d{4}-\d{2}-\d{2}$/.test(v)) return false
+    const d = new Date(v)
+    return !isNaN(d.getTime())
+  }
 
   // Load categorias
   useEffect(() => {
@@ -326,10 +338,10 @@ export default function ContaPagarCriadaResult({ result }: { result: ContaPagarC
           departamento_id: departamentoId || result.payload.departamento_id || undefined,
           filial_id: filialId || result.payload.filial_id || undefined,
           projeto_id: projetoId || result.payload.projeto_id || undefined,
-          descricao: result.payload.descricao || 'Conta a pagar',
+          descricao: (descricao && descricao.trim()) || result.payload.descricao || 'Conta a pagar',
           valor: headerValor > 0 ? headerValor : valorFromLinhas,
           data_lancamento: dataLanc,
-          data_vencimento: result.payload.data_vencimento,
+          data_vencimento: dataVenc || result.payload.data_vencimento,
           status: 'pendente',
           tenant_id: result.payload.tenant_id ?? 1,
           // Enviar itens para persistir em financeiro.lancamentos_financeiros_itens
@@ -340,10 +352,10 @@ export default function ContaPagarCriadaResult({ result }: { result: ContaPagarC
       } else {
         // Fallback: FormData (cabeçalho apenas)
         const fd = new FormData()
-        fd.set('descricao', String(result.payload.descricao || 'Conta a pagar'))
+        fd.set('descricao', String((descricao && descricao.trim()) || result.payload.descricao || 'Conta a pagar'))
         fd.set('valor', String(result.payload.valor))
         fd.set('data_lancamento', dataLanc)
-        fd.set('data_vencimento', result.payload.data_vencimento)
+        fd.set('data_vencimento', dataVenc || result.payload.data_vencimento)
         fd.set('status', 'pendente')
         if (result.payload.fornecedor_id) fd.set('entidade_id', result.payload.fornecedor_id)
         if (result.payload.categoria_id) fd.set('categoria_id', result.payload.categoria_id)
@@ -388,7 +400,7 @@ export default function ContaPagarCriadaResult({ result }: { result: ContaPagarC
 
   // Summary content (preview or created)
   const summaryValor = created ? created.valor : (isPreview ? (result.payload?.valor || 0) : (result.data?.valor || 0))
-  const summaryVenc = created ? created.data_vencimento : (isPreview ? (result.payload?.data_vencimento || '') : result.resumo.data_vencimento)
+  const summaryVenc = created ? created.data_vencimento : (isPreview ? (dataVenc || '') : result.resumo.data_vencimento)
   const summaryNF = created ? (created.numero_nota_fiscal || '-') : (isPreview ? (result.payload?.numero_nota_fiscal || '-') : result.resumo.numero_nota_fiscal)
   const summaryId = created ? created.id : (isPreview ? '-' : result.resumo.id)
   // Mostrar sempre o ID do fornecedor no 4º campo
@@ -431,13 +443,24 @@ export default function ContaPagarCriadaResult({ result }: { result: ContaPagarC
               </div>
               <div>
                 <span className={isPreview ? 'text-blue-700 font-medium' : 'text-green-700 font-medium'}>Vencimento:</span>
-                <div className={isPreview ? 'text-blue-900' : 'text-green-900'}>
-                  {summaryVenc ? new Date(summaryVenc).toLocaleDateString('pt-BR') : '-'}
-                </div>
+                {isPreview ? (
+                  <div className="flex flex-col gap-1">
+                    <Input type="date" value={dataVenc} onChange={(e) => setDataVenc(e.target.value)} className="h-8 text-sm" />
+                    {!isValidDate(dataVenc) && <span className="text-xs text-red-600">Data inválida (YYYY-MM-DD)</span>}
+                  </div>
+                ) : (
+                  <div className={isPreview ? 'text-blue-900' : 'text-green-900'}>
+                    {summaryVenc ? new Date(summaryVenc).toLocaleDateString('pt-BR') : '-'}
+                  </div>
+                )}
               </div>
               <div>
-                <span className={isPreview ? 'text-blue-700 font-medium' : 'text-green-700 font-medium'}>NF:</span>
-                <div className={isPreview ? 'text-blue-900' : 'text-green-900'}>{summaryNF}</div>
+                <span className={isPreview ? 'text-blue-700 font-medium' : 'text-green-700 font-medium'}>Descrição:</span>
+                {isPreview ? (
+                  <Input value={descricao} onChange={(e) => setDescricao(e.target.value)} placeholder="Descrição da conta" className="h-8 text-sm" />
+                ) : (
+                  <div className={isPreview ? 'text-blue-900' : 'text-green-900'}>{descricao || result.payload?.descricao || '-'}</div>
+                )}
               </div>
               <div>
                 <span className={isPreview ? 'text-blue-700 font-medium' : 'text-green-700 font-medium'}>Fornecedor:</span>
@@ -612,7 +635,7 @@ export default function ContaPagarCriadaResult({ result }: { result: ContaPagarC
           </div>
           {isPreview && (
             <div className="ml-auto">
-              <Button onClick={commit} disabled={creating || hasErrors || !fornecedorId || !categoriaId || !centroCustoId}>
+              <Button onClick={commit} disabled={creating || hasErrors || !fornecedorId || !categoriaId || !centroCustoId || !isValidDate(dataVenc)}>
                 {creating ? 'Criando…' : 'Criar Conta a Pagar'}
               </Button>
             </div>
