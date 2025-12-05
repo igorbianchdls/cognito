@@ -583,14 +583,14 @@ export default function ContaReceberCriadaResult({ result }: { result: ContaRece
                 )}
               </div>
             </div>
+            {isPreview && (
+              <div className="mt-4 pt-2 border-t border-gray-200">
+                <Button onClick={commit} disabled={creating || !clienteId || !categoriaId || !centroLucroId || !isValidDate(dataVenc)} className="w-full sm:w-auto">
+                  {creating ? 'Criando…' : 'Criar Conta a Receber'}
+                </Button>
+              </div>
+            )}
           </div>
-          {isPreview && (
-            <div className="ml-auto">
-              <Button onClick={commit} disabled={creating || !clienteId || !categoriaId || !centroLucroId || !isValidDate(dataVenc)}>
-                {creating ? 'Criando…' : 'Criar Conta a Receber'}
-              </Button>
-            </div>
-          )}
         </div>
       </div>
 

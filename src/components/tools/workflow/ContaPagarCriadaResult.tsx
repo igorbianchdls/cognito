@@ -632,14 +632,14 @@ export default function ContaPagarCriadaResult({ result }: { result: ContaPagarC
                 )}
               </div>
             </div>
+            {isPreview && (
+              <div className="mt-4 pt-2 border-t border-gray-200">
+                <Button onClick={commit} disabled={creating || hasErrors || !fornecedorId || !categoriaId || !centroCustoId || !isValidDate(dataVenc)} className="w-full sm:w-auto">
+                  {creating ? 'Criando…' : 'Criar Conta a Pagar'}
+                </Button>
+              </div>
+            )}
           </div>
-          {isPreview && (
-            <div className="ml-auto">
-              <Button onClick={commit} disabled={creating || hasErrors || !fornecedorId || !categoriaId || !centroCustoId || !isValidDate(dataVenc)}>
-                {creating ? 'Criando…' : 'Criar Conta a Pagar'}
-              </Button>
-            </div>
-          )}
         </div>
       </div>
 
