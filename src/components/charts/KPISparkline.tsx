@@ -12,6 +12,8 @@ type KPISparklineProps = {
 }
 
 export function KPISparkline({ id, height = 36, className }: KPISparklineProps) {
+  // Hooks must be called unconditionally
+  const uid = useId().replace(/[:]/g, '')
   const all = useStore($kpiSparklines)
   const serie = all[id]
 
@@ -27,7 +29,6 @@ export function KPISparkline({ id, height = 36, className }: KPISparklineProps) 
   const isGood = serie.invert ? !up : up
   const color = isGood ? colorUp : colorDown
 
-  const uid = useId().replace(/[:]/g, '')
   const gradId = `kpi-spark-${id.replace(/[^a-zA-Z0-9_-]/g, '')}-${uid}`
 
   return (
@@ -54,4 +55,3 @@ export function KPISparkline({ id, height = 36, className }: KPISparklineProps) 
     </div>
   )
 }
-
