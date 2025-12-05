@@ -1,11 +1,11 @@
 "use client"
 
-import { ArrowDownRight, ArrowUpRight, Minus } from 'lucide-react'
+import { ArrowDownRight, ArrowUpRight } from 'lucide-react'
 
 type KPITrendBadgeProps = {
   current: number
   previous: number
-  invert?: boolean
+  invert?: boolean // ignorado: mantido por compatibilidade
   label?: string
   className?: string
 }
@@ -15,7 +15,7 @@ function formatPct(n: number) {
   return `${sign}${n.toFixed(1)}%`
 }
 
-export function KPITrendBadge({ current, previous, invert, label = 'vs período anterior', className }: KPITrendBadgeProps) {
+export function KPITrendBadge({ current, previous, label = 'vs período anterior', className }: KPITrendBadgeProps) {
   const diff = current - previous
   let pct: number | null
   if (previous === 0) {
@@ -25,22 +25,21 @@ export function KPITrendBadge({ current, previous, invert, label = 'vs período 
     pct = (diff / Math.abs(previous)) * 100
   }
 
-  // Direção da variação (independente de invert)
-  const up = current >= previous
-  const good = invert ? !up : up
+  // Cores/ícones pelo sinal do percentual
+  const isPos = pct !== null && pct > 0
+  const isNeg = pct !== null && pct < 0
+  const isZero = pct === 0 || pct === null
 
-  const color = pct === null
-    ? 'bg-gray-100 text-gray-500'
-    : good
-      ? 'bg-emerald-50 text-emerald-700'
-      : 'bg-rose-50 text-rose-700'
-
-  const Icon = pct === null ? Minus : (up ? ArrowUpRight : ArrowDownRight)
+  const color = isPos
+    ? 'bg-emerald-50 text-emerald-700'
+    : isNeg
+      ? 'bg-rose-50 text-rose-700'
+      : 'bg-gray-100 text-gray-500'
 
   return (
     <div className={`flex items-center gap-2 mt-1 ${className || ''}`}>
       <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${color}`}>
-        <Icon className="w-3.5 h-3.5" />
+        {!isZero && (isPos ? <ArrowUpRight className="w-3.5 h-3.5" /> : <ArrowDownRight className="w-3.5 h-3.5" />)}
         {pct === null ? '—' : formatPct(pct)}
       </span>
       <span className="text-xs text-gray-400">{label}</span>
