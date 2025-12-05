@@ -596,21 +596,20 @@ export default function FinanceiroDashboardPage() {
         days.push(toDateOnly(d))
       }
 
-      // Janela anterior de 15 dias (imediatamente antes do início)
-      const prevDays: string[] = []
+      // Janela anterior com o mesmo tamanho do período atual
       const prevEnd = new Date(start)
       prevEnd.setDate(prevEnd.getDate() - 1)
       const prevStart = new Date(start)
-      prevStart.setDate(prevStart.getDate() - 15)
-      for (let d = new Date(prevStart); d <= prevEnd; d.setDate(d.getDate() + 1)) {
-        prevDays.push(toDateOnly(d))
-      }
+      const daysCount = days.length
+      prevStart.setDate(prevStart.getDate() - daysCount)
 
       // Mapas por dia — atual
       const arOpenByDay: Record<string, number> = {}
       const arAllByDay: Record<string, number> = {}
       for (const r of arRows) {
-        const k = String(r.data_vencimento)
+        const d = parseDate(String(r.data_vencimento))
+        if (!d) continue
+        const k = toDateOnly(d)
         const val = Number(r.valor_total) || 0
         arAllByDay[k] = (arAllByDay[k] || 0) + val
         if (!isPaid(r.status)) arOpenByDay[k] = (arOpenByDay[k] || 0) + val
@@ -619,7 +618,9 @@ export default function FinanceiroDashboardPage() {
       const apOpenByDay: Record<string, number> = {}
       const apAllByDay: Record<string, number> = {}
       for (const r of apRows) {
-        const k = String(r.data_vencimento)
+        const d = parseDate(String(r.data_vencimento))
+        if (!d) continue
+        const k = toDateOnly(d)
         const val = Number(r.valor_total) || 0
         apAllByDay[k] = (apAllByDay[k] || 0) + val
         if (!isPaid(r.status)) apOpenByDay[k] = (apOpenByDay[k] || 0) + val
@@ -627,13 +628,17 @@ export default function FinanceiroDashboardPage() {
 
       const prByDay: Record<string, number> = {}
       for (const r of prRows) {
-        const k = String(r.data_recebimento)
+        const d = parseDate(String(r.data_recebimento))
+        if (!d) continue
+        const k = toDateOnly(d)
         prByDay[k] = (prByDay[k] || 0) + (Number(r.valor_total) || 0)
       }
 
       const peByDay: Record<string, number> = {}
       for (const r of peRows) {
-        const k = String(r.data_pagamento)
+        const d = parseDate(String(r.data_pagamento))
+        if (!d) continue
+        const k = toDateOnly(d)
         peByDay[k] = (peByDay[k] || 0) + (Number(r.valor_pago) || 0)
       }
 
@@ -661,7 +666,12 @@ export default function FinanceiroDashboardPage() {
       }
 
       // Totais da janela anterior de 15 dias
-      const inPrevRange = (ds?: string) => ds ? (ds >= toDateOnly(prevStart) && ds <= toDateOnly(prevEnd)) : false
+      const inPrevRange = (ds?: string) => {
+        const d = parseDate(String(ds))
+        if (!d) return false
+        const s = toDateOnly(d)
+        return s >= toDateOnly(prevStart) && s <= toDateOnly(prevEnd)
+      }
       const prev = {
         ar: arRows.filter(r => !isPaid(r.status) && inPrevRange(String(r.data_vencimento))).reduce((a, r) => a + (Number(r.valor_total) || 0), 0),
         ap: apRows.filter(r => !isPaid(r.status) && inPrevRange(String(r.data_vencimento))).reduce((a, r) => a + (Number(r.valor_total) || 0), 0),
