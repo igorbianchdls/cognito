@@ -289,9 +289,15 @@ export default function FinanceiroDashboardPage() {
   }, [dateRange])
 
   const [groupBy, setGroupBy] = useState<'day' | 'week' | 'month'>('month')
-  // Date range popover control + pending selection (aplica só ao salvar)
+  // Date range popover control (header)
   const [datePopoverOpen, setDatePopoverOpen] = useState(false)
   const [pendingRange, setPendingRange] = useState<DateRange | undefined>(undefined)
+  // Date range – seção "Hoje" (row 1)
+  const [datePopoverRow1Open, setDatePopoverRow1Open] = useState(false)
+  const [pendingRangeRow1, setPendingRangeRow1] = useState<DateRange | undefined>(undefined)
+  // Date range – seção "Overview" (row 2)
+  const [datePopoverRow2Open, setDatePopoverRow2Open] = useState(false)
+  const [pendingRangeRow2, setPendingRangeRow2] = useState<DateRange | undefined>(undefined)
 
   const headerActions = (
     <div className="flex items-center gap-2">
@@ -840,6 +846,33 @@ export default function FinanceiroDashboardPage() {
         <div className="p-6 text-sm text-red-600">{error}</div>
       ) : null}
 
+      {/* Seção 1: Hoje + Date Range (da página) */}
+      <div className="flex items-center justify-between mb-2">
+        <div className="text-base font-semibold text-slate-700" style={styleKpiTitle}>Hoje</div>
+        <Popover open={datePopoverRow1Open} onOpenChange={(open) => { setDatePopoverRow1Open(open); if (open) setPendingRangeRow1(dateRange) }}>
+          <PopoverTrigger asChild>
+            <Button variant="outline" size="sm" className="h-8 px-3">
+              <CalendarIcon className="mr-2 h-4 w-4" style={{ color: filtersIconColor }} />
+              <span className="whitespace-nowrap" style={styleFilters}>{rangeLabel}</span>
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent align="end" className="p-2 w-auto">
+            <Calendar
+              mode="range"
+              selected={pendingRangeRow1}
+              onSelect={setPendingRangeRow1}
+              numberOfMonths={2}
+              captionLayout="dropdown"
+              showOutsideDays
+              initialFocus
+            />
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="default" size="sm" onClick={() => { setDateRange(pendingRangeRow1); setDatePopoverRow1Open(false) }}>Salvar</Button>
+            </div>
+          </PopoverContent>
+        </Popover>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor, boxShadow: cardBoxShadow }}>
           <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleKpiTitle}>
@@ -889,6 +922,33 @@ export default function FinanceiroDashboardPage() {
           <KPITrendBadge current={kpis.apCount ?? 0} previous={prevTotals.apCount ?? 0} label={`vs ${prevPeriod.prevLabel}`} />
           <div className="text-xs text-gray-400 mt-1" style={styleText}>Títulos pendentes por vencimento</div>
         </div>
+      </div>
+
+      {/* Seção 2: Overview + Date Range duplicado */}
+      <div className="flex items-center justify-between mb-2">
+        <div className="text-base font-semibold text-slate-700" style={styleKpiTitle}>Overview</div>
+        <Popover open={datePopoverRow2Open} onOpenChange={(open) => { setDatePopoverRow2Open(open); if (open) setPendingRangeRow2(dateRange) }}>
+          <PopoverTrigger asChild>
+            <Button variant="outline" size="sm" className="h-8 px-3">
+              <CalendarIcon className="mr-2 h-4 w-4" style={{ color: filtersIconColor }} />
+              <span className="whitespace-nowrap" style={styleFilters}>{rangeLabel}</span>
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent align="end" className="p-2 w-auto">
+            <Calendar
+              mode="range"
+              selected={pendingRangeRow2}
+              onSelect={setPendingRangeRow2}
+              numberOfMonths={2}
+              captionLayout="dropdown"
+              showOutsideDays
+              initialFocus
+            />
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="default" size="sm" onClick={() => { setDateRange(pendingRangeRow2); setDatePopoverRow2Open(false) }}>Salvar</Button>
+            </div>
+          </PopoverContent>
+        </Popover>
       </div>
 
       {/* KPI: Receita, Despesas, Lucro e Geração de Caixa do mês */}
