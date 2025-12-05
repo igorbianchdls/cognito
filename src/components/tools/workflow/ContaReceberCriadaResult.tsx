@@ -350,7 +350,7 @@ export default function ContaReceberCriadaResult({ result }: { result: ContaRece
   }
 
   const summaryValor = created ? created.valor : (isPreview ? (result.payload?.valor || 0) : (result.resumo?.valor_formatado ? Number(String(result.resumo.valor_formatado).replace(/[^\d,.-]/g, '').replace('.', '').replace(',', '.')) : 0))
-  const summaryVenc = created ? created.data_vencimento : (isPreview ? (result.payload?.data_vencimento || '') : result.resumo.data_vencimento)
+  const summaryVenc = created ? created.data_vencimento : (isPreview ? (dataVenc || '') : result.resumo.data_vencimento)
   const summaryId = created ? created.id : (isPreview ? '-' : result.resumo.id)
   const summaryNF = created ? (created.numero_nota_fiscal || '-') : (isPreview ? (result.payload?.numero_nota_fiscal || '-') : result.resumo.numero_nota_fiscal)
 
@@ -372,13 +372,24 @@ export default function ContaReceberCriadaResult({ result }: { result: ContaRece
               </div>
               <div>
                 <span className={isPreview ? 'text-blue-700 font-medium' : 'text-green-700 font-medium'}>Vencimento:</span>
-                <div className={isPreview ? 'text-blue-900' : 'text-green-900'}>
-                  {summaryVenc ? new Date(summaryVenc).toLocaleDateString('pt-BR') : '-'}
-                </div>
+                {isPreview ? (
+                  <div className="flex flex-col gap-1">
+                    <Input type="date" value={dataVenc} onChange={(e) => setDataVenc(e.target.value)} className="h-8 text-sm" />
+                    {!isValidDate(dataVenc) && <span className="text-xs text-red-600">Data inválida (YYYY-MM-DD)</span>}
+                  </div>
+                ) : (
+                  <div className={isPreview ? 'text-blue-900' : 'text-green-900'}>
+                    {summaryVenc ? new Date(summaryVenc).toLocaleDateString('pt-BR') : '-'}
+                  </div>
+                )}
               </div>
               <div>
-                <span className={isPreview ? 'text-blue-700 font-medium' : 'text-green-700 font-medium'}>NF:</span>
-                <div className={isPreview ? 'text-blue-900' : 'text-green-900'}>{summaryNF}</div>
+                <span className={isPreview ? 'text-blue-700 font-medium' : 'text-green-700 font-medium'}>Descrição:</span>
+                {isPreview ? (
+                  <Input value={descricao} onChange={(e) => setDescricao(e.target.value)} placeholder="Descrição da conta" className="h-8 text-sm" />
+                ) : (
+                  <div className={isPreview ? 'text-blue-900' : 'text-green-900'}>{descricao || result.payload?.descricao || '-'}</div>
+                )}
               </div>
               <div>
                 <span className={isPreview ? 'text-blue-700 font-medium' : 'text-green-700 font-medium'}>ID:</span>
@@ -562,7 +573,7 @@ export default function ContaReceberCriadaResult({ result }: { result: ContaRece
           </div>
           {isPreview && (
             <div className="ml-auto">
-              <Button onClick={commit} disabled={creating || !clienteId || !categoriaId || !centroLucroId}>
+              <Button onClick={commit} disabled={creating || !clienteId || !categoriaId || !centroLucroId || !isValidDate(dataVenc)}>
                 {creating ? 'Criando…' : 'Criar Conta a Receber'}
               </Button>
             </div>
