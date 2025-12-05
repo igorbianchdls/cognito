@@ -17,7 +17,13 @@ function formatPct(n: number) {
 
 export function KPITrendBadge({ current, previous, invert, label = 'vs período anterior', className }: KPITrendBadgeProps) {
   const diff = current - previous
-  const pct = previous === 0 ? (current === 0 ? 0 : null) : (diff / Math.abs(previous)) * 100
+  let pct: number | null
+  if (previous === 0) {
+    if (current === 0) pct = 0
+    else pct = current > 0 ? 100 : -100
+  } else {
+    pct = (diff / Math.abs(previous)) * 100
+  }
 
   // Direção da variação (independente de invert)
   const up = current >= previous
@@ -41,4 +47,3 @@ export function KPITrendBadge({ current, previous, invert, label = 'vs período 
     </div>
   )
 }
-

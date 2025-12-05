@@ -76,7 +76,19 @@ function toDateOnly(d: Date) {
 function parseDate(value?: string) {
   if (!value) return null
   const d = new Date(value)
-  return isNaN(d.getTime()) ? null : d
+  if (!isNaN(d.getTime())) return d
+  // Fallback: tenta dd/mm/yyyy
+  if (typeof value === 'string') {
+    const m = value.match(/^(\d{2})\/(\d{2})\/(\d{4})/)
+    if (m) {
+      const dd = parseInt(m[1], 10)
+      const mm = parseInt(m[2], 10)
+      const yyyy = parseInt(m[3], 10)
+      const alt = new Date(yyyy, mm - 1, dd)
+      if (!isNaN(alt.getTime())) return alt
+    }
+  }
+  return null
 }
 
 function daysDiffFromToday(dateStr?: string) {
@@ -93,6 +105,17 @@ function isPaid(status?: string) {
   if (!status) return false
   const s = status.toLowerCase()
   return s.includes('pago') || s.includes('liquidado') || s.includes('baixado')
+}
+
+function toNum(v: unknown) {
+  if (typeof v === 'number') return v
+  if (typeof v === 'string') {
+    const s = v.trim().replace(/\./g, '').replace(/,/g, '.')
+    const n = parseFloat(s)
+    return isNaN(n) ? 0 : n
+  }
+  const n = Number(v || 0)
+  return isNaN(n) ? 0 : n
 }
 
 export default function FinanceiroDashboardPage() {
@@ -503,16 +526,16 @@ export default function FinanceiroDashboardPage() {
       if (!ds) return false
       return ds >= kpiDe && ds <= kpiAte
     }
-    const sum = <T extends BaseRow>(arr: T[], pred: (r: T) => boolean) => arr.filter(pred).reduce((acc, r) => acc + (Number(r.valor_total) || 0), 0)
+    const sum = <T extends BaseRow>(arr: T[], pred: (r: T) => boolean) => arr.filter(pred).reduce((acc, r) => acc + toNum(r.valor_total), 0)
     const arMes = sum(arRows, r => !isPaid(r.status) && inMonth(String(r.data_vencimento)))
     const apMes = sum(apRows, r => !isPaid(r.status) && inMonth(String(r.data_vencimento)))
     // recebidos/pagos: aproximar por data de pagamento/recebimento nos arrays de séries
-    const recebidosMes = prRows.filter(r => inMonth(String(r.data_recebimento))).reduce((a, r) => a + (Number(r.valor_total) || 0), 0)
-    const pagosMes = peRows.filter(r => inMonth(String(r.data_pagamento))).reduce((a, r) => a + (Number(r.valor_pago) || 0), 0)
+    const recebidosMes = prRows.filter(r => inMonth(String(r.data_recebimento))).reduce((a, r) => a + toNum(r.valor_total), 0)
+    const pagosMes = peRows.filter(r => inMonth(String(r.data_pagamento))).reduce((a, r) => a + toNum(r.valor_pago), 0)
     const geracaoCaixa = recebidosMes - pagosMes
     // receita/despesas: ignorar status, por vencimento no período
-    const receitaMes = arRows.filter(r => inMonth(String(r.data_vencimento))).reduce((a, r) => a + (Number(r.valor_total) || 0), 0)
-    const despesasMes = apRows.filter(r => inMonth(String(r.data_vencimento))).reduce((a, r) => a + (Number(r.valor_total) || 0), 0)
+    const receitaMes = arRows.filter(r => inMonth(String(r.data_vencimento))).reduce((a, r) => a + toNum(r.valor_total), 0)
+    const despesasMes = apRows.filter(r => inMonth(String(r.data_vencimento))).reduce((a, r) => a + toNum(r.valor_total), 0)
     const lucroMes = receitaMes - despesasMes
     return { arMes, apMes, recebidosMes, pagosMes, geracaoCaixa, receitaMes, despesasMes, lucroMes }
   }, [kpisMonth, arRows, apRows, prRows, peRows])
@@ -603,13 +626,13 @@ export default function FinanceiroDashboardPage() {
       const s = toDateOnly(d)
       return s >= toDateOnly(prevPeriod.prevStart) && s <= toDateOnly(prevPeriod.prevEnd)
     }
-    const sum = <T extends BaseRow>(arr: T[], pred: (r: T) => boolean) => arr.filter(pred).reduce((acc, r) => acc + (Number(r.valor_total) || 0), 0)
+    const sum = <T extends BaseRow>(arr: T[], pred: (r: T) => boolean) => arr.filter(pred).reduce((acc, r) => acc + toNum(r.valor_total), 0)
     const arMes = sum(arRows, r => !isPaid(r.status) && inPrevRange(String(r.data_vencimento)))
     const apMes = sum(apRows, r => !isPaid(r.status) && inPrevRange(String(r.data_vencimento)))
-    const recebidosMes = prRows.filter(r => inPrevRange(String(r.data_recebimento))).reduce((a, r) => a + (Number(r.valor_total) || 0), 0)
-    const pagosMes = peRows.filter(r => inPrevRange(String(r.data_pagamento))).reduce((a, r) => a + (Number(r.valor_pago) || 0), 0)
-    const receitaMes = arRows.filter(r => inPrevRange(String(r.data_vencimento))).reduce((a, r) => a + (Number(r.valor_total) || 0), 0)
-    const despesasMes = apRows.filter(r => inPrevRange(String(r.data_vencimento))).reduce((a, r) => a + (Number(r.valor_total) || 0), 0)
+    const recebidosMes = prRows.filter(r => inPrevRange(String(r.data_recebimento))).reduce((a, r) => a + toNum(r.valor_total), 0)
+    const pagosMes = peRows.filter(r => inPrevRange(String(r.data_pagamento))).reduce((a, r) => a + toNum(r.valor_pago), 0)
+    const receitaMes = arRows.filter(r => inPrevRange(String(r.data_vencimento))).reduce((a, r) => a + toNum(r.valor_total), 0)
+    const despesasMes = apRows.filter(r => inPrevRange(String(r.data_vencimento))).reduce((a, r) => a + toNum(r.valor_total), 0)
     const lucroMes = receitaMes - despesasMes
     const geracaoCaixa = recebidosMes - pagosMes
     return { arMes, apMes, recebidosMes, pagosMes, receitaMes, despesasMes, lucroMes, geracaoCaixa }
