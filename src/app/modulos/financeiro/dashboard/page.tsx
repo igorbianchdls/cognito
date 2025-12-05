@@ -359,7 +359,7 @@ export default function FinanceiroDashboardPage() {
   const cardBoxShadow = useMemo(() => (cardShadowPreset === 'none' ? 'none' : `var(--shadow-${cardShadowPreset})`), [cardShadowPreset])
 
   // KPIs do mês — dinâmico via date picker (header)
-  type KPIs = { arMes: number; apMes: number; recebidosMes: number; pagosMes: number; geracaoCaixa: number; receitaMes: number; despesasMes: number; lucroMes: number }
+  type KPIs = { arMes: number; apMes: number; recebidosMes: number; pagosMes: number; geracaoCaixa: number; receitaMes: number; despesasMes: number; lucroMes: number; arCount: number; apCount: number }
   const [kpisMonth, setKpisMonth] = useState<KPIs | null>(null)
   const [kpisPrev, setKpisPrev] = useState<KPIs | null>(null)
   const { kpiDe, kpiAte, kpiLabel } = useMemo(() => {
@@ -508,7 +508,7 @@ export default function FinanceiroDashboardPage() {
 
         // KPIs mês (API)
         if (kpisRes.status === 'fulfilled' && kpisRes.value.ok) {
-          const j = await kpisRes.value.json() as { kpis?: { ar_mes?: number; ap_mes?: number; recebidos_mes?: number; pagos_mes?: number; geracao_caixa?: number; receita_mes?: number; despesas_mes?: number; lucro_mes?: number } }
+          const j = await kpisRes.value.json() as { kpis?: { ar_mes?: number; ap_mes?: number; recebidos_mes?: number; pagos_mes?: number; geracao_caixa?: number; receita_mes?: number; despesas_mes?: number; lucro_mes?: number; ar_count?: number; ap_count?: number } }
           if (j?.kpis) {
             setKpisMonth({
               arMes: Number(j.kpis.ar_mes || 0),
@@ -519,11 +519,13 @@ export default function FinanceiroDashboardPage() {
               receitaMes: Number(j.kpis.receita_mes || 0),
               despesasMes: Number(j.kpis.despesas_mes || 0),
               lucroMes: Number(j.kpis.lucro_mes || 0),
+              arCount: Number(j.kpis.ar_count || 0),
+              apCount: Number(j.kpis.ap_count || 0),
             })
           }
         }
         if (kpisPrevRes.status === 'fulfilled' && kpisPrevRes.value.ok) {
-          const j = await kpisPrevRes.value.json() as { kpis?: { ar_mes?: number; ap_mes?: number; recebidos_mes?: number; pagos_mes?: number; geracao_caixa?: number; receita_mes?: number; despesas_mes?: number; lucro_mes?: number } }
+          const j = await kpisPrevRes.value.json() as { kpis?: { ar_mes?: number; ap_mes?: number; recebidos_mes?: number; pagos_mes?: number; geracao_caixa?: number; receita_mes?: number; despesas_mes?: number; lucro_mes?: number; ar_count?: number; ap_count?: number } }
           if (j?.kpis) {
             setKpisPrev({
               arMes: Number(j.kpis.ar_mes || 0),
@@ -534,6 +536,8 @@ export default function FinanceiroDashboardPage() {
               receitaMes: Number(j.kpis.receita_mes || 0),
               despesasMes: Number(j.kpis.despesas_mes || 0),
               lucroMes: Number(j.kpis.lucro_mes || 0),
+              arCount: Number(j.kpis.ar_count || 0),
+              apCount: Number(j.kpis.ap_count || 0),
             })
           } else {
             setKpisPrev(null)
@@ -624,7 +628,9 @@ export default function FinanceiroDashboardPage() {
     const receitaMes = arRows.filter(r => inMonth(String(r.data_vencimento))).reduce((a, r) => a + toNum(r.valor_total), 0)
     const despesasMes = apRows.filter(r => inMonth(String(r.data_vencimento))).reduce((a, r) => a + toNum(r.valor_total), 0)
     const lucroMes = receitaMes - despesasMes
-    return { arMes, apMes, recebidosMes, pagosMes, geracaoCaixa, receitaMes, despesasMes, lucroMes }
+    const arCount = arRows.filter(r => inMonth(String(r.data_vencimento)) && String(r.status).toLowerCase() === 'pendente').length
+    const apCount = apRows.filter(r => inMonth(String(r.data_vencimento)) && String(r.status).toLowerCase() === 'pendente').length
+    return { arMes, apMes, recebidosMes, pagosMes, geracaoCaixa, receitaMes, despesasMes, lucroMes, arCount, apCount }
   }, [kpisMonth, arRows, apRows, prRows, peRows])
 
   const topReceber = useMemo(() => {
@@ -725,7 +731,9 @@ export default function FinanceiroDashboardPage() {
     const despesasMes = apRows.filter(r => inPrevRange(String(r.data_vencimento))).reduce((a, r) => a + toNum(r.valor_total), 0)
     const lucroMes = receitaMes - despesasMes
     const geracaoCaixa = recebidosMes - pagosMes
-    return { arMes, apMes, recebidosMes, pagosMes, receitaMes, despesasMes, lucroMes, geracaoCaixa }
+    const arCount = arRows.filter(r => inPrevRange(String(r.data_vencimento)) && String(r.status).toLowerCase() === 'pendente').length
+    const apCount = apRows.filter(r => inPrevRange(String(r.data_vencimento)) && String(r.status).toLowerCase() === 'pendente').length
+    return { arMes, apMes, recebidosMes, pagosMes, receitaMes, despesasMes, lucroMes, geracaoCaixa, arCount, apCount }
   }, [kpisPrev, arRows, apRows, prRows, peRows, prevPeriod])
 
   function BarsReceitasDespesas({ items, max }: { items: { label: string; receita: number; despesa: number }[]; max: number }) {
@@ -864,6 +872,26 @@ export default function FinanceiroDashboardPage() {
           <div className="text-2xl font-bold text-rose-600" style={styleValues}>{formatBRL(kpis.pagosMes)}</div>
           <KPITrendBadge current={kpis.pagosMes} previous={prevTotals.pagosMes} invert label={`vs ${prevPeriod.prevLabel}`} />
           <div className="text-xs text-gray-400 mt-1" style={styleText}>Pagamentos realizados no período</div>
+        </div>
+      </div>
+
+      {/* KPI: Contagens de títulos pendentes */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 mb-6">
+        <div className={cardContainerClass} style={{ borderColor: cardBorderColor, boxShadow: cardBoxShadow }}>
+          <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleKpiTitle}>
+            <ArrowDownCircle className="w-4 h-4" style={{ color: kpiIconColor }} />Qtd. A Receber ({kpiLabel})
+          </div>
+          <div className="text-2xl font-bold text-slate-800" style={styleValues}>{(kpis.arCount ?? 0).toLocaleString('pt-BR')}</div>
+          <KPITrendBadge current={kpis.arCount ?? 0} previous={prevTotals.arCount ?? 0} label={`vs ${prevPeriod.prevLabel}`} />
+          <div className="text-xs text-gray-400 mt-1" style={styleText}>Títulos pendentes por vencimento</div>
+        </div>
+        <div className={cardContainerClass} style={{ borderColor: cardBorderColor, boxShadow: cardBoxShadow }}>
+          <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleKpiTitle}>
+            <ArrowUpCircle className="w-4 h-4" style={{ color: kpiIconColor }} />Qtd. A Pagar ({kpiLabel})
+          </div>
+          <div className="text-2xl font-bold text-slate-800" style={styleValues}>{(kpis.apCount ?? 0).toLocaleString('pt-BR')}</div>
+          <KPITrendBadge current={kpis.apCount ?? 0} previous={prevTotals.apCount ?? 0} label={`vs ${prevPeriod.prevLabel}`} />
+          <div className="text-xs text-gray-400 mt-1" style={styleText}>Títulos pendentes por vencimento</div>
         </div>
       </div>
 

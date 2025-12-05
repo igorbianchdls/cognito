@@ -416,6 +416,21 @@ export async function GET(req: NextRequest) {
                              AND DATE(lf.data_vencimento) BETWEEN $1 AND $2${tenantFilter}`.replace(/\s+/g, ' ');
       const [despesasRow] = await runQuery<{ total: number | null }>(despesasSql, kpiParams);
 
+      // Contagens de títulos pendentes por vencimento
+      const arCountSql = `SELECT COUNT(*)::int AS count
+                            FROM financeiro.lancamentos_financeiros lf
+                           WHERE lf.tipo = 'conta_a_receber'
+                             AND LOWER(lf.status) = 'pendente'
+                             AND DATE(lf.data_vencimento) BETWEEN $1 AND $2${tenantFilter}`.replace(/\s+/g, ' ');
+      const [arCountRow] = await runQuery<{ count: number | null }>(arCountSql, kpiParams);
+
+      const apCountSql = `SELECT COUNT(*)::int AS count
+                            FROM financeiro.lancamentos_financeiros lf
+                           WHERE lf.tipo = 'conta_a_pagar'
+                             AND LOWER(lf.status) = 'pendente'
+                             AND DATE(lf.data_vencimento) BETWEEN $1 AND $2${tenantFilter}`.replace(/\s+/g, ' ');
+      const [apCountRow] = await runQuery<{ count: number | null }>(apCountSql, kpiParams);
+
       return Response.json({
         success: true,
         de: deDate,
@@ -429,6 +444,8 @@ export async function GET(req: NextRequest) {
           receita_mes: Number(receitaRow?.total ?? 0),
           despesas_mes: Number(despesasRow?.total ?? 0),
           lucro_mes: Number(receitaRow?.total ?? 0) - Number(despesasRow?.total ?? 0),
+          ar_count: Number(arCountRow?.count ?? 0),
+          ap_count: Number(apCountRow?.count ?? 0),
         },
         sql_query: {
           a_receber_mes: arSql,
@@ -437,6 +454,8 @@ export async function GET(req: NextRequest) {
           pagos_mes: pagoSql,
           receita_mes: receitaSql,
           despesas_mes: despesasSql,
+          ar_count: arCountSql,
+          ap_count: apCountSql,
         },
         sql_params: kpiParams,
       });
