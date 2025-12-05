@@ -5,6 +5,7 @@ import { ColumnDef } from '@tanstack/react-table'
 import { Receipt, CheckCircle2 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 type ItemRow = {
@@ -73,6 +74,9 @@ export default function ContaReceberCriadaResult({ result }: { result: ContaRece
   const [creating, setCreating] = useState(false)
   const [created, setCreated] = useState<CreatedData | null>(null)
   const isPreview = result.preview && result.payload && !created
+  // Editable fields (preview)
+  const [descricao, setDescricao] = useState<string>('')
+  const [dataVenc, setDataVenc] = useState<string>('')
   // Dropdown state & options
   const [clienteId, setClienteId] = useState<string>('')
   const [categoriaId, setCategoriaId] = useState<string>('')
@@ -108,6 +112,9 @@ export default function ContaReceberCriadaResult({ result }: { result: ContaRece
       setClienteId(String(result.payload?.cliente_id || ''))
       setCategoriaId(String(result.payload?.categoria_id || ''))
       setCentroLucroId(String(result.payload?.centro_lucro_id || ''))
+      // Initialize editable fields from payload
+      setDescricao(String(result.payload?.descricao || ''))
+      setDataVenc(String(result.payload?.data_vencimento || ''))
     } else if (created) {
       setClienteId(String(created.cliente_id || ''))
       setCategoriaId(String(created.categoria_id || ''))
@@ -117,6 +124,12 @@ export default function ContaReceberCriadaResult({ result }: { result: ContaRece
       setCategoriaId(String(result.data?.categoria_id || ''))
     }
   }, [isPreview, created, result.payload?.cliente_id, result.payload?.categoria_id, result.payload?.centro_lucro_id, result.data])
+
+  const isValidDate = (v: string) => {
+    if (!v || !/^\d{4}-\d{2}-\d{2}$/.test(v)) return false
+    const d = new Date(v)
+    return !isNaN(d.getTime())
+  }
 
   // Load options
   useEffect(() => {
@@ -293,10 +306,10 @@ export default function ContaReceberCriadaResult({ result }: { result: ContaRece
           departamento_id: departamentoId || undefined,
           filial_id: filialId || undefined,
           projeto_id: projetoId || undefined,
-          descricao: result.payload.descricao || 'Conta a receber',
+          descricao: (descricao && descricao.trim()) || result.payload.descricao || 'Conta a receber',
           valor: headerValor > 0 ? headerValor : valorFromLinhas,
           data_lancamento: dataLanc,
-          data_vencimento: result.payload.data_vencimento,
+          data_vencimento: dataVenc || result.payload.data_vencimento,
           status: 'pendente',
           tenant_id: result.payload.tenant_id ?? 1,
           itens: result.payload.itens,
@@ -306,14 +319,14 @@ export default function ContaReceberCriadaResult({ result }: { result: ContaRece
       } else {
         // FormData legado (apenas cabeçalho)
         const fd = new FormData()
-        fd.set('descricao', String(result.payload.descricao || 'Conta a receber'))
+        fd.set('descricao', String((descricao && descricao.trim()) || result.payload.descricao || 'Conta a receber'))
         fd.set('valor', String(result.payload.valor))
         fd.set('data_lancamento', dataLanc)
-        fd.set('data_vencimento', result.payload.data_vencimento)
+        fd.set('data_vencimento', dataVenc || result.payload.data_vencimento)
         fd.set('status', 'pendente')
-        if (result.payload.cliente_id) fd.set('entidade_id', result.payload.cliente_id)
-        if (result.payload.categoria_id) fd.set('categoria_id', result.payload.categoria_id)
-        if (result.payload.centro_lucro_id) fd.set('centro_lucro_id', result.payload.centro_lucro_id)
+        if (clienteId || result.payload.cliente_id) fd.set('entidade_id', String(clienteId || result.payload.cliente_id))
+        if (categoriaId || result.payload.categoria_id) fd.set('categoria_id', String(categoriaId || result.payload.categoria_id))
+        if (centroLucroId || result.payload.centro_lucro_id) fd.set('centro_lucro_id', String(centroLucroId || result.payload.centro_lucro_id))
         fd.set('tenant_id', String(result.payload.tenant_id ?? 1))
         res = await fetch(result.metadata.commitEndpoint, { method: 'POST', body: fd })
       }
@@ -352,7 +365,7 @@ export default function ContaReceberCriadaResult({ result }: { result: ContaRece
   const summaryValor = created ? created.valor : (isPreview ? (result.payload?.valor || 0) : (result.resumo?.valor_formatado ? Number(String(result.resumo.valor_formatado).replace(/[^\d,.-]/g, '').replace('.', '').replace(',', '.')) : 0))
   const summaryVenc = created ? created.data_vencimento : (isPreview ? (dataVenc || '') : result.resumo.data_vencimento)
   const summaryId = created ? created.id : (isPreview ? '-' : result.resumo.id)
-  const summaryNF = created ? (created.numero_nota_fiscal || '-') : (isPreview ? (result.payload?.numero_nota_fiscal || '-') : result.resumo.numero_nota_fiscal)
+  // NF mantida no payload/resumo, mas não usada diretamente na prévia editável
 
   return (
     <div className="space-y-4">
