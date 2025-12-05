@@ -588,68 +588,104 @@ export default function FinanceiroDashboardPage() {
   // Popula a store global de sparklines (sem helpers externos)
   useEffect(() => {
     try {
-      // Base: últimos 6 meses
-      const months = meses
+      // Série diária do período atual definido por kpiDe..kpiAte
+      const days: string[] = []
+      const start = new Date(kpiDe)
+      const end = new Date(kpiAte)
+      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+        days.push(toDateOnly(d))
+      }
 
-      // AR/AP: por mês (aberto e total)
-      const arOpenByMonth: Record<string, number> = {}
-      const arAllByMonth: Record<string, number> = {}
+      // Janela anterior de 15 dias (imediatamente antes do início)
+      const prevDays: string[] = []
+      const prevEnd = new Date(start)
+      prevEnd.setDate(prevEnd.getDate() - 1)
+      const prevStart = new Date(start)
+      prevStart.setDate(prevStart.getDate() - 15)
+      for (let d = new Date(prevStart); d <= prevEnd; d.setDate(d.getDate() + 1)) {
+        prevDays.push(toDateOnly(d))
+      }
+
+      // Mapas por dia — atual
+      const arOpenByDay: Record<string, number> = {}
+      const arAllByDay: Record<string, number> = {}
       for (const r of arRows) {
-        const mk = monthKeyFromStr(String(r.data_vencimento))
-        if (!mk) continue
+        const k = String(r.data_vencimento)
         const val = Number(r.valor_total) || 0
-        arAllByMonth[mk] = (arAllByMonth[mk] || 0) + val
-        if (!isPaid(r.status)) arOpenByMonth[mk] = (arOpenByMonth[mk] || 0) + val
+        arAllByDay[k] = (arAllByDay[k] || 0) + val
+        if (!isPaid(r.status)) arOpenByDay[k] = (arOpenByDay[k] || 0) + val
       }
 
-      const apOpenByMonth: Record<string, number> = {}
-      const apAllByMonth: Record<string, number> = {}
+      const apOpenByDay: Record<string, number> = {}
+      const apAllByDay: Record<string, number> = {}
       for (const r of apRows) {
-        const mk = monthKeyFromStr(String(r.data_vencimento))
-        if (!mk) continue
+        const k = String(r.data_vencimento)
         const val = Number(r.valor_total) || 0
-        apAllByMonth[mk] = (apAllByMonth[mk] || 0) + val
-        if (!isPaid(r.status)) apOpenByMonth[mk] = (apOpenByMonth[mk] || 0) + val
+        apAllByDay[k] = (apAllByDay[k] || 0) + val
+        if (!isPaid(r.status)) apOpenByDay[k] = (apOpenByDay[k] || 0) + val
       }
 
-      // Recebidos/Pagos: por mês (fluxo realizado)
-      const prByMonth: Record<string, number> = {}
+      const prByDay: Record<string, number> = {}
       for (const r of prRows) {
-        const mk = monthKeyFromStr(String(r.data_recebimento))
-        if (!mk) continue
-        prByMonth[mk] = (prByMonth[mk] || 0) + (Number(r.valor_total) || 0)
+        const k = String(r.data_recebimento)
+        prByDay[k] = (prByDay[k] || 0) + (Number(r.valor_total) || 0)
       }
 
-      const peByMonth: Record<string, number> = {}
+      const peByDay: Record<string, number> = {}
       for (const r of peRows) {
-        const mk = monthKeyFromStr(String(r.data_pagamento))
-        if (!mk) continue
-        peByMonth[mk] = (peByMonth[mk] || 0) + (Number(r.valor_pago) || 0)
+        const k = String(r.data_pagamento)
+        peByDay[k] = (peByDay[k] || 0) + (Number(r.valor_pago) || 0)
       }
 
-      // Converte mapas em séries alinhadas por mês
-      const sArOpen = months.map(mk => arOpenByMonth[mk] || 0)
-      const sApOpen = months.map(mk => apOpenByMonth[mk] || 0)
-      const sArAll = months.map(mk => arAllByMonth[mk] || 0)
-      const sApAll = months.map(mk => apAllByMonth[mk] || 0)
-      const sPr = months.map(mk => prByMonth[mk] || 0)
-      const sPe = months.map(mk => peByMonth[mk] || 0)
-      const sLucro = months.map((_, i) => (sArAll[i] || 0) - (sApAll[i] || 0))
-      const sCash = months.map((_, i) => (sPr[i] || 0) - (sPe[i] || 0))
+      // Séries diárias para o período atual
+      const sArOpen = days.map(d => arOpenByDay[d] || 0)
+      const sApOpen = days.map(d => apOpenByDay[d] || 0)
+      const sArAll = days.map(d => arAllByDay[d] || 0)
+      const sApAll = days.map(d => apAllByDay[d] || 0)
+      const sPr = days.map(d => prByDay[d] || 0)
+      const sPe = days.map(d => peByDay[d] || 0)
+      const sLucro = days.map((_, i) => (sArAll[i] || 0) - (sApAll[i] || 0))
+      const sCash = days.map((_, i) => (sPr[i] || 0) - (sPe[i] || 0))
 
-      // Publica na store global (invert onde subir é ruim)
-      kpiSparklineActions.setSeries('arMes', sArOpen, { invert: true })
-      kpiSparklineActions.setSeries('apMes', sApOpen, { invert: true })
-      kpiSparklineActions.setSeries('recebidosMes', sPr)
-      kpiSparklineActions.setSeries('pagosMes', sPe, { invert: true })
-      kpiSparklineActions.setSeries('receitaMes', sArAll)
-      kpiSparklineActions.setSeries('despesasMes', sApAll, { invert: true })
-      kpiSparklineActions.setSeries('lucroMes', sLucro)
-      kpiSparklineActions.setSeries('geracaoCaixa', sCash)
+      // Totais do período atual
+      const sum = (arr: number[]) => arr.reduce((a, b) => a + b, 0)
+      const curr = {
+        ar: sum(sArOpen),
+        ap: sum(sApOpen),
+        rec: sum(sPr),
+        pag: sum(sPe),
+        recTotal: sum(sArAll),
+        despTotal: sum(sApAll),
+        lucro: sum(sLucro),
+        caixa: sum(sCash),
+      }
+
+      // Totais da janela anterior de 15 dias
+      const inPrevRange = (ds?: string) => ds ? (ds >= toDateOnly(prevStart) && ds <= toDateOnly(prevEnd)) : false
+      const prev = {
+        ar: arRows.filter(r => !isPaid(r.status) && inPrevRange(String(r.data_vencimento))).reduce((a, r) => a + (Number(r.valor_total) || 0), 0),
+        ap: apRows.filter(r => !isPaid(r.status) && inPrevRange(String(r.data_vencimento))).reduce((a, r) => a + (Number(r.valor_total) || 0), 0),
+        rec: prRows.filter(r => inPrevRange(String(r.data_recebimento))).reduce((a, r) => a + (Number(r.valor_total) || 0), 0),
+        pag: peRows.filter(r => inPrevRange(String(r.data_pagamento))).reduce((a, r) => a + (Number(r.valor_pago) || 0), 0),
+        recTotal: arRows.filter(r => inPrevRange(String(r.data_vencimento))).reduce((a, r) => a + (Number(r.valor_total) || 0), 0),
+        despTotal: apRows.filter(r => inPrevRange(String(r.data_vencimento))).reduce((a, r) => a + (Number(r.valor_total) || 0), 0),
+      }
+      const prevLucro = prev.recTotal - prev.despTotal
+      const prevCaixa = prev.rec - prev.pag
+
+      // Publica na store global com metadados de comparação
+      kpiSparklineActions.setSeries('arMes', sArOpen, { invert: true, currentTotal: curr.ar, previousTotal: prev.ar })
+      kpiSparklineActions.setSeries('apMes', sApOpen, { invert: true, currentTotal: curr.ap, previousTotal: prev.ap })
+      kpiSparklineActions.setSeries('recebidosMes', sPr, { currentTotal: curr.rec, previousTotal: prev.rec })
+      kpiSparklineActions.setSeries('pagosMes', sPe, { invert: true, currentTotal: curr.pag, previousTotal: prev.pag })
+      kpiSparklineActions.setSeries('receitaMes', sArAll, { currentTotal: curr.recTotal, previousTotal: prev.recTotal })
+      kpiSparklineActions.setSeries('despesasMes', sApAll, { invert: true, currentTotal: curr.despTotal, previousTotal: prev.despTotal })
+      kpiSparklineActions.setSeries('lucroMes', sLucro, { currentTotal: curr.lucro, previousTotal: prevLucro })
+      kpiSparklineActions.setSeries('geracaoCaixa', sCash, { currentTotal: curr.caixa, previousTotal: prevCaixa })
     } catch (e) {
       // silencioso — se algo falhar, só não renderiza sparkline
     }
-  }, [meses, arRows, apRows, prRows, peRows])
+  }, [kpiDe, kpiAte, arRows, apRows, prRows, peRows])
 
   function BarsReceitasDespesas({ items, max }: { items: { label: string; receita: number; despesa: number }[]; max: number }) {
     return (

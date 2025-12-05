@@ -22,7 +22,11 @@ export function KPISparkline({ id, height = 36, className }: KPISparklineProps) 
   }
 
   const data = serie.data.map((v, i) => ({ i, v }))
-  const up = (data[data.length - 1]?.v ?? 0) >= (data[0]?.v ?? 0)
+  // Critério de cor: comparação explícita (se houver), senão inclinação da série
+  let up = (data[data.length - 1]?.v ?? 0) >= (data[0]?.v ?? 0)
+  if (typeof serie.currentTotal === 'number' && typeof serie.previousTotal === 'number') {
+    up = (serie.currentTotal ?? 0) >= (serie.previousTotal ?? 0)
+  }
 
   const colorUp = serie.colorUp || '#10b981' // emerald-500
   const colorDown = serie.colorDown || '#ef4444' // rose-500

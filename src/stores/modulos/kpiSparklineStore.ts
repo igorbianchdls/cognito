@@ -9,6 +9,9 @@ export type KPISparklineSeries = {
   invert?: boolean
   colorUp?: string
   colorDown?: string
+  // comparação explícita (total do período atual vs período anterior)
+  currentTotal?: number
+  previousTotal?: number
 }
 
 export type KPISparklinesState = Record<string, KPISparklineSeries>
@@ -29,6 +32,8 @@ export const kpiSparklineActions = {
       invert: opts?.invert ?? prev?.invert,
       colorUp: opts?.colorUp ?? prev?.colorUp,
       colorDown: opts?.colorDown ?? prev?.colorDown,
+      currentTotal: opts?.currentTotal ?? prev?.currentTotal,
+      previousTotal: opts?.previousTotal ?? prev?.previousTotal,
     }
     $kpiSparklines.set({
       ...curr,
