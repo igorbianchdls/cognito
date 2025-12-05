@@ -6,6 +6,7 @@ import DashboardLayout from '@/components/modulos/DashboardLayout'
 import { ArrowDownCircle, ArrowUpCircle, AlertTriangle, BarChart3, Wallet, Star, CalendarCheck, Calendar as CalendarIcon } from 'lucide-react'
 import { BarChartHorizontalRecharts } from '@/components/charts/BarChartHorizontalRecharts'
 import { BarChartMultipleRecharts } from '@/components/charts/BarChartMultipleRecharts'
+import { KPISparkline } from '@/components/charts/KPISparkline'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
@@ -13,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch'
 import type { DateRange } from 'react-day-picker'
 import { $financeiroDashboardUI, $financeiroDashboardFilters, financeiroDashboardActions, type FontSection } from '@/stores/modulos/financeiroDashboardStore'
+import { kpiSparklineActions } from '@/stores/modulos/kpiSparklineStore'
 import type { FinanceiroDashboardUIState } from '@/stores/modulos/financeiroDashboardStore'
 
 type BaseRow = {
@@ -583,6 +585,72 @@ export default function FinanceiroDashboardPage() {
     return d.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' })
   }
 
+  // Popula a store global de sparklines (sem helpers externos)
+  useEffect(() => {
+    try {
+      // Base: últimos 6 meses
+      const months = meses
+
+      // AR/AP: por mês (aberto e total)
+      const arOpenByMonth: Record<string, number> = {}
+      const arAllByMonth: Record<string, number> = {}
+      for (const r of arRows) {
+        const mk = monthKeyFromStr(String(r.data_vencimento))
+        if (!mk) continue
+        const val = Number(r.valor_total) || 0
+        arAllByMonth[mk] = (arAllByMonth[mk] || 0) + val
+        if (!isPaid(r.status)) arOpenByMonth[mk] = (arOpenByMonth[mk] || 0) + val
+      }
+
+      const apOpenByMonth: Record<string, number> = {}
+      const apAllByMonth: Record<string, number> = {}
+      for (const r of apRows) {
+        const mk = monthKeyFromStr(String(r.data_vencimento))
+        if (!mk) continue
+        const val = Number(r.valor_total) || 0
+        apAllByMonth[mk] = (apAllByMonth[mk] || 0) + val
+        if (!isPaid(r.status)) apOpenByMonth[mk] = (apOpenByMonth[mk] || 0) + val
+      }
+
+      // Recebidos/Pagos: por mês (fluxo realizado)
+      const prByMonth: Record<string, number> = {}
+      for (const r of prRows) {
+        const mk = monthKeyFromStr(String(r.data_recebimento))
+        if (!mk) continue
+        prByMonth[mk] = (prByMonth[mk] || 0) + (Number(r.valor_total) || 0)
+      }
+
+      const peByMonth: Record<string, number> = {}
+      for (const r of peRows) {
+        const mk = monthKeyFromStr(String(r.data_pagamento))
+        if (!mk) continue
+        peByMonth[mk] = (peByMonth[mk] || 0) + (Number(r.valor_pago) || 0)
+      }
+
+      // Converte mapas em séries alinhadas por mês
+      const sArOpen = months.map(mk => arOpenByMonth[mk] || 0)
+      const sApOpen = months.map(mk => apOpenByMonth[mk] || 0)
+      const sArAll = months.map(mk => arAllByMonth[mk] || 0)
+      const sApAll = months.map(mk => apAllByMonth[mk] || 0)
+      const sPr = months.map(mk => prByMonth[mk] || 0)
+      const sPe = months.map(mk => peByMonth[mk] || 0)
+      const sLucro = months.map((_, i) => (sArAll[i] || 0) - (sApAll[i] || 0))
+      const sCash = months.map((_, i) => (sPr[i] || 0) - (sPe[i] || 0))
+
+      // Publica na store global (invert onde subir é ruim)
+      kpiSparklineActions.setSeries('arMes', sArOpen, { invert: true })
+      kpiSparklineActions.setSeries('apMes', sApOpen, { invert: true })
+      kpiSparklineActions.setSeries('recebidosMes', sPr)
+      kpiSparklineActions.setSeries('pagosMes', sPe, { invert: true })
+      kpiSparklineActions.setSeries('receitaMes', sArAll)
+      kpiSparklineActions.setSeries('despesasMes', sApAll, { invert: true })
+      kpiSparklineActions.setSeries('lucroMes', sLucro)
+      kpiSparklineActions.setSeries('geracaoCaixa', sCash)
+    } catch (e) {
+      // silencioso — se algo falhar, só não renderiza sparkline
+    }
+  }, [meses, arRows, apRows, prRows, peRows])
+
   function BarsReceitasDespesas({ items, max }: { items: { label: string; receita: number; despesa: number }[]; max: number }) {
     return (
       <div>
@@ -693,6 +761,7 @@ export default function FinanceiroDashboardPage() {
             <ArrowDownCircle className="w-4 h-4" style={{ color: kpiIconColor }} />A Receber no mês ({kpiLabel})
           </div>
           <div className="text-2xl font-bold text-emerald-600" style={styleValues}>{formatBRL(kpis.arMes)}</div>
+          <KPISparkline id="arMes" className="mt-2" height={36} />
           <div className="text-xs text-gray-400 mt-1" style={styleText}>Vencimento dentro do período</div>
         </div>
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor, boxShadow: cardBoxShadow }}>
@@ -700,6 +769,7 @@ export default function FinanceiroDashboardPage() {
             <ArrowUpCircle className="w-4 h-4" style={{ color: kpiIconColor }} />A Pagar no mês ({kpiLabel})
           </div>
           <div className="text-2xl font-bold text-rose-600" style={styleValues}>{formatBRL(kpis.apMes)}</div>
+          <KPISparkline id="apMes" className="mt-2" height={36} />
           <div className="text-xs text-gray-400 mt-1" style={styleText}>Vencimento dentro do período</div>
         </div>
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor, boxShadow: cardBoxShadow }}>
@@ -707,6 +777,7 @@ export default function FinanceiroDashboardPage() {
             <Wallet className="w-4 h-4" style={{ color: kpiIconColor }} />Recebido no mês ({kpiLabel})
           </div>
           <div className="text-2xl font-bold text-emerald-600" style={styleValues}>{formatBRL(kpis.recebidosMes)}</div>
+          <KPISparkline id="recebidosMes" className="mt-2" height={36} />
           <div className="text-xs text-gray-400 mt-1" style={styleText}>Recebimentos realizados no período</div>
         </div>
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor, boxShadow: cardBoxShadow }}>
@@ -714,6 +785,7 @@ export default function FinanceiroDashboardPage() {
             <CalendarCheck className="w-4 h-4" style={{ color: kpiIconColor }} />Pago no mês ({kpiLabel})
           </div>
           <div className="text-2xl font-bold text-rose-600" style={styleValues}>{formatBRL(kpis.pagosMes)}</div>
+          <KPISparkline id="pagosMes" className="mt-2" height={36} />
           <div className="text-xs text-gray-400 mt-1" style={styleText}>Pagamentos realizados no período</div>
         </div>
       </div>
@@ -725,6 +797,7 @@ export default function FinanceiroDashboardPage() {
             <Wallet className="w-4 h-4" style={{ color: kpiIconColor }} />Receita ({kpiLabel})
           </div>
           <div className="text-2xl font-bold text-emerald-600" style={styleValues}>{formatBRL(kpis.receitaMes)}</div>
+          <KPISparkline id="receitaMes" className="mt-2" height={36} />
           <div className="text-xs text-gray-400 mt-1" style={styleText}>Contas a receber no período (sem status)</div>
         </div>
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor, boxShadow: cardBoxShadow }}>
@@ -732,6 +805,7 @@ export default function FinanceiroDashboardPage() {
             <ArrowUpCircle className="w-4 h-4" style={{ color: kpiIconColor }} />Despesas ({kpiLabel})
           </div>
           <div className="text-2xl font-bold text-rose-600" style={styleValues}>{formatBRL(kpis.despesasMes)}</div>
+          <KPISparkline id="despesasMes" className="mt-2" height={36} />
           <div className="text-xs text-gray-400 mt-1" style={styleText}>Contas a pagar no período (sem status)</div>
         </div>
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor, boxShadow: cardBoxShadow }}>
@@ -745,6 +819,7 @@ export default function FinanceiroDashboardPage() {
               <div className={`text-2xl font-bold ${cls}`} style={styleValues}>{formatBRL(net)}</div>
             )
           })()}
+          <KPISparkline id="lucroMes" className="mt-2" height={36} />
           <div className="text-xs text-gray-400 mt-1" style={styleText}>Receita − Despesas</div>
         </div>
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor, boxShadow: cardBoxShadow }}>
@@ -758,6 +833,7 @@ export default function FinanceiroDashboardPage() {
               <div className={`text-2xl font-bold ${cls}`} style={styleValues}>{formatBRL(net)}</div>
             )
           })()}
+          <KPISparkline id="geracaoCaixa" className="mt-2" height={36} />
           <div className="text-xs text-gray-400 mt-1" style={styleText}>Recebido − Pago no período</div>
         </div>
       </div>
