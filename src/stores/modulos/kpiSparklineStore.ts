@@ -22,14 +22,17 @@ export const kpiSparklineActions = {
     opts?: Omit<Partial<KPISparklineSeries>, 'id' | 'data'>
   ) => {
     const curr = $kpiSparklines.get()
+    const prev = curr[id]
+    const next: KPISparklineSeries = {
+      id,
+      data,
+      invert: opts?.invert ?? prev?.invert,
+      colorUp: opts?.colorUp ?? prev?.colorUp,
+      colorDown: opts?.colorDown ?? prev?.colorDown,
+    }
     $kpiSparklines.set({
       ...curr,
-      [id]: {
-        id,
-        data,
-        ...curr[id],
-        ...(opts || {}),
-      },
+      [id]: next,
     })
   },
   remove: (id: string) => {
@@ -39,4 +42,3 @@ export const kpiSparklineActions = {
   },
   reset: () => $kpiSparklines.set({}),
 }
-
