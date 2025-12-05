@@ -847,8 +847,8 @@ export default function FinanceiroDashboardPage() {
       ) : null}
 
       {/* Seção 1: Hoje + Date Range (da página) */}
-      <div className="flex items-center justify-between mb-2">
-        <div className="text-base font-semibold text-slate-700" style={styleKpiTitle}>Hoje</div>
+      <div className="flex items-center justify-between mb-4">
+        <div className="text-xl font-semibold text-slate-800" style={styleKpiTitle}>Hoje</div>
         <Popover open={datePopoverRow1Open} onOpenChange={(open) => { setDatePopoverRow1Open(open); if (open) setPendingRangeRow1(dateRange) }}>
           <PopoverTrigger asChild>
             <Button variant="outline" size="sm" className="h-8 px-3">
@@ -925,8 +925,8 @@ export default function FinanceiroDashboardPage() {
       </div>
 
       {/* Seção 2: Overview + Date Range duplicado */}
-      <div className="flex items-center justify-between mb-2">
-        <div className="text-base font-semibold text-slate-700" style={styleKpiTitle}>Overview</div>
+      <div className="flex items-center justify-between mb-4">
+        <div className="text-xl font-semibold text-slate-800" style={styleKpiTitle}>Overview</div>
         <Popover open={datePopoverRow2Open} onOpenChange={(open) => { setDatePopoverRow2Open(open); if (open) setPendingRangeRow2(dateRange) }}>
           <PopoverTrigger asChild>
             <Button variant="outline" size="sm" className="h-8 px-3">
