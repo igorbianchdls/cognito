@@ -6,7 +6,7 @@ import DashboardLayout from '@/components/modulos/DashboardLayout'
 import { ArrowDownCircle, ArrowUpCircle, AlertTriangle, BarChart3, Wallet, Star, CalendarCheck, Calendar as CalendarIcon } from 'lucide-react'
 import { BarChartHorizontalRecharts } from '@/components/charts/BarChartHorizontalRecharts'
 import { BarChartMultipleRecharts } from '@/components/charts/BarChartMultipleRecharts'
-import { KPISparkline } from '@/components/charts/KPISparkline'
+import { KPITrendBadge } from '@/components/widgets/KPITrendBadge'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch'
 import type { DateRange } from 'react-day-picker'
 import { $financeiroDashboardUI, $financeiroDashboardFilters, financeiroDashboardActions, type FontSection } from '@/stores/modulos/financeiroDashboardStore'
-import { kpiSparklineActions } from '@/stores/modulos/kpiSparklineStore'
+// (sem store global para sparkline)
 import type { FinanceiroDashboardUIState } from '@/stores/modulos/financeiroDashboardStore'
 
 type BaseRow = {
@@ -585,117 +585,37 @@ export default function FinanceiroDashboardPage() {
     return d.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' })
   }
 
-  // Popula a store global de sparklines (sem helpers externos)
-  useEffect(() => {
-    try {
-      // Série diária do período atual definido por kpiDe..kpiAte
-      const days: string[] = []
-      const start = new Date(kpiDe)
-      const end = new Date(kpiAte)
-      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-        days.push(toDateOnly(d))
-      }
+  // Cálculo do período anterior (mesmo tamanho) e label
+  const prevPeriod = useMemo(() => {
+    const start = new Date(kpiDe)
+    const end = new Date(kpiAte)
+    const daysCount = Math.max(1, Math.floor((end.getTime() - start.getTime()) / 86400000) + 1)
+    const prevEnd = new Date(start)
+    prevEnd.setDate(prevEnd.getDate() - 1)
+    const prevStart = new Date(start)
+    prevStart.setDate(prevStart.getDate() - daysCount)
+    const fmt = (d: Date) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
+    return { prevStart, prevEnd, prevLabel: `${fmt(prevStart)} - ${fmt(prevEnd)}` }
+  }, [kpiDe, kpiAte])
 
-      // Janela anterior com o mesmo tamanho do período atual
-      const prevEnd = new Date(start)
-      prevEnd.setDate(prevEnd.getDate() - 1)
-      const prevStart = new Date(start)
-      const daysCount = days.length
-      prevStart.setDate(prevStart.getDate() - daysCount)
-
-      // Mapas por dia — atual
-      const arOpenByDay: Record<string, number> = {}
-      const arAllByDay: Record<string, number> = {}
-      for (const r of arRows) {
-        const d = parseDate(String(r.data_vencimento))
-        if (!d) continue
-        const k = toDateOnly(d)
-        const val = Number(r.valor_total) || 0
-        arAllByDay[k] = (arAllByDay[k] || 0) + val
-        if (!isPaid(r.status)) arOpenByDay[k] = (arOpenByDay[k] || 0) + val
-      }
-
-      const apOpenByDay: Record<string, number> = {}
-      const apAllByDay: Record<string, number> = {}
-      for (const r of apRows) {
-        const d = parseDate(String(r.data_vencimento))
-        if (!d) continue
-        const k = toDateOnly(d)
-        const val = Number(r.valor_total) || 0
-        apAllByDay[k] = (apAllByDay[k] || 0) + val
-        if (!isPaid(r.status)) apOpenByDay[k] = (apOpenByDay[k] || 0) + val
-      }
-
-      const prByDay: Record<string, number> = {}
-      for (const r of prRows) {
-        const d = parseDate(String(r.data_recebimento))
-        if (!d) continue
-        const k = toDateOnly(d)
-        prByDay[k] = (prByDay[k] || 0) + (Number(r.valor_total) || 0)
-      }
-
-      const peByDay: Record<string, number> = {}
-      for (const r of peRows) {
-        const d = parseDate(String(r.data_pagamento))
-        if (!d) continue
-        const k = toDateOnly(d)
-        peByDay[k] = (peByDay[k] || 0) + (Number(r.valor_pago) || 0)
-      }
-
-      // Séries diárias para o período atual
-      const sArOpen = days.map(d => arOpenByDay[d] || 0)
-      const sApOpen = days.map(d => apOpenByDay[d] || 0)
-      const sArAll = days.map(d => arAllByDay[d] || 0)
-      const sApAll = days.map(d => apAllByDay[d] || 0)
-      const sPr = days.map(d => prByDay[d] || 0)
-      const sPe = days.map(d => peByDay[d] || 0)
-      const sLucro = days.map((_, i) => (sArAll[i] || 0) - (sApAll[i] || 0))
-      const sCash = days.map((_, i) => (sPr[i] || 0) - (sPe[i] || 0))
-
-      // Totais do período atual
-      const sum = (arr: number[]) => arr.reduce((a, b) => a + b, 0)
-      const curr = {
-        ar: sum(sArOpen),
-        ap: sum(sApOpen),
-        rec: sum(sPr),
-        pag: sum(sPe),
-        recTotal: sum(sArAll),
-        despTotal: sum(sApAll),
-        lucro: sum(sLucro),
-        caixa: sum(sCash),
-      }
-
-      // Totais da janela anterior de 15 dias
-      const inPrevRange = (ds?: string) => {
-        const d = parseDate(String(ds))
-        if (!d) return false
-        const s = toDateOnly(d)
-        return s >= toDateOnly(prevStart) && s <= toDateOnly(prevEnd)
-      }
-      const prev = {
-        ar: arRows.filter(r => !isPaid(r.status) && inPrevRange(String(r.data_vencimento))).reduce((a, r) => a + (Number(r.valor_total) || 0), 0),
-        ap: apRows.filter(r => !isPaid(r.status) && inPrevRange(String(r.data_vencimento))).reduce((a, r) => a + (Number(r.valor_total) || 0), 0),
-        rec: prRows.filter(r => inPrevRange(String(r.data_recebimento))).reduce((a, r) => a + (Number(r.valor_total) || 0), 0),
-        pag: peRows.filter(r => inPrevRange(String(r.data_pagamento))).reduce((a, r) => a + (Number(r.valor_pago) || 0), 0),
-        recTotal: arRows.filter(r => inPrevRange(String(r.data_vencimento))).reduce((a, r) => a + (Number(r.valor_total) || 0), 0),
-        despTotal: apRows.filter(r => inPrevRange(String(r.data_vencimento))).reduce((a, r) => a + (Number(r.valor_total) || 0), 0),
-      }
-      const prevLucro = prev.recTotal - prev.despTotal
-      const prevCaixa = prev.rec - prev.pag
-
-      // Publica na store global com metadados de comparação
-      kpiSparklineActions.setSeries('arMes', sArOpen, { invert: true, currentTotal: curr.ar, previousTotal: prev.ar })
-      kpiSparklineActions.setSeries('apMes', sApOpen, { invert: true, currentTotal: curr.ap, previousTotal: prev.ap })
-      kpiSparklineActions.setSeries('recebidosMes', sPr, { currentTotal: curr.rec, previousTotal: prev.rec })
-      kpiSparklineActions.setSeries('pagosMes', sPe, { invert: true, currentTotal: curr.pag, previousTotal: prev.pag })
-      kpiSparklineActions.setSeries('receitaMes', sArAll, { currentTotal: curr.recTotal, previousTotal: prev.recTotal })
-      kpiSparklineActions.setSeries('despesasMes', sApAll, { invert: true, currentTotal: curr.despTotal, previousTotal: prev.despTotal })
-      kpiSparklineActions.setSeries('lucroMes', sLucro, { currentTotal: curr.lucro, previousTotal: prevLucro })
-      kpiSparklineActions.setSeries('geracaoCaixa', sCash, { currentTotal: curr.caixa, previousTotal: prevCaixa })
-    } catch (e) {
-      // silencioso — se algo falhar, só não renderiza sparkline
+  const prevTotals = useMemo(() => {
+    const inPrevRange = (ds?: string) => {
+      const d = parseDate(String(ds))
+      if (!d) return false
+      const s = toDateOnly(d)
+      return s >= toDateOnly(prevPeriod.prevStart) && s <= toDateOnly(prevPeriod.prevEnd)
     }
-  }, [kpiDe, kpiAte, arRows, apRows, prRows, peRows])
+    const sum = <T extends BaseRow>(arr: T[], pred: (r: T) => boolean) => arr.filter(pred).reduce((acc, r) => acc + (Number(r.valor_total) || 0), 0)
+    const arMes = sum(arRows, r => !isPaid(r.status) && inPrevRange(String(r.data_vencimento)))
+    const apMes = sum(apRows, r => !isPaid(r.status) && inPrevRange(String(r.data_vencimento)))
+    const recebidosMes = prRows.filter(r => inPrevRange(String(r.data_recebimento))).reduce((a, r) => a + (Number(r.valor_total) || 0), 0)
+    const pagosMes = peRows.filter(r => inPrevRange(String(r.data_pagamento))).reduce((a, r) => a + (Number(r.valor_pago) || 0), 0)
+    const receitaMes = arRows.filter(r => inPrevRange(String(r.data_vencimento))).reduce((a, r) => a + (Number(r.valor_total) || 0), 0)
+    const despesasMes = apRows.filter(r => inPrevRange(String(r.data_vencimento))).reduce((a, r) => a + (Number(r.valor_total) || 0), 0)
+    const lucroMes = receitaMes - despesasMes
+    const geracaoCaixa = recebidosMes - pagosMes
+    return { arMes, apMes, recebidosMes, pagosMes, receitaMes, despesasMes, lucroMes, geracaoCaixa }
+  }, [arRows, apRows, prRows, peRows, prevPeriod])
 
   function BarsReceitasDespesas({ items, max }: { items: { label: string; receita: number; despesa: number }[]; max: number }) {
     return (
@@ -807,7 +727,7 @@ export default function FinanceiroDashboardPage() {
             <ArrowDownCircle className="w-4 h-4" style={{ color: kpiIconColor }} />A Receber no mês ({kpiLabel})
           </div>
           <div className="text-2xl font-bold text-emerald-600" style={styleValues}>{formatBRL(kpis.arMes)}</div>
-          <KPISparkline id="arMes" className="mt-2" height={36} />
+          <KPITrendBadge current={kpis.arMes} previous={prevTotals.arMes} invert label={`vs ${prevPeriod.prevLabel}`} />
           <div className="text-xs text-gray-400 mt-1" style={styleText}>Vencimento dentro do período</div>
         </div>
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor, boxShadow: cardBoxShadow }}>
@@ -815,7 +735,7 @@ export default function FinanceiroDashboardPage() {
             <ArrowUpCircle className="w-4 h-4" style={{ color: kpiIconColor }} />A Pagar no mês ({kpiLabel})
           </div>
           <div className="text-2xl font-bold text-rose-600" style={styleValues}>{formatBRL(kpis.apMes)}</div>
-          <KPISparkline id="apMes" className="mt-2" height={36} />
+          <KPITrendBadge current={kpis.apMes} previous={prevTotals.apMes} invert label={`vs ${prevPeriod.prevLabel}`} />
           <div className="text-xs text-gray-400 mt-1" style={styleText}>Vencimento dentro do período</div>
         </div>
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor, boxShadow: cardBoxShadow }}>
@@ -823,7 +743,7 @@ export default function FinanceiroDashboardPage() {
             <Wallet className="w-4 h-4" style={{ color: kpiIconColor }} />Recebido no mês ({kpiLabel})
           </div>
           <div className="text-2xl font-bold text-emerald-600" style={styleValues}>{formatBRL(kpis.recebidosMes)}</div>
-          <KPISparkline id="recebidosMes" className="mt-2" height={36} />
+          <KPITrendBadge current={kpis.recebidosMes} previous={prevTotals.recebidosMes} label={`vs ${prevPeriod.prevLabel}`} />
           <div className="text-xs text-gray-400 mt-1" style={styleText}>Recebimentos realizados no período</div>
         </div>
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor, boxShadow: cardBoxShadow }}>
@@ -831,7 +751,7 @@ export default function FinanceiroDashboardPage() {
             <CalendarCheck className="w-4 h-4" style={{ color: kpiIconColor }} />Pago no mês ({kpiLabel})
           </div>
           <div className="text-2xl font-bold text-rose-600" style={styleValues}>{formatBRL(kpis.pagosMes)}</div>
-          <KPISparkline id="pagosMes" className="mt-2" height={36} />
+          <KPITrendBadge current={kpis.pagosMes} previous={prevTotals.pagosMes} invert label={`vs ${prevPeriod.prevLabel}`} />
           <div className="text-xs text-gray-400 mt-1" style={styleText}>Pagamentos realizados no período</div>
         </div>
       </div>
@@ -843,7 +763,7 @@ export default function FinanceiroDashboardPage() {
             <Wallet className="w-4 h-4" style={{ color: kpiIconColor }} />Receita ({kpiLabel})
           </div>
           <div className="text-2xl font-bold text-emerald-600" style={styleValues}>{formatBRL(kpis.receitaMes)}</div>
-          <KPISparkline id="receitaMes" className="mt-2" height={36} />
+          <KPITrendBadge current={kpis.receitaMes} previous={prevTotals.receitaMes} label={`vs ${prevPeriod.prevLabel}`} />
           <div className="text-xs text-gray-400 mt-1" style={styleText}>Contas a receber no período (sem status)</div>
         </div>
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor, boxShadow: cardBoxShadow }}>
@@ -851,7 +771,7 @@ export default function FinanceiroDashboardPage() {
             <ArrowUpCircle className="w-4 h-4" style={{ color: kpiIconColor }} />Despesas ({kpiLabel})
           </div>
           <div className="text-2xl font-bold text-rose-600" style={styleValues}>{formatBRL(kpis.despesasMes)}</div>
-          <KPISparkline id="despesasMes" className="mt-2" height={36} />
+          <KPITrendBadge current={kpis.despesasMes} previous={prevTotals.despesasMes} invert label={`vs ${prevPeriod.prevLabel}`} />
           <div className="text-xs text-gray-400 mt-1" style={styleText}>Contas a pagar no período (sem status)</div>
         </div>
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor, boxShadow: cardBoxShadow }}>
@@ -865,7 +785,7 @@ export default function FinanceiroDashboardPage() {
               <div className={`text-2xl font-bold ${cls}`} style={styleValues}>{formatBRL(net)}</div>
             )
           })()}
-          <KPISparkline id="lucroMes" className="mt-2" height={36} />
+          <KPITrendBadge current={kpis.lucroMes} previous={prevTotals.lucroMes} label={`vs ${prevPeriod.prevLabel}`} />
           <div className="text-xs text-gray-400 mt-1" style={styleText}>Receita − Despesas</div>
         </div>
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor, boxShadow: cardBoxShadow }}>
@@ -879,7 +799,7 @@ export default function FinanceiroDashboardPage() {
               <div className={`text-2xl font-bold ${cls}`} style={styleValues}>{formatBRL(net)}</div>
             )
           })()}
-          <KPISparkline id="geracaoCaixa" className="mt-2" height={36} />
+          <KPITrendBadge current={kpis.geracaoCaixa} previous={prevTotals.geracaoCaixa} label={`vs ${prevPeriod.prevLabel}`} />
           <div className="text-xs text-gray-400 mt-1" style={styleText}>Recebido − Pago no período</div>
         </div>
       </div>
