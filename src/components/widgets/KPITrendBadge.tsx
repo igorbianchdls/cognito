@@ -16,14 +16,11 @@ function formatPct(n: number) {
 }
 
 export function KPITrendBadge({ current, previous, label = 'vs período anterior', className }: KPITrendBadgeProps) {
-  const diff = current - previous
-  let pct: number | null
-  // Regra solicitada: quando não houver base (previous === 0), mostrar 0% em cinza (sem seta)
-  if (previous === 0) {
-    pct = 0
-  } else {
-    pct = (diff / Math.abs(previous)) * 100
-  }
+  const prevSafe = Number.isFinite(previous) ? previous : 0
+  const currSafe = Number.isFinite(current) ? current : 0
+  const diff = currSafe - prevSafe
+  // Regra: se não houver base (previous <= 0) ou for inválida, mostrar 0%
+  const pct = prevSafe === 0 ? 0 : (diff / Math.abs(prevSafe)) * 100
 
   // Cores/ícones pelo sinal do percentual
   const isPos = pct !== null && pct > 0
