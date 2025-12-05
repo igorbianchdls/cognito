@@ -75,20 +75,28 @@ function toDateOnly(d: Date) {
 
 function parseDate(value?: string) {
   if (!value) return null
-  const d = new Date(value)
-  if (!isNaN(d.getTime())) return d
-  // Fallback: tenta dd/mm/yyyy
   if (typeof value === 'string') {
-    const m = value.match(/^(\d{2})\/(\d{2})\/(\d{4})/)
-    if (m) {
-      const dd = parseInt(m[1], 10)
-      const mm = parseInt(m[2], 10)
-      const yyyy = parseInt(m[3], 10)
-      const alt = new Date(yyyy, mm - 1, dd)
-      if (!isNaN(alt.getTime())) return alt
+    // Padrão ISO date-only ou com tempo: pega apenas a parte de data
+    const mIso = value.match(/^(\d{4})-(\d{2})-(\d{2})/)
+    if (mIso) {
+      const yyyy = parseInt(mIso[1], 10)
+      const mm = parseInt(mIso[2], 10)
+      const dd = parseInt(mIso[3], 10)
+      const d = new Date(yyyy, mm - 1, dd) // local date, sem fuso
+      if (!isNaN(d.getTime())) return d
+    }
+    // dd/mm/yyyy
+    const mBr = value.match(/^(\d{2})\/(\d{2})\/(\d{4})/)
+    if (mBr) {
+      const dd = parseInt(mBr[1], 10)
+      const mm = parseInt(mBr[2], 10)
+      const yyyy = parseInt(mBr[3], 10)
+      const d = new Date(yyyy, mm - 1, dd)
+      if (!isNaN(d.getTime())) return d
     }
   }
-  return null
+  const d = new Date(value as string)
+  return isNaN(d.getTime()) ? null : d
 }
 
 function daysDiffFromToday(dateStr?: string) {
@@ -523,8 +531,10 @@ export default function FinanceiroDashboardPage() {
   const kpis = useMemo(() => {
     if (kpisMonth) return kpisMonth
     const inMonth = (ds?: string) => {
-      if (!ds) return false
-      return ds >= kpiDe && ds <= kpiAte
+      const d = parseDate(ds)
+      if (!d) return false
+      const s = toDateOnly(d)
+      return s >= kpiDe && s <= kpiAte
     }
     const sum = <T extends BaseRow>(arr: T[], pred: (r: T) => boolean) => arr.filter(pred).reduce((acc, r) => acc + toNum(r.valor_total), 0)
     const arMes = sum(arRows, r => !isPaid(r.status) && inMonth(String(r.data_vencimento)))
@@ -610,7 +620,7 @@ export default function FinanceiroDashboardPage() {
 
   // Cálculo do período anterior (mesmo tamanho) e label
   const prevPeriod = useMemo(() => {
-    const start = new Date(kpiDe)
+    const start = parseDate(kpiDe) || new Date(kpiDe)
     const prevEnd = new Date(start)
     prevEnd.setDate(prevEnd.getDate() - 1)
     const prevStart = new Date(start)
