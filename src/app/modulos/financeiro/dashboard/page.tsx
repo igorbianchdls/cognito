@@ -840,7 +840,7 @@ export default function FinanceiroDashboardPage() {
         <div className="p-6 text-sm text-red-600">{error}</div>
       ) : null}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor, boxShadow: cardBoxShadow }}>
           <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleKpiTitle}>
             <ArrowDownCircle className="w-4 h-4" style={{ color: kpiIconColor }} />A Receber ({kpiLabel})
@@ -873,10 +873,6 @@ export default function FinanceiroDashboardPage() {
           <KPITrendBadge current={kpis.pagosMes} previous={prevTotals.pagosMes} invert label={`vs ${prevPeriod.prevLabel}`} />
           <div className="text-xs text-gray-400 mt-1" style={styleText}>Pagamentos realizados no período</div>
         </div>
-      </div>
-
-      {/* KPI: Contagens de títulos pendentes */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 mb-6">
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor, boxShadow: cardBoxShadow }}>
           <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleKpiTitle}>
             <ArrowDownCircle className="w-4 h-4" style={{ color: kpiIconColor }} />Qtd. A Receber ({kpiLabel})
