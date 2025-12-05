@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useStore } from '@nanostores/react'
 import DashboardLayout from '@/components/modulos/DashboardLayout'
-import { ArrowDownCircle, ArrowUpCircle, AlertTriangle, BarChart3, Wallet, Star, CalendarCheck, Calendar as CalendarIcon } from 'lucide-react'
+import { ArrowDownCircle, ArrowUpCircle, BarChart3, Wallet, Star, CalendarCheck, Calendar as CalendarIcon } from 'lucide-react'
 import { BarChartHorizontalRecharts } from '@/components/charts/BarChartHorizontalRecharts'
 import { BarChartMultipleRecharts } from '@/components/charts/BarChartMultipleRecharts'
 import { KPITrendBadge } from '@/components/widgets/KPITrendBadge'
@@ -11,7 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Switch } from '@/components/ui/switch'
+// import { Switch } from '@/components/ui/switch'
 import type { DateRange } from 'react-day-picker'
 import { $financeiroDashboardUI, $financeiroDashboardFilters, financeiroDashboardActions, type FontSection } from '@/stores/modulos/financeiroDashboardStore'
 // (sem store global para sparkline)
@@ -146,7 +146,7 @@ export default function FinanceiroDashboardPage() {
   const filters = useStore($financeiroDashboardFilters)
   const fonts = ui.fonts
   const cardBorderColor = ui.cardBorderColor
-  const cardShadow = ui.cardShadow // legacy flag (kept for compatibility)
+  // const cardShadow = ui.cardShadow // legacy flag (kept for compatibility)
   const pageBgColor = ui.pageBgColor
   const filtersIconColor = ui.filtersIconColor
   const kpiIconColor = ui.kpiIconColor
@@ -166,9 +166,7 @@ export default function FinanceiroDashboardPage() {
       'sidebarItemText',
     ]
     sections.forEach((s) => financeiroDashboardActions.setFont(s, { family: 'Barlow' }))
-    // run once on mount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+    }, [])
   // Patch-like setters to keep UI code similar
   const setFonts = (
     updater: (
@@ -216,14 +214,14 @@ export default function FinanceiroDashboardPage() {
     fontSize: typeof fonts.kpiTitle.size === 'number' ? `${fonts.kpiTitle.size}px` : undefined,
     textTransform: fonts.kpiTitle.transform === 'uppercase' ? 'uppercase' : 'none',
   }), [fonts.kpiTitle])
-  const styleChartTitle = useMemo<React.CSSProperties>(() => ({
-    fontFamily: fontVar(fonts.chartTitle.family),
-    fontWeight: fonts.chartTitle.weight as React.CSSProperties['fontWeight'],
-    letterSpacing: typeof fonts.chartTitle.letterSpacing === 'number' ? `${fonts.chartTitle.letterSpacing}em` : undefined,
-    color: fonts.chartTitle.color || undefined,
-    fontSize: typeof fonts.chartTitle.size === 'number' ? `${fonts.chartTitle.size}px` : undefined,
-    textTransform: fonts.chartTitle.transform === 'uppercase' ? 'uppercase' : 'none',
-  }), [fonts.chartTitle])
+  // const styleChartTitle = useMemo<React.CSSProperties>(() => ({
+  //   fontFamily: fontVar(fonts.chartTitle.family),
+  //   fontWeight: fonts.chartTitle.weight as React.CSSProperties['fontWeight'],
+  //   letterSpacing: typeof fonts.chartTitle.letterSpacing === 'number' ? `${fonts.chartTitle.letterSpacing}em` : undefined,
+  //   color: fonts.chartTitle.color || undefined,
+  //   fontSize: typeof fonts.chartTitle.size === 'number' ? `${fonts.chartTitle.size}px` : undefined,
+  //   textTransform: fonts.chartTitle.transform === 'uppercase' ? 'uppercase' : 'none',
+  // }), [fonts.chartTitle])
   const styleText = useMemo<React.CSSProperties>(() => ({
     fontFamily: fontVar(fonts.text.family),
     fontWeight: fonts.text.weight as React.CSSProperties['fontWeight'],
@@ -398,46 +396,50 @@ export default function FinanceiroDashboardPage() {
         let pr: RecebidoRow[] = []
         let pe: EfetuadoRow[] = []
 
+        const pick = (o: Record<string, unknown>, keys: string[]) => {
+          for (const k of keys) if (o[k] !== undefined && o[k] !== null) return o[k]
+          return undefined
+        }
         if (arRes.status === 'fulfilled' && arRes.value.ok) {
-          const j = (await arRes.value.json()) as { rows?: any[] }
+          const j = (await arRes.value.json()) as { rows?: Record<string, unknown>[] }
           ar = Array.isArray(j?.rows)
-            ? j.rows.map((r: any) => ({
-                valor_total: r.valor_a_receber ?? r.valor ?? r.valor_total,
-                data_vencimento: r.data_vencimento ?? r.vencimento ?? r.dv,
-                status: r.status_conta ?? r.status,
-                cliente: r.cliente_nome ?? r.cliente,
-                descricao: r.descricao_conta ?? r.descricao,
+            ? j.rows.map((r) => ({
+                valor_total: pick(r, ['valor_a_receber', 'valor', 'valor_total']) as number | string | undefined,
+                data_vencimento: pick(r, ['data_vencimento', 'vencimento', 'dv']) as string | undefined,
+                status: pick(r, ['status_conta', 'status']) as string | undefined,
+                cliente: pick(r, ['cliente_nome', 'cliente']) as string | undefined,
+                descricao: pick(r, ['descricao_conta', 'descricao']) as string | undefined,
               }))
             : []
         }
         if (apRes.status === 'fulfilled' && apRes.value.ok) {
-          const j = (await apRes.value.json()) as { rows?: any[] }
+          const j = (await apRes.value.json()) as { rows?: Record<string, unknown>[] }
           ap = Array.isArray(j?.rows)
-            ? j.rows.map((r: any) => ({
-                valor_total: r.valor_a_pagar ?? r.valor ?? r.valor_total,
-                data_vencimento: r.data_vencimento ?? r.vencimento ?? r.dv,
-                status: r.status_conta ?? r.status,
-                fornecedor: r.fornecedor_nome ?? r.fornecedor,
-                descricao: r.descricao_conta ?? r.descricao,
-                descricao_lancamento: r.descricao_conta ?? r.descricao_lancamento ?? r.descricao,
+            ? j.rows.map((r) => ({
+                valor_total: pick(r, ['valor_a_pagar', 'valor', 'valor_total']) as number | string | undefined,
+                data_vencimento: pick(r, ['data_vencimento', 'vencimento', 'dv']) as string | undefined,
+                status: pick(r, ['status_conta', 'status']) as string | undefined,
+                fornecedor: pick(r, ['fornecedor_nome', 'fornecedor']) as string | undefined,
+                descricao: pick(r, ['descricao_conta', 'descricao']) as string | undefined,
+                descricao_lancamento: pick(r, ['descricao_conta', 'descricao_lancamento', 'descricao']) as string | undefined,
               }))
             : []
         }
         if (prRes.status === 'fulfilled' && prRes.value.ok) {
-          const j = (await prRes.value.json()) as { rows?: any[] }
+          const j = (await prRes.value.json()) as { rows?: Record<string, unknown>[] }
           pr = Array.isArray(j?.rows)
-            ? j.rows.map((r: any) => ({
-                valor_total: r.valor_recebido ?? r.valor ?? r.valor_total,
-                data_recebimento: r.data_pagamento ?? r.data_recebimento ?? r.data_lancamento,
+            ? j.rows.map((r) => ({
+                valor_total: pick(r, ['valor_recebido', 'valor', 'valor_total']) as number | string | undefined,
+                data_recebimento: pick(r, ['data_pagamento', 'data_recebimento', 'data_lancamento']) as string | undefined,
               }))
             : []
         }
         if (peRes.status === 'fulfilled' && peRes.value.ok) {
-          const j = (await peRes.value.json()) as { rows?: any[] }
+          const j = (await peRes.value.json()) as { rows?: Record<string, unknown>[] }
           pe = Array.isArray(j?.rows)
-            ? j.rows.map((r: any) => ({
-                valor_pago: r.valor_pago ?? r.valor ?? r.valor_total,
-                data_pagamento: r.data_pagamento ?? r.data_lancamento ?? r.data,
+            ? j.rows.map((r) => ({
+                valor_pago: pick(r, ['valor_pago', 'valor', 'valor_total']) as number | string | undefined,
+                data_pagamento: pick(r, ['data_pagamento', 'data_lancamento', 'data']) as string | undefined,
               }))
             : []
         }
