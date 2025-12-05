@@ -18,9 +18,9 @@ function formatPct(n: number) {
 export function KPITrendBadge({ current, previous, label = 'vs período anterior', className }: KPITrendBadgeProps) {
   const diff = current - previous
   let pct: number | null
+  // Regra solicitada: quando não houver base (previous === 0), mostrar 0% em cinza (sem seta)
   if (previous === 0) {
-    if (current === 0) pct = 0
-    else pct = current > 0 ? 100 : -100
+    pct = 0
   } else {
     pct = (diff / Math.abs(previous)) * 100
   }
