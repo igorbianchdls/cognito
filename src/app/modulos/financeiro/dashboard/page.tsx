@@ -368,7 +368,7 @@ export default function FinanceiroDashboardPage() {
   type KPIs = { arMes: number; apMes: number; recebidosMes: number; pagosMes: number; geracaoCaixa: number; receitaMes: number; despesasMes: number; lucroMes: number; arCount: number; apCount: number }
   const [kpisMonth, setKpisMonth] = useState<KPIs | null>(null)
   const [kpisPrev, setKpisPrev] = useState<KPIs | null>(null)
-  const { kpiDe, kpiAte, kpiLabel } = useMemo(() => {
+  const { kpiDe, kpiAte } = useMemo(() => {
     const now = new Date()
     const firstDayOf = (d: Date) => new Date(d.getFullYear(), d.getMonth(), 1)
     const lastDayOf = (d: Date) => new Date(d.getFullYear(), d.getMonth() + 1, 0)
@@ -386,8 +386,7 @@ export default function FinanceiroDashboardPage() {
     }
     const deIso = toDateOnly(start)
     const ateIso = toDateOnly(end)
-    const label = `${start.toLocaleDateString('pt-BR')} - ${end.toLocaleDateString('pt-BR')}`
-    return { kpiDe: deIso, kpiAte: ateIso, kpiLabel: label }
+    return { kpiDe: deIso, kpiAte: ateIso }
   }, [dateRange])
 
   useEffect(() => {
@@ -598,21 +597,22 @@ export default function FinanceiroDashboardPage() {
             setTopClientes(Array.isArray(j?.rows) ? j.rows.map(r => ({ label: String(r.label || ''), value: Number(r.total || 0) })) : [])
           } else setTopClientes([])
         }
-      } catch (e) {
-        if (!cancelled) setError('Falha ao carregar dados')
+      } catch (err) {
+        if (!cancelled) {
+          const msg = err instanceof Error ? err.message : 'Falha ao carregar dados'
+          setError(msg)
+        }
       } finally {
         if (!cancelled) setLoading(false)
       }
     }
     load()
     return () => { cancelled = true }
-  }, [kpiDe, kpiAte])
+  }, [kpiDe, kpiAte, groupBy])
 
   // Helpers to compute KPIs
   const todayStr = toDateOnly(new Date())
   const isToday = (d?: string) => d ? toDateOnly(new Date(d)) === todayStr : false
-  const isOverdue = <T extends BaseRow>(r: T) => !isPaid(r.status) && (daysDiffFromToday(String(r.data_vencimento)) ?? 1) < 0
-  const isOpenOrOverdue = <T extends BaseRow>(r: T) => !isPaid(r.status)
 
   // Fallback simples caso a API de KPIs não responda: usa somas do mês corrente (client-side)
   const kpis = useMemo(() => {
@@ -647,12 +647,13 @@ export default function FinanceiroDashboardPage() {
     // Carrega KPIs de hoje e de ontem pela mesma API, para garantir consistência
     const today = toDateOnly(new Date())
     const yest = toDateOnly(new Date(Date.now() - 86400000))
+    type KPIsApi = { ar_mes?: number; ap_mes?: number; recebidos_mes?: number; pagos_mes?: number; geracao_caixa?: number; receita_mes?: number; despesas_mes?: number; lucro_mes?: number; ar_count?: number; ap_count?: number }
     Promise.allSettled([
       fetch(`/api/modulos/financeiro?view=kpis&de=${today}&ate=${today}`, { cache: 'no-store' }),
       fetch(`/api/modulos/financeiro?view=kpis&de=${yest}&ate=${yest}`, { cache: 'no-store' })
     ]).then(async ([resToday, resYest]) => {
       if (resToday.status === 'fulfilled' && resToday.value.ok) {
-        const j = await resToday.value.json() as { kpis?: Partial<KPIs> }
+        const j = await resToday.value.json() as { kpis?: KPIsApi }
         if (j?.kpis) setKpisToday({
           arMes: Number(j.kpis.ar_mes || 0),
           apMes: Number(j.kpis.ap_mes || 0),
@@ -662,12 +663,12 @@ export default function FinanceiroDashboardPage() {
           receitaMes: Number(j.kpis.receita_mes || 0),
           despesasMes: Number(j.kpis.despesas_mes || 0),
           lucroMes: Number(j.kpis.lucro_mes || 0),
-          arCount: Number((j.kpis as any).ar_count || 0),
-          apCount: Number((j.kpis as any).ap_count || 0),
+          arCount: Number(j.kpis.ar_count || 0),
+          apCount: Number(j.kpis.ap_count || 0),
         })
       }
       if (resYest.status === 'fulfilled' && resYest.value.ok) {
-        const j = await resYest.value.json() as { kpis?: Partial<KPIs> }
+        const j = await resYest.value.json() as { kpis?: KPIsApi }
         if (j?.kpis) setKpisYesterday({
           arMes: Number(j.kpis.ar_mes || 0),
           apMes: Number(j.kpis.ap_mes || 0),
@@ -677,8 +678,8 @@ export default function FinanceiroDashboardPage() {
           receitaMes: Number(j.kpis.receita_mes || 0),
           despesasMes: Number(j.kpis.despesas_mes || 0),
           lucroMes: Number(j.kpis.lucro_mes || 0),
-          arCount: Number((j.kpis as any).ar_count || 0),
-          apCount: Number((j.kpis as any).ap_count || 0),
+          arCount: Number(j.kpis.ar_count || 0),
+          apCount: Number(j.kpis.ap_count || 0),
         })
       }
     })
