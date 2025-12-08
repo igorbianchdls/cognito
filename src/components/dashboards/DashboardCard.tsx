@@ -78,12 +78,14 @@ export default function DashboardCard({ item, onOpen, onCopyId }: Props) {
           <Button size="sm" variant="secondary" onClick={handleCopy}>
             <Copy className="w-3.5 h-3.5 mr-1" /> ID
           </Button>
+          <Button size="sm" variant="secondary" onClick={() => window.open(`/dashboards/${item.id}/view`, "_self") }>
+            <ExternalLink className="w-3.5 h-3.5 mr-1" /> View
+          </Button>
           <Button size="sm" onClick={handleOpen}>
-            <ExternalLink className="w-3.5 h-3.5 mr-1" /> Abrir
+            <ExternalLink className="w-3.5 h-3.5 mr-1" /> Editar
           </Button>
         </div>
       </div>
     </div>
   );
 }
-
