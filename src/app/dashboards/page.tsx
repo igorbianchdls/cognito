@@ -9,7 +9,8 @@ import NexusPageContainer from "@/components/nexus/NexusPageContainer";
 import PageHeader from "@/components/modulos/PageHeader";
 import TabsNav from "@/components/modulos/TabsNav";
 import { $titulo, $tabs, $layout, moduleUiActions } from "@/stores/modulos/moduleUiStore";
-import { Layout, Users, Globe2 } from "lucide-react";
+import { Layout, Users, Globe2, LayoutGrid } from "lucide-react";
+import DashboardGridView from "@/components/dashboards/DashboardGridView";
 
 const fontVar = (name?: string) => {
   if (!name) return undefined;
@@ -34,6 +35,7 @@ export default function DashboardsPage() {
         { value: "meus", label: "Meus", icon: <Layout className="text-blue-600" /> },
         { value: "equipe", label: "Equipe", icon: <Users className="text-emerald-600" /> },
         { value: "publicos", label: "Públicos", icon: <Globe2 className="text-gray-700" /> },
+        { value: "catalogo", label: "Catálogo", icon: <LayoutGrid className="text-indigo-600" /> },
       ],
       selected: "meus",
     });
@@ -87,12 +89,16 @@ export default function DashboardsPage() {
                     className="px-0 md:px-0"
                   />
                 </div>
-                {/* Placeholder de conteúdo — sem tabelas por enquanto */}
+                {/* Conteúdo principal abaixo das tabs */}
                 <div style={{ paddingTop: (layout.contentTopGap || 0) + (layout.mbTabs || 0) }}>
                   <div className="px-4 md:px-6">
-                    <div className="w-full p-4 text-sm text-gray-600 bg-white border rounded">
-                      Selecione uma aba. O conteúdo será definido depois.
-                    </div>
+                    {tabs.selected === 'catalogo' ? (
+                      <DashboardGridView />
+                    ) : (
+                      <div className="w-full p-4 text-sm text-gray-600 bg-white border rounded">
+                        Selecione a aba Catálogo para ver os dashboards como cards.
+                      </div>
+                    )}
                   </div>
                 </div>
               </NexusPageContainer>
