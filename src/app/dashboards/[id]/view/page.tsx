@@ -4,7 +4,11 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { dashboardsApi, type Dashboard } from "@/stores/dashboardsStore";
 import { ConfigParser } from "@/components/visual-builder/ConfigParser";
-import WidgetRenderer from "@/components/visual-builder/WidgetRenderer";
+import dynamic from "next/dynamic";
+import ClientErrorBoundary from "@/components/common/ClientErrorBoundary";
+
+// Lazy-load heavy renderer to reduce initial errors/hydration issues
+const WidgetRenderer = dynamic(() => import("@/components/visual-builder/WidgetRenderer"), { ssr: false });
 
 type Parse = ReturnType<typeof ConfigParser.parse>;
 
@@ -78,25 +82,27 @@ export default function DashboardViewPage() {
             ) : null}
           </div>
         )}
-        <div
-          className="grid gap-4"
-          style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
-        >
-          {ordered.map((w) => {
-            const span = Math.max(1, Math.min(cols, (w.span?.desktop || w.position?.w || 3)));
-            const minH = (() => {
-              if (typeof w.heightPx === 'number' && w.heightPx > 0) return `${w.heightPx}px`;
-              if (w.type === 'kpi') return '100px';
-              if (['bar','line','pie','area','stackedbar','groupedbar','stackedlines','radialstacked','pivotbar'].includes(w.type)) return '500px';
-              return '280px';
-            })();
-            return (
-              <div key={w.id} className="bg-white border rounded-lg" style={{ gridColumn: `span ${span}`, borderColor: grid.borderColor || '#e5e7eb', minHeight: minH }}>
-                <WidgetRenderer widget={w} />
-              </div>
-            );
-          })}
-        </div>
+        <ClientErrorBoundary fallback={<div className="p-4 bg-red-50 border border-red-200 rounded">Falha ao renderizar widgets.</div>}>
+          <div
+            className="grid gap-4"
+            style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
+          >
+            {ordered.map((w) => {
+              const span = Math.max(1, Math.min(cols, (w.span?.desktop || w.position?.w || 3)));
+              const minH = (() => {
+                if (typeof w.heightPx === 'number' && w.heightPx > 0) return `${w.heightPx}px`;
+                if (w.type === 'kpi') return '100px';
+                if (['bar','line','pie','area','stackedbar','groupedbar','stackedlines','radialstacked','pivotbar'].includes(w.type)) return '500px';
+                return '280px';
+              })();
+              return (
+                <div key={w.id} className="bg-white border rounded-lg" style={{ gridColumn: `span ${span}`, borderColor: grid.borderColor || '#e5e7eb', minHeight: minH }}>
+                  <WidgetRenderer widget={w} />
+                </div>
+              );
+            })}
+          </div>
+        </ClientErrorBoundary>
       </div>
     </div>
   );
