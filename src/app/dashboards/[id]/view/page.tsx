@@ -1,109 +1,27 @@
-"use client";
+import DashboardViewerClient from "@/components/dashboards/DashboardViewerClient";
 
-import { useEffect, useMemo, useState } from "react";
-import { useParams } from "next/navigation";
-import { dashboardsApi, type Dashboard } from "@/stores/dashboardsStore";
-import { ConfigParser } from "@/components/visual-builder/ConfigParser";
-import dynamic from "next/dynamic";
-import ClientErrorBoundary from "@/components/common/ClientErrorBoundary";
+type ApiResponse = { success: true; item: { id: string; title: string; description: string | null; sourcecode: string } } | { success: false; error: string };
 
-// Lazy-load heavy renderer to reduce initial errors/hydration issues
-const WidgetRenderer = dynamic(() => import("@/components/visual-builder/WidgetRenderer"), { ssr: false });
-
-type Parse = ReturnType<typeof ConfigParser.parse>;
-
-export default function DashboardViewPage() {
-  const params = useParams<{ id: string }>();
-  const id = params?.id as string;
-
-  const [item, setItem] = useState<Dashboard | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const [parse, setParse] = useState<Parse | null>(null);
-
-  useEffect(() => {
-    let mounted = true;
-    const load = async () => {
-      if (!id) return;
-      setLoading(true);
-      setError(null);
-      try {
-        const { item } = await dashboardsApi.get(id);
-        if (!mounted) return;
-        setItem(item);
-        const result = ConfigParser.parse(item.sourcecode || "{}");
-        setParse(result);
-      } catch (e) {
-        if (!mounted) return;
-        setError((e as Error).message || "Falha ao carregar dashboard");
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    };
-    load();
-    return () => { mounted = false; };
-  }, [id]);
-
-  if (loading) {
-    return <div className="min-h-screen p-6"><div className="h-10 w-48 bg-gray-200 rounded animate-pulse mb-4" /><div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">{Array.from({ length: 6 }).map((_,i) => (<div key={i} className="h-40 bg-white border rounded-xl animate-pulse" />))}</div></div>;
-  }
-  if (error) {
-    return <div className="min-h-screen p-6"><div className="p-4 bg-red-50 border border-red-200 rounded">{error}</div></div>;
-  }
-  if (!item || !parse) {
+export default async function DashboardViewPage({ params }: { params: { id: string } }) {
+  const id = params?.id;
+  if (!id) {
     return <div className="min-h-screen p-6"><div className="p-4 bg-white border rounded">Dashboard não encontrado.</div></div>;
   }
 
-  const widgets = parse.widgets || [];
-  const grid = parse.gridConfig || { cols: 12 } as Parse["gridConfig"];
-  const cols = Math.max(1, grid.cols || 12);
+  let data: ApiResponse;
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_PATH ?? ''}/api/dashboards/${id}`, { cache: 'no-store' });
+    data = await res.json();
+  } catch (e) {
+    return <div className="min-h-screen p-6"><div className="p-4 bg-red-50 border border-red-200 rounded">Falha ao carregar: {(e as Error).message}</div></div>;
+  }
 
-  // Order widgets by position (y then x) for stable layout
-  const ordered = useMemo(() => {
-    return [...widgets].sort((a, b) => {
-      const ay = (a.position?.y ?? 0);
-      const by = (b.position?.y ?? 0);
-      if (ay !== by) return ay - by;
-      const ax = (a.position?.x ?? 0);
-      const bx = (b.position?.x ?? 0);
-      return ax - bx;
-    });
-  }, [widgets]);
+  if (!('success' in data) || !data.success) {
+    return <div className="min-h-screen p-6"><div className="p-4 bg-red-50 border border-red-200 rounded">{('error' in data && data.error) ? data.error : 'Erro desconhecido'}</div></div>;
+  }
 
+  const { item } = data;
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#f9fafb' }}>
-      <div className="max-w-7xl mx-auto p-4 md:p-6">
-        {(parse.dashboardTitle || item.title) && (
-          <div className="mb-4">
-            <h1 className="text-xl md:text-2xl font-semibold tracking-tight text-gray-900">{parse.dashboardTitle || item.title}</h1>
-            {parse.dashboardSubtitle || item.description ? (
-              <p className="text-sm text-gray-600 mt-1">{parse.dashboardSubtitle || item.description}</p>
-            ) : null}
-          </div>
-        )}
-        <ClientErrorBoundary fallback={<div className="p-4 bg-red-50 border border-red-200 rounded">Falha ao renderizar widgets.</div>}>
-          <div
-            className="grid gap-4"
-            style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
-          >
-            {ordered.map((w) => {
-              const span = Math.max(1, Math.min(cols, (w.span?.desktop || w.position?.w || 3)));
-              const minH = (() => {
-                if (typeof w.heightPx === 'number' && w.heightPx > 0) return `${w.heightPx}px`;
-                if (w.type === 'kpi') return '100px';
-                if (['bar','line','pie','area','stackedbar','groupedbar','stackedlines','radialstacked','pivotbar'].includes(w.type)) return '500px';
-                return '280px';
-              })();
-              return (
-                <div key={w.id} className="bg-white border rounded-lg" style={{ gridColumn: `span ${span}`, borderColor: grid.borderColor || '#e5e7eb', minHeight: minH }}>
-                  <WidgetRenderer widget={w} />
-                </div>
-              );
-            })}
-          </div>
-        </ClientErrorBoundary>
-      </div>
-    </div>
+    <DashboardViewerClient title={item.title} description={item.description} sourcecode={item.sourcecode} />
   );
 }
