@@ -84,7 +84,12 @@ export default function DashboardViewPage() {
         >
           {ordered.map((w) => {
             const span = Math.max(1, Math.min(cols, (w.span?.desktop || w.position?.w || 3)));
-            const minH = typeof w.style?.heightPx === 'number' && w.style.heightPx > 0 ? `${w.style.heightPx}px` : '280px';
+            const minH = (() => {
+              if (typeof w.heightPx === 'number' && w.heightPx > 0) return `${w.heightPx}px`;
+              if (w.type === 'kpi') return '100px';
+              if (['bar','line','pie','area','stackedbar','groupedbar','stackedlines','radialstacked','pivotbar'].includes(w.type)) return '500px';
+              return '280px';
+            })();
             return (
               <div key={w.id} className="bg-white border rounded-lg" style={{ gridColumn: `span ${span}`, borderColor: grid.borderColor || '#e5e7eb', minHeight: minH }}>
                 <WidgetRenderer widget={w} />
@@ -96,4 +101,3 @@ export default function DashboardViewPage() {
     </div>
   );
 }
-
