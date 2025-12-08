@@ -1,6 +1,3 @@
-export default function DashboardsPage() {
-  return <div>Dashboards</div>
-}
 "use client";
 
 import { useEffect } from "react";
@@ -73,4 +70,3 @@ export default function DashboardsPage() {
     </SidebarProvider>
   );
 }
-
