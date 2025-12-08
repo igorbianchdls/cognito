@@ -8,6 +8,7 @@ import {
   Plug,
   Cpu,
   ChevronsUpDown,
+  BarChart3,
 } from "lucide-react"
 
 import MetaIcon from "@/components/icons/MetaIcon"
@@ -88,10 +89,15 @@ const navigationData = {
   ],
   navMain: [
     {
-      title: "Nexus",
+      title: "Chat",
       url: "/nexus",
       icon: MessageSquare,
       isActive: false, // Will be set dynamically
+    },
+    {
+      title: "Dashboards",
+      url: "/dashboards",
+      icon: BarChart3,
     },
     {
       title: "Agentes",
