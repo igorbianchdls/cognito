@@ -1,16 +1,44 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import ClientErrorBoundary from "@/components/common/ClientErrorBoundary";
 import { ConfigParser } from "@/components/visual-builder/ConfigParser";
+import { dashboardsApi, type Dashboard } from "@/stores/dashboardsStore";
 
 const WidgetRenderer = dynamic(() => import("@/components/visual-builder/WidgetRenderer"), { ssr: false });
 
-export default function DashboardViewerClient({ title, description, sourcecode }: { title?: string; description?: string | null; sourcecode: string }) {
-  const parsed = useMemo(() => ConfigParser.parse(sourcecode || "{}"), [sourcecode]);
+export default function DashboardViewerClient({ id, title, description, sourcecode }: { id?: string; title?: string; description?: string | null; sourcecode?: string }) {
+  const [item, setItem] = useState<{ title?: string; description?: string | null; sourcecode: string } | null>(sourcecode ? { title, description, sourcecode } : null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      if (!id || item) return;
+      try {
+        const res = await dashboardsApi.get(id);
+        if (!mounted) return;
+        setItem({ title: res.item.title, description: res.item.description, sourcecode: res.item.sourcecode });
+      } catch (e) {
+        if (!mounted) return;
+        setError((e as Error).message || 'Falha ao carregar dashboard');
+      }
+    };
+    load();
+    return () => { mounted = false; };
+  }, [id]);
+
+  if (error) {
+    return <div className="p-4 bg-red-50 border border-red-200 rounded">{error}</div>;
+  }
+  if (!item) {
+    return <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">{Array.from({ length: 6 }).map((_, i) => (<div key={i} className="h-40 bg-white border rounded-xl animate-pulse" />))}</div>;
+  }
+
+  const parsed = useMemo(() => ConfigParser.parse(item.sourcecode || "{}"), [item.sourcecode]);
   const widgets = parsed.widgets || [];
-  const grid = parsed.gridConfig || { cols: 12 };
+  const grid = parsed.gridConfig || { cols: 12 } as any;
   const cols = Math.max(1, grid.cols || 12);
 
   const ordered = useMemo(() => {
@@ -27,11 +55,11 @@ export default function DashboardViewerClient({ title, description, sourcecode }
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#f9fafb' }}>
       <div className="max-w-7xl mx-auto p-4 md:p-6">
-        {(parsed.dashboardTitle || title) && (
+        {(parsed.dashboardTitle || item.title || title) && (
           <div className="mb-4">
-            <h1 className="text-xl md:text-2xl font-semibold tracking-tight text-gray-900">{parsed.dashboardTitle || title}</h1>
-            {(parsed.dashboardSubtitle || description) ? (
-              <p className="text-sm text-gray-600 mt-1">{parsed.dashboardSubtitle || description}</p>
+            <h1 className="text-xl md:text-2xl font-semibold tracking-tight text-gray-900">{parsed.dashboardTitle || item.title || title}</h1>
+            {(parsed.dashboardSubtitle || item.description || description) ? (
+              <p className="text-sm text-gray-600 mt-1">{parsed.dashboardSubtitle || item.description || description}</p>
             ) : null}
           </div>
         )}
@@ -57,4 +85,3 @@ export default function DashboardViewerClient({ title, description, sourcecode }
     </div>
   );
 }
-
