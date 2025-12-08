@@ -1,8 +1,8 @@
-import DashboardViewerClient from "@/components/dashboards/DashboardViewerClient";
+import DashboardViewerPanel from "@/components/dashboards/DashboardViewerPanel";
 
 export default function DashboardViewPage({ params }: { params: { id: string } }) {
   const id = params?.id;
   return (
-    <DashboardViewerClient id={id} />
+    <DashboardViewerPanel id={id} />
   );
 }
