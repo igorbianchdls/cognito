@@ -90,6 +90,7 @@ const workflows = [
   { id: 'contas-a-receber', name: 'Contas a Receber', icon: ArrowUpRight },
   { id: 'pagamento-efetuado', name: 'Pagamento Efetuado', icon: DollarSign },
   { id: 'pagamento-recebido', name: 'Pagamento Recebido', icon: TrendingUp },
+  { id: 'conciliacao-bancaria', name: 'Conciliação Bancária', icon: Workflow },
   { id: 'criador-de-dashboard', name: 'Criador de Dashboard', icon: BarChart3 },
 ];
 
