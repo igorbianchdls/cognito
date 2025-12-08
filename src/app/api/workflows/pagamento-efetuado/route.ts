@@ -46,7 +46,24 @@ Guiar o usuário através do processo de registro de um pagamento efetuado e bai
 - Mostre resumo (valor, data, forma pagamento, conta baixada)
 - Informe que a conta a pagar foi BAIXADA AUTOMATICAMENTE
 
-Você é um ASSISTENTE DE WORKFLOW. Conduza o usuário passo a passo de forma clara e eficiente.`
+Você é um ASSISTENTE DE WORKFLOW. Conduza o usuário passo a passo de forma clara e eficiente.
+
+# 🔎 Heurística de Busca (prioridade)
+- Preferir CNPJ/fornecedor_id quando disponível.
+- Sem CNPJ: usar fornecedor_nome (ILIKE) + valor com tolerância.
+- Se só houver valor: usar faixa de valor + janela de vencimento.
+- Por padrão, buscar apenas títulos com status pendente.
+
+# ⚙️ Parâmetros sugeridos
+- Tolerância de valor: ±1% ou ±R$ 1 (o que for maior).
+- Janela de vencimento: ±15 dias em torno da data do pagamento quando necessário.
+- Ordenação: order_by=data_vencimento, order_dir=desc; Limite: 20.
+
+# 🧾 Campos opcionais úteis
+- Quando houver: numero_nota_fiscal (NF) e/ou descrição do título (descricao) podem ser usados para refinar a busca.
+
+# 📌 Observação
+- A tool buscarContaPagar retorna valor_pago e valor_pendente consolidados a partir de pagamentos já registrados.`
 
 export async function POST(req: Request) {
   console.log('✅ WORKFLOW PAGAMENTO EFETUADO: Request recebido!')
@@ -80,8 +97,10 @@ Objetivo: Se houver comprovante/documento, extraia valor, data do pagamento e fo
 
 Regras obrigatórias:
 - NÃO escreva "function_calls"/"function_result" em texto. Invoque a tool real.
-- Use filtros adequados: fornecedor_id OU fornecedor_nome (nome_fantasia), valor/valor_min/valor_max, data_vencimento (ou de_vencimento/ate_vencimento) e status.
-- Sem dados suficientes: faça uma busca mais ampla (ex.: por intervalo de vencimento ou valor aproximado) e permita que o usuário escolha.
+- Use a heurística: (1) fornecedor_id quando tiver CNPJ; (2) fornecedor_nome + faixa de valor; (3) valor_min/valor_max + janela de vencimento.
+- Parâmetros: aplique tolerância de valor (±1% ou ±R$1), status pendente por padrão, limite 20, order_by=data_vencimento desc.
+- Filtros adicionais quando disponíveis: numero_nota_fiscal (NF) e/ou descricao (ILIKE parcial).
+- Sem dados suficientes: faça uma busca mais ampla (intervalo de vencimento maior ou ampliar tolerância) e permita que o usuário escolha.
 - NÃO simule listas; a UI renderiza a tabela a partir do retorno da tool.
 `,
             tools: { buscarContaPagar },

@@ -21,13 +21,15 @@ export const buscarContaPagar = tool({
     data_vencimento: z.string().optional().describe('Data de vencimento (YYYY-MM-DD)'),
     de_vencimento: z.string().optional().describe('Vencimento a partir de (YYYY-MM-DD)'),
     ate_vencimento: z.string().optional().describe('Vencimento até (YYYY-MM-DD)'),
-    status: z.string().optional().describe('Status (ex.: pendente, pago, cancelado)'),
+    status: z.string().optional().describe('Status (ex.: pendente, pago, cancelado). Se não informado, usa pendente por padrão.'),
+    numero_nota_fiscal: z.string().optional().describe('Número da nota fiscal (parcial ou completo)'),
+    descricao: z.string().optional().describe('Descrição do lançamento (ILIKE, parcial)'),
     tenant_id: z.number().optional().describe('Tenant ID para filtrar'),
     limite: z.number().int().positive().max(1000).optional().describe('Limite de registros (ex.: 10)'),
     order_by: z.enum(['id','valor','data_vencimento','fornecedor_nome']).optional().describe('Ordenação'),
     order_dir: z.enum(['asc','desc']).optional().describe('Direção da ordenação'),
   }),
-  execute: async ({ fornecedor_id, fornecedor_nome, valor, valor_min, valor_max, data_vencimento, de_vencimento, ate_vencimento, status, tenant_id, limite, order_by, order_dir }) => {
+  execute: async ({ fornecedor_id, fornecedor_nome, valor, valor_min, valor_max, data_vencimento, de_vencimento, ate_vencimento, status, numero_nota_fiscal, descricao, tenant_id, limite, order_by, order_dir }) => {
     // SQL alinhado com a view 'contas-a-pagar' da rota /api/modulos/financeiro
     const selectSql = `SELECT
       lf.id AS conta_id,
@@ -38,10 +40,13 @@ export const buscarContaPagar = tool({
       lf.data_lancamento,
       lf.data_vencimento,
       lf.observacao,
+      lf.numero_nota_fiscal,
       lf.storage_key AS storage_key,
       lf.nome_arquivo AS nome_arquivo,
       lf.content_type AS content_type,
       lf.tamanho_bytes AS tamanho_bytes,
+      COALESCE((SELECT SUM(p.valor)::numeric FROM financeiro.lancamentos_financeiros p
+                 WHERE LOWER(p.tipo) = 'pagamento_efetuado' AND p.lancamento_origem_id = lf.id), 0) AS valor_pago,
       cf.nome AS categoria_nome,
       cl.nome AS centro_lucro_nome,
       dep.nome AS departamento_nome,
@@ -70,7 +75,14 @@ export const buscarContaPagar = tool({
     if (data_vencimento) { conditions.push(`DATE(lf.data_vencimento) = $${i++}`); params.push(data_vencimento) }
     if (de_vencimento) { conditions.push(`DATE(lf.data_vencimento) >= $${i++}`); params.push(de_vencimento) }
     if (ate_vencimento) { conditions.push(`DATE(lf.data_vencimento) <= $${i++}`); params.push(ate_vencimento) }
-    if (status) { conditions.push(`LOWER(lf.status) = $${i++}`); params.push(status.toLowerCase()) }
+    if (numero_nota_fiscal) { conditions.push(`lf.numero_nota_fiscal ILIKE $${i++}`); params.push(`%${numero_nota_fiscal}%`) }
+    if (descricao) { conditions.push(`lf.descricao ILIKE $${i++}`); params.push(`%${descricao}%`) }
+    // Default status to pendente if not provided explicitly
+    if (status && status.trim()) {
+      conditions.push(`LOWER(lf.status) = $${i++}`); params.push(status.toLowerCase());
+    } else {
+      conditions.push(`LOWER(lf.status) = 'pendente'`);
+    }
     if (typeof tenant_id === 'number') { conditions.push(`lf.tenant_id = $${i++}`); params.push(tenant_id) }
 
     const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
@@ -86,7 +98,7 @@ export const buscarContaPagar = tool({
       data_vencimento?: string | null; observacao?: string | null; categoria_nome?: string | null;
       centro_lucro_nome?: string | null; departamento_nome?: string | null; filial_nome?: string | null;
       projeto_nome?: string | null; fornecedor_nome?: string | null; fornecedor_id?: string | number | null;
-      fornecedor_imagem_url?: string | null;
+      fornecedor_imagem_url?: string | null; numero_nota_fiscal?: string | null; valor_pago?: number | null;
     };
     const rows = await runQuery<Row>(sql, params);
 
@@ -107,9 +119,10 @@ export const buscarContaPagar = tool({
       fornecedor_id: r.fornecedor_id ? String(r.fornecedor_id) : '',
       fornecedor_nome: r.fornecedor_nome || '-',
       descricao: r.descricao_conta || '',
+      numero_nota_fiscal: r.numero_nota_fiscal ? String(r.numero_nota_fiscal) : undefined,
       valor: Number(r.valor_a_pagar || 0),
-      valor_pago: 0,
-      valor_pendente: Number(r.valor_a_pagar || 0),
+      valor_pago: Number(r.valor_pago || 0),
+      valor_pendente: Math.max(0, Number(r.valor_a_pagar || 0) - Number(r.valor_pago || 0)),
       data_emissao: r.data_lancamento ? String(r.data_lancamento) : '',
       data_vencimento: r.data_vencimento ? String(r.data_vencimento) : '',
       status: r.status_conta || '',
