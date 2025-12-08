@@ -48,28 +48,28 @@ Guiar o usuário através do processo de registro de um pagamento recebido e bai
 - Mostre resumo (valor, data, forma pagamento, conta baixada)
 - Informe que a conta a receber foi BAIXADA AUTOMATICAMENTE
 
-Você é um ASSISTENTE DE WORKFLOW. Conduza o usuário passo a passo de forma clara e eficiente.`
- 
- # 🔎 Heurística de Busca (prioridade)
- - Preferir CPF/CNPJ → cliente_id quando disponível.
- - Sem CPF/CNPJ: usar cliente_nome (ILIKE) + valor com tolerância.
- - Se só houver valor: usar faixa de valor + janela de vencimento.
- - Por padrão, buscar apenas títulos com status pendente.
+Você é um ASSISTENTE DE WORKFLOW. Conduza o usuário passo a passo de forma clara e eficiente.
 
- # ⚙️ Parâmetros sugeridos
- - Tolerância de valor: ±1% ou ±R$ 1 (o que for maior).
- - Janela de vencimento: ±15 dias em torno da data do pagamento quando necessário.
- - Ordenação: order_by=data_vencimento, order_dir=desc; Limite: 20.
+# 🔎 Heurística de Busca (prioridade)
+- Preferir CPF/CNPJ → cliente_id quando disponível.
+- Sem CPF/CNPJ: usar cliente_nome (ILIKE) + valor com tolerância.
+- Se só houver valor: usar faixa de valor + janela de vencimento.
+- Por padrão, buscar apenas títulos com status pendente.
 
- # 🧾 Campos opcionais úteis
- - Quando houver: numero_nota_fiscal (NF) e/ou descrição do título (descricao) podem ser usados para refinar a busca.
+# ⚙️ Parâmetros sugeridos
+- Tolerância de valor: ±1% ou ±R$ 1 (o que for maior).
+- Janela de vencimento: ±15 dias em torno da data do pagamento quando necessário.
+- Ordenação: order_by=data_vencimento, order_dir=desc; Limite: 20.
 
- # 📌 Observação
- - A tool buscarContaReceber retorna valor_recebido e valor_pendente consolidados a partir de recebimentos já registrados.
+# 🧾 Campos opcionais úteis
+- Quando houver: numero_nota_fiscal (NF) e/ou descrição do título (descricao) podem ser usados para refinar a busca.
 
- # 🔀 Fluxo Condicional
- - Se Step 1 encontrar (ou o usuário selecionar) uma conta a receber, pule Steps 2 e 3 e siga para Lookups (Step 4) e criação do recebimento (Step 5).
- - Se Step 1 NÃO encontrar nenhuma AR adequada, execute Step 2 (Buscar Cliente) e Step 3 (Criar Conta a Receber), depois prossiga com Steps 4 e 5.`
+# 📌 Observação
+- A tool buscarContaReceber retorna valor_recebido e valor_pendente consolidados a partir de recebimentos já registrados.
+
+# 🔀 Fluxo Condicional
+- Se Step 1 encontrar (ou o usuário selecionar) uma conta a receber, pule Steps 2 e 3 e siga para Lookups (Step 4) e criação do recebimento (Step 5).
+- Se Step 1 NÃO encontrar nenhuma AR adequada, execute Step 2 (Buscar Cliente) e Step 3 (Criar Conta a Receber), depois prossiga com Steps 4 e 5.`
 
 export async function POST(req: Request) {
   console.log('💸 WORKFLOW PAGAMENTO RECEBIDO: Request recebido!')
