@@ -11,6 +11,13 @@ import TabsNav from "@/components/modulos/TabsNav";
 import { $titulo, $tabs, $layout, moduleUiActions } from "@/stores/modulos/moduleUiStore";
 import { Layout, Users, Globe2 } from "lucide-react";
 
+const fontVar = (name?: string) => {
+  if (!name) return undefined;
+  if (name === 'Inter') return 'var(--font-inter)';
+  if (name === 'Geist') return 'var(--font-geist-sans)';
+  return name;
+};
+
 export default function DashboardsPage() {
   const titulo = useStore($titulo);
   const tabs = useStore($tabs);
@@ -46,21 +53,47 @@ export default function DashboardsPage() {
               size="sm"
               showBreadcrumb={false}
             />
-            <div className="flex-1 min-h-0 pl-2 pr-2 pt-0 pb-2">
+            <div className="flex-1 min-h-0 pl-2 pr-2 pt-0 pb-2" data-page="nexus">
               <NexusPageContainer className="h-full">
                 <div className="w-full" style={{ marginBottom: layout.mbTitle }}>
-                  <PageHeader title={titulo.title} subtitle={titulo.subtitle} />
+                  <PageHeader
+                    title={titulo.title}
+                    subtitle={titulo.subtitle}
+                    titleFontFamily={fontVar(titulo.titleFontFamily)}
+                    titleFontSize={titulo.titleFontSize}
+                    titleFontWeight={titulo.titleFontWeight}
+                    titleColor={titulo.titleColor}
+                    titleLetterSpacing={titulo.titleLetterSpacing}
+                    subtitleFontFamily={fontVar(titulo.subtitleFontFamily)}
+                    subtitleLetterSpacing={titulo.subtitleLetterSpacing}
+                  />
                 </div>
-                <div className="w-full" style={{ marginBottom: layout.mbTabs }}>
+                <div className="w-full" style={{ marginBottom: 0 }}>
                   <TabsNav
                     options={tabs.options}
                     value={tabs.selected}
                     onValueChange={(v) => moduleUiActions.setTabs({ selected: v })}
+                    fontFamily={fontVar(tabs.fontFamily)}
+                    fontSize={tabs.fontSize}
+                    fontWeight={tabs.fontWeight}
+                    color={tabs.color}
+                    letterSpacing={tabs.letterSpacing}
+                    iconSize={tabs.iconSize}
+                    labelOffsetY={tabs.labelOffsetY}
+                    startOffset={tabs.leftOffset}
+                    activeColor={tabs.activeColor}
+                    activeFontWeight={tabs.activeFontWeight}
+                    activeBorderColor={tabs.activeBorderColor}
+                    className="px-0 md:px-0"
                   />
                 </div>
                 {/* Placeholder de conteúdo — sem tabelas por enquanto */}
-                <div className="w-full p-4 text-sm text-gray-600">
-                  Selecione uma aba. O conteúdo será definido depois.
+                <div style={{ paddingTop: (layout.contentTopGap || 0) + (layout.mbTabs || 0) }}>
+                  <div className="px-4 md:px-6">
+                    <div className="w-full p-4 text-sm text-gray-600 bg-white border rounded">
+                      Selecione uma aba. O conteúdo será definido depois.
+                    </div>
+                  </div>
                 </div>
               </NexusPageContainer>
             </div>
