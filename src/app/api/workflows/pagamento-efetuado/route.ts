@@ -2,6 +2,7 @@ import { anthropic } from '@ai-sdk/anthropic'
 import { convertToModelMessages, streamText, UIMessage } from 'ai'
 import { buscarContaPagar, criarPagamentoEfetuado } from '@/tools/pagamentosEfetuadosWorkflowTools'
 import { buscarFinanceiroLookups } from '@/tools/financeiroLookupsTools'
+import { buscarFornecedor, criarContaPagar, buscarClassificacoesFinanceiras } from '@/tools/contasPagarWorkflowTools'
 
 export const maxDuration = 300
 
@@ -63,7 +64,11 @@ Você é um ASSISTENTE DE WORKFLOW. Conduza o usuário passo a passo de forma cl
 - Quando houver: numero_nota_fiscal (NF) e/ou descrição do título (descricao) podem ser usados para refinar a busca.
 
 # 📌 Observação
-- A tool buscarContaPagar retorna valor_pago e valor_pendente consolidados a partir de pagamentos já registrados.`
+- A tool buscarContaPagar retorna valor_pago e valor_pendente consolidados a partir de pagamentos já registrados.
+
+# 🔀 Fluxo Condicional
+- Se Step 1 encontrar (ou o usuário selecionar) uma conta a pagar, pule Steps 2 e 3 e siga para Lookups (Step 4) e criação do pagamento (Step 5).
+- Se Step 1 NÃO encontrar nenhuma AP adequada, execute Step 2 (Buscar Fornecedor) e Step 3 (Criar Conta a Pagar), depois prossiga com Steps 4 e 5.`
 
 export async function POST(req: Request) {
   console.log('✅ WORKFLOW PAGAMENTO EFETUADO: Request recebido!')
@@ -81,7 +86,13 @@ export async function POST(req: Request) {
       system: baseSystem,
       messages: convertToModelMessages(messages),
       tools: {
+        // Busca/seleção de AP existente
         buscarContaPagar,
+        // Fluxo condicional de criação de AP (reuso do workflow Contas a Pagar)
+        buscarFornecedor,
+        buscarClassificacoesFinanceiras,
+        criarContaPagar,
+        // Lookups e criação do pagamento
         buscarFinanceiroLookups,
         criarPagamentoEfetuado,
       },
@@ -102,16 +113,65 @@ Regras obrigatórias:
 - Filtros adicionais quando disponíveis: numero_nota_fiscal (NF) e/ou descricao (ILIKE parcial).
 - Sem dados suficientes: faça uma busca mais ampla (intervalo de vencimento maior ou ampliar tolerância) e permita que o usuário escolha.
 - NÃO simule listas; a UI renderiza a tabela a partir do retorno da tool.
+
+Condição:
+- Se uma única AP for encontrada (ou o usuário selecionar uma), ANOTE o id e PULE Steps 2 e 3, seguindo para Lookups (Step 4).
+- Se nenhuma AP adequada for encontrada, continue para o Step 2 (Buscar Fornecedor).
 `,
             tools: { buscarContaPagar },
           };
         }
 
+        // Condicional: só quando Step 1 não encontrar AP
         if (stepNumber === 2) {
           return {
             system: baseSystem + `
 
-# 🧭 Step 2 — Buscar Contas Financeiras e Métodos de Pagamento
+# 🧭 Step 2 — Buscar Fornecedor (Condicional)
+
+Objetivo: Quando nenhuma AP for encontrada no Step 1, resolva um fornecedor válido para criar uma nova AP.
+
+Regras obrigatórias:
+- NÃO escreva "function_calls"/"function_result" em texto. Invoque a tool real.
+- Use **buscarFornecedor** com CNPJ (normalizado) quando disponível; senão, por nome_fantasia (ILIKE). Sem filtros: lista limitada.
+- NÃO simule listas; a UI renderiza a tabela a partir do retorno da tool.
+
+Condição:
+- Se um fornecedor for selecionado (ou único), siga para Step 3 para criar a AP (prévia).
+- Se ainda não houver fornecedor adequado, ajuste filtros e tente novamente.
+`,
+            tools: { buscarFornecedor },
+          };
+        }
+
+        // Condicional: criação de AP quando não existia uma
+        if (stepNumber === 3) {
+          return {
+            system: baseSystem + `
+
+# 🧭 Step 3 — Criar Conta a Pagar (PRÉVIA, Condicional)
+
+Objetivo: Consolidar dados do fornecedor (Step 2) e dimensões financeiras para gerar a PRÉVIA da nova AP.
+
+Regras obrigatórias:
+- Se faltarem dimensões (categoria/centro de custo, etc.), primeiro CHAME **buscarClassificacoesFinanceiras** para listar opções ao usuário.
+- Então CHAME **criarContaPagar** com os IDs e dados extraídos do comprovante (valor, vencimento, descrição, NF quando houver).
+- NÃO escreva "function_calls"/"function_result" em texto. Invoque a tool real.
+- A tool gera PRÉVIA; a criação real ocorre na UI. NÃO invente payloads; a UI mostra os campos retornados.
+
+Condição:
+- Após a confirmação/criação na UI, ANOTE o id da AP criada e siga para Lookups (Step 4).
+`,
+            tools: { buscarClassificacoesFinanceiras, criarContaPagar },
+          };
+        }
+
+        // Lookups para pagamento (sempre executado após ter uma AP definida)
+        if (stepNumber === 4) {
+          return {
+            system: baseSystem + `
+
+# 🧭 Step 4 — Buscar Contas Financeiras e Métodos de Pagamento
 
 Objetivo: CHAMAR **buscarFinanceiroLookups** para listar contas financeiras e métodos (PIX, transferência, boleto, etc.).
 
@@ -123,11 +183,12 @@ Regras obrigatórias:
           };
         }
 
-        if (stepNumber === 3) {
+        // Criar pagamento (prévia)
+        if (stepNumber === 5) {
           return {
             system: baseSystem + `
 
-# 🧭 Step 3 — Criar Pagamento Efetuado (PRÉVIA)
+# 🧭 Step 5 — Criar Pagamento Efetuado (PRÉVIA)
 
 Objetivo: Consolidar dados (lancamento_origem_id da AP, conta_financeira_id, metodo_pagamento_id, descricao) e CHAMAR **criarPagamentoEfetuado** para gerar a PRÉVIA.
 
