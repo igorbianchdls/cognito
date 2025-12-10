@@ -314,7 +314,7 @@ const DraggableRow = memo(function DraggableRow({ id, children }: { id: string; 
     <div
       ref={setNodeRef}
       style={style}
-      className="group relative rounded-md hover:ring-2 hover:ring-black"
+      className="group relative rounded-md hover:ring-2 hover:ring-blue-400 ring-offset-1 ring-offset-white"
     >
       <div
         {...attributes}
