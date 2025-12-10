@@ -81,7 +81,7 @@ export function ScatterChart(props: ScatterChartProps) {
           padding: containerPadding,
         }}
       >
-        <EmptyState title="Sem dados" description="Não há pontos para o Scatter Plot" />
+        <EmptyState message="Sem dados" subtitle="Não há pontos para o Scatter Plot" />
       </div>
     );
   }
@@ -136,8 +136,8 @@ export function ScatterChart(props: ScatterChartProps) {
           colors={colors && colors.length ? colors : { scheme: "category10" }}
           axisBottom={{ legendOffset: 36 }}
           axisLeft={{ legendOffset: -40 }}
-          gridXValues={enableGridX ? undefined : []}
-          gridYValues={enableGridY ? undefined : []}
+          enableGridX={!!enableGridX}
+          enableGridY={!!enableGridY}
           theme={
             gridColor || gridStrokeWidth
               ? { grid: { line: { stroke: gridColor, strokeWidth: gridStrokeWidth } } }
@@ -168,4 +168,3 @@ export function ScatterChart(props: ScatterChartProps) {
     </div>
   );
 }
-

@@ -72,7 +72,7 @@ export function TreeMapChart(props: TreeMapChartProps) {
           padding: containerPadding,
         }}
       >
-        <EmptyState title="Sem dados" description="Não há valores para o TreeMap" />
+        <EmptyState message="Sem dados" subtitle="Não há valores para o Treemap" />
       </div>
     );
   }
@@ -139,4 +139,3 @@ export function TreeMapChart(props: TreeMapChartProps) {
     </div>
   );
 }
-
