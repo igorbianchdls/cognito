@@ -189,7 +189,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
   // Helpers by type
   const isSimpleChart = (t: string) => ['bar', 'line', 'pie', 'area'].includes(t);
   const isKpi = (t: string) => t === 'kpi';
-  const isMultiSeries = (t: string) => ['stackedbar', 'groupedbar', 'stackedlines', 'radialstacked', 'pivotbar', 'treemap'].includes(t);
+  const isMultiSeries = (t: string) => ['stackedbar', 'groupedbar', 'stackedlines', 'radialstacked', 'pivotbar', 'treemap', 'funnel'].includes(t);
   const isScatter = (t: string) => t === 'scatter';
   
 
@@ -422,6 +422,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
               <option value="pivotbar">Pivot Bar</option>
               <option value="treemap">Treemap</option>
               <option value="scatter">Scatter</option>
+              <option value="funnel">Funnel</option>
               <option value="insights">Insights</option>
               <option value="alerts">Alerts</option>
               <option value="recommendations">Recommendations</option>

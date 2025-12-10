@@ -11,6 +11,7 @@ import { ScatterChart } from '@/components/charts/ScatterChart';
 import { TreeMapChart } from '@/components/charts/TreeMapChart';
 import { StackedBarChart } from '@/components/charts/StackedBarChart';
 import { StackedLinesChart } from '@/components/charts/StackedLinesChart';
+import { FunnelChart } from '@/components/charts/FunnelChart';
 import { GroupedBarChart } from '@/components/charts/GroupedBarChart';
 import { PivotBarChart } from '@/components/charts/PivotBarChart';
 import { RadialStackedChart } from '@/components/charts/RadialStackedChart';
@@ -331,9 +332,9 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
     fetchData();
   }, [widget.id, widget.dataSource, reloadTick, globalFilters]);
 
-  // Fetch data for multi-series widgets (stacked/grouped/pivot/compare)
+  // Fetch data for multi-series widgets (stacked/grouped/pivot/treemap/funnel)
   useEffect(() => {
-    if (widget.type !== 'stackedbar' && widget.type !== 'groupedbar' && widget.type !== 'stackedlines' && widget.type !== 'radialstacked' && widget.type !== 'pivotbar' && widget.type !== 'treemap') {
+    if (widget.type !== 'stackedbar' && widget.type !== 'groupedbar' && widget.type !== 'stackedlines' && widget.type !== 'radialstacked' && widget.type !== 'pivotbar' && widget.type !== 'treemap' && widget.type !== 'funnel') {
       return;
     }
     // Wait until dataSource is available to avoid false error states
@@ -1425,6 +1426,52 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
             <div className="text-center text-gray-500">
               <div className="text-2xl mb-2">📊</div>
               <div className="text-sm">No grouped data available</div>
+            </div>
+          </div>
+        );
+      }
+      break;
+
+    case 'funnel':
+      if (multipleLoading) {
+        widgetContent = (
+          <div className="h-full w-full p-2 flex items-center justify-center">
+            <div className="text-center text-gray-500">
+              <div className="text-2xl mb-2">⏳</div>
+              <div className="text-sm">Loading data...</div>
+            </div>
+          </div>
+        );
+      } else if (multipleError) {
+        widgetContent = (
+          <div className="h-full w-full p-2 flex items-center justify-center bg-red-50 rounded">
+            <div className="text-center text-red-600">
+              <div className="text-2xl mb-2">⚠️</div>
+              <div className="text-sm font-medium mb-1">Error</div>
+              <div className="text-xs">{multipleError}</div>
+            </div>
+          </div>
+        );
+      } else if (multipleData && multipleData.items.length > 0) {
+        // Convert to ChartData array expected by FunnelChart (id/value derived internally)
+        const steps = multipleData.items.map((it) => ({
+          label: String(it.label),
+          value: Number((it as any).value || 0)
+        }));
+        widgetContent = (
+          <div className="h-full w-full p-2 relative group">
+            <FunnelChart
+              data={steps as any}
+              title={widget.title || 'Funnel'}
+            />
+          </div>
+        );
+      } else {
+        widgetContent = (
+          <div className="h-full w-full p-2 flex items-center justify-center bg-gray-50 rounded">
+            <div className="text-center text-gray-500">
+              <div className="text-2xl mb-2">📊</div>
+              <div className="text-sm">No data available</div>
             </div>
           </div>
         );

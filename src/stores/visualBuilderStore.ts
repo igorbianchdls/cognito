@@ -257,6 +257,14 @@ export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas"
       <styling tw="gridx:on gridy:on mb:32" />
     </widget>
   </row>
+
+  <!-- Funnel Chart -->
+  <row id="funnel_row" cols-d="1" cols-t="1" cols-m="1" gap-x="16" gap-y="16">
+    <widget id="fnl_canal_venda" type="funnel" order="1" span-d="1" span-t="1" span-m="1" height="420" title="Funil • Vendas por Canal (Top 5)">
+      <datasource schema="comercial" table="vendas_vw" dimension1="canal_venda_nome" measure="SUM(item_subtotal)" limit="5" />
+      <styling tw="mb:32" />
+    </widget>
+  </row>
 </dashboard>`
 
 // Example in grid-per-column mode
@@ -523,7 +531,7 @@ export const visualBuilderActions = {
                   dsAttrs['measure'] = measureExpr
                 } else if (t === 'kpi') {
                   dsAttrs['measure'] = measureExpr
-                } else if (['stackedbar','groupedbar','stackedlines','radialstacked','pivotbar','treemap'].includes(t)) {
+                } else if (['stackedbar','groupedbar','stackedlines','radialstacked','pivotbar','treemap','funnel'].includes(t)) {
                   const dim1 = (ds.dimension1 as string | undefined) ?? xDim ?? ''
                   const dim2 = (ds.dimension2 as string | undefined) ?? ''
                   dsAttrs['dimension1'] = dim1 || undefined
