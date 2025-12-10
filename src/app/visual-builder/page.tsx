@@ -7,6 +7,7 @@ import DashboardSaveDialog from '@/components/visual-builder/DashboardSaveDialog
 import DashboardOpenDialog from '@/components/visual-builder/DashboardOpenDialog';
 import { dashboardsApi, type Dashboard } from '@/stores/dashboardsStore';
 import MonacoEditor from '@/components/visual-builder/MonacoEditor';
+import VisualBuilderChat from '@/components/visual-builder/VisualBuilderChat';
 import ResponsiveGridCanvas from '@/components/visual-builder/ResponsiveGridCanvas';
 import DashboardInCanvasHeader from '@/components/visual-builder/DashboardInCanvasHeader';
 import WidgetEditorModal from '@/components/visual-builder/WidgetEditorModal';
@@ -207,13 +208,19 @@ export default function VisualBuilderPage() {
               <h2 className="text-lg font-semibold text-gray-900">Configuration Editor</h2>
               <p className="text-sm text-gray-600">Define your widgets with JSON coordinates</p>
             </div>
-            <div className="h-[calc(100%-73px)]">
-              <MonacoEditor
-                value={editorCode}
-                onChange={handleCodeChange}
-                language="json"
-                errors={visualBuilderState.parseErrors}
-              />
+            {/* Split 50/50: left editor, right chat */}
+            <div className="h-[calc(100%-73px)] flex">
+              <div className="w-1/2 min-w-[480px] h-full">
+                <MonacoEditor
+                  value={editorCode}
+                  onChange={handleCodeChange}
+                  language="json"
+                  errors={visualBuilderState.parseErrors}
+                />
+              </div>
+              <div className="w-1/2 min-w-[420px] h-full">
+                <VisualBuilderChat />
+              </div>
             </div>
           </div>
         )}
