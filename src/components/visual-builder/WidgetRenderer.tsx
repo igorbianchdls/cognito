@@ -1453,7 +1453,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
           </div>
         );
       } else if (multipleData && multipleData.items.length > 0) {
-        // Convert to ChartData array expected by FunnelChart (id/value derived internally)
+        // Convert items to ChartData for FunnelChart
         const steps = multipleData.items.map((it) => ({
           label: String(it.label),
           value: Number((it as any).value || 0)
@@ -1463,6 +1463,12 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
             <FunnelChart
               data={steps as any}
               title={widget.title || 'Funnel'}
+              colors={(widget.styling?.colors as string[] | undefined)}
+              backgroundColor={widget.styling?.backgroundColor}
+              containerBorderWidth={widget.styling?.containerBorderWidth as number | undefined}
+              containerBorderColor={widget.styling?.containerBorderColor as string | undefined}
+              containerBorderRadius={widget.styling?.containerBorderRadius as number | undefined}
+              containerPadding={widget.styling?.containerPadding as number | undefined}
             />
           </div>
         );

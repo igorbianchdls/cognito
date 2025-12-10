@@ -262,7 +262,7 @@ export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas"
   <row id="funnel_row" cols-d="1" cols-t="1" cols-m="1" gap-x="16" gap-y="16">
     <widget id="fnl_canal_venda" type="funnel" order="1" span-d="1" span-t="1" span-m="1" height="420" title="Funil • Vendas por Canal (Top 5)">
       <datasource schema="comercial" table="vendas_vw" dimension1="canal_venda_nome" measure="SUM(item_subtotal)" limit="5" />
-      <styling tw="mb:32" />
+      <styling tw="bg:#ffffff border:width:1 border:color:#e5e7eb radius:12 mb:32" />
     </widget>
   </row>
 </dashboard>`
