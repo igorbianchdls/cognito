@@ -158,8 +158,8 @@ export function ScatterChart(props: ScatterChartProps) {
           tooltip={({ node }) => (
             <div className="rounded-md border bg-white p-2 text-xs shadow">
               <div><strong>{String(node.serieId)}</strong></div>
-              <div>x: {node.data.formattedX || node.data.x}</div>
-              <div>y: {node.data.formattedY || node.data.y}</div>
+              <div>x: {String(node.data.x)}</div>
+              <div>y: {String(node.data.y)}</div>
               {node.data.label && <div>label: {String(node.data.label)}</div>}
             </div>
           )}
