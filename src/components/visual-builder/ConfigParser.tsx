@@ -201,7 +201,7 @@ export interface Insights2Config {
 
 export interface Widget {
   id: string;
-  type: 'bar' | 'line' | 'pie' | 'area' | 'kpi' | 'insights' | 'alerts' | 'recommendations' | 'insightsHero' | 'insights2' | 'stackedbar' | 'groupedbar' | 'stackedlines' | 'radialstacked' | 'pivotbar' | 'comparebar';
+  type: 'bar' | 'line' | 'pie' | 'area' | 'kpi' | 'insights' | 'alerts' | 'recommendations' | 'insightsHero' | 'insights2' | 'stackedbar' | 'groupedbar' | 'stackedlines' | 'radialstacked' | 'pivotbar';
   // Legacy absolute grid position (optional; not required by responsive layout)
   position?: {
     x: number;
@@ -263,20 +263,6 @@ export interface Widget {
   stackedLinesConfig?: Partial<StackedLinesChartConfig>;
   radialStackedConfig?: Partial<RadialStackedChartConfig>;
   pivotBarConfig?: Partial<PivotBarChartConfig>;
-  // Compare chart (two measures vs one dimension)
-  compareBarConfig?: {
-    styling?: {
-      showLegend?: boolean;
-      marginBottom?: number;
-      colors?: string[];
-      backgroundColor?: string;
-      gridColor?: string;
-      // Nivo options
-      groupMode?: 'grouped' | 'stacked';
-      layout?: 'vertical' | 'horizontal';
-    };
-    margin?: { top?: number; right?: number; bottom?: number; left?: number };
-  };
   insightsConfig?: InsightsConfig;
   // New: Insights hero (Swiper carousel variant)
   insightsHeroConfig?: InsightsHeroConfig;
@@ -311,7 +297,7 @@ export interface ParseResult {
 }
 
 export class ConfigParser {
-  private static VALID_TYPES = ['bar', 'line', 'pie', 'area', 'kpi', 'insights', 'alerts', 'recommendations', 'insightsHero', 'insights2', 'stackedbar', 'groupedbar', 'stackedlines', 'radialstacked', 'pivotbar', 'comparebar'];
+  private static VALID_TYPES = ['bar', 'line', 'pie', 'area', 'kpi', 'insights', 'alerts', 'recommendations', 'insightsHero', 'insights2', 'stackedbar', 'groupedbar', 'stackedlines', 'radialstacked', 'pivotbar'];
   private static DEFAULT_GRID_CONFIG: GridConfig = {
     maxRows: 12,
     rowHeight: 30,
@@ -554,7 +540,7 @@ export class ConfigParser {
       widget.dataSource = ds;
     };
 
-    const ensureStylingTarget = (widget: Widget): { target: Record<string, unknown>; where: 'widget' | 'bar' | 'line' | 'pie' | 'area' | 'stackedbar' | 'groupedbar' | 'stackedlines' | 'radialstacked' | 'pivotbar' | 'comparebar' | 'kpi' | 'insights2' } => {
+    const ensureStylingTarget = (widget: Widget): { target: Record<string, unknown>; where: 'widget' | 'bar' | 'line' | 'pie' | 'area' | 'stackedbar' | 'groupedbar' | 'stackedlines' | 'radialstacked' | 'pivotbar' | 'kpi' | 'insights2' } => {
       const w = widget as unknown as {
         styling?: Record<string, unknown>;
         barConfig?: { styling?: Record<string, unknown> };
@@ -566,7 +552,6 @@ export class ConfigParser {
         stackedLinesConfig?: { styling?: Record<string, unknown> };
         radialStackedConfig?: { styling?: Record<string, unknown> };
         pivotBarConfig?: { styling?: Record<string, unknown> };
-        compareBarConfig?: { styling?: Record<string, unknown> };
         kpiConfig?: Record<string, unknown>;
         insights2Config?: { styling?: Record<string, unknown> };
       };
@@ -607,10 +592,6 @@ export class ConfigParser {
           w.pivotBarConfig = w.pivotBarConfig || {};
           w.pivotBarConfig.styling = w.pivotBarConfig.styling || {};
           return { target: w.pivotBarConfig.styling!, where: 'pivotbar' };
-        case 'comparebar':
-          w.compareBarConfig = w.compareBarConfig || {};
-          w.compareBarConfig.styling = w.compareBarConfig.styling || {};
-          return { target: w.compareBarConfig.styling!, where: 'comparebar' };
         case 'kpi':
           w.kpiConfig = w.kpiConfig || {};
           return { target: w.kpiConfig!, where: 'kpi' };
@@ -722,10 +703,11 @@ export class ConfigParser {
       const columnsInner: NonNullable<GridConfig['layout']>['columnsInner'] = {};
 
       // Parse widgets (self-closing and pair with <config>)
-      const parseWidgetAttributes = (attrStr: string, innerContent?: string, defaultStart?: number) => {
-        const wa = parseAttrs(attrStr || '');
-        const id = wa['id'];
-        const type = wa['type'] as Widget['type'];
+    const parseWidgetAttributes = (attrStr: string, innerContent?: string, defaultStart?: number) => {
+      const wa = parseAttrs(attrStr || '');
+      const id = wa['id'];
+      const typeRaw = wa['type'] as string | undefined;
+      const type = ((typeRaw === 'comparebar') ? 'groupedbar' : typeRaw) as Widget['type'];
         if (!id || !type) {
           errors.push({ line: 1, column: 1, message: 'Widget missing id or type', type: 'validation' });
           return;
@@ -1062,7 +1044,8 @@ export class ConfigParser {
 
   private static buildWidgetFromAttrs(attrs: Record<string, string>, rowId: string, errors: ParseError[]): Widget | null {
     const id = attrs['id'];
-    const type = attrs['type'] as Widget['type'];
+        const typeRaw = attrs['type'];
+        const type = ((typeRaw === 'comparebar') ? 'groupedbar' : (typeRaw as Widget['type']));
     if (!id || !type) {
       errors.push({ line: 1, column: 1, message: `Widget missing id or type in row ${rowId}`, type: 'validation' });
       return null;
@@ -1109,7 +1092,6 @@ export class ConfigParser {
       | 'stackedLinesConfig'
       | 'radialStackedConfig'
       | 'pivotBarConfig'
-      | 'compareBarConfig'
       | 'insights2Config';
 
     const map: Array<[WidgetConfigKey, string[]]> = [
@@ -1123,7 +1105,6 @@ export class ConfigParser {
       ['stackedLinesConfig', ['stackedLinesConfig']],
       ['radialStackedConfig', ['radialStackedConfig']],
       ['pivotBarConfig', ['pivotBarConfig']],
-      ['compareBarConfig', ['compareBarConfig']],
       ['insights2Config', ['insights2Config', 'insights2']],
     ];
 
@@ -1135,6 +1116,12 @@ export class ConfigParser {
           wcfg[prop] = cfg[k] as unknown;
         }
       }
+    }
+
+    // Backwards-compat: if incoming JSON provides compareBarConfig, map it into groupedBarConfig
+    if (cfg['compareBarConfig'] && typeof cfg['compareBarConfig'] === 'object') {
+      const current = (wcfg['groupedBarConfig'] || {}) as Record<string, unknown>;
+      wcfg['groupedBarConfig'] = { ...current, ...(cfg['compareBarConfig'] as Record<string, unknown>) } as unknown;
     }
   }
 

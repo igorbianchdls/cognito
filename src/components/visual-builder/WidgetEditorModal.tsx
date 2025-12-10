@@ -9,12 +9,6 @@ import type { PieChartConfig } from '@/stores/apps/pieChartStore';
 import type { AreaChartConfig } from '@/stores/apps/areaChartStore';
 import type { GroupedBarChartConfig } from '@/stores/apps/groupedBarChartStore';
 import type { StackedBarChartConfig } from '@/stores/apps/stackedBarChartStore';
-// Local minimal type for comparebar config to avoid any
-type CompareBarConfig = {
-  styling?: { colors?: string[]; [k: string]: unknown };
-  margin?: { top?: number; right?: number; bottom?: number; left?: number };
-  legends?: unknown;
-};
 
 interface WidgetEditorModalProps {
   widget: Widget | null;
@@ -98,16 +92,12 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
       // multi-series
       dimension1: ((widget?.dataSource ?? {}) as Partial<NonNullable<Widget['dataSource']>>).dimension1 || '',
       dimension2: ((widget?.dataSource ?? {}) as Partial<NonNullable<Widget['dataSource']>>).dimension2 || '',
-      // compare
-      dimension: ((widget?.dataSource ?? {}) as Partial<NonNullable<Widget['dataSource']>>).dimension || '',
-      measureGoal: ((widget?.dataSource ?? {}) as Partial<NonNullable<Widget['dataSource']>>).measureGoal || '',
-      measureActual: ((widget?.dataSource ?? {}) as Partial<NonNullable<Widget['dataSource']>>).measureActual || ''
+      
     }
   });
 
   // Simple styling controls for charts (colors and left margin)
   const [styleData, setStyleData] = useState<{ colors: string; marginLeft: number; marginTop: number; marginBottom: number }>({ colors: '', marginLeft: 40, marginTop: 20, marginBottom: 40 });
-  const [compareLayout, setCompareLayout] = useState<'vertical' | 'horizontal'>('vertical');
 
   // Initialize styling controls on widget or type change
   useEffect(() => {
@@ -122,7 +112,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
         if (t === 'area') return widget.areaConfig?.styling?.colors;
         if (t === 'groupedbar') return widget.groupedBarConfig?.styling?.colors as string[] | undefined;
         if (t === 'stackedbar') return widget.stackedBarConfig?.styling?.colors as string[] | undefined;
-        if (t === 'comparebar') return (widget.compareBarConfig?.styling as { colors?: string[] } | undefined)?.colors;
+        
         return widget.styling?.colors as string[] | undefined;
       };
       const getMarginLeft = (): number | undefined => {
@@ -132,7 +122,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
         if (t === 'area') return (widget.areaConfig as Partial<{ margin?: { left?: number } }> | undefined)?.margin?.left;
         if (t === 'groupedbar') return (widget.groupedBarConfig?.margin as { left?: number } | undefined)?.left;
         if (t === 'stackedbar') return (widget.stackedBarConfig?.margin as { left?: number } | undefined)?.left;
-        if (t === 'comparebar') return ((widget as unknown as { compareBarConfig?: { margin?: { left?: number } } }).compareBarConfig?.margin?.left);
+        
         return undefined;
       };
       const getMarginTop = (): number | undefined => {
@@ -142,7 +132,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
         if (t === 'area') return (widget.areaConfig as Partial<{ margin?: { top?: number } }> | undefined)?.margin?.top;
         if (t === 'groupedbar') return (widget.groupedBarConfig?.margin as { top?: number } | undefined)?.top;
         if (t === 'stackedbar') return (widget.stackedBarConfig?.margin as { top?: number } | undefined)?.top;
-        if (t === 'comparebar') return ((widget as unknown as { compareBarConfig?: { margin?: { top?: number } } }).compareBarConfig?.margin?.top);
+        
         return undefined;
       };
       const getMarginBottom = (): number | undefined => {
@@ -152,7 +142,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
         if (t === 'area') return (widget.areaConfig as Partial<{ margin?: { bottom?: number } }> | undefined)?.margin?.bottom;
         if (t === 'groupedbar') return (widget.groupedBarConfig?.margin as { bottom?: number } | undefined)?.bottom;
         if (t === 'stackedbar') return (widget.stackedBarConfig?.margin as { bottom?: number } | undefined)?.bottom;
-        if (t === 'comparebar') return ((widget as unknown as { compareBarConfig?: { margin?: { bottom?: number } } }).compareBarConfig?.margin?.bottom);
+        
         return undefined;
       };
 
@@ -160,15 +150,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
       const marginLeft = getMarginLeft();
       const marginTop = getMarginTop();
       const marginBottom = getMarginBottom();
-      // comparebar layout initial
-      if (t === 'comparebar') {
-        const layout = (widget.compareBarConfig?.styling as { layout?: 'vertical'|'horizontal' } | undefined)?.layout;
-        setCompareLayout(layout === 'horizontal' ? 'horizontal' : 'vertical');
-      }
-      // For comparebar, ensure at least two colors are visible by default
-      if (t === 'comparebar' && colorsArr.length === 0) {
-        colorsArr = ['#60a5fa', '#10b981'];
-      }
+      
       setStyleData({
         colors: colorsArr.join(', '),
         marginLeft: typeof marginLeft === 'number' ? marginLeft : 40,
@@ -177,7 +159,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
       });
     } catch {
       setStyleData({ colors: '', marginLeft: 40, marginTop: 20, marginBottom: 40 });
-      setCompareLayout('vertical');
+      
     }
   }, [widget]);
 
@@ -204,7 +186,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
   const isSimpleChart = (t: string) => ['bar', 'line', 'pie', 'area'].includes(t);
   const isKpi = (t: string) => t === 'kpi';
   const isMultiSeries = (t: string) => ['stackedbar', 'groupedbar', 'stackedlines', 'radialstacked', 'pivotbar'].includes(t);
-  const isCompare = (t: string) => t === 'comparebar';
+  
 
   // Update form when widget changes
   useEffect(() => {
@@ -221,9 +203,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
           aggregation: ((widget.dataSource ?? {}) as Partial<NonNullable<Widget['dataSource']>>).aggregation || 'SUM',
           dimension1: ((widget.dataSource ?? {}) as Partial<NonNullable<Widget['dataSource']>>).dimension1 || '',
           dimension2: ((widget.dataSource ?? {}) as Partial<NonNullable<Widget['dataSource']>>).dimension2 || '',
-          dimension: ((widget.dataSource ?? {}) as Partial<NonNullable<Widget['dataSource']>>).dimension || '',
-          measureGoal: ((widget.dataSource ?? {}) as Partial<NonNullable<Widget['dataSource']>>).measureGoal || '',
-          measureActual: ((widget.dataSource ?? {}) as Partial<NonNullable<Widget['dataSource']>>).measureActual || ''
+          
         }
       });
     }
@@ -249,10 +229,6 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
       if (formData.dataSource.dimension2) dsPatch['dimension2'] = formData.dataSource.dimension2;
       dsPatch['y'] = formData.dataSource.y;
       dsPatch['aggregation'] = formData.dataSource.aggregation;
-    } else if (isCompare(formData.type)) {
-      dsPatch['dimension'] = formData.dataSource.dimension || formData.dataSource.x;
-      dsPatch['measureGoal'] = formData.dataSource.measureGoal;
-      dsPatch['measureActual'] = formData.dataSource.measureActual;
     }
 
     // Patch style: colors and margin.left per chart type
@@ -358,22 +334,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
       return next;
     };
 
-    const applyCompareBarStyling = (cfg?: Partial<CompareBarConfig>): Partial<CompareBarConfig> => {
-      const next: Partial<CompareBarConfig> = { ...(cfg || {}) };
-      next.styling = { ...(cfg?.styling || {}) };
-      if (colorsArray.length) (next.styling as NonNullable<CompareBarConfig['styling']>).colors = colorsArray;
-      // Persist orientation
-      (next.styling as NonNullable<CompareBarConfig['styling']>).layout = compareLayout;
-      const prevMargin = (cfg?.margin || {}) as NonNullable<CompareBarConfig['margin']>;
-      const base = { top: prevMargin.top ?? 20, right: prevMargin.right ?? 20, bottom: prevMargin.bottom ?? 40, left: prevMargin.left ?? 40 };
-      next.margin = {
-        ...base,
-        left: Number.isFinite(styleData.marginLeft) ? styleData.marginLeft : base.left,
-        top: Number.isFinite(styleData.marginTop) ? styleData.marginTop : base.top,
-        bottom: Number.isFinite(styleData.marginBottom) ? styleData.marginBottom : base.bottom,
-      } as NonNullable<CompareBarConfig['margin']>;
-      return next;
-    };
+    
 
     if (t === 'bar') {
       updatedWidget = { ...updatedWidget, barConfig: applyBarStyling(updatedWidget.barConfig as Partial<BarChartConfig>) };
@@ -389,9 +350,6 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
     } else if (t === 'stackedbar') {
       // Persist stackedbar styling into widget
       updatedWidget = { ...updatedWidget, stackedBarConfig: applyStackedBarStyling(updatedWidget.stackedBarConfig as Partial<StackedBarChartConfig>) };
-    } else if (t === 'comparebar') {
-      // Persist comparebar styling into widget
-      updatedWidget = { ...updatedWidget, compareBarConfig: applyCompareBarStyling(updatedWidget.compareBarConfig as Partial<CompareBarConfig>) as unknown as Widget['compareBarConfig'] };
     }
 
     onSave(updatedWidget);
@@ -451,7 +409,6 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
               <option value="stackedlines">Stacked Lines</option>
               <option value="radialstacked">Radial Stacked</option>
               <option value="pivotbar">Pivot Bar</option>
-              <option value="comparebar">Compare Bar</option>
               <option value="insights">Insights</option>
               <option value="alerts">Alerts</option>
               <option value="recommendations">Recommendations</option>
@@ -545,8 +502,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
                 )}
               </div>
 
-              {/* Aggregation (except compare) */}
-              {(!isCompare(formData.type)) && (
+              {/* Aggregation */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Agregação
@@ -566,7 +522,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
                   <option value="MAX">MAX</option>
                 </select>
               </div>
-              )}
+              
 
               {/* X Field (Dimension) for simple charts */}
               {isSimpleChart(formData.type) && (
@@ -674,58 +630,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
                 </>
               )}
 
-              {/* Comparebar: dimension + goal/actual */}
-              {isCompare(formData.type) && (
-                <>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Dimensão</label>
-                    {isCustomTable ? (
-                      <input type="text" value={formData.dataSource.dimension}
-                        onChange={(e) => setFormData({ ...formData, dataSource: { ...formData.dataSource, dimension: e.target.value } })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="ex.: vendedor" />
-                    ) : (
-                      <select value={formData.dataSource.dimension || ''}
-                        onChange={(e) => setFormData({ ...formData, dataSource: { ...formData.dataSource, dimension: e.target.value } })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="">Selecione…</option>
-                        {fieldOptions.dimensions.map((d) => (<option key={d} value={d}>{d}</option>))}
-                      </select>
-                    )}
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Meta (measureGoal)</label>
-                    {isCustomTable ? (
-                      <input type="text" value={formData.dataSource.measureGoal}
-                        onChange={(e) => setFormData({ ...formData, dataSource: { ...formData.dataSource, measureGoal: e.target.value } })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="ex.: valor_meta" />
-                    ) : (
-                      <select value={formData.dataSource.measureGoal || ''}
-                        onChange={(e) => setFormData({ ...formData, dataSource: { ...formData.dataSource, measureGoal: e.target.value } })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="">Selecione…</option>
-                        {fieldOptions.measures.map((m) => (<option key={m} value={m}>{m}</option>))}
-                      </select>
-                    )}
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Realizado (measureActual)</label>
-                    {isCustomTable ? (
-                      <input type="text" value={formData.dataSource.measureActual}
-                        onChange={(e) => setFormData({ ...formData, dataSource: { ...formData.dataSource, measureActual: e.target.value } })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="ex.: subtotal | novos_clientes | ticket_medio" />
-                    ) : (
-                      <select value={formData.dataSource.measureActual || ''}
-                        onChange={(e) => setFormData({ ...formData, dataSource: { ...formData.dataSource, measureActual: e.target.value } })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="">Selecione…</option>
-                        <option value="novos_clientes">novos_clientes</option>
-                        <option value="ticket_medio">ticket_medio</option>
-                        {fieldOptions.measures.map((m) => (<option key={m} value={m}>{m}</option>))}
-                      </select>
-                    )}
-                  </div>
-                </>
-              )}
+              
               {/* Close grid and data source section containers */}
             </div>
           </div>
@@ -733,30 +638,17 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
           )}
 
         {/* Style Section */}
-        {tab === 'estilo' && (isSimpleChart(formData.type) || isKpi(formData.type) || isMultiSeries(formData.type) || isCompare(formData.type)) && (
+        {tab === 'estilo' && (isSimpleChart(formData.type) || isKpi(formData.type) || isMultiSeries(formData.type)) && (
           <div className="pt-1">
             <h3 className="text-sm font-semibold text-gray-900 mb-3">Estilo</h3>
             <div className="grid grid-cols-2 gap-4">
-              {formData.type === 'comparebar' && (
-                <div className="col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Orientação</label>
-                  <select
-                    value={compareLayout}
-                    onChange={(e) => setCompareLayout((e.target.value as 'vertical'|'horizontal') || 'vertical')}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="vertical">Vertical</option>
-                    <option value="horizontal">Horizontal</option>
-                  </select>
-                </div>
-              )}
               <div className="col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-2">Cores das Séries</label>
                 {/* Lista de cores com color picker */}
                 <div className="space-y-2">
                   {(styleData.colors.split(',').map(c => c.trim()).filter(Boolean).length > 0
                     ? styleData.colors.split(',').map(c => c.trim()).filter(Boolean)
-                    : (formData.type === 'comparebar' ? ['#60a5fa', '#10b981'] : ['#3b82f6'])
+                    : ['#3b82f6']
                   ).map((color, idx, arr) => (
                     <div key={`${color}-${idx}`} className="flex items-center gap-2">
                       <input

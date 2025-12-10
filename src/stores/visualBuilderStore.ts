@@ -184,37 +184,7 @@ export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas"
     </widget>
   </row>
 
-  <!-- Meta x Realizado • Vendedor -->
-  <row id="mxr_vendedor" cols-d="3" cols-t="1" cols-m="1" gap-x="16" gap-y="16">
-    <widget id="mxr_vend_fat" type="comparebar" order="1" span-d="1" span-t="1" span-m="1" height="360" title="💰 Meta x Faturamento por Vendedor">
-      <datasource schema="comercial" table="vw_vendas_metas" dimension="vendedor_nome" measureGoal="meta_faturamento_vendedor" measureActual="subtotal" where="\"data_pedido\" >= :start_date AND \"data_pedido\" <= :end_date" />
-      <styling tw="group:grouped layout:horizontal legend:on mb:32" />
-    </widget>
-    <widget id="mxr_vend_ticket" type="comparebar" order="2" span-d="1" span-t="1" span-m="1" height="360" title="🎯 Meta x Ticket Médio por Vendedor">
-      <datasource schema="comercial" table="vw_vendas_metas" dimension="vendedor_nome" measureGoal="meta_ticket_vendedor" measureActual="ticket_medio" where="\"data_pedido\" >= :start_date AND \"data_pedido\" <= :end_date" />
-      <styling tw="group:grouped layout:horizontal legend:on mb:32" />
-    </widget>
-    <widget id="mxr_vend_novos" type="comparebar" order="3" span-d="1" span-t="1" span-m="1" height="360" title="👥 Meta x Novos Clientes por Vendedor">
-      <datasource schema="comercial" table="vw_vendas_metas" dimension="vendedor_nome" measureGoal="meta_novos_clientes_vendedor" measureActual="novos_clientes" where="\"data_pedido\" >= :start_date AND \"data_pedido\" <= :end_date" />
-      <styling tw="group:grouped layout:horizontal legend:on mb:32" />
-    </widget>
-  </row>
-
-  <!-- Meta x Realizado • Território -->
-  <row id="mxr_territorio" cols-d="3" cols-t="1" cols-m="1" gap-x="16" gap-y="16">
-    <widget id="mxr_terr_fat" type="comparebar" order="1" span-d="1" span-t="1" span-m="1" height="360" title="💰 Meta x Faturamento por Território">
-      <datasource schema="comercial" table="vw_vendas_metas" dimension="territorio_nome" measureGoal="meta_faturamento_territorio" measureActual="subtotal" where="\"data_pedido\" >= :start_date AND \"data_pedido\" <= :end_date" />
-      <styling tw="group:grouped layout:horizontal legend:on mb:32" />
-    </widget>
-    <widget id="mxr_terr_ticket" type="comparebar" order="2" span-d="1" span-t="1" span-m="1" height="360" title="🎯 Meta x Ticket Médio por Território">
-      <datasource schema="comercial" table="vw_vendas_metas" dimension="territorio_nome" measureGoal="meta_ticket_territorio" measureActual="ticket_medio" where="\"data_pedido\" >= :start_date AND \"data_pedido\" <= :end_date" />
-      <styling tw="group:grouped layout:horizontal legend:on mb:32" />
-    </widget>
-    <widget id="mxr_terr_novos" type="comparebar" order="3" span-d="1" span-t="1" span-m="1" height="360" title="👥 Meta x Novos Clientes por Território">
-      <datasource schema="comercial" table="vw_vendas_metas" dimension="territorio_nome" measureGoal="meta_novos_clientes_territorio" measureActual="novos_clientes" where="\"data_pedido\" >= :start_date AND \"data_pedido\" <= :end_date" />
-      <styling tw="group:grouped layout:horizontal legend:on mb:32" />
-    </widget>
-  </row>
+  
 
   <!-- Agregados: Serviços e Categorias (3 por linha) -->
   <row id="agg_1" cols-d="3" cols-t="1" cols-m="1" gap-x="16" gap-y="16">
@@ -547,18 +517,11 @@ export const visualBuilderActions = {
                   dsAttrs['dimension1'] = dim1 || undefined
                   dsAttrs['dimension2'] = dim2 || undefined
                   dsAttrs['measure'] = measureExpr
-                } else if (t === 'comparebar') {
-                  const cDim = (ds.dimension as string | undefined) ?? xDim ?? ''
-                  const goal = (ds.measureGoal as string | undefined) ?? ''
-                  const actual = (ds.measureActual as string | undefined) ?? ''
-                  dsAttrs['dimension'] = cDim || undefined
-                  dsAttrs['measureGoal'] = goal || undefined
-                  dsAttrs['measureActual'] = actual || undefined
               }
               dsl = setAttrOnDatasource(dsl, w.id, dsAttrs)
 
               // Persist styling colors and margin.left into <config> (supports simple and groupedbar)
-              const updateChartConfig = (key: 'barConfig'|'lineConfig'|'pieConfig'|'areaConfig'|'groupedBarConfig'|'compareBarConfig'|'stackedBarConfig', colors?: string[], marginLeft?: number, marginTop?: number, marginBottom?: number, layout?: 'vertical'|'horizontal') => {
+              const updateChartConfig = (key: 'barConfig'|'lineConfig'|'pieConfig'|'areaConfig'|'groupedBarConfig'|'stackedBarConfig', colors?: string[], marginLeft?: number, marginTop?: number, marginBottom?: number, layout?: 'vertical'|'horizontal') => {
                 if ((!colors || colors.length === 0) && (marginLeft === undefined) && (marginTop === undefined) && (marginBottom === undefined)) return
                 dsl = setConfigOnWidget(dsl, w.id, (cfg) => {
                   const prev = (cfg[key] as Record<string, unknown>) || {}
@@ -611,9 +574,6 @@ export const visualBuilderActions = {
               } else if (t === 'stackedbar') {
                 const s = (w as unknown as { stackedBarConfig?: { styling?: { colors?: string[] }, margin?: { left?: number; top?: number; bottom?: number } } }).stackedBarConfig
                 updateChartConfig('stackedBarConfig', s?.styling?.colors as string[] | undefined, s?.margin?.left, s?.margin?.top, s?.margin?.bottom)
-              } else if (t === 'comparebar') {
-                const c = (w as unknown as { compareBarConfig?: { styling?: { colors?: string[]; layout?: 'vertical'|'horizontal' }, margin?: { left?: number; top?: number; bottom?: number } } }).compareBarConfig
-                updateChartConfig('compareBarConfig', c?.styling?.colors as string[] | undefined, c?.margin?.left, c?.margin?.top, c?.margin?.bottom, c?.styling?.layout as 'vertical'|'horizontal' | undefined)
               }
               }
             }

@@ -331,7 +331,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
 
   // Fetch data for multi-series widgets (stacked/grouped/pivot/compare)
   useEffect(() => {
-    if (widget.type !== 'stackedbar' && widget.type !== 'groupedbar' && widget.type !== 'stackedlines' && widget.type !== 'radialstacked' && widget.type !== 'pivotbar' && widget.type !== 'comparebar') {
+    if (widget.type !== 'stackedbar' && widget.type !== 'groupedbar' && widget.type !== 'stackedlines' && widget.type !== 'radialstacked' && widget.type !== 'pivotbar') {
       return;
     }
     // Wait until dataSource is available to avoid false error states
@@ -357,9 +357,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
 
         console.log('📊 Fetching grouped data for widget:', widget.id);
 
-        const endpoint = widget.type === 'comparebar' ? '/api/dashboard-supabase/compare' : '/api/dashboard-supabase/grouped';
-        // For comparebar, prefer standardized fields: dimension, measureGoal, measureActual.
-        // Fallback to meta/topic if measures are not provided.
+        const endpoint = '/api/dashboard-supabase/grouped';
         const dsAnyRaw = (widget.dataSource || {}) as Record<string, unknown>;
         // Normalize schema/table for grouped endpoints as well
         const normalizeSchemaTableAny = (src: Record<string, unknown>) => {
@@ -380,17 +378,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
           return out;
         };
         const dsAny = normalizeSchemaTableAny(dsAnyRaw);
-        const payload = widget.type === 'comparebar'
-          ? {
-              ...dsAny,
-              ...(dsAny['measureGoal'] || dsAny['measureActual']
-                ? {}
-                : { topic: (dsAny['topic'] as unknown) ?? (dsAny['meta'] as unknown) }
-              ),
-              filters: globalFilters,
-              dateFilter: globalFilters?.dateRange
-            }
-          : { ...dsAny, filters: globalFilters, dateFilter: globalFilters?.dateRange };
+        const payload = { ...dsAny, filters: globalFilters, dateFilter: globalFilters?.dateRange };
         const response = await fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -1274,85 +1262,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
       }
       break;
 
-    case 'comparebar': {
-      if (multipleLoading) {
-        widgetContent = (
-          <div className="h-full w-full p-2 flex items-center justify-center">
-            <div className="text-center text-gray-500">
-              <div className="text-2xl mb-2">⏳</div>
-              <div className="text-sm">Loading data...</div>
-            </div>
-          </div>
-        );
-        break;
-      }
-      if (multipleError) {
-        widgetContent = (
-          <div className="h-full w-full p-2 flex items-center justify-center bg-red-50 rounded">
-            <div className="text-center text-red-600">
-              <div className="text-2xl mb-2">⚠️</div>
-              <div className="text-sm font-medium mb-1">Error</div>
-              <div className="text-xs">{multipleError}</div>
-            </div>
-          </div>
-        );
-        break;
-      }
-      if (multipleData && multipleData.items.length > 0) {
-        const keys = multipleData.series.map(s => s.key)
-        const colorOverrides = (widget.compareBarConfig?.styling?.colors as string[] | undefined)
-        const colors = (colorOverrides && colorOverrides.length)
-          ? keys.map((_, i) => colorOverrides[i] || multipleData.series[i]?.color)
-          : multipleData.series.map(s => s.color)
-        const seriesMetadata = (colorOverrides && colorOverrides.length)
-          ? multipleData.series.map((s, i) => ({ ...s, color: colorOverrides[i] || s.color }))
-          : multipleData.series
-        const groupMode = widget.compareBarConfig?.styling?.groupMode || 'grouped'
-        const layout = widget.compareBarConfig?.styling?.layout || 'vertical'
-        widgetContent = (
-          <div className="h-full w-full p-2 relative group">
-            
-            {groupMode === 'stacked' ? (
-              <StackedBarChart
-                data={multipleData.items}
-                keys={keys}
-                title={widget.title || 'Meta x Realizado'}
-                colors={colors}
-                seriesMetadata={seriesMetadata}
-                layout={layout}
-                // Style
-                gridColor={widget.compareBarConfig?.styling?.gridColor}
-                backgroundColor={widget.compareBarConfig?.styling?.backgroundColor}
-                margin={widget.compareBarConfig?.margin as { top?: number; right?: number; bottom?: number; left?: number }}
-              />
-            ) : (
-              <GroupedBarChart
-                data={multipleData.items}
-                keys={keys}
-                title={widget.title || 'Meta x Realizado'}
-                colors={colors}
-                seriesMetadata={seriesMetadata}
-                layout={layout}
-                // Style
-                gridColor={widget.compareBarConfig?.styling?.gridColor}
-                backgroundColor={widget.compareBarConfig?.styling?.backgroundColor}
-                margin={widget.compareBarConfig?.margin as { top?: number; right?: number; bottom?: number; left?: number }}
-              />
-            )}
-          </div>
-        );
-      } else {
-        widgetContent = (
-          <div className="h-full w-full p-2 flex items-center justify-center bg-gray-50 rounded">
-            <div className="text-center text-gray-500">
-              <div className="text-2xl mb-2">📊</div>
-              <div className="text-sm">No data available</div>
-            </div>
-          </div>
-        );
-      }
-      break;
-    }
+    
 
     default:
       widgetContent = (
