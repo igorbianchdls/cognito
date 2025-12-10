@@ -72,13 +72,34 @@ export default function ChartVisualization({
       case 'pie':
         return <PieChart {...commonProps} />;
       case 'scatter':
-        return <ScatterChart {...commonProps} />;
+        {
+          const series = [
+            {
+              id: 'Series',
+              data: (processedData || []).map((row) => ({
+                x: Number(row.x ?? 0),
+                y: Number(row.y ?? 0),
+                label: String(row.label ?? row.x ?? ''),
+              })),
+            },
+          ];
+          return <ScatterChart series={series} />;
+        }
       case 'area':
         return <AreaChart {...commonProps} />;
       case 'funnel':
         return <FunnelChart {...commonProps} />;
       case 'treemap':
-        return <TreeMapChart {...commonProps} />;
+        {
+          const root = {
+            name: 'root',
+            children: (processedData || []).map((row) => ({
+              name: String(row.label ?? row.x ?? ''),
+              value: Number(row.y ?? row.value ?? 0),
+            })),
+          };
+          return <TreeMapChart data={root} />;
+        }
       case 'heatmap':
         return <HeatmapChart {...commonProps} />;
       case 'radar':
