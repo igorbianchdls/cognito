@@ -246,8 +246,8 @@ export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas"
     </widget>
   </row>
 
-  <!-- Novos Exemplos: Treemap e Scatter -->
-  <row id="extra_viz" cols-d="2" cols-t="1" cols-m="1" gap-x="16" gap-y="16">
+  <!-- Novos Exemplos: Treemap, Scatter e Funnel (todos na mesma linha) -->
+  <row id="extra_viz" cols-d="3" cols-t="1" cols-m="1" gap-x="16" gap-y="16">
     <widget id="tm_categoria_servico" type="treemap" order="1" span-d="1" span-t="1" span-m="1" height="400" title="Treemap • Categoria > Serviço">
       <datasource schema="comercial" table="vendas_vw" dimension1="categoria_servico_nome" dimension2="servico_nome" measure="SUM(item_subtotal)" />
       <styling tw="mb:32" />
@@ -256,15 +256,13 @@ export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas"
       <datasource schema="comercial" table="vendas_vw" dimension="vendedor_nome" xMeasure="SUM(item_subtotal)" yMeasure="COUNT_DISTINCT(pedido_id)" />
       <styling tw="gridx:on gridy:on mb:32" />
     </widget>
-  </row>
-
-  <!-- Funnel Chart -->
-  <row id="funnel_row" cols-d="1" cols-t="1" cols-m="1" gap-x="16" gap-y="16">
-    <widget id="fnl_canal_venda" type="funnel" order="1" span-d="1" span-t="1" span-m="1" height="420" title="Funil • Vendas por Canal (Top 5)">
+    <widget id="fnl_canal_venda" type="funnel" order="3" span-d="1" span-t="1" span-m="1" height="400" title="Funil • Vendas por Canal (Top 5)">
       <datasource schema="comercial" table="vendas_vw" dimension1="canal_venda_nome" measure="SUM(item_subtotal)" limit="5" />
       <styling tw="bg:#ffffff border:width:1 border:color:#e5e7eb radius:12 mb:32" />
     </widget>
   </row>
+
+  
 </dashboard>`
 
 // Example in grid-per-column mode
