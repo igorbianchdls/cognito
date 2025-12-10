@@ -7,6 +7,8 @@ import { BarChart } from '@/components/charts/BarChart';
 import { LineChart } from '@/components/charts/LineChart';
 import { PieChart } from '@/components/charts/PieChart';
 import { AreaChart } from '@/components/charts/AreaChart';
+import { ScatterChart } from '@/components/charts/ScatterChart';
+import { TreeMapChart } from '@/components/charts/TreeMapChart';
 import { StackedBarChart } from '@/components/charts/StackedBarChart';
 import { StackedLinesChart } from '@/components/charts/StackedLinesChart';
 import { GroupedBarChart } from '@/components/charts/GroupedBarChart';
@@ -331,7 +333,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
 
   // Fetch data for multi-series widgets (stacked/grouped/pivot/compare)
   useEffect(() => {
-    if (widget.type !== 'stackedbar' && widget.type !== 'groupedbar' && widget.type !== 'stackedlines' && widget.type !== 'radialstacked' && widget.type !== 'pivotbar') {
+    if (widget.type !== 'stackedbar' && widget.type !== 'groupedbar' && widget.type !== 'stackedlines' && widget.type !== 'radialstacked' && widget.type !== 'pivotbar' && widget.type !== 'treemap') {
       return;
     }
     // Wait until dataSource is available to avoid false error states
@@ -405,6 +407,67 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
       }
 
     fetchGroupedData();
+  }, [widget.id, widget.dataSource, reloadTick, globalFilters]);
+
+  // Fetch data for scatter widgets (two measures)
+  const [scatterSeries, setScatterSeries] = useState<Array<{ id: string; data: Array<{ x: number; y: number; label?: string }> }> | null>(null);
+  const [scatterLoading, setScatterLoading] = useState(false);
+  const [scatterError, setScatterError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (widget.type !== 'scatter') return;
+    if (!widget.dataSource) { setScatterLoading(false); setScatterError(null); return; }
+    const dsAny = widget.dataSource as Record<string, unknown>;
+    if (!dsAny['table'] || !dsAny['xMeasure'] || !dsAny['yMeasure']) return;
+    (async () => {
+      try {
+        setScatterLoading(true);
+        setScatterError(null);
+        // Normalize schema.table
+        const normalize = (src: Record<string, unknown>) => {
+          const out = { ...src } as Record<string, unknown>;
+          const schema = (out['schema'] || '').toString().trim();
+          const table = (out['table'] || '').toString().trim();
+          if (table.includes('.')) {
+            const idx = table.indexOf('.');
+            const tSchema = table.slice(0, idx);
+            const tTable = table.slice(idx + 1);
+            if (!schema) {
+              out['schema'] = tSchema;
+              out['table'] = tTable;
+            } else {
+              out['table'] = tSchema === schema ? tTable : table.split('.').pop();
+            }
+          }
+          return out;
+        };
+        const payload = normalize(dsAny);
+        const response = await fetch('/api/dashboard-supabase/scatter', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            schema: payload['schema'],
+            table: payload['table'],
+            dimension: payload['dimension'],
+            xMeasure: payload['xMeasure'],
+            yMeasure: payload['yMeasure'],
+            where: payload['where'],
+            dateFilter: globalFilters?.dateRange,
+            filters: globalFilters
+          })
+        });
+        const result = await response.json();
+        if (result.success) {
+          setScatterSeries(result.series);
+        } else {
+          throw new Error(result.error || 'Failed to fetch scatter data');
+        }
+      } catch (err) {
+        setScatterError(err instanceof Error ? err.message : 'Unknown error');
+        setScatterSeries(null);
+      } finally {
+        setScatterLoading(false);
+      }
+    })();
   }, [widget.id, widget.dataSource, reloadTick, globalFilters]);
 
   // Type guard function for KPI data
@@ -766,6 +829,112 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
           />
         </div>
       );
+      break;
+
+    case 'treemap':
+      if (multipleLoading) {
+        widgetContent = (
+          <div className="h-full w-full p-2 flex items-center justify-center">
+            <div className="text-center text-gray-500">
+              <div className="text-2xl mb-2">⏳</div>
+              <div className="text-sm">Loading grouped data...</div>
+            </div>
+          </div>
+        );
+      } else if (multipleError) {
+        widgetContent = (
+          <div className="h-full w-full p-2 flex items-center justify-center bg-red-50 rounded">
+            <div className="text-center text-red-600">
+              <div className="text-2xl mb-2">⚠️</div>
+              <div className="text-sm font-medium mb-1">Error</div>
+              <div className="text-xs">{multipleError}</div>
+            </div>
+          </div>
+        );
+      } else if (multipleData && multipleData.items.length > 0) {
+        // Build hierarchical data
+        const hasSeries = (multipleData.series || []).length > 1 || (multipleData.series[0]?.key !== 'value');
+        let treeData: any = { name: 'root', children: [] as any[] };
+        if (hasSeries) {
+          // dimension1 as parent, dimension2 as children
+          for (const row of multipleData.items) {
+            const parent: any = { name: String(row.label), children: [] as any[] };
+            for (const s of multipleData.series) {
+              const v = Number((row as any)[s.key] || 0);
+              if (v > 0) parent.children.push({ name: s.label || s.key, value: v });
+            }
+            if (parent.children.length > 0) treeData.children.push(parent);
+          }
+        } else {
+          // Single level
+          treeData.children = multipleData.items.map((row) => ({ name: String(row.label), value: Number((row as any).value || 0) }));
+        }
+
+        widgetContent = (
+          <div className="h-full w-full p-2 relative group">
+            <TreeMapChart
+              data={treeData}
+              title={widget.title || 'Treemap'}
+              colors={(widget.styling?.colors as string[] | undefined)}
+              backgroundColor={widget.styling?.backgroundColor}
+            />
+          </div>
+        );
+      } else {
+        widgetContent = (
+          <div className="h-full w-full p-2 flex items-center justify-center bg-gray-50 rounded">
+            <div className="text-center text-gray-500">
+              <div className="text-2xl mb-2">📊</div>
+              <div className="text-sm">No grouped data available</div>
+            </div>
+          </div>
+        );
+      }
+      break;
+
+    case 'scatter':
+      if (scatterLoading) {
+        widgetContent = (
+          <div className="h-full w-full p-2 flex items-center justify-center">
+            <div className="text-center text-gray-500">
+              <div className="text-2xl mb-2">⏳</div>
+              <div className="text-sm">Loading data...</div>
+            </div>
+          </div>
+        );
+      } else if (scatterError) {
+        widgetContent = (
+          <div className="h-full w-full p-2 flex items-center justify-center bg-red-50 rounded">
+            <div className="text-center text-red-600">
+              <div className="text-2xl mb-2">⚠️</div>
+              <div className="text-sm font-medium mb-1">Error</div>
+              <div className="text-xs">{scatterError}</div>
+            </div>
+          </div>
+        );
+      } else if (scatterSeries && scatterSeries.length > 0) {
+        widgetContent = (
+          <div className="h-full w-full p-2 relative group">
+            <ScatterChart
+              series={scatterSeries}
+              title={widget.title || 'Scatter Plot'}
+              colors={(widget.styling?.colors as string[] | undefined)}
+              backgroundColor={widget.styling?.backgroundColor}
+              enableGridX={widget.styling?.enableGridX as boolean | undefined}
+              enableGridY={widget.styling?.enableGridY as boolean | undefined}
+            />
+          </div>
+        );
+      } else {
+        widgetContent = (
+          <div className="h-full w-full p-2 flex items-center justify-center bg-gray-50 rounded">
+            <div className="text-center text-gray-500">
+              <div className="text-2xl mb-2">📊</div>
+              <div className="text-sm">No data available</div>
+            </div>
+          </div>
+        );
+      }
       break;
 
     case 'insights2': {

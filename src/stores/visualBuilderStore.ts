@@ -245,6 +245,18 @@ export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas"
       <styling tw="legend:off grid:on mb:32" />
     </widget>
   </row>
+
+  <!-- Novos Exemplos: Treemap e Scatter -->
+  <row id="extra_viz" cols-d="2" cols-t="1" cols-m="1" gap-x="16" gap-y="16">
+    <widget id="tm_categoria_servico" type="treemap" order="1" span-d="1" span-t="1" span-m="1" height="400" title="Treemap • Categoria > Serviço">
+      <datasource schema="comercial" table="vendas_vw" dimension1="categoria_servico_nome" dimension2="servico_nome" measure="SUM(item_subtotal)" />
+      <styling tw="mb:32" />
+    </widget>
+    <widget id="sc_vend_fat_vs_pedidos" type="scatter" order="2" span-d="1" span-t="1" span-m="1" height="400" title="Scatter • Faturamento vs Pedidos por Vendedor">
+      <datasource schema="comercial" table="vendas_vw" dimension="vendedor_nome" xMeasure="SUM(item_subtotal)" yMeasure="COUNT_DISTINCT(pedido_id)" />
+      <styling tw="gridx:on gridy:on mb:32" />
+    </widget>
+  </row>
 </dashboard>`
 
 // Example in grid-per-column mode
@@ -511,13 +523,18 @@ export const visualBuilderActions = {
                   dsAttrs['measure'] = measureExpr
                 } else if (t === 'kpi') {
                   dsAttrs['measure'] = measureExpr
-                } else if (['stackedbar','groupedbar','stackedlines','radialstacked','pivotbar'].includes(t)) {
+                } else if (['stackedbar','groupedbar','stackedlines','radialstacked','pivotbar','treemap'].includes(t)) {
                   const dim1 = (ds.dimension1 as string | undefined) ?? xDim ?? ''
                   const dim2 = (ds.dimension2 as string | undefined) ?? ''
                   dsAttrs['dimension1'] = dim1 || undefined
                   dsAttrs['dimension2'] = dim2 || undefined
                   dsAttrs['measure'] = measureExpr
-              }
+                } else if (t === 'scatter') {
+                  const dOpt = (ds.dimension as string | undefined) ?? ''
+                  if (dOpt) dsAttrs['dimension'] = dOpt
+                  dsAttrs['xMeasure'] = (ds.xMeasure as string | undefined) || ''
+                  dsAttrs['yMeasure'] = (ds.yMeasure as string | undefined) || ''
+                }
               dsl = setAttrOnDatasource(dsl, w.id, dsAttrs)
 
               // Persist styling colors and margin.left into <config> (supports simple and groupedbar)

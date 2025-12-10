@@ -92,7 +92,11 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
       // multi-series
       dimension1: ((widget?.dataSource ?? {}) as Partial<NonNullable<Widget['dataSource']>>).dimension1 || '',
       dimension2: ((widget?.dataSource ?? {}) as Partial<NonNullable<Widget['dataSource']>>).dimension2 || '',
-      
+      // generic optional dimension (used by scatter)
+      dimension: ((widget?.dataSource ?? {}) as Partial<NonNullable<Widget['dataSource']>>).dimension || '',
+      // scatter measures
+      xMeasure: ((widget?.dataSource ?? {}) as Partial<NonNullable<Widget['dataSource']>>).xMeasure || '',
+      yMeasure: ((widget?.dataSource ?? {}) as Partial<NonNullable<Widget['dataSource']>>).yMeasure || '',
     }
   });
 
@@ -185,7 +189,8 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
   // Helpers by type
   const isSimpleChart = (t: string) => ['bar', 'line', 'pie', 'area'].includes(t);
   const isKpi = (t: string) => t === 'kpi';
-  const isMultiSeries = (t: string) => ['stackedbar', 'groupedbar', 'stackedlines', 'radialstacked', 'pivotbar'].includes(t);
+  const isMultiSeries = (t: string) => ['stackedbar', 'groupedbar', 'stackedlines', 'radialstacked', 'pivotbar', 'treemap'].includes(t);
+  const isScatter = (t: string) => t === 'scatter';
   
 
   // Update form when widget changes
@@ -203,7 +208,9 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
           aggregation: ((widget.dataSource ?? {}) as Partial<NonNullable<Widget['dataSource']>>).aggregation || 'SUM',
           dimension1: ((widget.dataSource ?? {}) as Partial<NonNullable<Widget['dataSource']>>).dimension1 || '',
           dimension2: ((widget.dataSource ?? {}) as Partial<NonNullable<Widget['dataSource']>>).dimension2 || '',
-          
+          dimension: ((widget.dataSource ?? {}) as Partial<NonNullable<Widget['dataSource']>>).dimension || '',
+          xMeasure: ((widget.dataSource ?? {}) as Partial<NonNullable<Widget['dataSource']>>).xMeasure || '',
+          yMeasure: ((widget.dataSource ?? {}) as Partial<NonNullable<Widget['dataSource']>>).yMeasure || '',
         }
       });
     }
@@ -229,6 +236,10 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
       if (formData.dataSource.dimension2) dsPatch['dimension2'] = formData.dataSource.dimension2;
       dsPatch['y'] = formData.dataSource.y;
       dsPatch['aggregation'] = formData.dataSource.aggregation;
+    } else if (isScatter(formData.type)) {
+      if (formData.dataSource.dimension) dsPatch['dimension'] = formData.dataSource.dimension;
+      dsPatch['xMeasure'] = formData.dataSource.xMeasure;
+      dsPatch['yMeasure'] = formData.dataSource.yMeasure;
     }
 
     // Patch style: colors and margin.left per chart type
@@ -409,6 +420,8 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
               <option value="stackedlines">Stacked Lines</option>
               <option value="radialstacked">Radial Stacked</option>
               <option value="pivotbar">Pivot Bar</option>
+              <option value="treemap">Treemap</option>
+              <option value="scatter">Scatter</option>
               <option value="insights">Insights</option>
               <option value="alerts">Alerts</option>
               <option value="recommendations">Recommendations</option>
@@ -502,8 +515,8 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
                 )}
               </div>
 
-              {/* Aggregation */}
-              <div>
+              {/* Aggregation (hide for scatter) */}
+              {!isScatter(formData.type) && (<div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Agregação
                 </label>
@@ -521,7 +534,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
                   <option value="MIN">MIN</option>
                   <option value="MAX">MAX</option>
                 </select>
-              </div>
+              </div>)}
               
 
               {/* X Field (Dimension) for simple charts */}
@@ -626,6 +639,39 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
                         {fieldOptions.dimensions.map((d) => (<option key={d} value={d}>{d}</option>))}
                       </select>
                     )}
+                  </div>
+                </>
+              )}
+
+              {/* Scatter: optional dimension label + xMeasure/yMeasure expressions */}
+              {isScatter(formData.type) && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Dimensão (opcional)</label>
+                    {isCustomTable ? (
+                      <input type="text" value={formData.dataSource.dimension}
+                        onChange={(e) => setFormData({ ...formData, dataSource: { ...formData.dataSource, dimension: e.target.value } })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="ex.: vendedor_nome" />
+                    ) : (
+                      <select value={formData.dataSource.dimension || ''}
+                        onChange={(e) => setFormData({ ...formData, dataSource: { ...formData.dataSource, dimension: e.target.value } })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">(Nenhuma)</option>
+                        {fieldOptions.dimensions.map((d) => (<option key={d} value={d}>{d}</option>))}
+                      </select>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">X (xMeasure)</label>
+                    <input type="text" value={formData.dataSource.xMeasure}
+                      onChange={(e) => setFormData({ ...formData, dataSource: { ...formData.dataSource, xMeasure: e.target.value } })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="ex.: SUM(item_subtotal)" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Y (yMeasure)</label>
+                    <input type="text" value={formData.dataSource.yMeasure}
+                      onChange={(e) => setFormData({ ...formData, dataSource: { ...formData.dataSource, yMeasure: e.target.value } })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="ex.: COUNT_DISTINCT(pedido_id)" />
                   </div>
                 </>
               )}

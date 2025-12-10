@@ -201,7 +201,7 @@ export interface Insights2Config {
 
 export interface Widget {
   id: string;
-  type: 'bar' | 'line' | 'pie' | 'area' | 'kpi' | 'insights' | 'alerts' | 'recommendations' | 'insightsHero' | 'insights2' | 'stackedbar' | 'groupedbar' | 'stackedlines' | 'radialstacked' | 'pivotbar';
+  type: 'bar' | 'line' | 'pie' | 'area' | 'kpi' | 'insights' | 'alerts' | 'recommendations' | 'insightsHero' | 'insights2' | 'stackedbar' | 'groupedbar' | 'stackedlines' | 'radialstacked' | 'pivotbar' | 'treemap' | 'scatter';
   // Legacy absolute grid position (optional; not required by responsive layout)
   position?: {
     x: number;
@@ -242,6 +242,9 @@ export interface Widget {
     measure?: string;
     measureGoal?: string;
     measureActual?: string;
+    // For scatter
+    xMeasure?: string;
+    yMeasure?: string;
     where?: string;
   };
   styling?: {
@@ -297,7 +300,7 @@ export interface ParseResult {
 }
 
 export class ConfigParser {
-  private static VALID_TYPES = ['bar', 'line', 'pie', 'area', 'kpi', 'insights', 'alerts', 'recommendations', 'insightsHero', 'insights2', 'stackedbar', 'groupedbar', 'stackedlines', 'radialstacked', 'pivotbar'];
+  private static VALID_TYPES = ['bar', 'line', 'pie', 'area', 'kpi', 'insights', 'alerts', 'recommendations', 'insightsHero', 'insights2', 'stackedbar', 'groupedbar', 'stackedlines', 'radialstacked', 'pivotbar', 'treemap', 'scatter'];
   private static DEFAULT_GRID_CONFIG: GridConfig = {
     maxRows: 12,
     rowHeight: 30,
@@ -532,6 +535,9 @@ export class ConfigParser {
       setStr('measure', attrs['measure']);
       setStr('measureGoal', attrs['measureGoal']);
       setStr('measureActual', attrs['measureActual']);
+      // Scatter
+      setStr('xMeasure', attrs['xMeasure']);
+      setStr('yMeasure', attrs['yMeasure']);
       setStr('field', attrs['field']);
       setStr('where', attrs['where']);
       setStr('topic', attrs['topic']);
