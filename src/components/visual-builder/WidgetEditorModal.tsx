@@ -390,6 +390,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
       (next.styling as any).axisBottomTickSize = styleData.axisBottomTickSize;
       (next.styling as any).axisBottomTickPadding = styleData.axisBottomTickPadding;
       (next.styling as any).axisBottomTickRotation = styleData.axisBottomTickRotation;
+      (next.styling as any).marginBottom = styleData.marginBottom;
       const base = (cfg?.margin || { top: 20, right: 20, bottom: 40, left: 40 }) as NonNullable<BarChartConfig['margin']>;
       next.margin = {
         ...base,
@@ -415,6 +416,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
       (next.styling as any).axisBottomTickSize = styleData.axisBottomTickSize;
       (next.styling as any).axisBottomTickPadding = styleData.axisBottomTickPadding;
       (next.styling as any).axisBottomTickRotation = styleData.axisBottomTickRotation;
+      (next.styling as any).marginBottom = styleData.marginBottom;
       const base = (cfg?.margin || { top: 20, right: 20, bottom: 40, left: 40 }) as NonNullable<LineChartConfig['margin']>;
       next.margin = {
         ...base,
@@ -429,6 +431,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
       const next: Partial<PieChartConfig> = { ...(cfg || {}) };
       next.styling = { ...(cfg?.styling || {}) } as PieChartConfig['styling'];
       if (colorsArray.length) (next.styling as PieChartConfig['styling']).colors = colorsArray;
+      (next.styling as any).marginBottom = styleData.marginBottom;
       const base = (cfg?.margin || { top: 20, right: 20, bottom: 40, left: 40 }) as NonNullable<PieChartConfig['margin']>;
       next.margin = {
         ...base,
@@ -443,6 +446,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
       const next: Partial<AreaChartConfig> = { ...(cfg || {}) };
       next.styling = { ...(cfg?.styling || {}) } as AreaChartConfig['styling'];
       if (colorsArray.length) (next.styling as AreaChartConfig['styling']).colors = colorsArray;
+      (next.styling as any).marginBottom = styleData.marginBottom;
       (next.styling as any).axisBottomTickSize = styleData.axisBottomTickSize;
       (next.styling as any).axisBottomTickPadding = styleData.axisBottomTickPadding;
       (next.styling as any).axisBottomTickRotation = styleData.axisBottomTickRotation;
@@ -464,6 +468,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
       if (colorsArray.length) (next.styling as GroupedBarChartConfig['styling']).colors = colorsArray;
       // Apply selected orientation
       (next.styling as GroupedBarChartConfig['styling']).layout = groupedBarLayout;
+      (next.styling as any).marginBottom = styleData.marginBottom;
       (next.styling as any).axisBottomTickSize = styleData.axisBottomTickSize;
       (next.styling as any).axisBottomTickPadding = styleData.axisBottomTickPadding;
       (next.styling as any).axisBottomTickRotation = styleData.axisBottomTickRotation;
@@ -486,6 +491,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
       if (colorsArray.length) (next.styling as StackedBarChartConfig['styling']).colors = colorsArray;
       // Apply selected orientation
       (next.styling as StackedBarChartConfig['styling']).layout = stackedBarLayout;
+      (next.styling as any).marginBottom = styleData.marginBottom;
       (next.styling as any).axisBottomTickSize = styleData.axisBottomTickSize;
       (next.styling as any).axisBottomTickPadding = styleData.axisBottomTickPadding;
       (next.styling as any).axisBottomTickRotation = styleData.axisBottomTickRotation;
