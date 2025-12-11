@@ -713,7 +713,6 @@ export const visualBuilderActions = {
       const layout = ((): NonNullable<typeof cfg.layout> => {
         if (cfg.layout && typeof cfg.layout === 'object') return cfg.layout as NonNullable<typeof cfg.layout>;
         const created = { mode: 'grid-per-row', rows: {} as Record<string, any> } as NonNullable<typeof cfg.layout>;
-        // @ts-expect-error assign
         cfg.layout = created;
         return created;
       })();
