@@ -25,9 +25,25 @@ export default function VisualBuilderChat() {
     e.preventDefault();
     const trimmed = input.trim();
     if (!trimmed) return;
-    await sendMessage({
-      content: trimmed,
-    });
+    // Envia mensagem seguindo o padrão do Nexus (/nexus):
+    // - quando há anexos, usamos parts com texto + arquivos
+    // - caso contrário, usamos a forma simplificada com text
+    if (attachedFiles.length > 0) {
+      const textPart = { type: 'text' as const, text: trimmed };
+      const fileParts = attachedFiles.map((file) => ({
+        type: 'file' as const,
+        mediaType: file.type,
+        url: file.dataUrl,
+      }));
+
+      await sendMessage({
+        role: 'user',
+        parts: [textPart, ...fileParts],
+      });
+      setAttachedFiles([]);
+    } else {
+      await sendMessage({ text: trimmed });
+    }
     setInput("");
   };
 
@@ -47,4 +63,3 @@ export default function VisualBuilderChat() {
     </div>
   );
 }
-
