@@ -623,7 +623,7 @@ const DraggableRow = memo(function DraggableRow({ id, children }: { id: string; 
                   >
                     <SortableContext items={widgetIds} strategy={horizontalListSortingStrategy}>
                       {/* Row overlay controls (no layout shift) */}
-                      <div className="absolute top-1 right-2 z-10 opacity-0 group-hover:opacity-100 focus-within:opacity-100 pointer-events-none">
+                      <div className="absolute top-2 left-12 z-20 opacity-0 group-hover:opacity-100 focus-within:opacity-100 pointer-events-none">
                         <button
                           type="button"
                           onClick={() => openRowEditor(rowKey)}
