@@ -100,8 +100,8 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
     }
   });
 
-  // Simple styling controls for charts (colors and left margin)
-  const [styleData, setStyleData] = useState<{ colors: string; marginLeft: number; marginTop: number; marginBottom: number }>({ colors: '', marginLeft: 40, marginTop: 20, marginBottom: 40 });
+  // Simple styling controls for charts (colors and margins)
+  const [styleData, setStyleData] = useState<{ colors: string; marginLeft: number; marginRight: number; marginTop: number; marginBottom: number }>({ colors: '', marginLeft: 40, marginRight: 20, marginTop: 20, marginBottom: 40 });
 
   // Orientation for Grouped Bar (vertical | horizontal)
   const [groupedBarLayout, setGroupedBarLayout] = useState<'vertical' | 'horizontal'>('vertical');
@@ -169,19 +169,31 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
         return undefined;
       };
 
+      const getMarginRight = (): number | undefined => {
+        if (t === 'bar') return widget.barConfig?.margin?.right;
+        if (t === 'line') return (widget.lineConfig as Partial<{ margin?: { right?: number } }> | undefined)?.margin?.right;
+        if (t === 'pie') return (widget.pieConfig as Partial<{ margin?: { right?: number } }> | undefined)?.margin?.right;
+        if (t === 'area') return (widget.areaConfig as Partial<{ margin?: { right?: number } }> | undefined)?.margin?.right;
+        if (t === 'groupedbar') return (widget.groupedBarConfig?.margin as { right?: number } | undefined)?.right;
+        if (t === 'stackedbar') return (widget.stackedBarConfig?.margin as { right?: number } | undefined)?.right;
+        return undefined;
+      };
+
       let colorsArr = getColors() || [];
       const marginLeft = getMarginLeft();
+      const marginRight = getMarginRight();
       const marginTop = getMarginTop();
       const marginBottom = getMarginBottom();
       
       setStyleData({
         colors: colorsArr.join(', '),
         marginLeft: typeof marginLeft === 'number' ? marginLeft : 40,
+        marginRight: typeof marginRight === 'number' ? marginRight : 20,
         marginTop: typeof marginTop === 'number' ? marginTop : 20,
         marginBottom: typeof marginBottom === 'number' ? marginBottom : 40,
       });
     } catch {
-      setStyleData({ colors: '', marginLeft: 40, marginTop: 20, marginBottom: 40 });
+      setStyleData({ colors: '', marginLeft: 40, marginRight: 20, marginTop: 20, marginBottom: 40 });
       
     }
   }, [widget]);
@@ -287,6 +299,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
       next.margin = {
         ...base,
         left: Number.isFinite(styleData.marginLeft) ? styleData.marginLeft : base.left,
+        right: Number.isFinite(styleData.marginRight) ? styleData.marginRight : base.right,
         top: Number.isFinite(styleData.marginTop) ? styleData.marginTop : base.top,
         bottom: Number.isFinite(styleData.marginBottom) ? styleData.marginBottom : base.bottom,
       };
@@ -300,6 +313,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
       next.margin = {
         ...base,
         left: Number.isFinite(styleData.marginLeft) ? styleData.marginLeft : base.left,
+        right: Number.isFinite(styleData.marginRight) ? styleData.marginRight : base.right,
         top: Number.isFinite(styleData.marginTop) ? styleData.marginTop : base.top,
         bottom: Number.isFinite(styleData.marginBottom) ? styleData.marginBottom : base.bottom,
       } as NonNullable<LineChartConfig['margin']>;
@@ -313,6 +327,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
       next.margin = {
         ...base,
         left: Number.isFinite(styleData.marginLeft) ? styleData.marginLeft : base.left,
+        right: Number.isFinite(styleData.marginRight) ? styleData.marginRight : base.right,
         top: Number.isFinite(styleData.marginTop) ? styleData.marginTop : base.top,
         bottom: Number.isFinite(styleData.marginBottom) ? styleData.marginBottom : base.bottom,
       } as NonNullable<PieChartConfig['margin']>;
@@ -326,6 +341,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
       next.margin = {
         ...base,
         left: Number.isFinite(styleData.marginLeft) ? styleData.marginLeft : base.left,
+        right: Number.isFinite(styleData.marginRight) ? styleData.marginRight : base.right,
         top: Number.isFinite(styleData.marginTop) ? styleData.marginTop : base.top,
         bottom: Number.isFinite(styleData.marginBottom) ? styleData.marginBottom : base.bottom,
       } as NonNullable<AreaChartConfig['margin']>;
@@ -344,6 +360,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
       next.margin = {
         ...base,
         left: Number.isFinite(styleData.marginLeft) ? styleData.marginLeft : base.left,
+        right: Number.isFinite(styleData.marginRight) ? styleData.marginRight : base.right,
         top: Number.isFinite(styleData.marginTop) ? styleData.marginTop : base.top,
         bottom: Number.isFinite(styleData.marginBottom) ? styleData.marginBottom : base.bottom,
       } as NonNullable<GroupedBarChartConfig['margin']>;
@@ -362,6 +379,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
       next.margin = {
         ...base,
         left: Number.isFinite(styleData.marginLeft) ? styleData.marginLeft : base.left,
+        right: Number.isFinite(styleData.marginRight) ? styleData.marginRight : base.right,
         top: Number.isFinite(styleData.marginTop) ? styleData.marginTop : base.top,
         bottom: Number.isFinite(styleData.marginBottom) ? styleData.marginBottom : base.bottom,
       } as NonNullable<StackedBarChartConfig['margin']>;
@@ -822,6 +840,16 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 <p className="text-xs text-gray-500 mt-1">Espaço para eixo Y/labels do gráfico.</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Margin Right (px)</label>
+                <input
+                  type="number"
+                  min={0}
+                  value={styleData.marginRight}
+                  onChange={(e) => setStyleData({ ...styleData, marginRight: Number.parseInt(e.target.value || '0') || 0 })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Margin Top (px)</label>
