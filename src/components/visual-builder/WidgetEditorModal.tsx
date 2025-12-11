@@ -103,11 +103,21 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
   // Simple styling controls for charts (colors and left margin)
   const [styleData, setStyleData] = useState<{ colors: string; marginLeft: number; marginTop: number; marginBottom: number }>({ colors: '', marginLeft: 40, marginTop: 20, marginBottom: 40 });
 
+  // Orientation for Grouped Bar (vertical | horizontal)
+  const [groupedBarLayout, setGroupedBarLayout] = useState<'vertical' | 'horizontal'>('vertical');
+
   // Initialize styling controls on widget or type change
   useEffect(() => {
     if (!widget) return;
     try {
       const t = widget.type as Widget['type'];
+      // Initialize grouped bar orientation from widget
+      if (t === 'groupedbar') {
+        const layout = widget.groupedBarConfig?.styling?.layout;
+        setGroupedBarLayout(layout === 'horizontal' ? 'horizontal' : 'vertical');
+      } else {
+        setGroupedBarLayout('vertical');
+      }
       // Helper getters per type
       const getColors = (): string[] | undefined => {
         if (t === 'bar') return widget.barConfig?.styling?.colors;
@@ -318,6 +328,8 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
       // Ensure styling exists
       next.styling = { ...(cfg?.styling || {}) } as GroupedBarChartConfig['styling'];
       if (colorsArray.length) (next.styling as GroupedBarChartConfig['styling']).colors = colorsArray;
+      // Apply selected orientation
+      (next.styling as GroupedBarChartConfig['styling']).layout = groupedBarLayout;
       const prevMargin = (cfg?.margin || {}) as NonNullable<GroupedBarChartConfig['margin']>;
       const base = { top: prevMargin.top ?? 20, right: prevMargin.right ?? 20, bottom: prevMargin.bottom ?? 40, left: prevMargin.left ?? 40 };
       next.margin = {
@@ -402,12 +414,27 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Tipo de Gráfico
             </label>
+            {/**
+             * Tipo de gráfico: adiciona a opção "Grouped Bar (Horizontal)" que mapeia
+             * para type='groupedbar' + layout='horizontal'. Mantemos o type real como
+             * 'groupedbar' e controlamos a orientação via estado local.
+             */}
             <select
-              value={formData.type}
-              onChange={(e) => setFormData({
-                ...formData,
-                type: e.target.value as Widget['type']
-              })}
+              value={(formData.type === 'groupedbar' && groupedBarLayout === 'horizontal') ? '__groupedbar_horizontal__' : formData.type}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (val === '__groupedbar_horizontal__') {
+                  setFormData({ ...formData, type: 'groupedbar' });
+                  setGroupedBarLayout('horizontal');
+                } else if (val === 'groupedbar') {
+                  setFormData({ ...formData, type: 'groupedbar' });
+                  setGroupedBarLayout('vertical');
+                } else {
+                  setFormData({ ...formData, type: val as Widget['type'] });
+                  // Reset orientation when leaving groupedbar
+                  setGroupedBarLayout('vertical');
+                }
+              }}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="bar">Bar Chart</option>
@@ -417,6 +444,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
               <option value="kpi">KPI</option>
               <option value="stackedbar">Stacked Bar</option>
               <option value="groupedbar">Grouped Bar</option>
+              <option value="__groupedbar_horizontal__">Grouped Bar (Horizontal)</option>
               <option value="stackedlines">Stacked Lines</option>
               <option value="radialstacked">Radial Stacked</option>
               <option value="pivotbar">Pivot Bar</option>
