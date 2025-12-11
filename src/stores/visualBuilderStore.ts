@@ -716,8 +716,8 @@ export const visualBuilderActions = {
         cfg.layout = created;
         return created;
       })();
-      layout.rows = (existingRows || {}) as any;
-      layout.rows[rowId] = {
+      const rowsRef = (layout.rows || (layout.rows = {} as Record<string, unknown>)) as Record<string, unknown>;
+      rowsRef[rowId] = {
         desktop: { columns: Math.max(1, spec.desktop.columns), gapX: spec.desktop.gapX, gapY: spec.desktop.gapY, autoRowHeight: spec.desktop.autoRowHeight },
         tablet: { columns: Math.max(1, spec.tablet.columns), gapX: spec.tablet.gapX, gapY: spec.tablet.gapY, autoRowHeight: spec.tablet.autoRowHeight },
         mobile: { columns: Math.max(1, spec.mobile.columns), gapX: spec.mobile.gapX, gapY: spec.mobile.gapY, autoRowHeight: spec.mobile.autoRowHeight },
