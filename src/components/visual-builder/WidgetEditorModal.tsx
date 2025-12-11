@@ -510,13 +510,37 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
     
 
     if (t === 'bar') {
-      updatedWidget = { ...updatedWidget, barConfig: applyBarStyling(updatedWidget.barConfig as Partial<BarChartConfig>) };
+      updatedWidget = {
+        ...updatedWidget,
+        barConfig: {
+          ...applyBarStyling(updatedWidget.barConfig as Partial<BarChartConfig>),
+          legends: buildLegendsObject() as unknown as import('@/stores/apps/barChartStore').BarChartConfig['legends']
+        }
+      } as Widget;
     } else if (t === 'line') {
-      updatedWidget = { ...updatedWidget, lineConfig: applyLineStyling(updatedWidget.lineConfig as Partial<LineChartConfig>) };
+      updatedWidget = {
+        ...updatedWidget,
+        lineConfig: {
+          ...applyLineStyling(updatedWidget.lineConfig as Partial<LineChartConfig>),
+          legends: buildLegendsObject() as unknown as import('@/stores/apps/lineChartStore').LineChartConfig['legends']
+        }
+      } as Widget;
     } else if (t === 'pie') {
-      updatedWidget = { ...updatedWidget, pieConfig: applyPieStyling(updatedWidget.pieConfig as Partial<PieChartConfig>) };
+      updatedWidget = {
+        ...updatedWidget,
+        pieConfig: {
+          ...applyPieStyling(updatedWidget.pieConfig as Partial<PieChartConfig>),
+          legends: buildLegendsObject() as unknown as import('@/stores/apps/pieChartStore').PieChartConfig['legends']
+        }
+      } as Widget;
     } else if (t === 'area') {
-      updatedWidget = { ...updatedWidget, areaConfig: applyAreaStyling(updatedWidget.areaConfig as Partial<AreaChartConfig>) };
+      updatedWidget = {
+        ...updatedWidget,
+        areaConfig: {
+          ...applyAreaStyling(updatedWidget.areaConfig as Partial<AreaChartConfig>),
+          legends: buildLegendsObject() as unknown as import('@/stores/apps/areaChartStore').AreaChartConfig['legends']
+        }
+      } as Widget;
     } else if (t === 'groupedbar') {
       // Persist groupedbar styling into widget
       updatedWidget = {
@@ -535,39 +559,6 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
           legends: buildLegendsObject() as unknown as StackedBarChartConfig['legends']
         }
       };
-    } else if (t === 'bar') {
-      updatedWidget = {
-        ...updatedWidget,
-        barConfig: {
-          ...applyBarStyling(updatedWidget.barConfig as Partial<BarChartConfig>),
-          legends: buildLegendsObject() as unknown as import('@/stores/apps/barChartStore').BarChartConfig['legends']
-        }
-      } as Widget;
-    } else if (t === 'line') {
-      updatedWidget = {
-        ...updatedWidget,
-        lineConfig: {
-          ...applyLineStyling(updatedWidget.lineConfig as Partial<LineChartConfig>),
-          legends: buildLegendsObject() as unknown as import('@/stores/apps/lineChartStore').LineChartConfig['legends']
-        }
-      } as Widget;
-    } else if (t === 'area') {
-      updatedWidget = {
-        ...updatedWidget,
-        areaConfig: {
-          ...applyAreaStyling(updatedWidget.areaConfig as Partial<AreaChartConfig>),
-          legends: buildLegendsObject() as unknown as import('@/stores/apps/areaChartStore').AreaChartConfig['legends']
-        }
-      } as Widget;
-    } else if (t === 'pie') {
-      // Pie usa LegendConfig também
-      updatedWidget = {
-        ...updatedWidget,
-        pieConfig: {
-          ...applyPieStyling(updatedWidget.pieConfig as Partial<PieChartConfig>),
-          legends: buildLegendsObject() as unknown as import('@/stores/apps/pieChartStore').PieChartConfig['legends']
-        }
-      } as Widget;
     }
 
     onSave(updatedWidget);
