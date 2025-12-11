@@ -105,6 +105,8 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
 
   // Orientation for Grouped Bar (vertical | horizontal)
   const [groupedBarLayout, setGroupedBarLayout] = useState<'vertical' | 'horizontal'>('vertical');
+  // Orientation for Stacked Bar (vertical | horizontal)
+  const [stackedBarLayout, setStackedBarLayout] = useState<'vertical' | 'horizontal'>('vertical');
 
   // Initialize styling controls on widget or type change
   useEffect(() => {
@@ -117,6 +119,13 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
         setGroupedBarLayout(layout === 'horizontal' ? 'horizontal' : 'vertical');
       } else {
         setGroupedBarLayout('vertical');
+      }
+      // Initialize stacked bar orientation from widget
+      if (t === 'stackedbar') {
+        const layout = widget.stackedBarConfig?.styling?.layout as 'horizontal' | 'vertical' | undefined;
+        setStackedBarLayout(layout === 'horizontal' ? 'horizontal' : 'vertical');
+      } else {
+        setStackedBarLayout('vertical');
       }
       // Helper getters per type
       const getColors = (): string[] | undefined => {
@@ -346,6 +355,8 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
       // Ensure styling exists
       next.styling = { ...(cfg?.styling || {}) } as StackedBarChartConfig['styling'];
       if (colorsArray.length) (next.styling as StackedBarChartConfig['styling']).colors = colorsArray;
+      // Apply selected orientation
+      (next.styling as StackedBarChartConfig['styling']).layout = stackedBarLayout;
       const prevMargin = (cfg?.margin || {}) as NonNullable<StackedBarChartConfig['margin']>;
       const base = { top: prevMargin.top ?? 20, right: prevMargin.right ?? 20, bottom: prevMargin.bottom ?? 40, left: prevMargin.left ?? 40 };
       next.margin = {
@@ -420,7 +431,11 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
              * 'groupedbar' e controlamos a orientação via estado local.
              */}
             <select
-              value={(formData.type === 'groupedbar' && groupedBarLayout === 'horizontal') ? '__groupedbar_horizontal__' : formData.type}
+              value={(() => {
+                if (formData.type === 'groupedbar' && groupedBarLayout === 'horizontal') return '__groupedbar_horizontal__';
+                if (formData.type === 'stackedbar' && stackedBarLayout === 'horizontal') return '__stackedbar_horizontal__';
+                return formData.type;
+              })()}
               onChange={(e) => {
                 const val = e.target.value;
                 if (val === '__groupedbar_horizontal__') {
@@ -429,10 +444,17 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
                 } else if (val === 'groupedbar') {
                   setFormData({ ...formData, type: 'groupedbar' });
                   setGroupedBarLayout('vertical');
+                } else if (val === '__stackedbar_horizontal__') {
+                  setFormData({ ...formData, type: 'stackedbar' });
+                  setStackedBarLayout('horizontal');
+                } else if (val === 'stackedbar') {
+                  setFormData({ ...formData, type: 'stackedbar' });
+                  setStackedBarLayout('vertical');
                 } else {
                   setFormData({ ...formData, type: val as Widget['type'] });
-                  // Reset orientation when leaving groupedbar
+                  // Reset orientations when leaving specific types
                   setGroupedBarLayout('vertical');
+                  setStackedBarLayout('vertical');
                 }
               }}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -443,6 +465,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
               <option value="area">Area Chart</option>
               <option value="kpi">KPI</option>
               <option value="stackedbar">Stacked Bar</option>
+              <option value="__stackedbar_horizontal__">Stacked Bar (Horizontal)</option>
               <option value="groupedbar">Grouped Bar</option>
               <option value="__groupedbar_horizontal__">Grouped Bar (Horizontal)</option>
               <option value="stackedlines">Stacked Lines</option>
