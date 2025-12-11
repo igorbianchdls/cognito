@@ -202,6 +202,19 @@ export async function POST(request: NextRequest) {
       return null;
     };
 
+    // Mapear dimension fallback: aceitar 'dimension' vindo do DSL
+    const dim1 = ((): string | undefined => {
+      const d1 = typeof dimension1 === 'string' ? dimension1.trim() : '';
+      if (d1) return d1;
+      const d = (body as Record<string, unknown>)['dimension'];
+      if (typeof d === 'string' && d.trim().length > 0) return d.trim();
+      return undefined;
+    })();
+
+    if (!table || !dim1) {
+      return NextResponse.json({ success: false, error: 'Parâmetros inválidos: é necessário informar table e dimension (ou dimension1).' }, { status: 400 });
+    }
+
     let sqlQuery: string;
     // Caso 1: dimension2 informada → multi-séries por segunda dimensão (com 1 medida)
     if (dimension2 && dimension2.trim().length > 0) {
@@ -209,19 +222,19 @@ export async function POST(request: NextRequest) {
       if (!valueExpr) {
         return NextResponse.json({ success: false, error: 'Medida inválida: forneça measure como expressão/coluna, ou use field/aggregation.' }, { status: 400 });
       }
-      sqlQuery = `SELECT "${dimension1}" as dim1, "${dimension2}" as dim2, ${valueExpr} as value
+      sqlQuery = `SELECT "${dim1}" as dim1, "${dimension2}" as dim2, ${valueExpr} as value
          FROM ${qualifiedTable}
          WHERE 1=1${dateCondition}
-         GROUP BY "${dimension1}", "${dimension2}"
+         GROUP BY "${dim1}", "${dimension2}"
          ORDER BY dim1, value DESC`;
     } else {
       // Caso 2: sem dimension2 → uma série (measure) OU duas séries (measureGoal/measureActual)
       const dual = resolveDualMeasures();
       if (dual) {
-        sqlQuery = `SELECT "${dimension1}" as dim1, ${dual.goalExpr} as meta, ${dual.actualExpr} as realizado
+        sqlQuery = `SELECT "${dim1}" as dim1, ${dual.goalExpr} as meta, ${dual.actualExpr} as realizado
          FROM ${qualifiedTable}
          WHERE 1=1${dateCondition}
-         GROUP BY "${dimension1}"
+         GROUP BY "${dim1}"
          ORDER BY realizado DESC
          LIMIT ${limit}`;
       } else {
@@ -229,10 +242,10 @@ export async function POST(request: NextRequest) {
         if (!valueExpr) {
           return NextResponse.json({ success: false, error: 'Medida inválida: forneça measure como expressão/coluna, ou use field/aggregation.' }, { status: 400 });
         }
-        sqlQuery = `SELECT "${dimension1}" as dim1, ${valueExpr} as value
+        sqlQuery = `SELECT "${dim1}" as dim1, ${valueExpr} as value
          FROM ${qualifiedTable}
          WHERE 1=1${dateCondition}
-         GROUP BY "${dimension1}"
+         GROUP BY "${dim1}"
          ORDER BY value DESC
          LIMIT ${limit}`;
       }
