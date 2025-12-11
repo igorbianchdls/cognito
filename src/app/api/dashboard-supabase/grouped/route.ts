@@ -18,6 +18,9 @@ interface GroupedRequest {
   // um nome de coluna simples (SUM aplicado por padrão),
   // ou uma expressão com funções (ex.: SUM(item_subtotal)/COUNT_DISTINCT(pedido_id))
   measure?: string;
+  // Novos campos: quando informados sem dimension2, retornamos duas séries (meta e realizado)
+  measureGoal?: string;
+  measureActual?: string;
   // Compat: ainda aceitar field direto
   field?: string;
   aggregation?: 'SUM' | 'COUNT' | 'AVG' | 'MIN' | 'MAX';
@@ -123,6 +126,8 @@ export async function POST(request: NextRequest) {
       field,
       aggregation,
       measure,
+      measureGoal,
+      measureActual,
       limit = 10,
       dateFilter,
       where,
@@ -171,41 +176,76 @@ export async function POST(request: NextRequest) {
       dateCondition += ` AND (${replaced})`;
     }
 
-    // Resolver expressão de medida
-    let valueExpr: string | null = buildMeasureExpression(measure);
-    if (!valueExpr) {
-      // Sem expressão → mapear semânticas ou field/aggregation
-      if (measure === 'faturamento') valueExpr = 'SUM("item_subtotal")';
-      else if (measure === 'quantidade') valueExpr = 'SUM("quantidade")';
-      else if (measure === 'pedidos') valueExpr = 'COUNT(DISTINCT "pedido_id")';
-      else if (measure === 'itens') valueExpr = 'COUNT(DISTINCT "item_id")';
-      else if (field) {
-        const agg = String(aggregation || 'SUM').toUpperCase();
-        valueExpr = (agg === 'COUNT_DISTINCT') ? `COUNT(DISTINCT "${field}")` : `${agg}("${field}")`;
-      } else {
+    // Resolver expressões de medida (para 1 série ou 2 séries)
+    const resolveSingleMeasure = (): string | null => {
+      let valueExpr: string | null = buildMeasureExpression(measure);
+      if (!valueExpr) {
+        // Sem expressão → mapear semânticas ou field/aggregation
+        if (measure === 'faturamento') valueExpr = 'SUM("item_subtotal")';
+        else if (measure === 'quantidade') valueExpr = 'SUM("quantidade")';
+        else if (measure === 'pedidos') valueExpr = 'COUNT(DISTINCT "pedido_id")';
+        else if (measure === 'itens') valueExpr = 'COUNT(DISTINCT "item_id")';
+        else if (field) {
+          const agg = String(aggregation || 'SUM').toUpperCase();
+          valueExpr = (agg === 'COUNT_DISTINCT') ? `COUNT(DISTINCT "${field}")` : `${agg}("${field}")`;
+        } else {
+          return null;
+        }
+      }
+      return valueExpr;
+    };
+
+    const resolveDualMeasures = (): { goalExpr: string; actualExpr: string } | null => {
+      const g = buildMeasureExpression(measureGoal || undefined);
+      const a = buildMeasureExpression(measureActual || undefined);
+      if (g && a) return { goalExpr: g, actualExpr: a };
+      return null;
+    };
+
+    let sqlQuery: string;
+    // Caso 1: dimension2 informada → multi-séries por segunda dimensão (com 1 medida)
+    if (dimension2 && dimension2.trim().length > 0) {
+      const valueExpr = resolveSingleMeasure();
+      if (!valueExpr) {
         return NextResponse.json({ success: false, error: 'Medida inválida: forneça measure como expressão/coluna, ou use field/aggregation.' }, { status: 400 });
       }
-    }
-
-    const sqlQuery = (dimension2 && dimension2.trim().length > 0)
-      ? `SELECT "${dimension1}" as dim1, "${dimension2}" as dim2, ${valueExpr} as value
+      sqlQuery = `SELECT "${dimension1}" as dim1, "${dimension2}" as dim2, ${valueExpr} as value
          FROM ${qualifiedTable}
          WHERE 1=1${dateCondition}
          GROUP BY "${dimension1}", "${dimension2}"
-         ORDER BY dim1, value DESC`
-      : `SELECT "${dimension1}" as dim1, ${valueExpr} as value
+         ORDER BY dim1, value DESC`;
+    } else {
+      // Caso 2: sem dimension2 → uma série (measure) OU duas séries (measureGoal/measureActual)
+      const dual = resolveDualMeasures();
+      if (dual) {
+        sqlQuery = `SELECT "${dimension1}" as dim1, ${dual.goalExpr} as meta, ${dual.actualExpr} as realizado
+         FROM ${qualifiedTable}
+         WHERE 1=1${dateCondition}
+         GROUP BY "${dimension1}"
+         ORDER BY realizado DESC
+         LIMIT ${limit}`;
+      } else {
+        const valueExpr = resolveSingleMeasure();
+        if (!valueExpr) {
+          return NextResponse.json({ success: false, error: 'Medida inválida: forneça measure como expressão/coluna, ou use field/aggregation.' }, { status: 400 });
+        }
+        sqlQuery = `SELECT "${dimension1}" as dim1, ${valueExpr} as value
          FROM ${qualifiedTable}
          WHERE 1=1${dateCondition}
          GROUP BY "${dimension1}"
          ORDER BY value DESC
          LIMIT ${limit}`;
+      }
+    }
 
     console.log('🔍 Generated SQL:', sqlQuery);
 
     // Execute query
     type TwoDimRow = { dim1: string; dim2: string; value: number };
     type OneDimRow = { dim1: string; value: number };
-    const rawData = await runQuery<TwoDimRow | OneDimRow>(sqlQuery);
+    type DualRow = { dim1: string; meta: number; realizado: number };
+    const isDual = !dimension2 && Boolean(measureGoal) && Boolean(measureActual);
+    const rawData = await runQuery<TwoDimRow | OneDimRow | DualRow>(sqlQuery);
 
     console.log('📊 Raw query result:', { rowCount: rawData.length, sample: rawData.slice(0, 3) });
 
@@ -241,13 +281,22 @@ export async function POST(request: NextRequest) {
         color: SERIES_COLORS[index % SERIES_COLORS.length]
       }));
     } else {
-      const rows1 = rawData as OneDimRow[];
-      items = rows1.map((row) => ({ label: row.dim1, value: Number(row.value || 0) }));
-      const labelMap: Record<string, string> = {
-        faturamento: 'Faturamento', quantidade: 'Quantidade', pedidos: 'Pedidos', itens: 'Itens'
-      };
-      const label = measure && labelMap[measure] ? labelMap[measure] : 'Valor';
-      series = [{ key: 'value', label, color: SERIES_COLORS[0] }];
+      if (isDual) {
+        const rows = rawData as DualRow[];
+        items = rows.map((r) => ({ label: r.dim1, meta: Number(r.meta || 0), realizado: Number(r.realizado || 0) }));
+        series = [
+          { key: 'meta', label: 'Meta', color: SERIES_COLORS[0] },
+          { key: 'realizado', label: 'Realizado', color: SERIES_COLORS[1] }
+        ];
+      } else {
+        const rows1 = rawData as OneDimRow[];
+        items = rows1.map((row) => ({ label: row.dim1, value: Number(row.value || 0) }));
+        const labelMap: Record<string, string> = {
+          faturamento: 'Faturamento', quantidade: 'Quantidade', pedidos: 'Pedidos', itens: 'Itens'
+        };
+        const label = measure && labelMap[measure] ? labelMap[measure] : 'Valor';
+        series = [{ key: 'value', label, color: SERIES_COLORS[0] }];
+      }
     }
 
     console.log('✅ Pivot result:', {
