@@ -643,6 +643,14 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
             // Positioning props
             translateY={widget.barConfig?.styling?.translateY}
             marginBottom={widget.barConfig?.styling?.marginBottom}
+            axisBottom={(() => {
+              const s = widget.barConfig?.styling as Record<string, unknown> | undefined;
+              const ts = s?.['axisBottomTickSize'] as number | undefined;
+              const tp = s?.['axisBottomTickPadding'] as number | undefined;
+              const tr = s?.['axisBottomTickRotation'] as number | undefined;
+              if (ts === undefined && tp === undefined && tr === undefined) return undefined;
+              return { tickSize: ts, tickPadding: tp, tickRotation: tr } as any;
+            })()}
           />
         </div>
       );
@@ -674,6 +682,14 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
             // Positioning props
             translateY={widget.lineConfig?.styling?.translateY}
             marginBottom={widget.lineConfig?.styling?.marginBottom}
+            axisBottom={(() => {
+              const s = widget.lineConfig?.styling as Record<string, unknown> | undefined;
+              const ts = s?.['axisBottomTickSize'] as number | undefined;
+              const tp = s?.['axisBottomTickPadding'] as number | undefined;
+              const tr = s?.['axisBottomTickRotation'] as number | undefined;
+              if (ts === undefined && tp === undefined && tr === undefined) return undefined;
+              return { tickSize: ts, tickPadding: tp, tickRotation: tr } as any;
+            })()}
           />
         </div>
       );
@@ -734,6 +750,14 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
             // Positioning props
             translateY={widget.areaConfig?.styling?.translateY}
             marginBottom={widget.areaConfig?.styling?.marginBottom}
+            axisBottom={(() => {
+              const s = widget.areaConfig?.styling as Record<string, unknown> | undefined;
+              const ts = s?.['axisBottomTickSize'] as number | undefined;
+              const tp = s?.['axisBottomTickPadding'] as number | undefined;
+              const tr = s?.['axisBottomTickRotation'] as number | undefined;
+              if (ts === undefined && tp === undefined && tr === undefined) return undefined;
+              return { tickSize: ts, tickPadding: tp, tickRotation: tr } as any;
+            })()}
           />
         </div>
       );
@@ -1064,6 +1088,14 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
               containerBorderRadius={widget.stackedBarConfig?.styling?.containerBorderRadius}
               containerBorderVariant={widget.stackedBarConfig?.styling?.containerBorderVariant}
               containerPadding={widget.stackedBarConfig?.styling?.containerPadding}
+              axisBottom={(() => {
+                const s = widget.stackedBarConfig?.styling as Record<string, unknown> | undefined;
+                const ts = s?.['axisBottomTickSize'] as number | undefined;
+                const tp = s?.['axisBottomTickPadding'] as number | undefined;
+                const tr = s?.['axisBottomTickRotation'] as number | undefined;
+                if (ts === undefined && tp === undefined && tr === undefined) return undefined;
+                return { tickSize: ts, tickPadding: tp, tickRotation: tr } as any;
+              })()}
             />
           </div>
         );
@@ -1175,6 +1207,14 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
               containerBorderRadius={widget.groupedBarConfig?.styling?.containerBorderRadius}
               containerBorderVariant={widget.groupedBarConfig?.styling?.containerBorderVariant}
               containerPadding={widget.groupedBarConfig?.styling?.containerPadding}
+              axisBottom={(() => {
+                const s = widget.groupedBarConfig?.styling as Record<string, unknown> | undefined;
+                const ts = s?.['axisBottomTickSize'] as number | undefined;
+                const tp = s?.['axisBottomTickPadding'] as number | undefined;
+                const tr = s?.['axisBottomTickRotation'] as number | undefined;
+                if (ts === undefined && tp === undefined && tr === undefined) return undefined;
+                return { tickSize: ts, tickPadding: tp, tickRotation: tr } as any;
+              })()}
             />
           </div>
         );

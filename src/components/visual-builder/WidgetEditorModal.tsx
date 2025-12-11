@@ -100,8 +100,17 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
     }
   });
 
-  // Simple styling controls for charts (colors and margins)
-  const [styleData, setStyleData] = useState<{ colors: string; marginLeft: number; marginRight: number; marginTop: number; marginBottom: number }>({ colors: '', marginLeft: 40, marginRight: 20, marginTop: 20, marginBottom: 40 });
+  // Simple styling controls for charts (colors, margins, axis bottom ticks)
+  const [styleData, setStyleData] = useState<{
+    colors: string;
+    marginLeft: number;
+    marginRight: number;
+    marginTop: number;
+    marginBottom: number;
+    axisBottomTickSize: number;
+    axisBottomTickPadding: number;
+    axisBottomTickRotation: number;
+  }>({ colors: '', marginLeft: 40, marginRight: 20, marginTop: 20, marginBottom: 40, axisBottomTickSize: 0, axisBottomTickPadding: 8, axisBottomTickRotation: 0 });
 
   // Orientation for Grouped Bar (vertical | horizontal)
   const [groupedBarLayout, setGroupedBarLayout] = useState<'vertical' | 'horizontal'>('vertical');
@@ -184,6 +193,34 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
       const marginRight = getMarginRight();
       const marginTop = getMarginTop();
       const marginBottom = getMarginBottom();
+      // Axis bottom ticks from styling
+      const getAxisBottomTickSize = (): number | undefined => {
+        if (t === 'bar') return (widget.barConfig?.styling as any)?.axisBottomTickSize as number | undefined;
+        if (t === 'line') return (widget.lineConfig?.styling as any)?.axisBottomTickSize as number | undefined;
+        if (t === 'area') return (widget.areaConfig?.styling as any)?.axisBottomTickSize as number | undefined;
+        if (t === 'groupedbar') return (widget.groupedBarConfig?.styling as any)?.axisBottomTickSize as number | undefined;
+        if (t === 'stackedbar') return (widget.stackedBarConfig?.styling as any)?.axisBottomTickSize as number | undefined;
+        return undefined;
+      };
+      const getAxisBottomTickPadding = (): number | undefined => {
+        if (t === 'bar') return (widget.barConfig?.styling as any)?.axisBottomTickPadding as number | undefined;
+        if (t === 'line') return (widget.lineConfig?.styling as any)?.axisBottomTickPadding as number | undefined;
+        if (t === 'area') return (widget.areaConfig?.styling as any)?.axisBottomTickPadding as number | undefined;
+        if (t === 'groupedbar') return (widget.groupedBarConfig?.styling as any)?.axisBottomTickPadding as number | undefined;
+        if (t === 'stackedbar') return (widget.stackedBarConfig?.styling as any)?.axisBottomTickPadding as number | undefined;
+        return undefined;
+      };
+      const getAxisBottomTickRotation = (): number | undefined => {
+        if (t === 'bar') return (widget.barConfig?.styling as any)?.axisBottomTickRotation as number | undefined;
+        if (t === 'line') return (widget.lineConfig?.styling as any)?.axisBottomTickRotation as number | undefined;
+        if (t === 'area') return (widget.areaConfig?.styling as any)?.axisBottomTickRotation as number | undefined;
+        if (t === 'groupedbar') return (widget.groupedBarConfig?.styling as any)?.axisBottomTickRotation as number | undefined;
+        if (t === 'stackedbar') return (widget.stackedBarConfig?.styling as any)?.axisBottomTickRotation as number | undefined;
+        return undefined;
+      };
+      const axisBottomTickSize = getAxisBottomTickSize();
+      const axisBottomTickPadding = getAxisBottomTickPadding();
+      const axisBottomTickRotation = getAxisBottomTickRotation();
       
       setStyleData({
         colors: colorsArr.join(', '),
@@ -191,9 +228,12 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
         marginRight: typeof marginRight === 'number' ? marginRight : 20,
         marginTop: typeof marginTop === 'number' ? marginTop : 20,
         marginBottom: typeof marginBottom === 'number' ? marginBottom : 40,
+        axisBottomTickSize: typeof axisBottomTickSize === 'number' ? axisBottomTickSize : 0,
+        axisBottomTickPadding: typeof axisBottomTickPadding === 'number' ? axisBottomTickPadding : 8,
+        axisBottomTickRotation: typeof axisBottomTickRotation === 'number' ? axisBottomTickRotation : 0,
       });
     } catch {
-      setStyleData({ colors: '', marginLeft: 40, marginRight: 20, marginTop: 20, marginBottom: 40 });
+      setStyleData({ colors: '', marginLeft: 40, marginRight: 20, marginTop: 20, marginBottom: 40, axisBottomTickSize: 0, axisBottomTickPadding: 8, axisBottomTickRotation: 0 });
       
     }
   }, [widget]);
@@ -295,6 +335,9 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
       const next: Partial<BarChartConfig> = { ...(cfg || {}) };
       next.styling = { ...(cfg?.styling || {}) } as BarChartConfig['styling'];
       if (colorsArray.length) (next.styling as BarChartConfig['styling']).colors = colorsArray;
+      (next.styling as any).axisBottomTickSize = styleData.axisBottomTickSize;
+      (next.styling as any).axisBottomTickPadding = styleData.axisBottomTickPadding;
+      (next.styling as any).axisBottomTickRotation = styleData.axisBottomTickRotation;
       const base = (cfg?.margin || { top: 20, right: 20, bottom: 40, left: 40 }) as NonNullable<BarChartConfig['margin']>;
       next.margin = {
         ...base,
@@ -309,6 +352,9 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
       const next: Partial<LineChartConfig> = { ...(cfg || {}) };
       next.styling = { ...(cfg?.styling || {}) } as LineChartConfig['styling'];
       if (colorsArray.length) (next.styling as LineChartConfig['styling']).colors = colorsArray;
+      (next.styling as any).axisBottomTickSize = styleData.axisBottomTickSize;
+      (next.styling as any).axisBottomTickPadding = styleData.axisBottomTickPadding;
+      (next.styling as any).axisBottomTickRotation = styleData.axisBottomTickRotation;
       const base = (cfg?.margin || { top: 20, right: 20, bottom: 40, left: 40 }) as NonNullable<LineChartConfig['margin']>;
       next.margin = {
         ...base,
@@ -337,6 +383,9 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
       const next: Partial<AreaChartConfig> = { ...(cfg || {}) };
       next.styling = { ...(cfg?.styling || {}) } as AreaChartConfig['styling'];
       if (colorsArray.length) (next.styling as AreaChartConfig['styling']).colors = colorsArray;
+      (next.styling as any).axisBottomTickSize = styleData.axisBottomTickSize;
+      (next.styling as any).axisBottomTickPadding = styleData.axisBottomTickPadding;
+      (next.styling as any).axisBottomTickRotation = styleData.axisBottomTickRotation;
       const base = (cfg?.margin || { top: 20, right: 20, bottom: 40, left: 40 }) as NonNullable<AreaChartConfig['margin']>;
       next.margin = {
         ...base,
@@ -355,6 +404,9 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
       if (colorsArray.length) (next.styling as GroupedBarChartConfig['styling']).colors = colorsArray;
       // Apply selected orientation
       (next.styling as GroupedBarChartConfig['styling']).layout = groupedBarLayout;
+      (next.styling as any).axisBottomTickSize = styleData.axisBottomTickSize;
+      (next.styling as any).axisBottomTickPadding = styleData.axisBottomTickPadding;
+      (next.styling as any).axisBottomTickRotation = styleData.axisBottomTickRotation;
       const prevMargin = (cfg?.margin || {}) as NonNullable<GroupedBarChartConfig['margin']>;
       const base = { top: prevMargin.top ?? 20, right: prevMargin.right ?? 20, bottom: prevMargin.bottom ?? 40, left: prevMargin.left ?? 40 };
       next.margin = {
@@ -374,6 +426,9 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
       if (colorsArray.length) (next.styling as StackedBarChartConfig['styling']).colors = colorsArray;
       // Apply selected orientation
       (next.styling as StackedBarChartConfig['styling']).layout = stackedBarLayout;
+      (next.styling as any).axisBottomTickSize = styleData.axisBottomTickSize;
+      (next.styling as any).axisBottomTickPadding = styleData.axisBottomTickPadding;
+      (next.styling as any).axisBottomTickRotation = styleData.axisBottomTickRotation;
       const prevMargin = (cfg?.margin || {}) as NonNullable<StackedBarChartConfig['margin']>;
       const base = { top: prevMargin.top ?? 20, right: prevMargin.right ?? 20, bottom: prevMargin.bottom ?? 40, left: prevMargin.left ?? 40 };
       next.margin = {
@@ -870,6 +925,41 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
                   onChange={(e) => setStyleData({ ...styleData, marginBottom: Number.parseInt(e.target.value || '0') || 0 })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
+              </div>
+              {/* Axis Bottom Config */}
+              <div className="col-span-2 mt-2">
+                <h4 className="text-sm font-semibold text-gray-900 mb-2">Axis Bottom</h4>
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Tick Size</label>
+                    <input
+                      type="number"
+                      min={0}
+                      value={styleData.axisBottomTickSize}
+                      onChange={(e) => setStyleData({ ...styleData, axisBottomTickSize: Number.parseInt(e.target.value || '0') || 0 })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Tick Padding</label>
+                    <input
+                      type="number"
+                      min={0}
+                      value={styleData.axisBottomTickPadding}
+                      onChange={(e) => setStyleData({ ...styleData, axisBottomTickPadding: Number.parseInt(e.target.value || '0') || 0 })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Tick Rotation</label>
+                    <input
+                      type="number"
+                      value={styleData.axisBottomTickRotation}
+                      onChange={(e) => setStyleData({ ...styleData, axisBottomTickRotation: Number.parseInt(e.target.value || '0') || 0 })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           </div>

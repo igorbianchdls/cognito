@@ -637,6 +637,13 @@ export class ConfigParser {
         if (key0 === 'compact') { set('compact', key1 === 'on'); continue; }
         if (key0 === 'radius') { const n = Number(val); if (!Number.isNaN(n)) set('borderRadius', n); continue; }
         if (key0 === 'layout') { set('layout', key1); continue; }
+        // Axis Bottom tokens: axisBottom:tickSize:6 axisBottom:tickPadding:8 axisBottom:tickRotation:45
+        if (key0 === 'axisbottom') {
+          const n = Number(val);
+          if (key1 === 'ticksize' && !Number.isNaN(n)) { set('axisBottomTickSize', n); continue; }
+          if (key1 === 'tickpadding' && !Number.isNaN(n)) { set('axisBottomTickPadding', n); continue; }
+          if (key1 === 'tickrotation' && !Number.isNaN(n)) { set('axisBottomTickRotation', n); continue; }
+        }
         if (key0 === 'group') { set('groupMode', key1 === 'stacked' ? 'stacked' : 'grouped'); continue; }
         if (key0 === 'color') { set('colors', [val]); continue; }
 
