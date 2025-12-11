@@ -184,6 +184,66 @@ export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas"
     </widget>
   </row>
 
+  <!-- Metas x Realizado — Vendedor (Faturamento, Ticket, Novos Clientes) -->
+  <row id="metas_vendedor" cols-d="3" cols-t="1" cols-m="1" gap-x="16" gap-y="16">
+    <widget id="meta_fat_vendedor" type="groupedbar" order="1" span-d="1" span-t="1" span-m="1" height="360" title="Meta x Faturamento por Vendedor">
+      <datasource schema="comercial" table="vw_vendas_metas"
+        dimension="vendedor_nome"
+        measureGoal="MAX(meta_faturamento_vendedor)"
+        measureActual="SUM(subtotal)"
+        limit="12" />
+      <styling tw="legend:on grid:on mb:32" />
+    </widget>
+
+    <widget id="meta_ticket_vendedor" type="groupedbar" order="2" span-d="1" span-t="1" span-m="1" height="360" title="Meta x Ticket Médio por Vendedor">
+      <datasource schema="comercial" table="vw_vendas_metas"
+        dimension="vendedor_nome"
+        measureGoal="MAX(meta_ticket_vendedor)"
+        measureActual="SUM(subtotal)/COUNT_DISTINCT(pedido_id)"
+        limit="12" />
+      <styling tw="legend:on grid:on mb:32" />
+    </widget>
+
+    <widget id="meta_novos_vendedor" type="groupedbar" order="3" span-d="1" span-t="1" span-m="1" height="360" title="Meta x Novos Clientes por Vendedor">
+      <datasource schema="comercial" table="vw_vendas_metas"
+        dimension="vendedor_nome"
+        measureGoal="MAX(meta_novos_clientes_vendedor)"
+        measureActual="COUNT_DISTINCT(cliente_id)"
+        limit="12" />
+      <styling tw="legend:on grid:on mb:32" />
+    </widget>
+  </row>
+
+  <!-- Metas x Realizado — Território (Faturamento, Ticket, Novos Clientes) -->
+  <row id="metas_territorio" cols-d="3" cols-t="1" cols-m="1" gap-x="16" gap-y="16">
+    <widget id="meta_fat_territorio" type="groupedbar" order="1" span-d="1" span-t="1" span-m="1" height="360" title="Meta x Faturamento por Território">
+      <datasource schema="comercial" table="vw_vendas_metas"
+        dimension="territorio_nome"
+        measureGoal="MAX(meta_faturamento_territorio)"
+        measureActual="SUM(subtotal)"
+        limit="12" />
+      <styling tw="legend:on grid:on mb:32" />
+    </widget>
+
+    <widget id="meta_ticket_territorio" type="groupedbar" order="2" span-d="1" span-t="1" span-m="1" height="360" title="Meta x Ticket Médio por Território">
+      <datasource schema="comercial" table="vw_vendas_metas"
+        dimension="territorio_nome"
+        measureGoal="MAX(meta_ticket_territorio)"
+        measureActual="SUM(subtotal)/COUNT_DISTINCT(pedido_id)"
+        limit="12" />
+      <styling tw="legend:on grid:on mb:32" />
+    </widget>
+
+    <widget id="meta_novos_territorio" type="groupedbar" order="3" span-d="1" span-t="1" span-m="1" height="360" title="Meta x Novos Clientes por Território">
+      <datasource schema="comercial" table="vw_vendas_metas"
+        dimension="territorio_nome"
+        measureGoal="MAX(meta_novos_clientes_territorio)"
+        measureActual="COUNT_DISTINCT(cliente_id)"
+        limit="12" />
+      <styling tw="legend:on grid:on mb:32" />
+    </widget>
+  </row>
+
   
 
   <!-- Agregados: Serviços e Categorias (3 por linha) -->
