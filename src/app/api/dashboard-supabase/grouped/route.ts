@@ -12,6 +12,8 @@ const SERIES_COLORS = [
 interface GroupedRequest {
   schema?: string;
   table: string;
+  // Aceita tanto dimension (DSL) quanto dimension1 (compat)
+  dimension?: string;
   dimension1: string;  // Label (eixo X)
   dimension2?: string;  // Series (barras agrupadas)
   // Medida: pode ser semântica (faturamento/quantidade/pedidos/itens),
@@ -206,8 +208,8 @@ export async function POST(request: NextRequest) {
     const dim1 = ((): string | undefined => {
       const d1 = typeof dimension1 === 'string' ? dimension1.trim() : '';
       if (d1) return d1;
-      const d = (body as Record<string, unknown>)['dimension'];
-      if (typeof d === 'string' && d.trim().length > 0) return d.trim();
+      const d = typeof body.dimension === 'string' ? body.dimension.trim() : '';
+      if (d) return d;
       return undefined;
     })();
 
