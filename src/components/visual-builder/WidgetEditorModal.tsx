@@ -245,7 +245,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
       const axisBottomTickRotation = getAxisBottomTickRotation();
 
       // Legends (read from type-specific config.legends when object)
-      const getLegends = (): Record<string, number> | null => {
+      const getLegends = (): Record<string, unknown> | null => {
         const read = (x?: unknown) => (x && typeof x === 'object' && !Array.isArray(x) ? (x as Record<string, unknown>) : null);
         if (t === 'bar') return read(widget.barConfig?.legends);
         if (t === 'line') return read(widget.lineConfig?.legends);
