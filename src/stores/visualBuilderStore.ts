@@ -708,16 +708,10 @@ export const visualBuilderActions = {
     try {
       const root = JSON.parse(code) as { config?: import('@/components/visual-builder/ConfigParser').GridConfig; [k: string]: unknown };
       const cfg = (root.config || current.gridConfig || {}) as import('@/components/visual-builder/ConfigParser').GridConfig;
-      const existingRows = (cfg.layout && cfg.layout.rows) ? cfg.layout.rows : ({} as NonNullable<typeof cfg.layout>['rows']);
-      // Ensure layout exists
-      const layout = ((): NonNullable<typeof cfg.layout> => {
-        if (cfg.layout && typeof cfg.layout === 'object') return cfg.layout as NonNullable<typeof cfg.layout>;
-        const created = { mode: 'grid-per-row', rows: {} as Record<string, any> } as NonNullable<typeof cfg.layout>;
-        cfg.layout = created;
-        return created;
-      })();
-      const rowsRef = (layout.rows || (layout.rows = {} as Record<string, unknown>)) as Record<string, unknown>;
-      rowsRef[rowId] = {
+      // Ensure layout exists (use 'any' to avoid excessive generic gymnastics)
+      const layoutAny = (cfg.layout || (cfg.layout = { mode: 'grid-per-row', rows: {} })) as any;
+      layoutAny.rows = layoutAny.rows || {};
+      layoutAny.rows[rowId] = {
         desktop: { columns: Math.max(1, spec.desktop.columns), gapX: spec.desktop.gapX, gapY: spec.desktop.gapY, autoRowHeight: spec.desktop.autoRowHeight },
         tablet: { columns: Math.max(1, spec.tablet.columns), gapX: spec.tablet.gapX, gapY: spec.tablet.gapY, autoRowHeight: spec.tablet.autoRowHeight },
         mobile: { columns: Math.max(1, spec.mobile.columns), gapX: spec.mobile.gapX, gapY: spec.mobile.gapY, autoRowHeight: spec.mobile.autoRowHeight },
