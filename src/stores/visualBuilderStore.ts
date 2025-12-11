@@ -672,6 +672,57 @@ export const visualBuilderActions = {
     })
   },
 
+  // Atualizar especificação de uma Row (columns/gaps por breakpoint)
+  updateRowSpec: (rowId: string, spec: { desktop: { columns: number; gapX?: number; gapY?: number; autoRowHeight?: number }, tablet: { columns: number; gapX?: number; gapY?: number; autoRowHeight?: number }, mobile: { columns: number; gapX?: number; gapY?: number; autoRowHeight?: number } }) => {
+    const current = $visualBuilderState.get();
+    const code = current.code || '';
+    const isDsl = code.trim().startsWith('<');
+    if (isDsl) {
+      // Atualiza atributos do <row id="..."> no DSL
+      const rx = new RegExp(`<row\\b([^>]*)\\bid=\\"${rowId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\"[^>]*>`, 'i');
+      const m = code.match(rx);
+      if (!m) return; // Row não encontrada
+      const openTag = m[0];
+      // Helper para set atributo/atualizar
+      const setAttr = (tag: string, name: string, value?: string | number) => {
+        if (value === undefined || value === null) return tag;
+        const v = String(value);
+        const re = new RegExp(`(\\b${name}\\=\\")[^\\"]*(\\")`, 'i');
+        if (re.test(tag)) return tag.replace(re, `$1${v}$2`);
+        const idx = tag.indexOf('>');
+        return tag.slice(0, idx) + ` ${name}="${v}"` + tag.slice(idx);
+      };
+      let newOpen = openTag;
+      newOpen = setAttr(newOpen, 'cols-d', spec.desktop.columns);
+      newOpen = setAttr(newOpen, 'cols-t', spec.tablet.columns);
+      newOpen = setAttr(newOpen, 'cols-m', spec.mobile.columns);
+      // Gaps preferem valor por breakpoint; como DSL de row tem único gap-x/gap-y, usamos desktop como fonte
+      newOpen = setAttr(newOpen, 'gap-x', spec.desktop.gapX ?? 16);
+      newOpen = setAttr(newOpen, 'gap-y', spec.desktop.gapY ?? 0);
+      if (spec.desktop.autoRowHeight !== undefined) newOpen = setAttr(newOpen, 'auto-row-height', spec.desktop.autoRowHeight);
+      const newCode = code.replace(openTag, newOpen);
+      visualBuilderActions.updateCode(newCode);
+      return;
+    }
+    // JSON mode: atualiza config.layout.rows
+    try {
+      const root = JSON.parse(code) as { config?: import('@/components/visual-builder/ConfigParser').GridConfig; [k: string]: unknown };
+      const cfg = (root.config || current.gridConfig || {}) as import('@/components/visual-builder/ConfigParser').GridConfig;
+      const rows = (cfg.layout && cfg.layout.rows) ? cfg.layout.rows : {} as NonNullable<typeof cfg.layout>['rows'];
+      cfg.layout = cfg.layout || { mode: 'grid-per-row', rows: {} } as any;
+      cfg.layout.rows = rows || {} as any;
+      cfg.layout.rows[rowId] = {
+        desktop: { columns: Math.max(1, spec.desktop.columns), gapX: spec.desktop.gapX, gapY: spec.desktop.gapY, autoRowHeight: spec.desktop.autoRowHeight },
+        tablet: { columns: Math.max(1, spec.tablet.columns), gapX: spec.tablet.gapX, gapY: spec.tablet.gapY, autoRowHeight: spec.tablet.autoRowHeight },
+        mobile: { columns: Math.max(1, spec.mobile.columns), gapX: spec.mobile.gapX, gapY: spec.mobile.gapY, autoRowHeight: spec.mobile.autoRowHeight },
+      } as any;
+      const nextCode = JSON.stringify({ ...root, config: cfg, widgets: current.widgets }, null, 2);
+      visualBuilderActions.updateCode(nextCode);
+    } catch {
+      // ignore
+    }
+  },
+
   // Atualizar código (vem do Monaco Editor)
   updateCode: (code: string) => {
     const parseResult = ConfigParser.parse(code)

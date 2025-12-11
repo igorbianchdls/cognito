@@ -6,6 +6,7 @@ import { SortableContext, useSortable, horizontalListSortingStrategy, verticalLi
 import { CSS } from '@dnd-kit/utilities';
 import WidgetRenderer from './WidgetRenderer';
 import WidgetEditorModal from './WidgetEditorModal';
+import RowEditorModal, { type RowSpec } from './RowEditorModal';
 import DashboardInCanvasHeader from './DashboardInCanvasHeader';
 import type { Widget, GridConfig, LayoutRow } from './ConfigParser';
 import { useStore as useNanoStore } from '@nanostores/react';
@@ -107,6 +108,8 @@ function ResponsiveGridCanvas({ widgets, gridConfig, globalFilters, viewportMode
   const containerRef = useRef<HTMLDivElement>(null);
   // Internal editor state used only when onEdit is not provided by parent
   const [editingWidget, setEditingWidget] = useState<Widget | null>(null);
+  const [editingRowId, setEditingRowId] = useState<string | null>(null);
+  const [rowDraft, setRowDraft] = useState<RowSpec | null>(null);
   const visualBuilderState = useNanoStore($visualBuilderState);
 
   // Handle widget edit
@@ -117,6 +120,34 @@ function ResponsiveGridCanvas({ widgets, gridConfig, globalFilters, viewportMode
       setEditingWidget(widget);
     }
   }, [onEdit]);
+
+  // Row helpers
+  const getRowSpecAll = useCallback((rowKey: string): RowSpec => {
+    const lr = gridConfig.layout?.rows?.[rowKey];
+    const pick = (bp: 'desktop'|'tablet'|'mobile'): { columns: number; gapX?: number; gapY?: number; autoRowHeight?: number } => {
+      if (lr && lr[bp]) {
+        const s = lr[bp]!;
+        return { columns: Math.max(1, s.columns || 1), gapX: s.gapX, gapY: s.gapY, autoRowHeight: (s as any).autoRowHeight };
+      }
+      // fallback from current canvas getters
+      const cols = getColumnsValue(rowKey);
+      const gaps = getRowGaps(rowKey);
+      return { columns: cols, gapX: gaps.gapX, gapY: gaps.gapY, autoRowHeight: gaps.autoRowHeight };
+    };
+    return { desktop: pick('desktop'), tablet: pick('tablet'), mobile: pick('mobile') };
+  }, [gridConfig]);
+
+  const openRowEditor = useCallback((rowKey: string) => {
+    setEditingRowId(rowKey);
+    setRowDraft(getRowSpecAll(rowKey));
+  }, [getRowSpecAll]);
+
+  const saveRowEditor = useCallback((spec: RowSpec) => {
+    if (!editingRowId) return;
+    visualBuilderActions.updateRowSpec(editingRowId, spec);
+    setEditingRowId(null);
+    setRowDraft(null);
+  }, [editingRowId]);
 
   // Handle save widget changes
   const handleSaveWidget = useCallback((updatedWidget: Widget) => {
@@ -570,6 +601,14 @@ const DraggableRow = memo(function DraggableRow({ id, children }: { id: string; 
         {/* Responsive Grid Layout - Grouped by Rows */}
         {widgets.length > 0 && !perColumnMode && (
           <div className="px-0 py-4 space-y-2">
+            {/* Row editor modal */}
+            <RowEditorModal
+              rowId={editingRowId || ''}
+              open={Boolean(editingRowId && rowDraft)}
+              initial={rowDraft || { desktop: { columns: 4 }, tablet: { columns: 2 }, mobile: { columns: 1 } }}
+              onClose={() => { setEditingRowId(null); setRowDraft(null); }}
+              onSave={saveRowEditor}
+            />
             <DndContext collisionDetection={closestCenter} onDragEnd={handleRowDragEnd}>
               <SortableContext items={rowOrder} strategy={verticalListSortingStrategy}>
               {rowOrder.map((rowKey) => {
@@ -583,6 +622,17 @@ const DraggableRow = memo(function DraggableRow({ id, children }: { id: string; 
                     onDragEnd={(event) => handleDragEnd(event, rowKey)}
                   >
                     <SortableContext items={widgetIds} strategy={horizontalListSortingStrategy}>
+                      {/* Row inline controls */}
+                      <div className="flex items-center justify-between mb-2 px-1">
+                        <div className="text-xs text-gray-500">Row {rowKey}</div>
+                        <button
+                          type="button"
+                          onClick={() => openRowEditor(rowKey)}
+                          className="px-2 py-1 text-xs border border-gray-300 rounded hover:bg-gray-50"
+                        >
+                          Editar Row
+                        </button>
+                      </div>
                       <div
                         className={getGridClassesForRow()}
                         style={{
