@@ -110,7 +110,29 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
     axisBottomTickSize: number;
     axisBottomTickPadding: number;
     axisBottomTickRotation: number;
-  }>({ colors: '', marginLeft: 40, marginRight: 20, marginTop: 20, marginBottom: 40, axisBottomTickSize: 0, axisBottomTickPadding: 8, axisBottomTickRotation: 0 });
+    // Legends
+    legendItemWidth: number;
+    legendItemHeight: number;
+    legendItemsSpacing: number;
+    legendTranslateX: number;
+    legendTranslateY: number;
+    legendSymbolSize: number;
+  }>({
+    colors: '',
+    marginLeft: 40,
+    marginRight: 20,
+    marginTop: 20,
+    marginBottom: 40,
+    axisBottomTickSize: 0,
+    axisBottomTickPadding: 8,
+    axisBottomTickRotation: 0,
+    legendItemWidth: 80,
+    legendItemHeight: 18,
+    legendItemsSpacing: 20,
+    legendTranslateX: 0,
+    legendTranslateY: 40,
+    legendSymbolSize: 12,
+  });
 
   // Orientation for Grouped Bar (vertical | horizontal)
   const [groupedBarLayout, setGroupedBarLayout] = useState<'vertical' | 'horizontal'>('vertical');
@@ -221,6 +243,25 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
       const axisBottomTickSize = getAxisBottomTickSize();
       const axisBottomTickPadding = getAxisBottomTickPadding();
       const axisBottomTickRotation = getAxisBottomTickRotation();
+
+      // Legends (read from type-specific config.legends when object)
+      const getLegends = (): Record<string, number> | null => {
+        const read = (x?: unknown) => (x && typeof x === 'object' && !Array.isArray(x) ? (x as Record<string, unknown>) : null);
+        if (t === 'bar') return read(widget.barConfig?.legends);
+        if (t === 'line') return read(widget.lineConfig?.legends);
+        if (t === 'area') return read(widget.areaConfig?.legends);
+        if (t === 'groupedbar') return read(widget.groupedBarConfig?.legends);
+        if (t === 'stackedbar') return read(widget.stackedBarConfig?.legends);
+        if (t === 'pie') return read(widget.pieConfig?.legends as unknown);
+        return null;
+      };
+      const legendsObj = getLegends();
+      const legendItemWidth = legendsObj?.itemWidth as number | undefined;
+      const legendItemHeight = legendsObj?.itemHeight as number | undefined;
+      const legendItemsSpacing = (legendsObj?.itemsSpacing as number | undefined) ?? (legendsObj?.itemSpacing as number | undefined);
+      const legendTranslateX = legendsObj?.translateX as number | undefined;
+      const legendTranslateY = legendsObj?.translateY as number | undefined;
+      const legendSymbolSize = legendsObj?.symbolSize as number | undefined;
       
       setStyleData({
         colors: colorsArr.join(', '),
@@ -231,9 +272,20 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
         axisBottomTickSize: typeof axisBottomTickSize === 'number' ? axisBottomTickSize : 0,
         axisBottomTickPadding: typeof axisBottomTickPadding === 'number' ? axisBottomTickPadding : 8,
         axisBottomTickRotation: typeof axisBottomTickRotation === 'number' ? axisBottomTickRotation : 0,
+        legendItemWidth: typeof legendItemWidth === 'number' ? legendItemWidth : 80,
+        legendItemHeight: typeof legendItemHeight === 'number' ? legendItemHeight : 18,
+        legendItemsSpacing: typeof legendItemsSpacing === 'number' ? legendItemsSpacing : 20,
+        legendTranslateX: typeof legendTranslateX === 'number' ? legendTranslateX : 0,
+        legendTranslateY: typeof legendTranslateY === 'number' ? legendTranslateY : 40,
+        legendSymbolSize: typeof legendSymbolSize === 'number' ? legendSymbolSize : 12,
       });
     } catch {
-      setStyleData({ colors: '', marginLeft: 40, marginRight: 20, marginTop: 20, marginBottom: 40, axisBottomTickSize: 0, axisBottomTickPadding: 8, axisBottomTickRotation: 0 });
+      setStyleData({
+        colors: '', marginLeft: 40, marginRight: 20, marginTop: 20, marginBottom: 40,
+        axisBottomTickSize: 0, axisBottomTickPadding: 8, axisBottomTickRotation: 0,
+        legendItemWidth: 80, legendItemHeight: 18, legendItemsSpacing: 20,
+        legendTranslateX: 0, legendTranslateY: 40, legendSymbolSize: 12,
+      });
       
     }
   }, [widget]);
@@ -348,6 +400,14 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
       };
       return next;
     };
+    const buildLegendsObject = (): Record<string, number> => ({
+      itemWidth: styleData.legendItemWidth,
+      itemHeight: styleData.legendItemHeight,
+      itemsSpacing: styleData.legendItemsSpacing,
+      translateX: styleData.legendTranslateX,
+      translateY: styleData.legendTranslateY,
+      symbolSize: styleData.legendSymbolSize,
+    });
     const applyLineStyling = (cfg?: Partial<LineChartConfig>): Partial<LineChartConfig> => {
       const next: Partial<LineChartConfig> = { ...(cfg || {}) };
       next.styling = { ...(cfg?.styling || {}) } as LineChartConfig['styling'];
@@ -453,10 +513,55 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
       updatedWidget = { ...updatedWidget, areaConfig: applyAreaStyling(updatedWidget.areaConfig as Partial<AreaChartConfig>) };
     } else if (t === 'groupedbar') {
       // Persist groupedbar styling into widget
-      updatedWidget = { ...updatedWidget, groupedBarConfig: applyGroupedBarStyling(updatedWidget.groupedBarConfig as Partial<GroupedBarChartConfig>) };
+      updatedWidget = {
+        ...updatedWidget,
+        groupedBarConfig: {
+          ...applyGroupedBarStyling(updatedWidget.groupedBarConfig as Partial<GroupedBarChartConfig>),
+          legends: buildLegendsObject() as unknown as GroupedBarChartConfig['legends']
+        }
+      };
     } else if (t === 'stackedbar') {
       // Persist stackedbar styling into widget
-      updatedWidget = { ...updatedWidget, stackedBarConfig: applyStackedBarStyling(updatedWidget.stackedBarConfig as Partial<StackedBarChartConfig>) };
+      updatedWidget = {
+        ...updatedWidget,
+        stackedBarConfig: {
+          ...applyStackedBarStyling(updatedWidget.stackedBarConfig as Partial<StackedBarChartConfig>),
+          legends: buildLegendsObject() as unknown as StackedBarChartConfig['legends']
+        }
+      };
+    } else if (t === 'bar') {
+      updatedWidget = {
+        ...updatedWidget,
+        barConfig: {
+          ...applyBarStyling(updatedWidget.barConfig as Partial<BarChartConfig>),
+          legends: buildLegendsObject() as unknown as import('@/stores/apps/barChartStore').BarChartConfig['legends']
+        }
+      } as Widget;
+    } else if (t === 'line') {
+      updatedWidget = {
+        ...updatedWidget,
+        lineConfig: {
+          ...applyLineStyling(updatedWidget.lineConfig as Partial<LineChartConfig>),
+          legends: buildLegendsObject() as unknown as import('@/stores/apps/lineChartStore').LineChartConfig['legends']
+        }
+      } as Widget;
+    } else if (t === 'area') {
+      updatedWidget = {
+        ...updatedWidget,
+        areaConfig: {
+          ...applyAreaStyling(updatedWidget.areaConfig as Partial<AreaChartConfig>),
+          legends: buildLegendsObject() as unknown as import('@/stores/apps/areaChartStore').AreaChartConfig['legends']
+        }
+      } as Widget;
+    } else if (t === 'pie') {
+      // Pie usa LegendConfig também
+      updatedWidget = {
+        ...updatedWidget,
+        pieConfig: {
+          ...applyPieStyling(updatedWidget.pieConfig as Partial<PieChartConfig>),
+          legends: buildLegendsObject() as unknown as import('@/stores/apps/pieChartStore').PieChartConfig['legends']
+        }
+      } as Widget;
     }
 
     onSave(updatedWidget);
@@ -956,6 +1061,71 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
                       type="number"
                       value={styleData.axisBottomTickRotation}
                       onChange={(e) => setStyleData({ ...styleData, axisBottomTickRotation: Number.parseInt(e.target.value || '0') || 0 })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Legends Config */}
+              <div className="col-span-2 mt-4">
+                <h4 className="text-sm font-semibold text-gray-900 mb-2">Legends</h4>
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Item Width</label>
+                    <input
+                      type="number"
+                      min={0}
+                      value={styleData.legendItemWidth}
+                      onChange={(e) => setStyleData({ ...styleData, legendItemWidth: Number.parseInt(e.target.value || '0') || 0 })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Item Height</label>
+                    <input
+                      type="number"
+                      min={0}
+                      value={styleData.legendItemHeight}
+                      onChange={(e) => setStyleData({ ...styleData, legendItemHeight: Number.parseInt(e.target.value || '0') || 0 })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Item Spacing</label>
+                    <input
+                      type="number"
+                      min={0}
+                      value={styleData.legendItemsSpacing}
+                      onChange={(e) => setStyleData({ ...styleData, legendItemsSpacing: Number.parseInt(e.target.value || '0') || 0 })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Translate X</label>
+                    <input
+                      type="number"
+                      value={styleData.legendTranslateX}
+                      onChange={(e) => setStyleData({ ...styleData, legendTranslateX: Number.parseInt(e.target.value || '0') || 0 })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Translate Y</label>
+                    <input
+                      type="number"
+                      value={styleData.legendTranslateY}
+                      onChange={(e) => setStyleData({ ...styleData, legendTranslateY: Number.parseInt(e.target.value || '0') || 0 })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Symbol Size</label>
+                    <input
+                      type="number"
+                      min={0}
+                      value={styleData.legendSymbolSize}
+                      onChange={(e) => setStyleData({ ...styleData, legendSymbolSize: Number.parseInt(e.target.value || '0') || 0 })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
