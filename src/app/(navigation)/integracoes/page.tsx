@@ -7,18 +7,14 @@ import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import NexusHeader from '@/components/navigation/nexus/NexusHeader'
 import NexusPageContainer from '@/components/navigation/nexus/NexusPageContainer'
 import { IntegrationCard } from "@/components/navigation/integrations/IntegrationCard"
-import {
-  integrations,
-  getCategoryTitle,
-  getCategoryDescription,
-  type Integration
-} from "@/data/integrations"
+import type { Integration } from "@/components/navigation/integrations/IntegrationCard"
 
 type FilterTab = 'all' | 'connected' | 'disconnected'
 
 export default function IntegrationsPage() {
   const [activeTab, setActiveTab] = useState<FilterTab>('all')
-  const [integrationsState, setIntegrationsState] = useState(integrations)
+  // Fallback: no static integrations
+  const [integrationsState, setIntegrationsState] = useState<Integration[]>([])
 
   const handleToggle = (id: string, connected: boolean) => {
     setIntegrationsState(prev => 
@@ -54,6 +50,30 @@ export default function IntegrationsPage() {
       {label}
     </button>
   )
+
+  const getCategoryTitle = (category: 'advertising' | 'analytics' | 'ecommerce' | 'financial' | 'crm' | 'database') => {
+    const map: Record<typeof category, string> = {
+      advertising: 'Publicidade e Marketing',
+      analytics: 'Analytics e Rastreamento',
+      ecommerce: 'Plataformas de E-commerce',
+      financial: 'Financeiro e Contabilidade',
+      crm: 'CRM e Marketing',
+      database: 'Bancos de Dados e Armazenamento',
+    }
+    return map[category] || ''
+  }
+
+  const getCategoryDescription = (category: 'advertising' | 'analytics' | 'ecommerce' | 'financial' | 'crm' | 'database') => {
+    const map: Record<typeof category, string> = {
+      advertising: 'Conecte suas plataformas de publicidade para analisar performance de campanhas e ROI',
+      analytics: 'Integre ferramentas de analytics para rastrear comportamento do usuário e performance do site',
+      ecommerce: 'Sincronize dados da sua loja online para análise abrangente de vendas e estoque',
+      financial: 'Importe dados financeiros para rastrear receita, gastos e performance do negócio',
+      crm: 'Conecte sistemas de CRM para gestão de relacionamento com clientes e automação de marketing',
+      database: 'Integre bancos de dados e data warehouses para análise abrangente de dados',
+    }
+    return map[category] || ''
+  }
 
   const IntegrationSection = ({ 
     category, 

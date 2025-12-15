@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo, useCallback } from 'react'
-import { AppData, mockApps, searchApps } from '@/data/appsData'
+import { AppData, mockApps, searchApps } from '@/components/apps/data'
 import AppCard from './AppCard'
 import SearchBar from './SearchBar'
 

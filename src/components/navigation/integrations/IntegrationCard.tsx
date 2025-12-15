@@ -29,7 +29,14 @@ import MagaluIcon from "@/components/icons/MagaluIcon"
 import TotvsIcon from "@/components/icons/TotvsIcon"
 import OmieIcon from "@/components/icons/OmieIcon"
 import PipedriveIcon from "@/components/icons/PipedriveIcon"
-import type { Integration } from "@/data/integrations"
+export interface Integration {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  connected: boolean;
+  category: 'advertising' | 'analytics' | 'ecommerce' | 'financial' | 'crm' | 'database';
+}
 
 interface IntegrationCardProps {
   integration: Integration;

@@ -1,6 +1,6 @@
 'use client'
 
-import { categories } from '@/data/appsData'
+import { categories } from '@/components/apps/data'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 

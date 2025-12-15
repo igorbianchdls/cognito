@@ -1,6 +1,6 @@
 'use client'
 
-import { AppData } from '@/data/appsData'
+import type { AppData } from '@/components/apps/data'
 import { MoreHorizontal } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import Link from 'next/link'

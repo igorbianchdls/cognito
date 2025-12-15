@@ -1,5 +1,17 @@
 import { ColDef, ICellRendererParams, ValueFormatterParams, CellClassParams } from 'ag-grid-community';
-import { DatasetInfo } from '@/data/mockDatasets';
+
+export interface DatasetInfo {
+  id: string;
+  name: string;
+  description: string;
+  rows: number;
+  columns: number;
+  size: string;
+  type: 'grid' | 'csv' | 'excel' | 'json';
+  lastModified: Date;
+  data: Array<Record<string, unknown>>;
+  columnDefs: ColDef[];
+}
 
 /**
  * BigQuery utilities for data processing and AG Grid integration
