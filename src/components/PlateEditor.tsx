@@ -44,11 +44,11 @@ import { FontSizeToolbarButton } from '@/components/ui/font-size-toolbar-button'
 import { FontColorToolbarButton } from '@/components/ui/font-color-toolbar-button';
 import { AIToolbarButton } from '@/components/ui/ai-toolbar-button';
 import { AlignToolbarButton } from '@/components/ui/align-toolbar-button';
-import { SlashKit } from '@/components/slash-kit';
-import { MentionKit } from '@/components/mention-kit';
-import { DndKit } from '@/components/dnd-kit';
-import { ListKit } from '@/components/editor/plugins/list-kit';
-import { FontKit } from '@/components/editor/plugins/font-kit';
+import { SlashKit } from '@/components/kits/slash-kit';
+import { MentionKit } from '@/components/kits/mention-kit';
+import { DndKit } from '@/components/kits/dnd-kit';
+import { ListKit } from '@/components/kits/list-kit';
+import { FontKit } from '@/components/kits/font-kit';
 import { EmbedPlugin } from '@/components/plate-plugins/EmbedPlugin';
 
 const initialValue: Value = [
