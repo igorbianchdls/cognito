@@ -18,10 +18,10 @@ import { List, Building2, Tag, FileText, Globe, MapPin, Flag, CheckCircle2, Book
 import IconLabelHeader from '@/components/widgets/IconLabelHeader'
 import { Button } from '@/components/ui/button'
 
-import CadastroEmpresaSheet from '@/components/empresa/CadastroEmpresaSheet'
-import CadastroFilialSheet from '@/components/empresa/CadastroFilialSheet'
-import CadastroDepartamentoSheet from '@/components/empresa/CadastroDepartamentoSheet'
-import CadastroCargoSheet from '@/components/empresa/CadastroCargoSheet'
+import CadastroEmpresaSheet from '@/components/modulos/empresa/CadastroEmpresaSheet'
+import CadastroFilialSheet from '@/components/modulos/empresa/CadastroFilialSheet'
+import CadastroDepartamentoSheet from '@/components/modulos/empresa/CadastroDepartamentoSheet'
+import CadastroCargoSheet from '@/components/modulos/empresa/CadastroCargoSheet'
 
 type Row = TableData
 

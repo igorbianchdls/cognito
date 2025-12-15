@@ -18,9 +18,9 @@ import EntityDisplay from '@/components/modulos/EntityDisplay'
 import StatusBadge from '@/components/modulos/StatusBadge'
 import { List, Package, FileText, Tag, CheckCircle2, DollarSign, Ruler, Globe } from 'lucide-react'
 import IconLabelHeader from '@/components/widgets/IconLabelHeader'
-import CadastroProdutoSheet from '@/components/produtos/CadastroProdutoSheet'
-import CadastroVariacaoSheet from '@/components/produtos/CadastroVariacaoSheet'
-import CadastroDadosFiscaisSheet from '@/components/produtos/CadastroDadosFiscaisSheet'
+import CadastroProdutoSheet from '@/components/modulos/produtos/CadastroProdutoSheet'
+import CadastroVariacaoSheet from '@/components/modulos/produtos/CadastroVariacaoSheet'
+import CadastroDadosFiscaisSheet from '@/components/modulos/produtos/CadastroDadosFiscaisSheet'
 
 type Row = TableData
 

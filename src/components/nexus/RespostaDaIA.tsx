@@ -198,7 +198,7 @@ import DeteccaoAnomaliasROASResult from '../tools/paid-traffic/DeteccaoAnomalias
 import DeteccaoAnomaliasTaxaConversaoResult from '../tools/paid-traffic/DeteccaoAnomaliasTaxaConversaoResult';
 import AdPerformanceForecastResult from '../tools/paid-traffic/AdPerformanceForecastResult';
 import DRETable, { type DRENode } from '@/components/relatorios/DRETable';
-import BalanceTAccountView from '@/components/contabilidade/BalanceTAccountView';
+import BalanceTAccountView from '@/components/modulos/contabilidade/BalanceTAccountView';
 import ClassificacoesFinanceirasResult from '../tools/workflow/ClassificacoesFinanceirasResult';
 import FornecedorResult from '../tools/workflow/FornecedorResult';
 import CriarFornecedorResult from '../tools/workflow/CriarFornecedorResult';
