@@ -3,22 +3,15 @@
 import * as React from "react"
 import { useState } from "react"
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
-import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb"
-import { Separator } from "@/components/ui/separator"
+import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
+import NexusHeader from '@/components/nexus/NexusHeader'
+import NexusPageContainer from '@/components/nexus/NexusPageContainer'
 import { IntegrationCard } from "@/components/integrations/IntegrationCard"
-import { 
-  integrations, 
-  getCategoryTitle, 
+import {
+  integrations,
+  getCategoryTitle,
   getCategoryDescription,
-  type Integration 
+  type Integration
 } from "@/data/integrations"
 
 type FilterTab = 'all' | 'connected' | 'disconnected'
@@ -96,72 +89,55 @@ export default function IntegrationsPage() {
 
   return (
     <SidebarProvider defaultOpen={true}>
-      <SidebarShadcn />
-      <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 border-b border-gray-200" style={{backgroundColor: 'white'}}>
-          <div className="flex items-center gap-2 px-4">
-            <SidebarTrigger className="-ml-1" />
-            <Separator
-              orientation="vertical"
-              className="mr-2 data-[orientation=vertical]:h-4"
-            />
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink href="#">
-                    Creatto
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator className="hidden md:block" />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>Integrações</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
-          </div>
-        </header>
-        <div className="flex flex-1 flex-col" style={{backgroundColor: 'white'}}>
-          <div className="mx-auto w-full max-w-5xl p-8">
-        {/* Header */}
-        <div className="mb-10">
-          <h1 className="text-3xl font-bold text-gray-900 mb-3">
-            Integrações
-          </h1>
-          <p className="text-gray-600 text-lg mb-8">
-            Conecte facilmente seu número de telefone com seus aplicativos favoritos para automatizar fluxos de trabalho e se manter atualizado sobre chamadas e mensagens.
-          </p>
-          
-          {/* Tabs */}
-          <div className="flex items-center space-x-2">
-            <TabButton tab="all" label="Todas as Aplicações" />
-            <TabButton tab="connected" label="Conectadas" />
-            <TabButton tab="disconnected" label="Desconectadas" />
-          </div>
-        </div>
-
-        {/* Content */}
-        <div className="space-y-8">
-          <IntegrationSection 
-            category="advertising" 
-            integrations={advertisingIntegrations} 
-          />
-          <IntegrationSection 
-            category="analytics" 
-            integrations={analyticsIntegrations} 
-          />
-          <IntegrationSection 
-            category="ecommerce" 
-            integrations={ecommerceIntegrations} 
-          />
-          <IntegrationSection 
-            category="crm" 
-            integrations={crmIntegrations} 
-          />
-          <IntegrationSection 
-            category="financial" 
-            integrations={financialIntegrations} 
-          />
-          </div>
+      <SidebarShadcn borderless headerBorderless />
+      <SidebarInset className="h-screen overflow-hidden">
+        <div className="flex h-full overflow-hidden" style={{ backgroundColor: '#fdfdfd' }}>
+          <div className="flex flex-col h-full w-full">
+            <NexusHeader viewMode={'dashboard'} onChangeViewMode={() => {}} borderless size="sm" showBreadcrumb={false} />
+            <div className="flex-1 min-h-0 pl-2 pr-2 pt-0 pb-2" data-page="nexus">
+              <NexusPageContainer className="h-full">
+                <div className="mx-auto w-full max-w-5xl p-8">
+                  {/* Header */}
+                  <div className="mb-10">
+                    <h1 className="text-3xl font-bold text-gray-900 mb-3">
+                      Integrações
+                    </h1>
+                    <p className="text-gray-600 text-lg mb-8">
+                      Conecte facilmente seu número de telefone com seus aplicativos favoritos para automatizar fluxos de trabalho e se manter atualizado sobre chamadas e mensagens.
+                    </p>
+                    {/* Tabs */}
+                    <div className="flex items-center space-x-2">
+                      <TabButton tab="all" label="Todas as Aplicações" />
+                      <TabButton tab="connected" label="Conectadas" />
+                      <TabButton tab="disconnected" label="Desconectadas" />
+                    </div>
+                  </div>
+                  {/* Content */}
+                  <div className="space-y-8">
+                    <IntegrationSection
+                      category="advertising"
+                      integrations={advertisingIntegrations}
+                    />
+                    <IntegrationSection
+                      category="analytics"
+                      integrations={analyticsIntegrations}
+                    />
+                    <IntegrationSection
+                      category="ecommerce"
+                      integrations={ecommerceIntegrations}
+                    />
+                    <IntegrationSection
+                      category="crm"
+                      integrations={crmIntegrations}
+                    />
+                    <IntegrationSection
+                      category="financial"
+                      integrations={financialIntegrations}
+                    />
+                  </div>
+                </div>
+              </NexusPageContainer>
+            </div>
           </div>
         </div>
       </SidebarInset>
