@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
 import type { CanvasConfig } from '@/types/apps/canvas'
-import { getBlendModeDisplayName } from '@/utils/backgroundEffects'
+import { getBlendModeDisplayName } from '@/components/apps/backgroundEffects'
 import { canvasHistoryActions } from '@/stores/apps/canvasHistoryStore'
 
 interface CanvasConfigAccordionProps {

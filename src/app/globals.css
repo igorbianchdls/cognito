@@ -1,7 +1,6 @@
 @import "tailwindcss";
 
 @plugin "tailwind-scrollbar-hide";
-@import "../styles/ag-grid-theme.css";
 
 /* React Grid Layout CSS */
 @import "react-grid-layout/css/styles.css";

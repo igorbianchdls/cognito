@@ -18,7 +18,7 @@ import {
 import SplitSidebarPanel from '@/components/apps/builder/SplitSidebarPanel'
 import GridCanvas from '@/components/apps/GridCanvas'
 import { $canvasConfig } from '@/stores/apps/canvasStore'
-import { generateEffectPattern, generateGradient, generateCSSFilters } from '@/utils/backgroundEffects'
+import { generateEffectPattern, generateGradient, generateCSSFilters } from '@/components/apps/backgroundEffects'
 // import MultiGridCanvas from '@/components/apps/MultiGridCanvas' // REMOVED: Simplified to single canvas
 // Chart stores - needed for charts to appear in canvas
 import { $barChartsAsDropped, barChartActions } from '@/stores/apps/barChartStore'
