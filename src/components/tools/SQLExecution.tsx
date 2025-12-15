@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import SQLEditor from '../sql-editor/SQLEditor';
 import { useStore } from '@nanostores/react';
 import { $lastQueryData } from '@/stores/apps/queryStore';
 
@@ -173,15 +172,19 @@ export default function SQLExecution({
 
 
 
-      {/* SQLEditor - Main execution */}
-      <div className="mt-4">
-        <SQLEditor 
-          initialSQL={sqlQuery || ''}
-          height="200px"
-          immediateExecute={true}
-          readOnly={false}
-          onAnalyzeWithAI={onAnalyzeWithAI}
+      {/* Lightweight SQL viewer/editor fallback (SQLEditor removed) */}
+      <div className="mt-4 space-y-2">
+        <label className="text-sm font-medium text-gray-700">Consulta SQL</label>
+        <textarea
+          defaultValue={sqlQuery || ''}
+          className="w-full h-40 p-2 border rounded font-mono text-sm bg-white"
+          spellCheck={false}
         />
+        {onAnalyzeWithAI && (
+          <div className="flex justify-end">
+            <Button size="sm" variant="default" onClick={handleAnalyzeData}>Analisar com IA</Button>
+          </div>
+        )}
       </div>
     </div>
   );
