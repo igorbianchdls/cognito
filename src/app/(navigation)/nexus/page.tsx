@@ -22,15 +22,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ChevronDown, MessageSquare, Layout, BarChart3 } from "lucide-react";
-import ChatContainer from '@/components/nexus/ChatContainer';
-import NexusPageContainer from '@/components/nexus/NexusPageContainer';
-import DashboardChatPanel from '@/components/nexus/DashboardChatPanel';
+import ChatContainer from '@/components/navigation/nexus/ChatContainer';
+import NexusPageContainer from '@/components/navigation/nexus/NexusPageContainer';
+import DashboardChatPanel from '@/components/navigation/nexus/DashboardChatPanel';
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import type { UIMessage } from 'ai';
 import { currentAgent, setCurrentAgent } from '@/stores/nexus/agentStore';
 import { currentWorkflow } from '@/stores/nexus/workflowStore';
-import type { AttachedFile } from '@/components/nexus/FileAttachmentPreview';
-import NexusHeader from '@/components/nexus/NexusHeader';
+import type { AttachedFile } from '@/components/navigation/nexus/FileAttachmentPreview';
+import NexusHeader from '@/components/navigation/nexus/NexusHeader';
 
 export default function Page() {
   const selectedAgent = useStore(currentAgent);

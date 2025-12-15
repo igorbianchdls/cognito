@@ -3,8 +3,8 @@
 import * as React from "react"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { SidebarShadcn } from "@/components/navigation/SidebarShadcn"
-import NexusHeader from "@/components/nexus/NexusHeader"
-import NexusPageContainer from "@/components/nexus/NexusPageContainer"
+import NexusHeader from "@/components/navigation/nexus/NexusHeader"
+import NexusPageContainer from "@/components/navigation/nexus/NexusPageContainer"
 
 type Props = React.PropsWithChildren<{
   rightActions?: React.ReactNode

@@ -3,8 +3,8 @@
 import { useState, FormEvent, useMemo } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
-import ChatContainer from "@/components/nexus/ChatContainer";
-import type { AttachedFile } from "@/components/nexus/FileAttachmentPreview";
+import ChatContainer from "@/components/navigation/nexus/ChatContainer";
+import type { AttachedFile } from "@/components/navigation/nexus/FileAttachmentPreview";
 
 export default function VisualBuilderChat() {
   const [input, setInput] = useState("");

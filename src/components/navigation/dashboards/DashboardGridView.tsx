@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useEffect, useMemo, useState } from "react";
 import { dashboardsApi, type Dashboard } from "@/stores/dashboardsStore";
-import DashboardCard from "@/components/dashboards/DashboardCard";
+import DashboardCard from "@/components/navigation/dashboards/DashboardCard";
 
 export default function DashboardGridView() {
   const [items, setItems] = useState<Dashboard[]>([]);

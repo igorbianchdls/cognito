@@ -4,9 +4,9 @@ import * as React from "react"
 import { useState } from "react"
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
-import NexusHeader from '@/components/nexus/NexusHeader'
-import NexusPageContainer from '@/components/nexus/NexusPageContainer'
-import { IntegrationCard } from "@/components/integrations/IntegrationCard"
+import NexusHeader from '@/components/navigation/nexus/NexusHeader'
+import NexusPageContainer from '@/components/navigation/nexus/NexusPageContainer'
+import { IntegrationCard } from "@/components/navigation/integrations/IntegrationCard"
 import {
   integrations,
   getCategoryTitle,

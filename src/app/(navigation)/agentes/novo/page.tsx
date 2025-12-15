@@ -4,23 +4,23 @@ import { useMemo, useState } from "react"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import Link from "next/link"
 import { SidebarShadcn } from "@/components/navigation/SidebarShadcn"
-import BlockPalette from "@/components/agentes/builder/BlockPalette"
-import FlowCanvas from "@/components/agentes/builder/flow/FlowCanvas"
+import BlockPalette from "@/components/navigation/agentes/builder/BlockPalette"
+import FlowCanvas from "@/components/navigation/agentes/builder/flow/FlowCanvas"
 import { ReactFlowProvider } from 'reactflow'
-import PropertiesPanel from "@/components/agentes/builder/PropertiesPanel"
+import PropertiesPanel from "@/components/navigation/agentes/builder/PropertiesPanel"
 import WorkflowRunChatPanel from "@/components/workflows/exec/WorkflowRunChatPanel"
 import ToolsPanel from "@/components/workflows/tools/ToolsPanel"
 import CategoriesPanel from "@/components/workflows/tools/CategoriesPanel"
 import type { Block, BlockKind, ToolBlockConfig } from "@/types/agentes/builder"
 import type { Node, Edge } from 'reactflow'
 import type { NodeData } from '@/types/agentes/flow'
-import { flowToGraph } from '@/components/agentes/builder/flow/serialization'
+import { flowToGraph } from '@/components/navigation/agentes/builder/flow/serialization'
 import { Button } from "@/components/ui/button"
 import { Code2, Play, Save, ArrowLeft, Paperclip, Settings as Cog, Play as PreviewIcon } from "lucide-react"
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import CodePreview from "@/components/agentes/codegen/CodePreview"
+import CodePreview from "@/components/navigation/agentes/codegen/CodePreview"
 
 export default function NewAgentPage() {
   const [name, setName] = useState("Novo agente")

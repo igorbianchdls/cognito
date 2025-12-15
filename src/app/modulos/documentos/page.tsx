@@ -16,8 +16,8 @@ import CadastroContratosDocumentoAnexoSheet from '@/components/modulos/documento
 import DataTable, { type TableData } from '@/components/widgets/Table'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
-import NexusHeader from '@/components/nexus/NexusHeader'
-import NexusPageContainer from '@/components/nexus/NexusPageContainer'
+import NexusHeader from '@/components/navigation/nexus/NexusHeader'
+import NexusPageContainer from '@/components/navigation/nexus/NexusPageContainer'
 import { List } from 'lucide-react'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/stores/modulos/moduleUiStore'
 

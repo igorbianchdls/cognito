@@ -1,4 +1,4 @@
-import DashboardChatPanelViewOnly from "@/components/dashboards/DashboardChatPanelViewOnly";
+import DashboardChatPanelViewOnly from "@/components/navigation/dashboards/DashboardChatPanelViewOnly";
 
 export default function DashboardViewPage({ params }: { params: { id: string } }) {
   const id = params?.id;

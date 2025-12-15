@@ -4,13 +4,13 @@ import { useEffect } from "react";
 import { useStore } from "@nanostores/react";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { SidebarShadcn } from "@/components/navigation/SidebarShadcn";
-import NexusHeader from "@/components/nexus/NexusHeader";
-import NexusPageContainer from "@/components/nexus/NexusPageContainer";
+import NexusHeader from "@/components/navigation/nexus/NexusHeader";
+import NexusPageContainer from "@/components/navigation/nexus/NexusPageContainer";
 import PageHeader from "@/components/modulos/PageHeader";
 import TabsNav from "@/components/modulos/TabsNav";
 import { $titulo, $tabs, $layout, moduleUiActions } from "@/stores/modulos/moduleUiStore";
 import { Layout, Users, Globe2, LayoutGrid } from "lucide-react";
-import DashboardGridView from "@/components/dashboards/DashboardGridView";
+import DashboardGridView from "@/components/navigation/dashboards/DashboardGridView";
 
 const fontVar = (name?: string) => {
   if (!name) return undefined;

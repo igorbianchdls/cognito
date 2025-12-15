@@ -4,8 +4,8 @@ import Link from "next/link"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { SidebarShadcn } from "@/components/navigation/SidebarShadcn"
 import { Button } from "@/components/ui/button"
-import NexusHeader from "@/components/nexus/NexusHeader"
-import NexusPageContainer from "@/components/nexus/NexusPageContainer"
+import NexusHeader from "@/components/navigation/nexus/NexusHeader"
+import NexusPageContainer from "@/components/navigation/nexus/NexusPageContainer"
 
 export default function AgentsIndexPage() {
   return (
