@@ -8,9 +8,9 @@ import BlockPalette from "@/components/navigation/agentes/builder/BlockPalette"
 import FlowCanvas from "@/components/navigation/agentes/builder/flow/FlowCanvas"
 import { ReactFlowProvider } from 'reactflow'
 import PropertiesPanel from "@/components/navigation/agentes/builder/PropertiesPanel"
-import WorkflowRunChatPanel from "@/components/workflows/exec/WorkflowRunChatPanel"
-import ToolsPanel from "@/components/workflows/tools/ToolsPanel"
-import CategoriesPanel from "@/components/workflows/tools/CategoriesPanel"
+import WorkflowRunChatPanel from "@/components/navigation/agentes/workflows/exec/WorkflowRunChatPanel"
+import ToolsPanel from "@/components/navigation/agentes/workflows/tools/ToolsPanel"
+import CategoriesPanel from "@/components/navigation/agentes/workflows/tools/CategoriesPanel"
 import type { Block, BlockKind, ToolBlockConfig } from "@/types/agentes/builder"
 import type { Node, Edge } from 'reactflow'
 import type { NodeData } from '@/types/agentes/flow'
