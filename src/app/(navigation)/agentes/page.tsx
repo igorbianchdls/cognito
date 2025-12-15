@@ -19,6 +19,13 @@ export default function AgentsIndexPage() {
   const tabs = useStore($tabs)
   const layout = useStore($layout)
 
+  const fontVar = (name?: string) => {
+    if (!name) return undefined
+    if (name === 'Inter') return 'var(--font-inter)'
+    if (name === 'Geist') return 'var(--font-geist-sans)'
+    return name
+  }
+
   useEffect(() => {
     moduleUiActions.setTitulo({ title: 'Agentes', subtitle: 'Selecione um módulo para visualizar agentes' })
     moduleUiActions.setLayout({ contentBg: 'rgb(253,253,253)', contentTopGap: 8, mbTitle: 16, mbTabs: 8 })
@@ -59,6 +66,18 @@ export default function AgentsIndexPage() {
                     options={tabs.options as Opcao[]}
                     value={tabs.selected}
                     onValueChange={(v) => moduleUiActions.setTabs({ selected: v })}
+                    fontFamily={fontVar(tabs.fontFamily)}
+                    fontSize={tabs.fontSize}
+                    fontWeight={tabs.fontWeight}
+                    color={tabs.color}
+                    letterSpacing={tabs.letterSpacing}
+                    iconSize={tabs.iconSize}
+                    labelOffsetY={tabs.labelOffsetY}
+                    startOffset={tabs.leftOffset}
+                    activeColor={tabs.activeColor}
+                    activeFontWeight={tabs.activeFontWeight}
+                    activeBorderColor={tabs.activeBorderColor}
+                    className="px-0 md:px-0"
                   />
                 </div>
                 <div style={{ paddingTop: (layout.contentTopGap || 0) + (layout.mbTabs || 0) }}>
