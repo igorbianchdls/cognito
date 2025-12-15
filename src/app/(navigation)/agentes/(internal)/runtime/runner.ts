@@ -2,8 +2,8 @@ import { generateText, type PrepareStepFunction, type Tool } from 'ai'
 import { anthropic } from '@ai-sdk/anthropic'
 import { openai } from '@ai-sdk/openai'
 import type { Graph, AgentBlockConfig, StepBlockConfig } from '@/types/agentes/builder'
-import { collectTools } from '@/app/agentes/(internal)/codegen/helpers'
-import { getToolsForIds, buildBuilderToolGuide } from '@/app/agentes/(internal)/runtime/tools'
+import { collectTools } from '@/app/(navigation)/agentes/(internal)/codegen/helpers'
+import { getToolsForIds, buildBuilderToolGuide } from '@/app/(navigation)/agentes/(internal)/runtime/tools'
 import * as builderTools from '@/tools/agentbuilder'
 
 export type ExecOptions = {

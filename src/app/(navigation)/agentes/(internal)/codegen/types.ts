@@ -17,4 +17,3 @@ export interface GenerateOptions {
   includeRoute?: boolean
   includeJson?: boolean
 }
-

@@ -5,8 +5,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import type { Graph } from '@/types/agentes/builder'
-import { generateCode } from '@/app/agentes/(internal)/codegen/generate'
-import { slugify } from '@/app/agentes/(internal)/codegen/helpers'
+import { generateCode } from '@/app/(navigation)/agentes/(internal)/codegen/generate'
+import { slugify } from '@/app/(navigation)/agentes/(internal)/codegen/helpers'
 
 export default function CodePreview({ graph, initialSlug }: { graph: Graph; initialSlug?: string }) {
   const [slug, setSlug] = useState<string>(initialSlug && initialSlug.trim() ? slugify(initialSlug) : 'agente-visual')
