@@ -1196,9 +1196,7 @@ ORDER BY total_gasto DESC;`;
       orderClause = `ORDER BY ${orderBy} ${orderDir}`
     } else {
       switch (view) {
-        case 'contas-a-pagar':
-          orderClause = 'ORDER BY lf.data_vencimento ASC NULLS LAST, lf.id ASC'
-          break
+        
         case 'pagamentos-efetuados':
           orderClause = 'ORDER BY lf.data_lancamento DESC, lf.id DESC'
           break
