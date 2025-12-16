@@ -506,85 +506,23 @@ export default function ModulosFinanceiroPage() {
       default:
         return [
           { accessorKey: 'tipo_registro', header: () => <IconLabelHeader icon={<List className="h-3.5 w-3.5" />} label="Registro" /> },
-          {
-            accessorKey: 'fornecedor_nome',
-            header: () => <IconLabelHeader icon={<Building2 className="h-3.5 w-3.5" />} label="Fornecedor" />,
-            cell: ({ row }) => (
-              <EntityDisplay
-                name={row.original['fornecedor_nome'] ? String(row.original['fornecedor_nome']) : 'Sem nome'}
-                subtitle={row.original['categoria_nome'] ? String(row.original['categoria_nome']) : 'Sem categoria'}
-                imageUrl={row.original['fornecedor_imagem_url'] ? String(row.original['fornecedor_imagem_url']) : undefined}
-                onClick={() => openEditor(row.original)}
-                clickable
-                size={32}
-              />
-            )
-          },
-          {
-            accessorKey: 'descricao_conta',
-            header: () => <IconLabelHeader icon={<FileText className="h-3.5 w-3.5" />} label="Descrição" />,
-            cell: ({ row }) => {
-              const raw = (row.original['descricao_conta'] ?? row.original['descricao']) as unknown
-              const text = raw ? String(raw) : 'Sem descrição'
-              const storageKey = row.original['storage_key'] as string | undefined
-              const contentType = row.original['content_type'] as string | undefined
-              const fileName = (row.original['nome_arquivo'] as string | null | undefined) ?? (text || 'documento')
-              const lancIdRaw = row.original['conta_id'] as unknown
-              const lancId = Number(lancIdRaw)
-              const handleClick: React.MouseEventHandler<HTMLDivElement> = (e) => {
-                if (!lancId || Number.isNaN(lancId)) return
-                setDocLancId(lancId)
-                if (e.altKey) {
-                  if (!storageKey) return
-                  void (async () => {
-                    const res = await fetch(`/api/modulos/financeiro/lancamentos/${lancId}/arquivo/download`)
-                    const json = await res.json()
-                    if (json?.success && json?.url) window.open(json.url, '_blank', 'noopener,noreferrer')
-                  })()
-                  return
-                }
-                if (storageKey) {
-                  void (async () => {
-                    const res = await fetch(`/api/modulos/financeiro/lancamentos/${lancId}/arquivo/preview`)
-                    const json = await res.json()
-                    if (json?.success) setDocUrl(json?.url ?? null)
-                    setDocName(fileName)
-                    setDocType(contentType ?? null)
-                    setDocViewerOpen(true)
-                  })()
-                } else {
-                  setDocUrl(null)
-                  setDocName(fileName)
-                  setDocType(contentType ?? null)
-                  setDocViewerOpen(true)
-                }
-              }
-              return (
-                <div
-                  className={`flex items-center gap-2 min-w-0 ${storageKey ? 'cursor-pointer hover:opacity-90' : 'opacity-60'}`}
-                  title={text}
-                  onClick={handleClick}
-                  role="button"
-                  aria-label={`Abrir documento: ${text}`}
-                >
-                  <FileText className={`h-4 w-4 shrink-0 ${storageKey ? 'text-gray-600' : 'text-gray-400'}`} aria-hidden="true" />
-                  <span className="truncate">{text}</span>
-                </div>
-              )
-            }
-          },
+          { accessorKey: 'fornecedor', header: () => <IconLabelHeader icon={<Building2 className="h-3.5 w-3.5" />} label="Fornecedor" /> },
+          { accessorKey: 'descricao', header: () => <IconLabelHeader icon={<FileText className="h-3.5 w-3.5" />} label="Descrição" /> },
+          { accessorKey: 'numero_documento', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Doc" /> },
+          { accessorKey: 'tipo_documento', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Tipo Doc" /> },
+          { accessorKey: 'status', header: () => <IconLabelHeader icon={<CheckCircle2 className="h-3.5 w-3.5" />} label="Status" />, cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
+          { accessorKey: 'data_documento', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Emissão" />, cell: ({ row }) => formatDate(row.original['data_documento']) },
           { accessorKey: 'data_lancamento', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Lançamento" />, cell: ({ row }) => formatDate(row.original['data_lancamento']) },
           { accessorKey: 'data_vencimento', header: () => <IconLabelHeader icon={<CalendarClock className="h-3.5 w-3.5" />} label="Vencimento" />, cell: ({ row }) => formatDate(row.original['data_vencimento']) },
-          { accessorKey: 'valor_a_pagar', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Valor" />, cell: ({ row }) => formatBRL(row.original['valor_a_pagar']) },
-          { accessorKey: 'status_conta', header: () => <IconLabelHeader icon={<CheckCircle2 className="h-3.5 w-3.5" />} label="Status" />, cell: ({ row }) => <StatusBadge value={row.original['status_conta']} type="status" /> },
-          { accessorKey: 'tipo_conta', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Tipo" /> },
-          { accessorKey: 'observacao', header: () => <IconLabelHeader icon={<FileText className="h-3.5 w-3.5" />} label="Observação" /> },
-          { accessorKey: 'categoria_nome', header: () => <IconLabelHeader icon={<Folder className="h-3.5 w-3.5" />} label="Categoria" /> },
-          { accessorKey: 'centro_lucro_nome', header: () => <IconLabelHeader icon={<PieChart className="h-3.5 w-3.5" />} label="Centro de Lucro" /> },
-          { accessorKey: 'departamento_nome', header: () => <IconLabelHeader icon={<Building className="h-3.5 w-3.5" />} label="Departamento" /> },
-          { accessorKey: 'filial_nome', header: () => <IconLabelHeader icon={<Building2 className="h-3.5 w-3.5" />} label="Filial" /> },
-          { accessorKey: 'projeto_nome', header: () => <IconLabelHeader icon={<Folder className="h-3.5 w-3.5" />} label="Projeto" /> },
-          
+          { accessorKey: 'valor_bruto', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Bruto" />, cell: ({ row }) => formatBRL(row.original['valor_bruto']) },
+          { accessorKey: 'valor_desconto', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Desc" />, cell: ({ row }) => formatBRL(row.original['valor_desconto']) },
+          { accessorKey: 'valor_impostos', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Impostos" />, cell: ({ row }) => formatBRL(row.original['valor_impostos']) },
+          { accessorKey: 'valor_liquido', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Líquido" />, cell: ({ row }) => formatBRL(row.original['valor_liquido']) },
+          { accessorKey: 'categoria_despesa', header: () => <IconLabelHeader icon={<Folder className="h-3.5 w-3.5" />} label="Categoria" /> },
+          { accessorKey: 'departamento', header: () => <IconLabelHeader icon={<Building className="h-3.5 w-3.5" />} label="Departamento" /> },
+          { accessorKey: 'centro_custo', header: () => <IconLabelHeader icon={<PieChart className="h-3.5 w-3.5" />} label="Centro Custo" /> },
+          { accessorKey: 'filial', header: () => <IconLabelHeader icon={<Building2 className="h-3.5 w-3.5" />} label="Filial" /> },
+          { accessorKey: 'unidade_negocio', header: () => <IconLabelHeader icon={<Building2 className="h-3.5 w-3.5" />} label="Unid. Negócio" /> },
         ]
     }
   }, [tabs.selected])
@@ -865,21 +803,28 @@ export default function ModulosFinanceiroPage() {
                     columnOptions={{
                     // Tipo de registro (CABECALHO/LINHA)
                     tipo_registro: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 90 },
-                    // Fornecedor (diversas visões)
-                    fornecedor_nome: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
-                    fornecedor: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
+                    // Fornecedor
+                    fornecedor: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 140 },
                     // Descrição
-                    descricao_conta: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
-                    descricao_pagamento: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
-                    // Observação
-                    observacao: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
-                    // Categoria (variações por view)
-                    categoria_nome: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
-                    categoria_financeira: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
-                    categoria: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
-                    // Filial (variações por view)
-                    filial_nome: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
-                    filial: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
+                    descricao: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 180 },
+                    // Doc/Tipo
+                    numero_documento: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 100 },
+                    tipo_documento: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 90 },
+                    // Datas
+                    data_documento: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
+                    data_lancamento: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
+                    data_vencimento: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
+                    // Valores
+                    valor_bruto: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 110 },
+                    valor_desconto: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 110 },
+                    valor_impostos: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 110 },
+                    valor_liquido: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 110 },
+                    // Dimensões
+                    categoria_despesa: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 140 },
+                    departamento: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 140 },
+                    centro_custo: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 140 },
+                    filial: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 140 },
+                    unidade_negocio: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 140 },
                     // Conta e Método (Pagamentos Efetuados/Recebidos)
                     conta_financeira: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
                     conta_financeira_nome: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
