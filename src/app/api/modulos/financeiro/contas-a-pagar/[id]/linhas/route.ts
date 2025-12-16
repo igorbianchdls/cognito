@@ -29,12 +29,12 @@ export async function GET(req: Request) {
         cat.nome AS categoria_nome,
         dep.nome AS departamento_nome,
         cc.nome  AS centro_custo_nome,
-        un.nome  AS unidade_negocio
+        NULL::text AS unidade_negocio
       FROM financeiro.contas_pagar_linhas l
       LEFT JOIN financeiro.categorias_despesa cat ON cat.id = l.categoria_despesa_id
       LEFT JOIN empresa.departamentos dep        ON dep.id = l.departamento_id
       LEFT JOIN empresa.centros_custo cc         ON cc.id = l.centro_custo_id
-      LEFT JOIN empresa.unidades_negocio un      ON un.id = l.unidade_negocio_id
+      -- Unidade de negócio opcional; mantendo nulo para compatibilidade
       WHERE l.conta_pagar_id = $1
       ORDER BY l.id ASC
     `.replace(/\n\s+/g, ' ').trim()
@@ -60,4 +60,3 @@ export async function GET(req: Request) {
     return Response.json({ success: false, message: msg, rows: [], count: 0 }, { status: 500 })
   }
 }
-

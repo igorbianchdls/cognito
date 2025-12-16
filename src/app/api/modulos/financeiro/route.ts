@@ -815,7 +815,7 @@ SELECT
   f.nome_fantasia                    AS fornecedor,
   f.nome_fantasia                    AS fornecedor_nome,
   cp.fornecedor_id                   AS fornecedor_id,
-  f.imagem_url                       AS fornecedor_imagem_url,
+  NULL::text                         AS fornecedor_imagem_url,
 
   -- Dimensões
   cat_h.nome                         AS categoria_despesa,
@@ -826,7 +826,7 @@ SELECT
   cc_h.nome                          AS centro_lucro_nome,
   fil.nome                           AS filial,
   fil.nome                           AS filial_nome,
-  un.nome                            AS unidade_negocio,
+  NULL::text                         AS unidade_negocio,
   NULL::text                         AS projeto_nome,
 
   -- Valores
@@ -862,8 +862,6 @@ LEFT JOIN empresa.centros_custo cc_h
        ON cc_h.id = cp.centro_custo_id
 LEFT JOIN empresa.filiais fil
        ON fil.id = cp.filial_id
-LEFT JOIN empresa.unidades_negocio un
-       ON un.id = cp.unidade_negocio_id
 ${whereCab}
 ORDER BY cp.data_vencimento ASC NULLS LAST, cp.id ASC
 LIMIT $${idxAP}::int OFFSET $${idxAP + 1}::int
