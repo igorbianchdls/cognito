@@ -810,9 +810,9 @@ ORDER BY total_gasto DESC;`;
       const unionSql = `
         WITH cab AS (
           SELECT
-            'CABECALHO'::text                    AS tipo_registro,
+            'CABECALHO'                          AS tipo_registro,
             cp.id                                AS conta_pagar_id,
-            NULL::bigint                         AS conta_pagar_linha_id,
+            NULL                                 AS conta_pagar_linha_id,
             cp.numero_documento,
             cp.tipo_documento,
             cp.status,
@@ -840,7 +840,7 @@ ORDER BY total_gasto DESC;`;
           ${whereCab}
         ), lin AS (
           SELECT
-            'LINHA'::text                        AS tipo_registro,
+            'LINHA'                              AS tipo_registro,
             cp.id                                AS conta_pagar_id,
             l.id                                 AS conta_pagar_linha_id,
             cp.numero_documento,
