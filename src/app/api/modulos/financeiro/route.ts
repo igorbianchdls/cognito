@@ -788,29 +788,16 @@ ORDER BY total_gasto DESC;`;
       const rows = await runQuery<{ label: string; total: number | null }>(sql, params);
       return Response.json({ success: true, rows, sql_query: sql, sql_params: params });
     } else if (view === 'contas-a-pagar') {
-      // Contas a Pagar – cabeçalho + linhas colapsáveis
+      // Contas a Pagar — lista apenas CABEÇALHOS; LINHAS virão via expand (endpoint /contas-a-pagar/{id}/linhas)
       const paramsAP: unknown[] = []
       let idxAP = 1
       let whereCab = 'WHERE 1=1'
-      let whereLin = 'WHERE 1=1'
-      const addFilt = (col: string, val?: string | number) => {
-        if (val === undefined) return
-        whereCab += ` AND ${col} = $${idxAP}`
-        whereLin += ` AND ${col} = $${idxAP}`
-        paramsAP.push(val)
-        idxAP++
-      }
+      if (de) { whereCab += ` AND cp.data_vencimento >= $${idxAP}`; paramsAP.push(de); idxAP++; }
+      if (ate) { whereCab += ` AND cp.data_vencimento <= $${idxAP}`; paramsAP.push(ate); idxAP++; }
+      if (status) { whereCab += ` AND LOWER(cp.status) = $${idxAP}`; paramsAP.push(status.toLowerCase()); idxAP++; }
+      if (fornecedor_id) { whereCab += ` AND cp.fornecedor_id = $${idxAP}`; paramsAP.push(Number(fornecedor_id)); idxAP++; }
 
-      // Filtros: fornecedor, status, intervalo por data_vencimento
-      if (de) { whereCab += ` AND cp.data_vencimento >= $${idxAP}`; whereLin += ` AND cp.data_vencimento >= $${idxAP}`; paramsAP.push(de); idxAP++; }
-      if (ate) { whereCab += ` AND cp.data_vencimento <= $${idxAP}`; whereLin += ` AND cp.data_vencimento <= $${idxAP}`; paramsAP.push(ate); idxAP++; }
-      if (status) { whereCab += ` AND LOWER(cp.status) = $${idxAP}`; whereLin += ` AND LOWER(cp.status) = $${idxAP}`; paramsAP.push(status.toLowerCase()); idxAP++; }
-      if (fornecedor_id) { whereCab += ` AND cp.fornecedor_id = $${idxAP}`; whereLin += ` AND cp.fornecedor_id = $${idxAP}`; paramsAP.push(Number(fornecedor_id)); idxAP++; }
-
-      const unionSql = `
--- =========================
--- CABEÇALHO
--- =========================
+      const headerSql = `
 SELECT
   'CABECALHO'                        AS tipo_registro,
   cp.id                              AS conta_pagar_id,
@@ -878,93 +865,15 @@ LEFT JOIN empresa.filiais fil
 LEFT JOIN empresa.unidades_negocio un
        ON un.id = cp.unidade_negocio_id
 ${whereCab}
+ORDER BY cp.data_vencimento ASC NULLS LAST, cp.id ASC
+LIMIT $${idxAP}::int OFFSET $${idxAP + 1}::int
+      `.replace(/\n\s+/g, ' ').trim()
 
-UNION ALL
-
--- =========================
--- LINHAS
--- =========================
-SELECT
-  'LINHA'                            AS tipo_registro,
-  cp.id                              AS conta_pagar_id,
-  l.id                               AS conta_pagar_linha_id,
-
-  cp.numero_documento,
-  cp.tipo_documento,
-  cp.status,
-  cp.status                          AS status_conta,
-  cp.data_documento,
-  cp.data_lancamento,
-  cp.data_vencimento,
-
-  -- Fornecedor
-  f.nome_fantasia                    AS fornecedor,
-  f.nome_fantasia                    AS fornecedor_nome,
-  cp.fornecedor_id                   AS fornecedor_id,
-  f.imagem_url                       AS fornecedor_imagem_url,
-
-  -- Dimensões
-  cat_l.nome                         AS categoria_despesa,
-  cat_l.nome                         AS categoria_nome,
-  dep_l.nome                         AS departamento,
-  dep_l.nome                         AS departamento_nome,
-  cc_l.nome                          AS centro_custo,
-  cc_l.nome                          AS centro_lucro_nome,
-  fil.nome                           AS filial,
-  fil.nome                           AS filial_nome,
-  un_l.nome                          AS unidade_negocio,
-  NULL::text                         AS projeto_nome,
-
-  -- Valores
-  l.valor_bruto,
-  l.desconto                         AS valor_desconto,
-  l.impostos                         AS valor_impostos,
-  l.valor_liquido,
-  l.valor_liquido                    AS valor_a_pagar,
-
-  -- Descrições
-  l.descricao                        AS descricao,
-  NULL::text                         AS observacao,
-  l.descricao                        AS descricao_conta,
-  cp.tipo_documento                  AS tipo_conta,
-
-  -- Anexos (não aplicável neste schema)
-  NULL::text                         AS storage_key,
-  NULL::text                         AS nome_arquivo,
-  NULL::text                         AS content_type,
-  NULL::bigint                       AS tamanho_bytes,
-
-  -- Campo padrão esperado pela UI
-  cp.id                              AS conta_id
-
-FROM financeiro.contas_pagar cp
-JOIN financeiro.contas_pagar_linhas l
-     ON l.conta_pagar_id = cp.id
-
-LEFT JOIN entidades.fornecedores f
-       ON f.id = cp.fornecedor_id
-LEFT JOIN financeiro.categorias_despesa cat_l
-       ON cat_l.id = l.categoria_despesa_id
-LEFT JOIN empresa.departamentos dep_l
-       ON dep_l.id = l.departamento_id
-LEFT JOIN empresa.centros_custo cc_l
-       ON cc_l.id = l.centro_custo_id
-LEFT JOIN empresa.filiais fil
-       ON fil.id = cp.filial_id
-LEFT JOIN empresa.unidades_negocio un_l
-       ON un_l.id = l.unidade_negocio_id
-${whereLin}
-
-ORDER BY
-  conta_pagar_id,
-  tipo_registro DESC,   -- CABEÇALHO vem antes da LINHA
-  conta_pagar_linha_id;
-      `
-
-      const listSql = unionSql
-      const rows = await runQuery<Record<string, unknown>>(listSql, paramsAP)
-      const total = rows.length
-      return Response.json({ success: true, view, page, pageSize, total, rows, sql: listSql, params: JSON.stringify(paramsAP) }, { headers: { 'Cache-Control': 'no-store' } })
+      const paramsWithPage = [...paramsAP, pageSize, offset]
+      const rows = await runQuery<Record<string, unknown>>(headerSql, paramsWithPage)
+      const totalSql = `SELECT COUNT(*)::int AS total FROM financeiro.contas_pagar cp ${whereCab}`
+      const [{ total }] = await runQuery<{ total: number }>(totalSql, paramsAP)
+      return Response.json({ success: true, view, page, pageSize, total, rows, sql: headerSql, params: JSON.stringify(paramsWithPage) }, { headers: { 'Cache-Control': 'no-store' } })
     } else if (view === 'pagamentos-efetuados') {
       // Pagamentos Efetuados – dimensões vindas do cabeçalho (conta_a_pagar)
       baseSql = `FROM financeiro.lancamentos_financeiros lf

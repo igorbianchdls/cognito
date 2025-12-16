@@ -87,32 +87,32 @@ export default function ModulosFinanceiroPage() {
     return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
   }
 
-  // Nested detail component for Contas a Pagar: itens do lançamento
-  function ItensDoLancamento({ lancamentoId }: { lancamentoId: number }) {
+  // Nested detail component for Contas a Pagar: linhas do título
+  function LinhasContaPagar({ contaPagarId }: { contaPagarId: number }) {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [rows, setRows] = useState<Array<Record<string, unknown>>>([])
     // Simple cache per ID to avoid refetch on re-open
-    const cacheRef = (ItensDoLancamento as unknown as { _cache?: Map<number, Array<Record<string, unknown>>> })._cache
+    const cacheRef = (LinhasContaPagar as unknown as { _cache?: Map<number, Array<Record<string, unknown>>> })._cache
       || new Map<number, Array<Record<string, unknown>>>()
-    ;(ItensDoLancamento as unknown as { _cache?: Map<number, Array<Record<string, unknown>>> })._cache = cacheRef
+    ;(LinhasContaPagar as unknown as { _cache?: Map<number, Array<Record<string, unknown>>> })._cache = cacheRef
 
     useEffect(() => {
       let cancelled = false
       async function load() {
         try {
           setLoading(true); setError(null)
-          if (cacheRef.has(lancamentoId)) {
-            setRows(cacheRef.get(lancamentoId) || [])
+          if (cacheRef.has(contaPagarId)) {
+            setRows(cacheRef.get(contaPagarId) || [])
             return
           }
-          const res = await fetch(`/api/modulos/financeiro/lancamentos/${lancamentoId}/itens`, { cache: 'no-store' })
+          const res = await fetch(`/api/modulos/financeiro/contas-a-pagar/${contaPagarId}/linhas`, { cache: 'no-store' })
           const j = await res.json()
           if (!res.ok || !j?.success) throw new Error(j?.message || `HTTP ${res.status}`)
           const list: Array<Record<string, unknown>> = Array.isArray(j.rows) ? j.rows : []
           if (!cancelled) {
             setRows(list)
-            cacheRef.set(lancamentoId, list)
+            cacheRef.set(contaPagarId, list)
           }
         } catch (e) {
           if (!cancelled) setError(e instanceof Error ? e.message : 'Falha ao carregar linhas')
@@ -122,7 +122,7 @@ export default function ModulosFinanceiroPage() {
       }
       load();
       return () => { cancelled = true }
-    }, [lancamentoId])
+    }, [contaPagarId])
 
     if (loading) return <div className="text-xs text-gray-500 p-3">Carregando itens…</div>
     if (error) return <div className="text-xs text-red-600 p-3">{error}</div>
@@ -133,29 +133,31 @@ export default function ModulosFinanceiroPage() {
         <table className="w-full text-sm">
           <thead>
             <tr className="text-gray-600">
-              <th className="text-left p-2">#</th>
+              <th className="text-left p-2">Linha</th>
               <th className="text-left p-2">Descrição</th>
-              <th className="text-right p-2">Qtd</th>
-              <th className="text-left p-2">Unid.</th>
-              <th className="text-right p-2">Valor Unit.</th>
+              <th className="text-left p-2">Categoria</th>
+              <th className="text-left p-2">Departamento</th>
+              <th className="text-left p-2">Centro Custo</th>
+              <th className="text-left p-2">Unidade</th>
+              <th className="text-right p-2">Bruto</th>
               <th className="text-right p-2">Desconto</th>
-              <th className="text-right p-2">Acréscimo</th>
-              <th className="text-right p-2">Total</th>
-              <th className="text-left p-2">Obs.</th>
+              <th className="text-right p-2">Impostos</th>
+              <th className="text-right p-2">Líquido</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((r, i) => (
-              <tr key={String(r['id'] ?? i)} className="border-t border-gray-200">
-                <td className="p-2">{String(r['numero_item'] ?? i + 1)}</td>
+              <tr key={String(r['conta_pagar_linha_id'] ?? i)} className="border-t border-gray-200">
+                <td className="p-2">{String(r['conta_pagar_linha_id'] ?? i + 1)}</td>
                 <td className="p-2">{String(r['descricao'] ?? '—')}</td>
-                <td className="p-2 text-right">{String(r['quantidade'] ?? '0')}</td>
-                <td className="p-2">{String(r['unidade'] ?? '')}</td>
-                <td className="p-2 text-right">{formatBRL(r['valor_unitario'])}</td>
-                <td className="p-2 text-right">{formatBRL(r['desconto'])}</td>
-                <td className="p-2 text-right">{formatBRL(r['acrescimo'])}</td>
-                <td className="p-2 text-right">{formatBRL(r['valor_total'])}</td>
-                <td className="p-2">{String(r['observacao'] ?? '')}</td>
+                <td className="p-2">{String(r['categoria_nome'] ?? '')}</td>
+                <td className="p-2">{String(r['departamento_nome'] ?? '')}</td>
+                <td className="p-2">{String(r['centro_custo_nome'] ?? '')}</td>
+                <td className="p-2">{String(r['unidade_negocio'] ?? '')}</td>
+                <td className="p-2 text-right">{formatBRL(r['valor_bruto'])}</td>
+                <td className="p-2 text-right">{formatBRL(r['valor_desconto'])}</td>
+                <td className="p-2 text-right">{formatBRL(r['valor_impostos'])}</td>
+                <td className="p-2 text-right">{formatBRL(r['valor_liquido'])}</td>
               </tr>
             ))}
           </tbody>
@@ -913,12 +915,12 @@ export default function ModulosFinanceiroPage() {
                       </div>
                     )
                   }) : (tabs.selected === 'contas-a-pagar' ? (row => {
-                    const lancIdRaw = row['conta_id'] as string | number | undefined
-                    const lancId = lancIdRaw ? Number(lancIdRaw) : NaN
-                    if (!Number.isFinite(lancId)) {
+                    const idRaw = row['conta_id'] as string | number | undefined
+                    const contaId = idRaw ? Number(idRaw) : NaN
+                    if (!Number.isFinite(contaId)) {
                       return <div className="text-xs text-gray-500 p-3">ID de lançamento inválido.</div>
                     }
-                    return <ItensDoLancamento lancamentoId={lancId} />
+                    return <LinhasContaPagar contaPagarId={contaId} />
                   }) : undefined)}
                   enableSearch={tabelaUI.enableSearch}
                   showColumnToggle={tabelaUI.enableColumnToggle}
