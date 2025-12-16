@@ -788,49 +788,101 @@ ORDER BY total_gasto DESC;`;
       const rows = await runQuery<{ label: string; total: number | null }>(sql, params);
       return Response.json({ success: true, rows, sql_query: sql, sql_params: params });
     } else if (view === 'contas-a-pagar') {
-      // Contas a Pagar – nova estrutura simplificada
-      baseSql = `FROM financeiro.lancamentos_financeiros lf
-                 LEFT JOIN financeiro.categorias_financeiras cf
-                        ON lf.categoria_id = cf.id
-                 LEFT JOIN empresa.centros_lucro cl
-                        ON lf.centro_lucro_id = cl.id
-                 LEFT JOIN empresa.departamentos dep
-                        ON lf.departamento_id = dep.id
-                 LEFT JOIN empresa.filiais fi
-                        ON lf.filial_id = fi.id
-                 LEFT JOIN financeiro.projetos pr
-                        ON lf.projeto_id = pr.id
-                 LEFT JOIN entidades.fornecedores f
-                        ON lf.fornecedor_id = f.id`;
-      selectSql = `SELECT
-                        lf.id AS conta_id,
-                        lf.tipo AS tipo_conta,
-                        lf.descricao AS descricao_conta,
-                        lf.valor AS valor_a_pagar,
-                        lf.status AS status_conta,
-                        lf.data_lancamento,
-                        lf.data_vencimento,
-                        lf.observacao,
-                        lf.storage_key AS storage_key,
-                        lf.nome_arquivo AS nome_arquivo,
-                        lf.content_type AS content_type,
-                        lf.tamanho_bytes AS tamanho_bytes,
-                        cf.nome AS categoria_nome,
-                        cl.nome AS centro_lucro_nome,
-                        dep.nome AS departamento_nome,
-                        fi.nome AS filial_nome,
-                        pr.nome AS projeto_nome,
-                        f.nome_fantasia AS fornecedor_nome,
-                        lf.fornecedor_id AS fornecedor_id,
-                        f.imagem_url AS fornecedor_imagem_url`;
-      whereDateCol = 'lf.data_vencimento';
-      conditions.push(`lf.tipo = 'conta_a_pagar'`);
-      if (fornecedor_id) push('lf.fornecedor_id =', fornecedor_id);
-      if (status) push('LOWER(lf.status) =', status.toLowerCase());
-      if (valor_min !== undefined) push('lf.valor >=', valor_min);
-      if (valor_max !== undefined) push('lf.valor <=', valor_max);
-      if (de) push(`${whereDateCol} >=`, de);
-      if (ate) push(`${whereDateCol} <=`, ate);
+      // Contas a Pagar – cabeçalho + linhas colapsáveis
+      const paramsAP: unknown[] = []
+      let idxAP = 1
+      let whereCab = 'WHERE 1=1'
+      let whereLin = 'WHERE 1=1'
+      const addFilt = (col: string, val?: string | number) => {
+        if (val === undefined) return
+        whereCab += ` AND ${col} = $${idxAP}`
+        whereLin += ` AND ${col} = $${idxAP}`
+        paramsAP.push(val)
+        idxAP++
+      }
+
+      // Filtros: fornecedor, status, intervalo por data_vencimento
+      if (de) { whereCab += ` AND cp.data_vencimento >= $${idxAP}`; whereLin += ` AND cp.data_vencimento >= $${idxAP}`; paramsAP.push(de); idxAP++; }
+      if (ate) { whereCab += ` AND cp.data_vencimento <= $${idxAP}`; whereLin += ` AND cp.data_vencimento <= $${idxAP}`; paramsAP.push(ate); idxAP++; }
+      if (status) { whereCab += ` AND LOWER(cp.status) = $${idxAP}`; whereLin += ` AND LOWER(cp.status) = $${idxAP}`; paramsAP.push(status.toLowerCase()); idxAP++; }
+      if (fornecedor_id) { whereCab += ` AND cp.fornecedor_id = $${idxAP}`; whereLin += ` AND cp.fornecedor_id = $${idxAP}`; paramsAP.push(Number(fornecedor_id)); idxAP++; }
+
+      const unionSql = `
+        WITH cab AS (
+          SELECT
+            'CABECALHO'::text                    AS tipo_registro,
+            cp.id                                AS conta_pagar_id,
+            NULL::bigint                         AS conta_pagar_linha_id,
+            cp.numero_documento,
+            cp.tipo_documento,
+            cp.status,
+            cp.data_documento,
+            cp.data_lancamento,
+            cp.data_vencimento,
+            f.nome_razao_social                  AS fornecedor,
+            cat_h.nome                           AS categoria_despesa,
+            dep_h.nome                           AS departamento,
+            cc_h.nome                            AS centro_custo,
+            fil.nome                             AS filial,
+            un.nome                              AS unidade_negocio,
+            cp.valor_bruto,
+            cp.valor_desconto,
+            cp.valor_impostos,
+            cp.valor_liquido,
+            cp.observacao                        AS descricao
+          FROM financeiro.contas_pagar cp
+          LEFT JOIN entidades.fornecedores f              ON f.id = cp.fornecedor_id
+          LEFT JOIN financeiro.categorias_despesa cat_h   ON cat_h.id = cp.categoria_despesa_id
+          LEFT JOIN empresa.departamentos dep_h           ON dep_h.id = cp.departamento_id
+          LEFT JOIN empresa.centros_custo cc_h            ON cc_h.id = cp.centro_custo_id
+          LEFT JOIN empresa.filiais fil                   ON fil.id = cp.filial_id
+          LEFT JOIN empresa.unidades_negocio un           ON un.id = cp.unidade_negocio_id
+          ${whereCab}
+        ), lin AS (
+          SELECT
+            'LINHA'::text                        AS tipo_registro,
+            cp.id                                AS conta_pagar_id,
+            l.id                                 AS conta_pagar_linha_id,
+            cp.numero_documento,
+            cp.tipo_documento,
+            cp.status,
+            cp.data_documento,
+            cp.data_lancamento,
+            cp.data_vencimento,
+            f.nome_razao_social                  AS fornecedor,
+            cat_l.nome                           AS categoria_despesa,
+            dep_l.nome                           AS departamento,
+            cc_l.nome                            AS centro_custo,
+            fil.nome                             AS filial,
+            un_l.nome                            AS unidade_negocio,
+            l.valor_bruto,
+            l.desconto                           AS valor_desconto,
+            l.impostos                           AS valor_impostos,
+            l.valor_liquido,
+            l.descricao                          AS descricao
+          FROM financeiro.contas_pagar cp
+          JOIN financeiro.contas_pagar_linhas l  ON l.conta_pagar_id = cp.id
+          LEFT JOIN entidades.fornecedores f              ON f.id = cp.fornecedor_id
+          LEFT JOIN financeiro.categorias_despesa cat_l   ON cat_l.id = l.categoria_despesa_id
+          LEFT JOIN empresa.departamentos dep_l           ON dep_l.id = l.departamento_id
+          LEFT JOIN empresa.centros_custo cc_l            ON cc_l.id = l.centro_custo_id
+          LEFT JOIN empresa.filiais fil                   ON fil.id = cp.filial_id
+          LEFT JOIN empresa.unidades_negocio un_l         ON un_l.id = l.unidade_negocio_id
+          ${whereLin}
+        )
+        SELECT * FROM cab
+        UNION ALL
+        SELECT * FROM lin
+        ORDER BY conta_pagar_id, tipo_registro DESC, conta_pagar_linha_id
+      `.replace(/\n\s+/g, ' ').trim()
+
+      // Apply pagination
+      const listSql = `${unionSql} LIMIT $${idxAP}::int OFFSET $${idxAP + 1}::int`
+      const paramsWithPage = [...paramsAP, pageSize, offset]
+      const rows = await runQuery<Record<string, unknown>>(listSql, paramsWithPage)
+      const total = rows.length // fallback simples; pode ser melhorado com COUNT
+
+      return Response.json({ success: true, view, page, pageSize, total, rows, sql: listSql, params: JSON.stringify(paramsWithPage) }, { headers: { 'Cache-Control': 'no-store' } })
     } else if (view === 'pagamentos-efetuados') {
       // Pagamentos Efetuados – dimensões vindas do cabeçalho (conta_a_pagar)
       baseSql = `FROM financeiro.lancamentos_financeiros lf
