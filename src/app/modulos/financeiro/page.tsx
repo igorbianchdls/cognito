@@ -88,7 +88,7 @@ export default function ModulosFinanceiroPage() {
   }
 
   // Nested detail component for Contas a Pagar: linhas do título
-  function LinhasContaPagar({ contaPagarId, linhas }: { contaPagarId?: number; linhas?: Array<Record<string, unknown>> }) {
+  function LinhasContaPagar({ contaPagarId }: { contaPagarId: number }) {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [rows, setRows] = useState<Array<Record<string, unknown>>>([])
@@ -98,19 +98,11 @@ export default function ModulosFinanceiroPage() {
     ;(LinhasContaPagar as unknown as { _cache?: Map<number, Array<Record<string, unknown>>> })._cache = cacheRef
 
     useEffect(() => {
-      if (Array.isArray(linhas)) {
-        setRows(linhas)
-        setLoading(false)
-        setError(null)
-        return
-      }
       let cancelled = false
       async function load() {
         try {
           setLoading(true); setError(null)
-          if (!contaPagarId || !Number.isFinite(contaPagarId)) {
-            throw new Error('ID de conta inválido')
-          }
+          if (!contaPagarId || !Number.isFinite(contaPagarId)) throw new Error('ID de conta inválido')
           if (cacheRef.has(contaPagarId)) {
             setRows(cacheRef.get(contaPagarId) || [])
             return
@@ -129,9 +121,9 @@ export default function ModulosFinanceiroPage() {
           if (!cancelled) setLoading(false)
         }
       }
-      if (!Array.isArray(linhas)) load();
+      load();
       return () => { cancelled = true }
-    }, [contaPagarId, Array.isArray(linhas) ? linhas.length : undefined])
+    }, [contaPagarId])
 
     if (loading) return <div className="text-xs text-gray-500 p-3">Carregando itens…</div>
     if (error) return <div className="text-xs text-red-600 p-3">{error}</div>
@@ -668,16 +660,22 @@ export default function ModulosFinanceiroPage() {
         const json = await res.json()
         const rows = (json?.rows || []) as Row[]
         if (tabs.selected === 'contas-a-pagar' && Array.isArray(rows) && rows.length > 0 && rows.some(r => r && String((r as any)['tipo_registro'] || '').length > 0)) {
-          // Agrupa por conta_pagar_id: mantém apenas CABECALHO na lista e anexa linhas
+          // Agrupa por conta_pagar_id: mantém apenas CABECALHO na lista e pré-carrega o cache do detalhe
           const headers = rows.filter(r => String((r as any)['tipo_registro']).toUpperCase() === 'CABECALHO')
           const linhas = rows.filter(r => String((r as any)['tipo_registro']).toUpperCase() === 'LINHA')
-          const headersWithChildren = headers.map(h => {
-            const id = (h as any)['conta_pagar_id'] ?? (h as any)['conta_id']
-            const child = linhas.filter(l => ((l as any)['conta_pagar_id'] ?? (l as any)['conta_id']) === id)
-            return { ...h, conta_id: (h as any)['conta_id'] ?? id, linhas: child }
+          const cacheRef = (LinhasContaPagar as unknown as { _cache?: Map<number, Array<Record<string, unknown>>> })._cache
+            || new Map<number, Array<Record<string, unknown>>>()
+          ;(LinhasContaPagar as unknown as { _cache?: Map<number, Array<Record<string, unknown>>> })._cache = cacheRef
+
+          const headersOnly = headers.map(h => {
+            const id = Number((h as any)['conta_pagar_id'] ?? (h as any)['conta_id'])
+            const child = linhas.filter(l => Number((l as any)['conta_pagar_id'] ?? (l as any)['conta_id']) === id)
+            if (Number.isFinite(id)) cacheRef.set(id, child)
+            // Garante presença de conta_id para o expand
+            return { ...h, conta_id: (h as any)['conta_id'] ?? (h as any)['conta_pagar_id'] ?? id }
           })
-          setData(headersWithChildren as Row[])
-          setTotal(Number(json?.total ?? headersWithChildren.length) || headersWithChildren.length)
+          setData(headersOnly as unknown as Row[])
+          setTotal(Number(json?.total ?? headersOnly.length) || headersOnly.length)
         } else {
           setData(Array.isArray(rows) ? rows : [])
           setTotal(Number(json?.total ?? rows.length) || 0)
@@ -939,13 +937,10 @@ export default function ModulosFinanceiroPage() {
                   }) : (tabs.selected === 'contas-a-pagar' ? (row => {
                     const idRaw = (row['conta_id'] ?? row['conta_pagar_id']) as string | number | undefined
                     const contaId = idRaw ? Number(idRaw) : NaN
-                    const linhas = (Array.isArray(row['linhas']) && (row['linhas'] as Array<Record<string, unknown>>).length > 0)
-                      ? (row['linhas'] as Array<Record<string, unknown>>)
-                      : undefined
                     if (!Number.isFinite(contaId)) {
                       return <div className="text-xs text-gray-500 p-3">ID de lançamento inválido.</div>
                     }
-                    return <LinhasContaPagar contaPagarId={contaId} linhas={linhas} />
+                    return <LinhasContaPagar contaPagarId={contaId} />
                   }) : undefined)}
                   enableSearch={tabelaUI.enableSearch}
                   showColumnToggle={tabelaUI.enableColumnToggle}
