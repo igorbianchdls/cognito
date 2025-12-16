@@ -808,81 +808,111 @@ ORDER BY total_gasto DESC;`;
       if (fornecedor_id) { whereCab += ` AND cp.fornecedor_id = $${idxAP}`; whereLin += ` AND cp.fornecedor_id = $${idxAP}`; paramsAP.push(Number(fornecedor_id)); idxAP++; }
 
       const unionSql = `
-        WITH cab AS (
-          SELECT
-            'CABECALHO'                          AS tipo_registro,
-            cp.id                                AS conta_pagar_id,
-            NULL                                 AS conta_pagar_linha_id,
-            cp.numero_documento,
-            cp.tipo_documento,
-            cp.status,
-            cp.data_documento,
-            cp.data_lancamento,
-            cp.data_vencimento,
-            f.nome_razao_social                  AS fornecedor,
-            cat_h.nome                           AS categoria_despesa,
-            dep_h.nome                           AS departamento,
-            cc_h.nome                            AS centro_custo,
-            fil.nome                             AS filial,
-            un.nome                              AS unidade_negocio,
-            cp.valor_bruto,
-            cp.valor_desconto,
-            cp.valor_impostos,
-            cp.valor_liquido,
-            cp.observacao                        AS descricao
-          FROM financeiro.contas_pagar cp
-          LEFT JOIN entidades.fornecedores f              ON f.id = cp.fornecedor_id
-          LEFT JOIN financeiro.categorias_despesa cat_h   ON cat_h.id = cp.categoria_despesa_id
-          LEFT JOIN empresa.departamentos dep_h           ON dep_h.id = cp.departamento_id
-          LEFT JOIN empresa.centros_custo cc_h            ON cc_h.id = cp.centro_custo_id
-          LEFT JOIN empresa.filiais fil                   ON fil.id = cp.filial_id
-          LEFT JOIN empresa.unidades_negocio un           ON un.id = cp.unidade_negocio_id
-          ${whereCab}
-        ), lin AS (
-          SELECT
-            'LINHA'                              AS tipo_registro,
-            cp.id                                AS conta_pagar_id,
-            l.id                                 AS conta_pagar_linha_id,
-            cp.numero_documento,
-            cp.tipo_documento,
-            cp.status,
-            cp.data_documento,
-            cp.data_lancamento,
-            cp.data_vencimento,
-            f.nome_razao_social                  AS fornecedor,
-            cat_l.nome                           AS categoria_despesa,
-            dep_l.nome                           AS departamento,
-            cc_l.nome                            AS centro_custo,
-            fil.nome                             AS filial,
-            un_l.nome                            AS unidade_negocio,
-            l.valor_bruto,
-            l.desconto                           AS valor_desconto,
-            l.impostos                           AS valor_impostos,
-            l.valor_liquido,
-            l.descricao                          AS descricao
-          FROM financeiro.contas_pagar cp
-          JOIN financeiro.contas_pagar_linhas l  ON l.conta_pagar_id = cp.id
-          LEFT JOIN entidades.fornecedores f              ON f.id = cp.fornecedor_id
-          LEFT JOIN financeiro.categorias_despesa cat_l   ON cat_l.id = l.categoria_despesa_id
-          LEFT JOIN empresa.departamentos dep_l           ON dep_l.id = l.departamento_id
-          LEFT JOIN empresa.centros_custo cc_l            ON cc_l.id = l.centro_custo_id
-          LEFT JOIN empresa.filiais fil                   ON fil.id = cp.filial_id
-          LEFT JOIN empresa.unidades_negocio un_l         ON un_l.id = l.unidade_negocio_id
-          ${whereLin}
-        )
-        SELECT * FROM cab
-        UNION ALL
-        SELECT * FROM lin
-        ORDER BY conta_pagar_id, tipo_registro DESC, conta_pagar_linha_id
-      `.replace(/\n\s+/g, ' ').trim()
+-- =========================
+-- CABEÇALHO
+-- =========================
+SELECT
+  'CABECALHO'                        AS tipo_registro,
+  cp.id                              AS conta_pagar_id,
+  NULL                               AS conta_pagar_linha_id,
 
-      // Apply pagination
-      const listSql = `${unionSql} LIMIT $${idxAP}::int OFFSET $${idxAP + 1}::int`
-      const paramsWithPage = [...paramsAP, pageSize, offset]
-      const rows = await runQuery<Record<string, unknown>>(listSql, paramsWithPage)
-      const total = rows.length // fallback simples; pode ser melhorado com COUNT
+  cp.numero_documento,
+  cp.tipo_documento,
+  cp.status,
+  cp.data_documento,
+  cp.data_lancamento,
+  cp.data_vencimento,
 
-      return Response.json({ success: true, view, page, pageSize, total, rows, sql: listSql, params: JSON.stringify(paramsWithPage) }, { headers: { 'Cache-Control': 'no-store' } })
+  f.nome_fantasia                AS fornecedor,
+
+  cat_h.nome                         AS categoria_despesa,
+
+  dep_h.nome                         AS departamento,
+  cc_h.nome                          AS centro_custo,
+  fil.nome                           AS filial,
+  un.nome                            AS unidade_negocio,
+
+  cp.valor_bruto,
+  cp.valor_desconto,
+  cp.valor_impostos,
+  cp.valor_liquido,
+
+  cp.observacao                      AS descricao
+
+FROM financeiro.contas_pagar cp
+LEFT JOIN entidades.fornecedores f
+       ON f.id = cp.fornecedor_id
+LEFT JOIN financeiro.categorias_despesa cat_h
+       ON cat_h.id = cp.categoria_despesa_id
+LEFT JOIN empresa.departamentos dep_h
+       ON dep_h.id = cp.departamento_id
+LEFT JOIN empresa.centros_custo cc_h
+       ON cc_h.id = cp.centro_custo_id
+LEFT JOIN empresa.filiais fil
+       ON fil.id = cp.filial_id
+LEFT JOIN empresa.unidades_negocio un
+       ON un.id = cp.unidade_negocio_id
+
+UNION ALL
+
+-- =========================
+-- LINHAS
+-- =========================
+SELECT
+  'LINHA'                            AS tipo_registro,
+  cp.id                              AS conta_pagar_id,
+  l.id                               AS conta_pagar_linha_id,
+
+  cp.numero_documento,
+  cp.tipo_documento,
+  cp.status,
+  cp.data_documento,
+  cp.data_lancamento,
+  cp.data_vencimento,
+
+  f.nome_fantasia                AS fornecedor,
+
+  cat_l.nome                         AS categoria_despesa,
+
+  dep_l.nome                         AS departamento,
+  cc_l.nome                          AS centro_custo,
+  fil.nome                           AS filial,
+  un_l.nome                          AS unidade_negocio,
+
+  l.valor_bruto,
+  l.desconto                         AS valor_desconto,
+  l.impostos                         AS valor_impostos,
+  l.valor_liquido,
+
+  l.descricao                        AS descricao
+
+FROM financeiro.contas_pagar cp
+JOIN financeiro.contas_pagar_linhas l
+     ON l.conta_pagar_id = cp.id
+
+LEFT JOIN entidades.fornecedores f
+       ON f.id = cp.fornecedor_id
+LEFT JOIN financeiro.categorias_despesa cat_l
+       ON cat_l.id = l.categoria_despesa_id
+LEFT JOIN empresa.departamentos dep_l
+       ON dep_l.id = l.departamento_id
+LEFT JOIN empresa.centros_custo cc_l
+       ON cc_l.id = l.centro_custo_id
+LEFT JOIN empresa.filiais fil
+       ON fil.id = cp.filial_id
+LEFT JOIN empresa.unidades_negocio un_l
+       ON un_l.id = l.unidade_negocio_id
+
+ORDER BY
+  conta_pagar_id,
+  tipo_registro DESC,   -- CABECALHO vem antes da LINHA
+  conta_pagar_linha_id;
+      `
+
+      const listSql = unionSql
+      const rows = await runQuery<Record<string, unknown>>(listSql, [])
+      const total = rows.length
+      return Response.json({ success: true, view, page, pageSize, total, rows, sql: listSql, params: '[]' }, { headers: { 'Cache-Control': 'no-store' } })
     } else if (view === 'pagamentos-efetuados') {
       // Pagamentos Efetuados – dimensões vindas do cabeçalho (conta_a_pagar)
       baseSql = `FROM financeiro.lancamentos_financeiros lf
