@@ -502,6 +502,7 @@ export default function ModulosFinanceiroPage() {
       case 'contas-a-pagar':
       default:
         return [
+          { accessorKey: 'tipo_registro', header: () => <IconLabelHeader icon={<List className="h-3.5 w-3.5" />} label="Registro" /> },
           {
             accessorKey: 'fornecedor_nome',
             header: () => <IconLabelHeader icon={<Building2 className="h-3.5 w-3.5" />} label="Fornecedor" />,
@@ -834,12 +835,14 @@ export default function ModulosFinanceiroPage() {
               ) : error ? (
                 <div className="p-6 text-sm text-red-600">Erro ao carregar: {error}</div>
               ) : (
-                <DataTable
-                  key={tabs.selected}
-                  columns={columns}
-                  data={data}
-                  headerPadding={8}
-                  columnOptions={{
+                  <DataTable
+                    key={tabs.selected}
+                    columns={columns}
+                    data={data}
+                    headerPadding={8}
+                    columnOptions={{
+                    // Tipo de registro (CABECALHO/LINHA)
+                    tipo_registro: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 90 },
                     // Fornecedor (diversas visões)
                     fornecedor_nome: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
                     fornecedor: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },

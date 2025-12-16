@@ -962,9 +962,9 @@ ORDER BY
       `
 
       const listSql = unionSql
-      const rows = await runQuery<Record<string, unknown>>(listSql, [])
+      const rows = await runQuery<Record<string, unknown>>(listSql, paramsAP)
       const total = rows.length
-      return Response.json({ success: true, view, page, pageSize, total, rows, sql: listSql, params: '[]' }, { headers: { 'Cache-Control': 'no-store' } })
+      return Response.json({ success: true, view, page, pageSize, total, rows, sql: listSql, params: JSON.stringify(paramsAP) }, { headers: { 'Cache-Control': 'no-store' } })
     } else if (view === 'pagamentos-efetuados') {
       // Pagamentos Efetuados – dimensões vindas do cabeçalho (conta_a_pagar)
       baseSql = `FROM financeiro.lancamentos_financeiros lf
