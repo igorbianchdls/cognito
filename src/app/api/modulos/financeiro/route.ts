@@ -795,7 +795,7 @@ ORDER BY total_gasto DESC;`;
       let whereLin = 'WHERE 1=1'
       if (de) { whereCab += ` AND cp.data_vencimento >= $${idxAP}`; whereLin += ` AND cp.data_vencimento >= $${idxAP}`; paramsAP.push(de); idxAP++; }
       if (ate) { whereCab += ` AND cp.data_vencimento <= $${idxAP}`; whereLin += ` AND cp.data_vencimento <= $${idxAP}`; paramsAP.push(ate); idxAP++; }
-      if (status) { whereCab += ` AND LOWER(cp.status) = $${idxAP}`; whereLin += ` AND LOWER(cp.status) = $${idxAP}`; paramsAP.push(status.toLowerCase()); idxAP++; }
+      if (status) { whereCab += ` AND LOWER(cp.status::text) = $${idxAP}`; whereLin += ` AND LOWER(cp.status::text) = $${idxAP}`; paramsAP.push(status.toLowerCase()); idxAP++; }
       if (fornecedor_id) { whereCab += ` AND cp.fornecedor_id = $${idxAP}`; whereLin += ` AND cp.fornecedor_id = $${idxAP}`; paramsAP.push(Number(fornecedor_id)); idxAP++; }
 
       const unionSql = `
