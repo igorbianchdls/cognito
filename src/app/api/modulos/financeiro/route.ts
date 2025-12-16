@@ -1185,7 +1185,7 @@ ORDER BY total_gasto DESC;`;
     }
 
     // Para outras views, aplicar filtros de data depois de montar os blocos
-    if (view !== 'contas-a-pagar') {
+    if ((view as string) !== 'contas-a-pagar') {
       if (de) push(`${whereDateCol} >=`, de);
       if (ate) push(`${whereDateCol} <=`, ate);
     }
