@@ -819,25 +819,50 @@ SELECT
   cp.numero_documento,
   cp.tipo_documento,
   cp.status,
+  cp.status                          AS status_conta,
   cp.data_documento,
   cp.data_lancamento,
   cp.data_vencimento,
 
-  f.nome_fantasia                AS fornecedor,
+  -- Fornecedor
+  f.nome_fantasia                    AS fornecedor,
+  f.nome_fantasia                    AS fornecedor_nome,
+  cp.fornecedor_id                   AS fornecedor_id,
+  f.imagem_url                       AS fornecedor_imagem_url,
 
+  -- Dimensões
   cat_h.nome                         AS categoria_despesa,
-
+  cat_h.nome                         AS categoria_nome,
   dep_h.nome                         AS departamento,
+  dep_h.nome                         AS departamento_nome,
   cc_h.nome                          AS centro_custo,
+  cc_h.nome                          AS centro_lucro_nome,
   fil.nome                           AS filial,
+  fil.nome                           AS filial_nome,
   un.nome                            AS unidade_negocio,
+  NULL::text                         AS projeto_nome,
 
+  -- Valores
   cp.valor_bruto,
   cp.valor_desconto,
   cp.valor_impostos,
   cp.valor_liquido,
+  cp.valor_liquido                   AS valor_a_pagar,
 
-  cp.observacao                      AS descricao
+  -- Descrições
+  cp.observacao                      AS descricao,
+  cp.observacao                      AS observacao,
+  cp.observacao                      AS descricao_conta,
+  cp.tipo_documento                  AS tipo_conta,
+
+  -- Anexos (não aplicável neste schema)
+  NULL::text                         AS storage_key,
+  NULL::text                         AS nome_arquivo,
+  NULL::text                         AS content_type,
+  NULL::bigint                       AS tamanho_bytes,
+
+  -- Campo padrão esperado pela UI
+  cp.id                              AS conta_id
 
 FROM financeiro.contas_pagar cp
 LEFT JOIN entidades.fornecedores f
@@ -852,6 +877,7 @@ LEFT JOIN empresa.filiais fil
        ON fil.id = cp.filial_id
 LEFT JOIN empresa.unidades_negocio un
        ON un.id = cp.unidade_negocio_id
+${whereCab}
 
 UNION ALL
 
@@ -866,25 +892,50 @@ SELECT
   cp.numero_documento,
   cp.tipo_documento,
   cp.status,
+  cp.status                          AS status_conta,
   cp.data_documento,
   cp.data_lancamento,
   cp.data_vencimento,
 
-  f.nome_fantasia                AS fornecedor,
+  -- Fornecedor
+  f.nome_fantasia                    AS fornecedor,
+  f.nome_fantasia                    AS fornecedor_nome,
+  cp.fornecedor_id                   AS fornecedor_id,
+  f.imagem_url                       AS fornecedor_imagem_url,
 
+  -- Dimensões
   cat_l.nome                         AS categoria_despesa,
-
+  cat_l.nome                         AS categoria_nome,
   dep_l.nome                         AS departamento,
+  dep_l.nome                         AS departamento_nome,
   cc_l.nome                          AS centro_custo,
+  cc_l.nome                          AS centro_lucro_nome,
   fil.nome                           AS filial,
+  fil.nome                           AS filial_nome,
   un_l.nome                          AS unidade_negocio,
+  NULL::text                         AS projeto_nome,
 
+  -- Valores
   l.valor_bruto,
   l.desconto                         AS valor_desconto,
   l.impostos                         AS valor_impostos,
   l.valor_liquido,
+  l.valor_liquido                    AS valor_a_pagar,
 
-  l.descricao                        AS descricao
+  -- Descrições
+  l.descricao                        AS descricao,
+  NULL::text                         AS observacao,
+  l.descricao                        AS descricao_conta,
+  cp.tipo_documento                  AS tipo_conta,
+
+  -- Anexos (não aplicável neste schema)
+  NULL::text                         AS storage_key,
+  NULL::text                         AS nome_arquivo,
+  NULL::text                         AS content_type,
+  NULL::bigint                       AS tamanho_bytes,
+
+  -- Campo padrão esperado pela UI
+  cp.id                              AS conta_id
 
 FROM financeiro.contas_pagar cp
 JOIN financeiro.contas_pagar_linhas l
@@ -902,10 +953,11 @@ LEFT JOIN empresa.filiais fil
        ON fil.id = cp.filial_id
 LEFT JOIN empresa.unidades_negocio un_l
        ON un_l.id = l.unidade_negocio_id
+${whereLin}
 
 ORDER BY
   conta_pagar_id,
-  tipo_registro DESC,   -- CABECALHO vem antes da LINHA
+  tipo_registro DESC,   -- CABEÇALHO vem antes da LINHA
   conta_pagar_linha_id;
       `
 
