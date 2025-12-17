@@ -18,38 +18,57 @@ export async function GET(req: Request) {
 
     const sql = `
       SELECT
-        l.id AS conta_pagar_linha_id,
+        l.id                                AS conta_pagar_linha_id,
         l.conta_pagar_id,
+
+        l.tipo_linha,
+        l.descricao                         AS descricao,
+
+        l.quantidade,
+        l.valor_unitario,
         l.valor_bruto,
-        l.desconto AS valor_desconto,
-        l.impostos AS valor_impostos,
+        l.desconto                          AS valor_desconto,
+        l.impostos                          AS valor_impostos,
         l.valor_liquido,
-        l.descricao,
-        -- Dimensões
-        cat.nome AS categoria_nome,
-        dep.nome AS departamento_nome,
-        cc.nome  AS centro_custo_nome,
-        NULL::text AS unidade_negocio
+
+        cat_l.nome                          AS categoria_despesa,
+
+        dep_l.nome                          AS departamento,
+        cc_l.nome                           AS centro_custo,
+        un_l.nome                           AS unidade_negocio
       FROM financeiro.contas_pagar_linhas l
-      LEFT JOIN financeiro.categorias_despesa cat ON cat.id = l.categoria_despesa_id
-      LEFT JOIN empresa.departamentos dep        ON dep.id = l.departamento_id
-      LEFT JOIN empresa.centros_custo cc         ON cc.id = l.centro_custo_id
-      -- Unidade de negócio opcional; mantendo nulo para compatibilidade
+
+      LEFT JOIN financeiro.categorias_despesa cat_l
+             ON cat_l.id = l.categoria_despesa_id
+
+      LEFT JOIN empresa.departamentos dep_l
+             ON dep_l.id = l.departamento_id
+
+      LEFT JOIN empresa.centros_custo cc_l
+             ON cc_l.id = l.centro_custo_id
+
+      LEFT JOIN empresa.unidades_negocio un_l
+             ON un_l.id = l.unidade_negocio_id
+
       WHERE l.conta_pagar_id = $1
+
       ORDER BY l.id ASC
     `.replace(/\n\s+/g, ' ').trim()
 
     type Row = {
       conta_pagar_linha_id: number
       conta_pagar_id: number
+      tipo_linha: string | null
+      descricao: string | null
+      quantidade: number | string | null
+      valor_unitario: number | string | null
       valor_bruto: number | string | null
       valor_desconto: number | string | null
       valor_impostos: number | string | null
       valor_liquido: number | string | null
-      descricao: string | null
-      categoria_nome: string | null
-      departamento_nome: string | null
-      centro_custo_nome: string | null
+      categoria_despesa: string | null
+      departamento: string | null
+      centro_custo: string | null
       unidade_negocio: string | null
     }
 

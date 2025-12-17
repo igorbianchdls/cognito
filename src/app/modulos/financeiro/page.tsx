@@ -135,30 +135,36 @@ export default function ModulosFinanceiroPage() {
           <thead>
             <tr className="text-gray-600">
               <th className="text-left p-2">Linha</th>
+              <th className="text-left p-2">Tipo</th>
               <th className="text-left p-2">Descrição</th>
-              <th className="text-left p-2">Categoria</th>
-              <th className="text-left p-2">Departamento</th>
-              <th className="text-left p-2">Centro Custo</th>
-              <th className="text-left p-2">Unidade</th>
+              <th className="text-right p-2">Qtd</th>
+              <th className="text-right p-2">Valor Unit.</th>
               <th className="text-right p-2">Bruto</th>
               <th className="text-right p-2">Desconto</th>
               <th className="text-right p-2">Impostos</th>
               <th className="text-right p-2">Líquido</th>
+              <th className="text-left p-2">Categoria</th>
+              <th className="text-left p-2">Departamento</th>
+              <th className="text-left p-2">Centro Custo</th>
+              <th className="text-left p-2">Unidade</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((r, i) => (
               <tr key={String(r['conta_pagar_linha_id'] ?? i)} className="border-t border-gray-200">
                 <td className="p-2">{String(r['conta_pagar_linha_id'] ?? i + 1)}</td>
+                <td className="p-2">{String(r['tipo_linha'] ?? '—')}</td>
                 <td className="p-2">{String(r['descricao'] ?? '—')}</td>
-                <td className="p-2">{String(r['categoria_nome'] ?? '')}</td>
-                <td className="p-2">{String(r['departamento_nome'] ?? '')}</td>
-                <td className="p-2">{String(r['centro_custo_nome'] ?? '')}</td>
-                <td className="p-2">{String(r['unidade_negocio'] ?? '')}</td>
+                <td className="p-2 text-right">{String(r['quantidade'] ?? '0')}</td>
+                <td className="p-2 text-right">{formatBRL(r['valor_unitario'])}</td>
                 <td className="p-2 text-right">{formatBRL(r['valor_bruto'])}</td>
                 <td className="p-2 text-right">{formatBRL(r['valor_desconto'])}</td>
                 <td className="p-2 text-right">{formatBRL(r['valor_impostos'])}</td>
                 <td className="p-2 text-right">{formatBRL(r['valor_liquido'])}</td>
+                <td className="p-2">{String(r['categoria_despesa'] ?? '')}</td>
+                <td className="p-2">{String(r['departamento'] ?? '')}</td>
+                <td className="p-2">{String(r['centro_custo'] ?? '')}</td>
+                <td className="p-2">{String(r['unidade_negocio'] ?? '')}</td>
               </tr>
             ))}
           </tbody>
