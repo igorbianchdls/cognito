@@ -788,160 +788,123 @@ ORDER BY total_gasto DESC;`;
       const rows = await runQuery<{ label: string; total: number | null }>(sql, params);
       return Response.json({ success: true, rows, sql_query: sql, sql_params: params });
     } else if (view === 'contas-a-pagar') {
-      // Contas a Pagar — CABEÇALHO + LINHAS (colapsar por tipo_registro na UI)
-      const paramsAP: unknown[] = []
-      let idxAP = 1
-      let whereCab = 'WHERE 1=1'
-      let whereLin = 'WHERE 1=1'
-      if (de) { whereCab += ` AND cp.data_vencimento >= $${idxAP}`; whereLin += ` AND cp.data_vencimento >= $${idxAP}`; paramsAP.push(de); idxAP++; }
-      if (ate) { whereCab += ` AND cp.data_vencimento <= $${idxAP}`; whereLin += ` AND cp.data_vencimento <= $${idxAP}`; paramsAP.push(ate); idxAP++; }
-      if (status) { whereCab += ` AND LOWER(cp.status::text) = $${idxAP}`; whereLin += ` AND LOWER(cp.status::text) = $${idxAP}`; paramsAP.push(status.toLowerCase()); idxAP++; }
-      if (fornecedor_id) { whereCab += ` AND cp.fornecedor_id = $${idxAP}`; whereLin += ` AND cp.fornecedor_id = $${idxAP}`; paramsAP.push(Number(fornecedor_id)); idxAP++; }
-
-      const unionSql = `
--- =========================
--- CABEÇALHO
--- =========================
+      // Contas a Pagar — somente CABEÇALHOS (query fornecida)
+      const headerSql = `
 SELECT
-  'CABECALHO'                        AS tipo_registro,
-  cp.id                              AS conta_pagar_id,
-  NULL                               AS conta_pagar_linha_id,
+  cp.id                                AS conta_pagar_id,
 
   cp.numero_documento,
   cp.tipo_documento,
   cp.status,
-  cp.status                          AS status_conta,
   cp.data_documento,
   cp.data_lancamento,
   cp.data_vencimento,
 
-  f.nome_fantasia                AS fornecedor,
-  f.nome_fantasia                AS fornecedor_nome,
-  cp.fornecedor_id               AS fornecedor_id,
+  f.nome_fantasia                      AS fornecedor,
 
-  cat_h.nome                     AS categoria_despesa,
-  cat_h.nome                     AS categoria_nome,
+  cat_h.nome                           AS categoria_despesa,
 
-  dep_h.nome                     AS departamento,
-  dep_h.nome                     AS departamento_nome,
-  cc_h.nome                      AS centro_custo,
-  cc_h.nome                      AS centro_lucro_nome,
-  fil.nome                       AS filial,
-  fil.nome                       AS filial_nome,
-  un.nome                        AS unidade_negocio,
+  dep_h.nome                           AS departamento,
+  cc_h.nome                            AS centro_custo,
+  fil.nome                             AS filial,
+  un.nome                              AS unidade_negocio,
 
   cp.valor_bruto,
   cp.valor_desconto,
   cp.valor_impostos,
   cp.valor_liquido,
-  cp.valor_liquido               AS valor_a_pagar,
 
-  cp.observacao                  AS descricao,
-  cp.observacao                  AS observacao,
-  cp.observacao                  AS descricao_conta,
-  cp.tipo_documento              AS tipo_conta,
-
-  NULL::text                     AS storage_key,
-  NULL::text                     AS nome_arquivo,
-  NULL::text                     AS content_type,
-  NULL::bigint                   AS tamanho_bytes,
-
-  cp.id                          AS conta_id
+  cp.observacao                        AS descricao
 
 FROM financeiro.contas_pagar cp
+
 LEFT JOIN entidades.fornecedores f
        ON f.id = cp.fornecedor_id
+
 LEFT JOIN financeiro.categorias_despesa cat_h
        ON cat_h.id = cp.categoria_despesa_id
+
 LEFT JOIN empresa.departamentos dep_h
        ON dep_h.id = cp.departamento_id
+
 LEFT JOIN empresa.centros_custo cc_h
        ON cc_h.id = cp.centro_custo_id
+
 LEFT JOIN empresa.filiais fil
        ON fil.id = cp.filial_id
+
 LEFT JOIN empresa.unidades_negocio un
        ON un.id = cp.unidade_negocio_id
-${whereCab}
 
-UNION ALL
+ORDER BY
+  cp.data_vencimento DESC,
+  cp.id DESC
+      `.replace(/\n\s+/g, ' ').trim()
 
--- =========================
--- LINHAS
--- =========================
+      const rows = await runQuery<Record<string, unknown>>(headerSql, [])
+      const total = rows.length
+      return Response.json({ success: true, view, page, pageSize, total, rows, sql: headerSql, params: '[]' }, { headers: { 'Cache-Control': 'no-store' } })
+    } else if (view === 'contas-a-pagar-cabecalhos' || view === 'contas-a-pagar-cabecalhos') {
+      // Contas a Pagar — Cabeçalhos (query solicitada)
+      try {
+        const sql = `
 SELECT
-  'LINHA'                            AS tipo_registro,
-  cp.id                              AS conta_pagar_id,
-  l.id                               AS conta_pagar_linha_id,
+  cp.id                                AS conta_pagar_id,
 
   cp.numero_documento,
   cp.tipo_documento,
   cp.status,
-  cp.status                          AS status_conta,
   cp.data_documento,
   cp.data_lancamento,
   cp.data_vencimento,
 
-  f.nome_fantasia                AS fornecedor,
-  f.nome_fantasia                AS fornecedor_nome,
-  cp.fornecedor_id               AS fornecedor_id,
+  f.nome_fantasia                      AS fornecedor,
 
-  cat_l.nome                     AS categoria_despesa,
-  cat_l.nome                     AS categoria_nome,
+  cat_h.nome                           AS categoria_despesa,
 
-  dep_l.nome                     AS departamento,
-  dep_l.nome                     AS departamento_nome,
-  cc_l.nome                      AS centro_custo,
-  cc_l.nome                      AS centro_lucro_nome,
-  fil.nome                       AS filial,
-  fil.nome                       AS filial_nome,
-  un_l.nome                      AS unidade_negocio,
+  dep_h.nome                           AS departamento,
+  cc_h.nome                            AS centro_custo,
+  fil.nome                             AS filial,
+  un.nome                              AS unidade_negocio,
 
-  l.valor_bruto,
-  l.desconto                     AS valor_desconto,
-  l.impostos                     AS valor_impostos,
-  l.valor_liquido,
-  l.valor_liquido                AS valor_a_pagar,
+  cp.valor_bruto,
+  cp.valor_desconto,
+  cp.valor_impostos,
+  cp.valor_liquido,
 
-  l.descricao                    AS descricao,
-  NULL::text                     AS observacao,
-  l.descricao                    AS descricao_conta,
-  cp.tipo_documento              AS tipo_conta,
-
-  NULL::text                     AS storage_key,
-  NULL::text                     AS nome_arquivo,
-  NULL::text                     AS content_type,
-  NULL::bigint                   AS tamanho_bytes,
-
-  cp.id                          AS conta_id
+  cp.observacao                        AS descricao
 
 FROM financeiro.contas_pagar cp
-JOIN financeiro.contas_pagar_linhas l
-     ON l.conta_pagar_id = cp.id
 
 LEFT JOIN entidades.fornecedores f
        ON f.id = cp.fornecedor_id
-LEFT JOIN financeiro.categorias_despesa cat_l
-       ON cat_l.id = l.categoria_despesa_id
-LEFT JOIN empresa.departamentos dep_l
-       ON dep_l.id = l.departamento_id
-LEFT JOIN empresa.centros_custo cc_l
-       ON cc_l.id = l.centro_custo_id
+
+LEFT JOIN financeiro.categorias_despesa cat_h
+       ON cat_h.id = cp.categoria_despesa_id
+
+LEFT JOIN empresa.departamentos dep_h
+       ON dep_h.id = cp.departamento_id
+
+LEFT JOIN empresa.centros_custo cc_h
+       ON cc_h.id = cp.centro_custo_id
+
 LEFT JOIN empresa.filiais fil
        ON fil.id = cp.filial_id
-LEFT JOIN empresa.unidades_negocio un_l
-       ON un_l.id = l.unidade_negocio_id
-${whereLin}
+
+LEFT JOIN empresa.unidades_negocio un
+       ON un.id = cp.unidade_negocio_id
 
 ORDER BY
-  conta_pagar_id,
-  tipo_registro DESC,   -- CABECALHO vem antes da LINHA
-  conta_pagar_linha_id
-      `.replace(/\n\s+/g, ' ').trim()
+  cp.data_vencimento DESC,
+  cp.id DESC;`.replace(/\n\s+/g, ' ').trim()
 
-      const listSql = unionSql
-      const rows = await runQuery<Record<string, unknown>>(listSql, paramsAP)
-      const total = rows.length
-      return Response.json({ success: true, view, page, pageSize, total, rows, sql: listSql, params: JSON.stringify(paramsAP) }, { headers: { 'Cache-Control': 'no-store' } })
+        const rows = await runQuery<Record<string, unknown>>(sql, [])
+        const total = rows.length
+        return Response.json({ success: true, view, page, pageSize, total, rows, sql, params: '[]' }, { headers: { 'Cache-Control': 'no-store' } })
+      } catch (error) {
+        const msg = error instanceof Error ? error.message : String(error)
+        return Response.json({ success: false, message: msg }, { status: 400 })
+      }
     } else if (view === 'pagamentos-efetuados') {
       // Pagamentos Efetuados – dimensões vindas do cabeçalho (conta_a_pagar)
       baseSql = `FROM financeiro.lancamentos_financeiros lf
