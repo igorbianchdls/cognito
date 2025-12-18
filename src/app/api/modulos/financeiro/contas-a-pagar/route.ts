@@ -1,4 +1,5 @@
 import { withTransaction } from '@/lib/postgres'
+import { inngest } from '@/lib/inngest'
 
 export const maxDuration = 300
 export const dynamic = 'force-dynamic'
@@ -237,8 +238,29 @@ export async function POST(req: Request) {
           )
         }
 
-        return { id, linhas_count: itensCount, itens_count: itensCount }
+        return { id, tenant_id, fornecedor_id, categoria_id, conta_financeira_id, numero_documento, data_lancamento, valor_liquido: Math.abs(valor), descricao, linhas_count: itensCount, itens_count: itensCount }
       })
+
+      // Dispara evento para criação automática de lançamento contábil (Inngest)
+      try {
+        await inngest.send({
+          name: 'financeiro/contas_a_pagar/criada',
+          data: {
+            conta_pagar_id: result.id,
+            tenant_id: result.tenant_id,
+            fornecedor_id: result.fornecedor_id,
+            categoria_despesa_id: result.categoria_id,
+            conta_financeira_id: result.conta_financeira_id,
+            numero_documento: result.numero_documento,
+            data_lancamento: result.data_lancamento,
+            valor_liquido: result.valor_liquido,
+            descricao: result.descricao,
+            subtipo: 'principal',
+          },
+        })
+      } catch (e) {
+        console.warn('Falha ao enviar evento Inngest contas_a_pagar.criada', e)
+      }
 
       return Response.json({ success: true, id: result.id, linhas_count: result.linhas_count, itens_count: result.itens_count })
     }
@@ -327,8 +349,29 @@ export async function POST(req: Request) {
       )
       const id = Number(insert.rows[0]?.id)
       if (!id) throw new Error('Falha ao criar conta a pagar')
-      return { id }
+      return { id, tenant_id, fornecedor_id, categoria_id, conta_financeira_id, data_lancamento, valor_liquido: Math.abs(valor), descricao }
     })
+
+    // Dispara evento Inngest também para modo FormData
+    try {
+      await inngest.send({
+        name: 'financeiro/contas_a_pagar/criada',
+        data: {
+          conta_pagar_id: result.id,
+          tenant_id: result.tenant_id,
+          fornecedor_id: result.fornecedor_id,
+          categoria_despesa_id: result.categoria_id,
+          conta_financeira_id: result.conta_financeira_id,
+          numero_documento: null,
+          data_lancamento: result.data_lancamento,
+          valor_liquido: result.valor_liquido,
+          descricao: result.descricao,
+          subtipo: 'principal',
+        },
+      })
+    } catch (e) {
+      console.warn('Falha ao enviar evento Inngest (FormData) contas_a_pagar.criada', e)
+    }
 
     return Response.json({ success: true, id: result.id })
   } catch (error) {
