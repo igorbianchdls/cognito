@@ -183,6 +183,7 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
     atualizado_em: 'cl.atualizado_em',
   },
   'categorias-despesa': {
+    id: 'cd.id',
     codigo: 'cd.codigo',
     nome: 'cd.nome',
     descricao: 'cd.descricao',
@@ -190,6 +191,8 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
     natureza: 'cd.natureza',
     categoria_pai_id: 'cd.categoria_pai_id',
     plano_conta_id: 'cd.plano_conta_id',
+    criado_em: 'cd.criado_em',
+    atualizado_em: 'cd.atualizado_em',
   },
   projetos: {
     id: 'p.id',
@@ -1255,13 +1258,16 @@ ORDER BY
       whereDateCol = 'cl.criado_em';
     } else if (view === 'categorias-despesa') {
       baseSql = `FROM financeiro.categorias_despesa cd`;
-      selectSql = `SELECT cd.codigo,
+      selectSql = `SELECT cd.id,
+                          cd.codigo,
                           cd.nome,
                           cd.descricao,
                           cd.tipo,
                           cd.natureza,
                           cd.categoria_pai_id,
-                          cd.plano_conta_id`;
+                          cd.plano_conta_id,
+                          cd.criado_em,
+                          cd.atualizado_em`;
       whereDateCol = 'cd.criado_em';
     } else if (view === 'projetos') {
       baseSql = `FROM financeiro.projetos p`;

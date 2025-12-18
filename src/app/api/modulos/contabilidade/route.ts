@@ -687,6 +687,28 @@ export async function GET(req: NextRequest) {
                     pc.criado_em,
                     pc.atualizado_em`
       whereDateCol = 'pc.criado_em'
+      // Filtros opcionais: aceita_lancamento, tipo, q
+      const aceitaParam = (searchParams.get('aceita_lancamento') || '').toLowerCase()
+      if (aceitaParam === '1' || aceitaParam === 'true' || aceitaParam === 'yes') {
+        conditions.push('pc.aceita_lancamento = TRUE')
+      }
+      const tipoParam = searchParams.get('tipo') || ''
+      if (tipoParam) {
+        const allowed = ['Ativo','Passivo','Patrimônio Líquido','Receita','Custo','Despesa']
+        const tipos = tipoParam.split(/[|,]/).map(s => s.trim()).filter(s => allowed.includes(s))
+        if (tipos.length) {
+          const ph = tipos.map((_t, i0) => `$${idx + i0}`).join(',')
+          conditions.push(`pc.tipo_conta IN (${ph})`)
+          for (const t of tipos) params.push(t)
+          idx += tipos.length
+        }
+      }
+      const q = searchParams.get('q') || ''
+      if (q) {
+        conditions.push(`(pc.codigo ILIKE $${idx} OR pc.nome ILIKE $${idx + 1})`)
+        params.push(`%${q}%`, `%${q}%`)
+        idx += 2
+      }
     } else if (view === 'categorias') {
       baseSql = `FROM contabilidade.plano_contas_categorias pcc`
       selectSql = `SELECT

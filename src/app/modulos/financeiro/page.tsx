@@ -15,7 +15,7 @@ import DataTable, { type TableData } from '@/components/widgets/Table'
 import DataToolbar from '@/components/modulos/DataToolbar'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/stores/modulos/moduleUiStore'
 import type { Opcao } from '@/components/modulos/TabsNav'
-import { CreditCard, ArrowDownCircle, ArrowUpCircle, List, Landmark, Wallet, Activity, CheckCheck, Receipt, Building2, FileText, Calendar, CalendarClock, DollarSign, CheckCircle2, Tag, Folder, PieChart, Building, User } from 'lucide-react'
+import { CreditCard, ArrowDownCircle, ArrowUpCircle, List, Landmark, Wallet, Activity, CheckCheck, Receipt, Building2, FileText, Calendar, CalendarClock, DollarSign, CheckCircle2, Tag, Folder, PieChart, Building, User, Pencil } from 'lucide-react'
 import DocumentViewer from '@/components/modulos/documentos/DocumentViewer'
 import IconLabelHeader from '@/components/widgets/IconLabelHeader'
 import EntityDisplay from '@/components/modulos/EntityDisplay'
@@ -29,6 +29,7 @@ import CadastroPagamentoEfetuadoSheet from '@/components/modulos/financeiro/Cada
 import CadastroPagamentoRecebidoSheet from '@/components/modulos/financeiro/CadastroPagamentoRecebidoSheet'
 import CadastroBancoSheet from '@/components/modulos/financeiro/CadastroBancoSheet'
 import CadastroContaFinanceiraSheet from '@/components/modulos/financeiro/CadastroContaFinanceiraSheet'
+import CategoriaDespesaEditorModal from '@/components/modulos/financeiro/CategoriaDespesaEditorModal'
 
 type Row = TableData
 
@@ -493,6 +494,7 @@ export default function ModulosFinanceiroPage() {
         ]
       case 'categorias-despesa':
         return [
+          { accessorKey: 'id', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="ID" /> },
           { accessorKey: 'codigo', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Código" /> },
           { accessorKey: 'nome', header: () => <IconLabelHeader icon={<FileText className="h-3.5 w-3.5" />} label="Nome" /> },
           { accessorKey: 'descricao', header: () => <IconLabelHeader icon={<FileText className="h-3.5 w-3.5" />} label="Descrição" /> },
@@ -500,6 +502,16 @@ export default function ModulosFinanceiroPage() {
           { accessorKey: 'natureza', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Natureza" /> },
           { accessorKey: 'categoria_pai_id', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Categoria Pai ID" /> },
           { accessorKey: 'plano_conta_id', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Plano Conta ID" /> },
+          { accessorKey: 'acoes', header: () => <IconLabelHeader icon={<Pencil className="h-3.5 w-3.5" />} label="Ações" />, cell: ({ row }) => {
+            const idRaw = row.original['id']
+            const id = idRaw ? Number(idRaw) : NaN
+            return (
+              <button
+                className="inline-flex items-center text-xs text-violet-700 hover:underline"
+                onClick={() => { if (Number.isFinite(id)) { setSelectedCategoriaDespesaId(id); setCategoriaModalOpen(true) } }}
+              >Editar…</button>
+            )
+          } },
         ]
       case 'pagamentos-efetuados':
         return [
@@ -572,6 +584,9 @@ export default function ModulosFinanceiroPage() {
   const [docName, setDocName] = useState<string | null>(null)
   const [docType, setDocType] = useState<string | null>(null)
   const [docLancId, setDocLancId] = useState<number | null>(null)
+  // Editor Categoria Despesa (modal)
+  const [categoriaModalOpen, setCategoriaModalOpen] = useState(false)
+  const [selectedCategoriaDespesaId, setSelectedCategoriaDespesaId] = useState<number | null>(null)
 
   // Editor (fornecedor + conta)
   const [editorOpen, setEditorOpen] = useState(false)
@@ -1013,6 +1028,12 @@ export default function ModulosFinanceiroPage() {
         contentType={docType ?? undefined}
         lancamentoId={docLancId ?? undefined}
         onChanged={() => setReloadKey((k) => k + 1)}
+      />
+      <CategoriaDespesaEditorModal
+        open={categoriaModalOpen}
+        onOpenChange={(v) => { setCategoriaModalOpen(v); if (!v) setSelectedCategoriaDespesaId(null) }}
+        categoriaId={selectedCategoriaDespesaId}
+        onSaved={() => setReloadKey(k => k + 1)}
       />
     </SidebarProvider>
   )
