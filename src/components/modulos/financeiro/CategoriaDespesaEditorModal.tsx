@@ -39,6 +39,11 @@ export default function CategoriaDespesaEditorModal({
   const [error, setError] = React.useState<string | null>(null)
   const [cat, setCat] = React.useState<Categoria | null>(null)
   const [selectedPlanoId, setSelectedPlanoId] = React.useState<number | null>(null)
+  const [codigo, setCodigo] = React.useState('')
+  const [nome, setNome] = React.useState('')
+  const [descricao, setDescricao] = React.useState('')
+  const [tipo, setTipo] = React.useState('')
+  const [natureza, setNatureza] = React.useState('')
   const [q, setQ] = React.useState('')
   const [options, setOptions] = React.useState<PlanoConta[]>([])
   const [optLoading, setOptLoading] = React.useState(false)
@@ -57,6 +62,11 @@ export default function CategoriaDespesaEditorModal({
         if (!cancel) {
           setCat(row)
           setSelectedPlanoId(row.plano_conta_id ?? null)
+          setCodigo(String(row.codigo ?? ''))
+          setNome(String(row.nome ?? ''))
+          setDescricao(String(row.descricao ?? ''))
+          setTipo(String(row.tipo ?? ''))
+          setNatureza(String(row.natureza ?? ''))
         }
       } catch (e) {
         if (!cancel) setError(e instanceof Error ? e.message : 'Falha ao carregar categoria')
@@ -99,7 +109,15 @@ export default function CategoriaDespesaEditorModal({
     if (!categoriaId) return
     try {
       setSaving(true); setError(null)
-      const res = await fetch(`/api/modulos/financeiro/categorias-despesa/${categoriaId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ plano_conta_id: selectedPlanoId }) })
+      const body = {
+        plano_conta_id: selectedPlanoId,
+        codigo: codigo || null,
+        nome: nome || null,
+        descricao: descricao || null,
+        tipo: tipo || null,
+        natureza: natureza || null,
+      }
+      const res = await fetch(`/api/modulos/financeiro/categorias-despesa/${categoriaId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       const j = await res.json()
       if (!res.ok || !j?.success) throw new Error(j?.message || `HTTP ${res.status}`)
       onSaved?.()
@@ -127,10 +145,32 @@ export default function CategoriaDespesaEditorModal({
         ) : error ? (
           <div className="p-3 text-sm text-red-600">{error}</div>
         ) : cat ? (
-          <div className="space-y-3">
+          <div className="space-y-4">
             <div className="text-sm">
               <div><span className="text-gray-500">Categoria:</span> <strong>{cat.codigo ?? '—'} {cat.nome ?? ''}</strong></div>
               <div className="text-gray-600">{cat.descricao ?? ''}</div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-sm font-medium">Código</label>
+                <Input value={codigo} onChange={(e) => setCodigo(e.target.value)} placeholder="Ex.: 6.1.1" />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Nome</label>
+                <Input value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Ex.: Despesa XYZ" />
+              </div>
+              <div className="col-span-2">
+                <label className="text-sm font-medium">Descrição</label>
+                <Input value={descricao} onChange={(e) => setDescricao(e.target.value)} placeholder="Descrição da categoria" />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Tipo</label>
+                <Input value={tipo} onChange={(e) => setTipo(e.target.value)} placeholder="Ex.: Despesa" />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Natureza</label>
+                <Input value={natureza} onChange={(e) => setNatureza(e.target.value)} placeholder="Ex.: Operacional" />
+              </div>
             </div>
             <div className="space-y-1">
               <label className="text-sm font-medium">Plano de Contas</label>
@@ -175,4 +215,3 @@ export default function CategoriaDespesaEditorModal({
     </Dialog>
   )
 }
-

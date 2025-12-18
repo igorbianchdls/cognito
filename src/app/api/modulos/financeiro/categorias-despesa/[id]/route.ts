@@ -31,12 +31,29 @@ export async function PATCH(req: Request) {
     const idStr = parts[parts.length - 1] || ''
     const id = Number(idStr)
     if (!Number.isFinite(id)) return Response.json({ success: false, message: 'ID inválido' }, { status: 400 })
-    const body = (await req.json()) as Partial<{ plano_conta_id?: number | null }>
+    const body = (await req.json()) as Partial<{
+      plano_conta_id?: number | null
+      codigo?: string | null
+      nome?: string | null
+      descricao?: string | null
+      tipo?: string | null
+      natureza?: string | null
+    }>
     const planoId = body.plano_conta_id === null ? null : (body.plano_conta_id !== undefined ? Number(body.plano_conta_id) : undefined)
-    if (planoId === undefined) return Response.json({ success: false, message: 'plano_conta_id é obrigatório no body' }, { status: 400 })
+    // pelo menos um campo deve ser enviado
+    if (
+      planoId === undefined &&
+      body.codigo === undefined &&
+      body.nome === undefined &&
+      body.descricao === undefined &&
+      body.tipo === undefined &&
+      body.natureza === undefined
+    ) {
+      return Response.json({ success: false, message: 'Nenhum campo para atualizar' }, { status: 400 })
+    }
 
     const out = await withTransaction(async (client) => {
-      if (planoId !== null) {
+      if (planoId !== undefined && planoId !== null) {
         // valida plano: existe, aceita_lancamento e tipo contábil permitido (Custo/Despesa)
         const chk = await client.query(
           `SELECT id FROM contabilidade.plano_contas WHERE id = $1 AND aceita_lancamento = TRUE AND tipo_conta IN ('Custo','Despesa') LIMIT 1`,
@@ -44,7 +61,20 @@ export async function PATCH(req: Request) {
         )
         if (!chk.rows.length) throw new Error('Plano de contas inválido para mapeamento (não lançável ou tipo não permitido)')
       }
-      await client.query(`UPDATE financeiro.categorias_despesa SET plano_conta_id = $1, atualizado_em = NOW() WHERE id = $2`, [planoId, id])
+      // build dynamic update
+      const sets: string[] = []
+      const params: unknown[] = []
+      let i = 1
+      if (planoId !== undefined) { sets.push(`plano_conta_id = $${i++}`); params.push(planoId) }
+      if (body.codigo !== undefined) { sets.push(`codigo = $${i++}`); params.push(body.codigo) }
+      if (body.nome !== undefined) { sets.push(`nome = $${i++}`); params.push(body.nome) }
+      if (body.descricao !== undefined) { sets.push(`descricao = $${i++}`); params.push(body.descricao) }
+      if (body.tipo !== undefined) { sets.push(`tipo = $${i++}`); params.push(body.tipo) }
+      if (body.natureza !== undefined) { sets.push(`natureza = $${i++}`); params.push(body.natureza) }
+      sets.push(`atualizado_em = NOW()`)
+      const sql = `UPDATE financeiro.categorias_despesa SET ${sets.join(', ')} WHERE id = $${i} RETURNING id`
+      params.push(id)
+      await client.query(sql, params)
       const res = await client.query(`SELECT id, codigo, nome, descricao, tipo, natureza, categoria_pai_id, plano_conta_id, criado_em, atualizado_em FROM financeiro.categorias_despesa WHERE id = $1`, [id])
       return res.rows[0]
     })
