@@ -8,8 +8,9 @@ type PostBody = {
   origem: string
   subtipo?: string | null
   plano_conta_id: number | string
-  conta_debito_id: number | string
   conta_credito_id: number | string
+  // conta_debito_id é redundante: se enviado, será aceito como override; senão, usamos plano_conta_id
+  conta_debito_id?: number | string | null
   descricao?: string | null
 }
 
@@ -19,14 +20,16 @@ export async function POST(req: Request) {
     const origem = String(body.origem || '').trim().toLowerCase()
     const subtipo = body.subtipo !== undefined && body.subtipo !== null ? String(body.subtipo).trim() : null
     const plano_conta_id = Number(body.plano_conta_id)
-    const conta_debito_id = Number(body.conta_debito_id)
     const conta_credito_id = Number(body.conta_credito_id)
+    const conta_debito_id = body.conta_debito_id === null || body.conta_debito_id === undefined
+      ? plano_conta_id
+      : Number(body.conta_debito_id)
     const descricao = body.descricao !== undefined && body.descricao !== null ? String(body.descricao).trim() : null
 
     if (!origem) return Response.json({ success: false, message: 'origem é obrigatório' }, { status: 400 })
     if (!Number.isFinite(plano_conta_id) || plano_conta_id <= 0) return Response.json({ success: false, message: 'plano_conta_id inválido' }, { status: 400 })
-    if (!Number.isFinite(conta_debito_id) || conta_debito_id <= 0) return Response.json({ success: false, message: 'conta_debito_id inválido' }, { status: 400 })
     if (!Number.isFinite(conta_credito_id) || conta_credito_id <= 0) return Response.json({ success: false, message: 'conta_credito_id inválido' }, { status: 400 })
+    if (!Number.isFinite(conta_debito_id) || conta_debito_id <= 0) return Response.json({ success: false, message: 'conta_debito_id inválido (use plano_conta_id ou informe override)' }, { status: 400 })
 
     const { id } = await withTransaction(async (client) => {
       // valida contas (opcional mas útil)

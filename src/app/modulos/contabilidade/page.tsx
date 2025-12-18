@@ -219,14 +219,10 @@ export default function ModulosContabilidadePage() {
         ]
       case 'regras-contabeis':
         return [
-          { accessorKey: 'id', header: () => <IconLabelHeader icon={<Wrench className="h-3.5 w-3.5" />} label="ID" /> },
           { accessorKey: 'origem', header: () => <IconLabelHeader icon={<FileText className="h-3.5 w-3.5" />} label="Origem" /> },
           { accessorKey: 'subtipo', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Subtipo" /> },
-          { accessorKey: 'plano_conta_id', header: () => <IconLabelHeader icon={<Briefcase className="h-3.5 w-3.5" />} label="Plano Conta ID" /> },
-          { accessorKey: 'conta_debito_id', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Conta Débito ID" /> },
           { accessorKey: 'codigo_conta_debito', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Cód. Débito" /> },
           { accessorKey: 'conta_debito', header: () => <IconLabelHeader icon={<BookOpen className="h-3.5 w-3.5" />} label="Conta Débito" /> },
-          { accessorKey: 'conta_credito_id', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Conta Crédito ID" /> },
           { accessorKey: 'codigo_conta_credito', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Cód. Crédito" /> },
           { accessorKey: 'conta_credito', header: () => <IconLabelHeader icon={<BookOpen className="h-3.5 w-3.5" />} label="Conta Crédito" /> },
           { accessorKey: 'descricao', header: () => <IconLabelHeader icon={<FileText className="h-3.5 w-3.5" />} label="Descrição" /> },

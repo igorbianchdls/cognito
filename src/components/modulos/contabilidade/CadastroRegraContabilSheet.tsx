@@ -22,13 +22,10 @@ export default function CadastroRegraContabilSheet({ onSaved }: { onSaved?: () =
   // Lookups (plano/contas) com busca
   type PlanoRow = { id: number; codigo: string; nome: string; aceita_lancamento?: boolean }
   const [qPlano, setQPlano] = React.useState('')
-  const [qDebito, setQDebito] = React.useState('')
   const [qCredito, setQCredito] = React.useState('')
   const [optsPlano, setOptsPlano] = React.useState<PlanoRow[]>([])
-  const [optsDebito, setOptsDebito] = React.useState<PlanoRow[]>([])
   const [optsCredito, setOptsCredito] = React.useState<PlanoRow[]>([])
   const [loadingPlano, setLoadingPlano] = React.useState(false)
-  const [loadingDebito, setLoadingDebito] = React.useState(false)
   const [loadingCredito, setLoadingCredito] = React.useState(false)
 
   async function fetchPlanoOpts(q: string): Promise<PlanoRow[]> {
@@ -47,7 +44,6 @@ export default function CadastroRegraContabilSheet({ onSaved }: { onSaved?: () =
 
   // Debounced loaders
   React.useEffect(() => { let c = false; (async () => { setLoadingPlano(true); try { setOptsPlano(await fetchPlanoOpts(qPlano)) } finally { if (!c) setLoadingPlano(false) } })(); return () => { c = true } }, [qPlano])
-  React.useEffect(() => { let c = false; (async () => { setLoadingDebito(true); try { setOptsDebito(await fetchPlanoOpts(qDebito)) } finally { if (!c) setLoadingDebito(false) } })(); return () => { c = true } }, [qDebito])
   React.useEffect(() => { let c = false; (async () => { setLoadingCredito(true); try { setOptsCredito(await fetchPlanoOpts(qCredito)) } finally { if (!c) setLoadingCredito(false) } })(); return () => { c = true } }, [qCredito])
 
   async function handleSave() {
@@ -65,7 +61,7 @@ export default function CadastroRegraContabilSheet({ onSaved }: { onSaved?: () =
       const j = await res.json()
       if (!res.ok || !j?.success) throw new Error(j?.message || `HTTP ${res.status}`)
       setOpen(false)
-      setOrigem('contas_a_pagar'); setSubtipo('principal'); setPlanoContaId(null); setContaDebitoId(null); setContaCreditoId(null); setDescricao('')
+      setOrigem('contas_a_pagar'); setSubtipo('principal'); setPlanoContaId(null); setContaCreditoId(null); setDescricao('')
       onSaved?.()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Falha ao salvar')
@@ -105,7 +101,7 @@ export default function CadastroRegraContabilSheet({ onSaved }: { onSaved?: () =
                 <Input value={subtipo} onChange={(e) => setSubtipo(e.target.value)} placeholder="ex.: principal" />
               </div>
               <div className="col-span-2">
-                <Label>Plano de Contas (selecionar pelo código/nome)</Label>
+                <Label>Plano de Contas (Débito)</Label>
                 <div className="flex items-center gap-2 mb-2">
                   <Input value={qPlano} onChange={(e) => setQPlano(e.target.value)} placeholder="Buscar plano por código/nome…" />
                 </div>
@@ -124,26 +120,6 @@ export default function CadastroRegraContabilSheet({ onSaved }: { onSaved?: () =
                 </div>
                 {planoContaId && (
                   <div className="text-xs text-gray-600 mt-1">Selecionado: {optsPlano.find(o => o.id === planoContaId)?.codigo} — {optsPlano.find(o => o.id === planoContaId)?.nome}</div>
-                )}
-              </div>
-              <div>
-                <Label>Conta Débito</Label>
-                <Input value={qDebito} onChange={(e) => setQDebito(e.target.value)} placeholder="Buscar conta débito…" className="mb-2" />
-                <div className="max-h-40 overflow-auto border rounded">
-                  {loadingDebito ? <div className="p-2 text-xs text-gray-500">Carregando…</div> : (
-                    <ul>
-                      {optsDebito.map(opt => (
-                        <li key={opt.id}>
-                          <button type="button" className={`w-full text-left px-2 py-1 text-sm hover:bg-gray-50 ${contaDebitoId === opt.id ? 'bg-amber-50' : ''}`} onClick={() => setContaDebitoId(opt.id)}>
-                            <span className="font-mono text-[11px] text-gray-700">{opt.codigo}</span> — {opt.nome}
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-                {contaDebitoId && (
-                  <div className="text-xs text-gray-600 mt-1">Selecionada: {optsDebito.find(o => o.id === contaDebitoId)?.codigo} — {optsDebito.find(o => o.id === contaDebitoId)?.nome}</div>
                 )}
               </div>
               <div>
@@ -176,7 +152,7 @@ export default function CadastroRegraContabilSheet({ onSaved }: { onSaved?: () =
             <SheetClose asChild>
               <Button variant="outline">Cancelar</Button>
             </SheetClose>
-            <Button onClick={handleSave} disabled={saving || !planoContaId || !contaDebitoId || !contaCreditoId}>Salvar</Button>
+            <Button onClick={handleSave} disabled={saving || !planoContaId || !contaCreditoId}>Salvar</Button>
           </SheetFooter>
         </div>
       </SheetContent>
