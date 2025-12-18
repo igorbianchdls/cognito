@@ -21,6 +21,9 @@ export async function POST(req: Request) {
       const statusRaw = toStr(body['status'] || 'pendente').trim().toLowerCase()
       const status = ['pendente', 'pago', 'cancelado'].includes(statusRaw) ? statusRaw : 'pendente'
       const data_lancamento = toStr(body['data_lancamento'] || new Date().toISOString().slice(0,10))
+      const data_documento = toStr((body as any)['data_emissao'] || (body as any)['data_documento'] || '')
+      const numero_documento = toStr((body as any)['numero_nota_fiscal'] || (body as any)['numero_documento'] || '')
+      const tipo_documento = toStr((body as any)['tipo_documento'] || '')
       const data_vencimento = toStr(body['data_vencimento'] || '')
       const tenant_id = body['tenant_id'] !== undefined && body['tenant_id'] !== null ? toNum(body['tenant_id']) : 1
       const linhas = Array.isArray(body['linhas']) ? (body['linhas'] as Array<Record<string, unknown>>) : []
@@ -31,6 +34,7 @@ export async function POST(req: Request) {
       const departamento_id = body['departamento_id'] !== undefined && body['departamento_id'] !== null ? toNum(body['departamento_id']) : null
       const filial_id = body['filial_id'] !== undefined && body['filial_id'] !== null ? toNum(body['filial_id']) : null
       const projeto_id = body['projeto_id'] !== undefined && body['projeto_id'] !== null ? toNum(body['projeto_id']) : null
+      const unidade_negocio_id = (body as any)['unidade_negocio_id'] !== undefined && (body as any)['unidade_negocio_id'] !== null ? toNum((body as any)['unidade_negocio_id']) : null
       let valor = body['valor'] !== undefined && body['valor'] !== null ? toNum(body['valor']) : NaN
 
       if (!fornecedor_id || fornecedor_id <= 0) return Response.json({ success: false, message: 'fornecedor_id é obrigatório' }, { status: 400 })
@@ -51,15 +55,51 @@ export async function POST(req: Request) {
       }
 
       const result = await withTransaction(async (client) => {
-        // Header
+        // Header (novo schema: financeiro.contas_pagar)
         const ins = await client.query(
-          `INSERT INTO financeiro.lancamentos_financeiros (
-             tenant_id, tipo, descricao, valor, data_lancamento, data_vencimento, status,
-             fornecedor_id, categoria_id, centro_custo_id, departamento_id, filial_id, projeto_id
-           ) VALUES ($1, 'conta_a_pagar', $2, $3, $4, $5, $6,
-                      $7, $8, $9, $10, $11, $12)
+          `INSERT INTO financeiro.contas_pagar (
+             tenant_id,
+             fornecedor_id,
+             categoria_despesa_id,
+             centro_custo_id,
+             departamento_id,
+             filial_id,
+             unidade_negocio_id,
+             numero_documento,
+             tipo_documento,
+             status,
+             data_documento,
+             data_lancamento,
+             data_vencimento,
+             valor_bruto,
+             valor_desconto,
+             valor_impostos,
+             valor_liquido,
+             observacao
+           ) VALUES (
+             $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18
+           )
             RETURNING id`,
-          [tenant_id, descricao, Math.abs(valor), data_lancamento, data_vencimento, status, fornecedor_id, categoria_id, centro_custo_id, departamento_id, filial_id, projeto_id]
+          [
+            tenant_id,
+            fornecedor_id,
+            categoria_id,
+            centro_custo_id,
+            departamento_id,
+            filial_id,
+            unidade_negocio_id,
+            numero_documento || null,
+            tipo_documento || null,
+            status,
+            data_documento || null,
+            data_lancamento,
+            data_vencimento,
+            Math.abs(valor),
+            0,
+            0,
+            Math.abs(valor),
+            descricao,
+          ]
         )
         const id = Number(ins.rows[0]?.id)
         if (!id) throw new Error('Falha ao criar conta a pagar')
@@ -110,7 +150,7 @@ export async function POST(req: Request) {
           }
 
           const itens = normalizarItens()
-          if (itens.length > 0) {
+          if (false && itens.length > 0) {
             const colsItens = [
               'lancamento_id','numero_item','descricao','quantidade','unidade',
               'valor_unitario','desconto','acrescimo','valor_total',
@@ -150,7 +190,7 @@ export async function POST(req: Request) {
         }
 
         // Lines
-        if (linhas.length > 0) {
+        if (false && linhas.length > 0) {
           const cols = ['lancamento_id','tipo_linha','numero_parcela','valor_bruto','juros','multa','desconto','valor_liquido','data_vencimento','data_pagamento','conta_financeira_id','extrato_transacao_id','status','observacao']
           const valuesSql: string[] = []
           const params: unknown[] = []
@@ -181,7 +221,7 @@ export async function POST(req: Request) {
           )
         }
 
-        return { id, linhas_count: linhas.length, itens_count: itensCount }
+        return { id, linhas_count: 0, itens_count: itensCount }
       })
 
       return Response.json({ success: true, id: result.id, linhas_count: result.linhas_count, itens_count: result.itens_count })
@@ -225,16 +265,49 @@ export async function POST(req: Request) {
 
     const result = await withTransaction(async (client) => {
       const insert = await client.query(
-        `INSERT INTO financeiro.lancamentos_financeiros (
-           tenant_id, tipo, descricao, valor, data_lancamento, data_vencimento, status,
-           entidade_id, fornecedor_id, categoria_id, conta_financeira_id,
-           centro_custo_id, departamento_id, filial_id, projeto_id
-         ) VALUES ($1, 'conta_a_pagar', $2, $3, $4, $5, $6,
-                   $7, $8, $9, $10,
-                   $11, $12, $13, $14)
+        `INSERT INTO financeiro.contas_pagar (
+           tenant_id,
+           fornecedor_id,
+           categoria_despesa_id,
+           centro_custo_id,
+           departamento_id,
+           filial_id,
+           unidade_negocio_id,
+           numero_documento,
+           tipo_documento,
+           status,
+           data_documento,
+           data_lancamento,
+           data_vencimento,
+           valor_bruto,
+           valor_desconto,
+           valor_impostos,
+           valor_liquido,
+           observacao
+         ) VALUES (
+           $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18
+         )
          RETURNING id`,
-        [tenant_id, descricao, Math.abs(valor), data_lancamento, data_vencimento, status, entidade_id, fornecedor_id, categoria_id, conta_financeira_id,
-         centro_custo_id, departamento_id, filial_id, projeto_id]
+        [
+          tenant_id,
+          fornecedor_id,
+          categoria_id,
+          centro_custo_id,
+          departamento_id,
+          filial_id,
+          null,
+          null,
+          null,
+          status,
+          null,
+          data_lancamento,
+          data_vencimento,
+          Math.abs(valor),
+          0,
+          0,
+          Math.abs(valor),
+          descricao,
+        ]
       )
       const id = Number(insert.rows[0]?.id)
       if (!id) throw new Error('Falha ao criar conta a pagar')
