@@ -15,7 +15,9 @@ export default function CadastroContaAPagarSheet({ triggerLabel = "Cadastrar", o
 
   const [fornecedores, setFornecedores] = React.useState<Item[]>([])
   const [categorias, setCategorias] = React.useState<{ id: number; nome: string; tipo: string }[]>([])
-  const [contas, setContas] = React.useState<Item[]>([])
+  const [centrosCusto, setCentrosCusto] = React.useState<Item[]>([])
+  const [departamentos, setDepartamentos] = React.useState<Item[]>([])
+  const [filiais, setFiliais] = React.useState<Item[]>([])
 
   const [descricao, setDescricao] = React.useState("")
   const [valor, setValor] = React.useState("")
@@ -23,24 +25,36 @@ export default function CadastroContaAPagarSheet({ triggerLabel = "Cadastrar", o
   const [dataVenc, setDataVenc] = React.useState("")
   const [fornecedorId, setFornecedorId] = React.useState("")
   const [categoriaId, setCategoriaId] = React.useState("")
-  const [contaId, setContaId] = React.useState("")
+  const [centroCustoId, setCentroCustoId] = React.useState("")
+  const [departamentoId, setDepartamentoId] = React.useState("")
+  const [filialId, setFilialId] = React.useState("")
   const [status, setStatus] = React.useState("pendente")
   const [tenantId, setTenantId] = React.useState("")
 
-  const reset = () => { setDescricao(""); setValor(""); setDataLanc(""); setDataVenc(""); setFornecedorId(""); setCategoriaId(""); setContaId(""); setStatus("pendente"); setTenantId("") }
+  const reset = () => { setDescricao(""); setValor(""); setDataLanc(""); setDataVenc(""); setFornecedorId(""); setCategoriaId(""); setCentroCustoId(""); setDepartamentoId(""); setFilialId(""); setStatus("pendente"); setTenantId("") }
 
   const fetchList = async <T,>(url: string): Promise<T[]> => {
     try { const res = await fetch(url, { cache: 'no-store' }); const json = await res.json(); return res.ok && json?.success && Array.isArray(json?.rows) ? json.rows as T[] : [] } catch { return [] as T[] }
   }
 
-  React.useEffect(() => { if (!isOpen) return; (async () => {
-    const [fs, cs, cfs] = await Promise.all([
-      fetchList<Item>('/api/modulos/financeiro/fornecedores/list'),
-      fetchList<{ id: number; nome: string; tipo: string }>('/api/modulos/financeiro/categorias/list'),
-      fetchList<Item>('/api/modulos/financeiro/contas-financeiras/list'),
-    ])
-    setFornecedores(fs); setCategorias(cs); setContas(cfs)
-  })() }, [isOpen])
+  React.useEffect(() => {
+    if (!isOpen) return;
+    (async () => {
+      const [fs, cs, cc, dp, fl] = await Promise.all([
+        fetchList<Item>('/api/modulos/financeiro/fornecedores/list'),
+        fetchList<{ id: number; nome: string; tipo: string }>('/api/modulos/financeiro/categorias/list'),
+        // Centros de Custo via /api/modulos/empresa
+        fetchList<{ id: number; codigo?: string; nome: string }>(`/api/modulos/empresa?view=centros-de-custo&pageSize=1000`),
+        fetchList<{ id: number; nome: string }>(`/api/modulos/empresa?view=departamentos&pageSize=1000`),
+        fetchList<{ id: number; nome: string }>(`/api/modulos/empresa?view=filiais&pageSize=1000`),
+      ])
+      setFornecedores(fs);
+      setCategorias(cs);
+      setCentrosCusto(cc.map((r) => ({ id: r.id, nome: r.nome })) as Item[]);
+      setDepartamentos(dp.map((r) => ({ id: r.id, nome: r.nome })) as Item[]);
+      setFiliais(fl.map((r) => ({ id: r.id, nome: r.nome })) as Item[]);
+    })()
+  }, [isOpen])
 
   const onSubmit = async (): Promise<{ success: boolean; error?: string }> => {
     if (!(descricao.trim() && valor && dataLanc && dataVenc)) {
@@ -57,7 +71,9 @@ export default function CadastroContaAPagarSheet({ triggerLabel = "Cadastrar", o
         fd.set('fornecedor_id', fornecedorId) // novo schema
       }
       if (categoriaId) fd.set('categoria_id', categoriaId)
-      if (contaId) fd.set('conta_financeira_id', contaId)
+      if (centroCustoId) fd.set('centro_custo_id', centroCustoId)
+      if (departamentoId) fd.set('departamento_id', departamentoId)
+      if (filialId) fd.set('filial_id', filialId)
       if (status) fd.set('status', status.trim())
       if (tenantId) fd.set('tenant_id', tenantId)
       const res = await fetch('/api/modulos/financeiro/contas-a-pagar', { method: 'POST', body: fd })
@@ -98,10 +114,24 @@ export default function CadastroContaAPagarSheet({ triggerLabel = "Cadastrar", o
         </Select>
       </div>
       <div>
-        <Label>Conta Financeira</Label>
-        <Select value={contaId} onValueChange={setContaId}>
+        <Label>Centro de Custo</Label>
+        <Select value={centroCustoId} onValueChange={setCentroCustoId}>
           <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-          <SelectContent>{contas.map(c => <SelectItem key={c.id} value={String(c.id)}>{c.nome}</SelectItem>)}</SelectContent>
+          <SelectContent>{centrosCusto.map(c => <SelectItem key={c.id} value={String(c.id)}>{c.nome}</SelectItem>)}</SelectContent>
+        </Select>
+      </div>
+      <div>
+        <Label>Departamento</Label>
+        <Select value={departamentoId} onValueChange={setDepartamentoId}>
+          <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+          <SelectContent>{departamentos.map(d => <SelectItem key={d.id} value={String(d.id)}>{d.nome}</SelectItem>)}</SelectContent>
+        </Select>
+      </div>
+      <div>
+        <Label>Filial</Label>
+        <Select value={filialId} onValueChange={setFilialId}>
+          <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+          <SelectContent>{filiais.map(f => <SelectItem key={f.id} value={String(f.id)}>{f.nome}</SelectItem>)}</SelectContent>
         </Select>
       </div>
       <div><Label>Status</Label><Input value={status} onChange={(e)=>setStatus(e.target.value)} placeholder="pendente | pago | vencido" /></div>
