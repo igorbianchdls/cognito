@@ -858,71 +858,71 @@ export default function ModulosFinanceiroPage() {
                     banco: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 140 },
                   }}
                   enableExpand={tabs.selected === 'extrato' || tabs.selected === 'contas-a-pagar' || tabs.selected === 'pagamentos-efetuados' || tabs.selected === 'contas-a-receber'}
-                  renderDetail={tabs.selected === 'extrato' ? (row => {
-                    type ExtratoTransacao = {
-                      transacao_id?: string | number | null
-                      tipo_transacao?: string | null
-                      data_transacao?: string | null
-                      descricao_transacao?: string | null
-                      valor_transacao?: number | string | null
-                      origem_transacao?: string | null
-                      transacao_conciliada?: boolean | string | null
-                    }
-                    const raw = row['transacoes'] as unknown
-                    const items: ExtratoTransacao[] = Array.isArray(raw)
-                      ? raw.filter((it: unknown): it is ExtratoTransacao => typeof it === 'object' && it !== null)
-                      : []
-                    if (!items.length) return <div className="text-xs text-gray-500">Sem transações neste extrato.</div>
-                    return (
-                      <div className="overflow-auto">
-                        <table className="w-full text-sm">
-                          <thead>
-                            <tr className="text-gray-600">
-                              <th className="text-left p-2">Data</th>
-                              <th className="text-left p-2">Tipo</th>
-                              <th className="text-left p-2">Descrição</th>
-                              <th className="text-right p-2">Valor</th>
-                              <th className="text-left p-2">Origem</th>
-                              <th className="text-left p-2">Conciliada</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {items.map((t, i) => (
-                              <tr key={String(t.transacao_id ?? i)} className="border-t border-gray-200">
-                                <td className="p-2">{formatDate(t.data_transacao)}</td>
-                                <td className="p-2"><StatusBadge value={t.tipo_transacao} type="fin_transacao" /></td>
-                                <td className="p-2">{t.descricao_transacao}</td>
-                                <td className="p-2 text-right">{formatBRL(t.valor_transacao)}</td>
-                                <td className="p-2">{t.origem_transacao}</td>
-                                <td className="p-2"><StatusBadge value={t.transacao_conciliada} type="bool" /></td>
+                  renderDetail={(row) => {
+                    if (tabs.selected === 'extrato') {
+                      type ExtratoTransacao = {
+                        transacao_id?: string | number | null
+                        tipo_transacao?: string | null
+                        data_transacao?: string | null
+                        descricao_transacao?: string | null
+                        valor_transacao?: number | string | null
+                        origem_transacao?: string | null
+                        transacao_conciliada?: boolean | string | null
+                      }
+                      const raw = row['transacoes'] as unknown
+                      const items: ExtratoTransacao[] = Array.isArray(raw)
+                        ? raw.filter((it: unknown): it is ExtratoTransacao => typeof it === 'object' && it !== null)
+                        : []
+                      if (!items.length) return <div className="text-xs text-gray-500">Sem transações neste extrato.</div>
+                      return (
+                        <div className="overflow-auto">
+                          <table className="w-full text-sm">
+                            <thead>
+                              <tr className="text-gray-600">
+                                <th className="text-left p-2">Data</th>
+                                <th className="text-left p-2">Tipo</th>
+                                <th className="text-left p-2">Descrição</th>
+                                <th className="text-right p-2">Valor</th>
+                                <th className="text-left p-2">Origem</th>
+                                <th className="text-left p-2">Conciliada</th>
                               </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    )
-                  }) : (tabs.selected === 'contas-a-pagar' ? (row => {
-                    const idRaw = (row['conta_id'] ?? row['conta_pagar_id']) as string | number | undefined
-                    const contaId = idRaw ? Number(idRaw) : NaN
-                    if (!Number.isFinite(contaId)) {
-                      return <div className="text-xs text-gray-500 p-3">ID de lançamento inválido.</div>
+                            </thead>
+                            <tbody>
+                              {items.map((t, i) => (
+                                <tr key={String(t.transacao_id ?? i)} className="border-t border-gray-200">
+                                  <td className="p-2">{formatDate(t.data_transacao)}</td>
+                                  <td className="p-2"><StatusBadge value={t.tipo_transacao} type="fin_transacao" /></td>
+                                  <td className="p-2">{t.descricao_transacao}</td>
+                                  <td className="p-2 text-right">{formatBRL(t.valor_transacao)}</td>
+                                  <td className="p-2">{t.origem_transacao}</td>
+                                  <td className="p-2"><StatusBadge value={t.transacao_conciliada} type="bool" /></td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )
                     }
-                    return <LinhasContaPagar contaPagarId={contaId} />
-                  }) : (tabs.selected === 'pagamentos-efetuados' ? (row => {
-                    const idRaw = row['pagamento_id'] as string | number | undefined
-                    const pagamentoId = idRaw ? Number(idRaw) : NaN
-                    if (!Number.isFinite(pagamentoId)) {
-                      return <div className="text-xs text-gray-500 p-3">ID de pagamento inválido.</div>
+                    if (tabs.selected === 'contas-a-pagar') {
+                      const idRaw = (row['conta_id'] ?? row['conta_pagar_id']) as string | number | undefined
+                      const contaId = idRaw ? Number(idRaw) : NaN
+                      if (!Number.isFinite(contaId)) return <div className="text-xs text-gray-500 p-3">ID de lançamento inválido.</div>
+                      return <LinhasContaPagar contaPagarId={contaId} />
                     }
-                    return <LinhasPagamentoEfetuado pagamentoId={pagamentoId} />
-                  }) : (tabs.selected === 'contas-a-receber' ? (row => {
-                    const idRaw = row['conta_receber_id'] as string | number | undefined
-                    const contaId = idRaw ? Number(idRaw) : NaN
-                    if (!Number.isFinite(contaId)) {
-                      return <div className="text-xs text-gray-500 p-3">ID de lançamento inválido.</div>
+                    if (tabs.selected === 'pagamentos-efetuados') {
+                      const idRaw = row['pagamento_id'] as string | number | undefined
+                      const pagamentoId = idRaw ? Number(idRaw) : NaN
+                      if (!Number.isFinite(pagamentoId)) return <div className="text-xs text-gray-500 p-3">ID de pagamento inválido.</div>
+                      return <LinhasPagamentoEfetuado pagamentoId={pagamentoId} />
                     }
-                    return <LinhasContaReceber contaReceberId={contaId} />
-                  }) : undefined))}
+                    if (tabs.selected === 'contas-a-receber') {
+                      const idRaw = row['conta_receber_id'] as string | number | undefined
+                      const contaId = idRaw ? Number(idRaw) : NaN
+                      if (!Number.isFinite(contaId)) return <div className="text-xs text-gray-500 p-3">ID de lançamento inválido.</div>
+                      return <LinhasContaReceber contaReceberId={contaId} />
+                    }
+                    return null
+                  }}
                   enableSearch={tabelaUI.enableSearch}
                   showColumnToggle={tabelaUI.enableColumnToggle}
                   showPagination={tabelaUI.showPagination}
