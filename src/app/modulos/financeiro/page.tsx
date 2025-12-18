@@ -339,83 +339,15 @@ export default function ModulosFinanceiroPage() {
         ]
       case 'pagamentos-efetuados':
         return [
-          {
-            accessorKey: 'fornecedor',
-            header: () => <IconLabelHeader icon={<Building2 className="h-3.5 w-3.5" />} label="Fornecedor" />,
-            cell: ({ row }) => (
-              <EntityDisplay
-                name={row.original['fornecedor'] ? String(row.original['fornecedor']) : 'Sem nome'}
-                subtitle={row.original['categoria_financeira'] ? String(row.original['categoria_financeira']) : (row.original['categoria'] ? String(row.original['categoria']) : 'Sem categoria')}
-                imageUrl={row.original['fornecedor_imagem_url'] ? String(row.original['fornecedor_imagem_url']) : undefined}
-                onClick={() => openEditor(row.original)}
-                clickable
-                size={32}
-              />
-            )
-          },
-          {
-            accessorKey: 'descricao_pagamento',
-            header: () => <IconLabelHeader icon={<FileText className="h-3.5 w-3.5" />} label="Descrição" />,
-            cell: ({ row }) => {
-              const raw = (row.original['descricao_pagamento'] ?? row.original['descricao']) as unknown
-              const text = raw ? String(raw) : 'Sem descrição'
-              const storageKey = row.original['storage_key'] as string | undefined
-              const contentType = row.original['content_type'] as string | undefined
-              const fileName = (row.original['nome_arquivo'] as string | null | undefined) ?? (text || 'documento')
-              const lancIdRaw = row.original['pagamento_id'] as unknown
-              const lancId = Number(lancIdRaw)
-              const handleClick: React.MouseEventHandler<HTMLDivElement> = (e) => {
-                if (!lancId || Number.isNaN(lancId)) return
-                setDocLancId(lancId)
-                if (e.altKey) {
-                  if (!storageKey) return
-                  void (async () => {
-                    const res = await fetch(`/api/modulos/financeiro/lancamentos/${lancId}/arquivo/download`)
-                    const json = await res.json()
-                    if (json?.success && json?.url) window.open(json.url, '_blank', 'noopener,noreferrer')
-                  })()
-                  return
-                }
-                if (storageKey) {
-                  void (async () => {
-                    const res = await fetch(`/api/modulos/financeiro/lancamentos/${lancId}/arquivo/preview`)
-                    const json = await res.json()
-                    if (json?.success) setDocUrl(json?.url ?? null)
-                    setDocName(fileName)
-                    setDocType(contentType ?? null)
-                    setDocViewerOpen(true)
-                  })()
-                } else {
-                  setDocUrl(null)
-                  setDocName(fileName)
-                  setDocType(contentType ?? null)
-                  setDocViewerOpen(true)
-                }
-              }
-              return (
-                <div
-                  className={`flex items-center gap-2 min-w-0 ${storageKey ? 'cursor-pointer hover:opacity-90' : 'opacity-60'}`}
-                  title={text}
-                  onClick={handleClick}
-                  role="button"
-                  aria-label={`Abrir documento: ${text}`}
-                >
-                  <FileText className={`h-4 w-4 shrink-0 ${storageKey ? 'text-gray-600' : 'text-gray-400'}`} aria-hidden="true" />
-                  <span className="truncate">{text}</span>
-                </div>
-              )
-            }
-          },
+          { accessorKey: 'numero_pagamento', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Nº Pagamento" /> },
+          { accessorKey: 'status', header: () => <IconLabelHeader icon={<CheckCircle2 className="h-3.5 w-3.5" />} label="Status" />, cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
           { accessorKey: 'data_pagamento', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Pago em" />, cell: ({ row }) => formatDate(row.original['data_pagamento']) },
-          { accessorKey: 'valor_pago', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Valor" />, cell: ({ row }) => formatBRL(row.original['valor_pago']) },
+          { accessorKey: 'data_lancamento', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Lançamento" />, cell: ({ row }) => formatDate(row.original['data_lancamento']) },
+          { accessorKey: 'fornecedor', header: () => <IconLabelHeader icon={<Building2 className="h-3.5 w-3.5" />} label="Fornecedor" /> },
           { accessorKey: 'conta_financeira', header: () => <IconLabelHeader icon={<Wallet className="h-3.5 w-3.5" />} label="Conta" /> },
           { accessorKey: 'metodo_pagamento', header: () => <IconLabelHeader icon={<CreditCard className="h-3.5 w-3.5" />} label="Método" /> },
-          { accessorKey: 'categoria_financeira', header: () => <IconLabelHeader icon={<Folder className="h-3.5 w-3.5" />} label="Categoria" /> },
-          { accessorKey: 'centro_custo', header: () => <IconLabelHeader icon={<PieChart className="h-3.5 w-3.5" />} label="Centro de Custo" /> },
-          { accessorKey: 'departamento', header: () => <IconLabelHeader icon={<Building className="h-3.5 w-3.5" />} label="Departamento" /> },
-          { accessorKey: 'filial', header: () => <IconLabelHeader icon={<Building2 className="h-3.5 w-3.5" />} label="Filial" /> },
-          { accessorKey: 'projeto', header: () => <IconLabelHeader icon={<Folder className="h-3.5 w-3.5" />} label="Projeto" /> },
-          
+          { accessorKey: 'valor_total_pagamento', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Valor" />, cell: ({ row }) => formatBRL(row.original['valor_total_pagamento']) },
+          { accessorKey: 'observacao', header: () => <IconLabelHeader icon={<FileText className="h-3.5 w-3.5" />} label="Observação" /> },
         ]
       case 'pagamentos-recebidos':
         return [

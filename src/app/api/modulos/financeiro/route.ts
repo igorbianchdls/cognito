@@ -906,50 +906,63 @@ ORDER BY
         return Response.json({ success: false, message: msg }, { status: 400 })
       }
     } else if (view === 'pagamentos-efetuados') {
-      // Pagamentos Efetuados – dimensões vindas do cabeçalho (conta_a_pagar)
-      baseSql = `FROM financeiro.lancamentos_financeiros lf
-                 JOIN financeiro.lancamentos_financeiros ap ON ap.id = lf.lancamento_origem_id
-                 LEFT JOIN financeiro.metodos_pagamento mp ON mp.id = ap.metodo_pagamento_id
-                 LEFT JOIN financeiro.contas_financeiras cf ON cf.id = ap.conta_financeira_id
-                 LEFT JOIN financeiro.categorias_financeiras cat_ap ON cat_ap.id = ap.categoria_id
-                 LEFT JOIN empresa.centros_custo cc_ap ON cc_ap.id = ap.centro_custo_id
-                 LEFT JOIN empresa.departamentos dep_ap ON dep_ap.id = ap.departamento_id
-                 LEFT JOIN empresa.filiais fil_ap ON fil_ap.id = ap.filial_id
-                 LEFT JOIN financeiro.projetos prj_ap ON prj_ap.id = ap.projeto_id
-                 LEFT JOIN entidades.fornecedores forn_ap ON forn_ap.id = ap.fornecedor_id`;
-      selectSql = `SELECT
-                        lf.id AS pagamento_id,
-                        ap.id AS titulo_id,
-                        lf.data_lancamento AS data_pagamento,
-                        ap.data_vencimento AS vencimento_titulo,
-                        ap.valor AS valor_titulo,
-                        lf.valor AS valor_pago,
-                        'SAIDA' AS natureza,
-                        mp.nome AS metodo_pagamento,
-                        cf.nome_conta AS conta_financeira,
-                        cat_ap.nome AS categoria,
-                        cat_ap.nome AS categoria_financeira,
-                        cc_ap.nome AS centro_custo,
-                        dep_ap.nome AS departamento,
-                        fil_ap.nome AS filial,
-                        prj_ap.nome AS projeto,
-                        lf.storage_key AS storage_key,
-                        lf.nome_arquivo AS nome_arquivo,
-                        lf.content_type AS content_type,
-                        lf.tamanho_bytes AS tamanho_bytes,
-                        forn_ap.nome_fantasia AS fornecedor,
-                        ap.fornecedor_id AS fornecedor_id,
-                        forn_ap.imagem_url AS fornecedor_imagem_url,
-                        ap.descricao AS titulo_descricao,
-                        lf.descricao AS pagamento_descricao,
-                        lf.descricao AS descricao_pagamento,
-                        lf.status`;
-      whereDateCol = 'lf.data_lancamento';
-      conditions.push(`lf.tipo = 'pagamento_efetuado'`);
-      if (fornecedor_id) push('ap.fornecedor_id =', fornecedor_id);
-      if (status) push('LOWER(lf.status) =', status.toLowerCase());
-      if (valor_min !== undefined) push('lf.valor >=', valor_min);
-      if (valor_max !== undefined) push('lf.valor <=', valor_max);
+      // Pagamentos Efetuados — query solicitada (pe/pel/cp/f/cf/mp)
+      const sql = `
+SELECT
+  pe.id                               AS pagamento_id,
+
+  pe.numero_pagamento,
+  pe.status,
+  pe.data_pagamento,
+  pe.data_lancamento,
+
+  f.nome_fantasia                     AS fornecedor,
+
+  cf.nome_conta                       AS conta_financeira,
+  mp.nome                             AS metodo_pagamento,
+
+  pe.valor_total_pagamento,
+
+  pe.observacao
+
+FROM financeiro.pagamentos_efetuados pe
+
+-- ligações para descobrir o fornecedor
+LEFT JOIN financeiro.pagamentos_efetuados_linhas pel
+       ON pel.pagamento_id = pe.id
+
+LEFT JOIN financeiro.contas_pagar cp
+       ON cp.id = pel.conta_pagar_id
+
+LEFT JOIN entidades.fornecedores f
+       ON f.id = cp.fornecedor_id
+
+-- banco / método
+LEFT JOIN financeiro.contas_financeiras cf
+       ON cf.id = pe.conta_financeira_id
+
+LEFT JOIN financeiro.metodos_pagamento mp
+       ON mp.id = pe.metodo_pagamento_id
+
+GROUP BY
+  pe.id,
+  pe.numero_pagamento,
+  pe.status,
+  pe.data_pagamento,
+  pe.data_lancamento,
+  f.nome_fantasia,
+  cf.nome_conta,
+  mp.nome,
+  pe.valor_total_pagamento,
+  pe.observacao
+
+ORDER BY
+  pe.data_pagamento DESC,
+  pe.id DESC`.replace(/\n\s+/g, ' ').trim()
+
+      const rows = await runQuery<Record<string, unknown>>(sql, [])
+      const total = rows.length
+      return Response.json({ success: true, view, page, pageSize, total, rows, sql, params: '[]' }, { headers: { 'Cache-Control': 'no-store' } })
     } else if (view === 'pagamentos-recebidos') {
       // Pagamentos Recebidos – nova estrutura com dados herdados da origem
       baseSql = `FROM financeiro.lancamentos_financeiros lf
