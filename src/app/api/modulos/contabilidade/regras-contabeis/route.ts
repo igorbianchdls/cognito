@@ -43,8 +43,8 @@ export async function POST(req: Request) {
 
       const ins = await client.query(
         `INSERT INTO contabilidade.regras_contabeis
-           (origem, subtipo, plano_conta_id, conta_debito_id, conta_credito_id, descricao)
-         VALUES ($1,$2,$3,$4,$5,$6)
+           (tenant_id, origem, subtipo, plano_conta_id, conta_debito_id, conta_credito_id, descricao)
+         VALUES (1, $1, $2, $3, $4, $5, $6)
          RETURNING id`,
         [origem, subtipo, plano_conta_id, conta_debito_id, conta_credito_id, descricao]
       )
@@ -57,4 +57,3 @@ export async function POST(req: Request) {
     return Response.json({ success: false, message: msg }, { status: 400 })
   }
 }
-
