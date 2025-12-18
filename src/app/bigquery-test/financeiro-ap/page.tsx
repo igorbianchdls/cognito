@@ -47,6 +47,13 @@ export default function BigQueryTestFinanceiroAP() {
   const [prError, setPrError] = useState<string | null>(null)
   const [prReloadKey, setPrReloadKey] = useState(0)
 
+  // Lançamentos Contábeis
+  const [lcRows, setLcRows] = useState<Row[]>([])
+  const [lcLoading, setLcLoading] = useState(false)
+  const [lcError, setLcError] = useState<string | null>(null)
+  const [lcReloadKey, setLcReloadKey] = useState(0)
+  const [lcExpanded, setLcExpanded] = useState<Record<number, boolean>>({})
+
   // Expand/collapse and caches per seção
   const [apExpanded, setApExpanded] = useState<Record<number, boolean>>({})
   const [arExpanded, setArExpanded] = useState<Record<number, boolean>>({})
@@ -147,6 +154,27 @@ export default function BigQueryTestFinanceiroAP() {
     load()
     return () => { cancelled = true }
   }, [prReloadKey])
+
+  useEffect(() => {
+    let cancelled = false
+    async function load() {
+      setLcLoading(true); setLcError(null)
+      try {
+        const url = `/api/modulos/contabilidade?view=lancamentos&page=1&pageSize=50`
+        const res = await fetch(url, { cache: 'no-store' })
+        const json = await res.json()
+        if (!res.ok || !json?.success) throw new Error(json?.message || `HTTP ${res.status}`)
+        const list: Row[] = Array.isArray(json.rows) ? json.rows : []
+        if (!cancelled) setLcRows(list)
+      } catch (e) {
+        if (!cancelled) setLcError(e instanceof Error ? e.message : 'Falha ao carregar dados')
+      } finally {
+        if (!cancelled) setLcLoading(false)
+      }
+    }
+    load()
+    return () => { cancelled = true }
+  }, [lcReloadKey])
 
   return (
     <div className="p-6 space-y-4">
@@ -675,6 +703,108 @@ export default function BigQueryTestFinanceiroAP() {
                 ))}
                 {!prRows.length && (
                   <tr><td colSpan={10} className="p-3 text-sm text-gray-500">Nenhum registro encontrado.</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+      {/* Lançamentos Contábeis */}
+      <div className="pt-6 space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold">Lançamentos Contábeis</h2>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => setLcReloadKey((k) => k + 1)} disabled={lcLoading}>Recarregar</Button>
+          </div>
+        </div>
+
+        {lcError && <div className="text-sm text-red-600">{lcError}</div>}
+        {lcLoading && <div className="text-sm text-gray-500">Carregando…</div>}
+
+        {!lcLoading && !lcError && (
+          <div className="overflow-auto border rounded">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-gray-50 text-gray-700">
+                  <th className="text-left p-2">Lançamento</th>
+                  <th className="text-left p-2">Data</th>
+                  <th className="text-left p-2">Histórico</th>
+                  <th className="text-right p-2">Débitos</th>
+                  <th className="text-right p-2">Créditos</th>
+                  <th className="text-left p-2">Origem</th>
+                  <th className="text-left p-2">Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(() => {
+                  const groups = new Map<number, Row[]>()
+                  for (const r of lcRows) {
+                    const id = Number(r['lancamento_id'])
+                    if (!Number.isFinite(id)) continue
+                    const cur = groups.get(id) || []
+                    cur.push(r)
+                    groups.set(id, cur)
+                  }
+                  const entries = Array.from(groups.entries())
+                  return entries.map(([id, list]) => {
+                    const h = list[0] || {}
+                    return (
+                      <>
+                        <tr key={`lc-${id}`} className="border-t border-gray-200">
+                          <td className="p-2">{String(id)}</td>
+                          <td className="p-2">{formatDate(h['data_lancamento'])}</td>
+                          <td className="p-2">{String(h['historico'] ?? '')}</td>
+                          <td className="p-2 text-right">{formatBRL(h['total_debitos'])}</td>
+                          <td className="p-2 text-right">{formatBRL(h['total_creditos'])}</td>
+                          <td className="p-2">{String(h['origem_tabela'] ?? '')}{h['origem_id'] ? ` #${String(h['origem_id'])}` : ''}</td>
+                          <td className="p-2">
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={() => setLcExpanded(prev => ({ ...prev, [id]: !prev[id] }))}
+                            >{lcExpanded[id] ? 'Ocultar' : 'Ver Linhas'}</Button>
+                          </td>
+                        </tr>
+                        {lcExpanded[id] && (
+                          <tr>
+                            <td colSpan={7} className="p-2 bg-gray-50">
+                              {list && list.length > 0 ? (
+                                <div className="overflow-auto">
+                                  <table className="w-full text-xs">
+                                    <thead>
+                                      <tr className="text-gray-600">
+                                        <th className="p-1 text-left">Linha</th>
+                                        <th className="p-1 text-left">Conta ID</th>
+                                        <th className="p-1 text-right">Débito</th>
+                                        <th className="p-1 text-right">Crédito</th>
+                                        <th className="p-1 text-left">Histórico Linha</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {list.map((ln, j) => (
+                                        <tr key={`lcl-${String(ln['linha_id'] ?? j)}`} className="border-t">
+                                          <td className="p-1">{String(ln['linha_id'] ?? j + 1)}</td>
+                                          <td className="p-1">{String(ln['conta_id'] ?? '')}</td>
+                                          <td className="p-1 text-right">{formatBRL(ln['debito'])}</td>
+                                          <td className="p-1 text-right">{formatBRL(ln['credito'])}</td>
+                                          <td className="p-1">{String(ln['historico_linha'] ?? '')}</td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              ) : (
+                                <div className="text-xs text-gray-500">Sem linhas.</div>
+                              )}
+                            </td>
+                          </tr>
+                        )}
+                      </>
+                    )
+                  })
+                })()}
+                {!lcRows.length && (
+                  <tr><td colSpan={7} className="p-3 text-sm text-gray-500">Nenhum lançamento encontrado.</td></tr>
                 )}
               </tbody>
             </table>
