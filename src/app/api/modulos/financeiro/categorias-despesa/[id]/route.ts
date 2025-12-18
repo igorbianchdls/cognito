@@ -1,13 +1,15 @@
-import { NextRequest } from 'next/server'
 import { runQuery, withTransaction } from '@/lib/postgres'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 export const maxDuration = 300
 
-export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: Request) {
   try {
-    const id = Number(params.id)
+    const url = new URL(req.url)
+    const parts = url.pathname.split('/').filter(Boolean)
+    const idStr = parts[parts.length - 1] || ''
+    const id = Number(idStr)
     if (!Number.isFinite(id)) return Response.json({ success: false, message: 'ID inválido' }, { status: 400 })
     const sql = `SELECT id, codigo, nome, descricao, tipo, natureza, categoria_pai_id, plano_conta_id, criado_em, atualizado_em
                    FROM financeiro.categorias_despesa
@@ -22,9 +24,12 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
   }
 }
 
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: Request) {
   try {
-    const id = Number(params.id)
+    const url = new URL(req.url)
+    const parts = url.pathname.split('/').filter(Boolean)
+    const idStr = parts[parts.length - 1] || ''
+    const id = Number(idStr)
     if (!Number.isFinite(id)) return Response.json({ success: false, message: 'ID inválido' }, { status: 400 })
     const body = (await req.json()) as Partial<{ plano_conta_id?: number | null }>
     const planoId = body.plano_conta_id === null ? null : (body.plano_conta_id !== undefined ? Number(body.plano_conta_id) : undefined)
@@ -51,4 +56,3 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     return Response.json({ success: false, message: msg }, { status: 400 })
   }
 }
-
