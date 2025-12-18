@@ -160,14 +160,18 @@ export const criarPagamentoEfetuado = tool({
     // Buscar dados da AP: tenant, valor total e soma de pagamentos anteriores
     try {
       const apSql = `
-        SELECT lf.tenant_id, lf.valor::numeric AS total,
-               COALESCE(
-                 (SELECT SUM(p.valor)::numeric FROM financeiro.lancamentos_financeiros p
-                   WHERE LOWER(p.tipo) = 'pagamento_efetuado' AND p.lancamento_origem_id = lf.id), 0
-               ) AS pagos
-          FROM financeiro.lancamentos_financeiros lf
-         WHERE lf.id = $1 AND LOWER(lf.tipo) = 'conta_a_pagar'
-         LIMIT 1
+        SELECT
+          cp.tenant_id,
+          cp.valor_liquido::numeric AS total,
+          COALESCE(
+            (SELECT SUM(pel.valor_pago)::numeric
+               FROM financeiro.pagamentos_efetuados_linhas pel
+              WHERE pel.conta_pagar_id = cp.id),
+            0
+          ) AS pagos
+        FROM financeiro.contas_pagar cp
+        WHERE cp.id = $1
+        LIMIT 1
       `.replace(/\n\s+/g, ' ').trim()
       const rows = await runQuery<{ tenant_id: number | null; total: number; pagos: number }>(apSql, [lancamento_origem_id])
       if (!rows.length) {
