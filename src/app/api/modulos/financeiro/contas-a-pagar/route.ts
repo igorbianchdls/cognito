@@ -150,37 +150,53 @@ export async function POST(req: Request) {
           }
 
           const itens = normalizarItens()
-          if (false && itens.length > 0) {
-            const colsItens = [
-              'lancamento_id','numero_item','descricao','quantidade','unidade',
-              'valor_unitario','desconto','acrescimo','valor_total',
-              'categoria_id','centro_custo_id','natureza_financeira_id','observacao'
+          if (itens.length > 0) {
+            const cols = [
+              'conta_pagar_id',
+              'tipo_linha',
+              'descricao',
+              'quantidade',
+              'valor_unitario',
+              'valor_bruto',
+              'desconto',
+              'impostos',
+              'valor_liquido',
+              'categoria_despesa_id',
+              'departamento_id',
+              'centro_custo_id',
+              'unidade_negocio_id'
             ]
-            const valuesSqlItens: string[] = []
-            const paramsItens: unknown[] = []
-            let pi = 1
+            const valuesSql: string[] = []
+            const params: unknown[] = []
+            let i = 1
             for (const it of itens) {
-              valuesSqlItens.push(`($${pi++},$${pi++},$${pi++},$${pi++},$${pi++},$${pi++},$${pi++},$${pi++},$${pi++},$${pi++},$${pi++},$${pi++},$${pi++})`)
-              paramsItens.push(
-                id,
-                it.numero_item,
-                it.descricao,
-                it.quantidade,
-                it.unidade,
-                it.valor_unitario,
-                it.desconto,
-                it.acrescimo,
-                it.valor_total,
-                it.categoria_id,
-                it.centro_custo_id,
-                it.natureza_financeira_id,
-                it.observacao,
+              const q = Number(it.quantidade || 1) || 1
+              const vu = Number(it.valor_unitario || 0) || 0
+              const acres = Number((it as any).acrescimo || 0) || 0
+              const desc = Number(it.desconto || 0) || 0
+              const bruto = q * vu + acres
+              const liquido = Number(it.valor_total || bruto - desc) || (bruto - desc)
+              valuesSql.push(`($${i++},$${i++},$${i++},$${i++},$${i++},$${i++},$${i++},$${i++},$${i++},$${i++},$${i++},$${i++},$${i++})`)
+              params.push(
+                id,                            // conta_pagar_id
+                'item',                        // tipo_linha
+                it.descricao || descricao,     // descricao
+                q,                             // quantidade
+                vu,                            // valor_unitario
+                bruto,                         // valor_bruto
+                desc,                          // desconto
+                0,                             // impostos (não detalhado no input atual)
+                liquido,                       // valor_liquido
+                (it.categoria_id ?? categoria_id) || null,        // categoria_despesa_id
+                departamento_id || null,       // departamento_id (do cabeçalho)
+                (it.centro_custo_id ?? centro_custo_id) || null,  // centro_custo_id
+                unidade_negocio_id || null     // unidade_negocio_id (do cabeçalho)
               )
             }
             await client.query(
-              `INSERT INTO financeiro.lancamentos_financeiros_itens (${colsItens.join(',')})
-               VALUES ${valuesSqlItens.join(',')}`,
-              paramsItens
+              `INSERT INTO financeiro.contas_pagar_linhas (${cols.join(',')})
+               VALUES ${valuesSql.join(',')}`,
+              params
             )
             itensCount = itens.length
           }
@@ -221,7 +237,7 @@ export async function POST(req: Request) {
           )
         }
 
-        return { id, linhas_count: 0, itens_count: itensCount }
+        return { id, linhas_count: itensCount, itens_count: itensCount }
       })
 
       return Response.json({ success: true, id: result.id, linhas_count: result.linhas_count, itens_count: result.itens_count })
