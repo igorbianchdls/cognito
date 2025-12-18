@@ -1232,9 +1232,6 @@ ORDER BY
     } else {
       switch (view) {
         
-        case 'pagamentos-efetuados':
-          orderClause = 'ORDER BY lf.data_lancamento DESC, lf.id DESC'
-          break
         case 'pagamentos-recebidos':
           orderClause = 'ORDER BY lf.data_lancamento DESC, lf.id DESC'
           break
