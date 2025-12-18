@@ -221,15 +221,16 @@ export default function ModulosContabilidadePage() {
           { accessorKey: 'id', header: () => <IconLabelHeader icon={<Wrench className="h-3.5 w-3.5" />} label="ID" /> },
           { accessorKey: 'origem', header: () => <IconLabelHeader icon={<FileText className="h-3.5 w-3.5" />} label="Origem" /> },
           { accessorKey: 'subtipo', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Subtipo" /> },
-          { accessorKey: 'categoria_financeira', header: () => <IconLabelHeader icon={<Briefcase className="h-3.5 w-3.5" />} label="Categoria" /> },
+          { accessorKey: 'plano_conta_id', header: () => <IconLabelHeader icon={<Briefcase className="h-3.5 w-3.5" />} label="Plano Conta ID" /> },
+          { accessorKey: 'conta_debito_id', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Conta Débito ID" /> },
           { accessorKey: 'codigo_conta_debito', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Cód. Débito" /> },
           { accessorKey: 'conta_debito', header: () => <IconLabelHeader icon={<BookOpen className="h-3.5 w-3.5" />} label="Conta Débito" /> },
+          { accessorKey: 'conta_credito_id', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Conta Crédito ID" /> },
           { accessorKey: 'codigo_conta_credito', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Cód. Crédito" /> },
           { accessorKey: 'conta_credito', header: () => <IconLabelHeader icon={<BookOpen className="h-3.5 w-3.5" />} label="Conta Crédito" /> },
           { accessorKey: 'descricao', header: () => <IconLabelHeader icon={<FileText className="h-3.5 w-3.5" />} label="Descrição" /> },
-          { accessorKey: 'automatico', header: () => <IconLabelHeader icon={<CheckCircle2 className="h-3.5 w-3.5" />} label="Automático" /> },
-          { accessorKey: 'ativo', header: () => <IconLabelHeader icon={<CheckCircle2 className="h-3.5 w-3.5" />} label="Ativo" /> },
           { accessorKey: 'criado_em', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Criado em" />, cell: ({ row }) => formatDate(row.original['criado_em']) },
+          { accessorKey: 'atualizado_em', header: () => <IconLabelHeader icon={<CalendarClock className="h-3.5 w-3.5" />} label="Atualizado em" />, cell: ({ row }) => formatDate(row.original['atualizado_em']) },
         ]
       default:
         return [

@@ -64,15 +64,16 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
     id: 'r.id',
     origem: 'r.origem',
     subtipo: 'r.subtipo',
-    categoria_financeira: 'cf.nome',
+    plano_conta_id: 'r.plano_conta_id',
+    conta_debito_id: 'r.conta_debito_id',
     codigo_conta_debito: 'd.codigo',
     conta_debito: 'd.nome',
+    conta_credito_id: 'r.conta_credito_id',
     codigo_conta_credito: 'c.codigo',
     conta_credito: 'c.nome',
     descricao: 'r.descricao',
-    automatico: 'r.automatico',
-    ativo: 'r.ativo',
     criado_em: 'r.criado_em',
+    atualizado_em: 'r.atualizado_em',
   },
 }
 
@@ -730,24 +731,24 @@ export async function GET(req: NextRequest) {
                     cl.criado_em,
                     cl.atualizado_em`
       whereDateCol = 'cl.criado_em'
-    } else if (view === 'regras-contabeis') {
+  } else if (view === 'regras-contabeis') {
       baseSql = `FROM contabilidade.regras_contabeis r
-                 LEFT JOIN administrativo.categorias_financeiras cf ON r.categoria_financeira_id = cf.id
                  LEFT JOIN contabilidade.plano_contas d ON r.conta_debito_id = d.id
                  LEFT JOIN contabilidade.plano_contas c ON r.conta_credito_id = c.id`
       selectSql = `SELECT
                     r.id,
                     r.origem,
                     r.subtipo,
-                    COALESCE(cf.nome, '— Todas —') AS categoria_financeira,
+                    r.plano_conta_id,
+                    r.conta_debito_id,
                     d.codigo AS codigo_conta_debito,
                     d.nome AS conta_debito,
+                    r.conta_credito_id,
                     c.codigo AS codigo_conta_credito,
                     c.nome AS conta_credito,
                     r.descricao,
-                    r.automatico,
-                    r.ativo,
-                    r.criado_em`
+                    r.criado_em,
+                    r.atualizado_em`
       whereDateCol = 'r.criado_em'
     } else {
       return Response.json({ success: false, message: `View inválida: ${view}` }, { status: 400 })
