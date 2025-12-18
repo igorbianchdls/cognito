@@ -135,8 +135,6 @@ export default function BigQueryTestFinanceiroAP() {
           </table>
         </div>
       )}
-    </div>
-
       {/* Contas a Receber */}
       <div className="pt-6 space-y-3">
         <div className="flex items-center justify-between">
@@ -196,5 +194,6 @@ export default function BigQueryTestFinanceiroAP() {
           </div>
         )}
       </div>
+    </div>
   )
 }
