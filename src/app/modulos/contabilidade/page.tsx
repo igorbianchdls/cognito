@@ -8,6 +8,7 @@ import type { ColumnDef } from '@tanstack/react-table'
 import PageHeader from '@/components/modulos/PageHeader'
 import TabsNav, { type Opcao } from '@/components/modulos/TabsNav'
 import DataToolbar from '@/components/modulos/DataToolbar'
+import CadastroRegraContabilSheet from '@/components/modulos/contabilidade/CadastroRegraContabilSheet'
 import DataTable, { type TableData } from '@/components/widgets/Table'
 import DRETable from '@/components/relatorios/DRETable'
 import BalanceTAccountView from '@/components/modulos/contabilidade/BalanceTAccountView'
@@ -38,7 +39,7 @@ export default function ModulosContabilidadePage() {
   const [bpData, setBpData] = useState<BPData>({ ativo: [], passivo: [], pl: [] })
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [reloadKey] = useState(0)
+  const [reloadKey, setReloadKey] = useState(0)
   const [page, setPage] = useState<number>(1)
   const [pageSize, setPageSize] = useState<number>(20)
   const [total, setTotal] = useState<number>(0)
@@ -283,7 +284,7 @@ export default function ModulosContabilidadePage() {
                 </div>
                 <div style={{ paddingTop: (layout.contentTopGap || 0) + (layout.mbTabs || 0) }}>
                   <div className="px-4 md:px-6" style={{ marginBottom: 8 }}>
-                    <DataToolbar
+                  <DataToolbar
                       from={total === 0 ? 0 : (page - 1) * pageSize + 1}
                       to={total === 0 ? 0 : Math.min(page * pageSize, total)}
                       total={total}
@@ -305,6 +306,9 @@ export default function ModulosContabilidadePage() {
                       iconSize={toolbarUI.iconSize}
                       searchWidth={toolbarUI.searchWidth}
                       dateRangeWidth={toolbarUI.dateRangeWidth}
+                      actionComponent={tabs.selected === 'regras-contabeis' ? (
+                        <CadastroRegraContabilSheet onSaved={() => setReloadKey(k => k + 1)} />
+                      ) : undefined}
                     />
                   </div>
                   <div className="flex-1 min-h-0 overflow-auto" style={{ marginBottom: layout.mbTable }}>
