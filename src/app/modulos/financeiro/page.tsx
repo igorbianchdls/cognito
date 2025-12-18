@@ -435,86 +435,15 @@ export default function ModulosFinanceiroPage() {
         ]
       case 'pagamentos-recebidos':
         return [
-          {
-            accessorKey: 'cliente_nome',
-            header: () => <IconLabelHeader icon={<User className="h-3.5 w-3.5" />} label="Cliente" />,
-            cell: ({ row }) => (
-              <EntityDisplay
-                name={row.original['cliente_nome'] ? String(row.original['cliente_nome']) : 'Sem nome'}
-                subtitle={row.original['categoria_nome'] ? String(row.original['categoria_nome']) : 'Sem categoria'}
-                imageUrl={row.original['cliente_imagem_url'] ? String(row.original['cliente_imagem_url']) : undefined}
-                onClick={() => openClienteEditor(row.original)}
-                clickable
-                size={32}
-              />
-            )
-          },
-          {
-            accessorKey: 'descricao_pagamento',
-            header: () => <IconLabelHeader icon={<FileText className="h-3.5 w-3.5" />} label="Descrição" />,
-            cell: ({ row }) => {
-              const raw = (row.original['descricao_pagamento'] ?? row.original['descricao']) as unknown
-              const text = raw ? String(raw) : 'Sem descrição'
-              const storageKey = row.original['storage_key'] as string | undefined
-              const contentType = row.original['content_type'] as string | undefined
-              const fileName = (row.original['nome_arquivo'] as string | null | undefined) ?? (text || 'documento')
-              const lancIdRaw = row.original['pagamento_id'] as unknown
-              const lancId = Number(lancIdRaw)
-              const handleClick: React.MouseEventHandler<HTMLDivElement> = (e) => {
-                if (!lancId || Number.isNaN(lancId)) return
-                setDocLancId(lancId)
-                if (e.altKey) {
-                  if (!storageKey) return
-                  void (async () => {
-                    const res = await fetch(`/api/modulos/financeiro/lancamentos/${lancId}/arquivo/download`)
-                    const json = await res.json()
-                    if (json?.success && json?.url) window.open(json.url, '_blank', 'noopener,noreferrer')
-                  })()
-                  return
-                }
-                if (storageKey) {
-                  void (async () => {
-                    const res = await fetch(`/api/modulos/financeiro/lancamentos/${lancId}/arquivo/preview`)
-                    const json = await res.json()
-                    if (json?.success) setDocUrl(json?.url ?? null)
-                    setDocName(fileName)
-                    setDocType(contentType ?? null)
-                    setDocViewerOpen(true)
-                  })()
-                } else {
-                  setDocUrl(null)
-                  setDocName(fileName)
-                  setDocType(contentType ?? null)
-                  setDocViewerOpen(true)
-                }
-              }
-              return (
-                <div
-                  className={`flex items-center gap-2 min-w-0 ${storageKey ? 'cursor-pointer hover:opacity-90' : 'opacity-60'}`}
-                  title={text}
-                  onClick={handleClick}
-                  role="button"
-                  aria-label={`Abrir documento: ${text}`}
-                >
-                  <FileText className={`h-4 w-4 shrink-0 ${storageKey ? 'text-gray-600' : 'text-gray-400'}`} aria-hidden="true" />
-                  <span className="truncate">{text}</span>
-                </div>
-              )
-            }
-          },
-          { accessorKey: 'data_pagamento', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Recebido em" />, cell: ({ row }) => formatDate(row.original['data_pagamento']) },
-          { accessorKey: 'valor_recebido', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Valor" />, cell: ({ row }) => formatBRL(row.original['valor_recebido']) },
-          { accessorKey: 'status_pagamento', header: () => <IconLabelHeader icon={<CheckCircle2 className="h-3.5 w-3.5" />} label="Status" />, cell: ({ row }) => <StatusBadge value={row.original['status_pagamento']} type="status" /> },
-          { accessorKey: 'tipo_pagamento', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Tipo" /> },
+          { accessorKey: 'numero_pagamento', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Nº Pagamento" /> },
+          { accessorKey: 'status', header: () => <IconLabelHeader icon={<CheckCircle2 className="h-3.5 w-3.5" />} label="Status" />, cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
+          { accessorKey: 'data_recebimento', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Recebido em" />, cell: ({ row }) => formatDate(row.original['data_recebimento']) },
+          { accessorKey: 'data_lancamento', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Lançamento" />, cell: ({ row }) => formatDate(row.original['data_lancamento']) },
+          { accessorKey: 'cliente', header: () => <IconLabelHeader icon={<User className="h-3.5 w-3.5" />} label="Cliente" /> },
+          { accessorKey: 'conta_financeira', header: () => <IconLabelHeader icon={<Wallet className="h-3.5 w-3.5" />} label="Conta" /> },
+          { accessorKey: 'metodo_pagamento', header: () => <IconLabelHeader icon={<CreditCard className="h-3.5 w-3.5" />} label="Método" /> },
+          { accessorKey: 'valor_total_recebido', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Valor" />, cell: ({ row }) => formatBRL(row.original['valor_total_recebido']) },
           { accessorKey: 'observacao', header: () => <IconLabelHeader icon={<FileText className="h-3.5 w-3.5" />} label="Observação" /> },
-          { accessorKey: 'metodo_pagamento_nome', header: () => <IconLabelHeader icon={<CreditCard className="h-3.5 w-3.5" />} label="Método" /> },
-          { accessorKey: 'conta_financeira_nome', header: () => <IconLabelHeader icon={<Wallet className="h-3.5 w-3.5" />} label="Conta" /> },
-          { accessorKey: 'categoria_nome', header: () => <IconLabelHeader icon={<Folder className="h-3.5 w-3.5" />} label="Categoria" /> },
-          { accessorKey: 'centro_lucro_nome', header: () => <IconLabelHeader icon={<PieChart className="h-3.5 w-3.5" />} label="Centro de Lucro" /> },
-          { accessorKey: 'departamento_nome', header: () => <IconLabelHeader icon={<Building className="h-3.5 w-3.5" />} label="Departamento" /> },
-          { accessorKey: 'filial_nome', header: () => <IconLabelHeader icon={<Building2 className="h-3.5 w-3.5" />} label="Filial" /> },
-          { accessorKey: 'projeto_nome', header: () => <IconLabelHeader icon={<Folder className="h-3.5 w-3.5" />} label="Projeto" /> },
-          
         ]
       case 'movimentos':
         return [
