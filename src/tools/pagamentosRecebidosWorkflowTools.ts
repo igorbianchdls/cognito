@@ -154,14 +154,18 @@ export const criarPagamentoRecebido = tool({
   execute: async ({ lancamento_origem_id, conta_financeira_id, metodo_pagamento_id, descricao }) => {
     try {
       const arSql = `
-        SELECT lf.tenant_id, lf.valor::numeric AS total,
-               COALESCE(
-                 (SELECT SUM(r.valor)::numeric FROM financeiro.lancamentos_financeiros r
-                   WHERE LOWER(r.tipo) = 'pagamento_recebido' AND r.lancamento_origem_id = lf.id), 0
-               ) AS recebidos
-          FROM financeiro.lancamentos_financeiros lf
-         WHERE lf.id = $1 AND LOWER(lf.tipo) = 'conta_a_receber'
-         LIMIT 1
+        SELECT
+          cr.tenant_id,
+          cr.valor_liquido::numeric AS total,
+          COALESCE(
+            (SELECT SUM(prl.valor_recebido)::numeric
+               FROM financeiro.pagamentos_recebidos_linhas prl
+              WHERE prl.conta_receber_id = cr.id),
+            0
+          ) AS recebidos
+        FROM financeiro.contas_receber cr
+        WHERE cr.id = $1
+        LIMIT 1
       `.replace(/\n\s+/g, ' ').trim()
       const rows = await runQuery<{ tenant_id: number | null; total: number; recebidos: number }>(arSql, [lancamento_origem_id])
       if (!rows.length) {
