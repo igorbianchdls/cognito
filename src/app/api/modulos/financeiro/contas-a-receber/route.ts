@@ -22,6 +22,9 @@ export async function POST(req: Request) {
       const statusRaw = toStr(body['status'] || 'pendente').trim().toLowerCase()
       const status = ['pendente', 'recebido', 'cancelado'].includes(statusRaw) ? statusRaw : 'pendente'
       const data_lancamento = toStr(body['data_lancamento'] || new Date().toISOString().slice(0,10))
+      const data_documento = toStr((body as any)['data_emissao'] || (body as any)['data_documento'] || '')
+      const numero_documento = toStr((body as any)['numero_nota_fiscal'] || (body as any)['numero_documento'] || '')
+      const tipo_documento = toStr((body as any)['tipo_documento'] || '')
       const data_vencimento = toStr(body['data_vencimento'] || '')
       const tenant_id = body['tenant_id'] !== undefined && body['tenant_id'] !== null ? toNum(body['tenant_id']) : 1
       const linhas = Array.isArray(body['linhas']) ? (body['linhas'] as Array<Record<string, unknown>>) : []
@@ -31,6 +34,7 @@ export async function POST(req: Request) {
       const departamento_id = body['departamento_id'] !== undefined && body['departamento_id'] !== null ? toNum(body['departamento_id']) : null
       const filial_id = body['filial_id'] !== undefined && body['filial_id'] !== null ? toNum(body['filial_id']) : null
       const projeto_id = body['projeto_id'] !== undefined && body['projeto_id'] !== null ? toNum(body['projeto_id']) : null
+      const unidade_negocio_id = (body as any)['unidade_negocio_id'] !== undefined && (body as any)['unidade_negocio_id'] !== null ? toNum((body as any)['unidade_negocio_id']) : null
 
       let valor = body['valor'] !== undefined && body['valor'] !== null ? toNum(body['valor']) : NaN
       if (!cliente_id || cliente_id <= 0) return Response.json({ success: false, message: 'cliente_id é obrigatório' }, { status: 400 })
@@ -51,23 +55,68 @@ export async function POST(req: Request) {
       }
 
       const result = await withTransaction(async (client) => {
-        // Cabeçalho
+        // Cabeçalho (novo schema: financeiro.contas_receber)
         const ins = await client.query(
-          `INSERT INTO financeiro.lancamentos_financeiros (
-             tenant_id, tipo, descricao, valor, data_lancamento, data_vencimento, status,
-             cliente_id, categoria_id, centro_lucro_id, departamento_id, filial_id, projeto_id
-           ) VALUES ($1, 'conta_a_receber', $2, $3, $4, $5, $6,
-                      $7, $8, $9, $10, $11, $12)
+          `INSERT INTO financeiro.contas_receber (
+             tenant_id,
+             cliente_id,
+             categoria_financeira_id,
+             centro_lucro_id,
+             departamento_id,
+             filial_id,
+             unidade_negocio_id,
+             numero_documento,
+             tipo_documento,
+             status,
+             data_documento,
+             data_lancamento,
+             data_vencimento,
+             valor_bruto,
+             valor_desconto,
+             valor_impostos,
+             valor_liquido,
+             observacao
+           ) VALUES (
+             $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18
+           )
            RETURNING id`,
-          [tenant_id, descricao, Math.abs(valor), data_lancamento, data_vencimento, status, cliente_id, categoria_id, centro_lucro_id, departamento_id, filial_id, projeto_id]
+          [
+            tenant_id,
+            cliente_id,
+            categoria_id,
+            centro_lucro_id,
+            departamento_id,
+            filial_id,
+            unidade_negocio_id,
+            numero_documento || null,
+            tipo_documento || null,
+            status,
+            data_documento || null,
+            data_lancamento,
+            data_vencimento,
+            Math.abs(valor),
+            0,
+            0,
+            Math.abs(valor),
+            descricao,
+          ]
         )
         const id = Number(ins.rows[0]?.id)
         if (!id) throw new Error('Falha ao criar conta a receber')
 
-        // Itens
+        // Itens -> contas_receber_linhas (tipo_linha='item')
         let itensCount = 0
-        const normalizarItens = () => {
-          const itensNorm = itensRaw.map((it, idx) => {
+        const itensList = ((): Array<{
+          descricao: string | null
+          quantidade: number
+          valor_unitario: number
+          desconto: number
+          acrescimo: number
+          valor_total: number
+          categoria_id: number | null
+          observacao: string | null
+        }> => {
+          const list = itensRaw.map((it) => {
             const q = Number(it['quantidade'] ?? 1) || 1
             const vu = Number(it['valor_unitario'] ?? it['valor'] ?? 0) || 0
             const desc = Number(it['desconto'] ?? 0) || 0
@@ -76,107 +125,79 @@ export async function POST(req: Request) {
               ? Number(it['valor_total'])
               : (q * vu + acres - (desc || 0))
             return {
-              numero_item: Number(it['numero_item'] ?? idx + 1) || (idx + 1),
-              descricao: toStr(it['descricao'] ?? descricao).trim(),
+              descricao: toStr(it['descricao'] ?? descricao).trim() || null,
               quantidade: q,
-              unidade: (it['unidade'] ?? null) as string | null,
               valor_unitario: vu,
               desconto: Number.isFinite(desc) ? desc : 0,
               acrescimo: Number.isFinite(acres) ? acres : 0,
               valor_total: Number.isFinite(vt) ? vt : 0,
-              categoria_id: it['categoria_id'] !== undefined && it['categoria_id'] !== null ? Number(it['categoria_id']) : null,
-              // Mantemos coluna centro_custo_id nos itens (schema existente), mesmo a dimensão do cabeçalho ser centro_lucro
-              centro_custo_id: it['centro_custo_id'] !== undefined && it['centro_custo_id'] !== null ? Number(it['centro_custo_id']) : null,
-              natureza_financeira_id: it['natureza_financeira_id'] !== undefined && it['natureza_financeira_id'] !== null ? Number(it['natureza_financeira_id']) : null,
-              observacao: it['observacao'] ?? null,
+              categoria_id: it['categoria_id'] !== undefined && it['categoria_id'] !== null ? Number(it['categoria_id']) : (categoria_id as number | null),
+              observacao: (it['observacao'] ?? null) as string | null,
             }
           })
-          if (itensNorm.length > 0) return itensNorm
+          if (list.length > 0) return list
           return [{
-            numero_item: 1,
             descricao,
             quantidade: 1,
-            unidade: null as string | null,
             valor_unitario: Math.abs(valor),
             desconto: 0,
             acrescimo: 0,
             valor_total: Math.abs(valor),
-            categoria_id: categoria_id,
-            centro_custo_id: null as number | null,
-            natureza_financeira_id: null as number | null,
-            observacao: null as string | null,
+            categoria_id: categoria_id as number | null,
+            observacao: null,
           }]
-        }
+        })()
 
-        const itens = normalizarItens()
-        if (itens.length > 0) {
-          const colsItens = [
-            'lancamento_id','numero_item','descricao','quantidade','unidade',
-            'valor_unitario','desconto','acrescimo','valor_total',
-            'categoria_id','centro_custo_id','natureza_financeira_id','observacao'
+        if (itensList.length > 0) {
+          const cols = [
+            'conta_receber_id',
+            'tipo_linha',
+            'descricao',
+            'quantidade',
+            'valor_unitario',
+            'valor_bruto',
+            'desconto',
+            'impostos',
+            'valor_liquido',
+            'categoria_financeira_id',
+            'departamento_id',
+            'centro_custo_id',
+            'unidade_negocio_id'
           ]
-          const valuesSqlItens: string[] = []
-          const paramsItens: unknown[] = []
-          let pi = 1
-          for (const it of itens) {
-            valuesSqlItens.push(`($${pi++},$${pi++},$${pi++},$${pi++},$${pi++},$${pi++},$${pi++},$${pi++},$${pi++},$${pi++},$${pi++},$${pi++},$${pi++})`)
-            paramsItens.push(
-              id,
-              it.numero_item,
-              it.descricao,
-              it.quantidade,
-              it.unidade,
-              it.valor_unitario,
-              it.desconto,
-              it.acrescimo,
-              it.valor_total,
-              it.categoria_id,
-              it.centro_custo_id,
-              it.natureza_financeira_id,
-              it.observacao,
-            )
-          }
-          await client.query(
-            `INSERT INTO financeiro.lancamentos_financeiros_itens (${colsItens.join(',')})
-             VALUES ${valuesSqlItens.join(',')}`,
-            paramsItens
-          )
-          itensCount = itens.length
-        }
-
-        // Linhas (opcional/legado)
-        if (linhas.length > 0) {
-          const cols = ['lancamento_id','tipo_linha','numero_parcela','valor_bruto','juros','multa','desconto','valor_liquido','data_vencimento','data_pagamento','conta_financeira_id','extrato_transacao_id','status','observacao']
           const valuesSql: string[] = []
           const params: unknown[] = []
           let i = 1
-          for (const ln of linhas) {
-            valuesSql.push(`($${i++},$${i++},$${i++},$${i++},$${i++},$${i++},$${i++},$${i++},$${i++},$${i++},$${i++},$${i++},$${i++},$${i++})`)
+          for (const it of itensList) {
+            const bruto = Number(it.quantidade) * Number(it.valor_unitario) + Number(it.acrescimo || 0)
+            const liquido = Number(it.valor_total || bruto - Number(it.desconto || 0))
+            valuesSql.push(`($${i++},$${i++},$${i++},$${i++},$${i++},$${i++},$${i++},$${i++},$${i++},$${i++},$${i++},$${i++},$${i++})`)
             params.push(
-              id,
-              ln['tipo_linha'] ?? null,
-              ln['numero_parcela'] ?? null,
-              ln['valor_bruto'] ?? null,
-              ln['juros'] ?? null,
-              ln['multa'] ?? null,
-              ln['desconto'] ?? null,
-              ln['valor_liquido'] ?? null,
-              ln['data_vencimento'] ?? null,
-              ln['data_pagamento'] ?? null,
-              ln['conta_financeira_id'] ?? null,
-              ln['extrato_transacao_id'] ?? null,
-              (typeof ln['status'] === 'string' ? String(ln['status']).toLowerCase() : 'pendente'),
-              ln['observacao'] ?? null,
+              id,                          // conta_receber_id
+              'item',                      // tipo_linha
+              it.descricao,                // descricao
+              it.quantidade,               // quantidade
+              it.valor_unitario,           // valor_unitario
+              bruto,                       // valor_bruto
+              it.desconto || 0,            // desconto
+              0,                           // impostos (não detalhado)
+              liquido,                     // valor_liquido
+              it.categoria_id || null,     // categoria_financeira_id
+              departamento_id || null,     // departamento_id
+              null,                        // centro_custo_id (não aplicável em CR)
+              unidade_negocio_id || null   // unidade_negocio_id
             )
           }
           await client.query(
-            `INSERT INTO financeiro.lancamentos_financeiros_linhas (${cols.join(',')})
+            `INSERT INTO financeiro.contas_receber_linhas (${cols.join(',')})
              VALUES ${valuesSql.join(',')}`,
             params
           )
+          itensCount = itensList.length
         }
 
-        return { id, itens_count: itensCount, linhas_count: linhas.length }
+        // Sem inserção de linhas legadas (parcelas)
+
+        return { id, itens_count: itensCount, linhas_count: itensCount }
       })
 
       return Response.json({ success: true, id: result.id, itens_count: result.itens_count, linhas_count: result.linhas_count })
@@ -220,16 +241,49 @@ export async function POST(req: Request) {
 
     const result = await withTransaction(async (client) => {
       const insert = await client.query(
-        `INSERT INTO financeiro.lancamentos_financeiros (
-           tenant_id, tipo, descricao, valor, data_lancamento, data_vencimento, status,
-           entidade_id, cliente_id, categoria_id, conta_financeira_id,
-           centro_lucro_id, departamento_id, filial_id, projeto_id
-         ) VALUES ($1, 'conta_a_receber', $2, $3, $4, $5, $6,
-                   $7, $8, $9, $10,
-                   $11, $12, $13, $14)
+        `INSERT INTO financeiro.contas_receber (
+           tenant_id,
+           cliente_id,
+           categoria_financeira_id,
+           centro_lucro_id,
+           departamento_id,
+           filial_id,
+           unidade_negocio_id,
+           numero_documento,
+           tipo_documento,
+           status,
+           data_documento,
+           data_lancamento,
+           data_vencimento,
+           valor_bruto,
+           valor_desconto,
+           valor_impostos,
+           valor_liquido,
+           observacao
+         ) VALUES (
+           $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18
+         )
          RETURNING id`,
-        [tenant_id, descricao, Math.abs(valor), data_lancamento, data_vencimento, status, entidade_id, cliente_id, categoria_id, conta_financeira_id,
-         centro_lucro_id, departamento_id, filial_id, projeto_id]
+        [
+          tenant_id,
+          cliente_id,
+          categoria_id,
+          centro_lucro_id,
+          departamento_id,
+          filial_id,
+          null,
+          null,
+          null,
+          status,
+          null,
+          data_lancamento,
+          data_vencimento,
+          Math.abs(valor),
+          0,
+          0,
+          Math.abs(valor),
+          descricao,
+        ]
       )
       const id = Number(insert.rows[0]?.id)
       if (!id) throw new Error('Falha ao criar conta a receber')
