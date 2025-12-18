@@ -173,6 +173,75 @@ export default function ModulosFinanceiroPage() {
     )
   }
 
+  // Nested detail component for Pagamentos Efetuados: linhas do pagamento
+  function LinhasPagamentoEfetuado({ pagamentoId }: { pagamentoId: number }) {
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
+    const [rows, setRows] = useState<Array<Record<string, unknown>>>([])
+    const cacheRef = (LinhasPagamentoEfetuado as unknown as { _cache?: Map<number, Array<Record<string, unknown>>> })._cache
+      || new Map<number, Array<Record<string, unknown>>>()
+    ;(LinhasPagamentoEfetuado as unknown as { _cache?: Map<number, Array<Record<string, unknown>>> })._cache = cacheRef
+
+    useEffect(() => {
+      let cancelled = false
+      async function load() {
+        try {
+          setLoading(true); setError(null)
+          if (!pagamentoId || !Number.isFinite(pagamentoId)) throw new Error('ID de pagamento inválido')
+          if (cacheRef.has(pagamentoId)) { setRows(cacheRef.get(pagamentoId) || []); return }
+          const res = await fetch(`/api/modulos/financeiro/pagamentos-efetuados/${pagamentoId}/linhas`, { cache: 'no-store' })
+          const j = await res.json()
+          if (!res.ok || !j?.success) throw new Error(j?.message || `HTTP ${res.status}`)
+          const list: Array<Record<string, unknown>> = Array.isArray(j.rows) ? j.rows : []
+          if (!cancelled) { setRows(list); cacheRef.set(pagamentoId, list) }
+        } catch (e) {
+          if (!cancelled) setError(e instanceof Error ? e.message : 'Falha ao carregar linhas')
+        } finally { if (!cancelled) setLoading(false) }
+      }
+      load();
+      return () => { cancelled = true }
+    }, [pagamentoId])
+
+    if (loading) return <div className="text-xs text-gray-500 p-3">Carregando linhas…</div>
+    if (error) return <div className="text-xs text-red-600 p-3">{error}</div>
+    if (!rows.length) return <div className="text-xs text-gray-500 p-3">Sem linhas para este pagamento.</div>
+
+    return (
+      <div className="overflow-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-gray-600">
+              <th className="text-left p-2">Linha</th>
+              <th className="text-left p-2">Documento</th>
+              <th className="text-left p-2">Fornecedor</th>
+              <th className="text-right p-2">Valor Original</th>
+              <th className="text-right p-2">Valor Pago</th>
+              <th className="text-right p-2">Saldo Após Pag.</th>
+              <th className="text-right p-2">Desc. Fin.</th>
+              <th className="text-right p-2">Juros</th>
+              <th className="text-right p-2">Multa</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r, i) => (
+              <tr key={String(r['pagamento_linha_id'] ?? i)} className="border-t border-gray-200">
+                <td className="p-2">{String(r['pagamento_linha_id'] ?? i + 1)}</td>
+                <td className="p-2">{String(r['documento_origem'] ?? '')}</td>
+                <td className="p-2">{String(r['fornecedor'] ?? '')}</td>
+                <td className="p-2 text-right">{formatBRL(r['valor_original_documento'])}</td>
+                <td className="p-2 text-right">{formatBRL(r['valor_pago'])}</td>
+                <td className="p-2 text-right">{formatBRL(r['saldo_apos_pagamento'])}</td>
+                <td className="p-2 text-right">{formatBRL(r['desconto_financeiro'])}</td>
+                <td className="p-2 text-right">{formatBRL(r['juros'])}</td>
+                <td className="p-2 text-right">{formatBRL(r['multa'])}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )
+  }
+
   const columns: ColumnDef<Row>[] = useMemo(() => {
     switch (tabs.selected) {
       case 'contas':
@@ -773,7 +842,7 @@ export default function ModulosFinanceiroPage() {
                     // Banco (Extrato)
                     banco: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 140 },
                   }}
-                  enableExpand={tabs.selected === 'extrato' || tabs.selected === 'contas-a-pagar'}
+                  enableExpand={tabs.selected === 'extrato' || tabs.selected === 'contas-a-pagar' || tabs.selected === 'pagamentos-efetuados'}
                   renderDetail={tabs.selected === 'extrato' ? (row => {
                     type ExtratoTransacao = {
                       transacao_id?: string | number | null
@@ -824,7 +893,14 @@ export default function ModulosFinanceiroPage() {
                       return <div className="text-xs text-gray-500 p-3">ID de lançamento inválido.</div>
                     }
                     return <LinhasContaPagar contaPagarId={contaId} />
-                  }) : undefined)}
+                  }) : (tabs.selected === 'pagamentos-efetuados' ? (row => {
+                    const idRaw = row['pagamento_id'] as string | number | undefined
+                    const pagamentoId = idRaw ? Number(idRaw) : NaN
+                    if (!Number.isFinite(pagamentoId)) {
+                      return <div className="text-xs text-gray-500 p-3">ID de pagamento inválido.</div>
+                    }
+                    return <LinhasPagamentoEfetuado pagamentoId={pagamentoId} />
+                  }) : undefined))}
                   enableSearch={tabelaUI.enableSearch}
                   showColumnToggle={tabelaUI.enableColumnToggle}
                   showPagination={tabelaUI.showPagination}
