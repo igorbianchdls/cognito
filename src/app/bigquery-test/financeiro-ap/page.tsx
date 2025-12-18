@@ -162,6 +162,7 @@ export default function BigQueryTestFinanceiroAP() {
                 <th className="text-left p-2">Centro Custo</th>
                 <th className="text-left p-2">Filial</th>
                 <th className="text-left p-2">Descrição</th>
+                <th className="text-left p-2">Ações</th>
               </tr>
             </thead>
             <tbody>
@@ -180,6 +181,20 @@ export default function BigQueryTestFinanceiroAP() {
                   <td className="p-2">{String(r['centro_custo'] ?? '')}</td>
                   <td className="p-2">{String(r['filial'] ?? '')}</td>
                   <td className="p-2">{String(r['descricao'] ?? '')}</td>
+                  <td className="p-2">
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={async () => {
+                        const idRaw = r['conta_pagar_id']
+                        const id = idRaw ? Number(idRaw) : NaN
+                        if (!Number.isFinite(id)) return
+                        if (!confirm('Excluir esta conta a pagar?')) return
+                        const del = await fetch(`/api/modulos/financeiro/contas-a-pagar/${id}`, { method: 'DELETE' })
+                        if (del.ok) setReloadKey(k => k + 1)
+                      }}
+                    >Excluir</Button>
+                  </td>
                 </tr>
               ))}
               {!rows.length && (
@@ -219,7 +234,8 @@ export default function BigQueryTestFinanceiroAP() {
                   <th className="text-left p-2">Departamento</th>
                   <th className="text-left p-2">Centro Lucro</th>
                   <th className="text-left p-2">Filial</th>
-                  <th className="text-left p-2">Descrição</th>
+                <th className="text-left p-2">Descrição</th>
+                <th className="text-left p-2">Ações</th>
                 </tr>
               </thead>
               <tbody>
@@ -238,6 +254,20 @@ export default function BigQueryTestFinanceiroAP() {
                     <td className="p-2">{String(r['centro_lucro'] ?? '')}</td>
                     <td className="p-2">{String(r['filial'] ?? '')}</td>
                     <td className="p-2">{String(r['descricao'] ?? '')}</td>
+                    <td className="p-2">
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={async () => {
+                          const idRaw = r['conta_receber_id']
+                          const id = idRaw ? Number(idRaw) : NaN
+                          if (!Number.isFinite(id)) return
+                          if (!confirm('Excluir esta conta a receber?')) return
+                          const del = await fetch(`/api/modulos/financeiro/contas-a-receber/${id}`, { method: 'DELETE' })
+                          if (del.ok) setArReloadKey(k => k + 1)
+                        }}
+                      >Excluir</Button>
+                    </td>
                   </tr>
                 ))}
                 {!arRows.length && (
@@ -277,6 +307,7 @@ export default function BigQueryTestFinanceiroAP() {
                   <th className="text-left p-2">Método</th>
                   <th className="text-right p-2">Valor</th>
                   <th className="text-left p-2">Observação</th>
+                  <th className="text-left p-2">Ações</th>
                 </tr>
               </thead>
               <tbody>
@@ -292,6 +323,20 @@ export default function BigQueryTestFinanceiroAP() {
                     <td className="p-2">{String(r['metodo_pagamento'] ?? '')}</td>
                     <td className="p-2 text-right">{formatBRL(r['valor_total_pagamento'])}</td>
                     <td className="p-2">{String(r['observacao'] ?? '')}</td>
+                    <td className="p-2">
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={async () => {
+                          const idRaw = r['pagamento_id']
+                          const id = idRaw ? Number(idRaw) : NaN
+                          if (!Number.isFinite(id)) return
+                          if (!confirm('Excluir este pagamento efetuado?')) return
+                          const del = await fetch(`/api/modulos/financeiro/pagamentos-efetuados/${id}`, { method: 'DELETE' })
+                          if (del.ok) setPeReloadKey(k => k + 1)
+                        }}
+                      >Excluir</Button>
+                    </td>
                   </tr>
                 ))}
                 {!peRows.length && (
@@ -331,6 +376,7 @@ export default function BigQueryTestFinanceiroAP() {
                   <th className="text-left p-2">Método</th>
                   <th className="text-right p-2">Valor</th>
                   <th className="text-left p-2">Observação</th>
+                  <th className="text-left p-2">Ações</th>
                 </tr>
               </thead>
               <tbody>
@@ -346,6 +392,20 @@ export default function BigQueryTestFinanceiroAP() {
                     <td className="p-2">{String(r['metodo_pagamento'] ?? '')}</td>
                     <td className="p-2 text-right">{formatBRL(r['valor_total_recebido'])}</td>
                     <td className="p-2">{String(r['observacao'] ?? '')}</td>
+                    <td className="p-2">
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={async () => {
+                          const idRaw = r['pagamento_recebido_id']
+                          const id = idRaw ? Number(idRaw) : NaN
+                          if (!Number.isFinite(id)) return
+                          if (!confirm('Excluir este pagamento recebido?')) return
+                          const del = await fetch(`/api/modulos/financeiro/pagamentos-recebidos/${id}`, { method: 'DELETE' })
+                          if (del.ok) setPrReloadKey(k => k + 1)
+                        }}
+                      >Excluir</Button>
+                    </td>
                   </tr>
                 ))}
                 {!prRows.length && (

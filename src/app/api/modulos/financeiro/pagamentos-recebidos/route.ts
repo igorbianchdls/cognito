@@ -20,21 +20,21 @@ export async function POST(req: Request) {
       }
 
       const result = await withTransaction(async (client) => {
-        // 1) Buscar AR
+        // 1) Buscar AR (novo schema) e recebimentos já registrados
         const arRow = await client.query(
-          `SELECT lf.id, lf.tenant_id, lf.valor::numeric AS total, lf.entidade_id, lf.categoria_id, lf.status
-             FROM financeiro.lancamentos_financeiros lf
-            WHERE lf.id = $1 AND LOWER(lf.tipo) = 'conta_a_receber'
+          `SELECT cr.id, cr.tenant_id, cr.valor_liquido::numeric AS total, cr.cliente_id, cr.categoria_financeira_id, cr.status
+             FROM financeiro.contas_receber cr
+            WHERE cr.id = $1
             LIMIT 1`,
           [arId]
         )
         if (!arRow.rows || arRow.rows.length === 0) throw new Error('Conta a receber não encontrada')
-        const ar = arRow.rows[0] as { id: number; tenant_id: number | null; total: number; entidade_id: number | null; categoria_id: number | null; status: string | null }
+        const ar = arRow.rows[0] as { id: number; tenant_id: number | null; total: number; cliente_id: number | null; categoria_financeira_id: number | null; status: string | null }
 
         const recRow = await client.query(
-          `SELECT COALESCE(SUM(valor),0)::numeric AS recebidos
-             FROM financeiro.lancamentos_financeiros
-            WHERE LOWER(tipo) = 'pagamento_recebido' AND lancamento_origem_id = $1`,
+          `SELECT COALESCE(SUM(prl.valor_recebido),0)::numeric AS recebidos
+             FROM financeiro.pagamentos_recebidos_linhas prl
+            WHERE prl.conta_receber_id = $1`,
           [arId]
         )
         const recebidos: number = Number(recRow.rows[0]?.recebidos || 0)
@@ -43,40 +43,40 @@ export async function POST(req: Request) {
 
         const today = new Date().toISOString().slice(0, 10)
         const tenant = ar.tenant_id ?? 1
-
-        // 2) Atualizar AR com conta/metodo se existir coluna (tentativa sem falhar se coluna não existir)
-        try {
-          await client.query(`UPDATE financeiro.lancamentos_financeiros SET conta_financeira_id = $1, metodo_pagamento_id = $2 WHERE id = $3`, [Number(body.conta_financeira_id), Number(body.metodo_pagamento_id), arId])
-        } catch {}
-
-        // 3) Inserir recebimento
-        const ins = await client.query(
-          `INSERT INTO financeiro.lancamentos_financeiros (
-             tenant_id, tipo, descricao, valor, data_lancamento, data_vencimento, status,
-             entidade_id, categoria_id, conta_financeira_id, lancamento_origem_id
-           ) VALUES ($1, 'pagamento_recebido', $2, $3, $4, NULL, 'recebido', $5, $6, $7, $8)
+        // 2) Criar cabeçalho do recebimento (novo schema)
+        const insHeader = await client.query(
+          `INSERT INTO financeiro.pagamentos_recebidos (
+             tenant_id, status, data_recebimento, data_lancamento, conta_financeira_id, metodo_pagamento_id, valor_total_recebido, observacao
+           ) VALUES ($1, 'recebido', $2, $2, $3, $4, $5, $6)
            RETURNING id`,
-          [tenant, `Recebimento AR #${arId} - ${body.descricao}`.slice(0, 255), Math.abs(pendente), today,
-           ar.entidade_id ?? null, ar.categoria_id ?? null, Number(body.conta_financeira_id), arId]
+          [tenant, today, Number(body.conta_financeira_id), Number(body.metodo_pagamento_id), Math.abs(pendente), `Recebimento AR #${arId} - ${body.descricao}`.slice(0, 255)]
         )
-        const recebId = Number(ins.rows[0]?.id)
+        const recebId = Number(insHeader.rows[0]?.id)
         if (!recebId) throw new Error('Falha ao criar pagamento recebido')
 
-        // 4) Baixar AR
+        // 3) Inserir linha vinculando à AR
+        await client.query(
+          `INSERT INTO financeiro.pagamentos_recebidos_linhas (
+             pagamento_id, conta_receber_id, valor_original_documento, valor_recebido, saldo_apos_pagamento, desconto_financeiro, juros, multa
+           ) VALUES ($1,$2,$3,$4,$5,0,0,0)`,
+          [recebId, arId, Number(ar.total || 0), Math.abs(pendente), Math.max(0, Number(ar.total || 0) - (recebidos + Math.abs(pendente)))]
+        )
+
+        // 4) Atualizar status da AR
         const rec2Row = await client.query(
-          `SELECT COALESCE(SUM(valor),0)::numeric AS recebidos
-             FROM financeiro.lancamentos_financeiros
-            WHERE LOWER(tipo) = 'pagamento_recebido' AND lancamento_origem_id = $1`,
+          `SELECT COALESCE(SUM(prl.valor_recebido),0)::numeric AS recebidos
+             FROM financeiro.pagamentos_recebidos_linhas prl
+            WHERE prl.conta_receber_id = $1`,
           [arId]
         )
         const rec2: number = Number(rec2Row.rows[0]?.recebidos || 0)
-        const novoStatus = rec2 >= Number(ar.total || 0) ? 'pago' : (rec2 > 0 ? 'parcial' : 'pendente')
-        await client.query(`UPDATE financeiro.lancamentos_financeiros SET status = $1 WHERE id = $2`, [novoStatus, arId])
+        const novoStatus = rec2 >= Number(ar.total || 0) ? 'recebido' : (rec2 > 0 ? 'parcial' : 'pendente')
+        await client.query(`UPDATE financeiro.contas_receber SET status = $1 WHERE id = $2`, [novoStatus, arId])
 
         // 5) Montar resposta
         const cfRow = await client.query(`SELECT nome_conta FROM financeiro.contas_financeiras WHERE id = $1`, [Number(body.conta_financeira_id)])
         const mpRow = await client.query(`SELECT nome FROM financeiro.metodos_pagamento WHERE id = $1`, [Number(body.metodo_pagamento_id)])
-        const cliNameRow = ar.entidade_id ? await client.query(`SELECT nome_fantasia FROM entidades.clientes WHERE id = $1`, [ar.entidade_id]) : { rows: [] as Record<string, unknown>[] }
+        const cliNameRow = ar.cliente_id ? await client.query(`SELECT nome_fantasia FROM entidades.clientes WHERE id = $1`, [ar.cliente_id]) : { rows: [] as Record<string, unknown>[] }
 
         const conta_financeira_nome = String(cfRow.rows?.[0]?.nome_conta || `Conta #${body.conta_financeira_id}`)
         const forma_pagamento_nome = String(mpRow.rows?.[0]?.nome || `Método #${body.metodo_pagamento_id}`)
@@ -148,8 +148,8 @@ export async function POST(req: Request) {
     if (Number.isNaN(valor)) return Response.json({ success: false, message: 'valor inválido' }, { status: 400 })
 
     const tenant_id_raw = String(form.get('tenant_id') || '').trim()
-    const entidade_id_raw = String(form.get('entidade_id') || '').trim() // cliente
-    const categoria_id_raw = String(form.get('categoria_id') || '').trim()
+    const entidade_id_raw = String(form.get('entidade_id') || '').trim() // cliente (não usado no header)
+    const categoria_id_raw = String(form.get('categoria_id') || '').trim() // não usado no header
     const conta_financeira_id_raw = String(form.get('conta_financeira_id') || '').trim()
     const status = String(form.get('status') || '').trim() || null
 
@@ -160,11 +160,11 @@ export async function POST(req: Request) {
 
     const result = await withTransaction(async (client) => {
       const insert = await client.query(
-        `INSERT INTO financeiro.lancamentos_financeiros (
-           tenant_id, tipo, descricao, valor, data_lancamento, data_vencimento, status, entidade_id, categoria_id, conta_financeira_id
-         ) VALUES ($1, 'pagamento_recebido', $2, $3, $4, NULL, $5, $6, $7, $8)
+        `INSERT INTO financeiro.pagamentos_recebidos (
+           tenant_id, status, data_recebimento, data_lancamento, conta_financeira_id, metodo_pagamento_id, valor_total_recebido, observacao
+         ) VALUES ($1, COALESCE($2,'recebido'), $3, $3, $4, NULL, $5, $6)
          RETURNING id`,
-        [tenant_id, descricao, Math.abs(valor), data_lancamento, status, entidade_id, categoria_id, conta_financeira_id]
+        [tenant_id, status, data_lancamento, conta_financeira_id, Math.abs(valor), descricao]
       )
       const id = Number(insert.rows[0]?.id)
       if (!id) throw new Error('Falha ao criar pagamento recebido')

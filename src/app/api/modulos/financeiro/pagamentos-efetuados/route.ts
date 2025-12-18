@@ -7,7 +7,7 @@ export const revalidate = 0
 export async function POST(req: Request) {
   try {
     const ct = req.headers.get('content-type') || ''
-    // JSON commit path (preview → criar)
+    // JSON commit path (preview → criar) — novo schema (pagamentos_efetuados + linhas)
     if (ct.includes('application/json')) {
       const body = await req.json() as {
         lancamento_origem_id: string
@@ -21,21 +21,21 @@ export async function POST(req: Request) {
       }
 
       const result = await withTransaction(async (client) => {
-        // 1) Buscar AP (valor total, tenant, entidade, categoria) e soma de pagamentos
+        // 1) Buscar AP (novo schema) e soma de pagamentos já efetuados
         const apRow = await client.query(
-          `SELECT lf.id, lf.tenant_id, lf.valor::numeric AS total, lf.entidade_id, lf.categoria_id, lf.status
-             FROM financeiro.lancamentos_financeiros lf
-            WHERE lf.id = $1 AND LOWER(lf.tipo) = 'conta_a_pagar'
+          `SELECT cp.id, cp.tenant_id, cp.valor_liquido::numeric AS total, cp.fornecedor_id, cp.categoria_despesa_id, cp.status
+             FROM financeiro.contas_pagar cp
+            WHERE cp.id = $1
             LIMIT 1`,
           [apId]
         )
         if (!apRow.rows || apRow.rows.length === 0) throw new Error('Conta a pagar não encontrada')
-        const ap = apRow.rows[0] as { id: number; tenant_id: number | null; total: number; entidade_id: number | null; categoria_id: number | null; status: string | null }
+        const ap = apRow.rows[0] as { id: number; tenant_id: number | null; total: number; fornecedor_id: number | null; categoria_despesa_id: number | null; status: string | null }
 
         const pagosRow = await client.query(
-          `SELECT COALESCE(SUM(valor),0)::numeric AS pagos
-             FROM financeiro.lancamentos_financeiros
-            WHERE LOWER(tipo) = 'pagamento_efetuado' AND lancamento_origem_id = $1`,
+          `SELECT COALESCE(SUM(pel.valor_pago),0)::numeric AS pagos
+             FROM financeiro.pagamentos_efetuados_linhas pel
+            WHERE pel.conta_pagar_id = $1`,
           [apId]
         )
         const pagos: number = Number(pagosRow.rows[0]?.pagos || 0)
@@ -44,43 +44,40 @@ export async function POST(req: Request) {
 
         const today = new Date().toISOString().slice(0, 10)
         const tenant = ap.tenant_id ?? 1
-
-        // 2) Atualizar AP com conta_financeira_id e metodo_pagamento_id
-        await client.query(
-          `UPDATE financeiro.lancamentos_financeiros
-              SET conta_financeira_id = $1, metodo_pagamento_id = $2
-            WHERE id = $3`,
-          [Number(body.conta_financeira_id), Number(body.metodo_pagamento_id), apId]
-        )
-
-        // 3) Inserir pagamento
-        const ins = await client.query(
-          `INSERT INTO financeiro.lancamentos_financeiros (
-             tenant_id, tipo, descricao, valor, data_lancamento, data_vencimento, status,
-             entidade_id, categoria_id, conta_financeira_id, lancamento_origem_id
-           ) VALUES ($1, 'pagamento_efetuado', $2, $3, $4, NULL, 'pago', $5, $6, $7, $8)
+        // 2) Criar cabeçalho do pagamento (novo schema)
+        const insHeader = await client.query(
+          `INSERT INTO financeiro.pagamentos_efetuados (
+             tenant_id, status, data_pagamento, data_lancamento, conta_financeira_id, metodo_pagamento_id, valor_total_pagamento, observacao
+           ) VALUES ($1, 'pago', $2, $2, $3, $4, $5, $6)
            RETURNING id`,
-          [tenant, `Pagamento AP #${apId} - ${body.descricao}`.slice(0, 255), Math.abs(pendente), today,
-           ap.entidade_id ?? null, ap.categoria_id ?? null, Number(body.conta_financeira_id), apId]
+          [tenant, today, Number(body.conta_financeira_id), Number(body.metodo_pagamento_id), Math.abs(pendente), `Pagamento AP #${apId} - ${body.descricao}`.slice(0,255)]
         )
-        const pagamentoId = Number(ins.rows[0]?.id)
+        const pagamentoId = Number(insHeader.rows[0]?.id)
         if (!pagamentoId) throw new Error('Falha ao criar pagamento efetuado')
 
-        // 4) Baixar status da AP
+        // 3) Inserir linha vinculando à AP
+        await client.query(
+          `INSERT INTO financeiro.pagamentos_efetuados_linhas (
+             pagamento_id, conta_pagar_id, valor_original_documento, valor_pago, saldo_apos_pagamento, desconto_financeiro, juros, multa
+           ) VALUES ($1,$2,$3,$4,$5,0,0,0)`,
+          [pagamentoId, apId, Number(ap.total || 0), Math.abs(pendente), Math.max(0, Number(ap.total || 0) - (pagos + Math.abs(pendente)))]
+        )
+
+        // 4) Atualizar status da AP
         const pagos2Row = await client.query(
-          `SELECT COALESCE(SUM(valor),0)::numeric AS pagos
-             FROM financeiro.lancamentos_financeiros
-            WHERE LOWER(tipo) = 'pagamento_efetuado' AND lancamento_origem_id = $1`,
+          `SELECT COALESCE(SUM(pel.valor_pago),0)::numeric AS pagos
+             FROM financeiro.pagamentos_efetuados_linhas pel
+            WHERE pel.conta_pagar_id = $1`,
           [apId]
         )
         const pagos2: number = Number(pagos2Row.rows[0]?.pagos || 0)
         const novoStatus = pagos2 >= Number(ap.total || 0) ? 'pago' : (pagos2 > 0 ? 'parcial' : 'pendente')
-        await client.query(`UPDATE financeiro.lancamentos_financeiros SET status = $1 WHERE id = $2`, [novoStatus, apId])
+        await client.query(`UPDATE financeiro.contas_pagar SET status = $1 WHERE id = $2`, [novoStatus, apId])
 
         // 5) Montar resposta completa (detalhes)
         const cfRow = await client.query(`SELECT nome_conta FROM financeiro.contas_financeiras WHERE id = $1`, [Number(body.conta_financeira_id)])
         const mpRow = await client.query(`SELECT nome FROM financeiro.metodos_pagamento WHERE id = $1`, [Number(body.metodo_pagamento_id)])
-        const fornNameRow = ap.entidade_id ? await client.query(`SELECT nome FROM entidades.fornecedores WHERE id = $1`, [ap.entidade_id]) : { rows: [] as Record<string, unknown>[] }
+        const fornNameRow = ap.fornecedor_id ? await client.query(`SELECT nome_fantasia AS nome FROM entidades.fornecedores WHERE id = $1`, [ap.fornecedor_id]) : { rows: [] as Record<string, unknown>[] }
 
         const conta_financeira_nome = String(cfRow.rows?.[0]?.nome_conta || `Conta #${body.conta_financeira_id}`)
         const forma_pagamento_nome = String(mpRow.rows?.[0]?.nome || `Método #${body.metodo_pagamento_id}`)
@@ -142,7 +139,7 @@ export async function POST(req: Request) {
       return Response.json(result.response)
     }
 
-    // Mantém compatibilidade com FormData (caminho antigo)
+    // FormData — criar somente cabeçalho (novo schema), sem vincular AP
     const form = await req.formData()
     const descricao = String(form.get('descricao') || '').trim()
     const valorRaw = String(form.get('valor') || '').trim()
@@ -155,8 +152,8 @@ export async function POST(req: Request) {
     if (Number.isNaN(valor)) return Response.json({ success: false, message: 'valor inválido' }, { status: 400 })
 
     const tenant_id_raw = String(form.get('tenant_id') || '').trim()
-    const entidade_id_raw = String(form.get('entidade_id') || '').trim() // fornecedor
-    const categoria_id_raw = String(form.get('categoria_id') || '').trim()
+    const entidade_id_raw = String(form.get('entidade_id') || '').trim() // fornecedor (não usado no header)
+    const categoria_id_raw = String(form.get('categoria_id') || '').trim() // não usado no header
     const conta_financeira_id_raw = String(form.get('conta_financeira_id') || '').trim()
     const status = String(form.get('status') || '').trim() || null
 
@@ -167,11 +164,11 @@ export async function POST(req: Request) {
 
     const result = await withTransaction(async (client) => {
       const insert = await client.query(
-        `INSERT INTO financeiro.lancamentos_financeiros (
-           tenant_id, tipo, descricao, valor, data_lancamento, data_vencimento, status, entidade_id, categoria_id, conta_financeira_id
-         ) VALUES ($1, 'pagamento_efetuado', $2, $3, $4, NULL, $5, $6, $7, $8)
+        `INSERT INTO financeiro.pagamentos_efetuados (
+           tenant_id, status, data_pagamento, data_lancamento, conta_financeira_id, metodo_pagamento_id, valor_total_pagamento, observacao
+         ) VALUES ($1, COALESCE($2,'pago'), $3, $3, $4, NULL, $5, $6)
          RETURNING id`,
-        [tenant_id, descricao, Math.abs(valor), data_lancamento, status, entidade_id, categoria_id, conta_financeira_id]
+        [tenant_id, status, data_lancamento, conta_financeira_id, Math.abs(valor), descricao]
       )
       const id = Number(insert.rows[0]?.id)
       if (!id) throw new Error('Falha ao criar pagamento efetuado')
