@@ -14,10 +14,41 @@ export default function CadastroRegraContabilSheet({ onSaved }: { onSaved?: () =
 
   const [origem, setOrigem] = React.useState('contas_a_pagar')
   const [subtipo, setSubtipo] = React.useState('principal')
-  const [planoContaId, setPlanoContaId] = React.useState('')
-  const [contaDebitoId, setContaDebitoId] = React.useState('')
-  const [contaCreditoId, setContaCreditoId] = React.useState('')
+  const [planoContaId, setPlanoContaId] = React.useState<number | null>(null)
+  const [contaDebitoId, setContaDebitoId] = React.useState<number | null>(null)
+  const [contaCreditoId, setContaCreditoId] = React.useState<number | null>(null)
   const [descricao, setDescricao] = React.useState('')
+
+  // Lookups (plano/contas) com busca
+  type PlanoRow = { id: number; codigo: string; nome: string; aceita_lancamento?: boolean }
+  const [qPlano, setQPlano] = React.useState('')
+  const [qDebito, setQDebito] = React.useState('')
+  const [qCredito, setQCredito] = React.useState('')
+  const [optsPlano, setOptsPlano] = React.useState<PlanoRow[]>([])
+  const [optsDebito, setOptsDebito] = React.useState<PlanoRow[]>([])
+  const [optsCredito, setOptsCredito] = React.useState<PlanoRow[]>([])
+  const [loadingPlano, setLoadingPlano] = React.useState(false)
+  const [loadingDebito, setLoadingDebito] = React.useState(false)
+  const [loadingCredito, setLoadingCredito] = React.useState(false)
+
+  async function fetchPlanoOpts(q: string): Promise<PlanoRow[]> {
+    const params = new URLSearchParams()
+    params.set('view', 'plano-contas')
+    params.set('aceita_lancamento', '1')
+    params.set('tipo', 'Custo,Despesa')
+    params.set('order_by', 'codigo')
+    params.set('pageSize', '20')
+    if (q) params.set('q', q)
+    const res = await fetch(`/api/modulos/contabilidade?${params.toString()}`, { cache: 'no-store' })
+    const j = await res.json()
+    const rows = Array.isArray(j?.rows) ? j.rows as Array<Record<string, unknown>> : []
+    return rows.map(r => ({ id: Number(r['id']), codigo: String(r['codigo'] || ''), nome: String(r['nome'] || ''), aceita_lancamento: Boolean(r['aceita_lancamento']) }))
+  }
+
+  // Debounced loaders
+  React.useEffect(() => { let c = false; (async () => { setLoadingPlano(true); try { setOptsPlano(await fetchPlanoOpts(qPlano)) } finally { if (!c) setLoadingPlano(false) } })(); return () => { c = true } }, [qPlano])
+  React.useEffect(() => { let c = false; (async () => { setLoadingDebito(true); try { setOptsDebito(await fetchPlanoOpts(qDebito)) } finally { if (!c) setLoadingDebito(false) } })(); return () => { c = true } }, [qDebito])
+  React.useEffect(() => { let c = false; (async () => { setLoadingCredito(true); try { setOptsCredito(await fetchPlanoOpts(qCredito)) } finally { if (!c) setLoadingCredito(false) } })(); return () => { c = true } }, [qCredito])
 
   async function handleSave() {
     try {
@@ -34,7 +65,7 @@ export default function CadastroRegraContabilSheet({ onSaved }: { onSaved?: () =
       const j = await res.json()
       if (!res.ok || !j?.success) throw new Error(j?.message || `HTTP ${res.status}`)
       setOpen(false)
-      setOrigem('contas_a_pagar'); setSubtipo('principal'); setPlanoContaId(''); setContaDebitoId(''); setContaCreditoId(''); setDescricao('')
+      setOrigem('contas_a_pagar'); setSubtipo('principal'); setPlanoContaId(null); setContaDebitoId(null); setContaCreditoId(null); setDescricao('')
       onSaved?.()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Falha ao salvar')
@@ -73,17 +104,67 @@ export default function CadastroRegraContabilSheet({ onSaved }: { onSaved?: () =
                 <Label>Subtipo (opcional)</Label>
                 <Input value={subtipo} onChange={(e) => setSubtipo(e.target.value)} placeholder="ex.: principal" />
               </div>
-              <div>
-                <Label>Plano de Contas (ID)</Label>
-                <Input value={planoContaId} onChange={(e) => setPlanoContaId(e.target.value)} placeholder="ex.: 101" />
+              <div className="col-span-2">
+                <Label>Plano de Contas (selecionar pelo código/nome)</Label>
+                <div className="flex items-center gap-2 mb-2">
+                  <Input value={qPlano} onChange={(e) => setQPlano(e.target.value)} placeholder="Buscar plano por código/nome…" />
+                </div>
+                <div className="max-h-40 overflow-auto border rounded">
+                  {loadingPlano ? <div className="p-2 text-xs text-gray-500">Carregando…</div> : (
+                    <ul>
+                      {optsPlano.map(opt => (
+                        <li key={opt.id}>
+                          <button type="button" className={`w-full text-left px-2 py-1 text-sm hover:bg-gray-50 ${planoContaId === opt.id ? 'bg-amber-50' : ''}`} onClick={() => setPlanoContaId(opt.id)}>
+                            <span className="font-mono text-[11px] text-gray-700">{opt.codigo}</span> — {opt.nome}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+                {planoContaId && (
+                  <div className="text-xs text-gray-600 mt-1">Selecionado: {optsPlano.find(o => o.id === planoContaId)?.codigo} — {optsPlano.find(o => o.id === planoContaId)?.nome}</div>
+                )}
               </div>
               <div>
-                <Label>Conta Débito (ID)</Label>
-                <Input value={contaDebitoId} onChange={(e) => setContaDebitoId(e.target.value)} placeholder="ex.: 601" />
+                <Label>Conta Débito</Label>
+                <Input value={qDebito} onChange={(e) => setQDebito(e.target.value)} placeholder="Buscar conta débito…" className="mb-2" />
+                <div className="max-h-40 overflow-auto border rounded">
+                  {loadingDebito ? <div className="p-2 text-xs text-gray-500">Carregando…</div> : (
+                    <ul>
+                      {optsDebito.map(opt => (
+                        <li key={opt.id}>
+                          <button type="button" className={`w-full text-left px-2 py-1 text-sm hover:bg-gray-50 ${contaDebitoId === opt.id ? 'bg-amber-50' : ''}`} onClick={() => setContaDebitoId(opt.id)}>
+                            <span className="font-mono text-[11px] text-gray-700">{opt.codigo}</span> — {opt.nome}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+                {contaDebitoId && (
+                  <div className="text-xs text-gray-600 mt-1">Selecionada: {optsDebito.find(o => o.id === contaDebitoId)?.codigo} — {optsDebito.find(o => o.id === contaDebitoId)?.nome}</div>
+                )}
               </div>
               <div>
-                <Label>Conta Crédito (ID)</Label>
-                <Input value={contaCreditoId} onChange={(e) => setContaCreditoId(e.target.value)} placeholder="ex.: 211" />
+                <Label>Conta Crédito</Label>
+                <Input value={qCredito} onChange={(e) => setQCredito(e.target.value)} placeholder="Buscar conta crédito…" className="mb-2" />
+                <div className="max-h-40 overflow-auto border rounded">
+                  {loadingCredito ? <div className="p-2 text-xs text-gray-500">Carregando…</div> : (
+                    <ul>
+                      {optsCredito.map(opt => (
+                        <li key={opt.id}>
+                          <button type="button" className={`w-full text-left px-2 py-1 text-sm hover:bg-gray-50 ${contaCreditoId === opt.id ? 'bg-amber-50' : ''}`} onClick={() => setContaCreditoId(opt.id)}>
+                            <span className="font-mono text-[11px] text-gray-700">{opt.codigo}</span> — {opt.nome}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+                {contaCreditoId && (
+                  <div className="text-xs text-gray-600 mt-1">Selecionada: {optsCredito.find(o => o.id === contaCreditoId)?.codigo} — {optsCredito.find(o => o.id === contaCreditoId)?.nome}</div>
+                )}
               </div>
               <div className="col-span-2">
                 <Label>Descrição</Label>
@@ -102,4 +183,3 @@ export default function CadastroRegraContabilSheet({ onSaved }: { onSaved?: () =
     </Sheet>
   )
 }
-
