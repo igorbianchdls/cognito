@@ -58,6 +58,7 @@ export default function ModulosFinanceiroPage() {
         { value: 'movimentos', label: 'Movimentos', icon: <Activity className="text-amber-600" /> },
         { value: 'bancos', label: 'Bancos', icon: <Landmark className="text-sky-600" /> },
         { value: 'contas', label: 'Contas Financeiras', icon: <Wallet className="text-gray-700" /> },
+        { value: 'categorias-despesa', label: 'Categorias de Despesa', icon: <Folder className="text-violet-700" /> },
       ],
       selected: 'contas-a-pagar',
     })
@@ -490,6 +491,16 @@ export default function ModulosFinanceiroPage() {
           { accessorKey: 'filial', header: () => <IconLabelHeader icon={<Building2 className="h-3.5 w-3.5" />} label="Filial" /> },
           { accessorKey: 'unidade_negocio', header: () => <IconLabelHeader icon={<Building2 className="h-3.5 w-3.5" />} label="Unid. Negócio" /> },
         ]
+      case 'categorias-despesa':
+        return [
+          { accessorKey: 'codigo', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Código" /> },
+          { accessorKey: 'nome', header: () => <IconLabelHeader icon={<FileText className="h-3.5 w-3.5" />} label="Nome" /> },
+          { accessorKey: 'descricao', header: () => <IconLabelHeader icon={<FileText className="h-3.5 w-3.5" />} label="Descrição" /> },
+          { accessorKey: 'tipo', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Tipo" /> },
+          { accessorKey: 'natureza', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Natureza" /> },
+          { accessorKey: 'categoria_pai_id', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Categoria Pai ID" /> },
+          { accessorKey: 'plano_conta_id', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Plano Conta ID" /> },
+        ]
       case 'pagamentos-efetuados':
         return [
           { accessorKey: 'numero_pagamento', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Nº Pagamento" /> },
@@ -717,6 +728,8 @@ export default function ModulosFinanceiroPage() {
           return <Activity className="h-4 w-4" />
         case 'contas':
           return <Wallet className="h-4 w-4" />
+        case 'categorias-despesa':
+          return <Folder className="h-4 w-4" />
         default:
           return null
       }

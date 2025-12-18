@@ -182,6 +182,15 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
     criado_em: 'cl.criado_em',
     atualizado_em: 'cl.atualizado_em',
   },
+  'categorias-despesa': {
+    codigo: 'cd.codigo',
+    nome: 'cd.nome',
+    descricao: 'cd.descricao',
+    tipo: 'cd.tipo',
+    natureza: 'cd.natureza',
+    categoria_pai_id: 'cd.categoria_pai_id',
+    plano_conta_id: 'cd.plano_conta_id',
+  },
   projetos: {
     id: 'p.id',
     codigo: 'p.codigo',
@@ -1244,6 +1253,16 @@ ORDER BY
                           cl.criado_em,
                           cl.atualizado_em`;
       whereDateCol = 'cl.criado_em';
+    } else if (view === 'categorias-despesa') {
+      baseSql = `FROM financeiro.categorias_despesa cd`;
+      selectSql = `SELECT cd.codigo,
+                          cd.nome,
+                          cd.descricao,
+                          cd.tipo,
+                          cd.natureza,
+                          cd.categoria_pai_id,
+                          cd.plano_conta_id`;
+      whereDateCol = 'cd.criado_em';
     } else if (view === 'projetos') {
       baseSql = `FROM financeiro.projetos p`;
       selectSql = `SELECT p.id,
@@ -1324,6 +1343,9 @@ ORDER BY
           break
         case 'projetos':
           orderClause = 'ORDER BY p.data_inicio DESC'
+          break
+        case 'categorias-despesa':
+          orderClause = 'ORDER BY cd.tipo ASC, cd.nome ASC'
           break
         default:
           orderClause = `ORDER BY ${whereDateCol} DESC`
