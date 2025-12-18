@@ -15,7 +15,9 @@ export default function CadastroContaAReceberSheet({ triggerLabel = "Cadastrar",
 
   const [clientes, setClientes] = React.useState<Item[]>([])
   const [categorias, setCategorias] = React.useState<{ id: number; nome: string; tipo: string }[]>([])
-  const [contas, setContas] = React.useState<Item[]>([])
+  const [centrosLucro, setCentrosLucro] = React.useState<Item[]>([])
+  const [departamentos, setDepartamentos] = React.useState<Item[]>([])
+  const [filiais, setFiliais] = React.useState<Item[]>([])
 
   const [descricao, setDescricao] = React.useState("")
   const [valor, setValor] = React.useState("")
@@ -23,24 +25,35 @@ export default function CadastroContaAReceberSheet({ triggerLabel = "Cadastrar",
   const [dataVenc, setDataVenc] = React.useState("")
   const [clienteId, setClienteId] = React.useState("")
   const [categoriaId, setCategoriaId] = React.useState("")
-  const [contaId, setContaId] = React.useState("")
+  const [centroLucroId, setCentroLucroId] = React.useState("")
+  const [departamentoId, setDepartamentoId] = React.useState("")
+  const [filialId, setFilialId] = React.useState("")
   const [status, setStatus] = React.useState("pendente")
   const [tenantId, setTenantId] = React.useState("")
 
-  const reset = () => { setDescricao(""); setValor(""); setDataLanc(""); setDataVenc(""); setClienteId(""); setCategoriaId(""); setContaId(""); setStatus("pendente"); setTenantId("") }
+  const reset = () => { setDescricao(""); setValor(""); setDataLanc(""); setDataVenc(""); setClienteId(""); setCategoriaId(""); setCentroLucroId(""); setDepartamentoId(""); setFilialId(""); setStatus("pendente"); setTenantId("") }
 
   const fetchList = async <T,>(url: string): Promise<T[]> => {
     try { const res = await fetch(url, { cache: 'no-store' }); const json = await res.json(); return res.ok && json?.success && Array.isArray(json?.rows) ? json.rows as T[] : [] } catch { return [] as T[] }
   }
 
-  React.useEffect(() => { if (!isOpen) return; (async () => {
-    const [cl, cs, cfs] = await Promise.all([
-      fetchList<Item>('/api/modulos/financeiro/clientes/list'),
-      fetchList<{ id: number; nome: string; tipo: string }>('/api/modulos/financeiro/categorias/list'),
-      fetchList<Item>('/api/modulos/financeiro/contas-financeiras/list'),
-    ])
-    setClientes(cl); setCategorias(cs); setContas(cfs)
-  })() }, [isOpen])
+  React.useEffect(() => {
+    if (!isOpen) return;
+    (async () => {
+      const [cl, cs, cluc, deps, fls] = await Promise.all([
+        fetchList<Item>('/api/modulos/financeiro/clientes/list'),
+        fetchList<{ id: number; nome: string; tipo: string }>('/api/modulos/financeiro/categorias/list'),
+        fetchList<{ id: number; nome: string }>(`/api/modulos/financeiro?view=centros-de-lucro&pageSize=1000`),
+        fetchList<{ id: number; nome: string }>(`/api/modulos/empresa?view=departamentos&pageSize=1000`),
+        fetchList<{ id: number; nome: string }>(`/api/modulos/empresa?view=filiais&pageSize=1000`),
+      ])
+      setClientes(cl);
+      setCategorias(cs);
+      setCentrosLucro(cluc.map(r => ({ id: r.id, nome: r.nome })) as Item[])
+      setDepartamentos(deps.map(r => ({ id: r.id, nome: r.nome })) as Item[])
+      setFiliais(fls.map(r => ({ id: r.id, nome: r.nome })) as Item[])
+    })()
+  }, [isOpen])
 
   const onSubmit = async (): Promise<{ success: boolean; error?: string }> => {
     if (!(descricao.trim() && valor && dataLanc && dataVenc)) {
@@ -57,7 +70,9 @@ export default function CadastroContaAReceberSheet({ triggerLabel = "Cadastrar",
         fd.set('cliente_id', clienteId) // novo schema
       }
       if (categoriaId) fd.set('categoria_id', categoriaId)
-      if (contaId) fd.set('conta_financeira_id', contaId)
+      if (centroLucroId) fd.set('centro_lucro_id', centroLucroId)
+      if (departamentoId) fd.set('departamento_id', departamentoId)
+      if (filialId) fd.set('filial_id', filialId)
       if (status) fd.set('status', status.trim())
       if (tenantId) fd.set('tenant_id', tenantId)
       const res = await fetch('/api/modulos/financeiro/contas-a-receber', { method: 'POST', body: fd })
@@ -98,10 +113,24 @@ export default function CadastroContaAReceberSheet({ triggerLabel = "Cadastrar",
         </Select>
       </div>
       <div>
-        <Label>Conta Financeira</Label>
-        <Select value={contaId} onValueChange={setContaId}>
+        <Label>Centro de Lucro</Label>
+        <Select value={centroLucroId} onValueChange={setCentroLucroId}>
           <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-          <SelectContent>{contas.map(c => <SelectItem key={c.id} value={String(c.id)}>{c.nome}</SelectItem>)}</SelectContent>
+          <SelectContent>{centrosLucro.map(c => <SelectItem key={c.id} value={String(c.id)}>{c.nome}</SelectItem>)}</SelectContent>
+        </Select>
+      </div>
+      <div>
+        <Label>Departamento</Label>
+        <Select value={departamentoId} onValueChange={setDepartamentoId}>
+          <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+          <SelectContent>{departamentos.map(d => <SelectItem key={d.id} value={String(d.id)}>{d.nome}</SelectItem>)}</SelectContent>
+        </Select>
+      </div>
+      <div>
+        <Label>Filial</Label>
+        <Select value={filialId} onValueChange={setFilialId}>
+          <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+          <SelectContent>{filiais.map(f => <SelectItem key={f.id} value={String(f.id)}>{f.nome}</SelectItem>)}</SelectContent>
         </Select>
       </div>
       <div><Label>Status</Label><Input value={status} onChange={(e)=>setStatus(e.target.value)} placeholder="pendente | recebido | vencido" /></div>
