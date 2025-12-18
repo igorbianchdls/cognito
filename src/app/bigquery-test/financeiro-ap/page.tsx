@@ -745,7 +745,7 @@ export default function BigQueryTestFinanceiroAP() {
                     cur.push(r)
                     groups.set(id, cur)
                   }
-                  const entries = Array.from(groups.entries())
+                  const entries = Array.from(groups.entries()).slice(0, 10)
                   return entries.map(([id, list]) => {
                     const h = list[0] || {}
                     return (
