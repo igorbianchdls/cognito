@@ -242,6 +242,83 @@ export default function ModulosFinanceiroPage() {
     )
   }
 
+  // Nested detail component for Contas a Receber: linhas do título
+  function LinhasContaReceber({ contaReceberId }: { contaReceberId: number }) {
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
+    const [rows, setRows] = useState<Array<Record<string, unknown>>>([])
+    const cacheRef = (LinhasContaReceber as unknown as { _cache?: Map<number, Array<Record<string, unknown>>> })._cache
+      || new Map<number, Array<Record<string, unknown>>>()
+    ;(LinhasContaReceber as unknown as { _cache?: Map<number, Array<Record<string, unknown>>> })._cache = cacheRef
+
+    useEffect(() => {
+      let cancelled = false
+      async function load() {
+        try {
+          setLoading(true); setError(null)
+          if (!contaReceberId || !Number.isFinite(contaReceberId)) throw new Error('ID de conta inválido')
+          if (cacheRef.has(contaReceberId)) { setRows(cacheRef.get(contaReceberId) || []); return }
+          const res = await fetch(`/api/modulos/financeiro/contas-a-receber/${contaReceberId}/linhas`, { cache: 'no-store' })
+          const j = await res.json()
+          if (!res.ok || !j?.success) throw new Error(j?.message || `HTTP ${res.status}`)
+          const list: Array<Record<string, unknown>> = Array.isArray(j.rows) ? j.rows : []
+          if (!cancelled) { setRows(list); cacheRef.set(contaReceberId, list) }
+        } catch (e) {
+          if (!cancelled) setError(e instanceof Error ? e.message : 'Falha ao carregar linhas')
+        } finally { if (!cancelled) setLoading(false) }
+      }
+      load();
+      return () => { cancelled = true }
+    }, [contaReceberId])
+
+    if (loading) return <div className="text-xs text-gray-500 p-3">Carregando linhas…</div>
+    if (error) return <div className="text-xs text-red-600 p-3">{error}</div>
+    if (!rows.length) return <div className="text-xs text-gray-500 p-3">Sem linhas para este título.</div>
+
+    return (
+      <div className="overflow-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-gray-600">
+              <th className="text-left p-2">Linha</th>
+              <th className="text-left p-2">Tipo</th>
+              <th className="text-left p-2">Descrição</th>
+              <th className="text-right p-2">Qtd</th>
+              <th className="text-right p-2">Valor Unit.</th>
+              <th className="text-right p-2">Bruto</th>
+              <th className="text-right p-2">Desconto</th>
+              <th className="text-right p-2">Impostos</th>
+              <th className="text-right p-2">Líquido</th>
+              <th className="text-left p-2">Categoria</th>
+              <th className="text-left p-2">Departamento</th>
+              <th className="text-left p-2">Centro Custo</th>
+              <th className="text-left p-2">Unidade</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r, i) => (
+              <tr key={String(r['conta_receber_linha_id'] ?? i)} className="border-t border-gray-200">
+                <td className="p-2">{String(r['conta_receber_linha_id'] ?? i + 1)}</td>
+                <td className="p-2">{String(r['tipo_linha'] ?? '—')}</td>
+                <td className="p-2">{String(r['descricao'] ?? '—')}</td>
+                <td className="p-2 text-right">{String(r['quantidade'] ?? '0')}</td>
+                <td className="p-2 text-right">{formatBRL(r['valor_unitario'])}</td>
+                <td className="p-2 text-right">{formatBRL(r['valor_bruto'])}</td>
+                <td className="p-2 text-right">{formatBRL(r['valor_desconto'])}</td>
+                <td className="p-2 text-right">{formatBRL(r['valor_impostos'])}</td>
+                <td className="p-2 text-right">{formatBRL(r['valor_liquido'])}</td>
+                <td className="p-2">{String(r['categoria_financeira'] ?? '')}</td>
+                <td className="p-2">{String(r['departamento'] ?? '')}</td>
+                <td className="p-2">{String(r['centro_custo'] ?? '')}</td>
+                <td className="p-2">{String(r['unidade_negocio'] ?? '')}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )
+  }
+
   const columns: ColumnDef<Row>[] = useMemo(() => {
     switch (tabs.selected) {
       case 'contas':
@@ -780,7 +857,7 @@ export default function ModulosFinanceiroPage() {
                     // Banco (Extrato)
                     banco: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 140 },
                   }}
-                  enableExpand={tabs.selected === 'extrato' || tabs.selected === 'contas-a-pagar' || tabs.selected === 'pagamentos-efetuados'}
+                  enableExpand={tabs.selected === 'extrato' || tabs.selected === 'contas-a-pagar' || tabs.selected === 'pagamentos-efetuados' || tabs.selected === 'contas-a-receber'}
                   renderDetail={tabs.selected === 'extrato' ? (row => {
                     type ExtratoTransacao = {
                       transacao_id?: string | number | null
@@ -838,6 +915,13 @@ export default function ModulosFinanceiroPage() {
                       return <div className="text-xs text-gray-500 p-3">ID de pagamento inválido.</div>
                     }
                     return <LinhasPagamentoEfetuado pagamentoId={pagamentoId} />
+                  }) : (tabs.selected === 'contas-a-receber' ? (row => {
+                    const idRaw = row['conta_receber_id'] as string | number | undefined
+                    const contaId = idRaw ? Number(idRaw) : NaN
+                    if (!Number.isFinite(contaId)) {
+                      return <div className="text-xs text-gray-500 p-3">ID de lançamento inválido.</div>
+                    }
+                    return <LinhasContaReceber contaReceberId={contaId} />
                   }) : undefined))}
                   enableSearch={tabelaUI.enableSearch}
                   showColumnToggle={tabelaUI.enableColumnToggle}
