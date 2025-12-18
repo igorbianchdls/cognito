@@ -47,6 +47,23 @@ export default function BigQueryTestFinanceiroAP() {
   const [prError, setPrError] = useState<string | null>(null)
   const [prReloadKey, setPrReloadKey] = useState(0)
 
+  // Expand/collapse and caches per seção
+  const [apExpanded, setApExpanded] = useState<Record<number, boolean>>({})
+  const [arExpanded, setArExpanded] = useState<Record<number, boolean>>({})
+  const [peExpanded, setPeExpanded] = useState<Record<number, boolean>>({})
+  const [prExpanded, setPrExpanded] = useState<Record<number, boolean>>({})
+
+  const [apLines, setApLines] = useState<Record<number, Row[]>>({})
+  const [arLines, setArLines] = useState<Record<number, Row[]>>({})
+  const [peLines, setPeLines] = useState<Record<number, Row[]>>({})
+  const [prLines, setPrLines] = useState<Record<number, Row[]>>({})
+
+  async function loadLines(url: string): Promise<Row[]> {
+    const res = await fetch(url, { cache: 'no-store' })
+    const j = await res.json()
+    return res.ok && j?.success && Array.isArray(j.rows) ? (j.rows as Row[]) : []
+  }
+
   useEffect(() => {
     let cancelled = false
     async function load() {
@@ -167,6 +184,7 @@ export default function BigQueryTestFinanceiroAP() {
             </thead>
             <tbody>
               {rows.map((r, i) => (
+                <>
                 <tr key={String(r['conta_pagar_id'] ?? i)} className="border-t border-gray-200">
                   <td className="p-2">{String(r['conta_pagar_id'] ?? '')}</td>
                   <td className="p-2">{String(r['fornecedor'] ?? '')}</td>
@@ -181,7 +199,21 @@ export default function BigQueryTestFinanceiroAP() {
                   <td className="p-2">{String(r['centro_custo'] ?? '')}</td>
                   <td className="p-2">{String(r['filial'] ?? '')}</td>
                   <td className="p-2">{String(r['descricao'] ?? '')}</td>
-                  <td className="p-2">
+                  <td className="p-2 space-x-2">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={async () => {
+                        const id = Number(r['conta_pagar_id'])
+                        if (!Number.isFinite(id)) return
+                        const expanded = !apExpanded[id]
+                        setApExpanded(prev => ({ ...prev, [id]: expanded }))
+                        if (expanded && !apLines[id]) {
+                          const lines = await loadLines(`/api/modulos/financeiro/contas-a-pagar/${id}/linhas`)
+                          setApLines(prev => ({ ...prev, [id]: lines }))
+                        }
+                      }}
+                    >{apExpanded[Number(r['conta_pagar_id'])] ? 'Ocultar' : 'Ver Linhas'}</Button>
                     <Button
                       variant="destructive"
                       size="sm"
@@ -196,6 +228,57 @@ export default function BigQueryTestFinanceiroAP() {
                     >Excluir</Button>
                   </td>
                 </tr>
+                {Number.isFinite(Number(r['conta_pagar_id'])) && apExpanded[Number(r['conta_pagar_id'])] && (
+                  <tr>
+                    <td colSpan={14} className="p-2 bg-gray-50">
+                      {Array.isArray(apLines[Number(r['conta_pagar_id'])]) && apLines[Number(r['conta_pagar_id'])]!.length > 0 ? (
+                        <div className="overflow-auto">
+                          <table className="w-full text-xs">
+                            <thead>
+                              <tr className="text-gray-600">
+                                <th className="p-1 text-left">Linha</th>
+                                <th className="p-1 text-left">Tipo</th>
+                                <th className="p-1 text-left">Descrição</th>
+                                <th className="p-1 text-right">Qtd</th>
+                                <th className="p-1 text-right">Unit</th>
+                                <th className="p-1 text-right">Bruto</th>
+                                <th className="p-1 text-right">Desc</th>
+                                <th className="p-1 text-right">Imp</th>
+                                <th className="p-1 text-right">Líquido</th>
+                                <th className="p-1 text-left">Categoria</th>
+                                <th className="p-1 text-left">Departamento</th>
+                                <th className="p-1 text-left">Centro Custo</th>
+                                <th className="p-1 text-left">Unidade</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {apLines[Number(r['conta_pagar_id'])]!.map((ln, j) => (
+                                <tr key={String(ln['conta_pagar_linha_id'] ?? j)} className="border-t">
+                                  <td className="p-1">{String(ln['conta_pagar_linha_id'] ?? j + 1)}</td>
+                                  <td className="p-1">{String(ln['tipo_linha'] ?? '')}</td>
+                                  <td className="p-1">{String(ln['descricao'] ?? '')}</td>
+                                  <td className="p-1 text-right">{String(ln['quantidade'] ?? '')}</td>
+                                  <td className="p-1 text-right">{formatBRL(ln['valor_unitario'])}</td>
+                                  <td className="p-1 text-right">{formatBRL(ln['valor_bruto'])}</td>
+                                  <td className="p-1 text-right">{formatBRL(ln['valor_desconto'])}</td>
+                                  <td className="p-1 text-right">{formatBRL(ln['valor_impostos'])}</td>
+                                  <td className="p-1 text-right">{formatBRL(ln['valor_liquido'])}</td>
+                                  <td className="p-1">{String(ln['categoria_despesa'] ?? '')}</td>
+                                  <td className="p-1">{String(ln['departamento'] ?? '')}</td>
+                                  <td className="p-1">{String(ln['centro_custo'] ?? '')}</td>
+                                  <td className="p-1">{String(ln['unidade_negocio'] ?? '')}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      ) : (
+                        <div className="text-xs text-gray-500">Sem linhas.</div>
+                      )}
+                    </td>
+                  </tr>
+                )}
+                </>
               ))}
               {!rows.length && (
                 <tr><td colSpan={13} className="p-3 text-sm text-gray-500">Nenhum registro encontrado.</td></tr>
@@ -239,8 +322,9 @@ export default function BigQueryTestFinanceiroAP() {
                 </tr>
               </thead>
               <tbody>
-                {arRows.map((r, i) => (
-                  <tr key={String(r['conta_receber_id'] ?? i)} className="border-t border-gray-200">
+              {arRows.map((r, i) => (
+                <>
+                <tr key={String(r['conta_receber_id'] ?? i)} className="border-t border-gray-200">
                     <td className="p-2">{String(r['conta_receber_id'] ?? '')}</td>
                     <td className="p-2">{String(r['cliente'] ?? '')}</td>
                     <td className="p-2">{String(r['numero_documento'] ?? '')}</td>
@@ -254,7 +338,21 @@ export default function BigQueryTestFinanceiroAP() {
                     <td className="p-2">{String(r['centro_lucro'] ?? '')}</td>
                     <td className="p-2">{String(r['filial'] ?? '')}</td>
                     <td className="p-2">{String(r['descricao'] ?? '')}</td>
-                    <td className="p-2">
+                    <td className="p-2 space-x-2">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={async () => {
+                          const id = Number(r['conta_receber_id'])
+                          if (!Number.isFinite(id)) return
+                          const expanded = !arExpanded[id]
+                          setArExpanded(prev => ({ ...prev, [id]: expanded }))
+                          if (expanded && !arLines[id]) {
+                            const lines = await loadLines(`/api/modulos/financeiro/contas-a-receber/${id}/linhas`)
+                            setArLines(prev => ({ ...prev, [id]: lines }))
+                          }
+                        }}
+                      >{arExpanded[Number(r['conta_receber_id'])] ? 'Ocultar' : 'Ver Linhas'}</Button>
                       <Button
                         variant="destructive"
                         size="sm"
@@ -269,7 +367,58 @@ export default function BigQueryTestFinanceiroAP() {
                       >Excluir</Button>
                     </td>
                   </tr>
-                ))}
+                  {Number.isFinite(Number(r['conta_receber_id'])) && arExpanded[Number(r['conta_receber_id'])] && (
+                    <tr>
+                      <td colSpan={14} className="p-2 bg-gray-50">
+                        {Array.isArray(arLines[Number(r['conta_receber_id'])]) && arLines[Number(r['conta_receber_id'])]!.length > 0 ? (
+                          <div className="overflow-auto">
+                            <table className="w-full text-xs">
+                              <thead>
+                                <tr className="text-gray-600">
+                                  <th className="p-1 text-left">Linha</th>
+                                  <th className="p-1 text-left">Tipo</th>
+                                  <th className="p-1 text-left">Descrição</th>
+                                  <th className="p-1 text-right">Qtd</th>
+                                  <th className="p-1 text-right">Unit</th>
+                                  <th className="p-1 text-right">Bruto</th>
+                                  <th className="p-1 text-right">Desc</th>
+                                  <th className="p-1 text-right">Imp</th>
+                                  <th className="p-1 text-right">Líquido</th>
+                                  <th className="p-1 text-left">Categoria</th>
+                                  <th className="p-1 text-left">Departamento</th>
+                                  <th className="p-1 text-left">Centro Custo</th>
+                                  <th className="p-1 text-left">Unidade</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {arLines[Number(r['conta_receber_id'])]!.map((ln, j) => (
+                                  <tr key={String(ln['conta_receber_linha_id'] ?? j)} className="border-t">
+                                    <td className="p-1">{String(ln['conta_receber_linha_id'] ?? j + 1)}</td>
+                                    <td className="p-1">{String(ln['tipo_linha'] ?? '')}</td>
+                                    <td className="p-1">{String(ln['descricao'] ?? '')}</td>
+                                    <td className="p-1 text-right">{String(ln['quantidade'] ?? '')}</td>
+                                    <td className="p-1 text-right">{formatBRL(ln['valor_unitario'])}</td>
+                                    <td className="p-1 text-right">{formatBRL(ln['valor_bruto'])}</td>
+                                    <td className="p-1 text-right">{formatBRL(ln['valor_desconto'])}</td>
+                                    <td className="p-1 text-right">{formatBRL(ln['valor_impostos'])}</td>
+                                    <td className="p-1 text-right">{formatBRL(ln['valor_liquido'])}</td>
+                                    <td className="p-1">{String(ln['categoria_financeira'] ?? '')}</td>
+                                    <td className="p-1">{String(ln['departamento'] ?? '')}</td>
+                                    <td className="p-1">{String(ln['centro_custo'] ?? '')}</td>
+                                    <td className="p-1">{String(ln['unidade_negocio'] ?? '')}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        ) : (
+                          <div className="text-xs text-gray-500">Sem linhas.</div>
+                        )}
+                      </td>
+                    </tr>
+                  )}
+                </>
+              ))}
                 {!arRows.length && (
                   <tr><td colSpan={13} className="p-3 text-sm text-gray-500">Nenhum registro encontrado.</td></tr>
                 )}
@@ -312,6 +461,7 @@ export default function BigQueryTestFinanceiroAP() {
               </thead>
               <tbody>
                 {peRows.map((r, i) => (
+                  <>
                   <tr key={String(r['pagamento_id'] ?? i)} className="border-t border-gray-200">
                     <td className="p-2">{String(r['pagamento_id'] ?? '')}</td>
                     <td className="p-2">{String(r['numero_pagamento'] ?? '')}</td>
@@ -323,7 +473,21 @@ export default function BigQueryTestFinanceiroAP() {
                     <td className="p-2">{String(r['metodo_pagamento'] ?? '')}</td>
                     <td className="p-2 text-right">{formatBRL(r['valor_total_pagamento'])}</td>
                     <td className="p-2">{String(r['observacao'] ?? '')}</td>
-                    <td className="p-2">
+                    <td className="p-2 space-x-2">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={async () => {
+                          const id = Number(r['pagamento_id'])
+                          if (!Number.isFinite(id)) return
+                          const expanded = !peExpanded[id]
+                          setPeExpanded(prev => ({ ...prev, [id]: expanded }))
+                          if (expanded && !peLines[id]) {
+                            const lines = await loadLines(`/api/modulos/financeiro/pagamentos-efetuados/${id}/linhas`)
+                            setPeLines(prev => ({ ...prev, [id]: lines }))
+                          }
+                        }}
+                      >{peExpanded[Number(r['pagamento_id'])] ? 'Ocultar' : 'Ver Linhas'}</Button>
                       <Button
                         variant="destructive"
                         size="sm"
@@ -338,6 +502,49 @@ export default function BigQueryTestFinanceiroAP() {
                       >Excluir</Button>
                     </td>
                   </tr>
+                  {Number.isFinite(Number(r['pagamento_id'])) && peExpanded[Number(r['pagamento_id'])] && (
+                    <tr>
+                      <td colSpan={11} className="p-2 bg-gray-50">
+                        {Array.isArray(peLines[Number(r['pagamento_id'])]) && peLines[Number(r['pagamento_id'])]!.length > 0 ? (
+                          <div className="overflow-auto">
+                            <table className="w-full text-xs">
+                              <thead>
+                                <tr className="text-gray-600">
+                                  <th className="p-1 text-left">Linha</th>
+                                  <th className="p-1 text-left">Documento</th>
+                                  <th className="p-1 text-left">Fornecedor</th>
+                                  <th className="p-1 text-right">Valor Documento</th>
+                                  <th className="p-1 text-right">Valor Pago</th>
+                                  <th className="p-1 text-right">Saldo Após</th>
+                                  <th className="p-1 text-right">Desc</th>
+                                  <th className="p-1 text-right">Juros</th>
+                                  <th className="p-1 text-right">Multa</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {peLines[Number(r['pagamento_id'])]!.map((ln, j) => (
+                                  <tr key={String(ln['pagamento_linha_id'] ?? j)} className="border-t">
+                                    <td className="p-1">{String(ln['pagamento_linha_id'] ?? j + 1)}</td>
+                                    <td className="p-1">{String(ln['documento_origem'] ?? '')}</td>
+                                    <td className="p-1">{String(ln['fornecedor'] ?? '')}</td>
+                                    <td className="p-1 text-right">{formatBRL(ln['valor_original_documento'])}</td>
+                                    <td className="p-1 text-right">{formatBRL(ln['valor_pago'])}</td>
+                                    <td className="p-1 text-right">{formatBRL(ln['saldo_apos_pagamento'])}</td>
+                                    <td className="p-1 text-right">{formatBRL(ln['desconto_financeiro'])}</td>
+                                    <td className="p-1 text-right">{formatBRL(ln['juros'])}</td>
+                                    <td className="p-1 text-right">{formatBRL(ln['multa'])}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        ) : (
+                          <div className="text-xs text-gray-500">Sem linhas.</div>
+                        )}
+                      </td>
+                    </tr>
+                  )}
+                  </>
                 ))}
                 {!peRows.length && (
                   <tr><td colSpan={10} className="p-3 text-sm text-gray-500">Nenhum registro encontrado.</td></tr>
@@ -381,6 +588,7 @@ export default function BigQueryTestFinanceiroAP() {
               </thead>
               <tbody>
                 {prRows.map((r, i) => (
+                  <>
                   <tr key={String(r['pagamento_recebido_id'] ?? i)} className="border-t border-gray-200">
                     <td className="p-2">{String(r['pagamento_recebido_id'] ?? '')}</td>
                     <td className="p-2">{String(r['numero_pagamento'] ?? '')}</td>
@@ -392,7 +600,21 @@ export default function BigQueryTestFinanceiroAP() {
                     <td className="p-2">{String(r['metodo_pagamento'] ?? '')}</td>
                     <td className="p-2 text-right">{formatBRL(r['valor_total_recebido'])}</td>
                     <td className="p-2">{String(r['observacao'] ?? '')}</td>
-                    <td className="p-2">
+                    <td className="p-2 space-x-2">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={async () => {
+                          const id = Number(r['pagamento_recebido_id'])
+                          if (!Number.isFinite(id)) return
+                          const expanded = !prExpanded[id]
+                          setPrExpanded(prev => ({ ...prev, [id]: expanded }))
+                          if (expanded && !prLines[id]) {
+                            const lines = await loadLines(`/api/modulos/financeiro/pagamentos-recebidos/${id}/linhas`)
+                            setPrLines(prev => ({ ...prev, [id]: lines }))
+                          }
+                        }}
+                      >{prExpanded[Number(r['pagamento_recebido_id'])] ? 'Ocultar' : 'Ver Linhas'}</Button>
                       <Button
                         variant="destructive"
                         size="sm"
@@ -407,6 +629,49 @@ export default function BigQueryTestFinanceiroAP() {
                       >Excluir</Button>
                     </td>
                   </tr>
+                  {Number.isFinite(Number(r['pagamento_recebido_id'])) && prExpanded[Number(r['pagamento_recebido_id'])] && (
+                    <tr>
+                      <td colSpan={11} className="p-2 bg-gray-50">
+                        {Array.isArray(prLines[Number(r['pagamento_recebido_id'])]) && prLines[Number(r['pagamento_recebido_id'])]!.length > 0 ? (
+                          <div className="overflow-auto">
+                            <table className="w-full text-xs">
+                              <thead>
+                                <tr className="text-gray-600">
+                                  <th className="p-1 text-left">Linha</th>
+                                  <th className="p-1 text-left">Documento</th>
+                                  <th className="p-1 text-left">Cliente</th>
+                                  <th className="p-1 text-right">Valor Documento</th>
+                                  <th className="p-1 text-right">Valor Recebido</th>
+                                  <th className="p-1 text-right">Saldo Após</th>
+                                  <th className="p-1 text-right">Desc</th>
+                                  <th className="p-1 text-right">Juros</th>
+                                  <th className="p-1 text-right">Multa</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {prLines[Number(r['pagamento_recebido_id'])]!.map((ln, j) => (
+                                  <tr key={String(ln['pagamento_recebido_linha_id'] ?? j)} className="border-t">
+                                    <td className="p-1">{String(ln['pagamento_recebido_linha_id'] ?? j + 1)}</td>
+                                    <td className="p-1">{String(ln['documento_origem'] ?? '')}</td>
+                                    <td className="p-1">{String(ln['cliente'] ?? '')}</td>
+                                    <td className="p-1 text-right">{formatBRL(ln['valor_original_documento'])}</td>
+                                    <td className="p-1 text-right">{formatBRL(ln['valor_recebido'])}</td>
+                                    <td className="p-1 text-right">{formatBRL(ln['saldo_apos_recebimento'])}</td>
+                                    <td className="p-1 text-right">{formatBRL(ln['desconto_financeiro'])}</td>
+                                    <td className="p-1 text-right">{formatBRL(ln['juros'])}</td>
+                                    <td className="p-1 text-right">{formatBRL(ln['multa'])}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        ) : (
+                          <div className="text-xs text-gray-500">Sem linhas.</div>
+                        )}
+                      </td>
+                    </tr>
+                  )}
+                  </>
                 ))}
                 {!prRows.length && (
                   <tr><td colSpan={10} className="p-3 text-sm text-gray-500">Nenhum registro encontrado.</td></tr>
