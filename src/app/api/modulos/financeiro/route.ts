@@ -964,7 +964,7 @@ ORDER BY
       const total = rows.length
       return Response.json({ success: true, view, page, pageSize, total, rows, sql, params: '[]' }, { headers: { 'Cache-Control': 'no-store' } })
     } else if (view === 'contas-a-receber') {
-      // Contas a Receber — query fornecida (cr/cli/categorias_financeiras e dimensões)
+      // Contas a Receber — query atualizada (inclui centro_lucro e remove centro_custo)
       const sql = `
 SELECT
   cr.id                                AS conta_receber_id,
@@ -981,7 +981,7 @@ SELECT
   cat_h.nome                           AS categoria_financeira,
 
   dep_h.nome                           AS departamento,
-  cc_h.nome                            AS centro_custo,
+  cl.nome                              AS centro_lucro,
   fil.nome                             AS filial,
   un.nome                              AS unidade_negocio,
 
@@ -1003,8 +1003,8 @@ LEFT JOIN financeiro.categorias_financeiras cat_h
 LEFT JOIN empresa.departamentos dep_h
        ON dep_h.id = cr.departamento_id
 
-LEFT JOIN empresa.centros_custo cc_h
-       ON cc_h.id = cr.centro_custo_id
+LEFT JOIN empresa.centros_lucro cl
+       ON cl.id = cr.centro_lucro_id
 
 LEFT JOIN empresa.filiais fil
        ON fil.id = cr.filial_id

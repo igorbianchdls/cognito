@@ -486,7 +486,7 @@ export default function ModulosFinanceiroPage() {
           { accessorKey: 'valor_liquido', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Líquido" />, cell: ({ row }) => formatBRL(row.original['valor_liquido']) },
           { accessorKey: 'categoria_financeira', header: () => <IconLabelHeader icon={<Folder className="h-3.5 w-3.5" />} label="Categoria" /> },
           { accessorKey: 'departamento', header: () => <IconLabelHeader icon={<Building className="h-3.5 w-3.5" />} label="Departamento" /> },
-          { accessorKey: 'centro_custo', header: () => <IconLabelHeader icon={<PieChart className="h-3.5 w-3.5" />} label="Centro Custo" /> },
+          { accessorKey: 'centro_lucro', header: () => <IconLabelHeader icon={<PieChart className="h-3.5 w-3.5" />} label="Centro Lucro" /> },
           { accessorKey: 'filial', header: () => <IconLabelHeader icon={<Building2 className="h-3.5 w-3.5" />} label="Filial" /> },
           { accessorKey: 'unidade_negocio', header: () => <IconLabelHeader icon={<Building2 className="h-3.5 w-3.5" />} label="Unid. Negócio" /> },
         ]
@@ -843,6 +843,7 @@ export default function ModulosFinanceiroPage() {
                     categoria_despesa: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 140 },
                     departamento: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 140 },
                     centro_custo: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 140 },
+                    centro_lucro: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 140 },
                     filial: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 140 },
                     unidade_negocio: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 140 },
                     // Conta e Método (Pagamentos Efetuados/Recebidos)
