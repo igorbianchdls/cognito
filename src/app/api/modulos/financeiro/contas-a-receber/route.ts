@@ -1,4 +1,5 @@
 import { withTransaction } from '@/lib/postgres'
+import { inngest } from '@/lib/inngest'
 
 export const maxDuration = 300
 export const dynamic = 'force-dynamic'
@@ -200,6 +201,8 @@ export async function POST(req: Request) {
         return { id, itens_count: itensCount, linhas_count: itensCount }
       })
 
+      // Evento para LC (Inngest)
+      try { await inngest.send({ name: 'financeiro/contas_a_receber/criada', data: { conta_receber_id: result.id } }) } catch {}
       return Response.json({ success: true, id: result.id, itens_count: result.itens_count, linhas_count: result.linhas_count })
     }
 
@@ -290,6 +293,7 @@ export async function POST(req: Request) {
       return { id }
     })
 
+    try { await inngest.send({ name: 'financeiro/contas_a_receber/criada', data: { conta_receber_id: result.id } }) } catch {}
     return Response.json({ success: true, id: result.id })
   } catch (error) {
     console.error('💸 API /api/modulos/financeiro/contas-a-receber POST error:', error)

@@ -321,3 +321,98 @@ export const pagamentoEfetuadoCriadoFn = inngest.createFunction(
     return { success: true, lcId: out.lcId }
   }
 )
+
+// Conta a Receber -> Lançamento Contábil (reconhecimento de Receita)
+type ContaAReceberPayload = { conta_receber_id: number }
+
+export const contaAReceberCriadaFn = inngest.createFunction(
+  { id: 'financeiro.contas-a-receber.criada->contabil' },
+  { event: 'financeiro/contas_a_receber/criada' },
+  async ({ event, step }) => {
+    const data = (event.data || {}) as Partial<ContaAReceberPayload>
+    const id = Number(data.conta_receber_id)
+    if (!Number.isFinite(id)) await step.run('validate', async () => { throw new Error('conta_receber_id inválido') })
+
+    // Carrega a CR
+    const cr = await step.run('fetch-cr', async () => {
+      const rows = await runQuery<Record<string, unknown>>(
+        `SELECT id, tenant_id, cliente_id, categoria_receita_id, categoria_financeira_id,
+                numero_documento, data_lancamento, valor_liquido, observacao
+           FROM financeiro.contas_receber
+          WHERE id = $1
+          LIMIT 1`,
+        [id]
+      )
+      return rows[0]
+    })
+    if (!cr) return { skipped: true, reason: 'conta_receber_not_found' }
+
+    const tenant_id = Number(cr['tenant_id'] ?? 1)
+    const cliente_id = cr['cliente_id'] !== null && cr['cliente_id'] !== undefined ? Number(cr['cliente_id']) : null
+    const categoria_receita_id = cr['categoria_receita_id'] !== null && cr['categoria_receita_id'] !== undefined ? Number(cr['categoria_receita_id']) : null
+    const numero_documento = String(cr['numero_documento'] || '') || null
+    const data_lancamento = String(cr['data_lancamento'] || new Date().toISOString().slice(0,10))
+    const valor_liquido = Math.abs(Number(cr['valor_liquido'] ?? 0))
+    const historico = String(cr['observacao'] ?? 'Conta a receber')
+
+    // Idempotência
+    const existing = await step.run('check-existing', async () => {
+      const rows = await runQuery<{ id: number }>(
+        `SELECT id FROM contabilidade.lancamentos_contabeis WHERE origem_tabela = 'financeiro.contas_receber' AND origem_id = $1 LIMIT 1`,
+        [id]
+      )
+      return rows[0]?.id || null
+    })
+    if (existing) return { alreadyExists: true, lcId: existing }
+
+    // Categoria Receita -> plano (Cr Receita)
+    const planoReceitaId = await step.run('fetch-plano-receita', async () => {
+      if (!Number.isFinite(categoria_receita_id || NaN)) return null
+      const rows = await runQuery<{ plano_conta_id: number | null }>(
+        `SELECT plano_conta_id FROM financeiro.categorias_receita WHERE id = $1 LIMIT 1`,
+        [categoria_receita_id!]
+      )
+      const v = rows[0]?.plano_conta_id
+      return v !== null && v !== undefined ? Number(v) : null
+    })
+    if (!Number.isFinite(planoReceitaId || NaN)) return { success: false, reason: 'categoria_sem_plano' }
+
+    // Regra: origem='contas_a_receber' + plano -> conta de Clientes (Dr)
+    const regra = await step.run('select-regra', async () => {
+      const rows = await runQuery<{ conta_debito_id: number | null; id: number | null; descricao: string | null }>(
+        `SELECT id, conta_debito_id, descricao
+           FROM contabilidade.regras_contabeis
+          WHERE tenant_id = $1 AND origem = 'contas_a_receber' AND plano_conta_id = $2
+          ORDER BY id ASC
+          LIMIT 1`,
+        [tenant_id, Number(planoReceitaId)]
+      )
+      return rows[0] || null
+    })
+    const contaClientesId = regra?.conta_debito_id !== null && regra?.conta_debito_id !== undefined ? Number(regra?.conta_debito_id) : null
+    if (!Number.isFinite(contaClientesId || NaN)) return { success: false, reason: 'regra_sem_conta_clientes' }
+
+    // Inserção transacional
+    const out = await step.run('create-lancamento', async () => withTransaction(async (client) => {
+      const insertLcSql = `
+        INSERT INTO contabilidade.lancamentos_contabeis
+          (tenant_id, data_lancamento, historico, cliente_id,
+           total_debitos, total_creditos, origem_tabela, origem_id, origem_numero)
+        VALUES ($1,$2,$3,$4,$5,$5,'financeiro.contas_receber',$6,$7)
+        RETURNING id`
+      const lcVals = [tenant_id, data_lancamento, (regra?.descricao ?? historico), cliente_id, valor_liquido, id, numero_documento]
+      const lcRes = await client.query(insertLcSql, lcVals)
+      const lcId = Number(lcRes.rows[0]?.id)
+
+      const insertLinhaSql = `INSERT INTO contabilidade.lancamentos_contabeis_linhas (lancamento_id, lancamento_contabil_id, conta_id, debito, credito, historico) VALUES ($1,$2,$3,$4,$5,$6)`
+      // Dr Clientes
+      await client.query(insertLinhaSql, [lcId, lcId, contaClientesId, valor_liquido, 0, historico])
+      // Cr Receita (plano da categoria)
+      await client.query(insertLinhaSql, [lcId, lcId, Number(planoReceitaId), 0, valor_liquido, historico])
+
+      return { lcId }
+    }))
+
+    return { success: true, lcId: out.lcId, regra_id: regra?.id ?? null }
+  }
+)
