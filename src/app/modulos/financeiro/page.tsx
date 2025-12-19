@@ -50,8 +50,8 @@ export default function ModulosFinanceiroPage() {
     })
     moduleUiActions.setTabs({
       options: [
-        { value: 'contas-a-pagar', label: 'Contas a Pagar', icon: <ArrowUpCircle className="text-rose-500" /> },
-        { value: 'contas-a-receber', label: 'Contas a Receber', icon: <ArrowDownCircle className="text-emerald-600" /> },
+        { value: 'contas-a-pagar', label: 'A Pagar', icon: <ArrowUpCircle className="text-rose-500" /> },
+        { value: 'contas-a-receber', label: 'A Receber', icon: <ArrowDownCircle className="text-emerald-600" /> },
         { value: 'pagamentos-efetuados', label: 'Pagamentos Efetuados', icon: <CreditCard className="text-rose-500" /> },
         { value: 'pagamentos-recebidos', label: 'Pagamentos Recebidos', icon: <CreditCard className="text-emerald-600" /> },
         { value: 'extrato', label: 'Extrato', icon: <List className="text-blue-600" /> },
