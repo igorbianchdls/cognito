@@ -1,4 +1,5 @@
 import { withTransaction } from '@/lib/postgres'
+import { inngest } from '@/lib/inngest'
 
 export const maxDuration = 300
 export const dynamic = 'force-dynamic'
@@ -132,6 +133,7 @@ export async function POST(req: Request) {
         }
       })
 
+      try { await inngest.send({ name: 'financeiro/pagamentos_recebidos/criado', data: { pagamento_id: Number((result as any).response?.data?.id || 0) } }) } catch {}
       return Response.json(result.response)
     }
 
@@ -171,6 +173,7 @@ export async function POST(req: Request) {
       return { id }
     })
 
+    try { await inngest.send({ name: 'financeiro/pagamentos_recebidos/criado', data: { pagamento_id: result.id } }) } catch {}
     return Response.json({ success: true, id: result.id })
   } catch (error) {
     console.error('💸 API /api/modulos/financeiro/pagamentos-recebidos POST error:', error)
