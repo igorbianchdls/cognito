@@ -1,6 +1,5 @@
 import { withTransaction } from '@/lib/postgres'
 import { inngest } from '@/lib/inngest'
-import { inngest } from '@/lib/inngest'
 
 export const maxDuration = 300
 export const dynamic = 'force-dynamic'
