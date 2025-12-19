@@ -102,35 +102,35 @@ export default function CadastroContaAReceberSheet({ triggerLabel = "Cadastrar",
   }, [isOpen])
 
   const onSubmit = async (): Promise<{ success: boolean; error?: string }> => {
-    if (!(descricao.trim() && numeroDocumento.trim() && tipoDocumento.trim() && clienteId && categoriaId && valor && dataLanc && dataVenc)) {
-      return { success: false, error: 'Preencha descrição, número e tipo do documento, cliente, categoria, valor, lançamento e vencimento.' }
+    if (!(descricao.trim() && tipoDocumento.trim() && clienteId && categoriaId && valor && dataLanc && dataVenc)) {
+      return { success: false, error: 'Preencha descrição, tipo do documento, cliente, categoria, valor, lançamento e vencimento.' }
     }
     try {
-      const fd = new FormData()
-      fd.set('descricao', descricao.trim())
-      fd.set('numero_documento', numeroDocumento.trim())
-      fd.set('tipo_documento', tipoDocumento.trim() || 'fatura')
-      fd.set('valor', valor)
-      fd.set('data_lancamento', dataLanc)
-      fd.set('data_vencimento', dataVenc)
-      if (clienteId) {
-        fd.set('entidade_id', clienteId) // compat
-        fd.set('cliente_id', clienteId) // novo schema
+      // Garante número único por tentativa para evitar duplicidade em bases com unique
+      const ts = Date.now().toString(36).toUpperCase()
+      const numero = (numeroDocumento?.trim() || 'DOC') + '-' + ts
+      const payload = {
+        descricao: descricao.trim(),
+        numero_documento: numero,
+        tipo_documento: tipoDocumento.trim() || 'fatura',
+        valor: Number(valor),
+        data_lancamento: dataLanc,
+        data_vencimento: dataVenc,
+        cliente_id: Number(clienteId),
+        categoria_id: Number(categoriaId),
+        conta_financeira_id: contaFinanceiraId ? Number(contaFinanceiraId) : null,
+        centro_lucro_id: centroLucroId ? Number(centroLucroId) : null,
+        departamento_id: departamentoId ? Number(departamentoId) : null,
+        filial_id: filialId ? Number(filialId) : null,
+        status: status?.trim() || 'pendente',
+        tenant_id: tenantId ? Number(tenantId) : 1,
+        itens: [
+          { descricao: descricao.trim(), quantidade: 1, valor_unitario: Number(valor), valor_total: Number(valor), categoria_id: Number(categoriaId) }
+        ]
       }
-      if (categoriaId) fd.set('categoria_id', categoriaId)
-      if (contaFinanceiraId) fd.set('conta_financeira_id', contaFinanceiraId)
-      if (centroLucroId) fd.set('centro_lucro_id', centroLucroId)
-      if (departamentoId) fd.set('departamento_id', departamentoId)
-      if (filialId) fd.set('filial_id', filialId)
-      if (status) fd.set('status', status.trim())
-      if (tenantId) fd.set('tenant_id', tenantId)
-      const res = await fetch('/api/modulos/financeiro/contas-a-receber', { method: 'POST', body: fd })
-      let payload: any = null
-      try { payload = await res.json() } catch {}
-      if (!res.ok || !payload?.success) {
-        const msg = payload?.message || payload?.error || `HTTP ${res.status}`
-        return { success: false, error: msg }
-      }
+      const res = await fetch('/api/modulos/financeiro/contas-a-receber', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+      const j = await res.json().catch(() => null)
+      if (!res.ok || !j?.success) return { success: false, error: j?.message || j?.error || `HTTP ${res.status}` }
       return { success: true }
     } catch (e) {
       return { success: false, error: e instanceof Error ? e.message : 'Erro ao salvar' }
