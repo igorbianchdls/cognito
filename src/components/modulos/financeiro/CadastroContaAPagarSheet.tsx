@@ -14,7 +14,7 @@ export default function CadastroContaAPagarSheet({ triggerLabel = "Cadastrar", o
   const [isOpen, setIsOpen] = React.useState(false)
 
   const [fornecedores, setFornecedores] = React.useState<Item[]>([])
-  const [categorias, setCategorias] = React.useState<{ id: number; nome: string; tipo: string }[]>([])
+  const [categorias, setCategorias] = React.useState<{ id: number; nome: string }[]>([])
   const [centrosCusto, setCentrosCusto] = React.useState<Item[]>([])
   const [departamentos, setDepartamentos] = React.useState<Item[]>([])
   const [filiais, setFiliais] = React.useState<Item[]>([])
