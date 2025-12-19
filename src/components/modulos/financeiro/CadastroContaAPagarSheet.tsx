@@ -20,6 +20,7 @@ export default function CadastroContaAPagarSheet({ triggerLabel = "Cadastrar", o
   const [filiais, setFiliais] = React.useState<Item[]>([])
 
   const [descricao, setDescricao] = React.useState("")
+  const [numeroDocumento, setNumeroDocumento] = React.useState("")
   const [valor, setValor] = React.useState("")
   const [dataLanc, setDataLanc] = React.useState("")
   const [dataVenc, setDataVenc] = React.useState("")
@@ -31,7 +32,7 @@ export default function CadastroContaAPagarSheet({ triggerLabel = "Cadastrar", o
   const [status, setStatus] = React.useState("pendente")
   const [tenantId, setTenantId] = React.useState("")
 
-  const reset = () => { setDescricao(""); setValor(""); setDataLanc(""); setDataVenc(""); setFornecedorId(""); setCategoriaId(""); setCentroCustoId(""); setDepartamentoId(""); setFilialId(""); setStatus("pendente"); setTenantId("") }
+  const reset = () => { setDescricao(""); setNumeroDocumento(""); setValor(""); setDataLanc(""); setDataVenc(""); setFornecedorId(""); setCategoriaId(""); setCentroCustoId(""); setDepartamentoId(""); setFilialId(""); setStatus("pendente"); setTenantId("") }
 
   const fetchList = async <T,>(url: string): Promise<T[]> => {
     try { const res = await fetch(url, { cache: 'no-store' }); const json = await res.json(); return res.ok && json?.success && Array.isArray(json?.rows) ? json.rows as T[] : [] } catch { return [] as T[] }
@@ -57,12 +58,13 @@ export default function CadastroContaAPagarSheet({ triggerLabel = "Cadastrar", o
   }, [isOpen])
 
   const onSubmit = async (): Promise<{ success: boolean; error?: string }> => {
-    if (!(descricao.trim() && valor && dataLanc && dataVenc)) {
-      return { success: false, error: 'Preencha descrição, valor, lançamento e vencimento.' }
+    if (!(descricao.trim() && numeroDocumento.trim() && valor && dataLanc && dataVenc)) {
+      return { success: false, error: 'Preencha descrição, número do documento, valor, lançamento e vencimento.' }
     }
     try {
       const fd = new FormData()
       fd.set('descricao', descricao.trim())
+      fd.set('numero_documento', numeroDocumento.trim())
       fd.set('valor', valor)
       fd.set('data_lancamento', dataLanc)
       fd.set('data_vencimento', dataVenc)
@@ -96,6 +98,7 @@ export default function CadastroContaAPagarSheet({ triggerLabel = "Cadastrar", o
       onSuccess={() => { reset(); onSaved?.() }}
     >
       <div><Label>Descrição<span className="text-red-500"> *</span></Label><Textarea rows={2} value={descricao} onChange={(e)=>setDescricao(e.target.value)} /></div>
+      <div><Label>Número do Documento<span className="text-red-500"> *</span></Label><Input value={numeroDocumento} onChange={(e)=>setNumeroDocumento(e.target.value)} placeholder="ex.: NF 1234 / Doc 5678" /></div>
       <div><Label>Valor<span className="text-red-500"> *</span></Label><Input type="number" step="0.01" value={valor} onChange={(e)=>setValor(e.target.value)} /></div>
       <div><Label>Lançamento<span className="text-red-500"> *</span></Label><Input type="date" value={dataLanc} onChange={(e)=>setDataLanc(e.target.value)} /></div>
       <div><Label>Vencimento<span className="text-red-500"> *</span></Label><Input type="date" value={dataVenc} onChange={(e)=>setDataVenc(e.target.value)} /></div>
