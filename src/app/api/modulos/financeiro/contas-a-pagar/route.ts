@@ -92,7 +92,7 @@ export async function POST(req: Request) {
             numero_documento,  // NOT NULL na tabela; aceita string vazia
             tipo_documento,
             status,
-            data_documento || null,
+            (data_documento || data_lancamento),
             data_lancamento,
             data_vencimento,
             Math.abs(valor),
@@ -340,7 +340,7 @@ export async function POST(req: Request) {
           numero_documento,        // NOT NULL
           tipo_documento,          // NOT NULL (default 'outro')
           status,
-          null,
+          data_lancamento,
           data_lancamento,
           data_vencimento,
           Math.abs(valor),

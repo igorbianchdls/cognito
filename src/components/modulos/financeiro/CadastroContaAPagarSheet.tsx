@@ -19,12 +19,14 @@ export default function CadastroContaAPagarSheet({ triggerLabel = "Cadastrar", o
   const [departamentos, setDepartamentos] = React.useState<Item[]>([])
   const [filiais, setFiliais] = React.useState<Item[]>([])
 
-  const [descricao, setDescricao] = React.useState("")
-  const [numeroDocumento, setNumeroDocumento] = React.useState("")
-  const [tipoDocumento, setTipoDocumento] = React.useState("")
-  const [valor, setValor] = React.useState("")
-  const [dataLanc, setDataLanc] = React.useState("")
-  const [dataVenc, setDataVenc] = React.useState("")
+  const [descricao, setDescricao] = React.useState("Compra de materiais (Ref. 001)")
+  const [numeroDocumento, setNumeroDocumento] = React.useState("NF-0001")
+  const [tipoDocumento, setTipoDocumento] = React.useState("nf")
+  const [valor, setValor] = React.useState("1250.00")
+  const [dataLanc, setDataLanc] = React.useState<string>(() => new Date().toISOString().slice(0,10))
+  const [dataVenc, setDataVenc] = React.useState<string>(() => {
+    const d = new Date(); d.setDate(d.getDate() + 15); return d.toISOString().slice(0,10)
+  })
   const [fornecedorId, setFornecedorId] = React.useState("")
   const [categoriaId, setCategoriaId] = React.useState("")
   const [centroCustoId, setCentroCustoId] = React.useState("")
@@ -33,7 +35,24 @@ export default function CadastroContaAPagarSheet({ triggerLabel = "Cadastrar", o
   const [status, setStatus] = React.useState("pendente")
   const [tenantId, setTenantId] = React.useState("1")
 
-  const reset = () => { setDescricao(""); setNumeroDocumento(""); setTipoDocumento(""); setValor(""); setDataLanc(""); setDataVenc(""); setFornecedorId(""); setCategoriaId(""); setCentroCustoId(""); setDepartamentoId(""); setFilialId(""); setStatus("pendente"); setTenantId("") }
+  const reset = () => {
+    setDescricao("Compra de materiais (Ref. 001)")
+    setNumeroDocumento("NF-0001")
+    setTipoDocumento("nf")
+    setValor("1250.00")
+    const today = new Date()
+    const todayStr = today.toISOString().slice(0,10)
+    const venc = new Date(today); venc.setDate(venc.getDate() + 15)
+    setDataLanc(todayStr)
+    setDataVenc(venc.toISOString().slice(0,10))
+    setFornecedorId("")
+    setCategoriaId("")
+    setCentroCustoId("")
+    setDepartamentoId("")
+    setFilialId("")
+    setStatus("pendente")
+    setTenantId("1")
+  }
 
   const fetchList = async <T,>(url: string): Promise<T[]> => {
     try { const res = await fetch(url, { cache: 'no-store' }); const json = await res.json(); return res.ok && json?.success && Array.isArray(json?.rows) ? json.rows as T[] : [] } catch { return [] as T[] }
