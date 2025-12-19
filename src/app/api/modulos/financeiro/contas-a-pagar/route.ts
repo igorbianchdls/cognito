@@ -89,7 +89,7 @@ export async function POST(req: Request) {
             departamento_id,
             filial_id,
             unidade_negocio_id,
-            numero_documento || null,
+            numero_documento,  // NOT NULL na tabela; aceita string vazia
             tipo_documento || null,
             status,
             data_documento || null,
@@ -269,10 +269,12 @@ export async function POST(req: Request) {
     const form = await req.formData()
 
     const descricao = String(form.get('descricao') || '').trim()
+    const numero_documento = String(form.get('numero_documento') || '').trim()
     const valorRaw = String(form.get('valor') || '').trim()
     const data_lancamento = String(form.get('data_lancamento') || '').trim()
     const data_vencimento = String(form.get('data_vencimento') || '').trim()
     if (!descricao) return Response.json({ success: false, message: 'descricao é obrigatório' }, { status: 400 })
+    if (!numero_documento) return Response.json({ success: false, message: 'numero_documento é obrigatório' }, { status: 400 })
     if (!valorRaw) return Response.json({ success: false, message: 'valor é obrigatório' }, { status: 400 })
     if (!data_lancamento) return Response.json({ success: false, message: 'data_lancamento é obrigatório' }, { status: 400 })
     if (!data_vencimento) return Response.json({ success: false, message: 'data_vencimento é obrigatório' }, { status: 400 })
@@ -334,8 +336,8 @@ export async function POST(req: Request) {
           departamento_id,
           filial_id,
           null,
-          null,
-          null,
+          numero_documento,        // NOT NULL
+          null,                    // tipo_documento
           status,
           null,
           data_lancamento,
@@ -349,7 +351,7 @@ export async function POST(req: Request) {
       )
       const id = Number(insert.rows[0]?.id)
       if (!id) throw new Error('Falha ao criar conta a pagar')
-      return { id, tenant_id, fornecedor_id, categoria_id, conta_financeira_id, data_lancamento, valor_liquido: Math.abs(valor), descricao }
+      return { id, tenant_id, fornecedor_id, categoria_id, conta_financeira_id, numero_documento, data_lancamento, valor_liquido: Math.abs(valor), descricao }
     })
 
     // Dispara evento Inngest também para modo FormData
@@ -362,7 +364,7 @@ export async function POST(req: Request) {
           fornecedor_id: result.fornecedor_id,
           categoria_despesa_id: result.categoria_id,
           conta_financeira_id: result.conta_financeira_id,
-          numero_documento: null,
+          numero_documento: result.numero_documento,
           data_lancamento: result.data_lancamento,
           valor_liquido: result.valor_liquido,
           descricao: result.descricao,
