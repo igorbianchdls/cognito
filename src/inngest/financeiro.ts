@@ -62,35 +62,46 @@ export const contaAPagarCriadaFn = inngest.createFunction(
     })
     if (existing) return { alreadyExists: true, lcId: existing }
 
-    // Seleção de regra contábil (por origem + subtipo), com fallback
+    // Categoria -> plano (débito)
+    const planoContaId = await step.run('fetch-categoria-e-plano', async () => {
+      if (!Number.isFinite(categoria_id)) return null
+      const rows = await runQuery<{ plano_conta_id: number | null }>(
+        `SELECT plano_conta_id FROM financeiro.categorias_despesa WHERE id = $1 LIMIT 1`,
+        [categoria_id]
+      )
+      const v = rows[0]?.plano_conta_id
+      return v !== null && v !== undefined ? Number(v) : null
+    })
+    if (!Number.isFinite(planoContaId || NaN)) {
+      await step.run('no-plano', async () => { console.warn('Categoria sem plano_conta_id', { conta_pagar_id: id, categoria_id }) })
+      return { success: false, reason: 'categoria_sem_plano' }
+    }
+
+    // Seleção de regra contábil (por origem + plano), com fallback por subtipo
     const subtipo = (data.subtipo || 'principal').toString()
     const regra = await step.run('select-regra', async () => {
       const rows = await runQuery<Record<string, unknown>>(
-        `SELECT r.id, r.conta_debito_id, r.conta_credito_id, r.descricao
+        `SELECT r.id, r.conta_credito_id, r.descricao
            FROM contabilidade.regras_contabeis r
           WHERE r.tenant_id = $1
             AND r.origem = 'contas_a_pagar'
-            AND (r.subtipo = $2 OR r.subtipo IS NULL)
-          ORDER BY (r.subtipo IS NULL)::int ASC, r.id ASC
+            AND r.plano_conta_id = $2
+            AND (r.subtipo = $3 OR r.subtipo IS NULL)
+          ORDER BY CASE WHEN r.subtipo = $3 THEN 0 ELSE 1 END, r.id ASC
           LIMIT 1`,
-        [tenant_id, subtipo]
+        [tenant_id, planoContaId!, subtipo]
       )
       return rows[0]
     })
 
     if (!regra) {
-      // Sem regra: não cria, mas registra
-      await step.run('no-rule-log', async () => {
-        console.warn('Sem regra contábil para contas_a_pagar', { tenant_id, id, subtipo })
-      })
+      await step.run('no-rule-log', async () => { console.warn('Sem regra contábil para plano', { tenant_id, id, plano_conta_id: planoContaId, subtipo }) })
       return { success: false, reason: 'no_rule' }
     }
 
-    const contaDebitoId = Number(regra['conta_debito_id'])
+    const contaDebitoId = Number(planoContaId)
     const contaCreditoId = Number(regra['conta_credito_id'])
-    if (!Number.isFinite(contaDebitoId) || !Number.isFinite(contaCreditoId)) {
-      throw new Error('Regra contábil inválida: contas não definidas')
-    }
+    if (!Number.isFinite(contaCreditoId)) throw new Error('Regra contábil inválida: conta de crédito não definida')
 
     // Transação: cria cabeçalho e duas linhas
     const out = await step.run('create-lancamento', async () => withTransaction(async (client) => {
@@ -127,4 +138,3 @@ export const contaAPagarCriadaFn = inngest.createFunction(
     return { success: true, lcId: out.lcId, regra_id: Number(regra['id'] || 0) }
   }
 )
-
