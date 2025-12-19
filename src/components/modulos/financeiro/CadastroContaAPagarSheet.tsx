@@ -73,7 +73,7 @@ export default function CadastroContaAPagarSheet({ triggerLabel = "Cadastrar", o
     (async () => {
       const [fs, cs, cc, dp, fl] = await Promise.all([
         fetchList<Item>('/api/modulos/financeiro/fornecedores/list'),
-        fetchList<{ id: number; nome: string; tipo: string }>('/api/modulos/financeiro/categorias/list'),
+        fetchList<{ id: number; nome: string }>(`/api/modulos/financeiro?view=categorias-despesa&pageSize=1000`),
         // Centros de Custo via /api/modulos/empresa
         fetchList<{ id: number; codigo?: string; nome: string }>(`/api/modulos/empresa?view=centros-de-custo&pageSize=1000`),
         fetchList<{ id: number; nome: string }>(`/api/modulos/empresa?view=departamentos&pageSize=1000`),
@@ -84,12 +84,14 @@ export default function CadastroContaAPagarSheet({ triggerLabel = "Cadastrar", o
       setCentrosCusto(cc.map((r) => ({ id: r.id, nome: r.nome })) as Item[]);
       setDepartamentos(dp.map((r) => ({ id: r.id, nome: r.nome })) as Item[]);
       setFiliais(fl.map((r) => ({ id: r.id, nome: r.nome })) as Item[]);
+      if (!fornecedorId && fs && fs.length > 0) setFornecedorId(String(fs[0].id))
+      if (!categoriaId && cs && cs.length > 0) setCategoriaId(String(cs[0].id))
     })()
   }, [isOpen])
 
   const onSubmit = async (): Promise<{ success: boolean; error?: string }> => {
     if (!(DescricaoEValidados())) {
-      return { success: false, error: 'Preencha descrição, número do documento, tipo do documento, valor, lançamento e vencimento.' }
+      return { success: false, error: 'Preencha descrição, número do documento, tipo do documento, fornecedor, categoria, valor, lançamento e vencimento.' }
     }
     try {
       const fd = new FormData()
