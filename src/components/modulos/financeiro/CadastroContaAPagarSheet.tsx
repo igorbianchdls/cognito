@@ -63,6 +63,7 @@ export default function CadastroContaAPagarSheet({ triggerLabel = "Cadastrar", o
       descricao.trim().length > 0 &&
       numeroDocumento.trim().length > 0 &&
       tipoDocumento.trim().length > 0 &&
+      fornecedorId.trim().length > 0 &&
       !!valor && !!dataLanc && !!dataVenc
     )
   }
