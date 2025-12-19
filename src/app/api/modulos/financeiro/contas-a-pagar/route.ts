@@ -270,6 +270,7 @@ export async function POST(req: Request) {
 
     const descricao = String(form.get('descricao') || '').trim()
     const numero_documento = String(form.get('numero_documento') || '').trim()
+    const tipo_documento = String(form.get('tipo_documento') || 'outro').trim() || 'outro'
     const valorRaw = String(form.get('valor') || '').trim()
     const data_lancamento = String(form.get('data_lancamento') || '').trim()
     const data_vencimento = String(form.get('data_vencimento') || '').trim()
@@ -337,7 +338,7 @@ export async function POST(req: Request) {
           filial_id,
           null,
           numero_documento,        // NOT NULL
-          null,                    // tipo_documento
+          tipo_documento,          // NOT NULL (default 'outro')
           status,
           null,
           data_lancamento,
