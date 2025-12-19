@@ -24,7 +24,7 @@ export async function POST(req: Request) {
       const data_lancamento = toStr(body['data_lancamento'] || new Date().toISOString().slice(0,10))
       const data_documento = toStr((body as any)['data_emissao'] || (body as any)['data_documento'] || '')
       const numero_documento = toStr((body as any)['numero_nota_fiscal'] || (body as any)['numero_documento'] || '')
-      const tipo_documento = toStr((body as any)['tipo_documento'] || '')
+      const tipo_documento = toStr((body as any)['tipo_documento'] || 'outro')
       const data_vencimento = toStr(body['data_vencimento'] || '')
       const tenant_id = body['tenant_id'] !== undefined && body['tenant_id'] !== null ? toNum(body['tenant_id']) : 1
       const linhas = Array.isArray(body['linhas']) ? (body['linhas'] as Array<Record<string, unknown>>) : []
@@ -90,7 +90,7 @@ export async function POST(req: Request) {
             filial_id,
             unidade_negocio_id,
             numero_documento,  // NOT NULL na tabela; aceita string vazia
-            tipo_documento || null,
+            tipo_documento,
             status,
             data_documento || null,
             data_lancamento,
