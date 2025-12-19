@@ -122,7 +122,7 @@ export default function CadastroContaAReceberSheet({ triggerLabel = "Cadastrar",
       onSubmit={onSubmit}
       onSuccess={() => { reset(); onSaved?.() }}
     >
-      <div><Label>Descrição<span className="text-red-500"> *</span></Label><Textarea rows={2} value={descricao} onChange={(e)=>setDescricao(e.target.value)} /></div>
+      <div><Label>Descrição<span className="text-red-500"> *</span></Label><Textarea rows={2} value={descricao} onChange={(e)=>setDescricao(e.target.value)} placeholder="Descreva a conta (ex.: Prestação de serviços)" /></div>
       <div><Label>Número do Documento<span className="text-red-500"> *</span></Label><Input value={numeroDocumento} onChange={(e)=>setNumeroDocumento(e.target.value)} placeholder="Ex.: NFS-0002 / DOC 4321" /></div>
       <div><Label>Tipo do Documento<span className="text-red-500"> *</span></Label><Input value={tipoDocumento} onChange={(e)=>setTipoDocumento(e.target.value)} placeholder="Ex.: nf, recibo, fatura" /></div>
       <div><Label>Valor<span className="text-red-500"> *</span></Label><Input type="number" step="0.01" value={valor} onChange={(e)=>setValor(e.target.value)} placeholder="Ex.: 1500,00" /></div>
