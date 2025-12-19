@@ -59,8 +59,8 @@ export default function ModulosFinanceiroPage() {
         { value: 'movimentos', label: 'Movimentos', icon: <Activity className="text-amber-600" /> },
         { value: 'bancos', label: 'Bancos', icon: <Landmark className="text-sky-600" /> },
         { value: 'contas', label: 'Contas Financeiras', icon: <Wallet className="text-gray-700" /> },
-        { value: 'categorias-despesa', label: 'Categorias de Despesa', icon: <Folder className="text-violet-700" /> },
-        { value: 'categorias-receita', label: 'Categorias de Receita', icon: <Folder className="text-emerald-700" /> },
+        { value: 'categorias-despesa', label: 'Categorias Despesa', icon: <Folder className="text-violet-700" /> },
+        { value: 'categorias-receita', label: 'Categorias Receita', icon: <Folder className="text-emerald-700" /> },
       ],
       selected: 'contas-a-pagar',
     })
