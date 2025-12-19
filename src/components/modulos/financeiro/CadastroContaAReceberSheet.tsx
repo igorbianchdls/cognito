@@ -104,8 +104,12 @@ export default function CadastroContaAReceberSheet({ triggerLabel = "Cadastrar",
       if (status) fd.set('status', status.trim())
       if (tenantId) fd.set('tenant_id', tenantId)
       const res = await fetch('/api/modulos/financeiro/contas-a-receber', { method: 'POST', body: fd })
-      const json = await res.json()
-      if (!res.ok || !json?.success) return { success: false, error: json?.message || json?.error || 'Falha ao cadastrar' }
+      let payload: any = null
+      try { payload = await res.json() } catch {}
+      if (!res.ok || !payload?.success) {
+        const msg = payload?.message || payload?.error || `HTTP ${res.status}`
+        return { success: false, error: msg }
+      }
       return { success: true }
     } catch (e) {
       return { success: false, error: e instanceof Error ? e.message : 'Erro ao salvar' }

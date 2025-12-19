@@ -66,6 +66,7 @@ export async function POST(req: Request) {
         valor = Number.isFinite(somaItensEstimado) && somaItensEstimado > 0 ? somaItensEstimado : somaLinhas
       }
 
+      if (!cliente_id || cliente_id <= 0) return Response.json({ success: false, message: 'cliente_id é obrigatório' }, { status: 400 })
       const result = await withTransaction(async (client) => {
         // Cabeçalho (novo schema: financeiro.contas_receber)
         const ins = await client.query(
@@ -270,6 +271,7 @@ export async function POST(req: Request) {
     const projeto_id = projeto_id_raw ? Number(projeto_id_raw) : null
     const conta_financeira_id = conta_financeira_id_raw ? Number(conta_financeira_id_raw) : null
 
+    if (!cliente_id || cliente_id <= 0) return Response.json({ success: false, message: 'cliente_id é obrigatório' }, { status: 400 })
     const result = await withTransaction(async (client) => {
       const insert = await client.query(
         `INSERT INTO financeiro.contas_receber (
