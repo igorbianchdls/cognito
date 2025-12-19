@@ -123,110 +123,18 @@ export async function POST(req: Request) {
         )
         const id = Number(ins.rows[0]?.id)
         if (!id) throw new Error('Falha ao criar conta a receber')
-
-        // Itens -> contas_receber_linhas (tipo_linha='item')
-        let itensCount = 0
-        const itensList = ((): Array<{
-          descricao: string | null
-          quantidade: number
-          valor_unitario: number
-          desconto: number
-          acrescimo: number
-          valor_total: number
-          categoria_id: number | null
-          observacao: string | null
-        }> => {
-          const list = itensRaw.map((it) => {
-            const q = Number(it['quantidade'] ?? 1) || 1
-            const vu = Number(it['valor_unitario'] ?? it['valor'] ?? 0) || 0
-            const desc = Number(it['desconto'] ?? 0) || 0
-            const acres = Number(it['acrescimo'] ?? 0) || 0
-            const vt = it['valor_total'] !== undefined && it['valor_total'] !== null
-              ? Number(it['valor_total'])
-              : (q * vu + acres - (desc || 0))
-            return {
-              descricao: toStr(it['descricao'] ?? descricao).trim() || null,
-              quantidade: q,
-              valor_unitario: vu,
-              desconto: Number.isFinite(desc) ? desc : 0,
-              acrescimo: Number.isFinite(acres) ? acres : 0,
-              valor_total: Number.isFinite(vt) ? vt : 0,
-              categoria_id: it['categoria_id'] !== undefined && it['categoria_id'] !== null ? Number(it['categoria_id']) : (categoria_id as number | null),
-              observacao: (it['observacao'] ?? null) as string | null,
-            }
-          })
-          if (list.length > 0) return list
-          return [{
-            descricao,
-            quantidade: 1,
-            valor_unitario: Math.abs(valor),
-            desconto: 0,
-            acrescimo: 0,
-            valor_total: Math.abs(valor),
-            categoria_id: categoria_id as number | null,
-            observacao: null,
-          }]
-        })()
-
-        if (itensList.length > 0) {
-          const cols = [
-            'conta_receber_id',
-            'tipo_linha',
-            'descricao',
-            'quantidade',
-            'valor_unitario',
-            'valor_bruto',
-            'desconto',
-            'impostos',
-            'valor_liquido',
-            'categoria_financeira_id',
-            'departamento_id',
-            'centro_custo_id',
-            'unidade_negocio_id'
-          ]
-          const valuesSql: string[] = []
-          const params: unknown[] = []
-          let i = 1
-          for (const it of itensList) {
-            const bruto = Number(it.quantidade) * Number(it.valor_unitario) + Number(it.acrescimo || 0)
-            const liquido = Number(it.valor_total || bruto - Number(it.desconto || 0))
-            valuesSql.push(`($${i++},$${i++},$${i++},$${i++},$${i++},$${i++},$${i++},$${i++},$${i++},$${i++},$${i++},$${i++},$${i++})`)
-            params.push(
-              id,                          // conta_receber_id
-              'item',                      // tipo_linha
-              it.descricao,                // descricao
-              it.quantidade,               // quantidade
-              it.valor_unitario,           // valor_unitario
-              bruto,                       // valor_bruto
-              it.desconto || 0,            // desconto
-              0,                           // impostos (não detalhado)
-              liquido,                     // valor_liquido
-              it.categoria_id || null,     // categoria_financeira_id
-              departamento_id || null,     // departamento_id
-              null,                        // centro_custo_id (não aplicável em CR)
-              unidade_negocio_id || null   // unidade_negocio_id
-            )
-          }
-          await client.query(
-            `INSERT INTO financeiro.contas_receber_linhas (${cols.join(',')})
-             VALUES ${valuesSql.join(',')}`,
-            params
-          )
-          itensCount = itensList.length
-        }
-
-        // Sem inserção de linhas legadas (parcelas)
+        // Sem inserção de linhas (cabeçalho apenas, conforme solicitado)
 
         // Atualiza conta_financeira_id se informado
         if (conta_financeira_id !== null) {
           try { await client.query(`UPDATE financeiro.contas_receber SET conta_financeira_id = $1 WHERE id = $2`, [conta_financeira_id, id]) } catch {}
         }
-        return { id, itens_count: itensCount, linhas_count: itensCount }
+        return { id }
       })
 
       // Evento para LC (Inngest)
       try { await inngest.send({ name: 'financeiro/contas_a_receber/criada', data: { conta_receber_id: result.id } }) } catch {}
-      return Response.json({ success: true, id: result.id, itens_count: result.itens_count, linhas_count: result.linhas_count })
+      return Response.json({ success: true, id: result.id })
     }
 
     // FormData legacy mode (cabeçalho apenas)
