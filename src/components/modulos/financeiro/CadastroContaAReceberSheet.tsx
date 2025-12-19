@@ -136,7 +136,7 @@ export default function CadastroContaAReceberSheet({ triggerLabel = "Cadastrar",
         </Select>
       </div>
       <div>
-        <Label>Categoria</Label>
+        <Label>Categoria Receita</Label>
         <Select value={categoriaId} onValueChange={setCategoriaId}>
           <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
           <SelectContent>{categorias.map(c => <SelectItem key={c.id} value={String(c.id)}>{c.nome}</SelectItem>)}</SelectContent>
