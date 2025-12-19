@@ -106,30 +106,30 @@ export default function CadastroContaAReceberSheet({ triggerLabel = "Cadastrar",
       return { success: false, error: 'Preencha descrição, tipo do documento, cliente, categoria, valor, lançamento e vencimento.' }
     }
     try {
-      // Garante número único por tentativa para evitar duplicidade em bases com unique
+      // Envia como FormData (mesmo padrão da Conta a Pagar)
       const ts = Date.now().toString(36).toUpperCase()
       const numero = (numeroDocumento?.trim() || 'DOC') + '-' + ts
-      const payload = {
-        descricao: descricao.trim(),
-        numero_documento: numero,
-        tipo_documento: tipoDocumento.trim() || 'fatura',
-        valor: Number(valor),
-        data_lancamento: dataLanc,
-        data_vencimento: dataVenc,
-        cliente_id: Number(clienteId),
-        categoria_id: Number(categoriaId),
-        conta_financeira_id: contaFinanceiraId ? Number(contaFinanceiraId) : null,
-        centro_lucro_id: centroLucroId ? Number(centroLucroId) : null,
-        departamento_id: departamentoId ? Number(departamentoId) : null,
-        filial_id: filialId ? Number(filialId) : null,
-        status: status?.trim() || 'pendente',
-        tenant_id: tenantId ? Number(tenantId) : 1,
-        itens: [
-          { descricao: descricao.trim(), quantidade: 1, valor_unitario: Number(valor), valor_total: Number(valor), categoria_id: Number(categoriaId) }
-        ]
+      const fd = new FormData()
+      fd.set('descricao', descricao.trim())
+      fd.set('numero_documento', numero)
+      fd.set('tipo_documento', (tipoDocumento.trim() || 'fatura'))
+      fd.set('valor', String(Number(valor)))
+      fd.set('data_lancamento', dataLanc)
+      fd.set('data_vencimento', dataVenc)
+      if (clienteId) {
+        fd.set('entidade_id', String(Number(clienteId)))
+        fd.set('cliente_id', String(Number(clienteId)))
       }
-      const res = await fetch('/api/modulos/financeiro/contas-a-receber', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
-      const j = await res.json().catch(() => null)
+      if (categoriaId) fd.set('categoria_id', String(Number(categoriaId)))
+      if (contaFinanceiraId) fd.set('conta_financeira_id', String(Number(contaFinanceiraId)))
+      if (centroLucroId) fd.set('centro_lucro_id', String(Number(centroLucroId)))
+      if (departamentoId) fd.set('departamento_id', String(Number(departamentoId)))
+      if (filialId) fd.set('filial_id', String(Number(filialId)))
+      fd.set('status', 'pendente')
+      if (tenantId) fd.set('tenant_id', String(Number(tenantId)))
+      const res = await fetch('/api/modulos/financeiro/contas-a-receber', { method: 'POST', body: fd })
+      let j: any = null
+      try { j = await res.json() } catch {}
       if (!res.ok || !j?.success) return { success: false, error: j?.message || j?.error || `HTTP ${res.status}` }
       return { success: true }
     } catch (e) {
