@@ -28,13 +28,29 @@ export default function CadastroRegraContabilSheet({ onSaved }: { onSaved?: () =
   const [loadingPlano, setLoadingPlano] = React.useState(false)
   const [loadingCredito, setLoadingCredito] = React.useState(false)
 
-  async function fetchPlanoOpts(q: string): Promise<PlanoRow[]> {
+  function tiposPermitidos(lado: 'debito' | 'credito'): string[] {
+    switch (origem) {
+      case 'contas_a_pagar':
+        return lado === 'debito' ? ['Custo', 'Despesa'] : ['Passivo']
+      case 'pagamentos_efetuados':
+        return lado === 'debito' ? ['Passivo'] : ['Ativo']
+      case 'contas_a_receber':
+        return lado === 'debito' ? ['Ativo'] : ['Receita']
+      case 'pagamentos_recebidos':
+        return lado === 'debito' ? ['Ativo'] : ['Ativo']
+      default:
+        return [] // sem filtro por tipo
+    }
+  }
+
+  async function fetchOpts(q: string, lado: 'debito' | 'credito'): Promise<PlanoRow[]> {
     const params = new URLSearchParams()
     params.set('view', 'plano-contas')
     params.set('aceita_lancamento', '1')
-    params.set('tipo', 'Custo,Despesa')
     params.set('order_by', 'codigo')
-    params.set('pageSize', '20')
+    params.set('pageSize', '1000')
+    const tipos = tiposPermitidos(lado)
+    if (tipos.length) params.set('tipo', tipos.join(','))
     if (q) params.set('q', q)
     const res = await fetch(`/api/modulos/contabilidade?${params.toString()}`, { cache: 'no-store' })
     const j = await res.json()
@@ -43,19 +59,22 @@ export default function CadastroRegraContabilSheet({ onSaved }: { onSaved?: () =
   }
 
   // Debounced loaders
-  React.useEffect(() => { let c = false; (async () => { setLoadingPlano(true); try { setOptsPlano(await fetchPlanoOpts(qPlano)) } finally { if (!c) setLoadingPlano(false) } })(); return () => { c = true } }, [qPlano])
-  React.useEffect(() => { let c = false; (async () => { setLoadingCredito(true); try { setOptsCredito(await fetchPlanoOpts(qCredito)) } finally { if (!c) setLoadingCredito(false) } })(); return () => { c = true } }, [qCredito])
+  React.useEffect(() => { let c = false; (async () => { setLoadingPlano(true); try { setOptsPlano(await fetchOpts(qPlano, 'debito')) } finally { if (!c) setLoadingPlano(false) } })(); return () => { c = true } }, [qPlano, origem])
+  React.useEffect(() => { let c = false; (async () => { setLoadingCredito(true); try { setOptsCredito(await fetchOpts(qCredito, 'credito')) } finally { if (!c) setLoadingCredito(false) } })(); return () => { c = true } }, [qCredito, origem])
 
   async function handleSave() {
     try {
       setSaving(true); setError(null)
-      const body = {
+      const body: Record<string, unknown> = {
         origem,
         subtipo: subtipo || null,
         plano_conta_id: Number(planoContaId),
-        conta_debito_id: Number(contaDebitoId),
         conta_credito_id: Number(contaCreditoId),
         descricao: descricao || null,
+      }
+      // Nota: conta_debito_id é opcional na API e, se omitido, usa plano_conta_id
+      if (contaDebitoId && Number(contaDebitoId) > 0) {
+        body['conta_debito_id'] = Number(contaDebitoId)
       }
       const res = await fetch('/api/modulos/contabilidade/regras-contabeis', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       const j = await res.json()
