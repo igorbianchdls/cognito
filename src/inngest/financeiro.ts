@@ -138,3 +138,186 @@ export const contaAPagarCriadaFn = inngest.createFunction(
     return { success: true, lcId: out.lcId, regra_id: Number(regra['id'] || 0) }
   }
 )
+
+// Pagamento Efetuado -> Lançamento Contábil (liquidação de Fornecedores contra Banco)
+type PagamentoEfetuadoPayload = { pagamento_id: number }
+
+export const pagamentoEfetuadoCriadoFn = inngest.createFunction(
+  { id: 'financeiro.pagamentos-efetuados.criado->contabil' },
+  { event: 'financeiro/pagamentos_efetuados/criado' },
+  async ({ event, step }) => {
+    const data = (event.data || {}) as Partial<PagamentoEfetuadoPayload>
+    const pagamentoId = Number(data.pagamento_id)
+    if (!Number.isFinite(pagamentoId)) {
+      await step.run('validate-payload', async () => { throw new Error('pagamento_id inválido') })
+    }
+
+    // Header do pagamento
+    const pagamento = await step.run('fetch-pagamento', async () => {
+      const rows = await runQuery<Record<string, unknown>>(
+        `SELECT id, tenant_id, data_pagamento, data_lancamento, conta_financeira_id, valor_total_pagamento, observacao
+           FROM financeiro.pagamentos_efetuados
+          WHERE id = $1
+          LIMIT 1`,
+        [pagamentoId]
+      )
+      return rows[0]
+    })
+    if (!pagamento) return { skipped: true, reason: 'pagamento not found' }
+
+    const tenant_id = Number(pagamento['tenant_id'] ?? 1)
+    const data_pag = String(pagamento['data_pagamento'] || pagamento['data_lancamento'] || new Date().toISOString().slice(0,10))
+    const conta_financeira_id = pagamento['conta_financeira_id'] !== null && pagamento['conta_financeira_id'] !== undefined ? Number(pagamento['conta_financeira_id']) : null
+    const historico = String(pagamento['observacao'] ?? 'Pagamento efetuado')
+
+    // Linhas do pagamento (sumários)
+    const { totals, anyApId } = await step.run('fetch-linhas', async () => {
+      const rows = await runQuery<{ valor_pago: number | null; desconto_financeiro: number | null; juros: number | null; multa: number | null; conta_pagar_id: number | null }>(
+        `SELECT valor_pago, desconto_financeiro, juros, multa, conta_pagar_id
+           FROM financeiro.pagamentos_efetuados_linhas
+          WHERE pagamento_id = $1`,
+        [pagamentoId]
+      )
+      let tp = 0, td = 0, tj = 0, tm = 0, apId: number | null = null
+      for (const r of rows) {
+        tp += Math.abs(Number(r.valor_pago || 0))
+        td += Math.abs(Number(r.desconto_financeiro || 0))
+        tj += Math.abs(Number(r.juros || 0))
+        tm += Math.abs(Number(r.multa || 0))
+        if (apId === null && r.conta_pagar_id !== null && r.conta_pagar_id !== undefined) apId = Number(r.conta_pagar_id)
+      }
+      return { totals: { total_pago: tp, total_desc: td, total_juros: tj, total_multa: tm }, anyApId: apId }
+    })
+
+    const total_pago = totals.total_pago
+    const total_desc = totals.total_desc
+    const total_encargos = totals.total_juros + totals.total_multa
+    const liquida_fornec = total_pago - total_encargos + total_desc
+
+    // Conta do banco (crédito)
+    const contaBancoId = await step.run('resolve-banco', async () => {
+      if (!Number.isFinite(conta_financeira_id || NaN)) return null
+      const rows = await runQuery<{ conta_contabil_id: number | null }>(
+        `SELECT conta_contabil_id FROM financeiro.contas_financeiras WHERE id = $1 LIMIT 1`,
+        [conta_financeira_id!]
+      )
+      const v = rows[0]?.conta_contabil_id
+      return v !== null && v !== undefined ? Number(v) : null
+    })
+    if (!Number.isFinite(contaBancoId || NaN)) return { success: false, reason: 'conta_financeira_sem_conta_contabil' }
+
+    // Conta Fornecedores (débito): preferir LC da AP; senão regra AP por plano
+    const contaFornecId = await step.run('resolve-fornecedores', async () => {
+      if (Number.isFinite(anyApId || NaN)) {
+        const viaLc = await runQuery<{ conta_id: number }>(
+          `SELECT lcl.conta_id
+             FROM contabilidade.lancamentos_contabeis lc
+             JOIN contabilidade.lancamentos_contabeis_linhas lcl ON lcl.lancamento_id = lc.id
+            WHERE lc.origem_tabela = 'financeiro.contas_pagar'
+              AND lc.origem_id = $1
+              AND lcl.credito > 0
+            ORDER BY lcl.credito DESC, lcl.id ASC
+            LIMIT 1`,
+          [anyApId!]
+        )
+        if (viaLc.length) return Number(viaLc[0].conta_id)
+
+        // fallback: regra AP por plano
+        const planoRows = await runQuery<{ plano_conta_id: number | null }>(
+          `SELECT cd.plano_conta_id
+             FROM financeiro.contas_pagar cp
+             LEFT JOIN financeiro.categorias_despesa cd ON cd.id = cp.categoria_despesa_id
+            WHERE cp.id = $1
+            LIMIT 1`,
+          [anyApId!]
+        )
+        const planoId = planoRows[0]?.plano_conta_id
+        if (planoId !== null && planoId !== undefined) {
+          const regra = await runQuery<{ conta_credito_id: number | null }>(
+            `SELECT conta_credito_id
+               FROM contabilidade.regras_contabeis
+              WHERE tenant_id = $1
+                AND origem = 'contas_a_pagar'
+                AND plano_conta_id = $2
+              ORDER BY id ASC
+              LIMIT 1`,
+            [tenant_id, Number(planoId)]
+          )
+          const cred = regra[0]?.conta_credito_id
+          if (cred !== null && cred !== undefined) return Number(cred)
+        }
+      }
+      return null
+    })
+    if (!Number.isFinite(contaFornecId || NaN)) return { success: false, reason: 'conta_fornecedores_indefinida' }
+
+    // Regras opcionais para desconto/juros/multa
+    const [contaDescontoId, contaJurosId, contaMultaId] = await step.run('resolve-regras-extras', async () => {
+      const desc = await runQuery<{ conta_credito_id: number | null }>(
+        `SELECT conta_credito_id FROM contabilidade.regras_contabeis
+          WHERE tenant_id = $1 AND origem = 'pagamentos_efetuados' AND subtipo = 'desconto'
+          ORDER BY id ASC LIMIT 1`, [tenant_id]
+      )
+      const juros = await runQuery<{ conta_debito_id: number | null }>(
+        `SELECT conta_debito_id FROM contabilidade.regras_contabeis
+          WHERE tenant_id = $1 AND origem = 'pagamentos_efetuados' AND subtipo = 'juros'
+          ORDER BY id ASC LIMIT 1`, [tenant_id]
+      )
+      const multa = await runQuery<{ conta_debito_id: number | null }>(
+        `SELECT conta_debito_id FROM contabilidade.regras_contabeis
+          WHERE tenant_id = $1 AND origem = 'pagamentos_efetuados' AND subtipo = 'multa'
+          ORDER BY id ASC LIMIT 1`, [tenant_id]
+      )
+      return [desc[0]?.conta_credito_id ?? null, juros[0]?.conta_debito_id ?? null, multa[0]?.conta_debito_id ?? null]
+    })
+
+    // Idempotência por origem
+    const existing = await step.run('check-existing', async () => {
+      const rows = await runQuery<{ id: number }>(
+        `SELECT id FROM contabilidade.lancamentos_contabeis WHERE origem_tabela = 'financeiro.pagamentos_efetuados' AND origem_id = $1 LIMIT 1`,
+        [pagamentoId]
+      )
+      return rows[0]?.id || null
+    })
+    if (existing) return { alreadyExists: true, lcId: existing }
+
+    // Inserção transacional (cabeçalho + linhas)
+    const out = await step.run('create-lancamento', async () => withTransaction(async (client) => {
+      const totalDeb = liquida_fornec + total_encargos
+      const totalCred = total_pago + total_desc
+      if (Math.abs(totalDeb - totalCred) > 0.001) throw new Error('Lançamento não balanceado')
+
+      const insertLcSql = `
+        INSERT INTO contabilidade.lancamentos_contabeis
+          (tenant_id, data_lancamento, historico, conta_financeira_id,
+           total_debitos, total_creditos, origem_tabela, origem_id, origem_numero)
+        VALUES ($1,$2,$3,$4,$5,$6,'financeiro.pagamentos_efetuados',$7,NULL)
+        RETURNING id`
+      const lcVals = [tenant_id, data_pag, historico, conta_financeira_id, totalDeb, totalCred, pagamentoId]
+      const lcRes = await client.query(insertLcSql, lcVals)
+      const lcId = Number(lcRes.rows[0]?.id)
+
+      const insertLinhaSql = `INSERT INTO contabilidade.lancamentos_contabeis_linhas (lancamento_id, lancamento_contabil_id, conta_id, debito, credito, historico) VALUES ($1,$2,$3,$4,$5,$6)`
+      // Dr Fornecedores (liquidação)
+      await client.query(insertLinhaSql, [lcId, lcId, contaFornecId, liquida_fornec, 0, historico])
+      // Dr Despesas (juros+multa), se houver e houver conta
+      if (total_encargos > 0) {
+        const contaEncargos = (contaJurosId || contaMultaId) ?? null
+        await client.query(insertLinhaSql, [lcId, lcId, contaEncargos ?? contaFornecId, total_encargos, 0, historico])
+      }
+      // Cr Banco (valor pago)
+      await client.query(insertLinhaSql, [lcId, lcId, contaBancoId, 0, total_pago, historico])
+      // Cr Descontos Obtidos, se houver e houver conta
+      if (total_desc > 0 && contaDescontoId) {
+        await client.query(insertLinhaSql, [lcId, lcId, contaDescontoId, 0, total_desc, historico])
+      } else if (total_desc > 0) {
+        // Sem conta específica de desconto: registra como redução do banco (ainda balanceia pelos totais)
+        await client.query(insertLinhaSql, [lcId, lcId, contaBancoId, 0, total_desc, historico])
+      }
+
+      return { lcId }
+    }))
+
+    return { success: true, lcId: out.lcId }
+  }
+)

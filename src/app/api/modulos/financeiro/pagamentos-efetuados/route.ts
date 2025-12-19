@@ -1,4 +1,5 @@
 import { withTransaction } from '@/lib/postgres'
+import { inngest } from '@/lib/inngest'
 
 export const maxDuration = 300
 export const dynamic = 'force-dynamic'
@@ -136,6 +137,12 @@ export async function POST(req: Request) {
       })
 
       if (!result) throw new Error('Falha ao criar pagamento efetuado')
+      // Dispara evento Inngest para criação do LC
+      try {
+        await inngest.send({ name: 'financeiro/pagamentos_efetuados/criado', data: { pagamento_id: result.id } })
+      } catch (e) {
+        console.warn('Falha ao enviar evento Inngest pagamentos_efetuados.criado', e)
+      }
       return Response.json(result.response)
     }
 
@@ -175,6 +182,12 @@ export async function POST(req: Request) {
       return { id }
     })
 
+    // Dispara evento Inngest também para modo FormData
+    try {
+      await inngest.send({ name: 'financeiro/pagamentos_efetuados/criado', data: { pagamento_id: result.id } })
+    } catch (e) {
+      console.warn('Falha ao enviar evento Inngest (FormData) pagamentos_efetuados.criado', e)
+    }
     return Response.json({ success: true, id: result.id })
   } catch (error) {
     console.error('💸 API /api/modulos/financeiro/pagamentos-efetuados POST error:', error)
