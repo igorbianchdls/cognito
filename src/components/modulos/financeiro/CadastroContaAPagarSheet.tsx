@@ -18,6 +18,7 @@ export default function CadastroContaAPagarSheet({ triggerLabel = "Cadastrar", o
   const [centrosCusto, setCentrosCusto] = React.useState<Item[]>([])
   const [departamentos, setDepartamentos] = React.useState<Item[]>([])
   const [filiais, setFiliais] = React.useState<Item[]>([])
+  const [contas, setContas] = React.useState<Item[]>([])
 
   const [descricao, setDescricao] = React.useState("Compra de materiais (Ref. 001)")
   const [numeroDocumento, setNumeroDocumento] = React.useState("NF-0001")
@@ -29,6 +30,7 @@ export default function CadastroContaAPagarSheet({ triggerLabel = "Cadastrar", o
   })
   const [fornecedorId, setFornecedorId] = React.useState("")
   const [categoriaId, setCategoriaId] = React.useState("")
+  const [contaFinanceiraId, setContaFinanceiraId] = React.useState("")
   const [centroCustoId, setCentroCustoId] = React.useState("")
   const [departamentoId, setDepartamentoId] = React.useState("")
   const [filialId, setFilialId] = React.useState("")
@@ -71,9 +73,10 @@ export default function CadastroContaAPagarSheet({ triggerLabel = "Cadastrar", o
   React.useEffect(() => {
     if (!isOpen) return;
     (async () => {
-      const [fs, cs, cc, dp, fl] = await Promise.all([
+      const [fs, cs, cf, cc, dp, fl] = await Promise.all([
         fetchList<Item>('/api/modulos/financeiro/fornecedores/list'),
         fetchList<{ id: number; nome: string }>(`/api/modulos/financeiro?view=categorias-despesa&pageSize=1000`),
+        fetchList<Item>('/api/modulos/financeiro/contas-financeiras/list'),
         // Centros de Custo via /api/modulos/empresa
         fetchList<{ id: number; codigo?: string; nome: string }>(`/api/modulos/empresa?view=centros-de-custo&pageSize=1000`),
         fetchList<{ id: number; nome: string }>(`/api/modulos/empresa?view=departamentos&pageSize=1000`),
@@ -81,11 +84,13 @@ export default function CadastroContaAPagarSheet({ triggerLabel = "Cadastrar", o
       ])
       setFornecedores(fs);
       setCategorias(cs);
+      setContas(cf);
       setCentrosCusto(cc.map((r) => ({ id: r.id, nome: r.nome })) as Item[]);
       setDepartamentos(dp.map((r) => ({ id: r.id, nome: r.nome })) as Item[]);
       setFiliais(fl.map((r) => ({ id: r.id, nome: r.nome })) as Item[]);
       if (!fornecedorId && fs && fs.length > 0) setFornecedorId(String(fs[0].id))
       if (!categoriaId && cs && cs.length > 0) setCategoriaId(String(cs[0].id))
+      if (!contaFinanceiraId && cf && cf.length > 0) setContaFinanceiraId(String(cf[0].id))
     })()
   }, [isOpen])
 
@@ -106,6 +111,7 @@ export default function CadastroContaAPagarSheet({ triggerLabel = "Cadastrar", o
         fd.set('fornecedor_id', fornecedorId) // novo schema
       }
       if (categoriaId) fd.set('categoria_id', categoriaId)
+      if (contaFinanceiraId) fd.set('conta_financeira_id', contaFinanceiraId)
       if (centroCustoId) fd.set('centro_custo_id', centroCustoId)
       if (departamentoId) fd.set('departamento_id', departamentoId)
       if (filialId) fd.set('filial_id', filialId)
@@ -148,6 +154,13 @@ export default function CadastroContaAPagarSheet({ triggerLabel = "Cadastrar", o
         <Select value={categoriaId} onValueChange={setCategoriaId}>
           <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
           <SelectContent>{categorias.map(c => <SelectItem key={c.id} value={String(c.id)}>{c.nome}</SelectItem>)}</SelectContent>
+        </Select>
+      </div>
+      <div>
+        <Label>Conta Financeira</Label>
+        <Select value={contaFinanceiraId} onValueChange={setContaFinanceiraId}>
+          <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+          <SelectContent>{contas.map(c => <SelectItem key={c.id} value={String(c.id)}>{c.nome}</SelectItem>)}</SelectContent>
         </Select>
       </div>
       <div>

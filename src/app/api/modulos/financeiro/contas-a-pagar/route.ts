@@ -352,6 +352,10 @@ export async function POST(req: Request) {
       )
       const id = Number(insert.rows[0]?.id)
       if (!id) throw new Error('Falha ao criar conta a pagar')
+      // Atualiza conta_financeira_id (coluna adicionada posteriormente)
+      if (conta_financeira_id !== null) {
+        try { await client.query(`UPDATE financeiro.contas_pagar SET conta_financeira_id = $1 WHERE id = $2`, [conta_financeira_id, id]) } catch {}
+      }
       return { id, tenant_id, fornecedor_id, categoria_id, conta_financeira_id, numero_documento, data_lancamento, valor_liquido: Math.abs(valor), descricao }
     })
 
