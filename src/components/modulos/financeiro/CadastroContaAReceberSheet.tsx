@@ -60,7 +60,7 @@ export default function CadastroContaAReceberSheet({ triggerLabel = "Cadastrar",
   React.useEffect(() => {
     if (!isOpen) return;
     (async () => {
-      const [cl, cs, contasList, cluc, deps, fls] = await Promise.all([
+      let [cl, cs, contasList, cluc, deps, fls] = await Promise.all([
         fetchList<Item>('/api/modulos/financeiro/clientes/list'),
         fetchList<{ id: number; nome: string }>(`/api/modulos/financeiro?view=categorias-receita&pageSize=1000`),
         fetchList<Item>('/api/modulos/financeiro/contas-financeiras/list'),
@@ -68,12 +68,33 @@ export default function CadastroContaAReceberSheet({ triggerLabel = "Cadastrar",
         fetchList<{ id: number; nome: string }>(`/api/modulos/empresa?view=departamentos&pageSize=1000`),
         fetchList<{ id: number; nome: string }>(`/api/modulos/empresa?view=filiais&pageSize=1000`),
       ])
-      setClientes(cl);
-      setCategorias(cs);
+
+      // Auto-seed mínimo para facilitar teste
+      if (!cl || cl.length === 0) {
+        try {
+          const res = await fetch('/api/modulos/financeiro/clientes', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ nome: 'Cliente Teste (Auto)' }) })
+          const j = await res.json();
+          if (res.ok && j?.success && j?.data?.id) {
+            cl = [{ id: Number(j.data.id), nome: j.data.nome }]
+          }
+        } catch {}
+      }
+      if (!cs || cs.length === 0) {
+        try {
+          const res = await fetch('/api/modulos/financeiro/categorias-receita', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ nome: 'Receita de Serviços (Auto)', tipo: 'operacional', tenant_id: 1 }) })
+          const j = await res.json();
+          if (res.ok && j?.success && j?.row?.id) {
+            cs = [{ id: Number(j.row.id), nome: j.row.nome }]
+          }
+        } catch {}
+      }
+
+      setClientes(cl || []);
+      setCategorias(cs || []);
       setContas(contasList)
-      setCentrosLucro(cluc.map(r => ({ id: r.id, nome: r.nome })) as Item[])
-      setDepartamentos(deps.map(r => ({ id: r.id, nome: r.nome })) as Item[])
-      setFiliais(fls.map(r => ({ id: r.id, nome: r.nome })) as Item[])
+      setCentrosLucro((cluc || []).map(r => ({ id: r.id, nome: r.nome })) as Item[])
+      setDepartamentos((deps || []).map(r => ({ id: r.id, nome: r.nome })) as Item[])
+      setFiliais((fls || []).map(r => ({ id: r.id, nome: r.nome })) as Item[])
       if (!clienteId && cl && cl.length > 0) setClienteId(String(cl[0].id))
       if (!categoriaId && cs && cs.length > 0) setCategoriaId(String(cs[0].id))
       if (!contaFinanceiraId && contasList && contasList.length > 0) setContaFinanceiraId(String(contasList[0].id))
