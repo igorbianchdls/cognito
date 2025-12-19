@@ -87,7 +87,6 @@ export async function POST(req: Request) {
              unidade_negocio_id,
              numero_documento,
              tipo_documento,
-             status,
              data_documento,
              data_lancamento,
              data_vencimento,
@@ -97,7 +96,7 @@ export async function POST(req: Request) {
              valor_liquido,
              observacao
            ) VALUES (
-             $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18
+             $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17
            )
            RETURNING id`,
           [
@@ -110,7 +109,6 @@ export async function POST(req: Request) {
             unidade_negocio_id,
             numero_documento,
             tipo_documento,
-            status,
             (data_documento || data_lancamento),
             data_lancamento,
             data_vencimento,
@@ -207,7 +205,6 @@ export async function POST(req: Request) {
            unidade_negocio_id,
            numero_documento,
            tipo_documento,
-           status,
            data_documento,
            data_lancamento,
            data_vencimento,
@@ -217,7 +214,7 @@ export async function POST(req: Request) {
            valor_liquido,
            observacao
          ) VALUES (
-           $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18
+           $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17
          )
          RETURNING id`,
         [
@@ -230,7 +227,6 @@ export async function POST(req: Request) {
           null,
           numero_documento,
           tipo_documento,
-          status,
           data_lancamento,
           data_lancamento,
           data_vencimento,
