@@ -1003,6 +1003,7 @@ SELECT
   cli.nome_fantasia                    AS cliente,
 
   cat_h.nome                           AS categoria_financeira,
+  cat_r.nome                           AS categoria_receita,
 
   dep_h.nome                           AS departamento,
   cl.nome                              AS centro_lucro,
@@ -1023,6 +1024,9 @@ LEFT JOIN entidades.clientes cli
 
 LEFT JOIN financeiro.categorias_financeiras cat_h
        ON cat_h.id = cr.categoria_financeira_id
+
+LEFT JOIN financeiro.categorias_receita cat_r
+       ON cat_r.id = cr.categoria_receita_id
 
 LEFT JOIN empresa.departamentos dep_h
        ON dep_h.id = cr.departamento_id
