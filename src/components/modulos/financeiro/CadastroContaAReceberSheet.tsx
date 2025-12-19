@@ -195,7 +195,7 @@ export default function CadastroContaAReceberSheet({ triggerLabel = "Cadastrar",
           <SelectContent>{filiais.map(f => <SelectItem key={f.id} value={String(f.id)}>{f.nome}</SelectItem>)}</SelectContent>
         </Select>
       </div>
-      <div><Label>Status</Label><Input value={status} onChange={(e)=>setStatus(e.target.value)} placeholder="pendente | recebido | vencido" /></div>
+      <div><Label>Status</Label><Input value={status} onChange={(e)=>setStatus(e.target.value)} placeholder="pendente | parcial | recebido | cancelado" /></div>
       <div><Label>Tenant ID</Label><Input value={tenantId} onChange={(e)=>setTenantId(e.target.value)} placeholder="1" /></div>
     </BaseCadastroSheet>
   )

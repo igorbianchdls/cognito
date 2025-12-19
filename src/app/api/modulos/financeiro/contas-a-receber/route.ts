@@ -20,8 +20,15 @@ export async function POST(req: Request) {
       const cliente_id = toNum(body['cliente_id'])
       const categoria_id = body['categoria_id'] !== undefined && body['categoria_id'] !== null ? toNum(body['categoria_id']) : null
       const descricao = toStr(body['descricao'] || 'Conta a receber').trim()
-      const statusRaw = toStr(body['status'] || 'pendente').trim().toLowerCase()
-      const status = ['pendente', 'recebido', 'cancelado'].includes(statusRaw) ? statusRaw : 'pendente'
+      const normalizeStatus = (v: string): 'pendente' | 'parcial' | 'recebido' | 'cancelado' => {
+        const s = (v || '').trim().toLowerCase()
+        if (['pendente','pend','open','em_aberto','em aberto','aberta','aberto','a_receber','a receber'].includes(s)) return 'pendente'
+        if (['parcial','partial','parcialmente recebido','recebido_parcial','recebido parcial'].includes(s)) return 'parcial'
+        if (['recebido','pago','paga','liquidado','liquidada','quitado','quitada'].includes(s)) return 'recebido'
+        if (['cancelado','cancelada','excluido','excluida','anulado','anulada'].includes(s)) return 'cancelado'
+        return 'pendente'
+      }
+      const status = normalizeStatus(toStr(body['status'] || 'pendente'))
       const data_lancamento = toStr(body['data_lancamento'] || new Date().toISOString().slice(0,10))
       const data_documento = toStr((body as any)['data_emissao'] || (body as any)['data_documento'] || '')
       const numero_documento = toStr((body as any)['numero_nota_fiscal'] || (body as any)['numero_documento'] || 'DOC')
@@ -259,7 +266,15 @@ export async function POST(req: Request) {
     const filial_id_raw = String(form.get('filial_id') || '').trim()
     const projeto_id_raw = String(form.get('projeto_id') || '').trim()
     const conta_financeira_id_raw = String(form.get('conta_financeira_id') || '').trim()
-    const status = String(form.get('status') || '').trim() || 'pendente'
+    const normalizeStatus = (v: string): 'pendente' | 'parcial' | 'recebido' | 'cancelado' => {
+      const s = (v || '').trim().toLowerCase()
+      if (['pendente','pend','open','em_aberto','em aberto','aberta','aberto','a_receber','a receber'].includes(s)) return 'pendente'
+      if (['parcial','partial','parcialmente recebido','recebido_parcial','recebido parcial'].includes(s)) return 'parcial'
+      if (['recebido','pago','paga','liquidado','liquidada','quitado','quitada'].includes(s)) return 'recebido'
+      if (['cancelado','cancelada','excluido','excluida','anulado','anulada'].includes(s)) return 'cancelado'
+      return 'pendente'
+    }
+    const status = normalizeStatus(String(form.get('status') || 'pendente'))
 
     const tenant_id = tenant_id_raw ? Number(tenant_id_raw) : 1
     const entidade_id = entidade_id_raw ? Number(entidade_id_raw) : null
