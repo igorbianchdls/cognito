@@ -30,6 +30,8 @@ import CadastroPagamentoRecebidoSheet from '@/components/modulos/financeiro/Cada
 import CadastroBancoSheet from '@/components/modulos/financeiro/CadastroBancoSheet'
 import CadastroContaFinanceiraSheet from '@/components/modulos/financeiro/CadastroContaFinanceiraSheet'
 import CategoriaDespesaEditorModal from '@/components/modulos/financeiro/CategoriaDespesaEditorModal'
+import CadastroCategoriaReceitaSheet from '@/components/modulos/financeiro/CadastroCategoriaReceitaSheet'
+import CategoriaReceitaEditorModal from '@/components/modulos/financeiro/CategoriaReceitaEditorModal'
 
 type Row = TableData
 
@@ -526,6 +528,16 @@ export default function ModulosFinanceiroPage() {
           { accessorKey: 'ativo', header: () => <IconLabelHeader icon={<CheckCircle2 className="h-3.5 w-3.5" />} label="Ativo" /> },
           { accessorKey: 'criado_em', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Criado em" /> },
           { accessorKey: 'atualizado_em', header: () => <IconLabelHeader icon={<CalendarClock className="h-3.5 w-3.5" />} label="Atualizado em" /> },
+          { accessorKey: 'acoes', header: () => <IconLabelHeader icon={<Pencil className="h-3.5 w-3.5" />} label="Ações" />, cell: ({ row }) => {
+            const idRaw = row.original['id']
+            const id = idRaw ? Number(idRaw) : NaN
+            return (
+              <button
+                className="inline-flex items-center text-xs text-emerald-700 hover:underline"
+                onClick={() => { if (Number.isFinite(id)) { setSelectedCategoriaReceitaId(id); setCategoriaReceitaModalOpen(true) } }}
+              >Editar…</button>
+            )
+          } },
         ]
       case 'pagamentos-efetuados':
         return [
@@ -601,6 +613,9 @@ export default function ModulosFinanceiroPage() {
   // Editor Categoria Despesa (modal)
   const [categoriaModalOpen, setCategoriaModalOpen] = useState(false)
   const [selectedCategoriaDespesaId, setSelectedCategoriaDespesaId] = useState<number | null>(null)
+  // Editor Categoria Receita (modal)
+  const [categoriaReceitaModalOpen, setCategoriaReceitaModalOpen] = useState(false)
+  const [selectedCategoriaReceitaId, setSelectedCategoriaReceitaId] = useState<number | null>(null)
 
   // Editor (fornecedor + conta)
   const [editorOpen, setEditorOpen] = useState(false)
@@ -848,6 +863,8 @@ export default function ModulosFinanceiroPage() {
                   <CadastroBancoSheet triggerLabel="Cadastrar" onSaved={() => setReloadKey((k) => k + 1)} />
                 ) : tabs.selected === 'contas' ? (
                   <CadastroContaFinanceiraSheet triggerLabel="Cadastrar" onSaved={() => setReloadKey((k) => k + 1)} />
+                ) : tabs.selected === 'categorias-receita' ? (
+                  <CadastroCategoriaReceitaSheet triggerLabel="Cadastrar" onSaved={() => setReloadKey((k) => k + 1)} />
                 ) : undefined
               }
             />
@@ -1049,6 +1066,12 @@ export default function ModulosFinanceiroPage() {
         open={categoriaModalOpen}
         onOpenChange={(v) => { setCategoriaModalOpen(v); if (!v) setSelectedCategoriaDespesaId(null) }}
         categoriaId={selectedCategoriaDespesaId}
+        onSaved={() => setReloadKey(k => k + 1)}
+      />
+      <CategoriaReceitaEditorModal
+        open={categoriaReceitaModalOpen}
+        onOpenChange={(v) => { setCategoriaReceitaModalOpen(v); if (!v) setSelectedCategoriaReceitaId(null) }}
+        categoriaId={selectedCategoriaReceitaId}
         onSaved={() => setReloadKey(k => k + 1)}
       />
     </SidebarProvider>
