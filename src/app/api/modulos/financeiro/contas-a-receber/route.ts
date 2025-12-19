@@ -1,5 +1,6 @@
 import { withTransaction } from '@/lib/postgres'
 import { inngest } from '@/lib/inngest'
+import { inngest } from '@/lib/inngest'
 
 export const maxDuration = 300
 export const dynamic = 'force-dynamic'
@@ -24,8 +25,19 @@ export async function POST(req: Request) {
       const status = ['pendente', 'recebido', 'cancelado'].includes(statusRaw) ? statusRaw : 'pendente'
       const data_lancamento = toStr(body['data_lancamento'] || new Date().toISOString().slice(0,10))
       const data_documento = toStr((body as any)['data_emissao'] || (body as any)['data_documento'] || '')
-      const numero_documento = toStr((body as any)['numero_nota_fiscal'] || (body as any)['numero_documento'] || '')
-      const tipo_documento = toStr((body as any)['tipo_documento'] || '')
+      const numero_documento = toStr((body as any)['numero_nota_fiscal'] || (body as any)['numero_documento'] || 'DOC')
+      const sanitizeTipoDocumento = (v: string): string => {
+        const s = (v || '').trim().toLowerCase()
+        if (['nota_fiscal','nota fiscal','nf','nfe','nf-e','nfs-e','nfse'].includes(s)) return 'nota_fiscal'
+        if (['boleto','boleto_bancario','boleto bancario'].includes(s)) return 'boleto'
+        if (['fatura','invoice'].includes(s)) return 'fatura'
+        if (['duplicata'].includes(s)) return 'duplicata'
+        if (['contrato'].includes(s)) return 'contrato'
+        if (['recibo'].includes(s)) return 'recibo'
+        return 'fatura'
+      }
+      const tipo_documento = sanitizeTipoDocumento(toStr((body as any)['tipo_documento'] || 'fatura'))
+      const conta_financeira_id = body['conta_financeira_id'] !== undefined && body['conta_financeira_id'] !== null ? toNum(body['conta_financeira_id']) : null
       const data_vencimento = toStr(body['data_vencimento'] || '')
       const tenant_id = body['tenant_id'] !== undefined && body['tenant_id'] !== null ? toNum(body['tenant_id']) : 1
       const linhas = Array.isArray(body['linhas']) ? (body['linhas'] as Array<Record<string, unknown>>) : []
@@ -61,7 +73,7 @@ export async function POST(req: Request) {
           `INSERT INTO financeiro.contas_receber (
              tenant_id,
              cliente_id,
-             categoria_financeira_id,
+             categoria_receita_id,
              centro_lucro_id,
              departamento_id,
              filial_id,
@@ -89,10 +101,10 @@ export async function POST(req: Request) {
             departamento_id,
             filial_id,
             unidade_negocio_id,
-            numero_documento || null,
-            tipo_documento || null,
+            numero_documento,
+            tipo_documento,
             status,
-            data_documento || null,
+            (data_documento || data_lancamento),
             data_lancamento,
             data_vencimento,
             Math.abs(valor),
@@ -198,6 +210,10 @@ export async function POST(req: Request) {
 
         // Sem inserção de linhas legadas (parcelas)
 
+        // Atualiza conta_financeira_id se informado
+        if (conta_financeira_id !== null) {
+          try { await client.query(`UPDATE financeiro.contas_receber SET conta_financeira_id = $1 WHERE id = $2`, [conta_financeira_id, id]) } catch {}
+        }
         return { id, itens_count: itensCount, linhas_count: itensCount }
       })
 
@@ -210,10 +226,23 @@ export async function POST(req: Request) {
     const form = await req.formData()
 
     const descricao = String(form.get('descricao') || '').trim()
+    const numero_documento = String(form.get('numero_documento') || '').trim()
+    const sanitizeTipoDocumento = (v: string): string => {
+      const s = (v || '').trim().toLowerCase()
+      if (['nota_fiscal','nota fiscal','nf','nfe','nf-e','nfs-e','nfse'].includes(s)) return 'nota_fiscal'
+      if (['boleto','boleto_bancario','boleto bancario'].includes(s)) return 'boleto'
+      if (['fatura','invoice'].includes(s)) return 'fatura'
+      if (['duplicata'].includes(s)) return 'duplicata'
+      if (['contrato'].includes(s)) return 'contrato'
+      if (['recibo'].includes(s)) return 'recibo'
+      return 'fatura'
+    }
+    const tipo_documento = sanitizeTipoDocumento(String(form.get('tipo_documento') || 'fatura'))
     const valorRaw = String(form.get('valor') || '').trim()
     const data_lancamento = String(form.get('data_lancamento') || '').trim()
     const data_vencimento = String(form.get('data_vencimento') || '').trim()
     if (!descricao) return Response.json({ success: false, message: 'descricao é obrigatório' }, { status: 400 })
+    if (!numero_documento) return Response.json({ success: false, message: 'numero_documento é obrigatório' }, { status: 400 })
     if (!valorRaw) return Response.json({ success: false, message: 'valor é obrigatório' }, { status: 400 })
     if (!data_lancamento) return Response.json({ success: false, message: 'data_lancamento é obrigatório' }, { status: 400 })
     if (!data_vencimento) return Response.json({ success: false, message: 'data_vencimento é obrigatório' }, { status: 400 })
@@ -221,7 +250,7 @@ export async function POST(req: Request) {
     const valor = Number(valorRaw)
     if (Number.isNaN(valor)) return Response.json({ success: false, message: 'valor inválido' }, { status: 400 })
 
-    const tenant_id_raw = String(form.get('tenant_id') || '').trim()
+    const tenant_id_raw = String(form.get('tenant_id') || '1').trim()
     const entidade_id_raw = String(form.get('entidade_id') || '').trim() // cliente (compat)
     const cliente_id_raw = String(form.get('cliente_id') || '').trim() // novo schema
     const categoria_id_raw = String(form.get('categoria_id') || '').trim()
@@ -247,7 +276,7 @@ export async function POST(req: Request) {
         `INSERT INTO financeiro.contas_receber (
            tenant_id,
            cliente_id,
-           categoria_financeira_id,
+           categoria_receita_id,
            centro_lucro_id,
            departamento_id,
            filial_id,
@@ -275,10 +304,10 @@ export async function POST(req: Request) {
           departamento_id,
           filial_id,
           null,
-          null,
-          null,
+          numero_documento,
+          tipo_documento,
           status,
-          null,
+          data_lancamento,
           data_lancamento,
           data_vencimento,
           Math.abs(valor),
@@ -290,9 +319,14 @@ export async function POST(req: Request) {
       )
       const id = Number(insert.rows[0]?.id)
       if (!id) throw new Error('Falha ao criar conta a receber')
+      if (conta_financeira_id !== null) {
+        try { await client.query(`UPDATE financeiro.contas_receber SET conta_financeira_id = $1 WHERE id = $2`, [conta_financeira_id, id]) } catch {}
+      }
       return { id }
     })
 
+    try { await inngest.send({ name: 'financeiro/contas_a_receber/criada', data: { conta_receber_id: result.id } }) } catch {}
+    // Evento para LC (Inngest)
     try { await inngest.send({ name: 'financeiro/contas_a_receber/criada', data: { conta_receber_id: result.id } }) } catch {}
     return Response.json({ success: true, id: result.id })
   } catch (error) {
