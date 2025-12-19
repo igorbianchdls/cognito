@@ -28,29 +28,11 @@ export default function CadastroRegraContabilSheet({ onSaved }: { onSaved?: () =
   const [loadingPlano, setLoadingPlano] = React.useState(false)
   const [loadingCredito, setLoadingCredito] = React.useState(false)
 
-  function tiposPermitidos(lado: 'debito' | 'credito'): string[] {
-    switch (origem) {
-      case 'contas_a_pagar':
-        return lado === 'debito' ? ['Custo', 'Despesa'] : ['Passivo']
-      case 'pagamentos_efetuados':
-        return lado === 'debito' ? ['Passivo'] : ['Ativo']
-      case 'contas_a_receber':
-        return lado === 'debito' ? ['Ativo'] : ['Receita']
-      case 'pagamentos_recebidos':
-        return lado === 'debito' ? ['Ativo'] : ['Ativo']
-      default:
-        return [] // sem filtro por tipo
-    }
-  }
-
-  async function fetchOpts(q: string, lado: 'debito' | 'credito'): Promise<PlanoRow[]> {
+  async function fetchAllPlanoOpts(q: string): Promise<PlanoRow[]> {
     const params = new URLSearchParams()
     params.set('view', 'plano-contas')
-    params.set('aceita_lancamento', '1')
     params.set('order_by', 'codigo')
     params.set('pageSize', '1000')
-    const tipos = tiposPermitidos(lado)
-    if (tipos.length) params.set('tipo', tipos.join(','))
     if (q) params.set('q', q)
     const res = await fetch(`/api/modulos/contabilidade?${params.toString()}`, { cache: 'no-store' })
     const j = await res.json()
@@ -59,8 +41,8 @@ export default function CadastroRegraContabilSheet({ onSaved }: { onSaved?: () =
   }
 
   // Debounced loaders
-  React.useEffect(() => { let c = false; (async () => { setLoadingPlano(true); try { setOptsPlano(await fetchOpts(qPlano, 'debito')) } finally { if (!c) setLoadingPlano(false) } })(); return () => { c = true } }, [qPlano, origem])
-  React.useEffect(() => { let c = false; (async () => { setLoadingCredito(true); try { setOptsCredito(await fetchOpts(qCredito, 'credito')) } finally { if (!c) setLoadingCredito(false) } })(); return () => { c = true } }, [qCredito, origem])
+  React.useEffect(() => { let c = false; (async () => { setLoadingPlano(true); try { setOptsPlano(await fetchAllPlanoOpts(qPlano)) } finally { if (!c) setLoadingPlano(false) } })(); return () => { c = true } }, [qPlano])
+  React.useEffect(() => { let c = false; (async () => { setLoadingCredito(true); try { setOptsCredito(await fetchAllPlanoOpts(qCredito)) } finally { if (!c) setLoadingCredito(false) } })(); return () => { c = true } }, [qCredito])
 
   async function handleSave() {
     try {
