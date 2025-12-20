@@ -180,7 +180,7 @@ export async function POST(req: Request) {
       try {
         await client.query(
           `INSERT INTO financeiro.pagamentos_recebidos_linhas (
-             pagamento_id, conta_receber_id, valor_original_documento, valor_recebido, saldo_apos_pagamento, desconto_financeiro, juros, multa
+             pagamento_id, conta_receber_id, valor_original_documento, valor_recebido, saldo_apos_recebimento, desconto_financeiro, juros, multa
            ) VALUES ($1, NULL, $2, $3, 0, 0, 0, 0)`,
           [id, Math.abs(valor), Math.abs(valor)]
         )
