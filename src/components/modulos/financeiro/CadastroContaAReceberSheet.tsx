@@ -125,7 +125,7 @@ export default function CadastroContaAReceberSheet({ triggerLabel = "Cadastrar",
       if (centroLucroId) fd.set('centro_lucro_id', String(Number(centroLucroId)))
       if (departamentoId) fd.set('departamento_id', String(Number(departamentoId)))
       if (filialId) fd.set('filial_id', String(Number(filialId)))
-      fd.set('status', 'pendente')
+      fd.set('status', 'recebido')
       if (tenantId) fd.set('tenant_id', String(Number(tenantId)))
       const res = await fetch('/api/modulos/financeiro/contas-a-receber', { method: 'POST', body: fd })
       let j: any = null
