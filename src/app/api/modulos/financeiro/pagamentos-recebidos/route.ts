@@ -14,6 +14,7 @@ export async function POST(req: Request) {
         conta_financeira_id: string
         metodo_pagamento_id: string
         descricao: string
+        numero_pagamento?: string
       }
       const arId = Number(body.lancamento_origem_id)
       if (!arId || !body.conta_financeira_id || !body.metodo_pagamento_id || !body.descricao) {
@@ -43,14 +44,15 @@ export async function POST(req: Request) {
         if (pendente <= 0) throw new Error('Título já está totalmente recebido')
 
         const today = new Date().toISOString().slice(0, 10)
+        const numero_pagamento = (body.numero_pagamento && String(body.numero_pagamento).trim()) || `PR-${today.replace(/-/g,'')}-${Math.random().toString(36).slice(2,8).toUpperCase()}`
         const tenant = ar.tenant_id ?? 1
         // 2) Criar cabeçalho do recebimento (novo schema)
         const insHeader = await client.query(
           `INSERT INTO financeiro.pagamentos_recebidos (
-             tenant_id, status, data_recebimento, data_lancamento, conta_financeira_id, metodo_pagamento_id, valor_total_recebido, observacao
-           ) VALUES ($1, 'recebido', $2, $2, $3, $4, $5, $6)
+             tenant_id, numero_pagamento, status, data_recebimento, data_lancamento, conta_financeira_id, metodo_pagamento_id, valor_total_recebido, observacao
+           ) VALUES ($1, $2, 'recebido', $3, $3, $4, $5, $6, $7)
            RETURNING id`,
-          [tenant, today, Number(body.conta_financeira_id), Number(body.metodo_pagamento_id), Math.abs(pendente), `Recebimento AR #${arId} - ${body.descricao}`.slice(0, 255)]
+          [tenant, numero_pagamento, today, Number(body.conta_financeira_id), Number(body.metodo_pagamento_id), Math.abs(pendente), `Recebimento AR #${arId} - ${body.descricao}`.slice(0, 255)]
         )
         const recebId = Number(insHeader.rows[0]?.id)
         if (!recebId) throw new Error('Falha ao criar pagamento recebido')
@@ -142,6 +144,7 @@ export async function POST(req: Request) {
     const descricao = String(form.get('descricao') || '').trim()
     const valorRaw = String(form.get('valor') || '').trim()
     const data_lancamento = String(form.get('data_lancamento') || '').trim()
+    const numero_pagamento_form = String(form.get('numero_pagamento') || '').trim()
     if (!descricao) return Response.json({ success: false, message: 'descricao é obrigatório' }, { status: 400 })
     if (!valorRaw) return Response.json({ success: false, message: 'valor é obrigatório' }, { status: 400 })
     if (!data_lancamento) return Response.json({ success: false, message: 'data_lancamento é obrigatório' }, { status: 400 })
@@ -161,12 +164,13 @@ export async function POST(req: Request) {
     const conta_financeira_id = conta_financeira_id_raw ? Number(conta_financeira_id_raw) : null
 
     const result = await withTransaction(async (client) => {
+      const numero_pagamento = numero_pagamento_form || `PR-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${Math.random().toString(36).slice(2,8).toUpperCase()}`
       const insert = await client.query(
         `INSERT INTO financeiro.pagamentos_recebidos (
-           tenant_id, status, data_recebimento, data_lancamento, conta_financeira_id, metodo_pagamento_id, valor_total_recebido, observacao
-         ) VALUES ($1, COALESCE($2,'recebido'), $3, $3, $4, NULL, $5, $6)
+           tenant_id, numero_pagamento, status, data_recebimento, data_lancamento, conta_financeira_id, metodo_pagamento_id, valor_total_recebido, observacao
+         ) VALUES ($1, $2, COALESCE($3,'recebido'), $4, $4, $5, NULL, $6, $7)
          RETURNING id`,
-        [tenant_id, status, data_lancamento, conta_financeira_id, Math.abs(valor), descricao]
+        [tenant_id, numero_pagamento, status, data_lancamento, conta_financeira_id, Math.abs(valor), descricao]
       )
       const id = Number(insert.rows[0]?.id)
       if (!id) throw new Error('Falha ao criar pagamento recebido')

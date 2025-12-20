@@ -25,6 +25,7 @@ export default function CadastroPagamentoRecebidoSheet({ triggerLabel = "Cadastr
   const [contaId, setContaId] = React.useState("")
   const [status, setStatus] = React.useState("")
   const [tenantId, setTenantId] = React.useState("")
+  const [numeroPagamento, setNumeroPagamento] = React.useState("")
 
   const reset = () => { setDescricao(""); setValor(""); setDataLanc(""); setClienteId(""); setCategoriaId(""); setContaId(""); setStatus(""); setTenantId("") }
 
@@ -39,6 +40,10 @@ export default function CadastroPagamentoRecebidoSheet({ triggerLabel = "Cadastr
       fetchList<Item>('/api/modulos/financeiro/contas-financeiras/list'),
     ])
     setClientes(cl); setCategorias(cs); setContas(cfs)
+    if (!numeroPagamento) {
+      const today = new Date().toISOString().slice(0,10).replace(/-/g,'')
+      setNumeroPagamento(`PR-${today}-${Math.random().toString(36).slice(2,8).toUpperCase()}`)
+    }
   })() }, [isOpen])
 
   const onSubmit = async (): Promise<{ success: boolean; error?: string }> => {
@@ -50,6 +55,7 @@ export default function CadastroPagamentoRecebidoSheet({ triggerLabel = "Cadastr
       fd.set('descricao', descricao.trim())
       fd.set('valor', valor)
       fd.set('data_lancamento', dataLanc)
+      fd.set('numero_pagamento', (numeroPagamento || '').trim() || (() => { const today = new Date().toISOString().slice(0,10).replace(/-/g,''); return `PR-${today}-${Math.random().toString(36).slice(2,8).toUpperCase()}` })())
       if (clienteId) {
         fd.set('entidade_id', clienteId)
         fd.set('cliente_id', clienteId)
@@ -79,6 +85,7 @@ export default function CadastroPagamentoRecebidoSheet({ triggerLabel = "Cadastr
     >
       <div className="md:col-span-2"><Label>Descrição<span className="text-red-500"> *</span></Label><Textarea rows={2} value={descricao} onChange={(e)=>setDescricao(e.target.value)} /></div>
       <div><Label>Valor<span className="text-red-500"> *</span></Label><Input type="number" step="0.01" value={valor} onChange={(e)=>setValor(e.target.value)} /></div>
+      <div><Label>Número do Pagamento</Label><Input value={numeroPagamento} onChange={(e)=>setNumeroPagamento(e.target.value)} placeholder="PR-YYYYMMDD-XXXXXX" /></div>
       <div><Label>Data Recebimento<span className="text-red-500"> *</span></Label><Input type="date" value={dataLanc} onChange={(e)=>setDataLanc(e.target.value)} /></div>
       <div>
         <Label>Cliente</Label>
