@@ -194,8 +194,21 @@ export const pagamentoEfetuadoCriadoFn = inngest.createFunction(
     const total_encargos = totals.total_juros + totals.total_multa
     const liquida_fornec = total_pago - total_encargos + total_desc
 
+    // Regra principal (pagamentos_efetuados) e por banco (conta_crédito = conta_contábil do banco)
+    const regraPgto = await step.run('select-regra-pagamentos-efetuados', async () => {
+      const rows = await runQuery<{ conta_debito_id: number | null; conta_credito_id: number | null }>(
+        `SELECT conta_debito_id, conta_credito_id
+           FROM contabilidade.regras_contabeis
+          WHERE tenant_id = $1 AND origem = 'pagamentos_efetuados' AND (subtipo = 'principal' OR subtipo IS NULL)
+          ORDER BY CASE WHEN subtipo = 'principal' THEN 0 ELSE 1 END, id ASC
+          LIMIT 1`,
+        [tenant_id]
+      )
+      return rows[0] || null
+    })
+
     // Conta do banco (crédito)
-    const contaBancoId = await step.run('resolve-banco', async () => {
+    let contaBancoId = await step.run('resolve-banco', async () => {
       if (!Number.isFinite(conta_financeira_id || NaN)) return null
       const rows = await runQuery<{ conta_contabil_id: number | null }>(
         `SELECT conta_contabil_id FROM financeiro.contas_financeiras WHERE id = $1 LIMIT 1`,
@@ -206,49 +219,73 @@ export const pagamentoEfetuadoCriadoFn = inngest.createFunction(
     })
     if (!Number.isFinite(contaBancoId || NaN)) return { success: false, reason: 'conta_financeira_sem_conta_contabil' }
 
-    // Conta Fornecedores (débito): preferir LC da AP; senão regra AP por plano
-    const contaFornecId = await step.run('resolve-fornecedores', async () => {
-      if (Number.isFinite(anyApId || NaN)) {
-        const viaLc = await runQuery<{ conta_id: number }>(
-          `SELECT lcl.conta_id
-             FROM contabilidade.lancamentos_contabeis lc
-             JOIN contabilidade.lancamentos_contabeis_linhas lcl ON lcl.lancamento_id = lc.id
-            WHERE lc.origem_tabela = 'financeiro.contas_pagar'
-              AND lc.origem_id = $1
-              AND lcl.credito > 0
-            ORDER BY lcl.credito DESC, lcl.id ASC
-            LIMIT 1`,
-          [anyApId!]
-        )
-        if (viaLc.length) return Number(viaLc[0].conta_id)
-
-        // fallback: regra AP por plano
-        const planoRows = await runQuery<{ plano_conta_id: number | null }>(
-          `SELECT cd.plano_conta_id
-             FROM financeiro.contas_pagar cp
-             LEFT JOIN financeiro.categorias_despesa cd ON cd.id = cp.categoria_despesa_id
-            WHERE cp.id = $1
-            LIMIT 1`,
-          [anyApId!]
-        )
-        const planoId = planoRows[0]?.plano_conta_id
-        if (planoId !== null && planoId !== undefined) {
-          const regra = await runQuery<{ conta_credito_id: number | null }>(
-            `SELECT conta_credito_id
-               FROM contabilidade.regras_contabeis
-              WHERE tenant_id = $1
-                AND origem = 'contas_a_pagar'
-                AND plano_conta_id = $2
-              ORDER BY id ASC
-              LIMIT 1`,
-            [tenant_id, Number(planoId)]
-          )
-          const cred = regra[0]?.conta_credito_id
-          if (cred !== null && cred !== undefined) return Number(cred)
-        }
-      }
-      return null
+    // Regra vinculada ao banco: origem='pagamentos_efetuados' com conta_credito = conta do banco
+    const regraPorBanco = await step.run('select-regra-pgto-por-banco', async () => {
+      const rows = await runQuery<{ conta_debito_id: number | null }>(
+        `SELECT conta_debito_id
+           FROM contabilidade.regras_contabeis
+          WHERE tenant_id = $1 AND origem = 'pagamentos_efetuados'
+            AND (conta_credito_id = $2 OR plano_conta_id = $2)
+          ORDER BY id ASC LIMIT 1`,
+        [tenant_id, Number(contaBancoId)]
+      )
+      return rows[0] || null
     })
+
+    // Conta Fornecedores (débito): preferir LC da AP; senão regra AP por plano
+    // Preferir regra por banco (conta_crédito = banco) para escolher o débito (fornecedores)
+    let contaFornecId: number | null = null
+    if (regraPorBanco?.conta_debito_id !== null && regraPorBanco?.conta_debito_id !== undefined) {
+      contaFornecId = Number(regraPorBanco.conta_debito_id)
+    }
+    if (!Number.isFinite(contaFornecId || NaN)) {
+      contaFornecId = await step.run('resolve-fornecedores', async () => {
+        if (Number.isFinite(anyApId || NaN)) {
+          const viaLc = await runQuery<{ conta_id: number }>(
+            `SELECT lcl.conta_id
+               FROM contabilidade.lancamentos_contabeis lc
+               JOIN contabilidade.lancamentos_contabeis_linhas lcl ON lcl.lancamento_id = lc.id
+              WHERE lc.origem_tabela = 'financeiro.contas_pagar'
+                AND lc.origem_id = $1
+                AND lcl.credito > 0
+              ORDER BY lcl.credito DESC, lcl.id ASC
+              LIMIT 1`,
+            [anyApId!]
+          )
+          if (viaLc.length) return Number(viaLc[0].conta_id)
+
+          // fallback: regra AP por plano
+          const planoRows = await runQuery<{ plano_conta_id: number | null }>(
+            `SELECT cd.plano_conta_id
+               FROM financeiro.contas_pagar cp
+               LEFT JOIN financeiro.categorias_despesa cd ON cd.id = cp.categoria_despesa_id
+              WHERE cp.id = $1
+              LIMIT 1`,
+            [anyApId!]
+          )
+          const planoId = planoRows[0]?.plano_conta_id
+          if (planoId !== null && planoId !== undefined) {
+            const regra = await runQuery<{ conta_credito_id: number | null }>(
+              `SELECT conta_credito_id
+                 FROM contabilidade.regras_contabeis
+                WHERE tenant_id = $1
+                  AND origem = 'contas_a_pagar'
+                  AND plano_conta_id = $2
+                ORDER BY id ASC
+                LIMIT 1`,
+              [tenant_id, Number(planoId)]
+            )
+            const cred = regra[0]?.conta_credito_id
+            if (cred !== null && cred !== undefined) return Number(cred)
+          }
+        }
+        return null
+      })
+    }
+    // Permite override via regra (conta_debito)
+    if (!Number.isFinite(contaFornecId || NaN) && regraPgto?.conta_debito_id !== null && regraPgto?.conta_debito_id !== undefined) {
+      contaFornecId = Number(regraPgto.conta_debito_id)
+    }
     if (!Number.isFinite(contaFornecId || NaN)) return { success: false, reason: 'conta_fornecedores_indefinida' }
 
     // Regras opcionais para desconto/juros/multa
@@ -468,8 +505,21 @@ export const pagamentoRecebidoCriadoFn = inngest.createFunction(
     const total_acresc = totals.total_juros + totals.total_multa
     const liquida_clientes = total_recebido + total_desc - total_acresc
 
+    // Regra principal (pagamentos_recebidos) opcional
+    const regraRec = await step.run('select-regra-pagamentos-recebidos', async () => {
+      const rows = await runQuery<{ conta_debito_id: number | null; conta_credito_id: number | null }>(
+        `SELECT conta_debito_id, conta_credito_id
+           FROM contabilidade.regras_contabeis
+          WHERE tenant_id = $1 AND origem = 'pagamentos_recebidos' AND (subtipo = 'principal' OR subtipo IS NULL)
+          ORDER BY CASE WHEN subtipo = 'principal' THEN 0 ELSE 1 END, id ASC
+          LIMIT 1`,
+        [tenant_id]
+      )
+      return rows[0] || null
+    })
+
     // Conta Banco (Dr)
-    const contaBancoId = await step.run('resolve-banco', async () => {
+    let contaBancoId = await step.run('resolve-banco', async () => {
       if (!Number.isFinite(conta_financeira_id || NaN)) return null
       const rows = await runQuery<{ conta_contabil_id: number | null }>(
         `SELECT conta_contabil_id FROM financeiro.contas_financeiras WHERE id = $1 LIMIT 1`,
@@ -478,10 +528,32 @@ export const pagamentoRecebidoCriadoFn = inngest.createFunction(
       const v = rows[0]?.conta_contabil_id
       return v !== null && v !== undefined ? Number(v) : null
     })
+    // Regra vinculada ao banco: origem='pagamentos_recebidos' com conta_debito_id = banco OU plano_conta_id = banco
+    const regraPorBancoRec = await step.run('select-regra-rec-por-banco', async () => {
+      if (!Number.isFinite(contaBancoId || NaN)) return null
+      const rows = await runQuery<{ conta_debito_id: number | null; conta_credito_id: number | null }>(
+        `SELECT conta_debito_id, conta_credito_id
+           FROM contabilidade.regras_contabeis
+          WHERE tenant_id = $1 AND origem = 'pagamentos_recebidos'
+            AND (conta_debito_id = $2 OR plano_conta_id = $2)
+          ORDER BY id ASC LIMIT 1`,
+        [tenant_id, Number(contaBancoId)]
+      )
+      return rows[0] || null
+    })
+    // Permite override de débito via regra principal se banco não resolvido
+    if (!Number.isFinite(contaBancoId || NaN) && regraRec?.conta_debito_id !== null && regraRec?.conta_debito_id !== undefined) {
+      contaBancoId = Number(regraRec.conta_debito_id)
+    }
     if (!Number.isFinite(contaBancoId || NaN)) return { success: false, reason: 'conta_financeira_sem_conta_contabil' }
 
     // Conta Clientes (Cr): via LC da AR ou regra AR por plano
-    const contaClientesId = await step.run('resolve-clientes', async () => {
+    // Preferir regra por banco (conta_débito = banco) para escolher o crédito (clientes)
+    let contaClientesId: number | null = null
+    if (regraPorBancoRec?.conta_credito_id !== null && regraPorBancoRec?.conta_credito_id !== undefined) {
+      contaClientesId = Number(regraPorBancoRec.conta_credito_id)
+    }
+    if (!Number.isFinite(contaClientesId || NaN)) contaClientesId = await step.run('resolve-clientes', async () => {
       if (Number.isFinite(anyCrId || NaN)) {
         const viaLc = await runQuery<{ conta_id: number }>(
           `SELECT lcl.conta_id
@@ -518,6 +590,10 @@ export const pagamentoRecebidoCriadoFn = inngest.createFunction(
       }
       return null
     })
+    // Permite override via regra (conta_credito)
+    if (!Number.isFinite(contaClientesId || NaN) && regraRec?.conta_credito_id !== null && regraRec?.conta_credito_id !== undefined) {
+      contaClientesId = Number(regraRec.conta_credito_id)
+    }
     if (!Number.isFinite(contaClientesId || NaN)) return { success: false, reason: 'conta_clientes_indefinida' }
 
     // Regras extras para descontos/juros/multa
