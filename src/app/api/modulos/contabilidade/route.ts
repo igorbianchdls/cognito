@@ -269,6 +269,7 @@ export async function GET(req: NextRequest) {
           conta_contabil,
           valor
         FROM (
+          -- RECEITAS (código 4) | origem: contas_receber | usa créditos
           SELECT
             1 AS ordem,
             'Receitas (Contas a Receber)' AS secao,
@@ -286,8 +287,27 @@ export async function GET(req: NextRequest) {
 
           UNION ALL
 
+          -- CUSTOS (código 5) | origem: contas_pagar | usa débitos
           SELECT
             2 AS ordem,
+            'Custos (Contas a Pagar)' AS secao,
+            pc.codigo AS codigo_conta,
+            pc.nome   AS conta_contabil,
+            COALESCE(SUM(lc.total_debitos), 0) AS valor
+          FROM contabilidade.plano_contas pc
+          LEFT JOIN contabilidade.lancamentos_contabeis_linhas lcl
+            ON lcl.conta_id = pc.id
+          LEFT JOIN contabilidade.lancamentos_contabeis lc
+            ON lc.id = lcl.lancamento_id
+           AND lc.origem_tabela = 'financeiro.contas_pagar'
+          WHERE pc.codigo LIKE '5%'
+          GROUP BY pc.codigo, pc.nome
+
+          UNION ALL
+
+          -- DESPESAS (código 6) | origem: contas_pagar | usa débitos
+          SELECT
+            3 AS ordem,
             'Despesas (Contas a Pagar)' AS secao,
             pc.codigo AS codigo_conta,
             pc.nome   AS conta_contabil,
