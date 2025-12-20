@@ -310,7 +310,7 @@ export default function ModulosContabilidadePage() {
                   </div>
                   <div className="flex-1 min-h-0 overflow-auto" style={{ marginBottom: layout.mbTable }}>
                     <div
-                      className={`border-y ${tabs.selected === 'balanco-patrimonial' ? '' : 'bg-background'}`}
+                      className={`border-y ${tabs.selected === 'balanco-patrimonial' ? '' : 'bg-background'} ${tabs.selected === 'dre' ? 'overflow-auto max-h-[70vh]' : ''}`}
                       style={{ borderColor: tabelaUI.borderColor, background: tabs.selected === 'balanco-patrimonial' ? 'transparent' : undefined }}
                     >
                       {isLoading ? (
