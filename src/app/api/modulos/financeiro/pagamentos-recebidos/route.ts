@@ -156,21 +156,23 @@ export async function POST(req: Request) {
     const entidade_id_raw = String(form.get('entidade_id') || '').trim() // cliente (não usado no header)
     const categoria_id_raw = String(form.get('categoria_id') || '').trim() // não usado no header
     const conta_financeira_id_raw = String(form.get('conta_financeira_id') || '').trim()
+    const metodo_pagamento_id_raw = String(form.get('metodo_pagamento_id') || '').trim()
     const status = String(form.get('status') || '').trim() || null
 
     const tenant_id = tenant_id_raw ? Number(tenant_id_raw) : 1
     const entidade_id = entidade_id_raw ? Number(entidade_id_raw) : null
     const categoria_id = categoria_id_raw ? Number(categoria_id_raw) : null
     const conta_financeira_id = conta_financeira_id_raw ? Number(conta_financeira_id_raw) : null
+    const metodo_pagamento_id = metodo_pagamento_id_raw ? Number(metodo_pagamento_id_raw) : null
 
     const result = await withTransaction(async (client) => {
       const numero_pagamento = numero_pagamento_form || `PR-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${Math.random().toString(36).slice(2,8).toUpperCase()}`
       const insert = await client.query(
         `INSERT INTO financeiro.pagamentos_recebidos (
            tenant_id, numero_pagamento, status, data_recebimento, data_lancamento, conta_financeira_id, metodo_pagamento_id, valor_total_recebido, observacao
-         ) VALUES ($1, $2, COALESCE($3,'recebido'), $4, $4, $5, NULL, $6, $7)
+         ) VALUES ($1, $2, COALESCE($3,'recebido'), $4, $4, $5, $6, $7, $8)
          RETURNING id`,
-        [tenant_id, numero_pagamento, status, data_lancamento, conta_financeira_id, Math.abs(valor), descricao]
+        [tenant_id, numero_pagamento, status, data_lancamento, conta_financeira_id, metodo_pagamento_id, Math.abs(valor), descricao]
       )
       const id = Number(insert.rows[0]?.id)
       if (!id) throw new Error('Falha ao criar pagamento recebido')

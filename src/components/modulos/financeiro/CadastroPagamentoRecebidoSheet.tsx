@@ -16,6 +16,7 @@ export default function CadastroPagamentoRecebidoSheet({ triggerLabel = "Cadastr
   const [clientes, setClientes] = React.useState<Item[]>([])
   const [categorias, setCategorias] = React.useState<{ id: number; nome: string; tipo: string }[]>([])
   const [contas, setContas] = React.useState<Item[]>([])
+  const [metodos, setMetodos] = React.useState<Item[]>([])
 
   const [descricao, setDescricao] = React.useState("")
   const [valor, setValor] = React.useState("")
@@ -23,6 +24,7 @@ export default function CadastroPagamentoRecebidoSheet({ triggerLabel = "Cadastr
   const [clienteId, setClienteId] = React.useState("")
   const [categoriaId, setCategoriaId] = React.useState("")
   const [contaId, setContaId] = React.useState("")
+  const [metodoId, setMetodoId] = React.useState("")
   const [status, setStatus] = React.useState("")
   const [tenantId, setTenantId] = React.useState("")
   const [numeroPagamento, setNumeroPagamento] = React.useState("")
@@ -34,12 +36,13 @@ export default function CadastroPagamentoRecebidoSheet({ triggerLabel = "Cadastr
   }
 
   React.useEffect(() => { if (!isOpen) return; (async () => {
-    const [cl, cs, cfs] = await Promise.all([
+    const [cl, cs, cfs, mps] = await Promise.all([
       fetchList<Item>('/api/modulos/financeiro/clientes/list'),
       fetchList<{ id: number; nome: string; tipo: string }>('/api/modulos/financeiro/categorias/list'),
       fetchList<Item>('/api/modulos/financeiro/contas-financeiras/list'),
+      fetchList<Item>('/api/modulos/financeiro/metodos-pagamento/list'),
     ])
-    setClientes(cl); setCategorias(cs); setContas(cfs)
+    setClientes(cl); setCategorias(cs); setContas(cfs); setMetodos(mps)
     if (!numeroPagamento) {
       const today = new Date().toISOString().slice(0,10).replace(/-/g,'')
       setNumeroPagamento(`PR-${today}-${Math.random().toString(36).slice(2,8).toUpperCase()}`)
@@ -47,8 +50,8 @@ export default function CadastroPagamentoRecebidoSheet({ triggerLabel = "Cadastr
   })() }, [isOpen])
 
   const onSubmit = async (): Promise<{ success: boolean; error?: string }> => {
-    if (!(descricao.trim() && valor && dataLanc && contaId)) {
-      return { success: false, error: 'Preencha descrição, valor, data e conta.' }
+    if (!(descricao.trim() && valor && dataLanc && contaId && metodoId)) {
+      return { success: false, error: 'Preencha descrição, valor, data, conta e método.' }
     }
     try {
       const fd = new FormData()
@@ -62,6 +65,7 @@ export default function CadastroPagamentoRecebidoSheet({ triggerLabel = "Cadastr
       }
       if (categoriaId) fd.set('categoria_id', categoriaId)
       if (contaId) fd.set('conta_financeira_id', contaId)
+      if (metodoId) fd.set('metodo_pagamento_id', metodoId)
       if (status) fd.set('status', status.trim())
       if (tenantId) fd.set('tenant_id', tenantId)
       const res = await fetch('/api/modulos/financeiro/pagamentos-recebidos', { method: 'POST', body: fd })
@@ -92,6 +96,13 @@ export default function CadastroPagamentoRecebidoSheet({ triggerLabel = "Cadastr
         <Select value={clienteId} onValueChange={setClienteId}>
           <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
           <SelectContent>{clientes.map(c => <SelectItem key={c.id} value={String(c.id)}>{c.nome}</SelectItem>)}</SelectContent>
+        </Select>
+      </div>
+      <div>
+        <Label>Método de Pagamento<span className="text-red-500"> *</span></Label>
+        <Select value={metodoId} onValueChange={setMetodoId}>
+          <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+          <SelectContent>{metodos.map(m => <SelectItem key={m.id} value={String(m.id)}>{m.nome}</SelectItem>)}</SelectContent>
         </Select>
       </div>
       <div>
