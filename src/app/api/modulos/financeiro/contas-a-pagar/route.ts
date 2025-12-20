@@ -19,8 +19,8 @@ export async function POST(req: Request) {
       const fornecedor_id = toNum(body['fornecedor_id'])
       const categoria_id = body['categoria_id'] !== undefined && body['categoria_id'] !== null ? toNum(body['categoria_id']) : null
       const descricao = toStr(body['descricao'] || 'Conta a pagar').trim()
-      const statusRaw = toStr(body['status'] || 'pendente').trim().toLowerCase()
-      const status = ['pendente', 'pago', 'cancelado'].includes(statusRaw) ? statusRaw : 'pendente'
+      // Aceita qualquer status informado; fallback para 'pendente' apenas se vazio
+      const status = toStr(body['status'] || 'pendente').trim()
       const data_lancamento = toStr(body['data_lancamento'] || new Date().toISOString().slice(0,10))
       const data_documento = toStr((body as any)['data_emissao'] || (body as any)['data_documento'] || '')
       const numero_documento = toStr((body as any)['numero_nota_fiscal'] || (body as any)['numero_documento'] || '')
