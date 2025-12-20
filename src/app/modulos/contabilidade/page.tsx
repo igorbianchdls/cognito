@@ -1,7 +1,6 @@
 "use client"
 
 import { useMemo, useState, useEffect } from 'react'
-import type { DRENode } from '@/components/relatorios/DRETable'
 import { useStore } from '@nanostores/react'
 import type { ColumnDef } from '@tanstack/react-table'
 
@@ -10,7 +9,6 @@ import TabsNav, { type Opcao } from '@/components/modulos/TabsNav'
 import DataToolbar from '@/components/modulos/DataToolbar'
 import CadastroRegraContabilSheet from '@/components/modulos/contabilidade/CadastroRegraContabilSheet'
 import DataTable, { type TableData } from '@/components/widgets/Table'
-import DRETable from '@/components/relatorios/DRETable'
 import BalanceTAccountView from '@/components/modulos/contabilidade/BalanceTAccountView'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
@@ -31,8 +29,7 @@ export default function ModulosContabilidadePage() {
 
   const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date } | undefined>(undefined)
   const [data, setData] = useState<Row[]>([])
-  const [dreNodes, setDreNodes] = useState<DRENode[]>([])
-  const [drePeriods, setDrePeriods] = useState<{ key: string; label: string }[]>([])
+  // DRE agora usa tabela simples (API: view=dre-tabela)
   type BPLinha = { conta: string; valor: number }
   type BPGrupo = { nome: string; linhas: BPLinha[] }
   type BPData = { ativo: BPGrupo[]; passivo: BPGrupo[]; pl: BPGrupo[] }
@@ -65,7 +62,8 @@ export default function ModulosContabilidadePage() {
       setError(null)
       try {
         const params = new URLSearchParams()
-        params.set('view', tabs.selected)
+        // Aba DRE usa a view específica 'dre-tabela'
+        params.set('view', tabs.selected === 'dre' ? 'dre-tabela' : tabs.selected)
         let deParam: string | undefined
         let ateParam: string | undefined
         if (dateRange?.from) {
@@ -84,41 +82,12 @@ export default function ModulosContabilidadePage() {
           ateParam = `${yyyy}-${mm}-${dd}`
           params.set('ate', ateParam)
         }
-        // Paginação server-side (não aplicável para DRE/Balanço, pois usam componentes próprios)
-        if (!['dre', 'balanco-patrimonial'].includes(tabs.selected)) {
+        // Paginação server-side (não aplicável para Balanço, pois usa componente próprio)
+        if (!['balanco-patrimonial'].includes(tabs.selected)) {
           params.set('page', String(page))
           params.set('pageSize', String(pageSize))
         }
-        const isDre = tabs.selected === 'dre'
-        if (isDre) {
-          const qs: Record<string, string> = { origem: 'contas_pagar' }
-          if (deParam) qs.de = deParam
-          if (ateParam) qs.ate = ateParam
-          const qsStr = new URLSearchParams(qs).toString()
-          const [structRes, sumRes] = await Promise.all([
-            fetch(`/api/modulos/contabilidade?view=dre-structure`, { cache: 'no-store', signal: controller.signal }),
-            fetch(`/api/modulos/contabilidade?view=dre-sum&${qsStr}`, { cache: 'no-store', signal: controller.signal })
-          ])
-          if (!structRes.ok) throw new Error(`HTTP ${structRes.status}`)
-          if (!sumRes.ok) throw new Error(`HTTP ${sumRes.status}`)
-          const struct = await structRes.json()
-          const sums = await sumRes.json()
-          const map = new Map<number, number>()
-          if (Array.isArray(sums?.rows)) {
-            for (const r of sums.rows as Array<{ conta_id: number; valor: number }>) {
-              if (typeof r.conta_id === 'number') map.set(r.conta_id, Number(r.valor || 0))
-            }
-          }
-          const decorate = (nodes: DRENode[]): DRENode[] => nodes.map(n => ({
-            ...n,
-            value: (!n.children || n.children.length === 0) && /^pc-\d+$/.test(n.id) ? (map.get(Number(n.id.slice(3))) || 0) : n.value,
-            children: n.children ? decorate(n.children) : undefined,
-          }))
-          const nodes = Array.isArray(struct?.nodes) ? decorate(struct.nodes as DRENode[]) : []
-          setDreNodes(nodes)
-          setDrePeriods([])
-          setTotal(0)
-        } else if (tabs.selected === 'balanco-patrimonial') {
+        if (tabs.selected === 'balanco-patrimonial') {
           const url = `/api/modulos/contabilidade?${params.toString()}`
           const res = await fetch(url, { cache: 'no-store', signal: controller.signal })
           if (!res.ok) throw new Error(`HTTP ${res.status}`)
@@ -198,13 +167,10 @@ export default function ModulosContabilidadePage() {
         ]
       case 'dre':
         return [
-          { accessorKey: 'grupo', header: 'Grupo' },
-          { accessorKey: 'conta', header: 'Conta' },
-          { accessorKey: 'tipo', header: 'Tipo (Receita/Despesa)' },
-          { accessorKey: 'periodo', header: 'Período' },
+          { accessorKey: 'secao', header: 'Seção' },
+          { accessorKey: 'codigo_conta', header: 'Código' },
+          { accessorKey: 'conta_contabil', header: 'Conta' },
           { accessorKey: 'valor', header: 'Valor', cell: ({ row }) => formatBRL(row.original['valor']) },
-          { accessorKey: 'acumulado', header: 'Acumulado', cell: ({ row }) => formatBRL(row.original['acumulado']) },
-          { accessorKey: 'percentual', header: '% Receita', cell: ({ row }) => String(row.original['percentual'] ?? '') },
         ]
       case 'centros-de-custo':
         return [
@@ -349,8 +315,6 @@ export default function ModulosContabilidadePage() {
                         <div className="p-6 text-sm text-gray-500">Carregando dados…</div>
                       ) : error ? (
                         <div className="p-6 text-sm text-red-600">Erro ao carregar: {error}</div>
-                      ) : tabs.selected === 'dre' ? (
-                        <DRETable data={dreNodes} periods={[]} />
                       ) : tabs.selected === 'balanco-patrimonial' ? (
                         <BalanceTAccountView data={bpData} />
                       ) : (

@@ -260,6 +260,55 @@ export async function GET(req: NextRequest) {
       }, { headers: { 'Cache-Control': 'no-store' } })
     }
 
+    // DRE simples (tabela) usando a query fornecida pelo usuário
+    if (view === 'dre-tabela') {
+      const sql = `
+        SELECT
+          secao,
+          codigo_conta,
+          conta_contabil,
+          valor
+        FROM (
+          SELECT
+            1 AS ordem,
+            'Receitas (Contas a Receber)' AS secao,
+            pc.codigo AS codigo_conta,
+            pc.nome   AS conta_contabil,
+            COALESCE(SUM(lc.total_creditos), 0) AS valor
+          FROM contabilidade.plano_contas pc
+          LEFT JOIN contabilidade.lancamentos_contabeis_linhas lcl
+            ON lcl.conta_id = pc.id
+          LEFT JOIN contabilidade.lancamentos_contabeis lc
+            ON lc.id = lcl.lancamento_id
+           AND lc.origem_tabela = 'financeiro.contas_receber'
+          WHERE pc.codigo LIKE '4%'
+          GROUP BY pc.codigo, pc.nome
+
+          UNION ALL
+
+          SELECT
+            2 AS ordem,
+            'Despesas (Contas a Pagar)' AS secao,
+            pc.codigo AS codigo_conta,
+            pc.nome   AS conta_contabil,
+            COALESCE(SUM(lc.total_debitos), 0) AS valor
+          FROM contabilidade.plano_contas pc
+          LEFT JOIN contabilidade.lancamentos_contabeis_linhas lcl
+            ON lcl.conta_id = pc.id
+          LEFT JOIN contabilidade.lancamentos_contabeis lc
+            ON lc.id = lcl.lancamento_id
+           AND lc.origem_tabela = 'financeiro.contas_pagar'
+          WHERE pc.codigo LIKE '6%'
+          GROUP BY pc.codigo, pc.nome
+        ) t
+        ORDER BY
+          ordem,
+          codigo_conta`;
+
+      const rows = await runQuery<{ secao: string; codigo_conta: string; conta_contabil: string; valor: number }>(sql, [])
+      return Response.json({ success: true, view, rows, sql }, { headers: { 'Cache-Control': 'no-store' } })
+    }
+
     // Balanço Patrimonial real
     if (view === 'balanco-patrimonial') {
       const today = new Date()
