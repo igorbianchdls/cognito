@@ -297,7 +297,7 @@ export default function DRETable({ data = DEFAULT_DATA, periods = [
               </TableRow>
             )
           })}
-          {!namesOnly && (
+          {!namesOnly && periods.length > 0 && (
             <>
               {/* Totais por período: Receita Total */}
               <TableRow className="border-t">

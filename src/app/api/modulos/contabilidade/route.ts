@@ -549,6 +549,31 @@ export async function GET(req: NextRequest) {
       return Response.json({ success: true, view, periods: [], nodes }, { headers: { 'Cache-Control': 'no-store' } })
     }
 
+    if (view === 'dre-sum') {
+      const conditions: string[] = []
+      const params: unknown[] = []
+      let idx = 1
+      if (de) { conditions.push(`lc.data_lancamento >= $${idx++}::date`); params.push(de) }
+      if (ate) { conditions.push(`lc.data_lancamento <= $${idx++}::date`); params.push(ate) }
+      const where = conditions.length ? `AND ${conditions.join(' AND ')}` : ''
+      const sql = `
+        SELECT lcl.conta_id,
+               SUM(CASE WHEN pc.tipo_conta = 'Receita'
+                        THEN (COALESCE(lcl.credito,0) - COALESCE(lcl.debito,0))
+                        WHEN pc.tipo_conta IN ('Custo','Despesa')
+                        THEN (COALESCE(lcl.debito,0) - COALESCE(lcl.credito,0))
+                        ELSE 0 END) AS valor
+          FROM contabilidade.lancamentos_contabeis lc
+          JOIN contabilidade.lancamentos_contabeis_linhas lcl ON lcl.lancamento_id = lc.id
+          JOIN contabilidade.plano_contas pc ON pc.id = lcl.conta_id
+         WHERE pc.tipo_conta IN ('Receita','Custo','Despesa')
+           ${where}
+         GROUP BY lcl.conta_id
+      `
+      const rows = await runQuery<{ conta_id: number; valor: number | null }>(sql, params)
+      return Response.json({ success: true, view, rows, sql, params: JSON.stringify(params) }, { headers: { 'Cache-Control': 'no-store' } })
+    }
+
     if (view === 'dre') {
       // DRE real a partir de lançamentos contábeis
       // Janela de período

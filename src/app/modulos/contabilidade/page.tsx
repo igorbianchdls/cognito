@@ -66,19 +66,23 @@ export default function ModulosContabilidadePage() {
       try {
         const params = new URLSearchParams()
         params.set('view', tabs.selected)
+        let deParam: string | undefined
+        let ateParam: string | undefined
         if (dateRange?.from) {
           const d = new Date(dateRange.from)
           const yyyy = d.getFullYear()
           const mm = String(d.getMonth() + 1).padStart(2, '0')
           const dd = String(d.getDate()).padStart(2, '0')
-          params.set('de', `${yyyy}-${mm}-${dd}`)
+          deParam = `${yyyy}-${mm}-${dd}`
+          params.set('de', deParam)
         }
         if (dateRange?.to) {
           const d = new Date(dateRange.to)
           const yyyy = d.getFullYear()
           const mm = String(d.getMonth() + 1).padStart(2, '0')
           const dd = String(d.getDate()).padStart(2, '0')
-          params.set('ate', `${yyyy}-${mm}-${dd}`)
+          ateParam = `${yyyy}-${mm}-${dd}`
+          params.set('ate', ateParam)
         }
         // Paginação server-side (não aplicável para DRE/Balanço, pois usam componentes próprios)
         if (!['dre', 'balanco-patrimonial'].includes(tabs.selected)) {
@@ -86,15 +90,35 @@ export default function ModulosContabilidadePage() {
           params.set('pageSize', String(pageSize))
         }
         const isDre = tabs.selected === 'dre'
-        const url = isDre ? `/api/modulos/contabilidade?view=dre-structure` : `/api/modulos/contabilidade?${params.toString()}`
-        const res = await fetch(url, { cache: 'no-store', signal: controller.signal })
-        if (!res.ok) throw new Error(`HTTP ${res.status}`)
-        const json = await res.json()
         if (isDre) {
-          setDreNodes(Array.isArray(json?.nodes) ? json.nodes as DRENode[] : [])
+          const [structRes, sumRes] = await Promise.all([
+            fetch(`/api/modulos/contabilidade?view=dre-structure`, { cache: 'no-store', signal: controller.signal }),
+            fetch(`/api/modulos/contabilidade?view=dre-sum${deParam || ateParam ? `&${new URLSearchParams({ ...(deParam ? { de: deParam } : {}), ...(ateParam ? { ate: ateParam } : {}) }).toString()}` : ''}`, { cache: 'no-store', signal: controller.signal })
+          ])
+          if (!structRes.ok) throw new Error(`HTTP ${structRes.status}`)
+          if (!sumRes.ok) throw new Error(`HTTP ${sumRes.status}`)
+          const struct = await structRes.json()
+          const sums = await sumRes.json()
+          const map = new Map<number, number>()
+          if (Array.isArray(sums?.rows)) {
+            for (const r of sums.rows as Array<{ conta_id: number; valor: number }>) {
+              if (typeof r.conta_id === 'number') map.set(r.conta_id, Number(r.valor || 0))
+            }
+          }
+          const decorate = (nodes: DRENode[]): DRENode[] => nodes.map(n => ({
+            ...n,
+            value: (!n.children || n.children.length === 0) && /^pc-\d+$/.test(n.id) ? (map.get(Number(n.id.slice(3))) || 0) : n.value,
+            children: n.children ? decorate(n.children) : undefined,
+          }))
+          const nodes = Array.isArray(struct?.nodes) ? decorate(struct.nodes as DRENode[]) : []
+          setDreNodes(nodes)
           setDrePeriods([])
           setTotal(0)
         } else if (tabs.selected === 'balanco-patrimonial') {
+          const url = `/api/modulos/contabilidade?${params.toString()}`
+          const res = await fetch(url, { cache: 'no-store', signal: controller.signal })
+          if (!res.ok) throw new Error(`HTTP ${res.status}`)
+          const json = await res.json()
           setBpData({
             ativo: Array.isArray(json?.ativo) ? (json.ativo as BPGrupo[]) : [],
             passivo: Array.isArray(json?.passivo) ? (json.passivo as BPGrupo[]) : [],
@@ -102,6 +126,10 @@ export default function ModulosContabilidadePage() {
           })
           setTotal(0)
         } else {
+          const url = `/api/modulos/contabilidade?${params.toString()}`
+          const res = await fetch(url, { cache: 'no-store', signal: controller.signal })
+          if (!res.ok) throw new Error(`HTTP ${res.status}`)
+          const json = await res.json()
           const rows = (json?.rows || []) as Row[]
           setData(Array.isArray(rows) ? rows : [])
           setTotal(Number(json?.total ?? rows.length) || 0)
@@ -318,7 +346,7 @@ export default function ModulosContabilidadePage() {
                       ) : error ? (
                         <div className="p-6 text-sm text-red-600">Erro ao carregar: {error}</div>
                       ) : tabs.selected === 'dre' ? (
-                        <DRETable data={dreNodes} periods={drePeriods} namesOnly />
+                        <DRETable data={dreNodes} periods={[]} />
                       ) : tabs.selected === 'balanco-patrimonial' ? (
                         <BalanceTAccountView data={bpData} />
                       ) : (
