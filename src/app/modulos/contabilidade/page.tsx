@@ -14,7 +14,7 @@ import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
 import NexusHeader from '@/components/navigation/nexus/NexusHeader'
 import NexusPageContainer from '@/components/navigation/nexus/NexusPageContainer'
-import { FileText, Landmark, BarChart3, BookOpen, Wrench, Calendar, CalendarClock, CheckCircle2, DollarSign, Tag, Briefcase } from 'lucide-react'
+import { FileText, Landmark, BarChart3, BookOpen, Wrench, Calendar, CalendarClock, CheckCircle2, DollarSign, Tag, Briefcase, ChevronRight, ChevronDown } from 'lucide-react'
 import IconLabelHeader from '@/components/widgets/IconLabelHeader'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/stores/modulos/moduleUiStore'
 
@@ -40,6 +40,7 @@ export default function ModulosContabilidadePage() {
   const [page, setPage] = useState<number>(1)
   const [pageSize, setPageSize] = useState<number>(20)
   const [total, setTotal] = useState<number>(0)
+  const [dreExpanded, setDreExpanded] = useState<Record<string, boolean>>({})
 
   useEffect(() => {
     moduleUiActions.setTitulo({ title: 'Contabilidade', subtitle: 'Lançamentos, balancetes e plano de contas' })
@@ -315,6 +316,70 @@ export default function ModulosContabilidadePage() {
                         <div className="p-6 text-sm text-gray-500">Carregando dados…</div>
                       ) : error ? (
                         <div className="p-6 text-sm text-red-600">Erro ao carregar: {error}</div>
+                      ) : tabs.selected === 'dre' ? (
+                        <div className="rounded-lg border bg-white">
+                          <div className="overflow-x-auto overflow-y-auto max-h-[70vh]">
+                            <table className="w-full text-sm">
+                              <thead className="bg-gray-50">
+                                <tr>
+                                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Seção / Conta</th>
+                                  <th className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Valor</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {(() => {
+                                  const bySec = new Map<string, Row[]>()
+                                  for (const r of data) {
+                                    const s = String((r as any)['secao'] || '')
+                                    if (!bySec.has(s)) bySec.set(s, [])
+                                    bySec.get(s)!.push(r)
+                                  }
+                                  const sections = Array.from(bySec.entries())
+                                  return sections.map(([secao, rows]) => {
+                                    const total = rows.reduce((acc, r) => acc + Number((r as any)['valor'] || 0), 0)
+                                    const open = Boolean(dreExpanded[secao])
+                                    return (
+                                      <>
+                                        <tr key={secao} className="border-b border-gray-200 bg-white">
+                                          <td className="px-4 py-3 text-gray-900 font-semibold">
+                                            <button
+                                              type="button"
+                                              onClick={() => setDreExpanded(prev => ({ ...prev, [secao]: !prev[secao] }))}
+                                              className="mr-2 text-gray-700 hover:text-gray-900 align-middle"
+                                              aria-label={open ? 'Recolher' : 'Expandir'}
+                                            >
+                                              {open ? <ChevronDown className="w-4 h-4 inline" /> : <ChevronRight className="w-4 h-4 inline" />}
+                                            </button>
+                                            <span>{secao}</span>
+                                          </td>
+                                          <td className="px-4 py-3 text-right text-gray-900 font-semibold">
+                                            {Number.isFinite(total) ? Number(total).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : ''}
+                                          </td>
+                                        </tr>
+                                        {open && rows.map((r, idx) => {
+                                          const codigo = String((r as any)['codigo_conta'] ?? '')
+                                          const conta = String((r as any)['conta_contabil'] ?? '')
+                                          const valor = Number((r as any)['valor'] || 0)
+                                          return (
+                                            <tr key={`${secao}-${codigo}-${idx}`} className="border-b border-gray-100">
+                                              <td className="px-4 py-2 text-gray-800">
+                                                <span className="text-xs text-gray-500 mr-2">{codigo}</span>
+                                                <span>{conta}</span>
+                                              </td>
+                                              <td className="px-4 py-2 text-right text-gray-800">
+                                                {valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                              </td>
+                                            </tr>
+                                          )
+                                        })}
+                                      </>
+                                    )
+                                  })
+                                })()}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
                       ) : tabs.selected === 'balanco-patrimonial' ? (
                         <BalanceTAccountView data={bpData} />
                       ) : (
