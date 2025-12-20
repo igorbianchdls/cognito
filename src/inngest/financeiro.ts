@@ -189,7 +189,9 @@ export const pagamentoEfetuadoCriadoFn = inngest.createFunction(
       return { totals: { total_pago: tp, total_desc: td, total_juros: tj, total_multa: tm }, anyApId: apId }
     })
 
-    const total_pago = totals.total_pago
+    // Fallback: se não houver linhas (modo cabeçalho simples), usa o valor do cabeçalho
+    const headerTotalPago = Math.abs(Number((pagamento as any)['valor_total_pagamento'] ?? 0))
+    const total_pago = totals.total_pago > 0 ? totals.total_pago : headerTotalPago
     const total_desc = totals.total_desc
     const total_encargos = totals.total_juros + totals.total_multa
     const liquida_fornec = total_pago - total_encargos + total_desc
@@ -500,7 +502,9 @@ export const pagamentoRecebidoCriadoFn = inngest.createFunction(
       return { totals: { total_recebido: tr, total_desc: td, total_juros: tj, total_multa: tm }, anyCrId: crId }
     })
 
-    const total_recebido = totals.total_recebido
+    // Fallback: se não houver linhas (modo cabeçalho simples), usa o valor do cabeçalho
+    const headerTotalRecebido = Math.abs(Number((pr as any)['valor_total_recebido'] ?? 0))
+    const total_recebido = totals.total_recebido > 0 ? totals.total_recebido : headerTotalRecebido
     const total_desc = totals.total_desc
     const total_acresc = totals.total_juros + totals.total_multa
     const liquida_clientes = total_recebido + total_desc - total_acresc

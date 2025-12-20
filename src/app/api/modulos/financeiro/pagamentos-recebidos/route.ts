@@ -176,15 +176,8 @@ export async function POST(req: Request) {
       )
       const id = Number(insert.rows[0]?.id)
       if (!id) throw new Error('Falha ao criar pagamento recebido')
-      // Insere linha padrão para suportar geração do LC (soma por linhas)
-      try {
-        await client.query(
-          `INSERT INTO financeiro.pagamentos_recebidos_linhas (
-             pagamento_id, conta_receber_id, valor_original_documento, valor_recebido, saldo_apos_recebimento, desconto_financeiro, juros, multa
-           ) VALUES ($1, NULL, $2, $3, 0, 0, 0, 0)`,
-          [id, Math.abs(valor), Math.abs(valor)]
-        )
-      } catch {}
+      // Não insere linhas automaticamente aqui para evitar conflito com constraints;
+      // o Inngest faz fallback para o valor do cabeçalho quando não há linhas.
       return { id }
     })
 
