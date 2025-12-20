@@ -85,13 +85,14 @@ export default function ModulosContabilidadePage() {
           params.set('page', String(page))
           params.set('pageSize', String(pageSize))
         }
-        const url = `/api/modulos/contabilidade?${params.toString()}`
+        const isDre = tabs.selected === 'dre'
+        const url = isDre ? `/api/modulos/contabilidade?view=dre-structure` : `/api/modulos/contabilidade?${params.toString()}`
         const res = await fetch(url, { cache: 'no-store', signal: controller.signal })
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
         const json = await res.json()
-        if (tabs.selected === 'dre') {
+        if (isDre) {
           setDreNodes(Array.isArray(json?.nodes) ? json.nodes as DRENode[] : [])
-          setDrePeriods(Array.isArray(json?.periods) ? json.periods as { key: string; label: string }[] : [])
+          setDrePeriods([])
           setTotal(0)
         } else if (tabs.selected === 'balanco-patrimonial') {
           setBpData({
@@ -317,7 +318,7 @@ export default function ModulosContabilidadePage() {
                       ) : error ? (
                         <div className="p-6 text-sm text-red-600">Erro ao carregar: {error}</div>
                       ) : tabs.selected === 'dre' ? (
-                        <DRETable data={dreNodes} periods={drePeriods} />
+                        <DRETable data={dreNodes} periods={drePeriods} namesOnly />
                       ) : tabs.selected === 'balanco-patrimonial' ? (
                         <BalanceTAccountView data={bpData} />
                       ) : (

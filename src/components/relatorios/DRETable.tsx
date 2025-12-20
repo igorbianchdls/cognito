@@ -127,13 +127,14 @@ const DEFAULT_DATA: DRENode[] = [
 interface DRETableProps {
   data?: DRENode[]
   periods?: { key: string; label: string }[]
+  namesOnly?: boolean
 }
 
 export default function DRETable({ data = DEFAULT_DATA, periods = [
   { key: '2025-01', label: 'Janeiro' },
   { key: '2025-02', label: 'Fevereiro' },
   { key: '2025-03', label: 'Março' },
-] }: DRETableProps) {
+], namesOnly = false }: DRETableProps) {
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set<string>())
   const commands = useStore($reportsCommands)
   const tabs = useStore($tabs)
@@ -194,6 +195,7 @@ export default function DRETable({ data = DEFAULT_DATA, periods = [
   // Export CSV when requested and DRE is active
   useEffect(() => {
     if (tabs.selected !== 'dre') return
+    if (namesOnly) return
     const header = ['Conta', ...periods.map(p => p.label), 'Total']
     const allRows = flattenAll(data)
     const csvLines: string[] = []
@@ -237,16 +239,18 @@ export default function DRETable({ data = DEFAULT_DATA, periods = [
         <TableHeader>
           <TableRow className="bg-gray-50">
             <TableHead className="w-2/5 text-xs font-semibold uppercase tracking-wide text-gray-600">Conta</TableHead>
-            {periods.map((p) => (
+            {!namesOnly && periods.map((p) => (
               <TableHead key={p.key} className="text-right text-xs font-semibold uppercase tracking-wide text-gray-600">{p.label}</TableHead>
             ))}
-            <TableHead className="text-right text-xs font-semibold uppercase tracking-wide text-gray-600">Total</TableHead>
+            {!namesOnly && (
+              <TableHead className="text-right text-xs font-semibold uppercase tracking-wide text-gray-600">Total</TableHead>
+            )}
           </TableRow>
         </TableHeader>
         <TableBody>
           {rows.map(({ node, depth }, idx) => {
             const hasChildren = isExpandable(node)
-            const total = computeNodeValue(node, periods.map(p => p.key))
+            const total = namesOnly ? 0 : computeNodeValue(node, periods.map(p => p.key))
             const isSection = hasChildren
             const indent = depth * 20
             const isNegative = total < 0
@@ -271,7 +275,7 @@ export default function DRETable({ data = DEFAULT_DATA, periods = [
                     <span className={isTopLevel ? 'font-semibold' : isSection ? 'font-medium' : ''}>{node.name}</span>
                   </div>
                 </TableCell>
-                {periods.map((p) => {
+                {!namesOnly && periods.map((p) => {
                   const v = computeNodeValueForPeriod(node, p.key)
                   const neg = v < 0
                   return (
@@ -282,40 +286,46 @@ export default function DRETable({ data = DEFAULT_DATA, periods = [
                     </TableCell>
                   )
                 })}
-                <TableCell className="text-right text-[13px] text-gray-800">
-                  <span className={isTopLevel ? 'font-semibold' : isSection ? 'font-medium' : ''} style={{ color: isNegative ? '#b91c1c' : '#111827' }}>
-                    {formatCurrencyPretty(total)}
-                  </span>
-                </TableCell>
+                {!namesOnly && (
+                  <TableCell className="text-right text-[13px] text-gray-800">
+                    <span className={isTopLevel ? 'font-semibold' : isSection ? 'font-medium' : ''} style={{ color: isNegative ? '#b91c1c' : '#111827' }}>
+                      {formatCurrencyPretty(total)}
+                    </span>
+                  </TableCell>
+                )}
               </TableRow>
             )
           })}
-          {/* Totais por período: Receita Total */}
-          <TableRow className="border-t">
-            <TableCell className="font-semibold text-gray-900">Receita Total</TableCell>
-            {periods.map((p) => (
-              <TableCell key={p.key} className="text-right font-semibold text-gray-900">{formatCurrencyPretty(totalRevenueByPeriod[p.key] || 0)}</TableCell>
-            ))}
-            <TableCell className="text-right font-semibold text-gray-900">
-              {formatCurrencyPretty(Object.values(totalRevenueByPeriod).reduce((a, b) => a + b, 0))}
-            </TableCell>
-          </TableRow>
-          {/* Lucro/Prejuízo: Receita - Despesas (somatório de todos os grupos) */}
-          <TableRow className="border-t">
-            <TableCell className="font-semibold text-gray-900">Lucro/Prejuízo</TableCell>
-            {periods.map((p) => {
-              const v = profitByPeriod[p.key] || 0
-              const neg = v < 0
-              return (
-                <TableCell key={p.key} className="text-right font-semibold" style={{ color: neg ? '#b91c1c' : '#111827' }}>
-                  {formatCurrencyPretty(v)}
+          {!namesOnly && (
+            <>
+              {/* Totais por período: Receita Total */}
+              <TableRow className="border-t">
+                <TableCell className="font-semibold text-gray-900">Receita Total</TableCell>
+                {periods.map((p) => (
+                  <TableCell key={p.key} className="text-right font-semibold text-gray-900">{formatCurrencyPretty(totalRevenueByPeriod[p.key] || 0)}</TableCell>
+                ))}
+                <TableCell className="text-right font-semibold text-gray-900">
+                  {formatCurrencyPretty(Object.values(totalRevenueByPeriod).reduce((a, b) => a + b, 0))}
                 </TableCell>
-              )
-            })}
-            <TableCell className="text-right font-semibold" style={{ color: (Object.values(profitByPeriod).reduce((a, b) => a + b, 0) < 0) ? '#b91c1c' : '#111827' }}>
-              {formatCurrencyPretty(Object.values(profitByPeriod).reduce((a, b) => a + b, 0))}
-            </TableCell>
-          </TableRow>
+              </TableRow>
+              {/* Lucro/Prejuízo: Receita - Despesas (somatório de todos os grupos) */}
+              <TableRow className="border-t">
+                <TableCell className="font-semibold text-gray-900">Lucro/Prejuízo</TableCell>
+                {periods.map((p) => {
+                  const v = profitByPeriod[p.key] || 0
+                  const neg = v < 0
+                  return (
+                    <TableCell key={p.key} className="text-right font-semibold" style={{ color: neg ? '#b91c1c' : '#111827' }}>
+                      {formatCurrencyPretty(v)}
+                    </TableCell>
+                  )
+                })}
+                <TableCell className="text-right font-semibold" style={{ color: (Object.values(profitByPeriod).reduce((a, b) => a + b, 0) < 0) ? '#b91c1c' : '#111827' }}>
+                  {formatCurrencyPretty(Object.values(profitByPeriod).reduce((a, b) => a + b, 0))}
+                </TableCell>
+              </TableRow>
+            </>
+          )}
         </TableBody>
       </Table>
     </div>

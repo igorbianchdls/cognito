@@ -516,6 +516,39 @@ export async function GET(req: NextRequest) {
       }, { headers: { 'Cache-Control': 'no-store' } })
     }
 
+    if (view === 'dre-structure') {
+      // Somente estrutura de contas da DRE (Receita, Custo, Despesa), sem valores
+      type PC = { id: number; nome: string; conta_pai_id: number | null; tipo_conta: string; codigo?: string | null }
+      const rows = await runQuery<PC>(
+        `SELECT id, nome, conta_pai_id, tipo_conta, codigo
+           FROM contabilidade.plano_contas
+          WHERE tipo_conta IN ('Receita','Custo','Despesa')
+          ORDER BY codigo::text COLLATE "C"`
+      )
+
+      function buildTree(type: 'Receita' | 'Custo' | 'Despesa') {
+        const list = rows.filter(r => r.tipo_conta === type)
+        const nodeMap = new Map<number, { id: string; name: string; children: any[] }>()
+        for (const r of list) nodeMap.set(r.id, { id: `pc-${r.id}`, name: String(r.nome || ''), children: [] })
+        const roots: any[] = []
+        for (const r of list) {
+          const n = nodeMap.get(r.id)!
+          const pid = r.conta_pai_id
+          if (pid && nodeMap.has(pid)) nodeMap.get(pid)!.children.push(n)
+          else roots.push(n)
+        }
+        return roots
+      }
+
+      const nodes = [
+        { id: 'receita', name: 'Receita', children: buildTree('Receita') },
+        { id: 'custo', name: 'Custo', children: buildTree('Custo') },
+        { id: 'despesa', name: 'Despesa', children: buildTree('Despesa') },
+      ]
+
+      return Response.json({ success: true, view, periods: [], nodes }, { headers: { 'Cache-Control': 'no-store' } })
+    }
+
     if (view === 'dre') {
       // DRE real a partir de lançamentos contábeis
       // Janela de período
