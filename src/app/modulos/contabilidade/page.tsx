@@ -91,9 +91,13 @@ export default function ModulosContabilidadePage() {
         }
         const isDre = tabs.selected === 'dre'
         if (isDre) {
+          const qs: Record<string, string> = { origem: 'contas_pagar' }
+          if (deParam) qs.de = deParam
+          if (ateParam) qs.ate = ateParam
+          const qsStr = new URLSearchParams(qs).toString()
           const [structRes, sumRes] = await Promise.all([
             fetch(`/api/modulos/contabilidade?view=dre-structure`, { cache: 'no-store', signal: controller.signal }),
-            fetch(`/api/modulos/contabilidade?view=dre-sum${deParam || ateParam ? `&${new URLSearchParams({ ...(deParam ? { de: deParam } : {}), ...(ateParam ? { ate: ateParam } : {}) }).toString()}` : ''}`, { cache: 'no-store', signal: controller.signal })
+            fetch(`/api/modulos/contabilidade?view=dre-sum&${qsStr}`, { cache: 'no-store', signal: controller.signal })
           ])
           if (!structRes.ok) throw new Error(`HTTP ${structRes.status}`)
           if (!sumRes.ok) throw new Error(`HTTP ${sumRes.status}`)

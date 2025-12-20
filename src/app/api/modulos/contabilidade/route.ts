@@ -553,9 +553,34 @@ export async function GET(req: NextRequest) {
       const conditions: string[] = []
       const params: unknown[] = []
       let idx = 1
+
+      // Período
       if (de) { conditions.push(`lc.data_lancamento >= $${idx++}::date`); params.push(de) }
       if (ate) { conditions.push(`lc.data_lancamento <= $${idx++}::date`); params.push(ate) }
+
+      // Origem opcional: ap, contas_pagar, financeiro.contas_pagar, cr, contas_receber, pagamentos_efetuados, pagamentos_recebidos
+      const origemParam = (searchParams.get('origem') || '').toLowerCase()
+      let origemClause = ''
+      let tipoLista: Array<'Receita' | 'Custo' | 'Despesa'> = ['Receita', 'Custo', 'Despesa']
+      const mapOrigem = (o: string) => {
+        if (o === 'ap' || o === 'contas_pagar' || o === 'financeiro.contas_pagar') return 'financeiro.contas_pagar'
+        if (o === 'cr' || o === 'contas_receber' || o === 'financeiro.contas_receber') return 'financeiro.contas_receber'
+        if (o === 'pagamentos_efetuados' || o === 'financeiro.pagamentos_efetuados') return 'financeiro.pagamentos_efetuados'
+        if (o === 'pagamentos_recebidos' || o === 'financeiro.pagamentos_recebidos') return 'financeiro.pagamentos_recebidos'
+        return ''
+      }
+      const origemTb = mapOrigem(origemParam)
+      if (origemTb) {
+        origemClause = `lc.origem_tabela = '${origemTb}'`
+        // Para AP: só Custo/Despesa; para CR: só Receita; para pagamentos: pode haver despesas/receitas financeiras
+        if (origemTb === 'financeiro.contas_pagar') tipoLista = ['Custo', 'Despesa']
+        else if (origemTb === 'financeiro.contas_receber') tipoLista = ['Receita']
+        else tipoLista = ['Receita', 'Custo', 'Despesa']
+      }
+      if (origemClause) conditions.push(origemClause)
+
       const where = conditions.length ? `AND ${conditions.join(' AND ')}` : ''
+      const tipoIn = tipoLista.map(t => `'${t}'`).join(',')
       const sql = `
         SELECT lcl.conta_id,
                SUM(CASE WHEN pc.tipo_conta = 'Receita'
@@ -566,10 +591,10 @@ export async function GET(req: NextRequest) {
           FROM contabilidade.lancamentos_contabeis lc
           JOIN contabilidade.lancamentos_contabeis_linhas lcl ON lcl.lancamento_id = lc.id
           JOIN contabilidade.plano_contas pc ON pc.id = lcl.conta_id
-         WHERE pc.tipo_conta IN ('Receita','Custo','Despesa')
+         WHERE pc.tipo_conta IN (${tipoIn})
            ${where}
-         GROUP BY lcl.conta_id
-      `
+         GROUP BY lcl.conta_id`
+
       const rows = await runQuery<{ conta_id: number; valor: number | null }>(sql, params)
       return Response.json({ success: true, view, rows, sql, params: JSON.stringify(params) }, { headers: { 'Cache-Control': 'no-store' } })
     }
