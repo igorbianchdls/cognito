@@ -15,7 +15,6 @@ export default function CadastroContaAReceberSheet({ triggerLabel = 'Cadastrar',
 
   const [clientes, setClientes] = React.useState<Item[]>([])
   const [categorias, setCategorias] = React.useState<Item[]>([])
-  const [contas, setContas] = React.useState<Item[]>([])
 
   const [descricao, setDescricao] = React.useState('Venda/serviço')
   const [numero, setNumero] = React.useState('')
@@ -25,10 +24,10 @@ export default function CadastroContaAReceberSheet({ triggerLabel = 'Cadastrar',
   const [dataVenc, setDataVenc] = React.useState<string>('')
   const [clienteId, setClienteId] = React.useState('')
   const [categoriaId, setCategoriaId] = React.useState('')
-  const [contaId, setContaId] = React.useState('')
+  
   const [tenantId, setTenantId] = React.useState('1')
 
-  const reset = () => { setDescricao('Venda/serviço'); setNumero(''); setTipoDoc('fatura'); setValor(''); setDataLanc(''); setDataVenc(''); setClienteId(''); setCategoriaId(''); setContaId(''); setTenantId('1') }
+  const reset = () => { setDescricao('Venda/serviço'); setNumero(''); setTipoDoc('fatura'); setValor(''); setDataLanc(''); setDataVenc(''); setClienteId(''); setCategoriaId(''); setTenantId('1') }
 
   const fetchList = async <T,>(url: string): Promise<T[]> => {
     try { const res = await fetch(url, { cache: 'no-store' }); const json = await res.json(); return res.ok && json?.success && Array.isArray(json?.rows) ? json.rows as T[] : [] } catch { return [] as T[] }
@@ -37,14 +36,12 @@ export default function CadastroContaAReceberSheet({ triggerLabel = 'Cadastrar',
   React.useEffect(() => {
     if (!isOpen) return;
     (async () => {
-      const [cl, cs, cfs] = await Promise.all([
+      const [cl, cs] = await Promise.all([
         fetchList<Item>('/api/modulos/financeiro/clientes/list'),
         fetchList<Item>(`/api/modulos/financeiro?view=categorias-receita&pageSize=1000`),
-        fetchList<Item>('/api/modulos/financeiro/contas-financeiras/list'),
       ])
       setClientes(cl);
       setCategorias(cs);
-      setContas(cfs)
       if (!dataLanc) setDataLanc(new Date().toISOString().slice(0,10))
       if (!numero) {
         const today = new Date().toISOString().slice(0,10).replace(/-/g,'')
@@ -69,7 +66,6 @@ export default function CadastroContaAReceberSheet({ triggerLabel = 'Cadastrar',
         data_lancamento: dataLanc,
         data_vencimento: dataVenc,
         categoria_id: categoriaId ? Number(categoriaId) : null,
-        conta_financeira_id: contaId ? Number(contaId) : null,
       }
       const res = await fetch('/api/modulos/financeiro/contas-a-receber', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
       const j = await res.json()
@@ -110,15 +106,8 @@ export default function CadastroContaAReceberSheet({ triggerLabel = 'Cadastrar',
           <SelectContent>{categorias.map(c => <SelectItem key={c.id} value={String(c.id)}>{c.nome}</SelectItem>)}</SelectContent>
         </Select>
       </div>
-      <div>
-        <Label>Conta Financeira</Label>
-        <Select value={contaId} onValueChange={setContaId}>
-          <SelectTrigger><SelectValue placeholder="(Opcional)" /></SelectTrigger>
-          <SelectContent>{contas.map(c => <SelectItem key={c.id} value={String(c.id)}>{c.nome}</SelectItem>)}</SelectContent>
-        </Select>
-      </div>
+      
       <div><Label>Tenant ID</Label><Input value={tenantId} onChange={(e)=>setTenantId(e.target.value)} placeholder="1" /></div>
     </BaseCadastroSheet>
   )
 }
-

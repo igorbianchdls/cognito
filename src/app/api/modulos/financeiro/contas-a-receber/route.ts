@@ -34,7 +34,6 @@ export async function POST(req: Request) {
     const departamento_id = payload['departamento_id'] !== undefined && payload['departamento_id'] !== null ? toNum(payload['departamento_id']) : null
     const filial_id = payload['filial_id'] !== undefined && payload['filial_id'] !== null ? toNum(payload['filial_id']) : null
     const unidade_negocio_id = payload['unidade_negocio_id'] !== undefined && payload['unidade_negocio_id'] !== null ? toNum(payload['unidade_negocio_id']) : null
-    const conta_financeira_id = payload['conta_financeira_id'] !== undefined && payload['conta_financeira_id'] !== null ? toNum(payload['conta_financeira_id']) : null
 
     if (!cliente_id || cliente_id <= 0) return Response.json({ success: false, message: 'cliente_id é obrigatório' }, { status: 400 })
     if (!data_vencimento) return Response.json({ success: false, message: 'data_vencimento é obrigatório' }, { status: 400 })
@@ -47,20 +46,20 @@ export async function POST(req: Request) {
            numero_documento, tipo_documento, status,
            data_documento, data_lancamento, data_vencimento,
            valor_bruto, valor_desconto, valor_impostos, valor_liquido,
-           observacao, conta_financeira_id
+           observacao
          ) VALUES (
            $1,$2,$3,$4,$5,$6,$7,
            $8,$9,$10,
            $11,$12,$13,
            $14,0,0,$15,
-           $16,$17
+           $16
          ) RETURNING id`,
         [
           tenant_id, cliente_id, categoria_receita_id, centro_lucro_id, departamento_id, filial_id, unidade_negocio_id,
           numero_documento, tipo_documento, status,
           data_documento, data_lancamento, data_vencimento,
           Math.abs(valor), Math.abs(valor),
-          descricao, conta_financeira_id
+          descricao
         ]
       )
       const id = Number(ins.rows[0]?.id)
@@ -76,4 +75,3 @@ export async function POST(req: Request) {
     return Response.json({ success: false, message: msg }, { status: 400 })
   }
 }
-
