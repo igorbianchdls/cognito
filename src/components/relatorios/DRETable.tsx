@@ -235,6 +235,7 @@ export default function DRETable({ data = DEFAULT_DATA, periods = [
 
   return (
     <div className="rounded-lg border bg-white">
+      <div className="overflow-auto">
       <Table>
         <TableHeader>
           <TableRow className="bg-gray-50">
@@ -328,6 +329,7 @@ export default function DRETable({ data = DEFAULT_DATA, periods = [
           )}
         </TableBody>
       </Table>
+      </div>
     </div>
   )
 }
