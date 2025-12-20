@@ -69,60 +69,73 @@ export async function POST(req: Request) {
       if (!cliente_id || cliente_id <= 0) return Response.json({ success: false, message: 'cliente_id é obrigatório' }, { status: 400 })
       const result = await withTransaction(async (client) => {
         // Cabeçalho (novo schema: financeiro.contas_receber)
-        const ins = await client.query(
-          `INSERT INTO financeiro.contas_receber (
-             tenant_id,
-             cliente_id,
-             categoria_receita_id,
-             centro_lucro_id,
-             departamento_id,
-             filial_id,
-             unidade_negocio_id,
-             numero_documento,
-             tipo_documento,
-             status,
-             data_documento,
-             data_lancamento,
-             data_vencimento,
-             valor_bruto,
-             valor_desconto,
-             valor_impostos,
-             valor_liquido,
-             observacao
-           ) VALUES (
-             $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18
-           )
-           RETURNING id`,
-          [
-            tenant_id,
-            cliente_id,
-            categoria_id,
-            centro_lucro_id,
-            departamento_id,
-            filial_id,
-            unidade_negocio_id,
-            numero_documento,
-            tipo_documento,
-            status,
-            (data_documento || data_lancamento),
-            data_lancamento,
-            data_vencimento,
-            Math.abs(valor),
-            0,
-            0,
-            Math.abs(valor),
-            descricao,
-          ]
-        )
-        const id = Number(ins.rows[0]?.id)
-        if (!id) throw new Error('Falha ao criar conta a receber')
-        // Sem inserção de linhas (cabeçalho apenas, conforme solicitado)
+        const statusCandidates = Array.from(new Set([
+          status,
+          'recebido','Recebido','pendente','Pendente','parcial','Parcial','cancelado','Cancelado'
+        ]))
+        let createdId: number | null = null
+        let lastErr: unknown = null
+        for (const st of statusCandidates) {
+          try {
+            const ins = await client.query(
+              `INSERT INTO financeiro.contas_receber (
+                 tenant_id,
+                 cliente_id,
+                 categoria_receita_id,
+                 centro_lucro_id,
+                 departamento_id,
+                 filial_id,
+                 unidade_negocio_id,
+                 numero_documento,
+                 tipo_documento,
+                 status,
+                 data_documento,
+                 data_lancamento,
+                 data_vencimento,
+                 valor_bruto,
+                 valor_desconto,
+                 valor_impostos,
+                 valor_liquido,
+                 observacao
+               ) VALUES (
+                 $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18
+               )
+               RETURNING id`,
+              [
+                tenant_id,
+                cliente_id,
+                categoria_id,
+                centro_lucro_id,
+                departamento_id,
+                filial_id,
+                unidade_negocio_id,
+                numero_documento,
+                tipo_documento,
+                st,
+                (data_documento || data_lancamento),
+                data_lancamento,
+                data_vencimento,
+                Math.abs(valor),
+                0,
+                0,
+                Math.abs(valor),
+                descricao,
+              ]
+            )
+            createdId = Number(ins.rows[0]?.id || 0)
+            if (createdId) break
+          } catch (e) {
+            lastErr = e
+            continue
+          }
+        }
+        if (!createdId) throw lastErr || new Error('Falha ao criar conta a receber')
 
         // Atualiza conta_financeira_id se informado
         if (conta_financeira_id !== null) {
-          try { await client.query(`UPDATE financeiro.contas_receber SET conta_financeira_id = $1 WHERE id = $2`, [conta_financeira_id, id]) } catch {}
+          try { await client.query(`UPDATE financeiro.contas_receber SET conta_financeira_id = $1 WHERE id = $2`, [conta_financeira_id, createdId]) } catch {}
         }
-        return { id }
+        return { id: createdId }
       })
 
       // Evento para LC (Inngest)
@@ -182,57 +195,71 @@ export async function POST(req: Request) {
 
     if (!cliente_id || cliente_id <= 0) return Response.json({ success: false, message: 'cliente_id é obrigatório' }, { status: 400 })
     const result = await withTransaction(async (client) => {
-      const insert = await client.query(
-        `INSERT INTO financeiro.contas_receber (
-           tenant_id,
-           cliente_id,
-           categoria_receita_id,
-           centro_lucro_id,
-           departamento_id,
-           filial_id,
-           unidade_negocio_id,
-           numero_documento,
-           tipo_documento,
-           status,
-           data_documento,
-           data_lancamento,
-           data_vencimento,
-           valor_bruto,
-           valor_desconto,
-           valor_impostos,
-           valor_liquido,
-           observacao
-         ) VALUES (
-           $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18
-         )
-         RETURNING id`,
-        [
-          tenant_id,
-          cliente_id,
-          categoria_id,
-          centro_lucro_id,
-          departamento_id,
-          filial_id,
-          null,
-          numero_documento,
-          tipo_documento,
-          status,
-          data_lancamento,
-          data_lancamento,
-          data_vencimento,
-          Math.abs(valor),
-          0,
-          0,
-          Math.abs(valor),
-          descricao,
-        ]
-      )
-      const id = Number(insert.rows[0]?.id)
-      if (!id) throw new Error('Falha ao criar conta a receber')
-      if (conta_financeira_id !== null) {
-        try { await client.query(`UPDATE financeiro.contas_receber SET conta_financeira_id = $1 WHERE id = $2`, [conta_financeira_id, id]) } catch {}
+      const statusCandidates = Array.from(new Set([
+        status,
+        'recebido','Recebido','pendente','Pendente','parcial','Parcial','cancelado','Cancelado'
+      ]))
+      let createdId: number | null = null
+      let lastErr: unknown = null
+      for (const st of statusCandidates) {
+        try {
+          const insert = await client.query(
+            `INSERT INTO financeiro.contas_receber (
+               tenant_id,
+               cliente_id,
+               categoria_receita_id,
+               centro_lucro_id,
+               departamento_id,
+               filial_id,
+               unidade_negocio_id,
+               numero_documento,
+               tipo_documento,
+               status,
+               data_documento,
+               data_lancamento,
+               data_vencimento,
+               valor_bruto,
+               valor_desconto,
+               valor_impostos,
+               valor_liquido,
+               observacao
+             ) VALUES (
+               $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18
+             )
+             RETURNING id`,
+            [
+              tenant_id,
+              cliente_id,
+              categoria_id,
+              centro_lucro_id,
+              departamento_id,
+              filial_id,
+              null,
+              numero_documento,
+              tipo_documento,
+              st,
+              data_lancamento,
+              data_lancamento,
+              data_vencimento,
+              Math.abs(valor),
+              0,
+              0,
+              Math.abs(valor),
+              descricao,
+            ]
+          )
+          createdId = Number(insert.rows[0]?.id || 0)
+          if (createdId) break
+        } catch (e) {
+          lastErr = e
+          continue
+        }
       }
-      return { id }
+      if (!createdId) throw lastErr || new Error('Falha ao criar conta a receber')
+      if (conta_financeira_id !== null) {
+        try { await client.query(`UPDATE financeiro.contas_receber SET conta_financeira_id = $1 WHERE id = $2`, [conta_financeira_id, createdId]) } catch {}
+      }
+      return { id: createdId }
     })
 
     try { await inngest.send({ name: 'financeiro/contas_a_receber/criada', data: { conta_receber_id: result.id } }) } catch {}
