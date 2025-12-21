@@ -538,13 +538,14 @@ export default function ModulosContabilidadePage() {
                           <div className="overflow-x-auto overflow-y-auto max-h-[70vh]">
                             <table className="w-full text-sm border border-gray-200 border-collapse">
                               <thead>
-                                <tr className="bg-white">
-                                  <th rowSpan={2} className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600 border-r border-gray-200">Seção / Conta</th>
-                                  <th rowSpan={2} className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600 border-r border-gray-200">Realizado Dez 2025</th>
+                                <tr className="bg-white border-b border-gray-300">
+                                  <th colSpan={2} className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600 border-r border-gray-200 text-left"></th>
                                   <th colSpan={3} className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600 border-r border-gray-200">vs Prior Período</th>
                                   <th colSpan={3} className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">vs Prior Year</th>
                                 </tr>
                                 <tr className="bg-gray-50">
+                                  <th className="text-left px-4 py-2 text-[11px] font-semibold text-gray-600 border-r border-gray-200">Seção / Conta</th>
+                                  <th className="text-right px-4 py-2 text-[11px] font-semibold text-gray-600 border-r border-gray-200">Realizado Dez 2025</th>
                                   <th className="text-right px-4 py-2 text-[11px] font-semibold text-gray-600 border-r border-gray-200">Realizado Nov 2025</th>
                                   <th className="text-right px-4 py-2 text-[11px] font-semibold text-gray-600 border-r border-gray-200">Δ</th>
                                   <th className="text-right px-4 py-2 text-[11px] font-semibold text-gray-600 border-r border-gray-200">%</th>
