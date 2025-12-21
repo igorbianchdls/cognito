@@ -542,7 +542,11 @@ export default function ModulosContabilidadePage() {
                                   <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Seção / Conta</th>
                                   <th className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Realizado Dez 2025</th>
                                   <th className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Realizado Nov 2025</th>
+                                  <th className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Δ</th>
+                                  <th className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">%</th>
                                   <th className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Realizado Dez 2024</th>
+                                  <th className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Δ</th>
+                                  <th className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">%</th>
                                 </tr>
                               </thead>
                               <tbody>
@@ -567,6 +571,10 @@ export default function ModulosContabilidadePage() {
                                     const totalDez25 = list.reduce((acc, r) => acc + Number(r['realizado_dez_2025'] || 0), 0)
                                     const totalNov25 = list.reduce((acc, r) => acc + Number(r['realizado_nov_2025'] || 0), 0)
                                     const totalDez24 = list.reduce((acc, r) => acc + Number(r['realizado_dez_2024'] || 0), 0)
+                                    const deltaNov = totalDez25 - totalNov25
+                                    const percNov = totalNov25 !== 0 ? (deltaNov / totalNov25) : null
+                                    const deltaDez24 = totalNov25 - totalDez24
+                                    const percDez24 = totalDez24 !== 0 ? (deltaDez24 / totalDez24) : null
                                     return (
                                       <React.Fragment key={secao}>
                                         <tr className="border-b border-gray-200 bg-white">
@@ -582,9 +590,12 @@ export default function ModulosContabilidadePage() {
                                           <td className="px-4 py-3 text-right text-gray-900 font-semibold">
                                             {Number(totalNov25).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                                           </td>
-                                          <td className="px-4 py-3 text-right text-gray-900 font-semibold">
-                                            {Number(totalDez24).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                                          </td>
+                                          <td className="px-4 py-3 text-right text-gray-900 font-semibold">{Number(totalNov25).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                                          <td className="px-4 py-3 text-right text-gray-900 font-semibold" style={{ color: deltaNov >= 0 ? '#16a34a' : '#b91c1c' }}>{deltaNov.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                                          <td className="px-4 py-3 text-right text-gray-900 font-semibold">{percNov === null ? '-' : (percNov * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + '%'}</td>
+                                          <td className="px-4 py-3 text-right text-gray-900 font-semibold">{Number(totalDez24).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                                          <td className="px-4 py-3 text-right text-gray-900 font-semibold" style={{ color: deltaDez24 >= 0 ? '#16a34a' : '#b91c1c' }}>{deltaDez24.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                                          <td className="px-4 py-3 text-right text-gray-900 font-semibold">{percDez24 === null ? '-' : (percDez24 * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + '%'}</td>
                                         </tr>
                                         {open && list.sort((a,b)=> String(a['codigo_conta']||'').localeCompare(String(b['codigo_conta']||''),'pt-BR')).map((r, idx) => {
                                           const codigo = String(r['codigo_conta'] || '')
@@ -592,6 +603,10 @@ export default function ModulosContabilidadePage() {
                                           const dez25 = Number(r['realizado_dez_2025'] || 0)
                                           const nov25 = Number(r['realizado_nov_2025'] || 0)
                                           const dez24 = Number(r['realizado_dez_2024'] || 0)
+                                          const dNov = dez25 - nov25
+                                          const pNov = nov25 !== 0 ? (dNov / nov25) : null
+                                          const dDez24 = nov25 - dez24
+                                          const pDez24 = dez24 !== 0 ? (dDez24 / dez24) : null
                                           return (
                                             <tr key={`${secao}-${codigo}-${idx}`} className="border-b border-gray-100">
                                               <td className="px-4 py-2 text-gray-800">
@@ -600,7 +615,11 @@ export default function ModulosContabilidadePage() {
                                               </td>
                                               <td className="px-4 py-2 text-right text-gray-800">{dez25.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
                                               <td className="px-4 py-2 text-right text-gray-800">{nov25.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                                              <td className="px-4 py-2 text-right text-gray-800" style={{ color: dNov >= 0 ? '#16a34a' : '#b91c1c' }}>{dNov.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                                              <td className="px-4 py-2 text-right text-gray-800">{pNov === null ? '-' : (pNov * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + '%'}</td>
                                               <td className="px-4 py-2 text-right text-gray-800">{dez24.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                                              <td className="px-4 py-2 text-right text-gray-800" style={{ color: dDez24 >= 0 ? '#16a34a' : '#b91c1c' }}>{dDez24.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                                              <td className="px-4 py-2 text-right text-gray-800">{pDez24 === null ? '-' : (pDez24 * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + '%'}</td>
                                             </tr>
                                           )
                                         })}
