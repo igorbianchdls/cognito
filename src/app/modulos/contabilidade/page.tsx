@@ -43,16 +43,15 @@ export default function ModulosContabilidadePage() {
     moduleUiActions.setTitulo({ title: 'Contabilidade', subtitle: 'Lançamentos, balancetes e plano de contas' })
     moduleUiActions.setTabs({
       options: [
-        { value: 'lancamentos', label: 'Lançamentos contábeis', icon: <FileText className="text-slate-600" /> },
-        
-        { value: 'budget-vs-actual', label: 'Orçado x Realizado', icon: <BarChart3 className="text-emerald-700" /> },
-        { value: 'dre-summary', label: 'DRE (Resumo Mensal)', icon: <BarChart3 className="text-emerald-700" /> },
-        { value: 'dre-comparison', label: 'DRE (Comparativo)', icon: <BarChart3 className="text-emerald-700" /> },
-        { value: 'bp-summary', label: 'BP (Resumo)', icon: <Landmark className="text-blue-700" /> },
-        { value: 'bp-comparison', label: 'BP (Comparativo)', icon: <Landmark className="text-blue-700" /> },
-        { value: 'orcamentos', label: 'Orçamentos', icon: <Briefcase className="text-slate-700" /> },
-        { value: 'plano-contas', label: 'Plano de Contas', icon: <BookOpen className="text-indigo-700" /> },
-        { value: 'regras-contabeis', label: 'Regras contábeis', icon: <Wrench className="text-amber-600" /> },
+        { value: 'lancamentos', label: 'Lançamentos contábeis', icon: <FileText className="text-gray-600" /> },
+        { value: 'budget-vs-actual', label: 'Orçado x Realizado', icon: <BarChart3 className="text-gray-600" /> },
+        { value: 'dre-summary', label: 'DRE (Resumo Mensal)', icon: <BarChart3 className="text-gray-600" /> },
+        { value: 'dre-comparison', label: 'DRE (Comparativo)', icon: <BarChart3 className="text-gray-600" /> },
+        { value: 'bp-summary', label: 'BP (Resumo)', icon: <Landmark className="text-gray-600" /> },
+        { value: 'bp-comparison', label: 'BP (Comparativo)', icon: <Landmark className="text-gray-600" /> },
+        { value: 'orcamentos', label: 'Orçamentos', icon: <Briefcase className="text-gray-600" /> },
+        { value: 'plano-contas', label: 'Plano de Contas', icon: <BookOpen className="text-gray-600" /> },
+        { value: 'regras-contabeis', label: 'Regras contábeis', icon: <Wrench className="text-gray-600" /> },
       ],
       selected: 'lancamentos',
     })
