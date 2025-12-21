@@ -49,6 +49,7 @@ export default function ModulosContabilidadePage() {
         { value: 'dre-comparison', label: 'DRE (Comparativo)', icon: <BarChart3 className="text-emerald-700" /> },
         { value: 'bp-summary', label: 'Balanço Patrimonial (Resumo)', icon: <Landmark className="text-blue-700" /> },
         { value: 'bp-comparison', label: 'Balanço Patrimonial (Comparativo)', icon: <Landmark className="text-blue-700" /> },
+        { value: 'orcamentos', label: 'Orçamentos', icon: <Briefcase className="text-slate-700" /> },
         { value: 'plano-contas', label: 'Plano de Contas', icon: <BookOpen className="text-indigo-700" /> },
         { value: 'regras-contabeis', label: 'Regras contábeis', icon: <Wrench className="text-amber-600" /> },
       ],
