@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState, useEffect } from 'react'
+import React, { useMemo, useState, useEffect } from 'react'
 import { useStore } from '@nanostores/react'
 import type { ColumnDef } from '@tanstack/react-table'
 
@@ -321,7 +321,15 @@ export default function ModulosContabilidadePage() {
                               <thead className="bg-gray-50">
                                 <tr>
                                   <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Seção / Conta</th>
-                                  <th className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Valor</th>
+                                  {tabs.selected === 'budget-vs-actual' ? (
+                                    <>
+                                      <th className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Realizado</th>
+                                      <th className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Δ</th>
+                                      <th className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">%</th>
+                                    </>
+                                  ) : (
+                                    <th className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Valor</th>
+                                  )}
                                 </tr>
                               </thead>
                               <tbody>
@@ -335,9 +343,14 @@ export default function ModulosContabilidadePage() {
                                   const sections = Array.from(bySec.entries())
                                   return sections.map(([secao, rows]) => {
                                     const total = rows.reduce((acc, r) => acc + Number((r as any)['valor'] || 0), 0)
+                                    const isBvA = tabs.selected === 'budget-vs-actual'
+                                    const totalBudget = 0 // placeholder até termos fonte de orçamento
+                                    const totalDelta = total - totalBudget
+                                    const totalPerc = totalBudget !== 0 ? (totalDelta / totalBudget) : null
+                                    const totalPos = totalDelta >= 0
                                     const open = Boolean(dreExpanded[secao])
                                     return (
-                                      <>
+                                      <React.Fragment key={secao}>
                                         <tr key={secao} className="border-b border-gray-200 bg-white">
                                           <td className="px-4 py-3 text-gray-900 font-semibold">
                                             <button
@@ -350,27 +363,63 @@ export default function ModulosContabilidadePage() {
                                             </button>
                                             <span>{secao}</span>
                                           </td>
-                                          <td className="px-4 py-3 text-right text-gray-900 font-semibold">
-                                            {Number.isFinite(total) ? Number(total).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : ''}
-                                          </td>
+                                          {isBvA ? (
+                                            <>
+                                              <td className="px-4 py-3 text-right text-gray-900 font-semibold">
+                                                {Number.isFinite(total) ? Number(total).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : ''}
+                                              </td>
+                                              <td className="px-4 py-3 text-right text-gray-900 font-semibold">
+                                                <span style={{ color: totalPos ? '#16a34a' : '#b91c1c' }}>
+                                                  {totalPos ? '▲' : '▼'} {Math.abs(totalDelta).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                                </span>
+                                              </td>
+                                              <td className="px-4 py-3 text-right text-gray-900 font-semibold">
+                                                {totalPerc === null ? '-' : (totalPerc * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + '%'}
+                                              </td>
+                                            </>
+                                          ) : (
+                                            <td className="px-4 py-3 text-right text-gray-900 font-semibold">
+                                              {Number.isFinite(total) ? Number(total).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : ''}
+                                            </td>
+                                          )}
                                         </tr>
                                         {open && rows.map((r, idx) => {
                                           const codigo = String((r as any)['codigo_conta'] ?? '')
                                           const conta = String((r as any)['conta_contabil'] ?? '')
                                           const valor = Number((r as any)['valor'] || 0)
+                                          const budget = 0 // placeholder até termos fonte de orçamento
+                                          const delta = valor - budget
+                                          const perc = budget !== 0 ? (delta / budget) : null
+                                          const pos = delta >= 0
                                           return (
                                             <tr key={`${secao}-${codigo}-${idx}`} className="border-b border-gray-100">
                                               <td className="px-4 py-2 text-gray-800">
                                                 <span className="text-xs text-gray-500 mr-2">{codigo}</span>
                                                 <span>{conta}</span>
                                               </td>
-                                              <td className="px-4 py-2 text-right text-gray-800">
-                                                {valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                                              </td>
+                                              {isBvA ? (
+                                                <>
+                                                  <td className="px-4 py-2 text-right text-gray-800">
+                                                    {valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                                  </td>
+                                                  <td className="px-4 py-2 text-right text-gray-800">
+                                                    <span style={{ color: pos ? '#16a34a' : '#b91c1c' }}>
+                                                      {pos ? '▲' : '▼'} {Math.abs(delta).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                                    </span>
+                                                  </td>
+                                                  <td className="px-4 py-2 text-right text-gray-800">
+                                                    {perc === null ? '-' : (perc * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + '%'}
+                                                  </td>
+                                                </>
+                                              ) : (
+                                                <td className="px-4 py-2 text-right text-gray-800">
+                                                  {valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                                </td>
+                                              )}
                                             </tr>
                                           )
                                         })}
-                                      </>
+                                      </React.Fragment>
                                     )
                                   })
                                 })()}
@@ -401,7 +450,7 @@ export default function ModulosContabilidadePage() {
                                     const total = rows.reduce((acc, r) => acc + Number((r as any)['saldo'] || 0), 0)
                                     const open = Boolean(dreExpanded[secao])
                                     return (
-                                      <>
+                                      <React.Fragment key={secao}>
                                         <tr key={secao} className="border-b border-gray-200 bg-white">
                                           <td className="px-4 py-3 text-gray-900 font-semibold">
                                             <button
@@ -434,7 +483,7 @@ export default function ModulosContabilidadePage() {
                                             </tr>
                                           )
                                         })}
-                                      </>
+                                      </React.Fragment>
                                     )
                                   })
                                 })()}
