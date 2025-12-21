@@ -782,6 +782,109 @@ export default function ModulosContabilidadePage() {
                                     bySec.get(s)!.push(r)
                                   }
                                   const sections = Array.from(bySec.entries())
+                                  // DRE: resumo com subtotais clássicos
+                                  if (tabs.selected === 'dre') {
+                                    const sumByCode = (pred: (code: string) => boolean) =>
+                                      (data as any[]).reduce((acc, r) => {
+                                        const code = String(r['codigo_conta'] || '')
+                                        const v = Number(r['valor'] || 0)
+                                        return pred(code) ? acc + v : acc
+                                      }, 0)
+                                    const receitaBruta = sumByCode(c => c.startsWith('4'))
+                                    const deducoes = 0 // ajustar se houver contas específicas de deduções
+                                    const receitaLiquida = receitaBruta - deducoes
+                                    const cogs = sumByCode(c => c.startsWith('5'))
+                                    const lucroBruto = receitaLiquida - cogs
+                                    const despesasOper = sumByCode(c => c.startsWith('6.1') || c.startsWith('6.2'))
+                                    const resultadoOperacional = lucroBruto - despesasOper
+                                    const receitasFin = sumByCode(c => c.startsWith('4.2'))
+                                    const despesasFin = sumByCode(c => c.startsWith('6.3'))
+                                    const resultadoFinanceiro = receitasFin - despesasFin
+                                    const lucroLiquido = resultadoOperacional + resultadoFinanceiro
+
+                                    return (
+                                      <>
+                                        <tr className="bg-white">
+                                          <td className="px-4 py-2 text-gray-900 font-semibold">Receita Bruta</td>
+                                          <td className="px-4 py-2 text-right text-gray-900 font-semibold">{receitaBruta.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</td>
+                                        </tr>
+                                        <tr>
+                                          <td className="px-4 py-2 text-gray-700">(-) Deduções/Impostos sobre Vendas</td>
+                                          <td className="px-4 py-2 text-right text-gray-700">{deducoes.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</td>
+                                        </tr>
+                                        <tr className="bg-gray-50">
+                                          <td className="px-4 py-2 text-gray-900 font-semibold">Receita Líquida</td>
+                                          <td className="px-4 py-2 text-right text-gray-900 font-semibold">{receitaLiquida.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</td>
+                                        </tr>
+                                        <tr>
+                                          <td className="px-4 py-2 text-gray-700">(-) Custo dos Produtos/Serviços (CPV/CSP)</td>
+                                          <td className="px-4 py-2 text-right text-gray-700">{cogs.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</td>
+                                        </tr>
+                                        <tr className="bg-gray-50">
+                                          <td className="px-4 py-2 text-gray-900 font-semibold">Lucro Bruto</td>
+                                          <td className="px-4 py-2 text-right text-gray-900 font-semibold">{lucroBruto.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</td>
+                                        </tr>
+                                        <tr>
+                                          <td className="px-4 py-2 text-gray-700">(-) Despesas Operacionais</td>
+                                          <td className="px-4 py-2 text-right text-gray-700">{despesasOper.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</td>
+                                        </tr>
+                                        <tr className="bg-gray-50">
+                                          <td className="px-4 py-2 text-gray-900 font-semibold">Resultado Operacional (EBIT)</td>
+                                          <td className="px-4 py-2 text-right text-gray-900 font-semibold">{resultadoOperacional.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</td>
+                                        </tr>
+                                        <tr>
+                                          <td className="px-4 py-2 text-gray-700">(+/-) Resultado Financeiro</td>
+                                          <td className="px-4 py-2 text-right text-gray-700">{resultadoFinanceiro.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</td>
+                                        </tr>
+                                        <tr className="bg-gray-100">
+                                          <td className="px-4 py-2 text-gray-900 font-semibold">Lucro Líquido</td>
+                                          <td className="px-4 py-2 text-right text-gray-900 font-semibold">{lucroLiquido.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</td>
+                                        </tr>
+                                        {/* Depois do resumo, renderiza as seções detalhadas */}
+                                        {sections.map(([secao, rows]) => {
+                                          const total = rows.reduce((acc, r) => acc + Number((r as any)['valor'] || 0), 0)
+                                          const open = Boolean(dreExpanded[secao])
+                                          return (
+                                            <React.Fragment key={secao}>
+                                              <tr className="border-b border-gray-200 bg-white">
+                                                <td className="px-4 py-3 text-gray-900 font-semibold">
+                                                  <button
+                                                    type="button"
+                                                    onClick={() => setDreExpanded(prev => ({ ...prev, [secao]: !prev[secao] }))}
+                                                    className="mr-2 text-gray-700 hover:text-gray-900 align-middle"
+                                                    aria-label={open ? 'Recolher' : 'Expandir'}
+                                                  >
+                                                    {open ? <ChevronDown className="w-4 h-4 inline" /> : <ChevronRight className="w-4 h-4 inline" />}
+                                                  </button>
+                                                  <span>{secao}</span>
+                                                </td>
+                                                <td className="px-4 py-3 text-right text-gray-900 font-semibold">
+                                                  {Number.isFinite(total) ? Number(total).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : ''}
+                                                </td>
+                                              </tr>
+                                              {open && rows.map((r, idx) => {
+                                                const codigo = String((r as any)['codigo_conta'] ?? '')
+                                                const conta = String((r as any)['conta_contabil'] ?? '')
+                                                const valor = Number((r as any)['valor'] || 0)
+                                                return (
+                                                  <tr key={`${secao}-${codigo}-${idx}`} className="border-b border-gray-100">
+                                                    <td className="px-4 py-2 text-gray-800">
+                                                      <span className="text-xs text-gray-500 mr-2">{codigo}</span>
+                                                      <span>{conta}</span>
+                                                    </td>
+                                                    <td className="px-4 py-2 text-right text-gray-800">
+                                                      {valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                                    </td>
+                                                  </tr>
+                                                )
+                                              })}
+                                            </React.Fragment>
+                                          )
+                                        })}
+                                      </>
+                                    )
+                                  }
+                                  // Budget vs Actual (mantém a renderização atual)
                                   return sections.map(([secao, rows]) => {
                                     const total = rows.reduce((acc, r) => acc + Number((r as any)['valor'] || 0), 0)
                                     const isBvA = tabs.selected === 'budget-vs-actual'
