@@ -47,6 +47,7 @@ export default function ModulosContabilidadePage() {
         { value: 'dre', label: 'DRE', icon: <BarChart3 className="text-emerald-700" /> },
         { value: 'budget-vs-actual', label: 'Budget vs Actual', icon: <BarChart3 className="text-emerald-700" /> },
         { value: 'dre-summary', label: 'DRE Summary', icon: <BarChart3 className="text-emerald-700" /> },
+        { value: 'dre-comparison', label: 'DRE Comparison', icon: <BarChart3 className="text-emerald-700" /> },
         { value: 'bp-summary', label: 'BP Summary', icon: <Landmark className="text-blue-700" /> },
         { value: 'plano-contas', label: 'Plano de Contas', icon: <BookOpen className="text-indigo-700" /> },
         { value: 'regras-contabeis', label: 'Regras contábeis', icon: <Wrench className="text-amber-600" /> },
@@ -62,10 +63,11 @@ export default function ModulosContabilidadePage() {
       setError(null)
       try {
         const params = new URLSearchParams()
-        // DRE, DRE Summary, BP Summary, Budget vs Actual e Balanço usam views específicas
+        // DRE, DRE Summary, DRE Comparison, BP Summary, Budget vs Actual e Balanço usam views específicas
         params.set('view',
           tabs.selected === 'dre' || tabs.selected === 'budget-vs-actual' ? 'dre-tabela'
           : tabs.selected === 'dre-summary' ? 'dre-summary'
+          : tabs.selected === 'dre-comparison' ? 'dre-summary'
           : tabs.selected === 'bp-summary' ? 'bp-summary'
           : tabs.selected === 'balanco-patrimonial' ? 'balanco-tabela'
           : tabs.selected
@@ -93,7 +95,7 @@ export default function ModulosContabilidadePage() {
           params.set('page', String(page))
           params.set('pageSize', String(pageSize))
         }
-        if (tabs.selected === 'balanco-patrimonial' || tabs.selected === 'dre' || tabs.selected === 'budget-vs-actual' || tabs.selected === 'dre-summary' || tabs.selected === 'bp-summary') {
+        if (tabs.selected === 'balanco-patrimonial' || tabs.selected === 'dre' || tabs.selected === 'budget-vs-actual' || tabs.selected === 'dre-summary' || tabs.selected === 'bp-summary' || tabs.selected === 'dre-comparison') {
           // As views específicas retornam 'rows' simples
           const url = `/api/modulos/contabilidade?${params.toString()}`
           const res = await fetch(url, { cache: 'no-store', signal: controller.signal })
@@ -175,6 +177,12 @@ export default function ModulosContabilidadePage() {
           { accessorKey: 'codigo_conta', header: 'Código' },
           { accessorKey: 'conta_contabil', header: 'Conta' },
           { accessorKey: 'valor', header: 'Valor', cell: ({ row }) => formatBRL(row.original['valor']) },
+        ]
+      case 'dre-comparison':
+        return [
+          { accessorKey: 'realizado_dez_2025', header: 'Realizado Dez 2025', cell: ({ row }) => formatBRL(row.original['realizado_dez_2025']) },
+          { accessorKey: 'codigo_conta', header: 'Código' },
+          { accessorKey: 'conta_contabil', header: 'Conta' },
         ]
       case 'dre-summary':
         return [
