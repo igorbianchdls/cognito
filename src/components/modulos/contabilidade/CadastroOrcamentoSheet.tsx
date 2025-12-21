@@ -20,6 +20,7 @@ export default function CadastroOrcamentoSheet({ onSaved }: { onSaved?: () => vo
   const [status, setStatus] = React.useState<string>('rascunho')
   const [descricao, setDescricao] = React.useState<string>('')
 
+  const [mesBase, setMesBase] = React.useState<number>(new Date().getMonth() + 1)
   const [linhas, setLinhas] = React.useState<Linha[]>([{ mes: new Date().getMonth() + 1, conta_id: null, valor_debito: 0, valor_credito: 0 }])
 
   const [qPlano, setQPlano] = React.useState('')
@@ -43,7 +44,7 @@ export default function CadastroOrcamentoSheet({ onSaved }: { onSaved?: () => vo
   const setLinha = (idx: number, patch: Partial<Linha>) => {
     setLinhas(prev => prev.map((l, i) => i === idx ? { ...l, ...patch } : l))
   }
-  const addLinha = () => setLinhas(prev => [...prev, { mes: 1, conta_id: null, valor_debito: 0, valor_credito: 0 }])
+  const addLinha = () => setLinhas(prev => [...prev, { mes: mesBase || 1, conta_id: null, valor_debito: 0, valor_credito: 0 }])
   const remLinha = (idx: number) => setLinhas(prev => prev.filter((_, i) => i !== idx))
 
   async function handleSave() {
@@ -92,13 +93,33 @@ export default function CadastroOrcamentoSheet({ onSaved }: { onSaved?: () => vo
           <div className="flex-1 overflow-auto p-6">
             {error && <div className="mb-3 text-sm text-red-600">{error}</div>}
             <div className="grid grid-cols-2 gap-4 mb-4">
-              <div>
+              <div className="col-span-2">
                 <Label>Nome</Label>
                 <Input value={nome} onChange={e=>setNome(e.target.value)} placeholder="Ex.: Orçamento 2025" />
               </div>
               <div>
                 <Label>Ano</Label>
-                <Input type="number" value={ano} onChange={e=>setAno(Number(e.target.value))} />
+                <select value={ano} onChange={e=>setAno(Number(e.target.value))} className="h-9 w-full border rounded px-2">
+                  <option value={2026}>2026</option>
+                  <option value={2027}>2027</option>
+                </select>
+              </div>
+              <div>
+                <Label>Mês</Label>
+                <select value={mesBase} onChange={e=>setMesBase(Number(e.target.value))} className="h-9 w-full border rounded px-2">
+                  <option value={1}>Janeiro</option>
+                  <option value={2}>Fevereiro</option>
+                  <option value={3}>Março</option>
+                  <option value={4}>Abril</option>
+                  <option value={5}>Maio</option>
+                  <option value={6}>Junho</option>
+                  <option value={7}>Julho</option>
+                  <option value={8}>Agosto</option>
+                  <option value={9}>Setembro</option>
+                  <option value={10}>Outubro</option>
+                  <option value={11}>Novembro</option>
+                  <option value={12}>Dezembro</option>
+                </select>
               </div>
               <div>
                 <Label>Versão</Label>
@@ -137,21 +158,28 @@ export default function CadastroOrcamentoSheet({ onSaved }: { onSaved?: () => vo
                   {linhas.map((l, idx) => (
                     <tr key={idx} className="border-t">
                       <td className="px-2 py-1">
-                        <Input type="number" min={1} max={12} value={l.mes} onChange={e=>setLinha(idx, { mes: Number(e.target.value) })} className="h-8 w-20" />
+                        <select value={l.mes} onChange={e=>setLinha(idx, { mes: Number(e.target.value) })} className="h-8 w-32 border rounded px-2">
+                          <option value={1}>Jan</option>
+                          <option value={2}>Fev</option>
+                          <option value={3}>Mar</option>
+                          <option value={4}>Abr</option>
+                          <option value={5}>Mai</option>
+                          <option value={6}>Jun</option>
+                          <option value={7}>Jul</option>
+                          <option value={8}>Ago</option>
+                          <option value={9}>Set</option>
+                          <option value={10}>Out</option>
+                          <option value={11}>Nov</option>
+                          <option value={12}>Dez</option>
+                        </select>
                       </td>
                       <td className="px-2 py-1">
-                        <div className="max-h-28 overflow-auto border rounded">
-                          <ul>
-                            {optsPlano.map(opt => (
-                              <li key={opt.id}>
-                                <button type="button" className={`w-full text-left px-2 py-1 text-sm hover:bg-gray-50 ${l.conta_id === opt.id ? 'bg-emerald-50' : ''}`} onClick={() => setLinha(idx, { conta_id: opt.id })}>
-                                  <span className="font-mono text-[11px] text-gray-700">{opt.codigo}</span> — {opt.nome}
-                                </button>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                        {l.conta_id && <div className="text-xs text-gray-600 mt-1">Selecionada: {optsPlano.find(o=>o.id===l.conta_id)?.codigo} — {optsPlano.find(o=>o.id===l.conta_id)?.nome}</div>}
+                        <select value={l.conta_id ?? ''} onChange={e=>setLinha(idx, { conta_id: e.target.value ? Number(e.target.value) : null })} className="h-9 w-full border rounded px-2">
+                          <option value="">Selecione…</option>
+                          {optsPlano.map(opt => (
+                            <option key={opt.id} value={opt.id}>{opt.codigo} — {opt.nome}</option>
+                          ))}
+                        </select>
                       </td>
                       <td className="px-2 py-1 text-right"><Input type="number" value={l.valor_debito ?? 0} onChange={e=>setLinha(idx, { valor_debito: Number(e.target.value) })} className="h-8 w-28 text-right" /></td>
                       <td className="px-2 py-1 text-right"><Input type="number" value={l.valor_credito ?? 0} onChange={e=>setLinha(idx, { valor_credito: Number(e.target.value) })} className="h-8 w-28 text-right" /></td>
@@ -174,4 +202,3 @@ export default function CadastroOrcamentoSheet({ onSaved }: { onSaved?: () => vo
     </Sheet>
   )
 }
-
