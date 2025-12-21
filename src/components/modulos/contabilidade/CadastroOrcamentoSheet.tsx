@@ -146,46 +146,47 @@ export default function CadastroOrcamentoSheet({ onSaved }: { onSaved?: () => vo
               <table className="w-full text-sm">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="text-left px-2 py-2">Mês</th>
                     <th className="text-left px-2 py-2">Conta Contábil</th>
-                    <th className="text-right px-2 py-2">Débito (Orçado)</th>
-                    <th className="text-right px-2 py-2">Crédito (Orçado)</th>
-                    <th className="text-left px-2 py-2">Observação</th>
                     <th className="text-right px-2 py-2">Ações</th>
                   </tr>
                 </thead>
                 <tbody>
                   {linhas.map((l, idx) => (
-                    <tr key={idx} className="border-t">
-                      <td className="px-2 py-1">
-                        <select value={l.mes} onChange={e=>setLinha(idx, { mes: Number(e.target.value) })} className="h-8 w-32 border rounded px-2">
-                          <option value={1}>Jan</option>
-                          <option value={2}>Fev</option>
-                          <option value={3}>Mar</option>
-                          <option value={4}>Abr</option>
-                          <option value={5}>Mai</option>
-                          <option value={6}>Jun</option>
-                          <option value={7}>Jul</option>
-                          <option value={8}>Ago</option>
-                          <option value={9}>Set</option>
-                          <option value={10}>Out</option>
-                          <option value={11}>Nov</option>
-                          <option value={12}>Dez</option>
-                        </select>
-                      </td>
-                      <td className="px-2 py-1">
-                        <select value={l.conta_id ?? ''} onChange={e=>setLinha(idx, { conta_id: e.target.value ? Number(e.target.value) : null })} className="h-9 w-full border rounded px-2">
-                          <option value="">Selecione…</option>
-                          {optsPlano.map(opt => (
-                            <option key={opt.id} value={opt.id}>{opt.codigo} — {opt.nome}</option>
-                          ))}
-                        </select>
-                      </td>
-                      <td className="px-2 py-1 text-right"><Input type="number" value={l.valor_debito ?? 0} onChange={e=>setLinha(idx, { valor_debito: Number(e.target.value) })} className="h-8 w-28 text-right" /></td>
-                      <td className="px-2 py-1 text-right"><Input type="number" value={l.valor_credito ?? 0} onChange={e=>setLinha(idx, { valor_credito: Number(e.target.value) })} className="h-8 w-28 text-right" /></td>
-                      <td className="px-2 py-1"><Input value={l.observacao || ''} onChange={e=>setLinha(idx, { observacao: e.target.value })} className="h-8" /></td>
-                      <td className="px-2 py-1 text-right"><Button size="sm" variant="outline" onClick={()=>remLinha(idx)}>Remover</Button></td>
-                    </tr>
+                    <React.Fragment key={idx}>
+                      <tr className="border-t">
+                        <td className="px-2 py-2">
+                          <select value={l.conta_id ?? ''} onChange={e=>setLinha(idx, { conta_id: e.target.value ? Number(e.target.value) : null })} className="h-9 w-full border rounded px-2">
+                            <option value="">Selecione…</option>
+                            {optsPlano.map(opt => (
+                              <option key={opt.id} value={opt.id}>{opt.codigo} — {opt.nome}</option>
+                            ))}
+                          </select>
+                        </td>
+                        <td className="px-2 py-2 text-right">
+                          <Button size="sm" variant="outline" onClick={()=>remLinha(idx)}>Remover</Button>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="px-2 py-2" colSpan={2}>
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              <Label>Débito (Orçado)</Label>
+                              <Input type="number" value={l.valor_debito ?? 0} onChange={e=>setLinha(idx, { valor_debito: Number(e.target.value) })} className="h-8 text-right" />
+                            </div>
+                            <div>
+                              <Label>Crédito (Orçado)</Label>
+                              <Input type="number" value={l.valor_credito ?? 0} onChange={e=>setLinha(idx, { valor_credito: Number(e.target.value) })} className="h-8 text-right" />
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="px-2 py-2" colSpan={2}>
+                          <Label>Observação</Label>
+                          <Input value={l.observacao || ''} onChange={e=>setLinha(idx, { observacao: e.target.value })} className="h-8" />
+                        </td>
+                      </tr>
+                    </React.Fragment>
                   ))}
                 </tbody>
               </table>
