@@ -539,14 +539,18 @@ export default function ModulosContabilidadePage() {
                             <table className="w-full text-sm">
                               <thead className="bg-gray-50">
                                 <tr>
-                                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Seção / Conta</th>
-                                  <th className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Realizado Dez 2025</th>
-                                  <th className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Realizado Nov 2025</th>
-                                  <th className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Δ</th>
-                                  <th className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">%</th>
-                                  <th className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Realizado Dez 2024</th>
-                                  <th className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Δ</th>
-                                  <th className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">%</th>
+                                  <th rowSpan={2} className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Seção / Conta</th>
+                                  <th rowSpan={2} className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Realizado Dez 2025</th>
+                                  <th colSpan={3} className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">vs Prior Período</th>
+                                  <th colSpan={3} className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">vs Prior Year</th>
+                                </tr>
+                                <tr>
+                                  <th className="text-right px-4 py-2 text-[11px] font-semibold text-gray-600">Realizado Nov 2025</th>
+                                  <th className="text-right px-4 py-2 text-[11px] font-semibold text-gray-600">Δ</th>
+                                  <th className="text-right px-4 py-2 text-[11px] font-semibold text-gray-600">%</n+                                  </th>
+                                  <th className="text-right px-4 py-2 text-[11px] font-semibold text-gray-600">Realizado Dez 2024</th>
+                                  <th className="text-right px-4 py-2 text-[11px] font-semibold text-gray-600">Δ</th>
+                                  <th className="text-right px-4 py-2 text-[11px] font-semibold text-gray-600">%</th>
                                 </tr>
                               </thead>
                               <tbody>
