@@ -324,6 +324,7 @@ export default function ModulosContabilidadePage() {
                                   {tabs.selected === 'budget-vs-actual' ? (
                                     <>
                                       <th className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Realizado</th>
+                                      <th className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Budget</th>
                                       <th className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Δ</th>
                                       <th className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">%</th>
                                     </>
@@ -369,6 +370,9 @@ export default function ModulosContabilidadePage() {
                                                 {Number.isFinite(total) ? Number(total).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : ''}
                                               </td>
                                               <td className="px-4 py-3 text-right text-gray-900 font-semibold">
+                                                {Number(totalBudget).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                              </td>
+                                              <td className="px-4 py-3 text-right text-gray-900 font-semibold">
                                                 <span style={{ color: totalPos ? '#16a34a' : '#b91c1c' }}>
                                                   {totalPos ? '▲' : '▼'} {Math.abs(totalDelta).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                                                 </span>
@@ -401,6 +405,9 @@ export default function ModulosContabilidadePage() {
                                                 <>
                                                   <td className="px-4 py-2 text-right text-gray-800">
                                                     {valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                                  </td>
+                                                  <td className="px-4 py-2 text-right text-gray-800">
+                                                    {Number(budget).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                                                   </td>
                                                   <td className="px-4 py-2 text-right text-gray-800">
                                                     <span style={{ color: pos ? '#16a34a' : '#b91c1c' }}>
