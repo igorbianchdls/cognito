@@ -331,126 +331,84 @@ export async function GET(req: NextRequest) {
 
     // DRE Summary (últimos meses por seção/conta, colunas por mês)
     if (view === 'dre-summary') {
-      // Determina janela de meses: usa de/ate se fornecidos, senão últimos 5 meses incluindo mês atual
-      const today = new Date()
-      const toDate = new Date(today.getFullYear(), today.getMonth(), 1)
-      const parseYmd = (s: string) => {
-        const [yy, mm, dd] = s.split('-').map(Number)
-        return new Date(yy, (mm || 1) - 1, dd || 1)
-      }
-      let from = de ? parseYmd(de) : new Date(toDate.getFullYear(), toDate.getMonth() - 4, 1)
-      let to = ate ? parseYmd(ate) : new Date(toDate.getFullYear(), toDate.getMonth() + 1, 0) // fim do mês atual
-
-      // Garante ordem correta
-      if (from > to) { const tmp = from; from = to; to = tmp }
-
-      const fromStr = `${from.getFullYear()}-${String(from.getMonth() + 1).padStart(2, '0')}-01`
-      const toStr = `${to.getFullYear()}-${String(to.getMonth() + 1).padStart(2, '0')}-${String(to.getDate()).padStart(2, '0')}`
-
+      // Query exata fornecida pelo usuário (não alterar)
       const sql = `
-        WITH months AS (
-          SELECT generate_series(date_trunc('month',$1::date), date_trunc('month',$2::date), interval '1 month')::date AS periodo
-        ),
-        contas_receita AS (
-          SELECT pc.codigo, pc.nome FROM contabilidade.plano_contas pc WHERE pc.codigo::text LIKE '4%'
-        ),
-        contas_custos AS (
-          SELECT pc.codigo, pc.nome FROM contabilidade.plano_contas pc WHERE pc.codigo::text LIKE '5%'
-        ),
-        contas_despesas AS (
-          SELECT pc.codigo, pc.nome FROM contabilidade.plano_contas pc WHERE pc.codigo::text LIKE '6%'
-        ),
-        s_receita AS (
-          SELECT DATE_TRUNC('month', lc.data_lancamento)::date AS periodo,
-                 pc.codigo,
-                 pc.nome,
-                 COALESCE(SUM(lc.total_creditos), 0) AS valor
-            FROM contabilidade.plano_contas pc
-            LEFT JOIN contabilidade.lancamentos_contabeis_linhas lcl ON lcl.conta_id = pc.id
-            LEFT JOIN contabilidade.lancamentos_contabeis lc ON lc.id = lcl.lancamento_id AND lc.origem_tabela = 'financeiro.contas_receber'
-           WHERE pc.codigo::text LIKE '4%'
-             AND lc.data_lancamento BETWEEN $1::date AND $2::date
-           GROUP BY 1,2,3
-        ),
-        s_custos AS (
-          SELECT DATE_TRUNC('month', lc.data_lancamento)::date AS periodo,
-                 pc.codigo,
-                 pc.nome,
-                 COALESCE(SUM(lc.total_debitos), 0) AS valor
-            FROM contabilidade.plano_contas pc
-            LEFT JOIN contabilidade.lancamentos_contabeis_linhas lcl ON lcl.conta_id = pc.id
-            LEFT JOIN contabilidade.lancamentos_contabeis lc ON lc.id = lcl.lancamento_id AND lc.origem_tabela = 'financeiro.contas_pagar'
-           WHERE pc.codigo::text LIKE '5%'
-             AND lc.data_lancamento BETWEEN $1::date AND $2::date
-           GROUP BY 1,2,3
-        ),
-        s_despesas AS (
-          SELECT DATE_TRUNC('month', lc.data_lancamento)::date AS periodo,
-                 pc.codigo,
-                 pc.nome,
-                 COALESCE(SUM(lc.total_debitos), 0) AS valor
-            FROM contabilidade.plano_contas pc
-            LEFT JOIN contabilidade.lancamentos_contabeis_linhas lcl ON lcl.conta_id = pc.id
-            LEFT JOIN contabilidade.lancamentos_contabeis lc ON lc.id = lcl.lancamento_id AND lc.origem_tabela = 'financeiro.contas_pagar'
-           WHERE pc.codigo::text LIKE '6%'
-             AND lc.data_lancamento BETWEEN $1::date AND $2::date
-           GROUP BY 1,2,3
-        )
-        SELECT TO_CHAR(m.periodo, 'YYYY-MM') AS periodo_key,
-               'Receitas (Contas a Receber)'::text AS secao,
-               c.codigo AS codigo_conta,
-               c.nome   AS conta_contabil,
-               COALESCE(s.valor,0) AS valor
-          FROM months m
-          CROSS JOIN contas_receita c
-          LEFT JOIN s_receita s ON s.periodo = m.periodo AND s.codigo = c.codigo
-        UNION ALL
-        SELECT TO_CHAR(m.periodo, 'YYYY-MM') AS periodo_key,
-               'Custos (Contas a Pagar)'::text AS secao,
-               c.codigo AS codigo_conta,
-               c.nome   AS conta_contabil,
-               COALESCE(s.valor,0) AS valor
-          FROM months m
-          CROSS JOIN contas_custos c
-          LEFT JOIN s_custos s ON s.periodo = m.periodo AND s.codigo = c.codigo
-        UNION ALL
-        SELECT TO_CHAR(m.periodo, 'YYYY-MM') AS periodo_key,
-               'Despesas (Contas a Pagar)'::text AS secao,
-               c.codigo AS codigo_conta,
-               c.nome   AS conta_contabil,
-               COALESCE(s.valor,0) AS valor
-          FROM months m
-          CROSS JOIN contas_despesas c
-          LEFT JOIN s_despesas s ON s.periodo = m.periodo AND s.codigo = c.codigo
-        ORDER BY periodo_key DESC,
-                 CASE
-                   WHEN secao LIKE 'Receitas%' THEN 1
-                   WHEN secao LIKE 'Custos%' THEN 2
-                   WHEN secao LIKE 'Despesas%' THEN 3
-                   ELSE 99
-                 END,
-                 codigo_conta`;
+        SELECT
+          pc.codigo AS codigo_conta,
+          pc.nome   AS conta_contabil,
 
-      const rows = await runQuery<{ periodo_key: string; secao: string; codigo_conta: string; conta_contabil: string; valor: number }>(sql, [fromStr, toStr])
+          -- Dezembro 2025
+          SUM(
+            CASE
+              WHEN pc.codigo LIKE '4%' AND date_trunc('month', lc.data_lancamento) = DATE '2025-12-01'
+                THEN lcl.credito
+              WHEN pc.codigo LIKE '5%' AND date_trunc('month', lc.data_lancamento) = DATE '2025-12-01'
+                THEN lcl.debito
+              WHEN pc.codigo LIKE '6%' AND date_trunc('month', lc.data_lancamento) = DATE '2025-12-01'
+                THEN lcl.debito
+              ELSE 0
+            END
+          ) AS realizado_dez_2025,
 
-      // Constrói períodos contínuos de from..to (inclusive), em ordem decrescente
-      const monthsPt = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
-      const periodsAsc: { key: string; label: string }[] = []
-      {
-        const cur = new Date(from.getFullYear(), from.getMonth(), 1)
-        const end = new Date(to.getFullYear(), to.getMonth(), 1)
-        while (cur <= end) {
-          const y = cur.getFullYear()
-          const m = cur.getMonth() + 1
-          const key = `${y}-${String(m).padStart(2,'0')}`
-          const label = `${monthsPt[m-1]} ${y}`
-          periodsAsc.push({ key, label })
-          cur.setMonth(cur.getMonth() + 1)
-        }
-      }
-      const periods = periodsAsc.reverse()
+          -- Novembro 2025
+          SUM(
+            CASE
+              WHEN pc.codigo LIKE '4%' AND date_trunc('month', lc.data_lancamento) = DATE '2025-11-01'
+                THEN lcl.credito
+              WHEN pc.codigo LIKE '5%' AND date_trunc('month', lc.data_lancamento) = DATE '2025-11-01'
+                THEN lcl.debito
+              WHEN pc.codigo LIKE '6%' AND date_trunc('month', lc.data_lancamento) = DATE '2025-11-01'
+                THEN lcl.debito
+              ELSE 0
+            END
+          ) AS realizado_nov_2025,
 
-      return Response.json({ success: true, view, rows, periods, sql, params: JSON.stringify([fromStr, toStr]) }, { headers: { 'Cache-Control': 'no-store' } })
+          -- Outubro 2025
+          SUM(
+            CASE
+              WHEN pc.codigo LIKE '4%' AND date_trunc('month', lc.data_lancamento) = DATE '2025-10-01'
+                THEN lcl.credito
+              WHEN pc.codigo LIKE '5%' AND date_trunc('month', lc.data_lancamento) = DATE '2025-10-01'
+                THEN lcl.debito
+              WHEN pc.codigo LIKE '6%' AND date_trunc('month', lc.data_lancamento) = DATE '2025-10-01'
+                THEN lcl.debito
+              ELSE 0
+            END
+          ) AS realizado_out_2025,
+
+          -- Setembro 2025
+          SUM(
+            CASE
+              WHEN pc.codigo LIKE '4%' AND date_trunc('month', lc.data_lancamento) = DATE '2025-09-01'
+                THEN lcl.credito
+              WHEN pc.codigo LIKE '5%' AND date_trunc('month', lc.data_lancamento) = DATE '2025-09-01'
+                THEN lcl.debito
+              WHEN pc.codigo LIKE '6%' AND date_trunc('month', lc.data_lancamento) = DATE '2025-09-01'
+                THEN lcl.debito
+              ELSE 0
+            END
+          ) AS realizado_set_2025
+
+        FROM contabilidade.plano_contas pc
+        LEFT JOIN contabilidade.lancamentos_contabeis_linhas lcl
+          ON lcl.conta_id = pc.id
+        LEFT JOIN contabilidade.lancamentos_contabeis lc
+          ON lc.id = lcl.lancamento_id
+        WHERE pc.codigo LIKE '4%'
+           OR pc.codigo LIKE '5%'
+           OR pc.codigo LIKE '6%'
+        GROUP BY pc.codigo, pc.nome
+        ORDER BY pc.codigo`;
+
+      const rows = await runQuery<{
+        codigo_conta: string;
+        conta_contabil: string;
+        realizado_dez_2025: number | null;
+        realizado_nov_2025: number | null;
+        realizado_out_2025: number | null;
+        realizado_set_2025: number | null;
+      }>(sql, [])
+      return Response.json({ success: true, view, rows, sql }, { headers: { 'Cache-Control': 'no-store' } })
     }
 
     // Balanço Patrimonial em tabela simples (Ativo, Passivo, PL)
