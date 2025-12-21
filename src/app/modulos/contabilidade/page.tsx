@@ -544,14 +544,14 @@ export default function ModulosContabilidadePage() {
                                   <th colSpan={3} className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">vs Prior Year</th>
                                 </tr>
                                 <tr className="bg-gray-50">
-                                  <th className="text-left px-4 py-2 text-[11px] font-semibold text-gray-600 border-r border-gray-200">Seção / Conta</th>
-                                  <th className="text-right px-4 py-2 text-[11px] font-semibold text-gray-600 border-r border-gray-200">Realizado Dez 2025</th>
-                                  <th className="text-right px-4 py-2 text-[11px] font-semibold text-gray-600 border-r border-gray-200">Realizado Nov 2025</th>
-                                  <th className="text-right px-4 py-2 text-[11px] font-semibold text-gray-600 border-r border-gray-200">Δ</th>
-                                  <th className="text-right px-4 py-2 text-[11px] font-semibold text-gray-600 border-r border-gray-200">%</th>
-                                  <th className="text-right px-4 py-2 text-[11px] font-semibold text-gray-600 border-r border-gray-200">Realizado Dez 2024</th>
-                                  <th className="text-right px-4 py-2 text-[11px] font-semibold text-gray-600 border-r border-gray-200">Δ</th>
-                                  <th className="text-right px-4 py-2 text-[11px] font-semibold text-gray-600">%</th>
+                                  <th className="text-left px-4 py-2 text-xs font-semibold text-gray-600 border-r border-gray-200">Seção / Conta</th>
+                                  <th className="text-right px-4 py-2 text-xs font-semibold text-gray-600 border-r border-gray-200">Realizado Dez 2025</th>
+                                  <th className="text-right px-4 py-2 text-xs font-semibold text-gray-600 border-r border-gray-200">Realizado Nov 2025</th>
+                                  <th className="text-right px-4 py-2 text-xs font-semibold text-gray-600 border-r border-gray-200">Δ</th>
+                                  <th className="text-right px-4 py-2 text-xs font-semibold text-gray-600 border-r border-gray-200">%</th>
+                                  <th className="text-right px-4 py-2 text-xs font-semibold text-gray-600 border-r border-gray-200">Realizado Dez 2024</th>
+                                  <th className="text-right px-4 py-2 text-xs font-semibold text-gray-600 border-r border-gray-200">Δ</th>
+                                  <th className="text-right px-4 py-2 text-xs font-semibold text-gray-600">%</th>
                                 </tr>
                               </thead>
                               <tbody>
