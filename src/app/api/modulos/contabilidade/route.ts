@@ -422,7 +422,14 @@ export async function GET(req: NextRequest) {
           FROM months m
           CROSS JOIN contas_despesas c
           LEFT JOIN s_despesas s ON s.periodo = m.periodo AND s.codigo = c.codigo
-        ORDER BY periodo_key DESC, secao, codigo_conta`;
+        ORDER BY periodo_key DESC,
+                 CASE
+                   WHEN secao LIKE 'Receitas%' THEN 1
+                   WHEN secao LIKE 'Custos%' THEN 2
+                   WHEN secao LIKE 'Despesas%' THEN 3
+                   ELSE 99
+                 END,
+                 codigo_conta`;
 
       const rows = await runQuery<{ periodo_key: string; secao: string; codigo_conta: string; conta_contabil: string; valor: number }>(sql, [fromStr, toStr])
 
