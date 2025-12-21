@@ -331,14 +331,14 @@ export async function GET(req: NextRequest) {
 
     // DRE Summary (últimos meses por seção/conta, colunas por mês)
     if (view === 'dre-summary') {
-      // Determina janela de meses: usa de/ate se fornecidos, senão últimos 3 meses incluindo mês atual
+      // Determina janela de meses: usa de/ate se fornecidos, senão últimos 5 meses incluindo mês atual
       const today = new Date()
       const toDate = new Date(today.getFullYear(), today.getMonth(), 1)
       const parseYmd = (s: string) => {
         const [yy, mm, dd] = s.split('-').map(Number)
         return new Date(yy, (mm || 1) - 1, dd || 1)
       }
-      let from = de ? parseYmd(de) : new Date(toDate.getFullYear(), toDate.getMonth() - 2, 1)
+      let from = de ? parseYmd(de) : new Date(toDate.getFullYear(), toDate.getMonth() - 4, 1)
       let to = ate ? parseYmd(ate) : new Date(toDate.getFullYear(), toDate.getMonth() + 1, 0) // fim do mês atual
 
       // Garante ordem correta
@@ -348,71 +348,100 @@ export async function GET(req: NextRequest) {
       const toStr = `${to.getFullYear()}-${String(to.getMonth() + 1).padStart(2, '0')}-${String(to.getDate()).padStart(2, '0')}`
 
       const sql = `
-        WITH base AS (
-          -- Receitas (4.x) por mês
+        WITH months AS (
+          SELECT generate_series(date_trunc('month',$1::date), date_trunc('month',$2::date), interval '1 month')::date AS periodo
+        ),
+        contas_receita AS (
+          SELECT pc.codigo, pc.nome FROM contabilidade.plano_contas pc WHERE pc.codigo LIKE '4%'
+        ),
+        contas_custos AS (
+          SELECT pc.codigo, pc.nome FROM contabilidade.plano_contas pc WHERE pc.codigo LIKE '5%'
+        ),
+        contas_despesas AS (
+          SELECT pc.codigo, pc.nome FROM contabilidade.plano_contas pc WHERE pc.codigo LIKE '6%'
+        ),
+        s_receita AS (
           SELECT DATE_TRUNC('month', lc.data_lancamento)::date AS periodo,
-                 'Receitas (Contas a Receber)'::text AS secao,
-                 pc.codigo AS codigo_conta,
-                 pc.nome   AS conta_contabil,
+                 pc.codigo,
+                 pc.nome,
                  COALESCE(SUM(lc.total_creditos), 0) AS valor
             FROM contabilidade.plano_contas pc
             LEFT JOIN contabilidade.lancamentos_contabeis_linhas lcl ON lcl.conta_id = pc.id
-            LEFT JOIN contabilidade.lancamentos_contabeis lc ON lc.id = lcl.lancamento_id
-                 AND lc.origem_tabela = 'financeiro.contas_receber'
+            LEFT JOIN contabilidade.lancamentos_contabeis lc ON lc.id = lcl.lancamento_id AND lc.origem_tabela = 'financeiro.contas_receber'
            WHERE pc.codigo LIKE '4%'
              AND lc.data_lancamento BETWEEN $1::date AND $2::date
-           GROUP BY 1,2,3,4
-
-          UNION ALL
-
-          -- Custos (5.x) por mês
+           GROUP BY 1,2,3
+        ),
+        s_custos AS (
           SELECT DATE_TRUNC('month', lc.data_lancamento)::date AS periodo,
-                 'Custos (Contas a Pagar)'::text AS secao,
-                 pc.codigo AS codigo_conta,
-                 pc.nome   AS conta_contabil,
+                 pc.codigo,
+                 pc.nome,
                  COALESCE(SUM(lc.total_debitos), 0) AS valor
             FROM contabilidade.plano_contas pc
             LEFT JOIN contabilidade.lancamentos_contabeis_linhas lcl ON lcl.conta_id = pc.id
-            LEFT JOIN contabilidade.lancamentos_contabeis lc ON lc.id = lcl.lancamento_id
-                 AND lc.origem_tabela = 'financeiro.contas_pagar'
+            LEFT JOIN contabilidade.lancamentos_contabeis lc ON lc.id = lcl.lancamento_id AND lc.origem_tabela = 'financeiro.contas_pagar'
            WHERE pc.codigo LIKE '5%'
              AND lc.data_lancamento BETWEEN $1::date AND $2::date
-           GROUP BY 1,2,3,4
-
-          UNION ALL
-
-          -- Despesas (6.x) por mês
+           GROUP BY 1,2,3
+        ),
+        s_despesas AS (
           SELECT DATE_TRUNC('month', lc.data_lancamento)::date AS periodo,
-                 'Despesas (Contas a Pagar)'::text AS secao,
-                 pc.codigo AS codigo_conta,
-                 pc.nome   AS conta_contabil,
+                 pc.codigo,
+                 pc.nome,
                  COALESCE(SUM(lc.total_debitos), 0) AS valor
             FROM contabilidade.plano_contas pc
             LEFT JOIN contabilidade.lancamentos_contabeis_linhas lcl ON lcl.conta_id = pc.id
-            LEFT JOIN contabilidade.lancamentos_contabeis lc ON lc.id = lcl.lancamento_id
-                 AND lc.origem_tabela = 'financeiro.contas_pagar'
+            LEFT JOIN contabilidade.lancamentos_contabeis lc ON lc.id = lcl.lancamento_id AND lc.origem_tabela = 'financeiro.contas_pagar'
            WHERE pc.codigo LIKE '6%'
              AND lc.data_lancamento BETWEEN $1::date AND $2::date
-           GROUP BY 1,2,3,4
+           GROUP BY 1,2,3
         )
-        SELECT TO_CHAR(periodo, 'YYYY-MM') AS periodo_key,
-               secao,
-               codigo_conta,
-               conta_contabil,
-               valor
-          FROM base
-         ORDER BY periodo_key DESC, secao, codigo_conta`;
+        SELECT TO_CHAR(m.periodo, 'YYYY-MM') AS periodo_key,
+               'Receitas (Contas a Receber)'::text AS secao,
+               c.codigo AS codigo_conta,
+               c.nome   AS conta_contabil,
+               COALESCE(s.valor,0) AS valor
+          FROM months m
+          CROSS JOIN contas_receita c
+          LEFT JOIN s_receita s ON s.periodo = m.periodo AND s.codigo = c.codigo
+        UNION ALL
+        SELECT TO_CHAR(m.periodo, 'YYYY-MM') AS periodo_key,
+               'Custos (Contas a Pagar)'::text AS secao,
+               c.codigo AS codigo_conta,
+               c.nome   AS conta_contabil,
+               COALESCE(s.valor,0) AS valor
+          FROM months m
+          CROSS JOIN contas_custos c
+          LEFT JOIN s_custos s ON s.periodo = m.periodo AND s.codigo = c.codigo
+        UNION ALL
+        SELECT TO_CHAR(m.periodo, 'YYYY-MM') AS periodo_key,
+               'Despesas (Contas a Pagar)'::text AS secao,
+               c.codigo AS codigo_conta,
+               c.nome   AS conta_contabil,
+               COALESCE(s.valor,0) AS valor
+          FROM months m
+          CROSS JOIN contas_despesas c
+          LEFT JOIN s_despesas s ON s.periodo = m.periodo AND s.codigo = c.codigo
+        ORDER BY periodo_key DESC, secao, codigo_conta`;
 
       const rows = await runQuery<{ periodo_key: string; secao: string; codigo_conta: string; conta_contabil: string; valor: number }>(sql, [fromStr, toStr])
 
-      // Monta lista de meses distintos em ordem decrescente
-      const uniq = Array.from(new Set(rows.map(r => r.periodo_key))).sort().reverse()
+      // Constrói períodos contínuos de from..to (inclusive), em ordem decrescente
       const monthsPt = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
-      const periods = uniq.map(k => {
-        const [yy, mm] = k.split('-').map(Number)
-        const label = `${monthsPt[(mm || 1) - 1]} ${yy}`
-        return { key: k, label }
-      })
+      const periodsAsc: { key: string; label: string }[] = []
+      {
+        const cur = new Date(from.getFullYear(), from.getMonth(), 1)
+        const end = new Date(to.getFullYear(), to.getMonth(), 1)
+        while (cur <= end) {
+          const y = cur.getFullYear()
+          const m = cur.getMonth() + 1
+          const key = `${y}-${String(m).padStart(2,'0')}`
+          const label = `${monthsPt[m-1]} ${y}`
+          periodsAsc.push({ key, label })
+          cur.setMonth(cur.getMonth() + 1)
+        }
+      }
+      const periods = periodsAsc.reverse()
 
       return Response.json({ success: true, view, rows, periods, sql, params: JSON.stringify([fromStr, toStr]) }, { headers: { 'Cache-Control': 'no-store' } })
     }
