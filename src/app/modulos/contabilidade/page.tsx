@@ -9,7 +9,6 @@ import TabsNav, { type Opcao } from '@/components/modulos/TabsNav'
 import DataToolbar from '@/components/modulos/DataToolbar'
 import CadastroRegraContabilSheet from '@/components/modulos/contabilidade/CadastroRegraContabilSheet'
 import DataTable, { type TableData } from '@/components/widgets/Table'
-import BalanceTAccountView from '@/components/modulos/contabilidade/BalanceTAccountView'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
 import NexusHeader from '@/components/navigation/nexus/NexusHeader'
@@ -30,10 +29,6 @@ export default function ModulosContabilidadePage() {
   const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date } | undefined>(undefined)
   const [data, setData] = useState<Row[]>([])
   // DRE agora usa tabela simples (API: view=dre-tabela)
-  type BPLinha = { conta: string; valor: number }
-  type BPGrupo = { nome: string; linhas: BPLinha[] }
-  type BPData = { ativo: BPGrupo[]; passivo: BPGrupo[]; pl: BPGrupo[] }
-  const [bpData, setBpData] = useState<BPData>({ ativo: [], passivo: [], pl: [] })
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [reloadKey, setReloadKey] = useState(0)
@@ -63,8 +58,12 @@ export default function ModulosContabilidadePage() {
       setError(null)
       try {
         const params = new URLSearchParams()
-        // Aba DRE usa a view específica 'dre-tabela'
-        params.set('view', tabs.selected === 'dre' ? 'dre-tabela' : tabs.selected)
+        // DRE e Balanço usam views específicas
+        params.set('view',
+          tabs.selected === 'dre' ? 'dre-tabela'
+          : tabs.selected === 'balanco-patrimonial' ? 'balanco-tabela'
+          : tabs.selected
+        )
         let deParam: string | undefined
         let ateParam: string | undefined
         if (dateRange?.from) {
@@ -88,17 +87,15 @@ export default function ModulosContabilidadePage() {
           params.set('page', String(page))
           params.set('pageSize', String(pageSize))
         }
-        if (tabs.selected === 'balanco-patrimonial') {
+        if (tabs.selected === 'balanco-patrimonial' || tabs.selected === 'dre') {
+          // As views específicas retornam 'rows' simples
           const url = `/api/modulos/contabilidade?${params.toString()}`
           const res = await fetch(url, { cache: 'no-store', signal: controller.signal })
           if (!res.ok) throw new Error(`HTTP ${res.status}`)
           const json = await res.json()
-          setBpData({
-            ativo: Array.isArray(json?.ativo) ? (json.ativo as BPGrupo[]) : [],
-            passivo: Array.isArray(json?.passivo) ? (json.passivo as BPGrupo[]) : [],
-            pl: Array.isArray(json?.pl) ? (json.pl as BPGrupo[]) : [],
-          })
-          setTotal(0)
+          const rows = (json?.rows || []) as Row[]
+          setData(Array.isArray(rows) ? rows : [])
+          setTotal(Number(json?.total ?? rows.length) || 0)
         } else {
           const url = `/api/modulos/contabilidade?${params.toString()}`
           const res = await fetch(url, { cache: 'no-store', signal: controller.signal })
@@ -381,7 +378,69 @@ export default function ModulosContabilidadePage() {
                           </div>
                         </div>
                       ) : tabs.selected === 'balanco-patrimonial' ? (
-                        <BalanceTAccountView data={bpData} />
+                        <div className="rounded-lg border bg-white">
+                          <div className="overflow-x-auto overflow-y-auto max-h-[70vh]">
+                            <table className="w-full text-sm">
+                              <thead className="bg-gray-50">
+                                <tr>
+                                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Seção / Conta</th>
+                                  <th className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Saldo</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {(() => {
+                                  const bySec = new Map<string, Row[]>()
+                                  for (const r of data) {
+                                    const s = String((r as any)['secao'] || '')
+                                    if (!bySec.has(s)) bySec.set(s, [])
+                                    bySec.get(s)!.push(r)
+                                  }
+                                  const sections = Array.from(bySec.entries())
+                                  return sections.map(([secao, rows]) => {
+                                    const total = rows.reduce((acc, r) => acc + Number((r as any)['saldo'] || 0), 0)
+                                    const open = Boolean(dreExpanded[secao])
+                                    return (
+                                      <>
+                                        <tr key={secao} className="border-b border-gray-200 bg-white">
+                                          <td className="px-4 py-3 text-gray-900 font-semibold">
+                                            <button
+                                              type="button"
+                                              onClick={() => setDreExpanded(prev => ({ ...prev, [secao]: !prev[secao] }))}
+                                              className="mr-2 text-gray-700 hover:text-gray-900 align-middle"
+                                              aria-label={open ? 'Recolher' : 'Expandir'}
+                                            >
+                                              {open ? <ChevronDown className="w-4 h-4 inline" /> : <ChevronRight className="w-4 h-4 inline" />}
+                                            </button>
+                                            <span>{secao}</span>
+                                          </td>
+                                          <td className="px-4 py-3 text-right text-gray-900 font-semibold">
+                                            {Number.isFinite(total) ? Number(total).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : ''}
+                                          </td>
+                                        </tr>
+                                        {open && rows.map((r, idx) => {
+                                          const codigo = String((r as any)['codigo_conta'] ?? '')
+                                          const conta = String((r as any)['conta_contabil'] ?? '')
+                                          const saldo = Number((r as any)['saldo'] || 0)
+                                          return (
+                                            <tr key={`${secao}-${codigo}-${idx}`} className="border-b border-gray-100">
+                                              <td className="px-4 py-2 text-gray-800">
+                                                <span className="text-xs text-gray-500 mr-2">{codigo}</span>
+                                                <span>{conta}</span>
+                                              </td>
+                                              <td className="px-4 py-2 text-right text-gray-800">
+                                                {saldo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                              </td>
+                                            </tr>
+                                          )
+                                        })}
+                                      </>
+                                    )
+                                  })
+                                })()}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
                       ) : (
                         <DataTable
                           key={tabs.selected}

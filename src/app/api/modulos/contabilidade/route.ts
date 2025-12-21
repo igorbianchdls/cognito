@@ -329,6 +329,88 @@ export async function GET(req: NextRequest) {
       return Response.json({ success: true, view, rows, sql }, { headers: { 'Cache-Control': 'no-store' } })
     }
 
+    // Balanço Patrimonial em tabela simples (Ativo, Passivo, PL)
+    if (view === 'balanco-tabela') {
+      const sql = `
+        SELECT
+          secao,
+          codigo_conta,
+          conta_contabil,
+          saldo
+        FROM (
+          -- ATIVO (1): debito - credito
+          SELECT
+            1 AS ordem,
+            'Ativo' AS secao,
+            pc.codigo AS codigo_conta,
+            pc.nome   AS conta_contabil,
+            COALESCE(SUM(lcl.debito), 0) - COALESCE(SUM(lcl.credito), 0) AS saldo
+          FROM contabilidade.plano_contas pc
+          LEFT JOIN contabilidade.lancamentos_contabeis_linhas lcl
+            ON lcl.conta_id = pc.id
+          LEFT JOIN contabilidade.lancamentos_contabeis lc
+            ON lc.id = lcl.lancamento_id
+           AND lc.origem_tabela IN (
+             'financeiro.contas_pagar',
+             'financeiro.contas_receber',
+             'financeiro.pagamentos_efetuados',
+             'financeiro.pagamentos_recebidos'
+           )
+          WHERE pc.codigo LIKE '1%'
+          GROUP BY pc.codigo, pc.nome
+
+          UNION ALL
+
+          -- PASSIVO (2): credito - debito (pra ficar positivo)
+          SELECT
+            2 AS ordem,
+            'Passivo' AS secao,
+            pc.codigo AS codigo_conta,
+            pc.nome   AS conta_contabil,
+            COALESCE(SUM(lcl.credito), 0) - COALESCE(SUM(lcl.debito), 0) AS saldo
+          FROM contabilidade.plano_contas pc
+          LEFT JOIN contabilidade.lancamentos_contabeis_linhas lcl
+            ON lcl.conta_id = pc.id
+          LEFT JOIN contabilidade.lancamentos_contabeis lc
+            ON lc.id = lcl.lancamento_id
+           AND lc.origem_tabela IN (
+             'financeiro.contas_pagar',
+             'financeiro.contas_receber',
+             'financeiro.pagamentos_efetuados',
+             'financeiro.pagamentos_recebidos'
+           )
+          WHERE pc.codigo LIKE '2%'
+          GROUP BY pc.codigo, pc.nome
+
+          UNION ALL
+
+          -- PATRIMÔNIO (3): credito - debito (positivo)
+          SELECT
+            3 AS ordem,
+            'Patrimônio Líquido' AS secao,
+            pc.codigo AS codigo_conta,
+            pc.nome   AS conta_contabil,
+            COALESCE(SUM(lcl.credito), 0) - COALESCE(SUM(lcl.debito), 0) AS saldo
+          FROM contabilidade.plano_contas pc
+          LEFT JOIN contabilidade.lancamentos_contabeis_linhas lcl
+            ON lcl.conta_id = pc.id
+          LEFT JOIN contabilidade.lancamentos_contabeis lc
+            ON lc.id = lcl.lancamento_id
+           AND lc.origem_tabela IN (
+             'financeiro.contas_pagar',
+             'financeiro.contas_receber',
+             'financeiro.pagamentos_efetuados',
+             'financeiro.pagamentos_recebidos'
+           )
+          WHERE pc.codigo LIKE '3%'
+          GROUP BY pc.codigo, pc.nome
+        ) t
+        ORDER BY ordem, codigo_conta`;
+
+      const rows = await runQuery<{ secao: string; codigo_conta: string; conta_contabil: string; saldo: number }>(sql, [])
+      return Response.json({ success: true, view, rows, sql }, { headers: { 'Cache-Control': 'no-store' } })
+    }
+
     // Balanço Patrimonial real
     if (view === 'balanco-patrimonial') {
       const today = new Date()
