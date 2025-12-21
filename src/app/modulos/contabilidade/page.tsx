@@ -533,6 +533,73 @@ export default function ModulosContabilidadePage() {
                             </table>
                           </div>
                         </div>
+                      ) : tabs.selected === 'dre-comparison' ? (
+                        <div className="rounded-lg border bg-white">
+                          <div className="overflow-x-auto overflow-y-auto max-h-[70vh]">
+                            <table className="w-full text-sm">
+                              <thead className="bg-gray-50">
+                                <tr>
+                                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Seção / Conta</th>
+                                  <th className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Realizado Dez 2025</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {(() => {
+                                  type RowT = { [k: string]: unknown }
+                                  const rows = (data as RowT[])
+                                  // Agrupa por seção da DRE (4/5/6)
+                                  const bySec = new Map<string, RowT[]>()
+                                  for (const r of rows) {
+                                    const codigo = String(r['codigo_conta'] || '')
+                                    const secao = codigo.startsWith('4') ? 'Receitas (Contas a Receber)'
+                                              : codigo.startsWith('5') ? 'Custos (Contas a Pagar)'
+                                              : codigo.startsWith('6') ? 'Despesas (Contas a Pagar)'
+                                              : 'Outros'
+                                    if (!bySec.has(secao)) bySec.set(secao, [])
+                                    bySec.get(secao)!.push(r)
+                                  }
+                                  const orderSecs = ['Receitas (Contas a Receber)','Custos (Contas a Pagar)','Despesas (Contas a Pagar)','Outros']
+                                  const sections = Array.from(bySec.entries()).sort((a,b)=> orderSecs.indexOf(a[0]) - orderSecs.indexOf(b[0]))
+                                  return sections.map(([secao, list]) => {
+                                    const open = Boolean(dreExpanded[secao])
+                                    const total = list.reduce((acc, r) => acc + Number(r['realizado_dez_2025'] || 0), 0)
+                                    return (
+                                      <React.Fragment key={secao}>
+                                        <tr className="border-b border-gray-200 bg-white">
+                                          <td className="px-4 py-3 text-gray-900 font-semibold">
+                                            <button type="button" onClick={() => setDreExpanded(prev => ({ ...prev, [secao]: !prev[secao] }))} className="mr-2 text-gray-700 hover:text-gray-900 align-middle" aria-label={open ? 'Recolher' : 'Expandir'}>
+                                              {open ? <ChevronDown className="w-4 h-4 inline" /> : <ChevronRight className="w-4 h-4 inline" />}
+                                            </button>
+                                            <span>{secao}</span>
+                                          </td>
+                                          <td className="px-4 py-3 text-right text-gray-900 font-semibold">
+                                            {Number(total).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                          </td>
+                                        </tr>
+                                        {open && list.sort((a,b)=> String(a['codigo_conta']||'').localeCompare(String(b['codigo_conta']||''),'pt-BR')).map((r, idx) => {
+                                          const codigo = String(r['codigo_conta'] || '')
+                                          const conta = String(r['conta_contabil'] || '')
+                                          const val = Number(r['realizado_dez_2025'] || 0)
+                                          return (
+                                            <tr key={`${secao}-${codigo}-${idx}`} className="border-b border-gray-100">
+                                              <td className="px-4 py-2 text-gray-800">
+                                                {/* Sem coluna de código: mostra apenas a conta (opcional: exibir código pequeno) */}
+                                                <span>{conta}</span>
+                                              </td>
+                                              <td className="px-4 py-2 text-right text-gray-800">
+                                                {val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                              </td>
+                                            </tr>
+                                          )
+                                        })}
+                                      </React.Fragment>
+                                    )
+                                  })
+                                })()}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
                       ) : (tabs.selected === 'dre' || tabs.selected === 'budget-vs-actual') ? (
                         <div className="rounded-lg border bg-white">
                           <div className="overflow-x-auto overflow-y-auto max-h-[70vh]">
