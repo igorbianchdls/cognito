@@ -67,7 +67,7 @@ export default function ModulosContabilidadePage() {
         params.set('view',
           tabs.selected === 'dre' || tabs.selected === 'budget-vs-actual' ? 'dre-tabela'
           : tabs.selected === 'dre-summary' ? 'dre-summary'
-          : tabs.selected === 'dre-comparison' ? 'dre-summary'
+          : tabs.selected === 'dre-comparison' ? 'dre-comparison'
           : tabs.selected === 'bp-summary' ? 'bp-summary'
           : tabs.selected === 'balanco-patrimonial' ? 'balanco-tabela'
           : tabs.selected
@@ -541,6 +541,8 @@ export default function ModulosContabilidadePage() {
                                 <tr>
                                   <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Seção / Conta</th>
                                   <th className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Realizado Dez 2025</th>
+                                  <th className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Realizado Nov 2025</th>
+                                  <th className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Realizado Dez 2024</th>
                                 </tr>
                               </thead>
                               <tbody>
@@ -562,7 +564,9 @@ export default function ModulosContabilidadePage() {
                                   const sections = Array.from(bySec.entries()).sort((a,b)=> orderSecs.indexOf(a[0]) - orderSecs.indexOf(b[0]))
                                   return sections.map(([secao, list]) => {
                                     const open = Boolean(dreExpanded[secao])
-                                    const total = list.reduce((acc, r) => acc + Number(r['realizado_dez_2025'] || 0), 0)
+                                    const totalDez25 = list.reduce((acc, r) => acc + Number(r['realizado_dez_2025'] || 0), 0)
+                                    const totalNov25 = list.reduce((acc, r) => acc + Number(r['realizado_nov_2025'] || 0), 0)
+                                    const totalDez24 = list.reduce((acc, r) => acc + Number(r['realizado_dez_2024'] || 0), 0)
                                     return (
                                       <React.Fragment key={secao}>
                                         <tr className="border-b border-gray-200 bg-white">
@@ -573,22 +577,30 @@ export default function ModulosContabilidadePage() {
                                             <span>{secao}</span>
                                           </td>
                                           <td className="px-4 py-3 text-right text-gray-900 font-semibold">
-                                            {Number(total).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                            {Number(totalDez25).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                          </td>
+                                          <td className="px-4 py-3 text-right text-gray-900 font-semibold">
+                                            {Number(totalNov25).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                          </td>
+                                          <td className="px-4 py-3 text-right text-gray-900 font-semibold">
+                                            {Number(totalDez24).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                                           </td>
                                         </tr>
                                         {open && list.sort((a,b)=> String(a['codigo_conta']||'').localeCompare(String(b['codigo_conta']||''),'pt-BR')).map((r, idx) => {
                                           const codigo = String(r['codigo_conta'] || '')
                                           const conta = String(r['conta_contabil'] || '')
-                                          const val = Number(r['realizado_dez_2025'] || 0)
+                                          const dez25 = Number(r['realizado_dez_2025'] || 0)
+                                          const nov25 = Number(r['realizado_nov_2025'] || 0)
+                                          const dez24 = Number(r['realizado_dez_2024'] || 0)
                                           return (
                                             <tr key={`${secao}-${codigo}-${idx}`} className="border-b border-gray-100">
                                               <td className="px-4 py-2 text-gray-800">
                                                 {/* Sem coluna de código: mostra apenas a conta (opcional: exibir código pequeno) */}
                                                 <span>{conta}</span>
                                               </td>
-                                              <td className="px-4 py-2 text-right text-gray-800">
-                                                {val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                                              </td>
+                                              <td className="px-4 py-2 text-right text-gray-800">{dez25.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                                              <td className="px-4 py-2 text-right text-gray-800">{nov25.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                                              <td className="px-4 py-2 text-right text-gray-800">{dez24.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
                                             </tr>
                                           )
                                         })}
