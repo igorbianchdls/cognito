@@ -43,8 +43,7 @@ export default function ModulosContabilidadePage() {
     moduleUiActions.setTabs({
       options: [
         { value: 'lancamentos', label: 'Lançamentos contábeis', icon: <FileText className="text-slate-600" /> },
-        { value: 'balanco-patrimonial', label: 'Balanço Patrimonial', icon: <Landmark className="text-blue-700" /> },
-        { value: 'dre', label: 'DRE', icon: <BarChart3 className="text-emerald-700" /> },
+        
         { value: 'budget-vs-actual', label: 'Orçado x Realizado', icon: <BarChart3 className="text-emerald-700" /> },
         { value: 'dre-summary', label: 'DRE (Resumo Mensal)', icon: <BarChart3 className="text-emerald-700" /> },
         { value: 'dre-comparison', label: 'DRE (Comparativo)', icon: <BarChart3 className="text-emerald-700" /> },
@@ -71,7 +70,7 @@ export default function ModulosContabilidadePage() {
           : tabs.selected === 'dre-comparison' ? 'dre-comparison'
           : tabs.selected === 'bp-summary' ? 'bp-summary'
           : tabs.selected === 'bp-comparison' ? 'bp-comparison'
-          : tabs.selected === 'balanco-patrimonial' ? 'balanco-tabela'
+          
           : tabs.selected
         )
         let deParam: string | undefined
@@ -93,11 +92,11 @@ export default function ModulosContabilidadePage() {
           params.set('ate', ateParam)
         }
         // Paginação server-side (não aplicável para Balanço, pois usa componente próprio)
-        if (!['balanco-patrimonial'].includes(tabs.selected)) {
+        if (true) {
           params.set('page', String(page))
           params.set('pageSize', String(pageSize))
         }
-        if (tabs.selected === 'balanco-patrimonial' || tabs.selected === 'dre' || tabs.selected === 'budget-vs-actual' || tabs.selected === 'dre-summary' || tabs.selected === 'bp-summary' || tabs.selected === 'dre-comparison' || tabs.selected === 'bp-comparison') {
+        if (tabs.selected === 'budget-vs-actual' || tabs.selected === 'dre-summary' || tabs.selected === 'bp-summary' || tabs.selected === 'dre-comparison' || tabs.selected === 'bp-comparison') {
           // As views específicas retornam 'rows' simples
           const url = `/api/modulos/contabilidade?${params.toString()}`
           const res = await fetch(url, { cache: 'no-store', signal: controller.signal })
