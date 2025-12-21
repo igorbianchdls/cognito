@@ -536,20 +536,20 @@ export default function ModulosContabilidadePage() {
                       ) : tabs.selected === 'dre-comparison' ? (
                         <div className="rounded-lg border bg-white">
                           <div className="overflow-x-auto overflow-y-auto max-h-[70vh]">
-                            <table className="w-full text-sm">
-                              <thead className="bg-gray-50">
-                                <tr>
-                                  <th rowSpan={2} className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Seção / Conta</th>
-                                  <th rowSpan={2} className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Realizado Dez 2025</th>
-                                  <th colSpan={3} className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">vs Prior Período</th>
+                            <table className="w-full text-sm border border-gray-200 border-collapse">
+                              <thead>
+                                <tr className="bg-white">
+                                  <th rowSpan={2} className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600 border-r border-gray-200">Seção / Conta</th>
+                                  <th rowSpan={2} className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600 border-r border-gray-200">Realizado Dez 2025</th>
+                                  <th colSpan={3} className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600 border-r border-gray-200">vs Prior Período</th>
                                   <th colSpan={3} className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">vs Prior Year</th>
                                 </tr>
-                                <tr>
-                                  <th className="text-right px-4 py-2 text-[11px] font-semibold text-gray-600">Realizado Nov 2025</th>
-                                  <th className="text-right px-4 py-2 text-[11px] font-semibold text-gray-600">Δ</th>
-                                  <th className="text-right px-4 py-2 text-[11px] font-semibold text-gray-600">%</th>
-                                  <th className="text-right px-4 py-2 text-[11px] font-semibold text-gray-600">Realizado Dez 2024</th>
-                                  <th className="text-right px-4 py-2 text-[11px] font-semibold text-gray-600">Δ</th>
+                                <tr className="bg-gray-50">
+                                  <th className="text-right px-4 py-2 text-[11px] font-semibold text-gray-600 border-r border-gray-200">Realizado Nov 2025</th>
+                                  <th className="text-right px-4 py-2 text-[11px] font-semibold text-gray-600 border-r border-gray-200">Δ</th>
+                                  <th className="text-right px-4 py-2 text-[11px] font-semibold text-gray-600 border-r border-gray-200">%</th>
+                                  <th className="text-right px-4 py-2 text-[11px] font-semibold text-gray-600 border-r border-gray-200">Realizado Dez 2024</th>
+                                  <th className="text-right px-4 py-2 text-[11px] font-semibold text-gray-600 border-r border-gray-200">Δ</th>
                                   <th className="text-right px-4 py-2 text-[11px] font-semibold text-gray-600">%</th>
                                 </tr>
                               </thead>
@@ -582,23 +582,22 @@ export default function ModulosContabilidadePage() {
                                     return (
                                       <React.Fragment key={secao}>
                                         <tr className="border-b border-gray-200 bg-white">
-                                          <td className="px-4 py-3 text-gray-900 font-semibold">
+                                          <td className="px-4 py-3 text-gray-900 font-semibold border-r border-gray-200">
                                             <button type="button" onClick={() => setDreExpanded(prev => ({ ...prev, [secao]: !prev[secao] }))} className="mr-2 text-gray-700 hover:text-gray-900 align-middle" aria-label={open ? 'Recolher' : 'Expandir'}>
                                               {open ? <ChevronDown className="w-4 h-4 inline" /> : <ChevronRight className="w-4 h-4 inline" />}
                                             </button>
                                             <span>{secao}</span>
                                           </td>
-                                          <td className="px-4 py-3 text-right text-gray-900 font-semibold">
+                                          <td className="px-4 py-3 text-right text-gray-900 font-semibold border-r border-gray-200">
                                             {Number(totalDez25).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                                           </td>
-                                          <td className="px-4 py-3 text-right text-gray-900 font-semibold">
+                                          <td className="px-4 py-3 text-right text-gray-900 font-semibold border-r border-gray-200">
                                             {Number(totalNov25).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                                           </td>
-                                          
-                                          <td className="px-4 py-3 text-right text-gray-900 font-semibold" style={{ color: deltaNov >= 0 ? '#16a34a' : '#b91c1c' }}>{deltaNov.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
-                                          <td className="px-4 py-3 text-right text-gray-900 font-semibold">{percNov === null ? '-' : (percNov * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + '%'}</td>
-                                          <td className="px-4 py-3 text-right text-gray-900 font-semibold">{Number(totalDez24).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
-                                          <td className="px-4 py-3 text-right text-gray-900 font-semibold" style={{ color: deltaDez24 >= 0 ? '#16a34a' : '#b91c1c' }}>{deltaDez24.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                                          <td className="px-4 py-3 text-right text-gray-900 font-semibold border-r border-gray-200" style={{ color: deltaNov >= 0 ? '#16a34a' : '#b91c1c' }}>{deltaNov.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                                          <td className="px-4 py-3 text-right text-gray-900 font-semibold border-r border-gray-200">{percNov === null ? '-' : (percNov * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + '%'}</td>
+                                          <td className="px-4 py-3 text-right text-gray-900 font-semibold border-r border-gray-200">{Number(totalDez24).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                                          <td className="px-4 py-3 text-right text-gray-900 font-semibold border-r border-gray-200" style={{ color: deltaDez24 >= 0 ? '#16a34a' : '#b91c1c' }}>{deltaDez24.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
                                           <td className="px-4 py-3 text-right text-gray-900 font-semibold">{percDez24 === null ? '-' : (percDez24 * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + '%'}</td>
                                         </tr>
                                         {open && list.sort((a,b)=> String(a['codigo_conta']||'').localeCompare(String(b['codigo_conta']||''),'pt-BR')).map((r, idx) => {
@@ -613,16 +612,16 @@ export default function ModulosContabilidadePage() {
                                           const pDez24 = dez24 !== 0 ? (dDez24 / dez24) : null
                                           return (
                                             <tr key={`${secao}-${codigo}-${idx}`} className="border-b border-gray-100">
-                                              <td className="px-4 py-2 text-gray-800">
+                                              <td className="px-4 py-2 text-gray-800 border-r border-gray-200">
                                                 {/* Sem coluna de código: mostra apenas a conta (opcional: exibir código pequeno) */}
                                                 <span>{conta}</span>
                                               </td>
-                                              <td className="px-4 py-2 text-right text-gray-800">{dez25.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
-                                              <td className="px-4 py-2 text-right text-gray-800">{nov25.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
-                                              <td className="px-4 py-2 text-right text-gray-800" style={{ color: dNov >= 0 ? '#16a34a' : '#b91c1c' }}>{dNov.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
-                                              <td className="px-4 py-2 text-right text-gray-800">{pNov === null ? '-' : (pNov * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + '%'}</td>
-                                              <td className="px-4 py-2 text-right text-gray-800">{dez24.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
-                                              <td className="px-4 py-2 text-right text-gray-800" style={{ color: dDez24 >= 0 ? '#16a34a' : '#b91c1c' }}>{dDez24.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                                              <td className="px-4 py-2 text-right text-gray-800 border-r border-gray-200">{dez25.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                                              <td className="px-4 py-2 text-right text-gray-800 border-r border-gray-200">{nov25.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                                              <td className="px-4 py-2 text-right text-gray-800 border-r border-gray-200" style={{ color: dNov >= 0 ? '#16a34a' : '#b91c1c' }}>{dNov.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                                              <td className="px-4 py-2 text-right text-gray-800 border-r border-gray-200">{pNov === null ? '-' : (pNov * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + '%'}</td>
+                                              <td className="px-4 py-2 text-right text-gray-800 border-r border-gray-200">{dez24.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                                              <td className="px-4 py-2 text-right text-gray-800 border-r border-gray-200" style={{ color: dDez24 >= 0 ? '#16a34a' : '#b91c1c' }}>{dDez24.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
                                               <td className="px-4 py-2 text-right text-gray-800">{pDez24 === null ? '-' : (pDez24 * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + '%'}</td>
                                             </tr>
                                           )
