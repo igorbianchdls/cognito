@@ -36,6 +36,7 @@ export default function ModulosContabilidadePage() {
   const [pageSize, setPageSize] = useState<number>(20)
   const [total, setTotal] = useState<number>(0)
   const [dreExpanded, setDreExpanded] = useState<Record<string, boolean>>({})
+  const [dreSummaryPeriods, setDreSummaryPeriods] = useState<{ key: string; label: string }[]>([])
 
   useEffect(() => {
     moduleUiActions.setTitulo({ title: 'Contabilidade', subtitle: 'Lançamentos, balancetes e plano de contas' })
@@ -45,6 +46,7 @@ export default function ModulosContabilidadePage() {
         { value: 'balanco-patrimonial', label: 'Balanço Patrimonial', icon: <Landmark className="text-blue-700" /> },
         { value: 'dre', label: 'DRE', icon: <BarChart3 className="text-emerald-700" /> },
         { value: 'budget-vs-actual', label: 'Budget vs Actual', icon: <BarChart3 className="text-emerald-700" /> },
+        { value: 'dre-summary', label: 'DRE Summary', icon: <BarChart3 className="text-emerald-700" /> },
         { value: 'plano-contas', label: 'Plano de Contas', icon: <BookOpen className="text-indigo-700" /> },
         { value: 'regras-contabeis', label: 'Regras contábeis', icon: <Wrench className="text-amber-600" /> },
       ],
@@ -59,9 +61,10 @@ export default function ModulosContabilidadePage() {
       setError(null)
       try {
         const params = new URLSearchParams()
-        // DRE, Budget vs Actual e Balanço usam views específicas
+        // DRE, DRE Summary, Budget vs Actual e Balanço usam views específicas
         params.set('view',
           tabs.selected === 'dre' || tabs.selected === 'budget-vs-actual' ? 'dre-tabela'
+          : tabs.selected === 'dre-summary' ? 'dre-summary'
           : tabs.selected === 'balanco-patrimonial' ? 'balanco-tabela'
           : tabs.selected
         )
@@ -88,7 +91,16 @@ export default function ModulosContabilidadePage() {
           params.set('page', String(page))
           params.set('pageSize', String(pageSize))
         }
-        if (tabs.selected === 'balanco-patrimonial' || tabs.selected === 'dre' || tabs.selected === 'budget-vs-actual') {
+        if (tabs.selected === 'dre-summary') {
+          const url = `/api/modulos/contabilidade?${params.toString()}`
+          const res = await fetch(url, { cache: 'no-store', signal: controller.signal })
+          if (!res.ok) throw new Error(`HTTP ${res.status}`)
+          const json = await res.json()
+          const rows = (json?.rows || []) as Row[]
+          setData(Array.isArray(rows) ? rows : [])
+          setDreSummaryPeriods(Array.isArray(json?.periods) ? (json.periods as { key: string; label: string }[]) : [])
+          setTotal(Number(json?.total ?? rows.length) || 0)
+        } else if (tabs.selected === 'balanco-patrimonial' || tabs.selected === 'dre' || tabs.selected === 'budget-vs-actual') {
           // As views específicas retornam 'rows' simples
           const url = `/api/modulos/contabilidade?${params.toString()}`
           const res = await fetch(url, { cache: 'no-store', signal: controller.signal })
@@ -314,6 +326,88 @@ export default function ModulosContabilidadePage() {
                         <div className="p-6 text-sm text-gray-500">Carregando dados…</div>
                       ) : error ? (
                         <div className="p-6 text-sm text-red-600">Erro ao carregar: {error}</div>
+                      ) : tabs.selected === 'dre-summary' ? (
+                        <div className="rounded-lg border bg-white">
+                          <div className="overflow-x-auto overflow-y-auto max-h-[70vh]">
+                            <table className="w-full text-sm">
+                              <thead className="bg-gray-50">
+                                <tr>
+                                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Seção / Conta</th>
+                                  {dreSummaryPeriods.map((p) => (
+                                    <th key={p.key} className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">{`Realizado ${p.label}`}</th>
+                                  ))}
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {(() => {
+                                  // Estrutura: agrega por seção e por conta -> valores por período
+                                  type Acc = { codigo: string; conta: string; values: Record<string, number> }
+                                  const bySec = new Map<string, Map<string, Acc>>()
+                                  for (const r of data as any[]) {
+                                    const secao = String(r['secao'] || '')
+                                    const codigo = String(r['codigo_conta'] || '')
+                                    const conta = String(r['conta_contabil'] || '')
+                                    const per = String(r['periodo_key'] || '')
+                                    const val = Number(r['valor'] || 0)
+                                    if (!bySec.has(secao)) bySec.set(secao, new Map())
+                                    const accMap = bySec.get(secao)!
+                                    if (!accMap.has(codigo)) accMap.set(codigo, { codigo, conta, values: {} })
+                                    const acc = accMap.get(codigo)!
+                                    acc.values[per] = (acc.values[per] || 0) + val
+                                  }
+                                  const renderSec = (secao: string, accMap: Map<string, Acc>) => {
+                                    const open = Boolean(dreExpanded[secao])
+                                    // Totais da seção por período
+                                    const totals: Record<string, number> = {}
+                                    for (const [, acc] of accMap) {
+                                      for (const p of dreSummaryPeriods) {
+                                        const v = Number(acc.values[p.key] || 0)
+                                        totals[p.key] = (totals[p.key] || 0) + v
+                                      }
+                                    }
+                                    return (
+                                      <React.Fragment key={secao}>
+                                        <tr className="border-b border-gray-200 bg-white">
+                                          <td className="px-4 py-3 text-gray-900 font-semibold">
+                                            <button
+                                              type="button"
+                                              onClick={() => setDreExpanded(prev => ({ ...prev, [secao]: !prev[secao] }))}
+                                              className="mr-2 text-gray-700 hover:text-gray-900 align-middle"
+                                              aria-label={open ? 'Recolher' : 'Expandir'}
+                                            >
+                                              {open ? <ChevronDown className="w-4 h-4 inline" /> : <ChevronRight className="w-4 h-4 inline" />}
+                                            </button>
+                                            <span>{secao}</span>
+                                          </td>
+                                          {dreSummaryPeriods.map(p => (
+                                            <td key={p.key} className="px-4 py-3 text-right text-gray-900 font-semibold">
+                                              {Number(totals[p.key] || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                            </td>
+                                          ))}
+                                        </tr>
+                                        {open && Array.from(accMap.values()).sort((a,b)=> a.codigo.localeCompare(b.codigo, 'pt-BR')).map((acc, idx) => (
+                                          <tr key={`${secao}-${acc.codigo}-${idx}`} className="border-b border-gray-100">
+                                            <td className="px-4 py-2 text-gray-800">
+                                              <span className="text-xs text-gray-500 mr-2">{acc.codigo}</span>
+                                              <span>{acc.conta}</span>
+                                            </td>
+                                            {dreSummaryPeriods.map(p => (
+                                              <td key={p.key} className="px-4 py-2 text-right text-gray-800">
+                                                {Number(acc.values[p.key] || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                              </td>
+                                            ))}
+                                          </tr>
+                                        ))}
+                                      </React.Fragment>
+                                    )
+                                  }
+                                  const sections = Array.from(bySec.entries())
+                                  return sections.map(([secao, accMap]) => renderSec(secao, accMap))
+                                })()}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
                       ) : (tabs.selected === 'dre' || tabs.selected === 'budget-vs-actual') ? (
                         <div className="rounded-lg border bg-white">
                           <div className="overflow-x-auto overflow-y-auto max-h-[70vh]">

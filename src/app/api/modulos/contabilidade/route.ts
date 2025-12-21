@@ -329,6 +329,94 @@ export async function GET(req: NextRequest) {
       return Response.json({ success: true, view, rows, sql }, { headers: { 'Cache-Control': 'no-store' } })
     }
 
+    // DRE Summary (últimos meses por seção/conta, colunas por mês)
+    if (view === 'dre-summary') {
+      // Determina janela de meses: usa de/ate se fornecidos, senão últimos 3 meses incluindo mês atual
+      const today = new Date()
+      const toDate = new Date(today.getFullYear(), today.getMonth(), 1)
+      const parseYmd = (s: string) => {
+        const [yy, mm, dd] = s.split('-').map(Number)
+        return new Date(yy, (mm || 1) - 1, dd || 1)
+      }
+      let from = de ? parseYmd(de) : new Date(toDate.getFullYear(), toDate.getMonth() - 2, 1)
+      let to = ate ? parseYmd(ate) : new Date(toDate.getFullYear(), toDate.getMonth() + 1, 0) // fim do mês atual
+
+      // Garante ordem correta
+      if (from > to) { const tmp = from; from = to; to = tmp }
+
+      const fromStr = `${from.getFullYear()}-${String(from.getMonth() + 1).padStart(2, '0')}-01`
+      const toStr = `${to.getFullYear()}-${String(to.getMonth() + 1).padStart(2, '0')}-${String(to.getDate()).padStart(2, '0')}`
+
+      const sql = `
+        WITH base AS (
+          -- Receitas (4.x) por mês
+          SELECT DATE_TRUNC('month', lc.data_lancamento)::date AS periodo,
+                 'Receitas (Contas a Receber)'::text AS secao,
+                 pc.codigo AS codigo_conta,
+                 pc.nome   AS conta_contabil,
+                 COALESCE(SUM(lc.total_creditos), 0) AS valor
+            FROM contabilidade.plano_contas pc
+            LEFT JOIN contabilidade.lancamentos_contabeis_linhas lcl ON lcl.conta_id = pc.id
+            LEFT JOIN contabilidade.lancamentos_contabeis lc ON lc.id = lcl.lancamento_id
+                 AND lc.origem_tabela = 'financeiro.contas_receber'
+           WHERE pc.codigo LIKE '4%'
+             AND lc.data_lancamento BETWEEN $1::date AND $2::date
+           GROUP BY 1,2,3,4
+
+          UNION ALL
+
+          -- Custos (5.x) por mês
+          SELECT DATE_TRUNC('month', lc.data_lancamento)::date AS periodo,
+                 'Custos (Contas a Pagar)'::text AS secao,
+                 pc.codigo AS codigo_conta,
+                 pc.nome   AS conta_contabil,
+                 COALESCE(SUM(lc.total_debitos), 0) AS valor
+            FROM contabilidade.plano_contas pc
+            LEFT JOIN contabilidade.lancamentos_contabeis_linhas lcl ON lcl.conta_id = pc.id
+            LEFT JOIN contabilidade.lancamentos_contabeis lc ON lc.id = lcl.lancamento_id
+                 AND lc.origem_tabela = 'financeiro.contas_pagar'
+           WHERE pc.codigo LIKE '5%'
+             AND lc.data_lancamento BETWEEN $1::date AND $2::date
+           GROUP BY 1,2,3,4
+
+          UNION ALL
+
+          -- Despesas (6.x) por mês
+          SELECT DATE_TRUNC('month', lc.data_lancamento)::date AS periodo,
+                 'Despesas (Contas a Pagar)'::text AS secao,
+                 pc.codigo AS codigo_conta,
+                 pc.nome   AS conta_contabil,
+                 COALESCE(SUM(lc.total_debitos), 0) AS valor
+            FROM contabilidade.plano_contas pc
+            LEFT JOIN contabilidade.lancamentos_contabeis_linhas lcl ON lcl.conta_id = pc.id
+            LEFT JOIN contabilidade.lancamentos_contabeis lc ON lc.id = lcl.lancamento_id
+                 AND lc.origem_tabela = 'financeiro.contas_pagar'
+           WHERE pc.codigo LIKE '6%'
+             AND lc.data_lancamento BETWEEN $1::date AND $2::date
+           GROUP BY 1,2,3,4
+        )
+        SELECT TO_CHAR(periodo, 'YYYY-MM') AS periodo_key,
+               secao,
+               codigo_conta,
+               conta_contabil,
+               valor
+          FROM base
+         ORDER BY periodo_key DESC, secao, codigo_conta`;
+
+      const rows = await runQuery<{ periodo_key: string; secao: string; codigo_conta: string; conta_contabil: string; valor: number }>(sql, [fromStr, toStr])
+
+      // Monta lista de meses distintos em ordem decrescente
+      const uniq = Array.from(new Set(rows.map(r => r.periodo_key))).sort().reverse()
+      const monthsPt = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
+      const periods = uniq.map(k => {
+        const [yy, mm] = k.split('-').map(Number)
+        const label = `${monthsPt[(mm || 1) - 1]} ${yy}`
+        return { key: k, label }
+      })
+
+      return Response.json({ success: true, view, rows, periods, sql, params: JSON.stringify([fromStr, toStr]) }, { headers: { 'Cache-Control': 'no-store' } })
+    }
+
     // Balanço Patrimonial em tabela simples (Ativo, Passivo, PL)
     if (view === 'balanco-tabela') {
       const sql = `
