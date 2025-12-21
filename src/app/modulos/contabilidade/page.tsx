@@ -547,7 +547,7 @@ export default function ModulosContabilidadePage() {
                                 <tr>
                                   <th className="text-right px-4 py-2 text-[11px] font-semibold text-gray-600">Realizado Nov 2025</th>
                                   <th className="text-right px-4 py-2 text-[11px] font-semibold text-gray-600">Δ</th>
-                                  <th className="text-right px-4 py-2 text-[11px] font-semibold text-gray-600">%</n+                                  </th>
+                                  <th className="text-right px-4 py-2 text-[11px] font-semibold text-gray-600">%</th>
                                   <th className="text-right px-4 py-2 text-[11px] font-semibold text-gray-600">Realizado Dez 2024</th>
                                   <th className="text-right px-4 py-2 text-[11px] font-semibold text-gray-600">Δ</th>
                                   <th className="text-right px-4 py-2 text-[11px] font-semibold text-gray-600">%</th>
@@ -594,7 +594,7 @@ export default function ModulosContabilidadePage() {
                                           <td className="px-4 py-3 text-right text-gray-900 font-semibold">
                                             {Number(totalNov25).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                                           </td>
-                                          <td className="px-4 py-3 text-right text-gray-900 font-semibold">{Number(totalNov25).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                                          
                                           <td className="px-4 py-3 text-right text-gray-900 font-semibold" style={{ color: deltaNov >= 0 ? '#16a34a' : '#b91c1c' }}>{deltaNov.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
                                           <td className="px-4 py-3 text-right text-gray-900 font-semibold">{percNov === null ? '-' : (percNov * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + '%'}</td>
                                           <td className="px-4 py-3 text-right text-gray-900 font-semibold">{Number(totalDez24).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
