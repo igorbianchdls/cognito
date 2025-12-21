@@ -70,6 +70,7 @@ export default function ModulosContabilidadePage() {
           : tabs.selected === 'dre-comparison' ? 'dre-comparison'
           : tabs.selected === 'bp-summary' ? 'bp-summary'
           : tabs.selected === 'bp-comparison' ? 'bp-comparison'
+          : tabs.selected === 'orcamentos' ? 'orcamentos'
           
           : tabs.selected
         )
@@ -202,6 +203,27 @@ export default function ModulosContabilidadePage() {
           { accessorKey: 'realizado_out_2025', header: 'Realizado Out 2025', cell: ({ row }) => formatBRL(row.original['realizado_out_2025']) },
           { accessorKey: 'realizado_nov_2025', header: 'Realizado Nov 2025', cell: ({ row }) => formatBRL(row.original['realizado_nov_2025']) },
           { accessorKey: 'realizado_dez_2025', header: 'Realizado Dez 2025', cell: ({ row }) => formatBRL(row.original['realizado_dez_2025']) },
+        ]
+      case 'orcamentos':
+        return [
+          { accessorKey: 'orcamento_id', header: 'ID' },
+          { accessorKey: 'orcamento_nome', header: 'Nome do Orçamento' },
+          { accessorKey: 'orcamento_ano', header: 'Ano' },
+          { accessorKey: 'orcamento_versao', header: 'Versão' },
+          { accessorKey: 'orcamento_status', header: 'Status' },
+          { accessorKey: 'orcamento_descricao', header: 'Descrição' },
+          { accessorKey: 'orcamento_criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['orcamento_criado_em']) },
+          { accessorKey: 'orcamento_atualizado_em', header: 'Atualizado em', cell: ({ row }) => formatDate(row.original['orcamento_atualizado_em']) },
+          { accessorKey: 'linha_id', header: 'Linha ID' },
+          { accessorKey: 'linha_mes', header: 'Mês' },
+          { accessorKey: 'valor_debito', header: 'Débito (Orçado)', cell: ({ row }) => formatBRL(row.original['valor_debito']) },
+          { accessorKey: 'valor_credito', header: 'Crédito (Orçado)', cell: ({ row }) => formatBRL(row.original['valor_credito']) },
+          { accessorKey: 'linha_observacao', header: 'Obs. Linha' },
+          { accessorKey: 'linha_criado_em', header: 'Criado em (Linha)', cell: ({ row }) => formatDate(row.original['linha_criado_em']) },
+          { accessorKey: 'linha_atualizado_em', header: 'Atualizado em (Linha)', cell: ({ row }) => formatDate(row.original['linha_atualizado_em']) },
+          { accessorKey: 'plano_conta_id', header: 'Conta ID' },
+          { accessorKey: 'plano_conta_codigo', header: 'Conta Código' },
+          { accessorKey: 'plano_conta_nome', header: 'Conta Contábil' },
         ]
       case 'centros-de-custo':
         return [
