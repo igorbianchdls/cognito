@@ -45,10 +45,10 @@ export default function ModulosContabilidadePage() {
         { value: 'lancamentos', label: 'Lançamentos contábeis', icon: <FileText className="text-slate-600" /> },
         { value: 'balanco-patrimonial', label: 'Balanço Patrimonial', icon: <Landmark className="text-blue-700" /> },
         { value: 'dre', label: 'DRE', icon: <BarChart3 className="text-emerald-700" /> },
-        { value: 'budget-vs-actual', label: 'Budget vs Actual', icon: <BarChart3 className="text-emerald-700" /> },
-        { value: 'dre-summary', label: 'DRE Summary', icon: <BarChart3 className="text-emerald-700" /> },
-        { value: 'dre-comparison', label: 'DRE Comparison', icon: <BarChart3 className="text-emerald-700" /> },
-        { value: 'bp-summary', label: 'BP Summary', icon: <Landmark className="text-blue-700" /> },
+        { value: 'budget-vs-actual', label: 'Orçado x Realizado', icon: <BarChart3 className="text-emerald-700" /> },
+        { value: 'dre-summary', label: 'DRE (Resumo Mensal)', icon: <BarChart3 className="text-emerald-700" /> },
+        { value: 'dre-comparison', label: 'DRE (Comparativo)', icon: <BarChart3 className="text-emerald-700" /> },
+        { value: 'bp-summary', label: 'Balanço Patrimonial (Resumo)', icon: <Landmark className="text-blue-700" /> },
         { value: 'plano-contas', label: 'Plano de Contas', icon: <BookOpen className="text-indigo-700" /> },
         { value: 'regras-contabeis', label: 'Regras contábeis', icon: <Wrench className="text-amber-600" /> },
       ],
@@ -361,7 +361,7 @@ export default function ModulosContabilidadePage() {
                                       const parts = k.split('_') // ['realizado','dez','2025']
                                       const m = map[parts[1]] || parts[1]?.toUpperCase?.() || ''
                                       const y = parts[2] || ''
-                                      return `Realizado ${m} ${y}`
+                                      return `Realizado ${m}/${y}`
                                     }
                                     return ordered.map(k => (
                                       <th key={k} className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">{label(k)}</th>
@@ -381,9 +381,9 @@ export default function ModulosContabilidadePage() {
                                   const bySec = new Map<string, any[]>()
                                   for (const r of data as any[]) {
                                     const codigo = String(r['codigo_conta'] || '')
-                                    const secao = codigo.startsWith('4') ? 'Receitas (Contas a Receber)'
-                                                : codigo.startsWith('5') ? 'Custos (Contas a Pagar)'
-                                                : codigo.startsWith('6') ? 'Despesas (Contas a Pagar)'
+                                    const secao = codigo.startsWith('4') ? 'Receitas'
+                                                : codigo.startsWith('5') ? 'Custos dos Produtos/Serviços (CPV/CSP)'
+                                                : codigo.startsWith('6') ? 'Despesas Operacionais'
                                                 : 'Outros'
                                     if (!bySec.has(secao)) bySec.set(secao, [])
                                     bySec.get(secao)!.push(r)
@@ -456,7 +456,7 @@ export default function ModulosContabilidadePage() {
                                       const parts = k.split('_')
                                       const m = map[parts[1]] || parts[1]?.toUpperCase?.() || ''
                                       const y = parts[2] || ''
-                                      return `Realizado ${m} ${y}`
+                                      return `Saldo ${m}/${y}`
                                     }
                                     return ordered.map(k => (
                                       <th key={k} className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">{label(k)}</th>
@@ -540,18 +540,18 @@ export default function ModulosContabilidadePage() {
                               <thead>
                                 <tr className="bg-white border-b border-gray-300">
                                   <th colSpan={2} className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600 border-r border-gray-200 text-left"></th>
-                                  <th colSpan={3} className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600 border-r border-gray-200">vs Prior Período</th>
-                                  <th colSpan={3} className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">vs Prior Year</th>
+                                  <th colSpan={3} className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600 border-r border-gray-200">vs Período Anterior</th>
+                                  <th colSpan={3} className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">vs Mesmo Mês do Ano Anterior</th>
                                 </tr>
                                 <tr className="bg-gray-50">
-                                  <th className="text-left px-4 py-2 text-xs font-semibold text-gray-600 border-r border-gray-200">Seção / Conta</th>
-                                  <th className="text-right px-4 py-2 text-xs font-semibold text-gray-600 border-r border-gray-200">Realizado Dez 2025</th>
-                                  <th className="text-right px-4 py-2 text-xs font-semibold text-gray-600 border-r border-gray-200">Realizado Nov 2025</th>
-                                  <th className="text-right px-4 py-2 text-xs font-semibold text-gray-600 border-r border-gray-200">Δ</th>
-                                  <th className="text-right px-4 py-2 text-xs font-semibold text-gray-600 border-r border-gray-200">%</th>
-                                  <th className="text-right px-4 py-2 text-xs font-semibold text-gray-600 border-r border-gray-200">Realizado Dez 2024</th>
-                                  <th className="text-right px-4 py-2 text-xs font-semibold text-gray-600 border-r border-gray-200">Δ</th>
-                                  <th className="text-right px-4 py-2 text-xs font-semibold text-gray-600">%</th>
+                                  <th className="text-left px-4 py-2 text-xs font-semibold text-gray-600 border-r border-gray-200">Conta Contábil</th>
+                                  <th className="text-right px-4 py-2 text-xs font-semibold text-gray-600 border-r border-gray-200">Realizado Dez/2025</th>
+                                  <th className="text-right px-4 py-2 text-xs font-semibold text-gray-600 border-r border-gray-200">Realizado Nov/2025</th>
+                                  <th className="text-right px-4 py-2 text-xs font-semibold text-gray-600 border-r border-gray-200">Variação</th>
+                                  <th className="text-right px-4 py-2 text-xs font-semibold text-gray-600 border-r border-gray-200">Variação %</th>
+                                  <th className="text-right px-4 py-2 text-xs font-semibold text-gray-600 border-r border-gray-200">Realizado Dez/2024</th>
+                                  <th className="text-right px-4 py-2 text-xs font-semibold text-gray-600 border-r border-gray-200">Variação</th>
+                                  <th className="text-right px-4 py-2 text-xs font-semibold text-gray-600">Variação %</th>
                                 </tr>
                               </thead>
                               <tbody>
@@ -641,16 +641,16 @@ export default function ModulosContabilidadePage() {
                             <table className="w-full text-sm">
                               <thead className="bg-gray-50">
                                 <tr>
-                                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Seção / Conta</th>
+                                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Conta Contábil</th>
                                   {tabs.selected === 'budget-vs-actual' ? (
                                     <>
                                       <th className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Realizado</th>
-                                      <th className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Budget</th>
-                                      <th className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Δ</th>
-                                      <th className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">%</th>
+                                      <th className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Orçado</th>
+                                      <th className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Diferença</th>
+                                      <th className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Desvio %</th>
                                     </>
                                   ) : (
-                                    <th className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Valor</th>
+                                    <th className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Realizado</th>
                                   )}
                                 </tr>
                               </thead>
@@ -761,7 +761,7 @@ export default function ModulosContabilidadePage() {
                             <table className="w-full text-sm">
                               <thead className="bg-gray-50">
                                 <tr>
-                                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Seção / Conta</th>
+                                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Conta Contábil</th>
                                   <th className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Saldo</th>
                                 </tr>
                               </thead>
