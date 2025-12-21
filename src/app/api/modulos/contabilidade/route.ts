@@ -352,13 +352,13 @@ export async function GET(req: NextRequest) {
           SELECT generate_series(date_trunc('month',$1::date), date_trunc('month',$2::date), interval '1 month')::date AS periodo
         ),
         contas_receita AS (
-          SELECT pc.codigo, pc.nome FROM contabilidade.plano_contas pc WHERE pc.codigo LIKE '4%'
+          SELECT pc.codigo, pc.nome FROM contabilidade.plano_contas pc WHERE pc.codigo::text LIKE '4%'
         ),
         contas_custos AS (
-          SELECT pc.codigo, pc.nome FROM contabilidade.plano_contas pc WHERE pc.codigo LIKE '5%'
+          SELECT pc.codigo, pc.nome FROM contabilidade.plano_contas pc WHERE pc.codigo::text LIKE '5%'
         ),
         contas_despesas AS (
-          SELECT pc.codigo, pc.nome FROM contabilidade.plano_contas pc WHERE pc.codigo LIKE '6%'
+          SELECT pc.codigo, pc.nome FROM contabilidade.plano_contas pc WHERE pc.codigo::text LIKE '6%'
         ),
         s_receita AS (
           SELECT DATE_TRUNC('month', lc.data_lancamento)::date AS periodo,
@@ -368,7 +368,7 @@ export async function GET(req: NextRequest) {
             FROM contabilidade.plano_contas pc
             LEFT JOIN contabilidade.lancamentos_contabeis_linhas lcl ON lcl.conta_id = pc.id
             LEFT JOIN contabilidade.lancamentos_contabeis lc ON lc.id = lcl.lancamento_id AND lc.origem_tabela = 'financeiro.contas_receber'
-           WHERE pc.codigo LIKE '4%'
+           WHERE pc.codigo::text LIKE '4%'
              AND lc.data_lancamento BETWEEN $1::date AND $2::date
            GROUP BY 1,2,3
         ),
@@ -380,7 +380,7 @@ export async function GET(req: NextRequest) {
             FROM contabilidade.plano_contas pc
             LEFT JOIN contabilidade.lancamentos_contabeis_linhas lcl ON lcl.conta_id = pc.id
             LEFT JOIN contabilidade.lancamentos_contabeis lc ON lc.id = lcl.lancamento_id AND lc.origem_tabela = 'financeiro.contas_pagar'
-           WHERE pc.codigo LIKE '5%'
+           WHERE pc.codigo::text LIKE '5%'
              AND lc.data_lancamento BETWEEN $1::date AND $2::date
            GROUP BY 1,2,3
         ),
@@ -392,7 +392,7 @@ export async function GET(req: NextRequest) {
             FROM contabilidade.plano_contas pc
             LEFT JOIN contabilidade.lancamentos_contabeis_linhas lcl ON lcl.conta_id = pc.id
             LEFT JOIN contabilidade.lancamentos_contabeis lc ON lc.id = lcl.lancamento_id AND lc.origem_tabela = 'financeiro.contas_pagar'
-           WHERE pc.codigo LIKE '6%'
+           WHERE pc.codigo::text LIKE '6%'
              AND lc.data_lancamento BETWEEN $1::date AND $2::date
            GROUP BY 1,2,3
         )
