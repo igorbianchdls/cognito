@@ -335,7 +335,7 @@ export default function ModulosContabilidadePage() {
                                   <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Seção / Conta</th>
                                   {(() => {
                                     const keys = Array.from(new Set((data || []).flatMap(r => Object.keys(r as any)))).filter(k => k.startsWith('realizado_'))
-                                    const order = ['realizado_dez_2025','realizado_nov_2025','realizado_out_2025','realizado_set_2025']
+                                    const order = ['realizado_set_2025','realizado_out_2025','realizado_nov_2025','realizado_dez_2025']
                                     const ordered = order.filter(k => keys.includes(k)).concat(keys.filter(k => !order.includes(k)))
                                     const label = (k: string) => {
                                       const map: Record<string,string> = { dez: 'Dez', nov: 'Nov', out: 'Out', set: 'Set' }
@@ -354,7 +354,7 @@ export default function ModulosContabilidadePage() {
                                 {(() => {
                                   const monthKeys = (() => {
                                     const keys = Array.from(new Set((data || []).flatMap(r => Object.keys(r as any)))).filter(k => k.startsWith('realizado_'))
-                                    const order = ['realizado_dez_2025','realizado_nov_2025','realizado_out_2025','realizado_set_2025']
+                                    const order = ['realizado_set_2025','realizado_out_2025','realizado_nov_2025','realizado_dez_2025']
                                     return order.filter(k => keys.includes(k)).concat(keys.filter(k => !order.includes(k)))
                                   })()
                                   // Group by seção derivada do código
