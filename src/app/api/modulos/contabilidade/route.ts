@@ -436,7 +436,7 @@ export async function GET(req: NextRequest) {
             CASE
               WHEN lc.data_lancamento <= DATE '2025-11-30' THEN
                 CASE
-                  WHEN pc.codigo LIKE '1%' THEN (COALESCE(lcl.debito,0) - COALES(lcl.credito,0))
+                  WHEN pc.codigo LIKE '1%' THEN (COALESCE(lcl.debito,0) - COALESCE(lcl.credito,0))
                   WHEN pc.codigo LIKE '2%' THEN (COALESCE(lcl.credito,0) - COALESCE(lcl.debito,0))
                   WHEN pc.codigo LIKE '3%' THEN (COALESCE(lcl.credito,0) - COALESCE(lcl.debito,0))
                   ELSE 0
