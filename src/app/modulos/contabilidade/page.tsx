@@ -44,6 +44,7 @@ export default function ModulosContabilidadePage() {
         { value: 'lancamentos', label: 'Lançamentos contábeis', icon: <FileText className="text-slate-600" /> },
         { value: 'balanco-patrimonial', label: 'Balanço Patrimonial', icon: <Landmark className="text-blue-700" /> },
         { value: 'dre', label: 'DRE', icon: <BarChart3 className="text-emerald-700" /> },
+        { value: 'budget-vs-actual', label: 'Budget vs Actual', icon: <BarChart3 className="text-emerald-700" /> },
         { value: 'plano-contas', label: 'Plano de Contas', icon: <BookOpen className="text-indigo-700" /> },
         { value: 'regras-contabeis', label: 'Regras contábeis', icon: <Wrench className="text-amber-600" /> },
       ],
@@ -58,9 +59,9 @@ export default function ModulosContabilidadePage() {
       setError(null)
       try {
         const params = new URLSearchParams()
-        // DRE e Balanço usam views específicas
+        // DRE, Budget vs Actual e Balanço usam views específicas
         params.set('view',
-          tabs.selected === 'dre' ? 'dre-tabela'
+          tabs.selected === 'dre' || tabs.selected === 'budget-vs-actual' ? 'dre-tabela'
           : tabs.selected === 'balanco-patrimonial' ? 'balanco-tabela'
           : tabs.selected
         )
@@ -87,7 +88,7 @@ export default function ModulosContabilidadePage() {
           params.set('page', String(page))
           params.set('pageSize', String(pageSize))
         }
-        if (tabs.selected === 'balanco-patrimonial' || tabs.selected === 'dre') {
+        if (tabs.selected === 'balanco-patrimonial' || tabs.selected === 'dre' || tabs.selected === 'budget-vs-actual') {
           // As views específicas retornam 'rows' simples
           const url = `/api/modulos/contabilidade?${params.toString()}`
           const res = await fetch(url, { cache: 'no-store', signal: controller.signal })
@@ -313,7 +314,7 @@ export default function ModulosContabilidadePage() {
                         <div className="p-6 text-sm text-gray-500">Carregando dados…</div>
                       ) : error ? (
                         <div className="p-6 text-sm text-red-600">Erro ao carregar: {error}</div>
-                      ) : tabs.selected === 'dre' ? (
+                      ) : (tabs.selected === 'dre' || tabs.selected === 'budget-vs-actual') ? (
                         <div className="rounded-lg border bg-white">
                           <div className="overflow-x-auto overflow-y-auto max-h-[70vh]">
                             <table className="w-full text-sm">
