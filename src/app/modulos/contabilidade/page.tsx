@@ -49,6 +49,7 @@ export default function ModulosContabilidadePage() {
         { value: 'dre-summary', label: 'DRE (Resumo Mensal)', icon: <BarChart3 className="text-emerald-700" /> },
         { value: 'dre-comparison', label: 'DRE (Comparativo)', icon: <BarChart3 className="text-emerald-700" /> },
         { value: 'bp-summary', label: 'Balanço Patrimonial (Resumo)', icon: <Landmark className="text-blue-700" /> },
+        { value: 'bp-comparison', label: 'Balanço Patrimonial (Comparativo)', icon: <Landmark className="text-blue-700" /> },
         { value: 'plano-contas', label: 'Plano de Contas', icon: <BookOpen className="text-indigo-700" /> },
         { value: 'regras-contabeis', label: 'Regras contábeis', icon: <Wrench className="text-amber-600" /> },
       ],
@@ -63,12 +64,13 @@ export default function ModulosContabilidadePage() {
       setError(null)
       try {
         const params = new URLSearchParams()
-        // DRE, DRE Summary, DRE Comparison, BP Summary, Budget vs Actual e Balanço usam views específicas
+        // DRE, DRE Summary, DRE Comparison, BP Summary, BP Comparison, Orçado x Realizado e Balanço usam views específicas
         params.set('view',
           tabs.selected === 'dre' || tabs.selected === 'budget-vs-actual' ? 'dre-tabela'
           : tabs.selected === 'dre-summary' ? 'dre-summary'
           : tabs.selected === 'dre-comparison' ? 'dre-comparison'
           : tabs.selected === 'bp-summary' ? 'bp-summary'
+          : tabs.selected === 'bp-comparison' ? 'bp-comparison'
           : tabs.selected === 'balanco-patrimonial' ? 'balanco-tabela'
           : tabs.selected
         )
@@ -95,7 +97,7 @@ export default function ModulosContabilidadePage() {
           params.set('page', String(page))
           params.set('pageSize', String(pageSize))
         }
-        if (tabs.selected === 'balanco-patrimonial' || tabs.selected === 'dre' || tabs.selected === 'budget-vs-actual' || tabs.selected === 'dre-summary' || tabs.selected === 'bp-summary' || tabs.selected === 'dre-comparison') {
+        if (tabs.selected === 'balanco-patrimonial' || tabs.selected === 'dre' || tabs.selected === 'budget-vs-actual' || tabs.selected === 'dre-summary' || tabs.selected === 'bp-summary' || tabs.selected === 'dre-comparison' || tabs.selected === 'bp-comparison') {
           // As views específicas retornam 'rows' simples
           const url = `/api/modulos/contabilidade?${params.toString()}`
           const res = await fetch(url, { cache: 'no-store', signal: controller.signal })
@@ -624,6 +626,97 @@ export default function ModulosContabilidadePage() {
                                               <td className="px-4 py-2 text-right text-gray-800 border-r border-gray-200">{dez24.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
                                               <td className="px-4 py-2 text-right text-gray-800 border-r border-gray-200" style={{ color: dDez24 >= 0 ? '#16a34a' : '#b91c1c' }}>{dDez24.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
                                               <td className="px-4 py-2 text-right text-gray-800">{pDez24 === null ? '-' : (pDez24 * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + '%'}</td>
+                                            </tr>
+                                          )
+                                        })}
+                                      </React.Fragment>
+                                    )
+                                  })
+                                })()}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      ) : tabs.selected === 'bp-comparison' ? (
+                        <div className="rounded-lg border bg-white">
+                          <div className="overflow-x-auto overflow-y-auto max-h-[70vh]">
+                            <table className="w-full text-sm border border-gray-200 border-collapse">
+                              <thead>
+                                <tr className="bg-white border-b border-gray-300">
+                                  <th colSpan={2} className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600 border-r border-gray-200 text-left"></th>
+                                  <th colSpan={3} className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600 border-r border-gray-200">vs Período Anterior</th>
+                                  <th colSpan={3} className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">vs Mesmo Mês do Ano Anterior</th>
+                                </tr>
+                                <tr className="bg-gray-50">
+                                  <th className="text-left px-4 py-2 text-xs font-semibold text-gray-600 border-r border-gray-200">Conta Contábil</th>
+                                  <th className="text-right px-4 py-2 text-xs font-semibold text-gray-600 border-r border-gray-200">Saldo Dez/2025</th>
+                                  <th className="text-right px-4 py-2 text-xs font-semibold text-gray-600 border-r border-gray-200">Saldo Nov/2025</th>
+                                  <th className="text-right px-4 py-2 text-xs font-semibold text-gray-600 border-r border-gray-200">Variação</th>
+                                  <th className="text-right px-4 py-2 text-xs font-semibold text-gray-600 border-r border-gray-200">Variação %</th>
+                                  <th className="text-right px-4 py-2 text-xs font-semibold text-gray-600 border-r border-gray-200">Saldo Dez/2024</th>
+                                  <th className="text-right px-4 py-2 text-xs font-semibold text-gray-600 border-r border-gray-200">Variação</th>
+                                  <th className="text-right px-4 py-2 text-xs font-semibold text-gray-600">Variação %</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {(() => {
+                                  type RowT = { [k: string]: unknown }
+                                  const rows = (data as RowT[])
+                                  const bySec = new Map<string, RowT[]>()
+                                  for (const r of rows) {
+                                    const codigo = String(r['codigo_conta'] || '')
+                                    const secao = codigo.startsWith('1') ? 'Ativo' : codigo.startsWith('2') ? 'Passivo' : codigo.startsWith('3') ? 'Patrimônio Líquido' : 'Outros'
+                                    if (!bySec.has(secao)) bySec.set(secao, [])
+                                    bySec.get(secao)!.push(r)
+                                  }
+                                  const orderSecs = ['Ativo','Passivo','Patrimônio Líquido','Outros']
+                                  const sections = Array.from(bySec.entries()).sort((a,b)=> orderSecs.indexOf(a[0]) - orderSecs.indexOf(b[0]))
+                                  return sections.map(([secao, list]) => {
+                                    const open = Boolean(dreExpanded[secao])
+                                    const sDez25 = list.reduce((acc, r) => acc + Number(r['saldo_dez_2025'] || 0), 0)
+                                    const sNov25 = list.reduce((acc, r) => acc + Number(r['saldo_nov_2025'] || 0), 0)
+                                    const sDez24 = list.reduce((acc, r) => acc + Number(r['saldo_dez_2024'] || 0), 0)
+                                    const dNov = sDez25 - sNov25
+                                    const pNov = sNov25 !== 0 ? (dNov / sNov25) : null
+                                    const dDez24 = sNov25 - sDez24
+                                    const pDez24 = sDez24 !== 0 ? (dDez24 / sDez24) : null
+                                    return (
+                                      <React.Fragment key={secao}>
+                                        <tr className="border-b border-gray-200 bg-white">
+                                          <td className="px-4 py-3 text-gray-900 font-semibold border-r border-gray-200">
+                                            <button type="button" onClick={() => setDreExpanded(prev => ({ ...prev, [secao]: !prev[secao] }))} className="mr-2 text-gray-700 hover:text-gray-900 align-middle" aria-label={open ? 'Recolher' : 'Expandir'}>
+                                              {open ? <ChevronDown className="w-4 h-4 inline" /> : <ChevronRight className="w-4 h-4 inline" />}
+                                            </button>
+                                            <span>{secao}</span>
+                                          </td>
+                                          <td className="px-4 py-3 text-right text-gray-900 font-semibold border-r border-gray-200">{sDez25.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                                          <td className="px-4 py-3 text-right text-gray-900 font-semibold border-r border-gray-200">{sNov25.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                                          <td className="px-4 py-3 text-right text-gray-900 font-semibold border-r border-gray-200" style={{ color: dNov >= 0 ? '#16a34a' : '#b91c1c' }}>{dNov.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                                          <td className="px-4 py-3 text-right text-gray-900 font-semibold border-r border-gray-200">{pNov === null ? '-' : (pNov * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + '%'}</td>
+                                          <td className="px-4 py-3 text-right text-gray-900 font-semibold border-r border-gray-200">{sDez24.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                                          <td className="px-4 py-3 text-right text-gray-900 font-semibold border-r border-gray-200" style={{ color: dDez24 >= 0 ? '#16a34a' : '#b91c1c' }}>{dDez24.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                                          <td className="px-4 py-3 text-right text-gray-900 font-semibold">{pDez24 === null ? '-' : (pDez24 * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + '%'}</td>
+                                        </tr>
+                                        {open && list.sort((a,b)=> String(a['codigo_conta']||'').localeCompare(String(b['codigo_conta']||''),'pt-BR')).map((r, idx) => {
+                                          const codigo = String(r['codigo_conta'] || '')
+                                          const conta = String(r['conta_contabil'] || '')
+                                          const dez25 = Number(r['saldo_dez_2025'] || 0)
+                                          const nov25 = Number(r['saldo_nov_2025'] || 0)
+                                          const dez24 = Number(r['saldo_dez_2024'] || 0)
+                                          const dN = dez25 - nov25
+                                          const pN = nov25 !== 0 ? (dN / nov25) : null
+                                          const dY = nov25 - dez24
+                                          const pY = dez24 !== 0 ? (dY / dez24) : null
+                                          return (
+                                            <tr key={`${secao}-${codigo}-${idx}`} className="border-b border-gray-100">
+                                              <td className="px-4 py-2 text-gray-800 border-r border-gray-200"><span>{conta}</span></td>
+                                              <td className="px-4 py-2 text-right text-gray-800 border-r border-gray-200">{dez25.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                                              <td className="px-4 py-2 text-right text-gray-800 border-r border-gray-200">{nov25.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                                              <td className="px-4 py-2 text-right text-gray-800 border-r border-gray-200" style={{ color: dN >= 0 ? '#16a34a' : '#b91c1c' }}>{dN.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                                              <td className="px-4 py-2 text-right text-gray-800 border-r border-gray-200">{pN === null ? '-' : (pN * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + '%'}</td>
+                                              <td className="px-4 py-2 text-right text-gray-800 border-r border-gray-200">{dez24.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                                              <td className="px-4 py-2 text-right text-gray-800 border-r border-gray-200" style={{ color: dY >= 0 ? '#16a34a' : '#b91c1c' }}>{dY.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                                              <td className="px-4 py-2 text-right text-gray-800">{pY === null ? '-' : (pY * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + '%'}</td>
                                             </tr>
                                           )
                                         })}
