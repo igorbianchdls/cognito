@@ -54,8 +54,6 @@ export default function ModulosFinanceiroPage() {
       options: [
         { value: 'contas-a-pagar', label: 'A Pagar', icon: <ArrowUpCircle className="text-rose-500" /> },
         { value: 'contas-a-receber', label: 'A Receber', icon: <ArrowDownCircle className="text-emerald-600" /> },
-        { value: 'pagamentos-efetuados', label: 'Pagamentos Efetuados', icon: <CreditCard className="text-rose-500" /> },
-        { value: 'pagamentos-recebidos', label: 'Pagamentos Recebidos', icon: <CreditCard className="text-emerald-600" /> },
         { value: 'extrato', label: 'Extrato', icon: <List className="text-blue-600" /> },
         { value: 'conciliacao', label: 'Conciliação', icon: <CheckCheck className="text-indigo-600" /> },
         { value: 'movimentos', label: 'Movimentos', icon: <Activity className="text-amber-600" /> },
