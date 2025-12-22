@@ -9,23 +9,20 @@ import NexusHeader from '@/components/navigation/nexus/NexusHeader'
 import NexusPageContainer from '@/components/navigation/nexus/NexusPageContainer'
 import PageHeader from '@/components/modulos/PageHeader'
 import { Card } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
+import EntryInfoCard, { type EntryInfoValues } from '@/components/modulos/financeiro/shared/EntryInfoCard'
 import PaymentConditionHeader, { type PaymentConditionConfig } from '@/components/modulos/financeiro/shared/PaymentConditionHeader'
 import ParcelasEditor, { type Parcela } from '@/components/modulos/financeiro/shared/ParcelasEditor'
-import EntryInfoCard, { type EntryInfoValues } from '@/components/modulos/financeiro/shared/EntryInfoCard'
 import { addDays } from '@/lib/date-utils'
 
-export default function NovaReceitaPage() {
+export default function NovaDespesaPage() {
   const router = useRouter()
 
   const [info, setInfo] = React.useState<EntryInfoValues>({
     dataCompetencia: '',
-    entidade: '',
+    entidade: '', // fornecedor
     descricao: '',
     valor: '',
     habilitarRateio: false,
@@ -35,37 +32,26 @@ export default function NovaReceitaPage() {
   })
 
   const [repetirLancamento, setRepetirLancamento] = React.useState(false)
-  // Condição de pagamento (cabeçalho)
   const [cond, setCond] = React.useState<PaymentConditionConfig>({ parcelas: 1, primeiroVenc: '', intervaloDias: 30, formaPadrao: '', contaPadrao: '' })
-  // Parcelas
   const [parcelas, setParcelas] = React.useState<Parcela[]>([])
-  const [recebido, setRecebido] = React.useState(false)
-  const [informarNSU, setInformarNSU] = React.useState(false)
-  const [nsu, setNsu] = React.useState('')
   const [observacoes, setObservacoes] = React.useState('')
   const [tab, setTab] = React.useState('obs')
 
   function onSalvar() {
-    // UI-only: apenas demonstração
-    console.log('Salvar (stub):', {
-      info,
-      repetirLancamento, cond, parcelas, recebido, informarNSU, nsu, observacoes,
-    })
-    router.push('/modulos/financeiro?tab=contas-a-receber')
+    console.log('Salvar (AP stub):', { info, repetirLancamento, cond, parcelas, observacoes })
+    router.push('/modulos/financeiro?tab=contas-a-pagar')
   }
 
-  // Options (mock UI-only)
   const formasPagamento = React.useMemo(() => [
     { value: 'pix', label: 'PIX' },
     { value: 'boleto', label: 'Boleto Bancário' },
     { value: 'transferencia', label: 'Transferência' },
   ], [])
   const contas = React.useMemo(() => [
-    { value: 'b1', label: 'PagHiper banco 001' },
+    { value: 'b1', label: 'Banco 1 - 0001' },
     { value: 'b2', label: 'Banco 2 - 0002' },
   ], [])
 
-  // Helpers
   const totalValor = React.useMemo(() => {
     const raw = info.valor.replace(/\./g, '').replace(/,/g, '.')
     const n = Number(raw)
@@ -85,13 +71,8 @@ export default function NovaReceitaPage() {
     }
     setParcelas(list)
   }
-
-  // Recalcular quando mudar condicoes ou total
   React.useEffect(() => { recalcFromConfig(cond, totalValor) }, [cond.parcelas, cond.primeiroVenc, cond.intervaloDias, totalValor])
-
-  const onChangeParcel = (idx: number, patch: Partial<Parcela>) => {
-    setParcelas((prev) => prev.map((p, i) => i === idx ? { ...p, ...patch } : p))
-  }
+  const onChangeParcel = (idx: number, patch: Partial<Parcela>) => setParcelas((prev) => prev.map((p, i) => i === idx ? { ...p, ...patch } : p))
 
   return (
     <SidebarProvider>
@@ -103,26 +84,24 @@ export default function NovaReceitaPage() {
             <div className="flex-1 min-h-0 pl-2 pr-2 pt-0 pb-2" data-page="nexus">
               <NexusPageContainer className="h-full">
                 <div className="mb-3">
-                  <PageHeader title="Nova Receita" subtitle="Preencha as informações para criar a conta a receber" />
+                  <PageHeader title="Nova Despesa" subtitle="Preencha as informações para criar a conta a pagar" />
                 </div>
 
                 <div className="space-y-4">
-                  {/* Informações do lançamento */}
                   <EntryInfoCard
                     values={info}
                     onChange={(patch) => setInfo((prev) => ({ ...prev, ...patch }))}
-                    entityLabel="Cliente"
+                    entityLabel="Fornecedor"
                     categoryLabel="Categoria"
                     centerLabel="Centro de custo"
                   />
 
-                  {/* Condição de pagamento */}
                   <Card className="p-4 mx-1">
                     <div className="flex items-center justify-between mb-3">
                       <div className="text-sm font-semibold text-slate-800">Condição de pagamento</div>
                       <div className="flex items-center gap-2">
                         <Label className="text-xs text-slate-600">Repetir lançamento?</Label>
-                        <Switch checked={repetirLancamento} onCheckedChange={setRepetirLancamento} />
+                        {/* Reutilizaremos o switch global quando necessário */}
                       </div>
                     </div>
 
@@ -146,7 +125,6 @@ export default function NovaReceitaPage() {
                     </div>
                   </Card>
 
-                  {/* Observações / Anexo */}
                   <Card className="p-4 mx-1">
                     <Tabs value={tab} onValueChange={setTab}>
                       <TabsList className="mb-3">
@@ -174,7 +152,7 @@ export default function NovaReceitaPage() {
                 {/* Footer */}
                 <div className="sticky bottom-0 left-0 right-0 mt-4 bg-white/80 backdrop-blur border-t border-gray-200">
                   <div className="flex items-center justify-between px-4 py-3">
-                    <Link href="/modulos/financeiro?tab=contas-a-receber" className="inline-flex">
+                    <Link href="/modulos/financeiro?tab=contas-a-pagar" className="inline-flex">
                       <Button variant="outline">Voltar</Button>
                     </Link>
                     <Button onClick={onSalvar} className="bg-emerald-600 hover:bg-emerald-700">Salvar</Button>
@@ -188,3 +166,4 @@ export default function NovaReceitaPage() {
     </SidebarProvider>
   )
 }
+

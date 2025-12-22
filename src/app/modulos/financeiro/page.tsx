@@ -887,7 +887,9 @@ export default function ModulosFinanceiroPage() {
               dateRangeWidth={toolbarUI.dateRangeWidth}
               actionComponent={
                 tabs.selected === 'contas-a-pagar' ? (
-                  <CadastroContaAPagarSheet triggerLabel="Cadastrar" onSaved={() => setReloadKey((k) => k + 1)} />
+                  <Link href="/modulos/financeiro/contas-a-pagar/novo" className="inline-flex">
+                    <Button variant="default">Cadastrar</Button>
+                  </Link>
                 ) : tabs.selected === 'contas-a-receber' ? (
                   <Link href="/modulos/financeiro/contas-a-receber/novo" className="inline-flex">
                     <Button variant="default">Cadastrar</Button>
