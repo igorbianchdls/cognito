@@ -134,7 +134,7 @@ export default function NovaDespesaPage() {
                       <TabsContent value="obs">
                         <Label className="text-xs text-slate-600">Observações</Label>
                         <textarea
-                          className="mt-1 w-full min-h-[120px] rounded bg-gray-100 border-0 p-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-400/40"
+                          className="mt-1 w-full min-h-[120px] rounded bg-gray-50 border-0 p-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-400/40"
                           value={observacoes}
                           onChange={(e) => setObservacoes(e.target.value)}
                           placeholder="Anotações gerais sobre este lançamento"
