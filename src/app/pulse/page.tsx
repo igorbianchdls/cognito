@@ -26,7 +26,7 @@ export default function PulsePage() {
   const items: InsightHeroItem[] = useMemo(() => ([
     {
       id: 'r1',
-      headline: '+78%',
+      headline: '+7%',
       title: "increase in your revenue by end of this month is forecasted.",
       description: 'Asep is about to receive 15K new customers which results in 78% increase in revenue.',
       rangeLabel: 'This Week'
