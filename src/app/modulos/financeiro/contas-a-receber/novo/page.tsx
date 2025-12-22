@@ -15,6 +15,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
+import PaymentConditionHeader, { type PaymentConditionConfig } from '@/components/modulos/financeiro/contas-a-receber/PaymentConditionHeader'
+import ParcelasEditor, { type Parcela } from '@/components/modulos/financeiro/contas-a-receber/ParcelasEditor'
+import { addDays } from '@/lib/date-utils'
 
 export default function NovaReceitaPage() {
   const router = useRouter()
@@ -29,10 +32,10 @@ export default function NovaReceitaPage() {
   const [codigoReferencia, setCodigoReferencia] = React.useState('')
 
   const [repetirLancamento, setRepetirLancamento] = React.useState(false)
-  const [parcelamento, setParcelamento] = React.useState('1x')
-  const [vencimento, setVencimento] = React.useState('')
-  const [formaPagamento, setFormaPagamento] = React.useState('')
-  const [contaRecebimento, setContaRecebimento] = React.useState('')
+  // Condição de pagamento (cabeçalho)
+  const [cond, setCond] = React.useState<PaymentConditionConfig>({ parcelas: 1, primeiroVenc: '', intervaloDias: 30, formaPadrao: '', contaPadrao: '' })
+  // Parcelas
+  const [parcelas, setParcelas] = React.useState<Parcela[]>([])
   const [recebido, setRecebido] = React.useState(false)
   const [informarNSU, setInformarNSU] = React.useState(false)
   const [nsu, setNsu] = React.useState('')
@@ -43,9 +46,48 @@ export default function NovaReceitaPage() {
     // UI-only: apenas demonstração
     console.log('Salvar (stub):', {
       dataCompetencia, cliente, descricao, valor, habilitarRateio, categoria, centroCusto, codigoReferencia,
-      repetirLancamento, parcelamento, vencimento, formaPagamento, contaRecebimento, recebido, informarNSU, nsu, observacoes,
+      repetirLancamento, cond, parcelas, recebido, informarNSU, nsu, observacoes,
     })
     router.push('/modulos/financeiro?tab=contas-a-receber')
+  }
+
+  // Options (mock UI-only)
+  const formasPagamento = React.useMemo(() => [
+    { value: 'pix', label: 'PIX' },
+    { value: 'boleto', label: 'Boleto Bancário' },
+    { value: 'transferencia', label: 'Transferência' },
+  ], [])
+  const contas = React.useMemo(() => [
+    { value: 'b1', label: 'PagHiper banco 001' },
+    { value: 'b2', label: 'Banco 2 - 0002' },
+  ], [])
+
+  // Helpers
+  const totalValor = React.useMemo(() => {
+    const raw = valor.replace(/\./g, '').replace(/,/g, '.')
+    const n = Number(raw)
+    return isNaN(n) ? 0 : n
+  }, [valor])
+
+  function recalcFromConfig(c: PaymentConditionConfig, total: number) {
+    const n = Math.max(1, c.parcelas || 1)
+    const base = Number((total / n).toFixed(2))
+    let residual = Number((total - base * (n - 1)).toFixed(2))
+    const list: Parcela[] = []
+    for (let i = 0; i < n; i++) {
+      const venc = c.primeiroVenc ? addDays(c.primeiroVenc, i * (c.intervaloDias || 30)) : ''
+      const val = i === n - 1 ? residual : base
+      const perc = total ? Number(((val / total) * 100).toFixed(2)) : 0
+      list.push({ index: i + 1, vencimento: venc, valor: val, percentual: perc, forma: '', conta: '', descricao: '' })
+    }
+    setParcelas(list)
+  }
+
+  // Recalcular quando mudar condicoes ou total
+  React.useEffect(() => { recalcFromConfig(cond, totalValor) }, [cond.parcelas, cond.primeiroVenc, cond.intervaloDias, totalValor])
+
+  const onChangeParcel = (idx: number, patch: Partial<Parcela>) => {
+    setParcelas((prev) => prev.map((p, i) => i === idx ? { ...p, ...patch } : p))
   }
 
   return (
@@ -140,67 +182,24 @@ export default function NovaReceitaPage() {
                         <Switch checked={repetirLancamento} onCheckedChange={setRepetirLancamento} />
                       </div>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
-                      <div className="md:col-span-2">
-                        <Label className="text-xs text-slate-600">Parcelamento *</Label>
-                        <Select value={parcelamento} onValueChange={setParcelamento}>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="1x">1x</SelectItem>
-                            <SelectItem value="2x">2x</SelectItem>
-                            <SelectItem value="3x">3x</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="md:col-span-2">
-                        <Label className="text-xs text-slate-600">Vencimento *</Label>
-                        <Input type="date" value={vencimento} onChange={(e) => setVencimento(e.target.value)} />
-                      </div>
-                      <div className="md:col-span-3">
-                        <Label className="text-xs text-slate-600">Forma de pagamento</Label>
-                        <Select value={formaPagamento} onValueChange={setFormaPagamento}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="pix">PIX</SelectItem>
-                            <SelectItem value="boleto">Boleto</SelectItem>
-                            <SelectItem value="transferencia">Transferência</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="md:col-span-3">
-                        <Label className="text-xs text-slate-600">Conta de recebimento</Label>
-                        <Select value={contaRecebimento} onValueChange={setContaRecebimento}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="banco1">Banco 1 - 0001</SelectItem>
-                            <SelectItem value="banco2">Banco 2 - 0002</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="md:col-span-2 flex items-end">
-                        <div className="flex items-center gap-2">
-                          <Label className="text-xs text-slate-600">Recebido</Label>
-                          <Switch checked={recebido} onCheckedChange={setRecebido} />
-                        </div>
-                      </div>
-                      <div className="md:col-span-2 flex items-end">
-                        <div className="flex items-center gap-2">
-                          <Label className="text-xs text-slate-600">Informar NSU?</Label>
-                          <Switch checked={informarNSU} onCheckedChange={setInformarNSU} />
-                        </div>
-                      </div>
-                      {informarNSU ? (
-                        <div className="md:col-span-2">
-                          <Label className="text-xs text-slate-600">NSU</Label>
-                          <Input value={nsu} onChange={(e) => setNsu(e.target.value)} />
-                        </div>
-                      ) : null}
+
+                    <PaymentConditionHeader
+                      config={cond}
+                      onChange={(patch) => setCond((prev) => ({ ...prev, ...patch }))}
+                      formasPagamento={formasPagamento}
+                      contas={contas}
+                    />
+
+                    <div className="mt-5">
+                      <ParcelasEditor
+                        total={totalValor}
+                        parcelas={parcelas}
+                        onChangeParcel={onChangeParcel}
+                        formasPagamento={formasPagamento}
+                        contas={contas}
+                        formaPadrao={cond.formaPadrao}
+                        contaPadrao={cond.contaPadrao}
+                      />
                     </div>
                   </Card>
 
