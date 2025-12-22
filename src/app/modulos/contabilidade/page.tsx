@@ -379,40 +379,127 @@ export default function ModulosContabilidadePage() {
                             <table className="w-full text-sm">
                               <thead className="bg-gray-50">
                                 <tr>
-                                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Seção</th>
+                                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Seção / Conta</th>
+                                  {(() => {
+                                    const keys = Array.from(new Set((data || []).flatMap(r => Object.keys(r as any)))).filter(k => k.startsWith('realizado_'))
+                                    const order = ['realizado_set_2025','realizado_out_2025','realizado_nov_2025','realizado_dez_2025']
+                                    const ordered = order.filter(k => keys.includes(k)).concat(keys.filter(k => !order.includes(k)))
+                                    const label = (k: string) => {
+                                      const map: Record<string,string> = { dez: 'Dez', nov: 'Nov', out: 'Out', set: 'Set' }
+                                      const parts = k.split('_') // ['realizado','dez','2025']
+                                      const m = map[parts[1]] || parts[1]?.toUpperCase?.() || ''
+                                      const y = parts[2] || ''
+                                      return `Realizado ${m}/${y}`
+                                    }
+                                    return ordered.map(k => (
+                                      <th key={k} className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">{label(k)}</th>
+                                    ))
+                                  })()}
                                 </tr>
                               </thead>
                               <tbody>
                                 {(() => {
-                                  const sections = [
-                                    'Receita Líquida',
-                                    'COGS/CPV/CMV',
-                                    'Lucro Bruto',
-                                    'Despesas Operacionais',
-                                    'Lucro Operacional (EBIT)',
-                                    'IR + CSLL',
-                                    'Lucro Líquido',
-                                  ]
-                                  return sections.map((secao) => {
+                                  // Keys (meses)
+                                  const monthKeys = (() => {
+                                    const keys = Array.from(new Set((data || []).flatMap(r => Object.keys(r as any)))).filter(k => k.startsWith('realizado_'))
+                                    const order = ['realizado_set_2025','realizado_out_2025','realizado_nov_2025','realizado_dez_2025']
+                                    return order.filter(k => keys.includes(k)).concat(keys.filter(k => !order.includes(k)))
+                                  })()
+
+                                  type RowAny = Record<string, any>
+                                  const rowsAll = (data as RowAny[]) || []
+                                  const rows4 = rowsAll.filter(r => String(r['codigo_conta'] || '').startsWith('4'))
+                                  const rows5 = rowsAll.filter(r => String(r['codigo_conta'] || '').startsWith('5'))
+                                  const rows6 = rowsAll.filter(r => String(r['codigo_conta'] || '').startsWith('6'))
+
+                                  const sumTotals = (rows: RowAny[]) => {
+                                    const totals: Record<string, number> = {}
+                                    for (const r of rows) for (const k of monthKeys) totals[k] = (totals[k] || 0) + Number(r[k] || 0)
+                                    return totals
+                                  }
+
+                                  const tReceita = sumTotals(rows4)
+                                  const tCogs = sumTotals(rows5)
+                                  const tDesp = sumTotals(rows6)
+
+                                  const tLucroBruto: Record<string, number> = {}
+                                  const tEbit: Record<string, number> = {}
+                                  const tIRCSLL: Record<string, number> = {}
+                                  const tLucroLiquido: Record<string, number> = {}
+                                  for (const k of monthKeys) {
+                                    tLucroBruto[k] = Number(tReceita[k] || 0) - Number(tCogs[k] || 0)
+                                    tEbit[k] = Number(tLucroBruto[k] || 0) - Number(tDesp[k] || 0)
+                                    tIRCSLL[k] = 0 // placeholder até mapeamento de contas de IR/CSLL
+                                    tLucroLiquido[k] = Number(tEbit[k] || 0) - Number(tIRCSLL[k] || 0)
+                                  }
+
+                                  const renderTotals = (totals: Record<string, number>) => monthKeys.map(k => (
+                                    <td key={k} className="px-4 py-3 text-right text-gray-900 font-semibold">
+                                      {Number(totals[k] || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                    </td>
+                                  ))
+
+                                  const renderDetailRows = (secao: string, rows: RowAny[]) => {
                                     const open = Boolean(dreExpanded[secao])
+                                    return open ? rows
+                                      .slice()
+                                      .sort((a,b) => String(a['codigo_conta']||'').localeCompare(String(b['codigo_conta']||''),'pt-BR'))
+                                      .map((r, idx) => {
+                                        const codigo = String(r['codigo_conta'] || '')
+                                        const conta = String(r['conta_contabil'] || '')
+                                        return (
+                                          <tr key={`${secao}-${codigo}-${idx}`} className="border-b border-gray-100">
+                                            <td className="px-4 py-2 text-gray-800">
+                                              <span className="text-xs text-gray-500 mr-2">{codigo}</span>
+                                              <span>{conta}</span>
+                                            </td>
+                                            {monthKeys.map(k => (
+                                              <td key={k} className="px-4 py-2 text-right text-gray-800">
+                                                {Number((r as any)[k] || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                              </td>
+                                            ))}
+                                          </tr>
+                                        )
+                                      }) : null
+                                  }
+
+                                  const renderSection = (label: string, totals: Record<string, number>, detailRows?: RowAny[]) => {
+                                    const hasDetails = Boolean(detailRows && detailRows.length)
+                                    const open = Boolean(dreExpanded[label])
                                     return (
-                                      <React.Fragment key={secao}>
+                                      <React.Fragment key={label}>
                                         <tr className="border-b border-gray-200 bg-white">
                                           <td className="px-4 py-3 text-gray-900 font-semibold">
-                                            <button
-                                              type="button"
-                                              onClick={() => setDreExpanded((prev) => ({ ...prev, [secao]: !prev[secao] }))}
-                                              className="mr-2 text-gray-700 hover:text-gray-900 align-middle"
-                                              aria-label={open ? 'Recolher' : 'Expandir'}
-                                            >
-                                              {open ? <ChevronDown className="w-4 h-4 inline" /> : <ChevronRight className="w-4 h-4 inline" />}
-                                            </button>
-                                            <span>{secao}</span>
+                                            {hasDetails ? (
+                                              <button
+                                                type="button"
+                                                onClick={() => setDreExpanded(prev => ({ ...prev, [label]: !prev[label] }))}
+                                                className="mr-2 text-gray-700 hover:text-gray-900 align-middle"
+                                                aria-label={open ? 'Recolher' : 'Expandir'}
+                                              >
+                                                {open ? <ChevronDown className="w-4 h-4 inline" /> : <ChevronRight className="w-4 h-4 inline" />}
+                                              </button>
+                                            ) : null}
+                                            <span>{label}</span>
                                           </td>
+                                          {renderTotals(totals)}
                                         </tr>
+                                        {hasDetails ? renderDetailRows(label, detailRows!) : null}
                                       </React.Fragment>
                                     )
-                                  })
+                                  }
+
+                                  return (
+                                    <>
+                                      {renderSection('Receita Líquida', tReceita, rows4)}
+                                      {renderSection('COGS/CPV/CMV', tCogs, rows5)}
+                                      {renderSection('Lucro Bruto', tLucroBruto)}
+                                      {renderSection('Despesas Operacionais', tDesp, rows6)}
+                                      {renderSection('Lucro Operacional (EBIT)', tEbit)}
+                                      {renderSection('IR + CSLL', tIRCSLL)}
+                                      {renderSection('Lucro Líquido', tLucroLiquido)}
+                                    </>
+                                  )
                                 })()}
                               </tbody>
                             </table>
