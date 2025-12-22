@@ -869,7 +869,7 @@ export default function ModulosFinanceiroPage() {
             />
           </div>
           {/* KPIs acima da tabela (somente Contas a Pagar) */}
-          {tabs.selected === 'contas-a-pagar' ? (
+          {tabs.selected === 'contas-a-pagar' || tabs.selected === 'contas-a-receber' ? (
             <div className="px-1 mb-3">
               <ApKpiRow />
             </div>

@@ -20,11 +20,11 @@ function formatBRL(value?: number | string) {
   return String(value ?? '')
 }
 
-const COLOR_MAP: Record<Color, { border: string; text: string }> = {
-  danger: { border: 'border-red-500', text: 'text-red-600' },
-  warning: { border: 'border-amber-500', text: 'text-amber-600' },
-  info: { border: 'border-sky-500', text: 'text-sky-600' },
-  success: { border: 'border-green-600', text: 'text-green-600' },
+const COLOR_MAP: Record<Color, { top: string; text: string }> = {
+  danger: { top: 'border-t-red-500', text: 'text-red-600' },
+  warning: { top: 'border-t-amber-500', text: 'text-amber-600' },
+  info: { top: 'border-t-sky-500', text: 'text-sky-600' },
+  success: { top: 'border-t-green-600', text: 'text-green-600' },
 }
 
 export default function ApKpiTile({ title, value = 0, color = 'info', tooltip, onClick, className }: ApKpiTileProps) {
@@ -33,6 +33,9 @@ export default function ApKpiTile({ title, value = 0, color = 'info', tooltip, o
     <div
       className={[
         'bg-white rounded-md border border-gray-200 overflow-hidden',
+        // Top border becomes the colored continuous border
+        'border-t-2',
+        colors.top,
         'flex flex-col justify-center min-h-[66px]',
         onClick ? 'cursor-pointer hover:bg-gray-50' : '',
         className || '',
@@ -42,7 +45,6 @@ export default function ApKpiTile({ title, value = 0, color = 'info', tooltip, o
       role={onClick ? 'button' : undefined}
       aria-label={title}
     >
-      <div className={[colors.border, 'border-t-2 w-full'].join(' ')} />
       <div className="px-3 py-2">
         <div className="text-[11px] uppercase tracking-wide text-gray-600 font-medium select-none">{title}</div>
         <div className={[colors.text, 'text-lg md:text-xl font-semibold leading-tight mt-0.5'].join(' ')}>
@@ -52,4 +54,3 @@ export default function ApKpiTile({ title, value = 0, color = 'info', tooltip, o
     </div>
   )
 }
-
