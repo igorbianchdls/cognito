@@ -379,86 +379,37 @@ export default function ModulosContabilidadePage() {
                             <table className="w-full text-sm">
                               <thead className="bg-gray-50">
                                 <tr>
-                                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Seção / Conta</th>
-                                  {(() => {
-                                    const keys = Array.from(new Set((data || []).flatMap(r => Object.keys(r as any)))).filter(k => k.startsWith('realizado_'))
-                                    const order = ['realizado_set_2025','realizado_out_2025','realizado_nov_2025','realizado_dez_2025']
-                                    const ordered = order.filter(k => keys.includes(k)).concat(keys.filter(k => !order.includes(k)))
-                                    const label = (k: string) => {
-                                      const map: Record<string,string> = { dez: 'Dez', nov: 'Nov', out: 'Out', set: 'Set' }
-                                      const parts = k.split('_') // ['realizado','dez','2025']
-                                      const m = map[parts[1]] || parts[1]?.toUpperCase?.() || ''
-                                      const y = parts[2] || ''
-                                      return `Realizado ${m}/${y}`
-                                    }
-                                    return ordered.map(k => (
-                                      <th key={k} className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">{label(k)}</th>
-                                    ))
-                                  })()}
+                                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Seção</th>
                                 </tr>
                               </thead>
                               <tbody>
                                 {(() => {
-                                  const monthKeys = (() => {
-                                    const keys = Array.from(new Set((data || []).flatMap(r => Object.keys(r as any)))).filter(k => k.startsWith('realizado_'))
-                                    const order = ['realizado_set_2025','realizado_out_2025','realizado_nov_2025','realizado_dez_2025']
-                                    return order.filter(k => keys.includes(k)).concat(keys.filter(k => !order.includes(k)))
-                                  })()
-                                  // Group by seção derivada do código
-                                  type RowSum = Record<string, number>
-                                  const bySec = new Map<string, any[]>()
-                                  for (const r of data as any[]) {
-                                    const codigo = String(r['codigo_conta'] || '')
-                                    const secao = codigo.startsWith('4') ? 'Receitas'
-                                                : codigo.startsWith('5') ? 'Custos dos Produtos/Serviços (CPV/CSP)'
-                                                : codigo.startsWith('6') ? 'Despesas Operacionais'
-                                                : 'Outros'
-                                    if (!bySec.has(secao)) bySec.set(secao, [])
-                                    bySec.get(secao)!.push(r)
-                                  }
-                                  const sections = Array.from(bySec.entries()).sort((a,b) => {
-                                    const rank = (s: string) => s.startsWith('Receitas') ? 1 : s.startsWith('Custos') ? 2 : s.startsWith('Despesas') ? 3 : 99
-                                    return rank(a[0]) - rank(b[0])
-                                  })
-                                  return sections.map(([secao, rows]) => {
+                                  const sections = [
+                                    'Receita Líquida',
+                                    'COGS/CPV/CMV',
+                                    'Lucro Bruto',
+                                    'Despesas Operacionais',
+                                    'Lucro Operacional (EBIT)',
+                                    'IR + CSLL',
+                                    'Lucro Líquido',
+                                  ]
+                                  return sections.map((secao) => {
                                     const open = Boolean(dreExpanded[secao])
-                                    // Totais por mês da seção
-                                    const totals: RowSum = {}
-                                    for (const r of rows) {
-                                      for (const k of monthKeys) totals[k] = (totals[k] || 0) + Number((r as any)[k] || 0)
-                                    }
                                     return (
                                       <React.Fragment key={secao}>
                                         <tr className="border-b border-gray-200 bg-white">
                                           <td className="px-4 py-3 text-gray-900 font-semibold">
-                                            <button type="button" onClick={() => setDreExpanded(prev => ({ ...prev, [secao]: !prev[secao] }))} className="mr-2 text-gray-700 hover:text-gray-900 align-middle" aria-label={open ? 'Recolher' : 'Expandir'}>
+                                            <button
+                                              type="button"
+                                              onClick={() => setDreExpanded((prev) => ({ ...prev, [secao]: !prev[secao] }))}
+                                              className="mr-2 text-gray-700 hover:text-gray-900 align-middle"
+                                              aria-label={open ? 'Recolher' : 'Expandir'}
+                                            >
                                               {open ? <ChevronDown className="w-4 h-4 inline" /> : <ChevronRight className="w-4 h-4 inline" />}
                                             </button>
                                             <span>{secao}</span>
                                           </td>
-                                          {monthKeys.map(k => (
-                                            <td key={k} className="px-4 py-3 text-right text-gray-900 font-semibold">
-                                              {Number(totals[k] || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                                            </td>
-                                          ))}
                                         </tr>
-                                        {open && (rows as any[]).sort((a,b) => String(a['codigo_conta']||'').localeCompare(String(b['codigo_conta']||''),'pt-BR')).map((r, idx) => {
-                                          const codigo = String(r['codigo_conta'] || '')
-                                          const conta = String(r['conta_contabil'] || '')
-                                          return (
-                                            <tr key={`${secao}-${codigo}-${idx}`} className="border-b border-gray-100">
-                                              <td className="px-4 py-2 text-gray-800">
-                                                <span className="text-xs text-gray-500 mr-2">{codigo}</span>
-                                                <span>{conta}</span>
-                                              </td>
-                                              {monthKeys.map(k => (
-                                                <td key={k} className="px-4 py-2 text-right text-gray-800">
-                                                  {Number((r as any)[k] || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                                                </td>
-                                              ))}
-                                            </tr>
-                                          )
-                                        })}
                                       </React.Fragment>
                                     )
                                   })
