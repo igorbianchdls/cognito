@@ -391,68 +391,61 @@ export async function GET(req: NextRequest) {
       let idxKpi = 3;
       // tenant opcional
       const tenantId = parseNumber(searchParams.get('tenant_id'));
-      const tenantFilter = tenantId ? ` AND lf.tenant_id = $${idxKpi++}` : '';
       const kpiParams: unknown[] = tenantId ? [...kpiParamsBase, tenantId] : [...kpiParamsBase];
+      const tenantFilterCr = tenantId ? ` AND cr.tenant_id = $${idxKpi}` : '';
+      const tenantFilterCp = tenantId ? ` AND cp.tenant_id = $${idxKpi}` : '';
+      const tenantFilterPr = tenantId ? ` AND pr.tenant_id = $${idxKpi}` : '';
+      const tenantFilterPe = tenantId ? ` AND pe.tenant_id = $${idxKpi}` : '';
 
-      // A RECEBER NO PERÍODO: títulos de AR não recebidos (qualquer status que não seja baixado/liquidado/recebido)
-      const arSql = `SELECT COALESCE(SUM(lf.valor), 0) AS total
-                     FROM financeiro.lancamentos_financeiros lf
-                    WHERE lf.tipo = 'conta_a_receber'
-                      AND LOWER(lf.status) NOT IN ('recebido','baixado','liquidado')
-                      AND DATE(lf.data_vencimento) BETWEEN $1 AND $2${tenantFilter}`.replace(/\s+/g, ' ');
+      // A RECEBER NO PERÍODO (pendentes): contas_receber por vencimento
+      const arSql = `SELECT COALESCE(SUM(cr.valor_liquido), 0) AS total
+                       FROM financeiro.contas_receber cr
+                      WHERE LOWER(cr.status) NOT IN ('recebido','baixado','liquidado')
+                        AND DATE(cr.data_vencimento) BETWEEN $1 AND $2${tenantFilterCr}`.replace(/\s+/g, ' ');
       const [arRow] = await runQuery<{ total: number | null }>(arSql, kpiParams);
 
-      // A PAGAR NO PERÍODO: títulos de AP não pagos (qualquer status diferente de pago/baixado/liquidado)
-      const apSql = `SELECT COALESCE(SUM(lf.valor), 0) AS total
-                     FROM financeiro.lancamentos_financeiros lf
-                    WHERE lf.tipo = 'conta_a_pagar'
-                      AND LOWER(lf.status) NOT IN ('pago','baixado','liquidado')
-                      AND DATE(lf.data_vencimento) BETWEEN $1 AND $2${tenantFilter}`.replace(/\s+/g, ' ');
+      // A PAGAR NO PERÍODO (pendentes): contas_pagar por vencimento
+      const apSql = `SELECT COALESCE(SUM(cp.valor_liquido), 0) AS total
+                       FROM financeiro.contas_pagar cp
+                      WHERE LOWER(cp.status) NOT IN ('pago','baixado','liquidado')
+                        AND DATE(cp.data_vencimento) BETWEEN $1 AND $2${tenantFilterCp}`.replace(/\s+/g, ' ');
       const [apRow] = await runQuery<{ total: number | null }>(apSql, kpiParams);
 
-      // RECEBIDO NO PERÍODO: AR com status recebido/baixado/liquidado por data de lançamento (pagamento)
-      const recSql = `SELECT COALESCE(SUM(lf.valor), 0) AS total
-                       FROM financeiro.lancamentos_financeiros lf
-                      WHERE lf.tipo = 'conta_a_receber'
-                        AND LOWER(lf.status) IN ('recebido','baixado','liquidado')
-                        AND DATE(lf.data_lancamento) BETWEEN $1 AND $2${tenantFilter}`.replace(/\s+/g, ' ');
+      // RECEBIDOS NO PERÍODO (caixa realizado): pagamentos_recebidos por data_recebimento
+      const recSql = `SELECT COALESCE(SUM(pr.valor_total_recebido), 0) AS total
+                        FROM financeiro.pagamentos_recebidos pr
+                       WHERE DATE(pr.data_recebimento) BETWEEN $1 AND $2${tenantFilterPr}`.replace(/\s+/g, ' ');
       const [recRow] = await runQuery<{ total: number | null }>(recSql, kpiParams);
 
-      // CONTAS PAGAS NO PERÍODO: AP com status pago/baixado/liquidado por data de lançamento (pagamento)
-      const pagoSql = `SELECT COALESCE(SUM(lf.valor), 0) AS total
-                        FROM financeiro.lancamentos_financeiros lf
-                       WHERE lf.tipo = 'conta_a_pagar'
-                         AND LOWER(lf.status) IN ('pago','baixado','liquidado')
-                         AND DATE(lf.data_lancamento) BETWEEN $1 AND $2${tenantFilter}`.replace(/\s+/g, ' ');
+      // PAGOS NO PERÍODO (caixa realizado): pagamentos_efetuados por data_pagamento
+      const pagoSql = `SELECT COALESCE(SUM(pe.valor_total_pagamento), 0) AS total
+                        FROM financeiro.pagamentos_efetuados pe
+                       WHERE DATE(pe.data_pagamento) BETWEEN $1 AND $2${tenantFilterPe}`.replace(/\s+/g, ' ');
       const [pagoRow] = await runQuery<{ total: number | null }>(pagoSql, kpiParams);
 
-      // RECEITA NO MÊS (contas a receber por vencimento, sem filtro de status)
-      const receitaSql = `SELECT COALESCE(SUM(lf.valor), 0) AS total
-                           FROM financeiro.lancamentos_financeiros lf
-                          WHERE lf.tipo = 'conta_a_receber'
-                            AND DATE(lf.data_vencimento) BETWEEN $1 AND $2${tenantFilter}`.replace(/\s+/g, ' ');
+      // RECEITA NO PERÍODO (competência): contas_receber por vencimento (sem filtro de status)
+      const receitaSql = `SELECT COALESCE(SUM(cr.valor_liquido), 0) AS total
+                            FROM financeiro.contas_receber cr
+                           WHERE DATE(cr.data_vencimento) BETWEEN $1 AND $2${tenantFilterCr}`.replace(/\s+/g, ' ');
       const [receitaRow] = await runQuery<{ total: number | null }>(receitaSql, kpiParams);
 
-      // DESPESAS NO MÊS (contas a pagar por vencimento, sem filtro de status)
-      const despesasSql = `SELECT COALESCE(SUM(lf.valor), 0) AS total
-                            FROM financeiro.lancamentos_financeiros lf
-                           WHERE lf.tipo = 'conta_a_pagar'
-                             AND DATE(lf.data_vencimento) BETWEEN $1 AND $2${tenantFilter}`.replace(/\s+/g, ' ');
+      // DESPESAS NO PERÍODO (competência): contas_pagar por vencimento (sem filtro de status)
+      const despesasSql = `SELECT COALESCE(SUM(cp.valor_liquido), 0) AS total
+                             FROM financeiro.contas_pagar cp
+                            WHERE DATE(cp.data_vencimento) BETWEEN $1 AND $2${tenantFilterCp}`.replace(/\s+/g, ' ');
       const [despesasRow] = await runQuery<{ total: number | null }>(despesasSql, kpiParams);
 
       // Contagens de títulos pendentes por vencimento
       const arCountSql = `SELECT COUNT(*)::int AS count
-                            FROM financeiro.lancamentos_financeiros lf
-                           WHERE lf.tipo = 'conta_a_receber'
-                             AND LOWER(lf.status) = 'pendente'
-                             AND DATE(lf.data_vencimento) BETWEEN $1 AND $2${tenantFilter}`.replace(/\s+/g, ' ');
+                            FROM financeiro.contas_receber cr
+                           WHERE LOWER(cr.status) = 'pendente'
+                             AND DATE(cr.data_vencimento) BETWEEN $1 AND $2${tenantFilterCr}`.replace(/\s+/g, ' ');
       const [arCountRow] = await runQuery<{ count: number | null }>(arCountSql, kpiParams);
 
       const apCountSql = `SELECT COUNT(*)::int AS count
-                            FROM financeiro.lancamentos_financeiros lf
-                           WHERE lf.tipo = 'conta_a_pagar'
-                             AND LOWER(lf.status) = 'pendente'
-                             AND DATE(lf.data_vencimento) BETWEEN $1 AND $2${tenantFilter}`.replace(/\s+/g, ' ');
+                            FROM financeiro.contas_pagar cp
+                           WHERE LOWER(cp.status) = 'pendente'
+                             AND DATE(cp.data_vencimento) BETWEEN $1 AND $2${tenantFilterCp}`.replace(/\s+/g, ' ');
       const [apCountRow] = await runQuery<{ count: number | null }>(apCountSql, kpiParams);
 
       return Response.json({
