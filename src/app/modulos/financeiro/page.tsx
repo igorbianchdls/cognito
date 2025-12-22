@@ -33,6 +33,7 @@ import CategoriaDespesaEditorModal from '@/components/modulos/financeiro/Categor
 import CadastroCategoriaReceitaSheet from '@/components/modulos/financeiro/CadastroCategoriaReceitaSheet'
 import CategoriaReceitaEditorModal from '@/components/modulos/financeiro/CategoriaReceitaEditorModal'
 import ApKpiRow from '@/components/modulos/financeiro/ApKpiRow'
+import RowActionsMenu from '@/components/modulos/financeiro/RowActionsMenu'
 
 type Row = TableData
 
@@ -476,6 +477,22 @@ export default function ModulosFinanceiroPage() {
         ]
       case 'contas-a-receber':
         return [
+          {
+            id: 'acoes',
+            header: () => <span className="sr-only">Ações</span>,
+            cell: ({ row }) => (
+              <RowActionsMenu
+                type="contas-a-receber"
+                row={row.original}
+                onViewDetails={() => console.log('Ver detalhes AR', row.original)}
+                onEdit={() => console.log('Editar AR', row.original)}
+                onOpenDocs={() => console.log('Anexos AR', row.original)}
+                onMark={() => console.log('Marcar recebido AR', row.original)}
+                onDuplicate={() => console.log('Duplicar AR', row.original)}
+                onDelete={() => console.log('Excluir AR', row.original)}
+              />
+            ),
+          },
           { accessorKey: 'cliente', header: () => <IconLabelHeader icon={<User className="h-3.5 w-3.5" />} label="Cliente" /> },
           { accessorKey: 'status', header: () => <IconLabelHeader icon={<CheckCircle2 className="h-3.5 w-3.5" />} label="Status" />, cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
           { accessorKey: 'data_documento', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Emissão" />, cell: ({ row }) => formatDate(row.original['data_documento']) },
@@ -568,6 +585,22 @@ export default function ModulosFinanceiroPage() {
       case 'contas-a-pagar':
       default:
         return [
+          {
+            id: 'acoes',
+            header: () => <span className="sr-only">Ações</span>,
+            cell: ({ row }) => (
+              <RowActionsMenu
+                type="contas-a-pagar"
+                row={row.original}
+                onViewDetails={() => console.log('Ver detalhes AP', row.original)}
+                onEdit={() => console.log('Editar AP', row.original)}
+                onOpenDocs={() => console.log('Anexos AP', row.original)}
+                onMark={() => console.log('Marcar pago AP', row.original)}
+                onDuplicate={() => console.log('Duplicar AP', row.original)}
+                onDelete={() => console.log('Excluir AP', row.original)}
+              />
+            ),
+          },
           { accessorKey: 'fornecedor', header: () => <IconLabelHeader icon={<Building2 className="h-3.5 w-3.5" />} label="Fornecedor" /> },
           { accessorKey: 'status', header: () => <IconLabelHeader icon={<CheckCircle2 className="h-3.5 w-3.5" />} label="Status" />, cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
           { accessorKey: 'data_documento', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Emissão" />, cell: ({ row }) => formatDate(row.original['data_documento']) },
@@ -876,6 +909,7 @@ export default function ModulosFinanceiroPage() {
                     data={data}
                     headerPadding={8}
                     columnOptions={{
+                    acoes: { headerNoWrap: true, cellNoWrap: true, widthMode: 'fixed', minWidth: 44 },
                     // Tipo de registro (CABECALHO/LINHA)
                     tipo_registro: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 90 },
                     // Fornecedor
