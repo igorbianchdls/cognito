@@ -63,7 +63,7 @@ export default function NovaReceitaPage() {
 
                 <div className="space-y-4">
                   {/* Informações do lançamento */}
-                  <Card className="p-4">
+                  <Card className="p-4 mx-1">
                     <div className="text-sm font-semibold text-slate-800 mb-3">Informações do lançamento</div>
                     <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
                       <div className="md:col-span-2">
@@ -132,7 +132,7 @@ export default function NovaReceitaPage() {
                   </Card>
 
                   {/* Condição de pagamento */}
-                  <Card className="p-4">
+                  <Card className="p-4 mx-1">
                     <div className="flex items-center justify-between mb-3">
                       <div className="text-sm font-semibold text-slate-800">Condição de pagamento</div>
                       <div className="flex items-center gap-2">
@@ -205,7 +205,7 @@ export default function NovaReceitaPage() {
                   </Card>
 
                   {/* Observações / Anexo */}
-                  <Card className="p-4">
+                  <Card className="p-4 mx-1">
                     <Tabs value={tab} onValueChange={setTab}>
                       <TabsList className="mb-3">
                         <TabsTrigger value="obs">Observações</TabsTrigger>
