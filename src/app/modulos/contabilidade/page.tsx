@@ -610,7 +610,7 @@ export default function ModulosContabilidadePage() {
                                   <th colSpan={3} className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">vs Mesmo Mês do Ano Anterior</th>
                                 </tr>
                                 <tr className="bg-gray-50">
-                                  <th className="text-left px-4 py-2 text-xs font-semibold text-gray-600 border-r border-gray-200">Conta Contábil</th>
+                                  <th className="text-left px-4 py-2 text-xs font-semibold text-gray-600 border-r border-gray-200">Seção / Conta</th>
                                   <th className="text-right px-4 py-2 text-xs font-semibold text-gray-600 border-r border-gray-200">Realizado Dez/2025</th>
                                   <th className="text-right px-4 py-2 text-xs font-semibold text-gray-600 border-r border-gray-200">Realizado Nov/2025</th>
                                   <th className="text-right px-4 py-2 text-xs font-semibold text-gray-600 border-r border-gray-200">Variação</th>
@@ -622,80 +622,121 @@ export default function ModulosContabilidadePage() {
                               </thead>
                               <tbody>
                                 {(() => {
-                                  type RowT = { [k: string]: unknown }
-                                  const rows = (data as RowT[])
-                                  // Agrupa por seção da DRE (4/5/6)
-                                  const bySec = new Map<string, RowT[]>()
-                                  for (const r of rows) {
-                                    const codigo = String(r['codigo_conta'] || '')
-                                    const secao = codigo.startsWith('4') ? 'Receitas (Contas a Receber)'
-                                              : codigo.startsWith('5') ? 'Custos (Contas a Pagar)'
-                                              : codigo.startsWith('6') ? 'Despesas (Contas a Pagar)'
-                                              : 'Outros'
-                                    if (!bySec.has(secao)) bySec.set(secao, [])
-                                    bySec.get(secao)!.push(r)
+                                  type RowAny = Record<string, any>
+                                  const rowsAll = (data as RowAny[]) || []
+                                  const rows4 = rowsAll.filter(r => String(r['codigo_conta'] || '').startsWith('4'))
+                                  const rows5 = rowsAll.filter(r => String(r['codigo_conta'] || '').startsWith('5'))
+                                  const rows6 = rowsAll.filter(r => String(r['codigo_conta'] || '').startsWith('6'))
+
+                                  const sum = (rows: RowAny[]) => ({
+                                    dez25: rows.reduce((a,r)=> a + Number(r['realizado_dez_2025'] || 0), 0),
+                                    nov25: rows.reduce((a,r)=> a + Number(r['realizado_nov_2025'] || 0), 0),
+                                    dez24: rows.reduce((a,r)=> a + Number(r['realizado_dez_2024'] || 0), 0),
+                                  })
+                                  const tReceita = sum(rows4)
+                                  const tCogs = sum(rows5)
+                                  const tDesp = sum(rows6)
+                                  const tLucroBruto = {
+                                    dez25: tReceita.dez25 - tCogs.dez25,
+                                    nov25: tReceita.nov25 - tCogs.nov25,
+                                    dez24: tReceita.dez24 - tCogs.dez24,
                                   }
-                                  const orderSecs = ['Receitas (Contas a Receber)','Custos (Contas a Pagar)','Despesas (Contas a Pagar)','Outros']
-                                  const sections = Array.from(bySec.entries()).sort((a,b)=> orderSecs.indexOf(a[0]) - orderSecs.indexOf(b[0]))
-                                  return sections.map(([secao, list]) => {
-                                    const open = Boolean(dreExpanded[secao])
-                                    const totalDez25 = list.reduce((acc, r) => acc + Number(r['realizado_dez_2025'] || 0), 0)
-                                    const totalNov25 = list.reduce((acc, r) => acc + Number(r['realizado_nov_2025'] || 0), 0)
-                                    const totalDez24 = list.reduce((acc, r) => acc + Number(r['realizado_dez_2024'] || 0), 0)
-                                    const deltaNov = totalDez25 - totalNov25
-                                    const percNov = totalNov25 !== 0 ? (deltaNov / totalNov25) : null
-                                    const deltaDez24 = totalNov25 - totalDez24
-                                    const percDez24 = totalDez24 !== 0 ? (deltaDez24 / totalDez24) : null
+                                  const tEbit = {
+                                    dez25: tLucroBruto.dez25 - tDesp.dez25,
+                                    nov25: tLucroBruto.nov25 - tDesp.nov25,
+                                    dez24: tLucroBruto.dez24 - tDesp.dez24,
+                                  }
+                                  const tIRCSLL = { dez25: 0, nov25: 0, dez24: 0 }
+                                  const tLucroLiquido = {
+                                    dez25: tEbit.dez25 - tIRCSLL.dez25,
+                                    nov25: tEbit.nov25 - tIRCSLL.nov25,
+                                    dez24: tEbit.dez24 - tIRCSLL.dez24,
+                                  }
+
+                                  const cellDelta = (a: number, b: number) => a - b
+                                  const cellPerc = (base: number, delta: number) => base !== 0 ? (delta / base) : null
+
+                                  const renderTotals = (t: { dez25: number; nov25: number; dez24: number }) => {
+                                    const dNov = cellDelta(t.dez25, t.nov25)
+                                    const pNov = cellPerc(t.nov25, dNov)
+                                    const dYoY = cellDelta(t.nov25, t.dez24)
+                                    const pYoY = cellPerc(t.dez24, dYoY)
                                     return (
-                                      <React.Fragment key={secao}>
+                                      <>
+                                        <td className="px-4 py-3 text-right text-gray-900 font-semibold border-r border-gray-200">{Number(t.dez25).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                                        <td className="px-4 py-3 text-right text-gray-900 font-semibold border-r border-gray-200">{Number(t.nov25).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                                        <td className="px-4 py-3 text-right text-gray-900 font-semibold border-r border-gray-200" style={{ color: dNov >= 0 ? '#16a34a' : '#b91c1c' }}>{dNov.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                                        <td className="px-4 py-3 text-right text-gray-900 font-semibold border-r border-gray-200">{pNov === null ? '-' : (pNov * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + '%'}</td>
+                                        <td className="px-4 py-3 text-right text-gray-900 font-semibold border-r border-gray-200">{Number(t.dez24).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                                        <td className="px-4 py-3 text-right text-gray-900 font-semibold border-r border-gray-200" style={{ color: dYoY >= 0 ? '#16a34a' : '#b91c1c' }}>{dYoY.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                                        <td className="px-4 py-3 text-right text-gray-900 font-semibold">{pYoY === null ? '-' : (pYoY * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + '%'}</td>
+                                      </>
+                                    )
+                                  }
+
+                                  const renderDetailRows = (secao: string, rows: RowAny[]) => {
+                                    const open = Boolean(dreExpanded[secao])
+                                    if (!open) return null
+                                    return rows
+                                      .slice()
+                                      .sort((a,b) => String(a['codigo_conta']||'').localeCompare(String(b['codigo_conta']||''),'pt-BR'))
+                                      .map((r, idx) => {
+                                        const codigo = String(r['codigo_conta'] || '')
+                                        const conta = String(r['conta_contabil'] || '')
+                                        const dez25 = Number(r['realizado_dez_2025'] || 0)
+                                        const nov25 = Number(r['realizado_nov_2025'] || 0)
+                                        const dez24 = Number(r['realizado_dez_2024'] || 0)
+                                        const dNov = cellDelta(dez25, nov25)
+                                        const pNov = cellPerc(nov25, dNov)
+                                        const dYoY = cellDelta(nov25, dez24)
+                                        const pYoY = cellPerc(dez24, dYoY)
+                                        return (
+                                          <tr key={`${secao}-${codigo}-${idx}`} className="border-b border-gray-100">
+                                            <td className="px-4 py-2 text-gray-800 border-r border-gray-200"><span>{conta}</span></td>
+                                            <td className="px-4 py-2 text-right text-gray-800 border-r border-gray-200">{dez25.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                                            <td className="px-4 py-2 text-right text-gray-800 border-r border-gray-200">{nov25.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                                            <td className="px-4 py-2 text-right text-gray-800 border-r border-gray-200" style={{ color: dNov >= 0 ? '#16a34a' : '#b91c1c' }}>{dNov.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                                            <td className="px-4 py-2 text-right text-gray-800 border-r border-gray-200">{pNov === null ? '-' : (pNov * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + '%'}</td>
+                                            <td className="px-4 py-2 text-right text-gray-800 border-r border-gray-200">{dez24.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                                            <td className="px-4 py-2 text-right text-gray-800 border-r border-gray-200" style={{ color: dYoY >= 0 ? '#16a34a' : '#b91c1c' }}>{dYoY.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                                            <td className="px-4 py-2 text-right text-gray-800">{pYoY === null ? '-' : (pYoY * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + '%'}</td>
+                                          </tr>
+                                        )
+                                      })
+                                  }
+
+                                  const renderSection = (label: string, totals: { dez25: number; nov25: number; dez24: number }, detailRows?: RowAny[]) => {
+                                    const hasDetails = Boolean(detailRows && detailRows.length)
+                                    const open = Boolean(dreExpanded[label])
+                                    return (
+                                      <React.Fragment key={label}>
                                         <tr className="border-b border-gray-200 bg-white">
                                           <td className="px-4 py-3 text-gray-900 font-semibold border-r border-gray-200">
-                                            <button type="button" onClick={() => setDreExpanded(prev => ({ ...prev, [secao]: !prev[secao] }))} className="mr-2 text-gray-700 hover:text-gray-900 align-middle" aria-label={open ? 'Recolher' : 'Expandir'}>
-                                              {open ? <ChevronDown className="w-4 h-4 inline" /> : <ChevronRight className="w-4 h-4 inline" />}
-                                            </button>
-                                            <span>{secao}</span>
+                                            {hasDetails ? (
+                                              <button type="button" onClick={() => setDreExpanded(prev => ({ ...prev, [label]: !prev[label] }))} className="mr-2 text-gray-700 hover:text-gray-900 align-middle" aria-label={open ? 'Recolher' : 'Expandir'}>
+                                                {open ? <ChevronDown className="w-4 h-4 inline" /> : <ChevronRight className="w-4 h-4 inline" />}
+                                              </button>
+                                            ) : null}
+                                            <span>{label}</span>
                                           </td>
-                                          <td className="px-4 py-3 text-right text-gray-900 font-semibold border-r border-gray-200">
-                                            {Number(totalDez25).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                                          </td>
-                                          <td className="px-4 py-3 text-right text-gray-900 font-semibold border-r border-gray-200">
-                                            {Number(totalNov25).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                                          </td>
-                                          <td className="px-4 py-3 text-right text-gray-900 font-semibold border-r border-gray-200" style={{ color: deltaNov >= 0 ? '#16a34a' : '#b91c1c' }}>{deltaNov.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
-                                          <td className="px-4 py-3 text-right text-gray-900 font-semibold border-r border-gray-200">{percNov === null ? '-' : (percNov * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + '%'}</td>
-                                          <td className="px-4 py-3 text-right text-gray-900 font-semibold border-r border-gray-200">{Number(totalDez24).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
-                                          <td className="px-4 py-3 text-right text-gray-900 font-semibold border-r border-gray-200" style={{ color: deltaDez24 >= 0 ? '#16a34a' : '#b91c1c' }}>{deltaDez24.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
-                                          <td className="px-4 py-3 text-right text-gray-900 font-semibold">{percDez24 === null ? '-' : (percDez24 * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + '%'}</td>
+                                          {renderTotals(totals)}
                                         </tr>
-                                        {open && list.sort((a,b)=> String(a['codigo_conta']||'').localeCompare(String(b['codigo_conta']||''),'pt-BR')).map((r, idx) => {
-                                          const codigo = String(r['codigo_conta'] || '')
-                                          const conta = String(r['conta_contabil'] || '')
-                                          const dez25 = Number(r['realizado_dez_2025'] || 0)
-                                          const nov25 = Number(r['realizado_nov_2025'] || 0)
-                                          const dez24 = Number(r['realizado_dez_2024'] || 0)
-                                          const dNov = dez25 - nov25
-                                          const pNov = nov25 !== 0 ? (dNov / nov25) : null
-                                          const dDez24 = nov25 - dez24
-                                          const pDez24 = dez24 !== 0 ? (dDez24 / dez24) : null
-                                          return (
-                                            <tr key={`${secao}-${codigo}-${idx}`} className="border-b border-gray-100">
-                                              <td className="px-4 py-2 text-gray-800 border-r border-gray-200">
-                                                {/* Sem coluna de código: mostra apenas a conta (opcional: exibir código pequeno) */}
-                                                <span>{conta}</span>
-                                              </td>
-                                              <td className="px-4 py-2 text-right text-gray-800 border-r border-gray-200">{dez25.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
-                                              <td className="px-4 py-2 text-right text-gray-800 border-r border-gray-200">{nov25.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
-                                              <td className="px-4 py-2 text-right text-gray-800 border-r border-gray-200" style={{ color: dNov >= 0 ? '#16a34a' : '#b91c1c' }}>{dNov.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
-                                              <td className="px-4 py-2 text-right text-gray-800 border-r border-gray-200">{pNov === null ? '-' : (pNov * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + '%'}</td>
-                                              <td className="px-4 py-2 text-right text-gray-800 border-r border-gray-200">{dez24.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
-                                              <td className="px-4 py-2 text-right text-gray-800 border-r border-gray-200" style={{ color: dDez24 >= 0 ? '#16a34a' : '#b91c1c' }}>{dDez24.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
-                                              <td className="px-4 py-2 text-right text-gray-800">{pDez24 === null ? '-' : (pDez24 * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + '%'}</td>
-                                            </tr>
-                                          )
-                                        })}
+                                        {hasDetails ? renderDetailRows(label, detailRows!) : null}
                                       </React.Fragment>
                                     )
-                                  })
+                                  }
+
+                                  return (
+                                    <>
+                                      {renderSection('Receita Líquida', tReceita, rows4)}
+                                      {renderSection('COGS/CPV/CMV', tCogs, rows5)}
+                                      {renderSection('Lucro Bruto', tLucroBruto)}
+                                      {renderSection('Despesas Operacionais', tDesp, rows6)}
+                                      {renderSection('Lucro Operacional (EBIT)', tEbit)}
+                                      {renderSection('IR + CSLL', tIRCSLL)}
+                                      {renderSection('Lucro Líquido', tLucroLiquido)}
+                                    </>
+                                  )
                                 })()}
                               </tbody>
                             </table>
