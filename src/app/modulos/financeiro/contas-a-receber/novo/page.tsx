@@ -37,6 +37,7 @@ export default function NovaReceitaPage() {
   const [informarNSU, setInformarNSU] = React.useState(false)
   const [nsu, setNsu] = React.useState('')
   const [observacoes, setObservacoes] = React.useState('')
+  const [tab, setTab] = React.useState('obs')
 
   function onSalvar() {
     // UI-only: apenas demonstração
@@ -205,7 +206,7 @@ export default function NovaReceitaPage() {
 
                   {/* Observações / Anexo */}
                   <Card className="p-4">
-                    <Tabs defaultValue="obs">
+                    <Tabs value={tab} onValueChange={setTab}>
                       <TabsList className="mb-3">
                         <TabsTrigger value="obs">Observações</TabsTrigger>
                         <TabsTrigger value="anexo">Anexo</TabsTrigger>
@@ -245,4 +246,3 @@ export default function NovaReceitaPage() {
     </SidebarProvider>
   )
 }
-
