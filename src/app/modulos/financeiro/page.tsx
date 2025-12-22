@@ -27,6 +27,8 @@ import CadastroContaAPagarSheet from '@/components/modulos/financeiro/CadastroCo
 import CadastroContaAReceberSheet from '@/components/modulos/financeiro/CadastroContaAReceberSheet'
 import CadastroPagamentoEfetuadoSheet from '@/components/modulos/financeiro/CadastroPagamentoEfetuadoSheet'
 import CadastroPagamentoRecebidoSheet from '@/components/modulos/financeiro/CadastroPagamentoRecebidoSheet'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
 import CadastroBancoSheet from '@/components/modulos/financeiro/CadastroBancoSheet'
 import CadastroContaFinanceiraSheet from '@/components/modulos/financeiro/CadastroContaFinanceiraSheet'
 import CategoriaDespesaEditorModal from '@/components/modulos/financeiro/CategoriaDespesaEditorModal'
@@ -887,7 +889,9 @@ export default function ModulosFinanceiroPage() {
                 tabs.selected === 'contas-a-pagar' ? (
                   <CadastroContaAPagarSheet triggerLabel="Cadastrar" onSaved={() => setReloadKey((k) => k + 1)} />
                 ) : tabs.selected === 'contas-a-receber' ? (
-                  <CadastroContaAReceberSheet triggerLabel="Cadastrar" onSaved={() => setReloadKey((k) => k + 1)} />
+                  <Link href="/modulos/financeiro/contas-a-receber/novo" className="inline-flex">
+                    <Button variant="default">Cadastrar</Button>
+                  </Link>
                 ) : tabs.selected === 'pagamentos-efetuados' ? (
                   <CadastroPagamentoEfetuadoSheet triggerLabel="Cadastrar" onSaved={() => setReloadKey((k) => k + 1)} />
                 ) : tabs.selected === 'pagamentos-recebidos' ? (
