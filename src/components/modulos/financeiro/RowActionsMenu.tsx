@@ -1,8 +1,7 @@
 "use client"
 
 import * as React from 'react'
-import { MoreVertical, Eye, Pencil, Paperclip, CheckCircle2, Copy, Trash2 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { Eye, Pencil, Paperclip, CheckCircle2, Copy, Trash2 } from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -10,6 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu'
+import AcoesDropdownButton from './AcoesDropdownButton'
 
 type Tipo = 'contas-a-pagar' | 'contas-a-receber' | string
 
@@ -30,9 +30,9 @@ export default function RowActionsMenu({ type, row, onViewDetails, onEdit, onOpe
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Ações da linha">
-          <MoreVertical className="h-4 w-4 text-gray-600" />
-        </Button>
+        <div>
+          <AcoesDropdownButton />
+        </div>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" sideOffset={8} className="w-48 p-1">
         <DropdownMenuItem onClick={onViewDetails} className="gap-2">
@@ -65,4 +65,3 @@ export default function RowActionsMenu({ type, row, onViewDetails, onEdit, onOpe
     </DropdownMenu>
   )
 }
-

@@ -486,7 +486,13 @@ export default function ModulosFinanceiroPage() {
                 row={row.original}
                 onViewDetails={() => console.log('Ver detalhes AR', row.original)}
                 onEdit={() => console.log('Editar AR', row.original)}
-                onOpenDocs={() => console.log('Anexos AR', row.original)}
+                onOpenDocs={() => {
+                  setDocName(String(row.original['numero_documento'] || 'documento'))
+                  setDocUrl(String(row.original['documento_url'] || ''))
+                  setDocType(String(row.original['content_type'] || ''))
+                  setDocLancId(Number(row.original['conta_receber_id'] || row.original['conta_id'] || 0))
+                  setDocViewerOpen(true)
+                }}
                 onMark={() => console.log('Marcar recebido AR', row.original)}
                 onDuplicate={() => console.log('Duplicar AR', row.original)}
                 onDelete={() => console.log('Excluir AR', row.original)}
@@ -593,8 +599,14 @@ export default function ModulosFinanceiroPage() {
                 type="contas-a-pagar"
                 row={row.original}
                 onViewDetails={() => console.log('Ver detalhes AP', row.original)}
-                onEdit={() => console.log('Editar AP', row.original)}
-                onOpenDocs={() => console.log('Anexos AP', row.original)}
+                onEdit={() => openEditor(row.original as Row)}
+                onOpenDocs={() => {
+                  setDocName(String(row.original['numero_documento'] || 'documento'))
+                  setDocUrl(String(row.original['documento_url'] || ''))
+                  setDocType(String(row.original['content_type'] || ''))
+                  setDocLancId(Number(row.original['conta_pagar_id'] || row.original['conta_id'] || 0))
+                  setDocViewerOpen(true)
+                }}
                 onMark={() => console.log('Marcar pago AP', row.original)}
                 onDuplicate={() => console.log('Duplicar AP', row.original)}
                 onDelete={() => console.log('Excluir AP', row.original)}
@@ -909,7 +921,7 @@ export default function ModulosFinanceiroPage() {
                     data={data}
                     headerPadding={8}
                     columnOptions={{
-                    acoes: { headerNoWrap: true, cellNoWrap: true, widthMode: 'fixed', minWidth: 44 },
+                    acoes: { headerNoWrap: true, cellNoWrap: true, widthMode: 'fixed', minWidth: 96 },
                     // Tipo de registro (CABECALHO/LINHA)
                     tipo_registro: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 90 },
                     // Fornecedor
