@@ -32,6 +32,7 @@ import CadastroContaFinanceiraSheet from '@/components/modulos/financeiro/Cadast
 import CategoriaDespesaEditorModal from '@/components/modulos/financeiro/CategoriaDespesaEditorModal'
 import CadastroCategoriaReceitaSheet from '@/components/modulos/financeiro/CadastroCategoriaReceitaSheet'
 import CategoriaReceitaEditorModal from '@/components/modulos/financeiro/CategoriaReceitaEditorModal'
+import ApKpiRow from '@/components/modulos/financeiro/ApKpiRow'
 
 type Row = TableData
 
@@ -867,6 +868,12 @@ export default function ModulosFinanceiroPage() {
               }
             />
           </div>
+          {/* KPIs acima da tabela (somente Contas a Pagar) */}
+          {tabs.selected === 'contas-a-pagar' ? (
+            <div className="px-4 md:px-6 mb-3">
+              <ApKpiRow />
+            </div>
+          ) : null}
           <div className="flex-1 min-h-0 overflow-auto" style={{ marginBottom: layout.mbTable }}>
             <div className="border-y bg-background" style={{ borderColor: tabelaUI.borderColor }}>
               {isLoading ? (
