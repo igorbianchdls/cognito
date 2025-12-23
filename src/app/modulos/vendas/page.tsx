@@ -19,6 +19,7 @@ import IconLabelHeader from '@/components/widgets/IconLabelHeader'
 import EntityDisplay from '@/components/modulos/EntityDisplay'
 import StatusBadge from '@/components/modulos/StatusBadge'
 import NovaVendaForm from '@/components/modulos/vendas/NovaVendaForm'
+import { Button } from '@/components/ui/button'
 
 type Row = TableData
 
@@ -480,6 +481,13 @@ export default function ModulosVendasPage() {
               iconSize={toolbarUI.iconSize}
               searchWidth={toolbarUI.searchWidth}
               dateRangeWidth={toolbarUI.dateRangeWidth}
+              actionComponent={
+                tabs.selected === 'pedidos' ? (
+                  <Button onClick={() => moduleUiActions.setTabs({ selected: 'nova_venda' })}>
+                    Nova Venda
+                  </Button>
+                ) : undefined
+              }
             />
           </div>
           <div className="flex-1 min-h-0 overflow-auto" style={{ marginBottom: layout.mbTable }}>
