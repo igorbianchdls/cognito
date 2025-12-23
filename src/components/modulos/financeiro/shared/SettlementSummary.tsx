@@ -24,14 +24,15 @@ function formatBRL(n?: number) {
   return (Number(n || 0)).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
 
-export default function SettlementSummary({ launch, parcel, titleLaunch = 'Informações do lançamento', titleParcel = 'Informações da parcela' }: { launch: LaunchInfo; parcel: ParcelInfo; titleLaunch?: string; titleParcel?: string }) {
+export default function SettlementSummary({ launch, parcel, titleLaunch = 'Informações do lançamento', titleParcel = 'Informações da parcela', entityLabel = 'Cliente' }: { launch: LaunchInfo; parcel: ParcelInfo; titleLaunch?: string; titleParcel?: string; entityLabel?: string }) {
+  const entityName = launch.cliente || launch.fornecedor || '—'
   return (
     <div className="space-y-4">
       <Card className="p-4 mx-4">
         <div className="text-base font-semibold text-slate-800 mb-3">{titleLaunch}</div>
         <div className="grid grid-cols-1 md:grid-cols-12 gap-3 text-[13px]">
-          <div className="md:col-span-2 text-slate-500">Cliente</div>
-          <div className="md:col-span-2 text-slate-900 font-medium">{launch.cliente || '—'}</div>
+          <div className="md:col-span-2 text-slate-500">{entityLabel}</div>
+          <div className="md:col-span-2 text-slate-900 font-medium">{entityName}</div>
           <div className="md:col-span-2 text-slate-500">Código de referência</div>
           <div className="md:col-span-2 text-slate-900 font-medium">{launch.codigoRef || '—'}</div>
           <div className="md:col-span-2 text-slate-500">Data de competência</div>
@@ -64,4 +65,3 @@ export default function SettlementSummary({ launch, parcel, titleLaunch = 'Infor
     </div>
   )
 }
-

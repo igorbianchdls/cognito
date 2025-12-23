@@ -615,6 +615,10 @@ export default function ModulosFinanceiroPage() {
                   setDocLancId(Number(row.original['conta_pagar_id'] || row.original['conta_id'] || 0))
                   setDocViewerOpen(true)
                 }}
+                onInformPagamento={() => {
+                  const id = row.original['conta_pagar_id'] || row.original['conta_id']
+                  if (id) router.push(`/modulos/financeiro/contas-a-pagar/pagar?id=${id}`)
+                }}
                 onMark={() => console.log('Marcar pago AP', row.original)}
                 onDuplicate={() => console.log('Duplicar AP', row.original)}
                 onDelete={() => console.log('Excluir AP', row.original)}

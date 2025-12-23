@@ -20,6 +20,7 @@ export type RowActionsMenuProps = {
   onEdit?: () => void
   onOpenDocs?: () => void
   onInformRecebimento?: () => void
+  onInformPagamento?: () => void
   onMark?: () => void
   onDuplicate?: () => void
   onDelete?: () => void
@@ -53,6 +54,12 @@ export default function RowActionsMenu({ type, row, onViewDetails, onEdit, onOpe
           <DropdownMenuItem onClick={onInformRecebimento} className="gap-2">
             <CheckCircle2 className="h-4 w-4" />
             Informar recebimento
+          </DropdownMenuItem>
+        ) : null}
+        {type === 'contas-a-pagar' ? (
+          <DropdownMenuItem onClick={onInformPagamento} className="gap-2">
+            <CheckCircle2 className="h-4 w-4" />
+            Informar pagamento
           </DropdownMenuItem>
         ) : null}
         <DropdownMenuSeparator />

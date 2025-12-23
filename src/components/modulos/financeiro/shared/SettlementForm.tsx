@@ -25,13 +25,17 @@ export type SettlementFormProps = {
   onChange: (patch: Partial<SettlementValues>) => void
   formas: Array<{ value: string; label: string }>
   contas: Array<{ value: string; label: string }>
+  title?: string
+  labelForma?: string
+  labelConta?: string
+  labelValor?: string
 }
 
-export default function SettlementForm({ values, onChange, formas, contas }: SettlementFormProps) {
+export default function SettlementForm({ values, onChange, formas, contas, title = 'Informações do recebimento', labelForma = 'Forma de recebimento *', labelConta = 'Conta *', labelValor = 'Valor recebido *' }: SettlementFormProps) {
   const liquido = Number((values.valorRecebido + values.juros + values.multa - values.desconto - values.tarifa).toFixed(2))
   return (
     <Card className="p-4 mx-4">
-      <div className="text-base font-semibold text-slate-800 mb-2">Informações do recebimento</div>
+      <div className="text-base font-semibold text-slate-800 mb-2">{title}</div>
       <div className="text-[13px] text-slate-600 mb-3">Você pode fazer o recebimento total ou parcial do saldo da parcela. O valor restante ficará em aberto.</div>
       <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
         <div className="md:col-span-2">
@@ -46,7 +50,7 @@ export default function SettlementForm({ values, onChange, formas, contas }: Set
           <Input type="date" value={values.dataRecebimento} onChange={(e) => onChange({ dataRecebimento: e.target.value })} />
         </div>
         <div className="md:col-span-3">
-          <Label className="text-sm text-slate-600">Forma de recebimento *</Label>
+          <Label className="text-sm text-slate-600">{labelForma}</Label>
           <Select value={values.forma} onValueChange={(v) => onChange({ forma: v })}>
             <SelectTrigger>
               <SelectValue placeholder="Selecione" />
@@ -57,7 +61,7 @@ export default function SettlementForm({ values, onChange, formas, contas }: Set
           </Select>
         </div>
         <div className="md:col-span-3">
-          <Label className="text-sm text-slate-600">Conta *</Label>
+          <Label className="text-sm text-slate-600">{labelConta}</Label>
           <Select value={values.conta} onValueChange={(v) => onChange({ conta: v })}>
             <SelectTrigger>
               <SelectValue placeholder="Selecione" />
@@ -69,7 +73,7 @@ export default function SettlementForm({ values, onChange, formas, contas }: Set
         </div>
 
         <div className="md:col-span-3">
-          <Label className="text-sm text-slate-600">Valor recebido *</Label>
+          <Label className="text-sm text-slate-600">{labelValor}</Label>
           <div className="flex items-center gap-2">
             <span className="text-xs text-slate-500">R$</span>
             <Input value={formatBRL(values.valorRecebido)} onChange={(e) => {
@@ -127,4 +131,3 @@ export default function SettlementForm({ values, onChange, formas, contas }: Set
     </Card>
   )
 }
-
