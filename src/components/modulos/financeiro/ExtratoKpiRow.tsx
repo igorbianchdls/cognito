@@ -4,26 +4,25 @@ import * as React from 'react'
 import ApKpiTile from './ApKpiTile'
 
 export default function ExtratoKpiRow({
-  saldoInicial = 0,
-  creditos = 0,
-  debitos = 0,
-  saldoFinal = 0,
-  diferenca = 0,
+  receitasEmAberto = 0,
+  receitasRealizadas = 0,
+  despesasEmAberto = 0,
+  despesasRealizadas = 0,
+  totalPeriodo = 0,
 }: {
-  saldoInicial?: number
-  creditos?: number
-  debitos?: number
-  saldoFinal?: number
-  diferenca?: number
+  receitasEmAberto?: number
+  receitasRealizadas?: number
+  despesasEmAberto?: number
+  despesasRealizadas?: number
+  totalPeriodo?: number
 }) {
   return (
     <div className="grid gap-2 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
-      <ApKpiTile title="Saldo inicial (R$)" value={saldoInicial} color="info" />
-      <ApKpiTile title="Créditos (R$)" value={creditos} color="success" />
-      <ApKpiTile title="Débitos (R$)" value={debitos} color="danger" />
-      <ApKpiTile title="Saldo final (R$)" value={saldoFinal} color="info" />
-      <ApKpiTile title="Diferença (R$)" value={diferenca} color={diferenca >= 0 ? 'success' : 'danger'} />
+      <ApKpiTile title="Receitas em aberto (R$)" value={receitasEmAberto} color="success" />
+      <ApKpiTile title="Receitas realizadas (R$)" value={receitasRealizadas} color="success" />
+      <ApKpiTile title="Despesas em aberto (R$)" value={despesasEmAberto} color="danger" />
+      <ApKpiTile title="Despesas realizadas (R$)" value={despesasRealizadas} color="danger" />
+      <ApKpiTile title="Total do período (R$)" value={totalPeriodo} color="info" />
     </div>
   )
 }
-
