@@ -45,6 +45,17 @@ export default function NovoContratoPage() {
       return next
     }))
   }
+  const sumItens = React.useMemo(() => itens.reduce((a, b) => a + Number(b.total || 0), 0), [itens])
+  // Descontos
+  const [descontoTipo, setDescontoTipo] = React.useState<'valor' | 'percent'>('valor')
+  const [desconto, setDesconto] = React.useState(0)
+  const descontoValor = React.useMemo(() => descontoTipo === 'valor' ? Number(desconto || 0) : Number(((sumItens * (desconto || 0)) / 100).toFixed(2)), [descontoTipo, desconto, sumItens])
+  const totalLiquido = React.useMemo(() => Number((sumItens - descontoValor).toFixed(2)), [sumItens, descontoValor])
+  // Pagamento
+  const [formaPg, setFormaPg] = React.useState('')
+  const [contaRec, setContaRec] = React.useState('')
+  const [vencerSempre, setVencerSempre] = React.useState('5')
+  const [vencimentoPg, setVencimentoPg] = React.useState('')
 
   function onSalvar() {
     console.log('Salvar contrato (stub):', { tipoVenda, numeroContrato, cliente, dataInicio, diaGeracao, dataPrimeiraVenda, repetirCada, unidade, tipoRecorrencia, dataTermino })
@@ -247,6 +258,95 @@ export default function NovoContratoPage() {
                           <SelectItem value="serv2">ASSISTÊNCIA TÉCNICA</SelectItem>
                         </SelectContent>
                       </Select>
+                    </div>
+                  </Card>
+
+                  {/* Valor */}
+                  <Card className="p-4 mx-4">
+                    <div className="text-lg font-semibold text-slate-800 mb-3">Valor</div>
+                    <div className="mb-3">
+                      <Label className="text-sm text-slate-600">Desconto</Label>
+                      <div className="flex items-center gap-2 mt-1">
+                        <div className="inline-flex rounded-md overflow-hidden">
+                          <button type="button" onClick={()=>setDescontoTipo('valor')} className={[ 'px-2 py-1 text-sm', descontoTipo==='valor' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-slate-700'].join(' ')}>R$</button>
+                          <button type="button" onClick={()=>setDescontoTipo('percent')} className={[ 'px-2 py-1 text-sm', descontoTipo==='percent' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-slate-700'].join(' ')}>%</button>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-slate-500">R$</span>
+                          <Input value={String(desconto)} onChange={(e)=>setDesconto(Number(e.target.value.replace(/\./g,'').replace(/,/g,'.'))||0)} />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Total da venda */}
+                    <div className="border rounded p-3 bg-white">
+                      <div className="text-sm font-semibold text-slate-800 mb-1">Total da Venda</div>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm">
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500">Itens (R$)</span>
+                          <span className="text-slate-900 font-semibold">{sumItens.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500">Descontos e Impostos (R$)</span>
+                          <span className="text-red-600 font-semibold">{descontoValor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500">Total líquido (R$)</span>
+                          <span className="text-slate-900 font-semibold">{totalLiquido.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+
+                  {/* Informações de pagamento */}
+                  <Card className="p-4 mx-4">
+                    <div className="text-lg font-semibold text-slate-800 mb-3">Informações de pagamento</div>
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
+                      <div className="md:col-span-3">
+                        <Label className="text-sm text-slate-600">Forma de pagamento</Label>
+                        <Select value={formaPg} onValueChange={setFormaPg}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="boleto">Boleto</SelectItem>
+                            <SelectItem value="pix">PIX</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="md:col-span-3">
+                        <Label className="text-sm text-slate-600">Conta de recebimento</Label>
+                        <Select value={contaRec} onValueChange={setContaRec}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="b1">Banco 1 - 0001</SelectItem>
+                            <SelectItem value="b2">Banco 2 - 0002</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="md:col-span-3">
+                        <Label className="text-sm text-slate-600">Vencer sempre no *</Label>
+                        <Select value={vencerSempre} onValueChange={setVencerSempre}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="5">5º dia do mês</SelectItem>
+                            <SelectItem value="10">10º dia do mês</SelectItem>
+                            <SelectItem value="30">30º dia do mês</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="md:col-span-3">
+                        <Label className="text-sm text-slate-600">Vencimento *</Label>
+                        <Input type="date" value={vencimentoPg} onChange={(e)=>setVencimentoPg(e.target.value)} />
+                      </div>
+                    </div>
+                    <div className="mt-3 border-l-4 border-blue-400 bg-blue-50 text-blue-900 text-sm rounded px-3 py-2">
+                      <strong>Quer enviar a cobrança por e-mail junto da fatura?</strong>
+                      <div>No fim deste formulário, em <em>Configurações de envio automático</em>, você pode informar se quer enviar e-mail com a fatura, cobrança e NFS-e ao seu cliente.</div>
                     </div>
                   </Card>
 
