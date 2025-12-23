@@ -24,6 +24,7 @@ import {
 export function NavModulos({ groupLabelStyle, itemTextStyle }: { groupLabelStyle?: React.CSSProperties; itemTextStyle?: React.CSSProperties } = {}) {
   const router = useRouter()
   const pathname = usePathname()
+  const isNexus = pathname === "/nexus"
 
   // Financeiro sempre expandido
 
@@ -138,17 +139,19 @@ export function NavModulos({ groupLabelStyle, itemTextStyle }: { groupLabelStyle
             </SidebarMenuItem>
           </Collapsible>
 
-          {/* Fiscal */}
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              tooltip="Fiscal"
-              onClick={() => router.push("/modulos/fiscal")}
-              isActive={pathname.startsWith("/modulos/fiscal")}
-            >
-              <FileText />
-              <span style={itemTextStyle}>Fiscal</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+          {/* Fiscal (hidden on /nexus) */}
+          {!isNexus && (
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                tooltip="Fiscal"
+                onClick={() => router.push("/modulos/fiscal")}
+                isActive={pathname.startsWith("/modulos/fiscal")}
+              >
+                <FileText />
+                <span style={itemTextStyle}>Fiscal</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          )}
 
           {/* Demais itens */}
           <SidebarMenuItem>
@@ -161,26 +164,32 @@ export function NavModulos({ groupLabelStyle, itemTextStyle }: { groupLabelStyle
               <span style={itemTextStyle}>Empresa</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              tooltip="Administrativo"
-              onClick={() => router.push("/modulos/admnistrativo")}
-              isActive={pathname.startsWith("/modulos/admnistrativo")}
-            >
-              <Building2 />
-              <span style={itemTextStyle}>Administrativo</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              tooltip="Documentos"
-              onClick={() => router.push("/modulos/documentos")}
-              isActive={pathname.startsWith("/modulos/documentos")}
-            >
-              <FileText />
-              <span style={itemTextStyle}>Documentos</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+          {/* Administrativo (hidden on /nexus) */}
+          {!isNexus && (
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                tooltip="Administrativo"
+                onClick={() => router.push("/modulos/admnistrativo")}
+                isActive={pathname.startsWith("/modulos/admnistrativo")}
+              >
+                <Building2 />
+                <span style={itemTextStyle}>Administrativo</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          )}
+          {/* Documentos (hidden on /nexus) */}
+          {!isNexus && (
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                tooltip="Documentos"
+                onClick={() => router.push("/modulos/documentos")}
+                isActive={pathname.startsWith("/modulos/documentos")}
+              >
+                <FileText />
+                <span style={itemTextStyle}>Documentos</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          )}
         </SidebarMenu>
       </SidebarGroup>
       <SidebarGroup>
