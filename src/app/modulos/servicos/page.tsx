@@ -45,6 +45,7 @@ export default function ModulosServicosPage() {
         { value: 'categorias', label: 'Categorias' },
         { value: 'tabelas-preco', label: 'Tabelas de Preço' },
         { value: 'slas', label: 'SLAs' },
+        { value: 'contatos', label: 'Contatos' },
       ],
       selected: 'catalogo',
     })
@@ -105,6 +106,14 @@ export default function ModulosServicosPage() {
 
   const columns: ColumnDef<Row>[] = useMemo(() => {
     switch (tabs.selected) {
+      case 'contatos':
+        return [
+          { accessorKey: 'nome', header: 'Nome' },
+          { accessorKey: 'empresa', header: 'Empresa' },
+          { accessorKey: 'cargo', header: 'Cargo' },
+          { accessorKey: 'telefone', header: 'Telefone' },
+          { accessorKey: 'email', header: 'Email' },
+        ]
       case 'categorias':
         return [
           { accessorKey: 'id', header: 'ID' },
@@ -272,6 +281,16 @@ export default function ModulosServicosPage() {
       setIsLoading(true)
       setError(null)
       try {
+        if (tabs.selected === 'contatos') {
+          const rows: Row[] = [
+            { id: 1, nome: 'Maria Silva', empresa: 'ACME Ltda', cargo: 'Compras', telefone: '(11) 99999-0001', email: 'maria@acme.com' },
+            { id: 2, nome: 'João Pereira', empresa: 'TechWave', cargo: 'TI', telefone: '(11) 99999-0002', email: 'joao@techwave.com' },
+            { id: 3, nome: 'Ana Souza', empresa: 'Global Corp', cargo: 'Financeiro', telefone: '(21) 98888-0003', email: 'ana@global.com' },
+          ]
+          setData(rows)
+          setTotal(rows.length)
+          return
+        }
         const params = new URLSearchParams()
         params.set('view', tabs.selected)
         if (['ordens-servico', 'agendamentos', 'servicos'].includes(tabs.selected)) {
@@ -323,6 +342,8 @@ export default function ModulosServicosPage() {
           return <List className="h-4 w-4" />
         case 'slas':
           return <Wrench className="h-4 w-4" />
+        case 'contatos':
+          return <Users className="h-4 w-4" />
         default:
           return null
       }
