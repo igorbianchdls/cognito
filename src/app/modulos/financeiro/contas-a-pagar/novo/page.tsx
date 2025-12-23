@@ -98,9 +98,9 @@ export default function NovaDespesaPage() {
 
                   <Card className="p-4 mx-1">
                     <div className="flex items-center justify-between mb-3">
-                      <div className="text-sm font-semibold text-slate-800">Condição de pagamento</div>
+                      <div className="text-base font-semibold text-slate-800">Condição de pagamento</div>
                       <div className="flex items-center gap-2">
-                        <Label className="text-xs text-slate-600">Repetir lançamento?</Label>
+                        <Label className="text-sm text-slate-600">Repetir lançamento?</Label>
                         {/* Reutilizaremos o switch global quando necessário */}
                       </div>
                     </div>

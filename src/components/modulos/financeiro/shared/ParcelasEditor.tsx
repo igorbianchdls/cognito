@@ -35,16 +35,16 @@ export default function ParcelasEditor({ total, parcelas, onChangeParcel, formas
 
   return (
     <div className="space-y-3">
-      <div className="text-sm font-semibold text-slate-800">Parcelas</div>
+      <div className="text-base font-semibold text-slate-800">Parcelas</div>
       {parcelas.map((p, i) => (
         <div key={i} className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
           <div className="text-xs text-slate-500 md:col-span-1">{i + 1}</div>
           <div className="md:col-span-2">
-            <Label className="text-xs text-slate-600">Vencimento</Label>
+            <Label className="text-sm text-slate-600">Vencimento</Label>
             <Input type="date" value={p.vencimento} onChange={(e) => onChangeParcel(i, { vencimento: e.target.value })} />
           </div>
           <div className="md:col-span-2">
-            <Label className="text-xs text-slate-600">Valor (R$)</Label>
+            <Label className="text-sm text-slate-600">Valor (R$)</Label>
             <Input value={fmtCurrency(p.valor)} onChange={(e) => {
               const raw = e.target.value.replace(/\./g, '').replace(/,/g, '.')
               const v = Number(raw)
@@ -52,14 +52,14 @@ export default function ParcelasEditor({ total, parcelas, onChangeParcel, formas
             }} />
           </div>
           <div className="md:col-span-1">
-            <Label className="text-xs text-slate-600">Percentual</Label>
+            <Label className="text-sm text-slate-600">Percentual</Label>
             <Input value={String(p.percentual)} onChange={(e) => {
               const v = Number(e.target.value.replace(/[^0-9.,-]/g, '').replace(',', '.'))
               if (!isNaN(v)) onChangeParcel(i, { percentual: v, valor: Number(((total * v) / 100).toFixed(2)) })
             }} />
           </div>
           <div className="md:col-span-2">
-            <Label className="text-xs text-slate-600">Forma de pagamento</Label>
+            <Label className="text-sm text-slate-600">Forma de pagamento</Label>
             <div className="flex items-center gap-2">
               <Select value={p.forma ?? ''} onValueChange={(v) => onChangeParcel(i, { forma: v })}>
                 <SelectTrigger>
@@ -80,7 +80,7 @@ export default function ParcelasEditor({ total, parcelas, onChangeParcel, formas
             </div>
           </div>
           <div className="md:col-span-2">
-            <Label className="text-xs text-slate-600">Conta para Recebimento</Label>
+            <Label className="text-sm text-slate-600">Conta para Recebimento</Label>
             <div className="flex items-center gap-2">
               <Select value={p.conta ?? ''} onValueChange={(v) => onChangeParcel(i, { conta: v })}>
                 <SelectTrigger>
@@ -101,7 +101,7 @@ export default function ParcelasEditor({ total, parcelas, onChangeParcel, formas
             </div>
           </div>
           <div className="md:col-span-2">
-            <Label className="text-xs text-slate-600">Descrição</Label>
+            <Label className="text-sm text-slate-600">Descrição</Label>
             <Input value={p.descricao ?? ''} onChange={(e) => onChangeParcel(i, { descricao: e.target.value })} />
           </div>
         </div>
@@ -115,4 +115,3 @@ export default function ParcelasEditor({ total, parcelas, onChangeParcel, formas
     </div>
   )
 }
-

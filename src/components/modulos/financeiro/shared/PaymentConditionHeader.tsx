@@ -26,7 +26,7 @@ export default function PaymentConditionHeader({ config, onChange, formasPagamen
   return (
     <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
       <div className="md:col-span-2">
-        <Label className="text-xs text-slate-600">Parcelamento *</Label>
+        <Label className="text-sm text-slate-600">Parcelamento *</Label>
         <Select value={String(config.parcelas)} onValueChange={(v) => onChange({ parcelas: Number(v) || 1 })}>
           <SelectTrigger>
             <SelectValue />
@@ -40,17 +40,17 @@ export default function PaymentConditionHeader({ config, onChange, formasPagamen
       </div>
 
       <div className="md:col-span-3">
-        <Label className="text-xs text-slate-600">1º Vencimento *</Label>
+        <Label className="text-sm text-slate-600">1º Vencimento *</Label>
         <Input type="date" value={config.primeiroVenc} onChange={(e) => onChange({ primeiroVenc: e.target.value })} />
       </div>
 
       <div className="md:col-span-2">
-        <Label className="text-xs text-slate-600">Intervalo entre parcelas (dias) *</Label>
+        <Label className="text-sm text-slate-600">Intervalo entre parcelas (dias) *</Label>
         <Input inputMode="numeric" value={String(config.intervaloDias)} onChange={(e) => onChange({ intervaloDias: Number(e.target.value.replace(/\D/g, '')) || 0 })} />
       </div>
 
       <div className="md:col-span-3">
-        <Label className="text-xs text-slate-600">Forma de pagamento</Label>
+        <Label className="text-sm text-slate-600">Forma de pagamento</Label>
         <Select value={config.formaPadrao} onValueChange={(v) => onChange({ formaPadrao: v })}>
           <SelectTrigger>
             <SelectValue placeholder="Selecione" />
@@ -64,7 +64,7 @@ export default function PaymentConditionHeader({ config, onChange, formasPagamen
       </div>
 
       <div className="md:col-span-2">
-        <Label className="text-xs text-slate-600">Conta de recebimento</Label>
+        <Label className="text-sm text-slate-600">Conta de recebimento</Label>
         <Select value={config.contaPadrao} onValueChange={(v) => onChange({ contaPadrao: v })}>
           <SelectTrigger>
             <SelectValue placeholder="Selecione" />
@@ -79,4 +79,3 @@ export default function PaymentConditionHeader({ config, onChange, formasPagamen
     </div>
   )
 }
-
