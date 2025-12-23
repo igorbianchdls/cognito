@@ -28,7 +28,7 @@ export type EntryInfoCardProps = {
 
 export default function EntryInfoCard({ values, onChange, title = 'Informações do lançamento', entityLabel, categoryLabel = 'Categoria', centerLabel = 'Centro de custo' }: EntryInfoCardProps) {
   return (
-    <Card className="p-4 mx-3">
+    <Card className="p-4 mx-4">
       <div className="text-base font-semibold text-slate-800 mb-3">{title}</div>
       <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
         <div className="md:col-span-2">

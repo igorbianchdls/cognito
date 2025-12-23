@@ -96,7 +96,7 @@ export default function NovaDespesaPage() {
                     centerLabel="Centro de custo"
                   />
 
-                  <Card className="p-4 mx-3">
+                  <Card className="p-4 mx-4">
                     <div className="flex items-center justify-between mb-3">
                       <div className="text-base font-semibold text-slate-800">Condição de pagamento</div>
                       <div className="flex items-center gap-2">
@@ -125,7 +125,7 @@ export default function NovaDespesaPage() {
                     </div>
                   </Card>
 
-                  <Card className="p-4 mx-3">
+                  <Card className="p-4 mx-4">
                     <Tabs value={tab} onValueChange={setTab}>
                       <TabsList className="mb-3">
                         <TabsTrigger value="obs">Observações</TabsTrigger>
