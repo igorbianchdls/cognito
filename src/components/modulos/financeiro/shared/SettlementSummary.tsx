@@ -57,12 +57,17 @@ export default function SettlementSummary({ launch, parcel, titleLaunch = 'Infor
       <Card className="p-4 mx-4">
         <div className="text-lg font-semibold text-slate-800 mb-3">{titleParcel} {parcel?.numero ? parcel.numero : ''}</div>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-          {parcelItems.map((it, idx) => (
-            <div key={idx} className="flex flex-col">
-              <div className="text-base text-slate-500">{it.label}</div>
-              <div className="text-[16px] text-slate-900 font-semibold">{it.value}</div>
-            </div>
-          ))}
+          {parcelItems.map((it, idx) => {
+            const isTotal = String(it.label).toLowerCase().includes('valor total')
+            return (
+              <div key={idx} className="flex flex-col">
+                <div className="text-base text-slate-500">{it.label}</div>
+                <div className={isTotal ? 'text-[18px] md:text-[20px] text-slate-900 font-bold' : 'text-[16px] text-slate-900 font-semibold'}>
+                  {it.value}
+                </div>
+              </div>
+            )
+          })}
         </div>
       </Card>
     </div>
