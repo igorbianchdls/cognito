@@ -56,7 +56,7 @@ export default function SettlementSummary({ launch, parcel, titleLaunch = 'Infor
 
       <Card className="p-4 mx-4">
         <div className="text-base font-semibold text-slate-800 mb-3">{titleParcel} {parcel?.numero ? parcel.numero : ''}</div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           {parcelItems.map((it, idx) => (
             <div key={idx} className="flex flex-col">
               <div className="text-sm text-slate-500">{it.label}</div>
