@@ -22,11 +22,14 @@ import StatusBadge from '@/components/modulos/StatusBadge'
 import EntityDisplay from '@/components/modulos/EntityDisplay'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/stores/modulos/moduleUiStore'
 import type { Opcao } from '@/components/modulos/TabsNav'
-import { Wrench, Calendar, User, Users, List, Building2, Briefcase, Phone, Mail, ShoppingCart, DollarSign } from 'lucide-react'
+import { Wrench, Calendar, User, Users, List, Building2, Briefcase, Phone, Mail, ShoppingCart, DollarSign, Receipt } from 'lucide-react'
 import IconLabelHeader from '@/components/widgets/IconLabelHeader'
 import ImagemEditorSheet from '@/components/modulos/servicos/ImagemEditorSheet'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
+import NfeKpiRow from '@/components/modulos/servicos/nfe/NfeKpiRow'
+import NfeStatusBadge from '@/components/modulos/servicos/nfe/NfeStatusBadge'
+import RowActionsMenu from '@/components/modulos/financeiro/RowActionsMenu'
 
 type Row = TableData
 
@@ -44,6 +47,7 @@ export default function ModulosServicosPage() {
     })
     moduleUiActions.setTabs({
       options: [
+        { value: 'nota-fiscal', label: 'Nota Fiscal' },
         { value: 'vendas', label: 'Vendas' },
         { value: 'catalogo', label: 'Catálogo de Serviços' },
         { value: 'categorias', label: 'Categorias' },
@@ -70,6 +74,8 @@ export default function ModulosServicosPage() {
   const [page, setPage] = useState<number>(1)
   const [pageSize, setPageSize] = useState<number>(20)
   const [total, setTotal] = useState<number>(0)
+  const [statusFilter, setStatusFilter] = useState<string | null>(null)
+  const [nfeKpis, setNfeKpis] = useState({ emAberto: 0, emTransmissao: 0, emitidas: 0, comFalha: 0, canceladas: 0, totalPeriodo: 0 })
 
   // Editor de imagem
   const [imgEditorOpen, setImgEditorOpen] = useState(false)
@@ -110,6 +116,33 @@ export default function ModulosServicosPage() {
 
   const columns: ColumnDef<Row>[] = useMemo(() => {
     switch (tabs.selected) {
+      case 'nota-fiscal':
+        return [
+          { accessorKey: 'indicador', header: 'I', size: 20, cell: ({ row }) => {
+            const s = String(row.original['status'] || '').toLowerCase()
+            const color = s.includes('falha') ? '#dc2626' : s.includes('emitida') ? '#16a34a' : s.includes('cancel') ? '#ca8a04' : '#2563eb'
+            return <div className="flex items-center"><div style={{ width: 4, height: 18, borderRadius: 2, backgroundColor: color }} /></div>
+          } },
+          { accessorKey: 'data', header: 'Data' },
+          { accessorKey: 'numero', header: 'Número', cell: ({ row }) => (
+            <div className="leading-tight">
+              <div>NFS-e: {String(row.original['nfse'] ?? '-')}</div>
+              {row.original['rps'] ? <div className="text-xs text-gray-500">RPS: {String(row.original['rps'])}</div> : null}
+            </div>
+          ) },
+          { accessorKey: 'venda', header: 'Venda' },
+          { accessorKey: 'cliente', header: 'Cliente', size: 250, minSize: 200, cell: ({ row }) => (
+            <EntityDisplay
+              name={row.original['cliente'] ? String(row.original['cliente']) : 'Sem nome'}
+              imageUrl={row.original['cliente_imagem_url'] ? String(row.original['cliente_imagem_url']) : undefined}
+            />
+          ) },
+          { accessorKey: 'valor', header: 'Valor', cell: ({ row }) => formatBRL(row.original['valor']) },
+          { accessorKey: 'status', header: 'Situação', cell: ({ row }) => <NfeStatusBadge value={String(row.original['status'] ?? '')} /> },
+          { accessorKey: 'acoes', header: 'Ações', cell: ({ row }) => (
+            <RowActionsMenu type="nota-fiscal" row={row.original} />
+          ) },
+        ]
       case 'vendas':
         return [
           { accessorKey: 'pedido', header: () => <IconLabelHeader icon={<ShoppingCart className="h-3.5 w-3.5" />} label="Pedido" /> },
@@ -300,6 +333,18 @@ export default function ModulosServicosPage() {
       setIsLoading(true)
       setError(null)
       try {
+        if (tabs.selected === 'nota-fiscal') {
+          const rows: Row[] = [
+            { id: 1, data: '14/06/2024', nfse: '-', rps: '99', venda: '378', cliente: 'Amanda Nunes Ferreira', valor: 1000, status: 'Em espera' },
+            { id: 2, data: '06/06/2024', nfse: '-', rps: '-', venda: '364', cliente: 'Aline - treinamento', valor: 500, status: 'Pronta para envio' },
+            { id: 3, data: '05/06/2024', nfse: '-', rps: '-', venda: '362', cliente: 'CONTA AZUL', valor: 1425, status: 'Em espera' },
+            { id: 4, data: '05/06/2024', nfse: '99', rps: '99', venda: '343', cliente: 'Amanda Nunes Ferreira', valor: 250, status: 'Falha na emissão' },
+          ]
+          setData(rows)
+          setTotal(rows.length)
+          setNfeKpis({ emAberto: 500, emTransmissao: 2425, emitidas: 0, comFalha: 250, canceladas: 0, totalPeriodo: 3175 })
+          return
+        }
         if (tabs.selected === 'vendas') {
           const rows: Row[] = [
             { id: 101, pedido: 'S-0001', cliente: 'Empresa X', data_venda: '2024-10-10', status: 'Concluído', valor_total: 12000.5 },
@@ -362,6 +407,8 @@ export default function ModulosServicosPage() {
   const tabOptions: Opcao[] = useMemo(() => {
     const iconFor = (v: string) => {
       switch (v) {
+        case 'nota-fiscal':
+          return <Receipt className="h-4 w-4" />
         case 'catalogo':
           return <List className="h-4 w-4" />
         case 'categorias':
@@ -424,6 +471,26 @@ export default function ModulosServicosPage() {
                 </div>
                 <div style={{ paddingTop: (layout.contentTopGap || 0) + (layout.mbTabs || 0) }}>
                   <div className="px-4 md:px-6" style={{ marginBottom: 8 }}>
+                    {tabs.selected === 'nota-fiscal' && (
+                      <div className="mb-3">
+                        <NfeKpiRow
+                          emAberto={nfeKpis.emAberto}
+                          emTransmissao={nfeKpis.emTransmissao}
+                          emitidas={nfeKpis.emitidas}
+                          comFalha={nfeKpis.comFalha}
+                          canceladas={nfeKpis.canceladas}
+                          totalPeriodo={nfeKpis.totalPeriodo}
+                          onClick={(key) => {
+                            if (key === 'totalPeriodo') setStatusFilter(null)
+                            else if (key === 'emAberto') setStatusFilter('Em espera')
+                            else if (key === 'emTransmissao') setStatusFilter('Em transmissão')
+                            else if (key === 'emitidas') setStatusFilter('Emitida')
+                            else if (key === 'comFalha') setStatusFilter('Falha na emissão')
+                            else if (key === 'canceladas') setStatusFilter('Cancelada')
+                          }}
+                        />
+                      </div>
+                    )}
                     <DataToolbar
                       from={(tabs.selected !== 'tecnicos' && tabs.selected !== 'clientes' ? total : data.length) === 0 ? 0 : (page - 1) * pageSize + 1}
                       to={(tabs.selected !== 'tecnicos' && tabs.selected !== 'clientes' ? total : data.length) === 0 ? 0 : Math.min(page * pageSize, (tabs.selected !== 'tecnicos' && tabs.selected !== 'clientes' ? total : data.length))}
@@ -451,6 +518,8 @@ export default function ModulosServicosPage() {
                           <Link href="/modulos/servicos/contratos/novo" className="inline-flex"><Button variant="default">Cadastrar</Button></Link>
                         ) : tabs.selected === 'vendas' ? (
                           <Link href="/modulos/vendas/pedidos/novo" className="inline-flex"><Button variant="default">Cadastrar Venda</Button></Link>
+                        ) : tabs.selected === 'nota-fiscal' ? (
+                          <Button variant="default" onClick={() => alert('Emitir NFS-e (stub)')}>Emitir NFS-e</Button>
                         ) : undefined
                       }
                     />
@@ -465,7 +534,7 @@ export default function ModulosServicosPage() {
                         <DataTable
                           key={tabs.selected}
                           columns={columns}
-                          data={data}
+                          data={tabs.selected === 'nota-fiscal' && statusFilter ? data.filter(r => String(r['status'] || '').toLowerCase() === statusFilter!.toLowerCase()) : data}
                           enableSearch={tabelaUI.enableSearch}
                           showColumnToggle={tabelaUI.enableColumnToggle}
                           showPagination={tabelaUI.showPagination}
