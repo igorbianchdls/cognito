@@ -35,6 +35,7 @@ import CategoriaDespesaEditorModal from '@/components/modulos/financeiro/Categor
 import CadastroCategoriaReceitaSheet from '@/components/modulos/financeiro/CadastroCategoriaReceitaSheet'
 import CategoriaReceitaEditorModal from '@/components/modulos/financeiro/CategoriaReceitaEditorModal'
 import ApKpiRow from '@/components/modulos/financeiro/ApKpiRow'
+import ExtratoKpiRow from '@/components/modulos/financeiro/ExtratoKpiRow'
 import RowActionsMenu from '@/components/modulos/financeiro/RowActionsMenu'
 import { useRouter } from 'next/navigation'
 
@@ -922,6 +923,10 @@ export default function ModulosFinanceiroPage() {
           {tabs.selected === 'contas-a-pagar' || tabs.selected === 'contas-a-receber' ? (
             <div className="px-1 mb-3">
               <ApKpiRow />
+            </div>
+          ) : tabs.selected === 'extrato' ? (
+            <div className="px-1 mb-3">
+              <ExtratoKpiRow />
             </div>
           ) : null}
           <div className="flex-1 min-h-0 overflow-auto" style={{ marginBottom: layout.mbTable }}>
