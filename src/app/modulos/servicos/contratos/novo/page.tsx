@@ -63,7 +63,7 @@ export default function NovoContratoPage() {
                   <PageHeader title="Novo contrato" subtitle="Crie um contrato recorrente para o cliente" />
                 </div>
 
-                <div className="space-y-4">
+                <div className="space-y-4 max-h-[calc(100vh-180px)] overflow-auto pr-2">
                   {/* Informações */}
                   <Card className="p-4 mx-4">
                     <div className="text-lg font-semibold text-slate-800 mb-3">Informações</div>
@@ -118,7 +118,7 @@ export default function NovoContratoPage() {
                     </div>
                   </Card>
 
-                  {/* Classificação */}
+                  {/* Classificação (inclui Centro de custo) */}
                   <Card className="p-4 mx-4">
                     <div className="text-lg font-semibold text-slate-800 mb-3">Classificação</div>
                     <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
@@ -151,12 +151,9 @@ export default function NovoContratoPage() {
                         </Select>
                       </div>
                     </div>
-                  </Card>
 
-                  {/* Centro de custo */}
-                  <Card className="p-4 mx-4">
-                    <div className="text-lg font-semibold text-slate-800 mb-3">Centro de custo</div>
-                    <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
+                    <div className="mt-4 text-base font-semibold text-slate-800">Centro de custo</div>
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end mt-2">
                       <div className="md:col-span-6">
                         <Label className="text-sm text-slate-600">Centro de custo</Label>
                         <Select value={centro} onValueChange={setCentro} disabled={centroPorItem}>
