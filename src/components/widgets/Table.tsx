@@ -154,6 +154,8 @@ interface DataTableProps<TData extends TableData> {
     setGlobalFilter?: (value: string) => void
   }) => void
   onPaginationChange?: (info: { pageIndex: number; pageSize: number; totalRows: number; pageCount: number }) => void
+  // Row selection count reporting
+  onRowSelectionChange?: (count: number) => void
 }
 
 export function DataTable<TData extends TableData>({
@@ -483,6 +485,13 @@ export function DataTable<TData extends TableData>({
       onExternalPaginationChange?.({ pageIndex: next.pageIndex, pageSize: next.pageSize, totalRows: totalRowsSS, pageCount: pageCountSS })
     },
   })
+
+  // Notify parent when row selection changes
+  React.useEffect(() => {
+    if (typeof onRowSelectionChange === 'function') {
+      onRowSelectionChange(table.getSelectedRowModel().rows.length)
+    }
+  }, [rowSelection, table, onRowSelectionChange])
 
   // Sync external pageSize changes with table
   React.useEffect(() => {

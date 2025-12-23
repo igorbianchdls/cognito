@@ -22,7 +22,7 @@ import StatusBadge from '@/components/modulos/StatusBadge'
 import EntityDisplay from '@/components/modulos/EntityDisplay'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/stores/modulos/moduleUiStore'
 import type { Opcao } from '@/components/modulos/TabsNav'
-import { Wrench, Calendar, User, Users, List, Building2, Briefcase, Phone, Mail, ShoppingCart, DollarSign, Receipt } from 'lucide-react'
+import { Wrench, Calendar, User, Users, List, Building2, Briefcase, Phone, Mail, ShoppingCart, DollarSign, Receipt, Eye } from 'lucide-react'
 import IconLabelHeader from '@/components/widgets/IconLabelHeader'
 import ImagemEditorSheet from '@/components/modulos/servicos/ImagemEditorSheet'
 import Link from 'next/link'
@@ -30,6 +30,7 @@ import { Button } from '@/components/ui/button'
 import NfeKpiRow from '@/components/modulos/servicos/nfe/NfeKpiRow'
 import NfeStatusBadge from '@/components/modulos/servicos/nfe/NfeStatusBadge'
 import RowActionsMenu from '@/components/modulos/financeiro/RowActionsMenu'
+import VendasKpiRow from '@/components/modulos/servicos/vendas/VendasKpiRow'
 
 type Row = TableData
 
@@ -76,6 +77,8 @@ export default function ModulosServicosPage() {
   const [total, setTotal] = useState<number>(0)
   const [statusFilter, setStatusFilter] = useState<string | null>(null)
   const [nfeKpis, setNfeKpis] = useState({ emAberto: 0, emTransmissao: 0, emitidas: 0, comFalha: 0, canceladas: 0, totalPeriodo: 0 })
+  const [vendasKpis, setVendasKpis] = useState({ cancelados: 0, previstos: 0, aprovados: 0, totalPeriodo: 0 })
+  const [selectedCount, setSelectedCount] = useState(0)
 
   // Editor de imagem
   const [imgEditorOpen, setImgEditorOpen] = useState(false)
@@ -145,18 +148,31 @@ export default function ModulosServicosPage() {
         ]
       case 'vendas':
         return [
-          { accessorKey: 'pedido', header: () => <IconLabelHeader icon={<ShoppingCart className="h-3.5 w-3.5" />} label="Pedido" /> },
-          { accessorKey: 'cliente', header: () => <IconLabelHeader icon={<User className="h-3.5 w-3.5" />} label="Cliente" />, 
-            cell: ({ row }) => (
-              <EntityDisplay
-                name={row.original['cliente'] ? String(row.original['cliente']) : 'Sem nome'}
+          { accessorKey: 'data', header: 'Data', cell: ({ row }) => formatDate(row.original['data']) },
+          { accessorKey: 'numero', header: 'Número' },
+          { accessorKey: 'cliente', header: 'Cliente', size: 260, minSize: 180, cell: ({ row }) => (
+            <div>
+              <EntityDisplay name={String(row.original['cliente'] ?? '-')}
                 imageUrl={row.original['cliente_imagem_url'] ? String(row.original['cliente_imagem_url']) : undefined}
               />
-            )
-          },
-          { accessorKey: 'data_venda', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Data" />, cell: ({ getValue }) => formatDate(getValue()) },
-          { accessorKey: 'status', header: () => <IconLabelHeader icon={<Users className="h-3.5 w-3.5" />} label="Status" />, cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
-          { accessorKey: 'valor_total', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Total" />, cell: ({ getValue }) => formatBRL(getValue()) },
+              <div className="text-[11px] inline-flex items-center gap-1 px-2 py-0.5 rounded bg-gray-100 text-gray-600 mt-1">Venda</div>
+            </div>
+          ) },
+          { accessorKey: 'valor', header: 'Valor', cell: ({ row }) => formatBRL(row.original['valor']) },
+          { accessorKey: 'situacao', header: 'Situação', cell: ({ row }) => (
+            <span className="text-[12px] px-2 py-1 rounded bg-amber-100 text-amber-700 font-medium">
+              {String(row.original['situacao'] ?? '-')}
+            </span>
+          ) },
+          { accessorKey: 'nota_fiscal', header: 'Nota Fiscal', cell: ({ row }) => (
+            <div className="flex items-center gap-3">
+              <a href="#" className="text-blue-600 hover:underline">{String(row.original['nota_fiscal'] ?? '—')}</a>
+              <Eye className="h-4 w-4 text-gray-600" />
+            </div>
+          ) },
+          { accessorKey: 'acoes', header: 'Ações', cell: ({ row }) => (
+            <RowActionsMenu type="vendas" row={row.original} />
+          ) },
         ]
       case 'contratos':
         return [
@@ -347,11 +363,13 @@ export default function ModulosServicosPage() {
         }
         if (tabs.selected === 'vendas') {
           const rows: Row[] = [
-            { id: 101, pedido: 'S-0001', cliente: 'Empresa X', data_venda: '2024-10-10', status: 'Concluído', valor_total: 12000.5 },
-            { id: 102, pedido: 'S-0002', cliente: 'Empresa Y', data_venda: '2024-10-12', status: 'Em andamento', valor_total: 3500 },
+            { id: 201, data: '29/06/2023', numero: '343', cliente: 'Amanda Nunes', valor: 250, situacao: 'Contrato 2 de 12', nota_fiscal: '1 - 99' },
+            { id: 202, data: '28/06/2023', numero: '344', cliente: 'Aline - treinamento', valor: 840, situacao: 'Previsto', nota_fiscal: '—' },
+            { id: 203, data: '27/06/2023', numero: '345', cliente: 'Empresa X', valor: 9200, situacao: 'Aprovado', nota_fiscal: '—' },
           ]
           setData(rows)
           setTotal(rows.length)
+          setVendasKpis({ cancelados: 0, previstos: 840, aprovados: 19839, totalPeriodo: 20679 })
           return
         }
         if (tabs.selected === 'contratos') {
@@ -471,6 +489,22 @@ export default function ModulosServicosPage() {
                 </div>
                 <div style={{ paddingTop: (layout.contentTopGap || 0) + (layout.mbTabs || 0) }}>
                   <div className="px-4 md:px-6" style={{ marginBottom: 8 }}>
+                    {tabs.selected === 'vendas' && (
+                      <div className="mb-3">
+                        <VendasKpiRow
+                          cancelados={vendasKpis.cancelados}
+                          previstos={vendasKpis.previstos}
+                          aprovados={vendasKpis.aprovados}
+                          totalPeriodo={vendasKpis.totalPeriodo}
+                          onClick={(key) => {
+                            if (key === 'totalPeriodo') setStatusFilter(null)
+                            else if (key === 'previstos') setStatusFilter('Previsto')
+                            else if (key === 'aprovados') setStatusFilter('Aprovado')
+                            else if (key === 'cancelados') setStatusFilter('Cancelado')
+                          }}
+                        />
+                      </div>
+                    )}
                     {tabs.selected === 'nota-fiscal' && (
                       <div className="mb-3">
                         <NfeKpiRow
@@ -513,6 +547,13 @@ export default function ModulosServicosPage() {
                       iconSize={toolbarUI.iconSize}
                       searchWidth={toolbarUI.searchWidth}
                       dateRangeWidth={toolbarUI.dateRangeWidth}
+                      leftExtra={tabs.selected === 'vendas' ? (
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <span>{selectedCount} registro(s) selecionado(s)</span>
+                          <Button variant="outline" size="sm">Excluir</Button>
+                          <Button variant="outline" size="sm">Imprimir</Button>
+                        </div>
+                      ) : undefined}
                       actionComponent={
                         tabs.selected === 'contratos' ? (
                           <Link href="/modulos/servicos/contratos/novo" className="inline-flex"><Button variant="default">Cadastrar</Button></Link>
@@ -534,10 +575,19 @@ export default function ModulosServicosPage() {
                         <DataTable
                           key={tabs.selected}
                           columns={columns}
-                          data={tabs.selected === 'nota-fiscal' && statusFilter ? data.filter(r => String(r['status'] || '').toLowerCase() === statusFilter!.toLowerCase()) : data}
+                          data={
+                            tabs.selected === 'nota-fiscal' && statusFilter
+                              ? data.filter(r => String(r['status'] || '').toLowerCase() === statusFilter!.toLowerCase())
+                              : tabs.selected === 'vendas' && statusFilter
+                                ? data.filter(r => String(r['situacao'] || '').toLowerCase() === statusFilter!.toLowerCase())
+                                : data
+                          }
                           enableSearch={tabelaUI.enableSearch}
                           showColumnToggle={tabelaUI.enableColumnToggle}
                           showPagination={tabelaUI.showPagination}
+                          enableRowSelection={tabs.selected === 'vendas' ? true : tabelaUI.enableRowSelection}
+                          selectionMode={tabs.selected === 'vendas' ? 'multiple' : tabelaUI.selectionMode}
+                          onRowSelectionChange={tabs.selected === 'vendas' ? (c) => setSelectedCount(c) : undefined}
                           pageSize={pageSize}
                           pageIndex={!(tabs.selected === 'tecnicos' || tabs.selected === 'clientes') ? page - 1 : undefined}
                           serverSidePagination={!(tabs.selected === 'tecnicos' || tabs.selected === 'clientes')}
