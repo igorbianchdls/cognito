@@ -14,10 +14,11 @@ import TabsNav, { type Opcao } from '@/components/modulos/TabsNav'
 import DataToolbar from '@/components/modulos/DataToolbar'
 import DataTable, { type TableData } from '@/components/widgets/Table'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/stores/modulos/moduleUiStore'
-import { ShoppingCart, RotateCcw, Ticket, LayoutGrid, User, Users, Building2, Building, Calendar, CalendarClock, CheckCircle2, DollarSign, Percent, Coins, TrendingUp, Truck, FileText, Tag, Table, Bookmark, Settings, Megaphone, Star, Hash } from 'lucide-react'
+import { ShoppingCart, RotateCcw, Ticket, LayoutGrid, User, Users, Building2, Building, Calendar, CalendarClock, CheckCircle2, DollarSign, Percent, Coins, TrendingUp, Truck, FileText, Tag, Table, Bookmark, Settings, Megaphone, Star, Hash, Plus } from 'lucide-react'
 import IconLabelHeader from '@/components/widgets/IconLabelHeader'
 import EntityDisplay from '@/components/modulos/EntityDisplay'
 import StatusBadge from '@/components/modulos/StatusBadge'
+import NovaVendaForm from '@/components/modulos/vendas/NovaVendaForm'
 
 type Row = TableData
 
@@ -91,6 +92,7 @@ export default function ModulosVendasPage() {
     })
     moduleUiActions.setTabs({
       options: [
+        { value: 'nova_venda', label: 'Nova venda' },
         { value: 'pedidos', label: 'Pedidos' },
         { value: 'devolucoes', label: 'Devoluções' },
         { value: 'cupons', label: 'Cupons' },
@@ -109,6 +111,7 @@ export default function ModulosVendasPage() {
     if (v === 'devolucoes') return <RotateCcw className="h-4 w-4" />
     if (v === 'cupons') return <Ticket className="h-4 w-4" />
     if (v === 'canais') return <LayoutGrid className="h-4 w-4" />
+    if (v === 'nova_venda') return <Plus className="h-4 w-4" />
     return <ShoppingCart className="h-4 w-4" />
   }
   const tabOptions: Opcao[] = useMemo(() => (tabs.options.map((opt) => ({ ...opt, icon: iconFor(opt.value) })) as Opcao[]), [tabs.options])
@@ -367,6 +370,14 @@ export default function ModulosVendasPage() {
   useEffect(() => {
     const controller = new AbortController()
     const load = async () => {
+      // Não buscar dados quando na aba de criação de venda
+      if (tabs.selected === 'nova_venda') {
+        setIsLoading(false)
+        setError(null)
+        setData([])
+        setTotal(0)
+        return
+      }
       setIsLoading(true)
       setError(null)
       try {
@@ -440,6 +451,12 @@ export default function ModulosVendasPage() {
                   />
                 </div>
                 <div style={{ paddingTop: (layout.contentTopGap || 0) + (layout.mbTabs || 0) }}>
+          {tabs.selected === 'nova_venda' ? (
+            <div className="px-2 md:px-2">
+              <NovaVendaForm />
+            </div>
+          ) : (
+            <>
           <div className="px-4 md:px-6" style={{ marginBottom: 8 }}>
             <DataToolbar
               from={total === 0 ? 0 : (page - 1) * pageSize + 1}
@@ -534,6 +551,8 @@ export default function ModulosVendasPage() {
               )}
             </div>
           </div>
+            </>
+          )}
                 </div>
               </NexusPageContainer>
             </div>
