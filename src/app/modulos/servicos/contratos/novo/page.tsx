@@ -32,6 +32,19 @@ export default function NovoContratoPage() {
   const [vendedor, setVendedor] = React.useState('')
   const [centro, setCentro] = React.useState('')
   const [centroPorItem, setCentroPorItem] = React.useState(false)
+  // Itens (UI-only)
+  type Item = { produto?: string; detalhes?: string; quantidade: number; valorUnit: number; total: number }
+  const [itens, setItens] = React.useState<Item[]>([{ quantidade: 1, valorUnit: 0, total: 0 }])
+  const setItem = (idx: number, patch: Partial<Item>) => {
+    setItens(prev => prev.map((it, i) => {
+      if (i !== idx) return it
+      const next = { ...it, ...patch }
+      const q = Number(next.quantidade || 0)
+      const vu = Number(next.valorUnit || 0)
+      next.total = Number((q * vu).toFixed(2))
+      return next
+    }))
+  }
 
   function onSalvar() {
     console.log('Salvar contrato (stub):', { tipoVenda, numeroContrato, cliente, dataInicio, diaGeracao, dataPrimeiraVenda, repetirCada, unidade, tipoRecorrencia, dataTermino })
@@ -173,6 +186,67 @@ export default function NovoContratoPage() {
                           <span className="text-sm text-slate-600">(se ativado, cada item definirá o centro)</span>
                         </div>
                       </div>
+                    </div>
+                  </Card>
+
+                  {/* Itens */}
+                  <Card className="p-4 mx-4">
+                    <div className="text-lg font-semibold text-slate-800 mb-3">Itens</div>
+                    {/* Cabeçalho da grade */}
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-2 text-sm font-medium text-slate-600 bg-gray-50 rounded px-2 py-2">
+                      <div className="md:col-span-4">Produtos/Serviços *</div>
+                      <div className="md:col-span-3">Detalhes do item</div>
+                      <div className="md:col-span-2">Quantidade *</div>
+                      <div className="md:col-span-2">Valor unitário *</div>
+                      <div className="md:col-span-1">Total *</div>
+                    </div>
+                    {/* Primeira linha */}
+                    {itens.map((it, idx) => (
+                      <div key={idx} className="grid grid-cols-1 md:grid-cols-12 gap-3 mt-2 items-center">
+                        <div className="md:col-span-4">
+                          <Select value={it.produto || ''} onValueChange={(v)=>setItem(idx,{ produto: v })}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione um serviço" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="serv1">HONORÁRIOS ADVOCATÍCIOS</SelectItem>
+                              <SelectItem value="serv2">ASSISTÊNCIA TÉCNICA</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="md:col-span-3">
+                          <Input value={it.detalhes || ''} onChange={(e)=>setItem(idx,{ detalhes: e.target.value })} />
+                        </div>
+                        <div className="md:col-span-2">
+                          <Input inputMode="numeric" value={String(it.quantidade)} onChange={(e)=>setItem(idx,{ quantidade: Number(e.target.value.replace(/\D/g,''))||0 })} />
+                        </div>
+                        <div className="md:col-span-2">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-slate-500">R$</span>
+                            <Input value={String(it.valorUnit)} onChange={(e)=>setItem(idx,{ valorUnit: Number(e.target.value.replace(/\./g,'').replace(/,/g,'.'))||0 })} />
+                          </div>
+                        </div>
+                        <div className="md:col-span-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-slate-500">R$</span>
+                            <Input value={String(it.total)} readOnly />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+
+                    {/* Adicionar/selecionar novo item */}
+                    <div className="mt-4">
+                      <Label className="text-sm text-slate-600">Selecione ou crie um novo item</Label>
+                      <Select onValueChange={(v)=>setItens([...itens,{ produto: v, detalhes: '', quantidade:1, valorUnit:0, total:0 }])}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Pesquisar/selecionar item" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="serv1">HONORÁRIOS ADVOCATÍCIOS</SelectItem>
+                          <SelectItem value="serv2">ASSISTÊNCIA TÉCNICA</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </Card>
 
