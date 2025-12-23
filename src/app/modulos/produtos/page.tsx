@@ -16,11 +16,13 @@ import DataTable, { type TableData } from '@/components/widgets/Table'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/stores/modulos/moduleUiStore'
 import EntityDisplay from '@/components/modulos/EntityDisplay'
 import StatusBadge from '@/components/modulos/StatusBadge'
-import { List, Package, FileText, Tag, CheckCircle2, DollarSign, Ruler, Globe } from 'lucide-react'
+import { List, Package, FileText, Tag, CheckCircle2, DollarSign, Ruler, Globe, ShoppingCart, Calendar, User } from 'lucide-react'
 import IconLabelHeader from '@/components/widgets/IconLabelHeader'
 import CadastroProdutoSheet from '@/components/modulos/produtos/CadastroProdutoSheet'
 import CadastroVariacaoSheet from '@/components/modulos/produtos/CadastroVariacaoSheet'
 import CadastroDadosFiscaisSheet from '@/components/modulos/produtos/CadastroDadosFiscaisSheet'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
 
 type Row = TableData
 
@@ -54,6 +56,7 @@ export default function ModulosProdutosPage() {
     })
     moduleUiActions.setTabs({
       options: [
+        { value: 'vendas', label: 'Vendas' },
         { value: 'produtos', label: 'Produtos' },
         { value: 'variacoes', label: 'Variações' },
         { value: 'dados-fiscais', label: 'Dados Fiscais' },
@@ -67,7 +70,7 @@ export default function ModulosProdutosPage() {
     setPage(1)
   }, [tabs.selected])
 
-  const iconFor = (v: string) => <List className="h-4 w-4" />
+  const iconFor = (v: string) => v === 'vendas' ? <ShoppingCart className="h-4 w-4" /> : <List className="h-4 w-4" />
   const tabOptions: Opcao[] = useMemo(() => (tabs.options.map((opt) => ({ ...opt, icon: iconFor(opt.value) })) as Opcao[]), [tabs.options])
 
   const formatDate = (value?: unknown) => {
@@ -87,6 +90,14 @@ export default function ModulosProdutosPage() {
 
   const columns: ColumnDef<Row>[] = useMemo(() => {
     switch (tabs.selected) {
+      case 'vendas':
+        return [
+          { accessorKey: 'pedido', header: () => <IconLabelHeader icon={<ShoppingCart className="h-3.5 w-3.5" />} label="Pedido" /> },
+          { accessorKey: 'cliente', header: () => <IconLabelHeader icon={<User className="h-3.5 w-3.5" />} label="Cliente" /> },
+          { accessorKey: 'data_venda', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Data" />, cell: ({ getValue }) => formatDate(getValue()) },
+          { accessorKey: 'status', header: () => <IconLabelHeader icon={<CheckCircle2 className="h-3.5 w-3.5" />} label="Status" />, cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
+          { accessorKey: 'valor_total', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Total" />, cell: ({ getValue }) => formatBRL(getValue()) },
+        ]
       case 'produtos':
         return [
           {
@@ -142,6 +153,15 @@ export default function ModulosProdutosPage() {
       setIsLoading(true)
       setError(null)
       try {
+        if (tabs.selected === 'vendas') {
+          const rows: Row[] = [
+            { id: 301, pedido: 'P-001', cliente: 'Cliente A', data_venda: '2024-10-05', status: 'Concluído', valor_total: 890 },
+            { id: 302, pedido: 'P-002', cliente: 'Cliente B', data_venda: '2024-10-12', status: 'Em andamento', valor_total: 1790.5 },
+          ]
+          setData(rows)
+          setTotal(rows.length)
+          return
+        }
         const params = new URLSearchParams()
         params.set('view', tabs.selected)
         params.set('page', String(page))
@@ -231,9 +251,11 @@ export default function ModulosProdutosPage() {
                       iconColor={toolbarUI.iconColor}
                       iconSize={toolbarUI.iconSize}
                       searchWidth={toolbarUI.searchWidth}
-                      dateRangeWidth={toolbarUI.dateRangeWidth}
+                  dateRangeWidth={toolbarUI.dateRangeWidth}
                       actionComponent={
-                        tabs.selected === 'produtos' ? (
+                        tabs.selected === 'vendas' ? (
+                          <Link href="/modulos/vendas/pedidos/novo" className="inline-flex"><Button variant="default">Cadastrar Venda</Button></Link>
+                        ) : tabs.selected === 'produtos' ? (
                           <CadastroProdutoSheet triggerLabel="Cadastrar" onCreated={() => setRefreshKey((k) => k + 1)} />
                         ) : tabs.selected === 'variacoes' ? (
                           <CadastroVariacaoSheet triggerLabel="Cadastrar" onCreated={() => setRefreshKey((k) => k + 1)} />

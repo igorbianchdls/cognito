@@ -44,12 +44,12 @@ export default function ModulosServicosPage() {
     })
     moduleUiActions.setTabs({
       options: [
+        { value: 'vendas', label: 'Vendas' },
         { value: 'catalogo', label: 'Catálogo de Serviços' },
         { value: 'categorias', label: 'Categorias' },
         { value: 'tabelas-preco', label: 'Tabelas de Preço' },
         { value: 'slas', label: 'SLAs' },
         { value: 'contratos', label: 'Contratos' },
-        { value: 'vendas', label: 'Vendas' },
       ],
       selected: 'catalogo',
     })
