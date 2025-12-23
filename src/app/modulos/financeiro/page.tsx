@@ -36,10 +36,12 @@ import CadastroCategoriaReceitaSheet from '@/components/modulos/financeiro/Cadas
 import CategoriaReceitaEditorModal from '@/components/modulos/financeiro/CategoriaReceitaEditorModal'
 import ApKpiRow from '@/components/modulos/financeiro/ApKpiRow'
 import RowActionsMenu from '@/components/modulos/financeiro/RowActionsMenu'
+import { useRouter } from 'next/navigation'
 
 type Row = TableData
 
 export default function ModulosFinanceiroPage() {
+  const router = useRouter()
   const titulo = useStore($titulo)
   const tabs = useStore($tabs)
   const tabelaUI = useStore($tabelaUI)
@@ -494,6 +496,10 @@ export default function ModulosFinanceiroPage() {
                   setDocType(String(row.original['content_type'] || ''))
                   setDocLancId(Number(row.original['conta_receber_id'] || row.original['conta_id'] || 0))
                   setDocViewerOpen(true)
+                }}
+                onInformRecebimento={() => {
+                  const id = row.original['conta_receber_id'] || row.original['conta_id']
+                  if (id) router.push(`/modulos/financeiro/contas-a-receber/receber?id=${id}`)
                 }}
                 onMark={() => console.log('Marcar recebido AR', row.original)}
                 onDuplicate={() => console.log('Duplicar AR', row.original)}
