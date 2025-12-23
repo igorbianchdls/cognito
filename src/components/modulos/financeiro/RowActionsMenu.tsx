@@ -25,7 +25,7 @@ export type RowActionsMenuProps = {
   onDelete?: () => void
 }
 
-export default function RowActionsMenu({ type, row, onViewDetails, onEdit, onOpenDocs, onMark, onDuplicate, onDelete }: RowActionsMenuProps) {
+export default function RowActionsMenu({ type, row, onViewDetails, onEdit, onOpenDocs, onInformRecebimento, onMark, onDuplicate, onDelete }: RowActionsMenuProps) {
   const markLabel = React.useMemo(() => (type === 'contas-a-pagar' ? 'Marcar como Pago' : type === 'contas-a-receber' ? 'Marcar como Recebido' : 'Marcar'), [type])
   const [open, setOpen] = React.useState(false)
 
