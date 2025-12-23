@@ -560,7 +560,7 @@ export default function ModulosServicosPage() {
                         ) : tabs.selected === 'vendas' ? (
                           <Link href="/modulos/vendas/pedidos/novo" className="inline-flex"><Button variant="default">Cadastrar Venda</Button></Link>
                         ) : tabs.selected === 'nota-fiscal' ? (
-                          <Button variant="default" onClick={() => alert('Emitir NFS-e (stub)')}>Emitir NFS-e</Button>
+                          <Link href="/modulos/servicos/nota-fiscal/emitir" className="inline-flex"><Button variant="default">Emitir NFS-e</Button></Link>
                         ) : undefined
                       }
                     />
@@ -608,8 +608,6 @@ export default function ModulosServicosPage() {
                           borderColor={tabelaUI.borderColor}
                           borderWidth={tabelaUI.borderWidth}
                           selectionColumnWidth={tabelaUI.selectionColumnWidth}
-                          enableRowSelection={tabelaUI.enableRowSelection}
-                          selectionMode={tabelaUI.selectionMode}
                           defaultSortColumn={tabelaUI.defaultSortColumn}
                           defaultSortDirection={tabelaUI.defaultSortDirection}
                           onPaginationChange={({ pageIndex, pageSize: newSize }) => {
