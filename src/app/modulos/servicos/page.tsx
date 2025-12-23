@@ -22,7 +22,7 @@ import StatusBadge from '@/components/modulos/StatusBadge'
 import EntityDisplay from '@/components/modulos/EntityDisplay'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/stores/modulos/moduleUiStore'
 import type { Opcao } from '@/components/modulos/TabsNav'
-import { Wrench, Calendar, User, Users, List, Building2, Briefcase, Phone, Mail } from 'lucide-react'
+import { Wrench, Calendar, User, Users, List, Building2, Briefcase, Phone, Mail, ShoppingCart, DollarSign } from 'lucide-react'
 import IconLabelHeader from '@/components/widgets/IconLabelHeader'
 import ImagemEditorSheet from '@/components/modulos/servicos/ImagemEditorSheet'
 import Link from 'next/link'
@@ -49,6 +49,7 @@ export default function ModulosServicosPage() {
         { value: 'tabelas-preco', label: 'Tabelas de Preço' },
         { value: 'slas', label: 'SLAs' },
         { value: 'contratos', label: 'Contratos' },
+        { value: 'vendas', label: 'Vendas' },
       ],
       selected: 'catalogo',
     })
@@ -109,6 +110,21 @@ export default function ModulosServicosPage() {
 
   const columns: ColumnDef<Row>[] = useMemo(() => {
     switch (tabs.selected) {
+      case 'vendas':
+        return [
+          { accessorKey: 'pedido', header: () => <IconLabelHeader icon={<ShoppingCart className="h-3.5 w-3.5" />} label="Pedido" /> },
+          { accessorKey: 'cliente', header: () => <IconLabelHeader icon={<User className="h-3.5 w-3.5" />} label="Cliente" />, 
+            cell: ({ row }) => (
+              <EntityDisplay
+                name={row.original['cliente'] ? String(row.original['cliente']) : 'Sem nome'}
+                imageUrl={row.original['cliente_imagem_url'] ? String(row.original['cliente_imagem_url']) : undefined}
+              />
+            )
+          },
+          { accessorKey: 'data_venda', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Data" />, cell: ({ getValue }) => formatDate(getValue()) },
+          { accessorKey: 'status', header: () => <IconLabelHeader icon={<Users className="h-3.5 w-3.5" />} label="Status" />, cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
+          { accessorKey: 'valor_total', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Total" />, cell: ({ getValue }) => formatBRL(getValue()) },
+        ]
       case 'contratos':
         return [
           { accessorKey: 'nome', header: () => <IconLabelHeader icon={<User className="h-3.5 w-3.5" />} label="Nome" /> },
@@ -284,6 +300,15 @@ export default function ModulosServicosPage() {
       setIsLoading(true)
       setError(null)
       try {
+        if (tabs.selected === 'vendas') {
+          const rows: Row[] = [
+            { id: 101, pedido: 'S-0001', cliente: 'Empresa X', data_venda: '2024-10-10', status: 'Concluído', valor_total: 12000.5 },
+            { id: 102, pedido: 'S-0002', cliente: 'Empresa Y', data_venda: '2024-10-12', status: 'Em andamento', valor_total: 3500 },
+          ]
+          setData(rows)
+          setTotal(rows.length)
+          return
+        }
         if (tabs.selected === 'contratos') {
           const rows: Row[] = [
             { id: 1, nome: 'Maria Silva', empresa: 'ACME Ltda', cargo: 'Compras', telefone: '(11) 99999-0001', email: 'maria@acme.com' },
@@ -347,6 +372,8 @@ export default function ModulosServicosPage() {
           return <Wrench className="h-4 w-4" />
         case 'contratos':
           return <Users className="h-4 w-4" />
+        case 'vendas':
+          return <ShoppingCart className="h-4 w-4" />
         default:
           return null
       }
@@ -422,6 +449,8 @@ export default function ModulosServicosPage() {
                       actionComponent={
                         tabs.selected === 'contratos' ? (
                           <Link href="/modulos/servicos/contratos/novo" className="inline-flex"><Button variant="default">Cadastrar</Button></Link>
+                        ) : tabs.selected === 'vendas' ? (
+                          <Link href="/modulos/vendas/pedidos/novo" className="inline-flex"><Button variant="default">Cadastrar Venda</Button></Link>
                         ) : undefined
                       }
                     />
