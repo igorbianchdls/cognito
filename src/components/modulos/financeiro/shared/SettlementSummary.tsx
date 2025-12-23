@@ -38,6 +38,7 @@ export default function SettlementSummary({ launch, parcel, titleLaunch = 'Infor
     { label: 'Vencimento', value: parcel.vencimento || '—' },
     { label: 'Parcela', value: parcel.numero || '—' },
     { label: 'Descrição', value: parcel.descricao || '—' },
+    { label: 'Valor total', value: formatBRL(parcel.valorTotal) },
   ]
   return (
     <div className="space-y-4">
@@ -46,8 +47,8 @@ export default function SettlementSummary({ launch, parcel, titleLaunch = 'Infor
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
           {topItems.map((it, idx) => (
             <div key={idx} className="flex flex-col">
-              <div className="text-xs text-slate-500">{it.label}</div>
-              <div className="text-[13px] text-slate-900 font-medium">{it.value}</div>
+              <div className="text-sm text-slate-500">{it.label}</div>
+              <div className="text-[15px] text-slate-900 font-medium">{it.value}</div>
             </div>
           ))}
         </div>
@@ -58,14 +59,10 @@ export default function SettlementSummary({ launch, parcel, titleLaunch = 'Infor
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {parcelItems.map((it, idx) => (
             <div key={idx} className="flex flex-col">
-              <div className="text-xs text-slate-500">{it.label}</div>
-              <div className="text-[13px] text-slate-900 font-medium">{it.value}</div>
+              <div className="text-sm text-slate-500">{it.label}</div>
+              <div className="text-[15px] text-slate-900 font-medium">{it.value}</div>
             </div>
           ))}
-        </div>
-        <div className="flex items-center justify-end mt-3">
-          <div className="text-slate-500 text-sm mr-3">Valor total</div>
-          <div className="text-slate-900 text-xl font-semibold">{formatBRL(parcel.valorTotal)}</div>
         </div>
       </Card>
     </div>
