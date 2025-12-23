@@ -3,6 +3,7 @@
 import * as React from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { Suspense } from 'react'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
 import NexusHeader from '@/components/navigation/nexus/NexusHeader'
@@ -13,7 +14,7 @@ import SettlementForm, { type SettlementValues } from '@/components/modulos/fina
 import { Button } from '@/components/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 
-export default function ReceberPage() {
+function ReceberPageInner() {
   const router = useRouter()
   const sp = useSearchParams()
   const contaId = sp.get('id')
@@ -103,3 +104,10 @@ export default function ReceberPage() {
   )
 }
 
+export default function ReceberPage() {
+  return (
+    <Suspense fallback={<div className="p-4 text-sm text-gray-500">Carregando…</div>}>
+      <ReceberPageInner />
+    </Suspense>
+  )
+}
