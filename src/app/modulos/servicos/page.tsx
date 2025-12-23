@@ -22,7 +22,8 @@ import StatusBadge from '@/components/modulos/StatusBadge'
 import EntityDisplay from '@/components/modulos/EntityDisplay'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/stores/modulos/moduleUiStore'
 import type { Opcao } from '@/components/modulos/TabsNav'
-import { Wrench, Calendar, User, Users, List } from 'lucide-react'
+import { Wrench, Calendar, User, Users, List, Building2, Briefcase, Phone, Mail } from 'lucide-react'
+import IconLabelHeader from '@/components/widgets/IconLabelHeader'
 import ImagemEditorSheet from '@/components/modulos/servicos/ImagemEditorSheet'
 
 type Row = TableData
@@ -45,7 +46,7 @@ export default function ModulosServicosPage() {
         { value: 'categorias', label: 'Categorias' },
         { value: 'tabelas-preco', label: 'Tabelas de Preço' },
         { value: 'slas', label: 'SLAs' },
-        { value: 'contatos', label: 'Contatos' },
+        { value: 'contratos', label: 'Contratos' },
       ],
       selected: 'catalogo',
     })
@@ -106,13 +107,13 @@ export default function ModulosServicosPage() {
 
   const columns: ColumnDef<Row>[] = useMemo(() => {
     switch (tabs.selected) {
-      case 'contatos':
+      case 'contratos':
         return [
-          { accessorKey: 'nome', header: 'Nome' },
-          { accessorKey: 'empresa', header: 'Empresa' },
-          { accessorKey: 'cargo', header: 'Cargo' },
-          { accessorKey: 'telefone', header: 'Telefone' },
-          { accessorKey: 'email', header: 'Email' },
+          { accessorKey: 'nome', header: () => <IconLabelHeader icon={<User className="h-3.5 w-3.5" />} label="Nome" /> },
+          { accessorKey: 'empresa', header: () => <IconLabelHeader icon={<Building2 className="h-3.5 w-3.5" />} label="Empresa" /> },
+          { accessorKey: 'cargo', header: () => <IconLabelHeader icon={<Briefcase className="h-3.5 w-3.5" />} label="Cargo" /> },
+          { accessorKey: 'telefone', header: () => <IconLabelHeader icon={<Phone className="h-3.5 w-3.5" />} label="Telefone" /> },
+          { accessorKey: 'email', header: () => <IconLabelHeader icon={<Mail className="h-3.5 w-3.5" />} label="Email" /> },
         ]
       case 'categorias':
         return [
@@ -281,7 +282,7 @@ export default function ModulosServicosPage() {
       setIsLoading(true)
       setError(null)
       try {
-        if (tabs.selected === 'contatos') {
+        if (tabs.selected === 'contratos') {
           const rows: Row[] = [
             { id: 1, nome: 'Maria Silva', empresa: 'ACME Ltda', cargo: 'Compras', telefone: '(11) 99999-0001', email: 'maria@acme.com' },
             { id: 2, nome: 'João Pereira', empresa: 'TechWave', cargo: 'TI', telefone: '(11) 99999-0002', email: 'joao@techwave.com' },
@@ -342,7 +343,7 @@ export default function ModulosServicosPage() {
           return <List className="h-4 w-4" />
         case 'slas':
           return <Wrench className="h-4 w-4" />
-        case 'contatos':
+        case 'contratos':
           return <Users className="h-4 w-4" />
         default:
           return null
