@@ -26,36 +26,42 @@ function formatBRL(n?: number) {
 
 export default function SettlementSummary({ launch, parcel, titleLaunch = 'Informações do lançamento', titleParcel = 'Informações da parcela', entityLabel = 'Cliente' }: { launch: LaunchInfo; parcel: ParcelInfo; titleLaunch?: string; titleParcel?: string; entityLabel?: string }) {
   const entityName = launch.cliente || launch.fornecedor || '—'
+  const topItems = [
+    { label: entityLabel, value: entityName },
+    { label: 'Código de referência', value: launch.codigoRef || '—' },
+    { label: 'Data de competência', value: launch.dataCompetencia || '—' },
+    { label: 'Categoria', value: launch.categoria || '—' },
+    { label: 'Centro de custo', value: launch.centroCusto || '—' },
+    { label: 'Recorrente', value: launch.recorrente ? 'Sim' : 'Não' },
+  ]
+  const parcelItems = [
+    { label: 'Vencimento', value: parcel.vencimento || '—' },
+    { label: 'Parcela', value: parcel.numero || '—' },
+    { label: 'Descrição', value: parcel.descricao || '—' },
+  ]
   return (
     <div className="space-y-4">
       <Card className="p-4 mx-4">
         <div className="text-base font-semibold text-slate-800 mb-3">{titleLaunch}</div>
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-3 text-[13px]">
-          <div className="md:col-span-2 text-slate-500">{entityLabel}</div>
-          <div className="md:col-span-2 text-slate-900 font-medium">{entityName}</div>
-          <div className="md:col-span-2 text-slate-500">Código de referência</div>
-          <div className="md:col-span-2 text-slate-900 font-medium">{launch.codigoRef || '—'}</div>
-          <div className="md:col-span-2 text-slate-500">Data de competência</div>
-          <div className="md:col-span-2 text-slate-900 font-medium">{launch.dataCompetencia || '—'}</div>
-
-          <div className="md:col-span-2 text-slate-500">Categoria</div>
-          <div className="md:col-span-2 text-slate-900 font-medium">{launch.categoria || '—'}</div>
-          <div className="md:col-span-2 text-slate-500">Centro de custo</div>
-          <div className="md:col-span-2 text-slate-900 font-medium">{launch.centroCusto || '—'}</div>
-          <div className="md:col-span-2 text-slate-500">Recorrente</div>
-          <div className="md:col-span-2 text-slate-900 font-medium">{launch.recorrente ? 'Sim' : 'Não'}</div>
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          {topItems.map((it, idx) => (
+            <div key={idx} className="flex flex-col">
+              <div className="text-xs text-slate-500">{it.label}</div>
+              <div className="text-[13px] text-slate-900 font-medium">{it.value}</div>
+            </div>
+          ))}
         </div>
       </Card>
 
       <Card className="p-4 mx-4">
         <div className="text-base font-semibold text-slate-800 mb-3">{titleParcel} {parcel?.numero ? parcel.numero : ''}</div>
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-3 text-[13px]">
-          <div className="md:col-span-2 text-slate-500">Vencimento</div>
-          <div className="md:col-span-2 text-slate-900 font-medium">{parcel.vencimento || '—'}</div>
-          <div className="md:col-span-2 text-slate-500">Parcela</div>
-          <div className="md:col-span-2 text-slate-900 font-medium">{parcel.numero || '—'}</div>
-          <div className="md:col-span-2 text-slate-500">Descrição</div>
-          <div className="md:col-span-2 text-slate-900 font-medium">{parcel.descricao || '—'}</div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {parcelItems.map((it, idx) => (
+            <div key={idx} className="flex flex-col">
+              <div className="text-xs text-slate-500">{it.label}</div>
+              <div className="text-[13px] text-slate-900 font-medium">{it.value}</div>
+            </div>
+          ))}
         </div>
         <div className="flex items-center justify-end mt-3">
           <div className="text-slate-500 text-sm mr-3">Valor total</div>
