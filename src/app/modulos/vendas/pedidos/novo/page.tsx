@@ -16,7 +16,7 @@ export default function NovaVendaPage() {
         <div className="flex h-full overflow-hidden" style={{ backgroundColor: '#fdfdfd' }}>
           <div className="flex flex-col h-full w-full">
             <NexusHeader viewMode={'dashboard'} onChangeViewMode={() => {}} borderless size="sm" showBreadcrumb={false} />
-            <div className="flex-1 min-h-0 pl-2 pr-2 pt-0 pb-2" data-page="nexus">
+            <div className="flex-1 min-h-0 pl-2 pr-2 pt-0 pb-2 overflow-auto" data-page="nexus">
               <NexusPageContainer className="h-full">
                 <div className="mb-3">
                   <PageHeader title="Nova Venda" subtitle="Preencha as informações para cadastrar a venda" />
@@ -30,4 +30,3 @@ export default function NovaVendaPage() {
     </SidebarProvider>
   )
 }
-

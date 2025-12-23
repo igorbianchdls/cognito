@@ -7,6 +7,7 @@ import VendaPagamentoCard from "@/components/modulos/vendas/VendaPagamentoCard"
 import type { PaymentConditionConfig } from "@/components/modulos/financeiro/shared/PaymentConditionHeader"
 import type { Parcela } from "@/components/modulos/financeiro/shared/ParcelasEditor"
 import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
 import { useRouter } from "next/navigation"
 
 export default function NovaVendaForm() {
@@ -123,16 +124,16 @@ export default function NovaVendaForm() {
         contas={contas}
       />
 
-      {/* Footer */}
-      <div className="sticky bottom-0 left-0 right-0 bg-white/80 backdrop-blur border-t border-gray-200 mt-4">
-        <div className="flex items-center justify-between px-4 py-3">
+      {/* Ações (como última seção) */}
+      <Card className="p-4 mx-4 mt-2">
+        <div className="flex items-center justify-between">
           <Button variant="outline" onClick={handleCancelar}>Cancelar</Button>
           <div className="flex items-center gap-2">
             <Button variant="secondary" onClick={handleSalvarCriarNova}>Salvar e criar nova venda</Button>
             <Button className="bg-emerald-600 hover:bg-emerald-700" onClick={handleSalvar}>Salvar</Button>
           </div>
         </div>
-      </div>
+      </Card>
     </div>
   )
 }
