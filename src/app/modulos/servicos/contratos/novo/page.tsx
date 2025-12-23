@@ -27,6 +27,11 @@ export default function NovoContratoPage() {
   const [unidade, setUnidade] = React.useState<'mes' | 'semana'>('mes')
   const [tipoRecorrencia, setTipoRecorrencia] = React.useState<'periodo' | 'indefinido'>('periodo')
   const [dataTermino, setDataTermino] = React.useState('')
+  // Classificação / Centro de custo
+  const [categoria, setCategoria] = React.useState('')
+  const [vendedor, setVendedor] = React.useState('')
+  const [centro, setCentro] = React.useState('')
+  const [centroPorItem, setCentroPorItem] = React.useState(false)
 
   function onSalvar() {
     console.log('Salvar contrato (stub):', { tipoVenda, numeroContrato, cliente, dataInicio, diaGeracao, dataPrimeiraVenda, repetirCada, unidade, tipoRecorrencia, dataTermino })
@@ -113,6 +118,67 @@ export default function NovoContratoPage() {
                     </div>
                   </Card>
 
+                  {/* Classificação */}
+                  <Card className="p-4 mx-4">
+                    <div className="text-lg font-semibold text-slate-800 mb-3">Classificação</div>
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
+                      <div className="md:col-span-6">
+                        <Label className="text-sm text-slate-600">Categoria financeira *</Label>
+                        <div className="flex items-center gap-2">
+                          <Select value={categoria} onValueChange={setCategoria}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="cat_jur">1.1.105. ASSESSORIA JURÍDICA</SelectItem>
+                              <SelectItem value="cat_mark">1.1.201. MARKETING</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <Button size="icon" variant="outline" className="h-8 w-8" title="Abrir cadastro">⚡</Button>
+                          <Button size="icon" variant="outline" className="h-8 w-8" title="Sincronizar">⟳</Button>
+                        </div>
+                      </div>
+                      <div className="md:col-span-6">
+                        <Label className="text-sm text-slate-600">Vendedor responsável</Label>
+                        <Select value={vendedor} onValueChange={setVendedor}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="u1">Fulano</SelectItem>
+                            <SelectItem value="u2">Ciclano</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </Card>
+
+                  {/* Centro de custo */}
+                  <Card className="p-4 mx-4">
+                    <div className="text-lg font-semibold text-slate-800 mb-3">Centro de custo</div>
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
+                      <div className="md:col-span-6">
+                        <Label className="text-sm text-slate-600">Centro de custo</Label>
+                        <Select value={centro} onValueChange={setCentro} disabled={centroPorItem}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="cc1">Receitas Franqueados</SelectItem>
+                            <SelectItem value="cc2">Administrativo</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="md:col-span-6">
+                        <Label className="text-sm text-slate-600">Usar centro de custo por item</Label>
+                        <div className="flex items-center gap-3 mt-1">
+                          <Switch checked={centroPorItem} onCheckedChange={setCentroPorItem} />
+                          <span className="text-sm text-slate-600">(se ativado, cada item definirá o centro)</span>
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+
                   {/* Configurações de recorrência */}
                   <Card className="p-4 mx-4">
                     <div className="text-lg font-semibold text-slate-800 mb-3">Configurações de recorrência</div>
@@ -176,4 +242,3 @@ export default function NovoContratoPage() {
     </SidebarProvider>
   )
 }
-
