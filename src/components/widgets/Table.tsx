@@ -224,6 +224,7 @@ export function DataTable<TData extends TableData>({
   onDataChange,
   onTableReady,
   onPaginationChange: onExternalPaginationChange,
+  onRowSelectionChange,
 }: DataTableProps<TData>) {
   const [sorting, setSorting] = React.useState<SortingState>(
     defaultSortColumn ? [{ id: defaultSortColumn, desc: defaultSortDirection === 'desc' }] : []
