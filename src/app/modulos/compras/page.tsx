@@ -328,6 +328,7 @@ export default function ModulosComprasPage() {
         { accessorKey: 'numero_cotacao', header: 'Número Cotação' },
         { accessorKey: 'data_solicitacao', header: 'Data Solicitação', cell: ({ row }) => formatDate(row.original['data_solicitacao']) },
         { accessorKey: 'prazo_resposta', header: 'Prazo Resposta', cell: ({ row }) => formatDate(row.original['prazo_resposta']) },
+        { accessorKey: 'valor_estimado', header: 'Valor Estimado', cell: ({ row }) => formatBRL(row.original['valor_estimado']) },
         { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
         { accessorKey: 'observacoes', header: 'Observações' },
         { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em']) },
@@ -516,6 +517,16 @@ export default function ModulosComprasPage() {
                 />
               </div>
             )}
+            {tabs.selected === 'cotacoes' && (
+              <div className="mb-3">
+                <CotacoesKpiRow
+                  abertas={kpisCotacoes.abertas}
+                  respondidas={kpisCotacoes.respondidas}
+                  aprovadas={kpisCotacoes.aprovadas}
+                  totalPeriodo={kpisCotacoes.totalPeriodo}
+                />
+              </div>
+            )}
             <DataToolbar
               from={total === 0 ? 0 : (page - 1) * pageSize + 1}
               to={total === 0 ? 0 : Math.min(page * pageSize, total)}
@@ -539,6 +550,8 @@ export default function ModulosComprasPage() {
               actionComponent={
                 tabs.selected === 'compras' ? (
                   <a href="/modulos/compras/novo" className="inline-flex"><button className="inline-flex items-center px-3 py-2 rounded-md bg-primary text-primary-foreground">Nova Compra</button></a>
+                ) : tabs.selected === 'cotacoes' ? (
+                  <a href="/modulos/compras/cotacoes/novo" className="inline-flex"><button className="inline-flex items-center px-3 py-2 rounded-md bg-primary text-primary-foreground">Nova Cotação</button></a>
                 ) : undefined
               }
             />
