@@ -16,6 +16,7 @@ import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from 
 import type { Opcao } from '@/components/modulos/TabsNav'
 import { ShoppingCart, PackageCheck, ClipboardList, FileText } from 'lucide-react'
 import ComprasKpiRow from '@/components/modulos/compras/ComprasKpiRow'
+import CotacoesKpiRow from '@/components/modulos/compras/CotacoesKpiRow'
 
 type Row = TableData
 
@@ -121,6 +122,7 @@ export default function ModulosComprasPage() {
   const [pageSize, setPageSize] = useState<number>(20)
   const [total, setTotal] = useState<number>(0)
   const [refreshKey, setRefreshKey] = useState(0)
+  const [kpisCotacoes, setKpisCotacoes] = useState({ abertas: 0, respondidas: 0, aprovadas: 0, totalPeriodo: 0 })
   const [kpisCompras, setKpisCompras] = useState({ canceladas: 0, emAprovacao: 0, aprovadas: 0, totalPeriodo: 0 })
 
   const formatDate = (value?: unknown) => {
@@ -420,6 +422,17 @@ export default function ModulosComprasPage() {
           setData(rows)
           setTotal(rows.length)
           setKpisCompras({ canceladas: 1200, emAprovacao: 8400, aprovadas: 1250, totalPeriodo: 10850 })
+          return
+        }
+        if (tabs.selected === 'cotacoes') {
+          const rows = [
+            { cotacao_id: 5001, numero_cotacao: 'CT-2024-001', data_solicitacao: '2024-06-10', prazo_resposta: '2024-06-15', valor_estimado: 4000, status: 'Aberta', observacoes: 'Enviar até 15/06', criado_em: '2024-06-10' },
+            { cotacao_id: 5002, numero_cotacao: 'CT-2024-002', data_solicitacao: '2024-06-12', prazo_resposta: '2024-06-18', valor_estimado: 9200, status: 'Respondida', observacoes: '', criado_em: '2024-06-12' },
+            { cotacao_id: 5003, numero_cotacao: 'CT-2024-003', data_solicitacao: '2024-06-14', prazo_resposta: '2024-06-19', valor_estimado: 1500, status: 'Aprovada', observacoes: '', criado_em: '2024-06-14' },
+          ] as unknown as Row[]
+          setData(rows)
+          setTotal(rows.length)
+          setKpisCotacoes({ abertas: 4000, respondidas: 9200, aprovadas: 1500, totalPeriodo: 14700 })
           return
         }
         const params = new URLSearchParams()
