@@ -89,9 +89,15 @@ export default function EmitirNfseForm() {
   const baseCalculo = React.useMemo(() => Math.max(0, valorServicos - (valores.deducoes || 0) - (valores.descontoIncond || 0)), [valorServicos, valores])
   const valorIss = React.useMemo(() => Number(((baseCalculo * (valores.aliquotaIss || 0)) / 100).toFixed(2)), [baseCalculo, valores.aliquotaIss])
   const totalRetencoes = React.useMemo(() => {
-    const v = [retencoes.inssValor, retencoes.irrfValor, retencoes.csllValor, retencoes.pisValor, retencoes.cofinsValor].reduce((a, n) => a + (Number(n || 0)), 0)
+    const v = [
+      retencoes.inssValor ?? 0,
+      retencoes.irrfValor ?? 0,
+      retencoes.csllValor ?? 0,
+      retencoes.pisValor ?? 0,
+      retencoes.cofinsValor ?? 0,
+    ].reduce((acc: number, n: number) => acc + n, 0)
     return v + Number(valores.outrasRetencoes || 0)
-  }, [retencoes, valores.outrasRetencoes])
+  }, [retencoes.inssValor, retencoes.irrfValor, retencoes.csllValor, retencoes.pisValor, retencoes.cofinsValor, valores.outrasRetencoes])
   const valorLiquido = React.useMemo(() => {
     return Number((valorServicos - (valores.descontoIncond || 0) - (valores.descontoCond || 0) - (valores.deducoes || 0) - totalRetencoes - (issRetido === 'sim' ? valorIss : 0)).toFixed(2))
   }, [valorServicos, valores, totalRetencoes, valorIss, issRetido])
@@ -423,4 +429,3 @@ export default function EmitirNfseForm() {
     </div>
   )
 }
-
