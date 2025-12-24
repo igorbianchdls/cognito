@@ -358,7 +358,7 @@ export default function ModulosComprasPage() {
       try {
         if (tabs.selected === 'compras') {
           // Dados mock para a aba Compras
-          const rows: Row[] = [
+          const rows: Array<Record<string, unknown>> = [
             {
               compra_id: 1001,
               numero_oc: 'OC-2024-001',
@@ -416,7 +416,7 @@ export default function ModulosComprasPage() {
               ],
             },
           ]
-          setData(rows)
+          setData(rows as Row[])
           setTotal(rows.length)
           setKpisCompras({ canceladas: 1200, emAprovacao: 8400, aprovadas: 1250, totalPeriodo: 10850 })
           return
