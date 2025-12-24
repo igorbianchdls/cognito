@@ -154,8 +154,6 @@ interface DataTableProps<TData extends TableData> {
     setGlobalFilter?: (value: string) => void
   }) => void
   onPaginationChange?: (info: { pageIndex: number; pageSize: number; totalRows: number; pageCount: number }) => void
-  // Row selection count reporting
-  onRowSelectionChange?: (count: number) => void
 }
 
 export function DataTable<TData extends TableData>({
@@ -224,7 +222,6 @@ export function DataTable<TData extends TableData>({
   onDataChange,
   onTableReady,
   onPaginationChange: onExternalPaginationChange,
-  onRowSelectionChange,
 }: DataTableProps<TData>) {
   const [sorting, setSorting] = React.useState<SortingState>(
     defaultSortColumn ? [{ id: defaultSortColumn, desc: defaultSortDirection === 'desc' }] : []
@@ -487,12 +484,7 @@ export function DataTable<TData extends TableData>({
     },
   })
 
-  // Notify parent when row selection changes
-  React.useEffect(() => {
-    if (typeof onRowSelectionChange === 'function') {
-      onRowSelectionChange(table.getSelectedRowModel().rows.length)
-    }
-  }, [rowSelection, table, onRowSelectionChange])
+  // (selection count callback removed to keep component simple)
 
   // Sync external pageSize changes with table
   React.useEffect(() => {

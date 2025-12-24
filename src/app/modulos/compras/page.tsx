@@ -536,6 +536,11 @@ export default function ModulosComprasPage() {
               iconSize={toolbarUI.iconSize}
               searchWidth={toolbarUI.searchWidth}
               dateRangeWidth={toolbarUI.dateRangeWidth}
+              actionComponent={
+                tabs.selected === 'compras' ? (
+                  <a href="/modulos/compras/novo" className="inline-flex"><button className="inline-flex items-center px-3 py-2 rounded-md bg-primary text-primary-foreground">Nova Compra</button></a>
+                ) : undefined
+              }
             />
           </div>
           <div className="flex-1 min-h-0 overflow-auto" style={{ marginBottom: layout.mbTable }}>

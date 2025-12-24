@@ -587,7 +587,6 @@ export default function ModulosServicosPage() {
                           showPagination={tabelaUI.showPagination}
                           enableRowSelection={tabs.selected === 'vendas' ? true : tabelaUI.enableRowSelection}
                           selectionMode={tabs.selected === 'vendas' ? 'multiple' : tabelaUI.selectionMode}
-                          onRowSelectionChange={tabs.selected === 'vendas' ? (c) => setSelectedCount(c) : undefined}
                           pageSize={pageSize}
                           pageIndex={!(tabs.selected === 'tecnicos' || tabs.selected === 'clientes') ? page - 1 : undefined}
                           serverSidePagination={!(tabs.selected === 'tecnicos' || tabs.selected === 'clientes')}
