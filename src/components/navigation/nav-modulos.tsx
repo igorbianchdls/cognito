@@ -303,6 +303,40 @@ export function NavModulos({ groupLabelStyle, itemTextStyle }: { groupLabelStyle
             </SidebarMenuItem>
           </Collapsible>
           <Collapsible
+            key="producao"
+            asChild
+            defaultOpen={pathname.startsWith("/modulos/producao")}
+            className="group/collapsible"
+          >
+            <SidebarMenuItem>
+              <CollapsibleTrigger asChild>
+                <SidebarMenuButton tooltip="Produção">
+                  <Package />
+                  <span style={itemTextStyle}>Produção</span>
+                  <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                </SidebarMenuButton>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <SidebarMenuSub>
+                  <SidebarMenuSubItem>
+                    <SidebarMenuSubButton asChild isActive={pathname === "/modulos/producao"}>
+                      <a href="/modulos/producao">
+                        <span style={itemTextStyle}>Gestão</span>
+                      </a>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                  <SidebarMenuSubItem>
+                    <SidebarMenuSubButton asChild isActive={pathname === "/modulos/producao/relatorio"}>
+                      <a href="/modulos/producao/relatorio">
+                        <span style={itemTextStyle}>Relatório</span>
+                      </a>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                </SidebarMenuSub>
+              </CollapsibleContent>
+            </SidebarMenuItem>
+          </Collapsible>
+          <Collapsible
             key="manutencao"
             asChild
             defaultOpen={pathname.startsWith("/modulos/manutencao")}
