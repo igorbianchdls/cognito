@@ -137,7 +137,7 @@ export default function NovaVendaForm() {
   const handleSalvarCriarNova = () => {
     console.log("Salvar + nova venda (stub):", { info, items })
     // Limpa o formulário para nova venda
-    setInfo({ tipoVenda: "avulsa", situacao: "aprovado", numeroVenda: "", cliente: "", dataVenda: "", categoria: "", vendedor: "" })
+    setInfo({ tipoVenda: "avulsa", situacao: "aprovado", numeroVenda: "", cliente: "", canal: "", dataVenda: "", categoria: "", vendedor: "" })
     setItems([{ id: String(Date.now()), produto: "", detalhes: "", quantidade: 1, valorUnitario: 0 }])
   }
 
@@ -152,7 +152,6 @@ export default function NovaVendaForm() {
         onChange={(patch) => setInfo((prev) => ({ ...prev, ...patch }))}
         clienteOptions={clienteOptions}
         canalOptions={canalOptions}
-        categoriaOptions={categoriaOptions}
         vendedorOptions={vendedorOptions}
       />
 

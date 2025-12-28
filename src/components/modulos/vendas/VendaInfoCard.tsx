@@ -12,7 +12,7 @@ export type VendaInfoValues = {
   situacao: string
   numeroVenda: string
   cliente: string
-  canal: string
+  canal?: string
   dataVenda: string
   categoria: string
   vendedor: string
@@ -82,7 +82,7 @@ export default function VendaInfoCard({ values, onChange, clienteOptions = [], c
         </div>
         <div className="md:col-span-2">
           <Label className="text-sm text-slate-600">Canal de venda *</Label>
-          <Select value={values.canal} onValueChange={(v) => onChange({ canal: v })}>
+          <Select value={values.canal || ''} onValueChange={(v) => onChange({ canal: v })}>
             <SelectTrigger>
               <SelectValue placeholder="Selecione" />
             </SelectTrigger>
