@@ -26,9 +26,10 @@ export type EntryInfoCardProps = {
   centerLabel?: string
   entityOptions?: Array<{ value: string; label: string }>
   centerOptions?: Array<{ value: string; label: string }>
+  categoryOptions?: Array<{ value: string; label: string }>
 }
 
-export default function EntryInfoCard({ values, onChange, title = 'Informações do lançamento', entityLabel, categoryLabel = 'Categoria', centerLabel = 'Centro de custo', entityOptions, centerOptions }: EntryInfoCardProps) {
+export default function EntryInfoCard({ values, onChange, title = 'Informações do lançamento', entityLabel, categoryLabel = 'Categoria', centerLabel = 'Centro de custo', entityOptions, centerOptions, categoryOptions }: EntryInfoCardProps) {
   return (
     <Card className="p-4 mx-4">
       <div className="text-base font-semibold text-slate-800 mb-3">{title}</div>
@@ -72,8 +73,12 @@ export default function EntryInfoCard({ values, onChange, title = 'Informações
               <SelectValue placeholder="Selecione" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="cat1">Categoria 1</SelectItem>
-              <SelectItem value="cat2">Categoria 2</SelectItem>
+              {(categoryOptions && categoryOptions.length > 0)
+                ? categoryOptions.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)
+                : (<>
+                    <SelectItem value="cat1">Categoria 1</SelectItem>
+                    <SelectItem value="cat2">Categoria 2</SelectItem>
+                  </>)}
             </SelectContent>
           </Select>
         </div>

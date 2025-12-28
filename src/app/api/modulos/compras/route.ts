@@ -16,6 +16,7 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
     centro_custo: 'c.centro_custo_id',
     projeto: 'c.projeto_id',
     categoria_financeira: 'c.categoria_financeira_id',
+    categoria_despesa: 'c.categoria_despesa_id',
     status: 'c.status',
     valor_total: 'c.valor_total',
     criado_em: 'c.criado_em',
@@ -106,6 +107,7 @@ export async function GET(req: NextRequest) {
         c.centro_custo_id AS centro_custo,
         c.projeto_id AS projeto,
         c.categoria_financeira_id AS categoria_financeira,
+        c.categoria_despesa_id AS categoria_despesa,
         l.id AS linha_id,
         l.produto_id AS produto,
         l.quantidade,
@@ -562,6 +564,7 @@ export async function POST(req: NextRequest) {
     const centro_custo_id = body.centro_custo_id == null ? null : Number(body.centro_custo_id)
     const projeto_id = body.projeto_id == null ? null : Number(body.projeto_id)
     const categoria_financeira_id = body.categoria_financeira_id == null ? null : Number(body.categoria_financeira_id)
+    const categoria_despesa_id = body.categoria_despesa_id == null ? null : Number(body.categoria_despesa_id)
 
     const numero_oc = (body.numero_oc ?? null) as string | null
     const data_emissao = (body.data_emissao ?? null) as string | null
@@ -599,11 +602,11 @@ export async function POST(req: NextRequest) {
       // Insert header
       const insCab = await client.query(
         `INSERT INTO compras.compras (
-           tenant_id, fornecedor_id, filial_id, centro_custo_id, projeto_id, categoria_financeira_id,
+           tenant_id, fornecedor_id, filial_id, centro_custo_id, projeto_id, categoria_financeira_id, categoria_despesa_id,
            numero_oc, data_emissao, data_entrega_prevista, status, valor_total, observacoes, criado_por
-         ) VALUES ($1,$2,$3,$4,$5,$6,$7,COALESCE($8, CURRENT_DATE),$9,$10,$11,$12,$13)
+         ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,COALESCE($9, CURRENT_DATE),$10,$11,$12,$13,$14)
          RETURNING id`,
-        [tenant, fornecedor_id, filial_id, centro_custo_id, projeto_id, categoria_financeira_id,
+        [tenant, fornecedor_id, filial_id, centro_custo_id, projeto_id, categoria_financeira_id, categoria_despesa_id,
          numero_oc, data_emissao, data_entrega_prevista, status, valor_total, observacoes, criado_por]
       )
       const compra_id = Number(insCab.rows[0]?.id)

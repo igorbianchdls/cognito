@@ -49,19 +49,22 @@ export default function NovaCompraForm() {
   const [produtoOptions, setProdutoOptions] = React.useState<Array<{ value: string; label: string }>>([])
   const [fornecedorOptions, setFornecedorOptions] = React.useState<Array<{ value: string; label: string }>>([])
   const [centroCustoOptions, setCentroCustoOptions] = React.useState<Array<{ value: string; label: string }>>([])
+  const [categoriaDespesaOptions, setCategoriaDespesaOptions] = React.useState<Array<{ value: string; label: string }>>([])
 
   React.useEffect(() => {
     // Carregar fornecedores
     const ac = new AbortController()
     async function load() {
       try {
-        const [fRes, pRes, ccRes] = await Promise.all([
+        const [fRes, pRes, ccRes, cdRes] = await Promise.all([
           // Fornecedores reais: entidades.fornecedores
           fetch('/api/modulos/financeiro/fornecedores/list', { cache: 'no-store', signal: ac.signal }),
           // Produtos
           fetch('/api/modulos/produtos/produtos/list', { cache: 'no-store', signal: ac.signal }),
           // Centros de custo
-          fetch('/api/modulos/empresa?view=centros-de-custo&pageSize=500', { cache: 'no-store', signal: ac.signal })
+          fetch('/api/modulos/empresa?view=centros-de-custo&pageSize=500', { cache: 'no-store', signal: ac.signal }),
+          // Categorias de despesa
+          fetch('/api/modulos/financeiro/categorias-despesa/list', { cache: 'no-store', signal: ac.signal })
         ])
         if (fRes.ok) {
           const j = await fRes.json()
@@ -77,6 +80,11 @@ export default function NovaCompraForm() {
           const j = await ccRes.json()
           const opts = (j?.rows || []).map((r: any) => ({ value: String(r.id), label: r.nome }))
           setCentroCustoOptions(opts)
+        }
+        if (cdRes.ok) {
+          const j = await cdRes.json()
+          const opts = (j?.rows || []).map((r: any) => ({ value: String(r.id), label: r.nome }))
+          setCategoriaDespesaOptions(opts)
         }
       } catch {}
     }
@@ -125,6 +133,7 @@ export default function NovaCompraForm() {
         tenant_id: Number(tenantId || '1'),
         fornecedor_id: fornecedor,
         centro_custo_id: info.centro ? Number(info.centro) : null,
+        categoria_despesa_id: info.categoria ? Number(info.categoria) : null,
         numero_oc: numeroOc || null,
         data_emissao: info.dataCompetencia || null,
         data_entrega_prevista: dataEntregaPrevista || null,
@@ -154,9 +163,10 @@ export default function NovaCompraForm() {
         onChange={(patch) => setInfo((prev) => ({ ...prev, ...patch }))}
         title="Informações da compra"
         entityLabel="Fornecedor"
-        categoryLabel="Categoria"
+        categoryLabel="Categoria de Despesa"
         centerLabel="Centro de custo"
         entityOptions={fornecedorOptions}
+        categoryOptions={categoriaDespesaOptions}
         centerOptions={centroCustoOptions}
       />
 
