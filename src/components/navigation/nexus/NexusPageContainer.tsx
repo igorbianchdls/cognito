@@ -14,7 +14,7 @@ export default function NexusPageContainer({ className, style, children, showSid
   return (
     <div
       className={cn(
-        "relative border border-gray-200 rounded-md bg-white h-full w-full overflow-hidden p-0",
+        "relative border border-gray-200 rounded-md bg-gray-100 h-full w-full overflow-hidden p-0",
         className,
       )}
       style={style}

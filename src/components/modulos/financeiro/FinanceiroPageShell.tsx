@@ -15,7 +15,7 @@ export default function FinanceiroPageShell({ rightActions, children }: Props) {
     <SidebarProvider>
       <SidebarShadcn borderless headerBorderless />
       <SidebarInset className="h-screen overflow-hidden">
-        <div className="flex h-full overflow-hidden" style={{ backgroundColor: '#fdfdfd' }}>
+        <div className="flex h-full overflow-hidden bg-gray-100">
           <div className="flex flex-col h-full w-full">
             <NexusHeader
               viewMode={'dashboard'}
@@ -36,4 +36,3 @@ export default function FinanceiroPageShell({ rightActions, children }: Props) {
     </SidebarProvider>
   )
 }
-
