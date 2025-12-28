@@ -18,12 +18,11 @@ import { List, Users, Briefcase, LayoutGrid, Calendar, CalendarClock, CheckCircl
 import IconLabelHeader from '@/components/widgets/IconLabelHeader'
 import EntityDisplay from '@/components/modulos/EntityDisplay'
 import StatusBadge from '@/components/modulos/StatusBadge'
-import dynamic from 'next/dynamic'
-const CadastroTerritorioSheet = dynamic(() => import('@/components/modulos/comercial/CadastroTerritorioSheet').then(m => m.default), { ssr: false })
-const CadastroVendedorSheet = dynamic(() => import('@/components/modulos/comercial/CadastroVendedorSheet').then(m => m.default), { ssr: false })
-const CadastroTipoMetaSheet = dynamic(() => import('@/components/modulos/comercial/CadastroTipoMetaSheet').then(m => m.default), { ssr: false })
-const CadastroRegraComissaoSheet = dynamic(() => import('@/components/modulos/comercial/CadastroRegraComissaoSheet').then(m => m.default), { ssr: false })
-const CadastroCampanhaVendasSheet = dynamic(() => import('@/components/modulos/comercial/CadastroCampanhaVendasSheet').then(m => m.default), { ssr: false })
+import CadastroTerritorioSheet from '@/components/modulos/comercial/CadastroTerritorioSheet'
+import CadastroVendedorSheet from '@/components/modulos/comercial/CadastroVendedorSheet'
+import CadastroTipoMetaSheet from '@/components/modulos/comercial/CadastroTipoMetaSheet'
+import CadastroRegraComissaoSheet from '@/components/modulos/comercial/CadastroRegraComissaoSheet'
+import CadastroCampanhaVendasSheet from '@/components/modulos/comercial/CadastroCampanhaVendasSheet'
 
 type Row = TableData
 
