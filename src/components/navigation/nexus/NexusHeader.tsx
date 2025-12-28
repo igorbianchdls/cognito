@@ -64,6 +64,34 @@ export default function NexusHeader({ viewMode, onChangeViewMode, showBreadcrumb
           </BreadcrumbList>
         </Breadcrumb>
       )}
+
+      {/* Center search bar */}
+      <div className="flex-1 flex justify-center px-2">
+        <form
+          className="relative w-full max-w-2xl"
+          onSubmit={(e) => {
+            e.preventDefault();
+            const fd = new FormData(e.currentTarget as HTMLFormElement);
+            const q = String(fd.get('q') || '').trim();
+            if (q) {
+              try { console.log('Header search:', q) } catch {}
+            }
+          }}
+        >
+          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+            {/* magnifier */}
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
+              <circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" />
+            </svg>
+          </span>
+          <input
+            name="q"
+            placeholder="Buscar, ir para… ou pergunte algo"
+            className="w-full h-10 rounded-full border border-gray-300 bg-white pl-9 pr-4 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400/40"
+          />
+        </form>
+      </div>
+
       <div className="ml-auto flex items-center gap-2">
         {rightActions}
         <DropdownMenu>
@@ -91,6 +119,15 @@ export default function NexusHeader({ viewMode, onChangeViewMode, showBreadcrumb
 
         {/* Quick actions cluster to the right of the selector */}
         <div className="flex items-center gap-2">
+          {/* Contact experts */}
+          <button
+            type="button"
+            className={`hidden md:inline-flex items-center gap-2 ${mainBtnSize} rounded-lg text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:bg-gray-100`}
+            onClick={() => console.log('Contact experts')}
+          >
+            <img src="https://i.pravatar.cc/36?img=5" alt="" className="h-5 w-5 rounded-full" />
+            Contact experts
+          </button>
           {/* Notifications */}
           <button
             type="button"
