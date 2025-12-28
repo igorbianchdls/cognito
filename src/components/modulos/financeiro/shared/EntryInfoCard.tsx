@@ -24,9 +24,11 @@ export type EntryInfoCardProps = {
   entityLabel: string
   categoryLabel?: string
   centerLabel?: string
+  entityOptions?: Array<{ value: string; label: string }>
+  centerOptions?: Array<{ value: string; label: string }>
 }
 
-export default function EntryInfoCard({ values, onChange, title = 'Informações do lançamento', entityLabel, categoryLabel = 'Categoria', centerLabel = 'Centro de custo' }: EntryInfoCardProps) {
+export default function EntryInfoCard({ values, onChange, title = 'Informações do lançamento', entityLabel, categoryLabel = 'Categoria', centerLabel = 'Centro de custo', entityOptions, centerOptions }: EntryInfoCardProps) {
   return (
     <Card className="p-4 mx-4">
       <div className="text-base font-semibold text-slate-800 mb-3">{title}</div>
@@ -42,8 +44,12 @@ export default function EntryInfoCard({ values, onChange, title = 'Informações
               <SelectValue placeholder="Selecione" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="1">Opção 1</SelectItem>
-              <SelectItem value="2">Opção 2</SelectItem>
+              {(entityOptions && entityOptions.length > 0)
+                ? entityOptions.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)
+                : (<>
+                    <SelectItem value="1">Opção 1</SelectItem>
+                    <SelectItem value="2">Opção 2</SelectItem>
+                  </>)}
             </SelectContent>
           </Select>
         </div>
@@ -78,8 +84,12 @@ export default function EntryInfoCard({ values, onChange, title = 'Informações
               <SelectValue placeholder="Selecione" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="cc1">Centro 1</SelectItem>
-              <SelectItem value="cc2">Centro 2</SelectItem>
+              {(centerOptions && centerOptions.length > 0)
+                ? centerOptions.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)
+                : (<>
+                    <SelectItem value="cc1">Centro 1</SelectItem>
+                    <SelectItem value="cc2">Centro 2</SelectItem>
+                  </>)}
             </SelectContent>
           </Select>
         </div>

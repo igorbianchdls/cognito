@@ -30,7 +30,6 @@ export default function NovaCompraForm() {
   const [parcelas, setParcelas] = React.useState<Parcela[]>([])
   const [itens, setItens] = React.useState<CompraItem[]>([{ id: String(Date.now()), produto: '', quantidade: 1, unidade: 'un', valorUnitario: 0 }])
   const [tenantId, setTenantId] = React.useState<string>('1')
-  const [fornecedorId, setFornecedorId] = React.useState<string>('')
   const [numeroOc, setNumeroOc] = React.useState<string>('')
   const [dataEntregaPrevista, setDataEntregaPrevista] = React.useState<string>('')
   const [isSaving, setIsSaving] = React.useState(false)
@@ -49,15 +48,20 @@ export default function NovaCompraForm() {
 
   const [produtoOptions, setProdutoOptions] = React.useState<Array<{ value: string; label: string }>>([])
   const [fornecedorOptions, setFornecedorOptions] = React.useState<Array<{ value: string; label: string }>>([])
+  const [centroCustoOptions, setCentroCustoOptions] = React.useState<Array<{ value: string; label: string }>>([])
 
   React.useEffect(() => {
     // Carregar fornecedores
     const ac = new AbortController()
     async function load() {
       try {
-        const [fRes, pRes] = await Promise.all([
-          fetch('/api/modulos/compras/fornecedores/list', { cache: 'no-store', signal: ac.signal }),
-          fetch('/api/modulos/produtos/produtos/list', { cache: 'no-store', signal: ac.signal })
+        const [fRes, pRes, ccRes] = await Promise.all([
+          // Fornecedores reais: entidades.fornecedores
+          fetch('/api/modulos/financeiro/fornecedores/list', { cache: 'no-store', signal: ac.signal }),
+          // Produtos
+          fetch('/api/modulos/produtos/produtos/list', { cache: 'no-store', signal: ac.signal }),
+          // Centros de custo
+          fetch('/api/modulos/empresa?view=centros-de-custo&pageSize=500', { cache: 'no-store', signal: ac.signal })
         ])
         if (fRes.ok) {
           const j = await fRes.json()
@@ -68,6 +72,11 @@ export default function NovaCompraForm() {
           const j = await pRes.json()
           const opts = (j?.rows || []).map((r: any) => ({ value: String(r.id), label: r.nome }))
           setProdutoOptions(opts)
+        }
+        if (ccRes.ok) {
+          const j = await ccRes.json()
+          const opts = (j?.rows || []).map((r: any) => ({ value: String(r.id), label: r.nome }))
+          setCentroCustoOptions(opts)
         }
       } catch {}
     }
@@ -99,7 +108,7 @@ export default function NovaCompraForm() {
     setError(null)
     setIsSaving(true)
     try {
-      const fornecedor = Number(fornecedorId || info.entidade)
+      const fornecedor = Number(info.entidade)
       if (!fornecedor) throw new Error('Selecione um fornecedor')
       const linhas = itens
         .filter(it => it.produto && Number(it.quantidade) > 0)
@@ -115,6 +124,7 @@ export default function NovaCompraForm() {
       const payload = {
         tenant_id: Number(tenantId || '1'),
         fornecedor_id: fornecedor,
+        centro_custo_id: info.centro ? Number(info.centro) : null,
         numero_oc: numeroOc || null,
         data_emissao: info.dataCompetencia || null,
         data_entrega_prevista: dataEntregaPrevista || null,
@@ -146,6 +156,8 @@ export default function NovaCompraForm() {
         entityLabel="Fornecedor"
         categoryLabel="Categoria"
         centerLabel="Centro de custo"
+        entityOptions={fornecedorOptions}
+        centerOptions={centroCustoOptions}
       />
 
       <Card className="p-4 mx-4">
@@ -153,17 +165,6 @@ export default function NovaCompraForm() {
           <div className="md:col-span-2">
             <Label className="text-sm text-slate-600">Tenant ID</Label>
             <Input value={tenantId} onChange={(e) => setTenantId(e.target.value)} placeholder="1" />
-          </div>
-          <div className="md:col-span-4">
-            <Label className="text-sm text-slate-600">Fornecedor</Label>
-            <Select value={fornecedorId} onValueChange={setFornecedorId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione" />
-              </SelectTrigger>
-              <SelectContent>
-                {fornecedorOptions.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
-              </SelectContent>
-            </Select>
           </div>
           <div className="md:col-span-3">
             <Label className="text-sm text-slate-600">Número OC</Label>
