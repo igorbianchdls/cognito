@@ -9,6 +9,8 @@ import TabsNav, { type Opcao } from '@/components/modulos/TabsNav'
 import DataToolbar from '@/components/modulos/DataToolbar'
 import CadastroRegraContabilSheet from '@/components/modulos/contabilidade/CadastroRegraContabilSheet'
 import CadastroOrcamentoSheet from '@/components/modulos/contabilidade/CadastroOrcamentoSheet'
+import CadastroPlanoContasSheet from '@/components/modulos/contabilidade/CadastroPlanoContasSheet'
+import CadastroLancamentoContabilSheet from '@/components/modulos/contabilidade/CadastroLancamentoContabilSheet'
 import DataTable, { type TableData } from '@/components/widgets/Table'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
@@ -44,14 +46,14 @@ export default function ModulosContabilidadePage() {
     moduleUiActions.setTabs({
       options: [
         { value: 'lancamentos', label: 'Lançamentos contábeis', icon: <FileText className="text-gray-600" /> },
+        { value: 'plano-contas', label: 'Plano de Contas', icon: <BookOpen className="text-gray-600" /> },
+        { value: 'regras-contabeis', label: 'Regras contábeis', icon: <Wrench className="text-gray-600" /> },
         { value: 'budget-vs-actual', label: 'Orçado x Realizado', icon: <BarChart3 className="text-gray-600" /> },
         { value: 'dre-summary', label: 'DRE (Resumo Mensal)', icon: <BarChart3 className="text-gray-600" /> },
         { value: 'dre-comparison', label: 'DRE (Comparativo)', icon: <BarChart3 className="text-gray-600" /> },
         { value: 'bp-summary', label: 'BP (Resumo)', icon: <Landmark className="text-gray-600" /> },
         { value: 'bp-comparison', label: 'BP (Comparativo)', icon: <Landmark className="text-gray-600" /> },
         { value: 'orcamentos', label: 'Orçamentos', icon: <Briefcase className="text-gray-600" /> },
-        { value: 'plano-contas', label: 'Plano de Contas', icon: <BookOpen className="text-gray-600" /> },
-        { value: 'regras-contabeis', label: 'Regras contábeis', icon: <Wrench className="text-gray-600" /> },
       ],
       selected: 'lancamentos',
     })
@@ -358,6 +360,10 @@ export default function ModulosContabilidadePage() {
                       actionComponent={
                         tabs.selected === 'regras-contabeis' ? (
                           <CadastroRegraContabilSheet onSaved={() => setReloadKey(k => k + 1)} />
+                        ) : tabs.selected === 'plano-contas' ? (
+                          <CadastroPlanoContasSheet onSaved={() => setReloadKey(k => k + 1)} />
+                        ) : tabs.selected === 'lancamentos' ? (
+                          <CadastroLancamentoContabilSheet onSaved={() => setReloadKey(k => k + 1)} />
                         ) : tabs.selected === 'orcamentos' ? (
                           <CadastroOrcamentoSheet onSaved={() => setReloadKey(k => k + 1)} />
                         ) : undefined
