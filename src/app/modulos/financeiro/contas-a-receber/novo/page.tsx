@@ -235,8 +235,8 @@ export default function NovaReceitaPage() {
                         total={totalValor}
                         parcelas={parcelas}
                         onChangeParcel={onChangeParcel}
-                        formasPagamento={formasPagamento}
-                        contas={contas}
+                        formasPagamento={formasPagamentoOptions}
+                        contas={contaFinanceiraOptions}
                         formaPadrao={cond.formaPadrao}
                         contaPadrao={cond.contaPadrao}
                       />
