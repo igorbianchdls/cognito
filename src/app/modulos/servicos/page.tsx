@@ -18,6 +18,10 @@ import CadastroAgendamentoSheet from '@/components/modulos/servicos/CadastroAgen
 import CadastroTecnicoSheet from '@/components/modulos/servicos/CadastroTecnicoSheet'
 import CadastroClienteSheet from '@/components/modulos/servicos/CadastroClienteSheet'
 import CadastroServicoSheet from '@/components/modulos/servicos/CadastroServicoSheet'
+import CadastroCatalogoServicoSheet from '@/components/modulos/servicos/CadastroCatalogoServicoSheet'
+import CadastroCategoriaServicoSheet from '@/components/modulos/servicos/CadastroCategoriaServicoSheet'
+import CadastroTabelaPrecoServicoSheet from '@/components/modulos/servicos/CadastroTabelaPrecoServicoSheet'
+import CadastroSlaServicoSheet from '@/components/modulos/servicos/CadastroSlaServicoSheet'
 import StatusBadge from '@/components/modulos/StatusBadge'
 import EntityDisplay from '@/components/modulos/EntityDisplay'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/stores/modulos/moduleUiStore'
@@ -561,6 +565,14 @@ export default function ModulosServicosPage() {
                           <Link href="/modulos/vendas/pedidos/novo" className="inline-flex"><Button variant="default">Cadastrar Venda</Button></Link>
                         ) : tabs.selected === 'nota-fiscal' ? (
                           <Link href="/modulos/servicos/nota-fiscal/emitir" className="inline-flex"><Button variant="default">Emitir NFS-e</Button></Link>
+                        ) : tabs.selected === 'catalogo' ? (
+                          <CadastroCatalogoServicoSheet triggerLabel="Cadastrar" onSaved={() => setReloadKey((k) => k + 1)} />
+                        ) : tabs.selected === 'categorias' ? (
+                          <CadastroCategoriaServicoSheet triggerLabel="Cadastrar" onSaved={() => setReloadKey((k) => k + 1)} />
+                        ) : tabs.selected === 'tabelas-preco' ? (
+                          <CadastroTabelaPrecoServicoSheet triggerLabel="Cadastrar" onSaved={() => setReloadKey((k) => k + 1)} />
+                        ) : tabs.selected === 'slas' ? (
+                          <CadastroSlaServicoSheet triggerLabel="Cadastrar" onSaved={() => setReloadKey((k) => k + 1)} />
                         ) : undefined
                       }
                     />
