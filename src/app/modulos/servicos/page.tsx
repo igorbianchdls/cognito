@@ -23,10 +23,6 @@ const CadastroCatalogoServicoSheet = dynamic(() => import('@/components/modulos/
 const CadastroCategoriaServicoSheet = dynamic(() => import('@/components/modulos/servicos/CadastroCategoriaServicoSheet').then(m => m.default), { ssr: false })
 const CadastroTabelaPrecoServicoSheet = dynamic(() => import('@/components/modulos/servicos/CadastroTabelaPrecoServicoSheet').then(m => m.default), { ssr: false })
 const CadastroSlaServicoSheet = dynamic(() => import('@/components/modulos/servicos/CadastroSlaServicoSheet').then(m => m.default), { ssr: false })
-import CadastroCatalogoServicoSheet from '@/components/modulos/servicos/CadastroCatalogoServicoSheet'
-import CadastroCategoriaServicoSheet from '@/components/modulos/servicos/CadastroCategoriaServicoSheet'
-import CadastroTabelaPrecoServicoSheet from '@/components/modulos/servicos/CadastroTabelaPrecoServicoSheet'
-import CadastroSlaServicoSheet from '@/components/modulos/servicos/CadastroSlaServicoSheet'
 import StatusBadge from '@/components/modulos/StatusBadge'
 import EntityDisplay from '@/components/modulos/EntityDisplay'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/stores/modulos/moduleUiStore'
