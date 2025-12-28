@@ -9,8 +9,9 @@ import TabsNav, { type Opcao } from '@/components/modulos/TabsNav'
 import DataToolbar from '@/components/modulos/DataToolbar'
 import CadastroRegraContabilSheet from '@/components/modulos/contabilidade/CadastroRegraContabilSheet'
 import CadastroOrcamentoSheet from '@/components/modulos/contabilidade/CadastroOrcamentoSheet'
-import CadastroPlanoContasSheet from '@/components/modulos/contabilidade/CadastroPlanoContasSheet'
-import CadastroLancamentoContabilSheet from '@/components/modulos/contabilidade/CadastroLancamentoContabilSheet'
+import dynamic from 'next/dynamic'
+const CadastroPlanoContasSheet = dynamic(() => import('@/components/modulos/contabilidade/CadastroPlanoContasSheet').then(m => m.default), { ssr: false })
+const CadastroLancamentoContabilSheet = dynamic(() => import('@/components/modulos/contabilidade/CadastroLancamentoContabilSheet').then(m => m.default), { ssr: false })
 import DataTable, { type TableData } from '@/components/widgets/Table'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'

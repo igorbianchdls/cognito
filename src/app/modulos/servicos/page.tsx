@@ -17,7 +17,12 @@ import CadastroOrdemServicoSheet from '@/components/modulos/servicos/CadastroOrd
 import CadastroAgendamentoSheet from '@/components/modulos/servicos/CadastroAgendamentoSheet'
 import CadastroTecnicoSheet from '@/components/modulos/servicos/CadastroTecnicoSheet'
 import CadastroClienteSheet from '@/components/modulos/servicos/CadastroClienteSheet'
+import dynamic from 'next/dynamic'
 import CadastroServicoSheet from '@/components/modulos/servicos/CadastroServicoSheet'
+const CadastroCatalogoServicoSheet = dynamic(() => import('@/components/modulos/servicos/CadastroCatalogoServicoSheet').then(m => m.default), { ssr: false })
+const CadastroCategoriaServicoSheet = dynamic(() => import('@/components/modulos/servicos/CadastroCategoriaServicoSheet').then(m => m.default), { ssr: false })
+const CadastroTabelaPrecoServicoSheet = dynamic(() => import('@/components/modulos/servicos/CadastroTabelaPrecoServicoSheet').then(m => m.default), { ssr: false })
+const CadastroSlaServicoSheet = dynamic(() => import('@/components/modulos/servicos/CadastroSlaServicoSheet').then(m => m.default), { ssr: false })
 import CadastroCatalogoServicoSheet from '@/components/modulos/servicos/CadastroCatalogoServicoSheet'
 import CadastroCategoriaServicoSheet from '@/components/modulos/servicos/CadastroCategoriaServicoSheet'
 import CadastroTabelaPrecoServicoSheet from '@/components/modulos/servicos/CadastroTabelaPrecoServicoSheet'

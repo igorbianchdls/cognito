@@ -19,11 +19,11 @@ import IconLabelHeader from '@/components/widgets/IconLabelHeader'
 import EntityDisplay from '@/components/modulos/EntityDisplay'
 import StatusBadge from '@/components/modulos/StatusBadge'
 import dynamic from 'next/dynamic'
-const CadastroTerritorioSheet = dynamic(() => import('@/components/modulos/comercial/CadastroTerritorioSheet'), { ssr: false })
-const CadastroVendedorSheet = dynamic(() => import('@/components/modulos/comercial/CadastroVendedorSheet'), { ssr: false })
-const CadastroTipoMetaSheet = dynamic(() => import('@/components/modulos/comercial/CadastroTipoMetaSheet'), { ssr: false })
-const CadastroRegraComissaoSheet = dynamic(() => import('@/components/modulos/comercial/CadastroRegraComissaoSheet'), { ssr: false })
-const CadastroCampanhaVendasSheet = dynamic(() => import('@/components/modulos/comercial/CadastroCampanhaVendasSheet'), { ssr: false })
+const CadastroTerritorioSheet = dynamic(() => import('@/components/modulos/comercial/CadastroTerritorioSheet').then(m => m.default), { ssr: false })
+const CadastroVendedorSheet = dynamic(() => import('@/components/modulos/comercial/CadastroVendedorSheet').then(m => m.default), { ssr: false })
+const CadastroTipoMetaSheet = dynamic(() => import('@/components/modulos/comercial/CadastroTipoMetaSheet').then(m => m.default), { ssr: false })
+const CadastroRegraComissaoSheet = dynamic(() => import('@/components/modulos/comercial/CadastroRegraComissaoSheet').then(m => m.default), { ssr: false })
+const CadastroCampanhaVendasSheet = dynamic(() => import('@/components/modulos/comercial/CadastroCampanhaVendasSheet').then(m => m.default), { ssr: false })
 
 type Row = TableData
 
