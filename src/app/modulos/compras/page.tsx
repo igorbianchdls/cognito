@@ -359,71 +359,7 @@ export default function ModulosComprasPage() {
       setIsLoading(true)
       setError(null)
       try {
-        if (tabs.selected === 'compras') {
-          // Dados mock para a aba Compras
-          const rows = [
-            {
-              compra_id: 1001,
-              numero_oc: 'OC-2024-001',
-              data_emissao: '2024-06-05',
-              data_entrega_prevista: '2024-06-15',
-              fornecedor: 'Papelaria Alpha',
-              filial: 'Matriz',
-              centro_custo: 'Escritório',
-              projeto: 'Operacional',
-              categoria_financeira: 'Suprimentos',
-              status: 'Aprovada',
-              valor_total: 1250.0,
-              observacoes: 'Urgente',
-              criado_em: '2024-06-05',
-              linhas: [
-                { linha_id: 1, produto: 'Papel A4', quantidade: 20, unidade_medida: 'cx', preco_unitario: 45.5, total_linha: 910 },
-                { linha_id: 2, produto: 'Canetas', quantidade: 50, unidade_medida: 'un', preco_unitario: 6.8, total_linha: 340 },
-              ],
-            },
-            {
-              compra_id: 1002,
-              numero_oc: 'OC-2024-002',
-              data_emissao: '2024-06-07',
-              data_entrega_prevista: '2024-06-20',
-              fornecedor: 'Tech Parts',
-              filial: 'Filial SP',
-              centro_custo: 'TI',
-              projeto: 'Infra 2024',
-              categoria_financeira: 'Equipamentos',
-              status: 'Em aprovação',
-              valor_total: 8400.0,
-              observacoes: '',
-              criado_em: '2024-06-07',
-              linhas: [
-                { linha_id: 1, produto: 'HD SSD 1TB', quantidade: 10, unidade_medida: 'un', preco_unitario: 420, total_linha: 4200 },
-                { linha_id: 2, produto: 'Memória 16GB', quantidade: 20, unidade_medida: 'un', preco_unitario: 210, total_linha: 4200 },
-              ],
-            },
-            {
-              compra_id: 1003,
-              numero_oc: 'OC-2024-003',
-              data_emissao: '2024-06-10',
-              data_entrega_prevista: '2024-06-18',
-              fornecedor: 'Fornecedor XYZ',
-              filial: 'Matriz',
-              centro_custo: 'Manutenção',
-              projeto: 'Máquinas',
-              categoria_financeira: 'Manutenção',
-              status: 'Cancelada',
-              valor_total: 1200,
-              observacoes: 'Sem orçamento',
-              criado_em: '2024-06-10',
-              linhas: [
-                { linha_id: 1, produto: 'Correia', quantidade: 4, unidade_medida: 'un', preco_unitario: 300, total_linha: 1200 },
-              ],
-            },
-          ] as unknown as Row[]
-          setData(rows)
-          setTotal(rows.length)
-          setKpisCompras({ canceladas: 1200, emAprovacao: 8400, aprovadas: 1250, totalPeriodo: 10850 })
-          return
-        }
+        // Removido: mock data para a aba Compras; passa a usar API real
         if (tabs.selected === 'cotacoes') {
           const rows = [
             { cotacao_id: 5001, numero_cotacao: 'CT-2024-001', data_solicitacao: '2024-06-10', prazo_resposta: '2024-06-15', valor_estimado: 4000, status: 'Aberta', observacoes: 'Enviar até 15/06', criado_em: '2024-06-10' },

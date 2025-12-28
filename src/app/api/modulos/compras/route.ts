@@ -11,11 +11,11 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
     numero_oc: 'c.numero_oc',
     data_emissao: 'c.data_emissao',
     data_entrega_prevista: 'c.data_entrega_prevista',
-    fornecedor: 'f.nome',
-    filial: 'fil.nome',
-    centro_custo: 'cc.nome',
-    projeto: 'pr.nome',
-    categoria_financeira: 'cat.nome',
+    fornecedor: 'c.fornecedor_id',
+    filial: 'c.filial_id',
+    centro_custo: 'c.centro_custo_id',
+    projeto: 'c.projeto_id',
+    categoria_financeira: 'c.categoria_financeira_id',
     status: 'c.status',
     valor_total: 'c.valor_total',
     criado_em: 'c.criado_em',
@@ -91,7 +91,7 @@ export async function GET(req: NextRequest) {
     let baseSql = '';
     let whereDateCol = '';
 
-    if (view === 'compras') {
+  if (view === 'compras') {
       selectSql = `SELECT
         c.id AS compra_id,
         c.numero_oc,
@@ -101,30 +101,24 @@ export async function GET(req: NextRequest) {
         c.valor_total,
         c.observacoes,
         c.criado_em,
-        f.nome AS fornecedor,
-        fil.nome AS filial,
-        cc.nome AS centro_custo,
-        pr.nome AS projeto,
-        cat.nome AS categoria_financeira,
+        c.fornecedor_id AS fornecedor,
+        c.filial_id AS filial,
+        c.centro_custo_id AS centro_custo,
+        c.projeto_id AS projeto,
+        c.categoria_financeira_id AS categoria_financeira,
         l.id AS linha_id,
-        p.nome AS produto,
+        l.produto_id AS produto,
         l.quantidade,
         l.unidade_medida,
         l.preco_unitario,
         l.total AS total_linha`;
       baseSql = `FROM compras.compras c
-        LEFT JOIN entidades.fornecedores f ON f.id = c.fornecedor_id
-        LEFT JOIN empresa.filiais fil ON fil.id = c.filial_id
-        LEFT JOIN empresa.centros_custo cc ON cc.id = c.centro_custo_id
-        LEFT JOIN financeiro.projetos pr ON pr.id = c.projeto_id
-        LEFT JOIN financeiro.categorias_financeiras cat ON cat.id = c.categoria_financeira_id
-        LEFT JOIN compras.compras_linhas l ON l.compra_id = c.id
-        LEFT JOIN produtos.produto p ON p.id = l.produto_id`;
+        LEFT JOIN compras.compras_linhas l ON l.compra_id = c.id`;
       whereDateCol = 'c.data_emissao';
       if (status) push('LOWER(c.status) =', status.toLowerCase());
       if (fornecedor_id) push('c.fornecedor_id =', fornecedor_id);
       if (q) {
-        conditions.push(`(c.numero_oc ILIKE '%' || $${i} || '%' OR f.nome ILIKE '%' || $${i} || '%' OR p.nome ILIKE '%' || $${i} || '%' OR c.observacoes ILIKE '%' || $${i} || '%')`);
+        conditions.push(`(c.numero_oc ILIKE '%' || $${i} || '%' OR c.observacoes ILIKE '%' || $${i} || '%' OR CAST(c.id AS TEXT) ILIKE '%' || $${i} || '%')`);
         params.push(q);
         i += 1;
       }
@@ -523,7 +517,7 @@ export async function GET(req: NextRequest) {
     }
 
     const totalSql = view === 'compras'
-      ? `SELECT COUNT(DISTINCT c.id)::int AS total FROM compras.compras c ${whereClause.replace(/c\./g, 'c.').replace(/f\./g, 'f.')}`
+      ? `SELECT COUNT(DISTINCT c.id)::int AS total FROM compras.compras c ${whereClause}`
       : view === 'recebimentos'
       ? `SELECT COUNT(DISTINCT r.id)::int AS total FROM compras.recebimentos r ${whereClause.replace(/r\./g, 'r.')}`
       : view === 'solicitacoes_compra'
