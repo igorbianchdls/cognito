@@ -18,6 +18,7 @@ export default function NovaVendaForm() {
     situacao: "aprovado",
     numeroVenda: "",
     cliente: "",
+    canal: "",
     dataVenda: "",
     categoria: "",
     vendedor: "",
@@ -31,34 +32,51 @@ export default function NovaVendaForm() {
   const [cond, setCond] = React.useState<PaymentConditionConfig>({ parcelas: 1, primeiroVenc: "", intervaloDias: 30, formaPadrao: "", contaPadrao: "" })
   const [parcelas, setParcelas] = React.useState<Parcela[]>([])
 
-  const clienteOptions = React.useMemo(() => [
-    { value: "c1", label: "Cliente A" },
-    { value: "c2", label: "Cliente B" },
-  ], [])
-  const categoriaOptions = React.useMemo(() => [
-    { value: "servicos", label: "Serviços" },
-    { value: "produtos", label: "Produtos" },
-  ], [])
-  const vendedorOptions = React.useMemo(() => [
-    { value: "u1", label: "Vendedor 1" },
-    { value: "u2", label: "Vendedor 2" },
-  ], [])
-  const produtoOptions = React.useMemo(() => [
-    { value: "p1", label: "Diagnóstico e Setup" },
-    { value: "p2", label: "Consultoria Mensal" },
-    { value: "p3", label: "Treinamento" },
-  ], [])
+  const [clienteOptions, setClienteOptions] = React.useState<Array<{ value: string; label: string }>>([])
+  const [canalOptions, setCanalOptions] = React.useState<Array<{ value: string; label: string }>>([])
+  const [vendedorOptions, setVendedorOptions] = React.useState<Array<{ value: string; label: string }>>([])
+  const [produtoOptions, setProdutoOptions] = React.useState<Array<{ value: string; label: string }>>([])
+  const [formasPagamento, setFormasPagamento] = React.useState<Array<{ value: string; label: string }>>([])
+  const [contas, setContas] = React.useState<Array<{ value: string; label: string }>>([])
 
-  const formasPagamento = React.useMemo(() => [
-    { value: 'pix', label: 'PIX' },
-    { value: 'boleto', label: 'Boleto bancário' },
-    { value: 'cartao', label: 'Cartão' },
-    { value: 'transferencia', label: 'Transferência' },
-  ], [])
-  const contas = React.useMemo(() => [
-    { value: 'rec_f1', label: 'Receba Fácil' },
-    { value: 'itau_0001', label: 'Itaú • 0001' },
-  ], [])
+  const [isSaving, setIsSaving] = React.useState(false)
+  const [error, setError] = React.useState<string | null>(null)
+
+  React.useEffect(() => {
+    const ac = new AbortController()
+    async function load() {
+      try {
+        const [cliRes, canRes, venRes, srvRes, mpRes, cfRes] = await Promise.all([
+          fetch('/api/modulos/vendas/clientes/list', { cache: 'no-store', signal: ac.signal }),
+          fetch('/api/modulos/vendas/canais/list', { cache: 'no-store', signal: ac.signal }),
+          fetch('/api/modulos/vendas/vendedores/list', { cache: 'no-store', signal: ac.signal }),
+          fetch('/api/modulos/servicos?view=catalogo&pageSize=1000&order_by=nome', { cache: 'no-store', signal: ac.signal }),
+          fetch('/api/modulos/financeiro/metodos-pagamento/list', { cache: 'no-store', signal: ac.signal }),
+          fetch('/api/modulos/financeiro/contas-financeiras/list', { cache: 'no-store', signal: ac.signal }),
+        ])
+        if (cliRes.ok) {
+          const j = await cliRes.json(); setClienteOptions((j?.rows || []).map((r: any) => ({ value: String(r.id), label: r.nome })))
+        }
+        if (canRes.ok) {
+          const j = await canRes.json(); setCanalOptions((j?.rows || []).map((r: any) => ({ value: String(r.id), label: r.nome })))
+        }
+        if (venRes.ok) {
+          const j = await venRes.json(); setVendedorOptions((j?.rows || []).map((r: any) => ({ value: String(r.id), label: r.nome })))
+        }
+        if (srvRes.ok) {
+          const j = await srvRes.json(); setProdutoOptions((j?.rows || []).map((r: any) => ({ value: String(r.id), label: r.nome })))
+        }
+        if (mpRes.ok) {
+          const j = await mpRes.json(); const opts = (j?.rows || []).map((r: any) => ({ value: String(r.id), label: r.nome })); setFormasPagamento(opts); setCond(prev => ({ ...prev, formaPadrao: prev.formaPadrao || (opts[0]?.value || '') }))
+        }
+        if (cfRes.ok) {
+          const j = await cfRes.json(); const opts = (j?.rows || []).map((r: any) => ({ value: String(r.id), label: r.nome })); setContas(opts); setCond(prev => ({ ...prev, contaPadrao: prev.contaPadrao || (opts[0]?.value || '') }))
+        }
+      } catch {}
+    }
+    load();
+    return () => ac.abort()
+  }, [])
 
   const vendaTotal = React.useMemo(() => items.reduce((acc, it) => acc + (Number(it.quantidade) * Number(it.valorUnitario)), 0), [items])
 
@@ -81,10 +99,39 @@ export default function NovaVendaForm() {
 
   const onChangeParcel = (idx: number, patch: Partial<Parcela>) => setParcelas((prev) => prev.map((p, i) => i === idx ? { ...p, ...patch } : p))
 
-  const handleSalvar = () => {
-    // MVP: apenas loga e retorna para lista de pedidos
-    console.log("Salvar venda (stub):", { info, items })
-    router.push("/modulos/vendas?tab=pedidos")
+  const handleSalvar = async () => {
+    setError(null)
+    setIsSaving(true)
+    try {
+      if (!info.numeroVenda) throw new Error('Informe o número da venda')
+      const clienteId = Number(info.cliente)
+      if (!clienteId) throw new Error('Selecione o cliente')
+      const canalId = Number(info.canal)
+      if (!canalId) throw new Error('Selecione o canal de venda')
+      if (!info.dataVenda) throw new Error('Informe a data da venda')
+      if (items.length === 0) throw new Error('Adicione ao menos um item')
+
+      const valorTotal = items.reduce((acc, it) => acc + (Number(it.quantidade) * Number(it.valorUnitario)), 0)
+
+      const fd = new FormData()
+      fd.set('numero_pedido', info.numeroVenda)
+      fd.set('cliente_id', String(clienteId))
+      fd.set('canal_venda_id', String(canalId))
+      fd.set('data_pedido', info.dataVenda)
+      fd.set('valor_total', String(valorTotal))
+      if (info.vendedor) fd.set('usuario_id', String(info.vendedor))
+      fd.set('status', info.situacao || 'aprovado')
+      fd.set('valor_produtos', String(valorTotal))
+
+      const res = await fetch('/api/modulos/vendas/pedidos', { method: 'POST', body: fd })
+      const j = await res.json()
+      if (!res.ok || !j?.success) throw new Error(j?.message || `HTTP ${res.status}`)
+      router.push("/modulos/vendas?tab=pedidos")
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Falha ao salvar')
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   const handleSalvarCriarNova = () => {
@@ -104,6 +151,7 @@ export default function NovaVendaForm() {
         values={info}
         onChange={(patch) => setInfo((prev) => ({ ...prev, ...patch }))}
         clienteOptions={clienteOptions}
+        canalOptions={canalOptions}
         categoriaOptions={categoriaOptions}
         vendedorOptions={vendedorOptions}
       />
@@ -129,8 +177,9 @@ export default function NovaVendaForm() {
         <div className="flex items-center justify-between">
           <Button variant="outline" onClick={handleCancelar}>Cancelar</Button>
           <div className="flex items-center gap-2">
-            <Button variant="secondary" onClick={handleSalvarCriarNova}>Salvar e criar nova venda</Button>
-            <Button className="bg-emerald-600 hover:bg-emerald-700" onClick={handleSalvar}>Salvar</Button>
+            {error && <span className="text-sm text-red-600 mr-2">{error}</span>}
+            <Button variant="secondary" onClick={handleSalvarCriarNova} disabled={isSaving}>Salvar e criar nova venda</Button>
+            <Button className="bg-emerald-600 hover:bg-emerald-700" onClick={handleSalvar} disabled={isSaving}>{isSaving ? 'Salvando…' : 'Salvar'}</Button>
           </div>
         </div>
       </Card>

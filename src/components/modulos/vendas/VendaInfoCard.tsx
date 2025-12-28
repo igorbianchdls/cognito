@@ -12,6 +12,7 @@ export type VendaInfoValues = {
   situacao: string
   numeroVenda: string
   cliente: string
+  canal: string
   dataVenda: string
   categoria: string
   vendedor: string
@@ -21,11 +22,12 @@ export type VendaInfoCardProps = {
   values: VendaInfoValues
   onChange: (patch: Partial<VendaInfoValues>) => void
   clienteOptions?: Array<{ value: string; label: string }>
+  canalOptions?: Array<{ value: string; label: string }>
   categoriaOptions?: Array<{ value: string; label: string }>
   vendedorOptions?: Array<{ value: string; label: string }>
 }
 
-export default function VendaInfoCard({ values, onChange, clienteOptions = [], categoriaOptions = [], vendedorOptions = [] }: VendaInfoCardProps) {
+export default function VendaInfoCard({ values, onChange, clienteOptions = [], canalOptions = [], categoriaOptions = [], vendedorOptions = [] }: VendaInfoCardProps) {
   return (
     <Card className="p-4 mx-4">
       <div className="text-base font-semibold text-slate-800 mb-3">Informações da venda</div>
@@ -79,6 +81,19 @@ export default function VendaInfoCard({ values, onChange, clienteOptions = [], c
           </Select>
         </div>
         <div className="md:col-span-2">
+          <Label className="text-sm text-slate-600">Canal de venda *</Label>
+          <Select value={values.canal} onValueChange={(v) => onChange({ canal: v })}>
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione" />
+            </SelectTrigger>
+            <SelectContent>
+              {canalOptions.map((o) => (
+                <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="md:col-span-2">
           <Label className="text-sm text-slate-600">Data da venda *</Label>
           <Input type="date" value={values.dataVenda} onChange={(e) => onChange({ dataVenda: e.target.value })} />
         </div>
@@ -112,4 +127,3 @@ export default function VendaInfoCard({ values, onChange, clienteOptions = [], c
     </Card>
   )
 }
-
