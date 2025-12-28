@@ -33,6 +33,7 @@ import CadastroBancoSheet from '@/components/modulos/financeiro/CadastroBancoShe
 import CadastroContaFinanceiraSheet from '@/components/modulos/financeiro/CadastroContaFinanceiraSheet'
 import CategoriaDespesaEditorModal from '@/components/modulos/financeiro/CategoriaDespesaEditorModal'
 import CadastroCategoriaReceitaSheet from '@/components/modulos/financeiro/CadastroCategoriaReceitaSheet'
+import CadastroCategoriaDespesaSheet from '@/components/modulos/financeiro/CadastroCategoriaDespesaSheet'
 import CategoriaReceitaEditorModal from '@/components/modulos/financeiro/CategoriaReceitaEditorModal'
 import ApKpiRow from '@/components/modulos/financeiro/ApKpiRow'
 import ExtratoKpiRow from '@/components/modulos/financeiro/ExtratoKpiRow'
@@ -913,6 +914,8 @@ export default function ModulosFinanceiroPage() {
                   <CadastroContaFinanceiraSheet triggerLabel="Cadastrar" onSaved={() => setReloadKey((k) => k + 1)} />
                 ) : tabs.selected === 'categorias-receita' ? (
                   <CadastroCategoriaReceitaSheet triggerLabel="Cadastrar" onSaved={() => setReloadKey((k) => k + 1)} />
+                ) : tabs.selected === 'categorias-despesa' ? (
+                  <CadastroCategoriaDespesaSheet triggerLabel="Cadastrar" onSaved={() => setReloadKey((k) => k + 1)} />
                 ) : undefined
               }
             />
