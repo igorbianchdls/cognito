@@ -15,6 +15,8 @@ export type EntryInfoValues = {
   categoria: string
   centro: string
   codigoReferencia: string
+  filial?: string
+  projeto?: string
 }
 
 export type EntryInfoCardProps = {
@@ -27,9 +29,11 @@ export type EntryInfoCardProps = {
   entityOptions?: Array<{ value: string; label: string }>
   centerOptions?: Array<{ value: string; label: string }>
   categoryOptions?: Array<{ value: string; label: string }>
+  branchOptions?: Array<{ value: string; label: string }>
+  projectOptions?: Array<{ value: string; label: string }>
 }
 
-export default function EntryInfoCard({ values, onChange, title = 'Informações do lançamento', entityLabel, categoryLabel = 'Categoria', centerLabel = 'Centro de custo', entityOptions, centerOptions, categoryOptions }: EntryInfoCardProps) {
+export default function EntryInfoCard({ values, onChange, title = 'Informações do lançamento', entityLabel, categoryLabel = 'Categoria', centerLabel = 'Centro de custo', entityOptions, centerOptions, categoryOptions, branchOptions, projectOptions }: EntryInfoCardProps) {
   return (
     <Card className="p-4 mx-4">
       <div className="text-base font-semibold text-slate-800 mb-3">{title}</div>
@@ -98,6 +102,32 @@ export default function EntryInfoCard({ values, onChange, title = 'Informações
             </SelectContent>
           </Select>
         </div>
+        {branchOptions && (
+          <div className="md:col-span-3">
+            <Label className="text-sm text-slate-600">Filial</Label>
+            <Select value={values.filial || ''} onValueChange={(v) => onChange({ filial: v })}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione" />
+              </SelectTrigger>
+              <SelectContent>
+                {branchOptions.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+        {projectOptions && (
+          <div className="md:col-span-3">
+            <Label className="text-sm text-slate-600">Projeto</Label>
+            <Select value={values.projeto || ''} onValueChange={(v) => onChange({ projeto: v })}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione" />
+              </SelectTrigger>
+              <SelectContent>
+                {projectOptions.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
         <div className="md:col-span-2">
           <Label className="text-sm text-slate-600">Código de referência</Label>
           <Input value={values.codigoReferencia} onChange={(e) => onChange({ codigoReferencia: e.target.value })} />

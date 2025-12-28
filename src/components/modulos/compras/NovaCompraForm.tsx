@@ -50,13 +50,15 @@ export default function NovaCompraForm() {
   const [fornecedorOptions, setFornecedorOptions] = React.useState<Array<{ value: string; label: string }>>([])
   const [centroCustoOptions, setCentroCustoOptions] = React.useState<Array<{ value: string; label: string }>>([])
   const [categoriaDespesaOptions, setCategoriaDespesaOptions] = React.useState<Array<{ value: string; label: string }>>([])
+  const [filialOptions, setFilialOptions] = React.useState<Array<{ value: string; label: string }>>([])
+  const [projetoOptions, setProjetoOptions] = React.useState<Array<{ value: string; label: string }>>([])
 
   React.useEffect(() => {
     // Carregar fornecedores
     const ac = new AbortController()
     async function load() {
       try {
-        const [fRes, pRes, ccRes, cdRes] = await Promise.all([
+        const [fRes, pRes, ccRes, cdRes, filRes, prjRes] = await Promise.all([
           // Fornecedores reais: entidades.fornecedores
           fetch('/api/modulos/financeiro/fornecedores/list', { cache: 'no-store', signal: ac.signal }),
           // Produtos
@@ -64,7 +66,11 @@ export default function NovaCompraForm() {
           // Centros de custo
           fetch('/api/modulos/empresa?view=centros-de-custo&pageSize=500', { cache: 'no-store', signal: ac.signal }),
           // Categorias de despesa
-          fetch('/api/modulos/financeiro/categorias-despesa/list', { cache: 'no-store', signal: ac.signal })
+          fetch('/api/modulos/financeiro/categorias-despesa/list', { cache: 'no-store', signal: ac.signal }),
+          // Filiais
+          fetch('/api/modulos/empresa?view=filiais&pageSize=500', { cache: 'no-store', signal: ac.signal }),
+          // Projetos
+          fetch('/api/modulos/financeiro?view=projetos&pageSize=1000', { cache: 'no-store', signal: ac.signal })
         ])
         if (fRes.ok) {
           const j = await fRes.json()
@@ -85,6 +91,16 @@ export default function NovaCompraForm() {
           const j = await cdRes.json()
           const opts = (j?.rows || []).map((r: any) => ({ value: String(r.id), label: r.nome }))
           setCategoriaDespesaOptions(opts)
+        }
+        if (filRes.ok) {
+          const j = await filRes.json()
+          const opts = (j?.rows || []).map((r: any) => ({ value: String(r.id), label: r.nome }))
+          setFilialOptions(opts)
+        }
+        if (prjRes.ok) {
+          const j = await prjRes.json()
+          const opts = (j?.rows || []).map((r: any) => ({ value: String(r.id), label: r.nome }))
+          setProjetoOptions(opts)
         }
       } catch {}
     }
@@ -133,6 +149,8 @@ export default function NovaCompraForm() {
         tenant_id: Number(tenantId || '1'),
         fornecedor_id: fornecedor,
         centro_custo_id: info.centro ? Number(info.centro) : null,
+        filial_id: info.filial ? Number(info.filial) : null,
+        projeto_id: info.projeto ? Number(info.projeto) : null,
         categoria_despesa_id: info.categoria ? Number(info.categoria) : null,
         numero_oc: numeroOc || null,
         data_emissao: info.dataCompetencia || null,
@@ -168,6 +186,8 @@ export default function NovaCompraForm() {
         entityOptions={fornecedorOptions}
         categoryOptions={categoriaDespesaOptions}
         centerOptions={centroCustoOptions}
+        branchOptions={filialOptions}
+        projectOptions={projetoOptions}
       />
 
       <Card className="p-4 mx-4">
