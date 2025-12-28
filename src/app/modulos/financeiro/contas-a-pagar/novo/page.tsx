@@ -9,6 +9,7 @@ import NexusHeader from '@/components/navigation/nexus/NexusHeader'
 import NexusPageContainer from '@/components/navigation/nexus/NexusPageContainer'
 import PageHeader from '@/components/modulos/PageHeader'
 import { Card } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
@@ -31,15 +32,107 @@ export default function NovaDespesaPage() {
     codigoReferencia: '',
   })
 
+  const [tenantId, setTenantId] = React.useState<string>('1')
+  const [numeroDocumento, setNumeroDocumento] = React.useState<string>('')
+  const [dataDocumento, setDataDocumento] = React.useState<string>('')
+  const [isSaving, setIsSaving] = React.useState(false)
+  const [error, setError] = React.useState<string | null>(null)
+
+  const [fornecedorOptions, setFornecedorOptions] = React.useState<Array<{ value: string; label: string }>>([])
+  const [categoriaDespesaOptions, setCategoriaDespesaOptions] = React.useState<Array<{ value: string; label: string }>>([])
+  const [centroCustoOptions, setCentroCustoOptions] = React.useState<Array<{ value: string; label: string }>>([])
+  const [filialOptions, setFilialOptions] = React.useState<Array<{ value: string; label: string }>>([])
+  const [projetoOptions, setProjetoOptions] = React.useState<Array<{ value: string; label: string }>>([])
+  const [formasPagamentoOptions, setFormasPagamentoOptions] = React.useState<Array<{ value: string; label: string }>>([])
+  const [contaFinanceiraOptions, setContaFinanceiraOptions] = React.useState<Array<{ value: string; label: string }>>([])
+
   const [repetirLancamento, setRepetirLancamento] = React.useState(false)
   const [cond, setCond] = React.useState<PaymentConditionConfig>({ parcelas: 1, primeiroVenc: '', intervaloDias: 30, formaPadrao: '', contaPadrao: '' })
   const [parcelas, setParcelas] = React.useState<Parcela[]>([])
   const [observacoes, setObservacoes] = React.useState('')
   const [tab, setTab] = React.useState('obs')
 
-  function onSalvar() {
-    console.log('Salvar (AP stub):', { info, repetirLancamento, cond, parcelas, observacoes })
-    router.push('/modulos/financeiro?tab=contas-a-pagar')
+  React.useEffect(() => {
+    const ac = new AbortController()
+    async function load() {
+      try {
+        const [fRes, catRes, ccRes, filRes, prjRes, mpRes, cfRes] = await Promise.all([
+          fetch('/api/modulos/financeiro/fornecedores/list', { cache: 'no-store', signal: ac.signal }),
+          fetch('/api/modulos/financeiro/categorias-despesa/list', { cache: 'no-store', signal: ac.signal }),
+          fetch('/api/modulos/empresa?view=centros-de-custo&pageSize=500', { cache: 'no-store', signal: ac.signal }),
+          fetch('/api/modulos/empresa?view=filiais&pageSize=500', { cache: 'no-store', signal: ac.signal }),
+          fetch('/api/modulos/financeiro?view=projetos&pageSize=1000', { cache: 'no-store', signal: ac.signal }),
+          fetch('/api/modulos/financeiro/metodos-pagamento/list', { cache: 'no-store', signal: ac.signal }),
+          fetch('/api/modulos/financeiro/contas-financeiras/list', { cache: 'no-store', signal: ac.signal }),
+        ])
+        if (fRes.ok) {
+          const j = await fRes.json(); setFornecedorOptions((j?.rows || []).map((r: any) => ({ value: String(r.id), label: r.nome })))
+        }
+        if (catRes.ok) {
+          const j = await catRes.json(); setCategoriaDespesaOptions((j?.rows || []).map((r: any) => ({ value: String(r.id), label: r.nome })))
+        }
+        if (ccRes.ok) {
+          const j = await ccRes.json(); setCentroCustoOptions((j?.rows || []).map((r: any) => ({ value: String(r.id), label: r.nome })))
+        }
+        if (filRes.ok) {
+          const j = await filRes.json(); setFilialOptions((j?.rows || []).map((r: any) => ({ value: String(r.id), label: r.nome })))
+        }
+        if (prjRes.ok) {
+          const j = await prjRes.json(); setProjetoOptions((j?.rows || []).map((r: any) => ({ value: String(r.id), label: r.nome })))
+        }
+        if (mpRes.ok) {
+          const j = await mpRes.json(); const opts = (j?.rows || []).map((r: any) => ({ value: String(r.id), label: r.nome })); setFormasPagamentoOptions(opts); setCond((prev) => ({ ...prev, formaPadrao: prev.formaPadrao || (opts[0]?.value || '') }))
+        }
+        if (cfRes.ok) {
+          const j = await cfRes.json(); const opts = (j?.rows || []).map((r: any) => ({ value: String(r.id), label: r.nome })); setContaFinanceiraOptions(opts); setCond((prev) => ({ ...prev, contaPadrao: prev.contaPadrao || (opts[0]?.value || '') }))
+        }
+      } catch {}
+    }
+    load()
+    return () => ac.abort()
+  }, [])
+
+  async function onSalvar() {
+    setError(null)
+    setIsSaving(true)
+    try {
+      const fornecedor = Number(info.entidade)
+      if (!fornecedor) throw new Error('Selecione um fornecedor')
+      const raw = info.valor.replace(/\./g, '').replace(/,/g, '.')
+      const valorNum = Number(raw)
+      if (!Number.isFinite(valorNum) || valorNum <= 0) throw new Error('Informe um valor válido')
+      const dataVenc = parcelas[0]?.vencimento || ''
+      if (!dataVenc) throw new Error('Informe o 1º vencimento')
+
+      const payload = {
+        tenant_id: Number(tenantId || '1'),
+        fornecedor_id: fornecedor,
+        categoria_id: info.categoria ? Number(info.categoria) : null,
+        centro_custo_id: info.centro ? Number(info.centro) : null,
+        filial_id: info.filial ? Number(info.filial) : null,
+        projeto_id: info.projeto ? Number(info.projeto) : null,
+        descricao: info.descricao || 'Conta a pagar',
+        valor: valorNum,
+        data_lancamento: info.dataCompetencia || new Date().toISOString().slice(0,10),
+        data_documento: dataDocumento || null,
+        numero_documento: numeroDocumento || null,
+        data_vencimento: dataVenc,
+        status: 'pendente',
+      }
+
+      const res = await fetch('/api/modulos/financeiro/contas-a-pagar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      const j = await res.json()
+      if (!res.ok || !j?.success) throw new Error(j?.message || `HTTP ${res.status}`)
+      router.push('/modulos/financeiro?tab=contas-a-pagar')
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Falha ao salvar')
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   const formasPagamento = React.useMemo(() => [
@@ -92,9 +185,31 @@ export default function NovaDespesaPage() {
                     values={info}
                     onChange={(patch) => setInfo((prev) => ({ ...prev, ...patch }))}
                     entityLabel="Fornecedor"
-                    categoryLabel="Categoria"
+                    categoryLabel="Categoria de Despesa"
                     centerLabel="Centro de custo"
+                    entityOptions={fornecedorOptions}
+                    categoryOptions={categoriaDespesaOptions}
+                    centerOptions={centroCustoOptions}
+                    branchOptions={filialOptions}
+                    projectOptions={projetoOptions}
                   />
+
+                  <Card className="p-4 mx-4">
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
+                      <div className="md:col-span-2">
+                        <Label className="text-sm text-slate-600">Tenant ID</Label>
+                        <Input value={tenantId} onChange={(e) => setTenantId(e.target.value)} placeholder="1" />
+                      </div>
+                      <div className="md:col-span-4">
+                        <Label className="text-sm text-slate-600">Número do Documento</Label>
+                        <Input value={numeroDocumento} onChange={(e) => setNumeroDocumento(e.target.value)} placeholder="Opcional" />
+                      </div>
+                      <div className="md:col-span-3">
+                        <Label className="text-sm text-slate-600">Data do Documento</Label>
+                        <Input type="date" value={dataDocumento} onChange={(e) => setDataDocumento(e.target.value)} />
+                      </div>
+                    </div>
+                  </Card>
 
                   <Card className="p-4 mx-4">
                     <div className="flex items-center justify-between mb-3">
@@ -108,8 +223,8 @@ export default function NovaDespesaPage() {
                     <PaymentConditionHeader
                       config={cond}
                       onChange={(patch) => setCond((prev) => ({ ...prev, ...patch }))}
-                      formasPagamento={formasPagamento}
-                      contas={contas}
+                      formasPagamento={formasPagamentoOptions}
+                      contas={contaFinanceiraOptions}
                     />
 
                     <div className="mt-5">
@@ -153,9 +268,12 @@ export default function NovaDespesaPage() {
                 <div className="sticky bottom-0 left-0 right-0 mt-4 bg-white/80 backdrop-blur border-t border-gray-200">
                   <div className="flex items-center justify-between px-4 py-3">
                     <Link href="/modulos/financeiro?tab=contas-a-pagar" className="inline-flex">
-                      <Button variant="outline">Voltar</Button>
+                      <Button variant="outline" disabled={isSaving}>Voltar</Button>
                     </Link>
-                    <Button onClick={onSalvar} className="bg-emerald-600 hover:bg-emerald-700">Salvar</Button>
+                    <div className="flex items-center gap-3">
+                      {error && <div className="text-sm text-red-600">{error}</div>}
+                      <Button onClick={onSalvar} className="bg-emerald-600 hover:bg-emerald-700" disabled={isSaving}>{isSaving ? 'Salvando…' : 'Salvar'}</Button>
+                    </div>
                   </div>
                 </div>
               </NexusPageContainer>
