@@ -101,7 +101,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} ${ptSerif.variable} ${notoSerif.variable} ${libreBaskerville.variable} ${crimsonText.variable} ${amiri.variable} ${radley.variable} ${ibmPlexMono.variable} ${spaceMono.variable} ${robotoMono.variable} ${ebGaramond.variable} ${barlow.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} ${ptSerif.variable} ${notoSerif.variable} ${libreBaskerville.variable} ${crimsonText.variable} ${amiri.variable} ${radley.variable} ${ibmPlexMono.variable} ${spaceMono.variable} ${robotoMono.variable} ${ebGaramond.variable} ${barlow.variable} antialiased bg-gray-100`}
       >
         {children}
       </body>

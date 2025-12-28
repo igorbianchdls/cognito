@@ -147,7 +147,7 @@ const DEFAULT_TABELA_UI: TabelaUIState = {
 export const $titulo = atom<TituloState>({ ...DEFAULT_TITULO, subtitleFontFamily: 'Barlow', subtitleFontSize: 16, subtitleLetterSpacing: -0.28 })
 export const $tabs = atom<TabsState>({ ...DEFAULT_TABS })
 export const $tabelaUI = atom<TabelaUIState>({ ...DEFAULT_TABELA_UI })
-export const $layout = atom<LayoutState>({ mbTitle: 16, mbTabs: 8, mbTable: 24, contentBg: 'rgb(253, 253, 253)', contentTopGap: 8 })
+export const $layout = atom<LayoutState>({ mbTitle: 16, mbTabs: 8, mbTable: 24, contentBg: 'rgb(243, 244, 246)', contentTopGap: 8 })
 export const $toolbarUI = atom<ToolbarUIState>({
   fontFamily: 'Geist',
   fontSize: 14,
@@ -182,6 +182,6 @@ export const moduleUiActions = {
       borderBottomWidth: 0, borderBottomColor: '#e5e7eb', borderDistanceTop: 8, underlineColor: '#d1d5db', underlineWidth: 0, underlineOffsetTop: 0,
       iconGap: 8, iconColor: '#9ca3af', iconSize: 16, searchWidth: 240, dateRangeWidth: 160,
     })
-    $layout.set({ mbTitle: 16, mbTabs: 8, mbTable: 24, contentBg: 'rgb(253, 253, 253)', contentTopGap: 8 })
+    $layout.set({ mbTitle: 16, mbTabs: 8, mbTable: 24, contentBg: 'rgb(243, 244, 246)', contentTopGap: 8 })
   },
 }
