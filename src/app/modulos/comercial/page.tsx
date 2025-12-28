@@ -18,6 +18,11 @@ import { List, Users, Briefcase, LayoutGrid, Calendar, CalendarClock, CheckCircl
 import IconLabelHeader from '@/components/widgets/IconLabelHeader'
 import EntityDisplay from '@/components/modulos/EntityDisplay'
 import StatusBadge from '@/components/modulos/StatusBadge'
+import CadastroTerritorioSheet from '@/components/modulos/comercial/CadastroTerritorioSheet'
+import CadastroVendedorSheet from '@/components/modulos/comercial/CadastroVendedorSheet'
+import CadastroTipoMetaSheet from '@/components/modulos/comercial/CadastroTipoMetaSheet'
+import CadastroRegraComissaoSheet from '@/components/modulos/comercial/CadastroRegraComissaoSheet'
+import CadastroCampanhaVendasSheet from '@/components/modulos/comercial/CadastroCampanhaVendasSheet'
 
 type Row = TableData
 
@@ -506,6 +511,19 @@ export default function ModulosComercialPage() {
                         iconSize={toolbarUI.iconSize}
                         searchWidth={toolbarUI.searchWidth}
                         dateRangeWidth={toolbarUI.dateRangeWidth}
+                        actionComponent={
+                          tabs.selected === 'territorios' ? (
+                            <CadastroTerritorioSheet triggerLabel="Cadastrar" onSaved={() => setPage(1)} />
+                          ) : tabs.selected === 'vendedores' ? (
+                            <CadastroVendedorSheet triggerLabel="Cadastrar" onSaved={() => setPage(1)} />
+                          ) : tabs.selected === 'tipos_metas' ? (
+                            <CadastroTipoMetaSheet triggerLabel="Cadastrar" onSaved={() => setPage(1)} />
+                          ) : tabs.selected === 'regras_comissoes' ? (
+                            <CadastroRegraComissaoSheet triggerLabel="Cadastrar" onSaved={() => setPage(1)} />
+                          ) : tabs.selected === 'campanhas_vendas' ? (
+                            <CadastroCampanhaVendasSheet triggerLabel="Cadastrar" onSaved={() => setPage(1)} />
+                          ) : undefined
+                        }
                       />
                     )}
                   </div>
