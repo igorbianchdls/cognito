@@ -10,7 +10,6 @@ import NexusPageContainer from '@/components/navigation/nexus/NexusPageContainer
 import PageHeader from '@/components/modulos/PageHeader'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
