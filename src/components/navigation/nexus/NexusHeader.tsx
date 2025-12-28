@@ -43,7 +43,7 @@ export default function NexusHeader({ viewMode, onChangeViewMode, showBreadcrumb
   const breadcrumbTextPage = size === 'sm' ? 'text-sm' : 'text-[15px] md:text-base'
 
   return (
-    <header className={`flex ${headerSizeClass} shrink-0 items-center gap-2 bg-[#fdfdfd] ${borderless ? '' : 'border-b'}`}>
+    <header className={`flex ${headerSizeClass} shrink-0 items-center gap-2 bg-gray-100 ${borderless ? '' : 'border-b'}`}>
       {showBreadcrumb && (
         <Separator orientation="vertical" className={size === 'sm' ? 'mr-1 data-[orientation=vertical]:h-4' : 'mr-2 data-[orientation=vertical]:h-4'} />
       )}

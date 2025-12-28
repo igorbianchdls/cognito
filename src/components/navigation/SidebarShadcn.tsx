@@ -208,7 +208,7 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
   }
 
   // Apply default values from financeiro dashboard
-  const finalBgColor = bgColor ?? '#fdfdfd'
+  const finalBgColor = bgColor ?? '#f3f4f6'
   const finalTextColor = textColor ?? '#717171'
   const finalItemTextColor = itemTextColor ?? '#0f172a'
   const finalSectionTitleStyle = sectionTitleStyle ?? DEFAULT_SECTION_TITLE_STYLE
@@ -229,7 +229,7 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
       className={cn(borderless ? '!border-r-0 !border-l-0 !border-0' : undefined, className)}
       {...props}
     >
-      <SidebarHeader className={cn("h-16 bg-[#fdfdfd]", headerBorderless ? undefined : "border-b") }>
+      <SidebarHeader className={cn("h-16 bg-gray-100", headerBorderless ? undefined : "border-b") }>
         {headerVariant === 'compact' ? (
           <div className="h-full flex items-center px-2">
             <SidebarHeaderCompact teams={dataWithActiveState.teams} />
