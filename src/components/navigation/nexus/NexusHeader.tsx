@@ -43,7 +43,7 @@ export default function NexusHeader({ viewMode, onChangeViewMode, showBreadcrumb
   const breadcrumbTextPage = size === 'sm' ? 'text-sm' : 'text-[15px] md:text-base'
 
   return (
-    <header className={`flex ${headerSizeClass} shrink-0 items-center gap-2 bg-[#fdfdfd] ${borderless ? '' : 'border-b'}`}>
+    <header className={`flex ${headerSizeClass} shrink-0 items-center gap-2 bg-gray-100 ${borderless ? '' : 'border-b'}`}>
       {showBreadcrumb && (
         <Separator orientation="vertical" className={size === 'sm' ? 'mr-1 data-[orientation=vertical]:h-4' : 'mr-2 data-[orientation=vertical]:h-4'} />
       )}
@@ -87,7 +87,7 @@ export default function NexusHeader({ viewMode, onChangeViewMode, showBreadcrumb
           <input
             name="q"
             placeholder="Buscar, ir para… ou pergunte algo"
-            className="w-full h-10 rounded-lg border border-gray-300 bg-gray-100 pl-9 pr-4 text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-400/40"
+            className="w-full h-10 rounded-lg border border-gray-300 bg-white pl-9 pr-4 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400/40"
           />
         </form>
       </div>
