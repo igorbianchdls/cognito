@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { runQuery } from '@/lib/postgres';
+import { runQuery, withTransaction } from '@/lib/postgres';
 
 export const maxDuration = 300;
 export const dynamic = 'force-dynamic';
@@ -544,5 +544,88 @@ export async function GET(req: NextRequest) {
       { success: false, message: 'Erro interno', error: error instanceof Error ? error.message : 'Erro desconhecido' },
       { status: 500 }
     );
+  }
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json().catch(() => ({})) as Record<string, unknown>
+
+    // Parse header fields
+    const tenant = typeof body.tenant_id === 'number' && !Number.isNaN(body.tenant_id) ? body.tenant_id : 1
+    const fornecedor_id = Number(body.fornecedor_id)
+    if (!fornecedor_id || Number.isNaN(fornecedor_id)) {
+      return Response.json({ success: false, message: 'fornecedor_id é obrigatório e deve ser numérico' }, { status: 400 })
+    }
+
+    const filial_id = body.filial_id == null ? null : Number(body.filial_id)
+    const centro_custo_id = body.centro_custo_id == null ? null : Number(body.centro_custo_id)
+    const projeto_id = body.projeto_id == null ? null : Number(body.projeto_id)
+    const categoria_financeira_id = body.categoria_financeira_id == null ? null : Number(body.categoria_financeira_id)
+
+    const numero_oc = (body.numero_oc ?? null) as string | null
+    const data_emissao = (body.data_emissao ?? null) as string | null
+    const data_entrega_prevista = (body.data_entrega_prevista ?? null) as string | null
+    const status = ((body.status as string) || 'rascunho') as string
+    const observacoes = (body.observacoes ?? null) as string | null
+    const criado_por = body.criado_por == null ? null : Number(body.criado_por)
+
+    const linhas = Array.isArray(body.linhas) ? (body.linhas as Array<Record<string, unknown>>) : []
+    if (!linhas.length) {
+      return Response.json({ success: false, message: 'Informe ao menos uma linha' }, { status: 400 })
+    }
+
+    // Normalize lines and compute totals
+    const normLinhas = linhas.map((l, idx) => {
+      const produto_id = Number(l.produto_id)
+      const quantidade = Number(l.quantidade)
+      const preco_unitario = Number(l.preco_unitario)
+      const unidade_medida = (l.unidade_medida ?? null) as string | null
+      const l_cc_id = l.centro_custo_id == null ? null : Number(l.centro_custo_id)
+      const l_proj_id = l.projeto_id == null ? null : Number(l.projeto_id)
+      const l_cat_id = l.categoria_financeira_id == null ? null : Number(l.categoria_financeira_id)
+
+      if (!produto_id || Number.isNaN(produto_id)) throw new Error(`Linha ${idx + 1}: produto_id inválido`)
+      if (!quantidade || Number.isNaN(quantidade)) throw new Error(`Linha ${idx + 1}: quantidade inválida`)
+      if (Number.isNaN(preco_unitario)) throw new Error(`Linha ${idx + 1}: preco_unitario inválido`)
+      const total = !Number.isNaN(Number(l.total)) ? Number(l.total) : Number((quantidade * preco_unitario).toFixed(2))
+
+      return { produto_id, quantidade, unidade_medida, preco_unitario, total, centro_custo_id: l_cc_id, projeto_id: l_proj_id, categoria_financeira_id: l_cat_id }
+    })
+
+    const valor_total = normLinhas.reduce((acc, it) => acc + Number(it.total || 0), 0)
+
+    const result = await withTransaction(async (client) => {
+      // Insert header
+      const insCab = await client.query(
+        `INSERT INTO compras.compras (
+           tenant_id, fornecedor_id, filial_id, centro_custo_id, projeto_id, categoria_financeira_id,
+           numero_oc, data_emissao, data_entrega_prevista, status, valor_total, observacoes, criado_por
+         ) VALUES ($1,$2,$3,$4,$5,$6,$7,COALESCE($8, CURRENT_DATE),$9,$10,$11,$12,$13)
+         RETURNING id`,
+        [tenant, fornecedor_id, filial_id, centro_custo_id, projeto_id, categoria_financeira_id,
+         numero_oc, data_emissao, data_entrega_prevista, status, valor_total, observacoes, criado_por]
+      )
+      const compra_id = Number(insCab.rows[0]?.id)
+      if (!compra_id) throw new Error('Falha ao criar compra')
+
+      // Insert lines
+      for (const l of normLinhas) {
+        await client.query(
+          `INSERT INTO compras.compras_linhas (
+             tenant_id, compra_id, produto_id, quantidade, unidade_medida, preco_unitario, total, centro_custo_id, projeto_id, categoria_financeira_id
+           ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
+          [tenant, compra_id, l.produto_id, l.quantidade, l.unidade_medida, l.preco_unitario, l.total, l.centro_custo_id, l.projeto_id, l.categoria_financeira_id]
+        )
+      }
+
+      return { id: compra_id }
+    })
+
+    return Response.json({ success: true, id: result.id })
+  } catch (error) {
+    console.error('📦 API /api/modulos/compras POST error:', error)
+    const msg = error instanceof Error ? error.message : String(error)
+    return Response.json({ success: false, message: msg }, { status: 400 })
   }
 }

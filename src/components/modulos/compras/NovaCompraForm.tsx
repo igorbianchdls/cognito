@@ -8,6 +8,9 @@ import PaymentConditionHeader, { type PaymentConditionConfig } from "@/component
 import ParcelasEditor, { type Parcela } from "@/components/modulos/financeiro/shared/ParcelasEditor"
 import CompraItemsEditor, { type CompraItem } from "@/components/modulos/compras/CompraItemsEditor"
 import { useRouter } from "next/navigation"
+import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 export default function NovaCompraForm() {
   const router = useRouter()
@@ -26,6 +29,12 @@ export default function NovaCompraForm() {
   const [cond, setCond] = React.useState<PaymentConditionConfig>({ parcelas: 1, primeiroVenc: '', intervaloDias: 30, formaPadrao: '', contaPadrao: '' })
   const [parcelas, setParcelas] = React.useState<Parcela[]>([])
   const [itens, setItens] = React.useState<CompraItem[]>([{ id: String(Date.now()), produto: '', quantidade: 1, unidade: 'un', valorUnitario: 0 }])
+  const [tenantId, setTenantId] = React.useState<string>('1')
+  const [fornecedorId, setFornecedorId] = React.useState<string>('')
+  const [numeroOc, setNumeroOc] = React.useState<string>('')
+  const [dataEntregaPrevista, setDataEntregaPrevista] = React.useState<string>('')
+  const [isSaving, setIsSaving] = React.useState(false)
+  const [error, setError] = React.useState<string | null>(null)
 
   const formasPagamento = React.useMemo(() => [
     { value: 'pix', label: 'PIX' },
@@ -38,11 +47,33 @@ export default function NovaCompraForm() {
     { value: 'b2', label: 'Banco 2 - 0002' },
   ], [])
 
-  const produtoOptions = React.useMemo(() => [
-    { value: 'papel_a4', label: 'Papel A4' },
-    { value: 'canetas', label: 'Canetas' },
-    { value: 'ssd_1tb', label: 'SSD 1TB' },
-  ], [])
+  const [produtoOptions, setProdutoOptions] = React.useState<Array<{ value: string; label: string }>>([])
+  const [fornecedorOptions, setFornecedorOptions] = React.useState<Array<{ value: string; label: string }>>([])
+
+  React.useEffect(() => {
+    // Carregar fornecedores
+    const ac = new AbortController()
+    async function load() {
+      try {
+        const [fRes, pRes] = await Promise.all([
+          fetch('/api/modulos/compras/fornecedores/list', { cache: 'no-store', signal: ac.signal }),
+          fetch('/api/modulos/produtos/produtos/list', { cache: 'no-store', signal: ac.signal })
+        ])
+        if (fRes.ok) {
+          const j = await fRes.json()
+          const opts = (j?.rows || []).map((r: any) => ({ value: String(r.id), label: r.nome }))
+          setFornecedorOptions(opts)
+        }
+        if (pRes.ok) {
+          const j = await pRes.json()
+          const opts = (j?.rows || []).map((r: any) => ({ value: String(r.id), label: r.nome }))
+          setProdutoOptions(opts)
+        }
+      } catch {}
+    }
+    load()
+    return () => ac.abort()
+  }, [])
 
   const totalItens = React.useMemo(() => itens.reduce((acc, it) => acc + (Number(it.quantidade) * Number(it.valorUnitario)), 0), [itens])
 
@@ -64,9 +95,46 @@ export default function NovaCompraForm() {
 
   const onChangeParcel = (idx: number, patch: Partial<Parcela>) => setParcelas((prev) => prev.map((p, i) => i === idx ? { ...p, ...patch } : p))
 
-  function onSalvar() {
-    console.log('Salvar (Compra stub):', { info, cond, parcelas, itens })
-    router.push('/modulos/compras?tab=compras')
+  async function onSalvar() {
+    setError(null)
+    setIsSaving(true)
+    try {
+      const fornecedor = Number(fornecedorId || info.entidade)
+      if (!fornecedor) throw new Error('Selecione um fornecedor')
+      const linhas = itens
+        .filter(it => it.produto && Number(it.quantidade) > 0)
+        .map(it => ({
+          produto_id: Number(it.produto),
+          quantidade: Number(it.quantidade),
+          unidade_medida: it.unidade,
+          preco_unitario: Number(it.valorUnitario),
+          total: Number((Number(it.quantidade) * Number(it.valorUnitario)).toFixed(2))
+        }))
+      if (!linhas.length) throw new Error('Adicione ao menos um item com produto e quantidade')
+
+      const payload = {
+        tenant_id: Number(tenantId || '1'),
+        fornecedor_id: fornecedor,
+        numero_oc: numeroOc || null,
+        data_emissao: info.dataCompetencia || null,
+        data_entrega_prevista: dataEntregaPrevista || null,
+        status: 'rascunho',
+        observacoes: info.descricao || null,
+        linhas,
+      }
+      const res = await fetch('/api/modulos/compras', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      const j = await res.json()
+      if (!res.ok || !j?.success) throw new Error(j?.message || `HTTP ${res.status}`)
+      router.push('/modulos/compras?tab=compras')
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Falha ao salvar')
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   return (
@@ -79,6 +147,34 @@ export default function NovaCompraForm() {
         categoryLabel="Categoria"
         centerLabel="Centro de custo"
       />
+
+      <Card className="p-4 mx-4">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
+          <div className="md:col-span-2">
+            <Label className="text-sm text-slate-600">Tenant ID</Label>
+            <Input value={tenantId} onChange={(e) => setTenantId(e.target.value)} placeholder="1" />
+          </div>
+          <div className="md:col-span-4">
+            <Label className="text-sm text-slate-600">Fornecedor</Label>
+            <Select value={fornecedorId} onValueChange={setFornecedorId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione" />
+              </SelectTrigger>
+              <SelectContent>
+                {fornecedorOptions.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="md:col-span-3">
+            <Label className="text-sm text-slate-600">Número OC</Label>
+            <Input value={numeroOc} onChange={(e) => setNumeroOc(e.target.value)} placeholder="Opcional" />
+          </div>
+          <div className="md:col-span-3">
+            <Label className="text-sm text-slate-600">Entrega prevista</Label>
+            <Input type="date" value={dataEntregaPrevista} onChange={(e) => setDataEntregaPrevista(e.target.value)} />
+          </div>
+        </div>
+      </Card>
 
       <Card className="p-4 mx-4">
         <div className="text-base font-semibold text-slate-800 mb-3">Itens da compra</div>
@@ -109,13 +205,13 @@ export default function NovaCompraForm() {
         </div>
       </Card>
 
-      <Card className="p-4 mx-4">
+      <Card className="p-4 mx-4 space-y-2">
+        {error && <div className="text-sm text-red-600">{error}</div>}
         <div className="flex items-center justify-between">
-          <Button variant="outline" onClick={() => router.push('/modulos/compras?tab=compras')}>Cancelar</Button>
-          <Button className="bg-emerald-600 hover:bg-emerald-700" onClick={onSalvar}>Salvar</Button>
+          <Button variant="outline" onClick={() => router.push('/modulos/compras?tab=compras')} disabled={isSaving}>Cancelar</Button>
+          <Button className="bg-emerald-600 hover:bg-emerald-700" onClick={onSalvar} disabled={isSaving}>{isSaving ? 'Salvando…' : 'Salvar'}</Button>
         </div>
       </Card>
     </div>
   )
 }
-
