@@ -688,6 +688,106 @@ export class ConfigParser {
       }
     };
 
+    // Generic visual parser for <kpi> and <chart>
+    const parseVisualAttributes = (
+      tag: 'chart' | 'kpi',
+      attrStr: string,
+      innerContent?: string,
+      defaultStart?: number
+    ) => {
+      const wa = parseAttrs(attrStr || '');
+      const id = wa['id'];
+      const typeRaw = tag === 'kpi' ? 'kpi' : (wa['type'] as string | undefined);
+      const type = ((typeRaw === 'comparebar') ? 'groupedbar' : typeRaw) as Widget['type'];
+      if (!id || !type) {
+        errors.push({ line: 1, column: 1, message: `${tag} missing id or type`, type: 'validation' });
+        return;
+      }
+      const order = wa['order'] ? Number(wa['order']) : undefined;
+      const heightPx = wa['height'] ? Number(wa['height']) : undefined;
+      const title = wa['title'];
+      const spanD = wa['span-d'] ? Number(wa['span-d']) : undefined;
+      const spanT = wa['span-t'] ? Number(wa['span-t']) : undefined;
+      const spanM = wa['span-m'] ? Number(wa['span-m']) : undefined;
+      const colD = wa['col-d'] ? Number(wa['col-d']) : undefined;
+      const colT = wa['col-t'] ? Number(wa['col-t']) : undefined;
+      const colM = wa['col-m'] ? Number(wa['col-m']) : undefined;
+
+      const widget: Widget = {
+        id,
+        type,
+        ...(typeof order === 'number' ? { order } : {}),
+        ...(typeof heightPx === 'number' ? { heightPx } : {}),
+        ...(title ? { title } : {}),
+        ...(spanD || spanT || spanM ? { span: { ...(spanD ? { desktop: spanD } : {}), ...(spanT ? { tablet: spanT } : {}), ...(spanM ? { mobile: spanM } : {}) } } : {}),
+        ...((colD || colT || colM || defaultStart)
+            ? { gridStart: {
+                  ...(colD ? { desktop: colD } : (defaultStart ? { desktop: defaultStart } : {})),
+                  ...(colT ? { tablet: colT } : (defaultStart ? { tablet: defaultStart } : {})),
+                  ...(colM ? { mobile: colM } : (defaultStart ? { mobile: defaultStart } : {}))
+               } }
+            : {})
+      } as Widget;
+
+      if (innerContent) {
+        // Parse <config> JSON if present
+        const cfgMatchInner = innerContent.match(/<config\b[^>]*>([\s\S]*?)<\/config>/i);
+        if (cfgMatchInner && cfgMatchInner[1]) {
+          try {
+            const cfgJson = JSON.parse(cfgMatchInner[1].trim());
+            this.applyWidgetConfig(widget, cfgJson);
+          } catch {
+            errors.push({ line: 1, column: 1, message: `${tag} ${widget.id}: invalid <config> JSON`, type: 'validation' });
+          }
+        }
+        // Parse <datasource .../>
+        const dsMatch = innerContent.match(/<datasource\b([^>]*)\/>/i);
+        if (dsMatch && dsMatch[1]) {
+          const dsAttrs = parseAttrs(dsMatch[1]);
+          applyDataSourceAttrs(widget, dsAttrs);
+        }
+        // Parse <styling .../?> (self-closing or paired)
+        const stMatch = innerContent.match(/<styling\b([^>]*?)(?:\/>|>\s*<\/styling>)/i);
+        if (stMatch && stMatch[1]) {
+          const stAttrs = parseAttrs(stMatch[1]);
+          const tw = stAttrs['tw'] || '';
+          applyStylingTokens(widget, tw);
+        }
+        // Parse <items> for insights2
+        const itemsMatch = innerContent.match(/<items\b([^>]*)>([\s\S]*?)<\/items>/i);
+        if (itemsMatch) {
+          const itemsAttrs = parseAttrs(itemsMatch[1] || '');
+          const itemsBody = itemsMatch[2] || '';
+          const w = widget as unknown as { insights2Config?: { title?: string; items?: Array<{ id: string; variant?: string; icon?: string; label: string; link?: { text: string; url?: string }; tail?: string }>; styling?: Record<string, unknown> } };
+          w.insights2Config = w.insights2Config || {};
+          if (itemsAttrs['title']) w.insights2Config.title = itemsAttrs['title'];
+          const itemRegex = /<item\b([^>]*)\/>/gi;
+          let im: RegExpExecArray | null;
+          const collected: Array<{ id: string; variant?: string; icon?: string; label: string; link?: { text: string; url?: string }; tail?: string }> = [];
+          while ((im = itemRegex.exec(itemsBody)) !== null) {
+            const ia = parseAttrs(im[1] || '');
+            const id = ia['id'] || `${Date.now()}-${Math.random()}`;
+            const label = ia['label'] || '';
+            const variant = ia['variant'];
+            const icon = ia['icon'];
+            const linkText = ia['link-text'] || ia['linkText'];
+            const linkUrl = ia['link-url'] || ia['linkUrl'];
+            const tail = ia['tail'];
+            const item: { id: string; variant?: string; icon?: string; label: string; link?: { text: string; url?: string }; tail?: string } = { id, label };
+            if (variant) item.variant = variant;
+            if (icon) item.icon = icon;
+            if (linkText || linkUrl) item.link = { text: linkText || '', url: linkUrl };
+            if (tail) item.tail = tail;
+            collected.push(item);
+          }
+          if (collected.length) {
+            w.insights2Config.items = collected;
+          }
+        }
+      }
+      widgets.push(widget);
+    };
+
     // grid-per-column mode: parse dashboard-level columns and widgets directly
     if (layoutMode === 'grid-per-column') {
       const colsD = Number(dashAttrs['cols-d'] || '0');
@@ -715,105 +815,7 @@ export class ConfigParser {
       // Column inner grid mapping (from <column cols-*> attributes)
       const columnsInner: NonNullable<GridConfig['layout']>['columnsInner'] = {};
 
-      // Parse visuals (self-closing and pair with <config>)
-      const parseVisualAttributes = (
-        tag: 'chart' | 'kpi',
-        attrStr: string,
-        innerContent?: string,
-        defaultStart?: number
-      ) => {
-        const wa = parseAttrs(attrStr || '');
-        const id = wa['id'];
-        const typeRaw = tag === 'kpi' ? 'kpi' : (wa['type'] as string | undefined);
-        const type = ((typeRaw === 'comparebar') ? 'groupedbar' : typeRaw) as Widget['type'];
-        if (!id || !type) {
-          errors.push({ line: 1, column: 1, message: `${tag} missing id or type`, type: 'validation' });
-          return;
-        }
-        const order = wa['order'] ? Number(wa['order']) : undefined;
-        const heightPx = wa['height'] ? Number(wa['height']) : undefined;
-        const title = wa['title'];
-        const spanD = wa['span-d'] ? Number(wa['span-d']) : undefined;
-        const spanT = wa['span-t'] ? Number(wa['span-t']) : undefined;
-        const spanM = wa['span-m'] ? Number(wa['span-m']) : undefined;
-        const colD = wa['col-d'] ? Number(wa['col-d']) : undefined;
-        const colT = wa['col-t'] ? Number(wa['col-t']) : undefined;
-        const colM = wa['col-m'] ? Number(wa['col-m']) : undefined;
-
-        const widget: Widget = {
-          id,
-          type,
-          ...(typeof order === 'number' ? { order } : {}),
-          ...(typeof heightPx === 'number' ? { heightPx } : {}),
-          ...(title ? { title } : {}),
-          ...(spanD || spanT || spanM ? { span: { ...(spanD ? { desktop: spanD } : {}), ...(spanT ? { tablet: spanT } : {}), ...(spanM ? { mobile: spanM } : {}) } } : {}),
-          ...((colD || colT || colM || defaultStart)
-              ? { gridStart: {
-                    ...(colD ? { desktop: colD } : (defaultStart ? { desktop: defaultStart } : {})),
-                    ...(colT ? { tablet: colT } : (defaultStart ? { tablet: defaultStart } : {})),
-                    ...(colM ? { mobile: colM } : (defaultStart ? { mobile: defaultStart } : {}))
-                 } }
-              : {})
-        } as Widget;
-
-        if (innerContent) {
-          // Parse <config> JSON if present
-          const cfgMatchInner = innerContent.match(/<config\b[^>]*>([\s\S]*?)<\/config>/i);
-          if (cfgMatchInner && cfgMatchInner[1]) {
-            try {
-              const cfgJson = JSON.parse(cfgMatchInner[1].trim());
-              this.applyWidgetConfig(widget, cfgJson);
-            } catch {
-              errors.push({ line: 1, column: 1, message: `${tag} ${widget.id}: invalid <config> JSON`, type: 'validation' });
-            }
-          }
-          // Parse <datasource .../>
-          const dsMatch = innerContent.match(/<datasource\b([^>]*)\/>/i);
-          if (dsMatch && dsMatch[1]) {
-            const dsAttrs = parseAttrs(dsMatch[1]);
-            applyDataSourceAttrs(widget, dsAttrs);
-          }
-          // Parse <styling .../?> (self-closing or paired)
-          const stMatch = innerContent.match(/<styling\b([^>]*?)(?:\/>|>\s*<\/styling>)/i);
-          if (stMatch && stMatch[1]) {
-            const stAttrs = parseAttrs(stMatch[1]);
-            const tw = stAttrs['tw'] || '';
-            applyStylingTokens(widget, tw);
-          }
-          // Parse <items> for insights2
-          const itemsMatch = innerContent.match(/<items\b([^>]*)>([\s\S]*?)<\/items>/i);
-          if (itemsMatch) {
-            const itemsAttrs = parseAttrs(itemsMatch[1] || '');
-            const itemsBody = itemsMatch[2] || '';
-            const w = widget as unknown as { insights2Config?: { title?: string; items?: Array<{ id: string; variant?: string; icon?: string; label: string; link?: { text: string; url?: string }; tail?: string }>; styling?: Record<string, unknown> } };
-            w.insights2Config = w.insights2Config || {};
-            if (itemsAttrs['title']) w.insights2Config.title = itemsAttrs['title'];
-            const itemRegex = /<item\b([^>]*)\/>/gi;
-            let im: RegExpExecArray | null;
-            const collected: Array<{ id: string; variant?: string; icon?: string; label: string; link?: { text: string; url?: string }; tail?: string }> = [];
-            while ((im = itemRegex.exec(itemsBody)) !== null) {
-              const ia = parseAttrs(im[1] || '');
-              const id = ia['id'] || `${Date.now()}-${Math.random()}`;
-              const label = ia['label'] || '';
-              const variant = ia['variant'];
-              const icon = ia['icon'];
-              const linkText = ia['link-text'] || ia['linkText'];
-              const linkUrl = ia['link-url'] || ia['linkUrl'];
-              const tail = ia['tail'];
-              const item: { id: string; variant?: string; icon?: string; label: string; link?: { text: string; url?: string }; tail?: string } = { id, label };
-              if (variant) item.variant = variant;
-              if (icon) item.icon = icon;
-              if (linkText || linkUrl) item.link = { text: linkText || '', url: linkUrl };
-              if (tail) item.tail = tail;
-              collected.push(item);
-            }
-            if (collected.length) {
-              w.insights2Config.items = collected;
-            }
-          }
-        }
-        widgets.push(widget);
-      };
+      // Parse visuals handled by top-level parseVisualAttributes
 
       // Prefer columns if present; fallback to global scanning
       const hasColumns = /<column\b/i.test(dsl);
@@ -929,6 +931,107 @@ export class ConfigParser {
         isValid: errors.length === 0,
         dashboardTitle,
         dashboardSubtitle
+      };
+    }
+
+    // grid mode: single canvas grid with direct <kpi>/<chart> children
+    if (layoutMode === 'grid') {
+      // Read columns/gaps from <dashboard>
+      const colsD = Number(dashAttrs['cols-d'] || '0');
+      const colsT = Number(dashAttrs['cols-t'] || '0');
+      const colsM = Number(dashAttrs['cols-m'] || '0');
+      const gapX = dashAttrs['gap-x'] ? Number(dashAttrs['gap-x']) : undefined;
+      const gapY = dashAttrs['gap-y'] ? Number(dashAttrs['gap-y']) : undefined;
+      const autoRowHeight = dashAttrs['auto-row-height'] ? Number(dashAttrs['auto-row-height']) : undefined;
+
+      const columns = {
+        desktop: { columns: Math.max(colsD || 1, 1), gapX, gapY, autoRowHeight },
+        tablet: { columns: Math.max(colsT || 1, 1), gapX, gapY, autoRowHeight },
+        mobile: { columns: Math.max(colsM || 1, 1), gapX, gapY, autoRowHeight }
+      } as NonNullable<GridConfig['layout']>['columns'];
+
+      // Optional template strings for explicit column widths
+      const tmplD = dashAttrs['template-d'];
+      const tmplT = dashAttrs['template-t'];
+      const tmplM = dashAttrs['template-m'];
+      const columnsTemplate: NonNullable<GridConfig['layout']>['columnsTemplate'] = {};
+      if (tmplD) columnsTemplate.desktop = tmplD;
+      if (tmplT) columnsTemplate.tablet = tmplT;
+      if (tmplM) columnsTemplate.mobile = tmplM;
+
+      // Parse all visuals in document order
+      const selfRe = /<(kpi|chart)\b([^>]*)\/>/gi;
+      let sMatch: RegExpExecArray | null;
+      while ((sMatch = selfRe.exec(dsl)) !== null) {
+        const tag = sMatch[1] as 'kpi' | 'chart';
+        const attrs = sMatch[2] || '';
+        // In grid mode, use col-d/t/m as explicit starts
+        parseVisualAttributes(tag, attrs);
+      }
+      const pairRe = /<(kpi|chart)\b([^>]*)>([\s\S]*?)<\/\1>/gi;
+      let pMatch: RegExpExecArray | null;
+      while ((pMatch = pairRe.exec(dsl)) !== null) {
+        const tag = pMatch[1] as 'kpi' | 'chart';
+        const attrs = pMatch[2] || '';
+        const inner = pMatch[3] || '';
+        parseVisualAttributes(tag, attrs, inner);
+      }
+
+      // Build grid config
+      const baseGrid: GridConfig = {
+        maxRows: this.DEFAULT_GRID_CONFIG.maxRows,
+        rowHeight: this.DEFAULT_GRID_CONFIG.rowHeight,
+        cols: this.DEFAULT_GRID_CONFIG.cols,
+        layout: { mode: 'grid', columns, ...(Object.keys(columnsTemplate).length ? { columnsTemplate } : {}) }
+      } as GridConfig;
+
+      // Apply theme/style options (same precedence)
+      const effectiveThemeG = (styleObj?.['theme'] as string | undefined) || themeAttr;
+      const corporateColorG = styleObj?.['corporateColor'] as string | undefined;
+      const customBackgroundG = styleObj?.['customBackground'] as string | undefined;
+      const customLetterSpacingG = typeof styleObj?.['customLetterSpacing'] === 'number' ? (styleObj!['customLetterSpacing'] as number) : undefined;
+      const customFontG = styleObj?.['customFont'] as string | undefined;
+      const customFontSizeG = styleObj?.['customFontSize'] as string | undefined;
+      const borderTypeG = typeof styleObj?.['borderType'] === 'string' ? (styleObj!['borderType'] as import('./BorderManager').BorderPresetKey) : undefined;
+      const borderColorG = typeof styleObj?.['borderColor'] === 'string' ? (styleObj!['borderColor'] as string) : undefined;
+      const borderWidthG = typeof styleObj?.['borderWidth'] === 'number' ? (styleObj!['borderWidth'] as number) : undefined;
+      const borderRadiusG = typeof styleObj?.['borderRadius'] === 'number' ? (styleObj!['borderRadius'] as number) : undefined;
+      const borderAccentColorG = typeof styleObj?.['borderAccentColor'] === 'string' ? (styleObj!['borderAccentColor'] as string) : undefined;
+      const borderShadowG = typeof styleObj?.['borderShadow'] === 'boolean' ? (styleObj!['borderShadow'] as boolean) : undefined;
+      const customChartFontFamilyG = typeof styleObj?.['customChartFontFamily'] === 'string' ? (styleObj!['customChartFontFamily'] as string) : undefined;
+      const customChartTextColorG = typeof styleObj?.['customChartTextColor'] === 'string' ? (styleObj!['customChartTextColor'] as string) : undefined;
+      const styleBackgroundColorG = typeof styleObj?.['backgroundColor'] === 'string' ? (styleObj!['backgroundColor'] as string) : undefined;
+
+      const themedGridG = (effectiveThemeG && ThemeManager.isValidTheme(effectiveThemeG))
+        ? ThemeManager.applyThemeToGrid(baseGrid, effectiveThemeG, corporateColorG, customBackgroundG, customLetterSpacingG)
+        : { ...baseGrid, letterSpacing: customLetterSpacingG };
+
+      const themedGridWithOverridesG: GridConfig = {
+        ...themedGridG,
+        ...(styleBackgroundColorG ? { backgroundColor: styleBackgroundColorG } : {}),
+        ...(borderColorG ? { borderColor: borderColorG } : {}),
+        ...(typeof borderWidthG === 'number' ? { borderWidth: borderWidthG } : {}),
+        ...(typeof borderRadiusG === 'number' ? { borderRadius: borderRadiusG } : {}),
+      };
+
+      const themedWidgetsG = (effectiveThemeG && ThemeManager.isValidTheme(effectiveThemeG))
+        ? this.applyThemeToWidgets(widgets, effectiveThemeG, customFontG, corporateColorG, customFontSizeG, {
+            type: borderTypeG,
+            color: borderColorG,
+            width: borderWidthG,
+            radius: borderRadiusG,
+            accentColor: borderAccentColorG,
+            shadow: borderShadowG,
+          }, customChartFontFamilyG, customChartTextColorG)
+        : widgets;
+
+      return {
+        widgets: themedWidgetsG,
+        gridConfig: themedGridWithOverridesG,
+        errors,
+        isValid: errors.length === 0,
+        dashboardTitle,
+        dashboardSubtitle,
       };
     }
 

@@ -281,6 +281,7 @@ function ResponsiveGridCanvas({ widgets, gridConfig, globalFilters, viewportMode
   };
   const widgetGroups = useMemo(groupWidgetsByRow, [widgets, gridConfig.layoutRows]);
   const perColumnMode = gridConfig.layout?.mode === 'grid-per-column';
+  const perGridMode = gridConfig.layout?.mode === 'grid';
 
   // --- Row DnD helpers (DSL-first) ---
   const isDsl = (code: string) => code.trim().startsWith('<');
@@ -662,6 +663,41 @@ const DraggableRow = memo(function DraggableRow({ id, children }: { id: string; 
               })}
               </SortableContext>
             </DndContext>
+          </div>
+        )}
+        {/* Global Grid Layout (grid-per-column and grid modes) */}
+        {widgets.length > 0 && perGridMode && (
+          <div className="px-0 py-4">
+            <div
+              className={getGridClassesForRow()}
+              style={{
+                gridTemplateColumns: getTemplateColumnsString() || `repeat(${getGlobalColumns()}, 1fr)`,
+                width: '100%',
+                columnGap: `${getGlobalGaps().gapX}px`,
+                rowGap: `${getGlobalGaps().gapY}px`,
+                gridAutoRows: getGlobalGaps().autoRowHeight ? `${getGlobalGaps().autoRowHeight}px` : undefined,
+              }}
+            >
+              {widgets.slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0)).map((widget) => {
+                const { desktopSpan, tabletSpan, mobileSpan } = adaptWidgetForResponsive(widget);
+                const spanValue = viewportMode === 'mobile' ? mobileSpan : viewportMode === 'tablet' ? tabletSpan : desktopSpan;
+                const minHeight = getWidgetHeight(widget);
+                const spanClasses = getSpanClasses();
+                const startValue = getStartValue(widget);
+                return (
+                  <DraggableWidget
+                    key={widget.id}
+                    widget={widget}
+                    spanClasses={spanClasses}
+                    spanValue={spanValue}
+                    startValue={startValue}
+                    minHeight={minHeight}
+                    globalFilters={globalFilters}
+                    onEdit={handleEditWidget}
+                  />
+                );
+              })}
+            </div>
           </div>
         )}
         {widgets.length > 0 && perColumnMode && (

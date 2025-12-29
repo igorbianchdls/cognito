@@ -13,7 +13,7 @@ import ResponsiveGridCanvas from '@/components/visual-builder/ResponsiveGridCanv
 import DashboardInCanvasHeader from '@/components/visual-builder/DashboardInCanvasHeader';
 import WidgetEditorModal from '@/components/visual-builder/WidgetEditorModal';
 import { $visualBuilderState, visualBuilderActions } from '@/stores/visualBuilderStore';
-import { initialDsl, initialDslColumns } from '@/stores/visualBuilderStore';
+import { initialDslGrid as initialDsl, initialDslColumns } from '@/stores/visualBuilderStore';
 import { ThemeManager, type ThemeName } from '@/components/visual-builder/ThemeManager';
 import type { Widget, GlobalFilters } from '@/stores/visualBuilderStore';
 
@@ -191,7 +191,7 @@ export default function VisualBuilderPage() {
               className="px-4 py-2 text-sm border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
               onClick={() => visualBuilderActions.updateCode(initialDsl)}
             >
-              Exemplo por Linhas
+              Exemplo (Grid)
             </button>
             <button
               className="px-4 py-2 text-sm border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
