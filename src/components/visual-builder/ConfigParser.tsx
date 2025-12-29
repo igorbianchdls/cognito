@@ -150,6 +150,19 @@ export interface GridConfig {
       mobile?: number;
       label?: string;
     }>;
+    groups?: Array<{
+      id: string;
+      title?: string;
+      orientation?: 'horizontal' | 'vertical';
+      grid?: {
+        desktop?: { columns: number; gapX?: number; gapY?: number; autoRowHeight?: number };
+        tablet?: { columns: number; gapX?: number; gapY?: number; autoRowHeight?: number };
+        mobile?: { columns: number; gapX?: number; gapY?: number; autoRowHeight?: number };
+        template?: { desktop?: string; tablet?: string; mobile?: string };
+      };
+      style?: Record<string, unknown>;
+      children: string[];
+    }>;
   };
 }
 
@@ -999,6 +1012,17 @@ export class ConfigParser {
         const gTmplT = ga['template-t'];
         const gTmplM = ga['template-m'];
         const children: string[] = [];
+        // Optional group-level <style>{ ...json... }</style>
+        let groupStyle: Record<string, unknown> | undefined;
+        const gStyleMatch = gInner.match(/<style\b[^>]*>([\s\S]*?)<\/style>/i);
+        if (gStyleMatch && gStyleMatch[1]) {
+          try {
+            const parsed = JSON.parse(gStyleMatch[1].trim());
+            if (parsed && typeof parsed === 'object') groupStyle = parsed as Record<string, unknown>;
+          } catch {
+            errors.push({ line: 1, column: 1, message: `group ${gid}: invalid <style> JSON`, type: 'validation' });
+          }
+        }
         // Parse visuals inside the group
         const gSelf = /<(kpi|chart)\b([^>]*)\/>/gi;
         let gs: RegExpExecArray | null;
@@ -1027,6 +1051,7 @@ export class ConfigParser {
             mobile: gColsM ? { columns: gColsM, gapX: gGapX, gapY: gGapY, autoRowHeight: gAutoRowHeight } : undefined,
             template: (gTmplD || gTmplT || gTmplM) ? { desktop: gTmplD, tablet: gTmplT, mobile: gTmplM } : undefined,
           },
+          ...(groupStyle ? { style: groupStyle } : {}),
           children,
         });
         // Remove this group's block from outer DSL so we don't duplicate visuals

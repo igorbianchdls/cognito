@@ -159,6 +159,10 @@ export const initialDslGrid = `<dashboard theme="branco" title="Dashboard de Ven
   <!-- Grupo de KPIs -->
   <group id="kpis" title="KPIs" orientation="horizontal" cols-d="12" gap-x="16" gap-y="16">
     <style>{
+      "titleFontFamily": "Inter, ui-sans-serif, system-ui",
+      "titleFontSize": 14,
+      "titleFontWeight": 600,
+      "titleColor": "#111827",
       "backgroundColor": "#fafafa",
       "borderColor": "#e5e7eb",
       "borderWidth": 1,
@@ -198,6 +202,12 @@ export const initialDslGrid = `<dashboard theme="branco" title="Dashboard de Ven
 
   <!-- Grupo de Charts (3 por linha) -->
   <group id="charts" title="Gráficos" orientation="horizontal" cols-d="12" gap-x="16" gap-y="16">
+    <style>{
+      "titleFontFamily": "Inter, ui-sans-serif, system-ui",
+      "titleFontSize": 14,
+      "titleFontWeight": 600,
+      "titleColor": "#111827"
+    }</style>
     <chart id="meta_fat_vendedor" type="groupedbar" col-d="1" span-d="4" height="360" title="Meta x Faturamento por Vendedor">
       <datasource schema="comercial" table="vw_vendas_metas" dimension="vendedor_nome" measureGoal="MAX(meta_faturamento_vendedor)" measureActual="SUM(subtotal)" limit="12" />
       <styling tw="legend:on grid:on mb:32" />

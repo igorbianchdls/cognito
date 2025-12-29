@@ -798,7 +798,17 @@ const DraggableGroup = memo(function DraggableGroup({ id, children, containerSty
                       })()}
                     >
                       {group.title && (
-                        <div className="px-2 py-1 text-sm font-medium text-gray-600">{group.title}</div>
+                        <div
+                          className="px-2 py-1"
+                          style={{
+                            fontFamily: (group as any).style?.titleFontFamily || undefined,
+                            fontSize: typeof (group as any).style?.titleFontSize === 'number' ? `${(group as any).style?.titleFontSize}px` : undefined,
+                            fontWeight: (group as any).style?.titleFontWeight || undefined,
+                            color: (group as any).style?.titleColor || '#4b5563',
+                          }}
+                        >
+                          {group.title}
+                        </div>
                       )}
                       <div
                         className={getGridClassesForRow()}
