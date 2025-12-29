@@ -514,14 +514,23 @@ export class ConfigParser {
     }
 
     // Optional dashboard-level <style>{ ...json... }</style>
-    const styleMatch = dsl.match(/<style\b[^>]*>([\s\S]*?)<\/style>/i);
+    // NOTE: Only capture a <style> that appears immediately after <dashboard ...> (to avoid picking nested group styles)
     let styleObj: Record<string, unknown> | null = null;
-    if (styleMatch && styleMatch[1]) {
-      try {
-        const parsed = JSON.parse(styleMatch[1].trim());
-        if (parsed && typeof parsed === 'object') styleObj = parsed as Record<string, unknown>;
-      } catch {
-        // ignore malformed style JSON, fall back to attributes
+    const dashOpen = dsl.match(/<dashboard\b[^>]*>/i);
+    if (dashOpen && typeof dashOpen.index === 'number') {
+      const start = dashOpen.index + dashOpen[0].length;
+      const post = dsl.slice(start);
+      const earlyStyle = post.match(/^\s*(?:<!--[\s\S]*?-->\s*)*(<style\b[^>]*>[\s\S]*?<\/style>)/i);
+      if (earlyStyle && earlyStyle[1]) {
+        const contentMatch = earlyStyle[1].match(/<style\b[^>]*>([\s\S]*?)<\/style>/i);
+        if (contentMatch && contentMatch[1]) {
+          try {
+            const parsed = JSON.parse(contentMatch[1].trim());
+            if (parsed && typeof parsed === 'object') styleObj = parsed as Record<string, unknown>;
+          } catch {
+            // ignore malformed style JSON, fall back to attributes
+          }
+        }
       }
     }
 

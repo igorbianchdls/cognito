@@ -206,7 +206,17 @@ export const initialDslGrid = `<dashboard theme="branco" title="Dashboard de Ven
       "titleFontFamily": "Inter, ui-sans-serif, system-ui",
       "titleFontSize": 14,
       "titleFontWeight": 600,
-      "titleColor": "#111827"
+      "titleColor": "#0f172a",
+      "backgroundColor": "#f0f9ff",
+      "borderColor": "#bfdbfe",
+      "borderWidth": 1,
+      "borderRadius": 12,
+      "padding": 12,
+      "containerShadowColor": "0,0,0",
+      "containerShadowOpacity": 0.03,
+      "containerShadowBlur": 6,
+      "containerShadowOffsetX": 0,
+      "containerShadowOffsetY": 1
     }</style>
     <chart id="meta_fat_vendedor" type="groupedbar" col-d="1" span-d="4" height="360" title="Meta x Faturamento por Vendedor">
       <datasource schema="comercial" table="vw_vendas_metas" dimension="vendedor_nome" measureGoal="MAX(meta_faturamento_vendedor)" measureActual="SUM(subtotal)" limit="12" />
