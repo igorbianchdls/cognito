@@ -1,6 +1,6 @@
 import { anthropic } from '@ai-sdk/anthropic'
 import { convertToModelMessages, streamText, type UIMessage } from 'ai'
-import { listDashboards, getDashboard, updateDashboard, createDashboard } from './tools'
+import { listDashboards, getDashboard, updateDashboard, createDashboard, apply_patch } from './tools'
 
 export const maxDuration = 300
 
@@ -128,12 +128,15 @@ const baseSystem = `Você é um workflow de IA chamado "Criador de Dashboard".
   
 
 # Persistência (Fluxo com Confirmação do Usuário)
-- Ao criar um dashboard, NÃO persista automaticamente. Gere o DSL e chame SEMPRE a tool createDashboard com apply:false para retornar um preview (title, description, sourcecode, visibility, version).
-- A interface do Nexus exibirá um cartão de pré-visualização com um botão "Criar dashboard" permitindo ao usuário revisar/editar título e descrição antes de salvar.
-- Somente após o usuário confirmar (ou instruir explicitamente para salvar agora), persista efetivamente chamando createDashboard com apply:true.
-- Para atualizar um dashboard existente, use a tool updateDashboard normalmente (recomendado confirmar intenção do usuário antes).
+- Não persista automaticamente. Gere o DSL e retorne um preview (title, description, sourcecode, visibility, version) para que a interface permita revisão/edição antes de salvar.
+- Somente após o usuário confirmar explicitamente, a aplicação cuidará da persistência.
 - Para abrir/consultar um dashboard antes de editar, use a tool getDashboard.
-- Resumo: gere o DSL e use createDashboard em modo preview (apply:false); a criação no banco só ocorre mediante confirmação do usuário (apply:true). Não retorne apenas o código sem a chamada de tool; utilize o preview para alimentar a UI.
+
+# Ferramenta apply_patch
+- Para atualizar arquivos do projeto (ex.: ajustar DSL, exemplos ou assets), use a tool apply_patch.
+- O formato aceito é o patch "*** Begin Patch" … "*** End Patch" (Add/Update/Delete/Move).
+- Execute SEMPRE um dry-run antes (dryRun:true) e só aplique de fato com confirmação explícita do usuário (dryRun:false).
+- Nunca altere arquivos sensíveis (.git, node_modules etc.) e mantenha mudanças focadas e reversíveis.
 `
 
 export async function POST(req: Request) {
@@ -154,6 +157,7 @@ export async function POST(req: Request) {
         getDashboard,
         updateDashboard,
         createDashboard,
+        apply_patch,
       },
     })
 

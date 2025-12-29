@@ -1,6 +1,7 @@
 import { tool } from 'ai';
 import { z } from 'zod';
 import { runQuery } from '@/lib/postgres';
+import { applyPatch as applyPatchCore } from '@/lib/patch/applyPatch'
 
 // Types
 export type Visibility = 'private' | 'org' | 'public';
@@ -172,5 +173,19 @@ export const createDashboard = tool({
     } catch (e) {
       return { success: false as const, error: (e as Error).message || 'Erro ao criar dashboard' };
     }
+  }
+});
+
+// apply_patch — aplica patches no workspace (por padrão dryRun)
+export const apply_patch = tool({
+  description: 'Aplica um patch no formato *** Begin Patch/End Patch (dry-run por padrão). Use com cautela.',
+  inputSchema: z.object({
+    patch: z.string().min(1, 'patch é obrigatório'),
+    dryRun: z.boolean().default(true).optional(),
+    allowApplyInProduction: z.boolean().default(false).optional(),
+  }),
+  execute: async ({ patch, dryRun = true, allowApplyInProduction = false }) => {
+    const result = await applyPatchCore(patch, { dryRun, allowApplyInProduction })
+    return result
   }
 });
