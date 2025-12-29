@@ -70,15 +70,16 @@ export default function VisualBuilderPage() {
     for (let i = 0; i < lines.length; i++) {
       const raw = lines[i] ?? '';
       const trimmed = raw.trimStart();
+      const maxCol = model.getLineMaxColumn(i + 1);
       if (/^\-/.test(trimmed) && !/^\-\-\-/.test(trimmed)) {
         decos.push({
-          range: new monaco.Range(i + 1, 1, i + 1, 1_000_000),
-          options: { isWholeLine: true, className: 'vb-line-remove' },
+          range: new monaco.Range(i + 1, 1, i + 1, maxCol),
+          options: { inlineClassName: 'vb-inline-remove' },
         });
       } else if (/^\+/.test(trimmed) && !/^\+\+\+/.test(trimmed)) {
         decos.push({
-          range: new monaco.Range(i + 1, 1, i + 1, 1_000_000),
-          options: { isWholeLine: true, className: 'vb-line-add' },
+          range: new monaco.Range(i + 1, 1, i + 1, maxCol),
+          options: { inlineClassName: 'vb-inline-add' },
         });
       }
     }
@@ -444,6 +445,15 @@ export default function VisualBuilderPage() {
           color: #b91c1c !important; /* red-700 */
         }
         .vb-line-add {
+          color: #1d4ed8 !important; /* blue-700 */
+        }
+        /* Force color on the actual token spans within inline decorations */
+        .monaco-editor .view-lines .vb-inline-remove,
+        .monaco-editor .view-lines .vb-inline-remove * {
+          color: #b91c1c !important; /* red-700 */
+        }
+        .monaco-editor .view-lines .vb-inline-add,
+        .monaco-editor .view-lines .vb-inline-add * {
           color: #1d4ed8 !important; /* blue-700 */
         }
       `}</style>
