@@ -1,6 +1,7 @@
 "use client";
 
-import { DiffEditor } from '@monaco-editor/react';
+import { Editor } from '@monaco-editor/react';
+import { useMemo, useState, useEffect } from 'react';
 
 type ApplyPatchFile = {
   path: string;
@@ -38,16 +39,29 @@ export default function ApplyPatchResultCard({ input, output }: Props) {
   const files = hasOutput && Array.isArray(output!.files) ? output!.files : [];
   const summary = hasOutput && output!.summary ? output!.summary : { added: 0, deleted: 0, updated: 0, moved: 0, totalChanges: 0 };
   const isApplied = hasOutput ? !!output!.applied && !output!.dryRun : false;
-  const patchText = typeof input?.patch === 'string' ? input!.patch : '';
+  const rawPatch = typeof input?.patch === 'string' ? input!.patch : '';
+
+  // Normalize initial editor text to only +/- lines (ignoring ---/+++ headers), fallback to raw when not present
+  const initialEditorText = useMemo(() => {
+    if (!rawPatch) return '';
+    const lines = rawPatch.split(/\r?\n/);
+    const body = lines
+      .filter(l => /^(\s*[\-\+])/.test(l) && !/^(\s*\-\-\-|\s*\+\+\+)/.test(l))
+      .join('\n');
+    return body.trim().length > 0 ? body : rawPatch;
+  }, [rawPatch]);
+
+  const [editedPatch, setEditedPatch] = useState<string>(initialEditorText);
+  useEffect(() => { setEditedPatch(initialEditorText) }, [initialEditorText]);
 
   const sendToChatAndSubmit = () => {
-    if (!patchText) return;
+    if (!editedPatch) return;
     // Se não houver envelope de patch, montar um patch Update File padrão para o DSL
-    const hasEnvelope = patchText.includes('*** Begin Patch') && patchText.includes('*** End Patch');
-    let toSend = patchText;
+    const hasEnvelope = editedPatch.includes('*** Begin Patch') && editedPatch.includes('*** End Patch');
+    let toSend = editedPatch;
     if (!hasEnvelope) {
       // Extrair linhas +/- e montar patch contra o arquivo do DSL inicial
-      const lines = patchText.split(/\r?\n/);
+      const lines = editedPatch.split(/\r?\n/);
       const minus = lines.filter(l => l.trim().startsWith('-')).map(l => l.replace(/^\s*\-/, ''));
       const plus = lines.filter(l => l.trim().startsWith('+')).map(l => l.replace(/^\s*\+/, ''));
       const original = minus.join('\n');
@@ -78,49 +92,34 @@ export default function ApplyPatchResultCard({ input, output }: Props) {
     : 'Pré‑visualização do patch';
 
   // Build preview texts for DiffEditor
-  let previewOriginal = '';
-  let previewModified = '';
-  if (patchText) {
-    const lines = patchText.split(/\r?\n/);
-    const minus = lines.filter(l => /^\s*\-/.test(l) && !/^\s*\-\-\- /.test(l)).map(l => l.replace(/^\s*\-/, ''));
-    const plus = lines.filter(l => /^\s*\+/.test(l) && !/^\s*\+\+\+ /.test(l)).map(l => l.replace(/^\s*\+/, ''));
-    previewOriginal = minus.join('\n');
-    previewModified = plus.join('\n');
-    // Fallback if no +/- markers: show as single chunk on modified side
-    if (!previewOriginal && !previewModified) {
-      previewModified = patchText;
-    }
-  }
-
   return (
     <div className="rounded-md border border-gray-200 p-4 not-prose">
       <div className="mb-2 text-sm text-gray-700">{headerText}</div>
 
-      {patchText && (
+      {editedPatch && (
         <div className="mb-3">
           <div className="text-xs text-gray-600 mb-2">Patch</div>
           <div className="border rounded-md overflow-hidden" style={{ height: 320 }}>
-            <DiffEditor
-              original={previewOriginal}
-              modified={previewModified}
-              language="plaintext"
+            <Editor
+              height="100%"
+              language="diff"
               theme="vs-light"
+              value={editedPatch}
+              onChange={(v) => setEditedPatch(v ?? '')}
               options={{
-                readOnly: true,
-                renderSideBySide: false,
+                readOnly: false,
                 minimap: { enabled: false },
                 fontSize: 13,
                 wordWrap: 'on',
                 lineNumbers: 'on',
                 scrollBeyondLastLine: false,
-                originalEditable: false,
               }}
             />
           </div>
         </div>
       )}
 
-      {!isApplied && patchText && (
+      {!isApplied && editedPatch && (
         <div className="mb-3 flex items-center gap-2">
           <button
             onClick={sendToChatAndSubmit}
