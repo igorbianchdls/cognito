@@ -36,6 +36,7 @@ import { MultipleCharts } from '@/components/tools/MultipleCharts';
 import { MultipleSQL } from '@/components/tools/MultipleSQL';
 import CodeExecutionResult from '@/components/tools/CodeExecutionResult';
 import RenderDashboardCode from './tools/renderDashboardCode';
+import ApplyPatchResultCard from './tools/ApplyPatchResultCard';
 import CreateDashboardResult from './tools/CreateDashboardResult';
 import UpdateDashboardResult from './tools/UpdateDashboardResult';
 import EmailResult from '@/components/tools/EmailResult';
@@ -5027,6 +5028,38 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   message={(t.output as { message?: string })?.message}
                   error={(t.output as { error?: string })?.error}
                 />
+              )}
+            </div>
+          );
+        }
+
+        // Workflow: Criador de Dashboard — apply_patch (edição de arquivos)
+        if (part.type === 'tool-apply_patch') {
+          const t = part as any;
+          const callId = t.toolCallId as string;
+          const shouldBeOpen = t.state === 'output-available' || t.state === 'output-error' || t.state === 'input-streaming' || t.state === 'input-available';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-apply_patch" state={t.state} />
+                <ToolContent>
+                  {t.state === 'input-streaming' && (
+                    <ToolInputStreaming input={t.input} isStreaming={true} />
+                  )}
+                  {t.state === 'input-available' && (
+                    <ToolInputStreaming input={t.input} isStreaming={false} />
+                  )}
+                  {t.input && (t.state !== 'input-streaming' && t.state !== 'input-available') && (
+                    <ToolInput input={t.input} />
+                  )}
+                  {t.state === 'output-error' && (
+                    <ToolOutput output={null} errorText={t.errorText} />
+                  )}
+                </ToolContent>
+              </Tool>
+              {t.state === 'output-available' && (
+                <ApplyPatchResultCard input={t.input as any} output={t.output as any} />
               )}
             </div>
           );
