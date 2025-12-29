@@ -158,168 +158,168 @@ const compactWidgetHeaders = (code: string): string => {
 export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas" subtitle="Análise de desempenho comercial" layout-mode="grid-per-row" date-type="last_30_days">
   <!-- KPIs (6 em uma linha) - Foco: Novembro/2025 via filtros globais -->
   <row id="kpis" cols-d="6" cols-t="3" cols-m="2" gap-x="12" gap-y="12">
-    <widget id="kpi_meta" type="kpi" order="1" span-d="1" span-t="1" span-m="1" height="150" title="Meta de Vendas">
+    <kpi id="kpi_meta" order="1" span-d="1" span-t="1" span-m="1" height="150" title="Meta de Vendas">
       <datasource schema="comercial" table="vw_vendas_metas" measure="SUM(meta_faturamento_territorio)" />
       <styling tw="kpi:viz:card kpi:unit:R$" />
-    </widget>
-    <widget id="kpi_vendas" type="kpi" order="2" span-d="1" span-t="1" span-m="1" height="150" title="Vendas">
+    </kpi>
+    <kpi id="kpi_vendas" order="2" span-d="1" span-t="1" span-m="1" height="150" title="Vendas">
       <datasource schema="comercial" table="vendas_vw" measure="SUM(item_subtotal)" />
       <styling tw="kpi:viz:card kpi:unit:R$" />
-    </widget>
-    <widget id="kpi_percent_meta" type="kpi" order="3" span-d="1" span-t="1" span-m="1" height="150" title="% da Meta">
+    </kpi>
+    <kpi id="kpi_percent_meta" order="3" span-d="1" span-t="1" span-m="1" height="150" title="% da Meta">
       <datasource schema="comercial" table="vw_vendas_metas" measure="(SUM(subtotal)/NULLIF(SUM(meta_faturamento_territorio),0))*100" />
       <styling tw="kpi:viz:card" />
-    </widget>
-    <widget id="kpi_ticket_medio" type="kpi" order="4" span-d="1" span-t="1" span-m="1" height="150" title="Ticket Médio">
+    </kpi>
+    <kpi id="kpi_ticket_medio" order="4" span-d="1" span-t="1" span-m="1" height="150" title="Ticket Médio">
       <datasource schema="comercial" table="vendas_vw" measure="SUM(item_subtotal)/COUNT_DISTINCT(pedido_id)" />
       <styling tw="kpi:viz:card kpi:unit:R$" />
-    </widget>
-    <widget id="kpi_pedidos" type="kpi" order="5" span-d="1" span-t="1" span-m="1" height="150" title="Pedidos">
+    </kpi>
+    <kpi id="kpi_pedidos" order="5" span-d="1" span-t="1" span-m="1" height="150" title="Pedidos">
       <datasource schema="comercial" table="vendas_vw" measure="COUNT_DISTINCT(pedido_id)" />
       <styling tw="kpi:viz:card" />
-    </widget>
-    <widget id="kpi_clientes" type="kpi" order="6" span-d="1" span-t="1" span-m="1" height="150" title="Clientes">
+    </kpi>
+    <kpi id="kpi_clientes" order="6" span-d="1" span-t="1" span-m="1" height="150" title="Clientes">
       <datasource schema="comercial" table="vendas_vw" measure="COUNT_DISTINCT(cliente_id)" />
       <styling tw="kpi:viz:card" />
-    </widget>
+    </kpi>
   </row>
 
   <!-- Metas x Realizado — Vendedor (Faturamento, Ticket, Novos Clientes) -->
   <row id="metas_vendedor" cols-d="3" cols-t="1" cols-m="1" gap-x="16" gap-y="16">
-    <widget id="meta_fat_vendedor" type="groupedbar" order="1" span-d="1" span-t="1" span-m="1" height="360" title="Meta x Faturamento por Vendedor">
+    <chart id="meta_fat_vendedor" type="groupedbar" order="1" span-d="1" span-t="1" span-m="1" height="360" title="Meta x Faturamento por Vendedor">
       <datasource schema="comercial" table="vw_vendas_metas"
         dimension="vendedor_nome"
         measureGoal="MAX(meta_faturamento_vendedor)"
         measureActual="SUM(subtotal)"
         limit="12" />
       <styling tw="legend:on grid:on mb:32" />
-    </widget>
+    </chart>
 
-    <widget id="meta_ticket_vendedor" type="groupedbar" order="2" span-d="1" span-t="1" span-m="1" height="360" title="Meta x Ticket Médio por Vendedor">
+    <chart id="meta_ticket_vendedor" type="groupedbar" order="2" span-d="1" span-t="1" span-m="1" height="360" title="Meta x Ticket Médio por Vendedor">
       <datasource schema="comercial" table="vw_vendas_metas"
         dimension="vendedor_nome"
         measureGoal="MAX(meta_ticket_vendedor)"
         measureActual="SUM(subtotal)/COUNT_DISTINCT(pedido_id)"
         limit="12" />
       <styling tw="legend:on grid:on mb:32" />
-    </widget>
+    </chart>
 
-    <widget id="meta_novos_vendedor" type="groupedbar" order="3" span-d="1" span-t="1" span-m="1" height="360" title="Meta x Novos Clientes por Vendedor">
+    <chart id="meta_novos_vendedor" type="groupedbar" order="3" span-d="1" span-t="1" span-m="1" height="360" title="Meta x Novos Clientes por Vendedor">
       <datasource schema="comercial" table="vw_vendas_metas"
         dimension="vendedor_nome"
         measureGoal="MAX(meta_novos_clientes_vendedor)"
         measureActual="COUNT_DISTINCT(cliente_id)"
         limit="12" />
       <styling tw="legend:on grid:on mb:32" />
-    </widget>
+    </chart>
   </row>
 
   <!-- Metas x Realizado — Território (Faturamento, Ticket, Novos Clientes) -->
   <row id="metas_territorio" cols-d="3" cols-t="1" cols-m="1" gap-x="16" gap-y="16">
-    <widget id="meta_fat_territorio" type="groupedbar" order="1" span-d="1" span-t="1" span-m="1" height="360" title="Meta x Faturamento por Território">
+    <chart id="meta_fat_territorio" type="groupedbar" order="1" span-d="1" span-t="1" span-m="1" height="360" title="Meta x Faturamento por Território"> 
       <datasource schema="comercial" table="vw_vendas_metas"
         dimension="territorio_nome"
         measureGoal="MAX(meta_faturamento_territorio)"
         measureActual="SUM(subtotal)"
         limit="12" />
       <styling tw="legend:on grid:on mb:32" />
-    </widget>
+    </chart>
 
-    <widget id="meta_ticket_territorio" type="groupedbar" order="2" span-d="1" span-t="1" span-m="1" height="360" title="Meta x Ticket Médio por Território">
+    <chart id="meta_ticket_territorio" type="groupedbar" order="2" span-d="1" span-t="1" span-m="1" height="360" title="Meta x Ticket Médio por Território"> 
       <datasource schema="comercial" table="vw_vendas_metas"
         dimension="territorio_nome"
         measureGoal="MAX(meta_ticket_territorio)"
         measureActual="SUM(subtotal)/COUNT_DISTINCT(pedido_id)"
         limit="12" />
       <styling tw="legend:on grid:on mb:32" />
-    </widget>
+    </chart>
 
-    <widget id="meta_novos_territorio" type="groupedbar" order="3" span-d="1" span-t="1" span-m="1" height="360" title="Meta x Novos Clientes por Território">
+    <chart id="meta_novos_territorio" type="groupedbar" order="3" span-d="1" span-t="1" span-m="1" height="360" title="Meta x Novos Clientes por Território"> 
       <datasource schema="comercial" table="vw_vendas_metas"
         dimension="territorio_nome"
         measureGoal="MAX(meta_novos_clientes_territorio)"
         measureActual="COUNT_DISTINCT(cliente_id)"
         limit="12" />
       <styling tw="legend:on grid:on mb:32" />
-    </widget>
+    </chart>
   </row>
 
   
 
   <!-- Agregados: Serviços e Categorias (3 por linha) -->
   <row id="agg_1" cols-d="3" cols-t="1" cols-m="1" gap-x="16" gap-y="16">
-    <widget id="vendas_servico" type="bar" order="1" span-d="1" span-t="1" span-m="1" height="360" title="Vendas por Serviço">
+    <chart id="vendas_servico" type="bar" order="1" span-d="1" span-t="1" span-m="1" height="360" title="Vendas por Serviço">
       <datasource schema="comercial" table="vendas_vw" dimension="servico_nome" measure="SUM(item_subtotal)" />
       <styling tw="legend:off grid:on mb:32" />
-    </widget>
-    <widget id="fat_categoria" type="bar" order="2" span-d="1" span-t="1" span-m="1" height="360" title="Faturamento por Categoria de Serviço">
+    </chart>
+    <chart id="fat_categoria" type="bar" order="2" span-d="1" span-t="1" span-m="1" height="360" title="Faturamento por Categoria de Serviço">
       <datasource schema="comercial" table="vendas_vw" dimension="categoria_servico_nome" measure="SUM(item_subtotal)" />
       <styling tw="legend:off grid:on mb:32" />
-    </widget>
-    <widget id="ticket_categoria" type="bar" order="3" span-d="1" span-t="1" span-m="1" height="360" title="Ticket Médio por Categoria de Serviço">
+    </chart>
+    <chart id="ticket_categoria" type="bar" order="3" span-d="1" span-t="1" span-m="1" height="360" title="Ticket Médio por Categoria de Serviço">
       <datasource schema="comercial" table="vendas_vw" dimension="categoria_servico_nome" measure="SUM(item_subtotal)/COUNT_DISTINCT(pedido_id)" />
       <styling tw="legend:off grid:on mb:32" />
-    </widget>
+    </chart>
   </row>
 
   <!-- Agregados: Categorias e Canais -->
   <row id="agg_2" cols-d="3" cols-t="1" cols-m="1" gap-x="16" gap-y="16">
-    <widget id="pedidos_categoria" type="bar" order="1" span-d="1" span-t="1" span-m="1" height="360" title="Pedidos por Categoria de Serviço">
+    <chart id="pedidos_categoria" type="bar" order="1" span-d="1" span-t="1" span-m="1" height="360" title="Pedidos por Categoria de Serviço">
       <datasource schema="comercial" table="vendas_vw" dimension="categoria_servico_nome" measure="COUNT_DISTINCT(pedido_id)" />
       <styling tw="legend:off grid:on mb:32" />
-    </widget>
-    <widget id="vendas_canal" type="bar" order="2" span-d="1" span-t="1" span-m="1" height="360" title="Vendas por Canal">
+    </chart>
+    <chart id="vendas_canal" type="bar" order="2" span-d="1" span-t="1" span-m="1" height="360" title="Vendas por Canal">
       <datasource schema="comercial" table="vendas_vw" dimension="canal_venda_nome" measure="SUM(item_subtotal)" />
       <styling tw="legend:off grid:on mb:32" />
-    </widget>
-    <widget id="fat_canal_distrib" type="bar" order="3" span-d="1" span-t="1" span-m="1" height="360" title="Faturamento por Canal de Distribuição">
+    </chart>
+    <chart id="fat_canal_distrib" type="bar" order="3" span-d="1" span-t="1" span-m="1" height="360" title="Faturamento por Canal de Distribuição">
       <datasource schema="comercial" table="vendas_vw" dimension="canal_distribuicao_nome" measure="SUM(item_subtotal)" />
       <styling tw="legend:off grid:on mb:32" />
-    </widget>
+    </chart>
   </row>
 
   <!-- Agregados: Canais de Distribuição e Territórios -->
   <row id="agg_3" cols-d="3" cols-t="1" cols-m="1" gap-x="16" gap-y="16">
-    <widget id="ticket_canal_distrib" type="bar" order="1" span-d="1" span-t="1" span-m="1" height="360" title="Ticket Médio por Canal de Distribuição">
+    <chart id="ticket_canal_distrib" type="bar" order="1" span-d="1" span-t="1" span-m="1" height="360" title="Ticket Médio por Canal de Distribuição">
       <datasource schema="comercial" table="vendas_vw" dimension="canal_distribuicao_nome" measure="SUM(item_subtotal)/COUNT_DISTINCT(pedido_id)" />
       <styling tw="legend:off grid:on mb:32" />
-    </widget>
-    <widget id="pedidos_canal_distrib" type="bar" order="2" span-d="1" span-t="1" span-m="1" height="360" title="Pedidos por Canal de Distribuição">
+    </chart>
+    <chart id="pedidos_canal_distrib" type="bar" order="2" span-d="1" span-t="1" span-m="1" height="360" title="Pedidos por Canal de Distribuição">
       <datasource schema="comercial" table="vendas_vw" dimension="canal_distribuicao_nome" measure="COUNT_DISTINCT(pedido_id)" />
       <styling tw="legend:off grid:on mb:32" />
-    </widget>
-    <widget id="vendas_territorio" type="bar" order="3" span-d="1" span-t="1" span-m="1" height="360" title="Vendas por Território">
+    </chart>
+    <chart id="vendas_territorio" type="bar" order="3" span-d="1" span-t="1" span-m="1" height="360" title="Vendas por Território">
       <datasource schema="comercial" table="vendas_vw" dimension="territorio_nome" measure="SUM(item_subtotal)" />
       <styling tw="legend:off grid:on mb:32" />
-    </widget>
+    </chart>
   </row>
 
   <!-- Agregados: Clientes e Filial -->
   <row id="agg_4" cols-d="3" cols-t="1" cols-m="1" gap-x="16" gap-y="16">
-    <widget id="top_clientes" type="bar" order="1" span-d="1" span-t="1" span-m="1" height="360" title="Top Clientes">
+    <chart id="top_clientes" type="bar" order="1" span-d="1" span-t="1" span-m="1" height="360" title="Top Clientes">
       <datasource schema="comercial" table="vendas_vw" dimension="cliente_nome" measure="SUM(item_subtotal)" />
       <styling tw="legend:off grid:on mb:32" />
-    </widget>
-    <widget id="fat_filial" type="bar" order="2" span-d="1" span-t="1" span-m="1" height="360" title="Faturamento por Filial">
+    </chart>
+    <chart id="fat_filial" type="bar" order="2" span-d="1" span-t="1" span-m="1" height="360" title="Faturamento por Filial">
       <datasource schema="comercial" table="vendas_vw" dimension="filial_nome" measure="SUM(item_subtotal)" />
       <styling tw="legend:off grid:on mb:32" />
-    </widget>
+    </chart>
   </row>
 
   <!-- Novos Exemplos: Treemap, Scatter e Funnel (todos na mesma linha) -->
   <row id="extra_viz" cols-d="3" cols-t="1" cols-m="1" gap-x="16" gap-y="16">
-    <widget id="tm_categoria_servico" type="treemap" order="1" span-d="1" span-t="1" span-m="1" height="400" title="Treemap • Categoria > Serviço">
+    <chart id="tm_categoria_servico" type="treemap" order="1" span-d="1" span-t="1" span-m="1" height="400" title="Treemap • Categoria > Serviço">
       <datasource schema="comercial" table="vendas_vw" dimension1="categoria_servico_nome" dimension2="servico_nome" measure="SUM(item_subtotal)" />
       <styling tw="mb:32" />
-    </widget>
-    <widget id="sc_vend_fat_vs_pedidos" type="scatter" order="2" span-d="1" span-t="1" span-m="1" height="400" title="Scatter • Faturamento vs Pedidos por Vendedor">
+    </chart>
+    <chart id="sc_vend_fat_vs_pedidos" type="scatter" order="2" span-d="1" span-t="1" span-m="1" height="400" title="Scatter • Faturamento vs Pedidos por Vendedor">
       <datasource schema="comercial" table="vendas_vw" dimension="vendedor_nome" xMeasure="SUM(item_subtotal)" yMeasure="COUNT_DISTINCT(pedido_id)" />
       <styling tw="gridx:on gridy:on mb:32" />
-    </widget>
-    <widget id="fnl_canal_venda" type="funnel" order="3" span-d="1" span-t="1" span-m="1" height="400" title="Funil • Vendas por Canal (Top 5)">
+    </chart>
+    <chart id="fnl_canal_venda" type="funnel" order="3" span-d="1" span-t="1" span-m="1" height="400" title="Funil • Vendas por Canal (Top 5)">
       <datasource schema="comercial" table="vendas_vw" dimension1="canal_venda_nome" measure="SUM(item_subtotal)" limit="5" />
       <styling tw="bg:#ffffff border:width:1 border:color:#e5e7eb radius:12 mb:32" />
-    </widget>
+    </chart>
   </row>
 
   
@@ -329,34 +329,34 @@ export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas"
 export const initialDslColumns = `<dashboard theme="branco" title="Dashboard (Colunas)" subtitle="Layout por colunas" layout-mode="grid-per-column" cols-d="3" cols-t="2" cols-m="1" gap-x="16" gap-y="16">
   <columns>
     <column id="1">
-      <widget id="kpi_faturamento" type="kpi" order="1" span-d="1" height="150" title="💰 Faturamento Total">
+      <kpi id="kpi_faturamento" order="1" span-d="1" height="150" title="💰 Faturamento Total">
         <datasource schema="vendas" table="vw_pedidos_completo" measure="item_subtotal" agg="SUM" />
         <styling tw="kpi:unit:R$ kpi:viz:card" />
-      </widget>
-      <widget id="chart_faturamento_mensal" type="line" order="2" span-d="2" height="420" title="📈 Faturamento Mensal">
+      </kpi>
+      <chart id="chart_faturamento_mensal" type="line" order="2" span-d="2" height="420" title="📈 Faturamento Mensal">
         <datasource schema="vendas" table="vw_pedidos_completo" dimension="data_pedido" measure="item_subtotal" agg="SUM" />
         <styling tw="legend:off grid:on mb:40" />
-      </widget>
+      </chart>
     </column>
     <column id="2">
-      <widget id="kpi_total_itens" type="kpi" order="1" span-d="1" height="150" title="📦 Total de Itens">
+      <kpi id="kpi_total_itens" order="1" span-d="1" height="150" title="📦 Total de Itens">
         <datasource schema="vendas" table="vw_pedidos_completo" measure="item_id" agg="COUNT" />
         <styling tw="kpi:viz:card" />
-      </widget>
-      <widget id="chart_top_produtos" type="bar" order="3" span-d="1" height="420" title="🏆 Top 10 Produtos">
+      </kpi>
+      <chart id="chart_top_produtos" type="bar" order="3" span-d="1" height="420" title="🏆 Top 10 Produtos">
         <datasource schema="vendas" table="vw_pedidos_completo" dimension="produto_nome" measure="item_subtotal" agg="SUM" />
         <styling tw="legend:off grid:on mb:40 bar:color:#3b82f6" />
-      </widget>
+      </chart>
     </column>
     <column id="3">
-      <widget id="kpi_ticket_medio" type="kpi" order="1" span-d="1" height="150" title="🎯 Ticket Médio">
+      <kpi id="kpi_ticket_medio" order="1" span-d="1" height="150" title="🎯 Ticket Médio">
         <datasource schema="vendas" table="vw_pedidos_completo" measure="item_subtotal" agg="AVG" />
         <styling tw="kpi:unit:R$ kpi:viz:card" />
-      </widget>
-      <widget id="chart_vendas_canal" type="pie" order="2" span-d="1" height="420" title="📱 Vendas por Canal">
+      </kpi>
+      <chart id="chart_vendas_canal" type="pie" order="2" span-d="1" height="420" title="📱 Vendas por Canal">
         <datasource schema="vendas" table="vw_pedidos_completo" dimension="canal_venda_nome" measure="item_subtotal" agg="SUM" />
         <styling tw="legend:on grid:off mb:40" />
-      </widget>
+      </chart>
     </column>
   </columns>
 </dashboard>`
@@ -461,8 +461,8 @@ export const visualBuilderActions = {
           const isPerColumn = /layout-mode\s*=\s*"grid-per-column"/.test(dsl)
 
           const escapeId = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-          const setAttrOnWidget = (source: string, id: string, name: string, value: string): string => {
-            const re = new RegExp(`(<widget\\b[^>]*\\bid=\"${escapeId(id)}\"[^>]*)(\\/?>)`, 'g')
+          const setAttrOnNode = (source: string, id: string, name: string, value: string): string => {
+            const re = new RegExp(`(<(kpi|chart)\\b[^>]*\\bid=\"${escapeId(id)}\"[^>]*)(\\/?>)`, 'gi')
             return source.replace(re, (match, attrs: string, end: string) => {
               const attrRe = new RegExp(`\\b${name}\\=\"[^\"]*\"`)
               let newAttrs = attrs
@@ -477,8 +477,8 @@ export const visualBuilderActions = {
 
           const escapeHtml = (s: string) => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;')
           const setAttrOnDatasource = (source: string, id: string, attrs: Record<string, string | undefined>): string => {
-            const idRe = new RegExp(`<widget\\b([^>]*)\\bid=\"${escapeId(id)}\"[^>]*>([\\s\\S]*?)<\\/widget>`, 'i')
-            return source.replace(idRe, (match: string, wAttrs: string, inner: string) => {
+            const idRe = new RegExp(`(<(kpi|chart)\\b([^>]*)\\bid=\"${escapeId(id)}\"[^>]*>)([\\s\\S]*?)(<\\/\\2>)`, 'i')
+            return source.replace(idRe, (match: string, _open: string, _tag: string, _attrs: string, inner: string) => {
               const dsRe = /<datasource\b([^>]*)\/>/i
               const dsMatch = inner.match(dsRe)
               if (!dsMatch) {
@@ -525,9 +525,9 @@ export const visualBuilderActions = {
           }
 
           // Insert or update <config>{...}</config> for a widget id
-          const setConfigOnWidget = (source: string, id: string, updater: (cfg: Record<string, unknown>) => Record<string, unknown>): string => {
-            const reWidget = new RegExp(`(<widget\\b[^>]*\\bid=\"${escapeId(id)}\"[^>]*>)([\\s\\S]*?)(<\\/widget>)`, 'i')
-            return source.replace(reWidget, (match: string, open: string, inner: string, close: string) => {
+          const setConfigOnNode = (source: string, id: string, updater: (cfg: Record<string, unknown>) => Record<string, unknown>): string => {
+            const reNode = new RegExp(`(<(kpi|chart)\\b[^>]*\\bid=\"${escapeId(id)}\"[^>]*>)([\\s\\S]*?)(<\\/\\2>)`, 'i')
+            return source.replace(reNode, (match: string, open: string, inner: string, close: string) => {
               const cfgRe = /<config\b[^>]*>([\s\S]*?)<\/config>/i
               const cfgMatch = inner.match(cfgRe)
               let current: Record<string, unknown> = {}
@@ -553,23 +553,23 @@ export const visualBuilderActions = {
           widgets.forEach(w => {
             if (w.id) {
               if (typeof w.order === 'number') {
-                dsl = setAttrOnWidget(dsl, w.id, 'order', String(w.order))
+                dsl = setAttrOnNode(dsl, w.id, 'order', String(w.order))
               }
               if (isPerColumn) {
                 const col = w.gridStart?.desktop
                 if (typeof col === 'number' && col >= 1) {
-                  dsl = setAttrOnWidget(dsl, w.id, 'col-d', String(col))
+                  dsl = setAttrOnNode(dsl, w.id, 'col-d', String(col))
                 }
               }
               // Update common widget attrs
               if (typeof w.heightPx === 'number') {
-                dsl = setAttrOnWidget(dsl, w.id, 'height', String(w.heightPx))
+                dsl = setAttrOnNode(dsl, w.id, 'height', String(w.heightPx))
               }
               if (typeof w.title === 'string' && w.title.length > 0) {
-                dsl = setAttrOnWidget(dsl, w.id, 'title', w.title)
+                dsl = setAttrOnNode(dsl, w.id, 'title', w.title)
               }
-              if (typeof w.type === 'string' && w.type.length > 0) {
-                dsl = setAttrOnWidget(dsl, w.id, 'type', w.type)
+              if (typeof w.type === 'string' && w.type.length > 0 && w.type !== 'kpi') {
+                dsl = setAttrOnNode(dsl, w.id, 'type', w.type)
               }
               // Update datasource for simple charts and KPI
               const t = w.type
@@ -606,7 +606,7 @@ export const visualBuilderActions = {
               // Persist styling colors and margin.left into <config> (supports simple and groupedbar)
               const updateChartConfig = (key: 'barConfig'|'lineConfig'|'pieConfig'|'areaConfig'|'groupedBarConfig'|'stackedBarConfig', colors?: string[], marginLeft?: number, marginTop?: number, marginBottom?: number, layout?: 'vertical'|'horizontal') => {
                 if ((!colors || colors.length === 0) && (marginLeft === undefined) && (marginTop === undefined) && (marginBottom === undefined)) return
-                dsl = setConfigOnWidget(dsl, w.id, (cfg) => {
+                dsl = setConfigOnNode(dsl, w.id, (cfg) => {
                   const prev = (cfg[key] as Record<string, unknown>) || {}
                   const prevStyling = (prev['styling'] as Record<string, unknown>) || {}
                   const prevMargin = (prev['margin'] as { top?: number; right?: number; bottom?: number; left?: number } | undefined) || {}

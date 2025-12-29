@@ -340,10 +340,10 @@ export class ConfigParser {
   static parse(jsonString: string): ParseResult {
     try {
       const raw = String(jsonString || '').trim();
-      // DSL detection: starts with tag and contains <row or <dashboard or <widget
+      // DSL detection: starts with tag and contains <row or <dashboard or <chart>/<kpi>
       if (
         raw.startsWith('<') &&
-        (/<row\b/i.test(raw) || /<dashboard\b/i.test(raw) || /<widget\b/i.test(raw))
+        (/<row\b/i.test(raw) || /<dashboard\b/i.test(raw) || /<chart\b/i.test(raw) || /<kpi\b/i.test(raw))
       ) {
         return this.parseDsl(raw);
       }
@@ -455,7 +455,7 @@ export class ConfigParser {
 
   /**
    * Parse HTML-like DSL into ParseResult
-   * Supported tags: <dashboard>, <row>, <widget>, <datasource/>, <styling/>, <items><item/></items>
+   * Supported tags: <dashboard>, <row>, <chart>, <kpi>, <datasource/>, <styling/>, <items><item/></items>
    * (Legacy <config> JSON is still accepted as fallback when present.)
    */
   private static parseDsl(dsl: string): ParseResult {
@@ -715,14 +715,19 @@ export class ConfigParser {
       // Column inner grid mapping (from <column cols-*> attributes)
       const columnsInner: NonNullable<GridConfig['layout']>['columnsInner'] = {};
 
-      // Parse widgets (self-closing and pair with <config>)
-    const parseWidgetAttributes = (attrStr: string, innerContent?: string, defaultStart?: number) => {
-      const wa = parseAttrs(attrStr || '');
-      const id = wa['id'];
-      const typeRaw = wa['type'] as string | undefined;
-      const type = ((typeRaw === 'comparebar') ? 'groupedbar' : typeRaw) as Widget['type'];
+      // Parse visuals (self-closing and pair with <config>)
+      const parseVisualAttributes = (
+        tag: 'chart' | 'kpi',
+        attrStr: string,
+        innerContent?: string,
+        defaultStart?: number
+      ) => {
+        const wa = parseAttrs(attrStr || '');
+        const id = wa['id'];
+        const typeRaw = tag === 'kpi' ? 'kpi' : (wa['type'] as string | undefined);
+        const type = ((typeRaw === 'comparebar') ? 'groupedbar' : typeRaw) as Widget['type'];
         if (!id || !type) {
-          errors.push({ line: 1, column: 1, message: 'Widget missing id or type', type: 'validation' });
+          errors.push({ line: 1, column: 1, message: `${tag} missing id or type`, type: 'validation' });
           return;
         }
         const order = wa['order'] ? Number(wa['order']) : undefined;
@@ -759,7 +764,7 @@ export class ConfigParser {
               const cfgJson = JSON.parse(cfgMatchInner[1].trim());
               this.applyWidgetConfig(widget, cfgJson);
             } catch {
-              errors.push({ line: 1, column: 1, message: `Widget ${widget.id}: invalid <config> JSON`, type: 'validation' });
+              errors.push({ line: 1, column: 1, message: `${tag} ${widget.id}: invalid <config> JSON`, type: 'validation' });
             }
           }
           // Parse <datasource .../>
@@ -834,32 +839,40 @@ export class ConfigParser {
             ...(label ? { label } : {})
           };
           const content = colMatch[2] || '';
-          // self-closing widgets inside column
-          const ws = /<widget\b([^>]*)\/>/gi;
+          // self-closing visuals inside column
+          const ws = /<(kpi|chart)\b([^>]*)\/>/gi;
           let wSelf: RegExpExecArray | null;
           while ((wSelf = ws.exec(content)) !== null) {
-            parseWidgetAttributes(wSelf[1], undefined, colId);
+            const tag = (wSelf[1] as 'kpi' | 'chart');
+            const attrs = wSelf[2];
+            parseVisualAttributes(tag, attrs, undefined, colId);
           }
-          // paired widgets inside column
-          const wp = /<widget\b([^>]*)>([\s\S]*?)<\/widget>/gi;
+          // paired visuals inside column
+          const wp = /<(kpi|chart)\b([^>]*)>([\s\S]*?)<\/\1>/gi;
           let wPair: RegExpExecArray | null;
           while ((wPair = wp.exec(content)) !== null) {
-          const inner = wPair[2] || '';
-          parseWidgetAttributes(wPair[1], inner, colId);
+          const tag = (wPair[1] as 'kpi' | 'chart');
+          const attrs = wPair[2];
+          const inner = wPair[3] || '';
+          parseVisualAttributes(tag, attrs, inner, colId);
         }
       }
     } else {
-        // Global: scan all widgets
-        const widgetSelfRegex = /<widget\b([^>]*)\/>/gi;
+        // Global: scan all visuals
+        const widgetSelfRegex = /<(kpi|chart)\b([^>]*)\/>/gi;
         let wSelf: RegExpExecArray | null;
         while ((wSelf = widgetSelfRegex.exec(dsl)) !== null) {
-          parseWidgetAttributes(wSelf[1]);
+          const tag = (wSelf[1] as 'kpi' | 'chart');
+          const attrs = wSelf[2];
+          parseVisualAttributes(tag, attrs);
         }
-        const widgetPairRegex = /<widget\b([^>]*)>([\s\S]*?)<\/widget>/gi;
+        const widgetPairRegex = /<(kpi|chart)\b([^>]*)>([\s\S]*?)<\/\1>/gi;
         let wPair: RegExpExecArray | null;
         while ((wPair = widgetPairRegex.exec(dsl)) !== null) {
-          const inner = wPair[2] || '';
-          parseWidgetAttributes(wPair[1], inner);
+          const tag = (wPair[1] as 'kpi' | 'chart');
+          const attrs = wPair[2];
+          const inner = wPair[3] || '';
+          parseVisualAttributes(tag, attrs, inner);
         }
       }
 
@@ -950,22 +963,24 @@ export class ConfigParser {
 
       const rowContent = rowMatch[2] || '';
 
-      // Self-closing widgets
-      const widgetSelfRegex = /<widget\b([^>]*)\/>/gi;
+      // Self-closing visuals
+      const widgetSelfRegex = /<(kpi|chart)\b([^>]*)\/>/gi;
       let wMatch: RegExpExecArray | null;
       while ((wMatch = widgetSelfRegex.exec(rowContent)) !== null) {
-        const wa = parseAttrs(wMatch[1] || '');
-        const widget = this.buildWidgetFromAttrs(wa, rowId, errors);
+        const tag = (wMatch[1] as 'kpi' | 'chart');
+        const wa = parseAttrs(wMatch[2] || '');
+        const widget = this.buildWidgetFromAttrsWithDefault(wa, rowId, tag === 'kpi' ? 'kpi' : undefined, errors);
         if (widget) widgets.push(widget);
       }
 
-      // Pair widgets with optional <config>, <datasource/>, <styling/>
-      const widgetPairRegex = /<widget\b([^>]*)>([\s\S]*?)<\/widget>/gi;
+      // Pair visuals with optional <config>, <datasource/>, <styling/>
+      const widgetPairRegex = /<(kpi|chart)\b([^>]*)>([\s\S]*?)<\/\1>/gi;
       let wpMatch: RegExpExecArray | null;
       while ((wpMatch = widgetPairRegex.exec(rowContent)) !== null) {
-        const wa = parseAttrs(wpMatch[1] || '');
-        const inner = wpMatch[2] || '';
-        const widget = this.buildWidgetFromAttrs(wa, rowId, errors);
+        const tag = (wpMatch[1] as 'kpi' | 'chart');
+        const wa = parseAttrs(wpMatch[2] || '');
+        const inner = wpMatch[3] || '';
+        const widget = this.buildWidgetFromAttrsWithDefault(wa, rowId, tag === 'kpi' ? 'kpi' : undefined, errors);
         if (!widget) continue;
         // Extract <config> JSON
         const cfgMatch = inner.match(/<config\b[^>]*>([\s\S]*?)<\/config>/i);
@@ -974,7 +989,7 @@ export class ConfigParser {
             const cfgJson = JSON.parse(cfgMatch[1].trim());
             this.applyWidgetConfig(widget, cfgJson);
           } catch (e) {
-            errors.push({ line: 1, column: 1, message: `Widget ${widget.id}: invalid <config> JSON`, type: 'validation' });
+            errors.push({ line: 1, column: 1, message: `${tag} ${widget.id}: invalid <config> JSON`, type: 'validation' });
           }
         }
         // New: parse <datasource .../>
@@ -1055,12 +1070,12 @@ export class ConfigParser {
     };
   }
 
-  private static buildWidgetFromAttrs(attrs: Record<string, string>, rowId: string, errors: ParseError[]): Widget | null {
+  private static buildWidgetFromAttrsWithDefault(attrs: Record<string, string>, rowId: string, defaultType: 'kpi' | undefined, errors: ParseError[]): Widget | null {
     const id = attrs['id'];
-        const typeRaw = attrs['type'];
-        const type = ((typeRaw === 'comparebar') ? 'groupedbar' : (typeRaw as Widget['type']));
+    const typeRaw = attrs['type'] || defaultType;
+    const type = ((typeRaw === 'comparebar') ? 'groupedbar' : (typeRaw as Widget['type']));
     if (!id || !type) {
-      errors.push({ line: 1, column: 1, message: `Widget missing id or type in row ${rowId}`, type: 'validation' });
+      errors.push({ line: 1, column: 1, message: `Visual missing id or type in row ${rowId}`, type: 'validation' });
       return null;
     }
     const order = attrs['order'] ? Number(attrs['order']) : undefined;
