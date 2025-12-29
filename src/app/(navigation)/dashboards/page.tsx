@@ -32,12 +32,9 @@ export default function DashboardsPage() {
     });
     moduleUiActions.setTabs({
       options: [
-        { value: "meus", label: "Meus", icon: <Layout className="text-blue-600" /> },
-        { value: "equipe", label: "Equipe", icon: <Users className="text-emerald-600" /> },
-        { value: "publicos", label: "Públicos", icon: <Globe2 className="text-gray-700" /> },
         { value: "catalogo", label: "Catálogo", icon: <LayoutGrid className="text-indigo-600" /> },
       ],
-      selected: "meus",
+      selected: "catalogo",
     });
     moduleUiActions.setLayout({ contentBg: "rgb(253, 253, 253)", contentTopGap: 8, mbTitle: 16, mbTabs: 8 });
   }, []);
@@ -92,13 +89,7 @@ export default function DashboardsPage() {
                 {/* Conteúdo principal abaixo das tabs */}
                 <div style={{ paddingTop: (layout.contentTopGap || 0) + (layout.mbTabs || 0) }}>
                   <div className="px-4 md:px-6">
-                    {tabs.selected === 'catalogo' ? (
-                      <DashboardGridView />
-                    ) : (
-                      <div className="w-full p-4 text-sm text-gray-600 bg-white border rounded">
-                        Selecione a aba Catálogo para ver os dashboards como cards.
-                      </div>
-                    )}
+                    <DashboardGridView />
                   </div>
                 </div>
               </NexusPageContainer>
