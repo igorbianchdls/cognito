@@ -931,6 +931,8 @@ const DraggableGroup = memo(function DraggableGroup({ id, children, containerSty
                     minHeight={minHeight}
                     globalFilters={globalFilters}
                     onEdit={handleEditWidget}
+                    onDuplicate={handleDuplicateWidget}
+                    onDelete={handleDeleteWidget}
                   />
                 );
               })}
