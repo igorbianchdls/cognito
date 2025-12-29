@@ -6,6 +6,15 @@ import { SortableContext, useSortable, horizontalListSortingStrategy, verticalLi
 import { CSS } from '@dnd-kit/utilities';
 import WidgetRenderer from './WidgetRenderer';
 import WidgetEditorModal from './WidgetEditorModal';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { MoreVertical, Copy, Edit3, Trash2 } from 'lucide-react';
 import RowEditorModal, { type RowSpec } from './RowEditorModal';
 import DashboardInCanvasHeader from './DashboardInCanvasHeader';
 import type { Widget, GridConfig, LayoutRow } from './ConfigParser';
@@ -39,9 +48,11 @@ interface DraggableWidgetProps {
   minHeight: string;
   globalFilters?: GlobalFilters;
   onEdit: (widget: Widget) => void;
+  onDuplicate: (widget: Widget) => void;
+  onDelete: (widget: Widget) => void;
 }
 
-const DraggableWidget = memo(function DraggableWidget({ widget, spanClasses, spanValue, startValue, minHeight, globalFilters, onEdit }: DraggableWidgetProps) {
+const DraggableWidget = memo(function DraggableWidget({ widget, spanClasses, spanValue, startValue, minHeight, globalFilters, onEdit, onDuplicate, onDelete }: DraggableWidgetProps) {
   const {
     attributes,
     listeners,
@@ -83,19 +94,27 @@ const DraggableWidget = memo(function DraggableWidget({ widget, spanClasses, spa
           ⋮⋮
         </div>
 
-        {/* Edit Button - Right Side */}
+        {/* Actions Menu - Right Side */}
         <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onEdit(widget);
-            }}
-            className="bg-blue-600 text-white px-2 py-1 rounded text-xs font-medium hover:bg-blue-700 cursor-pointer"
-          >
-            ✏️ Editar
-          </button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-gray-600 hover:text-gray-800" aria-label="Ações do widget">
+                <MoreVertical className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="min-w-[10rem]">
+              <DropdownMenuItem onClick={(e) => { e.preventDefault(); onEdit(widget); }} className="gap-2">
+                <Edit3 className="w-4 h-4" /> Editar
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={(e) => { e.preventDefault(); onDuplicate(widget); }} className="gap-2">
+                <Copy className="w-4 h-4" /> Duplicar
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem variant="destructive" onClick={(e) => { e.preventDefault(); onDelete(widget); }} className="gap-2">
+                <Trash2 className="w-4 h-4" /> Excluir
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         <WidgetRenderer widget={widget} globalFilters={globalFilters} />
@@ -158,6 +177,38 @@ function ResponsiveGridCanvas({ widgets, gridConfig, globalFilters, viewportMode
     );
     onLayoutChange(updatedWidgets);
     try { visualBuilderActions.bumpReloadTick(updatedWidget.id); } catch {}
+  }, [onLayoutChange, widgets]);
+
+  // Duplicate a widget (clone near original with new id)
+  const handleDuplicateWidget = useCallback((w: Widget) => {
+    const existingIds = new Set(widgets.map(x => x.id));
+    const base = `${w.id}_copy`;
+    let candidate = base;
+    let idx = 1;
+    while (existingIds.has(candidate)) {
+      candidate = `${base}_${idx++}`;
+    }
+    const clone: Widget = JSON.parse(JSON.stringify(w));
+    clone.id = candidate;
+    // Slightly bump order to appear after
+    if (typeof w.order === 'number') clone.order = w.order + 0.01;
+    // Keep row / gridStart and spans
+    const updated = [] as Widget[];
+    for (const it of widgets) {
+      updated.push(it);
+      if (it.id === w.id) updated.push(clone);
+    }
+    if (onLayoutChange) onLayoutChange(updated);
+    else try { visualBuilderActions.updateWidgets(updated); } catch {}
+  }, [onLayoutChange, widgets]);
+
+  // Delete a widget with confirmation
+  const handleDeleteWidget = useCallback((w: Widget) => {
+    const ok = typeof window !== 'undefined' ? window.confirm(`Excluir o widget "${w.title || w.id}"?`) : true;
+    if (!ok) return;
+    const updated = widgets.filter(x => x.id !== w.id);
+    if (onLayoutChange) onLayoutChange(updated);
+    else try { visualBuilderActions.updateWidgets(updated); } catch {}
   }, [onLayoutChange, widgets]);
 
   // Extract theme colors from gridConfig
@@ -739,6 +790,8 @@ const DraggableGroup = memo(function DraggableGroup({ id, children, containerSty
                             minHeight={getWidgetHeight(widget)}
                             globalFilters={globalFilters}
                             onEdit={handleEditWidget}
+                            onDuplicate={handleDuplicateWidget}
+                            onDelete={handleDeleteWidget}
                           />
                         ))}
                       </div>
@@ -836,6 +889,8 @@ const DraggableGroup = memo(function DraggableGroup({ id, children, containerSty
                               minHeight={minHeight}
                               globalFilters={globalFilters}
                               onEdit={handleEditWidget}
+                              onDuplicate={handleDuplicateWidget}
+                              onDelete={handleDeleteWidget}
                             />
                           );
                         })}
@@ -926,6 +981,8 @@ const DraggableGroup = memo(function DraggableGroup({ id, children, containerSty
                             minHeight={minHeight}
                             globalFilters={globalFilters}
                             onEdit={handleEditWidget}
+                            onDuplicate={handleDuplicateWidget}
+                            onDelete={handleDeleteWidget}
                           />
                         );
                       })}
