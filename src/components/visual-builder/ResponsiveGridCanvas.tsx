@@ -420,12 +420,13 @@ const DraggableRow = memo(function DraggableRow({ id, children }: { id: string; 
   );
 });
 
-const DraggableGroup = memo(function DraggableGroup({ id, children }: { id: string; children: React.ReactNode }) {
+const DraggableGroup = memo(function DraggableGroup({ id, children, containerStyle }: { id: string; children: React.ReactNode; containerStyle?: React.CSSProperties }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.9 : 1,
+    ...(containerStyle || {}),
   } as React.CSSProperties;
   return (
     <div
@@ -770,14 +771,39 @@ const DraggableGroup = memo(function DraggableGroup({ id, children }: { id: stri
                     .map(id => widgets.find(w => w.id === id))
                     .filter(Boolean) as Widget[];
                   return (
-                    <DraggableGroup id={group.id} key={`group-${group.id}`}>
+                    <DraggableGroup id={group.id} key={`group-${group.id}`}
+                      containerStyle={(() => {
+                        const st = (group as any).style as (Record<string, any> | undefined);
+                        if (!st) return undefined;
+                        const background = st.backgroundGradient && st.backgroundGradient.enabled
+                          ? `${st.backgroundGradient.type || 'linear'}-gradient(${st.backgroundGradient.direction || 'to bottom'}, ${st.backgroundGradient.startColor || '#ffffff'}, ${st.backgroundGradient.endColor || '#f8fafc'})`
+                          : st.backgroundColor;
+                        const boxShadow = st.containerShadowColor
+                          ? `${st.containerShadowOffsetX || 0}px ${st.containerShadowOffsetY || 4}px ${st.containerShadowBlur || 8}px rgba(${typeof st.containerShadowColor === 'string' ? st.containerShadowColor : '0,0,0'}, ${st.containerShadowOpacity ?? 0.1})`
+                          : undefined;
+                        const padding = typeof st.padding === 'number' ? st.padding : undefined;
+                        const margin = typeof st.margin === 'number' ? st.margin : undefined;
+                        const borderWidth = typeof st.borderWidth === 'number' ? st.borderWidth : undefined;
+                        const borderColor = typeof st.borderColor === 'string' ? st.borderColor : undefined;
+                        const borderRadius = typeof st.borderRadius === 'number' ? st.borderRadius : undefined;
+                        return {
+                          background,
+                          boxShadow,
+                          padding: typeof padding === 'number' ? `${padding}px` : undefined,
+                          margin: typeof margin === 'number' ? `${margin}px` : undefined,
+                          borderWidth: typeof borderWidth === 'number' ? `${borderWidth}px` : undefined,
+                          borderColor,
+                          borderRadius: typeof borderRadius === 'number' ? `${borderRadius}px` : undefined,
+                        } as React.CSSProperties;
+                      })()}
+                    >
                       {group.title && (
                         <div className="px-2 py-1 text-sm font-medium text-gray-600">{group.title}</div>
                       )}
                       <div
                         className={getGridClassesForRow()}
                         style={{
-                          gridTemplateColumns: getGroupTemplate() || `repeat(${getGroupColumns()}, 1fr)`,
+                          gridTemplateColumns: (group.orientation === 'vertical' ? `repeat(1, 1fr)` : (getGroupTemplate() || `repeat(${getGroupColumns()}, 1fr)`)),
                           width: '100%',
                           columnGap: `${getGroupGaps().gapX}px`,
                           rowGap: `${getGroupGaps().gapY}px`,
