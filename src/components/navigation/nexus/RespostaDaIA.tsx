@@ -5043,30 +5043,11 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
         if (part.type === 'tool-apply_patch') {
           const t = part as any;
           const callId = t.toolCallId as string;
-          const shouldBeOpen = t.state === 'output-available' || t.state === 'output-error' || t.state === 'input-streaming' || t.state === 'input-available';
-
+          if (t.state !== 'output-available') return null;
+          const ok = !!(t.output && (t.output as any).success);
           return (
-            <div key={callId}>
-              <Tool defaultOpen={shouldBeOpen}>
-                <ToolHeader type="tool-apply_patch" state={t.state} />
-                <ToolContent>
-                  {t.state === 'input-streaming' && (
-                    <ToolInputStreaming input={t.input} isStreaming={true} />
-                  )}
-                  {t.state === 'input-available' && (
-                    <ToolInputStreaming input={t.input} isStreaming={false} />
-                  )}
-                  {t.input && (t.state !== 'input-streaming' && t.state !== 'input-available') && (
-                    <ToolInput input={t.input} />
-                  )}
-                  {t.state === 'output-error' && (
-                    <ToolOutput output={null} errorText={t.errorText} />
-                  )}
-                </ToolContent>
-              </Tool>
-              {t.state === 'output-available' && (
-                <ApplyPatchResultCard input={t.input as any} output={t.output as any} />
-              )}
+            <div key={callId} className="text-xs text-gray-600 mb-2">
+              {ok ? 'Patch aplicado.' : 'Falha ao aplicar patch.'}
             </div>
           );
         }

@@ -11,6 +11,18 @@ export default function PerguntaDoUsuario({ message }: PerguntaDoUsuarioProps) {
   const fileParts = message.parts.filter(part => part.type === 'file');
   const textParts = message.parts.filter(part => part.type === 'text');
 
+  // Ocultar comandos internos (ex.: apply_patch(...)) e envelopes de patch
+  const visibleTextParts = textParts.filter((part) => {
+    const t = (part as { type: 'text'; text?: string }).text || '';
+    if (/^\s*apply_patch\s*\(/.test(t)) return false;
+    if (t.includes('*** Begin Patch') || t.includes('*** Update File:') || t.includes('*** End Patch')) return false;
+    return true;
+  });
+
+  if (visibleTextParts.length === 0 && fileParts.length === 0) {
+    return null;
+  }
+
   return (
     <Message from="user">
       <div>
@@ -29,7 +41,7 @@ export default function PerguntaDoUsuario({ message }: PerguntaDoUsuarioProps) {
 
         {/* Container preto apenas com texto */}
         <MessageContent>
-          {textParts.map((part, index) => (
+          {visibleTextParts.map((part, index) => (
             <span key={index}>{part.text}</span>
           ))}
         </MessageContent>

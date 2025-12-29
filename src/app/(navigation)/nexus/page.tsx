@@ -333,17 +333,8 @@ export default function Page() {
         try {
           const text: unknown = event.data.text;
           if (typeof text === 'string' && text.trim().length > 0) {
-            // Exibir a mensagem do usuário no histórico
-            const userMessage = {
-              id: `user-${Date.now()}`,
-              role: 'user' as const,
-              parts: [{ type: 'text' as const, text }],
-              agent: activeAgentOrWorkflow,
-            };
-            setAllMessages(prev => [...prev, userMessage]);
-            // Enviar para a IA
+            // Não adiciona mensagem visível do usuário; envia direto para o agente
             sendMessage({ text });
-            // Limpar input
             setInput('');
           }
         } catch (e) {
