@@ -320,6 +320,54 @@ function ResponsiveGridCanvas({ widgets, gridConfig, globalFilters, viewportMode
   };
   const rowOrder = useMemo(() => getRowOrderFromCode(), [visualBuilderState.code, widgetGroups]);
 
+  // --- Group DnD helpers (grid mode) ---
+  const getGroupsFromDsl = (dsl: string): Array<{ id: string; start: number; end: number; block: string }> => {
+    const arr: Array<{ id: string; start: number; end: number; block: string }> = [];
+    const re = /<group\b([^>]*)>([\s\S]*?)<\/group>/gi;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(dsl)) !== null) {
+      const attrs = m[1] || '';
+      const idMatch = attrs.match(/\bid=\"([^\"]+)\"/i);
+      const id = idMatch ? idMatch[1] : String(arr.length + 1);
+      arr.push({ id, start: m.index!, end: m.index! + m[0].length, block: m[0] });
+    }
+    return arr;
+  };
+  const getGroupOrderFromCode = (): string[] => {
+    const code = visualBuilderState.code || '';
+    if (!isDsl(code)) return Array.isArray(groups) ? groups.map(g => g.id) : [];
+    const gs = getGroupsFromDsl(code);
+    return gs.map(g => g.id);
+  };
+  const groupOrder = useMemo(() => getGroupOrderFromCode(), [visualBuilderState.code, groups]);
+
+  const reorderGroupsInDsl = (dsl: string, newOrder: string[]): string => {
+    const gs = getGroupsFromDsl(dsl);
+    if (gs.length === 0) return dsl;
+    const header = dsl.slice(0, gs[0].start);
+    const footer = dsl.slice(gs[gs.length - 1].end);
+    const byId = new Map(gs.map(g => [g.id, g.block] as const));
+    const orderedBlocks = newOrder.map(id => byId.get(id)).filter(Boolean) as string[];
+    return header + orderedBlocks.join('\n') + footer;
+  };
+
+  const handleGroupDragEnd = useCallback((event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const current = [...groupOrder];
+    const oldIndex = current.indexOf(String(active.id));
+    const newIndex = current.indexOf(String(over.id));
+    if (oldIndex === -1 || newIndex === -1) return;
+    const next = [...current];
+    const [moved] = next.splice(oldIndex, 1);
+    next.splice(newIndex, 0, moved);
+    const code = visualBuilderState.code || '';
+    if (isDsl(code)) {
+      const nextCode = reorderGroupsInDsl(code, next);
+      visualBuilderActions.updateCode(nextCode);
+    }
+  }, [groupOrder, visualBuilderState.code]);
+
   const reorderRowsInDsl = (dsl: string, newOrder: string[]): string => {
     const rows = getRowsFromDsl(dsl);
     if (rows.length === 0) return dsl;
@@ -366,6 +414,31 @@ const DraggableRow = memo(function DraggableRow({ id, children }: { id: string; 
         className="absolute -left-1 -top-3 opacity-0 group-hover:opacity-100 transition-opacity z-10 bg-gray-700 text-white px-2 py-0.5 rounded cursor-grab active:cursor-grabbing text-xs"
       >
         ⇅ Row {id}
+      </div>
+      {children}
+    </div>
+  );
+});
+
+const DraggableGroup = memo(function DraggableGroup({ id, children }: { id: string; children: React.ReactNode }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.9 : 1,
+  } as React.CSSProperties;
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="group relative rounded-md border-2 border-transparent hover:border-blue-400 hover:border-dashed"
+    >
+      <div
+        {...attributes}
+        {...listeners}
+        className="absolute -left-1 -top-3 opacity-0 group-hover:opacity-100 transition-opacity z-10 bg-gray-700 text-white px-2 py-0.5 rounded cursor-grab active:cursor-grabbing text-xs"
+      >
+        ⇅ Group {id}
       </div>
       {children}
     </div>
@@ -677,60 +750,65 @@ const DraggableRow = memo(function DraggableRow({ id, children }: { id: string; 
             </DndContext>
           </div>
         )}
-        {/* Grid mode with groups */}
+        {/* Grid mode with groups (sortable) */}
         {widgets.length > 0 && perGridMode && Array.isArray(groups) && groups.length > 0 && (
-          <div className="px-0 py-4 space-y-6">
-            {groups.map((group) => {
-              const getGroupTemplate = (): string | undefined => group.grid?.template ? (viewportMode === 'mobile' ? group.grid.template.mobile : viewportMode === 'tablet' ? group.grid.template.tablet : group.grid.template.desktop) : undefined;
-              const getGroupColumns = (): number => {
-                const spec = viewportMode === 'mobile' ? group.grid?.mobile : viewportMode === 'tablet' ? group.grid?.tablet : group.grid?.desktop;
-                return spec?.columns && spec.columns > 0 ? spec.columns : getGlobalColumns();
-              };
-              const getGroupGaps = (): { gapX: number; gapY: number; autoRowHeight?: number } => {
-                const spec = viewportMode === 'mobile' ? group.grid?.mobile : viewportMode === 'tablet' ? group.grid?.tablet : group.grid?.desktop;
-                return { gapX: spec?.gapX ?? getGlobalGaps().gapX, gapY: spec?.gapY ?? getGlobalGaps().gapY, autoRowHeight: spec?.autoRowHeight ?? getGlobalGaps().autoRowHeight };
-              };
-              const groupWidgets = (group.children || [])
-                .map(id => widgets.find(w => w.id === id))
-                .filter(Boolean) as Widget[];
-              return (
-                <div key={`group-${group.id}`} className="group relative rounded-md border-2 border-transparent hover:border-blue-400 hover:border-dashed">
-                  {group.title && (
-                    <div className="px-2 py-1 text-sm font-medium text-gray-600">{group.title}</div>
-                  )}
-                  <div
-                    className={getGridClassesForRow()}
-                    style={{
-                      gridTemplateColumns: getGroupTemplate() || `repeat(${getGroupColumns()}, 1fr)`,
-                      width: '100%',
-                      columnGap: `${getGroupGaps().gapX}px`,
-                      rowGap: `${getGroupGaps().gapY}px`,
-                      gridAutoRows: getGroupGaps().autoRowHeight ? `${getGroupGaps().autoRowHeight}px` : undefined,
-                    }}
-                  >
-                    {groupWidgets.map((widget) => {
-                      const { desktopSpan, tabletSpan, mobileSpan } = adaptWidgetForResponsive(widget);
-                      const spanValue = viewportMode === 'mobile' ? mobileSpan : viewportMode === 'tablet' ? tabletSpan : desktopSpan;
-                      const minHeight = getWidgetHeight(widget);
-                      const spanClasses = getSpanClasses();
-                      const startValue = getStartValue(widget);
-                      return (
-                        <DraggableWidget
-                          key={widget.id}
-                          widget={widget}
-                          spanClasses={spanClasses}
-                          spanValue={spanValue}
-                          startValue={startValue}
-                          minHeight={minHeight}
-                          globalFilters={globalFilters}
-                          onEdit={handleEditWidget}
-                        />
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            })}
+          <div className="px-0 py-4">
+            <DndContext collisionDetection={closestCenter} onDragEnd={handleGroupDragEnd}>
+              <SortableContext items={groupOrder} strategy={verticalListSortingStrategy}>
+                {groupOrder.map((groupId) => {
+                  const group = groups.find(g => g.id === groupId)!;
+                  const getGroupTemplate = (): string | undefined => group.grid?.template ? (viewportMode === 'mobile' ? group.grid.template.mobile : viewportMode === 'tablet' ? group.grid.template.tablet : group.grid.template.desktop) : undefined;
+                  const getGroupColumns = (): number => {
+                    const spec = viewportMode === 'mobile' ? group.grid?.mobile : viewportMode === 'tablet' ? group.grid?.tablet : group.grid?.desktop;
+                    return spec?.columns && spec.columns > 0 ? spec.columns : getGlobalColumns();
+                  };
+                  const getGroupGaps = (): { gapX: number; gapY: number; autoRowHeight?: number } => {
+                    const spec = viewportMode === 'mobile' ? group.grid?.mobile : viewportMode === 'tablet' ? group.grid?.tablet : group.grid?.desktop;
+                    return { gapX: spec?.gapX ?? getGlobalGaps().gapX, gapY: spec?.gapY ?? getGlobalGaps().gapY, autoRowHeight: spec?.autoRowHeight ?? getGlobalGaps().autoRowHeight };
+                  };
+                  const groupWidgets = (group.children || [])
+                    .map(id => widgets.find(w => w.id === id))
+                    .filter(Boolean) as Widget[];
+                  return (
+                    <DraggableGroup id={group.id} key={`group-${group.id}`}>
+                      {group.title && (
+                        <div className="px-2 py-1 text-sm font-medium text-gray-600">{group.title}</div>
+                      )}
+                      <div
+                        className={getGridClassesForRow()}
+                        style={{
+                          gridTemplateColumns: getGroupTemplate() || `repeat(${getGroupColumns()}, 1fr)`,
+                          width: '100%',
+                          columnGap: `${getGroupGaps().gapX}px`,
+                          rowGap: `${getGroupGaps().gapY}px`,
+                          gridAutoRows: getGroupGaps().autoRowHeight ? `${getGroupGaps().autoRowHeight}px` : undefined,
+                        }}
+                      >
+                        {groupWidgets.map((widget) => {
+                          const { desktopSpan, tabletSpan, mobileSpan } = adaptWidgetForResponsive(widget);
+                          const spanValue = viewportMode === 'mobile' ? mobileSpan : viewportMode === 'tablet' ? tabletSpan : desktopSpan;
+                          const minHeight = getWidgetHeight(widget);
+                          const spanClasses = getSpanClasses();
+                          const startValue = getStartValue(widget);
+                          return (
+                            <DraggableWidget
+                              key={widget.id}
+                              widget={widget}
+                              spanClasses={spanClasses}
+                              spanValue={spanValue}
+                              startValue={startValue}
+                              minHeight={minHeight}
+                              globalFilters={globalFilters}
+                              onEdit={handleEditWidget}
+                            />
+                          );
+                        })}
+                      </div>
+                    </DraggableGroup>
+                  );
+                })}
+              </SortableContext>
+            </DndContext>
           </div>
         )}
         {/* Global Grid Layout (grid mode without groups) */}
