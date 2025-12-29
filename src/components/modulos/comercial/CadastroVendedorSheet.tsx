@@ -14,8 +14,10 @@ export default function CadastroVendedorSheet({ onSaved, triggerLabel = 'Cadastr
   const [comissao, setComissao] = React.useState('0')
   const [ativo, setAtivo] = React.useState(true)
   const [territorios, setTerritorios] = React.useState<Array<{ value: string; label: string }>>([])
+  const [isOpen, setIsOpen] = React.useState(false)
 
   React.useEffect(() => {
+    if (!isOpen) return
     const ac = new AbortController()
     ;(async () => {
       try {
@@ -28,7 +30,7 @@ export default function CadastroVendedorSheet({ onSaved, triggerLabel = 'Cadastr
       } catch {}
     })()
     return () => ac.abort()
-  }, [])
+  }, [isOpen])
 
   const onSubmit = async (): Promise<{ success: boolean; error?: string }> => {
     if (!nome.trim()) return { success: false, error: 'Informe o nome do vendedor.' }
@@ -42,7 +44,7 @@ export default function CadastroVendedorSheet({ onSaved, triggerLabel = 'Cadastr
   }
 
   return (
-    <BaseCadastroSheet title="Cadastrar Vendedor" description="Inclua um novo vendedor e defina o território" onSubmit={onSubmit} onSuccess={onSaved}>
+    <BaseCadastroSheet title="Cadastrar Vendedor" description="Inclua um novo vendedor e defina o território" onOpenChange={setIsOpen} onSubmit={onSubmit} onSuccess={onSaved}>
       <div className="md:col-span-2"><Label>Nome *</Label><Input value={nome} onChange={(e) => setNome(e.target.value)} /></div>
       <div><Label>E-mail</Label><Input value={email} onChange={(e) => setEmail(e.target.value)} /></div>
       <div><Label>Telefone</Label><Input value={telefone} onChange={(e) => setTelefone(e.target.value)} /></div>
@@ -66,4 +68,3 @@ export default function CadastroVendedorSheet({ onSaved, triggerLabel = 'Cadastr
     </BaseCadastroSheet>
   )
 }
-

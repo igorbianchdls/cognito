@@ -12,8 +12,10 @@ export default function CadastroTerritorioSheet({ onSaved, triggerLabel = 'Cadas
   const [paiId, setPaiId] = React.useState<string>('')
   const [ativo, setAtivo] = React.useState(true)
   const [territorios, setTerritorios] = React.useState<Array<{ value: string; label: string }>>([])
+  const [isOpen, setIsOpen] = React.useState(false)
 
   React.useEffect(() => {
+    if (!isOpen) return
     const ac = new AbortController()
     ;(async () => {
       try {
@@ -26,7 +28,7 @@ export default function CadastroTerritorioSheet({ onSaved, triggerLabel = 'Cadas
       } catch {}
     })()
     return () => ac.abort()
-  }, [])
+  }, [isOpen])
 
   const onSubmit = async (): Promise<{ success: boolean; error?: string }> => {
     if (!nome.trim()) return { success: false, error: 'Informe o nome do território.' }
@@ -40,7 +42,7 @@ export default function CadastroTerritorioSheet({ onSaved, triggerLabel = 'Cadas
   }
 
   return (
-    <BaseCadastroSheet title="Cadastrar Território" description="Defina dados do território e vínculo com pai" onSubmit={onSubmit} onSuccess={onSaved}>
+    <BaseCadastroSheet title="Cadastrar Território" description="Defina dados do território e vínculo com pai" onOpenChange={setIsOpen} onSubmit={onSubmit} onSuccess={onSaved}>
       <div className="md:col-span-2"><Label>Nome *</Label><Input value={nome} onChange={(e) => setNome(e.target.value)} /></div>
       <div className="md:col-span-2"><Label>Descrição</Label><Input value={descricao} onChange={(e) => setDescricao(e.target.value)} /></div>
       <div>
@@ -62,4 +64,3 @@ export default function CadastroTerritorioSheet({ onSaved, triggerLabel = 'Cadas
     </BaseCadastroSheet>
   )
 }
-
