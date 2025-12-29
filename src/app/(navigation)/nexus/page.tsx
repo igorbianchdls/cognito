@@ -337,7 +337,7 @@ export default function Page() {
 
   return (
     <SidebarProvider>
-      <SidebarShadcn borderless headerBorderless headerVariant="compact" />
+      <SidebarShadcn borderless headerBorderless />
       <SidebarInset className="h-screen overflow-hidden">
         <div className="flex h-full overflow-hidden bg-gray-100">
           {viewMode === 'chat' && (
