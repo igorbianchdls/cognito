@@ -32,6 +32,28 @@ export default function VisualBuilderPage() {
   const codeDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [patchText, setPatchText] = useState<string>('');
   const [patchStatus, setPatchStatus] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  // Prefill the Patch Editor with a concrete example based on the current DSL (<dashboard ...>)
+  useEffect(() => {
+    try {
+      if (patchText && patchText.trim().length > 0) return;
+      const code = visualBuilderState.code || '';
+      const m = code.match(/<dashboard\b[^>]*>/i);
+      if (!m) return;
+      const openTag = m[0].trim();
+      // Replace or insert title="DSL"
+      let newTag = openTag;
+      if (/\btitle=\"[^\"]*\"/i.test(openTag)) {
+        newTag = openTag.replace(/\btitle=\"[^\"]*\"/i, 'title="DSL"');
+      } else {
+        newTag = openTag.replace(/<dashboard\b/i, '<dashboard title="DSL"');
+      }
+      const sample = `-${openTag}\n+${newTag}`;
+      setPatchText(sample);
+    } catch {
+      // ignore
+    }
+  }, [visualBuilderState.code, patchText]);
   const currentThemeName: ThemeName = useMemo<ThemeName>(() => {
     try {
       const cfg = JSON.parse(visualBuilderState.code);
