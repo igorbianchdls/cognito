@@ -346,7 +346,7 @@ const DraggableRow = memo(function DraggableRow({ id, children }: { id: string; 
     <div
       ref={setNodeRef}
       style={style}
-      className="group relative rounded-md hover:ring-2 hover:ring-blue-400 ring-offset-1 ring-offset-white"
+      className="group relative rounded-md border-2 border-transparent hover:border-blue-400 hover:border-dashed"
     >
       <div
         {...attributes}
@@ -600,7 +600,7 @@ const DraggableRow = memo(function DraggableRow({ id, children }: { id: string; 
         )}
 
         {/* Responsive Grid Layout - Grouped by Rows */}
-        {widgets.length > 0 && !perColumnMode && (
+        {widgets.length > 0 && !perColumnMode && !perGridMode && (
           <div className="px-0 py-4 space-y-2">
             {/* Row editor modal */}
             <RowEditorModal
