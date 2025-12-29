@@ -53,11 +53,13 @@ export default function ApplyPatchResultCard({ input, output }: Props) {
     }
   };
 
+  const headerText = hasOutput
+    ? (isApplied ? `Patch aplicado — ${output!.success ? 'sucesso' : 'falhou'}` : 'Pré‑visualização do patch')
+    : 'Pré‑visualização do patch';
+
   return (
     <div className="rounded-md border border-gray-200 p-4 not-prose">
-      <div className="mb-2 text-sm text-gray-700">
-        {isDryRun ? 'Dry‑run concluído' : 'Patch aplicado'} — {output.success ? 'sucesso' : 'falhou'}
-      </div>
+      <div className="mb-2 text-sm text-gray-700">{headerText}</div>
 
       {input?.patch && (
         <div className="mb-3">
@@ -130,8 +132,8 @@ export default function ApplyPatchResultCard({ input, output }: Props) {
         </div>
       )}
 
-      {Array.isArray(output.errors) && output.errors.length > 0 && (
-        <div className="mt-3 text-xs text-red-600">{output.errors.join(' • ')}</div>
+      {hasOutput && Array.isArray(output!.errors) && output!.errors!.length > 0 && (
+        <div className="mt-3 text-xs text-red-600">{output!.errors!.join(' • ')}</div>
       )}
     </div>
   );
