@@ -444,7 +444,7 @@ export default function VisualBuilderPage() {
           color: #b91c1c !important; /* red-700 */
         }
         .vb-line-add {
-          color: #15803d !important; /* green-700 */
+          color: #1d4ed8 !important; /* blue-700 */
         }
       `}</style>
     </div>
