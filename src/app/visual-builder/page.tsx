@@ -35,6 +35,7 @@ export default function VisualBuilderPage() {
   const patchEditorRef = useRef<any>(null);
   const patchMonacoRef = useRef<any>(null);
   const patchDecorationsRef = useRef<string[]>([]);
+  const [patchReady, setPatchReady] = useState(false);
 
   // Prefill the Patch Editor with a concrete example based on the current DSL (<dashboard ...>)
   useEffect(() => {
@@ -74,17 +75,17 @@ export default function VisualBuilderPage() {
       if (/^\-/.test(trimmed) && !/^\-\-\-/.test(trimmed)) {
         decos.push({
           range: new monaco.Range(i + 1, 1, i + 1, maxCol),
-          options: { inlineClassName: 'vb-inline-remove' },
+          options: { isWholeLine: true, className: 'vb-line-remove', inlineClassName: 'vb-inline-remove' },
         });
       } else if (/^\+/.test(trimmed) && !/^\+\+\+/.test(trimmed)) {
         decos.push({
           range: new monaco.Range(i + 1, 1, i + 1, maxCol),
-          options: { inlineClassName: 'vb-inline-add' },
+          options: { isWholeLine: true, className: 'vb-line-add', inlineClassName: 'vb-inline-add' },
         });
       }
     }
     patchDecorationsRef.current = editor.deltaDecorations(patchDecorationsRef.current, decos);
-  }, [patchText]);
+  }, [patchText, patchReady]);
   const currentThemeName: ThemeName = useMemo<ThemeName>(() => {
     try {
       const cfg = JSON.parse(visualBuilderState.code);
@@ -282,13 +283,14 @@ export default function VisualBuilderPage() {
                 <div className="flex-1 min-h-0 relative">
                   <MonacoRawEditor
                     height="100%"
-                    language="diff"
+                    language="plaintext"
                     value={patchText}
                     onChange={(v) => setPatchText(v || '')}
                     onMount={(editor, monaco) => {
-                      patchEditorRef.current = editor;
-                      patchMonacoRef.current = monaco;
-                    }}
+                    patchEditorRef.current = editor;
+                    patchMonacoRef.current = monaco;
+                    setPatchReady(true);
+                  }}
                     options={{
                       readOnly: false,
                       minimap: { enabled: false },
