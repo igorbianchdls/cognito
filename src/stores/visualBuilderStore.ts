@@ -156,45 +156,49 @@ const compactWidgetHeaders = (code: string): string => {
 
 // New DSL initial code (HTML-like)
 export const initialDslGrid = `<dashboard theme="branco" title="Dashboard de Vendas" subtitle="Análise de desempenho comercial" layout-mode="grid" cols-d="12" cols-t="6" cols-m="2" gap-x="16" gap-y="16" date-type="last_30_days">
-  <!-- KPIs (6 em uma linha) -->
-  <kpi id="kpi_meta" col-d="1" span-d="2" height="150" title="Meta de Vendas">
-    <datasource schema="comercial" table="vw_vendas_metas" measure="SUM(meta_faturamento_territorio)" />
-    <styling tw="kpi:viz:card kpi:unit:R$" />
-  </kpi>
-  <kpi id="kpi_vendas" col-d="3" span-d="2" height="150" title="Vendas">
-    <datasource schema="comercial" table="vendas_vw" measure="SUM(item_subtotal)" />
-    <styling tw="kpi:viz:card kpi:unit:R$" />
-  </kpi>
-  <kpi id="kpi_percent_meta" col-d="5" span-d="2" height="150" title="% da Meta">
-    <datasource schema="comercial" table="vw_vendas_metas" measure="(SUM(subtotal)/NULLIF(SUM(meta_faturamento_territorio),0))*100" />
-    <styling tw="kpi:viz:card" />
-  </kpi>
-  <kpi id="kpi_ticket_medio" col-d="7" span-d="2" height="150" title="Ticket Médio">
-    <datasource schema="comercial" table="vendas_vw" measure="SUM(item_subtotal)/COUNT_DISTINCT(pedido_id)" />
-    <styling tw="kpi:viz:card kpi:unit:R$" />
-  </kpi>
-  <kpi id="kpi_pedidos" col-d="9" span-d="2" height="150" title="Pedidos">
-    <datasource schema="comercial" table="vendas_vw" measure="COUNT_DISTINCT(pedido_id)" />
-    <styling tw="kpi:viz:card" />
-  </kpi>
-  <kpi id="kpi_clientes" col-d="11" span-d="2" height="150" title="Clientes">
-    <datasource schema="comercial" table="vendas_vw" measure="COUNT_DISTINCT(cliente_id)" />
-    <styling tw="kpi:viz:card" />
-  </kpi>
+  <!-- Grupo de KPIs -->
+  <group id="kpis" orientation="horizontal" cols-d="12" gap-x="16" gap-y="16">
+    <kpi id="kpi_meta" col-d="1" span-d="2" height="150" title="Meta de Vendas">
+      <datasource schema="comercial" table="vw_vendas_metas" measure="SUM(meta_faturamento_territorio)" />
+      <styling tw="kpi:viz:card kpi:unit:R$" />
+    </kpi>
+    <kpi id="kpi_vendas" col-d="3" span-d="2" height="150" title="Vendas">
+      <datasource schema="comercial" table="vendas_vw" measure="SUM(item_subtotal)" />
+      <styling tw="kpi:viz:card kpi:unit:R$" />
+    </kpi>
+    <kpi id="kpi_percent_meta" col-d="5" span-d="2" height="150" title="% da Meta">
+      <datasource schema="comercial" table="vw_vendas_metas" measure="(SUM(subtotal)/NULLIF(SUM(meta_faturamento_territorio),0))*100" />
+      <styling tw="kpi:viz:card" />
+    </kpi>
+    <kpi id="kpi_ticket_medio" col-d="7" span-d="2" height="150" title="Ticket Médio">
+      <datasource schema="comercial" table="vendas_vw" measure="SUM(item_subtotal)/COUNT_DISTINCT(pedido_id)" />
+      <styling tw="kpi:viz:card kpi:unit:R$" />
+    </kpi>
+    <kpi id="kpi_pedidos" col-d="9" span-d="2" height="150" title="Pedidos">
+      <datasource schema="comercial" table="vendas_vw" measure="COUNT_DISTINCT(pedido_id)" />
+      <styling tw="kpi:viz:card" />
+    </kpi>
+    <kpi id="kpi_clientes" col-d="11" span-d="2" height="150" title="Clientes">
+      <datasource schema="comercial" table="vendas_vw" measure="COUNT_DISTINCT(cliente_id)" />
+      <styling tw="kpi:viz:card" />
+    </kpi>
+  </group>
 
-  <!-- Linha seguinte: 3 charts (4 col cada) -->
-  <chart id="meta_fat_vendedor" type="groupedbar" col-d="1" span-d="4" height="360" title="Meta x Faturamento por Vendedor">
-    <datasource schema="comercial" table="vw_vendas_metas" dimension="vendedor_nome" measureGoal="MAX(meta_faturamento_vendedor)" measureActual="SUM(subtotal)" limit="12" />
-    <styling tw="legend:on grid:on mb:32" />
-  </chart>
-  <chart id="meta_ticket_vendedor" type="groupedbar" col-d="5" span-d="4" height="360" title="Meta x Ticket Médio por Vendedor">
-    <datasource schema="comercial" table="vw_vendas_metas" dimension="vendedor_nome" measureGoal="MAX(meta_ticket_vendedor)" measureActual="SUM(subtotal)/COUNT_DISTINCT(pedido_id)" limit="12" />
-    <styling tw="legend:on grid:on mb:32" />
-  </chart>
-  <chart id="meta_novos_vendedor" type="groupedbar" col-d="9" span-d="4" height="360" title="Meta x Novos Clientes por Vendedor">
-    <datasource schema="comercial" table="vw_vendas_metas" dimension="vendedor_nome" measureGoal="MAX(meta_novos_clientes_vendedor)" measureActual="COUNT_DISTINCT(cliente_id)" limit="12" />
-    <styling tw="legend:on grid:on mb:32" />
-  </chart>
+  <!-- Grupo de Charts (3 por linha) -->
+  <group id="charts" orientation="horizontal" cols-d="12" gap-x="16" gap-y="16">
+    <chart id="meta_fat_vendedor" type="groupedbar" col-d="1" span-d="4" height="360" title="Meta x Faturamento por Vendedor">
+      <datasource schema="comercial" table="vw_vendas_metas" dimension="vendedor_nome" measureGoal="MAX(meta_faturamento_vendedor)" measureActual="SUM(subtotal)" limit="12" />
+      <styling tw="legend:on grid:on mb:32" />
+    </chart>
+    <chart id="meta_ticket_vendedor" type="groupedbar" col-d="5" span-d="4" height="360" title="Meta x Ticket Médio por Vendedor">
+      <datasource schema="comercial" table="vw_vendas_metas" dimension="vendedor_nome" measureGoal="MAX(meta_ticket_vendedor)" measureActual="SUM(subtotal)/COUNT_DISTINCT(pedido_id)" limit="12" />
+      <styling tw="legend:on grid:on mb:32" />
+    </chart>
+    <chart id="meta_novos_vendedor" type="groupedbar" col-d="9" span-d="4" height="360" title="Meta x Novos Clientes por Vendedor">
+      <datasource schema="comercial" table="vw_vendas_metas" dimension="vendedor_nome" measureGoal="MAX(meta_novos_clientes_vendedor)" measureActual="COUNT_DISTINCT(cliente_id)" limit="12" />
+      <styling tw="legend:on grid:on mb:32" />
+    </chart>
+  </group>
 </dashboard>`
 export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas" subtitle="Análise de desempenho comercial" layout-mode="grid-per-row" date-type="last_30_days">
   <!-- KPIs (6 em uma linha) - Foco: Novembro/2025 via filtros globais -->

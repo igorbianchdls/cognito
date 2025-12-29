@@ -694,14 +694,14 @@ export class ConfigParser {
       attrStr: string,
       innerContent?: string,
       defaultStart?: number
-    ) => {
+    ): string | undefined => {
       const wa = parseAttrs(attrStr || '');
       const id = wa['id'];
       const typeRaw = tag === 'kpi' ? 'kpi' : (wa['type'] as string | undefined);
       const type = ((typeRaw === 'comparebar') ? 'groupedbar' : typeRaw) as Widget['type'];
       if (!id || !type) {
         errors.push({ line: 1, column: 1, message: `${tag} missing id or type`, type: 'validation' });
-        return;
+        return undefined;
       }
       const order = wa['order'] ? Number(wa['order']) : undefined;
       const heightPx = wa['height'] ? Number(wa['height']) : undefined;
@@ -786,6 +786,7 @@ export class ConfigParser {
         }
       }
       widgets.push(widget);
+      return widget.id;
     };
 
     // grid-per-column mode: parse dashboard-level columns and widgets directly
@@ -934,7 +935,7 @@ export class ConfigParser {
       };
     }
 
-    // grid mode: single canvas grid with direct <kpi>/<chart> children
+    // grid mode: single canvas grid with direct <kpi>/<chart> children and optional <group> wrappers
     if (layoutMode === 'grid') {
       // Read columns/gaps from <dashboard>
       const colsD = Number(dashAttrs['cols-d'] || '0');
@@ -959,18 +960,90 @@ export class ConfigParser {
       if (tmplT) columnsTemplate.tablet = tmplT;
       if (tmplM) columnsTemplate.mobile = tmplM;
 
-      // Parse all visuals in document order
+      // Parse <group> wrappers (optional)
+      type GroupSpec = {
+        id: string;
+        title?: string;
+        orientation?: 'horizontal'|'vertical';
+        grid?: {
+          desktop?: { columns: number; gapX?: number; gapY?: number; autoRowHeight?: number };
+          tablet?: { columns: number; gapX?: number; gapY?: number; autoRowHeight?: number };
+          mobile?: { columns: number; gapX?: number; gapY?: number; autoRowHeight?: number };
+          template?: { desktop?: string; tablet?: string; mobile?: string };
+        };
+        children: string[];
+      };
+      const groups: GroupSpec[] = [];
+      const groupRe = /<group\b([^>]*)>([\s\S]*?)<\/group>/gi;
+      let gMatch: RegExpExecArray | null;
+      // Build a copy of dsl without groups to parse remaining top-level visuals
+      let dslOutside = dsl;
+      while ((gMatch = groupRe.exec(dsl)) !== null) {
+        const gAttrsStr = gMatch[1] || '';
+        const gInner = gMatch[2] || '';
+        const ga = parseAttrs(gAttrsStr);
+        const gid = ga['id'];
+        if (!gid) {
+          errors.push({ line: 1, column: 1, message: 'group missing id', type: 'validation' });
+          continue;
+        }
+        const title = ga['title'];
+        const orientation = (ga['orientation'] as 'horizontal'|'vertical'|undefined);
+        const gColsD = ga['cols-d'] ? Number(ga['cols-d']) : undefined;
+        const gColsT = ga['cols-t'] ? Number(ga['cols-t']) : undefined;
+        const gColsM = ga['cols-m'] ? Number(ga['cols-m']) : undefined;
+        const gGapX = ga['gap-x'] ? Number(ga['gap-x']) : undefined;
+        const gGapY = ga['gap-y'] ? Number(ga['gap-y']) : undefined;
+        const gAutoRowHeight = ga['auto-row-height'] ? Number(ga['auto-row-height']) : undefined;
+        const gTmplD = ga['template-d'];
+        const gTmplT = ga['template-t'];
+        const gTmplM = ga['template-m'];
+        const children: string[] = [];
+        // Parse visuals inside the group
+        const gSelf = /<(kpi|chart)\b([^>]*)\/>/gi;
+        let gs: RegExpExecArray | null;
+        while ((gs = gSelf.exec(gInner)) !== null) {
+          const tag = gs[1] as 'kpi'|'chart';
+          const attrs = gs[2] || '';
+          const id = parseVisualAttributes(tag, attrs);
+          if (id) children.push(id);
+        }
+        const gPair = /<(kpi|chart)\b([^>]*)>([\s\S]*?)<\/\1>/gi;
+        let gp: RegExpExecArray | null;
+        while ((gp = gPair.exec(gInner)) !== null) {
+          const tag = gp[1] as 'kpi'|'chart';
+          const attrs = gp[2] || '';
+          const inner = gp[3] || '';
+          const id = parseVisualAttributes(tag, attrs, inner);
+          if (id) children.push(id);
+        }
+        groups.push({
+          id: gid,
+          ...(title ? { title } : {}),
+          ...(orientation ? { orientation } : {}),
+          grid: {
+            desktop: gColsD ? { columns: gColsD, gapX: gGapX, gapY: gGapY, autoRowHeight: gAutoRowHeight } : undefined,
+            tablet: gColsT ? { columns: gColsT, gapX: gGapX, gapY: gGapY, autoRowHeight: gAutoRowHeight } : undefined,
+            mobile: gColsM ? { columns: gColsM, gapX: gGapX, gapY: gGapY, autoRowHeight: gAutoRowHeight } : undefined,
+            template: (gTmplD || gTmplT || gTmplM) ? { desktop: gTmplD, tablet: gTmplT, mobile: gTmplM } : undefined,
+          },
+          children,
+        });
+        // Remove this group's block from outer DSL so we don't duplicate visuals
+        dslOutside = dslOutside.replace(gMatch[0], '');
+      }
+
+      // Parse remaining top-level visuals (outside groups)
       const selfRe = /<(kpi|chart)\b([^>]*)\/>/gi;
       let sMatch: RegExpExecArray | null;
-      while ((sMatch = selfRe.exec(dsl)) !== null) {
+      while ((sMatch = selfRe.exec(dslOutside)) !== null) {
         const tag = sMatch[1] as 'kpi' | 'chart';
         const attrs = sMatch[2] || '';
-        // In grid mode, use col-d/t/m as explicit starts
         parseVisualAttributes(tag, attrs);
       }
       const pairRe = /<(kpi|chart)\b([^>]*)>([\s\S]*?)<\/\1>/gi;
       let pMatch: RegExpExecArray | null;
-      while ((pMatch = pairRe.exec(dsl)) !== null) {
+      while ((pMatch = pairRe.exec(dslOutside)) !== null) {
         const tag = pMatch[1] as 'kpi' | 'chart';
         const attrs = pMatch[2] || '';
         const inner = pMatch[3] || '';
@@ -982,7 +1055,7 @@ export class ConfigParser {
         maxRows: this.DEFAULT_GRID_CONFIG.maxRows,
         rowHeight: this.DEFAULT_GRID_CONFIG.rowHeight,
         cols: this.DEFAULT_GRID_CONFIG.cols,
-        layout: { mode: 'grid', columns, ...(Object.keys(columnsTemplate).length ? { columnsTemplate } : {}) }
+        layout: { mode: 'grid', columns, ...(Object.keys(columnsTemplate).length ? { columnsTemplate } : {}), ...(groups.length ? { groups } : {}) }
       } as GridConfig;
 
       // Apply theme/style options (same precedence)

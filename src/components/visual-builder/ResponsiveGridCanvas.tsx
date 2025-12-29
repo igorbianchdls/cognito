@@ -282,6 +282,18 @@ function ResponsiveGridCanvas({ widgets, gridConfig, globalFilters, viewportMode
   const widgetGroups = useMemo(groupWidgetsByRow, [widgets, gridConfig.layoutRows]);
   const perColumnMode = gridConfig.layout?.mode === 'grid-per-column';
   const perGridMode = gridConfig.layout?.mode === 'grid';
+  const groups = (gridConfig.layout as any)?.groups as Array<{
+    id: string;
+    title?: string;
+    orientation?: 'horizontal'|'vertical';
+    grid?: {
+      desktop?: { columns: number; gapX?: number; gapY?: number; autoRowHeight?: number };
+      tablet?: { columns: number; gapX?: number; gapY?: number; autoRowHeight?: number };
+      mobile?: { columns: number; gapX?: number; gapY?: number; autoRowHeight?: number };
+      template?: { desktop?: string; tablet?: string; mobile?: string };
+    };
+    children: string[];
+  }> | undefined;
 
   // --- Row DnD helpers (DSL-first) ---
   const isDsl = (code: string) => code.trim().startsWith('<');
@@ -665,8 +677,64 @@ const DraggableRow = memo(function DraggableRow({ id, children }: { id: string; 
             </DndContext>
           </div>
         )}
-        {/* Global Grid Layout (grid-per-column and grid modes) */}
-        {widgets.length > 0 && perGridMode && (
+        {/* Grid mode with groups */}
+        {widgets.length > 0 && perGridMode && Array.isArray(groups) && groups.length > 0 && (
+          <div className="px-0 py-4 space-y-6">
+            {groups.map((group) => {
+              const getGroupTemplate = (): string | undefined => group.grid?.template ? (viewportMode === 'mobile' ? group.grid.template.mobile : viewportMode === 'tablet' ? group.grid.template.tablet : group.grid.template.desktop) : undefined;
+              const getGroupColumns = (): number => {
+                const spec = viewportMode === 'mobile' ? group.grid?.mobile : viewportMode === 'tablet' ? group.grid?.tablet : group.grid?.desktop;
+                return spec?.columns && spec.columns > 0 ? spec.columns : getGlobalColumns();
+              };
+              const getGroupGaps = (): { gapX: number; gapY: number; autoRowHeight?: number } => {
+                const spec = viewportMode === 'mobile' ? group.grid?.mobile : viewportMode === 'tablet' ? group.grid?.tablet : group.grid?.desktop;
+                return { gapX: spec?.gapX ?? getGlobalGaps().gapX, gapY: spec?.gapY ?? getGlobalGaps().gapY, autoRowHeight: spec?.autoRowHeight ?? getGlobalGaps().autoRowHeight };
+              };
+              const groupWidgets = (group.children || [])
+                .map(id => widgets.find(w => w.id === id))
+                .filter(Boolean) as Widget[];
+              return (
+                <div key={`group-${group.id}`} className="group relative rounded-md border-2 border-transparent hover:border-blue-400 hover:border-dashed">
+                  {group.title && (
+                    <div className="px-2 py-1 text-sm font-medium text-gray-600">{group.title}</div>
+                  )}
+                  <div
+                    className={getGridClassesForRow()}
+                    style={{
+                      gridTemplateColumns: getGroupTemplate() || `repeat(${getGroupColumns()}, 1fr)`,
+                      width: '100%',
+                      columnGap: `${getGroupGaps().gapX}px`,
+                      rowGap: `${getGroupGaps().gapY}px`,
+                      gridAutoRows: getGroupGaps().autoRowHeight ? `${getGroupGaps().autoRowHeight}px` : undefined,
+                    }}
+                  >
+                    {groupWidgets.map((widget) => {
+                      const { desktopSpan, tabletSpan, mobileSpan } = adaptWidgetForResponsive(widget);
+                      const spanValue = viewportMode === 'mobile' ? mobileSpan : viewportMode === 'tablet' ? tabletSpan : desktopSpan;
+                      const minHeight = getWidgetHeight(widget);
+                      const spanClasses = getSpanClasses();
+                      const startValue = getStartValue(widget);
+                      return (
+                        <DraggableWidget
+                          key={widget.id}
+                          widget={widget}
+                          spanClasses={spanClasses}
+                          spanValue={spanValue}
+                          startValue={startValue}
+                          minHeight={minHeight}
+                          globalFilters={globalFilters}
+                          onEdit={handleEditWidget}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+        {/* Global Grid Layout (grid mode without groups) */}
+        {widgets.length > 0 && perGridMode && (!Array.isArray(groups) || groups.length === 0) && (
           <div className="px-0 py-4">
             <div
               className={getGridClassesForRow()}
