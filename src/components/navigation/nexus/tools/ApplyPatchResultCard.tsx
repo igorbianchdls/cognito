@@ -1,6 +1,6 @@
 "use client";
 
-import { CodeBlock } from '@/components/ai-elements/code-block';
+import { Editor } from '@monaco-editor/react';
 
 type ApplyPatchFile = {
   path: string;
@@ -34,10 +34,24 @@ interface Props {
 }
 
 export default function ApplyPatchResultCard({ input, output }: Props) {
-  if (!output) return null;
-  const files = Array.isArray(output.files) ? output.files : [];
-  const summary = output.summary || { added: 0, deleted: 0, updated: 0, moved: 0, totalChanges: 0 };
-  const isDryRun = !!output.dryRun;
+  const hasOutput = !!output;
+  const files = hasOutput && Array.isArray(output!.files) ? output!.files : [];
+  const summary = hasOutput && output!.summary ? output!.summary : { added: 0, deleted: 0, updated: 0, moved: 0, totalChanges: 0 };
+  const isApplied = hasOutput ? !!output!.applied && !output!.dryRun : false;
+  const patchText = typeof input?.patch === 'string' ? input!.patch : '';
+
+  const sendToChatAndSubmit = () => {
+    if (!patchText) return;
+    const payload = {
+      type: 'SEND_TO_CHAT_AND_SUBMIT',
+      text: `apply_patch({ patch: ${JSON.stringify(patchText)}, dryRun: false })`,
+    } as const;
+    try {
+      window.postMessage(payload, '*');
+    } catch (e) {
+      console.error('Failed to post APPLY_PATCH message', e);
+    }
+  };
 
   return (
     <div className="rounded-md border border-gray-200 p-4 not-prose">
@@ -47,8 +61,35 @@ export default function ApplyPatchResultCard({ input, output }: Props) {
 
       {input?.patch && (
         <div className="mb-3">
-          <div className="text-xs text-gray-600 mb-1">Patch</div>
-          <CodeBlock code={String(input.patch)} language="diff" />
+          <div className="text-xs text-gray-600 mb-2">Patch</div>
+          <div className="border rounded-md overflow-hidden" style={{ height: 280 }}>
+            <Editor
+              height="100%"
+              language="diff"
+              theme="vs-light"
+              value={String(input.patch)}
+              options={{
+                readOnly: true,
+                minimap: { enabled: false },
+                fontSize: 13,
+                wordWrap: 'on',
+                lineNumbers: 'on',
+                scrollBeyondLastLine: false,
+              }}
+            />
+          </div>
+        </div>
+      )}
+
+      {!isApplied && patchText && (
+        <div className="mb-3 flex items-center gap-2">
+          <button
+            onClick={sendToChatAndSubmit}
+            className="inline-flex items-center px-3 py-1.5 rounded-md bg-blue-600 text-white hover:bg-blue-700 text-xs"
+          >
+            Aplicar patch
+          </button>
+          <span className="text-xs text-gray-600">O patch será enviado ao chat para aplicação.</span>
         </div>
       )}
 
@@ -95,4 +136,3 @@ export default function ApplyPatchResultCard({ input, output }: Props) {
     </div>
   );
 }
-

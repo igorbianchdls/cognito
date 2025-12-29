@@ -328,6 +328,29 @@ export default function Page() {
         }
       }
 
+      // Aplicar patch: enviar texto ao chat e submeter
+      if (event.data.type === 'SEND_TO_CHAT_AND_SUBMIT') {
+        try {
+          const text: unknown = event.data.text;
+          if (typeof text === 'string' && text.trim().length > 0) {
+            // Exibir a mensagem do usuário no histórico
+            const userMessage = {
+              id: `user-${Date.now()}`,
+              role: 'user' as const,
+              parts: [{ type: 'text' as const, text }],
+              agent: activeAgentOrWorkflow,
+            };
+            setAllMessages(prev => [...prev, userMessage]);
+            // Enviar para a IA
+            sendMessage({ text });
+            // Limpar input
+            setInput('');
+          }
+        } catch (e) {
+          console.error('Failed to send and submit chat message from APPLY_PATCH button:', e);
+        }
+      }
+
       // (removido: handler específico de paid-traffic para evitar acoplamento na página /nexus)
     };
 

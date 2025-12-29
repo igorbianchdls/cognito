@@ -3708,6 +3708,12 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
       {message.parts.map((part, index) => {
         if (part.type === 'text') {
           const txt = (part as { type: 'text'; text?: string }).text ?? '';
+          // Detecta um patch (*** Begin Patch ... *** End Patch) e mostra cartão com botão de aplicar
+          if (typeof txt === 'string' && txt.includes('*** Begin Patch') && txt.includes('*** End Patch')) {
+            return (
+              <ApplyPatchResultCard key={`patch-preview-${index}`} input={{ patch: txt }} output={null} />
+            );
+          }
           // Fallback: detectar blocos simulados de function_calls para buscarFornecedor e renderizar tabela real
           if (typeof txt === 'string' && txt.includes('function_calls') && txt.includes('buscarFornecedor') && txt.includes('<result>')) {
             try {

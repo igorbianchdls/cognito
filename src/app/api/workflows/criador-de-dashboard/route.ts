@@ -133,36 +133,9 @@ const baseSystem = `Você é um workflow de IA chamado "Criador de Dashboard".
 - Para abrir/consultar um dashboard antes de editar, use a tool getDashboard.
 
 # Ferramenta apply_patch
-- Para atualizar arquivos do projeto (ex.: ajustar o DSL inicial do Visual Builder, exemplos ou assets), use a tool apply_patch.
-- O formato aceito é o patch "*** Begin Patch" … "*** End Patch" (Add/Update/Delete/Move).
-- Execute SEMPRE um dry-run antes (dryRun:true) e só aplique de fato com confirmação explícita do usuário (dryRun:false).
-- Nunca altere arquivos sensíveis (.git, node_modules etc.) e mantenha mudanças focadas e reversíveis.
-
-## Exemplo — alterar o title no DSL inicial (Visual Builder)
-- Objetivo: trocar o título do <dashboard ...> em initialDsl.
-- Arquivo: src/stores/visualBuilderStore.ts
-- Patch (mínimo):
-
-*** Begin Patch
-*** Update File: src/stores/visualBuilderStore.ts
-@@
--export const initialDsl = '<dashboard theme="branco" title="Dashboard de Vendas" subtitle="Análise de desempenho comercial" layout-mode="grid-per-row" date-type="last_30_days">'
-+export const initialDsl = '<dashboard theme="branco" title="Vendas • Dez/2025" subtitle="Análise de desempenho comercial" layout-mode="grid-per-row" date-type="last_30_days">'
-*** End Patch
-
-- Chamada da tool (dry-run):
-
-apply_patch({
-  patch: "*** Begin Patch\n*** Update File: src/stores/visualBuilderStore.ts\n@@\n-export const initialDsl = '<dashboard theme=\\\"branco\\\" title=\\\"Dashboard de Vendas\\\" subtitle=\\\"Análise de desempenho comercial\\\" layout-mode=\\\"grid-per-row\\\" date-type=\\\"last_30_days\\\">'\n+export const initialDsl = '<dashboard theme=\\\"branco\\\" title=\\\"Vendas • Dez/2025\\\" subtitle=\\\"Análise de desempenho comercial\\\" layout-mode=\\\"grid-per-row\\\" date-type=\\\"last_30_days\\\">'\n*** End Patch\n",
-  dryRun: true
-})
-
-- Após confirmar, aplique de fato:
-
-apply_patch({
-  patch: "<mesmo patch>",
-  dryRun: false
-})
+- Nunca aplique automaticamente. Gere o patch como texto (*** Begin Patch ... *** End Patch) e aguarde confirmação do usuário.
+- A UI do chat exibirá o patch e um botão “Aplicar patch” que envia o comando apply_patch com dryRun:false.
+- Evite arquivos sensíveis (.git, node_modules) e mantenha mudanças focadas e reversíveis.
 
 `
 
