@@ -7,6 +7,7 @@ import DashboardSaveDialog from '@/components/visual-builder/DashboardSaveDialog
 import DashboardOpenDialog from '@/components/visual-builder/DashboardOpenDialog';
 import { dashboardsApi, type Dashboard } from '@/stores/dashboardsStore';
 import MonacoEditor from '@/components/visual-builder/MonacoEditor';
+import { Editor as MonacoRawEditor } from '@monaco-editor/react';
 // import VisualBuilderChat from '@/components/visual-builder/VisualBuilderChat';
 import ResponsiveGridCanvas from '@/components/visual-builder/ResponsiveGridCanvas';
 import DashboardInCanvasHeader from '@/components/visual-builder/DashboardInCanvasHeader';
@@ -226,16 +227,24 @@ export default function VisualBuilderPage() {
                   <p className="text-sm text-gray-600">Cole apenas linhas com - e + para aplicar ao editor da esquerda</p>
                 </div>
                 <div className="flex-1 min-h-0 relative">
-                  <MonacoEditor
-                    value={patchText}
-                    onChange={(v) => setPatchText(v)}
+                  <MonacoRawEditor
+                    height="100%"
                     language="diff"
-                    errors={[]}
+                    value={patchText}
+                    onChange={(v) => setPatchText(v || '')}
+                    options={{
+                      readOnly: false,
+                      minimap: { enabled: false },
+                      fontSize: 13,
+                      wordWrap: 'on',
+                      lineNumbers: 'on',
+                      scrollBeyondLastLine: false,
+                    }}
                   />
                   {(!patchText || patchText.trim().length === 0) && (
                     <pre className="pointer-events-none absolute inset-0 p-4 text-xs text-gray-400 whitespace-pre-wrap">
 {`-<dashboard theme="branco" title="Dashboard de Vendas" subtitle="Análise de desempenho comercial" layout-mode="grid-per-row" date-type="last_30_days">
-<dashboard theme="branco" title="DSL" subtitle="Análise de desempenho comercial" layout-mode="grid-per-row" date-type="last_30_days">`}
++<dashboard theme="branco" title="DSL" subtitle="Análise de desempenho comercial" layout-mode="grid-per-row" date-type="last_30_days">`}
                     </pre>
                   )}
                 </div>
@@ -253,7 +262,7 @@ export default function VisualBuilderPage() {
                         }
                         const original = minus.join('\n');
                         const replacement = plus.join('\n');
-                        if (!original) return { ok: false, error: 'Patch inválido: inclua pelo menos uma linha começando com -' };
+                        if (!original) return { ok: false, error: 'Patch inválido: inclua pelo menos uma linha que comece com "-" (conteúdo original).' };
                         const norm = (s: string) => s.replace(/\r\n/g, '\n');
                         let src = norm(code);
                         const orig = norm(original);
