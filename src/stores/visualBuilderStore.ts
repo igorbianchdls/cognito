@@ -710,6 +710,31 @@ export const visualBuilderActions = {
               }
             }
           })
+
+          // Remove deleted widgets from DSL
+          try {
+            const prevIds = new Set((currentState.widgets || []).map(w => w.id))
+            const nextIds = new Set(widgets.map(w => w.id))
+            const deletedIds: string[] = []
+            prevIds.forEach(id => { if (!nextIds.has(id)) deletedIds.push(id) })
+            const removeById = (source: string, id: string): string => {
+              const idEsc = escapeId(id)
+              // Remove paired tags first <kpi|chart ... id="...">...</kpi|chart>
+              const rePair = new RegExp(`<(?:(kpi|chart))\\b([^>]*)\\bid=\"${idEsc}\"[\s\S]*?>[\s\S]*?<\\/\\1>`, 'gi')
+              let out = source.replace(rePair, '')
+              // Remove self-closing <kpi|chart ... id="..." />
+              const reSelf = new RegExp(`<(?:(kpi|chart))\\b([^>]*)\\bid=\"${idEsc}\"[^>]*?\/?>`, 'gi')
+              out = out.replace(reSelf, '')
+              // Collapse excessive blank lines
+              out = out.replace(/[\r\n]{3,}/g, '\n\n')
+              return out
+            }
+            for (const id of deletedIds) {
+              dsl = removeById(dsl, id)
+            }
+          } catch {
+            // ignore
+          }
           return dsl
         })()
       : compactWidgetHeaders(compactJsonSections(compactLayoutRows(reorderWidgetKeysInCode(newCodeRaw))))
