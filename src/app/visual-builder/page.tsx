@@ -73,12 +73,12 @@ export default function VisualBuilderPage() {
       if (/^\-/.test(trimmed) && !/^\-\-\-/.test(trimmed)) {
         decos.push({
           range: new monaco.Range(i + 1, 1, i + 1, 1_000_000),
-          options: { inlineClassName: 'vb-line-remove' },
+          options: { isWholeLine: true, className: 'vb-line-remove' },
         });
       } else if (/^\+/.test(trimmed) && !/^\+\+\+/.test(trimmed)) {
         decos.push({
           range: new monaco.Range(i + 1, 1, i + 1, 1_000_000),
-          options: { inlineClassName: 'vb-line-add' },
+          options: { isWholeLine: true, className: 'vb-line-add' },
         });
       }
     }
