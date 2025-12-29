@@ -103,7 +103,31 @@ export default function ApplyPatchResultCard({ input, output }: Props) {
             <Editor
               height="100%"
               language="diff"
-              theme="vs-light"
+              theme="cognitoPatchTheme"
+              beforeMount={(monaco) => {
+                try {
+                  monaco.editor.defineTheme('cognitoPatchTheme', {
+                    base: 'vs',
+                    inherit: true,
+                    rules: [
+                      // Diff additions and deletions
+                      { token: 'markup.inserted', foreground: '2E7D32' },
+                      { token: 'diff.inserted', foreground: '2E7D32' },
+                      { token: 'markup.deleted', foreground: 'C62828' },
+                      { token: 'diff.deleted', foreground: 'C62828' },
+                      // Headers and ranges
+                      { token: 'meta.diff.header', foreground: '374151' },
+                      { token: 'meta.diff.range', foreground: '6B7280' },
+                      { token: 'constant.numeric.line-number.find-in-files - match', foreground: '6B7280' },
+                    ],
+                    colors: {
+                      'editor.foreground': '#1F2937',
+                    },
+                  });
+                } catch (e) {
+                  // no-op if theme already defined
+                }
+              }}
               value={editedPatch}
               onChange={(v) => setEditedPatch(v ?? '')}
               options={{
