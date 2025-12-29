@@ -32,6 +32,9 @@ export default function VisualBuilderPage() {
   const codeDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [patchText, setPatchText] = useState<string>('');
   const [patchStatus, setPatchStatus] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const patchEditorRef = useRef<any>(null);
+  const patchMonacoRef = useRef<any>(null);
+  const patchDecorationsRef = useRef<string[]>([]);
 
   // Prefill the Patch Editor with a concrete example based on the current DSL (<dashboard ...>)
   useEffect(() => {
@@ -54,6 +57,33 @@ export default function VisualBuilderPage() {
       // ignore
     }
   }, [visualBuilderState.code, patchText]);
+
+  // Update Monaco decorations to color lines by +/- prefix
+  useEffect(() => {
+    const editor = patchEditorRef.current;
+    const monaco = patchMonacoRef.current;
+    if (!editor || !monaco) return;
+    const model = editor.getModel?.();
+    if (!model) return;
+    const lines = (patchText || '').split(/\r?\n/);
+    const decos: any[] = [];
+    for (let i = 0; i < lines.length; i++) {
+      const raw = lines[i] ?? '';
+      const trimmed = raw.trimStart();
+      if (/^\-/.test(trimmed) && !/^\-\-\-/.test(trimmed)) {
+        decos.push({
+          range: new monaco.Range(i + 1, 1, i + 1, 1_000_000),
+          options: { inlineClassName: 'vb-line-remove' },
+        });
+      } else if (/^\+/.test(trimmed) && !/^\+\+\+/.test(trimmed)) {
+        decos.push({
+          range: new monaco.Range(i + 1, 1, i + 1, 1_000_000),
+          options: { inlineClassName: 'vb-line-add' },
+        });
+      }
+    }
+    patchDecorationsRef.current = editor.deltaDecorations(patchDecorationsRef.current, decos);
+  }, [patchText]);
   const currentThemeName: ThemeName = useMemo<ThemeName>(() => {
     try {
       const cfg = JSON.parse(visualBuilderState.code);
@@ -254,6 +284,10 @@ export default function VisualBuilderPage() {
                     language="diff"
                     value={patchText}
                     onChange={(v) => setPatchText(v || '')}
+                    onMount={(editor, monaco) => {
+                      patchEditorRef.current = editor;
+                      patchMonacoRef.current = monaco;
+                    }}
                     options={{
                       readOnly: false,
                       minimap: { enabled: false },
@@ -403,6 +437,16 @@ export default function VisualBuilderPage() {
         onClose={() => setEditingWidget(null)}
         onSave={handleSaveWidget}
       />
+
+      {/* Global styles for coloring +/- lines in the Patch Editor */}
+      <style jsx global>{`
+        .vb-line-remove {
+          color: #b91c1c !important; /* red-700 */
+        }
+        .vb-line-add {
+          color: #15803d !important; /* green-700 */
+        }
+      `}</style>
     </div>
   );
 }
