@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, FormEvent, useMemo } from "react";
+import { useState, FormEvent, useMemo, useEffect } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import ChatContainer from "@/components/navigation/nexus/ChatContainer";
@@ -20,6 +20,26 @@ export default function VisualBuilderChat() {
     transport: new DefaultChatTransport({ api }),
     id: "vb-chat",
   });
+
+  // Listen to apply-patch submit events coming from UI cards
+  useEffect(() => {
+    const onMessage = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin && event.origin !== 'null') return;
+      if (event.data && event.data.type === 'SEND_TO_CHAT_AND_SUBMIT') {
+        try {
+          const text: unknown = event.data.text;
+          if (typeof text === 'string' && text.trim().length > 0) {
+            sendMessage({ text });
+            setInput('');
+          }
+        } catch (e) {
+          console.error('VisualBuilderChat: failed to handle SEND_TO_CHAT_AND_SUBMIT', e);
+        }
+      }
+    };
+    window.addEventListener('message', onMessage);
+    return () => window.removeEventListener('message', onMessage);
+  }, [sendMessage]);
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
