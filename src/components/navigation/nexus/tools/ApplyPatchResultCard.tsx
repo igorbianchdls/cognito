@@ -1,6 +1,6 @@
 "use client";
 
-import { Editor } from '@monaco-editor/react';
+import { DiffEditor } from '@monaco-editor/react';
 
 type ApplyPatchFile = {
   path: string;
@@ -42,9 +42,29 @@ export default function ApplyPatchResultCard({ input, output }: Props) {
 
   const sendToChatAndSubmit = () => {
     if (!patchText) return;
+    // Se não houver envelope de patch, montar um patch Update File padrão para o DSL
+    const hasEnvelope = patchText.includes('*** Begin Patch') && patchText.includes('*** End Patch');
+    let toSend = patchText;
+    if (!hasEnvelope) {
+      // Extrair linhas +/- e montar patch contra o arquivo do DSL inicial
+      const lines = patchText.split(/\r?\n/);
+      const minus = lines.filter(l => l.trim().startsWith('-')).map(l => l.replace(/^\s*\-/, ''));
+      const plus = lines.filter(l => l.trim().startsWith('+')).map(l => l.replace(/^\s*\+/, ''));
+      const original = minus.join('\n');
+      const replacement = plus.join('\n');
+      const file = 'src/stores/visualBuilderStore.ts';
+      toSend = [
+        '*** Begin Patch',
+        `*** Update File: ${file}`,
+        '@@',
+        `-${original}`,
+        `+${replacement}`,
+        '*** End Patch',
+      ].join('\n');
+    }
     const payload = {
       type: 'SEND_TO_CHAT_AND_SUBMIT',
-      text: `apply_patch({ patch: ${JSON.stringify(patchText)}, dryRun: false })`,
+      text: `apply_patch({ patch: ${JSON.stringify(toSend)}, dryRun: false })`,
     } as const;
     try {
       window.postMessage(payload, '*');
@@ -57,26 +77,43 @@ export default function ApplyPatchResultCard({ input, output }: Props) {
     ? (isApplied ? `Patch aplicado — ${output!.success ? 'sucesso' : 'falhou'}` : 'Pré‑visualização do patch')
     : 'Pré‑visualização do patch';
 
+  // Build preview texts for DiffEditor
+  let previewOriginal = '';
+  let previewModified = '';
+  if (patchText) {
+    const lines = patchText.split(/\r?\n/);
+    const minus = lines.filter(l => /^\s*\-/.test(l) && !/^\s*\-\-\- /.test(l)).map(l => l.replace(/^\s*\-/, ''));
+    const plus = lines.filter(l => /^\s*\+/.test(l) && !/^\s*\+\+\+ /.test(l)).map(l => l.replace(/^\s*\+/, ''));
+    previewOriginal = minus.join('\n');
+    previewModified = plus.join('\n');
+    // Fallback if no +/- markers: show as single chunk on modified side
+    if (!previewOriginal && !previewModified) {
+      previewModified = patchText;
+    }
+  }
+
   return (
     <div className="rounded-md border border-gray-200 p-4 not-prose">
       <div className="mb-2 text-sm text-gray-700">{headerText}</div>
 
-      {input?.patch && (
+      {patchText && (
         <div className="mb-3">
           <div className="text-xs text-gray-600 mb-2">Patch</div>
-          <div className="border rounded-md overflow-hidden" style={{ height: 280 }}>
-            <Editor
-              height="100%"
-              language="diff"
+          <div className="border rounded-md overflow-hidden" style={{ height: 320 }}>
+            <DiffEditor
+              original={previewOriginal}
+              modified={previewModified}
+              language="plaintext"
               theme="vs-light"
-              value={String(input.patch)}
               options={{
                 readOnly: true,
+                renderSideBySide: false,
                 minimap: { enabled: false },
                 fontSize: 13,
                 wordWrap: 'on',
                 lineNumbers: 'on',
                 scrollBeyondLastLine: false,
+                originalEditable: false,
               }}
             />
           </div>

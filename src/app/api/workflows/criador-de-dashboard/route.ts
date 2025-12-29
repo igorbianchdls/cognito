@@ -4,7 +4,7 @@ import { listDashboards, getDashboard, apply_patch } from './tools'
 
 export const maxDuration = 300
 
-const baseSystem = `Você é um workflow de IA chamado "Criador de Dashboard".
+const systemPrompt = `Você é um workflow de IA chamado "Criador de Dashboard".
 
 # Papel
 - Entender a necessidade do usuário para montar dashboards.
@@ -150,7 +150,7 @@ export async function POST(req: Request) {
           thinking: { type: 'enabled', budgetTokens: 4000 },
         },
       },
-      system: baseSystem,
+      system: systemPrompt,
       messages: convertToModelMessages(messages),
       tools: {
         listDashboards,
