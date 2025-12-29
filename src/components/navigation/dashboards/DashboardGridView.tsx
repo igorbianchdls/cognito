@@ -54,15 +54,19 @@ export default function DashboardGridView() {
     );
   }
 
+  const handleDeleted = (id: string) => {
+    setItems(prev => prev.filter(it => it.id !== id));
+    setCount(prev => Math.max(0, prev - 1));
+  };
+
   return (
     <div className="space-y-2">
       <div className="text-xs text-gray-600">{`${items.length} de ${count}`}</div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {items.map((it) => (
-          <DashboardCard key={it.id} item={it} />
+          <DashboardCard key={it.id} item={it} onDeleted={handleDeleted} />
         ))}
       </div>
     </div>
   );
 }
-

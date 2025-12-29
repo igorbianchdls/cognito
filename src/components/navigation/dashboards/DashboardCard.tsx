@@ -4,12 +4,14 @@ import * as React from "react";
 import type { Dashboard } from "@/stores/dashboardsStore";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Copy, ExternalLink, Lock, Users, Globe2 } from "lucide-react";
+import { Copy, ExternalLink, Lock, Users, Globe2, Trash2 } from "lucide-react";
+import { dashboardsApi } from "@/stores/dashboardsStore";
 
 type Props = {
   item: Dashboard & { created_at?: string; updated_at?: string };
   onOpen?: (id: string) => void;
   onCopyId?: (id: string) => void;
+  onDeleted?: (id: string) => void;
 };
 
 const visibilityBadge = (v: Dashboard["visibility"]) => {
@@ -27,7 +29,7 @@ const visibilityBadge = (v: Dashboard["visibility"]) => {
   );
 };
 
-export default function DashboardCard({ item, onOpen, onCopyId }: Props) {
+export default function DashboardCard({ item, onOpen, onCopyId, onDeleted }: Props) {
   const handleOpen = () => {
     if (onOpen) onOpen(item.id);
     else window.open(`/nexus?dashboardId=${item.id}`, "_self");
@@ -37,6 +39,21 @@ export default function DashboardCard({ item, onOpen, onCopyId }: Props) {
       await navigator.clipboard.writeText(item.id);
       if (onCopyId) onCopyId(item.id);
     } catch {}
+  };
+  const [deleting, setDeleting] = React.useState(false);
+  const handleDelete = async () => {
+    if (deleting) return;
+    const ok = window.confirm(`Apagar o dashboard "${item.title || item.id}"?`);
+    if (!ok) return;
+    try {
+      setDeleting(true);
+      await dashboardsApi.remove(item.id);
+      if (onDeleted) onDeleted(item.id);
+    } catch (e) {
+      alert((e as Error).message || 'Falha ao apagar dashboard');
+    } finally {
+      setDeleting(false);
+    }
   };
 
   const recentlyUpdated = (() => {
@@ -83,6 +100,9 @@ export default function DashboardCard({ item, onOpen, onCopyId }: Props) {
           </Button>
           <Button size="sm" onClick={handleOpen}>
             <ExternalLink className="w-3.5 h-3.5 mr-1" /> Editar
+          </Button>
+          <Button size="sm" variant="destructive" onClick={handleDelete} disabled={deleting} title="Apagar dashboard">
+            <Trash2 className="w-3.5 h-3.5 mr-1" /> {deleting ? 'Apagando…' : 'Apagar'}
           </Button>
         </div>
       </div>
