@@ -447,7 +447,7 @@ export default function VisualBuilderPage() {
           color: #b91c1c !important; /* red-700 */
         }
         .vb-line-add {
-          color: #1d4ed8 !important; /* blue-700 */
+          color: #15803d !important; /* green-700 */
         }
         /* Force color on the actual token spans within inline decorations */
         .monaco-editor .view-lines .vb-inline-remove,
@@ -456,7 +456,7 @@ export default function VisualBuilderPage() {
         }
         .monaco-editor .view-lines .vb-inline-add,
         .monaco-editor .view-lines .vb-inline-add * {
-          color: #1d4ed8 !important; /* blue-700 */
+          color: #15803d !important; /* green-700 */
         }
       `}</style>
     </div>
