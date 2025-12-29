@@ -156,6 +156,7 @@ const compactWidgetHeaders = (code: string): string => {
 
 // New DSL initial code (HTML-like)
 export const initialDslGrid = `<dashboard theme="branco" title="Dashboard de Vendas" subtitle="Análise de desempenho comercial" layout-mode="grid" cols-d="12" cols-t="6" cols-m="2" gap-x="16" gap-y="16" date-type="last_30_days">
+  <style>{"backgroundColor":"#ffffff"}</style>
   <!-- Grupo de KPIs -->
   <group id="kpis" title="KPIs" orientation="horizontal" cols-d="12" gap-x="16" gap-y="16">
     <style>{"titleFontFamily":"Inter, ui-sans-serif, system-ui","titleFontSize":14,"titleFontWeight":600,"titleColor":"#111827","backgroundColor":"#fafafa","borderColor":"#e5e7eb","borderWidth":1,"borderRadius":12,"padding":12,"containerShadowColor":"0,0,0","containerShadowOpacity":0.04,"containerShadowBlur":8,"containerShadowOffsetX":0,"containerShadowOffsetY":2}</style>
