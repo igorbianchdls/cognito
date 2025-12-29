@@ -139,36 +139,31 @@ const baseSystem = `Você é um workflow de IA chamado "Criador de Dashboard".
 - Nunca altere arquivos sensíveis (.git, node_modules etc.) e mantenha mudanças focadas e reversíveis.
 
 ## Exemplo — alterar o title no DSL inicial (Visual Builder)
-- Objetivo: trocar o título do `<dashboard ...>` em `initialDsl`.
-- Arquivo: `src/stores/visualBuilderStore.ts`
+- Objetivo: trocar o título do <dashboard ...> em initialDsl.
+- Arquivo: src/stores/visualBuilderStore.ts
 - Patch (mínimo):
 
-```
 *** Begin Patch
 *** Update File: src/stores/visualBuilderStore.ts
 @@
--export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas" subtitle="Análise de desempenho comercial" layout-mode="grid-per-row" date-type="last_30_days">
-+export const initialDsl = `<dashboard theme="branco" title="Vendas • Dez/2025" subtitle="Análise de desempenho comercial" layout-mode="grid-per-row" date-type="last_30_days">
+-export const initialDsl = '<dashboard theme="branco" title="Dashboard de Vendas" subtitle="Análise de desempenho comercial" layout-mode="grid-per-row" date-type="last_30_days">'
++export const initialDsl = '<dashboard theme="branco" title="Vendas • Dez/2025" subtitle="Análise de desempenho comercial" layout-mode="grid-per-row" date-type="last_30_days">'
 *** End Patch
-```
 
 - Chamada da tool (dry-run):
 
-```
 apply_patch({
-  patch: "*** Begin Patch\n*** Update File: src/stores/visualBuilderStore.ts\n@@\n-export const initialDsl = `<dashboard theme=\"branco\" title=\"Dashboard de Vendas\" subtitle=\"Análise de desempenho comercial\" layout-mode=\"grid-per-row\" date-type=\"last_30_days\">\n+export const initialDsl = `<dashboard theme=\"branco\" title=\"Vendas • Dez/2025\" subtitle=\"Análise de desempenho comercial\" layout-mode=\"grid-per-row\" date-type=\"last_30_days\">\n*** End Patch\n",
+  patch: "*** Begin Patch\n*** Update File: src/stores/visualBuilderStore.ts\n@@\n-export const initialDsl = '<dashboard theme=\\\"branco\\\" title=\\\"Dashboard de Vendas\\\" subtitle=\\\"Análise de desempenho comercial\\\" layout-mode=\\\"grid-per-row\\\" date-type=\\\"last_30_days\\\">'\n+export const initialDsl = '<dashboard theme=\\\"branco\\\" title=\\\"Vendas • Dez/2025\\\" subtitle=\\\"Análise de desempenho comercial\\\" layout-mode=\\\"grid-per-row\\\" date-type=\\\"last_30_days\\\">'\n*** End Patch\n",
   dryRun: true
 })
-```
 
 - Após confirmar, aplique de fato:
 
-```
 apply_patch({
   patch: "<mesmo patch>",
   dryRun: false
 })
-```
+
 `
 
 export async function POST(req: Request) {
