@@ -27,6 +27,11 @@ export interface GroupSpecDraft {
   subtitleMarginRight?: number;
   subtitleMarginBottom?: number;
   subtitleMarginLeft?: number;
+  // Container margins
+  containerMarginTop?: number;
+  containerMarginRight?: number;
+  containerMarginBottom?: number;
+  containerMarginLeft?: number;
 }
 
 interface GroupEditorModalProps {
@@ -60,6 +65,10 @@ export default function GroupEditorModal({ open, groupId, initial, onClose, onSa
   const [subtitleMarginRight, setSubtitleMarginRight] = useState<number | undefined>(initial.subtitleMarginRight);
   const [subtitleMarginBottom, setSubtitleMarginBottom] = useState<number | undefined>(initial.subtitleMarginBottom);
   const [subtitleMarginLeft, setSubtitleMarginLeft] = useState<number | undefined>(initial.subtitleMarginLeft);
+  const [containerMarginTop, setContainerMarginTop] = useState<number | undefined>(initial.containerMarginTop);
+  const [containerMarginRight, setContainerMarginRight] = useState<number | undefined>(initial.containerMarginRight);
+  const [containerMarginBottom, setContainerMarginBottom] = useState<number | undefined>(initial.containerMarginBottom);
+  const [containerMarginLeft, setContainerMarginLeft] = useState<number | undefined>(initial.containerMarginLeft);
 
   useEffect(() => { setMounted(true); return () => setMounted(false); }, []);
   useEffect(() => {
@@ -85,6 +94,10 @@ export default function GroupEditorModal({ open, groupId, initial, onClose, onSa
       setSubtitleMarginRight(initial.subtitleMarginRight);
       setSubtitleMarginBottom(initial.subtitleMarginBottom);
       setSubtitleMarginLeft(initial.subtitleMarginLeft);
+      setContainerMarginTop(initial.containerMarginTop);
+      setContainerMarginRight(initial.containerMarginRight);
+      setContainerMarginBottom(initial.containerMarginBottom);
+      setContainerMarginLeft(initial.containerMarginLeft);
     }
   }, [open, initial.title, initial.subtitle, initial.backgroundColor, initial.borderColor, initial.borderWidth, initial.titleFontFamily, initial.titleFontSize, initial.titleFontWeight, initial.titleColor, initial.titleMarginTop, initial.titleMarginRight, initial.titleMarginBottom, initial.titleMarginLeft, initial.subtitleFontFamily, initial.subtitleFontSize, initial.subtitleFontWeight, initial.subtitleColor, initial.subtitleMarginTop, initial.subtitleMarginRight, initial.subtitleMarginBottom, initial.subtitleMarginLeft]);
 
@@ -112,6 +125,16 @@ export default function GroupEditorModal({ open, groupId, initial, onClose, onSa
             <div>
               <h4 className="text-sm font-semibold text-gray-900 mb-2">Fundo</h4>
               <input type="color" className="px-1 py-1 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 h-10" value={backgroundColor || '#ffffff'} onChange={e => setBackgroundColor(e.target.value)} />
+            </div>
+            {/* Container margins */}
+            <div>
+              <h4 className="text-sm font-semibold text-gray-900 mb-2">Container • Margens</h4>
+              <div className="grid grid-cols-4 gap-2">
+                <input type="number" min={0} className="px-2 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Top" value={containerMarginTop ?? ''} onChange={e => setContainerMarginTop(e.target.value ? parseInt(e.target.value) : undefined)} />
+                <input type="number" min={0} className="px-2 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Right" value={containerMarginRight ?? ''} onChange={e => setContainerMarginRight(e.target.value ? parseInt(e.target.value) : undefined)} />
+                <input type="number" min={0} className="px-2 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Bottom" value={containerMarginBottom ?? ''} onChange={e => setContainerMarginBottom(e.target.value ? parseInt(e.target.value) : undefined)} />
+                <input type="number" min={0} className="px-2 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Left" value={containerMarginLeft ?? ''} onChange={e => setContainerMarginLeft(e.target.value ? parseInt(e.target.value) : undefined)} />
+              </div>
             </div>
             {/* Title Typography */}
             <div>
@@ -178,7 +201,7 @@ export default function GroupEditorModal({ open, groupId, initial, onClose, onSa
         </div>
         <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
           <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">Cancelar</button>
-          <button type="button" onClick={() => onSave({ title, subtitle, backgroundColor, borderColor, borderWidth, titleFontFamily, titleFontSize, titleFontWeight, titleColor, titleMarginTop, titleMarginRight, titleMarginBottom, titleMarginLeft, subtitleFontFamily, subtitleFontSize, subtitleFontWeight, subtitleColor, subtitleMarginTop, subtitleMarginRight, subtitleMarginBottom, subtitleMarginLeft })} className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">Salvar</button>
+          <button type="button" onClick={() => onSave({ title, subtitle, backgroundColor, borderColor, borderWidth, titleFontFamily, titleFontSize, titleFontWeight, titleColor, titleMarginTop, titleMarginRight, titleMarginBottom, titleMarginLeft, subtitleFontFamily, subtitleFontSize, subtitleFontWeight, subtitleColor, subtitleMarginTop, subtitleMarginRight, subtitleMarginBottom, subtitleMarginLeft, containerMarginTop, containerMarginRight, containerMarginBottom, containerMarginLeft })} className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">Salvar</button>
         </div>
       </div>
     </div>

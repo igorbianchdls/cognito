@@ -166,6 +166,10 @@ function ResponsiveGridCanvas({ widgets, gridConfig, globalFilters, viewportMode
           out.backgroundColor = pickStr('backgroundColor');
           out.borderColor = pickStr('borderColor');
           out.borderWidth = pickNum('borderWidth');
+          out.containerMarginTop = pickNum('marginTop');
+          out.containerMarginRight = pickNum('marginRight');
+          out.containerMarginBottom = pickNum('marginBottom');
+          out.containerMarginLeft = pickNum('marginLeft');
           // Title typography
           out.titleFontFamily = pickStr('titleFontFamily');
           out.titleFontSize = pickNum('titleFontSize');
@@ -945,6 +949,10 @@ const DraggableGroup = memo(function DraggableGroup({ id, children, containerSty
                           : undefined;
                         const padding = typeof st.padding === 'number' ? st.padding : undefined;
                         const margin = typeof st.margin === 'number' ? st.margin : undefined;
+                        const marginTop = typeof (st as any).marginTop === 'number' ? (st as any).marginTop : undefined;
+                        const marginRight = typeof (st as any).marginRight === 'number' ? (st as any).marginRight : undefined;
+                        const marginBottom = typeof (st as any).marginBottom === 'number' ? (st as any).marginBottom : undefined;
+                        const marginLeft = typeof (st as any).marginLeft === 'number' ? (st as any).marginLeft : undefined;
                         const borderWidth = typeof st.borderWidth === 'number' ? st.borderWidth : undefined;
                         const borderColor = typeof st.borderColor === 'string' ? st.borderColor : undefined;
                         const borderRadius = typeof st.borderRadius === 'number' ? st.borderRadius : undefined;
@@ -953,6 +961,10 @@ const DraggableGroup = memo(function DraggableGroup({ id, children, containerSty
                           boxShadow,
                           padding: typeof padding === 'number' ? `${padding}px` : undefined,
                           margin: typeof margin === 'number' ? `${margin}px` : undefined,
+                          marginTop: typeof marginTop === 'number' ? `${marginTop}px` : undefined,
+                          marginRight: typeof marginRight === 'number' ? `${marginRight}px` : undefined,
+                          marginBottom: typeof marginBottom === 'number' ? `${marginBottom}px` : undefined,
+                          marginLeft: typeof marginLeft === 'number' ? `${marginLeft}px` : undefined,
                           borderWidth: typeof borderWidth === 'number' ? `${borderWidth}px` : undefined,
                           borderColor,
                           borderRadius: typeof borderRadius === 'number' ? `${borderRadius}px` : undefined,

@@ -805,7 +805,7 @@ export const visualBuilderActions = {
   },
 
   // Atualizar atributos de <group id="..."> no DSL (grid mode)
-  updateGroupSpec: (groupId: string, spec: { title?: string; subtitle?: string; backgroundColor?: string; borderColor?: string; borderWidth?: number; titleFontFamily?: string; titleFontSize?: number; titleFontWeight?: string | number; titleColor?: string; titleMarginTop?: number; titleMarginRight?: number; titleMarginBottom?: number; titleMarginLeft?: number; subtitleFontFamily?: string; subtitleFontSize?: number; subtitleFontWeight?: string | number; subtitleColor?: string; subtitleMarginTop?: number; subtitleMarginRight?: number; subtitleMarginBottom?: number; subtitleMarginLeft?: number }) => {
+  updateGroupSpec: (groupId: string, spec: { title?: string; subtitle?: string; backgroundColor?: string; borderColor?: string; borderWidth?: number; titleFontFamily?: string; titleFontSize?: number; titleFontWeight?: string | number; titleColor?: string; titleMarginTop?: number; titleMarginRight?: number; titleMarginBottom?: number; titleMarginLeft?: number; subtitleFontFamily?: string; subtitleFontSize?: number; subtitleFontWeight?: string | number; subtitleColor?: string; subtitleMarginTop?: number; subtitleMarginRight?: number; subtitleMarginBottom?: number; subtitleMarginLeft?: number; containerMarginTop?: number; containerMarginRight?: number; containerMarginBottom?: number; containerMarginLeft?: number }) => {
     const current = $visualBuilderState.get();
     const code = current.code || '';
     if (!isDslCode(code)) return;
@@ -865,6 +865,10 @@ export const visualBuilderActions = {
       if (typeof spec.subtitleMarginRight === 'number') styleObj['subtitleMarginRight'] = spec.subtitleMarginRight;
       if (typeof spec.subtitleMarginBottom === 'number') styleObj['subtitleMarginBottom'] = spec.subtitleMarginBottom;
       if (typeof spec.subtitleMarginLeft === 'number') styleObj['subtitleMarginLeft'] = spec.subtitleMarginLeft;
+      if (typeof spec.containerMarginTop === 'number') styleObj['marginTop'] = spec.containerMarginTop;
+      if (typeof spec.containerMarginRight === 'number') styleObj['marginRight'] = spec.containerMarginRight;
+      if (typeof spec.containerMarginBottom === 'number') styleObj['marginBottom'] = spec.containerMarginBottom;
+      if (typeof spec.containerMarginLeft === 'number') styleObj['marginLeft'] = spec.containerMarginLeft;
       const styleJson = JSON.stringify(styleObj);
       let newInner = inner;
       if (sMatch) newInner = inner.replace(styleRe, `<style>${styleJson}</style>`);
