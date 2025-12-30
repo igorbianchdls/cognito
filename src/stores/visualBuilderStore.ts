@@ -808,51 +808,58 @@ export const visualBuilderActions = {
   updateGroupSpec: (groupId: string, spec: { title?: string; subtitle?: string; backgroundColor?: string; borderColor?: string; borderWidth?: number }) => {
     const current = $visualBuilderState.get();
     const code = current.code || '';
-    if (!isDslCode(code)) return; // somente DSL por enquanto
-    // Encontrar bloco <group id="...">...</group>
-    const gidEsc = groupId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const re = new RegExp(`<group\\b([^>]*)\\bid=\\"${gidEsc}\\"[^>]*>([\\s\\S]*?)<\\/group>`, 'i');
-    const m = code.match(re);
-    if (!m) return;
-    const openAttrs = m[1] || '';
-    const inner = m[2] || '';
-    const whole = m[0];
+    if (!isDslCode(code)) return;
 
-    // Atualizar atributo title no open tag
-    const replaceOrInsertAttr = (attrs: string, name: string, value?: string): string => {
-      if (value === undefined) return attrs;
-      const reAttr = new RegExp(`(\\b${name}\\=\\")[^\\"]*(\\")`, 'i');
-      if (reAttr.test(attrs)) return attrs.replace(reAttr, `$1${value}$2`);
-      return `${attrs} ${name}="${value}"`;
+    const tagRe = /<group\b([^>]*)>([\s\S]*?)<\/group>/gi;
+    const parseAttrs = (s: string): Record<string, string> => {
+      const map: Record<string, string> = {};
+      const attrRegex = /(\w[\w-]*)\s*=\s*"([^"]*)"/g;
+      for (const m of s.matchAll(attrRegex)) map[m[1]] = m[2];
+      return map;
     };
-    let newAttrs = openAttrs;
-    if (spec.title !== undefined) newAttrs = replaceOrInsertAttr(newAttrs, 'title', spec.title);
+    const buildAttrs = (attrs: Record<string, string>): string => {
+      return Object.entries(attrs).map(([k, v]) => `${k}="${v}"`).join(' ');
+    };
 
-    // Atualizar <style>{...}</style> dentro do group
-    const styleRe = /<style\b[^>]*>([\s\S]*?)<\/style>/i;
-    const sMatch = inner.match(styleRe);
-    let styleObj: Record<string, unknown> = {};
-    if (sMatch && sMatch[1]) {
-      try { styleObj = JSON.parse(sMatch[1].trim()); } catch {}
-    }
-    const set = (k: string, v: unknown) => { if (v !== undefined && v !== '') styleObj[k] = v; };
-    set('subtitle', spec.subtitle);
-    set('backgroundColor', spec.backgroundColor);
-    set('borderColor', spec.borderColor);
-    if (typeof spec.borderWidth === 'number') styleObj['borderWidth'] = spec.borderWidth;
-    const styleJson = JSON.stringify(styleObj);
-    let newInner = inner;
-    if (sMatch) {
-      newInner = inner.replace(styleRe, `<style>${styleJson}</style>`);
-    } else {
-      // Insere no início do conteúdo do grupo
-      newInner = `\n  <style>${styleJson}</style>` + inner;
-    }
+    let replaced = false;
+    let nextCode = code;
+    let m: RegExpExecArray | null;
+    while ((m = tagRe.exec(code)) !== null) {
+      const openAttrsStr = m[1] || '';
+      const inner = m[2] || '';
+      const whole = m[0];
+      const attrs = parseAttrs(openAttrsStr);
+      if ((attrs['id'] || '') !== groupId) continue;
 
-    const newOpen = `<group ${newAttrs.trim()}>`;
-    const newBlock = newOpen + newInner + `</group>`;
-    const nextCode = code.replace(whole, newBlock);
-    visualBuilderActions.updateCode(nextCode);
+      // Update title attribute while preserving others
+      if (spec.title !== undefined) attrs['title'] = spec.title;
+      // Ensure id preserved
+      attrs['id'] = attrs['id'] || groupId;
+      const newOpen = `<group ${buildAttrs(attrs)}>`;
+
+      // Update style JSON inside group
+      const styleRe = /<style\b[^>]*>([\s\S]*?)<\/style>/i;
+      const sMatch = inner.match(styleRe);
+      let styleObj: Record<string, unknown> = {};
+      if (sMatch && sMatch[1]) {
+        try { styleObj = JSON.parse(sMatch[1].trim()); } catch {}
+      }
+      const set = (k: string, v: unknown) => { if (v !== undefined && v !== '') styleObj[k] = v; };
+      set('subtitle', spec.subtitle);
+      set('backgroundColor', spec.backgroundColor);
+      set('borderColor', spec.borderColor);
+      if (typeof spec.borderWidth === 'number') styleObj['borderWidth'] = spec.borderWidth;
+      const styleJson = JSON.stringify(styleObj);
+      let newInner = inner;
+      if (sMatch) newInner = inner.replace(styleRe, `<style>${styleJson}</style>`);
+      else newInner = `\n  <style>${styleJson}</style>` + inner;
+
+      const newBlock = newOpen + newInner + `</group>`;
+      nextCode = nextCode.replace(whole, newBlock);
+      replaced = true;
+      break;
+    }
+    if (replaced) visualBuilderActions.updateCode(nextCode);
   },
 
   // Atualizar código (vem do Monaco Editor)
