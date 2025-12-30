@@ -181,27 +181,57 @@ function ResponsiveGridCanvas({ widgets, gridConfig, globalFilters, viewportMode
 
   // Duplicate a widget (clone near original with new id)
   const handleDuplicateWidget = useCallback((w: Widget) => {
+    // Gerar novo id único baseado no estado atual
     const existingIds = new Set(widgets.map(x => x.id));
     const base = `${w.id}_copy`;
     let candidate = base;
     let idx = 1;
-    while (existingIds.has(candidate)) {
-      candidate = `${base}_${idx++}`;
+    while (existingIds.has(candidate)) candidate = `${base}_${idx++}`;
+
+    const code = visualBuilderState.code || '';
+    const isDsl = code.trim().startsWith('<');
+
+    if (isDsl) {
+      // Duplicar diretamente no DSL para manter store e código em sincronia
+      const escapeId = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const idEsc = escapeId(w.id);
+      const idNew = candidate;
+      const insertAfter = (source: string, original: string, duplicate: string) => source.replace(original, `${original}\n${duplicate}`);
+      // Tentar nó pareado primeiro
+      const pairRe = new RegExp(`<(?:(kpi|chart))\\b([^>]*)\\bid=\"${idEsc}\"[\\s\\S]*?>[\\s\\S]*?<\\/\\1>`, 'i');
+      let m = code.match(pairRe);
+      let newCode = code;
+      if (m && m[0]) {
+        const block = m[0];
+        const dup = block.replace(new RegExp(`\\bid=\\"${idEsc}\\"`, 'i'), `id="${idNew}"`);
+        newCode = insertAfter(code, block, dup);
+      } else {
+        // Tentar self-closing
+        const selfRe = new RegExp(`<(?:(kpi|chart))\\b([^>]*)\\bid=\"${idEsc}\"[^>]*?\/?>`, 'i');
+        m = code.match(selfRe);
+        if (m && m[0]) {
+          const block = m[0];
+          const dup = block.replace(new RegExp(`\\bid=\\"${idEsc}\\"`, 'i'), `id="${idNew}"`);
+          newCode = insertAfter(code, block, dup);
+        }
+      }
+      if (newCode !== code) {
+        try { visualBuilderActions.updateCode(newCode); } catch {}
+      }
+      return;
     }
+
+    // Fallback (JSON): duplicar no array e persistir
     const clone: Widget = JSON.parse(JSON.stringify(w));
     clone.id = candidate;
-    // Slightly bump order to appear after
     if (typeof w.order === 'number') clone.order = w.order + 0.01;
-    // Keep row / gridStart and spans
     const updated = [] as Widget[];
     for (const it of widgets) {
       updated.push(it);
       if (it.id === w.id) updated.push(clone);
     }
-    // Deixe a serialização do updateWidgets refletir no DSL
-    if (onLayoutChange) onLayoutChange(updated);
-    else try { visualBuilderActions.updateWidgets(updated); } catch {}
-  }, [onLayoutChange, widgets]);
+    if (onLayoutChange) onLayoutChange(updated); else try { visualBuilderActions.updateWidgets(updated); } catch {}
+  }, [onLayoutChange, widgets, visualBuilderState.code]);
 
   // Delete a widget with confirmation
   const handleDeleteWidget = useCallback((w: Widget) => {
