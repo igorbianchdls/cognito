@@ -136,6 +136,56 @@ function ResponsiveGridCanvas({ widgets, gridConfig, globalFilters, viewportMode
   const [groupDraft, setGroupDraft] = useState<GroupSpecDraft | null>(null);
   const visualBuilderState = useNanoStore($visualBuilderState);
   const [showHeaderEditor, setShowHeaderEditor] = useState(false);
+  // Helper: parse group spec directly from current DSL code
+  const parseGroupSpecFromDsl = useCallback((dsl: string, gid: string): GroupSpecDraft => {
+    const out: GroupSpecDraft = {};
+    if (!dsl || typeof dsl !== 'string') return out;
+    const re = /<group\b([^>]*)>([\s\S]*?)<\/group>/gi;
+    const attrRegex = /(\w[\w-]*)\s*=\s*"([^"]*)"/g;
+    const parseAttrs = (s: string): Record<string, string> => {
+      const map: Record<string, string> = {};
+      for (const m of s.matchAll(attrRegex)) map[m[1]] = m[2];
+      return map;
+    };
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(dsl)) !== null) {
+      const attrsStr = m[1] || '';
+      const inner = m[2] || '';
+      const attrs = parseAttrs(attrsStr);
+      if ((attrs['id'] || '') !== gid) continue;
+      // Title from attribute
+      if (typeof attrs['title'] === 'string') out.title = attrs['title'];
+      // Style JSON block
+      const styleMatch = inner.match(/<style\b[^>]*>([\s\S]*?)<\/style>/i);
+      if (styleMatch && styleMatch[1]) {
+        try {
+          const styleObj = JSON.parse(styleMatch[1].trim()) as Record<string, unknown>;
+          const pickStr = (k: string) => (typeof styleObj[k] === 'string' ? (styleObj[k] as string) : undefined);
+          const pickNum = (k: string) => (typeof styleObj[k] === 'number' ? (styleObj[k] as number) : undefined);
+          out.subtitle = pickStr('subtitle');
+          out.backgroundColor = pickStr('backgroundColor');
+          out.borderColor = pickStr('borderColor');
+          out.borderWidth = pickNum('borderWidth');
+          // Title typography
+          out.titleFontFamily = pickStr('titleFontFamily');
+          out.titleFontSize = pickNum('titleFontSize');
+          out.titleFontWeight = (styleObj['titleFontWeight'] as string | number | undefined);
+          out.titleColor = pickStr('titleColor');
+          out.titleMarginBottom = pickNum('titleMarginBottom');
+          // Subtitle typography
+          out.subtitleFontFamily = pickStr('subtitleFontFamily');
+          out.subtitleFontSize = pickNum('subtitleFontSize');
+          out.subtitleFontWeight = (styleObj['subtitleFontWeight'] as string | number | undefined);
+          out.subtitleColor = pickStr('subtitleColor');
+          out.subtitleMarginBottom = pickNum('subtitleMarginBottom');
+        } catch {
+          // ignore invalid style json
+        }
+      }
+      break;
+    }
+    return out;
+  }, []);
 
   // Handle widget edit
   const handleEditWidget = useCallback((widget: Widget) => {
@@ -909,14 +959,9 @@ const DraggableGroup = memo(function DraggableGroup({ id, children, containerSty
                           type="button"
                           onClick={() => {
                             setEditingGroupId(group.id);
-                            const st = (group as any).style || {};
-                            setGroupDraft({
-                              title: group.title,
-                              subtitle: st.subtitle,
-                              backgroundColor: st.backgroundColor,
-                              borderColor: st.borderColor,
-                              borderWidth: st.borderWidth,
-                            });
+                            const dsl = visualBuilderState.code || '';
+                            const parsed = parseGroupSpecFromDsl(dsl, group.id);
+                            setGroupDraft(parsed);
                           }}
                           className="pointer-events-auto inline-flex items-center px-2 py-0.5 text-xs rounded-sm bg-blue-400 text-white shadow-sm"
                           title={`Editar Group ${group.id}`}
