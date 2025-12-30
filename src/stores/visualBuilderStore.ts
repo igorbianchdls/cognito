@@ -962,6 +962,7 @@ export const visualBuilderActions = {
     borderColor?: string;
     borderWidth?: number;
     borderStyle?: 'solid' | 'dashed' | 'dotted' | string;
+    showDatePicker?: boolean;
   }) => {
     const currentState = $visualBuilderState.get()
     const code = currentState.code || ''
@@ -1045,6 +1046,7 @@ export const visualBuilderActions = {
       assign('borderColor', data?.borderColor)
       assign('borderWidth', data?.borderWidth)
       assign('borderStyle', data?.borderStyle as any)
+      if (typeof data?.showDatePicker === 'boolean') assign('showDatePicker', data?.showDatePicker)
       if (Object.keys(hc).length > 0) next.headerConfig = hc
       const nextCode = JSON.stringify(next, null, 2)
       visualBuilderActions.updateCode(nextCode)

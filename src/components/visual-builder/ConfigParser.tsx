@@ -180,6 +180,7 @@ export interface HeaderConfig {
   borderColor?: string;
   borderWidth?: number;
   borderStyle?: 'solid' | 'dashed' | 'dotted';
+  showDatePicker?: boolean;
 }
 
 // Theme types are now managed by ThemeManager
@@ -576,6 +577,12 @@ export class ConfigParser {
         if (bc) cfg.borderColor = String(bc);
         if (bw) { const n = num(String(bw)); if (n !== undefined) cfg.borderWidth = n; }
         if (bs && ['solid','dashed','dotted'].includes(String(bs))) cfg.borderStyle = String(bs) as any;
+        // Date picker visibility
+        const sdp = pick('showDatePicker') || pick('show-date-picker') || pick('showDate');
+        if (sdp !== undefined) {
+          const v = String(sdp).toLowerCase();
+          if (v === 'false' || v === 'off' || v === '0') cfg.showDatePicker = false; else cfg.showDatePicker = true;
+        }
         if (Object.keys(cfg).length > 0) headerConfig = cfg;
       }
     } catch { /* ignore */ }

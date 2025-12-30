@@ -29,6 +29,7 @@ export default function HeaderEditorModal({ isOpen, initialTitle, initialSubtitl
   const [borderColor, setBorderColor] = useState<string>(initialConfig?.borderColor || '');
   const [borderWidth, setBorderWidth] = useState<number | undefined>(initialConfig?.borderWidth);
   const [borderStyle, setBorderStyle] = useState<'solid'|'dashed'|'dotted' | ''>((initialConfig?.borderStyle as any) || '');
+  const [showDatePicker, setShowDatePicker] = useState<boolean>(initialConfig?.showDatePicker !== false);
 
   useEffect(() => { setMounted(true); return () => setMounted(false); }, []);
 
@@ -48,6 +49,7 @@ export default function HeaderEditorModal({ isOpen, initialTitle, initialSubtitl
       setBorderColor(initialConfig?.borderColor || '');
       setBorderWidth(initialConfig?.borderWidth);
       setBorderStyle((initialConfig?.borderStyle as any) || '');
+      setShowDatePicker(initialConfig?.showDatePicker !== false);
     }
   }, [isOpen, initialTitle, initialSubtitle, initialConfig]);
 
@@ -164,6 +166,13 @@ export default function HeaderEditorModal({ isOpen, initialTitle, initialSubtitl
                 </div>
               </div>
             </div>
+            <div className="mt-2">
+              <h4 className="text-sm font-semibold text-gray-900 mb-2">Outros</h4>
+              <label className="inline-flex items-center gap-2 text-sm text-gray-700">
+                <input type="checkbox" className="h-4 w-4" checked={showDatePicker} onChange={e => setShowDatePicker(e.target.checked)} />
+                Mostrar seletor de data no header
+              </label>
+            </div>
           </div>
         </div>
 
@@ -188,6 +197,7 @@ export default function HeaderEditorModal({ isOpen, initialTitle, initialSubtitl
               ...(borderColor ? { borderColor } : {}),
               ...(borderWidth !== undefined ? { borderWidth } : {}),
               ...(borderStyle ? { borderStyle } : {}),
+              ...(showDatePicker === false ? { showDatePicker } : {}),
             } })}
             className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
           >Salvar</button>

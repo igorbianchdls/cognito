@@ -203,85 +203,89 @@ export default function DashboardInCanvasHeader({
           )}
         </div>
         <div className="flex items-center gap-3 md:gap-4">
-          <div className="hidden lg:block text-sm" style={{ color: headerStyle.textSecondary }}>
-            <span className="font-medium" style={{ color: headerStyle.textPrimary }}>{currentLabel}</span>
-            {dateRangeDescription && (
-              <span className="ml-2">({dateRangeDescription})</span>
-            )}
-          </div>
-          <Popover open={showCustomPicker} onOpenChange={setShowCustomPicker}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-9 px-3"
-                style={{
-                  backgroundColor: 'transparent',
-                  color: headerStyle.textPrimary,
-                  borderColor: headerStyle.datePickerBorderColor || headerStyle.borderBottomColor,
-                }}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                <span className="whitespace-nowrap">{currentLabel}</span>
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent align="end" sideOffset={8} className="p-3 w-auto">
-              <div className="space-y-3">
-                <Calendar
-                  mode="range"
-                  numberOfMonths={2}
-                  selected={customRange}
-                  onSelect={(range?: DateRange) => {
-                    setCustomRange(range);
-                  }}
-                />
-                <div className="flex items-center justify-between gap-3">
-                  <div className="text-xs text-gray-500">
-                    {customRange?.from && customRange?.to ? (
-                      <span>
-                        {customRange.from.toISOString().split('T')[0]} — {customRange.to.toISOString().split('T')[0]}
-                      </span>
-                    ) : (
-                      <span>Selecione início e fim</span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        // Reverte seleção para o filtro atual e fecha
-                        if (currentFilter.type === 'custom' && currentFilter.startDate && currentFilter.endDate) {
-                          setCustomRange({ from: new Date(currentFilter.startDate), to: new Date(currentFilter.endDate) });
-                          setSelectedType('custom');
-                        } else {
-                          setCustomRange(undefined);
-                        }
-                        setShowCustomPicker(false);
-                      }}
-                    >
-                      Cancelar
-                    </Button>
-                    <Button
-                      variant="default"
-                      size="sm"
-                      disabled={!(customRange?.from && customRange?.to)}
-                      onClick={() => {
-                        if (customRange?.from && customRange?.to) {
-                          const toISO = (d: Date) => d.toISOString().split('T')[0];
-                          setSelectedType('custom');
-                          onFilterChange({ type: 'custom', startDate: toISO(customRange.from), endDate: toISO(customRange.to) });
-                          setShowCustomPicker(false);
-                        }
-                      }}
-                    >
-                      Salvar
-                    </Button>
-                  </div>
-                </div>
+          {(headerConfig?.showDatePicker !== false) && (
+            <>
+              <div className="hidden lg:block text-sm" style={{ color: headerStyle.textSecondary }}>
+                <span className="font-medium" style={{ color: headerStyle.textPrimary }}>{currentLabel}</span>
+                {dateRangeDescription && (
+                  <span className="ml-2">({dateRangeDescription})</span>
+                )}
               </div>
-            </PopoverContent>
-          </Popover>
+              <Popover open={showCustomPicker} onOpenChange={setShowCustomPicker}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-9 px-3"
+                    style={{
+                      backgroundColor: 'transparent',
+                      color: headerStyle.textPrimary,
+                      borderColor: headerStyle.datePickerBorderColor || headerStyle.borderBottomColor,
+                    }}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    <span className="whitespace-nowrap">{currentLabel}</span>
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent align="end" sideOffset={8} className="p-3 w-auto">
+                  <div className="space-y-3">
+                    <Calendar
+                      mode="range"
+                      numberOfMonths={2}
+                      selected={customRange}
+                      onSelect={(range?: DateRange) => {
+                        setCustomRange(range);
+                      }}
+                    />
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="text-xs text-gray-500">
+                        {customRange?.from && customRange?.to ? (
+                          <span>
+                            {customRange.from.toISOString().split('T')[0]} — {customRange.to.toISOString().split('T')[0]}
+                          </span>
+                        ) : (
+                          <span>Selecione início e fim</span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            // Reverte seleção para o filtro atual e fecha
+                            if (currentFilter.type === 'custom' && currentFilter.startDate && currentFilter.endDate) {
+                              setCustomRange({ from: new Date(currentFilter.startDate), to: new Date(currentFilter.endDate) });
+                              setSelectedType('custom');
+                            } else {
+                              setCustomRange(undefined);
+                            }
+                            setShowCustomPicker(false);
+                          }}
+                        >
+                          Cancelar
+                        </Button>
+                        <Button
+                          variant="default"
+                          size="sm"
+                          disabled={!(customRange?.from && customRange?.to)}
+                          onClick={() => {
+                            if (customRange?.from && customRange?.to) {
+                              const toISO = (d: Date) => d.toISOString().split('T')[0];
+                              setSelectedType('custom');
+                              onFilterChange({ type: 'custom', startDate: toISO(customRange.from), endDate: toISO(customRange.to) });
+                              setShowCustomPicker(false);
+                            }
+                          }}
+                        >
+                          Salvar
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </>
+          )}
           {/* Hover-only actions like widgets */}
           {(onEditHeader || onRemoveHeader) && (
             <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
