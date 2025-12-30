@@ -990,7 +990,7 @@ export const visualBuilderActions = {
       if (data?.borderColor) attrs.push(`borderColor=\"${escapeHtml(safe(data.borderColor))}\"`)
       if (data?.borderWidth !== undefined) attrs.push(`borderWidth=\"${escapeHtml(safe(data.borderWidth))}\"`)
       if (data?.borderStyle) attrs.push(`borderStyle=\"${escapeHtml(safe(data.borderStyle))}\"`)
-      if (typeof data?.showDatePicker === 'boolean') attrs.push(`showDatePicker=\"${escapeHtml(safe(data.showDatePicker))}\"`)
+      if (typeof data?.showDatePicker === 'boolean') attrs.push(`showDatePicker=\"${data.showDatePicker ? 'true' : 'false'}\"`)
       const tag = `<header ${attrs.join(' ')} />`
 
       if (rePair.test(code)) {
