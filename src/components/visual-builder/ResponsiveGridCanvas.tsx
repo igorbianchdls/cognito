@@ -171,13 +171,19 @@ function ResponsiveGridCanvas({ widgets, gridConfig, globalFilters, viewportMode
           out.titleFontSize = pickNum('titleFontSize');
           out.titleFontWeight = (styleObj['titleFontWeight'] as string | number | undefined);
           out.titleColor = pickStr('titleColor');
+          out.titleMarginTop = pickNum('titleMarginTop');
+          out.titleMarginRight = pickNum('titleMarginRight');
           out.titleMarginBottom = pickNum('titleMarginBottom');
+          out.titleMarginLeft = pickNum('titleMarginLeft');
           // Subtitle typography
           out.subtitleFontFamily = pickStr('subtitleFontFamily');
           out.subtitleFontSize = pickNum('subtitleFontSize');
           out.subtitleFontWeight = (styleObj['subtitleFontWeight'] as string | number | undefined);
           out.subtitleColor = pickStr('subtitleColor');
+          out.subtitleMarginTop = pickNum('subtitleMarginTop');
+          out.subtitleMarginRight = pickNum('subtitleMarginRight');
           out.subtitleMarginBottom = pickNum('subtitleMarginBottom');
+          out.subtitleMarginLeft = pickNum('subtitleMarginLeft');
         } catch {
           // ignore invalid style json
         }
@@ -977,7 +983,10 @@ const DraggableGroup = memo(function DraggableGroup({ id, children, containerSty
                             fontSize: typeof (group as any).style?.titleFontSize === 'number' ? `${(group as any).style?.titleFontSize}px` : undefined,
                             fontWeight: (group as any).style?.titleFontWeight || undefined,
                             color: (group as any).style?.titleColor || '#4b5563',
+                            marginTop: typeof (group as any).style?.titleMarginTop === 'number' ? `${(group as any).style?.titleMarginTop}px` : undefined,
+                            marginRight: typeof (group as any).style?.titleMarginRight === 'number' ? `${(group as any).style?.titleMarginRight}px` : undefined,
                             marginBottom: typeof (group as any).style?.titleMarginBottom === 'number' ? `${(group as any).style?.titleMarginBottom}px` : undefined,
+                            marginLeft: typeof (group as any).style?.titleMarginLeft === 'number' ? `${(group as any).style?.titleMarginLeft}px` : undefined,
                           }}
                         >
                           {group.title}
@@ -991,7 +1000,10 @@ const DraggableGroup = memo(function DraggableGroup({ id, children, containerSty
                             fontFamily: (group as any).style?.subtitleFontFamily || undefined,
                             fontSize: typeof (group as any).style?.subtitleFontSize === 'number' ? `${(group as any).style?.subtitleFontSize}px` : undefined,
                             fontWeight: (group as any).style?.subtitleFontWeight || undefined,
+                            marginTop: typeof (group as any).style?.subtitleMarginTop === 'number' ? `${(group as any).style?.subtitleMarginTop}px` : undefined,
+                            marginRight: typeof (group as any).style?.subtitleMarginRight === 'number' ? `${(group as any).style?.subtitleMarginRight}px` : undefined,
                             marginBottom: typeof (group as any).style?.subtitleMarginBottom === 'number' ? `${(group as any).style?.subtitleMarginBottom}px` : undefined,
+                            marginLeft: typeof (group as any).style?.subtitleMarginLeft === 'number' ? `${(group as any).style?.subtitleMarginLeft}px` : undefined,
                           }}
                         >
                           {(group as any).style?.subtitle}

@@ -15,12 +15,18 @@ export interface GroupSpecDraft {
   titleFontSize?: number;
   titleFontWeight?: string | number;
   titleColor?: string;
+  titleMarginTop?: number;
+  titleMarginRight?: number;
   titleMarginBottom?: number;
+  titleMarginLeft?: number;
   subtitleFontFamily?: string;
   subtitleFontSize?: number;
   subtitleFontWeight?: string | number;
   subtitleColor?: string;
+  subtitleMarginTop?: number;
+  subtitleMarginRight?: number;
   subtitleMarginBottom?: number;
+  subtitleMarginLeft?: number;
 }
 
 interface GroupEditorModalProps {
@@ -42,12 +48,18 @@ export default function GroupEditorModal({ open, groupId, initial, onClose, onSa
   const [titleFontSize, setTitleFontSize] = useState<number | undefined>(initial.titleFontSize);
   const [titleFontWeight, setTitleFontWeight] = useState<string | number | undefined>(initial.titleFontWeight);
   const [titleColor, setTitleColor] = useState<string>(initial.titleColor || '');
+  const [titleMarginTop, setTitleMarginTop] = useState<number | undefined>(initial.titleMarginTop);
+  const [titleMarginRight, setTitleMarginRight] = useState<number | undefined>(initial.titleMarginRight);
   const [titleMarginBottom, setTitleMarginBottom] = useState<number | undefined>(initial.titleMarginBottom);
+  const [titleMarginLeft, setTitleMarginLeft] = useState<number | undefined>(initial.titleMarginLeft);
   const [subtitleFontFamily, setSubtitleFontFamily] = useState<string>(initial.subtitleFontFamily || '');
   const [subtitleFontSize, setSubtitleFontSize] = useState<number | undefined>(initial.subtitleFontSize);
   const [subtitleFontWeight, setSubtitleFontWeight] = useState<string | number | undefined>(initial.subtitleFontWeight);
   const [subtitleColor, setSubtitleColor] = useState<string>(initial.subtitleColor || '');
+  const [subtitleMarginTop, setSubtitleMarginTop] = useState<number | undefined>(initial.subtitleMarginTop);
+  const [subtitleMarginRight, setSubtitleMarginRight] = useState<number | undefined>(initial.subtitleMarginRight);
   const [subtitleMarginBottom, setSubtitleMarginBottom] = useState<number | undefined>(initial.subtitleMarginBottom);
+  const [subtitleMarginLeft, setSubtitleMarginLeft] = useState<number | undefined>(initial.subtitleMarginLeft);
 
   useEffect(() => { setMounted(true); return () => setMounted(false); }, []);
   useEffect(() => {
@@ -61,14 +73,20 @@ export default function GroupEditorModal({ open, groupId, initial, onClose, onSa
       setTitleFontSize(initial.titleFontSize);
       setTitleFontWeight(initial.titleFontWeight);
       setTitleColor(initial.titleColor || '');
+      setTitleMarginTop(initial.titleMarginTop);
+      setTitleMarginRight(initial.titleMarginRight);
       setTitleMarginBottom(initial.titleMarginBottom);
+      setTitleMarginLeft(initial.titleMarginLeft);
       setSubtitleFontFamily(initial.subtitleFontFamily || '');
       setSubtitleFontSize(initial.subtitleFontSize);
       setSubtitleFontWeight(initial.subtitleFontWeight);
       setSubtitleColor(initial.subtitleColor || '');
+      setSubtitleMarginTop(initial.subtitleMarginTop);
+      setSubtitleMarginRight(initial.subtitleMarginRight);
       setSubtitleMarginBottom(initial.subtitleMarginBottom);
+      setSubtitleMarginLeft(initial.subtitleMarginLeft);
     }
-  }, [open, initial.title, initial.subtitle, initial.backgroundColor, initial.borderColor, initial.borderWidth, initial.titleFontFamily, initial.titleFontSize, initial.titleFontWeight, initial.titleColor, initial.titleMarginBottom, initial.subtitleFontFamily, initial.subtitleFontSize, initial.subtitleFontWeight, initial.subtitleColor, initial.subtitleMarginBottom]);
+  }, [open, initial.title, initial.subtitle, initial.backgroundColor, initial.borderColor, initial.borderWidth, initial.titleFontFamily, initial.titleFontSize, initial.titleFontWeight, initial.titleColor, initial.titleMarginTop, initial.titleMarginRight, initial.titleMarginBottom, initial.titleMarginLeft, initial.subtitleFontFamily, initial.subtitleFontSize, initial.subtitleFontWeight, initial.subtitleColor, initial.subtitleMarginTop, initial.subtitleMarginRight, initial.subtitleMarginBottom, initial.subtitleMarginLeft]);
 
   if (!open) return null;
 
@@ -111,7 +129,12 @@ export default function GroupEditorModal({ open, groupId, initial, onClose, onSa
                   <option value="">Peso</option>
                   {[100,200,300,400,500,600,700,800,900].map(w => (<option key={w} value={String(w)}>{w}</option>))}
                 </select>
-                <input type="number" min={0} className="px-3 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Margin bottom" value={titleMarginBottom ?? ''} onChange={e => setTitleMarginBottom(e.target.value ? parseInt(e.target.value) : undefined)} />
+                <div className="grid grid-cols-4 gap-1">
+                  <input type="number" min={0} className="px-2 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="T" value={titleMarginTop ?? ''} onChange={e => setTitleMarginTop(e.target.value ? parseInt(e.target.value) : undefined)} />
+                  <input type="number" min={0} className="px-2 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="R" value={titleMarginRight ?? ''} onChange={e => setTitleMarginRight(e.target.value ? parseInt(e.target.value) : undefined)} />
+                  <input type="number" min={0} className="px-2 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="B" value={titleMarginBottom ?? ''} onChange={e => setTitleMarginBottom(e.target.value ? parseInt(e.target.value) : undefined)} />
+                  <input type="number" min={0} className="px-2 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="L" value={titleMarginLeft ?? ''} onChange={e => setTitleMarginLeft(e.target.value ? parseInt(e.target.value) : undefined)} />
+                </div>
               </div>
             </div>
             {/* Subtitle Typography */}
@@ -130,7 +153,12 @@ export default function GroupEditorModal({ open, groupId, initial, onClose, onSa
                   <option value="">Peso</option>
                   {[100,200,300,400,500,600,700,800,900].map(w => (<option key={w} value={String(w)}>{w}</option>))}
                 </select>
-                <input type="number" min={0} className="px-3 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Margin bottom" value={subtitleMarginBottom ?? ''} onChange={e => setSubtitleMarginBottom(e.target.value ? parseInt(e.target.value) : undefined)} />
+                <div className="grid grid-cols-4 gap-1">
+                  <input type="number" min={0} className="px-2 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="T" value={subtitleMarginTop ?? ''} onChange={e => setSubtitleMarginTop(e.target.value ? parseInt(e.target.value) : undefined)} />
+                  <input type="number" min={0} className="px-2 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="R" value={subtitleMarginRight ?? ''} onChange={e => setSubtitleMarginRight(e.target.value ? parseInt(e.target.value) : undefined)} />
+                  <input type="number" min={0} className="px-2 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="B" value={subtitleMarginBottom ?? ''} onChange={e => setSubtitleMarginBottom(e.target.value ? parseInt(e.target.value) : undefined)} />
+                  <input type="number" min={0} className="px-2 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="L" value={subtitleMarginLeft ?? ''} onChange={e => setSubtitleMarginLeft(e.target.value ? parseInt(e.target.value) : undefined)} />
+                </div>
               </div>
             </div>
             <div>
@@ -150,7 +178,7 @@ export default function GroupEditorModal({ open, groupId, initial, onClose, onSa
         </div>
         <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
           <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">Cancelar</button>
-          <button type="button" onClick={() => onSave({ title, subtitle, backgroundColor, borderColor, borderWidth, titleFontFamily, titleFontSize, titleFontWeight, titleColor, titleMarginBottom, subtitleFontFamily, subtitleFontSize, subtitleFontWeight, subtitleColor, subtitleMarginBottom })} className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">Salvar</button>
+          <button type="button" onClick={() => onSave({ title, subtitle, backgroundColor, borderColor, borderWidth, titleFontFamily, titleFontSize, titleFontWeight, titleColor, titleMarginTop, titleMarginRight, titleMarginBottom, titleMarginLeft, subtitleFontFamily, subtitleFontSize, subtitleFontWeight, subtitleColor, subtitleMarginTop, subtitleMarginRight, subtitleMarginBottom, subtitleMarginLeft })} className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">Salvar</button>
         </div>
       </div>
     </div>

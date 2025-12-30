@@ -805,7 +805,7 @@ export const visualBuilderActions = {
   },
 
   // Atualizar atributos de <group id="..."> no DSL (grid mode)
-  updateGroupSpec: (groupId: string, spec: { title?: string; subtitle?: string; backgroundColor?: string; borderColor?: string; borderWidth?: number; titleFontFamily?: string; titleFontSize?: number; titleFontWeight?: string | number; titleColor?: string; titleMarginBottom?: number; subtitleFontFamily?: string; subtitleFontSize?: number; subtitleFontWeight?: string | number; subtitleColor?: string; subtitleMarginBottom?: number }) => {
+  updateGroupSpec: (groupId: string, spec: { title?: string; subtitle?: string; backgroundColor?: string; borderColor?: string; borderWidth?: number; titleFontFamily?: string; titleFontSize?: number; titleFontWeight?: string | number; titleColor?: string; titleMarginTop?: number; titleMarginRight?: number; titleMarginBottom?: number; titleMarginLeft?: number; subtitleFontFamily?: string; subtitleFontSize?: number; subtitleFontWeight?: string | number; subtitleColor?: string; subtitleMarginTop?: number; subtitleMarginRight?: number; subtitleMarginBottom?: number; subtitleMarginLeft?: number }) => {
     const current = $visualBuilderState.get();
     const code = current.code || '';
     if (!isDslCode(code)) return;
@@ -853,12 +853,18 @@ export const visualBuilderActions = {
       if (typeof spec.titleFontSize === 'number') styleObj['titleFontSize'] = spec.titleFontSize;
       set('titleFontWeight', spec.titleFontWeight as any);
       set('titleColor', spec.titleColor);
+      if (typeof spec.titleMarginTop === 'number') styleObj['titleMarginTop'] = spec.titleMarginTop;
+      if (typeof spec.titleMarginRight === 'number') styleObj['titleMarginRight'] = spec.titleMarginRight;
       if (typeof spec.titleMarginBottom === 'number') styleObj['titleMarginBottom'] = spec.titleMarginBottom;
+      if (typeof spec.titleMarginLeft === 'number') styleObj['titleMarginLeft'] = spec.titleMarginLeft;
       set('subtitleFontFamily', spec.subtitleFontFamily);
       if (typeof spec.subtitleFontSize === 'number') styleObj['subtitleFontSize'] = spec.subtitleFontSize;
       set('subtitleFontWeight', spec.subtitleFontWeight as any);
       set('subtitleColor', spec.subtitleColor);
+      if (typeof spec.subtitleMarginTop === 'number') styleObj['subtitleMarginTop'] = spec.subtitleMarginTop;
+      if (typeof spec.subtitleMarginRight === 'number') styleObj['subtitleMarginRight'] = spec.subtitleMarginRight;
       if (typeof spec.subtitleMarginBottom === 'number') styleObj['subtitleMarginBottom'] = spec.subtitleMarginBottom;
+      if (typeof spec.subtitleMarginLeft === 'number') styleObj['subtitleMarginLeft'] = spec.subtitleMarginLeft;
       const styleJson = JSON.stringify(styleObj);
       let newInner = inner;
       if (sMatch) newInner = inner.replace(styleRe, `<style>${styleJson}</style>`);
