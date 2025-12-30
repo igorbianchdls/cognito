@@ -805,7 +805,7 @@ export const visualBuilderActions = {
   },
 
   // Atualizar atributos de <group id="..."> no DSL (grid mode)
-  updateGroupSpec: (groupId: string, spec: { title?: string; subtitle?: string; backgroundColor?: string; borderColor?: string; borderWidth?: number }) => {
+  updateGroupSpec: (groupId: string, spec: { title?: string; subtitle?: string; backgroundColor?: string; borderColor?: string; borderWidth?: number; titleFontFamily?: string; titleFontSize?: number; titleFontWeight?: string | number; titleColor?: string; titleMarginBottom?: number; subtitleFontFamily?: string; subtitleFontSize?: number; subtitleFontWeight?: string | number; subtitleColor?: string; subtitleMarginBottom?: number }) => {
     const current = $visualBuilderState.get();
     const code = current.code || '';
     if (!isDslCode(code)) return;
@@ -849,6 +849,16 @@ export const visualBuilderActions = {
       set('backgroundColor', spec.backgroundColor);
       set('borderColor', spec.borderColor);
       if (typeof spec.borderWidth === 'number') styleObj['borderWidth'] = spec.borderWidth;
+      set('titleFontFamily', spec.titleFontFamily);
+      if (typeof spec.titleFontSize === 'number') styleObj['titleFontSize'] = spec.titleFontSize;
+      set('titleFontWeight', spec.titleFontWeight as any);
+      set('titleColor', spec.titleColor);
+      if (typeof spec.titleMarginBottom === 'number') styleObj['titleMarginBottom'] = spec.titleMarginBottom;
+      set('subtitleFontFamily', spec.subtitleFontFamily);
+      if (typeof spec.subtitleFontSize === 'number') styleObj['subtitleFontSize'] = spec.subtitleFontSize;
+      set('subtitleFontWeight', spec.subtitleFontWeight as any);
+      set('subtitleColor', spec.subtitleColor);
+      if (typeof spec.subtitleMarginBottom === 'number') styleObj['subtitleMarginBottom'] = spec.subtitleMarginBottom;
       const styleJson = JSON.stringify(styleObj);
       let newInner = inner;
       if (sMatch) newInner = inner.replace(styleRe, `<style>${styleJson}</style>`);

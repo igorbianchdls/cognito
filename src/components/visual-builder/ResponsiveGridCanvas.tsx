@@ -926,19 +926,29 @@ const DraggableGroup = memo(function DraggableGroup({ id, children, containerSty
                       </div>
                       {group.title && (
                         <div
-                          className="px-2 py-1"
+                          className="px-2"
                           style={{
                             fontFamily: (group as any).style?.titleFontFamily || undefined,
                             fontSize: typeof (group as any).style?.titleFontSize === 'number' ? `${(group as any).style?.titleFontSize}px` : undefined,
                             fontWeight: (group as any).style?.titleFontWeight || undefined,
                             color: (group as any).style?.titleColor || '#4b5563',
+                            marginBottom: typeof (group as any).style?.titleMarginBottom === 'number' ? `${(group as any).style?.titleMarginBottom}px` : undefined,
                           }}
                         >
                           {group.title}
                         </div>
                       )}
                       {(group as any).style?.subtitle && (
-                        <div className="px-2 pb-1 text-xs" style={{ color: (group as any).style?.subtitleColor || '#6b7280' }}>
+                        <div
+                          className="px-2"
+                          style={{
+                            color: (group as any).style?.subtitleColor || '#6b7280',
+                            fontFamily: (group as any).style?.subtitleFontFamily || undefined,
+                            fontSize: typeof (group as any).style?.subtitleFontSize === 'number' ? `${(group as any).style?.subtitleFontSize}px` : undefined,
+                            fontWeight: (group as any).style?.subtitleFontWeight || undefined,
+                            marginBottom: typeof (group as any).style?.subtitleMarginBottom === 'number' ? `${(group as any).style?.subtitleMarginBottom}px` : undefined,
+                          }}
+                        >
                           {(group as any).style?.subtitle}
                         </div>
                       )}
