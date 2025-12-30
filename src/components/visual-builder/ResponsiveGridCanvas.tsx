@@ -17,6 +17,7 @@ import {
 import { MoreVertical, Copy, Edit3, Trash2 } from 'lucide-react';
 import RowEditorModal, { type RowSpec } from './RowEditorModal';
 import DashboardInCanvasHeader from './DashboardInCanvasHeader';
+import HeaderEditorModal from './HeaderEditorModal';
 import type { Widget, GridConfig, LayoutRow } from './ConfigParser';
 import { useStore as useNanoStore } from '@nanostores/react';
 import { $visualBuilderState, visualBuilderActions } from '@/stores/visualBuilderStore';
@@ -130,6 +131,7 @@ function ResponsiveGridCanvas({ widgets, gridConfig, globalFilters, viewportMode
   const [editingRowId, setEditingRowId] = useState<string | null>(null);
   const [rowDraft, setRowDraft] = useState<RowSpec | null>(null);
   const visualBuilderState = useNanoStore($visualBuilderState);
+  const [showHeaderEditor, setShowHeaderEditor] = useState(false);
 
   // Handle widget edit
   const handleEditWidget = useCallback((widget: Widget) => {
@@ -751,6 +753,16 @@ const DraggableGroup = memo(function DraggableGroup({ id, children, containerSty
             isLoading={!!isFilterLoading}
             containerPadding={gridConfig.padding ?? 16}
             themeName={themeName}
+            rightExtras={(
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" className="h-8 px-2 text-xs" onClick={() => setShowHeaderEditor(true)}>
+                  Editar header
+                </Button>
+                <Button variant="ghost" size="sm" className="h-8 px-2 text-xs text-red-600" onClick={() => { try { visualBuilderActions.removeHeaderFromCode(); } catch {} }}>
+                  Remover header
+                </Button>
+              </div>
+            )}
           />
         )}
         {/* Empty State */}
@@ -1051,6 +1063,16 @@ const DraggableGroup = memo(function DraggableGroup({ id, children, containerSty
           onSave={handleSaveWidget}
         />
       )}
+      <HeaderEditorModal
+        isOpen={showHeaderEditor}
+        initialTitle={headerTitle}
+        initialSubtitle={headerSubtitle}
+        onClose={() => setShowHeaderEditor(false)}
+        onSave={({ title, subtitle }) => {
+          try { visualBuilderActions.updateHeaderInCode(title, subtitle); } catch {}
+          setShowHeaderEditor(false);
+        }}
+      />
     </div>
   );
 }

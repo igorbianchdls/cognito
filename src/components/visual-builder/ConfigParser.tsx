@@ -494,8 +494,8 @@ export class ConfigParser {
     const dashMatch = dsl.match(/<dashboard\b([^>]*)>/i);
     const dashAttrs = dashMatch ? parseAttrs(dashMatch[1]) : {};
     const themeAttr = dashAttrs['theme'] as ThemeName | undefined;
-    const dashboardTitle = dashAttrs['title'];
-    const dashboardSubtitle = dashAttrs['subtitle'];
+    let dashboardTitle = dashAttrs['title'];
+    let dashboardSubtitle = dashAttrs['subtitle'];
     const layoutMode = (dashAttrs['layout-mode'] as 'grid' | 'grid-per-row' | 'grid-per-column' | undefined) || 'grid-per-row';
 
     // Dashboard-level date range support
@@ -518,6 +518,16 @@ export class ConfigParser {
       }
       parsedGlobalFilters = { globalFilters: { dateRange: { type, ...(startDate ? { startDate } : {}), ...(endDate ? { endDate } : {}) } } }.globalFilters;
     }
+
+    // Optional <header title subtitle/> overrides (if present)
+    try {
+      const headerMatch = dsl.match(/<header\b([^>]*)\/?>(?:\s*<\/header>)?/i);
+      if (headerMatch) {
+        const hAttrs = parseAttrs(headerMatch[1] || '');
+        if (typeof hAttrs['title'] === 'string' && hAttrs['title'].length > 0) dashboardTitle = hAttrs['title'];
+        if (typeof hAttrs['subtitle'] === 'string') dashboardSubtitle = hAttrs['subtitle'];
+      }
+    } catch { /* ignore */ }
 
     // Optional dashboard-level <style>{ ...json... }</style>
     // NOTE: Only capture a <style> that appears immediately after <dashboard ...> (to avoid picking nested group styles)

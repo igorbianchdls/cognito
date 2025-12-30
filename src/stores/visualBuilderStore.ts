@@ -942,6 +942,97 @@ export const visualBuilderActions = {
     visualBuilderActions.updateCode(newCode)
   },
 
+  // Upsert <header> in DSL or set dashboardTitle/Subitle in JSON
+  updateHeaderInCode: (title?: string, subtitle?: string) => {
+    const currentState = $visualBuilderState.get()
+    const code = currentState.code || ''
+    const safe = (s?: string) => (s == null ? '' : String(s))
+    const escapeHtml = (s: string) => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;')
+
+    if (isDslCode(code)) {
+      // 1) If <header ...> exists, replace it
+      const rePair = /<header\b[^>]*>[\s\S]*?<\/header>/i
+      const reSelf = /<header\b[^>]*\/>/i
+      const attrs: string[] = []
+      const t = safe(title).trim()
+      const s = safe(subtitle).trim()
+      if (t) attrs.push(`title="${escapeHtml(t)}"`)
+      if (s) attrs.push(`subtitle="${escapeHtml(s)}"`)
+      const tag = `<header ${attrs.join(' ')} />`
+
+      if (rePair.test(code)) {
+        const next = code.replace(rePair, tag)
+        visualBuilderActions.updateCode(next)
+        return
+      }
+      if (reSelf.test(code)) {
+        const next = code.replace(reSelf, tag)
+        visualBuilderActions.updateCode(next)
+        return
+      }
+
+      // 2) Insert after <dashboard ...> and any immediate <style> block/comments
+      const m = code.match(/<dashboard\b[^>]*>/i)
+      if (!m) {
+        // Fallback: prepend
+        const next = `${tag}\n${code}`
+        visualBuilderActions.updateCode(next)
+        return
+      }
+      const dashOpen = m[0]
+      const start = (m.index || 0) + dashOpen.length
+      const post = code.slice(start)
+      const earlyStyle = post.match(/^\s*(?:<!--[\s\S]*?-->\s*)*(<style\b[\s\S]*?<\/style>)/i)
+      if (earlyStyle && typeof earlyStyle.index === 'number') {
+        const insertAt = start + (earlyStyle.index + earlyStyle[0].length)
+        const next = code.slice(0, insertAt) + `\n  ${tag}\n` + code.slice(insertAt)
+        visualBuilderActions.updateCode(next)
+      } else {
+        const next = code.slice(0, start) + `\n  ${tag}\n` + code.slice(start)
+        visualBuilderActions.updateCode(next)
+      }
+      return
+    }
+
+    // JSON: set dashboardTitle/dashboardSubtitle
+    try {
+      const root = JSON.parse(code || '{}') as { [k: string]: unknown }
+      const next = { ...root } as any
+      if (title !== undefined) next.dashboardTitle = title
+      if (subtitle !== undefined) next.dashboardSubtitle = subtitle
+      const nextCode = JSON.stringify(next, null, 2)
+      visualBuilderActions.updateCode(nextCode)
+    } catch {
+      // ignore
+    }
+  },
+
+  // Remove <header> from DSL or clear fields in JSON
+  removeHeaderFromCode: () => {
+    const currentState = $visualBuilderState.get()
+    const code = currentState.code || ''
+    if (isDslCode(code)) {
+      const rePair = /<header\b[^>]*>[\s\S]*?<\/header>/i
+      const reSelf = /<header\b[^>]*\/>/i
+      let next = code
+      if (rePair.test(next)) next = next.replace(rePair, '')
+      else if (reSelf.test(next)) next = next.replace(reSelf, '')
+      if (next !== code) visualBuilderActions.updateCode(next)
+      return
+    }
+    try {
+      const root = JSON.parse(code || '{}') as { [k: string]: unknown }
+      if (typeof root === 'object' && root) {
+        delete (root as any).dashboardTitle
+        delete (root as any).dashboardSubtitle
+        const nextCode = JSON.stringify(root, null, 2)
+        visualBuilderActions.updateCode(nextCode)
+      }
+    } catch {
+      // ignore
+    }
+  },
+
   // Resetar filtros globais
   resetGlobalFilters: () => {
     const currentState = $visualBuilderState.get()
