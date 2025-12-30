@@ -187,17 +187,17 @@ export const initialDslGrid = `<dashboard theme="branco" title="Dashboard de Ven
   </group>
 
   <!-- Grupo de Charts (3 por linha) -->
-  <group id="charts" title="Gráficos" orientation="horizontal" cols-d="12" gap-x="16" gap-y="16">
+  <group id="charts" title="Gráficos" sizing="fr" orientation="horizontal" cols-d="12" gap-x="16" gap-y="16">
     <style>{"titleFontFamily":"Inter, ui-sans-serif, system-ui","titleFontSize":14,"titleFontWeight":600,"titleColor":"#0f172a","backgroundColor":"#f0f9ff","borderColor":"#bfdbfe","borderWidth":1,"borderRadius":12,"padding":12,"containerShadowColor":"0,0,0","containerShadowOpacity":0.03,"containerShadowBlur":6,"containerShadowOffsetX":0,"containerShadowOffsetY":1}</style>
-    <chart id="meta_fat_vendedor" type="groupedbar" col-d="1" span-d="4" height="360" title="Meta x Faturamento por Vendedor">
+    <chart id="meta_fat_vendedor" type="groupedbar" width="2fr" col-d="1" span-d="4" height="360" title="Meta x Faturamento por Vendedor">
       <datasource schema="comercial" table="vw_vendas_metas" dimension="vendedor_nome" measureGoal="MAX(meta_faturamento_vendedor)" measureActual="SUM(subtotal)" limit="12" />
       <styling tw="legend:on grid:on mb:32" />
     </chart>
-    <chart id="meta_ticket_vendedor" type="groupedbar" col-d="5" span-d="4" height="360" title="Meta x Ticket Médio por Vendedor">
+    <chart id="meta_ticket_vendedor" type="groupedbar" width="1fr" col-d="5" span-d="4" height="360" title="Meta x Ticket Médio por Vendedor">
       <datasource schema="comercial" table="vw_vendas_metas" dimension="vendedor_nome" measureGoal="MAX(meta_ticket_vendedor)" measureActual="SUM(subtotal)/COUNT_DISTINCT(pedido_id)" limit="12" />
       <styling tw="legend:on grid:on mb:32" />
     </chart>
-    <chart id="meta_novos_vendedor" type="groupedbar" col-d="9" span-d="4" height="360" title="Meta x Novos Clientes por Vendedor">
+    <chart id="meta_novos_vendedor" type="groupedbar" width="1fr" col-d="9" span-d="4" height="360" title="Meta x Novos Clientes por Vendedor">
       <datasource schema="comercial" table="vw_vendas_metas" dimension="vendedor_nome" measureGoal="MAX(meta_novos_clientes_vendedor)" measureActual="COUNT_DISTINCT(cliente_id)" limit="12" />
       <styling tw="legend:on grid:on mb:32" />
     </chart>
