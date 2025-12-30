@@ -753,16 +753,8 @@ const DraggableGroup = memo(function DraggableGroup({ id, children, containerSty
             isLoading={!!isFilterLoading}
             containerPadding={gridConfig.padding ?? 16}
             themeName={themeName}
-            rightExtras={(
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" className="h-8 px-2 text-xs" onClick={() => setShowHeaderEditor(true)}>
-                  Editar header
-                </Button>
-                <Button variant="ghost" size="sm" className="h-8 px-2 text-xs text-red-600" onClick={() => { try { visualBuilderActions.removeHeaderFromCode(); } catch {} }}>
-                  Remover header
-                </Button>
-              </div>
-            )}
+            onEditHeader={() => setShowHeaderEditor(true)}
+            onRemoveHeader={() => { try { visualBuilderActions.removeHeaderFromCode(); } catch {} }}
           />
         )}
         {/* Empty State */}

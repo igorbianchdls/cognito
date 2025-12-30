@@ -1,6 +1,6 @@
 'use client';
 
-import { Calendar as CalendarIcon } from 'lucide-react';
+import { Calendar as CalendarIcon, MoreVertical } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
  
@@ -11,6 +11,13 @@ import type { DateRange } from 'react-day-picker';
 import { useStore } from '@nanostores/react';
 import { $headerUi, resolveHeaderStyle } from '@/stores/ui/headerUiStore';
 import type { ThemeName } from './ThemeManager';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface DashboardInCanvasHeaderProps {
   title: string;
@@ -21,6 +28,8 @@ interface DashboardInCanvasHeaderProps {
   rightExtras?: React.ReactNode;
   containerPadding?: number; // used to collapse container padding (left/right/top)
   themeName?: ThemeName;
+  onEditHeader?: () => void;
+  onRemoveHeader?: () => void;
 }
 
 const DATE_RANGE_OPTIONS: { value: DateRangeType; label: string }[] = [
@@ -41,7 +50,9 @@ export default function DashboardInCanvasHeader({
   isLoading = false,
   rightExtras,
   containerPadding = 0,
-  themeName
+  themeName,
+  onEditHeader,
+  onRemoveHeader
 }: DashboardInCanvasHeaderProps) {
   const headerUi = useStore($headerUi);
   const [selectedType, setSelectedType] = useState<DateRangeType>(currentFilter.type);
@@ -159,7 +170,7 @@ export default function DashboardInCanvasHeader({
       }}
     >
       <div
-        className="flex items-center justify-between py-4 md:py-6"
+        className="group relative flex items-center justify-between py-4 md:py-6 hover:ring-2 hover:ring-blue-400 rounded-lg transition-all"
         style={{ paddingLeft: containerPadding, paddingRight: containerPadding }}
       >
         <div className="min-w-0 flex flex-col space-y-0.5">
@@ -258,7 +269,33 @@ export default function DashboardInCanvasHeader({
               </div>
             </PopoverContent>
           </Popover>
-          {rightExtras}
+          {/* Hover-only actions like widgets */}
+          {(onEditHeader || onRemoveHeader) && (
+            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-gray-600 hover:text-gray-800" aria-label="Ações do header">
+                    <MoreVertical className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="min-w-[10rem]">
+                  {onEditHeader && (
+                    <DropdownMenuItem onClick={(e) => { e.preventDefault(); onEditHeader?.(); }} className="gap-2">
+                      Editar
+                    </DropdownMenuItem>
+                  )}
+                  {onRemoveHeader && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem variant="destructive" onClick={(e) => { e.preventDefault(); onRemoveHeader?.(); }} className="gap-2">
+                        Remover
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          )}
         </div>
       </div>
     </div>
