@@ -620,6 +620,11 @@ export const visualBuilderActions = {
               if (typeof w.type === 'string' && w.type.length > 0 && w.type !== 'kpi') {
                 dsl = setAttrOnNode(dsl, w.id, 'type', w.type)
               }
+              // Update fractional width when provided (group sizing="fr")
+              const wfr = (w as any).widthFr as { desktop?: string } | undefined
+              if (wfr && typeof wfr.desktop === 'string' && wfr.desktop.trim().length > 0) {
+                dsl = setAttrOnNode(dsl, w.id, 'width', wfr.desktop.trim())
+              }
               // Update datasource for simple charts and KPI
               const t = w.type
               if (w.dataSource) {

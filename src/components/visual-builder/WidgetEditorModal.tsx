@@ -83,6 +83,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
     type: (widget?.type as Widget['type']) || 'bar',
     title: widget?.title || '',
     heightPx: widget?.heightPx || 320,
+    widthFr: (widget?.widthFr?.desktop as string | undefined) || '',
     dataSource: {
       schema: widget?.dataSource?.schema || '',
       table: widget?.dataSource?.table || '',
@@ -323,6 +324,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
         type: widget.type,
         title: widget.title || '',
         heightPx: widget.heightPx || 320,
+        widthFr: (widget.widthFr?.desktop as string | undefined) || '',
         dataSource: {
           schema: widget.dataSource?.schema || '',
           table: widget.dataSource?.table || '',
@@ -381,6 +383,14 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
         ...dsPatch
       } as Widget['dataSource']
     };
+
+    // Apply width (fr) for desktop if provided
+    const widthVal = (formData.widthFr || '').trim();
+    if (widthVal) {
+      updatedWidget.widthFr = { desktop: widthVal };
+    } else if (updatedWidget.widthFr) {
+      delete (updatedWidget as any).widthFr;
+    }
 
     const t = formData.type as Widget['type'];
     const applyBarStyling = (cfg?: Partial<BarChartConfig>): Partial<BarChartConfig> => {
@@ -681,6 +691,26 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
               min="100"
               step="10"
             />
+          </div>
+
+          {/* Width (fraction) */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Largura (fração)
+            </label>
+            <select
+              value={formData.widthFr || ''}
+              onChange={(e) => setFormData({ ...formData, widthFr: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Padrão (1fr)</option>
+              <option value="1fr">1fr</option>
+              <option value="2fr">2fr</option>
+              <option value="3fr">3fr</option>
+              <option value="4fr">4fr</option>
+              <option value="5fr">5fr</option>
+            </select>
+            <p className="mt-1 text-xs text-gray-500">Aplicado quando o group usa sizing="fr".</p>
           </div>
 
           {/* Data Source Section */}
