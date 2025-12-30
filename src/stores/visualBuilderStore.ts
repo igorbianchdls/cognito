@@ -959,6 +959,9 @@ export const visualBuilderActions = {
     subtitleFontWeight?: string | number;
     subtitleColor?: string;
     backgroundColor?: string;
+    borderColor?: string;
+    borderWidth?: number;
+    borderStyle?: 'solid' | 'dashed' | 'dotted' | string;
   }) => {
     const currentState = $visualBuilderState.get()
     const code = currentState.code || ''
