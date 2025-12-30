@@ -231,6 +231,12 @@ export interface Widget {
   gridStart?: WidgetSpan;
   order?: number;         // Display order
   heightPx?: number;      // Height in pixels for responsive layout
+  // Fractional width per breakpoint when group sizing="fr"
+  widthFr?: {
+    desktop?: string;
+    tablet?: string;
+    mobile?: string;
+  };
   data?: {
     x: string;
     y: string;
@@ -711,20 +717,20 @@ export class ConfigParser {
     };
 
     // Generic visual parser for <kpi> and <chart>
-    const parseVisualAttributes = (
-      tag: 'chart' | 'kpi',
-      attrStr: string,
-      innerContent?: string,
-      defaultStart?: number
-    ): string | undefined => {
-      const wa = parseAttrs(attrStr || '');
-      const id = wa['id'];
-      const typeRaw = tag === 'kpi' ? 'kpi' : (wa['type'] as string | undefined);
-      const type = ((typeRaw === 'comparebar') ? 'groupedbar' : typeRaw) as Widget['type'];
-      if (!id || !type) {
-        errors.push({ line: 1, column: 1, message: `${tag} missing id or type`, type: 'validation' });
-        return undefined;
-      }
+      const parseVisualAttributes = (
+        tag: 'chart' | 'kpi',
+        attrStr: string,
+        innerContent?: string,
+        defaultStart?: number
+      ): string | undefined => {
+        const wa = parseAttrs(attrStr || '');
+        const id = wa['id'];
+        const typeRaw = tag === 'kpi' ? 'kpi' : (wa['type'] as string | undefined);
+        const type = ((typeRaw === 'comparebar') ? 'groupedbar' : typeRaw) as Widget['type'];
+        if (!id || !type) {
+          errors.push({ line: 1, column: 1, message: `${tag} missing id or type`, type: 'validation' });
+          return undefined;
+        }
       const order = wa['order'] ? Number(wa['order']) : undefined;
       const heightPx = wa['height'] ? Number(wa['height']) : undefined;
       const title = wa['title'];
@@ -735,21 +741,33 @@ export class ConfigParser {
       const colT = wa['col-t'] ? Number(wa['col-t']) : undefined;
       const colM = wa['col-m'] ? Number(wa['col-m']) : undefined;
 
-      const widget: Widget = {
-        id,
-        type,
-        ...(typeof order === 'number' ? { order } : {}),
-        ...(typeof heightPx === 'number' ? { heightPx } : {}),
-        ...(title ? { title } : {}),
-        ...(spanD || spanT || spanM ? { span: { ...(spanD ? { desktop: spanD } : {}), ...(spanT ? { tablet: spanT } : {}), ...(spanM ? { mobile: spanM } : {}) } } : {}),
-        ...((colD || colT || colM || defaultStart)
-            ? { gridStart: {
-                  ...(colD ? { desktop: colD } : (defaultStart ? { desktop: defaultStart } : {})),
-                  ...(colT ? { tablet: colT } : (defaultStart ? { tablet: defaultStart } : {})),
-                  ...(colM ? { mobile: colM } : (defaultStart ? { mobile: defaultStart } : {}))
-               } }
-            : {})
-      } as Widget;
+        const widget: Widget = {
+          id,
+          type,
+          ...(typeof order === 'number' ? { order } : {}),
+          ...(typeof heightPx === 'number' ? { heightPx } : {}),
+          ...(title ? { title } : {}),
+          ...(spanD || spanT || spanM ? { span: { ...(spanD ? { desktop: spanD } : {}), ...(spanT ? { tablet: spanT } : {}), ...(spanM ? { mobile: spanM } : {}) } } : {}),
+          ...((colD || colT || colM || defaultStart)
+              ? { gridStart: {
+                    ...(colD ? { desktop: colD } : (defaultStart ? { desktop: defaultStart } : {})),
+                    ...(colT ? { tablet: colT } : (defaultStart ? { tablet: defaultStart } : {})),
+                    ...(colM ? { mobile: colM } : (defaultStart ? { mobile: defaultStart } : {}))
+                 } }
+              : {})
+        } as Widget;
+
+        // Fractional widths: width, width-d, width-t, width-m
+        const wd = wa['width'] || wa['width-d'];
+        const wt = wa['width-t'] || undefined;
+        const wm = wa['width-m'] || undefined;
+        const isFr = (v?: string) => typeof v === 'string' && /fr\s*$/i.test(v.trim());
+        const trim = (v?: string) => (v || '').trim();
+        const frObj: { desktop?: string; tablet?: string; mobile?: string } = {};
+        if (isFr(trim(wd))) frObj.desktop = trim(wd);
+        if (isFr(trim(wt))) frObj.tablet = trim(wt);
+        if (isFr(trim(wm))) frObj.mobile = trim(wm);
+        if (Object.keys(frObj).length > 0) widget.widthFr = frObj;
 
       if (innerContent) {
         // Parse <config> JSON if present
@@ -1011,6 +1029,7 @@ export class ConfigParser {
         }
         const title = ga['title'];
         const orientation = (ga['orientation'] as 'horizontal'|'vertical'|undefined);
+        const sizing = (ga['sizing'] as 'fr'|'span'|undefined);
         const gColsD = ga['cols-d'] ? Number(ga['cols-d']) : undefined;
         const gColsT = ga['cols-t'] ? Number(ga['cols-t']) : undefined;
         const gColsM = ga['cols-m'] ? Number(ga['cols-m']) : undefined;
@@ -1054,6 +1073,7 @@ export class ConfigParser {
           id: gid,
           ...(title ? { title } : {}),
           ...(orientation ? { orientation } : {}),
+          ...(sizing ? { sizing } : {}),
           grid: {
             desktop: gColsD ? { columns: gColsD, gapX: gGapX, gapY: gGapY, autoRowHeight: gAutoRowHeight } : undefined,
             tablet: gColsT ? { columns: gColsT, gapX: gGapX, gapY: gGapY, autoRowHeight: gAutoRowHeight } : undefined,

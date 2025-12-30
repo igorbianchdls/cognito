@@ -841,7 +841,7 @@ const DraggableGroup = memo(function DraggableGroup({ id, children, containerSty
             <DndContext collisionDetection={closestCenter} onDragEnd={handleGroupDragEnd}>
               <SortableContext items={groupOrder} strategy={verticalListSortingStrategy}>
                 {groupOrder.map((groupId) => {
-                  const group = groups.find(g => g.id === groupId)!;
+                const group = groups.find(g => g.id === groupId)!;
                   const getGroupTemplate = (): string | undefined => group.grid?.template ? (viewportMode === 'mobile' ? group.grid.template.mobile : viewportMode === 'tablet' ? group.grid.template.tablet : group.grid.template.desktop) : undefined;
                   const getGroupColumns = (): number => {
                     const spec = viewportMode === 'mobile' ? group.grid?.mobile : viewportMode === 'tablet' ? group.grid?.tablet : group.grid?.desktop;
@@ -854,6 +854,19 @@ const DraggableGroup = memo(function DraggableGroup({ id, children, containerSty
                   const groupWidgets = (group.children || [])
                     .map(id => widgets.find(w => w.id === id))
                     .filter(Boolean) as Widget[];
+                  const isFrGroup = (group as any).sizing === 'fr';
+                  const getGroupFrTemplate = (): string => {
+                    const cols: string[] = [];
+                    for (const w of groupWidgets) {
+                      const fr = viewportMode === 'mobile'
+                        ? w.widthFr?.mobile || w.widthFr?.tablet || w.widthFr?.desktop || '1fr'
+                        : viewportMode === 'tablet'
+                        ? w.widthFr?.tablet || w.widthFr?.desktop || '1fr'
+                        : w.widthFr?.desktop || '1fr';
+                      cols.push(fr);
+                    }
+                    return cols.length > 0 ? cols.join(' ') : '1fr';
+                  };
                   return (
                     <DraggableGroup id={group.id} key={`group-${group.id}`}
                       containerStyle={(() => {
@@ -897,7 +910,7 @@ const DraggableGroup = memo(function DraggableGroup({ id, children, containerSty
                       <div
                         className={getGridClassesForRow()}
                         style={{
-                          gridTemplateColumns: (group.orientation === 'vertical' ? `repeat(1, 1fr)` : (getGroupTemplate() || `repeat(${getGroupColumns()}, 1fr)`)),
+                          gridTemplateColumns: (group.orientation === 'vertical' ? `repeat(1, 1fr)` : (isFrGroup ? getGroupFrTemplate() : (getGroupTemplate() || `repeat(${getGroupColumns()}, 1fr)`))),
                           width: '100%',
                           columnGap: `${getGroupGaps().gapX}px`,
                           rowGap: `${getGroupGaps().gapY}px`,
@@ -906,10 +919,10 @@ const DraggableGroup = memo(function DraggableGroup({ id, children, containerSty
                       >
                         {groupWidgets.map((widget) => {
                           const { desktopSpan, tabletSpan, mobileSpan } = adaptWidgetForResponsive(widget);
-                          const spanValue = viewportMode === 'mobile' ? mobileSpan : viewportMode === 'tablet' ? tabletSpan : desktopSpan;
+                          const spanValue = isFrGroup ? 1 : (viewportMode === 'mobile' ? mobileSpan : viewportMode === 'tablet' ? tabletSpan : desktopSpan);
                           const minHeight = getWidgetHeight(widget);
                           const spanClasses = getSpanClasses();
-                          const startValue = getStartValue(widget);
+                          const startValue = isFrGroup ? undefined : getStartValue(widget);
                           return (
                             <DraggableWidget
                               key={widget.id}
