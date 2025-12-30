@@ -57,6 +57,7 @@ interface VisualBuilderState {
   globalFilters: GlobalFilters
   dashboardTitle?: string
   dashboardSubtitle?: string
+  headerConfig?: import('@/components/visual-builder/ConfigParser').HeaderConfig
   // Controls when widgets should explicitly refetch (only when bumped)
   reloadTicks?: Record<string, number>
 }
@@ -426,6 +427,7 @@ const initialState: VisualBuilderState = {
   isValid: initialParseResult.isValid,
   dashboardTitle: initialParseResult.dashboardTitle,
   dashboardSubtitle: initialParseResult.dashboardSubtitle,
+  headerConfig: initialParseResult.headerConfig,
   globalFilters: coerceGlobalFilters(initialParseResult.globalFilters) || { dateRange: { type: 'last_30_days' } },
   reloadTicks: {}
 }
@@ -807,17 +809,18 @@ export const visualBuilderActions = {
     const parseResult = ConfigParser.parse(code)
     const currentState = $visualBuilderState.get()
 
-    $visualBuilderState.set({
-      widgets: parseResult.widgets,
-      gridConfig: parseResult.gridConfig,
-      code,
-      parseErrors: parseResult.errors,
-      isValid: parseResult.isValid,
-      dashboardTitle: parseResult.dashboardTitle,
-      dashboardSubtitle: parseResult.dashboardSubtitle,
-      globalFilters: coerceGlobalFilters(parseResult.globalFilters) || currentState.globalFilters,
-      reloadTicks: currentState.reloadTicks || {}
-    })
+  $visualBuilderState.set({
+    widgets: parseResult.widgets,
+    gridConfig: parseResult.gridConfig,
+    code,
+    parseErrors: parseResult.errors,
+    isValid: parseResult.isValid,
+    dashboardTitle: parseResult.dashboardTitle,
+    dashboardSubtitle: parseResult.dashboardSubtitle,
+    headerConfig: parseResult.headerConfig,
+    globalFilters: coerceGlobalFilters(parseResult.globalFilters) || currentState.globalFilters,
+    reloadTicks: currentState.reloadTicks || {}
+  })
   },
 
   // Inicializar store com código padrão
@@ -837,6 +840,7 @@ export const visualBuilderActions = {
       isValid: parseResult.isValid,
       dashboardTitle: parseResult.dashboardTitle,
       dashboardSubtitle: parseResult.dashboardSubtitle,
+      headerConfig: parseResult.headerConfig,
       globalFilters: coerceGlobalFilters(parseResult.globalFilters) || { dateRange: { type: 'last_30_days' } },
       reloadTicks: {}
     })
@@ -942,11 +946,23 @@ export const visualBuilderActions = {
     visualBuilderActions.updateCode(newCode)
   },
 
-  // Upsert <header> in DSL or set dashboardTitle/Subitle in JSON
-  updateHeaderInCode: (title?: string, subtitle?: string) => {
+  // Upsert <header> in DSL or set dashboardTitle/Subitle + headerConfig in JSON
+  updateHeaderInCode: (data: {
+    title?: string;
+    subtitle?: string;
+    titleFontFamily?: string;
+    titleFontSize?: number;
+    titleFontWeight?: string | number;
+    titleColor?: string;
+    subtitleFontFamily?: string;
+    subtitleFontSize?: number;
+    subtitleFontWeight?: string | number;
+    subtitleColor?: string;
+    backgroundColor?: string;
+  }) => {
     const currentState = $visualBuilderState.get()
     const code = currentState.code || ''
-    const safe = (s?: string) => (s == null ? '' : String(s))
+    const safe = (s?: string | number) => (s == null ? '' : String(s))
     const escapeHtml = (s: string) => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;')
 
     if (isDslCode(code)) {
@@ -954,10 +970,19 @@ export const visualBuilderActions = {
       const rePair = /<header\b[^>]*>[\s\S]*?<\/header>/i
       const reSelf = /<header\b[^>]*\/>/i
       const attrs: string[] = []
-      const t = safe(title).trim()
-      const s = safe(subtitle).trim()
-      if (t) attrs.push(`title="${escapeHtml(t)}"`)
-      if (s) attrs.push(`subtitle="${escapeHtml(s)}"`)
+      const t = safe(data?.title).trim()
+      const s = safe(data?.subtitle).trim()
+      if (t) attrs.push(`title=\"${escapeHtml(t)}\"`)
+      if (s) attrs.push(`subtitle=\"${escapeHtml(s)}\"`)
+      if (data?.titleFontFamily) attrs.push(`titleFontFamily=\"${escapeHtml(safe(data.titleFontFamily))}\"`)
+      if (data?.titleFontSize !== undefined) attrs.push(`titleFontSize=\"${escapeHtml(safe(data.titleFontSize))}\"`)
+      if (data?.titleFontWeight !== undefined) attrs.push(`titleFontWeight=\"${escapeHtml(safe(data.titleFontWeight))}\"`)
+      if (data?.titleColor) attrs.push(`titleColor=\"${escapeHtml(safe(data.titleColor))}\"`)
+      if (data?.subtitleFontFamily) attrs.push(`subtitleFontFamily=\"${escapeHtml(safe(data.subtitleFontFamily))}\"`)
+      if (data?.subtitleFontSize !== undefined) attrs.push(`subtitleFontSize=\"${escapeHtml(safe(data.subtitleFontSize))}\"`)
+      if (data?.subtitleFontWeight !== undefined) attrs.push(`subtitleFontWeight=\"${escapeHtml(safe(data.subtitleFontWeight))}\"`)
+      if (data?.subtitleColor) attrs.push(`subtitleColor=\"${escapeHtml(safe(data.subtitleColor))}\"`)
+      if (data?.backgroundColor) attrs.push(`backgroundColor=\"${escapeHtml(safe(data.backgroundColor))}\"`)
       const tag = `<header ${attrs.join(' ')} />`
 
       if (rePair.test(code)) {
@@ -994,12 +1019,24 @@ export const visualBuilderActions = {
       return
     }
 
-    // JSON: set dashboardTitle/dashboardSubtitle
+    // JSON: set dashboardTitle/dashboardSubtitle and headerConfig
     try {
       const root = JSON.parse(code || '{}') as { [k: string]: unknown }
       const next = { ...root } as any
-      if (title !== undefined) next.dashboardTitle = title
-      if (subtitle !== undefined) next.dashboardSubtitle = subtitle
+      if (data?.title !== undefined) next.dashboardTitle = data.title
+      if (data?.subtitle !== undefined) next.dashboardSubtitle = data.subtitle
+      const hc: any = { ...(next.headerConfig || {}) }
+      const assign = (k: string, v: unknown) => { if (v !== undefined && v !== "") hc[k] = v }
+      assign('titleFontFamily', data?.titleFontFamily)
+      assign('titleFontSize', data?.titleFontSize)
+      assign('titleFontWeight', data?.titleFontWeight)
+      assign('titleColor', data?.titleColor)
+      assign('subtitleFontFamily', data?.subtitleFontFamily)
+      assign('subtitleFontSize', data?.subtitleFontSize)
+      assign('subtitleFontWeight', data?.subtitleFontWeight)
+      assign('subtitleColor', data?.subtitleColor)
+      assign('backgroundColor', data?.backgroundColor)
+      if (Object.keys(hc).length > 0) next.headerConfig = hc
       const nextCode = JSON.stringify(next, null, 2)
       visualBuilderActions.updateCode(nextCode)
     } catch {
@@ -1025,6 +1062,7 @@ export const visualBuilderActions = {
       if (typeof root === 'object' && root) {
         delete (root as any).dashboardTitle
         delete (root as any).dashboardSubtitle
+        delete (root as any).headerConfig
         const nextCode = JSON.stringify(root, null, 2)
         visualBuilderActions.updateCode(nextCode)
       }

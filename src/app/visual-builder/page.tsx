@@ -423,6 +423,7 @@ export default function VisualBuilderPage() {
                 onLayoutChange={handleLayoutChange}
                 headerTitle={visualBuilderState.dashboardTitle || 'Responsive Dashboard'}
                 headerSubtitle={visualBuilderState.dashboardSubtitle || 'Preview different device layouts'}
+                headerConfig={visualBuilderState.headerConfig}
                 onFilterChange={handleFilterChange}
                 isFilterLoading={isFilterLoading}
                 themeName={currentThemeName}

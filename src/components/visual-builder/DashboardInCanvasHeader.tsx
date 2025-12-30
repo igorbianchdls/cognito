@@ -11,6 +11,7 @@ import type { DateRange } from 'react-day-picker';
 import { useStore } from '@nanostores/react';
 import { $headerUi, resolveHeaderStyle } from '@/stores/ui/headerUiStore';
 import type { ThemeName } from './ThemeManager';
+import type { HeaderConfig } from './ConfigParser';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,6 +31,7 @@ interface DashboardInCanvasHeaderProps {
   themeName?: ThemeName;
   onEditHeader?: () => void;
   onRemoveHeader?: () => void;
+  headerConfig?: HeaderConfig;
 }
 
 const DATE_RANGE_OPTIONS: { value: DateRangeType; label: string }[] = [
@@ -52,7 +54,8 @@ export default function DashboardInCanvasHeader({
   containerPadding = 0,
   themeName,
   onEditHeader,
-  onRemoveHeader
+  onRemoveHeader,
+  headerConfig
 }: DashboardInCanvasHeaderProps) {
   const headerUi = useStore($headerUi);
   const [selectedType, setSelectedType] = useState<DateRangeType>(currentFilter.type);
@@ -162,7 +165,7 @@ export default function DashboardInCanvasHeader({
       style={{
         marginLeft: -containerPadding,
         marginRight: -containerPadding,
-        background: headerStyle.background,
+        background: headerConfig?.backgroundColor || headerStyle.background,
         borderBottomColor: headerStyle.borderBottomColor,
         borderBottomWidth: 1,
         borderBottomStyle: 'solid',
@@ -176,14 +179,24 @@ export default function DashboardInCanvasHeader({
         <div className="min-w-0 flex flex-col space-y-0.5">
           <h2
             className="text-base md:text-lg font-semibold leading-tight truncate"
-            style={{ color: headerStyle.textPrimary }}
+            style={{
+              color: headerConfig?.titleColor || headerStyle.textPrimary,
+              fontFamily: headerConfig?.titleFontFamily || headerStyle.fontFamily,
+              fontSize: headerConfig?.titleFontSize ? `${headerConfig.titleFontSize}px` : undefined,
+              fontWeight: (headerConfig?.titleFontWeight as any) || undefined,
+            }}
           >
             {title}
           </h2>
           {subtitle && (
             <p
               className="text-xs md:text-sm truncate"
-              style={{ color: headerStyle.textSecondary }}
+              style={{
+                color: headerConfig?.subtitleColor || headerStyle.textSecondary,
+                fontFamily: headerConfig?.subtitleFontFamily || headerStyle.fontFamily,
+                fontSize: headerConfig?.subtitleFontSize ? `${headerConfig.subtitleFontSize}px` : undefined,
+                fontWeight: (headerConfig?.subtitleFontWeight as any) || undefined,
+              }}
             >
               {subtitle}
             </p>

@@ -166,6 +166,19 @@ export interface GridConfig {
   };
 }
 
+// Dashboard Header styling (per-dashboard)
+export interface HeaderConfig {
+  titleFontFamily?: string;
+  titleFontSize?: number;
+  titleFontWeight?: string | number;
+  titleColor?: string;
+  subtitleFontFamily?: string;
+  subtitleFontSize?: number;
+  subtitleFontWeight?: string | number;
+  subtitleColor?: string;
+  backgroundColor?: string;
+}
+
 // Theme types are now managed by ThemeManager
 import { ThemeManager, type ThemeName } from './ThemeManager';
 import { BorderManager, type BorderPresetKey } from './BorderManager';
@@ -308,6 +321,7 @@ export interface ParseResult {
   isValid: boolean;
   dashboardTitle?: string;
   dashboardSubtitle?: string;
+  headerConfig?: HeaderConfig;
   // Optional global filters parsed from DSL or JSON
   globalFilters?: {
     dateRange: {
@@ -385,6 +399,7 @@ export class ConfigParser {
       const layoutDef = (config.layout || rawGridConfig.layout) as GridConfig['layout'] | undefined;
       const dashboardTitle = typeof config.dashboardTitle === 'string' ? config.dashboardTitle : undefined;
       const dashboardSubtitle = typeof config.dashboardSubtitle === 'string' ? config.dashboardSubtitle : undefined;
+      const headerConfig = (config.headerConfig && typeof config.headerConfig === 'object') ? (config.headerConfig as HeaderConfig) : undefined;
 
       // Border options (top-level)
       const borderType = typeof config.borderType === 'string' && BorderManager.isValid(config.borderType)
@@ -455,7 +470,8 @@ export class ConfigParser {
         errors: [],
         isValid: true,
         dashboardTitle,
-        dashboardSubtitle
+        dashboardSubtitle,
+        ...(headerConfig ? { headerConfig } : {})
       };
     } catch (error) {
       return {
@@ -496,6 +512,7 @@ export class ConfigParser {
     const themeAttr = dashAttrs['theme'] as ThemeName | undefined;
     let dashboardTitle = dashAttrs['title'];
     let dashboardSubtitle = dashAttrs['subtitle'];
+    let headerConfig: HeaderConfig | undefined = undefined;
     const layoutMode = (dashAttrs['layout-mode'] as 'grid' | 'grid-per-row' | 'grid-per-column' | undefined) || 'grid-per-row';
 
     // Dashboard-level date range support
@@ -526,6 +543,31 @@ export class ConfigParser {
         const hAttrs = parseAttrs(headerMatch[1] || '');
         if (typeof hAttrs['title'] === 'string' && hAttrs['title'].length > 0) dashboardTitle = hAttrs['title'];
         if (typeof hAttrs['subtitle'] === 'string') dashboardSubtitle = hAttrs['subtitle'];
+        // Extract styling overrides
+        const num = (v?: string): number | undefined => {
+          if (v == null) return undefined; const n = Number(v); return Number.isFinite(n) ? n : undefined;
+        };
+        const pick = (k: string) => (hAttrs[k] !== undefined ? hAttrs[k] : undefined);
+        const bg = pick('backgroundColor') || pick('background-color');
+        const tff = pick('titleFontFamily') || pick('title-font-family');
+        const tfs = pick('titleFontSize') || pick('title-font-size');
+        const tfw = pick('titleFontWeight') || pick('title-font-weight');
+        const tc = pick('titleColor') || pick('title-color');
+        const sff = pick('subtitleFontFamily') || pick('subtitle-font-family');
+        const sfs = pick('subtitleFontSize') || pick('subtitle-font-size');
+        const sfw = pick('subtitleFontWeight') || pick('subtitle-font-weight');
+        const sc = pick('subtitleColor') || pick('subtitle-color');
+        const cfg: HeaderConfig = {};
+        if (bg) cfg.backgroundColor = String(bg);
+        if (tff) cfg.titleFontFamily = String(tff);
+        if (tfs) cfg.titleFontSize = num(String(tfs));
+        if (tfw) cfg.titleFontWeight = (/^\d+$/.test(String(tfw)) ? Number(tfw) : String(tfw));
+        if (tc) cfg.titleColor = String(tc);
+        if (sff) cfg.subtitleFontFamily = String(sff);
+        if (sfs) cfg.subtitleFontSize = num(String(sfs));
+        if (sfw) cfg.subtitleFontWeight = (/^\d+$/.test(String(sfw)) ? Number(sfw) : String(sfw));
+        if (sc) cfg.subtitleColor = String(sc);
+        if (Object.keys(cfg).length > 0) headerConfig = cfg;
       }
     } catch { /* ignore */ }
 
@@ -981,7 +1023,8 @@ export class ConfigParser {
         errors,
         isValid: errors.length === 0,
         dashboardTitle,
-        dashboardSubtitle
+        dashboardSubtitle,
+        ...(headerConfig ? { headerConfig } : {})
       };
     }
 
@@ -1169,6 +1212,7 @@ export class ConfigParser {
         isValid: errors.length === 0,
         dashboardTitle,
         dashboardSubtitle,
+        ...(headerConfig ? { headerConfig } : {}),
       };
     }
 
@@ -1306,6 +1350,7 @@ export class ConfigParser {
       isValid: errors.length === 0,
       dashboardTitle,
       dashboardSubtitle,
+      ...(headerConfig ? { headerConfig } : {}),
       ...(parsedGlobalFilters ? { globalFilters: parsedGlobalFilters } : {})
     };
   }

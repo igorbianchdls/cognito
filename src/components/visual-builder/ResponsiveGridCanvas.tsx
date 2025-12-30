@@ -38,6 +38,7 @@ interface ResponsiveGridCanvasProps {
   onEdit?: (widget: Widget) => void;
   // Control whether the canvas renders its own sticky header
   renderHeader?: boolean;
+  headerConfig?: import('./ConfigParser').HeaderConfig;
 }
 
 // Draggable Widget Component
@@ -124,7 +125,7 @@ const DraggableWidget = memo(function DraggableWidget({ widget, spanClasses, spa
   );
 });
 
-function ResponsiveGridCanvas({ widgets, gridConfig, globalFilters, viewportMode = 'desktop', onLayoutChange, headerTitle, headerSubtitle, onFilterChange, isFilterLoading, themeName, onEdit, renderHeader = true }: ResponsiveGridCanvasProps) {
+function ResponsiveGridCanvas({ widgets, gridConfig, globalFilters, viewportMode = 'desktop', onLayoutChange, headerTitle, headerSubtitle, onFilterChange, isFilterLoading, themeName, onEdit, renderHeader = true, headerConfig }: ResponsiveGridCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   // Internal editor state used only when onEdit is not provided by parent
   const [editingWidget, setEditingWidget] = useState<Widget | null>(null);
@@ -755,6 +756,7 @@ const DraggableGroup = memo(function DraggableGroup({ id, children, containerSty
             themeName={themeName}
             onEditHeader={() => setShowHeaderEditor(true)}
             onRemoveHeader={() => { try { visualBuilderActions.removeHeaderFromCode(); } catch {} }}
+            headerConfig={headerConfig}
           />
         )}
         {/* Empty State */}
@@ -1060,8 +1062,9 @@ const DraggableGroup = memo(function DraggableGroup({ id, children, containerSty
         initialTitle={headerTitle}
         initialSubtitle={headerSubtitle}
         onClose={() => setShowHeaderEditor(false)}
-        onSave={({ title, subtitle }) => {
-          try { visualBuilderActions.updateHeaderInCode(title, subtitle); } catch {}
+        initialConfig={headerConfig}
+        onSave={({ title, subtitle, config }) => {
+          try { visualBuilderActions.updateHeaderInCode({ title, subtitle, ...(config || {}) }); } catch {}
           setShowHeaderEditor(false);
         }}
       />
@@ -1078,6 +1081,7 @@ const propsAreEqual = (prev: ResponsiveGridCanvasProps, next: ResponsiveGridCanv
     prev.viewportMode === next.viewportMode &&
     prev.headerTitle === next.headerTitle &&
     prev.headerSubtitle === next.headerSubtitle &&
+    prev.headerConfig === next.headerConfig &&
     prev.isFilterLoading === next.isFilterLoading &&
     prev.themeName === next.themeName &&
     prev.onEdit === next.onEdit &&
