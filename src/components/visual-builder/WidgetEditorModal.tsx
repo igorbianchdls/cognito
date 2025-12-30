@@ -642,7 +642,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
                   setStackedBarLayout('vertical');
                 }
               }}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="bar">Bar Chart</option>
               <option value="line">Line Chart</option>
@@ -674,7 +674,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
               type="text"
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
@@ -687,7 +687,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
               type="number"
               value={formData.heightPx}
               onChange={(e) => setFormData({ ...formData, heightPx: parseInt(e.target.value) || 320 })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               min="100"
               step="10"
             />
@@ -701,7 +701,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
             <select
               value={formData.widthFr || ''}
               onChange={(e) => setFormData({ ...formData, widthFr: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">Padrão (1fr)</option>
               <option value="1fr">1fr</option>
@@ -741,7 +741,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
                         dataSource: { ...formData.dataSource, schema: nextSchema, table: nextTable, x: '', y: '' }
                       });
                     }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value={DEFAULT_KNOWN_KEY}>vendas.vw_pedidos_completo</option>
                     <option value="comercial.vw_metas_detalhe">comercial.vw_metas_detalhe</option>
@@ -764,7 +764,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
                           setFormData({ ...formData, dataSource: { ...formData.dataSource, schema: '', table: raw } });
                         }
                       }}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="schema.tabela ou nome_tabela"
                     />
                     <p className="mt-1 text-xs text-gray-500">Para usar dropdowns de campos, selecione uma tabela conhecida.</p>
@@ -783,7 +783,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
                     ...formData,
                     dataSource: { ...formData.dataSource, aggregation: e.target.value as 'SUM' | 'COUNT' | 'AVG' | 'MAX' | 'MIN' }
                   })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="SUM">SUM</option>
                   <option value="COUNT">COUNT</option>
@@ -808,7 +808,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
                         ...formData,
                         dataSource: { ...formData.dataSource, x: e.target.value }
                       })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="categoria (dimensão)"
                     />
                   ) : (
@@ -818,7 +818,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
                         ...formData,
                         dataSource: { ...formData.dataSource, x: e.target.value }
                       })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="">Selecione…</option>
                       {fieldOptions.dimensions.map((d) => (
@@ -843,7 +843,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
                         ...formData,
                         dataSource: { ...formData.dataSource, y: e.target.value }
                       })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="valor (métrica)"
                     />
                   ) : (
@@ -853,7 +853,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
                         ...formData,
                         dataSource: { ...formData.dataSource, y: e.target.value }
                       })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="">Selecione…</option>
                       {fieldOptions.measures.map((m) => (
@@ -872,11 +872,11 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
                     {isCustomTable ? (
                       <input type="text" value={formData.dataSource.dimension1}
                         onChange={(e) => setFormData({ ...formData, dataSource: { ...formData.dataSource, dimension1: e.target.value } })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="dimensão principal" />
+                        className="w-full px-3 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="dimensão principal" />
                     ) : (
                       <select value={formData.dataSource.dimension1 || ''}
                         onChange={(e) => setFormData({ ...formData, dataSource: { ...formData.dataSource, dimension1: e.target.value } })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        className="w-full px-3 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <option value="">Selecione…</option>
                         {fieldOptions.dimensions.map((d) => (<option key={d} value={d}>{d}</option>))}
                       </select>
@@ -887,11 +887,11 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
                     {isCustomTable ? (
                       <input type="text" value={formData.dataSource.dimension2}
                         onChange={(e) => setFormData({ ...formData, dataSource: { ...formData.dataSource, dimension2: e.target.value } })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="opcional" />
+                        className="w-full px-3 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="opcional" />
                     ) : (
                       <select value={formData.dataSource.dimension2 || ''}
                         onChange={(e) => setFormData({ ...formData, dataSource: { ...formData.dataSource, dimension2: e.target.value } })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        className="w-full px-3 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <option value="">(Nenhuma)</option>
                         {fieldOptions.dimensions.map((d) => (<option key={d} value={d}>{d}</option>))}
                       </select>
@@ -908,11 +908,11 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
                     {isCustomTable ? (
                       <input type="text" value={formData.dataSource.dimension}
                         onChange={(e) => setFormData({ ...formData, dataSource: { ...formData.dataSource, dimension: e.target.value } })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="ex.: vendedor_nome" />
+                        className="w-full px-3 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="ex.: vendedor_nome" />
                     ) : (
                       <select value={formData.dataSource.dimension || ''}
                         onChange={(e) => setFormData({ ...formData, dataSource: { ...formData.dataSource, dimension: e.target.value } })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        className="w-full px-3 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <option value="">(Nenhuma)</option>
                         {fieldOptions.dimensions.map((d) => (<option key={d} value={d}>{d}</option>))}
                       </select>
@@ -922,13 +922,13 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
                     <label className="block text-sm font-medium text-gray-700 mb-1">X (xMeasure)</label>
                     <input type="text" value={formData.dataSource.xMeasure}
                       onChange={(e) => setFormData({ ...formData, dataSource: { ...formData.dataSource, xMeasure: e.target.value } })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="ex.: SUM(item_subtotal)" />
+                      className="w-full px-3 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="ex.: SUM(item_subtotal)" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Y (yMeasure)</label>
                     <input type="text" value={formData.dataSource.yMeasure}
                       onChange={(e) => setFormData({ ...formData, dataSource: { ...formData.dataSource, yMeasure: e.target.value } })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="ex.: COUNT_DISTINCT(pedido_id)" />
+                      className="w-full px-3 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="ex.: COUNT_DISTINCT(pedido_id)" />
                   </div>
                 </>
               )}
@@ -981,7 +981,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
                           setStyleData({ ...styleData, colors: list.join(', ') });
                         }}
                         placeholder="#3b82f6"
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="flex-1 px-3 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                       {arr.length > 1 && (
                         <button
@@ -1024,7 +1024,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
                   min={0}
                   value={styleData.marginLeft}
                   onChange={(e) => setStyleData({ ...styleData, marginLeft: Number.parseInt(e.target.value || '0') || 0 })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 <p className="text-xs text-gray-500 mt-1">Espaço para eixo Y/labels do gráfico.</p>
               </div>
@@ -1035,7 +1035,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
                   min={0}
                   value={styleData.marginRight}
                   onChange={(e) => setStyleData({ ...styleData, marginRight: Number.parseInt(e.target.value || '0') || 0 })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               <div>
@@ -1045,7 +1045,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
                   min={0}
                   value={styleData.marginTop}
                   onChange={(e) => setStyleData({ ...styleData, marginTop: Number.parseInt(e.target.value || '0') || 0 })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               <div>
@@ -1055,7 +1055,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
                   min={0}
                   value={styleData.marginBottom}
                   onChange={(e) => setStyleData({ ...styleData, marginBottom: Number.parseInt(e.target.value || '0') || 0 })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               {/* Axis Bottom Config */}
@@ -1069,7 +1069,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
                       min={0}
                       value={styleData.axisBottomTickSize}
                       onChange={(e) => setStyleData({ ...styleData, axisBottomTickSize: Number.parseInt(e.target.value || '0') || 0 })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
                   <div>
@@ -1079,7 +1079,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
                       min={0}
                       value={styleData.axisBottomTickPadding}
                       onChange={(e) => setStyleData({ ...styleData, axisBottomTickPadding: Number.parseInt(e.target.value || '0') || 0 })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
                   <div>
@@ -1088,7 +1088,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
                       type="number"
                       value={styleData.axisBottomTickRotation}
                       onChange={(e) => setStyleData({ ...styleData, axisBottomTickRotation: Number.parseInt(e.target.value || '0') || 0 })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
                 </div>
@@ -1105,7 +1105,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
                       min={0}
                       value={styleData.legendItemWidth}
                       onChange={(e) => setStyleData({ ...styleData, legendItemWidth: Number.parseInt(e.target.value || '0') || 0 })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
                   <div>
@@ -1115,7 +1115,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
                       min={0}
                       value={styleData.legendItemHeight}
                       onChange={(e) => setStyleData({ ...styleData, legendItemHeight: Number.parseInt(e.target.value || '0') || 0 })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
                   <div>
@@ -1125,7 +1125,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
                       min={0}
                       value={styleData.legendItemsSpacing}
                       onChange={(e) => setStyleData({ ...styleData, legendItemsSpacing: Number.parseInt(e.target.value || '0') || 0 })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
                   <div>
@@ -1134,7 +1134,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
                       type="number"
                       value={styleData.legendTranslateX}
                       onChange={(e) => setStyleData({ ...styleData, legendTranslateX: Number.parseInt(e.target.value || '0') || 0 })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
                   <div>
@@ -1143,7 +1143,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
                       type="number"
                       value={styleData.legendTranslateY}
                       onChange={(e) => setStyleData({ ...styleData, legendTranslateY: Number.parseInt(e.target.value || '0') || 0 })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
                   <div>
@@ -1153,7 +1153,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
                       min={0}
                       value={styleData.legendSymbolSize}
                       onChange={(e) => setStyleData({ ...styleData, legendSymbolSize: Number.parseInt(e.target.value || '0') || 0 })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
                 </div>
