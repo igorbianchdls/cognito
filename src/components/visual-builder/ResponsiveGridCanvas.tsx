@@ -198,6 +198,37 @@ function ResponsiveGridCanvas({ widgets, gridConfig, globalFilters, viewportMode
       updated.push(it);
       if (it.id === w.id) updated.push(clone);
     }
+    // If current code is DSL, also duplicate the corresponding node in the DSL source
+    try {
+      const code = visualBuilderState.code || '';
+      if (code.trim().startsWith('<')) {
+        const escapeId = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const idEsc = escapeId(w.id);
+        const idNew = clone.id;
+        const insertAfter = (source: string, original: string, duplicate: string) => source.replace(original, `${original}\n${duplicate}`);
+        // Match paired node first
+        const pairRe = new RegExp(`<(?:(kpi|chart))\\b([^>]*)\\bid=\"${idEsc}\"[\\s\\S]*?>[\\s\\S]*?<\\/\\1>`, 'i');
+        let m = code.match(pairRe);
+        let newCode = code;
+        if (m && m[0]) {
+          const block = m[0];
+          const dup = block.replace(new RegExp(`\\bid=\\"${idEsc}\\"`, 'i'), `id="${idNew}"`);
+          newCode = insertAfter(code, block, dup);
+        } else {
+          // Try self-closing
+          const selfRe = new RegExp(`<(?:(kpi|chart))\\b([^>]*)\\bid=\"${idEsc}\"[^>]*?\/?>`, 'i');
+          m = code.match(selfRe);
+          if (m && m[0]) {
+            const block = m[0];
+            const dup = block.replace(new RegExp(`\\bid=\\"${idEsc}\\"`, 'i'), `id="${idNew}"`);
+            newCode = insertAfter(code, block, dup);
+          }
+        }
+        if (newCode !== code) {
+          visualBuilderActions.updateCode(newCode);
+        }
+      }
+    } catch { /* noop */ }
     if (onLayoutChange) onLayoutChange(updated);
     else try { visualBuilderActions.updateWidgets(updated); } catch {}
   }, [onLayoutChange, widgets]);
