@@ -26,6 +26,9 @@ export default function HeaderEditorModal({ isOpen, initialTitle, initialSubtitl
   const [subtitleFontWeight, setSubtitleFontWeight] = useState<string | number | undefined>(initialConfig?.subtitleFontWeight);
   const [subtitleColor, setSubtitleColor] = useState<string>(initialConfig?.subtitleColor || '');
   const [backgroundColor, setBackgroundColor] = useState<string>(initialConfig?.backgroundColor || '');
+  const [borderColor, setBorderColor] = useState<string>(initialConfig?.borderColor || '');
+  const [borderWidth, setBorderWidth] = useState<number | undefined>(initialConfig?.borderWidth);
+  const [borderStyle, setBorderStyle] = useState<'solid'|'dashed'|'dotted' | ''>((initialConfig?.borderStyle as any) || '');
 
   useEffect(() => { setMounted(true); return () => setMounted(false); }, []);
 
@@ -42,6 +45,9 @@ export default function HeaderEditorModal({ isOpen, initialTitle, initialSubtitl
       setSubtitleFontWeight(initialConfig?.subtitleFontWeight);
       setSubtitleColor(initialConfig?.subtitleColor || '');
       setBackgroundColor(initialConfig?.backgroundColor || '');
+      setBorderColor(initialConfig?.borderColor || '');
+      setBorderWidth(initialConfig?.borderWidth);
+      setBorderStyle((initialConfig?.borderStyle as any) || '');
     }
   }, [isOpen, initialTitle, initialSubtitle, initialConfig]);
 
@@ -136,6 +142,28 @@ export default function HeaderEditorModal({ isOpen, initialTitle, initialSubtitl
               <h4 className="text-sm font-semibold text-gray-900 mb-2">Container</h4>
               <input type="color" className="px-1 py-1 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 h-10" value={backgroundColor || '#ffffff'} onChange={e => setBackgroundColor(e.target.value)} />
             </div>
+            <div className="mt-2">
+              <h4 className="text-sm font-semibold text-gray-900 mb-2">Borda</h4>
+              <div className="grid grid-cols-3 gap-2 items-center">
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">Largura</label>
+                  <input type="number" min={0} className="w-full px-3 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" value={borderWidth ?? ''} onChange={e => setBorderWidth(e.target.value ? parseInt(e.target.value) : undefined)} />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">Estilo</label>
+                  <select className="w-full px-3 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" value={borderStyle} onChange={e => setBorderStyle((e.target.value as any) || '')}>
+                    <option value="">Padrão</option>
+                    <option value="solid">Normal (sólida)</option>
+                    <option value="dashed">Tracejada</option>
+                    <option value="dotted">Pontilhada</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">Cor</label>
+                  <input type="color" className="w-full px-1 py-1 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 h-10" value={borderColor || '#e5e7eb'} onChange={e => setBorderColor(e.target.value)} />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -157,6 +185,9 @@ export default function HeaderEditorModal({ isOpen, initialTitle, initialSubtitl
               ...(subtitleFontWeight ? { subtitleFontWeight } : {}),
               ...(subtitleColor ? { subtitleColor } : {}),
               ...(backgroundColor ? { backgroundColor } : {}),
+              ...(borderColor ? { borderColor } : {}),
+              ...(borderWidth !== undefined ? { borderWidth } : {}),
+              ...(borderStyle ? { borderStyle } : {}),
             } })}
             className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
           >Salvar</button>

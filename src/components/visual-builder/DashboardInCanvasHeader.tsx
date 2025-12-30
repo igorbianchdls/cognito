@@ -166,9 +166,9 @@ export default function DashboardInCanvasHeader({
         marginLeft: -containerPadding,
         marginRight: -containerPadding,
         background: headerConfig?.backgroundColor || headerStyle.background,
-        borderBottomColor: headerStyle.borderBottomColor,
-        borderBottomWidth: 1,
-        borderBottomStyle: 'solid',
+        borderBottomColor: headerConfig?.borderColor || headerStyle.borderBottomColor,
+        borderBottomWidth: typeof headerConfig?.borderWidth === 'number' ? headerConfig!.borderWidth! : 1,
+        borderBottomStyle: (headerConfig?.borderStyle as any) || 'solid',
         fontFamily: headerStyle.fontFamily,
       }}
     >

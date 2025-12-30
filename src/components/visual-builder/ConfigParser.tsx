@@ -177,6 +177,9 @@ export interface HeaderConfig {
   subtitleFontWeight?: string | number;
   subtitleColor?: string;
   backgroundColor?: string;
+  borderColor?: string;
+  borderWidth?: number;
+  borderStyle?: 'solid' | 'dashed' | 'dotted';
 }
 
 // Theme types are now managed by ThemeManager
@@ -567,6 +570,12 @@ export class ConfigParser {
         if (sfs) cfg.subtitleFontSize = num(String(sfs));
         if (sfw) cfg.subtitleFontWeight = (/^\d+$/.test(String(sfw)) ? Number(sfw) : String(sfw));
         if (sc) cfg.subtitleColor = String(sc);
+        const bc = pick('borderColor') || pick('border-color');
+        const bw = pick('borderWidth') || pick('border-width');
+        const bs = pick('borderStyle') || pick('border-style');
+        if (bc) cfg.borderColor = String(bc);
+        if (bw) { const n = num(String(bw)); if (n !== undefined) cfg.borderWidth = n; }
+        if (bs && ['solid','dashed','dotted'].includes(String(bs))) cfg.borderStyle = String(bs) as any;
         if (Object.keys(cfg).length > 0) headerConfig = cfg;
       }
     } catch { /* ignore */ }

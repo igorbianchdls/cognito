@@ -983,6 +983,9 @@ export const visualBuilderActions = {
       if (data?.subtitleFontWeight !== undefined) attrs.push(`subtitleFontWeight=\"${escapeHtml(safe(data.subtitleFontWeight))}\"`)
       if (data?.subtitleColor) attrs.push(`subtitleColor=\"${escapeHtml(safe(data.subtitleColor))}\"`)
       if (data?.backgroundColor) attrs.push(`backgroundColor=\"${escapeHtml(safe(data.backgroundColor))}\"`)
+      if (data?.borderColor) attrs.push(`borderColor=\"${escapeHtml(safe(data.borderColor))}\"`)
+      if (data?.borderWidth !== undefined) attrs.push(`borderWidth=\"${escapeHtml(safe(data.borderWidth))}\"`)
+      if (data?.borderStyle) attrs.push(`borderStyle=\"${escapeHtml(safe(data.borderStyle))}\"`)
       const tag = `<header ${attrs.join(' ')} />`
 
       if (rePair.test(code)) {
@@ -1036,6 +1039,9 @@ export const visualBuilderActions = {
       assign('subtitleFontWeight', data?.subtitleFontWeight)
       assign('subtitleColor', data?.subtitleColor)
       assign('backgroundColor', data?.backgroundColor)
+      assign('borderColor', data?.borderColor)
+      assign('borderWidth', data?.borderWidth)
+      assign('borderStyle', data?.borderStyle as any)
       if (Object.keys(hc).length > 0) next.headerConfig = hc
       const nextCode = JSON.stringify(next, null, 2)
       visualBuilderActions.updateCode(nextCode)
