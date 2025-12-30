@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { FontManager } from './FontManager';
 
 interface HeaderEditorModalProps {
   isOpen: boolean;
@@ -86,26 +87,54 @@ export default function HeaderEditorModal({ isOpen, initialTitle, initialSubtitl
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <h4 className="text-sm font-semibold text-gray-900 mb-2">Título • Tipografia</h4>
-                <input className="w-full px-3 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2" placeholder="Font family" value={titleFontFamily} onChange={e => setTitleFontFamily(e.target.value)} />
+                <select
+                  className="w-full px-3 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2"
+                  value={titleFontFamily}
+                  onChange={e => setTitleFontFamily(e.target.value)}
+                >
+                  <option value="">(Padrão do tema)</option>
+                  {FontManager.getAvailableFonts().map(f => (
+                    <option key={f.key} value={f.family}>{f.name}</option>
+                  ))}
+                </select>
                 <div className="grid grid-cols-3 gap-2">
                   <input type="number" min={8} className="px-3 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Tamanho" value={titleFontSize ?? ''} onChange={e => setTitleFontSize(e.target.value ? parseInt(e.target.value) : undefined)} />
-                  <input type="text" className="px-3 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Peso (ex. 600)" value={String(titleFontWeight ?? '')} onChange={e => setTitleFontWeight(e.target.value ? (isNaN(Number(e.target.value)) ? e.target.value : Number(e.target.value)) : undefined)} />
-                  <input type="text" className="px-3 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="# Cor" value={titleColor} onChange={e => setTitleColor(e.target.value)} />
+                  <select className="px-3 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" value={String(titleFontWeight ?? '')} onChange={e => setTitleFontWeight(e.target.value ? (isNaN(Number(e.target.value)) ? e.target.value : Number(e.target.value)) : undefined)}>
+                    <option value="">Peso</option>
+                    {[100,200,300,400,500,600,700,800,900].map(w => (
+                      <option key={w} value={String(w)}>{w}</option>
+                    ))}
+                  </select>
+                  <input type="color" className="px-1 py-1 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 h-10" value={titleColor || '#000000'} onChange={e => setTitleColor(e.target.value)} />
                 </div>
               </div>
               <div>
                 <h4 className="text-sm font-semibold text-gray-900 mb-2">Subtítulo • Tipografia</h4>
-                <input className="w-full px-3 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2" placeholder="Font family" value={subtitleFontFamily} onChange={e => setSubtitleFontFamily(e.target.value)} />
+                <select
+                  className="w-full px-3 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2"
+                  value={subtitleFontFamily}
+                  onChange={e => setSubtitleFontFamily(e.target.value)}
+                >
+                  <option value="">(Padrão do tema)</option>
+                  {FontManager.getAvailableFonts().map(f => (
+                    <option key={f.key} value={f.family}>{f.name}</option>
+                  ))}
+                </select>
                 <div className="grid grid-cols-3 gap-2">
                   <input type="number" min={8} className="px-3 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Tamanho" value={subtitleFontSize ?? ''} onChange={e => setSubtitleFontSize(e.target.value ? parseInt(e.target.value) : undefined)} />
-                  <input type="text" className="px-3 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Peso (ex. 400)" value={String(subtitleFontWeight ?? '')} onChange={e => setSubtitleFontWeight(e.target.value ? (isNaN(Number(e.target.value)) ? e.target.value : Number(e.target.value)) : undefined)} />
-                  <input type="text" className="px-3 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="# Cor" value={subtitleColor} onChange={e => setSubtitleColor(e.target.value)} />
+                  <select className="px-3 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" value={String(subtitleFontWeight ?? '')} onChange={e => setSubtitleFontWeight(e.target.value ? (isNaN(Number(e.target.value)) ? e.target.value : Number(e.target.value)) : undefined)}>
+                    <option value="">Peso</option>
+                    {[100,200,300,400,500,600,700,800,900].map(w => (
+                      <option key={w} value={String(w)}>{w}</option>
+                    ))}
+                  </select>
+                  <input type="color" className="px-1 py-1 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 h-10" value={subtitleColor || '#000000'} onChange={e => setSubtitleColor(e.target.value)} />
                 </div>
               </div>
             </div>
             <div className="mt-2">
               <h4 className="text-sm font-semibold text-gray-900 mb-2">Container</h4>
-              <input className="w-full px-3 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Background (ex.: #ffffff)" value={backgroundColor} onChange={e => setBackgroundColor(e.target.value)} />
+              <input type="color" className="px-1 py-1 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 h-10" value={backgroundColor || '#ffffff'} onChange={e => setBackgroundColor(e.target.value)} />
             </div>
           </div>
         </div>
