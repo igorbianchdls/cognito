@@ -849,7 +849,7 @@ export const visualBuilderActions = {
       newInner = `\n  <style>${styleJson}</style>` + inner;
     }
 
-    const newOpen = `<group${newAttrs}>`;
+    const newOpen = `<group ${newAttrs.trim()}>`;
     const newBlock = newOpen + newInner + `</group>`;
     const nextCode = code.replace(whole, newBlock);
     visualBuilderActions.updateCode(nextCode);
