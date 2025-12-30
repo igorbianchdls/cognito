@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { MoreVertical, Copy, Edit3, Trash2 } from 'lucide-react';
 import RowEditorModal, { type RowSpec } from './RowEditorModal';
+import GroupEditorModal, { type GroupSpecDraft } from './GroupEditorModal';
 import DashboardInCanvasHeader from './DashboardInCanvasHeader';
 import HeaderEditorModal from './HeaderEditorModal';
 import type { Widget, GridConfig, LayoutRow } from './ConfigParser';
@@ -131,6 +132,8 @@ function ResponsiveGridCanvas({ widgets, gridConfig, globalFilters, viewportMode
   const [editingWidget, setEditingWidget] = useState<Widget | null>(null);
   const [editingRowId, setEditingRowId] = useState<string | null>(null);
   const [rowDraft, setRowDraft] = useState<RowSpec | null>(null);
+  const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
+  const [groupDraft, setGroupDraft] = useState<GroupSpecDraft | null>(null);
   const visualBuilderState = useNanoStore($visualBuilderState);
   const [showHeaderEditor, setShowHeaderEditor] = useState(false);
 
@@ -900,6 +903,27 @@ const DraggableGroup = memo(function DraggableGroup({ id, children, containerSty
                         } as React.CSSProperties;
                       })()}
                     >
+                      {/* Group overlay controls (no layout shift) */}
+                      <div className="absolute top-0 left-0 z-20 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 focus-within:opacity-100 pointer-events-none">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingGroupId(group.id);
+                            const st = (group as any).style || {};
+                            setGroupDraft({
+                              title: group.title,
+                              subtitle: st.subtitle,
+                              backgroundColor: st.backgroundColor,
+                              borderColor: st.borderColor,
+                              borderWidth: st.borderWidth,
+                            });
+                          }}
+                          className="pointer-events-auto inline-flex items-center px-2 py-0.5 text-xs rounded-sm bg-blue-400 text-white shadow-sm"
+                          title={`Editar Group ${group.id}`}
+                        >
+                          Group {group.id}
+                        </button>
+                      </div>
                       {group.title && (
                         <div
                           className="px-2 py-1"
@@ -911,6 +935,11 @@ const DraggableGroup = memo(function DraggableGroup({ id, children, containerSty
                           }}
                         >
                           {group.title}
+                        </div>
+                      )}
+                      {(group as any).style?.subtitle && (
+                        <div className="px-2 pb-1 text-xs" style={{ color: (group as any).style?.subtitleColor || '#6b7280' }}>
+                          {(group as any).style?.subtitle}
                         </div>
                       )}
                       <div
@@ -1057,6 +1086,18 @@ const DraggableGroup = memo(function DraggableGroup({ id, children, containerSty
           onSave={handleSaveWidget}
         />
       )}
+      {/* Group editor modal */}
+      <GroupEditorModal
+        open={Boolean(editingGroupId && groupDraft)}
+        groupId={editingGroupId || ''}
+        initial={groupDraft || {}}
+        onClose={() => { setEditingGroupId(null); setGroupDraft(null); }}
+        onSave={(spec) => {
+          if (!editingGroupId) return;
+          try { visualBuilderActions.updateGroupSpec(editingGroupId, spec); } catch {}
+          setEditingGroupId(null); setGroupDraft(null);
+        }}
+      />
       <HeaderEditorModal
         isOpen={showHeaderEditor}
         initialTitle={headerTitle}

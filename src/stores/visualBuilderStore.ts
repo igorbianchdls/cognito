@@ -804,6 +804,57 @@ export const visualBuilderActions = {
     }
   },
 
+  // Atualizar atributos de <group id="..."> no DSL (grid mode)
+  updateGroupSpec: (groupId: string, spec: { title?: string; subtitle?: string; backgroundColor?: string; borderColor?: string; borderWidth?: number }) => {
+    const current = $visualBuilderState.get();
+    const code = current.code || '';
+    if (!isDslCode(code)) return; // somente DSL por enquanto
+    // Encontrar bloco <group id="...">...</group>
+    const gidEsc = groupId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const re = new RegExp(`<group\\b([^>]*)\\bid=\\"${gidEsc}\\"[^>]*>([\\s\\S]*?)<\\/group>`, 'i');
+    const m = code.match(re);
+    if (!m) return;
+    const openAttrs = m[1] || '';
+    const inner = m[2] || '';
+    const whole = m[0];
+
+    // Atualizar atributo title no open tag
+    const replaceOrInsertAttr = (attrs: string, name: string, value?: string): string => {
+      if (value === undefined) return attrs;
+      const reAttr = new RegExp(`(\\b${name}\\=\\")[^\\"]*(\\")`, 'i');
+      if (reAttr.test(attrs)) return attrs.replace(reAttr, `$1${value}$2`);
+      return `${attrs} ${name}="${value}"`;
+    };
+    let newAttrs = openAttrs;
+    if (spec.title !== undefined) newAttrs = replaceOrInsertAttr(newAttrs, 'title', spec.title);
+
+    // Atualizar <style>{...}</style> dentro do group
+    const styleRe = /<style\b[^>]*>([\s\S]*?)<\/style>/i;
+    const sMatch = inner.match(styleRe);
+    let styleObj: Record<string, unknown> = {};
+    if (sMatch && sMatch[1]) {
+      try { styleObj = JSON.parse(sMatch[1].trim()); } catch {}
+    }
+    const set = (k: string, v: unknown) => { if (v !== undefined && v !== '') styleObj[k] = v; };
+    set('subtitle', spec.subtitle);
+    set('backgroundColor', spec.backgroundColor);
+    set('borderColor', spec.borderColor);
+    if (typeof spec.borderWidth === 'number') styleObj['borderWidth'] = spec.borderWidth;
+    const styleJson = JSON.stringify(styleObj);
+    let newInner = inner;
+    if (sMatch) {
+      newInner = inner.replace(styleRe, `<style>${styleJson}</style>`);
+    } else {
+      // Insere no início do conteúdo do grupo
+      newInner = `\n  <style>${styleJson}</style>` + inner;
+    }
+
+    const newOpen = `<group${newAttrs}>`;
+    const newBlock = newOpen + newInner + `</group>`;
+    const nextCode = code.replace(whole, newBlock);
+    visualBuilderActions.updateCode(nextCode);
+  },
+
   // Atualizar código (vem do Monaco Editor)
   updateCode: (code: string) => {
     const parseResult = ConfigParser.parse(code)
