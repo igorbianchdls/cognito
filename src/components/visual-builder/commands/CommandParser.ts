@@ -6,7 +6,9 @@ export type CommandKind =
   | "addGroup"
   | "setDashboard"
   | "deleteWidget"
-  | "deleteGroupt";
+  | "deleteGroupt"
+  | "updateWidget"
+  | "updateGroup";
 
 export type BaseCommand<TKind extends CommandKind = CommandKind, TArgs = unknown> = {
   kind: TKind;
@@ -77,7 +79,33 @@ export type Command =
   | BaseCommand<"addGroup", AddGroupArgs>
   | BaseCommand<"setDashboard", SetDashboardArgs>
   | BaseCommand<"deleteWidget", { id: string }>
-  | BaseCommand<"deleteGroupt", { id: string }>;
+  | BaseCommand<"deleteGroupt", { id: string }>
+  | BaseCommand<"updateWidget", UpdateWidgetArgs>
+  | BaseCommand<"updateGroup", UpdateGroupArgs>;
+
+export type UpdateWidgetArgs = {
+  id: string;
+  title?: string;
+  height?: number;
+  widthFr?: string;
+  type?: string;
+  row?: string;
+  spanD?: number;
+  data?: { schema?: string; table?: string; dimension?: string; measure?: string; agg?: string };
+  style?: { tw?: string };
+  chartConfig?: { styling?: { colors?: string[] }, margin?: { left?: number; top?: number; bottom?: number }, layout?: string };
+};
+
+export type UpdateGroupArgs = {
+  id: string;
+  title?: string;
+  orientation?: "horizontal" | "vertical" | string;
+  sizing?: string;
+  colsD?: number;
+  gapX?: number;
+  gapY?: number;
+  style?: Record<string, unknown>;
+};
 
 export type CommandError = { line: number; message: string; raw?: string };
 
@@ -255,6 +283,23 @@ export function parseCommands(text: string): ParseResult {
         continue;
       }
       commands.push({ kind: "deleteGroupt", line, raw: stmt, args: { id: args.id } });
+      continue;
+    }
+
+    if (lower === "updateWidget") {
+      if (!args?.id || typeof args.id !== 'string') {
+        errors.push({ line, message: "updateWidget requer 'id' (string)" });
+        continue;
+      }
+      commands.push({ kind: "updateWidget", line, raw: stmt, args: args as UpdateWidgetArgs });
+      continue;
+    }
+    if (lower === "updateGroup") {
+      if (!args?.id || typeof args.id !== 'string') {
+        errors.push({ line, message: "updateGroup requer 'id' (string)" });
+        continue;
+      }
+      commands.push({ kind: "updateGroup", line, raw: stmt, args: args as UpdateGroupArgs });
       continue;
     }
 

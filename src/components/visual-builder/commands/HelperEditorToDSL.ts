@@ -266,3 +266,41 @@ export function setDashboardAttrs(
     .join(" ")}>`;
   return code.replace(openTag, rebuilt);
 }
+
+export function setOrInsertStylingTw(code: string, id: string, tw: string): string {
+  const reNode = new RegExp(`(<(kpi|chart)\\b[^>]*\\bid=\"${escRe(id)}\"[^>]*>)([\\s\\S]*?)(<\\/\\2>)`, 'i');
+  return code.replace(reNode, (match: string, open: string, _tag: string, inner: string, close: string) => {
+    const stRe = /<styling\b([^>]*)\/>/i;
+    const stMatch = inner.match(stRe);
+    if (stMatch) {
+      // update tw in existing styling tag
+      let attrs = stMatch[1] || '';
+      const reTw = /(\btw=\")[^\"]*(\")/i;
+      if (reTw.test(attrs)) attrs = attrs.replace(reTw, `$1${escapeHtml(tw)}$2`);
+      else attrs = `${attrs} tw=\"${escapeHtml(tw)}\"`;
+      inner = inner.replace(stRe, `<styling${attrs ? ' ' + attrs : ''} />`);
+    } else {
+      inner = inner.trimEnd() + `\n      <styling tw=\"${escapeHtml(tw)}\" />`;
+    }
+    return open + inner + close;
+  });
+}
+
+export function setGroupStyleJson(code: string, id: string, partial: Record<string, unknown>): string {
+  const reNode = new RegExp(`(<group\\b[^>]*\\bid=\"${escRe(id)}\"[^>]*>)([\\s\\S]*?)(<\\/group>)`, 'i');
+  return code.replace(reNode, (match: string, open: string, inner: string, close: string) => {
+    const stRe = /<style\b[^>]*>([\s\S]*?)<\/style>/i;
+    const m = inner.match(stRe);
+    let styleObj: Record<string, unknown> = {};
+    if (m && m[1]) {
+      try { styleObj = JSON.parse(m[1].trim()); } catch {}
+    }
+    for (const [k,v] of Object.entries(partial || {})) {
+      if (v !== undefined) styleObj[k] = v as unknown;
+    }
+    const json = JSON.stringify(styleObj);
+    if (m) inner = inner.replace(stRe, `<style>${json}</style>`);
+    else inner = `\n  <style>${json}</style>` + inner;
+    return open + inner + close;
+  });
+}
