@@ -26,6 +26,8 @@ export function runCommands(code: string, commands: Command[]): { nextCode: stri
   let next = String(code || "");
   const diags: RunDiagnostics = [];
   const dsl = isDsl(next);
+  // Track last declared group id to provide a sensible default target
+  let currentGroupId: string | undefined;
 
   for (const cmd of commands) {
     try {
@@ -44,6 +46,7 @@ export function runCommands(code: string, commands: Command[]): { nextCode: stri
               style: args.style,
             });
             next = updated;
+            currentGroupId = args.id;
             diags.push({ ok: true, message: created ? `Grupo '${args.id}' criado.` : `Grupo '${args.id}' já existia.`, line: cmd.line });
           } else {
             // JSON path: not implemented for groups in MVP
@@ -54,7 +57,7 @@ export function runCommands(code: string, commands: Command[]): { nextCode: stri
         case "addKPI": {
           const args = cmd.args as AddKPIArgs;
           if (dsl) {
-            const groupId = args.group || "kpis";
+            const groupId = args.group || currentGroupId || "kpis";
             // ensure group exists
             next = ensureGroupExists(next, { id: groupId, title: groupId }).code;
             next = insertKpiInGroup(next, groupId, {
@@ -101,7 +104,7 @@ export function runCommands(code: string, commands: Command[]): { nextCode: stri
         case "addChart": {
           const args = cmd.args as AddChartArgs;
           if (dsl) {
-            const groupId = args.group || "charts";
+            const groupId = args.group || currentGroupId || "charts";
             next = ensureGroupExists(next, { id: groupId, title: groupId }).code;
             next = insertChartInGroup(next, groupId, {
               id: args.id,

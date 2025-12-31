@@ -11,7 +11,7 @@ type Props = {
 };
 
 export default function CommandConsole({ sourceCode }: Props) {
-  const [text, setText] = useState<string>(`// Exemplo:\naddGroup({\n  "id": "grp_kpis",\n  "title": "KPIs",\n  "orientation": "horizontal",\n  "sizing": "fr",\n  "colsD": 12,\n  "gapX": 16,\n  "gapY": 16\n});\n\naddKPI({\n  "id": "kpi_receita",\n  "group": "grp_kpis",\n  "title": "Receita",\n  "unit": "R$",\n  "height": 150,\n  "widthFr": "1fr",\n  "data": { "schema": "vendas", "table": "vw_pedidos", "measure": "item_subtotal", "agg": "SUM" },\n  "style": { "tw": "kpi:viz:card" }\n});\n\naddKPI({\n  "id": "kpi_ticket_medio",\n  "group": "grp_kpis",\n  "title": "Ticket Médio",\n  "unit": "R$",\n  "height": 150,\n  "widthFr": "1fr",\n  "data": { "schema": "vendas", "table": "vw_pedidos", "measure": "item_subtotal", "agg": "AVG" },\n  "style": { "tw": "kpi:viz:card" }\n});\n\naddKPI({\n  "id": "kpi_pedidos",\n  "group": "grp_kpis",\n  "title": "Pedidos",\n  "height": 150,\n  "widthFr": "1fr",\n  "data": { "schema": "vendas", "table": "vw_pedidos", "measure": "pedido_id", "agg": "COUNT" },\n  "style": { "tw": "kpi:viz:card" }\n});\n`);
+  const [text, setText] = useState<string>(`// Exemplo: cria um novo grupo e adiciona 3 KPIs nele\naddGroup({\n  \"id\": \"grp_more_kpis\",\n  \"title\": \"KPIs (mais)\",\n  \"orientation\": \"horizontal\",\n  \"sizing\": \"fr\",\n  \"colsD\": 12,\n  \"gapX\": 16,\n  \"gapY\": 16\n});\n\n// Ao omitir \"group\", os KPIs irão para o último grupo criado (grp_more_kpis)\naddKPI({\n  \"id\": \"kpi_receita_2\",\n  \"title\": \"Receita (M)\",\n  \"unit\": \"R$\",\n  \"height\": 150,\n  \"widthFr\": \"1fr\",\n  \"data\": { \"schema\": \"vendas\", \"table\": \"vw_pedidos\", \"measure\": \"item_subtotal\", \"agg\": \"SUM\" },\n  \"style\": { \"tw\": \"kpi:viz:card\" }\n});\n\naddKPI({\n  \"id\": \"kpi_ticket_medio_2\",\n  \"title\": \"Ticket Médio (M)\",\n  \"unit\": \"R$\",\n  \"height\": 150,\n  \"widthFr\": \"1fr\",\n  \"data\": { \"schema\": \"vendas\", \"table\": \"vw_pedidos\", \"measure\": \"item_subtotal\", \"agg\": \"AVG\" },\n  \"style\": { \"tw\": \"kpi:viz:card\" }\n});\n\naddKPI({\n  \"id\": \"kpi_pedidos_2\",\n  \"title\": \"Pedidos (M)\",\n  \"height\": 150,\n  \"widthFr\": \"1fr\",\n  \"data\": { \"schema\": \"vendas\", \"table\": \"vw_pedidos\", \"measure\": \"pedido_id\", \"agg\": \"COUNT\" },\n  \"style\": { \"tw\": \"kpi:viz:card\" }\n});\n`);
   const [output, setOutput] = useState<Array<{ type: "ok" | "err"; text: string }>>([]);
   const lastResultRef = useRef<string>("");
 
@@ -72,4 +72,3 @@ export default function CommandConsole({ sourceCode }: Props) {
     </div>
   );
 }
-
