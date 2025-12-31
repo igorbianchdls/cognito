@@ -157,7 +157,8 @@ export function parseCommands(text: string): ParseResult {
   const commands: Command[] = [];
 
   for (const { text: stmt, line } of stmts) {
-    const m = stmt.match(/^(\w+)\s*\((.*)\)\s*$/s);
+    // Use [\s\S]* instead of dotAll flag to support ES2017 target
+    const m = stmt.match(/^(\w+)\s*\(([\s\S]*)\)\s*$/);
     if (!m) {
       errors.push({ line, message: "Sintaxe inválida. Esperado: comando({...})", raw: stmt });
       continue;
@@ -212,4 +213,3 @@ export function parseCommands(text: string): ParseResult {
 
   return { commands, errors };
 }
-
