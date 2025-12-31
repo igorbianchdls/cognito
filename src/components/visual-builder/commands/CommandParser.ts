@@ -162,7 +162,7 @@ export function parseCommands(text: string): ParseResult {
     // Use [\s\S]* instead of dotAll flag to support ES2017 target
     const m = stmt.match(/^(\w+)\s*\(([\s\S]*)\)\s*$/);
     if (!m) {
-      errors.push({ line, message: "Sintaxe inválida. Esperado: comando({...})", raw: stmt });
+      // Ignore non-matching statements silently to be tolerant with comments or stray semicolons
       continue;
     }
     const name = m[1] as CommandKind;
