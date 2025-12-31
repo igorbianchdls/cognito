@@ -171,6 +171,21 @@ export function parseCommands(text: string): ParseResult {
       errors.push({ line, message: "Comando ausente.", raw: stmt });
       continue;
     }
+    // Special shorthand support for deleteWidget: deleteWidget("id") or deleteWidget(id)
+    if (name === 'deleteWidget') {
+      const t = (argStr || '').trim();
+      if (!t.startsWith('{')) {
+        let idVal = t;
+        if ((t.startsWith('"') && t.endsWith('"')) || (t.startsWith("'") && t.endsWith("'"))) {
+          idVal = t.slice(1, -1);
+        }
+        if (idVal) {
+          commands.push({ kind: 'deleteWidget', line, raw: stmt, args: { id: idVal } });
+          continue;
+        }
+      }
+    }
+
     let args: any;
     try {
       args = parseArgs(argStr);
