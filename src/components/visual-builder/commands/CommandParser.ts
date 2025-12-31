@@ -4,7 +4,8 @@ export type CommandKind =
   | "addChart"
   | "addKPI"
   | "addGroup"
-  | "setDashboard";
+  | "setDashboard"
+  | "deleteWidget";
 
 export type BaseCommand<TKind extends CommandKind = CommandKind, TArgs = unknown> = {
   kind: TKind;
@@ -73,7 +74,8 @@ export type Command =
   | BaseCommand<"addChart", AddChartArgs>
   | BaseCommand<"addKPI", AddKPIArgs>
   | BaseCommand<"addGroup", AddGroupArgs>
-  | BaseCommand<"setDashboard", SetDashboardArgs>;
+  | BaseCommand<"setDashboard", SetDashboardArgs>
+  | BaseCommand<"deleteWidget", { id: string }>;
 
 export type CommandError = { line: number; message: string; raw?: string };
 
@@ -205,6 +207,15 @@ export function parseCommands(text: string): ParseResult {
     }
     if (lower === "setDashboard") {
       commands.push({ kind: "setDashboard", line, raw: stmt, args: args as SetDashboardArgs });
+      continue;
+    }
+
+    if (lower === "deleteWidget") {
+      if (!args?.id || typeof args.id !== 'string') {
+        errors.push({ line, message: "deleteWidget requer 'id' (string)" });
+        continue;
+      }
+      commands.push({ kind: "deleteWidget", line, raw: stmt, args: { id: args.id } });
       continue;
     }
 

@@ -126,6 +126,25 @@ export function setConfigOnNode(
   });
 }
 
+export function removeWidgetByIdDSL(code: string, id: string): { code: string; removed: number } {
+  const esc = escRe(id);
+  let removed = 0;
+  // Remove paired tags for kpi or chart
+  const re = new RegExp(`\n?\s*<((?:kpi|chart))\\b[^>]*\\bid=\"${esc}\"[^>]*>([\\s\\S]*?)<\\/\\1>\s*\n?`, 'gi');
+  let next = code;
+  let prev;
+  do {
+    prev = next;
+    next = next.replace(re, () => {
+      removed++;
+      return '';
+    });
+  } while (next !== prev);
+  // Normalize multiple blank lines
+  next = next.replace(/\n{3,}/g, '\n\n');
+  return { code: next, removed };
+}
+
 export function ensureGroupExists(code: string, spec: GroupSpec): { code: string; created: boolean } {
   const { id, title, orientation = "horizontal", sizing = "fr", colsD = 12, gapX = 16, gapY = 16, style } = spec;
   const exists = new RegExp(`<group\\b[^>]*\\bid=\"${escRe(id)}\"`, "i").test(code);
@@ -230,4 +249,3 @@ export function setDashboardAttrs(
     .join(" ")}>`;
   return code.replace(openTag, rebuilt);
 }
-

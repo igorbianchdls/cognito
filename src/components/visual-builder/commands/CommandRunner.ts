@@ -14,6 +14,7 @@ import {
   setDashboardAttrs,
   buildMeasureExpr,
   normalizeSchemaTable,
+  removeWidgetByIdDSL,
 } from "./HelperEditorToDSL";
 
 export type RunDiagnostics = Array<{ ok: boolean; message: string; line?: number }>;
@@ -162,6 +163,40 @@ export function runCommands(code: string, commands: Command[]): { nextCode: stri
               // dateRange in JSON not standardized; skip
               next = JSON.stringify(root, null, 2);
               diags.push({ ok: true, message: `Dashboard atualizado (JSON).`, line: cmd.line });
+            } catch (e) {
+              diags.push({ ok: false, message: `Falha ao mutar JSON: ${(e as Error).message}`, line: cmd.line });
+            }
+          }
+          break;
+        }
+        case "deleteWidget": {
+          const id = (cmd.args as { id: string }).id;
+          if (dsl) {
+            const { code: updated, removed } = removeWidgetByIdDSL(next, id);
+            next = updated;
+            if (removed > 0) diags.push({ ok: true, message: `Widget '${id}' removido (${removed}).`, line: cmd.line });
+            else diags.push({ ok: false, message: `Widget '${id}' não encontrado.`, line: cmd.line });
+          } else {
+            try {
+              const root = JSON.parse(next || "{}") as any;
+              const before = Array.isArray(root.widgets) ? root.widgets.length : 0;
+              if (Array.isArray(root.widgets)) {
+                root.widgets = root.widgets.filter((w: any) => w && w.id !== id);
+              }
+              // Remove from layout groups if present (top-level or inside config)
+              const cleanGroups = (container: any) => {
+                if (!container || !container.layout || !Array.isArray(container.layout.groups)) return;
+                container.layout.groups = container.layout.groups.map((g: any) => {
+                  if (Array.isArray(g.children)) g.children = g.children.filter((x: any) => x !== id);
+                  return g;
+                });
+              };
+              cleanGroups(root);
+              if (root.config && typeof root.config === 'object') cleanGroups(root.config);
+              const after = Array.isArray(root.widgets) ? root.widgets.length : 0;
+              next = JSON.stringify(root, null, 2);
+              if (after < before) diags.push({ ok: true, message: `Widget '${id}' removido (JSON).`, line: cmd.line });
+              else diags.push({ ok: false, message: `Widget '${id}' não encontrado (JSON).`, line: cmd.line });
             } catch (e) {
               diags.push({ ok: false, message: `Falha ao mutar JSON: ${(e as Error).message}`, line: cmd.line });
             }

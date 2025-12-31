@@ -52,6 +52,8 @@ addChart({
   "data": { "schema": "vendas", "table": "vw_pedidos", "dimension": "vendedor_nome", "measure": "item_subtotal", "agg": "SUM" },
   "style": { "tw": "legend:on grid:on mb:32" }
 });
+\n+// Exemplo de exclusão por ID (descomente para usar)
+// deleteWidget({ "id": "kpi_receita_2" });
 `;
 
 export default function CommandConsole({ sourceCode }: Props) {
@@ -91,7 +93,7 @@ export default function CommandConsole({ sourceCode }: Props) {
     <div className="h-full flex flex-col">
       <div className="p-4 border-b border-gray-200">
         <h2 className="text-lg font-semibold text-gray-900">Command Console</h2>
-        <p className="text-sm text-gray-600">Escreva comandos como addGroup(), addKPI(), addChart(), setDashboard() e clique em Executar.</p>
+        <p className="text-sm text-gray-600">Escreva comandos como addGroup(), addKPI(), addChart(), setDashboard(), deleteWidget() e clique em Executar.</p>
       </div>
       <div className="flex-1 min-h-0 grid grid-rows-[1fr_auto]">
         <div className="min-h-0">
