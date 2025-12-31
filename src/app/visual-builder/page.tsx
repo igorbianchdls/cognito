@@ -8,6 +8,7 @@ import DashboardOpenDialog from '@/components/visual-builder/DashboardOpenDialog
 import { dashboardsApi, type Dashboard } from '@/stores/dashboardsStore';
 import MonacoEditor from '@/components/visual-builder/MonacoEditor';
 import { Editor as MonacoRawEditor } from '@monaco-editor/react';
+import CommandConsole from '@/components/visual-builder/CommandConsole';
 // import VisualBuilderChat from '@/components/visual-builder/VisualBuilderChat';
 import ResponsiveGridCanvas from '@/components/visual-builder/ResponsiveGridCanvas';
 import DashboardInCanvasHeader from '@/components/visual-builder/DashboardInCanvasHeader';
@@ -19,7 +20,7 @@ import type { Widget, GlobalFilters } from '@/stores/visualBuilderStore';
 
 export default function VisualBuilderPage() {
   const visualBuilderState = useStore($visualBuilderState);
-  const [activeTab, setActiveTab] = useState<'editor' | 'responsive'>('editor');
+  const [activeTab, setActiveTab] = useState<'editor' | 'responsive' | 'commands'>('editor');
   const [viewportMode, setViewportMode] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
   const [isFilterLoading, setIsFilterLoading] = useState(false);
   const [showSave, setShowSave] = useState(false);
@@ -232,6 +233,16 @@ export default function VisualBuilderPage() {
           >
             📱 Responsive
           </button>
+          <button
+            className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === 'commands'
+                ? 'border-blue-500 text-blue-600 bg-blue-50'
+                : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+            }`}
+            onClick={() => setActiveTab('commands')}
+          >
+            ⚙️ Commands
+          </button>
         </div>
       </div>
 
@@ -258,7 +269,8 @@ export default function VisualBuilderPage() {
             }
           }}
         />
-        {/* Editor Tab */}
+        {/* Editor Tab */
+        }
         {activeTab === 'editor' && (
           <div className="h-full bg-white">
             <div className="p-4 border-b border-gray-200">
@@ -351,6 +363,13 @@ export default function VisualBuilderPage() {
                 </div>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Commands Tab */}
+        {activeTab === 'commands' && (
+          <div className="h-full bg-white">
+            <CommandConsole sourceCode={editorCode} />
           </div>
         )}
 
