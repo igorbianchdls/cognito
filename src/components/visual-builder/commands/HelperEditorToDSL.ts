@@ -171,6 +171,23 @@ export function ensureGroupExists(code: string, spec: GroupSpec): { code: string
   return { code: code + `\n` + groupBlock, created: true };
 }
 
+export function removeGroupByIdDSL(code: string, id: string): { code: string; removed: number } {
+  const esc = escRe(id);
+  let removed = 0;
+  const re = new RegExp(`\n?\s*<(group)\\b[^>]*\\bid=\"${esc}\"[^>]*>([\\s\\S]*?)<\\/\\1>\s*\n?`, 'gi');
+  let next = code;
+  let prev;
+  do {
+    prev = next;
+    next = next.replace(re, () => {
+      removed++;
+      return '';
+    });
+  } while (next !== prev);
+  next = next.replace(/\n{3,}/g, '\n\n');
+  return { code: next, removed };
+}
+
 export function insertKpiInGroup(code: string, groupId: string, spec: KPIWidgetSpec): string {
   const { id, title, unit, height = 150, widthFr = "1fr", data, style } = spec;
   const measure = buildMeasureExpr(data?.measure, data?.agg) || data?.measure || "";

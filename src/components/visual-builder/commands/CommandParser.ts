@@ -5,7 +5,8 @@ export type CommandKind =
   | "addKPI"
   | "addGroup"
   | "setDashboard"
-  | "deleteWidget";
+  | "deleteWidget"
+  | "deleteGroupt";
 
 export type BaseCommand<TKind extends CommandKind = CommandKind, TArgs = unknown> = {
   kind: TKind;
@@ -75,7 +76,8 @@ export type Command =
   | BaseCommand<"addKPI", AddKPIArgs>
   | BaseCommand<"addGroup", AddGroupArgs>
   | BaseCommand<"setDashboard", SetDashboardArgs>
-  | BaseCommand<"deleteWidget", { id: string }>;
+  | BaseCommand<"deleteWidget", { id: string }>
+  | BaseCommand<"deleteGroupt", { id: string }>;
 
 export type CommandError = { line: number; message: string; raw?: string };
 
@@ -185,6 +187,20 @@ export function parseCommands(text: string): ParseResult {
         }
       }
     }
+    // Special shorthand for deleteGroupt("id") or deleteGroupt(id)
+    if (name === 'deleteGroupt') {
+      const t = (argStr || '').trim();
+      if (!t.startsWith('{')) {
+        let idVal = t;
+        if ((t.startsWith('"') && t.endsWith('"')) || (t.startsWith("'") && t.endsWith("'"))) {
+          idVal = t.slice(1, -1);
+        }
+        if (idVal) {
+          commands.push({ kind: 'deleteGroupt', line, raw: stmt, args: { id: idVal } });
+          continue;
+        }
+      }
+    }
 
     let args: any;
     try {
@@ -231,6 +247,14 @@ export function parseCommands(text: string): ParseResult {
         continue;
       }
       commands.push({ kind: "deleteWidget", line, raw: stmt, args: { id: args.id } });
+      continue;
+    }
+    if (lower === "deleteGroupt") {
+      if (!args?.id || typeof args.id !== 'string') {
+        errors.push({ line, message: "deleteGroupt requer 'id' (string)" });
+        continue;
+      }
+      commands.push({ kind: "deleteGroupt", line, raw: stmt, args: { id: args.id } });
       continue;
     }
 

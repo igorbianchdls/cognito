@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { Editor } from "@monaco-editor/react";
 import { parseCommands } from "./commands/CommandParser";
 import { runCommands } from "./commands/CommandRunner";
@@ -57,18 +57,11 @@ addChart({
 `;
 
 export default function CommandConsole({ sourceCode }: Props) {
-  const [text, setText] = useState<string>(`// Exemplo: cria um novo grupo e adiciona 3 KPIs nele\naddGroup({\n  \"id\": \"grp_more_kpis\",\n  \"title\": \"KPIs (mais)\",\n  \"orientation\": \"horizontal\",\n  \"sizing\": \"fr\",\n  \"colsD\": 12,\n  \"gapX\": 16,\n  \"gapY\": 16\n});\n\n// Ao omitir \"group\", os KPIs irão para o último grupo criado (grp_more_kpis)\naddKPI({\n  \"id\": \"kpi_receita_2\",\n  \"title\": \"Receita (M)\",\n  \"unit\": \"R$\",\n  \"height\": 150,\n  \"widthFr\": \"1fr\",\n  \"data\": { \"schema\": \"vendas\", \"table\": \"vw_pedidos\", \"measure\": \"item_subtotal\", \"agg\": \"SUM\" },\n  \"style\": { \"tw\": \"kpi:viz:card\" }\n});\n\naddKPI({\n  \"id\": \"kpi_ticket_medio_2\",\n  \"title\": \"Ticket Médio (M)\",\n  \"unit\": \"R$\",\n  \"height\": 150,\n  \"widthFr\": \"1fr\",\n  \"data\": { \"schema\": \"vendas\", \"table\": \"vw_pedidos\", \"measure\": \"item_subtotal\", \"agg\": \"AVG\" },\n  \"style\": { \"tw\": \"kpi:viz:card\" }\n});\n\naddKPI({\n  \"id\": \"kpi_pedidos_2\",\n  \"title\": \"Pedidos (M)\",\n  \"height\": 150,\n  \"widthFr\": \"1fr\",\n  \"data\": { \"schema\": \"vendas\", \"table\": \"vw_pedidos\", \"measure\": \"pedido_id\", \"agg\": \"COUNT\" },\n  \"style\": { \"tw\": \"kpi:viz:card\" }\n});\n`);
+  const [text, setText] = useState<string>(`// Exemplo: cria 1 grupo de KPIs e 3 KPIs, depois 1 grupo de charts e 3 charts\naddGroup({\n  \"id\": \"grp_kpis\",\n  \"title\": \"KPIs\",\n  \"orientation\": \"horizontal\",\n  \"sizing\": \"fr\",\n  \"colsD\": 12,\n  \"gapX\": 16,\n  \"gapY\": 16\n});\n\naddKPI({\n  \"id\": \"kpi_receita\",\n  \"group\": \"grp_kpis\",\n  \"title\": \"Receita\",\n  \"unit\": \"R$\",\n  \"height\": 150,\n  \"widthFr\": \"1fr\",\n  \"data\": { \"schema\": \"vendas\", \"table\": \"vw_pedidos\", \"measure\": \"item_subtotal\", \"agg\": \"SUM\" },\n  \"style\": { \"tw\": \"kpi:viz:card\" }\n});\n\naddKPI({\n  \"id\": \"kpi_ticket_medio\",\n  \"group\": \"grp_kpis\",\n  \"title\": \"Ticket Médio\",\n  \"unit\": \"R$\",\n  \"height\": 150,\n  \"widthFr\": \"1fr\",\n  \"data\": { \"schema\": \"vendas\", \"table\": \"vw_pedidos\", \"measure\": \"item_subtotal\", \"agg\": \"AVG\" },\n  \"style\": { \"tw\": \"kpi:viz:card\" }\n});\n\naddKPI({\n  \"id\": \"kpi_pedidos\",\n  \"group\": \"grp_kpis\",\n  \"title\": \"Pedidos\",\n  \"height\": 150,\n  \"widthFr\": \"1fr\",\n  \"data\": { \"schema\": \"vendas\", \"table\": \"vw_pedidos\", \"measure\": \"pedido_id\", \"agg\": \"COUNT\" },\n  \"style\": { \"tw\": \"kpi:viz:card\" }\n});\n\naddGroup({\n  \"id\": \"grp_charts\",\n  \"title\": \"Gráficos\",\n  \"orientation\": \"horizontal\",\n  \"sizing\": \"fr\",\n  \"colsD\": 12,\n  \"gapX\": 16,\n  \"gapY\": 16\n});\n\naddChart({\n  \"id\": \"chart_vendas_regiao\",\n  \"title\": \"Vendas por Região\",\n  \"type\": \"bar\",\n  \"height\": 360,\n  \"widthFr\": \"1fr\",\n  \"data\": { \"schema\": \"vendas\", \"table\": \"vw_pedidos\", \"dimension\": \"regiao\", \"measure\": \"item_subtotal\", \"agg\": \"SUM\" },\n  \"style\": { \"tw\": \"legend:on grid:on mb:32\" }\n});\n\naddChart({\n  \"id\": \"chart_canal\",\n  \"title\": \"Vendas por Canal\",\n  \"type\": \"pie\",\n  \"height\": 360,\n  \"widthFr\": \"1fr\",\n  \"data\": { \"schema\": \"vendas\", \"table\": \"vw_pedidos\", \"dimension\": \"canal_venda_nome\", \"measure\": \"item_subtotal\", \"agg\": \"SUM\" },\n  \"style\": { \"tw\": \"legend:on grid:off mb:32\" }\n});\n\naddChart({\n  \"id\": \"chart_vendedor\",\n  \"title\": \"Vendas por Vendedor\",\n  \"type\": \"groupedbar\",\n  \"height\": 360,\n  \"widthFr\": \"1fr\",\n  \"data\": { \"schema\": \"vendas\", \"table\": \"vw_pedidos\", \"dimension\": \"vendedor_nome\", \"measure\": \"item_subtotal\", \"agg\": \"SUM\" },\n  \"style\": { \"tw\": \"legend:on grid:on mb:32\" }\n});\n\n// Exemplo de exclusão por ID\ndeleteWidget({ \"id\": \"kpi_receita\" });\n\n// Cria outro grupo com 2 charts e remove o grupo\naddGroup({\n  \"id\": \"grp_charts_2\",\n  \"title\": \"Gráficos 2\",\n  \"orientation\": \"horizontal\",\n  \"sizing\": \"fr\",\n  \"colsD\": 12,\n  \"gapX\": 16,\n  \"gapY\": 16\n});\n\naddChart({\n  \"id\": \"chart_categoria\",\n  \"title\": \"Vendas por Categoria\",\n  \"type\": \"bar\",\n  \"height\": 320,\n  \"widthFr\": \"1fr\",\n  \"data\": { \"schema\": \"vendas\", \"table\": \"vw_pedidos\", \"dimension\": \"categoria\", \"measure\": \"item_subtotal\", \"agg\": \"SUM\" },\n  \"style\": { \"tw\": \"legend:on grid:on mb:24\" }\n});\n\naddChart({\n  \"id\": \"chart_pagamento\",\n  \"title\": \"Vendas por Pagamento\",\n  \"type\": \"pie\",\n  \"height\": 320,\n  \"widthFr\": \"1fr\",\n  \"data\": { \"schema\": \"vendas\", \"table\": \"vw_pedidos\", \"dimension\": \"forma_pagamento\", \"measure\": \"item_subtotal\", \"agg\": \"SUM\" },\n  \"style\": { \"tw\": \"legend:on grid:off mb:24\" }\n});\n\ndeleteGroupt({ \"id\": \"grp_charts_2\" });\n`);
   const [output, setOutput] = useState<Array<{ type: "ok" | "err"; text: string }>>([]);
   const lastResultRef = useRef<string>("");
 
-  // Append a charts group example to the initial sample once
-  useEffect(() => {
-    if ((text.includes('grp_more_kpis') || text.includes('grp_kpis')) && !text.includes('grp_charts')) {
-      setText((prev) => prev + CHARTS_EXAMPLE);
-    }
-    // run once on mount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // no-op
 
   const run = (apply: boolean) => {
     const parsed = parseCommands(text);
@@ -93,7 +86,7 @@ export default function CommandConsole({ sourceCode }: Props) {
     <div className="h-full flex flex-col">
       <div className="p-4 border-b border-gray-200">
         <h2 className="text-lg font-semibold text-gray-900">Command Console</h2>
-        <p className="text-sm text-gray-600">Escreva comandos como addGroup(), addKPI(), addChart(), setDashboard(), deleteWidget() e clique em Executar.</p>
+        <p className="text-sm text-gray-600">Escreva comandos como addGroup(), addKPI(), addChart(), setDashboard(), deleteWidget(), deleteGroupt() e clique em Executar.</p>
       </div>
       <div className="flex-1 min-h-0 grid grid-rows-[1fr_auto]">
         <div className="min-h-0">

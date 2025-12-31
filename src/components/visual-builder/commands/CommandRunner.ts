@@ -15,6 +15,7 @@ import {
   buildMeasureExpr,
   normalizeSchemaTable,
   removeWidgetByIdDSL,
+  removeGroupByIdDSL,
 } from "./HelperEditorToDSL";
 
 export type RunDiagnostics = Array<{ ok: boolean; message: string; line?: number }>;
@@ -197,6 +198,46 @@ export function runCommands(code: string, commands: Command[]): { nextCode: stri
               next = JSON.stringify(root, null, 2);
               if (after < before) diags.push({ ok: true, message: `Widget '${id}' removido (JSON).`, line: cmd.line });
               else diags.push({ ok: false, message: `Widget '${id}' não encontrado (JSON).`, line: cmd.line });
+            } catch (e) {
+              diags.push({ ok: false, message: `Falha ao mutar JSON: ${(e as Error).message}`, line: cmd.line });
+            }
+          }
+          break;
+        }
+        case "deleteGroupt": {
+          const id = (cmd.args as { id: string }).id;
+          if (dsl) {
+            const { code: updated, removed } = removeGroupByIdDSL(next, id);
+            next = updated;
+            if (removed > 0) diags.push({ ok: true, message: `Grupo '${id}' removido (${removed}).`, line: cmd.line });
+            else diags.push({ ok: false, message: `Grupo '${id}' não encontrado.`, line: cmd.line });
+          } else {
+            try {
+              const root = JSON.parse(next || "{}") as any;
+              const collectChildrenAndRemove = (container: any): string[] => {
+                const removedChildren: string[] = [];
+                if (!container || !container.layout || !Array.isArray(container.layout.groups)) return removedChildren;
+                const groups = container.layout.groups as any[];
+                const keep: any[] = [];
+                for (const g of groups) {
+                  if (g && g.id === id) {
+                    if (Array.isArray(g.children)) removedChildren.push(...g.children);
+                    // skip (delete)
+                  } else keep.push(g);
+                }
+                container.layout.groups = keep;
+                return removedChildren;
+              };
+              const children: string[] = [];
+              children.push(...collectChildrenAndRemove(root));
+              if (root.config && typeof root.config === 'object') children.push(...collectChildrenAndRemove(root.config));
+              if (Array.isArray(root.widgets) && children.length > 0) {
+                const removeSet = new Set(children);
+                root.widgets = root.widgets.filter((w: any) => !removeSet.has(w?.id));
+              }
+              next = JSON.stringify(root, null, 2);
+              if (children.length > 0) diags.push({ ok: true, message: `Grupo '${id}' removido com ${children.length} widgets.`, line: cmd.line });
+              else diags.push({ ok: false, message: `Grupo '${id}' não encontrado (JSON).`, line: cmd.line });
             } catch (e) {
               diags.push({ ok: false, message: `Falha ao mutar JSON: ${(e as Error).message}`, line: cmd.line });
             }
