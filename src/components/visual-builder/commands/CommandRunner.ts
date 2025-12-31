@@ -165,9 +165,8 @@ export function runCommands(code: string, commands: Command[]): { nextCode: stri
           }
           break;
         }
-        default:
-          diags.push({ ok: false, message: `Comando não suportado: ${cmd.kind}`, line: cmd.line });
-      }
+        // No default: the switch is exhaustive over Command['kind'].
+        }
     } catch (e) {
       diags.push({ ok: false, message: `Erro ao executar: ${(e as Error).message}`, line: cmd.line });
     }
@@ -175,4 +174,3 @@ export function runCommands(code: string, commands: Command[]): { nextCode: stri
 
   return { nextCode: next, diagnostics: diags };
 }
-
