@@ -20,6 +20,8 @@ import {
   removeGroupByIdDSL,
   setOrInsertStylingTw,
   setGroupStyleJson,
+  setAttrOnNode,
+  setAttrOnDatasource,
 } from "./HelperEditorToDSL";
 
 export type RunDiagnostics = Array<{ ok: boolean; message: string; line?: number }>;
@@ -253,7 +255,7 @@ export function runCommands(code: string, commands: Command[]): { nextCode: stri
           const id = args.id;
           if (dsl) {
             let updated = false;
-            if (typeof args.title === 'string') { next = ensureGroupExists(next, { id: '' }).code; next = setAttrOnNode(next, id, 'title', args.title); updated = true; }
+            if (typeof args.title === 'string') { next = setAttrOnNode(next, id, 'title', args.title); updated = true; }
             if (typeof args.height === 'number') { next = setAttrOnNode(next, id, 'height', String(args.height)); updated = true; }
             if (typeof args.type === 'string') { next = setAttrOnNode(next, id, 'type', args.type); updated = true; }
             if (typeof args.widthFr === 'string') { next = setAttrOnNode(next, id, 'width', args.widthFr); updated = true; }
