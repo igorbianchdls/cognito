@@ -275,10 +275,19 @@ export function setOrInsertStylingTw(code: string, id: string, tw: string): stri
     if (stMatch) {
       // update tw in existing styling tag
       let attrs = stMatch[1] || '';
-      const reTw = /(\btw=\")[^\"]*(\")/i;
-      if (reTw.test(attrs)) attrs = attrs.replace(reTw, `$1${escapeHtml(tw)}$2`);
-      else attrs = `${attrs} tw=\"${escapeHtml(tw)}\"`;
-      inner = inner.replace(stRe, `<styling${attrs ? ' ' + attrs : ''} />`);
+      // Extract existing tw value if any
+      const twRe = /\btw=\"([^\"]*)\"/i;
+      const m = attrs.match(twRe);
+      if (m) {
+        const current = m[1] || '';
+        // Replace existing bg: token if present; otherwise append
+        const hasBg = /(?:^|\s)bg:\S+/.test(current);
+        const nextTw = hasBg ? current.replace(/(?:^|\s)bg:\S+/, (seg) => seg.replace(/bg:\S+/, `bg:${tw.replace(/^.*bg:/,'').trim()}`)) : (current + (current.trim() ? ' ' : '') + tw);
+        attrs = attrs.replace(twRe, `tw=\"${escapeHtml(nextTw)}\"`);
+      } else {
+        attrs = `${attrs} tw=\"${escapeHtml(tw)}\"`;
+      }
+      inner = inner.replace(stRe, `<styling${attrs ? ' ' + attrs.trim() : ''} />`);
     } else {
       inner = inner.trimEnd() + `\n      <styling tw=\"${escapeHtml(tw)}\" />`;
     }
