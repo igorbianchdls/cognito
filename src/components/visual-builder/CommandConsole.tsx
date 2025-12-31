@@ -61,7 +61,7 @@ export default function CommandConsole({ sourceCode }: Props) {
 
   // Append a charts group example to the initial sample once
   useEffect(() => {
-    if (text.includes('grp_kpis') && !text.includes('grp_charts')) {
+    if ((text.includes('grp_more_kpis') || text.includes('grp_kpis')) && !text.includes('grp_charts')) {
       setText((prev) => prev + CHARTS_EXAMPLE);
     }
     // run once on mount
