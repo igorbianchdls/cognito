@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Editor } from "@monaco-editor/react";
 import { parseCommands } from "./commands/CommandParser";
 import { runCommands } from "./commands/CommandRunner";
@@ -10,10 +10,63 @@ type Props = {
   sourceCode: string;
 };
 
+const CHARTS_EXAMPLE = `
+
+// Agora cria um novo grupo de gráficos e adiciona 3 charts nele
+addGroup({
+  "id": "grp_charts",
+  "title": "Gráficos",
+  "orientation": "horizontal",
+  "sizing": "fr",
+  "colsD": 12,
+  "gapX": 16,
+  "gapY": 16
+});
+
+addChart({
+  "id": "chart_vendas_regiao",
+  "title": "Vendas por Região",
+  "type": "bar",
+  "height": 360,
+  "widthFr": "1fr",
+  "data": { "schema": "vendas", "table": "vw_pedidos", "dimension": "regiao", "measure": "item_subtotal", "agg": "SUM" },
+  "style": { "tw": "legend:on grid:on mb:32" }
+});
+
+addChart({
+  "id": "chart_canal",
+  "title": "Vendas por Canal",
+  "type": "pie",
+  "height": 360,
+  "widthFr": "1fr",
+  "data": { "schema": "vendas", "table": "vw_pedidos", "dimension": "canal_venda_nome", "measure": "item_subtotal", "agg": "SUM" },
+  "style": { "tw": "legend:on grid:off mb:32" }
+});
+
+addChart({
+  "id": "chart_vendedor",
+  "title": "Vendas por Vendedor",
+  "type": "groupedbar",
+  "height": 360,
+  "widthFr": "1fr",
+  "data": { "schema": "vendas", "table": "vw_pedidos", "dimension": "vendedor_nome", "measure": "item_subtotal", "agg": "SUM" },
+  "style": { "tw": "legend:on grid:on mb:32" }
+});
+`;
+
 export default function CommandConsole({ sourceCode }: Props) {
   const [text, setText] = useState<string>(`// Exemplo: cria um novo grupo e adiciona 3 KPIs nele\naddGroup({\n  \"id\": \"grp_more_kpis\",\n  \"title\": \"KPIs (mais)\",\n  \"orientation\": \"horizontal\",\n  \"sizing\": \"fr\",\n  \"colsD\": 12,\n  \"gapX\": 16,\n  \"gapY\": 16\n});\n\n// Ao omitir \"group\", os KPIs irão para o último grupo criado (grp_more_kpis)\naddKPI({\n  \"id\": \"kpi_receita_2\",\n  \"title\": \"Receita (M)\",\n  \"unit\": \"R$\",\n  \"height\": 150,\n  \"widthFr\": \"1fr\",\n  \"data\": { \"schema\": \"vendas\", \"table\": \"vw_pedidos\", \"measure\": \"item_subtotal\", \"agg\": \"SUM\" },\n  \"style\": { \"tw\": \"kpi:viz:card\" }\n});\n\naddKPI({\n  \"id\": \"kpi_ticket_medio_2\",\n  \"title\": \"Ticket Médio (M)\",\n  \"unit\": \"R$\",\n  \"height\": 150,\n  \"widthFr\": \"1fr\",\n  \"data\": { \"schema\": \"vendas\", \"table\": \"vw_pedidos\", \"measure\": \"item_subtotal\", \"agg\": \"AVG\" },\n  \"style\": { \"tw\": \"kpi:viz:card\" }\n});\n\naddKPI({\n  \"id\": \"kpi_pedidos_2\",\n  \"title\": \"Pedidos (M)\",\n  \"height\": 150,\n  \"widthFr\": \"1fr\",\n  \"data\": { \"schema\": \"vendas\", \"table\": \"vw_pedidos\", \"measure\": \"pedido_id\", \"agg\": \"COUNT\" },\n  \"style\": { \"tw\": \"kpi:viz:card\" }\n});\n`);
   const [output, setOutput] = useState<Array<{ type: "ok" | "err"; text: string }>>([]);
   const lastResultRef = useRef<string>("");
+
+  // Append a charts group example to the initial sample once
+  useEffect(() => {
+    if (text.includes('grp_kpis') && !text.includes('grp_charts')) {
+      setText((prev) => prev + CHARTS_EXAMPLE);
+    }
+    // run once on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const run = (apply: boolean) => {
     const parsed = parseCommands(text);
