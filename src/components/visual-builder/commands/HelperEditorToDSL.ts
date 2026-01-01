@@ -320,3 +320,75 @@ export function getWidgetTagKind(code: string, id: string): 'kpi' | 'chart' | un
   const m = code.match(re);
   return (m && (m[1] as 'kpi'|'chart')) || undefined;
 }
+
+export function dedupeWidgetByIdDSL(code: string, id: string): { code: string; removed: number } {
+  const esc = escRe(id);
+  const re = new RegExp(`<(kpi|chart)\\b[^>]*\\bid=\"${esc}\"[^>]*>[\\s\\S]*?<\\/\\1>`, 'gi');
+  const matches = code.match(re) || [];
+  if (matches.length <= 1) return { code, removed: 0 };
+  // Keep the first occurrence, remove the others
+  let removed = 0;
+  let firstKept = false;
+  const newCode = code.replace(re, (m) => {
+    if (!firstKept) { firstKept = true; return m; }
+    removed++;
+    return '';
+  });
+  return { code: newCode.replace(/\n{3,}/g, '\n\n'), removed };
+}
+
+export function updateWidgetStylingTwAndKpiBg(code: string, id: string, tw: string): string {
+  const esc = escRe(id);
+  const reBlock = new RegExp(`(<(kpi|chart)\\b[^>]*\\bid=\"${esc}\"[^>]*>)([\\s\\S]*?)(<\\/\\2>)`, 'i');
+  const m = code.match(reBlock);
+  if (!m) return code;
+  const open = m[1];
+  let inner = m[3];
+  const close = m[4];
+
+  // Find existing styling tag (self-closing or paired)
+  const stRe = /<styling\b([^>]*?)(?:\/>|>\s*<\/styling>)/i;
+  const stMatch = inner.match(stRe);
+  if (stMatch) {
+    let attrs = stMatch[1] || '';
+    const twRe = /(\btw=\")(.*?)\"/i;
+    const mTw = attrs.match(twRe);
+    if (mTw) {
+      const current = mTw[2] || '';
+      const hasBg = /(?:^|\s)bg:\S+/.test(current);
+      const bgNew = (tw.match(/(?:^|\s)bg:(\S+)/i)?.[1]) || '';
+      let nextTw = current;
+      if (bgNew) {
+        nextTw = hasBg ? current.replace(/(?:^|\s)bg:\S+/, (seg) => seg.replace(/bg:\S+/, `bg:${bgNew}`)) : (current + (current.trim() ? ' ' : '') + `bg:${bgNew}`);
+      } else {
+        // merge generic tokens
+        nextTw = current + (current.trim() ? ' ' : '') + tw;
+      }
+      attrs = attrs.replace(twRe, `tw=\"${escapeHtml(nextTw)}\"`);
+    } else {
+      attrs = `${attrs} tw=\"${escapeHtml(tw)}\"`;
+    }
+    inner = inner.replace(stRe, `<styling${attrs ? ' ' + attrs.trim() : ''} />`);
+  } else {
+    inner = inner.trimEnd() + `\n      <styling tw=\"${escapeHtml(tw)}\" />`;
+  }
+
+  // If KPI and tw contains bg:..., also set kpiConfig.kpiContainerBackgroundColor in <config>
+  const kind = getWidgetTagKind(code, id);
+  const bgMatch = tw.match(/(?:^|\s)bg:(\S+)/i);
+  if (kind === 'kpi' && bgMatch) {
+    const col = bgMatch[1];
+    const cfgRe = /<config\b[^>]*>([\s\S]*?)<\/config>/i;
+    const hasCfg = inner.match(cfgRe);
+    let obj: Record<string, unknown> = {};
+    if (hasCfg && hasCfg[1]) { try { obj = JSON.parse(hasCfg[1].trim()); } catch { obj = {}; } }
+    const kc = (obj['kpiConfig'] as Record<string, unknown> | undefined) || {};
+    kc['kpiContainerBackgroundColor'] = col;
+    obj['kpiConfig'] = kc;
+    const json = JSON.stringify(obj, null, 2);
+    if (hasCfg) inner = inner.replace(cfgRe, `<config>\n${json}\n</config>`);
+    else inner = `<config>\n${json}\n</config>\n` + inner;
+  }
+
+  return code.replace(reBlock, open + inner + close);
+}
