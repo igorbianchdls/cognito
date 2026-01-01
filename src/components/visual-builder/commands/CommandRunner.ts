@@ -22,6 +22,8 @@ import {
   setGroupStyleJson,
   setAttrOnNode,
   setAttrOnDatasource,
+  setConfigOnNode,
+  getWidgetTagKind,
 } from "./HelperEditorToDSL";
 
 export type RunDiagnostics = Array<{ ok: boolean; message: string; line?: number }>;
@@ -268,7 +270,21 @@ export function runCommands(code: string, commands: Command[]): { nextCode: stri
               next = setAttrOnDatasource(next, id, dsAttrs);
               updated = true;
             }
-            if (args.style?.tw) { next = setOrInsertStylingTw(next, id, args.style.tw); updated = true; }
+            if (args.style?.tw) {
+              next = setOrInsertStylingTw(next, id, args.style.tw);
+              // If KPI and has bg: token, also set kpiConfig.kpiContainerBackgroundColor via <config>
+              const kind = getWidgetTagKind(next, id);
+              const bgMatch = args.style.tw.match(/(?:^|\s)bg:([^\s]+)/i);
+              if (kind === 'kpi' && bgMatch) {
+                const col = bgMatch[1];
+                next = setConfigOnNode(next, id, (cfg) => {
+                  const kc = (cfg['kpiConfig'] as Record<string, unknown> | undefined) || {};
+                  kc['kpiContainerBackgroundColor'] = col;
+                  return { ...cfg, kpiConfig: kc };
+                });
+              }
+              updated = true;
+            }
             diags.push({ ok: updated, message: updated ? `Widget '${id}' atualizado.` : `Nenhuma alteração aplicada ao widget '${id}'.`, line: cmd.line });
           } else {
             try {

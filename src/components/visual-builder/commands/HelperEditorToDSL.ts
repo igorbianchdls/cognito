@@ -313,3 +313,10 @@ export function setGroupStyleJson(code: string, id: string, partial: Record<stri
     return open + inner + close;
   });
 }
+
+export function getWidgetTagKind(code: string, id: string): 'kpi' | 'chart' | undefined {
+  const esc = escRe(id);
+  const re = new RegExp(`<(?:(kpi|chart))\\b[^>]*\\bid=\"${esc}\"`, 'i');
+  const m = code.match(re);
+  return (m && (m[1] as 'kpi'|'chart')) || undefined;
+}
