@@ -25,6 +25,7 @@ import {
   setConfigOnNode,
   getWidgetTagKind,
   dedupeWidgetByIdDSL,
+  updateWidgetStylingTwAndKpiBg,
 } from "./HelperEditorToDSL";
 
 export type RunDiagnostics = Array<{ ok: boolean; message: string; line?: number }>;
