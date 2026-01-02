@@ -143,6 +143,7 @@ function splitStatements(input: string): { text: string; line: number }[] {
   const out: { text: string; line: number }[] = [];
   let start = 0;
   let depth = 0;
+  let depthP = 0; // parentheses depth
   let inString = false;
   let escape = false;
   let line = 1;
@@ -165,7 +166,9 @@ function splitStatements(input: string): { text: string; line: number }[] {
     if (inString) continue;
     if (ch === "{") depth++;
     else if (ch === "}") depth = Math.max(0, depth - 1);
-    else if (ch === ";" && depth === 0) {
+    else if (ch === "(") depthP++;
+    else if (ch === ")") depthP = Math.max(0, depthP - 1);
+    else if (ch === ";" && depth === 0 && depthP === 0) {
       const stmt = src.slice(start, i).trim();
       if (stmt) out.push({ text: stmt, line: startLine });
       start = i + 1;
