@@ -23,7 +23,7 @@ addGroup({
   "gapY": 16
 });
 
-addChart({
+addWidget({
   "id": "chart_vendas_regiao",
   "title": "Vendas por Região",
   "type": "bar",
@@ -33,7 +33,7 @@ addChart({
   "style": { "tw": "legend:on grid:on mb:32" }
 });
 
-addChart({
+addWidget({
   "id": "chart_canal",
   "title": "Vendas por Canal",
   "type": "pie",
@@ -43,7 +43,7 @@ addChart({
   "style": { "tw": "legend:on grid:off mb:32" }
 });
 
-addChart({
+addWidget({
   "id": "chart_vendedor",
   "title": "Vendas por Vendedor",
   "type": "groupedbar",
@@ -57,7 +57,7 @@ addChart({
 `;
 
 export default function CommandConsole({ sourceCode }: Props) {
-  const [text, setText] = useState<string>(`// Exemplo (sintaxe inline: key: "value";)\naddGroup(id: "grp_kpis"; title: "KPIs"; orientation: "horizontal"; sizing: "fr"; colsD: 12; gapX: 16; gapY: 16;);\n\naddKPI(id: "kpi_receita"; group: "grp_kpis"; title: "Receita"; height: 150; style.tw: "kpi:viz:card"; data.schema: "vendas"; data.table: "vw_pedidos"; data.measure: "item_subtotal"; data.agg: "SUM";);\naddKPI(id: "kpi_ticket_medio"; group: "grp_kpis"; title: "Ticket Médio"; height: 150; style.tw: "kpi:viz:card"; data.schema: "vendas"; data.table: "vw_pedidos"; data.measure: "item_subtotal"; data.agg: "AVG";);\naddKPI(id: "kpi_pedidos"; group: "grp_kpis"; title: "Pedidos"; height: 150; style.tw: "kpi:viz:card"; data.schema: "vendas"; data.table: "vw_pedidos"; data.measure: "pedido_id"; data.agg: "COUNT";);\n\naddGroup(id: "grp_charts"; title: "Gráficos"; orientation: "horizontal"; sizing: "fr"; colsD: 12; gapX: 16; gapY: 16;);\naddChart(id: "chart_vendas_regiao"; title: "Vendas por Região"; type: "bar"; height: 360; widthFr: "1fr"; data.schema: "vendas"; data.table: "vw_pedidos"; data.dimension: "regiao"; data.measure: "item_subtotal"; data.agg: "SUM"; style.tw: "legend:on grid:on mb:32";);\naddChart(id: "chart_canal"; title: "Vendas por Canal"; type: "pie"; height: 360; widthFr: "1fr"; data.schema: "vendas"; data.table: "vw_pedidos"; data.dimension: "canal_venda_nome"; data.measure: "item_subtotal"; data.agg: "SUM"; style.tw: "legend:on grid:off mb:32";);\naddChart(id: "chart_vendedor"; title: "Vendas por Vendedor"; type: "groupedbar"; height: 360; widthFr: "1fr"; data.schema: "vendas"; data.table: "vw_pedidos"; data.dimension: "vendedor_nome"; data.measure: "item_subtotal"; data.agg: "SUM"; style.tw: "legend:on grid:on mb:32";);\n\n// Updates: KPI fundo preto e grupo fundo verde\nupdateWidget(id: "kpi_ticket_medio"; style.tw: "bg:#000000";);\nupdateGroup(id: "grp_kpis"; style.backgroundColor: "#00ff00";);\n\n// Excluir o primeiro KPI\ndeleteWidget(id: "kpi_receita";);\n\n// Segundo grupo com 2 charts e remoção\naddGroup(id: "grp_charts_2"; title: "Gráficos 2"; orientation: "horizontal"; sizing: "fr"; colsD: 12; gapX: 16; gapY: 16;);\naddChart(id: "chart_categoria"; title: "Vendas por Categoria"; type: "bar"; height: 320; widthFr: "1fr"; data.schema: "vendas"; data.table: "vw_pedidos"; data.dimension: "categoria"; data.measure: "item_subtotal"; data.agg: "SUM"; style.tw: "legend:on grid:on mb:24";);\naddChart(id: "chart_pagamento"; title: "Vendas por Pagamento"; type: "pie"; height: 320; widthFr: "1fr"; data.schema: "vendas"; data.table: "vw_pedidos"; data.dimension: "forma_pagamento"; data.measure: "item_subtotal"; data.agg: "SUM"; style.tw: "legend:on grid:off mb:24";);\ndeleteGroupt(id: "grp_charts_2";);`);
+  const [text, setText] = useState<string>(`// Exemplo (sintaxe inline: key: "value";)\naddGroup(id: "grp_kpis"; title: "KPIs"; orientation: "horizontal"; sizing: "fr"; colsD: 12; gapX: 16; gapY: 16;);\n\naddWidget(id: "kpi_receita"; group: "grp_kpis"; title: "Receita"; height: 150; style.tw: "kpi:viz:card"; data.schema: "vendas"; data.table: "vw_pedidos"; data.measure: "item_subtotal"; data.agg: "SUM";);\naddWidget(id: "kpi_ticket_medio"; group: "grp_kpis"; title: "Ticket Médio"; height: 150; style.tw: "kpi:viz:card"; data.schema: "vendas"; data.table: "vw_pedidos"; data.measure: "item_subtotal"; data.agg: "AVG";);\naddWidget(id: "kpi_pedidos"; group: "grp_kpis"; title: "Pedidos"; height: 150; style.tw: "kpi:viz:card"; data.schema: "vendas"; data.table: "vw_pedidos"; data.measure: "pedido_id"; data.agg: "COUNT";);\n\naddGroup(id: "grp_charts"; title: "Gráficos"; orientation: "horizontal"; sizing: "fr"; colsD: 12; gapX: 16; gapY: 16;);\naddWidget(id: "chart_vendas_regiao"; title: "Vendas por Região"; type: "bar"; height: 360; widthFr: "1fr"; data.schema: "vendas"; data.table: "vw_pedidos"; data.dimension: "regiao"; data.measure: "item_subtotal"; data.agg: "SUM"; style.tw: "legend:on grid:on mb:32";);\naddWidget(id: "chart_canal"; title: "Vendas por Canal"; type: "pie"; height: 360; widthFr: "1fr"; data.schema: "vendas"; data.table: "vw_pedidos"; data.dimension: "canal_venda_nome"; data.measure: "item_subtotal"; data.agg: "SUM"; style.tw: "legend:on grid:off mb:32";);\naddWidget(id: "chart_vendedor"; title: "Vendas por Vendedor"; type: "groupedbar"; height: 360; widthFr: "1fr"; data.schema: "vendas"; data.table: "vw_pedidos"; data.dimension: "vendedor_nome"; data.measure: "item_subtotal"; data.agg: "SUM"; style.tw: "legend:on grid:on mb:32";);\n\n// Updates: KPI fundo preto e grupo fundo verde\nupdateWidget(id: "kpi_ticket_medio"; style.tw: "bg:#000000";);\nupdateGroup(id: "grp_kpis"; style.backgroundColor: "#00ff00";);\n\n// Excluir o primeiro KPI\ndeleteWidget(id: "kpi_receita";);\n\n// Segundo grupo com 2 charts e remoção\naddGroup(id: "grp_charts_2"; title: "Gráficos 2"; orientation: "horizontal"; sizing: "fr"; colsD: 12; gapX: 16; gapY: 16;);\naddWidget(id: "chart_categoria"; title: "Vendas por Categoria"; type: "bar"; height: 320; widthFr: "1fr"; data.schema: "vendas"; data.table: "vw_pedidos"; data.dimension: "categoria"; data.measure: "item_subtotal"; data.agg: "SUM"; style.tw: "legend:on grid:on mb:24";);\naddWidget(id: "chart_pagamento"; title: "Vendas por Pagamento"; type: "pie"; height: 320; widthFr: "1fr"; data.schema: "vendas"; data.table: "vw_pedidos"; data.dimension: "forma_pagamento"; data.measure: "item_subtotal"; data.agg: "SUM"; style.tw: "legend:on grid:off mb:24";);\ndeleteGroupt(id: "grp_charts_2";);`);
   const [output, setOutput] = useState<Array<{ type: "ok" | "err"; text: string }>>([]);
   const lastResultRef = useRef<string>("");
 
@@ -86,7 +86,7 @@ export default function CommandConsole({ sourceCode }: Props) {
     <div className="h-full flex flex-col">
       <div className="p-4 border-b border-gray-200">
         <h2 className="text-lg font-semibold text-gray-900">Command Console</h2>
-        <p className="text-sm text-gray-600">Escreva comandos como addGroup(), addKPI(), addChart(), setDashboard(), updateWidget(), updateGroup(), deleteWidget(), deleteGroupt() e clique em Executar.</p>
+        <p className="text-sm text-gray-600">Escreva comandos como addGroup(), addWidget(type: "kpi"|"bar"|…), setDashboard(), updateWidget(), updateGroup(), deleteWidget(), deleteGroupt() e clique em Executar.</p>
       </div>
       <div className="flex-1 min-h-0 grid grid-rows-[1fr_auto]">
         <div className="min-h-0">

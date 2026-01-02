@@ -3,6 +3,7 @@
 export type CommandKind =
   | "addChart"
   | "addKPI"
+  | "addWidget"
   | "addGroup"
   | "setDashboard"
   | "deleteWidget"
@@ -76,12 +77,15 @@ export type SetDashboardArgs = {
 export type Command =
   | BaseCommand<"addChart", AddChartArgs>
   | BaseCommand<"addKPI", AddKPIArgs>
+  | BaseCommand<"addWidget", AddWidgetArgs>
   | BaseCommand<"addGroup", AddGroupArgs>
   | BaseCommand<"setDashboard", SetDashboardArgs>
   | BaseCommand<"deleteWidget", { id: string }>
   | BaseCommand<"deleteGroupt", { id: string }>
   | BaseCommand<"updateWidget", UpdateWidgetArgs>
   | BaseCommand<"updateGroup", UpdateGroupArgs>;
+
+export type AddWidgetArgs = AddChartArgs & { chartType?: string };
 
 export type UpdateWidgetArgs = {
   id: string;
@@ -363,6 +367,14 @@ export function parseCommands(text: string): ParseResult {
         continue;
       }
       commands.push({ kind: "addKPI", line, raw: stmt, args: args as AddKPIArgs });
+      continue;
+    }
+    if (lower === "addWidget") {
+      if (!args?.id) {
+        errors.push({ line, message: "addWidget requer 'id'" });
+        continue;
+      }
+      commands.push({ kind: "addWidget", line, raw: stmt, args: args as AddWidgetArgs });
       continue;
     }
     if (lower === "addGroup") {

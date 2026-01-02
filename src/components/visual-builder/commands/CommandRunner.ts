@@ -44,6 +44,101 @@ export function runCommands(code: string, commands: Command[]): { nextCode: stri
   for (const cmd of commands) {
     try {
       switch (cmd.kind) {
+        case "addWidget": {
+          const args = cmd.args as any;
+          const rawType = String(args.type || '').toLowerCase();
+          const finalType = rawType === 'chart' ? String(args.chartType || '').toLowerCase() : rawType;
+          if (finalType === 'kpi') {
+            // Reuse addKPI logic
+            if (dsl) {
+              const groupId = args.group || currentGroupId || "kpis";
+              next = ensureGroupExists(next, { id: groupId, title: groupId }).code;
+              next = insertKpiInGroup(next, groupId, {
+                id: args.id,
+                title: args.title,
+                unit: args.unit,
+                height: args.height ?? 150,
+                widthFr: args.widthFr || "1fr",
+                data: args.data,
+                style: args.style,
+              });
+              diags.push({ ok: true, message: `KPI '${args.id}' adicionado ao grupo '${groupId}'.`, line: cmd.line });
+            } else {
+              try {
+                const root = JSON.parse(next || "{}") as any;
+                const widgets = Array.isArray(root.widgets) ? root.widgets : [];
+                const ds = args.data || {};
+                const norm = normalizeSchemaTable(ds.schema, ds.table);
+                const measure = ds.measure || buildMeasureExpr(ds.measure, ds.agg) || undefined;
+                widgets.push({
+                  id: args.id,
+                  type: 'kpi',
+                  title: args.title,
+                  heightPx: args.height ?? 150,
+                  ...(args.row ? { row: args.row } : {}),
+                  ...(args.spanD ? { span: { desktop: args.spanD } } : {}),
+                  dataSource: {
+                    schema: norm.schema,
+                    table: norm.table,
+                    measure,
+                  },
+                  kpiConfig: args.unit ? { unit: args.unit } : undefined,
+                });
+                root.widgets = widgets;
+                next = JSON.stringify(root, null, 2);
+                diags.push({ ok: true, message: `KPI '${args.id}' adicionado (JSON).`, line: cmd.line });
+              } catch (e) {
+                diags.push({ ok: false, message: `Falha ao mutar JSON: ${(e as Error).message}`, line: cmd.line });
+              }
+            }
+          } else {
+            // Treat as chart
+            const chartType = finalType || 'bar';
+            if (dsl) {
+              const groupId = args.group || currentGroupId || "charts";
+              next = ensureGroupExists(next, { id: groupId, title: groupId }).code;
+              next = insertChartInGroup(next, groupId, {
+                id: args.id,
+                title: args.title,
+                type: chartType,
+                height: args.height ?? 360,
+                widthFr: args.widthFr || "1fr",
+                data: { schema: args.data?.schema, table: args.data?.table, dimension: args.data?.dimension, measure: args.data?.measure, agg: args.data?.agg },
+                style: args.style,
+              });
+              diags.push({ ok: true, message: `Chart '${args.id}' adicionado ao grupo '${groupId}'.`, line: cmd.line });
+            } else {
+              try {
+                const root = JSON.parse(next || "{}") as any;
+                const widgets = Array.isArray(root.widgets) ? root.widgets : [];
+                const ds = args.data || {};
+                const norm = normalizeSchemaTable(ds.schema, ds.table);
+                const measure = ds.measure || buildMeasureExpr(ds.measure, ds.agg) || undefined;
+                widgets.push({
+                  id: args.id,
+                  type: chartType,
+                  title: args.title,
+                  heightPx: args.height ?? 360,
+                  ...(args.row ? { row: args.row } : {}),
+                  ...(args.spanD ? { span: { desktop: args.spanD } } : {}),
+                  dataSource: {
+                    schema: norm.schema,
+                    table: norm.table,
+                    dimension: args.data?.dimension,
+                    measure,
+                    aggregation: ds.agg,
+                  },
+                });
+                root.widgets = widgets;
+                next = JSON.stringify(root, null, 2);
+                diags.push({ ok: true, message: `Chart '${args.id}' adicionado (JSON).`, line: cmd.line });
+              } catch (e) {
+                diags.push({ ok: false, message: `Falha ao mutar JSON: ${(e as Error).message}`, line: cmd.line });
+              }
+            }
+          }
+          break;
+        }
         case "addGroup": {
           const args = cmd.args as AddGroupArgs;
           if (dsl) {
