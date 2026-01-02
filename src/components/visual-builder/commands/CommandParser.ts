@@ -299,9 +299,10 @@ export function parseCommands(text: string): ParseResult {
       continue;
     }
     // Special shorthand support for deleteWidget: deleteWidget("id") or deleteWidget(id)
+    // Skip shorthand when inline key:value; syntax is used (contains ':')
     if (name === 'deleteWidget') {
       const t = (argStr || '').trim();
-      if (!t.startsWith('{')) {
+      if (!t.startsWith('{') && !t.includes(':')) {
         let idVal = t;
         if ((t.startsWith('"') && t.endsWith('"')) || (t.startsWith("'") && t.endsWith("'"))) {
           idVal = t.slice(1, -1);
@@ -315,7 +316,7 @@ export function parseCommands(text: string): ParseResult {
     // Special shorthand for deleteGroupt("id") or deleteGroupt(id)
     if (name === 'deleteGroupt') {
       const t = (argStr || '').trim();
-      if (!t.startsWith('{')) {
+      if (!t.startsWith('{') && !t.includes(':')) {
         let idVal = t;
         if ((t.startsWith('"') && t.endsWith('"')) || (t.startsWith("'") && t.endsWith("'"))) {
           idVal = t.slice(1, -1);
