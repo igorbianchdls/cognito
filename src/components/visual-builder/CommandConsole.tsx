@@ -57,7 +57,10 @@ addWidget({
 `;
 
 export default function CommandConsole({ sourceCode }: Props) {
-  const [text, setText] = useState<string>(`// Atualizar títulos dos 3 charts existentes
+  const [text, setText] = useState<string>(`// Atualizar header
+updateHeader(title: "Dashboard de Indicadores (Atualizado)"; subtitle: "Visão geral (Atualizado)";)
+
+// Atualizar títulos dos 3 charts existentes
 updateArticle(id: "chart_vendas_canal"; title: "Vendas por Canal (Atualizado)";);
 updateArticle(id: "chart_faturamento_mensal"; title: "Faturamento Mensal (Atualizado)";);
 updateArticle(id: "chart_vendas_categoria"; title: "Vendas por Categoria (Atualizado)";);`);
