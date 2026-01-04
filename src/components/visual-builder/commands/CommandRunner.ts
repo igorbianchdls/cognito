@@ -175,6 +175,26 @@ export function runCommands(code: string, commands: Command[]): { nextCode: stri
           }
           break;
         }
+        case "addSection": {
+          const args = cmd.args as { id: string; type: 'kpis'|'charts'; colsD?: number; colsT?: number; colsM?: number; gapX?: number; gapY?: number };
+          if (dsl) {
+            const { code: updated, created } = ensureSectionExists(next, {
+              id: args.id,
+              type: args.type,
+              colsD: args.colsD,
+              colsT: args.colsT,
+              colsM: args.colsM,
+              gapX: args.gapX,
+              gapY: args.gapY,
+            });
+            next = updated;
+            currentGroupId = args.id;
+            diags.push({ ok: true, message: created ? `Section '${args.id}' (${args.type}) criado.` : `Section '${args.id}' já existia.`, line: cmd.line });
+          } else {
+            diags.push({ ok: false, message: 'addSection ainda não suportado para JSON.', line: cmd.line });
+          }
+          break;
+        }
         case "addGroup": {
           const args = cmd.args as AddGroupArgs;
           if (dsl) {
@@ -569,23 +589,3 @@ export function runCommands(code: string, commands: Command[]): { nextCode: stri
 
   return { nextCode: next, diagnostics: diags };
 }
-        case "addSection": {
-          const args = cmd.args as { id: string; type: 'kpis'|'charts'; colsD?: number; colsT?: number; colsM?: number; gapX?: number; gapY?: number };
-          if (dsl) {
-            const { code: updated, created } = ensureSectionExists(next, {
-              id: args.id,
-              type: args.type,
-              colsD: args.colsD,
-              colsT: args.colsT,
-              colsM: args.colsM,
-              gapX: args.gapX,
-              gapY: args.gapY,
-            });
-            next = updated;
-            currentGroupId = args.id;
-            diags.push({ ok: true, message: created ? `Section '${args.id}' (${args.type}) criado.` : `Section '${args.id}' já existia.`, line: cmd.line });
-          } else {
-            diags.push({ ok: false, message: 'addSection ainda não suportado para JSON.', line: cmd.line });
-          }
-          break;
-        }
