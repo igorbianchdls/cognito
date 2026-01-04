@@ -7,6 +7,8 @@ export {
   normalizeSchemaTable,
   removeWidgetByIdDSL,
   removeGroupByIdDSL,
+  setOrInsertStylingTw,
+  setGroupStyleJson,
   dedupeWidgetByIdDSL,
   updateWidgetStylingTwAndKpiBg,
   setAttrOnNode,
@@ -14,4 +16,3 @@ export {
   setConfigOnNode,
   getWidgetTagKind,
 } from './HelperEditorToDSL';
-
