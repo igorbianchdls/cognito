@@ -464,13 +464,17 @@ function ResponsiveGridCanvas({ widgets, gridConfig, globalFilters, viewportMode
       if (Number.isFinite(ai) && Number.isFinite(bi)) return ai - bi;
       return a.localeCompare(b);
     });
-    if (!isDsl(code)) {
-      // fallback order from detected groups
-      return sortKeys(Object.keys(widgetGroups));
+    // Prefer explicit <row> order when present in DSL
+    if (isDsl(code)) {
+      const rows = getRowsFromDsl(code);
+      if (rows.length > 0) return rows.map(r => r.id);
     }
-    const rows = getRowsFromDsl(code);
-    if (rows.length > 0) return rows.map(r => r.id);
-    // No <row> blocks (HTML section/article). Fallback to detected widget row keys.
+    // Next, prefer insertion order from parsed gridConfig.layout.rows (sections)
+    const layoutRows = gridConfig.layout?.rows;
+    if (layoutRows && Object.keys(layoutRows).length > 0) {
+      return Object.keys(layoutRows);
+    }
+    // Fallback: use detected widget groups (sorted for stability)
     return sortKeys(Object.keys(widgetGroups));
   };
   const rowOrder = useMemo(() => getRowOrderFromCode(), [visualBuilderState.code, widgetGroups]);
