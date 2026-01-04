@@ -12,7 +12,7 @@ import CommandConsole from '@/components/visual-builder/CommandConsole';
 import ResponsiveGridCanvas from '@/components/visual-builder/ResponsiveGridCanvas';
 import WidgetEditorModal from '@/components/visual-builder/WidgetEditorModal';
 import { $visualBuilderState, visualBuilderActions } from '@/stores/visualBuilderStore';
-import { initialLiquidGrid as initialDsl, initialLiquidColumns as initialDslColumns } from '@/stores/visualBuilderStore';
+import { initialLiquidGrid, initialLiquidColumns } from '@/stores/visualBuilderStore';
 import { ThemeManager, type ThemeName } from '@/components/visual-builder/ThemeManager';
 import type { Widget, GlobalFilters } from '@/stores/visualBuilderStore';
 
@@ -146,13 +146,13 @@ export default function VisualBuilderPage() {
             </button>
             <button
               className="px-4 py-2 text-sm border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-              onClick={() => visualBuilderActions.updateCode(initialDsl)}
+              onClick={() => visualBuilderActions.updateCode(initialLiquidGrid)}
             >
               Exemplo (Grid)
             </button>
             <button
               className="px-4 py-2 text-sm border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-              onClick={() => visualBuilderActions.updateCode(initialDslColumns)}
+              onClick={() => visualBuilderActions.updateCode(initialLiquidColumns)}
             >
               Exemplo por Colunas
             </button>
@@ -222,7 +222,7 @@ export default function VisualBuilderPage() {
           <div className="h-full bg-white">
             <div className="p-4 border-b border-gray-200">
               <h2 className="text-lg font-semibold text-gray-900">Configuration Editor</h2>
-              <p className="text-sm text-gray-600">Defina seu dashboard com Liquid (ou JSON)</p>
+              <p className="text-sm text-gray-600">Defina seu dashboard em Liquid</p>
             </div>
             {/* Split 50/50: left editor, right commands */}
             <div className="h-[calc(100%-73px)] flex">

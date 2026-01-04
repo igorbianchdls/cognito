@@ -155,8 +155,8 @@ const compactWidgetHeaders = (code: string): string => {
   )
 }
 
-// New DSL initial code (HTML-like)
-export const initialDslGrid = `<dashboard theme="branco" title="Dashboard de Indicadores" subtitle="Visão geral" layout-mode="grid" cols-d="12" gap-x="16" gap-y="16" date-type="last_30_days">
+// Initial Liquid template (HTML-like)
+export const initialLiquidGrid = `<dashboard theme="branco" title="Dashboard de Indicadores" subtitle="Visão geral" layout-mode="grid" cols-d="12" gap-x="16" gap-y="16" date-type="last_30_days">
   <group id="grp_kpis" title="KPIs" sizing="fr" orientation="horizontal" cols-d="12" gap-x="16" gap-y="16">
     <style>{"titleFontFamily":"Inter, ui-sans-serif, system-ui","titleFontSize":14,"titleFontWeight":600,"titleColor":"#111827","backgroundColor":"#fafafa","borderColor":"#e5e7eb","borderWidth":1,"borderRadius":12,"padding":12}</style>
     <kpi id="kpi_receita" width="1fr" height="150" title="Receita">
@@ -173,8 +173,6 @@ export const initialDslGrid = `<dashboard theme="branco" title="Dashboard de Ind
     </kpi>
   </group>
 </dashboard>`
-// Liquid naming aliases (keeping content for compatibility)
-export const initialLiquidGrid = initialDslGrid
 export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas" subtitle="Análise de desempenho comercial" layout-mode="grid-per-row" date-type="last_30_days">
   <!-- KPIs (6 em uma linha) - Foco: Novembro/2025 via filtros globais -->
   <row id="kpis" cols-d="6" cols-t="3" cols-m="2" gap-x="12" gap-y="12">
@@ -345,8 +343,8 @@ export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas"
   
 </dashboard>`
 
-// Example in grid-per-column mode
-export const initialDslColumns = `<dashboard theme="branco" title="Dashboard (Colunas)" subtitle="Layout por colunas" layout-mode="grid-per-column" cols-d="3" cols-t="2" cols-m="1" gap-x="16" gap-y="16">
+// Example in grid-per-column mode (Liquid)
+export const initialLiquidColumns = `<dashboard theme="branco" title="Dashboard (Colunas)" subtitle="Layout por colunas" layout-mode="grid-per-column" cols-d="3" cols-t="2" cols-m="1" gap-x="16" gap-y="16">
   <columns>
     <column id="1">
       <kpi id="kpi_faturamento" order="1" span-d="1" height="150" title="💰 Faturamento Total">
@@ -380,16 +378,15 @@ export const initialDslColumns = `<dashboard theme="branco" title="Dashboard (Co
     </column>
   </columns>
 </dashboard>`
-export const initialLiquidColumns = initialDslColumns
 
 // Parse do código inicial para ter widgets desde o início
-const initialParseResult = ConfigParser.parse(initialDslGrid)
+const initialParseResult = ConfigParser.parse(initialLiquidGrid)
 
-// Use a compact view when code is JSON; keep as-is for DSL
-const isDslCode = (code: string) => code.trim().startsWith('<')
-const compactInitialCode = isDslCode(initialDslGrid)
-  ? initialDslGrid
-  : compactWidgetHeaders(compactJsonSections(compactLayoutRows(reorderWidgetKeysInCode(initialDslGrid))))
+// Use a compact view when code is JSON; keep as-is for Liquid
+const isLiquidCode = (code: string) => code.trim().startsWith('<')
+const compactInitialCode = isLiquidCode(initialLiquidGrid)
+  ? initialLiquidGrid
+  : compactWidgetHeaders(compactJsonSections(compactLayoutRows(reorderWidgetKeysInCode(initialLiquidGrid))))
 
 const initialState: VisualBuilderState = {
   widgets: initialParseResult.widgets,
@@ -476,7 +473,7 @@ export const visualBuilderActions = {
       2
     )
 
-    const newCode = isDslCode(currentState.code)
+    const newCode = isLiquidCode(currentState.code)
       ? (() => {
           // Serialize DSL: update order and (in per-column mode) column (col-d)
           let dsl = currentState.code
@@ -780,7 +777,7 @@ export const visualBuilderActions = {
   updateGroupSpec: (groupId: string, spec: { title?: string; subtitle?: string; backgroundColor?: string; borderColor?: string; borderWidth?: number; titleFontFamily?: string; titleFontSize?: number; titleFontWeight?: string | number; titleColor?: string; titleMarginTop?: number; titleMarginRight?: number; titleMarginBottom?: number; titleMarginLeft?: number; subtitleFontFamily?: string; subtitleFontSize?: number; subtitleFontWeight?: string | number; subtitleColor?: string; subtitleMarginTop?: number; subtitleMarginRight?: number; subtitleMarginBottom?: number; subtitleMarginLeft?: number; containerMarginTop?: number; containerMarginRight?: number; containerMarginBottom?: number; containerMarginLeft?: number }) => {
     const current = $visualBuilderState.get();
     const code = current.code || '';
-    if (!isDslCode(code)) return;
+    if (!isLiquidCode(code)) return;
 
     const tagRe = /<group\b([^>]*)>([\s\S]*?)<\/group>/gi;
     const parseAttrs = (s: string): Record<string, string> => {
@@ -880,12 +877,12 @@ export const visualBuilderActions = {
       return
     }
 
-    const parseResult = ConfigParser.parse(initialDslGrid)
+    const parseResult = ConfigParser.parse(initialLiquidGrid)
 
     $visualBuilderState.set({
       widgets: parseResult.widgets,
       gridConfig: parseResult.gridConfig,
-      code: initialDslGrid,
+      code: initialLiquidGrid,
       parseErrors: parseResult.errors,
       isValid: parseResult.isValid,
       dashboardTitle: parseResult.dashboardTitle,
@@ -935,7 +932,7 @@ export const visualBuilderActions = {
       null,
       2
     )
-    const newCode = isDslCode(currentState.code)
+    const newCode = isLiquidCode(currentState.code)
       ? currentState.code
       : compactWidgetHeaders(compactJsonSections(compactLayoutRows(reorderWidgetKeysInCode(newCodeRaw))))
 
@@ -960,7 +957,7 @@ export const visualBuilderActions = {
   updateGlobalDateInCode: (filters: GlobalFilters) => {
     const currentState = $visualBuilderState.get()
     const code = currentState.code || ''
-    if (!isDslCode(code)) {
+    if (!isLiquidCode(code)) {
       // Fallback: apenas atualiza os filtros na store
       visualBuilderActions.updateGlobalFilters(filters)
       return
@@ -1019,7 +1016,7 @@ export const visualBuilderActions = {
     const safe = (s?: string | number) => (s == null ? '' : String(s))
     const escapeHtml = (s: string) => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;')
 
-    if (isDslCode(code)) {
+    if (isLiquidCode(code)) {
       // 1) If <header ...> exists, replace it
       const rePair = /<header\b[^>]*>[\s\S]*?<\/header>/i
       const reSelf = /<header\b[^>]*\/>/i
@@ -1110,7 +1107,7 @@ export const visualBuilderActions = {
   removeHeaderFromCode: () => {
     const currentState = $visualBuilderState.get()
     const code = currentState.code || ''
-    if (isDslCode(code)) {
+    if (isLiquidCode(code)) {
       const rePair = /<header\b[^>]*>[\s\S]*?<\/header>/i
       const reSelf = /<header\b[^>]*\/>/i
       let next = code
