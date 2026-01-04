@@ -156,7 +156,8 @@ const compactWidgetHeaders = (code: string): string => {
 }
 
 // Initial Liquid template (HTML-like)
-export const initialLiquidGrid = `<dashboard theme="branco" title="Dashboard de Indicadores" subtitle="Visão geral" layout-mode="grid-per-row" cols-d="12" gap-x="16" gap-y="16" date-type="last_30_days">
+export const initialLiquidGrid = `<dashboard theme="branco" layout-mode="grid-per-row" cols-d="12" gap-x="16" gap-y="16" date-type="last_30_days">
+  <header title="Dashboard de Indicadores" subtitle="Visão geral" />
   <section data-type="kpis" id="kpis" data-cols-d="3" data-cols-t="2" data-cols-m="1" data-gap-x="16" data-gap-y="16">
     <article data-id="kpi_receita" data-order="1" data-height="150">
       <h1>Receita</h1>
@@ -366,7 +367,8 @@ export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas"
 </dashboard>`
 
 // Example in grid-per-column mode (Liquid)
-export const initialLiquidColumns = `<dashboard theme="branco" title="Dashboard (Colunas)" subtitle="Layout por colunas" layout-mode="grid-per-column" cols-d="3" cols-t="2" cols-m="1" gap-x="16" gap-y="16">
+export const initialLiquidColumns = `<dashboard theme="branco" layout-mode="grid-per-column" cols-d="3" cols-t="2" cols-m="1" gap-x="16" gap-y="16">
+  <header title="Dashboard (Colunas)" subtitle="Layout por colunas" />
   <columns>
     <column id="1">
       <kpi id="kpi_faturamento" order="1" span-d="1" height="150" title="💰 Faturamento Total">
@@ -1150,6 +1152,32 @@ export const visualBuilderActions = {
     } catch {
       // ignore
     }
+  },
+
+  // Migrar title/subtitle do <dashboard> para um <header .../>
+  migrateHeaderToTag: () => {
+    const currentState = $visualBuilderState.get()
+    const code = currentState.code || ''
+    if (!isLiquidCode(code)) return
+    const dashOpenMatch = code.match(/<dashboard\b[^>]*>/i)
+    if (!dashOpenMatch) return
+    const openTag = dashOpenMatch[0]
+    const attrsStr = openTag.slice('<dashboard'.length, openTag.length - 1)
+    const attrRegex = /(\w[\w-]*)\s*=\s*"([^"]*)"/g
+    const attrs: Record<string, string> = {}
+    for (const m of attrsStr.matchAll(attrRegex)) attrs[m[1]] = m[2]
+    const title = attrs['title']
+    const subtitle = attrs['subtitle']
+    if (!title && !subtitle) return
+    // Remove from dashboard attrs
+    delete attrs['title']
+    delete attrs['subtitle']
+    const kv = Object.entries(attrs).map(([k, v]) => `${k}="${v}"`).join(' ')
+    const newOpenTag = `<dashboard ${kv}>`
+    const codeNoDashTitle = code.replace(openTag, newOpenTag)
+    // First, apply the dashboard tag change, then upsert header
+    visualBuilderActions.updateCode(codeNoDashTitle)
+    visualBuilderActions.updateHeaderInCode({ title, subtitle })
   },
 
   // Resetar filtros globais

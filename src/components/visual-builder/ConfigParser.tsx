@@ -444,8 +444,17 @@ export class ConfigParser {
     const dashMatch = dsl.match(/<dashboard\b([^>]*)>/i);
     const dashAttrs = dashMatch ? parseAttrs(dashMatch[1]) : {};
     const themeAttr = dashAttrs['theme'] as ThemeName | undefined;
+    // Prefer header; keep dashboard attrs only as legacy fallback
     let dashboardTitle = dashAttrs['title'];
     let dashboardSubtitle = dashAttrs['subtitle'];
+    if (dashboardTitle || dashboardSubtitle) {
+      errors.push({
+        line: 1,
+        column: 1,
+        type: 'warning',
+        message: 'Atributos title/subtitle em <dashboard> estão obsoletos. Use <header title="…" subtitle="…" />.'
+      });
+    }
     let headerConfig: HeaderConfig | undefined = undefined;
     const layoutMode = (dashAttrs['layout-mode'] as 'grid' | 'grid-per-row' | 'grid-per-column' | undefined) || 'grid-per-row';
 
