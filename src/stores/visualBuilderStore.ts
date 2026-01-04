@@ -157,7 +157,7 @@ const compactWidgetHeaders = (code: string): string => {
 
 // Initial Liquid template (HTML-like)
 export const initialLiquidGrid = `<dashboard theme="branco" layout-mode="grid-per-row" cols-d="12" gap-x="16" gap-y="16" date-type="last_30_days">
-  <header title="Dashboard de Indicadores" subtitle="Visão geral" />
+  <header title="Dashboard de Indicadores" subtitle="Visão geral"></header>
   <section data-type="kpis" id="kpis" data-cols-d="3" data-cols-t="2" data-cols-m="1" data-gap-x="16" data-gap-y="16">
     <article data-id="kpi_receita" data-order="1" data-height="150">
       <h1>Receita</h1>
@@ -368,7 +368,7 @@ export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas"
 
 // Example in grid-per-column mode (Liquid)
 export const initialLiquidColumns = `<dashboard theme="branco" layout-mode="grid-per-column" cols-d="3" cols-t="2" cols-m="1" gap-x="16" gap-y="16">
-  <header title="Dashboard (Colunas)" subtitle="Layout por colunas" />
+  <header title="Dashboard (Colunas)" subtitle="Layout por colunas"></header>
   <columns>
     <column id="1">
       <kpi id="kpi_faturamento" order="1" span-d="1" height="150" title="💰 Faturamento Total">
@@ -1062,7 +1062,7 @@ export const visualBuilderActions = {
       if (data?.borderWidth !== undefined) attrs.push(`borderWidth=\"${escapeHtml(safe(data.borderWidth))}\"`)
       if (data?.borderStyle) attrs.push(`borderStyle=\"${escapeHtml(safe(data.borderStyle))}\"`)
       if (typeof data?.showDatePicker === 'boolean') attrs.push(`showDatePicker=\"${data.showDatePicker ? 'true' : 'false'}\"`)
-      const tag = `<header ${attrs.join(' ')} />`
+      const tag = `<header ${attrs.join(' ')}></header>`
 
       if (rePair.test(code)) {
         const next = code.replace(rePair, tag)
