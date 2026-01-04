@@ -12,7 +12,7 @@ import CommandConsole from '@/components/visual-builder/CommandConsole';
 import ResponsiveGridCanvas from '@/components/visual-builder/ResponsiveGridCanvas';
 import WidgetEditorModal from '@/components/visual-builder/WidgetEditorModal';
 import { $visualBuilderState, visualBuilderActions } from '@/stores/visualBuilderStore';
-import { initialDslGrid as initialDsl, initialDslColumns } from '@/stores/visualBuilderStore';
+import { initialLiquidGrid as initialDsl, initialLiquidColumns as initialDslColumns } from '@/stores/visualBuilderStore';
 import { ThemeManager, type ThemeName } from '@/components/visual-builder/ThemeManager';
 import type { Widget, GlobalFilters } from '@/stores/visualBuilderStore';
 
@@ -33,12 +33,23 @@ export default function VisualBuilderPage() {
 
   // Patch editor removed
   const currentThemeName: ThemeName = useMemo<ThemeName>(() => {
+    const code = String(visualBuilderState.code || '').trim();
     try {
-      const cfg = JSON.parse(visualBuilderState.code);
+      // Detect DSL (Liquid/HTML-like)
+      if (code.startsWith('<')) {
+        const m = code.match(/<dashboard\b[^>]*\btheme\s*=\s*\"([^\"]+)\"/i);
+        if (m && m[1] && ThemeManager.isValidTheme(m[1] as ThemeName)) return m[1] as ThemeName;
+        return 'branco';
+      }
+      // JSON fallback
+      const cfg = JSON.parse(code);
       if (cfg && typeof cfg.theme === 'string' && ThemeManager.isValidTheme(cfg.theme)) return cfg.theme;
     } catch {}
     return 'branco';
   }, [visualBuilderState.code]);
+
+  // Liquid-only editor language
+  const monacoLanguage = 'html';
 
   // Initialize store on mount
   useEffect(() => {
@@ -211,7 +222,7 @@ export default function VisualBuilderPage() {
           <div className="h-full bg-white">
             <div className="p-4 border-b border-gray-200">
               <h2 className="text-lg font-semibold text-gray-900">Configuration Editor</h2>
-              <p className="text-sm text-gray-600">Define your widgets with JSON coordinates</p>
+              <p className="text-sm text-gray-600">Defina seu dashboard com Liquid (ou JSON)</p>
             </div>
             {/* Split 50/50: left editor, right commands */}
             <div className="h-[calc(100%-73px)] flex">
@@ -219,7 +230,7 @@ export default function VisualBuilderPage() {
                 <MonacoEditor
                   value={editorCode}
                   onChange={handleCodeChange}
-                  language="json"
+                  language={monacoLanguage}
                   errors={visualBuilderState.parseErrors}
                 />
               </div>

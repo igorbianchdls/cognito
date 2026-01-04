@@ -173,6 +173,8 @@ export const initialDslGrid = `<dashboard theme="branco" title="Dashboard de Ind
     </kpi>
   </group>
 </dashboard>`
+// Liquid naming aliases (keeping content for compatibility)
+export const initialLiquidGrid = initialDslGrid
 export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas" subtitle="Análise de desempenho comercial" layout-mode="grid-per-row" date-type="last_30_days">
   <!-- KPIs (6 em uma linha) - Foco: Novembro/2025 via filtros globais -->
   <row id="kpis" cols-d="6" cols-t="3" cols-m="2" gap-x="12" gap-y="12">
@@ -378,6 +380,7 @@ export const initialDslColumns = `<dashboard theme="branco" title="Dashboard (Co
     </column>
   </columns>
 </dashboard>`
+export const initialLiquidColumns = initialDslColumns
 
 // Parse do código inicial para ter widgets desde o início
 const initialParseResult = ConfigParser.parse(initialDslGrid)

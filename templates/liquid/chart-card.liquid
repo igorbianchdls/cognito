@@ -1,0 +1,37 @@
+<section class="chart-group" id="grp_charts" data-cols-d="12" data-gap-x="16" data-gap-y="16">
+  <article class="chart-card"
+           data-id="chart_vendas_regiao"
+           data-type="bar"
+           data-height="360"
+           data-width-fr="2fr"
+           data-tw="legend:on grid:on mb:32">
+    <header class="chart-header">
+      <h2>Vendas por Região</h2>
+      <p class="chart-subtitle">Soma do subtotal por região</p>
+    </header>
+
+    <main class="chart-viz">
+      {{ schema: vendas; table: vw_pedidos; dimension: regiao; measure: item_subtotal; agg: SUM }}
+    </main>
+
+    <script type="application/json" data-kind="chart-config">
+      { "styling": { "colors": ["#2563eb", "#10b981", "#f59e0b"] }, "margin": { "left": 48, "bottom": 40 } }
+    </script>
+  </article>
+
+  <article class="chart-card"
+           data-id="chart_canal"
+           data-type="pie"
+           data-height="320"
+           data-width-fr="1fr"
+           data-tw="legend:on">
+    <header class="chart-header">
+      <h2>Vendas por Canal</h2>
+    </header>
+
+    <main class="chart-viz">
+      {{ schema: vendas; table: vw_pedidos; dimension: canal_venda_nome; measure: item_subtotal; agg: SUM }}
+    </main>
+  </article>
+</section>
+

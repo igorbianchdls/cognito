@@ -26,7 +26,7 @@ import {
   getWidgetTagKind,
   dedupeWidgetByIdDSL,
   updateWidgetStylingTwAndKpiBg,
-} from "./HelperEditorToDSL";
+} from "./HelperEditorToLiquid";
 
 export type RunDiagnostics = Array<{ ok: boolean; message: string; line?: number }>;
 

@@ -374,130 +374,41 @@ export class ConfigParser {
     );
   }
 
-  static parse(jsonString: string): ParseResult {
-    try {
-      const raw = String(jsonString || '').trim();
-      // DSL detection: starts with tag and contains <row or <dashboard or <chart>/<kpi>
-      if (
-        raw.startsWith('<') &&
-        (/<row\b/i.test(raw) || /<dashboard\b/i.test(raw) || /<chart\b/i.test(raw) || /<kpi\b/i.test(raw))
-      ) {
-        return this.parseDsl(raw);
+  static parse(input: string): ParseResult {
+    const raw = String(input || '').trim();
+    // Liquid-only: require HTML-like Liquid template starting with <dashboard ...>
+    if (raw.startsWith('<')) {
+      try {
+        return this.parseLiquid(raw);
+      } catch (error) {
+        return {
+          widgets: [],
+          gridConfig: this.DEFAULT_GRID_CONFIG,
+          errors: [{
+            line: 1,
+            column: 1,
+            message: error instanceof Error ? error.message : 'Invalid Liquid template',
+            type: 'syntax'
+          }],
+          isValid: false
+        };
       }
-      // Step 1: Parse JSON (same as chart stores)
-      const config = JSON.parse(jsonString);
-
-      // Step 2: Extract widgets, grid config, theme, custom font, custom font size, custom background, corporate color, layout columns and dashboard metadata
-      const widgets = (config.widgets || []) as Widget[];
-      const rawGridConfig = config.config || {};
-      const theme = config.theme as ThemeName;
-      const customFont = config.customFont as string;
-      const customFontSize = config.customFontSize as string;
-      const customLetterSpacing = typeof config.customLetterSpacing === 'number' ? config.customLetterSpacing : undefined;
-      const customBackground = config.customBackground as string;
-      const customChartFontFamily = typeof config.customChartFontFamily === 'string' ? config.customChartFontFamily : undefined;
-      const customChartTextColor = typeof config.customChartTextColor === 'string' ? config.customChartTextColor : undefined;
-      const corporateColor = config.corporateColor as string;
-      const layoutRows = (config.layoutRows || rawGridConfig.layoutRows) as Record<string, LayoutRow> | undefined;
-      // New layout definition (top-level or inside config)
-      const layoutDef = (config.layout || rawGridConfig.layout) as GridConfig['layout'] | undefined;
-      const dashboardTitle = typeof config.dashboardTitle === 'string' ? config.dashboardTitle : undefined;
-      const dashboardSubtitle = typeof config.dashboardSubtitle === 'string' ? config.dashboardSubtitle : undefined;
-      const headerConfig = (config.headerConfig && typeof config.headerConfig === 'object') ? (config.headerConfig as HeaderConfig) : undefined;
-
-      // Border options (top-level)
-      const borderType = typeof config.borderType === 'string' && BorderManager.isValid(config.borderType)
-        ? (config.borderType as BorderPresetKey)
-        : undefined;
-      const borderColor = typeof config.borderColor === 'string' ? config.borderColor : undefined;
-      const borderWidth = typeof config.borderWidth === 'number' ? config.borderWidth : undefined;
-      const borderRadius = typeof config.borderRadius === 'number' ? config.borderRadius : undefined;
-      const borderAccentColor = typeof config.borderAccentColor === 'string' ? config.borderAccentColor : undefined;
-      const borderShadow = typeof config.borderShadow === 'boolean' ? config.borderShadow : undefined;
-
-      // Step 3: Process grid config with defaults
-      const gridConfig: GridConfig = {
-        maxRows: typeof rawGridConfig.maxRows === 'number' && rawGridConfig.maxRows > 0
-          ? rawGridConfig.maxRows : this.DEFAULT_GRID_CONFIG.maxRows,
-        rowHeight: typeof rawGridConfig.rowHeight === 'number' && rawGridConfig.rowHeight > 0
-          ? rawGridConfig.rowHeight : this.DEFAULT_GRID_CONFIG.rowHeight,
-        cols: typeof rawGridConfig.cols === 'number' && rawGridConfig.cols > 0
-          ? rawGridConfig.cols : this.DEFAULT_GRID_CONFIG.cols,
-        height: typeof rawGridConfig.height === 'number' && rawGridConfig.height > 0
-          ? rawGridConfig.height : undefined,
-        backgroundColor: typeof rawGridConfig.backgroundColor === 'string'
-          ? rawGridConfig.backgroundColor : undefined,
-        borderColor: typeof rawGridConfig.borderColor === 'string'
-          ? rawGridConfig.borderColor : undefined,
-
-        // Add responsive layout rows
-        layoutRows: layoutRows,
-        // New grid layout definition
-        layout: layoutDef
-      };
-
-      // Step 4: Basic filter for runtime safety only
-      const validWidgets = widgets.filter(widget => {
-        // Basic safety checks only; 'position' is optional for responsive layout
-        const hasBasic = widget && typeof widget.id === 'string' && typeof widget.type === 'string' && this.VALID_TYPES.includes(widget.type);
-        const hasTitle = typeof widget.title === 'string' || widget.title === undefined;
-        // If a legacy 'position' is provided, it must be numeric; otherwise ignore
-        const validPosition = !widget.position || (
-          typeof widget.position.x === 'number' &&
-          typeof widget.position.y === 'number' &&
-          typeof widget.position.w === 'number' &&
-          typeof widget.position.h === 'number'
-        );
-        return Boolean(hasBasic && hasTitle && validPosition);
-      });
-
-      // Step 5: Apply theme to widgets and grid if theme is specified and valid
-      const themedWidgets = (theme && ThemeManager.isValidTheme(theme))
-        ? this.applyThemeToWidgets(validWidgets, theme, customFont, corporateColor, customFontSize, {
-            type: borderType,
-            color: borderColor,
-            width: borderWidth,
-            radius: borderRadius,
-            accentColor: borderAccentColor,
-            shadow: borderShadow,
-          }, customChartFontFamily, customChartTextColor)
-        : validWidgets;
-
-      // Step 6: Apply theme to grid (now handles custom background internally)
-      const themedGridConfig = (theme && ThemeManager.isValidTheme(theme))
-        ? ThemeManager.applyThemeToGrid(gridConfig, theme, corporateColor, customBackground, customLetterSpacing)
-        : { ...gridConfig, letterSpacing: customLetterSpacing };
-
-      return {
-        widgets: themedWidgets,
-        gridConfig: themedGridConfig,
-        errors: [],
-        isValid: true,
-        dashboardTitle,
-        dashboardSubtitle,
-        ...(headerConfig ? { headerConfig } : {})
-      };
-    } catch (error) {
-      return {
-        widgets: [],
-        gridConfig: this.DEFAULT_GRID_CONFIG,
-        errors: [{
-          line: 1,
-          column: 1,
-          message: error instanceof Error ? error.message : 'Invalid JSON',
-          type: 'syntax'
-        }],
-        isValid: false
-      };
     }
+    // Not Liquid: reject with clear message
+    return {
+      widgets: [],
+      gridConfig: this.DEFAULT_GRID_CONFIG,
+      errors: [{ line: 1, column: 1, message: 'Apenas Liquid é suportado aqui. Cole um template começando com <dashboard ...>.', type: 'validation' }],
+      isValid: false
+    };
   }
 
   /**
-   * Parse HTML-like DSL into ParseResult
+   * Parse HTML-like Liquid template (legacy DSL-compatible) into ParseResult
    * Supported tags: <dashboard>, <row>, <chart>, <kpi>, <datasource/>, <styling/>, <items><item/></items>
    * (Legacy <config> JSON is still accepted as fallback when present.)
    */
-  private static parseDsl(dsl: string): ParseResult {
+  private static parseLiquid(dsl: string): ParseResult {
     const errors: ParseError[] = [];
     const widgets: Widget[] = [];
     const layoutRows: NonNullable<GridConfig['layout']>['rows'] = {};

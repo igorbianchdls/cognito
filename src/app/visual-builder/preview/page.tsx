@@ -12,8 +12,16 @@ export default function PreviewPage() {
   const [viewportMode, setViewportMode] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
   const [isFilterLoading, setIsFilterLoading] = useState(false);
   const currentThemeName: ThemeName = (() => {
+    const code = String(visualBuilderState.code || '').trim();
     try {
-      const cfg = JSON.parse(visualBuilderState.code);
+      // Detect DSL (Liquid/HTML-like)
+      if (code.startsWith('<')) {
+        const m = code.match(/<dashboard\b[^>]*\btheme\s*=\s*\"([^\"]+)\"/i);
+        if (m && m[1] && ThemeManager.isValidTheme(m[1] as ThemeName)) return m[1] as ThemeName;
+        return 'branco';
+      }
+      // JSON fallback
+      const cfg = JSON.parse(code);
       if (cfg && typeof cfg.theme === 'string' && ThemeManager.isValidTheme(cfg.theme)) return cfg.theme;
     } catch {}
     return 'branco';
