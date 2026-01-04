@@ -459,12 +459,19 @@ function ResponsiveGridCanvas({ widgets, gridConfig, globalFilters, viewportMode
   };
   const getRowOrderFromCode = (): string[] => {
     const code = visualBuilderState.code || '';
+    const sortKeys = (keys: string[]) => keys.sort((a, b) => {
+      const ai = parseInt(a, 10), bi = parseInt(b, 10);
+      if (Number.isFinite(ai) && Number.isFinite(bi)) return ai - bi;
+      return a.localeCompare(b);
+    });
     if (!isDsl(code)) {
-      // fallback numeric order from groups
-      return Object.keys(widgetGroups).sort((a, b) => parseInt(a) - parseInt(b));
+      // fallback order from detected groups
+      return sortKeys(Object.keys(widgetGroups));
     }
     const rows = getRowsFromDsl(code);
-    return rows.map(r => r.id);
+    if (rows.length > 0) return rows.map(r => r.id);
+    // No <row> blocks (HTML section/article). Fallback to detected widget row keys.
+    return sortKeys(Object.keys(widgetGroups));
   };
   const rowOrder = useMemo(() => getRowOrderFromCode(), [visualBuilderState.code, widgetGroups]);
 

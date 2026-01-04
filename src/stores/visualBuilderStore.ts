@@ -156,25 +156,19 @@ const compactWidgetHeaders = (code: string): string => {
 }
 
 // Initial Liquid template (HTML-like)
-export const initialLiquidGrid = `{% assign schema = 'comercial' %}
-{% assign table = 'vendas_vw' %}
-{% assign m_receita = 'SUM(item_subtotal)' %}
-{% assign m_tm = 'SUM(item_subtotal)/COUNT_DISTINCT(pedido_id)' %}
-{% assign m_pedidos = 'COUNT_DISTINCT(pedido_id)' %}
-{% assign date_type = 'last_30_days' %}
-<dashboard theme="branco" title="Dashboard de Indicadores" subtitle="Visão geral" layout-mode="grid-per-row" cols-d="12" gap-x="16" gap-y="16">
+export const initialLiquidGrid = `<dashboard theme="branco" title="Dashboard de Indicadores" subtitle="Visão geral" layout-mode="grid-per-row" cols-d="12" gap-x="16" gap-y="16" date-type="last_30_days">
   <section data-type="kpis" id="kpis" data-cols-d="3" data-cols-t="2" data-cols-m="1" data-gap-x="16" data-gap-y="16">
     <article data-id="kpi_receita" data-order="1" data-height="150">
       <h1>Receita</h1>
-      <h2>{{ schema: {{ schema }}; table: {{ table }}; measure: {{ m_receita }} }}</h2>
+      <h2>{{ schema: comercial; table: vendas_vw; measure: SUM(item_subtotal) }}</h2>
     </article>
     <article data-id="kpi_ticket_medio" data-order="2" data-height="150">
       <h1>Ticket Médio</h1>
-      <h2>{{ schema: {{ schema }}; table: {{ table }}; measure: {{ m_tm }} }}</h2>
+      <h2>{{ schema: comercial; table: vendas_vw; measure: SUM(item_subtotal)/COUNT_DISTINCT(pedido_id) }}</h2>
     </article>
     <article data-id="kpi_pedidos" data-order="3" data-height="150">
       <h1>Pedidos</h1>
-      <h2>{{ schema: {{ schema }}; table: {{ table }}; measure: {{ m_pedidos }} }}</h2>
+      <h2>{{ schema: comercial; table: vendas_vw; measure: COUNT_DISTINCT(pedido_id) }}</h2>
     </article>
   </section>
 </dashboard>`
