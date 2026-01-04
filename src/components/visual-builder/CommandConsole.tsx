@@ -57,18 +57,8 @@ addWidget({
 `;
 
 export default function CommandConsole({ sourceCode }: Props) {
-  const [text, setText] = useState<string>(`// Exemplo (sintaxe inline: key: "value";)
-// Cria uma seção de KPIs (3 colunas no desktop)
-addSection(id: "sec_kpis_beta"; type: "kpis"; colsD: 3; colsT: 2; colsM: 1; gapX: 16; gapY: 16;);
-
-// Adiciona 3 KPIs na seção criada
-addWidget(id: "kpi_fat_beta"; type: "kpi"; group: "sec_kpis_beta"; title: "Faturamento Beta"; height: 150; data.schema: "comercial"; data.table: "vendas_vw"; data.measure: "SUM(item_subtotal)";);
-addWidget(id: "kpi_ped_beta"; type: "kpi"; group: "sec_kpis_beta"; title: "Pedidos Beta"; height: 150; data.schema: "comercial"; data.table: "vendas_vw"; data.measure: "COUNT_DISTINCT(pedido_id)";);
-addWidget(id: "kpi_ticket_beta"; type: "kpi"; group: "sec_kpis_beta"; title: "Ticket Médio Beta"; height: 150; data.schema: "comercial"; data.table: "vendas_vw"; data.measure: "SUM(item_subtotal)/COUNT_DISTINCT(pedido_id)";);
-
-// Opcional: cria seção de charts e adiciona um gráfico
-addSection(id: "sec_charts_beta"; type: "charts"; colsD: 3; colsT: 2; colsM: 1; gapX: 16; gapY: 16;);
-addWidget(id: "chart_canais_beta"; type: "bar"; group: "sec_charts_beta"; title: "Canais (Beta)"; height: 360; data.schema: "comercial"; data.table: "vendas_vw"; data.dimension: "canal_venda_nome"; data.measure: "SUM(item_subtotal)"; style.tw: "legend:on grid:on mb:32";);`);
+  const [text, setText] = useState<string>(`// Remover a seção padrão de KPIs do editor
+removeSection(id: "kpis");`);
   const [output, setOutput] = useState<Array<{ type: "ok" | "err"; text: string }>>([]);
   const lastResultRef = useRef<string>("");
 

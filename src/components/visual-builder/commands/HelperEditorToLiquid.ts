@@ -19,4 +19,5 @@ export {
   ensureSectionExists,
   insertKpiInSection,
   insertChartInSection,
+  removeSectionByIdDSL,
 } from './HelperEditorToDSL';

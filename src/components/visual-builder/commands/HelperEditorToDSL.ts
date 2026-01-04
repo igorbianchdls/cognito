@@ -363,6 +363,23 @@ export function insertChartInSection(
   return code.replace(re, (match: string, open: string, inner: string, close: string) => open + inner + article + close);
 }
 
+export function removeSectionByIdDSL(code: string, id: string): { code: string; removed: number } {
+  const esc = escRe(id);
+  let removed = 0;
+  const re = new RegExp(`\n?\s*<(section)\\b[^>]*\\bid=\"${esc}\"[^>]*>[\\s\\S]*?<\\/\\1>\s*\n?`, 'gi');
+  let next = code;
+  let prev;
+  do {
+    prev = next;
+    next = next.replace(re, () => {
+      removed++;
+      return '';
+    });
+  } while (next !== prev);
+  next = next.replace(/\n{3,}/g, '\n\n');
+  return { code: next, removed };
+}
+
 export function setOrInsertStylingTw(code: string, id: string, tw: string): string {
   const reNode = new RegExp(`(<(kpi|chart)\\b[^>]*\\bid=\"${escRe(id)}\"[^>]*>)([\\s\\S]*?)(<\\/\\2>)`, 'i');
   return code.replace(reNode, (match: string, open: string, _tag: string, inner: string, close: string) => {

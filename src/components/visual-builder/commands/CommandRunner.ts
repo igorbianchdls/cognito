@@ -19,6 +19,7 @@ import {
   normalizeSchemaTable,
   removeWidgetByIdDSL,
   removeGroupByIdDSL,
+  removeSectionByIdDSL,
   setOrInsertStylingTw,
   setGroupStyleJson,
   setAttrOnNode,
@@ -192,6 +193,18 @@ export function runCommands(code: string, commands: Command[]): { nextCode: stri
             diags.push({ ok: true, message: created ? `Section '${args.id}' (${args.type}) criado.` : `Section '${args.id}' já existia.`, line: cmd.line });
           } else {
             diags.push({ ok: false, message: 'addSection ainda não suportado para JSON.', line: cmd.line });
+          }
+          break;
+        }
+        case "removeSection": {
+          const id = (cmd.args as { id: string }).id;
+          if (dsl) {
+            const { code: updated, removed } = removeSectionByIdDSL(next, id);
+            next = updated;
+            if (removed > 0) diags.push({ ok: true, message: `Section '${id}' removido (${removed}).`, line: cmd.line });
+            else diags.push({ ok: false, message: `Section '${id}' não encontrado.`, line: cmd.line });
+          } else {
+            diags.push({ ok: false, message: 'removeSection ainda não suportado para JSON.', line: cmd.line });
           }
           break;
         }
