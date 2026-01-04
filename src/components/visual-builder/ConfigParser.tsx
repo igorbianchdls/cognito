@@ -1009,8 +1009,12 @@ export class ConfigParser {
       return widget.id;
     };
 
-    // First, try HTML+Liquid <section>/<article> KPIs
-    const hasHtmlSections = (parseKpiSectionHtml() || parseChartSectionHtml());
+    // First, parse HTML+Liquid <section>/<article> blocks.
+    // IMPORTANT: do NOT short-circuit with || here, otherwise when KPIs exist,
+    // charts won't be parsed. Call both and OR their results.
+    const foundKpis = parseKpiSectionHtml();
+    const foundCharts = parseChartSectionHtml();
+    const hasHtmlSections = (foundKpis || foundCharts);
 
     // grid-per-column mode: parse dashboard-level columns and widgets directly
     if (layoutMode === 'grid-per-column') {
