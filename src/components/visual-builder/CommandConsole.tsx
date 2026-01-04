@@ -57,8 +57,10 @@ addWidget({
 `;
 
 export default function CommandConsole({ sourceCode }: Props) {
-  const [text, setText] = useState<string>(`// Remover a seção padrão de KPIs do editor
-removeSection(id: "kpis");`);
+  const [text, setText] = useState<string>(`// Atualizar títulos dos 3 charts existentes
+updateArticle(id: "chart_vendas_canal"; title: "Vendas por Canal (Atualizado)";);
+updateArticle(id: "chart_faturamento_mensal"; title: "Faturamento Mensal (Atualizado)";);
+updateArticle(id: "chart_vendas_categoria"; title: "Vendas por Categoria (Atualizado)";);`);
   const [output, setOutput] = useState<Array<{ type: "ok" | "err"; text: string }>>([]);
   const lastResultRef = useRef<string>("");
 

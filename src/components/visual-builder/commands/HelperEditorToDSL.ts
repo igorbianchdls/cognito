@@ -380,6 +380,28 @@ export function removeSectionByIdDSL(code: string, id: string): { code: string; 
   return { code: next, removed };
 }
 
+export function updateArticleTitleByIdDSL(
+  code: string,
+  args: { id: string; title: string }
+): { code: string; updated: boolean } {
+  const id = args.id;
+  const title = args.title;
+  const esc = escRe(id);
+  const re = new RegExp(`(<article\\b[^>]*\\b(?:data-id|id)=\\"${esc}\\"[^>]*>)([\\s\\S]*?)(<\\/article>)`, 'i');
+  const m = code.match(re);
+  if (!m) return { code, updated: false };
+  const open = m[1];
+  let inner = m[2];
+  const close = m[3];
+  const h1Re = /<h1\b[^>]*>[\s\S]*?<\/h1>/i;
+  if (h1Re.test(inner)) {
+    inner = inner.replace(h1Re, `<h1>${escapeHtml(title)}</h1>`);
+  } else {
+    inner = `<h1>${escapeHtml(title)}</h1>\n` + inner;
+  }
+  return { code: code.replace(re, open + inner + close), updated: true };
+}
+
 export function setOrInsertStylingTw(code: string, id: string, tw: string): string {
   const reNode = new RegExp(`(<(kpi|chart)\\b[^>]*\\bid=\"${escRe(id)}\"[^>]*>)([\\s\\S]*?)(<\\/\\2>)`, 'i');
   return code.replace(reNode, (match: string, open: string, _tag: string, inner: string, close: string) => {

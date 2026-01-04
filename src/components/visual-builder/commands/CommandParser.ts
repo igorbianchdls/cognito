@@ -7,6 +7,7 @@ export type CommandKind =
   | "addGroup"
   | "addSection"
   | "removeSection"
+  | "updateArticle"
   | "setDashboard"
   | "deleteWidget"
   | "deleteGroupt"
@@ -93,6 +94,7 @@ export type Command =
   | BaseCommand<"addGroup", AddGroupArgs>
   | BaseCommand<"addSection", AddSectionArgs>
   | BaseCommand<"removeSection", { id: string }>
+  | BaseCommand<"updateArticle", { id: string; title: string }>
   | BaseCommand<"setDashboard", SetDashboardArgs>
   | BaseCommand<"deleteWidget", { id: string }>
   | BaseCommand<"deleteGroupt", { id: string }>
@@ -418,6 +420,14 @@ export function parseCommands(text: string): ParseResult {
         continue;
       }
       commands.push({ kind: "removeSection", line, raw: stmt, args: { id: args.id } });
+      continue;
+    }
+    if (lower === "updateArticle") {
+      if (!args?.id || typeof args.id !== 'string' || typeof args?.title !== 'string') {
+        errors.push({ line, message: "updateArticle requer 'id' (string) e 'title' (string)" });
+        continue;
+      }
+      commands.push({ kind: "updateArticle", line, raw: stmt, args: { id: args.id, title: args.title } });
       continue;
     }
     if (lower === "setDashboard") {

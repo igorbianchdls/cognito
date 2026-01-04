@@ -20,6 +20,7 @@ import {
   removeWidgetByIdDSL,
   removeGroupByIdDSL,
   removeSectionByIdDSL,
+  updateArticleTitleByIdDSL,
   setOrInsertStylingTw,
   setGroupStyleJson,
   setAttrOnNode,
@@ -205,6 +206,35 @@ export function runCommands(code: string, commands: Command[]): { nextCode: stri
             else diags.push({ ok: false, message: `Section '${id}' não encontrado.`, line: cmd.line });
           } else {
             diags.push({ ok: false, message: 'removeSection ainda não suportado para JSON.', line: cmd.line });
+          }
+          break;
+        }
+        case "updateArticle": {
+          const { id, title } = (cmd.args as { id: string; title: string });
+          if (dsl) {
+            const usesSections = /<section\b/i.test(next);
+            if (usesSections) {
+              const { code: updated, updated: ok } = updateArticleTitleByIdDSL(next, { id, title });
+              next = updated;
+              diags.push({ ok, message: ok ? `Article '${id}' atualizado.` : `Article '${id}' não encontrado.`, line: cmd.line });
+            } else {
+              next = setAttrOnNode(next, id, 'title', title);
+              diags.push({ ok: true, message: `Chart '${id}' title atualizado (sem sections).`, line: cmd.line });
+            }
+          } else {
+            // JSON path: tentar localizar widget e atualizar título
+            try {
+              const root = JSON.parse(next || '{}') as any;
+              if (Array.isArray(root.widgets)) {
+                const w = root.widgets.find((x: any) => x && x.id === id);
+                if (w) { w.title = title; next = JSON.stringify(root, null, 2); diags.push({ ok: true, message: `Widget '${id}' atualizado (JSON).`, line: cmd.line }); }
+                else diags.push({ ok: false, message: `Widget '${id}' não encontrado (JSON).`, line: cmd.line });
+              } else {
+                diags.push({ ok: false, message: 'Estrutura JSON inválida.', line: cmd.line });
+              }
+            } catch (e) {
+              diags.push({ ok: false, message: `Falha ao mutar JSON: ${(e as Error).message}`, line: cmd.line });
+            }
           }
           break;
         }

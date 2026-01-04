@@ -20,4 +20,5 @@ export {
   insertKpiInSection,
   insertChartInSection,
   removeSectionByIdDSL,
+  updateArticleTitleByIdDSL,
 } from './HelperEditorToDSL';
