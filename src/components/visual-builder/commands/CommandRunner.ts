@@ -14,6 +14,7 @@ import {
   insertKpiInGroup,
   insertChartInGroup,
   setDashboardAttrs,
+  upsertHeaderTag,
   buildMeasureExpr,
   normalizeSchemaTable,
   removeWidgetByIdDSL,
@@ -26,6 +27,9 @@ import {
   getWidgetTagKind,
   dedupeWidgetByIdDSL,
   updateWidgetStylingTwAndKpiBg,
+  ensureSectionExists,
+  insertKpiInSection,
+  insertChartInSection,
 } from "./HelperEditorToLiquid";
 
 export type RunDiagnostics = Array<{ ok: boolean; message: string; line?: number }>;
@@ -51,18 +55,34 @@ export function runCommands(code: string, commands: Command[]): { nextCode: stri
           if (finalType === 'kpi') {
             // Reuse addKPI logic
             if (dsl) {
-              const groupId = args.group || currentGroupId || "kpis";
-              next = ensureGroupExists(next, { id: groupId, title: groupId }).code;
-              next = insertKpiInGroup(next, groupId, {
-                id: args.id,
-                title: args.title,
-                unit: args.unit,
-                height: args.height ?? 150,
-                widthFr: args.widthFr || "1fr",
-                data: args.data,
-                style: args.style,
-              });
-              diags.push({ ok: true, message: `KPI '${args.id}' adicionado ao grupo '${groupId}'.`, line: cmd.line });
+              const usesSections = /<section\b/i.test(next);
+              if (usesSections) {
+                const sectionId = args.group || currentGroupId || 'kpis';
+                next = ensureSectionExists(next, { id: sectionId, type: 'kpis' }).code;
+                next = insertKpiInSection(next, sectionId, {
+                  id: args.id,
+                  title: args.title,
+                  unit: args.unit,
+                  height: args.height ?? 150,
+                  widthFr: args.widthFr || '1fr',
+                  data: args.data,
+                  style: args.style,
+                });
+                diags.push({ ok: true, message: `KPI '${args.id}' adicionado ao section '${sectionId}'.`, line: cmd.line });
+              } else {
+                const groupId = args.group || currentGroupId || "kpis";
+                next = ensureGroupExists(next, { id: groupId, title: groupId }).code;
+                next = insertKpiInGroup(next, groupId, {
+                  id: args.id,
+                  title: args.title,
+                  unit: args.unit,
+                  height: args.height ?? 150,
+                  widthFr: args.widthFr || "1fr",
+                  data: args.data,
+                  style: args.style,
+                });
+                diags.push({ ok: true, message: `KPI '${args.id}' adicionado ao grupo '${groupId}'.`, line: cmd.line });
+              }
             } else {
               try {
                 const root = JSON.parse(next || "{}") as any;
@@ -95,18 +115,34 @@ export function runCommands(code: string, commands: Command[]): { nextCode: stri
             // Treat as chart
             const chartType = finalType || 'bar';
             if (dsl) {
-              const groupId = args.group || currentGroupId || "charts";
-              next = ensureGroupExists(next, { id: groupId, title: groupId }).code;
-              next = insertChartInGroup(next, groupId, {
-                id: args.id,
-                title: args.title,
-                type: chartType,
-                height: args.height ?? 360,
-                widthFr: args.widthFr || "1fr",
-                data: { schema: args.data?.schema, table: args.data?.table, dimension: args.data?.dimension, measure: args.data?.measure, agg: args.data?.agg },
-                style: args.style,
-              });
-              diags.push({ ok: true, message: `Chart '${args.id}' adicionado ao grupo '${groupId}'.`, line: cmd.line });
+              const usesSections = /<section\b/i.test(next);
+              if (usesSections) {
+                const sectionId = args.group || currentGroupId || 'charts1';
+                next = ensureSectionExists(next, { id: sectionId, type: 'charts' }).code;
+                next = insertChartInSection(next, sectionId, {
+                  id: args.id,
+                  title: args.title,
+                  type: chartType,
+                  height: args.height ?? 360,
+                  widthFr: args.widthFr || '1fr',
+                  data: { schema: args.data?.schema, table: args.data?.table, dimension: args.data?.dimension, measure: args.data?.measure, agg: args.data?.agg },
+                  style: args.style,
+                });
+                diags.push({ ok: true, message: `Chart '${args.id}' adicionado ao section '${sectionId}'.`, line: cmd.line });
+              } else {
+                const groupId = args.group || currentGroupId || "charts";
+                next = ensureGroupExists(next, { id: groupId, title: groupId }).code;
+                next = insertChartInGroup(next, groupId, {
+                  id: args.id,
+                  title: args.title,
+                  type: chartType,
+                  height: args.height ?? 360,
+                  widthFr: args.widthFr || "1fr",
+                  data: { schema: args.data?.schema, table: args.data?.table, dimension: args.data?.dimension, measure: args.data?.measure, agg: args.data?.agg },
+                  style: args.style,
+                });
+                diags.push({ ok: true, message: `Chart '${args.id}' adicionado ao grupo '${groupId}'.`, line: cmd.line });
+              }
             } else {
               try {
                 const root = JSON.parse(next || "{}") as any;
@@ -142,19 +178,35 @@ export function runCommands(code: string, commands: Command[]): { nextCode: stri
         case "addGroup": {
           const args = cmd.args as AddGroupArgs;
           if (dsl) {
-            const { code: updated, created } = ensureGroupExists(next, {
-              id: args.id,
-              title: args.title,
-              orientation: args.orientation || "horizontal",
-              sizing: args.sizing || "fr",
-              colsD: args.colsD ?? 12,
-              gapX: args.gapX ?? 16,
-              gapY: args.gapY ?? 16,
-              style: args.style,
-            });
-            next = updated;
-            currentGroupId = args.id;
-            diags.push({ ok: true, message: created ? `Grupo '${args.id}' criado.` : `Grupo '${args.id}' já existia.`, line: cmd.line });
+            const usesSections = /<section\b/i.test(next);
+            if (usesSections) {
+              const { code: updated, created } = ensureSectionExists(next, {
+                id: args.id,
+                type: 'charts',
+                colsD: args.colsD ?? 12,
+                colsT: 2,
+                colsM: 1,
+                gapX: args.gapX ?? 16,
+                gapY: args.gapY ?? 16,
+              });
+              next = updated;
+              currentGroupId = args.id;
+              diags.push({ ok: true, message: created ? `Section '${args.id}' criado.` : `Section '${args.id}' já existia.`, line: cmd.line });
+            } else {
+              const { code: updated, created } = ensureGroupExists(next, {
+                id: args.id,
+                title: args.title,
+                orientation: args.orientation || "horizontal",
+                sizing: args.sizing || "fr",
+                colsD: args.colsD ?? 12,
+                gapX: args.gapX ?? 16,
+                gapY: args.gapY ?? 16,
+                style: args.style,
+              });
+              next = updated;
+              currentGroupId = args.id;
+              diags.push({ ok: true, message: created ? `Grupo '${args.id}' criado.` : `Grupo '${args.id}' já existia.`, line: cmd.line });
+            }
           } else {
             // JSON path: not implemented for groups in MVP
             diags.push({ ok: false, message: "addGroup ainda não suportado para JSON.", line: cmd.line });
@@ -164,19 +216,35 @@ export function runCommands(code: string, commands: Command[]): { nextCode: stri
         case "addKPI": {
           const args = cmd.args as AddKPIArgs;
           if (dsl) {
-            const groupId = args.group || currentGroupId || "kpis";
-            // ensure group exists
-            next = ensureGroupExists(next, { id: groupId, title: groupId }).code;
-            next = insertKpiInGroup(next, groupId, {
-              id: args.id,
-              title: args.title,
-              unit: args.unit,
-              height: args.height ?? 150,
-              widthFr: args.widthFr || "1fr",
-              data: args.data,
-              style: args.style,
-            });
-            diags.push({ ok: true, message: `KPI '${args.id}' adicionado ao grupo '${groupId}'.`, line: cmd.line });
+            const usesSections = /<section\b/i.test(next);
+            if (usesSections) {
+              const sectionId = args.group || currentGroupId || 'kpis';
+              next = ensureSectionExists(next, { id: sectionId, type: 'kpis' }).code;
+              next = insertKpiInSection(next, sectionId, {
+                id: args.id,
+                title: args.title,
+                unit: args.unit,
+                height: args.height ?? 150,
+                widthFr: args.widthFr || '1fr',
+                data: args.data,
+                style: args.style,
+              });
+              diags.push({ ok: true, message: `KPI '${args.id}' adicionado ao section '${sectionId}'.`, line: cmd.line });
+            } else {
+              const groupId = args.group || currentGroupId || "kpis";
+              // ensure group exists
+              next = ensureGroupExists(next, { id: groupId, title: groupId }).code;
+              next = insertKpiInGroup(next, groupId, {
+                id: args.id,
+                title: args.title,
+                unit: args.unit,
+                height: args.height ?? 150,
+                widthFr: args.widthFr || "1fr",
+                data: args.data,
+                style: args.style,
+              });
+              diags.push({ ok: true, message: `KPI '${args.id}' adicionado ao grupo '${groupId}'.`, line: cmd.line });
+            }
           } else {
             // JSON path: append widget
             try {
@@ -211,18 +279,34 @@ export function runCommands(code: string, commands: Command[]): { nextCode: stri
         case "addChart": {
           const args = cmd.args as AddChartArgs;
           if (dsl) {
-            const groupId = args.group || currentGroupId || "charts";
-            next = ensureGroupExists(next, { id: groupId, title: groupId }).code;
-            next = insertChartInGroup(next, groupId, {
-              id: args.id,
-              title: args.title,
-              type: args.type || "bar",
-              height: args.height ?? 360,
-              widthFr: args.widthFr || "1fr",
-              data: { schema: args.data?.schema, table: args.data?.table, dimension: args.data?.dimension, measure: args.data?.measure, agg: args.data?.agg },
-              style: args.style,
-            });
-            diags.push({ ok: true, message: `Chart '${args.id}' adicionado ao grupo '${groupId}'.`, line: cmd.line });
+            const usesSections = /<section\b/i.test(next);
+            if (usesSections) {
+              const sectionId = args.group || currentGroupId || 'charts1';
+              next = ensureSectionExists(next, { id: sectionId, type: 'charts' }).code;
+              next = insertChartInSection(next, sectionId, {
+                id: args.id,
+                title: args.title,
+                type: args.type || 'bar',
+                height: args.height ?? 360,
+                widthFr: args.widthFr || '1fr',
+                data: { schema: args.data?.schema, table: args.data?.table, dimension: args.data?.dimension, measure: args.data?.measure, agg: args.data?.agg },
+                style: args.style,
+              });
+              diags.push({ ok: true, message: `Chart '${args.id}' adicionado ao section '${sectionId}'.`, line: cmd.line });
+            } else {
+              const groupId = args.group || currentGroupId || "charts";
+              next = ensureGroupExists(next, { id: groupId, title: groupId }).code;
+              next = insertChartInGroup(next, groupId, {
+                id: args.id,
+                title: args.title,
+                type: args.type || "bar",
+                height: args.height ?? 360,
+                widthFr: args.widthFr || "1fr",
+                data: { schema: args.data?.schema, table: args.data?.table, dimension: args.data?.dimension, measure: args.data?.measure, agg: args.data?.agg },
+                style: args.style,
+              });
+              diags.push({ ok: true, message: `Chart '${args.id}' adicionado ao grupo '${groupId}'.`, line: cmd.line });
+            }
           } else {
             // JSON path
             try {
@@ -258,8 +342,14 @@ export function runCommands(code: string, commands: Command[]): { nextCode: stri
         case "setDashboard": {
           const args = cmd.args as SetDashboardArgs;
           if (dsl) {
-            next = setDashboardAttrs(next, args);
-            diags.push({ ok: true, message: `Atributos do dashboard atualizados.`, line: cmd.line });
+            // Liquid-first: move title/subtitle to <header>, keep theme/date on <dashboard>
+            if (args.title !== undefined || args.subtitle !== undefined) {
+              next = upsertHeaderTag(next, { title: args.title, subtitle: args.subtitle });
+            }
+            if (args.theme !== undefined || args.dateRange !== undefined) {
+              next = setDashboardAttrs(next, { theme: args.theme, dateRange: args.dateRange });
+            }
+            diags.push({ ok: true, message: `Header/Dashboard atualizados.`, line: cmd.line });
           } else {
             try {
               const root = JSON.parse(next || "{}") as any;
@@ -479,3 +569,23 @@ export function runCommands(code: string, commands: Command[]): { nextCode: stri
 
   return { nextCode: next, diagnostics: diags };
 }
+        case "addSection": {
+          const args = cmd.args as { id: string; type: 'kpis'|'charts'; colsD?: number; colsT?: number; colsM?: number; gapX?: number; gapY?: number };
+          if (dsl) {
+            const { code: updated, created } = ensureSectionExists(next, {
+              id: args.id,
+              type: args.type,
+              colsD: args.colsD,
+              colsT: args.colsT,
+              colsM: args.colsM,
+              gapX: args.gapX,
+              gapY: args.gapY,
+            });
+            next = updated;
+            currentGroupId = args.id;
+            diags.push({ ok: true, message: created ? `Section '${args.id}' (${args.type}) criado.` : `Section '${args.id}' já existia.`, line: cmd.line });
+          } else {
+            diags.push({ ok: false, message: 'addSection ainda não suportado para JSON.', line: cmd.line });
+          }
+          break;
+        }

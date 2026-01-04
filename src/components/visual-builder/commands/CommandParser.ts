@@ -5,6 +5,7 @@ export type CommandKind =
   | "addKPI"
   | "addWidget"
   | "addGroup"
+  | "addSection"
   | "setDashboard"
   | "deleteWidget"
   | "deleteGroupt"
@@ -67,6 +68,16 @@ export type AddGroupArgs = {
   style?: Record<string, unknown>;
 };
 
+export type AddSectionArgs = {
+  id: string;
+  type: 'kpis' | 'charts';
+  colsD?: number;
+  colsT?: number;
+  colsM?: number;
+  gapX?: number;
+  gapY?: number;
+};
+
 export type SetDashboardArgs = {
   title?: string;
   subtitle?: string;
@@ -79,6 +90,7 @@ export type Command =
   | BaseCommand<"addKPI", AddKPIArgs>
   | BaseCommand<"addWidget", AddWidgetArgs>
   | BaseCommand<"addGroup", AddGroupArgs>
+  | BaseCommand<"addSection", AddSectionArgs>
   | BaseCommand<"setDashboard", SetDashboardArgs>
   | BaseCommand<"deleteWidget", { id: string }>
   | BaseCommand<"deleteGroupt", { id: string }>
@@ -383,6 +395,19 @@ export function parseCommands(text: string): ParseResult {
         continue;
       }
       commands.push({ kind: "addGroup", line, raw: stmt, args: args as AddGroupArgs });
+      continue;
+    }
+    if (lower === "addSection") {
+      if (!args?.id || !args?.type) {
+        errors.push({ line, message: "addSection requer 'id' e 'type' (kpis|charts)" });
+        continue;
+      }
+      const ty = String(args.type).toLowerCase();
+      if (ty !== 'kpis' && ty !== 'charts') {
+        errors.push({ line, message: "addSection 'type' deve ser 'kpis' ou 'charts'" });
+        continue;
+      }
+      commands.push({ kind: "addSection", line, raw: stmt, args: args as AddSectionArgs });
       continue;
     }
     if (lower === "setDashboard") {

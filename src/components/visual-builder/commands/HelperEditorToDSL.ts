@@ -246,8 +246,7 @@ export function setDashboardAttrs(
   const attrRegex = /(\w[\w-]*)\s*=\s*"([^"]*)"/g;
   const kv: Record<string, string> = {};
   for (const match of attrsStr.matchAll(attrRegex)) kv[match[1]] = match[2];
-  if (attrs.title != null) kv["title"] = attrs.title;
-  if (attrs.subtitle != null) kv["subtitle"] = attrs.subtitle;
+  // Leave title/subtitle handling to <header> upsert (Liquid-first)
   if (attrs.theme != null) kv["theme"] = attrs.theme;
   if (attrs.dateRange) {
     const dr = attrs.dateRange;
@@ -265,6 +264,105 @@ export function setDashboardAttrs(
     .map(([k, v]) => `${k}="${escapeHtml(String(v))}` + `"`)
     .join(" ")}>`;
   return code.replace(openTag, rebuilt);
+}
+
+// Upsert <header> tag with title/subtitle (and simple style attrs) right after <dashboard ...>
+export function upsertHeaderTag(
+  code: string,
+  data: { title?: string; subtitle?: string; [k: string]: unknown }
+): string {
+  const m = code.match(dashOpenRe);
+  if (!m) return code;
+  const dashOpen = m[0];
+  const start = (m.index || 0) + dashOpen.length;
+  const post = code.slice(start);
+  // Build attributes
+  const attrs: string[] = [];
+  const push = (k: string, v: unknown) => { if (v !== undefined && v !== "") attrs.push(`${k}="${escapeHtml(String(v))}` + `"`); };
+  push('title', data.title);
+  push('subtitle', data.subtitle);
+  // Allow a few style keys commonly used
+  push('titleFontFamily', (data as any).titleFontFamily);
+  push('titleFontSize', (data as any).titleFontSize);
+  push('titleFontWeight', (data as any).titleFontWeight);
+  push('titleColor', (data as any).titleColor);
+  push('subtitleFontFamily', (data as any).subtitleFontFamily);
+  push('subtitleFontSize', (data as any).subtitleFontSize);
+  push('subtitleFontWeight', (data as any).subtitleFontWeight);
+  push('subtitleColor', (data as any).subtitleColor);
+  push('backgroundColor', (data as any).backgroundColor);
+  push('borderColor', (data as any).borderColor);
+  push('borderWidth', (data as any).borderWidth);
+  push('borderStyle', (data as any).borderStyle);
+  if (typeof (data as any).showDatePicker === 'boolean') push('showDatePicker', (data as any).showDatePicker ? 'true' : 'false');
+  const tag = `<header ${attrs.join(' ')}></header>`;
+  // Replace existing <header .../> or <header ...>...</header>
+  const rePair = /<header\b[^>]*>[\s\S]*?<\/header>/i;
+  const reSelf = /<header\b[^>]*\/>/i;
+  if (rePair.test(code)) return code.replace(rePair, tag);
+  if (reSelf.test(code)) return code.replace(reSelf, tag);
+  // Insert after optional immediate <style> block or comments
+  const earlyStyle = post.match(/^\s*(?:<!--[\s\S]*?-->\s*)*(<style\b[\s\S]*?<\/style>)/i);
+  if (earlyStyle && typeof earlyStyle.index === 'number') {
+    const insertAt = start + (earlyStyle.index + earlyStyle[0].length);
+    return code.slice(0, insertAt) + `\n  ${tag}\n` + code.slice(insertAt);
+  }
+  // Default: directly after <dashboard>
+  return code.slice(0, start) + `\n  ${tag}\n` + code.slice(start);
+}
+
+// Ensure a <section data-type="..." id="..."> exists; if not, create an empty one before </dashboard>
+export function ensureSectionExists(
+  code: string,
+  spec: { id: string; type: 'kpis' | 'charts'; colsD?: number; colsT?: number; colsM?: number; gapX?: number; gapY?: number }
+): { code: string; created: boolean } {
+  const { id, type, colsD = 3, colsT = 2, colsM = 1, gapX = 16, gapY = 16 } = spec;
+  const exists = new RegExp(`<section\\b[^>]*\\bid=\"${escRe(id)}\"`, 'i').test(code);
+  if (exists) return { code, created: false };
+  const block = `\n  <section data-type="${escapeHtml(type)}" id="${escapeHtml(id)}" data-cols-d="${colsD}" data-cols-t="${colsT}" data-cols-m="${colsM}" data-gap-x="${gapX}" data-gap-y="${gapY}">\n  </section>\n`;
+  const closeIdx = code.search(/<\/dashboard>/i);
+  if (closeIdx >= 0) return { code: code.slice(0, closeIdx) + block + code.slice(closeIdx), created: true };
+  const m = code.match(dashOpenRe);
+  if (m && typeof m.index === 'number') {
+    const insertAt = m.index + m[0].length;
+    return { code: code.slice(0, insertAt) + `\n` + block + code.slice(insertAt), created: true };
+  }
+  return { code: code + `\n` + block, created: true };
+}
+
+// Insert KPI <article> into a section by id
+export function insertKpiInSection(
+  code: string,
+  sectionId: string,
+  spec: KPIWidgetSpec
+): string {
+  const { id, title, unit, height = 150, data } = spec;
+  const measure = buildMeasureExpr(data?.measure, data?.agg) || data?.measure || '';
+  const norm = normalizeSchemaTable(data?.schema, data?.table);
+  const unitToken = unit ? ` kpi:unit:${unit}` : '';
+  const article = `\n    <article data-id="${escapeHtml(id)}" data-height="${height}">\n      <h1>${escapeHtml(title || id)}</h1>\n      <h2>{{ schema: ${escapeHtml(norm.schema || '')}; table: ${escapeHtml(norm.table || '')};${measure ? ` measure: ${escapeHtml(measure)}` : ''} }}</h2>\n    </article>\n`;
+  const re = new RegExp(`(<section\\b[^>]*\\bid=\"${escRe(sectionId)}\"[^>]*>)([\\s\\S]*?)(<\\/section>)`, 'i');
+  if (!re.test(code)) return code;
+  return code.replace(re, (match: string, open: string, inner: string, close: string) => {
+    // Append styling tw to <main> not used in KPI; keep simple
+    return open + inner + article + close;
+  });
+}
+
+// Insert Chart <article> into a section by id
+export function insertChartInSection(
+  code: string,
+  sectionId: string,
+  spec: ChartWidgetSpec
+): string {
+  const { id, title, type = 'bar', height = 360, data, style } = spec;
+  const measure = buildMeasureExpr(data?.measure, data?.agg) || data?.measure || '';
+  const norm = normalizeSchemaTable(data?.schema, data?.table);
+  const tw = style?.tw || '';
+  const article = `\n    <article data-id="${escapeHtml(id)}" data-chart="${escapeHtml(type)}" data-height="${height}">\n      <h1>${escapeHtml(title || id)}</h1>\n      <main>\n        {{ schema: ${escapeHtml(norm.schema || '')}; table: ${escapeHtml(norm.table || '')};${data?.dimension ? ` dimension: ${escapeHtml(data.dimension)}` : ''}${measure ? `; measure: ${escapeHtml(measure)}` : ''} }}\n        ${tw ? `<style>{\"tw\": \"${escapeHtml(tw)}\"}</style>` : ''}\n      </main>\n    </article>\n`;
+  const re = new RegExp(`(<section\\b[^>]*\\bid=\"${escRe(sectionId)}\"[^>]*>)([\\s\\S]*?)(<\\/section>)`, 'i');
+  if (!re.test(code)) return code;
+  return code.replace(re, (match: string, open: string, inner: string, close: string) => open + inner + article + close);
 }
 
 export function setOrInsertStylingTw(code: string, id: string, tw: string): string {

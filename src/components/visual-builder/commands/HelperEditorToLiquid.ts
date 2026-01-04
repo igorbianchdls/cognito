@@ -3,6 +3,7 @@ export {
   insertKpiInGroup,
   insertChartInGroup,
   setDashboardAttrs,
+  upsertHeaderTag,
   buildMeasureExpr,
   normalizeSchemaTable,
   removeWidgetByIdDSL,
@@ -15,4 +16,7 @@ export {
   setAttrOnDatasource,
   setConfigOnNode,
   getWidgetTagKind,
+  ensureSectionExists,
+  insertKpiInSection,
+  insertChartInSection,
 } from './HelperEditorToDSL';
