@@ -238,6 +238,24 @@ export function runCommands(code: string, commands: Command[]): { nextCode: stri
           }
           break;
         }
+        case "updateHeader": {
+          const { title, subtitle } = (cmd.args as { title?: string; subtitle?: string });
+          if (dsl) {
+            next = upsertHeaderTag(next, { title, subtitle });
+            diags.push({ ok: true, message: `Header atualizado${title ? ' (title)' : ''}${subtitle ? ' (subtitle)' : ''}.`, line: cmd.line });
+          } else {
+            try {
+              const root = JSON.parse(next || '{}') as any;
+              if (title !== undefined) root.dashboardTitle = title;
+              if (subtitle !== undefined) root.dashboardSubtitle = subtitle;
+              next = JSON.stringify(root, null, 2);
+              diags.push({ ok: true, message: 'Header atualizado (JSON).', line: cmd.line });
+            } catch (e) {
+              diags.push({ ok: false, message: `Falha ao mutar JSON: ${(e as Error).message}`, line: cmd.line });
+            }
+          }
+          break;
+        }
         case "addGroup": {
           const args = cmd.args as AddGroupArgs;
           if (dsl) {

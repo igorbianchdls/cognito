@@ -8,6 +8,7 @@ export type CommandKind =
   | "addSection"
   | "removeSection"
   | "updateArticle"
+  | "updateHeader"
   | "setDashboard"
   | "deleteWidget"
   | "deleteGroupt"
@@ -95,6 +96,7 @@ export type Command =
   | BaseCommand<"addSection", AddSectionArgs>
   | BaseCommand<"removeSection", { id: string }>
   | BaseCommand<"updateArticle", { id: string; title: string }>
+  | BaseCommand<"updateHeader", { title?: string; subtitle?: string }>
   | BaseCommand<"setDashboard", SetDashboardArgs>
   | BaseCommand<"deleteWidget", { id: string }>
   | BaseCommand<"deleteGroupt", { id: string }>
@@ -428,6 +430,19 @@ export function parseCommands(text: string): ParseResult {
         continue;
       }
       commands.push({ kind: "updateArticle", line, raw: stmt, args: { id: args.id, title: args.title } });
+      continue;
+    }
+    if (lower === "updateHeader") {
+      const hasTitle = args && Object.prototype.hasOwnProperty.call(args, 'title');
+      const hasSubtitle = args && Object.prototype.hasOwnProperty.call(args, 'subtitle');
+      if (!hasTitle && !hasSubtitle) {
+        errors.push({ line, message: "updateHeader requer 'title' e/ou 'subtitle'" });
+        continue;
+      }
+      const payload: { title?: string; subtitle?: string } = {};
+      if (hasTitle && typeof args.title === 'string') payload.title = args.title;
+      if (hasSubtitle && typeof args.subtitle === 'string') payload.subtitle = args.subtitle;
+      commands.push({ kind: "updateHeader", line, raw: stmt, args: payload });
       continue;
     }
     if (lower === "setDashboard") {
