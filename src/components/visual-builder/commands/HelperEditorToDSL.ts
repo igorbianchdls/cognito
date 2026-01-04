@@ -1,6 +1,4 @@
-"use client";
-
-// Utilities to manipulate the HTML-like DSL string used by the Visual Builder.
+// Utilities to manipulate the HTML-like Liquid/HTML string used by the Visual Builder.
 
 export type GroupSpec = {
   id: string;
