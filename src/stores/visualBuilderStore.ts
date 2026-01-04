@@ -156,22 +156,27 @@ const compactWidgetHeaders = (code: string): string => {
 }
 
 // Initial Liquid template (HTML-like)
-export const initialLiquidGrid = `<dashboard theme="branco" title="Dashboard de Indicadores" subtitle="Visão geral" layout-mode="grid" cols-d="12" gap-x="16" gap-y="16" date-type="last_30_days">
-  <group id="grp_kpis" title="KPIs" sizing="fr" orientation="horizontal" cols-d="12" gap-x="16" gap-y="16">
-    <style>{"titleFontFamily":"Inter, ui-sans-serif, system-ui","titleFontSize":14,"titleFontWeight":600,"titleColor":"#111827","backgroundColor":"#fafafa","borderColor":"#e5e7eb","borderWidth":1,"borderRadius":12,"padding":12}</style>
-    <kpi id="kpi_receita" width="1fr" height="150" title="Receita">
-      <datasource schema="vendas" table="vw_pedidos" measure="SUM(item_subtotal)" />
-      <styling tw="kpi:viz:card kpi:unit:R$" />
-    </kpi>
-    <kpi id="kpi_ticket_medio" width="1fr" height="150" title="Ticket Médio">
-      <datasource schema="vendas" table="vw_pedidos" measure="AVG(item_subtotal)" />
-      <styling tw="kpi:viz:card kpi:unit:R$" />
-    </kpi>
-    <kpi id="kpi_pedidos" width="1fr" height="150" title="Pedidos">
-      <datasource schema="vendas" table="vw_pedidos" measure="COUNT(pedido_id)" />
-      <styling tw="kpi:viz:card" />
-    </kpi>
-  </group>
+export const initialLiquidGrid = `{% assign schema = 'comercial' %}
+{% assign table = 'vendas_vw' %}
+{% assign m_receita = 'SUM(item_subtotal)' %}
+{% assign m_tm = 'SUM(item_subtotal)/COUNT_DISTINCT(pedido_id)' %}
+{% assign m_pedidos = 'COUNT_DISTINCT(pedido_id)' %}
+{% assign date_type = 'last_30_days' %}
+<dashboard theme="branco" title="Dashboard de Indicadores" subtitle="Visão geral" layout-mode="grid-per-row" cols-d="12" gap-x="16" gap-y="16">
+  <section data-type="kpis" id="kpis" data-cols-d="3" data-cols-t="2" data-cols-m="1" data-gap-x="16" data-gap-y="16">
+    <article data-id="kpi_receita" data-order="1" data-height="150">
+      <h1>Receita</h1>
+      <h2>{{ schema: {{ schema }}; table: {{ table }}; measure: {{ m_receita }} }}</h2>
+    </article>
+    <article data-id="kpi_ticket_medio" data-order="2" data-height="150">
+      <h1>Ticket Médio</h1>
+      <h2>{{ schema: {{ schema }}; table: {{ table }}; measure: {{ m_tm }} }}</h2>
+    </article>
+    <article data-id="kpi_pedidos" data-order="3" data-height="150">
+      <h1>Pedidos</h1>
+      <h2>{{ schema: {{ schema }}; table: {{ table }}; measure: {{ m_pedidos }} }}</h2>
+    </article>
+  </section>
 </dashboard>`
 export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas" subtitle="Análise de desempenho comercial" layout-mode="grid-per-row" date-type="last_30_days">
   <!-- KPIs (6 em uma linha) - Foco: Novembro/2025 via filtros globais -->
@@ -348,31 +353,31 @@ export const initialLiquidColumns = `<dashboard theme="branco" title="Dashboard 
   <columns>
     <column id="1">
       <kpi id="kpi_faturamento" order="1" span-d="1" height="150" title="💰 Faturamento Total">
-        <datasource schema="vendas" table="vw_pedidos_completo" measure="item_subtotal" agg="SUM" />
+        <datasource schema="comercial" table="vendas_vw" measure="SUM(item_subtotal)" />
         <styling tw="kpi:unit:R$ kpi:viz:card" />
       </kpi>
       <chart id="chart_faturamento_mensal" type="line" order="2" span-d="2" height="420" title="📈 Faturamento Mensal">
-        <datasource schema="vendas" table="vw_pedidos_completo" dimension="data_pedido" measure="item_subtotal" agg="SUM" />
+        <datasource schema="comercial" table="vendas_vw" dimension="data_pedido" measure="SUM(item_subtotal)" />
         <styling tw="legend:off grid:on mb:40" />
       </chart>
     </column>
     <column id="2">
       <kpi id="kpi_total_itens" order="1" span-d="1" height="150" title="📦 Total de Itens">
-        <datasource schema="vendas" table="vw_pedidos_completo" measure="item_id" agg="COUNT" />
+        <datasource schema="comercial" table="vendas_vw" measure="COUNT(*)" />
         <styling tw="kpi:viz:card" />
       </kpi>
-      <chart id="chart_top_produtos" type="bar" order="3" span-d="1" height="420" title="🏆 Top 10 Produtos">
-        <datasource schema="vendas" table="vw_pedidos_completo" dimension="produto_nome" measure="item_subtotal" agg="SUM" />
+      <chart id="chart_top_servicos" type="bar" order="3" span-d="1" height="420" title="🏆 Top 10 Serviços">
+        <datasource schema="comercial" table="vendas_vw" dimension="servico_nome" measure="SUM(item_subtotal)" />
         <styling tw="legend:off grid:on mb:40 bar:color:#3b82f6" />
       </chart>
     </column>
     <column id="3">
       <kpi id="kpi_ticket_medio" order="1" span-d="1" height="150" title="🎯 Ticket Médio">
-        <datasource schema="vendas" table="vw_pedidos_completo" measure="item_subtotal" agg="AVG" />
+        <datasource schema="comercial" table="vendas_vw" measure="SUM(item_subtotal)/COUNT_DISTINCT(pedido_id)" />
         <styling tw="kpi:unit:R$ kpi:viz:card" />
       </kpi>
       <chart id="chart_vendas_canal" type="pie" order="2" span-d="1" height="420" title="📱 Vendas por Canal">
-        <datasource schema="vendas" table="vw_pedidos_completo" dimension="canal_venda_nome" measure="item_subtotal" agg="SUM" />
+        <datasource schema="comercial" table="vendas_vw" dimension="canal_venda_nome" measure="SUM(item_subtotal)" />
         <styling tw="legend:on grid:off mb:40" />
       </chart>
     </column>

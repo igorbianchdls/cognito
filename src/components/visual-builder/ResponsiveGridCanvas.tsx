@@ -828,7 +828,7 @@ const DraggableGroup = memo(function DraggableGroup({ id, children, containerSty
             <div className="text-center text-gray-500">
               <div className="text-4xl mb-4">📱</div>
               <h3 className="text-lg font-medium mb-2">No widgets configured</h3>
-              <p className="text-sm">Add widgets in the JSON editor to see them here</p>
+              <p className="text-sm">Adicione widgets no editor Liquid para vê-los aqui</p>
               <p className="text-xs text-gray-400 mt-2">
                 This dashboard adapts: 4 columns (desktop) → 2 columns (tablet) → 1 column (mobile)
               </p>

@@ -413,11 +413,30 @@ export class ConfigParser {
     const widgets: Widget[] = [];
     const layoutRows: NonNullable<GridConfig['layout']>['rows'] = {};
 
+    // Minimal Liquid-like variable support: {% assign var = 'value' %} and {{ var | default: 'x' }}
+    const varMap: Record<string, string> = {};
+    try {
+      const assignRe = /{%\s*assign\s+([A-Za-z_][\w-]*)\s*=\s*(['"])(.*?)\2\s*%}/gi;
+      let am: RegExpExecArray | null;
+      while ((am = assignRe.exec(dsl)) !== null) {
+        const k = am[1];
+        const v = am[3];
+        if (k) varMap[k] = v;
+      }
+    } catch { /* ignore */ }
+    const resolveLiquidVars = (s: string): string => {
+      if (!s) return s;
+      return s.replace(/{{\s*([A-Za-z_][\w-]*)(?:\s*\|\s*default:\s*(['"])(.*?)\2)?\s*}}/gi, (_m, name: string, _q: string, def: string) => {
+        const v = varMap[name];
+        return (v !== undefined) ? String(v) : (def !== undefined ? String(def) : '');
+      });
+    };
+
     const attrRegex = /(\w[\w-]*)\s*=\s*"([^"]*)"/g;
     const parseAttrs = (s: string): Record<string, string> => {
       const map: Record<string, string> = {};
       for (const m of s.matchAll(attrRegex)) {
-        map[m[1]] = m[2];
+        map[m[1]] = resolveLiquidVars(m[2]);
       }
       return map;
     };
@@ -520,6 +539,89 @@ export class ConfigParser {
     }
 
     // Helpers for new tags: <datasource /> and <styling tw="..." />
+    // Also: HTML+Liquid binding parser for KPI <section>/<article>/<h1>/<h2>
+    const parseBindingPairs = (raw: string): Record<string, string> => {
+      const out: Record<string, string> = {};
+      if (!raw) return out;
+      // Extract first moustache content {{ ... }}; allow outer {{ }} already stripped
+      let body = raw.trim();
+      const m = body.match(/^\{\{([\s\S]*?)\}\}$/);
+      if (m) body = m[1];
+      const parts = body.split(';');
+      for (let p of parts) {
+        p = p.trim();
+        if (!p) continue;
+        const i = p.indexOf(':');
+        if (i === -1) continue;
+        const k = p.slice(0, i).trim().toLowerCase();
+        const v = resolveLiquidVars(p.slice(i + 1).trim().replace(/^['"]|['"]$/g, ''));
+        if (k) out[k] = v;
+      }
+      return out;
+    };
+
+    const parseKpiSectionHtml = () => {
+      let found = false;
+      const secRe = /<section\b([^>]*)>([\s\S]*?)<\/section>/gi;
+      let sm: RegExpExecArray | null;
+      let rowIndex = 0;
+      while ((sm = secRe.exec(dsl)) !== null) {
+        const secAttrs = parseAttrs(sm[1] || '');
+        const secType = (secAttrs['data-type'] || secAttrs['type'] || '').toLowerCase();
+        if (secType !== 'kpis') continue;
+        found = true;
+        rowIndex++;
+        const rowId = secAttrs['id'] || `row${rowIndex}`;
+        const colsD = Number(secAttrs['data-cols-d'] || secAttrs['cols-d'] || '3') || 3;
+        const colsT = Number(secAttrs['data-cols-t'] || secAttrs['cols-t'] || '2') || 2;
+        const colsM = Number(secAttrs['data-cols-m'] || secAttrs['cols-m'] || '1') || 1;
+        const gapX = secAttrs['data-gap-x'] || secAttrs['gap-x'] ? Number(secAttrs['data-gap-x'] || secAttrs['gap-x']) : undefined;
+        const gapY = secAttrs['data-gap-y'] || secAttrs['gap-y'] ? Number(secAttrs['data-gap-y'] || secAttrs['gap-y']) : undefined;
+        layoutRows[rowId] = {
+          desktop: { columns: Math.max(1, colsD), ...(gapX!=null?{gapX}:{}) , ...(gapY!=null?{gapY}:{}) },
+          tablet: { columns: Math.max(1, colsT), ...(gapX!=null?{gapX}:{}) , ...(gapY!=null?{gapY}:{}) },
+          mobile: { columns: Math.max(1, colsM), ...(gapX!=null?{gapX}:{}) , ...(gapY!=null?{gapY}:{}) },
+        } as any;
+
+        const sectionBody = sm[2] || '';
+        const artRe = /<article\b([^>]*)>([\s\S]*?)<\/article>/gi;
+        let am: RegExpExecArray | null;
+        while ((am = artRe.exec(sectionBody)) !== null) {
+          const aAttrs = parseAttrs(am[1] || '');
+          const inner = am[2] || '';
+          const id = aAttrs['data-id'] || aAttrs['id'] || `kpi_${Date.now()}_${Math.random()}`;
+          const orderStr = aAttrs['data-order'] || aAttrs['order'];
+          const heightStr = aAttrs['data-height'] || aAttrs['height'];
+          const order = orderStr ? Number(orderStr) : undefined;
+          const heightPx = heightStr ? Number(heightStr) : undefined;
+          const h1m = inner.match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/i);
+          const title = h1m ? resolveLiquidVars((h1m[1] || '').trim()) : undefined;
+          // Binding inside <h2> (first occurrence)
+          let bindingRaw = '';
+          const h2m = inner.match(/<h2\b[^>]*>([\s\S]*?)<\/h2>/i);
+          if (h2m && h2m[1]) bindingRaw = (h2m[1] || '').trim();
+          const pairs = bindingRaw ? parseBindingPairs(bindingRaw) : {};
+          const ds: any = {};
+          if (pairs['schema']) ds.schema = pairs['schema'];
+          if (pairs['table'] || pairs['dimension']) ds.table = pairs['table'] || pairs['dimension'];
+          if (pairs['measure']) ds.measure = pairs['measure'];
+          if (pairs['where']) ds.where = pairs['where'];
+          if (pairs['limit'] && !Number.isNaN(Number(pairs['limit']))) ds.limit = Number(pairs['limit']);
+
+          const widget: Widget = {
+            id,
+            type: 'kpi',
+            row: rowId,
+            ...(typeof order === 'number' ? { order } : {}),
+            ...(typeof heightPx === 'number' ? { heightPx } : {}),
+            ...(title ? { title } : {}),
+            ...(Object.keys(ds).length ? { dataSource: ds } : {}),
+          } as Widget;
+          widgets.push(widget);
+        }
+      }
+      return found;
+    };
     const applyDataSourceAttrs = (widget: Widget, attrs: Record<string, string>) => {
       const ds: NonNullable<Widget['dataSource']> = {
         ...(widget.dataSource || {}),
@@ -807,6 +909,9 @@ export class ConfigParser {
       widgets.push(widget);
       return widget.id;
     };
+
+    // First, try HTML+Liquid <section>/<article> KPIs
+    const hasHtmlSections = parseKpiSectionHtml();
 
     // grid-per-column mode: parse dashboard-level columns and widgets directly
     if (layoutMode === 'grid-per-column') {
