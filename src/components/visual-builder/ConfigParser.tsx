@@ -1053,11 +1053,6 @@ export class ConfigParser {
           if (frRaw && !Number.isNaN(Number(frRaw)) && Number(frRaw) > 0) {
             (widget as any).widthFr = { desktop: String(Number(frRaw)) + 'fr' };
           }
-          const frRaw = aAttrs['fr'] || aAttrs['data-fr'];
-          if (frRaw && !Number.isNaN(Number(frRaw)) && Number(frRaw) > 0) {
-            (widget as any).widthFr = { desktop: String(Number(frRaw)) + 'fr' };
-          }
-
           // Apply style.tw from <main><style>{ ... }</style></main>
           if (styleObj && typeof styleObj['tw'] === 'string') {
             applyStylingTokens(widget, String(styleObj['tw']));
