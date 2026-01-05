@@ -212,6 +212,8 @@ export interface HeaderConfig {
   datePickerEnd?: string;
   // Optional blocks order for header vb-block wrappers
   blocksOrder?: string[];
+  // Order of title/subtitle inside header-titles
+  titlesOrder?: Array<'h1'|'h2'>;
 }
 
 // Theme types are now managed by ThemeManager
@@ -639,6 +641,21 @@ export class ConfigParser {
             }
           }
           if (order.length) (cfg as any).blocksOrder = order;
+        } catch {}
+        // Capture titles order (h1/h2 sequence) inside header-titles block
+        try {
+          const titlesBlockMatch = inner.match(/<div\b[^>]*\bid=\"header-titles\"[^>]*>([\s\S]*?)<\/div>/i);
+          if (titlesBlockMatch) {
+            const tInner = titlesBlockMatch[1] || '';
+            const tagRe = /<(h1|h2)\b[^>]*>[\s\S]*?<\/\1>/gi;
+            const seq: Array<'h1'|'h2'> = [];
+            let tm: RegExpExecArray | null;
+            while ((tm = tagRe.exec(tInner)) !== null) {
+              const tag = (tm[1] || '').toLowerCase();
+              if (tag === 'h1' || tag === 'h2') seq.push(tag);
+            }
+            if (seq.length) (cfg as any).titlesOrder = seq;
+          }
         } catch {}
         if (Object.keys(cfg).length > 0) headerConfig = cfg;
       } else if (headerSelf) {

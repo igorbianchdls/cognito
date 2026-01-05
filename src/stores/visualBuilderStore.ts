@@ -1071,6 +1071,8 @@ export const visualBuilderActions = {
     datePickerFormat?: string;
     // Header blocks order (wrappers inside header)
     blocksOrder?: string[];
+    // Titles order inside header-titles
+    titlesOrder?: Array<'h1'|'h2'>;
   }) => {
     const currentState = $visualBuilderState.get()
     const code = currentState.code || ''
@@ -1100,6 +1102,34 @@ export const visualBuilderActions = {
           }
         }
       }
+      // Fast path: only reorder existing title/subtitle tags inside header-titles
+      if (data?.titlesOrder && Array.isArray(data.titlesOrder) && data.titlesOrder.length) {
+        const reHdr = /<header\b([^>]*)>([\s\S]*?)<\/header>/i
+        const mHdr = code.match(reHdr)
+        if (mHdr) {
+          const openAttrs = mHdr[1] || ''
+          const inner = mHdr[2] || ''
+          const reTitlesDiv = /(<div\b([^>]*)\bid=\"header-titles\"[^>]*>)([\s\S]*?)(<\/div>)/i
+          const m = inner.match(reTitlesDiv)
+          if (m) {
+            const openDiv = m[1]
+            const titlesInner = m[3] || ''
+            const closeDiv = m[4]
+            const h1Match = titlesInner.match(/<h1\b[^>]*>[\s\S]*?<\/h1>/i)
+            const h2Match = titlesInner.match(/<h2\b[^>]*>[\s\S]*?<\/h2>/i)
+            const map: Record<string,string> = { h1: h1Match ? h1Match[0] : '', h2: h2Match ? h2Match[0] : '' }
+            const newTitlesInner = data.titlesOrder.map(k => map[k]).filter(Boolean).join('\n')
+            if (newTitlesInner) {
+              const newTitlesBlock = openDiv + newTitlesInner + closeDiv
+              const replacedInner = inner.replace(reTitlesDiv, newTitlesBlock)
+              const newHeader = `<header ${openAttrs}>\n${replacedInner}\n</header>`
+              visualBuilderActions.updateCode(code.replace(reHdr, newHeader))
+              return
+            }
+          }
+        }
+      }
+
       // 1) Build <header> with inner <h1>/<h2> and kebab-case attrs
       const rePair = /<header\b[^>]*>[\s\S]*?<\/header>/i
       const reSelf = /<header\b[^>]*\/>/i

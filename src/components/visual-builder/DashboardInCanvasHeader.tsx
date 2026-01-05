@@ -2,7 +2,7 @@
 
 import { Calendar as CalendarIcon, MoreVertical } from 'lucide-react';
 import { DndContext, closestCenter, DragEndEvent } from '@dnd-kit/core';
-import { SortableContext, useSortable, horizontalListSortingStrategy } from '@dnd-kit/sortable';
+import { SortableContext, useSortable, horizontalListSortingStrategy, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -168,16 +168,34 @@ export default function DashboardInCanvasHeader({
   const titlesFirst = !blocksOrder || blocksOrder[0] !== 'header-actions';
 
   const headerBlockIds = (headerConfig?.blocksOrder && headerConfig.blocksOrder.length) ? headerConfig.blocksOrder : ['header-titles','header-actions'];
+  const titleItemIds = (headerConfig?.titlesOrder && headerConfig.titlesOrder.length)
+    ? headerConfig.titlesOrder.map(t => t === 'h1' ? 'header-title' : 'header-subtitle')
+    : ['header-title','header-subtitle'];
 
   const onDragEndBlocks = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
-    const ids = [...headerBlockIds];
-    const oldIndex = ids.indexOf(String(active.id));
-    const newIndex = ids.indexOf(String(over.id));
-    if (oldIndex === -1 || newIndex === -1) return;
-    ids.splice(newIndex, 0, ids.splice(oldIndex, 1)[0]);
-    try { visualBuilderActions.updateHeaderInCode({ blocksOrder: ids }); } catch {}
+    const aid = String(active.id);
+    const oid = String(over.id);
+    if (aid.startsWith('header-') && (aid === 'header-titles' || aid === 'header-actions')) {
+      const ids = [...headerBlockIds];
+      const oldIndex = ids.indexOf(aid);
+      const newIndex = ids.indexOf(oid);
+      if (oldIndex === -1 || newIndex === -1) return;
+      ids.splice(newIndex, 0, ids.splice(oldIndex, 1)[0]);
+      try { visualBuilderActions.updateHeaderInCode({ blocksOrder: ids }); } catch {}
+      return;
+    }
+    if (aid === 'header-title' || aid === 'header-subtitle') {
+      const ids = [...titleItemIds];
+      const oldIndex = ids.indexOf(aid);
+      const newIndex = ids.indexOf(oid);
+      if (oldIndex === -1 || newIndex === -1) return;
+      ids.splice(newIndex, 0, ids.splice(oldIndex, 1)[0]);
+      const titlesOrder = ids.map(x => x === 'header-title' ? 'h1' : 'h2') as Array<'h1'|'h2'>;
+      try { visualBuilderActions.updateHeaderInCode({ titlesOrder }); } catch {}
+      return;
+    }
   };
 
   // Sortable wrappers for header blocks
@@ -224,9 +242,9 @@ export default function DashboardInCanvasHeader({
         style={{ paddingLeft: containerPadding, paddingRight: containerPadding }}
       >
         {headerBlockIds.map((id) => (
-          <SortableBlock
-            key={id}
-            id={id}
+        <SortableBlock
+          key={id}
+          id={id}
             className={
               `vb-block ${id} w-1/2 basis-1/2 p-2 hover:ring-2 hover:ring-blue-400 rounded-md ` +
               (id === 'header-titles'
@@ -235,8 +253,11 @@ export default function DashboardInCanvasHeader({
             }
           >
             {id === 'header-titles' ? (
-              <div>
-                <h2
+              <SortableContext items={titleItemIds} strategy={verticalListSortingStrategy}>
+                <SortableBlock id="header-title" className="group mb-1">
+                  <div className="relative">
+                    <div className="absolute -left-1 -top-3 opacity-0 group-hover:opacity-100 transition-opacity z-10 bg-gray-700 text-white px-2 py-0.5 rounded cursor-grab active:cursor-grabbing text-xs">⇅ Title</div>
+                    <h2
                   className="text-base md:text-lg font-semibold leading-tight truncate p-1 hover:ring-2 hover:ring-blue-400 rounded-md"
                   style={{
                     color: headerConfig?.titleColor || headerStyle.textPrimary,
@@ -253,12 +274,17 @@ export default function DashboardInCanvasHeader({
                     marginLeft: typeof headerConfig?.titleMarginLeft === 'number' ? headerConfig.titleMarginLeft : undefined,
                   }}
                 >
-                  {title}
-                </h2>
+                      {title}
+                    </h2>
+                  </div>
+                </SortableBlock>
                 {subtitle && (
-                  <p
-                    className="text-xs md:text-sm truncate p-1 hover:ring-2 hover:ring-blue-400 rounded-md"
-                    style={{
+                  <SortableBlock id="header-subtitle" className="group">
+                    <div className="relative">
+                      <div className="absolute -left-1 -top-3 opacity-0 group-hover:opacity-100 transition-opacity z-10 bg-gray-700 text-white px-2 py-0.5 rounded cursor-grab active:cursor-grabbing text-xs">⇅ Subtitle</div>
+                      <p
+                        className="text-xs md:text-sm truncate p-1 hover:ring-2 hover:ring-blue-400 rounded-md"
+                        style={{
                       color: headerConfig?.subtitleColor || headerStyle.textSecondary,
                       fontFamily: headerConfig?.subtitleFontFamily || headerStyle.fontFamily,
                       fontSize: headerConfig?.subtitleFontSize != null ? String(headerConfig.subtitleFontSize) + 'px' : undefined,
@@ -271,12 +297,14 @@ export default function DashboardInCanvasHeader({
                       marginRight: typeof headerConfig?.subtitleMarginRight === 'number' ? headerConfig.subtitleMarginRight : undefined,
                       marginBottom: typeof headerConfig?.subtitleMarginBottom === 'number' ? headerConfig.subtitleMarginBottom : undefined,
                       marginLeft: typeof headerConfig?.subtitleMarginLeft === 'number' ? headerConfig.subtitleMarginLeft : undefined,
-                    }}
-                  >
-                    {subtitle}
-                  </p>
+                        }}
+                      >
+                        {subtitle}
+                      </p>
+                    </div>
+                  </SortableBlock>
                 )}
-              </div>
+              </SortableContext>
             ) : (
               <>
                 {(headerConfig?.showDatePicker !== false) && (
