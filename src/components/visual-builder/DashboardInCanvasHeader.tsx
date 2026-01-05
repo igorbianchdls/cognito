@@ -207,7 +207,7 @@ export default function DashboardInCanvasHeader({
       opacity: isDragging ? 0.9 : 1,
       position: 'relative' as const,
     };
-    const handleLabel = id === 'header-titles' ? '⇅ Titles' : '⇅ Actions';
+    const handleLabel = '⋮⋮';
     return (
       <div ref={setNodeRef} style={style} className={`group ${className || ''}`}>
         <div
@@ -256,7 +256,7 @@ export default function DashboardInCanvasHeader({
               <SortableContext items={titleItemIds} strategy={verticalListSortingStrategy}>
                 <SortableBlock id="header-title" className="group mb-1">
                   <div className="relative">
-                    <div className="absolute -left-1 -top-3 opacity-0 group-hover:opacity-100 transition-opacity z-10 bg-gray-700 text-white px-2 py-0.5 rounded cursor-grab active:cursor-grabbing text-xs">⇅ Title</div>
+                    <div className="absolute -left-1 -top-3 opacity-0 group-hover:opacity-100 transition-opacity z-10 bg-gray-700 text-white px-2 py-0.5 rounded cursor-grab active:cursor-grabbing text-xs">⋮⋮</div>
                     <h2
                   className="text-base md:text-lg font-semibold leading-tight truncate p-1 hover:ring-2 hover:ring-blue-400 rounded-md"
                   style={{
@@ -281,7 +281,7 @@ export default function DashboardInCanvasHeader({
                 {subtitle && (
                   <SortableBlock id="header-subtitle" className="group">
                     <div className="relative">
-                      <div className="absolute -left-1 -top-3 opacity-0 group-hover:opacity-100 transition-opacity z-10 bg-gray-700 text-white px-2 py-0.5 rounded cursor-grab active:cursor-grabbing text-xs">⇅ Subtitle</div>
+                      <div className="absolute -left-1 -top-3 opacity-0 group-hover:opacity-100 transition-opacity z-10 bg-gray-700 text-white px-2 py-0.5 rounded cursor-grab active:cursor-grabbing text-xs">⋮⋮</div>
                       <p
                         className="text-xs md:text-sm truncate p-1 hover:ring-2 hover:ring-blue-400 rounded-md"
                         style={{
