@@ -1146,7 +1146,10 @@ export const visualBuilderActions = {
         ? `  <div id=\"header-titles\" class=\"vb-block header-titles\">\n${titleLines.join('\n')}\n  </div>`
         : ''
 
-      const innerBlocks = [titlesBlock, datepickerBlock].filter(Boolean).join('\n')
+      const blocksMap: Record<string, string> = { 'header-titles': titlesBlock, 'header-actions': datepickerBlock }
+      const providedOrder = (data as any).blocksOrder as string[] | undefined
+      const order = Array.isArray(providedOrder) && providedOrder.length ? providedOrder : ['header-titles','header-actions']
+      const innerBlocks = order.map(k => blocksMap[k]).filter(Boolean).join('\n')
       const tag = `<header${headerAttrs.length ? ' ' + headerAttrs.join(' ') : ''}>\n${innerBlocks}\n</header>`
 
       if (rePair.test(code)) {

@@ -1,6 +1,9 @@
 'use client';
 
 import { Calendar as CalendarIcon, MoreVertical } from 'lucide-react';
+import { DndContext, closestCenter, DragEndEvent } from '@dnd-kit/core';
+import { SortableContext, useSortable, horizontalListSortingStrategy } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
  
@@ -12,6 +15,7 @@ import { useStore } from '@nanostores/react';
 import { $headerUi, resolveHeaderStyle } from '@/stores/ui/headerUiStore';
 import type { ThemeName } from './ThemeManager';
 import type { HeaderConfig } from './ConfigParser';
+import { visualBuilderActions } from '@/stores/visualBuilderStore';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -163,6 +167,34 @@ export default function DashboardInCanvasHeader({
   const blocksOrder = headerConfig?.blocksOrder;
   const titlesFirst = !blocksOrder || blocksOrder[0] !== 'header-actions';
 
+  const headerBlockIds = (headerConfig?.blocksOrder && headerConfig.blocksOrder.length) ? headerConfig.blocksOrder : ['header-titles','header-actions'];
+
+  const onDragEndBlocks = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const ids = [...headerBlockIds];
+    const oldIndex = ids.indexOf(String(active.id));
+    const newIndex = ids.indexOf(String(over.id));
+    if (oldIndex === -1 || newIndex === -1) return;
+    ids.splice(newIndex, 0, ids.splice(oldIndex, 1)[0]);
+    try { visualBuilderActions.updateHeaderInCode({ blocksOrder: ids }); } catch {}
+  };
+
+  // Sortable wrappers for header blocks
+  const SortableBlock = ({ id, children }: { id: string; children: React.ReactNode }) => {
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+    const style = {
+      transform: CSS.Transform.toString(transform),
+      transition,
+      opacity: isDragging ? 0.9 : 1,
+    } as React.CSSProperties;
+    return (
+      <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+        {children}
+      </div>
+    );
+  };
+
   return (
     <div
       className="sticky top-0 z-20 border-b"
@@ -176,10 +208,13 @@ export default function DashboardInCanvasHeader({
         fontFamily: headerStyle.fontFamily,
       }}
     >
+      <DndContext collisionDetection={closestCenter} onDragEnd={onDragEndBlocks}>
+      <SortableContext items={headerBlockIds} strategy={horizontalListSortingStrategy}>
       <div
         className="group relative flex items-center justify-between w-full py-4 md:py-6 hover:ring-2 hover:ring-blue-400 rounded-lg transition-all"
         style={{ paddingLeft: containerPadding, paddingRight: containerPadding }}
       >
+        <SortableBlock id="header-titles">
         <div id="header-titles" className={`vb-block header-titles min-w-0 w-1/2 basis-1/2 flex flex-col space-y-0.5 hover:ring-2 hover:ring-blue-400 rounded-md p-2 ${titlesFirst ? 'order-1' : 'order-2'}`}>
           <h2
             className="text-base md:text-lg font-semibold leading-tight truncate"
@@ -222,6 +257,8 @@ export default function DashboardInCanvasHeader({
             </p>
           )}
         </div>
+        </SortableBlock>
+        <SortableBlock id="header-actions">
         <div id="header-actions" className={`vb-block header-actions w-1/2 basis-1/2 flex items-center ${headerConfig?.datePickerAlign === 'left' ? 'justify-start' : 'justify-end'} gap-3 md:gap-4 hover:ring-2 hover:ring-blue-400 rounded-md p-2 ${titlesFirst ? 'order-2' : 'order-1'}`}>
           {(headerConfig?.showDatePicker !== false) && (
             <>
@@ -347,7 +384,10 @@ export default function DashboardInCanvasHeader({
             </div>
           )}
         </div>
+        </SortableBlock>
       </div>
+      </SortableContext>
+      </DndContext>
     </div>
   );
 }
