@@ -214,6 +214,8 @@ export interface HeaderConfig {
   blocksOrder?: string[];
   // Order of title/subtitle inside header-titles
   titlesOrder?: Array<'h1'|'h2'>;
+  // Fraction sizing per vb-block (fr units): key = block id
+  blocksFr?: Record<string, number>;
 }
 
 // Theme types are now managed by ThemeManager
@@ -630,6 +632,7 @@ export class ConfigParser {
         try {
           const blockRe = /<div\b([^>]*)>([\s\S]*?)<\/div>/gi;
           const order: string[] = [];
+          const frMap: Record<string, number> = {};
           let bm: RegExpExecArray | null;
           while ((bm = blockRe.exec(inner)) !== null) {
             const bAttrsStr = bm[1] || '';
@@ -638,9 +641,12 @@ export class ConfigParser {
             if (cls.includes('vb-block')) {
               const idv = ba['id'] || '';
               if (idv) order.push(idv);
+              const frRaw = ba['fr'] || ba['data-fr'];
+              if (frRaw && !Number.isNaN(Number(frRaw))) frMap[idv] = Number(frRaw);
             }
           }
           if (order.length) (cfg as any).blocksOrder = order;
+          if (Object.keys(frMap).length) (cfg as any).blocksFr = frMap;
         } catch {}
         // Capture titles order (h1/h2 sequence) inside header-titles block
         try {

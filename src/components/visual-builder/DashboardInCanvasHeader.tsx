@@ -238,15 +238,22 @@ export default function DashboardInCanvasHeader({
       <DndContext collisionDetection={closestCenter} onDragEnd={onDragEndBlocks}>
       <SortableContext items={headerBlockIds} strategy={horizontalListSortingStrategy}>
       <div
-        className="group relative flex items-center justify-between w-full py-4 md:py-6 hover:ring-2 hover:ring-blue-400 rounded-lg transition-all"
-        style={{ paddingLeft: containerPadding, paddingRight: containerPadding }}
+        className="group relative grid items-center w-full py-4 md:py-6 hover:ring-2 hover:ring-blue-400 rounded-lg transition-all"
+        style={{
+          paddingLeft: containerPadding,
+          paddingRight: containerPadding,
+          gridTemplateColumns: (headerConfig?.blocksOrder || ['header-titles','header-actions'])
+            .map(id => (headerConfig?.blocksFr && headerConfig.blocksFr[id] ? headerConfig.blocksFr[id] : 1))
+            .map(n => String(n) + 'fr')
+            .join(' ')
+        }}
       >
         {headerBlockIds.map((id) => (
-        <SortableBlock
-          key={id}
-          id={id}
+          <SortableBlock
+            key={id}
+            id={id}
             className={
-              `vb-block ${id} w-1/2 basis-1/2 p-2 hover:ring-2 hover:ring-blue-400 rounded-md ` +
+              `vb-block ${id} p-2 hover:ring-2 hover:ring-blue-400 rounded-md ` +
               (id === 'header-titles'
                 ? 'min-w-0 flex flex-col space-y-0.5'
                 : ('flex items-center ' + (headerConfig?.datePickerAlign === 'left' ? 'justify-start' : 'justify-end') + ' gap-3 md:gap-4'))
@@ -254,56 +261,61 @@ export default function DashboardInCanvasHeader({
           >
             {id === 'header-titles' ? (
               <SortableContext items={titleItemIds} strategy={verticalListSortingStrategy}>
-                <SortableBlock id="header-title" className="group mb-1">
-                  <div className="relative">
-                    <div className="absolute -left-1 -top-3 opacity-0 group-hover:opacity-100 transition-opacity z-10 bg-gray-700 text-white px-2 py-0.5 rounded cursor-grab active:cursor-grabbing text-xs">⋮⋮</div>
-                    <h2
-                  className="text-base md:text-lg font-semibold leading-tight truncate p-1 hover:ring-2 hover:ring-blue-400 rounded-md"
-                  style={{
-                    color: headerConfig?.titleColor || headerStyle.textPrimary,
-                    fontFamily: headerConfig?.titleFontFamily || headerStyle.fontFamily,
-                    fontSize: headerConfig?.titleFontSize != null ? String(headerConfig.titleFontSize) + 'px' : undefined,
-                    fontWeight: (headerConfig?.titleFontWeight as any) || undefined,
-                    letterSpacing: typeof headerConfig?.titleLetterSpacing === 'number' ? headerConfig.titleLetterSpacing : undefined,
-                    lineHeight: headerConfig?.titleLineHeight as any,
-                    textTransform: headerConfig?.titleTextTransform as any,
-                    textAlign: headerConfig?.titleTextAlign as any,
-                    marginTop: typeof headerConfig?.titleMarginTop === 'number' ? headerConfig.titleMarginTop : undefined,
-                    marginRight: typeof headerConfig?.titleMarginRight === 'number' ? headerConfig.titleMarginRight : undefined,
-                    marginBottom: typeof headerConfig?.titleMarginBottom === 'number' ? headerConfig.titleMarginBottom : undefined,
-                    marginLeft: typeof headerConfig?.titleMarginLeft === 'number' ? headerConfig.titleMarginLeft : undefined,
-                  }}
-                >
-                      {title}
-                    </h2>
-                  </div>
-                </SortableBlock>
-                {subtitle && (
-                  <SortableBlock id="header-subtitle" className="group">
-                    <div className="relative">
-                      <div className="absolute -left-1 -top-3 opacity-0 group-hover:opacity-100 transition-opacity z-10 bg-gray-700 text-white px-2 py-0.5 rounded cursor-grab active:cursor-grabbing text-xs">⋮⋮</div>
-                      <p
-                        className="text-xs md:text-sm truncate p-1 hover:ring-2 hover:ring-blue-400 rounded-md"
-                        style={{
-                      color: headerConfig?.subtitleColor || headerStyle.textSecondary,
-                      fontFamily: headerConfig?.subtitleFontFamily || headerStyle.fontFamily,
-                      fontSize: headerConfig?.subtitleFontSize != null ? String(headerConfig.subtitleFontSize) + 'px' : undefined,
-                      fontWeight: (headerConfig?.subtitleFontWeight as any) || undefined,
-                      letterSpacing: typeof headerConfig?.subtitleLetterSpacing === 'number' ? headerConfig.subtitleLetterSpacing : undefined,
-                      lineHeight: headerConfig?.subtitleLineHeight as any,
-                      textTransform: headerConfig?.subtitleTextTransform as any,
-                      textAlign: headerConfig?.subtitleTextAlign as any,
-                      marginTop: typeof headerConfig?.subtitleMarginTop === 'number' ? headerConfig.subtitleMarginTop : undefined,
-                      marginRight: typeof headerConfig?.subtitleMarginRight === 'number' ? headerConfig.subtitleMarginRight : undefined,
-                      marginBottom: typeof headerConfig?.subtitleMarginBottom === 'number' ? headerConfig.subtitleMarginBottom : undefined,
-                      marginLeft: typeof headerConfig?.subtitleMarginLeft === 'number' ? headerConfig.subtitleMarginLeft : undefined,
-                        }}
-                      >
-                        {subtitle}
-                      </p>
-                    </div>
-                  </SortableBlock>
-                )}
+                {titleItemIds.map(itemId => (
+                  itemId === 'header-title' ? (
+                    <SortableBlock key={itemId} id="header-title" className="group mb-1">
+                      <div className="relative">
+                        <div className="absolute -left-1 -top-3 opacity-0 group-hover:opacity-100 transition-opacity z-10 bg-gray-700 text-white px-2 py-0.5 rounded cursor-grab active:cursor-grabbing text-xs">⋮⋮</div>
+                        <h2
+                          className="text-base md:text-lg font-semibold leading-tight truncate p-1 hover:ring-2 hover:ring-blue-400 rounded-md"
+                          style={{
+                            color: headerConfig?.titleColor || headerStyle.textPrimary,
+                            fontFamily: headerConfig?.titleFontFamily || headerStyle.fontFamily,
+                            fontSize: headerConfig?.titleFontSize != null ? String(headerConfig.titleFontSize) + 'px' : undefined,
+                            fontWeight: (headerConfig?.titleFontWeight as any) || undefined,
+                            letterSpacing: typeof headerConfig?.titleLetterSpacing === 'number' ? headerConfig.titleLetterSpacing : undefined,
+                            lineHeight: headerConfig?.titleLineHeight as any,
+                            textTransform: headerConfig?.titleTextTransform as any,
+                            textAlign: headerConfig?.titleTextAlign as any,
+                            marginTop: typeof headerConfig?.titleMarginTop === 'number' ? headerConfig.titleMarginTop : undefined,
+                            marginRight: typeof headerConfig?.titleMarginRight === 'number' ? headerConfig.titleMarginRight : undefined,
+                            marginBottom: typeof headerConfig?.titleMarginBottom === 'number' ? headerConfig.titleMarginBottom : undefined,
+                            marginLeft: typeof headerConfig?.titleMarginLeft === 'number' ? headerConfig.titleMarginLeft : undefined,
+                          }}
+                        >
+                          {title}
+                        </h2>
+                      </div>
+                    </SortableBlock>
+                  ) : (
+                    subtitle ? (
+                      <SortableBlock key={itemId} id="header-subtitle" className="group">
+                        <div className="relative">
+                          <div className="absolute -left-1 -top-3 opacity-0 group-hover:opacity-100 transition-opacity z-10 bg-gray-700 text-white px-2 py-0.5 rounded cursor-grab active:cursor-grabbing text-xs">⋮⋮</div>
+                          <p
+                            className="text-xs md:text-sm truncate p-1 hover:ring-2 hover:ring-blue-400 rounded-md"
+                            style={{
+                              color: headerConfig?.subtitleColor || headerStyle.textSecondary,
+                              fontFamily: headerConfig?.subtitleFontFamily || headerStyle.fontFamily,
+                              fontSize: headerConfig?.subtitleFontSize != null ? String(headerConfig.subtitleFontSize) + 'px' : undefined,
+                              fontWeight: (headerConfig?.subtitleFontWeight as any) || undefined,
+                              letterSpacing: typeof headerConfig?.subtitleLetterSpacing === 'number' ? headerConfig.subtitleLetterSpacing : undefined,
+                              lineHeight: headerConfig?.subtitleLineHeight as any,
+                              textTransform: headerConfig?.subtitleTextTransform as any,
+                              textAlign: headerConfig?.subtitleTextAlign as any,
+                              marginTop: typeof headerConfig?.subtitleMarginTop === 'number' ? headerConfig.subtitleMarginTop : undefined,
+                              marginRight: typeof headerConfig?.subtitleMarginRight === 'number' ? headerConfig.subtitleMarginRight : undefined,
+                              marginBottom: typeof headerConfig?.subtitleMarginBottom === 'number' ? headerConfig.subtitleMarginBottom : undefined,
+                              marginLeft: typeof headerConfig?.subtitleMarginLeft === 'number' ? headerConfig.subtitleMarginLeft : undefined,
+                            }}
+                          >
+                            {subtitle}
+                          </p>
+                        </div>
+                      </SortableBlock>
+                    ) : null
+                  )
+                ))}
               </SortableContext>
             ) : (
               <>
