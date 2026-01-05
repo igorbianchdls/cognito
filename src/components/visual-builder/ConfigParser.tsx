@@ -640,8 +640,7 @@ export class ConfigParser {
             const spanDStr = aAttrs['data-span-d'] || aAttrs['span-d'];
             const spanTStr = aAttrs['data-span-t'] || aAttrs['span-t'];
             const spanMStr = aAttrs['data-span-m'] || aAttrs['span-m'];
-            const typeRaw = (aAttrs['data-chart'] || aAttrs['chart'] || '').toLowerCase();
-            const type = (typeRaw === 'comparebar') ? 'groupedbar' : typeRaw;
+            let typeRaw = (aAttrs['chart'] || aAttrs['data-chart'] || '').toLowerCase();
             const order = orderStr ? Number(orderStr) : undefined;
             const heightPx = heightStr ? Number(heightStr) : undefined;
             const spanD = spanDStr ? Number(spanDStr) : undefined;
@@ -653,10 +652,16 @@ export class ConfigParser {
             // Parse <main> with binding and optional <style>{...}</style>
             const mainRe = /<main\b[^>]*>([\s\S]*?)<\/main>/i;
             const mm = inner.match(mainRe);
+            let mainAttrs: Record<string, string> = {};
             let pairs: Record<string, string> = {};
             let styleObj: Record<string, unknown> | undefined;
             if (mm && mm[1]) {
               const mainBody = mm[1] || '';
+              const mainOpen = (mm[0] || '').match(/<main\b([^>]*)>/i);
+              if (mainOpen && mainOpen[1]) {
+                mainAttrs = parseAttrs(mainOpen[1]);
+                if (mainAttrs['chart']) typeRaw = String(mainAttrs['chart']).toLowerCase();
+              }
               const moustache = mainBody.match(/\{\{([\s\S]*?)\}\}/);
               if (moustache && moustache[0]) {
                 pairs = parseBindingPairs(moustache[0]);
@@ -670,6 +675,7 @@ export class ConfigParser {
               }
             }
 
+            const type = (typeRaw === 'comparebar') ? 'groupedbar' : typeRaw;
             const ds: any = {};
             if (pairs['schema']) ds.schema = pairs['schema'];
             if (pairs['table'] || pairs['dimension']) ds.table = pairs['table'] || pairs['dimension'];
@@ -803,8 +809,7 @@ export class ConfigParser {
           const spanDStr = aAttrs['data-span-d'] || aAttrs['span-d'];
           const spanTStr = aAttrs['data-span-t'] || aAttrs['span-t'];
           const spanMStr = aAttrs['data-span-m'] || aAttrs['span-m'];
-          const typeRaw = (aAttrs['data-chart'] || aAttrs['chart'] || '').toLowerCase();
-          const type = (typeRaw === 'comparebar') ? 'groupedbar' : typeRaw;
+          let typeRaw = (aAttrs['chart'] || aAttrs['data-chart'] || '').toLowerCase();
           const order = orderStr ? Number(orderStr) : undefined;
           const heightPx = heightStr ? Number(heightStr) : undefined;
           const spanD = spanDStr ? Number(spanDStr) : undefined;
@@ -816,10 +821,16 @@ export class ConfigParser {
           // Parse <main> with binding and optional <style>{...}</style>
           const mainRe = /<main\b[^>]*>([\s\S]*?)<\/main>/i;
           const mm = inner.match(mainRe);
+          let mainAttrs: Record<string, string> = {};
           let pairs: Record<string, string> = {};
           let styleObj: Record<string, unknown> | undefined;
           if (mm && mm[1]) {
             const mainBody = mm[1] || '';
+            const mainOpen = (mm[0] || '').match(/<main\b([^>]*)>/i);
+            if (mainOpen && mainOpen[1]) {
+              mainAttrs = parseAttrs(mainOpen[1]);
+              if (mainAttrs['chart']) typeRaw = String(mainAttrs['chart']).toLowerCase();
+            }
             const moustache = mainBody.match(/\{\{([\s\S]*?)\}\}/);
             if (moustache && moustache[0]) {
               pairs = parseBindingPairs(moustache[0]);
@@ -833,6 +844,7 @@ export class ConfigParser {
             }
           }
 
+          const type = (typeRaw === 'comparebar') ? 'groupedbar' : typeRaw;
           const ds: any = {};
           if (pairs['schema']) ds.schema = pairs['schema'];
           if (pairs['table'] || pairs['dimension']) ds.table = pairs['table'] || pairs['dimension'];

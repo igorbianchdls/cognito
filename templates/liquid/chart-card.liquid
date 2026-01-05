@@ -1,7 +1,6 @@
 <section class="chart-group" id="grp_charts" data-cols-d="12" data-gap-x="16" data-gap-y="16">
   <article class="chart-card"
            id="chart_vendas_regiao"
-           data-type="bar"
            data-height="360"
            data-width-fr="2fr"
            data-tw="legend:on grid:on mb:32">
@@ -10,7 +9,7 @@
       <p class="chart-subtitle">Soma do subtotal por região</p>
     </header>
 
-    <main class="chart-viz">
+    <main class="chart-viz" chart="bar">
       {{ schema: vendas; table: vw_pedidos; dimension: regiao; measure: item_subtotal; agg: SUM }}
     </main>
 
@@ -21,7 +20,6 @@
 
   <article class="chart-card"
            id="chart_canal"
-           data-type="pie"
            data-height="320"
            data-width-fr="1fr"
            data-tw="legend:on">
@@ -29,7 +27,7 @@
       <h2>Vendas por Canal</h2>
     </header>
 
-    <main class="chart-viz">
+    <main class="chart-viz" chart="pie">
       {{ schema: vendas; table: vw_pedidos; dimension: canal_venda_nome; measure: item_subtotal; agg: SUM }}
     </main>
   </article>
