@@ -1078,6 +1078,28 @@ export const visualBuilderActions = {
     const escapeHtml = (s: string) => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;')
 
     if (isLiquidCode(code)) {
+      // Fast path: only reorder existing header blocks if blocksOrder provided
+      if (data?.blocksOrder && Array.isArray(data.blocksOrder) && data.blocksOrder.length) {
+        const reHdr = /<header\b([^>]*)>([\s\S]*?)<\/header>/i
+        const mHdr = code.match(reHdr)
+        if (mHdr) {
+          const openAttrs = mHdr[1] || ''
+          const inner = mHdr[2] || ''
+          const reTitles = /<div\b([^>]*)\bid=\"header-titles\"[^>]*>([\s\S]*?)<\/div>/i
+          const reActions = /<div\b([^>]*)\bid=\"header-actions\"[^>]*>([\s\S]*?)<\/div>/i
+          const mTitles = inner.match(reTitles)
+          const mActions = inner.match(reActions)
+          const titlesBlk = mTitles ? mTitles[0] : ''
+          const actionsBlk = mActions ? mActions[0] : ''
+          const blocks: Record<string,string> = { 'header-titles': titlesBlk, 'header-actions': actionsBlk }
+          const newInner = data.blocksOrder.map(k => blocks[k]).filter(Boolean).join('\n')
+          if (newInner) {
+            const newTag = `<header ${openAttrs}>\n${newInner}\n</header>`
+            visualBuilderActions.updateCode(code.replace(reHdr, newTag))
+            return
+          }
+        }
+      }
       // 1) Build <header> with inner <h1>/<h2> and kebab-case attrs
       const rePair = /<header\b[^>]*>[\s\S]*?<\/header>/i
       const reSelf = /<header\b[^>]*\/>/i
