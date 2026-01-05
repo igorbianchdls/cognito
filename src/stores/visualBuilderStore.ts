@@ -166,36 +166,36 @@ export const initialLiquidGrid = `<dashboard theme="branco" layout-mode="grid-pe
       <datepicker type="last_30_days" align="right" variant="button" size="md" number-of-months="2" quick-presets="true" locale="pt-BR" format="DD/MM/YYYY"></datepicker>
     </div>
   </header>
-  <section data-type="kpis" id="kpis" data-cols-d="3" data-cols-t="2" data-cols-m="1" data-gap-x="16" data-gap-y="16">
-    <article id="kpi_receita" data-order="1" data-height="150">
+  <section class="w-full" data-type="kpis" id="kpis" data-cols-d="3" data-cols-t="2" data-cols-m="1" data-gap-x="16" data-gap-y="16">
+    <article fr="1" id="kpi_receita" data-order="1" data-height="150">
       <h1>Receita</h1>
       <h2>{{ schema: comercial; table: vendas_vw; measure: SUM(item_subtotal) }}</h2>
     </article>
-    <article id="kpi_ticket_medio" data-order="2" data-height="150">
+    <article fr="1" id="kpi_ticket_medio" data-order="2" data-height="150">
       <h1>Ticket Médio</h1>
       <h2>{{ schema: comercial; table: vendas_vw; measure: SUM(item_subtotal)/COUNT_DISTINCT(pedido_id) }}</h2>
     </article>
-    <article id="kpi_pedidos" data-order="3" data-height="150">
+    <article fr="1" id="kpi_pedidos" data-order="3" data-height="150">
       <h1>Pedidos</h1>
       <h2>{{ schema: comercial; table: vendas_vw; measure: COUNT_DISTINCT(pedido_id) }}</h2>
     </article>
   </section>
-  <section data-type="charts" id="charts1" data-cols-d="3" data-cols-t="2" data-cols-m="1" data-gap-x="16" data-gap-y="16">
-    <article id="chart_vendas_canal" data-order="1" data-height="420" data-span-d="1">
+  <section class="w-full" data-type="charts" id="charts1" data-cols-d="3" data-cols-t="2" data-cols-m="1" data-gap-x="16" data-gap-y="16">
+    <article fr="1" id="chart_vendas_canal" data-order="1" data-height="420" data-span-d="1">
       <h1>Vendas por Canal</h1>
       <main chart="bar">
         {{ schema: comercial; table: vendas_vw; dimension: canal_venda_nome; measure: SUM(item_subtotal) }}
         <style>{"tw": "legend:on mb:40"}</style>
       </main>
     </article>
-    <article id="chart_faturamento_mensal" data-order="2" data-height="420" data-span-d="1">
+    <article fr="1" id="chart_faturamento_mensal" data-order="2" data-height="420" data-span-d="1">
       <h1>Faturamento Mensal</h1>
       <main chart="line">
         {{ schema: comercial; table: vendas_vw; dimension: data_pedido; measure: SUM(item_subtotal) }}
         <style>{"tw": "legend:off grid:on mb:40"}</style>
       </main>
     </article>
-    <article id="chart_vendas_categoria" data-order="3" data-height="420" data-span-d="1">
+    <article fr="1" id="chart_vendas_categoria" data-order="3" data-height="420" data-span-d="1">
       <h1>Vendas por Categoria</h1>
       <main chart="pie">
         {{ schema: comercial; table: vendas_vw; dimension: categoria_servico_nome; measure: SUM(item_subtotal) }}
