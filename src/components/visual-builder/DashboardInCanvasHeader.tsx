@@ -223,7 +223,7 @@ export default function DashboardInCanvasHeader({
                   style={{
                     color: headerConfig?.titleColor || headerStyle.textPrimary,
                     fontFamily: headerConfig?.titleFontFamily || headerStyle.fontFamily,
-                    fontSize: headerConfig?.titleFontSize ? `${headerConfig.titleFontSize}px` : undefined,
+                    fontSize: headerConfig?.titleFontSize != null ? String(headerConfig.titleFontSize) + 'px' : undefined,
                     fontWeight: (headerConfig?.titleFontWeight as any) || undefined,
                     letterSpacing: typeof headerConfig?.titleLetterSpacing === 'number' ? headerConfig.titleLetterSpacing : undefined,
                     lineHeight: headerConfig?.titleLineHeight as any,
@@ -243,7 +243,7 @@ export default function DashboardInCanvasHeader({
                     style={{
                       color: headerConfig?.subtitleColor || headerStyle.textSecondary,
                       fontFamily: headerConfig?.subtitleFontFamily || headerStyle.fontFamily,
-                      fontSize: headerConfig?.subtitleFontSize ? `${headerConfig.subtitleFontSize}px` : undefined,
+                      fontSize: headerConfig?.subtitleFontSize != null ? String(headerConfig.subtitleFontSize) + 'px' : undefined,
                       fontWeight: (headerConfig?.subtitleFontWeight as any) || undefined,
                       letterSpacing: typeof headerConfig?.subtitleLetterSpacing === 'number' ? headerConfig.subtitleLetterSpacing : undefined,
                       lineHeight: headerConfig?.subtitleLineHeight as any,
