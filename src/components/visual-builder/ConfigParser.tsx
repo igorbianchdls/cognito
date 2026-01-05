@@ -479,17 +479,64 @@ export class ConfigParser {
       parsedGlobalFilters = { globalFilters: { dateRange: { type, ...(startDate ? { startDate } : {}), ...(endDate ? { endDate } : {}) } } }.globalFilters;
     }
 
-    // Optional <header title subtitle/> overrides (if present)
+    // Optional <header> parsing. Prefer paired <header> with inner <h1>/<h2> and kebab-case attrs.
     try {
-      const headerMatch = dsl.match(/<header\b([^>]*)\/?>(?:\s*<\/header>)?/i);
-      if (headerMatch) {
-        const hAttrs = parseAttrs(headerMatch[1] || '');
+      const headerPair = dsl.match(/<header\b([^>]*)>([\s\S]*?)<\/header>/i);
+      const headerSelf = dsl.match(/<header\b([^>]*)\/>/i);
+      const num = (v?: string): number | undefined => { if (v == null) return undefined; const n = Number(v); return Number.isFinite(n) ? n : undefined; };
+      const cfg: HeaderConfig = {};
+      if (headerPair) {
+        const hAttrs = parseAttrs(headerPair[1] || '');
+        const inner = headerPair[2] || '';
+        const pick = (k: string) => (hAttrs[k] !== undefined ? hAttrs[k] : undefined);
+        // Container-level styles from <header>
+        const bg = pick('backgroundColor') || pick('background-color');
+        const bc = pick('borderColor') || pick('border-color');
+        const bw = pick('borderWidth') || pick('border-width');
+        const bs = pick('borderStyle') || pick('border-style');
+        if (bg) cfg.backgroundColor = String(bg);
+        if (bc) cfg.borderColor = String(bc);
+        if (bw) { const n = num(String(bw)); if (n !== undefined) cfg.borderWidth = n; }
+        if (bs && ['solid','dashed','dotted'].includes(String(bs))) cfg.borderStyle = String(bs) as any;
+        const sdp = hAttrs['showDatePicker'] ?? hAttrs['show-date-picker'] ?? hAttrs['showDate'];
+        if (sdp !== undefined) {
+          const v = String(sdp).toLowerCase(); cfg.showDatePicker = !(v === 'false' || v === 'off' || v === '0');
+        }
+        // Title/subtitle from inner h1/h2 with own styles
+        const h1m = inner.match(/<h1\b([^>]*)>([\s\S]*?)<\/h1>/i);
+        if (h1m) {
+          const h1Attrs = parseAttrs(h1m[1] || '');
+          const text = resolveLiquidVars((h1m[2] || '').trim());
+          if (text) dashboardTitle = text;
+          const ff = h1Attrs['font-family'] || h1Attrs['fontFamily'];
+          const fs = h1Attrs['font-size'] || h1Attrs['fontSize'];
+          const fw = h1Attrs['font-weight'] || h1Attrs['fontWeight'];
+          const col = h1Attrs['color'];
+          if (ff) cfg.titleFontFamily = String(ff);
+          if (fs) cfg.titleFontSize = num(String(fs));
+          if (fw) cfg.titleFontWeight = (/^\d+$/.test(String(fw)) ? Number(fw) : String(fw));
+          if (col) cfg.titleColor = String(col);
+        }
+        const h2m = inner.match(/<h2\b([^>]*)>([\s\S]*?)<\/h2>/i);
+        if (h2m) {
+          const h2Attrs = parseAttrs(h2m[1] || '');
+          const text = resolveLiquidVars((h2m[2] || '').trim());
+          if (text) dashboardSubtitle = text;
+          const ff = h2Attrs['font-family'] || h2Attrs['fontFamily'];
+          const fs = h2Attrs['font-size'] || h2Attrs['fontSize'];
+          const fw = h2Attrs['font-weight'] || h2Attrs['fontWeight'];
+          const col = h2Attrs['color'];
+          if (ff) cfg.subtitleFontFamily = String(ff);
+          if (fs) cfg.subtitleFontSize = num(String(fs));
+          if (fw) cfg.subtitleFontWeight = (/^\d+$/.test(String(fw)) ? Number(fw) : String(fw));
+          if (col) cfg.subtitleColor = String(col);
+        }
+        if (Object.keys(cfg).length > 0) headerConfig = cfg;
+      } else if (headerSelf) {
+        // Legacy/self-closing: read from header attributes
+        const hAttrs = parseAttrs(headerSelf[1] || '');
         if (typeof hAttrs['title'] === 'string' && hAttrs['title'].length > 0) dashboardTitle = hAttrs['title'];
         if (typeof hAttrs['subtitle'] === 'string') dashboardSubtitle = hAttrs['subtitle'];
-        // Extract styling overrides
-        const num = (v?: string): number | undefined => {
-          if (v == null) return undefined; const n = Number(v); return Number.isFinite(n) ? n : undefined;
-        };
         const pick = (k: string) => (hAttrs[k] !== undefined ? hAttrs[k] : undefined);
         const bg = pick('backgroundColor') || pick('background-color');
         const tff = pick('titleFontFamily') || pick('title-font-family');
@@ -500,7 +547,6 @@ export class ConfigParser {
         const sfs = pick('subtitleFontSize') || pick('subtitle-font-size');
         const sfw = pick('subtitleFontWeight') || pick('subtitle-font-weight');
         const sc = pick('subtitleColor') || pick('subtitle-color');
-        const cfg: HeaderConfig = {};
         if (bg) cfg.backgroundColor = String(bg);
         if (tff) cfg.titleFontFamily = String(tff);
         if (tfs) cfg.titleFontSize = num(String(tfs));
@@ -516,12 +562,8 @@ export class ConfigParser {
         if (bc) cfg.borderColor = String(bc);
         if (bw) { const n = num(String(bw)); if (n !== undefined) cfg.borderWidth = n; }
         if (bs && ['solid','dashed','dotted'].includes(String(bs))) cfg.borderStyle = String(bs) as any;
-        // Date picker visibility
         const sdp = pick('showDatePicker') || pick('show-date-picker') || pick('showDate');
-        if (sdp !== undefined) {
-          const v = String(sdp).toLowerCase();
-          if (v === 'false' || v === 'off' || v === '0') cfg.showDatePicker = false; else cfg.showDatePicker = true;
-        }
+        if (sdp !== undefined) { const v = String(sdp).toLowerCase(); cfg.showDatePicker = !(v === 'false' || v === 'off' || v === '0'); }
         if (Object.keys(cfg).length > 0) headerConfig = cfg;
       }
     } catch { /* ignore */ }

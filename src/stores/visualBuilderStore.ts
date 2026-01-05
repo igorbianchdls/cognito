@@ -157,7 +157,10 @@ const compactWidgetHeaders = (code: string): string => {
 
 // Initial Liquid template (HTML-like)
 export const initialLiquidGrid = `<dashboard theme="branco" layout-mode="grid-per-row" cols-d="12" gap-x="16" gap-y="16" date-type="last_30_days">
-  <header title="Dashboard de Indicadores" subtitle="Visão geral"></header>
+  <header>
+    <h1>Dashboard de Indicadores</h1>
+    <h2>Visão geral</h2>
+  </header>
   <section data-type="kpis" id="kpis" data-cols-d="3" data-cols-t="2" data-cols-m="1" data-gap-x="16" data-gap-y="16">
     <article id="kpi_receita" data-order="1" data-height="150">
       <h1>Receita</h1>
@@ -368,7 +371,10 @@ export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas"
 
 // Example in grid-per-column mode (Liquid)
 export const initialLiquidColumns = `<dashboard theme="branco" layout-mode="grid-per-column" cols-d="3" cols-t="2" cols-m="1" gap-x="16" gap-y="16">
-  <header title="Dashboard (Colunas)" subtitle="Layout por colunas"></header>
+  <header>
+    <h1>Dashboard (Colunas)</h1>
+    <h2>Layout por colunas</h2>
+  </header>
   <columns>
     <column id="1">
       <kpi id="kpi_faturamento" order="1" span-d="1" height="150" title="💰 Faturamento Total">
@@ -1041,28 +1047,36 @@ export const visualBuilderActions = {
     const escapeHtml = (s: string) => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;')
 
     if (isLiquidCode(code)) {
-      // 1) If <header ...> exists, replace it
+      // 1) Build <header> with inner <h1>/<h2> and kebab-case attrs
       const rePair = /<header\b[^>]*>[\s\S]*?<\/header>/i
       const reSelf = /<header\b[^>]*\/>/i
-      const attrs: string[] = []
+
       const t = safe(data?.title).trim()
       const s = safe(data?.subtitle).trim()
-      if (t) attrs.push(`title=\"${escapeHtml(t)}\"`)
-      if (s) attrs.push(`subtitle=\"${escapeHtml(s)}\"`)
-      if (data?.titleFontFamily) attrs.push(`titleFontFamily=\"${escapeHtml(safe(data.titleFontFamily))}\"`)
-      if (data?.titleFontSize !== undefined) attrs.push(`titleFontSize=\"${escapeHtml(safe(data.titleFontSize))}\"`)
-      if (data?.titleFontWeight !== undefined) attrs.push(`titleFontWeight=\"${escapeHtml(safe(data.titleFontWeight))}\"`)
-      if (data?.titleColor) attrs.push(`titleColor=\"${escapeHtml(safe(data.titleColor))}\"`)
-      if (data?.subtitleFontFamily) attrs.push(`subtitleFontFamily=\"${escapeHtml(safe(data.subtitleFontFamily))}\"`)
-      if (data?.subtitleFontSize !== undefined) attrs.push(`subtitleFontSize=\"${escapeHtml(safe(data.subtitleFontSize))}\"`)
-      if (data?.subtitleFontWeight !== undefined) attrs.push(`subtitleFontWeight=\"${escapeHtml(safe(data.subtitleFontWeight))}\"`)
-      if (data?.subtitleColor) attrs.push(`subtitleColor=\"${escapeHtml(safe(data.subtitleColor))}\"`)
-      if (data?.backgroundColor) attrs.push(`backgroundColor=\"${escapeHtml(safe(data.backgroundColor))}\"`)
-      if (data?.borderColor) attrs.push(`borderColor=\"${escapeHtml(safe(data.borderColor))}\"`)
-      if (data?.borderWidth !== undefined) attrs.push(`borderWidth=\"${escapeHtml(safe(data.borderWidth))}\"`)
-      if (data?.borderStyle) attrs.push(`borderStyle=\"${escapeHtml(safe(data.borderStyle))}\"`)
-      if (typeof data?.showDatePicker === 'boolean') attrs.push(`showDatePicker=\"${data.showDatePicker ? 'true' : 'false'}\"`)
-      const tag = `<header ${attrs.join(' ')}></header>`
+      const headerAttrs: string[] = []
+      const h1Attrs: string[] = []
+      const h2Attrs: string[] = []
+      // Container (header) kebab-case
+      if (data?.backgroundColor) headerAttrs.push(`background-color=\"${escapeHtml(safe(data.backgroundColor))}\"`)
+      if (data?.borderColor) headerAttrs.push(`border-color=\"${escapeHtml(safe(data.borderColor))}\"`)
+      if (data?.borderWidth !== undefined) headerAttrs.push(`border-width=\"${escapeHtml(safe(data.borderWidth))}\"`)
+      if (data?.borderStyle) headerAttrs.push(`border-style=\"${escapeHtml(safe(data.borderStyle))}\"`)
+      if (typeof data?.showDatePicker === 'boolean') headerAttrs.push(`show-date-picker=\"${data.showDatePicker ? 'true' : 'false'}\"`)
+      // Title style on <h1>
+      if (data?.titleFontFamily) h1Attrs.push(`font-family=\"${escapeHtml(safe(data.titleFontFamily))}\"`)
+      if (data?.titleFontSize !== undefined) h1Attrs.push(`font-size=\"${escapeHtml(safe(data.titleFontSize))}\"`)
+      if (data?.titleFontWeight !== undefined) h1Attrs.push(`font-weight=\"${escapeHtml(safe(data.titleFontWeight))}\"`)
+      if (data?.titleColor) h1Attrs.push(`color=\"${escapeHtml(safe(data.titleColor))}\"`)
+      // Subtitle style on <h2>
+      if (data?.subtitleFontFamily) h2Attrs.push(`font-family=\"${escapeHtml(safe(data.subtitleFontFamily))}\"`)
+      if (data?.subtitleFontSize !== undefined) h2Attrs.push(`font-size=\"${escapeHtml(safe(data.subtitleFontSize))}\"`)
+      if (data?.subtitleFontWeight !== undefined) h2Attrs.push(`font-weight=\"${escapeHtml(safe(data.subtitleFontWeight))}\"`)
+      if (data?.subtitleColor) h2Attrs.push(`color=\"${escapeHtml(safe(data.subtitleColor))}\"`)
+
+      const lines: string[] = []
+      if (t) lines.push(`  <h1${h1Attrs.length ? ' ' + h1Attrs.join(' ') : ''}>${escapeHtml(t)}</h1>`)
+      if (s) lines.push(`  <h2${h2Attrs.length ? ' ' + h2Attrs.join(' ') : ''}>${escapeHtml(s)}</h2>`)
+      const tag = `<header${headerAttrs.length ? ' ' + headerAttrs.join(' ') : ''}>\n${lines.join('\n')}\n</header>`
 
       if (rePair.test(code)) {
         const next = code.replace(rePair, tag)
@@ -1078,7 +1092,6 @@ export const visualBuilderActions = {
       // 2) Insert after <dashboard ...> and any immediate <style> block/comments
       const m = code.match(/<dashboard\b[^>]*>/i)
       if (!m) {
-        // Fallback: prepend
         const next = `${tag}\n${code}`
         visualBuilderActions.updateCode(next)
         return

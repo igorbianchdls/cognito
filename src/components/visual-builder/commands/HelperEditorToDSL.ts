@@ -274,26 +274,39 @@ export function upsertHeaderTag(
   const dashOpen = m[0];
   const start = (m.index || 0) + dashOpen.length;
   const post = code.slice(start);
-  // Build attributes
-  const attrs: string[] = [];
-  const push = (k: string, v: unknown) => { if (v !== undefined && v !== "") attrs.push(`${k}="${escapeHtml(String(v))}` + `"`); };
-  push('title', data.title);
-  push('subtitle', data.subtitle);
-  // Allow a few style keys commonly used
-  push('titleFontFamily', (data as any).titleFontFamily);
-  push('titleFontSize', (data as any).titleFontSize);
-  push('titleFontWeight', (data as any).titleFontWeight);
-  push('titleColor', (data as any).titleColor);
-  push('subtitleFontFamily', (data as any).subtitleFontFamily);
-  push('subtitleFontSize', (data as any).subtitleFontSize);
-  push('subtitleFontWeight', (data as any).subtitleFontWeight);
-  push('subtitleColor', (data as any).subtitleColor);
-  push('backgroundColor', (data as any).backgroundColor);
-  push('borderColor', (data as any).borderColor);
-  push('borderWidth', (data as any).borderWidth);
-  push('borderStyle', (data as any).borderStyle);
-  if (typeof (data as any).showDatePicker === 'boolean') push('showDatePicker', (data as any).showDatePicker ? 'true' : 'false');
-  const tag = `<header ${attrs.join(' ')}></header>`;
+
+  const esc = (v: unknown) => escapeHtml(String(v));
+  const t = (data.title ?? '').toString().trim();
+  const s = (data.subtitle ?? '').toString().trim();
+
+  // Container attrs (kebab-case)
+  const headerAttrs: string[] = [];
+  const pushHeader = (k: string, v: unknown) => { if (v !== undefined && v !== '') headerAttrs.push(`${k}="${esc(v)}"`); };
+  pushHeader('background-color', (data as any).backgroundColor);
+  pushHeader('border-color', (data as any).borderColor);
+  pushHeader('border-width', (data as any).borderWidth);
+  pushHeader('border-style', (data as any).borderStyle);
+  if (typeof (data as any).showDatePicker === 'boolean') pushHeader('show-date-picker', (data as any).showDatePicker ? 'true' : 'false');
+
+  // h1/h2 attrs (kebab-case)
+  const h1Attrs: string[] = [];
+  const h2Attrs: string[] = [];
+  const pushH1 = (k: string, v: unknown) => { if (v !== undefined && v !== '') h1Attrs.push(`${k}="${esc(v)}"`); };
+  const pushH2 = (k: string, v: unknown) => { if (v !== undefined && v !== '') h2Attrs.push(`${k}="${esc(v)}"`); };
+  pushH1('font-family', (data as any).titleFontFamily);
+  pushH1('font-size', (data as any).titleFontSize);
+  pushH1('font-weight', (data as any).titleFontWeight);
+  pushH1('color', (data as any).titleColor);
+  pushH2('font-family', (data as any).subtitleFontFamily);
+  pushH2('font-size', (data as any).subtitleFontSize);
+  pushH2('font-weight', (data as any).subtitleFontWeight);
+  pushH2('color', (data as any).subtitleColor);
+
+  const inner: string[] = [];
+  if (t) inner.push(`  <h1${h1Attrs.length ? ' ' + h1Attrs.join(' ') : ''}>${esc(t)}</h1>`);
+  if (s) inner.push(`  <h2${h2Attrs.length ? ' ' + h2Attrs.join(' ') : ''}>${esc(s)}</h2>`);
+  const tag = `<header${headerAttrs.length ? ' ' + headerAttrs.join(' ') : ''}>\n${inner.join('\n')}\n</header>`;
+
   // Replace existing <header .../> or <header ...>...</header>
   const rePair = /<header\b[^>]*>[\s\S]*?<\/header>/i;
   const reSelf = /<header\b[^>]*\/>/i;
