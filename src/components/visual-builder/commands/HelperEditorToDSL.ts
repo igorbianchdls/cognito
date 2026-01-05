@@ -338,7 +338,7 @@ export function insertKpiInSection(
   const measure = buildMeasureExpr(data?.measure, data?.agg) || data?.measure || '';
   const norm = normalizeSchemaTable(data?.schema, data?.table);
   const unitToken = unit ? ` kpi:unit:${unit}` : '';
-  const article = `\n    <article data-id="${escapeHtml(id)}" data-height="${height}">\n      <h1>${escapeHtml(title || id)}</h1>\n      <h2>{{ schema: ${escapeHtml(norm.schema || '')}; table: ${escapeHtml(norm.table || '')};${measure ? ` measure: ${escapeHtml(measure)}` : ''} }}</h2>\n    </article>\n`;
+  const article = `\n    <article id="${escapeHtml(id)}" data-height="${height}">\n      <h1>${escapeHtml(title || id)}</h1>\n      <h2>{{ schema: ${escapeHtml(norm.schema || '')}; table: ${escapeHtml(norm.table || '')};${measure ? ` measure: ${escapeHtml(measure)}` : ''} }}</h2>\n    </article>\n`;
   const re = new RegExp(`(<section\\b[^>]*\\bid=\"${escRe(sectionId)}\"[^>]*>)([\\s\\S]*?)(<\\/section>)`, 'i');
   if (!re.test(code)) return code;
   return code.replace(re, (match: string, open: string, inner: string, close: string) => {
@@ -357,7 +357,7 @@ export function insertChartInSection(
   const measure = buildMeasureExpr(data?.measure, data?.agg) || data?.measure || '';
   const norm = normalizeSchemaTable(data?.schema, data?.table);
   const tw = style?.tw || '';
-  const article = `\n    <article data-id="${escapeHtml(id)}" data-chart="${escapeHtml(type)}" data-height="${height}">\n      <h1>${escapeHtml(title || id)}</h1>\n      <main>\n        {{ schema: ${escapeHtml(norm.schema || '')}; table: ${escapeHtml(norm.table || '')};${data?.dimension ? ` dimension: ${escapeHtml(data.dimension)}` : ''}${measure ? `; measure: ${escapeHtml(measure)}` : ''} }}\n        ${tw ? `<style>{\"tw\": \"${escapeHtml(tw)}\"}</style>` : ''}\n      </main>\n    </article>\n`;
+  const article = `\n    <article id="${escapeHtml(id)}" data-chart="${escapeHtml(type)}" data-height="${height}">\n      <h1>${escapeHtml(title || id)}</h1>\n      <main>\n        {{ schema: ${escapeHtml(norm.schema || '')}; table: ${escapeHtml(norm.table || '')};${data?.dimension ? ` dimension: ${escapeHtml(data.dimension)}` : ''}${measure ? `; measure: ${escapeHtml(measure)}` : ''} }}\n        ${tw ? `<style>{\"tw\": \"${escapeHtml(tw)}\"}</style>` : ''}\n      </main>\n    </article>\n`;
   const re = new RegExp(`(<section\\b[^>]*\\bid=\"${escRe(sectionId)}\"[^>]*>)([\\s\\S]*?)(<\\/section>)`, 'i');
   if (!re.test(code)) return code;
   return code.replace(re, (match: string, open: string, inner: string, close: string) => open + inner + article + close);

@@ -603,7 +603,7 @@ export class ConfigParser {
 
           if (secType === 'kpis') {
             // KPI article parsing (title in <h1>, binding in <h2>{{ ... }})
-            const id = aAttrs['data-id'] || aAttrs['id'] || `kpi_${Date.now()}_${Math.random()}`;
+            const id = aAttrs['id'] || aAttrs['data-id'] || `kpi_${Date.now()}_${Math.random()}`;
             const orderStr = aAttrs['data-order'] || aAttrs['order'];
             const heightStr = aAttrs['data-height'] || aAttrs['height'];
             const order = orderStr ? Number(orderStr) : undefined;
@@ -634,7 +634,7 @@ export class ConfigParser {
             widgets.push(widget);
           } else {
             // Charts article parsing (title in <h1>, binding in <main>{{ ... }}</main>)
-            const id = aAttrs['data-id'] || aAttrs['id'] || `chart_${Date.now()}_${Math.random()}`;
+            const id = aAttrs['id'] || aAttrs['data-id'] || `chart_${Date.now()}_${Math.random()}`;
             const orderStr = aAttrs['data-order'] || aAttrs['order'];
             const heightStr = aAttrs['data-height'] || aAttrs['height'];
             const spanDStr = aAttrs['data-span-d'] || aAttrs['span-d'];
@@ -734,7 +734,7 @@ export class ConfigParser {
         while ((am = artRe.exec(sectionBody)) !== null) {
           const aAttrs = parseAttrs(am[1] || '');
           const inner = am[2] || '';
-          const id = aAttrs['data-id'] || aAttrs['id'] || `kpi_${Date.now()}_${Math.random()}`;
+          const id = aAttrs['id'] || aAttrs['data-id'] || `kpi_${Date.now()}_${Math.random()}`;
           const orderStr = aAttrs['data-order'] || aAttrs['order'];
           const heightStr = aAttrs['data-height'] || aAttrs['height'];
           const order = orderStr ? Number(orderStr) : undefined;
@@ -797,7 +797,7 @@ export class ConfigParser {
         while ((am = artRe.exec(sectionBody)) !== null) {
           const aAttrs = parseAttrs(am[1] || '');
           const inner = am[2] || '';
-          const id = aAttrs['data-id'] || aAttrs['id'] || `chart_${Date.now()}_${Math.random()}`;
+          const id = aAttrs['id'] || aAttrs['data-id'] || `chart_${Date.now()}_${Math.random()}`;
           const orderStr = aAttrs['data-order'] || aAttrs['order'];
           const heightStr = aAttrs['data-height'] || aAttrs['height'];
           const spanDStr = aAttrs['data-span-d'] || aAttrs['span-d'];
