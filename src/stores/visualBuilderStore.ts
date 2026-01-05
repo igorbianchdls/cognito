@@ -1031,10 +1031,18 @@ export const visualBuilderActions = {
     titleFontSize?: number;
     titleFontWeight?: string | number;
     titleColor?: string;
+    titleLetterSpacing?: number;
+    titleLineHeight?: number | string;
+    titleMarginTop?: number; titleMarginRight?: number; titleMarginBottom?: number; titleMarginLeft?: number;
+    titleTextTransform?: string; titleTextAlign?: string;
     subtitleFontFamily?: string;
     subtitleFontSize?: number;
     subtitleFontWeight?: string | number;
     subtitleColor?: string;
+    subtitleLetterSpacing?: number;
+    subtitleLineHeight?: number | string;
+    subtitleMarginTop?: number; subtitleMarginRight?: number; subtitleMarginBottom?: number; subtitleMarginLeft?: number;
+    subtitleTextTransform?: string; subtitleTextAlign?: string;
     backgroundColor?: string;
     borderColor?: string;
     borderWidth?: number;
@@ -1067,11 +1075,27 @@ export const visualBuilderActions = {
       if (data?.titleFontSize !== undefined) h1Attrs.push(`font-size=\"${escapeHtml(safe(data.titleFontSize))}\"`)
       if (data?.titleFontWeight !== undefined) h1Attrs.push(`font-weight=\"${escapeHtml(safe(data.titleFontWeight))}\"`)
       if (data?.titleColor) h1Attrs.push(`color=\"${escapeHtml(safe(data.titleColor))}\"`)
+      if (data?.titleLetterSpacing !== undefined) h1Attrs.push(`letter-spacing=\"${escapeHtml(safe(data.titleLetterSpacing))}\"`)
+      if (data?.titleLineHeight !== undefined) h1Attrs.push(`line-height=\"${escapeHtml(safe(data.titleLineHeight))}\"`)
+      if (data?.titleTextAlign) h1Attrs.push(`text-align=\"${escapeHtml(safe(data.titleTextAlign))}\"`)
+      if (data?.titleTextTransform) h1Attrs.push(`text-transform=\"${escapeHtml(safe(data.titleTextTransform))}\"`)
+      if (data?.titleMarginTop !== undefined) h1Attrs.push(`margin-top=\"${escapeHtml(safe(data.titleMarginTop))}\"`)
+      if (data?.titleMarginRight !== undefined) h1Attrs.push(`margin-right=\"${escapeHtml(safe(data.titleMarginRight))}\"`)
+      if (data?.titleMarginBottom !== undefined) h1Attrs.push(`margin-bottom=\"${escapeHtml(safe(data.titleMarginBottom))}\"`)
+      if (data?.titleMarginLeft !== undefined) h1Attrs.push(`margin-left=\"${escapeHtml(safe(data.titleMarginLeft))}\"`)
       // Subtitle style on <h2>
       if (data?.subtitleFontFamily) h2Attrs.push(`font-family=\"${escapeHtml(safe(data.subtitleFontFamily))}\"`)
       if (data?.subtitleFontSize !== undefined) h2Attrs.push(`font-size=\"${escapeHtml(safe(data.subtitleFontSize))}\"`)
       if (data?.subtitleFontWeight !== undefined) h2Attrs.push(`font-weight=\"${escapeHtml(safe(data.subtitleFontWeight))}\"`)
       if (data?.subtitleColor) h2Attrs.push(`color=\"${escapeHtml(safe(data.subtitleColor))}\"`)
+      if (data?.subtitleLetterSpacing !== undefined) h2Attrs.push(`letter-spacing=\"${escapeHtml(safe(data.subtitleLetterSpacing))}\"`)
+      if (data?.subtitleLineHeight !== undefined) h2Attrs.push(`line-height=\"${escapeHtml(safe(data.subtitleLineHeight))}\"`)
+      if (data?.subtitleTextAlign) h2Attrs.push(`text-align=\"${escapeHtml(safe(data.subtitleTextAlign))}\"`)
+      if (data?.subtitleTextTransform) h2Attrs.push(`text-transform=\"${escapeHtml(safe(data.subtitleTextTransform))}\"`)
+      if (data?.subtitleMarginTop !== undefined) h2Attrs.push(`margin-top=\"${escapeHtml(safe(data.subtitleMarginTop))}\"`)
+      if (data?.subtitleMarginRight !== undefined) h2Attrs.push(`margin-right=\"${escapeHtml(safe(data.subtitleMarginRight))}\"`)
+      if (data?.subtitleMarginBottom !== undefined) h2Attrs.push(`margin-bottom=\"${escapeHtml(safe(data.subtitleMarginBottom))}\"`)
+      if (data?.subtitleMarginLeft !== undefined) h2Attrs.push(`margin-left=\"${escapeHtml(safe(data.subtitleMarginLeft))}\"`)
 
       const lines: string[] = []
       if (t) lines.push(`  <h1${h1Attrs.length ? ' ' + h1Attrs.join(' ') : ''}>${escapeHtml(t)}</h1>`)

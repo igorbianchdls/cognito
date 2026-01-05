@@ -184,6 +184,14 @@ export default function DashboardInCanvasHeader({
               fontFamily: headerConfig?.titleFontFamily || headerStyle.fontFamily,
               fontSize: headerConfig?.titleFontSize ? `${headerConfig.titleFontSize}px` : undefined,
               fontWeight: (headerConfig?.titleFontWeight as any) || undefined,
+              letterSpacing: typeof headerConfig?.titleLetterSpacing === 'number' ? headerConfig.titleLetterSpacing : undefined,
+              lineHeight: headerConfig?.titleLineHeight as any,
+              textTransform: headerConfig?.titleTextTransform as any,
+              textAlign: headerConfig?.titleTextAlign as any,
+              marginTop: typeof headerConfig?.titleMarginTop === 'number' ? headerConfig.titleMarginTop : undefined,
+              marginRight: typeof headerConfig?.titleMarginRight === 'number' ? headerConfig.titleMarginRight : undefined,
+              marginBottom: typeof headerConfig?.titleMarginBottom === 'number' ? headerConfig.titleMarginBottom : undefined,
+              marginLeft: typeof headerConfig?.titleMarginLeft === 'number' ? headerConfig.titleMarginLeft : undefined,
             }}
           >
             {title}
@@ -196,6 +204,14 @@ export default function DashboardInCanvasHeader({
                 fontFamily: headerConfig?.subtitleFontFamily || headerStyle.fontFamily,
                 fontSize: headerConfig?.subtitleFontSize ? `${headerConfig.subtitleFontSize}px` : undefined,
                 fontWeight: (headerConfig?.subtitleFontWeight as any) || undefined,
+                letterSpacing: typeof headerConfig?.subtitleLetterSpacing === 'number' ? headerConfig.subtitleLetterSpacing : undefined,
+                lineHeight: headerConfig?.subtitleLineHeight as any,
+                textTransform: headerConfig?.subtitleTextTransform as any,
+                textAlign: headerConfig?.subtitleTextAlign as any,
+                marginTop: typeof headerConfig?.subtitleMarginTop === 'number' ? headerConfig.subtitleMarginTop : undefined,
+                marginRight: typeof headerConfig?.subtitleMarginRight === 'number' ? headerConfig.subtitleMarginRight : undefined,
+                marginBottom: typeof headerConfig?.subtitleMarginBottom === 'number' ? headerConfig.subtitleMarginBottom : undefined,
+                marginLeft: typeof headerConfig?.subtitleMarginLeft === 'number' ? headerConfig.subtitleMarginLeft : undefined,
               }}
             >
               {subtitle}

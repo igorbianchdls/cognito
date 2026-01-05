@@ -297,10 +297,26 @@ export function upsertHeaderTag(
   pushH1('font-size', (data as any).titleFontSize);
   pushH1('font-weight', (data as any).titleFontWeight);
   pushH1('color', (data as any).titleColor);
+  pushH1('letter-spacing', (data as any).titleLetterSpacing);
+  pushH1('line-height', (data as any).titleLineHeight);
+  pushH1('text-align', (data as any).titleTextAlign);
+  pushH1('text-transform', (data as any).titleTextTransform);
+  pushH1('margin-top', (data as any).titleMarginTop);
+  pushH1('margin-right', (data as any).titleMarginRight);
+  pushH1('margin-bottom', (data as any).titleMarginBottom);
+  pushH1('margin-left', (data as any).titleMarginLeft);
   pushH2('font-family', (data as any).subtitleFontFamily);
   pushH2('font-size', (data as any).subtitleFontSize);
   pushH2('font-weight', (data as any).subtitleFontWeight);
   pushH2('color', (data as any).subtitleColor);
+  pushH2('letter-spacing', (data as any).subtitleLetterSpacing);
+  pushH2('line-height', (data as any).subtitleLineHeight);
+  pushH2('text-align', (data as any).subtitleTextAlign);
+  pushH2('text-transform', (data as any).subtitleTextTransform);
+  pushH2('margin-top', (data as any).subtitleMarginTop);
+  pushH2('margin-right', (data as any).subtitleMarginRight);
+  pushH2('margin-bottom', (data as any).subtitleMarginBottom);
+  pushH2('margin-left', (data as any).subtitleMarginLeft);
 
   const inner: string[] = [];
   if (t) inner.push(`  <h1${h1Attrs.length ? ' ' + h1Attrs.join(' ') : ''}>${esc(t)}</h1>`);

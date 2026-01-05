@@ -172,10 +172,26 @@ export interface HeaderConfig {
   titleFontSize?: number;
   titleFontWeight?: string | number;
   titleColor?: string;
+  titleLetterSpacing?: number;
+  titleLineHeight?: number | string;
+  titleMarginTop?: number;
+  titleMarginRight?: number;
+  titleMarginBottom?: number;
+  titleMarginLeft?: number;
+  titleTextTransform?: string;
+  titleTextAlign?: string;
   subtitleFontFamily?: string;
   subtitleFontSize?: number;
   subtitleFontWeight?: string | number;
   subtitleColor?: string;
+  subtitleLetterSpacing?: number;
+  subtitleLineHeight?: number | string;
+  subtitleMarginTop?: number;
+  subtitleMarginRight?: number;
+  subtitleMarginBottom?: number;
+  subtitleMarginLeft?: number;
+  subtitleTextTransform?: string;
+  subtitleTextAlign?: string;
   backgroundColor?: string;
   borderColor?: string;
   borderWidth?: number;
@@ -516,6 +532,22 @@ export class ConfigParser {
           if (fs) cfg.titleFontSize = num(String(fs));
           if (fw) cfg.titleFontWeight = (/^\d+$/.test(String(fw)) ? Number(fw) : String(fw));
           if (col) cfg.titleColor = String(col);
+          const ls = h1Attrs['letter-spacing'] || h1Attrs['letterSpacing'];
+          if (ls) cfg.titleLetterSpacing = num(String(ls));
+          const lh = h1Attrs['line-height'] || h1Attrs['lineHeight'];
+          if (lh) cfg.titleLineHeight = (/^\d+(?:\.?\d+)?$/.test(String(lh)) ? Number(lh) : String(lh));
+          const mt = h1Attrs['margin-top'] || h1Attrs['marginTop'];
+          const mr = h1Attrs['margin-right'] || h1Attrs['marginRight'];
+          const mb = h1Attrs['margin-bottom'] || h1Attrs['marginBottom'];
+          const ml = h1Attrs['margin-left'] || h1Attrs['marginLeft'];
+          if (mt) cfg.titleMarginTop = num(String(mt));
+          if (mr) cfg.titleMarginRight = num(String(mr));
+          if (mb) cfg.titleMarginBottom = num(String(mb));
+          if (ml) cfg.titleMarginLeft = num(String(ml));
+          const ta = h1Attrs['text-align'] || h1Attrs['textAlign'];
+          if (ta) cfg.titleTextAlign = String(ta);
+          const tt = h1Attrs['text-transform'] || h1Attrs['textTransform'];
+          if (tt) cfg.titleTextTransform = String(tt);
         }
         const h2m = inner.match(/<h2\b([^>]*)>([\s\S]*?)<\/h2>/i);
         if (h2m) {
@@ -530,6 +562,22 @@ export class ConfigParser {
           if (fs) cfg.subtitleFontSize = num(String(fs));
           if (fw) cfg.subtitleFontWeight = (/^\d+$/.test(String(fw)) ? Number(fw) : String(fw));
           if (col) cfg.subtitleColor = String(col);
+          const ls = h2Attrs['letter-spacing'] || h2Attrs['letterSpacing'];
+          if (ls) cfg.subtitleLetterSpacing = num(String(ls));
+          const lh = h2Attrs['line-height'] || h2Attrs['lineHeight'];
+          if (lh) cfg.subtitleLineHeight = (/^\d+(?:\.?\d+)?$/.test(String(lh)) ? Number(lh) : String(lh));
+          const mt = h2Attrs['margin-top'] || h2Attrs['marginTop'];
+          const mr = h2Attrs['margin-right'] || h2Attrs['marginRight'];
+          const mb = h2Attrs['margin-bottom'] || h2Attrs['marginBottom'];
+          const ml = h2Attrs['margin-left'] || h2Attrs['marginLeft'];
+          if (mt) cfg.subtitleMarginTop = num(String(mt));
+          if (mr) cfg.subtitleMarginRight = num(String(mr));
+          if (mb) cfg.subtitleMarginBottom = num(String(mb));
+          if (ml) cfg.subtitleMarginLeft = num(String(ml));
+          const ta = h2Attrs['text-align'] || h2Attrs['textAlign'];
+          if (ta) cfg.subtitleTextAlign = String(ta);
+          const tt = h2Attrs['text-transform'] || h2Attrs['textTransform'];
+          if (tt) cfg.subtitleTextTransform = String(tt);
         }
         if (Object.keys(cfg).length > 0) headerConfig = cfg;
       } else if (headerSelf) {
