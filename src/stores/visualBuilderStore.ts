@@ -1089,6 +1089,7 @@ export const visualBuilderActions = {
       const h2Attrs: string[] = []
       // Container (header) kebab-case
       if (data?.backgroundColor) headerAttrs.push(`background-color=\"${escapeHtml(safe(data.backgroundColor))}\"`)
+      headerAttrs.push(`class=\"w-full\"`)
       if (data?.borderColor) headerAttrs.push(`border-color=\"${escapeHtml(safe(data.borderColor))}\"`)
       if (data?.borderWidth !== undefined) headerAttrs.push(`border-width=\"${escapeHtml(safe(data.borderWidth))}\"`)
       if (data?.borderStyle) headerAttrs.push(`border-style=\"${escapeHtml(safe(data.borderStyle))}\"`)
@@ -1141,11 +1142,11 @@ export const visualBuilderActions = {
         if (typeof (data as any).datePickerQuickPresets === 'boolean') push('quick-presets', (data as any).datePickerQuickPresets ? 'true' : 'false')
         push('locale', (data as any).datePickerLocale)
         push('format', (data as any).datePickerFormat)
-        datepickerBlock = `  <div id=\"header-actions\" class=\"vb-block header-actions\">\n    <datepicker${dp.length ? ' ' + dp.join(' ') : ''}></datepicker>\n  </div>`
+        datepickerBlock = `  <div id=\"header-actions\" class=\"vb-block header-actions w-1/2 basis-1/2 p-2 hover:ring-2 hover:ring-blue-400 rounded-md\">\n    <datepicker${dp.length ? ' ' + dp.join(' ') : ''}></datepicker>\n  </div>`
       }
 
       const titlesBlock = titleLines.length
-        ? `  <div id=\"header-titles\" class=\"vb-block header-titles\">\n${titleLines.join('\n')}\n  </div>`
+        ? `  <div id=\"header-titles\" class=\"vb-block header-titles w-1/2 basis-1/2 min-w-0 p-2 hover:ring-2 hover:ring-blue-400 rounded-md\">\n${titleLines.join('\n')}\n  </div>`
         : ''
 
       const blocksMap: Record<string, string> = { 'header-titles': titlesBlock, 'header-actions': datepickerBlock }
