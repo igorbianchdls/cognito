@@ -177,10 +177,10 @@ export default function DashboardInCanvasHeader({
       }}
     >
       <div
-        className="group relative flex items-center justify-between py-4 md:py-6 hover:ring-2 hover:ring-blue-400 rounded-lg transition-all"
+        className="group relative flex items-center justify-between w-full py-4 md:py-6 hover:ring-2 hover:ring-blue-400 rounded-lg transition-all"
         style={{ paddingLeft: containerPadding, paddingRight: containerPadding }}
       >
-        <div id="header-titles" className={`vb-block header-titles min-w-0 flex flex-col space-y-0.5 hover:ring-2 hover:ring-blue-400 rounded-md p-1 ${titlesFirst ? 'order-1' : 'order-2'}`}>
+        <div id="header-titles" className={`vb-block header-titles min-w-0 w-1/2 basis-1/2 flex flex-col space-y-0.5 hover:ring-2 hover:ring-blue-400 rounded-md p-2 ${titlesFirst ? 'order-1' : 'order-2'}`}>
           <h2
             className="text-base md:text-lg font-semibold leading-tight truncate"
             style={{
@@ -222,7 +222,7 @@ export default function DashboardInCanvasHeader({
             </p>
           )}
         </div>
-        <div id="header-actions" className={`vb-block header-actions flex items-center gap-3 md:gap-4 hover:ring-2 hover:ring-blue-400 rounded-md p-1 ${titlesFirst ? 'order-2' : 'order-1'}`}>
+        <div id="header-actions" className={`vb-block header-actions w-1/2 basis-1/2 flex items-center ${headerConfig?.datePickerAlign === 'left' ? 'justify-start' : 'justify-end'} gap-3 md:gap-4 hover:ring-2 hover:ring-blue-400 rounded-md p-2 ${titlesFirst ? 'order-2' : 'order-1'}`}>
           {(headerConfig?.showDatePicker !== false) && (
             <>
               <div className="hidden lg:block text-sm" style={{ color: headerStyle.textSecondary }}>
