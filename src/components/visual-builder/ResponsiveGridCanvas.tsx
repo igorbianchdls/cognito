@@ -885,7 +885,18 @@ const DraggableGroup = memo(function DraggableGroup({ id, children, containerSty
                       <div
                         className={getGridClassesForRow()}
                         style={{
-                          gridTemplateColumns: `repeat(${getColumnsValue(rowKey)}, 1fr)`,
+                          gridTemplateColumns: (() => {
+                            const cols: string[] = [];
+                            for (const w of rowWidgets) {
+                              const fr = viewportMode === 'mobile'
+                                ? (w.widthFr?.mobile || w.widthFr?.tablet || w.widthFr?.desktop)
+                                : viewportMode === 'tablet'
+                                ? (w.widthFr?.tablet || w.widthFr?.desktop)
+                                : w.widthFr?.desktop;
+                              if (fr && /fr\s*$/i.test(fr)) cols.push(fr);
+                            }
+                            return cols.length > 0 ? cols.join(' ') : `repeat(${getColumnsValue(rowKey)}, 1fr)`;
+                          })(),
                           width: '100%',
                           columnGap: `${getRowGaps(rowKey).gapX}px`,
                           rowGap: `${getRowGaps(rowKey).gapY}px`,
