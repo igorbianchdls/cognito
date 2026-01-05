@@ -157,12 +157,12 @@ const compactWidgetHeaders = (code: string): string => {
 
 // Initial Liquid template (HTML-like)
 export const initialLiquidGrid = `<dashboard theme="branco" layout-mode="grid-per-row" cols-d="12" gap-x="16" gap-y="16" date-type="last_30_days">
-  <header background-color="#ffffff" border-color="#e5e7eb" border-width="1" border-style="solid">
-    <div id="header-titles" class="vb-block header-titles">
+  <header class="w-full" background-color="#ffffff" border-color="#e5e7eb" border-width="1" border-style="solid">
+    <div id="header-titles" class="vb-block header-titles w-1/2 basis-1/2 min-w-0 p-2 hover:ring-2 hover:ring-blue-400 rounded-md">
       <h1 font-family="Inter" font-size="24" font-weight="600" color="#111827" line-height="28" letter-spacing="0" text-align="left" margin-bottom="4">Dashboard de Indicadores</h1>
       <h2 font-size="14" font-weight="400" color="#6b7280" line-height="20">Visão geral</h2>
     </div>
-    <div id="header-actions" class="vb-block header-actions">
+    <div id="header-actions" class="vb-block header-actions w-1/2 basis-1/2 p-2 hover:ring-2 hover:ring-blue-400 rounded-md">
       <datepicker type="last_30_days" align="right" variant="button" size="md" number-of-months="2" quick-presets="true" locale="pt-BR" format="DD/MM/YYYY"></datepicker>
     </div>
   </header>
@@ -376,12 +376,12 @@ export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas"
 
 // Example in grid-per-column mode (Liquid)
 export const initialLiquidColumns = `<dashboard theme="branco" layout-mode="grid-per-column" cols-d="3" cols-t="2" cols-m="1" gap-x="16" gap-y="16">
-  <header background-color="#ffffff" border-color="#e5e7eb" border-width="1" border-style="solid">
-    <div id="header-titles" class="vb-block header-titles">
+  <header class="w-full" background-color="#ffffff" border-color="#e5e7eb" border-width="1" border-style="solid">
+    <div id="header-titles" class="vb-block header-titles w-1/2 basis-1/2 min-w-0 p-2 hover:ring-2 hover:ring-blue-400 rounded-md">
       <h1 font-family="Inter" font-size="22" font-weight="600" color="#111827" line-height="26" letter-spacing="0" text-align="left" margin-bottom="4">Dashboard (Colunas)</h1>
       <h2 font-size="13" font-weight="400" color="#6b7280" line-height="18">Layout por colunas</h2>
     </div>
-    <div id="header-actions" class="vb-block header-actions">
+    <div id="header-actions" class="vb-block header-actions w-1/2 basis-1/2 p-2 hover:ring-2 hover:ring-blue-400 rounded-md">
       <datepicker type="last_30_days" align="right" variant="button" size="md" number-of-months="2" quick-presets="true" locale="pt-BR" format="DD/MM/YYYY"></datepicker>
     </div>
   </header>
