@@ -946,6 +946,10 @@ export class ConfigParser {
             ...(title ? { title } : {}),
             ...(Object.keys(ds).length ? { dataSource: ds } : {}),
           } as Widget;
+          const frRaw = aAttrs['fr'] || aAttrs['data-fr'];
+          if (frRaw && !Number.isNaN(Number(frRaw)) && Number(frRaw) > 0) {
+            (widget as any).widthFr = { desktop: String(Number(frRaw)) + 'fr' };
+          }
           widgets.push(widget);
         }
       }
@@ -1045,6 +1049,10 @@ export class ConfigParser {
             ...(Object.keys(ds).length ? { dataSource: ds } : {}),
           } as Widget;
           if (spanD || spanT || spanM) widget.span = { ...(spanD?{desktop:spanD}:{}) , ...(spanT?{tablet:spanT}:{}) , ...(spanM?{mobile:spanM}:{}) };
+          const frRaw = aAttrs['fr'] || aAttrs['data-fr'];
+          if (frRaw && !Number.isNaN(Number(frRaw)) && Number(frRaw) > 0) {
+            (widget as any).widthFr = { desktop: String(Number(frRaw)) + 'fr' };
+          }
           const frRaw = aAttrs['fr'] || aAttrs['data-fr'];
           if (frRaw && !Number.isNaN(Number(frRaw)) && Number(frRaw) > 0) {
             (widget as any).widthFr = { desktop: String(Number(frRaw)) + 'fr' };
