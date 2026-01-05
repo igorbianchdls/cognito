@@ -318,9 +318,9 @@ export function upsertHeaderTag(
   pushH2('margin-bottom', (data as any).subtitleMarginBottom);
   pushH2('margin-left', (data as any).subtitleMarginLeft);
 
-  const inner: string[] = [];
-  if (t) inner.push(`  <h1${h1Attrs.length ? ' ' + h1Attrs.join(' ') : ''}>${esc(t)}</h1>`);
-  if (s) inner.push(`  <h2${h2Attrs.length ? ' ' + h2Attrs.join(' ') : ''}>${esc(s)}</h2>`);
+  const titles: string[] = [];
+  if (t) titles.push(`    <h1${h1Attrs.length ? ' ' + h1Attrs.join(' ') : ''}>${esc(t)}</h1>`);
+  if (s) titles.push(`    <h2${h2Attrs.length ? ' ' + h2Attrs.join(' ') : ''}>${esc(s)}</h2>`);
   // Optional <datepicker>
   const dp: string[] = [];
   const pushDp = (k: string, v: unknown) => { if (v !== undefined && v !== '') dp.push(`${k}="${esc(v)}` + `"`); };
@@ -334,8 +334,11 @@ export function upsertHeaderTag(
   if (typeof (data as any).datePickerQuickPresets === 'boolean') pushDp('quick-presets', (data as any).datePickerQuickPresets ? 'true' : 'false');
   pushDp('locale', (data as any).datePickerLocale);
   pushDp('format', (data as any).datePickerFormat);
-  if (dp.length || (data as any).showDatePicker) inner.push(`  <datepicker${dp.length ? ' ' + dp.join(' ') : ''}></datepicker>`);
-  const tag = `<header${headerAttrs.length ? ' ' + headerAttrs.join(' ') : ''}>\n${inner.join('\n')}\n</header>`;
+  const hasDp = dp.length || (data as any).showDatePicker;
+  const blocks: string[] = [];
+  if (titles.length) blocks.push(`  <div class=\"header-titles\">\n${titles.join('\n')}\n  </div>`);
+  if (hasDp) blocks.push(`  <div class=\"header-actions\">\n    <datepicker${dp.length ? ' ' + dp.join(' ') : ''}></datepicker>\n  </div>`);
+  const tag = `<header${headerAttrs.length ? ' ' + headerAttrs.join(' ') : ''}>\n${blocks.join('\n')}\n</header>`;
 
   // Replace existing <header .../> or <header ...>...</header>
   const rePair = /<header\b[^>]*>[\s\S]*?<\/header>/i;
