@@ -336,8 +336,8 @@ export function upsertHeaderTag(
   pushDp('format', (data as any).datePickerFormat);
   const hasDp = dp.length || (data as any).showDatePicker;
   const blocks: string[] = [];
-  if (titles.length) blocks.push(`  <div class=\"header-titles\">\n${titles.join('\n')}\n  </div>`);
-  if (hasDp) blocks.push(`  <div class=\"header-actions\">\n    <datepicker${dp.length ? ' ' + dp.join(' ') : ''}></datepicker>\n  </div>`);
+  if (titles.length) blocks.push(`  <div id=\"header-titles\" class=\"vb-block header-titles\">\n${titles.join('\n')}\n  </div>`);
+  if (hasDp) blocks.push(`  <div id=\"header-actions\" class=\"vb-block header-actions\">\n    <datepicker${dp.length ? ' ' + dp.join(' ') : ''}></datepicker>\n  </div>`);
   const tag = `<header${headerAttrs.length ? ' ' + headerAttrs.join(' ') : ''}>\n${blocks.join('\n')}\n</header>`;
 
   // Replace existing <header .../> or <header ...>...</header>

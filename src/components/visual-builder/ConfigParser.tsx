@@ -210,6 +210,8 @@ export interface HeaderConfig {
   datePickerType?: string;
   datePickerStart?: string;
   datePickerEnd?: string;
+  // Optional blocks order for header vb-block wrappers
+  blocksOrder?: string[];
 }
 
 // Theme types are now managed by ThemeManager
@@ -622,6 +624,22 @@ export class ConfigParser {
             parsedGlobalFilters = { dateRange: { type: t, ...(start ? { startDate: start } : {}), ...(end ? { endDate: end } : {}) } };
           }
         }
+        // Capture vb-block wrappers order (by id) inside header
+        try {
+          const blockRe = /<div\b([^>]*)>([\s\S]*?)<\/div>/gi;
+          const order: string[] = [];
+          let bm: RegExpExecArray | null;
+          while ((bm = blockRe.exec(inner)) !== null) {
+            const bAttrsStr = bm[1] || '';
+            const ba = parseAttrs(bAttrsStr);
+            const cls = (ba['class'] || '').split(/\s+/);
+            if (cls.includes('vb-block')) {
+              const idv = ba['id'] || '';
+              if (idv) order.push(idv);
+            }
+          }
+          if (order.length) (cfg as any).blocksOrder = order;
+        } catch {}
         if (Object.keys(cfg).length > 0) headerConfig = cfg;
       } else if (headerSelf) {
         // Legacy/self-closing: read from header attributes

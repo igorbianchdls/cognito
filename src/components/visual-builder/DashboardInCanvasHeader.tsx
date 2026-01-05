@@ -160,6 +160,8 @@ export default function DashboardInCanvasHeader({
   const isLightTheme = themeName === 'branco' || themeName === 'cinza-claro';
   const variantKind = (headerUi.variant === 'auto' ? (isLightTheme ? 'light' : 'dark') : headerUi.variant);
   const isDark = variantKind === 'dark';
+  const blocksOrder = headerConfig?.blocksOrder;
+  const titlesFirst = !blocksOrder || blocksOrder[0] !== 'header-actions';
 
   return (
     <div
@@ -178,7 +180,7 @@ export default function DashboardInCanvasHeader({
         className="group relative flex items-center justify-between py-4 md:py-6 hover:ring-2 hover:ring-blue-400 rounded-lg transition-all"
         style={{ paddingLeft: containerPadding, paddingRight: containerPadding }}
       >
-        <div className="min-w-0 flex flex-col space-y-0.5">
+        <div id="header-titles" className={`vb-block header-titles min-w-0 flex flex-col space-y-0.5 hover:ring-2 hover:ring-blue-400 rounded-md p-1 ${titlesFirst ? 'order-1' : 'order-2'}`}>
           <h2
             className="text-base md:text-lg font-semibold leading-tight truncate"
             style={{
@@ -220,7 +222,7 @@ export default function DashboardInCanvasHeader({
             </p>
           )}
         </div>
-        <div className="flex items-center gap-3 md:gap-4">
+        <div id="header-actions" className={`vb-block header-actions flex items-center gap-3 md:gap-4 hover:ring-2 hover:ring-blue-400 rounded-md p-1 ${titlesFirst ? 'order-2' : 'order-1'}`}>
           {(headerConfig?.showDatePicker !== false) && (
             <>
               <div className="hidden lg:block text-sm" style={{ color: headerStyle.textSecondary }}>
