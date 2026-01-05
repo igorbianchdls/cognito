@@ -592,6 +592,36 @@ export class ConfigParser {
           const tt = h2Attrs['text-transform'] || h2Attrs['textTransform'];
           if (tt) cfg.subtitleTextTransform = String(tt);
         }
+        // Daterange/Datepicker tag inside header
+        const drSelfPair = inner.match(/<(daterange|datepicker)\b([^>]*)\/>/i) || inner.match(/<(daterange|datepicker)\b([^>]*)>([\s\S]*?)<\/\1>/i);
+        const drAttrsStr2 = drSelfPair ? (drSelfPair[2] || '') : '';
+        if (drAttrsStr2) {
+          const drAttrs = parseAttrs(drAttrsStr2);
+          cfg.showDatePicker = true;
+          if (drAttrs['align']) cfg.datePickerAlign = String(drAttrs['align']);
+          if (drAttrs['variant']) cfg.datePickerVariant = String(drAttrs['variant']);
+          if (drAttrs['size']) cfg.datePickerSize = String(drAttrs['size']);
+          const months = drAttrs['number-of-months'] || drAttrs['months'];
+          if (months && !Number.isNaN(Number(months))) cfg.datePickerMonths = Number(months);
+          if (drAttrs['quick-presets'] !== undefined) cfg.datePickerQuickPresets = String(drAttrs['quick-presets']).toLowerCase() !== 'false';
+          if (drAttrs['locale']) cfg.datePickerLocale = String(drAttrs['locale']);
+          if (drAttrs['format']) cfg.datePickerFormat = String(drAttrs['format']);
+          if (drAttrs['id']) cfg.datePickerId = String(drAttrs['id']);
+          // Map initial filter
+          let t = drAttrs['type'];
+          let start = drAttrs['start'] || drAttrs['date-start'];
+          let end = drAttrs['end'] || drAttrs['date-end'];
+          if (t) {
+            if (/^custom:/i.test(t)) {
+              const m = t.split(':')[1] || '';
+              const parts = m.split(/[;,]/).map(s => s.trim());
+              t = 'custom';
+              if (parts[0]) start = parts[0];
+              if (parts[1]) end = parts[1];
+            }
+            parsedGlobalFilters = { dateRange: { type: t, ...(start ? { startDate: start } : {}), ...(end ? { endDate: end } : {}) } };
+          }
+        }
         if (Object.keys(cfg).length > 0) headerConfig = cfg;
       } else if (headerSelf) {
         // Legacy/self-closing: read from header attributes
@@ -625,39 +655,6 @@ export class ConfigParser {
         if (bs && ['solid','dashed','dotted'].includes(String(bs))) cfg.borderStyle = String(bs) as any;
         const sdp = pick('showDatePicker') || pick('show-date-picker') || pick('showDate');
         if (sdp !== undefined) { const v = String(sdp).toLowerCase(); cfg.showDatePicker = !(v === 'false' || v === 'off' || v === '0'); }
-        // Daterange/Datepicker tag inside header
-        const drSelf = inner.match(/<(daterange|datepicker)\b([^>]*)\/>/i);
-        const drPair = inner.match(/<(daterange|datepicker)\b([^>]*)>([\s\S]*?)<\/\1>/i);
-        const drAttrsStr = drSelf ? (drSelf[2] || '') : (drPair ? (drPair[2] || '') : '');
-        if (drAttrsStr) {
-          const drAttrs = parseAttrs(drAttrsStr);
-          // Enable date picker
-          cfg.showDatePicker = true;
-          // Map UI options
-          if (drAttrs['align']) cfg.datePickerAlign = String(drAttrs['align']);
-          if (drAttrs['variant']) cfg.datePickerVariant = String(drAttrs['variant']);
-          if (drAttrs['size']) cfg.datePickerSize = String(drAttrs['size']);
-          const months = drAttrs['number-of-months'] || drAttrs['months'];
-          if (months && !Number.isNaN(Number(months))) cfg.datePickerMonths = Number(months);
-          if (drAttrs['quick-presets'] !== undefined) cfg.datePickerQuickPresets = String(drAttrs['quick-presets']).toLowerCase() !== 'false';
-          if (drAttrs['locale']) cfg.datePickerLocale = String(drAttrs['locale']);
-          if (drAttrs['format']) cfg.datePickerFormat = String(drAttrs['format']);
-          if (drAttrs['id']) cfg.datePickerId = String(drAttrs['id']);
-          // Map initial filter
-          let t = drAttrs['type'];
-          let start = drAttrs['start'] || drAttrs['date-start'];
-          let end = drAttrs['end'] || drAttrs['date-end'];
-          if (t) {
-            if (/^custom:/i.test(t)) {
-              const m = t.split(':')[1] || '';
-              const parts = m.split(/[;,]/).map(s => s.trim());
-              t = 'custom';
-              if (parts[0]) start = parts[0];
-              if (parts[1]) end = parts[1];
-            }
-            parsedGlobalFilters = { dateRange: { type: t, ...(start ? { startDate: start } : {}), ...(end ? { endDate: end } : {}) } };
-          }
-        }
         if (Object.keys(cfg).length > 0) headerConfig = cfg;
       }
     } catch { /* ignore */ }
