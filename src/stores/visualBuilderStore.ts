@@ -1069,6 +1069,8 @@ export const visualBuilderActions = {
     datePickerQuickPresets?: boolean;
     datePickerLocale?: string;
     datePickerFormat?: string;
+    // Header blocks order (wrappers inside header)
+    blocksOrder?: string[];
   }) => {
     const currentState = $visualBuilderState.get()
     const code = currentState.code || ''
