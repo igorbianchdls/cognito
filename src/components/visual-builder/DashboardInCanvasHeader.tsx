@@ -187,9 +187,18 @@ export default function DashboardInCanvasHeader({
       transform: CSS.Transform.toString(transform),
       transition,
       opacity: isDragging ? 0.9 : 1,
-    } as React.CSSProperties;
+      position: 'relative' as const,
+    };
+    const handleLabel = id === 'header-titles' ? '⇅ Titles' : '⇅ Actions';
     return (
-      <div ref={setNodeRef} style={style} className={className} {...attributes} {...listeners}>
+      <div ref={setNodeRef} style={style} className={`group ${className || ''}`}>
+        <div
+          {...attributes}
+          {...listeners}
+          className="absolute -left-1 -top-3 opacity-0 group-hover:opacity-100 transition-opacity z-10 bg-gray-700 text-white px-2 py-0.5 rounded cursor-grab active:cursor-grabbing text-xs"
+        >
+          {handleLabel}
+        </div>
         {children}
       </div>
     );
