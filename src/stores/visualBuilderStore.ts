@@ -157,9 +157,10 @@ const compactWidgetHeaders = (code: string): string => {
 
 // Initial Liquid template (HTML-like)
 export const initialLiquidGrid = `<dashboard theme="branco" layout-mode="grid-per-row" cols-d="12" gap-x="16" gap-y="16" date-type="last_30_days">
-  <header background-color="#ffffff" border-color="#e5e7eb" border-width="1" border-style="solid" show-date-picker="true">
+  <header background-color="#ffffff" border-color="#e5e7eb" border-width="1" border-style="solid">
     <h1 font-family="Inter" font-size="24" font-weight="600" color="#111827" line-height="28" letter-spacing="0" text-align="left" margin-bottom="4">Dashboard de Indicadores</h1>
     <h2 font-size="14" font-weight="400" color="#6b7280" line-height="20">Visão geral</h2>
+    <datepicker type="last_30_days" align="right" variant="button" size="md" number-of-months="2" quick-presets="true" locale="pt-BR" format="DD/MM/YYYY"></datepicker>
   </header>
   <section data-type="kpis" id="kpis" data-cols-d="3" data-cols-t="2" data-cols-m="1" data-gap-x="16" data-gap-y="16">
     <article id="kpi_receita" data-order="1" data-height="150">
@@ -371,9 +372,10 @@ export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas"
 
 // Example in grid-per-column mode (Liquid)
 export const initialLiquidColumns = `<dashboard theme="branco" layout-mode="grid-per-column" cols-d="3" cols-t="2" cols-m="1" gap-x="16" gap-y="16">
-  <header background-color="#ffffff" border-color="#e5e7eb" border-width="1" border-style="solid" show-date-picker="true">
+  <header background-color="#ffffff" border-color="#e5e7eb" border-width="1" border-style="solid">
     <h1 font-family="Inter" font-size="22" font-weight="600" color="#111827" line-height="26" letter-spacing="0" text-align="left" margin-bottom="4">Dashboard (Colunas)</h1>
     <h2 font-size="13" font-weight="400" color="#6b7280" line-height="18">Layout por colunas</h2>
+    <datepicker type="last_30_days" align="right" variant="button" size="md" number-of-months="2" quick-presets="true" locale="pt-BR" format="DD/MM/YYYY"></datepicker>
   </header>
   <columns>
     <column id="1">
@@ -1048,6 +1050,17 @@ export const visualBuilderActions = {
     borderWidth?: number;
     borderStyle?: 'solid' | 'dashed' | 'dotted' | string;
     showDatePicker?: boolean;
+    // Datepicker options
+    datePickerType?: string;
+    datePickerStart?: string;
+    datePickerEnd?: string;
+    datePickerAlign?: 'left' | 'right' | string;
+    datePickerVariant?: 'button' | 'inline' | string;
+    datePickerSize?: 'sm' | 'md' | 'lg' | string;
+    datePickerMonths?: number;
+    datePickerQuickPresets?: boolean;
+    datePickerLocale?: string;
+    datePickerFormat?: string;
   }) => {
     const currentState = $visualBuilderState.get()
     const code = currentState.code || ''
@@ -1100,6 +1113,24 @@ export const visualBuilderActions = {
       const lines: string[] = []
       if (t) lines.push(`  <h1${h1Attrs.length ? ' ' + h1Attrs.join(' ') : ''}>${escapeHtml(t)}</h1>`)
       if (s) lines.push(`  <h2${h2Attrs.length ? ' ' + h2Attrs.join(' ') : ''}>${escapeHtml(s)}</h2>`)
+      // Datepicker tag
+      const shouldAddDatepicker = (typeof data?.showDatePicker === 'boolean' ? data.showDatePicker : false)
+        || Boolean((data as any).datePickerType || (data as any).datePickerAlign || (data as any).datePickerVariant || (data as any).datePickerSize || (data as any).datePickerMonths || (data as any).datePickerLocale || (data as any).datePickerFormat)
+      if (shouldAddDatepicker) {
+        const dp: string[] = []
+        const push = (k: string, v: unknown) => { if (v !== undefined && v !== '') dp.push(`${k}=\"${escapeHtml(String(v))}\"`) }
+        push('type', (data as any).datePickerType)
+        push('start', (data as any).datePickerStart)
+        push('end', (data as any).datePickerEnd)
+        push('align', (data as any).datePickerAlign)
+        push('variant', (data as any).datePickerVariant)
+        push('size', (data as any).datePickerSize)
+        if (typeof (data as any).datePickerMonths === 'number') push('number-of-months', (data as any).datePickerMonths)
+        if (typeof (data as any).datePickerQuickPresets === 'boolean') push('quick-presets', (data as any).datePickerQuickPresets ? 'true' : 'false')
+        push('locale', (data as any).datePickerLocale)
+        push('format', (data as any).datePickerFormat)
+        lines.push(`  <datepicker${dp.length ? ' ' + dp.join(' ') : ''}></datepicker>`)
+      }
       const tag = `<header${headerAttrs.length ? ' ' + headerAttrs.join(' ') : ''}>\n${lines.join('\n')}\n</header>`
 
       if (rePair.test(code)) {

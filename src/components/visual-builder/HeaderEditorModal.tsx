@@ -30,6 +30,17 @@ export default function HeaderEditorModal({ isOpen, initialTitle, initialSubtitl
   const [borderWidth, setBorderWidth] = useState<number | undefined>(initialConfig?.borderWidth);
   const [borderStyle, setBorderStyle] = useState<'solid'|'dashed'|'dotted' | ''>((initialConfig?.borderStyle as any) || '');
   const [showDatePicker, setShowDatePicker] = useState<boolean>(initialConfig?.showDatePicker !== false);
+  // Datepicker options
+  const [dpType, setDpType] = useState<string>((initialConfig as any)?.datePickerType || 'last_30_days');
+  const [dpStart, setDpStart] = useState<string>((initialConfig as any)?.datePickerStart || '');
+  const [dpEnd, setDpEnd] = useState<string>((initialConfig as any)?.datePickerEnd || '');
+  const [dpAlign, setDpAlign] = useState<string>((initialConfig as any)?.datePickerAlign || 'right');
+  const [dpVariant, setDpVariant] = useState<string>((initialConfig as any)?.datePickerVariant || 'button');
+  const [dpSize, setDpSize] = useState<string>((initialConfig as any)?.datePickerSize || 'md');
+  const [dpMonths, setDpMonths] = useState<number | undefined>((initialConfig as any)?.datePickerMonths ?? 2);
+  const [dpQuick, setDpQuick] = useState<boolean>((initialConfig as any)?.datePickerQuickPresets ?? true);
+  const [dpLocale, setDpLocale] = useState<string>((initialConfig as any)?.datePickerLocale || 'pt-BR');
+  const [dpFormat, setDpFormat] = useState<string>((initialConfig as any)?.datePickerFormat || 'DD/MM/YYYY');
 
   useEffect(() => { setMounted(true); return () => setMounted(false); }, []);
 
@@ -50,6 +61,17 @@ export default function HeaderEditorModal({ isOpen, initialTitle, initialSubtitl
       setBorderWidth(initialConfig?.borderWidth);
       setBorderStyle((initialConfig?.borderStyle as any) || '');
       setShowDatePicker(initialConfig?.showDatePicker !== false);
+      // Datepicker
+      setDpType(((initialConfig as any)?.datePickerType || 'last_30_days'))
+      setDpStart(((initialConfig as any)?.datePickerStart || ''))
+      setDpEnd(((initialConfig as any)?.datePickerEnd || ''))
+      setDpAlign(((initialConfig as any)?.datePickerAlign || 'right'))
+      setDpVariant(((initialConfig as any)?.datePickerVariant || 'button'))
+      setDpSize(((initialConfig as any)?.datePickerSize || 'md'))
+      setDpMonths(((initialConfig as any)?.datePickerMonths ?? 2) as number)
+      setDpQuick(((initialConfig as any)?.datePickerQuickPresets ?? true) as boolean)
+      setDpLocale(((initialConfig as any)?.datePickerLocale || 'pt-BR'))
+      setDpFormat(((initialConfig as any)?.datePickerFormat || 'DD/MM/YYYY'))
     }
   }, [isOpen, initialTitle, initialSubtitle, initialConfig]);
 
@@ -172,6 +194,72 @@ export default function HeaderEditorModal({ isOpen, initialTitle, initialSubtitl
                 <input type="checkbox" className="h-4 w-4" checked={showDatePicker} onChange={e => setShowDatePicker(e.target.checked)} />
                 Mostrar seletor de data no header
               </label>
+              {showDatePicker && (
+                <div className="mt-3 space-y-2">
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1">Tipo</label>
+                      <select className="w-full px-2 py-2 bg-gray-100 border-0 rounded-md" value={dpType} onChange={e => setDpType(e.target.value)}>
+                        {['today','yesterday','last_7_days','last_14_days','last_30_days','last_90_days','custom'].map(v => <option key={v} value={v}>{v}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1">Alinhamento</label>
+                      <select className="w-full px-2 py-2 bg-gray-100 border-0 rounded-md" value={dpAlign} onChange={e => setDpAlign(e.target.value)}>
+                        <option value="right">right</option>
+                        <option value="left">left</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1">Visual</label>
+                      <select className="w-full px-2 py-2 bg-gray-100 border-0 rounded-md" value={dpVariant} onChange={e => setDpVariant(e.target.value)}>
+                        <option value="button">button</option>
+                        <option value="inline">inline</option>
+                      </select>
+                    </div>
+                  </div>
+                  {dpType === 'custom' && (
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-xs text-gray-600 mb-1">Início</label>
+                        <input type="date" className="w-full px-2 py-2 bg-gray-100 border-0 rounded-md" value={dpStart} onChange={e => setDpStart(e.target.value)} />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-600 mb-1">Fim</label>
+                        <input type="date" className="w-full px-2 py-2 bg-gray-100 border-0 rounded-md" value={dpEnd} onChange={e => setDpEnd(e.target.value)} />
+                      </div>
+                    </div>
+                  )}
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1">Tamanho</label>
+                      <select className="w-full px-2 py-2 bg-gray-100 border-0 rounded-md" value={dpSize} onChange={e => setDpSize(e.target.value)}>
+                        <option value="sm">sm</option>
+                        <option value="md">md</option>
+                        <option value="lg">lg</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1">Meses</label>
+                      <input type="number" min={1} max={3} className="w-full px-2 py-2 bg-gray-100 border-0 rounded-md" value={dpMonths ?? 2} onChange={e => setDpMonths(e.target.value ? parseInt(e.target.value) : undefined)} />
+                    </div>
+                    <div className="flex items-center gap-2 mt-6">
+                      <input type="checkbox" className="h-4 w-4" checked={dpQuick} onChange={e => setDpQuick(e.target.checked)} />
+                      <span className="text-sm text-gray-700">Atalhos rápidos</span>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1">Locale</label>
+                      <input type="text" className="w-full px-2 py-2 bg-gray-100 border-0 rounded-md" value={dpLocale} onChange={e => setDpLocale(e.target.value)} />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1">Formato</label>
+                      <input type="text" className="w-full px-2 py-2 bg-gray-100 border-0 rounded-md" value={dpFormat} onChange={e => setDpFormat(e.target.value)} />
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -197,7 +285,18 @@ export default function HeaderEditorModal({ isOpen, initialTitle, initialSubtitl
               ...(borderColor ? { borderColor } : {}),
               ...(borderWidth !== undefined ? { borderWidth } : {}),
               ...(borderStyle ? { borderStyle } : {}),
-              ...(showDatePicker === false ? { showDatePicker } : {}),
+              // Datepicker
+              ...(showDatePicker ? { showDatePicker: true } : {}),
+              ...(showDatePicker && dpType ? { datePickerType: dpType } : {}),
+              ...(showDatePicker && dpStart ? { datePickerStart: dpStart } : {}),
+              ...(showDatePicker && dpEnd ? { datePickerEnd: dpEnd } : {}),
+              ...(showDatePicker && dpAlign ? { datePickerAlign: dpAlign } : {}),
+              ...(showDatePicker && dpVariant ? { datePickerVariant: dpVariant } : {}),
+              ...(showDatePicker && dpSize ? { datePickerSize: dpSize } : {}),
+              ...(showDatePicker && (dpMonths !== undefined) ? { datePickerMonths: dpMonths } : {}),
+              ...(showDatePicker ? { datePickerQuickPresets: dpQuick } : {}),
+              ...(showDatePicker && dpLocale ? { datePickerLocale: dpLocale } : {}),
+              ...(showDatePicker && dpFormat ? { datePickerFormat: dpFormat } : {}),
             } })}
             className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
           >Salvar</button>

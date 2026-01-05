@@ -111,38 +111,40 @@ export default function DashboardInCanvasHeader({
   const dateRangeDescription = useMemo(() => {
     const today = new Date();
     const toISO = (d: Date) => d.toISOString().split('T')[0];
+    const locale = headerConfig?.datePickerLocale || 'pt-BR';
     // Show in-progress custom range if selecting
     if (selectedType === 'custom' && customRange?.from && customRange?.to) {
-      return `${toISO(customRange.from).split('-').reverse().join('/')} - ${toISO(customRange.to).split('-').reverse().join('/')}`;
+      const f = (d: Date) => d.toLocaleDateString(locale);
+      return `${f(customRange.from)} - ${f(customRange.to)}`;
     }
     switch (currentFilter.type) {
       case 'today': {
-        return `${today.toLocaleDateString('pt-BR')} - ${today.toLocaleDateString('pt-BR')}`;
+        return `${today.toLocaleDateString(locale)} - ${today.toLocaleDateString(locale)}`;
       }
       case 'yesterday': {
         const y = new Date(today);
         y.setDate(today.getDate() - 1);
-        return `${y.toLocaleDateString('pt-BR')} - ${y.toLocaleDateString('pt-BR')}`;
+        return `${y.toLocaleDateString(locale)} - ${y.toLocaleDateString(locale)}`;
       }
       case 'last_7_days': {
         const weekAgo = new Date(today);
         weekAgo.setDate(today.getDate() - 6);
-        return `${weekAgo.toLocaleDateString('pt-BR')} - ${today.toLocaleDateString('pt-BR')}`;
+        return `${weekAgo.toLocaleDateString(locale)} - ${today.toLocaleDateString(locale)}`;
       }
       case 'last_14_days': {
         const d = new Date(today);
         d.setDate(today.getDate() - 13);
-        return `${d.toLocaleDateString('pt-BR')} - ${today.toLocaleDateString('pt-BR')}`;
+        return `${d.toLocaleDateString(locale)} - ${today.toLocaleDateString(locale)}`;
       }
       case 'last_30_days': {
         const monthAgo = new Date(today);
         monthAgo.setDate(today.getDate() - 29);
-        return `${monthAgo.toLocaleDateString('pt-BR')} - ${today.toLocaleDateString('pt-BR')}`;
+        return `${monthAgo.toLocaleDateString(locale)} - ${today.toLocaleDateString(locale)}`;
       }
       case 'last_90_days': {
         const quarterAgo = new Date(today);
         quarterAgo.setDate(today.getDate() - 89);
-        return `${quarterAgo.toLocaleDateString('pt-BR')} - ${today.toLocaleDateString('pt-BR')}`;
+        return `${quarterAgo.toLocaleDateString(locale)} - ${today.toLocaleDateString(locale)}`;
       }
       case 'custom':
         if (currentFilter.startDate && currentFilter.endDate) {
@@ -227,32 +229,44 @@ export default function DashboardInCanvasHeader({
                   <span className="ml-2">({dateRangeDescription})</span>
                 )}
               </div>
-              <Popover open={showCustomPicker} onOpenChange={setShowCustomPicker}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-9 px-3"
-                    style={{
-                      backgroundColor: 'transparent',
-                      color: headerStyle.textPrimary,
-                      borderColor: headerStyle.datePickerBorderColor || headerStyle.borderBottomColor,
+              {headerConfig?.datePickerVariant === 'inline' ? (
+                <div className="p-2 rounded-md border" style={{ borderColor: headerStyle.datePickerBorderColor || headerStyle.borderBottomColor }}>
+                  <Calendar
+                    mode="range"
+                    numberOfMonths={typeof headerConfig?.datePickerMonths === 'number' ? headerConfig.datePickerMonths : 2}
+                    selected={customRange}
+                    onSelect={(range?: DateRange) => {
+                      setCustomRange(range);
                     }}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    <span className="whitespace-nowrap">{currentLabel}</span>
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent align="end" sideOffset={8} className="p-3 w-auto">
-                  <div className="space-y-3">
-                    <Calendar
-                      mode="range"
-                      numberOfMonths={2}
-                      selected={customRange}
-                      onSelect={(range?: DateRange) => {
-                        setCustomRange(range);
+                  />
+                </div>
+              ) : (
+                <Popover open={showCustomPicker} onOpenChange={setShowCustomPicker}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size={headerConfig?.datePickerSize === 'lg' ? 'lg' : headerConfig?.datePickerSize === 'sm' ? 'sm' : undefined}
+                      className="h-9 px-3"
+                      style={{
+                        backgroundColor: 'transparent',
+                        color: headerStyle.textPrimary,
+                        borderColor: headerStyle.datePickerBorderColor || headerStyle.borderBottomColor,
                       }}
-                    />
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      <span className="whitespace-nowrap">{currentLabel}</span>
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent align="end" sideOffset={8} className="p-3 w-auto">
+                    <div className="space-y-3">
+                      <Calendar
+                        mode="range"
+                        numberOfMonths={typeof headerConfig?.datePickerMonths === 'number' ? headerConfig.datePickerMonths : 2}
+                        selected={customRange}
+                        onSelect={(range?: DateRange) => {
+                          setCustomRange(range);
+                        }}
+                      />
                     <div className="flex items-center justify-between gap-3">
                       <div className="text-xs text-gray-500">
                         {customRange?.from && customRange?.to ? (
@@ -297,9 +311,10 @@ export default function DashboardInCanvasHeader({
                         </Button>
                       </div>
                     </div>
-                  </div>
-                </PopoverContent>
-              </Popover>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              )}
             </>
           )}
           {/* Hover-only actions like widgets */}

@@ -321,6 +321,20 @@ export function upsertHeaderTag(
   const inner: string[] = [];
   if (t) inner.push(`  <h1${h1Attrs.length ? ' ' + h1Attrs.join(' ') : ''}>${esc(t)}</h1>`);
   if (s) inner.push(`  <h2${h2Attrs.length ? ' ' + h2Attrs.join(' ') : ''}>${esc(s)}</h2>`);
+  // Optional <datepicker>
+  const dp: string[] = [];
+  const pushDp = (k: string, v: unknown) => { if (v !== undefined && v !== '') dp.push(`${k}="${esc(v)}` + `"`); };
+  pushDp('type', (data as any).datePickerType);
+  pushDp('start', (data as any).datePickerStart);
+  pushDp('end', (data as any).datePickerEnd);
+  pushDp('align', (data as any).datePickerAlign);
+  pushDp('variant', (data as any).datePickerVariant);
+  pushDp('size', (data as any).datePickerSize);
+  if (typeof (data as any).datePickerMonths === 'number') pushDp('number-of-months', (data as any).datePickerMonths);
+  if (typeof (data as any).datePickerQuickPresets === 'boolean') pushDp('quick-presets', (data as any).datePickerQuickPresets ? 'true' : 'false');
+  pushDp('locale', (data as any).datePickerLocale);
+  pushDp('format', (data as any).datePickerFormat);
+  if (dp.length || (data as any).showDatePicker) inner.push(`  <datepicker${dp.length ? ' ' + dp.join(' ') : ''}></datepicker>`);
   const tag = `<header${headerAttrs.length ? ' ' + headerAttrs.join(' ') : ''}>\n${inner.join('\n')}\n</header>`;
 
   // Replace existing <header .../> or <header ...>...</header>
