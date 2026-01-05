@@ -215,7 +215,16 @@ export default function DashboardInCanvasHeader({
         style={{ paddingLeft: containerPadding, paddingRight: containerPadding }}
       >
         {headerBlockIds.map((id) => (
-          <SortableBlock key={id} id={id} className={`vb-block ${id} w-1/2 basis-1/2 p-2 hover:ring-2 hover:ring-blue-400 rounded-md ${id==='header-titles' ? 'min-w-0 flex flex-col space-y-0.5' : `flex items-center ${headerConfig?.datePickerAlign === 'left' ? 'justify-start' : 'justify-end'} gap-3 md:gap-4'}`}>
+          <SortableBlock
+            key={id}
+            id={id}
+            className={
+              `vb-block ${id} w-1/2 basis-1/2 p-2 hover:ring-2 hover:ring-blue-400 rounded-md ` +
+              (id === 'header-titles'
+                ? 'min-w-0 flex flex-col space-y-0.5'
+                : ('flex items-center ' + (headerConfig?.datePickerAlign === 'left' ? 'justify-start' : 'justify-end') + ' gap-3 md:gap-4'))
+            }
+          >
             {id === 'header-titles' ? (
               <div>
                 <h2
