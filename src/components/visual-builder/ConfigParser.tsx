@@ -882,6 +882,12 @@ export class ConfigParser {
               applyStylingTokens(widget, String(styleObj['tw']));
             }
 
+            // Support article-level fr width for charts (same as KPIs)
+            const frRaw = aAttrs['fr'] || aAttrs['data-fr'];
+            if (frRaw && !Number.isNaN(Number(frRaw)) && Number(frRaw) > 0) {
+              (widget as any).widthFr = { desktop: String(Number(frRaw)) + 'fr' };
+            }
+
             widgets.push(widget);
           }
         }
