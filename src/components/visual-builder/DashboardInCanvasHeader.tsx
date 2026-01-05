@@ -181,7 +181,7 @@ export default function DashboardInCanvasHeader({
   };
 
   // Sortable wrappers for header blocks
-  const SortableBlock = ({ id, children }: { id: string; children: React.ReactNode }) => {
+  const SortableBlock = ({ id, className, children }: { id: string; className?: string; children: React.ReactNode }) => {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
     const style = {
       transform: CSS.Transform.toString(transform),
@@ -189,7 +189,7 @@ export default function DashboardInCanvasHeader({
       opacity: isDragging ? 0.9 : 1,
     } as React.CSSProperties;
     return (
-      <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+      <div ref={setNodeRef} style={style} className={className} {...attributes} {...listeners}>
         {children}
       </div>
     );
@@ -214,177 +214,165 @@ export default function DashboardInCanvasHeader({
         className="group relative flex items-center justify-between w-full py-4 md:py-6 hover:ring-2 hover:ring-blue-400 rounded-lg transition-all"
         style={{ paddingLeft: containerPadding, paddingRight: containerPadding }}
       >
-        <SortableBlock id="header-titles">
-        <div id="header-titles" className={`vb-block header-titles min-w-0 w-1/2 basis-1/2 flex flex-col space-y-0.5 hover:ring-2 hover:ring-blue-400 rounded-md p-2 ${titlesFirst ? 'order-1' : 'order-2'}`}>
-          <h2
-            className="text-base md:text-lg font-semibold leading-tight truncate"
-            style={{
-              color: headerConfig?.titleColor || headerStyle.textPrimary,
-              fontFamily: headerConfig?.titleFontFamily || headerStyle.fontFamily,
-              fontSize: headerConfig?.titleFontSize ? `${headerConfig.titleFontSize}px` : undefined,
-              fontWeight: (headerConfig?.titleFontWeight as any) || undefined,
-              letterSpacing: typeof headerConfig?.titleLetterSpacing === 'number' ? headerConfig.titleLetterSpacing : undefined,
-              lineHeight: headerConfig?.titleLineHeight as any,
-              textTransform: headerConfig?.titleTextTransform as any,
-              textAlign: headerConfig?.titleTextAlign as any,
-              marginTop: typeof headerConfig?.titleMarginTop === 'number' ? headerConfig.titleMarginTop : undefined,
-              marginRight: typeof headerConfig?.titleMarginRight === 'number' ? headerConfig.titleMarginRight : undefined,
-              marginBottom: typeof headerConfig?.titleMarginBottom === 'number' ? headerConfig.titleMarginBottom : undefined,
-              marginLeft: typeof headerConfig?.titleMarginLeft === 'number' ? headerConfig.titleMarginLeft : undefined,
-            }}
-          >
-            {title}
-          </h2>
-          {subtitle && (
-            <p
-              className="text-xs md:text-sm truncate"
-              style={{
-                color: headerConfig?.subtitleColor || headerStyle.textSecondary,
-                fontFamily: headerConfig?.subtitleFontFamily || headerStyle.fontFamily,
-                fontSize: headerConfig?.subtitleFontSize ? `${headerConfig.subtitleFontSize}px` : undefined,
-                fontWeight: (headerConfig?.subtitleFontWeight as any) || undefined,
-                letterSpacing: typeof headerConfig?.subtitleLetterSpacing === 'number' ? headerConfig.subtitleLetterSpacing : undefined,
-                lineHeight: headerConfig?.subtitleLineHeight as any,
-                textTransform: headerConfig?.subtitleTextTransform as any,
-                textAlign: headerConfig?.subtitleTextAlign as any,
-                marginTop: typeof headerConfig?.subtitleMarginTop === 'number' ? headerConfig.subtitleMarginTop : undefined,
-                marginRight: typeof headerConfig?.subtitleMarginRight === 'number' ? headerConfig.subtitleMarginRight : undefined,
-                marginBottom: typeof headerConfig?.subtitleMarginBottom === 'number' ? headerConfig.subtitleMarginBottom : undefined,
-                marginLeft: typeof headerConfig?.subtitleMarginLeft === 'number' ? headerConfig.subtitleMarginLeft : undefined,
-              }}
-            >
-              {subtitle}
-            </p>
-          )}
-        </div>
-        </SortableBlock>
-        <SortableBlock id="header-actions">
-        <div id="header-actions" className={`vb-block header-actions w-1/2 basis-1/2 flex items-center ${headerConfig?.datePickerAlign === 'left' ? 'justify-start' : 'justify-end'} gap-3 md:gap-4 hover:ring-2 hover:ring-blue-400 rounded-md p-2 ${titlesFirst ? 'order-2' : 'order-1'}`}>
-          {(headerConfig?.showDatePicker !== false) && (
-            <>
-              <div className="hidden lg:block text-sm" style={{ color: headerStyle.textSecondary }}>
-                <span className="font-medium" style={{ color: headerStyle.textPrimary }}>{currentLabel}</span>
-                {dateRangeDescription && (
-                  <span className="ml-2">({dateRangeDescription})</span>
+        {headerBlockIds.map((id) => (
+          <SortableBlock key={id} id={id} className={`vb-block ${id} w-1/2 basis-1/2 p-2 hover:ring-2 hover:ring-blue-400 rounded-md ${id==='header-titles' ? 'min-w-0 flex flex-col space-y-0.5' : `flex items-center ${headerConfig?.datePickerAlign === 'left' ? 'justify-start' : 'justify-end'} gap-3 md:gap-4'}`}>
+            {id === 'header-titles' ? (
+              <div>
+                <h2
+                  className="text-base md:text-lg font-semibold leading-tight truncate"
+                  style={{
+                    color: headerConfig?.titleColor || headerStyle.textPrimary,
+                    fontFamily: headerConfig?.titleFontFamily || headerStyle.fontFamily,
+                    fontSize: headerConfig?.titleFontSize ? `${headerConfig.titleFontSize}px` : undefined,
+                    fontWeight: (headerConfig?.titleFontWeight as any) || undefined,
+                    letterSpacing: typeof headerConfig?.titleLetterSpacing === 'number' ? headerConfig.titleLetterSpacing : undefined,
+                    lineHeight: headerConfig?.titleLineHeight as any,
+                    textTransform: headerConfig?.titleTextTransform as any,
+                    textAlign: headerConfig?.titleTextAlign as any,
+                    marginTop: typeof headerConfig?.titleMarginTop === 'number' ? headerConfig.titleMarginTop : undefined,
+                    marginRight: typeof headerConfig?.titleMarginRight === 'number' ? headerConfig.titleMarginRight : undefined,
+                    marginBottom: typeof headerConfig?.titleMarginBottom === 'number' ? headerConfig.titleMarginBottom : undefined,
+                    marginLeft: typeof headerConfig?.titleMarginLeft === 'number' ? headerConfig.titleMarginLeft : undefined,
+                  }}
+                >
+                  {title}
+                </h2>
+                {subtitle && (
+                  <p
+                    className="text-xs md:text-sm truncate"
+                    style={{
+                      color: headerConfig?.subtitleColor || headerStyle.textSecondary,
+                      fontFamily: headerConfig?.subtitleFontFamily || headerStyle.fontFamily,
+                      fontSize: headerConfig?.subtitleFontSize ? `${headerConfig.subtitleFontSize}px` : undefined,
+                      fontWeight: (headerConfig?.subtitleFontWeight as any) || undefined,
+                      letterSpacing: typeof headerConfig?.subtitleLetterSpacing === 'number' ? headerConfig.subtitleLetterSpacing : undefined,
+                      lineHeight: headerConfig?.subtitleLineHeight as any,
+                      textTransform: headerConfig?.subtitleTextTransform as any,
+                      textAlign: headerConfig?.subtitleTextAlign as any,
+                      marginTop: typeof headerConfig?.subtitleMarginTop === 'number' ? headerConfig.subtitleMarginTop : undefined,
+                      marginRight: typeof headerConfig?.subtitleMarginRight === 'number' ? headerConfig.subtitleMarginRight : undefined,
+                      marginBottom: typeof headerConfig?.subtitleMarginBottom === 'number' ? headerConfig.subtitleMarginBottom : undefined,
+                      marginLeft: typeof headerConfig?.subtitleMarginLeft === 'number' ? headerConfig.subtitleMarginLeft : undefined,
+                    }}
+                  >
+                    {subtitle}
+                  </p>
                 )}
               </div>
-              {headerConfig?.datePickerVariant === 'inline' ? (
-                <div className="p-2 rounded-md border" style={{ borderColor: headerStyle.datePickerBorderColor || headerStyle.borderBottomColor }}>
-                  <Calendar
-                    mode="range"
-                    numberOfMonths={typeof headerConfig?.datePickerMonths === 'number' ? headerConfig.datePickerMonths : 2}
-                    selected={customRange}
-                    onSelect={(range?: DateRange) => {
-                      setCustomRange(range);
-                    }}
-                  />
-                </div>
-              ) : (
-                <Popover open={showCustomPicker} onOpenChange={setShowCustomPicker}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size={headerConfig?.datePickerSize === 'lg' ? 'lg' : headerConfig?.datePickerSize === 'sm' ? 'sm' : undefined}
-                      className="h-9 px-3"
-                      style={{
-                        backgroundColor: 'transparent',
-                        color: headerStyle.textPrimary,
-                        borderColor: headerStyle.datePickerBorderColor || headerStyle.borderBottomColor,
-                      }}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      <span className="whitespace-nowrap">{currentLabel}</span>
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent align="end" sideOffset={8} className="p-3 w-auto">
-                    <div className="space-y-3">
-                      <Calendar
-                        mode="range"
-                        numberOfMonths={typeof headerConfig?.datePickerMonths === 'number' ? headerConfig.datePickerMonths : 2}
-                        selected={customRange}
-                        onSelect={(range?: DateRange) => {
-                          setCustomRange(range);
-                        }}
-                      />
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="text-xs text-gray-500">
-                        {customRange?.from && customRange?.to ? (
-                          <span>
-                            {customRange.from.toISOString().split('T')[0]} — {customRange.to.toISOString().split('T')[0]}
-                          </span>
-                        ) : (
-                          <span>Selecione início e fim</span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2">
+            ) : (
+              <>
+                {(headerConfig?.showDatePicker !== false) && (
+                  <>
+                    <div className="hidden lg:block text-sm" style={{ color: headerStyle.textSecondary }}>
+                      <span className="font-medium" style={{ color: headerStyle.textPrimary }}>{currentLabel}</span>
+                      {dateRangeDescription && (
+                        <span className="ml-2">({dateRangeDescription})</span>
+                      )}
+                    </div>
+                    <Popover open={showCustomPicker} onOpenChange={setShowCustomPicker}>
+                      <PopoverTrigger asChild>
                         <Button
                           variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            // Reverte seleção para o filtro atual e fecha
-                            if (currentFilter.type === 'custom' && currentFilter.startDate && currentFilter.endDate) {
-                              setCustomRange({ from: new Date(currentFilter.startDate), to: new Date(currentFilter.endDate) });
-                              setSelectedType('custom');
-                            } else {
-                              setCustomRange(undefined);
-                            }
-                            setShowCustomPicker(false);
+                          size={headerConfig?.datePickerSize === 'lg' ? 'lg' : headerConfig?.datePickerSize === 'sm' ? 'sm' : undefined}
+                          className="h-9 px-3"
+                          style={{
+                            backgroundColor: 'transparent',
+                            color: headerStyle.textPrimary,
+                            borderColor: headerStyle.datePickerBorderColor || headerStyle.borderBottomColor,
                           }}
                         >
-                          Cancelar
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          <span className="whitespace-nowrap">{currentLabel}</span>
                         </Button>
-                        <Button
-                          variant="default"
-                          size="sm"
-                          disabled={!(customRange?.from && customRange?.to)}
-                          onClick={() => {
-                            if (customRange?.from && customRange?.to) {
-                              const toISO = (d: Date) => d.toISOString().split('T')[0];
-                              setSelectedType('custom');
-                              onFilterChange({ type: 'custom', startDate: toISO(customRange.from), endDate: toISO(customRange.to) });
-                              setShowCustomPicker(false);
-                            }
-                          }}
-                        >
-                          Salvar
+                      </PopoverTrigger>
+                      <PopoverContent align="end" sideOffset={8} className="p-3 w-auto">
+                        <div className="space-y-3">
+                          <Calendar
+                            mode="range"
+                            numberOfMonths={typeof headerConfig?.datePickerMonths === 'number' ? headerConfig.datePickerMonths : 2}
+                            selected={customRange}
+                            onSelect={(range?: DateRange) => {
+                              setCustomRange(range);
+                            }}
+                          />
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="text-xs text-gray-500">
+                              {customRange?.from && customRange?.to ? (
+                                <span>
+                                  {customRange.from.toISOString().split('T')[0]} — {customRange.to.toISOString().split('T')[0]}
+                                </span>
+                              ) : (
+                                <span>Selecione início e fim</span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  if (currentFilter.type === 'custom' && currentFilter.startDate && currentFilter.endDate) {
+                                    setCustomRange({ from: new Date(currentFilter.startDate), to: new Date(currentFilter.endDate) });
+                                    setSelectedType('custom');
+                                  } else {
+                                    setCustomRange(undefined);
+                                  }
+                                  setShowCustomPicker(false);
+                                }}
+                              >
+                                Cancelar
+                              </Button>
+                              <Button
+                                variant="default"
+                                size="sm"
+                                disabled={!(customRange?.from && customRange?.to)}
+                                onClick={() => {
+                                  if (customRange?.from && customRange?.to) {
+                                    const toISO2 = (d: Date) => d.toISOString().split('T')[0];
+                                    setSelectedType('custom');
+                                    onFilterChange({ type: 'custom', startDate: toISO2(customRange.from), endDate: toISO2(customRange.to) });
+                                    setShowCustomPicker(false);
+                                  }
+                                }}
+                              >
+                                Salvar
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  </>
+                )}
+                {(onEditHeader || onRemoveHeader) && (
+                  <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-gray-600 hover:text-gray-800" aria-label="Ações do header">
+                          <MoreVertical className="w-4 h-4" />
                         </Button>
-                      </div>
-                    </div>
-                    </div>
-                  </PopoverContent>
-                </Popover>
-              )}
-            </>
-          )}
-          {/* Hover-only actions like widgets */}
-          {(onEditHeader || onRemoveHeader) && (
-            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-gray-600 hover:text-gray-800" aria-label="Ações do header">
-                    <MoreVertical className="w-4 h-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="min-w-[10rem]">
-                  {onEditHeader && (
-                    <DropdownMenuItem onClick={(e) => { e.preventDefault(); onEditHeader?.(); }} className="gap-2">
-                      Editar
-                    </DropdownMenuItem>
-                  )}
-                  {onRemoveHeader && (
-                    <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem variant="destructive" onClick={(e) => { e.preventDefault(); onRemoveHeader?.(); }} className="gap-2">
-                        Remover
-                      </DropdownMenuItem>
-                    </>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          )}
-        </div>
-        </SortableBlock>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="min-w-[10rem]">
+                        {onEditHeader && (
+                          <DropdownMenuItem onClick={(e) => { e.preventDefault(); onEditHeader?.(); }} className="gap-2">
+                            Editar
+                          </DropdownMenuItem>
+                        )}
+                        {onRemoveHeader && (
+                          <>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem variant="destructive" onClick={(e) => { e.preventDefault(); onRemoveHeader?.(); }} className="gap-2">
+                              Remover
+                            </DropdownMenuItem>
+                          </>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                )}
+              </>
+            )}
+          </SortableBlock>
+        ))}
       </div>
       </SortableContext>
       </DndContext>
