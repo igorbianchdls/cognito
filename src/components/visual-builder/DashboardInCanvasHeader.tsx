@@ -237,7 +237,7 @@ export default function DashboardInCanvasHeader({
             {id === 'header-titles' ? (
               <div>
                 <h2
-                  className="text-base md:text-lg font-semibold leading-tight truncate"
+                  className="text-base md:text-lg font-semibold leading-tight truncate p-1 hover:ring-2 hover:ring-blue-400 rounded-md"
                   style={{
                     color: headerConfig?.titleColor || headerStyle.textPrimary,
                     fontFamily: headerConfig?.titleFontFamily || headerStyle.fontFamily,
@@ -257,7 +257,7 @@ export default function DashboardInCanvasHeader({
                 </h2>
                 {subtitle && (
                   <p
-                    className="text-xs md:text-sm truncate"
+                    className="text-xs md:text-sm truncate p-1 hover:ring-2 hover:ring-blue-400 rounded-md"
                     style={{
                       color: headerConfig?.subtitleColor || headerStyle.textSecondary,
                       fontFamily: headerConfig?.subtitleFontFamily || headerStyle.fontFamily,
@@ -292,7 +292,7 @@ export default function DashboardInCanvasHeader({
                         <Button
                           variant="outline"
                           size={headerConfig?.datePickerSize === 'lg' ? 'lg' : headerConfig?.datePickerSize === 'sm' ? 'sm' : undefined}
-                          className="h-9 px-3"
+                          className="h-9 px-3 hover:ring-2 hover:ring-blue-400 rounded-md"
                           style={{
                             backgroundColor: 'transparent',
                             color: headerStyle.textPrimary,
