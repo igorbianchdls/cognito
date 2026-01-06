@@ -185,21 +185,21 @@ export const initialLiquidGrid = `<dashboard theme="branco" layout-mode="grid-pe
   </section>
   <section class="w-full" data-type="charts" id="charts1" data-cols-d="3" data-cols-t="2" data-cols-m="1" data-gap-x="16" data-gap-y="16">
     <article fr="1" id="chart_vendas_canal" data-order="1" data-height="420" data-span-d="1">
-      <h1 class="mb-5">Vendas por Canal</h1>
+      <h1 marginBottom="20">Vendas por Canal</h1>
       <main chart="bar">
         {{ schema: comercial; table: vendas_vw; dimension: canal_venda_nome; measure: SUM(item_subtotal) }}
         <style>{"tw": "legend:on mb:40"}</style>
       </main>
     </article>
     <article fr="1" id="chart_faturamento_mensal" data-order="2" data-height="420" data-span-d="1">
-      <h1 class="mb-5">Faturamento Mensal</h1>
+      <h1 marginBottom="20">Faturamento Mensal</h1>
       <main chart="line">
         {{ schema: comercial; table: vendas_vw; dimension: data_pedido; measure: SUM(item_subtotal) }}
         <style>{"tw": "legend:off grid:on mb:40"}</style>
       </main>
     </article>
     <article fr="1" id="chart_vendas_categoria" data-order="3" data-height="420" data-span-d="1">
-      <h1 class="mb-5">Vendas por Categoria</h1>
+      <h1 marginBottom="20">Vendas por Categoria</h1>
       <main chart="pie">
         {{ schema: comercial; table: vendas_vw; dimension: categoria_servico_nome; measure: SUM(item_subtotal) }}
         <style>{"tw": "legend:on mb:40"}</style>
