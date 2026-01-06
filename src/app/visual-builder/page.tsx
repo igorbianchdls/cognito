@@ -15,6 +15,12 @@ import { $visualBuilderState, visualBuilderActions } from '@/stores/visualBuilde
 import { initialLiquidGrid } from '@/stores/visualBuilderStore';
 import { ThemeManager, type ThemeName } from '@/components/visual-builder/ThemeManager';
 import type { Widget, GlobalFilters } from '@/stores/visualBuilderStore';
+import { LiquidParser } from '@/components/visual-builder/LiquidParser';
+import { createRoot, type Root } from 'react-dom/client';
+import { BarChart } from '@/components/charts/BarChart';
+import { LineChart } from '@/components/charts/LineChart';
+import { PieChart } from '@/components/charts/PieChart';
+import { AreaChart } from '@/components/charts/AreaChart';
 
 export default function VisualBuilderPage() {
   const visualBuilderState = useStore($visualBuilderState);
@@ -129,17 +135,44 @@ export default function VisualBuilderPage() {
     return m ? m[1] : code;
   }, [htmlMode, code]);
   const htmlRef = useRef<HTMLDivElement>(null);
+  const htmlRootsRef = useRef<Root[]>([]);
   useEffect(() => {
     if (!htmlMode) return;
     if (activeTab !== 'responsive') return;
     const c = htmlRef.current;
     if (!c) return;
+    // clear previous mounts
+    for (const r of htmlRootsRef.current) { try { r.unmount(); } catch {} }
+    htmlRootsRef.current = [];
+
+    const parsed = LiquidParser.parse(code);
     c.innerHTML = '';
-    c.innerHTML = htmlInner;
+    c.innerHTML = parsed.html;
+
+    // mount charts with simulated data
+    for (const spec of parsed.charts) {
+      const mount = c.querySelector(`[data-liquid-chart="${spec.id}"]`) as HTMLElement | null;
+      if (!mount) continue;
+      // ensure height
+      if (!mount.style.height || mount.style.height === '') mount.style.height = (spec.height && Number.isFinite(spec.height) ? `${spec.height}px` : '320px');
+      mount.style.width = mount.style.width || '100%';
+      const root = createRoot(mount);
+      htmlRootsRef.current.push(root);
+      const common = { data: spec.data, title: spec.title } as any;
+      switch (spec.type) {
+        case 'line': root.render(<LineChart {...common} />); break;
+        case 'pie': root.render(<PieChart {...common} />); break;
+        case 'area': root.render(<AreaChart {...common} enableArea={true} />); break;
+        default: root.render(<BarChart {...common} />); break;
+      }
+    }
+
     return () => {
+      for (const r of htmlRootsRef.current) { try { r.unmount(); } catch {} }
+      htmlRootsRef.current = [];
       if (htmlRef.current && activeTab === 'responsive') htmlRef.current.innerHTML = '';
     };
-  }, [htmlMode, htmlInner, activeTab]);
+  }, [htmlMode, htmlInner, activeTab, code]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -183,7 +216,6 @@ export default function VisualBuilderPage() {
     .card { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 12px; color: #111827; }
     .card h3 { margin: 0 0 8px; font-family: Inter, system-ui, sans-serif; font-weight: 600; font-size: 14px; color: #374151; }
     .kpi-value { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; }
-    .chart-box { height: 240px; background: #f8fafc; border: 1px dashed #d1d5db; border-radius: 10px; display:flex; align-items:center; justify-content:center; color:#6b7280; font-size: 14px; }
   </style>
 
   <div class="vb-container">
@@ -209,15 +241,15 @@ export default function VisualBuilderPage() {
     <section class="row charts">
       <article class="card">
         <h3>Faturamento Mensal</h3>
-        <div class="chart-box">Placeholder de gráfico</div>
+        <Chart id="fat_mensal" type="line" height="320" title="Faturamento Mensal" />
       </article>
       <article class="card">
         <h3>Vendas por Canal</h3>
-        <div class="chart-box">Placeholder de gráfico</div>
+        <Chart id="vendas_canal" type="bar" height="320" title="Vendas por Canal" categories="Loja,Site,WhatsApp" values="120,80,150" />
       </article>
       <article class="card">
-        <h3>Top Produtos</h3>
-        <div class="chart-box">Placeholder de gráfico</div>
+        <h3>Participação</h3>
+        <Chart id="participacao" type="pie" height="320" title="Participação" />
       </article>
     </section>
   </div>

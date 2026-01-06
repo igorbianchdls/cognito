@@ -6,9 +6,12 @@ import Link from 'next/link';
 import ResponsiveGridCanvas from '@/components/visual-builder/ResponsiveGridCanvas';
 import { ThemeManager, type ThemeName } from '@/components/visual-builder/ThemeManager';
 import { $visualBuilderState, visualBuilderActions } from '@/stores/visualBuilderStore';
-import WidgetRenderer from '@/components/visual-builder/WidgetRenderer';
-import type { Widget } from '@/components/visual-builder/ConfigParser';
+import { LiquidParser } from '@/components/visual-builder/LiquidParser';
 import { createRoot, type Root } from 'react-dom/client';
+import { BarChart } from '@/components/charts/BarChart';
+import { LineChart } from '@/components/charts/LineChart';
+import { PieChart } from '@/components/charts/PieChart';
+import { AreaChart } from '@/components/charts/AreaChart';
 
 export default function PreviewPage() {
   const visualBuilderState = useStore($visualBuilderState);
@@ -50,33 +53,8 @@ export default function PreviewPage() {
     // aceita render=html, render='html' ou render="html"
     return /\brender\s*=\s*(?:"|')?(?:html|raw)(?:"|')?/i.test(attrs);
   }, [code, dashboardOpen]);
-  const htmlInner = useMemo(() => {
-    if (!htmlMode) return '';
-    const m = code.match(/<dashboard\b[^>]*>([\s\S]*?)<\/dashboard>/i);
-    return m ? m[1] : code;
-  }, [htmlMode, code]);
-
   const htmlRef = useRef<HTMLDivElement>(null);
   const reactRootsRef = useRef<Root[]>([]);
-
-  const parsePairs = (raw: string): Record<string, string> => {
-    const out: Record<string, string> = {};
-    if (!raw) return out;
-    let body = raw.trim();
-    const m = body.match(/^\{\{([\s\S]*?)\}\}$/);
-    if (m) body = m[1];
-    const parts = body.split(';');
-    for (let p of parts) {
-      p = p.trim();
-      if (!p) continue;
-      const i = p.indexOf(':');
-      if (i === -1) continue;
-      const k = p.slice(0, i).trim().toLowerCase();
-      const v = p.slice(i + 1).trim().replace(/^['"]|['"]$/g, '');
-      if (k) out[k] = v;
-    }
-    return out;
-  };
 
   useEffect(() => {
     if (!htmlMode) return;
@@ -88,48 +66,24 @@ export default function PreviewPage() {
       try { r.unmount(); } catch {}
     }
     reactRootsRef.current = [];
+    const parsed = LiquidParser.parse(code);
     c.innerHTML = '';
-
-    // injetar HTML puro
-    c.innerHTML = htmlInner;
-
-    // localizar <chart> e trocar por WidgetRenderer
-    const charts = c.querySelectorAll('chart');
-    charts.forEach((node, i) => {
-      const typeAttr = (node.getAttribute('type') || node.getAttribute('data-type') || 'bar').toLowerCase();
-      const raw = node.textContent || '';
-      const moustache = raw.match(/\{\{([\s\S]*?)\}\}/);
-      const pairs = moustache ? parsePairs(moustache[0]) : {};
-
-      const ds: any = {};
-      if (pairs['schema']) ds.schema = pairs['schema'];
-      if (pairs['table']) ds.table = pairs['table'];
-      if (pairs['dimension']) ds.dimension = pairs['dimension'];
-      if (pairs['measure']) ds.measure = pairs['measure'];
-      if (pairs['xmeasure']) ds.xMeasure = pairs['xmeasure'];
-      if (pairs['ymeasure']) ds.yMeasure = pairs['ymeasure'];
-      if (pairs['where']) ds.where = pairs['where'];
-      if (pairs['aggregation']) ds.aggregation = pairs['aggregation'];
-      if (pairs['limit'] && !Number.isNaN(Number(pairs['limit']))) ds.limit = Number(pairs['limit']);
-
-      const id = node.getAttribute('id') || `chart_${i}`;
-      const validTypes = ['bar','line','pie','area','stackedbar','groupedbar','stackedlines','radialstacked','pivotbar','treemap','scatter','funnel'];
-      const type = (validTypes.includes(typeAttr) ? (typeAttr as Widget['type']) : 'bar');
-      const widget: Widget = {
-        id,
-        type,
-        ...(Object.keys(ds).length ? { dataSource: ds } : {})
-      } as Widget;
-
-      const mount = document.createElement('div');
-      mount.style.width = '100%';
-      mount.style.height = '100%';
-      node.innerHTML = '';
-      node.appendChild(mount);
+    c.innerHTML = parsed.html;
+    for (const spec of parsed.charts) {
+      const mount = c.querySelector(`[data-liquid-chart="${spec.id}"]`) as HTMLElement | null;
+      if (!mount) continue;
+      if (!mount.style.height || mount.style.height === '') mount.style.height = (spec.height && Number.isFinite(spec.height) ? `${spec.height}px` : '320px');
+      mount.style.width = mount.style.width || '100%';
       const root = createRoot(mount);
       reactRootsRef.current.push(root);
-      root.render(<WidgetRenderer widget={widget} globalFilters={visualBuilderState.globalFilters} />);
-    });
+      const common = { data: spec.data, title: spec.title } as any;
+      switch (spec.type) {
+        case 'line': root.render(<LineChart {...common} />); break;
+        case 'pie': root.render(<PieChart {...common} />); break;
+        case 'area': root.render(<AreaChart {...common} enableArea={true} />); break;
+        default: root.render(<BarChart {...common} />); break;
+      }
+    }
 
     return () => {
       for (const r of reactRootsRef.current) {
