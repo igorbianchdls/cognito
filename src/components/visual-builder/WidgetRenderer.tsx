@@ -816,14 +816,15 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
       break;
 
     case 'kpi': {
-      const order = (Array.isArray(widget.kpiTitlesOrder) && widget.kpiTitlesOrder.length)
+      const fallbackOrder: Array<'h1'|'h2'|'h3'> = (widget.kpiConfig as any)?.comparisonLabel ? ['h1','h2','h3'] : ['h1','h2'];
+      const order: Array<'h1'|'h2'|'h3'> = (Array.isArray(widget.kpiTitlesOrder) && widget.kpiTitlesOrder.length)
         ? (widget.kpiTitlesOrder as Array<'h1'|'h2'|'h3'>)
-        : ((widget.kpiConfig as any)?.comparisonLabel ? ['h1','h2','h3'] : ['h1','h2']);
+        : fallbackOrder;
       const labels: Record<'h1'|'h2'|'h3', string> = { h1: 'Título', h2: 'Valor', h3: 'Comparação' };
       const onDragEndTitles = (e: DragEndEvent) => {
         const { active, over } = e;
         if (!over || active.id === over.id) return;
-        const ids = [...order];
+        const ids: Array<'h1'|'h2'|'h3'> = [...order];
         const oldIndex = ids.indexOf(active.id as any);
         const newIndex = ids.indexOf(over.id as any);
         if (oldIndex === -1 || newIndex === -1) return;
