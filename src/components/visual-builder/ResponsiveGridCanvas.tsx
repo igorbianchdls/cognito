@@ -93,6 +93,7 @@ const DraggableWidget = memo(function DraggableWidget({ widget, spanClasses, spa
     return out;
   };
 
+  const hasContainerStyle = Boolean((widget as any)?.containerStyle);
   return (
     <div
       ref={setNodeRef}
@@ -106,7 +107,7 @@ const DraggableWidget = memo(function DraggableWidget({ widget, spanClasses, spa
           position: 'relative',
           ...containerStyleFromWidget(widget)
         }}
-        className="group hover:ring-2 hover:ring-blue-400 rounded-lg transition-all"
+        className={hasContainerStyle ? 'transition-all' : 'group hover:ring-2 hover:ring-blue-400 rounded-lg transition-all'}
       >
         {/* Drag Handle - Left Side */}
         <div
