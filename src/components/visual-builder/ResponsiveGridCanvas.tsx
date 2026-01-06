@@ -230,7 +230,29 @@ function PureHtmlChart({ widget, globalFilters }: { widget: Widget; globalFilter
 
   React.useEffect(() => {
     if (!isChart) return;
-    const ds = (widget.dataSource || {}) as Record<string, unknown>;
+    const raw = (widget.dataSource || {}) as Record<string, unknown>;
+    const normalizeSimple = (src: Record<string, unknown>) => {
+      const out: Record<string, unknown> = { ...src };
+      // Map dimension/measure -> x/y when not provided
+      if (!out['x'] && out['dimension']) out['x'] = out['dimension'];
+      if (!out['y'] && out['measure']) out['y'] = out['measure'];
+      // Normalize schema.table
+      const table = String(out['table'] || '').trim();
+      const schema = String(out['schema'] || '').trim();
+      if (table.includes('.')) {
+        const dot = table.indexOf('.');
+        const tSchema = table.slice(0, dot);
+        const tTable = table.slice(dot + 1);
+        if (!schema) {
+          out['schema'] = tSchema;
+          out['table'] = tTable;
+        } else {
+          out['table'] = tSchema === schema ? tTable : table.split('.').pop();
+        }
+      }
+      return out;
+    };
+    const ds = normalizeSimple(raw);
     if (!ds || Object.keys(ds).length === 0) return;
     const fetchSimple = async () => {
       setLoading(true); setError(null);
@@ -247,9 +269,27 @@ function PureHtmlChart({ widget, globalFilters }: { widget: Widget; globalFilter
     const fetchGrouped = async () => {
       setLoading(true); setError(null);
       try {
+        // Normalize schema.table too
+        const body = (() => {
+          const out: Record<string, unknown> = { ...raw };
+          const table = String(out['table'] || '').trim();
+          const schema = String(out['schema'] || '').trim();
+          if (table.includes('.')) {
+            const dot = table.indexOf('.');
+            const tSchema = table.slice(0, dot);
+            const tTable = table.slice(dot + 1);
+            if (!schema) {
+              out['schema'] = tSchema;
+              out['table'] = tTable;
+            } else {
+              out['table'] = tSchema === schema ? tTable : table.split('.').pop();
+            }
+          }
+          return out;
+        })();
         const response = await fetch('/api/dashboard-supabase/grouped', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...ds, filters: globalFilters, dateFilter: globalFilters?.dateRange })
+          body: JSON.stringify({ ...body, filters: globalFilters, dateFilter: globalFilters?.dateRange })
         });
         const result = await response.json();
         if (result.success) setGrouped({ items: result.items, series: result.series }); else throw new Error(result.error || 'API error');
