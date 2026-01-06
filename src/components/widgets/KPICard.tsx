@@ -8,7 +8,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import React, { useEffect, useState } from 'react'
-import { ArrowDownRight, ArrowUpRight } from 'lucide-react'
+import { ArrowDownRight, ArrowUpRight, ChevronUp, ChevronDown } from 'lucide-react'
 import { DndContext, closestCenter, DragEndEvent, useSensor, useSensors, PointerSensor, KeyboardSensor } from '@dnd-kit/core'
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
@@ -401,7 +401,7 @@ export function KPICard({
       useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
       useSensor(KeyboardSensor)
     )
-    const SortableRow = ({ id, children }: { id: 'h1'|'h2'|'h3'; children: React.ReactNode }) => {
+    const SortableRow = ({ id, children, onMove }: { id: 'h1'|'h2'|'h3'; children: React.ReactNode; onMove?: (dir: 'up'|'down') => void }) => {
       const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id })
       const style = {
         transform: CSS.Transform.toString(transform),
@@ -409,8 +409,31 @@ export function KPICard({
         opacity: isDragging ? 0.95 : 1,
       } as React.CSSProperties
       return (
-        <div ref={setNodeRef} style={style} className="hover:ring-2 hover:ring-blue-400 rounded-md cursor-grab active:cursor-grabbing" {...attributes} {...listeners}>
-          {children}
+        <div ref={setNodeRef} style={style} className="group relative hover:ring-2 hover:ring-blue-400 rounded-md cursor-grab active:cursor-grabbing" {...attributes} {...listeners}>
+          {/* Hover controls */}
+          {onMove ? (
+            <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 pointer-events-auto">
+              <button
+                type="button"
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); onMove('up') }}
+                className="h-5 w-5 inline-flex items-center justify-center rounded bg-white/90 border text-gray-700 hover:bg-white"
+                title="Mover para cima"
+              >
+                <ChevronUp className="h-3 w-3" />
+              </button>
+              <button
+                type="button"
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); onMove('down') }}
+                className="h-5 w-5 inline-flex items-center justify-center rounded bg-white/90 border text-gray-700 hover:bg-white"
+                title="Mover para baixo"
+              >
+                <ChevronDown className="h-3 w-3" />
+              </button>
+            </div>
+          ) : null}
+          <div className="relative">
+            {children}
+          </div>
         </div>
       )
     }
@@ -484,6 +507,20 @@ export function KPICard({
       onTitlesOrderChange && onTitlesOrderChange(ids)
     }
 
+    const moveBlock = (block: 'h1'|'h2'|'h3', dir: 'up'|'down') => {
+      const idx = order.indexOf(block)
+      if (idx === -1) return
+      if (dir === 'up' && idx === 0) return
+      if (dir === 'down' && idx === order.length - 1) return
+      const next = [...order] as Array<'h1'|'h2'|'h3'>
+      const swapWith = dir === 'up' ? idx - 1 : idx + 1
+      const tmp = next[swapWith]
+      next[swapWith] = next[idx]
+      next[idx] = tmp
+      setOrder(next)
+      onTitlesOrderChange && onTitlesOrderChange(next)
+    }
+
     return (
       <div
         className={kpiContainerClassName || `${borderVariant === 'smooth' ? 'border border-gray-200' : ''} ${(borderVariant === 'accent' || borderVariant === 'smooth' || borderVariant === 'none') ? 'shadow-none' : 'shadow-sm'} relative ${s.pad}`}
@@ -534,7 +571,9 @@ export function KPICard({
             <SortableContext items={order} strategy={verticalListSortingStrategy}>
               <div className="flex flex-col gap-1">
                 {order.map((id) => (
-                  <SortableRow key={id} id={id}>{mapBlocks[id]}</SortableRow>
+                  <SortableRow key={id} id={id} onMove={(dir) => moveBlock(id, dir)}>
+                    {mapBlocks[id]}
+                  </SortableRow>
                 ))}
               </div>
             </SortableContext>
