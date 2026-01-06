@@ -114,6 +114,29 @@ export default function VisualBuilderPage() {
     }, 1000);
   }, []);
 
+  // HTML puro no editor/preview interno (aba Responsive)
+  const code = String(visualBuilderState.code || '').trim();
+  const dashOpen = useMemo(() => code.match(/<dashboard\b([^>]*)>/i), [code]);
+  const htmlMode = useMemo(() => {
+    if (!code.startsWith('<')) return false;
+    const attrs = dashOpen?.[1] || '';
+    return /\brender\s*=\s*"(?:html|raw)"/i.test(attrs);
+  }, [code, dashOpen]);
+  const htmlInner = useMemo(() => {
+    if (!htmlMode) return '';
+    const m = code.match(/<dashboard\b[^>]*>([\s\S]*?)<\/dashboard>/i);
+    return m ? m[1] : code;
+  }, [htmlMode, code]);
+  const htmlRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!htmlMode) return;
+    const c = htmlRef.current;
+    if (!c) return;
+    c.innerHTML = '';
+    c.innerHTML = htmlInner;
+    return () => { if (htmlRef.current) htmlRef.current.innerHTML = ''; };
+  }, [htmlMode, htmlInner]);
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -146,9 +169,58 @@ export default function VisualBuilderPage() {
             </button>
             <button
               className="px-4 py-2 text-sm border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-              onClick={() => visualBuilderActions.updateCode(initialLiquidGrid)}
+              onClick={() => visualBuilderActions.updateCode(`
+<dashboard render="html" theme="branco">
+  <style>
+    .vb-container { padding: 16px; }
+    .row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-bottom: 16px; }
+    @media (max-width: 1024px) { .row { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 640px)  { .row { grid-template-columns: repeat(1, minmax(0, 1fr)); } }
+    .card { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 12px; color: #111827; }
+    .card h3 { margin: 0 0 8px; font-family: Inter, system-ui, sans-serif; font-weight: 600; font-size: 14px; color: #374151; }
+    .kpi-value { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; }
+    .chart-box { height: 240px; background: #f8fafc; border: 1px dashed #d1d5db; border-radius: 10px; display:flex; align-items:center; justify-content:center; color:#6b7280; font-size: 14px; }
+  </style>
+
+  <div class="vb-container">
+    <section class="row kpis">
+      <article class="card" style="background-color:#ffffff; border-color:#e5e7eb;">
+        <h3>Vendas</h3>
+        <div class="kpi-value">R$ 124.500</div>
+      </article>
+      <article class="card">
+        <h3>Pedidos</h3>
+        <div class="kpi-value">830</div>
+      </article>
+      <article class="card">
+        <h3>Clientes</h3>
+        <div class="kpi-value">214</div>
+      </article>
+      <article class="card">
+        <h3>Ticket Médio</h3>
+        <div class="kpi-value">R$ 150,00</div>
+      </article>
+    </section>
+
+    <section class="row charts">
+      <article class="card">
+        <h3>Faturamento Mensal</h3>
+        <div class="chart-box">Placeholder de gráfico</div>
+      </article>
+      <article class="card">
+        <h3>Vendas por Canal</h3>
+        <div class="chart-box">Placeholder de gráfico</div>
+      </article>
+      <article class="card">
+        <h3>Top Produtos</h3>
+        <div class="chart-box">Placeholder de gráfico</div>
+      </article>
+    </section>
+  </div>
+</dashboard>
+              `)}
             >
-              Exemplo (Grid)
+              Exemplo (HTML)
             </button>
             <button className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
               Export Config
@@ -291,25 +363,25 @@ export default function VisualBuilderPage() {
                 </div>
               </div>
             </div>
-            <div
-              className="h-[calc(100%-73px)] p-6 overflow-auto"
-              ref={scrollRef}
-              style={{ overflowAnchor: 'none' }}
-            >
-              <ResponsiveGridCanvas
-                widgets={visualBuilderState.widgets}
-                gridConfig={visualBuilderState.gridConfig}
-                globalFilters={visualBuilderState.globalFilters}
-                viewportMode={viewportMode}
-                onLayoutChange={handleLayoutChange}
-                headerTitle={visualBuilderState.dashboardTitle || 'Responsive Dashboard'}
-                headerSubtitle={visualBuilderState.dashboardSubtitle || 'Preview different device layouts'}
-                headerConfig={visualBuilderState.headerConfig}
-                onFilterChange={handleFilterChange}
-                isFilterLoading={isFilterLoading}
-                themeName={currentThemeName}
-                onEdit={handleOpenEdit}
-              />
+            <div className="h-[calc(100%-73px)] p-6 overflow-auto" ref={scrollRef} style={{ overflowAnchor: 'none' }}>
+              {htmlMode ? (
+                <div ref={htmlRef} className="w-full h-full" />
+              ) : (
+                <ResponsiveGridCanvas
+                  widgets={visualBuilderState.widgets}
+                  gridConfig={visualBuilderState.gridConfig}
+                  globalFilters={visualBuilderState.globalFilters}
+                  viewportMode={viewportMode}
+                  onLayoutChange={handleLayoutChange}
+                  headerTitle={visualBuilderState.dashboardTitle || 'Responsive Dashboard'}
+                  headerSubtitle={visualBuilderState.dashboardSubtitle || 'Preview different device layouts'}
+                  headerConfig={visualBuilderState.headerConfig}
+                  onFilterChange={handleFilterChange}
+                  isFilterLoading={isFilterLoading}
+                  themeName={currentThemeName}
+                  onEdit={handleOpenEdit}
+                />
+              )}
             </div>
           </div>
         )}
