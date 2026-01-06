@@ -4,7 +4,19 @@ import React, { memo, useCallback, useMemo, useRef, useState } from 'react';
 import { DndContext, closestCenter, DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, useSortable, horizontalListSortingStrategy, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import WidgetRenderer from './WidgetRenderer';
+// Lightweight HTML-first renderer for charts
+import { BarChart } from '@/components/charts/BarChart';
+import { LineChart } from '@/components/charts/LineChart';
+import { PieChart } from '@/components/charts/PieChart';
+import { AreaChart } from '@/components/charts/AreaChart';
+import { StackedBarChart } from '@/components/charts/StackedBarChart';
+import { GroupedBarChart } from '@/components/charts/GroupedBarChart';
+import { StackedLinesChart } from '@/components/charts/StackedLinesChart';
+import { PivotBarChart } from '@/components/charts/PivotBarChart';
+import { RadialStackedChart } from '@/components/charts/RadialStackedChart';
+import { ScatterChart } from '@/components/charts/ScatterChart';
+import { TreeMapChart } from '@/components/charts/TreeMapChart';
+import { FunnelChart } from '@/components/charts/FunnelChart';
 import WidgetEditorModal from './WidgetEditorModal';
 import { Button } from '@/components/ui/button';
 import {
@@ -95,12 +107,13 @@ const DraggableWidget = memo(function DraggableWidget({ widget, spanClasses, spa
   };
 
   const hasContainerStyle = Boolean((widget as any)?.containerStyle);
+  const cs = containerStyleFromWidget(widget);
   return (
     <div
       ref={setNodeRef}
       style={{
         ...style,
-        ...containerStyleFromWidget(widget)
+        ...cs
       }}
       {...attributes}
       className={spanClasses}
@@ -108,7 +121,9 @@ const DraggableWidget = memo(function DraggableWidget({ widget, spanClasses, spa
       <div
         style={{
           height: minHeight,
-          position: 'relative'
+          position: 'relative',
+          ...(cs.backgroundColor ? { backgroundColor: cs.backgroundColor } : {}),
+          ...(cs.color ? { color: cs.color } : {})
         }}
         className={hasContainerStyle ? 'transition-all' : 'group hover:ring-2 hover:ring-blue-400 rounded-lg transition-all'}
       >
@@ -146,11 +161,183 @@ const DraggableWidget = memo(function DraggableWidget({ widget, spanClasses, spa
           </DropdownMenu>
         </div>
 
-        <WidgetRenderer widget={widget} globalFilters={globalFilters} />
+        <PureHtmlChart widget={widget} globalFilters={globalFilters} />
       </div>
     </div>
   );
 });
+
+function PureHtmlChart({ widget, globalFilters }: { widget: Widget; globalFilters?: GlobalFilters }) {
+  // Render any HTML blocks (preBlocks/preHtml) produced by parser
+  const renderPre = () => {
+    const blocks = (widget as any).preBlocks as Array<{ className?: string; attrs?: Record<string,string>; text?: string }> | undefined;
+    if (blocks && blocks.length) {
+      const styleFromAttrs = (a: Record<string,string> | undefined): React.CSSProperties => {
+        const s: React.CSSProperties = {};
+        if (!a) return s;
+        const num = (v?: string) => (v!=null && v!=='' && !Number.isNaN(Number(v)) ? Number(v) : undefined);
+        const map = [
+          ['marginBottom','margin-bottom','marginBottom'],
+          ['marginTop','margin-top','marginTop'],
+          ['marginLeft','margin-left','marginLeft'],
+          ['marginRight','margin-right','marginRight'],
+          ['paddingBottom','padding-bottom','paddingBottom'],
+          ['paddingTop','padding-top','paddingTop'],
+          ['paddingLeft','padding-left','paddingLeft'],
+          ['paddingRight','padding-right','paddingRight'],
+          ['fontSize','font-size','fontSize'],
+          ['fontWeight','font-weight','fontWeight'],
+          ['lineHeight','line-height','lineHeight'],
+          ['letterSpacing','letter-spacing','letterSpacing'],
+          ['fontFamily','font-family','fontFamily'],
+          ['color','color','color'],
+          ['textAlign','text-align','textAlign'],
+          ['textTransform','text-transform','textTransform'],
+          ['fontStyle','font-style','fontStyle'],
+        ] as const;
+        for (const [camel, kebab, key] of map) {
+          const v = a[camel] ?? a[kebab];
+          if (v != null && v !== '') {
+            if (['color','textAlign','fontFamily','textTransform','fontStyle'].includes(key)) (s as any)[key] = v;
+            else (s as any)[key] = num(String(v)) ?? v;
+          }
+        }
+        return s;
+      };
+      return (
+        <div className="mb-1">
+          {blocks.map((b, i) => (
+            <p key={`pre-${widget.id}-${i}`} className={b.className || undefined} style={styleFromAttrs(b.attrs)}>
+              {b.text}
+            </p>
+          ))}
+        </div>
+      );
+    }
+    const raw = (widget as any).preHtml as string | undefined;
+    if (raw && raw.trim()) return <div className="mb-1" dangerouslySetInnerHTML={{ __html: raw }} />;
+    return null;
+  };
+
+  // Only charts fetch data; KPIs/others just render HTML
+  const type = widget.type;
+  const isChart = ['bar','line','pie','area','stackedbar','groupedbar','stackedlines','radialstacked','pivotbar','treemap','scatter','funnel'].includes(type);
+  const [simpleData, setSimpleData] = React.useState<Array<{ x: string; y: number; label: string; value: number }> | null>(null);
+  const [grouped, setGrouped] = React.useState<{ items: Array<any>; series: Array<{ key: string; label: string; color: string }> } | null>(null);
+  const [scatter, setScatter] = React.useState<Array<{ id: string; data: Array<{ x: number; y: number; label?: string }> }> | null>(null);
+  const [error, setError] = React.useState<string | null>(null);
+  const [loading, setLoading] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!isChart) return;
+    const ds = (widget.dataSource || {}) as Record<string, unknown>;
+    if (!ds || Object.keys(ds).length === 0) return;
+    const fetchSimple = async () => {
+      setLoading(true); setError(null);
+      try {
+        const response = await fetch('/api/dashboard-supabase', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type, dataSource: ds, filters: globalFilters, dateFilter: globalFilters?.dateRange })
+        });
+        const result = await response.json();
+        if (result.success) setSimpleData(result.data); else throw new Error(result.error || 'API error');
+      } catch (e: any) { setError(e?.message || 'Error'); setSimpleData(null); }
+      finally { setLoading(false); }
+    };
+    const fetchGrouped = async () => {
+      setLoading(true); setError(null);
+      try {
+        const response = await fetch('/api/dashboard-supabase/grouped', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...ds, filters: globalFilters, dateFilter: globalFilters?.dateRange })
+        });
+        const result = await response.json();
+        if (result.success) setGrouped({ items: result.items, series: result.series }); else throw new Error(result.error || 'API error');
+      } catch (e: any) { setError(e?.message || 'Error'); setGrouped(null); }
+      finally { setLoading(false); }
+    };
+    const fetchScatter = async () => {
+      setLoading(true); setError(null);
+      try {
+        const response = await fetch('/api/dashboard-supabase/scatter', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            schema: ds['schema'], table: ds['table'], dimension: ds['dimension'],
+            xMeasure: ds['xMeasure'], yMeasure: ds['yMeasure'], where: ds['where'],
+            filters: globalFilters, dateFilter: globalFilters?.dateRange
+          })
+        });
+        const result = await response.json();
+        if (result.success) setScatter(result.series); else throw new Error(result.error || 'API error');
+      } catch (e: any) { setError(e?.message || 'Error'); setScatter(null); }
+      finally { setLoading(false); }
+    };
+
+    if (['bar','line','pie','area'].includes(type)) fetchSimple();
+    else if (['stackedbar','groupedbar','stackedlines','radialstacked','pivotbar','treemap','funnel'].includes(type)) fetchGrouped();
+    else if (type === 'scatter') fetchScatter();
+  }, [type, (widget as any).id, JSON.stringify(widget.dataSource), JSON.stringify(globalFilters)]);
+
+  if (!isChart) return renderPre();
+  if (loading) return (<div className="h-full w-full p-2 flex items-center justify-center"><div className="text-gray-500 text-sm">Carregando…</div></div>);
+  if (error) return (<div className="h-full w-full p-2 flex items-center justify-center bg-red-50 rounded"><div className="text-xs text-red-600">{error}</div></div>);
+
+  const common = {
+    data: (simpleData || []) as any,
+    margin: { top: 20, right: 20, bottom: 40, left: 40 },
+    colors: (widget.styling?.colors as string[] | undefined) || ['#2563eb'],
+    animate: false,
+  };
+
+  return (
+    <>
+      {renderPre()}
+      {type === 'bar' && (<BarChart {...common} {...(widget.barConfig?.styling || {})} legends={widget.barConfig?.legends} />)}
+      {type === 'line' && (<LineChart {...common} {...(widget.lineConfig?.styling || {})} legends={widget.lineConfig?.legends} />)}
+      {type === 'pie' && (<PieChart {...common} {...(widget.pieConfig?.styling || {})} legends={widget.pieConfig?.legends} />)}
+      {type === 'area' && (<AreaChart {...common} {...(widget.areaConfig?.styling || {})} legends={widget.areaConfig?.legends} />)}
+      {type === 'stackedbar' && grouped && (
+        <StackedBarChart {...(widget.stackedBarConfig?.styling || {})}
+          margin={widget.stackedBarConfig?.margin} legends={widget.stackedBarConfig?.legends}
+          data={grouped.items} keys={grouped.series.map(s => s.key)} colors={grouped.series.map(s => s.color)} seriesMetadata={grouped.series}
+        />
+      )}
+      {type === 'groupedbar' && grouped && (
+        <GroupedBarChart {...(widget.groupedBarConfig?.styling || {})}
+          margin={widget.groupedBarConfig?.margin} legends={widget.groupedBarConfig?.legends}
+          data={grouped.items} keys={grouped.series.map(s => s.key)} colors={grouped.series.map(s => s.color)} seriesMetadata={grouped.series}
+        />
+      )}
+      {type === 'stackedlines' && grouped && (
+        <StackedLinesChart {...(widget.stackedLinesConfig?.styling || {})}
+          margin={widget.stackedLinesConfig?.margin} legends={widget.stackedLinesConfig?.legends}
+          data={grouped.items} keys={grouped.series.map(s => s.key)} colors={grouped.series.map(s => s.color)} seriesMetadata={grouped.series}
+        />
+      )}
+      {type === 'pivotbar' && grouped && (
+        <PivotBarChart items={grouped.items} keys={grouped.series.map(s => s.key)} seriesMetadata={grouped.series} />
+      )}
+      {type === 'radialstacked' && grouped && (() => {
+        const keys = grouped.series.map(s => s.key);
+        const totals: Record<string, number> = {}; keys.forEach(k => { totals[k] = 0; });
+        grouped.items.forEach(it => { keys.forEach(k => { totals[k] += Number(it[k] || 0) || 0; }); });
+        const config = grouped.series.reduce((acc, s) => ({ ...acc, [s.key]: { label: s.label, color: s.color } }), {} as any);
+        return (
+          <RadialStackedChart data={totals} keys={keys} config={config} className="max-w-[320px]" />
+        );
+      })()}
+      {type === 'treemap' && grouped && (
+        <TreeMapChart data={{ name: 'root', children: grouped.items.map((r:any) => ({ name: String(r.label), value: Number(r.value || 0) })) }} colors={(widget.styling?.colors as string[] | undefined)} />
+      )}
+      {type === 'scatter' && scatter && (
+        <ScatterChart series={scatter} enableGridX={widget.styling?.enableGridX as boolean | undefined} enableGridY={widget.styling?.enableGridY as boolean | undefined} />
+      )}
+      {type === 'funnel' && grouped && (
+        <FunnelChart data={grouped.items.map((it:any) => ({ label: String(it.label), value: Number(it.value || 0) })) as any} colors={(widget.styling?.colors as string[] | undefined)} />
+      )}
+    </>
+  );
+}
 
 function ResponsiveGridCanvas({ widgets, gridConfig, globalFilters, viewportMode = 'desktop', onLayoutChange, headerTitle, headerSubtitle, onFilterChange, isFilterLoading, themeName, onEdit, renderHeader = true, headerConfig }: ResponsiveGridCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
