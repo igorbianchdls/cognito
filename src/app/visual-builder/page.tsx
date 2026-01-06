@@ -131,12 +131,15 @@ export default function VisualBuilderPage() {
   const htmlRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!htmlMode) return;
+    if (activeTab !== 'responsive') return;
     const c = htmlRef.current;
     if (!c) return;
     c.innerHTML = '';
     c.innerHTML = htmlInner;
-    return () => { if (htmlRef.current) htmlRef.current.innerHTML = ''; };
-  }, [htmlMode, htmlInner]);
+    return () => {
+      if (htmlRef.current && activeTab === 'responsive') htmlRef.current.innerHTML = '';
+    };
+  }, [htmlMode, htmlInner, activeTab]);
 
   return (
     <div className="min-h-screen bg-gray-50">
