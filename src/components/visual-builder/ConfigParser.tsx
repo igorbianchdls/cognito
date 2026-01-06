@@ -343,6 +343,8 @@ export interface Widget {
   alertsConfig?: AlertsConfig;
   recommendationsConfig?: RecommendationsConfig;
   insights2Config?: Insights2Config;
+  // Optional: order of KPI title/value/comparison tags parsed from DSL
+  kpiTitlesOrder?: Array<'h1'|'h2'|'h3'>;
 }
 
 
@@ -936,6 +938,11 @@ export class ConfigParser {
           const h2m = inner.match(/<h2\b[^>]*>([\s\S]*?)<\/h2>/i);
           if (h2m && h2m[1]) bindingRaw = (h2m[1] || '').trim();
           const pairs = bindingRaw ? parseBindingPairs(bindingRaw) : {};
+          // Optional comparison in <h3>
+          let h3TextRaw = '';
+          const h3m = inner.match(/<h3\b[^>]*>([\s\S]*?)<\/h3>/i);
+          if (h3m && h3m[1]) h3TextRaw = (h3m[1] || '').trim();
+          const h3Pairs = h3TextRaw && /\{\{/.test(h3TextRaw) ? parseBindingPairs(h3TextRaw) : {};
           const ds: any = {};
           if (pairs['schema']) ds.schema = pairs['schema'];
           if (pairs['table'] || pairs['dimension']) ds.table = pairs['table'] || pairs['dimension'];
@@ -943,20 +950,47 @@ export class ConfigParser {
           if (pairs['where']) ds.where = pairs['where'];
           if (pairs['limit'] && !Number.isNaN(Number(pairs['limit']))) ds.limit = Number(pairs['limit']);
 
-          const widget: Widget = {
-            id,
-            type: 'kpi',
-            row: rowId,
-            ...(typeof order === 'number' ? { order } : {}),
-            ...(typeof heightPx === 'number' ? { heightPx } : {}),
-            ...(title ? { title } : {}),
-            ...(Object.keys(ds).length ? { dataSource: ds } : {}),
-          } as Widget;
-          const frRaw = aAttrs['fr'] || aAttrs['data-fr'];
-          if (frRaw && !Number.isNaN(Number(frRaw)) && Number(frRaw) > 0) {
-            (widget as any).widthFr = { desktop: String(Number(frRaw)) + 'fr' };
-          }
-          widgets.push(widget);
+            const widget: Widget = {
+              id,
+              type: 'kpi',
+              row: rowId,
+              ...(typeof order === 'number' ? { order } : {}),
+              ...(typeof heightPx === 'number' ? { heightPx } : {}),
+              ...(title ? { title } : {}),
+              ...(Object.keys(ds).length ? { dataSource: ds } : {}),
+            } as Widget;
+            // Capture order of title/value/comparison tags present
+            try {
+              const seq: Array<'h1'|'h2'|'h3'> = [];
+              const tagRe = /<(h1|h2|h3)\b[^>]*>[\s\S]*?<\/\1>/gi;
+              let tm: RegExpExecArray | null;
+              while ((tm = tagRe.exec(inner)) !== null) {
+                const tag = (tm[1] || '').toLowerCase();
+                if (tag === 'h1' || tag === 'h2' || tag === 'h3') seq.push(tag as 'h1'|'h2'|'h3');
+              }
+              if (seq.length) (widget as any).kpiTitlesOrder = seq;
+            } catch {}
+            const frRaw = aAttrs['fr'] || aAttrs['data-fr'];
+            if (frRaw && !Number.isNaN(Number(frRaw)) && Number(frRaw) > 0) {
+              (widget as any).widthFr = { desktop: String(Number(frRaw)) + 'fr' };
+            }
+            // Map <h3> to KPI comparison when present
+            if (h3TextRaw) {
+              const w = widget as unknown as { kpiConfig?: Record<string, unknown> };
+              w.kpiConfig = w.kpiConfig || {};
+              if (Object.keys(h3Pairs).length > 0) {
+                if (h3Pairs['label']) (w.kpiConfig as any)['comparisonLabel'] = h3Pairs['label'];
+                if (h3Pairs['changePct'] || h3Pairs['changepct'] || h3Pairs['change_pct']) {
+                  const v = Number(h3Pairs['changePct'] || h3Pairs['changepct'] || h3Pairs['change_pct']);
+                  if (!Number.isNaN(v)) (w.kpiConfig as any)['change'] = v;
+                }
+                if (h3Pairs['unit']) (w.kpiConfig as any)['unit'] = h3Pairs['unit'];
+              } else {
+                // Plain text label
+                (w.kpiConfig as any)['comparisonLabel'] = resolveLiquidVars(h3TextRaw);
+              }
+            }
+            widgets.push(widget);
         }
       }
       return found;

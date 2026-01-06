@@ -34,6 +34,8 @@ export interface KPIConfig {
   metric?: string
   calculation?: string
   timeRange?: string
+  // Comparison label (e.g., 'VS PREV. 28 DAYS')
+  comparisonLabel?: string
   
   // Data source and simulation control
   dataSource?: string

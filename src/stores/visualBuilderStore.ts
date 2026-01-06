@@ -170,14 +170,17 @@ export const initialLiquidGrid = `<dashboard theme="branco" layout-mode="grid-pe
     <article fr="1" id="kpi_receita" data-order="1" data-height="150">
       <h1>Receita</h1>
       <h2>{{ schema: comercial; table: vendas_vw; measure: SUM(item_subtotal) }}</h2>
+      <h3>{{ label: VS MÊS ANTERIOR }}</h3>
     </article>
     <article fr="1" id="kpi_ticket_medio" data-order="2" data-height="150">
       <h1>Ticket Médio</h1>
       <h2>{{ schema: comercial; table: vendas_vw; measure: SUM(item_subtotal)/COUNT_DISTINCT(pedido_id) }}</h2>
+      <h3>{{ label: VS MÊS ANTERIOR }}</h3>
     </article>
     <article fr="1" id="kpi_pedidos" data-order="3" data-height="150">
       <h1>Pedidos</h1>
       <h2>{{ schema: comercial; table: vendas_vw; measure: COUNT_DISTINCT(pedido_id) }}</h2>
+      <h3>{{ label: VS MÊS ANTERIOR }}</h3>
     </article>
   </section>
   <section class="w-full" data-type="charts" id="charts1" data-cols-d="3" data-cols-t="2" data-cols-m="1" data-gap-x="16" data-gap-y="16">
@@ -1266,6 +1269,59 @@ export const visualBuilderActions = {
       visualBuilderActions.updateCode(nextCode)
     } catch {
       // ignore
+    }
+  },
+
+  // Reorder <h1>/<h2>/<h3> inside a KPI article by widget id
+  updateKpiTitlesOrderInCode: (kpiId: string, titlesOrder: Array<'h1'|'h2'|'h3'>) => {
+    const currentState = $visualBuilderState.get()
+    const code = currentState.code || ''
+    if (!isLiquidCode(code)) return
+    if (!kpiId || !Array.isArray(titlesOrder) || !titlesOrder.length) return
+
+    // Helper to reorder tags within a matched block
+    const reorderTags = (whole: string): string => {
+      const openMatch = whole.match(/^(<[^>]+>)/i)
+      const closeMatch = whole.match(/(<\/[^>]+>)\s*$/i)
+      const open = openMatch ? openMatch[1] : ''
+      const close = closeMatch ? closeMatch[1] : ''
+      const inner = whole.slice(open.length, whole.length - close.length)
+      const grab = (tag: string) => {
+        const m = inner.match(new RegExp(`<${tag}\\b[^>]*>[\\s\\S]*?<\\/${tag}>`, 'i'))
+        return m ? m[0] : ''
+      }
+      const blocks: Record<'h1'|'h2'|'h3', string> = { h1: grab('h1') as string, h2: grab('h2') as string, h3: grab('h3') as string }
+      const ordered = titlesOrder.map(t => blocks[t]).filter(Boolean).join('\n')
+      // If nothing found, return original
+      if (!ordered) return whole
+      return `${open}\n${ordered}\n${close}`
+    }
+
+    // Try to find the KPI as an <article id="..."> ... </article>
+    const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const idEsc = escape(kpiId)
+    const reArticle = new RegExp(`<article\\b([^>]*)\\bid=\\"${idEsc}\\"[\\s\\S]*?>[\\s\\S]*?<\\/article>`, 'i')
+    const mArt = code.match(reArticle)
+    if (mArt && mArt[0]) {
+      const whole = mArt[0]
+      const nextBlock = reorderTags(whole)
+      if (nextBlock !== whole) {
+        const next = code.replace(whole, nextBlock)
+        visualBuilderActions.updateCode(next)
+      }
+      return
+    }
+
+    // Fallback: try a paired <kpi id="..."> ... </kpi>
+    const reKpi = new RegExp(`<kpi\\b([^>]*)\\bid=\\"${idEsc}\\"[\\s\\S]*?>[\\s\\S]*?<\\/kpi>`, 'i')
+    const mKpi = code.match(reKpi)
+    if (mKpi && mKpi[0]) {
+      const whole = mKpi[0]
+      const nextBlock = reorderTags(whole)
+      if (nextBlock !== whole) {
+        const next = code.replace(whole, nextBlock)
+        visualBuilderActions.updateCode(next)
+      }
     }
   },
 
