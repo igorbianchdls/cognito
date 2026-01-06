@@ -156,56 +156,53 @@ const compactWidgetHeaders = (code: string): string => {
 }
 
 // Initial Liquid template (HTML-like)
-export const initialLiquidGrid = `<dashboard theme="branco" layout-mode="grid-per-row" cols-d="12" gap-x="16" gap-y="16" date-type="last_30_days">
-  <header class="w-full grid grid-cols-2" background-color="#ffffff" border-color="#e5e7eb" border-width="1" border-style="solid">
-    <div id="header-titles" fr="1" class="vb-block header-titles min-w-0 p-2 hover:ring-2 hover:ring-blue-400 rounded-md">
-      <p margin-bottom="20" font-family="Inter" font-size="24" font-weight="600" color="#111827" line-height="1" letter-spacing="0" text-align="left">Dashboard de Indicadores</p>
-      <p font-size="14" font-weight="400" color="#6b7280" line-height="1">Visão geral</p>
-    </div>
-    <div id="header-actions" fr="1" class="vb-block header-actions p-2 hover:ring-2 hover:ring-blue-400 rounded-md">
-      <datepicker type="last_30_days" align="right" variant="button" size="md" number-of-months="2" quick-presets="true" locale="pt-BR" format="DD/MM/YYYY"></datepicker>
-    </div>
-  </header>
-  <section class="w-full" data-type="kpis" id="kpis" data-cols-d="3" data-cols-t="2" data-cols-m="1" data-gap-x="16" data-gap-y="16">
-    <article fr="1" id="kpi_receita" data-order="1" data-height="150" background-color="#ffffff" border-color="#e5e7eb" border-width="1" border-style="solid" border-radius="12" padding="12">
-      <p margin-bottom="20" font-family="Inter" font-size="14" font-weight="600" color="#1f2937" text-align="left">Receita</p>
-      <p margin-bottom="12" font-family="Inter" font-size="28" font-weight="700" color="#111827" text-align="left">75</p>
-      <p margin-bottom="4" font-size="12" color="#6b7280" text-transform="uppercase">VS MÊS ANTERIOR</p>
-    </article>
-    <article fr="1" id="kpi_ticket_medio" data-order="2" data-height="150" background-color="#ffffff" border-color="#e5e7eb" border-width="1" border-style="solid" border-radius="12" padding="12">
-      <p margin-bottom="20" font-family="Inter" font-size="14" font-weight="600" color="#1f2937" text-align="left">Ticket Médio</p>
-      <p margin-bottom="12" font-family="Inter" font-size="28" font-weight="700" color="#111827" text-align="left">75</p>
-      <p margin-bottom="4" font-size="12" color="#6b7280" text-transform="uppercase">VS MÊS ANTERIOR</p>
-    </article>
-    <article fr="1" id="kpi_pedidos" data-order="3" data-height="150" background-color="#ffffff" border-color="#e5e7eb" border-width="1" border-style="solid" border-radius="12" padding="12">
-      <p margin-bottom="20" font-family="Inter" font-size="14" font-weight="600" color="#1f2937" text-align="left">Pedidos</p>
-      <p margin-bottom="12" font-family="Inter" font-size="28" font-weight="700" color="#111827" text-align="left">75</p>
-      <p margin-bottom="4" font-size="12" color="#6b7280" text-transform="uppercase">VS MÊS ANTERIOR</p>
-    </article>
-  </section>
-  <section class="w-full" data-type="charts" id="charts1" data-cols-d="3" data-cols-t="2" data-cols-m="1" data-gap-x="16" data-gap-y="16">
-    <article fr="1" id="chart_vendas_canal" data-order="1" data-height="420" data-span-d="1" background-color="#ffffff" border-color="#e5e7eb" border-width="1" border-style="solid" border-radius="12" padding="12">
-      <p margin-bottom="20" font-family="Inter" font-size="16" font-weight="600" color="#111827" text-align="left">Vendas por Canal</p>
-      <chart type="bar">
-        {{ schema: comercial; table: vendas_vw; dimension: canal_venda_nome; measure: SUM(item_subtotal) }}
-        <style>{"tw": "legend:on mb:40"}</style>
-      </chart>
-    </article>
-    <article fr="1" id="chart_faturamento_mensal" data-order="2" data-height="420" data-span-d="1" background-color="#ffffff" border-color="#e5e7eb" border-width="1" border-style="solid" border-radius="12" padding="12">
-      <p margin-bottom="20" font-family="Inter" font-size="16" font-weight="600" color="#111827" text-align="left">Faturamento Mensal</p>
-      <chart type="line">
-        {{ schema: comercial; table: vendas_vw; dimension: data_pedido; measure: SUM(item_subtotal) }}
-        <style>{"tw": "legend:off grid:on mb:40"}</style>
-      </chart>
-    </article>
-    <article fr="1" id="chart_vendas_categoria" data-order="3" data-height="420" data-span-d="1" background-color="#ffffff" border-color="#e5e7eb" border-width="1" border-style="solid" border-radius="12" padding="12">
-      <p margin-bottom="20" font-family="Inter" font-size="16" font-weight="600" color="#111827" text-align="left">Vendas por Categoria</p>
-      <chart type="pie">
-        {{ schema: comercial; table: vendas_vw; dimension: categoria_servico_nome; measure: SUM(item_subtotal) }}
-        <style>{"tw": "legend:on mb:40"}</style>
-      </chart>
-    </article>
-  </section>
+export const initialLiquidGrid = `<dashboard render="html" theme="branco">
+  <style>
+    .vb-container { padding: 16px; }
+    .row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-bottom: 16px; }
+    @media (max-width: 1024px) { .row { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 640px)  { .row { grid-template-columns: repeat(1, minmax(0, 1fr)); } }
+    .card { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 12px; color: #111827; }
+    .card h3 { margin: 0 0 8px; font-family: Inter, system-ui, sans-serif; font-weight: 600; font-size: 14px; color: #374151; }
+    .kpi-value { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; }
+    .chart-box { height: 240px; background: #f8fafc; border: 1px dashed #d1d5db; border-radius: 10px; display:flex; align-items:center; justify-content:center; color:#6b7280; font-size: 14px; }
+  </style>
+
+  <div class="vb-container">
+    <section class="row kpis">
+      <article class="card" style="background-color:#ffffff; border-color:#e5e7eb;">
+        <h3>Vendas</h3>
+        <div class="kpi-value">R$ 124.500</div>
+      </article>
+      <article class="card">
+        <h3>Pedidos</h3>
+        <div class="kpi-value">830</div>
+      </article>
+      <article class="card">
+        <h3>Clientes</h3>
+        <div class="kpi-value">214</div>
+      </article>
+      <article class="card">
+        <h3>Ticket Médio</h3>
+        <div class="kpi-value">R$ 150,00</div>
+      </article>
+    </section>
+
+    <section class="row charts">
+      <article class="card">
+        <h3>Faturamento Mensal</h3>
+        <div class="chart-box">Placeholder de gráfico</div>
+      </article>
+      <article class="card">
+        <h3>Vendas por Canal</h3>
+        <div class="chart-box">Placeholder de gráfico</div>
+      </article>
+      <article class="card">
+        <h3>Top Produtos</h3>
+        <div class="chart-box">Placeholder de gráfico</div>
+      </article>
+    </section>
+  </div>
 </dashboard>`
 export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas" subtitle="Análise de desempenho comercial" layout-mode="grid-per-row" date-type="last_30_days">
   <!-- KPIs (6 em uma linha) - Foco: Novembro/2025 via filtros globais -->

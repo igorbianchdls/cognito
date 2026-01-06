@@ -47,8 +47,8 @@ export default function PreviewPage() {
   const htmlMode = useMemo(() => {
     if (!code.startsWith('<')) return false;
     const attrs = dashboardOpen?.[1] || '';
-    // aceita aspas simples ou duplas
-    return /\brender\s*=\s*("|')(?:html|raw)\1/i.test(attrs);
+    // aceita render=html, render='html' ou render="html"
+    return /\brender\s*=\s*(?:"|')?(?:html|raw)(?:"|')?/i.test(attrs);
   }, [code, dashboardOpen]);
   const htmlInner = useMemo(() => {
     if (!htmlMode) return '';
@@ -191,7 +191,7 @@ export default function PreviewPage() {
       {/* Dashboard em tela cheia */}
       <div className="w-full h-[calc(100vh-69px)]">
         {htmlMode ? (
-          <div ref={htmlRef} className="w-full h-full overflow-auto p-4" />
+          <div ref={htmlRef} className="w-full overflow-auto p-4" />
         ) : (
           <ResponsiveGridCanvas
             widgets={visualBuilderState.widgets}

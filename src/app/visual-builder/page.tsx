@@ -120,8 +120,8 @@ export default function VisualBuilderPage() {
   const htmlMode = useMemo(() => {
     if (!code.startsWith('<')) return false;
     const attrs = dashOpen?.[1] || '';
-    // aceita aspas simples ou duplas em render
-    return /\brender\s*=\s*("|')(?:html|raw)\1/i.test(attrs);
+    // aceita render=html, render='html' ou render="html"
+    return /\brender\s*=\s*(?:"|')?(?:html|raw)(?:"|')?/i.test(attrs);
   }, [code, dashOpen]);
   const htmlInner = useMemo(() => {
     if (!htmlMode) return '';
@@ -366,7 +366,7 @@ export default function VisualBuilderPage() {
             </div>
             <div className="h-[calc(100%-73px)] p-6 overflow-auto" ref={scrollRef} style={{ overflowAnchor: 'none' }}>
               {htmlMode ? (
-                <div ref={htmlRef} className="w-full h-full" />
+                <div ref={htmlRef} className="w-full" />
               ) : (
                 <ResponsiveGridCanvas
                   widgets={visualBuilderState.widgets}
