@@ -856,14 +856,18 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
             ['paddingRight','padding-right','paddingRight'],
             ['fontSize','font-size','fontSize'],
             ['fontWeight','font-weight','fontWeight'],
+            ['lineHeight','line-height','lineHeight'],
+            ['letterSpacing','letter-spacing','letterSpacing'],
             ['fontFamily','font-family','fontFamily'],
             ['color','color','color'],
             ['textAlign','text-align','textAlign'],
+            ['textTransform','text-transform','textTransform'],
+            ['fontStyle','font-style','fontStyle'],
           ] as const;
           for (const [camel, kebab, key] of map) {
             const v = a[camel] ?? a[kebab];
             if (v != null && v !== '') {
-              if (['color','textAlign','fontFamily'].includes(key)) (s as any)[key] = v;
+              if (['color','textAlign','fontFamily','textTransform','fontStyle'].includes(key)) (s as any)[key] = v;
               else (s as any)[key] = num(String(v)) ?? v;
             }
           }
