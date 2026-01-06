@@ -544,9 +544,10 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
     }
   };
 
+  const hasPreBlocks = Array.isArray((widget as any).preBlocks) && (widget as any).preBlocks.length > 0;
   const commonChartProps = {
     data: chartData,
-    title: widget.title,
+    title: hasPreBlocks ? undefined : widget.title,
     margin: { top: 20, right: 20, bottom: 40, left: 40 },
     colors: getWidgetColors() || widget.styling?.colors || ['#2563eb'],
     animate: false,
@@ -614,13 +615,18 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
         ['paddingRight','padding-right','paddingRight'],
         ['fontSize','font-size','fontSize'],
         ['fontWeight','font-weight','fontWeight'],
+        ['lineHeight','line-height','lineHeight'],
+        ['letterSpacing','letter-spacing','letterSpacing'],
+        ['fontFamily','font-family','fontFamily'],
         ['color','color','color'],
         ['textAlign','text-align','textAlign'],
+        ['textTransform','text-transform','textTransform'],
+        ['fontStyle','font-style','fontStyle'],
       ] as const;
       for (const [camel, kebab, key] of map) {
         const v = a[camel] ?? a[kebab];
         if (v != null && v !== '') {
-          if (['color','textAlign'].includes(key)) (s as any)[key] = v;
+          if (['color','textAlign','fontFamily','textTransform','fontStyle'].includes(key)) (s as any)[key] = v;
           else (s as any)[key] = num(String(v)) ?? v;
         }
       }
@@ -1056,7 +1062,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
           <div className="h-full w-full p-2 relative group">
             <TreeMapChart
               data={treeData}
-              title={widget.title || 'Treemap'}
+              title={hasPreBlocks ? undefined : (widget.title || 'Treemap')}
               colors={(widget.styling?.colors as string[] | undefined)}
               backgroundColor={widget.styling?.backgroundColor}
             />
@@ -1099,7 +1105,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
           <div className="h-full w-full p-2 relative group">
             <ScatterChart
               series={scatterSeries}
-              title={widget.title || 'Scatter Plot'}
+              title={hasPreBlocks ? undefined : (widget.title || 'Scatter Plot')}
               colors={(widget.styling?.colors as string[] | undefined)}
               backgroundColor={widget.styling?.backgroundColor}
               enableGridX={widget.styling?.enableGridX as boolean | undefined}
@@ -1188,7 +1194,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
               // Data props (override any styling defaults)
               data={multipleData.items}
               keys={multipleData.series.map(s => s.key)}
-              title={widget.title || 'Chart'}
+              title={hasPreBlocks ? undefined : (widget.title || 'Chart')}
               colors={multipleData.series.map(s => s.color)}
               seriesMetadata={multipleData.series}
               // Container Glass Effect & Modern Styles
@@ -1301,7 +1307,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
               // Data props (override any styling defaults)
               data={multipleData.items}
               keys={multipleData.series.map(s => s.key)}
-              title={widget.title || 'Chart'}
+              title={hasPreBlocks ? undefined : (widget.title || 'Chart')}
               colors={(widget.groupedBarConfig?.styling?.colors as string[] | undefined)?.length
                 ? multipleData.series.map((s, i) => (widget.groupedBarConfig?.styling?.colors as string[])[i] || s.color)
                 : multipleData.series.map(s => s.color)
@@ -1418,7 +1424,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
               items={multipleData.items}
               keys={keys}
               seriesMetadata={seriesMetadata}
-              title={widget.title}
+              title={hasPreBlocks ? undefined : widget.title}
               // Typography
               titleFontFamily={widget.pivotBarConfig?.styling?.titleFontFamily}
               titleFontSize={widget.pivotBarConfig?.styling?.titleFontSize}
@@ -1508,7 +1514,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
               keys={keys}
               config={config}
               className="max-w-[320px]"
-              title={widget.title || 'Radial Stacked'}
+              title={hasPreBlocks ? undefined : (widget.title || 'Radial Stacked')}
               // Typography
               titleFontFamily={widget.radialStackedConfig?.styling?.titleFontFamily}
               titleFontSize={widget.radialStackedConfig?.styling?.titleFontSize}
@@ -1575,7 +1581,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
               legends={widget.stackedLinesConfig?.legends}
               data={multipleData.items}
               keys={multipleData.series.map(s => s.key)}
-              title={widget.title || 'Chart'}
+              title={hasPreBlocks ? undefined : (widget.title || 'Chart')}
               colors={multipleData.series.map(s => s.color)}
               seriesMetadata={multipleData.series}
               // Container styles
@@ -1659,7 +1665,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
           <div className="h-full w-full p-2 relative group">
             <FunnelChart
               data={steps as any}
-              title={widget.title || 'Funnel'}
+              title={hasPreBlocks ? undefined : (widget.title || 'Funnel')}
               colors={(widget.styling?.colors as string[] | undefined)}
               backgroundColor={widget.styling?.backgroundColor}
               containerBorderWidth={widget.styling?.containerBorderWidth as number | undefined}

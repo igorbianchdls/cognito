@@ -185,21 +185,21 @@ export const initialLiquidGrid = `<dashboard theme="branco" layout-mode="grid-pe
   </section>
   <section class="w-full" data-type="charts" id="charts1" data-cols-d="3" data-cols-t="2" data-cols-m="1" data-gap-x="16" data-gap-y="16">
     <article fr="1" id="chart_vendas_canal" data-order="1" data-height="420" data-span-d="1">
-      <p margin-bottom="20">Vendas por Canal</p>
+      <p margin-bottom="20" font-family="Inter" font-size="16" font-weight="600" color="#111827" text-align="left">Vendas por Canal</p>
       <main chart="bar">
         {{ schema: comercial; table: vendas_vw; dimension: canal_venda_nome; measure: SUM(item_subtotal) }}
         <style>{"tw": "legend:on mb:40"}</style>
       </main>
     </article>
     <article fr="1" id="chart_faturamento_mensal" data-order="2" data-height="420" data-span-d="1">
-      <p margin-bottom="20">Faturamento Mensal</p>
+      <p margin-bottom="20" font-family="Inter" font-size="16" font-weight="600" color="#111827" text-align="left">Faturamento Mensal</p>
       <main chart="line">
         {{ schema: comercial; table: vendas_vw; dimension: data_pedido; measure: SUM(item_subtotal) }}
         <style>{"tw": "legend:off grid:on mb:40"}</style>
       </main>
     </article>
     <article fr="1" id="chart_vendas_categoria" data-order="3" data-height="420" data-span-d="1">
-      <p margin-bottom="20">Vendas por Categoria</p>
+      <p margin-bottom="20" font-family="Inter" font-size="16" font-weight="600" color="#111827" text-align="left">Vendas por Categoria</p>
       <main chart="pie">
         {{ schema: comercial; table: vendas_vw; dimension: categoria_servico_nome; measure: SUM(item_subtotal) }}
         <style>{"tw": "legend:on mb:40"}</style>
