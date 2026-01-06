@@ -47,8 +47,8 @@ export default function PreviewPage() {
   const htmlMode = useMemo(() => {
     if (!code.startsWith('<')) return false;
     const attrs = dashboardOpen?.[1] || '';
-    // habilita quando <dashboard ... render="html" /> ou render="raw"
-    return /\brender\s*=\s*"(?:html|raw)"/i.test(attrs);
+    // aceita aspas simples ou duplas
+    return /\brender\s*=\s*("|')(?:html|raw)\1/i.test(attrs);
   }, [code, dashboardOpen]);
   const htmlInner = useMemo(() => {
     if (!htmlMode) return '';

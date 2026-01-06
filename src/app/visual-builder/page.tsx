@@ -120,7 +120,8 @@ export default function VisualBuilderPage() {
   const htmlMode = useMemo(() => {
     if (!code.startsWith('<')) return false;
     const attrs = dashOpen?.[1] || '';
-    return /\brender\s*=\s*"(?:html|raw)"/i.test(attrs);
+    // aceita aspas simples ou duplas em render
+    return /\brender\s*=\s*("|')(?:html|raw)\1/i.test(attrs);
   }, [code, dashOpen]);
   const htmlInner = useMemo(() => {
     if (!htmlMode) return '';
