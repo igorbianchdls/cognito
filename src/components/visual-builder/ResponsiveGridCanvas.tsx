@@ -98,15 +98,17 @@ const DraggableWidget = memo(function DraggableWidget({ widget, spanClasses, spa
   return (
     <div
       ref={setNodeRef}
-      style={style}
+      style={{
+        ...style,
+        ...containerStyleFromWidget(widget)
+      }}
       {...attributes}
       className={spanClasses}
     >
       <div
         style={{
           height: minHeight,
-          position: 'relative',
-          ...containerStyleFromWidget(widget)
+          position: 'relative'
         }}
         className={hasContainerStyle ? 'transition-all' : 'group hover:ring-2 hover:ring-blue-400 rounded-lg transition-all'}
       >
