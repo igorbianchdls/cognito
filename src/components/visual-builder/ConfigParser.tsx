@@ -834,7 +834,8 @@ export class ConfigParser {
             const spanM = spanMStr ? Number(spanMStr) : undefined;
             const pTitleMatch = inner.match(/<p\b([^>]*)>([\s\S]*?)<\/p>/i);
             const title = pTitleMatch ? resolveLiquidVars((pTitleMatch[2] || '').trim()) : undefined;
-            // Collect all <p> blocks for generic pre-rendering
+            // Collect all <p> blocks for generic pre-rendering (assign after widget creation)
+            let preBlocksTemp: Array<{ className?: string; attrs?: Record<string,string>; text?: string }> | undefined;
             try {
               const pre: Array<{ className?: string; attrs?: Record<string,string>; text?: string }> = [];
               const pReAll = /<p\b([^>]*)>([\s\S]*?)<\/p>/gi;
@@ -844,7 +845,7 @@ export class ConfigParser {
                 const text = resolveLiquidVars((pm[2] || '').trim());
                 pre.push({ className: attrs['class'], attrs, text });
               }
-              if (pre.length) (widget as any).preBlocks = pre;
+              if (pre.length) preBlocksTemp = pre;
             } catch {}
 
             // Parse <main> with binding and optional <style>{...}</style>
@@ -955,6 +956,7 @@ export class ConfigParser {
             if (frRaw && !Number.isNaN(Number(frRaw)) && Number(frRaw) > 0) {
               (widget as any).widthFr = { desktop: String(Number(frRaw)) + 'fr' };
             }
+            if (preBlocksTemp && preBlocksTemp.length) (widget as any).preBlocks = preBlocksTemp;
 
             widgets.push(widget);
           }
