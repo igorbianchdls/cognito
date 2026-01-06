@@ -24,10 +24,7 @@ import InsightsHeroCarousel from '@/components/widgets/InsightsHeroCarousel';
 import InsightsCard2 from '@/components/widgets/InsightsCard2';
 import { $insights2 } from '@/stores/nexus/insights2Store';
 import { useStore as useNanoStore } from '@nanostores/react';
-import { $visualBuilderState, visualBuilderActions } from '@/stores/visualBuilderStore';
-import { DndContext, closestCenter, DragEndEvent, useSensor, useSensors, PointerSensor, KeyboardSensor } from '@dnd-kit/core';
-import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
+import { $visualBuilderState } from '@/stores/visualBuilderStore';
 
 // Module-level caches to avoid 'any' casting and persist across mounts
 type GroupedCacheValue = { items: Array<{ label: string; [key: string]: string | number }>; series: Array<{ key: string; label: string; color: string }> };
@@ -162,26 +159,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
     dataSource: widget.dataSource
   });
 
-  // Sensors for nested DnD (e.g., KPI titles)
-  const sensorsNested = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
-    useSensor(KeyboardSensor)
-  );
-
-  const SortableMiniItem = ({ id, label }: { id: 'h1'|'h2'|'h3'; label: string }) => {
-    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
-    const style = {
-      transform: CSS.Transform.toString(transform),
-      transition,
-      opacity: isDragging ? 0.9 : 1,
-    } as React.CSSProperties;
-    return (
-      <div ref={setNodeRef} style={style} className="flex items-center gap-2 px-2 py-1 text-xs rounded bg-white/95 border shadow-sm cursor-grab active:cursor-grabbing" {...attributes} {...listeners}>
-        <span className="text-gray-500">⋮⋮</span>
-        <span className="text-gray-800">{label}</span>
-      </div>
-    );
-  };
+  // (Removed KPI titles DnD overlay per request)
 
   // Check if widget type needs BigQuery data
   const needsBigQueryData = (type: string): boolean => {
@@ -815,37 +793,9 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
       );
       break;
 
-    case 'kpi': {
-      const fallbackOrder: Array<'h1'|'h2'|'h3'> = (widget.kpiConfig as any)?.comparisonLabel ? ['h1','h2','h3'] : ['h1','h2'];
-      const order: Array<'h1'|'h2'|'h3'> = (Array.isArray(widget.kpiTitlesOrder) && widget.kpiTitlesOrder.length)
-        ? (widget.kpiTitlesOrder as Array<'h1'|'h2'|'h3'>)
-        : fallbackOrder;
-      const labels: Record<'h1'|'h2'|'h3', string> = { h1: 'Título', h2: 'Valor', h3: 'Comparação' };
-      const onDragEndTitles = (e: DragEndEvent) => {
-        const { active, over } = e;
-        if (!over || active.id === over.id) return;
-        const ids: Array<'h1'|'h2'|'h3'> = [...order];
-        const oldIndex = ids.indexOf(active.id as any);
-        const newIndex = ids.indexOf(over.id as any);
-        if (oldIndex === -1 || newIndex === -1) return;
-        ids.splice(newIndex, 0, ids.splice(oldIndex, 1)[0]);
-        try { visualBuilderActions.updateKpiTitlesOrderInCode(widget.id, ids); } catch {}
-      };
-
+    case 'kpi':
       widgetContent = (
         <div className="h-full w-full px-0 py-2 relative group">
-          {/* KPI titles reorder overlay */}
-          <div className="absolute -top-3 -left-1 z-20 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-            <DndContext sensors={sensorsNested} collisionDetection={closestCenter} onDragEnd={onDragEndTitles}>
-              <SortableContext items={order} strategy={verticalListSortingStrategy}>
-                <div className="flex flex-col gap-1 pointer-events-auto">
-                  {order.map((id) => (
-                    <SortableMiniItem key={id} id={id} label={labels[id]} />
-                  ))}
-                </div>
-              </SortableContext>
-            </DndContext>
-          </div>
           <KPICard
             variant="tile"
             name={widget.title}
@@ -864,7 +814,6 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
         </div>
       );
       break;
-    }
       break;
 
     case 'insights':
