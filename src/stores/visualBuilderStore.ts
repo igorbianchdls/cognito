@@ -876,13 +876,62 @@ export const visualBuilderActions = {
     if (currentState.widgets.length > 0) {
       return
     }
+    // Modo HTML puro (sem parser de layout). O preview lê render="html" e injeta este HTML como-is.
+    const defaultCode = `<dashboard render="html" theme="branco">
+  <style>
+    .vb-container { padding: 16px; }
+    .row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-bottom: 16px; }
+    @media (max-width: 1024px) { .row { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 640px)  { .row { grid-template-columns: repeat(1, minmax(0, 1fr)); } }
+    .card { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 12px; color: #111827; }
+    .card h3 { margin: 0 0 8px; font-family: Inter, system-ui, sans-serif; font-weight: 600; font-size: 14px; color: #374151; }
+    .kpi-value { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; }
+    .chart-box { height: 240px; background: #f8fafc; border: 1px dashed #d1d5db; border-radius: 10px; display:flex; align-items:center; justify-content:center; color:#6b7280; font-size: 14px; }
+  </style>
 
-    const parseResult = ConfigParser.parse(initialLiquidGrid)
+  <div class="vb-container">
+    <section class="row kpis">
+      <article class="card" style="background-color:#ffffff; border-color:#e5e7eb;">
+        <h3>Vendas</h3>
+        <div class="kpi-value">R$ 124.500</div>
+      </article>
+      <article class="card">
+        <h3>Pedidos</h3>
+        <div class="kpi-value">830</div>
+      </article>
+      <article class="card">
+        <h3>Clientes</h3>
+        <div class="kpi-value">214</div>
+      </article>
+      <article class="card">
+        <h3>Ticket Médio</h3>
+        <div class="kpi-value">R$ 150,00</div>
+      </article>
+    </section>
+
+    <section class="row charts">
+      <article class="card">
+        <h3>Faturamento Mensal</h3>
+        <div class="chart-box">Placeholder de gráfico</div>
+      </article>
+      <article class="card">
+        <h3>Vendas por Canal</h3>
+        <div class="chart-box">Placeholder de gráfico</div>
+      </article>
+      <article class="card">
+        <h3>Top Produtos</h3>
+        <div class="chart-box">Placeholder de gráfico</div>
+      </article>
+    </section>
+  </div>
+</dashboard>`
+
+    const parseResult = ConfigParser.parse(defaultCode)
 
     $visualBuilderState.set({
       widgets: parseResult.widgets,
       gridConfig: parseResult.gridConfig,
-      code: initialLiquidGrid,
+      code: defaultCode,
       parseErrors: parseResult.errors,
       isValid: parseResult.isValid,
       dashboardTitle: parseResult.dashboardTitle,

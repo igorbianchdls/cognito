@@ -1,11 +1,14 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useStore } from '@nanostores/react';
 import Link from 'next/link';
 import ResponsiveGridCanvas from '@/components/visual-builder/ResponsiveGridCanvas';
 import { ThemeManager, type ThemeName } from '@/components/visual-builder/ThemeManager';
 import { $visualBuilderState, visualBuilderActions } from '@/stores/visualBuilderStore';
+import WidgetRenderer from '@/components/visual-builder/WidgetRenderer';
+import type { Widget } from '@/components/visual-builder/ConfigParser';
+import { createRoot, type Root } from 'react-dom/client';
 
 export default function PreviewPage() {
   const visualBuilderState = useStore($visualBuilderState);
@@ -37,6 +40,105 @@ export default function PreviewPage() {
     visualBuilderActions.updateGlobalDateInCode(filters);
     setTimeout(() => setIsFilterLoading(false), 600);
   }, []);
+
+  // --- HTML puro (sem parser): renderiza o HTML como-is e troca apenas <chart> por componentes React
+  const code = String(visualBuilderState.code || '').trim();
+  const dashboardOpen = useMemo(() => code.match(/<dashboard\b([^>]*)>/i), [code]);
+  const htmlMode = useMemo(() => {
+    if (!code.startsWith('<')) return false;
+    const attrs = dashboardOpen?.[1] || '';
+    // habilita quando <dashboard ... render="html" /> ou render="raw"
+    return /\brender\s*=\s*"(?:html|raw)"/i.test(attrs);
+  }, [code, dashboardOpen]);
+  const htmlInner = useMemo(() => {
+    if (!htmlMode) return '';
+    const m = code.match(/<dashboard\b[^>]*>([\s\S]*?)<\/dashboard>/i);
+    return m ? m[1] : code;
+  }, [htmlMode, code]);
+
+  const htmlRef = useRef<HTMLDivElement>(null);
+  const reactRootsRef = useRef<Root[]>([]);
+
+  const parsePairs = (raw: string): Record<string, string> => {
+    const out: Record<string, string> = {};
+    if (!raw) return out;
+    let body = raw.trim();
+    const m = body.match(/^\{\{([\s\S]*?)\}\}$/);
+    if (m) body = m[1];
+    const parts = body.split(';');
+    for (let p of parts) {
+      p = p.trim();
+      if (!p) continue;
+      const i = p.indexOf(':');
+      if (i === -1) continue;
+      const k = p.slice(0, i).trim().toLowerCase();
+      const v = p.slice(i + 1).trim().replace(/^['"]|['"]$/g, '');
+      if (k) out[k] = v;
+    }
+    return out;
+  };
+
+  useEffect(() => {
+    if (!htmlMode) return;
+    const c = htmlRef.current;
+    if (!c) return;
+
+    // limpar montagens anteriores
+    for (const r of reactRootsRef.current) {
+      try { r.unmount(); } catch {}
+    }
+    reactRootsRef.current = [];
+    c.innerHTML = '';
+
+    // injetar HTML puro
+    c.innerHTML = htmlInner;
+
+    // localizar <chart> e trocar por WidgetRenderer
+    const charts = c.querySelectorAll('chart');
+    charts.forEach((node, i) => {
+      const typeAttr = (node.getAttribute('type') || node.getAttribute('data-type') || 'bar').toLowerCase();
+      const raw = node.textContent || '';
+      const moustache = raw.match(/\{\{([\s\S]*?)\}\}/);
+      const pairs = moustache ? parsePairs(moustache[0]) : {};
+
+      const ds: any = {};
+      if (pairs['schema']) ds.schema = pairs['schema'];
+      if (pairs['table']) ds.table = pairs['table'];
+      if (pairs['dimension']) ds.dimension = pairs['dimension'];
+      if (pairs['measure']) ds.measure = pairs['measure'];
+      if (pairs['xmeasure']) ds.xMeasure = pairs['xmeasure'];
+      if (pairs['ymeasure']) ds.yMeasure = pairs['ymeasure'];
+      if (pairs['where']) ds.where = pairs['where'];
+      if (pairs['aggregation']) ds.aggregation = pairs['aggregation'];
+      if (pairs['limit'] && !Number.isNaN(Number(pairs['limit']))) ds.limit = Number(pairs['limit']);
+
+      const id = node.getAttribute('id') || `chart_${i}`;
+      const validTypes = ['bar','line','pie','area','stackedbar','groupedbar','stackedlines','radialstacked','pivotbar','treemap','scatter','funnel'];
+      const type = (validTypes.includes(typeAttr) ? (typeAttr as Widget['type']) : 'bar');
+      const widget: Widget = {
+        id,
+        type,
+        ...(Object.keys(ds).length ? { dataSource: ds } : {})
+      } as Widget;
+
+      const mount = document.createElement('div');
+      mount.style.width = '100%';
+      mount.style.height = '100%';
+      node.innerHTML = '';
+      node.appendChild(mount);
+      const root = createRoot(mount);
+      reactRootsRef.current.push(root);
+      root.render(<WidgetRenderer widget={widget} globalFilters={visualBuilderState.globalFilters} />);
+    });
+
+    return () => {
+      for (const r of reactRootsRef.current) {
+        try { r.unmount(); } catch {}
+      }
+      reactRootsRef.current = [];
+      if (htmlRef.current) htmlRef.current.innerHTML = '';
+    };
+  }, [htmlMode, htmlInner, visualBuilderState.globalFilters]);
 
   return (
     <div className="min-h-screen w-full bg-gray-50">
@@ -88,17 +190,21 @@ export default function PreviewPage() {
 
       {/* Dashboard em tela cheia */}
       <div className="w-full h-[calc(100vh-69px)]">
-        <ResponsiveGridCanvas
-          widgets={visualBuilderState.widgets}
-          gridConfig={visualBuilderState.gridConfig}
-          viewportMode={viewportMode}
-          headerTitle={visualBuilderState.dashboardTitle || 'Live Dashboard'}
-          headerSubtitle={visualBuilderState.dashboardSubtitle || 'Real-time visualization with Supabase data'}
-          themeName={currentThemeName}
-          globalFilters={visualBuilderState.globalFilters}
-          onFilterChange={handleFilterChange}
-          isFilterLoading={isFilterLoading}
-        />
+        {htmlMode ? (
+          <div ref={htmlRef} className="w-full h-full overflow-auto p-4" />
+        ) : (
+          <ResponsiveGridCanvas
+            widgets={visualBuilderState.widgets}
+            gridConfig={visualBuilderState.gridConfig}
+            viewportMode={viewportMode}
+            headerTitle={visualBuilderState.dashboardTitle || 'Live Dashboard'}
+            headerSubtitle={visualBuilderState.dashboardSubtitle || 'Real-time visualization with Supabase data'}
+            themeName={currentThemeName}
+            globalFilters={visualBuilderState.globalFilters}
+            onFilterChange={handleFilterChange}
+            isFilterLoading={isFilterLoading}
+          />
+        )}
       </div>
     </div>
   );
