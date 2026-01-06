@@ -786,6 +786,7 @@ export class ConfigParser {
             const heightPx = heightStr ? Number(heightStr) : undefined;
             const h1m = inner.match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/i);
             const title = h1m ? resolveLiquidVars((h1m[1] || '').trim()) : undefined;
+            const h1Open = inner.match(/<h1\b([^>]*)>/i);
             // Binding inside <h2> (first occurrence)
             let bindingRaw = '';
             const h2m = inner.match(/<h2\b[^>]*>([\s\S]*?)<\/h2>/i);
@@ -852,6 +853,28 @@ export class ConfigParser {
                 if (h3Pairs['unit']) (w.kpiConfig as any)['unit'] = h3Pairs['unit'];
               } else {
                 (w.kpiConfig as any)['comparisonLabel'] = resolveLiquidVars(h3TextRaw);
+              }
+            }
+            // Apply style.tw from <main><style> to widget styling
+            if (styleObj && typeof styleObj['tw'] === 'string') {
+              applyStylingTokens(widget, String(styleObj['tw']));
+            }
+            // Map h1 class to chart titleClassName (via styling object passed to chart components)
+            if (h1Open && h1Open[1]) {
+              const a = parseAttrs(h1Open[1] || '');
+              const cls = a['class'];
+              if (cls) {
+                const setTitleClass = (key: 'bar'|'line'|'pie'|'area'|'stackedbar'|'groupedbar'|'stackedlines'|'radialstacked'|'pivotbar'|'treemap'|'scatter'|'funnel') => {
+                  const prop = key + 'Config' as keyof Widget;
+                  const current: any = (widget as any)[prop] || {};
+                  const styling = { ...(current.styling || {}), titleClassName: cls };
+                  (widget as any)[prop] = { ...(current || {}), styling };
+                };
+                switch (widget.type) {
+                  case 'bar': case 'line': case 'pie': case 'area': case 'stackedbar': case 'groupedbar': case 'stackedlines': case 'radialstacked': case 'pivotbar': case 'treemap': case 'scatter': case 'funnel':
+                    setTitleClass(widget.type as any);
+                    break;
+                }
               }
             }
             widgets.push(widget);
