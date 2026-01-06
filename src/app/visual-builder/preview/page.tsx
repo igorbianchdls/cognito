@@ -92,7 +92,7 @@ export default function PreviewPage() {
       reactRootsRef.current = [];
       if (htmlRef.current) htmlRef.current.innerHTML = '';
     };
-  }, [htmlMode, htmlInner, visualBuilderState.globalFilters]);
+  }, [htmlMode, code, visualBuilderState.globalFilters]);
 
   return (
     <div className="min-h-screen w-full bg-gray-50">
