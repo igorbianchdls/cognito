@@ -787,6 +787,7 @@ export class ConfigParser {
             const h1m = inner.match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/i);
             const title = h1m ? resolveLiquidVars((h1m[1] || '').trim()) : undefined;
             const h1Open = inner.match(/<h1\b([^>]*)>/i);
+            const h1Open = inner.match(/<h1\b([^>]*)>/i);
             // Binding inside <h2> (first occurrence)
             let bindingRaw = '';
             const h2m = inner.match(/<h2\b[^>]*>([\s\S]*?)<\/h2>/i);
