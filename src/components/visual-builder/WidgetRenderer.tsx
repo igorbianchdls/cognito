@@ -595,6 +595,48 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
   // Store widget content
   let widgetContent;
 
+  // Render generic preBlocks (<p> parsed from DSL) above widget content (charts, etc.)
+  const renderPreBlocks = () => {
+    const blocks = (widget as any).preBlocks as Array<{ className?: string; attrs?: Record<string,string>; text?: string }> | undefined;
+    if (!blocks || !blocks.length) return null;
+    const styleFromAttrs = (a: Record<string,string> | undefined): React.CSSProperties => {
+      const s: React.CSSProperties = {};
+      if (!a) return s;
+      const num = (v?: string) => (v!=null && v!=='' && !Number.isNaN(Number(v)) ? Number(v) : undefined);
+      const map = [
+        ['marginBottom','margin-bottom','marginBottom'],
+        ['marginTop','margin-top','marginTop'],
+        ['marginLeft','margin-left','marginLeft'],
+        ['marginRight','margin-right','marginRight'],
+        ['paddingBottom','padding-bottom','paddingBottom'],
+        ['paddingTop','padding-top','paddingTop'],
+        ['paddingLeft','padding-left','paddingLeft'],
+        ['paddingRight','padding-right','paddingRight'],
+        ['fontSize','font-size','fontSize'],
+        ['fontWeight','font-weight','fontWeight'],
+        ['color','color','color'],
+        ['textAlign','text-align','textAlign'],
+      ] as const;
+      for (const [camel, kebab, key] of map) {
+        const v = a[camel] ?? a[kebab];
+        if (v != null && v !== '') {
+          if (['color','textAlign'].includes(key)) (s as any)[key] = v;
+          else (s as any)[key] = num(String(v)) ?? v;
+        }
+      }
+      return s;
+    };
+    return (
+      <div className="mb-1">
+        {blocks.map((b, i) => (
+          <p key={`pre-${widget.id}-${i}`} className={b.className || undefined} style={styleFromAttrs(b.attrs)}>
+            {b.text}
+          </p>
+        ))}
+      </div>
+    );
+  };
+
   switch (widget.type) {
     case 'bar':
       // Debug: Log glass effect and modern CSS props being passed
@@ -728,6 +770,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
     case 'pie':
       widgetContent = (
         <div className="h-full w-full px-0 py-2 relative group">
+          {renderPreBlocks()}
           <PieChart
             {...commonChartProps}
             {...(widget.pieConfig?.styling || {})}
@@ -756,6 +799,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
     case 'area':
       widgetContent = (
         <div className="h-full w-full px-0 py-2 relative group">
+          {renderPreBlocks()}
           <AreaChart
             {...commonChartProps}
             {...(widget.areaConfig?.styling || {})}
@@ -796,6 +840,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
     case 'kpi':
       widgetContent = (
         <div className="h-full w-full px-0 py-2 relative group">
+          {renderPreBlocks()}
           <KPICard
             variant="tile"
             name={widget.title}

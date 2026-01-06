@@ -345,6 +345,8 @@ export interface Widget {
   insights2Config?: Insights2Config;
   // Optional: order of KPI title/value/comparison tags parsed from DSL
   kpiTitlesOrder?: Array<'h1'|'h2'|'h3'>;
+  // Generic pre-render blocks (<p> from DSL) to render before widget content
+  preBlocks?: Array<{ className?: string; attrs?: Record<string, string>; text?: string }>;
 }
 
 
@@ -516,7 +518,7 @@ export class ConfigParser {
       parsedGlobalFilters = { globalFilters: { dateRange: { type, ...(startDate ? { startDate } : {}), ...(endDate ? { endDate } : {}) } } }.globalFilters;
     }
 
-    // Optional <header> parsing. Prefer paired <header> with inner <h1>/<h2> and kebab-case attrs.
+    // Optional <header> parsing. Use <p> blocks for title/subtitle (no <h1>/<h2> fallback).
     try {
       const headerPair = dsl.match(/<header\b([^>]*)>([\s\S]*?)<\/header>/i);
       const headerSelf = dsl.match(/<header\b([^>]*)\/>/i);
@@ -539,7 +541,7 @@ export class ConfigParser {
         if (sdp !== undefined) {
           const v = String(sdp).toLowerCase(); cfg.showDatePicker = !(v === 'false' || v === 'off' || v === '0');
         }
-        // Prefer <p> blocks for header title/subtitle; fallback to <h1>/<h2>
+        // Prefer <p> blocks for header title/subtitle
         const pAll: Array<{ open: string; body: string }> = [];
         try {
           const pRe = /<p\b([^>]*)>([\s\S]*?)<\/p>/gi;
@@ -566,27 +568,11 @@ export class ConfigParser {
           const text = resolveLiquidVars((pAll[0].body || '').trim());
           if (text) dashboardTitle = text;
           mapHeaderTextAttrs(pAll[0].open, 'title');
-        } else {
-          const h1m = inner.match(/<h1\b([^>]*)>([\s\S]*?)<\/h1>/i);
-          if (h1m) {
-            const h1Attrs = parseAttrs(h1m[1] || '');
-            const text = resolveLiquidVars((h1m[2] || '').trim());
-            if (text) dashboardTitle = text;
-            mapHeaderTextAttrs(h1m[1] || '', 'title');
-          }
         }
         if (pAll[1]) {
           const text = resolveLiquidVars((pAll[1].body || '').trim());
           if (text) dashboardSubtitle = text;
           mapHeaderTextAttrs(pAll[1].open, 'subtitle');
-        } else {
-          const h2m = inner.match(/<h2\b([^>]*)>([\s\S]*?)<\/h2>/i);
-          if (h2m) {
-            const h2Attrs = parseAttrs(h2m[1] || '');
-            const text = resolveLiquidVars((h2m[2] || '').trim());
-            if (text) dashboardSubtitle = text;
-            mapHeaderTextAttrs(h2m[1] || '', 'subtitle');
-          }
         }
         // Daterange/Datepicker tag inside header
         const drSelfPair = inner.match(/<(daterange|datepicker)\b([^>]*)\/>/i) || inner.match(/<(daterange|datepicker)\b([^>]*)>([\s\S]*?)<\/\1>/i);
@@ -638,7 +624,7 @@ export class ConfigParser {
           if (order.length) (cfg as any).blocksOrder = order;
           if (Object.keys(frMap).length) (cfg as any).blocksFr = frMap;
         } catch {}
-        // Capture titles order inside header-titles block (prefer <p>, fallback to h1/h2)
+        // Capture titles order inside header-titles block (only <p>)
         try {
           const titlesBlockMatch = inner.match(/<div\b[^>]*\bid=\"header-titles\"[^>]*>([\s\S]*?)<\/div>/i);
           if (titlesBlockMatch) {
@@ -649,13 +635,6 @@ export class ConfigParser {
             if (pFound.length) {
               if (pFound[0]) seq.push('h1');
               if (pFound[1]) seq.push('h2');
-            } else {
-              const tagRe = /<(h1|h2)\b[^>]*>[\s\S]*?<\/\1>/gi;
-              let tm: RegExpExecArray | null;
-              while ((tm = tagRe.exec(tInner)) !== null) {
-                const tag = (tm[1] || '').toLowerCase();
-                if (tag === 'h1' || tag === 'h2') seq.push(tag);
-              }
             }
             if (seq.length) (cfg as any).titlesOrder = seq;
           }
@@ -855,6 +834,18 @@ export class ConfigParser {
             const spanM = spanMStr ? Number(spanMStr) : undefined;
             const pTitleMatch = inner.match(/<p\b([^>]*)>([\s\S]*?)<\/p>/i);
             const title = pTitleMatch ? resolveLiquidVars((pTitleMatch[2] || '').trim()) : undefined;
+            // Collect all <p> blocks for generic pre-rendering
+            try {
+              const pre: Array<{ className?: string; attrs?: Record<string,string>; text?: string }> = [];
+              const pReAll = /<p\b([^>]*)>([\s\S]*?)<\/p>/gi;
+              let pm: RegExpExecArray | null;
+              while ((pm = pReAll.exec(inner)) !== null) {
+                const attrs = parseAttrs(pm[1] || '');
+                const text = resolveLiquidVars((pm[2] || '').trim());
+                pre.push({ className: attrs['class'], attrs, text });
+              }
+              if (pre.length) (widget as any).preBlocks = pre;
+            } catch {}
 
             // Parse <main> with binding and optional <style>{...}</style>
             const mainRe = /<main\b[^>]*>([\s\S]*?)<\/main>/i;
@@ -919,6 +910,10 @@ export class ConfigParser {
               const destProp = (widget.type + 'Config') as keyof Widget;
               const current: any = (widget as any)[destProp] || {};
               const styling = { ...(current.styling || {}) } as Record<string, unknown>;
+              // If p has class, pass it through to chart components
+              if (cls) {
+                styling['titleClassName'] = cls;
+              }
               // 1) From class tokens (Tailwind-like)
               if (cls) {
                 const tokens = cls.split(/\s+/);
