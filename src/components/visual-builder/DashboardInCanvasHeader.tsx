@@ -1,7 +1,7 @@
 'use client';
 
 import { Calendar as CalendarIcon, MoreVertical } from 'lucide-react';
-import { DndContext, closestCenter, DragEndEvent } from '@dnd-kit/core';
+import { DndContext, closestCenter, DragEndEvent, useSensor, useSensors, PointerSensor, KeyboardSensor } from '@dnd-kit/core';
 import { SortableContext, useSortable, horizontalListSortingStrategy, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useEffect, useMemo, useState } from 'react';
@@ -62,6 +62,15 @@ export default function DashboardInCanvasHeader({
   headerConfig
 }: DashboardInCanvasHeaderProps) {
   const headerUi = useStore($headerUi);
+  // DnD sensors (reliable pointer + keyboard)
+  const sensorsBlocks = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(KeyboardSensor)
+  );
+  const sensorsTitles = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(KeyboardSensor)
+  );
   const [selectedType, setSelectedType] = useState<DateRangeType>(currentFilter.type);
   const [showCustomPicker, setShowCustomPicker] = useState(false);
   const [customRange, setCustomRange] = useState<DateRange | undefined>(() => {
@@ -207,7 +216,7 @@ export default function DashboardInCanvasHeader({
   };
 
   // Sortable wrappers for header blocks
-  const SortableBlock = ({ id, className, children }: { id: string; className?: string; children: React.ReactNode }) => {
+  const SortableBlock = ({ id, className, children, attachListenersToWrapper = false }: { id: string; className?: string; children: React.ReactNode; attachListenersToWrapper?: boolean }) => {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
     const style = {
       transform: CSS.Transform.toString(transform),
@@ -217,10 +226,11 @@ export default function DashboardInCanvasHeader({
     };
     const handleLabel = '⋮⋮';
     return (
-      <div ref={setNodeRef} style={style} className={`group ${className || ''}`}>
+      <div ref={setNodeRef} style={style} className={`group ${className || ''}`}
+        {...(attachListenersToWrapper ? { ...attributes, ...listeners } : {})}
+      >
         <div
-          {...attributes}
-          {...listeners}
+          {...(!attachListenersToWrapper ? { ...attributes, ...listeners } : {})}
           className="absolute -left-1 -top-3 opacity-0 group-hover:opacity-100 transition-opacity z-10 bg-gray-700 text-white px-2 py-0.5 rounded cursor-grab active:cursor-grabbing text-xs"
         >
           {handleLabel}
@@ -243,7 +253,7 @@ export default function DashboardInCanvasHeader({
         fontFamily: headerStyle.fontFamily,
       }}
     >
-      <DndContext collisionDetection={closestCenter} onDragEnd={onDragEndBlocks}>
+      <DndContext sensors={sensorsBlocks} collisionDetection={closestCenter} onDragEnd={onDragEndBlocks}>
       <SortableContext items={headerBlockIds} strategy={horizontalListSortingStrategy}>
       <div
         className="group relative grid items-center w-full py-4 md:py-6 hover:ring-2 hover:ring-blue-400 rounded-lg transition-all"
@@ -268,11 +278,11 @@ export default function DashboardInCanvasHeader({
             }
           >
             {id === 'header-titles' ? (
-              <DndContext collisionDetection={closestCenter} onDragEnd={onDragEndTitles}>
+              <DndContext sensors={sensorsTitles} collisionDetection={closestCenter} onDragEnd={onDragEndTitles}>
               <SortableContext items={titleItemIds} strategy={verticalListSortingStrategy}>
                 {titleItemIds.map(itemId => (
                   itemId === 'header-title' ? (
-                    <SortableBlock key={itemId} id="header-title" className="group mb-1">
+                    <SortableBlock key={itemId} id="header-title" className="group mb-1" attachListenersToWrapper>
                       <div className="relative">
                         <div className="absolute -left-1 -top-3 opacity-0 group-hover:opacity-100 transition-opacity z-10 bg-gray-700 text-white px-2 py-0.5 rounded cursor-grab active:cursor-grabbing text-xs">⋮⋮</div>
                         <h2
@@ -298,7 +308,7 @@ export default function DashboardInCanvasHeader({
                     </SortableBlock>
                   ) : (
                     subtitle ? (
-                      <SortableBlock key={itemId} id="header-subtitle" className="group">
+                      <SortableBlock key={itemId} id="header-subtitle" className="group" attachListenersToWrapper>
                         <div className="relative">
                           <div className="absolute -left-1 -top-3 opacity-0 group-hover:opacity-100 transition-opacity z-10 bg-gray-700 text-white px-2 py-0.5 rounded cursor-grab active:cursor-grabbing text-xs">⋮⋮</div>
                           <p
