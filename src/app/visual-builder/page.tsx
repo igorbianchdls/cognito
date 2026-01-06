@@ -158,7 +158,17 @@ export default function VisualBuilderPage() {
       mount.style.width = mount.style.width || '100%';
       const root = createRoot(mount);
       htmlRootsRef.current.push(root);
-      const common = { data: spec.data, title: spec.title } as any;
+      const common = {
+        data: spec.data,
+        title: spec.title,
+        // Strip container styling: no border, radius, background, padding
+        containerClassName: 'nivo-container',
+        containerBorderVariant: 'none',
+        containerPadding: 0,
+        containerBorderRadius: 0,
+        backgroundColor: 'transparent',
+        containerBackground: 'transparent'
+      } as any;
       switch (spec.type) {
         case 'line': root.render(<LineChart {...common} />); break;
         case 'pie': root.render(<PieChart {...common} />); break;
@@ -220,34 +230,34 @@ export default function VisualBuilderPage() {
 
   <div class="vb-container">
     <section class="row kpis">
-      <article class="card" style="background-color:#ffffff; border-color:#e5e7eb;">
+      <article class="card" style="background-color:#fff7ed; border-color:#e5e7eb;">
         <h3>Vendas</h3>
         <div class="kpi-value">R$ 124.500</div>
       </article>
-      <article class="card">
+      <article class="card" style="background-color:#ecfeff;">
         <h3>Pedidos</h3>
         <div class="kpi-value">830</div>
       </article>
-      <article class="card">
+      <article class="card" style="background-color:#f0fdf4;">
         <h3>Clientes</h3>
         <div class="kpi-value">214</div>
       </article>
-      <article class="card">
+      <article class="card" style="background-color:#eef2ff;">
         <h3>Ticket Médio</h3>
         <div class="kpi-value">R$ 150,00</div>
       </article>
     </section>
 
     <section class="row charts">
-      <article class="card">
+      <article class="card" style="background-color:#fefce8;">
         <h3>Faturamento Mensal</h3>
         <Chart id="fat_mensal" type="line" height="320" title="Faturamento Mensal" />
       </article>
-      <article class="card">
+      <article class="card" style="background-color:#f0f9ff;">
         <h3>Vendas por Canal</h3>
         <Chart id="vendas_canal" type="bar" height="320" title="Vendas por Canal" categories="Loja,Site,WhatsApp" values="120,80,150" />
       </article>
-      <article class="card">
+      <article class="card" style="background-color:#fdf2f8;">
         <h3>Participação</h3>
         <Chart id="participacao" type="pie" height="320" title="Participação" />
       </article>

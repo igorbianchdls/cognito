@@ -76,7 +76,16 @@ export default function PreviewPage() {
       mount.style.width = mount.style.width || '100%';
       const root = createRoot(mount);
       reactRootsRef.current.push(root);
-      const common = { data: spec.data, title: spec.title } as any;
+      const common = {
+        data: spec.data,
+        title: spec.title,
+        containerClassName: 'nivo-container',
+        containerBorderVariant: 'none',
+        containerPadding: 0,
+        containerBorderRadius: 0,
+        backgroundColor: 'transparent',
+        containerBackground: 'transparent'
+      } as any;
       switch (spec.type) {
         case 'line': root.render(<LineChart {...common} />); break;
         case 'pie': root.render(<PieChart {...common} />); break;
