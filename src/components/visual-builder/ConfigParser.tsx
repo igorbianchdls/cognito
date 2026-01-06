@@ -539,66 +539,54 @@ export class ConfigParser {
         if (sdp !== undefined) {
           const v = String(sdp).toLowerCase(); cfg.showDatePicker = !(v === 'false' || v === 'off' || v === '0');
         }
-        // Title/subtitle from inner h1/h2 with own styles
-        const h1m = inner.match(/<h1\b([^>]*)>([\s\S]*?)<\/h1>/i);
-        if (h1m) {
-          const h1Attrs = parseAttrs(h1m[1] || '');
-          const text = resolveLiquidVars((h1m[2] || '').trim());
+        // Prefer <p> blocks for header title/subtitle; fallback to <h1>/<h2>
+        const pAll: Array<{ open: string; body: string }> = [];
+        try {
+          const pRe = /<p\b([^>]*)>([\s\S]*?)<\/p>/gi;
+          let pm: RegExpExecArray | null;
+          while ((pm = pRe.exec(inner)) !== null) pAll.push({ open: pm[1] || '', body: pm[2] || '' });
+        } catch {}
+        const mapHeaderTextAttrs = (attrsStr: string, target: 'title'|'subtitle') => {
+          const a = parseAttrs(attrsStr || '');
+          const numv = (v?: string) => (v!=null && v!=='' && !Number.isNaN(Number(v)) ? Number(v) : undefined);
+          const ff = a['font-family'] || a['fontFamily']; if (ff) (cfg as any)[`${target}FontFamily`] = String(ff);
+          const fs = a['font-size'] || a['fontSize']; if (fs!=null) (cfg as any)[`${target}FontSize`] = numv(String(fs));
+          const fw = a['font-weight'] || a['fontWeight']; if (fw) (cfg as any)[`${target}FontWeight`] = (/^\d+$/.test(String(fw)) ? Number(fw) : String(fw));
+          const col = a['color']; if (col) (cfg as any)[`${target}Color`] = String(col);
+          const ls = a['letter-spacing'] || a['letterSpacing']; if (ls) (cfg as any)[`${target}LetterSpacing`] = numv(String(ls));
+          const lh = a['line-height'] || a['lineHeight']; if (lh) (cfg as any)[`${target}LineHeight`] = (/^\d+(?:\.?\d+)?$/.test(String(lh)) ? Number(lh) : String(lh));
+          const mt = a['margin-top'] || a['marginTop']; if (mt) (cfg as any)[`${target}MarginTop`] = numv(String(mt));
+          const mr = a['margin-right'] || a['marginRight']; if (mr) (cfg as any)[`${target}MarginRight`] = numv(String(mr));
+          const mb = a['margin-bottom'] || a['marginBottom']; if (mb) (cfg as any)[`${target}MarginBottom`] = numv(String(mb));
+          const ml = a['margin-left'] || a['marginLeft']; if (ml) (cfg as any)[`${target}MarginLeft`] = numv(String(ml));
+          const ta = a['text-align'] || a['textAlign']; if (ta) (cfg as any)[`${target}TextAlign`] = String(ta);
+          const tt = a['text-transform'] || a['textTransform']; if (tt) (cfg as any)[`${target}TextTransform`] = String(tt);
+        };
+        if (pAll[0]) {
+          const text = resolveLiquidVars((pAll[0].body || '').trim());
           if (text) dashboardTitle = text;
-          const ff = h1Attrs['font-family'] || h1Attrs['fontFamily'];
-          const fs = h1Attrs['font-size'] || h1Attrs['fontSize'];
-          const fw = h1Attrs['font-weight'] || h1Attrs['fontWeight'];
-          const col = h1Attrs['color'];
-          if (ff) cfg.titleFontFamily = String(ff);
-          if (fs) cfg.titleFontSize = num(String(fs));
-          if (fw) cfg.titleFontWeight = (/^\d+$/.test(String(fw)) ? Number(fw) : String(fw));
-          if (col) cfg.titleColor = String(col);
-          const ls = h1Attrs['letter-spacing'] || h1Attrs['letterSpacing'];
-          if (ls) cfg.titleLetterSpacing = num(String(ls));
-          const lh = h1Attrs['line-height'] || h1Attrs['lineHeight'];
-          if (lh) cfg.titleLineHeight = (/^\d+(?:\.?\d+)?$/.test(String(lh)) ? Number(lh) : String(lh));
-          const mt = h1Attrs['margin-top'] || h1Attrs['marginTop'];
-          const mr = h1Attrs['margin-right'] || h1Attrs['marginRight'];
-          const mb = h1Attrs['margin-bottom'] || h1Attrs['marginBottom'];
-          const ml = h1Attrs['margin-left'] || h1Attrs['marginLeft'];
-          if (mt) cfg.titleMarginTop = num(String(mt));
-          if (mr) cfg.titleMarginRight = num(String(mr));
-          if (mb) cfg.titleMarginBottom = num(String(mb));
-          if (ml) cfg.titleMarginLeft = num(String(ml));
-          const ta = h1Attrs['text-align'] || h1Attrs['textAlign'];
-          if (ta) cfg.titleTextAlign = String(ta);
-          const tt = h1Attrs['text-transform'] || h1Attrs['textTransform'];
-          if (tt) cfg.titleTextTransform = String(tt);
+          mapHeaderTextAttrs(pAll[0].open, 'title');
+        } else {
+          const h1m = inner.match(/<h1\b([^>]*)>([\s\S]*?)<\/h1>/i);
+          if (h1m) {
+            const h1Attrs = parseAttrs(h1m[1] || '');
+            const text = resolveLiquidVars((h1m[2] || '').trim());
+            if (text) dashboardTitle = text;
+            mapHeaderTextAttrs(h1m[1] || '', 'title');
+          }
         }
-        const h2m = inner.match(/<h2\b([^>]*)>([\s\S]*?)<\/h2>/i);
-        if (h2m) {
-          const h2Attrs = parseAttrs(h2m[1] || '');
-          const text = resolveLiquidVars((h2m[2] || '').trim());
+        if (pAll[1]) {
+          const text = resolveLiquidVars((pAll[1].body || '').trim());
           if (text) dashboardSubtitle = text;
-          const ff = h2Attrs['font-family'] || h2Attrs['fontFamily'];
-          const fs = h2Attrs['font-size'] || h2Attrs['fontSize'];
-          const fw = h2Attrs['font-weight'] || h2Attrs['fontWeight'];
-          const col = h2Attrs['color'];
-          if (ff) cfg.subtitleFontFamily = String(ff);
-          if (fs) cfg.subtitleFontSize = num(String(fs));
-          if (fw) cfg.subtitleFontWeight = (/^\d+$/.test(String(fw)) ? Number(fw) : String(fw));
-          if (col) cfg.subtitleColor = String(col);
-          const ls = h2Attrs['letter-spacing'] || h2Attrs['letterSpacing'];
-          if (ls) cfg.subtitleLetterSpacing = num(String(ls));
-          const lh = h2Attrs['line-height'] || h2Attrs['lineHeight'];
-          if (lh) cfg.subtitleLineHeight = (/^\d+(?:\.?\d+)?$/.test(String(lh)) ? Number(lh) : String(lh));
-          const mt = h2Attrs['margin-top'] || h2Attrs['marginTop'];
-          const mr = h2Attrs['margin-right'] || h2Attrs['marginRight'];
-          const mb = h2Attrs['margin-bottom'] || h2Attrs['marginBottom'];
-          const ml = h2Attrs['margin-left'] || h2Attrs['marginLeft'];
-          if (mt) cfg.subtitleMarginTop = num(String(mt));
-          if (mr) cfg.subtitleMarginRight = num(String(mr));
-          if (mb) cfg.subtitleMarginBottom = num(String(mb));
-          if (ml) cfg.subtitleMarginLeft = num(String(ml));
-          const ta = h2Attrs['text-align'] || h2Attrs['textAlign'];
-          if (ta) cfg.subtitleTextAlign = String(ta);
-          const tt = h2Attrs['text-transform'] || h2Attrs['textTransform'];
-          if (tt) cfg.subtitleTextTransform = String(tt);
+          mapHeaderTextAttrs(pAll[1].open, 'subtitle');
+        } else {
+          const h2m = inner.match(/<h2\b([^>]*)>([\s\S]*?)<\/h2>/i);
+          if (h2m) {
+            const h2Attrs = parseAttrs(h2m[1] || '');
+            const text = resolveLiquidVars((h2m[2] || '').trim());
+            if (text) dashboardSubtitle = text;
+            mapHeaderTextAttrs(h2m[1] || '', 'subtitle');
+          }
         }
         // Daterange/Datepicker tag inside header
         const drSelfPair = inner.match(/<(daterange|datepicker)\b([^>]*)\/>/i) || inner.match(/<(daterange|datepicker)\b([^>]*)>([\s\S]*?)<\/\1>/i);
@@ -650,17 +638,24 @@ export class ConfigParser {
           if (order.length) (cfg as any).blocksOrder = order;
           if (Object.keys(frMap).length) (cfg as any).blocksFr = frMap;
         } catch {}
-        // Capture titles order (h1/h2 sequence) inside header-titles block
+        // Capture titles order inside header-titles block (prefer <p>, fallback to h1/h2)
         try {
           const titlesBlockMatch = inner.match(/<div\b[^>]*\bid=\"header-titles\"[^>]*>([\s\S]*?)<\/div>/i);
           if (titlesBlockMatch) {
             const tInner = titlesBlockMatch[1] || '';
-            const tagRe = /<(h1|h2)\b[^>]*>[\s\S]*?<\/\1>/gi;
+            const pRe = /<p\b[^>]*>[\s\S]*?<\/p>/gi;
+            const pFound = tInner.match(pRe) || [];
             const seq: Array<'h1'|'h2'> = [];
-            let tm: RegExpExecArray | null;
-            while ((tm = tagRe.exec(tInner)) !== null) {
-              const tag = (tm[1] || '').toLowerCase();
-              if (tag === 'h1' || tag === 'h2') seq.push(tag);
+            if (pFound.length) {
+              if (pFound[0]) seq.push('h1');
+              if (pFound[1]) seq.push('h2');
+            } else {
+              const tagRe = /<(h1|h2)\b[^>]*>[\s\S]*?<\/\1>/gi;
+              let tm: RegExpExecArray | null;
+              while ((tm = tagRe.exec(tInner)) !== null) {
+                const tag = (tm[1] || '').toLowerCase();
+                if (tag === 'h1' || tag === 'h2') seq.push(tag);
+              }
             }
             if (seq.length) (cfg as any).titlesOrder = seq;
           }
