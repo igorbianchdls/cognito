@@ -168,38 +168,38 @@ export const initialLiquidGrid = `<dashboard theme="branco" layout-mode="grid-pe
   </header>
   <section class="w-full" data-type="kpis" id="kpis" data-cols-d="3" data-cols-t="2" data-cols-m="1" data-gap-x="16" data-gap-y="16">
     <article fr="1" id="kpi_receita" data-order="1" data-height="150">
-      <h1 class="mb-5">Receita</h1>
-      <h2 class="pt-4 pb-4">{{ schema: comercial; table: vendas_vw; measure: SUM(item_subtotal) }}</h2>
-      <h3 class="mt-1">{{ label: VS MÊS ANTERIOR }}</h3>
+      <p class="mb-5 text-slate-800">Receita</p>
+      <p class="pt-4 pb-4">{{ schema: comercial; table: vendas_vw; measure: SUM(item_subtotal) }}</p>
+      <p class="mt-1 text-xs uppercase tracking-wide">{{ label: VS MÊS ANTERIOR }}</p>
     </article>
     <article fr="1" id="kpi_ticket_medio" data-order="2" data-height="150">
-      <h1 class="mb-5">Ticket Médio</h1>
-      <h2 class="pt-4 pb-4">{{ schema: comercial; table: vendas_vw; measure: SUM(item_subtotal)/COUNT_DISTINCT(pedido_id) }}</h2>
-      <h3 class="mt-1">{{ label: VS MÊS ANTERIOR }}</h3>
+      <p class="mb-5 text-slate-800">Ticket Médio</p>
+      <p class="pt-4 pb-4">{{ schema: comercial; table: vendas_vw; measure: SUM(item_subtotal)/COUNT_DISTINCT(pedido_id) }}</p>
+      <p class="mt-1 text-xs uppercase tracking-wide">{{ label: VS MÊS ANTERIOR }}</p>
     </article>
     <article fr="1" id="kpi_pedidos" data-order="3" data-height="150">
-      <h1 class="mb-5">Pedidos</h1>
-      <h2 class="pt-4 pb-4">{{ schema: comercial; table: vendas_vw; measure: COUNT_DISTINCT(pedido_id) }}</h2>
-      <h3 class="mt-1">{{ label: VS MÊS ANTERIOR }}</h3>
+      <p class="mb-5 text-slate-800">Pedidos</p>
+      <p class="pt-4 pb-4">{{ schema: comercial; table: vendas_vw; measure: COUNT_DISTINCT(pedido_id) }}</p>
+      <p class="mt-1 text-xs uppercase tracking-wide">{{ label: VS MÊS ANTERIOR }}</p>
     </article>
   </section>
   <section class="w-full" data-type="charts" id="charts1" data-cols-d="3" data-cols-t="2" data-cols-m="1" data-gap-x="16" data-gap-y="16">
     <article fr="1" id="chart_vendas_canal" data-order="1" data-height="420" data-span-d="1">
-      <h1 marginBottom="20">Vendas por Canal</h1>
+      <p marginBottom="20">Vendas por Canal</p>
       <main chart="bar">
         {{ schema: comercial; table: vendas_vw; dimension: canal_venda_nome; measure: SUM(item_subtotal) }}
         <style>{"tw": "legend:on mb:40"}</style>
       </main>
     </article>
     <article fr="1" id="chart_faturamento_mensal" data-order="2" data-height="420" data-span-d="1">
-      <h1 marginBottom="20">Faturamento Mensal</h1>
+      <p marginBottom="20">Faturamento Mensal</p>
       <main chart="line">
         {{ schema: comercial; table: vendas_vw; dimension: data_pedido; measure: SUM(item_subtotal) }}
         <style>{"tw": "legend:off grid:on mb:40"}</style>
       </main>
     </article>
     <article fr="1" id="chart_vendas_categoria" data-order="3" data-height="420" data-span-d="1">
-      <h1 marginBottom="20">Vendas por Categoria</h1>
+      <p marginBottom="20">Vendas por Categoria</p>
       <main chart="pie">
         {{ schema: comercial; table: vendas_vw; dimension: categoria_servico_nome; measure: SUM(item_subtotal) }}
         <style>{"tw": "legend:on mb:40"}</style>
@@ -1272,7 +1272,7 @@ export const visualBuilderActions = {
     }
   },
 
-  // Reorder <h1>/<h2>/<h3> inside a KPI article by widget id
+  // Reorder first three <p> blocks inside a KPI article by widget id (mapped to h1/h2/h3 order)
   updateKpiTitlesOrderInCode: (kpiId: string, titlesOrder: Array<'h1'|'h2'|'h3'>) => {
     const currentState = $visualBuilderState.get()
     const code = currentState.code || ''
@@ -1286,15 +1286,28 @@ export const visualBuilderActions = {
       const open = openMatch ? openMatch[1] : ''
       const close = closeMatch ? closeMatch[1] : ''
       const inner = whole.slice(open.length, whole.length - close.length)
-      const grab = (tag: string) => {
-        const m = inner.match(new RegExp(`<${tag}\\b[^>]*>[\\s\\S]*?<\\/${tag}>`, 'i'))
-        return m ? m[0] : ''
+      // Grab first three <p> blocks
+      const pRe = /<p\b[^>]*>[\s\S]*?<\/p>/gi
+      const ps = inner.match(pRe) || []
+      const map: Record<'h1'|'h2'|'h3', string> = {
+        h1: ps[0] || '',
+        h2: ps[1] || '',
+        h3: ps[2] || ''
       }
-      const blocks: Record<'h1'|'h2'|'h3', string> = { h1: grab('h1') as string, h2: grab('h2') as string, h3: grab('h3') as string }
-      const ordered = titlesOrder.map(t => blocks[t]).filter(Boolean).join('\n')
-      // If nothing found, return original
-      if (!ordered) return whole
-      return `${open}\n${ordered}\n${close}`
+      const ordered = titlesOrder.map(t => map[t]).filter(Boolean)
+      // If nothing to reorder, return original
+      if (!ordered.length) return whole
+      // Replace the first n p-blocks with new order
+      let replaced = inner
+      // Remove original first three ps
+      replaced = replaced.replace(pRe, (m, ...args) => {
+        const index = (replaced as any)._pIndex = ((replaced as any)._pIndex || 0) + 1
+        return index <= 3 ? '' : m
+      })
+      ;(replaced as any)._pIndex = 0
+      // Prepend ordered blocks at the top of inner
+      const newInner = ordered.join('\n') + replaced
+      return `${open}\n${newInner}\n${close}`
     }
 
     // Try to find the KPI as an <article id="..."> ... </article>

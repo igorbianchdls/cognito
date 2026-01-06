@@ -778,35 +778,27 @@ export class ConfigParser {
           const inner = am[2] || '';
 
           if (secType === 'kpis') {
-            // KPI article parsing (title in <h1>, binding in <h2>{{ ... }})
+            // KPI: use <p> blocks → p[0]=title, p[1]=binding, p[2]=comparison
             const id = aAttrs['id'] || aAttrs['data-id'] || `kpi_${Date.now()}_${Math.random()}`;
             const orderStr = aAttrs['data-order'] || aAttrs['order'];
             const heightStr = aAttrs['data-height'] || aAttrs['height'];
             const order = orderStr ? Number(orderStr) : undefined;
             const heightPx = heightStr ? Number(heightStr) : undefined;
-            const h1m = inner.match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/i);
-            const title = h1m ? resolveLiquidVars((h1m[1] || '').trim()) : undefined;
-            const kpiH1Open = inner.match(/<h1\b([^>]*)>/i);
-            // Binding inside <h2> (first occurrence)
-            let bindingRaw = '';
-            const h2m = inner.match(/<h2\b[^>]*>([\s\S]*?)<\/h2>/i);
-            if (h2m && h2m[1]) bindingRaw = (h2m[1] || '').trim();
+            const pRe = /<p\b([^>]*)>([\s\S]*?)<\/p>/gi;
+            const pBlocks: Array<{ open: string; body: string }> = [];
+            let pm: RegExpExecArray | null;
+            while ((pm = pRe.exec(inner)) !== null) pBlocks.push({ open: pm[1] || '', body: pm[2] || '' });
+            const title = pBlocks[0] ? resolveLiquidVars((pBlocks[0].body || '').trim()) : undefined;
+            const bindingRaw = pBlocks[1] ? (pBlocks[1].body || '').trim() : '';
             const pairs = bindingRaw ? parseBindingPairs(bindingRaw) : {};
-          // Optional comparison in <h3>
-          let h3TextRaw = '';
-          const h3m = inner.match(/<h3\b[^>]*>([\s\S]*?)<\/h3>/i);
-          if (h3m && h3m[1]) h3TextRaw = (h3m[1] || '').trim();
+            const h3TextRaw = pBlocks[2] ? (pBlocks[2].body || '').trim() : '';
             const h3Pairs = h3TextRaw && /\{\{/.test(h3TextRaw) ? parseBindingPairs(h3TextRaw) : {};
-            // For class extraction on KPI blocks
-            const kpiH2Open = inner.match(/<h2\b([^>]*)>/i);
-            const kpiH3Open = inner.match(/<h3\b([^>]*)>/i);
             const ds: any = {};
             if (pairs['schema']) ds.schema = pairs['schema'];
             if (pairs['table'] || pairs['dimension']) ds.table = pairs['table'] || pairs['dimension'];
             if (pairs['measure']) ds.measure = pairs['measure'];
             if (pairs['where']) ds.where = pairs['where'];
             if (pairs['limit'] && !Number.isNaN(Number(pairs['limit']))) ds.limit = Number(pairs['limit']);
-
             const widget: Widget = {
               id,
               type: 'kpi',
@@ -820,38 +812,31 @@ export class ConfigParser {
             if (frRaw && !Number.isNaN(Number(frRaw)) && Number(frRaw) > 0) {
               (widget as any).widthFr = { desktop: String(Number(frRaw)) + 'fr' };
             }
-            // Capture order of h1/h2/h3
+            // Order and classes
             try {
               const seq: Array<'h1'|'h2'|'h3'> = [];
-              const tagRe = /<(h1|h2|h3)\b[^>]*>[\s\S]*?<\/\1>/gi;
-              let tm: RegExpExecArray | null;
-              while ((tm = tagRe.exec(inner)) !== null) {
-                const tag = (tm[1] || '').toLowerCase();
-                if (tag === 'h1' || tag === 'h2' || tag === 'h3') seq.push(tag as 'h1'|'h2'|'h3');
-              }
+              if (pBlocks[0]) seq.push('h1');
+              if (pBlocks[1]) seq.push('h2');
+              if (pBlocks[2]) seq.push('h3');
               if (seq.length) (widget as any).kpiTitlesOrder = seq;
+              const w = widget as any;
+              if (pBlocks[0]) { const a = parseAttrs(pBlocks[0].open || ''); if (a['class']) w.kpiConfig = { ...(w.kpiConfig||{}), kpiNameClassName: a['class'] }; }
+              if (pBlocks[1]) { const a = parseAttrs(pBlocks[1].open || ''); if (a['class']) w.kpiConfig = { ...(w.kpiConfig||{}), kpiValueClassName: a['class'] }; }
+              if (pBlocks[2]) { const a = parseAttrs(pBlocks[2].open || ''); if (a['class']) w.kpiConfig = { ...(w.kpiConfig||{}), kpiComparisonClassName: a['class'] }; }
             } catch {}
-            // Tailwind classes from h1/h2/h3
-            try {
-              const w = widget as unknown as { kpiConfig?: Record<string, unknown> };
-              w.kpiConfig = w.kpiConfig || {};
-              if (kpiH1Open && kpiH1Open[1]) { const a = parseAttrs(kpiH1Open[1] || ''); if (a['class']) (w.kpiConfig as any)['kpiNameClassName'] = a['class']; }
-              if (kpiH2Open && kpiH2Open[1]) { const a = parseAttrs(kpiH2Open[1] || ''); if (a['class']) (w.kpiConfig as any)['kpiValueClassName'] = a['class']; }
-              if (kpiH3Open && kpiH3Open[1]) { const a = parseAttrs(kpiH3Open[1] || ''); if (a['class']) (w.kpiConfig as any)['kpiComparisonClassName'] = a['class']; }
-            } catch {}
-            // Map <h3> moustache to comparison data
+            // Comparison moustache
             if (h3TextRaw) {
-              const w = widget as unknown as { kpiConfig?: Record<string, unknown> };
+              const w = widget as any;
               w.kpiConfig = w.kpiConfig || {};
               if (Object.keys(h3Pairs).length > 0) {
-                if (h3Pairs['label']) (w.kpiConfig as any)['comparisonLabel'] = h3Pairs['label'];
+                if (h3Pairs['label']) w.kpiConfig['comparisonLabel'] = h3Pairs['label'];
                 if (h3Pairs['changePct'] || h3Pairs['changepct'] || h3Pairs['change_pct']) {
                   const v = Number(h3Pairs['changePct'] || h3Pairs['changepct'] || h3Pairs['change_pct']);
-                  if (!Number.isNaN(v)) (w.kpiConfig as any)['change'] = v;
+                  if (!Number.isNaN(v)) w.kpiConfig['change'] = v;
                 }
-                if (h3Pairs['unit']) (w.kpiConfig as any)['unit'] = h3Pairs['unit'];
+                if (h3Pairs['unit']) w.kpiConfig['unit'] = h3Pairs['unit'];
               } else {
-                (w.kpiConfig as any)['comparisonLabel'] = resolveLiquidVars(h3TextRaw);
+                w.kpiConfig['comparisonLabel'] = resolveLiquidVars(h3TextRaw);
               }
             }
             // Apply style.tw from <main><style> to widget styling
@@ -860,7 +845,7 @@ export class ConfigParser {
             }
             widgets.push(widget);
           } else {
-            // Charts article parsing (title in <h1>, binding in <main>{{ ... }}</main>)
+            // Charts article parsing (title in first <p>, binding in <main>{{ ... }}</main>)
             const id = aAttrs['id'] || aAttrs['data-id'] || `chart_${Date.now()}_${Math.random()}`;
             const orderStr = aAttrs['data-order'] || aAttrs['order'];
             const heightStr = aAttrs['data-height'] || aAttrs['height'];
@@ -873,8 +858,8 @@ export class ConfigParser {
             const spanD = spanDStr ? Number(spanDStr) : undefined;
             const spanT = spanTStr ? Number(spanTStr) : undefined;
             const spanM = spanMStr ? Number(spanMStr) : undefined;
-            const h1m = inner.match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/i);
-            const title = h1m ? resolveLiquidVars((h1m[1] || '').trim()) : undefined;
+            const pTitleMatch = inner.match(/<p\b([^>]*)>([\s\S]*?)<\/p>/i);
+            const title = pTitleMatch ? resolveLiquidVars((pTitleMatch[2] || '').trim()) : undefined;
 
             // Parse <main> with binding and optional <style>{...}</style>
             const mainRe = /<main\b[^>]*>([\s\S]*?)<\/main>/i;
@@ -931,10 +916,10 @@ export class ConfigParser {
               applyStylingTokens(widget, String(styleObj['tw']));
             }
 
-            // Map <h1> spacing to numeric styling (supports class utilities and explicit attributes)
-            const h1Open = inner.match(/<h1\b([^>]*)>/i);
-            if (h1Open && h1Open[1]) {
-              const a = parseAttrs(h1Open[1] || '');
+            // Map <p> spacing to numeric styling (supports class utilities and explicit attributes)
+            const pOpen = pTitleMatch ? pTitleMatch[1] : '';
+            if (pOpen) {
+              const a = parseAttrs(pOpen || '');
               const cls = (a['class'] || '').trim();
               const destProp = (widget.type + 'Config') as keyof Widget;
               const current: any = (widget as any)[destProp] || {};
