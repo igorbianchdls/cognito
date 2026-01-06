@@ -464,7 +464,7 @@ export function KPICard({
         </span>
       </div>
     )
-    const mapBlocks: Record<'h1'|'h2'|'h3', JSX.Element> = { h1: headerRow, h2: valueRow, h3: comparisonRow }
+    const mapBlocks: Record<'h1'|'h2'|'h3', React.ReactNode> = { h1: headerRow, h2: valueRow, h3: comparisonRow }
     const defaultOrder: Array<'h1'|'h2'|'h3'> = (comparisonLabel !== undefined && String(comparisonLabel || '').length > 0) ? ['h1','h2','h3'] : ['h1','h2']
     const order: Array<'h1'|'h2'|'h3'> = (Array.isArray(titlesOrder) && titlesOrder.length ? titlesOrder : defaultOrder) as Array<'h1'|'h2'|'h3'>
     const onDragEnd = (e: DragEndEvent) => {
