@@ -790,7 +790,16 @@ export class ConfigParser {
             let bindingRaw = '';
             const h2m = inner.match(/<h2\b[^>]*>([\s\S]*?)<\/h2>/i);
             if (h2m && h2m[1]) bindingRaw = (h2m[1] || '').trim();
-          const pairs = bindingRaw ? parseBindingPairs(bindingRaw) : {};
+            const pairs = bindingRaw ? parseBindingPairs(bindingRaw) : {};
+            // Optional comparison in <h3>
+            let h3TextRaw = '';
+            const h3m = inner.match(/<h3\b[^>]*>([\s\S]*?)<\/h3>/i);
+            if (h3m && h3m[1]) h3TextRaw = (h3m[1] || '').trim();
+            const h3Pairs = h3TextRaw && /\{\{/.test(h3TextRaw) ? parseBindingPairs(h3TextRaw) : {};
+            // Open tags to read classes
+            const h1Open = inner.match(/<h1\b([^>]*)>/i);
+            const h2Open = inner.match(/<h2\b([^>]*)>/i);
+            const h3Open = inner.match(/<h3\b([^>]*)>/i);
           // Optional comparison in <h3>
           let h3TextRaw = '';
           const h3m = inner.match(/<h3\b[^>]*>([\s\S]*?)<\/h3>/i);
@@ -819,6 +828,40 @@ export class ConfigParser {
             const frRaw = aAttrs['fr'] || aAttrs['data-fr'];
             if (frRaw && !Number.isNaN(Number(frRaw)) && Number(frRaw) > 0) {
               (widget as any).widthFr = { desktop: String(Number(frRaw)) + 'fr' };
+            }
+            // Capture order of h1/h2/h3
+            try {
+              const seq: Array<'h1'|'h2'|'h3'> = [];
+              const tagRe = /<(h1|h2|h3)\b[^>]*>[\s\S]*?<\/\1>/gi;
+              let tm: RegExpExecArray | null;
+              while ((tm = tagRe.exec(inner)) !== null) {
+                const tag = (tm[1] || '').toLowerCase();
+                if (tag === 'h1' || tag === 'h2' || tag === 'h3') seq.push(tag as 'h1'|'h2'|'h3');
+              }
+              if (seq.length) (widget as any).kpiTitlesOrder = seq;
+            } catch {}
+            // Tailwind classes from h1/h2/h3
+            try {
+              const w = widget as unknown as { kpiConfig?: Record<string, unknown> };
+              w.kpiConfig = w.kpiConfig || {};
+              if (h1Open && h1Open[1]) { const a = parseAttrs(h1Open[1] || ''); if (a['class']) (w.kpiConfig as any)['kpiNameClassName'] = a['class']; }
+              if (h2Open && h2Open[1]) { const a = parseAttrs(h2Open[1] || ''); if (a['class']) (w.kpiConfig as any)['kpiValueClassName'] = a['class']; }
+              if (h3Open && h3Open[1]) { const a = parseAttrs(h3Open[1] || ''); if (a['class']) (w.kpiConfig as any)['kpiComparisonClassName'] = a['class']; }
+            } catch {}
+            // Map <h3> moustache to comparison data
+            if (h3TextRaw) {
+              const w = widget as unknown as { kpiConfig?: Record<string, unknown> };
+              w.kpiConfig = w.kpiConfig || {};
+              if (Object.keys(h3Pairs).length > 0) {
+                if (h3Pairs['label']) (w.kpiConfig as any)['comparisonLabel'] = h3Pairs['label'];
+                if (h3Pairs['changePct'] || h3Pairs['changepct'] || h3Pairs['change_pct']) {
+                  const v = Number(h3Pairs['changePct'] || h3Pairs['changepct'] || h3Pairs['change_pct']);
+                  if (!Number.isNaN(v)) (w.kpiConfig as any)['change'] = v;
+                }
+                if (h3Pairs['unit']) (w.kpiConfig as any)['unit'] = h3Pairs['unit'];
+              } else {
+                (w.kpiConfig as any)['comparisonLabel'] = resolveLiquidVars(h3TextRaw);
+              }
             }
             widgets.push(widget);
           } else {

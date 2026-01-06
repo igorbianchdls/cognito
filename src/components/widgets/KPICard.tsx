@@ -403,7 +403,7 @@ export function KPICard({
       useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
       useSensor(KeyboardSensor)
     )
-    const SortableRow = ({ id, children, onMove }: { id: 'h1'|'h2'|'h3'; children: React.ReactNode; onMove?: (dir: 'up'|'down') => void }) => {
+    const SortableRow = ({ id, children, onMove, rowClassName }: { id: 'h1'|'h2'|'h3'; children: React.ReactNode; onMove?: (dir: 'up'|'down') => void; rowClassName?: string }) => {
       const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id })
       const style = {
         transform: CSS.Transform.toString(transform),
@@ -411,7 +411,7 @@ export function KPICard({
         opacity: isDragging ? 0.95 : 1,
       } as React.CSSProperties
       return (
-        <div ref={setNodeRef} style={style} className="group relative hover:ring-2 hover:ring-blue-400 rounded-md">
+        <div ref={setNodeRef} style={style} className={`group relative hover:ring-2 hover:ring-blue-400 rounded-md ${rowClassName || ''}`}>
           {/* Drag handle (left) */}
           <button
             type="button"
@@ -589,7 +589,7 @@ export function KPICard({
             <SortableContext items={order} strategy={verticalListSortingStrategy}>
               <div className="flex flex-col gap-1">
                 {order.map((id) => (
-                  <SortableRow key={id} id={id} onMove={(dir) => moveBlock(id, dir)}>
+                  <SortableRow key={id} id={id} onMove={(dir) => moveBlock(id, dir)} rowClassName={id === 'h1' ? kpiNameClassName : id === 'h2' ? kpiValueClassName : kpiComparisonClassName}>
                     {mapBlocks[id]}
                   </SortableRow>
                 ))}
