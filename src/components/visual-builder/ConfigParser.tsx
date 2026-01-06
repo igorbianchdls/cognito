@@ -950,6 +950,7 @@ export class ConfigParser {
             }
 
             // Map <h1> spacing to numeric styling (supports class utilities and explicit attributes)
+            const h1Open = inner.match(/<h1\b([^>]*)>/i);
             if (h1Open && h1Open[1]) {
               const a = parseAttrs(h1Open[1] || '');
               const cls = (a['class'] || '').trim();
