@@ -547,7 +547,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
   const hasPreBlocks = Boolean(((widget as any).preHtml as string | undefined)?.trim()) || (Array.isArray((widget as any).preBlocks) && (widget as any).preBlocks.length > 0);
   const commonChartProps = {
     data: chartData,
-    title: hasPreBlocks ? undefined : widget.title,
+    title: undefined,
     margin: { top: 20, right: 20, bottom: 40, left: 40 },
     colors: getWidgetColors() || widget.styling?.colors || ['#2563eb'],
     animate: false,
@@ -679,15 +679,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
             margin={widget.barConfig?.margin || commonChartProps.margin}
             legends={widget.barConfig?.legends}
             showLegend={widget.barConfig?.styling?.showLegend}
-            // Container Glass Effect & Modern Styles - DIRECT PROPS
-            containerBackground={widget.barConfig?.styling?.containerBackground}
-            backgroundGradient={widget.barConfig?.styling?.backgroundGradient}
-            containerOpacity={widget.barConfig?.styling?.containerOpacity}
-            containerBackdropFilter={widget.barConfig?.styling?.containerBackdropFilter}
-            containerFilter={widget.barConfig?.styling?.containerFilter}
-            containerBoxShadow={widget.barConfig?.styling?.containerBoxShadow}
-            containerTransform={widget.barConfig?.styling?.containerTransform}
-            containerTransition={widget.barConfig?.styling?.containerTransition}
+            containerClassName="h-full"
             // Bar Visual Effects - CSS Only
             barBrightness={widget.barConfig?.styling?.barBrightness}
             barSaturate={widget.barConfig?.styling?.barSaturate}
@@ -700,33 +692,12 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
             hoverBlur={widget.barConfig?.styling?.hoverBlur}
             transitionDuration={widget.barConfig?.styling?.transitionDuration}
             transitionEasing={widget.barConfig?.styling?.transitionEasing}
-            // Typography props - Title (TODAS)
-            titleFontFamily={widget.barConfig?.styling?.titleFontFamily}
-            titleFontSize={widget.barConfig?.styling?.titleFontSize}
-            titleFontWeight={widget.barConfig?.styling?.titleFontWeight}
-            titleColor={widget.barConfig?.styling?.titleColor}
-            titleMarginTop={widget.barConfig?.styling?.titleMarginTop}
-            titleMarginLeft={widget.barConfig?.styling?.titleMarginLeft}
-            titleMarginBottom={widget.barConfig?.styling?.titleMarginBottom}
-            
-            // Typography props - Subtitle (TODAS)
-            subtitleFontFamily={widget.barConfig?.styling?.subtitleFontFamily}
-            subtitleFontSize={widget.barConfig?.styling?.subtitleFontSize}
-            subtitleFontWeight={widget.barConfig?.styling?.subtitleFontWeight}
-            subtitleColor={widget.barConfig?.styling?.subtitleColor}
-            subtitleMarginTop={widget.barConfig?.styling?.subtitleMarginTop}
-            subtitleMarginLeft={widget.barConfig?.styling?.subtitleMarginLeft}
-            subtitleMarginBottom={widget.barConfig?.styling?.subtitleMarginBottom}
             // Fallback to styling props if barConfig not provided
             enableGridX={widget.barConfig?.styling?.enableGridX ?? false}
             enableGridY={widget.barConfig?.styling?.enableGridY ?? true}
             gridColor={widget.barConfig?.styling?.gridColor}
             gridStrokeWidth={widget.barConfig?.styling?.gridStrokeWidth}
             borderRadius={widget.barConfig?.styling?.borderRadius ?? widget.styling?.borderRadius}
-            backgroundColor={widget.barConfig?.styling?.backgroundColor ?? widget.styling?.backgroundColor}
-            // Positioning props
-            translateY={widget.barConfig?.styling?.translateY}
-            marginBottom={widget.barConfig?.styling?.marginBottom}
             axisBottom={(() => {
               const s = widget.barConfig?.styling as Record<string, unknown> | undefined;
               const ts = s?.['axisBottomTickSize'] as number | undefined;
@@ -749,12 +720,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
             // Pass margin and legends from JSON config
             margin={widget.lineConfig?.margin || commonChartProps.margin}
             legends={widget.lineConfig?.legends}
-            // Container Glass Effect & Modern Styles - DIRECT PROPS
-            containerBackground={widget.lineConfig?.styling?.containerBackground}
-            backgroundGradient={widget.lineConfig?.styling?.backgroundGradient}
-            containerOpacity={widget.lineConfig?.styling?.containerOpacity}
-            containerBackdropFilter={widget.lineConfig?.styling?.containerBackdropFilter}
-            containerBoxShadow={widget.lineConfig?.styling?.containerBoxShadow}
+            containerClassName="h-full"
             // Fallback to default props if lineConfig not provided
             enableGridX={widget.lineConfig?.styling?.enableGridX ?? false}
             enableGridY={widget.lineConfig?.styling?.enableGridY ?? true}
@@ -762,10 +728,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
             enablePoints={widget.lineConfig?.styling?.enablePoints ?? true}
             pointSize={widget.lineConfig?.styling?.pointSize ?? 6}
             curve={widget.lineConfig?.styling?.curve ?? "cardinal"}
-            backgroundColor={widget.lineConfig?.styling?.backgroundColor ?? widget.styling?.backgroundColor}
-            // Positioning props
-            translateY={widget.lineConfig?.styling?.translateY}
-            marginBottom={widget.lineConfig?.styling?.marginBottom}
+            
             axisBottom={(() => {
               const s = widget.lineConfig?.styling as Record<string, unknown> | undefined;
               const ts = s?.['axisBottomTickSize'] as number | undefined;
@@ -789,20 +752,12 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
             // Pass margin and legends from JSON config
             margin={widget.pieConfig?.margin || commonChartProps.margin}
             legends={widget.pieConfig?.legends}
-            // Container Glass Effect & Modern Styles - DIRECT PROPS
-            containerBackground={widget.pieConfig?.styling?.containerBackground}
-            backgroundGradient={widget.pieConfig?.styling?.backgroundGradient}
-            containerOpacity={widget.pieConfig?.styling?.containerOpacity}
-            containerBackdropFilter={widget.pieConfig?.styling?.containerBackdropFilter}
-            containerBoxShadow={widget.pieConfig?.styling?.containerBoxShadow}
+            containerClassName="h-full"
             // Fallback to default props if pieConfig not provided
             innerRadius={widget.pieConfig?.styling?.innerRadius ?? 0.5}
             padAngle={widget.pieConfig?.styling?.padAngle ?? 1}
             cornerRadius={widget.pieConfig?.styling?.cornerRadius ?? 2}
-            backgroundColor={widget.pieConfig?.styling?.backgroundColor ?? widget.styling?.backgroundColor}
-            // Positioning props
-            translateY={widget.pieConfig?.styling?.translateY}
-            marginBottom={widget.pieConfig?.styling?.marginBottom}
+            
           />
         </div>
       );
@@ -818,12 +773,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
             // Pass margin and legends from JSON config
             margin={widget.areaConfig?.margin || commonChartProps.margin}
             legends={widget.areaConfig?.legends}
-            // Container Glass Effect & Modern Styles - DIRECT PROPS
-            containerBackground={widget.areaConfig?.styling?.containerBackground}
-            backgroundGradient={widget.areaConfig?.styling?.backgroundGradient}
-            containerOpacity={widget.areaConfig?.styling?.containerOpacity}
-            containerBackdropFilter={widget.areaConfig?.styling?.containerBackdropFilter}
-            containerBoxShadow={widget.areaConfig?.styling?.containerBoxShadow}
+            containerClassName="h-full"
             // Fallback to default props if areaConfig not provided
             enableGridX={widget.areaConfig?.styling?.enableGridX ?? false}
             enableGridY={widget.areaConfig?.styling?.enableGridY ?? true}
@@ -832,10 +782,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
             enablePoints={widget.areaConfig?.styling?.enablePoints ?? true}
             pointSize={widget.areaConfig?.styling?.pointSize ?? 6}
             curve={widget.areaConfig?.styling?.curve ?? "cardinal"}
-            backgroundColor={widget.areaConfig?.styling?.backgroundColor ?? widget.styling?.backgroundColor}
-            // Positioning props
-            translateY={widget.areaConfig?.styling?.translateY}
-            marginBottom={widget.areaConfig?.styling?.marginBottom}
+            
             axisBottom={(() => {
               const s = widget.areaConfig?.styling as Record<string, unknown> | undefined;
               const ts = s?.['axisBottomTickSize'] as number | undefined;
@@ -1068,9 +1015,9 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
           <div className="h-full w-full p-2 relative group">
             <TreeMapChart
               data={treeData}
-              title={hasPreBlocks ? undefined : (widget.title || 'Treemap')}
+              title={undefined}
               colors={(widget.styling?.colors as string[] | undefined)}
-              backgroundColor={widget.styling?.backgroundColor}
+              
             />
           </div>
         );
@@ -1111,9 +1058,9 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
           <div className="h-full w-full p-2 relative group">
             <ScatterChart
               series={scatterSeries}
-              title={hasPreBlocks ? undefined : (widget.title || 'Scatter Plot')}
+              title={undefined}
               colors={(widget.styling?.colors as string[] | undefined)}
-              backgroundColor={widget.styling?.backgroundColor}
+              
               enableGridX={widget.styling?.enableGridX as boolean | undefined}
               enableGridY={widget.styling?.enableGridY as boolean | undefined}
             />
@@ -1200,18 +1147,10 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
               // Data props (override any styling defaults)
               data={multipleData.items}
               keys={multipleData.series.map(s => s.key)}
-              title={hasPreBlocks ? undefined : (widget.title || 'Chart')}
+              title={undefined}
               colors={multipleData.series.map(s => s.color)}
               seriesMetadata={multipleData.series}
-              // Container Glass Effect & Modern Styles
-              containerBackground={widget.stackedBarConfig?.styling?.containerBackground}
-              backgroundGradient={widget.stackedBarConfig?.styling?.backgroundGradient}
-              containerOpacity={widget.stackedBarConfig?.styling?.containerOpacity}
-              containerBackdropFilter={widget.stackedBarConfig?.styling?.containerBackdropFilter}
-              containerFilter={widget.stackedBarConfig?.styling?.containerFilter}
-              containerBoxShadow={widget.stackedBarConfig?.styling?.containerBoxShadow}
-              containerTransform={widget.stackedBarConfig?.styling?.containerTransform}
-              containerTransition={widget.stackedBarConfig?.styling?.containerTransition}
+              containerClassName="h-full"
               // Bar Visual Effects
               barBrightness={widget.stackedBarConfig?.styling?.barBrightness}
               barSaturate={widget.stackedBarConfig?.styling?.barSaturate}
@@ -1224,22 +1163,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
               hoverBlur={widget.stackedBarConfig?.styling?.hoverBlur}
               transitionDuration={widget.stackedBarConfig?.styling?.transitionDuration}
               transitionEasing={widget.stackedBarConfig?.styling?.transitionEasing}
-              // Typography - Title
-              titleFontFamily={widget.stackedBarConfig?.styling?.titleFontFamily}
-              titleFontSize={widget.stackedBarConfig?.styling?.titleFontSize}
-              titleFontWeight={widget.stackedBarConfig?.styling?.titleFontWeight}
-              titleColor={widget.stackedBarConfig?.styling?.titleColor}
-              titleMarginTop={widget.stackedBarConfig?.styling?.titleMarginTop}
-              titleMarginLeft={widget.stackedBarConfig?.styling?.titleMarginLeft}
-              titleMarginBottom={widget.stackedBarConfig?.styling?.titleMarginBottom}
-              // Typography - Subtitle
-              subtitleFontFamily={widget.stackedBarConfig?.styling?.subtitleFontFamily}
-              subtitleFontSize={widget.stackedBarConfig?.styling?.subtitleFontSize}
-              subtitleFontWeight={widget.stackedBarConfig?.styling?.subtitleFontWeight}
-              subtitleColor={widget.stackedBarConfig?.styling?.subtitleColor}
-              subtitleMarginTop={widget.stackedBarConfig?.styling?.subtitleMarginTop}
-              subtitleMarginLeft={widget.stackedBarConfig?.styling?.subtitleMarginLeft}
-              subtitleMarginBottom={widget.stackedBarConfig?.styling?.subtitleMarginBottom}
+              
               // Grid & Style
               enableGridX={widget.stackedBarConfig?.styling?.enableGridX ?? false}
               enableGridY={widget.stackedBarConfig?.styling?.enableGridY ?? true}
@@ -1313,7 +1237,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
               // Data props (override any styling defaults)
               data={multipleData.items}
               keys={multipleData.series.map(s => s.key)}
-              title={hasPreBlocks ? undefined : (widget.title || 'Chart')}
+              title={undefined}
               colors={(widget.groupedBarConfig?.styling?.colors as string[] | undefined)?.length
                 ? multipleData.series.map((s, i) => (widget.groupedBarConfig?.styling?.colors as string[])[i] || s.color)
                 : multipleData.series.map(s => s.color)
@@ -1322,15 +1246,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
                 ? multipleData.series.map((s, i) => ({ ...s, color: (widget.groupedBarConfig?.styling?.colors as string[])[i] || s.color }))
                 : multipleData.series
               }
-              // Container Glass Effect & Modern Styles
-              containerBackground={widget.groupedBarConfig?.styling?.containerBackground}
-              backgroundGradient={widget.groupedBarConfig?.styling?.backgroundGradient}
-              containerOpacity={widget.groupedBarConfig?.styling?.containerOpacity}
-              containerBackdropFilter={widget.groupedBarConfig?.styling?.containerBackdropFilter}
-              containerFilter={widget.groupedBarConfig?.styling?.containerFilter}
-              containerBoxShadow={widget.groupedBarConfig?.styling?.containerBoxShadow}
-              containerTransform={widget.groupedBarConfig?.styling?.containerTransform}
-              containerTransition={widget.groupedBarConfig?.styling?.containerTransition}
+              containerClassName="h-full"
               // Bar Visual Effects
               barBrightness={widget.groupedBarConfig?.styling?.barBrightness}
               barSaturate={widget.groupedBarConfig?.styling?.barSaturate}
@@ -1343,22 +1259,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
               hoverBlur={widget.groupedBarConfig?.styling?.hoverBlur}
               transitionDuration={widget.groupedBarConfig?.styling?.transitionDuration}
               transitionEasing={widget.groupedBarConfig?.styling?.transitionEasing}
-              // Typography - Title
-              titleFontFamily={widget.groupedBarConfig?.styling?.titleFontFamily}
-              titleFontSize={widget.groupedBarConfig?.styling?.titleFontSize}
-              titleFontWeight={widget.groupedBarConfig?.styling?.titleFontWeight}
-              titleColor={widget.groupedBarConfig?.styling?.titleColor}
-              titleMarginTop={widget.groupedBarConfig?.styling?.titleMarginTop}
-              titleMarginLeft={widget.groupedBarConfig?.styling?.titleMarginLeft}
-              titleMarginBottom={widget.groupedBarConfig?.styling?.titleMarginBottom}
-              // Typography - Subtitle
-              subtitleFontFamily={widget.groupedBarConfig?.styling?.subtitleFontFamily}
-              subtitleFontSize={widget.groupedBarConfig?.styling?.subtitleFontSize}
-              subtitleFontWeight={widget.groupedBarConfig?.styling?.subtitleFontWeight}
-              subtitleColor={widget.groupedBarConfig?.styling?.subtitleColor}
-              subtitleMarginTop={widget.groupedBarConfig?.styling?.subtitleMarginTop}
-              subtitleMarginLeft={widget.groupedBarConfig?.styling?.subtitleMarginLeft}
-              subtitleMarginBottom={widget.groupedBarConfig?.styling?.subtitleMarginBottom}
+              
               // Grid & Style
               enableGridX={widget.groupedBarConfig?.styling?.enableGridX ?? false}
               enableGridY={widget.groupedBarConfig?.styling?.enableGridY ?? true}
@@ -1430,16 +1331,9 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
               items={multipleData.items}
               keys={keys}
               seriesMetadata={seriesMetadata}
-              title={hasPreBlocks ? undefined : widget.title}
+              title={undefined}
               // Typography
-              titleFontFamily={widget.pivotBarConfig?.styling?.titleFontFamily}
-              titleFontSize={widget.pivotBarConfig?.styling?.titleFontSize}
-              titleFontWeight={widget.pivotBarConfig?.styling?.titleFontWeight}
-              titleColor={widget.pivotBarConfig?.styling?.titleColor}
-              subtitleFontFamily={widget.pivotBarConfig?.styling?.subtitleFontFamily}
-              subtitleFontSize={widget.pivotBarConfig?.styling?.subtitleFontSize}
-              subtitleFontWeight={widget.pivotBarConfig?.styling?.subtitleFontWeight}
-              subtitleColor={widget.pivotBarConfig?.styling?.subtitleColor}
+              
               showLegend={pivotDrilled ? false : undefined}
               layout={widget.pivotBarConfig?.styling?.layout || 'vertical'}
               groupMode={widget.pivotBarConfig?.styling?.groupMode || 'grouped'}
@@ -1449,20 +1343,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
               gridStrokeWidth={widget.pivotBarConfig?.styling?.gridStrokeWidth}
               borderRadius={widget.pivotBarConfig?.styling?.borderRadius}
               borderWidth={widget.pivotBarConfig?.styling?.borderWidth}
-              containerBackground={widget.pivotBarConfig?.styling?.containerBackground}
-              containerOpacity={widget.pivotBarConfig?.styling?.containerOpacity}
-              containerBackdropFilter={widget.pivotBarConfig?.styling?.containerBackdropFilter}
-              containerFilter={widget.pivotBarConfig?.styling?.containerFilter}
-              containerBoxShadow={widget.pivotBarConfig?.styling?.containerBoxShadow}
-              containerBorder={widget.pivotBarConfig?.styling?.containerBorder}
-              containerTransform={widget.pivotBarConfig?.styling?.containerTransform}
-              containerTransition={widget.pivotBarConfig?.styling?.containerTransition}
-              containerBorderWidth={widget.pivotBarConfig?.styling?.containerBorderWidth}
-              containerBorderColor={widget.pivotBarConfig?.styling?.containerBorderColor}
-              containerBorderAccentColor={widget.pivotBarConfig?.styling?.containerBorderAccentColor}
-              containerBorderRadius={widget.pivotBarConfig?.styling?.containerBorderRadius}
-              containerBorderVariant={widget.pivotBarConfig?.styling?.containerBorderVariant}
-              containerPadding={widget.pivotBarConfig?.styling?.containerPadding}
+              containerClassName="h-full"
               onBarClick={(category) => drillPivot(category)}
             />
           </div>
@@ -1520,23 +1401,8 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
               keys={keys}
               config={config}
               className="max-w-[320px]"
-              title={hasPreBlocks ? undefined : (widget.title || 'Radial Stacked')}
-              // Typography
-              titleFontFamily={widget.radialStackedConfig?.styling?.titleFontFamily}
-              titleFontSize={widget.radialStackedConfig?.styling?.titleFontSize}
-              titleFontWeight={widget.radialStackedConfig?.styling?.titleFontWeight}
-              titleColor={widget.radialStackedConfig?.styling?.titleColor}
-              subtitleFontFamily={widget.radialStackedConfig?.styling?.subtitleFontFamily}
-              subtitleFontSize={widget.radialStackedConfig?.styling?.subtitleFontSize}
-              subtitleFontWeight={widget.radialStackedConfig?.styling?.subtitleFontWeight}
-              subtitleColor={widget.radialStackedConfig?.styling?.subtitleColor}
-              containerBackground={widget.radialStackedConfig?.styling?.containerBackground || '#ffffff'}
-              containerBorderColor={widget.radialStackedConfig?.styling?.containerBorderColor || '#e5e7eb'}
-              containerBorderWidth={widget.radialStackedConfig?.styling?.containerBorderWidth ?? 1}
-              containerBorderRadius={widget.radialStackedConfig?.styling?.containerBorderRadius ?? 12}
-              containerBorderVariant={widget.radialStackedConfig?.styling?.containerBorderVariant}
-              containerBorderAccentColor={widget.radialStackedConfig?.styling?.containerBorderAccentColor}
-              containerPadding={widget.radialStackedConfig?.styling?.containerPadding}
+              title={undefined}
+              containerClassName="h-full"
               startAngle={widget.radialStackedConfig?.styling?.startAngle}
               endAngle={widget.radialStackedConfig?.styling?.endAngle}
               innerRadius={widget.radialStackedConfig?.styling?.innerRadius}
@@ -1587,17 +1453,10 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
               legends={widget.stackedLinesConfig?.legends}
               data={multipleData.items}
               keys={multipleData.series.map(s => s.key)}
-              title={hasPreBlocks ? undefined : (widget.title || 'Chart')}
+              title={undefined}
               colors={multipleData.series.map(s => s.color)}
               seriesMetadata={multipleData.series}
-              // Container styles
-              containerBackground={widget.stackedLinesConfig?.styling?.containerBackground}
-              backgroundGradient={widget.stackedLinesConfig?.styling?.backgroundGradient}
-              containerOpacity={widget.stackedLinesConfig?.styling?.containerOpacity}
-              containerBackdropFilter={widget.stackedLinesConfig?.styling?.containerBackdropFilter}
-              containerBoxShadow={widget.stackedLinesConfig?.styling?.containerBoxShadow}
-              containerTransform={widget.stackedLinesConfig?.styling?.containerTransform}
-              containerTransition={widget.stackedLinesConfig?.styling?.containerTransition}
+              containerClassName="h-full"
               // Grid & axis
               enableGridX={widget.stackedLinesConfig?.styling?.enableGridX ?? false}
               enableGridY={widget.stackedLinesConfig?.styling?.enableGridY ?? true}
@@ -1671,13 +1530,9 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
           <div className="h-full w-full p-2 relative group">
             <FunnelChart
               data={steps as any}
-              title={hasPreBlocks ? undefined : (widget.title || 'Funnel')}
+              title={undefined}
               colors={(widget.styling?.colors as string[] | undefined)}
-              backgroundColor={widget.styling?.backgroundColor}
-              containerBorderWidth={widget.styling?.containerBorderWidth as number | undefined}
-              containerBorderColor={widget.styling?.containerBorderColor as string | undefined}
-              containerBorderRadius={widget.styling?.containerBorderRadius as number | undefined}
-              containerPadding={widget.styling?.containerPadding as number | undefined}
+              
             />
           </div>
         );
