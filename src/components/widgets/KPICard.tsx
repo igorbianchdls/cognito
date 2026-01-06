@@ -7,7 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { ArrowDownRight, ArrowUpRight } from 'lucide-react'
 import { DndContext, closestCenter, DragEndEvent, useSensor, useSensors, PointerSensor, KeyboardSensor } from '@dnd-kit/core'
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
@@ -466,7 +466,12 @@ export function KPICard({
     )
     const mapBlocks: Record<'h1'|'h2'|'h3', React.ReactNode> = { h1: headerRow, h2: valueRow, h3: comparisonRow }
     const defaultOrder: Array<'h1'|'h2'|'h3'> = (comparisonLabel !== undefined && String(comparisonLabel || '').length > 0) ? ['h1','h2','h3'] : ['h1','h2']
-    const order: Array<'h1'|'h2'|'h3'> = (Array.isArray(titlesOrder) && titlesOrder.length ? titlesOrder : defaultOrder) as Array<'h1'|'h2'|'h3'>
+    const computeInitialOrder = (): Array<'h1'|'h2'|'h3'> => (Array.isArray(titlesOrder) && titlesOrder.length ? (titlesOrder as Array<'h1'|'h2'|'h3'>) : defaultOrder)
+    const [order, setOrder] = useState<Array<'h1'|'h2'|'h3'>>(computeInitialOrder())
+    useEffect(() => {
+      setOrder(computeInitialOrder())
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [titlesOrder, comparisonLabel])
     const onDragEnd = (e: DragEndEvent) => {
       const { active, over } = e
       if (!over || active.id === over.id) return
@@ -475,6 +480,7 @@ export function KPICard({
       const newIndex = ids.indexOf(over.id as any)
       if (oldIndex === -1 || newIndex === -1) return
       ids.splice(newIndex, 0, ids.splice(oldIndex, 1)[0])
+      setOrder(ids)
       onTitlesOrderChange && onTitlesOrderChange(ids)
     }
 
