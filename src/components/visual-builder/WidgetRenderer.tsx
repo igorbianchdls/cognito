@@ -811,7 +811,16 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
               const fallback: Array<'h1'|'h2'|'h3'> = hasH3 ? ['h1','h2','h3'] : ['h1','h2'];
               return (Array.isArray(widget.kpiTitlesOrder) && widget.kpiTitlesOrder.length ? (widget.kpiTitlesOrder as Array<'h1'|'h2'|'h3'>) : fallback);
             })()}
-            onTitlesOrderChange={(ids) => { try { visualBuilderActions.updateKpiTitlesOrderInCode(widget.id, ids) } catch {} }}
+            onTitlesOrderChange={(ids) => {
+              try {
+                // Update UI state immediately
+                visualBuilderActions.updateKpiTitlesOrderInState(widget.id, ids)
+              } catch {}
+              try {
+                // Persist change in DSL
+                visualBuilderActions.updateKpiTitlesOrderInCode(widget.id, ids)
+              } catch {}
+            }}
             {...(widget.kpiConfig || {})}
             // Fallback to styling props if kpiConfig not provided
             kpiContainerBackgroundColor={widget.kpiConfig?.kpiContainerBackgroundColor || widget.styling?.backgroundColor}

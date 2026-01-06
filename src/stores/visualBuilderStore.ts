@@ -1325,6 +1325,18 @@ export const visualBuilderActions = {
     }
   },
 
+  // Update only the in-memory widgets state (no code change)
+  updateKpiTitlesOrderInState: (kpiId: string, titlesOrder: Array<'h1'|'h2'|'h3'>) => {
+    const current = $visualBuilderState.get()
+    const widgets = current.widgets.map(w => {
+      if (w.id === kpiId) {
+        return { ...w, kpiTitlesOrder: titlesOrder }
+      }
+      return w
+    })
+    $visualBuilderState.set({ ...current, widgets })
+  },
+
   // Remove <header> from DSL or clear fields in JSON
   removeHeaderFromCode: () => {
     const currentState = $visualBuilderState.get()
