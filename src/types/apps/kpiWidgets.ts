@@ -228,6 +228,7 @@ export const DEFAULT_KPI_CONFIG: Required<Omit<KPIConfig, 'name' | 'value' | 'un
   showTrend: true,
   visualizationType: 'card',
   colorScheme: 'blue',
+  comparisonLabel: '',
 
   // Container defaults
   kpiContainerBackgroundColor: '#ffffff',
