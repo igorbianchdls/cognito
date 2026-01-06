@@ -493,6 +493,27 @@ export class ConfigParser {
       return map;
     };
 
+    // Parse container-level style attributes present on <article> (KPI/Chart)
+    const parseContainerStyle = (attrs: Record<string,string>) => {
+      const num = (v?: string) => (v!=null && v!=='' && !Number.isNaN(Number(v)) ? Number(v) : undefined);
+      const get = (k1: string, k2?: string) => (attrs[k1] ?? (k2 ? attrs[k2] : undefined));
+      const s: Record<string, unknown> = {};
+      const bg = get('backgroundColor','background-color'); if (bg) s.backgroundColor = String(bg);
+      const bc = get('borderColor','border-color'); if (bc) s.borderColor = String(bc);
+      const bw = get('borderWidth','border-width'); if (bw!=null) { const n = num(String(bw)); if (n!=null) s.borderWidth = n; }
+      const bs = get('borderStyle','border-style'); if (bs) s.borderStyle = String(bs);
+      const br = get('borderRadius','border-radius') ?? get('radius'); if (br!=null) { const n = num(String(br)); if (n!=null) s.borderRadius = n; }
+      const p  = get('padding'); if (p!=null) { const n = num(String(p)); if (n!=null) s.padding = n; }
+      const pt = get('paddingTop','padding-top'); if (pt!=null) { const n = num(String(pt)); if (n!=null) s.paddingTop = n; }
+      const pr = get('paddingRight','padding-right'); if (pr!=null) { const n = num(String(pr)); if (n!=null) s.paddingRight = n; }
+      const pb = get('paddingBottom','padding-bottom'); if (pb!=null) { const n = num(String(pb)); if (n!=null) s.paddingBottom = n; }
+      const pl = get('paddingLeft','padding-left'); if (pl!=null) { const n = num(String(pl)); if (n!=null) s.paddingLeft = n; }
+      return Object.keys(s).length ? s as {
+        backgroundColor?: string; borderColor?: string; borderWidth?: number; borderStyle?: string; borderRadius?: number;
+        padding?: number; paddingTop?: number; paddingRight?: number; paddingBottom?: number; paddingLeft?: number;
+      } : undefined;
+    };
+
     const dashMatch = dsl.match(/<dashboard\b([^>]*)>/i);
     const dashAttrs = dashMatch ? parseAttrs(dashMatch[1]) : {};
     const themeAttr = dashAttrs['theme'] as ThemeName | undefined;
