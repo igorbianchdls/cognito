@@ -160,7 +160,6 @@ export default function VisualBuilderPage() {
       htmlRootsRef.current.push(root);
       const common = {
         data: spec.data,
-        title: spec.title,
         // Strip container styling: no border, radius, background, padding
         containerClassName: 'nivo-container',
         containerBorderVariant: 'none',

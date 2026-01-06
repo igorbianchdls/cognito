@@ -78,7 +78,6 @@ export default function PreviewPage() {
       reactRootsRef.current.push(root);
       const common = {
         data: spec.data,
-        title: spec.title,
         containerClassName: 'nivo-container',
         containerBorderVariant: 'none',
         containerPadding: 0,
