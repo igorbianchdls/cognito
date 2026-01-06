@@ -502,6 +502,7 @@ export class ConfigParser {
       const s: Record<string, unknown> = {};
       const bg = get('backgroundColor','background-color'); if (bg) s.backgroundColor = String(bg);
       const bc = get('borderColor','border-color'); if (bc) s.borderColor = String(bc);
+      const tc = get('color'); if (tc) s.color = String(tc);
       const bw = get('borderWidth','border-width'); if (bw!=null) { const n = num(String(bw)); if (n!=null) s.borderWidth = n; }
       const bs = get('borderStyle','border-style'); if (bs) s.borderStyle = String(bs);
       const br = get('borderRadius','border-radius') ?? get('radius'); if (br!=null) { const n = num(String(br)); if (n!=null) s.borderRadius = n; }

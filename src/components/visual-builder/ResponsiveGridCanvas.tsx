@@ -79,6 +79,7 @@ const DraggableWidget = memo(function DraggableWidget({ widget, spanClasses, spa
     const out: React.CSSProperties = {};
     if (s['backgroundColor']) out.backgroundColor = String(s['backgroundColor']);
     if (s['borderColor']) out.borderColor = String(s['borderColor']);
+    if (s['color']) out.color = String(s['color']);
     if (s['borderStyle']) out.borderStyle = String(s['borderStyle']);
     if (s['borderWidth'] !== undefined) out.borderWidth = toPx(s['borderWidth']);
     if (s['borderRadius'] !== undefined) out.borderRadius = toPx(s['borderRadius']);
