@@ -72,6 +72,26 @@ const DraggableWidget = memo(function DraggableWidget({ widget, spanClasses, spa
     gridColumn: startValue ? `${startValue} / span ${spanValue}` : `span ${spanValue}`,
   };
 
+  const containerStyleFromWidget = (w: Widget): React.CSSProperties => {
+    const s = (w as any).containerStyle as Record<string, unknown> | undefined;
+    if (!s) return {};
+    const toPx = (v: unknown) => (typeof v === 'number' ? `${v}px` : v as string);
+    const out: React.CSSProperties = {};
+    if (s['backgroundColor']) out.backgroundColor = String(s['backgroundColor']);
+    if (s['borderColor']) out.borderColor = String(s['borderColor']);
+    if (s['borderStyle']) out.borderStyle = String(s['borderStyle']);
+    if (s['borderWidth'] !== undefined) out.borderWidth = toPx(s['borderWidth']);
+    if (s['borderRadius'] !== undefined) out.borderRadius = toPx(s['borderRadius']);
+    if (s['padding'] !== undefined) out.padding = toPx(s['padding']);
+    if (s['paddingTop'] !== undefined) out.paddingTop = toPx(s['paddingTop']);
+    if (s['paddingRight'] !== undefined) out.paddingRight = toPx(s['paddingRight']);
+    if (s['paddingBottom'] !== undefined) out.paddingBottom = toPx(s['paddingBottom']);
+    if (s['paddingLeft'] !== undefined) out.paddingLeft = toPx(s['paddingLeft']);
+    // If borderColor/Width set but no style, default to solid
+    if ((out.borderColor || out.borderWidth) && !out.borderStyle) out.borderStyle = 'solid';
+    return out;
+  };
+
   return (
     <div
       ref={setNodeRef}
@@ -82,7 +102,8 @@ const DraggableWidget = memo(function DraggableWidget({ widget, spanClasses, spa
       <div
         style={{
           height: minHeight,
-          position: 'relative'
+          position: 'relative',
+          ...containerStyleFromWidget(widget)
         }}
         className="group hover:ring-2 hover:ring-blue-400 rounded-lg transition-all"
       >

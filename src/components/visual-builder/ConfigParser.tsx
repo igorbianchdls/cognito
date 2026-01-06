@@ -347,6 +347,19 @@ export interface Widget {
   kpiTitlesOrder?: Array<'h1'|'h2'|'h3'>;
   // Generic pre-render blocks (<p> from DSL) to render before widget content
   preBlocks?: Array<{ className?: string; attrs?: Record<string, string>; text?: string }>;
+  // Style for the outer container (article wrapper) applied in ResponsiveGridCanvas
+  containerStyle?: {
+    backgroundColor?: string;
+    borderColor?: string;
+    borderWidth?: number;
+    borderStyle?: 'solid' | 'dashed' | 'dotted' | string;
+    borderRadius?: number;
+    padding?: number;
+    paddingTop?: number;
+    paddingRight?: number;
+    paddingBottom?: number;
+    paddingLeft?: number;
+  };
 }
 
 
@@ -750,6 +763,22 @@ export class ConfigParser {
         while ((am = artRe.exec(sectionBody)) !== null) {
           const aAttrs = parseAttrs(am[1] || '');
           const inner = am[2] || '';
+          const parseContainerStyle = (attrs: Record<string,string>) => {
+            const num = (v?: string) => (v!=null && v!=='' && !Number.isNaN(Number(v)) ? Number(v) : undefined);
+            const get = (k1: string, k2?: string) => (attrs[k1] ?? (k2 ? attrs[k2] : undefined));
+            const s: Record<string, unknown> = {};
+            const bg = get('backgroundColor','background-color'); if (bg) s.backgroundColor = String(bg);
+            const bc = get('borderColor','border-color'); if (bc) s.borderColor = String(bc);
+            const bw = get('borderWidth','border-width'); if (bw!=null) { const n = num(String(bw)); if (n!=null) s.borderWidth = n; }
+            const bs = get('borderStyle','border-style'); if (bs) s.borderStyle = String(bs);
+            const br = get('borderRadius','border-radius') ?? get('radius'); if (br!=null) { const n = num(String(br)); if (n!=null) s.borderRadius = n; }
+            const p  = get('padding'); if (p!=null) { const n = num(String(p)); if (n!=null) s.padding = n; }
+            const pt = get('paddingTop','padding-top'); if (pt!=null) { const n = num(String(pt)); if (n!=null) s.paddingTop = n; }
+            const pr = get('paddingRight','padding-right'); if (pr!=null) { const n = num(String(pr)); if (n!=null) s.paddingRight = n; }
+            const pb = get('paddingBottom','padding-bottom'); if (pb!=null) { const n = num(String(pb)); if (n!=null) s.paddingBottom = n; }
+            const pl = get('paddingLeft','padding-left'); if (pl!=null) { const n = num(String(pl)); if (n!=null) s.paddingLeft = n; }
+            return Object.keys(s).length ? s : undefined;
+          };
 
           if (secType === 'kpis') {
             // KPI: use <p> blocks → p[0]=title, p[1]=binding (value), p[2]=comparison
@@ -786,6 +815,7 @@ export class ConfigParser {
             if (frRaw && !Number.isNaN(Number(frRaw)) && Number(frRaw) > 0) {
               (widget as any).widthFr = { desktop: String(Number(frRaw)) + 'fr' };
             }
+            const cs = parseContainerStyle(aAttrs); if (cs) (widget as any).containerStyle = cs;
             // Order and classes + capture HTML blocks for direct rendering
             try {
               const seq: Array<'h1'|'h2'|'h3'> = [];
@@ -1201,11 +1231,12 @@ export class ConfigParser {
             ...(title ? { title } : {}),
             ...(Object.keys(ds).length ? { dataSource: ds } : {}),
           } as Widget;
-          if (spanD || spanT || spanM) widget.span = { ...(spanD?{desktop:spanD}:{}) , ...(spanT?{tablet:spanT}:{}) , ...(spanM?{mobile:spanM}:{}) };
-          const frRaw = aAttrs['fr'] || aAttrs['data-fr'];
-          if (frRaw && !Number.isNaN(Number(frRaw)) && Number(frRaw) > 0) {
-            (widget as any).widthFr = { desktop: String(Number(frRaw)) + 'fr' };
-          }
+            if (spanD || spanT || spanM) widget.span = { ...(spanD?{desktop:spanD}:{}) , ...(spanT?{tablet:spanT}:{}) , ...(spanM?{mobile:spanM}:{}) };
+            const frRaw = aAttrs['fr'] || aAttrs['data-fr'];
+            if (frRaw && !Number.isNaN(Number(frRaw)) && Number(frRaw) > 0) {
+              (widget as any).widthFr = { desktop: String(Number(frRaw)) + 'fr' };
+            }
+            const cs = parseContainerStyle(aAttrs); if (cs) (widget as any).containerStyle = cs;
           // Charts branch: no KPI tailwind/tag parsing here
           // Apply style.tw from <main><style>{ ... }</style></main>
           if (styleObj && typeof styleObj['tw'] === 'string') {
