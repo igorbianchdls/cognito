@@ -791,15 +791,6 @@ export class ConfigParser {
             const h2m = inner.match(/<h2\b[^>]*>([\s\S]*?)<\/h2>/i);
             if (h2m && h2m[1]) bindingRaw = (h2m[1] || '').trim();
             const pairs = bindingRaw ? parseBindingPairs(bindingRaw) : {};
-            // Optional comparison in <h3>
-            let h3TextRaw = '';
-            const h3m = inner.match(/<h3\b[^>]*>([\s\S]*?)<\/h3>/i);
-            if (h3m && h3m[1]) h3TextRaw = (h3m[1] || '').trim();
-            const h3Pairs = h3TextRaw && /\{\{/.test(h3TextRaw) ? parseBindingPairs(h3TextRaw) : {};
-            // Open tags to read classes
-            const h1Open = inner.match(/<h1\b([^>]*)>/i);
-            const h2Open = inner.match(/<h2\b([^>]*)>/i);
-            const h3Open = inner.match(/<h3\b([^>]*)>/i);
           // Optional comparison in <h3>
           let h3TextRaw = '';
           const h3m = inner.match(/<h3\b[^>]*>([\s\S]*?)<\/h3>/i);
