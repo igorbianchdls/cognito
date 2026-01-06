@@ -923,24 +923,28 @@ export class ConfigParser {
               if (pre.length) preBlocksTemp = pre;
             } catch {}
 
-            // Parse <main> with binding and optional <style>{...}</style>
-            const mainRe = /<main\b[^>]*>([\s\S]*?)<\/main>/i;
-            const mm = inner.match(mainRe);
-            let mainAttrs: Record<string, string> = {};
+            // Parse <chart> (preferred) or <main> with moustache binding and optional <style>{...}</style>
+            const nodeRe = /<(chart|main)\b([^>]*)>([\s\S]*?)<\/\1>/i;
+            const nm = inner.match(nodeRe);
+            let nodeAttrs: Record<string, string> = {};
             let pairs: Record<string, string> = {};
             let styleObj: Record<string, unknown> | undefined;
-            if (mm && mm[1]) {
-              const mainBody = mm[1] || '';
-              const mainOpen = (mm[0] || '').match(/<main\b([^>]*)>/i);
-              if (mainOpen && mainOpen[1]) {
-                mainAttrs = parseAttrs(mainOpen[1]);
-                if (mainAttrs['chart']) typeRaw = String(mainAttrs['chart']).toLowerCase();
+            if (nm) {
+              const tagName = (nm[1] || 'main').toLowerCase();
+              const attrsStr = nm[2] || '';
+              const body = nm[3] || '';
+              nodeAttrs = parseAttrs(attrsStr);
+              if (tagName === 'chart') {
+                const t = (nodeAttrs['type'] || nodeAttrs['chart'] || nodeAttrs['data-chart'] || '').toLowerCase();
+                if (t) typeRaw = t;
+              } else {
+                if (nodeAttrs['chart']) typeRaw = String(nodeAttrs['chart']).toLowerCase();
               }
-              const moustache = mainBody.match(/\{\{([\s\S]*?)\}\}/);
+              const moustache = body.match(/\{\{([\s\S]*?)\}\}/);
               if (moustache && moustache[0]) {
                 pairs = parseBindingPairs(moustache[0]);
               }
-              const st = mainBody.match(/<style\b[^>]*>([\s\S]*?)<\/style>/i);
+              const st = body.match(/<style\b[^>]*>([\s\S]*?)<\/style>/i);
               if (st && st[1]) {
                 try {
                   const parsed = JSON.parse(st[1].trim());
