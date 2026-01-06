@@ -786,7 +786,7 @@ export class ConfigParser {
             const heightPx = heightStr ? Number(heightStr) : undefined;
             const h1m = inner.match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/i);
             const title = h1m ? resolveLiquidVars((h1m[1] || '').trim()) : undefined;
-            const h1Open = inner.match(/<h1\b([^>]*)>/i);
+            const kpiH1Open = inner.match(/<h1\b([^>]*)>/i);
             // Binding inside <h2> (first occurrence)
             let bindingRaw = '';
             const h2m = inner.match(/<h2\b[^>]*>([\s\S]*?)<\/h2>/i);
@@ -796,10 +796,10 @@ export class ConfigParser {
           let h3TextRaw = '';
           const h3m = inner.match(/<h3\b[^>]*>([\s\S]*?)<\/h3>/i);
           if (h3m && h3m[1]) h3TextRaw = (h3m[1] || '').trim();
-          const h3Pairs = h3TextRaw && /\{\{/.test(h3TextRaw) ? parseBindingPairs(h3TextRaw) : {};
-          // For class extraction on KPI blocks
-          const h2Open = inner.match(/<h2\b([^>]*)>/i);
-          const h3Open = inner.match(/<h3\b([^>]*)>/i);
+            const h3Pairs = h3TextRaw && /\{\{/.test(h3TextRaw) ? parseBindingPairs(h3TextRaw) : {};
+            // For class extraction on KPI blocks
+            const kpiH2Open = inner.match(/<h2\b([^>]*)>/i);
+            const kpiH3Open = inner.match(/<h3\b([^>]*)>/i);
             const ds: any = {};
             if (pairs['schema']) ds.schema = pairs['schema'];
             if (pairs['table'] || pairs['dimension']) ds.table = pairs['table'] || pairs['dimension'];
@@ -835,9 +835,9 @@ export class ConfigParser {
             try {
               const w = widget as unknown as { kpiConfig?: Record<string, unknown> };
               w.kpiConfig = w.kpiConfig || {};
-              if (h1Open && h1Open[1]) { const a = parseAttrs(h1Open[1] || ''); if (a['class']) (w.kpiConfig as any)['kpiNameClassName'] = a['class']; }
-              if (h2Open && h2Open[1]) { const a = parseAttrs(h2Open[1] || ''); if (a['class']) (w.kpiConfig as any)['kpiValueClassName'] = a['class']; }
-              if (h3Open && h3Open[1]) { const a = parseAttrs(h3Open[1] || ''); if (a['class']) (w.kpiConfig as any)['kpiComparisonClassName'] = a['class']; }
+              if (kpiH1Open && kpiH1Open[1]) { const a = parseAttrs(kpiH1Open[1] || ''); if (a['class']) (w.kpiConfig as any)['kpiNameClassName'] = a['class']; }
+              if (kpiH2Open && kpiH2Open[1]) { const a = parseAttrs(kpiH2Open[1] || ''); if (a['class']) (w.kpiConfig as any)['kpiValueClassName'] = a['class']; }
+              if (kpiH3Open && kpiH3Open[1]) { const a = parseAttrs(kpiH3Open[1] || ''); if (a['class']) (w.kpiConfig as any)['kpiComparisonClassName'] = a['class']; }
             } catch {}
             // Map <h3> moustache to comparison data
             if (h3TextRaw) {
