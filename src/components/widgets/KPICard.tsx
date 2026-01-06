@@ -426,6 +426,8 @@ export function KPICard({
             <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 pointer-events-auto">
               <button
                 type="button"
+                onPointerDown={(e) => { e.preventDefault(); e.stopPropagation() }}
+                onMouseDown={(e) => { e.preventDefault(); e.stopPropagation() }}
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); onMove('up') }}
                 className="h-5 w-5 inline-flex items-center justify-center rounded bg-white/90 border text-gray-700 hover:bg-white"
                 title="Mover para cima"
@@ -434,6 +436,8 @@ export function KPICard({
               </button>
               <button
                 type="button"
+                onPointerDown={(e) => { e.preventDefault(); e.stopPropagation() }}
+                onMouseDown={(e) => { e.preventDefault(); e.stopPropagation() }}
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); onMove('down') }}
                 className="h-5 w-5 inline-flex items-center justify-center rounded bg-white/90 border text-gray-700 hover:bg-white"
                 title="Mover para baixo"
