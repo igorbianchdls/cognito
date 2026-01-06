@@ -672,6 +672,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
 
       widgetContent = (
         <div className="h-full w-full px-0 py-2 relative group">
+          {renderPreBlocks()}
           <BarChart
             {...commonChartProps}
             {...(widget.barConfig?.styling || {})}
@@ -714,6 +715,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
     case 'line':
       widgetContent = (
         <div className="h-full w-full px-0 py-2 relative group">
+          {renderPreBlocks()}
           <LineChart
             {...commonChartProps}
             {...(widget.lineConfig?.styling || {})}
@@ -1013,6 +1015,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
 
         widgetContent = (
           <div className="h-full w-full p-2 relative group">
+            {renderPreBlocks()}
             <TreeMapChart
               data={treeData}
               title={undefined}
@@ -1056,6 +1059,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
       } else if (scatterSeries && scatterSeries.length > 0) {
         widgetContent = (
           <div className="h-full w-full p-2 relative group">
+            {renderPreBlocks()}
             <ScatterChart
               series={scatterSeries}
               title={undefined}
@@ -1136,7 +1140,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
       } else if (multipleData && multipleData.items.length > 0) {
         widgetContent = (
           <div className="h-full w-full px-0 py-2 relative group">
-            
+            {renderPreBlocks()}
             <StackedBarChart
               {...(widget.stackedBarConfig?.styling || {})}
               // Pass margin and legends from JSON config
@@ -1227,6 +1231,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
       } else if (multipleData && multipleData.items.length > 0) {
         widgetContent = (
           <div className="h-full w-full px-0 py-2 relative group">
+            {renderPreBlocks()}
             <GroupedBarChart
               {...(widget.groupedBarConfig?.styling || {})}
               // Pass margin and legends from JSON config
@@ -1324,6 +1329,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
         const seriesMetadata = multipleData.series;
         widgetContent = (
           <div className="h-full w-full px-0 py-2 relative group">
+            {renderPreBlocks()}
             {pivotDrilled && (
               <button onClick={drillPivotBack} className="absolute top-2 right-2 z-10 px-2 py-1 text-xs bg-white border border-gray-200 rounded shadow">Voltar</button>
             )}
@@ -1396,6 +1402,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
 
         widgetContent = (
           <div className="h-full w-full p-2 relative group">
+            {renderPreBlocks()}
             <RadialStackedChart
               data={dataRow}
               keys={keys}
@@ -1447,6 +1454,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
       } else if (multipleData && multipleData.items.length > 0) {
         widgetContent = (
           <div className="h-full w-full p-2 relative group">
+            {renderPreBlocks()}
             <StackedLinesChart
               {...(widget.stackedLinesConfig?.styling || {})}
               margin={widget.stackedLinesConfig?.margin}
@@ -1506,6 +1514,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
         }));
         widgetContent = (
           <div className="h-full w-full p-2 relative group">
+            {renderPreBlocks()}
             <FunnelChart
               data={steps as any}
               title={undefined}

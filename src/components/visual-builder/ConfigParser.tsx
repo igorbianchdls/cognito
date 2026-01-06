@@ -968,57 +968,17 @@ export class ConfigParser {
             } as Widget;
             if (spanD || spanT || spanM) widget.span = { ...(spanD?{desktop:spanD}:{}) , ...(spanT?{tablet:spanT}:{}) , ...(spanM?{mobile:spanM}:{}) };
 
-            // Apply style.tw from <main><style>{ ... }</style></main>
+            // Apply tokens from <style> inside <chart>
             if (styleObj && typeof styleObj['tw'] === 'string') {
               applyStylingTokens(widget, String(styleObj['tw']));
             }
 
-            // Map <p> spacing to numeric styling (supports class utilities and explicit attributes)
-            const pOpen = pTitleMatch ? pTitleMatch[1] : '';
-            if (pOpen) {
-              const a = parseAttrs(pOpen || '');
-              const cls = (a['class'] || '').trim();
-              const destProp = (widget.type + 'Config') as keyof Widget;
-              const current: any = (widget as any)[destProp] || {};
-              const styling = { ...(current.styling || {}) } as Record<string, unknown>;
-              // If p has class, pass it through to chart components
-              if (cls) {
-                styling['titleClassName'] = cls;
-              }
-              // 1) From class tokens (Tailwind-like)
-              if (cls) {
-                const tokens = cls.split(/\s+/);
-                const scaleToPx = (v: string): number | undefined => {
-                  const map: Record<string, number> = { '0':0, '1':4, '2':8, '3':12, '4':16, '5':20, '6':24, '8':32, '10':40 };
-                  return map[v];
-                };
-                for (const t of tokens) {
-                  let m: RegExpMatchArray | null;
-                  if ((m = t.match(/^mb-(\d+)$/))) { const px = scaleToPx(m[1]); if (px!=null) styling['titleMarginBottom'] = px; continue; }
-                  if ((m = t.match(/^mt-(\d+)$/))) { const px = scaleToPx(m[1]); if (px!=null) styling['titleMarginTop'] = px; continue; }
-                  if ((m = t.match(/^pt-(\d+)$/))) { const px = scaleToPx(m[1]); if (px!=null) styling['titlePaddingTop'] = px; continue; }
-                  if ((m = t.match(/^pb-(\d+)$/))) { const px = scaleToPx(m[1]); if (px!=null) styling['titlePaddingBottom'] = px; continue; }
-                }
-              }
-              // 2) From explicit attributes on <h1> (camelCase or kebab-case): marginBottom="20"
-              const num = (v?: string) => (v!=null && v!=='' && !Number.isNaN(Number(v)) ? Number(v) : undefined);
-              const mb = num(a['marginBottom'] || a['margin-bottom']);
-              const mt = num(a['marginTop'] || a['margin-top']);
-              const ml = num(a['marginLeft'] || a['margin-left']);
-              const mr = num(a['marginRight'] || a['margin-right']);
-              const pt = num(a['paddingTop'] || a['padding-top']);
-              const pb = num(a['paddingBottom'] || a['padding-bottom']);
-              const pl = num(a['paddingLeft'] || a['padding-left']);
-              const pr = num(a['paddingRight'] || a['padding-right']);
-              if (mt!=null) styling['titleMarginTop'] = mt;
-              if (mr!=null) styling['titleMarginRight'] = mr;
-              if (mb!=null) styling['titleMarginBottom'] = mb;
-              if (ml!=null) styling['titleMarginLeft'] = ml;
-              if (pt!=null) styling['titlePaddingTop'] = pt;
-              if (pr!=null) styling['titlePaddingRight'] = pr;
-              if (pb!=null) styling['titlePaddingBottom'] = pb;
-              if (pl!=null) styling['titlePaddingLeft'] = pl;
-              (widget as any)[destProp] = { ...(current || {}), styling };
+            // Capture any raw HTML outside the <chart> node to render as-is
+            if (nm && nm[0]) {
+              const raw = (inner || '').replace(nm[0], '').trim();
+              if (raw) (widget as any).preHtml = raw;
+            } else if ((inner || '').trim()) {
+              (widget as any).preHtml = (inner || '').trim();
             }
 
             // Support article-level fr width for charts (same as KPIs)
