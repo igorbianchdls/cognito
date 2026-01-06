@@ -457,7 +457,7 @@ export function KPICard({
     const headerRow = (
       <div className="flex items-start justify-between">
         <div
-          className={`font-medium ${!kpiNameColor ? 'text-slate-800' : ''} leading-none ${s.label}`}
+          className={`font-medium ${!kpiNameColor ? 'text-slate-800' : ''} leading-none ${s.label} ${kpiNameClassName || ''}`}
           style={{
             color: kpiNameColor || undefined,
             fontFamily: kpiNameFontFamily !== 'inherit' ? kpiNameFontFamily : undefined
@@ -480,9 +480,10 @@ export function KPICard({
     )
     const valueRow = (
       <div
-        className={`font-semibold ${!kpiValueColor ? 'text-slate-900' : ''} leading-none ${s.value}`}
+        className={`font-semibold ${!kpiValueColor ? 'text-slate-900' : ''} leading-none ${s.value} ${kpiValueClassName || ''}`}
         style={{
-          ...(tileValuePaddingY !== undefined ? { paddingTop: tileValuePaddingY, paddingBottom: tileValuePaddingY } : { paddingTop: 16, paddingBottom: 16 }),
+          ...((!kpiValueClassName && tileValuePaddingY === undefined) ? { paddingTop: 16, paddingBottom: 16 } : {}),
+          ...(tileValuePaddingY !== undefined ? { paddingTop: tileValuePaddingY, paddingBottom: tileValuePaddingY } : {}),
           color: kpiValueColor || undefined,
           fontFamily: kpiValueFontFamily !== 'inherit' ? kpiValueFontFamily : undefined
         }}
@@ -491,7 +492,7 @@ export function KPICard({
       </div>
     )
     const comparisonRow = (
-      <div className="flex items-center gap-2">
+      <div className={`flex items-center gap-2 ${ (visualization?.showTrend ?? true) ? '' : '' } ${ (kpiComparisonClassName || '') }`}>
         <TrendIcon size={14} color={appliedChangeColor} />
         <span style={{ color: appliedChangeColor }} className="font-medium text-[12px] leading-none">
           {Math.abs(effectiveChangePct || 0).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%

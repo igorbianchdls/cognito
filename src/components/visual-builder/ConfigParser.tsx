@@ -933,16 +933,16 @@ export class ConfigParser {
           const heightPx = heightStr ? Number(heightStr) : undefined;
           const h1m = inner.match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/i);
           const title = h1m ? resolveLiquidVars((h1m[1] || '').trim()) : undefined;
-          // Binding inside <h2> (first occurrence)
-          let bindingRaw = '';
-          const h2m = inner.match(/<h2\b[^>]*>([\s\S]*?)<\/h2>/i);
-          if (h2m && h2m[1]) bindingRaw = (h2m[1] || '').trim();
-          const pairs = bindingRaw ? parseBindingPairs(bindingRaw) : {};
-          // Optional comparison in <h3>
-          let h3TextRaw = '';
-          const h3m = inner.match(/<h3\b[^>]*>([\s\S]*?)<\/h3>/i);
-          if (h3m && h3m[1]) h3TextRaw = (h3m[1] || '').trim();
-          const h3Pairs = h3TextRaw && /\{\{/.test(h3TextRaw) ? parseBindingPairs(h3TextRaw) : {};
+            // Binding inside <h2> (first occurrence)
+            let bindingRaw = '';
+            const h2m = inner.match(/<h2\b[^>]*>([\s\S]*?)<\/h2>/i);
+            if (h2m && h2m[1]) bindingRaw = (h2m[1] || '').trim();
+            const pairs = bindingRaw ? parseBindingPairs(bindingRaw) : {};
+            // Optional comparison in <h3>
+            let h3TextRaw = '';
+            const h3m = inner.match(/<h3\b[^>]*>([\s\S]*?)<\/h3>/i);
+            if (h3m && h3m[1]) h3TextRaw = (h3m[1] || '').trim();
+            const h3Pairs = h3TextRaw && /\{\{/.test(h3TextRaw) ? parseBindingPairs(h3TextRaw) : {};
           const ds: any = {};
           if (pairs['schema']) ds.schema = pairs['schema'];
           if (pairs['table'] || pairs['dimension']) ds.table = pairs['table'] || pairs['dimension'];
@@ -974,6 +974,27 @@ export class ConfigParser {
             if (frRaw && !Number.isNaN(Number(frRaw)) && Number(frRaw) > 0) {
               (widget as any).widthFr = { desktop: String(Number(frRaw)) + 'fr' };
             }
+            // Map Tailwind classes from <h1>/<h2>/<h3>
+            try {
+              const h1Open = inner.match(/<h1\b([^>]*)>/i);
+              const h2Open = inner.match(/<h2\b([^>]*)>/i);
+              const h3Open = inner.match(/<h3\b([^>]*)>/i);
+              const w = widget as unknown as { kpiConfig?: Record<string, unknown> };
+              w.kpiConfig = w.kpiConfig || {};
+              if (h1Open && h1Open[1]) {
+                const a = parseAttrs(h1Open[1] || '');
+                if (a['class']) (w.kpiConfig as any)['kpiNameClassName'] = a['class'];
+              }
+              if (h2Open && h2Open[1]) {
+                const a = parseAttrs(h2Open[1] || '');
+                if (a['class']) (w.kpiConfig as any)['kpiValueClassName'] = a['class'];
+              }
+              if (h3Open && h3Open[1]) {
+                const a = parseAttrs(h3Open[1] || '');
+                if (a['class']) (w.kpiConfig as any)['kpiComparisonClassName'] = a['class'];
+              }
+            } catch {}
+
             // Map <h3> to KPI comparison when present
             if (h3TextRaw) {
               const w = widget as unknown as { kpiConfig?: Record<string, unknown> };

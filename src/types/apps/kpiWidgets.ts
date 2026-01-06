@@ -134,6 +134,7 @@ export interface KPIConfig {
   kpiNameClassName?: string
   kpiValueClassName?: string
   kpiContainerClassName?: string
+  kpiComparisonClassName?: string
 
   // Border variant (visual style) propagated to KPICard
   borderVariant?: 'smooth' | 'accent' | 'none'
@@ -262,6 +263,7 @@ export const DEFAULT_KPI_CONFIG: Required<Omit<KPIConfig, 'name' | 'value' | 'un
   kpiNameClassName: '',
   kpiValueClassName: '',
   kpiContainerClassName: '',
+  kpiComparisonClassName: '',
 
   // Border variant default
   borderVariant: 'smooth'

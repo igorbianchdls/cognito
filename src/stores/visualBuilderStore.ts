@@ -168,19 +168,19 @@ export const initialLiquidGrid = `<dashboard theme="branco" layout-mode="grid-pe
   </header>
   <section class="w-full" data-type="kpis" id="kpis" data-cols-d="3" data-cols-t="2" data-cols-m="1" data-gap-x="16" data-gap-y="16">
     <article fr="1" id="kpi_receita" data-order="1" data-height="150">
-      <h1>Receita</h1>
-      <h2>{{ schema: comercial; table: vendas_vw; measure: SUM(item_subtotal) }}</h2>
-      <h3>{{ label: VS MÊS ANTERIOR }}</h3>
+      <h1 class="mb-1">Receita</h1>
+      <h2 class="pt-4 pb-4">{{ schema: comercial; table: vendas_vw; measure: SUM(item_subtotal) }}</h2>
+      <h3 class="mt-1">{{ label: VS MÊS ANTERIOR }}</h3>
     </article>
     <article fr="1" id="kpi_ticket_medio" data-order="2" data-height="150">
-      <h1>Ticket Médio</h1>
-      <h2>{{ schema: comercial; table: vendas_vw; measure: SUM(item_subtotal)/COUNT_DISTINCT(pedido_id) }}</h2>
-      <h3>{{ label: VS MÊS ANTERIOR }}</h3>
+      <h1 class="mb-1">Ticket Médio</h1>
+      <h2 class="pt-4 pb-4">{{ schema: comercial; table: vendas_vw; measure: SUM(item_subtotal)/COUNT_DISTINCT(pedido_id) }}</h2>
+      <h3 class="mt-1">{{ label: VS MÊS ANTERIOR }}</h3>
     </article>
     <article fr="1" id="kpi_pedidos" data-order="3" data-height="150">
-      <h1>Pedidos</h1>
-      <h2>{{ schema: comercial; table: vendas_vw; measure: COUNT_DISTINCT(pedido_id) }}</h2>
-      <h3>{{ label: VS MÊS ANTERIOR }}</h3>
+      <h1 class="mb-1">Pedidos</h1>
+      <h2 class="pt-4 pb-4">{{ schema: comercial; table: vendas_vw; measure: COUNT_DISTINCT(pedido_id) }}</h2>
+      <h3 class="mt-1">{{ label: VS MÊS ANTERIOR }}</h3>
     </article>
   </section>
   <section class="w-full" data-type="charts" id="charts1" data-cols-d="3" data-cols-t="2" data-cols-m="1" data-gap-x="16" data-gap-y="16">
