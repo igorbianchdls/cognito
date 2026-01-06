@@ -752,7 +752,7 @@ export class ConfigParser {
           const inner = am[2] || '';
 
           if (secType === 'kpis') {
-            // KPI: use <p> blocks → p[0]=title, p[1]=binding, p[2]=comparison
+            // KPI: use <p> blocks → p[0]=title, p[1]=binding (value), p[2]=comparison
             const id = aAttrs['id'] || aAttrs['data-id'] || `kpi_${Date.now()}_${Math.random()}`;
             const orderStr = aAttrs['data-order'] || aAttrs['order'];
             const heightStr = aAttrs['data-height'] || aAttrs['height'];
@@ -786,7 +786,7 @@ export class ConfigParser {
             if (frRaw && !Number.isNaN(Number(frRaw)) && Number(frRaw) > 0) {
               (widget as any).widthFr = { desktop: String(Number(frRaw)) + 'fr' };
             }
-            // Order and classes
+            // Order and classes + capture HTML blocks for direct rendering
             try {
               const seq: Array<'h1'|'h2'|'h3'> = [];
               if (pBlocks[0]) seq.push('h1');
@@ -794,9 +794,33 @@ export class ConfigParser {
               if (pBlocks[2]) seq.push('h3');
               if (seq.length) (widget as any).kpiTitlesOrder = seq;
               const w = widget as any;
+              // Preserve classes for backward compatibility (KPICard), but also store raw <p> blocks
               if (pBlocks[0]) { const a = parseAttrs(pBlocks[0].open || ''); if (a['class']) w.kpiConfig = { ...(w.kpiConfig||{}), kpiNameClassName: a['class'] }; }
               if (pBlocks[1]) { const a = parseAttrs(pBlocks[1].open || ''); if (a['class']) w.kpiConfig = { ...(w.kpiConfig||{}), kpiValueClassName: a['class'] }; }
               if (pBlocks[2]) { const a = parseAttrs(pBlocks[2].open || ''); if (a['class']) w.kpiConfig = { ...(w.kpiConfig||{}), kpiComparisonClassName: a['class'] }; }
+
+              // New: store <p> blocks as HTML descriptors to allow direct rendering
+              try {
+                const blocksHtml: Array<{ role: 'title'|'value'|'comparison'; attrs: Record<string, string>; text?: string }> = [];
+                if (pBlocks[0]) {
+                  const a = parseAttrs(pBlocks[0].open || '');
+                  const t = resolveLiquidVars((pBlocks[0].body || '').trim());
+                  blocksHtml.push({ role: 'title', attrs: a, text: t });
+                }
+                if (pBlocks[1]) {
+                  const a = parseAttrs(pBlocks[1].open || '');
+                  // role 'value' displays runtime KPI value (not the moustache text)
+                  blocksHtml.push({ role: 'value', attrs: a });
+                }
+                if (pBlocks[2]) {
+                  const a = parseAttrs(pBlocks[2].open || '');
+                  const raw = (pBlocks[2].body || '').trim();
+                  const isMoustache = /\{\{/.test(raw);
+                  const t = isMoustache ? (h3Pairs['label'] ? resolveLiquidVars(String(h3Pairs['label'])) : undefined) : resolveLiquidVars(raw);
+                  blocksHtml.push({ role: 'comparison', attrs: a, ...(t ? { text: t } : {}) });
+                }
+                if (blocksHtml.length) (widget as any).kpiHtmlBlocks = blocksHtml;
+              } catch {}
             } catch {}
             // Comparison moustache
             if (h3TextRaw) {

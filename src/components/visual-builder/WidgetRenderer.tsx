@@ -837,44 +837,105 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
       );
       break;
 
-    case 'kpi':
-      widgetContent = (
-        <div className="h-full w-full px-0 py-2 relative group">
-          {renderPreBlocks()}
-          <KPICard
-            variant="tile"
-            name={widget.title}
-            currentValue={kpiValue}
-            previousValue={kpiPrev}
-            changePct={kpiChangePct}
-            comparisonLabel={kpiLabel}
-            unit={widget.unit || widget.kpiConfig?.unit}
-            success={true}
-            enableTitlesReorder
-            titlesOrder={(() => {
-              const hasH3 = Boolean(kpiLabel) || typeof kpiChangePct === 'number';
-              const fallback: Array<'h1'|'h2'|'h3'> = hasH3 ? ['h1','h2','h3'] : ['h1','h2'];
-              return (Array.isArray(widget.kpiTitlesOrder) && widget.kpiTitlesOrder.length ? (widget.kpiTitlesOrder as Array<'h1'|'h2'|'h3'>) : fallback);
-            })()}
-            onTitlesOrderChange={(ids) => {
-              try {
-                // Update UI state immediately
-                visualBuilderActions.updateKpiTitlesOrderInState(widget.id, ids)
-              } catch {}
-              try {
-                // Persist change in DSL
-                visualBuilderActions.updateKpiTitlesOrderInCode(widget.id, ids)
-              } catch {}
-            }}
-            {...(widget.kpiConfig || {})}
-            // Fallback to styling props if kpiConfig not provided
-            kpiContainerBackgroundColor={widget.kpiConfig?.kpiContainerBackgroundColor || widget.styling?.backgroundColor}
-            kpiValueColor={widget.kpiConfig?.kpiValueColor || widget.styling?.textColor}
-            kpiValueFontSize={widget.kpiConfig?.kpiValueFontSize || widget.styling?.fontSize}
-          />
-        </div>
-      );
+    case 'kpi': {
+      // If parser provided direct HTML blocks for KPI, render them as plain <p>
+      const kpiBlocks = (widget as any).kpiHtmlBlocks as Array<{ role: 'title'|'value'|'comparison'; attrs: Record<string,string>; text?: string }> | undefined;
+      if (Array.isArray(kpiBlocks) && kpiBlocks.length) {
+        const styleFromAttrs = (a: Record<string,string> | undefined): React.CSSProperties => {
+          const s: React.CSSProperties = {};
+          if (!a) return s;
+          const num = (v?: string) => (v!=null && v!=='' && !Number.isNaN(Number(v)) ? Number(v) : undefined);
+          const map = [
+            ['marginBottom','margin-bottom','marginBottom'],
+            ['marginTop','margin-top','marginTop'],
+            ['marginLeft','margin-left','marginLeft'],
+            ['marginRight','margin-right','marginRight'],
+            ['paddingBottom','padding-bottom','paddingBottom'],
+            ['paddingTop','padding-top','paddingTop'],
+            ['paddingLeft','padding-left','paddingLeft'],
+            ['paddingRight','padding-right','paddingRight'],
+            ['fontSize','font-size','fontSize'],
+            ['fontWeight','font-weight','fontWeight'],
+            ['fontFamily','font-family','fontFamily'],
+            ['color','color','color'],
+            ['textAlign','text-align','textAlign'],
+          ] as const;
+          for (const [camel, kebab, key] of map) {
+            const v = a[camel] ?? a[kebab];
+            if (v != null && v !== '') {
+              if (['color','textAlign','fontFamily'].includes(key)) (s as any)[key] = v;
+              else (s as any)[key] = num(String(v)) ?? v;
+            }
+          }
+          return s;
+        };
+
+        const unit = (widget as any).unit || (widget as any).kpiConfig?.unit || '';
+        const valueText = typeof kpiValue === 'number' ? `${unit ? unit : ''}${kpiValue.toLocaleString('pt-BR')}` : `${unit ? unit : ''}${kpiValue ?? ''}`;
+        const comparisonText = ((): string | undefined => {
+          if (typeof kpiChangePct === 'number' && !Number.isNaN(kpiChangePct)) {
+            const pct = Math.abs(kpiChangePct).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+            return kpiLabel ? `${kpiLabel} • ${pct}%` : `${pct}%`;
+          }
+          return kpiLabel || undefined;
+        })();
+
+        widgetContent = (
+          <div className="h-full w-full px-0 py-2 relative group">
+            {renderPreBlocks()}
+            <div>
+              {kpiBlocks.map((b, i) => {
+                const style = styleFromAttrs(b.attrs);
+                let text: string | undefined = b.text;
+                if (!text) {
+                  if (b.role === 'value') text = valueText;
+                  else if (b.role === 'comparison') text = comparisonText;
+                }
+                return (
+                  <p key={`kpi-${widget.id}-${i}`} style={style}>{text}</p>
+                );
+              })}
+            </div>
+          </div>
+        );
+      } else {
+        // Backward compatibility: render KPICard as before
+        widgetContent = (
+          <div className="h-full w-full px-0 py-2 relative group">
+            {renderPreBlocks()}
+            <KPICard
+              variant="tile"
+              name={widget.title}
+              currentValue={kpiValue}
+              previousValue={kpiPrev}
+              changePct={kpiChangePct}
+              comparisonLabel={kpiLabel}
+              unit={widget.unit || widget.kpiConfig?.unit}
+              success={true}
+              enableTitlesReorder
+              titlesOrder={(() => {
+                const hasH3 = Boolean(kpiLabel) || typeof kpiChangePct === 'number';
+                const fallback: Array<'h1'|'h2'|'h3'> = hasH3 ? ['h1','h2','h3'] : ['h1','h2'];
+                return (Array.isArray(widget.kpiTitlesOrder) && widget.kpiTitlesOrder.length ? (widget.kpiTitlesOrder as Array<'h1'|'h2'|'h3'>) : fallback);
+              })()}
+              onTitlesOrderChange={(ids) => {
+                try {
+                  visualBuilderActions.updateKpiTitlesOrderInState(widget.id, ids)
+                } catch {}
+                try {
+                  visualBuilderActions.updateKpiTitlesOrderInCode(widget.id, ids)
+                } catch {}
+              }}
+              {...(widget.kpiConfig || {})}
+              kpiContainerBackgroundColor={widget.kpiConfig?.kpiContainerBackgroundColor || widget.styling?.backgroundColor}
+              kpiValueColor={widget.kpiConfig?.kpiValueColor || widget.styling?.textColor}
+              kpiValueFontSize={widget.kpiConfig?.kpiValueFontSize || widget.styling?.fontSize}
+            />
+          </div>
+        );
+      }
       break;
+    }
       break;
 
     case 'insights':
