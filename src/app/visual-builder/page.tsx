@@ -229,36 +229,36 @@ export default function VisualBuilderPage() {
 
   <div class="vb-container">
     <section class="row kpis">
-      <article class="card" style="background-color:#fff7ed; border-color:#e5e7eb;">
-        <h3>Vendas</h3>
+      <article class="card" style="background-color:#fff7ed; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px;">
+        <h1 style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Vendas</h1>
         <div class="kpi-value">R$ 124.500</div>
       </article>
-      <article class="card" style="background-color:#ecfeff;">
-        <h3>Pedidos</h3>
+      <article class="card" style="background-color:#ecfeff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px;">
+        <h1 style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Pedidos</h1>
         <div class="kpi-value">830</div>
       </article>
-      <article class="card" style="background-color:#f0fdf4;">
-        <h3>Clientes</h3>
+      <article class="card" style="background-color:#f0fdf4; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px;">
+        <h1 style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Clientes</h1>
         <div class="kpi-value">214</div>
       </article>
-      <article class="card" style="background-color:#eef2ff;">
-        <h3>Ticket Médio</h3>
+      <article class="card" style="background-color:#eef2ff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px;">
+        <h1 style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Ticket Médio</h1>
         <div class="kpi-value">R$ 150,00</div>
       </article>
     </section>
 
     <section class="row charts">
-      <article class="card" style="background-color:#fefce8;">
-        <h3>Faturamento Mensal</h3>
-        <Chart id="fat_mensal" type="line" height="320" title="Faturamento Mensal" />
+      <article class="card" style="background-color:#fefce8; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px;">
+        <h1 style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Faturamento Mensal</h1>
+        <Chart id="fat_mensal" type="line" height="320" />
       </article>
-      <article class="card" style="background-color:#f0f9ff;">
-        <h3>Vendas por Canal</h3>
-        <Chart id="vendas_canal" type="bar" height="320" title="Vendas por Canal" categories="Loja,Site,WhatsApp" values="120,80,150" />
+      <article class="card" style="background-color:#f0f9ff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px;">
+        <h1 style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Vendas por Canal</h1>
+        <Chart id="vendas_canal" type="bar" height="320" categories="Loja,Site,WhatsApp" values="120,80,150" />
       </article>
-      <article class="card" style="background-color:#fdf2f8;">
-        <h3>Participação</h3>
-        <Chart id="participacao" type="pie" height="320" title="Participação" />
+      <article class="card" style="background-color:#fdf2f8; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px;">
+        <h1 style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Participação</h1>
+        <Chart id="participacao" type="pie" height="320" />
       </article>
     </section>
   </div>
