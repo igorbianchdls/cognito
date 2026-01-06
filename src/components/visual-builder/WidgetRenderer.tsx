@@ -544,7 +544,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
     }
   };
 
-  const hasPreBlocks = Array.isArray((widget as any).preBlocks) && (widget as any).preBlocks.length > 0;
+  const hasPreBlocks = Boolean(((widget as any).preHtml as string | undefined)?.trim()) || (Array.isArray((widget as any).preBlocks) && (widget as any).preBlocks.length > 0);
   const commonChartProps = {
     data: chartData,
     title: hasPreBlocks ? undefined : widget.title,
@@ -598,6 +598,12 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
 
   // Render generic preBlocks (<p> parsed from DSL) above widget content (charts, etc.)
   const renderPreBlocks = () => {
+    const preHtml = (widget as any).preHtml as string | undefined;
+    if (preHtml && preHtml.trim()) {
+      return (
+        <div className="mb-1" dangerouslySetInnerHTML={{ __html: preHtml }} />
+      );
+    }
     const blocks = (widget as any).preBlocks as Array<{ className?: string; attrs?: Record<string,string>; text?: string }> | undefined;
     if (!blocks || !blocks.length) return null;
     const styleFromAttrs = (a: Record<string,string> | undefined): React.CSSProperties => {

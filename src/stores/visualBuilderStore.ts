@@ -378,49 +378,6 @@ export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas"
 </dashboard>`
 
 // Example in grid-per-column mode (Liquid)
-export const initialLiquidColumns = `<dashboard theme="branco" layout-mode="grid-per-column" cols-d="3" cols-t="2" cols-m="1" gap-x="16" gap-y="16">
-  <header class="w-full grid grid-cols-2" background-color="#ffffff" border-color="#e5e7eb" border-width="1" border-style="solid">
-    <div id="header-titles" fr="1" class="vb-block header-titles min-w-0 p-2 hover:ring-2 hover:ring-blue-400 rounded-md">
-      <p margin-bottom="4" font-family="Inter" font-size="22" font-weight="600" color="#111827" line-height="1" letter-spacing="0" text-align="left">Dashboard (Colunas)</p>
-      <p font-size="13" font-weight="400" color="#6b7280" line-height="1">Layout por colunas</p>
-    </div>
-    <div id="header-actions" fr="1" class="vb-block header-actions p-2 hover:ring-2 hover:ring-blue-400 rounded-md">
-      <datepicker type="last_30_days" align="right" variant="button" size="md" number-of-months="2" quick-presets="true" locale="pt-BR" format="DD/MM/YYYY"></datepicker>
-    </div>
-  </header>
-  <columns>
-    <column id="1">
-      <kpi id="kpi_faturamento" order="1" span-d="1" height="150" title="💰 Faturamento Total">
-        <datasource schema="comercial" table="vendas_vw" measure="SUM(item_subtotal)" />
-        <styling tw="kpi:unit:R$ kpi:viz:card" />
-      </kpi>
-      <chart id="chart_faturamento_mensal" type="line" order="2" span-d="2" height="420" title="📈 Faturamento Mensal">
-        <datasource schema="comercial" table="vendas_vw" dimension="data_pedido" measure="SUM(item_subtotal)" />
-        <styling tw="legend:off grid:on mb:40" />
-      </chart>
-    </column>
-    <column id="2">
-      <kpi id="kpi_total_itens" order="1" span-d="1" height="150" title="📦 Total de Itens">
-        <datasource schema="comercial" table="vendas_vw" measure="COUNT(*)" />
-        <styling tw="kpi:viz:card" />
-      </kpi>
-      <chart id="chart_top_servicos" type="bar" order="3" span-d="1" height="420" title="🏆 Top 10 Serviços">
-        <datasource schema="comercial" table="vendas_vw" dimension="servico_nome" measure="SUM(item_subtotal)" />
-        <styling tw="legend:off grid:on mb:40 bar:color:#3b82f6" />
-      </chart>
-    </column>
-    <column id="3">
-      <kpi id="kpi_ticket_medio" order="1" span-d="1" height="150" title="🎯 Ticket Médio">
-        <datasource schema="comercial" table="vendas_vw" measure="SUM(item_subtotal)/COUNT_DISTINCT(pedido_id)" />
-        <styling tw="kpi:unit:R$ kpi:viz:card" />
-      </kpi>
-      <chart id="chart_vendas_canal" type="pie" order="2" span-d="1" height="420" title="📱 Vendas por Canal">
-        <datasource schema="comercial" table="vendas_vw" dimension="canal_venda_nome" measure="SUM(item_subtotal)" />
-        <styling tw="legend:on grid:off mb:40" />
-      </chart>
-    </column>
-  </columns>
-</dashboard>`
 
 // Parse do código inicial para ter widgets desde o início
 const initialParseResult = ConfigParser.parse(initialLiquidGrid)

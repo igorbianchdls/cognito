@@ -12,7 +12,7 @@ import CommandConsole from '@/components/visual-builder/CommandConsole';
 import ResponsiveGridCanvas from '@/components/visual-builder/ResponsiveGridCanvas';
 import WidgetEditorModal from '@/components/visual-builder/WidgetEditorModal';
 import { $visualBuilderState, visualBuilderActions } from '@/stores/visualBuilderStore';
-import { initialLiquidGrid, initialLiquidColumns } from '@/stores/visualBuilderStore';
+import { initialLiquidGrid } from '@/stores/visualBuilderStore';
 import { ThemeManager, type ThemeName } from '@/components/visual-builder/ThemeManager';
 import type { Widget, GlobalFilters } from '@/stores/visualBuilderStore';
 
@@ -149,12 +149,6 @@ export default function VisualBuilderPage() {
               onClick={() => visualBuilderActions.updateCode(initialLiquidGrid)}
             >
               Exemplo (Grid)
-            </button>
-            <button
-              className="px-4 py-2 text-sm border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-              onClick={() => visualBuilderActions.updateCode(initialLiquidColumns)}
-            >
-              Exemplo por Colunas
             </button>
             <button className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
               Export Config

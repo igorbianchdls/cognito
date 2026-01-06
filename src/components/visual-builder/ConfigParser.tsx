@@ -347,6 +347,8 @@ export interface Widget {
   kpiTitlesOrder?: Array<'h1'|'h2'|'h3'>;
   // Generic pre-render blocks (<p> from DSL) to render before widget content
   preBlocks?: Array<{ className?: string; attrs?: Record<string, string>; text?: string }>;
+  // Raw HTML to render before widget content (outside <chart> / data area)
+  preHtml?: string;
   // Style for the outer container (article wrapper) applied in ResponsiveGridCanvas
   containerStyle?: {
     backgroundColor?: string;
@@ -909,19 +911,8 @@ export class ConfigParser {
             const spanM = spanMStr ? Number(spanMStr) : undefined;
             const pTitleMatch = inner.match(/<p\b([^>]*)>([\s\S]*?)<\/p>/i);
             const title = pTitleMatch ? resolveLiquidVars((pTitleMatch[2] || '').trim()) : undefined;
-            // Collect all <p> blocks for generic pre-rendering (assign after widget creation)
+            // We'll prefer storing raw HTML outside <chart> for HTML rendering
             let preBlocksTemp: Array<{ className?: string; attrs?: Record<string,string>; text?: string }> | undefined;
-            try {
-              const pre: Array<{ className?: string; attrs?: Record<string,string>; text?: string }> = [];
-              const pReAll = /<p\b([^>]*)>([\s\S]*?)<\/p>/gi;
-              let pm: RegExpExecArray | null;
-              while ((pm = pReAll.exec(inner)) !== null) {
-                const attrs = parseAttrs(pm[1] || '');
-                const text = resolveLiquidVars((pm[2] || '').trim());
-                pre.push({ className: attrs['class'], attrs, text });
-              }
-              if (pre.length) preBlocksTemp = pre;
-            } catch {}
 
             // Parse <chart> (preferred) or <main> with moustache binding and optional <style>{...}</style>
             const nodeRe = /<(chart|main)\b([^>]*)>([\s\S]*?)<\/\1>/i;
@@ -2122,3 +2113,12 @@ export class ConfigParser {
   }
 
 }
+            // Capture any raw HTML around the chart node to render as-is
+            if (nm) {
+              const rawBeforeAfter = inner.replace(nm[0], '').trim();
+              if (rawBeforeAfter) {
+                (widget as any).preHtml = rawBeforeAfter;
+              }
+            } else if (inner && inner.trim()) {
+              (widget as any).preHtml = inner.trim();
+            }
