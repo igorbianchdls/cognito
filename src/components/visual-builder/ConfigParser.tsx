@@ -2113,12 +2113,3 @@ export class ConfigParser {
   }
 
 }
-            // Capture any raw HTML around the chart node to render as-is
-            if (nm) {
-              const rawBeforeAfter = inner.replace(nm[0], '').trim();
-              if (rawBeforeAfter) {
-                (widget as any).preHtml = rawBeforeAfter;
-              }
-            } else if (inner && inner.trim()) {
-              (widget as any).preHtml = inner.trim();
-            }
