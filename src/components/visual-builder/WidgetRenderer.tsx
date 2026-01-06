@@ -1150,7 +1150,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
               title={undefined}
               colors={multipleData.series.map(s => s.color)}
               seriesMetadata={multipleData.series}
-              containerClassName="h-full"
+              
               // Bar Visual Effects
               barBrightness={widget.stackedBarConfig?.styling?.barBrightness}
               barSaturate={widget.stackedBarConfig?.styling?.barSaturate}
@@ -1246,7 +1246,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
                 ? multipleData.series.map((s, i) => ({ ...s, color: (widget.groupedBarConfig?.styling?.colors as string[])[i] || s.color }))
                 : multipleData.series
               }
-              containerClassName="h-full"
+              
               // Bar Visual Effects
               barBrightness={widget.groupedBarConfig?.styling?.barBrightness}
               barSaturate={widget.groupedBarConfig?.styling?.barSaturate}
@@ -1343,7 +1343,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
               gridStrokeWidth={widget.pivotBarConfig?.styling?.gridStrokeWidth}
               borderRadius={widget.pivotBarConfig?.styling?.borderRadius}
               borderWidth={widget.pivotBarConfig?.styling?.borderWidth}
-              containerClassName="h-full"
+              
               onBarClick={(category) => drillPivot(category)}
             />
           </div>
@@ -1402,7 +1402,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
               config={config}
               className="max-w-[320px]"
               title={undefined}
-              containerClassName="h-full"
+              
               startAngle={widget.radialStackedConfig?.styling?.startAngle}
               endAngle={widget.radialStackedConfig?.styling?.endAngle}
               innerRadius={widget.radialStackedConfig?.styling?.innerRadius}
@@ -1456,35 +1456,13 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
               title={undefined}
               colors={multipleData.series.map(s => s.color)}
               seriesMetadata={multipleData.series}
-              containerClassName="h-full"
+              
               // Grid & axis
               enableGridX={widget.stackedLinesConfig?.styling?.enableGridX ?? false}
               enableGridY={widget.stackedLinesConfig?.styling?.enableGridY ?? true}
               gridColor={widget.stackedLinesConfig?.styling?.gridColor}
               gridStrokeWidth={widget.stackedLinesConfig?.styling?.gridStrokeWidth}
-              // Typography - Title
-              titleFontFamily={widget.stackedLinesConfig?.styling?.titleFontFamily}
-              titleFontSize={widget.stackedLinesConfig?.styling?.titleFontSize}
-              titleFontWeight={widget.stackedLinesConfig?.styling?.titleFontWeight}
-              titleColor={widget.stackedLinesConfig?.styling?.titleColor}
-              titleMarginTop={widget.stackedLinesConfig?.styling?.titleMarginTop}
-              titleMarginLeft={widget.stackedLinesConfig?.styling?.titleMarginLeft}
-              titleMarginBottom={widget.stackedLinesConfig?.styling?.titleMarginBottom}
-              // Typography - Subtitle
-              subtitleFontFamily={widget.stackedLinesConfig?.styling?.subtitleFontFamily}
-              subtitleFontSize={widget.stackedLinesConfig?.styling?.subtitleFontSize}
-              subtitleFontWeight={widget.stackedLinesConfig?.styling?.subtitleFontWeight}
-              subtitleColor={widget.stackedLinesConfig?.styling?.subtitleColor}
-              subtitleMarginTop={widget.stackedLinesConfig?.styling?.subtitleMarginTop}
-              subtitleMarginLeft={widget.stackedLinesConfig?.styling?.subtitleMarginLeft}
-              subtitleMarginBottom={widget.stackedLinesConfig?.styling?.subtitleMarginBottom}
-              // Container Border
-              containerBorderWidth={widget.stackedLinesConfig?.styling?.containerBorderWidth}
-              containerBorderColor={widget.stackedLinesConfig?.styling?.containerBorderColor}
-              containerBorderAccentColor={widget.stackedLinesConfig?.styling?.containerBorderAccentColor}
-              containerBorderRadius={widget.stackedLinesConfig?.styling?.containerBorderRadius}
-              containerBorderVariant={widget.stackedLinesConfig?.styling?.containerBorderVariant}
-              containerPadding={widget.stackedLinesConfig?.styling?.containerPadding}
+              
             />
           </div>
         );
