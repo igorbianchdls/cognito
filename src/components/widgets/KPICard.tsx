@@ -8,7 +8,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import React, { useEffect, useState } from 'react'
-import { ArrowDownRight, ArrowUpRight, ChevronUp, ChevronDown } from 'lucide-react'
+import { ArrowDownRight, ArrowUpRight, ChevronUp, ChevronDown, GripVertical } from 'lucide-react'
 import { DndContext, closestCenter, DragEndEvent, useSensor, useSensors, PointerSensor, KeyboardSensor } from '@dnd-kit/core'
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
@@ -409,7 +409,17 @@ export function KPICard({
         opacity: isDragging ? 0.95 : 1,
       } as React.CSSProperties
       return (
-        <div ref={setNodeRef} style={style} className="group relative hover:ring-2 hover:ring-blue-400 rounded-md cursor-grab active:cursor-grabbing" {...attributes} {...listeners}>
+        <div ref={setNodeRef} style={style} className="group relative hover:ring-2 hover:ring-blue-400 rounded-md" {...attributes}>
+          {/* Drag handle (left) */}
+          <button
+            type="button"
+            aria-label="Arrastar bloco"
+            title="Arrastar"
+            className="absolute top-1 left-1 h-5 w-5 inline-flex items-center justify-center rounded bg-white/90 border text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing pointer-events-auto"
+            {...listeners}
+          >
+            <GripVertical className="h-3 w-3" />
+          </button>
           {/* Hover controls */}
           {onMove ? (
             <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 pointer-events-auto">
