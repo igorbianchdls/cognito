@@ -168,9 +168,11 @@ export default function DashboardInCanvasHeader({
   const titlesFirst = !blocksOrder || blocksOrder[0] !== 'header-actions';
 
   const headerBlockIds = (headerConfig?.blocksOrder && headerConfig.blocksOrder.length) ? headerConfig.blocksOrder : ['header-titles','header-actions'];
-  const titleItemIds = (headerConfig?.titlesOrder && headerConfig.titlesOrder.length)
+  // Build titles items from config, but only include subtitle item if it exists
+  const desiredTitleItemIds = (headerConfig?.titlesOrder && headerConfig.titlesOrder.length)
     ? headerConfig.titlesOrder.map(t => t === 'h1' ? 'header-title' : 'header-subtitle')
     : ['header-title','header-subtitle'];
+  const titleItemIds = (subtitle ? desiredTitleItemIds : desiredTitleItemIds.filter(id => id !== 'header-subtitle')) as Array<'header-title'|'header-subtitle'>;
 
   const onDragEndBlocks = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -186,16 +188,22 @@ export default function DashboardInCanvasHeader({
       try { visualBuilderActions.updateHeaderInCode({ blocksOrder: ids }); } catch {}
       return;
     }
-    if (aid === 'header-title' || aid === 'header-subtitle') {
-      const ids = [...titleItemIds];
-      const oldIndex = ids.indexOf(aid);
-      const newIndex = ids.indexOf(oid);
-      if (oldIndex === -1 || newIndex === -1) return;
-      ids.splice(newIndex, 0, ids.splice(oldIndex, 1)[0]);
-      const titlesOrder = ids.map(x => x === 'header-title' ? 'h1' : 'h2') as Array<'h1'|'h2'>;
-      try { visualBuilderActions.updateHeaderInCode({ titlesOrder }); } catch {}
-      return;
-    }
+  };
+
+  // Dedicated handler for reordering title/subtitle inside header-titles
+  const onDragEndTitles = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const aid = String(active.id);
+    const oid = String(over.id);
+    if (!(aid === 'header-title' || aid === 'header-subtitle')) return;
+    const ids = [...titleItemIds];
+    const oldIndex = ids.indexOf(aid as any);
+    const newIndex = ids.indexOf(oid as any);
+    if (oldIndex === -1 || newIndex === -1) return;
+    ids.splice(newIndex, 0, ids.splice(oldIndex, 1)[0]);
+    const titlesOrder = ids.map(x => x === 'header-title' ? 'h1' : 'h2') as Array<'h1'|'h2'>;
+    try { visualBuilderActions.updateHeaderInCode({ titlesOrder }); } catch {}
   };
 
   // Sortable wrappers for header blocks
@@ -260,6 +268,7 @@ export default function DashboardInCanvasHeader({
             }
           >
             {id === 'header-titles' ? (
+              <DndContext collisionDetection={closestCenter} onDragEnd={onDragEndTitles}>
               <SortableContext items={titleItemIds} strategy={verticalListSortingStrategy}>
                 {titleItemIds.map(itemId => (
                   itemId === 'header-title' ? (
@@ -317,6 +326,7 @@ export default function DashboardInCanvasHeader({
                   )
                 ))}
               </SortableContext>
+              </DndContext>
             ) : (
               <>
                 {(headerConfig?.showDatePicker !== false) && (
