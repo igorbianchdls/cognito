@@ -24,7 +24,7 @@ import InsightsHeroCarousel from '@/components/widgets/InsightsHeroCarousel';
 import InsightsCard2 from '@/components/widgets/InsightsCard2';
 import { $insights2 } from '@/stores/nexus/insights2Store';
 import { useStore as useNanoStore } from '@nanostores/react';
-import { $visualBuilderState } from '@/stores/visualBuilderStore';
+import { $visualBuilderState, visualBuilderActions } from '@/stores/visualBuilderStore';
 
 // Module-level caches to avoid 'any' casting and persist across mounts
 type GroupedCacheValue = { items: Array<{ label: string; [key: string]: string | number }>; series: Array<{ key: string; label: string; color: string }> };
@@ -805,6 +805,13 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
             comparisonLabel={kpiLabel}
             unit={widget.unit || widget.kpiConfig?.unit}
             success={true}
+            enableTitlesReorder
+            titlesOrder={(() => {
+              const hasH3 = Boolean(kpiLabel) || typeof kpiChangePct === 'number';
+              const fallback: Array<'h1'|'h2'|'h3'> = hasH3 ? ['h1','h2','h3'] : ['h1','h2'];
+              return (Array.isArray(widget.kpiTitlesOrder) && widget.kpiTitlesOrder.length ? (widget.kpiTitlesOrder as Array<'h1'|'h2'|'h3'>) : fallback);
+            })()}
+            onTitlesOrderChange={(ids) => { try { visualBuilderActions.updateKpiTitlesOrderInCode(widget.id, ids) } catch {} }}
             {...(widget.kpiConfig || {})}
             // Fallback to styling props if kpiConfig not provided
             kpiContainerBackgroundColor={widget.kpiConfig?.kpiContainerBackgroundColor || widget.styling?.backgroundColor}

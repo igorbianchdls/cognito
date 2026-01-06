@@ -9,6 +9,9 @@ import {
 } from "@/components/ui/card"
 import React from 'react'
 import { ArrowDownRight, ArrowUpRight } from 'lucide-react'
+import { DndContext, closestCenter, DragEndEvent, useSensor, useSensors, PointerSensor, KeyboardSensor } from '@dnd-kit/core'
+import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 
 // Helper function to convert hex color + opacity to RGBA
 function hexToRgba(hex: string, opacity: number = 1): string {
@@ -164,6 +167,10 @@ interface KPICardProps {
   kpiNameClassName?: string;
   kpiValueClassName?: string;
   kpiContainerClassName?: string;
+  // Optional reorder of KPI blocks (tile variant)
+  enableTitlesReorder?: boolean;
+  titlesOrder?: Array<'h1'|'h2'|'h3'>;
+  onTitlesOrderChange?: (order: Array<'h1'|'h2'|'h3'>) => void;
 }
 
 export function KPICard({
@@ -280,7 +287,10 @@ export function KPICard({
   // Tailwind Classes - KPI
   kpiNameClassName = "",
   kpiValueClassName = "",
-  kpiContainerClassName = ""
+  kpiContainerClassName = "",
+  enableTitlesReorder,
+  titlesOrder,
+  onTitlesOrderChange
 }: KPICardProps) {
   // Reference compatibility props so linter doesn't flag them as unused
   const __compat = { kpiId, datasetId, tableId, metric, calculation, target, trend, status, timeRange, visualization, metadata, targetColorProp }
@@ -386,6 +396,88 @@ export function KPICard({
     const circleSize = tileIconCircleSize ?? s.icon
     const innerIconSize = tileIconSize ?? Math.max(16, circleSize - 8)
 
+    // DnD helpers (optional)
+    const sensors = useSensors(
+      useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+      useSensor(KeyboardSensor)
+    )
+    const SortableRow = ({ id, children }: { id: 'h1'|'h2'|'h3'; children: React.ReactNode }) => {
+      const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id })
+      const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.95 : 1,
+      } as React.CSSProperties
+      return (
+        <div ref={setNodeRef} style={style} className="hover:ring-2 hover:ring-blue-400 rounded-md cursor-grab active:cursor-grabbing" {...attributes} {...listeners}>
+          {children}
+        </div>
+      )
+    }
+
+    // Blocks
+    const headerRow = (
+      <div className="flex items-start justify-between">
+        <div
+          className={`font-medium ${!kpiNameColor ? 'text-slate-800' : ''} leading-none ${s.label}`}
+          style={{
+            color: kpiNameColor || undefined,
+            fontFamily: kpiNameFontFamily !== 'inherit' ? kpiNameFontFamily : undefined
+          }}
+        >
+          {name || 'KPI'}
+        </div>
+        {React.isValidElement(icon) ? (
+          <div
+            className="flex items-center justify-center rounded-full"
+            style={{ width: circleSize, height: circleSize, backgroundColor: iconBg || '#f3f4f6' }}
+          >
+            {React.cloneElement(
+              icon as React.ReactElement<{ size?: number; color?: string }>,
+              { size: innerIconSize, color: iconColor || '#9ca3af' }
+            )}
+          </div>
+        ) : null}
+      </div>
+    )
+    const valueRow = (
+      <div
+        className={`font-semibold ${!kpiValueColor ? 'text-slate-900' : ''} leading-none ${s.value}`}
+        style={{
+          ...(tileValuePaddingY !== undefined ? { paddingTop: tileValuePaddingY, paddingBottom: tileValuePaddingY } : { paddingTop: 16, paddingBottom: 16 }),
+          color: kpiValueColor || undefined,
+          fontFamily: kpiValueFontFamily !== 'inherit' ? kpiValueFontFamily : undefined
+        }}
+      >
+        {formatValue(currentValue, unit)}
+      </div>
+    )
+    const comparisonRow = (
+      <div className="flex items-center gap-2">
+        <TrendIcon size={14} color={appliedChangeColor} />
+        <span style={{ color: appliedChangeColor }} className="font-medium text-[12px] leading-none">
+          {Math.abs(effectiveChangePct || 0).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%
+        </span>
+        <span className={`uppercase tracking-wide leading-none ${s.micro}`}
+          style={{ color: neutralColor, fontFamily: kpiNameFontFamily !== 'inherit' ? kpiNameFontFamily : undefined }}>
+          {comparisonLabel}
+        </span>
+      </div>
+    )
+    const mapBlocks: Record<'h1'|'h2'|'h3', JSX.Element> = { h1: headerRow, h2: valueRow, h3: comparisonRow }
+    const defaultOrder: Array<'h1'|'h2'|'h3'> = (comparisonLabel !== undefined && String(comparisonLabel || '').length > 0) ? ['h1','h2','h3'] : ['h1','h2']
+    const order: Array<'h1'|'h2'|'h3'> = (Array.isArray(titlesOrder) && titlesOrder.length ? titlesOrder : defaultOrder) as Array<'h1'|'h2'|'h3'>
+    const onDragEnd = (e: DragEndEvent) => {
+      const { active, over } = e
+      if (!over || active.id === over.id) return
+      const ids = [...order] as Array<'h1'|'h2'|'h3'>
+      const oldIndex = ids.indexOf(active.id as any)
+      const newIndex = ids.indexOf(over.id as any)
+      if (oldIndex === -1 || newIndex === -1) return
+      ids.splice(newIndex, 0, ids.splice(oldIndex, 1)[0])
+      onTitlesOrderChange && onTitlesOrderChange(ids)
+    }
+
     return (
       <div
         className={kpiContainerClassName || `${borderVariant === 'smooth' ? 'border border-gray-200' : ''} ${(borderVariant === 'accent' || borderVariant === 'smooth' || borderVariant === 'none') ? 'shadow-none' : 'shadow-sm'} relative ${s.pad}`}
@@ -431,51 +523,23 @@ export function KPICard({
           return Object.keys(style).length ? style : undefined
         })()}
       >
-        {/* Header */}
-        <div className="flex items-start justify-between">
-          <div
-            className={`font-medium ${!kpiNameColor ? 'text-slate-800' : ''} leading-none ${s.label}`}
-            style={{
-              color: kpiNameColor || undefined,
-              fontFamily: kpiNameFontFamily !== 'inherit' ? kpiNameFontFamily : undefined
-            }}
-          >
-            {name || 'KPI'}
-          </div>
-          {React.isValidElement(icon) ? (
-            <div
-              className="flex items-center justify-center rounded-full"
-              style={{ width: circleSize, height: circleSize, backgroundColor: iconBg || '#f3f4f6' }}
-            >
-              {React.cloneElement(
-                icon as React.ReactElement<{ size?: number; color?: string }>,
-                { size: innerIconSize, color: iconColor || '#9ca3af' }
-              )}
-            </div>
-          ) : null}
-        </div>
-        {/* Value */}
-        <div
-          className={`font-semibold ${!kpiValueColor ? 'text-slate-900' : ''} leading-none ${s.value}`}
-          style={{
-            ...(tileValuePaddingY !== undefined ? { paddingTop: tileValuePaddingY, paddingBottom: tileValuePaddingY } : { paddingTop: 16, paddingBottom: 16 }),
-            color: kpiValueColor || undefined,
-            fontFamily: kpiValueFontFamily !== 'inherit' ? kpiValueFontFamily : undefined
-          }}
-        >
-          {formatValue(currentValue, unit)}
-        </div>
-        {/* Footer */}
-        <div className="flex items-center gap-2">
-          <TrendIcon size={14} color={appliedChangeColor} />
-          <span style={{ color: appliedChangeColor }} className="font-medium text-[12px] leading-none">
-            {Math.abs(effectiveChangePct || 0).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%
-          </span>
-          <span className={`uppercase tracking-wide leading-none ${s.micro}`}
-            style={{ color: neutralColor, fontFamily: kpiNameFontFamily !== 'inherit' ? kpiNameFontFamily : undefined }}>
-            {comparisonLabel}
-          </span>
-        </div>
+        {enableTitlesReorder ? (
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+            <SortableContext items={order} strategy={verticalListSortingStrategy}>
+              <div className="flex flex-col gap-1">
+                {order.map((id) => (
+                  <SortableRow key={id} id={id}>{mapBlocks[id]}</SortableRow>
+                ))}
+              </div>
+            </SortableContext>
+          </DndContext>
+        ) : (
+          <>
+            {order.map((id) => (
+              <div key={id}>{mapBlocks[id]}</div>
+            ))}
+          </>
+        )}
         {borderVariant === 'accent' ? (
           <>
             <div
