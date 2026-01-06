@@ -797,6 +797,9 @@ export class ConfigParser {
           const h3m = inner.match(/<h3\b[^>]*>([\s\S]*?)<\/h3>/i);
           if (h3m && h3m[1]) h3TextRaw = (h3m[1] || '').trim();
           const h3Pairs = h3TextRaw && /\{\{/.test(h3TextRaw) ? parseBindingPairs(h3TextRaw) : {};
+          // For class extraction on KPI blocks
+          const h2Open = inner.match(/<h2\b([^>]*)>/i);
+          const h3Open = inner.match(/<h3\b([^>]*)>/i);
             const ds: any = {};
             if (pairs['schema']) ds.schema = pairs['schema'];
             if (pairs['table'] || pairs['dimension']) ds.table = pairs['table'] || pairs['dimension'];
