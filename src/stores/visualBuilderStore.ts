@@ -169,18 +169,18 @@ export const initialLiquidGrid = `<dashboard theme="branco" layout-mode="grid-pe
   <section class="w-full" data-type="kpis" id="kpis" data-cols-d="3" data-cols-t="2" data-cols-m="1" data-gap-x="16" data-gap-y="16">
     <article fr="1" id="kpi_receita" data-order="1" data-height="150" background-color="#ffffff" border-color="#e5e7eb" border-width="1" border-style="solid" border-radius="12" padding="12">
       <p margin-bottom="20" font-family="Inter" font-size="14" font-weight="600" color="#1f2937" text-align="left">Receita</p>
-      <p margin-bottom="12" font-family="Inter" font-size="28" font-weight="700" color="#111827" text-align="left"></p>
-      <p margin-bottom="4" font-size="12" color="#6b7280" text-transform="uppercase">{{ label: VS MÊS ANTERIOR }}</p>
+      <p margin-bottom="12" font-family="Inter" font-size="28" font-weight="700" color="#111827" text-align="left">75</p>
+      <p margin-bottom="4" font-size="12" color="#6b7280" text-transform="uppercase">VS MÊS ANTERIOR</p>
     </article>
     <article fr="1" id="kpi_ticket_medio" data-order="2" data-height="150" background-color="#ffffff" border-color="#e5e7eb" border-width="1" border-style="solid" border-radius="12" padding="12">
       <p margin-bottom="20" font-family="Inter" font-size="14" font-weight="600" color="#1f2937" text-align="left">Ticket Médio</p>
-      <p margin-bottom="12" font-family="Inter" font-size="28" font-weight="700" color="#111827" text-align="left"></p>
-      <p margin-bottom="4" font-size="12" color="#6b7280" text-transform="uppercase">{{ label: VS MÊS ANTERIOR }}</p>
+      <p margin-bottom="12" font-family="Inter" font-size="28" font-weight="700" color="#111827" text-align="left">75</p>
+      <p margin-bottom="4" font-size="12" color="#6b7280" text-transform="uppercase">VS MÊS ANTERIOR</p>
     </article>
     <article fr="1" id="kpi_pedidos" data-order="3" data-height="150" background-color="#ffffff" border-color="#e5e7eb" border-width="1" border-style="solid" border-radius="12" padding="12">
       <p margin-bottom="20" font-family="Inter" font-size="14" font-weight="600" color="#1f2937" text-align="left">Pedidos</p>
-      <p margin-bottom="12" font-family="Inter" font-size="28" font-weight="700" color="#111827" text-align="left"></p>
-      <p margin-bottom="4" font-size="12" color="#6b7280" text-transform="uppercase">{{ label: VS MÊS ANTERIOR }}</p>
+      <p margin-bottom="12" font-family="Inter" font-size="28" font-weight="700" color="#111827" text-align="left">75</p>
+      <p margin-bottom="4" font-size="12" color="#6b7280" text-transform="uppercase">VS MÊS ANTERIOR</p>
     </article>
   </section>
   <section class="w-full" data-type="charts" id="charts1" data-cols-d="3" data-cols-t="2" data-cols-m="1" data-gap-x="16" data-gap-y="16">
