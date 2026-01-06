@@ -83,6 +83,7 @@ const DraggableWidget = memo(function DraggableWidget({ widget, spanClasses, spa
     if (s['borderStyle']) out.borderStyle = String(s['borderStyle']);
     if (s['borderWidth'] !== undefined) out.borderWidth = toPx(s['borderWidth']);
     if (s['borderRadius'] !== undefined) out.borderRadius = toPx(s['borderRadius']);
+    if (s['borderRadius'] !== undefined) out.overflow = 'hidden';
     if (s['padding'] !== undefined) out.padding = toPx(s['padding']);
     if (s['paddingTop'] !== undefined) out.paddingTop = toPx(s['paddingTop']);
     if (s['paddingRight'] !== undefined) out.paddingRight = toPx(s['paddingRight']);
