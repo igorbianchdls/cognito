@@ -167,6 +167,7 @@ interface KPICardProps {
   kpiNameClassName?: string;
   kpiValueClassName?: string;
   kpiContainerClassName?: string;
+  kpiComparisonClassName?: string;
   // Optional reorder of KPI blocks (tile variant)
   enableTitlesReorder?: boolean;
   titlesOrder?: Array<'h1'|'h2'|'h3'>;
@@ -288,6 +289,7 @@ export function KPICard({
   kpiNameClassName = "",
   kpiValueClassName = "",
   kpiContainerClassName = "",
+  kpiComparisonClassName = "",
   enableTitlesReorder,
   titlesOrder,
   onTitlesOrderChange
