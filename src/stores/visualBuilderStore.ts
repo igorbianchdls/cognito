@@ -159,7 +159,7 @@ const compactWidgetHeaders = (code: string): string => {
 export const initialLiquidGrid = `<dashboard theme="branco" layout-mode="grid-per-row" cols-d="12" gap-x="16" gap-y="16" date-type="last_30_days">
   <header class="w-full grid grid-cols-2" background-color="#ffffff" border-color="#e5e7eb" border-width="1" border-style="solid">
     <div id="header-titles" fr="1" class="vb-block header-titles min-w-0 p-2 hover:ring-2 hover:ring-blue-400 rounded-md">
-      <h1 font-family="Inter" font-size="24" font-weight="600" color="#111827" line-height="1" letter-spacing="0" text-align="left" margin-bottom="4">Dashboard de Indicadores</h1>
+      <h1 font-family="Inter" font-size="24" font-weight="600" color="#111827" line-height="1" letter-spacing="0" text-align="left" margin-bottom="4" class="mb-5">Dashboard de Indicadores</h1>
       <h2 font-size="14" font-weight="400" color="#6b7280" line-height="1">Visão geral</h2>
     </div>
     <div id="header-actions" fr="1" class="vb-block header-actions p-2 hover:ring-2 hover:ring-blue-400 rounded-md">
@@ -168,38 +168,38 @@ export const initialLiquidGrid = `<dashboard theme="branco" layout-mode="grid-pe
   </header>
   <section class="w-full" data-type="kpis" id="kpis" data-cols-d="3" data-cols-t="2" data-cols-m="1" data-gap-x="16" data-gap-y="16">
     <article fr="1" id="kpi_receita" data-order="1" data-height="150">
-      <h1 class="mb-1">Receita</h1>
+      <h1 class="mb-5">Receita</h1>
       <h2 class="pt-4 pb-4">{{ schema: comercial; table: vendas_vw; measure: SUM(item_subtotal) }}</h2>
       <h3 class="mt-1">{{ label: VS MÊS ANTERIOR }}</h3>
     </article>
     <article fr="1" id="kpi_ticket_medio" data-order="2" data-height="150">
-      <h1 class="mb-1">Ticket Médio</h1>
+      <h1 class="mb-5">Ticket Médio</h1>
       <h2 class="pt-4 pb-4">{{ schema: comercial; table: vendas_vw; measure: SUM(item_subtotal)/COUNT_DISTINCT(pedido_id) }}</h2>
       <h3 class="mt-1">{{ label: VS MÊS ANTERIOR }}</h3>
     </article>
     <article fr="1" id="kpi_pedidos" data-order="3" data-height="150">
-      <h1 class="mb-1">Pedidos</h1>
+      <h1 class="mb-5">Pedidos</h1>
       <h2 class="pt-4 pb-4">{{ schema: comercial; table: vendas_vw; measure: COUNT_DISTINCT(pedido_id) }}</h2>
       <h3 class="mt-1">{{ label: VS MÊS ANTERIOR }}</h3>
     </article>
   </section>
   <section class="w-full" data-type="charts" id="charts1" data-cols-d="3" data-cols-t="2" data-cols-m="1" data-gap-x="16" data-gap-y="16">
     <article fr="1" id="chart_vendas_canal" data-order="1" data-height="420" data-span-d="1">
-      <h1>Vendas por Canal</h1>
+      <h1 class="mb-5">Vendas por Canal</h1>
       <main chart="bar">
         {{ schema: comercial; table: vendas_vw; dimension: canal_venda_nome; measure: SUM(item_subtotal) }}
         <style>{"tw": "legend:on mb:40"}</style>
       </main>
     </article>
     <article fr="1" id="chart_faturamento_mensal" data-order="2" data-height="420" data-span-d="1">
-      <h1>Faturamento Mensal</h1>
+      <h1 class="mb-5">Faturamento Mensal</h1>
       <main chart="line">
         {{ schema: comercial; table: vendas_vw; dimension: data_pedido; measure: SUM(item_subtotal) }}
         <style>{"tw": "legend:off grid:on mb:40"}</style>
       </main>
     </article>
     <article fr="1" id="chart_vendas_categoria" data-order="3" data-height="420" data-span-d="1">
-      <h1>Vendas por Categoria</h1>
+      <h1 class="mb-5">Vendas por Categoria</h1>
       <main chart="pie">
         {{ schema: comercial; table: vendas_vw; dimension: categoria_servico_nome; measure: SUM(item_subtotal) }}
         <style>{"tw": "legend:on mb:40"}</style>
