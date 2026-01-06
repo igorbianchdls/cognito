@@ -163,7 +163,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
 
   // Check if widget type needs BigQuery data
   const needsBigQueryData = (type: string): boolean => {
-    return ['bar', 'line', 'pie', 'area', 'kpi'].includes(type);
+    return ['bar', 'line', 'pie', 'area', 'stackedbar', 'groupedbar', 'stackedlines', 'radialstacked', 'pivotbar', 'treemap', 'scatter', 'funnel'].includes(type);
   };
 
   // Simple in-memory caches per signature (module-level)
@@ -598,55 +598,57 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
 
   // Render generic preBlocks (<p> parsed from DSL) above widget content (charts, etc.)
   const renderPreBlocks = () => {
+    const blocks = (widget as any).preBlocks as Array<{ className?: string; attrs?: Record<string,string>; text?: string }> | undefined;
+    if (blocks && blocks.length) {
+      const styleFromAttrs = (a: Record<string,string> | undefined): React.CSSProperties => {
+        const s: React.CSSProperties = {};
+        if (!a) return s;
+        const num = (v?: string) => (v!=null && v!=='' && !Number.isNaN(Number(v)) ? Number(v) : undefined);
+        const map = [
+          ['marginBottom','margin-bottom','marginBottom'],
+          ['marginTop','margin-top','marginTop'],
+          ['marginLeft','margin-left','marginLeft'],
+          ['marginRight','margin-right','marginRight'],
+          ['paddingBottom','padding-bottom','paddingBottom'],
+          ['paddingTop','padding-top','paddingTop'],
+          ['paddingLeft','padding-left','paddingLeft'],
+          ['paddingRight','padding-right','paddingRight'],
+          ['fontSize','font-size','fontSize'],
+          ['fontWeight','font-weight','fontWeight'],
+          ['lineHeight','line-height','lineHeight'],
+          ['letterSpacing','letter-spacing','letterSpacing'],
+          ['fontFamily','font-family','fontFamily'],
+          ['color','color','color'],
+          ['textAlign','text-align','textAlign'],
+          ['textTransform','text-transform','textTransform'],
+          ['fontStyle','font-style','fontStyle'],
+        ] as const;
+        for (const [camel, kebab, key] of map) {
+          const v = a[camel] ?? a[kebab];
+          if (v != null && v !== '') {
+            if (['color','textAlign','fontFamily','textTransform','fontStyle'].includes(key)) (s as any)[key] = v;
+            else (s as any)[key] = num(String(v)) ?? v;
+          }
+        }
+        return s;
+      };
+      return (
+        <div className="mb-1">
+          {blocks.map((b, i) => (
+            <p key={`pre-${widget.id}-${i}`} className={b.className || undefined} style={styleFromAttrs(b.attrs)}>
+              {b.text}
+            </p>
+          ))}
+        </div>
+      );
+    }
     const preHtml = (widget as any).preHtml as string | undefined;
     if (preHtml && preHtml.trim()) {
       return (
         <div className="mb-1" dangerouslySetInnerHTML={{ __html: preHtml }} />
       );
     }
-    const blocks = (widget as any).preBlocks as Array<{ className?: string; attrs?: Record<string,string>; text?: string }> | undefined;
-    if (!blocks || !blocks.length) return null;
-    const styleFromAttrs = (a: Record<string,string> | undefined): React.CSSProperties => {
-      const s: React.CSSProperties = {};
-      if (!a) return s;
-      const num = (v?: string) => (v!=null && v!=='' && !Number.isNaN(Number(v)) ? Number(v) : undefined);
-      const map = [
-        ['marginBottom','margin-bottom','marginBottom'],
-        ['marginTop','margin-top','marginTop'],
-        ['marginLeft','margin-left','marginLeft'],
-        ['marginRight','margin-right','marginRight'],
-        ['paddingBottom','padding-bottom','paddingBottom'],
-        ['paddingTop','padding-top','paddingTop'],
-        ['paddingLeft','padding-left','paddingLeft'],
-        ['paddingRight','padding-right','paddingRight'],
-        ['fontSize','font-size','fontSize'],
-        ['fontWeight','font-weight','fontWeight'],
-        ['lineHeight','line-height','lineHeight'],
-        ['letterSpacing','letter-spacing','letterSpacing'],
-        ['fontFamily','font-family','fontFamily'],
-        ['color','color','color'],
-        ['textAlign','text-align','textAlign'],
-        ['textTransform','text-transform','textTransform'],
-        ['fontStyle','font-style','fontStyle'],
-      ] as const;
-      for (const [camel, kebab, key] of map) {
-        const v = a[camel] ?? a[kebab];
-        if (v != null && v !== '') {
-          if (['color','textAlign','fontFamily','textTransform','fontStyle'].includes(key)) (s as any)[key] = v;
-          else (s as any)[key] = num(String(v)) ?? v;
-        }
-      }
-      return s;
-    };
-    return (
-      <div className="mb-1">
-        {blocks.map((b, i) => (
-          <p key={`pre-${widget.id}-${i}`} className={b.className || undefined} style={styleFromAttrs(b.attrs)}>
-            {b.text}
-          </p>
-        ))}
-      </div>
-    );
+    return null;
   };
 
   switch (widget.type) {

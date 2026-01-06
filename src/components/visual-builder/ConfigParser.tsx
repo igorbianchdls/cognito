@@ -804,95 +804,37 @@ export class ConfigParser {
           };
 
           if (secType === 'kpis') {
-            // KPI: use <p> blocks → p[0]=title, p[1]=binding (value), p[2]=comparison
+            // KPI as pure HTML (no parsing for moustache/props)
             const id = aAttrs['id'] || aAttrs['data-id'] || `kpi_${Date.now()}_${Math.random()}`;
             const orderStr = aAttrs['data-order'] || aAttrs['order'];
             const heightStr = aAttrs['data-height'] || aAttrs['height'];
             const order = orderStr ? Number(orderStr) : undefined;
             const heightPx = heightStr ? Number(heightStr) : undefined;
-            const pRe = /<p\b([^>]*)>([\s\S]*?)<\/p>/gi;
-            const pBlocks: Array<{ open: string; body: string }> = [];
-            let pm: RegExpExecArray | null;
-            while ((pm = pRe.exec(inner)) !== null) pBlocks.push({ open: pm[1] || '', body: pm[2] || '' });
-            const title = pBlocks[0] ? resolveLiquidVars((pBlocks[0].body || '').trim()) : undefined;
-            const bindingRaw = pBlocks[1] ? (pBlocks[1].body || '').trim() : '';
-            const pairs = bindingRaw ? parseBindingPairs(bindingRaw) : {};
-            const h3TextRaw = pBlocks[2] ? (pBlocks[2].body || '').trim() : '';
-            const h3Pairs = h3TextRaw && /\{\{/.test(h3TextRaw) ? parseBindingPairs(h3TextRaw) : {};
-            const ds: any = {};
-            if (pairs['schema']) ds.schema = pairs['schema'];
-            if (pairs['table'] || pairs['dimension']) ds.table = pairs['table'] || pairs['dimension'];
-            if (pairs['measure']) ds.measure = pairs['measure'];
-            if (pairs['where']) ds.where = pairs['where'];
-            if (pairs['limit'] && !Number.isNaN(Number(pairs['limit']))) ds.limit = Number(pairs['limit']);
             const widget: Widget = {
               id,
               type: 'kpi',
               row: rowId,
               ...(typeof order === 'number' ? { order } : {}),
               ...(typeof heightPx === 'number' ? { heightPx } : {}),
-              ...(title ? { title } : {}),
-              ...(Object.keys(ds).length ? { dataSource: ds } : {}),
             } as Widget;
             const frRaw = aAttrs['fr'] || aAttrs['data-fr'];
             if (frRaw && !Number.isNaN(Number(frRaw)) && Number(frRaw) > 0) {
               (widget as any).widthFr = { desktop: String(Number(frRaw)) + 'fr' };
             }
             const cs = parseContainerStyle(aAttrs); if (cs) (widget as any).containerStyle = cs;
-            // Order and classes + capture HTML blocks for direct rendering
+            // Store <p> blocks (pure HTML) as preBlocks for direct rendering
             try {
-              const seq: Array<'h1'|'h2'|'h3'> = [];
-              if (pBlocks[0]) seq.push('h1');
-              if (pBlocks[1]) seq.push('h2');
-              if (pBlocks[2]) seq.push('h3');
-              if (seq.length) (widget as any).kpiTitlesOrder = seq;
-              const w = widget as any;
-              // Preserve classes for backward compatibility (KPICard), but also store raw <p> blocks
-              if (pBlocks[0]) { const a = parseAttrs(pBlocks[0].open || ''); if (a['class']) w.kpiConfig = { ...(w.kpiConfig||{}), kpiNameClassName: a['class'] }; }
-              if (pBlocks[1]) { const a = parseAttrs(pBlocks[1].open || ''); if (a['class']) w.kpiConfig = { ...(w.kpiConfig||{}), kpiValueClassName: a['class'] }; }
-              if (pBlocks[2]) { const a = parseAttrs(pBlocks[2].open || ''); if (a['class']) w.kpiConfig = { ...(w.kpiConfig||{}), kpiComparisonClassName: a['class'] }; }
-
-              // New: store <p> blocks as HTML descriptors to allow direct rendering
-              try {
-                const blocksHtml: Array<{ role: 'title'|'value'|'comparison'; attrs: Record<string, string>; text?: string }> = [];
-                if (pBlocks[0]) {
-                  const a = parseAttrs(pBlocks[0].open || '');
-                  const t = resolveLiquidVars((pBlocks[0].body || '').trim());
-                  blocksHtml.push({ role: 'title', attrs: a, text: t });
-                }
-                if (pBlocks[1]) {
-                  const a = parseAttrs(pBlocks[1].open || '');
-                  // role 'value' displays runtime KPI value (not the moustache text)
-                  blocksHtml.push({ role: 'value', attrs: a });
-                }
-                if (pBlocks[2]) {
-                  const a = parseAttrs(pBlocks[2].open || '');
-                  const raw = (pBlocks[2].body || '').trim();
-                  const isMoustache = /\{\{/.test(raw);
-                  const t = isMoustache ? (h3Pairs['label'] ? resolveLiquidVars(String(h3Pairs['label'])) : undefined) : resolveLiquidVars(raw);
-                  blocksHtml.push({ role: 'comparison', attrs: a, ...(t ? { text: t } : {}) });
-                }
-                if (blocksHtml.length) (widget as any).kpiHtmlBlocks = blocksHtml;
-              } catch {}
-            } catch {}
-            // Comparison moustache
-            if (h3TextRaw) {
-              const w = widget as any;
-              w.kpiConfig = w.kpiConfig || {};
-              if (Object.keys(h3Pairs).length > 0) {
-                if (h3Pairs['label']) w.kpiConfig['comparisonLabel'] = h3Pairs['label'];
-                if (h3Pairs['changePct'] || h3Pairs['changepct'] || h3Pairs['change_pct']) {
-                  const v = Number(h3Pairs['changePct'] || h3Pairs['changepct'] || h3Pairs['change_pct']);
-                  if (!Number.isNaN(v)) w.kpiConfig['change'] = v;
-                }
-                if (h3Pairs['unit']) w.kpiConfig['unit'] = h3Pairs['unit'];
-              } else {
-                w.kpiConfig['comparisonLabel'] = resolveLiquidVars(h3TextRaw);
+              const pre: Array<{ className?: string; attrs?: Record<string,string>; text?: string }> = [];
+              const pReAll = /<p\b([^>]*)>([\s\S]*?)<\/p>/gi;
+              let pm: RegExpExecArray | null;
+              while ((pm = pReAll.exec(inner)) !== null) {
+                const attrs = parseAttrs(pm[1] || '');
+                const text = resolveLiquidVars((pm[2] || '').trim());
+                pre.push({ className: attrs['class'], attrs, text });
               }
-            }
-            // Apply style.tw from <main><style> to widget styling
-            if (styleObj && typeof styleObj['tw'] === 'string') {
-              applyStylingTokens(widget, String(styleObj['tw']));
+              if (pre.length) (widget as any).preBlocks = pre; else (widget as any).preHtml = (inner || '').trim();
+            } catch {
+              (widget as any).preHtml = (inner || '').trim();
             }
             widgets.push(widget);
           } else {
@@ -973,12 +915,40 @@ export class ConfigParser {
               applyStylingTokens(widget, String(styleObj['tw']));
             }
 
-            // Capture any raw HTML outside the <chart> node to render as-is
+            // Capture HTML outside the <chart> node and convert <p> blocks to preBlocks (with style attrs mapping)
             if (nm && nm[0]) {
-              const raw = (inner || '').replace(nm[0], '').trim();
-              if (raw) (widget as any).preHtml = raw;
+              const outer = (inner || '').replace(nm[0], '');
+              try {
+                const pre: Array<{ className?: string; attrs?: Record<string,string>; text?: string }> = [];
+                const pReAll = /<p\b([^>]*)>([\s\S]*?)<\/p>/gi;
+                let pm: RegExpExecArray | null;
+                while ((pm = pReAll.exec(outer)) !== null) {
+                  const attrs = parseAttrs(pm[1] || '');
+                  const text = resolveLiquidVars((pm[2] || '').trim());
+                  pre.push({ className: attrs['class'], attrs, text });
+                }
+                if (pre.length) (widget as any).preBlocks = pre; else {
+                  const raw = outer.trim();
+                  if (raw) (widget as any).preHtml = raw;
+                }
+              } catch {
+                const raw = outer.trim();
+                if (raw) (widget as any).preHtml = raw;
+              }
             } else if ((inner || '').trim()) {
-              (widget as any).preHtml = (inner || '').trim();
+              try {
+                const pre: Array<{ className?: string; attrs?: Record<string,string>; text?: string }> = [];
+                const pReAll = /<p\b([^>]*)>([\s\S]*?)<\/p>/gi;
+                let pm: RegExpExecArray | null;
+                while ((pm = pReAll.exec(inner)) !== null) {
+                  const attrs = parseAttrs(pm[1] || '');
+                  const text = resolveLiquidVars((pm[2] || '').trim());
+                  pre.push({ className: attrs['class'], attrs, text });
+                }
+                if (pre.length) (widget as any).preBlocks = pre; else (widget as any).preHtml = (inner || '').trim();
+              } catch {
+                (widget as any).preHtml = (inner || '').trim();
+              }
             }
 
             // Support article-level fr width for charts (same as KPIs)
