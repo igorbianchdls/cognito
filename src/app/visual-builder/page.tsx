@@ -300,6 +300,17 @@ export default function VisualBuilderPage() {
         };
         const tStyle = parseStyle(titleEl?.getAttribute('style'));
         const num = (v?: string) => (v && /px$/.test(v) ? Number(v.replace(/px$/,'')) : (v ? Number(v) : undefined));
+        // Parse container styles
+        const artStyleObj = (() => {
+          const s = art.getAttribute('style');
+          const out: Record<string,string> = {};
+          if (!s) return out;
+          for (const part of s.split(';')) {
+            const p = part.trim(); if (!p) continue; const i = p.indexOf(':'); if (i === -1) continue; out[p.slice(0,i).trim()] = p.slice(i+1).trim();
+          }
+          return out;
+        })();
+        const numPx = (v?: string) => (v && /px$/.test(v) ? Number(v.replace(/px$/,'')) : (v ? Number(v) : undefined));
         setChartModalChartId(chartId);
         setChartModalInitial({
           titleText: titleEl?.textContent?.trim() || '',
@@ -307,6 +318,12 @@ export default function VisualBuilderPage() {
           titleFontSize: num(tStyle['font-size']),
           titleFontWeight: tStyle['font-weight'] || undefined,
           titleColor: tStyle['color'] || '#111827',
+          backgroundColor: artStyleObj['background-color'] || '',
+          opacity: artStyleObj['opacity'] ? Number(artStyleObj['opacity']) : undefined,
+          borderColor: artStyleObj['border-color'] || '',
+          borderWidth: numPx(artStyleObj['border-width']),
+          borderStyle: (artStyleObj['border-style'] as any) || '',
+          borderRadius: numPx(artStyleObj['border-radius']),
         });
         setChartModalOpen(true);
       });
@@ -704,7 +721,8 @@ export default function VisualBuilderPage() {
             const artClose = src.indexOf('</article>', chartIdx);
             if (artStart === -1 || artOpenEnd === -1 || artClose === -1) { setChartModalOpen(false); return; }
             const whole = src.slice(artStart, artClose + 10);
-            const openAttrs = src.slice(artStart).match(/<article\b([^>]*)>/i)?.[1] || '';
+            const openMatch = src.slice(artStart, artOpenEnd + 1).match(/<article\b([^>]*)>/i);
+            const openAttrs = openMatch ? (openMatch[1] || '') : '';
             const innerOld = src.slice(artOpenEnd + 1, artClose);
             // Replace or insert h1
             const esc = (s: string) => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -718,8 +736,27 @@ export default function VisualBuilderPage() {
             const newH1 = `<h1 style=\"${toStyle(h1Style)}\">${esc(out.titleText || '')}</h1>`;
             let inner = innerOld;
             if (h1Re.test(inner)) inner = inner.replace(h1Re, newH1); else inner = newH1 + `\n` + inner;
+            // Merge container styles
+            const styleRe = /style\s*=\s*("([^"]*)"|'([^']*)')/i;
+            const styleM = openAttrs.match(styleRe);
+            const parseStyle = (s: string): Record<string,string> => {
+              const outS: Record<string,string> = {};
+              for (const part of s.split(';')) { const p = part.trim(); if (!p) continue; const i = p.indexOf(':'); if (i === -1) continue; outS[p.slice(0,i).trim()] = p.slice(i+1).trim(); }
+              return outS;
+            };
+            const styleObj = styleM ? parseStyle(styleM[2] || styleM[3] || '') : {};
+            if (out.backgroundColor) styleObj['background-color'] = String(out.backgroundColor);
+            if (out.opacity !== undefined) styleObj['opacity'] = String(out.opacity);
+            if (out.borderColor) styleObj['border-color'] = String(out.borderColor);
+            if (typeof out.borderWidth === 'number') styleObj['border-width'] = `${out.borderWidth}px`;
+            if (out.borderStyle) styleObj['border-style'] = String(out.borderStyle);
+            if (typeof out.borderRadius === 'number') styleObj['border-radius'] = `${out.borderRadius}px`;
+            // rebuild open tag
+            let newOpenAttrs = openAttrs.replace(styleRe, '');
+            newOpenAttrs = newOpenAttrs.replace(/\s+$/, '');
+            const newOpenTag = `<article${newOpenAttrs}${Object.keys(styleObj).length ? ` style=\"${toStyle(styleObj)}\"` : ''}>`;
             const newWhole = `<article${openAttrs}>${inner}</article>`;
-            const newCode = src.replace(whole, newWhole);
+            const newCode = src.replace(whole, newOpenTag + inner + `</article>`);
             visualBuilderActions.updateCode(newCode);
           } catch {}
           finally {
