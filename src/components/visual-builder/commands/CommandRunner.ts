@@ -38,6 +38,7 @@ import {
   updateSectionStyleInline,
   insertKpiArticleInline,
   insertChartArticleInline,
+  updateArticleQueryInline,
 } from "./HelperEditorToLiquid";
 import { updateArticleInline as updateArticleInlineDirect } from "./HelperEditorToDSL";
 
