@@ -27,4 +27,5 @@ export {
   updateSectionStyleInline,
   insertKpiArticleInline,
   insertChartArticleInline,
+  updateArticleInline,
 } from './HelperEditorToDSL';

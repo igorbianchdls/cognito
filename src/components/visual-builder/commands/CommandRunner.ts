@@ -39,6 +39,7 @@ import {
   insertKpiArticleInline,
   insertChartArticleInline,
 } from "./HelperEditorToLiquid";
+import { updateArticleInline as updateArticleInlineDirect } from "./HelperEditorToDSL";
 
 export type RunDiagnostics = Array<{ ok: boolean; message: string; line?: number }>;
 
@@ -221,7 +222,7 @@ export function runCommands(code: string, commands: Command[]): { nextCode: stri
             const usesSections = /<section\b/i.test(next);
             if (usesSections) {
               // Try inline-first article update (title/style)
-              const res = updateArticleInline(next, { id, ...(typeof title === 'string' ? { title } : {}), ...(style ? { style } : {}) });
+              const res = updateArticleInlineDirect(next, { id, ...(typeof title === 'string' ? { title } : {}), ...(style ? { style } : {}) });
               if (res.updated) {
                 next = res.code;
                 diags.push({ ok: true, message: `Article '${id}' atualizado.`, line: cmd.line });
