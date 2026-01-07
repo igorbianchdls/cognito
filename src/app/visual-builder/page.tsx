@@ -327,16 +327,54 @@ export default function VisualBuilderPage() {
         // annotate original DSL index (order in code at render time)
         articles.forEach((art, i) => {
           art.dataset.dslIndex = String(i);
-          art.setAttribute('draggable', 'true');
-          art.style.cursor = art.style.cursor || 'move';
+          // Add drag handle button (top-left) shown on hover
+          art.style.position = art.style.position || 'relative';
+          const handle = document.createElement('button');
+          handle.setAttribute('type', 'button');
+          handle.textContent = '⇅';
+          handle.title = 'Arrastar';
+          handle.style.position = 'absolute';
+          handle.style.top = '8px';
+          handle.style.left = '8px';
+          handle.style.zIndex = '50';
+          handle.style.padding = '4px 6px';
+          handle.style.border = 'none';
+          handle.style.borderRadius = '6px';
+          handle.style.background = 'rgba(0,0,0,0.85)';
+          handle.style.color = '#fff';
+          handle.style.cursor = 'grab';
+          handle.style.opacity = '0';
+          handle.style.transition = 'opacity 120ms ease-in-out';
+          handle.setAttribute('draggable', 'true');
+          const enterH = () => { handle.style.opacity = '1'; };
+          const leaveH = () => { handle.style.opacity = '0'; };
+          art.addEventListener('mouseenter', enterH);
+          art.addEventListener('mouseleave', leaveH);
+          art.appendChild(handle);
+          cleanupFns.push(() => {
+            try { art.removeEventListener('mouseenter', enterH); } catch {}
+            try { art.removeEventListener('mouseleave', leaveH); } catch {}
+            try { art.removeChild(handle); } catch {}
+          });
+          // Drag cursor feedback during drag
+          const downH = () => { handle.style.cursor = 'grabbing'; };
+          const upH = () => { handle.style.cursor = 'grab'; };
+          handle.addEventListener('mousedown', downH);
+          window.addEventListener('mouseup', upH);
+          cleanupFns.push(() => {
+            try { handle.removeEventListener('mousedown', downH); } catch {}
+            try { window.removeEventListener('mouseup', upH); } catch {}
+          });
         });
 
         let dragging: HTMLElement | null = null;
         const onDragStart = (e: DragEvent) => {
-          const tgt = e.currentTarget as HTMLElement;
-          dragging = tgt;
-          tgt.classList.add('vb-dragging');
-          try { e.dataTransfer?.setData('text/plain', tgt.dataset.dslIndex || ''); } catch {}
+          const handle = e.currentTarget as HTMLElement;
+          const parentArt = handle?.parentElement as HTMLElement | null;
+          if (!parentArt || parentArt.tagName.toLowerCase() !== 'article') return;
+          dragging = parentArt;
+          parentArt.classList.add('vb-dragging');
+          try { e.dataTransfer?.setData('text/plain', parentArt.dataset.dslIndex || ''); } catch {}
           if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
         };
         const onDragOver = (e: DragEvent) => {
@@ -391,12 +429,17 @@ export default function VisualBuilderPage() {
 
         // Attach listeners
         for (const art of articles) {
-          art.addEventListener('dragstart', onDragStart as any);
-          art.addEventListener('dragend', onDragEnd as any);
+          const handle = art.querySelector('button[draggable="true"]') as HTMLElement | null;
+          if (handle) {
+            handle.addEventListener('dragstart', onDragStart as any);
+            handle.addEventListener('dragend', onDragEnd as any);
+            cleanupFns.push(() => {
+              try { handle.removeEventListener('dragstart', onDragStart as any); } catch {}
+              try { handle.removeEventListener('dragend', onDragEnd as any); } catch {}
+            });
+          }
           art.addEventListener('dragover', onDragOver as any);
           cleanupFns.push(() => {
-            try { art.removeEventListener('dragstart', onDragStart as any); } catch {}
-            try { art.removeEventListener('dragend', onDragEnd as any); } catch {}
             try { art.removeEventListener('dragover', onDragOver as any); } catch {}
           });
         }
