@@ -17,6 +17,13 @@ export interface KpiEditorModalProps {
     valueFontSize?: number;
     valueFontWeight?: string | number;
     valueColor?: string;
+    // Container (article) styles
+    backgroundColor?: string;
+    opacity?: number;
+    borderColor?: string;
+    borderWidth?: number;
+    borderStyle?: 'solid' | 'dashed' | 'dotted' | '';
+    borderRadius?: number;
   };
   onClose: () => void;
   onSave: (out: {
@@ -30,6 +37,12 @@ export interface KpiEditorModalProps {
     valueFontSize?: number;
     valueFontWeight?: string | number;
     valueColor?: string;
+    backgroundColor?: string;
+    opacity?: number;
+    borderColor?: string;
+    borderWidth?: number;
+    borderStyle?: 'solid' | 'dashed' | 'dotted' | '';
+    borderRadius?: number;
   }) => void;
 }
 
@@ -47,6 +60,12 @@ export default function KpiEditorModal({ isOpen, initial, onClose, onSave }: Kpi
   const [valueFontSize, setValueFontSize] = useState<number | undefined>(initial.valueFontSize);
   const [valueFontWeight, setValueFontWeight] = useState<string | number | undefined>(initial.valueFontWeight);
   const [valueColor, setValueColor] = useState(initial.valueColor || '#111827');
+  const [backgroundColor, setBackgroundColor] = useState(initial.backgroundColor || '');
+  const [opacity, setOpacity] = useState<number | undefined>(initial.opacity);
+  const [borderColor, setBorderColor] = useState(initial.borderColor || '');
+  const [borderWidth, setBorderWidth] = useState<number | undefined>(initial.borderWidth);
+  const [borderStyle, setBorderStyle] = useState<'solid'|'dashed'|'dotted'|''>(initial.borderStyle || '');
+  const [borderRadius, setBorderRadius] = useState<number | undefined>(initial.borderRadius);
 
   useEffect(() => { setMounted(true); return () => setMounted(false); }, []);
   useEffect(() => {
@@ -61,6 +80,12 @@ export default function KpiEditorModal({ isOpen, initial, onClose, onSave }: Kpi
       setValueFontSize(initial.valueFontSize);
       setValueFontWeight(initial.valueFontWeight);
       setValueColor(initial.valueColor || '#111827');
+      setBackgroundColor(initial.backgroundColor || '');
+      setOpacity(initial.opacity);
+      setBorderColor(initial.borderColor || '');
+      setBorderWidth(initial.borderWidth);
+      setBorderStyle(initial.borderStyle || '');
+      setBorderRadius(initial.borderRadius);
     }
   }, [isOpen, initial]);
 
@@ -73,6 +98,42 @@ export default function KpiEditorModal({ isOpen, initial, onClose, onSave }: Kpi
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-lg font-semibold text-gray-900">Editar KPI</h3>
           <button onClick={onClose} className="text-gray-600 hover:text-gray-800">✕</button>
+        </div>
+        <div>
+          <h4 className="text-sm font-semibold text-gray-900 mb-2">Container do Article</h4>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs text-gray-600 mb-1">Fundo</label>
+              <input type="color" className="w-full px-1 py-1 bg-gray-100 border-0 rounded-md h-10" value={backgroundColor || '#ffffff'} onChange={e=>setBackgroundColor(e.target.value)} />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-600 mb-1">Opacidade</label>
+              <input type="number" min={0} max={1} step={0.05} className="w-full px-2 py-2 bg-gray-100 border-0 rounded-md" value={opacity ?? ''} onChange={e=>setOpacity(e.target.value===''?undefined:parseFloat(e.target.value))} />
+            </div>
+          </div>
+          <div className="grid grid-cols-4 gap-2 mt-2">
+            <div>
+              <label className="block text-xs text-gray-600 mb-1">Borda (px)</label>
+              <input type="number" min={0} className="w-full px-2 py-2 bg-gray-100 border-0 rounded-md" value={borderWidth ?? ''} onChange={e=>setBorderWidth(e.target.value===''?undefined:parseInt(e.target.value))} />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-600 mb-1">Estilo</label>
+              <select className="w-full px-2 py-2 bg-gray-100 border-0 rounded-md" value={borderStyle} onChange={e=>setBorderStyle((e.target.value as any) || '')}>
+                <option value="">(padrão)</option>
+                <option value="solid">solid</option>
+                <option value="dashed">dashed</option>
+                <option value="dotted">dotted</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs text-gray-600 mb-1">Cor</label>
+              <input type="color" className="w-full px-1 py-1 bg-gray-100 border-0 rounded-md h-10" value={borderColor || '#e5e7eb'} onChange={e=>setBorderColor(e.target.value)} />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-600 mb-1">Raio (px)</label>
+              <input type="number" min={0} className="w-full px-2 py-2 bg-gray-100 border-0 rounded-md" value={borderRadius ?? ''} onChange={e=>setBorderRadius(e.target.value===''?undefined:parseInt(e.target.value))} />
+            </div>
+          </div>
         </div>
 
         <div className="space-y-4 max-h-[70vh] overflow-auto pr-1">
@@ -123,7 +184,7 @@ export default function KpiEditorModal({ isOpen, initial, onClose, onSave }: Kpi
 
         <div className="mt-4 flex items-center justify-end gap-2">
           <button onClick={onClose} className="px-3 py-2 rounded-md border border-gray-300 text-gray-700">Cancelar</button>
-          <button onClick={() => onSave({ titleText, titleFontFamily, titleFontSize, titleFontWeight, titleColor, valueText, valueFontFamily, valueFontSize, valueFontWeight, valueColor })} className="px-4 py-2 rounded-md bg-blue-600 text-white">Salvar</button>
+          <button onClick={() => onSave({ titleText, titleFontFamily, titleFontSize, titleFontWeight, titleColor, valueText, valueFontFamily, valueFontSize, valueFontWeight, valueColor, backgroundColor, opacity, borderColor, borderWidth, borderStyle, borderRadius })} className="px-4 py-2 rounded-md bg-blue-600 text-white">Salvar</button>
         </div>
       </div>
     </div>
@@ -133,4 +194,3 @@ export default function KpiEditorModal({ isOpen, initial, onClose, onSave }: Kpi
   const root = typeof document !== 'undefined' ? document.body : null;
   return root ? createPortal(modal, root) : null;
 }
-

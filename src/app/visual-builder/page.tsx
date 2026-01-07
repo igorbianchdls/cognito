@@ -773,7 +773,8 @@ export default function VisualBuilderPage() {
             const src = String(visualBuilderState.code || '');
             const id = kpiModalArticleId || '';
             if (!id) { setKpiModalOpen(false); return; }
-            const re = new RegExp(`<article\\b([^>]*?\\bid=\\\"${id.replace(/[.*+?^${}()|[\\]\\]/g, '\\\\$&')}\\\"[^>]*)>([\\s\\S]*?)<\\/article>`, 'i');
+            const escId = id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const re = new RegExp(`<article\\b([^>]*?\\bid=\\\"${escId}\\\"[^>]*)>([\\s\\S]*?)<\\/article>`, 'i');
             const m = src.match(re);
             if (!m) { setKpiModalOpen(false); return; }
             const whole = m[0];
@@ -804,8 +805,25 @@ export default function VisualBuilderPage() {
             const newKV = `<div class=\"kpi-value\" style=\"${toStyle(valStyle)}\">${esc(out.valueText || '')}</div>`;
             if (kvRe.test(inner)) inner = inner.replace(kvRe, newKV);
             else inner = inner.replace(newH1, newH1 + `\n        ${newKV}`);
-            const newWhole = `<article${openAttrs}>${inner}</article>`;
-            const newCode = src.replace(whole, newWhole);
+            // Merge container styles
+            const styleRe = /style\s*=\s*("([^"]*)"|'([^']*)')/i;
+            const styleM = openAttrs.match(styleRe);
+            const parseStyle = (s: string): Record<string,string> => {
+              const outS: Record<string,string> = {};
+              for (const part of s.split(';')) { const p = part.trim(); if (!p) continue; const i = p.indexOf(':'); if (i === -1) continue; outS[p.slice(0,i).trim()] = p.slice(i+1).trim(); }
+              return outS;
+            };
+            const styleObj = styleM ? parseStyle(styleM[2] || styleM[3] || '') : {};
+            if (out.backgroundColor) styleObj['background-color'] = String(out.backgroundColor);
+            if (out.opacity !== undefined) styleObj['opacity'] = String(out.opacity);
+            if (out.borderColor) styleObj['border-color'] = String(out.borderColor);
+            if (typeof out.borderWidth === 'number') styleObj['border-width'] = `${out.borderWidth}px`;
+            if (out.borderStyle) styleObj['border-style'] = String(out.borderStyle);
+            if (typeof out.borderRadius === 'number') styleObj['border-radius'] = `${out.borderRadius}px`;
+            let newOpenAttrs = openAttrs.replace(styleRe, '');
+            newOpenAttrs = newOpenAttrs.replace(/\s+$/, '');
+            const newOpenTag = `<article${newOpenAttrs}${Object.keys(styleObj).length ? ` style=\"${toStyle(styleObj)}\"` : ''}>`;
+            const newCode = src.replace(whole, newOpenTag + inner + `</article>`);
             visualBuilderActions.updateCode(newCode);
           } catch {}
           finally {
