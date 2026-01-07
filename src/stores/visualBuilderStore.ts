@@ -186,19 +186,19 @@ export const initialLiquidGrid = `<dashboard render="html" theme="branco">
       <article id="chart_top_categorias" class="card" data-role="chart" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#fefce8; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
         <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Top 5 Categorias (Despesas)</p>
         <Chart id="top_categorias" type="bar" height="320">
-          <query schema="financeiro" table="lancamentos_financeiros" dimension="categorias_financeiras.nome" measure="SUM(valor)" timeDimension="data_lancamento" range="${'${de}..${ate}'}" filter="tipo = 'pagamento_efetuado'" limit="5" order="value DESC" />
+          <query schema="financeiro" table="lancamentos_financeiros" dimension="categorias_financeiras.nome" measure="SUM(valor)" timeDimension="data_lancamento" range="2025-12-01..2025-12-31" filter="tipo = 'pagamento_efetuado'" limit="5" order="value DESC" />
         </Chart>
       </article>
       <article id="chart_top_cc" class="card" data-role="chart" style="--fr:2; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#f0f9ff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
         <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Top 5 Centros de Custo (Despesas)</p>
         <Chart id="top_cc" type="bar" height="320">
-          <query schema="financeiro" table="lancamentos_financeiros" dimension="centros_custo.nome" measure="SUM(valor)" timeDimension="data_lancamento" range="Last 30 days" filter="tipo = 'pagamento_efetuado'" limit="5" order="value DESC" />
+          <query schema="financeiro" table="lancamentos_financeiros" dimension="centros_custo.nome" measure="SUM(valor)" timeDimension="data_lancamento" range="2025-12-01..2025-12-31" filter="tipo = 'pagamento_efetuado'" limit="5" order="value DESC" />
         </Chart>
       </article>
       <article id="chart_top_clientes" class="card" data-role="chart" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#fdf2f8; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
         <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Top 5 Clientes (Receitas)</p>
         <Chart id="top_clientes" type="bar" height="320">
-          <query schema="financeiro" table="lancamentos_financeiros" dimension="clientes.nome_fantasia" measure="SUM(valor)" timeDimension="data_vencimento" range="${'${de}..${ate}'}" filter="tipo = 'conta_a_receber' AND (status IS NULL OR status NOT IN ('cancelado'))" limit="5" order="value DESC" />
+          <query schema="financeiro" table="lancamentos_financeiros" dimension="clientes.nome_fantasia" measure="SUM(valor)" timeDimension="data_vencimento" range="2025-11-01..2025-11-30" filter="tipo = 'conta_a_receber' AND (status IS NULL OR status NOT IN ('cancelado'))" limit="5" order="value DESC" />
         </Chart>
       </article>
     </section>
