@@ -184,7 +184,24 @@ export default function KpiEditorModal({ isOpen, initial, onClose, onSave }: Kpi
 
         <div className="mt-4 flex items-center justify-end gap-2">
           <button onClick={onClose} className="px-3 py-2 rounded-md border border-gray-300 text-gray-700">Cancelar</button>
-          <button onClick={() => onSave({ titleText, titleFontFamily, titleFontSize, titleFontWeight, titleColor, valueText, valueFontFamily, valueFontSize, valueFontWeight, valueColor, backgroundColor, opacity, borderColor, borderWidth, borderStyle, borderRadius })} className="px-4 py-2 rounded-md bg-blue-600 text-white">Salvar</button>
+          <button onClick={() => onSave({
+            titleText,
+            titleFontFamily,
+            titleFontSize,
+            titleFontWeight,
+            titleColor,
+            valueText,
+            valueFontFamily,
+            valueFontSize,
+            valueFontWeight,
+            valueColor,
+            backgroundColor,
+            opacity,
+            borderColor,
+            borderWidth,
+            borderStyle,
+            borderRadius
+          })} className="px-4 py-2 rounded-md bg-blue-600 text-white">Salvar</button>
         </div>
       </div>
     </div>
