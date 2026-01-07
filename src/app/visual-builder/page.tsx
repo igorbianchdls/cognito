@@ -11,6 +11,7 @@ import CommandConsole from '@/components/visual-builder/CommandConsole';
 // import VisualBuilderChat from '@/components/visual-builder/VisualBuilderChat';
 import ResponsiveGridCanvas from '@/components/visual-builder/ResponsiveGridCanvas';
 import WidgetEditorModal from '@/components/visual-builder/WidgetEditorModal';
+import HeaderEditorModal from '@/components/visual-builder/HeaderEditorModal';
 import { $visualBuilderState, visualBuilderActions } from '@/stores/visualBuilderStore';
 import { initialLiquidGrid } from '@/stores/visualBuilderStore';
 import { ThemeManager, type ThemeName } from '@/components/visual-builder/ThemeManager';
@@ -136,6 +137,11 @@ export default function VisualBuilderPage() {
   }, [htmlMode, code]);
   const htmlRef = useRef<HTMLDivElement>(null);
   const htmlRootsRef = useRef<Root[]>([]);
+  const htmlCleanupFnsRef = useRef<Array<() => void>>([]);
+  const [headerModalOpen, setHeaderModalOpen] = useState(false);
+  const [headerModalData, setHeaderModalData] = useState<{ title: string; subtitle: string }>({ title: '', subtitle: '' });
+  const [htmlWidgetModalOpen, setHtmlWidgetModalOpen] = useState(false);
+  const [htmlWidgetModal, setHtmlWidgetModal] = useState<Widget | null>(null);
   useEffect(() => {
     if (!htmlMode) return;
     if (activeTab !== 'responsive') return;
@@ -176,9 +182,73 @@ export default function VisualBuilderPage() {
       }
     }
 
+    // Inject edit triggers (header + articles)
+    const cleanupFns: Array<() => void> = [];
+    const makeTrigger = (parent: HTMLElement, role: 'header' | 'widget', onClick: () => void) => {
+      parent.style.position = parent.style.position || 'relative';
+      const btn = document.createElement('button');
+      btn.textContent = '✎';
+      btn.title = 'Editar';
+      btn.setAttribute('type', 'button');
+      btn.style.position = 'absolute';
+      btn.style.top = '8px';
+      btn.style.right = '8px';
+      btn.style.zIndex = '50';
+      btn.style.padding = '4px 8px';
+      btn.style.border = 'none';
+      btn.style.borderRadius = '6px';
+      btn.style.background = 'rgba(0,0,0,0.7)';
+      btn.style.color = '#fff';
+      btn.style.cursor = 'pointer';
+      btn.style.opacity = '0';
+      btn.style.transition = 'opacity 120ms ease-in-out';
+      const enter = () => { btn.style.opacity = '1'; };
+      const leave = () => { btn.style.opacity = '0'; };
+      const click = (e: MouseEvent) => { e.preventDefault(); e.stopPropagation(); onClick(); };
+      parent.addEventListener('mouseenter', enter);
+      parent.addEventListener('mouseleave', leave);
+      btn.addEventListener('click', click);
+      parent.appendChild(btn);
+      cleanupFns.push(() => {
+        try { parent.removeEventListener('mouseenter', enter); } catch {}
+        try { parent.removeEventListener('mouseleave', leave); } catch {}
+        try { btn.removeEventListener('click', click); } catch {}
+        try { parent.removeChild(btn); } catch {}
+      });
+    };
+
+    // Header trigger
+    const headerEl = c.querySelector('header.vb-header') as HTMLElement | null;
+    if (headerEl) {
+      makeTrigger(headerEl, 'header', () => {
+        const t = headerEl.querySelector('h1')?.textContent?.trim() || '';
+        const s = headerEl.querySelector('p, h2, small')?.textContent?.trim() || '';
+        setHeaderModalData({ title: t, subtitle: s });
+        setHeaderModalOpen(true);
+      });
+    }
+
+    // Article triggers (widgets)
+    const articleEls = Array.from(c.querySelectorAll('section.row article')) as HTMLElement[];
+    for (const art of articleEls) {
+      makeTrigger(art, 'widget', () => {
+        const chartMount = art.querySelector('[data-liquid-chart]') as HTMLElement | null;
+        const id = chartMount?.getAttribute('data-liquid-chart') || art.getAttribute('id') || `article_${Math.random().toString(36).slice(2,8)}`;
+        const chartSpec = chartMount ? parsed.charts.find(x => x.id === chartMount.getAttribute('data-liquid-chart')!) : undefined;
+        const type = chartSpec ? chartSpec.type : 'kpi';
+        const widget: Widget = { id, type: (type as Widget['type']) } as Widget;
+        setHtmlWidgetModal(widget);
+        setHtmlWidgetModalOpen(true);
+      });
+    }
+
+    htmlCleanupFnsRef.current = cleanupFns;
+
     return () => {
       for (const r of htmlRootsRef.current) { try { r.unmount(); } catch {} }
       htmlRootsRef.current = [];
+      for (const fn of htmlCleanupFnsRef.current) { try { fn(); } catch {} }
+      htmlCleanupFnsRef.current = [];
       if (htmlRef.current && activeTab === 'responsive') htmlRef.current.innerHTML = '';
     };
   }, [htmlMode, htmlInner, activeTab, code]);
@@ -450,6 +520,21 @@ export default function VisualBuilderPage() {
         isOpen={!!editingWidget}
         onClose={() => setEditingWidget(null)}
         onSave={handleSaveWidget}
+      />
+
+      {/* HTML-mode modals: open-only (no action) */}
+      <HeaderEditorModal
+        isOpen={headerModalOpen}
+        initialTitle={headerModalData.title}
+        initialSubtitle={headerModalData.subtitle}
+        onClose={() => setHeaderModalOpen(false)}
+        onSave={() => setHeaderModalOpen(false)}
+      />
+      <WidgetEditorModal
+        widget={htmlWidgetModal}
+        isOpen={htmlWidgetModalOpen}
+        onClose={() => { setHtmlWidgetModalOpen(false); setHtmlWidgetModal(null); }}
+        onSave={() => { setHtmlWidgetModalOpen(false); setHtmlWidgetModal(null); }}
       />
 
       
