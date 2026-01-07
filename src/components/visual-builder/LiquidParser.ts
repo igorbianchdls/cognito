@@ -29,6 +29,13 @@ export interface QuerySpec {
   limit?: number;
   orderBy?: string; // value DESC | label ASC
   where?: QueryRule[]; // AND-combined rules (phase 1)
+  // New: raw/english attributes for cube-like DSL
+  filterRaw?: string;
+  rangeRaw?: string;
+  from?: string;
+  to?: string;
+  granularity?: string;
+  timezone?: string;
 }
 
 export interface ChartSpec {
@@ -140,11 +147,21 @@ export const LiquidParser = {
           const qAttrs = parseAttrs(qMatch[1] || '');
           const schema = String(qAttrs['schema'] || '').trim();
           const table = String(qAttrs['table'] || '').trim();
-          const measure = String(qAttrs['measure'] || '').trim();
-          const dimension = (qAttrs['dimension'] || '').trim() || undefined;
-          const dateColumn = (qAttrs['datecolumn'] || qAttrs['dateColumn'] || '').trim() || undefined;
+          // Accept english measure(s)/dimension(s) or legacy measure/dimension
+          const mRaw = (qAttrs['measure'] || qAttrs['measures'] || qAttrs['medida'] || qAttrs['medidas'] || '').trim();
+          const dRaw = (qAttrs['dimension'] || qAttrs['dimensions'] || qAttrs['dimensao'] || qAttrs['dimensoes'] || '').trim();
+          const measure = mRaw.split(',').map(s => s.trim()).filter(Boolean)[0] || '';
+          const dimension = (dRaw.split(',').map(s => s.trim()).filter(Boolean)[0] || undefined);
+          // time dimension and ranges
+          const dateColumn = (qAttrs['timedimension'] || qAttrs['timeDimension'] || qAttrs['datecolumn'] || qAttrs['dateColumn'] || '').trim() || undefined;
+          const rangeRaw = (qAttrs['range'] || '').trim() || undefined;
+          const from = (qAttrs['from'] || '').trim() || undefined;
+          const to = (qAttrs['to'] || '').trim() || undefined;
+          const granularity = (qAttrs['granularity'] || '').trim() || undefined;
           const limit = qAttrs['limit'] != null && qAttrs['limit'] !== '' && !Number.isNaN(Number(qAttrs['limit'])) ? Number(qAttrs['limit']) : undefined;
-          const orderBy = (qAttrs['orderBy'] || qAttrs['orderby'] || '').trim() || undefined;
+          const orderBy = (qAttrs['order'] || qAttrs['orderBy'] || qAttrs['orderby'] || qAttrs['ordenar'] || '').trim() || undefined;
+          const timezone = (qAttrs['timezone'] || '').trim() || undefined;
+          const filterRaw = (qAttrs['filter'] || qAttrs['filters'] || qAttrs['filtro'] || qAttrs['filtros'] || '').trim() || undefined;
           const where: QueryRule[] = [];
           const qInner = qMatch[2] || '';
           const whereMatch = qInner.match(/<where\b[^>]*>([\s\S]*?)<\/where>/i);
@@ -164,7 +181,22 @@ export const LiquidParser = {
             }
           }
           if (schema && table && measure) {
-            querySpec = { schema, table, measure, ...(dimension ? { dimension } : {}), ...(dateColumn ? { dateColumn } : {}), ...(limit ? { limit } : {}), ...(orderBy ? { orderBy } : {}), ...(where.length ? { where } : {}) };
+            querySpec = {
+              schema,
+              table,
+              measure,
+              ...(dimension ? { dimension } : {}),
+              ...(dateColumn ? { dateColumn } : {}),
+              ...(limit ? { limit } : {}),
+              ...(orderBy ? { orderBy } : {}),
+              ...(where.length ? { where } : {}),
+              ...(rangeRaw ? { rangeRaw } : {}),
+              ...(from ? { from } : {}),
+              ...(to ? { to } : {}),
+              ...(granularity ? { granularity } : {}),
+              ...(timezone ? { timezone } : {}),
+              ...(filterRaw ? { filterRaw } : {}),
+            };
           }
         }
       } catch { /* ignore malformed query */ }

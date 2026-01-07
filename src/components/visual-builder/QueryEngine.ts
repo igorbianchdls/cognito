@@ -39,27 +39,85 @@ function deriveRange(filters: GlobalFilters): DateRange {
 // Phase 1: compile QuerySpec (Excel-like) to existing financeiro endpoints
 export const QueryEngine = {
   async resolve(spec: QuerySpec, filters: GlobalFilters): Promise<ChartDataPoint[]> {
-    // Supported: financeiro.contas_pagar (top despesas por dimensão), financeiro.contas_receber (top receitas por cliente)
+    // Supported via endpoints: top-despesas (pagamento_efetuado) and top-receitas / top-receitas-centro-lucro (conta_a_receber)
     const schema = (spec.schema || '').toLowerCase();
     const table = (spec.table || '').toLowerCase();
-    const dim = (spec.dimension || '').toLowerCase();
+    const rawDim = String(spec.dimension || '').trim();
+    const mapDim = (d: string): string => {
+      const s = d.toLowerCase();
+      // Allow fully qualified names like clientes.nome_fantasia
+      if (s.includes('cliente')) return 'cliente';
+      if (s.includes('centro_custo') || s.includes('centros_custo')) return 'centro_custo';
+      if (s.includes('categoria')) return 'categoria';
+      if (s.includes('departamento')) return 'departamento';
+      if (s.includes('centro_lucro') || s.includes('centros_lucro')) return 'centro_lucro';
+      if (s.includes('filial')) return 'filial';
+      if (s.includes('projeto')) return 'projeto';
+      if (s.includes('fornecedor')) return 'fornecedor';
+      return s;
+    };
+    const dim = rawDim ? mapDim(rawDim) : '';
     const lim = typeof spec.limit === 'number' && spec.limit > 0 ? spec.limit : 5;
-    const { de, ate } = deriveRange(filters);
 
-    let url: string | null = null;
-    if (schema === 'financeiro' && table === 'contas_pagar') {
-      // Map known dims → top-despesas
-      const allowed = ['centro_custo', 'categoria', 'departamento', 'projeto', 'filial'];
-      if (!dim || !allowed.includes(dim)) throw new Error(`Dimensão inválida para contas_pagar: ${dim || '(vazio)'}`);
-      url = `/api/modulos/financeiro?view=top-despesas&dim=${encodeURIComponent(dim)}${de ? `&de=${encodeURIComponent(de)}` : ''}${ate ? `&ate=${encodeURIComponent(ate)}` : ''}&page=1&pageSize=${lim}`;
-    } else if (schema === 'financeiro' && table === 'contas_receber') {
-      // Only cliente supported as dim (Top Receitas)
-      const allowed = ['cliente'];
-      if (!dim || !allowed.includes(dim)) throw new Error(`Dimensão inválida para contas_receber: ${dim || '(vazio)'}`);
-      url = `/api/modulos/financeiro?view=top-receitas&dim=${encodeURIComponent(dim)}${de ? `&de=${encodeURIComponent(de)}` : ''}${ate ? `&ate=${encodeURIComponent(ate)}` : ''}&page=1&pageSize=${lim}`;
+    // Determine date range: override from spec.rangeRaw/from/to if provided
+    const fallback = deriveRange(filters);
+    let de = fallback.de;
+    let ate = fallback.ate;
+    if (spec.from || spec.to) {
+      de = spec.from || de;
+      ate = spec.to || ate;
+    } else if (spec.rangeRaw) {
+      const r = spec.rangeRaw;
+      if (/(^last\s+\d+\s+days$)|(^this\s+month$)|(^last\s+month$)/i.test(r)) {
+        const s = r.trim().toLowerCase();
+        const now = new Date();
+        const add = (d: Date, n: number) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
+        const ymd = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        if (s.startsWith('last ') && s.endsWith(' days')) {
+          const n = parseInt(s.split(' ')[1] || '30', 10) || 30;
+          de = ymd(add(now, -(n-1)));
+          ate = ymd(now);
+        } else if (s === 'this month') {
+          const start = new Date(now.getFullYear(), now.getMonth(), 1);
+          de = ymd(start); ate = ymd(now);
+        } else if (s === 'last month') {
+          const endPrev = new Date(now.getFullYear(), now.getMonth(), 0);
+          const startPrev = new Date(endPrev.getFullYear(), endPrev.getMonth(), 1);
+          de = ymd(startPrev); ate = ymd(endPrev);
+        }
+      } else if (r.includes('..')) {
+        const [a,b] = r.split('..').map(s => s.trim());
+        de = a === '${de}' ? fallback.de : (a || de);
+        ate = b === '${ate}' ? fallback.ate : (b || ate);
+      }
     }
 
-    if (!url) throw new Error('Consulta não suportada neste estágio.');
+    let url: string | null = null;
+    // Determine intent from table/schema or filterRaw
+    const filterRaw = (spec.filterRaw || '').toLowerCase();
+    const isReceber = filterRaw.includes("conta_a_receber") || (schema==='financeiro' && table==='contas_receber');
+    const isPagarReal = filterRaw.includes('pagamento_efetuado') || (schema==='financeiro' && table==='contas_pagar');
+
+    if (schema === 'financeiro' && (table === 'lancamentos_financeiros' || table === 'contas_pagar')) {
+      // Despesas (pagamento realizado)
+      const allowed = ['centro_custo', 'categoria', 'departamento', 'projeto', 'filial', 'fornecedor', 'centro_lucro'];
+      if (!dim || !allowed.includes(dim)) {
+        // fallback: default to categoria
+        // throw new Error(`Invalid dimension for despesas: ${dim || '(empty)'}`);
+      }
+      url = `/api/modulos/financeiro?view=top-despesas&dim=${encodeURIComponent(dim || 'categoria')}${de ? `&de=${encodeURIComponent(de)}` : ''}${ate ? `&ate=${encodeURIComponent(ate)}` : ''}&limit=${lim}`;
+    }
+    if (schema === 'financeiro' && (table === 'lancamentos_financeiros' || table === 'contas_receber') || isReceber) {
+      if (dim === 'centro_lucro') {
+        url = `/api/modulos/financeiro?view=top-receitas-centro-lucro${de ? `&de=${encodeURIComponent(de!)}` : ''}${ate ? `&ate=${encodeURIComponent(ate!)}` : ''}&limit=${lim}`;
+      } else {
+        // Only cliente allowed for top-receitas
+        const mapped = dim || 'cliente';
+        url = `/api/modulos/financeiro?view=top-receitas&dim=${encodeURIComponent(mapped)}${de ? `&de=${encodeURIComponent(de!)}` : ''}${ate ? `&ate=${encodeURIComponent(ate!)}` : ''}&limit=${lim}`;
+      }
+    }
+
+    if (!url) throw new Error('Unsupported query for current engine.');
 
     try {
       const res = await fetch(url, { cache: 'no-store' });
@@ -77,4 +135,3 @@ export const QueryEngine = {
     }
   }
 };
-
