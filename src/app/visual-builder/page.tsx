@@ -382,8 +382,12 @@ export default function VisualBuilderPage() {
       const newStyleStr = toStyle(styleObj);
       const newOpenTag = `<header${newOpenAttrs}${newStyleStr ? ` style=\"${newStyleStr}\"` : ''}>`;
 
-      // Build H1 style from config
+      // Build H1 style from config (only if style fields provided)
       const h1Style: Record<string,string> = {};
+      const titleStyleDirty = Boolean(
+        cfg?.titleFontFamily || typeof cfg?.titleFontSize === 'number' || cfg?.titleFontWeight !== undefined || cfg?.titleColor ||
+        cfg?.titleMarginTop !== undefined || cfg?.titleMarginRight !== undefined || cfg?.titleMarginBottom !== undefined || cfg?.titleMarginLeft !== undefined
+      );
       if (cfg?.titleFontFamily) h1Style['font-family'] = String(cfg.titleFontFamily);
       if (typeof cfg?.titleFontSize === 'number') h1Style['font-size'] = `${cfg.titleFontSize}px`;
       if (cfg?.titleFontWeight !== undefined) h1Style['font-weight'] = String(cfg.titleFontWeight);
@@ -393,8 +397,12 @@ export default function VisualBuilderPage() {
         h1Style['margin'] = `${mt}px ${mr}px ${mb}px ${ml}px`;
       }
 
-      // Build subtitle <p> style
+      // Build subtitle <p> style (only if style fields provided)
       const pStyle: Record<string,string> = {};
+      const subtitleStyleDirty = Boolean(
+        cfg?.subtitleFontFamily || typeof cfg?.subtitleFontSize === 'number' || cfg?.subtitleFontWeight !== undefined || cfg?.subtitleColor ||
+        cfg?.subtitleMarginTop !== undefined || cfg?.subtitleMarginRight !== undefined || cfg?.subtitleMarginBottom !== undefined || cfg?.subtitleMarginLeft !== undefined
+      );
       if (cfg?.subtitleFontFamily) pStyle['font-family'] = String(cfg.subtitleFontFamily);
       if (typeof cfg?.subtitleFontSize === 'number') pStyle['font-size'] = `${cfg.subtitleFontSize}px`;
       if (cfg?.subtitleFontWeight !== undefined) pStyle['font-weight'] = String(cfg.subtitleFontWeight);
@@ -407,8 +415,31 @@ export default function VisualBuilderPage() {
 
       // Compose new header inner HTML
       const esc = (s: string) => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-      const newInner = `\n      <h1 style=\"${toStyle(h1Style)}\">${esc(data.title || '')}</h1>\n      <p style=\"${toStyle(pStyle)}\">${esc(data.subtitle || '')}</p>\n    `;
-      const newWhole = newOpenTag + newInner + `</header>`;
+      // Keep existing h1/p opening tag (attrs) if style not dirty; only replace inner text
+      const h1Re = /<h1\b([^>]*)>([\s\S]*?)<\/h1>/i;
+      const pRe = /<(p|h2|small)\b([^>]*)>([\s\S]*?)<\/\1>/i;
+      let inner = innerOld;
+      if (titleStyleDirty) {
+        const h1Open = inner.match(/<h1\b([^>]*)>/i)?.[1] || '';
+        const styleRe2 = /style\s*=\s*("([^"]*)"|'([^']*)')/i;
+        const h1NoStyle = h1Open.replace(styleRe2, '').replace(/\s+$/, '');
+        const h1StyleStr = toStyle(h1Style);
+        const newH1Open = `<h1${h1NoStyle ? ` ${h1NoStyle}` : ''}${h1StyleStr ? ` style=\"${h1StyleStr}\"` : ''}>`;
+        inner = h1Re.test(inner) ? inner.replace(h1Re, `${newH1Open}${esc(data.title || '')}</h1>`) : `${newH1Open}${esc(data.title || '')}</h1>\n` + inner;
+      } else {
+        inner = h1Re.test(inner) ? inner.replace(h1Re, (_m, open) => `<h1${open ? ` ${open}` : ''}>${esc(data.title || '')}</h1>`) : `<h1>${esc(data.title || '')}</h1>\n` + inner;
+      }
+      if (subtitleStyleDirty) {
+        const pOpen = inner.match(/<(p|h2|small)\b([^>]*)>/i)?.[2] || '';
+        const styleRe2 = /style\s*=\s*("([^"]*)"|'([^']*)')/i;
+        const pNoStyle = pOpen.replace(styleRe2, '').replace(/\s+$/, '');
+        const pStyleStr = toStyle(pStyle);
+        const newPOpen = `<p${pNoStyle ? ` ${pNoStyle}` : ''}${pStyleStr ? ` style=\"${pStyleStr}\"` : ''}>`;
+        inner = pRe.test(inner) ? inner.replace(pRe, `${newPOpen}${esc(data.subtitle || '')}</p>`) : inner + `\n      ${newPOpen}${esc(data.subtitle || '')}</p>`;
+      } else {
+        inner = pRe.test(inner) ? inner.replace(pRe, (_m, tag, open) => `<${tag}${open ? ` ${open}` : ''}>${esc(data.subtitle || '')}</${tag}>`) : inner + `\n      <p>${esc(data.subtitle || '')}</p>`;
+      }
+      const newWhole = newOpenTag + inner + `</header>`;
       const newCode = src.replace(whole, newWhole);
       visualBuilderActions.updateCode(newCode);
     } catch {}
