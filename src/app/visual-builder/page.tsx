@@ -228,15 +228,12 @@ export default function VisualBuilderPage() {
       });
     }
 
-    // Article triggers (widgets)
-    const articleEls = Array.from(c.querySelectorAll('section.row article')) as HTMLElement[];
-    for (const art of articleEls) {
+    // Article triggers (KPI only via data-role="kpi")
+    const kpiArticles = Array.from(c.querySelectorAll('article[data-role="kpi"]')) as HTMLElement[];
+    for (const art of kpiArticles) {
       makeTrigger(art, 'widget', () => {
-        const chartMount = art.querySelector('[data-liquid-chart]') as HTMLElement | null;
-        const id = chartMount?.getAttribute('data-liquid-chart') || art.getAttribute('id') || `article_${Math.random().toString(36).slice(2,8)}`;
-        const chartSpec = chartMount ? parsed.charts.find(x => x.id === chartMount.getAttribute('data-liquid-chart')!) : undefined;
-        const type = chartSpec ? chartSpec.type : 'kpi';
-        const widget: Widget = { id, type: (type as Widget['type']) } as Widget;
+        const id = art.getAttribute('id') || 'kpi_temp';
+        const widget: Widget = { id, type: 'kpi' } as Widget;
         setHtmlWidgetModal(widget);
         setHtmlWidgetModalOpen(true);
       });
