@@ -485,13 +485,15 @@ export function parseCommands(text: string): ParseResult {
       }
       const hasTitle = Object.prototype.hasOwnProperty.call(args, 'title');
       const hasStyle = Object.prototype.hasOwnProperty.call(args, 'style');
-      if (!hasTitle && !hasStyle) {
-        errors.push({ line, message: "updateArticle requer 'title' e/ou 'style'" });
+      const hasQuery = Object.prototype.hasOwnProperty.call(args, 'query');
+      if (!hasTitle && !hasStyle && !hasQuery) {
+        errors.push({ line, message: "updateArticle requer 'title' e/ou 'style' e/ou 'query'" });
         continue;
       }
       const payload: any = { id: args.id };
       if (hasTitle && typeof args.title === 'string') payload.title = args.title;
       if (hasStyle && typeof args.style === 'object') payload.style = args.style;
+      if (hasQuery && (typeof args.query === 'object' || typeof args.query === 'string')) payload.query = args.query;
       commands.push({ kind: "updateArticle", line, raw: stmt, args: payload });
       continue;
     }
