@@ -93,27 +93,35 @@ export const QueryEngine = {
     }
 
     let url: string | null = null;
-    // Determine intent from table/schema or filterRaw
+    // Determine intent from filters/timeDimension or explicit table
     const filterRaw = (spec.filterRaw || '').toLowerCase();
-    const isReceber = filterRaw.includes("conta_a_receber") || (schema==='financeiro' && table==='contas_receber');
-    const isPagarReal = filterRaw.includes('pagamento_efetuado') || (schema==='financeiro' && table==='contas_pagar');
+    const timeDim = (spec.dateColumn || '').toLowerCase();
+    const isReceber = filterRaw.includes('conta_a_receber') || (schema === 'financeiro' && table === 'contas_receber') || timeDim === 'data_vencimento';
+    const isPagarReal = filterRaw.includes('pagamento_efetuado') || (schema === 'financeiro' && table === 'contas_pagar') || timeDim === 'data_lancamento';
 
-    if (schema === 'financeiro' && (table === 'lancamentos_financeiros' || table === 'contas_pagar')) {
+    if (isPagarReal) {
       // Despesas (pagamento realizado)
       const allowed = ['centro_custo', 'categoria', 'departamento', 'projeto', 'filial', 'fornecedor', 'centro_lucro'];
-      if (!dim || !allowed.includes(dim)) {
-        // fallback: default to categoria
-        // throw new Error(`Invalid dimension for despesas: ${dim || '(empty)'}`);
-      }
-      url = `/api/modulos/financeiro?view=top-despesas&dim=${encodeURIComponent(dim || 'categoria')}${de ? `&de=${encodeURIComponent(de)}` : ''}${ate ? `&ate=${encodeURIComponent(ate)}` : ''}&limit=${lim}`;
-    }
-    if (schema === 'financeiro' && (table === 'lancamentos_financeiros' || table === 'contas_receber') || isReceber) {
+      const mappedDim = dim && allowed.includes(dim) ? dim : 'categoria';
+      url = `/api/modulos/financeiro?view=top-despesas&dim=${encodeURIComponent(mappedDim)}${de ? `&de=${encodeURIComponent(de)}` : ''}${ate ? `&ate=${encodeURIComponent(ate)}` : ''}&limit=${lim}`;
+    } else if (isReceber) {
+      // Receitas (a receber por vencimento)
       if (dim === 'centro_lucro') {
         url = `/api/modulos/financeiro?view=top-receitas-centro-lucro${de ? `&de=${encodeURIComponent(de!)}` : ''}${ate ? `&ate=${encodeURIComponent(ate!)}` : ''}&limit=${lim}`;
       } else {
-        // Only cliente allowed for top-receitas
         const mapped = dim || 'cliente';
         url = `/api/modulos/financeiro?view=top-receitas&dim=${encodeURIComponent(mapped)}${de ? `&de=${encodeURIComponent(de!)}` : ''}${ate ? `&ate=${encodeURIComponent(ate!)}` : ''}&limit=${lim}`;
+      }
+    } else if (schema === 'financeiro') {
+      // Fallback by table when filters didn't indicate
+      if (table === 'contas_pagar') {
+        const mappedDim = dim || 'categoria';
+        url = `/api/modulos/financeiro?view=top-despesas&dim=${encodeURIComponent(mappedDim)}${de ? `&de=${encodeURIComponent(de)}` : ''}${ate ? `&ate=${encodeURIComponent(ate)}` : ''}&limit=${lim}`;
+      } else if (table === 'contas_receber') {
+        const mapped = dim || 'cliente';
+        url = (mapped === 'centro_lucro')
+          ? `/api/modulos/financeiro?view=top-receitas-centro-lucro${de ? `&de=${encodeURIComponent(de!)}` : ''}${ate ? `&ate=${encodeURIComponent(ate!)}` : ''}&limit=${lim}`
+          : `/api/modulos/financeiro?view=top-receitas&dim=${encodeURIComponent(mapped)}${de ? `&de=${encodeURIComponent(de!)}` : ''}${ate ? `&ate=${encodeURIComponent(ate!)}` : ''}&limit=${lim}`;
       }
     }
 
