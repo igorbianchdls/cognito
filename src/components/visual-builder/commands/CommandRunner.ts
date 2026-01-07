@@ -232,8 +232,12 @@ export function runCommands(code: string, commands: Command[]): { nextCode: stri
                 diags.push({ ok, message: ok ? `Article '${id}' atualizado (fallback).` : `Article '${id}' não encontrado.`, line: cmd.line });
               }
             } else {
-              next = setAttrOnNode(next, id, 'title', title);
-              diags.push({ ok: true, message: `Chart '${id}' title atualizado (sem sections).`, line: cmd.line });
+              if (typeof title === 'string') {
+                next = setAttrOnNode(next, id, 'title', title as string);
+                diags.push({ ok: true, message: `Chart '${id}' title atualizado (sem sections).`, line: cmd.line });
+              } else {
+                diags.push({ ok: false, message: `updateArticle sem sections requer 'title'.`, line: cmd.line });
+              }
             }
           } else {
             // JSON path: tentar localizar widget e atualizar título
