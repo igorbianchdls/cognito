@@ -305,10 +305,6 @@ export default function VisualBuilderPage() {
         const mt = cfg.titleMarginTop ?? 0; const mr = cfg.titleMarginRight ?? 0; const mb = cfg.titleMarginBottom ?? 0; const ml = cfg.titleMarginLeft ?? 0;
         h1Style['margin'] = `${mt}px ${mr}px ${mb}px ${ml}px`;
       }
-      if (cfg?.titlePaddingTop !== undefined || cfg?.titlePaddingRight !== undefined || cfg?.titlePaddingBottom !== undefined || cfg?.titlePaddingLeft !== undefined) {
-        const pt = cfg.titlePaddingTop ?? 0; const pr = cfg.titlePaddingRight ?? 0; const pb = cfg.titlePaddingBottom ?? 0; const pl = cfg.titlePaddingLeft ?? 0;
-        h1Style['padding'] = `${pt}px ${pr}px ${pb}px ${pl}px`;
-      }
 
       // Build subtitle <p> style
       const pStyle: Record<string,string> = {};
@@ -320,10 +316,7 @@ export default function VisualBuilderPage() {
         const mt = cfg.subtitleMarginTop ?? 0; const mr = cfg.subtitleMarginRight ?? 0; const mb = cfg.subtitleMarginBottom ?? 0; const ml = cfg.subtitleMarginLeft ?? 0;
         pStyle['margin'] = `${mt}px ${mr}px ${mb}px ${ml}px`;
       }
-      if (cfg?.subtitlePaddingTop !== undefined || cfg?.subtitlePaddingRight !== undefined || cfg?.subtitlePaddingBottom !== undefined || cfg?.subtitlePaddingLeft !== undefined) {
-        const pt = cfg.subtitlePaddingTop ?? 0; const pr = cfg.subtitlePaddingRight ?? 0; const pb = cfg.subtitlePaddingBottom ?? 0; const pl = cfg.subtitlePaddingLeft ?? 0;
-        pStyle['padding'] = `${pt}px ${pr}px ${pb}px ${pl}px`;
-      }
+      // Padding de título/subtítulo não está no HeaderConfig atual; manter apenas margin
 
       // Compose new header inner HTML
       const esc = (s: string) => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
