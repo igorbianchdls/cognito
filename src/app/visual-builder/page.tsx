@@ -149,9 +149,6 @@ export default function VisualBuilderPage() {
   const [chartModalOpen, setChartModalOpen] = useState(false);
   const [chartModalChartId, setChartModalChartId] = useState<string | null>(null);
   const [chartModalInitialTitle, setChartModalInitialTitle] = useState<string>('');
-  const [kpiModalOpen, setKpiModalOpen] = useState(false);
-  const [kpiModalArticleId, setKpiModalArticleId] = useState<string | null>(null);
-  const [kpiModalInitial, setKpiModalInitial] = useState<import('@/components/visual-builder/KpiEditorModal').KpiEditorModalProps['initial']>({ titleText: '', valueText: '' });
   useEffect(() => {
     if (!htmlMode) return;
     if (activeTab !== 'responsive') return;
