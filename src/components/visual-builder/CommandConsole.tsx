@@ -67,7 +67,20 @@ updateSection(id: "kpis"; display: "grid"; gridTemplateColumns: "repeat(2, 1fr)"
 // Articles
 createArticle(sectionId: "kpis2"; id: "kpi_novo"; type: "kpi"; title: "Novo KPI"; widthFr: 1; backgroundColor: "#fff";);
 createArticle(sectionId: "charts"; id: "chart_novo"; type: "chart"; title: "Meu Gráfico"; chartType: "bar"; height: 300; categories: ["A","B"]; values: [10,20];);
-updateArticle(id: "kpi_novo"; title: "KPI Atualizado"; style: { borderColor: "#e5e7eb"; borderWidth: 1; borderStyle: "solid"; });`);
+updateArticle(id: "kpi_novo"; title: "KPI Atualizado"; style: { borderColor: "#e5e7eb"; borderWidth: 1; borderStyle: "solid"; });
+
+// Update queries dos charts (exemplos do Financeiro)
+// 1) Trocar Top 5 Categorias (Despesas) para Centros de Custo (Despesas)
+updateArticle(
+  id: "top_categorias";
+  query: { "dimension": "centros_custo.nome", "timeDimension": "data_lancamento", "range": "${de}..${ate}", "filter": "tipo = 'pagamento_efetuado'", "order": "value DESC", "limit": 5 };
+);
+
+// 2) Trocar Top 5 Clientes (Receitas) para Centros de Lucro (Receitas)
+updateArticle(
+  id: "top_clientes";
+  query: { "dimension": "centros_lucro.nome", "timeDimension": "data_vencimento", "range": "${de}..${ate}", "filter": "tipo = 'conta_a_receber' AND (status IS NULL OR status NOT IN ('cancelado'))", "order": "value DESC", "limit": 5 };
+);`);
   const [output, setOutput] = useState<Array<{ type: "ok" | "err"; text: string }>>([]);
   const lastResultRef = useRef<string>("");
 

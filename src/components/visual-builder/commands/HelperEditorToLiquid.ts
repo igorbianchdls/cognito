@@ -21,6 +21,7 @@ export {
   insertChartInSection,
   removeSectionByIdDSL,
   updateArticleTitleByIdDSL,
+  updateArticleQueryInline,
   // Inline-first helpers
   upsertHeaderSimple,
   ensureSectionExistsInline,

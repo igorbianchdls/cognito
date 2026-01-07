@@ -448,6 +448,93 @@ export function updateArticleTitleByIdDSL(
   return { code: code.replace(re, open + inner + close), updated: true };
 }
 
+// Update or insert <query .../> inside an <article id="..."> block (Chart article)
+export function updateArticleQueryInline(
+  code: string,
+  args: { id: string; patch: Partial<Record<string, string | number>> }
+): { code: string; updated: boolean } {
+  const escId = escRe(args.id);
+  const reArticle = new RegExp(`<article\\b([^>]*?\\bid=\\\"${escId}\\\"[^>]*)>([\\s\\S]*?)<\\/article>`, 'i');
+  const m = code.match(reArticle);
+  if (!m) return { code, updated: false };
+  const openAttrs = m[1] || '';
+  let inner = m[2] || '';
+
+  const reQuerySelf = /<query\b([^>]*)\/>/i;
+  const reQueryPair = /<query\b([^>]*)>([\s\S]*?)<\/query>/i;
+  const reChartPair = /(<Chart\b([^>]*)>)([\s\S]*?)(<\/Chart>)/i;
+
+  const parseAttrs = (s: string): Record<string, string> => {
+    const out: Record<string,string> = {};
+    const re = /(\w[\w-]*)\s*=\s*("([^"]*)"|'([^']*)'|([^\s>]+))/g;
+    let mm: RegExpExecArray | null;
+    while ((mm = re.exec(s)) !== null) {
+      const name = mm[1];
+      const val = (mm[3] ?? mm[4] ?? mm[5] ?? '').trim();
+      out[name] = val;
+    }
+    return out;
+  };
+  const serializeAttrs = (obj: Record<string, unknown>): string => {
+    const order = [
+      'schema','table','measure','measures','dimension','dimensions','timeDimension','dateColumn',
+      'range','from','to','granularity','filter','filters','order','limit','offset','timezone'
+    ];
+    const keys = Array.from(new Set([...order, ...Object.keys(obj)]));
+    const esc = (v: unknown) => String(v).replace(/"/g, '&quot;');
+    return keys
+      .filter(k => obj[k] !== undefined && obj[k] !== '')
+      .map(k => `${k}="${esc(obj[k])}` + `"`)
+      .join(' ');
+  };
+
+  const applyPatch = (attrs: Record<string,string>, patch: Partial<Record<string, string | number>>) => {
+    const next: Record<string, string> = { ...attrs };
+    for (const [k,v] of Object.entries(patch || {})) {
+      if (v === undefined || v === null) continue;
+      next[k] = String(v);
+    }
+    return next;
+  };
+
+  // Try existing <query .../>
+  if (reQuerySelf.test(inner)) {
+    inner = inner.replace(reQuerySelf, (full: string, qAttrsStr: string) => {
+      const attrs = parseAttrs(qAttrsStr || '');
+      const patched = applyPatch(attrs, args.patch);
+      const newAttrs = serializeAttrs(patched);
+      return `<query ${newAttrs} />`;
+    });
+    return { code: code.replace(reArticle, `<article${openAttrs}>${inner}</article>`), updated: true };
+  }
+  if (reQueryPair.test(inner)) {
+    inner = inner.replace(reQueryPair, (full: string, qAttrsStr: string, _body: string) => {
+      const attrs = parseAttrs(qAttrsStr || '');
+      const patched = applyPatch(attrs, args.patch);
+      const newAttrs = serializeAttrs(patched);
+      return `<query ${newAttrs} />`;
+    });
+    return { code: code.replace(reArticle, `<article${openAttrs}>${inner}</article>`), updated: true };
+  }
+
+  // No <query> found: try to insert inside <Chart ...> ... </Chart>
+  const mChart = inner.match(reChartPair);
+  if (mChart) {
+    const chartOpen = mChart[1] || '';
+    const chartInner = mChart[3] || '';
+    const chartClose = mChart[4] || '';
+    const newAttrs = serializeAttrs(applyPatch({}, args.patch));
+    const injected = `${chartOpen}\n          <query ${newAttrs} />\n${chartInner}${chartClose}`;
+    const replaced = inner.replace(reChartPair, injected);
+    return { code: code.replace(reArticle, `<article${openAttrs}>${replaced}</article>`), updated: true };
+  }
+
+  // Fallback: append at end of article
+  const newAttrs = serializeAttrs(applyPatch({}, args.patch));
+  const appended = inner.trimEnd() + `\n        <query ${newAttrs} />`;
+  return { code: code.replace(reArticle, `<article${openAttrs}>${appended}</article>`), updated: true };
+}
+
 // New: simple header upsert with <p> title/subtitle inside <header class="vb-header">, merging simple container styles
 export function upsertHeaderSimple(
   code: string,

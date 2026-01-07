@@ -146,7 +146,7 @@ export type Command =
   | BaseCommand<"addGroup", AddGroupArgs>
   | BaseCommand<"addSection", AddSectionArgs>
   | BaseCommand<"removeSection", { id: string }>
-  | BaseCommand<"updateArticle", { id: string; title?: string; style?: Record<string, unknown> }>
+  | BaseCommand<"updateArticle", { id: string; title?: string; style?: Record<string, unknown>; query?: Record<string, unknown> | string }>
   | BaseCommand<"updateHeader", { title?: string; subtitle?: string }>
   | BaseCommand<"updateSection", UpdateSectionArgs>
   | BaseCommand<"createSection", CreateSectionArgs>

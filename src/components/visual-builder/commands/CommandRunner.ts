@@ -217,10 +217,38 @@ export function runCommands(code: string, commands: Command[]): { nextCode: stri
           break;
         }
         case "updateArticle": {
-        const { id, title, style } = (cmd.args as { id: string; title?: string; style?: Record<string, unknown> });
+        const { id, title, style, query } = (cmd.args as { id: string; title?: string; style?: Record<string, unknown>; query?: Record<string, unknown> | string });
           if (dsl) {
             const usesSections = /<section\b/i.test(next);
             if (usesSections) {
+              // Update or insert <query .../>
+              if (query) {
+                // If query is string like "key: value; key2: value2" turn into object
+                let patch: Record<string, string | number> = {};
+                if (typeof query === 'string') {
+                  const items = String(query).split(';').map(s => s.trim()).filter(Boolean);
+                  for (const it of items) {
+                    const ix = it.indexOf(':');
+                    if (ix > 0) {
+                      const k = it.slice(0, ix).trim();
+                      const v = it.slice(ix + 1).trim();
+                      patch[k] = v.replace(/^"|"$/g,'').replace(/^'|'$/g,'');
+                    }
+                  }
+                } else {
+                  for (const [k,v] of Object.entries(query as Record<string, unknown>)) {
+                    if (v === undefined || v === null) continue;
+                    patch[k] = typeof v === 'number' ? v : String(v);
+                  }
+                }
+                const qRes = updateArticleQueryInline(next, { id, patch });
+                if (qRes.updated) {
+                  next = qRes.code;
+                  diags.push({ ok: true, message: `Query do article '${id}' atualizada.`, line: cmd.line });
+                } else {
+                  diags.push({ ok: false, message: `Article '${id}' não encontrado para atualizar query.`, line: cmd.line });
+                }
+              }
               // Try inline-first article update (title/style)
               const res = updateArticleInlineDirect(next, { id, ...(typeof title === 'string' ? { title } : {}), ...(style ? { style } : {}) });
               if (res.updated) {
