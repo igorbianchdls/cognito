@@ -846,8 +846,21 @@ export default function VisualBuilderPage() {
               setIf('flex-wrap', out.flexWrap);
               setIf('justify-content', out.justifyContent);
               setIf('align-items', out.alignItems);
+              // Clean grid-only props when switching to flex
+              if (displayValue === 'flex') {
+                delete styleObj['grid-template-columns'];
+              }
             }
-            if (displayValue === 'grid' || wantsGridProps) setIf('grid-template-columns', out.gridTemplateColumns);
+            if (displayValue === 'grid' || wantsGridProps) {
+              setIf('grid-template-columns', out.gridTemplateColumns);
+              // Clean flex-only props when switching to grid
+              if (displayValue === 'grid') {
+                delete styleObj['flex-direction'];
+                delete styleObj['flex-wrap'];
+                delete styleObj['justify-content'];
+                delete styleObj['align-items'];
+              }
+            }
             setIf('padding', out.padding !== undefined ? `${out.padding}px` : undefined);
             setIf('margin', out.margin !== undefined ? `${out.margin}px` : undefined);
             setIf('background-color', out.backgroundColor);
