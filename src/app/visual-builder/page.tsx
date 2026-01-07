@@ -209,6 +209,7 @@ export default function VisualBuilderPage() {
       // If querySpec present, resolve it and re-render with fetched data
       if (spec.querySpec) {
         QueryEngine.resolve(spec.querySpec, visualBuilderState.globalFilters).then((rows) => {
+          if (!Array.isArray(rows) || rows.length === 0) return; // keep placeholder if backend returned no rows
           const commonFetched = { ...common, data: rows } as any;
           try {
             switch (spec.type) {
