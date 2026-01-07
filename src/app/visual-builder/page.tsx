@@ -161,7 +161,7 @@ export default function VisualBuilderPage() {
   const [kpiModalInitial, setKpiModalInitial] = useState<KpiInitial>({ titleText: '', valueText: '' });
   const [chartModalOpen, setChartModalOpen] = useState(false);
   const [chartModalChartId, setChartModalChartId] = useState<string | null>(null);
-  const [chartModalInitial, setChartModalInitial] = useState<{ titleText: string; titleFontFamily?: string; titleFontSize?: number; titleFontWeight?: string | number; titleColor?: string }>({ titleText: '' });
+  const [chartModalInitial, setChartModalInitial] = useState<{ titleText: string; titleFontFamily?: string; titleFontSize?: number; titleFontWeight?: string | number; titleColor?: string; backgroundColor?: string; opacity?: number; borderColor?: string; borderWidth?: number; borderStyle?: 'solid'|'dashed'|'dotted'|''; borderRadius?: number }>({ titleText: '' });
   useEffect(() => {
     if (!htmlMode) return;
     if (activeTab !== 'responsive') return;
