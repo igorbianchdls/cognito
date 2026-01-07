@@ -887,6 +887,15 @@ export const visualBuilderActions = {
     .card { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 12px; color: #111827; }
     .card h3 { margin: 0 0 8px; font-family: Inter, system-ui, sans-serif; font-weight: 600; font-size: 14px; color: #374151; }
     .kpi-value { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; }
+    /* KPIs: grid de 12 colunas com spans de 3 (4 cards por linha) */
+    .row.kpis { grid-template-columns: repeat(12, minmax(0, 1fr)); }
+    .row.kpis > article { grid-column: span 3; }
+    @media (max-width: 1024px) { .row.kpis { grid-template-columns: repeat(6, minmax(0, 1fr)); } .row.kpis > article { grid-column: span 3; } }
+    @media (max-width: 640px)  { .row.kpis { grid-template-columns: repeat(1, minmax(0, 1fr)); } .row.kpis > article { grid-column: span 1; } }
+    /* Charts row using flex with fractional widths via --fr */
+    .row.charts { display: flex; gap: 16px; }
+    .row.charts > article { flex: var(--fr, 1) 1 0%; min-width: 0; }
+    @media (max-width: 640px) { .row.charts { flex-direction: column; } .row.charts > article { flex: 1 1 auto; } }
   </style>
 
   <div class="vb-container">
@@ -910,15 +919,15 @@ export const visualBuilderActions = {
     </section>
 
     <section class="row charts">
-      <article class="card" style="background-color:#fefce8; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px;">
+      <article class="card" style="--fr:1; background-color:#fefce8; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px;">
         <h1 style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Faturamento Mensal</h1>
         <Chart id="fat_mensal" type="line" height="320" />
       </article>
-      <article class="card" style="background-color:#f0f9ff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px;">
+      <article class="card" style="--fr:2; background-color:#f0f9ff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px;">
         <h1 style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Vendas por Canal</h1>
         <Chart id="vendas_canal" type="bar" height="320" categories="Loja,Site,WhatsApp" values="120,80,150" />
       </article>
-      <article class="card" style="background-color:#fdf2f8; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px;">
+      <article class="card" style="--fr:1; background-color:#fdf2f8; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px;">
         <h1 style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Participação</h1>
         <Chart id="participacao" type="pie" height="320" />
       </article>
