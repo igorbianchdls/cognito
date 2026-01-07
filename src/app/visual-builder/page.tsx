@@ -146,6 +146,12 @@ export default function VisualBuilderPage() {
   const [kpiModalOpen, setKpiModalOpen] = useState(false);
   const [kpiModalArticleId, setKpiModalArticleId] = useState<string | null>(null);
   const [kpiModalInitial, setKpiModalInitial] = useState<import('@/components/visual-builder/KpiEditorModal').KpiEditorModalProps['initial']>({ titleText: '', valueText: '' });
+  const [chartModalOpen, setChartModalOpen] = useState(false);
+  const [chartModalChartId, setChartModalChartId] = useState<string | null>(null);
+  const [chartModalInitialTitle, setChartModalInitialTitle] = useState<string>('');
+  const [kpiModalOpen, setKpiModalOpen] = useState(false);
+  const [kpiModalArticleId, setKpiModalArticleId] = useState<string | null>(null);
+  const [kpiModalInitial, setKpiModalInitial] = useState<import('@/components/visual-builder/KpiEditorModal').KpiEditorModalProps['initial']>({ titleText: '', valueText: '' });
   useEffect(() => {
     if (!htmlMode) return;
     if (activeTab !== 'responsive') return;
@@ -264,6 +270,19 @@ export default function VisualBuilderPage() {
           valueColor: vStyle['color'] || '#111827',
         });
         setKpiModalOpen(true);
+      });
+    }
+
+    // Chart triggers (only on article[data-role="chart"]) 
+    const chartArticles = Array.from(c.querySelectorAll('article[data-role="chart"]')) as HTMLElement[];
+    for (const art of chartArticles) {
+      makeTrigger(art, 'widget', () => {
+        const mount = art.querySelector('[data-liquid-chart]') as HTMLElement | null;
+        const chartId = mount?.getAttribute('data-liquid-chart') || '';
+        const titleEl = art.querySelector('h1');
+        setChartModalChartId(chartId);
+        setChartModalInitialTitle(titleEl?.textContent?.trim() || '');
+        setChartModalOpen(true);
       });
     }
 
@@ -432,15 +451,15 @@ export default function VisualBuilderPage() {
     </section>
 
     <section class="row charts">
-      <article class="card" style="--fr:1; background-color:#fefce8; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px;">
+      <article class="card" data-role="chart" style="--fr:1; background-color:#fefce8; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px;">
         <h1 style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Faturamento Mensal</h1>
         <Chart id="fat_mensal" type="line" height="320" />
       </article>
-      <article class="card" style="--fr:2; background-color:#f0f9ff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px;">
+      <article class="card" data-role="chart" style="--fr:2; background-color:#f0f9ff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px;">
         <h1 style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Vendas por Canal</h1>
         <Chart id="vendas_canal" type="bar" height="320" categories="Loja,Site,WhatsApp" values="120,80,150" />
       </article>
-      <article class="card" style="--fr:1; background-color:#fdf2f8; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px;">
+      <article class="card" data-role="chart" style="--fr:1; background-color:#fdf2f8; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px;">
         <h1 style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Participação</h1>
         <Chart id="participacao" type="pie" height="320" />
       </article>
@@ -637,6 +656,44 @@ export default function VisualBuilderPage() {
         isOpen={htmlWidgetModalOpen}
         onClose={() => { setHtmlWidgetModalOpen(false); setHtmlWidgetModal(null); }}
         onSave={() => { setHtmlWidgetModalOpen(false); setHtmlWidgetModal(null); }}
+      />
+      <ChartEditorModal
+        isOpen={chartModalOpen}
+        initialTitle={chartModalInitialTitle}
+        onClose={() => setChartModalOpen(false)}
+        onSave={(out) => {
+          try {
+            const src = String(visualBuilderState.code || '');
+            const chartId = chartModalChartId || '';
+            if (!chartId) { setChartModalOpen(false); return; }
+            // Find the Chart tag first
+            const escId = chartId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const chartTagRe = new RegExp(`<Chart\\b[^>]*\\bid=\\"${escId}\\"`, 'i');
+            const mChart = src.match(chartTagRe);
+            if (!mChart || mChart.index === undefined) { setChartModalOpen(false); return; }
+            const chartIdx = mChart.index;
+            // Find surrounding article
+            const artStart = src.lastIndexOf('<article', chartIdx);
+            const artOpenEnd = src.indexOf('>', artStart);
+            const artClose = src.indexOf('</article>', chartIdx);
+            if (artStart === -1 || artOpenEnd === -1 || artClose === -1) { setChartModalOpen(false); return; }
+            const whole = src.slice(artStart, artClose + 10);
+            const openAttrs = src.slice(artStart).match(/<article\b([^>]*)>/i)?.[1] || '';
+            const innerOld = src.slice(artOpenEnd + 1, artClose);
+            // Replace or insert h1
+            const esc = (s: string) => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+            const h1Re = /<h1\b([^>]*)>([\s\S]*?)<\/h1>/i;
+            const newH1 = `<h1>${esc(out.titleText || '')}</h1>`;
+            let inner = innerOld;
+            if (h1Re.test(inner)) inner = inner.replace(h1Re, newH1); else inner = newH1 + `\n` + inner;
+            const newWhole = `<article${openAttrs}>${inner}</article>`;
+            const newCode = src.replace(whole, newWhole);
+            visualBuilderActions.updateCode(newCode);
+          } catch {}
+          finally {
+            setChartModalOpen(false);
+          }
+        }}
       />
       <KpiEditorModal
         isOpen={kpiModalOpen}
