@@ -446,86 +446,213 @@ export default function VisualBuilderPage() {
       } catch { /* ignore sortable setup */ }
     }
 
-    // Article triggers (KPI only via data-role="kpi")
-    const kpiArticles = Array.from(c.querySelectorAll('article[data-role="kpi"]')) as HTMLElement[];
-    for (const art of kpiArticles) {
-      makeTrigger(art, 'widget', () => {
-        const id = art.getAttribute('id') || 'kpi_temp';
-        const titleEl = (art.querySelector('p') || art.querySelector('h1')) as HTMLElement | null;
-        const valEl = art.querySelector('.kpi-value');
-        const parseStyle = (s: string | null | undefined): Record<string,string> => {
-          const out: Record<string,string> = {};
-          if (!s) return out;
-          for (const part of s.split(';')) {
-            const p = part.trim(); if (!p) continue; const i = p.indexOf(':'); if (i === -1) continue; out[p.slice(0,i).trim()] = p.slice(i+1).trim();
-          }
-          return out;
-        };
-        const tStyle = parseStyle(titleEl?.getAttribute('style'));
-        const vStyle = parseStyle(valEl?.getAttribute('style'));
-        const num = (v?: string) => (v && /px$/.test(v) ? Number(v.replace(/px$/,'')) : (v ? Number(v) : undefined));
-        setKpiModalArticleId(id);
-        setKpiModalInitial({
-          titleText: titleEl?.textContent?.trim() || '',
-          titleFontFamily: tStyle['font-family'] || '',
-          titleFontSize: num(tStyle['font-size']),
-          titleFontWeight: tStyle['font-weight'] || undefined,
-          titleColor: tStyle['color'] || '#111827',
-          valueText: valEl?.textContent?.trim() || '',
-          valueFontFamily: vStyle['font-family'] || '',
-          valueFontSize: num(vStyle['font-size']),
-          valueFontWeight: vStyle['font-weight'] || undefined,
-          valueColor: vStyle['color'] || '#111827',
-        });
-        setKpiModalOpen(true);
+    // Article menu (Editar, Duplicar, Excluir) for KPI and Chart articles
+    const setupArticleMenu = (art: HTMLElement, role: 'kpi' | 'chart') => {
+      const sectionEl = art.closest('section[data-role="section"]') as HTMLElement | null;
+      const artId = art.getAttribute('id') || '';
+      if (!artId) return;
+      art.style.position = art.style.position || 'relative';
+      // Menu trigger button
+      const menuBtn = document.createElement('button');
+      menuBtn.type = 'button';
+      menuBtn.textContent = '⋮';
+      menuBtn.title = 'Mais ações';
+      menuBtn.style.position = 'absolute';
+      menuBtn.style.top = '8px';
+      menuBtn.style.right = '8px';
+      menuBtn.style.zIndex = '60';
+      menuBtn.style.padding = '4px 6px';
+      menuBtn.style.border = 'none';
+      menuBtn.style.borderRadius = '6px';
+      menuBtn.style.background = 'rgba(0,0,0,0.85)';
+      menuBtn.style.color = '#fff';
+      menuBtn.style.cursor = 'pointer';
+      menuBtn.style.opacity = '0';
+      menuBtn.style.transition = 'opacity 120ms ease-in-out';
+      const enter = () => { menuBtn.style.opacity = '1'; };
+      const leave = () => { menuBtn.style.opacity = '0'; };
+      art.addEventListener('mouseenter', enter);
+      art.addEventListener('mouseleave', leave);
+      art.appendChild(menuBtn);
+      cleanupFns.push(() => {
+        try { art.removeEventListener('mouseenter', enter); } catch {}
+        try { art.removeEventListener('mouseleave', leave); } catch {}
+        try { art.removeChild(menuBtn); } catch {}
       });
-    }
 
-    // Chart triggers (only on article[data-role="chart"]) 
+      // Popover menu
+      const pop = document.createElement('div');
+      pop.style.position = 'absolute';
+      pop.style.top = '32px';
+      pop.style.right = '8px';
+      pop.style.zIndex = '70';
+      pop.style.background = 'rgba(17,17,17,0.98)';
+      pop.style.color = '#fff';
+      pop.style.borderRadius = '8px';
+      pop.style.padding = '4px';
+      pop.style.boxShadow = '0 6px 16px rgba(0,0,0,0.35)';
+      pop.style.display = 'none';
+      const mkItem = (label: string) => {
+        const el = document.createElement('button');
+        el.type = 'button';
+        el.textContent = label;
+        el.style.display = 'block';
+        el.style.width = '160px';
+        el.style.textAlign = 'left';
+        el.style.padding = '8px 10px';
+        el.style.border = 'none';
+        el.style.background = 'transparent';
+        el.style.color = '#fff';
+        el.style.borderRadius = '6px';
+        el.addEventListener('mouseenter', () => { el.style.background = 'rgba(255,255,255,0.08)'; });
+        el.addEventListener('mouseleave', () => { el.style.background = 'transparent'; });
+        return el;
+      };
+      const itemEdit = mkItem('Editar');
+      const itemDup = mkItem('Duplicar');
+      const itemDel = mkItem('Excluir');
+      pop.appendChild(itemEdit); pop.appendChild(itemDup); pop.appendChild(itemDel);
+      art.appendChild(pop);
+      cleanupFns.push(() => { try { art.removeChild(pop); } catch {} });
+
+      const closePop = () => { pop.style.display = 'none'; };
+      const openPop = (e: MouseEvent) => { e.preventDefault(); e.stopPropagation(); pop.style.display = 'block'; document.addEventListener('click', closePop, { once: true }); };
+      menuBtn.addEventListener('click', openPop);
+      cleanupFns.push(() => { try { menuBtn.removeEventListener('click', openPop); } catch {} });
+
+      // Helpers
+      const getSrc = () => String(visualBuilderState.code || '');
+      const escRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const findSection = (code: string, id: string) => {
+        const re = new RegExp(`<section\\b([^>]*?\\bid=\\\"${escRe(id)}\\\"[^>]*)>([\\s\\S]*?)<\\/section>`, 'i');
+        const m = code.match(re); return { re, m } as const;
+      };
+      const findArticle = (code: string, id: string) => {
+        const re = new RegExp(`<article\\b([^>]*?\\bid=\\\"${escRe(id)}\\\"[^>]*)>([\\s\\S]*?)<\\/article>`, 'i');
+        const m = code.match(re); return { re, m } as const;
+      };
+      const genUniqueId = (base: string) => {
+        const code = getSrc();
+        const has = (idTry: string) => new RegExp(`<article\\b[^>]*\\bid=\\\"${escRe(idTry)}\\\"`).test(code) || new RegExp(`<Chart\\b[^>]*\\bid=\\\"${escRe(idTry)}\\\"`).test(code);
+        let attempt = `${base}_copy`;
+        let i = 2;
+        while (has(attempt)) { attempt = `${base}_${i++}`; if (i > 999) break; }
+        return attempt;
+      };
+
+      // Edit
+      const onEdit = (e: MouseEvent) => {
+        e.preventDefault(); e.stopPropagation(); closePop();
+        if (role === 'kpi') {
+          const titleEl = (art.querySelector('p') || art.querySelector('h1')) as HTMLElement | null;
+          const valEl = art.querySelector('.kpi-value');
+          const parseStyle = (s: string | null | undefined): Record<string,string> => { const out: Record<string,string> = {}; if (!s) return out; for (const part of s.split(';')) { const p = part.trim(); if (!p) continue; const i = p.indexOf(':'); if (i === -1) continue; out[p.slice(0,i).trim()] = p.slice(i+1).trim(); } return out; };
+          const tStyle = parseStyle(titleEl?.getAttribute('style'));
+          const vStyle = parseStyle(valEl?.getAttribute('style'));
+          const num = (v?: string) => (v && /px$/.test(v) ? Number(v.replace(/px$/,'')) : (v ? Number(v) : undefined));
+          setKpiModalArticleId(artId);
+          setKpiModalInitial({
+            titleText: titleEl?.textContent?.trim() || '',
+            titleFontFamily: tStyle['font-family'] || '',
+            titleFontSize: num(tStyle['font-size']),
+            titleFontWeight: tStyle['font-weight'] || undefined,
+            titleColor: tStyle['color'] || '#111827',
+            valueText: valEl?.textContent?.trim() || '',
+            valueFontFamily: vStyle['font-family'] || '',
+            valueFontSize: num(vStyle['font-size']),
+            valueFontWeight: vStyle['font-weight'] || undefined,
+            valueColor: vStyle['color'] || '#111827',
+          });
+          setKpiModalOpen(true);
+        } else {
+          const mount = art.querySelector('[data-liquid-chart]') as HTMLElement | null;
+          const chartId = mount?.getAttribute('data-liquid-chart') || '';
+          const titleEl = (art.querySelector('p') || art.querySelector('h1')) as HTMLElement | null;
+          const parseStyle = (s: string | null | undefined): Record<string,string> => { const out: Record<string,string> = {}; if (!s) return out; for (const part of s.split(';')) { const p = part.trim(); if (!p) continue; const i = p.indexOf(':'); if (i === -1) continue; out[p.slice(0,i).trim()] = p.slice(i+1).trim(); } return out; };
+          const tStyle = parseStyle(titleEl?.getAttribute('style'));
+          const artStyleObj = parseStyle(art.getAttribute('style'));
+          const numPx = (v?: string) => (v && /px$/.test(v) ? Number(v.replace(/px$/,'')) : (v ? Number(v) : undefined));
+          setChartModalChartId(chartId);
+          setChartModalInitial({
+            titleText: titleEl?.textContent?.trim() || '',
+            titleFontFamily: tStyle['font-family'] || '',
+            titleFontSize: (tStyle['font-size'] ? Number(String(tStyle['font-size']).replace(/px$/,'')) : undefined),
+            titleFontWeight: tStyle['font-weight'] || undefined,
+            titleColor: tStyle['color'] || '#111827',
+            backgroundColor: artStyleObj['background-color'] || '',
+            opacity: artStyleObj['opacity'] ? Number(artStyleObj['opacity']) : undefined,
+            borderColor: artStyleObj['border-color'] || '',
+            borderWidth: numPx(artStyleObj['border-width']),
+            borderStyle: artStyleObj['border-style'] as any,
+            borderRadius: numPx(artStyleObj['border-radius']),
+          });
+          setChartModalOpen(true);
+        }
+      };
+      itemEdit.addEventListener('click', onEdit);
+      cleanupFns.push(() => { try { itemEdit.removeEventListener('click', onEdit); } catch {} });
+
+      // Duplicate
+      const onDuplicate = (e: MouseEvent) => {
+        e.preventDefault(); e.stopPropagation(); closePop();
+        try {
+          const src = getSrc();
+          const secId = sectionEl?.getAttribute('id') || '';
+          if (!secId) return;
+          const { m: mSec } = findSection(src, secId);
+          if (!mSec) return;
+          const secInner = mSec[2] || '';
+          const { m: mArt } = findArticle(secInner, artId);
+          if (!mArt) return;
+          const artOpen = mArt[1] || '';
+          let artInner = mArt[2] || '';
+          const newArtId = genUniqueId(artId);
+          let newArtOpen = artOpen.replace(/(id=\")[^\"]*(\")/i, `$1${newArtId}$2`);
+          // Update internal Chart id if present
+          const chartMatch = artInner.match(/<Chart\b([^>]*)>/i);
+          if (chartMatch) {
+            const attrs = chartMatch[1] || '';
+            const idAttr = attrs.match(/\bid=\"([^\"]+)\"/i);
+            const oldCId = idAttr?.[1];
+            if (oldCId) artInner = artInner.replace(/(<Chart\b[^>]*?id=\")[^\"]*(\")/i, `$1${genUniqueId(oldCId)}$2`);
+          }
+          const artClone = `<article${newArtOpen}>${artInner}</article>`;
+          const secInnerNew = secInner.replace(mArt[0], mArt[0] + `\n` + artClone);
+          const wholeSec = mSec[0];
+          const newSec = wholeSec.replace(secInner, secInnerNew);
+          visualBuilderActions.updateCode(src.replace(wholeSec, newSec));
+        } catch {}
+      };
+      itemDup.addEventListener('click', onDuplicate);
+      cleanupFns.push(() => { try { itemDup.removeEventListener('click', onDuplicate); } catch {} });
+
+      // Delete
+      const onDelete = (e: MouseEvent) => {
+        e.preventDefault(); e.stopPropagation(); closePop();
+        try {
+          const src = getSrc();
+          const secId = sectionEl?.getAttribute('id') || '';
+          if (!secId) return;
+          const { m: mSec } = findSection(src, secId);
+          if (!mSec) return;
+          const secInner = mSec[2] || '';
+          const { m: mArt } = findArticle(secInner, artId);
+          if (!mArt) return;
+          const secInnerNew = secInner.replace(mArt[0], '').replace(/\n{3,}/g, '\n\n');
+          const wholeSec = mSec[0];
+          const newSec = wholeSec.replace(secInner, secInnerNew);
+          visualBuilderActions.updateCode(src.replace(wholeSec, newSec));
+        } catch {}
+      };
+      itemDel.addEventListener('click', onDelete);
+      cleanupFns.push(() => { try { itemDel.removeEventListener('click', onDelete); } catch {} });
+    };
+
+    // Apply menu to articles
+    const kpiArticles = Array.from(c.querySelectorAll('article[data-role="kpi"]')) as HTMLElement[];
+    for (const art of kpiArticles) setupArticleMenu(art, 'kpi');
     const chartArticles = Array.from(c.querySelectorAll('article[data-role="chart"]')) as HTMLElement[];
-    for (const art of chartArticles) {
-      makeTrigger(art, 'widget', () => {
-        const mount = art.querySelector('[data-liquid-chart]') as HTMLElement | null;
-        const chartId = mount?.getAttribute('data-liquid-chart') || '';
-        const titleEl = (art.querySelector('p') || art.querySelector('h1')) as HTMLElement | null;
-        const parseStyle = (s: string | null | undefined): Record<string,string> => {
-          const out: Record<string,string> = {};
-          if (!s) return out;
-          for (const part of s.split(';')) {
-            const p = part.trim(); if (!p) continue; const i = p.indexOf(':'); if (i === -1) continue; out[p.slice(0,i).trim()] = p.slice(i+1).trim();
-          }
-          return out;
-        };
-        const tStyle = parseStyle(titleEl?.getAttribute('style'));
-        const num = (v?: string) => (v && /px$/.test(v) ? Number(v.replace(/px$/,'')) : (v ? Number(v) : undefined));
-        // Parse container styles
-        const artStyleObj = (() => {
-          const s = art.getAttribute('style');
-          const out: Record<string,string> = {};
-          if (!s) return out;
-          for (const part of s.split(';')) {
-            const p = part.trim(); if (!p) continue; const i = p.indexOf(':'); if (i === -1) continue; out[p.slice(0,i).trim()] = p.slice(i+1).trim();
-          }
-          return out;
-        })();
-        const numPx = (v?: string) => (v && /px$/.test(v) ? Number(v.replace(/px$/,'')) : (v ? Number(v) : undefined));
-        setChartModalChartId(chartId);
-        setChartModalInitial({
-          titleText: titleEl?.textContent?.trim() || '',
-          titleFontFamily: tStyle['font-family'] || '',
-          titleFontSize: num(tStyle['font-size']),
-          titleFontWeight: tStyle['font-weight'] || undefined,
-          titleColor: tStyle['color'] || '#111827',
-          backgroundColor: artStyleObj['background-color'] || '',
-          opacity: artStyleObj['opacity'] ? Number(artStyleObj['opacity']) : undefined,
-          borderColor: artStyleObj['border-color'] || '',
-          borderWidth: numPx(artStyleObj['border-width']),
-          borderStyle: (artStyleObj['border-style'] as any) || '',
-          borderRadius: numPx(artStyleObj['border-radius']),
-        });
-        setChartModalOpen(true);
-      });
-    }
+    for (const art of chartArticles) setupArticleMenu(art, 'chart');
 
     htmlCleanupFnsRef.current = cleanupFns;
 
