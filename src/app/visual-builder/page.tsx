@@ -12,6 +12,7 @@ import CommandConsole from '@/components/visual-builder/CommandConsole';
 import ResponsiveGridCanvas from '@/components/visual-builder/ResponsiveGridCanvas';
 import WidgetEditorModal from '@/components/visual-builder/WidgetEditorModal';
 import HeaderEditorModal from '@/components/visual-builder/HeaderEditorModal';
+import KpiEditorModal from '@/components/visual-builder/KpiEditorModal';
 import { $visualBuilderState, visualBuilderActions } from '@/stores/visualBuilderStore';
 import { initialLiquidGrid } from '@/stores/visualBuilderStore';
 import { ThemeManager, type ThemeName } from '@/components/visual-builder/ThemeManager';
@@ -142,6 +143,9 @@ export default function VisualBuilderPage() {
   const [headerModalData, setHeaderModalData] = useState<{ title: string; subtitle: string }>({ title: '', subtitle: '' });
   const [htmlWidgetModalOpen, setHtmlWidgetModalOpen] = useState(false);
   const [htmlWidgetModal, setHtmlWidgetModal] = useState<Widget | null>(null);
+  const [kpiModalOpen, setKpiModalOpen] = useState(false);
+  const [kpiModalArticleId, setKpiModalArticleId] = useState<string | null>(null);
+  const [kpiModalInitial, setKpiModalInitial] = useState<import('@/components/visual-builder/KpiEditorModal').KpiEditorModalProps['initial']>({ titleText: '', valueText: '' });
   useEffect(() => {
     if (!htmlMode) return;
     if (activeTab !== 'responsive') return;
