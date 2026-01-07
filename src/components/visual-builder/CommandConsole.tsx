@@ -73,13 +73,13 @@ updateArticle(id: "kpi_novo"; title: "KPI Atualizado"; style: { borderColor: "#e
 // 1) Trocar Top 5 Categorias (Despesas) para Centros de Custo (Despesas)
 updateArticle(
   id: "top_categorias";
-  query: { "dimension": "centros_custo.nome", "timeDimension": "data_lancamento", "range": "${de}..${ate}", "filter": "tipo = 'pagamento_efetuado'", "order": "value DESC", "limit": 5 };
+  query: { "dimension": "centros_custo.nome", "timeDimension": "data_lancamento", "range": "\${de}..\${ate}", "filter": "tipo = 'pagamento_efetuado'", "order": "value DESC", "limit": 5 };
 );
 
 // 2) Trocar Top 5 Clientes (Receitas) para Centros de Lucro (Receitas)
 updateArticle(
   id: "top_clientes";
-  query: { "dimension": "centros_lucro.nome", "timeDimension": "data_vencimento", "range": "${de}..${ate}", "filter": "tipo = 'conta_a_receber' AND (status IS NULL OR status NOT IN ('cancelado'))", "order": "value DESC", "limit": 5 };
+  query: { "dimension": "centros_lucro.nome", "timeDimension": "data_vencimento", "range": "\${de}..\${ate}", "filter": "tipo = 'conta_a_receber' AND (status IS NULL OR status NOT IN ('cancelado'))", "order": "value DESC", "limit": 5 };
 );`);
   const [output, setOutput] = useState<Array<{ type: "ok" | "err"; text: string }>>([]);
   const lastResultRef = useRef<string>("");
