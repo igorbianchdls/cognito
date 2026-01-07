@@ -173,7 +173,7 @@ export const initialLiquidGrid = `<dashboard render="html" theme="branco">
       <h1 style="margin:0 0 4px; font-family:Inter, system-ui, sans-serif; font-size:20px; font-weight:700; color:#111827;">Dashboard de Indicadores</h1>
       <p style="margin:0; font-family:Inter, system-ui, sans-serif; font-size:14px; font-weight:400; color:#6b7280;">Visão geral</p>
     </header>
-    <section id="kpis" class="row kpis" data-role="section" style="display:flex; gap:16px; margin-bottom:16px;">
+    <section id="kpis" class="row kpis" data-role="section" style="display:flex; flex-direction:row; flex-wrap:nowrap; justify-content:flex-start; align-items:stretch; gap:16px; margin-bottom:16px;">
       <article class="card" style="background-color:#ffffff; border-color:#e5e7eb;">
         <h3>Vendas</h3>
         <div class="kpi-value">R$ 124.500</div>
@@ -192,7 +192,7 @@ export const initialLiquidGrid = `<dashboard render="html" theme="branco">
       </article>
     </section>
 
-    <section id="charts" class="row charts" data-role="section" style="display:flex; gap:16px; margin-bottom:16px;">
+    <section id="charts" class="row charts" data-role="section" style="display:flex; flex-direction:row; flex-wrap:nowrap; justify-content:flex-start; align-items:stretch; gap:16px; margin-bottom:16px;">
       <article class="card">
         <h3>Faturamento Mensal</h3>
         <div class="chart-box">Placeholder de gráfico</div>
@@ -896,7 +896,7 @@ export const visualBuilderActions = {
   </style>
 
   <div class="vb-container">
-    <section id="kpis" class="row kpis" data-role="section">
+    <section id="kpis" class="row kpis" data-role="section" style="display:flex; flex-direction:row; flex-wrap:nowrap; justify-content:flex-start; align-items:stretch; gap:16px; margin-bottom:16px;">
       <article id="kpi_vendas" class="card" data-role="kpi" style="--fr:1; background-color:#fff7ed; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px;">
         <h1 style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Vendas</h1>
         <div class="kpi-value">R$ 124.500</div>
@@ -915,7 +915,7 @@ export const visualBuilderActions = {
       </article>
     </section>
 
-    <section id="charts" class="row charts" data-role="section">
+    <section id="charts" class="row charts" data-role="section" style="display:flex; flex-direction:row; flex-wrap:nowrap; justify-content:flex-start; align-items:stretch; gap:16px; margin-bottom:16px;">
       <article class="card" data-role="chart" style="--fr:1; background-color:#fefce8; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px;">
         <h1 style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Faturamento Mensal</h1>
         <Chart id="fat_mensal" type="line" height="320" />

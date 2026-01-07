@@ -283,8 +283,14 @@ export default function VisualBuilderPage() {
         };
         const st = parse(sec.getAttribute('style'));
         const numPx = (v?: string) => (v && /px$/.test(v) ? Number(v.replace(/px$/,'')) : (v ? Number(v) : undefined));
+        const computedDisplay = (() => {
+          try {
+            const v = (sec.style?.display || (typeof window !== 'undefined' ? window.getComputedStyle(sec).display : '') || '').trim();
+            return v.includes('grid') ? 'grid' : (v.includes('flex') ? 'flex' : undefined);
+          } catch { return undefined; }
+        })();
         const initial: import('@/components/visual-builder/SectionEditorModal').SectionEditorInitial = {
-          display: (st['display'] as any) || 'flex',
+          display: (st['display'] as any) || computedDisplay,
           gap: numPx(st['gap']),
           flexDirection: (st['flex-direction'] as any) || undefined,
           flexWrap: (st['flex-wrap'] as any) || undefined,
@@ -881,15 +887,19 @@ export default function VisualBuilderPage() {
             const toStyle = (obj: Record<string,string>) => Object.entries(obj).filter(([,v])=>v!==undefined&&v!=='').map(([k,v])=>`${k}:${v}`).join('; ');
             const styleObj = (() => { const ms = openAttrs.match(styleRe); return ms ? parse(ms[2] || ms[3] || '') : {}; })();
             const setIf = (k: string, v?: string | number) => { if (v !== undefined && v !== '') styleObj[k] = String(v); };
-            setIf('display', out.display);
+            // Determine intended display if user changed flex/grid-specific props but not display
+            const wantsFlexProps = out.flexDirection !== undefined || out.flexWrap !== undefined || out.justifyContent !== undefined || out.alignItems !== undefined;
+            const wantsGridProps = out.gridTemplateColumns !== undefined;
+            const displayValue = out.display || (wantsFlexProps ? 'flex' : (wantsGridProps ? 'grid' : undefined));
+            setIf('display', displayValue);
             setIf('gap', out.gap !== undefined ? `${out.gap}px` : undefined);
-            if (out.display === 'flex') {
+            if (displayValue === 'flex' || wantsFlexProps) {
               setIf('flex-direction', out.flexDirection);
               setIf('flex-wrap', out.flexWrap);
               setIf('justify-content', out.justifyContent);
               setIf('align-items', out.alignItems);
             }
-            if (out.display === 'grid') setIf('grid-template-columns', out.gridTemplateColumns);
+            if (displayValue === 'grid' || wantsGridProps) setIf('grid-template-columns', out.gridTemplateColumns);
             setIf('padding', out.padding !== undefined ? `${out.padding}px` : undefined);
             setIf('margin', out.margin !== undefined ? `${out.margin}px` : undefined);
             setIf('background-color', out.backgroundColor);
