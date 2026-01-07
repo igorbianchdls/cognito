@@ -658,6 +658,11 @@ export default function VisualBuilderPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Global CSS for responsive stacking of sections (outside user Liquid) */}
+      <style>{`@media (max-width: 640px){
+        section[data-role="section"] { flex-direction: column !important; }
+        section[data-role="section"] > article { flex: 1 1 auto !important; }
+      }`}</style>
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between">

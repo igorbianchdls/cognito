@@ -157,56 +157,41 @@ const compactWidgetHeaders = (code: string): string => {
 
 // Initial Liquid template (HTML-like)
 export const initialLiquidGrid = `<dashboard render="html" theme="branco">
-  <style>
-    .vb-container { padding: 16px; }
-    /* KPIs and Charts rows using flex with fractional widths via --fr */
-    .row.kpis { display:flex; flex-direction:row; flex-wrap:nowrap; justify-content:flex-start; align-items:stretch; gap:16px; margin-bottom:16px; }
-    .row.kpis > article { flex: var(--fr, 1) 1 0%; min-width: 0; }
-    .row.charts { display:flex; flex-direction:row; flex-wrap:nowrap; justify-content:flex-start; align-items:stretch; gap:16px; margin-bottom:16px; }
-    .row.charts > article { flex: var(--fr, 1) 1 0%; min-width: 0; }
-    @media (max-width: 640px) {
-      .row.kpis, .row.charts { flex-direction: column; }
-      .row.kpis > article, .row.charts > article { flex: 1 1 auto; }
-    }
-    .card { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 12px; color: #111827; }
-    .kpi-value { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; }
-  </style>
-
-  <div class="vb-container">
+  <div class="vb-container" style="padding: 16px;">
     <header class="vb-header" style="background-color:#ffffff; border:1px solid #e5e7eb; border-radius:12px; padding:12px; margin:-16px -16px 16px -16px;">
       <p style="margin:0 0 4px; font-family:Inter, system-ui, sans-serif; font-size:20px; font-weight:700; color:#111827;">Dashboard de Indicadores</p>
       <p style="margin:0; font-family:Inter, system-ui, sans-serif; font-size:14px; font-weight:400; color:#6b7280;">Visão geral</p>
     </header>
 
     <section id="kpis" class="row kpis" data-role="section" style="display:flex; flex-direction:row; flex-wrap:nowrap; justify-content:flex-start; align-items:stretch; gap:16px; margin-bottom:16px;">
-      <article id="kpi_vendas" class="card" data-role="kpi" style="--fr:1; background-color:#fff7ed; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px;">
+      <article id="kpi_vendas" class="card" data-role="kpi" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#fff7ed; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
         <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Vendas</p>
-        <div class="kpi-value">R$ 124.500</div>
+        <div class="kpi-value" style="font-size:28px; font-weight:700; letter-spacing:-0.02em;">R$ 124.500</div>
       </article>
-      <article id="kpi_pedidos" class="card" data-role="kpi" style="--fr:1; background-color:#ecfeff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px;">
+      <article id="kpi_pedidos" class="card" data-role="kpi" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#ecfeff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
         <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Pedidos</p>
-        <div class="kpi-value">830</div>
+        <div class="kpi-value" style="font-size:28px; font-weight:700; letter-spacing:-0.02em;">830</div>
       </article>
-      <article id="kpi_clientes" class="card" data-role="kpi" style="--fr:1; background-color:#f0fdf4; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px;">
+      <article id="kpi_clientes" class="card" data-role="kpi" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#f0fdf4; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
         <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Clientes</p>
-        <div class="kpi-value">214</div>
+        <div class="kpi-value" style="font-size:28px; font-weight:700; letter-spacing:-0.02em;">214</div>
       </article>
-      <article id="kpi_ticket_medio" class="card" data-role="kpi" style="--fr:1; background-color:#eef2ff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px;">
+      <article id="kpi_ticket_medio" class="card" data-role="kpi" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#eef2ff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
         <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Ticket Médio</p>
-        <div class="kpi-value">R$ 150,00</div>
+        <div class="kpi-value" style="font-size:28px; font-weight:700; letter-spacing:-0.02em;">R$ 150,00</div>
       </article>
     </section>
 
     <section id="charts" class="row charts" data-role="section" style="display:flex; flex-direction:row; flex-wrap:nowrap; justify-content:flex-start; align-items:stretch; gap:16px; margin-bottom:16px;">
-      <article id="chart_fat_mensal" class="card" data-role="chart" style="--fr:1; background-color:#fefce8; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px;">
+      <article id="chart_fat_mensal" class="card" data-role="chart" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#fefce8; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
         <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Faturamento Mensal</p>
         <Chart id="fat_mensal" type="line" height="320" />
       </article>
-      <article id="chart_vendas_canal" class="card" data-role="chart" style="--fr:2; background-color:#f0f9ff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px;">
+      <article id="chart_vendas_canal" class="card" data-role="chart" style="--fr:2; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#f0f9ff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
         <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Vendas por Canal</p>
         <Chart id="vendas_canal" type="bar" height="320" categories="Loja,Site,WhatsApp" values="120,80,150" />
       </article>
-      <article id="chart_participacao" class="card" data-role="chart" style="--fr:1; background-color:#fdf2f8; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px;">
+      <article id="chart_participacao" class="card" data-role="chart" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#fdf2f8; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
         <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Participação</p>
         <Chart id="participacao" type="pie" height="320" />
       </article>
