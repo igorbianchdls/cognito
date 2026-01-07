@@ -320,6 +320,87 @@ export default function VisualBuilderPage() {
         try { label.removeEventListener('click', click); } catch {}
         try { sec.removeChild(label); } catch {}
       });
+
+      // Make articles inside this section sortable (drag to reorder)
+      try {
+        const articles = Array.from(sec.querySelectorAll(':scope > article')) as HTMLElement[];
+        // annotate original DSL index (order in code at render time)
+        articles.forEach((art, i) => {
+          art.dataset.dslIndex = String(i);
+          art.setAttribute('draggable', 'true');
+          art.style.cursor = art.style.cursor || 'move';
+        });
+
+        let dragging: HTMLElement | null = null;
+        const onDragStart = (e: DragEvent) => {
+          const tgt = e.currentTarget as HTMLElement;
+          dragging = tgt;
+          tgt.classList.add('vb-dragging');
+          try { e.dataTransfer?.setData('text/plain', tgt.dataset.dslIndex || ''); } catch {}
+          if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
+        };
+        const onDragOver = (e: DragEvent) => {
+          e.preventDefault();
+          if (!dragging) return;
+          const over = e.currentTarget as HTMLElement;
+          if (!over || over === dragging) return;
+          const rect = over.getBoundingClientRect();
+          const before = (e.clientY < rect.top + rect.height / 2);
+          const parent = over.parentElement as HTMLElement | null;
+          if (!parent) return;
+          if (before) parent.insertBefore(dragging, over);
+          else parent.insertBefore(dragging, over.nextSibling);
+        };
+        const onDragEnd = (_e: DragEvent) => {
+          if (!dragging) return;
+          dragging.classList.remove('vb-dragging');
+          // Compute new order from DOM
+          const ordered = Array.from(sec.querySelectorAll(':scope > article')) as HTMLElement[];
+          const orderIdx = ordered.map(a => a.dataset.dslIndex || '').filter(v => v !== '');
+          dragging = null;
+          if (!orderIdx.length) return;
+          try {
+            const src = String(visualBuilderState.code || '');
+            const secId = sec.getAttribute('id') || '';
+            if (!secId) return;
+            const esc = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const re = new RegExp(`<section\\b([^>]*?\\bid=\\\"${esc(secId)}\\\"[^>]*)>([\\s\\S]*?)<\\/section>`, 'i');
+            const m = src.match(re);
+            if (!m) return;
+            const whole = m[0];
+            const openAttrs = m[1] || '';
+            const innerOld = m[2] || '';
+            // Extract article blocks from innerOld
+            const articleRe = /<article\b([\s\S]*?)<\/article>/gi;
+            const blocks: string[] = [];
+            let am: RegExpExecArray | null;
+            while ((am = articleRe.exec(innerOld)) !== null) {
+              const full = am[0];
+              blocks.push(full);
+            }
+            if (!blocks.length) return;
+            // Reorder blocks using the new DOM order (indices map)
+            const idxNums = orderIdx.map(s => Number(s)).filter(n => Number.isFinite(n));
+            if (idxNums.some(n => n < 0 || n >= blocks.length)) return;
+            const newInner = idxNums.map(i => blocks[i]).join('\n');
+            const newOpen = `<section${openAttrs}>`;
+            const next = src.replace(whole, newOpen + newInner + `</section>`);
+            if (next !== src) visualBuilderActions.updateCode(next);
+          } catch { /* ignore */ }
+        };
+
+        // Attach listeners
+        for (const art of articles) {
+          art.addEventListener('dragstart', onDragStart as any);
+          art.addEventListener('dragend', onDragEnd as any);
+          art.addEventListener('dragover', onDragOver as any);
+          cleanupFns.push(() => {
+            try { art.removeEventListener('dragstart', onDragStart as any); } catch {}
+            try { art.removeEventListener('dragend', onDragEnd as any); } catch {}
+            try { art.removeEventListener('dragover', onDragOver as any); } catch {}
+          });
+        }
+      } catch { /* ignore sortable setup */ }
     }
 
     // Article triggers (KPI only via data-role="kpi")
