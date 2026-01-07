@@ -25,6 +25,7 @@ import { BarChart } from '@/components/charts/BarChart';
 import { LineChart } from '@/components/charts/LineChart';
 import { PieChart } from '@/components/charts/PieChart';
 import { AreaChart } from '@/components/charts/AreaChart';
+import { QueryEngine } from '@/components/visual-builder/QueryEngine';
 
 export default function VisualBuilderPage() {
   const visualBuilderState = useStore($visualBuilderState);
@@ -179,7 +180,7 @@ export default function VisualBuilderPage() {
     c.innerHTML = '';
     c.innerHTML = parsed.html;
 
-    // mount charts with simulated data
+    // mount charts with simulated data, then fetch real data if querySpec provided
     for (const spec of parsed.charts) {
       const mount = c.querySelector(`[data-liquid-chart="${spec.id}"]`) as HTMLElement | null;
       if (!mount) continue;
@@ -203,6 +204,21 @@ export default function VisualBuilderPage() {
         case 'pie': root.render(<PieChart {...common} />); break;
         case 'area': root.render(<AreaChart {...common} enableArea={true} />); break;
         default: root.render(<BarChart {...common} />); break;
+      }
+
+      // If querySpec present, resolve it and re-render with fetched data
+      if (spec.querySpec) {
+        QueryEngine.resolve(spec.querySpec, visualBuilderState.globalFilters).then((rows) => {
+          const commonFetched = { ...common, data: rows } as any;
+          try {
+            switch (spec.type) {
+              case 'line': root.render(<LineChart {...commonFetched} />); break;
+              case 'pie': root.render(<PieChart {...commonFetched} />); break;
+              case 'area': root.render(<AreaChart {...commonFetched} enableArea={true} />); break;
+              default: root.render(<BarChart {...commonFetched} />); break;
+            }
+          } catch { /* ignore render errors */ }
+        }).catch(() => { /* ignore errors; keep placeholder */ });
       }
     }
 

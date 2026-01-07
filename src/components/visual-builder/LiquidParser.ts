@@ -11,6 +11,26 @@ export interface ChartDataPoint {
   value?: number;
 }
 
+export interface QueryRule {
+  col: string;
+  op: '=' | '!=' | '>' | '>=' | '<' | '<=' | 'in' | 'between' | 'like' | string;
+  val?: string;
+  vals?: string[];
+  start?: string | number;
+  end?: string | number;
+}
+
+export interface QuerySpec {
+  schema: string;
+  table: string;
+  measure: string; // e.g., SUM(valor_total)
+  dimension?: string; // optional grouping
+  dateColumn?: string; // will apply global date range automatically
+  limit?: number;
+  orderBy?: string; // value DESC | label ASC
+  where?: QueryRule[]; // AND-combined rules (phase 1)
+}
+
 export interface ChartSpec {
   id: string;
   type: ChartTypeBasic;
@@ -18,6 +38,8 @@ export interface ChartSpec {
   height?: number;
   data: ChartDataPoint[]; // simulated or inline
   mountId: string; // equals id, used to locate in DOM
+  // Optional query spec (Excel-like), translated to SQL/endpoint by QueryEngine
+  querySpec?: QuerySpec;
 }
 
 export interface LiquidParseResult {
@@ -108,7 +130,46 @@ export const LiquidParser = {
       const title = a['title'];
       const height = a['height'] ? Number(a['height']) : undefined;
       const data = simulateData(type, a);
-      charts.push({ id, type, title, height, data, mountId: id });
+
+      // Optional <query .../> block inside the Chart body
+      let querySpec: QuerySpec | undefined = undefined;
+      try {
+        const b = String(body || '');
+        const qMatch = b.match(/<query\b([^>]*)>([\s\S]*?)<\/query>/i) || b.match(/<query\b([^>]*)\/>/i);
+        if (qMatch) {
+          const qAttrs = parseAttrs(qMatch[1] || '');
+          const schema = String(qAttrs['schema'] || '').trim();
+          const table = String(qAttrs['table'] || '').trim();
+          const measure = String(qAttrs['measure'] || '').trim();
+          const dimension = (qAttrs['dimension'] || '').trim() || undefined;
+          const dateColumn = (qAttrs['datecolumn'] || qAttrs['dateColumn'] || '').trim() || undefined;
+          const limit = qAttrs['limit'] != null && qAttrs['limit'] !== '' && !Number.isNaN(Number(qAttrs['limit'])) ? Number(qAttrs['limit']) : undefined;
+          const orderBy = (qAttrs['orderBy'] || qAttrs['orderby'] || '').trim() || undefined;
+          const where: QueryRule[] = [];
+          const qInner = qMatch[2] || '';
+          const whereMatch = qInner.match(/<where\b[^>]*>([\s\S]*?)<\/where>/i);
+          if (whereMatch) {
+            const wInner = whereMatch[1] || '';
+            const ruleRe = /<rule\b([^>]*)\/>/gi;
+            let rm: RegExpExecArray | null;
+            while ((rm = ruleRe.exec(wInner)) !== null) {
+              const rAttrs = parseAttrs(rm[1] || '');
+              const col = String(rAttrs['col'] || '').trim();
+              const op = String(rAttrs['op'] || '=').trim();
+              const val = rAttrs['val'] != null ? String(rAttrs['val']) : undefined;
+              const vals = rAttrs['vals'] != null ? String(rAttrs['vals']).split(',').map(s => s.trim()).filter(Boolean) : undefined;
+              const start = rAttrs['start'] != null ? String(rAttrs['start']) : undefined;
+              const end = rAttrs['end'] != null ? String(rAttrs['end']) : undefined;
+              if (col) where.push({ col, op: op as any, ...(val !== undefined ? { val } : {}), ...(vals ? { vals } : {}), ...(start ? { start } : {}), ...(end ? { end } : {}) });
+            }
+          }
+          if (schema && table && measure) {
+            querySpec = { schema, table, measure, ...(dimension ? { dimension } : {}), ...(dateColumn ? { dateColumn } : {}), ...(limit ? { limit } : {}), ...(orderBy ? { orderBy } : {}), ...(where.length ? { where } : {}) };
+          }
+        }
+      } catch { /* ignore malformed query */ }
+
+      charts.push({ id, type, title, height, data, mountId: id, ...(querySpec ? { querySpec } : {}) });
       // inject mount div with height style if provided
       const style = height && Number.isFinite(height) ? ` style=\"height:${height}px\"` : '';
       return `<div data-liquid-chart=\"${id}\"${style}></div>`;
@@ -122,4 +183,3 @@ export const LiquidParser = {
     return { mode: 'html', html: htmlOut, charts };
   }
 };
-
