@@ -13,6 +13,7 @@ import ResponsiveGridCanvas from '@/components/visual-builder/ResponsiveGridCanv
 import WidgetEditorModal from '@/components/visual-builder/WidgetEditorModal';
 import HeaderEditorModal from '@/components/visual-builder/HeaderEditorModal';
 import KpiEditorModal from '@/components/visual-builder/KpiEditorModal';
+import ChartEditorModal from '@/components/visual-builder/ChartEditorModal';
 import { $visualBuilderState, visualBuilderActions } from '@/stores/visualBuilderStore';
 import { initialLiquidGrid } from '@/stores/visualBuilderStore';
 import { ThemeManager, type ThemeName } from '@/components/visual-builder/ThemeManager';
@@ -143,9 +144,21 @@ export default function VisualBuilderPage() {
   const [headerModalData, setHeaderModalData] = useState<{ title: string; subtitle: string }>({ title: '', subtitle: '' });
   const [htmlWidgetModalOpen, setHtmlWidgetModalOpen] = useState(false);
   const [htmlWidgetModal, setHtmlWidgetModal] = useState<Widget | null>(null);
+  type KpiInitial = {
+    titleText: string;
+    titleFontFamily?: string;
+    titleFontSize?: number;
+    titleFontWeight?: string | number;
+    titleColor?: string;
+    valueText: string;
+    valueFontFamily?: string;
+    valueFontSize?: number;
+    valueFontWeight?: string | number;
+    valueColor?: string;
+  };
   const [kpiModalOpen, setKpiModalOpen] = useState(false);
   const [kpiModalArticleId, setKpiModalArticleId] = useState<string | null>(null);
-  const [kpiModalInitial, setKpiModalInitial] = useState<import('@/components/visual-builder/KpiEditorModal').KpiEditorModalProps['initial']>({ titleText: '', valueText: '' });
+  const [kpiModalInitial, setKpiModalInitial] = useState<KpiInitial>({ titleText: '', valueText: '' });
   const [chartModalOpen, setChartModalOpen] = useState(false);
   const [chartModalChartId, setChartModalChartId] = useState<string | null>(null);
   const [chartModalInitialTitle, setChartModalInitialTitle] = useState<string>('');
