@@ -253,6 +253,90 @@ export default function VisualBuilderPage() {
     };
   }, [htmlMode, htmlInner, activeTab, code]);
 
+  // Save handler for Header modal in HTML mode: mutate source code header block
+  const handleHeaderSave = useCallback((data: { title: string; subtitle: string; config?: import('@/components/visual-builder/ConfigParser').HeaderConfig }) => {
+    try {
+      const src = String(visualBuilderState.code || '');
+      const m = src.match(/<header\b[^>]*>[\s\S]*?<\/header>/i);
+      if (!m || !m[0]) { setHeaderModalOpen(false); return; }
+      const whole = m[0];
+      const openMatch = whole.match(/<header\b([^>]*)>/i);
+      const innerMatch = whole.match(/<header\b[^>]*>([\s\S]*?)<\/header>/i);
+      const openAttrs = openMatch ? (openMatch[1] || '') : '';
+      const innerOld = innerMatch ? (innerMatch[1] || '') : '';
+
+      // Parse existing style from header and merge overrides
+      const styleRe = /style\s*=\s*("([^"]*)"|'([^']*)')/i;
+      const styleM = openAttrs.match(styleRe);
+      const parseStyle = (s: string): Record<string,string> => {
+        const out: Record<string,string> = {};
+        for (const part of s.split(';')) {
+          const p = part.trim(); if (!p) continue;
+          const i = p.indexOf(':'); if (i === -1) continue;
+          const k = p.slice(0,i).trim(); const v = p.slice(i+1).trim();
+          out[k] = v;
+        }
+        return out;
+      };
+      const toStyle = (obj: Record<string,string>) => Object.entries(obj).map(([k,v]) => `${k}:${v}`).join('; ');
+      const styleObj = styleM ? parseStyle(styleM[2] || styleM[3] || '') : {};
+      // Apply container overrides from config
+      const cfg = data.config;
+      if (cfg?.backgroundColor) styleObj['background-color'] = String(cfg.backgroundColor);
+      if (cfg?.borderColor) styleObj['border-color'] = String(cfg.borderColor);
+      if (typeof cfg?.borderWidth === 'number') styleObj['border-width'] = `${cfg.borderWidth}px`;
+      if (cfg?.borderStyle) styleObj['border-style'] = String(cfg.borderStyle);
+
+      // Rebuild header open tag with merged style (preserve other attrs)
+      let newOpenAttrs = openAttrs.replace(styleRe, ''); // strip old style
+      newOpenAttrs = newOpenAttrs.replace(/\s+$/, '');
+      const classRe = /class\s*=\s*("([^"]*)"|'([^']*)')/i;
+      if (!classRe.test(newOpenAttrs)) newOpenAttrs = ` class=\"vb-header\"` + newOpenAttrs;
+      const newStyleStr = toStyle(styleObj);
+      const newOpenTag = `<header${newOpenAttrs}${newStyleStr ? ` style=\"${newStyleStr}\"` : ''}>`;
+
+      // Build H1 style from config
+      const h1Style: Record<string,string> = {};
+      if (cfg?.titleFontFamily) h1Style['font-family'] = String(cfg.titleFontFamily);
+      if (typeof cfg?.titleFontSize === 'number') h1Style['font-size'] = `${cfg.titleFontSize}px`;
+      if (cfg?.titleFontWeight !== undefined) h1Style['font-weight'] = String(cfg.titleFontWeight);
+      if (cfg?.titleColor) h1Style['color'] = String(cfg.titleColor);
+      if (cfg?.titleMarginTop !== undefined || cfg?.titleMarginRight !== undefined || cfg?.titleMarginBottom !== undefined || cfg?.titleMarginLeft !== undefined) {
+        const mt = cfg.titleMarginTop ?? 0; const mr = cfg.titleMarginRight ?? 0; const mb = cfg.titleMarginBottom ?? 0; const ml = cfg.titleMarginLeft ?? 0;
+        h1Style['margin'] = `${mt}px ${mr}px ${mb}px ${ml}px`;
+      }
+      if (cfg?.titlePaddingTop !== undefined || cfg?.titlePaddingRight !== undefined || cfg?.titlePaddingBottom !== undefined || cfg?.titlePaddingLeft !== undefined) {
+        const pt = cfg.titlePaddingTop ?? 0; const pr = cfg.titlePaddingRight ?? 0; const pb = cfg.titlePaddingBottom ?? 0; const pl = cfg.titlePaddingLeft ?? 0;
+        h1Style['padding'] = `${pt}px ${pr}px ${pb}px ${pl}px`;
+      }
+
+      // Build subtitle <p> style
+      const pStyle: Record<string,string> = {};
+      if (cfg?.subtitleFontFamily) pStyle['font-family'] = String(cfg.subtitleFontFamily);
+      if (typeof cfg?.subtitleFontSize === 'number') pStyle['font-size'] = `${cfg.subtitleFontSize}px`;
+      if (cfg?.subtitleFontWeight !== undefined) pStyle['font-weight'] = String(cfg.subtitleFontWeight);
+      if (cfg?.subtitleColor) pStyle['color'] = String(cfg.subtitleColor);
+      if (cfg?.subtitleMarginTop !== undefined || cfg?.subtitleMarginRight !== undefined || cfg?.subtitleMarginBottom !== undefined || cfg?.subtitleMarginLeft !== undefined) {
+        const mt = cfg.subtitleMarginTop ?? 0; const mr = cfg.subtitleMarginRight ?? 0; const mb = cfg.subtitleMarginBottom ?? 0; const ml = cfg.subtitleMarginLeft ?? 0;
+        pStyle['margin'] = `${mt}px ${mr}px ${mb}px ${ml}px`;
+      }
+      if (cfg?.subtitlePaddingTop !== undefined || cfg?.subtitlePaddingRight !== undefined || cfg?.subtitlePaddingBottom !== undefined || cfg?.subtitlePaddingLeft !== undefined) {
+        const pt = cfg.subtitlePaddingTop ?? 0; const pr = cfg.subtitlePaddingRight ?? 0; const pb = cfg.subtitlePaddingBottom ?? 0; const pl = cfg.subtitlePaddingLeft ?? 0;
+        pStyle['padding'] = `${pt}px ${pr}px ${pb}px ${pl}px`;
+      }
+
+      // Compose new header inner HTML
+      const esc = (s: string) => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      const newInner = `\n      <h1 style=\"${toStyle(h1Style)}\">${esc(data.title || '')}</h1>\n      <p style=\"${toStyle(pStyle)}\">${esc(data.subtitle || '')}</p>\n    `;
+      const newWhole = newOpenTag + newInner + `</header>`;
+      const newCode = src.replace(whole, newWhole);
+      visualBuilderActions.updateCode(newCode);
+    } catch {}
+    finally {
+      setHeaderModalOpen(false);
+    }
+  }, [visualBuilderState.code]);
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -528,7 +612,7 @@ export default function VisualBuilderPage() {
         initialTitle={headerModalData.title}
         initialSubtitle={headerModalData.subtitle}
         onClose={() => setHeaderModalOpen(false)}
-        onSave={() => setHeaderModalOpen(false)}
+        onSave={handleHeaderSave}
       />
       <WidgetEditorModal
         widget={htmlWidgetModal}
