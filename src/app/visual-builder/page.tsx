@@ -245,8 +245,9 @@ export default function VisualBuilderPage() {
     const headerEl = c.querySelector('header.vb-header') as HTMLElement | null;
     if (headerEl) {
       makeTrigger(headerEl, 'header', () => {
-        const t = headerEl.querySelector('h1')?.textContent?.trim() || '';
-        const s = headerEl.querySelector('p, h2, small')?.textContent?.trim() || '';
+        const ps = headerEl.querySelectorAll('p');
+        const t = (ps[0]?.textContent?.trim() || headerEl.querySelector('h1')?.textContent?.trim() || '');
+        const s = (ps[1]?.textContent?.trim() || '');
         setHeaderModalData({ title: t, subtitle: s });
         setHeaderModalOpen(true);
       });
@@ -326,7 +327,7 @@ export default function VisualBuilderPage() {
     for (const art of kpiArticles) {
       makeTrigger(art, 'widget', () => {
         const id = art.getAttribute('id') || 'kpi_temp';
-        const titleEl = art.querySelector('h1');
+        const titleEl = (art.querySelector('p') || art.querySelector('h1')) as HTMLElement | null;
         const valEl = art.querySelector('.kpi-value');
         const parseStyle = (s: string | null | undefined): Record<string,string> => {
           const out: Record<string,string> = {};
@@ -362,7 +363,7 @@ export default function VisualBuilderPage() {
       makeTrigger(art, 'widget', () => {
         const mount = art.querySelector('[data-liquid-chart]') as HTMLElement | null;
         const chartId = mount?.getAttribute('data-liquid-chart') || '';
-        const titleEl = art.querySelector('h1');
+        const titleEl = (art.querySelector('p') || art.querySelector('h1')) as HTMLElement | null;
         const parseStyle = (s: string | null | undefined): Record<string,string> => {
           const out: Record<string,string> = {};
           if (!s) return out;
@@ -486,31 +487,41 @@ export default function VisualBuilderPage() {
       }
       // Padding de título/subtítulo não está no HeaderConfig atual; manter apenas margin
 
-      // Compose new header inner HTML
+      // Compose new header inner HTML using <p> for title and subtitle
       const esc = (s: string) => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-      // Keep existing h1/p opening tag (attrs) if style not dirty; only replace inner text
-      const h1Re = /<h1\b([^>]*)>([\s\S]*?)<\/h1>/i;
-      const pRe = /<(p|h2|small)\b([^>]*)>([\s\S]*?)<\/\1>/i;
       let inner = innerOld;
-      if (titleStyleDirty) {
-        const h1Open = inner.match(/<h1\b([^>]*)>/i)?.[1] || '';
-        const styleRe2 = /style\s*=\s*("([^"]*)"|'([^']*)')/i;
-        const h1NoStyle = h1Open.replace(styleRe2, '').replace(/\s+$/, '');
-        const h1StyleStr = toStyle(h1Style);
-        const newH1Open = `<h1${h1NoStyle ? ` ${h1NoStyle}` : ''}${h1StyleStr ? ` style=\"${h1StyleStr}\"` : ''}>`;
-        inner = h1Re.test(inner) ? inner.replace(h1Re, `${newH1Open}${esc(data.title || '')}</h1>`) : `${newH1Open}${esc(data.title || '')}</h1>\n` + inner;
-      } else {
-        inner = h1Re.test(inner) ? inner.replace(h1Re, (_m, open) => `<h1${open ? ` ${open}` : ''}>${esc(data.title || '')}</h1>`) : `<h1>${esc(data.title || '')}</h1>\n` + inner;
+      const styleRe2 = /style\s*=\s*("([^"]*)"|'([^']*)')/i;
+      // Title (<p>, first p)
+      {
+        const matches = Array.from(inner.matchAll(/<p\b([^>]*)>([\s\S]*?)<\/p>/gi));
+        const openAttrs = matches[0]?.[1] || inner.match(/<h1\b([^>]*)>/i)?.[1] || '';
+        const noStyle = openAttrs.replace(styleRe2, '').replace(/\s+$/, '');
+        const titleStyleStr = toStyle(h1Style);
+        const newPOpen = `<p${noStyle ? ` ${noStyle}` : ''}${titleStyleStr ? ` style=\"${titleStyleStr}\"` : ''}>`;
+        const newTitle = `${newPOpen}${esc(data.title || '')}</p>`;
+        if (matches[0]) {
+          inner = inner.replace(matches[0][0], newTitle);
+        } else if (inner.match(/<h1\b[^>]*>[\s\S]*?<\/h1>/i)) {
+          inner = inner.replace(/<h1\b([^>]*)>[\s\S]*?<\/h1>/i, newTitle);
+        } else {
+          inner = newTitle + `\n` + inner;
+        }
       }
-      if (subtitleStyleDirty) {
-        const pOpen = inner.match(/<(p|h2|small)\b([^>]*)>/i)?.[2] || '';
-        const styleRe2 = /style\s*=\s*("([^"]*)"|'([^']*)')/i;
-        const pNoStyle = pOpen.replace(styleRe2, '').replace(/\s+$/, '');
-        const pStyleStr = toStyle(pStyle);
-        const newPOpen = `<p${pNoStyle ? ` ${pNoStyle}` : ''}${pStyleStr ? ` style=\"${pStyleStr}\"` : ''}>`;
-        inner = pRe.test(inner) ? inner.replace(pRe, `${newPOpen}${esc(data.subtitle || '')}</p>`) : inner + `\n      ${newPOpen}${esc(data.subtitle || '')}</p>`;
-      } else {
-        inner = pRe.test(inner) ? inner.replace(pRe, (_m, tag, open) => `<${tag}${open ? ` ${open}` : ''}>${esc(data.subtitle || '')}</${tag}>`) : inner + `\n      <p>${esc(data.subtitle || '')}</p>`;
+      // Subtitle (<p>, second p)
+      {
+        const matches = Array.from(inner.matchAll(/<p\b([^>]*)>([\s\S]*?)<\/p>/gi));
+        // target second p if available; else append
+        const existing = matches[1]?.[0];
+        const openAttrs2 = matches[1]?.[1] || '';
+        const noStyle2 = openAttrs2.replace(styleRe2, '').replace(/\s+$/, '');
+        const subStyleStr = toStyle(pStyle);
+        const newPOpen2 = `<p${noStyle2 ? ` ${noStyle2}` : ''}${subStyleStr ? ` style=\"${subStyleStr}\"` : ''}>`;
+        const newSub = `${newPOpen2}${esc(data.subtitle || '')}</p>`;
+        if (existing) {
+          inner = inner.replace(existing, newSub);
+        } else {
+          inner = inner + `\n      ${newSub}`;
+        }
       }
       const newWhole = newOpenTag + inner + `</header>`;
       const newCode = src.replace(whole, newWhole);
@@ -551,70 +562,7 @@ export default function VisualBuilderPage() {
             >
               Abrir…
             </button>
-            <button
-              className="px-4 py-2 text-sm border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-              onClick={() => visualBuilderActions.updateCode(`
-<dashboard render="html" theme="branco">
-  <style>
-    .vb-container { padding: 16px; }
-    .row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-bottom: 16px; }
-    @media (max-width: 1024px) { .row { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-    @media (max-width: 640px)  { .row { grid-template-columns: repeat(1, minmax(0, 1fr)); } }
-    .card { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 12px; color: #111827; }
-    .card h3 { margin: 0 0 8px; font-family: Inter, system-ui, sans-serif; font-weight: 600; font-size: 14px; color: #374151; }
-    .kpi-value { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; }
-    /* KPIs: flex com frações via --fr (display/gap inline no section) */
-    .row.kpis > article { flex: var(--fr, 1) 1 0%; min-width: 0; }
-    @media (max-width: 640px) { .row.kpis { flex-direction: column; } .row.kpis > article { flex: 1 1 auto; } }
-    /* Charts row using flex with fractional widths via --fr (display/gap inline no section) */
-    .row.charts > article { flex: var(--fr, 1) 1 0%; min-width: 0; }
-    @media (max-width: 640px) { .row.charts { flex-direction: column; } .row.charts > article { flex: 1 1 auto; } }
-  </style>
-
-  <div class="vb-container">
-    <header class="vb-header" style="background-color:#ffffff; border:1px solid #e5e7eb; border-radius:12px; padding:0; margin:-16px -16px 0 -16px;">
-      <h1 style="margin:0 0 4px; font-family:Inter, system-ui, sans-serif; font-size:20px; font-weight:700; color:#111827;">Dashboard de Indicadores</h1>
-      <p style="margin:0; font-family:Inter, system-ui, sans-serif; font-size:14px; font-weight:400; color:#6b7280;">Visão geral</p>
-    </header>
-    <section class="row kpis" style="display:flex; gap:16px; margin-bottom:16px;">
-      <article id="kpi_vendas" class="card" data-role="kpi" style="--fr:1; background-color:#fff7ed; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px;">
-        <h1 style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Vendas</h1>
-        <div class="kpi-value">R$ 124.500</div>
-      </article>
-      <article id="kpi_pedidos" class="card" data-role="kpi" style="--fr:1; background-color:#ecfeff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px;">
-        <h1 style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Pedidos</h1>
-        <div class="kpi-value">830</div>
-      </article>
-      <article id="kpi_clientes" class="card" data-role="kpi" style="--fr:1; background-color:#f0fdf4; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px;">
-        <h1 style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Clientes</h1>
-        <div class="kpi-value">214</div>
-      </article>
-      <article id="kpi_ticket_medio" class="card" data-role="kpi" style="--fr:1; background-color:#eef2ff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px;">
-        <h1 style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Ticket Médio</h1>
-        <div class="kpi-value">R$ 150,00</div>
-      </article>
-    </section>
-
-    <section class="row charts" style="display:flex; gap:16px; margin-bottom:16px;">
-      <article class="card" data-role="chart" style="--fr:1; background-color:#fefce8; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px;">
-        <h1 style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Faturamento Mensal</h1>
-        <Chart id="fat_mensal" type="line" height="320" />
-      </article>
-      <article class="card" data-role="chart" style="--fr:2; background-color:#f0f9ff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px;">
-        <h1 style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Vendas por Canal</h1>
-        <Chart id="vendas_canal" type="bar" height="320" categories="Loja,Site,WhatsApp" values="120,80,150" />
-      </article>
-      <article class="card" data-role="chart" style="--fr:1; background-color:#fdf2f8; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px;">
-        <h1 style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Participação</h1>
-        <Chart id="participacao" type="pie" height="320" />
-      </article>
-    </section>
-  </div>
-</dashboard>
-              `)}
-            >
-              Exemplo (HTML)
-            </button>
+            
             <button className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
               Export Config
             </button>
@@ -826,18 +774,18 @@ export default function VisualBuilderPage() {
             const openMatch = src.slice(artStart, artOpenEnd + 1).match(/<article\b([^>]*)>/i);
             const openAttrs = openMatch ? (openMatch[1] || '') : '';
             const innerOld = src.slice(artOpenEnd + 1, artClose);
-            // Replace or insert h1
+            // Replace or insert title (<p>)
             const esc = (s: string) => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-            const h1Re = /<h1\b([^>]*)>([\s\S]*?)<\/h1>/i;
+            const pTitleRe = /<p\b([^>]*)>([\s\S]*?)<\/p>/i;
             const toStyle = (obj: Record<string,string>) => Object.entries(obj).filter(([,v])=>v!==undefined&&v!=='').map(([k,v])=>`${k}:${v}`).join('; ');
-            const h1Style: Record<string,string> = {};
-            if (out.titleFontFamily) h1Style['font-family'] = String(out.titleFontFamily);
-            if (typeof out.titleFontSize === 'number') h1Style['font-size'] = `${out.titleFontSize}px`;
-            if (out.titleFontWeight !== undefined) h1Style['font-weight'] = String(out.titleFontWeight);
-            if (out.titleColor) h1Style['color'] = String(out.titleColor);
-            const newH1 = `<h1 style=\"${toStyle(h1Style)}\">${esc(out.titleText || '')}</h1>`;
+            const pTitleStyle: Record<string,string> = {};
+            if (out.titleFontFamily) pTitleStyle['font-family'] = String(out.titleFontFamily);
+            if (typeof out.titleFontSize === 'number') pTitleStyle['font-size'] = `${out.titleFontSize}px`;
+            if (out.titleFontWeight !== undefined) pTitleStyle['font-weight'] = String(out.titleFontWeight);
+            if (out.titleColor) pTitleStyle['color'] = String(out.titleColor);
+            const newTitleP = `<p style=\"${toStyle(pTitleStyle)}\">${esc(out.titleText || '')}</p>`;
             let inner = innerOld;
-            if (h1Re.test(inner)) inner = inner.replace(h1Re, newH1); else inner = newH1 + `\n` + inner;
+            if (pTitleRe.test(inner)) inner = inner.replace(pTitleRe, newTitleP); else inner = newTitleP + `\n` + inner;
             // Merge container styles
             const styleRe = /style\s*=\s*("([^"]*)"|'([^']*)')/i;
             const styleM = openAttrs.match(styleRe);
@@ -934,12 +882,12 @@ export default function VisualBuilderPage() {
             const innerOld = m[2] || '';
             const esc = (s: string) => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
             const toStyle = (obj: Record<string,string>) => Object.entries(obj).filter(([,v])=>v!==undefined&&v!=='').map(([k,v])=>`${k}:${v}`).join('; ');
-            // Build h1 style
-            const h1Style: Record<string,string> = {};
-            if (out.titleFontFamily) h1Style['font-family'] = String(out.titleFontFamily);
-            if (typeof out.titleFontSize === 'number') h1Style['font-size'] = `${out.titleFontSize}px`;
-            if (out.titleFontWeight !== undefined) h1Style['font-weight'] = String(out.titleFontWeight);
-            if (out.titleColor) h1Style['color'] = String(out.titleColor);
+            // Build title <p> style
+            const pTitleStyle: Record<string,string> = {};
+            if (out.titleFontFamily) pTitleStyle['font-family'] = String(out.titleFontFamily);
+            if (typeof out.titleFontSize === 'number') pTitleStyle['font-size'] = `${out.titleFontSize}px`;
+            if (out.titleFontWeight !== undefined) pTitleStyle['font-weight'] = String(out.titleFontWeight);
+            if (out.titleColor) pTitleStyle['color'] = String(out.titleColor);
             // Build value style
             const valStyle: Record<string,string> = {};
             if (out.valueFontFamily) valStyle['font-family'] = String(out.valueFontFamily);
@@ -948,15 +896,15 @@ export default function VisualBuilderPage() {
             if (out.valueColor) valStyle['color'] = String(out.valueColor);
             // Replace or insert h1
             let inner = innerOld;
-            const h1Re = /<h1\b([^>]*)>([\s\S]*?)<\/h1>/i;
-            const newH1 = `<h1 style=\"${toStyle(h1Style)}\">${esc(out.titleText || '')}</h1>`;
-            if (h1Re.test(inner)) inner = inner.replace(h1Re, newH1);
-            else inner = newH1 + inner;
+            const pTitleRe = /<p\b([^>]*)>([\s\S]*?)<\/p>/i;
+            const newTitleP = `<p style=\"${toStyle(pTitleStyle)}\">${esc(out.titleText || '')}</p>`;
+            if (pTitleRe.test(inner)) inner = inner.replace(pTitleRe, newTitleP);
+            else inner = newTitleP + inner;
             // Replace or insert kpi-value
             const kvRe = /<([a-z]+)\b([^>]*?class\s*=\s*(?:"[^"]*\bkpi-value\b[^"]*"|'[^']*\bkpi-value\b[^']*'))[^>]*>([\s\S]*?)<\/\1>/i;
             const newKV = `<div class=\"kpi-value\" style=\"${toStyle(valStyle)}\">${esc(out.valueText || '')}</div>`;
             if (kvRe.test(inner)) inner = inner.replace(kvRe, newKV);
-            else inner = inner.replace(newH1, newH1 + `\n        ${newKV}`);
+            else inner = inner.replace(newTitleP, newTitleP + `\n        ${newKV}`);
             // Merge container styles
             const styleRe = /style\s*=\s*("([^"]*)"|'([^']*)')/i;
             const styleM = openAttrs.match(styleRe);
