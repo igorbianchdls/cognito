@@ -233,9 +233,33 @@ export default function VisualBuilderPage() {
     for (const art of kpiArticles) {
       makeTrigger(art, 'widget', () => {
         const id = art.getAttribute('id') || 'kpi_temp';
-        const widget: Widget = { id, type: 'kpi' } as Widget;
-        setHtmlWidgetModal(widget);
-        setHtmlWidgetModalOpen(true);
+        const titleEl = art.querySelector('h1');
+        const valEl = art.querySelector('.kpi-value');
+        const parseStyle = (s: string | null | undefined): Record<string,string> => {
+          const out: Record<string,string> = {};
+          if (!s) return out;
+          for (const part of s.split(';')) {
+            const p = part.trim(); if (!p) continue; const i = p.indexOf(':'); if (i === -1) continue; out[p.slice(0,i).trim()] = p.slice(i+1).trim();
+          }
+          return out;
+        };
+        const tStyle = parseStyle(titleEl?.getAttribute('style'));
+        const vStyle = parseStyle(valEl?.getAttribute('style'));
+        const num = (v?: string) => (v && /px$/.test(v) ? Number(v.replace(/px$/,'')) : (v ? Number(v) : undefined));
+        setKpiModalArticleId(id);
+        setKpiModalInitial({
+          titleText: titleEl?.textContent?.trim() || '',
+          titleFontFamily: tStyle['font-family'] || '',
+          titleFontSize: num(tStyle['font-size']),
+          titleFontWeight: tStyle['font-weight'] || undefined,
+          titleColor: tStyle['color'] || '#111827',
+          valueText: valEl?.textContent?.trim() || '',
+          valueFontFamily: vStyle['font-family'] || '',
+          valueFontSize: num(vStyle['font-size']),
+          valueFontWeight: vStyle['font-weight'] || undefined,
+          valueColor: vStyle['color'] || '#111827',
+        });
+        setKpiModalOpen(true);
       });
     }
 
@@ -609,6 +633,55 @@ export default function VisualBuilderPage() {
         isOpen={htmlWidgetModalOpen}
         onClose={() => { setHtmlWidgetModalOpen(false); setHtmlWidgetModal(null); }}
         onSave={() => { setHtmlWidgetModalOpen(false); setHtmlWidgetModal(null); }}
+      />
+      <KpiEditorModal
+        isOpen={kpiModalOpen}
+        initial={kpiModalInitial}
+        onClose={() => setKpiModalOpen(false)}
+        onSave={(out) => {
+          try {
+            const src = String(visualBuilderState.code || '');
+            const id = kpiModalArticleId || '';
+            if (!id) { setKpiModalOpen(false); return; }
+            const re = new RegExp(`<article\\b([^>]*?\\bid=\\\"${id.replace(/[.*+?^${}()|[\\]\\]/g, '\\\\$&')}\\\"[^>]*)>([\\s\\S]*?)<\\/article>`, 'i');
+            const m = src.match(re);
+            if (!m) { setKpiModalOpen(false); return; }
+            const whole = m[0];
+            const openAttrs = m[1] || '';
+            const innerOld = m[2] || '';
+            const esc = (s: string) => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+            const toStyle = (obj: Record<string,string>) => Object.entries(obj).filter(([,v])=>v!==undefined&&v!=='').map(([k,v])=>`${k}:${v}`).join('; ');
+            // Build h1 style
+            const h1Style: Record<string,string> = {};
+            if (out.titleFontFamily) h1Style['font-family'] = String(out.titleFontFamily);
+            if (typeof out.titleFontSize === 'number') h1Style['font-size'] = `${out.titleFontSize}px`;
+            if (out.titleFontWeight !== undefined) h1Style['font-weight'] = String(out.titleFontWeight);
+            if (out.titleColor) h1Style['color'] = String(out.titleColor);
+            // Build value style
+            const valStyle: Record<string,string> = {};
+            if (out.valueFontFamily) valStyle['font-family'] = String(out.valueFontFamily);
+            if (typeof out.valueFontSize === 'number') valStyle['font-size'] = `${out.valueFontSize}px`;
+            if (out.valueFontWeight !== undefined) valStyle['font-weight'] = String(out.valueFontWeight);
+            if (out.valueColor) valStyle['color'] = String(out.valueColor);
+            // Replace or insert h1
+            let inner = innerOld;
+            const h1Re = /<h1\b([^>]*)>([\s\S]*?)<\/h1>/i;
+            const newH1 = `<h1 style=\"${toStyle(h1Style)}\">${esc(out.titleText || '')}</h1>`;
+            if (h1Re.test(inner)) inner = inner.replace(h1Re, newH1);
+            else inner = newH1 + inner;
+            // Replace or insert kpi-value
+            const kvRe = /<([a-z]+)\b([^>]*?class\s*=\s*(?:"[^"]*\bkpi-value\b[^"]*"|'[^']*\bkpi-value\b[^']*'))[^>]*>([\s\S]*?)<\/\1>/i;
+            const newKV = `<div class=\"kpi-value\" style=\"${toStyle(valStyle)}\">${esc(out.valueText || '')}</div>`;
+            if (kvRe.test(inner)) inner = inner.replace(kvRe, newKV);
+            else inner = inner.replace(newH1, newH1 + `\n        ${newKV}`);
+            const newWhole = `<article${openAttrs}>${inner}</article>`;
+            const newCode = src.replace(whole, newWhole);
+            visualBuilderActions.updateCode(newCode);
+          } catch {}
+          finally {
+            setKpiModalOpen(false);
+          }
+        }}
       />
 
       
