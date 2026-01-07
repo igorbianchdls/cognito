@@ -2,20 +2,39 @@
 
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { FontManager } from './FontManager';
 
 interface ChartEditorModalProps {
   isOpen: boolean;
-  initialTitle?: string;
+  initial: {
+    titleText: string;
+    titleFontFamily?: string;
+    titleFontSize?: number;
+    titleFontWeight?: string | number;
+    titleColor?: string;
+  };
   onClose: () => void;
-  onSave: (data: { titleText: string }) => void;
+  onSave: (data: { titleText: string; titleFontFamily?: string; titleFontSize?: number; titleFontWeight?: string | number; titleColor?: string }) => void;
 }
 
-export default function ChartEditorModal({ isOpen, initialTitle, onClose, onSave }: ChartEditorModalProps) {
+export default function ChartEditorModal({ isOpen, initial, onClose, onSave }: ChartEditorModalProps) {
   const [mounted, setMounted] = useState(false);
-  const [titleText, setTitleText] = useState(initialTitle || '');
+  const [titleText, setTitleText] = useState(initial.titleText || '');
+  const [titleFontFamily, setTitleFontFamily] = useState(initial.titleFontFamily || '');
+  const [titleFontSize, setTitleFontSize] = useState<number | undefined>(initial.titleFontSize);
+  const [titleFontWeight, setTitleFontWeight] = useState<string | number | undefined>(initial.titleFontWeight);
+  const [titleColor, setTitleColor] = useState(initial.titleColor || '#111827');
 
   useEffect(() => { setMounted(true); return () => setMounted(false); }, []);
-  useEffect(() => { if (isOpen) setTitleText(initialTitle || ''); }, [isOpen, initialTitle]);
+  useEffect(() => {
+    if (isOpen) {
+      setTitleText(initial.titleText || '');
+      setTitleFontFamily(initial.titleFontFamily || '');
+      setTitleFontSize(initial.titleFontSize);
+      setTitleFontWeight(initial.titleFontWeight);
+      setTitleColor(initial.titleColor || '#111827');
+    }
+  }, [isOpen, initial]);
 
   if (!isOpen) return null;
 
@@ -32,10 +51,30 @@ export default function ChartEditorModal({ isOpen, initialTitle, onClose, onSave
             <label className="block text-sm font-medium text-gray-800 mb-1">Título (HTML &lt;h1&gt;)</label>
             <input className="w-full px-3 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" value={titleText} onChange={e=>setTitleText(e.target.value)} placeholder="Ex.: Faturamento Mensal" />
           </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-800 mb-1">Tipografia do Título</label>
+            <div className="grid grid-cols-3 gap-2">
+              <select className="px-2 py-2 bg-gray-100 border-0 rounded-md" value={titleFontFamily} onChange={e=>setTitleFontFamily(e.target.value)}>
+                <option value="">(Padrão)</option>
+                {FontManager.getAvailableFonts().map(f => (
+                  <option key={f.key} value={f.family}>{f.name}</option>
+                ))}
+              </select>
+              <input type="number" min={10} className="px-2 py-2 bg-gray-100 border-0 rounded-md" placeholder="Tamanho" value={titleFontSize ?? ''} onChange={e=>setTitleFontSize(e.target.value ? parseInt(e.target.value) : undefined)} />
+              <select className="px-2 py-2 bg-gray-100 border-0 rounded-md" value={String(titleFontWeight ?? '')} onChange={e=>setTitleFontWeight(e.target.value ? (isNaN(Number(e.target.value)) ? e.target.value : Number(e.target.value)) : undefined)}>
+                <option value="">Peso</option>
+                {[100,200,300,400,500,600,700,800,900].map(w => <option key={w} value={String(w)}>{w}</option>)}
+              </select>
+            </div>
+            <div className="mt-2">
+              <label className="text-xs text-gray-600 block mb-1">Cor</label>
+              <input type="color" className="px-1 py-1 bg-gray-100 border-0 rounded-md h-10" value={titleColor} onChange={e=>setTitleColor(e.target.value)} />
+            </div>
+          </div>
         </div>
         <div className="mt-4 flex items-center justify-end gap-2">
           <button onClick={onClose} className="px-3 py-2 rounded-md border border-gray-300 text-gray-700">Cancelar</button>
-          <button onClick={() => onSave({ titleText })} className="px-4 py-2 rounded-md bg-blue-600 text-white">Salvar</button>
+          <button onClick={() => onSave({ titleText, titleFontFamily, titleFontSize, titleFontWeight, titleColor })} className="px-4 py-2 rounded-md bg-blue-600 text-white">Salvar</button>
         </div>
       </div>
     </div>
@@ -45,4 +84,3 @@ export default function ChartEditorModal({ isOpen, initialTitle, onClose, onSave
   const root = typeof document !== 'undefined' ? document.body : null;
   return root ? createPortal(modal, root) : null;
 }
-

@@ -161,7 +161,7 @@ export default function VisualBuilderPage() {
   const [kpiModalInitial, setKpiModalInitial] = useState<KpiInitial>({ titleText: '', valueText: '' });
   const [chartModalOpen, setChartModalOpen] = useState(false);
   const [chartModalChartId, setChartModalChartId] = useState<string | null>(null);
-  const [chartModalInitialTitle, setChartModalInitialTitle] = useState<string>('');
+  const [chartModalInitial, setChartModalInitial] = useState<{ titleText: string; titleFontFamily?: string; titleFontSize?: number; titleFontWeight?: string | number; titleColor?: string }>({ titleText: '' });
   useEffect(() => {
     if (!htmlMode) return;
     if (activeTab !== 'responsive') return;
@@ -290,8 +290,24 @@ export default function VisualBuilderPage() {
         const mount = art.querySelector('[data-liquid-chart]') as HTMLElement | null;
         const chartId = mount?.getAttribute('data-liquid-chart') || '';
         const titleEl = art.querySelector('h1');
+        const parseStyle = (s: string | null | undefined): Record<string,string> => {
+          const out: Record<string,string> = {};
+          if (!s) return out;
+          for (const part of s.split(';')) {
+            const p = part.trim(); if (!p) continue; const i = p.indexOf(':'); if (i === -1) continue; out[p.slice(0,i).trim()] = p.slice(i+1).trim();
+          }
+          return out;
+        };
+        const tStyle = parseStyle(titleEl?.getAttribute('style'));
+        const num = (v?: string) => (v && /px$/.test(v) ? Number(v.replace(/px$/,'')) : (v ? Number(v) : undefined));
         setChartModalChartId(chartId);
-        setChartModalInitialTitle(titleEl?.textContent?.trim() || '');
+        setChartModalInitial({
+          titleText: titleEl?.textContent?.trim() || '',
+          titleFontFamily: tStyle['font-family'] || '',
+          titleFontSize: num(tStyle['font-size']),
+          titleFontWeight: tStyle['font-weight'] || undefined,
+          titleColor: tStyle['color'] || '#111827',
+        });
         setChartModalOpen(true);
       });
     }
@@ -669,7 +685,7 @@ export default function VisualBuilderPage() {
       />
       <ChartEditorModal
         isOpen={chartModalOpen}
-        initialTitle={chartModalInitialTitle}
+        initial={chartModalInitial}
         onClose={() => setChartModalOpen(false)}
         onSave={(out) => {
           try {
@@ -693,7 +709,13 @@ export default function VisualBuilderPage() {
             // Replace or insert h1
             const esc = (s: string) => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
             const h1Re = /<h1\b([^>]*)>([\s\S]*?)<\/h1>/i;
-            const newH1 = `<h1>${esc(out.titleText || '')}</h1>`;
+            const toStyle = (obj: Record<string,string>) => Object.entries(obj).filter(([,v])=>v!==undefined&&v!=='').map(([k,v])=>`${k}:${v}`).join('; ');
+            const h1Style: Record<string,string> = {};
+            if (out.titleFontFamily) h1Style['font-family'] = String(out.titleFontFamily);
+            if (typeof out.titleFontSize === 'number') h1Style['font-size'] = `${out.titleFontSize}px`;
+            if (out.titleFontWeight !== undefined) h1Style['font-weight'] = String(out.titleFontWeight);
+            if (out.titleColor) h1Style['color'] = String(out.titleColor);
+            const newH1 = `<h1 style=\"${toStyle(h1Style)}\">${esc(out.titleText || '')}</h1>`;
             let inner = innerOld;
             if (h1Re.test(inner)) inner = inner.replace(h1Re, newH1); else inner = newH1 + `\n` + inner;
             const newWhole = `<article${openAttrs}>${inner}</article>`;
