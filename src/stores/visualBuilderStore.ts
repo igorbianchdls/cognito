@@ -159,51 +159,56 @@ const compactWidgetHeaders = (code: string): string => {
 export const initialLiquidGrid = `<dashboard render="html" theme="branco">
   <style>
     .vb-container { padding: 16px; }
-    .row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-bottom: 16px; }
-    @media (max-width: 1024px) { .row { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-    @media (max-width: 640px)  { .row { grid-template-columns: repeat(1, minmax(0, 1fr)); } }
+    /* KPIs and Charts rows using flex with fractional widths via --fr */
+    .row.kpis { display:flex; flex-direction:row; flex-wrap:nowrap; justify-content:flex-start; align-items:stretch; gap:16px; margin-bottom:16px; }
+    .row.kpis > article { flex: var(--fr, 1) 1 0%; min-width: 0; }
+    .row.charts { display:flex; flex-direction:row; flex-wrap:nowrap; justify-content:flex-start; align-items:stretch; gap:16px; margin-bottom:16px; }
+    .row.charts > article { flex: var(--fr, 1) 1 0%; min-width: 0; }
+    @media (max-width: 640px) {
+      .row.kpis, .row.charts { flex-direction: column; }
+      .row.kpis > article, .row.charts > article { flex: 1 1 auto; }
+    }
     .card { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 12px; color: #111827; }
-    .card h3 { margin: 0 0 8px; font-family: Inter, system-ui, sans-serif; font-weight: 600; font-size: 14px; color: #374151; }
     .kpi-value { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; }
-    .chart-box { height: 240px; background: #f8fafc; border: 1px dashed #d1d5db; border-radius: 10px; display:flex; align-items:center; justify-content:center; color:#6b7280; font-size: 14px; }
   </style>
 
   <div class="vb-container">
-    <header class="vb-header" style="background-color:#ffffff; border:1px solid #e5e7eb; border-radius:12px; padding:0; margin:-16px -16px 0 -16px;">
+    <header class="vb-header" style="background-color:#ffffff; border:1px solid #e5e7eb; border-radius:12px; padding:12px; margin:-16px -16px 16px -16px;">
       <p style="margin:0 0 4px; font-family:Inter, system-ui, sans-serif; font-size:20px; font-weight:700; color:#111827;">Dashboard de Indicadores</p>
       <p style="margin:0; font-family:Inter, system-ui, sans-serif; font-size:14px; font-weight:400; color:#6b7280;">Visão geral</p>
     </header>
-    <section id="kpis" class="row kpis" data-role="section" style="display:flex; flex-direction:row; flex-wrap:nowrap; justify-content:flex-start; align-items:stretch; gap:16px; margin-bottom:16px;">
-      <article class="card" style="background-color:#ffffff; border-color:#e5e7eb;">
-        <h3>Vendas</h3>
+
+    <section id="kpis" class="row kpis" data-role="section">
+      <article id="kpi_vendas" class="card" data-role="kpi" style="--fr:1; background-color:#fff7ed; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px;">
+        <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Vendas</p>
         <div class="kpi-value">R$ 124.500</div>
       </article>
-      <article class="card">
-        <h3>Pedidos</h3>
+      <article id="kpi_pedidos" class="card" data-role="kpi" style="--fr:1; background-color:#ecfeff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px;">
+        <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Pedidos</p>
         <div class="kpi-value">830</div>
       </article>
-      <article class="card">
-        <h3>Clientes</h3>
+      <article id="kpi_clientes" class="card" data-role="kpi" style="--fr:1; background-color:#f0fdf4; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px;">
+        <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Clientes</p>
         <div class="kpi-value">214</div>
       </article>
-      <article class="card">
-        <h3>Ticket Médio</h3>
+      <article id="kpi_ticket_medio" class="card" data-role="kpi" style="--fr:1; background-color:#eef2ff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px;">
+        <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Ticket Médio</p>
         <div class="kpi-value">R$ 150,00</div>
       </article>
     </section>
 
-    <section id="charts" class="row charts" data-role="section" style="display:flex; flex-direction:row; flex-wrap:nowrap; justify-content:flex-start; align-items:stretch; gap:16px; margin-bottom:16px;">
-      <article class="card">
-        <h3>Faturamento Mensal</h3>
-        <div class="chart-box">Placeholder de gráfico</div>
+    <section id="charts" class="row charts" data-role="section">
+      <article class="card" data-role="chart" style="--fr:1; background-color:#fefce8; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px;">
+        <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Faturamento Mensal</p>
+        <Chart id="fat_mensal" type="line" height="320" />
       </article>
-      <article class="card">
-        <h3>Vendas por Canal</h3>
-        <div class="chart-box">Placeholder de gráfico</div>
+      <article class="card" data-role="chart" style="--fr:2; background-color:#f0f9ff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px;">
+        <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Vendas por Canal</p>
+        <Chart id="vendas_canal" type="bar" height="320" categories="Loja,Site,WhatsApp" values="120,80,150" />
       </article>
-      <article class="card">
-        <h3>Top Produtos</h3>
-        <div class="chart-box">Placeholder de gráfico</div>
+      <article class="card" data-role="chart" style="--fr:1; background-color:#fdf2f8; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px;">
+        <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Participação</p>
+        <Chart id="participacao" type="pie" height="320" />
       </article>
     </section>
   </div>
@@ -877,60 +882,8 @@ export const visualBuilderActions = {
     if (currentState.widgets.length > 0) {
       return
     }
-    // Modo HTML puro (sem parser de layout). O preview lê render="html" e injeta este HTML como-is.
-    const defaultCode = `<dashboard render="html" theme="branco">
-  <style>
-    .vb-container { padding: 16px; }
-    .row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-bottom: 16px; }
-    @media (max-width: 1024px) { .row { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-    @media (max-width: 640px)  { .row { grid-template-columns: repeat(1, minmax(0, 1fr)); } }
-    .card { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 12px; color: #111827; }
-    .card h3 { margin: 0 0 8px; font-family: Inter, system-ui, sans-serif; font-weight: 600; font-size: 14px; color: #374151; }
-    .kpi-value { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; }
-    /* KPIs: flex com frações via --fr (display/gap inline no section) */
-    .row.kpis > article { flex: var(--fr, 1) 1 0%; min-width: 0; }
-    @media (max-width: 640px) { .row.kpis { flex-direction: column; } .row.kpis > article { flex: 1 1 auto; } }
-    /* Charts row using flex with fractional widths via --fr (display/gap inline no section) */
-    .row.charts > article { flex: var(--fr, 1) 1 0%; min-width: 0; }
-    @media (max-width: 640px) { .row.charts { flex-direction: column; } .row.charts > article { flex: 1 1 auto; } }
-  </style>
-
-  <div class="vb-container">
-    <section id="kpis" class="row kpis" data-role="section" style="display:flex; flex-direction:row; flex-wrap:nowrap; justify-content:flex-start; align-items:stretch; gap:16px; margin-bottom:16px;">
-      <article id="kpi_vendas" class="card" data-role="kpi" style="--fr:1; background-color:#fff7ed; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px;">
-        <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Vendas</p>
-        <div class="kpi-value">R$ 124.500</div>
-      </article>
-      <article id="kpi_pedidos" class="card" data-role="kpi" style="--fr:1; background-color:#ecfeff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px;">
-        <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Pedidos</p>
-        <div class="kpi-value">830</div>
-      </article>
-      <article id="kpi_clientes" class="card" data-role="kpi" style="--fr:1; background-color:#f0fdf4; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px;">
-        <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Clientes</p>
-        <div class="kpi-value">214</div>
-      </article>
-      <article id="kpi_ticket_medio" class="card" data-role="kpi" style="--fr:1; background-color:#eef2ff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px;">
-        <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Ticket Médio</p>
-        <div class="kpi-value">R$ 150,00</div>
-      </article>
-    </section>
-
-    <section id="charts" class="row charts" data-role="section" style="display:flex; flex-direction:row; flex-wrap:nowrap; justify-content:flex-start; align-items:stretch; gap:16px; margin-bottom:16px;">
-      <article class="card" data-role="chart" style="--fr:1; background-color:#fefce8; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px;">
-        <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Faturamento Mensal</p>
-        <Chart id="fat_mensal" type="line" height="320" />
-      </article>
-      <article class="card" data-role="chart" style="--fr:2; background-color:#f0f9ff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px;">
-        <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Vendas por Canal</p>
-        <Chart id="vendas_canal" type="bar" height="320" categories="Loja,Site,WhatsApp" values="120,80,150" />
-      </article>
-      <article class="card" data-role="chart" style="--fr:1; background-color:#fdf2f8; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px;">
-        <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Participação</p>
-        <Chart id="participacao" type="pie" height="320" />
-      </article>
-    </section>
-  </div>
-</dashboard>`
+    // Modo HTML puro (sem parser de layout). Reutiliza o template padrão único (com header).
+    const defaultCode = initialLiquidGrid
 
     const parseResult = ConfigParser.parse(defaultCode)
 
