@@ -183,17 +183,23 @@ export const initialLiquidGrid = `<dashboard render="html" theme="branco">
     </section>
 
     <section id="charts" class="row charts" data-role="section" style="display:flex; flex-direction:row; flex-wrap:nowrap; justify-content:flex-start; align-items:stretch; gap:16px; margin-bottom:16px;">
-      <article id="chart_fat_mensal" class="card" data-role="chart" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#fefce8; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
-        <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Faturamento Mensal</p>
-        <Chart id="fat_mensal" type="line" height="320" />
+      <article id="chart_top_categorias" class="card" data-role="chart" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#fefce8; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
+        <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Top 5 Categorias (Despesas)</p>
+        <Chart id="top_categorias" type="bar" height="320">
+          <query schema="financeiro" table="contas_pagar" dimension="categoria" measure="SUM(valor_total)" dateColumn="data_vencimento" limit="5" orderBy="value DESC" />
+        </Chart>
       </article>
-      <article id="chart_vendas_canal" class="card" data-role="chart" style="--fr:2; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#f0f9ff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
-        <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Vendas por Canal</p>
-        <Chart id="vendas_canal" type="bar" height="320" categories="Loja,Site,WhatsApp" values="120,80,150" />
+      <article id="chart_top_cc" class="card" data-role="chart" style="--fr:2; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#f0f9ff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
+        <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Top 5 Centros de Custo (Despesas)</p>
+        <Chart id="top_cc" type="bar" height="320">
+          <query schema="financeiro" table="contas_pagar" dimension="centro_custo" measure="SUM(valor_total)" dateColumn="data_vencimento" limit="5" orderBy="value DESC" />
+        </Chart>
       </article>
-      <article id="chart_participacao" class="card" data-role="chart" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#fdf2f8; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
-        <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Participação</p>
-        <Chart id="participacao" type="pie" height="320" />
+      <article id="chart_top_clientes" class="card" data-role="chart" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#fdf2f8; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
+        <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Top 5 Clientes (Receitas)</p>
+        <Chart id="top_clientes" type="bar" height="320">
+          <query schema="financeiro" table="contas_receber" dimension="cliente" measure="SUM(valor_total)" dateColumn="data_vencimento" limit="5" orderBy="value DESC" />
+        </Chart>
       </article>
     </section>
   </div>
