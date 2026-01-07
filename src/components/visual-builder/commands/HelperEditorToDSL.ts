@@ -448,6 +448,269 @@ export function updateArticleTitleByIdDSL(
   return { code: code.replace(re, open + inner + close), updated: true };
 }
 
+// New: simple header upsert with <p> title/subtitle inside <header class="vb-header">, merging simple container styles
+export function upsertHeaderSimple(
+  code: string,
+  data: { title?: string; subtitle?: string; backgroundColor?: string; borderColor?: string; borderWidth?: number; borderStyle?: string }
+): string {
+  const dash = code.match(dashOpenRe);
+  if (!dash) return code;
+  const dashOpen = dash[0];
+  const start = (dash.index || 0) + dashOpen.length;
+  const post = code.slice(start);
+  const rePair = /<header\b([^>]*)>([\s\S]*?)<\/header>/i;
+  const m = code.match(rePair);
+  const esc = (s: string) => String(s).replace(/&/g, '&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const styleRe = /style\s*=\s*("([^"]*)"|'([^']*)')/i;
+  const parseStyle = (s: string): Record<string,string> => { const o: Record<string,string> = {}; for (const part of s.split(';')) { const p = part.trim(); if (!p) continue; const i = p.indexOf(':'); if (i===-1) continue; o[p.slice(0,i).trim()] = p.slice(i+1).trim(); } return o; };
+  const toStyle = (obj: Record<string,string>): string => Object.entries(obj).filter(([,v])=>v!==undefined&&v!=='').map(([k,v])=>`${k}:${v}`).join('; ');
+  const mergeContainerStyle = (openAttrs: string): string => {
+    const ms = openAttrs.match(styleRe);
+    const obj = ms ? parseStyle(ms[2] || ms[3] || '') : {};
+    if (data.backgroundColor) obj['background-color'] = String(data.backgroundColor);
+    if (data.borderColor) obj['border-color'] = String(data.borderColor);
+    if (typeof data.borderWidth === 'number') obj['border-width'] = `${data.borderWidth}px`;
+    if (data.borderStyle) obj['border-style'] = String(data.borderStyle);
+    let next = openAttrs.replace(styleRe, '');
+    next = next.replace(/\s+$/, '');
+    // ensure vb-header class exists
+    if (!/class\s*=/.test(next)) next = ` class=\"vb-header\"` + next;
+    else next = next.replace(/class\s*=\s*("([^"]*)"|'([^']*)')/i, (_m, q, d1, d2) => {
+      const val = d1 || d2 || '';
+      const has = /\bvb-header\b/.test(val);
+      return `class=\"${has ? val : (val ? `${val} vb-header` : 'vb-header')}\"`;
+    });
+    const styleStr = toStyle(obj);
+    return `<header${next}${styleStr ? ` style=\"${styleStr}\"` : ''}>`;
+  };
+  // Build inner with <p> tags
+  const t = (data.title ?? '').toString();
+  const s = (data.subtitle ?? '').toString();
+  const p1 = `  <p>${esc(t)}</p>`;
+  const p2 = `  <p>${esc(s)}</p>`;
+  if (m) {
+    const openAttrs = m[1] || '';
+    const innerOld = m[2] || '';
+    let inner = innerOld;
+    const pRe = /<p\b([^>]*)>([\s\S]*?)<\/p>/gi;
+    const found = Array.from(inner.matchAll(pRe));
+    if (t) {
+      if (found[0]) inner = inner.replace(found[0][0], p1); else inner = p1 + `\n` + inner;
+    }
+    if (s) {
+      const pSecond = inner.match(/<p\b[^>]*>[\s\S]*?<\/p>\s*([\s\S]*)/i);
+      if (found[1]) inner = inner.replace(found[1][0], p2);
+      else inner = inner.replace(/(<p\b[^>]*>[\s\S]*?<\/p>)/i, (_m) => _m + `\n` + p2) || (p1 + `\n` + p2 + `\n` + inner);
+    }
+    const openNew = mergeContainerStyle(openAttrs);
+    return code.replace(rePair, openNew + inner + `</header>`);
+  }
+  // Insert new header after optional early <style> or directly after <dashboard>
+  const openNew = mergeContainerStyle('');
+  const tag = `${openNew}\n${t ? p1 + '\n' : ''}${s ? p2 + '\n' : ''}</header>`;
+  const earlyStyle = post.match(/^\s*(?:<!--[\s\S]*?-->\s*)*(<style\b[\s\S]*?<\/style>)/i);
+  if (earlyStyle && typeof earlyStyle.index === 'number') {
+    const insertAt = start + (earlyStyle.index + earlyStyle[0].length);
+    return code.slice(0, insertAt) + `\n  ${tag}\n` + code.slice(insertAt);
+  }
+  return code.slice(0, start) + `\n  ${tag}\n` + code.slice(start);
+}
+
+// Ensure or create a <section ...> with inline styles only
+export function ensureSectionExistsInline(
+  code: string,
+  spec: { id: string; type: 'kpis'|'charts'; style?: Record<string, unknown> }
+): { code: string; created: boolean } {
+  const { id, type } = spec;
+  const exists = new RegExp(`<section\\b[^>]*\\bid=\"${escRe(id)}\"`, 'i').test(code);
+  if (exists) return { code, created: false };
+  const cls = `row ${type}`;
+  const baseStyle = {
+    display: 'flex', 'flex-direction': 'row', 'flex-wrap': 'nowrap', 'justify-content': 'flex-start', 'align-items': 'stretch', gap: '16px', 'margin-bottom': '16px'
+  } as Record<string,string>;
+  const apply = (o: Record<string,string>, k: string, v?: unknown, unit?: string) => { if (v !== undefined && v !== '') o[k] = unit && typeof v === 'number' ? `${v}${unit}` : String(v); };
+  const st = { ...baseStyle } as Record<string,string>;
+  const s = (spec.style || {}) as any;
+  apply(st, 'display', s.display);
+  apply(st, 'gap', s.gap, 'px');
+  apply(st, 'flex-direction', s.flexDirection);
+  apply(st, 'flex-wrap', s.flexWrap);
+  apply(st, 'justify-content', s.justifyContent);
+  apply(st, 'align-items', s.alignItems);
+  apply(st, 'grid-template-columns', s.gridTemplateColumns);
+  apply(st, 'padding', s.padding, 'px');
+  apply(st, 'margin', s.margin, 'px');
+  apply(st, 'background-color', s.backgroundColor);
+  apply(st, 'opacity', s.opacity);
+  apply(st, 'border-color', s.borderColor);
+  apply(st, 'border-width', s.borderWidth, 'px');
+  apply(st, 'border-style', s.borderStyle);
+  apply(st, 'border-radius', s.borderRadius, 'px');
+  const styleStr = Object.entries(st).map(([k,v]) => `${k}:${v}`).join('; ');
+  const block = `\n  <section id=\"${escapeHtml(id)}\" class=\"${escapeHtml(cls)}\" data-role=\"section\" style=\"${escapeHtml(styleStr)}\"></section>\n`;
+  const closeIdx = code.search(/<\/dashboard>/i);
+  if (closeIdx >= 0) return { code: code.slice(0, closeIdx) + block + code.slice(closeIdx), created: true };
+  const m = code.match(dashOpenRe);
+  if (m && typeof m.index === 'number') {
+    const insertAt = m.index + m[0].length;
+    return { code: code.slice(0, insertAt) + `\n` + block + code.slice(insertAt), created: true };
+  }
+  return { code: code + `\n` + block, created: true };
+}
+
+// Update inline section style by id
+export function updateSectionStyleInline(
+  code: string,
+  args: {
+    id: string;
+    display?: 'flex'|'grid'; gap?: number; flexDirection?: string; flexWrap?: string; justifyContent?: string; alignItems?: string; gridTemplateColumns?: string;
+    padding?: number; margin?: number; backgroundColor?: string; opacity?: number; borderColor?: string; borderWidth?: number; borderStyle?: string; borderRadius?: number;
+  }
+): { code: string; updated: boolean } {
+  const escId = escRe(args.id);
+  const re = new RegExp(`<section\\b([^>]*?\\bid=\"${escId}\\"[^>]*)>([\\s\\S]*?)<\\/section>`, 'i');
+  const m = code.match(re);
+  if (!m) return { code, updated: false };
+  const openAttrs = m[1] || '';
+  const body = m[2] || '';
+  const styleRe = /style\s*=\s*("([^"]*)"|'([^']*)')/i;
+  const parseStyle = (s: string): Record<string,string> => { const o: Record<string,string> = {}; for (const part of s.split(';')) { const p = part.trim(); if (!p) continue; const i = p.indexOf(':'); if (i===-1) continue; o[p.slice(0,i).trim()] = p.slice(i+1).trim(); } return o; };
+  const toStyle = (o: Record<string,string>) => Object.entries(o).filter(([,v])=>v!==undefined&&v!=='').map(([k,v])=>`${k}:${v}`).join('; ');
+  const obj = (() => { const ms = openAttrs.match(styleRe); return ms ? parseStyle(ms[2] || ms[3] || '') : {}; })();
+  const setIf = (k: string, v?: string|number, unit?: string) => { if (v !== undefined && v !== '') obj[k] = typeof v === 'number' && unit ? `${v}${unit}` : String(v); };
+  const disp = (args.display || (args.gridTemplateColumns ? 'grid' : (args.flexDirection||args.flexWrap||args.justifyContent||args.alignItems ? 'flex' : undefined)));
+  if (disp) obj['display'] = disp;
+  setIf('gap', args.gap, 'px');
+  if (disp === 'flex' || (args.flexDirection||args.flexWrap||args.justifyContent||args.alignItems)) {
+    setIf('flex-direction', args.flexDirection);
+    setIf('flex-wrap', args.flexWrap);
+    setIf('justify-content', args.justifyContent);
+    setIf('align-items', args.alignItems);
+    if (disp === 'flex') delete obj['grid-template-columns'];
+  }
+  if (disp === 'grid' || args.gridTemplateColumns) {
+    setIf('grid-template-columns', args.gridTemplateColumns);
+    if (disp === 'grid') {
+      delete obj['flex-direction']; delete obj['flex-wrap']; delete obj['justify-content']; delete obj['align-items'];
+    }
+  }
+  setIf('padding', args.padding, 'px');
+  setIf('margin', args.margin, 'px');
+  setIf('background-color', args.backgroundColor);
+  setIf('opacity', args.opacity);
+  setIf('border-color', args.borderColor);
+  setIf('border-width', args.borderWidth, 'px');
+  setIf('border-style', args.borderStyle);
+  setIf('border-radius', args.borderRadius, 'px');
+  let newOpenAttrs = openAttrs.replace(styleRe, ''); newOpenAttrs = newOpenAttrs.replace(/\s+$/, '');
+  const styleStr = toStyle(obj);
+  const newOpen = `<section${newOpenAttrs}${styleStr ? ` style=\"${styleStr}\"` : ''}>`;
+  const whole = m[0];
+  const rebuilt = `${newOpen}${body}</section>`;
+  return { code: code.replace(whole, rebuilt), updated: true };
+}
+
+// Insert KPI <article> with inline styles into a section
+export function insertKpiArticleInline(
+  code: string,
+  sectionId: string,
+  spec: { id: string; title?: string; widthFr?: number|string; backgroundColor?: string; opacity?: number; borderColor?: string; borderWidth?: number; borderStyle?: string; borderRadius?: number }
+): { code: string; inserted: boolean } {
+  const sid = escRe(sectionId);
+  const sRe = new RegExp(`(<section\\b[^>]*\\bid=\"${sid}\\"[^>]*>)([\\s\\S]*?)(<\\/section>)`, 'i');
+  const m = code.match(sRe);
+  if (!m) return { code, inserted: false };
+  const open = m[1]; const inner = m[2] || ''; const close = m[3];
+  const esc = (s: string) => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const wfr = (spec.widthFr != null ? String(spec.widthFr) : '1');
+  const frVal = wfr.endsWith('fr') ? wfr.replace(/fr$/,'') : wfr;
+  const styleParts: string[] = [ `--fr:${esc(frVal)}`, 'flex: var(--fr, 1) 1 0%', 'min-width:0', 'padding:12px', 'color:#111827' ];
+  if (spec.backgroundColor) styleParts.push(`background-color:${esc(spec.backgroundColor)}`);
+  if (spec.borderColor) styleParts.push(`border-color:${esc(spec.borderColor)}`);
+  if (typeof spec.borderWidth === 'number') styleParts.push(`border-width:${spec.borderWidth}px`);
+  if (spec.borderStyle) styleParts.push(`border-style:${esc(spec.borderStyle)}`);
+  if (typeof spec.borderRadius === 'number') styleParts.push(`border-radius:${spec.borderRadius}px`);
+  if (typeof spec.opacity === 'number') styleParts.push(`opacity:${spec.opacity}`);
+  const article = `\n      <article id=\"${esc(spec.id)}\" class=\"card\" data-role=\"kpi\" style=\"${styleParts.join('; ')}\">\n        <p>${esc(spec.title || spec.id)}</p>\n        <div class=\"kpi-value\" style=\"font-size:28px; font-weight:700; letter-spacing:-0.02em;\">0</div>\n      </article>`;
+  return { code: code.replace(sRe, open + inner + article + close), inserted: true };
+}
+
+// Insert Chart <article> with inline styles into a section
+export function insertChartArticleInline(
+  code: string,
+  sectionId: string,
+  spec: { id: string; title?: string; widthFr?: number|string; chartType?: string; height?: number; categories?: string[]; values?: Array<number>; backgroundColor?: string; opacity?: number; borderColor?: string; borderWidth?: number; borderStyle?: string; borderRadius?: number }
+): { code: string; inserted: boolean } {
+  const sid = escRe(sectionId);
+  const sRe = new RegExp(`(<section\\b[^>]*\\bid=\"${sid}\\"[^>]*>)([\\s\\S]*?)(<\\/section>)`, 'i');
+  const m = code.match(sRe);
+  if (!m) return { code, inserted: false };
+  const open = m[1]; const inner = m[2] || ''; const close = m[3];
+  const esc = (s: string) => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const wfr = (spec.widthFr != null ? String(spec.widthFr) : '1');
+  const frVal = wfr.endsWith('fr') ? wfr.replace(/fr$/,'') : wfr;
+  const styleParts: string[] = [ `--fr:${esc(frVal)}`, 'flex: var(--fr, 1) 1 0%', 'min-width:0', 'padding:12px', 'color:#111827' ];
+  if (spec.backgroundColor) styleParts.push(`background-color:${esc(spec.backgroundColor)}`);
+  if (spec.borderColor) styleParts.push(`border-color:${esc(spec.borderColor)}`);
+  if (typeof spec.borderWidth === 'number') styleParts.push(`border-width:${spec.borderWidth}px`);
+  if (spec.borderStyle) styleParts.push(`border-style:${esc(spec.borderStyle)}`);
+  if (typeof spec.borderRadius === 'number') styleParts.push(`border-radius:${spec.borderRadius}px`);
+  if (typeof spec.opacity === 'number') styleParts.push(`opacity:${spec.opacity}`);
+  const attrs: string[] = [];
+  attrs.push(`id=\"${esc(spec.id)}\"`);
+  attrs.push(`type=\"${esc((spec.chartType || 'bar').toLowerCase())}\"`);
+  if (typeof spec.height === 'number') attrs.push(`height=\"${spec.height}\"`);
+  if (spec.categories && spec.categories.length) attrs.push(`categories=\"${esc(spec.categories.join(','))}\"`);
+  if (spec.values && spec.values.length) attrs.push(`values=\"${esc(spec.values.join(','))}\"`);
+  const article = `\n      <article id=\"${esc(spec.id)}\" class=\"card\" data-role=\"chart\" style=\"${styleParts.join('; ')}\">\n        <p>${esc(spec.title || spec.id)}</p>\n        <Chart ${attrs.join(' ')} />\n      </article>`;
+  return { code: code.replace(sRe, open + inner + article + close), inserted: true };
+}
+
+// Update article title and container inline styles
+export function updateArticleInline(
+  code: string,
+  args: { id: string; title?: string; style?: { widthFr?: number|string; backgroundColor?: string; opacity?: number; borderColor?: string; borderWidth?: number; borderStyle?: string; borderRadius?: number } }
+): { code: string; updated: boolean } {
+  const escId = escRe(args.id);
+  const re = new RegExp(`<article\\b([^>]*?\\bid=\"${escId}\\"[^>]*)>([\\s\\S]*?)<\\/article>`, 'i');
+  const m = code.match(re);
+  if (!m) return { code, updated: false };
+  const openAttrs = m[1] || '';
+  let inner = m[2] || '';
+  const styleRe = /style\s*=\s*("([^"]*)"|'([^']*)')/i;
+  const parseStyle = (s: string): Record<string,string> => { const o: Record<string,string> = {}; for (const part of s.split(';')) { const p = part.trim(); if (!p) continue; const i = p.indexOf(':'); if (i===-1) continue; o[p.slice(0,i).trim()] = p.slice(i+1).trim(); } return o; };
+  const toStyle = (o: Record<string,string>) => Object.entries(o).filter(([,v])=>v!==undefined&&v!=='').map(([k,v])=>`${k}:${v}`).join('; ');
+  const obj = (() => { const ms = openAttrs.match(styleRe); return ms ? parseStyle(ms[2] || ms[3] || '') : {}; })();
+  const setIf = (k: string, v?: string|number, unit?: string) => { if (v !== undefined && v !== '') obj[k] = typeof v === 'number' && unit ? `${v}${unit}` : String(v); };
+  if (args.style) {
+    const st = args.style as any;
+    if (st.widthFr !== undefined) {
+      const wfr = String(st.widthFr);
+      const frVal = wfr.endsWith('fr') ? wfr.replace(/fr$/,'') : wfr;
+      obj['--fr'] = frVal;
+      obj['flex'] = 'var(--fr, 1) 1 0%';
+      obj['min-width'] = '0';
+    }
+    setIf('background-color', st.backgroundColor);
+    setIf('opacity', st.opacity);
+    setIf('border-color', st.borderColor);
+    setIf('border-width', st.borderWidth, 'px');
+    setIf('border-style', st.borderStyle);
+    setIf('border-radius', st.borderRadius, 'px');
+  }
+  if (typeof args.title === 'string') {
+    const pRe = /<p\b[^>]*>[\s\S]*?<\/p>/i;
+    if (pRe.test(inner)) inner = inner.replace(pRe, `<p>${args.title}</p>`);
+    else inner = `<p>${args.title}</p>\n` + inner;
+  }
+  let newOpenAttrs = openAttrs.replace(styleRe, ''); newOpenAttrs = newOpenAttrs.replace(/\s+$/, '');
+  const styleStr = toStyle(obj);
+  const newOpen = `<article${newOpenAttrs}${styleStr ? ` style=\"${styleStr}\"` : ''}>`;
+  const whole = m[0];
+  const rebuilt = `${newOpen}${inner}</article>`;
+  return { code: code.replace(whole, rebuilt), updated: true };
+}
+
 export function setOrInsertStylingTw(code: string, id: string, tw: string): string {
   const reNode = new RegExp(`(<(kpi|chart)\\b[^>]*\\bid=\"${escRe(id)}\"[^>]*>)([\\s\\S]*?)(<\\/\\2>)`, 'i');
   return code.replace(reNode, (match: string, open: string, _tag: string, inner: string, close: string) => {

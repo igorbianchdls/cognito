@@ -32,6 +32,12 @@ import {
   ensureSectionExists,
   insertKpiInSection,
   insertChartInSection,
+  // Inline-first helpers
+  upsertHeaderSimple,
+  ensureSectionExistsInline,
+  updateSectionStyleInline,
+  insertKpiArticleInline,
+  insertChartArticleInline,
 } from "./HelperEditorToLiquid";
 
 export type RunDiagnostics = Array<{ ok: boolean; message: string; line?: number }>;
@@ -210,13 +216,20 @@ export function runCommands(code: string, commands: Command[]): { nextCode: stri
           break;
         }
         case "updateArticle": {
-          const { id, title } = (cmd.args as { id: string; title: string });
+        const { id, title, style } = (cmd.args as { id: string; title?: string; style?: Record<string, unknown> });
           if (dsl) {
             const usesSections = /<section\b/i.test(next);
             if (usesSections) {
-              const { code: updated, updated: ok } = updateArticleTitleByIdDSL(next, { id, title });
-              next = updated;
-              diags.push({ ok, message: ok ? `Article '${id}' atualizado.` : `Article '${id}' não encontrado.`, line: cmd.line });
+              // Try inline-first article update (title/style)
+              const res = updateArticleInline(next, { id, ...(typeof title === 'string' ? { title } : {}), ...(style ? { style } : {}) });
+              if (res.updated) {
+                next = res.code;
+                diags.push({ ok: true, message: `Article '${id}' atualizado.`, line: cmd.line });
+              } else {
+                const { code: updated, updated: ok } = updateArticleTitleByIdDSL(next, { id, title: String(title || '') });
+                next = updated;
+                diags.push({ ok, message: ok ? `Article '${id}' atualizado (fallback).` : `Article '${id}' não encontrado.`, line: cmd.line });
+              }
             } else {
               next = setAttrOnNode(next, id, 'title', title);
               diags.push({ ok: true, message: `Chart '${id}' title atualizado (sem sections).`, line: cmd.line });
@@ -241,7 +254,8 @@ export function runCommands(code: string, commands: Command[]): { nextCode: stri
         case "updateHeader": {
           const { title, subtitle } = (cmd.args as { title?: string; subtitle?: string });
           if (dsl) {
-            next = upsertHeaderTag(next, { title, subtitle });
+            // Prefer simple <header class="vb-header"><p/><p/></header>
+            next = upsertHeaderSimple(next, { title, subtitle });
             diags.push({ ok: true, message: `Header atualizado${title ? ' (title)' : ''}${subtitle ? ' (subtitle)' : ''}.`, line: cmd.line });
           } else {
             try {
@@ -253,6 +267,73 @@ export function runCommands(code: string, commands: Command[]): { nextCode: stri
             } catch (e) {
               diags.push({ ok: false, message: `Falha ao mutar JSON: ${(e as Error).message}`, line: cmd.line });
             }
+          }
+          break;
+        }
+        case "createSection": {
+          const args = cmd.args as any; // CreateSectionArgs
+          if (dsl) {
+            const { code: updated, created } = ensureSectionExistsInline(next, { id: args.id, type: args.type, style: args.style });
+            next = updated;
+            diags.push({ ok: true, message: created ? `Section '${args.id}' criado.` : `Section '${args.id}' já existia.`, line: cmd.line });
+          } else {
+            diags.push({ ok: false, message: 'createSection apenas para Liquid.', line: cmd.line });
+          }
+          break;
+        }
+        case "updateSection": {
+          const args = cmd.args as any; // UpdateSectionArgs
+          if (dsl) {
+            const { code: updated, updated: ok } = updateSectionStyleInline(next, args);
+            next = updated;
+            diags.push({ ok: ok, message: ok ? `Section '${args.id}' atualizado.` : `Section '${args.id}' não encontrado.`, line: cmd.line });
+          } else {
+            diags.push({ ok: false, message: 'updateSection apenas para Liquid.', line: cmd.line });
+          }
+          break;
+        }
+        case "createArticle": {
+          const args = cmd.args as any; // CreateArticleArgs
+          if (dsl) {
+            const sectionId = args.sectionId;
+            // Ensure section exists if needed with defaults
+            const { code: ensured } = ensureSectionExistsInline(next, { id: sectionId, type: (String(args.type).toLowerCase() === 'kpi' ? 'kpis' : 'charts') });
+            next = ensured;
+            if (String(args.type).toLowerCase() === 'kpi') {
+              const { code: updated, inserted } = insertKpiArticleInline(next, sectionId, {
+                id: args.id,
+                title: args.title,
+                widthFr: args.widthFr,
+                backgroundColor: args.backgroundColor,
+                opacity: args.opacity,
+                borderColor: args.borderColor,
+                borderWidth: args.borderWidth,
+                borderStyle: args.borderStyle,
+                borderRadius: args.borderRadius,
+              });
+              next = updated;
+              diags.push({ ok: inserted, message: inserted ? `KPI '${args.id}' criado em '${sectionId}'.` : `Falha ao criar KPI '${args.id}'.`, line: cmd.line });
+            } else {
+              const { code: updated, inserted } = insertChartArticleInline(next, sectionId, {
+                id: args.id,
+                title: args.title,
+                widthFr: args.widthFr,
+                chartType: args.chartType,
+                height: args.height,
+                categories: args.categories,
+                values: args.values,
+                backgroundColor: args.backgroundColor,
+                opacity: args.opacity,
+                borderColor: args.borderColor,
+                borderWidth: args.borderWidth,
+                borderStyle: args.borderStyle,
+                borderRadius: args.borderRadius,
+              });
+              next = updated;
+              diags.push({ ok: inserted, message: inserted ? `Chart '${args.id}' criado em '${sectionId}'.` : `Falha ao criar Chart '${args.id}'.`, line: cmd.line });
+            }
+          } else {
+            diags.push({ ok: false, message: 'createArticle apenas para Liquid.', line: cmd.line });
           }
           break;
         }

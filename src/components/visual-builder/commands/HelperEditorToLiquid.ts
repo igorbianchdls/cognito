@@ -21,4 +21,10 @@ export {
   insertChartInSection,
   removeSectionByIdDSL,
   updateArticleTitleByIdDSL,
+  // Inline-first helpers
+  upsertHeaderSimple,
+  ensureSectionExistsInline,
+  updateSectionStyleInline,
+  insertKpiArticleInline,
+  insertChartArticleInline,
 } from './HelperEditorToDSL';

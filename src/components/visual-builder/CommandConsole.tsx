@@ -57,13 +57,17 @@ addWidget({
 `;
 
 export default function CommandConsole({ sourceCode }: Props) {
-  const [text, setText] = useState<string>(`// Atualizar header
-updateHeader(title: "Dashboard de Indicadores (Atualizado)"; subtitle: "Visão geral (Atualizado)";)
+  const [text, setText] = useState<string>(`// Header
+updateHeader(title: "Dashboard (Atualizado)"; subtitle: "Visão geral (Atualizado)";)
 
-// Atualizar títulos dos 3 charts existentes
-updateArticle(id: "chart_vendas_canal"; title: "Vendas por Canal (Atualizado)";);
-updateArticle(id: "chart_faturamento_mensal"; title: "Faturamento Mensal (Atualizado)";);
-updateArticle(id: "chart_vendas_categoria"; title: "Vendas por Categoria (Atualizado)";);`);
+// Sections
+createSection(id: "kpis2"; type: "kpis"; style: { display: "flex"; gap: 16; });
+updateSection(id: "kpis"; display: "grid"; gridTemplateColumns: "repeat(2, 1fr)"; gap: 24;);
+
+// Articles
+createArticle(sectionId: "kpis2"; id: "kpi_novo"; type: "kpi"; title: "Novo KPI"; widthFr: 1; backgroundColor: "#fff";);
+createArticle(sectionId: "charts"; id: "chart_novo"; type: "chart"; title: "Meu Gráfico"; chartType: "bar"; height: 300; categories: ["A","B"]; values: [10,20];);
+updateArticle(id: "kpi_novo"; title: "KPI Atualizado"; style: { borderColor: "#e5e7eb"; borderWidth: 1; borderStyle: "solid"; });`);
   const [output, setOutput] = useState<Array<{ type: "ok" | "err"; text: string }>>([]);
   const lastResultRef = useRef<string>("");
 
@@ -92,7 +96,7 @@ updateArticle(id: "chart_vendas_categoria"; title: "Vendas por Categoria (Atuali
     <div className="h-full flex flex-col">
       <div className="p-4 border-b border-gray-200">
         <h2 className="text-lg font-semibold text-gray-900">Command Console</h2>
-        <p className="text-sm text-gray-600">Escreva comandos como addSection(), addWidget(type: "kpi"|"bar"|…), setDashboard(), updateWidget(), updateGroup(), deleteWidget(), deleteGroupt() e clique em Executar.</p>
+        <p className="text-sm text-gray-600">Comandos suportados: createSection(), updateSection(), createArticle(), updateArticle(), updateHeader(), addKPI(), addChart(), addGroup(), deleteWidget().</p>
       </div>
       <div className="flex-1 min-h-0 grid grid-rows-[1fr_auto]">
         <div className="min-h-0">

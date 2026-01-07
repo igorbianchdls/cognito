@@ -9,6 +9,9 @@ export type CommandKind =
   | "removeSection"
   | "updateArticle"
   | "updateHeader"
+  | "updateSection"
+  | "createSection"
+  | "createArticle"
   | "setDashboard"
   | "deleteWidget"
   | "deleteGroupt"
@@ -81,6 +84,54 @@ export type AddSectionArgs = {
   gapY?: number;
 };
 
+export type UpdateSectionArgs = {
+  id: string;
+  display?: 'flex' | 'grid';
+  gap?: number;
+  // Flex
+  flexDirection?: 'row' | 'column';
+  flexWrap?: 'nowrap' | 'wrap' | 'wrap-reverse';
+  justifyContent?: 'flex-start' | 'center' | 'flex-end' | 'space-between' | 'space-around' | 'space-evenly';
+  alignItems?: 'stretch' | 'flex-start' | 'center' | 'flex-end' | 'baseline';
+  // Grid
+  gridTemplateColumns?: string;
+  // Spacing and container
+  padding?: number;
+  margin?: number;
+  backgroundColor?: string;
+  opacity?: number;
+  borderColor?: string;
+  borderWidth?: number;
+  borderStyle?: 'solid' | 'dashed' | 'dotted' | '';
+  borderRadius?: number;
+};
+
+export type CreateSectionArgs = {
+  id: string;
+  type: 'kpis' | 'charts';
+  style?: Omit<UpdateSectionArgs, 'id'>;
+};
+
+export type CreateArticleArgs = {
+  sectionId: string;
+  id: string;
+  type: 'kpi' | 'chart';
+  title?: string;
+  height?: number;
+  widthFr?: number | string;
+  // Visual container
+  backgroundColor?: string;
+  opacity?: number;
+  borderColor?: string;
+  borderWidth?: number;
+  borderStyle?: 'solid' | 'dashed' | 'dotted' | '';
+  borderRadius?: number;
+  // Chart-only fields
+  chartType?: string;
+  categories?: string[];
+  values?: Array<number>;
+};
+
 export type SetDashboardArgs = {
   title?: string;
   subtitle?: string;
@@ -95,8 +146,11 @@ export type Command =
   | BaseCommand<"addGroup", AddGroupArgs>
   | BaseCommand<"addSection", AddSectionArgs>
   | BaseCommand<"removeSection", { id: string }>
-  | BaseCommand<"updateArticle", { id: string; title: string }>
+  | BaseCommand<"updateArticle", { id: string; title?: string; style?: Record<string, unknown> }>
   | BaseCommand<"updateHeader", { title?: string; subtitle?: string }>
+  | BaseCommand<"updateSection", UpdateSectionArgs>
+  | BaseCommand<"createSection", CreateSectionArgs>
+  | BaseCommand<"createArticle", CreateArticleArgs>
   | BaseCommand<"setDashboard", SetDashboardArgs>
   | BaseCommand<"deleteWidget", { id: string }>
   | BaseCommand<"deleteGroupt", { id: string }>
@@ -425,11 +479,20 @@ export function parseCommands(text: string): ParseResult {
       continue;
     }
     if (lower === "updateArticle") {
-      if (!args?.id || typeof args.id !== 'string' || typeof args?.title !== 'string') {
-        errors.push({ line, message: "updateArticle requer 'id' (string) e 'title' (string)" });
+      if (!args?.id || typeof args.id !== 'string') {
+        errors.push({ line, message: "updateArticle requer 'id' (string)" });
         continue;
       }
-      commands.push({ kind: "updateArticle", line, raw: stmt, args: { id: args.id, title: args.title } });
+      const hasTitle = Object.prototype.hasOwnProperty.call(args, 'title');
+      const hasStyle = Object.prototype.hasOwnProperty.call(args, 'style');
+      if (!hasTitle && !hasStyle) {
+        errors.push({ line, message: "updateArticle requer 'title' e/ou 'style'" });
+        continue;
+      }
+      const payload: any = { id: args.id };
+      if (hasTitle && typeof args.title === 'string') payload.title = args.title;
+      if (hasStyle && typeof args.style === 'object') payload.style = args.style;
+      commands.push({ kind: "updateArticle", line, raw: stmt, args: payload });
       continue;
     }
     if (lower === "updateHeader") {
@@ -447,6 +510,41 @@ export function parseCommands(text: string): ParseResult {
     }
     if (lower === "setDashboard") {
       commands.push({ kind: "setDashboard", line, raw: stmt, args: args as SetDashboardArgs });
+      continue;
+    }
+
+    if (lower === "createSection") {
+      if (!args?.id || !args?.type) {
+        errors.push({ line, message: "createSection requer 'id' e 'type' (kpis|charts)" });
+        continue;
+      }
+      const ty = String(args.type).toLowerCase();
+      if (ty !== 'kpis' && ty !== 'charts') {
+        errors.push({ line, message: "createSection 'type' deve ser 'kpis' ou 'charts'" });
+        continue;
+      }
+      commands.push({ kind: "createSection", line, raw: stmt, args: args as CreateSectionArgs });
+      continue;
+    }
+    if (lower === "updateSection") {
+      if (!args?.id || typeof args.id !== 'string') {
+        errors.push({ line, message: "updateSection requer 'id' (string)" });
+        continue;
+      }
+      commands.push({ kind: "updateSection", line, raw: stmt, args: args as UpdateSectionArgs });
+      continue;
+    }
+    if (lower === "createArticle") {
+      if (!args?.sectionId || !args?.id || !args?.type) {
+        errors.push({ line, message: "createArticle requer 'sectionId', 'id' e 'type' (kpi|chart)" });
+        continue;
+      }
+      const ty = String(args.type).toLowerCase();
+      if (ty !== 'kpi' && ty !== 'chart') {
+        errors.push({ line, message: "createArticle 'type' deve ser 'kpi' ou 'chart'" });
+        continue;
+      }
+      commands.push({ kind: "createArticle", line, raw: stmt, args: args as CreateArticleArgs });
       continue;
     }
 
