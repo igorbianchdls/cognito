@@ -173,7 +173,7 @@ export const initialLiquidGrid = `<dashboard render="html" theme="branco">
       <h1 style="margin:0 0 4px; font-family:Inter, system-ui, sans-serif; font-size:20px; font-weight:700; color:#111827;">Dashboard de Indicadores</h1>
       <p style="margin:0; font-family:Inter, system-ui, sans-serif; font-size:14px; font-weight:400; color:#6b7280;">Visão geral</p>
     </header>
-    <section class="row kpis">
+    <section class="row kpis" style="display:flex; gap:16px; margin-bottom:16px;">
       <article class="card" style="background-color:#ffffff; border-color:#e5e7eb;">
         <h3>Vendas</h3>
         <div class="kpi-value">R$ 124.500</div>
@@ -192,7 +192,7 @@ export const initialLiquidGrid = `<dashboard render="html" theme="branco">
       </article>
     </section>
 
-    <section class="row charts">
+    <section class="row charts" style="display:flex; gap:16px; margin-bottom:16px;">
       <article class="card">
         <h3>Faturamento Mensal</h3>
         <div class="chart-box">Placeholder de gráfico</div>
@@ -887,12 +887,10 @@ export const visualBuilderActions = {
     .card { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 12px; color: #111827; }
     .card h3 { margin: 0 0 8px; font-family: Inter, system-ui, sans-serif; font-weight: 600; font-size: 14px; color: #374151; }
     .kpi-value { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; }
-    /* KPIs: flex com frações via --fr */
-    .row.kpis { display: flex; gap: 16px; }
+    /* KPIs: flex com frações via --fr (display/gap inline no section) */
     .row.kpis > article { flex: var(--fr, 1) 1 0%; min-width: 0; }
     @media (max-width: 640px) { .row.kpis { flex-direction: column; } .row.kpis > article { flex: 1 1 auto; } }
-    /* Charts row using flex with fractional widths via --fr */
-    .row.charts { display: flex; gap: 16px; }
+    /* Charts row using flex with fractional widths via --fr (display/gap inline no section) */
     .row.charts > article { flex: var(--fr, 1) 1 0%; min-width: 0; }
     @media (max-width: 640px) { .row.charts { flex-direction: column; } .row.charts > article { flex: 1 1 auto; } }
   </style>

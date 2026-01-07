@@ -14,6 +14,7 @@ import WidgetEditorModal from '@/components/visual-builder/WidgetEditorModal';
 import HeaderEditorModal from '@/components/visual-builder/HeaderEditorModal';
 import KpiEditorModal from '@/components/visual-builder/KpiEditorModal';
 import ChartEditorModal from '@/components/visual-builder/ChartEditorModal';
+import SectionEditorModal from '@/components/visual-builder/SectionEditorModal';
 import { $visualBuilderState, visualBuilderActions } from '@/stores/visualBuilderStore';
 import { initialLiquidGrid } from '@/stores/visualBuilderStore';
 import { ThemeManager, type ThemeName } from '@/components/visual-builder/ThemeManager';
@@ -162,6 +163,9 @@ export default function VisualBuilderPage() {
   const [chartModalOpen, setChartModalOpen] = useState(false);
   const [chartModalChartId, setChartModalChartId] = useState<string | null>(null);
   const [chartModalInitial, setChartModalInitial] = useState<{ titleText: string; titleFontFamily?: string; titleFontSize?: number; titleFontWeight?: string | number; titleColor?: string; backgroundColor?: string; opacity?: number; borderColor?: string; borderWidth?: number; borderStyle?: 'solid'|'dashed'|'dotted'|''; borderRadius?: number }>({ titleText: '' });
+  const [sectionModalOpen, setSectionModalOpen] = useState(false);
+  const [sectionModalId, setSectionModalId] = useState<string | null>(null);
+  const [sectionModalInitial, setSectionModalInitial] = useState<import('@/components/visual-builder/SectionEditorModal').SectionEditorInitial>({});
   useEffect(() => {
     if (!htmlMode) return;
     if (activeTab !== 'responsive') return;
@@ -245,6 +249,69 @@ export default function VisualBuilderPage() {
         const s = headerEl.querySelector('p, h2, small')?.textContent?.trim() || '';
         setHeaderModalData({ title: t, subtitle: s });
         setHeaderModalOpen(true);
+      });
+    }
+
+    // Section triggers (only on section[data-role="section"]) with blue outline + label "Editar"
+    const sectionEls = Array.from(c.querySelectorAll('section[data-role="section"]')) as HTMLElement[];
+    for (const sec of sectionEls) {
+      // Hover outline + label
+      sec.style.position = sec.style.position || 'relative';
+      const label = document.createElement('div');
+      label.textContent = 'Editar';
+      label.style.position = 'absolute';
+      label.style.top = '-10px';
+      label.style.left = '8px';
+      label.style.background = '#3b82f6';
+      label.style.color = '#fff';
+      label.style.padding = '2px 8px';
+      label.style.borderRadius = '6px';
+      label.style.fontSize = '12px';
+      label.style.lineHeight = '1';
+      label.style.opacity = '0';
+      label.style.transition = 'opacity 120ms ease-in-out';
+      label.style.cursor = 'pointer';
+      const enter = () => { sec.style.outline = '2px solid #3b82f6'; label.style.opacity = '1'; };
+      const leave = () => { sec.style.outline = ''; label.style.opacity = '0'; };
+      const click = (e: MouseEvent) => {
+        e.preventDefault(); e.stopPropagation();
+        const id = sec.getAttribute('id') || '';
+        setSectionModalId(id || null);
+        // Collect current styles
+        const parse = (s: string | null | undefined) => {
+          const out: Record<string,string> = {}; if (!s) return out; for (const part of s.split(';')) { const p = part.trim(); if (!p) continue; const i = p.indexOf(':'); if (i === -1) continue; out[p.slice(0,i).trim()] = p.slice(i+1).trim(); } return out;
+        };
+        const st = parse(sec.getAttribute('style'));
+        const numPx = (v?: string) => (v && /px$/.test(v) ? Number(v.replace(/px$/,'')) : (v ? Number(v) : undefined));
+        const initial: import('@/components/visual-builder/SectionEditorModal').SectionEditorInitial = {
+          display: (st['display'] as any) || 'flex',
+          gap: numPx(st['gap']),
+          flexDirection: (st['flex-direction'] as any) || undefined,
+          flexWrap: (st['flex-wrap'] as any) || undefined,
+          justifyContent: (st['justify-content'] as any) || undefined,
+          alignItems: (st['align-items'] as any) || undefined,
+          gridTemplateColumns: st['grid-template-columns'] || undefined,
+          padding: numPx(st['padding']),
+          margin: numPx(st['margin']),
+          backgroundColor: st['background-color'] || undefined,
+          opacity: st['opacity'] ? Number(st['opacity']) : undefined,
+          borderColor: st['border-color'] || undefined,
+          borderWidth: numPx(st['border-width']),
+          borderStyle: (st['border-style'] as any) || undefined,
+          borderRadius: numPx(st['border-radius'])
+        };
+        setSectionModalInitial(initial);
+        setSectionModalOpen(true);
+      };
+      sec.addEventListener('mouseenter', enter);
+      sec.addEventListener('mouseleave', leave);
+      label.addEventListener('click', click);
+      sec.appendChild(label);
+      cleanupFns.push(() => {
+        try { sec.removeEventListener('mouseenter', enter); } catch {}
+        try { sec.removeEventListener('mouseleave', leave); } catch {}
+        try { label.removeEventListener('click', click); } catch {}
+        try { sec.removeChild(label); } catch {}
       });
     }
 
@@ -484,18 +551,16 @@ export default function VisualBuilderPage() {
 <dashboard render="html" theme="branco">
   <style>
     .vb-container { padding: 16px; }
-    .row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-bottom: 16px; }
+    .row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-bottom: 16px; }
     @media (max-width: 1024px) { .row { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
     @media (max-width: 640px)  { .row { grid-template-columns: repeat(1, minmax(0, 1fr)); } }
     .card { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 12px; color: #111827; }
     .card h3 { margin: 0 0 8px; font-family: Inter, system-ui, sans-serif; font-weight: 600; font-size: 14px; color: #374151; }
     .kpi-value { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; }
-    /* KPIs: flex com frações via --fr */
-    .row.kpis { display: flex; gap: 16px; }
+    /* KPIs: flex com frações via --fr (display/gap inline no section) */
     .row.kpis > article { flex: var(--fr, 1) 1 0%; min-width: 0; }
     @media (max-width: 640px) { .row.kpis { flex-direction: column; } .row.kpis > article { flex: 1 1 auto; } }
-    /* Charts row using flex with fractional widths via --fr */
-    .row.charts { display: flex; gap: 16px; }
+    /* Charts row using flex with fractional widths via --fr (display/gap inline no section) */
     .row.charts > article { flex: var(--fr, 1) 1 0%; min-width: 0; }
     @media (max-width: 640px) { .row.charts { flex-direction: column; } .row.charts > article { flex: 1 1 auto; } }
   </style>
@@ -505,7 +570,7 @@ export default function VisualBuilderPage() {
       <h1 style="margin:0 0 4px; font-family:Inter, system-ui, sans-serif; font-size:20px; font-weight:700; color:#111827;">Dashboard de Indicadores</h1>
       <p style="margin:0; font-family:Inter, system-ui, sans-serif; font-size:14px; font-weight:400; color:#6b7280;">Visão geral</p>
     </header>
-    <section class="row kpis">
+    <section class="row kpis" style="display:flex; gap:16px; margin-bottom:16px;">
       <article id="kpi_vendas" class="card" data-role="kpi" style="--fr:1; background-color:#fff7ed; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px;">
         <h1 style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Vendas</h1>
         <div class="kpi-value">R$ 124.500</div>
@@ -524,7 +589,7 @@ export default function VisualBuilderPage() {
       </article>
     </section>
 
-    <section class="row charts">
+    <section class="row charts" style="display:flex; gap:16px; margin-bottom:16px;">
       <article class="card" data-role="chart" style="--fr:1; background-color:#fefce8; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px;">
         <h1 style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Faturamento Mensal</h1>
         <Chart id="fat_mensal" type="line" height="320" />
@@ -793,6 +858,52 @@ export default function VisualBuilderPage() {
           finally {
             setChartModalOpen(false);
           }
+        }}
+      />
+      <SectionEditorModal
+        isOpen={sectionModalOpen}
+        initial={sectionModalInitial}
+        onClose={() => setSectionModalOpen(false)}
+        onSave={(out) => {
+          try {
+            const src = String(visualBuilderState.code || '');
+            const id = sectionModalId || '';
+            if (!id) { setSectionModalOpen(false); return; }
+            const escId = id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const re = new RegExp(`<section\\b([^>]*?\\bid=\\\"${escId}\\\"[^>]*)>([\\s\\S]*?)<\\/section>`, 'i');
+            const m = src.match(re);
+            if (!m) { setSectionModalOpen(false); return; }
+            const whole = m[0];
+            const openAttrs = m[1] || '';
+            const innerOld = m[2] || '';
+            const styleRe = /style\s*=\s*("([^"]*)"|'([^']*)')/i;
+            const parse = (s: string) => { const o: Record<string,string> = {}; for (const part of s.split(';')) { const p = part.trim(); if (!p) continue; const i = p.indexOf(':'); if (i === -1) continue; o[p.slice(0,i).trim()] = p.slice(i+1).trim(); } return o; };
+            const toStyle = (obj: Record<string,string>) => Object.entries(obj).filter(([,v])=>v!==undefined&&v!=='').map(([k,v])=>`${k}:${v}`).join('; ');
+            const styleObj = (() => { const ms = openAttrs.match(styleRe); return ms ? parse(ms[2] || ms[3] || '') : {}; })();
+            const setIf = (k: string, v?: string | number) => { if (v !== undefined && v !== '') styleObj[k] = String(v); };
+            setIf('display', out.display);
+            setIf('gap', out.gap !== undefined ? `${out.gap}px` : undefined);
+            if (out.display === 'flex') {
+              setIf('flex-direction', out.flexDirection);
+              setIf('flex-wrap', out.flexWrap);
+              setIf('justify-content', out.justifyContent);
+              setIf('align-items', out.alignItems);
+            }
+            if (out.display === 'grid') setIf('grid-template-columns', out.gridTemplateColumns);
+            setIf('padding', out.padding !== undefined ? `${out.padding}px` : undefined);
+            setIf('margin', out.margin !== undefined ? `${out.margin}px` : undefined);
+            setIf('background-color', out.backgroundColor);
+            setIf('opacity', out.opacity !== undefined ? out.opacity : undefined);
+            setIf('border-color', out.borderColor);
+            setIf('border-width', out.borderWidth !== undefined ? `${out.borderWidth}px` : undefined);
+            setIf('border-style', out.borderStyle);
+            setIf('border-radius', out.borderRadius !== undefined ? `${out.borderRadius}px` : undefined);
+            let newOpenAttrs = openAttrs.replace(styleRe, ''); newOpenAttrs = newOpenAttrs.replace(/\s+$/, '');
+            const newOpenTag = `<section${newOpenAttrs}${Object.keys(styleObj).length ? ` style=\"${toStyle(styleObj)}\"` : ''}>`;
+            const newCode = src.replace(whole, newOpenTag + innerOld + `</section>`);
+            visualBuilderActions.updateCode(newCode);
+          } catch {}
+          finally { setSectionModalOpen(false); }
         }}
       />
       <KpiEditorModal
