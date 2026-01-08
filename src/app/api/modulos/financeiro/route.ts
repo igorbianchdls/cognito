@@ -739,7 +739,13 @@ ORDER BY
       const params: unknown[] = []
       let idx = 1
       const filtros: string[] = []
-      filtros.push(`LOWER(cp.status) = 'aberto'`)
+      const statusParam = (searchParams.get('status') || 'aberto').toLowerCase()
+      if (statusParam === 'aberto') {
+        filtros.push(`LOWER(cp.status) IN ('aberto','pendente','em_aberto','em aberto')`)
+      } else {
+        filtros.push(`LOWER(cp.status) = $${idx++}`)
+        params.push(statusParam)
+      }
       if (de) { filtros.push(`cp.data_vencimento >= $${idx++}`); params.push(de) }
       if (ate) { filtros.push(`cp.data_vencimento <= $${idx++}`); params.push(ate) }
       if (tenantId) { filtros.push(`cp.tenant_id = $${idx++}`); params.push(tenantId) }
@@ -799,7 +805,13 @@ ORDER BY
       const params: unknown[] = []
       let idx = 1
       const filtros: string[] = []
-      filtros.push(`LOWER(cr.status) = 'aberto'`)
+      const statusParam = (searchParams.get('status') || 'aberto').toLowerCase()
+      if (statusParam === 'aberto') {
+        filtros.push(`LOWER(cr.status) IN ('aberto','pendente','em_aberto','em aberto')`)
+      } else {
+        filtros.push(`LOWER(cr.status) = $${idx++}`)
+        params.push(statusParam)
+      }
       if (de) { filtros.push(`cr.data_vencimento >= $${idx++}`); params.push(de) }
       if (ate) { filtros.push(`cr.data_vencimento <= $${idx++}`); params.push(ate) }
       if (tenantId) { filtros.push(`cr.tenant_id = $${idx++}`); params.push(tenantId) }
