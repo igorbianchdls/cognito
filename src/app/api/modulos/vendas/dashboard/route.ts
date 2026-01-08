@@ -180,19 +180,31 @@ export async function GET(req: NextRequest) {
     let canais: ChartItem[] = []
     try { canais = await runQuery<ChartItem>(canaisSql, [limit]) } catch (e) { console.error('🛒 VENDAS dashboard canais (join) error:', e); canais = [] }
 
-    // Top clientes
+    // Top clientes (por receita) - período fixo
     const topClientesSql = `SELECT COALESCE(c.nome_fantasia,'—') AS cliente,
                                    COALESCE(SUM(pi.subtotal),0)::float AS total,
                                    COUNT(DISTINCT p.id)::int AS pedidos
                             FROM vendas.pedidos p
                             LEFT JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
                             LEFT JOIN entidades.clientes c ON c.id = p.cliente_id
-                            ${pWhere}
+                            WHERE p.data_pedido >= '2025-09-01' AND p.data_pedido <= '2025-12-31'
                             GROUP BY 1
                             ORDER BY 2 DESC
-                            LIMIT $${pParams.length + 1}::int`;
+                            LIMIT $1::int`;
     let topClientes: { cliente: string; total: number; pedidos: number }[] = []
-    try { topClientes = await runQuery<{ cliente: string; total: number; pedidos: number }>(topClientesSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard clientes error:', e); topClientes = [] }
+    try { topClientes = await runQuery<{ cliente: string; total: number; pedidos: number }>(topClientesSql, [limit]) } catch (e) { console.error('🛒 VENDAS dashboard clientes error:', e); topClientes = [] }
+
+    // Top clientes por número de pedidos - período fixo
+    const topClientesPedidosSql = `SELECT COALESCE(c.nome_fantasia,'—') AS cliente,
+                                          COUNT(DISTINCT p.id)::int AS pedidos
+                                   FROM vendas.pedidos p
+                                   LEFT JOIN entidades.clientes c ON c.id = p.cliente_id
+                                   WHERE p.data_pedido >= '2025-09-01' AND p.data_pedido <= '2025-12-31'
+                                   GROUP BY 1
+                                   ORDER BY pedidos DESC
+                                   LIMIT $1::int`;
+    let topClientesPorPedidos: { cliente: string; pedidos: number }[] = []
+    try { topClientesPorPedidos = await runQuery<{ cliente: string; pedidos: number }>(topClientesPedidosSql, [limit]) } catch (e) { console.error('🛒 VENDAS dashboard clientes_por_pedidos error:', e); topClientesPorPedidos = [] }
 
     // Vendas por Cidade (somente c.cidade, sem UF)
     const cidadeSql = `SELECT COALESCE(c.cidade, '—') AS cidade, COALESCE(SUM(pi.subtotal),0)::float AS total
@@ -307,12 +319,12 @@ export async function GET(req: NextRequest) {
                         FROM vendas.pedidos p
                         LEFT JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
                         LEFT JOIN empresa.filiais f ON f.id = p.filial_id
-                        ${pWhere}
+                        WHERE p.data_pedido >= '2025-09-01' AND p.data_pedido <= '2025-12-31'
                         GROUP BY 1
                         ORDER BY 2 DESC
-                        LIMIT $${pParams.length + 1}::int`;
+                        LIMIT $1::int`;
     let filiais: ChartItem[] = []
-    try { filiais = await runQuery<ChartItem>(filiaisSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard filiais error:', e); filiais = [] }
+    try { filiais = await runQuery<ChartItem>(filiaisSql, [limit]) } catch (e) { console.error('🛒 VENDAS dashboard filiais error:', e); filiais = [] }
 
     // Vendas por Business Unit (Unidade de Negócio)
     const unidadesNegocioSql = `SELECT COALESCE(un.nome,'—') AS label, COALESCE(SUM(pi.subtotal),0)::float AS value
@@ -657,6 +669,7 @@ LIMIT $${vmParams.length + 1}::int`;
           categorias,
           canais,
           clientes: topClientes,
+          clientes_pedidos: topClientesPorPedidos,
           cidades: vendasCidade,
           centros_lucro: centrosLucro,
           campanhas_vendas: campanhasVendas,
