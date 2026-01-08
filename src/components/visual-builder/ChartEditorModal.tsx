@@ -4,6 +4,21 @@ import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { FontManager } from './FontManager';
 
+type QueryRuleEdit = { col: string; op: string; val?: string; vals?: string; start?: string; end?: string }
+
+type QueryEdit = {
+  schema?: string;
+  table?: string;
+  measure?: string;
+  dimension?: string;
+  timeDimension?: string;
+  from?: string;
+  to?: string;
+  limit?: number;
+  order?: 'value DESC' | 'value ASC' | 'label ASC' | 'label DESC';
+  where?: QueryRuleEdit[];
+}
+
 interface ChartEditorModalProps {
   isOpen: boolean;
   initial: {
@@ -19,9 +34,10 @@ interface ChartEditorModalProps {
     borderWidth?: number;
     borderStyle?: 'solid' | 'dashed' | 'dotted' | '';
     borderRadius?: number;
+    query?: QueryEdit;
   };
   onClose: () => void;
-  onSave: (data: { titleText: string; titleFontFamily?: string; titleFontSize?: number; titleFontWeight?: string | number; titleColor?: string; backgroundColor?: string; opacity?: number; borderColor?: string; borderWidth?: number; borderStyle?: 'solid'|'dashed'|'dotted'|''; borderRadius?: number }) => void;
+  onSave: (data: { titleText: string; titleFontFamily?: string; titleFontSize?: number; titleFontWeight?: string | number; titleColor?: string; backgroundColor?: string; opacity?: number; borderColor?: string; borderWidth?: number; borderStyle?: 'solid'|'dashed'|'dotted'|''; borderRadius?: number; query?: QueryEdit }) => void;
 }
 
 export default function ChartEditorModal({ isOpen, initial, onClose, onSave }: ChartEditorModalProps) {
@@ -47,6 +63,18 @@ export default function ChartEditorModal({ isOpen, initial, onClose, onSave }: C
   const [dirtyBWidth, setDirtyBWidth] = useState(false);
   const [dirtyBStyle, setDirtyBStyle] = useState(false);
   const [dirtyBRadius, setDirtyBRadius] = useState(false);
+  // Query state
+  const [schema, setSchema] = useState<string>(initial.query?.schema || 'financeiro')
+  const [table, setTable] = useState<string>(initial.query?.table || '')
+  const [measure, setMeasure] = useState<string>(initial.query?.measure || '')
+  const [dimension, setDimension] = useState<string>(initial.query?.dimension || '')
+  const [timeDimension, setTimeDimension] = useState<string>(initial.query?.timeDimension || '')
+  const [from, setFrom] = useState<string>(initial.query?.from || '')
+  const [to, setTo] = useState<string>(initial.query?.to || '')
+  const [limit, setLimit] = useState<number>(typeof initial.query?.limit === 'number' ? (initial.query?.limit as number) : 5)
+  const [order, setOrder] = useState<QueryEdit['order']>(initial.query?.order || 'value DESC')
+  const [where, setWhere] = useState<QueryRuleEdit[]>(Array.isArray(initial.query?.where) ? (initial.query?.where as QueryRuleEdit[]) : [])
+  const [dirtyQuery, setDirtyQuery] = useState(false)
 
   useEffect(() => { setMounted(true); return () => setMounted(false); }, []);
   useEffect(() => {
@@ -62,6 +90,18 @@ export default function ChartEditorModal({ isOpen, initial, onClose, onSave }: C
       setBorderWidth(initial.borderWidth);
       setBorderStyle(initial.borderStyle || '');
       setBorderRadius(initial.borderRadius);
+      // query
+      setSchema(initial.query?.schema || 'financeiro')
+      setTable(initial.query?.table || '')
+      setMeasure(initial.query?.measure || '')
+      setDimension(initial.query?.dimension || '')
+      setTimeDimension(initial.query?.timeDimension || '')
+      setFrom(initial.query?.from || '')
+      setTo(initial.query?.to || '')
+      setLimit(typeof initial.query?.limit === 'number' ? (initial.query?.limit as number) : 5)
+      setOrder(initial.query?.order || 'value DESC')
+      setWhere(Array.isArray(initial.query?.where) ? (initial.query?.where as QueryRuleEdit[]) : [])
+      setDirtyQuery(false)
     }
   }, [isOpen, initial]);
 
@@ -75,7 +115,7 @@ export default function ChartEditorModal({ isOpen, initial, onClose, onSave }: C
           <h3 className="text-lg font-semibold text-gray-900">Editar Chart</h3>
           <button onClick={onClose} className="text-gray-600 hover:text-gray-800">✕</button>
         </div>
-        <div className="space-y-3">
+        <div className="space-y-3 max-h-[70vh] overflow-auto pr-1">
           <div>
             <label className="block text-sm font-medium text-gray-800 mb-1">Título (HTML &lt;h1&gt;)</label>
             <input className="w-full px-3 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" value={titleText} onChange={e=>setTitleText(e.target.value)} placeholder="Ex.: Faturamento Mensal" />
@@ -136,6 +176,94 @@ export default function ChartEditorModal({ isOpen, initial, onClose, onSave }: C
               </div>
             </div>
           </div>
+          {/* Query Editor */}
+          <div className="pt-2 border-t border-gray-200">
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-semibold text-gray-900">Query</label>
+              <button className="text-xs text-blue-600 hover:underline" onClick={() => {
+                // Reset defaults according to table
+                const t = table.trim().toLowerCase()
+                if (!t) return
+                if (t === 'contas_pagar') { setMeasure('SUM(valor_liquido)'); setTimeDimension('data_vencimento') }
+                else if (t === 'contas_receber') { setMeasure('SUM(valor_liquido)'); setTimeDimension('data_vencimento') }
+                else if (t === 'pagamentos_efetuados') { setMeasure('SUM(valor_total_pagamento)'); setTimeDimension('data_pagamento') }
+                else if (t === 'pagamentos_recebidos') { setMeasure('SUM(valor_total_recebido)'); setTimeDimension('data_recebimento') }
+                setDirtyQuery(true)
+              }}>Reset defaults</button>
+            </div>
+            <div className="grid grid-cols-2 gap-2 mb-2">
+              <div>
+                <label className="text-xs text-gray-600 block mb-1">Schema</label>
+                <input className="w-full px-2 py-1 bg-gray-100 rounded" value={schema} onChange={e=>{ setSchema(e.target.value); setDirtyQuery(true) }} />
+              </div>
+              <div>
+                <label className="text-xs text-gray-600 block mb-1">Table</label>
+                <input className="w-full px-2 py-1 bg-gray-100 rounded" value={table} onChange={e=>{ setTable(e.target.value); setDirtyQuery(true) }} placeholder="contas_pagar, contas_receber..." />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2 mb-2">
+              <div>
+                <label className="text-xs text-gray-600 block mb-1">Measure</label>
+                <input className="w-full px-2 py-1 bg-gray-100 rounded" value={measure} onChange={e=>{ setMeasure(e.target.value); setDirtyQuery(true) }} placeholder="SUM(valor_liquido)" />
+              </div>
+              <div>
+                <label className="text-xs text-gray-600 block mb-1">Dimension</label>
+                <input className="w-full px-2 py-1 bg-gray-100 rounded" value={dimension} onChange={e=>{ setDimension(e.target.value); setDirtyQuery(true) }} placeholder="categoria, fornecedor..." />
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-2 mb-2">
+              <div>
+                <label className="text-xs text-gray-600 block mb-1">timeDimension</label>
+                <input className="w-full px-2 py-1 bg-gray-100 rounded" value={timeDimension} onChange={e=>{ setTimeDimension(e.target.value); setDirtyQuery(true) }} placeholder="data_vencimento" />
+              </div>
+              <div>
+                <label className="text-xs text-gray-600 block mb-1">From</label>
+                <input type="date" className="w-full px-2 py-1 bg-gray-100 rounded" value={from} onChange={e=>{ setFrom(e.target.value); setDirtyQuery(true) }} />
+              </div>
+              <div>
+                <label className="text-xs text-gray-600 block mb-1">To</label>
+                <input type="date" className="w-full px-2 py-1 bg-gray-100 rounded" value={to} onChange={e=>{ setTo(e.target.value); setDirtyQuery(true) }} />
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-2 mb-2">
+              <div>
+                <label className="text-xs text-gray-600 block mb-1">Limit</label>
+                <input type="number" min={1} max={50} className="w-full px-2 py-1 bg-gray-100 rounded" value={limit} onChange={e=>{ setLimit(e.target.value ? parseInt(e.target.value) : 5); setDirtyQuery(true) }} />
+              </div>
+              <div className="col-span-2">
+                <label className="text-xs text-gray-600 block mb-1">Order</label>
+                <select className="w-full px-2 py-1 bg-gray-100 rounded" value={order} onChange={e=>{ setOrder(e.target.value as any); setDirtyQuery(true) }}>
+                  <option value="value DESC">value DESC</option>
+                  <option value="value ASC">value ASC</option>
+                  <option value="label ASC">label ASC</option>
+                  <option value="label DESC">label DESC</option>
+                </select>
+              </div>
+            </div>
+            <div className="mb-2">
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-xs text-gray-600">Where rules</label>
+                <button className="text-xs text-blue-600 hover:underline" onClick={()=>{ setWhere([...(where||[]), { col: '', op: '=', val: '' }]); setDirtyQuery(true) }}>+ Regra</button>
+              </div>
+              <div className="space-y-2">
+                {(where || []).map((r, idx) => (
+                  <div key={idx} className="grid grid-cols-12 gap-2 items-center">
+                    <input className="col-span-3 px-2 py-1 bg-gray-100 rounded" placeholder="col" value={r.col} onChange={e=>{ const w=[...where]; w[idx]={...w[idx], col:e.target.value}; setWhere(w); setDirtyQuery(true) }} />
+                    <select className="col-span-2 px-2 py-1 bg-gray-100 rounded" value={r.op} onChange={e=>{ const w=[...where]; w[idx]={...w[idx], op:e.target.value}; setWhere(w); setDirtyQuery(true) }}>
+                      <option value="=">=</option>
+                      <option value="in">in</option>
+                      <option value="between">between</option>
+                      <option value="like">like</option>
+                    </select>
+                    <input className="col-span-3 px-2 py-1 bg-gray-100 rounded" placeholder="val(s)" value={r.vals !== undefined ? r.vals : (r.val || '')} onChange={e=>{ const w=[...where]; const op=(w[idx].op||'').toLowerCase(); if (op==='in') w[idx]={...w[idx], vals:e.target.value}; else if(op==='between'){ /* ignore here */ } else w[idx]={...w[idx], val:e.target.value}; setWhere(w); setDirtyQuery(true) }} />
+                    <input className="col-span-2 px-2 py-1 bg-gray-100 rounded" placeholder="start" value={r.start || ''} onChange={e=>{ const w=[...where]; w[idx]={...w[idx], start:e.target.value}; setWhere(w); setDirtyQuery(true) }} />
+                    <input className="col-span-2 px-2 py-1 bg-gray-100 rounded" placeholder="end" value={r.end || ''} onChange={e=>{ const w=[...where]; w[idx]={...w[idx], end:e.target.value}; setWhere(w); setDirtyQuery(true) }} />
+                    <button className="col-span-12 text-xs text-red-600 hover:underline" onClick={()=>{ const w=[...where]; w.splice(idx,1); setWhere(w); setDirtyQuery(true) }}>remover</button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
         <div className="mt-4 flex items-center justify-end gap-2">
           <button onClick={onClose} className="px-3 py-2 rounded-md border border-gray-300 text-gray-700">Cancelar</button>
@@ -151,6 +279,10 @@ export default function ChartEditorModal({ isOpen, initial, onClose, onSave }: C
             borderWidth: dirtyBWidth ? borderWidth : undefined,
             borderStyle: dirtyBStyle ? borderStyle : undefined,
             borderRadius: dirtyBRadius ? borderRadius : undefined,
+            query: dirtyQuery ? {
+              schema, table, measure, dimension, timeDimension, from, to, limit, order,
+              where: (where || []).map(r => ({ ...r }))
+            } : undefined,
           })} className="px-4 py-2 rounded-md bg-blue-600 text-white">Salvar</button>
         </div>
       </div>

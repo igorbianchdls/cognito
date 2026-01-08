@@ -26,6 +26,7 @@ import { LineChart } from '@/components/charts/LineChart';
 import { PieChart } from '@/components/charts/PieChart';
 import { AreaChart } from '@/components/charts/AreaChart';
 import { QueryEngine } from '@/components/visual-builder/QueryEngine';
+import { updateArticleQueryFull } from '@/components/visual-builder/commands/HelperEditorToDSL';
 
 export default function VisualBuilderPage() {
   const visualBuilderState = useStore($visualBuilderState);
@@ -589,6 +590,34 @@ export default function VisualBuilderPage() {
           const tStyle = parseStyle(titleEl?.getAttribute('style'));
           const artStyleObj = parseStyle(art.getAttribute('style'));
           const numPx = (v?: string) => (v && /px$/.test(v) ? Number(v.replace(/px$/,'')) : (v ? Number(v) : undefined));
+          // Parse query from source code
+          const srcCode = getSrc();
+          const { m: artMatch } = findArticle(srcCode, artId);
+          let qInitial: { schema?: string; table?: string; measure?: string; dimension?: string; timeDimension?: string; from?: string; to?: string; limit?: number; order?: 'value DESC'|'value ASC'|'label ASC'|'label DESC'; where?: Array<{ col: string; op: string; val?: string; vals?: string; start?: string; end?: string }> } | undefined;
+          if (artMatch) {
+            const inner = artMatch[2] || '';
+            const qPair = inner.match(/<query\b([^>]*)>([\s\S]*?)<\/query>/i);
+            const qSelf = !qPair ? inner.match(/<query\b([^>]*)\/>/i) : null;
+            const attrsStr = (qPair?.[1] || qSelf?.[1] || '').trim();
+            const parseAttrs = (s: string): Record<string,string> => { const out: Record<string,string> = {}; const re=/(\w[\w-]*)\s*=\s*("([^"]*)"|'([^']*)'|([^\s>]+))/g; let m: RegExpExecArray|null; while((m=re.exec(s))!==null){ out[m[1]]=(m[3]??m[4]??m[5]??'').trim(); } return out; };
+            const qa = parseAttrs(attrsStr);
+            const dimVal = (qa['dimension'] || qa['dimensions'] || qa['dimensao'] || qa['dimensoes'] || '').trim() || undefined;
+            const lim = qa['limit'] && !Number.isNaN(Number(qa['limit'])) ? Number(qa['limit']) : undefined;
+            const ord = (qa['order'] || qa['orderBy'] || qa['orderby'] || qa['ordenar'] || '').trim() || undefined;
+            const timeDim = (qa['timedimension'] || qa['timeDimension'] || qa['datecolumn'] || qa['dateColumn'] || '').trim() || undefined;
+            let whereRules: Array<{ col:string; op:string; val?:string; vals?:string; start?:string; end?:string }> | undefined = undefined;
+            if (qPair) {
+              const innerQ = qPair[2] || '';
+              const wMatch = innerQ.match(/<where\b[^>]*>([\s\S]*?)<\/where>/i);
+              if (wMatch) {
+                const rulesStr = wMatch[1] || '';
+                const ruleRe = /<rule\b([^>]*)\/>/gi; let rm: RegExpExecArray | null; const rules: any[] = [];
+                while ((rm = ruleRe.exec(rulesStr)) !== null) { const ra = parseAttrs(rm[1] || ''); rules.push({ col: ra['col'] || '', op: ra['op'] || '=', val: ra['val'], vals: ra['vals'], start: ra['start'], end: ra['end'] }) }
+                whereRules = rules;
+              }
+            }
+            qInitial = { schema: qa['schema'] || undefined, table: qa['table'] || undefined, measure: (qa['measure'] || qa['measures'] || '').trim() || undefined, dimension: dimVal, timeDimension: timeDim, from: qa['from'] || undefined, to: qa['to'] || undefined, limit: lim, order: (ord as any) || undefined, where: whereRules };
+          }
           setChartModalChartId(chartId);
           setChartModalInitial({
             titleText: titleEl?.textContent?.trim() || '',
@@ -602,6 +631,7 @@ export default function VisualBuilderPage() {
             borderWidth: numPx(artStyleObj['border-width']),
             borderStyle: artStyleObj['border-style'] as any,
             borderRadius: numPx(artStyleObj['border-radius']),
+            query: qInitial,
           });
           setChartModalOpen(true);
         }
@@ -1079,7 +1109,33 @@ export default function VisualBuilderPage() {
             newOpenAttrs = newOpenAttrs.replace(/\s+$/, '');
             const newOpenTag = `<article${newOpenAttrs}${Object.keys(styleObj).length ? ` style=\"${toStyle(styleObj)}\"` : ''}>`;
             const newWhole = `<article${openAttrs}>${inner}</article>`;
-            const newCode = src.replace(whole, newOpenTag + inner + `</article>`);
+            let newCode = src.replace(whole, newOpenTag + inner + `</article>`);
+            // If query was edited, upsert <query> (and optional <where>) inside the same article
+            if (out.query) {
+              try {
+                const idMatch = openAttrs.match(/\bid\s*=\s*("([^"]+)"|'([^']+)')/i);
+                const articleId = (idMatch?.[2] || idMatch?.[3] || '').trim();
+                if (articleId) {
+                  const q = out.query;
+                  const { code: qCode } = updateArticleQueryFull(newCode, {
+                    articleId,
+                    query: {
+                      schema: q.schema,
+                      table: q.table,
+                      measure: q.measure,
+                      dimension: q.dimension,
+                      timeDimension: q.timeDimension,
+                      from: q.from,
+                      to: q.to,
+                      limit: typeof q.limit === 'number' ? q.limit : undefined,
+                      order: q.order,
+                      where: Array.isArray(q.where) ? q.where.map(r => ({ col: r.col || '', op: r.op || '=', val: r.val, vals: r.vals, start: r.start, end: r.end })) : undefined,
+                    }
+                  });
+                  newCode = qCode;
+                }
+              } catch { /* ignore query upsert errors */ }
+            }
             visualBuilderActions.updateCode(newCode);
           } catch {}
           finally {

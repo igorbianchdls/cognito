@@ -535,6 +535,113 @@ export function updateArticleQueryInline(
   return { code: code.replace(reArticle, `<article${openAttrs}>${appended}</article>`), updated: true };
 }
 
+// Update or insert a full <query> block (including optional <where>/<rule />) inside an <article id="...">
+// Accepts either self-closing <query ... /> when there are no where rules, or paired when rules exist.
+export function updateArticleQueryFull(
+  code: string,
+  args: {
+    articleId: string;
+    query: {
+      schema?: string;
+      table?: string;
+      measure?: string;
+      dimension?: string;
+      timeDimension?: string;
+      from?: string;
+      to?: string;
+      limit?: number;
+      order?: string;
+      where?: Array<{ col: string; op: string; val?: string; vals?: string; start?: string; end?: string }>;
+    };
+  }
+): { code: string; updated: boolean } {
+  const escId = escRe(args.articleId);
+  const reArticle = new RegExp(`<article\\b([^>]*?\\bid=\\\"${escId}\\\"[^>]*)>([\\s\\S]*?)<\\/article>`, 'i');
+  const m = code.match(reArticle);
+  if (!m) return { code, updated: false };
+  const openAttrs = m[1] || '';
+  let inner = m[2] || '';
+
+  const reQuerySelf = /<query\b([^>]*)\/>/i;
+  const reQueryPair = /<query\b([^>]*)>([\s\S]*?)<\/query>/i;
+  const reChartPair = /(<Chart\b([^>]*)>)([\s\S]*?)(<\/Chart>)/i;
+
+  const serializeAttrs = (obj: Record<string, unknown>): string => {
+    const order = [
+      'schema','table','measure','measures','dimension','dimensions','timeDimension','dateColumn',
+      'from','to','granularity','order','limit','offset','timezone'
+    ];
+    const keys = Array.from(new Set([...order, ...Object.keys(obj)]));
+    const esc = (v: unknown) => String(v).replace(/\"/g, '&quot;');
+    return keys
+      .filter(k => obj[k] !== undefined && obj[k] !== '')
+      .map(k => `${k}="${esc(obj[k])}` + `"`)
+      .join(' ');
+  };
+
+  const q = args.query || {};
+  const attrsObj: Record<string, unknown> = {};
+  if (q.schema) attrsObj.schema = q.schema;
+  if (q.table) attrsObj.table = q.table;
+  if (q.measure) attrsObj.measure = q.measure;
+  if (q.dimension) attrsObj.dimension = q.dimension;
+  if (q.timeDimension) attrsObj.timeDimension = q.timeDimension;
+  if (q.from) attrsObj.from = q.from;
+  if (q.to) attrsObj.to = q.to;
+  if (typeof q.limit === 'number') attrsObj.limit = q.limit;
+  if (q.order) attrsObj.order = q.order;
+  const attrsStr = serializeAttrs(attrsObj);
+
+  const rules = Array.isArray(q.where) ? q.where.filter(r => r && (r.col || '').trim()).map(r => ({
+    col: (r.col || '').trim(),
+    op: (r.op || '=').trim(),
+    val: r.val,
+    vals: r.vals,
+    start: r.start,
+    end: r.end,
+  })) : [];
+
+  const serializeRule = (r: { col: string; op: string; val?: string; vals?: string; start?: string; end?: string }): string => {
+    const parts: string[] = [];
+    parts.push(`col=\"${String(r.col).replace(/\"/g,'&quot;')}\"`);
+    parts.push(`op=\"${String(r.op).replace(/\"/g,'&quot;')}\"`);
+    if (r.val != null && r.val !== '') parts.push(`val=\"${String(r.val).replace(/\"/g,'&quot;')}\"`);
+    if (r.vals != null && r.vals !== '') parts.push(`vals=\"${String(r.vals).replace(/\"/g,'&quot;')}\"`);
+    if (r.start != null && r.start !== '') parts.push(`start=\"${String(r.start).replace(/\"/g,'&quot;')}\"`);
+    if (r.end != null && r.end !== '') parts.push(`end=\"${String(r.end).replace(/\"/g,'&quot;')}\"`);
+    return `<rule ${parts.join(' ')} />`;
+  };
+
+  const queryTag = (() => {
+    if (rules.length > 0) {
+      const rulesStr = rules.map(serializeRule).join('\n            ');
+      return `<query ${attrsStr}>\n          <where>\n            ${rulesStr}\n          </where>\n        </query>`;
+    }
+    return `<query ${attrsStr} />`;
+  })();
+
+  if (reQuerySelf.test(inner)) {
+    inner = inner.replace(reQuerySelf, queryTag);
+    return { code: code.replace(reArticle, `<article${openAttrs}>${inner}</article>`), updated: true };
+  }
+  if (reQueryPair.test(inner)) {
+    inner = inner.replace(reQueryPair, queryTag);
+    return { code: code.replace(reArticle, `<article${openAttrs}>${inner}</article>`), updated: true };
+  }
+
+  // No <query> found: try to inject inside <Chart> ... </Chart>
+  if (reChartPair.test(inner)) {
+    inner = inner.replace(reChartPair, (full: string, chartOpen: string, _attrs: string, chartInner: string, chartClose: string) => {
+      return `${chartOpen}\n          ${queryTag}\n${chartInner}${chartClose}`;
+    });
+    return { code: code.replace(reArticle, `<article${openAttrs}>${inner}</article>`), updated: true };
+  }
+
+  // Fallback: append at end of article
+  inner = inner.trimEnd() + `\n        ${queryTag}`;
+  return { code: code.replace(reArticle, `<article${openAttrs}>${inner}</article>`), updated: true };
+}
+
 // New: simple header upsert with <p> title/subtitle inside <header class="vb-header">, merging simple container styles
 export function upsertHeaderSimple(
   code: string,
