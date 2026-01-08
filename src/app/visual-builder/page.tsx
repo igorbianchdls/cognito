@@ -8,12 +8,16 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
   DropdownMenuSub,
   DropdownMenuSubTrigger,
   DropdownMenuSubContent,
 } from '@/components/ui/dropdown-menu';
-import { Palette, Check } from 'lucide-react';
+import { Palette, Check, Type, Square, Layout, BarChart3 } from 'lucide-react';
+import { BackgroundManager, type BackgroundPresetKey } from '@/components/visual-builder/BackgroundManager';
+import { FontManager, type FontPresetKey, type FontSizeKey } from '@/components/visual-builder/FontManager';
+import { BorderManager, type BorderPresetKey } from '@/components/visual-builder/BorderManager';
 import DashboardSaveDialog from '@/components/visual-builder/DashboardSaveDialog';
 import DashboardOpenDialog from '@/components/visual-builder/DashboardOpenDialog';
 import { dashboardsApi, type Dashboard } from '@/stores/dashboardsStore';
@@ -199,6 +203,46 @@ export default function VisualBuilderPage() {
 
   // Liquid-only editor language
   const monacoLanguage = 'html';
+
+  // UI-only defaults for dropdown (no handlers)
+  const availableFonts = FontManager.getAvailableFonts();
+  const availableFontSizes = FontManager.getAvailableFontSizes();
+  const selectedFont: FontPresetKey = 'barlow';
+  const selectedFontSize: FontSizeKey = 'lg';
+  const selectedLetterSpacing = -0.02;
+  const chartBodyFontFamily: FontPresetKey = 'geist';
+  const chartBodyTextColor = '#6b7280';
+  const availableBackgrounds = BackgroundManager.getAvailableBackgrounds();
+  const selectedBackground: BackgroundPresetKey = BackgroundManager.getDefaultBackground();
+  const headerVariant: 'auto' | 'light' | 'dark' = 'auto';
+  const resolvedHeaderKind: 'light' | 'dark' = 'light';
+  const currentHeaderStyle = {
+    background: '#ffffff',
+    textPrimary: '#111827',
+    textSecondary: '#6b7280',
+    borderBottomColor: '#e5e7eb',
+    datePickerBorderColor: '#e5e7eb',
+    fontFamily: 'Inter, system-ui, sans-serif'
+  } as const;
+  const dashboardBgColor = '#171717';
+  const cardsBgColor = '#1B1B1B';
+  const chartTitleColor = '#ffffff';
+  const kpiValueColor = '#ffffff';
+  const kpiTitleColor = '#d1d5db';
+  const selectedBorderType: BorderPresetKey = 'suave';
+  const borderColor = '#e5e7eb';
+  const borderWidth = 1;
+  const borderRadius = 0;
+  const borderAccentColor = '#bbb';
+  const borderShadow = true;
+  const insightsBgColor = '#ffffff';
+  const insightsBgOpacity = 1;
+  const insightsBorderColor = '#e5e7eb';
+  const insightsTitleColor = '#111827';
+  const insightsBorderRadius = 8;
+  const insightsTitleSize = 18;
+  const insightsTitleMargin = 8;
+  const insightsCompact = true;
 
   // Initialize store on mount
   useEffect(() => {
@@ -1095,6 +1139,334 @@ export default function VisualBuilderPage() {
                       </DropdownMenuItem>
                     );
                   })}
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+
+              {/* Fonte Submenu */}
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                  <Type className="w-4 h-4 mr-2" />
+                  Fonte
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent>
+                  {/* Família da Fonte */}
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>Família da Fonte</DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent>
+                      {availableFonts.map((font) => (
+                        <DropdownMenuItem key={font.key} className="flex items-center justify-between py-2">
+                          <span style={{ fontFamily: font.family }} className="text-sm">
+                            {font.name}
+                          </span>
+                          {selectedFont === font.key && (
+                            <Check className="w-4 h-4 text-blue-600" />
+                          )}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
+
+                  <DropdownMenuSeparator />
+
+                  {/* Tamanho da Fonte */}
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>Tamanho da Fonte</DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent>
+                      {availableFontSizes.map((size) => (
+                        <DropdownMenuItem key={size.key} className="flex items-center justify-between py-2">
+                          <div className="flex flex-col">
+                            <span className="text-sm font-medium">{size.name}</span>
+                            <span className="text-xs text-muted-foreground">{size.value}px • {size.usage}</span>
+                          </div>
+                          {selectedFontSize === size.key && (
+                            <Check className="w-4 h-4 text-blue-600" />
+                          )}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
+
+                  <DropdownMenuSeparator />
+
+                  {/* Letter Spacing */}
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>Letter Spacing</DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent>
+                      {[-0.05,-0.04,-0.03,-0.02,-0.01,0,0.01,0.02,0.03,0.04,0.05].map(v => (
+                        <DropdownMenuItem key={v} className="flex items-center justify-between py-2">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm">{v.toFixed(2)}em</span>
+                            <span className="text-xs text-muted-foreground">tracking</span>
+                          </div>
+                          {Math.abs(selectedLetterSpacing - v) < 1e-6 && (
+                            <Check className="w-4 h-4 text-blue-600" />
+                          )}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
+
+                  <DropdownMenuSeparator />
+
+                  {/* Chart Body Font */}
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>Chart Body Font</DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent>
+                      {availableFonts.map((font) => (
+                        <DropdownMenuItem key={font.key} className="flex items-center justify-between py-2">
+                          <span style={{ fontFamily: font.family }} className="text-sm">
+                            {font.name}
+                          </span>
+                          {chartBodyFontFamily === font.key && (
+                            <Check className="w-4 h-4 text-blue-600" />
+                          )}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+
+              {/* Header Style Submenu */}
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                  <Layout className="w-4 h-4 mr-2" />
+                  Estilo do Cabeçalho
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent>
+                  <DropdownMenuItem className="flex items-center justify-between py-2">
+                    <span>Automático</span>
+                    {headerVariant === 'auto' && <Check className="w-4 h-4 text-blue-600" />}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="flex items-center justify-between py-2">
+                    <span>Claro</span>
+                    {headerVariant === 'light' && <Check className="w-4 h-4 text-blue-600" />}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="flex items-center justify-between py-2">
+                    <span>Escuro</span>
+                    {headerVariant === 'dark' && <Check className="w-4 h-4 text-blue-600" />}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <div className="px-3 py-2 text-xs text-muted-foreground">
+                    Cores do Cabeçalho ({resolvedHeaderKind === 'light' ? 'Claro' : 'Escuro'})
+                  </div>
+                  <div className="px-3 py-2 text-xs text-muted-foreground space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <span>Fundo</span>
+                      <input type="color" defaultValue={currentHeaderStyle.background} disabled />
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                      <span>Texto primário</span>
+                      <input type="color" defaultValue={currentHeaderStyle.textPrimary} disabled />
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                      <span>Texto secundário</span>
+                      <input type="color" defaultValue={currentHeaderStyle.textSecondary} disabled />
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                      <span>Borda inferior</span>
+                      <input type="color" defaultValue={currentHeaderStyle.borderBottomColor} disabled />
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                      <span>Borda do seletor de data</span>
+                      <input type="color" defaultValue={currentHeaderStyle.datePickerBorderColor} disabled />
+                    </div>
+                  </div>
+                  <DropdownMenuSeparator />
+                  <div className="px-3 py-2 text-xs text-muted-foreground">Fonte do Cabeçalho</div>
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>
+                      <Type className="w-4 h-4 mr-2" />
+                      Selecionar fonte
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent>
+                      {availableFonts.map((font) => (
+                        <DropdownMenuItem key={font.key} className="flex items-center justify-between py-2">
+                          <span style={{ fontFamily: font.family }} className="text-sm">
+                            {font.name}
+                          </span>
+                          {currentHeaderStyle.fontFamily === font.family && (
+                            <Check className="w-4 h-4 text-blue-600" />
+                          )}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+
+              {/* Background Submenu */}
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                  <Square className="w-4 h-4 mr-2" />
+                  Fundo
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent>
+                  {availableBackgrounds.map((background) => (
+                    <DropdownMenuItem key={background.key} className="flex items-center justify-between py-2">
+                      <div className="flex items-center gap-3">
+                        <div className="w-6 h-6 rounded border border-gray-200" style={background.previewStyle} />
+                        <div>
+                          <div className="font-medium text-sm">{background.name}</div>
+                          <div className="text-xs text-muted-foreground">{background.description}</div>
+                        </div>
+                      </div>
+                      {selectedBackground === background.key && (
+                        <Check className="w-4 h-4 text-blue-600" />
+                      )}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+
+              {/* Colors Submenu */}
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                  <Square className="w-4 h-4 mr-2" />
+                  Cores
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent className="w-64">
+                  <div className="px-3 py-2 text-xs text-muted-foreground">Painel</div>
+                  <div className="px-3 py-2 flex items-center justify-between gap-2">
+                    <span className="text-sm">Fundo</span>
+                    <input type="color" defaultValue={dashboardBgColor} disabled />
+                  </div>
+                  <DropdownMenuSeparator />
+                  <div className="px-3 py-2 text-xs text-muted-foreground">Cartões</div>
+                  <div className="px-3 py-2 flex items-center justify-between gap-2">
+                    <span className="text-sm">Fundo dos Cartões</span>
+                    <input type="color" defaultValue={cardsBgColor} disabled />
+                  </div>
+                  <div className="px-3 py-2 flex items-center justify-between gap-2">
+                    <span className="text-sm">Título do Gráfico</span>
+                    <input type="color" defaultValue={chartTitleColor} disabled />
+                  </div>
+                  <div className="px-3 py-2 flex items-center justify-between gap-2">
+                    <span className="text-sm">Texto do Gráfico</span>
+                    <input type="color" defaultValue={chartBodyTextColor} disabled />
+                  </div>
+                  <DropdownMenuSeparator />
+                  <div className="px-3 py-2 text-xs text-muted-foreground">KPI</div>
+                  <div className="px-3 py-2 flex items-center justify-between gap-2">
+                    <span className="text-sm">Valor do KPI</span>
+                    <input type="color" defaultValue={kpiValueColor} disabled />
+                  </div>
+                  <div className="px-3 py-2 flex items-center justify-between gap-2">
+                    <span className="text-sm">Título do KPI</span>
+                    <input type="color" defaultValue={kpiTitleColor} disabled />
+                  </div>
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+
+              {/* Border Submenu */}
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                  <Square className="w-4 h-4 mr-2" />
+                  Borda
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent className="w-72">
+                  <div className="px-2 py-1.5 text-sm font-medium text-muted-foreground">Tipo</div>
+                  <DropdownMenuSeparator />
+                  {BorderManager.getAvailableBorders().map((b) => (
+                    <DropdownMenuItem key={b.key} className="flex items-center justify-between py-2">
+                      <div className="flex flex-col">
+                        <span className="font-medium text-sm">{b.name}</span>
+                        <span className="text-xs text-muted-foreground">{b.description}</span>
+                      </div>
+                      {selectedBorderType === b.key && <Check className="w-4 h-4 text-blue-600" />}
+                    </DropdownMenuItem>
+                  ))}
+                  <DropdownMenuSeparator />
+                  <div className="px-2 py-1.5 text-sm font-medium text-muted-foreground">Propriedades</div>
+                  <div className="px-3 py-2 text-xs text-muted-foreground space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <span>Cor</span>
+                      <input type="color" defaultValue={borderColor} disabled />
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                      <span>Largura</span>
+                      <input className="w-20 border rounded px-2 py-1" type="number" defaultValue={borderWidth} disabled />
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                      <span>Raio</span>
+                      <input className="w-20 border rounded px-2 py-1" type="number" defaultValue={borderRadius} disabled />
+                    </div>
+                    {selectedBorderType === 'acentuada' && (
+                      <div className="flex items-center justify-between gap-2">
+                        <span>Cor dos cantos</span>
+                        <input type="color" defaultValue={borderAccentColor} disabled />
+                      </div>
+                    )}
+                    {selectedBorderType === 'suave' && (
+                      <div className="flex items-center justify-between gap-2">
+                        <span>Sombra</span>
+                        <input type="checkbox" defaultChecked={borderShadow} disabled />
+                      </div>
+                    )}
+                  </div>
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+
+              {/* Insights Card Style Submenu */}
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                  <BarChart3 className="w-4 h-4 mr-2" />
+                  Estilo do Insights Card
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent className="w-80">
+                  <div className="px-2 py-1.5 text-sm font-medium text-muted-foreground">Cores</div>
+                  <div className="px-3 py-2 text-xs text-muted-foreground space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <span>Fundo</span>
+                      <input type="color" defaultValue={insightsBgColor} disabled />
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                      <span>Transparência</span>
+                      <div className="flex items-center gap-2">
+                        <input className="w-24 border rounded px-2 py-1" type="number" min={0} max={100} defaultValue={Math.round(insightsBgOpacity * 100)} disabled />
+                        <span>%</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                      <span>Borda</span>
+                      <input type="color" defaultValue={insightsBorderColor} disabled />
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                      <span>Título</span>
+                      <input type="color" defaultValue={insightsTitleColor} disabled />
+                    </div>
+                  </div>
+                  <DropdownMenuSeparator />
+                  <div className="px-2 py-1.5 text-sm font-medium text-muted-foreground">Bordas e Tipografia</div>
+                  <div className="px-3 py-2 text-xs text-muted-foreground space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <span>Raio</span>
+                      <input className="w-20 border rounded px-2 py-1" type="number" min={0} max={32} defaultValue={insightsBorderRadius} disabled />
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                      <span>Tam. título</span>
+                      <input className="w-20 border rounded px-2 py-1" type="number" min={10} max={36} defaultValue={insightsTitleSize} disabled />
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                      <span>Margem título</span>
+                      <input className="w-20 border rounded px-2 py-1" type="number" min={0} max={24} defaultValue={insightsTitleMargin} disabled />
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                      <span>Compacto</span>
+                      <input type="checkbox" defaultChecked={insightsCompact} disabled />
+                    </div>
+                  </div>
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+
+              {/* Rows ordering submenu (UI-only) */}
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                  <Layout className="w-4 h-4 mr-2" />
+                  Reordenar Linhas
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent className="w-72">
+                  <div className="px-3 py-2 text-xs text-muted-foreground">Sem rows (ou código JSON)</div>
                 </DropdownMenuSubContent>
               </DropdownMenuSub>
             </DropdownMenuContent>
