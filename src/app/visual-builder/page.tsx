@@ -35,6 +35,7 @@ import { initialLiquidGrid } from '@/stores/visualBuilderStore';
 import { ThemeManager, type ThemeName } from '@/components/visual-builder/ThemeManager';
 import type { Widget, GlobalFilters } from '@/stores/visualBuilderStore';
 import { LiquidParser } from '@/components/visual-builder/LiquidParser';
+import { setGlobalFontByPresetKey } from '@/components/visual-builder/helpers/DefaultHtmlStyleHelper';
 import { createRoot, type Root } from 'react-dom/client';
 import { BarChart } from '@/components/charts/BarChart';
 import { LineChart } from '@/components/charts/LineChart';
@@ -214,9 +215,7 @@ export default function VisualBuilderPage() {
   const chartBodyTextColor = '#6b7280';
   const availableBackgrounds = BackgroundManager.getAvailableBackgrounds();
   const selectedBackground: BackgroundPresetKey = BackgroundManager.getDefaultBackground();
-  // UI-only: use string to avoid TS literal comparison narrowing warnings
-  const headerVariant: string = 'auto';
-  const resolvedHeaderKind: 'light' | 'dark' = 'light';
+  // UI-only defaults (no state/handlers)
   const currentHeaderStyle = {
     background: '#ffffff',
     textPrimary: '#111827',
@@ -273,6 +272,15 @@ export default function VisualBuilderPage() {
   const handleLayoutChange = useCallback((updatedWidgets: Widget[]) => {
     visualBuilderActions.updateWidgets(updatedWidgets);
   }, []);
+
+  // Handler: Atualiza fonte global no default HTML (aplica no container e substitui inline)
+  const handleGeneralFontChange = useCallback((fontKey: import('@/components/visual-builder/FontManager').FontPresetKey) => {
+    try {
+      const src = String(visualBuilderState.code || '');
+      const next = setGlobalFontByPresetKey(src, fontKey);
+      if (next && next !== src) visualBuilderActions.updateCode(next);
+    } catch {}
+  }, [visualBuilderState.code]);
 
   const handleOpenEdit = useCallback((widget: Widget) => {
     // Capture current scroll position of the scroll container
@@ -1156,7 +1164,7 @@ export default function VisualBuilderPage() {
                     <DropdownMenuSubTrigger>Família da Fonte</DropdownMenuSubTrigger>
                     <DropdownMenuSubContent>
                       {availableFonts.map((font) => (
-                        <DropdownMenuItem key={font.key} className="flex items-center justify-between py-2">
+                        <DropdownMenuItem key={font.key} className="flex items-center justify-between py-2" onClick={() => handleGeneralFontChange(font.key)}>
                           <span style={{ fontFamily: font.family }} className="text-sm">
                             {font.name}
                           </span>
@@ -1238,20 +1246,15 @@ export default function VisualBuilderPage() {
                 <DropdownMenuSubContent>
                   <DropdownMenuItem className="flex items-center justify-between py-2">
                     <span>Automático</span>
-                    {headerVariant === 'auto' && <Check className="w-4 h-4 text-blue-600" />}
                   </DropdownMenuItem>
                   <DropdownMenuItem className="flex items-center justify-between py-2">
                     <span>Claro</span>
-                    {headerVariant === 'light' && <Check className="w-4 h-4 text-blue-600" />}
                   </DropdownMenuItem>
                   <DropdownMenuItem className="flex items-center justify-between py-2">
                     <span>Escuro</span>
-                    {headerVariant === 'dark' && <Check className="w-4 h-4 text-blue-600" />}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <div className="px-3 py-2 text-xs text-muted-foreground">
-                    Cores do Cabeçalho ({resolvedHeaderKind === 'light' ? 'Claro' : 'Escuro'})
-                  </div>
+                  <div className="px-3 py-2 text-xs text-muted-foreground">Cores do Cabeçalho</div>
                   <div className="px-3 py-2 text-xs text-muted-foreground space-y-2">
                     <div className="flex items-center justify-between gap-2">
                       <span>Fundo</span>
@@ -1393,13 +1396,13 @@ export default function VisualBuilderPage() {
                       <span>Raio</span>
                       <input className="w-20 border rounded px-2 py-1" type="number" defaultValue={borderRadius} disabled />
                     </div>
-                    {selectedBorderType === 'acentuada' && (
+                    {String(selectedBorderType) === 'acentuada' && (
                       <div className="flex items-center justify-between gap-2">
                         <span>Cor dos cantos</span>
                         <input type="color" defaultValue={borderAccentColor} disabled />
                       </div>
                     )}
-                    {selectedBorderType === 'suave' && (
+                    {String(selectedBorderType) === 'suave' && (
                       <div className="flex items-center justify-between gap-2">
                         <span>Sombra</span>
                         <input type="checkbox" defaultChecked={borderShadow} disabled />
