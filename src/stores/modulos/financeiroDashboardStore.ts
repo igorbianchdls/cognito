@@ -59,7 +59,8 @@ const DEFAULT_UI: FinanceiroDashboardUIState = {
 }
 
 const DEFAULT_FILTERS: FinanceiroDashboardFiltersState = {
-  dateRange: { from: '2025-12-21', to: '2025-12-28' },
+  // Período padrão: de outubro/2025 até janeiro/2026
+  dateRange: { from: '2025-10-01', to: '2026-01-31' },
   dataFilter: 'todos',
 }
 

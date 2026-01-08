@@ -139,6 +139,7 @@ export default function FinanceiroDashboardPage() {
   const [topFiliais, setTopFiliais] = useState<{ label: string; value: number }[]>([])
   const [topFornecedores, setTopFornecedores] = useState<{ label: string; value: number }[]>([])
   const [topClientes, setTopClientes] = useState<{ label: string; value: number }[]>([])
+  const [topAPT, setTopAPT] = useState<{ label: string; value: number }[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   // Global (Nanostores): UI + Filters
@@ -407,13 +408,17 @@ export default function FinanceiroDashboardPage() {
         const prevDe = toDateOnly(prevStartD)
         const prevAte = toDateOnly(prevEndD)
 
-        const [arRes, apRes, prRes, peRes, kpisRes, kpisPrevRes] = await Promise.allSettled([
+        const [arRes, apRes, prRes, peRes, kpisRes, kpisPrevRes, topForRes, topCcRes, topFilRes, topTitRes] = await Promise.allSettled([
           fetch(qs('contas-a-receber'), { cache: 'no-store' }),
           fetch(qs('contas-a-pagar'), { cache: 'no-store' }),
           fetch(qs('pagamentos-recebidos'), { cache: 'no-store' }),
           fetch(qs('pagamentos-efetuados'), { cache: 'no-store' }),
           fetch(`/api/modulos/financeiro?view=kpis&de=${kpiDe}&ate=${kpiAte}`, { cache: 'no-store' }),
           fetch(`/api/modulos/financeiro?view=kpis&de=${prevDe}&ate=${prevAte}`, { cache: 'no-store' }),
+          fetch(`/api/modulos/financeiro?view=top5-ap&dim=fornecedor&de=${kpiDe}&ate=${kpiAte}`, { cache: 'no-store' }),
+          fetch(`/api/modulos/financeiro?view=top5-ap&dim=centro_custo&de=${kpiDe}&ate=${kpiAte}`, { cache: 'no-store' }),
+          fetch(`/api/modulos/financeiro?view=top5-ap&dim=filial&de=${kpiDe}&ate=${kpiAte}`, { cache: 'no-store' }),
+          fetch(`/api/modulos/financeiro?view=top5-ap&dim=titulo&de=${kpiDe}&ate=${kpiAte}`, { cache: 'no-store' }),
         ])
 
         let ar: ARRow[] = []
@@ -547,16 +552,31 @@ export default function FinanceiroDashboardPage() {
           setApRows(ap)
           setPrRows(pr)
           setPeRows(pe)
-          // Zera listas analíticas (visual ainda renderiza vazio)
-          setTopCC([])
+          // Top 5 (Contas a pagar abertas): fornecedores, centros de custo, filiais, títulos
+          if (topForRes.status === 'fulfilled' && topForRes.value.ok) {
+            const j = await topForRes.value.json() as { rows?: Array<{ label?: string; total?: number }> }
+            setTopFornecedores(Array.isArray(j?.rows) ? j.rows.map(r => ({ label: String(r.label || ''), value: Number(r.total || 0) })) : [])
+          } else setTopFornecedores([])
+          if (topCcRes.status === 'fulfilled' && topCcRes.value.ok) {
+            const j = await topCcRes.value.json() as { rows?: Array<{ label?: string; total?: number }> }
+            setTopCC(Array.isArray(j?.rows) ? j.rows.map(r => ({ label: String(r.label || ''), value: Number(r.total || 0) })) : [])
+          } else setTopCC([])
+          if (topFilRes.status === 'fulfilled' && topFilRes.value.ok) {
+            const j = await topFilRes.value.json() as { rows?: Array<{ label?: string; total?: number }> }
+            setTopFiliais(Array.isArray(j?.rows) ? j.rows.map(r => ({ label: String(r.label || ''), value: Number(r.total || 0) })) : [])
+          } else setTopFiliais([])
+          if (topTitRes.status === 'fulfilled' && topTitRes.value.ok) {
+            const j = await topTitRes.value.json() as { rows?: Array<{ label?: string; total?: number }> }
+            setTopAPT(Array.isArray(j?.rows) ? j.rows.map(r => ({ label: String(r.label || ''), value: Number(r.total || 0) })) : [])
+          } else setTopAPT([])
+
+          // Limpar outros tops não utilizados agora
           setTopCategorias([])
           setTopDepartamentos([])
           setTopLucros([])
           setTopProjetos([])
-          setTopFiliais([])
-          setCashRealized([])
-          setTopFornecedores([])
           setTopClientes([])
+          setCashRealized([])
         }
       } catch (err) {
         if (!cancelled) {
@@ -1074,8 +1094,8 @@ export default function FinanceiroDashboardPage() {
           color="#10b981"
         />
         <BarChartHorizontalRecharts
-          items={topClientes}
-          title="Top 5 Clientes"
+          items={topAPT}
+          title="Top 5 Contas a Pagar (Abertas)"
           icon={<CalendarCheck className="w-5 h-5" />}
           color="#8b5cf6"
         />
