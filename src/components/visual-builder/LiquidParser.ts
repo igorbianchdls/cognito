@@ -2,7 +2,7 @@
 
 export type LiquidParseMode = 'html' | 'grid';
 
-export type ChartTypeBasic = 'bar' | 'line' | 'pie' | 'area';
+export type ChartTypeBasic = 'bar' | 'line' | 'pie' | 'area' | 'groupedbar';
 
 export interface ChartDataPoint {
   x: string;
@@ -36,6 +36,10 @@ export interface QuerySpec {
   to?: string;
   granularity?: string;
   timezone?: string;
+  // Meta x Realizado (optional)
+  mode?: string; // 'meta-real'
+  scope?: 'vendedor' | 'territorio' | string;
+  metric?: 'faturamento' | 'ticket_medio' | 'novos_clientes' | string;
 }
 
 export interface ChartSpec {
@@ -226,6 +230,9 @@ export const LiquidParser = {
           const limit = qAttrs['limit'] != null && qAttrs['limit'] !== '' && !Number.isNaN(Number(qAttrs['limit'])) ? Number(qAttrs['limit']) : undefined;
           const orderBy = (qAttrs['order'] || qAttrs['orderBy'] || qAttrs['orderby'] || qAttrs['ordenar'] || '').trim() || undefined;
           const timezone = (qAttrs['timezone'] || '').trim() || undefined;
+          const mode = (qAttrs['mode'] || '').trim() || undefined;
+          const scope = (qAttrs['scope'] || '').trim() || undefined;
+          const metric = (qAttrs['metric'] || '').trim() || undefined;
           // New: where DSL in attribute
           const where: QueryRule[] = [];
           const whereAttr = (qAttrs['where'] || '').trim() || undefined;
@@ -249,7 +256,7 @@ export const LiquidParser = {
               if (col) where.push({ col, op: op as any, ...(val !== undefined ? { val } : {}), ...(vals ? { vals } : {}), ...(start ? { start } : {}), ...(end ? { end } : {}) });
             }
           }
-          if (schema && table && measure) {
+          if (schema && table && (measure || mode)) {
             querySpec = {
               schema,
               table,
@@ -264,6 +271,9 @@ export const LiquidParser = {
               ...(to ? { to } : {}),
               ...(granularity ? { granularity } : {}),
               ...(timezone ? { timezone } : {}),
+              ...(mode ? { mode } : {}),
+              ...(scope ? { scope } : {}),
+              ...(metric ? { metric } : {}),
             };
           }
         }

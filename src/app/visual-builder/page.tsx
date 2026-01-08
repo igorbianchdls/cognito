@@ -25,9 +25,61 @@ import { BarChart } from '@/components/charts/BarChart';
 import { LineChart } from '@/components/charts/LineChart';
 import { PieChart } from '@/components/charts/PieChart';
 import { AreaChart } from '@/components/charts/AreaChart';
+import { GroupedBarChart } from '@/components/charts/GroupedBarChart';
 import { QueryEngine } from '@/components/visual-builder/QueryEngine';
 import { updateArticleQueryFull } from '@/components/visual-builder/commands/HelperEditorToDSL';
 
+// New: Comercial (Metas x Realizado) HTML template
+const COMERCIAL_DASHBOARD_TEMPLATE = `<dashboard render="html" theme="branco" date-type="custom" date-start="2025-11-01" date-end="2025-12-01">
+  <div class="vb-container" style="padding: 16px;">
+    <header class="vb-header" style="background-color:#ffffff; border:1px solid #e5e7eb; border-radius:12px; padding:12px; margin:-16px -16px 16px -16px;">
+      <p style="margin:0 0 4px; font-family:Inter, system-ui, sans-serif; font-size:20px; font-weight:700; color:#111827;">Comercial • Metas x Realizado</p>
+      <p style="margin:0; font-family:Inter, system-ui, sans-serif; font-size:14px; font-weight:400; color:#6b7280;">Vendedor e Território</p>
+    </header>
+
+    <section id="metas_vendedor" class="row charts" data-role="section" style="display:flex; flex-direction:row; flex-wrap:wrap; justify-content:flex-start; align-items:stretch; gap:16px; margin-bottom:16px;">
+      <article id="mxr_fat_vendedor" class="card" data-role="chart" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#ffffff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
+        <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Meta x Faturamento (Vendedor)</p>
+        <Chart id="mxr_fat_vendedor" type="groupedbar" height="360">
+          <query mode="meta-real" scope="vendedor" metric="faturamento" timeDimension="data_pedido" limit="5" />
+        </Chart>
+      </article>
+      <article id="mxr_ticket_vendedor" class="card" data-role="chart" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#ffffff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
+        <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Meta x Ticket Médio (Vendedor)</p>
+        <Chart id="mxr_ticket_vendedor" type="groupedbar" height="360">
+          <query mode="meta-real" scope="vendedor" metric="ticket_medio" timeDimension="data_pedido" limit="5" />
+        </Chart>
+      </article>
+      <article id="mxr_novos_vendedor" class="card" data-role="chart" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#ffffff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
+        <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Meta x Novos Clientes (Vendedor)</p>
+        <Chart id="mxr_novos_vendedor" type="groupedbar" height="360">
+          <query mode="meta-real" scope="vendedor" metric="novos_clientes" timeDimension="data_pedido" limit="5" />
+        </Chart>
+      </article>
+    </section>
+
+    <section id="metas_territorio" class="row charts" data-role="section" style="display:flex; flex-direction:row; flex-wrap:wrap; justify-content:flex-start; align-items:stretch; gap:16px; margin-bottom:16px;">
+      <article id="mxr_fat_territorio" class="card" data-role="chart" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#ffffff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
+        <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Meta x Faturamento (Território)</p>
+        <Chart id="mxr_fat_territorio" type="groupedbar" height="360">
+          <query mode="meta-real" scope="territorio" metric="faturamento" timeDimension="data_pedido" limit="5" />
+        </Chart>
+      </article>
+      <article id="mxr_ticket_territorio" class="card" data-role="chart" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#ffffff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
+        <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Meta x Ticket Médio (Território)</p>
+        <Chart id="mxr_ticket_territorio" type="groupedbar" height="360">
+          <query mode="meta-real" scope="territorio" metric="ticket_medio" timeDimension="data_pedido" limit="5" />
+        </Chart>
+      </article>
+      <article id="mxr_novos_territorio" class="card" data-role="chart" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#ffffff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
+        <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Meta x Novos Clientes (Território)</p>
+        <Chart id="mxr_novos_territorio" type="groupedbar" height="360">
+          <query mode="meta-real" scope="territorio" metric="novos_clientes" timeDimension="data_pedido" limit="5" />
+        </Chart>
+      </article>
+    </section>
+  </div>
+</dashboard>`;
 // New: Sales (Vendas) HTML template for Visual Builder
 const SALES_DASHBOARD_TEMPLATE = `<dashboard render="html" theme="branco" date-type="custom" date-start="2025-11-01" date-end="2026-01-31">
   <div class="vb-container" style="padding: 16px;">
@@ -303,6 +355,7 @@ export default function VisualBuilderPage() {
         case 'line': root.render(<LineChart {...common} />); break;
         case 'pie': root.render(<PieChart {...common} />); break;
         case 'area': root.render(<AreaChart {...common} enableArea={true} />); break;
+        case 'groupedbar': root.render(<GroupedBarChart data={spec.data as any} />); break;
         default: root.render(<BarChart {...common} />); break;
       }
 
@@ -310,12 +363,15 @@ export default function VisualBuilderPage() {
       if (spec.querySpec) {
         QueryEngine.resolve(spec.querySpec, visualBuilderState.globalFilters).then((rows) => {
           if (!Array.isArray(rows) || rows.length === 0) return; // keep placeholder if backend returned no rows
-          const commonFetched = { ...common, data: rows } as any;
+          const commonFetched = spec.type === 'groupedbar'
+            ? ({ data: rows } as any)
+            : ({ ...common, data: rows } as any);
           try {
             switch (spec.type) {
               case 'line': root.render(<LineChart {...commonFetched} />); break;
               case 'pie': root.render(<PieChart {...commonFetched} />); break;
               case 'area': root.render(<AreaChart {...commonFetched} enableArea={true} />); break;
+              case 'groupedbar': root.render(<GroupedBarChart {...commonFetched} />); break;
               default: root.render(<BarChart {...commonFetched} />); break;
             }
           } catch { /* ignore render errors */ }
@@ -963,6 +1019,14 @@ export default function VisualBuilderPage() {
             onClick={() => setShowOpen(true)}
           >
             Abrir…
+          </button>
+          <button
+            className="px-4 py-2 text-sm border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+            onClick={() => {
+              try { visualBuilderActions.updateCode(COMERCIAL_DASHBOARD_TEMPLATE); } catch {}
+            }}
+          >
+            Template Comercial
           </button>
           <button
             className="px-4 py-2 text-sm border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"

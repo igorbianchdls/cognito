@@ -39,6 +39,25 @@ function deriveRange(filters: GlobalFilters): DateRange {
 // Phase 1: compile QuerySpec (Excel-like) to existing financeiro endpoints
 export const QueryEngine = {
   async resolve(spec: QuerySpec, filters: GlobalFilters): Promise<ChartDataPoint[]> {
+    // Handle Meta x Realizado special mode
+    if ((spec as any).mode === 'meta-real') {
+      const scope = ((spec as any).scope || 'vendedor') as 'vendedor'|'territorio'
+      const metric = ((spec as any).metric || 'faturamento') as 'faturamento'|'ticket_medio'|'novos_clientes'
+      const fallback = deriveRange(filters)
+      const from = spec.from || fallback.de || undefined
+      const to = spec.to || fallback.ate || undefined
+      const limit = typeof spec.limit === 'number' ? spec.limit : 5
+      try {
+        const res = await fetch('/api/analytics', {
+          method: 'POST', headers: { 'content-type': 'application/json' }, cache: 'no-store',
+          body: JSON.stringify({ mode: 'meta-real', scope, metric, from, to, limit })
+        })
+        const json = await res.json() as { rows?: Array<{ label: string; meta: number; realizado: number }> }
+        return (json.rows || []) as any
+      } catch {
+        return []
+      }
+    }
     const schema = (spec.schema || '').toLowerCase();
     const table = (spec.table || '').toLowerCase();
     const rawDim = String(spec.dimension || '').trim();

@@ -32,6 +32,122 @@ type AnalyticsBody = {
 export async function POST(req: NextRequest) {
   try {
     const body = (await req.json()) as Partial<AnalyticsBody>
+    // Special mode: Meta x Realizado
+    if ((body as any).mode === 'meta-real') {
+      const scope = String((body as any).scope || 'vendedor').toLowerCase()
+      const metric = String((body as any).metric || 'faturamento').toLowerCase()
+      const from = body.from || '2025-11-01'
+      const to = body.to || '2025-12-01'
+      const limit = Math.max(1, Math.min(50, Number(body.limit || 5)))
+
+      const ym = (() => {
+        try { const d = new Date(from!); return { ano: d.getUTCFullYear(), mes: d.getUTCMonth()+1 } } catch { return { ano: 2025, mes: 11 } }
+      })()
+
+      const rows: Array<{ label: string; meta: number; realizado: number }> = []
+      if (scope === 'vendedor') {
+        // Meta
+        const metaSql = `WITH metas_por_vendedor AS (
+            SELECT m.id AS meta_id, m.vendedor_id, COALESCE(f.nome,'—') AS vendedor_nome,
+                   MAX(CASE WHEN mi.tipo_meta_id = ${metric==='faturamento'?1:metric==='ticket_medio'?5:4} THEN mi.valor_meta END) AS meta_val
+            FROM comercial.metas m
+            LEFT JOIN comercial.metas_itens mi ON mi.meta_id = m.id
+            LEFT JOIN comercial.vendedores v ON v.id = m.vendedor_id
+            LEFT JOIN entidades.funcionarios f ON f.id = v.funcionario_id
+            WHERE m.ano = ${ym.ano} AND m.mes = ${ym.mes} AND m.vendedor_id IS NOT NULL
+            GROUP BY m.id, m.vendedor_id, f.nome
+          )
+          SELECT vendedor_id, vendedor_nome AS label, COALESCE(SUM(meta_val),0)::float AS meta
+          FROM metas_por_vendedor
+          GROUP BY vendedor_id, vendedor_nome`;
+        const realSql = metric === 'faturamento'
+          ? `SELECT v.id AS vendedor_id, COALESCE(f.nome,'—') AS label, COALESCE(SUM(i.subtotal),0)::float AS realizado
+             FROM vendas.pedidos p
+             LEFT JOIN vendas.pedidos_itens i ON i.pedido_id = p.id
+             LEFT JOIN comercial.vendedores v ON v.id = p.vendedor_id
+             LEFT JOIN entidades.funcionarios f ON f.id = v.funcionario_id
+             WHERE p.status = 'concluido' AND p.data_pedido >= $1 AND p.data_pedido < $2
+             GROUP BY v.id, f.nome`
+          : metric === 'ticket_medio'
+            ? `SELECT v.id AS vendedor_id, COALESCE(f.nome,'—') AS label,
+                      CASE WHEN COUNT(DISTINCT p.id) > 0 THEN COALESCE(SUM(i.subtotal),0)::float / NULLIF(COUNT(DISTINCT p.id),0) ELSE 0 END AS realizado
+               FROM vendas.pedidos p
+               LEFT JOIN vendas.pedidos_itens i ON i.pedido_id = p.id
+               LEFT JOIN comercial.vendedores v ON v.id = p.vendedor_id
+               LEFT JOIN entidades.funcionarios f ON f.id = v.funcionario_id
+               WHERE p.status = 'concluido' AND p.data_pedido >= $1 AND p.data_pedido < $2
+               GROUP BY v.id, f.nome`
+            : `WITH firsts AS (
+                 SELECT p.vendedor_id, p.cliente_id, MIN(p.data_pedido) AS first_date
+                 FROM vendas.pedidos p
+                 GROUP BY p.vendedor_id, p.cliente_id
+               )
+               SELECT v.id AS vendedor_id, COALESCE(f.nome,'—') AS label, COUNT(*)::float AS realizado
+               FROM firsts f1
+               LEFT JOIN comercial.vendedores v ON v.id = f1.vendedor_id
+               LEFT JOIN entidades.funcionarios f ON f.id = v.funcionario_id
+               WHERE f1.first_date >= $1 AND f1.first_date < $2
+               GROUP BY v.id, f.nome`;
+        const metas = await runQuery<{ vendedor_id: number; label: string; meta: number }>(metaSql)
+        const reals = await runQuery<{ vendedor_id: number; label: string; realizado: number }>(realSql, [from, to])
+        const map = new Map<number, { label: string; meta: number; realizado: number }>()
+        for (const r of reals) map.set(r.vendedor_id, { label: r.label, meta: 0, realizado: Number(r.realizado||0) })
+        for (const m of metas) {
+          const cur = map.get(m.vendedor_id) || { label: m.label, meta: 0, realizado: 0 }
+          cur.label = m.label; cur.meta += Number(m.meta||0); map.set(m.vendedor_id, cur)
+        }
+        rows.push(...Array.from(map.values()).sort((a,b)=> b.realizado - a.realizado).slice(0, limit))
+      } else {
+        // Território
+        const metaSql = `WITH metas_por_territorio AS (
+            SELECT m.id AS meta_id, m.territorio_id, COALESCE(t.nome,'—') AS territorio_nome,
+                   MAX(CASE WHEN mi.tipo_meta_id = ${metric==='faturamento'?1:metric==='ticket_medio'?5:4} THEN mi.valor_meta END) AS meta_val
+            FROM comercial.metas m
+            LEFT JOIN comercial.metas_itens mi ON mi.meta_id = m.id
+            LEFT JOIN comercial.territorios t ON t.id = m.territorio_id
+            WHERE m.ano = ${ym.ano} AND m.mes = ${ym.mes} AND m.territorio_id IS NOT NULL
+            GROUP BY m.id, m.territorio_id, t.nome
+          )
+          SELECT territorio_id, territorio_nome AS label, COALESCE(SUM(meta_val),0)::float AS meta
+          FROM metas_por_territorio
+          GROUP BY territorio_id, territorio_nome`;
+        const realSql = metric === 'faturamento'
+          ? `SELECT COALESCE(p.territorio_id,0)::int AS territorio_id, COALESCE(t.nome,'—') AS label, COALESCE(SUM(i.subtotal),0)::float AS realizado
+             FROM vendas.pedidos p
+             LEFT JOIN vendas.pedidos_itens i ON i.pedido_id = p.id
+             LEFT JOIN comercial.territorios t ON t.id = p.territorio_id
+             WHERE p.status = 'concluido' AND p.data_pedido >= $1 AND p.data_pedido < $2
+             GROUP BY p.territorio_id, t.nome`
+          : metric === 'ticket_medio'
+            ? `SELECT COALESCE(p.territorio_id,0)::int AS territorio_id, COALESCE(t.nome,'—') AS label,
+                      CASE WHEN COUNT(DISTINCT p.id) > 0 THEN COALESCE(SUM(i.subtotal),0)::float / NULLIF(COUNT(DISTINCT p.id),0) ELSE 0 END AS realizado
+               FROM vendas.pedidos p
+               LEFT JOIN vendas.pedidos_itens i ON i.pedido_id = p.id
+               LEFT JOIN comercial.territorios t ON t.id = p.territorio_id
+               WHERE p.status = 'concluido' AND p.data_pedido >= $1 AND p.data_pedido < $2
+               GROUP BY p.territorio_id, t.nome`
+            : `WITH firsts AS (
+                 SELECT p.territorio_id, p.cliente_id, MIN(p.data_pedido) AS first_date
+                 FROM vendas.pedidos p
+                 GROUP BY p.territorio_id, p.cliente_id
+               )
+               SELECT COALESCE(f.territorio_id,0)::int AS territorio_id, COALESCE(t.nome,'—') AS label, COUNT(*)::float AS realizado
+               FROM firsts f
+               LEFT JOIN comercial.territorios t ON t.id = f.territorio_id
+               WHERE f.first_date >= $1 AND f.first_date < $2
+               GROUP BY f.territorio_id, t.nome`;
+        const metas = await runQuery<{ territorio_id: number; label: string; meta: number }>(metaSql)
+        const reals = await runQuery<{ territorio_id: number; label: string; realizado: number }>(realSql, [from, to])
+        const map = new Map<number, { label: string; meta: number; realizado: number }>()
+        for (const r of reals) map.set(r.territorio_id, { label: r.label, meta: 0, realizado: Number(r.realizado||0) })
+        for (const m of metas) {
+          const cur = map.get(m.territorio_id) || { label: m.label, meta: 0, realizado: 0 }
+          cur.label = m.label; cur.meta += Number(m.meta||0); map.set(m.territorio_id, cur)
+        }
+        rows.push(...Array.from(map.values()).sort((a,b)=> b.realizado - a.realizado).slice(0, limit))
+      }
+      return Response.json({ success: true, rows }, { headers: { 'Cache-Control': 'no-store' } })
+    }
     let source = (body.source || '').toLowerCase() as Source
     if (source === 'vendas') source = 'vd' as Source
     if (!source || !['ap','ar','pe','pr','vd'].includes(source)) {
