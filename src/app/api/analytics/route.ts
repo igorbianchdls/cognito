@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic'
 export const revalidate = 0
 export const maxDuration = 300
 
-type Source = 'ap' | 'ar' | 'pe' | 'pr'
+type Source = 'ap' | 'ar' | 'pe' | 'pr' | 'vd' | 'vendas'
 
 type WhereRule = {
   col: string
@@ -32,9 +32,10 @@ type AnalyticsBody = {
 export async function POST(req: NextRequest) {
   try {
     const body = (await req.json()) as Partial<AnalyticsBody>
-    const source = (body.source || '').toLowerCase() as Source
-    if (!source || !['ap','ar','pe','pr'].includes(source)) {
-      return Response.json({ success: false, message: "Parâmetro 'source' inválido. Use 'ap' | 'ar' | 'pe' | 'pr'" }, { status: 400 })
+    let source = (body.source || '').toLowerCase() as Source
+    if (source === 'vendas') source = 'vd' as Source
+    if (!source || !['ap','ar','pe','pr','vd'].includes(source)) {
+      return Response.json({ success: false, message: "Parâmetro 'source' inválido. Use 'ap' | 'ar' | 'pe' | 'pr' | 'vd' (vendas)" }, { status: 400 })
     }
 
     const limit = Math.max(1, Math.min(50, Number(body.limit || 5)))
@@ -67,6 +68,21 @@ export async function POST(req: NextRequest) {
             ['filial', "COALESCE(fil.nome,'Sem filial')"],
             ['projeto', "COALESCE(prj.nome,'Sem projeto')"],
             ['titulo', "COALESCE(NULLIF(TRIM(cp.numero_documento), ''), CONCAT('Conta #', cp.id::text))"],
+          ]),
+        }
+      }
+      if (source === 'vd') {
+        return {
+          baseFrom: `FROM comercial.vendas_vw vw`,
+          defaultMeasure: 'SUM(vw.item_subtotal)',
+          defaultDate: 'vw.data_pedido',
+          labelMap: new Map<string, string>([
+            ['vendedor', "COALESCE(vw.vendedor_nome,'—')"],
+            ['canal_venda', "COALESCE(vw.canal_venda_nome,'—')"],
+            ['territorio', "COALESCE(vw.territorio_nome,'—')"],
+            ['categoria', "COALESCE(vw.categoria_servico_nome,'—')"],
+            ['cliente', "COALESCE(vw.cliente_nome,'—')"],
+            ['cidade', "COALESCE(vw.cidade,'—')"],
           ]),
         }
       }
@@ -160,8 +176,14 @@ export async function POST(req: NextRequest) {
       .replace('unidade-negocio','unidade_negocio')
 
     const labelExpr = dimension ? ctx.labelMap.get(dimension) : undefined
-    const measure = (body.measure && String(body.measure).trim()) || ctx.defaultMeasure
-    const dateCol = (body.dateColumn && String(body.dateColumn).trim()) || ctx.defaultDate
+    let measure = (body.measure && String(body.measure).trim()) || ctx.defaultMeasure
+    let dateCol = (body.dateColumn && String(body.dateColumn).trim()) || ctx.defaultDate
+
+    // Normalize fields for vendas view
+    if (source === 'vd') {
+      measure = measure.replace(/\bsubtotal\b/gi, 'vw.item_subtotal').replace(/\bitem_subtotal\b/gi, 'vw.item_subtotal')
+      dateCol = dateCol.replace(/\bdata_pedido\b/gi, 'vw.data_pedido')
+    }
 
     // Build WHERE with safe whitelists
     const params: unknown[] = []
@@ -169,7 +191,7 @@ export async function POST(req: NextRequest) {
     const filters: string[] = []
 
     // Tenant filter
-    if (tenantId) {
+    if (tenantId && source !== 'vd') {
       // decide alias by source
       const alias = source === 'ap' ? 'cp' : source === 'ar' ? 'cr' : source === 'pe' ? 'pe' : 'pr'
       filters.push(`${alias}.tenant_id = $${idx++}`)
@@ -191,7 +213,33 @@ export async function POST(req: NextRequest) {
     const applyRule = (r: WhereRule) => {
       const c = String(r.col || '').toLowerCase()
       const op = String(r.op || '=').toLowerCase()
-      // map allowed cols per source
+      if (source === 'vd') {
+        const mapCol = (name: string): string | null => {
+          switch (name) {
+            case 'status': return 'vw.status'
+            case 'vendedor': return 'vw.vendedor_nome'
+            case 'canal_venda': return 'vw.canal_venda_nome'
+            case 'territorio': return 'vw.territorio_nome'
+            case 'categoria': return 'vw.categoria_servico_nome'
+            case 'cliente': return 'vw.cliente_nome'
+            case 'cidade': return 'vw.cidade'
+            default: return null
+          }
+        }
+        const colExpr = mapCol(c)
+        if (!colExpr) return
+        if (op === '=' && r.val !== undefined) { filters.push(`${colExpr} = $${idx++}`); params.push(r.val) }
+        else if (op === 'in' && Array.isArray(r.vals) && r.vals.length) {
+          const placeholders = r.vals.map(() => `$${idx++}`).join(',')
+          filters.push(`${colExpr} IN (${placeholders})`); params.push(...r.vals)
+        } else if (op === 'between' && r.start !== undefined && r.end !== undefined) {
+          filters.push(`${colExpr} BETWEEN $${idx++} AND $${idx++}`); params.push(r.start, r.end)
+        } else if (op === 'like' && r.val !== undefined) {
+          filters.push(`${colExpr} ILIKE $${idx++}`); params.push(r.val)
+        }
+        return
+      }
+      // Financeiro
       const allowedCols = new Set<string>([
         'status','fornecedor_id','cliente_id','categoria_despesa_id','categoria_receita_id','centro_custo_id','centro_lucro_id','departamento_id','unidade_negocio_id','filial_id','projeto_id'
       ])

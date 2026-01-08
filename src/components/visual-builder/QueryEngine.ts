@@ -44,17 +44,27 @@ export const QueryEngine = {
     const rawDim = String(spec.dimension || '').trim();
     const mapDim = (d: string): string => {
       const s = d.toLowerCase();
-      if (s.includes('cliente')) return 'cliente';
-      if (s.includes('centro_custo') || s.includes('centros_custo')) return 'centro_custo';
-      if (s.includes('categoria')) return 'categoria';
-      if (s.includes('departamento')) return 'departamento';
-      if (s.includes('centro_lucro') || s.includes('centros_lucro')) return 'centro_lucro';
-      if (s.includes('filial')) return 'filial';
-      if (s.includes('unidade') && s.includes('negocio')) return 'unidade_negocio';
-      if (s.includes('fornecedor')) return 'fornecedor';
-      if (s.includes('titulo')) return 'titulo';
-      if (s.includes('metodo')) return 'metodo_pagamento';
-      if (s.includes('conta_financeira') || s.includes('conta') && s.includes('financeira')) return 'conta_financeira';
+      // Financeiro
+      if (s.includes('cliente') && schema === 'financeiro') return 'cliente';
+      if ((s.includes('centro_custo') || s.includes('centros_custo')) && schema === 'financeiro') return 'centro_custo';
+      if (s.includes('categoria') && schema === 'financeiro') return 'categoria';
+      if (s.includes('departamento') && schema === 'financeiro') return 'departamento';
+      if ((s.includes('centro_lucro') || s.includes('centros_lucro')) && schema === 'financeiro') return 'centro_lucro';
+      if (s.includes('filial') && schema === 'financeiro') return 'filial';
+      if (s.includes('unidade') && s.includes('negocio') && schema === 'financeiro') return 'unidade_negocio';
+      if (s.includes('fornecedor') && schema === 'financeiro') return 'fornecedor';
+      if (s.includes('titulo') && schema === 'financeiro') return 'titulo';
+      if (s.includes('metodo') && schema === 'financeiro') return 'metodo_pagamento';
+      if ((s.includes('conta_financeira') || (s.includes('conta') && s.includes('financeira'))) && schema === 'financeiro') return 'conta_financeira';
+      // Vendas
+      if (schema === 'vendas') {
+        if (s.includes('vendedor') || s.includes('seller')) return 'vendedor';
+        if (s === 'canal' || s.includes('canal_venda') || s.includes('canal-de-venda')) return 'canal_venda';
+        if (s.includes('territorio') || s.includes('território') || s.includes('region')) return 'territorio';
+        if (s.includes('categoria')) return 'categoria';
+        if (s.includes('cliente')) return 'cliente';
+        if (s.includes('cidade')) return 'cidade';
+      }
       return s;
     };
     const dim = rawDim ? mapDim(rawDim) : '';
@@ -95,12 +105,14 @@ export const QueryEngine = {
 
     // Map schema/table to source
     const tbl = table.replace(/\./g,'')
-    let source: 'ap' | 'ar' | 'pe' | 'pr' | null = null
+    let source: 'ap' | 'ar' | 'pe' | 'pr' | 'vd' | null = null
     if (schema === 'financeiro') {
       if (tbl === 'contas_pagar') source = 'ap'
       else if (tbl === 'contas_receber') source = 'ar'
       else if (tbl === 'pagamentos_efetuados') source = 'pe'
       else if (tbl === 'pagamentos_recebidos') source = 'pr'
+    } else if (schema === 'vendas') {
+      if (tbl === 'pedidos' || tbl === 'vw_pedidos' || tbl === 'vendas' || tbl === 'vendas_vw') source = 'vd'
     }
     if (!source) throw new Error('Unsupported query for current engine.')
 
