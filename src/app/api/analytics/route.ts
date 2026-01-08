@@ -85,11 +85,13 @@ export async function POST(req: NextRequest) {
                      LEFT JOIN empresa.filiais fil ON fil.id = p.filial_id
                      LEFT JOIN empresa.unidades_negocio un ON un.id = p.unidade_negocio_id
                      LEFT JOIN comercial.sales_offices so ON so.id = p.sales_office_id
+                     LEFT JOIN empresa.centros_lucro cl ON cl.id = p.centro_lucro_id
                      LEFT JOIN produtos.produto pr ON pr.id = i.produto_id
                      LEFT JOIN produtos.marcas m ON m.id = pr.marca_id
                      LEFT JOIN servicos.catalogo_servicos s ON s.id = i.servico_id
                      LEFT JOIN servicos.categorias_servicos cat ON cat.id = s.categoria_id
-                     LEFT JOIN comercial.campanhas_vendas camp ON camp.id = p.campanha_venda_id`,
+                     LEFT JOIN comercial.campanhas_vendas camp ON camp.id = p.campanha_venda_id
+                     LEFT JOIN vendas.cupons cup ON cup.id = p.cupom_id`,
           defaultMeasure: 'SUM(i.subtotal)',
           defaultDate: 'p.data_pedido',
           labelMap: new Map<string, string>([
@@ -108,6 +110,8 @@ export async function POST(req: NextRequest) {
             ['sales_office', "COALESCE(so.nome,'—')"],
             ['marca', "COALESCE(m.nome,'—')"],
             ['campanha', "COALESCE(camp.nome,'—')"],
+            ['centro_lucro', "COALESCE(cl.nome,'—')"],
+            ['cupom', "COALESCE(cup.codigo,'—')"],
           ]),
         }
       }

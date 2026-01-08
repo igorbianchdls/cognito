@@ -84,7 +84,7 @@ export default function ChartEditorModal({ isOpen, initial, onClose, onSave }: C
       defaultTimeColumn: 'data_pedido',
       measureFields: ['subtotal'],
       timeColumns: ['data_pedido'],
-      dimensions: ['vendedor','canal_venda','territorio','categoria','cliente','cidade']
+      dimensions: ['vendedor','canal_venda','canal_distribuicao','territorio','servico','categoria_servico','produto','cliente','cidade','filial','unidade_negocio','sales_office','marca','campanha','centro_lucro','cupom']
     },
   };
   const AGGS: Array<'SUM'|'COUNT'|'AVG'|'MIN'|'MAX'> = ['SUM','COUNT','AVG','MIN','MAX'];
