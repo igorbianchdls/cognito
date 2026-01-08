@@ -400,20 +400,25 @@ export async function GET(req: NextRequest) {
     let servicosCategoriasPedidosView: ChartItem[] = []
     try { servicosCategoriasPedidosView = await runQuery<ChartItem>(servCatPedidosSql, [limit]) } catch (e) { console.error('🛒 VENDAS dashboard serv_cat_pedidos(join) error:', e); servicosCategoriasPedidosView = [] }
 
-    // Meta x Faturamento por Território — tabelas reais (período fixo)
-    const terrMetaFatSql = `SELECT t.id AS territorio_id, COALESCE(t.nome,'—') AS label, COALESCE(SUM(mt.valor_meta),0)::float AS meta
-                            FROM comercial.metas_territorios mt
-                            LEFT JOIN comercial.territorios t ON t.id = mt.territorio_id
-                            LEFT JOIN comercial.tipos_metas tm ON tm.id = mt.tipo_meta_id
-                            WHERE mt.periodo >= '2025-09-01' AND mt.periodo <= '2025-12-31' AND tm.nome = 'faturamento'
-                            GROUP BY t.id, t.nome`;
-    const terrRealFatSql = `SELECT t.id AS territorio_id, COALESCE(t.nome,'—') AS label, COALESCE(SUM(pi.subtotal),0)::float AS faturamento
+    // Meta x Faturamento por Território — tabelas reais (Nov/2025)
+    const terrMetaFatSql = `WITH metas_por_territorio AS (
+                              SELECT m.id AS meta_id, m.territorio_id, COALESCE(t.nome,'—') AS territorio_nome,
+                                     MAX(CASE WHEN mi.tipo_meta_id = 1 THEN mi.valor_meta END) AS meta_faturamento
+                              FROM comercial.metas m
+                              LEFT JOIN comercial.metas_itens mi ON mi.meta_id = m.id
+                              LEFT JOIN comercial.territorios t ON t.id = m.territorio_id
+                              WHERE m.ano = 2025 AND m.mes = 11 AND m.territorio_id IS NOT NULL
+                              GROUP BY m.id, m.territorio_id, t.nome
+                            )
+                            SELECT m.territorio_id, m.territorio_nome AS label, COALESCE(SUM(m.meta_faturamento),0)::float AS meta
+                            FROM metas_por_territorio m
+                            GROUP BY m.territorio_id, m.territorio_nome`;
+    const terrRealFatSql = `SELECT COALESCE(p.territorio_id,0)::int AS territorio_id, COALESCE(t.nome,'—') AS label, COALESCE(SUM(pi.subtotal),0)::float AS faturamento
                             FROM vendas.pedidos p
-                            JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
-                            LEFT JOIN comercial.vendedores v ON v.id = p.vendedor_id
-                            LEFT JOIN comercial.territorios t ON t.id = v.territorio_id
-                            WHERE p.data_pedido >= '2025-09-01' AND p.data_pedido <= '2025-12-31'
-                            GROUP BY t.id, t.nome`;
+                            LEFT JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+                            LEFT JOIN comercial.territorios t ON t.id = p.territorio_id
+                            WHERE p.status = 'concluido' AND p.data_pedido >= '2025-11-01' AND p.data_pedido < '2025-12-01'
+                            GROUP BY p.territorio_id, t.nome`;
     let terrMetaFat: Array<{ territorio_id: number; label: string; meta: number }> = []
     let terrRealFat: Array<{ territorio_id: number; label: string; faturamento: number }> = []
     try { terrMetaFat = await runQuery(terrMetaFatSql) } catch { terrMetaFat = [] }
@@ -423,21 +428,26 @@ export async function GET(req: NextRequest) {
       return { label: r.label, meta: Number(m?.meta || 0), faturamento: Number(r.faturamento || 0) }
     }).sort((a,b) => b.faturamento - a.faturamento).slice(0, limit)
 
-    // Meta x Ticket Médio por Território — tabelas reais (período fixo)
-    const terrMetaTicketSql = `SELECT t.id AS territorio_id, COALESCE(t.nome,'—') AS label, COALESCE(SUM(mt.valor_meta),0)::float AS meta
-                               FROM comercial.metas_territorios mt
-                               LEFT JOIN comercial.territorios t ON t.id = mt.territorio_id
-                               LEFT JOIN comercial.tipos_metas tm ON tm.id = mt.tipo_meta_id
-                               WHERE mt.periodo >= '2025-09-01' AND mt.periodo <= '2025-12-31' AND tm.nome = 'ticket_medio'
-                               GROUP BY t.id, t.nome`;
-    const terrRealTicketSql = `SELECT t.id AS territorio_id, COALESCE(t.nome,'—') AS label,
+    // Meta x Ticket Médio por Território — tabelas reais (Nov/2025)
+    const terrMetaTicketSql = `WITH metas_por_territorio AS (
+                                 SELECT m.id AS meta_id, m.territorio_id, COALESCE(t.nome,'—') AS territorio_nome,
+                                        MAX(CASE WHEN mi.tipo_meta_id = 5 THEN mi.valor_meta END) AS meta_ticket
+                                 FROM comercial.metas m
+                                 LEFT JOIN comercial.metas_itens mi ON mi.meta_id = m.id
+                                 LEFT JOIN comercial.territorios t ON t.id = m.territorio_id
+                                 WHERE m.ano = 2025 AND m.mes = 11 AND m.territorio_id IS NOT NULL
+                                 GROUP BY m.id, m.territorio_id, t.nome
+                               )
+                               SELECT m.territorio_id, m.territorio_nome AS label, COALESCE(SUM(m.meta_ticket),0)::float AS meta
+                               FROM metas_por_territorio m
+                               GROUP BY m.territorio_id, m.territorio_nome`;
+    const terrRealTicketSql = `SELECT COALESCE(p.territorio_id,0)::int AS territorio_id, COALESCE(t.nome,'—') AS label,
                                       CASE WHEN COUNT(DISTINCT p.id) > 0 THEN COALESCE(SUM(pi.subtotal),0)::float / NULLIF(COUNT(DISTINCT p.id),0) ELSE 0 END AS realizado
                                FROM vendas.pedidos p
-                               JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
-                               LEFT JOIN comercial.vendedores v ON v.id = p.vendedor_id
-                               LEFT JOIN comercial.territorios t ON t.id = v.territorio_id
-                               WHERE p.data_pedido >= '2025-09-01' AND p.data_pedido <= '2025-12-31'
-                               GROUP BY t.id, t.nome`;
+                               LEFT JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+                               LEFT JOIN comercial.territorios t ON t.id = p.territorio_id
+                               WHERE p.status = 'concluido' AND p.data_pedido >= '2025-11-01' AND p.data_pedido < '2025-12-01'
+                               GROUP BY p.territorio_id, t.nome`;
     let terrMetaTicket: Array<{ territorio_id: number; label: string; meta: number }> = []
     let terrRealTicket: Array<{ territorio_id: number; label: string; realizado: number }> = []
     try { terrMetaTicket = await runQuery(terrMetaTicketSql) } catch { terrMetaTicket = [] }
@@ -447,24 +457,29 @@ export async function GET(req: NextRequest) {
       return { label: r.label, meta: Number(m?.meta || 0), realizado: Number(r.realizado || 0) }
     }).sort((a,b)=> b.realizado - a.realizado).slice(0, limit)
 
-    // Meta x Novos Clientes por Território — tabelas reais (período fixo)
-    const terrMetaNovosSql = `SELECT t.id AS territorio_id, COALESCE(t.nome,'—') AS label, COALESCE(SUM(mt.valor_meta),0)::float AS meta
-                              FROM comercial.metas_territorios mt
-                              LEFT JOIN comercial.territorios t ON t.id = mt.territorio_id
-                              LEFT JOIN comercial.tipos_metas tm ON tm.id = mt.tipo_meta_id
-                              WHERE mt.periodo >= '2025-09-01' AND mt.periodo <= '2025-12-31' AND tm.nome = 'novos_clientes'
-                              GROUP BY t.id, t.nome`;
-    const terrRealNovosSql = `WITH firsts AS (
-                                SELECT p.vendedor_id, p.cliente_id, MIN(p.data_pedido) AS first_date
-                                FROM vendas.pedidos p
-                                GROUP BY p.vendedor_id, p.cliente_id
+    // Meta x Novos Clientes por Território — tabelas reais (Nov/2025)
+    const terrMetaNovosSql = `WITH metas_por_territorio AS (
+                                SELECT m.id AS meta_id, m.territorio_id, COALESCE(t.nome,'—') AS territorio_nome,
+                                       MAX(CASE WHEN mi.tipo_meta_id = 4 THEN mi.valor_meta END) AS meta_novos
+                                FROM comercial.metas m
+                                LEFT JOIN comercial.metas_itens mi ON mi.meta_id = m.id
+                                LEFT JOIN comercial.territorios t ON t.id = m.territorio_id
+                                WHERE m.ano = 2025 AND m.mes = 11 AND m.territorio_id IS NOT NULL
+                                GROUP BY m.id, m.territorio_id, t.nome
                               )
-                              SELECT t.id AS territorio_id, COALESCE(t.nome,'—') AS label, COUNT(*)::float AS realizado
+                              SELECT m.territorio_id, m.territorio_nome AS label, COALESCE(SUM(m.meta_novos),0)::float AS meta
+                              FROM metas_por_territorio m
+                              GROUP BY m.territorio_id, m.territorio_nome`;
+    const terrRealNovosSql = `WITH firsts AS (
+                                SELECT p.territorio_id, p.cliente_id, MIN(p.data_pedido) AS first_date
+                                FROM vendas.pedidos p
+                                GROUP BY p.territorio_id, p.cliente_id
+                              )
+                              SELECT COALESCE(f.territorio_id,0)::int AS territorio_id, COALESCE(t.nome,'—') AS label, COUNT(*)::float AS realizado
                               FROM firsts f
-                              LEFT JOIN comercial.vendedores v ON v.id = f.vendedor_id
-                              LEFT JOIN comercial.territorios t ON t.id = v.territorio_id
-                              WHERE f.first_date >= '2025-09-01' AND f.first_date <= '2025-12-31'
-                              GROUP BY t.id, t.nome`;
+                              LEFT JOIN comercial.territorios t ON t.id = f.territorio_id
+                              WHERE f.first_date >= '2025-11-01' AND f.first_date < '2025-12-01'
+                              GROUP BY f.territorio_id, t.nome`;
     let terrMetaNovos: Array<{ territorio_id: number; label: string; meta: number }> = []
     let terrRealNovos: Array<{ territorio_id: number; label: string; realizado: number }> = []
     try { terrMetaNovos = await runQuery(terrMetaNovosSql) } catch { terrMetaNovos = [] }
