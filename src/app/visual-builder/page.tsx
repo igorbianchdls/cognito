@@ -3,6 +3,17 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from '@nanostores/react';
 import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
+} from '@/components/ui/dropdown-menu';
+import { Palette, Check } from 'lucide-react';
 import DashboardSaveDialog from '@/components/visual-builder/DashboardSaveDialog';
 import DashboardOpenDialog from '@/components/visual-builder/DashboardOpenDialog';
 import { dashboardsApi, type Dashboard } from '@/stores/dashboardsStore';
@@ -1043,6 +1054,51 @@ export default function VisualBuilderPage() {
           <button className="px-4 py-2 text-sm border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
             Import Config
           </button>
+
+          {/* Dropdown "Tema" (somente UI, sem handlers) */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="flex items-center gap-2">
+                <Palette className="w-4 h-4" />
+                <span>Tema</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                  <Palette className="w-4 h-4 mr-2" />
+                  Tema
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent>
+                  {(['branco', 'cinza-claro', 'preto', 'cinza-escuro'] as ThemeName[]).map((theme) => {
+                    const preview = ThemeManager.getThemePreview(theme);
+                    return (
+                      <DropdownMenuItem
+                        key={theme}
+                        className="flex items-center justify-between py-2"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div
+                            className="w-4 h-4 rounded border border-gray-200"
+                            style={{ backgroundColor: preview.primaryColor }}
+                          />
+                          <div>
+                            <div className="font-medium">{preview.name}</div>
+                            <div className="text-xs text-muted-foreground truncate max-w-40">
+                              {preview.description}
+                            </div>
+                          </div>
+                        </div>
+                        {currentThemeName === theme && (
+                          <Check className="w-4 h-4 text-blue-600" />
+                        )}
+                      </DropdownMenuItem>
+                    );
+                  })}
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+            </DropdownMenuContent>
+          </DropdownMenu>
           </div>
         </div>
       </div>
