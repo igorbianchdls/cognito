@@ -219,15 +219,19 @@ export async function GET(req: NextRequest) {
     let campanhasVendas: ChartItem[] = []
     try { campanhasVendas = await runQuery<ChartItem>(campanhaVendaSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard campanhas_vendas error:', e); campanhasVendas = [] }
 
-    // Vendas por Canal de Distribuição (via view comercial.vendas_vw, sem filtro de período)
-    const canalDistribuicaoSql = `SELECT canal_distribuicao_nome AS label,
-                                  COALESCE(SUM(item_subtotal),0)::float AS value
-                                  FROM comercial.vendas_vw
-                                  GROUP BY canal_distribuicao_nome
+    // Faturamento por Canal de Distribuição (tabelas reais)
+    const canalDistribuicaoSql = `SELECT COALESCE(cd.nome,'—') AS label,
+                                         COALESCE(SUM(i.subtotal),0)::float AS value
+                                  FROM vendas.pedidos p
+                                  JOIN vendas.pedidos_itens i ON i.pedido_id = p.id
+                                  LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+                                  LEFT JOIN vendas.canais_distribuicao cd ON cd.id = cv.canal_distribuicao_id
+                                  ${cdWhere}
+                                  GROUP BY 1
                                   ORDER BY value DESC
-                                  LIMIT $1::int`;
+                                  LIMIT $${pParams.length + 1}::int`;
     let canaisDistribuicao: ChartItem[] = []
-    try { canaisDistribuicao = await runQuery<ChartItem>(canalDistribuicaoSql, [limit]) } catch (e) { console.error('🛒 VENDAS dashboard canais_distribuicao error:', e); canaisDistribuicao = [] }
+    try { canaisDistribuicao = await runQuery<ChartItem>(canalDistribuicaoSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard canais_distribuicao (join) error:', e); canaisDistribuicao = [] }
 
     // Canais de Distribuição (agregado: faturamento, pedidos, ticket médio por pedido) somente concluídos
     const cdWhere = pWhere ? `${pWhere} AND p.status = 'concluido'` : `WHERE p.status = 'concluido'`
@@ -247,25 +251,33 @@ export async function GET(req: NextRequest) {
     type CanalDistribRow = { nome: string; faturamento_total: number; pedidos_distintos: number; ticket_medio: number }
     let canaisDistribAgg: CanalDistribRow[] = []
     try { canaisDistribAgg = await runQuery<CanalDistribRow>(canaisDistribuicaoAggSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard canais_distrib agg error:', e); canaisDistribAgg = [] }
-    // Pedidos por Canal de Distribuição (via view comercial.vendas_vw)
-    const canalDistribuicaoPedidosViewSql = `SELECT canal_distribuicao_nome AS label,
-                                                    COUNT(DISTINCT pedido_id)::int AS value
-                                             FROM comercial.vendas_vw
-                                             GROUP BY canal_distribuicao_nome
-                                             ORDER BY value DESC
-                                             LIMIT $1::int`;
+    // Pedidos por Canal de Distribuição (tabelas reais)
+    const canalDistribuicaoPedidosSql = `SELECT COALESCE(cd.nome,'—') AS label,
+                                                COUNT(DISTINCT p.id)::int AS value
+                                         FROM vendas.pedidos p
+                                         JOIN vendas.pedidos_itens i ON i.pedido_id = p.id
+                                         LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+                                         LEFT JOIN vendas.canais_distribuicao cd ON cd.id = cv.canal_distribuicao_id
+                                         ${cdWhere}
+                                         GROUP BY 1
+                                         ORDER BY value DESC
+                                         LIMIT $${pParams.length + 1}::int`;
     let canaisDistribuicaoPedidos: ChartItem[] = []
-    try { canaisDistribuicaoPedidos = await runQuery<ChartItem>(canalDistribuicaoPedidosViewSql, [limit]) } catch (e) { console.error('🛒 VENDAS dashboard canais_distrib pedidos(view) error:', e); canaisDistribuicaoPedidos = [] }
+    try { canaisDistribuicaoPedidos = await runQuery<ChartItem>(canalDistribuicaoPedidosSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard canais_distrib pedidos(join) error:', e); canaisDistribuicaoPedidos = [] }
 
-    // Ticket médio por Canal de Distribuição (via view comercial.vendas_vw)
-    const canalDistribuicaoTicketViewSql = `SELECT canal_distribuicao_nome AS label,
-                                                   COALESCE(SUM(item_subtotal) / NULLIF(COUNT(DISTINCT pedido_id), 0), 0)::float AS value
-                                            FROM comercial.vendas_vw
-                                            GROUP BY canal_distribuicao_nome
-                                            ORDER BY value DESC
-                                            LIMIT $1::int`;
+    // Ticket médio por Canal de Distribuição (tabelas reais)
+    const canalDistribuicaoTicketSql = `SELECT COALESCE(cd.nome,'—') AS label,
+                                               COALESCE(SUM(i.subtotal) / NULLIF(COUNT(DISTINCT p.id), 0), 0)::float AS value
+                                        FROM vendas.pedidos p
+                                        JOIN vendas.pedidos_itens i ON i.pedido_id = p.id
+                                        LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+                                        LEFT JOIN vendas.canais_distribuicao cd ON cd.id = cv.canal_distribuicao_id
+                                        ${cdWhere}
+                                        GROUP BY 1
+                                        ORDER BY value DESC
+                                        LIMIT $${pParams.length + 1}::int`;
     let canaisDistribuicaoTicket: ChartItem[] = []
-    try { canaisDistribuicaoTicket = await runQuery<ChartItem>(canalDistribuicaoTicketViewSql, [limit]) } catch (e) { console.error('🛒 VENDAS dashboard canais_distrib ticket(view) error:', e); canaisDistribuicaoTicket = [] }
+    try { canaisDistribuicaoTicket = await runQuery<ChartItem>(canalDistribuicaoTicketSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard canais_distrib ticket(join) error:', e); canaisDistribuicaoTicket = [] }
 
     // Faturamento por Marca
     const marcasSql = `SELECT COALESCE(m.nome,'—') AS label, COALESCE(SUM(pi.quantidade * pi.preco_unitario),0)::float AS value
