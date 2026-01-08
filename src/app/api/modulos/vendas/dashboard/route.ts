@@ -474,20 +474,26 @@ export async function GET(req: NextRequest) {
       return { label: r.label, meta: Number(m?.meta || 0), realizado: Number(r.realizado || 0) }
     }).sort((a,b)=> b.realizado - a.realizado).slice(0, limit)
 
-    // Meta x Faturamento por Vendedor — tabelas reais (período fixo)
-    const vendMetaFatSql = `SELECT v.id AS vendedor_id, COALESCE(f.nome,'—') AS label, COALESCE(SUM(mv.valor_meta),0)::float AS meta
-                            FROM comercial.metas_vendedores mv
-                            LEFT JOIN comercial.vendedores v ON v.id = mv.vendedor_id
-                            LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id
-                            LEFT JOIN comercial.tipos_metas tm ON tm.id = mv.tipo_meta_id
-                            WHERE mv.periodo >= '2025-09-01' AND mv.periodo <= '2025-12-31' AND tm.nome = 'faturamento'
-                            GROUP BY v.id, f.nome`;
+    // Meta x Faturamento por Vendedor — tabelas reais (Nov/2025)
+    const vendMetaFatSql = `WITH metas_por_vendedor AS (
+                              SELECT m.id AS meta_id, m.vendedor_id, COALESCE(f.nome,'—') AS vendedor_nome,
+                                     MAX(CASE WHEN mi.tipo_meta_id = 1 THEN mi.valor_meta END) AS meta_faturamento
+                              FROM comercial.metas m
+                              LEFT JOIN comercial.metas_itens mi ON mi.meta_id = m.id
+                              LEFT JOIN comercial.vendedores v ON v.id = m.vendedor_id
+                              LEFT JOIN entidades.funcionarios f ON f.id = v.funcionario_id
+                              WHERE m.ano = 2025 AND m.mes = 11 AND m.vendedor_id IS NOT NULL
+                              GROUP BY m.id, m.vendedor_id, f.nome
+                            )
+                            SELECT m.vendedor_id, m.vendedor_nome AS label, COALESCE(SUM(m.meta_faturamento),0)::float AS meta
+                            FROM metas_por_vendedor m
+                            GROUP BY m.vendedor_id, m.vendedor_nome`;
     const vendRealFatSql = `SELECT v.id AS vendedor_id, COALESCE(f.nome,'—') AS label, COALESCE(SUM(pi.subtotal),0)::float AS faturamento
                             FROM vendas.pedidos p
                             JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
                             LEFT JOIN comercial.vendedores v ON v.id = p.vendedor_id
                             LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id
-                            WHERE p.data_pedido >= '2025-09-01' AND p.data_pedido <= '2025-12-31'
+                            WHERE p.status = 'concluido' AND p.data_pedido >= '2025-11-01' AND p.data_pedido < '2025-12-01'
                             GROUP BY v.id, f.nome`;
     let vendMetaFat: Array<{ vendedor_id: number; label: string; meta: number }> = []
     let vendRealFat: Array<{ vendedor_id: number; label: string; faturamento: number }> = []
@@ -547,14 +553,20 @@ export async function GET(req: NextRequest) {
       .sort((a,b)=> (b.faturamento + b.meta) - (a.faturamento + a.meta))
       .slice(0, limit)
 
-    // Meta x Novos Clientes por Vendedor — tabelas reais (período fixo)
-    const vendMetaNovosSql = `SELECT v.id AS vendedor_id, COALESCE(f.nome,'—') AS label, COALESCE(SUM(mv.valor_meta),0)::float AS meta
-                              FROM comercial.metas_vendedores mv
-                              LEFT JOIN comercial.vendedores v ON v.id = mv.vendedor_id
-                              LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id
-                              LEFT JOIN comercial.tipos_metas tm ON tm.id = mv.tipo_meta_id
-                              WHERE mv.periodo >= '2025-09-01' AND mv.periodo <= '2025-12-31' AND tm.nome = 'novos_clientes'
-                              GROUP BY v.id, f.nome`;
+    // Meta x Novos Clientes por Vendedor — tabelas reais (Nov/2025)
+    const vendMetaNovosSql = `WITH metas_por_vendedor AS (
+                                SELECT m.id AS meta_id, m.vendedor_id, COALESCE(f.nome,'—') AS vendedor_nome,
+                                       MAX(CASE WHEN mi.tipo_meta_id = 4 THEN mi.valor_meta END) AS meta_novos
+                                FROM comercial.metas m
+                                LEFT JOIN comercial.metas_itens mi ON mi.meta_id = m.id
+                                LEFT JOIN comercial.vendedores v ON v.id = m.vendedor_id
+                                LEFT JOIN entidades.funcionarios f ON f.id = v.funcionario_id
+                                WHERE m.ano = 2025 AND m.mes = 11 AND m.vendedor_id IS NOT NULL
+                                GROUP BY m.id, m.vendedor_id, f.nome
+                              )
+                              SELECT m.vendedor_id, m.vendedor_nome AS label, COALESCE(SUM(m.meta_novos),0)::float AS meta
+                              FROM metas_por_vendedor m
+                              GROUP BY m.vendedor_id, m.vendedor_nome`;
     const vendRealNovosSql = `WITH firsts AS (
                                 SELECT p.vendedor_id, p.cliente_id, MIN(p.data_pedido) AS first_date
                                 FROM vendas.pedidos p
@@ -564,7 +576,7 @@ export async function GET(req: NextRequest) {
                               FROM firsts f1
                               LEFT JOIN comercial.vendedores v ON v.id = f1.vendedor_id
                               LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id
-                              WHERE f1.first_date >= '2025-09-01' AND f1.first_date <= '2025-12-31'
+                              WHERE f1.first_date >= '2025-11-01' AND f1.first_date < '2025-12-01'
                               GROUP BY v.id, f.nome`;
     let vendMetaNovos: Array<{ vendedor_id: number; label: string; meta: number }> = []
     let vendRealNovos: Array<{ vendedor_id: number; label: string; realizado: number }> = []
@@ -575,21 +587,27 @@ export async function GET(req: NextRequest) {
       return { label: r.label, meta: Number(m?.meta || 0), realizado: Number(r.realizado || 0) }
     }).sort((a,b)=> b.realizado - a.realizado).slice(0, limit)
 
-    // Meta x Ticket Médio por Vendedor — tabelas reais (período fixo)
-    const vendMetaTicketSql = `SELECT v.id AS vendedor_id, COALESCE(f.nome,'—') AS label, COALESCE(SUM(mv.valor_meta),0)::float AS meta
-                               FROM comercial.metas_vendedores mv
-                               LEFT JOIN comercial.vendedores v ON v.id = mv.vendedor_id
-                               LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id
-                               LEFT JOIN comercial.tipos_metas tm ON tm.id = mv.tipo_meta_id
-                               WHERE mv.periodo >= '2025-09-01' AND mv.periodo <= '2025-12-31' AND tm.nome = 'ticket_medio'
-                               GROUP BY v.id, f.nome`;
+    // Meta x Ticket Médio por Vendedor — tabelas reais (Nov/2025)
+    const vendMetaTicketSql = `WITH metas_por_vendedor AS (
+                                 SELECT m.id AS meta_id, m.vendedor_id, COALESCE(f.nome,'—') AS vendedor_nome,
+                                        MAX(CASE WHEN mi.tipo_meta_id = 5 THEN mi.valor_meta END) AS meta_ticket
+                                 FROM comercial.metas m
+                                 LEFT JOIN comercial.metas_itens mi ON mi.meta_id = m.id
+                                 LEFT JOIN comercial.vendedores v ON v.id = m.vendedor_id
+                                 LEFT JOIN entidades.funcionarios f ON f.id = v.funcionario_id
+                                 WHERE m.ano = 2025 AND m.mes = 11 AND m.vendedor_id IS NOT NULL
+                                 GROUP BY m.id, m.vendedor_id, f.nome
+                               )
+                               SELECT m.vendedor_id, m.vendedor_nome AS label, COALESCE(SUM(m.meta_ticket),0)::float AS meta
+                               FROM metas_por_vendedor m
+                               GROUP BY m.vendedor_id, m.vendedor_nome`;
     const vendRealTicketSql = `SELECT v.id AS vendedor_id, COALESCE(f.nome,'—') AS label,
                                       CASE WHEN COUNT(DISTINCT p.id) > 0 THEN COALESCE(SUM(pi.subtotal),0)::float / NULLIF(COUNT(DISTINCT p.id),0) ELSE 0 END AS realizado
                                FROM vendas.pedidos p
                                JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
                                LEFT JOIN comercial.vendedores v ON v.id = p.vendedor_id
                                LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id
-                               WHERE p.data_pedido >= '2025-09-01' AND p.data_pedido <= '2025-12-31'
+                               WHERE p.status = 'concluido' AND p.data_pedido >= '2025-11-01' AND p.data_pedido < '2025-12-01'
                                GROUP BY v.id, f.nome`;
     let vendMetaTicket: Array<{ vendedor_id: number; label: string; meta: number }> = []
     let vendRealTicket: Array<{ vendedor_id: number; label: string; realizado: number }> = []
