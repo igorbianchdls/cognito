@@ -988,10 +988,6 @@ ORDER BY
       orderClause = `ORDER BY ${orderBy} ${orderDir}`
     } else {
       switch (view) {
-        
-        case 'contas-a-receber':
-          orderClause = 'ORDER BY lf.data_vencimento ASC NULLS LAST, lf.id ASC'
-          break
         case 'extrato':
           orderClause = 'ORDER BY eb.id ASC, t.data_transacao ASC'
           break
