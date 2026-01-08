@@ -164,7 +164,32 @@ export default function VisualBuilderPage() {
   const [kpiModalInitial, setKpiModalInitial] = useState<KpiInitial>({ titleText: '', valueText: '' });
   const [chartModalOpen, setChartModalOpen] = useState(false);
   const [chartModalChartId, setChartModalChartId] = useState<string | null>(null);
-  const [chartModalInitial, setChartModalInitial] = useState<{ titleText: string; titleFontFamily?: string; titleFontSize?: number; titleFontWeight?: string | number; titleColor?: string; backgroundColor?: string; opacity?: number; borderColor?: string; borderWidth?: number; borderStyle?: 'solid'|'dashed'|'dotted'|''; borderRadius?: number }>({ titleText: '' });
+  type ChartModalInitial = {
+    titleText: string;
+    titleFontFamily?: string;
+    titleFontSize?: number;
+    titleFontWeight?: string | number;
+    titleColor?: string;
+    backgroundColor?: string;
+    opacity?: number;
+    borderColor?: string;
+    borderWidth?: number;
+    borderStyle?: 'solid' | 'dashed' | 'dotted' | '';
+    borderRadius?: number;
+    query?: {
+      schema?: string;
+      table?: string;
+      measure?: string;
+      dimension?: string;
+      timeDimension?: string;
+      from?: string;
+      to?: string;
+      limit?: number;
+      order?: 'value DESC' | 'value ASC' | 'label ASC' | 'label DESC';
+      where?: Array<{ col: string; op: string; val?: string; vals?: string; start?: string; end?: string }>;
+    };
+  };
+  const [chartModalInitial, setChartModalInitial] = useState<ChartModalInitial>({ titleText: '' });
   const [sectionModalOpen, setSectionModalOpen] = useState(false);
   const [sectionModalId, setSectionModalId] = useState<string | null>(null);
   const [sectionModalInitial, setSectionModalInitial] = useState<import('@/components/visual-builder/SectionEditorModal').SectionEditorInitial>({});

@@ -572,7 +572,7 @@ export function updateArticleQueryFull(
       'from','to','granularity','order','limit','offset','timezone'
     ];
     const keys = Array.from(new Set([...order, ...Object.keys(obj)]));
-    const esc = (v: unknown) => String(v).replace(/\"/g, '&quot;');
+    const esc = (v: unknown) => String(v).replace(/"/g, '&quot;');
     return keys
       .filter(k => obj[k] !== undefined && obj[k] !== '')
       .map(k => `${k}="${esc(obj[k])}` + `"`)
@@ -603,12 +603,12 @@ export function updateArticleQueryFull(
 
   const serializeRule = (r: { col: string; op: string; val?: string; vals?: string; start?: string; end?: string }): string => {
     const parts: string[] = [];
-    parts.push(`col=\"${String(r.col).replace(/\"/g,'&quot;')}\"`);
-    parts.push(`op=\"${String(r.op).replace(/\"/g,'&quot;')}\"`);
-    if (r.val != null && r.val !== '') parts.push(`val=\"${String(r.val).replace(/\"/g,'&quot;')}\"`);
-    if (r.vals != null && r.vals !== '') parts.push(`vals=\"${String(r.vals).replace(/\"/g,'&quot;')}\"`);
-    if (r.start != null && r.start !== '') parts.push(`start=\"${String(r.start).replace(/\"/g,'&quot;')}\"`);
-    if (r.end != null && r.end !== '') parts.push(`end=\"${String(r.end).replace(/\"/g,'&quot;')}\"`);
+    parts.push(`col=\"${String(r.col).replace(/"/g,'&quot;')}\"`);
+    parts.push(`op=\"${String(r.op).replace(/"/g,'&quot;')}\"`);
+    if (r.val != null && r.val !== '') parts.push(`val=\"${String(r.val).replace(/"/g,'&quot;')}\"`);
+    if (r.vals != null && r.vals !== '') parts.push(`vals=\"${String(r.vals).replace(/"/g,'&quot;')}\"`);
+    if (r.start != null && r.start !== '') parts.push(`start=\"${String(r.start).replace(/"/g,'&quot;')}\"`);
+    if (r.end != null && r.end !== '') parts.push(`end=\"${String(r.end).replace(/"/g,'&quot;')}\"`);
     return `<rule ${parts.join(' ')} />`;
   };
 
