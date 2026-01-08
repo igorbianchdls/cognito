@@ -39,27 +39,28 @@ function deriveRange(filters: GlobalFilters): DateRange {
 // Phase 1: compile QuerySpec (Excel-like) to existing financeiro endpoints
 export const QueryEngine = {
   async resolve(spec: QuerySpec, filters: GlobalFilters): Promise<ChartDataPoint[]> {
-    // Supported via endpoints: top-despesas (pagamento_efetuado) and top-receitas / top-receitas-centro-lucro (conta_a_receber)
     const schema = (spec.schema || '').toLowerCase();
     const table = (spec.table || '').toLowerCase();
     const rawDim = String(spec.dimension || '').trim();
     const mapDim = (d: string): string => {
       const s = d.toLowerCase();
-      // Allow fully qualified names like clientes.nome_fantasia
       if (s.includes('cliente')) return 'cliente';
       if (s.includes('centro_custo') || s.includes('centros_custo')) return 'centro_custo';
       if (s.includes('categoria')) return 'categoria';
       if (s.includes('departamento')) return 'departamento';
       if (s.includes('centro_lucro') || s.includes('centros_lucro')) return 'centro_lucro';
       if (s.includes('filial')) return 'filial';
-      if (s.includes('projeto')) return 'projeto';
+      if (s.includes('unidade') && s.includes('negocio')) return 'unidade_negocio';
       if (s.includes('fornecedor')) return 'fornecedor';
+      if (s.includes('titulo')) return 'titulo';
+      if (s.includes('metodo')) return 'metodo_pagamento';
+      if (s.includes('conta_financeira') || s.includes('conta') && s.includes('financeira')) return 'conta_financeira';
       return s;
     };
     const dim = rawDim ? mapDim(rawDim) : '';
     const lim = typeof spec.limit === 'number' && spec.limit > 0 ? spec.limit : 5;
 
-    // Determine date range: override from spec.rangeRaw/from/to if provided
+    // Determine date range
     const fallback = deriveRange(filters);
     let de = fallback.de;
     let ate = fallback.ate;
@@ -92,54 +93,57 @@ export const QueryEngine = {
       }
     }
 
-    let url: string | null = null;
-    // Determine intent from filters/timeDimension or explicit table
-    const filterRaw = (spec.filterRaw || '').toLowerCase();
-    const timeDim = (spec.dateColumn || '').toLowerCase();
-    const isReceber = filterRaw.includes('conta_a_receber') || (schema === 'financeiro' && table === 'contas_receber') || timeDim === 'data_vencimento';
-    const isPagarReal = filterRaw.includes('pagamento_efetuado') || (schema === 'financeiro' && table === 'contas_pagar') || timeDim === 'data_lancamento';
+    // Map schema/table to source
+    const tbl = table.replace(/\./g,'')
+    let source: 'ap' | 'ar' | 'pe' | 'pr' | null = null
+    if (schema === 'financeiro') {
+      if (tbl === 'contas_pagar') source = 'ap'
+      else if (tbl === 'contas_receber') source = 'ar'
+      else if (tbl === 'pagamentos_efetuados') source = 'pe'
+      else if (tbl === 'pagamentos_recebidos') source = 'pr'
+    }
+    if (!source) throw new Error('Unsupported query for current engine.')
 
-    if (isPagarReal) {
-      // Despesas (pagamento realizado)
-      const allowed = ['centro_custo', 'categoria', 'departamento', 'projeto', 'filial', 'fornecedor', 'centro_lucro'];
-      const mappedDim = dim && allowed.includes(dim) ? dim : 'categoria';
-      url = `/api/modulos/financeiro?view=top-despesas&dim=${encodeURIComponent(mappedDim)}${de ? `&de=${encodeURIComponent(de)}` : ''}${ate ? `&ate=${encodeURIComponent(ate)}` : ''}&limit=${lim}`;
-    } else if (isReceber) {
-      // Receitas (a receber por vencimento)
-      if (dim === 'centro_lucro') {
-        url = `/api/modulos/financeiro?view=top-receitas-centro-lucro${de ? `&de=${encodeURIComponent(de!)}` : ''}${ate ? `&ate=${encodeURIComponent(ate!)}` : ''}&limit=${lim}`;
-      } else {
-        const mapped = dim || 'cliente';
-        url = `/api/modulos/financeiro?view=top-receitas&dim=${encodeURIComponent(mapped)}${de ? `&de=${encodeURIComponent(de!)}` : ''}${ate ? `&ate=${encodeURIComponent(ate!)}` : ''}&limit=${lim}`;
-      }
-    } else if (schema === 'financeiro') {
-      // Fallback by table when filters didn't indicate
-      if (table === 'contas_pagar') {
-        const mappedDim = dim || 'categoria';
-        url = `/api/modulos/financeiro?view=top-despesas&dim=${encodeURIComponent(mappedDim)}${de ? `&de=${encodeURIComponent(de)}` : ''}${ate ? `&ate=${encodeURIComponent(ate)}` : ''}&limit=${lim}`;
-      } else if (table === 'contas_receber') {
-        const mapped = dim || 'cliente';
-        url = (mapped === 'centro_lucro')
-          ? `/api/modulos/financeiro?view=top-receitas-centro-lucro${de ? `&de=${encodeURIComponent(de!)}` : ''}${ate ? `&ate=${encodeURIComponent(ate!)}` : ''}&limit=${lim}`
-          : `/api/modulos/financeiro?view=top-receitas&dim=${encodeURIComponent(mapped)}${de ? `&de=${encodeURIComponent(de!)}` : ''}${ate ? `&ate=${encodeURIComponent(ate!)}` : ''}&limit=${lim}`;
-      }
+    // Build request payload
+    const payload: any = {
+      source,
+      dimension: dim || undefined,
+      measure: (spec.measure || undefined),
+      dateColumn: (spec.dateColumn || undefined),
+      from: de,
+      to: ate,
+      limit: lim,
+      order: (spec.orderBy as any) || 'value DESC',
     }
 
-    if (!url) throw new Error('Unsupported query for current engine.');
+    // where rules: currently pass status rule if present in spec.filterRaw or in where
+    const where: Array<{ col: string; op: string; val?: string; vals?: string[] }> = []
+    if (spec.where && Array.isArray(spec.where)) {
+      for (const r of spec.where) {
+        const col = (r.col || '').toString()
+        if (!col) continue
+        const op = (r.op || '=').toString()
+        const rule: any = { col, op }
+        if (r.val !== undefined) rule.val = String(r.val)
+        if (Array.isArray(r.vals)) rule.vals = r.vals.map(String)
+        if (r.start !== undefined && r.end !== undefined) { rule.start = r.start; rule.end = r.end }
+        where.push(rule)
+      }
+    }
+    if (where.length) payload.where = where
 
     try {
-      const res = await fetch(url, { cache: 'no-store' });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json = await res.json() as { rows?: Array<{ label?: string; total?: number }> };
-      const rows = Array.isArray(json?.rows) ? json.rows : [];
+      const res = await fetch('/api/analytics', { method: 'POST', headers: { 'content-type': 'application/json' }, cache: 'no-store', body: JSON.stringify(payload) })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const json = await res.json() as { rows?: Array<{ label?: string; total?: number }> }
+      const rows = Array.isArray(json?.rows) ? json.rows : []
       return rows.map((r, i) => {
-        const label = String(r.label || `Item ${i+1}`);
-        const value = Number(r.total || 0);
-        return { x: label, y: value, label, value } as ChartDataPoint;
-      });
-    } catch (e) {
-      // graceful fallback: empty
-      return [];
+        const label = String(r.label || `Item ${i+1}`)
+        const value = Number(r.total || 0)
+        return { x: label, y: value, label, value } as ChartDataPoint
+      })
+    } catch {
+      return []
     }
   }
-};
+}
