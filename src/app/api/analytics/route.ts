@@ -72,26 +72,42 @@ export async function POST(req: NextRequest) {
         }
       }
       if (source === 'vd') {
+        // Tables-based sales aggregation (no dependency on views)
         return {
-          baseFrom: `FROM comercial.vendas_vw vw`,
-          defaultMeasure: 'SUM(vw.item_subtotal)',
-          defaultDate: 'vw.data_pedido',
+          baseFrom: `FROM vendas.pedidos p
+                     LEFT JOIN vendas.pedidos_itens i ON i.pedido_id = p.id
+                     LEFT JOIN comercial.vendedores v ON v.id = p.vendedor_id
+                     LEFT JOIN entidades.funcionarios f ON f.id = v.funcionario_id
+                     LEFT JOIN comercial.territorios t ON t.id = p.territorio_id
+                     LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+                     LEFT JOIN vendas.canais_distribuicao cd ON cd.id = cv.canal_distribuicao_id
+                     LEFT JOIN entidades.clientes cli ON cli.id = p.cliente_id
+                     LEFT JOIN empresa.filiais fil ON fil.id = p.filial_id
+                     LEFT JOIN empresa.unidades_negocio un ON un.id = p.unidade_negocio_id
+                     LEFT JOIN comercial.sales_offices so ON so.id = p.sales_office_id
+                     LEFT JOIN produtos.produto pr ON pr.id = i.produto_id
+                     LEFT JOIN produtos.marcas m ON m.id = pr.marca_id
+                     LEFT JOIN servicos.catalogo_servicos s ON s.id = i.servico_id
+                     LEFT JOIN servicos.categorias_servicos cat ON cat.id = s.categoria_id
+                     LEFT JOIN comercial.campanhas_vendas camp ON camp.id = p.campanha_venda_id`,
+          defaultMeasure: 'SUM(i.subtotal)',
+          defaultDate: 'p.data_pedido',
           labelMap: new Map<string, string>([
-            ['vendedor', "COALESCE(vw.vendedor_nome,'—')"],
-            ['canal_venda', "COALESCE(vw.canal_venda_nome,'—')"],
-            ['canal_distribuicao', "COALESCE(vw.canal_distribuicao_nome,'—')"],
-            ['territorio', "COALESCE(vw.territorio_nome,'—')"],
-            ['categoria', "COALESCE(vw.categoria_servico_nome,'—')"],
-            ['categoria_servico', "COALESCE(vw.categoria_servico_nome,'—')"],
-            ['servico', "COALESCE(vw.servico_nome,'—')"],
-            ['produto', "COALESCE(vw.produto_nome,'—')"],
-            ['cliente', "COALESCE(vw.cliente_nome,'—')"],
-            ['cidade', "COALESCE(vw.cidade,'—')"],
-            ['filial', "COALESCE(vw.filial_nome,'—')"],
-            ['unidade_negocio', "COALESCE(vw.unidade_negocio_nome,'—')"],
-            ['sales_office', "COALESCE(vw.sales_office_nome,'—')"],
-            ['marca', "COALESCE(vw.marca_nome,'—')"],
-            ['campanha', "COALESCE(vw.campanha_venda_nome,'—')"],
+            ['vendedor', "COALESCE(f.nome,'—')"],
+            ['canal_venda', "COALESCE(cv.nome,'—')"],
+            ['canal_distribuicao', "COALESCE(cd.nome,'—')"],
+            ['territorio', "COALESCE(t.nome,'—')"],
+            ['categoria', "COALESCE(cat.nome,'—')"],
+            ['categoria_servico', "COALESCE(cat.nome,'—')"],
+            ['servico', "COALESCE(s.nome,'—')"],
+            ['produto', "COALESCE(pr.nome,'—')"],
+            ['cliente', "COALESCE(cli.nome_fantasia,'—')"],
+            ['cidade', "COALESCE(cli.cidade,'—')"],
+            ['filial', "COALESCE(fil.nome,'—')"],
+            ['unidade_negocio', "COALESCE(un.nome,'—')"],
+            ['sales_office', "COALESCE(so.nome,'—')"],
+            ['marca', "COALESCE(m.nome,'—')"],
+            ['campanha', "COALESCE(camp.nome,'—')"],
           ]),
         }
       }
@@ -192,11 +208,11 @@ export async function POST(req: NextRequest) {
     if (source === 'vd') {
       // Normalize common fields for sales view
       measure = measure
-        .replace(/\bsubtotal\b/gi, 'vw.item_subtotal')
-        .replace(/\bitem_subtotal\b/gi, 'vw.item_subtotal')
+        .replace(/\bsubtotal\b/gi, 'i.subtotal')
+        .replace(/\bitem_subtotal\b/gi, 'i.subtotal')
         .replace(/COUNT_DISTINCT\s*\(\s*([^)]+?)\s*\)/gi, 'COUNT(DISTINCT $1)')
-        .replace(/\bpedido_id\b/gi, 'vw.pedido_id');
-      dateCol = dateCol.replace(/\bdata_pedido\b/gi, 'vw.data_pedido')
+        .replace(/\bpedido_id\b/gi, 'p.id');
+      dateCol = dateCol.replace(/\bdata_pedido\b/gi, 'p.data_pedido')
     }
 
     // Build WHERE with safe whitelists
@@ -230,22 +246,22 @@ export async function POST(req: NextRequest) {
       if (source === 'vd') {
         const mapCol = (name: string): string | null => {
           switch (name) {
-            case 'status': return 'vw.status'
-            case 'vendedor': return 'vw.vendedor_nome'
-            case 'canal_venda': return 'vw.canal_venda_nome'
-            case 'canal_distribuicao': return 'vw.canal_distribuicao_nome'
-            case 'territorio': return 'vw.territorio_nome'
-            case 'categoria': return 'vw.categoria_servico_nome'
-            case 'categoria_servico': return 'vw.categoria_servico_nome'
-            case 'servico': return 'vw.servico_nome'
-            case 'produto': return 'vw.produto_nome'
-            case 'cliente': return 'vw.cliente_nome'
-            case 'cidade': return 'vw.cidade'
-            case 'filial': return 'vw.filial_nome'
-            case 'unidade_negocio': return 'vw.unidade_negocio_nome'
-            case 'sales_office': return 'vw.sales_office_nome'
-            case 'marca': return 'vw.marca_nome'
-            case 'campanha': return 'vw.campanha_venda_nome'
+            case 'status': return 'p.status'
+            case 'vendedor': return 'f.nome'
+            case 'canal_venda': return 'cv.nome'
+            case 'canal_distribuicao': return 'cd.nome'
+            case 'territorio': return 't.nome'
+            case 'categoria': return 'cat.nome'
+            case 'categoria_servico': return 'cat.nome'
+            case 'servico': return 's.nome'
+            case 'produto': return 'pr.nome'
+            case 'cliente': return 'cli.nome_fantasia'
+            case 'cidade': return 'cli.cidade'
+            case 'filial': return 'fil.nome'
+            case 'unidade_negocio': return 'un.nome'
+            case 'sales_office': return 'so.nome'
+            case 'marca': return 'm.nome'
+            case 'campanha': return 'camp.nome'
             default: return null
           }
         }
