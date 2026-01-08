@@ -590,35 +590,41 @@ export function updateArticleQueryFull(
   if (q.to) attrsObj.to = q.to;
   if (typeof q.limit === 'number') attrsObj.limit = q.limit;
   if (q.order) attrsObj.order = q.order;
-  const attrsStr = serializeAttrs(attrsObj);
+  const rules = Array.isArray(q.where)
+    ? q.where.filter(r => r && (r.col || '').trim()).map(r => ({
+        col: (r.col || '').trim(),
+        op: (r.op || '=').trim(),
+        val: r.val,
+        vals: r.vals,
+        start: r.start,
+        end: r.end,
+      }))
+    : [];
 
-  const rules = Array.isArray(q.where) ? q.where.filter(r => r && (r.col || '').trim()).map(r => ({
-    col: (r.col || '').trim(),
-    op: (r.op || '=').trim(),
-    val: r.val,
-    vals: r.vals,
-    start: r.start,
-    end: r.end,
-  })) : [];
-
-  const serializeRule = (r: { col: string; op: string; val?: string; vals?: string; start?: string; end?: string }): string => {
-    const parts: string[] = [];
-    parts.push(`col=\"${String(r.col).replace(/"/g,'&quot;')}\"`);
-    parts.push(`op=\"${String(r.op).replace(/"/g,'&quot;')}\"`);
-    if (r.val != null && r.val !== '') parts.push(`val=\"${String(r.val).replace(/"/g,'&quot;')}\"`);
-    if (r.vals != null && r.vals !== '') parts.push(`vals=\"${String(r.vals).replace(/"/g,'&quot;')}\"`);
-    if (r.start != null && r.start !== '') parts.push(`start=\"${String(r.start).replace(/"/g,'&quot;')}\"`);
-    if (r.end != null && r.end !== '') parts.push(`end=\"${String(r.end).replace(/"/g,'&quot;')}\"`);
-    return `<rule ${parts.join(' ')} />`;
-  };
-
-  const queryTag = (() => {
-    if (rules.length > 0) {
-      const rulesStr = rules.map(serializeRule).join('\n            ');
-      return `<query ${attrsStr}>\n          <where>\n            ${rulesStr}\n          </where>\n        </query>`;
+  // Build where DSL string: `col in (a,b)` | `col between a..b` | `col like val` | `col op val`
+  const needsQuote = (v: string) => /[\s,;()]/.test(v);
+  const quote = (v: string) => (needsQuote(v) ? `"${v.replace(/"/g, '\\"')}"` : v);
+  const rulesToDSL = (arr: typeof rules): string => {
+    const out: string[] = [];
+    for (const r of arr) {
+      const op = r.op.toLowerCase();
+      if (op === 'in' || op === 'not in') {
+        const vs = (r.vals || '').toString().split(',').map(s => s.trim()).filter(Boolean);
+        if (vs.length) out.push(`${r.col} ${op} (${vs.map(quote).join(', ')})`);
+      } else if (op === 'between') {
+        if (r.start != null && r.end != null) out.push(`${r.col} between ${quote(String(r.start))}..${quote(String(r.end))}`);
+      } else if (op === 'like') {
+        if (r.val != null) out.push(`${r.col} like ${quote(String(r.val))}`);
+      } else {
+        if (r.val != null) out.push(`${r.col} ${r.op} ${quote(String(r.val))}`);
+      }
     }
-    return `<query ${attrsStr} />`;
-  })();
+    return out.join('; ');
+  };
+  const whereDSL = rulesToDSL(rules);
+  if (whereDSL) attrsObj.where = whereDSL;
+  const attrsStr = serializeAttrs(attrsObj);
+  const queryTag = `<query ${attrsStr} />`;
 
   if (reQuerySelf.test(inner)) {
     inner = inner.replace(reQuerySelf, queryTag);

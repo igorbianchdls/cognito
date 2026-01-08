@@ -74,6 +74,71 @@ function csvToArray(s: string | undefined): string[] {
   return s.split(',').map(v => v.trim()).filter(Boolean);
 }
 
+function stripOuterQuotes(s: string): string {
+  const t = String(s || '').trim();
+  if ((t.startsWith('"') && t.endsWith('"')) || (t.startsWith("'") && t.endsWith("'"))) {
+    return t.slice(1, -1);
+  }
+  return t;
+}
+
+function parseWhereDSL(whereAttr: string | undefined): QueryRule[] {
+  const rules: QueryRule[] = [];
+  const raw = String(whereAttr || '').trim();
+  if (!raw) return rules;
+  const parts = raw.split(';').map(s => s.trim()).filter(Boolean);
+  for (const p of parts) {
+    const s = p.replace(/\s+/g, ' ').trim();
+    if (!s) continue;
+    // in / not in
+    let m = s.match(/^([A-Za-z_][\w\.-]*)\s+(not\s+in|in)\s*\((.*)\)$/i);
+    if (m) {
+      const col = m[1];
+      const op = m[2].toLowerCase();
+      const inside = m[3];
+      const items = inside.split(',').map(v => stripOuterQuotes(v).trim()).filter(Boolean);
+      if (col && items.length) {
+        rules.push({ col, op, vals: items });
+        continue;
+      }
+    }
+    // between a..b
+    m = s.match(/^([A-Za-z_][\w\.-]*)\s+between\s+(.+?)\.\.(.+)$/i);
+    if (m) {
+      const col = m[1];
+      const start = stripOuterQuotes(m[2]);
+      const end = stripOuterQuotes(m[3]);
+      if (col && start && end) {
+        rules.push({ col, op: 'between', start, end });
+        continue;
+      }
+    }
+    // like pattern
+    m = s.match(/^([A-Za-z_][\w\.-]*)\s+like\s+(.+)$/i);
+    if (m) {
+      const col = m[1];
+      const val = stripOuterQuotes(m[2]);
+      if (col && val) {
+        rules.push({ col, op: 'like', val });
+        continue;
+      }
+    }
+    // basic comparators
+    m = s.match(/^([A-Za-z_][\w\.-]*)\s*(=|!=|>=|<=|>|<)\s*(.+)$/);
+    if (m) {
+      const col = m[1];
+      const op = m[2];
+      const val = stripOuterQuotes(m[3]);
+      if (col && op && val !== undefined) {
+        rules.push({ col, op, val });
+        continue;
+      }
+    }
+    // fallback: ignore malformed rule
+  }
+  return rules;
+}
+
 function simulateData(type: ChartTypeBasic, attrs: Record<string,string>): ChartDataPoint[] {
   // If explicit JSON data provided
   if (attrs['data']) {
@@ -161,8 +226,12 @@ export const LiquidParser = {
           const limit = qAttrs['limit'] != null && qAttrs['limit'] !== '' && !Number.isNaN(Number(qAttrs['limit'])) ? Number(qAttrs['limit']) : undefined;
           const orderBy = (qAttrs['order'] || qAttrs['orderBy'] || qAttrs['orderby'] || qAttrs['ordenar'] || '').trim() || undefined;
           const timezone = (qAttrs['timezone'] || '').trim() || undefined;
-          const filterRaw = (qAttrs['filter'] || qAttrs['filters'] || qAttrs['filtro'] || qAttrs['filtros'] || '').trim() || undefined;
+          // New: where DSL in attribute
           const where: QueryRule[] = [];
+          const whereAttr = (qAttrs['where'] || '').trim() || undefined;
+          if (whereAttr) {
+            try { where.push(...parseWhereDSL(whereAttr)); } catch {}
+          }
           const qInner = qMatch[2] || '';
           const whereMatch = qInner.match(/<where\b[^>]*>([\s\S]*?)<\/where>/i);
           if (whereMatch) {
@@ -195,7 +264,6 @@ export const LiquidParser = {
               ...(to ? { to } : {}),
               ...(granularity ? { granularity } : {}),
               ...(timezone ? { timezone } : {}),
-              ...(filterRaw ? { filterRaw } : {}),
             };
           }
         }
