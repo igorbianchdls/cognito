@@ -214,7 +214,8 @@ export default function VisualBuilderPage() {
   const chartBodyTextColor = '#6b7280';
   const availableBackgrounds = BackgroundManager.getAvailableBackgrounds();
   const selectedBackground: BackgroundPresetKey = BackgroundManager.getDefaultBackground();
-  const headerVariant: 'auto' | 'light' | 'dark' = 'auto';
+  // UI-only: use string to avoid TS literal comparison narrowing warnings
+  const headerVariant: string = 'auto';
   const resolvedHeaderKind: 'light' | 'dark' = 'light';
   const currentHeaderStyle = {
     background: '#ffffff',
@@ -229,7 +230,8 @@ export default function VisualBuilderPage() {
   const chartTitleColor = '#ffffff';
   const kpiValueColor = '#ffffff';
   const kpiTitleColor = '#d1d5db';
-  const selectedBorderType: BorderPresetKey = 'suave';
+  // UI-only: use string to avoid TS literal comparison narrowing warnings
+  const selectedBorderType: string = 'suave';
   const borderColor = '#e5e7eb';
   const borderWidth = 1;
   const borderRadius = 0;
