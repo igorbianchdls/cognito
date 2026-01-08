@@ -79,10 +79,19 @@ export async function POST(req: NextRequest) {
           labelMap: new Map<string, string>([
             ['vendedor', "COALESCE(vw.vendedor_nome,'—')"],
             ['canal_venda', "COALESCE(vw.canal_venda_nome,'—')"],
+            ['canal_distribuicao', "COALESCE(vw.canal_distribuicao_nome,'—')"],
             ['territorio', "COALESCE(vw.territorio_nome,'—')"],
             ['categoria', "COALESCE(vw.categoria_servico_nome,'—')"],
+            ['categoria_servico', "COALESCE(vw.categoria_servico_nome,'—')"],
+            ['servico', "COALESCE(vw.servico_nome,'—')"],
+            ['produto', "COALESCE(vw.produto_nome,'—')"],
             ['cliente', "COALESCE(vw.cliente_nome,'—')"],
             ['cidade', "COALESCE(vw.cidade,'—')"],
+            ['filial', "COALESCE(vw.filial_nome,'—')"],
+            ['unidade_negocio', "COALESCE(vw.unidade_negocio_nome,'—')"],
+            ['sales_office', "COALESCE(vw.sales_office_nome,'—')"],
+            ['marca', "COALESCE(vw.marca_nome,'—')"],
+            ['campanha', "COALESCE(vw.campanha_venda_nome,'—')"],
           ]),
         }
       }
@@ -181,7 +190,12 @@ export async function POST(req: NextRequest) {
 
     // Normalize fields for vendas view
     if (source === 'vd') {
-      measure = measure.replace(/\bsubtotal\b/gi, 'vw.item_subtotal').replace(/\bitem_subtotal\b/gi, 'vw.item_subtotal')
+      // Normalize common fields for sales view
+      measure = measure
+        .replace(/\bsubtotal\b/gi, 'vw.item_subtotal')
+        .replace(/\bitem_subtotal\b/gi, 'vw.item_subtotal')
+        .replace(/COUNT_DISTINCT\s*\(\s*([^)]+?)\s*\)/gi, 'COUNT(DISTINCT $1)')
+        .replace(/\bpedido_id\b/gi, 'vw.pedido_id');
       dateCol = dateCol.replace(/\bdata_pedido\b/gi, 'vw.data_pedido')
     }
 
@@ -219,10 +233,19 @@ export async function POST(req: NextRequest) {
             case 'status': return 'vw.status'
             case 'vendedor': return 'vw.vendedor_nome'
             case 'canal_venda': return 'vw.canal_venda_nome'
+            case 'canal_distribuicao': return 'vw.canal_distribuicao_nome'
             case 'territorio': return 'vw.territorio_nome'
             case 'categoria': return 'vw.categoria_servico_nome'
+            case 'categoria_servico': return 'vw.categoria_servico_nome'
+            case 'servico': return 'vw.servico_nome'
+            case 'produto': return 'vw.produto_nome'
             case 'cliente': return 'vw.cliente_nome'
             case 'cidade': return 'vw.cidade'
+            case 'filial': return 'vw.filial_nome'
+            case 'unidade_negocio': return 'vw.unidade_negocio_nome'
+            case 'sales_office': return 'vw.sales_office_nome'
+            case 'marca': return 'vw.marca_nome'
+            case 'campanha': return 'vw.campanha_venda_nome'
             default: return null
           }
         }
