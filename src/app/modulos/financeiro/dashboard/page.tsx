@@ -5,7 +5,7 @@ import { useStore } from '@nanostores/react'
 import DashboardLayout from '@/components/modulos/DashboardLayout'
 import { ArrowDownCircle, ArrowUpCircle, BarChart3, Wallet, Star, CalendarCheck, Calendar as CalendarIcon } from 'lucide-react'
 import { BarChartHorizontalRecharts } from '@/components/charts/BarChartHorizontalRecharts'
-import { BarChartMultipleRecharts } from '@/components/charts/BarChartMultipleRecharts'
+// import { BarChartMultipleRecharts } from '@/components/charts/BarChartMultipleRecharts'
 import { KPITrendBadge } from '@/components/widgets/KPITrendBadge'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
@@ -140,6 +140,8 @@ export default function FinanceiroDashboardPage() {
   const [topFornecedores, setTopFornecedores] = useState<{ label: string; value: number }[]>([])
   const [topClientes, setTopClientes] = useState<{ label: string; value: number }[]>([])
   const [topAPT, setTopAPT] = useState<{ label: string; value: number }[]>([])
+  const [topUnidades, setTopUnidades] = useState<{ label: string; value: number }[]>([])
+  const [topCategoriasReceita, setTopCategoriasReceita] = useState<{ label: string; value: number }[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   // Global (Nanostores): UI + Filters
@@ -408,7 +410,7 @@ export default function FinanceiroDashboardPage() {
         const prevDe = toDateOnly(prevStartD)
         const prevAte = toDateOnly(prevEndD)
 
-        const [arRes, apRes, prRes, peRes, kpisRes, kpisPrevRes, topForRes, topCcRes, topFilRes, topTitRes] = await Promise.allSettled([
+        const [arRes, apRes, prRes, peRes, kpisRes, kpisPrevRes, topForRes, topCcRes, topFilRes, topTitRes, topDepRes, topUnRes, topCatApRes, topClArRes, topCatArRes] = await Promise.allSettled([
           fetch(qs('contas-a-receber'), { cache: 'no-store' }),
           fetch(qs('contas-a-pagar'), { cache: 'no-store' }),
           fetch(qs('pagamentos-recebidos'), { cache: 'no-store' }),
@@ -419,6 +421,11 @@ export default function FinanceiroDashboardPage() {
           fetch(`/api/modulos/financeiro?view=top5-ap&dim=centro_custo&de=${kpiDe}&ate=${kpiAte}`, { cache: 'no-store' }),
           fetch(`/api/modulos/financeiro?view=top5-ap&dim=filial&de=${kpiDe}&ate=${kpiAte}`, { cache: 'no-store' }),
           fetch(`/api/modulos/financeiro?view=top5-ap&dim=titulo&de=${kpiDe}&ate=${kpiAte}`, { cache: 'no-store' }),
+          fetch(`/api/modulos/financeiro?view=top5-ap&dim=departamento&de=${kpiDe}&ate=${kpiAte}`, { cache: 'no-store' }),
+          fetch(`/api/modulos/financeiro?view=top5-ap&dim=unidade_negocio&de=${kpiDe}&ate=${kpiAte}`, { cache: 'no-store' }),
+          fetch(`/api/modulos/financeiro?view=top5-ap&dim=categoria&de=${kpiDe}&ate=${kpiAte}`, { cache: 'no-store' }),
+          fetch(`/api/modulos/financeiro?view=top5-ar&dim=centro_lucro&de=${kpiDe}&ate=${kpiAte}`, { cache: 'no-store' }),
+          fetch(`/api/modulos/financeiro?view=top5-ar&dim=categoria&de=${kpiDe}&ate=${kpiAte}`, { cache: 'no-store' }),
         ])
 
         let ar: ARRow[] = []
@@ -569,6 +576,27 @@ export default function FinanceiroDashboardPage() {
             const j = await topTitRes.value.json() as { rows?: Array<{ label?: string; total?: number }> }
             setTopAPT(Array.isArray(j?.rows) ? j.rows.map(r => ({ label: String(r.label || ''), value: Number(r.total || 0) })) : [])
           } else setTopAPT([])
+
+          if (topDepRes.status === 'fulfilled' && topDepRes.value.ok) {
+            const j = await topDepRes.value.json() as { rows?: Array<{ label?: string; total?: number }> }
+            setTopDepartamentos(Array.isArray(j?.rows) ? j.rows.map(r => ({ label: String(r.label || ''), value: Number(r.total || 0) })) : [])
+          } else setTopDepartamentos([])
+          if (topUnRes.status === 'fulfilled' && topUnRes.value.ok) {
+            const j = await topUnRes.value.json() as { rows?: Array<{ label?: string; total?: number }> }
+            setTopUnidades(Array.isArray(j?.rows) ? j.rows.map(r => ({ label: String(r.label || ''), value: Number(r.total || 0) })) : [])
+          } else setTopUnidades([])
+          if (topCatApRes.status === 'fulfilled' && topCatApRes.value.ok) {
+            const j = await topCatApRes.value.json() as { rows?: Array<{ label?: string; total?: number }> }
+            setTopCategorias(Array.isArray(j?.rows) ? j.rows.map(r => ({ label: String(r.label || ''), value: Number(r.total || 0) })) : [])
+          } else setTopCategorias([])
+          if (topClArRes.status === 'fulfilled' && topClArRes.value.ok) {
+            const j = await topClArRes.value.json() as { rows?: Array<{ label?: string; total?: number }> }
+            setTopLucros(Array.isArray(j?.rows) ? j.rows.map(r => ({ label: String(r.label || ''), value: Number(r.total || 0) })) : [])
+          } else setTopLucros([])
+          if (topCatArRes.status === 'fulfilled' && topCatArRes.value.ok) {
+            const j = await topCatArRes.value.json() as { rows?: Array<{ label?: string; total?: number }> }
+            setTopCategoriasReceita(Array.isArray(j?.rows) ? j.rows.map(r => ({ label: String(r.label || ''), value: Number(r.total || 0) })) : [])
+          } else setTopCategoriasReceita([])
 
           // Limpar outros tops não utilizados agora
           setTopCategorias([])
@@ -1072,20 +1100,13 @@ export default function FinanceiroDashboardPage() {
         </div>
       </div>
 
-      {/* Charts — Row 1 (Fluxo de Caixa + Fornecedores + Clientes) */}
+      {/* Charts — Row 1 (Unidades de Negócio + Fornecedores + Títulos) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        <BarChartMultipleRecharts
-          items={cashRealized.map(d => ({
-            label: periodToLabel(d.period),
-            entradas: d.entradas,
-            saidas: d.saidas
-          }))}
-          title="Fluxo de Caixa — Realizado"
+        <BarChartHorizontalRecharts
+          items={topUnidades}
+          title="Top 5 Unidades de Negócio"
           icon={<BarChart3 className="w-5 h-5" />}
-          series={[
-            { key: "entradas", label: "Entradas", color: "#10b981" },
-            { key: "saidas", label: "Saídas", color: "#ef4444" }
-          ]}
+          color="#0ea5e9"
         />
         <BarChartHorizontalRecharts
           items={topFornecedores}
@@ -1132,10 +1153,10 @@ export default function FinanceiroDashboardPage() {
           color="#10b981"
         />
         <BarChartHorizontalRecharts
-          items={topProjetos}
-          title="Top 5 Projetos"
+          items={topCategoriasReceita}
+          title="Top 5 Categorias (Receita)"
           icon={<BarChart3 className="w-5 h-5" />}
-          color="#8b5cf6"
+          color="#a855f7"
         />
         <BarChartHorizontalRecharts
           items={topFiliais}

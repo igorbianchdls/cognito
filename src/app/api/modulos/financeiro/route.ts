@@ -766,8 +766,10 @@ ORDER BY
       else if (dim === 'centro_custo' || dim === 'centro-custo') labelExpr = "COALESCE(cc.nome, 'Sem centro de custo')"
       else if (dim === 'filial') labelExpr = "COALESCE(fil.nome, 'Sem filial')"
       else if (dim === 'categoria') labelExpr = "COALESCE(cat.nome, 'Sem categoria')"
+      else if (dim === 'departamento') labelExpr = "COALESCE(dep.nome, 'Sem departamento')"
+      else if (dim === 'unidade_negocio' || dim === 'unidade-negocio') labelExpr = "COALESCE(un.nome, 'Sem unidade')"
       else {
-        return Response.json({ success: false, message: "Parâmetro 'dim' inválido. Use 'fornecedor' | 'centro_custo' | 'filial' | 'categoria' | 'titulo'" }, { status: 400 })
+        return Response.json({ success: false, message: "Parâmetro 'dim' inválido. Use 'fornecedor' | 'centro_custo' | 'filial' | 'categoria' | 'departamento' | 'unidade_negocio' | 'titulo'" }, { status: 400 })
       }
 
       const sql = `
@@ -776,8 +778,46 @@ ORDER BY
           FROM financeiro.contas_pagar cp
           LEFT JOIN entidades.fornecedores f ON f.id = cp.fornecedor_id
           LEFT JOIN empresa.centros_custo cc ON cc.id = cp.centro_custo_id
+          LEFT JOIN empresa.departamentos dep ON dep.id = cp.departamento_id
+          LEFT JOIN empresa.unidades_negocio un ON un.id = cp.unidade_negocio_id
           LEFT JOIN empresa.filiais fil ON fil.id = cp.filial_id
           LEFT JOIN financeiro.categorias_despesa cat ON cat.id = cp.categoria_despesa_id
+          ${where}
+         GROUP BY 1
+         ORDER BY total DESC NULLS LAST
+         LIMIT ${limit}
+      `.replace(/\n\s+/g, ' ').trim()
+      const rows = await runQuery<{ label: string; total: number | null }>(sql, params)
+      return Response.json({ success: true, dim, rows, sql_query: sql, sql_params: params })
+
+    } else if (view === 'top5-ar') {
+      // Top 5 por Contas a Receber (status='aberto') – categorias de receita e centros de lucro
+      const dim = (searchParams.get('dim') || '').toLowerCase(); // categoria | categoria_receita | centro_lucro
+      const limit = Math.max(1, Math.min(50, parseNumber(searchParams.get('limit'), 5) || 5));
+      const tenantId = parseNumber(searchParams.get('tenant_id'));
+
+      const params: unknown[] = []
+      let idx = 1
+      const filtros: string[] = []
+      filtros.push(`LOWER(cr.status) = 'aberto'`)
+      if (de) { filtros.push(`cr.data_vencimento >= $${idx++}`); params.push(de) }
+      if (ate) { filtros.push(`cr.data_vencimento <= $${idx++}`); params.push(ate) }
+      if (tenantId) { filtros.push(`cr.tenant_id = $${idx++}`); params.push(tenantId) }
+      const where = filtros.length ? `WHERE ${filtros.join(' AND ')}` : ''
+
+      let labelExpr = ''
+      if (dim === 'categoria' || dim === 'categoria_receita') labelExpr = "COALESCE(cat.nome, 'Sem categoria')"
+      else if (dim === 'centro_lucro' || dim === 'centro-lucro') labelExpr = "COALESCE(cl.nome, 'Sem centro de lucro')"
+      else {
+        return Response.json({ success: false, message: "Parâmetro 'dim' inválido. Use 'categoria' | 'centro_lucro'" }, { status: 400 })
+      }
+
+      const sql = `
+        SELECT ${labelExpr} AS label,
+               COALESCE(SUM(cr.valor_liquido), 0) AS total
+          FROM financeiro.contas_receber cr
+          LEFT JOIN financeiro.categorias_receita cat ON cat.id = cr.categoria_receita_id
+          LEFT JOIN empresa.centros_lucro cl ON cl.id = cr.centro_lucro_id
           ${where}
          GROUP BY 1
          ORDER BY total DESC NULLS LAST
