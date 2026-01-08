@@ -245,6 +245,52 @@ export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas"
     </kpi>
   </row>
 
+  <!-- Mais exemplos do relatório financeiro (gráficos) -->
+  <section id="charts2" class="row charts" data-role="section" style="display:flex; flex-direction:row; flex-wrap:nowrap; justify-content:flex-start; align-items:stretch; gap:16px; margin-bottom:16px;">
+    <article id="chart_top_fornecedores_ap" class="card" data-role="chart" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#ecfeff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
+      <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Top 5 Fornecedores (Despesas)</p>
+      <Chart id="top_fornecedores_ap" type="bar" height="320">
+        <query schema="financeiro" table="contas_pagar" dimension="fornecedor" measure="SUM(valor_liquido)" timeDimension="data_vencimento" from="2025-10-01" to="2026-01-31" limit="5" order="value DESC">
+          <where>
+            <rule col="status" op="in" vals="aberto,pendente,em_aberto,em aberto" />
+          </where>
+        </query>
+      </Chart>
+    </article>
+    <article id="chart_top_cc_ap" class="card" data-role="chart" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#f0f9ff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
+      <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Top 5 Centros de Custo (Despesas)</p>
+      <Chart id="top_cc_ap" type="bar" height="320">
+        <query schema="financeiro" table="contas_pagar" dimension="centro_custo" measure="SUM(valor_liquido)" timeDimension="data_vencimento" from="2025-10-01" to="2026-01-31" limit="5" order="value DESC">
+          <where>
+            <rule col="status" op="in" vals="aberto,pendente,em_aberto,em aberto" />
+          </where>
+        </query>
+      </Chart>
+    </article>
+    <article id="chart_top_clientes_ar" class="card" data-role="chart" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#fdf2f8; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
+      <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Top 5 Clientes (Receitas)</p>
+      <Chart id="top_clientes_ar" type="bar" height="320">
+        <query schema="financeiro" table="contas_receber" dimension="cliente" measure="SUM(valor_liquido)" timeDimension="data_vencimento" from="2025-10-01" to="2026-01-31" limit="5" order="value DESC">
+          <where>
+            <rule col="status" op="in" vals="aberto,pendente,em_aberto,em aberto" />
+          </where>
+        </query>
+      </Chart>
+    </article>
+  </section>
+
+  <section id="charts3" class="row charts" data-role="section" style="display:flex; flex-direction:row; flex-wrap:nowrap; justify-content:flex-start; align-items:stretch; gap:16px; margin-bottom:16px;">
+    <article id="chart_top_titulos_ap" class="card" data-role="chart" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#fff7ed; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
+      <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Top 5 Títulos (A Pagar)</p>
+      <Chart id="top_titulos_ap" type="bar" height="320">
+        <query schema="financeiro" table="contas_pagar" dimension="titulo" measure="SUM(valor_liquido)" timeDimension="data_vencimento" from="2025-10-01" to="2026-01-31" limit="5" order="value DESC">
+          <where>
+            <rule col="status" op="in" vals="aberto,pendente,em_aberto,em aberto" />
+          </where>
+        </query>
+      </Chart>
+    </article>
+  </section>
   <!-- Metas x Realizado — Vendedor (Faturamento, Ticket, Novos Clientes) -->
   <row id="metas_vendedor" cols-d="3" cols-t="1" cols-m="1" gap-x="16" gap-y="16">
     <chart id="meta_fat_vendedor" type="groupedbar" order="1" span-d="1" span-t="1" span-m="1" height="360" title="Meta x Faturamento por Vendedor">
