@@ -116,12 +116,12 @@ export async function GET(req: NextRequest) {
                      JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
                      LEFT JOIN comercial.vendedores v ON v.id = p.vendedor_id
                      LEFT JOIN entidades.funcionarios f ON f.id = v.funcionario_id
-                     ${pWhere}
+                     WHERE p.data_pedido >= '2025-09-01' AND p.data_pedido <= '2025-12-31'
                      GROUP BY 1
                      ORDER BY 2 DESC
-                     LIMIT $${pParams.length + 1}::int`;
+                     LIMIT $1::int`;
     let vendedores: ChartItem[] = []
-    try { vendedores = await runQuery<ChartItem>(vendSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard vendedores (join) error:', e); vendedores = [] }
+    try { vendedores = await runQuery<ChartItem>(vendSql, [limit]) } catch (e) { console.error('🛒 VENDAS dashboard vendedores (join) error:', e); vendedores = [] }
 
     // Produtos (por subtotal do item)
     const prodSql = `SELECT COALESCE(pr.nome,'—') AS label, COALESCE(SUM(pi.subtotal),0)::float AS value
@@ -140,12 +140,12 @@ export async function GET(req: NextRequest) {
                      FROM vendas.pedidos p
                      JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
                      LEFT JOIN servicos.catalogo_servicos s ON s.id = pi.servico_id
-                     ${pWhere}
+                     WHERE p.data_pedido >= '2025-09-01' AND p.data_pedido <= '2025-12-31'
                      GROUP BY 1
                      ORDER BY 2 DESC
-                     LIMIT $${pParams.length + 1}::int`;
+                     LIMIT $1::int`;
     let servicos: ChartItem[] = []
-    try { servicos = await runQuery<ChartItem>(servSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard servicos (join) error:', e); servicos = [] }
+    try { servicos = await runQuery<ChartItem>(servSql, [limit]) } catch (e) { console.error('🛒 VENDAS dashboard servicos (join) error:', e); servicos = [] }
 
     // Territórios (via view comercial.vendas_vw, sem filtro de período)
     const terrSql = `SELECT territorio_nome AS label,
@@ -173,12 +173,12 @@ export async function GET(req: NextRequest) {
                        FROM vendas.pedidos p
                        LEFT JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
                        LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
-                       ${pWhere}
+                       WHERE p.data_pedido >= '2025-09-01' AND p.data_pedido <= '2025-12-31'
                        GROUP BY 1
                        ORDER BY 2 DESC
-                       LIMIT $${pParams.length + 1}::int`;
+                       LIMIT $1::int`;
     let canais: ChartItem[] = []
-    try { canais = await runQuery<ChartItem>(canaisSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard canais (join) error:', e); canais = [] }
+    try { canais = await runQuery<ChartItem>(canaisSql, [limit]) } catch (e) { console.error('🛒 VENDAS dashboard canais (join) error:', e); canais = [] }
 
     // Top clientes
     const topClientesSql = `SELECT COALESCE(c.nome_fantasia,'—') AS cliente,
@@ -237,12 +237,12 @@ export async function GET(req: NextRequest) {
                                   JOIN vendas.pedidos_itens i ON i.pedido_id = p.id
                                   LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
                                   LEFT JOIN vendas.canais_distribuicao cd ON cd.id = cv.canal_distribuicao_id
-                                  ${cdWhere}
+                                  WHERE p.data_pedido >= '2025-09-01' AND p.data_pedido <= '2025-12-31' AND p.status = 'concluido'
                                   GROUP BY 1
                                   ORDER BY value DESC
-                                  LIMIT $${pParams.length + 1}::int`;
+                                  LIMIT $1::int`;
     let canaisDistribuicao: ChartItem[] = []
-    try { canaisDistribuicao = await runQuery<ChartItem>(canalDistribuicaoSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard canais_distribuicao (join) error:', e); canaisDistribuicao = [] }
+    try { canaisDistribuicao = await runQuery<ChartItem>(canalDistribuicaoSql, [limit]) } catch (e) { console.error('🛒 VENDAS dashboard canais_distribuicao (join) error:', e); canaisDistribuicao = [] }
 
     // Canais de Distribuição (agregado: faturamento, pedidos, ticket médio por pedido) somente concluídos
     const canaisDistribuicaoAggSql = `SELECT
@@ -268,12 +268,12 @@ export async function GET(req: NextRequest) {
                                          JOIN vendas.pedidos_itens i ON i.pedido_id = p.id
                                          LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
                                          LEFT JOIN vendas.canais_distribuicao cd ON cd.id = cv.canal_distribuicao_id
-                                         ${cdWhere}
+                                         WHERE p.data_pedido >= '2025-09-01' AND p.data_pedido <= '2025-12-31' AND p.status = 'concluido'
                                          GROUP BY 1
                                          ORDER BY value DESC
-                                         LIMIT $${pParams.length + 1}::int`;
+                                         LIMIT $1::int`;
     let canaisDistribuicaoPedidos: ChartItem[] = []
-    try { canaisDistribuicaoPedidos = await runQuery<ChartItem>(canalDistribuicaoPedidosSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard canais_distrib pedidos(join) error:', e); canaisDistribuicaoPedidos = [] }
+    try { canaisDistribuicaoPedidos = await runQuery<ChartItem>(canalDistribuicaoPedidosSql, [limit]) } catch (e) { console.error('🛒 VENDAS dashboard canais_distrib pedidos(join) error:', e); canaisDistribuicaoPedidos = [] }
 
     // Ticket médio por Canal de Distribuição (tabelas reais)
     const canalDistribuicaoTicketSql = `SELECT COALESCE(cd.nome,'—') AS label,
@@ -282,12 +282,12 @@ export async function GET(req: NextRequest) {
                                         JOIN vendas.pedidos_itens i ON i.pedido_id = p.id
                                         LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
                                         LEFT JOIN vendas.canais_distribuicao cd ON cd.id = cv.canal_distribuicao_id
-                                        ${cdWhere}
+                                        WHERE p.data_pedido >= '2025-09-01' AND p.data_pedido <= '2025-12-31' AND p.status = 'concluido'
                                         GROUP BY 1
                                         ORDER BY value DESC
-                                        LIMIT $${pParams.length + 1}::int`;
+                                        LIMIT $1::int`;
     let canaisDistribuicaoTicket: ChartItem[] = []
-    try { canaisDistribuicaoTicket = await runQuery<ChartItem>(canalDistribuicaoTicketSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard canais_distrib ticket(join) error:', e); canaisDistribuicaoTicket = [] }
+    try { canaisDistribuicaoTicket = await runQuery<ChartItem>(canalDistribuicaoTicketSql, [limit]) } catch (e) { console.error('🛒 VENDAS dashboard canais_distrib ticket(join) error:', e); canaisDistribuicaoTicket = [] }
 
     // Faturamento por Marca
     const marcasSql = `SELECT COALESCE(m.nome,'—') AS label, COALESCE(SUM(pi.quantidade * pi.preco_unitario),0)::float AS value
@@ -367,12 +367,12 @@ export async function GET(req: NextRequest) {
                               LEFT JOIN vendas.pedidos p ON p.id = i.pedido_id
                               LEFT JOIN servicos.catalogo_servicos s ON s.id = i.servico_id
                               LEFT JOIN servicos.categorias_servicos cat ON cat.id = s.categoria_id
-                              ${servCatWhere}
+                              WHERE p.data_pedido >= '2025-09-01' AND p.data_pedido <= '2025-12-31' AND p.status = 'concluido'
                               GROUP BY cat.nome
                               ORDER BY value DESC
-                              LIMIT $${pParams.length + 1}::int`;
+                              LIMIT $1::int`;
     let servicosCategoriasTicketView: ChartItem[] = []
-    try { servicosCategoriasTicketView = await runQuery<ChartItem>(servCatTicketSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard serv_cat_ticket(join) error:', e); servicosCategoriasTicketView = [] }
+    try { servicosCategoriasTicketView = await runQuery<ChartItem>(servCatTicketSql, [limit]) } catch (e) { console.error('🛒 VENDAS dashboard serv_cat_ticket(join) error:', e); servicosCategoriasTicketView = [] }
 
     // Pedidos por Categoria de Serviço (tabelas reais)
     const servCatPedidosSql = `SELECT COALESCE(cat.nome,'—') AS label,
@@ -381,12 +381,12 @@ export async function GET(req: NextRequest) {
                                LEFT JOIN vendas.pedidos p ON p.id = i.pedido_id
                                LEFT JOIN servicos.catalogo_servicos s ON s.id = i.servico_id
                                LEFT JOIN servicos.categorias_servicos cat ON cat.id = s.categoria_id
-                               ${servCatWhere}
+                               WHERE p.data_pedido >= '2025-09-01' AND p.data_pedido <= '2025-12-31' AND p.status = 'concluido'
                                GROUP BY cat.nome
                                ORDER BY value DESC
-                               LIMIT $${pParams.length + 1}::int`;
+                               LIMIT $1::int`;
     let servicosCategoriasPedidosView: ChartItem[] = []
-    try { servicosCategoriasPedidosView = await runQuery<ChartItem>(servCatPedidosSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard serv_cat_pedidos(join) error:', e); servicosCategoriasPedidosView = [] }
+    try { servicosCategoriasPedidosView = await runQuery<ChartItem>(servCatPedidosSql, [limit]) } catch (e) { console.error('🛒 VENDAS dashboard serv_cat_pedidos(join) error:', e); servicosCategoriasPedidosView = [] }
 
     // Meta x Faturamento por Território — view comercial.vw_vendas_metas (respeita de/ate)
     const metaFatTerrViewSQL = `
