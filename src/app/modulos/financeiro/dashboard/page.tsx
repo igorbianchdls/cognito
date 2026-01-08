@@ -407,22 +407,13 @@ export default function FinanceiroDashboardPage() {
         const prevDe = toDateOnly(prevStartD)
         const prevAte = toDateOnly(prevEndD)
 
-        const [arRes, apRes, prRes, peRes, kpisRes, kpisPrevRes, topCcRes, topCatRes, topDepRes, topLucroRes, topProjRes, topFilialRes, cfRealRes, topFornRes, topCliRes] = await Promise.allSettled([
+        const [arRes, apRes, prRes, peRes, kpisRes, kpisPrevRes] = await Promise.allSettled([
           fetch(qs('contas-a-receber'), { cache: 'no-store' }),
           fetch(qs('contas-a-pagar'), { cache: 'no-store' }),
           fetch(qs('pagamentos-recebidos'), { cache: 'no-store' }),
           fetch(qs('pagamentos-efetuados'), { cache: 'no-store' }),
           fetch(`/api/modulos/financeiro?view=kpis&de=${kpiDe}&ate=${kpiAte}`, { cache: 'no-store' }),
           fetch(`/api/modulos/financeiro?view=kpis&de=${prevDe}&ate=${prevAte}`, { cache: 'no-store' }),
-          fetch(`/api/modulos/financeiro?view=top-despesas&dim=centro_custo&de=${kpiDe}&ate=${kpiAte}`, { cache: 'no-store' }),
-          fetch(`/api/modulos/financeiro?view=top-despesas&dim=categoria&de=${kpiDe}&ate=${kpiAte}`, { cache: 'no-store' }),
-          fetch(`/api/modulos/financeiro?view=top-despesas&dim=departamento&de=${kpiDe}&ate=${kpiAte}`, { cache: 'no-store' }),
-          fetch(`/api/modulos/financeiro?view=top-receitas-centro-lucro&de=${kpiDe}&ate=${kpiAte}`, { cache: 'no-store' }),
-          fetch(`/api/modulos/financeiro?view=top-despesas&dim=projeto&de=${kpiDe}&ate=${kpiAte}`, { cache: 'no-store' }),
-          fetch(`/api/modulos/financeiro?view=top-despesas&dim=filial&de=${kpiDe}&ate=${kpiAte}`, { cache: 'no-store' }),
-          fetch(`/api/modulos/financeiro?view=cashflow-realized&de=${kpiDe}&ate=${kpiAte}&group_by=${groupBy}`, { cache: 'no-store' }),
-          fetch(`/api/modulos/financeiro?view=top-despesas&dim=fornecedor&de=${kpiDe}&ate=${kpiAte}`, { cache: 'no-store' }),
-          fetch(`/api/modulos/financeiro?view=top-receitas&dim=cliente&de=${kpiDe}&ate=${kpiAte}`, { cache: 'no-store' }),
         ])
 
         let ar: ARRow[] = []
@@ -556,46 +547,16 @@ export default function FinanceiroDashboardPage() {
           setApRows(ap)
           setPrRows(pr)
           setPeRows(pe)
-          // Top 5 (CC, Categoria, Departamento)
-          if (topCcRes.status === 'fulfilled' && topCcRes.value.ok) {
-            const j = await topCcRes.value.json() as { rows?: Array<{ label?: string; total?: number }> }
-            setTopCC(Array.isArray(j?.rows) ? j.rows.map(r => ({ label: String(r.label || ''), value: Number(r.total || 0) })) : [])
-          } else setTopCC([])
-          if (topCatRes.status === 'fulfilled' && topCatRes.value.ok) {
-            const j = await topCatRes.value.json() as { rows?: Array<{ label?: string; total?: number }> }
-            setTopCategorias(Array.isArray(j?.rows) ? j.rows.map(r => ({ label: String(r.label || ''), value: Number(r.total || 0) })) : [])
-          } else setTopCategorias([])
-          if (topDepRes.status === 'fulfilled' && topDepRes.value.ok) {
-            const j = await topDepRes.value.json() as { rows?: Array<{ label?: string; total?: number }> }
-            setTopDepartamentos(Array.isArray(j?.rows) ? j.rows.map(r => ({ label: String(r.label || ''), value: Number(r.total || 0) })) : [])
-          } else setTopDepartamentos([])
-          if (topLucroRes.status === 'fulfilled' && topLucroRes.value.ok) {
-            const j = await topLucroRes.value.json() as { rows?: Array<{ label?: string; total?: number }> }
-            setTopLucros(Array.isArray(j?.rows) ? j.rows.map(r => ({ label: String(r.label || ''), value: Number(r.total || 0) })) : [])
-          } else setTopLucros([])
-          if (topProjRes.status === 'fulfilled' && topProjRes.value.ok) {
-            const j = await topProjRes.value.json() as { rows?: Array<{ label?: string; total?: number }> }
-            setTopProjetos(Array.isArray(j?.rows) ? j.rows.map(r => ({ label: String(r.label || ''), value: Number(r.total || 0) })) : [])
-          } else setTopProjetos([])
-          if (topFilialRes.status === 'fulfilled' && topFilialRes.value.ok) {
-            const j = await topFilialRes.value.json() as { rows?: Array<{ label?: string; total?: number }> }
-            setTopFiliais(Array.isArray(j?.rows) ? j.rows.map(r => ({ label: String(r.label || ''), value: Number(r.total || 0) })) : [])
-          } else setTopFiliais([])
-
-          if (cfRealRes.status === 'fulfilled' && cfRealRes.value.ok) {
-            const j = await cfRealRes.value.json() as { rows?: Array<{ period: string; entradas: number; saidas: number; net: number }> }
-            setCashRealized(Array.isArray(j?.rows) ? j.rows : [])
-          } else setCashRealized([])
-
-          // Top fornecedores e clientes
-          if (topFornRes.status === 'fulfilled' && topFornRes.value.ok) {
-            const j = await topFornRes.value.json() as { rows?: Array<{ label?: string; total?: number }> }
-            setTopFornecedores(Array.isArray(j?.rows) ? j.rows.map(r => ({ label: String(r.label || ''), value: Number(r.total || 0) })) : [])
-          } else setTopFornecedores([])
-          if (topCliRes.status === 'fulfilled' && topCliRes.value.ok) {
-            const j = await topCliRes.value.json() as { rows?: Array<{ label?: string; total?: number }> }
-            setTopClientes(Array.isArray(j?.rows) ? j.rows.map(r => ({ label: String(r.label || ''), value: Number(r.total || 0) })) : [])
-          } else setTopClientes([])
+          // Zera listas analíticas (visual ainda renderiza vazio)
+          setTopCC([])
+          setTopCategorias([])
+          setTopDepartamentos([])
+          setTopLucros([])
+          setTopProjetos([])
+          setTopFiliais([])
+          setCashRealized([])
+          setTopFornecedores([])
+          setTopClientes([])
         }
       } catch (err) {
         if (!cancelled) {
