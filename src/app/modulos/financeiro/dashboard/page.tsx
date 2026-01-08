@@ -598,13 +598,9 @@ export default function FinanceiroDashboardPage() {
             setTopCategoriasReceita(Array.isArray(j?.rows) ? j.rows.map(r => ({ label: String(r.label || ''), value: Number(r.total || 0) })) : [])
           } else setTopCategoriasReceita([])
 
-          // Limpar outros tops não utilizados agora
-          setTopCategorias([])
-          setTopDepartamentos([])
-          setTopLucros([])
+          // Limpar apenas gráficos não utilizados nesta versão
           setTopProjetos([])
           setTopClientes([])
-          setCashRealized([])
         }
       } catch (err) {
         if (!cancelled) {
