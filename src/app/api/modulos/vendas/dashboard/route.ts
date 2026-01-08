@@ -20,6 +20,8 @@ export async function GET(req: NextRequest) {
     if (de) { pConds.push(`p.data_pedido >= $${pi++}`); pParams.push(de) }
     if (ate) { pConds.push(`p.data_pedido <= $${pi++}`); pParams.push(ate) }
     const pWhere = pConds.length ? `WHERE ${pConds.join(' AND ')}` : ''
+    // Reusable WHERE for canais de distribuição: período + status concluído
+    const cdWhere = pWhere ? `${pWhere} AND p.status = 'concluido'` : `WHERE p.status = 'concluido'`
 
     // WHERE for comercial.vw_vendas_metas (vm)
     const vmConds: string[] = []
@@ -234,7 +236,6 @@ export async function GET(req: NextRequest) {
     try { canaisDistribuicao = await runQuery<ChartItem>(canalDistribuicaoSql, [...pParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard canais_distribuicao (join) error:', e); canaisDistribuicao = [] }
 
     // Canais de Distribuição (agregado: faturamento, pedidos, ticket médio por pedido) somente concluídos
-    const cdWhere = pWhere ? `${pWhere} AND p.status = 'concluido'` : `WHERE p.status = 'concluido'`
     const canaisDistribuicaoAggSql = `SELECT
                                         COALESCE(cd.nome,'—') AS nome,
                                         COALESCE(SUM(i.subtotal),0)::float AS faturamento_total,
