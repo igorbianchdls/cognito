@@ -41,6 +41,46 @@ interface ChartEditorModalProps {
 }
 
 export default function ChartEditorModal({ isOpen, initial, onClose, onSave }: ChartEditorModalProps) {
+  // Static options
+  const SCHEMAS = [ { value: 'financeiro', label: 'Financeiro' } ];
+  const TABLES = [
+    { value: 'contas_pagar', label: 'Contas a Pagar' },
+    { value: 'contas_receber', label: 'Contas a Receber' },
+    { value: 'pagamentos_efetuados', label: 'Pagamentos Efetuados' },
+    { value: 'pagamentos_recebidos', label: 'Pagamentos Recebidos' },
+  ];
+  const TABLE_META: Record<string, { defaultMeasureField: string; defaultTimeColumn: string; dimensions: string[]; measureFields: string[]; timeColumns: string[] }> = {
+    contas_pagar: {
+      defaultMeasureField: 'valor_liquido',
+      defaultTimeColumn: 'data_vencimento',
+      measureFields: ['valor_liquido'],
+      timeColumns: ['data_vencimento'],
+      dimensions: ['categoria','fornecedor','departamento','centro_custo','filial','unidade_negocio','titulo','metodo_pagamento','conta_financeira']
+    },
+    contas_receber: {
+      defaultMeasureField: 'valor_liquido',
+      defaultTimeColumn: 'data_vencimento',
+      measureFields: ['valor_liquido'],
+      timeColumns: ['data_vencimento'],
+      dimensions: ['categoria','cliente','centro_lucro','filial','unidade_negocio','titulo','metodo_pagamento','conta_financeira']
+    },
+    pagamentos_efetuados: {
+      defaultMeasureField: 'valor_total_pagamento',
+      defaultTimeColumn: 'data_pagamento',
+      measureFields: ['valor_total_pagamento'],
+      timeColumns: ['data_pagamento'],
+      dimensions: ['categoria','fornecedor','departamento','centro_custo','filial','unidade_negocio','metodo_pagamento','conta_financeira']
+    },
+    pagamentos_recebidos: {
+      defaultMeasureField: 'valor_total_recebido',
+      defaultTimeColumn: 'data_recebimento',
+      measureFields: ['valor_total_recebido'],
+      timeColumns: ['data_recebimento'],
+      dimensions: ['categoria','cliente','centro_lucro','filial','unidade_negocio','metodo_pagamento','conta_financeira']
+    },
+  };
+  const AGGS: Array<'SUM'|'COUNT'|'AVG'|'MIN'|'MAX'> = ['SUM','COUNT','AVG','MIN','MAX'];
+
   const [mounted, setMounted] = useState(false);
   const [titleText, setTitleText] = useState(initial.titleText || '');
   const [titleFontFamily, setTitleFontFamily] = useState(initial.titleFontFamily || '');
@@ -66,7 +106,21 @@ export default function ChartEditorModal({ isOpen, initial, onClose, onSave }: C
   // Query state
   const [schema, setSchema] = useState<string>(initial.query?.schema || 'financeiro')
   const [table, setTable] = useState<string>(initial.query?.table || '')
-  const [measure, setMeasure] = useState<string>(initial.query?.measure || '')
+  // Measure split: aggregate + field
+  const parseMeasure = (s?: string): { agg?: 'SUM'|'COUNT'|'AVG'|'MIN'|'MAX'; field?: string } => {
+    const raw = String(s || '').trim();
+    const m = raw.match(/^([A-Za-z]+)\s*\(\s*([A-Za-z0-9_\.]+)\s*\)\s*$/);
+    if (m) {
+      const agg = m[1].toUpperCase();
+      const field = m[2];
+      if (AGGS.includes(agg as any)) return { agg: agg as any, field };
+      return { field: raw };
+    }
+    return raw ? { field: raw } : {};
+  };
+  const initialParsed = parseMeasure(initial.query?.measure);
+  const [measureAgg, setMeasureAgg] = useState<'SUM'|'COUNT'|'AVG'|'MIN'|'MAX'>(initialParsed.agg || 'SUM');
+  const [measureField, setMeasureField] = useState<string>(initialParsed.field || '');
   const [dimension, setDimension] = useState<string>(initial.query?.dimension || '')
   const [timeDimension, setTimeDimension] = useState<string>(initial.query?.timeDimension || '')
   const [from, setFrom] = useState<string>(initial.query?.from || '')
@@ -93,7 +147,9 @@ export default function ChartEditorModal({ isOpen, initial, onClose, onSave }: C
       // query
       setSchema(initial.query?.schema || 'financeiro')
       setTable(initial.query?.table || '')
-      setMeasure(initial.query?.measure || '')
+      const pm = parseMeasure(initial.query?.measure);
+      setMeasureAgg(pm.agg || 'SUM');
+      setMeasureField(pm.field || '');
       setDimension(initial.query?.dimension || '')
       setTimeDimension(initial.query?.timeDimension || '')
       setFrom(initial.query?.from || '')
@@ -184,37 +240,67 @@ export default function ChartEditorModal({ isOpen, initial, onClose, onSave }: C
                 // Reset defaults according to table
                 const t = table.trim().toLowerCase()
                 if (!t) return
-                if (t === 'contas_pagar') { setMeasure('SUM(valor_liquido)'); setTimeDimension('data_vencimento') }
-                else if (t === 'contas_receber') { setMeasure('SUM(valor_liquido)'); setTimeDimension('data_vencimento') }
-                else if (t === 'pagamentos_efetuados') { setMeasure('SUM(valor_total_pagamento)'); setTimeDimension('data_pagamento') }
-                else if (t === 'pagamentos_recebidos') { setMeasure('SUM(valor_total_recebido)'); setTimeDimension('data_recebimento') }
+                if (TABLE_META[t]) {
+                  setMeasureAgg('SUM');
+                  setMeasureField(TABLE_META[t].defaultMeasureField);
+                  setTimeDimension(TABLE_META[t].defaultTimeColumn);
+                }
                 setDirtyQuery(true)
               }}>Reset defaults</button>
             </div>
             <div className="grid grid-cols-2 gap-2 mb-2">
               <div>
                 <label className="text-xs text-gray-600 block mb-1">Schema</label>
-                <input className="w-full px-2 py-1 bg-gray-100 rounded" value={schema} onChange={e=>{ setSchema(e.target.value); setDirtyQuery(true) }} />
+                <select className="w-full px-2 py-1 bg-gray-100 rounded" value={schema} onChange={e=>{ setSchema(e.target.value); setDirtyQuery(true) }}>
+                  {SCHEMAS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
               </div>
               <div>
                 <label className="text-xs text-gray-600 block mb-1">Table</label>
-                <input className="w-full px-2 py-1 bg-gray-100 rounded" value={table} onChange={e=>{ setTable(e.target.value); setDirtyQuery(true) }} placeholder="contas_pagar, contas_receber..." />
+                <select className="w-full px-2 py-1 bg-gray-100 rounded" value={table} onChange={e=>{
+                  const v = e.target.value; setTable(v);
+                  // adjust defaults when changing table
+                  const meta = TABLE_META[v];
+                  if (meta) {
+                    if (!meta.measureFields.includes(measureField)) setMeasureField(meta.defaultMeasureField);
+                    if (!meta.timeColumns.includes(timeDimension)) setTimeDimension(meta.defaultTimeColumn);
+                    if (dimension && !meta.dimensions.includes(dimension)) setDimension('');
+                  }
+                  setDirtyQuery(true)
+                }}>
+                  <option value="">Selecione…</option>
+                  {TABLES.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-2 mb-2">
               <div>
                 <label className="text-xs text-gray-600 block mb-1">Measure</label>
-                <input className="w-full px-2 py-1 bg-gray-100 rounded" value={measure} onChange={e=>{ setMeasure(e.target.value); setDirtyQuery(true) }} placeholder="SUM(valor_liquido)" />
+                <div className="flex gap-2">
+                  <select className="px-2 py-1 bg-gray-100 rounded w-28" value={measureAgg} onChange={e=>{ setMeasureAgg(e.target.value as any); setDirtyQuery(true); }}>
+                    {AGGS.map(a => <option key={a} value={a}>{a}</option>)}
+                  </select>
+                  <select className="flex-1 px-2 py-1 bg-gray-100 rounded" value={measureField} onChange={e=>{ setMeasureField(e.target.value); setDirtyQuery(true); }}>
+                    <option value="">Selecione…</option>
+                    {(TABLE_META[table]?.measureFields || []).map(f => <option key={f} value={f}>{f}</option>)}
+                  </select>
+                </div>
               </div>
               <div>
                 <label className="text-xs text-gray-600 block mb-1">Dimension</label>
-                <input className="w-full px-2 py-1 bg-gray-100 rounded" value={dimension} onChange={e=>{ setDimension(e.target.value); setDirtyQuery(true) }} placeholder="categoria, fornecedor..." />
+                <select className="w-full px-2 py-1 bg-gray-100 rounded" value={dimension} onChange={e=>{ setDimension(e.target.value); setDirtyQuery(true) }}>
+                  <option value="">(Nenhuma)</option>
+                  {(TABLE_META[table]?.dimensions || []).map(d => <option key={d} value={d}>{d}</option>)}
+                </select>
               </div>
             </div>
             <div className="grid grid-cols-3 gap-2 mb-2">
               <div>
                 <label className="text-xs text-gray-600 block mb-1">timeDimension</label>
-                <input className="w-full px-2 py-1 bg-gray-100 rounded" value={timeDimension} onChange={e=>{ setTimeDimension(e.target.value); setDirtyQuery(true) }} placeholder="data_vencimento" />
+                <select className="w-full px-2 py-1 bg-gray-100 rounded" value={timeDimension} onChange={e=>{ setTimeDimension(e.target.value); setDirtyQuery(true) }}>
+                  <option value="">(Nenhuma)</option>
+                  {(TABLE_META[table]?.timeColumns || []).map(tc => <option key={tc} value={tc}>{tc}</option>)}
+                </select>
               </div>
               <div>
                 <label className="text-xs text-gray-600 block mb-1">From</label>
@@ -280,7 +366,15 @@ export default function ChartEditorModal({ isOpen, initial, onClose, onSave }: C
             borderStyle: dirtyBStyle ? borderStyle : undefined,
             borderRadius: dirtyBRadius ? borderRadius : undefined,
             query: dirtyQuery ? {
-              schema, table, measure, dimension, timeDimension, from, to, limit, order,
+              schema,
+              table,
+              measure: (measureField ? `${measureAgg}(${measureField})` : undefined),
+              dimension,
+              timeDimension,
+              from,
+              to,
+              limit,
+              order,
               where: (where || []).map(r => ({ ...r }))
             } : undefined,
           })} className="px-4 py-2 rounded-md bg-blue-600 text-white">Salvar</button>
