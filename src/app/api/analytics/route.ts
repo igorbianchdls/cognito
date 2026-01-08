@@ -54,7 +54,8 @@ export async function POST(req: NextRequest) {
                      LEFT JOIN empresa.centros_custo cc ON cc.id = cp.centro_custo_id
                      LEFT JOIN empresa.departamentos dep ON dep.id = cp.departamento_id
                      LEFT JOIN empresa.unidades_negocio un ON un.id = cp.unidade_negocio_id
-                     LEFT JOIN empresa.filiais fil ON fil.id = cp.filial_id`,
+                     LEFT JOIN empresa.filiais fil ON fil.id = cp.filial_id
+                     LEFT JOIN financeiro.projetos prj ON prj.id = cp.projeto_id`,
           defaultMeasure: 'SUM(cp.valor_liquido)',
           defaultDate: 'cp.data_vencimento',
           labelMap: new Map<string, string>([
@@ -64,6 +65,7 @@ export async function POST(req: NextRequest) {
             ['departamento', "COALESCE(dep.nome,'Sem departamento')"],
             ['unidade_negocio', "COALESCE(un.nome,'Sem unidade')"],
             ['filial', "COALESCE(fil.nome,'Sem filial')"],
+            ['projeto', "COALESCE(prj.nome,'Sem projeto')"],
             ['titulo', "COALESCE(NULLIF(TRIM(cp.numero_documento), ''), CONCAT('Conta #', cp.id::text))"],
           ]),
         }
@@ -76,7 +78,8 @@ export async function POST(req: NextRequest) {
                      LEFT JOIN empresa.centros_lucro cl ON cl.id = cr.centro_lucro_id
                      LEFT JOIN empresa.departamentos dep ON dep.id = cr.departamento_id
                      LEFT JOIN empresa.unidades_negocio un ON un.id = cr.unidade_negocio_id
-                     LEFT JOIN empresa.filiais fil ON fil.id = cr.filial_id`,
+                     LEFT JOIN empresa.filiais fil ON fil.id = cr.filial_id
+                     LEFT JOIN financeiro.projetos prj ON prj.id = cr.projeto_id`,
           defaultMeasure: 'SUM(cr.valor_liquido)',
           defaultDate: 'cr.data_vencimento',
           labelMap: new Map<string, string>([
@@ -86,6 +89,7 @@ export async function POST(req: NextRequest) {
             ['departamento', "COALESCE(dep.nome,'Sem departamento')"],
             ['unidade_negocio', "COALESCE(un.nome,'Sem unidade')"],
             ['filial', "COALESCE(fil.nome,'Sem filial')"],
+            ['projeto', "COALESCE(prj.nome,'Sem projeto')"],
             ['titulo', "COALESCE(NULLIF(TRIM(cr.numero_documento), ''), CONCAT('Conta #', cr.id::text))"],
           ]),
         }
@@ -102,7 +106,8 @@ export async function POST(req: NextRequest) {
                      LEFT JOIN empresa.unidades_negocio un ON un.id = cp.unidade_negocio_id
                      LEFT JOIN empresa.filiais fil ON fil.id = cp.filial_id
                      LEFT JOIN financeiro.contas_financeiras cf ON cf.id = pe.conta_financeira_id
-                     LEFT JOIN financeiro.metodos_pagamento mp ON mp.id = pe.metodo_pagamento_id`,
+                     LEFT JOIN financeiro.metodos_pagamento mp ON mp.id = pe.metodo_pagamento_id
+                     LEFT JOIN financeiro.projetos prj ON prj.id = cp.projeto_id`,
           defaultMeasure: 'SUM(pe.valor_total_pagamento)',
           defaultDate: 'pe.data_pagamento',
           labelMap: new Map<string, string>([
@@ -114,6 +119,7 @@ export async function POST(req: NextRequest) {
             ['departamento', "COALESCE(dep.nome,'Sem departamento')"],
             ['unidade_negocio', "COALESCE(un.nome,'Sem unidade')"],
             ['filial', "COALESCE(fil.nome,'Sem filial')"],
+            ['projeto', "COALESCE(prj.nome,'Sem projeto')"],
           ]),
         }
       }
@@ -129,7 +135,8 @@ export async function POST(req: NextRequest) {
                    LEFT JOIN empresa.unidades_negocio un ON un.id = cr.unidade_negocio_id
                    LEFT JOIN empresa.filiais fil ON fil.id = cr.filial_id
                    LEFT JOIN financeiro.contas_financeiras cf ON cf.id = pr.conta_financeira_id
-                   LEFT JOIN financeiro.metodos_pagamento mp ON mp.id = pr.metodo_pagamento_id`,
+                   LEFT JOIN financeiro.metodos_pagamento mp ON mp.id = pr.metodo_pagamento_id
+                   LEFT JOIN financeiro.projetos prj ON prj.id = cr.projeto_id`,
         defaultMeasure: 'SUM(pr.valor_total_recebido)',
         defaultDate: 'pr.data_recebimento',
         labelMap: new Map<string, string>([
@@ -141,6 +148,7 @@ export async function POST(req: NextRequest) {
           ['departamento', "COALESCE(dep.nome,'Sem departamento')"],
           ['unidade_negocio', "COALESCE(un.nome,'Sem unidade')"],
           ['filial', "COALESCE(fil.nome,'Sem filial')"],
+          ['projeto', "COALESCE(prj.nome,'Sem projeto')"],
         ]),
       }
     })()
@@ -185,7 +193,7 @@ export async function POST(req: NextRequest) {
       const op = String(r.op || '=').toLowerCase()
       // map allowed cols per source
       const allowedCols = new Set<string>([
-        'status','fornecedor_id','cliente_id','categoria_despesa_id','categoria_receita_id','centro_custo_id','centro_lucro_id','departamento_id','unidade_negocio_id','filial_id'
+        'status','fornecedor_id','cliente_id','categoria_despesa_id','categoria_receita_id','centro_custo_id','centro_lucro_id','departamento_id','unidade_negocio_id','filial_id','projeto_id'
       ])
       if (!allowedCols.has(c)) return
       const alias = (source === 'ap' || source === 'pe') ? (c.includes('cliente') || c.includes('receita') || c.includes('centro_lucro') ? 'cr' : 'cp')
@@ -236,4 +244,3 @@ export async function GET(req: NextRequest) {
   // Optional: lightweight GET for quick checks
   return Response.json({ success: true, message: 'Use POST with JSON body to query analytics.' })
 }
-

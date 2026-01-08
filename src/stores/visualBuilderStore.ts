@@ -290,6 +290,16 @@ export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas"
         </query>
       </Chart>
     </article>
+    <article id="chart_top_projetos_ap" class="card" data-role="chart" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#eef2ff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
+      <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Top 5 Projetos (Despesas)</p>
+      <Chart id="top_projetos_ap" type="bar" height="320">
+        <query schema="financeiro" table="contas_pagar" dimension="projeto" measure="SUM(valor_liquido)" timeDimension="data_vencimento" from="2025-10-01" to="2026-01-31" limit="5" order="value DESC">
+          <where>
+            <rule col="status" op="in" vals="aberto,pendente,em_aberto,em aberto" />
+          </where>
+        </query>
+      </Chart>
+    </article>
   </section>
   <!-- Metas x Realizado — Vendedor (Faturamento, Ticket, Novos Clientes) -->
   <row id="metas_vendedor" cols-d="3" cols-t="1" cols-m="1" gap-x="16" gap-y="16">
