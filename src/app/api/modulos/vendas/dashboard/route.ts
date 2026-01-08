@@ -400,79 +400,103 @@ export async function GET(req: NextRequest) {
     let servicosCategoriasPedidosView: ChartItem[] = []
     try { servicosCategoriasPedidosView = await runQuery<ChartItem>(servCatPedidosSql, [limit]) } catch (e) { console.error('🛒 VENDAS dashboard serv_cat_pedidos(join) error:', e); servicosCategoriasPedidosView = [] }
 
-    // Meta x Faturamento por Território — view comercial.vw_vendas_metas (respeita de/ate)
-    const metaFatTerrViewSQL = `
-      SELECT
-        territorio_nome AS label,
-        COALESCE(SUM(subtotal),0)::float AS faturamento,
-        COALESCE(MAX(meta_faturamento_territorio),0)::float AS meta
-      FROM comercial.vw_vendas_metas
-      ${vmWhere}
-      GROUP BY territorio_nome
-      ORDER BY faturamento DESC
-      LIMIT $${vmParams.length + 1}::int`;
-    let metaTerritorio: { label: string; meta: number; faturamento: number }[] = []
-    try { metaTerritorio = await runQuery<{ label: string; meta: number; faturamento: number }>(metaFatTerrViewSQL, [...vmParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard meta_fat_territorio(view) error:', e); metaTerritorio = [] }
+    // Meta x Faturamento por Território — tabelas reais (período fixo)
+    const terrMetaFatSql = `SELECT t.id AS territorio_id, COALESCE(t.nome,'—') AS label, COALESCE(SUM(mt.valor_meta),0)::float AS meta
+                            FROM comercial.metas_territorios mt
+                            LEFT JOIN comercial.territorios t ON t.id = mt.territorio_id
+                            LEFT JOIN comercial.tipos_metas tm ON tm.id = mt.tipo_meta_id
+                            WHERE mt.periodo >= '2025-09-01' AND mt.periodo <= '2025-12-31' AND tm.nome = 'faturamento'
+                            GROUP BY t.id, t.nome`;
+    const terrRealFatSql = `SELECT t.id AS territorio_id, COALESCE(t.nome,'—') AS label, COALESCE(SUM(pi.subtotal),0)::float AS faturamento
+                            FROM vendas.pedidos p
+                            JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+                            LEFT JOIN comercial.vendedores v ON v.id = p.vendedor_id
+                            LEFT JOIN comercial.territorios t ON t.id = v.territorio_id
+                            WHERE p.data_pedido >= '2025-09-01' AND p.data_pedido <= '2025-12-31'
+                            GROUP BY t.id, t.nome`;
+    let terrMetaFat: Array<{ territorio_id: number; label: string; meta: number }> = []
+    let terrRealFat: Array<{ territorio_id: number; label: string; faturamento: number }> = []
+    try { terrMetaFat = await runQuery(terrMetaFatSql) } catch { terrMetaFat = [] }
+    try { terrRealFat = await runQuery(terrRealFatSql) } catch { terrRealFat = [] }
+    const metaTerritorio = terrRealFat.map(r => {
+      const m = terrMetaFat.find(x => x.territorio_id === r.territorio_id)
+      return { label: r.label, meta: Number(m?.meta || 0), faturamento: Number(r.faturamento || 0) }
+    }).sort((a,b) => b.faturamento - a.faturamento).slice(0, limit)
 
-    // Meta x Ticket Médio por Território — view comercial.vw_vendas_metas (respeita de/ate)
-    const metaTicketTerrViewSQL = `
-      SELECT
-        territorio_nome AS label,
-        COALESCE(MAX(meta_ticket_territorio),0)::float AS meta,
-        CASE WHEN COUNT(DISTINCT pedido_id) > 0
-             THEN COALESCE(SUM(subtotal),0)::float / NULLIF(COUNT(DISTINCT pedido_id), 0)
-             ELSE 0 END AS realizado
-      FROM comercial.vw_vendas_metas
-      ${vmWhere}
-      GROUP BY territorio_nome
-      ORDER BY territorio_nome
-      LIMIT $${vmParams.length + 1}::int`;
-    let metaTicketMedioTerritorio: { label: string; meta: number; realizado: number }[] = []
-    try { metaTicketMedioTerritorio = await runQuery<{ label: string; meta: number; realizado: number }>(metaTicketTerrViewSQL, [...vmParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard meta_ticket_territorio(view) error:', e); metaTicketMedioTerritorio = [] }
+    // Meta x Ticket Médio por Território — tabelas reais (período fixo)
+    const terrMetaTicketSql = `SELECT t.id AS territorio_id, COALESCE(t.nome,'—') AS label, COALESCE(SUM(mt.valor_meta),0)::float AS meta
+                               FROM comercial.metas_territorios mt
+                               LEFT JOIN comercial.territorios t ON t.id = mt.territorio_id
+                               LEFT JOIN comercial.tipos_metas tm ON tm.id = mt.tipo_meta_id
+                               WHERE mt.periodo >= '2025-09-01' AND mt.periodo <= '2025-12-31' AND tm.nome = 'ticket_medio'
+                               GROUP BY t.id, t.nome`;
+    const terrRealTicketSql = `SELECT t.id AS territorio_id, COALESCE(t.nome,'—') AS label,
+                                      CASE WHEN COUNT(DISTINCT p.id) > 0 THEN COALESCE(SUM(pi.subtotal),0)::float / NULLIF(COUNT(DISTINCT p.id),0) ELSE 0 END AS realizado
+                               FROM vendas.pedidos p
+                               JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+                               LEFT JOIN comercial.vendedores v ON v.id = p.vendedor_id
+                               LEFT JOIN comercial.territorios t ON t.id = v.territorio_id
+                               WHERE p.data_pedido >= '2025-09-01' AND p.data_pedido <= '2025-12-31'
+                               GROUP BY t.id, t.nome`;
+    let terrMetaTicket: Array<{ territorio_id: number; label: string; meta: number }> = []
+    let terrRealTicket: Array<{ territorio_id: number; label: string; realizado: number }> = []
+    try { terrMetaTicket = await runQuery(terrMetaTicketSql) } catch { terrMetaTicket = [] }
+    try { terrRealTicket = await runQuery(terrRealTicketSql) } catch { terrRealTicket = [] }
+    const metaTicketMedioTerritorio = terrRealTicket.map(r => {
+      const m = terrMetaTicket.find(x => x.territorio_id === r.territorio_id)
+      return { label: r.label, meta: Number(m?.meta || 0), realizado: Number(r.realizado || 0) }
+    }).sort((a,b)=> b.realizado - a.realizado).slice(0, limit)
 
-    // Meta x Novos Clientes por Território — view comercial.vw_vendas_metas (respeita de/ate)
-    const havingNovosTerr = (de && ate)
-      ? `HAVING MIN(data_pedido) >= $1 AND MIN(data_pedido) <= $2`
-      : de
-        ? `HAVING MIN(data_pedido) >= $1`
-        : ate
-          ? `HAVING MIN(data_pedido) <= $${de ? 2 : 1}`
-          : ''
-    const metaNovosTerrViewSQL = `WITH novos AS (
-    SELECT
-        territorio_id,
-        COUNT(DISTINCT cliente_id) AS novos_clientes_real
-    FROM comercial.vw_vendas_metas
-    ${vmWhere}
-      ${havingNovosTerr}
-    GROUP BY territorio_id
-)
-SELECT
-    vm.territorio_nome AS label,
-    COALESCE(MAX(vm.meta_novos_clientes_territorio), 0)::float AS meta,
-    COALESCE(n.novos_clientes_real, 0)::float AS realizado
-FROM comercial.vw_vendas_metas vm
-LEFT JOIN novos n ON n.territorio_id = vm.territorio_id
-${vmWhere.replace(/\bdata_pedido\b/g, 'vm.data_pedido')}
-GROUP BY vm.territorio_nome, n.novos_clientes_real
-ORDER BY vm.territorio_nome
-LIMIT $${vmParams.length + 1}::int`;
-    let metaNovosClientesTerritorio: { label: string; meta: number; realizado: number }[] = []
-    try { metaNovosClientesTerritorio = await runQuery<{ label: string; meta: number; realizado: number }>(metaNovosTerrViewSQL, [...vmParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard meta_novos_territorio(view) error:', e); metaNovosClientesTerritorio = [] }
+    // Meta x Novos Clientes por Território — tabelas reais (período fixo)
+    const terrMetaNovosSql = `SELECT t.id AS territorio_id, COALESCE(t.nome,'—') AS label, COALESCE(SUM(mt.valor_meta),0)::float AS meta
+                              FROM comercial.metas_territorios mt
+                              LEFT JOIN comercial.territorios t ON t.id = mt.territorio_id
+                              LEFT JOIN comercial.tipos_metas tm ON tm.id = mt.tipo_meta_id
+                              WHERE mt.periodo >= '2025-09-01' AND mt.periodo <= '2025-12-31' AND tm.nome = 'novos_clientes'
+                              GROUP BY t.id, t.nome`;
+    const terrRealNovosSql = `WITH firsts AS (
+                                SELECT p.vendedor_id, p.cliente_id, MIN(p.data_pedido) AS first_date
+                                FROM vendas.pedidos p
+                                GROUP BY p.vendedor_id, p.cliente_id
+                              )
+                              SELECT t.id AS territorio_id, COALESCE(t.nome,'—') AS label, COUNT(*)::float AS realizado
+                              FROM firsts f
+                              LEFT JOIN comercial.vendedores v ON v.id = f.vendedor_id
+                              LEFT JOIN comercial.territorios t ON t.id = v.territorio_id
+                              WHERE f.first_date >= '2025-09-01' AND f.first_date <= '2025-12-31'
+                              GROUP BY t.id, t.nome`;
+    let terrMetaNovos: Array<{ territorio_id: number; label: string; meta: number }> = []
+    let terrRealNovos: Array<{ territorio_id: number; label: string; realizado: number }> = []
+    try { terrMetaNovos = await runQuery(terrMetaNovosSql) } catch { terrMetaNovos = [] }
+    try { terrRealNovos = await runQuery(terrRealNovosSql) } catch { terrRealNovos = [] }
+    const metaNovosClientesTerritorio = terrRealNovos.map(r => {
+      const m = terrMetaNovos.find(x => x.territorio_id === r.territorio_id)
+      return { label: r.label, meta: Number(m?.meta || 0), realizado: Number(r.realizado || 0) }
+    }).sort((a,b)=> b.realizado - a.realizado).slice(0, limit)
 
-    // Meta x Faturamento por Vendedor — view comercial.vw_vendas_metas (respeita de/ate)
-    const metaVendViewSql = `
-      SELECT
-        vendedor_nome AS label,
-        COALESCE(SUM(subtotal),0)::float AS faturamento,
-        COALESCE(MAX(meta_faturamento_vendedor),0)::float AS meta
-      FROM comercial.vw_vendas_metas
-      ${vmWhere}
-      GROUP BY vendedor_nome
-      ORDER BY faturamento DESC
-      LIMIT $${vmParams.length + 1}::int`;
-    let metaVendedor: { label: string; meta: number; faturamento: number }[] = []
-    try { metaVendedor = await runQuery<{ label: string; meta: number; faturamento: number }>(metaVendViewSql, [...vmParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard meta_fat_vendedor(view) error:', e); metaVendedor = [] }
+    // Meta x Faturamento por Vendedor — tabelas reais (período fixo)
+    const vendMetaFatSql = `SELECT v.id AS vendedor_id, COALESCE(f.nome,'—') AS label, COALESCE(SUM(mv.valor_meta),0)::float AS meta
+                            FROM comercial.metas_vendedores mv
+                            LEFT JOIN comercial.vendedores v ON v.id = mv.vendedor_id
+                            LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id
+                            LEFT JOIN comercial.tipos_metas tm ON tm.id = mv.tipo_meta_id
+                            WHERE mv.periodo >= '2025-09-01' AND mv.periodo <= '2025-12-31' AND tm.nome = 'faturamento'
+                            GROUP BY v.id, f.nome`;
+    const vendRealFatSql = `SELECT v.id AS vendedor_id, COALESCE(f.nome,'—') AS label, COALESCE(SUM(pi.subtotal),0)::float AS faturamento
+                            FROM vendas.pedidos p
+                            JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+                            LEFT JOIN comercial.vendedores v ON v.id = p.vendedor_id
+                            LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id
+                            WHERE p.data_pedido >= '2025-09-01' AND p.data_pedido <= '2025-12-31'
+                            GROUP BY v.id, f.nome`;
+    let vendMetaFat: Array<{ vendedor_id: number; label: string; meta: number }> = []
+    let vendRealFat: Array<{ vendedor_id: number; label: string; faturamento: number }> = []
+    try { vendMetaFat = await runQuery(vendMetaFatSql) } catch { vendMetaFat = [] }
+    try { vendRealFat = await runQuery(vendRealFatSql) } catch { vendRealFat = [] }
+    const metaVendedor = vendRealFat.map(r => {
+      const m = vendMetaFat.find(x => x.vendedor_id === r.vendedor_id)
+      return { label: r.label, meta: Number(m?.meta || 0), faturamento: Number(r.faturamento || 0) }
+    }).sort((a,b)=> b.faturamento - a.faturamento).slice(0, limit)
 
     // Meta x Faturamento por Vendedor (via vw_metas_detalhe)
     // Meta x Faturamento por Vendedor (via vw_metas_detalhe) – filtra por mês/ano quando de/ate fornecidos
@@ -523,51 +547,58 @@ LIMIT $${vmParams.length + 1}::int`;
       .sort((a,b)=> (b.faturamento + b.meta) - (a.faturamento + a.meta))
       .slice(0, limit)
 
-    // Meta x Novos Clientes por Vendedor (Novembro/2025) — via view comercial.vw_vendas_metas
-    const havingNovosVend = (de && ate)
-      ? `HAVING MIN(data_pedido) >= $1 AND MIN(data_pedido) <= $2`
-      : de
-        ? `HAVING MIN(data_pedido) >= $1`
-        : ate
-          ? `HAVING MIN(data_pedido) <= $${de ? 2 : 1}`
-          : ''
-    const metaNovosClientesVendSql = `WITH novos AS (
-    SELECT
-        vendedor_id,
-        COUNT(DISTINCT cliente_id) AS novos_clientes_real
-    FROM comercial.vw_vendas_metas
-    ${vmWhere}
-      ${havingNovosVend}
-    GROUP BY vendedor_id
-)
-SELECT
-    vm.vendedor_nome AS label,
-    COALESCE(MAX(vm.meta_novos_clientes_vendedor), 0)::float AS meta,
-    COALESCE(n.novos_clientes_real, 0)::float AS realizado
-FROM comercial.vw_vendas_metas vm
-LEFT JOIN novos n ON n.vendedor_id = vm.vendedor_id
-${vmWhere.replace(/\bdata_pedido\b/g, 'vm.data_pedido')}
-GROUP BY vm.vendedor_nome, n.novos_clientes_real
-ORDER BY vm.vendedor_nome
-LIMIT $${vmParams.length + 1}::int`;
-    let metaNovosClientesVendedor: { label: string; meta: number; realizado: number }[] = []
-    try { metaNovosClientesVendedor = await runQuery<{ label: string; meta: number; realizado: number }>(metaNovosClientesVendSql, [...vmParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard meta_novos_clientes_vw error:', e); metaNovosClientesVendedor = [] }
+    // Meta x Novos Clientes por Vendedor — tabelas reais (período fixo)
+    const vendMetaNovosSql = `SELECT v.id AS vendedor_id, COALESCE(f.nome,'—') AS label, COALESCE(SUM(mv.valor_meta),0)::float AS meta
+                              FROM comercial.metas_vendedores mv
+                              LEFT JOIN comercial.vendedores v ON v.id = mv.vendedor_id
+                              LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id
+                              LEFT JOIN comercial.tipos_metas tm ON tm.id = mv.tipo_meta_id
+                              WHERE mv.periodo >= '2025-09-01' AND mv.periodo <= '2025-12-31' AND tm.nome = 'novos_clientes'
+                              GROUP BY v.id, f.nome`;
+    const vendRealNovosSql = `WITH firsts AS (
+                                SELECT p.vendedor_id, p.cliente_id, MIN(p.data_pedido) AS first_date
+                                FROM vendas.pedidos p
+                                GROUP BY p.vendedor_id, p.cliente_id
+                              )
+                              SELECT v.id AS vendedor_id, COALESCE(f.nome,'—') AS label, COUNT(*)::float AS realizado
+                              FROM firsts f1
+                              LEFT JOIN comercial.vendedores v ON v.id = f1.vendedor_id
+                              LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id
+                              WHERE f1.first_date >= '2025-09-01' AND f1.first_date <= '2025-12-31'
+                              GROUP BY v.id, f.nome`;
+    let vendMetaNovos: Array<{ vendedor_id: number; label: string; meta: number }> = []
+    let vendRealNovos: Array<{ vendedor_id: number; label: string; realizado: number }> = []
+    try { vendMetaNovos = await runQuery(vendMetaNovosSql) } catch { vendMetaNovos = [] }
+    try { vendRealNovos = await runQuery(vendRealNovosSql) } catch { vendRealNovos = [] }
+    const metaNovosClientesVendedor = vendRealNovos.map(r => {
+      const m = vendMetaNovos.find(x => x.vendedor_id === r.vendedor_id)
+      return { label: r.label, meta: Number(m?.meta || 0), realizado: Number(r.realizado || 0) }
+    }).sort((a,b)=> b.realizado - a.realizado).slice(0, limit)
 
-    // Meta x Ticket Médio por Vendedor (Novembro/2025) — via view comercial.vw_vendas_metas
-    const metaTicketVendSql = `
-      SELECT
-        vendedor_nome AS label,
-        COALESCE(MAX(meta_ticket_vendedor),0)::float AS meta,
-        CASE WHEN COUNT(DISTINCT pedido_id) > 0
-             THEN COALESCE(SUM(subtotal),0)::float / NULLIF(COUNT(DISTINCT pedido_id), 0)
-             ELSE 0 END AS realizado
-      FROM comercial.vw_vendas_metas
-      ${vmWhere}
-      GROUP BY vendedor_nome
-      ORDER BY vendedor_nome
-      LIMIT $${vmParams.length + 1}::int`;
-    let metaTicketMedioVendedor: { label: string; meta: number; realizado: number }[] = []
-    try { metaTicketMedioVendedor = await runQuery<{ label: string; meta: number; realizado: number }>(metaTicketVendSql, [...vmParams, limit]) } catch (e) { console.error('🛒 VENDAS dashboard meta_ticket_medio_vw error:', e); metaTicketMedioVendedor = [] }
+    // Meta x Ticket Médio por Vendedor — tabelas reais (período fixo)
+    const vendMetaTicketSql = `SELECT v.id AS vendedor_id, COALESCE(f.nome,'—') AS label, COALESCE(SUM(mv.valor_meta),0)::float AS meta
+                               FROM comercial.metas_vendedores mv
+                               LEFT JOIN comercial.vendedores v ON v.id = mv.vendedor_id
+                               LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id
+                               LEFT JOIN comercial.tipos_metas tm ON tm.id = mv.tipo_meta_id
+                               WHERE mv.periodo >= '2025-09-01' AND mv.periodo <= '2025-12-31' AND tm.nome = 'ticket_medio'
+                               GROUP BY v.id, f.nome`;
+    const vendRealTicketSql = `SELECT v.id AS vendedor_id, COALESCE(f.nome,'—') AS label,
+                                      CASE WHEN COUNT(DISTINCT p.id) > 0 THEN COALESCE(SUM(pi.subtotal),0)::float / NULLIF(COUNT(DISTINCT p.id),0) ELSE 0 END AS realizado
+                               FROM vendas.pedidos p
+                               JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+                               LEFT JOIN comercial.vendedores v ON v.id = p.vendedor_id
+                               LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id
+                               WHERE p.data_pedido >= '2025-09-01' AND p.data_pedido <= '2025-12-31'
+                               GROUP BY v.id, f.nome`;
+    let vendMetaTicket: Array<{ vendedor_id: number; label: string; meta: number }> = []
+    let vendRealTicket: Array<{ vendedor_id: number; label: string; realizado: number }> = []
+    try { vendMetaTicket = await runQuery(vendMetaTicketSql) } catch { vendMetaTicket = [] }
+    try { vendRealTicket = await runQuery(vendRealTicketSql) } catch { vendRealTicket = [] }
+    const metaTicketMedioVendedor = vendRealTicket.map(r => {
+      const m = vendMetaTicket.find(x => x.vendedor_id === r.vendedor_id)
+      return { label: r.label, meta: Number(m?.meta || 0), realizado: Number(r.realizado || 0) }
+    }).sort((a,b)=> b.realizado - a.realizado).slice(0, limit)
 
     // Vendas por Cupom
     const cupomSql = `SELECT COALESCE(cup.codigo, '—') AS label, COALESCE(SUM(pi.subtotal),0)::float AS value
