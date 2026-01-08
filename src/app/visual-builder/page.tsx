@@ -28,6 +28,80 @@ import { AreaChart } from '@/components/charts/AreaChart';
 import { QueryEngine } from '@/components/visual-builder/QueryEngine';
 import { updateArticleQueryFull } from '@/components/visual-builder/commands/HelperEditorToDSL';
 
+// New: Sales (Vendas) HTML template for Visual Builder
+const SALES_DASHBOARD_TEMPLATE = `<dashboard render="html" theme="branco">
+  <div class="vb-container" style="padding: 16px;">
+    <header class="vb-header" style="background-color:#ffffff; border:1px solid #e5e7eb; border-radius:12px; padding:12px; margin:-16px -16px 16px -16px;">
+      <p style="margin:0 0 4px; font-family:Inter, system-ui, sans-serif; font-size:20px; font-weight:700; color:#111827;">Dashboard de Vendas</p>
+      <p style="margin:0; font-family:Inter, system-ui, sans-serif; font-size:14px; font-weight:400; color:#6b7280;">Visão comercial e desempenho</p>
+    </header>
+
+    <section id="kpis_vendas" class="row kpis" data-role="section" style="display:flex; flex-direction:row; flex-wrap:wrap; justify-content:flex-start; align-items:stretch; gap:16px; margin-bottom:16px;">
+      <article id="kpi_faturamento" class="card" data-role="kpi" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#f0fdf4; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
+        <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Faturamento</p>
+        <div class="kpi-value" style="font-size:28px; font-weight:700; letter-spacing:-0.02em;">R$ 245.000</div>
+      </article>
+      <article id="kpi_pedidos_total" class="card" data-role="kpi" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#ecfeff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
+        <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Pedidos</p>
+        <div class="kpi-value" style="font-size:28px; font-weight:700; letter-spacing:-0.02em;">1.240</div>
+      </article>
+      <article id="kpi_ticket" class="card" data-role="kpi" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#eef2ff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
+        <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Ticket Médio</p>
+        <div class="kpi-value" style="font-size:28px; font-weight:700; letter-spacing:-0.02em;">R$ 198,50</div>
+      </article>
+      <article id="kpi_cogs" class="card" data-role="kpi" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#fff7ed; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
+        <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">COGS</p>
+        <div class="kpi-value" style="font-size:28px; font-weight:700; letter-spacing:-0.02em;">R$ 126.300</div>
+      </article>
+    </section>
+
+    <section id="charts_v1" class="row charts" data-role="section" style="display:flex; flex-direction:row; flex-wrap:wrap; justify-content:flex-start; align-items:stretch; gap:16px; margin-bottom:16px;">
+      <article id="chart_vendas_vendedor" class="card" data-role="chart" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#ffffff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
+        <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Vendas por Vendedor</p>
+        <Chart id="vendas_vendedor" type="bar" height="320">
+          <query schema="vendas" table="pedidos" dimension="vendedor" measure="SUM(subtotal)" timeDimension="data_pedido" limit="5" order="value DESC" where='status in (concluido, pago)' />
+        </Chart>
+      </article>
+      <article id="chart_vendas_canal" class="card" data-role="chart" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#ffffff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
+        <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Vendas por Canal</p>
+        <Chart id="vendas_canal" type="pie" height="320">
+          <query schema="vendas" table="pedidos" dimension="canal_venda" measure="SUM(subtotal)" timeDimension="data_pedido" limit="5" order="value DESC" />
+        </Chart>
+      </article>
+    </section>
+
+    <section id="charts_v2" class="row charts" data-role="section" style="display:flex; flex-direction:row; flex-wrap:wrap; justify-content:flex-start; align-items:stretch; gap:16px; margin-bottom:16px;">
+      <article id="chart_vendas_territorio" class="card" data-role="chart" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#ffffff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
+        <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Vendas por Território</p>
+        <Chart id="vendas_territorio" type="bar" height="320">
+          <query schema="vendas" table="pedidos" dimension="territorio" measure="SUM(subtotal)" timeDimension="data_pedido" limit="5" order="value DESC" />
+        </Chart>
+      </article>
+      <article id="chart_vendas_categoria" class="card" data-role="chart" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#ffffff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
+        <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Top 5 Categorias</p>
+        <Chart id="vendas_categoria" type="bar" height="320">
+          <query schema="vendas" table="pedidos" dimension="categoria" measure="SUM(subtotal)" timeDimension="data_pedido" limit="5" order="value DESC" />
+        </Chart>
+      </article>
+    </section>
+
+    <section id="charts_v3" class="row charts" data-role="section" style="display:flex; flex-direction:row; flex-wrap:wrap; justify-content:flex-start; align-items:stretch; gap:16px; margin-bottom:16px;">
+      <article id="chart_top_clientes" class="card" data-role="chart" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#ffffff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
+        <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Top 5 Clientes</p>
+        <Chart id="top_clientes" type="bar" height="320">
+          <query schema="vendas" table="pedidos" dimension="cliente" measure="SUM(subtotal)" timeDimension="data_pedido" limit="5" order="value DESC" />
+        </Chart>
+      </article>
+      <article id="chart_vendas_cidade" class="card" data-role="chart" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#ffffff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
+        <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Vendas por Cidade</p>
+        <Chart id="vendas_cidade" type="area" height="320">
+          <query schema="vendas" table="pedidos" dimension="cidade" measure="SUM(subtotal)" timeDimension="data_pedido" limit="5" order="value DESC" />
+        </Chart>
+      </article>
+    </section>
+  </div>
+</dashboard>`;
+
 export default function VisualBuilderPage() {
   const visualBuilderState = useStore($visualBuilderState);
   const [activeTab, setActiveTab] = useState<'editor' | 'responsive'>('editor');
@@ -878,25 +952,33 @@ export default function VisualBuilderPage() {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <button
-              className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              onClick={() => setShowSave(true)}
-            >
-              Salvar como…
-            </button>
-            <button
-              className="px-4 py-2 text-sm border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-              onClick={() => setShowOpen(true)}
-            >
-              Abrir…
-            </button>
-            
-            <button className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-              Export Config
-            </button>
-            <button className="px-4 py-2 text-sm border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
-              Import Config
-            </button>
+          <button
+            className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            onClick={() => setShowSave(true)}
+          >
+            Salvar como…
+          </button>
+          <button
+            className="px-4 py-2 text-sm border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+            onClick={() => setShowOpen(true)}
+          >
+            Abrir…
+          </button>
+          <button
+            className="px-4 py-2 text-sm border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+            onClick={() => {
+              try { visualBuilderActions.updateCode(SALES_DASHBOARD_TEMPLATE); } catch {}
+            }}
+          >
+            Template Vendas
+          </button>
+          
+          <button className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+            Export Config
+          </button>
+          <button className="px-4 py-2 text-sm border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+            Import Config
+          </button>
           </div>
         </div>
       </div>

@@ -42,12 +42,13 @@ interface ChartEditorModalProps {
 
 export default function ChartEditorModal({ isOpen, initial, onClose, onSave }: ChartEditorModalProps) {
   // Static options
-  const SCHEMAS = [ { value: 'financeiro', label: 'Financeiro' } ];
+  const SCHEMAS = [ { value: 'financeiro', label: 'Financeiro' }, { value: 'vendas', label: 'Vendas' } ];
   const TABLES = [
     { value: 'contas_pagar', label: 'Contas a Pagar' },
     { value: 'contas_receber', label: 'Contas a Receber' },
     { value: 'pagamentos_efetuados', label: 'Pagamentos Efetuados' },
     { value: 'pagamentos_recebidos', label: 'Pagamentos Recebidos' },
+    { value: 'pedidos', label: 'Pedidos (Vendas)' },
   ];
   const TABLE_META: Record<string, { defaultMeasureField: string; defaultTimeColumn: string; dimensions: string[]; measureFields: string[]; timeColumns: string[] }> = {
     contas_pagar: {
@@ -77,6 +78,13 @@ export default function ChartEditorModal({ isOpen, initial, onClose, onSave }: C
       measureFields: ['valor_total_recebido'],
       timeColumns: ['data_recebimento'],
       dimensions: ['categoria','cliente','centro_lucro','filial','unidade_negocio','metodo_pagamento','conta_financeira']
+    },
+    pedidos: {
+      defaultMeasureField: 'subtotal',
+      defaultTimeColumn: 'data_pedido',
+      measureFields: ['subtotal'],
+      timeColumns: ['data_pedido'],
+      dimensions: ['vendedor','canal_venda','territorio','categoria','cliente','cidade']
     },
   };
   const AGGS: Array<'SUM'|'COUNT'|'AVG'|'MIN'|'MAX'> = ['SUM','COUNT','AVG','MIN','MAX'];
