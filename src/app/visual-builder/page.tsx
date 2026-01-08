@@ -29,7 +29,7 @@ import { QueryEngine } from '@/components/visual-builder/QueryEngine';
 import { updateArticleQueryFull } from '@/components/visual-builder/commands/HelperEditorToDSL';
 
 // New: Sales (Vendas) HTML template for Visual Builder
-const SALES_DASHBOARD_TEMPLATE = `<dashboard render="html" theme="branco">
+const SALES_DASHBOARD_TEMPLATE = `<dashboard render="html" theme="branco" date-type="custom" date-start="2025-11-01" date-end="2026-01-31">
   <div class="vb-container" style="padding: 16px;">
     <header class="vb-header" style="background-color:#ffffff; border:1px solid #e5e7eb; border-radius:12px; padding:12px; margin:-16px -16px 16px -16px;">
       <p style="margin:0 0 4px; font-family:Inter, system-ui, sans-serif; font-size:20px; font-weight:700; color:#111827;">Dashboard de Vendas</p>
