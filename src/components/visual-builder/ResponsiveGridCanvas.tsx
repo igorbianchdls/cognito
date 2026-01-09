@@ -468,21 +468,99 @@ function PureHtmlChart({ widget, globalFilters }: { widget: Widget; globalFilter
         />
       )}
       {type === 'stackedbar' && grouped && (
-        <StackedBarChart {...(widget.stackedBarConfig?.styling || {})}
-          margin={widget.stackedBarConfig?.margin} legends={widget.stackedBarConfig?.legends}
-          data={grouped.items} keys={grouped.series.map(s => s.key)} colors={grouped.series.map(s => s.color)} seriesMetadata={grouped.series}
+        <StackedBarChart
+          {...common}
+          enableGridX={vbNivo.enableGridX}
+          enableGridY={vbNivo.enableGridY}
+          gridColor={vbNivo.gridColor}
+          gridStrokeWidth={vbNivo.gridStrokeWidth}
+          axisFontFamily={vbNivo.axisFontFamily}
+          axisFontSize={vbNivo.axisFontSize}
+          axisFontWeight={vbNivo.axisFontWeight}
+          axisTextColor={vbNivo.axisTextColor}
+          axisLegendFontSize={vbNivo.axisLegendFontSize}
+          axisLegendFontWeight={vbNivo.axisLegendFontWeight}
+          labelsFontFamily={vbNivo.labelsFontFamily}
+          labelsFontSize={vbNivo.labelsFontSize}
+          labelsFontWeight={vbNivo.labelsFontWeight}
+          labelsTextColor={vbNivo.labelsTextColor}
+          legendsFontFamily={vbNivo.legendsFontFamily}
+          legendsFontSize={vbNivo.legendsFontSize}
+          legendsFontWeight={vbNivo.legendsFontWeight}
+          legendsTextColor={vbNivo.legendsTextColor}
+          animate={vbNivo.animate}
+          motionConfig={vbNivo.motionConfig}
+          {...(widget.stackedBarConfig?.styling || {})}
+          margin={widget.stackedBarConfig?.margin}
+          legends={widget.stackedBarConfig?.legends}
+          data={grouped.items}
+          keys={grouped.series.map(s => s.key)}
+          colors={grouped.series.map(s => s.color)}
+          seriesMetadata={grouped.series}
         />
       )}
       {type === 'groupedbar' && grouped && (
-        <GroupedBarChart {...(widget.groupedBarConfig?.styling || {})}
-          margin={widget.groupedBarConfig?.margin} legends={widget.groupedBarConfig?.legends}
-          data={grouped.items} keys={grouped.series.map(s => s.key)} colors={grouped.series.map(s => s.color)} seriesMetadata={grouped.series}
+        <GroupedBarChart
+          {...common}
+          enableGridX={vbNivo.enableGridX}
+          enableGridY={vbNivo.enableGridY}
+          gridColor={vbNivo.gridColor}
+          gridStrokeWidth={vbNivo.gridStrokeWidth}
+          axisFontFamily={vbNivo.axisFontFamily}
+          axisFontSize={vbNivo.axisFontSize}
+          axisFontWeight={vbNivo.axisFontWeight}
+          axisTextColor={vbNivo.axisTextColor}
+          axisLegendFontSize={vbNivo.axisLegendFontSize}
+          axisLegendFontWeight={vbNivo.axisLegendFontWeight}
+          labelsFontFamily={vbNivo.labelsFontFamily}
+          labelsFontSize={vbNivo.labelsFontSize}
+          labelsFontWeight={vbNivo.labelsFontWeight}
+          labelsTextColor={vbNivo.labelsTextColor}
+          legendsFontFamily={vbNivo.legendsFontFamily}
+          legendsFontSize={vbNivo.legendsFontSize}
+          legendsFontWeight={vbNivo.legendsFontWeight}
+          legendsTextColor={vbNivo.legendsTextColor}
+          animate={vbNivo.animate}
+          motionConfig={vbNivo.motionConfig}
+          {...(widget.groupedBarConfig?.styling || {})}
+          margin={widget.groupedBarConfig?.margin}
+          legends={widget.groupedBarConfig?.legends}
+          data={grouped.items}
+          keys={grouped.series.map(s => s.key)}
+          colors={grouped.series.map(s => s.color)}
+          seriesMetadata={grouped.series}
         />
       )}
       {type === 'stackedlines' && grouped && (
-        <StackedLinesChart {...(widget.stackedLinesConfig?.styling || {})}
-          margin={widget.stackedLinesConfig?.margin} legends={widget.stackedLinesConfig?.legends}
-          data={grouped.items} keys={grouped.series.map(s => s.key)} colors={grouped.series.map(s => s.color)} seriesMetadata={grouped.series}
+        <StackedLinesChart
+          {...common}
+          enableGridX={vbNivo.enableGridX}
+          enableGridY={vbNivo.enableGridY}
+          gridColor={vbNivo.gridColor}
+          gridStrokeWidth={vbNivo.gridStrokeWidth}
+          axisFontFamily={vbNivo.axisFontFamily}
+          axisFontSize={vbNivo.axisFontSize}
+          axisFontWeight={vbNivo.axisFontWeight}
+          axisTextColor={vbNivo.axisTextColor}
+          axisLegendFontSize={vbNivo.axisLegendFontSize}
+          axisLegendFontWeight={vbNivo.axisLegendFontWeight}
+          labelsFontFamily={vbNivo.labelsFontFamily}
+          labelsFontSize={vbNivo.labelsFontSize}
+          labelsFontWeight={vbNivo.labelsFontWeight}
+          labelsTextColor={vbNivo.labelsTextColor}
+          legendsFontFamily={vbNivo.legendsFontFamily}
+          legendsFontSize={vbNivo.legendsFontSize}
+          legendsFontWeight={vbNivo.legendsFontWeight}
+          legendsTextColor={vbNivo.legendsTextColor}
+          animate={vbNivo.animate}
+          motionConfig={vbNivo.motionConfig}
+          {...(widget.stackedLinesConfig?.styling || {})}
+          margin={widget.stackedLinesConfig?.margin}
+          legends={widget.stackedLinesConfig?.legends}
+          data={grouped.items}
+          keys={grouped.series.map(s => s.key)}
+          colors={grouped.series.map(s => s.color)}
+          seriesMetadata={grouped.series}
         />
       )}
       {type === 'pivotbar' && grouped && (

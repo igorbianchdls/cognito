@@ -314,6 +314,7 @@ import { initialLiquidGrid } from '@/stores/visualBuilderStore';
 import { ThemeManager, type ThemeName } from '@/components/visual-builder/ThemeManager';
 import type { Widget, GlobalFilters } from '@/stores/visualBuilderStore';
 import { LiquidParser } from '@/components/visual-builder/LiquidParser';
+import { $vbNivoTheme } from '@/stores/visualBuilderNivoStore';
 // import { setGlobalFontByPresetKey } from '@/components/visual-builder/helpers/DefaultHtmlStyleHelper';
 import { createRoot, type Root } from 'react-dom/client';
 import { BarChart } from '@/components/charts/BarChart';
@@ -451,6 +452,7 @@ const SALES_DASHBOARD_TEMPLATE = `<dashboard render="html" theme="branco" date-t
 
 export default function VisualBuilderPage() {
   const visualBuilderState = useStore($visualBuilderState);
+  const vbNivo = useStore($vbNivoTheme);
   const [activeTab, setActiveTab] = useState<'editor' | 'responsive'>('editor');
   const [viewportMode, setViewportMode] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
   const [isFilterLoading, setIsFilterLoading] = useState(false);
@@ -1293,6 +1295,27 @@ export default function VisualBuilderPage() {
       htmlRootsRef.current.push(root);
       const common = {
         data: spec.data,
+        // Nivo defaults (global)
+        enableGridX: vbNivo.enableGridX,
+        enableGridY: vbNivo.enableGridY,
+        gridColor: vbNivo.gridColor,
+        gridStrokeWidth: vbNivo.gridStrokeWidth,
+        axisFontFamily: vbNivo.axisFontFamily,
+        axisFontSize: vbNivo.axisFontSize,
+        axisFontWeight: vbNivo.axisFontWeight,
+        axisTextColor: vbNivo.axisTextColor,
+        axisLegendFontSize: vbNivo.axisLegendFontSize,
+        axisLegendFontWeight: vbNivo.axisLegendFontWeight,
+        labelsFontFamily: vbNivo.labelsFontFamily,
+        labelsFontSize: vbNivo.labelsFontSize,
+        labelsFontWeight: vbNivo.labelsFontWeight,
+        labelsTextColor: vbNivo.labelsTextColor,
+        legendsFontFamily: vbNivo.legendsFontFamily,
+        legendsFontSize: vbNivo.legendsFontSize,
+        legendsFontWeight: vbNivo.legendsFontWeight,
+        legendsTextColor: vbNivo.legendsTextColor,
+        animate: vbNivo.animate,
+        motionConfig: vbNivo.motionConfig,
         // Strip container styling: no border, radius, background, padding
         containerClassName: 'nivo-container',
         containerBorderVariant: 'none',
