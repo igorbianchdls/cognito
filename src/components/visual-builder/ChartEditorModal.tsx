@@ -267,7 +267,12 @@ export default function ChartEditorModal({ isOpen, initial, onClose, onSave }: C
 
               <div>
                 <div className="text-xs text-gray-600 mb-1">Axis</div>
-                <input className="w-full px-2 py-2 bg-gray-100 rounded" placeholder="Axis font family" value={vbNivo.axisFontFamily || ''} onChange={e=>vbNivoActions.update({ axisFontFamily: e.target.value })} />
+                <select className="w-full px-2 py-2 bg-gray-100 rounded" value={vbNivo.axisFontFamily || ''} onChange={e=>vbNivoActions.update({ axisFontFamily: e.target.value })}>
+                  <option value="">(Padrão)</option>
+                  {FontManager.getAvailableFonts().map(f => (
+                    <option key={f.key} value={f.family} style={{ fontFamily: f.family }}>{f.name}</option>
+                  ))}
+                </select>
                 <div className="flex items-center gap-2 mt-1">
                   <input className="w-20 px-2 py-1 bg-gray-100 rounded" type="number" placeholder="Size" value={vbNivo.axisFontSize ?? ''} onChange={e=>vbNivoActions.update({ axisFontSize: e.target.value===''?undefined:Number(e.target.value) })} />
                   <input className="w-24 px-2 py-1 bg-gray-100 rounded" type="number" placeholder="Weight" value={vbNivo.axisFontWeight ?? ''} onChange={e=>vbNivoActions.update({ axisFontWeight: e.target.value===''?undefined:Number(e.target.value) })} />
@@ -276,7 +281,12 @@ export default function ChartEditorModal({ isOpen, initial, onClose, onSave }: C
               </div>
               <div>
                 <div className="text-xs text-gray-600 mb-1">Labels</div>
-                <input className="w-full px-2 py-2 bg-gray-100 rounded" placeholder="Labels font family" value={vbNivo.labelsFontFamily || ''} onChange={e=>vbNivoActions.update({ labelsFontFamily: e.target.value })} />
+                <select className="w-full px-2 py-2 bg-gray-100 rounded" value={vbNivo.labelsFontFamily || ''} onChange={e=>vbNivoActions.update({ labelsFontFamily: e.target.value })}>
+                  <option value="">(Padrão)</option>
+                  {FontManager.getAvailableFonts().map(f => (
+                    <option key={f.key} value={f.family} style={{ fontFamily: f.family }}>{f.name}</option>
+                  ))}
+                </select>
                 <div className="flex items-center gap-2 mt-1">
                   <input className="w-20 px-2 py-1 bg-gray-100 rounded" type="number" placeholder="Size" value={vbNivo.labelsFontSize ?? ''} onChange={e=>vbNivoActions.update({ labelsFontSize: e.target.value===''?undefined:Number(e.target.value) })} />
                   <input className="w-24 px-2 py-1 bg-gray-100 rounded" type="number" placeholder="Weight" value={vbNivo.labelsFontWeight ?? ''} onChange={e=>vbNivoActions.update({ labelsFontWeight: e.target.value===''?undefined:Number(e.target.value) })} />
@@ -286,7 +296,12 @@ export default function ChartEditorModal({ isOpen, initial, onClose, onSave }: C
               <div>
                 <div className="text-xs text-gray-600 mb-1">Legends</div>
                 <label className="flex items-center gap-2 text-xs mb-1"><input type="checkbox" checked={vbNivo.showLegend} onChange={e=>vbNivoActions.update({ showLegend: e.target.checked })} /> Mostrar legenda</label>
-                <input className="w-full px-2 py-2 bg-gray-100 rounded" placeholder="Legends font family" value={vbNivo.legendsFontFamily || ''} onChange={e=>vbNivoActions.update({ legendsFontFamily: e.target.value })} />
+                <select className="w-full px-2 py-2 bg-gray-100 rounded" value={vbNivo.legendsFontFamily || ''} onChange={e=>vbNivoActions.update({ legendsFontFamily: e.target.value })}>
+                  <option value="">(Padrão)</option>
+                  {FontManager.getAvailableFonts().map(f => (
+                    <option key={f.key} value={f.family} style={{ fontFamily: f.family }}>{f.name}</option>
+                  ))}
+                </select>
                 <div className="flex items-center gap-2 mt-1">
                   <input className="w-20 px-2 py-1 bg-gray-100 rounded" type="number" placeholder="Size" value={vbNivo.legendsFontSize ?? ''} onChange={e=>vbNivoActions.update({ legendsFontSize: e.target.value===''?undefined:Number(e.target.value) })} />
                   <input className="w-24 px-2 py-1 bg-gray-100 rounded" type="number" placeholder="Weight" value={vbNivo.legendsFontWeight ?? ''} onChange={e=>vbNivoActions.update({ legendsFontWeight: e.target.value===''?undefined:Number(e.target.value) })} />
@@ -295,7 +310,12 @@ export default function ChartEditorModal({ isOpen, initial, onClose, onSave }: C
               </div>
               <div>
                 <div className="text-xs text-gray-600 mb-1">Tooltip</div>
-                <input className="w-full px-2 py-2 bg-gray-100 rounded" placeholder="Tooltip font family" value={vbNivo.tooltipFontFamily || ''} onChange={e=>vbNivoActions.update({ tooltipFontFamily: e.target.value })} />
+                <select className="w-full px-2 py-2 bg-gray-100 rounded" value={vbNivo.tooltipFontFamily || ''} onChange={e=>vbNivoActions.update({ tooltipFontFamily: e.target.value })}>
+                  <option value="">(Padrão)</option>
+                  {FontManager.getAvailableFonts().map(f => (
+                    <option key={f.key} value={f.family} style={{ fontFamily: f.family }}>{f.name}</option>
+                  ))}
+                </select>
                 <div className="flex items-center gap-2 mt-1">
                   <input className="w-20 px-2 py-1 bg-gray-100 rounded" type="number" placeholder="Size" value={vbNivo.tooltipFontSize ?? ''} onChange={e=>vbNivoActions.update({ tooltipFontSize: e.target.value===''?undefined:Number(e.target.value) })} />
                 </div>
