@@ -552,7 +552,6 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
     title: undefined,
     margin: { top: 20, right: 20, bottom: 40, left: 40 },
     colors: getWidgetColors() || widget.styling?.colors || ['#2563eb'],
-    animate: false,
   };
 
   // Loading state - only for BigQuery widgets
@@ -696,8 +695,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
             legendsFontSize={vbNivo.legendsFontSize}
             legendsFontWeight={vbNivo.legendsFontWeight}
             legendsTextColor={vbNivo.legendsTextColor}
-            tooltipFontFamily={vbNivo.tooltipFontFamily}
-            tooltipFontSize={vbNivo.tooltipFontSize}
+            
             animate={vbNivo.animate}
             motionConfig={vbNivo.motionConfig}
             {...commonChartProps}
@@ -761,8 +759,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
             legendsFontSize={vbNivo.legendsFontSize}
             legendsFontWeight={vbNivo.legendsFontWeight}
             legendsTextColor={vbNivo.legendsTextColor}
-            tooltipFontFamily={vbNivo.tooltipFontFamily}
-            tooltipFontSize={vbNivo.tooltipFontSize}
+            
             animate={vbNivo.animate}
             motionConfig={vbNivo.motionConfig}
             {...commonChartProps}
@@ -807,8 +804,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
             legendsFontSize={vbNivo.legendsFontSize}
             legendsFontWeight={vbNivo.legendsFontWeight}
             legendsTextColor={vbNivo.legendsTextColor}
-            tooltipFontFamily={vbNivo.tooltipFontFamily}
-            tooltipFontSize={vbNivo.tooltipFontSize}
+            
             animate={vbNivo.animate}
             motionConfig={vbNivo.motionConfig}
             {...commonChartProps}
@@ -850,8 +846,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
             legendsFontSize={vbNivo.legendsFontSize}
             legendsFontWeight={vbNivo.legendsFontWeight}
             legendsTextColor={vbNivo.legendsTextColor}
-            tooltipFontFamily={vbNivo.tooltipFontFamily}
-            tooltipFontSize={vbNivo.tooltipFontSize}
+            
             animate={vbNivo.animate}
             motionConfig={vbNivo.motionConfig}
             {...commonChartProps}
