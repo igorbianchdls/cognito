@@ -35,7 +35,7 @@ import { initialLiquidGrid } from '@/stores/visualBuilderStore';
 import { ThemeManager, type ThemeName } from '@/components/visual-builder/ThemeManager';
 import type { Widget, GlobalFilters } from '@/stores/visualBuilderStore';
 import { LiquidParser } from '@/components/visual-builder/LiquidParser';
-import { setGlobalFontByPresetKey } from '@/components/visual-builder/helpers/DefaultHtmlStyleHelper';
+// import { setGlobalFontByPresetKey } from '@/components/visual-builder/helpers/DefaultHtmlStyleHelper';
 import { createRoot, type Root } from 'react-dom/client';
 import { BarChart } from '@/components/charts/BarChart';
 import { LineChart } from '@/components/charts/LineChart';
@@ -208,11 +208,144 @@ export default function VisualBuilderPage() {
   // UI-only defaults for dropdown (no handlers)
   const availableFonts = FontManager.getAvailableFonts();
   const availableFontSizes = FontManager.getAvailableFontSizes();
-  const selectedFont: FontPresetKey = 'barlow';
-  const selectedFontSize: FontSizeKey = 'lg';
-  const selectedLetterSpacing = -0.02;
-  const chartBodyFontFamily: FontPresetKey = 'geist';
-  const chartBodyTextColor = '#6b7280';
+  // CSS-style helpers: ensure <style> exists and update CSS variables
+  const isDsl = (code: string) => code.trim().startsWith('<');
+  const cssSkeleton = `
+    :root {
+      --vb-font-family: var(--font-barlow), Barlow, -apple-system, BlinkMacSystemFont, sans-serif;
+      --vb-letter-spacing: -0.02em;
+      --vb-title-size: 18px;
+      --vb-chart-font-family: var(--font-geist), Geist, -apple-system, BlinkMacSystemFont, sans-serif;
+      --vb-chart-text-color: #6b7280;
+    }
+
+    .vb-container {
+      font-family: var(--vb-font-family);
+      letter-spacing: var(--vb-letter-spacing);
+    }
+
+    .vb-header p,
+    .vb-header h1,
+    .vb-header h2 {
+      font-family: var(--vb-font-family);
+    }
+
+    [data-liquid-chart] {
+      font-family: var(--vb-chart-font-family);
+      color: var(--vb-chart-text-color);
+    }
+
+    .vb-header p:first-of-type {
+      font-size: var(--vb-title-size);
+    }`;
+  const ensureStyleBlock = (dsl: string): string => {
+    if (/<style\b[^>]*>[\s\S]*?<\/style>/i.test(dsl)) return dsl;
+    const dashOpen = dsl.match(/<dashboard\b[^>]*>/i);
+    if (!dashOpen || dashOpen.index === undefined) return dsl;
+    const insertAt = dashOpen.index + dashOpen[0].length;
+    const prefix = dsl.slice(0, insertAt);
+    const suffix = dsl.slice(insertAt);
+    const block = `\n  <style>\n${cssSkeleton}\n  </style>`;
+    return prefix + block + suffix;
+  };
+  const getStyleContent = (dsl: string): { content: string; start: number; end: number } | null => {
+    const re = /<style\b[^>]*>([\s\S]*?)<\/style>/i;
+    const m = dsl.match(re);
+    if (!m) return null;
+    const full = m[0];
+    const start = m.index ?? -1;
+    if (start < 0) return null;
+    return { content: m[1] || '', start, end: start + full.length };
+  };
+  const upsertCssVar = (styleText: string, varName: string, value: string): string => {
+    // Try to find :root { ... }
+    const rootRe = /:root\s*\{([\s\S]*?)\}/i;
+    const rm = styleText.match(rootRe);
+    if (!rm) {
+      // Prepend a :root block with our var
+      const block = `:root {\n  ${varName}: ${value};\n}`;
+      return `${block}\n\n${styleText}`;
+    }
+    const before = styleText.slice(0, rm.index!);
+    const inner = rm[1] || '';
+    const after = styleText.slice((rm.index || 0) + rm[0].length);
+    const varRe = new RegExp(`(^|\\n)\\s*${varName}\\s*:\\s*[^;]+;`, 'i');
+    let newInner: string;
+    if (varRe.test(inner)) {
+      newInner = inner.replace(varRe, (_m, p1) => `${p1}${varName}: ${value};`);
+    } else {
+      const trimmed = inner.trimEnd();
+      const prefix = trimmed && !/;\s*$/.test(trimmed) ? trimmed + ';' : trimmed;
+      newInner = `${prefix}\n  ${varName}: ${value};\n`;
+    }
+    return `${before}:root {${newInner}}${after}`;
+  };
+  const writeCssVarsToDsl = (dsl: string, vars: Record<string, string>): string => {
+    let next = ensureStyleBlock(dsl);
+    const m = getStyleContent(next);
+    if (!m) return dsl;
+    let style = m.content;
+    for (const [k, v] of Object.entries(vars)) {
+      style = upsertCssVar(style, k, v);
+    }
+    const re = /<style\b[^>]*>[\s\S]*?<\/style>/i;
+    const replacement = `<style>\n${style}\n  </style>`;
+    next = next.replace(re, replacement);
+    return next;
+  };
+  const readCssVarsFromDsl = (dsl: string): Record<string, string> => {
+    const out: Record<string, string> = {};
+    const m = getStyleContent(dsl);
+    if (!m) return out;
+    const rootRe = /:root\s*\{([\s\S]*?)\}/i;
+    const rm = m.content.match(rootRe);
+    const scope = rm ? (rm[1] || '') : m.content;
+    const capture = (name: string) => {
+      const re = new RegExp(`${name}\\s*:\\s*([^;]+);`, 'i');
+      const mm = scope.match(re);
+      if (mm && mm[1]) out[name] = mm[1].trim();
+    };
+    capture('--vb-font-family');
+    capture('--vb-letter-spacing');
+    capture('--vb-title-size');
+    capture('--vb-chart-font-family');
+    capture('--vb-chart-text-color');
+    return out;
+  };
+  // Derive current selections from CSS vars
+  const cssVars = useMemo(() => readCssVarsFromDsl(String(visualBuilderState.code || '')), [visualBuilderState.code]);
+  const normalizeFamily = (s?: string) => (s || '').replace(/\s*,\s*/g, ',').replace(/\s+/g, ' ').trim().replace(/^"|"$/g, '')
+  const currentFontFamily = normalizeFamily(cssVars['--vb-font-family']);
+  const currentChartFamily = normalizeFamily(cssVars['--vb-chart-font-family']);
+  const currentTitleSizePx = (cssVars['--vb-title-size'] || '').trim();
+  const currentLetterSpacingEm = (cssVars['--vb-letter-spacing'] || '').trim();
+  const selectedFontKey: FontPresetKey = useMemo(() => {
+    for (const f of availableFonts) {
+      if (normalizeFamily(f.family) === currentFontFamily) return f.key;
+    }
+    return 'barlow';
+  }, [availableFonts, currentFontFamily]);
+  const selectedChartBodyFontKey: FontPresetKey = useMemo(() => {
+    for (const f of availableFonts) {
+      if (normalizeFamily(f.family) === currentChartFamily) return f.key;
+    }
+    return 'geist';
+  }, [availableFonts, currentChartFamily]);
+  const selectedFontSizeKey: FontSizeKey = useMemo(() => {
+    const n = Number((currentTitleSizePx || '').replace(/px$/, ''));
+    for (const s of availableFontSizes) {
+      if (Math.abs(s.value - n) < 1e-6) return s.key as FontSizeKey;
+    }
+    return 'lg';
+  }, [availableFontSizes, currentTitleSizePx]);
+  const selectedLetterSpacingValue: number = useMemo(() => {
+    if (/em$/i.test(currentLetterSpacingEm)) {
+      const n = Number(currentLetterSpacingEm.replace(/em$/i, ''));
+      if (!Number.isNaN(n)) return n;
+    }
+    return -0.02;
+  }, [currentLetterSpacingEm]);
+  const chartBodyTextColor = useMemo(() => (cssVars['--vb-chart-text-color'] || '#6b7280'), [cssVars]);
   const availableBackgrounds = BackgroundManager.getAvailableBackgrounds();
   const selectedBackground: BackgroundPresetKey = BackgroundManager.getDefaultBackground();
   // UI-only defaults (no state/handlers)
@@ -273,12 +406,40 @@ export default function VisualBuilderPage() {
     visualBuilderActions.updateWidgets(updatedWidgets);
   }, []);
 
-  // Handler: Atualiza fonte global no default HTML (aplica no container e substitui inline)
-  const handleGeneralFontChange = useCallback((fontKey: import('@/components/visual-builder/FontManager').FontPresetKey) => {
+  // Handlers: atualizam variáveis CSS dentro do <style>
+  const handleSetStyleFont = useCallback((fontKey: import('@/components/visual-builder/FontManager').FontPresetKey) => {
     try {
-      const src = String(visualBuilderState.code || '');
-      const next = setGlobalFontByPresetKey(src, fontKey);
-      if (next && next !== src) visualBuilderActions.updateCode(next);
+      const code = String(visualBuilderState.code || '');
+      if (!isDsl(code)) return;
+      const family = FontManager.getFontFamily(fontKey);
+      const next = writeCssVarsToDsl(code, { '--vb-font-family': family });
+      if (next !== code) visualBuilderActions.updateCode(next);
+    } catch {}
+  }, [visualBuilderState.code]);
+  const handleSetStyleFontSize = useCallback((sizeKey: import('@/components/visual-builder/FontManager').FontSizeKey) => {
+    try {
+      const code = String(visualBuilderState.code || '');
+      if (!isDsl(code)) return;
+      const px = FontManager.getFontSizeValue(sizeKey) + 'px';
+      const next = writeCssVarsToDsl(code, { '--vb-title-size': px });
+      if (next !== code) visualBuilderActions.updateCode(next);
+    } catch {}
+  }, [visualBuilderState.code]);
+  const handleSetStyleLetterSpacing = useCallback((value: number) => {
+    try {
+      const code = String(visualBuilderState.code || '');
+      if (!isDsl(code)) return;
+      const next = writeCssVarsToDsl(code, { '--vb-letter-spacing': `${value}em` });
+      if (next !== code) visualBuilderActions.updateCode(next);
+    } catch {}
+  }, [visualBuilderState.code]);
+  const handleSetChartBodyFont = useCallback((fontKey: import('@/components/visual-builder/FontManager').FontPresetKey) => {
+    try {
+      const code = String(visualBuilderState.code || '');
+      if (!isDsl(code)) return;
+      const family = FontManager.getFontFamily(fontKey);
+      const next = writeCssVarsToDsl(code, { '--vb-chart-font-family': family });
+      if (next !== code) visualBuilderActions.updateCode(next);
     } catch {}
   }, [visualBuilderState.code]);
 
@@ -1164,11 +1325,11 @@ export default function VisualBuilderPage() {
                     <DropdownMenuSubTrigger>Família da Fonte</DropdownMenuSubTrigger>
                     <DropdownMenuSubContent>
                       {availableFonts.map((font) => (
-                        <DropdownMenuItem key={font.key} className="flex items-center justify-between py-2" onClick={() => handleGeneralFontChange(font.key)}>
+                        <DropdownMenuItem key={font.key} className="flex items-center justify-between py-2" onClick={() => handleSetStyleFont(font.key)}>
                           <span style={{ fontFamily: font.family }} className="text-sm">
                             {font.name}
                           </span>
-                          {selectedFont === font.key && (
+                          {selectedFontKey === font.key && (
                             <Check className="w-4 h-4 text-blue-600" />
                           )}
                         </DropdownMenuItem>
@@ -1183,12 +1344,12 @@ export default function VisualBuilderPage() {
                     <DropdownMenuSubTrigger>Tamanho da Fonte</DropdownMenuSubTrigger>
                     <DropdownMenuSubContent>
                       {availableFontSizes.map((size) => (
-                        <DropdownMenuItem key={size.key} className="flex items-center justify-between py-2">
+                        <DropdownMenuItem key={size.key} className="flex items-center justify-between py-2" onClick={() => handleSetStyleFontSize(size.key)}>
                           <div className="flex flex-col">
                             <span className="text-sm font-medium">{size.name}</span>
                             <span className="text-xs text-muted-foreground">{size.value}px • {size.usage}</span>
                           </div>
-                          {selectedFontSize === size.key && (
+                          {selectedFontSizeKey === size.key && (
                             <Check className="w-4 h-4 text-blue-600" />
                           )}
                         </DropdownMenuItem>
@@ -1203,12 +1364,12 @@ export default function VisualBuilderPage() {
                     <DropdownMenuSubTrigger>Letter Spacing</DropdownMenuSubTrigger>
                     <DropdownMenuSubContent>
                       {[-0.05,-0.04,-0.03,-0.02,-0.01,0,0.01,0.02,0.03,0.04,0.05].map(v => (
-                        <DropdownMenuItem key={v} className="flex items-center justify-between py-2">
+                        <DropdownMenuItem key={v} className="flex items-center justify-between py-2" onClick={() => handleSetStyleLetterSpacing(v)}>
                           <div className="flex items-center gap-2">
                             <span className="text-sm">{v.toFixed(2)}em</span>
                             <span className="text-xs text-muted-foreground">tracking</span>
                           </div>
-                          {Math.abs(selectedLetterSpacing - v) < 1e-6 && (
+                          {Math.abs(selectedLetterSpacingValue - v) < 1e-6 && (
                             <Check className="w-4 h-4 text-blue-600" />
                           )}
                         </DropdownMenuItem>
@@ -1223,11 +1384,11 @@ export default function VisualBuilderPage() {
                     <DropdownMenuSubTrigger>Chart Body Font</DropdownMenuSubTrigger>
                     <DropdownMenuSubContent>
                       {availableFonts.map((font) => (
-                        <DropdownMenuItem key={font.key} className="flex items-center justify-between py-2">
+                        <DropdownMenuItem key={font.key} className="flex items-center justify-between py-2" onClick={() => handleSetChartBodyFont(font.key)}>
                           <span style={{ fontFamily: font.family }} className="text-sm">
                             {font.name}
                           </span>
-                          {chartBodyFontFamily === font.key && (
+                          {selectedChartBodyFontKey === font.key && (
                             <Check className="w-4 h-4 text-blue-600" />
                           )}
                         </DropdownMenuItem>

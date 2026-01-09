@@ -157,7 +157,36 @@ const compactWidgetHeaders = (code: string): string => {
 
 // Initial Liquid template (HTML-like)
 export const initialLiquidGrid = `<dashboard render="html" theme="branco">
-  <style>{}
+  <style>
+    :root {
+      --vb-font-family: var(--font-barlow), Barlow, -apple-system, BlinkMacSystemFont, sans-serif;
+      --vb-letter-spacing: -0.02em;
+      --vb-title-size: 18px;
+      --vb-chart-font-family: var(--font-geist), Geist, -apple-system, BlinkMacSystemFont, sans-serif;
+      --vb-chart-text-color: #6b7280;
+    }
+
+    .vb-container {
+      font-family: var(--vb-font-family);
+      letter-spacing: var(--vb-letter-spacing);
+    }
+
+    .vb-header p,
+    .vb-header h1,
+    .vb-header h2 {
+      font-family: var(--vb-font-family);
+    }
+
+    /* Gráficos montados por LiquidParser */
+    [data-liquid-chart] {
+      font-family: var(--vb-chart-font-family);
+      color: var(--vb-chart-text-color);
+    }
+
+    /* Título do cabeçalho usa tamanho base */
+    .vb-header p:first-of-type {
+      font-size: var(--vb-title-size);
+    }
   </style>
   <div class="vb-container" style="padding: 16px;">
     <header class="vb-header" style="background-color:#ffffff; border:1px solid #e5e7eb; border-radius:12px; padding:12px; margin:-16px -16px 16px -16px;">
