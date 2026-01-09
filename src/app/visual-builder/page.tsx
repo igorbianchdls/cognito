@@ -513,6 +513,190 @@ export default function VisualBuilderPage() {
     } catch {}
   }, [visualBuilderState.code]);
 
+  // ===== Dashboard (vb-container) helpers =====
+  const updateVbContainerStyle = (code: string, mut: (so: Record<string,string>) => void): string => {
+    if (!isDsl(code)) return code;
+    const tagRe = /<([a-z][^>\s]*)\b([^>]*)>/gi;
+    let m: RegExpExecArray | null;
+    while ((m = tagRe.exec(code)) !== null) {
+      const full = m[0];
+      const tag = m[1];
+      const attrs = m[2] || '';
+      const classM = attrs.match(/class\s*=\s*("([^"]*)"|'([^']*)')/i);
+      if (!classM) continue;
+      const classVal = (classM[2] || classM[3] || '');
+      if (!/\bvb-container\b/.test(classVal)) continue;
+      const styleRe = /style\s*=\s*("([^"]*)"|'([^']*)')/i;
+      const sm = attrs.match(styleRe);
+      const so = parseInlineStyle(sm ? (sm[2] || sm[3] || '') : '');
+      mut(so);
+      const noStyle = attrs.replace(styleRe, '').replace(/\s+$/, '');
+      const styleStr = toInlineStyle(so);
+      const newOpen = `<${tag}${noStyle ? ` ${noStyle}` : ''}${styleStr ? ` style=\"${styleStr}\"` : ''}>`;
+      return code.replace(full, newOpen);
+    }
+    return code;
+  };
+
+  // ===== Theme presets (header + dashboard + articles) =====
+  type PresetKey = 'clean-light' | 'clean-dark' | 'minimal-cards';
+  type Preset = {
+    key: PresetKey;
+    name: string;
+    description: string;
+    header: { backgroundColor: string; borderColor?: string; borderWidth?: number; borderStyle?: 'solid'|'dashed'|'dotted'; borderRadius?: number; titleColor: string; subtitleColor: string };
+    dashboard: { backgroundColor: string };
+    articles: {
+      backgroundColor: string;
+      borderColor?: string; borderWidth?: number; borderStyle?: 'solid'|'dashed'|'dotted'; borderRadius?: number;
+      padding?: { top?: number; right?: number; bottom?: number; left?: number };
+      marginBottom?: number;
+      title: { color: string; size: number; weight: string | number };
+      value: { color: string; size: number; weight: string | number };
+    };
+  };
+  const PRESETS: Preset[] = [
+    {
+      key: 'clean-light',
+      name: 'Clean Light',
+      description: 'Claro, minimalista, cartões brancos',
+      header: { backgroundColor: '#ffffff', borderColor: '#e5e7eb', borderWidth: 1, borderStyle: 'solid', borderRadius: 12, titleColor: '#111827', subtitleColor: '#6b7280' },
+      dashboard: { backgroundColor: '#f8fafc' },
+      articles: {
+        backgroundColor: '#ffffff', borderColor: '#e5e7eb', borderWidth: 1, borderStyle: 'solid', borderRadius: 12,
+        padding: { top: 12, right: 12, bottom: 12, left: 12 }, marginBottom: 16,
+        title: { color: '#111827', size: 16, weight: 600 },
+        value: { color: '#111827', size: 28, weight: 700 },
+      }
+    },
+    {
+      key: 'clean-dark',
+      name: 'Clean Dark',
+      description: 'Escuro com alto contraste',
+      header: { backgroundColor: '#111827', borderColor: '#374151', borderWidth: 1, borderStyle: 'solid', borderRadius: 12, titleColor: '#f9fafb', subtitleColor: '#9ca3af' },
+      dashboard: { backgroundColor: '#0b0f14' },
+      articles: {
+        backgroundColor: '#1b1b1b', borderColor: '#404040', borderWidth: 1, borderStyle: 'solid', borderRadius: 12,
+        padding: { top: 12, right: 12, bottom: 12, left: 12 }, marginBottom: 16,
+        title: { color: '#e5e7eb', size: 16, weight: 600 },
+        value: { color: '#ffffff', size: 28, weight: 700 },
+      }
+    },
+    {
+      key: 'minimal-cards',
+      name: 'Minimal (Cards)',
+      description: 'Sutil, bordas tracejadas, leve',
+      header: { backgroundColor: 'transparent', borderColor: undefined, borderWidth: undefined, borderStyle: undefined, borderRadius: 12, titleColor: '#111827', subtitleColor: '#6b7280' },
+      dashboard: { backgroundColor: '#ffffff' },
+      articles: {
+        backgroundColor: '#ffffff', borderColor: '#e5e7eb', borderWidth: 1, borderStyle: 'dashed', borderRadius: 8,
+        padding: { top: 8, right: 8, bottom: 8, left: 8 }, marginBottom: 12,
+        title: { color: '#111827', size: 15, weight: 500 },
+        value: { color: '#111827', size: 26, weight: 600 },
+      }
+    }
+  ];
+
+  const applyPresetOnCode = (code: string, key: PresetKey): string => {
+    const preset = PRESETS.find(p => p.key === key);
+    if (!preset) return code;
+    let next = String(code);
+    // Header
+    const mh = getHeaderMatch(next);
+    if (mh) {
+      const whole = mh[0]; const open = mh[1] || ''; const inner = mh[2] || '';
+      const styleRe = /style\s*=\s*("([^"]*)"|'([^']*)')/i;
+      const sm = open.match(styleRe);
+      const so = parseInlineStyle(sm ? (sm[2] || sm[3] || '') : '');
+      so['background-color'] = preset.header.backgroundColor;
+      if (preset.header.borderColor) so['border-color'] = preset.header.borderColor; else delete so['border-color'];
+      if (preset.header.borderWidth != null) so['border-width'] = `${preset.header.borderWidth}px`; else delete so['border-width'];
+      if (preset.header.borderStyle) so['border-style'] = preset.header.borderStyle; else delete so['border-style'];
+      if (preset.header.borderRadius != null) so['border-radius'] = `${preset.header.borderRadius}px`; else delete so['border-radius'];
+      const newOpen = setHeaderOpenStyle(open, so);
+      const newInner = setHeaderTextColors(inner, preset.header.titleColor, preset.header.subtitleColor);
+      next = next.replace(whole, newOpen + newInner + `</header>`);
+    }
+    // Dashboard (vb-container)
+    next = updateVbContainerStyle(next, (so) => {
+      so['background-color'] = preset.dashboard.backgroundColor;
+    });
+    // Articles
+    next = rewriteAllArticles(next, (open, inner) => {
+      const newOpen = setArticleOpenStyle(open, (so) => {
+        so['background-color'] = preset.articles.backgroundColor;
+        if (preset.articles.borderColor) so['border-color'] = preset.articles.borderColor; else delete so['border-color'];
+        if (preset.articles.borderWidth != null) so['border-width'] = `${preset.articles.borderWidth}px`; else delete so['border-width'];
+        if (preset.articles.borderStyle) so['border-style'] = preset.articles.borderStyle; else delete so['border-style'];
+        if (preset.articles.borderRadius != null) so['border-radius'] = `${preset.articles.borderRadius}px`; else delete so['border-radius'];
+        // spacing
+        const pad = preset.articles.padding || {};
+        if (pad.top != null) so['padding-top'] = `${pad.top}px`;
+        if (pad.right != null) so['padding-right'] = `${pad.right}px`;
+        if (pad.bottom != null) so['padding-bottom'] = `${pad.bottom}px`;
+        if (pad.left != null) so['padding-left'] = `${pad.left}px`;
+        if (preset.articles.marginBottom != null) so['margin-bottom'] = `${preset.articles.marginBottom}px`;
+      });
+      let newInner = setFirstPStyle(inner, (ps) => {
+        ps['color'] = preset.articles.title.color;
+        ps['font-size'] = `${preset.articles.title.size}px`;
+        ps['font-weight'] = String(preset.articles.title.weight);
+      });
+      newInner = setKpiValueStyle(newInner, (ps) => {
+        ps['color'] = preset.articles.value.color;
+        ps['font-size'] = `${preset.articles.value.size}px`;
+        ps['font-weight'] = String(preset.articles.value.weight);
+      });
+      return { open: newOpen, inner: newInner };
+    });
+    return next;
+  };
+
+  const detectPresetKey = (code: string): PresetKey | 'custom' => {
+    const src = String(code || '');
+    const mh = getHeaderMatch(src);
+    const headerBg = (() => {
+      if (!mh) return undefined;
+      const m = (mh[1] || '').match(/style\s*=\s*("([^"]*)"|'([^']*)')/i);
+      const so = parseInlineStyle(m ? (m[2] || m[3] || '') : '');
+      return (so['background-color'] || '').toLowerCase();
+    })();
+    const containerBg = (() => {
+      const tagRe = /<([a-z][^>\s]*)\b([^>]*)>/gi; let m: RegExpExecArray | null;
+      while ((m = tagRe.exec(src)) !== null) {
+        const attrs = m[2] || '';
+        const cm = attrs.match(/class\s*=\s*("([^"]*)"|'([^']*)')/i);
+        if (!cm) continue; const cv = (cm[2] || cm[3] || '');
+        if (!/\bvb-container\b/.test(cv)) continue;
+        const sm = attrs.match(/style\s*=\s*("([^"]*)"|'([^']*)')/i);
+        const so = parseInlineStyle(sm ? (sm[2] || sm[3] || '') : '');
+        return (so['background-color'] || '').toLowerCase();
+      }
+      return undefined;
+    })();
+    const art = getAllArticles(src)[0];
+    const articleBg = (() => {
+      if (!art) return undefined;
+      const sm = art.open.match(/style\s*=\s*("([^"]*)"|'([^']*)')/i);
+      const so = parseInlineStyle(sm ? (sm[2] || sm[3] || '') : '');
+      return (so['background-color'] || '').toLowerCase();
+    })();
+    for (const p of PRESETS) {
+      const hb = p.header.backgroundColor.toLowerCase();
+      const db = p.dashboard.backgroundColor.toLowerCase();
+      const ab = p.articles.backgroundColor.toLowerCase();
+      if (headerBg === hb && containerBg === db && articleBg === ab) return p.key;
+    }
+    return 'custom';
+  };
+  const selectedPreset = useMemo(() => detectPresetKey(String(visualBuilderState.code || '')), [visualBuilderState.code]);
+  const handleApplyPreset = useCallback((key: PresetKey) => {
+    try {
+      const src = String(visualBuilderState.code || '');
+      const next = applyPresetOnCode(src, key);
+      if (next !== src) visualBuilderActions.updateCode(next);
+    } catch {}
+  }, [visualBuilderState.code]);
   // ===== Articles (global) style helpers =====
   type BorderStyle = 'solid' | 'dashed' | 'dotted';
   type ArticleStyleAggregate = {
@@ -1711,7 +1895,26 @@ export default function VisualBuilderPage() {
                 <span>Tema</span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
+          <DropdownMenuContent align="end" className="w-56">
+              {/* Presets */}
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                  <Palette className="w-4 h-4 mr-2" />
+                  Presets
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent className="w-72">
+                  {PRESETS.map((p) => (
+                    <DropdownMenuItem key={p.key} className="flex items-center justify-between py-2" onClick={() => handleApplyPreset(p.key)}>
+                      <div className="flex flex-col">
+                        <span className="font-medium text-sm">{p.name}</span>
+                        <span className="text-xs text-muted-foreground">{p.description}</span>
+                      </div>
+                      {selectedPreset === p.key && <Check className="w-4 h-4 text-blue-600" />}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger>
                   <Palette className="w-4 h-4 mr-2" />
