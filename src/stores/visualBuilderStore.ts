@@ -157,6 +157,8 @@ const compactWidgetHeaders = (code: string): string => {
 
 // Initial Liquid template (HTML-like)
 export const initialLiquidGrid = `<dashboard render="html" theme="branco">
+  <style>{}
+  </style>
   <div class="vb-container" style="padding: 16px;">
     <header class="vb-header" style="background-color:#ffffff; border:1px solid #e5e7eb; border-radius:12px; padding:12px; margin:-16px -16px 16px -16px;">
       <p style="margin:0 0 4px; font-family:Inter, system-ui, sans-serif; font-size:20px; font-weight:700; color:#111827;">Dashboard de Indicadores</p>
