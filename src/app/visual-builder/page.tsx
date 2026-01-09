@@ -346,6 +346,112 @@ export default function VisualBuilderPage() {
     return -0.02;
   }, [currentLetterSpacingEm]);
   const chartBodyTextColor = useMemo(() => (cssVars['--vb-chart-text-color'] || '#6b7280'), [cssVars]);
+
+  // ===== Header style helpers (Estilo do Cabeçalho) =====
+  type HeaderPreset = 'auto' | 'light' | 'dark';
+  const parseInlineStyle = (s: string): Record<string, string> => {
+    const out: Record<string, string> = {};
+    if (!s) return out;
+    for (const part of s.split(';')) {
+      const p = part.trim(); if (!p) continue; const i = p.indexOf(':'); if (i === -1) continue;
+      const k = p.slice(0, i).trim(); const v = p.slice(i + 1).trim();
+      out[k] = v;
+    }
+    return out;
+  };
+  const toInlineStyle = (obj: Record<string, string>): string => Object.entries(obj).filter(([,v])=>v!==undefined&&v!=='').map(([k,v])=>`${k}:${v}`).join('; ');
+  const getHeaderMatch = (dsl: string) => dsl.match(/<header\b([^>]*)>([\s\S]*?)<\/header>/i);
+  const setHeaderOpenStyle = (openAttrs: string, styleObj: Record<string,string>): string => {
+    const styleRe = /style\s*=\s*("([^"]*)"|'([^']*)')/i;
+    let newOpenAttrs = openAttrs.replace(styleRe, '');
+    newOpenAttrs = newOpenAttrs.replace(/\s+$/, '');
+    const styleStr = toInlineStyle(styleObj);
+    return `<header${newOpenAttrs}${styleStr ? ` style=\"${styleStr}\"` : ''}>`;
+  };
+  const setHeaderTextColors = (inner: string, titleColor?: string, subtitleColor?: string): string => {
+    const pRe = /<p\b([^>]*)>([\s\S]*?)<\/p>/gi;
+    const matches = Array.from(inner.matchAll(pRe));
+    let next = inner;
+    const setColor = (full: string, openAttrs: string, body: string, color?: string) => {
+      if (!color) return full;
+      const styleRe = /style\s*=\s*("([^"]*)"|'([^']*)')/i;
+      const m = openAttrs.match(styleRe);
+      const styleStr = m ? (m[2] || m[3] || '') : '';
+      const so = parseInlineStyle(styleStr);
+      so['color'] = color;
+      const noStyle = openAttrs.replace(styleRe, '').replace(/\s+$/, '');
+      const newOpen = `<p${noStyle ? ` ${noStyle}` : ''} style=\"${toInlineStyle(so)}\">`;
+      return `${newOpen}${body}</p>`;
+    };
+    if (matches[0]) {
+      const full = matches[0][0]; const open = matches[0][1] || ''; const body = matches[0][2] || '';
+      const replaced = setColor(full, open, body, titleColor);
+      next = next.replace(full, replaced);
+    }
+    // Need to re-search after replacement for correct second p boundaries
+    const matches2 = Array.from(next.matchAll(pRe));
+    if (matches2[1]) {
+      const full = matches2[1][0]; const open = matches2[1][1] || ''; const body = matches2[1][2] || '';
+      const replaced = setColor(full, open, body, subtitleColor);
+      next = next.replace(full, replaced);
+    }
+    return next;
+  };
+  const resolvePreset = (preset: HeaderPreset): HeaderPreset => {
+    if (preset !== 'auto') return preset;
+    // Map theme to light/dark
+    return (currentThemeName === 'branco' || currentThemeName === 'cinza-claro') ? 'light' : 'dark';
+  };
+  const applyHeaderPresetOnCode = (code: string, preset: HeaderPreset): string => {
+    if (!isDsl(code)) return code;
+    const m = getHeaderMatch(code);
+    if (!m) return code;
+    const whole = m[0];
+    const openAttrs = m[1] || '';
+    const innerOld = m[2] || '';
+    const styleRe = /style\s*=\s*("([^"]*)"|'([^']*)')/i;
+    const styleM = openAttrs.match(styleRe);
+    const styleObj = parseInlineStyle(styleM ? (styleM[2] || styleM[3] || '') : '');
+    const resolved = resolvePreset(preset);
+    if (resolved === 'light') {
+      styleObj['background-color'] = '#ffffff';
+      styleObj['border-color'] = '#e5e7eb';
+      styleObj['border-width'] = '1px';
+      styleObj['border-style'] = 'solid';
+      styleObj['border-radius'] = '12px';
+    } else {
+      styleObj['background-color'] = '#111827';
+      styleObj['border-color'] = '#374151';
+      styleObj['border-width'] = '1px';
+      styleObj['border-style'] = 'solid';
+      styleObj['border-radius'] = '12px';
+    }
+    const newOpen = setHeaderOpenStyle(openAttrs, styleObj);
+    const nextInner = setHeaderTextColors(innerOld,
+      resolved === 'light' ? '#111827' : '#f9fafb',
+      resolved === 'light' ? '#6b7280' : '#9ca3af'
+    );
+    return code.replace(whole, newOpen + nextInner + `</header>`);
+  };
+  const detectHeaderPreset = (code: string): HeaderPreset => {
+    const m = getHeaderMatch(code);
+    if (!m) return 'auto';
+    const styleRe = /style\s*=\s*("([^"]*)"|'([^']*)')/i;
+    const s = (m[1] || '').match(styleRe);
+    const so = parseInlineStyle(s ? (s[2] || s[3] || '') : '');
+    const bg = (so['background-color'] || '').toLowerCase().trim();
+    if (bg === '#ffffff' || bg === 'white') return 'light';
+    if (bg === '#111827' || bg === '#1f2937') return 'dark';
+    return 'auto';
+  };
+  const headerPresetSelected = useMemo<HeaderPreset>(() => detectHeaderPreset(String(visualBuilderState.code || '')), [visualBuilderState.code]);
+  const handleApplyHeaderPreset = useCallback((preset: HeaderPreset) => {
+    try {
+      const src = String(visualBuilderState.code || '');
+      const next = applyHeaderPresetOnCode(src, preset);
+      if (next !== src) visualBuilderActions.updateCode(next);
+    } catch {}
+  }, [visualBuilderState.code, currentThemeName]);
   const availableBackgrounds = BackgroundManager.getAvailableBackgrounds();
   const selectedBackground: BackgroundPresetKey = BackgroundManager.getDefaultBackground();
   // UI-only defaults (no state/handlers)
@@ -1405,14 +1511,17 @@ export default function VisualBuilderPage() {
                   Estilo do Cabeçalho
                 </DropdownMenuSubTrigger>
                 <DropdownMenuSubContent>
-                  <DropdownMenuItem className="flex items-center justify-between py-2">
+                  <DropdownMenuItem className="flex items-center justify-between py-2" onClick={() => handleApplyHeaderPreset('auto')}>
                     <span>Automático</span>
+                    {headerPresetSelected === 'auto' && <Check className="w-4 h-4 text-blue-600" />}
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="flex items-center justify-between py-2">
+                  <DropdownMenuItem className="flex items-center justify-between py-2" onClick={() => handleApplyHeaderPreset('light')}>
                     <span>Claro</span>
+                    {headerPresetSelected === 'light' && <Check className="w-4 h-4 text-blue-600" />}
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="flex items-center justify-between py-2">
+                  <DropdownMenuItem className="flex items-center justify-between py-2" onClick={() => handleApplyHeaderPreset('dark')}>
                     <span>Escuro</span>
+                    {headerPresetSelected === 'dark' && <Check className="w-4 h-4 text-blue-600" />}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <div className="px-3 py-2 text-xs text-muted-foreground">Cores do Cabeçalho</div>
