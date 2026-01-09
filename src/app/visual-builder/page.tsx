@@ -1,5 +1,7 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from '@nanostores/react';
 import Link from 'next/link';
@@ -822,7 +824,7 @@ export default function VisualBuilderPage() {
     const styleStr = toInlineStyle(so);
     return `${noStyle ? ` ${noStyle}` : ''}${styleStr ? ` style=\"${styleStr}\"` : ''}`;
   };
-  const setFirstPStyle = (inner: string, mut: (ps: Record<string,string>) => void): string => {
+  function setFirstPStyle(inner: string, mut: (ps: Record<string,string>) => void): string {
     const pRe = /<p\b([^>]*)>([\s\S]*?)<\/p>/i;
     const m = inner.match(pRe);
     if (!m) return inner;
@@ -834,7 +836,20 @@ export default function VisualBuilderPage() {
     const noStyle = open.replace(styleRe, '').replace(/\s+$/, '');
     const newOpen = `<p${noStyle ? ` ${noStyle}` : ''}${Object.keys(ps).length ? ` style=\"${toInlineStyle(ps)}\"` : ''}>`;
     return inner.replace(m[0], `${newOpen}${body}</p>`);
-  };
+  }
+  // Kpi value style helper (used by presets and Articles controls)
+  function setKpiValueStyle(inner: string, mut: (ps: Record<string,string>) => void): string {
+    const kvRe = /<([a-z]+)\b([^>]*?class\s*=\s*(?:"[^"]*\bkpi-value\b[^"]*"|'[^']*\bkpi-value\b[^']*'))[^>]*>([\s\S]*?)<\/\1>/i;
+    const m = inner.match(kvRe); if (!m) return inner;
+    const tag = m[1]; const open = m[2] || ''; const body = m[3] || '';
+    const styleRe = /style\s*=\s*("([^"]*)"|'([^']*)')/i;
+    const sm = open.match(styleRe);
+    const ps = parseInlineStyle(sm ? (sm[2] || sm[3] || '') : '');
+    mut(ps);
+    const noStyle = open.replace(styleRe, '').replace(/\s+$/, '');
+    const newOpen = `<${tag}${noStyle ? ` ${noStyle}` : ''}${Object.keys(ps).length ? ` style=\"${toInlineStyle(ps)}\"` : ''}>`;
+    return inner.replace(m[0], `${newOpen}${body}</${tag}>`);
+  }
   // Handlers: background & border
   const handleSetArticlesBgColor = useCallback((hex: string) => {
     try {
@@ -942,18 +957,6 @@ export default function VisualBuilderPage() {
     } catch {}
   }, [visualBuilderState.code]);
   // Handlers: kpi-value
-  const setKpiValueStyle = (inner: string, mut: (ps: Record<string,string>) => void): string => {
-    const kvRe = /<([a-z]+)\b([^>]*?class\s*=\s*(?:"[^"]*\bkpi-value\b[^"]*"|'[^']*\bkpi-value\b[^']*'))[^>]*>([\s\S]*?)<\/\1>/i;
-    const m = inner.match(kvRe); if (!m) return inner;
-    const tag = m[1]; const open = m[2] || ''; const body = m[3] || '';
-    const styleRe = /style\s*=\s*("([^"]*)"|'([^']*)')/i;
-    const sm = open.match(styleRe);
-    const ps = parseInlineStyle(sm ? (sm[2] || sm[3] || '') : '');
-    mut(ps);
-    const noStyle = open.replace(styleRe, '').replace(/\s+$/, '');
-    const newOpen = `<${tag}${noStyle ? ` ${noStyle}` : ''}${Object.keys(ps).length ? ` style=\"${toInlineStyle(ps)}\"` : ''}>`;
-    return inner.replace(m[0], `${newOpen}${body}</${tag}>`);
-  };
   const handleSetArticlesValueColor = useCallback((hex: string) => {
     try {
       const src = String(visualBuilderState.code || '');
