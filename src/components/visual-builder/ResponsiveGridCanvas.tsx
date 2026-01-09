@@ -36,6 +36,7 @@ import { useStore as useNanoStore } from '@nanostores/react';
 import { $visualBuilderState, visualBuilderActions } from '@/stores/visualBuilderStore';
 import type { GlobalFilters, DateRangeFilter } from '@/stores/visualBuilderStore';
 import { $vbNivoTheme } from '@/stores/visualBuilderNivoStore';
+import { $vbNivoTheme } from '@/stores/visualBuilderNivoStore';
 
 interface ResponsiveGridCanvasProps {
   widgets: Widget[];
@@ -355,10 +356,104 @@ function PureHtmlChart({ widget, globalFilters }: { widget: Widget; globalFilter
   return (
     <>
       {renderPre()}
-      {type === 'bar' && (<BarChart {...common} {...(widget.barConfig?.styling || {})} legends={widget.barConfig?.legends} />)}
-      {type === 'line' && (<LineChart {...common} {...(widget.lineConfig?.styling || {})} legends={widget.lineConfig?.legends} />)}
-      {type === 'pie' && (<PieChart {...common} {...(widget.pieConfig?.styling || {})} legends={widget.pieConfig?.legends} />)}
-      {type === 'area' && (<AreaChart {...common} {...(widget.areaConfig?.styling || {})} legends={widget.areaConfig?.legends} />)}
+      {type === 'bar' && (
+        <BarChart
+          {...common}
+          enableGridX={vbNivo.enableGridX}
+          enableGridY={vbNivo.enableGridY}
+          gridColor={vbNivo.gridColor}
+          gridStrokeWidth={vbNivo.gridStrokeWidth}
+          axisFontFamily={vbNivo.axisFontFamily}
+          axisFontSize={vbNivo.axisFontSize}
+          axisFontWeight={vbNivo.axisFontWeight}
+          axisTextColor={vbNivo.axisTextColor}
+          axisLegendFontSize={vbNivo.axisLegendFontSize}
+          axisLegendFontWeight={vbNivo.axisLegendFontWeight}
+          labelsFontFamily={vbNivo.labelsFontFamily}
+          labelsFontSize={vbNivo.labelsFontSize}
+          labelsFontWeight={vbNivo.labelsFontWeight}
+          labelsTextColor={vbNivo.labelsTextColor}
+          legendsFontFamily={vbNivo.legendsFontFamily}
+          legendsFontSize={vbNivo.legendsFontSize}
+          legendsFontWeight={vbNivo.legendsFontWeight}
+          legendsTextColor={vbNivo.legendsTextColor}
+          animate={vbNivo.animate}
+          motionConfig={vbNivo.motionConfig}
+          {...(widget.barConfig?.styling || {})}
+          legends={widget.barConfig?.legends}
+        />
+      )}
+      {type === 'line' && (
+        <LineChart
+          {...common}
+          enableGridX={vbNivo.enableGridX}
+          enableGridY={vbNivo.enableGridY}
+          gridColor={vbNivo.gridColor}
+          gridStrokeWidth={vbNivo.gridStrokeWidth}
+          axisFontFamily={vbNivo.axisFontFamily}
+          axisFontSize={vbNivo.axisFontSize}
+          axisFontWeight={vbNivo.axisFontWeight}
+          axisTextColor={vbNivo.axisTextColor}
+          axisLegendFontSize={vbNivo.axisLegendFontSize}
+          axisLegendFontWeight={vbNivo.axisLegendFontWeight}
+          labelsFontFamily={vbNivo.labelsFontFamily}
+          labelsFontSize={vbNivo.labelsFontSize}
+          labelsFontWeight={vbNivo.labelsFontWeight}
+          labelsTextColor={vbNivo.labelsTextColor}
+          legendsFontFamily={vbNivo.legendsFontFamily}
+          legendsFontSize={vbNivo.legendsFontSize}
+          legendsFontWeight={vbNivo.legendsFontWeight}
+          legendsTextColor={vbNivo.legendsTextColor}
+          animate={vbNivo.animate}
+          motionConfig={vbNivo.motionConfig}
+          {...(widget.lineConfig?.styling || {})}
+          legends={widget.lineConfig?.legends}
+        />
+      )}
+      {type === 'pie' && (
+        <PieChart
+          {...common}
+          labelsFontFamily={vbNivo.labelsFontFamily}
+          labelsFontSize={vbNivo.labelsFontSize}
+          labelsFontWeight={vbNivo.labelsFontWeight}
+          labelsTextColor={vbNivo.labelsTextColor}
+          legendsFontFamily={vbNivo.legendsFontFamily}
+          legendsFontSize={vbNivo.legendsFontSize}
+          legendsFontWeight={vbNivo.legendsFontWeight}
+          legendsTextColor={vbNivo.legendsTextColor}
+          animate={vbNivo.animate}
+          motionConfig={vbNivo.motionConfig}
+          {...(widget.pieConfig?.styling || {})}
+          legends={widget.pieConfig?.legends}
+        />
+      )}
+      {type === 'area' && (
+        <AreaChart
+          {...common}
+          enableGridX={vbNivo.enableGridX}
+          enableGridY={vbNivo.enableGridY}
+          gridColor={vbNivo.gridColor}
+          gridStrokeWidth={vbNivo.gridStrokeWidth}
+          axisFontFamily={vbNivo.axisFontFamily}
+          axisFontSize={vbNivo.axisFontSize}
+          axisFontWeight={vbNivo.axisFontWeight}
+          axisTextColor={vbNivo.axisTextColor}
+          axisLegendFontSize={vbNivo.axisLegendFontSize}
+          axisLegendFontWeight={vbNivo.axisLegendFontWeight}
+          labelsFontFamily={vbNivo.labelsFontFamily}
+          labelsFontSize={vbNivo.labelsFontSize}
+          labelsFontWeight={vbNivo.labelsFontWeight}
+          labelsTextColor={vbNivo.labelsTextColor}
+          legendsFontFamily={vbNivo.legendsFontFamily}
+          legendsFontSize={vbNivo.legendsFontSize}
+          legendsFontWeight={vbNivo.legendsFontWeight}
+          legendsTextColor={vbNivo.legendsTextColor}
+          animate={vbNivo.animate}
+          motionConfig={vbNivo.motionConfig}
+          {...(widget.areaConfig?.styling || {})}
+          legends={widget.areaConfig?.legends}
+        />
+      )}
       {type === 'stackedbar' && grouped && (
         <StackedBarChart {...(widget.stackedBarConfig?.styling || {})}
           margin={widget.stackedBarConfig?.margin} legends={widget.stackedBarConfig?.legends}
