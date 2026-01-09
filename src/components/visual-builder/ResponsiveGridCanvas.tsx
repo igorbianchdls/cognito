@@ -35,6 +35,7 @@ import type { Widget, GridConfig, LayoutRow } from './ConfigParser';
 import { useStore as useNanoStore } from '@nanostores/react';
 import { $visualBuilderState, visualBuilderActions } from '@/stores/visualBuilderStore';
 import type { GlobalFilters, DateRangeFilter } from '@/stores/visualBuilderStore';
+import { $vbNivoTheme } from '@/stores/visualBuilderNivoStore';
 
 interface ResponsiveGridCanvasProps {
   widgets: Widget[];
@@ -322,11 +323,33 @@ function PureHtmlChart({ widget, globalFilters }: { widget: Widget; globalFilter
   if (loading) return (<div className="h-full w-full p-2 flex items-center justify-center"><div className="text-gray-500 text-sm">Carregando…</div></div>);
   if (error) return (<div className="h-full w-full p-2 flex items-center justify-center bg-red-50 rounded"><div className="text-xs text-red-600">{error}</div></div>);
 
+  const vbNivo = useNanoStore($vbNivoTheme);
   const common = {
+    // Global Nivo defaults
+    enableGridX: vbNivo.enableGridX,
+    enableGridY: vbNivo.enableGridY,
+    gridColor: vbNivo.gridColor,
+    gridStrokeWidth: vbNivo.gridStrokeWidth,
+    axisFontFamily: vbNivo.axisFontFamily,
+    axisFontSize: vbNivo.axisFontSize,
+    axisFontWeight: vbNivo.axisFontWeight,
+    axisTextColor: vbNivo.axisTextColor,
+    axisLegendFontSize: vbNivo.axisLegendFontSize,
+    axisLegendFontWeight: vbNivo.axisLegendFontWeight,
+    labelsFontFamily: vbNivo.labelsFontFamily,
+    labelsFontSize: vbNivo.labelsFontSize,
+    labelsFontWeight: vbNivo.labelsFontWeight,
+    labelsTextColor: vbNivo.labelsTextColor,
+    legendsFontFamily: vbNivo.legendsFontFamily,
+    legendsFontSize: vbNivo.legendsFontSize,
+    legendsFontWeight: vbNivo.legendsFontWeight,
+    legendsTextColor: vbNivo.legendsTextColor,
+    animate: vbNivo.animate,
+    motionConfig: vbNivo.motionConfig,
+    // Chart data/base
     data: (simpleData || []) as any,
     margin: { top: 20, right: 20, bottom: 40, left: 40 },
     colors: (widget.styling?.colors as string[] | undefined) || ['#2563eb'],
-    animate: false,
   };
 
   return (
