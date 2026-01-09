@@ -36,7 +36,6 @@ import { useStore as useNanoStore } from '@nanostores/react';
 import { $visualBuilderState, visualBuilderActions } from '@/stores/visualBuilderStore';
 import type { GlobalFilters, DateRangeFilter } from '@/stores/visualBuilderStore';
 import { $vbNivoTheme } from '@/stores/visualBuilderNivoStore';
-import { $vbNivoTheme } from '@/stores/visualBuilderNivoStore';
 
 interface ResponsiveGridCanvasProps {
   widgets: Widget[];
