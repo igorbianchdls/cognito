@@ -673,6 +673,31 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
         }
       });
 
+      const {
+        animate: barAnimate,
+        motionConfig: barMotionConfig,
+        enableGridX: _barEgx,
+        enableGridY: _barEgy,
+        gridColor: _barGc,
+        gridStrokeWidth: _barGsw,
+        axisFontFamily: _barAff,
+        axisFontSize: _barAfs,
+        axisFontWeight: _barAfw,
+        axisTextColor: _barAtc,
+        axisLegendFontSize: _barAlfs,
+        axisLegendFontWeight: _barAlfw,
+        labelsFontFamily: _barLff,
+        labelsFontSize: _barLfs,
+        labelsFontWeight: _barLfw,
+        labelsTextColor: _barLtc,
+        legendsFontFamily: _barLegFf,
+        legendsFontSize: _barLegFs,
+        legendsFontWeight: _barLegFw,
+        legendsTextColor: _barLegTc,
+        tooltipFontFamily: _barTff,
+        tooltipFontSize: _barTfs,
+        ...barStyling
+      } = (widget.barConfig?.styling || {}) as Record<string, unknown>;
       widgetContent = (
         <div className="h-full w-full px-0 py-2 relative group">
           {renderPreBlocks()}
@@ -695,11 +720,10 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
             legendsFontSize={vbNivo.legendsFontSize}
             legendsFontWeight={vbNivo.legendsFontWeight}
             legendsTextColor={vbNivo.legendsTextColor}
-            
-            animate={vbNivo.animate}
-            motionConfig={vbNivo.motionConfig}
+            animate={(barAnimate as any) ?? vbNivo.animate}
+            motionConfig={(barMotionConfig as any) ?? vbNivo.motionConfig}
             {...commonChartProps}
-            {...(widget.barConfig?.styling || {})}
+            {...barStyling}
             // Pass margin and legends from JSON config
             margin={widget.barConfig?.margin || commonChartProps.margin}
             legends={widget.barConfig?.legends}
@@ -717,11 +741,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
             hoverBlur={widget.barConfig?.styling?.hoverBlur}
             transitionDuration={widget.barConfig?.styling?.transitionDuration}
             transitionEasing={widget.barConfig?.styling?.transitionEasing}
-            // Fallback to styling props if barConfig not provided
-            enableGridX={widget.barConfig?.styling?.enableGridX ?? false}
-            enableGridY={widget.barConfig?.styling?.enableGridY ?? true}
-            gridColor={widget.barConfig?.styling?.gridColor}
-            gridStrokeWidth={widget.barConfig?.styling?.gridStrokeWidth}
+            
             borderRadius={widget.barConfig?.styling?.borderRadius ?? widget.styling?.borderRadius}
             axisBottom={(() => {
               const s = widget.barConfig?.styling as Record<string, unknown> | undefined;
@@ -737,6 +757,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
       break;
 
     case 'line':
+      const { animate: lineAnimate, motionConfig: lineMotionConfig, enableGridX: _lineEgx, enableGridY: _lineEgy, gridColor: _lineGc, gridStrokeWidth: _lineGsw, axisFontFamily: _lineAff, axisFontSize: _lineAfs, axisFontWeight: _lineAfw, axisTextColor: _lineAtc, axisLegendFontSize: _lineAlfs, axisLegendFontWeight: _lineAlfw, labelsFontFamily: _lineLff, labelsFontSize: _lineLfs, labelsFontWeight: _lineLfw, labelsTextColor: _lineLtc, legendsFontFamily: _lineLegFf, legendsFontSize: _lineLegFs, legendsFontWeight: _lineLegFw, legendsTextColor: _lineLegTc, ...lineStyling } = (widget.lineConfig?.styling || {}) as Record<string, unknown>;
       widgetContent = (
         <div className="h-full w-full px-0 py-2 relative group">
           {renderPreBlocks()}
@@ -760,17 +781,15 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
             legendsFontWeight={vbNivo.legendsFontWeight}
             legendsTextColor={vbNivo.legendsTextColor}
             
-            animate={vbNivo.animate}
-            motionConfig={vbNivo.motionConfig}
+            animate={(lineAnimate as any) ?? vbNivo.animate}
+            motionConfig={(lineMotionConfig as any) ?? vbNivo.motionConfig}
             {...commonChartProps}
-            {...(widget.lineConfig?.styling || {})}
+            {...lineStyling}
             // Pass margin and legends from JSON config
             margin={widget.lineConfig?.margin || commonChartProps.margin}
             legends={widget.lineConfig?.legends}
             containerClassName="h-full"
-            // Fallback to default props if lineConfig not provided
-            enableGridX={widget.lineConfig?.styling?.enableGridX ?? false}
-            enableGridY={widget.lineConfig?.styling?.enableGridY ?? true}
+            // Fallbacks
             lineWidth={widget.lineConfig?.styling?.lineWidth ?? 2}
             enablePoints={widget.lineConfig?.styling?.enablePoints ?? true}
             pointSize={widget.lineConfig?.styling?.pointSize ?? 6}
@@ -790,6 +809,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
       break;
 
     case 'pie':
+      const { animate: pieAnimate, motionConfig: pieMotionConfig, labelsFontFamily: _pieLff, labelsFontSize: _pieLfs, labelsFontWeight: _pieLfw, labelsTextColor: _pieLtc, legendsFontFamily: _pieLegFf, legendsFontSize: _pieLegFs, legendsFontWeight: _pieLegFw, legendsTextColor: _pieLegTc, tooltipFontFamily: _pieTff, tooltipFontSize: _pieTfs, ...pieStyling } = (widget.pieConfig?.styling || {}) as Record<string, unknown>;
       widgetContent = (
         <div className="h-full w-full px-0 py-2 relative group">
           {renderPreBlocks()}
@@ -805,10 +825,10 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
             legendsFontWeight={vbNivo.legendsFontWeight}
             legendsTextColor={vbNivo.legendsTextColor}
             
-            animate={vbNivo.animate}
-            motionConfig={vbNivo.motionConfig}
+            animate={(pieAnimate as any) ?? vbNivo.animate}
+            motionConfig={(pieMotionConfig as any) ?? vbNivo.motionConfig}
             {...commonChartProps}
-            {...(widget.pieConfig?.styling || {})}
+            {...pieStyling}
             // Pass margin and legends from JSON config
             margin={widget.pieConfig?.margin || commonChartProps.margin}
             legends={widget.pieConfig?.legends}
@@ -824,6 +844,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
       break;
 
     case 'area':
+      const { animate: areaAnimate, motionConfig: areaMotionConfig, enableGridX: _areaEgx, enableGridY: _areaEgy, gridColor: _areaGc, gridStrokeWidth: _areaGsw, axisFontFamily: _areaAff, axisFontSize: _areaAfs, axisFontWeight: _areaAfw, axisTextColor: _areaAtc, axisLegendFontSize: _areaAlfs, axisLegendFontWeight: _areaAlfw, labelsFontFamily: _areaLff, labelsFontSize: _areaLfs, labelsFontWeight: _areaLfw, labelsTextColor: _areaLtc, legendsFontFamily: _areaLegFf, legendsFontSize: _areaLegFs, legendsFontWeight: _areaLegFw, legendsTextColor: _areaLegTc, tooltipFontFamily: _areaTff, tooltipFontSize: _areaTfs, ...areaStyling } = (widget.areaConfig?.styling || {}) as Record<string, unknown>;
       widgetContent = (
         <div className="h-full w-full px-0 py-2 relative group">
           {renderPreBlocks()}
@@ -847,17 +868,15 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
             legendsFontWeight={vbNivo.legendsFontWeight}
             legendsTextColor={vbNivo.legendsTextColor}
             
-            animate={vbNivo.animate}
-            motionConfig={vbNivo.motionConfig}
+            animate={(areaAnimate as any) ?? vbNivo.animate}
+            motionConfig={(areaMotionConfig as any) ?? vbNivo.motionConfig}
             {...commonChartProps}
-            {...(widget.areaConfig?.styling || {})}
+            {...areaStyling}
             // Pass margin and legends from JSON config
             margin={widget.areaConfig?.margin || commonChartProps.margin}
             legends={widget.areaConfig?.legends}
             containerClassName="h-full"
-            // Fallback to default props if areaConfig not provided
-            enableGridX={widget.areaConfig?.styling?.enableGridX ?? false}
-            enableGridY={widget.areaConfig?.styling?.enableGridY ?? true}
+            // Fallback to default props if areaConfig not provided (grid handled globally)
             areaOpacity={widget.areaConfig?.styling?.areaOpacity ?? 0.15}
             lineWidth={widget.areaConfig?.styling?.lineWidth ?? 2}
             enablePoints={widget.areaConfig?.styling?.enablePoints ?? true}
