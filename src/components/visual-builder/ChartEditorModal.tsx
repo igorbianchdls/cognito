@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useStore } from '@nanostores/react';
+import { $vbNivoTheme, vbNivoActions, type VBNivoThemeState } from '@/stores/visualBuilderNivoStore';
 import { createPortal } from 'react-dom';
 import { FontManager } from './FontManager';
 
@@ -41,6 +43,7 @@ interface ChartEditorModalProps {
 }
 
 export default function ChartEditorModal({ isOpen, initial, onClose, onSave }: ChartEditorModalProps) {
+  const vbNivo = useStore($vbNivoTheme);
   // Static options
   const SCHEMAS = [ { value: 'financeiro', label: 'Financeiro' }, { value: 'vendas', label: 'Vendas' } ];
   const TABLES = [
@@ -237,6 +240,72 @@ export default function ChartEditorModal({ isOpen, initial, onClose, onSave }: C
               <div>
                 <label className="block text-xs text-gray-600 mb-1">Raio (px)</label>
                 <input type="number" min={0} className="w-full px-2 py-2 bg-gray-100 border-0 rounded-md" value={borderRadius ?? ''} onChange={e=>{ setBorderRadius(e.target.value===''?undefined:parseInt(e.target.value)); setDirtyBRadius(true); }} />
+              </div>
+            </div>
+          </div>
+
+          {/* Nivo Chart (Global) */}
+          <div className="border-t pt-3">
+            <div className="flex items-center justify-between">
+              <label className="block text-sm font-semibold text-gray-900">Nivo Chart (Global)</label>
+              <button type="button" className="text-xs text-blue-600 hover:underline" onClick={() => vbNivoActions.reset()}>Reset</button>
+            </div>
+            <div className="grid grid-cols-2 gap-3 mt-2">
+              <div className="col-span-2">
+                <div className="text-xs text-gray-600 mb-1">Grid</div>
+                <div className="flex items-center gap-3">
+                  <label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={vbNivo.enableGridX} onChange={e=>vbNivoActions.update({ enableGridX: e.target.checked })} /> Grid X</label>
+                  <label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={vbNivo.enableGridY} onChange={e=>vbNivoActions.update({ enableGridY: e.target.checked })} /> Grid Y</label>
+                  <div className="flex items-center gap-2 ml-auto">
+                    <span className="text-xs">Cor</span>
+                    <input type="color" value={vbNivo.gridColor || '#f1f5f9'} onChange={e=>vbNivoActions.update({ gridColor: e.target.value })} />
+                    <span className="text-xs">Espessura</span>
+                    <input type="number" className="w-16 px-2 py-1 rounded bg-gray-100" min={0} value={vbNivo.gridStrokeWidth ?? 1} onChange={e=>vbNivoActions.update({ gridStrokeWidth: e.target.value===''?undefined:Number(e.target.value) })} />
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <div className="text-xs text-gray-600 mb-1">Axis</div>
+                <input className="w-full px-2 py-2 bg-gray-100 rounded" placeholder="Axis font family" value={vbNivo.axisFontFamily || ''} onChange={e=>vbNivoActions.update({ axisFontFamily: e.target.value })} />
+                <div className="flex items-center gap-2 mt-1">
+                  <input className="w-20 px-2 py-1 bg-gray-100 rounded" type="number" placeholder="Size" value={vbNivo.axisFontSize ?? ''} onChange={e=>vbNivoActions.update({ axisFontSize: e.target.value===''?undefined:Number(e.target.value) })} />
+                  <input className="w-24 px-2 py-1 bg-gray-100 rounded" type="number" placeholder="Weight" value={vbNivo.axisFontWeight ?? ''} onChange={e=>vbNivoActions.update({ axisFontWeight: e.target.value===''?undefined:Number(e.target.value) })} />
+                  <input className="h-9 w-14 px-1 py-1 bg-gray-100 rounded" type="color" value={vbNivo.axisTextColor || '#6b7280'} onChange={e=>vbNivoActions.update({ axisTextColor: e.target.value })} />
+                </div>
+              </div>
+              <div>
+                <div className="text-xs text-gray-600 mb-1">Labels</div>
+                <input className="w-full px-2 py-2 bg-gray-100 rounded" placeholder="Labels font family" value={vbNivo.labelsFontFamily || ''} onChange={e=>vbNivoActions.update({ labelsFontFamily: e.target.value })} />
+                <div className="flex items-center gap-2 mt-1">
+                  <input className="w-20 px-2 py-1 bg-gray-100 rounded" type="number" placeholder="Size" value={vbNivo.labelsFontSize ?? ''} onChange={e=>vbNivoActions.update({ labelsFontSize: e.target.value===''?undefined:Number(e.target.value) })} />
+                  <input className="w-24 px-2 py-1 bg-gray-100 rounded" type="number" placeholder="Weight" value={vbNivo.labelsFontWeight ?? ''} onChange={e=>vbNivoActions.update({ labelsFontWeight: e.target.value===''?undefined:Number(e.target.value) })} />
+                  <input className="h-9 w-14 px-1 py-1 bg-gray-100 rounded" type="color" value={vbNivo.labelsTextColor || '#1f2937'} onChange={e=>vbNivoActions.update({ labelsTextColor: e.target.value })} />
+                </div>
+              </div>
+              <div>
+                <div className="text-xs text-gray-600 mb-1">Legends</div>
+                <label className="flex items-center gap-2 text-xs mb-1"><input type="checkbox" checked={vbNivo.showLegend} onChange={e=>vbNivoActions.update({ showLegend: e.target.checked })} /> Mostrar legenda</label>
+                <input className="w-full px-2 py-2 bg-gray-100 rounded" placeholder="Legends font family" value={vbNivo.legendsFontFamily || ''} onChange={e=>vbNivoActions.update({ legendsFontFamily: e.target.value })} />
+                <div className="flex items-center gap-2 mt-1">
+                  <input className="w-20 px-2 py-1 bg-gray-100 rounded" type="number" placeholder="Size" value={vbNivo.legendsFontSize ?? ''} onChange={e=>vbNivoActions.update({ legendsFontSize: e.target.value===''?undefined:Number(e.target.value) })} />
+                  <input className="w-24 px-2 py-1 bg-gray-100 rounded" type="number" placeholder="Weight" value={vbNivo.legendsFontWeight ?? ''} onChange={e=>vbNivoActions.update({ legendsFontWeight: e.target.value===''?undefined:Number(e.target.value) })} />
+                  <input className="h-9 w-14 px-1 py-1 bg-gray-100 rounded" type="color" value={vbNivo.legendsTextColor || '#6b7280'} onChange={e=>vbNivoActions.update({ legendsTextColor: e.target.value })} />
+                </div>
+              </div>
+              <div>
+                <div className="text-xs text-gray-600 mb-1">Tooltip</div>
+                <input className="w-full px-2 py-2 bg-gray-100 rounded" placeholder="Tooltip font family" value={vbNivo.tooltipFontFamily || ''} onChange={e=>vbNivoActions.update({ tooltipFontFamily: e.target.value })} />
+                <div className="flex items-center gap-2 mt-1">
+                  <input className="w-20 px-2 py-1 bg-gray-100 rounded" type="number" placeholder="Size" value={vbNivo.tooltipFontSize ?? ''} onChange={e=>vbNivoActions.update({ tooltipFontSize: e.target.value===''?undefined:Number(e.target.value) })} />
+                </div>
+              </div>
+              <div>
+                <div className="text-xs text-gray-600 mb-1">Animação</div>
+                <label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={vbNivo.animate} onChange={e=>vbNivoActions.update({ animate: e.target.checked })} /> Animate</label>
+                <select className="w-full px-2 py-2 bg-gray-100 rounded mt-1" value={vbNivo.motionConfig} onChange={e=>vbNivoActions.update({ motionConfig: e.target.value as VBNivoThemeState['motionConfig'] })}>
+                  {['default','gentle','wobbly','stiff','slow'].map(k => <option key={k} value={k}>{k}</option>)}
+                </select>
               </div>
             </div>
           </div>

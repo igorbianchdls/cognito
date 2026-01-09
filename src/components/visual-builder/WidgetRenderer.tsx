@@ -20,6 +20,7 @@ import { KPICard } from '@/components/widgets/KPICard';
 import InsightsCard from '@/components/widgets/InsightsCard';
 import AlertasCard from '@/components/widgets/AlertasCard';
 import RecomendacoesCard from '@/components/widgets/RecomendacoesCard';
+import { $vbNivoTheme } from '@/stores/visualBuilderNivoStore';
 import InsightsHeroCarousel from '@/components/widgets/InsightsHeroCarousel';
 import InsightsCard2 from '@/components/widgets/InsightsCard2';
 import { $insights2 } from '@/stores/nexus/insights2Store';
@@ -58,6 +59,7 @@ interface WidgetRendererProps {
 export default function WidgetRenderer({ widget, globalFilters }: WidgetRendererProps) {
   const insights2State = useNanoStore($insights2);
   const vbState = useNanoStore($visualBuilderState);
+  const vbNivo = useNanoStore($vbNivoTheme);
   const reloadTick = (vbState.reloadTicks && vbState.reloadTicks[widget.id]) || 0;
   const [data, setData] = useState<WidgetData>(null);
   const [loading, setLoading] = useState(false);
@@ -676,6 +678,28 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
         <div className="h-full w-full px-0 py-2 relative group">
           {renderPreBlocks()}
           <BarChart
+            enableGridX={vbNivo.enableGridX}
+            enableGridY={vbNivo.enableGridY}
+            gridColor={vbNivo.gridColor}
+            gridStrokeWidth={vbNivo.gridStrokeWidth}
+            axisFontFamily={vbNivo.axisFontFamily}
+            axisFontSize={vbNivo.axisFontSize}
+            axisFontWeight={vbNivo.axisFontWeight}
+            axisTextColor={vbNivo.axisTextColor}
+            axisLegendFontSize={vbNivo.axisLegendFontSize}
+            axisLegendFontWeight={vbNivo.axisLegendFontWeight}
+            labelsFontFamily={vbNivo.labelsFontFamily}
+            labelsFontSize={vbNivo.labelsFontSize}
+            labelsFontWeight={vbNivo.labelsFontWeight}
+            labelsTextColor={vbNivo.labelsTextColor}
+            legendsFontFamily={vbNivo.legendsFontFamily}
+            legendsFontSize={vbNivo.legendsFontSize}
+            legendsFontWeight={vbNivo.legendsFontWeight}
+            legendsTextColor={vbNivo.legendsTextColor}
+            tooltipFontFamily={vbNivo.tooltipFontFamily}
+            tooltipFontSize={vbNivo.tooltipFontSize}
+            animate={vbNivo.animate}
+            motionConfig={vbNivo.motionConfig}
             {...commonChartProps}
             {...(widget.barConfig?.styling || {})}
             // Pass margin and legends from JSON config
@@ -719,6 +743,28 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
         <div className="h-full w-full px-0 py-2 relative group">
           {renderPreBlocks()}
           <LineChart
+            enableGridX={vbNivo.enableGridX}
+            enableGridY={vbNivo.enableGridY}
+            gridColor={vbNivo.gridColor}
+            gridStrokeWidth={vbNivo.gridStrokeWidth}
+            axisFontFamily={vbNivo.axisFontFamily}
+            axisFontSize={vbNivo.axisFontSize}
+            axisFontWeight={vbNivo.axisFontWeight}
+            axisTextColor={vbNivo.axisTextColor}
+            axisLegendFontSize={vbNivo.axisLegendFontSize}
+            axisLegendFontWeight={vbNivo.axisLegendFontWeight}
+            labelsFontFamily={vbNivo.labelsFontFamily}
+            labelsFontSize={vbNivo.labelsFontSize}
+            labelsFontWeight={vbNivo.labelsFontWeight}
+            labelsTextColor={vbNivo.labelsTextColor}
+            legendsFontFamily={vbNivo.legendsFontFamily}
+            legendsFontSize={vbNivo.legendsFontSize}
+            legendsFontWeight={vbNivo.legendsFontWeight}
+            legendsTextColor={vbNivo.legendsTextColor}
+            tooltipFontFamily={vbNivo.tooltipFontFamily}
+            tooltipFontSize={vbNivo.tooltipFontSize}
+            animate={vbNivo.animate}
+            motionConfig={vbNivo.motionConfig}
             {...commonChartProps}
             {...(widget.lineConfig?.styling || {})}
             // Pass margin and legends from JSON config
@@ -751,6 +797,20 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
         <div className="h-full w-full px-0 py-2 relative group">
           {renderPreBlocks()}
           <PieChart
+            gridColor={vbNivo.gridColor}
+            gridStrokeWidth={vbNivo.gridStrokeWidth}
+            labelsFontFamily={vbNivo.labelsFontFamily}
+            labelsFontSize={vbNivo.labelsFontSize}
+            labelsFontWeight={vbNivo.labelsFontWeight}
+            labelsTextColor={vbNivo.labelsTextColor}
+            legendsFontFamily={vbNivo.legendsFontFamily}
+            legendsFontSize={vbNivo.legendsFontSize}
+            legendsFontWeight={vbNivo.legendsFontWeight}
+            legendsTextColor={vbNivo.legendsTextColor}
+            tooltipFontFamily={vbNivo.tooltipFontFamily}
+            tooltipFontSize={vbNivo.tooltipFontSize}
+            animate={vbNivo.animate}
+            motionConfig={vbNivo.motionConfig}
             {...commonChartProps}
             {...(widget.pieConfig?.styling || {})}
             // Pass margin and legends from JSON config
@@ -772,6 +832,28 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
         <div className="h-full w-full px-0 py-2 relative group">
           {renderPreBlocks()}
           <AreaChart
+            enableGridX={vbNivo.enableGridX}
+            enableGridY={vbNivo.enableGridY}
+            gridColor={vbNivo.gridColor}
+            gridStrokeWidth={vbNivo.gridStrokeWidth}
+            axisFontFamily={vbNivo.axisFontFamily}
+            axisFontSize={vbNivo.axisFontSize}
+            axisFontWeight={vbNivo.axisFontWeight}
+            axisTextColor={vbNivo.axisTextColor}
+            axisLegendFontSize={vbNivo.axisLegendFontSize}
+            axisLegendFontWeight={vbNivo.axisLegendFontWeight}
+            labelsFontFamily={vbNivo.labelsFontFamily}
+            labelsFontSize={vbNivo.labelsFontSize}
+            labelsFontWeight={vbNivo.labelsFontWeight}
+            labelsTextColor={vbNivo.labelsTextColor}
+            legendsFontFamily={vbNivo.legendsFontFamily}
+            legendsFontSize={vbNivo.legendsFontSize}
+            legendsFontWeight={vbNivo.legendsFontWeight}
+            legendsTextColor={vbNivo.legendsTextColor}
+            tooltipFontFamily={vbNivo.tooltipFontFamily}
+            tooltipFontSize={vbNivo.tooltipFontSize}
+            animate={vbNivo.animate}
+            motionConfig={vbNivo.motionConfig}
             {...commonChartProps}
             {...(widget.areaConfig?.styling || {})}
             // Pass margin and legends from JSON config
