@@ -452,6 +452,66 @@ export default function VisualBuilderPage() {
       if (next !== src) visualBuilderActions.updateCode(next);
     } catch {}
   }, [visualBuilderState.code, currentThemeName]);
+
+  // Header colors current values (for color pickers)
+  const headerColors = useMemo(() => {
+    const code = String(visualBuilderState.code || '');
+    const m = getHeaderMatch(code);
+    const resolved = resolvePreset(headerPresetSelected);
+    let bg = resolved === 'light' ? '#ffffff' : '#111827';
+    let title = resolved === 'light' ? '#111827' : '#f9fafb';
+    let subtitle = resolved === 'light' ? '#6b7280' : '#9ca3af';
+    if (m) {
+      const styleRe = /style\s*=\s*("([^"]*)"|'([^']*)')/i;
+      const s = (m[1] || '').match(styleRe);
+      const so = parseInlineStyle(s ? (s[2] || s[3] || '') : '');
+      if (so['background-color']) bg = so['background-color'];
+      const pRe = /<p\b([^>]*)>([\s\S]*?)<\/p>/gi;
+      const ps = Array.from((m[2] || '').matchAll(pRe));
+      const colorFromOpen = (open: string) => {
+        const mm = open.match(styleRe); const st = mm ? (mm[2] || mm[3] || '') : '';
+        const o = parseInlineStyle(st); return o['color'];
+      };
+      if (ps[0]) { const c = colorFromOpen(ps[0][1] || ''); if (c) title = c; }
+      if (ps[1]) { const c = colorFromOpen(ps[1][1] || ''); if (c) subtitle = c; }
+    }
+    return { bg, title, subtitle };
+  }, [visualBuilderState.code, headerPresetSelected]);
+
+  const handleSetHeaderBgColor = useCallback((hex: string) => {
+    try {
+      const src = String(visualBuilderState.code || '');
+      const m = getHeaderMatch(src); if (!m) return;
+      const whole = m[0]; const openAttrs = m[1] || ''; const innerOld = m[2] || '';
+      const styleRe = /style\s*=\s*("([^"]*)"|'([^']*)')/i;
+      const styleM = openAttrs.match(styleRe);
+      const so = parseInlineStyle(styleM ? (styleM[2] || styleM[3] || '') : '');
+      so['background-color'] = hex;
+      const newOpen = setHeaderOpenStyle(openAttrs, so);
+      const next = src.replace(whole, newOpen + innerOld + `</header>`);
+      if (next !== src) visualBuilderActions.updateCode(next);
+    } catch {}
+  }, [visualBuilderState.code]);
+  const handleSetHeaderTitleColor = useCallback((hex: string) => {
+    try {
+      const src = String(visualBuilderState.code || '');
+      const m = getHeaderMatch(src); if (!m) return;
+      const whole = m[0]; const openAttrs = m[1] || ''; const innerOld = m[2] || '';
+      const innerNext = setHeaderTextColors(innerOld, hex, undefined);
+      const next = src.replace(whole, `<header${openAttrs}>` + innerNext + `</header>`);
+      if (next !== src) visualBuilderActions.updateCode(next);
+    } catch {}
+  }, [visualBuilderState.code]);
+  const handleSetHeaderSubtitleColor = useCallback((hex: string) => {
+    try {
+      const src = String(visualBuilderState.code || '');
+      const m = getHeaderMatch(src); if (!m) return;
+      const whole = m[0]; const openAttrs = m[1] || ''; const innerOld = m[2] || '';
+      const innerNext = setHeaderTextColors(innerOld, undefined, hex);
+      const next = src.replace(whole, `<header${openAttrs}>` + innerNext + `</header>`);
+      if (next !== src) visualBuilderActions.updateCode(next);
+    } catch {}
+  }, [visualBuilderState.code]);
   const availableBackgrounds = BackgroundManager.getAvailableBackgrounds();
   const selectedBackground: BackgroundPresetKey = BackgroundManager.getDefaultBackground();
   // UI-only defaults (no state/handlers)
@@ -1528,23 +1588,30 @@ export default function VisualBuilderPage() {
                   <div className="px-3 py-2 text-xs text-muted-foreground space-y-2">
                     <div className="flex items-center justify-between gap-2">
                       <span>Fundo</span>
-                      <input type="color" defaultValue={currentHeaderStyle.background} disabled />
+                      <input
+                        type="color"
+                        aria-label="Cor de fundo do cabeçalho"
+                        value={headerColors.bg}
+                        onChange={(e)=>handleSetHeaderBgColor(e.target.value)}
+                      />
                     </div>
                     <div className="flex items-center justify-between gap-2">
                       <span>Texto primário</span>
-                      <input type="color" defaultValue={currentHeaderStyle.textPrimary} disabled />
+                      <input
+                        type="color"
+                        aria-label="Cor do título do cabeçalho"
+                        value={headerColors.title}
+                        onChange={(e)=>handleSetHeaderTitleColor(e.target.value)}
+                      />
                     </div>
                     <div className="flex items-center justify-between gap-2">
                       <span>Texto secundário</span>
-                      <input type="color" defaultValue={currentHeaderStyle.textSecondary} disabled />
-                    </div>
-                    <div className="flex items-center justify-between gap-2">
-                      <span>Borda inferior</span>
-                      <input type="color" defaultValue={currentHeaderStyle.borderBottomColor} disabled />
-                    </div>
-                    <div className="flex items-center justify-between gap-2">
-                      <span>Borda do seletor de data</span>
-                      <input type="color" defaultValue={currentHeaderStyle.datePickerBorderColor} disabled />
+                      <input
+                        type="color"
+                        aria-label="Cor do subtítulo do cabeçalho"
+                        value={headerColors.subtitle}
+                        onChange={(e)=>handleSetHeaderSubtitleColor(e.target.value)}
+                      />
                     </div>
                   </div>
                   <DropdownMenuSeparator />
