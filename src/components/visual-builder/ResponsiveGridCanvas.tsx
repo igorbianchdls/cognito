@@ -352,6 +352,20 @@ function PureHtmlChart({ widget, globalFilters }: { widget: Widget; globalFilter
     colors: (widget.styling?.colors as string[] | undefined) || ['#2563eb'],
   };
 
+  // Avoid overriding globals with undefined by removing shared keys from widget styling
+  const omitShared = (sty: any) => {
+    if (!sty) return {} as Record<string, unknown>;
+    const {
+      enableGridX, enableGridY, gridColor, gridStrokeWidth,
+      axisFontFamily, axisFontSize, axisFontWeight, axisTextColor, axisLegendFontSize, axisLegendFontWeight,
+      labelsFontFamily, labelsFontSize, labelsFontWeight, labelsTextColor,
+      legendsFontFamily, legendsFontSize, legendsFontWeight, legendsTextColor,
+      animate, motionConfig,
+      ...rest
+    } = sty as Record<string, unknown>;
+    return rest;
+  };
+
   return (
     <>
       {renderPre()}
@@ -378,7 +392,7 @@ function PureHtmlChart({ widget, globalFilters }: { widget: Widget; globalFilter
           legendsTextColor={vbNivo.legendsTextColor}
           animate={vbNivo.animate}
           motionConfig={vbNivo.motionConfig}
-          {...(widget.barConfig?.styling || {})}
+          {...omitShared(widget.barConfig?.styling)}
           legends={widget.barConfig?.legends}
         />
       )}
@@ -405,7 +419,7 @@ function PureHtmlChart({ widget, globalFilters }: { widget: Widget; globalFilter
           legendsTextColor={vbNivo.legendsTextColor}
           animate={vbNivo.animate}
           motionConfig={vbNivo.motionConfig}
-          {...(widget.lineConfig?.styling || {})}
+          {...omitShared(widget.lineConfig?.styling)}
           legends={widget.lineConfig?.legends}
         />
       )}
@@ -422,7 +436,7 @@ function PureHtmlChart({ widget, globalFilters }: { widget: Widget; globalFilter
           legendsTextColor={vbNivo.legendsTextColor}
           animate={vbNivo.animate}
           motionConfig={vbNivo.motionConfig}
-          {...(widget.pieConfig?.styling || {})}
+          {...omitShared(widget.pieConfig?.styling)}
           legends={widget.pieConfig?.legends}
         />
       )}
@@ -449,7 +463,7 @@ function PureHtmlChart({ widget, globalFilters }: { widget: Widget; globalFilter
           legendsTextColor={vbNivo.legendsTextColor}
           animate={vbNivo.animate}
           motionConfig={vbNivo.motionConfig}
-          {...(widget.areaConfig?.styling || {})}
+          {...omitShared(widget.areaConfig?.styling)}
           legends={widget.areaConfig?.legends}
         />
       )}
