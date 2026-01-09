@@ -51,6 +51,8 @@ export interface ChartSpec {
   mountId: string; // equals id, used to locate in DOM
   // Optional query spec (Excel-like), translated to SQL/endpoint by QueryEngine
   querySpec?: QuerySpec;
+  // Local, per-chart props (unified: attributes + <props> block)
+  props?: Record<string, unknown>;
 }
 
 export interface LiquidParseResult {
@@ -197,6 +199,137 @@ export const LiquidParser = {
     const charts: ChartSpec[] = [];
     let htmlOut = inner;
 
+    // Helper: deep merge (arrays replaced by b)
+    const deepMerge = (a: any, b: any): any => {
+      if (Array.isArray(a) && Array.isArray(b)) return b;
+      if (a && typeof a === 'object' && !Array.isArray(a) && b && typeof b === 'object' && !Array.isArray(b)) {
+        const out: any = { ...a };
+        for (const k of Object.keys(b)) out[k] = k in out ? deepMerge(out[k], b[k]) : b[k];
+        return out;
+      }
+      return b === undefined ? a : b;
+    };
+
+    // Helper: set nested path (e.g. axisBottom.tickRotation)
+    const setNested = (obj: any, path: string, value: any) => {
+      const parts = path.split('.');
+      let curr = obj;
+      for (let i = 0; i < parts.length - 1; i++) {
+        const p = parts[i];
+        if (!curr[p] || typeof curr[p] !== 'object') curr[p] = {};
+        curr = curr[p];
+      }
+      curr[parts[parts.length - 1]] = value;
+    };
+
+    const coerce = (v: string): any => {
+      const t = String(v).trim();
+      if (t === '') return t;
+      if (/^(true|false)$/i.test(t)) return /^true$/i.test(t);
+      if (/^-?\d+(?:\.\d+)?$/.test(t)) return Number(t);
+      return t;
+    };
+
+    const parseMaybeJSON = (raw: string | undefined): any => {
+      if (!raw) return undefined;
+      const s = String(raw).trim();
+      if (!s) return undefined;
+      try { return JSON.parse(s); } catch {}
+      return undefined;
+    };
+
+    const parseColorsAttr = (s: string | undefined): any => {
+      if (!s) return undefined;
+      const t = String(s).trim();
+      if (!t) return undefined;
+      if (t.startsWith('[')) {
+        try { return JSON.parse(t); } catch { return undefined; }
+      }
+      if (t.includes(',')) return t.split(',').map(x => x.trim()).filter(Boolean);
+      return t; // single string
+    };
+
+    const getAttr = (attrs: Record<string,string>, camel: string, kebab?: string) => {
+      if (attrs[camel] != null) return attrs[camel];
+      if (kebab && attrs[kebab] != null) return attrs[kebab];
+      return undefined;
+    };
+
+    // Map attributes (shorthands) -> props object
+    const buildPropsFromAttrs = (a: Record<string,string>): Record<string, unknown> => {
+      const out: Record<string, unknown> = {};
+      const directKeys = [
+        'layout','groupMode','padding','innerPadding','borderRadius','borderWidth','barColor',
+        'enableGridX','enableGridY','gridColor','gridStrokeWidth',
+        'enableLabel','labelTextColor','labelSkipWidth','labelSkipHeight','labelPosition','labelOffset',
+        'animate','motionConfig','showLegend',
+        // container & style
+        'containerBackground','containerOpacity','containerBackdropFilter','containerFilter','containerBoxShadow','containerBorder','containerTransform','containerTransition',
+        'backgroundColor','backgroundOpacity',
+        'containerClassName','containerBorderWidth','containerBorderColor','containerBorderAccentColor','containerBorderRadius','containerBorderVariant','containerPadding',
+        'translateY','marginBottom',
+        // typography common
+        'axisFontFamily','axisFontSize','axisFontWeight','axisTextColor','axisLegendFontSize','axisLegendFontWeight',
+        'labelsFontFamily','labelsFontSize','labelsFontWeight','labelsTextColor',
+        'legendsFontFamily','legendsFontSize','legendsFontWeight','legendsTextColor',
+        'tooltipFontSize','tooltipFontFamily',
+        // titles
+        'title','subtitle',
+        'titleMarginTop','titleMarginRight','titleMarginBottom','titleMarginLeft','titlePaddingTop','titlePaddingRight','titlePaddingBottom','titlePaddingLeft',
+        'subtitleMarginTop','subtitleMarginRight','subtitleMarginBottom','subtitleMarginLeft','subtitlePaddingTop','subtitlePaddingRight','subtitlePaddingBottom','subtitlePaddingLeft'
+      ];
+      for (const k of directKeys) {
+        const kebab = k.replace(/[A-Z]/g, (m) => '-' + m.toLowerCase());
+        const v = getAttr(a, k, kebab);
+        if (v != null && v !== '') (out as any)[k] = coerce(v);
+      }
+
+      // colors
+      const colorsAttr = getAttr(a, 'colors');
+      if (colorsAttr != null && colorsAttr !== '') out['colors'] = parseColorsAttr(colorsAttr);
+
+      // margin (JSON) or specific marginBottom already handled above
+      const marginAttr = getAttr(a, 'margin');
+      const marginParsed = parseMaybeJSON(marginAttr);
+      if (marginParsed && typeof marginParsed === 'object') out['margin'] = marginParsed;
+
+      // axisBottom.*
+      const axisBottomMap: Record<string, string> = {
+        axisBottomTickSize: 'axisBottom.tickSize',
+        axisBottomTickPadding: 'axisBottom.tickPadding',
+        axisBottomTickRotation: 'axisBottom.tickRotation',
+        axisBottomLegend: 'axisBottom.legend',
+        axisBottomLegendOffset: 'axisBottom.legendOffset',
+        axisBottomLegendPosition: 'axisBottom.legendPosition'
+      };
+      for (const ak of Object.keys(axisBottomMap)) {
+        const kebab = ak.replace(/[A-Z]/g, (m) => '-' + m.toLowerCase());
+        const v = getAttr(a, ak, kebab);
+        if (v != null && v !== '') setNested(out, axisBottomMap[ak], coerce(v));
+      }
+
+      // axisLeft.*
+      const axisLeftMap: Record<string, string> = {
+        axisLeftTickSize: 'axisLeft.tickSize',
+        axisLeftTickPadding: 'axisLeft.tickPadding',
+        axisLeftTickRotation: 'axisLeft.tickRotation',
+        axisLeftLegend: 'axisLeft.legend',
+        axisLeftLegendOffset: 'axisLeft.legendOffset'
+      };
+      for (const ak of Object.keys(axisLeftMap)) {
+        const kebab = ak.replace(/[A-Z]/g, (m) => '-' + m.toLowerCase());
+        const v = getAttr(a, ak, kebab);
+        if (v != null && v !== '') setNested(out, axisLeftMap[ak], coerce(v));
+      }
+
+      // legends (as JSON)
+      const legendsAttr = getAttr(a, 'legends');
+      const legendsParsed = parseMaybeJSON(legendsAttr);
+      if (legendsParsed !== undefined) out['legends'] = legendsParsed;
+
+      return out;
+    };
+
     // Helper to replace matched tag with mount div
     const replaceTagWithMount = (full: string, open: string, body: string | undefined) => {
       const a = parseAttrs(open);
@@ -209,8 +342,29 @@ export const LiquidParser = {
 
       // Optional <query .../> block inside the Chart body
       let querySpec: QuerySpec | undefined = undefined;
+      // Optional props (attributes + <props> block)
+      let localProps: Record<string, unknown> | undefined = undefined;
       try {
         const b = String(body || '');
+        // Parse <props> block (JSON)
+        const pMatch = b.match(/<props\b[^>]*>([\s\S]*?)<\/props>/i);
+        const propsFromBlock = (() => {
+          if (!pMatch) return undefined;
+          const inner = (pMatch[1] || '').trim();
+          if (!inner) return undefined;
+          try { return JSON.parse(inner); } catch { return undefined; }
+        })();
+        // Parse props attribute (JSON string)
+        const propsFromAttr = (() => {
+          const raw = a['props'];
+          if (!raw) return undefined;
+          try { return JSON.parse(raw); } catch { return undefined; }
+        })();
+        // Parse attribute shorthands
+        const propsFromAttrs = buildPropsFromAttrs(a);
+        // Merge: attrs -> propsAttr -> propsBlock (block wins)
+        localProps = deepMerge(propsFromAttrs, deepMerge(propsFromAttr, propsFromBlock));
+
         const qMatch = b.match(/<query\b([^>]*)>([\s\S]*?)<\/query>/i) || b.match(/<query\b([^>]*)\/>/i);
         if (qMatch) {
           const qAttrs = parseAttrs(qMatch[1] || '');
@@ -279,7 +433,7 @@ export const LiquidParser = {
         }
       } catch { /* ignore malformed query */ }
 
-      charts.push({ id, type, title, height, data, mountId: id, ...(querySpec ? { querySpec } : {}) });
+      charts.push({ id, type, title, height, data, mountId: id, ...(querySpec ? { querySpec } : {}), ...(localProps ? { props: localProps } : {}) });
       // inject mount div with height style if provided
       const style = height && Number.isFinite(height) ? ` style=\"height:${height}px\"` : '';
       return `<div data-liquid-chart=\"${id}\"${style}></div>`;

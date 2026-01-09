@@ -1295,7 +1295,7 @@ export default function VisualBuilderPage() {
       htmlRootsRef.current.push(root);
       const common = {
         data: spec.data,
-        // Nivo defaults (global)
+        // Nivo defaults (global) - used by non-Bar charts for now
         enableGridX: vbNivo.enableGridX,
         enableGridY: vbNivo.enableGridY,
         gridColor: vbNivo.gridColor,
@@ -1329,7 +1329,19 @@ export default function VisualBuilderPage() {
         case 'pie': root.render(<PieChart {...common} />); break;
         case 'area': root.render(<AreaChart {...common} enableArea={true} />); break;
         case 'groupedbar': root.render(<GroupedBarChart data={spec.data as any} />); break;
-        default: root.render(<BarChart {...common} />); break;
+        default: {
+          const barBase = {
+            containerClassName: 'nivo-container',
+            containerBorderVariant: 'none',
+            containerPadding: 0,
+            containerBorderRadius: 0,
+            backgroundColor: 'transparent',
+            containerBackground: 'transparent'
+          } as any;
+          const barProps = { ...barBase, ...(spec as any).props, data: spec.data } as any;
+          root.render(<BarChart {...barProps} />);
+          break;
+        }
       }
 
       // If querySpec present, resolve it and re-render with fetched data
@@ -1345,7 +1357,19 @@ export default function VisualBuilderPage() {
               case 'pie': root.render(<PieChart {...commonFetched} />); break;
               case 'area': root.render(<AreaChart {...commonFetched} enableArea={true} />); break;
               case 'groupedbar': root.render(<GroupedBarChart {...commonFetched} />); break;
-              default: root.render(<BarChart {...commonFetched} />); break;
+              default: {
+                const barBase = {
+                  containerClassName: 'nivo-container',
+                  containerBorderVariant: 'none',
+                  containerPadding: 0,
+                  containerBorderRadius: 0,
+                  backgroundColor: 'transparent',
+                  containerBackground: 'transparent'
+                } as any;
+                const barProps = { ...barBase, ...(spec as any).props, data: rows } as any;
+                root.render(<BarChart {...barProps} />);
+                break;
+              }
             }
           } catch { /* ignore render errors */ }
         }).catch(() => { /* ignore errors; keep placeholder */ });

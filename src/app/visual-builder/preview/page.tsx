@@ -89,7 +89,19 @@ export default function PreviewPage() {
         case 'line': root.render(<LineChart {...common} />); break;
         case 'pie': root.render(<PieChart {...common} />); break;
         case 'area': root.render(<AreaChart {...common} enableArea={true} />); break;
-        default: root.render(<BarChart {...common} />); break;
+        default: {
+          const barBase = {
+            containerClassName: 'nivo-container',
+            containerBorderVariant: 'none',
+            containerPadding: 0,
+            containerBorderRadius: 0,
+            backgroundColor: 'transparent',
+            containerBackground: 'transparent'
+          } as any;
+          const barProps = { ...barBase, ...(spec as any).props, data: spec.data } as any;
+          root.render(<BarChart {...barProps} />);
+          break;
+        }
       }
     }
 
