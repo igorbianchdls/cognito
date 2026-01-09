@@ -512,6 +512,286 @@ export default function VisualBuilderPage() {
       if (next !== src) visualBuilderActions.updateCode(next);
     } catch {}
   }, [visualBuilderState.code]);
+
+  // ===== Articles (global) style helpers =====
+  type BorderStyle = 'solid' | 'dashed' | 'dotted';
+  type ArticleStyleAggregate = {
+    bg?: string;
+    borderColor?: string;
+    borderWidth?: number;
+    borderStyle?: BorderStyle;
+    borderRadius?: number;
+    titleColor?: string;
+    titleSize?: number;
+    titleWeight?: string | number;
+    paddingTop?: number; paddingRight?: number; paddingBottom?: number; paddingLeft?: number;
+    marginTop?: number; marginRight?: number; marginBottom?: number; marginLeft?: number;
+    valueColor?: string; valueSize?: number; valueWeight?: string | number;
+  };
+  const getAllArticles = (code: string): Array<{ whole: string; open: string; inner: string }> => {
+    const re = /<article\b([^>]*)>([\s\S]*?)<\/article>/gi;
+    const out: Array<{ whole: string; open: string; inner: string }> = [];
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(code)) !== null) {
+      out.push({ whole: m[0], open: m[1] || '', inner: m[2] || '' });
+    }
+    return out;
+  };
+  const readArticlesAggregate = (code: string): ArticleStyleAggregate => {
+    const arts = getAllArticles(code);
+    if (!arts.length) return {};
+    const { open, inner } = arts[0];
+    const styleRe = /style\s*=\s*("([^"]*)"|'([^']*)')/i;
+    const sm = open.match(styleRe);
+    const s = parseInlineStyle(sm ? (sm[2] || sm[3] || '') : '');
+    const agg: ArticleStyleAggregate = {};
+    if (s['background-color']) agg.bg = s['background-color'];
+    if (s['border-color']) agg.borderColor = s['border-color'];
+    if (s['border-width']) { const n = Number(String(s['border-width']).replace(/px$/,'')); if (!Number.isNaN(n)) agg.borderWidth = n; }
+    if (s['border-style']) agg.borderStyle = s['border-style'] as BorderStyle;
+    if (s['border-radius']) { const n = Number(String(s['border-radius']).replace(/px$/,'')); if (!Number.isNaN(n)) agg.borderRadius = n; }
+    // padding/margin parsing
+    const parsePx = (v?: string) => {
+      if (!v) return undefined; const n = Number(String(v).replace(/px$/,'')); return Number.isNaN(n) ? undefined : n;
+    };
+    const parseBox = (v?: string): { t?: number; r?: number; b?: number; l?: number } => {
+      if (!v) return {};
+      const parts = String(v).trim().split(/\s+/);
+      const toN = (x: string) => Number(String(x).replace(/px$/,''));
+      if (parts.length === 1) {
+        const n = toN(parts[0]); return Number.isNaN(n) ? {} : { t: n, r: n, b: n, l: n };
+      }
+      if (parts.length === 2) {
+        const v1 = toN(parts[0]); const v2 = toN(parts[1]);
+        if ([v1,v2].some(Number.isNaN)) return {};
+        return { t: v1, b: v1, r: v2, l: v2 };
+      }
+      if (parts.length === 3) {
+        const v1 = toN(parts[0]); const v2 = toN(parts[1]); const v3 = toN(parts[2]);
+        if ([v1,v2,v3].some(Number.isNaN)) return {};
+        return { t: v1, r: v2, l: v2, b: v3 };
+      }
+      if (parts.length >= 4) {
+        const v1 = toN(parts[0]); const v2 = toN(parts[1]); const v3 = toN(parts[2]); const v4 = toN(parts[3]);
+        if ([v1,v2,v3,v4].some(Number.isNaN)) return {};
+        return { t: v1, r: v2, b: v3, l: v4 };
+      }
+      return {};
+    };
+    const pbox = parseBox(s['padding']);
+    agg.paddingTop = parsePx(s['padding-top']) ?? pbox.t;
+    agg.paddingRight = parsePx(s['padding-right']) ?? pbox.r;
+    agg.paddingBottom = parsePx(s['padding-bottom']) ?? pbox.b;
+    agg.paddingLeft = parsePx(s['padding-left']) ?? pbox.l;
+    const mbox = parseBox(s['margin']);
+    agg.marginTop = parsePx(s['margin-top']) ?? mbox.t;
+    agg.marginRight = parsePx(s['margin-right']) ?? mbox.r;
+    agg.marginBottom = parsePx(s['margin-bottom']) ?? mbox.b;
+    agg.marginLeft = parsePx(s['margin-left']) ?? mbox.l;
+    const pRe = /<p\b([^>]*)>([\s\S]*?)<\/p>/i;
+    const pm = inner.match(pRe);
+    if (pm) {
+      const pmStyleM = pm[1].match(styleRe);
+      const ps = parseInlineStyle(pmStyleM ? (pmStyleM[2] || pmStyleM[3] || '') : '');
+      if (ps['color']) agg.titleColor = ps['color'];
+      if (ps['font-size']) { const n = Number(String(ps['font-size']).replace(/px$/,'')); if (!Number.isNaN(n)) agg.titleSize = n; }
+      if (ps['font-weight']) agg.titleWeight = (/^\d+$/.test(ps['font-weight']) ? Number(ps['font-weight']) : ps['font-weight']);
+    }
+    // kpi-value style
+    const kvRe = /<([a-z]+)\b([^>]*?class\s*=\s*(?:"[^"]*\bkpi-value\b[^"]*"|'[^']*\bkpi-value\b[^']*'))[^>]*>([\s\S]*?)<\/\1>/i;
+    const kvm = inner.match(kvRe);
+    if (kvm) {
+      const openKV = kvm[2] || '';
+      const stKV = openKV.match(styleRe);
+      const kvs = parseInlineStyle(stKV ? (stKV[2] || stKV[3] || '') : '');
+      if (kvs['color']) agg.valueColor = kvs['color'];
+      if (kvs['font-size']) { const n = Number(String(kvs['font-size']).replace(/px$/,'')); if (!Number.isNaN(n)) agg.valueSize = n; }
+      if (kvs['font-weight']) agg.valueWeight = (/^\d+$/.test(kvs['font-weight']) ? Number(kvs['font-weight']) : kvs['font-weight']);
+    }
+    return agg;
+  };
+  const articlesAggregate = useMemo(() => readArticlesAggregate(String(visualBuilderState.code || '')), [visualBuilderState.code]);
+  const rewriteAllArticles = (code: string, patch: (open: string, inner: string) => { open: string; inner: string }): string => {
+    const arts = getAllArticles(code);
+    if (!arts.length) return code;
+    let next = code;
+    for (const a of arts) {
+      const newParts = patch(a.open, a.inner);
+      const styleRe = /style\s*=\s*("([^"]*)"|'([^']*)')/i;
+      const styleM = a.open.match(styleRe);
+      const so = parseInlineStyle(styleM ? (styleM[2] || styleM[3] || '') : '');
+      // Allow patch to have replaced style via returned open string; use it directly
+      const newWhole = `<article${newParts.open}>${newParts.inner}</article>`;
+      next = next.replace(a.whole, newWhole);
+    }
+    return next;
+  };
+  const setArticleOpenStyle = (openAttrs: string, mut: (so: Record<string,string>) => void): string => {
+    const styleRe = /style\s*=\s*("([^"]*)"|'([^']*)')/i;
+    const m = openAttrs.match(styleRe);
+    const so = parseInlineStyle(m ? (m[2] || m[3] || '') : '');
+    mut(so);
+    // normalize: remove shorthand when edges are set explicitly
+    if (so['padding-top'] || so['padding-right'] || so['padding-bottom'] || so['padding-left']) delete so['padding'];
+    if (so['margin-top'] || so['margin-right'] || so['margin-bottom'] || so['margin-left']) delete so['margin'];
+    const noStyle = openAttrs.replace(styleRe, '').replace(/\s+$/, '');
+    const styleStr = toInlineStyle(so);
+    return `${noStyle ? ` ${noStyle}` : ''}${styleStr ? ` style=\"${styleStr}\"` : ''}`;
+  };
+  const setFirstPStyle = (inner: string, mut: (ps: Record<string,string>) => void): string => {
+    const pRe = /<p\b([^>]*)>([\s\S]*?)<\/p>/i;
+    const m = inner.match(pRe);
+    if (!m) return inner;
+    const open = m[1] || ''; const body = m[2] || '';
+    const styleRe = /style\s*=\s*("([^"]*)"|'([^']*)')/i;
+    const sm = open.match(styleRe);
+    const ps = parseInlineStyle(sm ? (sm[2] || sm[3] || '') : '');
+    mut(ps);
+    const noStyle = open.replace(styleRe, '').replace(/\s+$/, '');
+    const newOpen = `<p${noStyle ? ` ${noStyle}` : ''}${Object.keys(ps).length ? ` style=\"${toInlineStyle(ps)}\"` : ''}>`;
+    return inner.replace(m[0], `${newOpen}${body}</p>`);
+  };
+  // Handlers: background & border
+  const handleSetArticlesBgColor = useCallback((hex: string) => {
+    try {
+      const src = String(visualBuilderState.code || '');
+      const next = rewriteAllArticles(src, (open, inner) => ({
+        open: setArticleOpenStyle(open, (so) => { so['background-color'] = hex; }),
+        inner
+      }));
+      if (next !== src) visualBuilderActions.updateCode(next);
+    } catch {}
+  }, [visualBuilderState.code]);
+  const handleSetArticlesBorderColor = useCallback((hex: string) => {
+    try {
+      const src = String(visualBuilderState.code || '');
+      const next = rewriteAllArticles(src, (open, inner) => ({
+        open: setArticleOpenStyle(open, (so) => { so['border-color'] = hex; }),
+        inner
+      }));
+      if (next !== src) visualBuilderActions.updateCode(next);
+    } catch {}
+  }, [visualBuilderState.code]);
+  const handleSetArticlesBorderWidth = useCallback((px: number) => {
+    try {
+      const src = String(visualBuilderState.code || '');
+      const next = rewriteAllArticles(src, (open, inner) => ({
+        open: setArticleOpenStyle(open, (so) => { so['border-width'] = `${Math.max(0, Math.round(px))}px`; if (!so['border-style']) so['border-style'] = 'solid'; }),
+        inner
+      }));
+      if (next !== src) visualBuilderActions.updateCode(next);
+    } catch {}
+  }, [visualBuilderState.code]);
+  const handleSetArticlesBorderRadius = useCallback((px: number) => {
+    try {
+      const src = String(visualBuilderState.code || '');
+      const next = rewriteAllArticles(src, (open, inner) => ({
+        open: setArticleOpenStyle(open, (so) => { so['border-radius'] = `${Math.max(0, Math.round(px))}px`; }),
+        inner
+      }));
+      if (next !== src) visualBuilderActions.updateCode(next);
+    } catch {}
+  }, [visualBuilderState.code]);
+  const handleSetArticlesBorderStyle = useCallback((style: BorderStyle) => {
+    try {
+      const src = String(visualBuilderState.code || '');
+      const next = rewriteAllArticles(src, (open, inner) => ({
+        open: setArticleOpenStyle(open, (so) => { so['border-style'] = style; so['border-width'] = so['border-width'] || '1px'; }),
+        inner
+      }));
+      if (next !== src) visualBuilderActions.updateCode(next);
+    } catch {}
+  }, [visualBuilderState.code]);
+  // Handlers: title
+  const handleSetArticlesTitleColor = useCallback((hex: string) => {
+    try {
+      const src = String(visualBuilderState.code || '');
+      const next = rewriteAllArticles(src, (open, inner) => ({
+        open,
+        inner: setFirstPStyle(inner, (ps) => { ps['color'] = hex; })
+      }));
+      if (next !== src) visualBuilderActions.updateCode(next);
+    } catch {}
+  }, [visualBuilderState.code]);
+  const handleSetArticlesTitleSize = useCallback((px: number) => {
+    try {
+      const src = String(visualBuilderState.code || '');
+      const next = rewriteAllArticles(src, (open, inner) => ({
+        open,
+        inner: setFirstPStyle(inner, (ps) => { ps['font-size'] = `${Math.max(8, Math.round(px))}px`; })
+      }));
+      if (next !== src) visualBuilderActions.updateCode(next);
+    } catch {}
+  }, [visualBuilderState.code]);
+  const handleSetArticlesTitleWeight = useCallback((w: string | number) => {
+    try {
+      const src = String(visualBuilderState.code || '');
+      const val = String(w);
+      const next = rewriteAllArticles(src, (open, inner) => ({
+        open,
+        inner: setFirstPStyle(inner, (ps) => { ps['font-weight'] = val; })
+      }));
+      if (next !== src) visualBuilderActions.updateCode(next);
+    } catch {}
+  }, [visualBuilderState.code]);
+  // Handlers: padding/margin
+  const handleSetArticlesPadding = useCallback((side: 'top'|'right'|'bottom'|'left', px: number) => {
+    try {
+      const key = `padding-${side}` as const;
+      const src = String(visualBuilderState.code || '');
+      const next = rewriteAllArticles(src, (open, inner) => ({
+        open: setArticleOpenStyle(open, (so) => { so[key] = `${Math.max(0, Math.round(px))}px`; }),
+        inner
+      }));
+      if (next !== src) visualBuilderActions.updateCode(next);
+    } catch {}
+  }, [visualBuilderState.code]);
+  const handleSetArticlesMargin = useCallback((side: 'top'|'right'|'bottom'|'left', px: number) => {
+    try {
+      const key = `margin-${side}` as const;
+      const src = String(visualBuilderState.code || '');
+      const next = rewriteAllArticles(src, (open, inner) => ({
+        open: setArticleOpenStyle(open, (so) => { so[key] = `${Math.round(px)}px`; }),
+        inner
+      }));
+      if (next !== src) visualBuilderActions.updateCode(next);
+    } catch {}
+  }, [visualBuilderState.code]);
+  // Handlers: kpi-value
+  const setKpiValueStyle = (inner: string, mut: (ps: Record<string,string>) => void): string => {
+    const kvRe = /<([a-z]+)\b([^>]*?class\s*=\s*(?:"[^"]*\bkpi-value\b[^"]*"|'[^']*\bkpi-value\b[^']*'))[^>]*>([\s\S]*?)<\/\1>/i;
+    const m = inner.match(kvRe); if (!m) return inner;
+    const tag = m[1]; const open = m[2] || ''; const body = m[3] || '';
+    const styleRe = /style\s*=\s*("([^"]*)"|'([^']*)')/i;
+    const sm = open.match(styleRe);
+    const ps = parseInlineStyle(sm ? (sm[2] || sm[3] || '') : '');
+    mut(ps);
+    const noStyle = open.replace(styleRe, '').replace(/\s+$/, '');
+    const newOpen = `<${tag}${noStyle ? ` ${noStyle}` : ''}${Object.keys(ps).length ? ` style=\"${toInlineStyle(ps)}\"` : ''}>`;
+    return inner.replace(m[0], `${newOpen}${body}</${tag}>`);
+  };
+  const handleSetArticlesValueColor = useCallback((hex: string) => {
+    try {
+      const src = String(visualBuilderState.code || '');
+      const next = rewriteAllArticles(src, (open, inner) => ({ open, inner: setKpiValueStyle(inner, (ps)=>{ ps['color'] = hex; }) }));
+      if (next !== src) visualBuilderActions.updateCode(next);
+    } catch {}
+  }, [visualBuilderState.code]);
+  const handleSetArticlesValueSize = useCallback((px: number) => {
+    try {
+      const value = `${Math.max(8, Math.round(px))}px`;
+      const src = String(visualBuilderState.code || '');
+      const next = rewriteAllArticles(src, (open, inner) => ({ open, inner: setKpiValueStyle(inner, (ps)=>{ ps['font-size'] = value; }) }));
+      if (next !== src) visualBuilderActions.updateCode(next);
+    } catch {}
+  }, [visualBuilderState.code]);
+  const handleSetArticlesValueWeight = useCallback((w: string | number) => {
+    try {
+      const src = String(visualBuilderState.code || '');
+      const next = rewriteAllArticles(src, (open, inner) => ({ open, inner: setKpiValueStyle(inner, (ps)=>{ ps['font-weight'] = String(w); }) }));
+      if (next !== src) visualBuilderActions.updateCode(next);
+    } catch {}
+  }, [visualBuilderState.code]);
   const availableBackgrounds = BackgroundManager.getAvailableBackgrounds();
   const selectedBackground: BackgroundPresetKey = BackgroundManager.getDefaultBackground();
   // UI-only defaults (no state/handlers)
@@ -1696,6 +1976,109 @@ export default function VisualBuilderPage() {
                   <div className="px-3 py-2 flex items-center justify-between gap-2">
                     <span className="text-sm">Título do KPI</span>
                     <input type="color" defaultValue={kpiTitleColor} disabled />
+                  </div>
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+
+              {/* Articles Submenu */}
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                  <Layout className="w-4 h-4 mr-2" />
+                  Articles
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent className="w-80">
+                  <div className="px-3 py-2 text-xs text-muted-foreground">Cor de Fundo</div>
+                  <div className="px-3 py-2 flex items-center justify-between gap-2">
+                    <span className="text-sm">Fundo</span>
+                    <input type="color" value={articlesAggregate.bg || '#ffffff'} onChange={(e)=>handleSetArticlesBgColor(e.target.value)} />
+                  </div>
+                  <DropdownMenuSeparator />
+                  <div className="px-3 py-2 text-xs text-muted-foreground">Borda</div>
+                  <div className="px-3 py-2 space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-sm">Cor</span>
+                      <input type="color" value={articlesAggregate.borderColor || '#e5e7eb'} onChange={(e)=>handleSetArticlesBorderColor(e.target.value)} />
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-sm">Largura</span>
+                      <input className="w-20 border rounded px-2 py-1" type="number" min={0} value={articlesAggregate.borderWidth ?? 1} onChange={(e)=>handleSetArticlesBorderWidth(Number(e.target.value||0))} />
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-sm">Raio</span>
+                      <input className="w-20 border rounded px-2 py-1" type="number" min={0} value={articlesAggregate.borderRadius ?? 12} onChange={(e)=>handleSetArticlesBorderRadius(Number(e.target.value||0))} />
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-sm">Estilo</span>
+                      <select className="w-28 border rounded px-2 py-1" value={articlesAggregate.borderStyle || 'solid'} onChange={(e)=>handleSetArticlesBorderStyle(e.target.value as any)}>
+                        <option value="solid">solid</option>
+                        <option value="dashed">dashed</option>
+                        <option value="dotted">dotted</option>
+                      </select>
+                    </div>
+                  </div>
+                  <DropdownMenuSeparator />
+                  <div className="px-3 py-2 text-xs text-muted-foreground">Espaçamentos</div>
+                  <div className="px-3 py-2 space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-sm">Padding</span>
+                      <div className="flex items-center gap-2">
+                        <input className="w-16 border rounded px-2 py-1" type="number" min={0} value={articlesAggregate.paddingTop ?? 12} onChange={(e)=>handleSetArticlesPadding('top', Number(e.target.value||0))} title="Topo" />
+                        <input className="w-16 border rounded px-2 py-1" type="number" min={0} value={articlesAggregate.paddingRight ?? 12} onChange={(e)=>handleSetArticlesPadding('right', Number(e.target.value||0))} title="Direita" />
+                        <input className="w-16 border rounded px-2 py-1" type="number" min={0} value={articlesAggregate.paddingBottom ?? 12} onChange={(e)=>handleSetArticlesPadding('bottom', Number(e.target.value||0))} title="Baixo" />
+                        <input className="w-16 border rounded px-2 py-1" type="number" min={0} value={articlesAggregate.paddingLeft ?? 12} onChange={(e)=>handleSetArticlesPadding('left', Number(e.target.value||0))} title="Esquerda" />
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-sm">Margin</span>
+                      <div className="flex items-center gap-2">
+                        <input className="w-16 border rounded px-2 py-1" type="number" value={articlesAggregate.marginTop ?? 0} onChange={(e)=>handleSetArticlesMargin('top', Number(e.target.value||0))} title="Topo" />
+                        <input className="w-16 border rounded px-2 py-1" type="number" value={articlesAggregate.marginRight ?? 0} onChange={(e)=>handleSetArticlesMargin('right', Number(e.target.value||0))} title="Direita" />
+                        <input className="w-16 border rounded px-2 py-1" type="number" value={articlesAggregate.marginBottom ?? 16} onChange={(e)=>handleSetArticlesMargin('bottom', Number(e.target.value||0))} title="Baixo" />
+                        <input className="w-16 border rounded px-2 py-1" type="number" value={articlesAggregate.marginLeft ?? 0} onChange={(e)=>handleSetArticlesMargin('left', Number(e.target.value||0))} title="Esquerda" />
+                      </div>
+                    </div>
+                  </div>
+                  <DropdownMenuSeparator />
+                  <div className="px-3 py-2 text-xs text-muted-foreground">Título</div>
+                  <div className="px-3 py-2 space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-sm">Cor</span>
+                      <input type="color" value={articlesAggregate.titleColor || '#111827'} onChange={(e)=>handleSetArticlesTitleColor(e.target.value)} />
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-sm">Tamanho</span>
+                      <input className="w-20 border rounded px-2 py-1" type="number" min={10} value={articlesAggregate.titleSize ?? 16} onChange={(e)=>handleSetArticlesTitleSize(Number(e.target.value||0))} />
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-sm">Peso</span>
+                      <select className="w-28 border rounded px-2 py-1" value={String(articlesAggregate.titleWeight ?? '600')} onChange={(e)=>handleSetArticlesTitleWeight(e.target.value)}>
+                        <option value="400">normal</option>
+                        <option value="500">500</option>
+                        <option value="600">600</option>
+                        <option value="700">bold</option>
+                      </select>
+                    </div>
+                  </div>
+                  <DropdownMenuSeparator />
+                  <div className="px-3 py-2 text-xs text-muted-foreground">Valor (KPI)</div>
+                  <div className="px-3 py-2 space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-sm">Cor</span>
+                      <input type="color" value={articlesAggregate.valueColor || '#111827'} onChange={(e)=>handleSetArticlesValueColor(e.target.value)} />
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-sm">Tamanho</span>
+                      <input className="w-20 border rounded px-2 py-1" type="number" min={10} value={articlesAggregate.valueSize ?? 28} onChange={(e)=>handleSetArticlesValueSize(Number(e.target.value||0))} />
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-sm">Peso</span>
+                      <select className="w-28 border rounded px-2 py-1" value={String(articlesAggregate.valueWeight ?? '700')} onChange={(e)=>handleSetArticlesValueWeight(e.target.value)}>
+                        <option value="400">normal</option>
+                        <option value="500">500</option>
+                        <option value="600">600</option>
+                        <option value="700">bold</option>
+                      </select>
+                    </div>
                   </div>
                 </DropdownMenuSubContent>
               </DropdownMenuSub>
