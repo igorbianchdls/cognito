@@ -1266,6 +1266,8 @@ export default function VisualBuilderPage() {
       order?: 'value DESC' | 'value ASC' | 'label ASC' | 'label DESC';
       where?: Array<{ col: string; op: string; val?: string; vals?: string; start?: string; end?: string }>;
     };
+    // Nivo local props (attributes + <props> merged) for this chart
+    chartProps?: Record<string, unknown>;
   };
   const [chartModalInitial, setChartModalInitial] = useState<ChartModalInitial>({ titleText: '' });
   const [sectionModalOpen, setSectionModalOpen] = useState(false);
