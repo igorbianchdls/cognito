@@ -2627,7 +2627,7 @@ export default function VisualBuilderPage() {
                 </div>
               </div>
             </div>
-            <div className="h-[calc(100%-73px)] p-6 overflow-auto" ref={scrollRef} style={{ overflowAnchor: 'none' }}>
+            <div className="h-[calc(100%-73px)] p-0 overflow-auto" ref={scrollRef} style={{ overflowAnchor: 'none' }}>
               {htmlMode ? (
                 <div ref={htmlRef} className="w-full" />
               ) : (
