@@ -775,7 +775,7 @@ function ResponsiveGridCanvas({ widgets, gridConfig, globalFilters, viewportMode
   const borderColor = gridConfig.borderColor || '#e5e7eb';
 
   // Advanced container styles (same as original GridCanvas)
-  const pad = gridConfig.padding ?? 16;
+  const pad = gridConfig.padding ?? 0;
   const DEFAULT_BORDER_RADIUS = 8; // px, fallback when not provided by config/theme
   const containerStyles = {
     // Background: priority to gradient, fallback to backgroundColor
