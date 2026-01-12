@@ -156,7 +156,7 @@ const compactWidgetHeaders = (code: string): string => {
 }
 
 // Initial Liquid template (HTML-like)
-export const initialLiquidGrid = `<dashboard render="html" theme="branco">
+export const initialLiquidGrid = `<dashboard render="html" theme="branco" style="border:1px solid red;">
   <style>
     :root {
       --vb-font-family: var(--font-barlow), Barlow, -apple-system, BlinkMacSystemFont, sans-serif;
@@ -188,7 +188,7 @@ export const initialLiquidGrid = `<dashboard render="html" theme="branco">
       font-size: var(--vb-title-size);
     }
   </style>
-  <div class="vb-container" style="padding: 16px;">
+  <div class="vb-container" style="padding: 16px; border: 1px solid blue;">
     <header class="vb-header" style="background-color:#ffffff; border:1px solid #e5e7eb; border-radius:12px; padding:12px; margin:-16px -16px 16px -16px;">
       <p style="margin:0 0 4px; font-family:Inter, system-ui, sans-serif; font-size:20px; font-weight:700; color:#111827;">Dashboard de Indicadores</p>
       <p style="margin:0; font-family:Inter, system-ui, sans-serif; font-size:14px; font-weight:400; color:#6b7280;">Visão geral</p>

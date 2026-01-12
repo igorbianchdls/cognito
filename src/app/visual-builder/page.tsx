@@ -326,8 +326,8 @@ import { QueryEngine } from '@/components/visual-builder/QueryEngine';
 import { updateArticleQueryFull } from '@/components/visual-builder/commands/HelperEditorToDSL';
 
 // New: Comercial (Metas x Realizado) HTML template
-const COMERCIAL_DASHBOARD_TEMPLATE = `<dashboard render="html" theme="branco" date-type="custom" date-start="2025-11-01" date-end="2025-12-01">
-  <div class="vb-container" style="padding: 16px;">
+const COMERCIAL_DASHBOARD_TEMPLATE = `<dashboard render="html" theme="branco" date-type="custom" date-start="2025-11-01" date-end="2025-12-01" style="border:1px solid red;">
+  <div class="vb-container" style="padding: 16px; border: 1px solid blue;">
     <header class="vb-header" style="background-color:#ffffff; border:1px solid #e5e7eb; border-radius:12px; padding:12px; margin:-16px -16px 16px -16px;">
       <p style="margin:0 0 4px; font-family:Inter, system-ui, sans-serif; font-size:20px; font-weight:700; color:#111827;">Comercial • Metas x Realizado</p>
       <p style="margin:0; font-family:Inter, system-ui, sans-serif; font-size:14px; font-weight:400; color:#6b7280;">Vendedor e Território</p>
@@ -377,8 +377,8 @@ const COMERCIAL_DASHBOARD_TEMPLATE = `<dashboard render="html" theme="branco" da
   </div>
 </dashboard>`;
 // New: Sales (Vendas) HTML template for Visual Builder
-const SALES_DASHBOARD_TEMPLATE = `<dashboard render="html" theme="branco" date-type="custom" date-start="2025-11-01" date-end="2026-01-31">
-  <div class="vb-container" style="padding: 16px;">
+const SALES_DASHBOARD_TEMPLATE = `<dashboard render="html" theme="branco" date-type="custom" date-start="2025-11-01" date-end="2026-01-31" style="border:1px solid red;">
+  <div class="vb-container" style="padding: 16px; border: 1px solid blue;">
     <header class="vb-header" style="background-color:#ffffff; border:1px solid #e5e7eb; border-radius:12px; padding:12px; margin:-16px -16px 16px -16px;">
       <p style="margin:0 0 4px; font-family:Inter, system-ui, sans-serif; font-size:20px; font-weight:700; color:#111827;">Dashboard de Vendas</p>
       <p style="margin:0; font-family:Inter, system-ui, sans-serif; font-size:14px; font-weight:400; color:#6b7280;">Visão comercial e desempenho</p>
