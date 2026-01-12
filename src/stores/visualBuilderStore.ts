@@ -189,7 +189,7 @@ export const initialLiquidGrid = `<dashboard render="html" theme="branco" style=
     }
   </style>
   <div class="vb-container" style="padding: 0; border: 1px solid blue;">
-    <header class="vb-header" style="background-color:#ffffff; border:1px solid #e5e7eb; border-radius:12px; padding:12px; margin:-16px -16px 16px -16px;">
+    <header class="vb-header" style="background-color:#ffffff; border:1px solid #e5e7eb; border-radius:12px;">
       <p style="margin:0 0 4px; font-family:Inter, system-ui, sans-serif; font-size:20px; font-weight:700; color:#111827;">Dashboard de Indicadores</p>
       <p style="margin:0; font-family:Inter, system-ui, sans-serif; font-size:14px; font-weight:400; color:#6b7280;">Visão geral</p>
     </header>
