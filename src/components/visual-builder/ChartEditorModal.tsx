@@ -93,6 +93,7 @@ export default function ChartEditorModal({ isOpen, initial, onClose, onSave }: C
   const AGGS: Array<'SUM'|'COUNT'|'AVG'|'MIN'|'MAX'> = ['SUM','COUNT','AVG','MIN','MAX'];
 
   const [mounted, setMounted] = useState(false);
+  const [tab, setTab] = useState<'chart' | 'container' | 'query'>('chart');
   const [titleText, setTitleText] = useState(initial.titleText || '');
   const [titleFontFamily, setTitleFontFamily] = useState(initial.titleFontFamily || '');
   const [titleFontSize, setTitleFontSize] = useState<number | undefined>(initial.titleFontSize);
