@@ -4,7 +4,6 @@ import * as React from 'react'
 import Link from 'next/link'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
-import NexusHeader from '@/components/navigation/nexus/NexusHeader'
 import NexusPageContainer from '@/components/navigation/nexus/NexusPageContainer'
 import PageHeader from '@/components/modulos/PageHeader'
 import { Card } from '@/components/ui/card'
@@ -80,7 +79,7 @@ export default function NovoContratoPage() {
       <SidebarInset className="h-screen overflow-hidden">
         <div className="flex h-full overflow-hidden bg-gray-100">
           <div className="flex flex-col h-full w-full">
-            <NexusHeader viewMode={'dashboard'} onChangeViewMode={() => {}} borderless size="sm" showBreadcrumb={false} />
+            
             <div className="flex-1 min-h-0 pl-2 pr-2 pt-0 pb-2" data-page="nexus">
               <NexusPageContainer className="h-full">
                 <div className="mb-3">

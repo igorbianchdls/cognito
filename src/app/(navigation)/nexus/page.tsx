@@ -4,8 +4,7 @@ import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
 import { useState, FormEvent, useEffect, useRef } from 'react';
 import { useStore } from '@nanostores/react';
-import { SidebarShadcn } from '@/components/navigation/SidebarShadcn';
-import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
+import { SidebarTrigger } from '@/components/ui/sidebar';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -23,14 +22,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ChevronDown, MessageSquare, Layout, BarChart3 } from "lucide-react";
 import ChatContainer from '@/components/navigation/nexus/ChatContainer';
-import NexusPageContainer from '@/components/navigation/nexus/NexusPageContainer';
+import NexusShell from '@/components/navigation/nexus/NexusShell';
 import DashboardChatPanel from '@/components/navigation/nexus/DashboardChatPanel';
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import type { UIMessage } from 'ai';
 import { currentAgent, setCurrentAgent } from '@/stores/nexus/agentStore';
 import { currentWorkflow } from '@/stores/nexus/workflowStore';
 import type { AttachedFile } from '@/components/navigation/nexus/FileAttachmentPreview';
-import NexusHeader from '@/components/navigation/nexus/NexusHeader';
 
 export default function Page() {
   const selectedAgent = useStore(currentAgent);
@@ -350,84 +348,51 @@ export default function Page() {
   }, [activeAgentOrWorkflow]);
 
   return (
-    <SidebarProvider>
-      <SidebarShadcn borderless headerBorderless />
-      <SidebarInset className="h-screen overflow-hidden">
-        <div className="flex h-full overflow-hidden bg-gray-50">
-          {viewMode === 'chat' && (
-            // Modo Chat Only - Header + ChatContainer
-            <div className="flex flex-col h-full w-full">
-              <NexusHeader viewMode={viewMode} onChangeViewMode={setViewMode} borderless size="sm" showBreadcrumb={false} />
-
-              <div className="flex-1 min-h-0 pl-2 pr-2 pt-0 pb-2" data-page="nexus">
-                <NexusPageContainer className="h-full" showSidebarTrigger>
-                  <div className="mx-auto w-full max-w-5xl h-full">
-                    <ChatContainer
-                      messages={displayedMessages}
-                      input={input}
-                      setInput={setInput}
-                      onSubmit={handleSubmit}
-                      status={status}
-                      selectedAgent={selectedAgent}
-                      onAgentChange={setCurrentAgent}
-                      attachedFiles={attachedFiles}
-                      onFilesChange={setAttachedFiles}
-                    />
-                  </div>
-                </NexusPageContainer>
-              </div>
-            </div>
-          )}
-
-          {viewMode === 'split' && (
-            // Modo Split - Header global + Workspaces lado a lado
-            <div className="flex flex-col h-full w-full">
-              <NexusHeader viewMode={viewMode} onChangeViewMode={setViewMode} borderless size="sm" showBreadcrumb={false} />
-              <div className="flex-1 min-h-0 pl-2 pr-2 pt-0 pb-2">
-                <NexusPageContainer className="h-full" showSidebarTrigger>
-                  <PanelGroup direction="horizontal">
-                  {/* Coluna Esquerda: Chat */}
-                  <Panel defaultSize={33} minSize={25}>
-                    <div className="h-full overflow-hidden" data-page="nexus">
-                      <ChatContainer
-                        messages={displayedMessages}
-                        input={input}
-                        setInput={setInput}
-                        onSubmit={handleSubmit}
-                        status={status}
-                        selectedAgent={selectedAgent}
-                        onAgentChange={setCurrentAgent}
-                        attachedFiles={attachedFiles}
-                        onFilesChange={setAttachedFiles}
-                      />
-                    </div>
-                  </Panel>
-
-                  {/* Coluna Direita: Dashboard altura completa */}
-                  <Panel defaultSize={67} minSize={40}>
-                    <div className="h-full">
-                      <DashboardChatPanel />
-                    </div>
-                  </Panel>
-                </PanelGroup>
-                </NexusPageContainer>
-              </div>
-            </div>
-          )}
-
-          {viewMode === 'dashboard' && (
-            // Modo Dashboard Only - Header + Tela inteira
-            <div className="flex flex-col h-full w-full">
-              <NexusHeader viewMode={viewMode} onChangeViewMode={setViewMode} borderless size="sm" showBreadcrumb={false} />
-              <div className="flex-1 min-h-0 pl-2 pr-2 pt-0 pb-2">
-                <NexusPageContainer className="h-full" showSidebarTrigger>
-                  <DashboardChatPanel />
-                </NexusPageContainer>
-              </div>
-            </div>
-          )}
+    <NexusShell showSidebarTrigger>
+      {viewMode === 'chat' && (
+        <div className="mx-auto w-full max-w-5xl h-full">
+          <ChatContainer
+            messages={displayedMessages}
+            input={input}
+            setInput={setInput}
+            onSubmit={handleSubmit}
+            status={status}
+            selectedAgent={selectedAgent}
+            onAgentChange={setCurrentAgent}
+            attachedFiles={attachedFiles}
+            onFilesChange={setAttachedFiles}
+          />
         </div>
-      </SidebarInset>
-    </SidebarProvider>
+      )}
+
+      {viewMode === 'split' && (
+        <PanelGroup direction="horizontal">
+          <Panel defaultSize={33} minSize={25}>
+            <div className="h-full overflow-hidden" data-page="nexus">
+              <ChatContainer
+                messages={displayedMessages}
+                input={input}
+                setInput={setInput}
+                onSubmit={handleSubmit}
+                status={status}
+                selectedAgent={selectedAgent}
+                onAgentChange={setCurrentAgent}
+                attachedFiles={attachedFiles}
+                onFilesChange={setAttachedFiles}
+              />
+            </div>
+          </Panel>
+          <Panel defaultSize={67} minSize={40}>
+            <div className="h-full">
+              <DashboardChatPanel />
+            </div>
+          </Panel>
+        </PanelGroup>
+      )}
+
+      {viewMode === 'dashboard' && (
+        <DashboardChatPanel />
+      )}
+    </NexusShell>
   );
 }

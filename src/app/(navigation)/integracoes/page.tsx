@@ -2,10 +2,7 @@
 
 import * as React from "react"
 import { useState } from "react"
-import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
-import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
-import NexusHeader from '@/components/navigation/nexus/NexusHeader'
-import NexusPageContainer from '@/components/navigation/nexus/NexusPageContainer'
+import NexusShell from '@/components/navigation/nexus/NexusShell'
 import { IntegrationCard } from "@/components/navigation/integrations/IntegrationCard"
 import type { Integration } from "@/components/navigation/integrations/IntegrationCard"
 
@@ -108,15 +105,8 @@ export default function IntegrationsPage() {
   }
 
   return (
-    <SidebarProvider defaultOpen={true}>
-      <SidebarShadcn borderless headerBorderless />
-      <SidebarInset className="h-screen overflow-hidden">
-        <div className="flex h-full overflow-hidden" style={{ backgroundColor: '#fdfdfd' }}>
-          <div className="flex flex-col h-full w-full">
-            <NexusHeader viewMode={'dashboard'} onChangeViewMode={() => {}} borderless size="sm" showBreadcrumb={false} />
-            <div className="flex-1 min-h-0 pl-2 pr-2 pt-0 pb-2" data-page="nexus">
-              <NexusPageContainer className="h-full">
-                <div className="mx-auto w-full max-w-5xl p-8">
+    <NexusShell outerBg="#fdfdfd">
+      <div className="mx-auto w-full max-w-5xl p-8">
                   {/* Header */}
                   <div className="mb-10">
                     <h1 className="text-3xl font-bold text-gray-900 mb-3">
@@ -156,11 +146,7 @@ export default function IntegrationsPage() {
                     />
                   </div>
                 </div>
-              </NexusPageContainer>
-            </div>
-          </div>
-        </div>
-      </SidebarInset>
-    </SidebarProvider>
+      </div>
+    </NexusShell>
   )
 }

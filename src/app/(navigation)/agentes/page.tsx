@@ -3,11 +3,8 @@
 import Link from "next/link"
 import { useEffect } from "react"
 import { useStore } from "@nanostores/react"
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import { SidebarShadcn } from "@/components/navigation/SidebarShadcn"
 import { Button } from "@/components/ui/button"
-import NexusHeader from "@/components/navigation/nexus/NexusHeader"
-import NexusPageContainer from "@/components/navigation/nexus/NexusPageContainer"
+import NexusShell from "@/components/navigation/nexus/NexusShell"
 import PageHeader from "@/components/modulos/PageHeader"
 import TabsNav, { type Opcao } from "@/components/modulos/TabsNav"
 import { $titulo, $tabs, $layout, moduleUiActions } from "@/stores/modulos/moduleUiStore"
@@ -50,46 +47,34 @@ export default function AgentsIndexPage() {
   )
 
   return (
-    <SidebarProvider defaultOpen={true}>
-      <SidebarShadcn borderless headerBorderless />
-      <SidebarInset className="h-screen overflow-hidden">
-        <div className="flex h-full overflow-hidden" style={{ backgroundColor: layout.contentBg }}>
-          <div className="flex flex-col h-full w-full">
-            <NexusHeader viewMode={'dashboard'} onChangeViewMode={() => {}} borderless size="sm" showBreadcrumb={false} rightActions={headerRight} />
-            <div className="flex-1 min-h-0 pl-2 pr-2 pt-0 pb-2" data-page="nexus">
-              <NexusPageContainer className="h-full">
-                <div className="w-full" style={{ marginBottom: layout.mbTitle }}>
-                  <PageHeader title={titulo.title} subtitle={titulo.subtitle} />
-                </div>
-                <div className="w-full" style={{ marginBottom: 0 }}>
-                  <TabsNav
-                    options={tabs.options as Opcao[]}
-                    value={tabs.selected}
-                    onValueChange={(v) => moduleUiActions.setTabs({ selected: v })}
-                    fontFamily={fontVar(tabs.fontFamily)}
-                    fontSize={tabs.fontSize}
-                    fontWeight={tabs.fontWeight}
-                    color={tabs.color}
-                    letterSpacing={tabs.letterSpacing}
-                    iconSize={tabs.iconSize}
-                    labelOffsetY={tabs.labelOffsetY}
-                    startOffset={tabs.leftOffset}
-                    activeColor={tabs.activeColor}
-                    activeFontWeight={tabs.activeFontWeight}
-                    activeBorderColor={tabs.activeBorderColor}
-                    className="px-0 md:px-0"
-                  />
-                </div>
-                <div style={{ paddingTop: (layout.contentTopGap || 0) + (layout.mbTabs || 0) }}>
-                  <div className="px-4 md:px-6">
-                    <AgentsGridView category={tabs.selected as any} />
-                  </div>
-                </div>
-              </NexusPageContainer>
-            </div>
-          </div>
+    <NexusShell outerBg={layout.contentBg}>
+      <div className="w-full" style={{ marginBottom: layout.mbTitle }}>
+        <PageHeader title={titulo.title} subtitle={titulo.subtitle} />
+      </div>
+      <div className="w-full" style={{ marginBottom: 0 }}>
+        <TabsNav
+          options={tabs.options as Opcao[]}
+          value={tabs.selected}
+          onValueChange={(v) => moduleUiActions.setTabs({ selected: v })}
+          fontFamily={fontVar(tabs.fontFamily)}
+          fontSize={tabs.fontSize}
+          fontWeight={tabs.fontWeight}
+          color={tabs.color}
+          letterSpacing={tabs.letterSpacing}
+          iconSize={tabs.iconSize}
+          labelOffsetY={tabs.labelOffsetY}
+          startOffset={tabs.leftOffset}
+          activeColor={tabs.activeColor}
+          activeFontWeight={tabs.activeFontWeight}
+          activeBorderColor={tabs.activeBorderColor}
+          className="px-0 md:px-0"
+        />
+      </div>
+      <div style={{ paddingTop: (layout.contentTopGap || 0) + (layout.mbTabs || 0) }}>
+        <div className="px-4 md:px-6">
+          <AgentsGridView category={tabs.selected as any} />
         </div>
-      </SidebarInset>
-    </SidebarProvider>
+      </div>
+    </NexusShell>
   )
 }
