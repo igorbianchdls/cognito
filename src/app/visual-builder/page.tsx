@@ -2698,7 +2698,7 @@ export default function VisualBuilderPage() {
             let newOpenAttrs = openAttrs.replace(styleRe, '');
             newOpenAttrs = newOpenAttrs.replace(/\s+$/, '');
             const newOpenTag = `<article${newOpenAttrs}${Object.keys(styleObj).length ? ` style=\"${toStyle(styleObj)}\"` : ''}>`;
-            // Update <Chart ...> attributes and <props> with Nivo props from modal (using vbNivo as source for now)
+            // Update <Chart ...> attributes and <props> with Nivo props from modal (local props)
             const parseAttrs = (s: string): Record<string,string> => { const out: Record<string,string> = {}; const re=/(\w[\w-]*)\s*=\s*("([^"]*)"|'([^']*)'|([^\s>]+))/g; let m: RegExpExecArray|null; while((m=re.exec(s))!==null){ out[m[1]]=(m[3]??m[4]??m[5]??'').trim(); } return out; };
             const buildAttrs = (a: Record<string,string>) => Object.entries(a).map(([k,v])=>`${k}="${v}"`).join(' ');
             const setAttrKV = (attrsStr: string, name: string, value: string | undefined) => {
@@ -2713,29 +2713,7 @@ export default function VisualBuilderPage() {
             let innerNext = inner;
             const applyChartProps = (openAttrsStr: string, chartInner: string): { open: string; inner: string } => {
               const attrs = parseAttrs(openAttrsStr);
-              const chartProps: any = {
-                enableGridX: vbNivo.enableGridX,
-                enableGridY: vbNivo.enableGridY,
-                gridColor: vbNivo.gridColor,
-                gridStrokeWidth: vbNivo.gridStrokeWidth,
-                axisFontFamily: vbNivo.axisFontFamily,
-                axisFontSize: vbNivo.axisFontSize,
-                axisFontWeight: vbNivo.axisFontWeight,
-                axisTextColor: vbNivo.axisTextColor,
-                axisLegendFontSize: vbNivo.axisLegendFontSize,
-                axisLegendFontWeight: vbNivo.axisLegendFontWeight,
-                labelsFontFamily: vbNivo.labelsFontFamily,
-                labelsFontSize: vbNivo.labelsFontSize,
-                labelsFontWeight: vbNivo.labelsFontWeight,
-                labelsTextColor: vbNivo.labelsTextColor,
-                legendsFontFamily: vbNivo.legendsFontFamily,
-                legendsFontSize: vbNivo.legendsFontSize,
-                legendsFontWeight: vbNivo.legendsFontWeight,
-                legendsTextColor: vbNivo.legendsTextColor,
-                showLegend: vbNivo.showLegend,
-                animate: vbNivo.animate,
-                motionConfig: vbNivo.motionConfig,
-              };
+              const chartProps = (out.chartProps || {}) as Record<string, unknown>;
               // Set some shorthands as attributes
               let newAttrsStr = openAttrsStr;
               newAttrsStr = setAttrKV(newAttrsStr, 'enableGridX', String(Boolean(chartProps.enableGridX)));
