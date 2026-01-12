@@ -165,7 +165,7 @@ export default function PreviewPage() {
       {/* Dashboard em tela cheia */}
       <div className="w-full h-[calc(100vh-69px)]">
         {htmlMode ? (
-          <div ref={htmlRef} className="w-full overflow-auto p-4" />
+          <div ref={htmlRef} className="w-full overflow-auto p-0" />
         ) : (
           <ResponsiveGridCanvas
             widgets={visualBuilderState.widgets}
