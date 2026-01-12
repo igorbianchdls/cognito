@@ -263,7 +263,7 @@ export default function ChartEditorModal({ isOpen, initial, onClose, onSave }: C
               </div>
               <div>
                 <div className="text-xs text-gray-600 mb-1">Cores</div>
-                <input className="w-full px-2 py-2 bg-gray-100 rounded" placeholder="#2563eb ou #2563eb,#22c55e ou [\"#2563eb\"]" value={colorsText} onChange={e=>setColorsText(e.target.value)} />
+                <input className="w-full px-2 py-2 bg-gray-100 rounded" placeholder='#2563eb ou #2563eb,#22c55e ou ["#2563eb"]' value={colorsText} onChange={e=>setColorsText(e.target.value)} />
               </div>
               <div className="col-span-2">
                 <div className="text-xs text-gray-600 mb-1">Grid</div>
