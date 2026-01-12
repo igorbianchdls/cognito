@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { FontManager } from './FontManager';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 type QueryRuleEdit = { col: string; op: string; val?: string; vals?: string; start?: string; end?: string }
 
@@ -232,135 +233,265 @@ export default function ChartEditorModal({ isOpen, initial, onClose, onSave }: C
           <h3 className="text-lg font-semibold text-gray-900">Editar Chart</h3>
           <button onClick={onClose} className="text-gray-600 hover:text-gray-800">✕</button>
         </div>
-        <div className="space-y-3 max-h-[70vh] overflow-auto pr-1">
-          <div>
-            <label className="block text-sm font-medium text-gray-800 mb-1">Título (HTML &lt;h1&gt;)</label>
-            <input className="w-full px-3 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" value={titleText} onChange={e=>setTitleText(e.target.value)} placeholder="Ex.: Faturamento Mensal" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-800 mb-1">Tipografia do Título</label>
-            <div className="grid grid-cols-3 gap-2">
-              <select className="px-2 py-2 bg-gray-100 border-0 rounded-md" value={titleFontFamily} onChange={e=>{ setTitleFontFamily(e.target.value); setDirtyTitleFamily(true); }}>
-                <option value="">(Padrão)</option>
-                {FontManager.getAvailableFonts().map(f => (
-                  <option key={f.key} value={f.family}>{f.name}</option>
-                ))}
-              </select>
-              <input type="number" min={10} className="px-2 py-2 bg-gray-100 border-0 rounded-md" placeholder="Tamanho" value={titleFontSize ?? ''} onChange={e=>{ setTitleFontSize(e.target.value ? parseInt(e.target.value) : undefined); setDirtyTitleSize(true); }} />
-              <select className="px-2 py-2 bg-gray-100 border-0 rounded-md" value={String(titleFontWeight ?? '')} onChange={e=>{ setTitleFontWeight(e.target.value ? (isNaN(Number(e.target.value)) ? e.target.value : Number(e.target.value)) : undefined); setDirtyTitleWeight(true); }}>
-                <option value="">Peso</option>
-                {[100,200,300,400,500,600,700,800,900].map(w => <option key={w} value={String(w)}>{w}</option>)}
-              </select>
-            </div>
-            <div className="mt-2">
-              <label className="text-xs text-gray-600 block mb-1">Cor</label>
-              <input type="color" className="px-1 py-1 bg-gray-100 border-0 rounded-md h-10" value={titleColor} onChange={e=>{ setTitleColor(e.target.value); setDirtyTitleColor(true); }} />
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-800 mb-1">Container do Article</label>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs text-gray-600 mb-1">Fundo</label>
-                <input type="color" className="w-full px-1 py-1 bg-gray-100 border-0 rounded-md h-10" value={backgroundColor || '#ffffff'} onChange={e=>{ setBackgroundColor(e.target.value); setDirtyBg(true); }} />
-              </div>
-              <div>
-                <label className="block text-xs text-gray-600 mb-1">Opacidade</label>
-                <input type="number" min={0} max={1} step={0.05} className="w-full px-2 py-2 bg-gray-100 border-0 rounded-md" value={opacity ?? ''} onChange={e=>{ setOpacity(e.target.value===''?undefined:parseFloat(e.target.value)); setDirtyOpacity(true); }} />
-              </div>
-            </div>
-            <div className="grid grid-cols-4 gap-2 mt-2">
-              <div>
-                <label className="block text-xs text-gray-600 mb-1">Borda (px)</label>
-                <input type="number" min={0} className="w-full px-2 py-2 bg-gray-100 border-0 rounded-md" value={borderWidth ?? ''} onChange={e=>{ setBorderWidth(e.target.value===''?undefined:parseInt(e.target.value)); setDirtyBWidth(true); }} />
-              </div>
-              <div>
-                <label className="block text-xs text-gray-600 mb-1">Estilo</label>
-                <select className="w-full px-2 py-2 bg-gray-100 border-0 rounded-md" value={borderStyle} onChange={e=>{ setBorderStyle((e.target.value as any) || ''); setDirtyBStyle(true); }}>
-                  <option value="">(padrão)</option>
-                  <option value="solid">solid</option>
-                  <option value="dashed">dashed</option>
-                  <option value="dotted">dotted</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs text-gray-600 mb-1">Cor</label>
-                <input type="color" className="w-full px-1 py-1 bg-gray-100 border-0 rounded-md h-10" value={borderColor || '#e5e7eb'} onChange={e=>{ setBorderColor(e.target.value); setDirtyBColor(true); }} />
-              </div>
-              <div>
-                <label className="block text-xs text-gray-600 mb-1">Raio (px)</label>
-                <input type="number" min={0} className="w-full px-2 py-2 bg-gray-100 border-0 rounded-md" value={borderRadius ?? ''} onChange={e=>{ setBorderRadius(e.target.value===''?undefined:parseInt(e.target.value)); setDirtyBRadius(true); }} />
-              </div>
-            </div>
-          </div>
+        <div className="max-h-[70vh] overflow-auto pr-1">
+          <Tabs value={tab} onValueChange={(v)=>setTab(v as any)} className="">
+            <TabsList variant="underline" className="mb-2">
+              <TabsTrigger value="chart">Gráfico</TabsTrigger>
+              <TabsTrigger value="container">Container</TabsTrigger>
+              <TabsTrigger value="query">Query</TabsTrigger>
+            </TabsList>
 
-          {/* Nivo (BarChart) — Props locais */}
-          <div className="border-t pt-3">
-            <label className="block text-sm font-semibold text-gray-900 mb-2">Chart (Nivo) — Bar</label>
-            <div className="grid grid-cols-2 gap-3 mt-2">
-              <div>
-                <div className="text-xs text-gray-600 mb-1">Layout</div>
-                <select className="w-full px-2 py-2 bg-gray-100 rounded" value={layout} onChange={e=>setLayout(e.target.value)}>
-                  <option value="vertical">vertical</option>
-                  <option value="horizontal">horizontal</option>
-                </select>
-              </div>
-              <div>
-                <div className="text-xs text-gray-600 mb-1">Cores</div>
-                <input className="w-full px-2 py-2 bg-gray-100 rounded" placeholder='#2563eb ou #2563eb,#22c55e ou ["#2563eb"]' value={colorsText} onChange={e=>setColorsText(e.target.value)} />
-              </div>
-              <div className="col-span-2">
-                <div className="text-xs text-gray-600 mb-1">Grid</div>
-                <div className="flex items-center gap-3">
-                  <label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={enableGridX} onChange={e=>setEnableGridX(e.target.checked)} /> Grid X</label>
-                  <label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={enableGridY} onChange={e=>setEnableGridY(e.target.checked)} /> Grid Y</label>
-                  <div className="flex items-center gap-2 ml-auto">
-                    <span className="text-xs">Cor</span>
-                    <input type="color" value={gridColor} onChange={e=>setGridColor(e.target.value)} />
-                    <span className="text-xs">Esp.</span>
-                    <input type="number" className="w-16 px-2 py-1 rounded bg-gray-100" min={0} value={gridStrokeWidth} onChange={e=>setGridStrokeWidth(e.target.value===''?0:Number(e.target.value))} />
+            <TabsContent value="container">
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-800 mb-1">Título (HTML &lt;h1&gt;)</label>
+                  <input className="w-full px-3 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" value={titleText} onChange={e=>setTitleText(e.target.value)} placeholder="Ex.: Faturamento Mensal" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-800 mb-1">Tipografia do Título</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    <select className="px-2 py-2 bg-gray-100 border-0 rounded-md" value={titleFontFamily} onChange={e=>{ setTitleFontFamily(e.target.value); setDirtyTitleFamily(true); }}>
+                      <option value="">(Padrão)</option>
+                      {FontManager.getAvailableFonts().map(f => (
+                        <option key={f.key} value={f.family}>{f.name}</option>
+                      ))}
+                    </select>
+                    <input type="number" min={10} className="px-2 py-2 bg-gray-100 border-0 rounded-md" placeholder="Tamanho" value={titleFontSize ?? ''} onChange={e=>{ setTitleFontSize(e.target.value ? parseInt(e.target.value) : undefined); setDirtyTitleSize(true); }} />
+                    <select className="px-2 py-2 bg-gray-100 border-0 rounded-md" value={String(titleFontWeight ?? '')} onChange={e=>{ setTitleFontWeight(e.target.value ? (isNaN(Number(e.target.value)) ? e.target.value : Number(e.target.value)) : undefined); setDirtyTitleWeight(true); }}>
+                      <option value="">Peso</option>
+                      {[100,200,300,400,500,600,700,800,900].map(w => <option key={w} value={String(w)}>{w}</option>)}
+                    </select>
+                  </div>
+                  <div className="mt-2">
+                    <label className="text-xs text-gray-600 block mb-1">Cor</label>
+                    <input type="color" className="px-1 py-1 bg-gray-100 border-0 rounded-md h-10" value={titleColor} onChange={e=>{ setTitleColor(e.target.value); setDirtyTitleColor(true); }} />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-800 mb-1">Container do Article</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1">Fundo</label>
+                      <input type="color" className="w-full px-1 py-1 bg-gray-100 border-0 rounded-md h-10" value={backgroundColor || '#ffffff'} onChange={e=>{ setBackgroundColor(e.target.value); setDirtyBg(true); }} />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1">Opacidade</label>
+                      <input type="number" min={0} max={1} step={0.05} className="w-full px-2 py-2 bg-gray-100 border-0 rounded-md" value={opacity ?? ''} onChange={e=>{ setOpacity(e.target.value===''?undefined:parseFloat(e.target.value)); setDirtyOpacity(true); }} />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-4 gap-2 mt-2">
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1">Borda (px)</label>
+                      <input type="number" min={0} className="w-full px-2 py-2 bg-gray-100 border-0 rounded-md" value={borderWidth ?? ''} onChange={e=>{ setBorderWidth(e.target.value===''?undefined:parseInt(e.target.value)); setDirtyBWidth(true); }} />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1">Estilo</label>
+                      <select className="w-full px-2 py-2 bg-gray-100 border-0 rounded-md" value={borderStyle} onChange={e=>{ setBorderStyle((e.target.value as any) || ''); setDirtyBStyle(true); }}>
+                        <option value="">(padrão)</option>
+                        <option value="solid">solid</option>
+                        <option value="dashed">dashed</option>
+                        <option value="dotted">dotted</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1">Cor</label>
+                      <input type="color" className="w-full px-1 py-1 bg-gray-100 border-0 rounded-md h-10" value={borderColor || '#e5e7eb'} onChange={e=>{ setBorderColor(e.target.value); setDirtyBColor(true); }} />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1">Raio (px)</label>
+                      <input type="number" min={0} className="w-full px-2 py-2 bg-gray-100 border-0 rounded-md" value={borderRadius ?? ''} onChange={e=>{ setBorderRadius(e.target.value===''?undefined:parseInt(e.target.value)); setDirtyBRadius(true); }} />
+                    </div>
                   </div>
                 </div>
               </div>
-              <div>
-                <div className="text-xs text-gray-600 mb-1">Axis Bottom</div>
-                <input className="w-full px-2 py-1 bg-gray-100 rounded mb-1" placeholder="Legenda" value={axisBottomLegend} onChange={e=>setAxisBottomLegend(e.target.value)} />
-                <div className="flex items-center gap-2">
-                  <input className="w-20 px-2 py-1 bg-gray-100 rounded" type="number" placeholder="Rotação" value={axisBottomTickRotation} onChange={e=>setAxisBottomTickRotation(e.target.value===''?0:Number(e.target.value))} />
-                  <input className="w-24 px-2 py-1 bg-gray-100 rounded" type="number" placeholder="Offset" value={axisBottomLegendOffset ?? ''} onChange={e=>setAxisBottomLegendOffset(e.target.value===''?undefined:Number(e.target.value))} />
-                  <select className="px-2 py-1 bg-gray-100 rounded" value={axisBottomLegendPosition} onChange={e=>setAxisBottomLegendPosition(e.target.value)}>
-                    <option value="start">start</option>
-                    <option value="middle">middle</option>
-                    <option value="end">end</option>
+            </TabsContent>
+
+            <TabsContent value="chart">
+              <div className="grid grid-cols-2 gap-3 mt-2">
+                <div>
+                  <div className="text-xs text-gray-600 mb-1">Layout</div>
+                  <select className="w-full px-2 py-2 bg-gray-100 rounded" value={layout} onChange={e=>setLayout(e.target.value)}>
+                    <option value="vertical">vertical</option>
+                    <option value="horizontal">horizontal</option>
+                  </select>
+                </div>
+                <div>
+                  <div className="text-xs text-gray-600 mb-1">Cores</div>
+                  <input className="w-full px-2 py-2 bg-gray-100 rounded" placeholder='#2563eb ou #2563eb,#22c55e ou ["#2563eb"]' value={colorsText} onChange={e=>setColorsText(e.target.value)} />
+                </div>
+                <div className="col-span-2">
+                  <div className="text-xs text-gray-600 mb-1">Grid</div>
+                  <div className="flex items-center gap-3">
+                    <label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={enableGridX} onChange={e=>setEnableGridX(e.target.checked)} /> Grid X</label>
+                    <label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={enableGridY} onChange={e=>setEnableGridY(e.target.checked)} /> Grid Y</label>
+                    <div className="flex items-center gap-2 ml-auto">
+                      <span className="text-xs">Cor</span>
+                      <input type="color" value={gridColor} onChange={e=>setGridColor(e.target.value)} />
+                      <span className="text-xs">Esp.</span>
+                      <input type="number" className="w-16 px-2 py-1 rounded bg-gray-100" min={0} value={gridStrokeWidth} onChange={e=>setGridStrokeWidth(e.target.value===''?0:Number(e.target.value))} />
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <div className="text-xs text-gray-600 mb-1">Axis Bottom</div>
+                  <input className="w-full px-2 py-1 bg-gray-100 rounded mb-1" placeholder="Legenda" value={axisBottomLegend} onChange={e=>setAxisBottomLegend(e.target.value)} />
+                  <div className="flex items-center gap-2">
+                    <input className="w-20 px-2 py-1 bg-gray-100 rounded" type="number" placeholder="Rotação" value={axisBottomTickRotation} onChange={e=>setAxisBottomTickRotation(e.target.value===''?0:Number(e.target.value))} />
+                    <input className="w-24 px-2 py-1 bg-gray-100 rounded" type="number" placeholder="Offset" value={axisBottomLegendOffset ?? ''} onChange={e=>setAxisBottomLegendOffset(e.target.value===''?undefined:Number(e.target.value))} />
+                    <select className="px-2 py-1 bg-gray-100 rounded" value={axisBottomLegendPosition} onChange={e=>setAxisBottomLegendPosition(e.target.value)}>
+                      <option value="start">start</option>
+                      <option value="middle">middle</option>
+                      <option value="end">end</option>
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <div className="text-xs text-gray-600 mb-1">Axis Left</div>
+                  <input className="w-full px-2 py-1 bg-gray-100 rounded mb-1" placeholder="Legenda" value={axisLeftLegend} onChange={e=>setAxisLeftLegend(e.target.value)} />
+                  <input className="w-24 px-2 py-1 bg-gray-100 rounded" type="number" placeholder="Offset" value={axisLeftLegendOffset ?? ''} onChange={e=>setAxisLeftLegendOffset(e.target.value===''?undefined:Number(e.target.value))} />
+                </div>
+                <div>
+                  <div className="text-xs text-gray-600 mb-1">Rótulos e Legenda</div>
+                  <label className="flex items-center gap-2 text-xs mb-1"><input type="checkbox" checked={enableLabel} onChange={e=>setEnableLabel(e.target.checked)} /> enableLabel</label>
+                  <label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={showLegend} onChange={e=>setShowLegend(e.target.checked)} /> showLegend</label>
+                </div>
+                <div>
+                  <div className="text-xs text-gray-600 mb-1">Espaçamento</div>
+                  <div className="flex items-center gap-2">
+                    <input className="w-20 px-2 py-1 bg-gray-100 rounded" type="number" placeholder="padding" value={padding ?? ''} onChange={e=>setPadding(e.target.value===''?undefined:Number(e.target.value))} />
+                    <input className="w-24 px-2 py-1 bg-gray-100 rounded" type="number" placeholder="innerPadding" value={innerPadding ?? ''} onChange={e=>setInnerPadding(e.target.value===''?undefined:Number(e.target.value))} />
+                  </div>
+                </div>
+                <div>
+                  <div className="text-xs text-gray-600 mb-1">Animação</div>
+                  <label className="flex items-center gap-2 text-xs mb-1"><input type="checkbox" checked={animate} onChange={e=>setAnimate(e.target.checked)} /> animate</label>
+                  <select className="w-full px-2 py-1 bg-gray-100 rounded" value={motionConfig} onChange={e=>setMotionConfig(e.target.value)}>
+                    {['default','gentle','wobbly','stiff','slow'].map(m => <option key={m} value={m}>{m}</option>)}
                   </select>
                 </div>
               </div>
-              <div>
-                <div className="text-xs text-gray-600 mb-1">Axis Left</div>
-                <input className="w-full px-2 py-1 bg-gray-100 rounded mb-1" placeholder="Legenda" value={axisLeftLegend} onChange={e=>setAxisLeftLegend(e.target.value)} />
-                <input className="w-24 px-2 py-1 bg-gray-100 rounded" type="number" placeholder="Offset" value={axisLeftLegendOffset ?? ''} onChange={e=>setAxisLeftLegendOffset(e.target.value===''?undefined:Number(e.target.value))} />
-              </div>
-              <div>
-                <div className="text-xs text-gray-600 mb-1">Rótulos e Legenda</div>
-                <label className="flex items-center gap-2 text-xs mb-1"><input type="checkbox" checked={enableLabel} onChange={e=>setEnableLabel(e.target.checked)} /> enableLabel</label>
-                <label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={showLegend} onChange={e=>setShowLegend(e.target.checked)} /> showLegend</label>
-              </div>
-              <div>
-                <div className="text-xs text-gray-600 mb-1">Espaçamento</div>
-                <div className="flex items-center gap-2">
-                  <input className="w-20 px-2 py-1 bg-gray-100 rounded" type="number" placeholder="padding" value={padding ?? ''} onChange={e=>setPadding(e.target.value===''?undefined:Number(e.target.value))} />
-                  <input className="w-24 px-2 py-1 bg-gray-100 rounded" type="number" placeholder="innerPadding" value={innerPadding ?? ''} onChange={e=>setInnerPadding(e.target.value===''?undefined:Number(e.target.value))} />
+            </TabsContent>
+
+            <TabsContent value="query">
+              {/* Query Editor */}
+              <div className="pt-2">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-semibold text-gray-900">Query</label>
+                  <button className="text-xs text-blue-600 hover:underline" onClick={() => {
+                    const t = table.trim().toLowerCase()
+                    if (!t) return
+                    if (TABLE_META[t]) {
+                      setMeasureAgg('SUM');
+                      setMeasureField(TABLE_META[t].defaultMeasureField);
+                      setTimeDimension(TABLE_META[t].defaultTimeColumn);
+                    }
+                    setDirtyQuery(true)
+                  }}>Reset defaults</button>
+                </div>
+                <div className="grid grid-cols-2 gap-2 mb-2">
+                  <div>
+                    <label className="text-xs text-gray-600 block mb-1">Schema</label>
+                    <select className="w-full px-2 py-1 bg-gray-100 rounded" value={schema} onChange={e=>{ setSchema(e.target.value); setDirtyQuery(true) }}>
+                      {SCHEMAS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-600 block mb-1">Table</label>
+                    <select className="w-full px-2 py-1 bg-gray-100 rounded" value={table} onChange={e=>{
+                      const v = e.target.value; setTable(v);
+                      const meta = TABLE_META[v];
+                      if (meta) {
+                        if (!meta.measureFields.includes(measureField)) setMeasureField(meta.defaultMeasureField);
+                        if (!meta.timeColumns.includes(timeDimension)) setTimeDimension(meta.defaultTimeColumn);
+                        if (dimension && !meta.dimensions.includes(dimension)) setDimension('');
+                      }
+                      setDirtyQuery(true)
+                    }}>
+                      <option value="">Selecione…</option>
+                      {TABLES.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                    </select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2 mb-2">
+                  <div>
+                    <label className="text-xs text-gray-600 block mb-1">Measure</label>
+                    <div className="flex gap-2">
+                      <select className="px-2 py-1 bg-gray-100 rounded w-28" value={measureAgg} onChange={e=>{ setMeasureAgg(e.target.value as any); setDirtyQuery(true); }}>
+                        {AGGS.map(a => <option key={a} value={a}>{a}</option>)}
+                      </select>
+                      <select className="flex-1 px-2 py-1 bg-gray-100 rounded" value={measureField} onChange={e=>{ setMeasureField(e.target.value); setDirtyQuery(true); }}>
+                        <option value="">Selecione…</option>
+                        {(TABLE_META[table]?.measureFields || []).map(f => <option key={f} value={f}>{f}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-600 block mb-1">Dimension</label>
+                    <select className="w-full px-2 py-1 bg-gray-100 rounded" value={dimension} onChange={e=>{ setDimension(e.target.value); setDirtyQuery(true) }}>
+                      <option value="">(Nenhuma)</option>
+                      {(TABLE_META[table]?.dimensions || []).map(d => <option key={d} value={d}>{d}</option>)}
+                    </select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-2 mb-2">
+                  <div>
+                    <label className="text-xs text-gray-600 block mb-1">timeDimension</label>
+                    <select className="w-full px-2 py-1 bg-gray-100 rounded" value={timeDimension} onChange={e=>{ setTimeDimension(e.target.value); setDirtyQuery(true) }}>
+                      <option value="">(Nenhuma)</option>
+                      {(TABLE_META[table]?.timeColumns || []).map(tc => <option key={tc} value={tc}>{tc}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-600 block mb-1">From</label>
+                    <input type="date" className="w-full px-2 py-1 bg-gray-100 rounded" value={from} onChange={e=>{ setFrom(e.target.value); setDirtyQuery(true) }} />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-600 block mb-1">To</label>
+                    <input type="date" className="w-full px-2 py-1 bg-gray-100 rounded" value={to} onChange={e=>{ setTo(e.target.value); setDirtyQuery(true) }} />
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-2 mb-2">
+                  <div>
+                    <label className="text-xs text-gray-600 block mb-1">Limit</label>
+                    <input type="number" min={1} max={50} className="w-full px-2 py-1 bg-gray-100 rounded" value={limit} onChange={e=>{ setLimit(e.target.value ? parseInt(e.target.value) : 5); setDirtyQuery(true) }} />
+                  </div>
+                  <div className="col-span-2">
+                    <label className="text-xs text-gray-600 block mb-1">Order</label>
+                    <select className="w-full px-2 py-1 bg-gray-100 rounded" value={order} onChange={e=>{ setOrder(e.target.value as any); setDirtyQuery(true) }}>
+                      <option value="value DESC">value DESC</option>
+                      <option value="value ASC">value ASC</option>
+                      <option value="label ASC">label ASC</option>
+                      <option value="label DESC">label DESC</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="mb-2">
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs text-gray-600">Where rules</label>
+                    <button className="text-xs text-blue-600 hover:underline" onClick={()=>{ setWhere([...(where||[]), { col: '', op: '=', val: '' }]); setDirtyQuery(true) }}>+ Regra</button>
+                  </div>
+                  <div className="space-y-2">
+                    {(where || []).map((r, idx) => (
+                      <div key={idx} className="grid grid-cols-12 gap-2 items-center">
+                        <input className="col-span-3 px-2 py-1 bg-gray-100 rounded" placeholder="col" value={r.col} onChange={e=>{ const w=[...where]; w[idx]={...w[idx], col:e.target.value}; setWhere(w); setDirtyQuery(true) }} />
+                        <select className="col-span-2 px-2 py-1 bg-gray-100 rounded" value={r.op} onChange={e=>{ const w=[...where]; w[idx]={...w[idx], op:e.target.value}; setWhere(w); setDirtyQuery(true) }}>
+                          <option value="=">=</option>
+                          <option value="in">in</option>
+                          <option value="between">between</option>
+                          <option value="like">like</option>
+                        </select>
+                        <input className="col-span-3 px-2 py-1 bg-gray-100 rounded" placeholder="val(s)" value={r.vals !== undefined ? r.vals : (r.val || '')} onChange={e=>{ const w=[...where]; const op=(w[idx].op||'').toLowerCase(); if (op==='in') w[idx]={...w[idx], vals:e.target.value}; else if(op==='between'){ /* ignore here */ } else w[idx]={...w[idx], val:e.target.value}; setWhere(w); setDirtyQuery(true) }} />
+                        <input className="col-span-2 px-2 py-1 bg-gray-100 rounded" placeholder="start" value={r.start || ''} onChange={e=>{ const w=[...where]; w[idx]={...w[idx], start:e.target.value}; setWhere(w); setDirtyQuery(true) }} />
+                        <input className="col-span-2 px-2 py-1 bg-gray-100 rounded" placeholder="end" value={r.end || ''} onChange={e=>{ const w=[...where]; w[idx]={...w[idx], end:e.target.value}; setWhere(w); setDirtyQuery(true) }} />
+                        <button className="col-span-12 text-xs text-red-600 hover:underline" onClick={()=>{ const w=[...where]; w.splice(idx,1); setWhere(w); setDirtyQuery(true) }}>remover</button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
-              <div>
-                <div className="text-xs text-gray-600 mb-1">Animação</div>
-                <label className="flex items-center gap-2 text-xs mb-1"><input type="checkbox" checked={animate} onChange={e=>setAnimate(e.target.checked)} /> animate</label>
-                <select className="w-full px-2 py-1 bg-gray-100 rounded" value={motionConfig} onChange={e=>setMotionConfig(e.target.value)}>
-                  {['default','gentle','wobbly','stiff','slow'].map(m => <option key={m} value={m}>{m}</option>)}
-                </select>
-              </div>
-            </div>
-          </div>
+            </TabsContent>
+          </Tabs>
+        </div>
           {/* Query Editor */}
           <div className="pt-2 border-t border-gray-200">
             <div className="flex items-center justify-between mb-2">
