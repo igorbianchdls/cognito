@@ -323,7 +323,7 @@ import { PieChart } from '@/components/charts/PieChart';
 import { AreaChart } from '@/components/charts/AreaChart';
 import { GroupedBarChart } from '@/components/charts/GroupedBarChart';
 import { QueryEngine } from '@/components/visual-builder/QueryEngine';
-import { updateArticleQueryDSL } from '@/components/visual-builder/commands/HelperEditorToDSL';
+import { updateArticleQueryFull } from '@/components/visual-builder/commands/HelperEditorToDSL';
 
 // New: Comercial (Metas x Realizado) HTML template
 const COMERCIAL_DASHBOARD_TEMPLATE = `<dashboard render="html" theme="branco" date-type="custom" date-start="2025-11-01" date-end="2025-12-01" style="border:1px solid red;">
@@ -2827,7 +2827,7 @@ export default function VisualBuilderPage() {
                 const articleId = (idMatch?.[2] || idMatch?.[3] || '').trim();
                 if (articleId) {
                   const q = out.query;
-                  const { code: qCode } = updateArticleQueryDSL(newCode, {
+                  const { code: qCode } = updateArticleQueryFull(newCode, {
                     articleId,
                     query: {
                       schema: q.schema,
