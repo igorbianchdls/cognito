@@ -129,16 +129,32 @@ export default function ChartEditorModal({ isOpen, initial, onClose, onSave }: C
   const [axisBottomLegendOffset, setAxisBottomLegendOffset] = useState<number | undefined>(get(initialProps,'axisBottom.legendOffset', undefined));
   const [axisBottomLegendPosition, setAxisBottomLegendPosition] = useState<string>(String(get(initialProps,'axisBottom.legendPosition','middle')));
   const [axisBottomTickRotation, setAxisBottomTickRotation] = useState<number>(Number(get(initialProps,'axisBottom.tickRotation', 0)));
+  const [axisBottomTickSize, setAxisBottomTickSize] = useState<number | undefined>(get(initialProps,'axisBottom.tickSize', undefined));
+  const [axisBottomTickPadding, setAxisBottomTickPadding] = useState<number | undefined>(get(initialProps,'axisBottom.tickPadding', undefined));
   const [axisLeftLegend, setAxisLeftLegend] = useState<string>(String(get(initialProps,'axisLeft.legend','')));
   const [axisLeftLegendOffset, setAxisLeftLegendOffset] = useState<number | undefined>(get(initialProps,'axisLeft.legendOffset', undefined));
+  const [axisLeftTickSize, setAxisLeftTickSize] = useState<number | undefined>(get(initialProps,'axisLeft.tickSize', undefined));
+  const [axisLeftTickPadding, setAxisLeftTickPadding] = useState<number | undefined>(get(initialProps,'axisLeft.tickPadding', undefined));
   const colorsToString = (c: any): string => Array.isArray(c) ? c.join(', ') : (typeof c === 'string' ? c : '');
   const [colorsText, setColorsText] = useState<string>(colorsToString(initialProps.colors));
   const [showLegend, setShowLegend] = useState<boolean>(Boolean(initialProps.showLegend ?? false));
   const [enableLabel, setEnableLabel] = useState<boolean>(Boolean(initialProps.enableLabel ?? false));
+  const [labelPosition, setLabelPosition] = useState<'start'|'middle'|'end'>((initialProps.labelPosition as any) || 'middle');
+  const [labelOffset, setLabelOffset] = useState<number | undefined>(typeof initialProps.labelOffset === 'number' ? initialProps.labelOffset : undefined);
+  const [labelSkipWidth, setLabelSkipWidth] = useState<number | undefined>(typeof initialProps.labelSkipWidth === 'number' ? initialProps.labelSkipWidth : undefined);
+  const [labelSkipHeight, setLabelSkipHeight] = useState<number | undefined>(typeof initialProps.labelSkipHeight === 'number' ? initialProps.labelSkipHeight : undefined);
+  const [labelTextColor, setLabelTextColor] = useState<string>(String(initialProps.labelTextColor || '#374151'));
   const [padding, setPadding] = useState<number | undefined>(typeof initialProps.padding === 'number' ? initialProps.padding : undefined);
   const [innerPadding, setInnerPadding] = useState<number | undefined>(typeof initialProps.innerPadding === 'number' ? initialProps.innerPadding : undefined);
   const [animate, setAnimate] = useState<boolean>(Boolean(initialProps.animate ?? true));
   const [motionConfig, setMotionConfig] = useState<string>(String(initialProps.motionConfig || 'gentle'));
+  const [groupMode, setGroupMode] = useState<'grouped'|'stacked'>(String((initialProps.groupMode || 'grouped')).toLowerCase() === 'stacked' ? 'stacked' : 'grouped');
+  const [barBorderRadius, setBarBorderRadius] = useState<number | undefined>(typeof initialProps.borderRadius === 'number' ? initialProps.borderRadius : undefined);
+  const [barBorderWidth, setBarBorderWidth] = useState<number | undefined>(typeof initialProps.borderWidth === 'number' ? initialProps.borderWidth : undefined);
+  const [barOpacity, setBarOpacity] = useState<number | undefined>(typeof initialProps.barOpacity === 'number' ? initialProps.barOpacity : undefined);
+  const [legendAnchor, setLegendAnchor] = useState<string>(String((initialProps.legends as any)?.anchor || 'bottom'));
+  const [legendDirection, setLegendDirection] = useState<string>(String((initialProps.legends as any)?.direction || 'row'));
+  const [legendTranslateY, setLegendTranslateY] = useState<number | undefined>(typeof (initialProps.legends as any)?.translateY === 'number' ? (initialProps.legends as any).translateY : undefined);
   // Query state
   const [schema, setSchema] = useState<string>(initial.query?.schema || 'financeiro')
   const [table, setTable] = useState<string>(initial.query?.table || '')
@@ -191,15 +207,33 @@ export default function ChartEditorModal({ isOpen, initial, onClose, onSave }: C
       setAxisBottomLegendOffset(get(p,'axisBottom.legendOffset', undefined));
       setAxisBottomLegendPosition(String(get(p,'axisBottom.legendPosition','middle')));
       setAxisBottomTickRotation(Number(get(p,'axisBottom.tickRotation', 0)));
+      setAxisBottomTickSize(get(p,'axisBottom.tickSize', undefined));
+      setAxisBottomTickPadding(get(p,'axisBottom.tickPadding', undefined));
       setAxisLeftLegend(String(get(p,'axisLeft.legend','')));
       setAxisLeftLegendOffset(get(p,'axisLeft.legendOffset', undefined));
+      setAxisLeftTickSize(get(p,'axisLeft.tickSize', undefined));
+      setAxisLeftTickPadding(get(p,'axisLeft.tickPadding', undefined));
       setColorsText(colorsToString(p.colors));
       setShowLegend(Boolean(p.showLegend ?? false));
       setEnableLabel(Boolean(p.enableLabel ?? false));
+      setLabelPosition(((p.labelPosition as any) || 'middle') as any);
+      setLabelOffset(typeof p.labelOffset === 'number' ? p.labelOffset : undefined);
+      setLabelSkipWidth(typeof p.labelSkipWidth === 'number' ? p.labelSkipWidth : undefined);
+      setLabelSkipHeight(typeof p.labelSkipHeight === 'number' ? p.labelSkipHeight : undefined);
+      setLabelTextColor(String(p.labelTextColor || '#374151'));
       setPadding(typeof p.padding === 'number' ? p.padding : undefined);
       setInnerPadding(typeof p.innerPadding === 'number' ? p.innerPadding : undefined);
       setAnimate(Boolean(p.animate ?? true));
       setMotionConfig(String(p.motionConfig || 'gentle'));
+      setGroupMode(String((p.groupMode || 'grouped')).toLowerCase() === 'stacked' ? 'stacked' : 'grouped');
+      setBarBorderRadius(typeof p.borderRadius === 'number' ? p.borderRadius : undefined);
+      setBarBorderWidth(typeof p.borderWidth === 'number' ? p.borderWidth : undefined);
+      setBarOpacity(typeof p.barOpacity === 'number' ? p.barOpacity : undefined);
+      if (p.legends && typeof p.legends === 'object') {
+        setLegendAnchor(String((p.legends as any).anchor || 'bottom'));
+        setLegendDirection(String((p.legends as any).direction || 'row'));
+        setLegendTranslateY(typeof (p.legends as any).translateY === 'number' ? (p.legends as any).translateY : undefined);
+      }
       // query
       setSchema(initial.query?.schema || 'financeiro')
       setTable(initial.query?.table || '')
@@ -320,6 +354,13 @@ export default function ChartEditorModal({ isOpen, initial, onClose, onSave }: C
                   <div className="text-xs text-gray-600 mb-1">Cores</div>
                   <input className="w-full px-2 py-2 bg-gray-100 rounded" placeholder='#2563eb ou #2563eb,#22c55e ou ["#2563eb"]' value={colorsText} onChange={e=>setColorsText(e.target.value)} />
                 </div>
+                <div>
+                  <div className="text-xs text-gray-600 mb-1">Espaçamento</div>
+                  <div className="flex items-center gap-2">
+                    <input className="w-20 px-2 py-1 bg-gray-100 rounded" type="number" placeholder="padding" value={padding ?? ''} onChange={e=>setPadding(e.target.value===''?undefined:Number(e.target.value))} />
+                    <input className="w-24 px-2 py-1 bg-gray-100 rounded" type="number" placeholder="innerPadding" value={innerPadding ?? ''} onChange={e=>setInnerPadding(e.target.value===''?undefined:Number(e.target.value))} />
+                  </div>
+                </div>
                 <div className="col-span-2">
                   <div className="text-xs text-gray-600 mb-1">Grid</div>
                   <div className="flex items-center gap-3">
@@ -355,12 +396,18 @@ export default function ChartEditorModal({ isOpen, initial, onClose, onSave }: C
                   <div className="text-xs text-gray-600 mb-1">Rótulos e Legenda</div>
                   <label className="flex items-center gap-2 text-xs mb-1"><input type="checkbox" checked={enableLabel} onChange={e=>setEnableLabel(e.target.checked)} /> enableLabel</label>
                   <label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={showLegend} onChange={e=>setShowLegend(e.target.checked)} /> showLegend</label>
-                </div>
-                <div>
-                  <div className="text-xs text-gray-600 mb-1">Espaçamento</div>
-                  <div className="flex items-center gap-2">
-                    <input className="w-20 px-2 py-1 bg-gray-100 rounded" type="number" placeholder="padding" value={padding ?? ''} onChange={e=>setPadding(e.target.value===''?undefined:Number(e.target.value))} />
-                    <input className="w-24 px-2 py-1 bg-gray-100 rounded" type="number" placeholder="innerPadding" value={innerPadding ?? ''} onChange={e=>setInnerPadding(e.target.value===''?undefined:Number(e.target.value))} />
+                  <div className="grid grid-cols-3 gap-2 mt-1">
+                    <select className="px-2 py-1 bg-gray-100 rounded" value={labelPosition} onChange={e=>setLabelPosition(e.target.value as any)}>
+                      <option value="start">start</option>
+                      <option value="middle">middle</option>
+                      <option value="end">end</option>
+                    </select>
+                    <input className="px-2 py-1 bg-gray-100 rounded" type="number" placeholder="labelOffset" value={labelOffset ?? ''} onChange={e=>setLabelOffset(e.target.value===''?undefined:Number(e.target.value))} />
+                    <input className="px-2 py-1 bg-gray-100 rounded" type="color" value={labelTextColor} onChange={e=>setLabelTextColor(e.target.value)} />
+                  </div>
+                  <div className="flex items-center gap-2 mt-1">
+                    <input className="w-20 px-2 py-1 bg-gray-100 rounded" type="number" placeholder="skipWidth" value={labelSkipWidth ?? ''} onChange={e=>setLabelSkipWidth(e.target.value===''?undefined:Number(e.target.value))} />
+                    <input className="w-24 px-2 py-1 bg-gray-100 rounded" type="number" placeholder="skipHeight" value={labelSkipHeight ?? ''} onChange={e=>setLabelSkipHeight(e.target.value===''?undefined:Number(e.target.value))} />
                   </div>
                 </div>
                 <div>
@@ -509,6 +556,7 @@ export default function ChartEditorModal({ isOpen, initial, onClose, onSave }: C
             borderRadius: dirtyBRadius ? borderRadius : undefined,
             chartProps: {
               layout,
+              groupMode,
               enableGridX,
               enableGridY,
               gridColor,
@@ -516,6 +564,11 @@ export default function ChartEditorModal({ isOpen, initial, onClose, onSave }: C
               colors: parseColors(colorsText),
               showLegend,
               enableLabel,
+              labelPosition,
+              ...(labelOffset !== undefined ? { labelOffset } : {}),
+              ...(labelSkipWidth !== undefined ? { labelSkipWidth } : {}),
+              ...(labelSkipHeight !== undefined ? { labelSkipHeight } : {}),
+              labelTextColor,
               ...(padding !== undefined ? { padding } : {}),
               ...(innerPadding !== undefined ? { innerPadding } : {}),
               animate,
@@ -525,11 +578,20 @@ export default function ChartEditorModal({ isOpen, initial, onClose, onSave }: C
                 ...(axisBottomLegendOffset !== undefined ? { legendOffset: axisBottomLegendOffset } : {}),
                 ...(axisBottomLegendPosition ? { legendPosition: axisBottomLegendPosition } : {}),
                 tickRotation: axisBottomTickRotation,
+                ...(axisBottomTickSize !== undefined ? { tickSize: axisBottomTickSize } : {}),
+                ...(axisBottomTickPadding !== undefined ? { tickPadding: axisBottomTickPadding } : {}),
               },
               axisLeft: {
                 ...(axisLeftLegend ? { legend: axisLeftLegend } : {}),
                 ...(axisLeftLegendOffset !== undefined ? { legendOffset: axisLeftLegendOffset } : {}),
+                ...(axisLeftTickSize !== undefined ? { tickSize: axisLeftTickSize } : {}),
+                ...(axisLeftTickPadding !== undefined ? { tickPadding: axisLeftTickPadding } : {}),
               }
+              ,
+              ...(barBorderRadius !== undefined ? { borderRadius: barBorderRadius } : {}),
+              ...(barBorderWidth !== undefined ? { borderWidth: barBorderWidth } : {}),
+              ...(barOpacity !== undefined ? { barOpacity } : {}),
+              ...(showLegend ? { legends: { anchor: legendAnchor, direction: legendDirection, ...(legendTranslateY !== undefined ? { translateY: legendTranslateY } : {}) } } : {}),
             },
             query: dirtyQuery ? {
               schema,

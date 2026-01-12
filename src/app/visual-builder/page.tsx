@@ -1791,6 +1791,7 @@ export default function VisualBuilderPage() {
             const coerce = (v?: string) => { if (v==null || v==='') return undefined; const t=String(v).trim(); if (/^(true|false)$/i.test(t)) return /^true$/i.test(t); if (/^-?\d+(?:\.\d+)?$/.test(t)) return Number(t); return t; };
             const out: Record<string, unknown> = {};
             if (a['layout']) out['layout'] = a['layout'];
+            if (a['groupMode']) out['groupMode'] = a['groupMode'];
             if (a['enableGridX']) out['enableGridX'] = coerce(a['enableGridX']);
             if (a['enableGridY']) out['enableGridY'] = coerce(a['enableGridY']);
             if (a['showLegend']) out['showLegend'] = coerce(a['showLegend']);
@@ -1801,6 +1802,22 @@ export default function VisualBuilderPage() {
               else out['colors'] = t;
             }
             if (a['axisBottomTickRotation']) out['axisBottom'] = { ...(out['axisBottom'] as any || {}), tickRotation: coerce(a['axisBottomTickRotation']) };
+            if (a['axisBottomTickSize']) out['axisBottom'] = { ...(out['axisBottom'] as any || {}), tickSize: coerce(a['axisBottomTickSize']) };
+            if (a['axisBottomTickPadding']) out['axisBottom'] = { ...(out['axisBottom'] as any || {}), tickPadding: coerce(a['axisBottomTickPadding']) };
+            if (a['axisBottomLegend']) out['axisBottom'] = { ...(out['axisBottom'] as any || {}), legend: a['axisBottomLegend'] };
+            if (a['axisBottomLegendOffset']) out['axisBottom'] = { ...(out['axisBottom'] as any || {}), legendOffset: coerce(a['axisBottomLegendOffset']) };
+            if (a['axisBottomLegendPosition']) out['axisBottom'] = { ...(out['axisBottom'] as any || {}), legendPosition: a['axisBottomLegendPosition'] };
+            if (a['axisLeftTickSize']) out['axisLeft'] = { ...(out['axisLeft'] as any || {}), tickSize: coerce(a['axisLeftTickSize']) };
+            if (a['axisLeftTickPadding']) out['axisLeft'] = { ...(out['axisLeft'] as any || {}), tickPadding: coerce(a['axisLeftTickPadding']) };
+            if (a['axisLeftTickRotation']) out['axisLeft'] = { ...(out['axisLeft'] as any || {}), tickRotation: coerce(a['axisLeftTickRotation']) };
+            if (a['axisLeftLegend']) out['axisLeft'] = { ...(out['axisLeft'] as any || {}), legend: a['axisLeftLegend'] };
+            if (a['axisLeftLegendOffset']) out['axisLeft'] = { ...(out['axisLeft'] as any || {}), legendOffset: coerce(a['axisLeftLegendOffset']) };
+            if (a['enableLabel']) out['enableLabel'] = coerce(a['enableLabel']);
+            if (a['labelPosition']) out['labelPosition'] = a['labelPosition'];
+            if (a['labelOffset']) out['labelOffset'] = coerce(a['labelOffset']);
+            if (a['labelSkipWidth']) out['labelSkipWidth'] = coerce(a['labelSkipWidth']);
+            if (a['labelSkipHeight']) out['labelSkipHeight'] = coerce(a['labelSkipHeight']);
+            if (a['labelTextColor']) out['labelTextColor'] = a['labelTextColor'];
             return out;
           };
           const propsFromBlock = (inner: string): Record<string, unknown> => {
@@ -2721,6 +2738,29 @@ export default function VisualBuilderPage() {
               newAttrsStr = setAttrKV(newAttrsStr, 'enableGridX', String(Boolean(chartProps.enableGridX)));
               newAttrsStr = setAttrKV(newAttrsStr, 'enableGridY', String(Boolean(chartProps.enableGridY)));
               newAttrsStr = setAttrKV(newAttrsStr, 'showLegend', String(Boolean(chartProps.showLegend)));
+              if (typeof chartProps.layout === 'string') newAttrsStr = setAttrKV(newAttrsStr, 'layout', String(chartProps.layout));
+              if (typeof chartProps.groupMode === 'string') newAttrsStr = setAttrKV(newAttrsStr, 'groupMode', String(chartProps.groupMode));
+              // axis shorthands
+              const ab = (chartProps.axisBottom || {}) as any;
+              const al = (chartProps.axisLeft || {}) as any;
+              if (ab.tickRotation !== undefined) newAttrsStr = setAttrKV(newAttrsStr, 'axisBottomTickRotation', String(ab.tickRotation));
+              if (ab.tickSize !== undefined) newAttrsStr = setAttrKV(newAttrsStr, 'axisBottomTickSize', String(ab.tickSize));
+              if (ab.tickPadding !== undefined) newAttrsStr = setAttrKV(newAttrsStr, 'axisBottomTickPadding', String(ab.tickPadding));
+              if (ab.legend !== undefined) newAttrsStr = setAttrKV(newAttrsStr, 'axisBottomLegend', String(ab.legend));
+              if (ab.legendOffset !== undefined) newAttrsStr = setAttrKV(newAttrsStr, 'axisBottomLegendOffset', String(ab.legendOffset));
+              if (ab.legendPosition !== undefined) newAttrsStr = setAttrKV(newAttrsStr, 'axisBottomLegendPosition', String(ab.legendPosition));
+              if (al.tickRotation !== undefined) newAttrsStr = setAttrKV(newAttrsStr, 'axisLeftTickRotation', String(al.tickRotation));
+              if (al.tickSize !== undefined) newAttrsStr = setAttrKV(newAttrsStr, 'axisLeftTickSize', String(al.tickSize));
+              if (al.tickPadding !== undefined) newAttrsStr = setAttrKV(newAttrsStr, 'axisLeftTickPadding', String(al.tickPadding));
+              if (al.legend !== undefined) newAttrsStr = setAttrKV(newAttrsStr, 'axisLeftLegend', String(al.legend));
+              if (al.legendOffset !== undefined) newAttrsStr = setAttrKV(newAttrsStr, 'axisLeftLegendOffset', String(al.legendOffset));
+              // labels shorthands
+              if ((chartProps as any).enableLabel !== undefined) newAttrsStr = setAttrKV(newAttrsStr, 'enableLabel', String(Boolean((chartProps as any).enableLabel)));
+              if ((chartProps as any).labelPosition !== undefined) newAttrsStr = setAttrKV(newAttrsStr, 'labelPosition', String((chartProps as any).labelPosition));
+              if ((chartProps as any).labelOffset !== undefined) newAttrsStr = setAttrKV(newAttrsStr, 'labelOffset', String((chartProps as any).labelOffset));
+              if ((chartProps as any).labelSkipWidth !== undefined) newAttrsStr = setAttrKV(newAttrsStr, 'labelSkipWidth', String((chartProps as any).labelSkipWidth));
+              if ((chartProps as any).labelSkipHeight !== undefined) newAttrsStr = setAttrKV(newAttrsStr, 'labelSkipHeight', String((chartProps as any).labelSkipHeight));
+              if ((chartProps as any).labelTextColor !== undefined) newAttrsStr = setAttrKV(newAttrsStr, 'labelTextColor', String((chartProps as any).labelTextColor));
               // Upsert <props> JSON block
               const propsJson = JSON.stringify(chartProps);
               const propsRe = /<props\b[^>]*>[\s\S]*?<\/props>/i;
