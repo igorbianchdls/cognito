@@ -172,6 +172,13 @@ export default function ChartEditorModal({ isOpen, initial, onClose, onSave }: C
   }, [isOpen, initial]);
 
   if (!isOpen) return null;
+  const parseColors = (s: string): any => {
+    const t = String(s || '').trim();
+    if (!t) return undefined;
+    if (t.startsWith('[')) { try { return JSON.parse(t); } catch { return undefined; } }
+    if (t.includes(',')) return t.split(',').map(x => x.trim()).filter(Boolean);
+    return t;
+  };
 
   const modal = (
     <div className="fixed inset-0 z-50">
@@ -443,6 +450,30 @@ export default function ChartEditorModal({ isOpen, initial, onClose, onSave }: C
             borderWidth: dirtyBWidth ? borderWidth : undefined,
             borderStyle: dirtyBStyle ? borderStyle : undefined,
             borderRadius: dirtyBRadius ? borderRadius : undefined,
+            chartProps: {
+              layout,
+              enableGridX,
+              enableGridY,
+              gridColor,
+              gridStrokeWidth,
+              colors: parseColors(colorsText),
+              showLegend,
+              enableLabel,
+              ...(padding !== undefined ? { padding } : {}),
+              ...(innerPadding !== undefined ? { innerPadding } : {}),
+              animate,
+              motionConfig,
+              axisBottom: {
+                ...(axisBottomLegend ? { legend: axisBottomLegend } : {}),
+                ...(axisBottomLegendOffset !== undefined ? { legendOffset: axisBottomLegendOffset } : {}),
+                ...(axisBottomLegendPosition ? { legendPosition: axisBottomLegendPosition } : {}),
+                tickRotation: axisBottomTickRotation,
+              },
+              axisLeft: {
+                ...(axisLeftLegend ? { legend: axisLeftLegend } : {}),
+                ...(axisLeftLegendOffset !== undefined ? { legendOffset: axisLeftLegendOffset } : {}),
+              }
+            },
             query: dirtyQuery ? {
               schema,
               table,
