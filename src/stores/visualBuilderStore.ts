@@ -222,7 +222,7 @@ export const initialLiquidGrid = `<dashboard render="html" theme="branco">
               <rule col="status" op="in" vals="aberto,pendente,em_aberto,em aberto" />
             </where>
           </query>
-          <props>{ "axisLeft": { "legend": "Valor (R$)", "legendOffset": -40 } }</props>
+          <props>{ "axisLeft": { "legend": "Valor (R$)", "legendOffset": -40 }, "axisBottom": { "legend": "Categoria", "legendOffset": 36, "legendPosition": "middle" }, "groupMode": "grouped", "padding": 0.25, "innerPadding": 2, "enableLabel": false, "animate": true, "motionConfig": "gentle", "gridColor": "#e5e7eb", "gridStrokeWidth": 1 }</props>
         </Chart>
       </article>
       <article id="chart_top_departamentos_ap" class="card" data-role="chart" style="--fr:2; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#f0f9ff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
@@ -233,7 +233,7 @@ export const initialLiquidGrid = `<dashboard render="html" theme="branco">
               <rule col="status" op="in" vals="aberto,pendente,em_aberto,em aberto" />
             </where>
           </query>
-          <props>{ "axisLeft": { "legend": "Valor (R$)", "legendOffset": -40 } }</props>
+          <props>{ "axisLeft": { "legend": "Valor (R$)", "legendOffset": -40 }, "axisBottom": { "legend": "Categoria", "legendOffset": 36, "legendPosition": "middle" }, "groupMode": "grouped", "padding": 0.25, "innerPadding": 2, "enableLabel": false, "animate": true, "motionConfig": "gentle", "gridColor": "#e5e7eb", "gridStrokeWidth": 1 }</props>
         </Chart>
       </article>
       <article id="chart_top_centros_lucro_ar" class="card" data-role="chart" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#fdf2f8; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
@@ -244,7 +244,7 @@ export const initialLiquidGrid = `<dashboard render="html" theme="branco">
               <rule col="status" op="in" vals="aberto,pendente,em_aberto,em aberto" />
             </where>
           </query>
-          <props>{ "axisLeft": { "legend": "Valor (R$)", "legendOffset": -40 } }</props>
+          <props>{ "axisLeft": { "legend": "Valor (R$)", "legendOffset": -40 }, "axisBottom": { "legend": "Categoria", "legendOffset": 36, "legendPosition": "middle" }, "groupMode": "grouped", "padding": 0.25, "innerPadding": 2, "enableLabel": false, "animate": true, "motionConfig": "gentle", "gridColor": "#e5e7eb", "gridStrokeWidth": 1 }</props>
         </Chart>
       </article>
     </section>
@@ -258,7 +258,7 @@ export const initialLiquidGrid = `<dashboard render="html" theme="branco">
               <rule col="status" op="in" vals="aberto,pendente,em_aberto,em aberto" />
             </where>
           </query>
-          <props>{ "axisLeft": { "legend": "Valor (R$)", "legendOffset": -40 } }</props>
+          <props>{ "axisLeft": { "legend": "Valor (R$)", "legendOffset": -40 }, "axisBottom": { "legend": "Categoria", "legendOffset": 36, "legendPosition": "middle" }, "groupMode": "grouped", "padding": 0.25, "innerPadding": 2, "enableLabel": false, "animate": true, "motionConfig": "gentle", "gridColor": "#e5e7eb", "gridStrokeWidth": 1 }</props>
         </Chart>
       </article>
       <article id="chart_top_cc_ap" class="card" data-role="chart" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#f0f9ff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
@@ -269,7 +269,7 @@ export const initialLiquidGrid = `<dashboard render="html" theme="branco">
               <rule col="status" op="in" vals="aberto,pendente,em_aberto,em aberto" />
             </where>
           </query>
-          <props>{ "axisLeft": { "legend": "Valor (R$)", "legendOffset": -40 } }</props>
+          <props>{ "axisLeft": { "legend": "Valor (R$)", "legendOffset": -40 }, "axisBottom": { "legend": "Categoria", "legendOffset": 36, "legendPosition": "middle" }, "groupMode": "grouped", "padding": 0.25, "innerPadding": 2, "enableLabel": false, "animate": true, "motionConfig": "gentle", "gridColor": "#e5e7eb", "gridStrokeWidth": 1 }</props>
         </Chart>
       </article>
       <article id="chart_top_clientes_ar" class="card" data-role="chart" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#fdf2f8; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
@@ -280,7 +280,7 @@ export const initialLiquidGrid = `<dashboard render="html" theme="branco">
               <rule col="status" op="in" vals="aberto,pendente,em_aberto,em aberto" />
             </where>
           </query>
-          <props>{ "axisLeft": { "legend": "Valor (R$)", "legendOffset": -40 } }</props>
+          <props>{ "axisLeft": { "legend": "Valor (R$)", "legendOffset": -40 }, "axisBottom": { "legend": "Categoria", "legendOffset": 36, "legendPosition": "middle" }, "groupMode": "grouped", "padding": 0.25, "innerPadding": 2, "enableLabel": false, "animate": true, "motionConfig": "gentle", "gridColor": "#e5e7eb", "gridStrokeWidth": 1 }</props>
         </Chart>
       </article>
     </section>
@@ -294,7 +294,7 @@ export const initialLiquidGrid = `<dashboard render="html" theme="branco">
               <rule col="status" op="in" vals="aberto,pendente,em_aberto,em aberto" />
             </where>
           </query>
-          <props>{ "axisLeft": { "legend": "Valor (R$)", "legendOffset": -40 } }</props>
+          <props>{ "axisLeft": { "legend": "Valor (R$)", "legendOffset": -40 }, "axisBottom": { "legend": "Categoria", "legendOffset": 36, "legendPosition": "middle" }, "groupMode": "grouped", "padding": 0.25, "innerPadding": 2, "enableLabel": false, "animate": true, "motionConfig": "gentle", "gridColor": "#e5e7eb", "gridStrokeWidth": 1 }</props>
         </Chart>
       </article>
       <article id="chart_top_unidade_ap" class="card" data-role="chart" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#eef2ff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
@@ -305,7 +305,7 @@ export const initialLiquidGrid = `<dashboard render="html" theme="branco">
               <rule col="status" op="in" vals="aberto,pendente,em_aberto,em aberto" />
             </where>
           </query>
-          <props>{ "axisLeft": { "legend": "Valor (R$)", "legendOffset": -40 } }</props>
+          <props>{ "axisLeft": { "legend": "Valor (R$)", "legendOffset": -40 }, "axisBottom": { "legend": "Categoria", "legendOffset": 36, "legendPosition": "middle" }, "groupMode": "grouped", "padding": 0.25, "innerPadding": 2, "enableLabel": false, "animate": true, "motionConfig": "gentle", "gridColor": "#e5e7eb", "gridStrokeWidth": 1 }</props>
         </Chart>
       </article>
       <article id="chart_top_categorias_receita_ar" class="card" data-role="chart" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#fff7ed; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
@@ -360,7 +360,7 @@ export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas"
             <rule col="status" op="in" vals="aberto,pendente,em_aberto,em aberto" />
           </where>
         </query>
-        <props>{ "axisLeft": { "legend": "Valor (R$)", "legendOffset": -40 } }</props>
+        <props>{ "axisLeft": { "legend": "Valor (R$)", "legendOffset": -40 }, "axisBottom": { "legend": "Categoria", "legendOffset": 36, "legendPosition": "middle" }, "groupMode": "grouped", "padding": 0.25, "innerPadding": 2, "enableLabel": false, "animate": true, "motionConfig": "gentle", "gridColor": "#e5e7eb", "gridStrokeWidth": 1 }</props>
       </Chart>
     </article>
     <article id="chart_top_cc_ap" class="card" data-role="chart" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#f0f9ff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
@@ -371,7 +371,7 @@ export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas"
             <rule col="status" op="in" vals="aberto,pendente,em_aberto,em aberto" />
           </where>
         </query>
-        <props>{ "axisLeft": { "legend": "Valor (R$)", "legendOffset": -40 } }</props>
+        <props>{ "axisLeft": { "legend": "Valor (R$)", "legendOffset": -40 }, "axisBottom": { "legend": "Categoria", "legendOffset": 36, "legendPosition": "middle" }, "groupMode": "grouped", "padding": 0.25, "innerPadding": 2, "enableLabel": false, "animate": true, "motionConfig": "gentle", "gridColor": "#e5e7eb", "gridStrokeWidth": 1 }</props>
       </Chart>
     </article>
     <article id="chart_top_clientes_ar" class="card" data-role="chart" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#fdf2f8; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
@@ -382,7 +382,7 @@ export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas"
             <rule col="status" op="in" vals="aberto,pendente,em_aberto,em aberto" />
           </where>
         </query>
-        <props>{ "axisLeft": { "legend": "Valor (R$)", "legendOffset": -40 } }</props>
+        <props>{ "axisLeft": { "legend": "Valor (R$)", "legendOffset": -40 }, "axisBottom": { "legend": "Categoria", "legendOffset": 36, "legendPosition": "middle" }, "groupMode": "grouped", "padding": 0.25, "innerPadding": 2, "enableLabel": false, "animate": true, "motionConfig": "gentle", "gridColor": "#e5e7eb", "gridStrokeWidth": 1 }</props>
       </Chart>
     </article>
   </section>
@@ -396,7 +396,7 @@ export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas"
             <rule col="status" op="in" vals="aberto,pendente,em_aberto,em aberto" />
           </where>
         </query>
-        <props>{ "axisLeft": { "legend": "Valor (R$)", "legendOffset": -40 } }</props>
+        <props>{ "axisLeft": { "legend": "Valor (R$)", "legendOffset": -40 }, "axisBottom": { "legend": "Categoria", "legendOffset": 36, "legendPosition": "middle" }, "groupMode": "grouped", "padding": 0.25, "innerPadding": 2, "enableLabel": false, "animate": true, "motionConfig": "gentle", "gridColor": "#e5e7eb", "gridStrokeWidth": 1 }</props>
       </Chart>
     </article>
     <article id="chart_top_projetos_ap" class="card" data-role="chart" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#eef2ff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
@@ -407,7 +407,7 @@ export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas"
             <rule col="status" op="in" vals="aberto,pendente,em_aberto,em aberto" />
           </where>
         </query>
-        <props>{ "axisLeft": { "legend": "Valor (R$)", "legendOffset": -40 } }</props>
+        <props>{ "axisLeft": { "legend": "Valor (R$)", "legendOffset": -40 }, "axisBottom": { "legend": "Categoria", "legendOffset": 36, "legendPosition": "middle" }, "groupMode": "grouped", "padding": 0.25, "innerPadding": 2, "enableLabel": false, "animate": true, "motionConfig": "gentle", "gridColor": "#e5e7eb", "gridStrokeWidth": 1 }</props>
       </Chart>
     </article>
   </section>
