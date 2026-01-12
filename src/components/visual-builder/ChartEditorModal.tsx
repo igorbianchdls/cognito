@@ -113,6 +113,30 @@ export default function ChartEditorModal({ isOpen, initial, onClose, onSave }: C
   const [dirtyBWidth, setDirtyBWidth] = useState(false);
   const [dirtyBStyle, setDirtyBStyle] = useState(false);
   const [dirtyBRadius, setDirtyBRadius] = useState(false);
+  // Local BarChart props (from initial.chartProps)
+  const initialProps = (initial.chartProps || {}) as Record<string, any>;
+  const get = (obj: any, path: string, d?: any) => {
+    try { return path.split('.').reduce((o,k)=> (o && typeof o==='object') ? o[k] : undefined, obj) ?? d; } catch { return d; }
+  };
+  const [layout, setLayout] = useState<string>(String(initialProps.layout || 'vertical'));
+  const [enableGridX, setEnableGridX] = useState<boolean>(Boolean(initialProps.enableGridX ?? false));
+  const [enableGridY, setEnableGridY] = useState<boolean>(Boolean(initialProps.enableGridY ?? true));
+  const [gridColor, setGridColor] = useState<string>(String(initialProps.gridColor || '#e5e7eb'));
+  const [gridStrokeWidth, setGridStrokeWidth] = useState<number>(Number(initialProps.gridStrokeWidth ?? 1));
+  const [axisBottomLegend, setAxisBottomLegend] = useState<string>(String(get(initialProps,'axisBottom.legend','')));
+  const [axisBottomLegendOffset, setAxisBottomLegendOffset] = useState<number | undefined>(get(initialProps,'axisBottom.legendOffset', undefined));
+  const [axisBottomLegendPosition, setAxisBottomLegendPosition] = useState<string>(String(get(initialProps,'axisBottom.legendPosition','middle')));
+  const [axisBottomTickRotation, setAxisBottomTickRotation] = useState<number>(Number(get(initialProps,'axisBottom.tickRotation', 0)));
+  const [axisLeftLegend, setAxisLeftLegend] = useState<string>(String(get(initialProps,'axisLeft.legend','')));
+  const [axisLeftLegendOffset, setAxisLeftLegendOffset] = useState<number | undefined>(get(initialProps,'axisLeft.legendOffset', undefined));
+  const colorsToString = (c: any): string => Array.isArray(c) ? c.join(', ') : (typeof c === 'string' ? c : '');
+  const [colorsText, setColorsText] = useState<string>(colorsToString(initialProps.colors));
+  const [showLegend, setShowLegend] = useState<boolean>(Boolean(initialProps.showLegend ?? false));
+  const [enableLabel, setEnableLabel] = useState<boolean>(Boolean(initialProps.enableLabel ?? false));
+  const [padding, setPadding] = useState<number | undefined>(typeof initialProps.padding === 'number' ? initialProps.padding : undefined);
+  const [innerPadding, setInnerPadding] = useState<number | undefined>(typeof initialProps.innerPadding === 'number' ? initialProps.innerPadding : undefined);
+  const [animate, setAnimate] = useState<boolean>(Boolean(initialProps.animate ?? true));
+  const [motionConfig, setMotionConfig] = useState<string>(String(initialProps.motionConfig || 'gentle'));
   // Query state
   const [schema, setSchema] = useState<string>(initial.query?.schema || 'financeiro')
   const [table, setTable] = useState<string>(initial.query?.table || '')
@@ -154,6 +178,26 @@ export default function ChartEditorModal({ isOpen, initial, onClose, onSave }: C
       setBorderWidth(initial.borderWidth);
       setBorderStyle(initial.borderStyle || '');
       setBorderRadius(initial.borderRadius);
+      // chart props local
+      const p = (initial.chartProps || {}) as Record<string, any>;
+      setLayout(String(p.layout || 'vertical'));
+      setEnableGridX(Boolean(p.enableGridX ?? false));
+      setEnableGridY(Boolean(p.enableGridY ?? true));
+      setGridColor(String(p.gridColor || '#e5e7eb'));
+      setGridStrokeWidth(Number(p.gridStrokeWidth ?? 1));
+      setAxisBottomLegend(String(get(p,'axisBottom.legend','')));
+      setAxisBottomLegendOffset(get(p,'axisBottom.legendOffset', undefined));
+      setAxisBottomLegendPosition(String(get(p,'axisBottom.legendPosition','middle')));
+      setAxisBottomTickRotation(Number(get(p,'axisBottom.tickRotation', 0)));
+      setAxisLeftLegend(String(get(p,'axisLeft.legend','')));
+      setAxisLeftLegendOffset(get(p,'axisLeft.legendOffset', undefined));
+      setColorsText(colorsToString(p.colors));
+      setShowLegend(Boolean(p.showLegend ?? false));
+      setEnableLabel(Boolean(p.enableLabel ?? false));
+      setPadding(typeof p.padding === 'number' ? p.padding : undefined);
+      setInnerPadding(typeof p.innerPadding === 'number' ? p.innerPadding : undefined);
+      setAnimate(Boolean(p.animate ?? true));
+      setMotionConfig(String(p.motionConfig || 'gentle'));
       // query
       setSchema(initial.query?.schema || 'financeiro')
       setTable(initial.query?.table || '')
