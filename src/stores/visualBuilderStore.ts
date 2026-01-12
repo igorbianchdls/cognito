@@ -216,32 +216,35 @@ export const initialLiquidGrid = `<dashboard render="html" theme="branco">
     <section id="charts" class="row charts" data-role="section" style="display:flex; flex-direction:row; flex-wrap:wrap; justify-content:flex-start; align-items:stretch; gap:16px; margin-bottom:16px;">
       <article id="chart_top_categorias_ap" class="card" data-role="chart" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#fefce8; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
         <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Top 5 Categorias (Despesas)</p>
-        <Chart id="top_categorias_ap" type="bar" height="320">
+        <Chart id="top_categorias_ap" type="bar" height="320" layout="vertical" axisBottomTickRotation="-25" enableGridY="true" showLegend="false" colors="#2563eb">
           <query schema="financeiro" table="contas_pagar" dimension="categoria" measure="SUM(valor_liquido)" timeDimension="data_vencimento" from="2025-10-01" to="2026-01-31" limit="5" order="value DESC">
             <where>
               <rule col="status" op="in" vals="aberto,pendente,em_aberto,em aberto" />
             </where>
           </query>
+          <props>{ "axisLeft": { "legend": "Valor (R$)", "legendOffset": -40 } }</props>
         </Chart>
       </article>
       <article id="chart_top_departamentos_ap" class="card" data-role="chart" style="--fr:2; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#f0f9ff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
         <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Top 5 Departamentos (Despesas)</p>
-        <Chart id="top_departamentos_ap" type="bar" height="320">
+        <Chart id="top_departamentos_ap" type="bar" height="320" layout="vertical" axisBottomTickRotation="-25" enableGridY="true" showLegend="false" colors="#2563eb">
           <query schema="financeiro" table="contas_pagar" dimension="departamento" measure="SUM(valor_liquido)" timeDimension="data_vencimento" from="2025-10-01" to="2026-01-31" limit="5" order="value DESC">
             <where>
               <rule col="status" op="in" vals="aberto,pendente,em_aberto,em aberto" />
             </where>
           </query>
+          <props>{ "axisLeft": { "legend": "Valor (R$)", "legendOffset": -40 } }</props>
         </Chart>
       </article>
       <article id="chart_top_centros_lucro_ar" class="card" data-role="chart" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#fdf2f8; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
         <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Top 5 Centros de Lucro (Receitas)</p>
-        <Chart id="top_centros_lucro_ar" type="bar" height="320">
+        <Chart id="top_centros_lucro_ar" type="bar" height="320" layout="vertical" axisBottomTickRotation="-25" enableGridY="true" showLegend="false" colors="#2563eb">
           <query schema="financeiro" table="contas_receber" dimension="centro_lucro" measure="SUM(valor_liquido)" timeDimension="data_vencimento" from="2025-10-01" to="2026-01-31" limit="5" order="value DESC">
             <where>
               <rule col="status" op="in" vals="aberto,pendente,em_aberto,em aberto" />
             </where>
           </query>
+          <props>{ "axisLeft": { "legend": "Valor (R$)", "legendOffset": -40 } }</props>
         </Chart>
       </article>
     </section>
@@ -249,32 +252,35 @@ export const initialLiquidGrid = `<dashboard render="html" theme="branco">
     <section id="charts2" class="row charts" data-role="section" style="display:flex; flex-direction:row; flex-wrap:wrap; justify-content:flex-start; align-items:stretch; gap:16px; margin-bottom:16px;">
       <article id="chart_top_fornecedores_ap" class="card" data-role="chart" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#ecfeff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
         <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Top 5 Fornecedores (Despesas)</p>
-        <Chart id="top_fornecedores_ap" type="bar" height="320">
+        <Chart id="top_fornecedores_ap" type="bar" height="320" layout="vertical" axisBottomTickRotation="-25" enableGridY="true" showLegend="false" colors="#2563eb">
           <query schema="financeiro" table="contas_pagar" dimension="fornecedor" measure="SUM(valor_liquido)" timeDimension="data_vencimento" from="2025-10-01" to="2026-01-31" limit="5" order="value DESC">
             <where>
               <rule col="status" op="in" vals="aberto,pendente,em_aberto,em aberto" />
             </where>
           </query>
+          <props>{ "axisLeft": { "legend": "Valor (R$)", "legendOffset": -40 } }</props>
         </Chart>
       </article>
       <article id="chart_top_cc_ap" class="card" data-role="chart" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#f0f9ff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
         <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Top 5 Centros de Custo (Despesas)</p>
-        <Chart id="top_cc_ap" type="bar" height="320">
+        <Chart id="top_cc_ap" type="bar" height="320" layout="vertical" axisBottomTickRotation="-25" enableGridY="true" showLegend="false" colors="#2563eb">
           <query schema="financeiro" table="contas_pagar" dimension="centro_custo" measure="SUM(valor_liquido)" timeDimension="data_vencimento" from="2025-10-01" to="2026-01-31" limit="5" order="value DESC">
             <where>
               <rule col="status" op="in" vals="aberto,pendente,em_aberto,em aberto" />
             </where>
           </query>
+          <props>{ "axisLeft": { "legend": "Valor (R$)", "legendOffset": -40 } }</props>
         </Chart>
       </article>
       <article id="chart_top_clientes_ar" class="card" data-role="chart" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#fdf2f8; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
         <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Top 5 Clientes (Receitas)</p>
-        <Chart id="top_clientes_ar" type="bar" height="320">
+        <Chart id="top_clientes_ar" type="bar" height="320" layout="vertical" axisBottomTickRotation="-25" enableGridY="true" showLegend="false" colors="#2563eb">
           <query schema="financeiro" table="contas_receber" dimension="cliente" measure="SUM(valor_liquido)" timeDimension="data_vencimento" from="2025-10-01" to="2026-01-31" limit="5" order="value DESC">
             <where>
               <rule col="status" op="in" vals="aberto,pendente,em_aberto,em aberto" />
             </where>
           </query>
+          <props>{ "axisLeft": { "legend": "Valor (R$)", "legendOffset": -40 } }</props>
         </Chart>
       </article>
     </section>
@@ -282,22 +288,24 @@ export const initialLiquidGrid = `<dashboard render="html" theme="branco">
     <section id="charts3" class="row charts" data-role="section" style="display:flex; flex-direction:row; flex-wrap:wrap; justify-content:flex-start; align-items:stretch; gap:16px; margin-bottom:16px;">
       <article id="chart_top_filial_ap" class="card" data-role="chart" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#f0fdf4; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
         <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Top 5 Filiais (Despesas)</p>
-        <Chart id="top_filial_ap" type="bar" height="320">
+        <Chart id="top_filial_ap" type="bar" height="320" layout="vertical" axisBottomTickRotation="-25" enableGridY="true" showLegend="false" colors="#2563eb">
           <query schema="financeiro" table="contas_pagar" dimension="filial" measure="SUM(valor_liquido)" timeDimension="data_vencimento" from="2025-10-01" to="2026-01-31" limit="5" order="value DESC">
             <where>
               <rule col="status" op="in" vals="aberto,pendente,em_aberto,em aberto" />
             </where>
           </query>
+          <props>{ "axisLeft": { "legend": "Valor (R$)", "legendOffset": -40 } }</props>
         </Chart>
       </article>
       <article id="chart_top_unidade_ap" class="card" data-role="chart" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#eef2ff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
         <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Top 5 Unidades de Negócio (Despesas)</p>
-        <Chart id="top_unidade_ap" type="bar" height="320">
+        <Chart id="top_unidade_ap" type="bar" height="320" layout="vertical" axisBottomTickRotation="-25" enableGridY="true" showLegend="false" colors="#2563eb">
           <query schema="financeiro" table="contas_pagar" dimension="unidade_negocio" measure="SUM(valor_liquido)" timeDimension="data_vencimento" from="2025-10-01" to="2026-01-31" limit="5" order="value DESC">
             <where>
               <rule col="status" op="in" vals="aberto,pendente,em_aberto,em aberto" />
             </where>
           </query>
+          <props>{ "axisLeft": { "legend": "Valor (R$)", "legendOffset": -40 } }</props>
         </Chart>
       </article>
       <article id="chart_top_categorias_receita_ar" class="card" data-role="chart" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#fff7ed; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
@@ -346,32 +354,35 @@ export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas"
   <section id="charts2" class="row charts" data-role="section" style="display:flex; flex-direction:row; flex-wrap:wrap; justify-content:flex-start; align-items:stretch; gap:16px; margin-bottom:16px;">
     <article id="chart_top_fornecedores_ap" class="card" data-role="chart" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#ecfeff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
       <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Top 5 Fornecedores (Despesas)</p>
-      <Chart id="top_fornecedores_ap" type="bar" height="320">
+      <Chart id="top_fornecedores_ap" type="bar" height="320" layout="vertical" axisBottomTickRotation="-25" enableGridY="true" showLegend="false" colors="#2563eb">
         <query schema="financeiro" table="contas_pagar" dimension="fornecedor" measure="SUM(valor_liquido)" timeDimension="data_vencimento" from="2025-10-01" to="2026-01-31" limit="5" order="value DESC">
           <where>
             <rule col="status" op="in" vals="aberto,pendente,em_aberto,em aberto" />
           </where>
         </query>
+        <props>{ "axisLeft": { "legend": "Valor (R$)", "legendOffset": -40 } }</props>
       </Chart>
     </article>
     <article id="chart_top_cc_ap" class="card" data-role="chart" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#f0f9ff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
       <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Top 5 Centros de Custo (Despesas)</p>
-      <Chart id="top_cc_ap" type="bar" height="320">
+      <Chart id="top_cc_ap" type="bar" height="320" layout="vertical" axisBottomTickRotation="-25" enableGridY="true" showLegend="false" colors="#2563eb">
         <query schema="financeiro" table="contas_pagar" dimension="centro_custo" measure="SUM(valor_liquido)" timeDimension="data_vencimento" from="2025-10-01" to="2026-01-31" limit="5" order="value DESC">
           <where>
             <rule col="status" op="in" vals="aberto,pendente,em_aberto,em aberto" />
           </where>
         </query>
+        <props>{ "axisLeft": { "legend": "Valor (R$)", "legendOffset": -40 } }</props>
       </Chart>
     </article>
     <article id="chart_top_clientes_ar" class="card" data-role="chart" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#fdf2f8; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
       <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Top 5 Clientes (Receitas)</p>
-      <Chart id="top_clientes_ar" type="bar" height="320">
+      <Chart id="top_clientes_ar" type="bar" height="320" layout="vertical" axisBottomTickRotation="-25" enableGridY="true" showLegend="false" colors="#2563eb">
         <query schema="financeiro" table="contas_receber" dimension="cliente" measure="SUM(valor_liquido)" timeDimension="data_vencimento" from="2025-10-01" to="2026-01-31" limit="5" order="value DESC">
           <where>
             <rule col="status" op="in" vals="aberto,pendente,em_aberto,em aberto" />
           </where>
         </query>
+        <props>{ "axisLeft": { "legend": "Valor (R$)", "legendOffset": -40 } }</props>
       </Chart>
     </article>
   </section>
@@ -379,22 +390,24 @@ export const initialDsl = `<dashboard theme="branco" title="Dashboard de Vendas"
   <section id="charts3" class="row charts" data-role="section" style="display:flex; flex-direction:row; flex-wrap:wrap; justify-content:flex-start; align-items:stretch; gap:16px; margin-bottom:16px;">
     <article id="chart_top_titulos_ap" class="card" data-role="chart" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#fff7ed; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
       <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Top 5 Títulos (A Pagar)</p>
-      <Chart id="top_titulos_ap" type="bar" height="320">
+      <Chart id="top_titulos_ap" type="bar" height="320" layout="vertical" axisBottomTickRotation="-25" enableGridY="true" showLegend="false" colors="#2563eb">
         <query schema="financeiro" table="contas_pagar" dimension="titulo" measure="SUM(valor_liquido)" timeDimension="data_vencimento" from="2025-10-01" to="2026-01-31" limit="5" order="value DESC">
           <where>
             <rule col="status" op="in" vals="aberto,pendente,em_aberto,em aberto" />
           </where>
         </query>
+        <props>{ "axisLeft": { "legend": "Valor (R$)", "legendOffset": -40 } }</props>
       </Chart>
     </article>
     <article id="chart_top_projetos_ap" class="card" data-role="chart" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#eef2ff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
       <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Top 5 Projetos (Despesas)</p>
-      <Chart id="top_projetos_ap" type="bar" height="320">
+      <Chart id="top_projetos_ap" type="bar" height="320" layout="vertical" axisBottomTickRotation="-25" enableGridY="true" showLegend="false" colors="#2563eb">
         <query schema="financeiro" table="contas_pagar" dimension="projeto" measure="SUM(valor_liquido)" timeDimension="data_vencimento" from="2025-10-01" to="2026-01-31" limit="5" order="value DESC">
           <where>
             <rule col="status" op="in" vals="aberto,pendente,em_aberto,em aberto" />
           </where>
         </query>
+        <props>{ "axisLeft": { "legend": "Valor (R$)", "legendOffset": -40 } }</props>
       </Chart>
     </article>
   </section>
