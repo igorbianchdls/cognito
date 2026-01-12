@@ -2835,8 +2835,6 @@ export default function VisualBuilderPage() {
                       measure: q.measure,
                       dimension: q.dimension,
                       timeDimension: q.timeDimension,
-                      from: q.from,
-                      to: q.to,
                       limit: typeof q.limit === 'number' ? q.limit : undefined,
                       order: q.order,
                       where: Array.isArray(q.where) ? q.where.map(r => ({ col: r.col || '', op: r.op || '=', val: r.val, vals: r.vals, start: r.start, end: r.end })) : undefined,
