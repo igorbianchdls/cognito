@@ -303,7 +303,7 @@ export function PivotBarChart(props: PivotBarChartProps) {
             tickPadding: axisLeft.tickPadding ?? 8,
             tickRotation: axisLeft.tickRotation ?? 0,
             legend: axisLeft.legend,
-            legendOffset: axisLeft.legendOffset ?? -40,
+            legendOffset: axisLeft.legendOffset ?? -60,
             format: layout === 'horizontal' ? (v) => String(v).slice(0, 12) : (v) => formatValue(Number(v))
           } : {
             tickSize: 0, tickPadding: 8, tickRotation: 0,

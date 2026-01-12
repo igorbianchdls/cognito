@@ -456,7 +456,7 @@ export function LineChart({
           tickRotation: axisLeft.tickRotation ?? 0,
           tickValues: 8,
           legend: axisLeft.legend,
-          legendOffset: axisLeft.legendOffset ?? -40,
+          legendOffset: axisLeft.legendOffset ?? -60,
           format: (value) => formatValue(Number(value))
         } : {
           tickSize: 0,

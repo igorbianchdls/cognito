@@ -508,7 +508,7 @@ export function GroupedBarChart(props: GroupedBarChartProps) {
               tickRotation: axisLeft.tickRotation ?? 0,
               tickValues: 8,
               legend: axisLeft.legend,
-              legendOffset: axisLeft.legendOffset ?? -40,
+              legendOffset: axisLeft.legendOffset ?? -60,
               format: axisLeft.format || (layout === 'horizontal'
                 ? (value) => String(value).slice(0, 12)
                 : (value) => formatValue(Number(value))

@@ -135,7 +135,7 @@ export function ScatterChart(props: ScatterChartProps) {
           margin={margin}
           colors={colors && colors.length ? colors : { scheme: "category10" }}
           axisBottom={{ legendOffset: 36 }}
-          axisLeft={{ legendOffset: -40 }}
+          axisLeft={{ legendOffset: -60 }}
           enableGridX={!!enableGridX}
           enableGridY={!!enableGridY}
           theme={

@@ -608,7 +608,7 @@ export function StackedBarChart(props: StackedBarChartProps) {
             tickRotation: axisLeft.tickRotation ?? 0,
             tickValues: 8,
             legend: axisLeft.legend,
-            legendOffset: axisLeft.legendOffset ?? -40,
+            legendOffset: axisLeft.legendOffset ?? -60,
             format: axisLeft.format || (layout === 'horizontal'
               ? (value) => value.toString().slice(0, 10) // Strings for horizontal
               : (value) => formatValue(Number(value)) // Numbers for vertical

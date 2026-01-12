@@ -348,7 +348,7 @@ export function StackedLinesChart(props: StackedLinesChartProps) {
             tickPadding: axisLeft.tickPadding ?? 8,
             tickRotation: axisLeft.tickRotation ?? 0,
             legend: axisLeft.legend,
-            legendOffset: axisLeft.legendOffset ?? -40,
+            legendOffset: axisLeft.legendOffset ?? -60,
             format: axisLeft.format || ((v) => formatValue(Number(v)))
           } : {
             tickSize: 0,
