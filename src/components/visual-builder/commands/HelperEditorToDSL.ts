@@ -746,6 +746,101 @@ export function updateArticleQuerySQL(
   return { code: code.replace(reArticle, `<article${openAttrs}>${inner}</article>`), updated: true };
 }
 
+// Build and upsert a <query> block using the DSL (no inner tags, parser compila para SQL)
+export function updateArticleQueryDSL(
+  code: string,
+  args: {
+    articleId: string;
+    query: {
+      schema?: string;
+      table?: string;
+      measure?: string;
+      dimension?: string;
+      timeDimension?: string;
+      // optional future: granularity, timezone
+      limit?: number;
+      order?: string;
+      where?: Array<{ col: string; op: string; val?: string; vals?: string; start?: string; end?: string }>;
+    };
+  }
+): { code: string; updated: boolean } {
+  const escId = escRe(args.articleId);
+  const reArticle = new RegExp(`<article\\b([^>]*?\\bid=\\\"${escId}\\\"[^>]*)>([\\s\\S]*?)<\\/article>`, 'i');
+  const m = code.match(reArticle);
+  if (!m) return { code, updated: false };
+  const openAttrs = m[1] || '';
+  let inner = m[2] || '';
+  const reQuerySelf = /<query\b([^>]*)\/>/i;
+  const reQueryPair = /<query\b([^>]*)>([\s\S]*?)<\/query>/i;
+  const reChartPair = /(<Chart\b([^>]*)>)([\s\S]*?)(<\/Chart>)/i;
+
+  const q = args.query || {};
+  const rules = Array.isArray(q.where)
+    ? q.where.filter(r => r && (r.col || '').trim()).map(r => ({
+        col: (r.col || '').trim(),
+        op: (r.op || '=').trim(),
+        val: r.val,
+        vals: r.vals,
+        start: r.start,
+        end: r.end,
+      }))
+    : [];
+
+  const needsQuote = (v: string) => /[\s,;()]/.test(v);
+  const quote = (v: string) => (needsQuote(v) ? `"${String(v).replace(/"/g, '\\"')}"` : v);
+  const ruleToLine = (r: typeof rules[number]): string => {
+    const op = r.op.toLowerCase();
+    if (op === 'in' || op === 'not in') {
+      const vs = (r.vals || '').toString().split(',').map(s => s.trim()).filter(Boolean);
+      return `${r.col} ${op} (${vs.map(quote).join(', ')})`;
+    }
+    if (op === 'between') {
+      if (r.start != null && r.end != null) return `${r.col} between ${quote(String(r.start))}..${quote(String(r.end))}`;
+    }
+    if (op === 'like') {
+      if (r.val != null) return `${r.col} like ${quote(String(r.val))}`;
+    }
+    if (r.val != null) return `${r.col} ${r.op} ${quote(String(r.val))}`;
+    return '';
+  };
+
+  const lines: string[] = [];
+  lines.push('query:');
+  const src = [q.schema, q.table].filter(Boolean).join('.');
+  if (src) lines.push(`  source: ${src}`);
+  if (q.dimension) lines.push(`  dimension: ${q.dimension}`);
+  if (q.timeDimension) lines.push(`  time: ${q.timeDimension}`);
+  if (q.measure) lines.push(`  measure: ${q.measure}`);
+  if (rules.length) {
+    lines.push('  where:');
+    for (const r of rules) {
+      const s = ruleToLine(r);
+      if (s) lines.push(`    ${s}`);
+    }
+  }
+  if (q.order) lines.push(`  order: ${q.order}`);
+  if (typeof q.limit === 'number') lines.push(`  limit: ${q.limit}`);
+
+  const queryTag = `<query>\n${lines.join('\n')}\n        </query>`;
+
+  if (reQuerySelf.test(inner)) {
+    inner = inner.replace(reQuerySelf, queryTag);
+    return { code: code.replace(reArticle, `<article${openAttrs}>${inner}</article>`), updated: true };
+  }
+  if (reQueryPair.test(inner)) {
+    inner = inner.replace(reQueryPair, queryTag);
+    return { code: code.replace(reArticle, `<article${openAttrs}>${inner}</article>`), updated: true };
+  }
+  if (reChartPair.test(inner)) {
+    inner = inner.replace(reChartPair, (full: string, chartOpen: string, _attrs: string, chartInner: string, chartClose: string) => {
+      return `${chartOpen}\n          ${queryTag}\n${chartInner}${chartClose}`;
+    });
+    return { code: code.replace(reArticle, `<article${openAttrs}>${inner}</article>`), updated: true };
+  }
+  inner = inner.trimEnd() + `\n        ${queryTag}`;
+  return { code: code.replace(reArticle, `<article${openAttrs}>${inner}</article>`), updated: true };
+}
+
 // New: simple header upsert with <p> title/subtitle inside <header class="vb-header">, merging simple container styles
 export function upsertHeaderSimple(
   code: string,

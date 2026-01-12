@@ -65,6 +65,144 @@ export interface LiquidParseResult {
 
 const DEFAULT_HEIGHT = 320;
 
+// Simple DSL spec for query bodies
+type QueryDSLSpec = {
+  source?: string;
+  dimension?: string;
+  series?: string;
+  time?: { column: string; by?: 'day'|'week'|'month'; tz?: string };
+  measure?: string;
+  where?: string[];
+  order?: string;
+  limit?: number;
+};
+
+function parseQueryDSL(raw: string): QueryDSLSpec | null {
+  const text = String(raw || '').trim();
+  if (!text) return null;
+  // strip optional leading "query:" line
+  const body = text.replace(/^query\s*:\s*/i, '');
+  const lines = body.split(/\r?\n/).map(l => l.replace(/\t/g, '  '));
+  const spec: QueryDSLSpec = {};
+  let inWhere = false;
+  const where: string[] = [];
+  for (const ln of lines) {
+    const line = ln.trim();
+    if (!line) continue;
+    if (/^where\s*:/i.test(line)) { inWhere = true; continue; }
+    if (inWhere) {
+      // stop if next top-level key detected
+      if (/^(source|dimension|series|time|measure|order|limit)\s*:/i.test(line)) { inWhere = false; }
+    }
+    if (inWhere) {
+      const cond = line.replace(/^[-*]\s*/, '');
+      if (cond) where.push(cond);
+      continue;
+    }
+    const m = line.match(/^(\w+)\s*:\s*(.*)$/);
+    if (!m) continue;
+    const key = m[1].toLowerCase();
+    const val = m[2].trim();
+    if (key === 'source') spec.source = val;
+    else if (key === 'dimension') spec.dimension = val;
+    else if (key === 'series') spec.series = val;
+    else if (key === 'measure') spec.measure = val;
+    else if (key === 'order') spec.order = val;
+    else if (key === 'limit') {
+      const n = Number(val);
+      if (!Number.isNaN(n)) spec.limit = n;
+    } else if (key === 'time') {
+      // time: column [by: day] [tz: America/Sao_Paulo]
+      const parts = val.split(/\s+/);
+      const out: QueryDSLSpec['time'] = { column: '' };
+      // Collect tokens key:value
+      let i = 0;
+      while (i < parts.length) {
+        const tok = parts[i];
+        if (!out.column) {
+          out.column = tok;
+          i++;
+          continue;
+        }
+        const by = tok.toLowerCase() === 'by:' ? (parts[i+1] || '') : '';
+        const tz = tok.toLowerCase() === 'tz:' || tok.toLowerCase() === 'timezone:' ? (parts[i+1] || '') : '';
+        if (by) { out.by = (by as any); i += 2; continue; }
+        if (tz) { out.tz = tz; i += 2; continue; }
+        i++;
+      }
+      if (out.column) spec.time = out;
+    }
+  }
+  if (where.length) spec.where = where;
+  // minimal validity: need at least measure and one of dimension/time, or KPI with measure
+  if (!spec.measure) return null;
+  return spec;
+}
+
+function compileDSLToSQL(dsl: QueryDSLSpec): string {
+  const tableRef = (dsl.source || '').trim();
+  const measure = (dsl.measure || 'SUM(1)').trim();
+  const hasTime = !!dsl.time?.column;
+  const timeCol = dsl.time?.column || '';
+  const gran = dsl.time?.by;
+  const tz = dsl.time?.tz;
+  const tzClause = tz ? ` AT TIME ZONE '${tz}'` : '';
+  const xExpr = hasTime ? (gran ? `date_trunc('${gran}', ${timeCol}${tzClause})` : `${timeCol}${tzClause}`) : '';
+  const dim = (dsl.dimension || '').trim();
+  const series = (dsl.series || '').trim();
+
+  // Build WHERE
+  const lines = (dsl.where || []).map(s => s.trim()).filter(Boolean);
+  const whereSqlParts: string[] = [];
+  if (lines.length) {
+    // We can reuse parseWhereDSL by joining with ';'
+    const rules = parseWhereDSL(lines.join('; '));
+    for (const r of rules) {
+      const op = (r.op || '=').toLowerCase();
+      if (op === 'in' || op === 'not in') {
+        const vals = (r.vals || []).map(v => `'${String(v).replace(/'/g, "''")}'`).join(', ');
+        if (r.col && vals) whereSqlParts.push(`${r.col} ${op} (${vals})`);
+      } else if (op === 'between') {
+        if (r.start != null && r.end != null) whereSqlParts.push(`${r.col} BETWEEN '${String(r.start).replace(/'/g, "''")}' AND '${String(r.end).replace(/'/g, "''")}'`);
+      } else if (op === 'like') {
+        if (r.val != null) whereSqlParts.push(`${r.col} LIKE '${String(r.val).replace(/'/g, "''")}'`);
+      } else {
+        if (r.val != null) whereSqlParts.push(`${r.col} ${r.op} '${String(r.val).replace(/'/g, "''")}'`);
+      }
+    }
+  }
+  // If time present and no explicit between on time col, add default placeholder range
+  if (hasTime && !whereSqlParts.some(w => new RegExp(`\n?\b${timeCol}\b[\s\S]*\bBETWEEN\b`, 'i').test(w))) {
+    whereSqlParts.push(`${timeCol} BETWEEN '${'${de}'}' AND '${'${ate}'}'`);
+  }
+  const whereSQL = whereSqlParts.length ? `\n    WHERE ${whereSqlParts.join('\n      AND ')}` : '';
+
+  // Compose SELECT/GROUP
+  let sql = '';
+  if (series) {
+    // Multiseries grouped bar: label + series + value
+    sql = `SELECT\n      ${dim || 'NULL'} AS label,\n      ${series} AS series,\n      ${measure} AS value\n    FROM ${tableRef}${whereSQL}\n    GROUP BY ${dim || 'label'}, ${series}`;
+    if (dsl.order) sql += `\n    ORDER BY ${dsl.order}`;
+    if (typeof dsl.limit === 'number') sql += `\n    LIMIT ${dsl.limit}`;
+    sql += `;`;
+  } else if (dim && !hasTime) {
+    sql = `SELECT\n      ${dim} AS label,\n      ${measure} AS value\n    FROM ${tableRef}${whereSQL}\n    GROUP BY ${dim}`;
+    if (dsl.order) sql += `\n    ORDER BY ${dsl.order}`;
+    if (typeof dsl.limit === 'number') sql += `\n    LIMIT ${dsl.limit}`;
+    sql += `;`;
+  } else if (hasTime) {
+    sql = `SELECT\n      ${xExpr} AS x,\n      ${measure} AS y\n    FROM ${tableRef}${whereSQL}\n    GROUP BY ${xExpr}\n    ORDER BY x`;
+    if (typeof dsl.limit === 'number') sql += `\n    LIMIT ${dsl.limit}`;
+    sql += `;`;
+  } else {
+    // KPI fallback
+    sql = `SELECT\n      ${measure} AS value\n    FROM ${tableRef}${whereSQL}`;
+    if (typeof dsl.limit === 'number') sql += `\n    LIMIT ${dsl.limit}`;
+    sql += `;`;
+  }
+  return sql;
+}
+
 function parseAttrs(openTag: string): Record<string, string> {
   const attrs: Record<string, string> = {};
   const re = /(\w[\w-]*)\s*=\s*("([^"]*)"|'([^']*)'|([^\s>]+))/g;
@@ -397,6 +535,15 @@ export const LiquidParser = {
               sql,
             } as QuerySpec;
             // Done
+          } else if (qInnerRaw && !/[<][^>]+>/.test(qInnerRaw)) {
+            // Try DSL parsing, then compile to SQL
+            const dsl = parseQueryDSL(qInnerRaw);
+            if (dsl) {
+              const sql = compileDSLToSQL(dsl);
+              querySpec = {
+                schema: '', table: '', measure: '', sql,
+              } as QuerySpec;
+            }
           } else {
           const schema = String(qAttrs['schema'] || '').trim();
           const table = String(qAttrs['table'] || '').trim();
