@@ -648,6 +648,104 @@ export function updateArticleQueryFull(
   return { code: code.replace(reArticle, `<article${openAttrs}>${inner}</article>`), updated: true };
 }
 
+// New (SQL-first): Update or insert a <query> block using raw SQL built from structured args
+export function updateArticleQuerySQL(
+  code: string,
+  args: {
+    articleId: string;
+    query: {
+      schema?: string;
+      table?: string;
+      measure?: string;
+      dimension?: string;
+      timeDimension?: string;
+      limit?: number;
+      order?: string;
+      where?: Array<{ col: string; op: string; val?: string; vals?: string; start?: string; end?: string }>;
+    };
+  }
+): { code: string; updated: boolean } {
+  const escId = escRe(args.articleId);
+  const reArticle = new RegExp(`<article\\b([^>]*?\\bid=\\\"${escId}\\\"[^>]*)>([\\s\\S]*?)<\\/article>`, 'i');
+  const m = code.match(reArticle);
+  if (!m) return { code, updated: false };
+  const openAttrs = m[1] || '';
+  let inner = m[2] || '';
+  const reQuerySelf = /<query\b([^>]*)\/>/i;
+  const reQueryPair = /<query\b([^>]*)>([\s\S]*?)<\/query>/i;
+  const reChartPair = /(<Chart\b([^>]*)>)([\s\S]*?)(<\/Chart>)/i;
+
+  const q = args.query || {};
+  const rules = Array.isArray(q.where)
+    ? q.where.filter(r => r && (r.col || '').trim()).map(r => ({
+        col: (r.col || '').trim(),
+        op: (r.op || '=').trim(),
+        val: r.val,
+        vals: r.vals,
+        start: r.start,
+        end: r.end,
+      }))
+    : [];
+  const escStr = (v: string) => String(v).replace(/'/g, "''");
+  const wrap = (v: string) => `'${escStr(v)}'`;
+  const serializeVals = (valsStr?: string) => {
+    if (!valsStr) return '';
+    const vs = valsStr.split(',').map(s => s.trim()).filter(Boolean);
+    return vs.map(wrap).join(', ');
+  };
+  const whereToSQL = (): string => {
+    if (!rules.length && !q.timeDimension) return '';
+    const parts: string[] = [];
+    for (const r of rules) {
+      const op = r.op.toLowerCase();
+      if (op === 'in' || op === 'not in') {
+        const inside = serializeVals(r.vals);
+        if (inside) parts.push(`${r.col} ${op} (${inside})`);
+      } else if (op === 'between') {
+        if (r.start != null && r.end != null) parts.push(`${r.col} BETWEEN ${wrap(String(r.start))} AND ${wrap(String(r.end))}`);
+      } else if (op === 'like') {
+        if (r.val != null) parts.push(`${r.col} LIKE ${wrap(String(r.val))}`);
+      } else {
+        if (r.val != null) parts.push(`${r.col} ${r.op} ${wrap(String(r.val))}`);
+      }
+    }
+    if (q.timeDimension) parts.push(`${q.timeDimension} BETWEEN '${'${de}'}' AND '${'${ate}'}'`);
+    return parts.length ? `\n    WHERE ${parts.join("\n      AND ")}` : '';
+  };
+  const tableRef = q.schema && q.table ? `${q.schema}.${q.table}` : (q.table || '');
+  let sql = '';
+  if (q.dimension) {
+    sql = `SELECT\n      ${q.dimension} AS label,\n      ${q.measure || 'SUM(1)'} AS value\n    FROM ${tableRef}${whereToSQL()}\n    GROUP BY ${q.dimension}`;
+    if (q.order) sql += `\n    ORDER BY ${q.order}`;
+    if (typeof q.limit === 'number') sql += `\n    LIMIT ${q.limit}`;
+    sql += `;`;
+  } else if (q.timeDimension) {
+    sql = `SELECT\n      ${q.timeDimension} AS x,\n      ${q.measure || 'SUM(1)'} AS y\n    FROM ${tableRef}${whereToSQL()}\n    GROUP BY ${q.timeDimension}\n    ORDER BY x`;
+    if (typeof q.limit === 'number') sql += `\n    LIMIT ${q.limit}`;
+    sql += `;`;
+  } else {
+    sql = `SELECT\n      ${q.measure || 'SUM(1)'} AS value\n    FROM ${tableRef}${whereToSQL()}\n    LIMIT ${typeof q.limit === 'number' ? q.limit : 100};`;
+  }
+  const queryTag = `<query>\n${sql}\n        </query>`;
+
+  if (reQuerySelf.test(inner)) {
+    inner = inner.replace(reQuerySelf, queryTag);
+    return { code: code.replace(reArticle, `<article${openAttrs}>${inner}</article>`), updated: true };
+  }
+  if (reQueryPair.test(inner)) {
+    inner = inner.replace(reQueryPair, queryTag);
+    return { code: code.replace(reArticle, `<article${openAttrs}>${inner}</article>`), updated: true };
+  }
+  if (reChartPair.test(inner)) {
+    inner = inner.replace(reChartPair, (full: string, chartOpen: string, _attrs: string, chartInner: string, chartClose: string) => {
+      return `${chartOpen}\n          ${queryTag}\n${chartInner}${chartClose}`;
+    });
+    return { code: code.replace(reArticle, `<article${openAttrs}>${inner}</article>`), updated: true };
+  }
+  inner = inner.trimEnd() + `\n        ${queryTag}`;
+  return { code: code.replace(reArticle, `<article${openAttrs}>${inner}</article>`), updated: true };
+}
+
 // New: simple header upsert with <p> title/subtitle inside <header class="vb-header">, merging simple container styles
 export function upsertHeaderSimple(
   code: string,

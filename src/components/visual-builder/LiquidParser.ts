@@ -40,6 +40,8 @@ export interface QuerySpec {
   mode?: string; // 'meta-real'
   scope?: 'vendedor' | 'territorio' | string;
   metric?: 'faturamento' | 'ticket_medio' | 'novos_clientes' | string;
+  // SQL mode (Option A): when provided, ignore attribute-based fields
+  sql?: string;
 }
 
 export interface ChartSpec {
@@ -383,6 +385,19 @@ export const LiquidParser = {
         const qMatch = b.match(/<query\b([^>]*)>([\s\S]*?)<\/query>/i) || b.match(/<query\b([^>]*)\/>/i);
         if (qMatch) {
           const qAttrs = parseAttrs(qMatch[1] || '');
+          const qInnerRaw = (qMatch[2] || '').trim();
+          // If paired tag with inner SQL provided, prefer SQL mode
+          if (qInnerRaw && !/[<][^>]+>/.test(qInnerRaw) && /\bselect\b/i.test(qInnerRaw)) {
+            // Treat body as SQL string as-is
+            const sql = qInnerRaw;
+            querySpec = {
+              schema: '',
+              table: '',
+              measure: '',
+              sql,
+            } as QuerySpec;
+            // Done
+          } else {
           const schema = String(qAttrs['schema'] || '').trim();
           const table = String(qAttrs['table'] || '').trim();
           // Accept english measure(s)/dimension(s) or legacy measure/dimension
@@ -444,6 +459,7 @@ export const LiquidParser = {
               ...(scope ? { scope } : {}),
               ...(metric ? { metric } : {}),
             };
+          }
           }
         }
       } catch { /* ignore malformed query */ }

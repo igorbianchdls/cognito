@@ -39,6 +39,36 @@ function deriveRange(filters: GlobalFilters): DateRange {
 // Phase 1: compile QuerySpec (Excel-like) to existing financeiro endpoints
 export const QueryEngine = {
   async resolve(spec: QuerySpec, filters: GlobalFilters): Promise<ChartDataPoint[]> {
+    // SQL-first (Option A): if raw SQL provided, execute via /api/sql
+    if (spec.sql && String(spec.sql).trim()) {
+      const fallback = deriveRange(filters);
+      const de = spec.from || fallback.de || undefined;
+      const ate = spec.to || fallback.ate || undefined;
+      const fill = (raw: string): string => {
+        let s = String(raw);
+        if (de) s = s.replace(/\$\{de\}/g, de);
+        if (ate) s = s.replace(/\$\{ate\}/g, ate);
+        return s;
+      };
+      const sql = fill(spec.sql);
+      try {
+        const res = await fetch('/api/sql', { method: 'POST', headers: { 'content-type': 'application/json' }, cache: 'no-store', body: JSON.stringify({ sql }) });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const json = await res.json() as { rows?: Array<Record<string, unknown>> };
+        const rows = Array.isArray(json?.rows) ? json.rows : [];
+        // Map using explicit aliases as per Option A contract
+        return rows.map((r: Record<string, unknown>) => {
+          const label = (r['label'] ?? r['x'] ?? '') as any;
+          const value = (r['value'] ?? r['y'] ?? 0) as any;
+          const x = label as string;
+          const y = Number(value || 0);
+          return { x, y, label: String(x), value: y } as ChartDataPoint;
+        });
+      } catch {
+        return [];
+      }
+    }
+
     // Handle Meta x Realizado special mode
     if ((spec as any).mode === 'meta-real') {
       const scope = ((spec as any).scope || 'vendedor') as 'vendedor'|'territorio'
