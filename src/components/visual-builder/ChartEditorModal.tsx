@@ -493,7 +493,6 @@ export default function ChartEditorModal({ isOpen, initial, onClose, onSave }: C
             </TabsContent>
           </Tabs>
         </div>
-        </div>
         <div className="mt-4 flex items-center justify-end gap-2">
           <button onClick={onClose} className="px-3 py-2 rounded-md border border-gray-300 text-gray-700">Cancelar</button>
           <button onClick={() => onSave({
