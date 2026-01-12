@@ -342,7 +342,7 @@ export const LiquidParser = {
 
       // Optional <query .../> block inside the Chart body
       let querySpec: QuerySpec | undefined = undefined;
-      // Optional props (attributes + <props> block)
+      // Optional props (attributes + <props> block + <nivo/> block)
       let localProps: Record<string, unknown> | undefined = undefined;
       try {
         const b = String(body || '');
@@ -354,6 +354,15 @@ export const LiquidParser = {
           if (!inner) return undefined;
           try { return JSON.parse(inner); } catch { return undefined; }
         })();
+        // Parse <nivo .../> block (attributes)
+        const nMatchPair = b.match(/<nivo\b([^>]*)>([\s\S]*?)<\/nivo>/i);
+        const nMatchSelf = !nMatchPair ? b.match(/<nivo\b([^>]*)\/>/i) : null;
+        const nAttrsStr = (nMatchPair?.[1] || nMatchSelf?.[1] || '').trim();
+        const propsFromNivo = (() => {
+          if (!nAttrsStr) return undefined;
+          const na = parseAttrs(nAttrsStr);
+          return buildPropsFromAttrs(na);
+        })();
         // Parse props attribute (JSON string)
         const propsFromAttr = (() => {
           const raw = a['props'];
@@ -362,8 +371,14 @@ export const LiquidParser = {
         })();
         // Parse attribute shorthands
         const propsFromAttrs = buildPropsFromAttrs(a);
-        // Merge: attrs -> propsAttr -> propsBlock (block wins)
-        localProps = deepMerge(propsFromAttrs, deepMerge(propsFromAttr, propsFromBlock));
+        // Merge: attrs -> propsAttr -> propsBlock -> nivo (nivo wins)
+        localProps = deepMerge(
+          propsFromAttrs,
+          deepMerge(
+            propsFromAttr,
+            deepMerge(propsFromBlock, propsFromNivo)
+          )
+        );
 
         const qMatch = b.match(/<query\b([^>]*)>([\s\S]*?)<\/query>/i) || b.match(/<query\b([^>]*)\/>/i);
         if (qMatch) {

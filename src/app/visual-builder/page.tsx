@@ -1824,8 +1824,19 @@ export default function VisualBuilderPage() {
             const m = inner.match(/<props\b[^>]*>([\s\S]*?)<\/props>/i); if (!m) return {};
             try { return JSON.parse(m[1] || '{}'); } catch { return {}; }
           };
+          const propsFromNivo = (inner: string): Record<string, unknown> => {
+            const m = inner.match(/<nivo\b([^>]*)\/>/i) || inner.match(/<nivo\b([^>]*)>([\s\S]*?)<\/nivo>/i);
+            if (!m) return {};
+            const attrsStr = (m[1] || '').trim();
+            return propsFromAttrs(attrsStr);
+          };
           const deepMerge = (a:any,b:any):any => { if(Array.isArray(a)&&Array.isArray(b)) return b; if(a&&typeof a==='object'&&!Array.isArray(a) && b&&typeof b==='object'&&!Array.isArray(b)){ const o:any={...a}; for(const k of Object.keys(b)) o[k]=k in o?deepMerge(o[k],b[k]):b[k]; return o;} return b===undefined?a:b; };
-          const chartPropsInitial = chartFound ? deepMerge(propsFromAttrs(chartFound.openAttrs), propsFromBlock(chartFound.inner)) : {};
+          const chartPropsInitial = chartFound
+            ? deepMerge(
+                propsFromAttrs(chartFound.openAttrs),
+                deepMerge(propsFromBlock(chartFound.inner), propsFromNivo(chartFound.inner))
+              )
+            : {};
           setChartModalInitial({
             titleText: titleEl?.textContent?.trim() || '',
             titleFontFamily: tStyle['font-family'] || '',
@@ -2731,42 +2742,69 @@ export default function VisualBuilderPage() {
             const chartSelfRe = new RegExp(`<(?:(?:Chart)|(?:chart))\\b([^>]*)\\/>`, 'i');
             let innerNext = inner;
             const applyChartProps = (openAttrsStr: string, chartInner: string): { open: string; inner: string } => {
-              const attrs = parseAttrs(openAttrsStr);
               const chartProps = (out.chartProps || {}) as Record<string, unknown>;
-              // Set some shorthands as attributes
-              let newAttrsStr = openAttrsStr;
-              newAttrsStr = setAttrKV(newAttrsStr, 'enableGridX', String(Boolean(chartProps.enableGridX)));
-              newAttrsStr = setAttrKV(newAttrsStr, 'enableGridY', String(Boolean(chartProps.enableGridY)));
-              newAttrsStr = setAttrKV(newAttrsStr, 'showLegend', String(Boolean(chartProps.showLegend)));
-              if (typeof chartProps.layout === 'string') newAttrsStr = setAttrKV(newAttrsStr, 'layout', String(chartProps.layout));
-              if (typeof chartProps.groupMode === 'string') newAttrsStr = setAttrKV(newAttrsStr, 'groupMode', String(chartProps.groupMode));
-              // axis shorthands
-              const ab = (chartProps.axisBottom || {}) as any;
-              const al = (chartProps.axisLeft || {}) as any;
-              if (ab.tickRotation !== undefined) newAttrsStr = setAttrKV(newAttrsStr, 'axisBottomTickRotation', String(ab.tickRotation));
-              if (ab.tickSize !== undefined) newAttrsStr = setAttrKV(newAttrsStr, 'axisBottomTickSize', String(ab.tickSize));
-              if (ab.tickPadding !== undefined) newAttrsStr = setAttrKV(newAttrsStr, 'axisBottomTickPadding', String(ab.tickPadding));
-              if (ab.legend !== undefined) newAttrsStr = setAttrKV(newAttrsStr, 'axisBottomLegend', String(ab.legend));
-              if (ab.legendOffset !== undefined) newAttrsStr = setAttrKV(newAttrsStr, 'axisBottomLegendOffset', String(ab.legendOffset));
-              if (ab.legendPosition !== undefined) newAttrsStr = setAttrKV(newAttrsStr, 'axisBottomLegendPosition', String(ab.legendPosition));
-              if (al.tickRotation !== undefined) newAttrsStr = setAttrKV(newAttrsStr, 'axisLeftTickRotation', String(al.tickRotation));
-              if (al.tickSize !== undefined) newAttrsStr = setAttrKV(newAttrsStr, 'axisLeftTickSize', String(al.tickSize));
-              if (al.tickPadding !== undefined) newAttrsStr = setAttrKV(newAttrsStr, 'axisLeftTickPadding', String(al.tickPadding));
-              if (al.legend !== undefined) newAttrsStr = setAttrKV(newAttrsStr, 'axisLeftLegend', String(al.legend));
-              if (al.legendOffset !== undefined) newAttrsStr = setAttrKV(newAttrsStr, 'axisLeftLegendOffset', String(al.legendOffset));
-              // labels shorthands
-              if ((chartProps as any).enableLabel !== undefined) newAttrsStr = setAttrKV(newAttrsStr, 'enableLabel', String(Boolean((chartProps as any).enableLabel)));
-              if ((chartProps as any).labelPosition !== undefined) newAttrsStr = setAttrKV(newAttrsStr, 'labelPosition', String((chartProps as any).labelPosition));
-              if ((chartProps as any).labelOffset !== undefined) newAttrsStr = setAttrKV(newAttrsStr, 'labelOffset', String((chartProps as any).labelOffset));
-              if ((chartProps as any).labelSkipWidth !== undefined) newAttrsStr = setAttrKV(newAttrsStr, 'labelSkipWidth', String((chartProps as any).labelSkipWidth));
-              if ((chartProps as any).labelSkipHeight !== undefined) newAttrsStr = setAttrKV(newAttrsStr, 'labelSkipHeight', String((chartProps as any).labelSkipHeight));
-              if ((chartProps as any).labelTextColor !== undefined) newAttrsStr = setAttrKV(newAttrsStr, 'labelTextColor', String((chartProps as any).labelTextColor));
-              // Upsert <props> JSON block
-              const propsJson = JSON.stringify(chartProps);
-              const propsRe = /<props\b[^>]*>[\s\S]*?<\/props>/i;
-              let newInner = chartInner;
-              if (propsRe.test(chartInner)) newInner = chartInner.replace(propsRe, `<props>${propsJson}</props>`);
-              else newInner = chartInner + `\n          <props>${propsJson}</props>`;
+              // Não escrever mais shorthands no <Chart> — manter attrs originais
+              const newAttrsStr = openAttrsStr;
+
+              // Constrói atributos do <nivo /> a partir de chartProps
+              const toPairs = (obj: Record<string, unknown>): Record<string, string> => {
+                const pairs: Record<string, string> = {};
+                const set = (k: string, v: unknown) => { if (v !== undefined && v !== null && v !== '') pairs[k] = String(v); };
+                const coerceBool = (v: unknown) => (typeof v === 'boolean' ? v : Boolean(v));
+
+                set('layout', obj['layout']);
+                set('groupMode', obj['groupMode']);
+                set('padding', obj['padding']);
+                set('innerPadding', obj['innerPadding']);
+                if (obj['colors']) {
+                  const c = obj['colors'] as any;
+                  if (Array.isArray(c)) set('colors', JSON.stringify(c)); else set('colors', c);
+                }
+                set('enableGridX', coerceBool(obj['enableGridX'] as any));
+                set('enableGridY', coerceBool(obj['enableGridY'] as any));
+                set('showLegend', coerceBool(obj['showLegend'] as any));
+                set('gridColor', obj['gridColor']);
+                set('gridStrokeWidth', obj['gridStrokeWidth']);
+                set('animate', coerceBool(obj['animate'] as any));
+                set('motionConfig', obj['motionConfig']);
+                set('enableLabel', obj['enableLabel']);
+                set('labelPosition', obj['labelPosition']);
+                set('labelSkipWidth', obj['labelSkipWidth']);
+                set('labelSkipHeight', obj['labelSkipHeight']);
+                set('labelTextColor', obj['labelTextColor']);
+                set('labelOffset', obj['labelOffset']);
+
+                const ab = (obj['axisBottom'] || {}) as any;
+                set('axisBottomTickSize', ab.tickSize);
+                set('axisBottomTickPadding', ab.tickPadding);
+                set('axisBottomTickRotation', ab.tickRotation);
+                set('axisBottomLegend', ab.legend);
+                set('axisBottomLegendOffset', ab.legendOffset);
+                set('axisBottomLegendPosition', ab.legendPosition);
+
+                const al = (obj['axisLeft'] || {}) as any;
+                set('axisLeftTickSize', al.tickSize);
+                set('axisLeftTickPadding', al.tickPadding);
+                set('axisLeftTickRotation', al.tickRotation);
+                set('axisLeftLegend', al.legend);
+                set('axisLeftLegendOffset', al.legendOffset);
+                return pairs;
+              };
+
+              const nivoAttrsObj = toPairs(chartProps);
+              const nivoAttrStr = buildAttrs(nivoAttrsObj as Record<string, string>);
+              const nivoTag = `<nivo ${nivoAttrStr} />`;
+
+              // Remover <props> legado, se existir
+              let newInner = chartInner.replace(/<props\b[^>]*>[\s\S]*?<\/props>/i, '').trimEnd();
+
+              // Upsert <nivo />
+              const nivoPairRe = /<nivo\b[^>]*>[\s\S]*?<\/nivo>/i;
+              const nivoSelfRe = /<nivo\b[^>]*\/>/i;
+              if (nivoPairRe.test(newInner)) newInner = newInner.replace(nivoPairRe, nivoTag);
+              else if (nivoSelfRe.test(newInner)) newInner = newInner.replace(nivoSelfRe, nivoTag);
+              else newInner = newInner + `\n          ${nivoTag}`;
+
               return { open: newAttrsStr, inner: newInner };
             };
             if (chartPairRe.test(innerNext)) {
