@@ -1,8 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useStore } from '@nanostores/react';
-import { $vbNivoTheme, vbNivoActions, type VBNivoThemeState } from '@/stores/visualBuilderNivoStore';
 import { createPortal } from 'react-dom';
 import { FontManager } from './FontManager';
 
@@ -37,13 +35,14 @@ interface ChartEditorModalProps {
     borderStyle?: 'solid' | 'dashed' | 'dotted' | '';
     borderRadius?: number;
     query?: QueryEdit;
+    // Local Nivo props (merged attrs + <props>)
+    chartProps?: Record<string, unknown>;
   };
   onClose: () => void;
-  onSave: (data: { titleText: string; titleFontFamily?: string; titleFontSize?: number; titleFontWeight?: string | number; titleColor?: string; backgroundColor?: string; opacity?: number; borderColor?: string; borderWidth?: number; borderStyle?: 'solid'|'dashed'|'dotted'|''; borderRadius?: number; query?: QueryEdit }) => void;
+  onSave: (data: { titleText: string; titleFontFamily?: string; titleFontSize?: number; titleFontWeight?: string | number; titleColor?: string; backgroundColor?: string; opacity?: number; borderColor?: string; borderWidth?: number; borderStyle?: 'solid'|'dashed'|'dotted'|''; borderRadius?: number; query?: QueryEdit; chartProps?: Record<string, unknown> }) => void;
 }
 
 export default function ChartEditorModal({ isOpen, initial, onClose, onSave }: ChartEditorModalProps) {
-  const vbNivo = useStore($vbNivoTheme);
   // Static options
   const SCHEMAS = [ { value: 'financeiro', label: 'Financeiro' }, { value: 'vendas', label: 'Vendas' } ];
   const TABLES = [

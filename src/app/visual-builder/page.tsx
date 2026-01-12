@@ -1771,6 +1771,42 @@ export default function VisualBuilderPage() {
             qInitial = { schema: qa['schema'] || undefined, table: qa['table'] || undefined, measure: (qa['measure'] || qa['measures'] || '').trim() || undefined, dimension: dimVal, timeDimension: timeDim, from: qa['from'] || undefined, to: qa['to'] || undefined, limit: lim, order: (ord as any) || undefined, where: whereRules };
           }
           setChartModalChartId(chartId);
+          // Parse Chart props (attributes + <props>) for initial modal (best-effort)
+          const findChartIn = (s: string): { openAttrs: string; inner: string } | null => {
+            const escId = artId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const rePair = new RegExp(`<(?:(?:Chart)|(?:chart))\\b([^>]*?\\bid=\\\"${escId}\\\"[^>]*)>([\\s\\S]*?)<\\/(?:Chart|chart)>`, 'i');
+            const mPair = s.match(rePair);
+            if (mPair) return { openAttrs: mPair[1] || '', inner: mPair[2] || '' };
+            const reSelf = new RegExp(`<(?:(?:Chart)|(?:chart))\\b([^>]*?\\bid=\\\"${escId}\\\"[^>]*)\\/>`, 'i');
+            const mSelf = s.match(reSelf);
+            if (mSelf) return { openAttrs: mSelf[1] || '', inner: '' };
+            return null;
+          };
+          const chartFound = findChartIn(artMatch ? (artMatch[2] || '') : '');
+          const parseAttrs = (s: string): Record<string,string> => { const out: Record<string,string> = {}; const re=/(\w[\w-]*)\s*=\s*("([^"]*)"|'([^']*)'|([^\s>]+))/g; let m: RegExpExecArray|null; while((m=re.exec(s))!==null){ out[m[1]]=(m[3]??m[4]??m[5]??'').trim(); } return out; };
+          const propsFromAttrs = (attrsStr: string): Record<string, unknown> => {
+            const a = parseAttrs(attrsStr);
+            const coerce = (v?: string) => { if (v==null || v==='') return undefined; const t=String(v).trim(); if (/^(true|false)$/i.test(t)) return /^true$/i.test(t); if (/^-?\d+(?:\.\d+)?$/.test(t)) return Number(t); return t; };
+            const out: Record<string, unknown> = {};
+            if (a['layout']) out['layout'] = a['layout'];
+            if (a['enableGridX']) out['enableGridX'] = coerce(a['enableGridX']);
+            if (a['enableGridY']) out['enableGridY'] = coerce(a['enableGridY']);
+            if (a['showLegend']) out['showLegend'] = coerce(a['showLegend']);
+            if (a['colors']) {
+              const t = a['colors'];
+              if (t.startsWith('[')) { try { out['colors'] = JSON.parse(t); } catch {} }
+              else if (t.includes(',')) out['colors'] = t.split(',').map(x=>x.trim()).filter(Boolean);
+              else out['colors'] = t;
+            }
+            if (a['axisBottomTickRotation']) out['axisBottom'] = { ...(out['axisBottom'] as any || {}), tickRotation: coerce(a['axisBottomTickRotation']) };
+            return out;
+          };
+          const propsFromBlock = (inner: string): Record<string, unknown> => {
+            const m = inner.match(/<props\b[^>]*>([\s\S]*?)<\/props>/i); if (!m) return {};
+            try { return JSON.parse(m[1] || '{}'); } catch { return {}; }
+          };
+          const deepMerge = (a:any,b:any):any => { if(Array.isArray(a)&&Array.isArray(b)) return b; if(a&&typeof a==='object'&&!Array.isArray(a) && b&&typeof b==='object'&&!Array.isArray(b)){ const o:any={...a}; for(const k of Object.keys(b)) o[k]=k in o?deepMerge(o[k],b[k]):b[k]; return o;} return b===undefined?a:b; };
+          const chartPropsInitial = chartFound ? deepMerge(propsFromAttrs(chartFound.openAttrs), propsFromBlock(chartFound.inner)) : {};
           setChartModalInitial({
             titleText: titleEl?.textContent?.trim() || '',
             titleFontFamily: tStyle['font-family'] || '',
@@ -1784,6 +1820,7 @@ export default function VisualBuilderPage() {
             borderStyle: artStyleObj['border-style'] as any,
             borderRadius: numPx(artStyleObj['border-radius']),
             query: qInitial,
+            chartProps: chartPropsInitial,
           });
           setChartModalOpen(true);
         }
@@ -2661,8 +2698,70 @@ export default function VisualBuilderPage() {
             let newOpenAttrs = openAttrs.replace(styleRe, '');
             newOpenAttrs = newOpenAttrs.replace(/\s+$/, '');
             const newOpenTag = `<article${newOpenAttrs}${Object.keys(styleObj).length ? ` style=\"${toStyle(styleObj)}\"` : ''}>`;
-            const newWhole = `<article${openAttrs}>${inner}</article>`;
-            let newCode = src.replace(whole, newOpenTag + inner + `</article>`);
+            // Update <Chart ...> attributes and <props> with Nivo props from modal (using vbNivo as source for now)
+            const parseAttrs = (s: string): Record<string,string> => { const out: Record<string,string> = {}; const re=/(\w[\w-]*)\s*=\s*("([^"]*)"|'([^']*)'|([^\s>]+))/g; let m: RegExpExecArray|null; while((m=re.exec(s))!==null){ out[m[1]]=(m[3]??m[4]??m[5]??'').trim(); } return out; };
+            const buildAttrs = (a: Record<string,string>) => Object.entries(a).map(([k,v])=>`${k}="${v}"`).join(' ');
+            const setAttrKV = (attrsStr: string, name: string, value: string | undefined) => {
+              if (!value && value !== '') return attrsStr;
+              const re = new RegExp(`(\\b${name}\\=\")[^\"]*(\")`, 'i');
+              if (re.test(attrsStr)) return attrsStr.replace(re, `$1${value}$2`);
+              return `${attrsStr} ${name}="${value}"`;
+            };
+            // Locate the Chart block inside inner
+            const chartPairRe = new RegExp(`<(?:(?:Chart)|(?:chart))\\b([^>]*)>([\\s\\S]*?)<\\/(?:Chart|chart)>`, 'i');
+            const chartSelfRe = new RegExp(`<(?:(?:Chart)|(?:chart))\\b([^>]*)\\/>`, 'i');
+            let innerNext = inner;
+            const applyChartProps = (openAttrsStr: string, chartInner: string): { open: string; inner: string } => {
+              const attrs = parseAttrs(openAttrsStr);
+              const chartProps: any = {
+                enableGridX: vbNivo.enableGridX,
+                enableGridY: vbNivo.enableGridY,
+                gridColor: vbNivo.gridColor,
+                gridStrokeWidth: vbNivo.gridStrokeWidth,
+                axisFontFamily: vbNivo.axisFontFamily,
+                axisFontSize: vbNivo.axisFontSize,
+                axisFontWeight: vbNivo.axisFontWeight,
+                axisTextColor: vbNivo.axisTextColor,
+                axisLegendFontSize: vbNivo.axisLegendFontSize,
+                axisLegendFontWeight: vbNivo.axisLegendFontWeight,
+                labelsFontFamily: vbNivo.labelsFontFamily,
+                labelsFontSize: vbNivo.labelsFontSize,
+                labelsFontWeight: vbNivo.labelsFontWeight,
+                labelsTextColor: vbNivo.labelsTextColor,
+                legendsFontFamily: vbNivo.legendsFontFamily,
+                legendsFontSize: vbNivo.legendsFontSize,
+                legendsFontWeight: vbNivo.legendsFontWeight,
+                legendsTextColor: vbNivo.legendsTextColor,
+                showLegend: vbNivo.showLegend,
+                animate: vbNivo.animate,
+                motionConfig: vbNivo.motionConfig,
+              };
+              // Set some shorthands as attributes
+              let newAttrsStr = openAttrsStr;
+              newAttrsStr = setAttrKV(newAttrsStr, 'enableGridX', String(Boolean(chartProps.enableGridX)));
+              newAttrsStr = setAttrKV(newAttrsStr, 'enableGridY', String(Boolean(chartProps.enableGridY)));
+              newAttrsStr = setAttrKV(newAttrsStr, 'showLegend', String(Boolean(chartProps.showLegend)));
+              // Upsert <props> JSON block
+              const propsJson = JSON.stringify(chartProps);
+              const propsRe = /<props\b[^>]*>[\s\S]*?<\/props>/i;
+              let newInner = chartInner;
+              if (propsRe.test(chartInner)) newInner = chartInner.replace(propsRe, `<props>${propsJson}</props>`);
+              else newInner = chartInner + `\n          <props>${propsJson}</props>`;
+              return { open: newAttrsStr, inner: newInner };
+            };
+            if (chartPairRe.test(innerNext)) {
+              innerNext = innerNext.replace(chartPairRe, (_m, openAttrsStr: string, chartInner: string) => {
+                const { open, inner: ci } = applyChartProps(openAttrsStr, chartInner);
+                return `<Chart ${buildAttrs(parseAttrs(open))}>${ci}</Chart>`;
+              });
+            } else if (chartSelfRe.test(innerNext)) {
+              innerNext = innerNext.replace(chartSelfRe, (_m, openAttrsStr: string) => {
+                const { open, inner: ci } = applyChartProps(openAttrsStr, '');
+                return `<Chart ${buildAttrs(parseAttrs(open))}>${ci}</Chart>`;
+              });
+            }
+            const newWhole = `<article${openAttrs}>${innerNext}</article>`;
+            let newCode = src.replace(whole, newOpenTag + innerNext + `</article>`);
             // If query was edited, upsert <query> (and optional <where>) inside the same article
             if (out.query) {
               try {
