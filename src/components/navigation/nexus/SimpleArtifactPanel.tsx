@@ -20,7 +20,7 @@ type SimpleArtifactPanelProps = {
 
 export default function SimpleArtifactPanel({ onClose }: SimpleArtifactPanelProps) {
   const [tab, setTab] = useState<'code' | 'preview'>('code');
-  const [code, setCode] = useState<string>(() => initialSampleHtml);
+  const [code, setCode] = useState<string>(() => initialArtifactLiquid);
   const [copied, setCopied] = useState(false);
 
   const handleCopy = useCallback(async () => {
@@ -104,16 +104,27 @@ export default function SimpleArtifactPanel({ onClose }: SimpleArtifactPanelProp
   );
 }
 
-const initialSampleHtml = `
-<div style="font-family: system-ui;">
-  <h2 style="margin: 0 0 8px;">Hello Artifact 👋</h2>
-  <p style="margin: 0 0 12px; color: #4b5563;">
-    Edite o código na aba "Código" e visualize aqui na aba "Preview".
-  </p>
-  <ul style="margin: 0; padding-left: 18px; color: #374151;">
-    <li>Suporta HTML simples</li>
-    <li>O botão Copiar copia o código</li>
-    <li>O botão Publicar é um placeholder</li>
-  </ul>
-</div>
-`;
+const initialArtifactLiquid = `
+<dashboard render="html" theme="branco" date-type="last_30_days">
+  <div class="vb-container" style="padding: 0;">
+    <header class="vb-header" style="background-color:#ffffff; border:1px solid #e5e7eb; border-radius:12px;">
+      <p style="margin:0 0 4px; font-family:Inter, system-ui, sans-serif; font-size:18px; font-weight:700; color:#111827;">Artifact • Exemplo Inicial</p>
+      <p style="margin:0; font-family:Inter, system-ui, sans-serif; font-size:14px; font-weight:400; color:#6b7280;">Edite o código e visualize abaixo</p>
+    </header>
+
+    <section id="sec1" class="row charts" data-role="section" style="display:flex; flex-direction:row; flex-wrap:wrap; justify-content:flex-start; align-items:stretch; gap:16px; margin-top:16px;">
+      <article id="chart_exemplo" class="card" data-role="chart" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#ffffff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
+        <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Vendas por Categoria</p>
+        <Chart id="exemplo_bar" type="bar" height="320">
+          <query schema="vendas" table="pedidos" dimension="categoria" measure="SUM(subtotal)" timeDimension="data_pedido" limit="5" order="value DESC" />
+        </Chart>
+      </article>
+      <article id="chart_linha" class="card" data-role="chart" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#ffffff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
+        <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Receita • Últimos Meses</p>
+        <Chart id="exemplo_line" type="line" height="320">
+          <query schema="vendas" table="pedidos" dimension="cidade" measure="SUM(subtotal)" timeDimension="data_pedido" limit="5" order="value DESC" />
+        </Chart>
+      </article>
+    </section>
+  </div>
+</dashboard>`;
