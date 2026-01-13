@@ -8,6 +8,7 @@ import { visualBuilderActions } from "@/stores/visualBuilderStore";
 
 type Props = {
   sourceCode: string;
+  onApply?: (nextCode: string) => void;
 };
 
 const CHARTS_EXAMPLE = `
@@ -56,7 +57,7 @@ addWidget({
 // deleteWidget({ "id": "kpi_receita_2" });
 `;
 
-export default function CommandConsole({ sourceCode }: Props) {
+export default function CommandConsole({ sourceCode, onApply }: Props) {
   const [text, setText] = useState<string>(`// Header
 updateHeader(title: "Dashboard (Atualizado)"; subtitle: "Visão geral (Atualizado)";)
 
@@ -101,7 +102,9 @@ updateArticle(
     lastResultRef.current = nextCode;
     setOutput(logs);
     if (apply) {
-      try { visualBuilderActions.updateCode(nextCode); } catch {}
+      try {
+        if (onApply) onApply(nextCode); else visualBuilderActions.updateCode(nextCode);
+      } catch {}
     }
   };
 

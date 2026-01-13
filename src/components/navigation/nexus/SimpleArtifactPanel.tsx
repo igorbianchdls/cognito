@@ -11,8 +11,9 @@ import {
 import { Button } from "@/components/ui/button";
 import MonacoEditor from "@/components/visual-builder/MonacoEditor";
 import LiquidPreviewCanvas from "@/components/visual-builder/LiquidPreviewCanvas";
+import CommandConsole from "@/components/visual-builder/CommandConsole";
 import type { GlobalFilters } from "@/stores/visualBuilderStore";
-import { CheckIcon, CopyIcon, XIcon, Eye, Code2 } from "lucide-react";
+import { CheckIcon, CopyIcon, XIcon, Eye, Code2, Terminal } from "lucide-react";
 import CodeThemeMenu from "@/components/visual-builder/CodeThemeMenu";
 
 type SimpleArtifactPanelProps = {
@@ -20,7 +21,7 @@ type SimpleArtifactPanelProps = {
 };
 
 export default function SimpleArtifactPanel({ onClose }: SimpleArtifactPanelProps) {
-  const [tab, setTab] = useState<'code' | 'preview'>('code');
+  const [tab, setTab] = useState<'code' | 'preview' | 'console'>('code');
   const [code, setCode] = useState<string>(() => initialArtifactLiquid);
   const [copied, setCopied] = useState(false);
 
@@ -39,7 +40,7 @@ export default function SimpleArtifactPanel({ onClose }: SimpleArtifactPanelProp
   return (
     <Artifact className="h-full" hideTopBorder>
       <ArtifactHeader className="bg-white">
-        {/* Header Left: Toggle Preview/Code */}
+        {/* Header Left: Toggle Preview/Code/Console (igual ao builder) */}
         <div className="flex items-center">
           <div className="inline-flex rounded-xl bg-gray-100 p-1">
             <button
@@ -61,6 +62,16 @@ export default function SimpleArtifactPanel({ onClose }: SimpleArtifactPanelProp
               aria-label="Código"
             >
               <Code2 className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setTab('console')}
+              className={`ml-1 inline-flex items-center justify-center w-9 h-8 rounded-lg text-sm transition-colors ${
+                tab === 'console' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+              }`}
+              aria-label="Console"
+            >
+              <Terminal className="w-4 h-4" />
             </button>
           </div>
         </div>
@@ -93,11 +104,17 @@ export default function SimpleArtifactPanel({ onClose }: SimpleArtifactPanelProp
       </ArtifactHeader>
       <ArtifactContent className="p-0">
         <div className="h-full">
-          {tab === 'code' ? (
+          {tab === 'code' && (
             <MonacoEditor value={code} onChange={setCode} language="html" />
-          ) : (
+          )}
+          {tab === 'preview' && (
             <div className="h-full overflow-auto">
               <LiquidPreviewCanvas code={code} globalFilters={defaultFilters} className="w-full" />
+            </div>
+          )}
+          {tab === 'console' && (
+            <div className="h-full overflow-auto">
+              <CommandConsole sourceCode={code} onApply={setCode} />
             </div>
           )}
         </div>
