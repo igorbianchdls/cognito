@@ -14,6 +14,7 @@ interface ChatContainerProps {
   onAgentChange: (agent: string | null) => void;
   attachedFiles: AttachedFile[];
   onFilesChange: (files: AttachedFile[]) => void;
+  onInputFocus?: () => void;
 }
 
 export default function ChatContainer({
@@ -25,7 +26,8 @@ export default function ChatContainer({
   selectedAgent,
   onAgentChange,
   attachedFiles,
-  onFilesChange
+  onFilesChange,
+  onInputFocus
 }: ChatContainerProps) {
   console.log('📦 [ChatContainer] Props recebidas:', { 
     messagesCount: messages.length 
@@ -52,6 +54,7 @@ export default function ChatContainer({
             onAgentChange={onAgentChange}
             attachedFiles={attachedFiles}
             onFilesChange={onFilesChange}
+            onInputFocus={onInputFocus}
           />
         </div>
       </div>
@@ -74,6 +77,7 @@ export default function ChatContainer({
           onAgentChange={onAgentChange}
           attachedFiles={attachedFiles}
           onFilesChange={onFilesChange}
+          onInputFocus={onInputFocus}
         />
       </div>
     </div>

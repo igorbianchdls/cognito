@@ -45,6 +45,7 @@ interface InputAreaProps {
   onAgentChange: (agent: string | null) => void;
   attachedFiles: AttachedFile[];
   onFilesChange: (files: AttachedFile[]) => void;
+  onInputFocus?: () => void;
 }
 
 // Mapeamento de ícones dos agentes
@@ -94,7 +95,7 @@ const workflows = [
   { id: 'criador-de-dashboard', name: 'Criador de Dashboard', icon: BarChart3 },
 ];
 
-export default function InputArea({ input, setInput, onSubmit, status, selectedAgent, onAgentChange, attachedFiles, onFilesChange }: InputAreaProps) {
+export default function InputArea({ input, setInput, onSubmit, status, selectedAgent, onAgentChange, attachedFiles, onFilesChange, onInputFocus }: InputAreaProps) {
   // Estado para controlar a exibição do dropdown de agentes quando "/" é digitado
   const [showAgentDropdown, setShowAgentDropdown] = useState(false);
   // Armazena a posição exata onde o "/" foi digitado no texto
@@ -248,6 +249,8 @@ export default function InputArea({ input, setInput, onSubmit, status, selectedA
           onChange={handleInputChange}
           value={input}
           className={hasDataAttachment ? 'text-blue-600' : ''}
+          onFocus={() => onInputFocus?.()}
+          onClick={() => onInputFocus?.()}
         />
       <PromptInputToolbar>
         <PromptInputTools>

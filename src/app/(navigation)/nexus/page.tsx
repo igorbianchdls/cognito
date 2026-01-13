@@ -24,6 +24,7 @@ import { ChevronDown, MessageSquare, Layout, BarChart3 } from "lucide-react";
 import ChatContainer from '@/components/navigation/nexus/ChatContainer';
 import NexusShell from '@/components/navigation/nexus/NexusShell';
 import DashboardChatPanel from '@/components/navigation/nexus/DashboardChatPanel';
+import SimpleArtifactPanel from '@/components/navigation/nexus/SimpleArtifactPanel';
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import type { UIMessage } from 'ai';
 import { currentAgent, setCurrentAgent } from '@/stores/nexus/agentStore';
@@ -361,6 +362,7 @@ export default function Page() {
             onAgentChange={setCurrentAgent}
             attachedFiles={attachedFiles}
             onFilesChange={setAttachedFiles}
+            onInputFocus={() => setViewMode('split')}
           />
         </div>
       )}
@@ -379,12 +381,13 @@ export default function Page() {
                 onAgentChange={setCurrentAgent}
                 attachedFiles={attachedFiles}
                 onFilesChange={setAttachedFiles}
+                onInputFocus={() => setViewMode('split')}
               />
             </div>
           </Panel>
           <Panel defaultSize={67} minSize={40}>
             <div className="h-full">
-              <DashboardChatPanel />
+              <SimpleArtifactPanel onClose={() => setViewMode('chat')} />
             </div>
           </Panel>
         </PanelGroup>
