@@ -324,6 +324,7 @@ import { AreaChart } from '@/components/charts/AreaChart';
 import { GroupedBarChart } from '@/components/charts/GroupedBarChart';
 import { QueryEngine } from '@/components/visual-builder/QueryEngine';
 import { updateArticleQueryFull } from '@/components/visual-builder/commands/HelperEditorToDSL';
+import LiquidPreviewCanvas from '@/components/visual-builder/LiquidPreviewCanvas';
 
 // New: Comercial (Metas x Realizado) HTML template
 const COMERCIAL_DASHBOARD_TEMPLATE = `<dashboard render="html" theme="branco" date-type="custom" date-start="2025-11-01" date-end="2025-12-01" style="border:1px solid red;">
@@ -2629,7 +2630,12 @@ export default function VisualBuilderPage() {
             </div>
             <div className="h-[calc(100%-73px)] p-0 overflow-auto" ref={scrollRef} style={{ overflowAnchor: 'none' }}>
               {htmlMode ? (
-                <div ref={htmlRef} className="w-full" />
+                <LiquidPreviewCanvas
+                  code={code}
+                  globalFilters={visualBuilderState.globalFilters}
+                  defaults={$vbNivoTheme}
+                  className="w-full"
+                />
               ) : (
                 <ResponsiveGridCanvas
                   widgets={visualBuilderState.widgets}
