@@ -13,7 +13,7 @@ import MonacoEditor from "@/components/visual-builder/MonacoEditor";
 import LiquidPreviewCanvas from "@/components/visual-builder/LiquidPreviewCanvas";
 import type { GlobalFilters } from "@/stores/visualBuilderStore";
 import { CheckIcon, CopyIcon, XIcon, Eye, Code2 } from "lucide-react";
-import CodeDesignToolbar from "@/components/visual-builder/CodeDesignToolbar";
+import CodeThemeMenu from "@/components/visual-builder/CodeThemeMenu";
 
 type SimpleArtifactPanelProps = {
   onClose?: () => void;
@@ -66,7 +66,7 @@ export default function SimpleArtifactPanel({ onClose }: SimpleArtifactPanelProp
         </div>
         {/* Header Right: Toolbar / Copiar / Publicar / Fechar */}
         <ArtifactActions className="gap-2">
-          <CodeDesignToolbar code={code} onChange={setCode} />
+          <CodeThemeMenu code={code} onChange={setCode} />
           <Button
             type="button"
             onClick={handleCopy}

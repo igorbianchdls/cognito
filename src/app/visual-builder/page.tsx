@@ -325,7 +325,7 @@ import { GroupedBarChart } from '@/components/charts/GroupedBarChart';
 import { QueryEngine } from '@/components/visual-builder/QueryEngine';
 import { updateArticleQueryFull } from '@/components/visual-builder/commands/HelperEditorToDSL';
 import LiquidPreviewCanvas from '@/components/visual-builder/LiquidPreviewCanvas';
-import CodeDesignToolbar from '@/components/visual-builder/CodeDesignToolbar';
+import CodeThemeMenu from '@/components/visual-builder/CodeThemeMenu';
 
 // New: Comercial (Metas x Realizado) HTML template
 const COMERCIAL_DASHBOARD_TEMPLATE = `<dashboard render="html" theme="branco" date-type="custom" date-start="2025-11-01" date-end="2025-12-01" style="border:1px solid red;">
@@ -2629,8 +2629,8 @@ export default function VisualBuilderPage() {
                 </div>
               </div>
             </div>
-            <div className="px-4 py-2 border-b border-gray-200 bg-white">
-              <CodeDesignToolbar code={code} onChange={(next) => visualBuilderActions.updateCode(next)} />
+            <div className="px-4 py-2 border-b border-gray-200 bg-white flex items-center gap-2">
+              <CodeThemeMenu code={code} onChange={(next) => visualBuilderActions.updateCode(next)} />
             </div>
             <div className="h-[calc(100%-113px)] p-0 overflow-auto" ref={scrollRef} style={{ overflowAnchor: 'none' }}>
               {htmlMode ? (
