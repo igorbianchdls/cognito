@@ -374,7 +374,7 @@ export default function LiquidPreviewCanvas({ code, globalFilters, defaults, cla
   }, [code, globalFilters, vb, interactive]);
 
   // Minimal rewrites for save
-  const rewriteSection = (src: string, id: string, out: import("@/components/visual-builder/SectionEditorModal").SectionEditorOutput) => {
+  const rewriteSection = (src: string, id: string, out: import("@/components/visual-builder/SectionEditorModal").SectionEditorInitial) => {
     try {
       const escId = id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       const re = new RegExp(`<section\\b([^>]*?\\bid=\\\"${escId}\\\"[^>]*)>([\\s\\S]*?)<\\/section>`, 'i');
