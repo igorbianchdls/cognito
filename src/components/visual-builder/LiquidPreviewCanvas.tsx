@@ -277,7 +277,7 @@ export default function LiquidPreviewCanvas({ code, globalFilters, defaults, cla
         });
       }
 
-      // Article menu (edit)
+      // Article menu (edit/duplicate/delete)
       const arts = Array.from(el.querySelectorAll('article[data-role]')) as HTMLElement[];
       for (const art of arts) {
         const role = (art.getAttribute('data-role') || '').toLowerCase();
@@ -300,6 +300,20 @@ export default function LiquidPreviewCanvas({ code, globalFilters, defaults, cla
         itemEdit.addEventListener('mouseenter', () => { itemEdit.style.background = 'rgba(255,255,255,0.08)'; });
         itemEdit.addEventListener('mouseleave', () => { itemEdit.style.background = 'transparent'; });
         pop.appendChild(itemEdit);
+
+        const itemDuplicate = document.createElement('button');
+        Object.assign(itemDuplicate, { type: 'button' }); itemDuplicate.textContent = 'Duplicar';
+        Object.assign(itemDuplicate.style, { display: 'block', width: '160px', textAlign: 'left', padding: '8px 10px', border: 'none', background: 'transparent', color: '#fff', borderRadius: '6px' });
+        itemDuplicate.addEventListener('mouseenter', () => { itemDuplicate.style.background = 'rgba(255,255,255,0.08)'; });
+        itemDuplicate.addEventListener('mouseleave', () => { itemDuplicate.style.background = 'transparent'; });
+        pop.appendChild(itemDuplicate);
+
+        const itemDelete = document.createElement('button');
+        Object.assign(itemDelete, { type: 'button' }); itemDelete.textContent = 'Excluir';
+        Object.assign(itemDelete.style, { display: 'block', width: '160px', textAlign: 'left', padding: '8px 10px', border: 'none', background: 'transparent', color: '#fff', borderRadius: '6px' });
+        itemDelete.addEventListener('mouseenter', () => { itemDelete.style.background = 'rgba(255,255,255,0.08)'; });
+        itemDelete.addEventListener('mouseleave', () => { itemDelete.style.background = 'transparent'; });
+        pop.appendChild(itemDelete);
         art.appendChild(pop);
         const closePop = () => { pop.style.display = 'none'; };
         const openPop = (e: MouseEvent) => { e.preventDefault(); e.stopPropagation(); pop.style.display = 'block'; document.addEventListener('click', closePop, { once: true }); };
@@ -352,11 +366,41 @@ export default function LiquidPreviewCanvas({ code, globalFilters, defaults, cla
           }
         };
         itemEdit.addEventListener('click', onEdit);
+
+        const onDuplicate = (e: MouseEvent) => {
+          e.preventDefault(); e.stopPropagation(); closePop();
+          try {
+            if (!onChangeCode) return;
+            const artId = art.getAttribute('id') || '';
+            let chartId: string | undefined;
+            if (role === 'chart') {
+              const mount = art.querySelector('[data-liquid-chart]') as HTMLElement | null;
+              chartId = mount?.getAttribute('data-liquid-chart') || undefined;
+            }
+            const next = duplicateArticle(code, artId, chartId);
+            if (next && next !== code) onChangeCode(next);
+          } catch {}
+        };
+        itemDuplicate.addEventListener('click', onDuplicate);
+
+        const onDelete = (e: MouseEvent) => {
+          e.preventDefault(); e.stopPropagation(); closePop();
+          try {
+            if (!onChangeCode) return;
+            const artId = art.getAttribute('id') || '';
+            if (typeof window !== 'undefined' && !window.confirm('Excluir este card?')) return;
+            const next = deleteArticle(code, artId);
+            if (next && next !== code) onChangeCode(next);
+          } catch {}
+        };
+        itemDelete.addEventListener('click', onDelete);
         cleanups.push(() => {
           try { art.removeEventListener('mouseenter', enter); } catch {}
           try { art.removeEventListener('mouseleave', leave); } catch {}
           try { menuBtn.removeEventListener('click', openPop); } catch {}
           try { itemEdit.removeEventListener('click', onEdit); } catch {}
+          try { itemDuplicate.removeEventListener('click', onDuplicate); } catch {}
+          try { itemDelete.removeEventListener('click', onDelete); } catch {}
           try { art.removeChild(menuBtn); } catch {}
           try { art.removeChild(pop); } catch {}
         });
@@ -374,6 +418,56 @@ export default function LiquidPreviewCanvas({ code, globalFilters, defaults, cla
   }, [code, globalFilters, vb, interactive]);
 
   // Minimal rewrites for save
+  const deleteArticle = (src: string, articleId: string): string => {
+    try {
+      const escId = articleId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const re = new RegExp(`<article\\b([^>]*?\\bid=\\\"${escId}\\\"[^>]*)>([\\s\\S]*?)<\\/article>`, 'i');
+      const m = src.match(re); if (!m) return src;
+      const whole = m[0];
+      return src.replace(whole, '');
+    } catch { return src; }
+  };
+
+  const duplicateArticle = (src: string, articleId: string, chartId?: string): string => {
+    try {
+      const escId = articleId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const re = new RegExp(`<article\\b([^>]*?\\bid=\\\"${escId}\\\"[^>]*)>([\\s\\S]*?)<\\/article>`, 'i');
+      const m = src.match(re); if (!m) return src;
+      const whole = m[0]; const openAttrs = m[1] || ''; const inner = m[2] || '';
+
+      const existsArticleId = (id: string) => new RegExp(`<article\\b[^>]*\\bid=\\\"${id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\\"`, 'i').test(src);
+      const makeUnique = (base: string) => {
+        let n = 2; let candidate = `${base}-copy`;
+        if (!existsArticleId(candidate)) return candidate;
+        while (existsArticleId(candidate = `${base}-${n}`)) n++;
+        return candidate;
+      };
+      const newArticleId = makeUnique(articleId);
+
+      // Replace article id in open attrs
+      const newOpenAttrs = openAttrs.replace(/id\s*=\s*("([^"]*)"|'([^']*)')/i, (_mm, _q, d1, d2) => `id=\"${newArticleId}\"`);
+
+      // Replace chart id if present
+      let newInner = inner;
+      if (chartId) {
+        const existsChartId = (id: string) => new RegExp(`<(?:Chart|chart)\\b[^>]*\\bid=\\\"${id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\\"`, 'i').test(src);
+        const makeChartUnique = (base: string) => {
+          let n = 2; let candidate = `${base}-copy`;
+          if (!existsChartId(candidate)) return candidate;
+          while (existsChartId(candidate = `${base}-${n}`)) n++;
+          return candidate;
+        };
+        const newChartId = makeChartUnique(chartId);
+        newInner = newInner.replace(new RegExp(`(id\\s*=\\s*")${chartId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\")`, 'gi'), `$1${newChartId}$2`)
+                           .replace(new RegExp(`(id\\s*=\\s*')${chartId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\')`, 'gi'), `$1${newChartId}$2`);
+      }
+
+      const dupWhole = `<article${newOpenAttrs}>${newInner}</article>`;
+      // Insert the duplicate right after the original
+      return src.replace(whole, `${whole}\n${dupWhole}`);
+    } catch { return src; }
+  };
+
   const rewriteSection = (src: string, id: string, out: import("@/components/visual-builder/SectionEditorModal").SectionEditorInitial) => {
     try {
       const escId = id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
