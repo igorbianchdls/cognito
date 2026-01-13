@@ -64,60 +64,58 @@ export const getContasAReceber = tool({
         index += 1;
       };
 
-      // Base no schema unificado
-      conditions.push(`lf.tipo = 'conta_a_receber'`);
+      // Base nas tabelas específicas
 
       // Status: tratar "vencido" por regra de data
       if (status) {
         const s = status.toLowerCase();
         if (s === 'vencido' || s === 'atrasado') {
-          conditions.push(`LOWER(lf.status) = 'pendente'`);
-          conditions.push(`lf.data_vencimento < CURRENT_DATE`);
+          conditions.push(`LOWER(cr.status) IN ('pendente','aberto','em_aberto','em aberto')`);
+          conditions.push(`cr.data_vencimento < CURRENT_DATE`);
         } else {
           const norm = normalizeStatus(s);
-          if (norm) push('LOWER(lf.status) =', norm);
+          if (norm) push('LOWER(cr.status) =', norm);
         }
       }
-      if (cliente_id) push('lf.entidade_id =', cliente_id);
-      if (valor_minimo !== undefined) push('lf.valor >=', valor_minimo);
-      if (valor_maximo !== undefined) push('lf.valor <=', valor_maximo);
+      if (cliente_id) push('cr.cliente_id =', cliente_id);
+      if (valor_minimo !== undefined) push('cr.valor_liquido >=', valor_minimo);
+      if (valor_maximo !== undefined) push('cr.valor_liquido <=', valor_maximo);
 
       if (vence_em_dias !== undefined) {
-        conditions.push(`lf.data_vencimento BETWEEN CURRENT_DATE AND CURRENT_DATE + ($${index}::int) * INTERVAL '1 day'`);
+        conditions.push(`cr.data_vencimento BETWEEN CURRENT_DATE AND CURRENT_DATE + ($${index}::int) * INTERVAL '1 day'`);
         params.push(vence_em_dias);
         index += 1;
       }
 
       if (venceu_ha_dias !== undefined) {
-        conditions.push(`lf.data_vencimento BETWEEN CURRENT_DATE - ($${index}::int) * INTERVAL '1 day' AND CURRENT_DATE - INTERVAL '1 day'`);
+        conditions.push(`cr.data_vencimento BETWEEN CURRENT_DATE - ($${index}::int) * INTERVAL '1 day' AND CURRENT_DATE - INTERVAL '1 day'`);
         params.push(venceu_ha_dias);
         index += 1;
       }
 
-      if (data_vencimento_de) push('lf.data_vencimento >=', data_vencimento_de);
-      if (data_vencimento_ate) push('lf.data_vencimento <=', data_vencimento_ate);
+      if (data_vencimento_de) push('cr.data_vencimento >=', data_vencimento_de);
+      if (data_vencimento_ate) push('cr.data_vencimento <=', data_vencimento_ate);
 
-      if (data_emissao_de) push('lf.data_lancamento >=', data_emissao_de);
-      if (data_emissao_ate) push('lf.data_lancamento <=', data_emissao_ate);
+      if (data_emissao_de) push('cr.data_lancamento >=', data_emissao_de);
+      if (data_emissao_ate) push('cr.data_lancamento <=', data_emissao_ate);
 
       const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
 
       const listSql = `
         SELECT
-          lf.id,
-          e.nome_fantasia AS cliente,
-          lf.descricao,
-          lf.valor AS valor_total,
-          lf.data_lancamento AS data_emissao,
-          lf.data_vencimento,
+          cr.id,
+          cli.nome_fantasia AS cliente,
+          cr.observacao AS descricao,
+          cr.valor_liquido AS valor_total,
+          cr.data_lancamento AS data_emissao,
+          cr.data_vencimento,
           NULL::date AS data_recebimento,
-          lf.status,
-          lf.criado_em
-        FROM financeiro.lancamentos_financeiros AS lf
-        LEFT JOIN entidades.clientes AS e ON e.id = lf.entidade_id
-        LEFT JOIN financeiro.categorias_financeiras cf ON cf.id = lf.categoria_id
+          cr.status,
+          cr.criado_em
+        FROM financeiro.contas_receber AS cr
+        LEFT JOIN entidades.clientes AS cli ON cli.id = cr.cliente_id
         ${whereClause}
-        ORDER BY lf.data_vencimento ASC
+        ORDER BY cr.data_vencimento ASC
         LIMIT $${index}
       `.trim();
 
@@ -125,11 +123,10 @@ export const getContasAReceber = tool({
 
       const totalsSql = `
         SELECT
-          SUM(lf.valor) AS total_valor,
+          SUM(cr.valor_liquido) AS total_valor,
           COUNT(*) AS total_registros
-        FROM financeiro.lancamentos_financeiros AS lf
-        LEFT JOIN entidades.clientes AS e ON e.id = lf.entidade_id
-        LEFT JOIN financeiro.categorias_financeiras cf ON cf.id = lf.categoria_id
+        FROM financeiro.contas_receber AS cr
+        LEFT JOIN entidades.clientes AS cli ON cli.id = cr.cliente_id
         ${whereClause}
       `.trim();
 
@@ -231,12 +228,10 @@ export const getPagamentosRecebidos = tool({
         index += 1;
       };
 
-      // Base no schema unificado
-      conditions.push(`pr.tipo = 'pagamento_recebido'`);
-
-      if (cliente_id) push('pr.entidade_id =', cliente_id);
-      if (valor_minimo !== undefined) push('pr.valor >=', valor_minimo);
-      if (valor_maximo !== undefined) push('pr.valor <=', valor_maximo);
+      // Base nas tabelas específicas
+      if (cliente_id) push('cr.cliente_id =', cliente_id);
+      if (valor_minimo !== undefined) push('pr.valor_total_recebido >=', valor_minimo);
+      if (valor_maximo !== undefined) push('pr.valor_total_recebido <=', valor_maximo);
 
       // Para pagamentos recebidos, considerar janelas sobre a data de lançamento (pagamento)
       if (vence_em_dias !== undefined) {
@@ -263,16 +258,16 @@ export const getPagamentosRecebidos = tool({
       const listSql = `
         SELECT
           pr.id,
-          ent.nome_fantasia AS cliente,
-          pr.descricao,
-          pr.valor AS valor_total,
-          pr.data_vencimento,
-          pr.data_lancamento AS data_recebimento,
+          cli.nome_fantasia AS cliente,
+          pr.observacao AS descricao,
+          pr.valor_total_recebido AS valor_total,
+          pr.data_recebimento,
+          pr.data_lancamento,
           pr.status
-        FROM financeiro.lancamentos_financeiros AS pr
-        LEFT JOIN entidades.clientes AS ent ON ent.id = pr.entidade_id
-        LEFT JOIN financeiro.categorias_financeiras cat ON cat.id = pr.categoria_id
-        LEFT JOIN financeiro.contas_financeiras cf ON cf.id = pr.conta_financeira_id
+        FROM financeiro.pagamentos_recebidos AS pr
+        LEFT JOIN financeiro.pagamentos_recebidos_linhas prl ON prl.pagamento_id = pr.id
+        LEFT JOIN financeiro.contas_receber cr ON cr.id = prl.conta_receber_id
+        LEFT JOIN entidades.clientes cli ON cli.id = cr.cliente_id
         ${whereClause}
         ORDER BY pr.data_lancamento DESC
         LIMIT $${index}
@@ -282,12 +277,9 @@ export const getPagamentosRecebidos = tool({
 
       const totalsSql = `
         SELECT
-          SUM(pr.valor) AS total_valor,
+          SUM(pr.valor_total_recebido) AS total_valor,
           COUNT(*) AS total_registros
-        FROM financeiro.lancamentos_financeiros AS pr
-        LEFT JOIN entidades.clientes AS ent ON ent.id = pr.entidade_id
-        LEFT JOIN financeiro.categorias_financeiras cat ON cat.id = pr.categoria_id
-        LEFT JOIN financeiro.contas_financeiras cf ON cf.id = pr.conta_financeira_id
+        FROM financeiro.pagamentos_recebidos AS pr
         ${whereClause}
       `.trim();
 
@@ -382,59 +374,57 @@ export const getContasAPagar = tool({
         index += 1;
       };
 
-      // Base no schema unificado
-      conditions.push(`lf.tipo = 'conta_a_pagar'`);
+      // Base nas tabelas específicas
 
       if (status) {
         const s = status.toLowerCase();
         if (s === 'vencido' || s === 'atrasado') {
-          conditions.push(`LOWER(lf.status) = 'pendente'`);
-          conditions.push(`lf.data_vencimento < CURRENT_DATE`);
+          conditions.push(`LOWER(cp.status) IN ('pendente','aberto','em_aberto','em aberto')`);
+          conditions.push(`cp.data_vencimento < CURRENT_DATE`);
         } else {
           const norm = normalizeStatus(s);
-          if (norm) push('LOWER(lf.status) =', norm);
+          if (norm) push('LOWER(cp.status) =', norm);
         }
       }
-      if (fornecedor_id) push('lf.entidade_id =', fornecedor_id);
-      if (valor_minimo !== undefined) push('lf.valor >=', valor_minimo);
-      if (valor_maximo !== undefined) push('lf.valor <=', valor_maximo);
+      if (fornecedor_id) push('cp.fornecedor_id =', fornecedor_id);
+      if (valor_minimo !== undefined) push('cp.valor_liquido >=', valor_minimo);
+      if (valor_maximo !== undefined) push('cp.valor_liquido <=', valor_maximo);
 
       if (vence_em_dias !== undefined) {
-        conditions.push(`lf.data_vencimento BETWEEN CURRENT_DATE AND CURRENT_DATE + ($${index}::int) * INTERVAL '1 day'`);
+        conditions.push(`cp.data_vencimento BETWEEN CURRENT_DATE AND CURRENT_DATE + ($${index}::int) * INTERVAL '1 day'`);
         params.push(vence_em_dias);
         index += 1;
       }
 
       if (venceu_ha_dias !== undefined) {
-        conditions.push(`lf.data_vencimento BETWEEN CURRENT_DATE - ($${index}::int) * INTERVAL '1 day' AND CURRENT_DATE - INTERVAL '1 day'`);
+        conditions.push(`cp.data_vencimento BETWEEN CURRENT_DATE - ($${index}::int) * INTERVAL '1 day' AND CURRENT_DATE - INTERVAL '1 day'`);
         params.push(venceu_ha_dias);
         index += 1;
       }
 
-      if (data_vencimento_de) push('lf.data_vencimento >=', data_vencimento_de);
-      if (data_vencimento_ate) push('lf.data_vencimento <=', data_vencimento_ate);
+      if (data_vencimento_de) push('cp.data_vencimento >=', data_vencimento_de);
+      if (data_vencimento_ate) push('cp.data_vencimento <=', data_vencimento_ate);
 
-      if (data_emissao_de) push('lf.data_lancamento >=', data_emissao_de);
-      if (data_emissao_ate) push('lf.data_lancamento <=', data_emissao_ate);
+      if (data_emissao_de) push('cp.data_lancamento >=', data_emissao_de);
+      if (data_emissao_ate) push('cp.data_lancamento <=', data_emissao_ate);
 
       const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
 
       const listSql = `
         SELECT
-          lf.id,
+          cp.id,
           f.nome_fantasia AS fornecedor,
-          lf.descricao,
-          lf.valor AS valor_total,
-          lf.data_lancamento AS data_emissao,
-          lf.data_vencimento,
+          cp.observacao AS descricao,
+          cp.valor_liquido AS valor_total,
+          cp.data_lancamento AS data_emissao,
+          cp.data_vencimento,
           NULL::date AS data_pagamento,
-          lf.status,
-          lf.criado_em
-        FROM financeiro.lancamentos_financeiros AS lf
-        LEFT JOIN entidades.fornecedores AS f ON f.id = lf.entidade_id
-        LEFT JOIN financeiro.categorias_financeiras cf ON cf.id = lf.categoria_id
+          cp.status,
+          cp.criado_em
+        FROM financeiro.contas_pagar AS cp
+        LEFT JOIN entidades.fornecedores AS f ON f.id = cp.fornecedor_id
         ${whereClause}
-        ORDER BY lf.data_vencimento ASC
+        ORDER BY cp.data_vencimento ASC
         LIMIT $${index}
       `.trim();
 
@@ -442,11 +432,10 @@ export const getContasAPagar = tool({
 
       const totalsSql = `
         SELECT
-          SUM(lf.valor) AS total_valor,
+          SUM(cp.valor_liquido) AS total_valor,
           COUNT(*) AS total_registros
-        FROM financeiro.lancamentos_financeiros AS lf
-        LEFT JOIN entidades.fornecedores AS f ON f.id = lf.entidade_id
-        LEFT JOIN financeiro.categorias_financeiras cf ON cf.id = lf.categoria_id
+        FROM financeiro.contas_pagar AS cp
+        LEFT JOIN entidades.fornecedores AS f ON f.id = cp.fornecedor_id
         ${whereClause}
       `.trim();
 
@@ -548,12 +537,11 @@ export const getPagamentosEfetuados = tool({
         index += 1;
       };
 
-      // Base no schema unificado
-      conditions.push(`pe.tipo = 'pagamento_efetuado'`);
+      // Base na tabela específica
 
-      if (fornecedor_id) push('pe.entidade_id =', fornecedor_id);
-      if (valor_minimo !== undefined) push('pe.valor >=', valor_minimo);
-      if (valor_maximo !== undefined) push('pe.valor <=', valor_maximo);
+      if (fornecedor_id) push('cp.fornecedor_id =', fornecedor_id);
+      if (valor_minimo !== undefined) push('pe.valor_total_pagamento >=', valor_minimo);
+      if (valor_maximo !== undefined) push('pe.valor_total_pagamento <=', valor_maximo);
 
       if (vence_em_dias !== undefined) {
         conditions.push(`pe.data_lancamento BETWEEN CURRENT_DATE AND CURRENT_DATE + ($${index}::int) * INTERVAL '1 day'`);
@@ -579,15 +567,15 @@ export const getPagamentosEfetuados = tool({
         SELECT
           pe.id,
           f.nome_fantasia AS fornecedor,
-          pe.descricao,
-          pe.valor AS valor_total,
-          pe.data_lancamento AS data_pagamento,
-          pe.data_vencimento,
+          pe.observacao AS descricao,
+          pe.valor_total_pagamento AS valor_total,
+          pe.data_pagamento,
+          pe.data_lancamento,
           pe.status
-        FROM financeiro.lancamentos_financeiros AS pe
-        LEFT JOIN entidades.fornecedores AS f ON f.id = pe.entidade_id
-        LEFT JOIN financeiro.categorias_financeiras cat ON cat.id = pe.categoria_id
-        LEFT JOIN financeiro.contas_financeiras cf ON cf.id = pe.conta_financeira_id
+        FROM financeiro.pagamentos_efetuados AS pe
+        LEFT JOIN financeiro.pagamentos_efetuados_linhas pel ON pel.pagamento_id = pe.id
+        LEFT JOIN financeiro.contas_pagar cp ON cp.id = pel.conta_pagar_id
+        LEFT JOIN entidades.fornecedores f ON f.id = cp.fornecedor_id
         ${whereClause}
         ORDER BY pe.data_lancamento DESC
         LIMIT $${index}
@@ -597,12 +585,9 @@ export const getPagamentosEfetuados = tool({
 
       const totalsSql = `
         SELECT
-          SUM(pe.valor) AS total_valor,
+          SUM(pe.valor_total_pagamento) AS total_valor,
           COUNT(*) AS total_registros
-        FROM financeiro.lancamentos_financeiros AS pe
-        LEFT JOIN entidades.fornecedores AS f ON f.id = pe.entidade_id
-        LEFT JOIN financeiro.categorias_financeiras cat ON cat.id = pe.categoria_id
-        LEFT JOIN financeiro.contas_financeiras cf ON cf.id = pe.conta_financeira_id
+        FROM financeiro.pagamentos_efetuados AS pe
         ${whereClause}
       `.trim();
 
