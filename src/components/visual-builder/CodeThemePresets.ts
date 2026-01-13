@@ -142,7 +142,13 @@ function updateVbContainerStyle(code: string, mut: (so: Record<string,string>) =
 }
 
 // --- Presets and APIs ---
-export type PresetKey = 'clean-light' | 'clean-dark' | 'minimal-cards';
+export type PresetKey =
+  | 'clean-light'
+  | 'clean-dark'
+  | 'minimal-cards'
+  | 'azul-corporativo'
+  | 'verde-suave'
+  | 'sepia';
 type Preset = {
   key: PresetKey;
   name: string;
@@ -162,7 +168,7 @@ type Preset = {
 export const PRESETS: Preset[] = [
   {
     key: 'clean-light',
-    name: 'Clean Light',
+    name: 'Claro Limpo',
     description: 'Claro, minimalista, cartões brancos',
     header: { backgroundColor: '#ffffff', borderColor: '#e5e7eb', borderWidth: 1, borderStyle: 'solid', borderRadius: 12, titleColor: '#111827', subtitleColor: '#6b7280' },
     dashboard: { backgroundColor: '#f8fafc' },
@@ -175,7 +181,7 @@ export const PRESETS: Preset[] = [
   },
   {
     key: 'clean-dark',
-    name: 'Clean Dark',
+    name: 'Escuro Limpo',
     description: 'Escuro com alto contraste',
     header: { backgroundColor: '#111827', borderColor: '#374151', borderWidth: 1, borderStyle: 'solid', borderRadius: 12, titleColor: '#f9fafb', subtitleColor: '#9ca3af' },
     dashboard: { backgroundColor: '#0b0f14' },
@@ -188,7 +194,7 @@ export const PRESETS: Preset[] = [
   },
   {
     key: 'minimal-cards',
-    name: 'Minimal (Cards)',
+    name: 'Minimal (Cartões)',
     description: 'Sutil, bordas tracejadas, leve',
     header: { backgroundColor: 'transparent', borderColor: undefined, borderWidth: undefined, borderStyle: undefined, borderRadius: 12, titleColor: '#111827', subtitleColor: '#6b7280' },
     dashboard: { backgroundColor: '#ffffff' },
@@ -197,6 +203,84 @@ export const PRESETS: Preset[] = [
       padding: { top: 8, right: 8, bottom: 8, left: 8 }, marginBottom: 12,
       title: { color: '#111827', size: 15, weight: 500 },
       value: { color: '#111827', size: 26, weight: 600 },
+    }
+  },
+  {
+    key: 'azul-corporativo',
+    name: 'Azul Corporativo',
+    description: 'Tons de azul, limpo e profissional',
+    header: {
+      backgroundColor: '#0ea5e9', // sky-500
+      borderColor: '#38bdf8',     // sky-400
+      borderWidth: 1,
+      borderStyle: 'solid',
+      borderRadius: 12,
+      titleColor: '#f8fafc',      // quase branco
+      subtitleColor: '#e0f2fe',   // sky-100
+    },
+    dashboard: { backgroundColor: '#f0f9ff' }, // sky-50
+    articles: {
+      backgroundColor: '#ffffff',
+      borderColor: '#bae6fd', // sky-200
+      borderWidth: 1,
+      borderStyle: 'solid',
+      borderRadius: 12,
+      padding: { top: 12, right: 12, bottom: 12, left: 12 },
+      marginBottom: 16,
+      title: { color: '#0c4a6e', size: 16, weight: 600 }, // sky/cyan dark
+      value: { color: '#075985', size: 28, weight: 700 }, // sky-800
+    }
+  },
+  {
+    key: 'verde-suave',
+    name: 'Verde Suave',
+    description: 'Suave com realces em verde',
+    header: {
+      backgroundColor: '#d1fae5', // emerald-100
+      borderColor: '#a7f3d0',     // emerald-200
+      borderWidth: 1,
+      borderStyle: 'solid',
+      borderRadius: 12,
+      titleColor: '#065f46',      // emerald-800
+      subtitleColor: '#047857',   // emerald-700
+    },
+    dashboard: { backgroundColor: '#ecfdf5' }, // emerald-50
+    articles: {
+      backgroundColor: '#ffffff',
+      borderColor: '#a7f3d0',
+      borderWidth: 1,
+      borderStyle: 'solid',
+      borderRadius: 12,
+      padding: { top: 12, right: 12, bottom: 12, left: 12 },
+      marginBottom: 16,
+      title: { color: '#065f46', size: 16, weight: 600 },
+      value: { color: '#064e3b', size: 28, weight: 700 },
+    }
+  },
+  {
+    key: 'sepia',
+    name: 'Sépia',
+    description: 'Paleta quente, agradável e suave',
+    header: {
+      backgroundColor: '#f5f0e6',
+      borderColor: '#e2d6c2',
+      borderWidth: 1,
+      borderStyle: 'solid',
+      borderRadius: 12,
+      titleColor: '#3d2b1f',
+      subtitleColor: '#6b513a',
+    },
+    dashboard: { backgroundColor: '#f8f5ef' },
+    articles: {
+      backgroundColor: '#fffaf0',
+      borderColor: '#e2d6c2',
+      borderWidth: 1,
+      borderStyle: 'solid',
+      borderRadius: 12,
+      padding: { top: 12, right: 12, bottom: 12, left: 12 },
+      marginBottom: 16,
+      title: { color: '#3d2b1f', size: 16, weight: 600 },
+      value: { color: '#3a2a1b', size: 28, weight: 700 },
     }
   }
 ];
@@ -289,4 +373,3 @@ export function detectPresetKey(code: string): PresetKey | 'custom' {
   }
   return 'custom';
 }
-
