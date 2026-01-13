@@ -74,7 +74,7 @@ export default function CodeDesignToolbar({ code, onChange, className }: CodeDes
               <SelectTrigger size="sm"><SelectValue placeholder="Fonte" /></SelectTrigger>
               <SelectContent>
                 {fonts.map(f => (
-                  <SelectItem key={f.key} value={f.family}>{f.label || f.family}</SelectItem>
+                  <SelectItem key={f.key} value={f.family}>{f.name || f.family}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -85,7 +85,7 @@ export default function CodeDesignToolbar({ code, onChange, className }: CodeDes
               <SelectTrigger size="sm"><SelectValue placeholder="Tamanho" /></SelectTrigger>
               <SelectContent>
                 {fontSizes.map(s => (
-                  <SelectItem key={s.key} value={String(s.size)}>{s.size}</SelectItem>
+                  <SelectItem key={s.key} value={String(s.value)}>{s.value}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -112,7 +112,7 @@ export default function CodeDesignToolbar({ code, onChange, className }: CodeDes
               <SelectTrigger size="sm"><SelectValue placeholder="Fonte" /></SelectTrigger>
               <SelectContent>
                 {fonts.map(f => (
-                  <SelectItem key={f.key} value={f.family}>{f.label || f.family}</SelectItem>
+                  <SelectItem key={f.key} value={f.family}>{f.name || f.family}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -123,7 +123,7 @@ export default function CodeDesignToolbar({ code, onChange, className }: CodeDes
               <SelectTrigger size="sm"><SelectValue placeholder="Tamanho" /></SelectTrigger>
               <SelectContent>
                 {fontSizes.map(s => (
-                  <SelectItem key={s.key} value={String(s.size)}>{s.size}</SelectItem>
+                  <SelectItem key={s.key} value={String(s.value)}>{s.value}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -196,4 +196,3 @@ function parsePx(s?: string): number | undefined {
   const n = Number(m[1]);
   return Number.isFinite(n) ? n : undefined;
 }
-
