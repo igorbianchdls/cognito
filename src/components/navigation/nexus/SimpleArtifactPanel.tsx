@@ -128,11 +128,11 @@ const initialArtifactLiquid = `
   <div class="vb-container" style="padding: 0;">
     <header class="vb-header" style="background-color:#ffffff; border-bottom:1px solid #e5e7eb; border-top:0; border-left:0; border-right:0; border-radius:0;">
       <p style="margin:0 0 4px; margin-left:8px; margin-top:6px; font-family:Inter, system-ui, sans-serif; font-size:18px; font-weight:700; color:#111827;">Visão Geral • Exemplo Inicial</p>
-      <p style="margin:0; margin-left:8px; margin-top:6px; font-family:Inter, system-ui, sans-serif; font-size:14px; font-weight:400; color:#6b7280;">KPIs e gráficos de exemplo — edite o código e visualize abaixo</p>
+      <p style="margin:0; margin-left:8px; margin-top:6px; margin-bottom:6px; font-family:Inter, system-ui, sans-serif; font-size:14px; font-weight:400; color:#6b7280;">KPIs e gráficos de exemplo — edite o código e visualize abaixo</p>
     </header>
 
     <!-- KPIs: Linha 1 (4 itens) -->
-    <section id="kpis-1" class="row kpis" data-role="section" style="display:flex; flex-direction:row; flex-wrap:wrap; justify-content:flex-start; align-items:stretch; gap:12px; margin-top:12px;">
+    <section id="kpis-1" class="row kpis" data-role="section" style="display:flex; flex-direction:row; flex-wrap:wrap; justify-content:flex-start; align-items:stretch; gap:12px; margin-top:12px; padding:8px;">
       <article id="kpi_receita_total" class="card" data-role="kpi" style="--fr:1; flex: var(--fr, 1) 1 220px; min-width:0; background-color:#ffffff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px;">
         <p style="margin:0 0 6px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Receita Total</p>
         <div class="kpi-value" style="font-family:Inter, system-ui, sans-serif; font-size:28px; font-weight:700; letter-spacing:-0.02em; color:#111827;">R$ 1.234.567</div>
@@ -152,7 +152,7 @@ const initialArtifactLiquid = `
     </section>
 
     <!-- KPIs: Linha 2 (2 itens) -->
-    <section id="kpis-2" class="row kpis" data-role="section" style="display:flex; flex-direction:row; flex-wrap:wrap; justify-content:flex-start; align-items:stretch; gap:12px; margin-top:12px;">
+    <section id="kpis-2" class="row kpis" data-role="section" style="display:flex; flex-direction:row; flex-wrap:wrap; justify-content:flex-start; align-items:stretch; gap:12px; margin-top:12px; padding:8px;">
       <article id="kpi_conversao" class="card" data-role="kpi" style="--fr:1; flex: var(--fr, 1) 1 220px; min-width:0; background-color:#ffffff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px;">
         <p style="margin:0 0 6px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Conversão</p>
         <div class="kpi-value" style="font-family:Inter, system-ui, sans-serif; font-size:28px; font-weight:700; letter-spacing:-0.02em; color:#111827;">3,4%</div>
@@ -164,7 +164,7 @@ const initialArtifactLiquid = `
     </section>
 
     <!-- Gráficos: Linha 1 (2 itens) -->
-    <section id="sec1" class="row charts" data-role="section" style="display:flex; flex-direction:row; flex-wrap:wrap; justify-content:flex-start; align-items:stretch; gap:16px; margin-top:16px;">
+    <section id="sec1" class="row charts" data-role="section" style="display:flex; flex-direction:row; flex-wrap:wrap; justify-content:flex-start; align-items:stretch; gap:16px; margin-top:16px; padding:8px;">
       <article id="chart_exemplo" class="card" data-role="chart" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#ffffff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
         <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Vendas por Categoria</p>
         <Chart id="exemplo_bar" type="bar" height="320">
@@ -180,7 +180,7 @@ const initialArtifactLiquid = `
     </section>
 
     <!-- Gráficos: Linha 2 (2 itens) -->
-    <section id="sec2" class="row charts" data-role="section" style="display:flex; flex-direction:row; flex-wrap:wrap; justify-content:flex-start; align-items:stretch; gap:16px; margin-top:16px;">
+    <section id="sec2" class="row charts" data-role="section" style="display:flex; flex-direction:row; flex-wrap:wrap; justify-content:flex-start; align-items:stretch; gap:16px; margin-top:16px; padding:8px;">
       <article id="chart_pizza" class="card" data-role="chart" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#ffffff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
         <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Participação por Região</p>
         <Chart id="exemplo_pie" type="pie" height="320">
