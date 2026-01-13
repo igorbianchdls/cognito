@@ -127,10 +127,43 @@ const initialArtifactLiquid = `
 <dashboard render="html" theme="branco" date-type="last_30_days">
   <div class="vb-container" style="padding: 0;">
     <header class="vb-header" style="background-color:#ffffff; border:1px solid #e5e7eb; border-radius:12px;">
-      <p style="margin:0 0 4px; font-family:Inter, system-ui, sans-serif; font-size:18px; font-weight:700; color:#111827;">Artifact • Exemplo Inicial</p>
-      <p style="margin:0; font-family:Inter, system-ui, sans-serif; font-size:14px; font-weight:400; color:#6b7280;">Edite o código e visualize abaixo</p>
+      <p style="margin:0 0 4px; font-family:Inter, system-ui, sans-serif; font-size:18px; font-weight:700; color:#111827;">Visão Geral • Exemplo Inicial</p>
+      <p style="margin:0; font-family:Inter, system-ui, sans-serif; font-size:14px; font-weight:400; color:#6b7280;">KPIs e gráficos de exemplo — edite o código e visualize abaixo</p>
     </header>
 
+    <!-- KPIs: Linha 1 (4 itens) -->
+    <section id="kpis-1" class="row kpis" data-role="section" style="display:flex; flex-direction:row; flex-wrap:wrap; justify-content:flex-start; align-items:stretch; gap:12px; margin-top:12px;">
+      <article id="kpi_receita_total" class="card" data-role="kpi" style="--fr:1; flex: var(--fr, 1) 1 220px; min-width:0; background-color:#ffffff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px;">
+        <p style="margin:0 0 6px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Receita Total</p>
+        <div class="kpi-value" style="font-family:Inter, system-ui, sans-serif; font-size:28px; font-weight:700; letter-spacing:-0.02em; color:#111827;">R$ 1.234.567</div>
+      </article>
+      <article id="kpi_pedidos" class="card" data-role="kpi" style="--fr:1; flex: var(--fr, 1) 1 220px; min-width:0; background-color:#ffffff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px;">
+        <p style="margin:0 0 6px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Pedidos</p>
+        <div class="kpi-value" style="font-family:Inter, system-ui, sans-serif; font-size:28px; font-weight:700; letter-spacing:-0.02em; color:#111827;">3.456</div>
+      </article>
+      <article id="kpi_ticket_medio" class="card" data-role="kpi" style="--fr:1; flex: var(--fr, 1) 1 220px; min-width:0; background-color:#ffffff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px;">
+        <p style="margin:0 0 6px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Ticket Médio</p>
+        <div class="kpi-value" style="font-family:Inter, system-ui, sans-serif; font-size:28px; font-weight:700; letter-spacing:-0.02em; color:#111827;">R$ 357,20</div>
+      </article>
+      <article id="kpi_novos_clientes" class="card" data-role="kpi" style="--fr:1; flex: var(--fr, 1) 1 220px; min-width:0; background-color:#ffffff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px;">
+        <p style="margin:0 0 6px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Novos Clientes</p>
+        <div class="kpi-value" style="font-family:Inter, system-ui, sans-serif; font-size:28px; font-weight:700; letter-spacing:-0.02em; color:#111827;">128</div>
+      </article>
+    </section>
+
+    <!-- KPIs: Linha 2 (2 itens) -->
+    <section id="kpis-2" class="row kpis" data-role="section" style="display:flex; flex-direction:row; flex-wrap:wrap; justify-content:flex-start; align-items:stretch; gap:12px; margin-top:12px;">
+      <article id="kpi_conversao" class="card" data-role="kpi" style="--fr:1; flex: var(--fr, 1) 1 220px; min-width:0; background-color:#ffffff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px;">
+        <p style="margin:0 0 6px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Conversão</p>
+        <div class="kpi-value" style="font-family:Inter, system-ui, sans-serif; font-size:28px; font-weight:700; letter-spacing:-0.02em; color:#111827;">3,4%</div>
+      </article>
+      <article id="kpi_itens_pedido" class="card" data-role="kpi" style="--fr:1; flex: var(--fr, 1) 1 220px; min-width:0; background-color:#ffffff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px;">
+        <p style="margin:0 0 6px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Itens por Pedido</p>
+        <div class="kpi-value" style="font-family:Inter, system-ui, sans-serif; font-size:28px; font-weight:700; letter-spacing:-0.02em; color:#111827;">2,1</div>
+      </article>
+    </section>
+
+    <!-- Gráficos: Linha 1 (2 itens) -->
     <section id="sec1" class="row charts" data-role="section" style="display:flex; flex-direction:row; flex-wrap:wrap; justify-content:flex-start; align-items:stretch; gap:16px; margin-top:16px;">
       <article id="chart_exemplo" class="card" data-role="chart" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#ffffff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
         <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Vendas por Categoria</p>
@@ -142,6 +175,22 @@ const initialArtifactLiquid = `
         <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Receita • Últimos Meses</p>
         <Chart id="exemplo_line" type="line" height="320">
           <query schema="vendas" table="pedidos" dimension="cidade" measure="SUM(subtotal)" timeDimension="data_pedido" limit="5" order="value DESC" />
+        </Chart>
+      </article>
+    </section>
+
+    <!-- Gráficos: Linha 2 (2 itens) -->
+    <section id="sec2" class="row charts" data-role="section" style="display:flex; flex-direction:row; flex-wrap:wrap; justify-content:flex-start; align-items:stretch; gap:16px; margin-top:16px;">
+      <article id="chart_pizza" class="card" data-role="chart" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#ffffff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
+        <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Participação por Região</p>
+        <Chart id="exemplo_pie" type="pie" height="320">
+          <query schema="vendas" table="pedidos" dimension="regiao" measure="SUM(subtotal)" timeDimension="data_pedido" limit="5" order="value DESC" />
+        </Chart>
+      </article>
+      <article id="chart_grouped" class="card" data-role="chart" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#ffffff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
+        <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Vendas por Canal</p>
+        <Chart id="exemplo_grouped" type="groupedbar" height="320">
+          <query schema="vendas" table="pedidos" dimension="canal" measure="SUM(subtotal)" timeDimension="data_pedido" order="value DESC" />
         </Chart>
       </article>
     </section>
