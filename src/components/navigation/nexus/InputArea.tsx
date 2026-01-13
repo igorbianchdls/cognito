@@ -272,7 +272,7 @@ export default function InputArea({ input, setInput, onSubmit, status, selectedA
 
           <PromptInputButton onClick={() => onOpenDashboard?.()}>
             <BarChart3 size={16} />
-            <span>Dashboard</span>
+            <span>Artifact</span>
           </PromptInputButton>
           <PromptInputButton>
             <GlobeIcon size={16} />
