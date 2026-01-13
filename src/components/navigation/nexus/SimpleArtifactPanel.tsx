@@ -9,6 +9,7 @@ import {
   ArtifactContent,
 } from "@/components/ai-elements/artifact";
 import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import MonacoEditor from "@/components/visual-builder/MonacoEditor";
 import LiquidPreviewCanvas from "@/components/visual-builder/LiquidPreviewCanvas";
 import CommandConsole from "@/components/visual-builder/CommandConsole";
@@ -90,18 +91,24 @@ export default function SimpleArtifactPanel({ onClose, dashboardId, onExpand }: 
             {copied ? <CheckIcon className="w-4 h-4 mr-1" /> : <CopyIcon className="w-4 h-4 mr-1" />}
             Copiar
           </Button>
-          {onExpand && (
-            <Button
-              type="button"
-              onClick={() => onExpand?.()}
-              className="h-8 px-3"
-              variant="outline"
-              title="Tela Cheia"
-            >
-              <Maximize2 className="w-4 h-4 mr-1" />
-              Tela Cheia
-            </Button>
-          )}
+          {/* Botão de opções (Tela Cheia / Fechar) com ícone de X */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button type="button" variant="outline" className="size-8 p-0 text-muted-foreground hover:text-foreground" aria-label="Opções do painel">
+                <XIcon className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-44">
+              {onExpand && (
+                <DropdownMenuItem onClick={() => onExpand?.()}>
+                  <Maximize2 className="w-4 h-4 mr-2" /> Tela Cheia
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuItem onClick={onClose}>
+                <XIcon className="w-4 h-4 mr-2" /> Fechar
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <a href={dashboardHref} className="inline-flex">
             <Button type="button" className="h-8 px-3" variant="outline">
               Ver Dashboard
@@ -114,12 +121,7 @@ export default function SimpleArtifactPanel({ onClose, dashboardId, onExpand }: 
           >
             Publicar
           </Button>
-          <ArtifactAction
-            tooltip="Fechar"
-            label="Fechar"
-            icon={XIcon}
-            onClick={onClose}
-          />
+          {/* Removido: botão Fechar isolado; agora embutido no menu acima */}
         </ArtifactActions>
       </ArtifactHeader>
       <ArtifactContent className="p-0">
