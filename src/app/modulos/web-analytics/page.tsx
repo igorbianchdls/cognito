@@ -195,6 +195,7 @@ export default function ModulosWebAnalyticsPage() {
               )}
             </div>
           </div>
+        </div>
     </NexusShell>
   )
 }
