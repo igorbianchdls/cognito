@@ -38,8 +38,6 @@ export const buscarClassificacoesFinanceiras = tool({
 
       const sql = `
         SELECT * FROM (
-          SELECT 'categoria_financeira'::text AS tipo, id::text AS id, nome::text AS nome FROM financeiro.categorias_financeiras
-          UNION ALL
           SELECT 'natureza_financeira'::text AS tipo, id::text AS id, nome::text AS nome FROM financeiro.naturezas_financeiras
           UNION ALL
           SELECT 'projeto'::text AS tipo, id::text AS id, nome::text AS nome FROM financeiro.projetos
@@ -72,9 +70,6 @@ export const buscarClassificacoesFinanceiras = tool({
 
       for (const r of rows) {
         switch (r.tipo) {
-          case 'categoria_financeira':
-            categorias_financeiras.push({ id: r.id, nome: r.nome, tipo: '', descricao: '' });
-            break;
           case 'natureza_financeira':
             naturezas_financeiras.push({ id: r.id, nome: r.nome, tipo: '' });
             break;
@@ -98,7 +93,17 @@ export const buscarClassificacoesFinanceiras = tool({
         }
       }
 
-      const msgBase = `${categorias_financeiras.length} categorias financeiras, ${centros_custo.length} centros de custo e ${naturezas_financeiras.length} naturezas financeiras disponíveis`;
+      // Acrescentar categorias do schema novo
+      try {
+        const catDesp = await runQuery<{ id: string; nome: string }>(`SELECT id::text AS id, nome::text AS nome FROM financeiro.categorias_despesa ORDER BY nome ASC`, [])
+        for (const c of catDesp) categorias_financeiras.push({ id: c.id, nome: c.nome, tipo: 'despesa', descricao: '' })
+      } catch {}
+      try {
+        const catRec = await runQuery<{ id: string; nome: string }>(`SELECT id::text AS id, nome::text AS nome FROM financeiro.categorias_receita ORDER BY nome ASC`, [])
+        for (const c of catRec) categorias_financeiras.push({ id: c.id, nome: c.nome, tipo: 'receita', descricao: '' })
+      } catch {}
+
+      const msgBase = `${categorias_financeiras.length} categorias (despesa/receita), ${centros_custo.length} centros de custo e ${naturezas_financeiras.length} naturezas financeiras disponíveis`;
       const message = hasFilter
         ? `Encontradas ${categorias_financeiras.length} categorias, ${centros_custo.length} centros de custo e ${naturezas_financeiras.length} naturezas para "${termo_busca}"`
         : msgBase;
@@ -117,11 +122,7 @@ export const buscarClassificacoesFinanceiras = tool({
           filiais,
           projetos,
         },
-        counts: {
-          categorias: categorias_financeiras.length,
-          centros_custo: centros_custo.length,
-          naturezas: naturezas_financeiras.length,
-        },
+        counts: { categorias: categorias_financeiras.length, centros_custo: centros_custo.length, naturezas: naturezas_financeiras.length },
       };
     } catch (err) {
       return {

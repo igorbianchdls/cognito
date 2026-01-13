@@ -7,14 +7,14 @@ import { runQuery } from '@/lib/postgres';
 // ============================================
 
 /**
- * [WORKFLOW] Busca conta a receber existente
+ * [WORKFLOW] Busca conta a receber existente (schema novo)
  * Permite buscar por NF, cliente, valor ou vencimento
  */
 export const buscarContaReceber = tool({
-  description: '[WORKFLOW] Busca conta a receber existente no sistema (consulta ao banco) com filtros opcionais',
+  description: '[WORKFLOW] Busca conta a receber existente no sistema (consulta ao banco — schema novo) com filtros opcionais',
   inputSchema: z.object({
     cliente_id: z.string().optional().describe('ID do cliente'),
-    cliente_nome: z.string().optional().describe('Nome fantasia do cliente (parcial, coluna nome_fantasia)'),
+    cliente_nome: z.string().optional().describe('Nome fantasia do cliente (ILIKE)'),
     valor: z.number().optional().describe('Valor exato'),
     valor_min: z.number().optional().describe('Valor mínimo'),
     valor_max: z.number().optional().describe('Valor máximo'),
@@ -22,107 +22,124 @@ export const buscarContaReceber = tool({
     de_vencimento: z.string().optional().describe('Vencimento a partir de (YYYY-MM-DD)'),
     ate_vencimento: z.string().optional().describe('Vencimento até (YYYY-MM-DD)'),
     status: z.string().optional().describe('Status (ex.: pendente, pago, cancelado). Se não informar, assume pendente por padrão.'),
-    numero_nota_fiscal: z.string().optional().describe('Número da nota fiscal/fatura (parcial ou completo)'),
+    numero_nota_fiscal: z.string().optional().describe('Número da nota/documento (ILIKE)'),
     descricao: z.string().optional().describe('Descrição do título (ILIKE, parcial)'),
     tenant_id: z.number().optional().describe('Tenant ID para filtrar'),
-    limite: z.number().int().positive().max(1000).optional().describe('Limite (default 10)'),
+    limite: z.number().int().positive().max(1000).optional().describe('Limite (default 20)'),
     order_by: z.enum(['id','valor','data_vencimento','cliente_nome']).optional().describe('Ordenação'),
     order_dir: z.enum(['asc','desc']).optional().describe('Direção'),
   }),
   execute: async ({ cliente_id, cliente_nome, valor, valor_min, valor_max, data_vencimento, de_vencimento, ate_vencimento, status, numero_nota_fiscal, descricao, tenant_id, limite, order_by, order_dir }) => {
-    // Query alinhada com a view 'contas-a-receber' do módulo Financeiro
-    const selectSql = `SELECT
-      lf.id AS conta_id,
-      lf.tipo AS tipo_conta,
-      lf.descricao AS descricao_conta,
-      lf.valor AS valor_a_receber,
-      lf.status AS status_conta,
-      lf.data_lancamento,
-      lf.data_vencimento,
-      lf.observacao,
-      lf.numero_nota_fiscal,
-      lf.storage_key AS storage_key,
-      lf.nome_arquivo AS nome_arquivo,
-      lf.content_type AS content_type,
-      lf.tamanho_bytes AS tamanho_bytes,
-      COALESCE((SELECT SUM(r.valor)::numeric FROM financeiro.lancamentos_financeiros r
-                 WHERE LOWER(r.tipo) = 'pagamento_recebido' AND r.lancamento_origem_id = lf.id), 0) AS valor_recebido,
-      cf.nome AS categoria_nome,
-      cl.nome AS centro_lucro_nome,
-      dep.nome AS departamento_nome,
-      fi.nome AS filial_nome,
-      pr.nome AS projeto_nome,
-      c.nome_fantasia AS cliente_nome,
-      lf.cliente_id AS cliente_id,
-      c.imagem_url AS cliente_imagem_url
-    `;
-    const baseSql = `FROM financeiro.lancamentos_financeiros lf
-      LEFT JOIN financeiro.categorias_financeiras cf ON lf.categoria_id = cf.id
-      LEFT JOIN empresa.centros_lucro cl ON lf.centro_lucro_id = cl.id
-      LEFT JOIN empresa.departamentos dep ON lf.departamento_id = dep.id
-      LEFT JOIN empresa.filiais fi ON lf.filial_id = fi.id
-      LEFT JOIN financeiro.projetos pr ON lf.projeto_id = pr.id
-      LEFT JOIN entidades.clientes c ON lf.cliente_id = c.id`;
+    const conditions: string[] = []
+    const params: unknown[] = []
+    let i = 1
 
-    const conditions: string[] = ["lf.tipo = 'conta_a_receber'"];
-    const params: unknown[] = [];
-    let i = 1;
-    if (cliente_id) { conditions.push(`lf.cliente_id = $${i++}`); params.push(cliente_id) }
-    if (cliente_nome) { conditions.push(`c.nome_fantasia ILIKE $${i++}`); params.push(`%${cliente_nome}%`) }
-    if (typeof valor === 'number') { conditions.push(`lf.valor = $${i++}`); params.push(valor) }
-    if (typeof valor_min === 'number') { conditions.push(`lf.valor >= $${i++}`); params.push(valor_min) }
-    if (typeof valor_max === 'number') { conditions.push(`lf.valor <= $${i++}`); params.push(valor_max) }
-    if (data_vencimento) { conditions.push(`DATE(lf.data_vencimento) = $${i++}`); params.push(data_vencimento) }
-    if (de_vencimento) { conditions.push(`DATE(lf.data_vencimento) >= $${i++}`); params.push(de_vencimento) }
-    if (ate_vencimento) { conditions.push(`DATE(lf.data_vencimento) <= $${i++}`); params.push(ate_vencimento) }
-    if (numero_nota_fiscal) { conditions.push(`lf.numero_nota_fiscal ILIKE $${i++}`); params.push(`%${numero_nota_fiscal}%`) }
-    if (descricao) { conditions.push(`lf.descricao ILIKE $${i++}`); params.push(`%${descricao}%`) }
-    if (status && status.trim()) { conditions.push(`LOWER(lf.status) = $${i++}`); params.push(status.toLowerCase()) } else { conditions.push(`LOWER(lf.status) = 'pendente'`) }
-    if (typeof tenant_id === 'number') { conditions.push(`lf.tenant_id = $${i++}`); params.push(tenant_id) }
+    if (cliente_id) { conditions.push(`cr.cliente_id = $${i++}`); params.push(cliente_id) }
+    if (cliente_nome) { conditions.push(`cli.nome_fantasia ILIKE $${i++}`); params.push(`%${cliente_nome}%`) }
+    if (typeof valor === 'number') { conditions.push(`cr.valor_liquido = $${i++}`); params.push(valor) }
+    if (typeof valor_min === 'number') { conditions.push(`cr.valor_liquido >= $${i++}`); params.push(valor_min) }
+    if (typeof valor_max === 'number') { conditions.push(`cr.valor_liquido <= $${i++}`); params.push(valor_max) }
+    if (data_vencimento) { conditions.push(`DATE(cr.data_vencimento) = $${i++}`); params.push(data_vencimento) }
+    if (de_vencimento) { conditions.push(`DATE(cr.data_vencimento) >= $${i++}`); params.push(de_vencimento) }
+    if (ate_vencimento) { conditions.push(`DATE(cr.data_vencimento) <= $${i++}`); params.push(ate_vencimento) }
+    if (numero_nota_fiscal) { conditions.push(`cr.numero_documento ILIKE $${i++}`); params.push(`%${numero_nota_fiscal}%`) }
+    if (descricao) { conditions.push(`cr.observacao ILIKE $${i++}`); params.push(`%${descricao}%`) }
+    if (status && status.trim()) { conditions.push(`LOWER(cr.status) = $${i++}`); params.push(status.toLowerCase()) } else { conditions.push(`LOWER(cr.status) = 'pendente'`) }
+    if (typeof tenant_id === 'number') { conditions.push(`cr.tenant_id = $${i++}`); params.push(tenant_id) }
 
-    const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
-    const orderMap: Record<string,string> = { id: 'lf.id', valor: 'lf.valor', data_vencimento: 'lf.data_vencimento', cliente_nome: 'c.nome_fantasia' };
-    const ob = orderMap[(order_by || 'data_vencimento')] || 'lf.data_vencimento';
-    const od = (order_dir || 'desc').toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
-    const limitVal = Math.max(1, Math.min(1000, limite || 50));
-    const sql = `${selectSql} ${baseSql} ${where} ORDER BY ${ob} ${od} LIMIT ${limitVal}`.replace(/\n\s+/g, ' ').trim();
+    const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''
+
+    const orderMap: Record<string, string> = {
+      id: 'cr.id',
+      valor: 'cr.valor_liquido',
+      data_vencimento: 'cr.data_vencimento',
+      cliente_nome: 'cli.nome_fantasia',
+    }
+    const ob = (order_by && orderMap[order_by]) || 'cr.data_vencimento'
+    const od = (order_dir && order_dir.toLowerCase() === 'asc') ? 'ASC' : 'DESC'
+    const limitVal = Math.max(1, Math.min(1000, typeof limite === 'number' ? limite : 20))
+
+    const sql = `
+      SELECT
+        cr.id                                   AS conta_id,
+        'conta_a_receber'::text                 AS tipo_conta,
+        cr.observacao                           AS descricao_conta,
+        cr.valor_liquido                        AS valor_a_receber,
+        cr.status                               AS status_conta,
+        cr.data_lancamento,
+        cr.data_vencimento,
+        cr.observacao,
+        cr.numero_documento                     AS numero_nota_fiscal,
+        NULL::text                              AS storage_key,
+        NULL::text                              AS nome_arquivo,
+        NULL::text                              AS content_type,
+        NULL::bigint                            AS tamanho_bytes,
+        (
+          SELECT COALESCE(SUM(prl.valor_recebido),0)::numeric
+            FROM financeiro.pagamentos_recebidos_linhas prl
+           WHERE prl.conta_receber_id = cr.id
+        ) AS valor_recebido,
+        cat_r.nome                              AS categoria_nome,
+        cl.nome                                 AS centro_lucro_nome,
+        dep.nome                                AS departamento_nome,
+        fil.nome                                AS filial_nome,
+        cli.nome_fantasia                       AS cliente_nome,
+        cr.cliente_id                           AS cliente_id,
+        cli.imagem_url                          AS cliente_imagem_url
+      FROM financeiro.contas_receber cr
+      LEFT JOIN entidades.clientes cli            ON cli.id = cr.cliente_id
+      LEFT JOIN financeiro.categorias_receita cat_r ON cat_r.id = cr.categoria_receita_id
+      LEFT JOIN empresa.centros_lucro cl          ON cl.id = cr.centro_lucro_id
+      LEFT JOIN empresa.departamentos dep         ON dep.id = cr.departamento_id
+      LEFT JOIN empresa.filiais fil               ON fil.id = cr.filial_id
+      ${where}
+      ORDER BY ${ob} ${od}
+      LIMIT ${limitVal}
+    `.replace(/\n\s+/g, ' ').trim()
 
     type Row = {
-      conta_id: string | number; tipo_conta?: string | null; descricao_conta?: string | null;
-      valor_a_receber?: number | null; status_conta?: string | null; data_lancamento?: string | null;
-      data_vencimento?: string | null; observacao?: string | null; categoria_nome?: string | null;
-      centro_lucro_nome?: string | null; departamento_nome?: string | null; filial_nome?: string | null;
-      projeto_nome?: string | null; cliente_nome?: string | null; cliente_id?: string | number | null;
-      cliente_imagem_url?: string | null; numero_nota_fiscal?: string | null; valor_recebido?: number | null;
-    };
-    const rows = await runQuery<Row>(sql, params);
-
-    if (!rows.length) {
-      return {
-        success: true,
-        conta_encontrada: false,
-        data: null,
-        rows: [],
-        count: 0,
-        message: 'Nenhuma conta a receber encontrada com os critérios informados',
-        title: '⚠️ Conta Não Encontrada',
-      } as const
+      conta_id: number
+      descricao_conta: string | null
+      valor_a_receber: number | string | null
+      status_conta: string | null
+      data_lancamento: string | null
+      data_vencimento: string | null
+      observacao: string | null
+      numero_nota_fiscal: string | null
+      valor_recebido: number | string | null
+      categoria_nome: string | null
+      centro_lucro_nome: string | null
+      departamento_nome: string | null
+      filial_nome: string | null
+      cliente_nome: string | null
+      cliente_id: number | string | null
+      cliente_imagem_url: string | null
     }
 
+    const rows = await runQuery<Row>(sql, params)
     const mapped = rows.map((r) => ({
-      id: String(r.conta_id),
-      cliente_id: r.cliente_id ? String(r.cliente_id) : '',
-      cliente_nome: r.cliente_nome || '-',
-      descricao: r.descricao_conta || '',
-      numero_nota_fiscal: r.numero_nota_fiscal ? String(r.numero_nota_fiscal) : undefined,
-      valor: Number(r.valor_a_receber || 0),
-      valor_recebido: Number(r.valor_recebido || 0),
-      valor_pendente: Math.max(0, Number(r.valor_a_receber || 0) - Number(r.valor_recebido || 0)),
-      data_emissao: r.data_lancamento ? String(r.data_lancamento) : '',
-      data_vencimento: r.data_vencimento ? String(r.data_vencimento) : '',
-      status: r.status_conta || '',
+      id: Number(r.conta_id),
+      conta_id: Number(r.conta_id),
+      tipo: 'conta_a_receber',
+      descricao: r.descricao_conta || r.observacao || null,
+      valor: Number(r.valor_a_receber ?? 0),
+      status: r.status_conta || null,
+      data_lancamento: r.data_lancamento || null,
+      data_vencimento: r.data_vencimento || null,
+      numero_nota_fiscal: r.numero_nota_fiscal || null,
+      storage_key: null,
+      nome_arquivo: null,
+      content_type: null,
+      tamanho_bytes: null,
+      valor_recebido: Number(r.valor_recebido ?? 0),
+      valor_pendente: Math.max(0, Number(r.valor_a_receber ?? 0) - Number(r.valor_recebido ?? 0)),
       categoria_nome: r.categoria_nome || undefined,
-      centro_custo_nome: r.centro_lucro_nome || undefined,
+      centro_lucro_nome: r.centro_lucro_nome || undefined,
+      departamento_nome: r.departamento_nome || undefined,
+      filial_nome: r.filial_nome || undefined,
+      cliente_nome: r.cliente_nome || undefined,
+      cliente_id: r.cliente_id ? String(r.cliente_id) : undefined,
+      cliente_imagem_url: r.cliente_imagem_url || undefined,
     }))
 
     return {
@@ -205,3 +222,4 @@ export const criarPagamentoRecebido = tool({
     }
   }
 });
+
