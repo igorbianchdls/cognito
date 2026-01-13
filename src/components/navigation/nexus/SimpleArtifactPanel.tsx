@@ -10,6 +10,8 @@ import {
 } from "@/components/ai-elements/artifact";
 import { Button } from "@/components/ui/button";
 import MonacoEditor from "@/components/visual-builder/MonacoEditor";
+import LiquidPreviewCanvas from "@/components/visual-builder/LiquidPreviewCanvas";
+import type { GlobalFilters } from "@/stores/visualBuilderStore";
 import { CheckIcon, CopyIcon, XIcon, Eye, Code2 } from "lucide-react";
 
 type SimpleArtifactPanelProps = {
@@ -31,7 +33,7 @@ export default function SimpleArtifactPanel({ onClose }: SimpleArtifactPanelProp
     }
   }, [code]);
 
-  const preview = useMemo(() => ({ __html: code }), [code]);
+  const defaultFilters: GlobalFilters = useMemo(() => ({ dateRange: { type: 'last_30_days' } }), []);
 
   return (
     <Artifact className="h-full" hideTopBorder>
@@ -92,8 +94,8 @@ export default function SimpleArtifactPanel({ onClose }: SimpleArtifactPanelProp
           {tab === 'code' ? (
             <MonacoEditor value={code} onChange={setCode} language="html" />
           ) : (
-            <div className="h-full overflow-auto p-4">
-              <div className="border border-gray-200 rounded-md p-4 bg-white" dangerouslySetInnerHTML={preview} />
+            <div className="h-full overflow-auto">
+              <LiquidPreviewCanvas code={code} globalFilters={defaultFilters} className="w-full" />
             </div>
           )}
         </div>

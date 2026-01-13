@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, type CSSProperties } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { LiquidParser } from "@/components/visual-builder/LiquidParser";
 import { QueryEngine } from "@/components/visual-builder/QueryEngine";
@@ -17,7 +17,7 @@ type LiquidPreviewCanvasProps = {
   globalFilters?: GlobalFilters;
   defaults?: Partial<VBNivoThemeState>;
   className?: string;
-  style?: React.CSSProperties;
+  style?: CSSProperties;
 };
 
 const DEFAULTS: VBNivoThemeState = {
@@ -170,4 +170,3 @@ export default function LiquidPreviewCanvas({ code, globalFilters, defaults, cla
 
   return <div ref={containerRef} className={className} style={style} />;
 }
-
