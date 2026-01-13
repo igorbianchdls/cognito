@@ -15,6 +15,41 @@ import SectionEditorModal from "@/components/visual-builder/SectionEditorModal";
 import ChartEditorModal from "@/components/visual-builder/ChartEditorModal";
 import KpiEditorModal from "@/components/visual-builder/KpiEditorModal";
 
+// Local shapes matching the modals' "initial" and "onSave" payloads
+type KpiInitial = {
+  titleText: string;
+  titleFontFamily?: string;
+  titleFontSize?: number;
+  titleFontWeight?: string | number;
+  titleColor?: string;
+  valueText: string;
+  valueFontFamily?: string;
+  valueFontSize?: number;
+  valueFontWeight?: string | number;
+  valueColor?: string;
+  backgroundColor?: string;
+  opacity?: number;
+  borderColor?: string;
+  borderWidth?: number;
+  borderStyle?: 'solid' | 'dashed' | 'dotted' | '';
+  borderRadius?: number;
+};
+
+type ChartInitial = {
+  titleText: string;
+  titleFontFamily?: string;
+  titleFontSize?: number;
+  titleFontWeight?: string | number;
+  titleColor?: string;
+  backgroundColor?: string;
+  opacity?: number;
+  borderColor?: string;
+  borderWidth?: number;
+  borderStyle?: 'solid' | 'dashed' | 'dotted' | '';
+  borderRadius?: number;
+  // query and chartProps intentionally omitted in preview minimal mode
+};
+
 type LiquidPreviewCanvasProps = {
   code: string;
   globalFilters?: GlobalFilters;
@@ -60,11 +95,11 @@ export default function LiquidPreviewCanvas({ code, globalFilters, defaults, cla
   const sectionEditingIdRef = useRef<string | null>(null);
 
   const [kpiModalOpen, setKpiModalOpen] = useState(false);
-  const [kpiInitial, setKpiInitial] = useState<import("@/components/visual-builder/KpiEditorModal").KpiEditorInitial>({ titleText: '', valueText: '' });
+  const [kpiInitial, setKpiInitial] = useState<KpiInitial>({ titleText: '', valueText: '' });
   const kpiEditingArticleIdRef = useRef<string | null>(null);
 
   const [chartModalOpen, setChartModalOpen] = useState(false);
-  const [chartInitial, setChartInitial] = useState<import("@/components/visual-builder/ChartEditorModal").ChartEditorInitial>({ titleText: '' });
+  const [chartInitial, setChartInitial] = useState<ChartInitial>({ titleText: '' });
   const chartEditingArticleIdRef = useRef<string | null>(null);
   const chartEditingChartIdRef = useRef<string | null>(null);
 
@@ -380,7 +415,7 @@ export default function LiquidPreviewCanvas({ code, globalFilters, defaults, cla
     } catch { return src; }
   };
 
-  const rewriteKpi = (src: string, id: string, out: import("@/components/visual-builder/KpiEditorModal").KpiEditorOutput) => {
+  const rewriteKpi = (src: string, id: string, out: KpiInitial) => {
     try {
       const escId = id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       const re = new RegExp(`<article\\b([^>]*?\\bid=\\\"${escId}\\\"[^>]*)>([\\s\\S]*?)<\\/article>`, 'i');
@@ -408,7 +443,7 @@ export default function LiquidPreviewCanvas({ code, globalFilters, defaults, cla
     } catch { return src; }
   };
 
-  const rewriteChartBasic = (src: string, articleId: string, out: import("@/components/visual-builder/ChartEditorModal").ChartEditorOutput) => {
+  const rewriteChartBasic = (src: string, articleId: string, out: ChartInitial) => {
     try {
       const escId = articleId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       const re = new RegExp(`<article\\b([^>]*?\\bid=\\\"${escId}\\\"[^>]*)>([\\s\\S]*?)<\\/article>`, 'i');
