@@ -13,15 +13,16 @@ import MonacoEditor from "@/components/visual-builder/MonacoEditor";
 import LiquidPreviewCanvas from "@/components/visual-builder/LiquidPreviewCanvas";
 import CommandConsole from "@/components/visual-builder/CommandConsole";
 import type { GlobalFilters } from "@/stores/visualBuilderStore";
-import { CheckIcon, CopyIcon, XIcon, Eye, Code2, Terminal } from "lucide-react";
+import { CheckIcon, CopyIcon, XIcon, Eye, Code2, Terminal, Maximize2 } from "lucide-react";
 import CodeThemeMenu from "@/components/visual-builder/CodeThemeMenu";
 
 type SimpleArtifactPanelProps = {
   onClose?: () => void;
   dashboardId?: string;
+  onExpand?: () => void;
 };
 
-export default function SimpleArtifactPanel({ onClose, dashboardId }: SimpleArtifactPanelProps) {
+export default function SimpleArtifactPanel({ onClose, dashboardId, onExpand }: SimpleArtifactPanelProps) {
   const [tab, setTab] = useState<'code' | 'preview' | 'console'>('code');
   const [code, setCode] = useState<string>(() => initialArtifactLiquid);
   const [copied, setCopied] = useState(false);
@@ -89,6 +90,18 @@ export default function SimpleArtifactPanel({ onClose, dashboardId }: SimpleArti
             {copied ? <CheckIcon className="w-4 h-4 mr-1" /> : <CopyIcon className="w-4 h-4 mr-1" />}
             Copiar
           </Button>
+          {onExpand && (
+            <Button
+              type="button"
+              onClick={() => onExpand?.()}
+              className="h-8 px-3"
+              variant="outline"
+              title="Tela Cheia"
+            >
+              <Maximize2 className="w-4 h-4 mr-1" />
+              Tela Cheia
+            </Button>
+          )}
           <a href={dashboardHref} className="inline-flex">
             <Button type="button" className="h-8 px-3" variant="outline">
               Ver Dashboard

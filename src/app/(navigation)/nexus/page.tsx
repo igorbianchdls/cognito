@@ -46,7 +46,7 @@ export default function Page() {
   const [pendingAnalysisData, setPendingAnalysisData] = useState<string | null>(null);
 
   // State para controlar o modo de visualização
-  const [viewMode, setViewMode] = useState<'chat' | 'split' | 'dashboard'>('chat');
+  const [viewMode, setViewMode] = useState<'chat' | 'split' | 'dashboard' | 'artifact'>('chat');
 
   // Snapshot do agente no momento do envio para anotar mensagens de streaming
   const streamAgentRef = useRef<string>(activeAgentOrWorkflow);
@@ -391,7 +391,7 @@ export default function Page() {
           <Panel defaultSize={67} minSize={40}>
             <div className="h-full">
               <Suspense fallback={<div className="h-full" />}> 
-                <ArtifactPanelWithParams onClose={() => setViewMode('chat')} />
+                <ArtifactPanelWithParams onClose={() => setViewMode('chat')} onExpand={() => setViewMode('artifact')} />
               </Suspense>
             </div>
           </Panel>
@@ -401,12 +401,20 @@ export default function Page() {
       {viewMode === 'dashboard' && (
         <DashboardChatPanel />
       )}
+
+      {viewMode === 'artifact' && (
+        <div className="h-full">
+          <Suspense fallback={<div className="h-full" />}> 
+            <ArtifactPanelWithParams onClose={() => setViewMode('split')} />
+          </Suspense>
+        </div>
+      )}
     </NexusShell>
   );
 }
 
-function ArtifactPanelWithParams({ onClose }: { onClose: () => void }) {
+function ArtifactPanelWithParams({ onClose, onExpand }: { onClose: () => void; onExpand?: () => void }) {
   const searchParams = useSearchParams();
   const dashboardId = searchParams.get('dashboardId') || undefined;
-  return <SimpleArtifactPanel onClose={onClose} dashboardId={dashboardId} />;
+  return <SimpleArtifactPanel onClose={onClose} onExpand={onExpand} dashboardId={dashboardId} />;
 }
