@@ -4,9 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useStore } from '@nanostores/react'
 import type { ColumnDef } from '@tanstack/react-table'
 
-import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar' 
-import { SidebarShadcn } from '@/components/navigation/SidebarShadcn' 
-import NexusPageContainer from '@/components/navigation/nexus/NexusPageContainer'
+import NexusShell from '@/components/navigation/nexus/NexusShell'
 
 import PageHeader from '@/components/modulos/PageHeader'
 import TabsNav from '@/components/modulos/TabsNav'
@@ -279,20 +277,14 @@ export default function ModulosRecursosHumanosPage() {
   }, [tabs.options])
 
   return (
-    <SidebarProvider>
-      <SidebarShadcn borderless headerBorderless />
-      <SidebarInset className="h-screen overflow-hidden">
-        <div className="flex h-full overflow-hidden bg-gray-100">
-          <div className="flex flex-col h-full w-full">
-            
-            <div className="flex-1 min-h-0 pl-2 pr-2 pt-2 pb-2" data-page="nexus">
-              <NexusPageContainer className="h-full">
-                <div style={{ background: 'white' }}>
-                  <div style={{ marginBottom: layout.mbTitle }}>
-                    <PageHeader
-                      title={titulo.title}
-                      subtitle={titulo.subtitle}
-                      titleFontFamily={fontVar(titulo.titleFontFamily)}
+    <>
+      <NexusShell>
+        <div style={{ background: 'white' }}>
+          <div style={{ marginBottom: layout.mbTitle }}>
+            <PageHeader
+              title={titulo.title}
+              subtitle={titulo.subtitle}
+              titleFontFamily={fontVar(titulo.titleFontFamily)}
                       titleFontSize={titulo.titleFontSize}
                       titleFontWeight={titulo.titleFontWeight}
                       titleColor={titulo.titleColor}
@@ -320,10 +312,10 @@ export default function ModulosRecursosHumanosPage() {
                       className="px-0 md:px-0"
                     />
                   </div>
-                </div>
-                <div style={{ paddingTop: (layout.contentTopGap || 0) + (layout.mbTabs || 0) }}>
-                  <div className="px-4 md:px-6" style={{ marginBottom: 8 }}>
-                    <DataToolbar
+        </div>
+        <div style={{ paddingTop: (layout.contentTopGap || 0) + (layout.mbTabs || 0) }}>
+          <div className="px-4 md:px-6" style={{ marginBottom: 8 }}>
+            <DataToolbar
                       from={(!(tabs.selected === 'departamentos' || tabs.selected === 'cargos') ? total : data.length) === 0 ? 0 : (page - 1) * pageSize + 1}
                       to={(!(tabs.selected === 'departamentos' || tabs.selected === 'cargos') ? total : data.length) === 0 ? 0 : Math.min(page * pageSize, (!(tabs.selected === 'departamentos' || tabs.selected === 'cargos') ? total : data.length))}
                       total={!(tabs.selected === 'departamentos' || tabs.selected === 'cargos') ? total : data.length}
@@ -415,13 +407,9 @@ export default function ModulosRecursosHumanosPage() {
                         />
                       )}
                     </div>
-                  </div>
-                </div>
-              </NexusPageContainer>
-            </div>
           </div>
         </div>
-      </SidebarInset>
+      </NexusShell>
       <FuncionarioEditorSheet
         open={editorOpen}
         onOpenChange={setEditorOpen}
@@ -429,6 +417,6 @@ export default function ModulosRecursosHumanosPage() {
         funcionarioPrefill={funcionarioPrefill}
         onSaved={() => setReloadKey((k) => k + 1)}
       />
-    </SidebarProvider>
+    </>
   )
 }
