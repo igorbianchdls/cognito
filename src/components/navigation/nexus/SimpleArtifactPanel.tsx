@@ -4,16 +4,13 @@ import { useCallback, useMemo, useState } from "react";
 import {
   Artifact,
   ArtifactHeader,
-  ArtifactTitle,
-  ArtifactDescription,
   ArtifactActions,
   ArtifactAction,
   ArtifactContent,
 } from "@/components/ai-elements/artifact";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MonacoEditor from "@/components/visual-builder/MonacoEditor";
-import { CheckIcon, CopyIcon, XIcon } from "lucide-react";
+import { CheckIcon, CopyIcon, XIcon, Eye, Code2 } from "lucide-react";
 
 type SimpleArtifactPanelProps = {
   onClose?: () => void;
@@ -39,11 +36,49 @@ export default function SimpleArtifactPanel({ onClose }: SimpleArtifactPanelProp
   return (
     <Artifact className="h-full" hideTopBorder>
       <ArtifactHeader className="bg-white">
-        <div className="flex flex-col">
-          <ArtifactTitle>Artifact</ArtifactTitle>
-          <ArtifactDescription>Código e visualização</ArtifactDescription>
+        {/* Header Left: Toggle Preview/Code */}
+        <div className="flex items-center">
+          <div className="inline-flex rounded-xl bg-gray-100 p-1">
+            <button
+              type="button"
+              onClick={() => setTab('preview')}
+              className={`inline-flex items-center justify-center w-9 h-8 rounded-lg text-sm transition-colors ${
+                tab === 'preview' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+              }`}
+              aria-label="Preview"
+            >
+              <Eye className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setTab('code')}
+              className={`ml-1 inline-flex items-center justify-center w-9 h-8 rounded-lg text-sm transition-colors ${
+                tab === 'code' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+              }`}
+              aria-label="Código"
+            >
+              <Code2 className="w-4 h-4" />
+            </button>
+          </div>
         </div>
+        {/* Header Right: Copiar / Publicar / Fechar */}
         <ArtifactActions className="gap-2">
+          <Button
+            type="button"
+            onClick={handleCopy}
+            className="h-8 px-3 bg-white text-gray-900 border border-gray-300 hover:bg-gray-50"
+            variant="outline"
+          >
+            {copied ? <CheckIcon className="w-4 h-4 mr-1" /> : <CopyIcon className="w-4 h-4 mr-1" />}
+            Copiar
+          </Button>
+          <Button
+            type="button"
+            onClick={() => console.log('Publicar acionado')}
+            className="h-8 px-3 bg-black text-white hover:bg-black/90"
+          >
+            Publicar
+          </Button>
           <ArtifactAction
             tooltip="Fechar"
             label="Fechar"
@@ -53,54 +88,14 @@ export default function SimpleArtifactPanel({ onClose }: SimpleArtifactPanelProp
         </ArtifactActions>
       </ArtifactHeader>
       <ArtifactContent className="p-0">
-        <div className="h-full grid" style={{ gridTemplateColumns: 'minmax(0, 1fr) 240px' }}>
-          {/* Esquerda: Tabs Código/Preview */}
-          <div className="h-full min-h-0 border-r border-gray-200">
-            <div className="h-full flex flex-col">
-              <Tabs value={tab} onValueChange={(v) => setTab(v as 'code' | 'preview')} className="h-full flex flex-col">
-                <div className="px-4 pt-3">
-                  <TabsList variant="underline" className="mb-2">
-                    <TabsTrigger value="code">Código</TabsTrigger>
-                    <TabsTrigger value="preview">Preview</TabsTrigger>
-                  </TabsList>
-                </div>
-                <div className="flex-1 min-h-0">
-                  <TabsContent value="code" className="h-full mt-0">
-                    <div className="h-full">
-                      <MonacoEditor value={code} onChange={setCode} language="html" />
-                    </div>
-                  </TabsContent>
-                  <TabsContent value="preview" className="h-full mt-0">
-                    <div className="h-full overflow-auto p-4">
-                      <div className="border border-gray-200 rounded-md p-4 bg-white" dangerouslySetInnerHTML={preview} />
-                    </div>
-                  </TabsContent>
-                </div>
-              </Tabs>
+        <div className="h-full">
+          {tab === 'code' ? (
+            <MonacoEditor value={code} onChange={setCode} language="html" />
+          ) : (
+            <div className="h-full overflow-auto p-4">
+              <div className="border border-gray-200 rounded-md p-4 bg-white" dangerouslySetInnerHTML={preview} />
             </div>
-          </div>
-
-          {/* Direita: Ações adicionais (duplicadas no header se quiser reforçar acesso) */}
-          <div className="p-4 bg-gray-50">
-            <div className="sticky top-0 space-y-2">
-              <Button
-                type="button"
-                onClick={handleCopy}
-                className="w-full h-9 bg-white text-gray-900 border border-gray-300 hover:bg-gray-100"
-                variant="outline"
-              >
-                {copied ? <CheckIcon className="w-4 h-4 mr-1" /> : <CopyIcon className="w-4 h-4 mr-1" />}
-                Copiar
-              </Button>
-              <Button
-                type="button"
-                onClick={() => console.log('Publicar acionado')}
-                className="w-full h-9 bg-black text-white hover:bg-black/90"
-              >
-                Publicar
-              </Button>
-            </div>
-          </div>
+          )}
         </div>
       </ArtifactContent>
     </Artifact>
