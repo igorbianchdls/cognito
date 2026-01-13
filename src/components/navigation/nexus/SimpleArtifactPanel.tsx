@@ -12,9 +12,8 @@ import { Button } from "@/components/ui/button";
 import MonacoEditor from "@/components/visual-builder/MonacoEditor";
 import LiquidPreviewCanvas from "@/components/visual-builder/LiquidPreviewCanvas";
 import type { GlobalFilters } from "@/stores/visualBuilderStore";
-import { CheckIcon, CopyIcon, XIcon, Eye, Code2, Palette } from "lucide-react";
-import { PRESETS, applyPresetOnCode, detectPresetKey, type PresetKey } from "@/components/visual-builder/CodeThemePresets";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { CheckIcon, CopyIcon, XIcon, Eye, Code2 } from "lucide-react";
+import CodeDesignToolbar from "@/components/visual-builder/CodeDesignToolbar";
 
 type SimpleArtifactPanelProps = {
   onClose?: () => void;
@@ -24,7 +23,6 @@ export default function SimpleArtifactPanel({ onClose }: SimpleArtifactPanelProp
   const [tab, setTab] = useState<'code' | 'preview'>('code');
   const [code, setCode] = useState<string>(() => initialArtifactLiquid);
   const [copied, setCopied] = useState(false);
-  const currentPreset = useMemo(() => detectPresetKey(code), [code]);
 
   const handleCopy = useCallback(async () => {
     try {
@@ -66,23 +64,9 @@ export default function SimpleArtifactPanel({ onClose }: SimpleArtifactPanelProp
             </button>
           </div>
         </div>
-        {/* Header Right: Tema / Copiar / Publicar / Fechar */}
+        {/* Header Right: Toolbar / Copiar / Publicar / Fechar */}
         <ArtifactActions className="gap-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button type="button" className="h-8 px-3 bg-white text-gray-900 border border-gray-300 hover:bg-gray-50" variant="outline">
-                <Palette className="w-4 h-4 mr-1" />
-                {currentPreset === 'custom' ? 'Tema' : PRESETS.find(p => p.key === currentPreset)?.name || 'Tema'}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {PRESETS.map((p) => (
-                <DropdownMenuItem key={p.key} onClick={() => setCode(prev => applyPresetOnCode(prev, p.key as PresetKey))}>
-                  {p.name}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <CodeDesignToolbar code={code} onChange={setCode} />
           <Button
             type="button"
             onClick={handleCopy}
