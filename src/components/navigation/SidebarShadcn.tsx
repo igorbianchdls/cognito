@@ -35,6 +35,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from "@/components/ui/sidebar"
+import { SidebarTrigger } from "@/components/ui/sidebar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
 
@@ -172,7 +173,6 @@ function SidebarHeaderCompact({
             <Badge variant="secondary" className="text-xs px-2 py-0 h-5 rounded-md bg-gray-100 text-gray-700">
               {activeTeam.plan}
             </Badge>
-            <ChevronsUpDown className="w-4 h-4 text-gray-500" />
           </span>
         </button>
       </DropdownMenuTrigger>
@@ -231,11 +231,15 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
     >
       <SidebarHeader className={cn("h-16 bg-gray-50", headerBorderless ? undefined : "border-b") }>
         {headerVariant === 'compact' ? (
-          <div className="h-full flex items-center px-2">
+          <div className="h-full w-full flex items-center justify-between px-2">
             <SidebarHeaderCompact teams={dataWithActiveState.teams} />
+            <SidebarTrigger />
           </div>
         ) : (
-          <TeamSwitcher teams={dataWithActiveState.teams} />
+          <div className="h-full w-full flex items-center justify-between px-2">
+            <TeamSwitcher teams={dataWithActiveState.teams} />
+            <SidebarTrigger />
+          </div>
         )}
       </SidebarHeader>
       <SidebarContent>

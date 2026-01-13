@@ -350,7 +350,7 @@ export default function Page() {
   }, [activeAgentOrWorkflow]);
 
   return (
-    <NexusShell showSidebarTrigger>
+    <NexusShell>
       {viewMode === 'chat' && (
         <div className="mx-auto w-full max-w-5xl h-full">
           <ChatContainer
