@@ -377,10 +377,18 @@ export function applyPresetOnCode(code: string, key: PresetKey): string {
     const sm = open.match(styleRe);
     const so = parseInlineStyle(sm ? (sm[2] || sm[3] || '') : '');
     so['background-color'] = preset.header.backgroundColor;
-    if (preset.header.borderColor) so['border-color'] = preset.header.borderColor; else delete so['border-color'];
-    if (preset.header.borderWidth != null) so['border-width'] = `${preset.header.borderWidth}px`; else delete so['border-width'];
-    if (preset.header.borderStyle) so['border-style'] = preset.header.borderStyle; else delete so['border-style'];
-    if (preset.header.borderRadius != null) so['border-radius'] = `${preset.header.borderRadius}px`; else delete so['border-radius'];
+    // Header: enforce only bottom border and no radius
+    delete so['border'];
+    delete so['border-color'];
+    delete so['border-style'];
+    delete so['border-width'];
+    so['border-top'] = '0';
+    so['border-left'] = '0';
+    so['border-right'] = '0';
+    so['border-radius'] = '0';
+    if (preset.header.borderColor) so['border-bottom-color'] = preset.header.borderColor; else delete so['border-bottom-color'];
+    if (preset.header.borderWidth != null) so['border-bottom-width'] = `${preset.header.borderWidth}px`; else delete so['border-bottom-width'];
+    if (preset.header.borderStyle) so['border-bottom-style'] = preset.header.borderStyle; else delete so['border-bottom-style'];
     const newOpen = setHeaderOpenStyle(open, so);
     const newInner = setHeaderTextColors(inner, preset.header.titleColor, preset.header.subtitleColor);
     next = next.replace(whole, newOpen + newInner + `</header>`);
