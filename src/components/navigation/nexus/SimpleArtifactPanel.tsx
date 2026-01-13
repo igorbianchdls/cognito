@@ -109,7 +109,7 @@ export default function SimpleArtifactPanel({ onClose }: SimpleArtifactPanelProp
           )}
           {tab === 'preview' && (
             <div className="h-full overflow-auto">
-              <LiquidPreviewCanvas code={code} globalFilters={defaultFilters} className="w-full" />
+              <LiquidPreviewCanvas code={code} globalFilters={defaultFilters} className="w-full" interactive onChangeCode={setCode} />
             </div>
           )}
           {tab === 'console' && (
