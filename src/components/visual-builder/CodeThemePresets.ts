@@ -148,7 +148,10 @@ export type PresetKey =
   | 'minimal-cards'
   | 'azul-corporativo'
   | 'verde-suave'
-  | 'sepia';
+  | 'sepia'
+  | 'roxo-noturno'
+  | 'amarelo-solar'
+  | 'vermelho-elegante';
 type Preset = {
   key: PresetKey;
   name: string;
@@ -281,6 +284,84 @@ export const PRESETS: Preset[] = [
       marginBottom: 16,
       title: { color: '#3d2b1f', size: 16, weight: 600 },
       value: { color: '#3a2a1b', size: 28, weight: 700 },
+    }
+  },
+  {
+    key: 'roxo-noturno',
+    name: 'Roxo Noturno',
+    description: 'Escuro, elegante, com tons de roxo',
+    header: {
+      backgroundColor: '#4c1d95', // violet-900
+      borderColor: '#7c3aed',     // violet-600
+      borderWidth: 1,
+      borderStyle: 'solid',
+      borderRadius: 12,
+      titleColor: '#f5f3ff',      // violet-50
+      subtitleColor: '#ddd6fe',   // violet-200
+    },
+    dashboard: { backgroundColor: '#0b0f14' },
+    articles: {
+      backgroundColor: '#1e1b4b', // indigo-950
+      borderColor: '#6d28d9',     // violet-700
+      borderWidth: 1,
+      borderStyle: 'solid',
+      borderRadius: 12,
+      padding: { top: 12, right: 12, bottom: 12, left: 12 },
+      marginBottom: 16,
+      title: { color: '#ede9fe', size: 16, weight: 600 },
+      value: { color: '#faf5ff', size: 28, weight: 700 },
+    }
+  },
+  {
+    key: 'amarelo-solar',
+    name: 'Amarelo Solar',
+    description: 'Luminoso e vibrante com amarelo',
+    header: {
+      backgroundColor: '#fde68a', // yellow-200
+      borderColor: '#fcd34d',     // yellow-300
+      borderWidth: 1,
+      borderStyle: 'solid',
+      borderRadius: 12,
+      titleColor: '#78350f',      // amber-900
+      subtitleColor: '#b45309',   // orange-700
+    },
+    dashboard: { backgroundColor: '#fffbeb' }, // amber-50
+    articles: {
+      backgroundColor: '#ffffff',
+      borderColor: '#fcd34d',
+      borderWidth: 1,
+      borderStyle: 'solid',
+      borderRadius: 12,
+      padding: { top: 12, right: 12, bottom: 12, left: 12 },
+      marginBottom: 16,
+      title: { color: '#92400e', size: 16, weight: 600 }, // amber-800
+      value: { color: '#b45309', size: 28, weight: 700 }, // orange-700
+    }
+  },
+  {
+    key: 'vermelho-elegante',
+    name: 'Vermelho Elegante',
+    description: 'Sutil com acentos em vermelho',
+    header: {
+      backgroundColor: '#fee2e2', // red-100
+      borderColor: '#fecaca',     // red-200
+      borderWidth: 1,
+      borderStyle: 'solid',
+      borderRadius: 12,
+      titleColor: '#7f1d1d',      // red-900
+      subtitleColor: '#991b1b',   // red-800
+    },
+    dashboard: { backgroundColor: '#fef2f2' }, // red-50
+    articles: {
+      backgroundColor: '#ffffff',
+      borderColor: '#fecaca',
+      borderWidth: 1,
+      borderStyle: 'solid',
+      borderRadius: 12,
+      padding: { top: 12, right: 12, bottom: 12, left: 12 },
+      marginBottom: 16,
+      title: { color: '#7f1d1d', size: 16, weight: 600 },
+      value: { color: '#991b1b', size: 28, weight: 700 },
     }
   }
 ];
