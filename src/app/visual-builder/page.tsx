@@ -2633,7 +2633,7 @@ export default function VisualBuilderPage() {
                 <LiquidPreviewCanvas
                   code={code}
                   globalFilters={visualBuilderState.globalFilters}
-                  defaults={$vbNivoTheme}
+                  defaults={vbNivo}
                   className="w-full"
                 />
               ) : (
