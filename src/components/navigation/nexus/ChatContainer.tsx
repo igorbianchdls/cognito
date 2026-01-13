@@ -15,6 +15,7 @@ interface ChatContainerProps {
   attachedFiles: AttachedFile[];
   onFilesChange: (files: AttachedFile[]) => void;
   onInputFocus?: () => void;
+  onOpenDashboard?: () => void;
 }
 
 export default function ChatContainer({
@@ -27,7 +28,8 @@ export default function ChatContainer({
   onAgentChange,
   attachedFiles,
   onFilesChange,
-  onInputFocus
+  onInputFocus,
+  onOpenDashboard
 }: ChatContainerProps) {
   console.log('📦 [ChatContainer] Props recebidas:', { 
     messagesCount: messages.length 
@@ -55,6 +57,7 @@ export default function ChatContainer({
             attachedFiles={attachedFiles}
             onFilesChange={onFilesChange}
             onInputFocus={onInputFocus}
+            onOpenDashboard={onOpenDashboard}
           />
         </div>
       </div>
@@ -78,6 +81,7 @@ export default function ChatContainer({
           attachedFiles={attachedFiles}
           onFilesChange={onFilesChange}
           onInputFocus={onInputFocus}
+          onOpenDashboard={onOpenDashboard}
         />
       </div>
     </div>

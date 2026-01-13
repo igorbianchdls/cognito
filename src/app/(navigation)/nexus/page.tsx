@@ -363,6 +363,7 @@ export default function Page() {
             attachedFiles={attachedFiles}
             onFilesChange={setAttachedFiles}
             onInputFocus={() => setViewMode('split')}
+            onOpenDashboard={() => setViewMode('dashboard')}
           />
         </div>
       )}
@@ -382,6 +383,7 @@ export default function Page() {
                 attachedFiles={attachedFiles}
                 onFilesChange={setAttachedFiles}
                 onInputFocus={() => setViewMode('split')}
+                onOpenDashboard={() => setViewMode('dashboard')}
               />
             </div>
           </Panel>
