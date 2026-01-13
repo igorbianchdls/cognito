@@ -530,6 +530,7 @@ export default function ModulosVendasPage() {
               )}
             </div>
           </div>
+        </div>
     </NexusShell>
   )
 }
