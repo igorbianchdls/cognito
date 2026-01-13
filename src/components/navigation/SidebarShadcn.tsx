@@ -163,11 +163,11 @@ function SidebarHeaderCompact({
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className="flex items-center h-10 gap-2 px-2 rounded-md text-gray-800 hover:bg-gray-50 focus-visible:outline-none"
+          className="flex items-center h-10 gap-2 px-2 rounded-md text-gray-800 hover:bg-gray-50 focus-visible:outline-none min-w-0 group-data-[collapsible=icon]:justify-center"
         >
           <Logo className="w-4 h-4 text-gray-900" />
-          <span className="text-gray-300">/</span>
-          <span className="inline-flex items-center gap-2">
+          <span className="text-gray-300 group-data-[collapsible=icon]:hidden">/</span>
+          <span className="inline-flex items-center gap-2 group-data-[collapsible=icon]:hidden">
             <span className="w-5 h-5 rounded-full bg-gradient-to-tr from-fuchsia-500 via-pink-500 to-purple-500" />
             <span className="text-sm font-medium leading-none">{activeTeam.name}</span>
             <Badge variant="secondary" className="text-xs px-2 py-0 h-5 rounded-md bg-gray-100 text-gray-700">
@@ -237,7 +237,9 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
           </div>
         ) : (
           <div className="h-full w-full flex items-center justify-between px-2">
-            <TeamSwitcher teams={dataWithActiveState.teams} />
+            <div className="group-data-[collapsible=icon]:hidden">
+              <TeamSwitcher teams={dataWithActiveState.teams} />
+            </div>
             <SidebarTrigger />
           </div>
         )}
