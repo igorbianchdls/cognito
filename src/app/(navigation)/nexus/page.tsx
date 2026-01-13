@@ -5,6 +5,7 @@ import { DefaultChatTransport } from 'ai';
 import { useState, FormEvent, useEffect, useRef } from 'react';
 import { useStore } from '@nanostores/react';
 import { SidebarTrigger } from '@/components/ui/sidebar';
+import { useSearchParams } from 'next/navigation';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -32,6 +33,8 @@ import { currentWorkflow } from '@/stores/nexus/workflowStore';
 import type { AttachedFile } from '@/components/navigation/nexus/FileAttachmentPreview';
 
 export default function Page() {
+  const searchParams = useSearchParams();
+  const dashboardId = searchParams.get('dashboardId') || undefined;
   const selectedAgent = useStore(currentAgent);
   const selectedWorkflow = useStore(currentWorkflow);
 
@@ -389,7 +392,7 @@ export default function Page() {
           </Panel>
           <Panel defaultSize={67} minSize={40}>
             <div className="h-full">
-              <SimpleArtifactPanel onClose={() => setViewMode('chat')} />
+              <SimpleArtifactPanel onClose={() => setViewMode('chat')} dashboardId={dashboardId} />
             </div>
           </Panel>
         </PanelGroup>

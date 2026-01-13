@@ -18,9 +18,10 @@ import CodeThemeMenu from "@/components/visual-builder/CodeThemeMenu";
 
 type SimpleArtifactPanelProps = {
   onClose?: () => void;
+  dashboardId?: string;
 };
 
-export default function SimpleArtifactPanel({ onClose }: SimpleArtifactPanelProps) {
+export default function SimpleArtifactPanel({ onClose, dashboardId }: SimpleArtifactPanelProps) {
   const [tab, setTab] = useState<'code' | 'preview' | 'console'>('code');
   const [code, setCode] = useState<string>(() => initialArtifactLiquid);
   const [copied, setCopied] = useState(false);
@@ -36,6 +37,7 @@ export default function SimpleArtifactPanel({ onClose }: SimpleArtifactPanelProp
   }, [code]);
 
   const defaultFilters: GlobalFilters = useMemo(() => ({ dateRange: { type: 'last_30_days' } }), []);
+  const dashboardHref = useMemo(() => (dashboardId ? `/dashboards/${dashboardId}/view` : '/dashboards'), [dashboardId]);
 
   return (
     <Artifact className="h-full" hideTopBorder>
@@ -87,6 +89,11 @@ export default function SimpleArtifactPanel({ onClose }: SimpleArtifactPanelProp
             {copied ? <CheckIcon className="w-4 h-4 mr-1" /> : <CopyIcon className="w-4 h-4 mr-1" />}
             Copiar
           </Button>
+          <a href={dashboardHref} className="inline-flex">
+            <Button type="button" className="h-8 px-3" variant="outline">
+              Ver Dashboard
+            </Button>
+          </a>
           <Button
             type="button"
             onClick={() => console.log('Publicar acionado')}
