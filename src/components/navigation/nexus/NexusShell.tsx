@@ -29,8 +29,8 @@ export default function NexusShell({
       <SidebarInset className="h-screen overflow-hidden">
         <div className="flex h-full overflow-hidden" style={{ backgroundColor: bg }}>
           <div className="flex flex-col h-full w-full">
-            <div className={cn("flex-1 min-h-0 pl-2 pr-2 pt-0 pb-2", contentClassName)} data-page="nexus">
-              <NexusPageContainer className={cn("h-full mt-2", className)} style={style} showSidebarTrigger={showSidebarTrigger}>
+            <div className={cn("flex-1 min-h-0 pl-2 pr-2 pt-2 pb-2", contentClassName)} data-page="nexus">
+              <NexusPageContainer className={cn("h-full", className)} style={style} showSidebarTrigger={showSidebarTrigger}>
                 {children}
               </NexusPageContainer>
             </div>
