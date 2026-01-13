@@ -4,9 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useStore } from '@nanostores/react'
 import type { ColumnDef } from '@tanstack/react-table'
 
-import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
-import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
-import NexusPageContainer from '@/components/navigation/nexus/NexusPageContainer'
+import NexusShell from '@/components/navigation/nexus/NexusShell'
 
 import PageHeader from '@/components/modulos/PageHeader'
 import TabsNav from '@/components/modulos/TabsNav'
@@ -340,15 +338,8 @@ export default function ModulosCrmPage() {
   }, [tabs.options])
 
   return (
-    <SidebarProvider>
-      <SidebarShadcn borderless headerBorderless />
-      <SidebarInset className="h-screen overflow-hidden">
-        <div className="flex h-full overflow-hidden" style={{ backgroundColor: '#fdfdfd' }}>
-          <div className="flex flex-col h-full w-full">
-            
-            <div className="flex-1 min-h-0 pl-2 pr-2 pt-2 pb-2" data-page="nexus">
-              <NexusPageContainer className="h-full">
-                <div>
+    <NexusShell outerBg="#fdfdfd">
+      <div>
           <div style={{ marginBottom: layout.mbTitle }}>
             <PageHeader
               title={titulo.title}
@@ -469,12 +460,7 @@ export default function ModulosCrmPage() {
             </div>
           </div>
         </div>
-                </div>
-              </NexusPageContainer>
-            </div>
-          </div>
-        </div>
-      </SidebarInset>
-    </SidebarProvider>
+      </div>
+    </NexusShell>
   )
 }
