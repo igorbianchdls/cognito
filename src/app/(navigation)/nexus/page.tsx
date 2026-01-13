@@ -2,7 +2,7 @@
 
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
-import { useState, FormEvent, useEffect, useRef } from 'react';
+import { useState, FormEvent, useEffect, useRef, Suspense } from 'react';
 import { useStore } from '@nanostores/react';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useSearchParams } from 'next/navigation';
@@ -33,8 +33,6 @@ import { currentWorkflow } from '@/stores/nexus/workflowStore';
 import type { AttachedFile } from '@/components/navigation/nexus/FileAttachmentPreview';
 
 export default function Page() {
-  const searchParams = useSearchParams();
-  const dashboardId = searchParams.get('dashboardId') || undefined;
   const selectedAgent = useStore(currentAgent);
   const selectedWorkflow = useStore(currentWorkflow);
 
@@ -392,7 +390,9 @@ export default function Page() {
           </Panel>
           <Panel defaultSize={67} minSize={40}>
             <div className="h-full">
-              <SimpleArtifactPanel onClose={() => setViewMode('chat')} dashboardId={dashboardId} />
+              <Suspense fallback={<div className="h-full" />}> 
+                <ArtifactPanelWithParams onClose={() => setViewMode('chat')} />
+              </Suspense>
             </div>
           </Panel>
         </PanelGroup>
@@ -403,4 +403,10 @@ export default function Page() {
       )}
     </NexusShell>
   );
+}
+
+function ArtifactPanelWithParams({ onClose }: { onClose: () => void }) {
+  const searchParams = useSearchParams();
+  const dashboardId = searchParams.get('dashboardId') || undefined;
+  return <SimpleArtifactPanel onClose={onClose} dashboardId={dashboardId} />;
 }
