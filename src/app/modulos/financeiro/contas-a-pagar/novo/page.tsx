@@ -172,7 +172,7 @@ export default function NovaDespesaPage() {
       <SidebarInset className="h-screen overflow-hidden">
         <div className="flex h-full overflow-hidden" style={{ backgroundColor: '#fdfdfd' }}>
           <div className="flex flex-col h-full w-full">
-            <div className="flex-1 min-h-0 pl-2 pr-2 pt-0 pb-2" data-page="nexus">
+            <div className="flex-1 min-h-0 pl-2 pr-2 pt-2 pb-2" data-page="nexus">
               <NexusPageContainer className="h-full">
                 <div className="mb-3">
                   <PageHeader title="Nova Despesa" subtitle="Preencha as informações para criar a conta a pagar" />

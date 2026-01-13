@@ -14,9 +14,7 @@ import CadastroJuridicoDocumentoAnexoSheet from '@/components/modulos/documentos
 import CadastroRHDocumentoAnexoSheet from '@/components/modulos/documentos/CadastroRHDocumentoAnexoSheet'
 import CadastroContratosDocumentoAnexoSheet from '@/components/modulos/documentos/CadastroContratosDocumentoAnexoSheet'
 import DataTable, { type TableData } from '@/components/widgets/Table'
-import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
-import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
-import NexusPageContainer from '@/components/navigation/nexus/NexusPageContainer'
+import NexusShell from '@/components/navigation/nexus/NexusShell'
 import { List } from 'lucide-react'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/stores/modulos/moduleUiStore'
 
@@ -357,15 +355,8 @@ export default function ModulosDocumentosPage() {
   }, [tabs.selected, dateRange?.from, dateRange?.to, refreshKey])
 
   return (
-    <SidebarProvider>
-      <SidebarShadcn borderless headerBorderless />
-      <SidebarInset className="h-screen overflow-hidden">
-        <div className="flex h-full overflow-hidden" style={{ backgroundColor: '#fdfdfd' }}>
-          <div className="flex flex-col h-full w-full">
-            
-            <div className="flex-1 min-h-0 pl-2 pr-2 pt-0 pb-2" data-page="nexus">
-              <NexusPageContainer className="h-full">
-                <div style={{ marginBottom: layout.mbTitle }}>
+    <NexusShell outerBg="#fdfdfd">
+      <div style={{ marginBottom: layout.mbTitle }}>
                   <PageHeader
                     title={titulo.title}
                     subtitle={titulo.subtitle}
@@ -377,8 +368,8 @@ export default function ModulosDocumentosPage() {
                     subtitleFontFamily={titulo.subtitleFontFamily}
                     subtitleLetterSpacing={titulo.subtitleLetterSpacing}
                   />
-                </div>
-                <div style={{ marginBottom: 0 }}>
+      </div>
+      <div style={{ marginBottom: 0 }}>
                   <TabsNav
                     options={tabOptions}
                     value={tabs.selected}
@@ -395,9 +386,9 @@ export default function ModulosDocumentosPage() {
                     activeFontWeight={tabs.activeFontWeight}
                     activeBorderColor={tabs.activeBorderColor}
                   />
-                </div>
-                <div style={{ paddingTop: (layout.contentTopGap || 0) + (layout.mbTabs || 0) }}>
-                  <div className="px-4 md:px-6" style={{ marginBottom: 8 }}>
+      </div>
+      <div style={{ paddingTop: (layout.contentTopGap || 0) + (layout.mbTabs || 0) }}>
+        <div className="px-4 md:px-6" style={{ marginBottom: 8 }}>
                     <DataToolbar
                       from={0}
                       to={rows.length}
@@ -454,9 +445,9 @@ export default function ModulosDocumentosPage() {
                         ) : undefined
                       }
                     />
-                  </div>
-                  <div className="flex-1 min-h-0 overflow-auto" style={{ marginBottom: layout.mbTable }}>
-                    <div className="border-y bg-background" style={{ borderColor: tabelaUI.borderColor }}>
+        </div>
+        <div className="flex-1 min-h-0 overflow-auto" style={{ marginBottom: layout.mbTable }}>
+          <div className="border-y bg-background" style={{ borderColor: tabelaUI.borderColor }}>
                       <DataTable
                         columns={columns}
                         data={rows}
@@ -485,8 +476,8 @@ export default function ModulosDocumentosPage() {
                         defaultSortColumn={tabelaUI.defaultSortColumn}
                         defaultSortDirection={tabelaUI.defaultSortDirection}
                       />
-                    </div>
-                  </div>
+          </div>
+        </div>
                   {anexosOpenFor && (
                     <div className="fixed inset-0 bg-black/30 flex justify-end z-50" onClick={() => setAnexosOpenFor(null)}>
                       <div className="w-full max-w-md bg-white h-full shadow-xl" onClick={(e) => e.stopPropagation()}>
@@ -531,13 +522,8 @@ export default function ModulosDocumentosPage() {
                       </div>
                     </div>
                   )}
-                </div>
-              </NexusPageContainer>
-            </div>
-          </div>
-        </div>
-      </SidebarInset>
-    </SidebarProvider>
+      </div>
+    </NexusShell>
   )
 }
  

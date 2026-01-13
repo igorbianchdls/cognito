@@ -15,7 +15,7 @@ export default function NovaCotacaoPage() {
         <div className="flex h-full overflow-hidden" style={{ backgroundColor: '#fdfdfd' }}>
           <div className="flex flex-col h-full w-full">
             
-            <div className="flex-1 min-h-0 pl-2 pr-2 pt-0 pb-2 overflow-auto" data-page="nexus">
+            <div className="flex-1 min-h-0 pl-2 pr-2 pt-2 pb-2 overflow-auto" data-page="nexus">
               <NexusPageContainer className="h-full" style={{ overflow: 'auto' }}>
                 <div className="mb-3">
                   <PageHeader title="Nova Cotação" subtitle="Preencha as informações para cadastrar a cotação" />
