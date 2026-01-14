@@ -427,6 +427,13 @@ export default function CodeThemeMenu({ code, onChange }: Props) {
   const borderSelected = useMemo<BorderPresetKey | 'custom'>(() => {
     const bw = articlesAggregate.borderWidth ?? 0;
     const br = articlesAggregate.borderRadius ?? 0;
+    const bs = articlesAggregate.borderStyle;
+    const bbw = articlesAggregate.borderBottomWidth ?? 0;
+    const shadow = articlesAggregate.shadow ?? false;
+    if (bbw > 0 && bw === 0) return 'linha-inferior';
+    if (bs === 'dashed') return 'suave-tracejada';
+    if (bs === 'dotted') return 'pontilhada-minimal';
+    if (bw === 0 && shadow) return 'cartao-elevado';
     if (bw === 0) return 'sem-borda';
     if (br > 0) return 'suave';
     return 'acentuada';
@@ -543,11 +550,35 @@ export default function CodeThemeMenu({ code, onChange }: Props) {
                   const style = BorderManager.getStyle(b.key);
                   const next = rewriteAllArticles(code, (open, inner) => {
                     const newOpen = setArticleOpenStyle(open, (so) => {
-                      so['border-color'] = style.color;
-                      so['border-width'] = `${style.width}px`;
-                      so['border-style'] = style.width > 0 ? 'solid' : 'none';
-                      so['border-radius'] = `${style.radius}px`;
+                      // Clear all border sides first
+                      delete so['border'];
+                      delete so['border-color'];
+                      delete so['border-width'];
+                      delete so['border-style'];
+                      delete so['border-top']; delete so['border-right']; delete so['border-left']; delete so['border-bottom'];
+                      delete so['border-top-color']; delete so['border-top-width']; delete so['border-top-style'];
+                      delete so['border-right-color']; delete so['border-right-width']; delete so['border-right-style'];
+                      delete so['border-left-color']; delete so['border-left-width']; delete so['border-left-style'];
+                      delete so['border-bottom-color']; delete so['border-bottom-width']; delete so['border-bottom-style'];
+
+                      if (style.sides === 'bottom') {
+                        // Only bottom border
+                        so['border-bottom-color'] = style.color;
+                        so['border-bottom-width'] = `${style.width}px`;
+                        so['border-bottom-style'] = style.width > 0 ? (style.borderStyle || 'solid') : 'none';
+                        so['border-radius'] = `${style.radius}px`;
+                      } else {
+                        // All sides
+                        so['border-color'] = style.color;
+                        so['border-width'] = `${style.width}px`;
+                        so['border-style'] = style.width > 0 ? (style.borderStyle || 'solid') : 'none';
+                        so['border-radius'] = `${style.radius}px`;
+                      }
+
                       if (style.shadow === false) so['box-shadow'] = 'none';
+                      if (style.shadow === true && style.width === 0) {
+                        so['box-shadow'] = '0 1px 2px rgba(0,0,0,0.06), 0 1.5px 4px rgba(0,0,0,0.08)';
+                      }
                     });
                     return { open: newOpen, inner };
                   });
