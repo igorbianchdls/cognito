@@ -24,6 +24,7 @@ export interface KpiEditorModalProps {
     borderWidth?: number;
     borderStyle?: 'solid' | 'dashed' | 'dotted' | '';
     borderRadius?: number;
+    widthFr?: number;
   };
   onClose: () => void;
   onSave: (out: {
@@ -43,6 +44,7 @@ export interface KpiEditorModalProps {
     borderWidth?: number;
     borderStyle?: 'solid' | 'dashed' | 'dotted' | '';
     borderRadius?: number;
+    widthFr?: number;
   }) => void;
 }
 
@@ -66,6 +68,7 @@ export default function KpiEditorModal({ isOpen, initial, onClose, onSave }: Kpi
   const [borderWidth, setBorderWidth] = useState<number | undefined>(initial.borderWidth);
   const [borderStyle, setBorderStyle] = useState<'solid'|'dashed'|'dotted'|''>(initial.borderStyle || '');
   const [borderRadius, setBorderRadius] = useState<number | undefined>(initial.borderRadius);
+  const [widthFr, setWidthFr] = useState<number | undefined>(initial.widthFr ?? 1);
 
   useEffect(() => { setMounted(true); return () => setMounted(false); }, []);
   useEffect(() => {
@@ -86,6 +89,7 @@ export default function KpiEditorModal({ isOpen, initial, onClose, onSave }: Kpi
       setBorderWidth(initial.borderWidth);
       setBorderStyle(initial.borderStyle || '');
       setBorderRadius(initial.borderRadius);
+      setWidthFr(initial.widthFr ?? 1);
     }
   }, [isOpen, initial]);
 
@@ -137,8 +141,20 @@ export default function KpiEditorModal({ isOpen, initial, onClose, onSave }: Kpi
         </div>
 
         <div className="space-y-4 max-h-[70vh] overflow-auto pr-1">
-          <div>
-            <h4 className="text-sm font-semibold text-gray-900 mb-2">Título</h4>
+        <div>
+          <h4 className="text-sm font-semibold text-gray-900 mb-2">Largura (fração)</h4>
+          <div className="grid grid-cols-4 gap-2 items-center">
+            <input type="number" step={0.5} min={0.25} className="col-span-2 px-2 py-2 bg-gray-100 border-0 rounded-md" value={widthFr ?? 1} onChange={e=>setWidthFr(e.target.value===''?1:parseFloat(e.target.value))} />
+            <div className="col-span-2 flex items-center gap-2 text-xs">
+              {[0.5,1,1.5,2,3].map(v => (
+                <button key={v} type="button" className={`px-2 py-1 rounded bg-gray-100 ${widthFr===v?'ring-1 ring-blue-500':''}`} onClick={()=>setWidthFr(v)}>{v}</button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <h4 className="text-sm font-semibold text-gray-900 mb-2">Título</h4>
             <input className="w-full px-3 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2" value={titleText} onChange={e=>setTitleText(e.target.value)} placeholder="Título" />
             <div className="grid grid-cols-3 gap-2">
               <select className="px-2 py-2 bg-gray-100 border-0 rounded-md" value={titleFontFamily} onChange={e=>setTitleFontFamily(e.target.value)}>
@@ -200,7 +216,8 @@ export default function KpiEditorModal({ isOpen, initial, onClose, onSave }: Kpi
             borderColor,
             borderWidth,
             borderStyle,
-            borderRadius
+            borderRadius,
+            widthFr
           })} className="px-4 py-2 rounded-md bg-blue-600 text-white">Salvar</button>
         </div>
       </div>

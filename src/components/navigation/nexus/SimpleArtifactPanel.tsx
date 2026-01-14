@@ -155,19 +155,19 @@ const initialArtifactLiquid = `
 
     <!-- KPIs: Linha 1 (4 itens) -->
     <section id="kpis-1" class="row kpis" data-role="section" style="display:flex; flex-direction:row; flex-wrap:wrap; justify-content:flex-start; align-items:stretch; gap:12px; margin-top:12px; padding:16px;">
-      <article id="kpi_receita_total" class="card" data-role="kpi" style="--fr:1; flex: var(--fr, 1) 1 220px; min-width:0; background-color:#ffffff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px;">
+      <article id="kpi_receita_total" class="card" data-role="kpi" style="--fr:3; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#ffffff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px;">
         <p style="margin:0 0 6px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Receita Total</p>
         <div class="kpi-value" style="font-family:Inter, system-ui, sans-serif; font-size:28px; font-weight:700; letter-spacing:-0.02em; color:#111827;">R$ 1.234.567</div>
       </article>
-      <article id="kpi_pedidos" class="card" data-role="kpi" style="--fr:1; flex: var(--fr, 1) 1 220px; min-width:0; background-color:#ffffff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px;">
+      <article id="kpi_pedidos" class="card" data-role="kpi" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#ffffff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px;">
         <p style="margin:0 0 6px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Pedidos</p>
         <div class="kpi-value" style="font-family:Inter, system-ui, sans-serif; font-size:28px; font-weight:700; letter-spacing:-0.02em; color:#111827;">3.456</div>
       </article>
-      <article id="kpi_ticket_medio" class="card" data-role="kpi" style="--fr:1; flex: var(--fr, 1) 1 220px; min-width:0; background-color:#ffffff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px;">
+      <article id="kpi_ticket_medio" class="card" data-role="kpi" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#ffffff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px;">
         <p style="margin:0 0 6px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Ticket Médio</p>
         <div class="kpi-value" style="font-family:Inter, system-ui, sans-serif; font-size:28px; font-weight:700; letter-spacing:-0.02em; color:#111827;">R$ 357,20</div>
       </article>
-      <article id="kpi_novos_clientes" class="card" data-role="kpi" style="--fr:1; flex: var(--fr, 1) 1 220px; min-width:0; background-color:#ffffff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px;">
+      <article id="kpi_novos_clientes" class="card" data-role="kpi" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#ffffff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px;">
         <p style="margin:0 0 6px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Novos Clientes</p>
         <div class="kpi-value" style="font-family:Inter, system-ui, sans-serif; font-size:28px; font-weight:700; letter-spacing:-0.02em; color:#111827;">128</div>
       </article>
@@ -175,11 +175,11 @@ const initialArtifactLiquid = `
 
     <!-- KPIs: Linha 2 (2 itens) -->
     <section id="kpis-2" class="row kpis" data-role="section" style="display:flex; flex-direction:row; flex-wrap:wrap; justify-content:flex-start; align-items:stretch; gap:12px; margin-top:12px; padding:16px;">
-      <article id="kpi_conversao" class="card" data-role="kpi" style="--fr:1; flex: var(--fr, 1) 1 220px; min-width:0; background-color:#ffffff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px;">
+      <article id="kpi_conversao" class="card" data-role="kpi" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#ffffff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px;">
         <p style="margin:0 0 6px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Conversão</p>
         <div class="kpi-value" style="font-family:Inter, system-ui, sans-serif; font-size:28px; font-weight:700; letter-spacing:-0.02em; color:#111827;">3,4%</div>
       </article>
-      <article id="kpi_itens_pedido" class="card" data-role="kpi" style="--fr:1; flex: var(--fr, 1) 1 220px; min-width:0; background-color:#ffffff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px;">
+      <article id="kpi_itens_pedido" class="card" data-role="kpi" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#ffffff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px;">
         <p style="margin:0 0 6px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Itens por Pedido</p>
         <div class="kpi-value" style="font-family:Inter, system-ui, sans-serif; font-size:28px; font-weight:700; letter-spacing:-0.02em; color:#111827;">2,1</div>
       </article>

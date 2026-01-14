@@ -35,12 +35,13 @@ interface ChartEditorModalProps {
     borderWidth?: number;
     borderStyle?: 'solid' | 'dashed' | 'dotted' | '';
     borderRadius?: number;
+    widthFr?: number;
     query?: QueryEdit;
     // Local Nivo props (merged attrs + <props>)
     chartProps?: Record<string, unknown>;
   };
   onClose: () => void;
-  onSave: (data: { titleText: string; titleFontFamily?: string; titleFontSize?: number; titleFontWeight?: string | number; titleColor?: string; backgroundColor?: string; opacity?: number; borderColor?: string; borderWidth?: number; borderStyle?: 'solid'|'dashed'|'dotted'|''; borderRadius?: number; query?: QueryEdit; chartProps?: Record<string, unknown> }) => void;
+  onSave: (data: { titleText: string; titleFontFamily?: string; titleFontSize?: number; titleFontWeight?: string | number; titleColor?: string; backgroundColor?: string; opacity?: number; borderColor?: string; borderWidth?: number; borderStyle?: 'solid'|'dashed'|'dotted'|''; borderRadius?: number; widthFr?: number; query?: QueryEdit; chartProps?: Record<string, unknown> }) => void;
 }
 
 export default function ChartEditorModal({ isOpen, initial, onClose, onSave }: ChartEditorModalProps) {
@@ -104,6 +105,7 @@ export default function ChartEditorModal({ isOpen, initial, onClose, onSave }: C
   const [dirtyTitleWeight, setDirtyTitleWeight] = useState(false);
   const [dirtyTitleColor, setDirtyTitleColor] = useState(false);
   const [backgroundColor, setBackgroundColor] = useState(initial.backgroundColor || '');
+  const [widthFr, setWidthFr] = useState<number | undefined>(initial.widthFr ?? 1);
   const [opacity, setOpacity] = useState<number | undefined>(initial.opacity);
   const [borderColor, setBorderColor] = useState(initial.borderColor || '');
   const [borderWidth, setBorderWidth] = useState<number | undefined>(initial.borderWidth);
@@ -281,6 +283,17 @@ export default function ChartEditorModal({ isOpen, initial, onClose, onSave }: C
                 <div>
                   <label className="block text-sm font-medium text-gray-800 mb-1">Título (HTML &lt;h1&gt;)</label>
                   <input className="w-full px-3 py-2 bg-gray-100 border-0 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" value={titleText} onChange={e=>setTitleText(e.target.value)} placeholder="Ex.: Faturamento Mensal" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-800 mb-1">Largura (fração)</label>
+                  <div className="grid grid-cols-4 gap-2 items-center">
+                    <input type="number" step={0.5} min={0.25} className="col-span-2 px-2 py-2 bg-gray-100 border-0 rounded-md" value={widthFr ?? 1} onChange={e=>setWidthFr(e.target.value===''?1:parseFloat(e.target.value))} />
+                    <div className="col-span-2 flex items-center gap-2 text-xs">
+                      {[0.5,1,1.5,2,3].map(v => (
+                        <button key={v} type="button" className={`px-2 py-1 rounded bg-gray-100 ${widthFr===v?'ring-1 ring-blue-500':''}`} onClick={()=>setWidthFr(v)}>{v}</button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-800 mb-1">Tipografia do Título</label>
@@ -554,6 +567,7 @@ export default function ChartEditorModal({ isOpen, initial, onClose, onSave }: C
             borderWidth: dirtyBWidth ? borderWidth : undefined,
             borderStyle: dirtyBStyle ? borderStyle : undefined,
             borderRadius: dirtyBRadius ? borderRadius : undefined,
+            widthFr,
             chartProps: {
               layout,
               groupMode,

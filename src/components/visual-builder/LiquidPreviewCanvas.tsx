@@ -514,8 +514,14 @@ export default function LiquidPreviewCanvas({ code, globalFilters, defaults, cla
       const escId = id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       const re = new RegExp(`<article\\b([^>]*?\\bid=\\\"${escId}\\\"[^>]*)>([\\s\\S]*?)<\\/article>`, 'i');
       const m = src.match(re); if (!m) return src; const whole = m[0]; const openAttrs = m[1] || ''; let inner = m[2] || '';
-      const pTitleRe = /<p\b([^>]*)>([\s\S]*?)<\/p>/i;
+      const styleRe = /style\s*=\s*("([^"]*)"|'([^']*)')/i;
+      const parse = (s: string) => { const o: Record<string,string> = {}; for (const part of s.split(';')) { const p = part.trim(); if (!p) continue; const i = p.indexOf(':' ); if (i === -1) continue; o[p.slice(0,i).trim()] = p.slice(i+1).trim(); } return o; };
       const toStyle = (obj: Record<string,string>) => Object.entries(obj).filter(([,v])=>v!==undefined&&v!=='').map(([k,v])=>`${k}:${v}`).join('; ');
+      const styleObj = (() => { const ms = openAttrs.match(styleRe); return ms ? parse(ms[2] || ms[3] || '') : {}; })();
+      if (typeof out.widthFr === 'number' && !Number.isNaN(out.widthFr)) styleObj['--fr'] = String(out.widthFr);
+      if (!styleObj['flex']) styleObj['flex'] = 'var(--fr, 1) 1 0%';
+      if (!styleObj['min-width']) styleObj['min-width'] = '0';
+      const pTitleRe = /<p\b([^>]*)>([\s\S]*?)<\/p>/i;
       const titleStyle: Record<string,string> = {};
       if (out.titleFontFamily) titleStyle['font-family'] = String(out.titleFontFamily);
       if (typeof out.titleFontSize === 'number') titleStyle['font-size'] = `${out.titleFontSize}px`;
@@ -533,7 +539,9 @@ export default function LiquidPreviewCanvas({ code, globalFilters, defaults, cla
         if (out.valueColor) valStyle['color'] = String(out.valueColor);
         return `<${tag} class=\"kpi-value\" style=\"${toStyle(valStyle)}\">${esc(out.valueText || '')}</${tag}>`;
       });
-      return src.replace(whole, `<article${openAttrs}>${inner}</article>`);
+      let newOpenAttrs = openAttrs.replace(styleRe, ''); newOpenAttrs = newOpenAttrs.replace(/\s+$/, '');
+      const newOpenTag = `<article${newOpenAttrs}${Object.keys(styleObj).length ? ` style=\"${toStyle(styleObj)}\"` : ''}>`;
+      return src.replace(whole, newOpenTag + inner + `</article>`);
     } catch { return src; }
   };
 
@@ -547,6 +555,9 @@ export default function LiquidPreviewCanvas({ code, globalFilters, defaults, cla
       const toStyle = (obj: Record<string,string>) => Object.entries(obj).filter(([,v])=>v!==undefined&&v!=='').map(([k,v])=>`${k}:${v}`).join('; ');
       const styleObj = (() => { const ms = openAttrs.match(styleRe); return ms ? parse(ms[2] || ms[3] || '') : {}; })();
       const setIf = (k: string, v?: string | number) => { if (v !== undefined && v !== '') styleObj[k] = String(v); };
+      if (typeof out.widthFr === 'number' && !Number.isNaN(out.widthFr)) styleObj['--fr'] = String(out.widthFr);
+      if (!styleObj['flex']) styleObj['flex'] = 'var(--fr, 1) 1 0%';
+      if (!styleObj['min-width']) styleObj['min-width'] = '0';
       setIf('background-color', out.backgroundColor);
       setIf('opacity', out.opacity !== undefined ? out.opacity : undefined);
       setIf('border-color', out.borderColor);
