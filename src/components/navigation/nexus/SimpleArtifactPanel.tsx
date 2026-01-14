@@ -14,7 +14,7 @@ import MonacoEditor from "@/components/visual-builder/MonacoEditor";
 import LiquidPreviewCanvas from "@/components/visual-builder/LiquidPreviewCanvas";
 import CommandConsole from "@/components/visual-builder/CommandConsole";
 import type { GlobalFilters } from "@/stores/visualBuilderStore";
-import { CheckIcon, CopyIcon, XIcon, Eye, Code2, Terminal, Maximize2 } from "lucide-react";
+import { CheckIcon, CopyIcon, XIcon, Eye, Code2, Terminal, Maximize2, MoreHorizontal } from "lucide-react";
 import CodeThemeMenu from "@/components/visual-builder/CodeThemeMenu";
 
 type SimpleArtifactPanelProps = {
@@ -91,11 +91,23 @@ export default function SimpleArtifactPanel({ onClose, dashboardId, onExpand }: 
             {copied ? <CheckIcon className="w-4 h-4 mr-1" /> : <CopyIcon className="w-4 h-4 mr-1" />}
             Copiar
           </Button>
-          {/* Botão de opções (Tela Cheia / Fechar) com ícone de X */}
+          <a href={dashboardHref} className="inline-flex">
+            <Button type="button" className="h-8 px-3" variant="outline">
+              Ver Dashboard
+            </Button>
+          </a>
+          <Button
+            type="button"
+            onClick={() => console.log('Publicar acionado')}
+            className="h-8 px-3 bg-black text-white hover:bg-black/90"
+          >
+            Publicar
+          </Button>
+          {/* Botão de opções (Tela Cheia / Fechar) com ícone neutro */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button type="button" variant="outline" className="size-8 p-0 text-muted-foreground hover:text-foreground" aria-label="Opções do painel">
-                <XIcon className="w-4 h-4" />
+                <MoreHorizontal className="w-4 h-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-44">
@@ -109,18 +121,6 @@ export default function SimpleArtifactPanel({ onClose, dashboardId, onExpand }: 
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <a href={dashboardHref} className="inline-flex">
-            <Button type="button" className="h-8 px-3" variant="outline">
-              Ver Dashboard
-            </Button>
-          </a>
-          <Button
-            type="button"
-            onClick={() => console.log('Publicar acionado')}
-            className="h-8 px-3 bg-black text-white hover:bg-black/90"
-          >
-            Publicar
-          </Button>
           {/* Removido: botão Fechar isolado; agora embutido no menu acima */}
         </ArtifactActions>
       </ArtifactHeader>
