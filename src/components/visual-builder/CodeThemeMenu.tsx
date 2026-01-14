@@ -614,6 +614,29 @@ export default function CodeThemeMenu({ code, onChange }: Props) {
                         ].join(', ');
                         so['background-repeat'] = 'no-repeat';
                       }
+
+                      // Apply uniform corners (full edge with darker corners)
+                      if (b.key === 'cantos-uniformes') {
+                        const base = style.color || '#e5e7eb';
+                        const corner = style.cornerColor || '#d1d5db';
+                        const L = (style.cornerLength ?? 12);
+                        const T = (style.cornerThickness ?? 1);
+                        // Top and Bottom: horizontal stripes with corner segments
+                        const top = `linear-gradient(to right, ${corner} 0 ${L}px, ${base} ${L}px calc(100% - ${L}px), ${corner} calc(100% - ${L}px) 100%)`;
+                        const bottom = top; // same gradient
+                        // Left and Right: vertical stripes with corner segments
+                        const left = `linear-gradient(to bottom, ${corner} 0 ${L}px, ${base} ${L}px calc(100% - ${L}px), ${corner} calc(100% - ${L}px) 100%)`;
+                        const right = left;
+                        so['background-image'] = [top, bottom, left, right].join(', ');
+                        so['background-position'] = ['top left', 'bottom left', 'top left', 'top right'].join(', ');
+                        so['background-size'] = [
+                          `100% ${T}px`, // top height
+                          `100% ${T}px`, // bottom height
+                          `${T}px 100%`, // left width
+                          `${T}px 100%`, // right width
+                        ].join(', ');
+                        so['background-repeat'] = 'no-repeat';
+                      }
                     });
                     return { open: newOpen, inner };
                   });

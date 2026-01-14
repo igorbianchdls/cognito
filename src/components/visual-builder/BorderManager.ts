@@ -8,6 +8,7 @@ export type BorderPresetKey =
   | 'pontilhada-minimal'
   | 'cartao-elevado'
   | 'linha-inferior'
+  | 'cantos-uniformes'
   | 'cantos-coloridos'
 
 export interface BorderStyle {
@@ -116,6 +117,19 @@ const DEFAULTS: Record<BorderPresetKey, BorderStyle> = {
     cornerColor: '#3b82f6',
     cornerLength: 12,
     cornerThickness: 2,
+  },
+  'cantos-uniformes': {
+    type: 'cantos-uniformes',
+    color: '#e5e7eb', // base (borda clara)
+    width: 0,         // desenhado via background-image (sem border real)
+    radius: 12,
+    borderStyle: 'solid',
+    sides: 'all',
+    shadow: false,
+    continuousBorder: true,
+    cornerColor: '#d1d5db', // cantos levemente mais escuros
+    cornerLength: 12,
+    cornerThickness: 1,
   }
 }
 
@@ -130,6 +144,7 @@ export class BorderManager {
       { key: 'cartao-elevado', name: 'Cartão Elevado', description: 'Sem borda, canto arredondado e sombra leve' },
       { key: 'linha-inferior', name: 'Linha inferior', description: 'Apenas linha na parte de baixo' },
       { key: 'cantos-coloridos', name: 'Cantos Coloridos', description: 'Cantoneiras nos quatro cantos com borda base' },
+      { key: 'cantos-uniformes', name: 'Cantos Uniformes', description: 'Borda clara com cantos discretamente mais escuros' },
     ]
   }
 
@@ -142,7 +157,8 @@ export class BorderManager {
       key === 'pontilhada-minimal' ||
       key === 'cartao-elevado' ||
       key === 'linha-inferior' ||
-      key === 'cantos-coloridos'
+      key === 'cantos-coloridos' ||
+      key === 'cantos-uniformes'
     )
   }
 
