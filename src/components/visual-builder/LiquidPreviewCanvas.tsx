@@ -33,6 +33,7 @@ type KpiInitial = {
   borderWidth?: number;
   borderStyle?: 'solid' | 'dashed' | 'dotted' | '';
   borderRadius?: number;
+  widthFr?: number;
 };
 
 type ChartInitial = {
@@ -47,6 +48,7 @@ type ChartInitial = {
   borderWidth?: number;
   borderStyle?: 'solid' | 'dashed' | 'dotted' | '';
   borderRadius?: number;
+  widthFr?: number;
   // query and chartProps intentionally omitted in preview minimal mode
 };
 
@@ -327,6 +329,7 @@ export default function LiquidPreviewCanvas({ code, globalFilters, defaults, cla
             const valEl = art.querySelector('.kpi-value') as HTMLElement | null;
             const tStyle = parseS(titleEl?.getAttribute('style'));
             const vStyle = parseS(valEl?.getAttribute('style'));
+            const artStyle = parseS(art.getAttribute('style'));
             kpiEditingArticleIdRef.current = artId || null;
             setKpiInitial({
               titleText: titleEl?.textContent?.trim() || '',
@@ -339,6 +342,7 @@ export default function LiquidPreviewCanvas({ code, globalFilters, defaults, cla
               valueFontSize: numPx(vStyle['font-size']),
               valueFontWeight: vStyle['font-weight'] || undefined,
               valueColor: vStyle['color'] || '#111827',
+              widthFr: (artStyle['--fr'] ? Number(artStyle['--fr']) : undefined) || 1,
             });
             setKpiModalOpen(true);
           } else {
@@ -361,6 +365,7 @@ export default function LiquidPreviewCanvas({ code, globalFilters, defaults, cla
               borderWidth: numPx(artStyle['border-width']),
               borderStyle: artStyle['border-style'] as any,
               borderRadius: numPx(artStyle['border-radius']),
+              widthFr: (artStyle['--fr'] ? Number(artStyle['--fr']) : undefined) || 1,
             });
             setChartModalOpen(true);
           }
