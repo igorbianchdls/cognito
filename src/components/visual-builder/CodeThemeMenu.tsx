@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Palette, Type, Layout, Check } from "lucide-react";
 import { PRESETS, applyPresetOnCode, detectPresetKey, type PresetKey } from "@/components/visual-builder/CodeThemePresets";
+import { BorderManager, type BorderPresetKey } from "@/components/visual-builder/BorderManager";
 import { FontManager, type FontPresetKey, type FontSizeKey } from "@/components/visual-builder/FontManager";
 import { ThemeManager, type ThemeName } from "@/components/visual-builder/ThemeManager";
 
@@ -423,6 +424,13 @@ export default function CodeThemeMenu({ code, onChange }: Props) {
     return agg;
   };
   const articlesAggregate = useMemo(() => readArticlesAggregate(String(code || '')), [code]);
+  const borderSelected = useMemo<BorderPresetKey | 'custom'>(() => {
+    const bw = articlesAggregate.borderWidth ?? 0;
+    const br = articlesAggregate.borderRadius ?? 0;
+    if (bw === 0) return 'sem-borda';
+    if (br > 0) return 'suave';
+    return 'acentuada';
+  }, [articlesAggregate]);
   const setArticleOpenStyle = (openAttrs: string, mut: (so: Record<string,string>) => void): string => {
     const styleRe = /style\s*=\s*("([^"]*)"|'([^']*)')/i;
     const m = openAttrs.match(styleRe);
@@ -518,6 +526,41 @@ export default function CodeThemeMenu({ code, onChange }: Props) {
                 </DropdownMenuItem>
               );
             })}
+          </DropdownMenuSubContent>
+        </DropdownMenuSub>
+
+        <DropdownMenuSub>
+          <DropdownMenuSubTrigger>
+            <Palette className="w-4 h-4 mr-2" />
+            Borda
+          </DropdownMenuSubTrigger>
+          <DropdownMenuSubContent className="w-72">
+            {BorderManager.getAvailableBorders().map((b) => (
+              <DropdownMenuItem
+                key={b.key}
+                className="flex items-center justify-between py-2"
+                onClick={() => {
+                  const style = BorderManager.getStyle(b.key);
+                  const next = rewriteAllArticles(code, (open, inner) => {
+                    const newOpen = setArticleOpenStyle(open, (so) => {
+                      so['border-color'] = style.color;
+                      so['border-width'] = `${style.width}px`;
+                      so['border-style'] = style.width > 0 ? 'solid' : 'none';
+                      so['border-radius'] = `${style.radius}px`;
+                      if (style.shadow === false) so['box-shadow'] = 'none';
+                    });
+                    return { open: newOpen, inner };
+                  });
+                  onChange(next);
+                }}
+              >
+                <div className="flex flex-col">
+                  <span className="font-medium text-sm">{b.name}</span>
+                  <span className="text-xs text-muted-foreground">{b.description}</span>
+                </div>
+                {borderSelected === b.key && (<Check className="w-4 h-4 text-blue-600" />)}
+              </DropdownMenuItem>
+            ))}
           </DropdownMenuSubContent>
         </DropdownMenuSub>
 
