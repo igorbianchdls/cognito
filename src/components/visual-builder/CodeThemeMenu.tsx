@@ -615,27 +615,35 @@ export default function CodeThemeMenu({ code, onChange }: Props) {
                         so['background-repeat'] = 'no-repeat';
                       }
 
-                      // Apply uniform corners (full edge with darker corners)
+                      // Apply uniform corners (border drawn via background gradients on border-box)
                       if (b.key === 'cantos-uniformes') {
                         const base = style.color || '#e5e7eb';
                         const corner = style.cornerColor || '#d1d5db';
                         const L = (style.cornerLength ?? 12);
-                        const T = (style.cornerThickness ?? 1);
-                        // Top and Bottom: horizontal stripes with corner segments
+                        const W = (style.cornerThickness ?? 1);
+                        const bg = so['background-color'] || '#ffffff';
+                        // Ensure border area is available for painting
+                        so['border-color'] = 'transparent';
+                        so['border-width'] = `${W}px`;
+                        so['border-style'] = 'solid';
+                        // Layers: [content bg (padding-box)] + 4 edge layers (border-box)
+                        const layerBg = `linear-gradient(${bg}, ${bg})`;
                         const top = `linear-gradient(to right, ${corner} 0 ${L}px, ${base} ${L}px calc(100% - ${L}px), ${corner} calc(100% - ${L}px) 100%)`;
-                        const bottom = top; // same gradient
-                        // Left and Right: vertical stripes with corner segments
+                        const bottom = top;
                         const left = `linear-gradient(to bottom, ${corner} 0 ${L}px, ${base} ${L}px calc(100% - ${L}px), ${corner} calc(100% - ${L}px) 100%)`;
                         const right = left;
-                        so['background-image'] = [top, bottom, left, right].join(', ');
-                        so['background-position'] = ['top left', 'bottom left', 'top left', 'top right'].join(', ');
+                        so['background-image'] = [layerBg, top, bottom, left, right].join(', ');
+                        so['background-origin'] = ['padding-box', 'border-box', 'border-box', 'border-box', 'border-box'].join(', ');
+                        so['background-clip'] = ['padding-box', 'border-box', 'border-box', 'border-box', 'border-box'].join(', ');
+                        so['background-position'] = ['0 0', 'top left', 'bottom left', 'top left', 'top right'].join(', ');
                         so['background-size'] = [
-                          `100% ${T}px`, // top height
-                          `100% ${T}px`, // bottom height
-                          `${T}px 100%`, // left width
-                          `${T}px 100%`, // right width
+                          '100% 100%',        // content bg
+                          `100% ${W}px`,      // top
+                          `100% ${W}px`,      // bottom
+                          `${W}px 100%`,      // left
+                          `${W}px 100%`,      // right
                         ].join(', ');
-                        so['background-repeat'] = 'no-repeat';
+                        so['background-repeat'] = ['no-repeat','no-repeat','no-repeat','no-repeat','no-repeat'].join(', ');
                       }
                     });
                     return { open: newOpen, inner };
