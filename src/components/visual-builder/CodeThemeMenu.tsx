@@ -354,6 +354,8 @@ export default function CodeThemeMenu({ code, onChange }: Props) {
     borderWidth?: number;
     borderStyle?: BorderStyle;
     borderRadius?: number;
+    borderBottomWidth?: number;
+    shadow?: boolean;
     titleColor?: string;
     titleSize?: number;
     titleWeight?: string | number;
@@ -392,6 +394,11 @@ export default function CodeThemeMenu({ code, onChange }: Props) {
     if (s['border-width']) agg.borderWidth = parsePxNum(s['border-width']);
     if (s['border-style']) agg.borderStyle = s['border-style'] as BorderStyle;
     if (s['border-radius']) agg.borderRadius = parsePxNum(s['border-radius']);
+    if (s['border-bottom-width']) agg.borderBottomWidth = parsePxNum(s['border-bottom-width']);
+    if (s['box-shadow']) {
+      const bxs = String(s['box-shadow']).trim().toLowerCase();
+      if (bxs && bxs !== 'none') agg.shadow = true;
+    }
     const pbox = parseBox(s['padding']);
     agg.paddingTop = parsePxNum(s['padding-top']) ?? pbox.t;
     agg.paddingRight = parsePxNum(s['padding-right']) ?? pbox.r;
