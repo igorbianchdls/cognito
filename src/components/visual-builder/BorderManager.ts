@@ -8,6 +8,7 @@ export type BorderPresetKey =
   | 'pontilhada-minimal'
   | 'cartao-elevado'
   | 'linha-inferior'
+  | 'cantos-coloridos'
 
 export interface BorderStyle {
   type: BorderPresetKey
@@ -19,6 +20,10 @@ export interface BorderStyle {
   accentColor?: string
   shadow: boolean
   continuousBorder: boolean
+  // Optional corner highlight configuration (for HUD-like corners without glow)
+  cornerColor?: string
+  cornerLength?: number // px
+  cornerThickness?: number // px
 }
 
 export interface BorderPreview {
@@ -98,6 +103,19 @@ const DEFAULTS: Record<BorderPresetKey, BorderStyle> = {
     sides: 'bottom',
     shadow: false,
     continuousBorder: false,
+  },
+  'cantos-coloridos': {
+    type: 'cantos-coloridos',
+    color: '#e5e7eb',
+    width: 1,
+    radius: 12,
+    borderStyle: 'solid',
+    sides: 'all',
+    shadow: false,
+    continuousBorder: true,
+    cornerColor: '#3b82f6',
+    cornerLength: 12,
+    cornerThickness: 2,
   }
 }
 
@@ -111,6 +129,7 @@ export class BorderManager {
       { key: 'pontilhada-minimal', name: 'Pontilhada Minimal', description: 'Borda pontilhada sutil' },
       { key: 'cartao-elevado', name: 'Cartão Elevado', description: 'Sem borda, canto arredondado e sombra leve' },
       { key: 'linha-inferior', name: 'Linha inferior', description: 'Apenas linha na parte de baixo' },
+      { key: 'cantos-coloridos', name: 'Cantos Coloridos', description: 'Cantoneiras nos quatro cantos com borda base' },
     ]
   }
 
@@ -122,13 +141,14 @@ export class BorderManager {
       key === 'suave-tracejada' ||
       key === 'pontilhada-minimal' ||
       key === 'cartao-elevado' ||
-      key === 'linha-inferior'
+      key === 'linha-inferior' ||
+      key === 'cantos-coloridos'
     )
   }
 
   static getStyle(
     preset: BorderPresetKey,
-    opts?: Partial<Pick<BorderStyle, 'color' | 'width' | 'radius' | 'accentColor' | 'shadow' | 'borderStyle' | 'sides'>>
+    opts?: Partial<Pick<BorderStyle, 'color' | 'width' | 'radius' | 'accentColor' | 'shadow' | 'borderStyle' | 'sides' | 'cornerColor' | 'cornerLength' | 'cornerThickness'>>
   ): BorderStyle {
     const base = DEFAULTS[preset]
     return {
@@ -140,6 +160,9 @@ export class BorderManager {
       ...(typeof opts?.shadow === 'boolean' ? { shadow: opts.shadow } : {}),
       ...(opts?.borderStyle ? { borderStyle: opts.borderStyle } : {}),
       ...(opts?.sides ? { sides: opts.sides } : {}),
+      ...(opts?.cornerColor ? { cornerColor: opts.cornerColor } : {}),
+      ...(typeof opts?.cornerLength === 'number' ? { cornerLength: opts.cornerLength } : {}),
+      ...(typeof opts?.cornerThickness === 'number' ? { cornerThickness: opts.cornerThickness } : {}),
     }
   }
 }

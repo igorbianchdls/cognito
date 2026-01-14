@@ -567,6 +567,11 @@ export default function CodeThemeMenu({ code, onChange }: Props) {
                       delete so['border-right-color']; delete so['border-right-width']; delete so['border-right-style'];
                       delete so['border-left-color']; delete so['border-left-width']; delete so['border-left-style'];
                       delete so['border-bottom-color']; delete so['border-bottom-width']; delete so['border-bottom-style'];
+                      // Clear any corner backgrounds first
+                      delete so['background-image'];
+                      delete so['background-size'];
+                      delete so['background-position'];
+                      delete so['background-repeat'];
 
                       if (style.sides === 'bottom') {
                         // Only bottom border
@@ -585,6 +590,29 @@ export default function CodeThemeMenu({ code, onChange }: Props) {
                       if (style.shadow === false) so['box-shadow'] = 'none';
                       if (style.shadow === true && style.width === 0) {
                         so['box-shadow'] = '0 1px 2px rgba(0,0,0,0.06), 0 1.5px 4px rgba(0,0,0,0.08)';
+                      }
+
+                      // Apply colored corner accents (no glow)
+                      if (b.key === 'cantos-coloridos') {
+                        const c = style.cornerColor || '#3b82f6';
+                        const L = (style.cornerLength ?? 12);
+                        const T = (style.cornerThickness ?? 2);
+                        const horiz = `linear-gradient(${c}, ${c})`;
+                        const vert = `linear-gradient(${c}, ${c})`;
+                        so['background-image'] = [horiz, vert, horiz, vert, horiz, vert, horiz, vert].join(', ');
+                        so['background-position'] = [
+                          'top left', 'top left',
+                          'top right', 'top right',
+                          'bottom left', 'bottom left',
+                          'bottom right', 'bottom right',
+                        ].join(', ');
+                        so['background-size'] = [
+                          `${L}px ${T}px`, `${T}px ${L}px`,
+                          `${L}px ${T}px`, `${T}px ${L}px`,
+                          `${L}px ${T}px`, `${T}px ${L}px`,
+                          `${L}px ${T}px`, `${T}px ${L}px`,
+                        ].join(', ');
+                        so['background-repeat'] = 'no-repeat';
                       }
                     });
                     return { open: newOpen, inner };
