@@ -21,9 +21,10 @@ import { ThemeManager, type ThemeName } from "@/components/visual-builder/ThemeM
 type Props = {
   code: string;
   onChange: (next: string) => void;
+  triggerClassName?: string;
 };
 
-export default function CodeThemeMenu({ code, onChange }: Props) {
+export default function CodeThemeMenu({ code, onChange, triggerClassName }: Props) {
   // ===== CSS vars helpers (identical behavior to builder) =====
   const cssSkeleton = `
     :root {
@@ -495,7 +496,7 @@ export default function CodeThemeMenu({ code, onChange }: Props) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm" className="flex items-center gap-2">
+        <Button variant="outline" size="sm" className={`flex items-center gap-2 ${triggerClassName || ''}`}>
           <Palette className="w-4 h-4" />
           <span>Tema</span>
         </Button>

@@ -81,32 +81,32 @@ export default function SimpleArtifactPanel({ onClose, dashboardId, onExpand }: 
         </div>
         {/* Header Right: Toolbar / Copiar / Publicar / Fechar */}
         <ArtifactActions className="gap-2">
-          <CodeThemeMenu code={code} onChange={setCode} />
+          <CodeThemeMenu code={code} onChange={setCode} triggerClassName="bg-gray-100 text-gray-600 border-0 hover:bg-gray-200 hover:text-gray-900" />
           <Button
             type="button"
             onClick={handleCopy}
-            className="h-8 px-3 bg-white text-gray-900 border border-gray-300 hover:bg-gray-50"
+            className="h-8 px-3 bg-gray-100 text-gray-600 border-0 hover:bg-gray-200 hover:text-gray-900"
             variant="outline"
           >
             {copied ? <CheckIcon className="w-4 h-4 mr-1" /> : <CopyIcon className="w-4 h-4 mr-1" />}
             Copiar
           </Button>
           <a href={dashboardHref} className="inline-flex">
-            <Button type="button" className="h-8 px-3" variant="outline">
+            <Button type="button" className="h-8 px-3 bg-gray-100 text-gray-600 border-0 hover:bg-gray-200 hover:text-gray-900" variant="outline">
               Ver Dashboard
             </Button>
           </a>
           <Button
             type="button"
             onClick={() => console.log('Publicar acionado')}
-            className="h-8 px-3 bg-black text-white hover:bg-black/90"
+            className="h-8 px-3 bg-gray-100 text-gray-600 border-0 hover:bg-gray-200 hover:text-gray-900"
           >
             Publicar
           </Button>
           {/* Botão de opções (Tela Cheia / Fechar) com ícone neutro */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button type="button" variant="outline" className="size-8 p-0 text-muted-foreground hover:text-foreground" aria-label="Opções do painel">
+              <Button type="button" variant="outline" className="size-8 p-0 bg-gray-100 text-gray-600 border-0 hover:bg-gray-200 hover:text-gray-900" aria-label="Opções do painel">
                 <MoreHorizontal className="w-4 h-4" />
               </Button>
             </DropdownMenuTrigger>
