@@ -148,7 +148,7 @@ export default function SimpleArtifactPanel({ onClose, dashboardId, onExpand }: 
 const initialArtifactLiquid = `
 <dashboard render="html" theme="branco" date-type="last_30_days">
   <div class="vb-container" style="padding: 0;">
-    <header class="vb-header" style="background-color:#ffffff; border-bottom:1px solid #e5e7eb; border-top:0; border-left:0; border-right:0; border-radius:0;">
+    <header class="vb-header" style="background-color:#ffffff; border-bottom:1px solid #e5e7eb; border-top:0; border-left:0; border-right:0; border-radius:0; padding-top:10px;">
       <p style="margin:0 0 4px; margin-left:16px; font-family:Inter, system-ui, sans-serif; font-size:18px; font-weight:700; color:#111827;">Visão Geral • Exemplo Inicial</p>
       <p style="margin:0; margin-left:16px; margin-bottom:6px; font-family:Inter, system-ui, sans-serif; font-size:14px; font-weight:400; color:#6b7280;">KPIs e gráficos de exemplo — edite o código e visualize abaixo</p>
     </header>
