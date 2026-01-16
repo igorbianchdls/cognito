@@ -1,7 +1,6 @@
 import { tool } from 'ai';
 import { z } from 'zod';
 import { runQuery } from '@/lib/postgres';
-import { applyPatch as applyPatchCore } from '@/lib/patch/applyPatch'
 
 // Types
 export type Visibility = 'private' | 'org' | 'public';
@@ -45,49 +44,12 @@ async function getDashboardByIdQuery(id: string) {
   return rows?.[0] || null;
 }
 
-async function updateDashboardByIdQuery(id: string, payload: { title?: string; description?: string | null; sourcecode?: string; visibility?: Visibility; version?: number }) {
-  const fields: Record<string, unknown> = {};
-  (['title', 'description', 'sourcecode', 'visibility', 'version'] as const).forEach((k) => { if (payload[k] !== undefined) fields[k] = payload[k] as unknown; });
-  if (Object.keys(fields).length === 0) throw new Error('Nada para atualizar');
-  const setParts: string[] = []; const params: unknown[] = []; let idx = 1;
-  if (fields.title !== undefined) { setParts.push(`title = $${idx++}`); params.push(fields.title); }
-  if (fields.description !== undefined) { setParts.push(`description = $${idx++}`); params.push(fields.description ?? null); }
-  if (fields.sourcecode !== undefined) { setParts.push(`sourcecode = $${idx++}`); params.push(fields.sourcecode); }
-  if (fields.visibility !== undefined) { setParts.push(`visibility = $${idx++}`); params.push(fields.visibility); }
-  if (fields.version !== undefined) { setParts.push(`version = $${idx++}`); params.push(Number(fields.version)); }
-  setParts.push('updated_at = NOW()'); params.push(id);
-  const sql = `
-    UPDATE apps.dashboards SET ${setParts.join(', ')}
-    WHERE id = $${idx} AND tenant_id = 1
-    RETURNING id, title, description, sourcecode, visibility, version, created_at, updated_at
-  `;
-  const rows = await runQuery<{
-    id: string; title: string; description: string | null; sourcecode: string; visibility: string; version: number; created_at: string; updated_at: string
-  }>(sql, params);
-  return rows?.[0] || null;
-}
+// (atualização de dashboard removida)
 
 // Tools (single file)
 const VisibilityEnum = z.enum(['private', 'org', 'public']);
 
-// Create (insert) — returns created row
-async function createDashboardQuery(payload: {
-  title: string;
-  description: string | null;
-  sourcecode: string;
-  visibility: Visibility;
-  version: number;
-}) {
-  const rows = await runQuery<{
-    id: string; title: string; description: string | null; sourcecode: string; visibility: string; version: number; created_at: string; updated_at: string
-  }>(
-    `INSERT INTO apps.dashboards (tenant_id, title, description, sourcecode, visibility, version)
-     VALUES (1, $1, $2, $3, $4, $5)
-     RETURNING id, title, description, sourcecode, visibility, version, created_at, updated_at`,
-    [payload.title, payload.description, payload.sourcecode, payload.visibility, Number(payload.version)]
-  );
-  return rows?.[0] || null;
-}
+// (criação de dashboard removida)
 
 export const listDashboards = tool({
   description: 'Lista dashboards disponíveis com filtros opcionais (q, visibility) e paginação.',
@@ -113,79 +75,8 @@ export const getDashboard = tool({
   }
 });
 
-export const updateDashboard = tool({
-  description: 'Atualiza campos de um dashboard (title, description, sourcecode, visibility, version).',
-  inputSchema: z.object({
-    id: z.string().min(1),
-    title: z.string().optional(),
-    description: z.string().nullable().optional(),
-    sourcecode: z.string().optional(),
-    visibility: VisibilityEnum.optional(),
-    version: z.number().int().positive().optional(),
-  }),
-  execute: async ({ id, title, description, sourcecode, visibility, version }) => {
-    try {
-      const item = await updateDashboardByIdQuery(id, { title, description: description ?? undefined, sourcecode, visibility, version });
-      if (!item) return { success: false as const, error: 'Falha ao atualizar' };
-      return { success: true as const, item };
-    } catch (e) {
-      return { success: false as const, error: (e as Error).message || 'Erro ao atualizar' };
-    }
-  }
-});
+// (tool updateDashboard removida)
 
-export const createDashboard = tool({
-  description: 'Prepara a criação de um novo dashboard (preview). Só cria no banco quando explicitamente solicitado.',
-  inputSchema: z.object({
-    title: z.string().trim().min(1, 'title é obrigatório'),
-    sourcecode: z.string().min(1, 'sourcecode é obrigatório'),
-    description: z.string().nullable().optional(),
-    visibility: VisibilityEnum.default('private').optional(),
-    version: z.number().int().positive().default(1).optional(),
-    apply: z.boolean().default(false).optional().describe('Se true, persiste imediatamente; default false (apenas preview)')
-  }),
-  execute: async ({ title, sourcecode, description, visibility = 'private', version = 1, apply = false }) => {
-    try {
-      // Sanitização básica
-      const desc = (description === '' ? null : description ?? null);
-      const code = sourcecode;
-      // Limite de tamanho (1MB)
-      if (code && code.length > 1_000_000) {
-        return { success: false as const, error: 'sourcecode excede o limite de 1MB' };
-      }
-      if (!apply) {
-        // Apenas preview: não persiste
-        return {
-          success: true as const,
-          preview: {
-            title,
-            description: desc,
-            sourcecode: code,
-            visibility,
-            version
-          }
-        };
-      }
-      // Persistência explícita
-      const item = await createDashboardQuery({ title, sourcecode: code, description: desc, visibility, version });
-      if (!item) return { success: false as const, error: 'Falha ao criar dashboard' };
-      return { success: true as const, item };
-    } catch (e) {
-      return { success: false as const, error: (e as Error).message || 'Erro ao criar dashboard' };
-    }
-  }
-});
+// (tool createDashboard removida)
 
-// apply_patch — aplica patches no workspace (por padrão dryRun)
-export const apply_patch = tool({
-  description: 'Aplica um patch no formato *** Begin Patch/End Patch (dry-run por padrão). Use com cautela.',
-  inputSchema: z.object({
-    patch: z.string().min(1, 'patch é obrigatório'),
-    dryRun: z.boolean().default(true).optional(),
-    allowApplyInProduction: z.boolean().default(false).optional(),
-  }),
-  execute: async ({ patch, dryRun = true, allowApplyInProduction = false }) => {
-    const result = await applyPatchCore(patch, { dryRun, allowApplyInProduction })
-    return result
-  }
-});
+// (tool apply_patch removida)
