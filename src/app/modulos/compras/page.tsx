@@ -347,7 +347,7 @@ export default function ModulosComprasPage() {
     { accessorKey: 'filial', header: 'Filial' },
     { accessorKey: 'centro_custo', header: 'Centro de Custo' },
     { accessorKey: 'projeto', header: 'Projeto' },
-    { accessorKey: 'categoria_financeira', header: 'Categoria Financeira' },
+    { accessorKey: 'categoria_despesa', header: 'Categoria de Despesa' },
     { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
     { accessorKey: 'valor_total', header: 'Valor Total', cell: ({ row }) => formatBRL(row.original['valor_total']) },
     { accessorKey: 'observacoes', header: 'Observações' },
