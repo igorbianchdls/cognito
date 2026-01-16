@@ -35,24 +35,27 @@ export default function CodeThemeMenu({ code, onChange, triggerClassName }: Prop
       --vb-chart-text-color: #6b7280;
     }
 
+    /*
+      Global font: everything inherits from container.
+      Use !important to override inline font-family in legacy blocks.
+    */
     .vb-container {
-      font-family: var(--vb-font-family);
+      font-family: var(--vb-font-family) !important;
       letter-spacing: var(--vb-letter-spacing);
     }
-
-    .vb-header p,
-    .vb-header h1,
-    .vb-header h2 {
-      font-family: var(--vb-font-family);
+    .vb-container * {
+      font-family: inherit !important;
     }
 
-    [data-liquid-chart] {
-      font-family: var(--vb-chart-font-family);
-      color: var(--vb-chart-text-color);
-    }
-
+    /* Header title size (first <p>) */
     .vb-header p:first-of-type {
       font-size: var(--vb-title-size);
+    }
+
+    /* Charts body text inherits dedicated chart font */
+    [data-liquid-chart] {
+      font-family: var(--vb-chart-font-family) !important;
+      color: var(--vb-chart-text-color);
     }`;
   const ensureStyleBlock = (dsl: string): string => {
     if (/<style\b[^>]*>[\s\S]*?<\/style>/i.test(dsl)) return dsl;
