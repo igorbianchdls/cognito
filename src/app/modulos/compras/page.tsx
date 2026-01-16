@@ -11,6 +11,7 @@ import NexusPageContainer from '@/components/navigation/nexus/NexusPageContainer
 import PageHeader from '@/components/modulos/PageHeader'
 import TabsNav from '@/components/modulos/TabsNav'
 import DataTable, { type TableData } from '@/components/widgets/Table'
+import EntityDisplay from '@/components/modulos/EntityDisplay'
 import DataToolbar from '@/components/modulos/DataToolbar'
 import StatusBadge from '@/components/modulos/StatusBadge'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/stores/modulos/moduleUiStore'
@@ -339,20 +340,27 @@ export default function ModulosComprasPage() {
     }
 
     return [
-    { accessorKey: 'compra_id', header: 'ID' },
-    { accessorKey: 'numero_oc', header: 'Número OC' },
-    { accessorKey: 'data_emissao', header: 'Data Emissão', cell: ({ row }) => formatDate(row.original['data_emissao']) },
-    { accessorKey: 'data_entrega_prevista', header: 'Entrega Prevista', cell: ({ row }) => formatDate(row.original['data_entrega_prevista']) },
-    { accessorKey: 'fornecedor', header: 'Fornecedor' },
-    { accessorKey: 'filial', header: 'Filial' },
-    { accessorKey: 'centro_custo', header: 'Centro de Custo' },
-    { accessorKey: 'projeto', header: 'Projeto' },
-    { accessorKey: 'categoria_despesa', header: 'Categoria de Despesa' },
-    { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
-    { accessorKey: 'valor_total', header: 'Valor Total', cell: ({ row }) => formatBRL(row.original['valor_total']) },
-    { accessorKey: 'observacoes', header: 'Observações' },
-    { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em']) },
-  ]}, [tabs.selected])
+      { accessorKey: 'compra_id', header: 'ID' },
+      { accessorKey: 'numero_oc', header: 'Número OC' },
+      { accessorKey: 'data_emissao', header: 'Data Emissão', cell: ({ row }) => formatDate(row.original['data_emissao']) },
+      { accessorKey: 'data_entrega_prevista', header: 'Entrega Prevista', cell: ({ row }) => formatDate(row.original['data_entrega_prevista']) },
+      { accessorKey: 'fornecedor', header: 'Fornecedor',
+        cell: ({ row }) => (
+          <EntityDisplay
+            name={row.original['fornecedor'] ? String(row.original['fornecedor']) : '—'}
+          />
+        )
+      },
+      { accessorKey: 'filial', header: 'Filial', cell: ({ row }) => <StatusBadge value={row.original['filial']} type="status" /> },
+      { accessorKey: 'centro_custo', header: 'Centro de Custo', cell: ({ row }) => <StatusBadge value={row.original['centro_custo']} type="status" /> },
+      { accessorKey: 'projeto', header: 'Projeto', cell: ({ row }) => <StatusBadge value={row.original['projeto']} type="status" /> },
+      { accessorKey: 'categoria_despesa', header: 'Categoria de Despesa', cell: ({ row }) => <StatusBadge value={row.original['categoria_despesa']} type="status" /> },
+      { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
+      { accessorKey: 'valor_total', header: 'Valor Total', cell: ({ row }) => formatBRL(row.original['valor_total']) },
+      { accessorKey: 'observacoes', header: 'Observações' },
+      { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em']) },
+    ]
+  }, [tabs.selected])
 
   useEffect(() => {
     const controller = new AbortController()
