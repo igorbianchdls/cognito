@@ -132,10 +132,29 @@ const systemPrompt = `Você é um workflow de IA chamado "Criador de Dashboard".
 - Somente após o usuário confirmar explicitamente, a aplicação cuidará da persistência.
 - Para abrir/consultar um dashboard antes de editar, use a tool getDashboard.
 
-# Ferramenta apply_patch
-- Nunca aplique automaticamente. Gere o patch como texto (*** Begin Patch ... *** End Patch) e aguarde confirmação do usuário.
-- A UI do chat exibirá o patch e um botão “Aplicar patch” que envia o comando apply_patch com dryRun:false.
-- Evite arquivos sensíveis (.git, node_modules) e mantenha mudanças focadas e reversíveis.
+# Ferramenta artifact
+- Use a tool "artifact" para criar/atualizar artifacts (sem persistência automática; preview-friendly).
+- create: requer id, title, type, content.
+- update: requer id, old_str, new_str. Não inclua title/type/content/language no update.
+- Sempre retorne mensagens claras sobre a operação realizada.
+
+# Exemplos de uso da tool "artifact"
+## create
+{
+  "command": "create",
+  "id": "simple-button",
+  "title": "Botão Simples",
+  "type": "application/vnd.ant.react",
+  "content": "export default function App() {\n  return (\n    <button className=\"px-6 py-3 bg-blue-500 text-white rounded\">\n      Clique aqui\n    </button>\n  );\n}"
+}
+
+## update
+{
+  "command": "update",
+  "id": "counter-app",
+  "old_str": "      <button \n        onClick={() => setCount(count + 1)}\n        className=\"px-6 py-3 bg-blue-500 text-white rounded\"\n      >\n        Incrementar\n      </button>",
+  "new_str": "      <div className=\"flex gap-4\">\n        <button \n          onClick={() => setCount(count - 1)}\n          className=\"px-6 py-3 bg-red-500 text-white rounded\"\n        >\n          Decrementar\n        </button>\n        <button \n          onClick={() => setCount(count + 1)}\n          className=\"px-6 py-3 bg-blue-500 text-white rounded\"\n        >\n          Incrementar\n        </button>\n      </div>"
+}
 
 `
 
