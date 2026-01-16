@@ -732,7 +732,7 @@ export default function CodeThemeMenu({ code, onChange, triggerClassName }: Prop
             <DropdownMenuSeparator />
 
             <DropdownMenuSub>
-              <DropdownMenuSubTrigger>Chart Body Font</DropdownMenuSubTrigger>
+              <DropdownMenuSubTrigger>Fonte dos charts</DropdownMenuSubTrigger>
               <DropdownMenuSubContent>
                 {availableFonts.map((font) => (
                   <DropdownMenuItem key={font.key} className="flex items-center justify-between py-2" onClick={() => handleSetChartBodyFont(font.key)}>
