@@ -265,7 +265,7 @@ export async function GET(req: NextRequest) {
         filial: unknown
         centro_custo: unknown
         projeto: unknown
-        categoria_financeira: unknown
+        categoria_despesa: unknown
         linhas: Array<{
           linha_id: unknown
           produto: unknown
@@ -290,14 +290,14 @@ export async function GET(req: NextRequest) {
             valor_total: row.valor_total,
             observacoes: row.observacoes,
             criado_em: row.criado_em,
-            fornecedor: row.fornecedor,
-            filial: row.filial,
-            centro_custo: row.centro_custo,
-            projeto: row.projeto,
-            categoria_financeira: row.categoria_financeira,
-            linhas: []
-          })
-        }
+          fornecedor: row.fornecedor,
+          filial: row.filial,
+          centro_custo: row.centro_custo,
+          projeto: row.projeto,
+            categoria_despesa: row.categoria_despesa,
+          linhas: []
+        })
+      }
 
         if (row.linha_id) {
           comprasMap.get(compraKey)!.linhas.push({
