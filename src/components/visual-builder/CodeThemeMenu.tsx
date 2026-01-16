@@ -31,7 +31,8 @@ export default function CodeThemeMenu({ code, onChange, triggerClassName }: Prop
       --vb-font-family: var(--font-barlow), Barlow, -apple-system, BlinkMacSystemFont, sans-serif;
       --vb-letter-spacing: -0.02em;
       --vb-title-size: 18px;
-      --vb-chart-font-family: var(--font-geist), Geist, -apple-system, BlinkMacSystemFont, sans-serif;
+      --vb-chart-font-family: var(--vb-font-family);
+      --vb-title-font-family: var(--vb-font-family);
       --vb-chart-text-color: #6b7280;
     }
 
@@ -50,6 +51,12 @@ export default function CodeThemeMenu({ code, onChange, triggerClassName }: Prop
     /* Header title size (first <p>) */
     .vb-header p:first-of-type {
       font-size: var(--vb-title-size);
+    }
+
+    /* Article titles: first <p> or h1 */
+    .vb-container article > p:first-of-type,
+    .vb-container article h1 {
+      font-family: var(--vb-title-font-family, var(--vb-font-family)) !important;
     }
 
     /* Charts body text inherits dedicated chart font */
@@ -694,12 +701,10 @@ export default function CodeThemeMenu({ code, onChange, triggerClassName }: Prop
                   <DropdownMenuItem
                     key={font.key}
                     className="flex items-center justify-between py-2"
-                    onClick={() => onChange(rewriteAllArticles(code, (open, inner) => {
+                    onClick={() => {
                       const family = FontManager.getFontFamily(font.key);
-                      const afterP = setFirstPStyle(inner, (ps) => { ps['font-family'] = family; });
-                      const afterH1 = setH1Style(afterP, (ps) => { ps['font-family'] = family; });
-                      return { open, inner: afterH1 };
-                    }))}
+                      onChange(writeCssVarsToDsl(code, { '--vb-title-font-family': family }));
+                    }}
                   >
                     <span style={{ fontFamily: font.family }} className="text-sm">{font.name}</span>
                   </DropdownMenuItem>
