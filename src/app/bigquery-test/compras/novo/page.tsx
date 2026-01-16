@@ -6,23 +6,91 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 export default function BigQueryTestNovaCompraPage() {
+  const toLocalISODate = (d: Date) => {
+    const tz = d.getTimezoneOffset()
+    const local = new Date(d.getTime() - tz * 60000)
+    return local.toISOString().slice(0, 10)
+  }
+
   const [tenantId, setTenantId] = React.useState<string>('1')
   const [fornecedorId, setFornecedorId] = React.useState<string>('')
   const [numeroOc, setNumeroOc] = React.useState<string>('')
-  const [dataEmissao, setDataEmissao] = React.useState<string>('')
-  const [dataEntregaPrevista, setDataEntregaPrevista] = React.useState<string>('')
-  const [observacoes, setObservacoes] = React.useState<string>('')
+  const [dataEmissao, setDataEmissao] = React.useState<string>(() => toLocalISODate(new Date()))
+  const [dataEntregaPrevista, setDataEntregaPrevista] = React.useState<string>(() => {
+    const in7 = new Date()
+    in7.setDate(in7.getDate() + 7)
+    return toLocalISODate(in7)
+  })
+  const [observacoes, setObservacoes] = React.useState<string>(() => `Compra de teste criada em ${new Date().toLocaleString('pt-BR')} (BigQuery Test)`) 
 
   const [produtoId, setProdutoId] = React.useState<string>('')
   const [quantidade, setQuantidade] = React.useState<string>('1')
   const [precoUnitario, setPrecoUnitario] = React.useState<string>('0')
   const [unidade, setUnidade] = React.useState<string>('un')
 
+  const [centroCustoId, setCentroCustoId] = React.useState<string>('')
+  const [filialId, setFilialId] = React.useState<string>('')
+  const [projetoId, setProjetoId] = React.useState<string>('')
+  const [categoriaDespesaId, setCategoriaDespesaId] = React.useState<string>('')
+
   const [isSaving, setIsSaving] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
   const [success, setSuccess] = React.useState<string | null>(null)
+
+  type Opt = { value: string; label: string }
+  const [fornecedorOptions, setFornecedorOptions] = React.useState<Opt[]>([])
+  const [produtoOptions, setProdutoOptions] = React.useState<Opt[]>([])
+  const [centroCustoOptions, setCentroCustoOptions] = React.useState<Opt[]>([])
+  const [categoriaDespesaOptions, setCategoriaDespesaOptions] = React.useState<Opt[]>([])
+  const [filialOptions, setFilialOptions] = React.useState<Opt[]>([])
+  const [projetoOptions, setProjetoOptions] = React.useState<Opt[]>([])
+
+  React.useEffect(() => {
+    const ac = new AbortController()
+    ;(async () => {
+      try {
+        const [fRes, pRes, ccRes, cdRes, filRes, prjRes] = await Promise.all([
+          fetch('/api/modulos/financeiro/fornecedores/list', { cache: 'no-store', signal: ac.signal }),
+          fetch('/api/modulos/produtos/produtos/list', { cache: 'no-store', signal: ac.signal }),
+          fetch('/api/modulos/empresa?view=centros-de-custo&pageSize=1000&order_by=codigo', { cache: 'no-store', signal: ac.signal }),
+          fetch('/api/modulos/financeiro/categorias-despesa/list', { cache: 'no-store', signal: ac.signal }),
+          fetch('/api/modulos/empresa?view=filiais&pageSize=1000&order_by=nome', { cache: 'no-store', signal: ac.signal }),
+          fetch('/api/modulos/financeiro?view=projetos&pageSize=1000&order_by=nome', { cache: 'no-store', signal: ac.signal }),
+        ])
+
+        if (fRes.ok) {
+          const j = await fRes.json()
+          setFornecedorOptions((j?.rows || []).map((r: any) => ({ value: String(r.id), label: r.nome })))
+        }
+        if (pRes.ok) {
+          const j = await pRes.json()
+          setProdutoOptions((j?.rows || []).map((r: any) => ({ value: String(r.id), label: r.nome })))
+        }
+        if (ccRes.ok) {
+          const j = await ccRes.json()
+          setCentroCustoOptions((j?.rows || []).map((r: any) => ({ value: String(r.id), label: r.codigo ? `${r.codigo} - ${r.nome}` : r.nome })))
+        }
+        if (cdRes.ok) {
+          const j = await cdRes.json()
+          setCategoriaDespesaOptions((j?.rows || []).map((r: any) => ({ value: String(r.id), label: r.nome })))
+        }
+        if (filRes.ok) {
+          const j = await filRes.json()
+          setFilialOptions((j?.rows || []).map((r: any) => ({ value: String(r.id), label: r.nome })))
+        }
+        if (prjRes.ok) {
+          const j = await prjRes.json()
+          setProjetoOptions((j?.rows || []).map((r: any) => ({ value: String(r.id), label: r.nome })))
+        }
+      } catch (err) {
+        // silencioso para teste
+      }
+    })()
+    return () => ac.abort()
+  }, [])
 
   async function onSalvar() {
     setError(null)
@@ -42,6 +110,10 @@ export default function BigQueryTestNovaCompraPage() {
       const payload = {
         tenant_id: Number(tenantId || '1'),
         fornecedor_id: fornecedor,
+        centro_custo_id: centroCustoId ? Number(centroCustoId) : null,
+        filial_id: filialId ? Number(filialId) : null,
+        projeto_id: projetoId ? Number(projetoId) : null,
+        categoria_despesa_id: categoriaDespesaId ? Number(categoriaDespesaId) : null,
         numero_oc: numeroOc || null,
         data_emissao: dataEmissao || null,
         data_entrega_prevista: dataEntregaPrevista || null,
@@ -86,8 +158,15 @@ export default function BigQueryTestNovaCompraPage() {
               <Input value={tenantId} onChange={(e) => setTenantId(e.target.value)} placeholder="1" />
             </div>
             <div className="md:col-span-4">
-              <Label className="text-sm text-slate-600">Fornecedor ID</Label>
-              <Input value={fornecedorId} onChange={(e) => setFornecedorId(e.target.value)} placeholder="ex: 10" />
+              <Label className="text-sm text-slate-600">Fornecedor</Label>
+              <Select value={fornecedorId} onValueChange={setFornecedorId}>
+                <SelectTrigger className="w-full"><SelectValue placeholder="Selecione" /></SelectTrigger>
+                <SelectContent>
+                  {fornecedorOptions.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="md:col-span-3">
               <Label className="text-sm text-slate-600">Número OC</Label>
@@ -101,6 +180,50 @@ export default function BigQueryTestNovaCompraPage() {
               <Label className="text-sm text-slate-600">Entrega Prevista</Label>
               <Input type="date" value={dataEntregaPrevista} onChange={(e) => setDataEntregaPrevista(e.target.value)} />
             </div>
+            <div className="md:col-span-4">
+              <Label className="text-sm text-slate-600">Centro de Custo</Label>
+              <Select value={centroCustoId} onValueChange={setCentroCustoId}>
+                <SelectTrigger className="w-full"><SelectValue placeholder="(opcional)" /></SelectTrigger>
+                <SelectContent>
+                  {centroCustoOptions.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="md:col-span-4">
+              <Label className="text-sm text-slate-600">Projeto</Label>
+              <Select value={projetoId} onValueChange={setProjetoId}>
+                <SelectTrigger className="w-full"><SelectValue placeholder="(opcional)" /></SelectTrigger>
+                <SelectContent>
+                  {projetoOptions.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="md:col-span-4">
+              <Label className="text-sm text-slate-600">Categoria de Despesa</Label>
+              <Select value={categoriaDespesaId} onValueChange={setCategoriaDespesaId}>
+                <SelectTrigger className="w-full"><SelectValue placeholder="(opcional)" /></SelectTrigger>
+                <SelectContent>
+                  {categoriaDespesaOptions.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="md:col-span-4">
+              <Label className="text-sm text-slate-600">Filial</Label>
+              <Select value={filialId} onValueChange={setFilialId}>
+                <SelectTrigger className="w-full"><SelectValue placeholder="(opcional)" /></SelectTrigger>
+                <SelectContent>
+                  {filialOptions.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div className="md:col-span-12">
               <Label className="text-sm text-slate-600">Observações</Label>
               <Textarea value={observacoes} onChange={(e) => setObservacoes(e.target.value)} placeholder="Opcional" />
@@ -111,9 +234,16 @@ export default function BigQueryTestNovaCompraPage() {
         <Card className="p-4">
           <div className="text-base font-semibold text-slate-800 mb-3">Item (mínimo 1)</div>
           <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
-            <div className="md:col-span-4">
-              <Label className="text-sm text-slate-600">Produto ID</Label>
-              <Input value={produtoId} onChange={(e) => setProdutoId(e.target.value)} placeholder="ex: 100" />
+            <div className="md:col-span-6">
+              <Label className="text-sm text-slate-600">Produto</Label>
+              <Select value={produtoId} onValueChange={setProdutoId}>
+                <SelectTrigger className="w-full"><SelectValue placeholder="Selecione" /></SelectTrigger>
+                <SelectContent>
+                  {produtoOptions.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="md:col-span-3">
               <Label className="text-sm text-slate-600">Quantidade</Label>
@@ -149,4 +279,3 @@ export default function BigQueryTestNovaCompraPage() {
     </div>
   )
 }
-
