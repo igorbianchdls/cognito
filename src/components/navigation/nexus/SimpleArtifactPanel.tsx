@@ -26,7 +26,7 @@ type SimpleArtifactPanelProps = {
 };
 
 export default function SimpleArtifactPanel({ onClose, dashboardId, onExpand, initialCode, initialJsonUpdate }: SimpleArtifactPanelProps) {
-  const [tab, setTab] = useState<'code' | 'preview' | 'console'>(initialJsonUpdate ? 'console' : 'code');
+  const [tab, setTab] = useState<'code' | 'preview' | 'console'>(initialJsonUpdate ? 'console' : 'preview');
   const [code, setCode] = useState<string>(() => (typeof initialCode === 'string' && initialCode.length > 0) ? initialCode : initialArtifactLiquid);
   const [copied, setCopied] = useState(false);
 
