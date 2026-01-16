@@ -92,7 +92,7 @@ export async function GET(req: NextRequest) {
     let whereDateCol = '';
 
   if (view === 'compras') {
-      // Resumo de compras (tab Compras): campos descritivos via joins
+      // Query fixa (sem filtros dinâmicos), conforme especificação
       selectSql = `SELECT
         c.id AS compra_id,
         f.nome_fantasia AS fornecedor,
@@ -114,14 +114,9 @@ export async function GET(req: NextRequest) {
         LEFT JOIN empresa.centros_custo cc ON cc.id = c.centro_custo_id
         LEFT JOIN financeiro.projetos p ON p.id = c.projeto_id
         LEFT JOIN financeiro.categorias_despesa cd ON cd.id = c.categoria_despesa_id`;
-      whereDateCol = 'c.data_emissao';
-      if (status) push('LOWER(c.status) =', status.toLowerCase());
-      if (fornecedor_id) push('c.fornecedor_id =', fornecedor_id);
-      if (q) {
-        conditions.push(`(c.numero_oc ILIKE '%' || $${i} || '%' OR c.observacoes ILIKE '%' || $${i} || '%' OR CAST(c.id AS TEXT) ILIKE '%' || $${i} || '%')`);
-        params.push(q);
-        i += 1;
-      }
+      whereDateCol = '';
+      // Força ordenação exatamente como especificada
+      conditions.length = 0;
     } else if (view === 'recebimentos') {
       selectSql = `SELECT
         r.id AS recebimento_id,
@@ -231,7 +226,7 @@ export async function GET(req: NextRequest) {
     let orderClause = '';
     if (ORDER_BY_WHITELIST[view] && Object.keys(ORDER_BY_WHITELIST[view]).length) {
       if (orderBy) {
-        if (view === 'compras') orderClause = `ORDER BY ${orderBy} ${orderDir}, c.numero_oc ASC`;
+        if (view === 'compras') orderClause = 'ORDER BY c.data_emissao ASC, c.numero_oc ASC, c.id ASC';
         else if (view === 'recebimentos') orderClause = `ORDER BY ${orderBy} ${orderDir}, rl.id ASC`;
         else if (view === 'solicitacoes_compra') orderClause = `ORDER BY ${orderBy} ${orderDir}, sci.id ASC`;
         else if (view === 'cotacoes') orderClause = `ORDER BY ${orderBy} ${orderDir}, cf.id ASC, cl.id ASC`;
@@ -517,7 +512,7 @@ export async function GET(req: NextRequest) {
     }
 
     const totalSql = view === 'compras'
-      ? `SELECT COUNT(DISTINCT c.id)::int AS total FROM compras.compras c ${whereClause}`
+      ? `SELECT COUNT(*)::int AS total FROM compras.compras c`
       : view === 'recebimentos'
       ? `SELECT COUNT(DISTINCT r.id)::int AS total FROM compras.recebimentos r ${whereClause.replace(/r\./g, 'r.')}`
       : view === 'solicitacoes_compra'
