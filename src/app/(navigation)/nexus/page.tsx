@@ -275,6 +275,7 @@ export default function Page() {
     initialCode?: string;
     initialJsonUpdate?: unknown[];
   } | null>(null);
+  const [artifactUI, setArtifactUI] = useState<{ visible: boolean; fullscreen: boolean }>({ visible: false, fullscreen: false });
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
@@ -361,6 +362,7 @@ export default function Page() {
               initialJsonUpdate: Array.isArray(payload.initialJsonUpdate) ? payload.initialJsonUpdate : undefined,
             });
             setViewMode('split');
+            setArtifactUI({ visible: true, fullscreen: false });
           }
         } catch (e) {
           console.error('Failed to open artifact panel:', e);
@@ -387,12 +389,13 @@ export default function Page() {
             attachedFiles={attachedFiles}
             onFilesChange={setAttachedFiles}
             onInputFocus={() => setViewMode('split')}
-            onOpenDashboard={() => setViewMode('split')}
+            onOpenDashboard={() => { setViewMode('split'); setArtifactUI({ visible: true, fullscreen: false }); }}
           />
         </div>
       )}
 
-      {viewMode === 'split' && (
+      {/* Keep PanelGroup mounted at all times; hide when not in split */}
+      <div className={viewMode === 'split' ? 'h-full' : 'absolute w-0 h-0 overflow-hidden'}>
         <PanelGroup direction="horizontal">
           <Panel defaultSize={33} minSize={25}>
             <div className="h-full overflow-hidden" data-page="nexus">
@@ -407,7 +410,7 @@ export default function Page() {
                 attachedFiles={attachedFiles}
                 onFilesChange={setAttachedFiles}
                 onInputFocus={() => setViewMode('split')}
-                onOpenDashboard={() => setViewMode('split')}
+                onOpenDashboard={() => { setViewMode('split'); setArtifactUI({ visible: true, fullscreen: false }); }}
               />
             </div>
           </Panel>
@@ -415,41 +418,39 @@ export default function Page() {
             <div className="h-full">
               <Suspense fallback={<div className="h-full" />}> 
             <ArtifactPanelWithParams
-              onClose={() => setViewMode('chat')}
-              onExpand={() => setViewMode('artifact')}
+              onClose={() => {
+                if (artifactUI.fullscreen) setArtifactUI({ visible: true, fullscreen: false });
+                else { setArtifactUI({ visible: false, fullscreen: false }); setViewMode('chat'); }
+              }}
+              onExpand={() => setArtifactUI({ visible: true, fullscreen: true })}
               artifactPayload={artifactPayload}
+              artifactUI={artifactUI}
             />
               </Suspense>
             </div>
           </Panel>
         </PanelGroup>
-      )}
+      </div>
 
       {viewMode === 'dashboard' && (
         <DashboardChatPanel />
-      )}
-
-      {viewMode === 'artifact' && (
-        <div className="h-full">
-          <Suspense fallback={<div className="h-full" />}> 
-            <ArtifactPanelWithParams onClose={() => setViewMode('split')} artifactPayload={artifactPayload} />
-          </Suspense>
-        </div>
       )}
     </NexusShell>
   );
 }
 
-function ArtifactPanelWithParams({ onClose, onExpand, artifactPayload }: { onClose: () => void; onExpand?: () => void; artifactPayload?: { mode: 'create'|'update'; id: string; initialCode?: string; initialJsonUpdate?: unknown[] } | null }) {
+function ArtifactPanelWithParams({ onClose, onExpand, artifactPayload, artifactUI }: { onClose: () => void; onExpand?: () => void; artifactPayload?: { mode: 'create'|'update'; id: string; initialCode?: string; initialJsonUpdate?: unknown[] } | null, artifactUI?: { visible: boolean; fullscreen: boolean } }) {
   const searchParams = useSearchParams();
   const dashboardId = searchParams.get('dashboardId') || undefined;
   return (
-    <SimpleArtifactPanel
-      onClose={onClose}
-      onExpand={onExpand}
-      dashboardId={dashboardId}
-      initialCode={artifactPayload?.initialCode}
-      initialJsonUpdate={artifactPayload?.initialJsonUpdate as unknown[] | undefined}
-    />
+    <div className={artifactUI?.visible ? (artifactUI.fullscreen ? 'fixed inset-0 z-50 bg-white' : 'h-full') : 'hidden'}>
+      <SimpleArtifactPanel
+        onClose={onClose}
+        onExpand={onExpand}
+        dashboardId={dashboardId}
+        initialCode={artifactPayload?.initialCode}
+        initialJsonUpdate={artifactPayload?.initialJsonUpdate as unknown[] | undefined}
+      />
+    </div>
   );
 }
