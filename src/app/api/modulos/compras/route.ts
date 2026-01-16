@@ -11,12 +11,11 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
     numero_oc: 'c.numero_oc',
     data_emissao: 'c.data_emissao',
     data_entrega_prevista: 'c.data_entrega_prevista',
-    fornecedor: 'c.fornecedor_id',
-    filial: 'c.filial_id',
-    centro_custo: 'c.centro_custo_id',
-    projeto: 'c.projeto_id',
-    categoria_financeira: 'c.categoria_financeira_id',
-    categoria_despesa: 'c.categoria_despesa_id',
+    fornecedor: 'f.nome_fantasia',
+    filial: 'fil.nome',
+    centro_custo: 'cc.nome',
+    projeto: 'p.nome',
+    categoria_despesa: 'cd.nome',
     status: 'c.status',
     valor_total: 'c.valor_total',
     criado_em: 'c.criado_em',
@@ -93,8 +92,14 @@ export async function GET(req: NextRequest) {
     let whereDateCol = '';
 
   if (view === 'compras') {
+      // Resumo de compras (tab Compras): campos descritivos via joins
       selectSql = `SELECT
         c.id AS compra_id,
+        f.nome_fantasia AS fornecedor,
+        fil.nome AS filial,
+        cc.nome AS centro_custo,
+        p.nome AS projeto,
+        cd.nome AS categoria_despesa,
         c.numero_oc,
         c.data_emissao,
         c.data_entrega_prevista,
@@ -102,20 +107,13 @@ export async function GET(req: NextRequest) {
         c.valor_total,
         c.observacoes,
         c.criado_em,
-        c.fornecedor_id AS fornecedor,
-        c.filial_id AS filial,
-        c.centro_custo_id AS centro_custo,
-        c.projeto_id AS projeto,
-        c.categoria_financeira_id AS categoria_financeira,
-        c.categoria_despesa_id AS categoria_despesa,
-        l.id AS linha_id,
-        l.produto_id AS produto,
-        l.quantidade,
-        l.unidade_medida,
-        l.preco_unitario,
-        l.total AS total_linha`;
+        c.atualizado_em`;
       baseSql = `FROM compras.compras c
-        LEFT JOIN compras.compras_linhas l ON l.compra_id = c.id`;
+        LEFT JOIN entidades.fornecedores f ON f.id = c.fornecedor_id
+        LEFT JOIN empresa.filiais fil ON fil.id = c.filial_id
+        LEFT JOIN empresa.centros_custo cc ON cc.id = c.centro_custo_id
+        LEFT JOIN financeiro.projetos p ON p.id = c.projeto_id
+        LEFT JOIN financeiro.categorias_despesa cd ON cd.id = c.categoria_despesa_id`;
       whereDateCol = 'c.data_emissao';
       if (status) push('LOWER(c.status) =', status.toLowerCase());
       if (fornecedor_id) push('c.fornecedor_id =', fornecedor_id);
@@ -233,13 +231,13 @@ export async function GET(req: NextRequest) {
     let orderClause = '';
     if (ORDER_BY_WHITELIST[view] && Object.keys(ORDER_BY_WHITELIST[view]).length) {
       if (orderBy) {
-        if (view === 'compras') orderClause = `ORDER BY ${orderBy} ${orderDir}, l.id ASC`;
+        if (view === 'compras') orderClause = `ORDER BY ${orderBy} ${orderDir}, c.numero_oc ASC`;
         else if (view === 'recebimentos') orderClause = `ORDER BY ${orderBy} ${orderDir}, rl.id ASC`;
         else if (view === 'solicitacoes_compra') orderClause = `ORDER BY ${orderBy} ${orderDir}, sci.id ASC`;
         else if (view === 'cotacoes') orderClause = `ORDER BY ${orderBy} ${orderDir}, cf.id ASC, cl.id ASC`;
         else orderClause = `ORDER BY ${orderBy} ${orderDir}`;
       } else {
-        if (view === 'compras') orderClause = 'ORDER BY c.id DESC, l.id ASC';
+        if (view === 'compras') orderClause = 'ORDER BY c.data_emissao ASC, c.numero_oc ASC, c.id ASC';
         else if (view === 'recebimentos') orderClause = 'ORDER BY r.id DESC, rl.id ASC';
         else if (view === 'solicitacoes_compra') orderClause = 'ORDER BY sc.id DESC, sci.id ASC';
         else if (view === 'cotacoes') orderClause = 'ORDER BY c.id DESC, cf.id ASC, cl.id ASC';
