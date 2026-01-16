@@ -355,11 +355,145 @@ function parseInlineArgs(argStr: string): any {
   return args;
 }
 
-export function parseCommands(text: string): ParseResult {
-  const cleaned = stripComments(text || "");
-  const stmts = splitStatements(cleaned);
+function toLower<T extends string>(s: T | undefined): string {
+  return String(s || '').toLowerCase();
+}
+
+function parseJsonUpdateRoot(root: any): ParseResult {
   const errors: CommandError[] = [];
   const commands: Command[] = [];
+  const arr = root && typeof root === 'object' ? (Array.isArray(root.update) ? root.update : []) : [];
+  if (!Array.isArray(arr)) {
+    return { commands, errors: [{ line: 1, message: "JSON inválido: 'update' deve ser um array" }] };
+  }
+
+  for (let i = 0; i < arr.length; i++) {
+    const item = arr[i];
+    const line = i + 1; // aproximação; JSON não tem linhas rastreadas
+    const raw = (() => { try { return JSON.stringify(item); } catch { return String(item); } })();
+    if (!item || typeof item !== 'object') {
+      errors.push({ line, message: "Item inválido: deve ser um objeto", raw });
+      continue;
+    }
+    const id = item.id;
+    if (!id || typeof id !== 'string') {
+      errors.push({ line, message: "Item requer 'id' (string)", raw });
+      continue;
+    }
+
+    // Remoção
+    if (item.delete === true) {
+      if (id === 'header') {
+        errors.push({ line, message: "'header' não pode ser removido", raw });
+        continue;
+      }
+      const ty = toLower(item.type);
+      if ((ty === 'kpis' || ty === 'charts') && !item.sectionId) {
+        commands.push({ kind: 'removeSection', line, raw, args: { id } });
+      } else {
+        commands.push({ kind: 'deleteWidget', line, raw, args: { id } });
+      }
+      continue;
+    }
+
+    // Header
+    if (id === 'header') {
+      const payload: { title?: string; subtitle?: string } = {};
+      if (typeof item.title === 'string') payload.title = item.title;
+      if (typeof item.subtitle === 'string') payload.subtitle = item.subtitle;
+      if (payload.title === undefined && payload.subtitle === undefined) {
+        errors.push({ line, message: "header requer 'title' e/ou 'subtitle'", raw });
+        continue;
+      }
+      commands.push({ kind: 'updateHeader', line, raw, args: payload });
+      continue;
+    }
+
+    // Section (create/update inferido)
+    const sectionType = toLower(item.type);
+    const isSection = sectionType === 'kpis' || sectionType === 'charts';
+    if (isSection) {
+      const createArgs: any = { id, type: sectionType as 'kpis' | 'charts' };
+      if (item.style && typeof item.style === 'object') createArgs.style = item.style;
+      commands.push({ kind: 'createSection', line, raw, args: createArgs });
+
+      // Atualizações de estilo opcionais
+      if (item.style && typeof item.style === 'object') {
+        const style = item.style as Record<string, unknown>;
+        const allowed = [
+          'display','gap','flexDirection','flexWrap','justifyContent','alignItems',
+          'gridTemplateColumns','padding','margin','backgroundColor','opacity','borderColor','borderWidth','borderStyle','borderRadius'
+        ];
+        const upd: any = { id };
+        let hasAny = false;
+        for (const k of Object.keys(style)) {
+          if (allowed.includes(k)) { (upd as any)[k] = (style as any)[k]; hasAny = true; }
+        }
+        if (hasAny) {
+          commands.push({ kind: 'updateSection', line, raw, args: upd });
+        }
+      }
+      continue;
+    }
+
+    // Article (create/update inferido)
+    const hasSectionId = typeof item.sectionId === 'string' && item.sectionId;
+    const role = toLower(item.role);
+    const isKpi = role === 'kpi';
+    const isChart = role === 'chart' || (!!item.chartType && !isKpi);
+    const wantsCreate = !!hasSectionId && (isKpi || isChart);
+
+    if (wantsCreate) {
+      const ca: any = { sectionId: item.sectionId, id, type: (isKpi ? 'kpi' : 'chart') };
+      if (typeof item.title === 'string') ca.title = item.title;
+      if (typeof item.height === 'number') ca.height = item.height;
+      if (typeof item.widthFr === 'number' || typeof item.widthFr === 'string') ca.widthFr = item.widthFr;
+      if (!isKpi && typeof item.chartType === 'string') ca.chartType = item.chartType;
+      // Estilo visual de container
+      const styleKeys = ['backgroundColor','opacity','borderColor','borderWidth','borderStyle','borderRadius'] as const;
+      for (const k of styleKeys) { if (item[k] !== undefined) (ca as any)[k] = item[k]; }
+      commands.push({ kind: 'createArticle', line, raw, args: ca });
+    }
+
+    const hasTitle = typeof item.title === 'string';
+    const hasStyle = item.style && typeof item.style === 'object';
+    const hasQuery = typeof item.query === 'object' || typeof item.query === 'string';
+    if (hasTitle || hasStyle || hasQuery) {
+      const ua: any = { id };
+      if (hasTitle) ua.title = item.title;
+      if (hasStyle) ua.style = item.style;
+      if (hasQuery) ua.query = item.query;
+      commands.push({ kind: 'updateArticle', line, raw, args: ua });
+    }
+
+    if (!wantsCreate && !hasTitle && !hasStyle && !hasQuery) {
+      errors.push({ line, message: `Item '${id}' não reconhecido. Informe 'type' (kpis|charts) para seção ou 'sectionId'/'role' para article.`, raw });
+    }
+  }
+
+  return { commands, errors };
+}
+
+export function parseCommands(text: string): ParseResult {
+  const cleaned = stripComments(text || "");
+  const errors: CommandError[] = [];
+  const commands: Command[] = [];
+
+  // 1) Tentar interpretar como JSON { update: [...] }
+  const trimmedAll = cleaned.trim();
+  if (trimmedAll.startsWith('{')) {
+    try {
+      const root = JSON.parse(trimmedAll);
+      if (root && typeof root === 'object' && Array.isArray(root.update)) {
+        return parseJsonUpdateRoot(root);
+      }
+    } catch {
+      // se falhar, cai para o parser tradicional
+    }
+  }
+
+  // 2) Parser tradicional baseado em statements "cmd(args...);"
+  const stmts = splitStatements(cleaned);
 
   for (const { text: stmt, line } of stmts) {
     // Use [\s\S]* instead of dotAll flag to support ES2017 target

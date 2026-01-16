@@ -58,30 +58,19 @@ addWidget({
 `;
 
 export default function CommandConsole({ sourceCode, onApply }: Props) {
-  const [text, setText] = useState<string>(`// Header
-updateHeader(title: "Dashboard (Atualizado)"; subtitle: "Visão geral (Atualizado)";)
+  const [text, setText] = useState<string>(`{
+  "update": [
+    { "id": "header", "title": "Dashboard de Vendas", "subtitle": "Visão Geral" },
 
-// Sections
-createSection(id: "kpis2"; type: "kpis"; style: { display: "flex"; gap: 16; });
-updateSection(id: "kpis"; display: "grid"; gridTemplateColumns: "repeat(2, 1fr)"; gap: 24;);
+    { "id": "kpis", "type": "kpis", "style": { "display": "flex", "gap": 16 } },
+    { "id": "kpi_faturamento", "sectionId": "kpis", "role": "kpi", "title": "Faturamento", "height": 150 },
 
-// Articles
-createArticle(sectionId: "kpis2"; id: "kpi_novo"; type: "kpi"; title: "Novo KPI"; widthFr: 1; backgroundColor: "#fff";);
-createArticle(sectionId: "charts"; id: "chart_novo"; type: "chart"; title: "Meu Gráfico"; chartType: "bar"; height: 300; categories: ["A","B"]; values: [10,20];);
-updateArticle(id: "kpi_novo"; title: "KPI Atualizado"; style: { borderColor: "#e5e7eb"; borderWidth: 1; borderStyle: "solid"; });
-
-// Update queries dos charts (exemplos do Financeiro)
-// 1) Trocar Top 5 Categorias (Despesas) para Centros de Custo (Despesas)
-updateArticle(
-  id: "chart_top_categorias";
-  query: { "dimension": "centros_custo.nome", "timeDimension": "data_lancamento", "range": "\${de}..\${ate}", "filter": "tipo = 'pagamento_efetuado'", "order": "value DESC", "limit": 5 };
-);
-
-// 2) Trocar Top 5 Clientes (Receitas) para Centros de Lucro (Receitas)
-updateArticle(
-  id: "chart_top_clientes";
-  query: { "dimension": "centros_lucro.nome", "timeDimension": "data_vencimento", "range": "\${de}..\${ate}", "filter": "tipo = 'conta_a_receber' AND (status IS NULL OR status NOT IN ('cancelado'))", "order": "value DESC", "limit": 5 };
-);`);
+    { "id": "charts", "type": "charts", "style": { "display": "grid", "gridTemplateColumns": "repeat(2, 1fr)", "gap": 16 } },
+    { "id": "chart_canal", "sectionId": "charts", "role": "chart", "chartType": "bar", "title": "Vendas por Canal", "height": 320,
+      "query": { "schema": "comercial", "table": "vendas_vw", "dimension": "canal_venda_nome", "measure": "SUM(item_subtotal)", "timeDimension": "data_pedido", "order": "value DESC", "limit": 5 }
+    }
+  ]
+}`);
   const [output, setOutput] = useState<Array<{ type: "ok" | "err"; text: string }>>([]);
   const lastResultRef = useRef<string>("");
 
@@ -112,7 +101,9 @@ updateArticle(
     <div className="h-full flex flex-col">
       <div className="p-4 border-b border-gray-200">
         <h2 className="text-lg font-semibold text-gray-900">Command Console</h2>
-        <p className="text-sm text-gray-600">Comandos suportados: createSection(), updateSection(), createArticle(), updateArticle(), updateHeader(), addKPI(), addChart(), addGroup(), deleteWidget().</p>
+        <p className="text-sm text-gray-600">
+          Aceita JSON no formato {`{ "update": [...] }`} ou a sintaxe de comandos (createSection(), createArticle(), updateArticle(), updateHeader(), addKPI(), addChart(), addGroup(), deleteWidget()).
+        </p>
       </div>
       <div className="flex-1 min-h-0 grid grid-rows-[1fr_auto]">
         <div className="min-h-0">
