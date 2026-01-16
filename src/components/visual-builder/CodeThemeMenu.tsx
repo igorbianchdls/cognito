@@ -495,6 +495,20 @@ export default function CodeThemeMenu({ code, onChange, triggerClassName }: Prop
     const newOpen = `<${tag}${noStyle ? ` ${noStyle}` : ''}${Object.keys(ps).length ? ` style=\"${toInlineStyle(ps)}\"` : ''}>`;
     return inner.replace(m[0], `${newOpen}${body}</${tag}>`);
   };
+  const setH1Style = (inner: string, mut: (ps: Record<string,string>) => void): string => {
+    const h1Re = /<h1\b([^>]*)>([\s\S]*?)<\/h1>/i;
+    const m = inner.match(h1Re);
+    if (!m) return inner; // no h1 in this article
+    const open = m[1] || '';
+    const body = m[2] || '';
+    const styleRe = /style\s*=\s*("([^"]*)"|'([^']*)')/i;
+    const sm = open.match(styleRe);
+    const ps = parseInlineStyle(sm ? (sm[2] || sm[3] || '') : '');
+    mut(ps);
+    const noStyle = open.replace(styleRe, '').replace(/\s+$/, '');
+    const newOpen = `<h1${noStyle ? ` ${noStyle}` : ''}${Object.keys(ps).length ? ` style=\"${toInlineStyle(ps)}\"` : ''}>`;
+    return inner.replace(m[0], `${newOpen}${body}</h1>`);
+  };
 
   return (
     <DropdownMenu>
@@ -523,29 +537,15 @@ export default function CodeThemeMenu({ code, onChange, triggerClassName }: Prop
           </DropdownMenuSubContent>
         </DropdownMenuSub>
 
-        <DropdownMenuSub>
-          <DropdownMenuSubTrigger>
-            <Palette className="w-4 h-4 mr-2" />
-            Tema
-          </DropdownMenuSubTrigger>
-          <DropdownMenuSubContent>
-            {(['branco', 'cinza-claro', 'preto', 'cinza-escuro'] as ThemeName[]).map((theme) => {
-              const preview = ThemeManager.getThemePreview(theme);
-              return (
-                <DropdownMenuItem key={theme} className="flex items-center justify-between py-2">
-                  <div className="flex items-center gap-3">
-                    <div className="w-4 h-4 rounded border border-gray-200" style={{ backgroundColor: preview.primaryColor }} />
-                    <div>
-                      <div className="font-medium">{preview.name}</div>
-                      <div className="text-xs text-muted-foreground truncate max-w-40">{preview.description}</div>
-                    </div>
-                  </div>
-                  {currentThemeName === theme && (<Check className="w-4 h-4 text-blue-600" />)}
-                </DropdownMenuItem>
-              );
-            })}
-          </DropdownMenuSubContent>
-        </DropdownMenuSub>
+        {false && (
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger>
+              <Palette className="w-4 h-4 mr-2" />
+              Tema
+            </DropdownMenuSubTrigger>
+            <DropdownMenuSubContent></DropdownMenuSubContent>
+          </DropdownMenuSub>
+        )}
 
         <DropdownMenuSub>
           <DropdownMenuSubTrigger>
@@ -685,16 +685,18 @@ export default function CodeThemeMenu({ code, onChange, triggerClassName }: Prop
 
             <DropdownMenuSeparator />
 
+            {/* Removed: Tamanho da Fonte */}
+
             <DropdownMenuSub>
-              <DropdownMenuSubTrigger>Tamanho da Fonte</DropdownMenuSubTrigger>
+              <DropdownMenuSubTrigger>Fonte do h1</DropdownMenuSubTrigger>
               <DropdownMenuSubContent>
-                {availableFontSizes.map((size) => (
-                  <DropdownMenuItem key={size.key} className="flex items-center justify-between py-2" onClick={() => handleSetStyleFontSize(size.key)}>
-                    <div className="flex flex-col">
-                      <span className="text-sm font-medium">{size.name}</span>
-                      <span className="text-xs text-muted-foreground">{size.value}px • {size.usage}</span>
-                    </div>
-                    {selectedFontSizeKey === size.key && (<Check className="w-4 h-4 text-blue-600" />)}
+                {availableFonts.map((font) => (
+                  <DropdownMenuItem
+                    key={font.key}
+                    className="flex items-center justify-between py-2"
+                    onClick={() => onChange(rewriteAllArticles(code, (open, inner) => ({ open, inner: setH1Style(inner, (ps) => { ps['font-family'] = FontManager.getFontFamily(font.key); }) })))}
+                  >
+                    <span style={{ fontFamily: font.family }} className="text-sm">{font.name}</span>
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuSubContent>
