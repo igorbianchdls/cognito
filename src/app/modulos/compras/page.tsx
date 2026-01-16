@@ -527,6 +527,54 @@ export default function ModulosComprasPage() {
                           key={tabs.selected}
                           columns={columns}
                           data={data}
+                          headerPadding={8}
+                          columnOptions={
+                            tabs.selected === 'compras' ? {
+                              compra_id: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 80 },
+                              numero_oc: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
+                              data_emissao: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
+                              data_entrega_prevista: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 140 },
+                              fornecedor: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 160 },
+                              filial: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 140 },
+                              centro_custo: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 140 },
+                              projeto: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 140 },
+                              categoria_despesa: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 160 },
+                              status: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
+                              valor_total: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
+                              observacoes: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 160 },
+                              criado_em: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
+                            }
+                            : tabs.selected === 'recebimentos' ? {
+                              recebimento_id: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 80 },
+                              data_recebimento: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
+                              numero_oc: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
+                              compra_data: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
+                              fornecedor: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 160 },
+                              compra_valor_total: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
+                              status: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
+                              observacoes: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 160 },
+                              criado_em: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
+                            }
+                            : tabs.selected === 'solicitacoes_compra' ? {
+                              solicitacao_id: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 80 },
+                              solicitado_por: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 160 },
+                              departamento: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 140 },
+                              status: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
+                              urgencia: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
+                              observacoes: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 160 },
+                              criado_em: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
+                            }
+                            : {
+                              cotacao_id: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 80 },
+                              numero_cotacao: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 140 },
+                              data_solicitacao: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
+                              prazo_resposta: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 140 },
+                              valor_estimado: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
+                              status: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
+                              observacoes: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 160 },
+                              criado_em: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
+                            }
+                          }
                           enableExpand={true}
                           renderDetail={
                             tabs.selected === 'compras'
