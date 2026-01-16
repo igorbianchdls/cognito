@@ -688,13 +688,18 @@ export default function CodeThemeMenu({ code, onChange, triggerClassName }: Prop
             {/* Removed: Tamanho da Fonte */}
 
             <DropdownMenuSub>
-              <DropdownMenuSubTrigger>Fonte do h1</DropdownMenuSubTrigger>
+              <DropdownMenuSubTrigger>Fonte do Título</DropdownMenuSubTrigger>
               <DropdownMenuSubContent>
                 {availableFonts.map((font) => (
                   <DropdownMenuItem
                     key={font.key}
                     className="flex items-center justify-between py-2"
-                    onClick={() => onChange(rewriteAllArticles(code, (open, inner) => ({ open, inner: setH1Style(inner, (ps) => { ps['font-family'] = FontManager.getFontFamily(font.key); }) })))}
+                    onClick={() => onChange(rewriteAllArticles(code, (open, inner) => {
+                      const family = FontManager.getFontFamily(font.key);
+                      const afterP = setFirstPStyle(inner, (ps) => { ps['font-family'] = family; });
+                      const afterH1 = setH1Style(afterP, (ps) => { ps['font-family'] = family; });
+                      return { open, inner: afterH1 };
+                    }))}
                   >
                     <span style={{ fontFamily: font.family }} className="text-sm">{font.name}</span>
                   </DropdownMenuItem>
