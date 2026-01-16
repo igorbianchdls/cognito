@@ -58,6 +58,7 @@ import ContasAReceberResult from '@/components/tools/ContasAReceberResult';
 import ContasAPagarResult, { type ContaPagarRow } from '@/components/tools/ContasAPagarResult';
 import PagamentosRecebidosResult from '@/components/tools/PagamentosRecebidosResult';
 import PagamentosEfetuadosResult from '@/components/tools/PagamentosEfetuadosResult';
+import ArtifactToolCard from './tools/ArtifactToolCard';
 // import MovimentosResult, { type GetMovimentosOutput } from '../tools/MovimentosResult';
 // import MovimentosPorCentroCustoResult, { type GetMovimentosPorCentroCustoOutput } from '../tools/MovimentosPorCentroCustoResult';
 // import TransacoesExtratoResult, { type GetTransacoesExtratoOutput } from '../tools/TransacoesExtratoResult';
@@ -5048,6 +5049,71 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
           return (
             <div key={callId} className="text-xs text-gray-600 mb-2">
               {ok ? 'Patch aplicado.' : 'Falha ao aplicar patch.'}
+            </div>
+          );
+        }
+
+        // Workflow: Criador de Dashboard — artifact (create/update)
+        if (part.type === 'tool-artifact') {
+          const t = part as any;
+          const callId = String(t.toolCallId || `${Date.now()}`);
+          const state = t.state as string;
+          const shouldBeOpen = state === 'output-available' || state === 'output-error' || state === 'input-streaming' || state === 'input-available';
+
+          // Lazy render tool header box for consistency with other tools
+          const headerBox = (
+            <Tool defaultOpen={shouldBeOpen}>
+              <ToolHeader type="tool-artifact" state={state as any} />
+              <ToolContent>
+                {t.state === 'input-streaming' && (<ToolInputStreaming input={t.input} isStreaming={true} />)}
+                {t.state === 'input-available' && (<ToolInputStreaming input={t.input} isStreaming={false} />)}
+                {t.input && (t.state !== 'input-streaming' && t.state !== 'input-available') && (<ToolInput input={t.input} />)}
+                {t.state === 'output-error' && (<ToolOutput output={null} errorText={t.errorText} />)}
+              </ToolContent>
+            </Tool>
+          );
+
+          if (state !== 'output-available') {
+            return (
+              <div key={callId}>{headerBox}</div>
+            );
+          }
+
+          // Output available: show compact card that opens the Artifact Panel
+          const out = t.output as any;
+          const cmd = (out?.command as string) || '';
+          const art = out?.artifact as { id: string; title?: string | null; type?: string | null; content?: string } | undefined;
+          const id = art?.id || 'artifact';
+          const title = art?.title || null;
+          const type = art?.type || null;
+          const initialCode = cmd === 'create' ? (art?.content || '') : undefined;
+          const initialJsonUpdate: unknown[] | undefined = cmd === 'update' ? (out?.json?.update as unknown[] | undefined) : undefined;
+
+          const openPanel = () => {
+            try {
+              window.postMessage(
+                {
+                  type: 'OPEN_ARTIFACT_PANEL',
+                  payload: {
+                    mode: cmd === 'update' ? 'update' : 'create',
+                    id,
+                    initialCode,
+                    initialJsonUpdate,
+                  },
+                },
+                '*'
+              );
+            } catch {}
+          };
+
+          const ArtifactToolCard = require('./tools/ArtifactToolCard').default; // local import to avoid top-level churn
+
+          return (
+            <div key={callId}>
+              {headerBox}
+              <div className="mt-2">
+                <ArtifactToolCard id={id} title={title} type={type || undefined} command={cmd} onOpen={openPanel} />
+              </div>
             </div>
           );
         }

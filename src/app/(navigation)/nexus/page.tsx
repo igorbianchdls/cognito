@@ -269,6 +269,13 @@ export default function Page() {
   };
 
   // Listen for postMessage from SQLExecution components
+  const [artifactPayload, setArtifactPayload] = useState<{
+    mode: 'create'|'update';
+    id: string;
+    initialCode?: string;
+    initialJsonUpdate?: unknown[];
+  } | null>(null);
+
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       // Security: only accept messages from same origin
@@ -343,6 +350,22 @@ export default function Page() {
       }
 
       // (removido: handler específico de paid-traffic para evitar acoplamento na página /nexus)
+      if (event.data.type === 'OPEN_ARTIFACT_PANEL') {
+        try {
+          const payload = event.data.payload;
+          if (payload && typeof payload === 'object') {
+            setArtifactPayload({
+              mode: payload.mode === 'update' ? 'update' : 'create',
+              id: String(payload.id || ''),
+              initialCode: typeof payload.initialCode === 'string' ? payload.initialCode : undefined,
+              initialJsonUpdate: Array.isArray(payload.initialJsonUpdate) ? payload.initialJsonUpdate : undefined,
+            });
+            setViewMode('split');
+          }
+        } catch (e) {
+          console.error('Failed to open artifact panel:', e);
+        }
+      }
     };
 
     window.addEventListener('message', handleMessage);
@@ -391,7 +414,11 @@ export default function Page() {
           <Panel defaultSize={67} minSize={40}>
             <div className="h-full">
               <Suspense fallback={<div className="h-full" />}> 
-                <ArtifactPanelWithParams onClose={() => setViewMode('chat')} onExpand={() => setViewMode('artifact')} />
+            <ArtifactPanelWithParams
+              onClose={() => setViewMode('chat')}
+              onExpand={() => setViewMode('artifact')}
+              artifactPayload={artifactPayload}
+            />
               </Suspense>
             </div>
           </Panel>
@@ -405,7 +432,7 @@ export default function Page() {
       {viewMode === 'artifact' && (
         <div className="h-full">
           <Suspense fallback={<div className="h-full" />}> 
-            <ArtifactPanelWithParams onClose={() => setViewMode('split')} />
+            <ArtifactPanelWithParams onClose={() => setViewMode('split')} artifactPayload={artifactPayload} />
           </Suspense>
         </div>
       )}
@@ -413,8 +440,16 @@ export default function Page() {
   );
 }
 
-function ArtifactPanelWithParams({ onClose, onExpand }: { onClose: () => void; onExpand?: () => void }) {
+function ArtifactPanelWithParams({ onClose, onExpand, artifactPayload }: { onClose: () => void; onExpand?: () => void; artifactPayload?: { mode: 'create'|'update'; id: string; initialCode?: string; initialJsonUpdate?: unknown[] } | null }) {
   const searchParams = useSearchParams();
   const dashboardId = searchParams.get('dashboardId') || undefined;
-  return <SimpleArtifactPanel onClose={onClose} onExpand={onExpand} dashboardId={dashboardId} />;
+  return (
+    <SimpleArtifactPanel
+      onClose={onClose}
+      onExpand={onExpand}
+      dashboardId={dashboardId}
+      initialCode={artifactPayload?.initialCode}
+      initialJsonUpdate={artifactPayload?.initialJsonUpdate as unknown[] | undefined}
+    />
+  );
 }

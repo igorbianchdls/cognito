@@ -9,6 +9,7 @@ import { visualBuilderActions } from "@/stores/visualBuilderStore";
 type Props = {
   sourceCode: string;
   onApply?: (nextCode: string) => void;
+  initialText?: string;
 };
 
 const CHARTS_EXAMPLE = `
@@ -57,8 +58,8 @@ addWidget({
 // deleteWidget({ "id": "kpi_receita_2" });
 `;
 
-export default function CommandConsole({ sourceCode, onApply }: Props) {
-  const [text, setText] = useState<string>(`{
+export default function CommandConsole({ sourceCode, onApply, initialText }: Props) {
+  const [text, setText] = useState<string>(initialText ?? `{
   "update": [
     { "id": "header", "title": "Dashboard de Vendas", "subtitle": "Visão Geral" },
 

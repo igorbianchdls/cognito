@@ -21,11 +21,13 @@ type SimpleArtifactPanelProps = {
   onClose?: () => void;
   dashboardId?: string;
   onExpand?: () => void;
+  initialCode?: string;
+  initialJsonUpdate?: unknown[];
 };
 
-export default function SimpleArtifactPanel({ onClose, dashboardId, onExpand }: SimpleArtifactPanelProps) {
-  const [tab, setTab] = useState<'code' | 'preview' | 'console'>('code');
-  const [code, setCode] = useState<string>(() => initialArtifactLiquid);
+export default function SimpleArtifactPanel({ onClose, dashboardId, onExpand, initialCode, initialJsonUpdate }: SimpleArtifactPanelProps) {
+  const [tab, setTab] = useState<'code' | 'preview' | 'console'>(initialJsonUpdate ? 'console' : 'code');
+  const [code, setCode] = useState<string>(() => (typeof initialCode === 'string' && initialCode.length > 0) ? initialCode : initialArtifactLiquid);
   const [copied, setCopied] = useState(false);
 
   const handleCopy = useCallback(async () => {
@@ -136,7 +138,11 @@ export default function SimpleArtifactPanel({ onClose, dashboardId, onExpand }: 
           )}
           {tab === 'console' && (
             <div className="h-full overflow-auto">
-              <CommandConsole sourceCode={code} onApply={setCode} />
+          <CommandConsole
+            sourceCode={code}
+            onApply={setCode}
+            initialText={initialJsonUpdate ? JSON.stringify({ update: initialJsonUpdate }, null, 2) : undefined}
+          />
             </div>
           )}
         </div>
