@@ -135,7 +135,7 @@ const systemPrompt = `Você é um workflow de IA chamado "Criador de Dashboard".
 # Ferramenta artifact
 - Use a tool "artifact" para criar/atualizar artifacts (sem persistência automática; preview-friendly).
 - create: requer id, title, type, content.
-- update: requer id, old_str, new_str. Não inclua title/type/content/language no update.
+- update: requer id e json com payload no padrão do Command Console: { "json": { "update": [ ... ] } }. Campos title/type/content/language enviados junto do update são ignorados.
 - Sempre retorne mensagens claras sobre a operação realizada.
 
 # Exemplos de uso da tool "artifact"
@@ -148,12 +148,34 @@ const systemPrompt = `Você é um workflow de IA chamado "Criador de Dashboard".
   "content": "export default function App() {\n  return (\n    <button className=\"px-6 py-3 bg-blue-500 text-white rounded\">\n      Clique aqui\n    </button>\n  );\n}"
 }
 
-## update
+## update (JSON no padrão do Command Console, dentro de 'json')
 {
   "command": "update",
   "id": "counter-app",
-  "old_str": "      <button \n        onClick={() => setCount(count + 1)}\n        className=\"px-6 py-3 bg-blue-500 text-white rounded\"\n      >\n        Incrementar\n      </button>",
-  "new_str": "      <div className=\"flex gap-4\">\n        <button \n          onClick={() => setCount(count - 1)}\n          className=\"px-6 py-3 bg-red-500 text-white rounded\"\n        >\n          Decrementar\n        </button>\n        <button \n          onClick={() => setCount(count + 1)}\n          className=\"px-6 py-3 bg-blue-500 text-white rounded\"\n        >\n          Incrementar\n        </button>\n      </div>"
+  "json": {
+    "update": [
+      { "id": "header", "title": "Counter App", "subtitle": "Adicionei o botão de decrementar" }
+    ]
+  }
+}
+
+## update — Exemplo real (usando o JSON padrão do Command Console)
+{
+  "command": "update",
+  "id": "counter-app",
+  "json": {
+    "update": [
+      { "id": "header", "title": "Dashboard de Vendas", "subtitle": "Visão Geral" },
+
+      { "id": "kpis", "type": "kpis", "style": { "display": "flex", "gap": 16 } },
+      { "id": "kpi_faturamento", "sectionId": "kpis", "role": "kpi", "title": "Faturamento", "height": 150 },
+
+      { "id": "charts", "type": "charts", "style": { "display": "grid", "gridTemplateColumns": "repeat(2, 1fr)", "gap": 16 } },
+      { "id": "chart_canal", "sectionId": "charts", "role": "chart", "chartType": "bar", "title": "Vendas por Canal", "height": 320,
+        "query": { "schema": "comercial", "table": "vendas_vw", "dimension": "canal_venda_nome", "measure": "SUM(item_subtotal)", "timeDimension": "data_pedido", "order": "value DESC", "limit": 5 }
+      }
+    ]
+  }
 }
 
 `

@@ -87,14 +87,16 @@ const ArtifactCreateSchema = z.object({
 const ArtifactUpdateSchema = z.object({
   command: z.literal('update'),
   id: z.string().min(1, 'id é obrigatório'),
-  old_str: z.string().min(1, 'old_str é obrigatório'),
-  new_str: z.string().min(1, 'new_str é obrigatório'),
-}).strict();
+  // JSON no formato do Command Console: { json: { update: [ ... ] } }
+  json: z.object({
+    update: z.array(z.any()).min(1, 'json.update deve ter ao menos um item')
+  }).strict()
+}).passthrough();
 
 const ArtifactInputSchema = z.discriminatedUnion('command', [ArtifactCreateSchema, ArtifactUpdateSchema]);
 
 export const artifact = tool({
-  description: 'Gerencia artifacts em modo preview. create: id/title/type/content. update: id/old_str/new_str (sem alterar conteúdo).',
+  description: 'Gerencia artifacts em modo preview. create: id/title/type/content. update: id + { json: { update: [...] } } (sem alterar conteúdo).',
   inputSchema: ArtifactInputSchema,
   execute: async (input) => {
     if (input.command === 'create') {
@@ -106,12 +108,12 @@ export const artifact = tool({
       };
     }
     // update
-    const { id, old_str, new_str } = input;
+    const { id, json } = input as unknown as { id: string; json: { update: unknown[] } };
     return {
       success: true as const,
       command: 'update' as const,
       artifact: { id },
-      change: { old_str, new_str },
+      json,
     };
   },
 });
