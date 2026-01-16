@@ -858,21 +858,15 @@ export function upsertHeaderSimple(
   const parseStyle = (s: string): Record<string,string> => { const o: Record<string,string> = {}; for (const part of s.split(';')) { const p = part.trim(); if (!p) continue; const i = p.indexOf(':'); if (i===-1) continue; o[p.slice(0,i).trim()] = p.slice(i+1).trim(); } return o; };
   const toStyle = (obj: Record<string,string>): string => Object.entries(obj).filter(([,v])=>v!==undefined&&v!=='').map(([k,v])=>`${k}:${v}`).join('; ');
   const mergeContainerStyle = (openAttrs: string): string => {
+    // Merge only provided container style fields, preserve all other attrs as-is
     const ms = openAttrs.match(styleRe);
     const obj = ms ? parseStyle(ms[2] || ms[3] || '') : {};
-    if (data.backgroundColor) obj['background-color'] = String(data.backgroundColor);
-    if (data.borderColor) obj['border-color'] = String(data.borderColor);
+    if (data.backgroundColor !== undefined) obj['background-color'] = String(data.backgroundColor);
+    if (data.borderColor !== undefined) obj['border-color'] = String(data.borderColor);
     if (typeof data.borderWidth === 'number') obj['border-width'] = `${data.borderWidth}px`;
-    if (data.borderStyle) obj['border-style'] = String(data.borderStyle);
+    if (data.borderStyle !== undefined) obj['border-style'] = String(data.borderStyle);
     let next = openAttrs.replace(styleRe, '');
     next = next.replace(/\s+$/, '');
-    // ensure vb-header class exists
-    if (!/class\s*=/.test(next)) next = ` class=\"vb-header\"` + next;
-    else next = next.replace(/class\s*=\s*("([^"]*)"|'([^']*)')/i, (_m, q, d1, d2) => {
-      const val = d1 || d2 || '';
-      const has = /\bvb-header\b/.test(val);
-      return `class=\"${has ? val : (val ? `${val} vb-header` : 'vb-header')}\"`;
-    });
     const styleStr = toStyle(obj);
     return `<header${next}${styleStr ? ` style=\"${styleStr}\"` : ''}>`;
   };
@@ -886,20 +880,51 @@ export function upsertHeaderSimple(
     const innerOld = m[2] || '';
     let inner = innerOld;
     const pRe = /<p\b([^>]*)>([\s\S]*?)<\/p>/gi;
-    const found = Array.from(inner.matchAll(pRe));
+    const matches = Array.from(inner.matchAll(pRe));
+
+    // Replace only text content for existing <p> tags, preserving attributes/styles
     if (t) {
-      if (found[0]) inner = inner.replace(found[0][0], p1); else inner = p1 + `\n` + inner;
+      if (matches[0]) {
+        const full = matches[0][0];
+        const attrs = matches[0][1] || '';
+        const replaced = `<p${attrs ? ' ' + attrs : ''}>${esc(t)}</p>`;
+        inner = inner.replace(full, replaced);
+      } else {
+        inner = p1 + `\n` + inner;
+      }
     }
     if (s) {
-      const pSecond = inner.match(/<p\b[^>]*>[\s\S]*?<\/p>\s*([\s\S]*)/i);
-      if (found[1]) inner = inner.replace(found[1][0], p2);
-      else inner = inner.replace(/(<p\b[^>]*>[\s\S]*?<\/p>)/i, (_m) => _m + `\n` + p2) || (p1 + `\n` + p2 + `\n` + inner);
+      // Recompute second match against current inner to avoid index drift
+      const matchesNow = Array.from(inner.matchAll(pRe));
+      if (matchesNow[1]) {
+        const full = matchesNow[1][0];
+        const attrs = matchesNow[1][1] || '';
+        const replaced = `<p${attrs ? ' ' + attrs : ''}>${esc(s)}</p>`;
+        inner = inner.replace(full, replaced);
+      } else if (matchesNow[0]) {
+        // Insert after first <p> if only one exists
+        inner = inner.replace(/(<p\b[^>]*>[\s\S]*?<\/p>)/i, (_m) => _m + `\n` + p2) || (p1 + `\n` + p2 + `\n` + inner);
+      } else {
+        // No <p> at all, prepend both as needed
+        inner = `${p1}\n${p2}\n${inner}`;
+      }
     }
-    const openNew = mergeContainerStyle(openAttrs);
+
+    // Only merge container styles if any container style was provided; otherwise keep header attrs untouched
+    const hasContainerStyle = (
+      data.backgroundColor !== undefined ||
+      data.borderColor !== undefined ||
+      typeof data.borderWidth === 'number' ||
+      data.borderStyle !== undefined
+    );
+    const openNew = hasContainerStyle ? mergeContainerStyle(openAttrs) : `<header${openAttrs}>`;
     return code.replace(rePair, openNew + inner + `</header>`);
   }
   // Insert new header after optional early <style> or directly after <dashboard>
-  const openNew = mergeContainerStyle('');
+  // Create minimal header when missing (no forced classes/styles unless provided)
+  const openNew = (data.backgroundColor !== undefined || data.borderColor !== undefined || typeof data.borderWidth === 'number' || data.borderStyle !== undefined)
+    ? mergeContainerStyle('')
+    : `<header>`;
   const tag = `${openNew}\n${t ? p1 + '\n' : ''}${s ? p2 + '\n' : ''}</header>`;
   const earlyStyle = post.match(/^\s*(?:<!--[\s\S]*?-->\s*)*(<style\b[\s\S]*?<\/style>)/i);
   if (earlyStyle && typeof earlyStyle.index === 'number') {
