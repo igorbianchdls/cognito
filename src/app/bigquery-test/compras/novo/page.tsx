@@ -220,7 +220,7 @@ export default function BigQueryTestNovaCompraPage() {
       if (vValorProdutos) fd.set('valor_produtos', String(Number(vValorProdutos) || 0))
       if (vValorFrete) fd.set('valor_frete', String(Number(vValorFrete) || 0))
       if (vValorDesconto) fd.set('valor_desconto', String(Number(vValorDesconto) || 0))
-      fd.set('status', 'Aberto')
+      fd.set('status', 'confirmado')
 
       const res = await fetch('/api/modulos/vendas/pedidos', { method: 'POST', body: fd })
       const j = await res.json()
