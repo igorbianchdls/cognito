@@ -107,9 +107,9 @@ export async function GET(req: NextRequest) {
     let orderClause = ''
 
     if (view === 'pedidos') {
-      // Cabeçalho conforme query fornecida (sem itens aqui; itens carregados abaixo)
+      // Implementa a query fornecida (com IDs auxiliares para agregação)
       selectSql = `SELECT
-        p.id AS pedido_id,
+        p.id               AS pedido_id,
         p.data_pedido,
         p.status,
         p.subtotal,
@@ -117,29 +117,41 @@ export async function GET(req: NextRequest) {
         p.valor_total,
         p.descricao        AS pedido_descricao,
         p.observacoes,
+
         c.nome_fantasia    AS cliente,
+
         f.nome             AS vendedor,
+
         t.nome             AS territorio,
         cv.nome            AS canal_venda,
-        p.canal_venda_id   AS canal_venda_id,
         camp.nome          AS campanha_venda,
         cr.nome            AS categoria_receita,
         cl.nome            AS centro_lucro,
         fil.nome           AS filial,
-        un.nome            AS unidade_negocio`
+        un.nome            AS unidade_negocio,
+
+        s.nome             AS servico,
+        pi.quantidade,
+        pi.preco_unitario,
+        pi.desconto        AS desconto_item,
+        pi.subtotal        AS subtotal_item,
+        pi.id              AS item_id,
+        p.canal_venda_id   AS canal_venda_id`
       baseSql = `FROM vendas.pedidos p
-        JOIN entidades.clientes c           ON c.id = p.cliente_id
-        LEFT JOIN comercial.vendedores v    ON v.id = p.vendedor_id
-        LEFT JOIN entidades.funcionarios f  ON f.id = v.funcionario_id
-        LEFT JOIN comercial.territorios t   ON t.id = p.territorio_id
-        LEFT JOIN vendas.canais_venda cv    ON cv.id = p.canal_venda_id
+        JOIN vendas.pedidos_itens pi      ON pi.pedido_id = p.id
+        JOIN entidades.clientes c         ON c.id = p.cliente_id
+        JOIN servicos.catalogo_servicos s ON s.id = pi.servico_id
+        LEFT JOIN comercial.vendedores v  ON v.id = p.vendedor_id
+        LEFT JOIN entidades.funcionarios f ON f.id = v.funcionario_id
+        LEFT JOIN comercial.territorios t ON t.id = p.territorio_id
+        LEFT JOIN vendas.canais_venda cv  ON cv.id = p.canal_venda_id
         LEFT JOIN comercial.campanhas_vendas camp ON camp.id = p.campanha_venda_id
         LEFT JOIN financeiro.categorias_receita cr ON cr.id = p.categoria_receita_id
-        LEFT JOIN empresa.centros_lucro cl  ON cl.id = p.centro_lucro_id
-        LEFT JOIN empresa.filiais fil       ON fil.id = p.filial_id
+        LEFT JOIN empresa.centros_lucro cl ON cl.id = p.centro_lucro_id
+        LEFT JOIN empresa.filiais fil      ON fil.id = p.filial_id
         LEFT JOIN empresa.unidades_negocio un ON un.id = p.unidade_negocio_id
         WHERE p.tenant_id = 1`
-      orderClause = orderBy ? `ORDER BY ${orderBy} ${orderDir}` : 'ORDER BY p.data_pedido ASC, c.nome_fantasia ASC'
+      orderClause = 'ORDER BY p.data_pedido ASC, c.nome_fantasia ASC, s.nome ASC'
     } else if (view === 'devolucoes') {
       selectSql = `SELECT
         d.id AS devolucao,
@@ -257,7 +269,7 @@ export async function GET(req: NextRequest) {
     const listSql = `${selectSql} ${baseSql} ${orderClause} LIMIT $1::int OFFSET $2::int`.trim()
     let rows = await runQuery<Record<string, unknown>>(listSql, [pageSize, offset])
 
-    // Para pedidos, agrupar itens (cabeçalho + linhas) com paginação por cabeçalho
+    // Para pedidos, agrupar itens (cabeçalho + linhas) a partir da query única
     if (view === 'pedidos') {
       type PedidoItem = {
         item_id: unknown
@@ -282,50 +294,31 @@ export async function GET(req: NextRequest) {
 
       const headers = rows as Record<string, unknown>[]
       const pedidosMap = new Map<number, PedidoAgregado>()
-      const ids: number[] = []
       for (const row of headers) {
         const pedidoId = Number(row.pedido_id)
-        ids.push(pedidoId)
-        pedidosMap.set(pedidoId, {
-          pedido: row.pedido_id,
-          cliente: row.cliente,
-          vendedor: row.vendedor,
-          filial: row.filial,
-          canal_venda: row.canal_venda,
-          canal_venda_id: row.canal_venda_id,
-          data_pedido: row.data_pedido,
-          status: row.status,
-          valor_total: Number(row.valor_total || 0),
-          itens: []
-        })
-      }
-
-      if (ids.length > 0) {
-        const itemsSql = `SELECT
-          i.id AS item_id,
-          i.pedido_id,
-          i.servico_id,
-          s.nome AS servico_nome,
-          i.quantidade,
-          i.preco_unitario,
-          i.desconto AS desconto_item,
-          i.subtotal AS subtotal_item
-        FROM vendas.pedidos_itens i
-        LEFT JOIN servico.catalogo_servicos s ON s.id = i.servico_id
-        WHERE i.pedido_id = ANY($1::int[])
-        ORDER BY i.pedido_id ASC, s.nome ASC`
-        const itemsRows = await runQuery<Record<string, unknown>>(itemsSql, [ids])
-        for (const it of itemsRows) {
-          const pedidoId = Number(it.pedido_id)
-          const agg = pedidosMap.get(pedidoId)
-          if (!agg) continue
-          agg.itens.push({
-            item_id: it.item_id,
-            servico_id: it.servico_id,
-            servico: it.servico_nome,
-            quantidade: it.quantidade,
-            preco_unitario: it.preco_unitario,
-            subtotal: it.subtotal_item ?? it.subtotal,
+        if (!pedidosMap.has(pedidoId)) {
+          pedidosMap.set(pedidoId, {
+            pedido: row.pedido_id,
+            cliente: row.cliente,
+            vendedor: row.vendedor,
+            filial: row.filial,
+            canal_venda: row.canal_venda,
+            canal_venda_id: row.canal_venda_id,
+            data_pedido: row.data_pedido,
+            status: row.status,
+            valor_total: Number(row.valor_total || 0),
+            itens: []
+          })
+        }
+        // item desta linha
+        if (row.item_id) {
+          pedidosMap.get(pedidoId)!.itens.push({
+            item_id: row.item_id,
+            servico_id: undefined,
+            servico: row.servico,
+            quantidade: row.quantidade,
+            preco_unitario: row.preco_unitario,
+            subtotal: row.subtotal_item ?? row.subtotal,
           })
         }
       }

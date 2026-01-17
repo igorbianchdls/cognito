@@ -15,7 +15,6 @@ export async function POST(req: Request) {
     const data_pedido = String(form.get('data_pedido') || '').trim()
     const valor_total_raw = String(form.get('valor_total') || '').trim()
 
-    if (!numero_pedido) return Response.json({ success: false, message: 'numero_pedido é obrigatório' }, { status: 400 })
     if (!cliente_id_raw) return Response.json({ success: false, message: 'cliente_id é obrigatório' }, { status: 400 })
     if (!canal_venda_id_raw) return Response.json({ success: false, message: 'canal_venda_id é obrigatório' }, { status: 400 })
     if (!data_pedido) return Response.json({ success: false, message: 'data_pedido é obrigatório' }, { status: 400 })
@@ -59,7 +58,7 @@ export async function POST(req: Request) {
     let i = 1
 
     if (has('tenant_id')) { insertCols.push('tenant_id'); placeholders.push(`$${i++}`); values.push(tenant_id) }
-    insertCols.push('numero_pedido'); placeholders.push(`$${i++}`); values.push(numero_pedido)
+    // Para maior compatibilidade, não insere numero_pedido; usar descrição/campo próprio no futuro
     insertCols.push('cliente_id'); placeholders.push(`$${i++}`); values.push(cliente_id)
     insertCols.push('canal_venda_id'); placeholders.push(`$${i++}`); values.push(canal_venda_id)
     if (has('vendedor_id')) {
