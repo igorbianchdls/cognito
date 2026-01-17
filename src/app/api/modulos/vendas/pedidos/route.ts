@@ -31,27 +31,57 @@ export async function POST(req: Request) {
     // Optionals
     const tenant_id_raw = String(form.get('tenant_id') || '').trim()
     const usuario_id_raw = String(form.get('usuario_id') || '').trim()
+    const vendedor_id_raw = String(form.get('vendedor_id') || '').trim()
     const valor_produtos_raw = String(form.get('valor_produtos') || '').trim()
     const valor_frete_raw = String(form.get('valor_frete') || '').trim()
     const valor_desconto_raw = String(form.get('valor_desconto') || '').trim()
     const status = String(form.get('status') || '').trim() || null
 
     const tenant_id = tenant_id_raw ? Number(tenant_id_raw) : 1
-    const usuario_id = usuario_id_raw ? Number(usuario_id_raw) : null
+    // Some schemas use vendedor_id instead of usuario_id
+    const vendedor_id = vendedor_id_raw ? Number(vendedor_id_raw) : (usuario_id_raw ? Number(usuario_id_raw) : null)
     const valor_produtos = valor_produtos_raw ? Number(valor_produtos_raw) : null
     const valor_frete = valor_frete_raw ? Number(valor_frete_raw) : null
     const valor_desconto = valor_desconto_raw ? Number(valor_desconto_raw) : null
 
     const result = await withTransaction(async (client) => {
-      const insert = await client.query(
-        `INSERT INTO gestaovendas.pedidos (
-           tenant_id, numero_pedido, cliente_id, canal_venda_id, usuario_id, data_pedido,
-           valor_produtos, valor_frete, valor_desconto, valor_total, status
-         ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
-         RETURNING id`,
-        [tenant_id, numero_pedido, cliente_id, canal_venda_id, usuario_id, data_pedido,
-         valor_produtos, valor_frete, valor_desconto, valor_total, status]
-      )
+      let insert
+      // Variant A: vendas.pedidos with tenant_id and vendedor_id
+      try {
+        insert = await client.query(
+          `INSERT INTO vendas.pedidos (
+             tenant_id, numero_pedido, cliente_id, canal_venda_id, vendedor_id, data_pedido,
+             valor_produtos, valor_frete, valor_desconto, valor_total, status
+           ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+           RETURNING id`,
+          [tenant_id, numero_pedido, cliente_id, canal_venda_id, vendedor_id, data_pedido,
+           valor_produtos, valor_frete, valor_desconto, valor_total, status]
+        )
+      } catch (e1) {
+        // Variant B: vendas.pedidos without tenant_id
+        try {
+          insert = await client.query(
+            `INSERT INTO vendas.pedidos (
+               numero_pedido, cliente_id, canal_venda_id, vendedor_id, data_pedido,
+               valor_produtos, valor_frete, valor_desconto, valor_total, status
+             ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+             RETURNING id`,
+            [numero_pedido, cliente_id, canal_venda_id, vendedor_id, data_pedido,
+             valor_produtos, valor_frete, valor_desconto, valor_total, status]
+          )
+        } catch (e2) {
+          // Variant C: vendas.pedidos with usuario_id (legacy naming)
+          insert = await client.query(
+            `INSERT INTO vendas.pedidos (
+               numero_pedido, cliente_id, canal_venda_id, usuario_id, data_pedido,
+               valor_produtos, valor_frete, valor_desconto, valor_total, status
+             ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+             RETURNING id`,
+            [numero_pedido, cliente_id, canal_venda_id, vendedor_id, data_pedido,
+             valor_produtos, valor_frete, valor_desconto, valor_total, status]
+          )
+        }
+      }
       const inserted = insert.rows[0] as { id: number | string }
       const id = Number(inserted?.id)
       if (!id) throw new Error('Falha ao criar pedido')
