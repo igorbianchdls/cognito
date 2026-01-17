@@ -107,28 +107,39 @@ export async function GET(req: NextRequest) {
     let orderClause = ''
 
     if (view === 'pedidos') {
-      // Paginação por cabeçalho (pedido) apenas, com nomes de vendedor, filial e canal de venda
+      // Cabeçalho conforme query fornecida (sem itens aqui; itens carregados abaixo)
       selectSql = `SELECT
         p.id AS pedido_id,
         p.data_pedido,
         p.status,
+        p.subtotal,
+        p.desconto_total,
         p.valor_total,
-        cli.nome_fantasia AS cliente_nome,
-        f.nome AS vendedor_nome,
-        fil.nome AS filial_nome,
-        cv.nome AS canal_venda_nome,
-        p.canal_venda_id AS canal_venda_id`
+        p.descricao        AS pedido_descricao,
+        p.observacoes,
+        c.nome_fantasia    AS cliente,
+        f.nome             AS vendedor,
+        t.nome             AS territorio,
+        cv.nome            AS canal_venda,
+        p.canal_venda_id   AS canal_venda_id,
+        camp.nome          AS campanha_venda,
+        cr.nome            AS categoria_receita,
+        cl.nome            AS centro_lucro,
+        fil.nome           AS filial,
+        un.nome            AS unidade_negocio`
       baseSql = `FROM vendas.pedidos p
-        -- CLIENTE
-        LEFT JOIN entidades.clientes cli ON cli.id = p.cliente_id
-        -- VENDEDOR
-        LEFT JOIN comercial.vendedores v ON v.id = p.vendedor_id
-        LEFT JOIN entidades.funcionarios f ON f.id = v.funcionario_id
-        -- FILIAL
-        LEFT JOIN empresa.filiais fil ON fil.id = p.filial_id
-        -- CANAL DE VENDA
-        LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id`
-      orderClause = orderBy ? `ORDER BY ${orderBy} ${orderDir}` : 'ORDER BY p.id ASC'
+        JOIN entidades.clientes c           ON c.id = p.cliente_id
+        LEFT JOIN comercial.vendedores v    ON v.id = p.vendedor_id
+        LEFT JOIN entidades.funcionarios f  ON f.id = v.funcionario_id
+        LEFT JOIN comercial.territorios t   ON t.id = p.territorio_id
+        LEFT JOIN vendas.canais_venda cv    ON cv.id = p.canal_venda_id
+        LEFT JOIN comercial.campanhas_vendas camp ON camp.id = p.campanha_venda_id
+        LEFT JOIN financeiro.categorias_receita cr ON cr.id = p.categoria_receita_id
+        LEFT JOIN empresa.centros_lucro cl  ON cl.id = p.centro_lucro_id
+        LEFT JOIN empresa.filiais fil       ON fil.id = p.filial_id
+        LEFT JOIN empresa.unidades_negocio un ON un.id = p.unidade_negocio_id
+        WHERE p.tenant_id = 1`
+      orderClause = orderBy ? `ORDER BY ${orderBy} ${orderDir}` : 'ORDER BY p.data_pedido ASC, c.nome_fantasia ASC'
     } else if (view === 'devolucoes') {
       selectSql = `SELECT
         d.id AS devolucao,
@@ -277,10 +288,10 @@ export async function GET(req: NextRequest) {
         ids.push(pedidoId)
         pedidosMap.set(pedidoId, {
           pedido: row.pedido_id,
-          cliente: row.cliente_nome,
-          vendedor: row.vendedor_nome,
-          filial: row.filial_nome,
-          canal_venda: row.canal_venda_nome,
+          cliente: row.cliente,
+          vendedor: row.vendedor,
+          filial: row.filial,
+          canal_venda: row.canal_venda,
           canal_venda_id: row.canal_venda_id,
           data_pedido: row.data_pedido,
           status: row.status,
@@ -297,11 +308,12 @@ export async function GET(req: NextRequest) {
           s.nome AS servico_nome,
           i.quantidade,
           i.preco_unitario,
-          i.subtotal
+          i.desconto AS desconto_item,
+          i.subtotal AS subtotal_item
         FROM vendas.pedidos_itens i
-        LEFT JOIN servicos.catalogo_servicos s ON s.id = i.servico_id
+        LEFT JOIN servico.catalogo_servicos s ON s.id = i.servico_id
         WHERE i.pedido_id = ANY($1::int[])
-        ORDER BY i.pedido_id ASC, i.id ASC`
+        ORDER BY i.pedido_id ASC, s.nome ASC`
         const itemsRows = await runQuery<Record<string, unknown>>(itemsSql, [ids])
         for (const it of itemsRows) {
           const pedidoId = Number(it.pedido_id)
@@ -313,7 +325,7 @@ export async function GET(req: NextRequest) {
             servico: it.servico_nome,
             quantidade: it.quantidade,
             preco_unitario: it.preco_unitario,
-            subtotal: it.subtotal,
+            subtotal: it.subtotal_item ?? it.subtotal,
           })
         }
       }
@@ -453,7 +465,7 @@ export async function GET(req: NextRequest) {
 
     // Total - para pedidos e devolucoes, contar apenas registros distintos
     const totalSql = view === 'pedidos'
-      ? `SELECT COUNT(DISTINCT p.id)::int AS total FROM vendas.pedidos p`
+      ? `SELECT COUNT(DISTINCT p.id)::int AS total FROM vendas.pedidos p WHERE p.tenant_id = 1`
       : view === 'devolucoes'
       ? `SELECT COUNT(DISTINCT d.id)::int AS total FROM vendas.devolucoes d`
       : view === 'tabelas_preco'
