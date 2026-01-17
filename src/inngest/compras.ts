@@ -16,6 +16,21 @@ type CompraHeader = {
   observacoes: string | null
 }
 
+function toISODate(value: unknown, fallback?: Date): string {
+  if (typeof value === 'string') {
+    // Accept 'YYYY-MM-DD' or 'YYYY-MM-DDTHH:mm:ssZ'
+    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value
+    const m = value.match(/^(\d{4}-\d{2}-\d{2})/)
+    if (m) return m[1]
+    const d = new Date(value)
+    if (!isNaN(d.getTime())) return d.toISOString().slice(0, 10)
+  } else if (value instanceof Date) {
+    if (!isNaN(value.getTime())) return value.toISOString().slice(0, 10)
+  }
+  const d = fallback ?? new Date()
+  return d.toISOString().slice(0, 10)
+}
+
 export async function createApFromCompra(compraId: number): Promise<{ apId: number }> {
   // Carrega a compra
   const compraRows = await runQuery<CompraHeader>(
@@ -35,9 +50,9 @@ export async function createApFromCompra(compraId: number): Promise<{ apId: numb
   const filialId = compra.filial_id !== null && compra.filial_id !== undefined ? Number(compra.filial_id) : null
   const categoriaId = compra.categoria_despesa_id !== null && compra.categoria_despesa_id !== undefined ? Number(compra.categoria_despesa_id) : null
   const numeroDoc = (compra.numero_oc && compra.numero_oc.trim()) ? compra.numero_oc.trim() : `OC-${compra.id}`
-  const dataDoc = (compra.data_emissao && String(compra.data_emissao)) || new Date().toISOString().slice(0,10)
+  const dataDoc = toISODate(compra.data_emissao)
   const dataLanc = dataDoc
-  const dataVenc = (compra.data_entrega_prevista && String(compra.data_entrega_prevista)) || dataDoc
+  const dataVenc = toISODate(compra.data_entrega_prevista, new Date(dataDoc))
   const valorTotal = Math.abs(Number(compra.valor_total || 0))
   const observacao = (compra.observacoes && compra.observacoes.trim()) || `Compra ${numeroDoc} (ID ${compra.id})`
 
