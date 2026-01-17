@@ -16,48 +16,26 @@ function toISODate(value: unknown, fallback?: Date): string {
 }
 
 export async function createCrFromPedido(pedidoId: number): Promise<{ crId: number }> {
-  // Carregar pedido (com dims relevantes). Alguns campos podem não existir; proteger com COALESCE/nulos
-  const pedidoRows = await runQuery<{
-    id: number
-    tenant_id: number | null
-    cliente_id: number | null
-    numero_pedido?: string | null
-    data_pedido: string | null
-    valor_total: number | null
-    descricao?: string | null
-    categoria_receita_id?: number | null
-    centro_lucro_id?: number | null
-    filial_id?: number | null
-    unidade_negocio_id?: number | null
-  }>(
-    `SELECT p.id,
-            p.tenant_id,
-            p.cliente_id,
-            CASE WHEN EXISTS (
-              SELECT 1 FROM information_schema.columns WHERE table_schema='vendas' AND table_name='pedidos' AND column_name='numero_pedido'
-            ) THEN p.numero_pedido ELSE NULL END AS numero_pedido,
-            p.data_pedido,
-            p.valor_total,
-            CASE WHEN EXISTS (
-              SELECT 1 FROM information_schema.columns WHERE table_schema='vendas' AND table_name='pedidos' AND column_name='descricao'
-            ) THEN p.descricao ELSE NULL END AS descricao,
-            CASE WHEN EXISTS (
-              SELECT 1 FROM information_schema.columns WHERE table_schema='vendas' AND table_name='pedidos' AND column_name='categoria_receita_id'
-            ) THEN p.categoria_receita_id ELSE NULL END AS categoria_receita_id,
-            CASE WHEN EXISTS (
-              SELECT 1 FROM information_schema.columns WHERE table_schema='vendas' AND table_name='pedidos' AND column_name='centro_lucro_id'
-            ) THEN p.centro_lucro_id ELSE NULL END AS centro_lucro_id,
-            CASE WHEN EXISTS (
-              SELECT 1 FROM information_schema.columns WHERE table_schema='vendas' AND table_name='pedidos' AND column_name='filial_id'
-            ) THEN p.filial_id ELSE NULL END AS filial_id,
-            CASE WHEN EXISTS (
-              SELECT 1 FROM information_schema.columns WHERE table_schema='vendas' AND table_name='pedidos' AND column_name='unidade_negocio_id'
-            ) THEN p.unidade_negocio_id ELSE NULL END AS unidade_negocio_id
-       FROM vendas.pedidos p
-      WHERE p.id = $1
-      LIMIT 1`,
-    [pedidoId]
+  // Descobrir colunas existentes para montar SELECT compatível
+  const colsInfo = await runQuery<{ column_name: string }>(
+    `SELECT column_name FROM information_schema.columns WHERE table_schema='vendas' AND table_name='pedidos'`
   )
+  const has = (c: string) => colsInfo.some(r => r.column_name === c)
+  const selectParts = [
+    'p.id',
+    'p.tenant_id',
+    'p.cliente_id',
+    has('numero_pedido') ? 'p.numero_pedido' : "NULL AS numero_pedido",
+    'p.data_pedido',
+    'p.valor_total',
+    has('descricao') ? 'p.descricao' : 'NULL AS descricao',
+    has('categoria_receita_id') ? 'p.categoria_receita_id' : 'NULL AS categoria_receita_id',
+    has('centro_lucro_id') ? 'p.centro_lucro_id' : 'NULL AS centro_lucro_id',
+    has('filial_id') ? 'p.filial_id' : 'NULL AS filial_id',
+    has('unidade_negocio_id') ? 'p.unidade_negocio_id' : 'NULL AS unidade_negocio_id',
+  ]
+  const pedidoSql = `SELECT ${selectParts.join(', ')} FROM vendas.pedidos p WHERE p.id = $1 LIMIT 1`
+  const pedidoRows = await runQuery<any>(pedidoSql, [pedidoId])
   const pedido = pedidoRows[0]
   if (!pedido) throw new Error('pedido not found')
 
@@ -202,4 +180,3 @@ export const pedidoCriadoFn = inngest.createFunction(
     return { success: true, crId: result.crId }
   }
 )
-
