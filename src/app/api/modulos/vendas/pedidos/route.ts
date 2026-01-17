@@ -29,12 +29,14 @@ export async function POST(req: Request) {
     if (Number.isNaN(valor_total)) return Response.json({ success: false, message: 'valor_total inválido' }, { status: 400 })
 
     // Optionals
+    const tenant_id_raw = String(form.get('tenant_id') || '').trim()
     const usuario_id_raw = String(form.get('usuario_id') || '').trim()
     const valor_produtos_raw = String(form.get('valor_produtos') || '').trim()
     const valor_frete_raw = String(form.get('valor_frete') || '').trim()
     const valor_desconto_raw = String(form.get('valor_desconto') || '').trim()
     const status = String(form.get('status') || '').trim() || null
 
+    const tenant_id = tenant_id_raw ? Number(tenant_id_raw) : 1
     const usuario_id = usuario_id_raw ? Number(usuario_id_raw) : null
     const valor_produtos = valor_produtos_raw ? Number(valor_produtos_raw) : null
     const valor_frete = valor_frete_raw ? Number(valor_frete_raw) : null
@@ -43,11 +45,11 @@ export async function POST(req: Request) {
     const result = await withTransaction(async (client) => {
       const insert = await client.query(
         `INSERT INTO gestaovendas.pedidos (
-           numero_pedido, cliente_id, canal_venda_id, usuario_id, data_pedido,
+           tenant_id, numero_pedido, cliente_id, canal_venda_id, usuario_id, data_pedido,
            valor_produtos, valor_frete, valor_desconto, valor_total, status
-         ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+         ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
          RETURNING id`,
-        [numero_pedido, cliente_id, canal_venda_id, usuario_id, data_pedido,
+        [tenant_id, numero_pedido, cliente_id, canal_venda_id, usuario_id, data_pedido,
          valor_produtos, valor_frete, valor_desconto, valor_total, status]
       )
       const inserted = insert.rows[0] as { id: number | string }
@@ -63,4 +65,3 @@ export async function POST(req: Request) {
     return Response.json({ success: false, message: msg }, { status: 400 })
   }
 }
-

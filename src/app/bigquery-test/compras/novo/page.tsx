@@ -211,6 +211,7 @@ export default function BigQueryTestNovaCompraPage() {
       if (!Number.isFinite(total) || total <= 0) throw new Error('Valor total inválido')
 
       const fd = new FormData()
+      fd.set('tenant_id', tenantId || '1')
       fd.set('numero_pedido', vNumeroPedido || `PV-${Date.now()}`)
       fd.set('cliente_id', String(cliente))
       fd.set('canal_venda_id', String(canal))
