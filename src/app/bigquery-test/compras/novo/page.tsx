@@ -40,6 +40,32 @@ export default function BigQueryTestNovaCompraPage() {
   const [error, setError] = React.useState<string | null>(null)
   const [success, setSuccess] = React.useState<string | null>(null)
 
+  // Vendas (teste rápido)
+  const [vNumeroPedido, setVNumeroPedido] = React.useState<string>(() => {
+    const d = new Date()
+    const yyyy = d.getFullYear()
+    const mm = String(d.getMonth() + 1).padStart(2, '0')
+    const dd = String(d.getDate()).padStart(2, '0')
+    const hh = String(d.getHours()).padStart(2, '0')
+    const mi = String(d.getMinutes()).padStart(2, '0')
+    return `PV-${yyyy}${mm}${dd}-${hh}${mi}`
+  })
+  const [vDataPedido, setVDataPedido] = React.useState<string>(() => toLocalISODate(new Date()))
+  const [vClienteId, setVClienteId] = React.useState<string>('')
+  const [vCanalId, setVCanalId] = React.useState<string>('')
+  const [vValorProdutos, setVValorProdutos] = React.useState<string>('100')
+  const [vValorFrete, setVValorFrete] = React.useState<string>('0')
+  const [vValorDesconto, setVValorDesconto] = React.useState<string>('0')
+  const vendaTotal = React.useMemo(() => {
+    const p = Number(vValorProdutos || '0') || 0
+    const f = Number(vValorFrete || '0') || 0
+    const d = Number(vValorDesconto || '0') || 0
+    return (p + f - d).toFixed(2)
+  }, [vValorProdutos, vValorFrete, vValorDesconto])
+  const [isSavingVenda, setIsSavingVenda] = React.useState(false)
+  const [errorVenda, setErrorVenda] = React.useState<string | null>(null)
+  const [successVenda, setSuccessVenda] = React.useState<string | null>(null)
+
   type Opt = { value: string; label: string }
   const [fornecedorOptions, setFornecedorOptions] = React.useState<Opt[]>([])
   const [produtoOptions, setProdutoOptions] = React.useState<Opt[]>([])
@@ -47,18 +73,22 @@ export default function BigQueryTestNovaCompraPage() {
   const [categoriaDespesaOptions, setCategoriaDespesaOptions] = React.useState<Opt[]>([])
   const [filialOptions, setFilialOptions] = React.useState<Opt[]>([])
   const [projetoOptions, setProjetoOptions] = React.useState<Opt[]>([])
+  const [clienteOptions, setClienteOptions] = React.useState<Opt[]>([])
+  const [canalOptions, setCanalOptions] = React.useState<Opt[]>([])
 
   React.useEffect(() => {
     const ac = new AbortController()
     ;(async () => {
       try {
-        const [fRes, pRes, ccRes, cdRes, filRes, prjRes] = await Promise.all([
+        const [fRes, pRes, ccRes, cdRes, filRes, prjRes, cliRes, canRes] = await Promise.all([
           fetch('/api/modulos/financeiro/fornecedores/list', { cache: 'no-store', signal: ac.signal }),
           fetch('/api/modulos/produtos/produtos/list', { cache: 'no-store', signal: ac.signal }),
           fetch('/api/modulos/empresa?view=centros-de-custo&pageSize=1000&order_by=codigo', { cache: 'no-store', signal: ac.signal }),
           fetch('/api/modulos/financeiro/categorias-despesa/list', { cache: 'no-store', signal: ac.signal }),
           fetch('/api/modulos/empresa?view=filiais&pageSize=1000&order_by=nome', { cache: 'no-store', signal: ac.signal }),
           fetch('/api/modulos/financeiro?view=projetos&pageSize=1000&order_by=nome', { cache: 'no-store', signal: ac.signal }),
+          fetch('/api/modulos/vendas/clientes/list', { cache: 'no-store', signal: ac.signal }),
+          fetch('/api/modulos/vendas/canais/list', { cache: 'no-store', signal: ac.signal }),
         ])
 
         if (fRes.ok) {
@@ -84,6 +114,14 @@ export default function BigQueryTestNovaCompraPage() {
         if (prjRes.ok) {
           const j = await prjRes.json()
           setProjetoOptions((j?.rows || []).map((r: any) => ({ value: String(r.id), label: r.nome })))
+        }
+        if (cliRes.ok) {
+          const j = await cliRes.json()
+          setClienteOptions((j?.rows || []).map((r: any) => ({ value: String(r.id), label: r.nome })))
+        }
+        if (canRes.ok) {
+          const j = await canRes.json()
+          setCanalOptions((j?.rows || []).map((r: any) => ({ value: String(r.id), label: r.nome })))
         }
       } catch (err) {
         // silencioso para teste
@@ -157,6 +195,40 @@ export default function BigQueryTestNovaCompraPage() {
       setError(e instanceof Error ? e.message : 'Falha ao salvar')
     } finally {
       setIsSaving(false)
+    }
+  }
+
+  async function onSalvarVenda() {
+    setErrorVenda(null)
+    setSuccessVenda(null)
+    setIsSavingVenda(true)
+    try {
+      const cliente = Number(vClienteId)
+      const canal = Number(vCanalId)
+      if (!cliente) throw new Error('Selecione um cliente')
+      if (!canal) throw new Error('Selecione um canal de venda')
+      const total = Number(vendaTotal)
+      if (!Number.isFinite(total) || total <= 0) throw new Error('Valor total inválido')
+
+      const fd = new FormData()
+      fd.set('numero_pedido', vNumeroPedido || `PV-${Date.now()}`)
+      fd.set('cliente_id', String(cliente))
+      fd.set('canal_venda_id', String(canal))
+      fd.set('data_pedido', vDataPedido)
+      fd.set('valor_total', String(total))
+      if (vValorProdutos) fd.set('valor_produtos', String(Number(vValorProdutos) || 0))
+      if (vValorFrete) fd.set('valor_frete', String(Number(vValorFrete) || 0))
+      if (vValorDesconto) fd.set('valor_desconto', String(Number(vValorDesconto) || 0))
+      fd.set('status', 'Aberto')
+
+      const res = await fetch('/api/modulos/vendas/pedidos', { method: 'POST', body: fd })
+      const j = await res.json()
+      if (!res.ok || !j?.success) throw new Error(j?.message || `HTTP ${res.status}`)
+      setSuccessVenda(`Venda criada com ID ${j.id}.`)
+    } catch (e) {
+      setErrorVenda(e instanceof Error ? e.message : 'Falha ao salvar venda')
+    } finally {
+      setIsSavingVenda(false)
     }
   }
 
@@ -287,6 +359,72 @@ export default function BigQueryTestNovaCompraPage() {
             </Button>
             <Button variant="ghost" asChild>
               <a href="/modulos/compras?tab=compras">Ver Compras</a>
+            </Button>
+          </div>
+        </Card>
+
+        {/* Venda (teste rápido) */}
+        <h2 className="text-xl font-semibold text-slate-900 pt-4">BigQuery Test • Nova Venda</h2>
+        <Card className="p-4">
+          <div className="text-base font-semibold text-slate-800 mb-3">Dados da Venda (teste rápido)</div>
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
+            <div className="md:col-span-4">
+              <Label className="text-sm text-slate-600">Número Pedido</Label>
+              <Input value={vNumeroPedido} onChange={(e) => setVNumeroPedido(e.target.value)} placeholder="PV-..." />
+            </div>
+            <div className="md:col-span-4">
+              <Label className="text-sm text-slate-600">Cliente</Label>
+              <Select value={vClienteId} onValueChange={setVClienteId}>
+                <SelectTrigger className="w-full"><SelectValue placeholder="Selecione" /></SelectTrigger>
+                <SelectContent>
+                  {clienteOptions.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="md:col-span-4">
+              <Label className="text-sm text-slate-600">Canal de Venda</Label>
+              <Select value={vCanalId} onValueChange={setVCanalId}>
+                <SelectTrigger className="w-full"><SelectValue placeholder="Selecione" /></SelectTrigger>
+                <SelectContent>
+                  {canalOptions.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="md:col-span-3">
+              <Label className="text-sm text-slate-600">Data do Pedido</Label>
+              <Input type="date" value={vDataPedido} onChange={(e) => setVDataPedido(e.target.value)} />
+            </div>
+            <div className="md:col-span-3">
+              <Label className="text-sm text-slate-600">Valor Produtos</Label>
+              <Input value={vValorProdutos} onChange={(e) => setVValorProdutos(e.target.value)} placeholder="100" />
+            </div>
+            <div className="md:col-span-3">
+              <Label className="text-sm text-slate-600">Frete</Label>
+              <Input value={vValorFrete} onChange={(e) => setVValorFrete(e.target.value)} placeholder="0" />
+            </div>
+            <div className="md:col-span-3">
+              <Label className="text-sm text-slate-600">Desconto</Label>
+              <Input value={vValorDesconto} onChange={(e) => setVValorDesconto(e.target.value)} placeholder="0" />
+            </div>
+            <div className="md:col-span-3">
+              <Label className="text-sm text-slate-600">Valor Total</Label>
+              <Input value={vendaTotal} readOnly />
+            </div>
+          </div>
+        </Card>
+        <Card className="p-4 space-y-2">
+          {errorVenda && <div className="text-sm text-red-600">{errorVenda}</div>}
+          {successVenda && <div className="text-sm text-emerald-700">{successVenda}</div>}
+          <div className="flex items-center gap-2">
+            <Button className="bg-indigo-600 hover:bg-indigo-700" onClick={onSalvarVenda} disabled={isSavingVenda}>
+              {isSavingVenda ? 'Salvando…' : 'Salvar Venda'}
+            </Button>
+            <Button variant="ghost" asChild>
+              <a href="/modulos/vendas?tab=pedidos">Ver Vendas</a>
             </Button>
           </div>
         </Card>
