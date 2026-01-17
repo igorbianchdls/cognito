@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { runQuery, withTransaction } from '@/lib/postgres';
 import { inngest } from '@/lib/inngest';
+import { createApFromCompra } from '@/inngest/compras';
 
 export const maxDuration = 300;
 export const dynamic = 'force-dynamic';
@@ -621,15 +622,21 @@ export async function POST(req: NextRequest) {
 
     // Dispara evento Inngest para criação de Conta a Pagar a partir da compra
     try {
-      await inngest.send({
-        name: 'compras/compra/criada',
-        data: { compra_id: result.id },
-      })
+      await inngest.send({ name: 'compras/compra/criada', data: { compra_id: result.id } })
     } catch (e) {
       console.warn('Falha ao enviar evento Inngest compras/compra/criada', e)
     }
 
-    return Response.json({ success: true, id: result.id })
+    // Cria AP imediatamente (idempotente). Retorna ap_id para feedback no UI.
+    let apId: number | null = null
+    try {
+      const ap = await createApFromCompra(result.id)
+      apId = ap.apId
+    } catch (err) {
+      console.warn('Criação inline da Conta a Pagar falhou', err)
+    }
+
+    return Response.json({ success: true, id: result.id, ap_id: apId })
   } catch (error) {
     console.error('📦 API /api/modulos/compras POST error:', error)
     const msg = error instanceof Error ? error.message : String(error)

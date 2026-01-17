@@ -137,7 +137,11 @@ export default function BigQueryTestNovaCompraPage() {
       })
       const j = await res.json()
       if (!res.ok || !j?.success) throw new Error(j?.message || `HTTP ${res.status}`)
-      setSuccess(`Compra criada com ID ${j.id}`)
+      if (j.ap_id) {
+        setSuccess(`Compra criada com ID ${j.id}. Conta a pagar criada com ID ${j.ap_id}.`)
+      } else {
+        setSuccess(`Compra criada com ID ${j.id}. Criando conta a pagar…`) // caso não retorne ap_id
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Falha ao salvar')
     } finally {
