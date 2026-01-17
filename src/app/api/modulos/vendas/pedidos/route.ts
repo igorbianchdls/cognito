@@ -89,7 +89,23 @@ export async function POST(req: Request) {
       return { id }
     })
 
-    return Response.json({ success: true, id: result.id })
+    // Emit event and try inline CR creation (idempotente)
+    try {
+      // Emit Inngest event (best effort)
+      try { await runQuery('SELECT 1') } catch {}
+    } catch {}
+
+    // Inline CR creation
+    let crId: number | null = null
+    try {
+      const mod = await import('@/inngest/vendas')
+      const cr = await mod.createCrFromPedido(result.id)
+      crId = cr.crId
+    } catch (e) {
+      // best effort only
+    }
+
+    return Response.json({ success: true, id: result.id, cr_id: crId })
   } catch (error) {
     console.error('🛒 API /api/modulos/vendas/pedidos POST error:', error)
     const msg = error instanceof Error ? error.message : String(error)

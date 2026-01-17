@@ -225,7 +225,22 @@ export default function BigQueryTestNovaCompraPage() {
       const res = await fetch('/api/modulos/vendas/pedidos', { method: 'POST', body: fd })
       const j = await res.json()
       if (!res.ok || !j?.success) throw new Error(j?.message || `HTTP ${res.status}`)
-      setSuccessVenda(`Venda criada com ID ${j.id}.`)
+      if (j.cr_id) {
+        setSuccessVenda(`Venda criada com ID ${j.id}. Conta a receber criada com ID ${j.cr_id}.`)
+      } else {
+        setSuccessVenda(`Venda criada com ID ${j.id}. Criando conta a receber…`)
+        try {
+          const follow = await fetch(`/api/modulos/vendas/pedidos/${j.id}/create-cr`, { method: 'POST' })
+          const jf = await follow.json()
+          if (follow.ok && jf?.success && jf?.cr_id) {
+            setSuccessVenda(`Venda criada com ID ${j.id}. Conta a receber criada com ID ${jf.cr_id}.`)
+          } else {
+            setErrorVenda(jf?.message || 'Falha ao criar conta a receber')
+          }
+        } catch (err) {
+          setErrorVenda('Falha ao criar conta a receber')
+        }
+      }
     } catch (e) {
       setErrorVenda(e instanceof Error ? e.message : 'Falha ao salvar venda')
     } finally {
