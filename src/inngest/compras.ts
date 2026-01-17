@@ -129,7 +129,7 @@ export async function createApFromCompra(compraId: number): Promise<{ apId: numb
       const descr = it.produto ? String(it.produto) : `Item de compra ${it.id || ''}`.trim()
       const linhaCcId = it.centro_custo_id !== null && it.centro_custo_id !== undefined ? Number(it.centro_custo_id) : ccId
       valuesSql.push(`($${i++},$${i++},$${i++},$${i++},$${i++},$${i++},$${i++},$${i++},$${i++},$${i++},$${i++},$${i++},$${i++})`)
-      params.push(apId,'item',descr,q,vu,bruto,0,0,liquido,categoriaId || null,null,linhaCcId || null,null)
+      params.push(apId,'servico',descr,q,vu,bruto,0,0,liquido,categoriaId || null,null,linhaCcId || null,null)
     }
     if (valuesSql.length) {
       await client.query(
