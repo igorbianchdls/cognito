@@ -8,7 +8,7 @@ export const revalidate = 0
 export async function GET(req: NextRequest) {
   try {
     const rows = await runQuery<{ id: number; nome: string }>(
-      `SELECT id, nome FROM gestaovendas.canais_venda ORDER BY nome ASC`
+      `SELECT id, nome FROM vendas.canais_venda ORDER BY nome ASC`
     )
     return Response.json({ success: true, rows }, { headers: { 'Cache-Control': 'no-store' } })
   } catch (error) {
@@ -16,4 +16,3 @@ export async function GET(req: NextRequest) {
     return Response.json({ success: false, message: 'Erro interno' }, { status: 500 })
   }
 }
-
