@@ -140,7 +140,18 @@ export default function BigQueryTestNovaCompraPage() {
       if (j.ap_id) {
         setSuccess(`Compra criada com ID ${j.id}. Conta a pagar criada com ID ${j.ap_id}.`)
       } else {
-        setSuccess(`Compra criada com ID ${j.id}. Criando conta a pagar…`) // caso não retorne ap_id
+        setSuccess(`Compra criada com ID ${j.id}. Criando conta a pagar…`)
+        try {
+          const follow = await fetch(`/api/modulos/compras/${j.id}/create-ap`, { method: 'POST' })
+          const jf = await follow.json()
+          if (follow.ok && jf?.success && jf?.ap_id) {
+            setSuccess(`Compra criada com ID ${j.id}. Conta a pagar criada com ID ${jf.ap_id}.`)
+          } else {
+            setError(jf?.message || 'Falha ao criar conta a pagar')
+          }
+        } catch (err) {
+          setError('Falha ao criar conta a pagar')
+        }
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Falha ao salvar')
