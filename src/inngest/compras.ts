@@ -100,7 +100,7 @@ export async function createApFromCompra(compraId: number): Promise<{ apId: numb
         filialId,
         null,
         numeroDoc,
-        'oc',
+        'fatura',
         'pendente',
         dataDoc,
         dataLanc,
