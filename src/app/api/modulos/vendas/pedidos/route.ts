@@ -1,4 +1,4 @@
-import { withTransaction } from '@/lib/postgres'
+import { withTransaction, runQuery } from '@/lib/postgres'
 
 export const maxDuration = 300
 export const dynamic = 'force-dynamic'
@@ -44,44 +44,46 @@ export async function POST(req: Request) {
     const valor_frete = valor_frete_raw ? Number(valor_frete_raw) : null
     const valor_desconto = valor_desconto_raw ? Number(valor_desconto_raw) : null
 
-    const result = await withTransaction(async (client) => {
-      let insert
-      // Variant A: vendas.pedidos with tenant_id and vendedor_id
-      try {
-        insert = await client.query(
-          `INSERT INTO vendas.pedidos (
-             tenant_id, numero_pedido, cliente_id, canal_venda_id, vendedor_id, data_pedido,
-             valor_produtos, valor_frete, valor_desconto, valor_total, status
-           ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
-           RETURNING id`,
-          [tenant_id, numero_pedido, cliente_id, canal_venda_id, vendedor_id, data_pedido,
-           valor_produtos, valor_frete, valor_desconto, valor_total, status]
-        )
-      } catch (e1) {
-        // Variant B: vendas.pedidos without tenant_id
-        try {
-          insert = await client.query(
-            `INSERT INTO vendas.pedidos (
-               numero_pedido, cliente_id, canal_venda_id, vendedor_id, data_pedido,
-               valor_produtos, valor_frete, valor_desconto, valor_total, status
-             ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
-             RETURNING id`,
-            [numero_pedido, cliente_id, canal_venda_id, vendedor_id, data_pedido,
-             valor_produtos, valor_frete, valor_desconto, valor_total, status]
-          )
-        } catch (e2) {
-          // Variant C: vendas.pedidos with usuario_id (legacy naming)
-          insert = await client.query(
-            `INSERT INTO vendas.pedidos (
-               numero_pedido, cliente_id, canal_venda_id, usuario_id, data_pedido,
-               valor_produtos, valor_frete, valor_desconto, valor_total, status
-             ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
-             RETURNING id`,
-            [numero_pedido, cliente_id, canal_venda_id, vendedor_id, data_pedido,
-             valor_produtos, valor_frete, valor_desconto, valor_total, status]
-          )
-        }
+    // Discover table columns to build a single successful INSERT
+    const colsInfo = await runQuery<{ column_name: string; is_nullable: string }>(
+      `SELECT column_name, is_nullable
+         FROM information_schema.columns
+        WHERE table_schema = 'vendas' AND table_name = 'pedidos'`
+    )
+    const has = (c: string) => colsInfo.some((r) => r.column_name === c)
+    const notNull = (c: string) => colsInfo.some((r) => r.column_name === c && r.is_nullable === 'NO')
+
+    const insertCols: string[] = []
+    const placeholders: string[] = []
+    const values: unknown[] = []
+    let i = 1
+
+    if (has('tenant_id')) { insertCols.push('tenant_id'); placeholders.push(`$${i++}`); values.push(tenant_id) }
+    insertCols.push('numero_pedido'); placeholders.push(`$${i++}`); values.push(numero_pedido)
+    insertCols.push('cliente_id'); placeholders.push(`$${i++}`); values.push(cliente_id)
+    insertCols.push('canal_venda_id'); placeholders.push(`$${i++}`); values.push(canal_venda_id)
+    if (has('vendedor_id')) {
+      if (notNull('vendedor_id') && (vendedor_id == null || Number.isNaN(vendedor_id))) {
+        return Response.json({ success: false, message: 'vendedor_id é obrigatório' }, { status: 400 })
       }
+      insertCols.push('vendedor_id'); placeholders.push(`$${i++}`); values.push(vendedor_id)
+    } else if (has('usuario_id')) {
+      if (notNull('usuario_id') && (vendedor_id == null || Number.isNaN(vendedor_id))) {
+        return Response.json({ success: false, message: 'usuario_id é obrigatório' }, { status: 400 })
+      }
+      insertCols.push('usuario_id'); placeholders.push(`$${i++}`); values.push(vendedor_id)
+    }
+    insertCols.push('data_pedido'); placeholders.push(`$${i++}`); values.push(data_pedido)
+    if (has('valor_produtos')) { insertCols.push('valor_produtos'); placeholders.push(`$${i++}`); values.push(valor_produtos) }
+    if (has('valor_frete')) { insertCols.push('valor_frete'); placeholders.push(`$${i++}`); values.push(valor_frete) }
+    if (has('valor_desconto')) { insertCols.push('valor_desconto'); placeholders.push(`$${i++}`); values.push(valor_desconto) }
+    insertCols.push('valor_total'); placeholders.push(`$${i++}`); values.push(valor_total)
+    insertCols.push('status'); placeholders.push(`$${i++}`); values.push(status)
+
+    const sql = `INSERT INTO vendas.pedidos (${insertCols.join(',')}) VALUES (${placeholders.join(',')}) RETURNING id`
+
+    const result = await withTransaction(async (client) => {
+      const insert = await client.query(sql, values)
       const inserted = insert.rows[0] as { id: number | string }
       const id = Number(inserted?.id)
       if (!id) throw new Error('Falha ao criar pedido')
