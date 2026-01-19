@@ -11,7 +11,6 @@
     "sandbox:agent-verify": "node scripts/sandbox-agent-verify.mjs"
   },
   "dependencies": {
-    "ms": "^2.1.3",
     "@ai-sdk/anthropic": "^2.0.0",
     "@ai-sdk/openai": "^2.0.62",
     "@ai-sdk/react": "^2.0.8",

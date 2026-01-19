@@ -1,12 +1,11 @@
-import ms from 'ms'
 import { Sandbox } from '@vercel/sandbox'
 
 async function main() {
   const sandbox = await Sandbox.create({
     resources: { vcpus: 4 },
-    // Timeout in milliseconds: ms('10m') = 600000
+    // Timeout in milliseconds (10 minutes)
     // Defaults to 5 minutes. The maximum is 5 hours for Pro/Enterprise, and 45 minutes for Hobby.
-    timeout: ms('10m'),
+    timeout: 600_000,
     runtime: 'node22',
   })
 
@@ -76,4 +75,3 @@ console.log('SDK is ready to use');
 }
 
 main().catch(console.error)
-
