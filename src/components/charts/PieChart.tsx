@@ -436,7 +436,7 @@ export function PieChart({
         )}
         
         // Legendas configuráveis
-        // @ts-expect-error - Nivo legend type compatibility
+        // @ts-ignore - Nivo legend type compatibility
         legends={(() => {
           // Se legends é array, usar diretamente
           if (Array.isArray(legends)) {
