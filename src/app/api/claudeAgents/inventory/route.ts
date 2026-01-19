@@ -7,7 +7,7 @@ import {
   analiseDOS,
   abcResumoGerencial,
   desempenhoPorDepositoExpedicoes,
-  analiseGiroEstoque
+  
 } from '@/tools/inventoryTools';
 import {
   listarAlmoxarifadosEstoque,
@@ -80,9 +80,7 @@ Auxiliar gestores de estoque, compradores e controllers a:
 - Métricas: pacotes, itens enviados, ticket médio dos pedidos
 - Use para: "Quais depósitos mais expedem?", "Média por pedido?"
 
-**7. analiseGiroEstoque** - Giro de estoque (vendas ÷ estoque atual)
-- Parâmetros: período em meses (default 6)
-- Use para: "Quais produtos giram mais?", "Risco de obsolescência?"
+
 
 ## 🎯 WORKFLOW RECOMENDADO
 
@@ -272,7 +270,6 @@ Seja sempre orientado a dados, priorize eficiência operacional e saúde finance
         analiseDOS,
         abcResumoGerencial,
         desempenhoPorDepositoExpedicoes,
-        analiseGiroEstoque,
         // Leitura — Estoque (schema estoque)
         listarAlmoxarifadosEstoque,
         listarEstoqueAtual,
