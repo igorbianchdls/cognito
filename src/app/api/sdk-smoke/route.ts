@@ -1,20 +1,19 @@
+import { unstable_v2_prompt } from '@anthropic-ai/claude-agent-sdk'
+import { createRequire } from 'module'
+
 export const runtime = 'nodejs'
-export const maxDuration = 60
 
 export async function GET() {
   try {
-    const { execFile } = await import('node:child_process')
-    const { promisify } = await import('node:util')
-    const { join } = await import('node:path')
+    const require = createRequire(import.meta.url)
+    const cli = require.resolve('@anthropic-ai/claude-code/cli.js')
 
-    const run = promisify(execFile)
-    const scriptPath = join(process.cwd(), 'scripts', 'claude-v2-smoke.mjs')
-
-    const { stdout } = await run(process.execPath, [scriptPath], {
-      env: { ...process.env }
+    const result: any = await unstable_v2_prompt('What is 2 + 2?', {
+      model: 'claude-sonnet-4-5-20250929',
+      pathToClaudeCodeExecutable: cli
     })
 
-    return Response.json({ text: stdout.trim() })
+    return Response.json({ text: result.result })
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
     console.error('[sdk-smoke] error:', message)
