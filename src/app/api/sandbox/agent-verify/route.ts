@@ -33,11 +33,11 @@ export async function GET() {
       }, { status: 500 })
     }
 
-    // 3) Install @anthropic-ai/sdk locally
-    const installSDK = await sandbox.runCommand({
-      cmd: 'npm',
-      args: ['install', '@anthropic-ai/sdk'],
-    })
+  // 3) Install @anthropic-ai/sdk locally
+  const installSDK = await sandbox.runCommand({
+    cmd: 'npm',
+    args: ['install', '@anthropic-ai/sdk'],
+  })
     const [sdkOut, sdkErr] = await Promise.all([
       installSDK.stdout().catch(() => ''),
       installSDK.stderr().catch(() => ''),
@@ -53,17 +53,27 @@ export async function GET() {
       }, { status: 500 })
     }
 
-    // 4) Write a minimal verify script
-    const verifyScript = `import Anthropic from '@anthropic-ai/sdk';\nconsole.log('SDK imported successfully');\nconsole.log('Anthropic SDK version:', Anthropic.VERSION);\nconsole.log('SDK is ready to use');\n`
-    await sandbox.writeFiles([
-      { path: '/vercel/sandbox/verify.mjs', content: Buffer.from(verifyScript) },
-    ])
+  // 4) Check CLI version explicitly (optional but informative)
+  const cliVersionProc = await sandbox.runCommand({
+    cmd: 'npx',
+    args: ['-y', '@anthropic-ai/claude-code', '--version'],
+  })
+  const [cliVerOut, cliVerErr] = await Promise.all([
+    cliVersionProc.stdout().catch(() => ''),
+    cliVersionProc.stderr().catch(() => ''),
+  ])
 
-    // 5) Run verification
-    const verifyRun = await sandbox.runCommand({
-      cmd: 'node',
-      args: ['verify.mjs'],
-    })
+  // 5) Write a minimal verify script
+  const verifyScript = `import Anthropic from '@anthropic-ai/sdk';\nconsole.log('SDK imported successfully');\nconsole.log('Anthropic SDK version:', Anthropic.VERSION);\nconsole.log('SDK is ready to use');\n`
+  await sandbox.writeFiles([
+    { path: '/vercel/sandbox/verify.mjs', content: Buffer.from(verifyScript) },
+  ])
+
+  // 6) Run verification
+  const verifyRun = await sandbox.runCommand({
+    cmd: 'node',
+    args: ['verify.mjs'],
+  })
     const [verOut, verErr] = await Promise.all([
       verifyRun.stdout().catch(() => ''),
       verifyRun.stderr().catch(() => ''),
@@ -79,15 +89,16 @@ export async function GET() {
       }, { status: 500 })
     }
 
-    return Response.json({
-      ok: true,
-      steps: {
-        installCLI: { exitCode: installCLI.exitCode },
-        installSDK: { exitCode: installSDK.exitCode },
-        verify: { exitCode: verifyRun.exitCode },
-      },
-      verifyOutput: verOut.trim(),
-    })
+  return Response.json({
+    ok: true,
+    steps: {
+      installCLI: { exitCode: installCLI.exitCode },
+      installSDK: { exitCode: installSDK.exitCode },
+      verify: { exitCode: verifyRun.exitCode },
+    },
+    cliVersion: (cliVerOut || cliVerErr).trim(),
+    verifyOutput: verOut.trim(),
+  })
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
     return Response.json({ ok: false, error: message }, { status: 500 })
@@ -95,4 +106,3 @@ export async function GET() {
     try { await sandbox?.stop() } catch {}
   }
 }
-
