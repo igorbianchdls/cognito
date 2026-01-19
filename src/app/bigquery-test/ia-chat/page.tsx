@@ -52,7 +52,7 @@ export default function BigQueryIaChatPage() {
 
   return (
     <NexusShell outerBg="#fdfdfd" contentClassName="p-2" className="h-full">
-      <div className="h-full">
+      <div className="h-full" style={{ marginLeft: '20%', marginRight: '20%' }}>
         <ChatContainer
           messages={messages}
           input={input}
@@ -70,4 +70,3 @@ export default function BigQueryIaChatPage() {
     </NexusShell>
   )
 }
-
