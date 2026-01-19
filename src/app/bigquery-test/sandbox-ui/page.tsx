@@ -72,13 +72,14 @@ export default function SandboxUIPage() {
     setError(null)
     try {
       const res = await fetch('/api/sandbox/agent-verify', { cache: 'no-store' })
-      const data = await res.json().catch(() => ({})) as { ok?: boolean; verifyOutput?: string; cliVersion?: string; error?: string }
+      const data = await res.json().catch(() => ({})) as { ok?: boolean; verifyOutput?: string; agentVerifyOutput?: string; cliVersion?: string; error?: string }
       if (!res.ok || data.ok === false) {
         throw new Error(data.error || `Erro ${res.status}`)
       }
       const parts = [] as string[]
       if (data.cliVersion) parts.push(`Claude Code CLI: ${data.cliVersion}`)
       if (data.verifyOutput) parts.push(data.verifyOutput)
+      if (data.agentVerifyOutput) parts.push(data.agentVerifyOutput)
       setOutput(parts.join('\n') || 'Verificação concluída (sem saída)')
     } catch (e) {
       setError((e as Error).message)
