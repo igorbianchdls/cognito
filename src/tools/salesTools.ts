@@ -22,7 +22,7 @@ export const getTopProdutosReceitaLiquida = tool({
     data_de: z.string().optional().describe('Data inicial (YYYY-MM-DD ou vazio)'),
     data_ate: z.string().optional().describe('Data final (YYYY-MM-DD ou vazio)'),
     limit: z.number().int().min(1).max(1000).default(20)
-  }),
+  }).optional(),
   execute: async ({ data_de, data_ate, limit = 20 } = {}) => {
     const sql = `
       SELECT
