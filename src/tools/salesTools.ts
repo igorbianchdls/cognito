@@ -387,7 +387,7 @@ export const getTopClientesPorReceita = tool({
     data_ate: z.string().optional().describe('Data final (YYYY-MM-DD)'),
     limit: z.number().int().min(1).max(1000).default(50)
   }),
-  execute: async ({ data_de, data_ate, limit = 50 } = {}) => {
+  execute: async ({ data_de, data_ate, limit }) => {
     const sql = `
       SELECT
         p.cliente_id,
