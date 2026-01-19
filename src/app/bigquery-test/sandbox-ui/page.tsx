@@ -7,6 +7,8 @@ export default function SandboxUIPage() {
   const [output, setOutput] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loadingNode, setLoadingNode] = useState(false)
+  const [code, setCode] = useState("console.log('2+2 =', 2+2)")
+  const [runningCode, setRunningCode] = useState(false)
 
   const runEcho = async () => {
     setLoading(true)
@@ -40,6 +42,29 @@ export default function SandboxUIPage() {
     }
   }
 
+  const runCode = async () => {
+    setRunningCode(true)
+    setOutput(null)
+    setError(null)
+    try {
+      const res = await fetch('/api/sandbox/run-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code })
+      })
+      const data = await res.json().catch(() => ({})) as { ok?: boolean; stdout?: string; stderr?: string; error?: string }
+      if (!res.ok || data.ok === false) {
+        throw new Error(data.error || `Erro ${res.status}`)
+      }
+      const out = [data.stdout || '', data.stderr ? `\n[stderr]\n${data.stderr}` : ''].join('').trim()
+      setOutput(out || '(sem saída)')
+    } catch (e) {
+      setError((e as Error).message)
+    } finally {
+      setRunningCode(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-xl mx-auto space-y-4">
@@ -60,6 +85,35 @@ export default function SandboxUIPage() {
           className={`px-4 py-2 rounded-md text-white ${loadingNode ? 'bg-gray-400' : 'bg-indigo-600 hover:bg-indigo-700'}`}
         >
           {loadingNode ? 'Executando…' : 'Executar node -v no Sandbox'}
+        </button>
+
+        <div className="pt-4 border-t border-gray-200" />
+        <h2 className="text-lg font-medium text-gray-900">Executar código (node -e)</h2>
+        <textarea
+          value={code}
+          onChange={(e) => setCode(e.target.value)}
+          className="w-full h-40 p-3 rounded border border-gray-300 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <div className="flex gap-2">
+          <button
+            onClick={() => setCode("console.log('Hello from Sandbox')")}
+            className="px-3 py-1.5 rounded border border-gray-300 text-gray-700 hover:bg-gray-100"
+          >Hello preset</button>
+          <button
+            onClick={() => setCode("for (let i=0;i<3;i++) console.log('i=', i)")}
+            className="px-3 py-1.5 rounded border border-gray-300 text-gray-700 hover:bg-gray-100"
+          >Loop preset</button>
+          <button
+            onClick={() => setCode("console.log('now=', new Date().toISOString())")}
+            className="px-3 py-1.5 rounded border border-gray-300 text-gray-700 hover:bg-gray-100"
+          >Time preset</button>
+        </div>
+        <button
+          onClick={runCode}
+          disabled={runningCode}
+          className={`px-4 py-2 rounded-md text-white ${runningCode ? 'bg-gray-400' : 'bg-emerald-600 hover:bg-emerald-700'}`}
+        >
+          {runningCode ? 'Executando…' : 'Executar código no Sandbox'}
         </button>
 
         {output !== null && (
