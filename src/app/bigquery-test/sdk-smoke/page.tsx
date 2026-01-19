@@ -9,18 +9,13 @@ export default function SdkSmokePage() {
   const [prompt, setPrompt] = useState('What is 2 + 2?')
 
   const runSmoke = async () => {
+    setLoading(true)
+    setError(null)
+    setOutput(null)
     try {
-      setLoading(true)
-      setError(null)
-      setOutput(null)
-      const url = `/api/claude-v1?prompt=${encodeURIComponent(prompt)}`
-      const res = await fetch(url, { cache: 'no-store' })
-      const data = await res.json().catch(() => ({})) as { text?: string; error?: string }
-      console.log('[claude-v1] response:', data)
-      if (!res.ok || data.error) {
-        throw new Error(data.error || `Erro ${res.status}`)
-      }
-      setOutput(data.text ?? '')
+      // Backend removido a pedido — modo demo local
+      await new Promise(r => setTimeout(r, 150))
+      setOutput('Backend desativado. Esta ação não chama /api.')
     } catch (e) {
       setError((e as Error).message)
     } finally {
@@ -32,7 +27,7 @@ export default function SdkSmokePage() {
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-xl mx-auto">
         <h1 className="text-2xl font-bold text-gray-900 mb-4">Claude Agent SDK — Smoke Test</h1>
-        <p className="text-gray-600 mb-6">Subrota: <code>/bigquery-test/sdk-smoke</code>. Clique para chamar <code>/api/claude-v1</code> e ver o retorno.</p>
+        <p className="text-gray-600 mb-6">Subrota: <code>/bigquery-test/sdk-smoke</code>. Backend removido — execução local de demonstração.</p>
 
         <label className="block text-sm font-medium text-gray-700 mb-1">Prompt</label>
         <input
