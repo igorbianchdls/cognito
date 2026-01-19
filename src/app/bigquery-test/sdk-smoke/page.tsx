@@ -13,9 +13,14 @@ export default function SdkSmokePage() {
     setError(null)
     setOutput(null)
     try {
-      // Backend removido a pedido — modo demo local
-      await new Promise(r => setTimeout(r, 150))
-      setOutput('Backend desativado. Esta ação não chama /api.')
+      const url = `/api/agent-sdk-simple?prompt=${encodeURIComponent(prompt)}`
+      const res = await fetch(url, { cache: 'no-store' })
+      const data = await res.json().catch(() => ({})) as { text?: string; error?: string }
+      console.log('[agent-sdk-simple] response:', data)
+      if (!res.ok || data.error) {
+        throw new Error(data.error || `Erro ${res.status}`)
+      }
+      setOutput(data.text ?? '')
     } catch (e) {
       setError((e as Error).message)
     } finally {
@@ -27,7 +32,7 @@ export default function SdkSmokePage() {
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-xl mx-auto">
         <h1 className="text-2xl font-bold text-gray-900 mb-4">Claude Agent SDK — Smoke Test</h1>
-        <p className="text-gray-600 mb-6">Subrota: <code>/bigquery-test/sdk-smoke</code>. Backend removido — execução local de demonstração.</p>
+        <p className="text-gray-600 mb-6">Subrota: <code>/bigquery-test/sdk-smoke</code>. Chama a rota <code>/api/agent-sdk-simple</code> com query().</p>
 
         <label className="block text-sm font-medium text-gray-700 mb-1">Prompt</label>
         <input
