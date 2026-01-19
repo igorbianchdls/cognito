@@ -10,6 +10,8 @@ export default function SandboxUIPage() {
   const [code, setCode] = useState("console.log('2+2 =', 2+2)")
   const [runningCode, setRunningCode] = useState(false)
   const [verifying, setVerifying] = useState(false)
+  const [agentPrompt, setAgentPrompt] = useState('What is 2 + 2?')
+  const [runningPrompt, setRunningPrompt] = useState(false)
 
   const runEcho = async () => {
     setLoading(true)
@@ -88,6 +90,25 @@ export default function SandboxUIPage() {
     }
   }
 
+  const runAgentPrompt = async () => {
+    setRunningPrompt(true)
+    setOutput(null)
+    setError(null)
+    try {
+      const url = `/api/sandbox/agent-prompt?prompt=${encodeURIComponent(agentPrompt)}`
+      const res = await fetch(url, { cache: 'no-store' })
+      const data = await res.json().catch(() => ({})) as { ok?: boolean; text?: string; error?: string }
+      if (!res.ok || data.ok === false) {
+        throw new Error(data.error || `Erro ${res.status}`)
+      }
+      setOutput(data.text || '(sem saída)')
+    } catch (e) {
+      setError((e as Error).message)
+    } finally {
+      setRunningPrompt(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-xl mx-auto space-y-4">
@@ -148,6 +169,22 @@ export default function SandboxUIPage() {
           className={`px-4 py-2 rounded-md text-white ${verifying ? 'bg-gray-400' : 'bg-purple-600 hover:bg-purple-700'}`}
         >
           {verifying ? 'Verificando…' : 'Verificar SDK no Sandbox'}
+        </button>
+
+        <div className="pt-4 border-t border-gray-200" />
+        <h2 className="text-lg font-medium text-gray-900">Executar Prompt com Agent SDK</h2>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Prompt</label>
+        <input
+          value={agentPrompt}
+          onChange={(e) => setAgentPrompt(e.target.value)}
+          className="w-full mb-3 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <button
+          onClick={runAgentPrompt}
+          disabled={runningPrompt}
+          className={`px-4 py-2 rounded-md text-white ${runningPrompt ? 'bg-gray-400' : 'bg-teal-600 hover:bg-teal-700'}`}
+        >
+          {runningPrompt ? 'Executando…' : 'Executar Agent SDK Prompt'}
         </button>
 
         {output !== null && (
