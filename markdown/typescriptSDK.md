@@ -1,6 +1,6 @@
 # Agent SDK reference - TypeScript
 
-Complete API reference for the TypeScript Agent SDK, including all functions, types, and interfaces.
+Complete API reference for the ypeScript Agent SDK, including all functions, types, and interfaces.
 
 ---
 
