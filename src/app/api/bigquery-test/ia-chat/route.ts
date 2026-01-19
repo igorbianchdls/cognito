@@ -1,4 +1,4 @@
-import { unstable_v2_prompt } from '@anthropic-ai/claude-agent-sdk'
+import { query } from '@anthropic-ai/claude-agent-sdk'
 import { createRequire } from 'module'
 
 export const runtime = 'nodejs'
@@ -20,16 +20,24 @@ export async function POST(req: Request) {
     const require = createRequire(import.meta.url)
     const pathToCli = require.resolve('@anthropic-ai/claude-agent-sdk/cli.js')
 
-    const result = await unstable_v2_prompt(prompt, {
-      model: 'claude-sonnet-4-20250514',
-      pathToClaudeCodeExecutable: pathToCli
+    const q = query({
+      prompt,
+      options: {
+        model: 'claude-sonnet-4-20250514',
+        pathToClaudeCodeExecutable: pathToCli
+      }
     })
-    // unstable_v2_prompt returns an SDKResultMessage; success subtype has 'result'
-    if (result.type === 'result' && result.subtype === 'success') {
-      return Response.json({ text: result.result ?? '' })
+
+    for await (const msg of q) {
+      if (msg.type === 'result' && msg.subtype === 'success') {
+        return Response.json({ text: msg.result ?? '' })
+      }
+      if (msg.type === 'result' && msg.is_error) {
+        const errText = Array.isArray((msg as any).errors) ? (msg as any).errors.join('\n') : 'Falha ao gerar resposta.'
+        return Response.json({ error: errText }, { status: 500 })
+      }
     }
-    // Error case: return message summarizing the failure
-    return Response.json({ error: 'Falha ao gerar resposta.' }, { status: 500 })
+    return Response.json({ error: 'Sessão terminou sem resultado.' }, { status: 500 })
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
     console.error('❌ /api/bigquery-test/ia-chat error:', message)
