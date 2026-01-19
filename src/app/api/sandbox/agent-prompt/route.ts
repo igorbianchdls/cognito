@@ -27,7 +27,7 @@ export async function GET(req: Request) {
     })
     if (installCLI.exitCode !== 0) {
       const [o, e] = await Promise.all([installCLI.stdout().catch(() => ''), installCLI.stderr().catch(() => '')])
-      return Response.json({ ok: false, step: 'install-cli', exitCode: installCLI.exitCode, stdout: o, stderr: e }, { status: 500 })
+      return Response.json({ ok: false, step: 'install-cli', exitCode: installCLI.exitCode, stdout: o, stderr: e, error: 'Installing Claude Code CLI failed' }, { status: 500 })
     }
 
     // 3) Install Claude Agent SDK (local)
@@ -37,7 +37,7 @@ export async function GET(req: Request) {
     })
     if (installAgent.exitCode !== 0) {
       const [o, e] = await Promise.all([installAgent.stdout().catch(() => ''), installAgent.stderr().catch(() => '')])
-      return Response.json({ ok: false, step: 'install-agent', exitCode: installAgent.exitCode, stdout: o, stderr: e }, { status: 500 })
+      return Response.json({ ok: false, step: 'install-agent', exitCode: installAgent.exitCode, stdout: o, stderr: e, error: 'Installing Claude Agent SDK failed' }, { status: 500 })
     }
 
     // 4) Write script to run a single prompt
@@ -67,7 +67,7 @@ if (res.type === 'result' && res.subtype === 'success') {
     })
     const [out, err] = await Promise.all([run.stdout().catch(() => ''), run.stderr().catch(() => '')])
     if (run.exitCode !== 0) {
-      return Response.json({ ok: false, step: 'prompt', exitCode: run.exitCode, stdout: out, stderr: err }, { status: 500 })
+      return Response.json({ ok: false, step: 'prompt', exitCode: run.exitCode, stdout: out, stderr: err, error: 'Prompt run failed' }, { status: 500 })
     }
 
     return Response.json({ ok: true, text: (out || '').trim() })
@@ -78,4 +78,3 @@ if (res.type === 'result' && res.subtype === 'success') {
     try { await sandbox?.stop() } catch {}
   }
 }
-

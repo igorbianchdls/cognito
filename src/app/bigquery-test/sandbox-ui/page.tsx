@@ -97,9 +97,15 @@ export default function SandboxUIPage() {
     try {
       const url = `/api/sandbox/agent-prompt?prompt=${encodeURIComponent(agentPrompt)}`
       const res = await fetch(url, { cache: 'no-store' })
-      const data = await res.json().catch(() => ({})) as { ok?: boolean; text?: string; error?: string }
+      const data = await res.json().catch(() => ({})) as { ok?: boolean; text?: string; error?: string; step?: string; exitCode?: number; stdout?: string; stderr?: string }
       if (!res.ok || data.ok === false) {
-        throw new Error(data.error || `Erro ${res.status}`)
+        const details = [
+          data.error ? `Erro: ${data.error}` : null,
+          data.step ? `Etapa: ${data.step}` : null,
+          typeof data.exitCode === 'number' ? `ExitCode: ${data.exitCode}` : null,
+          data.stderr ? `stderr:\n${data.stderr}` : (data.stdout ? `stdout:\n${data.stdout}` : null),
+        ].filter(Boolean).join('\n')
+        throw new Error(details || `Erro ${res.status}`)
       }
       setOutput(data.text || '(sem saída)')
     } catch (e) {
