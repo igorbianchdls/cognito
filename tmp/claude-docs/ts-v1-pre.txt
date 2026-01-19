@@ -1,0 +1,1415 @@
+npm install @anthropic-ai/claude-agent-sdk
+
+---
+function query({
+  prompt,
+  options
+}: {
+  prompt: string | AsyncIterable&#x3C;SDKUserMessage>;
+  options?: Options;
+}): Query
+
+---
+function tool&#x3C;Schema extends ZodRawShape>(
+  name: string,
+  description: string,
+  inputSchema: Schema,
+  handler: (args: z.infer&#x3C;ZodObject&#x3C;Schema>>, extra: unknown) => Promise&#x3C;CallToolResult>
+): SdkMcpToolDefinition&#x3C;Schema>
+
+---
+function createSdkMcpServer(options: {
+  name: string;
+  version?: string;
+  tools?: Array&#x3C;SdkMcpToolDefinition&#x3C;any>>;
+}): McpSdkServerConfigWithInstance
+
+---
+interface Query extends AsyncGenerator&#x3C;SDKMessage, void> {
+  interrupt(): Promise&#x3C;void>;
+  rewindFiles(userMessageUuid: string): Promise&#x3C;void>;
+  setPermissionMode(mode: PermissionMode): Promise&#x3C;void>;
+  setModel(model?: string): Promise&#x3C;void>;
+  setMaxThinkingTokens(maxThinkingTokens: number | null): Promise&#x3C;void>;
+  supportedCommands(): Promise&#x3C;SlashCommand[]>;
+  supportedModels(): Promise&#x3C;ModelInfo[]>;
+  mcpServerStatus(): Promise&#x3C;McpServerStatus[]>;
+  accountInfo(): Promise&#x3C;AccountInfo>;
+}
+
+---
+type AgentDefinition = {
+  description: string;
+  tools?: string[];
+  prompt: string;
+  model?: 'sonnet' | 'opus' | 'haiku' | 'inherit';
+}
+
+---
+type SettingSource = 'user' | 'project' | 'local';
+
+---
+// Load all settings like SDK v0.0.x did
+const result = query({
+  prompt: "Analyze this code",
+  options: {
+    settingSources: ['user', 'project', 'local']  // Load all settings
+  }
+});
+
+---
+// Load only project settings, ignore user and local
+const result = query({
+  prompt: "Run CI checks",
+  options: {
+    settingSources: ['project']  // Only .claude/settings.json
+  }
+});
+
+---
+// Ensure consistent behavior in CI by excluding local settings
+const result = query({
+  prompt: "Run tests",
+  options: {
+    settingSources: ['project'],  // Only team-shared settings
+    permissionMode: 'bypassPermissions'
+  }
+});
+
+---
+// Define everything programmatically (default behavior)
+// No filesystem dependencies - settingSources defaults to []
+const result = query({
+  prompt: "Review this PR",
+  options: {
+    // settingSources: [] is the default, no need to specify
+    agents: { /* ... */ },
+    mcpServers: { /* ... */ },
+    allowedTools: ['Read', 'Grep', 'Glob']
+  }
+});
+
+---
+// Load project settings to include CLAUDE.md files
+const result = query({
+  prompt: "Add a new feature following project conventions",
+  options: {
+    systemPrompt: {
+      type: 'preset',
+      preset: 'claude_code'  // Required to use CLAUDE.md
+    },
+    settingSources: ['project'],  // Loads CLAUDE.md from project directory
+    allowedTools: ['Read', 'Write', 'Edit']
+  }
+});
+
+---
+type PermissionMode =
+  | 'default'           // Standard permission behavior
+  | 'acceptEdits'       // Auto-accept file edits
+  | 'bypassPermissions' // Bypass all permission checks
+  | 'plan'              // Planning mode - no execution
+
+---
+type CanUseTool = (
+  toolName: string,
+  input: ToolInput,
+  options: {
+    signal: AbortSignal;
+    suggestions?: PermissionUpdate[];
+  }
+) => Promise&#x3C;PermissionResult>;
+
+---
+type PermissionResult = 
+  | {
+      behavior: 'allow';
+      updatedInput: ToolInput;
+      updatedPermissions?: PermissionUpdate[];
+    }
+  | {
+      behavior: 'deny';
+      message: string;
+      interrupt?: boolean;
+    }
+
+---
+type McpServerConfig = 
+  | McpStdioServerConfig
+  | McpSSEServerConfig
+  | McpHttpServerConfig
+  | McpSdkServerConfigWithInstance;
+
+---
+type McpStdioServerConfig = {
+  type?: 'stdio';
+  command: string;
+  args?: string[];
+  env?: Record&#x3C;string, string>;
+}
+
+---
+type McpSSEServerConfig = {
+  type: 'sse';
+  url: string;
+  headers?: Record&#x3C;string, string>;
+}
+
+---
+type McpHttpServerConfig = {
+  type: 'http';
+  url: string;
+  headers?: Record&#x3C;string, string>;
+}
+
+---
+type McpSdkServerConfigWithInstance = {
+  type: 'sdk';
+  name: string;
+  instance: McpServer;
+}
+
+---
+type SdkPluginConfig = {
+  type: 'local';
+  path: string;
+}
+
+---
+plugins: [
+  { type: 'local', path: './my-plugin' },
+  { type: 'local', path: '/absolute/path/to/plugin' }
+]
+
+---
+type SDKMessage = 
+  | SDKAssistantMessage
+  | SDKUserMessage
+  | SDKUserMessageReplay
+  | SDKResultMessage
+  | SDKSystemMessage
+  | SDKPartialAssistantMessage
+  | SDKCompactBoundaryMessage;
+
+---
+type SDKAssistantMessage = {
+  type: 'assistant';
+  uuid: UUID;
+  session_id: string;
+  message: APIAssistantMessage; // From Anthropic SDK
+  parent_tool_use_id: string | null;
+}
+
+---
+type SDKUserMessage = {
+  type: 'user';
+  uuid?: UUID;
+  session_id: string;
+  message: APIUserMessage; // From Anthropic SDK
+  parent_tool_use_id: string | null;
+}
+
+---
+type SDKUserMessageReplay = {
+  type: 'user';
+  uuid: UUID;
+  session_id: string;
+  message: APIUserMessage;
+  parent_tool_use_id: string | null;
+}
+
+---
+type SDKResultMessage =
+  | {
+      type: 'result';
+      subtype: 'success';
+      uuid: UUID;
+      session_id: string;
+      duration_ms: number;
+      duration_api_ms: number;
+      is_error: boolean;
+      num_turns: number;
+      result: string;
+      total_cost_usd: number;
+      usage: NonNullableUsage;
+      modelUsage: { [modelName: string]: ModelUsage };
+      permission_denials: SDKPermissionDenial[];
+      structured_output?: unknown;
+    }
+  | {
+      type: 'result';
+      subtype:
+        | 'error_max_turns'
+        | 'error_during_execution'
+        | 'error_max_budget_usd'
+        | 'error_max_structured_output_retries';
+      uuid: UUID;
+      session_id: string;
+      duration_ms: number;
+      duration_api_ms: number;
+      is_error: boolean;
+      num_turns: number;
+      total_cost_usd: number;
+      usage: NonNullableUsage;
+      modelUsage: { [modelName: string]: ModelUsage };
+      permission_denials: SDKPermissionDenial[];
+      errors: string[];
+    }
+
+---
+type SDKSystemMessage = {
+  type: 'system';
+  subtype: 'init';
+  uuid: UUID;
+  session_id: string;
+  apiKeySource: ApiKeySource;
+  cwd: string;
+  tools: string[];
+  mcp_servers: {
+    name: string;
+    status: string;
+  }[];
+  model: string;
+  permissionMode: PermissionMode;
+  slash_commands: string[];
+  output_style: string;
+}
+
+---
+type SDKPartialAssistantMessage = {
+  type: 'stream_event';
+  event: RawMessageStreamEvent; // From Anthropic SDK
+  parent_tool_use_id: string | null;
+  uuid: UUID;
+  session_id: string;
+}
+
+---
+type SDKCompactBoundaryMessage = {
+  type: 'system';
+  subtype: 'compact_boundary';
+  uuid: UUID;
+  session_id: string;
+  compact_metadata: {
+    trigger: 'manual' | 'auto';
+    pre_tokens: number;
+  };
+}
+
+---
+type SDKPermissionDenial = {
+  tool_name: string;
+  tool_use_id: string;
+  tool_input: ToolInput;
+}
+
+---
+type HookEvent =
+  | 'PreToolUse'
+  | 'PostToolUse'
+  | 'PostToolUseFailure'
+  | 'Notification'
+  | 'UserPromptSubmit'
+  | 'SessionStart'
+  | 'SessionEnd'
+  | 'Stop'
+  | 'SubagentStart'
+  | 'SubagentStop'
+  | 'PreCompact'
+  | 'PermissionRequest';
+
+---
+type HookCallback = (
+  input: HookInput, // Union of all hook input types
+  toolUseID: string | undefined,
+  options: { signal: AbortSignal }
+) => Promise&#x3C;HookJSONOutput>;
+
+---
+interface HookCallbackMatcher {
+  matcher?: string;
+  hooks: HookCallback[];
+}
+
+---
+type HookInput =
+  | PreToolUseHookInput
+  | PostToolUseHookInput
+  | PostToolUseFailureHookInput
+  | NotificationHookInput
+  | UserPromptSubmitHookInput
+  | SessionStartHookInput
+  | SessionEndHookInput
+  | StopHookInput
+  | SubagentStartHookInput
+  | SubagentStopHookInput
+  | PreCompactHookInput
+  | PermissionRequestHookInput;
+
+---
+type BaseHookInput = {
+  session_id: string;
+  transcript_path: string;
+  cwd: string;
+  permission_mode?: string;
+}
+
+---
+type PreToolUseHookInput = BaseHookInput &#x26; {
+  hook_event_name: 'PreToolUse';
+  tool_name: string;
+  tool_input: unknown;
+}
+
+---
+type PostToolUseHookInput = BaseHookInput &#x26; {
+  hook_event_name: 'PostToolUse';
+  tool_name: string;
+  tool_input: unknown;
+  tool_response: unknown;
+}
+
+---
+type PostToolUseFailureHookInput = BaseHookInput &#x26; {
+  hook_event_name: 'PostToolUseFailure';
+  tool_name: string;
+  tool_input: unknown;
+  error: string;
+  is_interrupt?: boolean;
+}
+
+---
+type NotificationHookInput = BaseHookInput &#x26; {
+  hook_event_name: 'Notification';
+  message: string;
+  title?: string;
+}
+
+---
+type UserPromptSubmitHookInput = BaseHookInput &#x26; {
+  hook_event_name: 'UserPromptSubmit';
+  prompt: string;
+}
+
+---
+type SessionStartHookInput = BaseHookInput &#x26; {
+  hook_event_name: 'SessionStart';
+  source: 'startup' | 'resume' | 'clear' | 'compact';
+}
+
+---
+type SessionEndHookInput = BaseHookInput &#x26; {
+  hook_event_name: 'SessionEnd';
+  reason: ExitReason;  // String from EXIT_REASONS array
+}
+
+---
+type StopHookInput = BaseHookInput &#x26; {
+  hook_event_name: 'Stop';
+  stop_hook_active: boolean;
+}
+
+---
+type SubagentStartHookInput = BaseHookInput &#x26; {
+  hook_event_name: 'SubagentStart';
+  agent_id: string;
+  agent_type: string;
+}
+
+---
+type SubagentStopHookInput = BaseHookInput &#x26; {
+  hook_event_name: 'SubagentStop';
+  stop_hook_active: boolean;
+}
+
+---
+type PreCompactHookInput = BaseHookInput &#x26; {
+  hook_event_name: 'PreCompact';
+  trigger: 'manual' | 'auto';
+  custom_instructions: string | null;
+}
+
+---
+type PermissionRequestHookInput = BaseHookInput &#x26; {
+  hook_event_name: 'PermissionRequest';
+  tool_name: string;
+  tool_input: unknown;
+  permission_suggestions?: PermissionUpdate[];
+}
+
+---
+type HookJSONOutput = AsyncHookJSONOutput | SyncHookJSONOutput;
+
+---
+type AsyncHookJSONOutput = {
+  async: true;
+  asyncTimeout?: number;
+}
+
+---
+type SyncHookJSONOutput = {
+  continue?: boolean;
+  suppressOutput?: boolean;
+  stopReason?: string;
+  decision?: 'approve' | 'block';
+  systemMessage?: string;
+  reason?: string;
+  hookSpecificOutput?:
+    | {
+        hookEventName: 'PreToolUse';
+        permissionDecision?: 'allow' | 'deny' | 'ask';
+        permissionDecisionReason?: string;
+        updatedInput?: Record&#x3C;string, unknown>;
+      }
+    | {
+        hookEventName: 'UserPromptSubmit';
+        additionalContext?: string;
+      }
+    | {
+        hookEventName: 'SessionStart';
+        additionalContext?: string;
+      }
+    | {
+        hookEventName: 'PostToolUse';
+        additionalContext?: string;
+      };
+}
+
+---
+type ToolInput =
+  | AgentInput
+  | AskUserQuestionInput
+  | BashInput
+  | BashOutputInput
+  | FileEditInput
+  | FileReadInput
+  | FileWriteInput
+  | GlobInput
+  | GrepInput
+  | KillShellInput
+  | NotebookEditInput
+  | WebFetchInput
+  | WebSearchInput
+  | TodoWriteInput
+  | ExitPlanModeInput
+  | ListMcpResourcesInput
+  | ReadMcpResourceInput;
+
+---
+interface AgentInput {
+  /**
+   * A short (3-5 word) description of the task
+   */
+  description: string;
+  /**
+   * The task for the agent to perform
+   */
+  prompt: string;
+  /**
+   * The type of specialized agent to use for this task
+   */
+  subagent_type: string;
+}
+
+---
+interface AskUserQuestionInput {
+  /**
+   * Questions to ask the user (1-4 questions)
+   */
+  questions: Array&#x3C;{
+    /**
+     * The complete question to ask the user. Should be clear, specific,
+     * and end with a question mark.
+     */
+    question: string;
+    /**
+     * Very short label displayed as a chip/tag (max 12 chars).
+     * Examples: "Auth method", "Library", "Approach"
+     */
+    header: string;
+    /**
+     * The available choices (2-4 options). An "Other" option is
+     * automatically provided.
+     */
+    options: Array&#x3C;{
+      /**
+       * Display text for this option (1-5 words)
+       */
+      label: string;
+      /**
+       * Explanation of what this option means
+       */
+      description: string;
+    }>;
+    /**
+     * Set to true to allow multiple selections
+     */
+    multiSelect: boolean;
+  }>;
+  /**
+   * User answers populated by the permission system.
+   * Maps question text to selected option label(s).
+   * Multi-select answers are comma-separated.
+   */
+  answers?: Record&#x3C;string, string>;
+}
+
+---
+interface BashInput {
+  /**
+   * The command to execute
+   */
+  command: string;
+  /**
+   * Optional timeout in milliseconds (max 600000)
+   */
+  timeout?: number;
+  /**
+   * Clear, concise description of what this command does in 5-10 words
+   */
+  description?: string;
+  /**
+   * Set to true to run this command in the background
+   */
+  run_in_background?: boolean;
+}
+
+---
+interface BashOutputInput {
+  /**
+   * The ID of the background shell to retrieve output from
+   */
+  bash_id: string;
+  /**
+   * Optional regex to filter output lines
+   */
+  filter?: string;
+}
+
+---
+interface FileEditInput {
+  /**
+   * The absolute path to the file to modify
+   */
+  file_path: string;
+  /**
+   * The text to replace
+   */
+  old_string: string;
+  /**
+   * The text to replace it with (must be different from old_string)
+   */
+  new_string: string;
+  /**
+   * Replace all occurrences of old_string (default false)
+   */
+  replace_all?: boolean;
+}
+
+---
+interface FileReadInput {
+  /**
+   * The absolute path to the file to read
+   */
+  file_path: string;
+  /**
+   * The line number to start reading from
+   */
+  offset?: number;
+  /**
+   * The number of lines to read
+   */
+  limit?: number;
+}
+
+---
+interface FileWriteInput {
+  /**
+   * The absolute path to the file to write
+   */
+  file_path: string;
+  /**
+   * The content to write to the file
+   */
+  content: string;
+}
+
+---
+interface GlobInput {
+  /**
+   * The glob pattern to match files against
+   */
+  pattern: string;
+  /**
+   * The directory to search in (defaults to cwd)
+   */
+  path?: string;
+}
+
+---
+interface GrepInput {
+  /**
+   * The regular expression pattern to search for
+   */
+  pattern: string;
+  /**
+   * File or directory to search in (defaults to cwd)
+   */
+  path?: string;
+  /**
+   * Glob pattern to filter files (e.g. "*.js")
+   */
+  glob?: string;
+  /**
+   * File type to search (e.g. "js", "py", "rust")
+   */
+  type?: string;
+  /**
+   * Output mode: "content", "files_with_matches", or "count"
+   */
+  output_mode?: 'content' | 'files_with_matches' | 'count';
+  /**
+   * Case insensitive search
+   */
+  '-i'?: boolean;
+  /**
+   * Show line numbers (for content mode)
+   */
+  '-n'?: boolean;
+  /**
+   * Lines to show before each match
+   */
+  '-B'?: number;
+  /**
+   * Lines to show after each match
+   */
+  '-A'?: number;
+  /**
+   * Lines to show before and after each match
+   */
+  '-C'?: number;
+  /**
+   * Limit output to first N lines/entries
+   */
+  head_limit?: number;
+  /**
+   * Enable multiline mode
+   */
+  multiline?: boolean;
+}
+
+---
+interface KillShellInput {
+  /**
+   * The ID of the background shell to kill
+   */
+  shell_id: string;
+}
+
+---
+interface NotebookEditInput {
+  /**
+   * The absolute path to the Jupyter notebook file
+   */
+  notebook_path: string;
+  /**
+   * The ID of the cell to edit
+   */
+  cell_id?: string;
+  /**
+   * The new source for the cell
+   */
+  new_source: string;
+  /**
+   * The type of the cell (code or markdown)
+   */
+  cell_type?: 'code' | 'markdown';
+  /**
+   * The type of edit (replace, insert, delete)
+   */
+  edit_mode?: 'replace' | 'insert' | 'delete';
+}
+
+---
+interface WebFetchInput {
+  /**
+   * The URL to fetch content from
+   */
+  url: string;
+  /**
+   * The prompt to run on the fetched content
+   */
+  prompt: string;
+}
+
+---
+interface WebSearchInput {
+  /**
+   * The search query to use
+   */
+  query: string;
+  /**
+   * Only include results from these domains
+   */
+  allowed_domains?: string[];
+  /**
+   * Never include results from these domains
+   */
+  blocked_domains?: string[];
+}
+
+---
+interface TodoWriteInput {
+  /**
+   * The updated todo list
+   */
+  todos: Array&#x3C;{
+    /**
+     * The task description
+     */
+    content: string;
+    /**
+     * The task status
+     */
+    status: 'pending' | 'in_progress' | 'completed';
+    /**
+     * Active form of the task description
+     */
+    activeForm: string;
+  }>;
+}
+
+---
+interface ExitPlanModeInput {
+  /**
+   * The plan to run by the user for approval
+   */
+  plan: string;
+}
+
+---
+interface ListMcpResourcesInput {
+  /**
+   * Optional server name to filter resources by
+   */
+  server?: string;
+}
+
+---
+interface ReadMcpResourceInput {
+  /**
+   * The MCP server name
+   */
+  server: string;
+  /**
+   * The resource URI to read
+   */
+  uri: string;
+}
+
+---
+type ToolOutput =
+  | TaskOutput
+  | AskUserQuestionOutput
+  | BashOutput
+  | BashOutputToolOutput
+  | EditOutput
+  | ReadOutput
+  | WriteOutput
+  | GlobOutput
+  | GrepOutput
+  | KillBashOutput
+  | NotebookEditOutput
+  | WebFetchOutput
+  | WebSearchOutput
+  | TodoWriteOutput
+  | ExitPlanModeOutput
+  | ListMcpResourcesOutput
+  | ReadMcpResourceOutput;
+
+---
+interface TaskOutput {
+  /**
+   * Final result message from the subagent
+   */
+  result: string;
+  /**
+   * Token usage statistics
+   */
+  usage?: {
+    input_tokens: number;
+    output_tokens: number;
+    cache_creation_input_tokens?: number;
+    cache_read_input_tokens?: number;
+  };
+  /**
+   * Total cost in USD
+   */
+  total_cost_usd?: number;
+  /**
+   * Execution duration in milliseconds
+   */
+  duration_ms?: number;
+}
+
+---
+interface AskUserQuestionOutput {
+  /**
+   * The questions that were asked
+   */
+  questions: Array&#x3C;{
+    question: string;
+    header: string;
+    options: Array&#x3C;{
+      label: string;
+      description: string;
+    }>;
+    multiSelect: boolean;
+  }>;
+  /**
+   * The answers provided by the user.
+   * Maps question text to answer string.
+   * Multi-select answers are comma-separated.
+   */
+  answers: Record&#x3C;string, string>;
+}
+
+---
+interface BashOutput {
+  /**
+   * Combined stdout and stderr output
+   */
+  output: string;
+  /**
+   * Exit code of the command
+   */
+  exitCode: number;
+  /**
+   * Whether the command was killed due to timeout
+   */
+  killed?: boolean;
+  /**
+   * Shell ID for background processes
+   */
+  shellId?: string;
+}
+
+---
+interface BashOutputToolOutput {
+  /**
+   * New output since last check
+   */
+  output: string;
+  /**
+   * Current shell status
+   */
+  status: 'running' | 'completed' | 'failed';
+  /**
+   * Exit code (when completed)
+   */
+  exitCode?: number;
+}
+
+---
+interface EditOutput {
+  /**
+   * Confirmation message
+   */
+  message: string;
+  /**
+   * Number of replacements made
+   */
+  replacements: number;
+  /**
+   * File path that was edited
+   */
+  file_path: string;
+}
+
+---
+type ReadOutput = 
+  | TextFileOutput
+  | ImageFileOutput
+  | PDFFileOutput
+  | NotebookFileOutput;
+
+interface TextFileOutput {
+  /**
+   * File contents with line numbers
+   */
+  content: string;
+  /**
+   * Total number of lines in file
+   */
+  total_lines: number;
+  /**
+   * Lines actually returned
+   */
+  lines_returned: number;
+}
+
+interface ImageFileOutput {
+  /**
+   * Base64 encoded image data
+   */
+  image: string;
+  /**
+   * Image MIME type
+   */
+  mime_type: string;
+  /**
+   * File size in bytes
+   */
+  file_size: number;
+}
+
+interface PDFFileOutput {
+  /**
+   * Array of page contents
+   */
+  pages: Array&#x3C;{
+    page_number: number;
+    text?: string;
+    images?: Array&#x3C;{
+      image: string;
+      mime_type: string;
+    }>;
+  }>;
+  /**
+   * Total number of pages
+   */
+  total_pages: number;
+}
+
+interface NotebookFileOutput {
+  /**
+   * Jupyter notebook cells
+   */
+  cells: Array&#x3C;{
+    cell_type: 'code' | 'markdown';
+    source: string;
+    outputs?: any[];
+    execution_count?: number;
+  }>;
+  /**
+   * Notebook metadata
+   */
+  metadata?: Record&#x3C;string, any>;
+}
+
+---
+interface WriteOutput {
+  /**
+   * Success message
+   */
+  message: string;
+  /**
+   * Number of bytes written
+   */
+  bytes_written: number;
+  /**
+   * File path that was written
+   */
+  file_path: string;
+}
+
+---
+interface GlobOutput {
+  /**
+   * Array of matching file paths
+   */
+  matches: string[];
+  /**
+   * Number of matches found
+   */
+  count: number;
+  /**
+   * Search directory used
+   */
+  search_path: string;
+}
+
+---
+type GrepOutput = 
+  | GrepContentOutput
+  | GrepFilesOutput
+  | GrepCountOutput;
+
+interface GrepContentOutput {
+  /**
+   * Matching lines with context
+   */
+  matches: Array&#x3C;{
+    file: string;
+    line_number?: number;
+    line: string;
+    before_context?: string[];
+    after_context?: string[];
+  }>;
+  /**
+   * Total number of matches
+   */
+  total_matches: number;
+}
+
+interface GrepFilesOutput {
+  /**
+   * Files containing matches
+   */
+  files: string[];
+  /**
+   * Number of files with matches
+   */
+  count: number;
+}
+
+interface GrepCountOutput {
+  /**
+   * Match counts per file
+   */
+  counts: Array&#x3C;{
+    file: string;
+    count: number;
+  }>;
+  /**
+   * Total matches across all files
+   */
+  total: number;
+}
+
+---
+interface KillBashOutput {
+  /**
+   * Success message
+   */
+  message: string;
+  /**
+   * ID of the killed shell
+   */
+  shell_id: string;
+}
+
+---
+interface NotebookEditOutput {
+  /**
+   * Success message
+   */
+  message: string;
+  /**
+   * Type of edit performed
+   */
+  edit_type: 'replaced' | 'inserted' | 'deleted';
+  /**
+   * Cell ID that was affected
+   */
+  cell_id?: string;
+  /**
+   * Total cells in notebook after edit
+   */
+  total_cells: number;
+}
+
+---
+interface WebFetchOutput {
+  /**
+   * AI model's response to the prompt
+   */
+  response: string;
+  /**
+   * URL that was fetched
+   */
+  url: string;
+  /**
+   * Final URL after redirects
+   */
+  final_url?: string;
+  /**
+   * HTTP status code
+   */
+  status_code?: number;
+}
+
+---
+interface WebSearchOutput {
+  /**
+   * Search results
+   */
+  results: Array&#x3C;{
+    title: string;
+    url: string;
+    snippet: string;
+    /**
+     * Additional metadata if available
+     */
+    metadata?: Record&#x3C;string, any>;
+  }>;
+  /**
+   * Total number of results
+   */
+  total_results: number;
+  /**
+   * The query that was searched
+   */
+  query: string;
+}
+
+---
+interface TodoWriteOutput {
+  /**
+   * Success message
+   */
+  message: string;
+  /**
+   * Current todo statistics
+   */
+  stats: {
+    total: number;
+    pending: number;
+    in_progress: number;
+    completed: number;
+  };
+}
+
+---
+interface ExitPlanModeOutput {
+  /**
+   * Confirmation message
+   */
+  message: string;
+  /**
+   * Whether user approved the plan
+   */
+  approved?: boolean;
+}
+
+---
+interface ListMcpResourcesOutput {
+  /**
+   * Available resources
+   */
+  resources: Array&#x3C;{
+    uri: string;
+    name: string;
+    description?: string;
+    mimeType?: string;
+    server: string;
+  }>;
+  /**
+   * Total number of resources
+   */
+  total: number;
+}
+
+---
+interface ReadMcpResourceOutput {
+  /**
+   * Resource contents
+   */
+  contents: Array&#x3C;{
+    uri: string;
+    mimeType?: string;
+    text?: string;
+    blob?: string;
+  }>;
+  /**
+   * Server that provided the resource
+   */
+  server: string;
+}
+
+---
+type PermissionUpdate = 
+  | {
+      type: 'addRules';
+      rules: PermissionRuleValue[];
+      behavior: PermissionBehavior;
+      destination: PermissionUpdateDestination;
+    }
+  | {
+      type: 'replaceRules';
+      rules: PermissionRuleValue[];
+      behavior: PermissionBehavior;
+      destination: PermissionUpdateDestination;
+    }
+  | {
+      type: 'removeRules';
+      rules: PermissionRuleValue[];
+      behavior: PermissionBehavior;
+      destination: PermissionUpdateDestination;
+    }
+  | {
+      type: 'setMode';
+      mode: PermissionMode;
+      destination: PermissionUpdateDestination;
+    }
+  | {
+      type: 'addDirectories';
+      directories: string[];
+      destination: PermissionUpdateDestination;
+    }
+  | {
+      type: 'removeDirectories';
+      directories: string[];
+      destination: PermissionUpdateDestination;
+    }
+
+---
+type PermissionBehavior = 'allow' | 'deny' | 'ask';
+
+---
+type PermissionUpdateDestination = 
+  | 'userSettings'     // Global user settings
+  | 'projectSettings'  // Per-directory project settings
+  | 'localSettings'    // Gitignored local settings
+  | 'session'          // Current session only
+
+---
+type PermissionRuleValue = {
+  toolName: string;
+  ruleContent?: string;
+}
+
+---
+type ApiKeySource = 'user' | 'project' | 'org' | 'temporary';
+
+---
+type SdkBeta = 'context-1m-2025-08-07';
+
+---
+type SlashCommand = {
+  name: string;
+  description: string;
+  argumentHint: string;
+}
+
+---
+type ModelInfo = {
+  value: string;
+  displayName: string;
+  description: string;
+}
+
+---
+type McpServerStatus = {
+  name: string;
+  status: 'connected' | 'failed' | 'needs-auth' | 'pending';
+  serverInfo?: {
+    name: string;
+    version: string;
+  };
+}
+
+---
+type AccountInfo = {
+  email?: string;
+  organization?: string;
+  subscriptionType?: string;
+  tokenSource?: string;
+  apiKeySource?: string;
+}
+
+---
+type ModelUsage = {
+  inputTokens: number;
+  outputTokens: number;
+  cacheReadInputTokens: number;
+  cacheCreationInputTokens: number;
+  webSearchRequests: number;
+  costUSD: number;
+  contextWindow: number;
+}
+
+---
+type ConfigScope = 'local' | 'user' | 'project';
+
+---
+type NonNullableUsage = {
+  [K in keyof Usage]: NonNullable&#x3C;Usage[K]>;
+}
+
+---
+type Usage = {
+  input_tokens: number | null;
+  output_tokens: number | null;
+  cache_creation_input_tokens?: number | null;
+  cache_read_input_tokens?: number | null;
+}
+
+---
+type CallToolResult = {
+  content: Array&#x3C;{
+    type: 'text' | 'image' | 'resource';
+    // Additional fields vary by type
+  }>;
+  isError?: boolean;
+}
+
+---
+class AbortError extends Error {}
+
+---
+type SandboxSettings = {
+  enabled?: boolean;
+  autoAllowBashIfSandboxed?: boolean;
+  excludedCommands?: string[];
+  allowUnsandboxedCommands?: boolean;
+  network?: NetworkSandboxSettings;
+  ignoreViolations?: SandboxIgnoreViolations;
+  enableWeakerNestedSandbox?: boolean;
+}
+
+---
+import { query } from "@anthropic-ai/claude-agent-sdk";
+
+const result = await query({
+  prompt: "Build and test my project",
+  options: {
+    sandbox: {
+      enabled: true,
+      autoAllowBashIfSandboxed: true,
+      network: {
+        allowLocalBinding: true
+      }
+    }
+  }
+});
+
+---
+type NetworkSandboxSettings = {
+  allowLocalBinding?: boolean;
+  allowUnixSockets?: string[];
+  allowAllUnixSockets?: boolean;
+  httpProxyPort?: number;
+  socksProxyPort?: number;
+}
+
+---
+type SandboxIgnoreViolations = {
+  file?: string[];
+  network?: string[];
+}
+
+---
+import { query } from "@anthropic-ai/claude-agent-sdk";
+
+const result = await query({
+  prompt: "Deploy my application",
+  options: {
+    sandbox: {
+      enabled: true,
+      allowUnsandboxedCommands: true  // Model can request unsandboxed execution
+    },
+    permissionMode: "default",
+    canUseTool: async (tool, input) => {
+      // Check if the model is requesting to bypass the sandbox
+      if (tool === "Bash" &#x26;&#x26; input.dangerouslyDisableSandbox) {
+        // The model wants to run this command outside the sandbox
+        console.log(`Unsandboxed command requested: ${input.command}`);
+
+        // Return true to allow, false to deny
+        return isCommandAuthorized(input.command);
+      }
+      return true;
+    }
+  }
+});
