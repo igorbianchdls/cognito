@@ -1,10 +1,6 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  experimental: {
-    // Keep the package as external so its files (cli.js, wasm) are available at runtime
-    serverExternalPackages: ["@anthropic-ai/claude-agent-sdk"],
-  },
   // Ensure the Claude Code CLI and its wasm assets are included in the serverless trace
   outputFileTracingIncludes: {
     "/api/bigquery-test/ia-chat": [
