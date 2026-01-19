@@ -9,6 +9,7 @@ export default function SandboxUIPage() {
   const [loadingNode, setLoadingNode] = useState(false)
   const [code, setCode] = useState("console.log('2+2 =', 2+2)")
   const [runningCode, setRunningCode] = useState(false)
+  const [verifying, setVerifying] = useState(false)
 
   const runEcho = async () => {
     setLoading(true)
@@ -65,6 +66,24 @@ export default function SandboxUIPage() {
     }
   }
 
+  const runAgentVerify = async () => {
+    setVerifying(true)
+    setOutput(null)
+    setError(null)
+    try {
+      const res = await fetch('/api/sandbox/agent-verify', { cache: 'no-store' })
+      const data = await res.json().catch(() => ({})) as { ok?: boolean; verifyOutput?: string; error?: string }
+      if (!res.ok || data.ok === false) {
+        throw new Error(data.error || `Erro ${res.status}`)
+      }
+      setOutput(data.verifyOutput || 'Verificação concluída (sem saída)')
+    } catch (e) {
+      setError((e as Error).message)
+    } finally {
+      setVerifying(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-xl mx-auto space-y-4">
@@ -114,6 +133,17 @@ export default function SandboxUIPage() {
           className={`px-4 py-2 rounded-md text-white ${runningCode ? 'bg-gray-400' : 'bg-emerald-600 hover:bg-emerald-700'}`}
         >
           {runningCode ? 'Executando…' : 'Executar código no Sandbox'}
+        </button>
+
+        <div className="pt-4 border-t border-gray-200" />
+        <h2 className="text-lg font-medium text-gray-900">Verificar Anthropic SDK no Sandbox</h2>
+        <p className="text-sm text-gray-600">Instala @anthropic-ai/claude-code e @anthropic-ai/sdk dentro do Sandbox e roda um script de verificação.</p>
+        <button
+          onClick={runAgentVerify}
+          disabled={verifying}
+          className={`px-4 py-2 rounded-md text-white ${verifying ? 'bg-gray-400' : 'bg-purple-600 hover:bg-purple-700'}`}
+        >
+          {verifying ? 'Verificando…' : 'Verificar SDK no Sandbox'}
         </button>
 
         {output !== null && (
