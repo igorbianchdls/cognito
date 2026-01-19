@@ -1,4 +1,7 @@
 import { query } from '@anthropic-ai/claude-agent-sdk'
+import { createRequire } from 'module'
+
+export const runtime = 'nodejs'
 
 export async function GET(req: Request) {
   try {
@@ -9,9 +12,15 @@ export async function GET(req: Request) {
       return Response.json({ error: 'ANTHROPIC_API_KEY não configurada' }, { status: 500 })
     }
 
+    const require = createRequire(import.meta.url)
+    const cli = require.resolve('@anthropic-ai/claude-code/cli.js')
+
     const q = query({
       prompt,
-      options: { model: 'claude-sonnet-4-5-20250929' }
+      options: {
+        model: 'claude-sonnet-4-5-20250929',
+        pathToClaudeCodeExecutable: cli
+      }
     })
 
     for await (const msg of q) {
