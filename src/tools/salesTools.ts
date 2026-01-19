@@ -581,8 +581,9 @@ export const analisePerformanceLancamento = tool({
       .describe('IDs > id_limite_colecao são considerados Nova Coleção'),
     data_de: z.string().optional().describe('Data inicial (YYYY-MM-DD)'),
     data_ate: z.string().optional().describe('Data final (YYYY-MM-DD)'),
-  }).optional(),
-  execute: async ({ mes_lancamento, id_limite_colecao = 24, data_de, data_ate } = {}) => {
+  }),
+  execute: async (args: { mes_lancamento?: string; id_limite_colecao: number; data_de?: string; data_ate?: string }) => {
+    const { mes_lancamento, id_limite_colecao, data_de, data_ate } = args;
     let sql: string;
     let params: unknown[] = [];
     if (data_de || data_ate) {
