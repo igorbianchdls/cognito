@@ -1,4 +1,7 @@
 import { unstable_v2_prompt } from '@anthropic-ai/claude-agent-sdk'
+import { createRequire } from 'module'
+
+export const runtime = 'nodejs'
 
 export const maxDuration = 300
 
@@ -14,8 +17,12 @@ export async function POST(req: Request) {
       return Response.json({ error: 'prompt é obrigatório' }, { status: 400 })
     }
 
+    const require = createRequire(import.meta.url)
+    const pathToCli = require.resolve('@anthropic-ai/claude-agent-sdk/cli.js')
+
     const result = await unstable_v2_prompt(prompt, {
-      model: 'claude-sonnet-4-20250514'
+      model: 'claude-sonnet-4-20250514',
+      pathToClaudeCodeExecutable: pathToCli
     })
     // unstable_v2_prompt returns an SDKResultMessage; success subtype has 'result'
     if (result.type === 'result' && result.subtype === 'success') {
