@@ -14,6 +14,7 @@ export default function SandboxUIPage() {
   const [sending, setSending] = useState(false)
   const [chatHistory, setChatHistory] = useState<{ role: 'user'|'assistant'; content: string }[]>([])
   const [chatInput, setChatInput] = useState('Olá!')
+  const [streaming, setStreaming] = useState(false)
   
 
   const runEcho = async () => {
@@ -209,6 +210,66 @@ export default function SandboxUIPage() {
     }
   }
 
+  const sendChatStream = async () => {
+    if (!chatId || !chatInput.trim()) return
+    setStreaming(true)
+    setError(null)
+    try {
+      const next = [...chatHistory, { role: 'user' as const, content: chatInput }]
+      setChatHistory(next)
+      setChatInput('')
+      const res = await fetch('/api/sandbox/chat/send-stream', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chatId, history: next })
+      })
+      if (!res.ok || !res.body) {
+        const text = await res.text().catch(() => '')
+        throw new Error(text || `Erro ${res.status}`)
+      }
+      // Add streaming assistant message
+      setChatHistory(h => [...h, { role: 'assistant', content: '' }])
+      const idx = chatHistory.length + 1 // new assistant index
+      const reader = res.body.getReader()
+      const decoder = new TextDecoder()
+      let buf = ''
+      while (true) {
+        const { value, done } = await reader.read()
+        if (done) break
+        buf += decoder.decode(value, { stream: true })
+        // SSE frames
+        const parts = buf.split('\n\n')
+        buf = parts.pop() || ''
+        for (const frame of parts) {
+          const line = frame.split('\n').find(l => l.startsWith('data: '))
+          if (!line) continue
+          const payload = line.slice(6)
+          try {
+            const evt = JSON.parse(payload)
+            if (evt.type === 'delta' && typeof evt.text === 'string') {
+              setChatHistory(h => {
+                const copy = h.slice()
+                const cur = copy[idx]
+                if (cur && cur.role === 'assistant') {
+                  cur.content += evt.text
+                }
+                return copy
+              })
+            } else if (evt.type === 'final') {
+              // Nothing special; stream ends
+            }
+          } catch {
+            // ignore non-JSON data lines
+          }
+        }
+      }
+    } catch (e) {
+      setError((e as Error).message)
+    } finally {
+      setStreaming(false)
+    }
+  }
+
   
 
   return (
@@ -304,7 +365,8 @@ export default function SandboxUIPage() {
               placeholder="Digite sua mensagem"
               disabled={!chatId}
             />
-            <button onClick={sendChat} disabled={!chatId || sending || !chatInput.trim()} className={`px-4 py-2 rounded-md text-white ${(!chatId || sending) ? 'bg-gray-400' : 'bg-teal-600 hover:bg-teal-700'}`}>{sending ? 'Enviando…' : 'Enviar'}</button>
+            <button onClick={sendChat} disabled={!chatId || sending || streaming || !chatInput.trim()} className={`px-4 py-2 rounded-md text-white ${(!chatId || sending || streaming) ? 'bg-gray-400' : 'bg-teal-600 hover:bg-teal-700'}`}>{sending ? 'Enviando…' : 'Enviar (sync)'}</button>
+            <button onClick={sendChatStream} disabled={!chatId || streaming || sending || !chatInput.trim()} className={`px-4 py-2 rounded-md text-white ${(!chatId || streaming || sending) ? 'bg-gray-400' : 'bg-indigo-600 hover:bg-indigo-700'}`}>{streaming ? 'Transmitindo…' : 'Enviar (stream)'}</button>
           </div>
         </div>
 
