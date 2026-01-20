@@ -129,8 +129,8 @@ const options = {
   }
 };
 const q = query({ prompt, options });
-const toolInputBuffers: Record<number, string> = {};
-const toolMeta: Record<number, { id?: string; name?: string }> = {};
+const toolInputBuffers = {};
+const toolMeta = {};
 for await (const msg of q) {
   if (msg.type === 'stream_event') {
     const ev = msg.event;
@@ -150,22 +150,22 @@ for await (const msg of q) {
     }
     // Tool input streaming: tool_use start/delta/stop
     if (ev && ev.type === 'content_block_start' && ev.content_block && ev.content_block.type === 'tool_use') {
-      const idx = typeof (ev as any).index === 'number' ? (ev as any).index : 0;
+      const idx = typeof ev.index === 'number' ? ev.index : 0;
       toolInputBuffers[idx] = '';
-      toolMeta[idx] = { id: (ev as any).content_block?.id, name: (ev as any).content_block?.name };
+      toolMeta[idx] = { id: ev.content_block && ev.content_block.id, name: ev.content_block && ev.content_block.name };
       console.log(JSON.stringify({ type: 'tool_input_start', index: idx, id: toolMeta[idx].id, name: toolMeta[idx].name }));
     }
-    if (ev && ev.type === 'content_block_delta' && ev.delta && ev.delta.type === 'input_json_delta' && typeof (ev.delta as any).partial_json === 'string') {
-      const idx = typeof (ev as any).index === 'number' ? (ev as any).index : 0;
-      const part = (ev.delta as any).partial_json as string;
+    if (ev && ev.type === 'content_block_delta' && ev.delta && ev.delta.type === 'input_json_delta' && typeof ev.delta.partial_json === 'string') {
+      const idx = typeof ev.index === 'number' ? ev.index : 0;
+      const part = ev.delta.partial_json;
       toolInputBuffers[idx] = (toolInputBuffers[idx] || '') + part;
       console.log(JSON.stringify({ type: 'tool_input_delta', index: idx, partial: part }));
     }
     if (ev && ev.type === 'content_block_stop') {
-      const idx = typeof (ev as any).index === 'number' ? (ev as any).index : 0;
+      const idx = typeof ev.index === 'number' ? ev.index : 0;
       if (Object.prototype.hasOwnProperty.call(toolInputBuffers, idx)) {
         const raw = toolInputBuffers[idx];
-        let parsed: any = undefined;
+        let parsed = undefined;
         try { parsed = JSON.parse(raw); } catch {}
         const meta = toolMeta[idx] || {};
         console.log(JSON.stringify({ type: 'tool_input_done', index: idx, id: meta.id, name: meta.name, input: parsed, raw }));
