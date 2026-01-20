@@ -63,7 +63,16 @@ import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
 const cli = require.resolve('@anthropic-ai/claude-code/cli.js');
 const prompt = process.argv[2] || '';
-const res = await unstable_v2_prompt(prompt, { model: 'claude-sonnet-4-5-20250929', pathToClaudeCodeExecutable: cli });
+const options = {
+  model: 'claude-sonnet-4-5-20250929',
+  pathToClaudeCodeExecutable: cli,
+  cwd: '/vercel/sandbox',
+  additionalDirectories: ['/vercel/sandbox'],
+  tools: { type: 'preset', preset: 'claude_code' },
+  permissionMode: 'acceptEdits',
+  maxThinkingTokens: 2048
+};
+const res = await unstable_v2_prompt(prompt, options);
 if (res.type === 'result' && res.subtype === 'success') console.log(res.result ?? '');
 else { console.log(''); process.exit(2); }
 `.trim()
@@ -93,12 +102,31 @@ import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
 const cli = require.resolve('@anthropic-ai/claude-code/cli.js');
 const prompt = process.argv[2] || '';
-const q = query({ prompt, options: { model: 'claude-sonnet-4-5-20250929', pathToClaudeCodeExecutable: cli, includePartialMessages: true }});
+const options = {
+  model: 'claude-sonnet-4-5-20250929',
+  pathToClaudeCodeExecutable: cli,
+  cwd: '/vercel/sandbox',
+  additionalDirectories: ['/vercel/sandbox'],
+  tools: { type: 'preset', preset: 'claude_code' },
+  permissionMode: 'acceptEdits',
+  includePartialMessages: true,
+  maxThinkingTokens: 2048
+};
+const q = query({ prompt, options });
 for await (const msg of q) {
   if (msg.type === 'stream_event') {
     const ev = msg.event;
+    if (ev && ev.type === 'content_block_start' && ev.content_block && ev.content_block.type === 'reasoning') {
+      console.log(JSON.stringify({ type: 'reasoning_start' }));
+    }
     if (ev && ev.type === 'content_block_delta' && ev.delta && ev.delta.type === 'text_delta' && ev.delta.text) {
       console.log(JSON.stringify({ type: 'delta', text: ev.delta.text }));
+    }
+    if (ev && ev.type === 'content_block_delta' && ev.delta && (ev.delta.type === 'thinking_delta' || ev.delta.type === 'reasoning_delta') && ev.delta.text) {
+      console.log(JSON.stringify({ type: 'reasoning_delta', text: ev.delta.text }));
+    }
+    if (ev && ev.type === 'content_block_stop') {
+      console.log(JSON.stringify({ type: 'reasoning_end' }));
     }
   } else if (msg.type === 'result' && msg.subtype === 'success') {
     console.log(JSON.stringify({ type: 'final', text: msg.result ?? '' }));
@@ -149,4 +177,3 @@ for await (const msg of q) {
     return Response.json({ ok: true })
   }
 }
-

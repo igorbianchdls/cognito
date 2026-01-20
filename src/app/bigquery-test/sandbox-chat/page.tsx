@@ -11,6 +11,8 @@ export default function SandboxChatPage() {
   const [starting, setStarting] = useState(false)
   const [sending, setSending] = useState(false)
   const [streaming, setStreaming] = useState(false)
+  const [reasoningOpen, setReasoningOpen] = useState(false)
+  const [reasoningText, setReasoningText] = useState('')
   const [error, setError] = useState<string | null>(null)
 
   const start = async () => {
@@ -62,6 +64,8 @@ export default function SandboxChatPage() {
       const idx = history.length + 1
       const reader = res.body.getReader(); const decoder = new TextDecoder()
       let buf = ''
+      setReasoningOpen(false)
+      setReasoningText('')
       while (true) {
         const { value, done } = await reader.read(); if (done) break
         buf += decoder.decode(value, { stream: true })
@@ -70,9 +74,17 @@ export default function SandboxChatPage() {
           const line = f.split('\n').find(l => l.startsWith('data: ')); if (!line) continue
           const payload = line.slice(6)
           try {
-            const evt = JSON.parse(payload)
+            const evt = JSON.parse(payload) as { type?: string; text?: string }
             if (evt.type === 'delta' && typeof evt.text === 'string') {
               setHistory(h => { const copy = h.slice(); const cur = copy[idx]; if (cur && cur.role==='assistant') cur.content += evt.text; return copy })
+            } else if (evt.type === 'reasoning_start') {
+              setReasoningOpen(true)
+              setReasoningText('')
+            } else if (evt.type === 'reasoning_delta' && typeof evt.text === 'string') {
+              setReasoningOpen(true)
+              setReasoningText(prev => prev + evt.text)
+            } else if (evt.type === 'reasoning_end') {
+              // keep shown
             }
           } catch { /* ignore */ }
         }
@@ -84,6 +96,12 @@ export default function SandboxChatPage() {
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-xl mx-auto space-y-4">
         <h1 className="text-2xl font-semibold text-gray-900">Sandbox Chat (Claude Agent SDK)</h1>
+        {reasoningOpen && (
+          <div className="mb-3 p-2 border border-amber-300 bg-amber-50 rounded text-sm text-amber-900">
+            <div className="flex items-center justify-between mb-1"><strong>Raciocínio</strong><button onClick={()=>setReasoningOpen(false)} className="text-xs text-amber-700 hover:underline">Ocultar</button></div>
+            <div className="whitespace-pre-wrap">{reasoningText || '…'}</div>
+          </div>
+        )}
         <div className="flex gap-2">
           <button onClick={start} disabled={starting || !!chatId} className={`px-3 py-2 rounded-md text-white ${starting||chatId?'bg-gray-400':'bg-emerald-600 hover:bg-emerald-700'}`}>Iniciar chat</button>
           <button onClick={stop} disabled={starting || !chatId} className={`px-3 py-2 rounded-md text-white ${starting||!chatId?'bg-gray-400':'bg-rose-600 hover:bg-rose-700'}`}>Encerrar chat</button>
@@ -110,4 +128,3 @@ export default function SandboxChatPage() {
     </div>
   )
 }
-

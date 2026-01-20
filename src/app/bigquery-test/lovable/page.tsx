@@ -16,6 +16,8 @@ export default function LovableLikeStudioPage() {
   const [sending, setSending] = useState(false)
   const [starting, setStarting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [reasoningOpen, setReasoningOpen] = useState(false)
+  const [reasoningText, setReasoningText] = useState('')
 
   // File system state (right)
   const initialTree: FileNode[] = useMemo(() => ([
@@ -77,6 +79,8 @@ button:hover { filter:brightness(0.95); }`,
     // placeholder assistant for streaming
     setMessages([...base, { role: 'assistant', content: '' }])
     const assistantIndex = base.length
+    setReasoningOpen(false)
+    setReasoningText('')
     setInput('')
     try {
       const res = await fetch('/api/sandbox', {
@@ -110,6 +114,14 @@ button:hover { filter:brightness(0.95); }`,
                 if (cur && cur.role === 'assistant') cur.content += evt.text
                 return copy
               })
+            } else if (evt.type === 'reasoning_start') {
+              setReasoningOpen(true)
+              setReasoningText('')
+            } else if (evt.type === 'reasoning_delta' && typeof evt.text === 'string') {
+              setReasoningOpen(true)
+              setReasoningText(prev => prev + evt.text)
+            } else if (evt.type === 'reasoning_end') {
+              // no-op; keep panel open with accumulated text
             }
           } catch { /* ignore non-JSON frames */ }
         }
@@ -207,6 +219,15 @@ button:hover { filter:brightness(0.95); }`,
               {error && (<div className="mt-2 text-xs text-red-600">Erro: {error}</div>)}
             </div>
             <div className="flex-1 overflow-auto p-4 space-y-3">
+              {reasoningOpen && (
+                <div className="p-2 border border-amber-300 bg-amber-50 rounded text-sm text-amber-900">
+                  <div className="flex items-center justify-between mb-1">
+                    <strong>Raciocínio</strong>
+                    <button onClick={()=>setReasoningOpen(false)} className="text-xs text-amber-700 hover:underline">Ocultar</button>
+                  </div>
+                  <div className="whitespace-pre-wrap">{reasoningText || '…'}</div>
+                </div>
+              )}
               {messages.map((m, i) => (
                 <div key={i} className={`max-w-[90%] rounded-lg px-3 py-2 ${m.role==='user'?'bg-blue-600 text-white ml-auto':'bg-gray-100 text-gray-900'}`}>
                   {m.content}
