@@ -73,18 +73,47 @@ button:hover { filter:brightness(0.95); }`,
     if (!chatId) { setError('Inicie o chat antes de enviar mensagens.'); return }
     setSending(true)
     setError(null)
-    const next = [...messages, { role: 'user' as const, content: text }]
-    setMessages(next)
+    const base = [...messages, { role: 'user' as const, content: text }]
+    // placeholder assistant for streaming
+    setMessages([...base, { role: 'assistant', content: '' }])
+    const assistantIndex = base.length
     setInput('')
     try {
       const res = await fetch('/api/sandbox', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'chat-send', chatId, history: next })
+        body: JSON.stringify({ action: 'chat-send-stream', chatId, history: base })
       })
-      const data = await res.json().catch(() => ({})) as { ok?: boolean; reply?: string; error?: string }
-      if (!res.ok || data.ok === false) throw new Error(data.error || `Erro ${res.status}`)
-      setMessages(m => [...m, { role: 'assistant', content: data.reply || '' }])
+      if (!res.ok || !res.body) {
+        const txt = await res.text().catch(() => '')
+        throw new Error(txt || `Erro ${res.status}`)
+      }
+      const reader = res.body.getReader()
+      const decoder = new TextDecoder()
+      let buf = ''
+      while (true) {
+        const { value, done } = await reader.read()
+        if (done) break
+        buf += decoder.decode(value, { stream: true })
+        const frames = buf.split('\n\n')
+        buf = frames.pop() || ''
+        for (const f of frames) {
+          const line = f.split('\n').find(l => l.startsWith('data: '))
+          if (!line) continue
+          const payload = line.slice(6)
+          try {
+            const evt = JSON.parse(payload) as { type?: string; text?: string }
+            if (evt.type === 'delta' && typeof evt.text === 'string') {
+              setMessages(prev => {
+                const copy = prev.slice()
+                const cur = copy[assistantIndex]
+                if (cur && cur.role === 'assistant') cur.content += evt.text
+                return copy
+              })
+            }
+          } catch { /* ignore non-JSON frames */ }
+        }
+      }
     } catch (e) {
       setError((e as Error).message)
     } finally {
@@ -186,7 +215,7 @@ button:hover { filter:brightness(0.95); }`,
             </div>
             <div className="p-3 border-t border-gray-200 flex gap-2">
               <input value={input} onChange={e=>setInput(e.target.value)} disabled={!chatId || sending} className="flex-1 px-3 py-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder={chatId? 'Digite sua mensagem':'Inicie o chat para enviar'} />
-              <button onClick={handleSend} disabled={!chatId || sending || !input.trim()} className={`px-4 py-2 rounded text-white ${(!chatId||sending)?'bg-gray-400':'bg-blue-600 hover:bg-blue-700'}`}>{sending? 'Enviando…':'Enviar'}</button>
+              <button onClick={handleSend} disabled={!chatId || sending || !input.trim()} className={`px-4 py-2 rounded text-white ${(!chatId||sending)?'bg-gray-400':'bg-blue-600 hover:bg-blue-700'}`}>{sending? 'Transmitindo…':'Enviar (stream)'}</button>
             </div>
           </div>
         </Panel>
