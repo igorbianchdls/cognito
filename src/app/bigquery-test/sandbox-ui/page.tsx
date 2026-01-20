@@ -10,6 +10,10 @@ export default function SandboxUIPage() {
   const [code, setCode] = useState("console.log('2+2 =', 2+2)")
   const [runningCode, setRunningCode] = useState(false)
   const [verifying, setVerifying] = useState(false)
+  const [chatId, setChatId] = useState<string | null>(null)
+  const [sending, setSending] = useState(false)
+  const [chatHistory, setChatHistory] = useState<{ role: 'user'|'assistant'; content: string }[]>([])
+  const [chatInput, setChatInput] = useState('Olá!')
   
 
   const runEcho = async () => {
@@ -73,12 +77,14 @@ export default function SandboxUIPage() {
     setError(null)
     try {
       const res = await fetch('/api/sandbox/agent-verify', { cache: 'no-store' })
-      const data = await res.json().catch(() => ({})) as { ok?: boolean; verifyOutput?: string; agentVerifyOutput?: string; cliVersion?: string; promptOk?: boolean; promptText?: string; promptExitCode?: number; promptStderr?: string; error?: string }
+      const data = await res.json().catch(() => ({})) as { ok?: boolean; verifyOutput?: string; agentVerifyOutput?: string; cliVersion?: string; sdkVersion?: string; agentVersion?: string; promptOk?: boolean; promptText?: string; promptExitCode?: number; promptStderr?: string; timeline?: Array<{name:string;ms:number;ok:boolean;exitCode?:number;note?:string}>; error?: string }
       if (!res.ok || data.ok === false) {
         throw new Error(data.error || `Erro ${res.status}`)
       }
       const parts = [] as string[]
       if (data.cliVersion) parts.push(`Claude Code CLI: ${data.cliVersion}`)
+      if (data.sdkVersion) parts.push(`@anthropic-ai/sdk: ${data.sdkVersion}`)
+      if (data.agentVersion) parts.push(`@anthropic-ai/claude-agent-sdk: ${data.agentVersion}`)
       if (data.verifyOutput) parts.push(data.verifyOutput)
       if (data.agentVerifyOutput) parts.push(data.agentVerifyOutput)
       if (typeof data.promptOk !== 'undefined') {
@@ -87,6 +93,12 @@ export default function SandboxUIPage() {
         if (!data.promptOk && (data.promptStderr || typeof data.promptExitCode === 'number')) {
           parts.push(`ExitCode: ${data.promptExitCode ?? ''}`)
           if (data.promptStderr) parts.push(`stderr: ${data.promptStderr}`)
+        }
+      }
+      if (Array.isArray(data.timeline) && data.timeline.length) {
+        parts.push('Timeline:')
+        for (const s of data.timeline) {
+          parts.push(`- ${s.name}: ${s.ok ? 'ok' : 'fail'} in ${s.ms}ms${typeof s.exitCode==='number' ? ` (exit ${s.exitCode})` : ''}${s.note ? ` | ${s.note}` : ''}`)
         }
       }
       setOutput(parts.join('\n') || 'Verificação concluída (sem saída)')
@@ -128,6 +140,68 @@ export default function SandboxUIPage() {
         throw new Error(details || `Erro ${res.status}`)
       }
       setOutput(`Global CLI result: ${data.text || '(sem saída)'}`)
+    } catch (e) {
+      setError((e as Error).message)
+    } finally {
+      setVerifying(false)
+    }
+  }
+
+  const startChat = async () => {
+    setVerifying(true)
+    setError(null)
+    setOutput(null)
+    try {
+      const res = await fetch('/api/sandbox/chat/start', { method: 'POST' })
+      const data = await res.json().catch(() => ({})) as { ok?: boolean; chatId?: string; error?: string }
+      if (!res.ok || data.ok === false || !data.chatId) {
+        throw new Error(data.error || `Erro ${res.status}`)
+      }
+      setChatId(data.chatId)
+      setChatHistory([])
+    } catch (e) {
+      setError((e as Error).message)
+    } finally {
+      setVerifying(false)
+    }
+  }
+
+  const sendChat = async () => {
+    if (!chatId || !chatInput.trim()) return
+    setSending(true)
+    setError(null)
+    try {
+      const next = [...chatHistory, { role: 'user' as const, content: chatInput }]
+      setChatHistory(next)
+      setChatInput('')
+      const res = await fetch('/api/sandbox/chat/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chatId, history: next })
+      })
+      const data = await res.json().catch(() => ({})) as { ok?: boolean; reply?: string; error?: string }
+      if (!res.ok || data.ok === false) {
+        throw new Error(data.error || `Erro ${res.status}`)
+      }
+      setChatHistory(h => [...h, { role: 'assistant', content: data.reply || '' }])
+    } catch (e) {
+      setError((e as Error).message)
+    } finally {
+      setSending(false)
+    }
+  }
+
+  const stopChat = async () => {
+    if (!chatId) return
+    setVerifying(true)
+    setError(null)
+    try {
+      await fetch('/api/sandbox/chat/stop', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chatId })
+      })
+      setChatId(null)
     } catch (e) {
       setError((e as Error).message)
     } finally {
@@ -201,6 +275,37 @@ export default function SandboxUIPage() {
         <div className="flex gap-2">
           <button onClick={runPromptLocal} disabled={verifying} className={`px-3 py-2 rounded-md text-white ${verifying ? 'bg-gray-400' : 'bg-teal-600 hover:bg-teal-700'}`}>Testar Agent SDK (CLI local)</button>
           <button onClick={runPromptGlobal} disabled={verifying} className={`px-3 py-2 rounded-md text-white ${verifying ? 'bg-gray-400' : 'bg-orange-600 hover:bg-orange-700'}`}>Testar Agent SDK (CLI global)</button>
+        </div>
+
+        <div className="pt-4 border-t border-gray-200" />
+        <h2 className="text-lg font-medium text-gray-900">Chat (Sandbox persistente)</h2>
+        <div className="flex gap-2 mb-2">
+          <button onClick={startChat} disabled={verifying || !!chatId} className={`px-3 py-2 rounded-md text-white ${verifying || chatId ? 'bg-gray-400' : 'bg-emerald-600 hover:bg-emerald-700'}`}>Iniciar chat</button>
+          <button onClick={stopChat} disabled={verifying || !chatId} className={`px-3 py-2 rounded-md text-white ${verifying || !chatId ? 'bg-gray-400' : 'bg-rose-600 hover:bg-rose-700'}`}>Encerrar chat</button>
+          {chatId && <span className="text-sm text-gray-500">chatId: {chatId.slice(0,8)}…</span>}
+        </div>
+        <div className="space-y-2 p-3 bg-white border border-gray-200 rounded">
+          <div className="space-y-1 max-h-64 overflow-auto">
+            {chatHistory.length === 0 && (
+              <div className="text-sm text-gray-500">Sem mensagens. Inicie o chat e envie a primeira.</div>
+            )}
+            {chatHistory.map((m, i) => (
+              <div key={i} className={m.role === 'user' ? 'text-gray-900' : 'text-blue-700'}>
+                <span className="font-medium">{m.role === 'user' ? 'Você' : 'Assistente'}: </span>
+                <span>{m.content}</span>
+              </div>
+            ))}
+          </div>
+          <div className="flex gap-2">
+            <input
+              value={chatInput}
+              onChange={(e) => setChatInput(e.target.value)}
+              className="flex-1 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Digite sua mensagem"
+              disabled={!chatId}
+            />
+            <button onClick={sendChat} disabled={!chatId || sending || !chatInput.trim()} className={`px-4 py-2 rounded-md text-white ${(!chatId || sending) ? 'bg-gray-400' : 'bg-teal-600 hover:bg-teal-700'}`}>{sending ? 'Enviando…' : 'Enviar'}</button>
+          </div>
         </div>
 
         
