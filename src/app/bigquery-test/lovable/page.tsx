@@ -21,6 +21,11 @@ export default function LovableLikeStudioPage() {
   const [toolsOpen, setToolsOpen] = useState(false)
   const [toolsLog, setToolsLog] = useState<string[]>([])
   const [toolBox, setToolBox] = useState<{ visible: boolean; name: string; status: 'running'|'done'|'error'; input?: any; inputStream?: string; output?: any; error?: string }>({ visible:false, name:'', status:'running' })
+  // Agents palette state
+  const [agents, setAgents] = useState<string[]>([])
+  const [agentPaletteOpen, setAgentPaletteOpen] = useState(false)
+  const [agentFilter, setAgentFilter] = useState('')
+  const [agentActive, setAgentActive] = useState<string | null>(null)
 
   // File system state (right) — from sandbox
   const [tree, setTree] = useState<FileNode[]>([])
@@ -71,7 +76,7 @@ export default function LovableLikeStudioPage() {
           if (!line) continue
           const payload = line.slice(6)
           try {
-            const evt = JSON.parse(payload) as { type?: string; text?: string; tool_name?: string; input?: any; output?: any; error?: string; name?: string; index?: number; partial?: string }
+            const evt = JSON.parse(payload) as { type?: string; text?: string; tool_name?: string; input?: any; output?: any; error?: string; name?: string; index?: number; partial?: string; agents?: string[] }
             if (evt.type === 'delta' && typeof evt.text === 'string') {
               setMessages(prev => {
                 const copy = prev.slice()
@@ -119,6 +124,16 @@ export default function LovableLikeStudioPage() {
               setToolBox(prev => ({ ...prev, visible:true, name: evt.name || prev.name || 'Tool', input: parsed ?? prev.input, inputStream: prev.inputStream }))
             } else if (evt.type === 'final') {
               sawFinal = true
+            } else if (evt.type === 'agents_list' && Array.isArray(evt.agents)) {
+              setAgents(evt.agents)
+            } else if (evt.type === 'subagent_start') {
+              const nm = evt.name || ''
+              setAgentActive(nm)
+              setToolsLog(prev => [...prev, `🤖 Subagent start: ${nm}`])
+            } else if (evt.type === 'subagent_stop') {
+              const nm = evt.name || ''
+              setAgentActive(null)
+              setToolsLog(prev => [...prev, `✅ Subagent stop: ${nm}`])
             }
           } catch { /* ignore non-JSON frames */ }
         }
@@ -318,6 +333,9 @@ export default function LovableLikeStudioPage() {
                 <div>
                   <h1 className="text-lg font-semibold text-gray-900">Chat</h1>
                   <p className="text-xs text-gray-500">Descreva o site, peça mudanças, gere componentes…</p>
+                  {agentActive && (
+                    <div className="mt-1 inline-flex items-center gap-2 text-xs text-indigo-700 bg-indigo-50 border border-indigo-200 rounded px-2 py-0.5">Ativo: {agentActive}</div>
+                  )}
                 </div>
                 <div className="flex items-center gap-2">
                   <button onClick={handleStart} disabled={starting || !!chatId} className={`px-3 py-1.5 rounded text-white ${starting||chatId?'bg-gray-400':'bg-emerald-600 hover:bg-emerald-700'}`}>Iniciar chat</button>
@@ -389,9 +407,47 @@ export default function LovableLikeStudioPage() {
                 </div>
               ))}
             </div>
-            <div className="p-3 border-t border-gray-200 flex gap-2">
-              <input value={input} onChange={e=>setInput(e.target.value)} disabled={!chatId || sending} className="flex-1 px-3 py-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder={chatId? 'Digite sua mensagem':'Inicie o chat para enviar'} />
-              <button onClick={handleSend} disabled={!chatId || sending || !input.trim()} className={`px-4 py-2 rounded text-white ${(!chatId||sending)?'bg-gray-400':'bg-blue-600 hover:bg-blue-700'}`}>{sending? 'Transmitindo…':'Enviar (stream)'}</button>
+            <div className="p-3 border-t border-gray-200 flex flex-col gap-2">
+              <div className="flex gap-2">
+                <input
+                  value={input}
+                  onChange={e=>{
+                    const v = e.target.value;
+                    setInput(v)
+                    const idx = v.lastIndexOf('@agent')
+                    if (idx >= 0) {
+                      const tail = v.slice(idx + 6).trimStart()
+                      setAgentFilter(tail)
+                      setAgentPaletteOpen(true)
+                    } else {
+                      setAgentPaletteOpen(false)
+                      setAgentFilter('')
+                    }
+                  }}
+                  disabled={!chatId || sending}
+                  className="flex-1 px-3 py-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder={chatId? 'Digite sua mensagem (dica: use @agent)':'Inicie o chat para enviar'}
+                />
+                <button onClick={handleSend} disabled={!chatId || sending || !input.trim()} className={`px-4 py-2 rounded text-white ${(!chatId||sending)?'bg-gray-400':'bg-blue-600 hover:bg-blue-700'}`}>{sending? 'Transmitindo…':'Enviar (stream)'}</button>
+              </div>
+              {agentPaletteOpen && agents.length > 0 && (
+                <div className="max-h-40 overflow-auto rounded border border-gray-200 bg-white shadow-sm">
+                  {(agents.filter(a=> a.toLowerCase().includes(agentFilter.toLowerCase()))).map((a, i)=> (
+                    <button key={a} onClick={()=>{
+                      const idx = input.lastIndexOf('@agent')
+                      const head = idx>=0 ? input.slice(0, idx) : input
+                      const next = `${head}Use o subagente ${a}: `
+                      setInput(next)
+                      setAgentPaletteOpen(false)
+                    }} className="w-full text-left px-3 py-1.5 hover:bg-gray-100 text-sm">
+                      @{a}
+                    </button>
+                  ))}
+                  {agents.filter(a=> a.toLowerCase().includes(agentFilter.toLowerCase())).length === 0 && (
+                    <div className="px-3 py-2 text-sm text-gray-500">Nenhum agente encontrado</div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </Panel>

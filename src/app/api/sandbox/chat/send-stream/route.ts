@@ -63,6 +63,14 @@ const options = {
   maxThinkingTokens: 2048,
   agents,
   hooks: {
+    SubagentStart: [{ hooks: [async (input) => {
+      try { console.log(JSON.stringify({ type: 'subagent_start', name: (input && (input as any).agent_name) || '' })); } catch {}
+      return {};
+    }]}],
+    SubagentStop: [{ hooks: [async (input) => {
+      try { console.log(JSON.stringify({ type: 'subagent_stop', name: (input && (input as any).agent_name) || '' })); } catch {}
+      return {};
+    }]}],
     PreToolUse: [{ hooks: [async (input) => {
       try { console.log(JSON.stringify({ type: 'tool_start', tool_name: input.tool_name, input: input.tool_input })); } catch {}
       return {};
@@ -78,6 +86,8 @@ const options = {
   }
 };
 const q = query({ prompt, options });
+// Emit list of available agents for UI palette
+try { console.log(JSON.stringify({ type: 'agents_list', agents: Object.keys(agents) })); } catch {}
 const toolInputBuffers = {};
 const toolMeta = {};
 for await (const msg of q) {
