@@ -28,6 +28,7 @@ export default function LovableLikeStudioPage() {
   const [selectedContent, setSelectedContent] = useState('')
   const [previewContent, setPreviewContent] = useState('')
   const [viewTab, setViewTab] = useState<'editor' | 'preview'>('preview')
+  const [fsError, setFsError] = useState<string | null>(null)
 
   const handleSend = async () => {
     const text = input.trim()
@@ -91,6 +92,8 @@ export default function LovableLikeStudioPage() {
             } else if (evt.type === 'tool_done') {
               setToolsOpen(true)
               setToolsLog(prev => [...prev, `✅ ${JSON.stringify(evt)}`])
+              // refresh tree after write/edit
+              await refreshDir('/vercel/sandbox')
             } else if (evt.type === 'tool_error') {
               setToolsOpen(true)
               setToolsLog(prev => [...prev, `❌ ${JSON.stringify(evt)}`])
@@ -167,7 +170,7 @@ export default function LovableLikeStudioPage() {
     if (!chatId) return
     const res = await fetch('/api/sandbox', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'fs-list', chatId, path: dirPath }) })
     const data = await res.json().catch(() => ({})) as { ok?: boolean; entries?: Array<{ name:string; path:string; type:'file'|'dir' }>; error?: string }
-    if (!res.ok || data.ok === false) return
+    if (!res.ok || data.ok === false) { setFsError(data.error || `Falha ao listar ${dirPath}`); return }
     const ents = (data.entries ?? []).map(e => ({ name: e.name, path: e.path, type: e.type }))
     if (ents.length === 0) return
     setTree(prev => upsertChildren(prev, dirPath, ents))
@@ -225,8 +228,9 @@ export default function LovableLikeStudioPage() {
     setSelectedPath(path)
     if (!chatId) return
     const res = await fetch('/api/sandbox', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'fs-read', chatId, path }) })
-    const data = await res.json().catch(() => ({})) as { ok?: boolean; content?: string }
+    const data = await res.json().catch(() => ({})) as { ok?: boolean; content?: string; error?: string }
     if (res.ok && data.ok && typeof data.content === 'string') setSelectedContent(data.content)
+    else if (!res.ok || data.ok === false) setFsError(data.error || `Falha ao ler ${path}`)
   }
 
   return (
@@ -294,7 +298,13 @@ export default function LovableLikeStudioPage() {
             {/* File tree */}
             <Panel defaultSize={25} minSize={15} className="h-full">
               <div className="h-full bg-white border-r border-gray-200">
-                <div className="px-3 py-2 border-b border-gray-200 text-sm font-medium text-gray-700">Arquivos</div>
+            <div className="px-3 py-2 border-b border-gray-200 text-sm font-medium text-gray-700 flex items-center justify-between">
+              <span>Arquivos</span>
+              <div className="flex items-center gap-2">
+                <button onClick={()=>chatId && refreshDir('/vercel/sandbox')} className="px-2 py-1 rounded bg-gray-100 text-gray-700 hover:bg-gray-200 text-xs">Carregar árvore</button>
+                {fsError && <span className="text-xs text-red-600">{fsError}</span>}
+              </div>
+            </div>
                 <div className="p-2 overflow-auto h-[calc(100%-40px)]">
                   {tree.length === 0 ? (
                     <div className="text-xs text-gray-500">{chatId ? 'Carregue a lista de arquivos (Iniciar chat e o agente criará arquivos)':'Inicie o chat para carregar a árvore.'}</div>
