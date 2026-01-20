@@ -17,6 +17,8 @@ export async function POST(req: Request) {
   if (action === 'chat-send') return chatSend(payload as { chatId?: string; history?: Msg[] })
   if (action === 'chat-stop') return chatStop(payload as { chatId?: string })
   if (action === 'chat-send-stream') return chatSendStream(payload as { chatId?: string; history?: Msg[] })
+  if (action === 'fs-list') return fsList(payload as { chatId?: string; path?: string })
+  if (action === 'fs-read') return fsRead(payload as { chatId?: string; path?: string })
 
   return Response.json({ ok: false, error: `ação desconhecida: ${action}` }, { status: 400 })
 
@@ -175,5 +177,65 @@ for await (const msg of q) {
     await sess.sandbox.stop().catch(() => {})
     SESSIONS.delete(chatId)
     return Response.json({ ok: true })
+  }
+
+  function validatePath(p?: string) {
+    const base = '/vercel/sandbox'
+    const path = (p || base).toString()
+    if (!path.startsWith(base)) return { ok: false as const, error: 'path fora de /vercel/sandbox' }
+    if (path.includes('..')) return { ok: false as const, error: 'path inválido' }
+    return { ok: true as const, path }
+  }
+
+  async function fsList({ chatId, path }: { chatId?: string; path?: string }) {
+    if (!chatId) return Response.json({ ok: false, error: 'chatId obrigatório' }, { status: 400 })
+    const sess = SESSIONS.get(chatId)
+    if (!sess) return Response.json({ ok: false, error: 'chat não encontrado' }, { status: 404 })
+    const v = validatePath(path); if (!v.ok) return Response.json({ ok: false, error: v.error }, { status: 400 })
+    const target = v.path
+    // Node one‑liner to list entries ignoring node_modules and hidden heavy dirs
+    const script = `
+const fs = require('fs');
+const p = process.argv[2];
+try {
+  const names = fs.readdirSync(p, { withFileTypes: true }).map(d=>({ name: d.name, type: d.isDirectory()?'dir':'file', path: require('path').join(p, d.name) }));
+  const filtered = names.filter(e => !e.name.startsWith('.') && e.name !== 'node_modules' && e.name !== '.cache');
+  filtered.sort((a,b)=> a.type===b.type ? a.name.localeCompare(b.name) : (a.type==='dir'?-1:1));
+  console.log(JSON.stringify(filtered));
+} catch(e){ console.error(String(e.message||e)); process.exit(1); }
+`
+    const run = await sess.sandbox.runCommand({ cmd: 'node', args: ['-e', script, target] })
+    const [out, err] = await Promise.all([run.stdout().catch(()=>''), run.stderr().catch(()=> '')])
+    if (run.exitCode !== 0) return Response.json({ ok: false, error: err || out || 'falha ao listar' }, { status: 500 })
+    let entries: Array<{ name: string; type: 'file'|'dir'; path: string }> = []
+    try { entries = JSON.parse(out) } catch { return Response.json({ ok: false, error: 'json inválido' }, { status: 500 }) }
+    return Response.json({ ok: true, path: target, entries })
+  }
+
+  async function fsRead({ chatId, path }: { chatId?: string; path?: string }) {
+    if (!chatId) return Response.json({ ok: false, error: 'chatId obrigatório' }, { status: 400 })
+    const sess = SESSIONS.get(chatId)
+    if (!sess) return Response.json({ ok: false, error: 'chat não encontrado' }, { status: 404 })
+    const v = validatePath(path); if (!v.ok) return Response.json({ ok: false, error: v.error }, { status: 400 })
+    const target = v.path
+    const script = `
+const fs = require('fs');
+const p = process.argv[2];
+try {
+  const buf = fs.readFileSync(p);
+  const isBin = buf.some(b => b===0);
+  if (isBin) console.log(JSON.stringify({ isBinary:true, content: buf.toString('base64') }));
+  else console.log(JSON.stringify({ isBinary:false, content: buf.toString('utf8') }));
+} catch(e){ console.error(String(e.message||e)); process.exit(1); }
+`
+    const run = await sess.sandbox.runCommand({ cmd: 'node', args: ['-e', script, target] })
+    const [out, err] = await Promise.all([run.stdout().catch(()=>''), run.stderr().catch(()=> '')])
+    if (run.exitCode !== 0) return Response.json({ ok: false, error: err || out || 'falha ao ler' }, { status: 500 })
+    try {
+      const parsed = JSON.parse(out)
+      return Response.json({ ok: true, path: target, ...parsed })
+    } catch {
+      return Response.json({ ok: false, error: 'json inválido' }, { status: 500 })
+    }
   }
 }

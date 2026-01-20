@@ -19,55 +19,13 @@ export default function LovableLikeStudioPage() {
   const [reasoningOpen, setReasoningOpen] = useState(false)
   const [reasoningText, setReasoningText] = useState('')
 
-  // File system state (right)
-  const initialTree: FileNode[] = useMemo(() => ([
-    { name: 'public', path: '/public', type: 'dir', children: [
-      { name: 'favicon.ico', path: '/public/favicon.ico', type: 'file' },
-    ]},
-    { name: 'index.html', path: '/index.html', type: 'file' },
-    { name: 'styles.css', path: '/styles.css', type: 'file' },
-    { name: 'main.js', path: '/main.js', type: 'file' },
-  ]), [])
-  const [selectedPath, setSelectedPath] = useState('/index.html')
-  const [openDirs, setOpenDirs] = useState<Record<string, boolean>>({ '/public': true })
+  // File system state (right) — from sandbox
+  const [tree, setTree] = useState<FileNode[]>([])
+  const [openDirs, setOpenDirs] = useState<Record<string, boolean>>({ '/vercel/sandbox': true })
+  const [selectedPath, setSelectedPath] = useState('/vercel/sandbox/index.html')
+  const [selectedContent, setSelectedContent] = useState('')
+  const [previewContent, setPreviewContent] = useState('')
   const [viewTab, setViewTab] = useState<'editor' | 'preview'>('preview')
-
-  // Mock file contents
-  const [files, setFiles] = useState<Record<string, string>>({
-    '/index.html': `<!doctype html>
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Meu Site</title>
-    <link rel="stylesheet" href="styles.css" />
-  </head>
-  <body>
-    <div class="container">
-      <h1>Olá, mundo!</h1>
-      <p>Este é um protótipo de UI "Lovable-like".</p>
-      <button id="btn">Clique</button>
-    </div>
-    <script src="main.js"></script>
-  </body>
-  <style>
-    /* inline fallback */ * { box-sizing: border-box; }
-    body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; background:#f8fafc; }
-    .container { max-width: 720px; margin: 40px auto; padding: 24px; background:#fff; border:1px solid #e5e7eb; border-radius:12px; }
-  </style>
-</html>`,
-    '/styles.css': `:root { --primary:#2563eb; }
-body { color:#0f172a; }
-button { background:var(--primary); color:white; padding:10px 14px; border:none; border-radius:8px; cursor:pointer; }
-button:hover { filter:brightness(0.95); }`,
-    '/main.js': `document.addEventListener('DOMContentLoaded',()=>{
-  const btn=document.getElementById('btn');
-  if(btn){ btn.addEventListener('click',()=> alert('Olá da sandbox de UI!')) }
-});`,
-    '/public/favicon.ico': '(binary)',
-  })
-
-  const selectedContent = files[selectedPath] ?? ''
 
   const handleSend = async () => {
     const text = input.trim()
@@ -146,6 +104,9 @@ button:hover { filter:brightness(0.95); }`,
       if (!res.ok || data.ok === false || !data.chatId) throw new Error(data.error || `Erro ${res.status}`)
       setChatId(data.chatId)
       setMessages([{ role: 'assistant', content: 'Sandbox iniciada. Pode enviar sua primeira mensagem!' }])
+      // load root dir and try reading index.html for preview
+      await refreshDir('/vercel/sandbox')
+      await refreshPreview()
     } catch (e) {
       setError((e as Error).message)
     } finally {
@@ -172,7 +133,38 @@ button:hover { filter:brightness(0.95); }`,
     }
   }
 
-  const toggleDir = (path: string) => setOpenDirs(d => ({ ...d, [path]: !d[path] }))
+  const toggleDir = async (path: string) => {
+    setOpenDirs(d => ({ ...d, [path]: !d[path] }))
+    // lazy load children when opening
+    if (!openDirs[path] && chatId) {
+      await refreshDir(path)
+    }
+  }
+
+  const refreshDir = async (dirPath: string) => {
+    if (!chatId) return
+    const res = await fetch('/api/sandbox', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'fs-list', chatId, path: dirPath }) })
+    const data = await res.json().catch(() => ({})) as { ok?: boolean; entries?: Array<{ name:string; path:string; type:'file'|'dir' }>; error?: string }
+    if (!res.ok || data.ok === false || !data.entries) return
+    setTree(prev => upsertChildren(prev, dirPath, data.entries.map(e => ({ name: e.name, path: e.path, type: e.type }))))
+  }
+
+  const upsertChildren = (nodes: FileNode[], dirPath: string, children: FileNode[]): FileNode[] => {
+    const recur = (arr: FileNode[]): FileNode[] => arr.map(n => {
+      if (n.type === 'dir') {
+        if (n.path === dirPath) {
+          return { ...n, children }
+        }
+        if (n.children) return { ...n, children: recur(n.children) }
+      }
+      return n
+    })
+    // if dirPath is root and not present, create root node
+    if (dirPath === '/vercel/sandbox' && nodes.length === 0) {
+      return [{ name: 'sandbox', path: '/vercel/sandbox', type: 'dir', children }]
+    }
+    return recur(nodes)
+  }
 
   const renderTree = (nodes: FileNode[], depth = 0) => (
     <ul className="space-y-0.5">
@@ -197,6 +189,21 @@ button:hover { filter:brightness(0.95); }`,
       ))}
     </ul>
   )
+
+  const refreshPreview = async () => {
+    if (!chatId) return
+    const res = await fetch('/api/sandbox', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'fs-read', chatId, path: '/vercel/sandbox/index.html' }) })
+    const data = await res.json().catch(() => ({})) as { ok?: boolean; content?: string }
+    if (res.ok && data.ok && typeof data.content === 'string') setPreviewContent(data.content)
+  }
+
+  const openFile = async (path: string) => {
+    setSelectedPath(path)
+    if (!chatId) return
+    const res = await fetch('/api/sandbox', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'fs-read', chatId, path }) })
+    const data = await res.json().catch(() => ({})) as { ok?: boolean; content?: string }
+    if (res.ok && data.ok && typeof data.content === 'string') setSelectedContent(data.content)
+  }
 
   return (
     <div className="h-screen w-screen overflow-hidden bg-gray-50">
@@ -250,7 +257,11 @@ button:hover { filter:brightness(0.95); }`,
               <div className="h-full bg-white border-r border-gray-200">
                 <div className="px-3 py-2 border-b border-gray-200 text-sm font-medium text-gray-700">Arquivos</div>
                 <div className="p-2 overflow-auto h-[calc(100%-40px)]">
-                  {renderTree(initialTree)}
+                  {tree.length === 0 ? (
+                    <div className="text-xs text-gray-500">{chatId ? 'Carregue a lista de arquivos (Iniciar chat e o agente criará arquivos)':'Inicie o chat para carregar a árvore.'}</div>
+                  ) : (
+                    renderTree(tree)
+                  )}
                 </div>
               </div>
             </Panel>
@@ -263,13 +274,14 @@ button:hover { filter:brightness(0.95); }`,
                   <div className="flex items-center gap-1">
                     <button onClick={()=>setViewTab('editor')} className={`px-3 py-1.5 rounded ${viewTab==='editor'?'bg-gray-900 text-white':'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>Editor</button>
                     <button onClick={()=>setViewTab('preview')} className={`px-3 py-1.5 rounded ${viewTab==='preview'?'bg-gray-900 text-white':'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>Preview</button>
+                    <button onClick={()=>{ if (selectedPath) openFile(selectedPath); refreshPreview() }} className="px-3 py-1.5 rounded bg-gray-100 text-gray-700 hover:bg-gray-200">Atualizar</button>
                   </div>
                 </div>
                 <div className="flex-1 overflow-auto">
                   {viewTab === 'editor' ? (
                     <textarea value={selectedContent} readOnly className="w-full h-full p-3 font-mono text-sm text-gray-900 bg-white outline-none" />
                   ) : (
-                    <iframe title="Preview" className="w-full h-full bg-white" srcDoc={files['/index.html']} />
+                    <iframe title="Preview" className="w-full h-full bg-white" srcDoc={previewContent} />
                   )}
                 </div>
               </div>
