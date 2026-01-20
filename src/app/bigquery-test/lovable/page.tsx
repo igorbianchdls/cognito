@@ -71,7 +71,7 @@ export default function LovableLikeStudioPage() {
           if (!line) continue
           const payload = line.slice(6)
           try {
-            const evt = JSON.parse(payload) as { type?: string; text?: string; tool_name?: string; input?: any; output?: any; error?: string }
+            const evt = JSON.parse(payload) as { type?: string; text?: string; tool_name?: string; input?: any; output?: any; error?: string; name?: string; index?: number; partial?: string }
             if (evt.type === 'delta' && typeof evt.text === 'string') {
               setMessages(prev => {
                 const copy = prev.slice()
