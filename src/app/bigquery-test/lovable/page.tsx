@@ -26,6 +26,10 @@ export default function LovableLikeStudioPage() {
   const [agentPaletteOpen, setAgentPaletteOpen] = useState(false)
   const [agentFilter, setAgentFilter] = useState('')
   const [agentActive, setAgentActive] = useState<string | null>(null)
+  // Slash commands state
+  const [slashCommands, setSlashCommands] = useState<Array<{ name: string; description?: string; argumentHint?: string }>>([])
+  const [slashOpen, setSlashOpen] = useState(false)
+  const [slashFilter, setSlashFilter] = useState('')
 
   // File system state (right) — from sandbox
   const [tree, setTree] = useState<FileNode[]>([])
@@ -76,7 +80,7 @@ export default function LovableLikeStudioPage() {
           if (!line) continue
           const payload = line.slice(6)
           try {
-            const evt = JSON.parse(payload) as { type?: string; text?: string; tool_name?: string; input?: any; output?: any; error?: string; name?: string; index?: number; partial?: string; agents?: string[] }
+            const evt = JSON.parse(payload) as { type?: string; text?: string; tool_name?: string; input?: any; output?: any; error?: string; name?: string; index?: number; partial?: string; agents?: string[]; commands?: Array<{ name: string; description?: string; argumentHint?: string }> }
             if (evt.type === 'delta' && typeof evt.text === 'string') {
               setMessages(prev => {
                 const copy = prev.slice()
@@ -134,6 +138,10 @@ export default function LovableLikeStudioPage() {
               const nm = evt.name || ''
               setAgentActive(null)
               setToolsLog(prev => [...prev, `✅ Subagent stop: ${nm}`])
+            } else if (evt.type === 'slash_commands' && Array.isArray((evt as any).commands)) {
+              try {
+                setSlashCommands((evt as any).commands as Array<{ name: string; description?: string; argumentHint?: string }>)
+              } catch {}
             }
           } catch { /* ignore non-JSON frames */ }
         }
@@ -414,22 +422,59 @@ export default function LovableLikeStudioPage() {
                   onChange={e=>{
                     const v = e.target.value;
                     setInput(v)
-                    const idx = v.lastIndexOf('@agent')
-                    if (idx >= 0) {
-                      const tail = v.slice(idx + 6).trimStart()
+                    // Detect @agent palette
+                    const aIdx = v.lastIndexOf('@agent')
+                    if (aIdx >= 0) {
+                      const tail = v.slice(aIdx + 6).trimStart()
                       setAgentFilter(tail)
                       setAgentPaletteOpen(true)
                     } else {
                       setAgentPaletteOpen(false)
                       setAgentFilter('')
                     }
+                    // Detect slash commands palette
+                    const sIdx = v.lastIndexOf('/')
+                    const atTokenStart = sIdx === 0 || (sIdx > 0 && v[sIdx-1] === ' ')
+                    if (sIdx >= 0 && atTokenStart) {
+                      const tail = v.slice(sIdx + 1)
+                      setSlashFilter(tail)
+                      setSlashOpen(true)
+                    } else {
+                      setSlashOpen(false)
+                      setSlashFilter('')
+                    }
                   }}
                   disabled={!chatId || sending}
                   className="flex-1 px-3 py-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder={chatId? 'Digite sua mensagem (dica: use @agent)':'Inicie o chat para enviar'}
+                  placeholder={chatId? 'Digite sua mensagem (dica: use / ou @agent)':'Inicie o chat para enviar'}
                 />
                 <button onClick={handleSend} disabled={!chatId || sending || !input.trim()} className={`px-4 py-2 rounded text-white ${(!chatId||sending)?'bg-gray-400':'bg-blue-600 hover:bg-blue-700'}`}>{sending? 'Transmitindo…':'Enviar (stream)'}</button>
               </div>
+              {slashOpen && slashCommands.length > 0 && (
+                <div className="max-h-48 overflow-auto rounded border border-gray-200 bg-white shadow-sm mt-1">
+                  {(slashCommands.filter(c => c.name.toLowerCase().includes(slashFilter.toLowerCase()))).map((c) => (
+                    <button key={c.name} onClick={()=>{
+                      // Replace current slash token with selected command + hint
+                      const v = input
+                      const sIdx = v.lastIndexOf('/')
+                      const head = sIdx>=0 ? v.slice(0, sIdx) : v
+                      const hint = c.argumentHint ? ` ${c.argumentHint}` : ' '
+                      const next = `${head}/${c.name}${hint}`
+                      setInput(next)
+                      setSlashOpen(false)
+                    }} className="w-full text-left px-3 py-1.5 hover:bg-gray-100 text-sm">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">/{c.name}</span>
+                        {c.argumentHint && <span className="text-xs text-gray-500">{c.argumentHint}</span>}
+                      </div>
+                      {c.description && <div className="text-xs text-gray-600">{c.description}</div>}
+                    </button>
+                  ))}
+                  {slashCommands.filter(c => c.name.toLowerCase().includes(slashFilter.toLowerCase())).length === 0 && (
+                    <div className="px-3 py-2 text-sm text-gray-500">Nenhum comando encontrado</div>
+                  )}
+                </div>
+              )}
               {agentPaletteOpen && agents.length > 0 && (
                 <div className="max-h-40 overflow-auto rounded border border-gray-200 bg-white shadow-sm">
                   {(agents.filter(a=> a.toLowerCase().includes(agentFilter.toLowerCase()))).map((a, i)=> (

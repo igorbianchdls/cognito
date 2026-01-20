@@ -186,6 +186,11 @@ const options = {
 const q = query({ prompt, options });
 // Emit list of available agents for UI palette
 try { console.log(JSON.stringify({ type: 'agents_list', agents: Object.keys(agents) })); } catch {}
+// Emit slash commands available from SDK
+try {
+  const cmds = await q.supportedCommands();
+  console.log(JSON.stringify({ type: 'slash_commands', commands: cmds }));
+} catch {}
 const toolInputBuffers = {};
 const toolMeta = {};
 for await (const msg of q) {
