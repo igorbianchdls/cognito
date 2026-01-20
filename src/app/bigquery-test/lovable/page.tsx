@@ -153,7 +153,17 @@ export default function LovableLikeStudioPage() {
               setToolsLog(prev => [...prev, `✅ Subagent stop: ${nm}`])
             } else if (evt.type === 'slash_commands' && Array.isArray((evt as any).commands)) {
               try {
-                setSlashCommands((evt as any).commands as Array<{ name: string; description?: string; argumentHint?: string }>)
+                const raw = (evt as any).commands as Array<any>
+                const normalized = raw.map((c: any) => {
+                  const obj = typeof c === 'string' ? { name: c } : c || {}
+                  const nm = String(obj.name || '').replace(/^\//, '')
+                  return nm ? { name: nm, description: obj.description, argumentHint: obj.argumentHint } : null
+                }).filter(Boolean) as Array<{ name: string; description?: string; argumentHint?: string }>
+                const ensured = normalized.slice()
+                if (!ensured.some(c => c.name.toLowerCase() === 'clear')) {
+                  ensured.push({ name: 'clear', description: 'Clear conversation' })
+                }
+                setSlashCommands(ensured)
               } catch {}
             }
           } catch { /* ignore non-JSON frames */ }
