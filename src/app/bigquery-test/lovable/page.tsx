@@ -20,6 +20,7 @@ export default function LovableLikeStudioPage() {
   const [reasoningText, setReasoningText] = useState('')
   const [toolsOpen, setToolsOpen] = useState(false)
   const [toolsLog, setToolsLog] = useState<string[]>([])
+  const [toolBox, setToolBox] = useState<{ visible: boolean; name: string; status: 'running'|'done'|'error'; input?: any; output?: any; error?: string }>({ visible:false, name:'', status:'running' })
 
   // File system state (right) — from sandbox
   const [tree, setTree] = useState<FileNode[]>([])
@@ -90,16 +91,19 @@ export default function LovableLikeStudioPage() {
               setToolsOpen(true)
               const detail = formatToolEvent('start', evt)
               setToolsLog(prev => [...prev, detail])
+              setToolBox({ visible:true, name: evt.tool_name || 'Tool', status:'running', input: evt.input })
             } else if (evt.type === 'tool_done') {
               setToolsOpen(true)
               const detail = formatToolEvent('done', evt)
               setToolsLog(prev => [...prev, detail])
+              setToolBox(prev => ({ ...prev, visible:true, status:'done', output: evt.output }))
               // refresh tree after write/edit
               await refreshDir('/vercel/sandbox')
             } else if (evt.type === 'tool_error') {
               setToolsOpen(true)
               const detail = formatToolEvent('error', evt)
               setToolsLog(prev => [...prev, detail])
+              setToolBox(prev => ({ ...prev, visible:true, status:'error', error: evt.error || 'erro' }))
             } else if (evt.type === 'final') {
               sawFinal = true
             }
@@ -286,6 +290,10 @@ export default function LovableLikeStudioPage() {
     return `❌ ${name}: ${err || 'erro'}`
   }
 
+  function safeJson(obj: any) {
+    try { return JSON.stringify(obj, null, 2) } catch { return String(obj) }
+  }
+
   return (
     <div className="h-screen w-screen overflow-hidden bg-gray-50">
       <PanelGroup direction="horizontal">
@@ -314,6 +322,31 @@ export default function LovableLikeStudioPage() {
                     <button onClick={()=>setReasoningOpen(false)} className="text-xs text-amber-700 hover:underline">Ocultar</button>
                   </div>
                   <div className="whitespace-pre-wrap">{reasoningText || '…'}</div>
+                </div>
+              )}
+              {toolBox.visible && (
+                <div className="p-2 border border-blue-300 bg-blue-50 rounded text-sm text-blue-900">
+                  <div className="flex items-center justify-between mb-1">
+                    <strong>Tool: {toolBox.name}</strong>
+                    <span className={`text-xs ${toolBox.status==='running'?'text-blue-700': toolBox.status==='done'?'text-green-700':'text-red-700'}`}>
+                      {toolBox.status==='running'?'executando…': toolBox.status==='done'?'concluída':'erro'}
+                    </span>
+                  </div>
+                  {toolBox.input && (
+                    <div className="mb-1">
+                      <div className="text-xs font-medium">Input</div>
+                      <pre className="whitespace-pre-wrap break-all bg-white border border-blue-100 rounded p-2 text-blue-900">{safeJson(toolBox.input)}</pre>
+                    </div>
+                  )}
+                  {toolBox.output && (
+                    <div className="mb-1">
+                      <div className="text-xs font-medium">Output</div>
+                      <pre className="whitespace-pre-wrap break-all bg-white border border-blue-100 rounded p-2 text-blue-900">{safeJson(toolBox.output)}</pre>
+                    </div>
+                  )}
+                  {toolBox.error && (
+                    <div className="text-red-700">{toolBox.error}</div>
+                  )}
                 </div>
               )}
               {toolsOpen && (
