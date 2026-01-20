@@ -17,6 +17,9 @@ export default function SandboxUIPage() {
   const [streaming, setStreaming] = useState(false)
   const [reasoningOpen, setReasoningOpen] = useState(false)
   const [reasoningText, setReasoningText] = useState('')
+  const [toolInputOpen, setToolInputOpen] = useState(false)
+  const [toolInputName, setToolInputName] = useState('')
+  const [toolInputText, setToolInputText] = useState('')
   
 
   const runEcho = async () => {
@@ -164,6 +167,9 @@ export default function SandboxUIPage() {
       setChatHistory([])
       setReasoningOpen(false)
       setReasoningText('')
+      setToolInputOpen(false)
+      setToolInputName('')
+      setToolInputText('')
     } catch (e) {
       setError((e as Error).message)
     } finally {
@@ -222,6 +228,9 @@ export default function SandboxUIPage() {
       // reset reasoning panel for new stream
       setReasoningOpen(false)
       setReasoningText('')
+      setToolInputOpen(false)
+      setToolInputName('')
+      setToolInputText('')
       const next = [...chatHistory, { role: 'user' as const, content: chatInput }]
       setChatHistory(next)
       setChatInput('')
@@ -270,6 +279,15 @@ export default function SandboxUIPage() {
               setReasoningText(prev => prev + evt.text)
             } else if (evt.type === 'reasoning_end') {
               // keep panel open with accumulated text
+            } else if (evt.type === 'tool_input_start') {
+              setToolInputOpen(true)
+              setToolInputName(evt.name || '')
+              setToolInputText('')
+            } else if (evt.type === 'tool_input_delta' && typeof evt.partial === 'string') {
+              setToolInputOpen(true)
+              setToolInputText(prev => prev + evt.partial)
+            } else if (evt.type === 'tool_input_done') {
+              // keep panel open; final object may come in evt.input
             } else if (evt.type === 'final') {
               // Nothing special; stream ends
             }
@@ -367,6 +385,15 @@ export default function SandboxUIPage() {
               <button onClick={() => setReasoningOpen(false)} className="text-xs text-yellow-700 hover:underline">Ocultar</button>
             </div>
             <div className="whitespace-pre-wrap break-words text-sm text-yellow-900">{reasoningText || '…'}</div>
+          </div>
+        )}
+        {toolInputOpen && (
+          <div className="mb-2 p-2 border border-indigo-300 bg-indigo-50 rounded">
+            <div className="flex items-center justify-between mb-1">
+              <strong className="text-indigo-900 text-sm">Tool input {toolInputName ? `(${toolInputName})` : ''}</strong>
+              <button onClick={() => setToolInputOpen(false)} className="text-xs text-indigo-700 hover:underline">Ocultar</button>
+            </div>
+            <div className="whitespace-pre-wrap break-words text-sm text-indigo-900">{toolInputText || '…'}</div>
           </div>
         )}
         <div className="space-y-2 p-3 bg-white border border-gray-200 rounded">

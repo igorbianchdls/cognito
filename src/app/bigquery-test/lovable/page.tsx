@@ -20,7 +20,7 @@ export default function LovableLikeStudioPage() {
   const [reasoningText, setReasoningText] = useState('')
   const [toolsOpen, setToolsOpen] = useState(false)
   const [toolsLog, setToolsLog] = useState<string[]>([])
-  const [toolBox, setToolBox] = useState<{ visible: boolean; name: string; status: 'running'|'done'|'error'; input?: any; output?: any; error?: string }>({ visible:false, name:'', status:'running' })
+  const [toolBox, setToolBox] = useState<{ visible: boolean; name: string; status: 'running'|'done'|'error'; input?: any; inputStream?: string; output?: any; error?: string }>({ visible:false, name:'', status:'running' })
 
   // File system state (right) — from sandbox
   const [tree, setTree] = useState<FileNode[]>([])
@@ -104,6 +104,18 @@ export default function LovableLikeStudioPage() {
               const detail = formatToolEvent('error', evt)
               setToolsLog(prev => [...prev, detail])
               setToolBox(prev => ({ ...prev, visible:true, status:'error', error: evt.error || 'erro' }))
+            } else if (evt.type === 'tool_input_start') {
+              setToolsOpen(true)
+              setToolsLog(prev => [...prev, `🟡 Tool input start: ${evt.name || ''} [idx=${evt.index}]`])
+              setToolBox(prev => ({ ...prev, visible:true, name: evt.name || prev.name || 'Tool', inputStream: '' }))
+            } else if (evt.type === 'tool_input_delta' && typeof evt.partial === 'string') {
+              setToolsOpen(true)
+              setToolBox(prev => ({ ...prev, visible:true, inputStream: (prev.inputStream || '') + evt.partial }))
+            } else if (evt.type === 'tool_input_done') {
+              setToolsOpen(true)
+              const parsed = (evt.input !== undefined) ? evt.input : undefined
+              setToolsLog(prev => [...prev, `🟢 Tool input done: ${evt.name || ''} [idx=${evt.index}]`])
+              setToolBox(prev => ({ ...prev, visible:true, name: evt.name || prev.name || 'Tool', input: parsed ?? prev.input, inputStream: prev.inputStream }))
             } else if (evt.type === 'final') {
               sawFinal = true
             }
@@ -332,6 +344,12 @@ export default function LovableLikeStudioPage() {
                       {toolBox.status==='running'?'executando…': toolBox.status==='done'?'concluída':'erro'}
                     </span>
                   </div>
+                  {toolBox.inputStream && !toolBox.input && (
+                    <div className="mb-1">
+                      <div className="text-xs font-medium">Input (streaming)</div>
+                      <pre className="whitespace-pre-wrap break-all bg-white border border-blue-100 rounded p-2 text-blue-900">{toolBox.inputStream}</pre>
+                    </div>
+                  )}
                   {toolBox.input && (
                     <div className="mb-1">
                       <div className="text-xs font-medium">Input</div>
