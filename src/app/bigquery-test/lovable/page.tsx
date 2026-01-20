@@ -12,6 +12,10 @@ export default function LovableLikeStudioPage() {
     { role: 'assistant', content: 'Bem-vindo! Descreva o site que deseja criar.' },
   ])
   const [input, setInput] = useState('')
+  const [chatId, setChatId] = useState<string | null>(null)
+  const [sending, setSending] = useState(false)
+  const [starting, setStarting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   // File system state (right)
   const initialTree: FileNode[] = useMemo(() => ([
@@ -63,15 +67,68 @@ button:hover { filter:brightness(0.95); }`,
 
   const selectedContent = files[selectedPath] ?? ''
 
-  const handleSend = () => {
+  const handleSend = async () => {
     const text = input.trim()
     if (!text) return
-    setMessages(m => [...m, { role: 'user', content: text }])
+    if (!chatId) { setError('Inicie o chat antes de enviar mensagens.'); return }
+    setSending(true)
+    setError(null)
+    const next = [...messages, { role: 'user' as const, content: text }]
+    setMessages(next)
     setInput('')
-    // Mock assistant reply (sem backend por enquanto)
-    setTimeout(() => {
-      setMessages(m => [...m, { role: 'assistant', content: 'Entendi. Posso criar a estrutura base do site do lado direito.' }])
-    }, 300)
+    try {
+      const res = await fetch('/api/sandbox', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'chat-send', chatId, history: next })
+      })
+      const data = await res.json().catch(() => ({})) as { ok?: boolean; reply?: string; error?: string }
+      if (!res.ok || data.ok === false) throw new Error(data.error || `Erro ${res.status}`)
+      setMessages(m => [...m, { role: 'assistant', content: data.reply || '' }])
+    } catch (e) {
+      setError((e as Error).message)
+    } finally {
+      setSending(false)
+    }
+  }
+
+  const handleStart = async () => {
+    setStarting(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/sandbox', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'chat-start' })
+      })
+      const data = await res.json().catch(() => ({})) as { ok?: boolean; chatId?: string; error?: string }
+      if (!res.ok || data.ok === false || !data.chatId) throw new Error(data.error || `Erro ${res.status}`)
+      setChatId(data.chatId)
+      setMessages([{ role: 'assistant', content: 'Sandbox iniciada. Pode enviar sua primeira mensagem!' }])
+    } catch (e) {
+      setError((e as Error).message)
+    } finally {
+      setStarting(false)
+    }
+  }
+
+  const handleStop = async () => {
+    if (!chatId) return
+    setStarting(true)
+    setError(null)
+    try {
+      await fetch('/api/sandbox', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'chat-stop', chatId })
+      })
+      setChatId(null)
+      setMessages(m => [...m, { role: 'assistant', content: 'Sandbox encerrada.' }])
+    } catch (e) {
+      setError((e as Error).message)
+    } finally {
+      setStarting(false)
+    }
   }
 
   const toggleDir = (path: string) => setOpenDirs(d => ({ ...d, [path]: !d[path] }))
@@ -107,8 +164,18 @@ button:hover { filter:brightness(0.95); }`,
         <Panel defaultSize={40} minSize={25} className="h-full">
           <div className="h-full flex flex-col border-r border-gray-200 bg-white">
             <div className="px-4 py-3 border-b border-gray-200">
-              <h1 className="text-lg font-semibold text-gray-900">Chat</h1>
-              <p className="text-xs text-gray-500">Descreva o site, peça mudanças, gere componentes…</p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-lg font-semibold text-gray-900">Chat</h1>
+                  <p className="text-xs text-gray-500">Descreva o site, peça mudanças, gere componentes…</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button onClick={handleStart} disabled={starting || !!chatId} className={`px-3 py-1.5 rounded text-white ${starting||chatId?'bg-gray-400':'bg-emerald-600 hover:bg-emerald-700'}`}>Iniciar chat</button>
+                  <button onClick={handleStop} disabled={starting || !chatId} className={`px-3 py-1.5 rounded text-white ${starting||!chatId?'bg-gray-400':'bg-rose-600 hover:bg-rose-700'}`}>Encerrar chat</button>
+                </div>
+              </div>
+              {chatId && (<div className="mt-1 text-xs text-gray-500">chatId: {chatId.slice(0,8)}…</div>)}
+              {error && (<div className="mt-2 text-xs text-red-600">Erro: {error}</div>)}
             </div>
             <div className="flex-1 overflow-auto p-4 space-y-3">
               {messages.map((m, i) => (
@@ -118,8 +185,8 @@ button:hover { filter:brightness(0.95); }`,
               ))}
             </div>
             <div className="p-3 border-t border-gray-200 flex gap-2">
-              <input value={input} onChange={e=>setInput(e.target.value)} className="flex-1 px-3 py-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Digite sua mensagem" />
-              <button onClick={handleSend} className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700">Enviar</button>
+              <input value={input} onChange={e=>setInput(e.target.value)} disabled={!chatId || sending} className="flex-1 px-3 py-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder={chatId? 'Digite sua mensagem':'Inicie o chat para enviar'} />
+              <button onClick={handleSend} disabled={!chatId || sending || !input.trim()} className={`px-4 py-2 rounded text-white ${(!chatId||sending)?'bg-gray-400':'bg-blue-600 hover:bg-blue-700'}`}>{sending? 'Enviando…':'Enviar'}</button>
             </div>
           </div>
         </Panel>
@@ -163,4 +230,3 @@ button:hover { filter:brightness(0.95); }`,
     </div>
   )
 }
-
