@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels'
+import AppPreviewWrapper from '@/components/visual-builder/AppPreviewWrapper'
 
 type ChatMessage = { role: 'user' | 'assistant'; content: string }
 type FileNode = { name: string; path: string; type: 'file' | 'dir'; children?: FileNode[] }
@@ -37,7 +38,7 @@ export default function LovableLikeStudioPage() {
   const [selectedPath, setSelectedPath] = useState('/vercel/sandbox/index.html')
   const [selectedContent, setSelectedContent] = useState('')
   const [previewContent, setPreviewContent] = useState('')
-  const [viewTab, setViewTab] = useState<'editor' | 'preview'>('preview')
+  const [viewTab, setViewTab] = useState<'editor' | 'preview' | 'app'>('preview')
   const [fsError, setFsError] = useState<string | null>(null)
 
   const handleSend = async () => {
@@ -550,14 +551,19 @@ export default function LovableLikeStudioPage() {
                   <div className="flex items-center gap-1">
                     <button onClick={()=>setViewTab('editor')} className={`px-3 py-1.5 rounded ${viewTab==='editor'?'bg-gray-900 text-white':'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>Editor</button>
                     <button onClick={()=>setViewTab('preview')} className={`px-3 py-1.5 rounded ${viewTab==='preview'?'bg-gray-900 text-white':'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>Preview</button>
+                    <button onClick={()=>setViewTab('app')} className={`px-3 py-1.5 rounded ${viewTab==='app'?'bg-gray-900 text-white':'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>App Preview</button>
                     <button onClick={async ()=>{ if (chatId) await refreshDir('/vercel/sandbox'); if (selectedPath) await openFile(selectedPath); await refreshPreview() }} className="px-3 py-1.5 rounded bg-gray-100 text-gray-700 hover:bg-gray-200">Atualizar</button>
                   </div>
                 </div>
                 <div className="flex-1 overflow-auto">
                   {viewTab === 'editor' ? (
                     <textarea value={selectedContent} readOnly className="w-full h-full p-3 font-mono text-sm text-gray-900 bg-white outline-none" />
-                  ) : (
+                  ) : viewTab === 'preview' ? (
                     <iframe title="Preview" className="w-full h-full bg-white" srcDoc={previewContent} />
+                  ) : (
+                    <div className="h-full">
+                      <AppPreviewWrapper code={selectedContent} />
+                    </div>
                   )}
                 </div>
               </div>
