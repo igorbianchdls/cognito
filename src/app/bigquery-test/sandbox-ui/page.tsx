@@ -12,6 +12,8 @@ export default function SandboxUIPage() {
   const [verifying, setVerifying] = useState(false)
   const [agentPrompt, setAgentPrompt] = useState('What is 2 + 2?')
   const [runningPrompt, setRunningPrompt] = useState(false)
+  const [chatHistory, setChatHistory] = useState<{ role: 'user'|'assistant'; content: string }[]>([])
+  const [chatInput, setChatInput] = useState('Olá!')
 
   const runEcho = async () => {
     setLoading(true)
@@ -115,6 +117,38 @@ export default function SandboxUIPage() {
     }
   }
 
+  const sendChat = async () => {
+    setRunningPrompt(true)
+    setError(null)
+    setOutput(null)
+    try {
+      const nextHistory = [...chatHistory, { role: 'user' as const, content: chatInput }]
+      setChatHistory(nextHistory)
+      setChatInput('')
+      const res = await fetch('/api/sandbox/agent-chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ history: nextHistory })
+      })
+      const data = await res.json().catch(() => ({})) as { ok?: boolean; reply?: string; error?: string; step?: string; exitCode?: number; stderr?: string; stdout?: string }
+      if (!res.ok || data.ok === false) {
+        const details = [
+          data.error ? `Erro: ${data.error}` : null,
+          data.step ? `Etapa: ${data.step}` : null,
+          typeof data.exitCode === 'number' ? `ExitCode: ${data.exitCode}` : null,
+          data.stderr ? `stderr:\n${data.stderr}` : (data.stdout ? `stdout:\n${data.stdout}` : null),
+        ].filter(Boolean).join('\n')
+        throw new Error(details || `Erro ${res.status}`)
+      }
+      const reply = data.reply || ''
+      setChatHistory(h => [...h, { role: 'assistant', content: reply }])
+    } catch (e) {
+      setError((e as Error).message)
+    } finally {
+      setRunningPrompt(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-xl mx-auto space-y-4">
@@ -192,6 +226,37 @@ export default function SandboxUIPage() {
         >
           {runningPrompt ? 'Executando…' : 'Executar Agent SDK Prompt'}
         </button>
+
+        <div className="pt-4 border-t border-gray-200" />
+        <h2 className="text-lg font-medium text-gray-900">Chat com Agent SDK (Sandbox)</h2>
+        <div className="space-y-2 p-3 bg-white border border-gray-200 rounded">
+          <div className="space-y-1 max-h-64 overflow-auto">
+            {chatHistory.length === 0 && (
+              <div className="text-sm text-gray-500">Sem mensagens. Envie a primeira abaixo.</div>
+            )}
+            {chatHistory.map((m, i) => (
+              <div key={i} className={m.role === 'user' ? 'text-gray-900' : 'text-blue-700'}>
+                <span className="font-medium">{m.role === 'user' ? 'Você' : 'Assistente'}: </span>
+                <span>{m.content}</span>
+              </div>
+            ))}
+          </div>
+          <div className="flex gap-2">
+            <input
+              value={chatInput}
+              onChange={(e) => setChatInput(e.target.value)}
+              className="flex-1 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Digite sua mensagem"
+            />
+            <button
+              onClick={sendChat}
+              disabled={runningPrompt || !chatInput.trim()}
+              className={`px-4 py-2 rounded-md text-white ${runningPrompt ? 'bg-gray-400' : 'bg-teal-600 hover:bg-teal-700'}`}
+            >
+              {runningPrompt ? 'Enviando…' : 'Enviar'}
+            </button>
+          </div>
+        </div>
 
         {output !== null && (
           <pre className="p-3 bg-white rounded border border-gray-200 text-gray-900 whitespace-pre-wrap">{output}</pre>
