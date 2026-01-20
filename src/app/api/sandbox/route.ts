@@ -55,6 +55,46 @@ fs.mkdirSync('/vercel/sandbox/.claude/skills/bq-analyst', { recursive: true });
       const t3 = Date.now()
       await sandbox.writeFiles(skills)
       timeline.push({ name: 'seed-skills', ms: Date.now() - t3, ok: true })
+      // Seed a default Liquid dashboard file if not present
+      const defaultLiquid = `<!doctype html>
+<dashboard render="html" theme="branco" date-type="last_30_days">
+  <div class="vb-container" style="padding: 0;">
+    <header class="vb-header" style="background-color:#ffffff; border:1px solid #e5e7eb; border-radius:12px;">
+      <p style="margin:0 0 4px; font-family:Inter, system-ui, sans-serif; font-size:20px; font-weight:700; color:#111827;">Dashboard de Indicadores</p>
+      <p style="margin:0; font-family:Inter, system-ui, sans-serif; font-size:14px; font-weight:400; color:#6b7280;">Visão geral (últimos 30 dias)</p>
+    </header>
+
+    <section id="charts" class="row charts" data-role="section" style="display:flex; flex-direction:row; flex-wrap:wrap; justify-content:flex-start; align-items:stretch; gap:16px; margin-top:16px;">
+      <article id="chart_top_categorias_ap" class="card" data-role="chart" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#ffffff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
+        <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Top 5 Categorias (Despesas)</p>
+        <Chart id="top_categorias_ap" type="bar" height="320">
+          <query schema="financeiro" table="contas_pagar" dimension="categoria" measure="SUM(valor_liquido)" timeDimension="data_vencimento" limit="5" order="value DESC">
+            <where>
+              <rule col="status" op="in" vals="aberto,pendente,em_aberto,em aberto" />
+            </where>
+          </query>
+        </Chart>
+      </article>
+
+      <article id="chart_vendas_territorio" class="card" data-role="chart" style="--fr:1; flex: var(--fr, 1) 1 0%; min-width:0; background-color:#ffffff; border-color:#e5e7eb; border-width:1px; border-style:solid; border-radius:12px; padding:12px; color:#111827;">
+        <p style="margin:0 0 8px; font-family:Inter, system-ui, sans-serif; font-size:16px; font-weight:600; color:#111827;">Vendas por Território</p>
+        <Chart id="vendas_territorio" type="bar" height="320">
+          <query schema="vendas" table="pedidos" dimension="territorio" measure="SUM(subtotal)" timeDimension="data_pedido" limit="5" order="value DESC" />
+        </Chart>
+      </article>
+    </section>
+  </div>
+</dashboard>`;
+      try {
+        const chk = await sandbox.runCommand({ cmd: 'node', args: ['-e', `try{const fs=require('fs');process.stdout.write(fs.existsSync('/vercel/sandbox/dashboard.liquid.html')?'exists':'missing');}catch(e){process.stdout.write('missing');process.exit(0);}`] })
+        const out = await chk.stdout().catch(()=> '')
+        if (!out.includes('exists')) {
+          const t4 = Date.now()
+          await sandbox.writeFiles([{ path: '/vercel/sandbox/dashboard.liquid.html', content: Buffer.from(defaultLiquid, 'utf8') }])
+          timeline.push({ name: 'seed-liquid', ms: Date.now() - t4, ok: true })
+        }
+      } catch { /* ignore seed errors */ }
+
       const id = genId()
       const session: ChatSession = { id, sandbox, createdAt: Date.now(), lastUsedAt: Date.now(), mode: 'local' }
       SESSIONS.set(id, session)
