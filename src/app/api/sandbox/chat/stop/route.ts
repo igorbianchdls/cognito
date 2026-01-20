@@ -9,6 +9,9 @@ export async function POST(req: Request) {
     if (!chatId) return Response.json({ ok: false, error: 'chatId obrigatório' }, { status: 400 })
     const sess = SESSIONS.get(chatId)
     if (!sess) return Response.json({ ok: false, error: 'chat não encontrado' }, { status: 404 })
+    try {
+      await sess.sandbox.runCommand({ cmd: 'node', args: ['-e', `try { require('fs').unlinkSync('/vercel/sandbox/.session/session.json'); } catch {}` ] })
+    } catch {}
     await sess.sandbox.stop().catch(() => {})
     SESSIONS.delete(chatId)
     return Response.json({ ok: true })
@@ -17,4 +20,3 @@ export async function POST(req: Request) {
     return Response.json({ ok: false, error: message }, { status: 500 })
   }
 }
-
