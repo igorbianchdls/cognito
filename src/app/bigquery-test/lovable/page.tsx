@@ -91,7 +91,8 @@ export default function LovableLikeStudioPage() {
               setToolsOpen(true)
               const detail = formatToolEvent('start', evt)
               setToolsLog(prev => [...prev, detail])
-              setToolBox({ visible:true, name: evt.tool_name || 'Tool', status:'running', input: evt.input })
+              // Não defina input aqui para não suprimir o streaming; apenas marque execução
+              setToolBox(prev => ({ ...prev, visible:true, name: evt.tool_name || prev.name || 'Tool', status:'running', inputStream: '' }))
             } else if (evt.type === 'tool_done') {
               setToolsOpen(true)
               const detail = formatToolEvent('done', evt)
@@ -344,7 +345,7 @@ export default function LovableLikeStudioPage() {
                       {toolBox.status==='running'?'executando…': toolBox.status==='done'?'concluída':'erro'}
                     </span>
                   </div>
-                  {toolBox.inputStream && !toolBox.input && (
+                  {toolBox.inputStream && (
                     <div className="mb-1">
                       <div className="text-xs font-medium">Input (streaming)</div>
                       <pre className="whitespace-pre-wrap break-all bg-white border border-blue-100 rounded p-2 text-blue-900">{toolBox.inputStream}</pre>
