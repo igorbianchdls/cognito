@@ -73,7 +73,7 @@ export default function SandboxUIPage() {
     setError(null)
     try {
       const res = await fetch('/api/sandbox/agent-verify', { cache: 'no-store' })
-      const data = await res.json().catch(() => ({})) as { ok?: boolean; verifyOutput?: string; agentVerifyOutput?: string; cliVersion?: string; error?: string }
+      const data = await res.json().catch(() => ({})) as { ok?: boolean; verifyOutput?: string; agentVerifyOutput?: string; cliVersion?: string; promptOk?: boolean; promptText?: string; promptExitCode?: number; promptStderr?: string; error?: string }
       if (!res.ok || data.ok === false) {
         throw new Error(data.error || `Erro ${res.status}`)
       }
@@ -81,6 +81,14 @@ export default function SandboxUIPage() {
       if (data.cliVersion) parts.push(`Claude Code CLI: ${data.cliVersion}`)
       if (data.verifyOutput) parts.push(data.verifyOutput)
       if (data.agentVerifyOutput) parts.push(data.agentVerifyOutput)
+      if (typeof data.promptOk !== 'undefined') {
+        parts.push(`Agent prompt: ${data.promptOk ? 'ok' : 'failed'}`)
+        if (data.promptText) parts.push(`Result: ${data.promptText}`)
+        if (!data.promptOk && (data.promptStderr || typeof data.promptExitCode === 'number')) {
+          parts.push(`ExitCode: ${data.promptExitCode ?? ''}`)
+          if (data.promptStderr) parts.push(`stderr: ${data.promptStderr}`)
+        }
+      }
       setOutput(parts.join('\n') || 'Verificação concluída (sem saída)')
     } catch (e) {
       setError((e as Error).message)

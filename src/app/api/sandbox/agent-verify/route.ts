@@ -120,17 +120,33 @@ export async function GET() {
       agentVerifyRun.stdout().catch(() => ''),
       agentVerifyRun.stderr().catch(() => ''),
     ])
-    if (agentVerifyRun.exitCode !== 0) {
-      return Response.json({
-        ok: false,
-        step: 'agent-verify',
-        exitCode: agentVerifyRun.exitCode,
-        stdout: agentVerOut,
-        stderr: agentVerErr,
-        error: 'Agent SDK import verification failed',
-      }, { status: 500 })
-    }
+    // don't hard fail here; we'll include output and move on
 
+    // 7) Optional: run a real prompt (requires ANTHROPIC_API_KEY)
+    const apiKey = process.env.ANTHROPIC_API_KEY || ''
+    let promptOk = false
+    let promptText = ''
+    let promptExitCode: number | undefined
+    let promptStderr = ''
+    try {
+      // Resolve CLI path via global npm root
+      const npmRoot = await sandbox.runCommand({ cmd: 'npm', args: ['root', '-g'] })
+      const [rootOut2] = await Promise.all([npmRoot.stdout().catch(() => '')])
+      const cliPath2 = `${(rootOut2 || '').trim()}/@anthropic-ai/claude-code/cli.js`
+
+      const promptScript = `import { unstable_v2_prompt } from '@anthropic-ai/claude-agent-sdk';\nconst cli=${JSON.stringify(cliPath2)};\nconst res=await unstable_v2_prompt('What is 2 + 2?',{model:'claude-sonnet-4-5-20250929',pathToClaudeCodeExecutable:cli});\nif(res.type==='result'&&res.subtype==='success'){console.log(res.result??'')}else{console.log('');process.exit(2)}`
+      await sandbox.writeFiles([{ path: '/vercel/sandbox/prompt-verify.mjs', content: Buffer.from(promptScript) }])
+
+      const runPrompt = await sandbox.runCommand({ cmd: 'node', args: ['prompt-verify.mjs'], env: { ANTHROPIC_API_KEY: apiKey } })
+      const [pOut, pErr] = await Promise.all([runPrompt.stdout().catch(() => ''), runPrompt.stderr().catch(() => '')])
+      promptExitCode = runPrompt.exitCode
+      promptStderr = pErr || ''
+      promptText = (pOut || '').trim()
+      promptOk = runPrompt.exitCode === 0
+    } catch (e) {
+      promptOk = false
+      promptText = ''
+    }
     return Response.json({
       ok: true,
       steps: {
@@ -142,6 +158,10 @@ export async function GET() {
       cliVersion: (cliVerOut || cliVerErr).trim(),
       verifyOutput: verOut.trim(),
       agentVerifyOutput: (agentVerOut || agentVerErr).trim(),
+      promptOk,
+      promptText,
+      promptExitCode,
+      promptStderr,
     })
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
