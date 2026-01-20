@@ -97,6 +97,44 @@ export default function SandboxUIPage() {
     }
   }
 
+  const runPromptLocal = async () => {
+    setVerifying(true)
+    setOutput(null)
+    setError(null)
+    try {
+      const res = await fetch('/api/sandbox/agent-prompt-local', { cache: 'no-store' })
+      const data = await res.json().catch(() => ({})) as { ok?: boolean; text?: string; error?: string; step?: string; exitCode?: number; stdout?: string; stderr?: string }
+      if (!res.ok || data.ok === false) {
+        const details = [data.error, data.step && `Etapa: ${data.step}`, typeof data.exitCode==='number' && `ExitCode: ${data.exitCode}`, data.stderr && `stderr:\n${data.stderr}`, data.stdout && `stdout:\n${data.stdout}`].filter(Boolean).join('\n')
+        throw new Error(details || `Erro ${res.status}`)
+      }
+      setOutput(`Local CLI result: ${data.text || '(sem saída)'}`)
+    } catch (e) {
+      setError((e as Error).message)
+    } finally {
+      setVerifying(false)
+    }
+  }
+
+  const runPromptGlobal = async () => {
+    setVerifying(true)
+    setOutput(null)
+    setError(null)
+    try {
+      const res = await fetch('/api/sandbox/agent-prompt-global', { cache: 'no-store' })
+      const data = await res.json().catch(() => ({})) as { ok?: boolean; text?: string; error?: string; step?: string; exitCode?: number; stdout?: string; stderr?: string }
+      if (!res.ok || data.ok === false) {
+        const details = [data.error, data.step && `Etapa: ${data.step}`, typeof data.exitCode==='number' && `ExitCode: ${data.exitCode}`, data.stderr && `stderr:\n${data.stderr}`, data.stdout && `stdout:\n${data.stdout}`].filter(Boolean).join('\n')
+        throw new Error(details || `Erro ${res.status}`)
+      }
+      setOutput(`Global CLI result: ${data.text || '(sem saída)'}`)
+    } catch (e) {
+      setError((e as Error).message)
+    } finally {
+      setVerifying(false)
+    }
+  }
+
   
 
   return (
@@ -160,6 +198,10 @@ export default function SandboxUIPage() {
         >
           {verifying ? 'Verificando…' : 'Verificar SDK no Sandbox'}
         </button>
+        <div className="flex gap-2">
+          <button onClick={runPromptLocal} disabled={verifying} className={`px-3 py-2 rounded-md text-white ${verifying ? 'bg-gray-400' : 'bg-teal-600 hover:bg-teal-700'}`}>Testar Agent SDK (CLI local)</button>
+          <button onClick={runPromptGlobal} disabled={verifying} className={`px-3 py-2 rounded-md text-white ${verifying ? 'bg-gray-400' : 'bg-orange-600 hover:bg-orange-700'}`}>Testar Agent SDK (CLI global)</button>
+        </div>
 
         
 
