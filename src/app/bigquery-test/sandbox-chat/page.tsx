@@ -15,6 +15,35 @@ export default function SandboxChatPage() {
   const [reasoningText, setReasoningText] = useState('')
   const [toolsOpen, setToolsOpen] = useState(false)
   const [toolsLog, setToolsLog] = useState<string[]>([])
+
+  function formatToolEvent(kind: 'start'|'done'|'error', evt: { tool_name?: string; input?: any; output?: any; error?: string }) {
+    const name = evt.tool_name || 'Tool'
+    if (kind === 'start') {
+      if (name === 'Write' && evt.input && typeof evt.input === 'object') {
+        const p = evt.input.file_path || evt.input.path || ''
+        const size = typeof evt.input.content === 'string' ? evt.input.content.length : 0
+        return `▶️ Write: criando ${p} (${size} bytes)`
+      }
+      if (name === 'Edit' && evt.input && typeof evt.input === 'object') {
+        const p = evt.input.file_path || ''
+        return `▶️ Edit: modificando ${p}`
+      }
+      if (name === 'Bash' && evt.input && evt.input.command) {
+        return `▶️ Bash: ${evt.input.command}`
+      }
+      return `▶️ ${name}: iniciando`
+    }
+    if (kind === 'done') {
+      if (name === 'Write' && evt.output && typeof evt.output === 'object') {
+        const p = evt.output.filePath || evt.output.path || ''
+        return `✅ Write: ${p} criado`}
+      if (name === 'Edit') return `✅ Edit: concluído`
+      if (name === 'Bash') return `✅ Bash: concluído`
+      return `✅ ${name}: concluído`
+    }
+    const err = (evt.error || '').toString()
+    return `❌ ${name}: ${err || 'erro'}`
+  }
   const [error, setError] = useState<string | null>(null)
 
   const start = async () => {
@@ -78,7 +107,7 @@ export default function SandboxChatPage() {
           const line = f.split('\n').find(l => l.startsWith('data: ')); if (!line) continue
           const payload = line.slice(6)
           try {
-            const evt = JSON.parse(payload) as { type?: string; text?: string }
+            const evt = JSON.parse(payload) as { type?: string; text?: string; tool_name?: string; input?: any; output?: any; error?: string }
             if (evt.type === 'delta' && typeof evt.text === 'string') {
               setHistory(h => { const copy = h.slice(); const cur = copy[idx]; if (cur && cur.role==='assistant') cur.content += evt.text; return copy })
             } else if (evt.type === 'reasoning_start') {
@@ -91,13 +120,16 @@ export default function SandboxChatPage() {
               // keep shown
             } else if (evt.type === 'tool_start') {
               setToolsOpen(true)
-              setToolsLog(prev => [...prev, `▶️ ${JSON.stringify(evt)}`])
+              const detail = formatToolEvent('start', evt)
+              setToolsLog(prev => [...prev, detail])
             } else if (evt.type === 'tool_done') {
               setToolsOpen(true)
-              setToolsLog(prev => [...prev, `✅ ${JSON.stringify(evt)}`])
+              const detail = formatToolEvent('done', evt)
+              setToolsLog(prev => [...prev, detail])
             } else if (evt.type === 'tool_error') {
               setToolsOpen(true)
-              setToolsLog(prev => [...prev, `❌ ${JSON.stringify(evt)}`])
+              const detail = formatToolEvent('error', evt)
+              setToolsLog(prev => [...prev, detail])
             }
           } catch { /* ignore */ }
         }

@@ -70,7 +70,7 @@ export default function LovableLikeStudioPage() {
           if (!line) continue
           const payload = line.slice(6)
           try {
-            const evt = JSON.parse(payload) as { type?: string; text?: string }
+            const evt = JSON.parse(payload) as { type?: string; text?: string; tool_name?: string; input?: any; output?: any; error?: string }
             if (evt.type === 'delta' && typeof evt.text === 'string') {
               setMessages(prev => {
                 const copy = prev.slice()
@@ -88,15 +88,18 @@ export default function LovableLikeStudioPage() {
               // no-op; keep panel open with accumulated text
             } else if (evt.type === 'tool_start') {
               setToolsOpen(true)
-              setToolsLog(prev => [...prev, `▶️ ${JSON.stringify(evt)}`])
+              const detail = formatToolEvent('start', evt)
+              setToolsLog(prev => [...prev, detail])
             } else if (evt.type === 'tool_done') {
               setToolsOpen(true)
-              setToolsLog(prev => [...prev, `✅ ${JSON.stringify(evt)}`])
+              const detail = formatToolEvent('done', evt)
+              setToolsLog(prev => [...prev, detail])
               // refresh tree after write/edit
               await refreshDir('/vercel/sandbox')
             } else if (evt.type === 'tool_error') {
               setToolsOpen(true)
-              setToolsLog(prev => [...prev, `❌ ${JSON.stringify(evt)}`])
+              const detail = formatToolEvent('error', evt)
+              setToolsLog(prev => [...prev, detail])
             } else if (evt.type === 'final') {
               sawFinal = true
             }
@@ -250,6 +253,37 @@ export default function LovableLikeStudioPage() {
     } catch (e) {
       setFsError((e as Error).message)
     }
+  }
+
+  function formatToolEvent(kind: 'start'|'done'|'error', evt: { tool_name?: string; input?: any; output?: any; error?: string }) {
+    const name = evt.tool_name || 'Tool'
+    if (kind === 'start') {
+      // Try to extract details for known tools
+      if (name === 'Write' && evt.input && typeof evt.input === 'object') {
+        const p = evt.input.file_path || evt.input.path || ''
+        const size = typeof evt.input.content === 'string' ? evt.input.content.length : 0
+        return `▶️ Write: criando ${p} (${size} bytes)`
+      }
+      if (name === 'Edit' && evt.input && typeof evt.input === 'object') {
+        const p = evt.input.file_path || ''
+        return `▶️ Edit: modificando ${p}`
+      }
+      if (name === 'Bash' && evt.input && evt.input.command) {
+        return `▶️ Bash: ${evt.input.command}`
+      }
+      return `▶️ ${name}: iniciando`
+    }
+    if (kind === 'done') {
+      if (name === 'Write' && evt.output && typeof evt.output === 'object') {
+        const p = evt.output.filePath || evt.output.path || ''
+        return `✅ Write: ${p} criado`}
+      if (name === 'Edit') return `✅ Edit: concluído`
+      if (name === 'Bash') return `✅ Bash: concluído`
+      return `✅ ${name}: concluído`
+    }
+    // error
+    const err = (evt.error || '').toString()
+    return `❌ ${name}: ${err || 'erro'}`
   }
 
   return (
