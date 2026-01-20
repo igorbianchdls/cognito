@@ -210,7 +210,7 @@ for await (const msg of q) {
     // Node one‑liner to list entries ignoring node_modules and hidden heavy dirs
     const script = `
 const fs = require('fs');
-const p = process.argv[2];
+const p = process.env.TARGET_PATH;
 try {
   const names = fs.readdirSync(p, { withFileTypes: true }).map(d=>({ name: d.name, type: d.isDirectory()?'dir':'file', path: require('path').join(p, d.name) }));
   const filtered = names.filter(e => !e.name.startsWith('.') && e.name !== 'node_modules' && e.name !== '.cache');
@@ -218,7 +218,7 @@ try {
   console.log(JSON.stringify(filtered));
 } catch(e){ console.error(String(e.message||e)); process.exit(1); }
 `
-    const run = await sess.sandbox.runCommand({ cmd: 'node', args: ['-e', script, target] })
+    const run = await sess.sandbox.runCommand({ cmd: 'node', args: ['-e', script], env: { TARGET_PATH: target } })
     const [out, err] = await Promise.all([run.stdout().catch(()=>''), run.stderr().catch(()=> '')])
     if (run.exitCode !== 0) return Response.json({ ok: false, error: err || out || 'falha ao listar' }, { status: 500 })
     let entries: Array<{ name: string; type: 'file'|'dir'; path: string }> = []
@@ -234,7 +234,7 @@ try {
     const target = v.path
     const script = `
 const fs = require('fs');
-const p = process.argv[2];
+const p = process.env.TARGET_PATH;
 try {
   const buf = fs.readFileSync(p);
   const isBin = buf.some(b => b===0);
@@ -242,7 +242,7 @@ try {
   else console.log(JSON.stringify({ isBinary:false, content: buf.toString('utf8') }));
 } catch(e){ console.error(String(e.message||e)); process.exit(1); }
 `
-    const run = await sess.sandbox.runCommand({ cmd: 'node', args: ['-e', script, target] })
+    const run = await sess.sandbox.runCommand({ cmd: 'node', args: ['-e', script], env: { TARGET_PATH: target } })
     const [out, err] = await Promise.all([run.stdout().catch(()=>''), run.stderr().catch(()=> '')])
     if (run.exitCode !== 0) return Response.json({ ok: false, error: err || out || 'falha ao ler' }, { status: 500 })
     try {
