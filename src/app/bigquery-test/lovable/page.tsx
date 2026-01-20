@@ -18,6 +18,8 @@ export default function LovableLikeStudioPage() {
   const [error, setError] = useState<string | null>(null)
   const [reasoningOpen, setReasoningOpen] = useState(false)
   const [reasoningText, setReasoningText] = useState('')
+  const [toolsOpen, setToolsOpen] = useState(false)
+  const [toolsLog, setToolsLog] = useState<string[]>([])
 
   // File system state (right) — from sandbox
   const [tree, setTree] = useState<FileNode[]>([])
@@ -39,6 +41,8 @@ export default function LovableLikeStudioPage() {
     const assistantIndex = base.length
     setReasoningOpen(false)
     setReasoningText('')
+    setToolsOpen(false)
+    setToolsLog([])
     setInput('')
     try {
       const res = await fetch('/api/sandbox', {
@@ -81,6 +85,15 @@ export default function LovableLikeStudioPage() {
               setReasoningText(prev => prev + evt.text)
             } else if (evt.type === 'reasoning_end') {
               // no-op; keep panel open with accumulated text
+            } else if (evt.type === 'tool_start') {
+              setToolsOpen(true)
+              setToolsLog(prev => [...prev, `▶️ ${JSON.stringify(evt)}`])
+            } else if (evt.type === 'tool_done') {
+              setToolsOpen(true)
+              setToolsLog(prev => [...prev, `✅ ${JSON.stringify(evt)}`])
+            } else if (evt.type === 'tool_error') {
+              setToolsOpen(true)
+              setToolsLog(prev => [...prev, `❌ ${JSON.stringify(evt)}`])
             } else if (evt.type === 'final') {
               sawFinal = true
             }
@@ -192,7 +205,7 @@ export default function LovableLikeStudioPage() {
               )}
             </div>
           ) : (
-            <button onClick={() => setSelectedPath(node.path)} className={`w-full text-left px-2 py-1 rounded hover:bg-gray-100 ${selectedPath===node.path?'bg-blue-50 text-blue-700':'text-gray-800'}`}>
+            <button onClick={() => openFile(node.path)} className={`w-full text-left px-2 py-1 rounded hover:bg-gray-100 ${selectedPath===node.path?'bg-blue-50 text-blue-700':'text-gray-800'}`}>
               {node.name}
             </button>
           )}
@@ -244,6 +257,21 @@ export default function LovableLikeStudioPage() {
                     <button onClick={()=>setReasoningOpen(false)} className="text-xs text-amber-700 hover:underline">Ocultar</button>
                   </div>
                   <div className="whitespace-pre-wrap">{reasoningText || '…'}</div>
+                </div>
+              )}
+              {toolsOpen && (
+                <div className="p-2 border border-indigo-300 bg-indigo-50 rounded text-sm text-indigo-900">
+                  <div className="flex items-center justify-between mb-1">
+                    <strong>Ferramentas</strong>
+                    <button onClick={()=>setToolsOpen(false)} className="text-xs text-indigo-700 hover:underline">Ocultar</button>
+                  </div>
+                  <div className="space-y-1 max-h-40 overflow-auto">
+                    {toolsLog.length === 0 ? (
+                      <div className="text-xs text-indigo-700">Aguardando eventos…</div>
+                    ) : toolsLog.map((l, i)=> (
+                      <div key={i} className="whitespace-pre-wrap break-all">{l}</div>
+                    ))}
+                  </div>
                 </div>
               )}
               {messages.map((m, i) => (

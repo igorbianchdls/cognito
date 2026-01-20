@@ -13,6 +13,8 @@ export default function SandboxChatPage() {
   const [streaming, setStreaming] = useState(false)
   const [reasoningOpen, setReasoningOpen] = useState(false)
   const [reasoningText, setReasoningText] = useState('')
+  const [toolsOpen, setToolsOpen] = useState(false)
+  const [toolsLog, setToolsLog] = useState<string[]>([])
   const [error, setError] = useState<string | null>(null)
 
   const start = async () => {
@@ -66,6 +68,8 @@ export default function SandboxChatPage() {
       let buf = ''
       setReasoningOpen(false)
       setReasoningText('')
+      setToolsOpen(false)
+      setToolsLog([])
       while (true) {
         const { value, done } = await reader.read(); if (done) break
         buf += decoder.decode(value, { stream: true })
@@ -85,6 +89,15 @@ export default function SandboxChatPage() {
               setReasoningText(prev => prev + evt.text)
             } else if (evt.type === 'reasoning_end') {
               // keep shown
+            } else if (evt.type === 'tool_start') {
+              setToolsOpen(true)
+              setToolsLog(prev => [...prev, `▶️ ${JSON.stringify(evt)}`])
+            } else if (evt.type === 'tool_done') {
+              setToolsOpen(true)
+              setToolsLog(prev => [...prev, `✅ ${JSON.stringify(evt)}`])
+            } else if (evt.type === 'tool_error') {
+              setToolsOpen(true)
+              setToolsLog(prev => [...prev, `❌ ${JSON.stringify(evt)}`])
             }
           } catch { /* ignore */ }
         }
@@ -100,6 +113,18 @@ export default function SandboxChatPage() {
           <div className="mb-3 p-2 border border-amber-300 bg-amber-50 rounded text-sm text-amber-900">
             <div className="flex items-center justify-between mb-1"><strong>Raciocínio</strong><button onClick={()=>setReasoningOpen(false)} className="text-xs text-amber-700 hover:underline">Ocultar</button></div>
             <div className="whitespace-pre-wrap">{reasoningText || '…'}</div>
+          </div>
+        )}
+        {toolsOpen && (
+          <div className="mb-3 p-2 border border-indigo-300 bg-indigo-50 rounded text-sm text-indigo-900">
+            <div className="flex items-center justify-between mb-1"><strong>Ferramentas</strong><button onClick={()=>setToolsOpen(false)} className="text-xs text-indigo-700 hover:underline">Ocultar</button></div>
+            <div className="space-y-1 max-h-40 overflow-auto">
+              {toolsLog.length === 0 ? (
+                <div className="text-xs text-indigo-700">Aguardando eventos…</div>
+              ) : toolsLog.map((l, i)=> (
+                <div key={i} className="whitespace-pre-wrap break-all">{l}</div>
+              ))}
+            </div>
           </div>
         )}
         <div className="flex gap-2">

@@ -112,7 +112,21 @@ const options = {
   tools: { type: 'preset', preset: 'claude_code' },
   permissionMode: 'acceptEdits',
   includePartialMessages: true,
-  maxThinkingTokens: 2048
+  maxThinkingTokens: 2048,
+  hooks: {
+    PreToolUse: [{ hooks: [async (input) => {
+      try { console.log(JSON.stringify({ type: 'tool_start', tool_name: input.tool_name, input: input.tool_input })); } catch {}
+      return {};
+    }]}],
+    PostToolUse: [{ hooks: [async (input) => {
+      try { console.log(JSON.stringify({ type: 'tool_done', tool_name: input.tool_name, output: input.tool_response })); } catch {}
+      return {};
+    }]}],
+    PostToolUseFailure: [{ hooks: [async (input) => {
+      try { console.log(JSON.stringify({ type: 'tool_error', tool_name: input.tool_name, error: input.error, is_interrupt: input.is_interrupt })); } catch {}
+      return {};
+    }]}],
+  }
 };
 const q = query({ prompt, options });
 for await (const msg of q) {
