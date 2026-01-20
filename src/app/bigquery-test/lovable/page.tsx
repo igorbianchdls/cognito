@@ -145,8 +145,10 @@ export default function LovableLikeStudioPage() {
     if (!chatId) return
     const res = await fetch('/api/sandbox', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'fs-list', chatId, path: dirPath }) })
     const data = await res.json().catch(() => ({})) as { ok?: boolean; entries?: Array<{ name:string; path:string; type:'file'|'dir' }>; error?: string }
-    if (!res.ok || data.ok === false || !data.entries) return
-    setTree(prev => upsertChildren(prev, dirPath, data.entries.map(e => ({ name: e.name, path: e.path, type: e.type }))))
+    if (!res.ok || data.ok === false) return
+    const ents = (data.entries ?? []).map(e => ({ name: e.name, path: e.path, type: e.type }))
+    if (ents.length === 0) return
+    setTree(prev => upsertChildren(prev, dirPath, ents))
   }
 
   const upsertChildren = (nodes: FileNode[], dirPath: string, children: FileNode[]): FileNode[] => {
