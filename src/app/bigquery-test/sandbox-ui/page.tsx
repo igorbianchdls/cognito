@@ -15,6 +15,8 @@ export default function SandboxUIPage() {
   const [chatHistory, setChatHistory] = useState<{ role: 'user'|'assistant'; content: string }[]>([])
   const [chatInput, setChatInput] = useState('Olá!')
   const [streaming, setStreaming] = useState(false)
+  const [reasoningOpen, setReasoningOpen] = useState(false)
+  const [reasoningText, setReasoningText] = useState('')
   
 
   const runEcho = async () => {
@@ -160,6 +162,8 @@ export default function SandboxUIPage() {
       }
       setChatId(data.chatId)
       setChatHistory([])
+      setReasoningOpen(false)
+      setReasoningText('')
     } catch (e) {
       setError((e as Error).message)
     } finally {
@@ -215,6 +219,9 @@ export default function SandboxUIPage() {
     setStreaming(true)
     setError(null)
     try {
+      // reset reasoning panel for new stream
+      setReasoningOpen(false)
+      setReasoningText('')
       const next = [...chatHistory, { role: 'user' as const, content: chatInput }]
       setChatHistory(next)
       setChatInput('')
@@ -255,6 +262,14 @@ export default function SandboxUIPage() {
                 }
                 return copy
               })
+            } else if (evt.type === 'reasoning_start') {
+              setReasoningOpen(true)
+              setReasoningText('')
+            } else if (evt.type === 'reasoning_delta' && typeof evt.text === 'string') {
+              setReasoningOpen(true)
+              setReasoningText(prev => prev + evt.text)
+            } else if (evt.type === 'reasoning_end') {
+              // keep panel open with accumulated text
             } else if (evt.type === 'final') {
               // Nothing special; stream ends
             }
@@ -345,6 +360,15 @@ export default function SandboxUIPage() {
           <button onClick={stopChat} disabled={verifying || !chatId} className={`px-3 py-2 rounded-md text-white ${verifying || !chatId ? 'bg-gray-400' : 'bg-rose-600 hover:bg-rose-700'}`}>Encerrar chat</button>
           {chatId && <span className="text-sm text-gray-500">chatId: {chatId.slice(0,8)}…</span>}
         </div>
+        {reasoningOpen && (
+          <div className="mb-2 p-2 border border-yellow-300 bg-yellow-50 rounded">
+            <div className="flex items-center justify-between mb-1">
+              <strong className="text-yellow-900 text-sm">Raciocínio (thinking)</strong>
+              <button onClick={() => setReasoningOpen(false)} className="text-xs text-yellow-700 hover:underline">Ocultar</button>
+            </div>
+            <div className="whitespace-pre-wrap break-words text-sm text-yellow-900">{reasoningText || '…'}</div>
+          </div>
+        )}
         <div className="space-y-2 p-3 bg-white border border-gray-200 rounded">
           <div className="space-y-1 max-h-64 overflow-auto">
             {chatHistory.length === 0 && (

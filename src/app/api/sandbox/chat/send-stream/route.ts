@@ -24,19 +24,56 @@ export async function POST(req: Request) {
     lines.push('Assistant:')
     const prompt = lines.join('\n').slice(0, 6000)
 
-    // Write a streaming runner script into the sandbox (handles partial deltas)
+    // Write a streaming runner script into the sandbox (handles partial deltas + reasoning + tools)
     const runner = `
 import { query } from '@anthropic-ai/claude-agent-sdk';
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
 const cli = require.resolve('@anthropic-ai/claude-code/cli.js');
 const prompt = process.argv[2] || '';
-const q = query({ prompt, options: { model: 'claude-sonnet-4-5-20250929', pathToClaudeCodeExecutable: cli, includePartialMessages: true }});
+const options = {
+  model: 'claude-sonnet-4-5-20250929',
+  pathToClaudeCodeExecutable: cli,
+  cwd: '/vercel/sandbox',
+  additionalDirectories: ['/vercel/sandbox'],
+  tools: { type: 'preset', preset: 'claude_code' },
+  permissionMode: 'acceptEdits',
+  includePartialMessages: true,
+  maxThinkingTokens: 2048,
+  hooks: {
+    PreToolUse: [{ hooks: [async (input) => {
+      try { console.log(JSON.stringify({ type: 'tool_start', tool_name: input.tool_name, input: input.tool_input })); } catch {}
+      return {};
+    }]}],
+    PostToolUse: [{ hooks: [async (input) => {
+      try { console.log(JSON.stringify({ type: 'tool_done', tool_name: input.tool_name, output: input.tool_response })); } catch {}
+      return {};
+    }]}],
+    PostToolUseFailure: [{ hooks: [async (input) => {
+      try { console.log(JSON.stringify({ type: 'tool_error', tool_name: input.tool_name, error: input.error, is_interrupt: input.is_interrupt })); } catch {}
+      return {};
+    }]}],
+  }
+};
+const q = query({ prompt, options });
 for await (const msg of q) {
   if (msg.type === 'stream_event') {
     const ev = msg.event;
-    if (ev && ev.type === 'content_block_delta' && ev.delta && ev.delta.type === 'text_delta' && ev.delta.text) {
-      console.log(JSON.stringify({ type: 'delta', text: ev.delta.text }));
+    // Assistant visible text
+    if (ev && ev.type === 'content_block_delta' && ev.delta && ev.delta.type === 'text_delta' && (ev.delta.text || ev.delta.text === '')) {
+      const t = ev.delta.text ?? '';
+      if (t) console.log(JSON.stringify({ type: 'delta', text: t }));
+    }
+    // Reasoning/thinking blocks
+    if (ev && ev.type === 'content_block_start' && ev.content_block && (ev.content_block.type === 'reasoning' || ev.content_block.type === 'thinking')) {
+      console.log(JSON.stringify({ type: 'reasoning_start' }));
+    }
+    if (ev && ev.type === 'content_block_delta' && ev.delta && (ev.delta.type === 'thinking_delta' || ev.delta.type === 'reasoning_delta')) {
+      const t = (ev.delta.text ?? ev.delta.thinking ?? ev.delta.content ?? '').toString();
+      if (t) console.log(JSON.stringify({ type: 'reasoning_delta', text: t }));
+    }
+    if (ev && ev.type === 'content_block_stop') {
+      console.log(JSON.stringify({ type: 'reasoning_end' }));
     }
   } else if (msg.type === 'result' && msg.subtype === 'success') {
     console.log(JSON.stringify({ type: 'final', text: msg.result ?? '' }));
@@ -106,4 +143,3 @@ for await (const msg of q) {
     return new Response(JSON.stringify({ ok: false, error: message }), { status: 500 })
   }
 }
-

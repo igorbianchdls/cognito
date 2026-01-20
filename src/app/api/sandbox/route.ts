@@ -132,15 +132,21 @@ const q = query({ prompt, options });
 for await (const msg of q) {
   if (msg.type === 'stream_event') {
     const ev = msg.event;
-    if (ev && ev.type === 'content_block_start' && ev.content_block && ev.content_block.type === 'reasoning') {
+    // Start of reasoning/thinking block
+    if (ev && ev.type === 'content_block_start' && ev.content_block && (ev.content_block.type === 'reasoning' || ev.content_block.type === 'thinking')) {
       console.log(JSON.stringify({ type: 'reasoning_start' }));
     }
-    if (ev && ev.type === 'content_block_delta' && ev.delta && ev.delta.type === 'text_delta' && ev.delta.text) {
-      console.log(JSON.stringify({ type: 'delta', text: ev.delta.text }));
+    // Visible assistant text deltas
+    if (ev && ev.type === 'content_block_delta' && ev.delta && ev.delta.type === 'text_delta' && (ev.delta.text || ev.delta.text === '')) {
+      const t = ev.delta.text ?? '';
+      if (t) console.log(JSON.stringify({ type: 'delta', text: t }));
     }
-    if (ev && ev.type === 'content_block_delta' && ev.delta && (ev.delta.type === 'thinking_delta' || ev.delta.type === 'reasoning_delta') && ev.delta.text) {
-      console.log(JSON.stringify({ type: 'reasoning_delta', text: ev.delta.text }));
+    // Reasoning/thinking deltas (field may be 'text' or 'thinking')
+    if (ev && ev.type === 'content_block_delta' && ev.delta && (ev.delta.type === 'thinking_delta' || ev.delta.type === 'reasoning_delta')) {
+      const t = (ev.delta.text ?? ev.delta.thinking ?? ev.delta.content ?? '').toString();
+      if (t) console.log(JSON.stringify({ type: 'reasoning_delta', text: t }));
     }
+    // End of block
     if (ev && ev.type === 'content_block_stop') {
       console.log(JSON.stringify({ type: 'reasoning_end' }));
     }
