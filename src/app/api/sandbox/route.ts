@@ -397,6 +397,11 @@ for await (const msg of q) {
       if (Array.isArray((msg as any).slash_commands)) out.slash_commands = (msg as any).slash_commands;
       if ((msg as any).compact_metadata) out.compact_metadata = (msg as any).compact_metadata;
       console.log(JSON.stringify(out));
+      // Also emit a dedicated slash_commands event so the UI updates the palette
+      if (Array.isArray((msg as any).slash_commands)) {
+        const list = ((msg as any).slash_commands as any[]).map((n:any)=> ({ name: typeof n === 'string' ? n : String(n?.name || '') }))
+        console.log(JSON.stringify({ type: 'slash_commands', commands: list }));
+      }
     } catch {}
   } else if (msg.type === 'stream_event') {
     const ev = (msg as any).event;
