@@ -145,7 +145,7 @@ export async function GET() {
       cmd: 'node',
       args: ['agent-verify.mjs'],
     })
-    const [agentVerOut, agentVerErr] = await Promise.all([
+    const [agentImportOut, agentImportErr] = await Promise.all([
       agentVerifyRun.stdout().catch(() => ''),
       agentVerifyRun.stderr().catch(() => ''),
     ])
@@ -191,7 +191,7 @@ export async function GET() {
       sdkVersion,
       agentVersion,
       verifyOutput: verOut.trim(),
-      agentVerifyOutput: (agentVerOut || agentVerErr).trim(),
+      agentVerifyOutput: (agentImportOut || agentImportErr).trim(),
       promptOk,
       promptText,
       promptExitCode,
