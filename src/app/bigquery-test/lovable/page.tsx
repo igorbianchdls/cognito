@@ -53,6 +53,7 @@ export default function LovableLikeStudioPage() {
       const reader = res.body.getReader()
       const decoder = new TextDecoder()
       let buf = ''
+      let sawFinal = false
       while (true) {
         const { value, done } = await reader.read()
         if (done) break
@@ -80,9 +81,17 @@ export default function LovableLikeStudioPage() {
               setReasoningText(prev => prev + evt.text)
             } else if (evt.type === 'reasoning_end') {
               // no-op; keep panel open with accumulated text
+            } else if (evt.type === 'final') {
+              sawFinal = true
             }
           } catch { /* ignore non-JSON frames */ }
         }
+      }
+      // After stream ends, refresh tree/editor/preview so new files appear
+      if (sawFinal) {
+        await refreshDir('/vercel/sandbox')
+        if (selectedPath) await openFile(selectedPath)
+        await refreshPreview()
       }
     } catch (e) {
       setError((e as Error).message)
@@ -276,7 +285,7 @@ export default function LovableLikeStudioPage() {
                   <div className="flex items-center gap-1">
                     <button onClick={()=>setViewTab('editor')} className={`px-3 py-1.5 rounded ${viewTab==='editor'?'bg-gray-900 text-white':'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>Editor</button>
                     <button onClick={()=>setViewTab('preview')} className={`px-3 py-1.5 rounded ${viewTab==='preview'?'bg-gray-900 text-white':'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>Preview</button>
-                    <button onClick={()=>{ if (selectedPath) openFile(selectedPath); refreshPreview() }} className="px-3 py-1.5 rounded bg-gray-100 text-gray-700 hover:bg-gray-200">Atualizar</button>
+                    <button onClick={async ()=>{ if (chatId) await refreshDir('/vercel/sandbox'); if (selectedPath) await openFile(selectedPath); await refreshPreview() }} className="px-3 py-1.5 rounded bg-gray-100 text-gray-700 hover:bg-gray-200">Atualizar</button>
                   </div>
                 </div>
                 <div className="flex-1 overflow-auto">
