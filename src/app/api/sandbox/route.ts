@@ -156,11 +156,17 @@ const options = {
   agents,
   hooks: {
     SubagentStart: [{ hooks: [async (input) => {
-      try { console.log(JSON.stringify({ type: 'subagent_start', name: (input && (input as any).agent_name) || '' })); } catch {}
+      try {
+        const nm = (input && (input.agent_name || input.agentName || input.name)) || '';
+        console.log(JSON.stringify({ type: 'subagent_start', name: nm }));
+      } catch {}
       return {};
     }]}],
     SubagentStop: [{ hooks: [async (input) => {
-      try { console.log(JSON.stringify({ type: 'subagent_stop', name: (input && (input as any).agent_name) || '' })); } catch {}
+      try {
+        const nm = (input && (input.agent_name || input.agentName || input.name)) || '';
+        console.log(JSON.stringify({ type: 'subagent_stop', name: nm }));
+      } catch {}
       return {};
     }]}],
     PreToolUse: [{ hooks: [async (input) => {
