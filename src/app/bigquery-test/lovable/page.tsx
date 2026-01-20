@@ -219,18 +219,37 @@ export default function LovableLikeStudioPage() {
 
   const refreshPreview = async () => {
     if (!chatId) return
-    const res = await fetch('/api/sandbox', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'fs-read', chatId, path: '/vercel/sandbox/index.html' }) })
-    const data = await res.json().catch(() => ({})) as { ok?: boolean; content?: string }
-    if (res.ok && data.ok && typeof data.content === 'string') setPreviewContent(data.content)
+    try {
+      const res = await fetch('/api/sandbox', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'fs-read', chatId, path: '/vercel/sandbox/index.html' }) })
+      const data = await res.json().catch(() => ({})) as { ok?: boolean; content?: string; error?: string }
+      if (res.ok && data.ok && typeof data.content === 'string') {
+        setPreviewContent(data.content)
+      } else {
+        // Fallback when index.html does not exist yet
+        setPreviewContent(`<!doctype html><html><body style="margin:0;font-family:system-ui;padding:16px;background:#f8fafc;color:#334155"><div style="max-width:760px;margin:24px auto;background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:16px"><h2 style="margin:0 0 8px">Sem index.html</h2><p style="margin:0">Crie <code>/vercel/sandbox/index.html</code> com o agente para visualizar aqui.</p></div></body></html>`)
+      }
+    } catch {
+      // Ignore preview errors
+      setPreviewContent('')
+    }
   }
 
   const openFile = async (path: string) => {
     setSelectedPath(path)
+    setViewTab('editor')
     if (!chatId) return
-    const res = await fetch('/api/sandbox', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'fs-read', chatId, path }) })
-    const data = await res.json().catch(() => ({})) as { ok?: boolean; content?: string; error?: string }
-    if (res.ok && data.ok && typeof data.content === 'string') setSelectedContent(data.content)
-    else if (!res.ok || data.ok === false) setFsError(data.error || `Falha ao ler ${path}`)
+    try {
+      const res = await fetch('/api/sandbox', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'fs-read', chatId, path }) })
+      const data = await res.json().catch(() => ({})) as { ok?: boolean; content?: string; isBinary?: boolean; error?: string }
+      if (res.ok && data.ok) {
+        if (data.isBinary) setSelectedContent('[arquivo binário]')
+        else if (typeof data.content === 'string') setSelectedContent(data.content)
+      } else {
+        setFsError(data.error || `Falha ao ler ${path}`)
+      }
+    } catch (e) {
+      setFsError((e as Error).message)
+    }
   }
 
   return (
