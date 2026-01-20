@@ -17,6 +17,7 @@ export async function POST(req: Request) {
   if (action === 'chat-send') return chatSend(payload as { chatId?: string; history?: Msg[] })
   if (action === 'chat-stop') return chatStop(payload as { chatId?: string })
   if (action === 'chat-send-stream') return chatSendStream(payload as { chatId?: string; history?: Msg[] })
+  if (action === 'chat-slash') return chatSlash(payload as { chatId?: string; prompt?: string })
   if (action === 'fs-list') return fsList(payload as { chatId?: string; path?: string })
   if (action === 'fs-read') return fsRead(payload as { chatId?: string; path?: string })
 
@@ -312,6 +313,141 @@ try { require('fs').unlinkSync('/vercel/sandbox/.session/session.json'); } catch
     await sess.sandbox.stop().catch(() => {})
     SESSIONS.delete(chatId)
     return Response.json({ ok: true })
+  }
+
+  async function chatSlash({ chatId, prompt }: { chatId?: string; prompt?: string }) {
+    const enc = new TextEncoder()
+    if (!chatId) return new Response(JSON.stringify({ ok: false, error: 'chatId obrigatório' }), { status: 400 })
+    const sess = SESSIONS.get(chatId)
+    if (!sess) return new Response(JSON.stringify({ ok: false, error: 'chat não encontrado' }), { status: 404 })
+    const slash = (prompt || '').toString().trim()
+    if (!slash || !slash.startsWith('/')) return new Response(JSON.stringify({ ok: false, error: 'prompt deve começar com /' }), { status: 400 })
+    sess.lastUsedAt = Date.now()
+
+    // Runner specialized for slash commands (no transcript), streaming system events
+    const runner = `
+import { query } from '@anthropic-ai/claude-agent-sdk';
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const cli = require.resolve('@anthropic-ai/claude-code/cli.js');
+const prompt = process.argv[2] || '';
+const fs = require('fs');
+// Define subagents (programáticos)
+const agents = {
+  sqlAnalyst: {
+    description: 'Analisa esquemas e escreve SQL (BigQuery) com segurança',
+    tools: ['Read','Grep','Glob','Write','Edit'],
+    prompt: 'Você é um analista SQL cuidadoso. Prefira SQL parametrizado, explique joins e filtros, valide nomes de tabelas/colunas antes de usar. Evite consultas caras sem necessidade.' ,
+    model: 'inherit'
+  },
+  uiScaffold: {
+    description: 'Cria/expande páginas HTML/CSS/JS simples (scaffold de UI)',
+    tools: ['Read','Write','Edit'],
+    prompt: 'Crie artefatos web mínimos e incrementais. Use HTML semântico, CSS leve e JS simples. Mantenha mudanças pequenas e testáveis.',
+    model: 'inherit'
+  },
+  dataCleaner: {
+    description: 'Limpa/normaliza dados CSV/JSON e gera saídas limpas',
+    tools: ['Read','Write','Edit','Grep','Glob'],
+    prompt: 'Faça limpeza de dados de forma segura: preservar colunas, normalizar formatos, remover linhas inválidas documentando critérios. Explique as transformações aplicadas.',
+    model: 'inherit'
+  }
+};
+const baseOptions = {
+  model: 'claude-sonnet-4-5-20250929',
+  pathToClaudeCodeExecutable: cli,
+  cwd: '/vercel/sandbox',
+  additionalDirectories: ['/vercel/sandbox'],
+  tools: { type: 'preset', preset: 'claude_code' },
+  permissionMode: 'acceptEdits',
+  includePartialMessages: true,
+  maxThinkingTokens: 2048,
+  settingSources: ['project'],
+  allowedTools: ['Skill','Read','Write','Edit','Grep','Glob','Bash'],
+  agents,
+  // For slash commands, constrain to a single turn
+  maxTurns: 1,
+};
+// Try to resume an existing SDK session (V1) to keep history/context
+let resumeId = null;
+try {
+  const raw = fs.readFileSync('/vercel/sandbox/.session/session.json','utf8');
+  const parsed = JSON.parse(raw);
+  if (parsed && parsed.sessionId) resumeId = parsed.sessionId;
+} catch {}
+const q = query({ prompt, options: Object.assign({}, baseOptions, resumeId ? { resume: resumeId, continue: true } : {}) });
+// Emit list of available agents for UI palette
+try { console.log(JSON.stringify({ type: 'agents_list', agents: Object.keys(agents) })); } catch {}
+// Emit slash commands available from SDK
+try {
+  const cmds = await q.supportedCommands();
+  console.log(JSON.stringify({ type: 'slash_commands', commands: cmds }));
+} catch {}
+for await (const msg of q) {
+  if (msg && msg.type === 'system') {
+    try {
+      // Persist new session id on /clear or fresh init
+      if (msg.subtype === 'init' && (msg as any).session_id) {
+        const sid = (msg as any).session_id;
+        fs.mkdirSync('/vercel/sandbox/.session', { recursive: true });
+        fs.writeFileSync('/vercel/sandbox/.session/session.json', JSON.stringify({ sessionId: sid }));
+      }
+      // Forward compact boundaries and other system notices
+      const out = { type: 'system', subtype: (msg as any).subtype } as any;
+      if (Array.isArray((msg as any).slash_commands)) out.slash_commands = (msg as any).slash_commands;
+      if ((msg as any).compact_metadata) out.compact_metadata = (msg as any).compact_metadata;
+      console.log(JSON.stringify(out));
+    } catch {}
+  } else if (msg.type === 'stream_event') {
+    const ev = (msg as any).event;
+    if (ev && ev.type === 'content_block_delta' && ev.delta && ev.delta.type === 'text_delta' && (ev.delta.text || ev.delta.text === '')) {
+      const t = ev.delta.text ?? '';
+      if (t) console.log(JSON.stringify({ type: 'delta', text: t }));
+    }
+  } else if (msg.type === 'result' && msg.subtype === 'success') {
+    console.log(JSON.stringify({ type: 'final', text: (msg as any).result ?? '' }));
+  }
+}
+`.trim()
+
+    await sess.sandbox.writeFiles([{ path: '/vercel/sandbox/agent-slash-stream.mjs', content: Buffer.from(runner) }])
+
+    const stream = new ReadableStream<Uint8Array>({
+      start: async (controller) => {
+        try {
+          const cmd: any = await (sess.sandbox as any).runCommand({
+            cmd: 'node',
+            args: ['agent-slash-stream.mjs', slash],
+            env: { ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY || '' },
+            detached: true,
+          })
+          controller.enqueue(enc.encode('event: start\ndata: ok\n\n'))
+          let outBuf = ''
+          let errBuf = ''
+          for await (const log of cmd.logs()) {
+            const ch = String(log.data)
+            if (log.stream === 'stdout') {
+              outBuf += ch
+              let idx
+              while ((idx = outBuf.indexOf('\n')) >= 0) {
+                const line = outBuf.slice(0, idx).trim(); outBuf = outBuf.slice(idx + 1)
+                if (!line) continue
+                controller.enqueue(enc.encode(`data: ${line}\n\n`))
+              }
+            } else {
+              errBuf += ch
+            }
+          }
+          if (errBuf) controller.enqueue(enc.encode(`event: stderr\ndata: ${JSON.stringify(errBuf)}\n\n`))
+          controller.enqueue(enc.encode('event: end\ndata: done\n\n'))
+          controller.close()
+        } catch (e: any) {
+          controller.enqueue(enc.encode(`event: error\ndata: ${JSON.stringify(e?.message || String(e))}\n\n`))
+          controller.close()
+        }
+      }
+    })
+    return new Response(stream, { headers: { 'Content-Type': 'text/event-stream; charset=utf-8', 'Cache-Control': 'no-cache, no-transform', Connection: 'keep-alive', 'X-Accel-Buffering': 'no' } })
   }
 
   function validatePath(p?: string) {

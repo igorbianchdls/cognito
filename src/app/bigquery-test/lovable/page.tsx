@@ -47,9 +47,15 @@ export default function LovableLikeStudioPage() {
     setSending(true)
     setError(null)
     const base = [...messages, { role: 'user' as const, content: text }]
-    // placeholder assistant for streaming
-    setMessages([...base, { role: 'assistant', content: '' }])
-    const assistantIndex = base.length
+    const isSlash = text.startsWith('/')
+    // placeholder assistant only for normal chat (non-slash)
+    let assistantIndex = -1
+    if (!isSlash) {
+      setMessages([...base, { role: 'assistant', content: '' }])
+      assistantIndex = base.length
+    } else {
+      setMessages(base)
+    }
     setReasoningOpen(false)
     setReasoningText('')
     setToolsOpen(false)
@@ -59,7 +65,7 @@ export default function LovableLikeStudioPage() {
       const res = await fetch('/api/sandbox', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'chat-send-stream', chatId, history: base })
+        body: JSON.stringify(isSlash ? { action: 'chat-slash', chatId, prompt: text } : { action: 'chat-send-stream', chatId, history: base })
       })
       if (!res.ok || !res.body) {
         const txt = await res.text().catch(() => '')
@@ -80,14 +86,16 @@ export default function LovableLikeStudioPage() {
           if (!line) continue
           const payload = line.slice(6)
           try {
-            const evt = JSON.parse(payload) as { type?: string; text?: string; tool_name?: string; input?: any; output?: any; error?: string; name?: string; index?: number; partial?: string; agents?: string[]; commands?: Array<{ name: string; description?: string; argumentHint?: string }> }
+            const evt = JSON.parse(payload) as { type?: string; text?: string; tool_name?: string; input?: any; output?: any; error?: string; name?: string; index?: number; partial?: string; agents?: string[]; commands?: Array<{ name: string; description?: string; argumentHint?: string }>; subtype?: string; compact_metadata?: any }
             if (evt.type === 'delta' && typeof evt.text === 'string') {
-              setMessages(prev => {
-                const copy = prev.slice()
-                const cur = copy[assistantIndex]
-                if (cur && cur.role === 'assistant') cur.content += evt.text
-                return copy
-              })
+              if (assistantIndex >= 0) {
+                setMessages(prev => {
+                  const copy = prev.slice()
+                  const cur = copy[assistantIndex]
+                  if (cur && cur.role === 'assistant') cur.content += evt.text
+                  return copy
+                })
+              }
             } else if (evt.type === 'reasoning_start') {
               setReasoningOpen(true)
               setReasoningText('')
@@ -96,6 +104,11 @@ export default function LovableLikeStudioPage() {
               setReasoningText(prev => prev + evt.text)
             } else if (evt.type === 'reasoning_end') {
               // no-op; keep panel open with accumulated text
+            } else if (evt.type === 'system') {
+              // Minimal feedback for slash commands like /compact
+              if (evt.subtype === 'compact_boundary') {
+                setMessages(prev => [...prev, { role: 'assistant', content: 'Histórico compactado com sucesso.' }])
+              }
             } else if (evt.type === 'tool_start') {
               setToolsOpen(true)
               const detail = formatToolEvent('start', evt)
