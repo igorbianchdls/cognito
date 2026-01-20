@@ -64,12 +64,12 @@ for await (const msg of q) {
       const t = ev.delta.text ?? '';
       if (t) console.log(JSON.stringify({ type: 'delta', text: t }));
     }
-    // Reasoning/thinking blocks
-    if (ev && ev.type === 'content_block_start' && ev.content_block && (ev.content_block.type === 'reasoning' || ev.content_block.type === 'thinking')) {
+    // Thinking blocks
+    if (ev && ev.type === 'content_block_start' && ev.content_block && ev.content_block.type === 'thinking') {
       console.log(JSON.stringify({ type: 'reasoning_start' }));
     }
-    if (ev && ev.type === 'content_block_delta' && ev.delta && (ev.delta.type === 'thinking_delta' || ev.delta.type === 'reasoning_delta')) {
-      const t = (ev.delta.text ?? ev.delta.thinking ?? ev.delta.content ?? '').toString();
+    if (ev && ev.type === 'content_block_delta' && ev.delta && ev.delta.type === 'thinking_delta') {
+      const t = (ev.delta.thinking ?? ev.delta.text ?? ev.delta.content ?? '').toString();
       if (t) console.log(JSON.stringify({ type: 'reasoning_delta', text: t }));
     }
     if (ev && ev.type === 'content_block_stop') {
