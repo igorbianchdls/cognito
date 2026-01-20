@@ -31,6 +31,27 @@ import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
 const cli = require.resolve('@anthropic-ai/claude-code/cli.js');
 const prompt = process.argv[2] || '';
+// Define subagents (programáticos)
+const agents = {
+  sqlAnalyst: {
+    description: 'Analisa esquemas e escreve SQL (BigQuery) com segurança',
+    tools: ['Read','Grep','Glob','Write','Edit'],
+    prompt: 'Você é um analista SQL cuidadoso. Prefira SQL parametrizado, explique joins e filtros, valide nomes de tabelas/colunas antes de usar. Evite consultas caras sem necessidade.',
+    model: 'inherit'
+  },
+  uiScaffold: {
+    description: 'Cria/expande páginas HTML/CSS/JS simples (scaffold de UI)',
+    tools: ['Read','Write','Edit'],
+    prompt: 'Crie artefatos web mínimos e incrementais. Use HTML semântico, CSS leve e JS simples. Mantenha mudanças pequenas e testáveis.',
+    model: 'inherit'
+  },
+  dataCleaner: {
+    description: 'Limpa/normaliza dados CSV/JSON e gera saídas limpas',
+    tools: ['Read','Write','Edit','Grep','Glob'],
+    prompt: 'Faça limpeza de dados de forma segura: preservar colunas, normalizar formatos, remover linhas inválidas documentando critérios. Explique as transformações aplicadas.',
+    model: 'inherit'
+  }
+};
 const options = {
   model: 'claude-sonnet-4-5-20250929',
   pathToClaudeCodeExecutable: cli,
@@ -40,6 +61,7 @@ const options = {
   permissionMode: 'acceptEdits',
   includePartialMessages: true,
   maxThinkingTokens: 2048,
+  agents,
   hooks: {
     PreToolUse: [{ hooks: [async (input) => {
       try { console.log(JSON.stringify({ type: 'tool_start', tool_name: input.tool_name, input: input.tool_input })); } catch {}
