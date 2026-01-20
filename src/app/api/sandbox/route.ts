@@ -37,6 +37,23 @@ export async function POST(req: Request) {
         await sandbox.stop().catch(() => {})
         return Response.json({ ok: false, error: 'install failed', stdout: o, stderr: e, timeline }, { status: 500 })
       }
+      // Seed default Skills into /vercel/sandbox/.claude/skills
+      const t2 = Date.now()
+      // Ensure skill directories exist
+      const mk = await sandbox.runCommand({ cmd: 'node', args: ['-e', `
+const fs=require('fs');
+fs.mkdirSync('/vercel/sandbox/.claude/skills/web-scaffold', { recursive: true });
+fs.mkdirSync('/vercel/sandbox/.claude/skills/bq-analyst', { recursive: true });
+` ] })
+      timeline.push({ name: 'mkdir-skills', ms: Date.now() - t2, ok: mk.exitCode === 0, exitCode: mk.exitCode })
+      const skills: { path: string; content: Buffer }[] = []
+      const webSkill = `---\nname: Web Scaffold\ndescription: Create or extend a minimal website skeleton (HTML/CSS/JS) inside the project sandbox.\n---\n\nYou are a Skill that helps scaffold simple web projects.\n\nGuidelines:\n- Create files under /vercel/sandbox (cwd).\n- Prefer minimal HTML in index.html and lightweight CSS/JS.\n- If asked to add a component, generate a simple self-contained HTML section and CSS.\n- Use the agent tools (Write/Edit) to modify files.\n- Keep changes small and incremental.\n\nExamples:\n- Create index.html with header, main section and footer.\n- Add styles.css with a neutral palette.\n- Add script.js with a small interactivity snippet.\n`;
+      const bqSkill = `---\nname: BigQuery Analyst\ndescription: Analyze and propose BigQuery SQL queries based on dataset structure.\n---\n\nYou are a Skill that assists with BigQuery queries.\n\nGuidelines:\n- Ask for or read available table names and schemas when necessary.\n- Propose parameterized SQL and explain joins and filters.\n- When user requests, write files (e.g., queries/analysis.sql).\n- Keep queries safe and scoped.\n`;
+      skills.push({ path: '/vercel/sandbox/.claude/skills/web-scaffold/SKILL.md', content: Buffer.from(webSkill, 'utf8') })
+      skills.push({ path: '/vercel/sandbox/.claude/skills/bq-analyst/SKILL.md', content: Buffer.from(bqSkill, 'utf8') })
+      const t3 = Date.now()
+      await sandbox.writeFiles(skills)
+      timeline.push({ name: 'seed-skills', ms: Date.now() - t3, ok: true })
       const id = genId()
       const session: ChatSession = { id, sandbox, createdAt: Date.now(), lastUsedAt: Date.now(), mode: 'local' }
       SESSIONS.set(id, session)
@@ -113,6 +130,8 @@ const options = {
   permissionMode: 'acceptEdits',
   includePartialMessages: true,
   maxThinkingTokens: 2048,
+  settingSources: ['project'],
+  allowedTools: ['Skill','Read','Write','Edit','Grep','Glob','Bash'],
   hooks: {
     PreToolUse: [{ hooks: [async (input) => {
       try { console.log(JSON.stringify({ type: 'tool_start', tool_name: input.tool_name, input: input.tool_input })); } catch {}
@@ -246,7 +265,8 @@ const fs = require('fs');
 const p = process.env.TARGET_PATH;
 try {
   const names = fs.readdirSync(p, { withFileTypes: true }).map(d=>({ name: d.name, type: d.isDirectory()?'dir':'file', path: require('path').join(p, d.name) }));
-  const filtered = names.filter(e => !e.name.startsWith('.') && e.name !== 'node_modules' && e.name !== '.cache');
+  // Show .claude explicitly; still hide other hidden entries and heavy dirs
+  const filtered = names.filter(e => (e.name === '.claude' || !e.name.startsWith('.')) && e.name !== 'node_modules' && e.name !== '.cache');
   filtered.sort((a,b)=> a.type===b.type ? a.name.localeCompare(b.name) : (a.type==='dir'?-1:1));
   console.log(JSON.stringify(filtered));
 } catch(e){ console.error(String(e.message||e)); process.exit(1); }
