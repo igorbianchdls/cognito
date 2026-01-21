@@ -19,16 +19,20 @@ export default function ChatRoutePage() {
         <div className="flex h-full overflow-hidden">
           <div className="flex-1">
             <PageContainer>
-              <div className={`grid h-full ${showSandbox ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}>
-                <div className="h-full min-h-0">
-                  <ChatPanel onOpenSandbox={() => setShowSandbox(true)} />
-                </div>
-                {showSandbox && (
+              {showSandbox ? (
+                <div className="grid h-full grid-cols-1 lg:grid-cols-2">
+                  <div className="h-full min-h-0">
+                    <ChatPanel onOpenSandbox={() => setShowSandbox(true)} />
+                  </div>
                   <div className="h-full min-h-0">
                     <SandboxPanel onClose={() => setShowSandbox(false)} />
                   </div>
-                )}
-              </div>
+                </div>
+              ) : (
+                <div className="h-full">
+                  <ChatPanel onOpenSandbox={() => setShowSandbox(true)} />
+                </div>
+              )}
             </PageContainer>
           </div>
         </div>
