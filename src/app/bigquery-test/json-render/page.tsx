@@ -37,7 +37,7 @@ function Playground() {
     const t = action?.type;
     if (t === "refresh_data") {
       // Fake refresh: jitter values slightly
-      setData((prev) => ({
+      setData((prev: any) => ({
         revenue: Math.round(prev.revenue * (0.98 + Math.random() * 0.04)),
         growth: Math.max(0, Math.min(1, prev.growth + (Math.random() - 0.5) * 0.02)),
       }));

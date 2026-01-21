@@ -39,24 +39,22 @@ export function DataProvider({ initialData, children }: { initialData?: AnyRecor
   return <DataContext.Provider value={ctx}>{children}</DataContext.Provider>;
 }
 
-export function useData() {
+export function useData(): DataContextType {
   const ctx = useContext(DataContext);
   if (!ctx) {
-    // Provide a harmless fallback outside of provider
+    // Provide a harmless typed fallback outside of provider
     return {
       data: {},
       setData: (() => { /* noop */ }) as React.Dispatch<React.SetStateAction<AnyRecord>>,
       mergeData: () => {},
       getValueByPath: (_: string, fallback?: any) => fallback,
-      __missingProvider: true as const,
-    } as any;
+    };
   }
   return ctx;
 }
 
-export function useDataValue(path: string, fallback?: any) {
+export function useDataValue(path: string, fallback?: any): any {
   const ctx = useContext(DataContext);
   if (!ctx) return fallback;
   return ctx.getValueByPath(path, fallback);
 }
-
