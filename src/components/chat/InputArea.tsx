@@ -20,9 +20,10 @@ type Props = {
   onChange: (value: string) => void;
   onSubmit: (e: FormEvent) => void;
   status?: ChatStatus | string;
+  onOpenSandbox?: () => void;
 };
 
-export default function InputArea({ value, onChange, onSubmit, status = 'idle' }: Props) {
+export default function InputArea({ value, onChange, onSubmit, status = 'idle', onOpenSandbox }: Props) {
   return (
     <div className="border-t pt-2">
       <PromptInput onSubmit={onSubmit} className="border-gray-100">
@@ -37,7 +38,7 @@ export default function InputArea({ value, onChange, onSubmit, status = 'idle' }
               <Plus size={16} />
               <span>Upload</span>
             </PromptInputButton>
-            <PromptInputButton>
+            <PromptInputButton onClick={() => onOpenSandbox?.()}>
               <BarChart3 size={16} />
               <span>Artifact</span>
             </PromptInputButton>

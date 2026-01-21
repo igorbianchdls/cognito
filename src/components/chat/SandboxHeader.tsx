@@ -5,8 +5,13 @@ import { ChevronsRight } from 'lucide-react';
 import SandboxTabs from './SandboxTabs';
 import StatusBadge from './StatusBadge';
 import HeaderActions from './HeaderActions';
+import { X } from 'lucide-react';
 
-export default function SandboxHeader() {
+type Props = {
+  onClose?: () => void;
+};
+
+export default function SandboxHeader({ onClose }: Props) {
   return (
     <div className="flex items-center justify-between border-b px-3 py-3 bg-white">
       {/* Left group: chevrons + tabs */}
@@ -26,8 +31,20 @@ export default function SandboxHeader() {
       <div className="hidden sm:block">
         <StatusBadge />
       </div>
-      {/* Right: actions + deploy */}
-      <HeaderActions />
+      {/* Right: actions + deploy + close */}
+      <div className="flex items-center gap-1">
+        <HeaderActions />
+        {onClose && (
+          <button
+            type="button"
+            aria-label="Close sandbox"
+            onClick={onClose}
+            className="h-8 w-8 inline-flex items-center justify-center rounded-md text-gray-600 hover:bg-gray-100 hover:text-gray-800 ml-1"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        )}
+      </div>
     </div>
   );
 }

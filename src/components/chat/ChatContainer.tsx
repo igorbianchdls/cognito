@@ -7,7 +7,7 @@ import PerguntaDoUsuario from './PerguntaDoUsuario';
 import RespostaDaIa from './RespostaDaIa';
 import InputArea from './InputArea';
 
-export default function ChatContainer() {
+export default function ChatContainer({ onOpenSandbox }: { onOpenSandbox?: () => void }) {
   const [input, setInput] = useState('');
 
   // Static mock messages just for UI
@@ -43,9 +43,8 @@ export default function ChatContainer() {
         )}
       </div>
       <div className="px-4 pb-3">
-        <InputArea value={input} onChange={setInput} onSubmit={handleSubmit} status="idle" />
+        <InputArea value={input} onChange={setInput} onSubmit={handleSubmit} status="idle" onOpenSandbox={onOpenSandbox} />
       </div>
     </div>
   );
 }
-
