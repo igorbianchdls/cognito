@@ -1,19 +1,9 @@
 "use client";
 
 import React from "react";
+import { useDataValue } from "@/components/json-render/context";
 
 type AnyRecord = Record<string, any>;
-
-function getValueByPath(data: AnyRecord, path: string): any {
-  if (!path) return undefined;
-  const parts = path.split(".").map((p) => p.trim()).filter(Boolean);
-  let curr: any = data;
-  for (const p of parts) {
-    if (curr == null) return undefined;
-    curr = curr[p];
-  }
-  return curr;
-}
 
 function formatValue(val: any, fmt: "currency" | "percent" | "number"): string {
   const n = Number(val ?? 0);
@@ -43,7 +33,9 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     const label = element?.props?.label ?? "";
     const valuePath = element?.props?.valuePath ?? "";
     const fmt = (element?.props?.format ?? "number") as "currency" | "percent" | "number";
-    const value = getValueByPath(data || {}, valuePath);
+    // Prefer DataProvider; fallback to data prop
+    const fallback = React.useMemo(() => (data ? (valuePath ? valuePath.split('.').reduce((acc: any, k) => (acc ? acc[k] : undefined), data) : undefined) : undefined), [data, valuePath]);
+    const value = useDataValue(valuePath, fallback);
     return (
       <div className="flex items-baseline justify-between">
         <span className="text-sm text-gray-500">{label}</span>
@@ -66,4 +58,3 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     );
   },
 };
-
