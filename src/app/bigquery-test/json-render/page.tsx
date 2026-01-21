@@ -23,6 +23,20 @@ const SAMPLE_TREE_TEXT = JSON.stringify([
       { type: "BarChart", props: { title: "Vendas (R$)", dataPath: "salesByMonth", xKey: "month", yKey: "total", format: "currency", height: 180 } },
     ],
   },
+  {
+    type: "Card",
+    props: { title: "Tendência de Receita" },
+    children: [
+      { type: "LineChart", props: { title: "Receita", dataPath: "salesByMonth", xKey: "month", yKey: "total", format: "currency", height: 180, nivo: { curve: 'monotoneX', pointSize: 6, gridY: true } } },
+    ],
+  },
+  {
+    type: "Card",
+    props: { title: "Participação por Categoria" },
+    children: [
+      { type: "PieChart", props: { title: "Categorias", dataPath: "categoryShare", xKey: "category", yKey: "value", format: "percent", height: 220, nivo: { innerRadius: 0.3 } } },
+    ],
+  },
 ], null, 2);
 
 function Playground() {
@@ -139,6 +153,13 @@ export default function JsonRenderPage() {
             { month: 'Mar', total: 15000 },
             { month: 'Abr', total: 22000 },
             { month: 'Mai', total: 17500 },
+          ],
+          categoryShare: [
+            { category: 'A', value: 0.35 },
+            { category: 'B', value: 0.25 },
+            { category: 'C', value: 0.20 },
+            { category: 'D', value: 0.12 },
+            { category: 'E', value: 0.08 },
           ],
         }}>
           <Playground />

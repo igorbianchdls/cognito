@@ -2,6 +2,8 @@
 
 import React from "react";
 import JsonRenderBarChart from "@/components/json-render/components/BarChart";
+import JsonRenderLineChart from "@/components/json-render/components/LineChart";
+import JsonRenderPieChart from "@/components/json-render/components/PieChart";
 import { useDataValue, useData } from "@/components/json-render/context";
 
 type AnyRecord = Record<string, any>;
@@ -75,6 +77,8 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
   },
 
   BarChart: ({ element }) => <JsonRenderBarChart element={element} />,
+  LineChart: ({ element }) => <JsonRenderLineChart element={element} />,
+  PieChart: ({ element }) => <JsonRenderPieChart element={element} />,
 
   Button: ({ element, onAction }) => {
     const label = element?.props?.label ?? "Button";
