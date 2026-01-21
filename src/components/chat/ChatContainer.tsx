@@ -7,7 +7,7 @@ import PerguntaDoUsuario from './PerguntaDoUsuario';
 import RespostaDaIa from './RespostaDaIa';
 import InputArea from './InputArea';
 
-export default function ChatContainer({ onOpenSandbox }: { onOpenSandbox?: () => void }) {
+export default function ChatContainer({ onOpenSandbox, withSideMargins }: { onOpenSandbox?: () => void; withSideMargins?: boolean }) {
   const [input, setInput] = useState('');
 
   // Static mock messages just for UI
@@ -31,19 +31,21 @@ export default function ChatContainer({ onOpenSandbox }: { onOpenSandbox?: () =>
   };
 
   return (
-    <div className="h-full grid grid-rows-[auto_1fr_auto]">
+    <div className="h-full grid grid-rows-[auto_1fr]">
       <Header />
-      <div className="overflow-y-auto min-h-0 px-4 py-4">
-        {messages.map((m) =>
-          m.role === 'user' ? (
-            <PerguntaDoUsuario key={m.id} message={m} />
-          ) : (
-            <RespostaDaIa key={m.id} message={m} />
-          )
-        )}
-      </div>
-      <div className="px-4 pb-3">
-        <InputArea value={input} onChange={setInput} onSubmit={handleSubmit} status="idle" onOpenSandbox={onOpenSandbox} />
+      <div className="h-full grid grid-rows-[1fr_auto] min-h-0" style={withSideMargins ? { marginLeft: '20%', marginRight: '20%' } : undefined}>
+        <div className="overflow-y-auto min-h-0 px-4 py-4">
+          {messages.map((m) =>
+            m.role === 'user' ? (
+              <PerguntaDoUsuario key={m.id} message={m} />
+            ) : (
+              <RespostaDaIa key={m.id} message={m} />
+            )
+          )}
+        </div>
+        <div className="px-4 pb-3">
+          <InputArea value={input} onChange={setInput} onSubmit={handleSubmit} status="idle" onOpenSandbox={onOpenSandbox} />
+        </div>
       </div>
     </div>
   );

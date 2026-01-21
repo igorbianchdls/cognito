@@ -22,7 +22,7 @@ export default function ChatRoutePage() {
               {showSandbox ? (
                 <div className="grid h-full grid-cols-1 lg:grid-cols-2">
                   <div className="h-full min-h-0">
-                    <ChatPanel onOpenSandbox={() => setShowSandbox(true)} />
+                    <ChatPanel onOpenSandbox={() => setShowSandbox(true)} withSideMargins={false} />
                   </div>
                   <div className="h-full min-h-0">
                     <SandboxPanel onClose={() => setShowSandbox(false)} />
@@ -30,7 +30,7 @@ export default function ChatRoutePage() {
                 </div>
               ) : (
                 <div className="h-full">
-                  <ChatPanel onOpenSandbox={() => setShowSandbox(true)} />
+                  <ChatPanel onOpenSandbox={() => setShowSandbox(true)} withSideMargins={true} />
                 </div>
               )}
             </PageContainer>
