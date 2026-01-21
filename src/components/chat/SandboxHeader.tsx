@@ -8,7 +8,7 @@ import HeaderActions from './HeaderActions';
 
 export default function SandboxHeader() {
   return (
-    <div className="flex items-center justify-between h-12 border-b px-3 bg-white">
+    <div className="flex items-center justify-between border-b px-3 py-3 bg-white">
       {/* Left group: chevrons + tabs */}
       <div className="flex items-center gap-3 min-w-0">
         <button
