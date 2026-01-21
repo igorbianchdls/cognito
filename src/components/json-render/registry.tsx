@@ -11,6 +11,8 @@ import { $kpiDefaults } from "@/stores/ui/json-render/kpiStore";
 import { $barChartDefaults } from "@/stores/ui/json-render/barChartStore";
 import { $lineChartDefaults } from "@/stores/ui/json-render/lineChartStore";
 import { $pieChartDefaults } from "@/stores/ui/json-render/pieChartStore";
+import { $headerDefaults } from "@/stores/ui/json-render/headerStore";
+import { $divDefaults } from "@/stores/ui/json-render/divStore";
 
 type AnyRecord = Record<string, any>;
 
@@ -27,6 +29,33 @@ function formatValue(val: any, fmt: "currency" | "percent" | "number"): string {
   }
 }
 
+function styleVal(v: unknown): string | undefined {
+  if (v === undefined || v === null) return undefined;
+  return typeof v === 'number' ? `${v}px` : String(v);
+}
+
+function mapJustify(v?: string): React.CSSProperties['justifyContent'] | undefined {
+  switch (v) {
+    case 'start': return 'flex-start';
+    case 'center': return 'center';
+    case 'end': return 'flex-end';
+    case 'between': return 'space-between';
+    case 'around': return 'space-around';
+    case 'evenly': return 'space-evenly';
+    default: return undefined;
+  }
+}
+
+function mapAlign(v?: string): React.CSSProperties['alignItems'] | undefined {
+  switch (v) {
+    case 'start': return 'flex-start';
+    case 'center': return 'center';
+    case 'end': return 'flex-end';
+    case 'stretch': return 'stretch';
+    default: return undefined;
+  }
+}
+
 export const registry: Record<string, React.FC<{ element: any; children?: React.ReactNode; data?: AnyRecord; onAction?: (action: any) => void }>> = {
   Card: ({ element, children }) => {
     const title = element?.props?.title ?? "";
@@ -35,6 +64,59 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
         <h3 className="text-base font-semibold text-gray-900 mb-2">{title}</h3>
         <div className="space-y-2">{children}</div>
       </div>
+    );
+  },
+
+  Header: ({ element, children }) => {
+    const defs = useStore($headerDefaults);
+    const p = deepMerge(defs as any, (element?.props || {}) as any) as AnyRecord;
+    const align = (p.align ?? 'left') as 'left'|'center'|'right';
+    const containerStyle: React.CSSProperties = {
+      backgroundColor: p.backgroundColor,
+      color: p.textColor,
+      padding: styleVal(p.padding),
+      margin: styleVal(p.margin),
+      borderColor: p.borderColor,
+      borderWidth: p.borderWidth,
+      borderStyle: p.borderWidth ? 'solid' : undefined,
+      borderRadius: p.borderRadius,
+      width: styleVal(p.width),
+      height: styleVal(p.height),
+      textAlign: align,
+    };
+    return (
+      <div className="rounded-md" style={containerStyle}>
+        <div>
+          <div className="text-lg font-semibold" style={{ color: p.textColor }}>{p.title}</div>
+          {p.subtitle && <div className="text-sm" style={{ color: p.subtitleColor }}>{p.subtitle}</div>}
+        </div>
+        {children && <div className="mt-2">{children}</div>}
+      </div>
+    );
+  },
+
+  Div: ({ element, children }) => {
+    const defs = useStore($divDefaults);
+    const p = deepMerge(defs as any, (element?.props || {}) as any) as AnyRecord;
+    const style: React.CSSProperties = {
+      display: 'flex',
+      flexDirection: (p.direction ?? 'column') as any,
+      gap: styleVal(p.gap),
+      flexWrap: p.wrap ? 'wrap' : 'nowrap',
+      justifyContent: mapJustify(p.justify),
+      alignItems: mapAlign(p.align),
+      padding: styleVal(p.padding),
+      margin: styleVal(p.margin),
+      backgroundColor: p.backgroundColor,
+      borderColor: p.borderColor,
+      borderWidth: p.borderWidth,
+      borderStyle: p.borderWidth ? 'solid' : undefined,
+      borderRadius: p.borderRadius,
+      width: styleVal(p.width),
+      height: styleVal(p.height),
+    };
+    return (
+      <div style={style}>{children}</div>
     );
   },
 

@@ -13,6 +13,42 @@ const ActionEnum = z.enum(Object.keys(actions) as [keyof typeof actions, ...Arra
 
 export const catalog = {
   components: {
+    Header: {
+      props: z.object({
+        title: z.string(),
+        subtitle: z.string().optional(),
+        align: z.enum(["left","center","right"]).optional(),
+        backgroundColor: z.string().optional(),
+        textColor: z.string().optional(),
+        subtitleColor: z.string().optional(),
+        padding: z.union([z.number(), z.string()]).optional(),
+        margin: z.union([z.number(), z.string()]).optional(),
+        borderColor: z.string().optional(),
+        borderWidth: z.number().optional(),
+        borderRadius: z.number().optional(),
+        width: z.union([z.number(), z.string()]).optional(),
+        height: z.union([z.number(), z.string()]).optional(),
+      }).strict(),
+      hasChildren: true,
+    },
+    Div: {
+      props: z.object({
+        direction: z.enum(["row","column"]).optional(),
+        gap: z.union([z.number(), z.string()]).optional(),
+        wrap: z.boolean().optional(),
+        justify: z.enum(["start","center","end","between","around","evenly"]).optional(),
+        align: z.enum(["start","center","end","stretch"]).optional(),
+        padding: z.union([z.number(), z.string()]).optional(),
+        margin: z.union([z.number(), z.string()]).optional(),
+        backgroundColor: z.string().optional(),
+        borderColor: z.string().optional(),
+        borderWidth: z.number().optional(),
+        borderRadius: z.number().optional(),
+        width: z.union([z.number(), z.string()]).optional(),
+        height: z.union([z.number(), z.string()]).optional(),
+      }).strict(),
+      hasChildren: true,
+    },
     Card: {
       props: z.object({
         title: z.string(),

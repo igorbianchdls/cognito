@@ -8,11 +8,17 @@ import { DataProvider, useData } from "@/components/json-render/context";
 // Example JSON tree (as text)
 const SAMPLE_TREE_TEXT = JSON.stringify([
   {
+    type: "Header",
+    props: { title: "Dashboard Comercial", subtitle: "Resumo do mês", align: "center", padding: 12, borderRadius: 8, backgroundColor: "#ffffff" }
+  },
+  {
     type: "Card",
     props: { title: "KPIs" },
     children: [
-      { type: "Kpi", props: { label: "Receita", valuePath: "revenue", format: "currency" } },
-      { type: "Kpi", props: { label: "Crescimento", valuePath: "growth", format: "percent" } },
+      { type: "Div", props: { direction: "row", gap: 12, justify: "between", align: "center" }, children: [
+        { type: "Kpi", props: { label: "Receita", valuePath: "revenue", format: "currency" } },
+        { type: "Kpi", props: { label: "Crescimento", valuePath: "growth", format: "percent" } }
+      ]},
       { type: "Button", props: { label: "Atualizar", action: { type: "refresh_data" } } },
     ],
   },
