@@ -27,6 +27,51 @@ export const catalog = {
       }).strict(),
       hasChildren: false,
     },
+    Kpi: {
+      props: z.object({
+        label: z.string(),
+        valuePath: z.string(),
+        format: z.enum(["currency", "percent", "number"]).default("number"),
+        unit: z.string().optional(),
+        deltaPath: z.string().optional(),
+        trend: z.enum(["up", "down", "flat"]).optional(),
+      }).strict(),
+      hasChildren: false,
+    },
+    BarChart: {
+      props: z.object({
+        title: z.string().optional(),
+        dataPath: z.string(),
+        xKey: z.string(),
+        yKey: z.string(),
+        format: z.enum(["currency", "percent", "number"]).default("number"),
+        height: z.number().optional(),
+        colorScheme: z.union([z.string(), z.array(z.string())]).optional(),
+        nivo: z.object({
+          padding: z.number().optional(),
+          groupMode: z.enum(["grouped","stacked"]).optional(),
+          gridX: z.boolean().optional(),
+          gridY: z.boolean().optional(),
+          enableLabel: z.boolean().optional(),
+          labelSkipWidth: z.number().optional(),
+          labelSkipHeight: z.number().optional(),
+          labelTextColor: z.string().optional(),
+          axisBottom: z.object({
+            tickRotation: z.number().optional(),
+            legend: z.string().optional(),
+            legendOffset: z.number().optional(),
+          }).partial().optional(),
+          axisLeft: z.object({
+            legend: z.string().optional(),
+            legendOffset: z.number().optional(),
+          }).partial().optional(),
+          margin: z.object({ top: z.number().optional(), right: z.number().optional(), bottom: z.number().optional(), left: z.number().optional() }).partial().optional(),
+          animate: z.boolean().optional(),
+          motionConfig: z.string().optional(),
+        }).partial().optional(),
+      }).strict(),
+      hasChildren: false,
+    },
     Button: {
       props: z.object({
         label: z.string(),
@@ -60,4 +105,3 @@ export function validateElement(el: any): { success: true; value: any } | { succ
     return { success: false, error: `${type}: ${msg}` };
   }
 }
-

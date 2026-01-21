@@ -11,16 +11,16 @@ const SAMPLE_TREE_TEXT = JSON.stringify([
     type: "Card",
     props: { title: "KPIs" },
     children: [
-      { type: "Metric", props: { label: "Receita", valuePath: "revenue", format: "currency" } },
-      { type: "Metric", props: { label: "Crescimento", valuePath: "growth", format: "percent" } },
+      { type: "Kpi", props: { label: "Receita", valuePath: "revenue", format: "currency" } },
+      { type: "Kpi", props: { label: "Crescimento", valuePath: "growth", format: "percent" } },
       { type: "Button", props: { label: "Atualizar", action: { type: "refresh_data" } } },
     ],
   },
   {
     type: "Card",
-    props: { title: "Ações" },
+    props: { title: "Vendas por mês" },
     children: [
-      { type: "Button", props: { label: "Exportar PDF", action: { type: "export_report" } } },
+      { type: "BarChart", props: { title: "Vendas (R$)", dataPath: "salesByMonth", xKey: "month", yKey: "total", format: "currency", height: 180 } },
     ],
   },
 ], null, 2);
@@ -131,7 +131,16 @@ export default function JsonRenderPage() {
         <h1 className="text-2xl font-semibold text-gray-900 mb-1">JSON Render (MVP)</h1>
         <p className="text-sm text-gray-600 mb-6">Edite o JSON à esquerda e veja o render à direita.</p>
 
-        <DataProvider initialData={{ revenue: 125000, growth: 0.15 }}>
+        <DataProvider initialData={{
+          revenue: 125000, growth: 0.15,
+          salesByMonth: [
+            { month: 'Jan', total: 12000 },
+            { month: 'Fev', total: 18000 },
+            { month: 'Mar', total: 15000 },
+            { month: 'Abr', total: 22000 },
+            { month: 'Mai', total: 17500 },
+          ],
+        }}>
           <Playground />
         </DataProvider>
       </div>

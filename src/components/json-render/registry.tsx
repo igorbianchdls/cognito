@@ -1,7 +1,8 @@
 "use client";
 
 import React from "react";
-import { useDataValue } from "@/components/json-render/context";
+import JsonRenderBarChart from "@/components/json-render/components/BarChart";
+import { useDataValue, useData } from "@/components/json-render/context";
 
 type AnyRecord = Record<string, any>;
 
@@ -48,6 +49,32 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       </div>
     );
   },
+
+  Kpi: ({ element }) => {
+    const label = element?.props?.label ?? '';
+    const valuePath = element?.props?.valuePath ?? '';
+    const unit = element?.props?.unit as string | undefined;
+    const fmt = (element?.props?.format ?? 'number') as 'currency'|'percent'|'number';
+    const deltaPath = element?.props?.deltaPath as string | undefined;
+    const trendProp = element?.props?.trend as ('up'|'down'|'flat') | undefined;
+    const value = useDataValue(valuePath, undefined);
+    const deltaVal = deltaPath ? useDataValue(deltaPath, undefined) : undefined;
+    const trend: 'up'|'down'|'flat' | undefined = trendProp ?? (typeof deltaVal === 'number' ? (deltaVal > 0 ? 'up' : deltaVal < 0 ? 'down' : 'flat') : undefined);
+    const arrow = trend === 'up' ? '▲' : trend === 'down' ? '▼' : '■';
+    return (
+      <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+        <div className="text-xs text-gray-500 mb-1">{label}</div>
+        <div className="flex items-end gap-2">
+          <div className="text-2xl font-semibold text-gray-900">{formatValue(value, fmt)}{unit ? ` ${unit}` : ''}</div>
+          {deltaVal !== undefined && (
+            <div className={`text-xs ${trend === 'up' ? 'text-green-600' : trend === 'down' ? 'text-red-600' : 'text-gray-500'}`}>{arrow} {formatValue(Math.abs(deltaVal), fmt)}</div>
+          )}
+        </div>
+      </div>
+    );
+  },
+
+  BarChart: ({ element }) => <JsonRenderBarChart element={element} />,
 
   Button: ({ element, onAction }) => {
     const label = element?.props?.label ?? "Button";
