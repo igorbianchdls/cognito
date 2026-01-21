@@ -25,14 +25,10 @@ export default function SandboxTabs() {
             <TabsTrigger
               value={key}
               className={cn(
-                'h-9 px-3 rounded-xl text-sm font-medium',
-                // Inactive: lighter title
-                'text-gray-500 hover:text-gray-700',
-                // Active: gray background + slightly darker title
-                'data-[state=active]:bg-gray-100 data-[state=active]:text-gray-800',
-                'data-[state=active]:border data-[state=active]:border-gray-200',
-                'data-[state=inactive]:bg-transparent data-[state=inactive]:border-transparent',
-                'transition-colors'
+                'h-9 px-3 rounded-xl text-sm font-medium transition-colors',
+                active === key
+                  ? 'bg-gray-100 text-gray-700 border border-gray-200 shadow-none'
+                  : 'text-gray-400 hover:text-gray-600',
               )}
             >
               <Icon className="w-4 h-4 mr-2" />
