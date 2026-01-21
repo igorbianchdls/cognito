@@ -14,7 +14,6 @@ export async function POST(req: Request) {
 
   // Router for JSON actions
   if (action === 'chat-start') return chatStart()
-  if (action === 'chat-send') return chatSend(payload as { chatId?: string; history?: Msg[] })
   if (action === 'chat-stop') return chatStop(payload as { chatId?: string })
   if (action === 'chat-send-stream') return chatSendStream(payload as { chatId?: string; history?: Msg[] })
   if (action === 'chat-slash') return chatSlash(payload as { chatId?: string; prompt?: string })
@@ -126,47 +125,6 @@ fs.mkdirSync('/vercel/sandbox/.claude/skills/bq-analyst', { recursive: true });
       if (sandbox) await sandbox.stop().catch(() => {})
       return Response.json({ ok: false, error: e instanceof Error ? e.message : String(e), timeline }, { status: 500 })
     }
-  }
-
-  async function chatSend({ chatId, history }: { chatId?: string; history?: Msg[] }) {
-    const timeline: Array<{ name: string; ms: number; ok: boolean; exitCode?: number }> = []
-    if (!chatId) return Response.json({ ok: false, error: 'chatId obrigatório' }, { status: 400 })
-    if (!Array.isArray(history) || !history.length) return Response.json({ ok: false, error: 'history vazio' }, { status: 400 })
-    const sess = SESSIONS.get(chatId)
-    if (!sess) return Response.json({ ok: false, error: 'chat não encontrado' }, { status: 404 })
-    sess.lastUsedAt = Date.now()
-    const lines: string[] = ['You are a helpful assistant. Continue the conversation.', '', 'Conversation:']
-    for (const m of history.slice(-12)) lines.push(`${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`)
-    lines.push('Assistant:')
-    const prompt = lines.join('\n').slice(0, 6000)
-    const t1 = Date.now()
-    const runner = `
-import { unstable_v2_prompt } from '@anthropic-ai/claude-agent-sdk';
-import { createRequire } from 'module';
-const require = createRequire(import.meta.url);
-const cli = require.resolve('@anthropic-ai/claude-code/cli.js');
-const prompt = process.argv[2] || '';
-const options = {
-  model: 'claude-sonnet-4-5-20250929',
-  pathToClaudeCodeExecutable: cli,
-  cwd: '/vercel/sandbox',
-  additionalDirectories: ['/vercel/sandbox'],
-  tools: { type: 'preset', preset: 'claude_code' },
-  permissionMode: 'acceptEdits',
-  maxThinkingTokens: 2048
-};
-const res = await unstable_v2_prompt(prompt, options);
-if (res.type === 'result' && res.subtype === 'success') console.log(res.result ?? '');
-else { console.log(''); process.exit(2); }
-`.trim()
-    await sess.sandbox.writeFiles([{ path: '/vercel/sandbox/agent-chat-run.mjs', content: Buffer.from(runner) }])
-    timeline.push({ name: 'write-runner', ms: Date.now() - t1, ok: true })
-    const t2 = Date.now()
-    const run = await sess.sandbox.runCommand({ cmd: 'node', args: ['agent-chat-run.mjs', prompt], env: { ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY || '' } })
-    const [out, err] = await Promise.all([run.stdout().catch(() => ''), run.stderr().catch(() => '')])
-    timeline.push({ name: 'run-prompt', ms: Date.now() - t2, ok: run.exitCode === 0, exitCode: run.exitCode })
-    if (run.exitCode !== 0) return Response.json({ ok: false, error: 'run failed', stdout: out, stderr: err, timeline }, { status: 500 })
-    return Response.json({ ok: true, reply: (out || '').trim(), timeline })
   }
 
   async function chatSendStream({ chatId, history }: { chatId?: string; history?: Msg[] }) {
