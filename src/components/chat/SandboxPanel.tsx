@@ -1,18 +1,24 @@
 "use client";
 
 import React from 'react';
+import SandboxHeader from './SandboxHeader';
+import SandboxBody from './SandboxBody';
 
-type SandboxPanelProps = React.PropsWithChildren<{
+type SandboxPanelProps = {
   className?: string;
   style?: React.CSSProperties;
-}>;
+};
 
-// Minimal container for the Sandbox area. UI internals will be added later.
-export default function SandboxPanel({ className, style, children }: SandboxPanelProps) {
+export default function SandboxPanel({ className, style }: SandboxPanelProps) {
   return (
-    <div className={`h-full min-h-0 w-full overflow-hidden ${className ?? ''}`} style={style}>
-      {children}
+    <div
+      className={`h-full min-h-0 w-full overflow-hidden grid grid-rows-[auto_1fr] border-l border-gray-200 ${
+        className ?? ''
+      }`}
+      style={style}
+    >
+      <SandboxHeader />
+      <SandboxBody />
     </div>
   );
 }
-
