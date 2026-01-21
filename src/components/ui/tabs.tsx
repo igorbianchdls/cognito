@@ -56,9 +56,11 @@ interface TabsTriggerProps extends React.ButtonHTMLAttributes<HTMLButtonElement>
   activeColor?: string
   inactiveColor?: string
   activeBorderColor?: string
+  activeClassName?: string
+  inactiveClassName?: string
 }
 
-export function TabsTrigger({ value, children, disabled = false, className = '', variant = 'default', activeColor, inactiveColor, activeBorderColor, style, ...rest }: TabsTriggerProps) {
+export function TabsTrigger({ value, children, disabled = false, className = '', variant = 'default', activeColor, inactiveColor, activeBorderColor, activeClassName, inactiveClassName, style, ...rest }: TabsTriggerProps) {
   const context = useContext(TabsContext)
   
   if (!context) {
@@ -91,16 +93,18 @@ export function TabsTrigger({ value, children, disabled = false, className = '',
   const computedStyle: React.CSSProperties = { ...(style || {}) }
   const desiredColor = isActive ? activeColor : inactiveColor
   if (desiredColor) computedStyle.color = desiredColor
+  const activeDefaults = 'bg-white text-gray-950 shadow-sm'
+  const inactiveDefaults = 'text-gray-600 hover:text-gray-900'
+  const chosenStateClasses = isActive
+    ? (activeClassName ? activeClassName : activeDefaults)
+    : (inactiveClassName ? inactiveClassName : inactiveDefaults)
+
   return (
     <button
       type="button"
       onClick={() => !disabled && context.onValueChange(value)}
       disabled={disabled}
-      className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ${
-        isActive
-          ? 'bg-white text-gray-950 shadow-sm'
-          : 'text-gray-600 hover:text-gray-900'
-      } ${className}`}
+      className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ${chosenStateClasses} ${className}`}
       style={computedStyle}
       {...rest}
     >
