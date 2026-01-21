@@ -4,6 +4,7 @@ import React from "react";
 import JsonRenderBarChart from "@/components/json-render/components/BarChart";
 import JsonRenderLineChart from "@/components/json-render/components/LineChart";
 import JsonRenderPieChart from "@/components/json-render/components/PieChart";
+import { ThemeProvider, useThemeOverrides } from "@/components/json-render/theme/ThemeContext";
 import { useDataValue, useData } from "@/components/json-render/context";
 import { useStore } from "@nanostores/react";
 import { deepMerge } from "@/stores/ui/json-render/utils";
@@ -58,10 +59,20 @@ function mapAlign(v?: string): React.CSSProperties['alignItems'] | undefined {
 
 export const registry: Record<string, React.FC<{ element: any; children?: React.ReactNode; data?: AnyRecord; onAction?: (action: any) => void }>> = {
   Card: ({ element, children }) => {
-    const title = element?.props?.title ?? "";
+    const theme = useThemeOverrides();
+    const p = deepMerge(theme.components?.Card || {}, element?.props || {}) as AnyRecord;
+    const title = p.title ?? "";
+    const style: React.CSSProperties = {
+      backgroundColor: p.backgroundColor,
+      borderColor: p.borderColor,
+      borderWidth: p.borderWidth,
+      borderStyle: p.borderWidth ? 'solid' : undefined,
+      borderRadius: p.borderRadius,
+      padding: styleVal(p.padding) || undefined,
+    };
     return (
-      <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-        <h3 className="text-base font-semibold text-gray-900 mb-2">{title}</h3>
+      <div className="rounded-lg shadow-sm" style={style}>
+        {title && <h3 className="text-base font-semibold text-gray-900 mb-2">{title}</h3>}
         <div className="space-y-2">{children}</div>
       </div>
     );
@@ -147,8 +158,9 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
   },
 
   Kpi: ({ element }) => {
+    const theme = useThemeOverrides();
     const defs = useStore($kpiDefaults);
-    const p = deepMerge(defs as any, (element?.props || {}) as any);
+    const p = deepMerge(deepMerge(defs as any, (theme.components?.Kpi || {}) as any), (element?.props || {}) as any);
     const label = p.label ?? '';
     const valuePath = p.valuePath ?? '';
     const unit = p.unit as string | undefined;
@@ -175,18 +187,21 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
   },
 
   BarChart: ({ element }) => {
+    const theme = useThemeOverrides();
     const defs = useStore($barChartDefaults);
-    const merged = deepMerge(defs as any, (element?.props || {}) as any);
+    const merged = deepMerge(deepMerge(defs as any, (theme.components?.BarChart || {}) as any), (element?.props || {}) as any);
     return <JsonRenderBarChart element={{ props: merged }} />;
   },
   LineChart: ({ element }) => {
+    const theme = useThemeOverrides();
     const defs = useStore($lineChartDefaults);
-    const merged = deepMerge(defs as any, (element?.props || {}) as any);
+    const merged = deepMerge(deepMerge(defs as any, (theme.components?.LineChart || {}) as any), (element?.props || {}) as any);
     return <JsonRenderLineChart element={{ props: merged }} />;
   },
   PieChart: ({ element }) => {
+    const theme = useThemeOverrides();
     const defs = useStore($pieChartDefaults);
-    const merged = deepMerge(defs as any, (element?.props || {}) as any);
+    const merged = deepMerge(deepMerge(defs as any, (theme.components?.PieChart || {}) as any), (element?.props || {}) as any);
     return <JsonRenderPieChart element={{ props: merged }} />;
   },
 
@@ -201,6 +216,17 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       >
         {label}
       </button>
+    );
+  },
+
+  Theme: ({ element, children }) => {
+    const name = element?.props?.name as string | undefined;
+    const components = (element?.props?.components || {}) as AnyRecord;
+    const cssVars = (element?.props?.cssVars || {}) as Record<string,string>;
+    return (
+      <ThemeProvider name={name} components={components} cssVars={cssVars}>
+        {children}
+      </ThemeProvider>
     );
   },
 };

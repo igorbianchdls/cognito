@@ -13,6 +13,14 @@ const ActionEnum = z.enum(Object.keys(actions) as [keyof typeof actions, ...Arra
 
 export const catalog = {
   components: {
+    Theme: {
+      props: z.object({
+        name: z.string().optional(),
+        components: z.object({}).passthrough().optional(),
+        cssVars: z.record(z.string()).optional(),
+      }).strict(),
+      hasChildren: true,
+    },
     Header: {
       props: z.object({
         title: z.string(),
