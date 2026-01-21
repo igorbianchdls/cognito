@@ -34,7 +34,12 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     const valuePath = element?.props?.valuePath ?? "";
     const fmt = (element?.props?.format ?? "number") as "currency" | "percent" | "number";
     // Prefer DataProvider; fallback to data prop
-    const fallback = React.useMemo(() => (data ? (valuePath ? valuePath.split('.').reduce((acc: any, k) => (acc ? acc[k] : undefined), data) : undefined) : undefined), [data, valuePath]);
+    const fallback = React.useMemo(() => {
+      if (!data || !valuePath) return undefined;
+      return valuePath
+        .split('.')
+        .reduce((acc: any, k: string) => (acc ? (acc as any)[k] : undefined), data as any);
+    }, [data, valuePath]);
     const value = useDataValue(valuePath, fallback);
     return (
       <div className="flex items-baseline justify-between">
