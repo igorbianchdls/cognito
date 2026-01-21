@@ -8,41 +8,28 @@ import { DataProvider, useData } from "@/components/json-render/context";
 // Example JSON tree (as text)
 const SAMPLE_TREE_TEXT = JSON.stringify([
   {
-    type: "Header",
-    props: { title: "Dashboard Comercial", subtitle: "Resumo do mês", align: "center", padding: 12, borderRadius: 8, backgroundColor: "#ffffff" }
-  },
-  {
-    type: "Card",
-    props: { title: "KPIs" },
+    type: "Theme",
+    props: { name: "light" },
     children: [
-      { type: "Div", props: { direction: "row", gap: 12, justify: "between", align: "center" }, children: [
-        { type: "Kpi", props: { label: "Receita", valuePath: "revenue", format: "currency" } },
-        { type: "Kpi", props: { label: "Crescimento", valuePath: "growth", format: "percent" } }
+      { type: "Header", props: { title: "Dashboard Comercial", subtitle: "Resumo do mês", align: "center" } },
+      { type: "Card", props: { title: "KPIs" }, children: [
+        { type: "Div", props: { direction: "row", gap: 12, justify: "between", align: "center" }, children: [
+          { type: "Kpi", props: { label: "Receita", valuePath: "revenue", format: "currency" } },
+          { type: "Kpi", props: { label: "Crescimento", valuePath: "growth", format: "percent" } }
+        ]},
+        { type: "Button", props: { label: "Atualizar", action: { type: "refresh_data" } } }
       ]},
-      { type: "Button", props: { label: "Atualizar", action: { type: "refresh_data" } } },
-    ],
-  },
-  {
-    type: "Card",
-    props: { title: "Vendas por mês" },
-    children: [
-      { type: "BarChart", props: { title: "Vendas (R$)", dataPath: "salesByMonth", xKey: "month", yKey: "total", format: "currency", height: 180 } },
-    ],
-  },
-  {
-    type: "Card",
-    props: { title: "Tendência de Receita" },
-    children: [
-      { type: "LineChart", props: { title: "Receita", dataPath: "salesByMonth", xKey: "month", yKey: "total", format: "currency", height: 180, nivo: { curve: 'monotoneX', pointSize: 6, gridY: true } } },
-    ],
-  },
-  {
-    type: "Card",
-    props: { title: "Participação por Categoria" },
-    children: [
-      { type: "PieChart", props: { title: "Categorias", dataPath: "categoryShare", xKey: "category", yKey: "value", format: "percent", height: 220, nivo: { innerRadius: 0.3 } } },
-    ],
-  },
+      { type: "Card", props: { title: "Vendas por mês" }, children: [
+        { type: "BarChart", props: { title: "Vendas (R$)", dataPath: "salesByMonth", xKey: "month", yKey: "total", format: "currency", height: 180 } }
+      ]},
+      { type: "Card", props: { title: "Tendência de Receita" }, children: [
+        { type: "LineChart", props: { title: "Receita", dataPath: "salesByMonth", xKey: "month", yKey: "total", format: "currency", height: 180, nivo: { curve: 'monotoneX', pointSize: 6, gridY: true } } }
+      ]},
+      { type: "Card", props: { title: "Participação por Categoria" }, children: [
+        { type: "PieChart", props: { title: "Categorias", dataPath: "categoryShare", xKey: "category", yKey: "value", format: "percent", height: 220, nivo: { innerRadius: 0.3 } } }
+      ]}
+    ]
+  }
 ], null, 2);
 
 function Playground() {

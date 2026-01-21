@@ -15,9 +15,7 @@ export const catalog = {
   components: {
     Theme: {
       props: z.object({
-        name: z.string().optional(),
-        components: z.object({}).passthrough().optional(),
-        cssVars: z.record(z.string()).optional(),
+        name: z.enum(["black","light","blue"]),
       }).strict(),
       hasChildren: true,
     },

@@ -221,10 +221,8 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
 
   Theme: ({ element, children }) => {
     const name = element?.props?.name as string | undefined;
-    const components = (element?.props?.components || {}) as AnyRecord;
-    const cssVars = (element?.props?.cssVars || {}) as Record<string,string>;
     return (
-      <ThemeProvider name={name} components={components} cssVars={cssVars}>
+      <ThemeProvider name={name}>
         {children}
       </ThemeProvider>
     );
