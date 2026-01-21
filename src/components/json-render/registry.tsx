@@ -71,6 +71,8 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     const defs = useStore($headerDefaults);
     const p = deepMerge(defs as any, (element?.props || {}) as any) as AnyRecord;
     const align = (p.align ?? 'left') as 'left'|'center'|'right';
+    const hasBorder = [p.borderWidth, p.borderTopWidth, p.borderRightWidth, p.borderBottomWidth, p.borderLeftWidth]
+      .some((w: any) => typeof w === 'number' && w > 0);
     const containerStyle: React.CSSProperties = {
       backgroundColor: p.backgroundColor,
       color: p.textColor,
@@ -78,7 +80,11 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       margin: styleVal(p.margin),
       borderColor: p.borderColor,
       borderWidth: p.borderWidth,
-      borderStyle: p.borderWidth ? 'solid' : undefined,
+      borderTopWidth: p.borderTopWidth,
+      borderRightWidth: p.borderRightWidth,
+      borderBottomWidth: p.borderBottomWidth,
+      borderLeftWidth: p.borderLeftWidth,
+      borderStyle: hasBorder ? 'solid' : undefined,
       borderRadius: p.borderRadius,
       width: styleVal(p.width),
       height: styleVal(p.height),

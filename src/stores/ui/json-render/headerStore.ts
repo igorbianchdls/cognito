@@ -10,6 +10,10 @@ export type HeaderDefaults = {
   margin?: number|string;
   borderColor?: string;
   borderWidth?: number;
+  borderTopWidth?: number;
+  borderRightWidth?: number;
+  borderBottomWidth?: number;
+  borderLeftWidth?: number;
   borderRadius?: number;
   width?: number|string;
   height?: number|string;
@@ -21,7 +25,8 @@ export const $headerDefaults = atom<HeaderDefaults>({
   textColor: '#111827',
   subtitleColor: '#6b7280',
   padding: 12,
-  borderWidth: 0,
+  borderColor: '#e5e7eb',
+  borderWidth: 1,
   borderRadius: 0,
 });
 
@@ -30,4 +35,3 @@ export const headerDefaultsActions = {
     updateAtomDeep($headerDefaults as any, partial as any);
   }
 };
-
