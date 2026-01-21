@@ -5,6 +5,12 @@ import JsonRenderBarChart from "@/components/json-render/components/BarChart";
 import JsonRenderLineChart from "@/components/json-render/components/LineChart";
 import JsonRenderPieChart from "@/components/json-render/components/PieChart";
 import { useDataValue, useData } from "@/components/json-render/context";
+import { useStore } from "@nanostores/react";
+import { deepMerge } from "@/stores/ui/json-render/utils";
+import { $kpiDefaults } from "@/stores/ui/json-render/kpiStore";
+import { $barChartDefaults } from "@/stores/ui/json-render/barChartStore";
+import { $lineChartDefaults } from "@/stores/ui/json-render/lineChartStore";
+import { $pieChartDefaults } from "@/stores/ui/json-render/pieChartStore";
 
 type AnyRecord = Record<string, any>;
 
@@ -53,15 +59,19 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
   },
 
   Kpi: ({ element }) => {
-    const label = element?.props?.label ?? '';
-    const valuePath = element?.props?.valuePath ?? '';
-    const unit = element?.props?.unit as string | undefined;
-    const fmt = (element?.props?.format ?? 'number') as 'currency'|'percent'|'number';
-    const deltaPath = element?.props?.deltaPath as string | undefined;
-    const trendProp = element?.props?.trend as ('up'|'down'|'flat') | undefined;
+    const defs = useStore($kpiDefaults);
+    const p = deepMerge(defs as any, (element?.props || {}) as any);
+    const label = p.label ?? '';
+    const valuePath = p.valuePath ?? '';
+    const unit = p.unit as string | undefined;
+    const fmt = (p.format ?? 'number') as 'currency'|'percent'|'number';
+    const deltaPath = p.deltaPath as string | undefined;
+    const trendProp = p.trend as ('up'|'down'|'flat'|'auto') | undefined;
     const value = useDataValue(valuePath, undefined);
     const deltaVal = deltaPath ? useDataValue(deltaPath, undefined) : undefined;
-    const trend: 'up'|'down'|'flat' | undefined = trendProp ?? (typeof deltaVal === 'number' ? (deltaVal > 0 ? 'up' : deltaVal < 0 ? 'down' : 'flat') : undefined);
+    const trend: 'up'|'down'|'flat' | undefined = (trendProp === 'auto' || trendProp === undefined)
+      ? (typeof deltaVal === 'number' ? (deltaVal > 0 ? 'up' : deltaVal < 0 ? 'down' : 'flat') : undefined)
+      : (trendProp as any);
     const arrow = trend === 'up' ? '▲' : trend === 'down' ? '▼' : '■';
     return (
       <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
@@ -76,9 +86,21 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     );
   },
 
-  BarChart: ({ element }) => <JsonRenderBarChart element={element} />,
-  LineChart: ({ element }) => <JsonRenderLineChart element={element} />,
-  PieChart: ({ element }) => <JsonRenderPieChart element={element} />,
+  BarChart: ({ element }) => {
+    const defs = useStore($barChartDefaults);
+    const merged = deepMerge(defs as any, (element?.props || {}) as any);
+    return <JsonRenderBarChart element={{ props: merged }} />;
+  },
+  LineChart: ({ element }) => {
+    const defs = useStore($lineChartDefaults);
+    const merged = deepMerge(defs as any, (element?.props || {}) as any);
+    return <JsonRenderLineChart element={{ props: merged }} />;
+  },
+  PieChart: ({ element }) => {
+    const defs = useStore($pieChartDefaults);
+    const merged = deepMerge(defs as any, (element?.props || {}) as any);
+    return <JsonRenderPieChart element={{ props: merged }} />;
+  },
 
   Button: ({ element, onAction }) => {
     const label = element?.props?.label ?? "Button";
