@@ -9,6 +9,7 @@ import SandboxPanel from "@/components/chat/SandboxPanel";
 
 export default function ChatRoutePage() {
   const [showSandbox, setShowSandbox] = useState(false);
+  const [sandboxExpanded, setSandboxExpanded] = useState(false);
 
   return (
     <SidebarProvider>
@@ -20,17 +21,26 @@ export default function ChatRoutePage() {
           <div className="flex-1">
             <PageContainer>
               {showSandbox ? (
-                <div className="grid h-full grid-cols-1 lg:grid-cols-2">
-                  <div className="h-full min-h-0">
-                    <ChatPanel onOpenSandbox={() => setShowSandbox(true)} withSideMargins={false} />
+                sandboxExpanded ? (
+                  <div className="h-full">
+                    <SandboxPanel
+                      onClose={() => { setShowSandbox(false); setSandboxExpanded(false); }}
+                      onExpand={() => setSandboxExpanded(false)}
+                    />
                   </div>
-                  <div className="h-full min-h-0">
-                    <SandboxPanel onClose={() => setShowSandbox(false)} />
+                ) : (
+                  <div className="grid h-full grid-cols-1 lg:grid-cols-2">
+                    <div className="h-full min-h-0">
+                      <ChatPanel onOpenSandbox={() => { setShowSandbox(true); setSandboxExpanded(false); }} withSideMargins={false} />
+                    </div>
+                    <div className="h-full min-h-0">
+                      <SandboxPanel onClose={() => { setShowSandbox(false); setSandboxExpanded(false); }} onExpand={() => setSandboxExpanded(true)} />
+                    </div>
                   </div>
-                </div>
+                )
               ) : (
                 <div className="h-full">
-                  <ChatPanel onOpenSandbox={() => setShowSandbox(true)} withSideMargins={true} />
+                  <ChatPanel onOpenSandbox={() => { setShowSandbox(true); setSandboxExpanded(false); }} withSideMargins={true} />
                 </div>
               )}
             </PageContainer>

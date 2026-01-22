@@ -8,9 +8,10 @@ type SandboxPanelProps = {
   className?: string;
   style?: React.CSSProperties;
   onClose?: () => void;
+  onExpand?: () => void;
 };
 
-export default function SandboxPanel({ className, style, onClose }: SandboxPanelProps) {
+export default function SandboxPanel({ className, style, onClose, onExpand }: SandboxPanelProps) {
   return (
     <div
       className={`h-full min-h-0 w-full overflow-hidden grid grid-rows-[auto_1fr] border-l border-gray-200 ${
@@ -18,7 +19,7 @@ export default function SandboxPanel({ className, style, onClose }: SandboxPanel
       }`}
       style={style}
     >
-      <SandboxHeader onClose={onClose} />
+      <SandboxHeader onClose={onClose} onExpand={onExpand} />
       <SandboxBody />
     </div>
   );
