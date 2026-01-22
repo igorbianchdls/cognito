@@ -8,6 +8,7 @@ import { Tool, ToolHeader, ToolContent, ToolInput, ToolOutput } from '@/componen
 import { ToolInputStreaming } from '@/components/ai-elements/tool-input-streaming';
 import { CodeBlock } from '@/components/ai-elements/code-block';
 import FornecedorResult from '@/components/tools/workflow/FornecedorResult';
+import WeatherResult from '@/components/tools/mcp/WeatherResult';
 
 type Props = { message: UIMessage };
 
@@ -51,6 +52,19 @@ export default function RespostaDaIa({ message }: Props) {
                   <FornecedorResult result={result} />
                 </div>
               );
+            }
+            // Special render: MCP get_weather → WeatherResult UI
+            {
+              const normalized = toolType.startsWith('tool-') ? toolType.slice(5) : toolType;
+              const isWeather = normalized === 'get_weather' || normalized.endsWith('__get_weather') || normalized.includes('get_weather');
+              if (isWeather && (state === 'output-available' || state === 'output-error') && output) {
+                const result = (output && (output.result !== undefined ? output.result : output)) as any;
+                return (
+                  <div key={`tool-${index}`} className="mb-3">
+                    <WeatherResult output={result} input={input} />
+                  </div>
+                );
+              }
             }
             return (
               <Tool key={`tool-${index}`} defaultOpen>

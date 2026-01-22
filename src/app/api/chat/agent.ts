@@ -52,6 +52,14 @@ const options = {
   allowedTools: ['Skill','Read','Write','Edit','Grep','Glob','Bash'].concat(extraAllowed),
   mcpServers: appToolsServer ? { 'app-tools': appToolsServer } : undefined,
   agents,
+  // Emit standard tool lifecycle events so UI can render tool-specific components (e.g., get_weather)
+  hooks: {
+    SubagentStart: [{ hooks: [async (input) => { try { const nm = (input && (input.agent_name || input.agentName || input.name)) || ''; console.log(JSON.stringify({ type: 'subagent_start', name: nm })); } catch {} return {}; }]}],
+    SubagentStop: [{ hooks: [async (input) => { try { const nm = (input && (input.agent_name || input.agentName || input.name)) || ''; console.log(JSON.stringify({ type: 'subagent_stop', name: nm })); } catch {} return {}; }]}],
+    PreToolUse: [{ hooks: [async (input) => { try { console.log(JSON.stringify({ type: 'tool_start', tool_name: input.tool_name, input: input.tool_input })); } catch {} return {}; }]}],
+    PostToolUse: [{ hooks: [async (input) => { try { console.log(JSON.stringify({ type: 'tool_done', tool_name: input.tool_name, output: input.tool_response })); } catch {} return {}; }]}],
+    PostToolUseFailure: [{ hooks: [async (input) => { try { console.log(JSON.stringify({ type: 'tool_error', tool_name: input.tool_name, error: input.error, is_interrupt: input.is_interrupt })); } catch {} return {}; }]}],
+  },
 };
 
 // Try to resume a previous session to preserve state
