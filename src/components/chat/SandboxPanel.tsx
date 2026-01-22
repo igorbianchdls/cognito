@@ -12,7 +12,7 @@ type SandboxPanelProps = {
   expanded?: boolean;
 };
 
-export default function SandboxPanel({ className, style, onClose, onExpand, expanded }: SandboxPanelProps) {
+export default function SandboxPanel({ className, style, onClose, onExpand, expanded, chatId }: SandboxPanelProps & { chatId?: string }) {
   return (
     <div
       className={`h-full min-h-0 w-full overflow-hidden grid grid-rows-[auto_1fr] border-l border-gray-200 ${
@@ -21,7 +21,7 @@ export default function SandboxPanel({ className, style, onClose, onExpand, expa
       style={style}
     >
       <SandboxHeader onClose={onClose} onExpand={onExpand} expanded={expanded} />
-      <SandboxBody />
+      <SandboxBody chatId={chatId} />
     </div>
   );
 }

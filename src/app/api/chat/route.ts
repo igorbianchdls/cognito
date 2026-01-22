@@ -21,6 +21,9 @@ export async function POST(req: Request) {
   if (action === 'chat-stop') return chatStop(payload as { chatId?: string })
   if (action === 'chat-send-stream') return chatSendStream(payload as { chatId?: string; history?: Msg[] })
   if (action === 'chat-slash') return chatSlash(payload as { chatId?: string; prompt?: string })
+  if (action === 'fs-list') return fsList(payload as { chatId?: string; path?: string })
+  if (action === 'fs-read') return fsRead(payload as { chatId?: string; path?: string })
+  if (action === 'fs-write') return fsWrite(payload as { chatId?: string; path?: string; content?: string })
 
   return Response.json({ ok: false, error: `ação desconhecida: ${action}` }, { status: 400 })
 
@@ -153,5 +156,79 @@ export async function POST(req: Request) {
     })
     return new Response(stream, { headers: { 'Content-Type': 'text/event-stream; charset=utf-8', 'Cache-Control': 'no-cache, no-transform', Connection: 'keep-alive', 'X-Accel-Buffering': 'no' } })
   }
-}
 
+  function validatePath(p?: string) {
+    const base = '/vercel/sandbox'
+    const path = (p || base).toString()
+    if (!path.startsWith(base)) return { ok: false as const, error: 'path fora de /vercel/sandbox' }
+    if (path.includes('..')) return { ok: false as const, error: 'path inválido' }
+    return { ok: true as const, path }
+  }
+
+  async function fsList({ chatId, path }: { chatId?: string; path?: string }) {
+    if (!chatId) return Response.json({ ok: false, error: 'chatId obrigatório' }, { status: 400 })
+    const sess = SESSIONS.get(chatId)
+    if (!sess) return Response.json({ ok: false, error: 'chat não encontrado' }, { status: 404 })
+    const v = validatePath(path); if (!v.ok) return Response.json({ ok: false, error: v.error }, { status: 400 })
+    const target = v.path
+    const script = `
+const fs = require('fs');
+const p = process.env.TARGET_PATH;
+try {
+  const names = fs.readdirSync(p, { withFileTypes: true }).map(d=>({ name: d.name, type: d.isDirectory()?'dir':'file', path: require('path').join(p, d.name) }));
+  const filtered = names.filter(e => (e.name === '.claude' || !e.name.startsWith('.')) && e.name !== 'node_modules' && e.name !== '.cache');
+  filtered.sort((a,b)=> a.type===b.type ? a.name.localeCompare(b.name) : (a.type==='dir'?-1:1));
+  console.log(JSON.stringify(filtered));
+} catch(e){ console.error(String(e.message||e)); process.exit(1); }
+`
+    const run = await sess.sandbox.runCommand({ cmd: 'node', args: ['-e', script], env: { TARGET_PATH: target } })
+    const [out, err] = await Promise.all([run.stdout().catch(()=>''), run.stderr().catch(()=> '')])
+    if (run.exitCode !== 0) return Response.json({ ok: false, error: err || out || 'falha ao listar' }, { status: 500 })
+    let entries: Array<{ name: string; type: 'file'|'dir'; path: string }> = []
+    try { entries = JSON.parse(out) } catch { return Response.json({ ok: false, error: 'json inválido' }, { status: 500 }) }
+    return Response.json({ ok: true, path: target, entries })
+  }
+
+  async function fsRead({ chatId, path }: { chatId?: string; path?: string }) {
+    if (!chatId) return Response.json({ ok: false, error: 'chatId obrigatório' }, { status: 400 })
+    const sess = SESSIONS.get(chatId)
+    if (!sess) return Response.json({ ok: false, error: 'chat não encontrado' }, { status: 404 })
+    const v = validatePath(path); if (!v.ok) return Response.json({ ok: false, error: v.error }, { status: 400 })
+    const target = v.path
+    const script = `
+const fs = require('fs');
+const p = process.env.TARGET_PATH;
+try {
+  const buf = fs.readFileSync(p);
+  const isBin = buf.some(b => b===0);
+  if (isBin) console.log(JSON.stringify({ isBinary:true, content: buf.toString('base64') }));
+  else console.log(JSON.stringify({ isBinary:false, content: buf.toString('utf8') }));
+} catch(e){ console.error(String(e.message||e)); process.exit(1); }
+`
+    const run = await sess.sandbox.runCommand({ cmd: 'node', args: ['-e', script], env: { TARGET_PATH: target } })
+    const [out, err] = await Promise.all([run.stdout().catch(()=>''), run.stderr().catch(()=> '')])
+    if (run.exitCode !== 0) return Response.json({ ok: false, error: err || out || 'falha ao ler' }, { status: 500 })
+    try {
+      const parsed = JSON.parse(out)
+      return Response.json({ ok: true, path: target, ...parsed })
+    } catch { return Response.json({ ok: false, error: 'json inválido' }, { status: 500 }) }
+  }
+
+  async function fsWrite({ chatId, path, content }: { chatId?: string; path?: string; content?: string }) {
+    if (!chatId) return Response.json({ ok: false, error: 'chatId obrigatório' }, { status: 400 })
+    const sess = SESSIONS.get(chatId)
+    if (!sess) return Response.json({ ok: false, error: 'chat não encontrado' }, { status: 404 })
+    const v = validatePath(path); if (!v.ok) return Response.json({ ok: false, error: v.error }, { status: 400 })
+    const target = v.path
+    const script = `
+const fs = require('fs');
+const p = process.env.TARGET_PATH;
+try { fs.mkdirSync(require('path').dirname(p), { recursive: true }); fs.writeFileSync(p, process.env.FILE_CONTENT || '', 'utf8'); console.log('ok'); }
+catch(e){ console.error(String(e.message||e)); process.exit(1); }
+`
+    const run = await sess.sandbox.runCommand({ cmd: 'node', args: ['-e', script], env: { TARGET_PATH: target, FILE_CONTENT: content ?? '' } })
+    const [out, err] = await Promise.all([run.stdout().catch(()=>''), run.stderr().catch(()=> '')])
+    if (run.exitCode !== 0) return Response.json({ ok: false, error: err || out || 'falha ao escrever' }, { status: 500 })
+    return Response.json({ ok: true })
+  }
+}

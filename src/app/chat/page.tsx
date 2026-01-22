@@ -10,6 +10,7 @@ import SandboxPanel from "@/components/chat/SandboxPanel";
 export default function ChatRoutePage() {
   const [showSandbox, setShowSandbox] = useState(false);
   const [sandboxExpanded, setSandboxExpanded] = useState(false);
+  const [chatId, setChatId] = useState<string | null>(null);
 
   return (
     <SidebarProvider>
@@ -24,6 +25,7 @@ export default function ChatRoutePage() {
                 sandboxExpanded ? (
                   <div className="h-full">
                     <SandboxPanel
+                      chatId={chatId ?? undefined}
                       onClose={() => { setShowSandbox(false); setSandboxExpanded(false); }}
                       onExpand={() => setSandboxExpanded(false)}
                       expanded
@@ -32,16 +34,16 @@ export default function ChatRoutePage() {
                 ) : (
                   <div className="grid h-full grid-cols-1 lg:grid-cols-2">
                     <div className="h-full min-h-0">
-                      <ChatPanel onOpenSandbox={() => { setShowSandbox(true); setSandboxExpanded(false); }} withSideMargins={false} />
+                      <ChatPanel onOpenSandbox={(id) => { setChatId(id); setShowSandbox(true); setSandboxExpanded(false); }} withSideMargins={false} />
                     </div>
                     <div className="h-full min-h-0">
-                      <SandboxPanel onClose={() => { setShowSandbox(false); setSandboxExpanded(false); }} onExpand={() => setSandboxExpanded(true)} />
+                      <SandboxPanel chatId={chatId ?? undefined} onClose={() => { setShowSandbox(false); setSandboxExpanded(false); }} onExpand={() => setSandboxExpanded(true)} />
                     </div>
                   </div>
                 )
               ) : (
                 <div className="h-full">
-                  <ChatPanel onOpenSandbox={() => { setShowSandbox(true); setSandboxExpanded(false); }} withSideMargins={true} />
+                  <ChatPanel onOpenSandbox={(id) => { setChatId(id); setShowSandbox(true); setSandboxExpanded(false); }} withSideMargins={true} />
                 </div>
               )}
             </PageContainer>

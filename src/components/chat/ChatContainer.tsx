@@ -9,7 +9,7 @@ import InputArea from './InputArea';
 
 type ChatStatus = 'idle' | 'submitted' | 'streaming' | 'error'
 
-export default function ChatContainer({ onOpenSandbox, withSideMargins }: { onOpenSandbox?: () => void; withSideMargins?: boolean }) {
+export default function ChatContainer({ onOpenSandbox, withSideMargins }: { onOpenSandbox?: (chatId: string) => void; withSideMargins?: boolean }) {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<UIMessage[]>([])
   const [chatId, setChatId] = useState<string | null>(null)
@@ -164,7 +164,9 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins }: { onOp
           )}
         </div>
         <div className="px-4 pb-3">
-          <InputArea value={input} onChange={setInput} onSubmit={handleSubmit} status={status} onOpenSandbox={onOpenSandbox} />
+          <InputArea value={input} onChange={setInput} onSubmit={handleSubmit} status={status} onOpenSandbox={async () => {
+            try { const id = await ensureStart(); onOpenSandbox?.(id); } catch { /* ignore */ }
+          }} />
         </div>
       </div>
     </div>
