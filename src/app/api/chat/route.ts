@@ -37,8 +37,8 @@ export async function POST(req: Request) {
       sandbox = await Sandbox.create({ runtime: 'node22', resources: { vcpus: 2 }, timeout: 600_000 })
       timeline.push({ name: 'create-sandbox', ms: Date.now() - t0, ok: true })
       const t1 = Date.now()
-      // Install Agent SDK + CLI
-      const install = await sandbox.runCommand({ cmd: 'npm', args: ['install', '@anthropic-ai/claude-agent-sdk', '@anthropic-ai/claude-code'] })
+      // Install Agent SDK + CLI + zod (for MCP tool schemas)
+      const install = await sandbox.runCommand({ cmd: 'npm', args: ['install', '@anthropic-ai/claude-agent-sdk', '@anthropic-ai/claude-code', 'zod'] })
       timeline.push({ name: 'install', ms: Date.now() - t1, ok: install.exitCode === 0, exitCode: install.exitCode })
       if (install.exitCode !== 0) {
         const [o, e] = await Promise.all([install.stdout().catch(() => ''), install.stderr().catch(() => '')])
