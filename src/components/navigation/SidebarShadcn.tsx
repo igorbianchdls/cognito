@@ -57,11 +57,12 @@ function fontVar(name?: string) {
 
 // Default styles now bound to UI tokens
 const DEFAULT_SECTION_TITLE_STYLE: React.CSSProperties = {
-  fontFamily: 'var(--ui-font-family)',
+  // Use the previous dedicated font for section titles (not the general UI font)
+  fontFamily: fontVar('Space Mono'),
   fontWeight: 500,
-  fontSize: 'calc(var(--ui-font-size) * 0.8)',
+  fontSize: '12px',
   color: '#808080',
-  letterSpacing: 'calc(var(--ui-tracking-pct) * 0.01em)',
+  letterSpacing: '0em',
   textTransform: 'uppercase',
 }
 

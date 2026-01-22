@@ -84,10 +84,10 @@
   --ui-font-size: 15px;
   --ui-line-height: 1.5;
   /* Tracking/letter-spacing in percent: -5 to 5 */
-  --ui-tracking-pct: -2;
+  --ui-tracking-pct: -4;
 
   /* Layout spacing scale in percent: -5 to 5 */
-  --ui-space-scale-pct: 0;
+  --ui-space-scale-pct: -4;
   --ui-space-base: 12px;
   --ui-space: calc(var(--ui-space-base) * (1 + (var(--ui-space-scale-pct) * 0.01)));
   --ui-gap: var(--ui-space);
