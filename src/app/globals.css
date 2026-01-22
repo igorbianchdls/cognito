@@ -77,6 +77,22 @@
     0 0 0 1px var(--gray-a3),
     0 12px 60px var(--black-a3),
     0 12px 32px -16px var(--gray-a5);
+
+  /* UI Typography + Spacing Tokens */
+  /* Fonts: default Barlow; switch with .font-inter / .font-geist classes */
+  --ui-font-family: var(--font-barlow), Barlow, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  --ui-font-size: 15px;
+  --ui-line-height: 1.5;
+  /* Tracking/letter-spacing in percent: -5 to 5 */
+  --ui-tracking-pct: -2;
+
+  /* Layout spacing scale in percent: -5 to 5 */
+  --ui-space-scale-pct: 0;
+  --ui-space-base: 12px;
+  --ui-space: calc(var(--ui-space-base) * (1 + (var(--ui-space-scale-pct) * 0.01)));
+  --ui-gap: var(--ui-space);
+  --ui-pad-x: calc(var(--ui-space) * 1.333);
+  --ui-pad-y: var(--ui-space);
 }
 
 .dark {
@@ -162,6 +178,22 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* UI tokens helpers */
+.ui-text {
+  font-family: var(--ui-font-family);
+  font-size: var(--ui-font-size);
+  line-height: var(--ui-line-height);
+  letter-spacing: calc(var(--ui-tracking-pct) * 0.01em);
+}
+.ui-px { padding-left: var(--ui-pad-x); padding-right: var(--ui-pad-x); }
+.ui-py { padding-top: var(--ui-pad-y); padding-bottom: var(--ui-pad-y); }
+.ui-gap { gap: var(--ui-gap); }
+
+/* Font switches */
+.font-barlow { --ui-font-family: var(--font-barlow), Barlow, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; }
+.font-inter { --ui-font-family: var(--font-inter), Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; }
+.font-geist { --ui-font-family: var(--font-geist-sans), Geist, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; }
 
 /* Typography improvements */
 h1, h2, h3, h4, h5, h6 {

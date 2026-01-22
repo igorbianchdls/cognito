@@ -55,22 +55,22 @@ function fontVar(name?: string) {
   return name
 }
 
-// Default styles matching financeiro dashboard
+// Default styles now bound to UI tokens
 const DEFAULT_SECTION_TITLE_STYLE: React.CSSProperties = {
-  fontFamily: fontVar('Space Mono'),
+  fontFamily: 'var(--ui-font-family)',
   fontWeight: 500,
-  fontSize: '12px',
+  fontSize: 'calc(var(--ui-font-size) * 0.8)',
   color: '#808080',
-  letterSpacing: '0em',
+  letterSpacing: 'calc(var(--ui-tracking-pct) * 0.01em)',
   textTransform: 'uppercase',
 }
 
 const DEFAULT_ITEM_TEXT_STYLE: React.CSSProperties = {
-  fontFamily: fontVar('Barlow'),
+  fontFamily: 'var(--ui-font-family)',
   fontWeight: 400,
-  fontSize: '15px',
+  fontSize: 'var(--ui-font-size)',
   color: 'rgb(64, 64, 64)',
-  letterSpacing: '-0.03em',
+  letterSpacing: 'calc(var(--ui-tracking-pct) * 0.01em)',
   textTransform: 'none',
 }
 
@@ -226,17 +226,17 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
     <Sidebar
       collapsible="icon"
       style={inlineStyle}
-      className={cn(borderless ? '!border-r-0 !border-l-0 !border-0' : undefined, className)}
+      className={cn('ui-text', borderless ? '!border-r-0 !border-l-0 !border-0' : undefined, className)}
       {...props}
     >
       <SidebarHeader className={cn("h-16 bg-gray-50", headerBorderless ? undefined : "border-b") }>
         {headerVariant === 'compact' ? (
-          <div className="h-full w-full flex items-center justify-between px-2">
+          <div className="h-full w-full flex items-center justify-between px-[var(--ui-pad-x)]">
             <SidebarHeaderCompact teams={dataWithActiveState.teams} />
             <SidebarTrigger />
           </div>
         ) : (
-          <div className="h-full w-full flex items-center justify-between px-2">
+          <div className="h-full w-full flex items-center justify-between px-[var(--ui-pad-x)]">
             <div className="group-data-[collapsible=icon]:hidden">
               <TeamSwitcher teams={dataWithActiveState.teams} />
             </div>
@@ -244,7 +244,7 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
           </div>
         )}
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent className="ui-text">
         <NavMainSimple items={dataWithActiveState.navMain} groupLabelStyle={finalSectionTitleStyle} itemTextStyle={finalItemTextStyle} />
         <NavModulos groupLabelStyle={finalSectionTitleStyle} itemTextStyle={finalItemTextStyle} />
 

@@ -12,7 +12,7 @@ type ChatPanelProps = {
 
 export default function ChatPanel({ className, style, onOpenSandbox, withSideMargins }: ChatPanelProps) {
   return (
-    <div className={`h-full min-h-0 w-full overflow-hidden ${className ?? ''}`} style={style}>
+    <div className={`ui-text h-full min-h-0 w-full overflow-hidden ${className ?? ''}`} style={style}>
       <ChatContainer onOpenSandbox={onOpenSandbox} withSideMargins={withSideMargins} />
     </div>
   );

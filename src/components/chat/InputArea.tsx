@@ -25,8 +25,8 @@ type Props = {
 
 export default function InputArea({ value, onChange, onSubmit, status = 'idle', onOpenSandbox }: Props) {
   return (
-    <div className="pt-2">
-      <PromptInput onSubmit={onSubmit} className="border-gray-100">
+    <div className="pt-[var(--ui-pad-y)]">
+      <PromptInput onSubmit={onSubmit} className="border-gray-100 ui-text">
         <PromptInputTextarea
           placeholder="Ask a follow up..."
           value={value}
