@@ -33,6 +33,7 @@ const agents = {
 
 let appToolsServer = null;
 let appToolsServerExtra = null;
+let appToolsServerFinance = null;
 try {
   const mod = await import('file:///vercel/sandbox/.mcp/app-tools.mjs');
   // @ts-ignore
@@ -42,6 +43,11 @@ try {
   const mod2 = await import('file:///vercel/sandbox/.mcp/app-tools-extra.mjs');
   // @ts-ignore
   appToolsServerExtra = (mod2 && (mod2.default || mod2.appToolsServerExtra)) || null;
+} catch {}
+try {
+  const mod3 = await import('file:///vercel/sandbox/.mcp/app-tools-finance.mjs');
+  // @ts-ignore
+  appToolsServerFinance = (mod3 && (mod3.default || mod3.appToolsServerFinance)) || null;
 } catch {}
 const extraAllowed = [];
 if (appToolsServer) {
@@ -59,6 +65,13 @@ if (appToolsServerExtra) {
     'mcp__app-tools-extra__get_compras',
   );
 }
+if (appToolsServerFinance) {
+  extraAllowed.push(
+    'mcp__app-tools-finance__get_contas_financeiras',
+    'mcp__app-tools-finance__get_categorias_despesa',
+    'mcp__app-tools-finance__get_categorias_receita',
+  );
+}
 const options = {
   model: 'claude-sonnet-4-5-20250929',
   pathToClaudeCodeExecutable: cli,
@@ -70,9 +83,10 @@ const options = {
   maxThinkingTokens: 2048,
   settingSources: ['project'],
   allowedTools: ['Skill','Read','Write','Edit','Grep','Glob','Bash'].concat(extraAllowed),
-  mcpServers: (appToolsServer || appToolsServerExtra) ? Object.fromEntries([
+  mcpServers: (appToolsServer || appToolsServerExtra || appToolsServerFinance) ? Object.fromEntries([
     ...(appToolsServer ? [[ 'app-tools', appToolsServer ]] : []),
     ...(appToolsServerExtra ? [[ 'app-tools-extra', appToolsServerExtra ]] : []),
+    ...(appToolsServerFinance ? [[ 'app-tools-finance', appToolsServerFinance ]] : []),
   ]) : undefined,
   agents,
   // Emit standard tool lifecycle events so UI can render tool-specific components (e.g., get_weather)
@@ -196,6 +210,24 @@ for await (const msg of q) {
               const data = await res.json().catch(() => ({}));
               const out = (data && (data.result !== undefined ? data.result : data)) || {};
               console.log(JSON.stringify({ type: 'tool_done', tool_name: 'getCompras', output: out }));
+            } else if (toolName === 'getContasFinanceiras' && base && token && chatId) {
+              const url = (base || '') + '/api/agent-tools/financeiro/contas-financeiras/listar';
+              const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json', 'authorization': 'Bearer ' + token, 'x-chat-id': chatId }, body: JSON.stringify(args || {}) });
+              const data = await res.json().catch(() => ({}));
+              const out = (data && (data.result !== undefined ? data.result : data)) || {};
+              console.log(JSON.stringify({ type: 'tool_done', tool_name: 'getContasFinanceiras', output: out }));
+            } else if (toolName === 'getCategoriasDespesa' && base && token && chatId) {
+              const url = (base || '') + '/api/agent-tools/financeiro/categorias-despesa/listar';
+              const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json', 'authorization': 'Bearer ' + token, 'x-chat-id': chatId }, body: JSON.stringify(args || {}) });
+              const data = await res.json().catch(() => ({}));
+              const out = (data && (data.result !== undefined ? data.result : data)) || {};
+              console.log(JSON.stringify({ type: 'tool_done', tool_name: 'getCategoriasDespesa', output: out }));
+            } else if (toolName === 'getCategoriasReceita' && base && token && chatId) {
+              const url = (base || '') + '/api/agent-tools/financeiro/categorias-receita/listar';
+              const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json', 'authorization': 'Bearer ' + token, 'x-chat-id': chatId }, body: JSON.stringify(args || {}) });
+              const data = await res.json().catch(() => ({}));
+              const out = (data && (data.result !== undefined ? data.result : data)) || {};
+              console.log(JSON.stringify({ type: 'tool_done', tool_name: 'getCategoriasReceita', output: out }));
             }
           }
         } catch (e) {

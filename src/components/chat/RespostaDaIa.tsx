@@ -13,6 +13,9 @@ import ContasAPagarResult from '@/components/tools/ContasAPagarResult';
 import ContasAReceberResult from '@/components/tools/ContasAReceberResult';
 import PedidosVendasResult from '@/components/tools/vendas-b2b/PedidosVendasResult';
 import PedidosCompraResult from '@/components/tools/compras/PedidosCompraResult';
+import ContasFinanceirasResult from '@/components/tools/financeiro/ContasFinanceirasResult';
+import CategoriasDespesaResult from '@/components/tools/financeiro/CategoriasDespesaResult';
+import CategoriasReceitaResult from '@/components/tools/financeiro/CategoriasReceitaResult';
 
 type Props = { message: UIMessage };
 
@@ -86,6 +89,66 @@ export default function RespostaDaIa({ message }: Props) {
                 return (
                   <div key={`tool-${index}`} className="mb-3">
                     <FornecedorResult result={result} />
+                  </div>
+                );
+              }
+            }
+            // Special render: get_contas_financeiras
+            {
+              const normalized = toolType.startsWith('tool-') ? toolType.slice(5) : toolType;
+              const isCF = normalized === 'get_contas_financeiras' || normalized === 'getContasFinanceiras' || normalized.endsWith('__get_contas_financeiras');
+              if (isCF && (state === 'output-available' || state === 'output-error') && output) {
+                let result: any = (output as any).result !== undefined ? (output as any).result : output;
+                try {
+                  if (result && typeof result === 'object' && 'content' in (result as any) && Array.isArray((result as any).content)) {
+                    const arr = (result as any).content as Array<any>;
+                    const textParts = arr.filter((c) => typeof c?.text === 'string').map((c) => String(c.text));
+                    for (const t of textParts) { const s = t.trim(); if (!s) continue; try { result = JSON.parse(s); break; } catch {} }
+                  }
+                } catch {}
+                return (
+                  <div key={`tool-${index}`} className="mb-3">
+                    <ContasFinanceirasResult result={result} />
+                  </div>
+                );
+              }
+            }
+            // Special render: get_categorias_despesa
+            {
+              const normalized = toolType.startsWith('tool-') ? toolType.slice(5) : toolType;
+              const isCD = normalized === 'get_categorias_despesa' || normalized === 'getCategoriasDespesa' || normalized.endsWith('__get_categorias_despesa');
+              if (isCD && (state === 'output-available' || state === 'output-error') && output) {
+                let result: any = (output as any).result !== undefined ? (output as any).result : output;
+                try {
+                  if (result && typeof result === 'object' && 'content' in (result as any) && Array.isArray((result as any).content)) {
+                    const arr = (result as any).content as Array<any>;
+                    const textParts = arr.filter((c) => typeof c?.text === 'string').map((c) => String(c.text));
+                    for (const t of textParts) { const s = t.trim(); if (!s) continue; try { result = JSON.parse(s); break; } catch {} }
+                  }
+                } catch {}
+                return (
+                  <div key={`tool-${index}`} className="mb-3">
+                    <CategoriasDespesaResult result={result} />
+                  </div>
+                );
+              }
+            }
+            // Special render: get_categorias_receita
+            {
+              const normalized = toolType.startsWith('tool-') ? toolType.slice(5) : toolType;
+              const isCR = normalized === 'get_categorias_receita' || normalized === 'getCategoriasReceita' || normalized.endsWith('__get_categorias_receita');
+              if (isCR && (state === 'output-available' || state === 'output-error') && output) {
+                let result: any = (output as any).result !== undefined ? (output as any).result : output;
+                try {
+                  if (result && typeof result === 'object' && 'content' in (result as any) && Array.isArray((result as any).content)) {
+                    const arr = (result as any).content as Array<any>;
+                    const textParts = arr.filter((c) => typeof c?.text === 'string').map((c) => String(c.text));
+                    for (const t of textParts) { const s = t.trim(); if (!s) continue; try { result = JSON.parse(s); break; } catch {} }
+                  }
+                } catch {}
+                return (
+                  <div key={`tool-${index}`} className="mb-3">
+                    <CategoriasReceitaResult result={result} />
                   </div>
                 );
               }
