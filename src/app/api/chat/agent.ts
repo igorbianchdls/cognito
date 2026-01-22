@@ -32,22 +32,28 @@ const agents = {
   }
 };
 
-// MCP test tools server
-const testToolsServer = createSdkMcpServer({
-  name: 'test-tools',
-  version: '1.0.0',
-  tools: [
-    tool('get_weather', 'Retorna temperatura (mock) para uma cidade', { city: z.string().optional() }, async (args) => {
-      const city = (args && (args as any).city) || 'Local';
-      return { content: [{ type: 'text', text: 'Temperatura em ' + city + ': 25°C' }] };
-    }),
-    tool('echo_text', 'Repete o texto enviado', { text: z.string() }, async (args) => {
-      const t = (args && (args as any).text) || '';
-      return { content: [{ type: 'text', text: String(t) }] };
-    }),
-  ],
-});
+// MCP test tools server (guarded init)
+let testToolsServer: any = null;
+try {
+  testToolsServer = createSdkMcpServer({
+    name: 'test-tools',
+    version: '1.0.0',
+    tools: [
+      tool('get_weather', 'Retorna temperatura (mock) para uma cidade', { city: z.string().optional() }, async (args) => {
+        const city = (args && (args as any).city) || 'Local';
+        return { content: [{ type: 'text', text: 'Temperatura em ' + city + ': 25°C' }] };
+      }),
+      tool('echo_text', 'Repete o texto enviado', { text: z.string() }, async (args) => {
+        const t = (args && (args as any).text) || '';
+        return { content: [{ type: 'text', text: String(t) }] };
+      }),
+    ],
+  });
+} catch (e) {
+  try { console.log(JSON.stringify({ type: 'stderr', data: 'MCP init failed: ' + String(e?.message || e) })); } catch {}
+}
 
+const extraAllowed = testToolsServer ? ['mcp__test-tools__get_weather', 'mcp__test-tools__echo_text'] : [];
 const options = {
   model: 'claude-sonnet-4-5-20250929',
   pathToClaudeCodeExecutable: cli,
@@ -58,8 +64,8 @@ const options = {
   includePartialMessages: true,
   maxThinkingTokens: 2048,
   settingSources: ['project'],
-  allowedTools: ['Skill','Read','Write','Edit','Grep','Glob','Bash', 'mcp__test-tools__get_weather', 'mcp__test-tools__echo_text'],
-  mcpServers: { 'test-tools': testToolsServer },
+  allowedTools: ['Skill','Read','Write','Edit','Grep','Glob','Bash'].concat(extraAllowed),
+  mcpServers: testToolsServer ? { 'test-tools': testToolsServer } : undefined,
   agents,
 };
 
