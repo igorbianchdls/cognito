@@ -70,10 +70,10 @@ const options = {
   maxThinkingTokens: 2048,
   settingSources: ['project'],
   allowedTools: ['Skill','Read','Write','Edit','Grep','Glob','Bash'].concat(extraAllowed),
-  mcpServers: (appToolsServer || appToolsServerExtra) ? (Object.fromEntries([
+  mcpServers: (appToolsServer || appToolsServerExtra) ? Object.fromEntries([
     ...(appToolsServer ? [[ 'app-tools', appToolsServer ]] : []),
     ...(appToolsServerExtra ? [[ 'app-tools-extra', appToolsServerExtra ]] : []),
-  ]) as any) : undefined,
+  ]) : undefined,
   agents,
   // Emit standard tool lifecycle events so UI can render tool-specific components (e.g., get_weather)
   hooks: {
