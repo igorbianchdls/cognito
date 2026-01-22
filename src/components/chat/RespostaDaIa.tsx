@@ -44,14 +44,35 @@ export default function RespostaDaIa({ message }: Props) {
             const output = (part as any).output;
             const errorText = (part as any).errorText as string | undefined;
             const toolType = (part as any).type as string;
-            // Special render: buscarFornecedor → ArtifactDataTable
-            if (toolType === 'tool-buscarFornecedor' && (state === 'output-available' || state === 'output-error') && output) {
-              const result = (output && (output.result !== undefined ? output.result : output)) as any;
-              return (
-                <div key={`tool-${index}`} className="mb-3">
-                  <FornecedorResult result={result} />
-                </div>
-              );
+            // Special render: buscarFornecedor (Skill HTTP) or MCP buscar_fornecedor → ArtifactDataTable
+            {
+              const normalized = toolType.startsWith('tool-') ? toolType.slice(5) : toolType;
+              const isFornecedor = normalized === 'buscarFornecedor' || normalized === 'buscar_fornecedor' || /buscar.*fornecedor/i.test(normalized);
+              if (isFornecedor && (state === 'output-available' || state === 'output-error') && output) {
+                // Unwrap possible MCP content shape: { content: [{ type:'json', json: {...} } | { type:'text', text: '...' } ...] }
+                let result: any = output as any;
+                try {
+                  if (result && typeof result === 'object' && 'result' in result) {
+                    result = (result as any).result;
+                  } else if (result && typeof result === 'object' && 'content' in result && Array.isArray((result as any).content)) {
+                    const arr = (result as any).content as Array<any>;
+                    const jsonPart = arr.find((c) => c && (c.json !== undefined));
+                    if (jsonPart && jsonPart.json !== undefined) {
+                      result = jsonPart.json;
+                    } else {
+                      const txtPart = arr.find((c) => typeof c.text === 'string');
+                      if (txtPart && typeof txtPart.text === 'string') {
+                        try { result = JSON.parse(txtPart.text); } catch { /* ignore */ }
+                      }
+                    }
+                  }
+                } catch { /* ignore */ }
+                return (
+                  <div key={`tool-${index}`} className="mb-3">
+                    <FornecedorResult result={result} />
+                  </div>
+                );
+              }
             }
             // Special render: MCP get_weather → WeatherResult UI
             {
@@ -62,6 +83,33 @@ export default function RespostaDaIa({ message }: Props) {
                 return (
                   <div key={`tool-${index}`} className="mb-3">
                     <WeatherResult output={result} input={input} />
+                  </div>
+                );
+              }
+            }
+            // Special render: MCP buscar_fornecedor → FornecedorResult UI
+            {
+              const normalized = toolType.startsWith('tool-') ? toolType.slice(5) : toolType;
+              const isFornecedor = normalized === 'buscar_fornecedor' || normalized.endsWith('__buscar_fornecedor') || normalized.includes('buscar_fornecedor');
+              if (isFornecedor && (state === 'output-available' || state === 'output-error') && output) {
+                // Unwrap MCP content to JSON result if present
+                let result: any = output && (output as any).result !== undefined ? (output as any).result : output;
+                try {
+                  if (result && typeof result === 'object' && Array.isArray((result as any).content)) {
+                    const arr = (result as any).content as Array<any>;
+                    const jsonItem = arr.find((c) => c && (c.json !== undefined || c.type === 'json'));
+                    if (jsonItem) result = jsonItem.json !== undefined ? jsonItem.json : jsonItem;
+                    else {
+                      const textItem = arr.find((c) => c && typeof c.text === 'string');
+                      if (textItem && typeof textItem.text === 'string') {
+                        try { const parsed = JSON.parse(textItem.text); if (parsed) result = parsed; } catch {}
+                      }
+                    }
+                  }
+                } catch {}
+                return (
+                  <div key={`tool-${index}`} className="mb-3">
+                    <FornecedorResult result={result as any} />
                   </div>
                 );
               }

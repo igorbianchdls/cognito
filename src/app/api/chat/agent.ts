@@ -38,7 +38,7 @@ try {
   appToolsServer = (mod && (mod.default || mod.appToolsServer)) || null;
 } catch {}
 
-const extraAllowed = appToolsServer ? ['mcp__app-tools__get_weather','mcp__app-tools__echo_text'] : [];
+const extraAllowed = appToolsServer ? ['mcp__app-tools__get_weather','mcp__app-tools__echo_text','mcp__app-tools__buscar_fornecedor'] : [];
 const options = {
   model: 'claude-sonnet-4-5-20250929',
   pathToClaudeCodeExecutable: cli,
