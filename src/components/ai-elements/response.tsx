@@ -298,7 +298,7 @@ export const Response = memo(
         'size-full text-lg [&>*:first-child]:mt-0 [&>*:last-child]:mb-0',
         className,
       )}
-      style={{ fontFamily: 'var(--font-barlow), Barlow, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif' }}
+      style={{ fontFamily: 'var(--ui-font-family)' }}
       {...props}
     >
         <HardenedMarkdown
