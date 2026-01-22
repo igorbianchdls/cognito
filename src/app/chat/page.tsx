@@ -26,6 +26,7 @@ export default function ChatRoutePage() {
                     <SandboxPanel
                       onClose={() => { setShowSandbox(false); setSandboxExpanded(false); }}
                       onExpand={() => setSandboxExpanded(false)}
+                      expanded
                     />
                   </div>
                 ) : (
