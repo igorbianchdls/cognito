@@ -38,7 +38,13 @@ try {
   appToolsServer = (mod && (mod.default || mod.appToolsServer)) || null;
 } catch {}
 
-const extraAllowed = appToolsServer ? ['mcp__app-tools__get_weather','mcp__app-tools__echo_text','mcp__app-tools__buscar_fornecedor'] : [];
+const extraAllowed = appToolsServer ? [
+  'mcp__app-tools__get_weather',
+  'mcp__app-tools__echo_text',
+  'mcp__app-tools__buscar_fornecedor',
+  'mcp__app-tools__get_contas_pagar',
+  'mcp__app-tools__get_contas_receber'
+] : [];
 const options = {
   model: 'claude-sonnet-4-5-20250929',
   pathToClaudeCodeExecutable: cli,
@@ -149,6 +155,18 @@ for await (const msg of q) {
               const data = await res.json().catch(() => ({}));
               const out = (data && (data.result !== undefined ? data.result : data)) || {};
               console.log(JSON.stringify({ type: 'tool_done', tool_name: 'buscarFornecedor', output: out }));
+            } else if (toolName === 'getContasPagar' && base && token && chatId) {
+              const url = (base || '') + '/api/agent-tools/contas-a-pagar/listar';
+              const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json', 'authorization': 'Bearer ' + token, 'x-chat-id': chatId }, body: JSON.stringify(args || {}) });
+              const data = await res.json().catch(() => ({}));
+              const out = (data && (data.result !== undefined ? data.result : data)) || {};
+              console.log(JSON.stringify({ type: 'tool_done', tool_name: 'getContasPagar', output: out }));
+            } else if (toolName === 'getContasReceber' && base && token && chatId) {
+              const url = (base || '') + '/api/agent-tools/contas-a-receber/listar';
+              const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json', 'authorization': 'Bearer ' + token, 'x-chat-id': chatId }, body: JSON.stringify(args || {}) });
+              const data = await res.json().catch(() => ({}));
+              const out = (data && (data.result !== undefined ? data.result : data)) || {};
+              console.log(JSON.stringify({ type: 'tool_done', tool_name: 'getContasReceber', output: out }));
             }
           }
         } catch (e) {

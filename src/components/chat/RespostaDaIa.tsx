@@ -9,6 +9,8 @@ import { ToolInputStreaming } from '@/components/ai-elements/tool-input-streamin
 import { CodeBlock } from '@/components/ai-elements/code-block';
 import FornecedorResult from '@/components/tools/workflow/FornecedorResult';
 import WeatherResult from '@/components/tools/mcp/WeatherResult';
+import ContasAPagarResult from '@/components/tools/ContasAPagarResult';
+import ContasAReceberResult from '@/components/tools/ContasAReceberResult';
 
 type Props = { message: UIMessage };
 
@@ -95,6 +97,82 @@ export default function RespostaDaIa({ message }: Props) {
                 return (
                   <div key={`tool-${index}`} className="mb-3">
                     <WeatherResult output={result} input={input} />
+                  </div>
+                );
+              }
+            }
+            // Special render: get_contas_pagar / getContasPagar → ContasAPagarResult
+            {
+              const normalized = toolType.startsWith('tool-') ? toolType.slice(5) : toolType;
+              const isAP = normalized === 'get_contas_pagar' || normalized === 'getContasPagar' || normalized.endsWith('__get_contas_pagar') || /get[_-]?contas[_-]?pagar/i.test(normalized);
+              if (isAP && (state === 'output-available' || state === 'output-error') && output) {
+                let result: any = output as any;
+                try {
+                  if (result && typeof result === 'object' && 'result' in result) {
+                    result = (result as any).result;
+                  } else {
+                    let arr: Array<any> | null = null;
+                    if (result && typeof result === 'object' && 'content' in (result as any) && Array.isArray((result as any).content)) {
+                      arr = (result as any).content as Array<any>;
+                    } else if (Array.isArray(result)) {
+                      arr = result as Array<any>;
+                    }
+                    if (arr) {
+                      const jsonPart = arr.find((c) => c && (c.json !== undefined));
+                      if (jsonPart && jsonPart.json !== undefined) {
+                        result = jsonPart.json;
+                      } else {
+                        const textParts = arr.filter((c) => typeof c?.text === 'string').map((c) => String(c.text));
+                        for (const t of textParts) {
+                          const s = t.trim();
+                          if (!s) continue;
+                          try { result = JSON.parse(s); break; } catch {}
+                        }
+                      }
+                    }
+                  }
+                } catch {}
+                return (
+                  <div key={`tool-${index}`} className="mb-3">
+                    <ContasAPagarResult result={result} />
+                  </div>
+                );
+              }
+            }
+            // Special render: get_contas_receber / getContasReceber → ContasAReceberResult
+            {
+              const normalized = toolType.startsWith('tool-') ? toolType.slice(5) : toolType;
+              const isAR = normalized === 'get_contas_receber' || normalized === 'getContasReceber' || normalized.endsWith('__get_contas_receber') || /get[_-]?contas[_-]?receber/i.test(normalized);
+              if (isAR && (state === 'output-available' || state === 'output-error') && output) {
+                let result: any = output as any;
+                try {
+                  if (result && typeof result === 'object' && 'result' in result) {
+                    result = (result as any).result;
+                  } else {
+                    let arr: Array<any> | null = null;
+                    if (result && typeof result === 'object' && 'content' in (result as any) && Array.isArray((result as any).content)) {
+                      arr = (result as any).content as Array<any>;
+                    } else if (Array.isArray(result)) {
+                      arr = result as Array<any>;
+                    }
+                    if (arr) {
+                      const jsonPart = arr.find((c) => c && (c.json !== undefined));
+                      if (jsonPart && jsonPart.json !== undefined) {
+                        result = jsonPart.json;
+                      } else {
+                        const textParts = arr.filter((c) => typeof c?.text === 'string').map((c) => String(c.text));
+                        for (const t of textParts) {
+                          const s = t.trim();
+                          if (!s) continue;
+                          try { result = JSON.parse(s); break; } catch {}
+                        }
+                      }
+                    }
+                  }
+                } catch {}
+                return (
+                  <div key={`tool-${index}`} className="mb-3">
+                    <ContasAReceberResult result={result} />
                   </div>
                 );
               }
