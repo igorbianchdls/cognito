@@ -37,7 +37,7 @@ export async function POST(req: Request) {
       sandbox = await Sandbox.create({ runtime: 'node22', resources: { vcpus: 2 }, timeout: 600_000 })
       timeline.push({ name: 'create-sandbox', ms: Date.now() - t0, ok: true })
       const t1 = Date.now()
-      // Install Agent SDK + CLI + zod (for MCP tool schemas)
+      // Install Agent SDK + CLI + zod (for MCP schemas)
       const install = await sandbox.runCommand({ cmd: 'npm', args: ['install', '@anthropic-ai/claude-agent-sdk', '@anthropic-ai/claude-code', 'zod'] })
       timeline.push({ name: 'install', ms: Date.now() - t1, ok: install.exitCode === 0, exitCode: install.exitCode })
       if (install.exitCode !== 0) {
@@ -51,6 +51,12 @@ export async function POST(req: Request) {
         timeline.push({ name: 'mkdir-skills-tools', ms: 0, ok: mk.exitCode === 0, exitCode: mk.exitCode })
         const skill = `---\nname: Tools\ndescription: Coleção de ferramentas do aplicativo acessíveis via HTTP bridge.\n---\n\nUse esta Skill para chamar as ferramentas do app. Sempre envie UM objeto JSON no input com o formato:\n\n{\n  \"tool\": \"<nome-da-tool>\",\n  \"args\": { /* parâmetros da tool */ }\n}\n\nExemplos:\n- Buscar fornecedor por nome:\n  { \"tool\": \"buscarFornecedor\", \"args\": { \"query\": \"ACME LTDA\", \"limite\": 20 } }\n- Buscar fornecedor por CNPJ:\n  { \"tool\": \"buscarFornecedor\", \"args\": { \"cnpj\": \"12.345.678/0001-90\" } }\n\nAs chamadas são feitas para a API do app usando variáveis de ambiente:\n- $AGENT_BASE_URL\n- $AGENT_TOOL_TOKEN\n- $AGENT_CHAT_ID\n`;
         await sandbox.writeFiles([{ path: '/vercel/sandbox/.claude/skills/Tools/SKILL.md', content: Buffer.from(skill) }])
+      } catch {}
+      // Seed MCP test tools server file
+      try {
+        await sandbox.runCommand({ cmd: 'node', args: ['-e', `require('fs').mkdirSync('/vercel/sandbox/.mcp', { recursive: true });`] })
+        const mcpContent = `import { createSdkMcpServer, tool } from '@anthropic-ai/claude-agent-sdk';\nimport { z } from 'zod';\nexport const appToolsServer = createSdkMcpServer({\n  name: 'app-tools',\n  version: '1.0.0',\n  tools: [\n    tool('get_weather','Get current temperature (mock)', { city: z.string().optional() }, async (args) => {\n      const city = (args && args.city) || 'Local';\n      return { content: [{ type: 'text', text: 'Temperatura em ' + city + ': 25°C' }] };\n    }),\n    tool('echo_text','Echo the provided text', { text: z.string() }, async (args) => {\n      const t = (args && args.text) || '';\n      return { content: [{ type: 'text', text: String(t) }] };\n    })\n  ]\n});\nexport default appToolsServer;\n`;
+        await sandbox.writeFiles([{ path: '/vercel/sandbox/.mcp/app-tools.mjs', content: Buffer.from(mcpContent) }])
       } catch {}
       const id = genId()
       // Issue short-lived agent token (opaque) and store

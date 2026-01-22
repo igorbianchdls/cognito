@@ -2,8 +2,7 @@
 
 export function getChatStreamRunnerScript(): string {
   return `
-import { query, tool, createSdkMcpServer } from '@anthropic-ai/claude-agent-sdk';
-import { z } from 'zod';
+import { query } from '@anthropic-ai/claude-agent-sdk';
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
 const cli = require.resolve('@anthropic-ai/claude-code/cli.js');
@@ -32,28 +31,14 @@ const agents = {
   }
 };
 
-// MCP test tools server (guarded init)
-let testToolsServer: any = null;
+let appToolsServer = null;
 try {
-  testToolsServer = createSdkMcpServer({
-    name: 'test-tools',
-    version: '1.0.0',
-    tools: [
-      tool('get_weather', 'Retorna temperatura (mock) para uma cidade', { city: z.string().optional() }, async (args) => {
-        const city = (args && (args as any).city) || 'Local';
-        return { content: [{ type: 'text', text: 'Temperatura em ' + city + ': 25°C' }] };
-      }),
-      tool('echo_text', 'Repete o texto enviado', { text: z.string() }, async (args) => {
-        const t = (args && (args as any).text) || '';
-        return { content: [{ type: 'text', text: String(t) }] };
-      }),
-    ],
-  });
-} catch (e) {
-  try { console.log(JSON.stringify({ type: 'stderr', data: 'MCP init failed: ' + String(e?.message || e) })); } catch {}
-}
+  const mod = await import('file:///vercel/sandbox/.mcp/app-tools.mjs');
+  // @ts-ignore
+  appToolsServer = (mod && (mod.default || mod.appToolsServer)) || null;
+} catch {}
 
-const extraAllowed = testToolsServer ? ['mcp__test-tools__get_weather', 'mcp__test-tools__echo_text'] : [];
+const extraAllowed = appToolsServer ? ['mcp__app-tools__get_weather','mcp__app-tools__echo_text'] : [];
 const options = {
   model: 'claude-sonnet-4-5-20250929',
   pathToClaudeCodeExecutable: cli,
@@ -65,7 +50,7 @@ const options = {
   maxThinkingTokens: 2048,
   settingSources: ['project'],
   allowedTools: ['Skill','Read','Write','Edit','Grep','Glob','Bash'].concat(extraAllowed),
-  mcpServers: testToolsServer ? { 'test-tools': testToolsServer } : undefined,
+  mcpServers: appToolsServer ? { 'app-tools': appToolsServer } : undefined,
   agents,
 };
 
@@ -77,11 +62,8 @@ try {
   if (parsed && parsed.sessionId) resumeId = parsed.sessionId;
 } catch {}
 
-// Start query stream (MCP requires streaming input)
-async function* generateMessages() {
-  yield { type: 'user' as const, message: { role: 'user' as const, content: prompt } };
-}
-const q = query({ prompt: generateMessages(), options: Object.assign({}, options, resumeId ? { resume: resumeId, continue: true } : {}) });
+// Start query stream (simple prompt)
+const q = query({ prompt, options: Object.assign({}, options, resumeId ? { resume: resumeId, continue: true } : {}) });
 
 // Surface agents and slash commands early
 try { console.log(JSON.stringify({ type: 'agents_list', agents: Object.keys(agents) })); } catch {}
