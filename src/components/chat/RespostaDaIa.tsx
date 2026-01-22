@@ -44,7 +44,8 @@ export default function RespostaDaIa({ message }: Props) {
                   {state === 'input-streaming' && (
                     <ToolInputStreaming input={inputStream || input || ''} isStreaming />
                   )}
-                  {(state === 'input-available') && input && (
+                  {/* Show input JSON when available or after completion */}
+                  {(state !== 'input-streaming') && input && (
                     <ToolInput input={input} />
                   )}
                   {(state === 'output-available' || state === 'output-error') && (

@@ -58,16 +58,35 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins }: { onOp
     const reader = res.body.getReader()
     const decoder = new TextDecoder()
     let buf = ''
-    const applyDelta = (delta: string) => {
+    const ensureTextPartAtEnd = () => {
       setMessages(prev => {
         const copy = prev.slice()
-        // Find last assistant
         for (let i = copy.length - 1; i >= 0; i--) {
           if (copy[i].role === 'assistant') {
-            const part = copy[i].parts?.[0]
-            const cur = (part && (part as any).text) || ''
-            const npart = { type: 'text', text: cur + delta } as any
-            copy[i] = { ...copy[i], parts: [npart] }
+            const parts = copy[i].parts || []
+            const last = parts[parts.length - 1]
+            if (!(last && (last as any).type === 'text')) {
+              copy[i] = { ...copy[i], parts: [...parts, { type: 'text', text: '' } as any] }
+            }
+            break
+          }
+        }
+        return copy
+      })
+    }
+    const appendToTextEnd = (delta: string) => {
+      setMessages(prev => {
+        const copy = prev.slice()
+        for (let i = copy.length - 1; i >= 0; i--) {
+          if (copy[i].role === 'assistant') {
+            const parts = (copy[i].parts || []).slice()
+            if (parts.length === 0 || (parts[parts.length - 1] as any).type !== 'text') {
+              parts.push({ type: 'text', text: '' } as any)
+            }
+            const last = parts[parts.length - 1] as any
+            const cur = (last && last.text) || ''
+            parts[parts.length - 1] = { type: 'text', text: cur + delta } as any
+            copy[i] = { ...copy[i], parts }
             break
           }
         }
@@ -133,7 +152,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins }: { onOp
         const copy = prev.slice()
         for (let i = copy.length - 1; i >= 0; i--) {
           if (copy[i].role === 'assistant') {
-            const parts = copy[i].parts || []
+            const parts = (copy[i].parts || []).slice()
             const idx = parts.findIndex(p => (p as any).toolCallId === callKey)
             if (idx === -1) {
               const newPart: any = {
@@ -142,7 +161,14 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins }: { onOp
                 toolCallId: callKey,
                 inputStream: '',
               }
-              copy[i] = { ...copy[i], parts: [...parts, newPart] }
+              // Insert before trailing text part (if any) to keep text at bottom
+              const last = parts[parts.length - 1]
+              if (last && (last as any).type === 'text') {
+                parts.splice(parts.length - 1, 0, newPart)
+              } else {
+                parts.push(newPart)
+              }
+              copy[i] = { ...copy[i], parts }
             }
             break
           }
@@ -155,12 +181,23 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins }: { onOp
         const copy = prev.slice()
         for (let i = copy.length - 1; i >= 0; i--) {
           if (copy[i].role === 'assistant') {
+            let found = false
             const parts = (copy[i].parts || []).map(p => {
               if ((p as any).toolCallId === callKey) {
+                found = true
                 return { ...(p as any), ...patch }
               }
               return p
             })
+            // Fallback: if not found, update the last tool part
+            if (!found) {
+              for (let j = parts.length - 1; j >= 0; j--) {
+                if (((parts[j] as any).type || '').toString().startsWith('tool-')) {
+                  parts[j] = { ...(parts[j] as any), ...patch } as any
+                  break
+                }
+              }
+            }
             copy[i] = { ...copy[i], parts }
             break
           }
@@ -180,7 +217,8 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins }: { onOp
         try {
           const evt = JSON.parse(payload) as any
           if (evt && evt.type === 'delta' && typeof evt.text === 'string') {
-            applyDelta(evt.text)
+            ensureTextPartAtEnd()
+            appendToTextEnd(evt.text)
           } else if (evt && evt.type === 'reasoning_start') {
             ensureReasoningPart()
           } else if (evt && evt.type === 'reasoning_delta' && typeof evt.text === 'string') {
