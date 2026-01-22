@@ -193,10 +193,6 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins }: { onOp
           } else if (evt && evt.type === 'tool_input_delta' && typeof evt.partial === 'string') {
             const callKey = `ti-${evt.index ?? 0}`
             ensureToolPart(callKey, evt.name, 'input-streaming')
-            updateToolPart(callKey, (prev => {
-              // We'll use a function-style patch by computing new inputStream outside
-              return {} as any
-            }) as any)
             // Manually update by reading and writing to avoid stale closures
             setMessages(prev => {
               const copy = prev.slice()
