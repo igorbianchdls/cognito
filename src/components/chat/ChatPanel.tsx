@@ -6,7 +6,7 @@ import ChatContainer from './ChatContainer';
 type ChatPanelProps = {
   className?: string;
   style?: React.CSSProperties;
-  onOpenSandbox?: () => void;
+  onOpenSandbox?: (chatId: string) => void;
   withSideMargins?: boolean;
 };
 
