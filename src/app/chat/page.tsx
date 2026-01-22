@@ -21,31 +21,25 @@ export default function ChatRoutePage() {
         <div className="flex h-full overflow-hidden">
           <div className="flex-1">
             <PageContainer>
-              {showSandbox ? (
-                sandboxExpanded ? (
-                  <div className="h-full">
-                    <SandboxPanel
-                      chatId={chatId ?? undefined}
-                      onClose={() => { setShowSandbox(false); setSandboxExpanded(false); }}
-                      onExpand={() => setSandboxExpanded(false)}
-                      expanded
-                    />
-                  </div>
-                ) : (
-                  <div className="grid h-full grid-cols-1 lg:grid-cols-2">
-                    <div className="h-full min-h-0">
-                      <ChatPanel onOpenSandbox={(id) => { setChatId(id); setShowSandbox(true); setSandboxExpanded(false); }} withSideMargins={false} />
-                    </div>
-                    <div className="h-full min-h-0">
-                      <SandboxPanel chatId={chatId ?? undefined} onClose={() => { setShowSandbox(false); setSandboxExpanded(false); }} onExpand={() => setSandboxExpanded(true)} />
-                    </div>
-                  </div>
-                )
-              ) : (
-                <div className="h-full">
-                  <ChatPanel onOpenSandbox={(id) => { setChatId(id); setShowSandbox(true); setSandboxExpanded(false); }} withSideMargins={true} />
+              {/* Always mounted panels; toggle visibility/layout only */}
+              <div className={showSandbox && !sandboxExpanded ? 'grid h-full grid-cols-1 lg:grid-cols-2' : 'grid h-full grid-cols-1'}>
+                {/* Chat cell */}
+                <div className={sandboxExpanded ? 'hidden' : 'h-full min-h-0'}>
+                  <ChatPanel
+                    onOpenSandbox={(id) => { setChatId(id); setShowSandbox(true); setSandboxExpanded(false); }}
+                    withSideMargins={!showSandbox}
+                  />
                 </div>
-              )}
+                {/* Sandbox cell (kept mounted; hidden when closed) */}
+                <div className={!showSandbox ? 'hidden' : 'h-full min-h-0'}>
+                  <SandboxPanel
+                    chatId={chatId ?? undefined}
+                    onClose={() => { setShowSandbox(false); setSandboxExpanded(false); }}
+                    onExpand={() => setSandboxExpanded(!sandboxExpanded)}
+                    expanded={sandboxExpanded}
+                  />
+                </div>
+              </div>
             </PageContainer>
           </div>
         </div>
