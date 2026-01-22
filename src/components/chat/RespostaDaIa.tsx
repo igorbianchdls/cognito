@@ -18,9 +18,9 @@ export default function RespostaDaIa({ message }: Props) {
   return (
     <div className="w-full flex justify-start py-3">
       <div className="max-w-[720px] w-full">
-        <div className="flex items-center gap-2 text-sm text-gray-600 mb-2 px-1">
+        <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
           <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-gray-900 text-white text-[10px]">IA</span>
-          <span>Agente</span>
+          <span className="font-semibold text-gray-900">Claude</span>
         </div>
         {parts.map((part, index) => {
           if (part.type === 'reasoning') {
