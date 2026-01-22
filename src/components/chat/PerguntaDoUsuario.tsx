@@ -13,7 +13,7 @@ export default function PerguntaDoUsuario({ message }: Props) {
   if (textParts.length === 0) return null;
 
   return (
-    <div className="w-full flex justify-start py-3">
+    <div className="w-full flex justify-end py-3">
       <div className="max-w-[680px] bg-gray-50 rounded-xl px-4 py-3 text-[15px] leading-6 text-gray-900">
         {textParts.map((p, i) => (
           <p key={i}>{(p as any).text}</p>
