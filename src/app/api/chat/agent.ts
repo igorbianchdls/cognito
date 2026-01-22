@@ -115,7 +115,8 @@ for await (const msg of q) {
           const token = process.env.AGENT_TOOL_TOKEN || '';
           const chatId = process.env.AGENT_CHAT_ID || '';
           if (meta && meta.name === 'buscarFornecedor' && base && token && chatId && parsed) {
-            const res = await fetch(`${base}/api/agent-tools/contas-a-pagar/buscar-fornecedor`, {
+            const url = (base || '') + '/api/agent-tools/contas-a-pagar/buscar-fornecedor';
+            const res = await fetch(url, {
               method: 'POST',
               headers: {
                 'content-type': 'application/json',
