@@ -38,16 +38,6 @@ export default function SandboxHeader({ onClose, onExpand, expanded }: Props) {
       </div>
       {/* Right: actions + deploy + close */}
       <div className="flex items-center gap-1">
-        {expanded && (
-          <button
-            type="button"
-            className="h-8 w-8 inline-flex items-center justify-center rounded-md text-gray-700 hover:bg-gray-100"
-            aria-label="Collapse to split"
-            onClick={onExpand}
-          >
-            <ChevronsRight className="w-4 h-4" />
-          </button>
-        )}
         <HeaderActions />
         {onClose && (
           <button
@@ -57,6 +47,16 @@ export default function SandboxHeader({ onClose, onExpand, expanded }: Props) {
             className="h-8 w-8 inline-flex items-center justify-center rounded-md text-gray-600 hover:bg-gray-100 hover:text-gray-800 ml-1"
           >
             <X className="w-4 h-4" />
+          </button>
+        )}
+        {expanded && (
+          <button
+            type="button"
+            className="h-8 w-8 inline-flex items-center justify-center rounded-md text-gray-700 hover:bg-gray-100 ml-1"
+            aria-label="Collapse to split"
+            onClick={onExpand}
+          >
+            <ChevronsRight className="w-4 h-4" />
           </button>
         )}
       </div>
