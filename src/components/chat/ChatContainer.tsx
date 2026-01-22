@@ -181,23 +181,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins }: { onOp
         const copy = prev.slice()
         for (let i = copy.length - 1; i >= 0; i--) {
           if (copy[i].role === 'assistant') {
-            let found = false
-            const parts = (copy[i].parts || []).map(p => {
-              if ((p as any).toolCallId === callKey) {
-                found = true
-                return { ...(p as any), ...patch }
-              }
-              return p
-            })
-            // Fallback: if not found, update the last tool part
-            if (!found) {
-              for (let j = parts.length - 1; j >= 0; j--) {
-                if (((parts[j] as any).type || '').toString().startsWith('tool-')) {
-                  parts[j] = { ...(parts[j] as any), ...patch } as any
-                  break
-                }
-              }
-            }
+            const parts = (copy[i].parts || []).map(p => ((p as any).toolCallId === callKey) ? { ...(p as any), ...patch } : p)
             copy[i] = { ...copy[i], parts }
             break
           }
@@ -205,6 +189,10 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins }: { onOp
         return copy
       })
     }
+
+    // Tool correlation helpers
+    const toolIndexToKey = new Map<number, string>()
+    let lastActiveToolKey: string | null = null
     while (true) {
       const { value, done } = await reader.read()
       if (done) break
@@ -226,10 +214,14 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins }: { onOp
           } else if (evt && evt.type === 'reasoning_end') {
             endReasoning()
           } else if (evt && evt.type === 'tool_input_start') {
-            const callKey = `ti-${evt.index ?? 0}`
+            const idx: number = typeof evt.index === 'number' ? evt.index : 0
+            const callKey = `ti-${idx}`
             ensureToolPart(callKey, evt.name, 'input-streaming')
+            toolIndexToKey.set(idx, callKey)
+            lastActiveToolKey = callKey
           } else if (evt && evt.type === 'tool_input_delta' && typeof evt.partial === 'string') {
-            const callKey = `ti-${evt.index ?? 0}`
+            const idx: number = typeof evt.index === 'number' ? evt.index : 0
+            const callKey = toolIndexToKey.get(idx) || `ti-${idx}`
             ensureToolPart(callKey, evt.name, 'input-streaming')
             // Manually update by reading and writing to avoid stale closures
             setMessages(prev => {
@@ -250,20 +242,17 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins }: { onOp
               return copy
             })
           } else if (evt && evt.type === 'tool_input_done') {
-            const callKey = `ti-${evt.index ?? 0}`
+            const idx: number = typeof evt.index === 'number' ? evt.index : 0
+            const callKey = toolIndexToKey.get(idx) || `ti-${idx}`
             let parsed: any = undefined
             try { if (typeof evt.input !== 'undefined') parsed = evt.input } catch {}
             updateToolPart(callKey, { state: 'input-available', input: parsed })
           } else if (evt && evt.type === 'tool_start') {
-            const callKey = `${evt.tool_name || 'tool'}-0`
-            ensureToolPart(callKey, evt.tool_name, 'input-available')
-            updateToolPart(callKey, { state: 'input-available' })
+            if (lastActiveToolKey) updateToolPart(lastActiveToolKey, { state: 'input-available' })
           } else if (evt && evt.type === 'tool_done') {
-            const callKey = `${evt.tool_name || 'tool'}-0`
-            updateToolPart(callKey, { state: 'output-available', output: evt.output })
+            if (lastActiveToolKey) updateToolPart(lastActiveToolKey, { state: 'output-available', output: evt.output })
           } else if (evt && evt.type === 'tool_error') {
-            const callKey = `${evt.tool_name || 'tool'}-0`
-            updateToolPart(callKey, { state: 'output-error', errorText: evt.error || 'Tool error' })
+            if (lastActiveToolKey) updateToolPart(lastActiveToolKey, { state: 'output-error', errorText: evt.error || 'Tool error' })
           } else if (evt && evt.type === 'final') {
             setStatus('idle')
           }
