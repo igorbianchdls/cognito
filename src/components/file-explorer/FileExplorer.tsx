@@ -42,7 +42,12 @@ export default function FileExplorer({ chatId }: { chatId?: string }) {
       const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'fs-read', chatId, path: node.path }) })
       const data = await res.json().catch(()=> ({})) as { ok?: boolean; content?: string; isBinary?: boolean; error?: string }
       if (res.ok && data.ok && typeof data.content === 'string' && !data.isBinary) {
-        setOpenFiles(prev => prev.map(f => f.path === node.path ? { ...f, content: data.content, language: languageFromPath(node.path), dirty: false } : f))
+        const contentStr = data.content as string;
+        setOpenFiles(prev => prev.map((f): OpenFile => (
+          f.path === node.path
+            ? { ...f, content: contentStr, language: languageFromPath(node.path), dirty: false }
+            : f
+        )))
       } else if (!res.ok || data.ok === false) {
         setFsError(data.error || 'Falha ao ler arquivo')
       }
