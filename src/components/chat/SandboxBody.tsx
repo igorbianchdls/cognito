@@ -1,6 +1,7 @@
 "use client";
 
 import React from 'react';
+import FileExplorer from '../file-explorer/FileExplorer';
 
 type SandboxBodyProps = React.PropsWithChildren<{
   className?: string;
@@ -9,9 +10,9 @@ type SandboxBodyProps = React.PropsWithChildren<{
 
 export default function SandboxBody({ className, style, children }: SandboxBodyProps) {
   return (
-    <div className={`min-h-0 overflow-y-auto p-4 ${className ?? ''}`} style={style}>
+    <div className={`min-h-0 overflow-hidden ${className ?? ''}`} style={style}>
+      <FileExplorer />
       {children}
     </div>
   );
 }
-
