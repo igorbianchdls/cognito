@@ -128,6 +128,46 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins }: { onOp
         return copy
       })
     }
+    const ensureToolPart = (callKey: string, toolName?: string, initialState?: string) => {
+      setMessages(prev => {
+        const copy = prev.slice()
+        for (let i = copy.length - 1; i >= 0; i--) {
+          if (copy[i].role === 'assistant') {
+            const parts = copy[i].parts || []
+            const idx = parts.findIndex(p => (p as any).toolCallId === callKey)
+            if (idx === -1) {
+              const newPart: any = {
+                type: `tool-${(toolName || 'generic').toString()}`,
+                state: (initialState as any) || 'input-streaming',
+                toolCallId: callKey,
+                inputStream: '',
+              }
+              copy[i] = { ...copy[i], parts: [...parts, newPart] }
+            }
+            break
+          }
+        }
+        return copy
+      })
+    }
+    const updateToolPart = (callKey: string, patch: Record<string, any>) => {
+      setMessages(prev => {
+        const copy = prev.slice()
+        for (let i = copy.length - 1; i >= 0; i--) {
+          if (copy[i].role === 'assistant') {
+            const parts = (copy[i].parts || []).map(p => {
+              if ((p as any).toolCallId === callKey) {
+                return { ...(p as any), ...patch }
+              }
+              return p
+            })
+            copy[i] = { ...copy[i], parts }
+            break
+          }
+        }
+        return copy
+      })
+    }
     while (true) {
       const { value, done } = await reader.read()
       if (done) break
@@ -139,11 +179,60 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins }: { onOp
         const payload = line.slice(6)
         try {
           const evt = JSON.parse(payload) as any
-          if (evt && evt.type === 'delta' && typeof evt.text === 'string') applyDelta(evt.text)
-          else if (evt && evt.type === 'reasoning_start') ensureReasoningPart()
-          else if (evt && evt.type === 'reasoning_delta' && typeof evt.text === 'string') applyReasoningDelta(evt.text)
-          else if (evt && evt.type === 'reasoning_end') endReasoning()
-          else if (evt && evt.type === 'final') setStatus('idle')
+          if (evt && evt.type === 'delta' && typeof evt.text === 'string') {
+            applyDelta(evt.text)
+          } else if (evt && evt.type === 'reasoning_start') {
+            ensureReasoningPart()
+          } else if (evt && evt.type === 'reasoning_delta' && typeof evt.text === 'string') {
+            applyReasoningDelta(evt.text)
+          } else if (evt && evt.type === 'reasoning_end') {
+            endReasoning()
+          } else if (evt && evt.type === 'tool_input_start') {
+            const callKey = `ti-${evt.index ?? 0}`
+            ensureToolPart(callKey, evt.name, 'input-streaming')
+          } else if (evt && evt.type === 'tool_input_delta' && typeof evt.partial === 'string') {
+            const callKey = `ti-${evt.index ?? 0}`
+            ensureToolPart(callKey, evt.name, 'input-streaming')
+            updateToolPart(callKey, (prev => {
+              // We'll use a function-style patch by computing new inputStream outside
+              return {} as any
+            }) as any)
+            // Manually update by reading and writing to avoid stale closures
+            setMessages(prev => {
+              const copy = prev.slice()
+              for (let i = copy.length - 1; i >= 0; i--) {
+                if (copy[i].role === 'assistant') {
+                  const parts = (copy[i].parts || []).map(p => {
+                    if ((p as any).toolCallId === callKey) {
+                      const cur = ((p as any).inputStream || '') as string
+                      return { ...(p as any), state: 'input-streaming', inputStream: cur + evt.partial }
+                    }
+                    return p
+                  })
+                  copy[i] = { ...copy[i], parts }
+                  break
+                }
+              }
+              return copy
+            })
+          } else if (evt && evt.type === 'tool_input_done') {
+            const callKey = `ti-${evt.index ?? 0}`
+            let parsed: any = undefined
+            try { if (typeof evt.input !== 'undefined') parsed = evt.input } catch {}
+            updateToolPart(callKey, { state: 'input-available', input: parsed })
+          } else if (evt && evt.type === 'tool_start') {
+            const callKey = `${evt.tool_name || 'tool'}-0`
+            ensureToolPart(callKey, evt.tool_name, 'input-available')
+            updateToolPart(callKey, { state: 'input-available' })
+          } else if (evt && evt.type === 'tool_done') {
+            const callKey = `${evt.tool_name || 'tool'}-0`
+            updateToolPart(callKey, { state: 'output-available', output: evt.output })
+          } else if (evt && evt.type === 'tool_error') {
+            const callKey = `${evt.tool_name || 'tool'}-0`
+            updateToolPart(callKey, { state: 'output-error', errorText: evt.error || 'Tool error' })
+          } else if (evt && evt.type === 'final') {
+            setStatus('idle')
+          }
         } catch {}
       }
     }
