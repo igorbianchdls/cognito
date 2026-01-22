@@ -32,21 +32,33 @@ const agents = {
 };
 
 let appToolsServer = null;
+let appToolsServerExtra = null;
 try {
   const mod = await import('file:///vercel/sandbox/.mcp/app-tools.mjs');
   // @ts-ignore
   appToolsServer = (mod && (mod.default || mod.appToolsServer)) || null;
 } catch {}
-
-const extraAllowed = appToolsServer ? [
-  'mcp__app-tools__get_weather',
-  'mcp__app-tools__echo_text',
-  'mcp__app-tools__buscar_fornecedor',
-  'mcp__app-tools__get_contas_pagar',
-  'mcp__app-tools__get_contas_receber',
-  'mcp__app-tools__get_vendas',
-  'mcp__app-tools__get_compras'
-] : [];
+try {
+  const mod2 = await import('file:///vercel/sandbox/.mcp/app-tools-extra.mjs');
+  // @ts-ignore
+  appToolsServerExtra = (mod2 && (mod2.default || mod2.appToolsServerExtra)) || null;
+} catch {}
+const extraAllowed = [];
+if (appToolsServer) {
+  extraAllowed.push(
+    'mcp__app-tools__get_weather',
+    'mcp__app-tools__echo_text',
+    'mcp__app-tools__buscar_fornecedor',
+    'mcp__app-tools__get_contas_pagar',
+    'mcp__app-tools__get_contas_receber',
+  );
+}
+if (appToolsServerExtra) {
+  extraAllowed.push(
+    'mcp__app-tools-extra__get_vendas',
+    'mcp__app-tools-extra__get_compras',
+  );
+}
 const options = {
   model: 'claude-sonnet-4-5-20250929',
   pathToClaudeCodeExecutable: cli,
@@ -58,7 +70,10 @@ const options = {
   maxThinkingTokens: 2048,
   settingSources: ['project'],
   allowedTools: ['Skill','Read','Write','Edit','Grep','Glob','Bash'].concat(extraAllowed),
-  mcpServers: appToolsServer ? { 'app-tools': appToolsServer } : undefined,
+  mcpServers: (appToolsServer || appToolsServerExtra) ? (Object.fromEntries([
+    ...(appToolsServer ? [[ 'app-tools', appToolsServer ]] : []),
+    ...(appToolsServerExtra ? [[ 'app-tools-extra', appToolsServerExtra ]] : []),
+  ]) as any) : undefined,
   agents,
   // Emit standard tool lifecycle events so UI can render tool-specific components (e.g., get_weather)
   hooks: {
