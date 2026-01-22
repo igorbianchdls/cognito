@@ -74,6 +74,60 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins }: { onOp
         return copy
       })
     }
+    const ensureReasoningPart = () => {
+      setMessages(prev => {
+        const copy = prev.slice()
+        for (let i = copy.length - 1; i >= 0; i--) {
+          if (copy[i].role === 'assistant') {
+            const parts = copy[i].parts || []
+            const has = parts.some(p => (p as any).type === 'reasoning')
+            if (!has) {
+              const nextParts = [...parts, { type: 'reasoning', content: '', state: 'streaming' } as any]
+              copy[i] = { ...copy[i], parts: nextParts }
+            }
+            break
+          }
+        }
+        return copy
+      })
+    }
+    const applyReasoningDelta = (delta: string) => {
+      setMessages(prev => {
+        const copy = prev.slice()
+        for (let i = copy.length - 1; i >= 0; i--) {
+          if (copy[i].role === 'assistant') {
+            const parts = (copy[i].parts || []).map(p => {
+              if ((p as any).type === 'reasoning') {
+                const cur = (p as any).content || (p as any).text || ''
+                return { ...(p as any), content: cur + delta, text: cur + delta }
+              }
+              return p
+            })
+            copy[i] = { ...copy[i], parts }
+            break
+          }
+        }
+        return copy
+      })
+    }
+    const endReasoning = () => {
+      setMessages(prev => {
+        const copy = prev.slice()
+        for (let i = copy.length - 1; i >= 0; i--) {
+          if (copy[i].role === 'assistant') {
+            const parts = (copy[i].parts || []).map(p => {
+              if ((p as any).type === 'reasoning') {
+                return { ...(p as any), state: 'done' }
+              }
+              return p
+            })
+            copy[i] = { ...copy[i], parts }
+            break
+          }
+        }
+        return copy
+      })
+    }
     while (true) {
       const { value, done } = await reader.read()
       if (done) break
@@ -86,7 +140,10 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins }: { onOp
         try {
           const evt = JSON.parse(payload) as any
           if (evt && evt.type === 'delta' && typeof evt.text === 'string') applyDelta(evt.text)
-          if (evt && evt.type === 'final') setStatus('idle')
+          else if (evt && evt.type === 'reasoning_start') ensureReasoningPart()
+          else if (evt && evt.type === 'reasoning_delta' && typeof evt.text === 'string') applyReasoningDelta(evt.text)
+          else if (evt && evt.type === 'reasoning_end') endReasoning()
+          else if (evt && evt.type === 'final') setStatus('idle')
         } catch {}
       }
     }
