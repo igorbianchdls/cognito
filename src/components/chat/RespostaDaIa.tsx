@@ -54,21 +54,28 @@ export default function RespostaDaIa({ message }: Props) {
                 try {
                   if (result && typeof result === 'object' && 'result' in result) {
                     result = (result as any).result;
-                  } else if (result && typeof result === 'object' && 'content' in result && Array.isArray((result as any).content)) {
-                    const arr = (result as any).content as Array<any>;
-                    const jsonPart = arr.find((c) => c && (c.json !== undefined));
-                    if (jsonPart && jsonPart.json !== undefined) {
-                      result = jsonPart.json;
-                    } else {
-                      // Try to parse any text entry as JSON, preferring ones that look like objects
-                      const textParts = arr.filter((c) => typeof c?.text === 'string').map((c) => String(c.text));
-                      let parsed: any = undefined;
-                      for (const t of textParts) {
-                        const s = t.trim();
-                        if (!s) continue;
-                        try { parsed = JSON.parse(s); break; } catch { /* try next */ }
+                  } else {
+                    let arr: Array<any> | null = null;
+                    if (result && typeof result === 'object' && 'content' in (result as any) && Array.isArray((result as any).content)) {
+                      arr = (result as any).content as Array<any>;
+                    } else if (Array.isArray(result)) {
+                      arr = result as Array<any>;
+                    }
+                    if (arr) {
+                      // Prefer JSON-like entries; otherwise parse any text entries that are JSON
+                      const jsonPart = arr.find((c) => c && (c.json !== undefined));
+                      if (jsonPart && jsonPart.json !== undefined) {
+                        result = jsonPart.json;
+                      } else {
+                        const textParts = arr.filter((c) => typeof c?.text === 'string').map((c) => String(c.text));
+                        let parsed: any = undefined;
+                        for (const t of textParts) {
+                          const s = t.trim();
+                          if (!s) continue;
+                          try { const p = JSON.parse(s); parsed = p; break; } catch { /* continue */ }
+                        }
+                        if (parsed !== undefined) result = parsed;
                       }
-                      if (parsed !== undefined) result = parsed;
                     }
                   }
                 } catch { /* ignore */ }
