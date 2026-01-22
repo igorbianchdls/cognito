@@ -24,13 +24,7 @@ export default function FileExplorer({ chatId }: { chatId?: string }) {
     })();
   }, [chatId]);
 
-  const handleToggle = (path: string) => {
-    setExpanded(prev => {
-      const next = new Set(prev);
-      if (next.has(path)) next.delete(path); else next.add(path);
-      return next;
-    });
-  };
+  
 
   const handleOpenFile = async (node: FileNode) => {
     if (node.type !== 'file') return;
