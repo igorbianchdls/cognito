@@ -39,7 +39,7 @@ const testToolsServer = createSdkMcpServer({
   tools: [
     tool('get_weather', 'Retorna temperatura (mock) para uma cidade', { city: z.string().optional() }, async (args) => {
       const city = (args && (args as any).city) || 'Local';
-      return { content: [{ type: 'text', text: `Temperatura em ${city}: 25°C` }] };
+      return { content: [{ type: 'text', text: 'Temperatura em ' + city + ': 25°C' }] };
     }),
     tool('echo_text', 'Repete o texto enviado', { text: z.string() }, async (args) => {
       const t = (args && (args as any).text) || '';
