@@ -15,7 +15,7 @@ type SandboxPanelProps = {
 export default function SandboxPanel({ className, style, onClose, onExpand, expanded, chatId }: SandboxPanelProps & { chatId?: string }) {
   return (
     <div
-      className={`h-full min-h-0 w-full overflow-hidden grid grid-rows-[auto_1fr] border-l border-gray-200 ${
+      className={`ui-text h-full min-h-0 w-full overflow-hidden grid grid-rows-[auto_1fr] border-l border-gray-200 ${
         className ?? ''
       }`}
       style={style}

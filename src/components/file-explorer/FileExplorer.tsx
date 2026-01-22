@@ -118,7 +118,7 @@ export default function FileExplorer({ chatId }: { chatId?: string }) {
   }
 
   return (
-    <div className="h-full grid grid-cols-[260px_1fr] min-h-0">
+    <div className="ui-text h-full grid grid-cols-[260px_1fr] min-h-0">
       <div className="border-r bg-white min-w-[240px]">
         <FileTree
           tree={tree}

@@ -10,7 +10,7 @@ type SandboxBodyProps = React.PropsWithChildren<{
 
 export default function SandboxBody({ className, style, children, chatId }: SandboxBodyProps & { chatId?: string }) {
   return (
-    <div className={`min-h-0 overflow-hidden ${className ?? ''}`} style={style}>
+    <div className={`ui-text min-h-0 overflow-hidden ${className ?? ''}`} style={style}>
       <FileExplorer chatId={chatId} />
       {children}
     </div>
