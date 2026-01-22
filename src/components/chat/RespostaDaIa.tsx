@@ -7,6 +7,7 @@ import { Reasoning, ReasoningTrigger, ReasoningContent } from '@/components/ai-e
 import { Tool, ToolHeader, ToolContent, ToolInput, ToolOutput } from '@/components/ai-elements/tool';
 import { ToolInputStreaming } from '@/components/ai-elements/tool-input-streaming';
 import { CodeBlock } from '@/components/ai-elements/code-block';
+import FornecedorResult from '@/components/tools/workflow/FornecedorResult';
 
 type Props = { message: UIMessage };
 
@@ -34,13 +35,23 @@ export default function RespostaDaIa({ message }: Props) {
               </Reasoning>
             );
           }
-          // Tool UI part (generic)
+          // Tool UI part (generic + special cases)
           if (typeof part.type === 'string' && part.type.startsWith('tool-')) {
             const state = (part as any).state as 'input-streaming' | 'input-available' | 'output-available' | 'output-error' | undefined;
             const input = (part as any).input;
             const inputStream = (part as any).inputStream as string | undefined;
             const output = (part as any).output;
             const errorText = (part as any).errorText as string | undefined;
+            const toolType = (part as any).type as string;
+            // Special render: buscarFornecedor → ArtifactDataTable
+            if (toolType === 'tool-buscarFornecedor' && (state === 'output-available' || state === 'output-error') && output) {
+              const result = (output && (output.result !== undefined ? output.result : output)) as any;
+              return (
+                <div key={`tool-${index}`} className="mb-3">
+                  <FornecedorResult result={result} />
+                </div>
+              );
+            }
             return (
               <Tool key={`tool-${index}`} defaultOpen>
                 <ToolHeader type={(part as any).type} state={(state as any) || 'input-streaming'} />

@@ -109,6 +109,28 @@ for await (const msg of q) {
         try { parsed = JSON.parse(raw); } catch {}
         const meta = toolMeta[idx] || {};
         console.log(JSON.stringify({ type: 'tool_input_done', index: idx, id: meta.id, name: meta.name, input: parsed, raw }));
+        // Bridge custom tool calls to backend endpoints
+        try {
+          const base = process.env.AGENT_BASE_URL || '';
+          const token = process.env.AGENT_TOOL_TOKEN || '';
+          const chatId = process.env.AGENT_CHAT_ID || '';
+          if (meta && meta.name === 'buscarFornecedor' && base && token && chatId && parsed) {
+            const res = await fetch(`${base}/api/agent-tools/contas-a-pagar/buscar-fornecedor`, {
+              method: 'POST',
+              headers: {
+                'content-type': 'application/json',
+                'authorization': `Bearer ${token}`,
+                'x-chat-id': chatId,
+              },
+              body: JSON.stringify(parsed)
+            });
+            const data = await res.json().catch(() => ({}));
+            const out = (data && (data.result !== undefined ? data.result : data)) || {};
+            console.log(JSON.stringify({ type: 'tool_done', tool_name: 'buscarFornecedor', output: out }));
+          }
+        } catch (e) {
+          try { console.log(JSON.stringify({ type: 'tool_error', tool_name: String((toolMeta[idx] && toolMeta[idx].name) || 'buscarFornecedor'), error: String(e?.message || e) })); } catch {}
+        }
         delete toolInputBuffers[idx];
         delete toolMeta[idx];
       }
@@ -164,4 +186,3 @@ for await (const msg of q) {
 }
 `.trim();
 }
-
