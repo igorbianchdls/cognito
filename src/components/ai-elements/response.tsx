@@ -295,7 +295,7 @@ export const Response = memo(
   return (
     <div
       className={cn(
-        'size-full text-lg [&>*:first-child]:mt-0 [&>*:last-child]:mb-0',
+        'size-full text-base [&>*:first-child]:mt-0 [&>*:last-child]:mb-0',
         className,
       )}
       style={{ fontFamily: 'var(--ui-font-family)' }}

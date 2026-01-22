@@ -22,7 +22,7 @@ export default function ChatRoutePage() {
           <div className="flex-1">
             <PageContainer>
               {/* Always mounted panels; toggle visibility/layout only */}
-              <div className={showSandbox && !sandboxExpanded ? 'grid h-full grid-cols-1 lg:grid-cols-2' : 'grid h-full grid-cols-1'}>
+              <div className={showSandbox && !sandboxExpanded ? 'grid h-full grid-cols-1 lg:grid-cols-[1fr_2fr]' : 'grid h-full grid-cols-1'}>
                 {/* Chat cell */}
                 <div className={sandboxExpanded ? 'hidden' : 'h-full min-h-0'}>
                   <ChatPanel
