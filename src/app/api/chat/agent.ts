@@ -114,20 +114,25 @@ for await (const msg of q) {
           const base = process.env.AGENT_BASE_URL || '';
           const token = process.env.AGENT_TOOL_TOKEN || '';
           const chatId = process.env.AGENT_CHAT_ID || '';
+          // 1) Direct call when tool name matches
           if (meta && meta.name === 'buscarFornecedor' && base && token && chatId && parsed) {
             const url = (base || '') + '/api/agent-tools/contas-a-pagar/buscar-fornecedor';
-            const res = await fetch(url, {
-              method: 'POST',
-              headers: {
-                'content-type': 'application/json',
-                'authorization': 'Bearer ' + token,
-                'x-chat-id': chatId,
-              },
-              body: JSON.stringify(parsed)
-            });
+            const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json', 'authorization': 'Bearer ' + token, 'x-chat-id': chatId }, body: JSON.stringify(parsed) });
             const data = await res.json().catch(() => ({}));
             const out = (data && (data.result !== undefined ? data.result : data)) || {};
             console.log(JSON.stringify({ type: 'tool_done', tool_name: 'buscarFornecedor', output: out }));
+          }
+          // 2) Generic Tools Skill: { tool: 'buscarFornecedor', args: {...} }
+          else if (meta && meta.name === 'Tools' && parsed && typeof parsed === 'object' && (parsed.tool || (parsed.name))) {
+            const toolName = String((parsed.tool || parsed.name) || '');
+            const args = (parsed.args !== undefined ? parsed.args : parsed.input !== undefined ? parsed.input : {})
+            if (toolName === 'buscarFornecedor' && base && token && chatId) {
+              const url = (base || '') + '/api/agent-tools/contas-a-pagar/buscar-fornecedor';
+              const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json', 'authorization': 'Bearer ' + token, 'x-chat-id': chatId }, body: JSON.stringify(args || {}) });
+              const data = await res.json().catch(() => ({}));
+              const out = (data && (data.result !== undefined ? data.result : data)) || {};
+              console.log(JSON.stringify({ type: 'tool_done', tool_name: 'buscarFornecedor', output: out }));
+            }
           }
         } catch (e) {
           try { console.log(JSON.stringify({ type: 'tool_error', tool_name: String((toolMeta[idx] && toolMeta[idx].name) || 'buscarFornecedor'), error: String(e?.message || e) })); } catch {}

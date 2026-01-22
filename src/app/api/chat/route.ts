@@ -45,6 +45,13 @@ export async function POST(req: Request) {
         await sandbox.stop().catch(() => {})
         return Response.json({ ok: false, error: 'install failed', stdout: o, stderr: e, timeline }, { status: 500 })
       }
+      // Seed a single Tools Skill to document app tools usage
+      try {
+        const mk = await sandbox.runCommand({ cmd: 'node', args: ['-e', `require('fs').mkdirSync('/vercel/sandbox/.claude/skills/Tools', { recursive: true });`] })
+        timeline.push({ name: 'mkdir-skills-tools', ms: 0, ok: mk.exitCode === 0, exitCode: mk.exitCode })
+        const skill = `---\nname: Tools\ndescription: Coleção de ferramentas do aplicativo acessíveis via HTTP bridge.\n---\n\nUse esta Skill para chamar as ferramentas do app. Sempre envie UM objeto JSON no input com o formato:\n\n{\n  \"tool\": \"<nome-da-tool>\",\n  \"args\": { /* parâmetros da tool */ }\n}\n\nExemplos:\n- Buscar fornecedor por nome:\n  { \"tool\": \"buscarFornecedor\", \"args\": { \"query\": \"ACME LTDA\", \"limite\": 20 } }\n- Buscar fornecedor por CNPJ:\n  { \"tool\": \"buscarFornecedor\", \"args\": { \"cnpj\": \"12.345.678/0001-90\" } }\n\nAs chamadas são feitas para a API do app usando variáveis de ambiente:\n- $AGENT_BASE_URL\n- $AGENT_TOOL_TOKEN\n- $AGENT_CHAT_ID\n`;
+        await sandbox.writeFiles([{ path: '/vercel/sandbox/.claude/skills/Tools/SKILL.md', content: Buffer.from(skill) }])
+      } catch {}
       const id = genId()
       // Issue short-lived agent token (opaque) and store
       const { token, exp } = generateAgentToken(1800)
@@ -72,7 +79,14 @@ export async function POST(req: Request) {
     const sess = SESSIONS.get(chatId)
     if (!sess) return new Response(JSON.stringify({ ok: false, error: 'chat não encontrado' }), { status: 404 })
     sess.lastUsedAt = Date.now()
-    const lines: string[] = ['You are a helpful assistant. Continue the conversation.', '', 'Conversation:']
+    const lines: string[] = [
+      'You are a helpful assistant. Continue the conversation.',
+      'Available application tools (invoke with tool_use):',
+      '- buscarFornecedor(input: { query?: string, cnpj?: string, nome?: string, limite?: number }) — use to list suppliers when the user asks about fornecedores.',
+      'When the user asks for fornecedores, emit a tool_use with name "buscarFornecedor" and a reasonable JSON input (e.g., {"query":"<user term>","limite":20}). Do not simulate results; call the tool and then summarize based on the returned data.',
+      '',
+      'Conversation:'
+    ]
     for (const m of history.slice(-12)) lines.push(`${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`)
     lines.push('Assistant:')
     const prompt = lines.join('\n').slice(0, 6000)

@@ -250,9 +250,9 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins }: { onOp
           } else if (evt && evt.type === 'tool_start') {
             if (lastActiveToolKey) updateToolPart(lastActiveToolKey, { state: 'input-available' })
           } else if (evt && evt.type === 'tool_done') {
-            if (lastActiveToolKey) updateToolPart(lastActiveToolKey, { state: 'output-available', output: evt.output })
+            if (lastActiveToolKey) updateToolPart(lastActiveToolKey, { state: 'output-available', output: evt.output, type: `tool-${evt.tool_name || 'generic'}` })
           } else if (evt && evt.type === 'tool_error') {
-            if (lastActiveToolKey) updateToolPart(lastActiveToolKey, { state: 'output-error', errorText: evt.error || 'Tool error' })
+            if (lastActiveToolKey) updateToolPart(lastActiveToolKey, { state: 'output-error', errorText: evt.error || 'Tool error', type: `tool-${evt.tool_name || 'generic'}` })
           } else if (evt && evt.type === 'final') {
             setStatus('idle')
           }
