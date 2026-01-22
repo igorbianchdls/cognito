@@ -120,7 +120,7 @@ for await (const msg of q) {
               method: 'POST',
               headers: {
                 'content-type': 'application/json',
-                'authorization': `Bearer ${token}`,
+                'authorization': 'Bearer ' + token,
                 'x-chat-id': chatId,
               },
               body: JSON.stringify(parsed)
