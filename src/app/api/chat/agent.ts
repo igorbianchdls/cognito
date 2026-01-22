@@ -43,7 +43,9 @@ const extraAllowed = appToolsServer ? [
   'mcp__app-tools__echo_text',
   'mcp__app-tools__buscar_fornecedor',
   'mcp__app-tools__get_contas_pagar',
-  'mcp__app-tools__get_contas_receber'
+  'mcp__app-tools__get_contas_receber',
+  'mcp__app-tools__get_vendas',
+  'mcp__app-tools__get_compras'
 ] : [];
 const options = {
   model: 'claude-sonnet-4-5-20250929',
@@ -167,6 +169,18 @@ for await (const msg of q) {
               const data = await res.json().catch(() => ({}));
               const out = (data && (data.result !== undefined ? data.result : data)) || {};
               console.log(JSON.stringify({ type: 'tool_done', tool_name: 'getContasReceber', output: out }));
+            } else if (toolName === 'getVendas' && base && token && chatId) {
+              const url = (base || '') + '/api/agent-tools/vendas/pedidos/listar';
+              const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json', 'authorization': 'Bearer ' + token, 'x-chat-id': chatId }, body: JSON.stringify(args || {}) });
+              const data = await res.json().catch(() => ({}));
+              const out = (data && (data.result !== undefined ? data.result : data)) || {};
+              console.log(JSON.stringify({ type: 'tool_done', tool_name: 'getVendas', output: out }));
+            } else if (toolName === 'getCompras' && base && token && chatId) {
+              const url = (base || '') + '/api/agent-tools/compras/pedidos/listar';
+              const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json', 'authorization': 'Bearer ' + token, 'x-chat-id': chatId }, body: JSON.stringify(args || {}) });
+              const data = await res.json().catch(() => ({}));
+              const out = (data && (data.result !== undefined ? data.result : data)) || {};
+              console.log(JSON.stringify({ type: 'tool_done', tool_name: 'getCompras', output: out }));
             }
           }
         } catch (e) {

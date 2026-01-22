@@ -11,6 +11,8 @@ import FornecedorResult from '@/components/tools/workflow/FornecedorResult';
 import WeatherResult from '@/components/tools/mcp/WeatherResult';
 import ContasAPagarResult from '@/components/tools/ContasAPagarResult';
 import ContasAReceberResult from '@/components/tools/ContasAReceberResult';
+import PedidosVendasResult from '@/components/tools/vendas-b2b/PedidosVendasResult';
+import PedidosCompraResult from '@/components/tools/compras/PedidosCompraResult';
 
 type Props = { message: UIMessage };
 
@@ -84,6 +86,82 @@ export default function RespostaDaIa({ message }: Props) {
                 return (
                   <div key={`tool-${index}`} className="mb-3">
                     <FornecedorResult result={result} />
+                  </div>
+                );
+              }
+            }
+            // Special render: get_vendas / getVendas → PedidosVendasResult
+            {
+              const normalized = toolType.startsWith('tool-') ? toolType.slice(5) : toolType;
+              const isVendas = normalized === 'get_vendas' || normalized === 'getVendas' || normalized.endsWith('__get_vendas') || /get[_-]?vendas/i.test(normalized);
+              if (isVendas && (state === 'output-available' || state === 'output-error') && output) {
+                let result: any = output as any;
+                try {
+                  if (result && typeof result === 'object' && 'result' in result) {
+                    result = (result as any).result;
+                  } else {
+                    let arr: Array<any> | null = null;
+                    if (result && typeof result === 'object' && 'content' in (result as any) && Array.isArray((result as any).content)) {
+                      arr = (result as any).content as Array<any>;
+                    } else if (Array.isArray(result)) {
+                      arr = result as Array<any>;
+                    }
+                    if (arr) {
+                      const jsonPart = arr.find((c) => c && (c.json !== undefined));
+                      if (jsonPart && jsonPart.json !== undefined) {
+                        result = jsonPart.json;
+                      } else {
+                        const textParts = arr.filter((c) => typeof c?.text === 'string').map((c) => String(c.text));
+                        for (const t of textParts) {
+                          const s = t.trim();
+                          if (!s) continue;
+                          try { result = JSON.parse(s); break; } catch {}
+                        }
+                      }
+                    }
+                  }
+                } catch {}
+                return (
+                  <div key={`tool-${index}`} className="mb-3">
+                    <PedidosVendasResult success={!!result?.success} message={String(result?.message || '')} rows={Array.isArray(result?.rows) ? result.rows : []} count={typeof result?.count === 'number' ? result.count : undefined} sql_query={typeof result?.sql_query === 'string' ? result.sql_query : undefined} />
+                  </div>
+                );
+              }
+            }
+            // Special render: get_compras / getCompras → PedidosCompraResult
+            {
+              const normalized = toolType.startsWith('tool-') ? toolType.slice(5) : toolType;
+              const isCompras = normalized === 'get_compras' || normalized === 'getCompras' || normalized.endsWith('__get_compras') || /get[_-]?compras/i.test(normalized);
+              if (isCompras && (state === 'output-available' || state === 'output-error') && output) {
+                let result: any = output as any;
+                try {
+                  if (result && typeof result === 'object' && 'result' in result) {
+                    result = (result as any).result;
+                  } else {
+                    let arr: Array<any> | null = null;
+                    if (result && typeof result === 'object' && 'content' in (result as any) && Array.isArray((result as any).content)) {
+                      arr = (result as any).content as Array<any>;
+                    } else if (Array.isArray(result)) {
+                      arr = result as Array<any>;
+                    }
+                    if (arr) {
+                      const jsonPart = arr.find((c) => c && (c.json !== undefined));
+                      if (jsonPart && jsonPart.json !== undefined) {
+                        result = jsonPart.json;
+                      } else {
+                        const textParts = arr.filter((c) => typeof c?.text === 'string').map((c) => String(c.text));
+                        for (const t of textParts) {
+                          const s = t.trim();
+                          if (!s) continue;
+                          try { result = JSON.parse(s); break; } catch {}
+                        }
+                      }
+                    }
+                  }
+                } catch {}
+                return (
+                  <div key={`tool-${index}`} className="mb-3">
+                    <PedidosCompraResult success={!!result?.success} message={String(result?.message || '')} rows={Array.isArray(result?.rows) ? result.rows : []} count={typeof result?.count === 'number' ? result.count : undefined} sql_query={typeof result?.sql_query === 'string' ? result.sql_query : undefined} title={typeof result?.title === 'string' ? result.title : undefined} />
                   </div>
                 );
               }

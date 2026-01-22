@@ -91,6 +91,8 @@ export async function POST(req: Request) {
       '- buscarFornecedor(input: { query?: string, cnpj?: string, nome?: string, limite?: number }) — use to list suppliers when the user asks about fornecedores.',
       '- get_contas_pagar(input: { status?: string, fornecedor_id?: string, data_vencimento_de?: string, data_vencimento_ate?: string, limit?: number }) — use to list contas a pagar per user request.',
       '- get_contas_receber(input: { status?: string, cliente_id?: string, data_vencimento_de?: string, data_vencimento_ate?: string, limit?: number }) — use to list contas a receber per user request.',
+      '- get_vendas(input: { de?: string, ate?: string, status?: string, cliente_id?: string, vendedor_id?: string, canal_venda_id?: string, valor_min?: number, valor_max?: number, pageSize?: number }) — use to list sales orders (pedidos de venda).',
+      '- get_compras(input: { de?: string, ate?: string, status?: string, fornecedor_id?: string, condicao_pagamento_id?: string, valor_min?: number, valor_max?: number, limit?: number }) — use to list purchase orders (pedidos de compra).',
       'When the user asks for fornecedores, emit a tool_use with name "buscarFornecedor" and a reasonable JSON input (e.g., {"query":"<user term>","limite":20}). For financial lists, call get_contas_pagar/get_contas_receber with appropriate filters; do not simulate results — call the tool and then summarize.',
       '',
       'Conversation:'
