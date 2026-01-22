@@ -1,18 +1,20 @@
 import { Sandbox } from '@vercel/sandbox'
 import { getChatStreamRunnerScript, getSlashStreamRunnerScript } from './agent'
+import { generateAgentToken, setAgentToken } from './tokenStore'
 
 export const runtime = 'nodejs'
 
 type Msg = { role: 'user'|'assistant'; content: string }
 
 // Simple in-memory session store
-type ChatSession = { id: string; sandbox: Sandbox; createdAt: number; lastUsedAt: number }
+type ChatSession = { id: string; sandbox: Sandbox; createdAt: number; lastUsedAt: number; agentToken?: string; agentTokenExp?: number }
 const SESSIONS = new Map<string, ChatSession>()
 const genId = () => Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2)
 
 export async function POST(req: Request) {
   const enc = new TextEncoder()
   const { action, ...payload } = await req.json().catch(() => ({})) as any
+  const origin = (() => { try { return new URL((req as any).url).origin } catch { return process.env.NEXT_PUBLIC_BASE_URL || '' } })()
   if (!action || typeof action !== 'string') {
     return Response.json({ ok: false, error: 'action inválida' }, { status: 400 })
   }
@@ -44,7 +46,10 @@ export async function POST(req: Request) {
         return Response.json({ ok: false, error: 'install failed', stdout: o, stderr: e, timeline }, { status: 500 })
       }
       const id = genId()
-      SESSIONS.set(id, { id, sandbox, createdAt: Date.now(), lastUsedAt: Date.now() })
+      // Issue short-lived agent token (opaque) and store
+      const { token, exp } = generateAgentToken(1800)
+      SESSIONS.set(id, { id, sandbox, createdAt: Date.now(), lastUsedAt: Date.now(), agentToken: token, agentTokenExp: exp })
+      setAgentToken(id, token, exp)
       return Response.json({ ok: true, chatId: id, timeline })
     } catch (e) {
       try { await sandbox?.stop() } catch {}
@@ -77,7 +82,15 @@ export async function POST(req: Request) {
       start: async (controller) => {
         try {
           const cmd: any = await (sess.sandbox as any).runCommand({
-            cmd: 'node', args: ['agent-chat-stream.mjs', prompt], env: { ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY || '' }, detached: true,
+            cmd: 'node',
+            args: ['agent-chat-stream.mjs', prompt],
+            env: {
+              ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY || '',
+              AGENT_TOOL_TOKEN: sess.agentToken || '',
+              AGENT_CHAT_ID: chatId,
+              AGENT_BASE_URL: origin,
+            },
+            detached: true,
           })
           controller.enqueue(enc.encode('event: start\ndata: ok\n\n'))
           let outBuf = ''; let errBuf = ''
@@ -125,7 +138,12 @@ export async function POST(req: Request) {
           const cmd: any = await (sess.sandbox as any).runCommand({
             cmd: 'node',
             args: ['agent-slash-stream.mjs', slash],
-            env: { ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY || '' },
+            env: {
+              ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY || '',
+              AGENT_TOOL_TOKEN: (SESSIONS.get(chatId)?.agentToken) || '',
+              AGENT_CHAT_ID: chatId,
+              AGENT_BASE_URL: origin,
+            },
             detached: true,
           })
           controller.enqueue(enc.encode('event: start\ndata: ok\n\n'))
