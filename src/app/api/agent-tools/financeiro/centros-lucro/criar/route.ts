@@ -20,19 +20,19 @@ export async function POST(req: NextRequest) {
     const ativo = typeof payload.ativo === 'boolean' ? payload.ativo : true
     if (!nome) return Response.json({ ok: false, error: 'nome é obrigatório' }, { status: 400 })
 
-    // Checa duplicidade básica por nome
-    const dup = await runQuery<{ id: number }>(`SELECT id FROM empresa.centros_custo WHERE LOWER(nome) = LOWER($1) LIMIT 1`, [nome])
-    if (dup.length) return Response.json({ ok: false, error: 'Centro de custo já existe' }, { status: 409 })
+    const dup = await runQuery<{ id: number }>(`SELECT id FROM empresa.centros_lucro WHERE LOWER(nome) = LOWER($1) LIMIT 1`, [nome])
+    if (dup.length) return Response.json({ ok: false, error: 'Centro de lucro já existe' }, { status: 409 })
 
     const ins = await runQuery<{ id: number; nome: string; codigo: string | null; descricao: string | null; ativo: boolean }>(
-      `INSERT INTO empresa.centros_custo (codigo, nome, descricao, ativo)
+      `INSERT INTO empresa.centros_lucro (codigo, nome, descricao, ativo)
        VALUES ($1, $2, $3, $4)
        RETURNING id, nome, codigo, descricao, ativo`,
       [codigo, nome, descricao, ativo]
     )
     const row = ins[0]
-    return Response.json({ ok: true, result: { success: true, data: row, message: 'Centro de custo criado com sucesso' } })
+    return Response.json({ ok: true, result: { success: true, data: row, message: 'Centro de lucro criado com sucesso' } })
   } catch (e) {
     return Response.json({ ok: false, error: (e as Error).message }, { status: 500 })
   }
 }
+

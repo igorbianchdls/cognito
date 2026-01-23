@@ -22,8 +22,9 @@ import CategoriasReceitaResult from '@/components/tools/financeiro/CategoriasRec
 import CriarCentroCustoResult from '@/components/tools/financeiro/CriarCentroCustoResult';
 // Removed per request: do not render green client card
 // import CriarClienteResult from '@/components/tools/workflow/CriarClienteResult';
-import ClienteCriadoInput from '@/components/tools/workflow/ClienteCriadoInput';
-import CriarFornecedorResult from '@/components/tools/workflow/CriarFornecedorResult';
+import ToolCreateInputCard from '@/components/tools/workflow/ToolCreateInputCard';
+// Removed dedicated supplier card for create flow
+// import CriarFornecedorResult from '@/components/tools/workflow/CriarFornecedorResult';
 
 type Props = { message: UIMessage };
 
@@ -149,7 +150,7 @@ export default function RespostaDaIa({ message }: Props) {
                 );
               }
             }
-            // Special render: criar_cliente → mostrar input JSON + resultado criado
+            // Special render: criar_cliente → mostrar apenas o JSON de entrada (genérico)
             {
               const normalized = toolType.startsWith('tool-') ? toolType.slice(5) : toolType;
               const isCreateClient = normalized === 'criar_cliente' || normalized === 'criarCliente' || normalized.endsWith('__criar_cliente') || /criar[_-]?cliente/i.test(normalized);
@@ -184,33 +185,71 @@ export default function RespostaDaIa({ message }: Props) {
                 }
                 return (
                   <div key={`tool-${index}`} className="mb-3">
-                    <ClienteCriadoInput input={inputForDisplay} />
+                    <ToolCreateInputCard title="Criar Cliente" input={inputForDisplay} />
                   </div>
                 );
               }
             }
-            // Special render: criar_fornecedor → CriarFornecedorResult (form + commit)
+            // Special render: criar_fornecedor → mostrar apenas o JSON de entrada (genérico)
             {
               const normalized = toolType.startsWith('tool-') ? toolType.slice(5) : toolType;
               const isCreateSupplier = normalized === 'criar_fornecedor' || normalized === 'criarFornecedor' || normalized.endsWith('__criar_fornecedor') || /criar[_-]?fornecedor/i.test(normalized);
-              if (isCreateSupplier && (state === 'output-available' || state === 'output-error') && output) {
-                let result: any = (output as any).result !== undefined ? (output as any).result : output;
+              if (isCreateSupplier && (state === 'output-available' || state === 'output-error')) {
+                let inputForDisplay: any = input;
                 try {
-                  if (result && typeof result === 'object' && 'content' in (result as any) && Array.isArray((result as any).content)) {
-                    const arr = (result as any).content as Array<any>;
-                    const textParts = arr.filter((c) => typeof c?.text === 'string').map((c) => String(c.text));
-                    for (const t of textParts) { const s = t.trim(); if (!s) continue; try { result = JSON.parse(s); break; } catch {} }
+                  if (input && typeof input === 'object') {
+                    const o: any = input as any;
+                    if (o && (o.tool || o.name)) inputForDisplay = (o.args !== undefined ? o.args : (o.input !== undefined ? o.input : o));
                   }
                 } catch {}
-                // Ensure result shape has success/data to avoid error banner
-                if (result && typeof result === 'object' && !('success' in (result as any))) {
-                  if ((result as any).data || (result as any).id || (result as any).nome || (result as any).cnpj) {
-                    result = { success: true, data: (result as any).data ?? result, message: String((result as any).message || 'Fornecedor criado') };
-                  }
+                if (!inputForDisplay && (inputStream && typeof inputStream === 'string')) {
+                  const s = inputStream.trim(); if (s) { try { inputForDisplay = JSON.parse(s); } catch { inputForDisplay = s; } }
                 }
                 return (
                   <div key={`tool-${index}`} className="mb-3">
-                    <CriarFornecedorResult result={result as any} />
+                    <ToolCreateInputCard title="Criar Fornecedor" input={inputForDisplay} />
+                  </div>
+                );
+              }
+            }
+            // Special render: criar_centro_custo → mostrar apenas o JSON de entrada (genérico)
+            {
+              const normalized = toolType.startsWith('tool-') ? toolType.slice(5) : toolType;
+              const isCreateCC = normalized === 'criar_centro_custo' || normalized === 'criarCentroCusto' || normalized.endsWith('__criar_centro_custo') || /criar[_-]?centro[_-]?custo/i.test(normalized);
+              if (isCreateCC && (state === 'output-available' || state === 'output-error')) {
+                let inputForDisplay: any = input;
+                try {
+                  if (input && typeof input === 'object') {
+                    const o: any = input as any; if (o && (o.tool || o.name)) inputForDisplay = (o.args !== undefined ? o.args : (o.input !== undefined ? o.input : o));
+                  }
+                } catch {}
+                if (!inputForDisplay && (inputStream && typeof inputStream === 'string')) {
+                  const s = inputStream.trim(); if (s) { try { inputForDisplay = JSON.parse(s); } catch { inputForDisplay = s; } }
+                }
+                return (
+                  <div key={`tool-${index}`} className="mb-3">
+                    <ToolCreateInputCard title="Criar Centro de Custo" input={inputForDisplay} />
+                  </div>
+                );
+              }
+            }
+            // Special render: criar_centro_lucro → mostrar apenas o JSON de entrada (genérico)
+            {
+              const normalized = toolType.startsWith('tool-') ? toolType.slice(5) : toolType;
+              const isCreateCL = normalized === 'criar_centro_lucro' || normalized === 'criarCentroLucro' || normalized.endsWith('__criar_centro_lucro') || /criar[_-]?centro[_-]?lucro/i.test(normalized);
+              if (isCreateCL && (state === 'output-available' || state === 'output-error')) {
+                let inputForDisplay: any = input;
+                try {
+                  if (input && typeof input === 'object') {
+                    const o: any = input as any; if (o && (o.tool || o.name)) inputForDisplay = (o.args !== undefined ? o.args : (o.input !== undefined ? o.input : o));
+                  }
+                } catch {}
+                if (!inputForDisplay && (inputStream && typeof inputStream === 'string')) {
+                  const s = inputStream.trim(); if (s) { try { inputForDisplay = JSON.parse(s); } catch { inputForDisplay = s; } }
+                }
+                return (
+                  <div key={`tool-${index}`} className="mb-3">
+                    <ToolCreateInputCard title="Criar Centro de Lucro" input={inputForDisplay} />
                   </div>
                 );
               }

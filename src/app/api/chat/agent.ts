@@ -85,6 +85,7 @@ if (appToolsServerFinanceCreate) {
   extraAllowed.push('mcp__app-tools-finance-create__criar_centro_custo');
   extraAllowed.push('mcp__app-tools-finance-create__criar_cliente');
   extraAllowed.push('mcp__app-tools-finance-create__criar_fornecedor');
+  extraAllowed.push('mcp__app-tools-finance-create__criar_centro_lucro');
 }
 const options = {
   model: 'claude-sonnet-4-5-20250929',
@@ -202,6 +203,18 @@ for await (const msg of q) {
             const data = await res.json().catch(() => ({}));
             const out = (data && (data.result !== undefined ? data.result : data)) || {};
             console.log(JSON.stringify({ type: 'tool_done', tool_name: 'criar_fornecedor', output: out }));
+          } else if (meta && (meta.name === 'criarCentroCusto' || meta.name === 'criar_centro_custo') && base && token && chatId && parsed) {
+            const url = (base || '') + '/api/agent-tools/financeiro/centros-custo/criar';
+            const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json', 'authorization': 'Bearer ' + token, 'x-chat-id': chatId }, body: JSON.stringify(parsed) });
+            const data = await res.json().catch(() => ({}));
+            const out = (data && (data.result !== undefined ? data.result : data)) || {};
+            console.log(JSON.stringify({ type: 'tool_done', tool_name: 'criar_centro_custo', output: out }));
+          } else if (meta && (meta.name === 'criarCentroLucro' || meta.name === 'criar_centro_lucro') && base && token && chatId && parsed) {
+            const url = (base || '') + '/api/agent-tools/financeiro/centros-lucro/criar';
+            const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json', 'authorization': 'Bearer ' + token, 'x-chat-id': chatId }, body: JSON.stringify(parsed) });
+            const data = await res.json().catch(() => ({}));
+            const out = (data && (data.result !== undefined ? data.result : data)) || {};
+            console.log(JSON.stringify({ type: 'tool_done', tool_name: 'criar_centro_lucro', output: out }));
           }
           // 2) Generic Tools Skill: { tool: 'buscarFornecedor', args: {...} }
           else if (meta && meta.name === 'Tools' && parsed && typeof parsed === 'object' && (parsed.tool || (parsed.name))) {
@@ -285,24 +298,18 @@ for await (const msg of q) {
               const data = await res.json().catch(() => ({}));
               const out = (data && (data.result !== undefined ? data.result : data)) || {};
               console.log(JSON.stringify({ type: 'tool_done', tool_name: 'getCentrosLucro', output: out }));
-            } else if (toolName === 'criarCentroCusto') {
-              const p = args || {}
-              const payload = {
-                nome: String(p.nome || ''),
-                codigo: p.codigo ? String(p.codigo) : undefined,
-                descricao: p.descricao ? String(p.descricao) : undefined,
-                ativo: typeof p.ativo === 'boolean' ? p.ativo : true,
-              }
-              const out = {
-                success: !!payload.nome,
-                preview: true,
-                title: 'Centro de Custo (Prévia)',
-                message: 'Revise os campos e clique em Criar para confirmar.',
-                payload,
-                validations: payload.nome ? [] : [{ field: 'nome', status: 'error', message: 'Informe o nome' }],
-                metadata: { entity: 'centro_custo', action: 'create', commitEndpoint: '/api/agent-tools/financeiro/centros-custo/criar' }
-              }
+            } else if (toolName === 'criarCentroCusto' || toolName === 'criar_centro_custo') {
+              const url = (base || '') + '/api/agent-tools/financeiro/centros-custo/criar';
+              const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json', 'authorization': 'Bearer ' + token, 'x-chat-id': chatId }, body: JSON.stringify(args || {}) });
+              const data = await res.json().catch(() => ({}));
+              const out = (data && (data.result !== undefined ? data.result : data)) || {};
               console.log(JSON.stringify({ type: 'tool_done', tool_name: 'criar_centro_custo', output: out }));
+            } else if (toolName === 'criarCentroLucro' || toolName === 'criar_centro_lucro') {
+              const url = (base || '') + '/api/agent-tools/financeiro/centros-lucro/criar';
+              const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json', 'authorization': 'Bearer ' + token, 'x-chat-id': chatId }, body: JSON.stringify(args || {}) });
+              const data = await res.json().catch(() => ({}));
+              const out = (data && (data.result !== undefined ? data.result : data)) || {};
+              console.log(JSON.stringify({ type: 'tool_done', tool_name: 'criar_centro_lucro', output: out }));
             }
           }
         } catch (e) {
