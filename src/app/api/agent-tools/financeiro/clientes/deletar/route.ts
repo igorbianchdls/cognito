@@ -15,8 +15,13 @@ export async function POST(req: NextRequest) {
     const id = Number((payload as any)?.id)
     if (!Number.isFinite(id)) return Response.json({ ok: false, error: 'id inválido' }, { status: 400 })
 
-    const sql = `DELETE FROM entidades.clientes WHERE id = $1`
-    const res = await runQuery(sql, [id]).catch(async (e) => {
+    // Resolve tenant
+    const hdrTenant = Number.parseInt((req.headers.get('x-tenant-id') || '').trim(), 10)
+    const envTenant = Number.parseInt((process.env.DEFAULT_TENANT_ID || '').trim(), 10)
+    const tenantId = Number.isFinite(hdrTenant) && hdrTenant > 0 ? hdrTenant : (Number.isFinite(envTenant) && envTenant > 0 ? envTenant : 1)
+
+    const sql = `DELETE FROM entidades.clientes WHERE tenant_id = $1 AND id = $2`
+    const res = await runQuery(sql, [tenantId, id]).catch(async (e) => {
       throw e
     })
     return Response.json({ ok: true, result: { success: true, message: 'Cliente deletado', data: { id } } })
@@ -24,4 +29,3 @@ export async function POST(req: NextRequest) {
     return Response.json({ ok: false, error: (e as Error).message }, { status: 500 })
   }
 }
-

@@ -13,10 +13,12 @@ export async function POST(req: NextRequest) {
     if (!verifyAgentToken(chatId, token)) return Response.json({ ok: false, error: 'unauthorized' }, { status: 401 })
     const id = Number((payload as any)?.id)
     if (!Number.isFinite(id)) return Response.json({ ok: false, error: 'id inválido' }, { status: 400 })
-    await runQuery(`DELETE FROM financeiro.lancamentos_financeiros WHERE id = $1 AND tipo = 'conta_a_receber'`, [id])
+    const hdrTenant = Number.parseInt((req.headers.get('x-tenant-id') || '').trim(), 10)
+    const envTenant = Number.parseInt((process.env.DEFAULT_TENANT_ID || '').trim(), 10)
+    const tenantId = Number.isFinite(hdrTenant) && hdrTenant > 0 ? hdrTenant : (Number.isFinite(envTenant) && envTenant > 0 ? envTenant : 1)
+    await runQuery(`DELETE FROM financeiro.lancamentos_financeiros WHERE tenant_id = $1 AND id = $2 AND tipo = 'conta_a_receber'`, [tenantId, id])
     return Response.json({ ok: true, result: { success: true, message: 'Conta a receber deletada', data: { id } } })
   } catch (e) {
     return Response.json({ ok: false, error: (e as Error).message }, { status: 500 })
   }
 }
-

@@ -15,17 +15,21 @@ export async function POST(req: NextRequest) {
     const id = Number((payload as any)?.id)
     if (!Number.isFinite(id)) return Response.json({ ok: false, error: 'id inválido' }, { status: 400 })
 
-    // Soft delete se possível, senão delete
+    // Resolve tenant
+    const hdrTenant = Number.parseInt((req.headers.get('x-tenant-id') || '').trim(), 10)
+    const envTenant = Number.parseInt((process.env.DEFAULT_TENANT_ID || '').trim(), 10)
+    const tenantId = Number.isFinite(hdrTenant) && hdrTenant > 0 ? hdrTenant : (Number.isFinite(envTenant) && envTenant > 0 ? envTenant : 1)
+
+    // Soft delete se possível, senão delete, sempre filtrando por tenant
     try {
-      const up = await runQuery(`UPDATE financeiro.categorias_despesa SET ativo = FALSE WHERE id = $1`, [id])
+      const up = await runQuery(`UPDATE financeiro.categorias_despesa SET ativo = FALSE WHERE tenant_id = $1 AND id = $2`, [tenantId, id])
       if (Array.isArray(up) && up.length >= 0) {
         return Response.json({ ok: true, result: { success: true, message: 'Categoria de despesa desativada', data: { id } } })
       }
     } catch {}
-    await runQuery(`DELETE FROM financeiro.categorias_despesa WHERE id = $1`, [id])
+    await runQuery(`DELETE FROM financeiro.categorias_despesa WHERE tenant_id = $1 AND id = $2`, [tenantId, id])
     return Response.json({ ok: true, result: { success: true, message: 'Categoria de despesa deletada', data: { id } } })
   } catch (e) {
     return Response.json({ ok: false, error: (e as Error).message }, { status: 500 })
   }
 }
-

@@ -15,10 +15,12 @@ export async function POST(req: NextRequest) {
     const id = Number((payload as any)?.id)
     if (!Number.isFinite(id)) return Response.json({ ok: false, error: 'id inválido' }, { status: 400 })
 
-    await runQuery(`DELETE FROM empresa.centros_lucro WHERE id = $1`, [id])
+    const hdrTenant = Number.parseInt((req.headers.get('x-tenant-id') || '').trim(), 10)
+    const envTenant = Number.parseInt((process.env.DEFAULT_TENANT_ID || '').trim(), 10)
+    const tenantId = Number.isFinite(hdrTenant) && hdrTenant > 0 ? hdrTenant : (Number.isFinite(envTenant) && envTenant > 0 ? envTenant : 1)
+    await runQuery(`DELETE FROM empresa.centros_lucro WHERE tenant_id = $1 AND id = $2`, [tenantId, id])
     return Response.json({ ok: true, result: { success: true, message: 'Centro de lucro deletado', data: { id } } })
   } catch (e) {
     return Response.json({ ok: false, error: (e as Error).message }, { status: 500 })
   }
 }
-
