@@ -106,6 +106,10 @@ export default function RespostaDaIa({ message }: Props) {
               const isCreateCC = /criar.*centro.*custo/i.test(normalized);
               if (isCreateCC && (state === 'output-available' || state === 'output-error') && output) {
                 let result: any = (output as any).result !== undefined ? (output as any).result : output;
+                if (typeof result === 'string') {
+                  const s = result.trim();
+                  try { result = JSON.parse(s); } catch {}
+                }
                 try {
                   if (result && typeof result === 'object' && 'content' in (result as any) && Array.isArray((result as any).content)) {
                     const arr = (result as any).content as Array<any>;
@@ -126,6 +130,10 @@ export default function RespostaDaIa({ message }: Props) {
               const isCF = /get[_-]?contas[_-]?financeiras/i.test(normalized);
               if (isCF && (state === 'output-available' || state === 'output-error') && output) {
                 let result: any = (output as any).result !== undefined ? (output as any).result : output;
+                if (typeof result === 'string') {
+                  const s = result.trim();
+                  try { result = JSON.parse(s); } catch {}
+                }
                 try {
                   if (result && typeof result === 'object' && 'content' in (result as any) && Array.isArray((result as any).content)) {
                     const arr = (result as any).content as Array<any>;
