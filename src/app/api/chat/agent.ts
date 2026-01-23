@@ -34,6 +34,7 @@ const agents = {
 let appToolsServer = null;
 let appToolsServerExtra = null;
 let appToolsServerFinance = null;
+let appToolsServerFinanceCreate = null;
 try {
   const mod = await import('file:///vercel/sandbox/.mcp/app-tools.mjs');
   // @ts-ignore
@@ -48,6 +49,11 @@ try {
   const mod3 = await import('file:///vercel/sandbox/.mcp/app-tools-finance.mjs');
   // @ts-ignore
   appToolsServerFinance = (mod3 && (mod3.default || mod3.appToolsServerFinance)) || null;
+} catch {}
+try {
+  const mod4 = await import('file:///vercel/sandbox/.mcp/app-tools-finance-create.mjs');
+  // @ts-ignore
+  appToolsServerFinanceCreate = (mod4 && (mod4.default || mod4.appToolsServerFinanceCreate)) || null;
 } catch {}
 const extraAllowed = [];
 if (appToolsServer) {
@@ -75,6 +81,9 @@ if (appToolsServerFinance) {
     'mcp__app-tools-finance__get_centros_lucro',
   );
 }
+if (appToolsServerFinanceCreate) {
+  extraAllowed.push('mcp__app-tools-finance-create__criar_centro_custo');
+}
 const options = {
   model: 'claude-sonnet-4-5-20250929',
   pathToClaudeCodeExecutable: cli,
@@ -86,10 +95,11 @@ const options = {
   maxThinkingTokens: 2048,
   settingSources: ['project'],
   allowedTools: ['Skill','Read','Write','Edit','Grep','Glob','Bash'].concat(extraAllowed),
-  mcpServers: (appToolsServer || appToolsServerExtra || appToolsServerFinance) ? Object.fromEntries([
+  mcpServers: (appToolsServer || appToolsServerExtra || appToolsServerFinance || appToolsServerFinanceCreate) ? Object.fromEntries([
     ...(appToolsServer ? [[ 'app-tools', appToolsServer ]] : []),
     ...(appToolsServerExtra ? [[ 'app-tools-extra', appToolsServerExtra ]] : []),
     ...(appToolsServerFinance ? [[ 'app-tools-finance', appToolsServerFinance ]] : []),
+    ...(appToolsServerFinanceCreate ? [[ 'app-tools-finance-create', appToolsServerFinanceCreate ]] : []),
   ]) : undefined,
   agents,
   // Emit standard tool lifecycle events so UI can render tool-specific components (e.g., get_weather)
