@@ -19,7 +19,7 @@ import PedidosCompraResult from '@/components/tools/compras/PedidosCompraResult'
 import ContasFinanceirasResult from '@/components/tools/financeiro/ContasFinanceirasResult';
 import CategoriasDespesaResult from '@/components/tools/financeiro/CategoriasDespesaResult';
 import CategoriasReceitaResult from '@/components/tools/financeiro/CategoriasReceitaResult';
-import CriarCentroCustoResult from '@/components/tools/financeiro/CriarCentroCustoResult';
+// import CriarCentroCustoResult from '@/components/tools/financeiro/CriarCentroCustoResult';
 // Removed per request: do not render green client card
 // import CriarClienteResult from '@/components/tools/workflow/CriarClienteResult';
 import ToolCreateInputCard from '@/components/tools/workflow/ToolCreateInputCard';
@@ -102,30 +102,7 @@ export default function RespostaDaIa({ message }: Props) {
                 );
               }
             }
-            // Special render: criar_centro_custo → CriarCentroCustoResult (form + commit)
-            {
-              const normalized = toolType.startsWith('tool-') ? toolType.slice(5) : toolType;
-              const isCreateCC = /criar.*centro.*custo/i.test(normalized);
-              if (isCreateCC && (state === 'output-available' || state === 'output-error') && output) {
-                let result: any = (output as any).result !== undefined ? (output as any).result : output;
-                if (typeof result === 'string') {
-                  const s = result.trim();
-                  try { result = JSON.parse(s); } catch {}
-                }
-                try {
-                  if (result && typeof result === 'object' && 'content' in (result as any) && Array.isArray((result as any).content)) {
-                    const arr = (result as any).content as Array<any>;
-                    const textParts = arr.filter((c) => typeof c?.text === 'string').map((c) => String(c.text));
-                    for (const t of textParts) { const s = t.trim(); if (!s) continue; try { result = JSON.parse(s); break; } catch {} }
-                  }
-                } catch {}
-                return (
-                  <div key={`tool-${index}`} className="mb-3">
-                    <CriarCentroCustoResult result={result as any} />
-                  </div>
-                );
-              }
-            }
+            // Removed special render for centro de custo (use generic create card below)
             // Special render: get_contas_financeiras
             {
               const normalized = toolType.startsWith('tool-') ? toolType.slice(5) : toolType;
