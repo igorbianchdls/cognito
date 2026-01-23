@@ -9,6 +9,7 @@ import { ToolInputStreaming } from '@/components/ai-elements/tool-input-streamin
 import { CodeBlock } from '@/components/ai-elements/code-block';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
 import type { ColumnDef } from '@tanstack/react-table';
+import { Table as TableIcon } from 'lucide-react';
 import FornecedorResult from '@/components/tools/workflow/FornecedorResult';
 import WeatherResult from '@/components/tools/mcp/WeatherResult';
 import ContasAPagarResult from '@/components/tools/ContasAPagarResult';
@@ -343,9 +344,10 @@ export default function RespostaDaIa({ message }: Props) {
                       data={rows}
                       columns={cols}
                       title={String(res.title || (toolType || 'Resultado'))}
-                      icon={undefined as any}
-                      message={String(res.message || '')}
-                      success={Boolean(res.success)}
+                      icon={TableIcon}
+                      iconColor="text-slate-700"
+                      message={String(res.message || `${rows.length} registros`)}
+                      success={res.success === undefined ? true : Boolean(res.success)}
                       count={typeof res.count === 'number' ? res.count : rows.length}
                       exportFileName="tool_result"
                       sqlQuery={typeof res.sql_query === 'string' ? res.sql_query : undefined}
