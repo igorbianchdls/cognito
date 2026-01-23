@@ -81,15 +81,19 @@ if (appToolsServerFinance) {
     'mcp__app-tools-finance__get_centros_lucro',
   );
 }
-if (appToolsServerFinanceCreate) {
-  extraAllowed.push('mcp__app-tools-finance-create__criar_centro_custo');
-  extraAllowed.push('mcp__app-tools-finance-create__criar_cliente');
-  extraAllowed.push('mcp__app-tools-finance-create__criar_fornecedor');
-  extraAllowed.push('mcp__app-tools-finance-create__criar_centro_lucro');
-  extraAllowed.push('mcp__app-tools-finance-create__criar_categoria_despesa');
-  extraAllowed.push('mcp__app-tools-finance-create__criar_categoria_receita');
-  extraAllowed.push('mcp__app-tools-finance-create__criar_conta_financeira');
-}
+  if (appToolsServerFinanceCreate) {
+    extraAllowed.push('mcp__app-tools-finance-create__criar_centro_custo');
+    extraAllowed.push('mcp__app-tools-finance-create__criar_cliente');
+    extraAllowed.push('mcp__app-tools-finance-create__criar_fornecedor');
+    extraAllowed.push('mcp__app-tools-finance-create__criar_centro_lucro');
+    extraAllowed.push('mcp__app-tools-finance-create__criar_categoria_despesa');
+    extraAllowed.push('mcp__app-tools-finance-create__criar_categoria_receita');
+    extraAllowed.push('mcp__app-tools-finance-create__criar_conta_financeira');
+    extraAllowed.push('mcp__app-tools-finance-create__criar_venda');
+    extraAllowed.push('mcp__app-tools-finance-create__criar_compra');
+    extraAllowed.push('mcp__app-tools-finance-create__criar_conta_pagar');
+    extraAllowed.push('mcp__app-tools-finance-create__criar_conta_receber');
+  }
 const options = {
   model: 'claude-sonnet-4-5-20250929',
   pathToClaudeCodeExecutable: cli,
@@ -349,6 +353,30 @@ for await (const msg of q) {
               const data = await res.json().catch(() => ({}));
               const out = (data && (data.result !== undefined ? data.result : data)) || {};
               console.log(JSON.stringify({ type: 'tool_done', tool_name: 'criar_conta_financeira', output: out }));
+            } else if (toolName === 'criarVenda' || toolName === 'criar_venda') {
+              const url = (base || '') + '/api/agent-tools/vendas/pedidos/criar';
+              const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json', 'authorization': 'Bearer ' + token, 'x-chat-id': chatId }, body: JSON.stringify(args || {}) });
+              const data = await res.json().catch(() => ({}));
+              const out = (data && (data.result !== undefined ? data.result : data)) || {};
+              console.log(JSON.stringify({ type: 'tool_done', tool_name: 'criar_venda', output: out }));
+            } else if (toolName === 'criarCompra' || toolName === 'criar_compra') {
+              const url = (base || '') + '/api/agent-tools/compras/pedidos/criar';
+              const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json', 'authorization': 'Bearer ' + token, 'x-chat-id': chatId }, body: JSON.stringify(args || {}) });
+              const data = await res.json().catch(() => ({}));
+              const out = (data && (data.result !== undefined ? data.result : data)) || {};
+              console.log(JSON.stringify({ type: 'tool_done', tool_name: 'criar_compra', output: out }));
+            } else if (toolName === 'criarContaPagar' || toolName === 'criar_conta_pagar') {
+              const url = (base || '') + '/api/agent-tools/contas-a-pagar/criar';
+              const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json', 'authorization': 'Bearer ' + token, 'x-chat-id': chatId }, body: JSON.stringify(args || {}) });
+              const data = await res.json().catch(() => ({}));
+              const out = (data && (data.result !== undefined ? data.result : data)) || {};
+              console.log(JSON.stringify({ type: 'tool_done', tool_name: 'criar_conta_pagar', output: out }));
+            } else if (toolName === 'criarContaReceber' || toolName === 'criar_conta_receber') {
+              const url = (base || '') + '/api/agent-tools/contas-a-receber/criar';
+              const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json', 'authorization': 'Bearer ' + token, 'x-chat-id': chatId }, body: JSON.stringify(args || {}) });
+              const data = await res.json().catch(() => ({}));
+              const out = (data && (data.result !== undefined ? data.result : data)) || {};
+              console.log(JSON.stringify({ type: 'tool_done', tool_name: 'criar_conta_receber', output: out }));
             }
           }
         } catch (e) {
