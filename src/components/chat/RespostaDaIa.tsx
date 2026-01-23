@@ -20,7 +20,8 @@ import ContasFinanceirasResult from '@/components/tools/financeiro/ContasFinance
 import CategoriasDespesaResult from '@/components/tools/financeiro/CategoriasDespesaResult';
 import CategoriasReceitaResult from '@/components/tools/financeiro/CategoriasReceitaResult';
 import CriarCentroCustoResult from '@/components/tools/financeiro/CriarCentroCustoResult';
-import CriarClienteResult from '@/components/tools/workflow/CriarClienteResult';
+// Removed per request: do not render green client card
+// import CriarClienteResult from '@/components/tools/workflow/CriarClienteResult';
 import ClienteCriadoInput from '@/components/tools/workflow/ClienteCriadoInput';
 import CriarFornecedorResult from '@/components/tools/workflow/CriarFornecedorResult';
 
@@ -182,9 +183,8 @@ export default function RespostaDaIa({ message }: Props) {
                   }
                 }
                 return (
-                  <div key={`tool-${index}`} className="space-y-3 mb-3">
+                  <div key={`tool-${index}`} className="mb-3">
                     <ClienteCriadoInput input={inputForDisplay} />
-                    <CriarClienteResult result={result as any} />
                   </div>
                 );
               }
