@@ -96,7 +96,7 @@ export default function RespostaDaIa({ message }: Props) {
             // Special render: get_contas_financeiras
             {
               const normalized = toolType.startsWith('tool-') ? toolType.slice(5) : toolType;
-              const isCF = normalized === 'get_contas_financeiras' || normalized === 'getContasFinanceiras' || normalized.endsWith('__get_contas_financeiras');
+              const isCF = /get[_-]?contas[_-]?financeiras/i.test(normalized);
               if (isCF && (state === 'output-available' || state === 'output-error') && output) {
                 let result: any = (output as any).result !== undefined ? (output as any).result : output;
                 try {
@@ -116,7 +116,7 @@ export default function RespostaDaIa({ message }: Props) {
             // Special render: get_categorias_despesa
             {
               const normalized = toolType.startsWith('tool-') ? toolType.slice(5) : toolType;
-              const isCD = normalized === 'get_categorias_despesa' || normalized === 'getCategoriasDespesa' || normalized.endsWith('__get_categorias_despesa');
+              const isCD = /get[_-]?categorias[_-]?despesa/i.test(normalized);
               if (isCD && (state === 'output-available' || state === 'output-error') && output) {
                 let result: any = (output as any).result !== undefined ? (output as any).result : output;
                 try {
@@ -136,7 +136,7 @@ export default function RespostaDaIa({ message }: Props) {
             // Special render: get_categorias_receita
             {
               const normalized = toolType.startsWith('tool-') ? toolType.slice(5) : toolType;
-              const isCR = normalized === 'get_categorias_receita' || normalized === 'getCategoriasReceita' || normalized.endsWith('__get_categorias_receita');
+              const isCR = /get[_-]?categorias[_-]?receita/i.test(normalized);
               if (isCR && (state === 'output-available' || state === 'output-error') && output) {
                 let result: any = (output as any).result !== undefined ? (output as any).result : output;
                 try {
