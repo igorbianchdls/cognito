@@ -23,6 +23,7 @@ import CategoriasReceitaResult from '@/components/tools/financeiro/CategoriasRec
 // Removed per request: do not render green client card
 // import CriarClienteResult from '@/components/tools/workflow/CriarClienteResult';
 import ToolCreateInputCard from '@/components/tools/workflow/ToolCreateInputCard';
+import ToolDeleteInputCard from '@/components/tools/workflow/ToolDeleteInputCard';
 // Removed dedicated supplier card for create flow
 // import CriarFornecedorResult from '@/components/tools/workflow/CriarFornecedorResult';
 
@@ -272,6 +273,34 @@ export default function RespostaDaIa({ message }: Props) {
                 return (
                   <div key={`tool-${index}`} className="mb-3">
                     <ToolCreateInputCard title="Criar Conta Financeira" input={inputForDisplay} />
+                  </div>
+                );
+              }
+            }
+            // Special render: deletar_* → JSON de entrada (genérico)
+            {
+              const normalized = toolType.startsWith('tool-') ? toolType.slice(5) : toolType;
+              const delMap: Array<{ test: RegExp; title: string }> = [
+                { test: /deletar[_-]?cliente/i, title: 'Cliente' },
+                { test: /deletar[_-]?fornecedor/i, title: 'Fornecedor' },
+                { test: /deletar[_-]?centro[_-]?custo/i, title: 'Centro de Custo' },
+                { test: /deletar[_-]?centro[_-]?lucro/i, title: 'Centro de Lucro' },
+                { test: /deletar[_-]?categoria[_-]?despesa/i, title: 'Categoria de Despesa' },
+                { test: /deletar[_-]?categoria[_-]?receita/i, title: 'Categoria de Receita' },
+                { test: /deletar[_-]?conta[_-]?financeira/i, title: 'Conta Financeira' },
+                { test: /deletar[_-]?venda/i, title: 'Venda' },
+                { test: /deletar[_-]?compra/i, title: 'Compra' },
+                { test: /deletar[_-]?conta[_-]?pagar/i, title: 'Conta a Pagar' },
+                { test: /deletar[_-]?conta[_-]?receber/i, title: 'Conta a Receber' },
+              ];
+              const match = delMap.find(m => m.test.test(normalized));
+              if (match && (state === 'output-available' || state === 'output-error')) {
+                let inputForDisplay: any = input;
+                try { if (input && typeof input === 'object') { const o: any = input as any; if (o && (o.tool || o.name)) inputForDisplay = (o.args ?? (o.input ?? o)); } } catch {}
+                if (!inputForDisplay && (inputStream && typeof inputStream === 'string')) { const s = inputStream.trim(); if (s) { try { inputForDisplay = JSON.parse(s); } catch { inputForDisplay = s; } } }
+                return (
+                  <div key={`tool-${index}`} className="mb-3">
+                    <ToolDeleteInputCard title={match.title} input={inputForDisplay} />
                   </div>
                 );
               }

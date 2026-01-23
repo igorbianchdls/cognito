@@ -93,6 +93,17 @@ if (appToolsServerFinance) {
     extraAllowed.push('mcp__app-tools-finance-create__criar_compra');
     extraAllowed.push('mcp__app-tools-finance-create__criar_conta_pagar');
     extraAllowed.push('mcp__app-tools-finance-create__criar_conta_receber');
+    extraAllowed.push('mcp__app-tools-finance-create__deletar_cliente');
+    extraAllowed.push('mcp__app-tools-finance-create__deletar_fornecedor');
+    extraAllowed.push('mcp__app-tools-finance-create__deletar_centro_custo');
+    extraAllowed.push('mcp__app-tools-finance-create__deletar_centro_lucro');
+    extraAllowed.push('mcp__app-tools-finance-create__deletar_categoria_despesa');
+    extraAllowed.push('mcp__app-tools-finance-create__deletar_categoria_receita');
+    extraAllowed.push('mcp__app-tools-finance-create__deletar_conta_financeira');
+    extraAllowed.push('mcp__app-tools-finance-create__deletar_venda');
+    extraAllowed.push('mcp__app-tools-finance-create__deletar_compra');
+    extraAllowed.push('mcp__app-tools-finance-create__deletar_conta_pagar');
+    extraAllowed.push('mcp__app-tools-finance-create__deletar_conta_receber');
   }
 const options = {
   model: 'claude-sonnet-4-5-20250929',
@@ -240,6 +251,72 @@ for await (const msg of q) {
             const data = await res.json().catch(() => ({}));
             const out = (data && (data.result !== undefined ? data.result : data)) || {};
             console.log(JSON.stringify({ type: 'tool_done', tool_name: 'criar_conta_financeira', output: out }));
+          } else if (meta && (meta.name === 'deletarCliente' || meta.name === 'deletar_cliente') && base && token && chatId && parsed) {
+            const url = (base || '') + '/api/agent-tools/financeiro/clientes/deletar';
+            const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json', 'authorization': 'Bearer ' + token, 'x-chat-id': chatId }, body: JSON.stringify(parsed) });
+            const data = await res.json().catch(() => ({}));
+            const out = (data && (data.result !== undefined ? data.result : data)) || {};
+            console.log(JSON.stringify({ type: 'tool_done', tool_name: 'deletar_cliente', output: out }));
+          } else if (meta && (meta.name === 'deletarFornecedor' || meta.name === 'deletar_fornecedor') && base && token && chatId && parsed) {
+            const url = (base || '') + '/api/agent-tools/financeiro/fornecedores/deletar';
+            const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json', 'authorization': 'Bearer ' + token, 'x-chat-id': chatId }, body: JSON.stringify(parsed) });
+            const data = await res.json().catch(() => ({}));
+            const out = (data && (data.result !== undefined ? data.result : data)) || {};
+            console.log(JSON.stringify({ type: 'tool_done', tool_name: 'deletar_fornecedor', output: out }));
+          } else if (meta && (meta.name === 'deletarCentroCusto' || meta.name === 'deletar_centro_custo') && base && token && chatId && parsed) {
+            const url = (base || '') + '/api/agent-tools/financeiro/centros-custo/deletar';
+            const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json', 'authorization': 'Bearer ' + token, 'x-chat-id': chatId }, body: JSON.stringify(parsed) });
+            const data = await res.json().catch(() => ({}));
+            const out = (data && (data.result !== undefined ? data.result : data)) || {};
+            console.log(JSON.stringify({ type: 'tool_done', tool_name: 'deletar_centro_custo', output: out }));
+          } else if (meta && (meta.name === 'deletarCentroLucro' || meta.name === 'deletar_centro_lucro') && base && token && chatId && parsed) {
+            const url = (base || '') + '/api/agent-tools/financeiro/centros-lucro/deletar';
+            const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json', 'authorization': 'Bearer ' + token, 'x-chat-id': chatId }, body: JSON.stringify(parsed) });
+            const data = await res.json().catch(() => ({}));
+            const out = (data && (data.result !== undefined ? data.result : data)) || {};
+            console.log(JSON.stringify({ type: 'tool_done', tool_name: 'deletar_centro_lucro', output: out }));
+          } else if (meta && (meta.name === 'deletarCategoriaDespesa' || meta.name === 'deletar_categoria_despesa') && base && token && chatId && parsed) {
+            const url = (base || '') + '/api/agent-tools/financeiro/categorias-despesa/deletar';
+            const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json', 'authorization': 'Bearer ' + token, 'x-chat-id': chatId }, body: JSON.stringify(parsed) });
+            const data = await res.json().catch(() => ({}));
+            const out = (data && (data.result !== undefined ? data.result : data)) || {};
+            console.log(JSON.stringify({ type: 'tool_done', tool_name: 'deletar_categoria_despesa', output: out }));
+          } else if (meta && (meta.name === 'deletarCategoriaReceita' || meta.name === 'deletar_categoria_receita') && base && token && chatId && parsed) {
+            const url = (base || '') + '/api/agent-tools/financeiro/categorias-receita/deletar';
+            const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json', 'authorization': 'Bearer ' + token, 'x-chat-id': chatId }, body: JSON.stringify(parsed) });
+            const data = await res.json().catch(() => ({}));
+            const out = (data && (data.result !== undefined ? data.result : data)) || {};
+            console.log(JSON.stringify({ type: 'tool_done', tool_name: 'deletar_categoria_receita', output: out }));
+          } else if (meta && (meta.name === 'deletarContaFinanceira' || meta.name === 'deletar_conta_financeira') && base && token && chatId && parsed) {
+            const url = (base || '') + '/api/agent-tools/financeiro/contas-financeiras/deletar';
+            const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json', 'authorization': 'Bearer ' + token, 'x-chat-id': chatId }, body: JSON.stringify(parsed) });
+            const data = await res.json().catch(() => ({}));
+            const out = (data && (data.result !== undefined ? data.result : data)) || {};
+            console.log(JSON.stringify({ type: 'tool_done', tool_name: 'deletar_conta_financeira', output: out }));
+          } else if (meta && (meta.name === 'deletarVenda' || meta.name === 'deletar_venda') && base && token && chatId && parsed) {
+            const url = (base || '') + '/api/agent-tools/vendas/pedidos/deletar';
+            const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json', 'authorization': 'Bearer ' + token, 'x-chat-id': chatId }, body: JSON.stringify(parsed) });
+            const data = await res.json().catch(() => ({}));
+            const out = (data && (data.result !== undefined ? data.result : data)) || {};
+            console.log(JSON.stringify({ type: 'tool_done', tool_name: 'deletar_venda', output: out }));
+          } else if (meta && (meta.name === 'deletarCompra' || meta.name === 'deletar_compra') && base && token && chatId && parsed) {
+            const url = (base || '') + '/api/agent-tools/compras/pedidos/deletar';
+            const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json', 'authorization': 'Bearer ' + token, 'x-chat-id': chatId }, body: JSON.stringify(parsed) });
+            const data = await res.json().catch(() => ({}));
+            const out = (data && (data.result !== undefined ? data.result : data)) || {};
+            console.log(JSON.stringify({ type: 'tool_done', tool_name: 'deletar_compra', output: out }));
+          } else if (meta && (meta.name === 'deletarContaPagar' || meta.name === 'deletar_conta_pagar') && base && token && chatId && parsed) {
+            const url = (base || '') + '/api/agent-tools/contas-a-pagar/deletar';
+            const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json', 'authorization': 'Bearer ' + token, 'x-chat-id': chatId }, body: JSON.stringify(parsed) });
+            const data = await res.json().catch(() => ({}));
+            const out = (data && (data.result !== undefined ? data.result : data)) || {};
+            console.log(JSON.stringify({ type: 'tool_done', tool_name: 'deletar_conta_pagar', output: out }));
+          } else if (meta && (meta.name === 'deletarContaReceber' || meta.name === 'deletar_conta_receber') && base && token && chatId && parsed) {
+            const url = (base || '') + '/api/agent-tools/contas-a-receber/deletar';
+            const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json', 'authorization': 'Bearer ' + token, 'x-chat-id': chatId }, body: JSON.stringify(parsed) });
+            const data = await res.json().catch(() => ({}));
+            const out = (data && (data.result !== undefined ? data.result : data)) || {};
+            console.log(JSON.stringify({ type: 'tool_done', tool_name: 'deletar_conta_receber', output: out }));
           }
           // 2) Generic Tools Skill: { tool: 'buscarFornecedor', args: {...} }
           else if (meta && meta.name === 'Tools' && parsed && typeof parsed === 'object' && (parsed.tool || (parsed.name))) {
