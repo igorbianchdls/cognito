@@ -1,12 +1,9 @@
 'use client'
 
-import ArtifactDataTable from '@/components/widgets/ArtifactDataTable'
-import EntityDisplay from '@/components/modulos/EntityDisplay'
-import StatusBadge from '@/components/modulos/StatusBadge'
-import { ColumnDef } from '@tanstack/react-table'
-import { UserPlus, CheckCircle } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
+import { CodeBlock } from '@/components/ai-elements/code-block'
 import { Button } from '@/components/ui/button'
+import { CheckCircle, AlertCircle } from 'lucide-react'
 
 type ClienteRow = {
   id: string;
@@ -23,174 +20,63 @@ type ClienteRow = {
 }
 
 type CriarClienteOutput = {
-  success: boolean;
-  // preview mode
-  preview?: boolean;
-  payload?: Partial<ClienteRow> & { nome?: string; cpf_cnpj?: string; tipo_pessoa?: string };
-  validations?: Array<{ field: string; status: 'ok' | 'warn' | 'error'; message?: string }>;
-  metadata?: { entity?: string; action?: string; commitEndpoint?: string };
-  // created mode
-  data: ClienteRow | null;
-  message: string;
+  success?: boolean;
+  data?: ClienteRow | null;
+  message?: string;
   title?: string;
   error?: string;
-  cpf_cnpj_formatado?: string;
 }
 
 export default function CriarClienteResult({ result }: { result: CriarClienteOutput }) {
-  const [creating, setCreating] = useState(false)
-  const [created, setCreated] = useState<ClienteRow | null>(null)
-  const isPreview = result.preview && result.payload && !created
-  // Convert single cliente to array for table display
-  const tableRows: ClienteRow[] = useMemo(() => {
-    if (created) return [created]
-    if (isPreview) {
-      const p = result.payload || {}
-      return [{
-        id: '',
-        nome: String(p.nome || ''),
-        cpf_cnpj: String(p.cpf_cnpj || ''),
-        tipo_pessoa: p.tipo_pessoa ? String(p.tipo_pessoa) : undefined,
-        endereco: p.endereco ? String(p.endereco) : undefined,
-        telefone: p.telefone ? String(p.telefone) : undefined,
-        email: p.email ? String(p.email) : undefined,
-        status: undefined,
-        data_cadastro: undefined,
-      }]
-    }
-    return result.data ? [result.data] : []
-  }, [created, isPreview, result.payload, result.data]);
+  const created: ClienteRow | null = useMemo(() => (result?.data as any) ?? null, [result])
+  const ok = Boolean(result?.success) || Boolean(created)
+  const title = result?.title || (ok ? 'Cliente Criado' : 'Falha ao criar cliente')
+  const message = result?.message || (ok ? 'Cliente criado com sucesso.' : (result?.error || 'Não foi possível criar o cliente.'))
 
-  const columns: ColumnDef<ClienteRow>[] = useMemo(() => [
-    {
-      accessorKey: 'nome',
-      header: 'Cliente',
-      size: 250,
-      minSize: 200,
-      cell: ({ row }) => {
-        const nome = row.original.nome || 'Sem nome';
-        const doc = row.original.cpf_cnpj || 'Sem CPF/CNPJ';
-        return <EntityDisplay name={String(nome)} subtitle={String(doc)} />;
-      }
-    },
-    {
-      accessorKey: 'tipo_pessoa',
-      header: 'Tipo',
-      cell: ({ row }) => {
-        const tipo = row.original.tipo_pessoa;
-        if (!tipo) return '-';
-        const labels = {
-          fisica: 'Pessoa Física',
-          juridica: 'Pessoa Jurídica'
-        };
-        const colors = {
-          fisica: 'bg-blue-100 text-blue-700',
-          juridica: 'bg-purple-100 text-purple-700'
-        };
-        return (
-          <span className={`px-2 py-1 rounded text-xs font-medium ${colors[tipo as keyof typeof colors] || 'bg-gray-100 text-gray-700'}`}>
-            {labels[tipo as keyof typeof labels] || tipo}
-          </span>
-        );
-      }
-    },
-    {
-      accessorKey: 'endereco',
-      header: 'Endereço',
-      cell: ({ row }) => {
-        const end = row.original.endereco || 'Não informado';
-        return <div className="text-sm text-muted-foreground">{end}</div>;
-      }
-    },
-    {
-      accessorKey: 'telefone',
-      header: 'Telefone',
-      cell: ({ row }) => {
-        const tel = row.original.telefone || '-';
-        return <div className="text-sm">{tel}</div>;
-      }
-    },
-    {
-      accessorKey: 'email',
-      header: 'E-mail',
-      cell: ({ row }) => {
-        const email = row.original.email || '-';
-        return <div className="text-sm">{email}</div>;
-      }
-    },
-    {
-      accessorKey: 'status',
-      header: 'Status',
-      cell: ({ row }) => {
-        const status = row.original.status;
-        if (!status) return '-';
-        return <StatusBadge value={status} type="status" />;
-      }
-    },
-    {
-      accessorKey: 'data_cadastro',
-      header: 'Data Cadastro',
-      cell: ({ row }) => {
-        const data = row.original.data_cadastro;
-        if (!data) return '-';
-        return new Date(data).toLocaleDateString('pt-BR');
-      }
-    }
-  ], []);
-
-  const commit = async () => {
-    if (!result.metadata?.commitEndpoint || !result.payload) return
-    try {
-      setCreating(true)
-      const res = await fetch(result.metadata.commitEndpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          nome: result.payload.nome,
-          cpf_cnpj: result.payload.cpf_cnpj,
-          email: result.payload.email,
-          telefone: result.payload.telefone,
-          endereco: result.payload.endereco,
-          observacoes: result.payload.observacoes,
-        })
-      })
-      const json = await res.json()
-      if (!res.ok || !json?.success) {
-        alert(json?.message || 'Falha ao criar cliente')
-        setCreating(false)
-        return
-      }
-      setCreated(json.data as ClienteRow)
-    } catch (e) {
-      alert(e instanceof Error ? e.message : 'Erro ao criar cliente')
-    } finally {
-      setCreating(false)
-    }
+  if (!ok) {
+    return (
+      <div className="rounded-md border border-red-200 bg-red-50 p-4">
+        <div className="flex items-center gap-2 mb-1">
+          <AlertCircle className="w-4 h-4 text-red-600" />
+          <div className="text-red-800 font-semibold">{title}</div>
+        </div>
+        <div className="text-red-700 text-sm">{message}</div>
+      </div>
+    )
   }
 
-  return (
-    <div className="space-y-3">
-      <ArtifactDataTable
-        data={tableRows}
-        columns={columns}
-        title={isPreview ? (result.title ?? 'Cliente (Prévia)') : (result.title ?? 'Cliente Criado')}
-        icon={isPreview ? UserPlus : CheckCircle}
-        iconColor={isPreview ? 'text-blue-600' : 'text-green-600'}
-        message={result.message}
-        success={result.success}
-        count={tableRows.length}
-        error={result.error}
-        exportFileName={isPreview ? 'cliente_previa' : 'cliente_criado'}
-        pageSize={10}
-      />
+  const items: Array<{ label: string; value?: string }> = [
+    { label: 'ID', value: created?.id },
+    { label: 'Nome', value: created?.nome },
+    { label: 'CPF/CNPJ', value: created?.cpf_cnpj },
+    { label: 'E-mail', value: created?.email as any },
+    { label: 'Telefone', value: created?.telefone as any },
+    { label: 'Endereço', value: created?.endereco as any },
+  ]
 
-      {isPreview && (
-        <div className="flex items-center justify-end gap-2">
-          <Button onClick={commit} disabled={creating}>
-            {creating ? 'Criando…' : 'Criar Cliente'}
-          </Button>
+  return (
+    <div className="rounded-md border border-emerald-200 bg-emerald-50">
+      <div className="px-3 py-2 border-b flex items-center gap-2">
+        <CheckCircle className="w-4 h-4 text-emerald-600" />
+        <div className="text-sm font-semibold text-emerald-800">{title}</div>
+      </div>
+      <div className="p-3 space-y-3">
+        <div className="text-sm text-emerald-900">{message}</div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {items.map((it) => (
+            <div key={it.label} className="text-sm">
+              <div className="text-slate-500">{it.label}</div>
+              <div className="font-medium text-slate-900">{it.value || '-'}</div>
+            </div>
+          ))}
         </div>
-      )}
+        {created && (
+          <div className="pt-2">
+            <div className="text-xs font-medium text-slate-500 mb-2">JSON do Registro</div>
+            <CodeBlock code={JSON.stringify(created, null, 2)} language="json" />
+          </div>
+        )}
+      </div>
     </div>
-  );
+  )
 }
