@@ -83,6 +83,8 @@ if (appToolsServerFinance) {
 }
 if (appToolsServerFinanceCreate) {
   extraAllowed.push('mcp__app-tools-finance-create__criar_centro_custo');
+  extraAllowed.push('mcp__app-tools-finance-create__criar_cliente');
+  extraAllowed.push('mcp__app-tools-finance-create__criar_fornecedor');
 }
 const options = {
   model: 'claude-sonnet-4-5-20250929',
@@ -188,6 +190,18 @@ for await (const msg of q) {
             const data = await res.json().catch(() => ({}));
             const out = (data && (data.result !== undefined ? data.result : data)) || {};
             console.log(JSON.stringify({ type: 'tool_done', tool_name: 'buscarFornecedor', output: out }));
+          } else if (meta && (meta.name === 'criarCliente' || meta.name === 'criar_cliente') && base && token && chatId && parsed) {
+            const url = (base || '') + '/api/agent-tools/financeiro/clientes/criar';
+            const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json', 'authorization': 'Bearer ' + token, 'x-chat-id': chatId }, body: JSON.stringify(parsed) });
+            const data = await res.json().catch(() => ({}));
+            const out = (data && (data.result !== undefined ? data.result : data)) || {};
+            console.log(JSON.stringify({ type: 'tool_done', tool_name: 'criar_cliente', output: out }));
+          } else if (meta && (meta.name === 'criarFornecedor' || meta.name === 'criar_fornecedor') && base && token && chatId && parsed) {
+            const url = (base || '') + '/api/agent-tools/financeiro/fornecedores/criar';
+            const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json', 'authorization': 'Bearer ' + token, 'x-chat-id': chatId }, body: JSON.stringify(parsed) });
+            const data = await res.json().catch(() => ({}));
+            const out = (data && (data.result !== undefined ? data.result : data)) || {};
+            console.log(JSON.stringify({ type: 'tool_done', tool_name: 'criar_fornecedor', output: out }));
           }
           // 2) Generic Tools Skill: { tool: 'buscarFornecedor', args: {...} }
           else if (meta && meta.name === 'Tools' && parsed && typeof parsed === 'object' && (parsed.tool || (parsed.name))) {
@@ -199,6 +213,18 @@ for await (const msg of q) {
               const data = await res.json().catch(() => ({}));
               const out = (data && (data.result !== undefined ? data.result : data)) || {};
               console.log(JSON.stringify({ type: 'tool_done', tool_name: 'buscarFornecedor', output: out }));
+            } else if ((toolName === 'criarCliente' || toolName === 'criar_cliente') && base && token && chatId) {
+              const url = (base || '') + '/api/agent-tools/financeiro/clientes/criar';
+              const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json', 'authorization': 'Bearer ' + token, 'x-chat-id': chatId }, body: JSON.stringify(args || {}) });
+              const data = await res.json().catch(() => ({}));
+              const out = (data && (data.result !== undefined ? data.result : data)) || {};
+              console.log(JSON.stringify({ type: 'tool_done', tool_name: 'criar_cliente', output: out }));
+            } else if ((toolName === 'criarFornecedor' || toolName === 'criar_fornecedor') && base && token && chatId) {
+              const url = (base || '') + '/api/agent-tools/financeiro/fornecedores/criar';
+              const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json', 'authorization': 'Bearer ' + token, 'x-chat-id': chatId }, body: JSON.stringify(args || {}) });
+              const data = await res.json().catch(() => ({}));
+              const out = (data && (data.result !== undefined ? data.result : data)) || {};
+              console.log(JSON.stringify({ type: 'tool_done', tool_name: 'criar_fornecedor', output: out }));
             } else if (toolName === 'getContasPagar' && base && token && chatId) {
               const url = (base || '') + '/api/agent-tools/contas-a-pagar/listar';
               const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json', 'authorization': 'Bearer ' + token, 'x-chat-id': chatId }, body: JSON.stringify(args || {}) });
