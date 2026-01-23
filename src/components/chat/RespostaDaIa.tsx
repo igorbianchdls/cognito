@@ -7,6 +7,8 @@ import { Reasoning, ReasoningTrigger, ReasoningContent } from '@/components/ai-e
 import { Tool, ToolHeader, ToolContent, ToolInput, ToolOutput } from '@/components/ai-elements/tool';
 import { ToolInputStreaming } from '@/components/ai-elements/tool-input-streaming';
 import { CodeBlock } from '@/components/ai-elements/code-block';
+import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
+import type { ColumnDef } from '@tanstack/react-table';
 import FornecedorResult from '@/components/tools/workflow/FornecedorResult';
 import WeatherResult from '@/components/tools/mcp/WeatherResult';
 import ContasAPagarResult from '@/components/tools/ContasAPagarResult';
@@ -314,6 +316,40 @@ export default function RespostaDaIa({ message }: Props) {
                 return (
                   <div key={`tool-${index}`} className="mb-3">
                     <ContasAReceberResult result={result} />
+                  </div>
+                );
+              }
+            }
+            // Generic fallback: if output has rows[], render dynamic table
+            if ((state === 'output-available') && output && typeof output === 'object') {
+              let res: any = (output as any).result !== undefined ? (output as any).result : output;
+              try {
+                if (res && typeof res === 'object' && 'content' in (res as any) && Array.isArray((res as any).content)) {
+                  const arr = (res as any).content as Array<any>;
+                  const textParts = arr.filter((c) => typeof c?.text === 'string').map((c) => String(c.text));
+                  for (const t of textParts) { const s = t.trim(); if (!s) continue; try { const parsed = JSON.parse(s); if (parsed) res = parsed; break; } catch {} }
+                }
+              } catch {}
+              if (res && Array.isArray(res.rows)) {
+                const rows = res.rows as Array<Record<string, unknown>>;
+                const cols: ColumnDef<Record<string, unknown>>[] = [];
+                if (rows.length > 0) {
+                  const keys = Object.keys(rows[0]);
+                  for (const k of keys) cols.push({ accessorKey: k, header: k } as any);
+                }
+                return (
+                  <div key={`tool-${index}`} className="mb-3">
+                    <ArtifactDataTable
+                      data={rows}
+                      columns={cols}
+                      title={String(res.title || (toolType || 'Resultado'))}
+                      icon={undefined as any}
+                      message={String(res.message || '')}
+                      success={Boolean(res.success)}
+                      count={typeof res.count === 'number' ? res.count : rows.length}
+                      exportFileName="tool_result"
+                      sqlQuery={typeof res.sql_query === 'string' ? res.sql_query : undefined}
+                    />
                   </div>
                 );
               }

@@ -256,6 +256,12 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins }: { onOp
               updateToolPart(lastActiveToolKey, { state: 'input-available' })
             }
           } else if (evt && evt.type === 'tool_done') {
+            // Ensure a tool part exists even if no prior tool_input/tool_start was observed
+            if (!lastActiveToolKey) {
+              const callKey = `td-hook-${Date.now()}`
+              ensureToolPart(callKey, (evt as any).tool_name, 'input-available')
+              lastActiveToolKey = callKey
+            }
             if (lastActiveToolKey) updateToolPart(lastActiveToolKey, { state: 'output-available', output: evt.output, type: `tool-${evt.tool_name || 'generic'}` })
           } else if (evt && evt.type === 'tool_error') {
             if (lastActiveToolKey) updateToolPart(lastActiveToolKey, { state: 'output-error', errorText: evt.error || 'Tool error', type: `tool-${evt.tool_name || 'generic'}` })
