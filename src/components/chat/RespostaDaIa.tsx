@@ -153,6 +153,7 @@ export default function RespostaDaIa({ message }: Props) {
                     for (const t of textParts) { const s = t.trim(); if (!s) continue; try { result = JSON.parse(s); break; } catch {} }
                   }
                 } catch {}
+                // Normalize input for display (prefer parsed input; fallback to streaming/raw)
                 let inputForDisplay: any = input;
                 try {
                   if (input && typeof input === 'object') {
@@ -162,6 +163,16 @@ export default function RespostaDaIa({ message }: Props) {
                     }
                   }
                 } catch {}
+                if (!inputForDisplay && (inputStream && typeof inputStream === 'string')) {
+                  const s = inputStream.trim();
+                  if (s) { try { inputForDisplay = JSON.parse(s); } catch { inputForDisplay = s; } }
+                }
+                // Ensure result shape has success/data
+                if (result && typeof result === 'object' && !('success' in (result as any))) {
+                  if ((result as any).data || (result as any).id || (result as any).nome || (result as any).cpf_cnpj) {
+                    result = { success: true, data: (result as any).data ?? result, message: String((result as any).message || 'Cliente criado') };
+                  }
+                }
                 return (
                   <div key={`tool-${index}`} className="space-y-3 mb-3">
                     <ClienteCriadoInput input={inputForDisplay} />
@@ -183,6 +194,12 @@ export default function RespostaDaIa({ message }: Props) {
                     for (const t of textParts) { const s = t.trim(); if (!s) continue; try { result = JSON.parse(s); break; } catch {} }
                   }
                 } catch {}
+                // Ensure result shape has success/data to avoid error banner
+                if (result && typeof result === 'object' && !('success' in (result as any))) {
+                  if ((result as any).data || (result as any).id || (result as any).nome || (result as any).cnpj) {
+                    result = { success: true, data: (result as any).data ?? result, message: String((result as any).message || 'Fornecedor criado') };
+                  }
+                }
                 return (
                   <div key={`tool-${index}`} className="mb-3">
                     <CriarFornecedorResult result={result as any} />
