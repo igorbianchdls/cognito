@@ -21,6 +21,7 @@ import CategoriasDespesaResult from '@/components/tools/financeiro/CategoriasDes
 import CategoriasReceitaResult from '@/components/tools/financeiro/CategoriasReceitaResult';
 import CriarCentroCustoResult from '@/components/tools/financeiro/CriarCentroCustoResult';
 import CriarClienteResult from '@/components/tools/workflow/CriarClienteResult';
+import ClienteCriadoInput from '@/components/tools/workflow/ClienteCriadoInput';
 import CriarFornecedorResult from '@/components/tools/workflow/CriarFornecedorResult';
 
 type Props = { message: UIMessage };
@@ -139,7 +140,7 @@ export default function RespostaDaIa({ message }: Props) {
                 );
               }
             }
-            // Special render: criar_cliente → CriarClienteResult (form + commit)
+            // Special render: criar_cliente → mostrar input JSON + resultado criado
             {
               const normalized = toolType.startsWith('tool-') ? toolType.slice(5) : toolType;
               const isCreateClient = normalized === 'criar_cliente' || normalized === 'criarCliente' || normalized.endsWith('__criar_cliente') || /criar[_-]?cliente/i.test(normalized);
@@ -152,8 +153,18 @@ export default function RespostaDaIa({ message }: Props) {
                     for (const t of textParts) { const s = t.trim(); if (!s) continue; try { result = JSON.parse(s); break; } catch {} }
                   }
                 } catch {}
+                let inputForDisplay: any = input;
+                try {
+                  if (input && typeof input === 'object') {
+                    const o: any = input as any;
+                    if (o && (o.tool || o.name)) {
+                      inputForDisplay = (o.args !== undefined ? o.args : (o.input !== undefined ? o.input : o));
+                    }
+                  }
+                } catch {}
                 return (
-                  <div key={`tool-${index}`} className="mb-3">
+                  <div key={`tool-${index}`} className="space-y-3 mb-3">
+                    <ClienteCriadoInput input={inputForDisplay} />
                     <CriarClienteResult result={result as any} />
                   </div>
                 );
