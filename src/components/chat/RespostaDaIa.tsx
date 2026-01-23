@@ -276,6 +276,66 @@ export default function RespostaDaIa({ message }: Props) {
                 );
               }
             }
+            // Special render: criar_venda → JSON de entrada
+            {
+              const normalized = toolType.startsWith('tool-') ? toolType.slice(5) : toolType;
+              const isCV = normalized === 'criar_venda' || normalized === 'criarVenda' || /criar[_-]?venda/i.test(normalized);
+              if (isCV && (state === 'output-available' || state === 'output-error')) {
+                let inputForDisplay: any = input;
+                try { if (input && typeof input === 'object') { const o: any = input as any; if (o && (o.tool || o.name)) inputForDisplay = (o.args ?? (o.input ?? o)); } } catch {}
+                if (!inputForDisplay && (inputStream && typeof inputStream === 'string')) { const s = inputStream.trim(); if (s) { try { inputForDisplay = JSON.parse(s); } catch { inputForDisplay = s; } } }
+                return (
+                  <div key={`tool-${index}`} className="mb-3">
+                    <ToolCreateInputCard title="Criar Venda" input={inputForDisplay} />
+                  </div>
+                );
+              }
+            }
+            // Special render: criar_compra → JSON de entrada
+            {
+              const normalized = toolType.startsWith('tool-') ? toolType.slice(5) : toolType;
+              const isCCP = normalized === 'criar_compra' || normalized === 'criarCompra' || /criar[_-]?compra/i.test(normalized);
+              if (isCCP && (state === 'output-available' || state === 'output-error')) {
+                let inputForDisplay: any = input;
+                try { if (input && typeof input === 'object') { const o: any = input as any; if (o && (o.tool || o.name)) inputForDisplay = (o.args ?? (o.input ?? o)); } } catch {}
+                if (!inputForDisplay && (inputStream && typeof inputStream === 'string')) { const s = inputStream.trim(); if (s) { try { inputForDisplay = JSON.parse(s); } catch { inputForDisplay = s; } } }
+                return (
+                  <div key={`tool-${index}`} className="mb-3">
+                    <ToolCreateInputCard title="Criar Compra" input={inputForDisplay} />
+                  </div>
+                );
+              }
+            }
+            // Special render: criar_conta_pagar → JSON de entrada
+            {
+              const normalized = toolType.startsWith('tool-') ? toolType.slice(5) : toolType;
+              const isCAP = normalized === 'criar_conta_pagar' || normalized === 'criarContaPagar' || /criar[_-]?conta[_-]?pagar/i.test(normalized);
+              if (isCAP && (state === 'output-available' || state === 'output-error')) {
+                let inputForDisplay: any = input;
+                try { if (input && typeof input === 'object') { const o: any = input as any; if (o && (o.tool || o.name)) inputForDisplay = (o.args ?? (o.input ?? o)); } } catch {}
+                if (!inputForDisplay && (inputStream && typeof inputStream === 'string')) { const s = inputStream.trim(); if (s) { try { inputForDisplay = JSON.parse(s); } catch { inputForDisplay = s; } } }
+                return (
+                  <div key={`tool-${index}`} className="mb-3">
+                    <ToolCreateInputCard title="Criar Conta a Pagar" input={inputForDisplay} />
+                  </div>
+                );
+              }
+            }
+            // Special render: criar_conta_receber → JSON de entrada
+            {
+              const normalized = toolType.startsWith('tool-') ? toolType.slice(5) : toolType;
+              const isCAR = normalized === 'criar_conta_receber' || normalized === 'criarContaReceber' || /criar[_-]?conta[_-]?receber/i.test(normalized);
+              if (isCAR && (state === 'output-available' || state === 'output-error')) {
+                let inputForDisplay: any = input;
+                try { if (input && typeof input === 'object') { const o: any = input as any; if (o && (o.tool || o.name)) inputForDisplay = (o.args ?? (o.input ?? o)); } } catch {}
+                if (!inputForDisplay && (inputStream && typeof inputStream === 'string')) { const s = inputStream.trim(); if (s) { try { inputForDisplay = JSON.parse(s); } catch { inputForDisplay = s; } } }
+                return (
+                  <div key={`tool-${index}`} className="mb-3">
+                    <ToolCreateInputCard title="Criar Conta a Receber" input={inputForDisplay} />
+                  </div>
+                );
+              }
+            }
             // Special render: get_categorias_despesa
             {
               const normalized = toolType.startsWith('tool-') ? toolType.slice(5) : toolType;
