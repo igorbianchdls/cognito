@@ -31,80 +31,12 @@ const agents = {
   }
 };
 
-let appToolsServer = null;
-let appToolsServerExtra = null;
 let appToolsServerFinance = null;
-let appToolsServerFinanceCreate = null;
-try {
-  const mod = await import('file:///vercel/sandbox/.mcp/app-tools.mjs');
-  // @ts-ignore
-  appToolsServer = (mod && (mod.default || mod.appToolsServer)) || null;
-} catch {}
-try {
-  const mod2 = await import('file:///vercel/sandbox/.mcp/app-tools-extra.mjs');
-  // @ts-ignore
-  appToolsServerExtra = (mod2 && (mod2.default || mod2.appToolsServerExtra)) || null;
-} catch {}
 try {
   const mod3 = await import('file:///vercel/sandbox/.mcp/app-tools-finance.mjs');
   // @ts-ignore
   appToolsServerFinance = (mod3 && (mod3.default || mod3.appToolsServerFinance)) || null;
 } catch {}
-try {
-  const mod4 = await import('file:///vercel/sandbox/.mcp/app-tools-finance-create.mjs');
-  // @ts-ignore
-  appToolsServerFinanceCreate = (mod4 && (mod4.default || mod4.appToolsServerFinanceCreate)) || null;
-} catch {}
-const extraAllowed = [];
-if (appToolsServer) {
-  extraAllowed.push(
-    'mcp__app-tools__get_weather',
-    'mcp__app-tools__echo_text',
-    'mcp__app-tools__buscar_fornecedor',
-    'mcp__app-tools__get_contas_pagar',
-    'mcp__app-tools__get_contas_receber',
-  );
-}
-if (appToolsServerExtra) {
-  extraAllowed.push(
-    'mcp__app-tools-extra__get_vendas',
-    'mcp__app-tools-extra__get_compras',
-  );
-}
-if (appToolsServerFinance) {
-  extraAllowed.push(
-    'mcp__app-tools-finance__get_contas_financeiras',
-    'mcp__app-tools-finance__get_categorias_despesa',
-    'mcp__app-tools-finance__get_categorias_receita',
-    'mcp__app-tools-finance__get_clientes',
-    'mcp__app-tools-finance__get_centros_custo',
-    'mcp__app-tools-finance__get_centros_lucro',
-  );
-}
-  if (appToolsServerFinanceCreate) {
-    extraAllowed.push('mcp__app-tools-finance-create__criar_centro_custo');
-    extraAllowed.push('mcp__app-tools-finance-create__criar_cliente');
-    extraAllowed.push('mcp__app-tools-finance-create__criar_fornecedor');
-    extraAllowed.push('mcp__app-tools-finance-create__criar_centro_lucro');
-    extraAllowed.push('mcp__app-tools-finance-create__criar_categoria_despesa');
-    extraAllowed.push('mcp__app-tools-finance-create__criar_categoria_receita');
-    extraAllowed.push('mcp__app-tools-finance-create__criar_conta_financeira');
-    extraAllowed.push('mcp__app-tools-finance-create__criar_venda');
-    extraAllowed.push('mcp__app-tools-finance-create__criar_compra');
-    extraAllowed.push('mcp__app-tools-finance-create__criar_conta_pagar');
-    extraAllowed.push('mcp__app-tools-finance-create__criar_conta_receber');
-    extraAllowed.push('mcp__app-tools-finance-create__deletar_cliente');
-    extraAllowed.push('mcp__app-tools-finance-create__deletar_fornecedor');
-    extraAllowed.push('mcp__app-tools-finance-create__deletar_centro_custo');
-    extraAllowed.push('mcp__app-tools-finance-create__deletar_centro_lucro');
-    extraAllowed.push('mcp__app-tools-finance-create__deletar_categoria_despesa');
-    extraAllowed.push('mcp__app-tools-finance-create__deletar_categoria_receita');
-    extraAllowed.push('mcp__app-tools-finance-create__deletar_conta_financeira');
-    extraAllowed.push('mcp__app-tools-finance-create__deletar_venda');
-    extraAllowed.push('mcp__app-tools-finance-create__deletar_compra');
-    extraAllowed.push('mcp__app-tools-finance-create__deletar_conta_pagar');
-    extraAllowed.push('mcp__app-tools-finance-create__deletar_conta_receber');
-  }
 const options = {
   model: 'claude-sonnet-4-5-20250929',
   pathToClaudeCodeExecutable: cli,
@@ -116,14 +48,16 @@ const options = {
   includePartialMessages: true,
   maxThinkingTokens: 2048,
   settingSources: ['project'],
-  // Allow only MCP tools (no Claude preset tools)
-  allowedTools: extraAllowed,
-  mcpServers: (appToolsServer || appToolsServerExtra || appToolsServerFinance || appToolsServerFinanceCreate) ? Object.fromEntries([
-    ...(appToolsServer ? [[ 'app-tools', appToolsServer ]] : []),
-    ...(appToolsServerExtra ? [[ 'app-tools-extra', appToolsServerExtra ]] : []),
-    ...(appToolsServerFinance ? [[ 'app-tools-finance', appToolsServerFinance ]] : []),
-    ...(appToolsServerFinanceCreate ? [[ 'app-tools-finance-create', appToolsServerFinanceCreate ]] : []),
-  ]) : undefined,
+  // Allow only app-tools-finance MCP tools
+  allowedTools: appToolsServerFinance ? [
+    'mcp__app-tools-finance__get_contas_financeiras',
+    'mcp__app-tools-finance__get_categorias_despesa',
+    'mcp__app-tools-finance__get_categorias_receita',
+    'mcp__app-tools-finance__get_clientes',
+    'mcp__app-tools-finance__get_centros_custo',
+    'mcp__app-tools-finance__get_centros_lucro',
+  ] : [],
+  mcpServers: appToolsServerFinance ? { 'app-tools-finance': appToolsServerFinance } : undefined,
   agents,
   // Emit standard tool lifecycle events so UI can render tool-specific components (e.g., get_weather)
   hooks: {
