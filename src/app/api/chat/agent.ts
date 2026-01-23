@@ -70,6 +70,9 @@ if (appToolsServerFinance) {
     'mcp__app-tools-finance__get_contas_financeiras',
     'mcp__app-tools-finance__get_categorias_despesa',
     'mcp__app-tools-finance__get_categorias_receita',
+    'mcp__app-tools-finance__get_clientes',
+    'mcp__app-tools-finance__get_centros_custo',
+    'mcp__app-tools-finance__get_centros_lucro',
   );
 }
 const options = {
@@ -228,6 +231,24 @@ for await (const msg of q) {
               const data = await res.json().catch(() => ({}));
               const out = (data && (data.result !== undefined ? data.result : data)) || {};
               console.log(JSON.stringify({ type: 'tool_done', tool_name: 'getCategoriasReceita', output: out }));
+            } else if (toolName === 'getClientes' && base && token && chatId) {
+              const url = (base || '') + '/api/agent-tools/financeiro/clientes/listar';
+              const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json', 'authorization': 'Bearer ' + token, 'x-chat-id': chatId }, body: JSON.stringify(args || {}) });
+              const data = await res.json().catch(() => ({}));
+              const out = (data && (data.result !== undefined ? data.result : data)) || {};
+              console.log(JSON.stringify({ type: 'tool_done', tool_name: 'getClientes', output: out }));
+            } else if (toolName === 'getCentrosCusto' && base && token && chatId) {
+              const url = (base || '') + '/api/agent-tools/financeiro/centros-custo/listar';
+              const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json', 'authorization': 'Bearer ' + token, 'x-chat-id': chatId }, body: JSON.stringify(args || {}) });
+              const data = await res.json().catch(() => ({}));
+              const out = (data && (data.result !== undefined ? data.result : data)) || {};
+              console.log(JSON.stringify({ type: 'tool_done', tool_name: 'getCentrosCusto', output: out }));
+            } else if (toolName === 'getCentrosLucro' && base && token && chatId) {
+              const url = (base || '') + '/api/agent-tools/financeiro/centros-lucro/listar';
+              const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json', 'authorization': 'Bearer ' + token, 'x-chat-id': chatId }, body: JSON.stringify(args || {}) });
+              const data = await res.json().catch(() => ({}));
+              const out = (data && (data.result !== undefined ? data.result : data)) || {};
+              console.log(JSON.stringify({ type: 'tool_done', tool_name: 'getCentrosLucro', output: out }));
             }
           }
         } catch (e) {
