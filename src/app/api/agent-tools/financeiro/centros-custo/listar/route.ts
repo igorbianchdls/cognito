@@ -27,7 +27,13 @@ export async function POST(req: NextRequest) {
     let i = 1
     const push = (expr: string, val: unknown) => { conditions.push(`${expr} $${i}`); params.push(val); i += 1 }
 
-    const selectSql = `SELECT cc.id, cc.tenant_id, cc.codigo, cc.nome, cc.descricao, cc.ativo, cc.criado_em, cc.atualizado_em`
+    const selectSql = `SELECT cc.id,
+                             cc.codigo,
+                             cc.nome,
+                             cc.descricao,
+                             COALESCE(cc.ativo, true) AS ativo,
+                             NULL::timestamp AS criado_em,
+                             NULL::timestamp AS atualizado_em`
     const baseSql = `FROM empresa.centros_custo cc`
     if (typeof ativo === 'boolean') push('cc.ativo =', ativo)
     if (q) { conditions.push(`(cc.nome ILIKE '%' || $${i} || '%' OR cc.codigo ILIKE '%' || $${i} || '%' OR COALESCE(cc.descricao,'') ILIKE '%' || $${i} || '%')`); params.push(q); i += 1 }
