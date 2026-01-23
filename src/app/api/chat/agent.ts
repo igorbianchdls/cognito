@@ -110,12 +110,14 @@ const options = {
   pathToClaudeCodeExecutable: cli,
   cwd: '/vercel/sandbox',
   additionalDirectories: ['/vercel/sandbox'],
-  tools: { type: 'preset', preset: 'claude_code' },
+  // No preset; disable all tools
+  tools: [],
   permissionMode: 'acceptEdits',
   includePartialMessages: true,
   maxThinkingTokens: 2048,
   settingSources: ['project'],
-  allowedTools: ['Skill','Read','Write','Edit','Grep','Glob','Bash'].concat(extraAllowed),
+  // Allow only MCP tools (no Claude preset tools)
+  allowedTools: extraAllowed,
   mcpServers: (appToolsServer || appToolsServerExtra || appToolsServerFinance || appToolsServerFinanceCreate) ? Object.fromEntries([
     ...(appToolsServer ? [[ 'app-tools', appToolsServer ]] : []),
     ...(appToolsServerExtra ? [[ 'app-tools-extra', appToolsServerExtra ]] : []),
@@ -486,12 +488,14 @@ const baseOptions = {
   pathToClaudeCodeExecutable: cli,
   cwd: '/vercel/sandbox',
   additionalDirectories: ['/vercel/sandbox'],
-  tools: { type: 'preset', preset: 'claude_code' },
+  // No preset; disable all tools
+  tools: [],
   permissionMode: 'acceptEdits',
   includePartialMessages: true,
   maxThinkingTokens: 1024,
   settingSources: ['project'],
-  allowedTools: ['Skill','Read','Write','Edit','Grep','Glob','Bash'],
+  // No tools allowed
+  allowedTools: [],
   agents,
   maxTurns: 1,
 };
