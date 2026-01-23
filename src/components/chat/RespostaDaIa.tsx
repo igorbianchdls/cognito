@@ -231,6 +231,51 @@ export default function RespostaDaIa({ message }: Props) {
                 );
               }
             }
+            // Special render: criar_categoria_despesa → JSON de entrada
+            {
+              const normalized = toolType.startsWith('tool-') ? toolType.slice(5) : toolType;
+              const isCCD = normalized === 'criar_categoria_despesa' || normalized === 'criarCategoriaDespesa' || /criar[_-]?categoria[_-]?despesa/i.test(normalized);
+              if (isCCD && (state === 'output-available' || state === 'output-error')) {
+                let inputForDisplay: any = input;
+                try { if (input && typeof input === 'object') { const o: any = input as any; if (o && (o.tool || o.name)) inputForDisplay = (o.args ?? (o.input ?? o)); } } catch {}
+                if (!inputForDisplay && (inputStream && typeof inputStream === 'string')) { const s = inputStream.trim(); if (s) { try { inputForDisplay = JSON.parse(s); } catch { inputForDisplay = s; } } }
+                return (
+                  <div key={`tool-${index}`} className="mb-3">
+                    <ToolCreateInputCard title="Criar Categoria de Despesa" input={inputForDisplay} />
+                  </div>
+                );
+              }
+            }
+            // Special render: criar_categoria_receita → JSON de entrada
+            {
+              const normalized = toolType.startsWith('tool-') ? toolType.slice(5) : toolType;
+              const isCCR = normalized === 'criar_categoria_receita' || normalized === 'criarCategoriaReceita' || /criar[_-]?categoria[_-]?receita/i.test(normalized);
+              if (isCCR && (state === 'output-available' || state === 'output-error')) {
+                let inputForDisplay: any = input;
+                try { if (input && typeof input === 'object') { const o: any = input as any; if (o && (o.tool || o.name)) inputForDisplay = (o.args ?? (o.input ?? o)); } } catch {}
+                if (!inputForDisplay && (inputStream && typeof inputStream === 'string')) { const s = inputStream.trim(); if (s) { try { inputForDisplay = JSON.parse(s); } catch { inputForDisplay = s; } } }
+                return (
+                  <div key={`tool-${index}`} className="mb-3">
+                    <ToolCreateInputCard title="Criar Categoria de Receita" input={inputForDisplay} />
+                  </div>
+                );
+              }
+            }
+            // Special render: criar_conta_financeira → JSON de entrada
+            {
+              const normalized = toolType.startsWith('tool-') ? toolType.slice(5) : toolType;
+              const isCCF = normalized === 'criar_conta_financeira' || normalized === 'criarContaFinanceira' || /criar[_-]?conta[_-]?financeira/i.test(normalized);
+              if (isCCF && (state === 'output-available' || state === 'output-error')) {
+                let inputForDisplay: any = input;
+                try { if (input && typeof input === 'object') { const o: any = input as any; if (o && (o.tool || o.name)) inputForDisplay = (o.args ?? (o.input ?? o)); } } catch {}
+                if (!inputForDisplay && (inputStream && typeof inputStream === 'string')) { const s = inputStream.trim(); if (s) { try { inputForDisplay = JSON.parse(s); } catch { inputForDisplay = s; } } }
+                return (
+                  <div key={`tool-${index}`} className="mb-3">
+                    <ToolCreateInputCard title="Criar Conta Financeira" input={inputForDisplay} />
+                  </div>
+                );
+              }
+            }
             // Special render: get_categorias_despesa
             {
               const normalized = toolType.startsWith('tool-') ? toolType.slice(5) : toolType;

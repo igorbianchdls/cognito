@@ -86,6 +86,9 @@ if (appToolsServerFinanceCreate) {
   extraAllowed.push('mcp__app-tools-finance-create__criar_cliente');
   extraAllowed.push('mcp__app-tools-finance-create__criar_fornecedor');
   extraAllowed.push('mcp__app-tools-finance-create__criar_centro_lucro');
+  extraAllowed.push('mcp__app-tools-finance-create__criar_categoria_despesa');
+  extraAllowed.push('mcp__app-tools-finance-create__criar_categoria_receita');
+  extraAllowed.push('mcp__app-tools-finance-create__criar_conta_financeira');
 }
 const options = {
   model: 'claude-sonnet-4-5-20250929',
@@ -215,6 +218,24 @@ for await (const msg of q) {
             const data = await res.json().catch(() => ({}));
             const out = (data && (data.result !== undefined ? data.result : data)) || {};
             console.log(JSON.stringify({ type: 'tool_done', tool_name: 'criar_centro_lucro', output: out }));
+          } else if (meta && (meta.name === 'criarCategoriaDespesa' || meta.name === 'criar_categoria_despesa') && base && token && chatId && parsed) {
+            const url = (base || '') + '/api/agent-tools/financeiro/categorias-despesa/criar';
+            const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json', 'authorization': 'Bearer ' + token, 'x-chat-id': chatId }, body: JSON.stringify(parsed) });
+            const data = await res.json().catch(() => ({}));
+            const out = (data && (data.result !== undefined ? data.result : data)) || {};
+            console.log(JSON.stringify({ type: 'tool_done', tool_name: 'criar_categoria_despesa', output: out }));
+          } else if (meta && (meta.name === 'criarCategoriaReceita' || meta.name === 'criar_categoria_receita') && base && token && chatId && parsed) {
+            const url = (base || '') + '/api/agent-tools/financeiro/categorias-receita/criar';
+            const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json', 'authorization': 'Bearer ' + token, 'x-chat-id': chatId }, body: JSON.stringify(parsed) });
+            const data = await res.json().catch(() => ({}));
+            const out = (data && (data.result !== undefined ? data.result : data)) || {};
+            console.log(JSON.stringify({ type: 'tool_done', tool_name: 'criar_categoria_receita', output: out }));
+          } else if (meta && (meta.name === 'criarContaFinanceira' || meta.name === 'criar_conta_financeira') && base && token && chatId && parsed) {
+            const url = (base || '') + '/api/agent-tools/financeiro/contas-financeiras/criar';
+            const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json', 'authorization': 'Bearer ' + token, 'x-chat-id': chatId }, body: JSON.stringify(parsed) });
+            const data = await res.json().catch(() => ({}));
+            const out = (data && (data.result !== undefined ? data.result : data)) || {};
+            console.log(JSON.stringify({ type: 'tool_done', tool_name: 'criar_conta_financeira', output: out }));
           }
           // 2) Generic Tools Skill: { tool: 'buscarFornecedor', args: {...} }
           else if (meta && meta.name === 'Tools' && parsed && typeof parsed === 'object' && (parsed.tool || (parsed.name))) {
@@ -310,6 +331,24 @@ for await (const msg of q) {
               const data = await res.json().catch(() => ({}));
               const out = (data && (data.result !== undefined ? data.result : data)) || {};
               console.log(JSON.stringify({ type: 'tool_done', tool_name: 'criar_centro_lucro', output: out }));
+            } else if (toolName === 'criarCategoriaDespesa' || toolName === 'criar_categoria_despesa') {
+              const url = (base || '') + '/api/agent-tools/financeiro/categorias-despesa/criar';
+              const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json', 'authorization': 'Bearer ' + token, 'x-chat-id': chatId }, body: JSON.stringify(args || {}) });
+              const data = await res.json().catch(() => ({}));
+              const out = (data && (data.result !== undefined ? data.result : data)) || {};
+              console.log(JSON.stringify({ type: 'tool_done', tool_name: 'criar_categoria_despesa', output: out }));
+            } else if (toolName === 'criarCategoriaReceita' || toolName === 'criar_categoria_receita') {
+              const url = (base || '') + '/api/agent-tools/financeiro/categorias-receita/criar';
+              const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json', 'authorization': 'Bearer ' + token, 'x-chat-id': chatId }, body: JSON.stringify(args || {}) });
+              const data = await res.json().catch(() => ({}));
+              const out = (data && (data.result !== undefined ? data.result : data)) || {};
+              console.log(JSON.stringify({ type: 'tool_done', tool_name: 'criar_categoria_receita', output: out }));
+            } else if (toolName === 'criarContaFinanceira' || toolName === 'criar_conta_financeira') {
+              const url = (base || '') + '/api/agent-tools/financeiro/contas-financeiras/criar';
+              const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json', 'authorization': 'Bearer ' + token, 'x-chat-id': chatId }, body: JSON.stringify(args || {}) });
+              const data = await res.json().catch(() => ({}));
+              const out = (data && (data.result !== undefined ? data.result : data)) || {};
+              console.log(JSON.stringify({ type: 'tool_done', tool_name: 'criar_conta_financeira', output: out }));
             }
           }
         } catch (e) {
