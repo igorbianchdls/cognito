@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
     const push = (expr: string, val: unknown) => { conditions.push(`${expr} $${i}`); params.push(val); i += 1 }
 
     const selectSql = `SELECT cc.id, cc.tenant_id, cc.codigo, cc.nome, cc.descricao, cc.ativo, cc.criado_em, cc.atualizado_em`
-    const baseSql = `FROM financeiro.centros_custo cc`
+    const baseSql = `FROM empresa.centros_custo cc`
     if (typeof ativo === 'boolean') push('cc.ativo =', ativo)
     if (q) { conditions.push(`(cc.nome ILIKE '%' || $${i} || '%' OR cc.codigo ILIKE '%' || $${i} || '%' OR COALESCE(cc.descricao,'') ILIKE '%' || $${i} || '%')`); params.push(q); i += 1 }
     if (de) push('cc.criado_em >=', de)
@@ -50,4 +50,3 @@ export async function POST(req: NextRequest) {
     return Response.json({ ok: false, error: (e as Error).message }, { status: 500 })
   }
 }
-
