@@ -249,6 +249,24 @@ for await (const msg of q) {
               const data = await res.json().catch(() => ({}));
               const out = (data && (data.result !== undefined ? data.result : data)) || {};
               console.log(JSON.stringify({ type: 'tool_done', tool_name: 'getCentrosLucro', output: out }));
+            } else if (toolName === 'criarCentroCusto') {
+              const p = args || {}
+              const payload = {
+                nome: String(p.nome || ''),
+                codigo: p.codigo ? String(p.codigo) : undefined,
+                descricao: p.descricao ? String(p.descricao) : undefined,
+                ativo: typeof p.ativo === 'boolean' ? p.ativo : true,
+              }
+              const out = {
+                success: !!payload.nome,
+                preview: true,
+                title: 'Centro de Custo (Prévia)',
+                message: 'Revise os campos e clique em Criar para confirmar.',
+                payload,
+                validations: payload.nome ? [] : [{ field: 'nome', status: 'error', message: 'Informe o nome' }],
+                metadata: { entity: 'centro_custo', action: 'create', commitEndpoint: '/api/agent-tools/financeiro/centros-custo/criar' }
+              }
+              console.log(JSON.stringify({ type: 'tool_done', tool_name: 'criar_centro_custo', output: out }));
             }
           }
         } catch (e) {
