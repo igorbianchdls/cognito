@@ -630,7 +630,7 @@ export default function RespostaDaIa({ message }: Props) {
               }
             }
             return (
-              <Tool key={`tool-${index}`} defaultOpen>
+              <Tool key={`tool-${index}-${state || 'unknown'}`}>
                 <ToolHeader type={(part as any).type} state={(state as any) || 'input-streaming'} />
                 <ToolContent>
                   {state === 'input-streaming' && (
