@@ -45,11 +45,11 @@ export async function POST(req: Request) {
         await sandbox.stop().catch(() => {})
         return Response.json({ ok: false, error: 'install failed', stdout: o, stderr: e, timeline }, { status: 500 })
       }
-      // Seed a single Tools Skill to document app tools usage
+      // Seed a single Tools Skill to document generic MCP tools
       try {
         const mk = await sandbox.runCommand({ cmd: 'node', args: ['-e', `require('fs').mkdirSync('/vercel/sandbox/.claude/skills/Tools', { recursive: true });`] })
         timeline.push({ name: 'mkdir-skills-tools', ms: 0, ok: mk.exitCode === 0, exitCode: mk.exitCode })
-        const skill = `---\nname: Tools\ndescription: Coleção de ferramentas do aplicativo acessíveis via HTTP bridge.\n---\n\nUse esta Skill para chamar as ferramentas do app. Sempre envie UM objeto JSON no input com o formato:\n\n{\n  \"tool\": \"<nome-da-tool>\",\n  \"args\": { /* parâmetros da tool */ }\n}\n\nExemplos:\n- Buscar fornecedor por nome:\n  { \"tool\": \"buscarFornecedor\", \"args\": { \"query\": \"ACME LTDA\", \"limite\": 20 } }\n- Buscar fornecedor por CNPJ:\n  { \"tool\": \"buscarFornecedor\", \"args\": { \"cnpj\": \"12.345.678/0001-90\" } }\n- Criar cliente (prévia):\n  { \"tool\": \"criarCliente\", \"args\": { \"nome\": \"Cliente Exemplo\", \"cpf_cnpj\": \"123.456.789-09\" } }\n- Criar fornecedor (prévia):\n  { \"tool\": \"criarFornecedor\", \"args\": { \"nome\": \"Fornecedor Exemplo\", \"cnpj\": \"12.345.678/0001-90\" } }\n\nAs chamadas são feitas para a API do app usando variáveis de ambiente:\n- $AGENT_BASE_URL\n- $AGENT_TOOL_TOKEN\n- $AGENT_CHAT_ID\n`;
+        const skill = `---\nname: App MCP Tools\ndescription: Uso das tools genéricas via MCP (listar, criar, atualizar, deletar).\n---\n\nAs tools disponíveis (apenas via MCP):\n- listar(input: { resource: string, params?: object, actionSuffix?: string, method?: \"GET\"|\"POST\" })\n- criar(input: { resource: string, data?: object, actionSuffix?: string, method?: \"GET\"|\"POST\" })\n- atualizar(input: { resource: string, data?: object, actionSuffix?: string, method?: \"GET\"|\"POST\" })\n- deletar(input: { resource: string, data?: object, actionSuffix?: string, method?: \"GET\"|\"POST\" })\n\nRECURSOS (resource) SUPORTADOS (use exatamente estes caminhos; não invente nomes):\n- financeiro/contas-financeiras\n- financeiro/categorias-despesa\n- financeiro/categorias-receita\n- financeiro/clientes\n- financeiro/centros-custo\n- financeiro/centros-lucro\n- vendas/pedidos\n- compras/pedidos\n- contas-a-pagar\n- contas-a-receber\n\nRegras:\n- NUNCA use termos genéricos como \"categoria\" ou \"despesa\". Use os caminhos exatos, por exemplo \"financeiro/categorias-despesa\".\n- Prefixe corretamente com o módulo (ex.: \"financeiro/...\").\n- O \"resource\" não pode conter \"..\" e deve iniciar com um dos prefixos: financeiro, vendas, compras, contas-a-pagar, contas-a-receber, estoque, cadastros.\n- Por padrão, listar usa actionSuffix=\"listar\" e criar/atualizar/deletar usam seus sufixos homônimos.\n\nExemplos:\n- Listar contas financeiras:\n  { \"tool\": \"listar\", \"args\": { \"resource\": \"financeiro/contas-financeiras\", \"params\": { \"limit\": 50 } } }\n- Listar categorias de despesa (não use \"categoria\" sozinho):\n  { \"tool\": \"listar\", \"args\": { \"resource\": \"financeiro/categorias-despesa\", \"params\": { \"q\": \"marketing\" } } }\n- Criar centro de custo:\n  { \"tool\": \"criar\", \"args\": { \"resource\": \"financeiro/centros-custo\", \"data\": { \"nome\": \"Marketing\", \"codigo\": \"CC-001\" } } }\n- Atualizar centro de custo:\n  { \"tool\": \"atualizar\", \"args\": { \"resource\": \"financeiro/centros-custo\", \"data\": { \"id\": 123, \"nome\": \"Marketing & Growth\" } } }\n- Deletar centro de custo:\n  { \"tool\": \"deletar\", \"args\": { \"resource\": \"financeiro/centros-custo\", \"data\": { \"id\": 123 } } }\n\nAs chamadas são roteadas para /api/agent-tools/<resource>/<acao> usando as variáveis:\n- $AGENT_BASE_URL\n- $AGENT_TOOL_TOKEN\n- $AGENT_CHAT_ID\n`;
         await sandbox.writeFiles([{ path: '/vercel/sandbox/.claude/skills/Tools/SKILL.md', content: Buffer.from(skill) }])
       } catch {}
       // Seed MCP test tools server file
@@ -111,11 +111,28 @@ export async function POST(req: Request) {
     sess.lastUsedAt = Date.now()
     const lines: string[] = [
       'You are a helpful assistant. Continue the conversation.',
-      'Available application tools (invoke with tool_use):',
-      '- listar(input: { resource: string, params?: object, actionSuffix?: string, method?: "GET"|"POST" }) — generic list (calls /listar).',
-      '- criar(input: { resource: string, data?: object, actionSuffix?: string, method?: "GET"|"POST" }) — generic create (calls /criar).',
-      '- atualizar(input: { resource: string, data?: object, actionSuffix?: string, method?: "GET"|"POST" }) — generic update (defaults /atualizar, fallback /editar).',
-      '- deletar(input: { resource: string, data?: object, actionSuffix?: string, method?: "GET"|"POST" }) — generic delete (defaults /deletar).',
+      'Use ONLY the 4 generic MCP tools. Strictly follow the resource list and naming below. Do not invent resources.',
+      'Tools (invoke with tool_use):',
+      '- listar(input: { resource: string, params?: object, actionSuffix?: string, method?: "GET"|"POST" }) — calls /listar',
+      '- criar(input: { resource: string, data?: object, actionSuffix?: string, method?: "GET"|"POST" }) — calls /criar',
+      '- atualizar(input: { resource: string, data?: object, actionSuffix?: string, method?: "GET"|"POST" }) — defaults /atualizar; fallback /editar',
+      '- deletar(input: { resource: string, data?: object, actionSuffix?: string, method?: "GET"|"POST" }) — defaults /deletar',
+      'Allowed top-level prefixes: financeiro, vendas, compras, contas-a-pagar, contas-a-receber, estoque, cadastros.',
+      'Canonical resources (use EXACT strings):',
+      '- financeiro/contas-financeiras',
+      '- financeiro/categorias-despesa',
+      '- financeiro/categorias-receita',
+      '- financeiro/clientes',
+      '- financeiro/centros-custo',
+      '- financeiro/centros-lucro',
+      '- vendas/pedidos',
+      '- compras/pedidos',
+      '- contas-a-pagar',
+      '- contas-a-receber',
+      'Guidelines:',
+      '- NEVER use vague terms like "categoria" or "despesa". Always use canonical paths (e.g., "financeiro/categorias-despesa").',
+      '- Always include the correct module prefix (e.g., "financeiro/...").',
+      '- resource must not contain ".." and must start with one of the allowed prefixes.',
       '',
       'Conversation:'
     ]
