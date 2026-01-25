@@ -126,10 +126,12 @@ export default function ToolListResult({ output, input }: { output: any; input?:
         cols.push({
           accessorKey: key,
           header: key,
-          cell: ({ row }) => {
-            const v = (row.original as AnyRow)[key]
+          cell: (ctx) => {
+            const v = (ctx.row.original as AnyRow)[key]
             if (v === null || v === undefined) return ''
-            if (typeof v === 'object') return (v as any) // already stringified in normalizeRows
+            if (typeof v === 'object') {
+              try { return JSON.stringify(v) } catch { return String(v) }
+            }
             return String(v)
           }
         } as any)
@@ -154,4 +156,3 @@ export default function ToolListResult({ output, input }: { output: any; input?:
     />
   )
 }
-
