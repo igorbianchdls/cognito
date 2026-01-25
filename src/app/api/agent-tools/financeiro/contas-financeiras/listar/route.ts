@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
     const q = typeof payload.q === 'string' ? payload.q : undefined
     const de = typeof payload.de === 'string' ? payload.de : undefined
     const ate = typeof payload.ate === 'string' ? payload.ate : undefined
-    const ativo = typeof payload.ativo === 'boolean' ? payload.ativo : undefined
+    const ativoParam = typeof payload.ativo === 'boolean' ? payload.ativo : undefined
     const page = typeof payload.page === 'number' && payload.page > 0 ? payload.page : 1
     const pageSize = typeof payload.pageSize === 'number' && payload.pageSize > 0 ? Math.min(1000, payload.pageSize) : (typeof payload.limit === 'number' && payload.limit > 0 ? Math.min(1000, payload.limit) : 50)
     const offset = (page - 1) * pageSize
@@ -41,7 +41,8 @@ export async function POST(req: NextRequest) {
                              cf.atualizado_em`
     const baseSql = `FROM financeiro.contas_financeiras cf`
 
-    if (typeof ativo === 'boolean') push('cf.ativo =', ativo)
+    // Default to only active accounts unless explicitly overridden
+    push('cf.ativo =', (ativoParam === undefined ? true : ativoParam))
     if (q) { conditions.push(`(cf.nome_conta ILIKE '%' || $${i} || '%' OR cf.numero_conta ILIKE '%' || $${i} || '%' OR COALESCE(cf.pix_chave,'') ILIKE '%' || $${i} || '%')`); params.push(q); i += 1 }
     if (de) push('cf.criado_em >=', de)
     if (ate) push('cf.criado_em <=', ate)
@@ -62,4 +63,3 @@ export async function POST(req: NextRequest) {
     return Response.json({ ok: false, error: (e as Error).message }, { status: 500 })
   }
 }
-

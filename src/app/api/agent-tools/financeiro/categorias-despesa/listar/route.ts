@@ -15,6 +15,7 @@ export async function POST(req: NextRequest) {
     }
 
     const q = typeof payload.q === 'string' ? payload.q : undefined
+    const ativoParam = typeof (payload as any).ativo === 'boolean' ? (payload as any).ativo : undefined
     const de = typeof payload.de === 'string' ? payload.de : undefined
     const ate = typeof payload.ate === 'string' ? payload.ate : undefined
     const page = typeof payload.page === 'number' && payload.page > 0 ? payload.page : 1
@@ -37,6 +38,8 @@ export async function POST(req: NextRequest) {
                              cd.criado_em,
                              cd.atualizado_em`
     const baseSql = `FROM financeiro.categorias_despesa cd`
+    // Default: only active categories unless explicitly overridden
+    push('COALESCE(cd.ativo, true) =', (ativoParam === undefined ? true : ativoParam))
 
     if (q) { conditions.push(`(cd.nome ILIKE '%' || $${i} || '%' OR cd.codigo ILIKE '%' || $${i} || '%' OR COALESCE(cd.descricao,'') ILIKE '%' || $${i} || '%')`); params.push(q); i += 1 }
     if (de) push('cd.criado_em >=', de)
@@ -58,4 +61,3 @@ export async function POST(req: NextRequest) {
     return Response.json({ ok: false, error: (e as Error).message }, { status: 500 })
   }
 }
-

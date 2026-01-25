@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
     const q = typeof payload.q === 'string' ? payload.q : undefined
     const de = typeof payload.de === 'string' ? payload.de : undefined
     const ate = typeof payload.ate === 'string' ? payload.ate : undefined
-    const ativo = typeof payload.ativo === 'boolean' ? payload.ativo : undefined
+    const ativoParam = typeof payload.ativo === 'boolean' ? payload.ativo : undefined
     const page = typeof payload.page === 'number' && payload.page > 0 ? payload.page : 1
     const pageSize = typeof payload.pageSize === 'number' && payload.pageSize > 0 ? Math.min(1000, payload.pageSize) : (typeof payload.limit === 'number' && payload.limit > 0 ? Math.min(1000, payload.limit) : 100)
     const offset = (page - 1) * pageSize
@@ -39,7 +39,8 @@ export async function POST(req: NextRequest) {
                              cr.atualizado_em`
     const baseSql = `FROM financeiro.categorias_receita cr`
 
-    if (typeof ativo === 'boolean') push('cr.ativo =', ativo)
+    // Default: only active categories unless explicitly overridden
+    push('cr.ativo =', (ativoParam === undefined ? true : ativoParam))
     if (q) { conditions.push(`(cr.nome ILIKE '%' || $${i} || '%' OR cr.codigo ILIKE '%' || $${i} || '%' OR COALESCE(cr.descricao,'') ILIKE '%' || $${i} || '%')`); params.push(q); i += 1 }
     if (de) push('cr.criado_em >=', de)
     if (ate) push('cr.criado_em <=', ate)
@@ -60,4 +61,3 @@ export async function POST(req: NextRequest) {
     return Response.json({ ok: false, error: (e as Error).message }, { status: 500 })
   }
 }
-

@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
     const q = typeof payload.q === 'string' ? payload.q : undefined
     const de = typeof payload.de === 'string' ? payload.de : undefined
     const ate = typeof payload.ate === 'string' ? payload.ate : undefined
-    const ativo = typeof payload.ativo === 'boolean' ? payload.ativo : undefined
+    const ativoParam = typeof payload.ativo === 'boolean' ? payload.ativo : undefined
     const page = typeof payload.page === 'number' && payload.page > 0 ? payload.page : 1
     const pageSize = typeof payload.pageSize === 'number' && payload.pageSize > 0 ? Math.min(1000, payload.pageSize) : (typeof payload.limit === 'number' && payload.limit > 0 ? Math.min(1000, payload.limit) : 200)
     const offset = (page - 1) * pageSize
@@ -35,7 +35,8 @@ export async function POST(req: NextRequest) {
                              NULL::timestamp AS criado_em,
                              NULL::timestamp AS atualizado_em`
     const baseSql = `FROM empresa.centros_lucro cl`
-    if (typeof ativo === 'boolean') push('cl.ativo =', ativo)
+    // Default: only active unless explicitly overridden
+    push('COALESCE(cl.ativo, true) =', (ativoParam === undefined ? true : ativoParam))
     if (q) { conditions.push(`(cl.nome ILIKE '%' || $${i} || '%' OR cl.codigo ILIKE '%' || $${i} || '%' OR COALESCE(cl.descricao,'') ILIKE '%' || $${i} || '%')`); params.push(q); i += 1 }
     if (de) push('cl.criado_em >=', de)
     if (ate) push('cl.criado_em <=', ate)

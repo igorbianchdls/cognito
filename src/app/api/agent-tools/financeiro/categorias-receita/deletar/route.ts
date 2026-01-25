@@ -20,8 +20,8 @@ export async function POST(req: NextRequest) {
     const tenantId = Number.isFinite(hdrTenant) && hdrTenant > 0 ? hdrTenant : (Number.isFinite(envTenant) && envTenant > 0 ? envTenant : 1)
 
     try {
-      const up = await runQuery(`UPDATE financeiro.categorias_receita SET ativo = FALSE WHERE tenant_id = $1 AND id = $2`, [tenantId, id])
-      if (Array.isArray(up) && up.length >= 0) {
+      const up = await runQuery<{ id: number }>(`UPDATE financeiro.categorias_receita SET ativo = FALSE WHERE tenant_id = $1 AND id = $2 RETURNING id`, [tenantId, id])
+      if (Array.isArray(up) && up.length > 0) {
         return Response.json({ ok: true, result: { success: true, message: 'Categoria de receita desativada', data: { id } } })
       }
     } catch {}
