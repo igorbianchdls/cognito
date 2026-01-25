@@ -47,18 +47,38 @@ function normalizeRows(data: unknown): AnyRow[] {
 }
 
 function unwrapMcpLike(output: any): any {
-  // Accept shapes: { result }, { content: [{json}|{text}] }, array, or object already in expected shape
+  // Accept shapes:
+  // - { result }
+  // - { content: [{ json } | { text } | ...] }
+  // - [ { type:"text", text:"..." }, ... ] (raw content array)
+  // - already an object with rows/data/items
   let res: any = output
   try {
+    // 1) { result }
     if (res && typeof res === 'object' && 'result' in res) {
       res = (res as any).result
-    } else if (res && typeof res === 'object' && 'content' in (res as any) && Array.isArray((res as any).content)) {
+      return res
+    }
+    // 2) { content: [...] }
+    if (res && typeof res === 'object' && 'content' in (res as any) && Array.isArray((res as any).content)) {
       const arr = (res as any).content as Array<any>
+      // Prefer explicit JSON payload
       const jsonPart = arr.find((c) => c && (c.json !== undefined))
-      if (jsonPart && jsonPart.json !== undefined) res = jsonPart.json
-      else {
-        const textParts = arr.filter((c) => typeof c?.text === 'string').map((c) => String(c.text))
-        for (const t of textParts) { const s = t.trim(); if (!s) continue; try { res = JSON.parse(s); break } catch {} }
+      if (jsonPart && jsonPart.json !== undefined) return jsonPart.json
+      // Fallback: parse first parseable text
+      const textParts = arr.filter((c) => typeof c?.text === 'string').map((c) => String(c.text))
+      for (const t of textParts) { const s = t.trim(); if (!s) continue; try { return JSON.parse(s) } catch {} }
+      return res
+    }
+    // 3) Raw content array
+    if (Array.isArray(res)) {
+      // If it looks like MCP content parts, try to parse JSON text entries
+      const looksLikeContent = res.every((c) => c && typeof c === 'object' && 'type' in c)
+      if (looksLikeContent) {
+        const jsonPart = (res as Array<any>).find((c) => c && (c.json !== undefined))
+        if (jsonPart && jsonPart.json !== undefined) return jsonPart.json
+        const textParts = (res as Array<any>).filter((c) => typeof c?.text === 'string').map((c) => String(c.text))
+        for (const t of textParts) { const s = t.trim(); if (!s) continue; try { return JSON.parse(s) } catch {} }
       }
     }
   } catch {}
@@ -109,7 +129,7 @@ function parseResult(output: any, input?: any): ParsedResult {
   }
 
   // Defaults
-  if (!message) message = `${rows.length} registros` 
+  if (!message) message = `${rows.length} registros`
   if (count === undefined) count = rows.length
 
   return { success, title, message, count, rows, sql_query, error }
