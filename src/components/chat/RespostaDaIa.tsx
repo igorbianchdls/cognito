@@ -37,7 +37,7 @@ export default function RespostaDaIa({ message }: Props) {
 
   return (
     <div className="w-full flex justify-start py-3">
-      <div className="max-w-[720px] w-full">
+      <div className="w-full">
         <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
           <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-900 text-white text-[11px] leading-none">IA</span>
           <span className="font-semibold text-gray-900 text-[16px]">Claude</span>
