@@ -27,6 +27,11 @@ export async function POST(req: NextRequest) {
     let i = 1
     const push = (expr: string, val: unknown) => { conditions.push(`${expr} $${i}`); params.push(val); i += 1 }
 
+    // Resolve tenant
+    const hdrTenant = Number.parseInt((req.headers.get('x-tenant-id') || '').trim(), 10)
+    const envTenant = Number.parseInt((process.env.DEFAULT_TENANT_ID || '').trim(), 10)
+    const tenantId = Number.isFinite(hdrTenant) && hdrTenant > 0 ? hdrTenant : (Number.isFinite(envTenant) && envTenant > 0 ? envTenant : 1)
+
     const selectSql = `SELECT cl.id,
                              cl.codigo,
                              cl.nome,
@@ -35,6 +40,7 @@ export async function POST(req: NextRequest) {
                              NULL::timestamp AS criado_em,
                              NULL::timestamp AS atualizado_em`
     const baseSql = `FROM empresa.centros_lucro cl`
+    push('cl.tenant_id =', tenantId)
     // Default: only active unless explicitly overridden
     push('COALESCE(cl.ativo, true) =', (ativoParam === undefined ? true : ativoParam))
     if (q) { conditions.push(`(cl.nome ILIKE '%' || $${i} || '%' OR cl.codigo ILIKE '%' || $${i} || '%' OR COALESCE(cl.descricao,'') ILIKE '%' || $${i} || '%')`); params.push(q); i += 1 }

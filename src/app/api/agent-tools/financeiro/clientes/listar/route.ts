@@ -22,7 +22,13 @@ export async function POST(req: NextRequest) {
     let i = 1
     const push = (expr: string, val: unknown) => { conditions.push(`${expr} $${i}`); params.push(val); i += 1 }
 
+    // Resolve tenant
+    const hdrTenant = Number.parseInt((req.headers.get('x-tenant-id') || '').trim(), 10)
+    const envTenant = Number.parseInt((process.env.DEFAULT_TENANT_ID || '').trim(), 10)
+    const tenantId = Number.isFinite(hdrTenant) && hdrTenant > 0 ? hdrTenant : (Number.isFinite(envTenant) && envTenant > 0 ? envTenant : 1)
+
     let sql = `SELECT id, nome_fantasia AS nome FROM entidades.clientes`
+    push('tenant_id =', tenantId)
     if (q) { push(`(nome_fantasia ILIKE '%' ||`, q); conditions[conditions.length - 1] += ` $${i-1} || '%')` }
     const whereClause = conditions.length ? ` WHERE ${conditions.join(' AND ')}` : ''
     sql = `${sql}${whereClause} ORDER BY nome_fantasia ASC LIMIT $${i}::int`
@@ -35,10 +41,10 @@ export async function POST(req: NextRequest) {
                             COALESCE(c.nome_fantasia, 'Cliente #' || lf.cliente_id::text) AS nome
                        FROM financeiro.lancamentos_financeiros lf
                        LEFT JOIN entidades.clientes c ON c.id = lf.cliente_id
-                      WHERE lf.cliente_id IS NOT NULL
+                      WHERE lf.cliente_id IS NOT NULL AND lf.tenant_id = $2
                       ORDER BY 2 ASC
                       LIMIT $1::int`
-      out = await runQuery<{ id: number; nome: string }>(fbSql, [limit])
+      out = await runQuery<{ id: number; nome: string }>(fbSql, [limit, tenantId])
     }
 
     return Response.json({ ok: true, result: { success: true, rows: out, count: out.length, message: `${out.length} clientes`, title: 'Clientes', sql_query: sql } })
@@ -46,4 +52,3 @@ export async function POST(req: NextRequest) {
     return Response.json({ ok: false, error: (e as Error).message }, { status: 500 })
   }
 }
-

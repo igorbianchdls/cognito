@@ -27,6 +27,11 @@ export async function POST(req: NextRequest) {
     let i = 1
     const push = (expr: string, val: unknown) => { conditions.push(`${expr} $${i}`); params.push(val); i += 1 }
 
+    // Resolve tenant
+    const hdrTenant = Number.parseInt((req.headers.get('x-tenant-id') || '').trim(), 10)
+    const envTenant = Number.parseInt((process.env.DEFAULT_TENANT_ID || '').trim(), 10)
+    const tenantId = Number.isFinite(hdrTenant) && hdrTenant > 0 ? hdrTenant : (Number.isFinite(envTenant) && envTenant > 0 ? envTenant : 1)
+
     const selectSql = `SELECT cf.id AS conta_id,
                              cf.nome_conta,
                              cf.tipo_conta,
@@ -40,6 +45,7 @@ export async function POST(req: NextRequest) {
                              cf.criado_em,
                              cf.atualizado_em`
     const baseSql = `FROM financeiro.contas_financeiras cf`
+    push('cf.tenant_id =', tenantId)
 
     // Default to only active accounts unless explicitly overridden
     push('cf.ativo =', (ativoParam === undefined ? true : ativoParam))

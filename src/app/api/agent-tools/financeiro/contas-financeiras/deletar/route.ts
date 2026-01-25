@@ -19,12 +19,7 @@ export async function POST(req: NextRequest) {
     const envTenant = Number.parseInt((process.env.DEFAULT_TENANT_ID || '').trim(), 10)
     const tenantId = Number.isFinite(hdrTenant) && hdrTenant > 0 ? hdrTenant : (Number.isFinite(envTenant) && envTenant > 0 ? envTenant : 1)
 
-    try {
-      const up = await runQuery<{ id: number }>(`UPDATE financeiro.contas_financeiras SET ativo = FALSE WHERE tenant_id = $1 AND id = $2 RETURNING id`, [tenantId, id])
-      if (Array.isArray(up) && up.length > 0) {
-        return Response.json({ ok: true, result: { success: true, message: 'Conta financeira desativada', data: { id } } })
-      }
-    } catch {}
+    // Hard delete only
     await runQuery(`DELETE FROM financeiro.contas_financeiras WHERE tenant_id = $1 AND id = $2`, [tenantId, id])
     return Response.json({ ok: true, result: { success: true, message: 'Conta financeira deletada', data: { id } } })
   } catch (e) {

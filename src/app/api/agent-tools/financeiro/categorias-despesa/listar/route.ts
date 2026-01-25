@@ -27,6 +27,11 @@ export async function POST(req: NextRequest) {
     let i = 1
     const push = (expr: string, val: unknown) => { conditions.push(`${expr} $${i}`); params.push(val); i += 1 }
 
+    // Resolve tenant
+    const hdrTenant = Number.parseInt((req.headers.get('x-tenant-id') || '').trim(), 10)
+    const envTenant = Number.parseInt((process.env.DEFAULT_TENANT_ID || '').trim(), 10)
+    const tenantId = Number.isFinite(hdrTenant) && hdrTenant > 0 ? hdrTenant : (Number.isFinite(envTenant) && envTenant > 0 ? envTenant : 1)
+
     const selectSql = `SELECT cd.id,
                              cd.codigo,
                              cd.nome,
@@ -38,6 +43,7 @@ export async function POST(req: NextRequest) {
                              cd.criado_em,
                              cd.atualizado_em`
     const baseSql = `FROM financeiro.categorias_despesa cd`
+    push('cd.tenant_id =', tenantId)
     // Default: only active categories unless explicitly overridden
     push('COALESCE(cd.ativo, true) =', (ativoParam === undefined ? true : ativoParam))
 
