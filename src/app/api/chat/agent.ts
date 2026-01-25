@@ -39,9 +39,9 @@ try {
 } catch {}
 let appToolsServerGeneric = null;
 try {
-  const mod4 = await import('file:///vercel/sandbox/.mcp/app-tools-generic.mjs');
+  const mod4 = await import('file:///vercel/sandbox/.mcp/app-tools-generic2.mjs');
   // @ts-ignore
-  appToolsServerGeneric = (mod4 && (mod4.default || mod4.appToolsServerGeneric)) || null;
+  appToolsServerGeneric = (mod4 && (mod4.default || mod4.appToolsServerGeneric2 || mod4.appToolsServerGeneric)) || null;
 } catch {}
 const options = {
   model: 'claude-sonnet-4-5-20250929',
@@ -56,13 +56,13 @@ const options = {
   settingSources: ['project'],
   // Allow only the 4 generic MCP tools
   allowedTools: appToolsServerGeneric ? [
-    'mcp__app-tools-generic__listar',
-    'mcp__app-tools-generic__criar',
-    'mcp__app-tools-generic__atualizar',
-    'mcp__app-tools-generic__deletar',
+    'mcp__app-tools-generic2__listar',
+    'mcp__app-tools-generic2__criar',
+    'mcp__app-tools-generic2__atualizar',
+    'mcp__app-tools-generic2__deletar',
   ] : [],
   // Register only the generic MCP server
-  mcpServers: appToolsServerGeneric ? { 'app-tools-generic': appToolsServerGeneric } : undefined,
+  mcpServers: appToolsServerGeneric ? { 'app-tools-generic2': appToolsServerGeneric } : undefined,
   agents,
   // Emit standard tool lifecycle events so UI can render tool-specific components (e.g., get_weather)
   hooks: {
