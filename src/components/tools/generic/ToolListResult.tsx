@@ -1,7 +1,7 @@
 'use client'
 
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable'
-import type { ColumnDef } from '@tanstack/react-table'
+import type { ColumnDef, CellContext } from '@tanstack/react-table'
 import { Table as TableIcon } from 'lucide-react'
 import { useMemo } from 'react'
 
@@ -126,7 +126,7 @@ export default function ToolListResult({ output, input }: { output: any; input?:
         cols.push({
           accessorKey: key,
           header: key,
-          cell: (ctx) => {
+          cell: (ctx: CellContext<AnyRow, unknown>) => {
             const v = (ctx.row.original as AnyRow)[key]
             if (v === null || v === undefined) return ''
             if (typeof v === 'object') {
@@ -134,7 +134,7 @@ export default function ToolListResult({ output, input }: { output: any; input?:
             }
             return String(v)
           }
-        } as any)
+        } as ColumnDef<AnyRow>)
       }
     }
     return cols
