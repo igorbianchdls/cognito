@@ -37,6 +37,12 @@ try {
   // @ts-ignore
   appToolsServerFinance = (mod3 && (mod3.default || mod3.appToolsServerFinance)) || null;
 } catch {}
+let appToolsServerGeneric = null;
+try {
+  const mod4 = await import('file:///vercel/sandbox/.mcp/app-tools-generic.mjs');
+  // @ts-ignore
+  appToolsServerGeneric = (mod4 && (mod4.default || mod4.appToolsServerGeneric)) || null;
+} catch {}
 const options = {
   model: 'claude-sonnet-4-5-20250929',
   pathToClaudeCodeExecutable: cli,
@@ -48,16 +54,15 @@ const options = {
   includePartialMessages: true,
   maxThinkingTokens: 2048,
   settingSources: ['project'],
-  // Allow only app-tools-finance MCP tools
-  allowedTools: appToolsServerFinance ? [
-    'mcp__app-tools-finance__get_contas_financeiras',
-    'mcp__app-tools-finance__get_categorias_despesa',
-    'mcp__app-tools-finance__get_categorias_receita',
-    'mcp__app-tools-finance__get_clientes',
-    'mcp__app-tools-finance__get_centros_custo',
-    'mcp__app-tools-finance__get_centros_lucro',
+  // Allow only the 4 generic MCP tools
+  allowedTools: appToolsServerGeneric ? [
+    'mcp__app-tools-generic__listar',
+    'mcp__app-tools-generic__criar',
+    'mcp__app-tools-generic__atualizar',
+    'mcp__app-tools-generic__deletar',
   ] : [],
-  mcpServers: appToolsServerFinance ? { 'app-tools-finance': appToolsServerFinance } : undefined,
+  // Register only the generic MCP server
+  mcpServers: appToolsServerGeneric ? { 'app-tools-generic': appToolsServerGeneric } : undefined,
   agents,
   // Emit standard tool lifecycle events so UI can render tool-specific components (e.g., get_weather)
   hooks: {

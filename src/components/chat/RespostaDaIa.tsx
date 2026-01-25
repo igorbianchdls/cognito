@@ -11,6 +11,7 @@ import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
 import type { ColumnDef } from '@tanstack/react-table';
 import { Table as TableIcon } from 'lucide-react';
 import FornecedorResult from '@/components/tools/workflow/FornecedorResult';
+import ToolListResult from '@/components/tools/generic/ToolListResult';
 import WeatherResult from '@/components/tools/mcp/WeatherResult';
 import ContasAPagarResult from '@/components/tools/ContasAPagarResult';
 import ContasAReceberResult from '@/components/tools/ContasAReceberResult';
@@ -61,6 +62,29 @@ export default function RespostaDaIa({ message }: Props) {
             const output = (part as any).output;
             const errorText = (part as any).errorText as string | undefined;
             const toolType = (part as any).type as string;
+            // Special render: generic MCP "listar" → ArtifactDataTable
+            {
+              const normalized = toolType.startsWith('tool-') ? toolType.slice(5) : toolType;
+              const isGenericList = normalized === 'listar' || /__listar$/i.test(normalized);
+              if (isGenericList && (state === 'output-available' || state === 'output-error') && output) {
+                // Unwrap possible wrapped input (skill wrapper)
+                let inputForDisplay: any = input;
+                try {
+                  if (input && typeof input === 'object') {
+                    const o: any = input as any;
+                    if (o && (o.tool || o.name)) inputForDisplay = (o.args !== undefined ? o.args : (o.input !== undefined ? o.input : o));
+                  }
+                } catch {}
+                if (!inputForDisplay && (inputStream && typeof inputStream === 'string')) {
+                  const s = inputStream.trim(); if (s) { try { inputForDisplay = JSON.parse(s); } catch { inputForDisplay = s; } }
+                }
+                return (
+                  <div key={`tool-${index}`} className="mb-3">
+                    <ToolListResult output={output} input={inputForDisplay} />
+                  </div>
+                );
+              }
+            }
             // Special render: buscarFornecedor (Skill HTTP) or MCP buscar_fornecedor → ArtifactDataTable
             {
               const normalized = toolType.startsWith('tool-') ? toolType.slice(5) : toolType;
