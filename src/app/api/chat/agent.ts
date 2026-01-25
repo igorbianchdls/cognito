@@ -37,11 +37,11 @@ try {
   // @ts-ignore
   appToolsServerFinance = (mod3 && (mod3.default || mod3.appToolsServerFinance)) || null;
 } catch {}
-let appToolsServerGeneric = null;
+let appToolsServerERP = null;
 try {
-  const mod4 = await import('file:///vercel/sandbox/.mcp/app-tools-generic2.mjs');
+  const mod4 = await import('file:///vercel/sandbox/.mcp/ERP.mjs');
   // @ts-ignore
-  appToolsServerGeneric = (mod4 && (mod4.default || mod4.appToolsServerGeneric2 || mod4.appToolsServerGeneric)) || null;
+  appToolsServerERP = (mod4 && (mod4.default || mod4.mcpERPServer)) || null;
 } catch {}
 const options = {
   model: 'claude-sonnet-4-5-20250929',
@@ -54,15 +54,15 @@ const options = {
   includePartialMessages: true,
   maxThinkingTokens: 2048,
   settingSources: ['project'],
-  // Allow only the 4 generic MCP tools
-  allowedTools: appToolsServerGeneric ? [
-    'mcp__app-tools-generic2__listar',
-    'mcp__app-tools-generic2__criar',
-    'mcp__app-tools-generic2__atualizar',
-    'mcp__app-tools-generic2__deletar',
+  // Allow only the 4 ERP MCP tools
+  allowedTools: appToolsServerERP ? [
+    'mcp__ERP__listar',
+    'mcp__ERP__criar',
+    'mcp__ERP__atualizar',
+    'mcp__ERP__deletar',
   ] : [],
-  // Register only the generic MCP server
-  mcpServers: appToolsServerGeneric ? { 'app-tools-generic2': appToolsServerGeneric } : undefined,
+  // Register only the ERP MCP server
+  mcpServers: appToolsServerERP ? { 'ERP': appToolsServerERP } : undefined,
   agents,
   // Emit standard tool lifecycle events so UI can render tool-specific components (e.g., get_weather)
   hooks: {
