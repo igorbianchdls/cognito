@@ -31,12 +31,6 @@ const agents = {
   }
 };
 
-let appToolsServerFinance = null;
-try {
-  const mod3 = await import('file:///vercel/sandbox/.mcp/app-tools-finance.mjs');
-  // @ts-ignore
-  appToolsServerFinance = (mod3 && (mod3.default || mod3.appToolsServerFinance)) || null;
-} catch {}
 let appToolsServerERP = null;
 try {
   const mod4 = await import('file:///vercel/sandbox/.mcp/ERP.mjs');
