@@ -48,14 +48,8 @@ const options = {
   includePartialMessages: true,
   maxThinkingTokens: 2048,
   settingSources: ['project'],
-  // Allow only the 4 ERP MCP tools
-  allowedTools: appToolsServerERP ? [
-    'mcp__ERP__crud',
-    'mcp__ERP__listar',
-    'mcp__ERP__criar',
-    'mcp__ERP__atualizar',
-    'mcp__ERP__deletar',
-  ] : [],
+  // Allow only the ERP CRUD tool
+  allowedTools: appToolsServerERP ? ['mcp__ERP__crud'] : [],
   // Register only the ERP MCP server
   mcpServers: appToolsServerERP ? { 'ERP': appToolsServerERP } : undefined,
   agents,
