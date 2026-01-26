@@ -95,9 +95,12 @@ export default function RespostaDaIa({ message }: Props) {
                   const s = inputStream.trim(); if (s) { try { inputForDisplay = JSON.parse(s); } catch { inputForDisplay = s; } }
                 }
                 return (
-                  <div key={`tool-${index}`} className="mb-3">
-                    <ToolListResult output={output} input={inputForDisplay} />
-                  </div>
+                  <Tool key={`tool-${index}-${state || 'unknown'}`}>
+                    <ToolHeader type={(part as any).type} state={(state as any) || 'output-available'} />
+                    <ToolContent>
+                      <ToolListResult output={output} input={inputForDisplay} />
+                    </ToolContent>
+                  </Tool>
                 );
               }
             }
