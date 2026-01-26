@@ -46,6 +46,17 @@ try {
 const mcpServers = {};
 if (appToolsServerERP) { mcpServers['ERP'] = appToolsServerERP; }
 if (appToolsServerComposio) { mcpServers['composio'] = appToolsServerComposio; }
+// Build allowed tools list: ERP CRUD + all Composio tools
+const allowedToolsList = [];
+if (appToolsServerERP) allowedToolsList.push('mcp__ERP__crud');
+try {
+  if (appToolsServerComposio && Array.isArray(appToolsServerComposio.tools)) {
+    for (const t of appToolsServerComposio.tools) {
+      const nm = (t && (t.name || (t.tool && t.tool.name))) || null;
+      if (nm) allowedToolsList.push('mcp__composio__' + nm);
+    }
+  }
+} catch {}
 const options = {
   model: 'claude-sonnet-4-5-20250929',
   pathToClaudeCodeExecutable: cli,
@@ -57,8 +68,8 @@ const options = {
   includePartialMessages: true,
   maxThinkingTokens: 2048,
   settingSources: ['project'],
-  // Allow only the ERP CRUD tool
-  allowedTools: appToolsServerERP ? ['mcp__ERP__crud'] : [],
+  // Allow ERP CRUD and Composio router tools
+  allowedTools: allowedToolsList,
   // Register only the ERP MCP server
   mcpServers: Object.keys(mcpServers).length ? mcpServers : undefined,
   agents,

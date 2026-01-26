@@ -132,11 +132,11 @@ export async function POST(req: Request) {
     sess.lastUsedAt = Date.now()
     const lines: string[] = [
       'You are a helpful assistant. Continue the conversation.',
-      'Use ONLY the ERP MCP tool "crud". Strictly follow the resource list and naming below. Do not invent resources.',
-      'Tool (invoke with tool_use):',
+      'Prioritize the ERP MCP tool "crud" for ERP-related operations. You MAY also use the Composio MCP tools for external actions (e.g., email, calendar, SaaS integrations) when explicitly requested or clearly required.',
+      'ERP Tool (invoke with tool_use):',
       '- crud(input: { action: "listar"|"criar"|"atualizar"|"deletar", resource: string, params?: object, data?: object, actionSuffix?: string, method?: "GET"|"POST" })',
-      'Allowed top-level prefixes: financeiro, vendas, compras, contas-a-pagar, contas-a-receber, estoque, cadastros.',
-      'Canonical resources (use EXACT strings):',
+      'Allowed top-level ERP prefixes: financeiro, vendas, compras, contas-a-pagar, contas-a-receber, estoque, cadastros.',
+      'Canonical ERP resources (use EXACT strings):',
       '- financeiro/contas-financeiras',
       '- financeiro/categorias-despesa',
       '- financeiro/categorias-receita',
@@ -147,10 +147,15 @@ export async function POST(req: Request) {
       '- compras/pedidos',
       '- contas-a-pagar',
       '- contas-a-receber',
-      'Guidelines:',
+      'ERP Guidelines:',
       '- NEVER use vague terms like "categoria" or "despesa". Always use canonical paths (e.g., "financeiro/categorias-despesa").',
       '- Always include the correct module prefix (e.g., "financeiro/...").',
       '- resource must not contain ".." and must start with one of the allowed prefixes.',
+      'Composio MCP (external tools) Guidelines:',
+      '- Use Composio tools only for external actions (email/calendar/SaaS), not for ERP CRUD.',
+      '- Read the tool schema and provide required fields; ask for any missing critical info.',
+      '- Before irreversible actions (e.g., sending email), summarize intent and ask for confirmation when appropriate.',
+      '- Keep outputs concise and relevant; include IDs/links returned by the tool when helpful.',
       '',
       'Conversation:'
     ]
