@@ -95,7 +95,7 @@ export default function RespostaDaIa({ message }: Props) {
                   const s = inputStream.trim(); if (s) { try { inputForDisplay = JSON.parse(s); } catch { inputForDisplay = s; } }
                 }
                 // Build dynamic header label: action + '_' + last segment of resource
-                let headerType = (part as any).type as string;
+                let headerType: `tool-${string}` = ((part as any).type as `tool-${string}`) || ('tool-generic' as `tool-${string}`);
                 try {
                   const act = (inputForDisplay && typeof (inputForDisplay as any).action === 'string') ? String((inputForDisplay as any).action).toLowerCase() : undefined;
                   const resRaw = (inputForDisplay && typeof (inputForDisplay as any).resource === 'string') ? String((inputForDisplay as any).resource) : (
@@ -107,7 +107,7 @@ export default function RespostaDaIa({ message }: Props) {
                     const partsSeg = clean.split('/');
                     seg = (partsSeg[partsSeg.length - 1] || '').toLowerCase();
                   }
-                  if (act) headerType = `tool-${act}${seg ? '_' + seg : ''}`;
+                  if (act) headerType = (`tool-${act}${seg ? '_' + seg : ''}` as `tool-${string}`);
                 } catch {}
                 return (
                   <React.Fragment key={`tool-${index}-${state || 'unknown'}`}>
@@ -671,7 +671,7 @@ export default function RespostaDaIa({ message }: Props) {
               }
             }
             // Compute dynamic header for ERP CRUD when possible
-            let headerTypeGeneric = (part as any).type as string;
+            let headerTypeGeneric: `tool-${string}` = ((part as any).type as `tool-${string}`) || ('tool-generic' as `tool-${string}`);
             try {
               const normalized = toolType.startsWith('tool-') ? toolType.slice(5) : toolType;
               const looksCrud = normalized === 'crud' || /__crud$/i.test(normalized);
@@ -695,7 +695,7 @@ export default function RespostaDaIa({ message }: Props) {
                     const partsSeg = clean.split('/');
                     seg = (partsSeg[partsSeg.length - 1] || '').toLowerCase();
                   }
-                  if (act) headerTypeGeneric = `tool-${act}${seg ? '_' + seg : ''}`;
+                  if (act) headerTypeGeneric = (`tool-${act}${seg ? '_' + seg : ''}` as `tool-${string}`);
                 }
               }
             } catch {}
