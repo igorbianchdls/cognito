@@ -32,11 +32,20 @@ const agents = {
 };
 
 let appToolsServerERP = null;
+let appToolsServerComposio = null;
 try {
   const mod4 = await import('file:///vercel/sandbox/.mcp/ERP.mjs');
   // @ts-ignore
   appToolsServerERP = (mod4 && (mod4.default || mod4.mcpERPServer)) || null;
 } catch {}
+try {
+  const modC = await import('file:///vercel/sandbox/.mcp/composio.mjs');
+  // @ts-ignore
+  appToolsServerComposio = (modC && (modC.default || modC.composioServer)) || null;
+} catch {}
+const mcpServers = {};
+if (appToolsServerERP) { mcpServers['ERP'] = appToolsServerERP; }
+if (appToolsServerComposio) { mcpServers['composio'] = appToolsServerComposio; }
 const options = {
   model: 'claude-sonnet-4-5-20250929',
   pathToClaudeCodeExecutable: cli,
@@ -51,7 +60,7 @@ const options = {
   // Allow only the ERP CRUD tool
   allowedTools: appToolsServerERP ? ['mcp__ERP__crud'] : [],
   // Register only the ERP MCP server
-  mcpServers: appToolsServerERP ? { 'ERP': appToolsServerERP } : undefined,
+  mcpServers: Object.keys(mcpServers).length ? mcpServers : undefined,
   agents,
   // Emit standard tool lifecycle events so UI can render tool-specific components (e.g., get_weather)
   hooks: {
