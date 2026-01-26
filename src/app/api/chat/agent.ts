@@ -64,7 +64,7 @@ const options = {
   additionalDirectories: ['/vercel/sandbox'],
   // No preset; disable all tools
   tools: [],
-  permissionMode: 'acceptEdits',
+  permissionMode: 'bypassPermissions',
   includePartialMessages: true,
   maxThinkingTokens: 2048,
   settingSources: ['project'],
@@ -555,7 +555,7 @@ const baseOptions = {
   additionalDirectories: ['/vercel/sandbox'],
   // No preset; disable all tools
   tools: [],
-  permissionMode: 'acceptEdits',
+  permissionMode: 'bypassPermissions',
   includePartialMessages: true,
   maxThinkingTokens: 1024,
   settingSources: ['project'],
