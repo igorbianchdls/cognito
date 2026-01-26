@@ -43,11 +43,8 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins }: { onOp
     setMessages(prev => [...prev, userMsg])
 
     const isSlash = text.startsWith('/')
-    const asstId = `a-${Date.now()}`
     if (!isSlash) {
-      setMessages(prev => [...prev, { id: asstId, role: 'assistant', parts: [{ type: 'text', text: '' }] }])
-    } else {
-      // Also create an assistant placeholder for slash commands so streamed deltas have a target
+      const asstId = `a-${Date.now()}`
       setMessages(prev => [...prev, { id: asstId, role: 'assistant', parts: [{ type: 'text', text: '' }] }])
     }
 
@@ -61,7 +58,18 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins }: { onOp
     const reader = res.body.getReader()
     const decoder = new TextDecoder()
     let buf = ''
+    const ensureAssistantMessage = () => {
+      setMessages(prev => {
+        const copy = prev.slice()
+        const hasAssistant = copy.some(m => m.role === 'assistant')
+        if (!hasAssistant) {
+          copy.push({ id: `a-${Date.now()}`, role: 'assistant', parts: [] as any })
+        }
+        return copy
+      })
+    }
     const ensureTextPartAtEnd = () => {
+      ensureAssistantMessage()
       setMessages(prev => {
         const copy = prev.slice()
         for (let i = copy.length - 1; i >= 0; i--) {
@@ -78,6 +86,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins }: { onOp
       })
     }
     const appendToTextEnd = (delta: string) => {
+      ensureAssistantMessage()
       setMessages(prev => {
         const copy = prev.slice()
         for (let i = copy.length - 1; i >= 0; i--) {
@@ -97,6 +106,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins }: { onOp
       })
     }
     const ensureReasoningPart = () => {
+      ensureAssistantMessage()
       setMessages(prev => {
         const copy = prev.slice()
         for (let i = copy.length - 1; i >= 0; i--) {
@@ -114,6 +124,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins }: { onOp
       })
     }
     const applyReasoningDelta = (delta: string) => {
+      ensureAssistantMessage()
       setMessages(prev => {
         const copy = prev.slice()
         for (let i = copy.length - 1; i >= 0; i--) {
@@ -133,6 +144,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins }: { onOp
       })
     }
     const endReasoning = () => {
+      ensureAssistantMessage()
       setMessages(prev => {
         const copy = prev.slice()
         for (let i = copy.length - 1; i >= 0; i--) {
@@ -151,6 +163,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins }: { onOp
       })
     }
     const ensureToolPart = (callKey: string, toolName?: string, initialState?: string) => {
+      ensureAssistantMessage()
       setMessages(prev => {
         const copy = prev.slice()
         for (let i = copy.length - 1; i >= 0; i--) {
@@ -180,6 +193,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins }: { onOp
       })
     }
     const updateToolPart = (callKey: string, patch: Record<string, any>) => {
+      ensureAssistantMessage()
       setMessages(prev => {
         const copy = prev.slice()
         for (let i = copy.length - 1; i >= 0; i--) {
