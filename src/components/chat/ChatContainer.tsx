@@ -43,8 +43,11 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins }: { onOp
     setMessages(prev => [...prev, userMsg])
 
     const isSlash = text.startsWith('/')
+    const asstId = `a-${Date.now()}`
     if (!isSlash) {
-      const asstId = `a-${Date.now()}`
+      setMessages(prev => [...prev, { id: asstId, role: 'assistant', parts: [{ type: 'text', text: '' }] }])
+    } else {
+      // Also create an assistant placeholder for slash commands so streamed deltas have a target
       setMessages(prev => [...prev, { id: asstId, role: 'assistant', parts: [{ type: 'text', text: '' }] }])
     }
 
