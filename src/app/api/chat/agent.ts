@@ -440,7 +440,7 @@ try {
       const session = await composio.create(String(externalUserId));
       const tools = await session.tools();
       const count = (Array.isArray(tools) ? tools.length : (tools && Array.isArray((tools as any).tools) ? (tools as any).tools.length : 0)) || 0;
-      console.log(JSON.stringify({ type: 'delta', text: `Composio auth OK (${count} tools)` }));
+      console.log(JSON.stringify({ type: 'delta', text: 'Composio auth OK (' + count + ' tools)' }));
     } catch (e) {
       console.log(JSON.stringify({ type: 'delta', text: 'Composio auth error: ' + String((e && (e as any).message) || e) }));
     }
