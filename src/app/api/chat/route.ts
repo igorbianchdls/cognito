@@ -55,7 +55,7 @@ export async function POST(req: Request) {
       // Seed Composio MCP server file
       try {
         await sandbox.runCommand({ cmd: 'node', args: ['-e', `require('fs').mkdirSync('/vercel/sandbox/.mcp', { recursive: true });`] })
-        const mcpComposio = `import { Composio } from '@composio/core';\nimport { ClaudeAgentSDKProvider } from '@composio/claude-agent-sdk';\nimport { createSdkMcpServer } from '@anthropic-ai/claude-agent-sdk';\nlet server = null;\ntry {\n  const apiKey = process.env.COMPOSIO_API_KEY || '';\n  const provider = new ClaudeAgentSDKProvider();\n  const composio = new Composio({ apiKey, provider });\n  const externalUserId = process.env.AGENT_CHAT_ID || ('composio-' + Date.now());\n  const session = await composio.create(String(externalUserId));\n  const tools = await session.tools();\n  server = createSdkMcpServer({ name: 'composio', version: '1.0.0', tools });\n} catch (e) {\n  // Fallback: export empty server if auth/config fails\n  server = createSdkMcpServer({ name: 'composio', version: '1.0.0', tools: [] });\n}\nexport const composioServer = server;\nexport default composioServer;\n`;
+        const mcpComposio = `import { Composio } from '@composio/core';\nimport { ClaudeAgentSDKProvider } from '@composio/claude-agent-sdk';\nimport { createSdkMcpServer } from '@anthropic-ai/claude-agent-sdk';\nlet server = null;\ntry {\n  const apiKey = process.env.COMPOSIO_API_KEY || '';\n  const provider = new ClaudeAgentSDKProvider();\n  const composio = new Composio({ apiKey, provider });\n  const externalUserId = process.env.COMPOSIO_USER_ID || process.env.AGENT_CHAT_ID || ('composio-' + Date.now());\n  const session = await composio.create(String(externalUserId));\n  const tools = await session.tools();\n  server = createSdkMcpServer({ name: 'composio', version: '1.0.0', tools });\n} catch (e) {\n  // Fallback: export empty server if auth/config fails\n  server = createSdkMcpServer({ name: 'composio', version: '1.0.0', tools: [] });\n}\nexport const composioServer = server;\nexport default composioServer;\n`;
         await sandbox.writeFiles([{ path: '/vercel/sandbox/.mcp/composio.mjs', content: Buffer.from(mcpComposio) }])
       } catch {}
       // Seed MCP test tools server file
@@ -173,6 +173,8 @@ export async function POST(req: Request) {
             env: {
               ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY || '',
               COMPOSIO_API_KEY: process.env.COMPOSIO_API_KEY || '',
+              COMPOSIO_USER_ID: process.env.COMPOSIO_USER_ID || '',
+              COMPOSIO_CONNECTED_ACCOUNT_ID: process.env.COMPOSIO_CONNECTED_ACCOUNT_ID || '',
               AGENT_TOOL_TOKEN: sess.agentToken || '',
               AGENT_CHAT_ID: chatId,
               AGENT_BASE_URL: origin,
@@ -228,6 +230,8 @@ export async function POST(req: Request) {
             env: {
               ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY || '',
               COMPOSIO_API_KEY: process.env.COMPOSIO_API_KEY || '',
+              COMPOSIO_USER_ID: process.env.COMPOSIO_USER_ID || '',
+              COMPOSIO_CONNECTED_ACCOUNT_ID: process.env.COMPOSIO_CONNECTED_ACCOUNT_ID || '',
               AGENT_TOOL_TOKEN: (SESSIONS.get(chatId)?.agentToken) || '',
               AGENT_CHAT_ID: chatId,
               AGENT_BASE_URL: origin,

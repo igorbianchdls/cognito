@@ -457,7 +457,7 @@ try {
       const { Composio } = await import('@composio/core');
       const { ClaudeAgentSDKProvider } = await import('@composio/claude-agent-sdk');
       const composio = new Composio({ apiKey, provider: new ClaudeAgentSDKProvider() });
-      const externalUserId = process.env.AGENT_CHAT_ID || ('composio-test-' + Date.now());
+      const externalUserId = process.env.COMPOSIO_USER_ID || process.env.AGENT_CHAT_ID || ('composio-test-' + Date.now());
       const session = await composio.create(String(externalUserId));
       const tools = await session.tools();
       const count = (Array.isArray(tools) ? tools.length : (tools && Array.isArray((tools as any).tools) ? (tools as any).tools.length : 0)) || 0;
