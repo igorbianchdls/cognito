@@ -50,6 +50,7 @@ const options = {
   settingSources: ['project'],
   // Allow only the 4 ERP MCP tools
   allowedTools: appToolsServerERP ? [
+    'mcp__ERP__crud',
     'mcp__ERP__listar',
     'mcp__ERP__criar',
     'mcp__ERP__atualizar',
