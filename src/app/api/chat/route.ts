@@ -125,12 +125,9 @@ export async function POST(req: Request) {
     sess.lastUsedAt = Date.now()
     const lines: string[] = [
       'You are a helpful assistant. Continue the conversation.',
-      'Use ONLY the 4 generic MCP tools. Strictly follow the resource list and naming below. Do not invent resources.',
-      'Tools (invoke with tool_use):',
-      '- listar(input: { resource: string, params?: object, actionSuffix?: string, method?: "GET"|"POST" }) — calls /listar',
-      '- criar(input: { resource: string, data?: object, actionSuffix?: string, method?: "GET"|"POST" }) — calls /criar',
-      '- atualizar(input: { resource: string, data?: object, actionSuffix?: string, method?: "GET"|"POST" }) — defaults /atualizar; fallback /editar',
-      '- deletar(input: { resource: string, data?: object, actionSuffix?: string, method?: "GET"|"POST" }) — defaults /deletar',
+      'Use ONLY the ERP MCP tool "crud". Strictly follow the resource list and naming below. Do not invent resources.',
+      'Tool (invoke with tool_use):',
+      '- crud(input: { action: "listar"|"criar"|"atualizar"|"deletar", resource: string, params?: object, data?: object, actionSuffix?: string, method?: "GET"|"POST" })',
       'Allowed top-level prefixes: financeiro, vendas, compras, contas-a-pagar, contas-a-receber, estoque, cadastros.',
       'Canonical resources (use EXACT strings):',
       '- financeiro/contas-financeiras',

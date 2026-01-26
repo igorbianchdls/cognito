@@ -65,7 +65,23 @@ export default function RespostaDaIa({ message }: Props) {
             // Special render: generic MCP "listar" → ArtifactDataTable
             {
               const normalized = toolType.startsWith('tool-') ? toolType.slice(5) : toolType;
-              const isGenericList = normalized === 'listar' || /__listar$/i.test(normalized);
+              // Detect CRUD with action 'listar'
+              let actionForCheck: string | undefined = undefined;
+              try {
+                let candidate: any = input;
+                if (candidate && typeof candidate === 'object') {
+                  const o: any = candidate;
+                  if (o && (o.tool || o.name)) candidate = (o.args !== undefined ? o.args : (o.input !== undefined ? o.input : o));
+                } else if (!candidate && (typeof (part as any).inputStream === 'string')) {
+                  const s = ((part as any).inputStream as string).trim();
+                  if (s) { try { candidate = JSON.parse(s) } catch { /* ignore */ } }
+                }
+                if (candidate && typeof candidate === 'object' && typeof (candidate as any).action === 'string') {
+                  actionForCheck = String((candidate as any).action).toLowerCase();
+                }
+              } catch {}
+              const isCrudList = (normalized === 'crud' || /__crud$/i.test(normalized)) && actionForCheck === 'listar';
+              const isGenericList = normalized === 'listar' || /__listar$/i.test(normalized) || isCrudList;
               if (isGenericList && (state === 'output-available' || state === 'output-error') && output) {
                 // Unwrap possible wrapped input (skill wrapper)
                 let inputForDisplay: any = input;
