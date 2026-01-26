@@ -1,12 +1,13 @@
 # Slash Commands in the SDK
 
-Learn how to use slash commands to control Claude Code sessions through the SDK
+Learn how to use slash comands to control Claude Code sessions through the SDK
 
 ---
 
-Slash commands provide a way to control Claude Code sessions with special commands that start with `/`. These commands can be sent through the SDK to perform actions like clearing conversation history, compacting messages, or getting help.
+Slash commands proide a way to control Claude Code sessions with special commands that start with `/`. These commands can be sent through the SDK to perform actions like clearing conversation history, compacting messages, or getting help.
 
-## Discovering Available Slash Commands
+## Discovering Availabl
+ Slash Commands
 
 The Claude Agent SDK provides information about available slash commands in the system initialization message. Access this information when your session starts:
 
