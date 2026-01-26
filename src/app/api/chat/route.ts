@@ -38,7 +38,7 @@ export async function POST(req: Request) {
       timeline.push({ name: 'create-sandbox', ms: Date.now() - t0, ok: true })
       const t1 = Date.now()
       // Install Agent SDK + CLI + zod (for MCP schemas)
-      const install = await sandbox.runCommand({ cmd: 'npm', args: ['install', '@anthropic-ai/claude-agent-sdk', '@anthropic-ai/claude-code', 'zod'] })
+      const install = await sandbox.runCommand({ cmd: 'npm', args: ['install', '@anthropic-ai/claude-agent-sdk', '@anthropic-ai/claude-code', 'zod', '@composio/core', '@composio/claude-agent-sdk'] })
       timeline.push({ name: 'install', ms: Date.now() - t1, ok: install.exitCode === 0, exitCode: install.exitCode })
       if (install.exitCode !== 0) {
         const [o, e] = await Promise.all([install.stdout().catch(() => ''), install.stderr().catch(() => '')])

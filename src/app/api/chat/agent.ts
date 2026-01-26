@@ -404,6 +404,8 @@ for await (const msg of q) {
 export function getSlashStreamRunnerScript(): string {
   return `
 import { query } from '@anthropic-ai/claude-agent-sdk';
+import { Composio } from '@composio/core';
+import { ClaudeAgentSDKProvider } from '@composio/claude-agent-sdk';
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
 const cli = require.resolve('@anthropic-ai/claude-code/cli.js');
@@ -417,6 +419,31 @@ try {
     const has = !!(process.env.COMPOSIO_API_KEY && String(process.env.COMPOSIO_API_KEY).length > 0);
     const msg = has ? 'COMPOSIO_API_KEY: present' : 'COMPOSIO_API_KEY: missing';
     console.log(JSON.stringify({ type: 'delta', text: msg }));
+    console.log(JSON.stringify({ type: 'final', text: 'done' }));
+    process.exit(0);
+  }
+} catch {}
+
+// Slash: /composio-test — authenticate and list tools count
+try {
+  const slash = String(prompt || '').trim();
+  if (slash === '/composio-test') {
+    const apiKey = process.env.COMPOSIO_API_KEY || '';
+    if (!apiKey) {
+      console.log(JSON.stringify({ type: 'delta', text: 'COMPOSIO_API_KEY: missing' }));
+      console.log(JSON.stringify({ type: 'final', text: 'done' }));
+      process.exit(0);
+    }
+    try {
+      const composio = new Composio({ apiKey, provider: new ClaudeAgentSDKProvider() });
+      const externalUserId = process.env.AGENT_CHAT_ID || ('composio-test-' + Date.now());
+      const session = await composio.create(String(externalUserId));
+      const tools = await session.tools();
+      const count = (Array.isArray(tools) ? tools.length : (tools && Array.isArray((tools as any).tools) ? (tools as any).tools.length : 0)) || 0;
+      console.log(JSON.stringify({ type: 'delta', text: `Composio auth OK (${count} tools)` }));
+    } catch (e) {
+      console.log(JSON.stringify({ type: 'delta', text: 'Composio auth error: ' + String((e && (e as any).message) || e) }));
+    }
     console.log(JSON.stringify({ type: 'final', text: 'done' }));
     process.exit(0);
   }
