@@ -95,12 +95,19 @@ export default function RespostaDaIa({ message }: Props) {
                   const s = inputStream.trim(); if (s) { try { inputForDisplay = JSON.parse(s); } catch { inputForDisplay = s; } }
                 }
                 return (
-                  <Tool key={`tool-${index}-${state || 'unknown'}`} defaultOpen>
-                    <ToolHeader type={(part as any).type} state={(state as any) || 'output-available'} />
-                    <ToolContent>
+                  <React.Fragment key={`tool-${index}-${state || 'unknown'}`}>
+                    <Tool>
+                      <ToolHeader type={(part as any).type} state={(state as any) || 'output-available'} />
+                      <ToolContent>
+                        {inputForDisplay && (
+                          <ToolInput input={inputForDisplay} />
+                        )}
+                      </ToolContent>
+                    </Tool>
+                    <div className="mb-3">
                       <ToolListResult output={output} input={inputForDisplay} />
-                    </ToolContent>
-                  </Tool>
+                    </div>
+                  </React.Fragment>
                 );
               }
             }
