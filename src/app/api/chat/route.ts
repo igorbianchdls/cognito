@@ -161,6 +161,7 @@ export async function POST(req: Request) {
             args: ['agent-chat-stream.mjs', prompt],
             env: {
               ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY || '',
+              COMPOSIO_API_KEY: process.env.COMPOSIO_API_KEY || '',
               AGENT_TOOL_TOKEN: sess.agentToken || '',
               AGENT_CHAT_ID: chatId,
               AGENT_BASE_URL: origin,
@@ -215,6 +216,7 @@ export async function POST(req: Request) {
             args: ['agent-slash-stream.mjs', slash],
             env: {
               ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY || '',
+              COMPOSIO_API_KEY: process.env.COMPOSIO_API_KEY || '',
               AGENT_TOOL_TOKEN: (SESSIONS.get(chatId)?.agentToken) || '',
               AGENT_CHAT_ID: chatId,
               AGENT_BASE_URL: origin,

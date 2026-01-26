@@ -410,6 +410,18 @@ const cli = require.resolve('@anthropic-ai/claude-code/cli.js');
 const prompt = process.argv[2] || '';
 const fs = require('fs');
 
+// Quick built-in slash: /env-check (validate env propagation)
+try {
+  const slash = String(prompt || '').trim();
+  if (slash === '/env-check') {
+    const has = !!(process.env.COMPOSIO_API_KEY && String(process.env.COMPOSIO_API_KEY).length > 0);
+    const msg = has ? 'COMPOSIO_API_KEY: present' : 'COMPOSIO_API_KEY: missing';
+    console.log(JSON.stringify({ type: 'delta', text: msg }));
+    console.log(JSON.stringify({ type: 'final', text: 'done' }));
+    process.exit(0);
+  }
+} catch {}
+
 const agents = { uiScaffold: { description:'UI scaffold', tools:['Read','Write','Edit'], prompt:'Crie artefatos web mínimos.', model:'inherit' } };
 const baseOptions = {
   model: 'claude-sonnet-4-5-20250929',
