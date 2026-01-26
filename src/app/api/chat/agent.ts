@@ -424,8 +424,6 @@ for await (const msg of q) {
 export function getSlashStreamRunnerScript(): string {
   return `
 import { query } from '@anthropic-ai/claude-agent-sdk';
-import { Composio } from '@composio/core';
-import { ClaudeAgentSDKProvider } from '@composio/claude-agent-sdk';
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
 const cli = require.resolve('@anthropic-ai/claude-code/cli.js');
@@ -455,6 +453,9 @@ try {
       process.exit(0);
     }
     try {
+      // Dynamic import to avoid hard failure when deps are not installed yet
+      const { Composio } = await import('@composio/core');
+      const { ClaudeAgentSDKProvider } = await import('@composio/claude-agent-sdk');
       const composio = new Composio({ apiKey, provider: new ClaudeAgentSDKProvider() });
       const externalUserId = process.env.AGENT_CHAT_ID || ('composio-test-' + Date.now());
       const session = await composio.create(String(externalUserId));
@@ -462,7 +463,9 @@ try {
       const count = (Array.isArray(tools) ? tools.length : (tools && Array.isArray((tools as any).tools) ? (tools as any).tools.length : 0)) || 0;
       console.log(JSON.stringify({ type: 'delta', text: 'Composio auth OK (' + count + ' tools)' }));
     } catch (e) {
-      console.log(JSON.stringify({ type: 'delta', text: 'Composio auth error: ' + String((e && (e as any).message) || e) }));
+      const msg = String((e && (e as any).message) || e || '')
+      const hint = msg.includes("Cannot find module '@composio/") ? ' — Hint: start a new chat to trigger sandbox install or ensure chat-start ran after installing deps.' : '';
+      console.log(JSON.stringify({ type: 'delta', text: 'Composio auth error: ' + msg + hint }));
     }
     console.log(JSON.stringify({ type: 'final', text: 'done' }));
     process.exit(0);
