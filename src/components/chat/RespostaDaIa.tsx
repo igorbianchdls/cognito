@@ -94,10 +94,25 @@ export default function RespostaDaIa({ message }: Props) {
                 if (!inputForDisplay && (inputStream && typeof inputStream === 'string')) {
                   const s = inputStream.trim(); if (s) { try { inputForDisplay = JSON.parse(s); } catch { inputForDisplay = s; } }
                 }
+                // Build dynamic header label: action + '_' + last segment of resource
+                let headerType = (part as any).type as string;
+                try {
+                  const act = (inputForDisplay && typeof (inputForDisplay as any).action === 'string') ? String((inputForDisplay as any).action).toLowerCase() : undefined;
+                  const resRaw = (inputForDisplay && typeof (inputForDisplay as any).resource === 'string') ? String((inputForDisplay as any).resource) : (
+                    (inputForDisplay && typeof (inputForDisplay as any).path === 'string') ? String((inputForDisplay as any).path) : undefined
+                  );
+                  let seg = '';
+                  if (resRaw) {
+                    const clean = resRaw.replace(/^\/+|\/+$/g, '');
+                    const partsSeg = clean.split('/');
+                    seg = (partsSeg[partsSeg.length - 1] || '').toLowerCase();
+                  }
+                  if (act) headerType = `tool-${act}${seg ? '_' + seg : ''}`;
+                } catch {}
                 return (
                   <React.Fragment key={`tool-${index}-${state || 'unknown'}`}>
                     <Tool>
-                      <ToolHeader type={(part as any).type} state={(state as any) || 'output-available'} />
+                      <ToolHeader type={headerType} state={(state as any) || 'output-available'} />
                       <ToolContent>
                         {inputForDisplay && (
                           <ToolInput input={inputForDisplay} />
@@ -655,9 +670,38 @@ export default function RespostaDaIa({ message }: Props) {
                 );
               }
             }
+            // Compute dynamic header for ERP CRUD when possible
+            let headerTypeGeneric = (part as any).type as string;
+            try {
+              const normalized = toolType.startsWith('tool-') ? toolType.slice(5) : toolType;
+              const looksCrud = normalized === 'crud' || /__crud$/i.test(normalized);
+              if (looksCrud) {
+                let candidate: any = input;
+                if (candidate && typeof candidate === 'object') {
+                  const o: any = candidate;
+                  if (o && (o.tool || o.name)) candidate = (o.args !== undefined ? o.args : (o.input !== undefined ? o.input : o));
+                } else if (!candidate && (typeof (part as any).inputStream === 'string')) {
+                  const s = ((part as any).inputStream as string).trim();
+                  if (s) { try { candidate = JSON.parse(s) } catch { /* ignore */ } }
+                }
+                if (candidate && typeof candidate === 'object') {
+                  const act = (typeof (candidate as any).action === 'string') ? String((candidate as any).action).toLowerCase() : undefined;
+                  const resRaw = (typeof (candidate as any).resource === 'string') ? String((candidate as any).resource) : (
+                    (typeof (candidate as any).path === 'string') ? String((candidate as any).path) : undefined
+                  );
+                  let seg = '';
+                  if (resRaw) {
+                    const clean = resRaw.replace(/^\/+|\/+$/g, '');
+                    const partsSeg = clean.split('/');
+                    seg = (partsSeg[partsSeg.length - 1] || '').toLowerCase();
+                  }
+                  if (act) headerTypeGeneric = `tool-${act}${seg ? '_' + seg : ''}`;
+                }
+              }
+            } catch {}
             return (
               <Tool key={`tool-${index}-${state || 'unknown'}`}>
-                <ToolHeader type={(part as any).type} state={(state as any) || 'input-streaming'} />
+                <ToolHeader type={headerTypeGeneric} state={(state as any) || 'input-streaming'} />
                 <ToolContent>
                   {state === 'input-streaming' && (
                     <ToolInputStreaming input={inputStream || input || ''} isStreaming />
