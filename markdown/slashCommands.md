@@ -1,6 +1,6 @@
 # Slash Commands in the SDK
 
-Learn how to use slash commands to control Claude Code sessions through the SDK
+Learn how to use slash commnds to control Claude Code sessions through the SDK
 
 ---
 
