@@ -280,17 +280,21 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins }: { onOp
       <div className="h-full grid grid-rows-[auto_1fr]">
         <Header />
         <div className="h-full min-h-0" style={withSideMargins ? { marginLeft: '20%', marginRight: '20%' } : undefined}>
-          <div className="px-4 pt-10 md:pt-16">
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">Como você vai?</h1>
-            <InputArea
-              value={input}
-              onChange={setInput}
-              onSubmit={handleSubmit}
-              status={status}
-              onOpenSandbox={async () => {
-                try { const id = await ensureStart(); onOpenSandbox?.(id); } catch { /* ignore */ }
-              }}
-            />
+          <div className="h-full px-4">
+            <div className="h-full flex items-center justify-center">
+              <div className="w-full max-w-2xl text-center">
+                <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">Como você vai?</h1>
+                <InputArea
+                  value={input}
+                  onChange={setInput}
+                  onSubmit={handleSubmit}
+                  status={status}
+                  onOpenSandbox={async () => {
+                    try { const id = await ensureStart(); onOpenSandbox?.(id); } catch { /* ignore */ }
+                  }}
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>
