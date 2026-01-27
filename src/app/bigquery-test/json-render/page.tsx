@@ -197,14 +197,14 @@ function Playground() {
           value={jsonText}
           onChange={(e) => onChangeText(e.target.value)}
           spellCheck={false}
-          className="w-full min-h-[420px] rounded-md border border-gray-300 bg-white p-3 font-mono text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full min-h-[420px] rounded-md border border-gray-300 bg-white p-0 font-mono text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         {parseError && (
           <div className="mt-2 rounded border border-red-300 bg-red-50 px-2 py-1 text-xs text-red-700">
             {parseError}
           </div>
         )}
-        <div className="mt-4 rounded-md bg-white p-3 border border-gray-200">
+        <div className="mt-4 rounded-md bg-white p-0 border border-gray-200">
           <h3 className="text-xs font-medium text-gray-900 mb-1">Dados atuais</h3>
           <pre className="text-[11px] text-gray-700 whitespace-pre-wrap">{JSON.stringify(data, null, 2)}</pre>
         </div>
@@ -216,7 +216,7 @@ function Playground() {
           <h2 className="text-sm font-medium text-gray-900">Preview</h2>
           <div className="text-xs text-gray-500">Ações: Atualizar / Exportar PDF</div>
         </div>
-        <div className="rounded-md border border-gray-200 bg-white p-4 min-h-[420px]">
+        <div className="rounded-md border border-gray-200 bg-white p-0 min-h-[420px]">
           {tree ? (
             <Renderer tree={tree} registry={registry} onAction={handleAction} />
           ) : (
@@ -231,7 +231,7 @@ function Playground() {
 export default function JsonRenderPage() {
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="mx-auto max-w-6xl px-4 py-8">
+      <div className="w-full">
         <h1 className="text-2xl font-semibold text-gray-900 mb-1">JSON Render (MVP)</h1>
         <p className="text-sm text-gray-600 mb-6">Edite o JSON à esquerda e veja o render à direita.</p>
 

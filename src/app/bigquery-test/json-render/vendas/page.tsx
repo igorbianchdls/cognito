@@ -132,7 +132,7 @@ function SalesPlayground() {
           value={jsonText}
           onChange={(e) => onChangeText(e.target.value)}
           spellCheck={false}
-          className="w-full min-h-[420px] rounded-md border border-gray-300 bg-white p-3 font-mono text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full min-h-[420px] rounded-md border border-gray-300 bg-white p-0 font-mono text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         {parseError && (
           <div className="mt-2 rounded border border-red-300 bg-red-50 px-2 py-1 text-xs text-red-700">{parseError}</div>
@@ -148,7 +148,7 @@ function SalesPlayground() {
           <h2 className="text-sm font-medium text-gray-900">Preview</h2>
           <div className="text-xs text-gray-500">Ações: Atualizar</div>
         </div>
-        <div className="rounded-md border border-gray-200 bg-white p-4 min-h-[420px]">
+        <div className="rounded-md border border-gray-200 bg-white p-0 min-h-[420px]">
           {tree ? (
             <Renderer tree={tree} registry={registry} onAction={handleAction} />
           ) : (

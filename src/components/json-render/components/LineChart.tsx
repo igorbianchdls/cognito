@@ -89,7 +89,7 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
   const motionConfig = (typeof nivo?.motionConfig === 'string' ? nivo.motionConfig : 'gentle') as any;
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-sm">
+    <div className="rounded-lg border border-gray-200 bg-white p-0 shadow-sm">
       {title && <div className="text-sm font-medium text-gray-900 mb-2">{title}</div>}
       <div style={{ height }}>
         <ResponsiveLine
