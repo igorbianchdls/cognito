@@ -23,6 +23,23 @@ const TitleStyleSchema = z.object({
   textAlign: z.enum(["left","center","right"]).optional(),
 }).partial();
 
+const NivoTextSchema = z.object({
+  fontFamily: z.string().optional(),
+  fontSize: z.number().optional(),
+  fill: z.string().optional(),
+}).partial();
+
+const NivoThemeSchema = z.object({
+  textColor: z.string().optional(),
+  fontSize: z.number().optional(),
+  fontFamily: z.string().optional(),
+  axis: z.object({
+    ticks: z.object({ text: NivoTextSchema }).partial(),
+    legend: z.object({ text: NivoTextSchema }).partial(),
+  }).partial(),
+  labels: z.object({ text: NivoTextSchema }).partial(),
+}).partial();
+
 export const catalog = {
   components: {
     Theme: {
@@ -155,6 +172,7 @@ export const catalog = {
           margin: z.object({ top: z.number().optional(), right: z.number().optional(), bottom: z.number().optional(), left: z.number().optional() }).partial().optional(),
           animate: z.boolean().optional(),
           motionConfig: z.string().optional(),
+          theme: NivoThemeSchema.optional(),
         }).partial().optional(),
       }).strict(),
       hasChildren: false,
@@ -199,6 +217,7 @@ export const catalog = {
           margin: z.object({ top: z.number().optional(), right: z.number().optional(), bottom: z.number().optional(), left: z.number().optional() }).partial().optional(),
           animate: z.boolean().optional(),
           motionConfig: z.string().optional(),
+          theme: NivoThemeSchema.optional(),
         }).partial().optional(),
       }).strict(),
       hasChildren: false,
@@ -237,6 +256,7 @@ export const catalog = {
           margin: z.object({ top: z.number().optional(), right: z.number().optional(), bottom: z.number().optional(), left: z.number().optional() }).partial().optional(),
           animate: z.boolean().optional(),
           motionConfig: z.string().optional(),
+          theme: NivoThemeSchema.optional(),
         }).partial().optional(),
       }).strict(),
       hasChildren: false,

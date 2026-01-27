@@ -165,3 +165,26 @@ export function normalizeContainerStyle(style?: any, borderless?: boolean): Reco
   if (borderless) out.borderWidth = 0;
   return Object.keys(out).length ? out : undefined;
 }
+
+export function buildNivoTheme(input?: any): Record<string, any> | undefined {
+  if (!input || typeof input !== 'object') return undefined;
+  const t: any = {};
+  if (input.textColor) t.textColor = String(input.textColor);
+  if (input.fontSize !== undefined) t.fontSize = Number(input.fontSize);
+  if (input.fontFamily) t.fontFamily = String(input.fontFamily);
+  if (input.axis) {
+    t.axis = {};
+    if (input.axis.ticks) {
+      t.axis.ticks = {};
+      if (input.axis.ticks.text) t.axis.ticks.text = { ...input.axis.ticks.text };
+    }
+    if (input.axis.legend) {
+      t.axis.legend = {};
+      if (input.axis.legend.text) t.axis.legend.text = { ...input.axis.legend.text };
+    }
+  }
+  if (input.labels && input.labels.text) {
+    t.labels = { text: { ...input.labels.text } };
+  }
+  return t;
+}

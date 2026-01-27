@@ -3,7 +3,7 @@
 import React from "react";
 import { useData } from "@/components/json-render/context";
 import { ResponsiveBar } from "@nivo/bar";
-import { aggregateByDimension, getByPath, parseMeasureSpec, normalizeTitleStyle, normalizeContainerStyle } from "@/components/json-render/helpers";
+import { aggregateByDimension, getByPath, parseMeasureSpec, normalizeTitleStyle, normalizeContainerStyle, buildNivoTheme } from "@/components/json-render/helpers";
 
 type AnyRecord = Record<string, any>;
 
@@ -94,6 +94,7 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
   const animate = Boolean(nivo?.animate ?? true);
   const motionConfig = (typeof nivo?.motionConfig === 'string' ? nivo.motionConfig : 'gentle') as any;
 
+  const nivoTheme = buildNivoTheme(nivo?.theme);
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-0 shadow-sm" style={containerStyle}>
       {title && <div className="text-sm font-medium text-gray-900 mb-2" style={titleStyle}>{title}</div>}
@@ -123,6 +124,7 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
           )}
           animate={animate}
           motionConfig={motionConfig}
+          theme={nivoTheme as any}
         />
       </div>
     </div>
