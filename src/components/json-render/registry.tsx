@@ -132,9 +132,14 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       width: styleVal(p.width),
       height: styleVal(p.height),
     };
-    return (
-      <div style={style}>{children}</div>
-    );
+    const childGrow = Boolean(p.childGrow);
+    if (!childGrow) {
+      return <div style={style}>{children}</div>;
+    }
+    const wrapped = React.Children.toArray(children).map((c, i) => (
+      <div key={i} style={{ flex: '1 1 0%', minWidth: 0 }}>{c}</div>
+    ));
+    return <div style={style}>{wrapped}</div>;
   },
 
   Metric: ({ element, data }) => {

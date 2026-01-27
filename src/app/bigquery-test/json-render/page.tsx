@@ -29,7 +29,7 @@ const SAMPLE_TREE_TEXT = JSON.stringify([
       { type: "Card", props: { title: "Financeiro: Títulos A Pagar" }, children: [
         { type: "BarChart", props: { title: "Títulos (por Valor)", dataPath: "financeiro.contas-a-pagar", xKey: "numero_documento", yKey: "SUM(valor_liquido)", format: "currency", height: 200, nivo: { layout: 'horizontal' } } }
       ]},
-      { type: "Div", props: { direction: "row", gap: 12, justify: "between", align: "start" }, children: [
+      { type: "Div", props: { direction: "row", gap: 12, justify: "start", align: "start", childGrow: true }, children: [
         { type: "Card", props: { title: "AP por Centro de Custo" }, children: [
           { type: "BarChart", props: { title: "Centros de Custo", dataPath: "financeiro.contas-a-pagar", xKey: "centro_custo", yKey: "SUM(valor_liquido)", format: "currency", height: 200, nivo: { layout: 'horizontal' } } }
         ]},
@@ -40,7 +40,7 @@ const SAMPLE_TREE_TEXT = JSON.stringify([
           { type: "BarChart", props: { title: "Departamentos", dataPath: "financeiro.contas-a-pagar", xKey: "departamento", yKey: "SUM(valor_liquido)", format: "currency", height: 200, nivo: { layout: 'horizontal' } } }
         ]}
       ]},
-      { type: "Div", props: { direction: "row", gap: 12, justify: "between", align: "start" }, children: [
+      { type: "Div", props: { direction: "row", gap: 12, justify: "start", align: "start", childGrow: true }, children: [
         { type: "Card", props: { title: "AR por Categoria (Receita)" }, children: [
           { type: "BarChart", props: { title: "Categorias de Receita", dataPath: "financeiro.contas-a-receber", xKey: "categoria_receita", yKey: "SUM(valor_liquido)", format: "currency", height: 200, nivo: { layout: 'horizontal' } } }
         ]},

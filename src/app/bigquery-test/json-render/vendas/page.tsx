@@ -32,7 +32,7 @@ const SALES_TEMPLATE_TEXT = JSON.stringify([
         ]}
       ]},
 
-      { type: "Div", props: { direction: "row", gap: 12, justify: "between", align: "start" }, children: [
+      { type: "Div", props: { direction: "row", gap: 12, justify: "start", align: "start", childGrow: true }, children: [
         { type: "Card", props: { title: "Vendas por Vendedor" }, children: [
           { type: "BarChart", props: { title: "Vendedores", dataPath: "vendas.pedidos", xKey: "vendedor", yKey: "SUM(valor_total)", format: "currency", height: 220, nivo: { layout: 'horizontal' } } }
         ]},
@@ -44,7 +44,7 @@ const SALES_TEMPLATE_TEXT = JSON.stringify([
         ]}
       ]},
 
-      { type: "Div", props: { direction: "row", gap: 12, justify: "between", align: "start" }, children: [
+      { type: "Div", props: { direction: "row", gap: 12, justify: "start", align: "start", childGrow: true }, children: [
         { type: "Card", props: { title: "Vendas por Território" }, children: [
           { type: "BarChart", props: { title: "Territórios", dataPath: "vendas.pedidos", xKey: "territorio", yKey: "SUM(valor_total)", format: "currency", height: 220, nivo: { layout: 'horizontal' } } }
         ]},

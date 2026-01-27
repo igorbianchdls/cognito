@@ -20,7 +20,7 @@ const COMPRAS_TEMPLATE_TEXT = JSON.stringify([
         ]}
       ]},
 
-      { type: "Div", props: { direction: "row", gap: 12, justify: "between", align: "start" }, children: [
+      { type: "Div", props: { direction: "row", gap: 12, justify: "start", align: "start", childGrow: true }, children: [
         { type: "Card", props: { title: "Gasto por Fornecedor" }, children: [
           { type: "BarChart", props: { title: "Fornecedores", dataPath: "compras.compras", xKey: "fornecedor", yKey: "SUM(valor_total)", format: "currency", height: 240, nivo: { layout: 'horizontal' } } }
         ]},
@@ -32,7 +32,7 @@ const COMPRAS_TEMPLATE_TEXT = JSON.stringify([
         ]}
       ]},
 
-      { type: "Div", props: { direction: "row", gap: 12, justify: "between", align: "start" }, children: [
+      { type: "Div", props: { direction: "row", gap: 12, justify: "start", align: "start", childGrow: true }, children: [
         { type: "Card", props: { title: "Gasto por Categoria" }, children: [
           { type: "BarChart", props: { title: "Categorias", dataPath: "compras.compras", xKey: "categoria_despesa", yKey: "SUM(valor_total)", format: "currency", height: 220, nivo: { layout: 'horizontal' } } }
         ]},
