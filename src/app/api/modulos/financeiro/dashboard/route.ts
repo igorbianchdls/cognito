@@ -108,7 +108,7 @@ export async function GET(req: NextRequest) {
       return { where, params }
     }
 
-    const ap = { fornecedor: [] as ChartItem[], centro_custo: [] as ChartItem[], filial: [] as ChartItem[], departamento: [] as ChartItem[], unidade_negocio: [] as ChartItem[], categoria: [] as ChartItem[] }
+    const ap = { fornecedor: [] as ChartItem[], centro_custo: [] as ChartItem[], filial: [] as ChartItem[], departamento: [] as ChartItem[], unidade_negocio: [] as ChartItem[], categoria: [] as ChartItem[], titulo: [] as ChartItem[] }
     const ar = { centro_lucro: [] as ChartItem[], categoria: [] as ChartItem[] }
 
     {
@@ -169,6 +169,16 @@ export async function GET(req: NextRequest) {
            GROUP BY 1 ORDER BY 2 DESC NULLS LAST LIMIT $${limIdx}::int`.replace(/\s+/g, ' '),
         [...params, limit]
       )
+      // titulos (individuais)
+      ap.titulo = await runQuery<ChartItem>(
+        `SELECT COALESCE(NULLIF(TRIM(cp.numero_documento), ''), CONCAT('Conta #', cp.id::text)) AS label,
+                COALESCE(cp.valor_liquido,0)::float AS value
+           ${base}
+           ${where}
+           ORDER BY value DESC NULLS LAST
+           LIMIT $${limIdx}::int`.replace(/\s+/g, ' '),
+        [...params, limit]
+      )
     }
 
     {
@@ -216,4 +226,3 @@ export async function GET(req: NextRequest) {
     )
   }
 }
-

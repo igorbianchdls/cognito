@@ -21,10 +21,35 @@ const SAMPLE_TREE_TEXT = JSON.stringify([
         { type: "Button", props: { label: "Atualizar", action: { type: "refresh_data" } } }
       ]},
       { type: "Card", props: { title: "Financeiro: AP por Fornecedor" }, children: [
-        { type: "BarChart", props: { title: "AP por Fornecedor", dataPath: "financeiro.dashboard.ap.fornecedor", xKey: "label", yKey: "value", format: "currency", height: 200 } }
+        { type: "BarChart", props: { title: "AP por Fornecedor", dataPath: "financeiro.dashboard.ap.fornecedor", xKey: "label", yKey: "value", format: "currency", height: 200, nivo: { layout: 'horizontal' } } }
       ]},
       { type: "Card", props: { title: "Financeiro: AR por Centro de Lucro" }, children: [
-        { type: "LineChart", props: { title: "AR por Centro de Lucro", dataPath: "financeiro.dashboard.ar.centro_lucro", xKey: "label", yKey: "value", format: "currency", height: 200, nivo: { curve: 'monotoneX', pointSize: 6, gridY: true } } }
+        { type: "BarChart", props: { title: "AR por Centro de Lucro", dataPath: "financeiro.dashboard.ar.centro_lucro", xKey: "label", yKey: "value", format: "currency", height: 200, nivo: { layout: 'horizontal' } } }
+      ]},
+      { type: "Card", props: { title: "Financeiro: Top Títulos A Pagar" }, children: [
+        { type: "BarChart", props: { title: "Top 5 Títulos (AP)", dataPath: "financeiro.dashboard.ap.titulo", xKey: "label", yKey: "value", format: "currency", height: 200, nivo: { layout: 'horizontal' } } }
+      ]},
+      { type: "Div", props: { direction: "row", gap: 12, justify: "between", align: "start" }, children: [
+        { type: "Card", props: { title: "AP por Centro de Custo" }, children: [
+          { type: "BarChart", props: { title: "Centros de Custo", dataPath: "financeiro.dashboard.ap.centro_custo", xKey: "label", yKey: "value", format: "currency", height: 200, nivo: { layout: 'horizontal' } } }
+        ]},
+        { type: "Card", props: { title: "AP por Categoria (Despesa)" }, children: [
+          { type: "BarChart", props: { title: "Categorias de Despesa", dataPath: "financeiro.dashboard.ap.categoria", xKey: "label", yKey: "value", format: "currency", height: 200, nivo: { layout: 'horizontal' } } }
+        ]},
+        { type: "Card", props: { title: "AP por Departamento" }, children: [
+          { type: "BarChart", props: { title: "Departamentos", dataPath: "financeiro.dashboard.ap.departamento", xKey: "label", yKey: "value", format: "currency", height: 200, nivo: { layout: 'horizontal' } } }
+        ]}
+      ]},
+      { type: "Div", props: { direction: "row", gap: 12, justify: "between", align: "start" }, children: [
+        { type: "Card", props: { title: "AR por Categoria (Receita)" }, children: [
+          { type: "BarChart", props: { title: "Categorias de Receita", dataPath: "financeiro.dashboard.ar.categoria", xKey: "label", yKey: "value", format: "currency", height: 200, nivo: { layout: 'horizontal' } } }
+        ]},
+        { type: "Card", props: { title: "AP por Filial" }, children: [
+          { type: "BarChart", props: { title: "Filiais", dataPath: "financeiro.dashboard.ap.filial", xKey: "label", yKey: "value", format: "currency", height: 200, nivo: { layout: 'horizontal' } } }
+        ]},
+        { type: "Card", props: { title: "AP por Unidade de Negócio" }, children: [
+          { type: "BarChart", props: { title: "Unidades de Negócio", dataPath: "financeiro.dashboard.ap.unidade_negocio", xKey: "label", yKey: "value", format: "currency", height: 200, nivo: { layout: 'horizontal' } } }
+        ]}
       ]},
       { type: "Card", props: { title: "Vendas: Vendas por Canal" }, children: [
         { type: "PieChart", props: { title: "Canais de Venda", dataPath: "vendas.dashboard.canais", xKey: "label", yKey: "value", format: "currency", height: 220, nivo: { innerRadius: 0.3 } } }

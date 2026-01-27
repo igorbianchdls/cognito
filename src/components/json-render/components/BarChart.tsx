@@ -82,6 +82,7 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
 
   const padding = typeof nivo?.padding === 'number' ? nivo.padding : 0.3;
   const groupMode = (nivo?.groupMode === 'stacked' ? 'stacked' : 'grouped') as 'grouped'|'stacked';
+  const layout = (typeof (nivo as AnyRecord)?.layout === 'string' ? (nivo as AnyRecord).layout : 'vertical') as 'vertical'|'horizontal';
   const gridX = Boolean(nivo?.gridX ?? false);
   const gridY = Boolean(nivo?.gridY ?? true);
   const enableLabel = Boolean(nivo?.enableLabel ?? false);
@@ -101,6 +102,7 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
           margin={margin}
           padding={padding}
           groupMode={groupMode}
+          layout={layout as any}
           colors={colors as any}
           enableGridX={gridX}
           enableGridY={gridY}
