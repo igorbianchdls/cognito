@@ -11,28 +11,26 @@ const SAMPLE_TREE_TEXT = JSON.stringify([
     type: "Theme",
     props: { name: "light" },
     children: [
-      { type: "Header", props: { title: "Dashboard Comercial", subtitle: "Resumo do mês", align: "center" } },
-      { type: "Card", props: { title: "KPIs" }, children: [
+      { type: "Header", props: { title: "Dashboard (Dados Reais)", subtitle: "Vendas, Compras e Financeiro", align: "center" } },
+      { type: "Card", props: { title: "KPIs Financeiros" }, children: [
         { type: "Div", props: { direction: "row", gap: 12, justify: "between", align: "center" }, children: [
-          { type: "Kpi", props: { label: "Receita", valuePath: "revenue", format: "currency" } },
-          { type: "Kpi", props: { label: "Crescimento", valuePath: "growth", format: "percent" } }
+          { type: "Kpi", props: { label: "Recebidos (Período)", valuePath: "financeiro.kpis.recebidos_mes", format: "currency" } },
+          { type: "Kpi", props: { label: "Pagos (Período)", valuePath: "financeiro.kpis.pagos_mes", format: "currency" } },
+          { type: "Kpi", props: { label: "Geração de Caixa", valuePath: "financeiro.kpis.geracao_caixa", format: "currency" } }
         ]},
         { type: "Button", props: { label: "Atualizar", action: { type: "refresh_data" } } }
       ]},
-      { type: "Card", props: { title: "Vendas por mês" }, children: [
-        { type: "BarChart", props: { title: "Vendas (R$)", dataPath: "salesByMonth", xKey: "month", yKey: "total", format: "currency", height: 180 } }
-      ]},
-      { type: "Card", props: { title: "Tendência de Receita" }, children: [
-        { type: "LineChart", props: { title: "Receita", dataPath: "salesByMonth", xKey: "month", yKey: "total", format: "currency", height: 180, nivo: { curve: 'monotoneX', pointSize: 6, gridY: true } } }
-      ]},
-      { type: "Card", props: { title: "Participação por Categoria" }, children: [
-        { type: "PieChart", props: { title: "Categorias", dataPath: "categoryShare", xKey: "category", yKey: "value", format: "percent", height: 220, nivo: { innerRadius: 0.3 } } }
-      ]},
-      { type: "Card", props: { title: "Financeiro (real): AP por Fornecedor" }, children: [
+      { type: "Card", props: { title: "Financeiro: AP por Fornecedor" }, children: [
         { type: "BarChart", props: { title: "AP por Fornecedor", dataPath: "financeiro.dashboard.ap.fornecedor", xKey: "label", yKey: "value", format: "currency", height: 200 } }
       ]},
-      { type: "Card", props: { title: "Vendas (real): Vendas por Canal" }, children: [
+      { type: "Card", props: { title: "Financeiro: AR por Centro de Lucro" }, children: [
+        { type: "LineChart", props: { title: "AR por Centro de Lucro", dataPath: "financeiro.dashboard.ar.centro_lucro", xKey: "label", yKey: "value", format: "currency", height: 200, nivo: { curve: 'monotoneX', pointSize: 6, gridY: true } } }
+      ]},
+      { type: "Card", props: { title: "Vendas: Vendas por Canal" }, children: [
         { type: "PieChart", props: { title: "Canais de Venda", dataPath: "vendas.dashboard.canais", xKey: "label", yKey: "value", format: "currency", height: 220, nivo: { innerRadius: 0.3 } } }
+      ]},
+      { type: "Card", props: { title: "Compras: Gasto por Fornecedor" }, children: [
+        { type: "BarChart", props: { title: "Gasto por Fornecedor", dataPath: "compras.dashboard.fornecedores", xKey: "label", yKey: "value", format: "currency", height: 200 } }
       ]}
     ]
   }
@@ -58,9 +56,10 @@ function Playground() {
         const de = toISO(firstDay);
         const ate = toISO(lastDay);
 
-        const [finRes, venRes] = await Promise.allSettled([
+        const [finRes, venRes, comRes] = await Promise.allSettled([
           fetch(`/api/modulos/financeiro/dashboard?de=${de}&ate=${ate}&limit=6`, { cache: 'no-store' }),
           fetch(`/api/modulos/vendas/dashboard?de=${de}&ate=${ate}&limit=6`, { cache: 'no-store' }),
+          fetch(`/api/modulos/compras/dashboard?de=${de}&ate=${ate}&limit=6`, { cache: 'no-store' }),
         ]);
 
         const next: Record<string, any> = {};
@@ -73,6 +72,11 @@ function Playground() {
           const j = await venRes.value.json();
           next.vendas = { ...(data?.vendas || {}), dashboard: j?.charts || {} };
           if (j?.kpis) next.vendas.kpis = j.kpis;
+        }
+        if (comRes.status === 'fulfilled' && comRes.value.ok) {
+          const j = await comRes.value.json();
+          next.compras = { ...(data?.compras || {}), dashboard: j?.charts || {} };
+          if (j?.kpis) next.compras.kpis = j.kpis;
         }
         if (!cancelled && Object.keys(next).length) {
           setData((prev: any) => ({ ...(prev || {}), ...next }));
