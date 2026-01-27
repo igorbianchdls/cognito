@@ -20,14 +20,16 @@ const SAMPLE_TREE_TEXT = JSON.stringify([
         ]},
         { type: "Button", props: { label: "Atualizar", action: { type: "refresh_data" } } }
       ]},
-      { type: "Card", props: { title: "Financeiro: AP por Fornecedor" }, children: [
-        { type: "BarChart", props: { title: "AP por Fornecedor", dataPath: "financeiro.contas-a-pagar", xKey: "fornecedor", yKey: "SUM(valor_liquido)", format: "currency", height: 200, nivo: { layout: 'horizontal' } } }
-      ]},
-      { type: "Card", props: { title: "Financeiro: AR por Centro de Lucro" }, children: [
-        { type: "BarChart", props: { title: "AR por Centro de Lucro", dataPath: "financeiro.contas-a-receber", xKey: "centro_lucro", yKey: "SUM(valor_liquido)", format: "currency", height: 200, nivo: { layout: 'horizontal' } } }
-      ]},
-      { type: "Card", props: { title: "Financeiro: Títulos A Pagar" }, children: [
-        { type: "BarChart", props: { title: "Títulos (por Valor)", dataPath: "financeiro.contas-a-pagar", xKey: "numero_documento", yKey: "SUM(valor_liquido)", format: "currency", height: 200, nivo: { layout: 'horizontal' } } }
+      { type: "Div", props: { direction: "row", gap: 12, justify: "start", align: "start", childGrow: true }, children: [
+        { type: "Card", props: { title: "Financeiro: AP por Fornecedor" }, children: [
+          { type: "BarChart", props: { title: "AP por Fornecedor", dataPath: "financeiro.contas-a-pagar", xKey: "fornecedor", yKey: "SUM(valor_liquido)", format: "currency", height: 200, nivo: { layout: 'horizontal' } } }
+        ]},
+        { type: "Card", props: { title: "Financeiro: AR por Centro de Lucro" }, children: [
+          { type: "BarChart", props: { title: "AR por Centro de Lucro", dataPath: "financeiro.contas-a-receber", xKey: "centro_lucro", yKey: "SUM(valor_liquido)", format: "currency", height: 200, nivo: { layout: 'horizontal' } } }
+        ]},
+        { type: "Card", props: { title: "Financeiro: Títulos A Pagar" }, children: [
+          { type: "BarChart", props: { title: "Títulos (por Valor)", dataPath: "financeiro.contas-a-pagar", xKey: "numero_documento", yKey: "SUM(valor_liquido)", format: "currency", height: 200, nivo: { layout: 'horizontal' } } }
+        ]}
       ]},
       { type: "Div", props: { direction: "row", gap: 12, justify: "start", align: "start", childGrow: true }, children: [
         { type: "Card", props: { title: "AP por Centro de Custo" }, children: [

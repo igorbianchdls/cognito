@@ -12,7 +12,7 @@ const COMPRAS_TEMPLATE_TEXT = JSON.stringify([
     children: [
       { type: "Header", props: { title: "Dashboard de Compras", subtitle: "Principais indicadores e cortes", align: "center" } },
       { type: "Card", props: { title: "KPIs de Compras" }, children: [
-        { type: "Div", props: { direction: "row", gap: 12, justify: "between", align: "center" }, children: [
+        { type: "Div", props: { direction: "row", gap: 12, justify: "start", align: "start", childGrow: true }, children: [
           { type: "Kpi", props: { label: "Gasto", valuePath: "compras.kpis.gasto", format: "currency" } },
           { type: "Kpi", props: { label: "Fornecedores", valuePath: "compras.kpis.fornecedores", format: "number" } },
           { type: "Kpi", props: { label: "Pedidos", valuePath: "compras.kpis.pedidos", format: "number" } },

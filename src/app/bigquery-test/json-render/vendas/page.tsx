@@ -12,7 +12,7 @@ const SALES_TEMPLATE_TEXT = JSON.stringify([
     children: [
       { type: "Header", props: { title: "Dashboard de Vendas", subtitle: "Principais indicadores e cortes", align: "center" } },
       { type: "Card", props: { title: "KPIs de Vendas" }, children: [
-        { type: "Div", props: { direction: "row", gap: 12, justify: "between", align: "center" }, children: [
+        { type: "Div", props: { direction: "row", gap: 12, justify: "start", align: "start", childGrow: true }, children: [
           { type: "Kpi", props: { label: "Vendas", valuePath: "vendas.kpis.vendas", format: "currency" } },
           { type: "Kpi", props: { label: "Pedidos", valuePath: "vendas.kpis.pedidos", format: "number" } },
           { type: "Kpi", props: { label: "Ticket Médio", valuePath: "vendas.kpis.ticketMedio", format: "currency" } },
