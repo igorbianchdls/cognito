@@ -28,8 +28,11 @@ const SAMPLE_TREE_TEXT = JSON.stringify([
       { type: "Card", props: { title: "Participação por Categoria" }, children: [
         { type: "PieChart", props: { title: "Categorias", dataPath: "categoryShare", xKey: "category", yKey: "value", format: "percent", height: 220, nivo: { innerRadius: 0.3 } } }
       ]},
-      { type: "Card", props: { title: "Financeiro: AP por Fornecedor (SUM)" }, children: [
-        { type: "BarChart", props: { title: "AP por Fornecedor", dataPath: "financeiro.contas-a-pagar", xKey: "fornecedor", yKey: "SUM(valor_liquido)", format: "currency", height: 200 } }
+      { type: "Card", props: { title: "Financeiro (real): AP por Fornecedor" }, children: [
+        { type: "BarChart", props: { title: "AP por Fornecedor", dataPath: "financeiro.dashboard.ap.fornecedor", xKey: "label", yKey: "value", format: "currency", height: 200 } }
+      ]},
+      { type: "Card", props: { title: "Vendas (real): Vendas por Canal" }, children: [
+        { type: "PieChart", props: { title: "Canais de Venda", dataPath: "vendas.dashboard.canais", xKey: "label", yKey: "value", format: "currency", height: 220, nivo: { innerRadius: 0.3 } } }
       ]}
     ]
   }
@@ -42,6 +45,45 @@ function Playground() {
   const [tree, setTree] = useState<any | any[] | null>(() => {
     try { return JSON.parse(SAMPLE_TREE_TEXT); } catch { return null; }
   });
+
+  // Carrega exemplos reais de APIs (Financeiro e Vendas)
+  React.useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      try {
+        const now = new Date();
+        const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+        const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        const toISO = (d: Date) => d.toISOString().slice(0, 10);
+        const de = toISO(firstDay);
+        const ate = toISO(lastDay);
+
+        const [finRes, venRes] = await Promise.allSettled([
+          fetch(`/api/modulos/financeiro/dashboard?de=${de}&ate=${ate}&limit=6`, { cache: 'no-store' }),
+          fetch(`/api/modulos/vendas/dashboard?de=${de}&ate=${ate}&limit=6`, { cache: 'no-store' }),
+        ]);
+
+        const next: Record<string, any> = {};
+        if (finRes.status === 'fulfilled' && finRes.value.ok) {
+          const j = await finRes.value.json();
+          next.financeiro = { ...(data?.financeiro || {}), dashboard: j?.charts || {} };
+          if (j?.kpis) next.financeiro.kpis = j.kpis;
+        }
+        if (venRes.status === 'fulfilled' && venRes.value.ok) {
+          const j = await venRes.value.json();
+          next.vendas = { ...(data?.vendas || {}), dashboard: j?.charts || {} };
+          if (j?.kpis) next.vendas.kpis = j.kpis;
+        }
+        if (!cancelled && Object.keys(next).length) {
+          setData((prev: any) => ({ ...(prev || {}), ...next }));
+        }
+      } catch {
+        // silencioso
+      }
+    }
+    load();
+    return () => { cancelled = true };
+  }, []);
 
   const handleAction = useCallback((action: any) => {
     const t = action?.type;
@@ -157,14 +199,9 @@ export default function JsonRenderPage() {
             { category: 'D', value: 0.12 },
             { category: 'E', value: 0.08 },
           ],
-          financeiro: {
-            'contas-a-pagar': [
-              { fornecedor: 'Fornecedor X', valor_liquido: 1200 },
-              { fornecedor: 'Fornecedor X', valor_liquido: 800 },
-              { fornecedor: 'Fornecedor Y', valor_liquido: 1500 },
-              { fornecedor: 'Fornecedor Z', valor_liquido: 500 },
-            ]
-          }
+          // Namespaces vazios a serem preenchidos pelo fetch em runtime
+          financeiro: { dashboard: {} },
+          vendas: { dashboard: {} }
         }}>
           <Playground />
         </DataProvider>
