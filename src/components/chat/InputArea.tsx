@@ -13,7 +13,7 @@ import {
   PromptInputModelSelectTrigger,
   PromptInputModelSelectValue,
 } from '@/components/ai-elements/prompt-input';
-import { Plus, BarChart3, GlobeIcon } from 'lucide-react';
+import { Plus, BarChart3, GlobeIcon, Plug } from 'lucide-react';
 
 type Props = {
   value: string;
@@ -21,9 +21,11 @@ type Props = {
   onSubmit: (e: FormEvent) => void;
   status?: ChatStatus | string;
   onOpenSandbox?: () => void;
+  composioEnabled?: boolean;
+  onToggleComposio?: () => void;
 };
 
-export default function InputArea({ value, onChange, onSubmit, status = 'idle', onOpenSandbox }: Props) {
+export default function InputArea({ value, onChange, onSubmit, status = 'idle', onOpenSandbox, composioEnabled, onToggleComposio }: Props) {
   return (
     <div className="pt-[var(--ui-pad-y)]">
       <PromptInput onSubmit={onSubmit} className="border-gray-100 ui-text">
@@ -46,6 +48,12 @@ export default function InputArea({ value, onChange, onSubmit, status = 'idle', 
               <GlobeIcon size={16} />
               <span>Search</span>
             </PromptInputButton>
+            {typeof onToggleComposio === 'function' && (
+              <PromptInputButton onClick={() => onToggleComposio?.()} variant={composioEnabled ? 'default' : 'ghost'}>
+                <Plug size={16} />
+                <span>Composio {composioEnabled ? 'ON' : 'OFF'}</span>
+              </PromptInputButton>
+            )}
 
             {/* Agentes (somente trigger visual) */}
             <PromptInputModelSelect>

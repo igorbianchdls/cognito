@@ -32,6 +32,7 @@ const agents = {
 };
 
 let appToolsServerERP = null;
+let appToolsServerComposio = null;
 try {
   const mod4 = await import('file:///vercel/sandbox/.mcp/ERP.mjs');
   // @ts-ignore
@@ -39,9 +40,25 @@ try {
 } catch {}
 const mcpServers = {};
 if (appToolsServerERP) { mcpServers['ERP'] = appToolsServerERP; }
+try {
+  if ((process.env.MCP_COMPOSIO_ENABLED || '') === '1') {
+    const modC = await import('file:///vercel/sandbox/.mcp/composio.mjs');
+    // @ts-ignore
+    appToolsServerComposio = (modC && (modC.default || modC.composioServer)) || null;
+    if (appToolsServerComposio) { mcpServers['composio'] = appToolsServerComposio; }
+  }
+} catch {}
 // Build allowed tools list: ERP CRUD + all Composio tools
 const allowedToolsList = [];
 if (appToolsServerERP) allowedToolsList.push('mcp__ERP__crud');
+try {
+  if (appToolsServerComposio && Array.isArray(appToolsServerComposio.tools)) {
+    for (const t of appToolsServerComposio.tools) {
+      const nm = (t && (t.name || (t.tool && t.tool.name))) || null;
+      if (nm) allowedToolsList.push('mcp__composio__' + nm);
+    }
+  }
+} catch {}
 const options = {
   model: 'claude-sonnet-4-5-20250929',
   pathToClaudeCodeExecutable: cli,

@@ -7,7 +7,7 @@ export const runtime = 'nodejs'
 type Msg = { role: 'user'|'assistant'; content: string }
 
 // Simple in-memory session store
-type ChatSession = { id: string; sandbox: Sandbox; createdAt: number; lastUsedAt: number; agentToken?: string; agentTokenExp?: number }
+type ChatSession = { id: string; sandbox: Sandbox; createdAt: number; lastUsedAt: number; agentToken?: string; agentTokenExp?: number; composioEnabled?: boolean }
 const SESSIONS = new Map<string, ChatSession>()
 const genId = () => Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2)
 
@@ -26,6 +26,7 @@ export async function POST(req: Request) {
   if (action === 'fs-list') return fsList(payload as { chatId?: string; path?: string })
   if (action === 'fs-read') return fsRead(payload as { chatId?: string; path?: string })
   if (action === 'fs-write') return fsWrite(payload as { chatId?: string; path?: string; content?: string })
+  if (action === 'mcp-toggle') return mcpToggle(payload as { chatId?: string; enabled?: boolean })
 
   return Response.json({ ok: false, error: `ação desconhecida: ${action}` }, { status: 400 })
 
@@ -106,7 +107,7 @@ export async function POST(req: Request) {
       const id = genId()
       // Issue short-lived agent token (opaque) and store
       const { token, exp } = generateAgentToken(1800)
-      SESSIONS.set(id, { id, sandbox, createdAt: Date.now(), lastUsedAt: Date.now(), agentToken: token, agentTokenExp: exp })
+      SESSIONS.set(id, { id, sandbox, createdAt: Date.now(), lastUsedAt: Date.now(), agentToken: token, agentTokenExp: exp, composioEnabled: false })
       setAgentToken(id, token, exp)
       return Response.json({ ok: true, chatId: id, timeline })
     } catch (e) {
@@ -177,6 +178,7 @@ export async function POST(req: Request) {
               COMPOSIO_CONNECTED_ACCOUNT_ID: process.env.COMPOSIO_CONNECTED_ACCOUNT_ID || '',
               COMPOSIO_GMAIL_AUTH_CONFIG_ID: process.env.COMPOSIO_GMAIL_AUTH_CONFIG_ID || '',
               COMPOSIO_CALLBACK_URL: process.env.COMPOSIO_CALLBACK_URL || '',
+              MCP_COMPOSIO_ENABLED: (SESSIONS.get(chatId)?.composioEnabled ? '1' : ''),
               AGENT_TOOL_TOKEN: sess.agentToken || '',
               AGENT_CHAT_ID: chatId,
               AGENT_BASE_URL: origin,
@@ -236,6 +238,7 @@ export async function POST(req: Request) {
               COMPOSIO_CONNECTED_ACCOUNT_ID: process.env.COMPOSIO_CONNECTED_ACCOUNT_ID || '',
               COMPOSIO_GMAIL_AUTH_CONFIG_ID: process.env.COMPOSIO_GMAIL_AUTH_CONFIG_ID || '',
               COMPOSIO_CALLBACK_URL: process.env.COMPOSIO_CALLBACK_URL || '',
+              MCP_COMPOSIO_ENABLED: (SESSIONS.get(chatId)?.composioEnabled ? '1' : ''),
               AGENT_TOOL_TOKEN: (SESSIONS.get(chatId)?.agentToken) || '',
               AGENT_CHAT_ID: chatId,
               AGENT_BASE_URL: origin,
@@ -346,3 +349,11 @@ catch(e){ console.error(String(e.message||e)); process.exit(1); }
     return Response.json({ ok: true })
   }
 }
+  async function mcpToggle({ chatId, enabled }: { chatId?: string; enabled?: boolean }) {
+    if (!chatId) return Response.json({ ok: false, error: 'chatId obrigatório' }, { status: 400 })
+    const sess = SESSIONS.get(chatId)
+    if (!sess) return Response.json({ ok: false, error: 'chat não encontrado' }, { status: 404 })
+    sess.composioEnabled = Boolean(enabled)
+    sess.lastUsedAt = Date.now()
+    return Response.json({ ok: true, enabled: sess.composioEnabled })
+  }

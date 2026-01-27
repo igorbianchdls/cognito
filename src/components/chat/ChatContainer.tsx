@@ -14,6 +14,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins }: { onOp
   const [messages, setMessages] = useState<UIMessage[]>([])
   const [chatId, setChatId] = useState<string | null>(null)
   const [status, setStatus] = useState<ChatStatus>('idle')
+  const [composioEnabled, setComposioEnabled] = useState<boolean>(false)
   const abortRef = useRef<AbortController | null>(null)
 
   const ensureStart = async () => {
@@ -306,6 +307,15 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins }: { onOp
                   onChange={setInput}
                   onSubmit={handleSubmit}
                   status={status}
+                  composioEnabled={composioEnabled}
+                  onToggleComposio={async () => {
+                    try {
+                      const id = await ensureStart();
+                      const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'mcp-toggle', chatId: id, enabled: !composioEnabled }) });
+                      const data = await res.json().catch(() => ({})) as any;
+                      if (res.ok && data && data.ok) setComposioEnabled(Boolean(data.enabled));
+                    } catch { /* ignore */ }
+                  }}
                   onOpenSandbox={async () => {
                     try { const id = await ensureStart(); onOpenSandbox?.(id); } catch { /* ignore */ }
                   }}
@@ -332,7 +342,14 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins }: { onOp
           )}
         </div>
         <div className="px-4 pb-3">
-          <InputArea value={input} onChange={setInput} onSubmit={handleSubmit} status={status} onOpenSandbox={async () => {
+          <InputArea value={input} onChange={setInput} onSubmit={handleSubmit} status={status} composioEnabled={composioEnabled} onToggleComposio={async () => {
+            try {
+              const id = await ensureStart();
+              const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'mcp-toggle', chatId: id, enabled: !composioEnabled }) });
+              const data = await res.json().catch(() => ({})) as any;
+              if (res.ok && data && data.ok) setComposioEnabled(Boolean(data.enabled));
+            } catch { /* ignore */ }
+          }} onOpenSandbox={async () => {
             try { const id = await ensureStart(); onOpenSandbox?.(id); } catch { /* ignore */ }
           }} />
         </div>
