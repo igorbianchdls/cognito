@@ -9,7 +9,7 @@ import { useDataValue, useData } from "@/components/json-render/context";
 import { useStore } from "@nanostores/react";
 import { deepMerge } from "@/stores/ui/json-render/utils";
 import { $kpiDefaults } from "@/stores/ui/json-render/kpiStore";
-import { normalizeTitleStyle } from "@/components/json-render/helpers";
+import { normalizeTitleStyle, normalizeContainerStyle } from "@/components/json-render/helpers";
 import { $barChartDefaults } from "@/stores/ui/json-render/barChartStore";
 import { $lineChartDefaults } from "@/stores/ui/json-render/lineChartStore";
 import { $pieChartDefaults } from "@/stores/ui/json-render/pieChartStore";
@@ -208,8 +208,9 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     const arrow = trend === 'up' ? '▲' : trend === 'down' ? '▼' : '■';
     const labelStyle = normalizeTitleStyle(p.labelStyle);
     const valueStyle = normalizeTitleStyle(p.valueStyle);
+    const containerStyle = normalizeContainerStyle(p.containerStyle, Boolean(p.borderless));
     return (
-      <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+      <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm" style={containerStyle}>
         <div className="mb-1" style={labelStyle}>{label}</div>
         <div className="flex items-end gap-2">
           <div className="text-2xl font-semibold text-gray-900" style={valueStyle}>{formatValue(value, fmt)}{unit ? ` ${unit}` : ''}</div>

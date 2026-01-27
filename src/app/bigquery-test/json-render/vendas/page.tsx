@@ -12,10 +12,10 @@ const SALES_TEMPLATE_TEXT = JSON.stringify([
     children: [
       { type: "Header", props: { title: "Dashboard de Vendas", subtitle: "Principais indicadores e cortes", align: "center" } },
       { type: "Div", props: { direction: "row", gap: 12, padding: 16, justify: "start", align: "start", childGrow: true }, children: [
-        { type: "Kpi", props: { label: "Vendas", valuePath: "vendas.kpis.vendas", format: "currency", labelStyle: { fontWeight: 600, fontSize: 12, color: "#64748b" }, valueStyle: { fontWeight: 700, fontSize: 24, color: "#0f172a" } } },
-        { type: "Kpi", props: { label: "Pedidos", valuePath: "vendas.kpis.pedidos", format: "number" } },
-        { type: "Kpi", props: { label: "Ticket Médio", valuePath: "vendas.kpis.ticketMedio", format: "currency", labelStyle: { fontWeight: 600 }, valueStyle: { fontSize: 22 } } },
-        { type: "Kpi", props: { label: "Margem Bruta", valuePath: "vendas.kpis.margemBruta", format: "currency" } }
+        { type: "Kpi", props: { label: "Vendas", valuePath: "vendas.kpis.vendas", format: "currency", labelStyle: { fontWeight: 600, fontSize: 12, color: "#64748b" }, valueStyle: { fontWeight: 700, fontSize: 24, color: "#0f172a" }, containerStyle: { borderWidth: 2, borderColor: "#0ea5e9", borderRadius: 12 } } },
+        { type: "Kpi", props: { label: "Pedidos", valuePath: "vendas.kpis.pedidos", format: "number", containerStyle: { borderWidth: 2, borderColor: "#22c55e", borderStyle: "dashed", borderRadius: 10 } } },
+        { type: "Kpi", props: { label: "Ticket Médio", valuePath: "vendas.kpis.ticketMedio", format: "currency", labelStyle: { fontWeight: 600 }, valueStyle: { fontSize: 22 }, containerStyle: { borderWidth: 2, borderColor: "#f59e0b", borderStyle: "dotted", borderRadius: 8 } } },
+        { type: "Kpi", props: { label: "Margem Bruta", valuePath: "vendas.kpis.margemBruta", format: "currency", borderless: true } }
       ]},
 
       { type: "Div", props: { direction: "row", gap: 12, padding: 16, justify: "start", align: "start", childGrow: true }, children: [
