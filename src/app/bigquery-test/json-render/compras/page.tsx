@@ -22,30 +22,30 @@ const COMPRAS_TEMPLATE_TEXT = JSON.stringify([
 
       { type: "Div", props: { direction: "row", gap: 12, justify: "between", align: "start" }, children: [
         { type: "Card", props: { title: "Gasto por Fornecedor" }, children: [
-          { type: "BarChart", props: { title: "Fornecedores", dataPath: "compras.dashboard.fornecedores", xKey: "label", yKey: "value", format: "currency", height: 240, nivo: { layout: 'horizontal' } } }
+          { type: "BarChart", props: { title: "Fornecedores", dataPath: "compras.compras", xKey: "fornecedor", yKey: "SUM(valor_total)", format: "currency", height: 240, nivo: { layout: 'horizontal' } } }
         ]},
         { type: "Card", props: { title: "Gasto por Centro de Custo" }, children: [
-          { type: "BarChart", props: { title: "Centros de Custo", dataPath: "compras.dashboard.centro_custo", xKey: "label", yKey: "value", format: "currency", height: 240, nivo: { layout: 'horizontal' } } }
+          { type: "BarChart", props: { title: "Centros de Custo", dataPath: "compras.compras", xKey: "centro_custo", yKey: "SUM(valor_total)", format: "currency", height: 240, nivo: { layout: 'horizontal' } } }
         ]},
         { type: "Card", props: { title: "Gasto por Filial" }, children: [
-          { type: "BarChart", props: { title: "Filiais", dataPath: "compras.dashboard.filiais", xKey: "label", yKey: "value", format: "currency", height: 240, nivo: { layout: 'horizontal' } } }
+          { type: "BarChart", props: { title: "Filiais", dataPath: "compras.compras", xKey: "filial", yKey: "SUM(valor_total)", format: "currency", height: 240, nivo: { layout: 'horizontal' } } }
         ]}
       ]},
 
       { type: "Div", props: { direction: "row", gap: 12, justify: "between", align: "start" }, children: [
         { type: "Card", props: { title: "Gasto por Categoria" }, children: [
-          { type: "BarChart", props: { title: "Categorias", dataPath: "compras.dashboard.categorias", xKey: "label", yKey: "value", format: "currency", height: 220, nivo: { layout: 'horizontal' } } }
+          { type: "BarChart", props: { title: "Categorias", dataPath: "compras.compras", xKey: "categoria_despesa", yKey: "SUM(valor_total)", format: "currency", height: 220, nivo: { layout: 'horizontal' } } }
         ]},
         { type: "Card", props: { title: "Gasto por Projeto" }, children: [
-          { type: "BarChart", props: { title: "Projetos", dataPath: "compras.dashboard.projetos", xKey: "label", yKey: "value", format: "currency", height: 220, nivo: { layout: 'horizontal' } } }
+          { type: "BarChart", props: { title: "Projetos", dataPath: "compras.compras", xKey: "projeto", yKey: "SUM(valor_total)", format: "currency", height: 220, nivo: { layout: 'horizontal' } } }
         ]},
-        { type: "Card", props: { title: "Gasto por Departamento" }, children: [
-          { type: "BarChart", props: { title: "Departamentos", dataPath: "compras.dashboard.departamentos", xKey: "label", yKey: "value", format: "currency", height: 220, nivo: { layout: 'horizontal' } } }
+        { type: "Card", props: { title: "Pedidos por Status" }, children: [
+          { type: "BarChart", props: { title: "Status (Qtd)", dataPath: "compras.compras", xKey: "status", yKey: "COUNT()", format: "number", height: 220, nivo: { layout: 'horizontal' } } }
         ]}
       ]},
 
-      { type: "Card", props: { title: "Pedidos por Status" }, children: [
-        { type: "PieChart", props: { title: "Status", dataPath: "compras.dashboard.status", xKey: "label", yKey: "value", format: "number", height: 260, nivo: { innerRadius: 0.35 } } }
+      { type: "Card", props: { title: "Pedidos por Status (Pizza)" }, children: [
+        { type: "PieChart", props: { title: "Status", dataPath: "compras.compras", xKey: "status", yKey: "COUNT()", format: "number", height: 260, nivo: { innerRadius: 0.35 } } }
       ]}
     ]
   }
@@ -59,9 +59,31 @@ function ComprasPlayground() {
     try { return JSON.parse(COMPRAS_TEMPLATE_TEXT); } catch { return null; }
   });
 
-  // Fetch compras dashboard (dados reais)
+  // Fetch compras (dados reais): lista + dashboard (kpis)
   React.useEffect(() => {
     let cancelled = false;
+    async function fetchOnce(de?: string, ate?: string) {
+      const qsDash = new URLSearchParams();
+      if (de) qsDash.set('de', de);
+      if (ate) qsDash.set('ate', ate);
+      qsDash.set('limit', '8');
+      const [listRes, dashRes] = await Promise.allSettled([
+        fetch(`/api/modulos/compras?view=compras&page=1&pageSize=1000`, { cache: 'no-store' }),
+        fetch(`/api/modulos/compras/dashboard?${qsDash.toString()}`, { cache: 'no-store' })
+      ]);
+      let charts: any = undefined;
+      if (listRes.status === 'fulfilled' && listRes.value.ok) {
+        const j = await listRes.value.json();
+        const rows = Array.isArray(j?.rows) ? j.rows : [];
+        if (!cancelled) setData((prev: any) => ({ ...(prev || {}), compras: { ...(prev?.compras || {}), compras: rows } }));
+      }
+      if (dashRes.status === 'fulfilled' && dashRes.value.ok) {
+        const j = await dashRes.value.json();
+        charts = j?.charts;
+        if (!cancelled) setData((prev: any) => ({ ...(prev || {}), compras: { ...(prev?.compras || {}), kpis: j?.kpis || {} } }));
+      }
+      return { charts } as any;
+    }
     async function load() {
       try {
         const now = new Date();
@@ -70,10 +92,12 @@ function ComprasPlayground() {
         const toISO = (d: Date) => d.toISOString().slice(0, 10);
         const de = toISO(firstDay);
         const ate = toISO(lastDay);
-        const res = await fetch(`/api/modulos/compras/dashboard?de=${de}&ate=${ate}&limit=8`, { cache: 'no-store' });
-        if (res.ok) {
-          const j = await res.json();
-          setData((prev: any) => ({ ...(prev || {}), compras: { ...(prev?.compras || {}), dashboard: j?.charts || {}, kpis: j?.kpis || {} } }));
+        const j = await fetchOnce(de, ate);
+        const charts = j?.charts as Record<string, any[]> | undefined;
+        const hasData = charts ? Object.values(charts).some(arr => Array.isArray(arr) && arr.length > 0) : false;
+        if (!hasData) {
+          // fallback: busca ampla sem período
+          await fetchOnce(undefined, undefined);
         }
       } catch {}
     }
@@ -146,4 +170,3 @@ export default function JsonRenderComprasPage() {
     </div>
   );
 }
-

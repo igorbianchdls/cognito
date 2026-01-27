@@ -22,37 +22,37 @@ const SALES_TEMPLATE_TEXT = JSON.stringify([
 
       { type: "Div", props: { direction: "row", gap: 12, justify: "between", align: "start" }, children: [
         { type: "Card", props: { title: "Vendas por Canal" }, children: [
-          { type: "PieChart", props: { title: "Canais", dataPath: "vendas.dashboard.canais", xKey: "label", yKey: "value", format: "currency", height: 240, nivo: { innerRadius: 0.35 } } }
+          { type: "PieChart", props: { title: "Canais", dataPath: "vendas.pedidos", xKey: "canal_venda", yKey: "SUM(valor_total)", format: "currency", height: 240, nivo: { innerRadius: 0.35 } } }
         ]},
         { type: "Card", props: { title: "Vendas por Categoria" }, children: [
-          { type: "BarChart", props: { title: "Categorias", dataPath: "vendas.dashboard.categorias", xKey: "label", yKey: "value", format: "currency", height: 240, nivo: { layout: 'horizontal' } } }
+          { type: "BarChart", props: { title: "Categorias", dataPath: "vendas.pedidos", xKey: "categoria_receita", yKey: "SUM(valor_total)", format: "currency", height: 240, nivo: { layout: 'horizontal' } } }
         ]},
         { type: "Card", props: { title: "Top Clientes (Receita)" }, children: [
-          { type: "BarChart", props: { title: "Clientes", dataPath: "vendas.dashboard.clientes", xKey: "cliente", yKey: "total", format: "currency", height: 240, nivo: { layout: 'horizontal' } } }
+          { type: "BarChart", props: { title: "Clientes", dataPath: "vendas.pedidos", xKey: "cliente", yKey: "SUM(valor_total)", format: "currency", height: 240, nivo: { layout: 'horizontal' } } }
         ]}
       ]},
 
       { type: "Div", props: { direction: "row", gap: 12, justify: "between", align: "start" }, children: [
         { type: "Card", props: { title: "Vendas por Vendedor" }, children: [
-          { type: "BarChart", props: { title: "Vendedores", dataPath: "vendas.dashboard.vendedores", xKey: "label", yKey: "value", format: "currency", height: 220, nivo: { layout: 'horizontal' } } }
+          { type: "BarChart", props: { title: "Vendedores", dataPath: "vendas.pedidos", xKey: "vendedor", yKey: "SUM(valor_total)", format: "currency", height: 220, nivo: { layout: 'horizontal' } } }
         ]},
         { type: "Card", props: { title: "Vendas por Filial" }, children: [
-          { type: "BarChart", props: { title: "Filiais", dataPath: "vendas.dashboard.filiais", xKey: "label", yKey: "value", format: "currency", height: 220, nivo: { layout: 'horizontal' } } }
+          { type: "BarChart", props: { title: "Filiais", dataPath: "vendas.pedidos", xKey: "filial", yKey: "SUM(valor_total)", format: "currency", height: 220, nivo: { layout: 'horizontal' } } }
         ]},
         { type: "Card", props: { title: "Vendas por Unidade de Negócio" }, children: [
-          { type: "BarChart", props: { title: "Unidades de Negócio", dataPath: "vendas.dashboard.unidades_negocio", xKey: "label", yKey: "value", format: "currency", height: 220, nivo: { layout: 'horizontal' } } }
+          { type: "BarChart", props: { title: "Unidades de Negócio", dataPath: "vendas.pedidos", xKey: "unidade_negocio", yKey: "SUM(valor_total)", format: "currency", height: 220, nivo: { layout: 'horizontal' } } }
         ]}
       ]},
 
       { type: "Div", props: { direction: "row", gap: 12, justify: "between", align: "start" }, children: [
         { type: "Card", props: { title: "Vendas por Território" }, children: [
-          { type: "BarChart", props: { title: "Territórios", dataPath: "vendas.dashboard.territorios", xKey: "label", yKey: "value", format: "currency", height: 220, nivo: { layout: 'horizontal' } } }
+          { type: "BarChart", props: { title: "Territórios", dataPath: "vendas.pedidos", xKey: "territorio", yKey: "SUM(valor_total)", format: "currency", height: 220, nivo: { layout: 'horizontal' } } }
         ]},
         { type: "Card", props: { title: "Vendas por Categoria de Serviço" }, children: [
-          { type: "BarChart", props: { title: "Serviços/Categorias", dataPath: "vendas.dashboard.servicos_categorias_faturamento", xKey: "label", yKey: "value", format: "currency", height: 220, nivo: { layout: 'horizontal' } } }
+          { type: "BarChart", props: { title: "Serviços/Categorias", dataPath: "vendas.pedidos", xKey: "categoria_receita", yKey: "SUM(valor_total)", format: "currency", height: 220, nivo: { layout: 'horizontal' } } }
         ]},
-        { type: "Card", props: { title: "Devolução por Canal (%)" }, children: [
-          { type: "BarChart", props: { title: "Taxa de Devolução", dataPath: "vendas.dashboard.devolucao_canal", xKey: "label", yKey: "value", format: "percent", height: 220, nivo: { layout: 'horizontal' } } }
+        { type: "Card", props: { title: "Pedidos por Canal" }, children: [
+          { type: "BarChart", props: { title: "Pedidos", dataPath: "vendas.pedidos", xKey: "canal_venda", yKey: "COUNT()", format: "number", height: 220, nivo: { layout: 'horizontal' } } }
         ]}
       ]}
     ]
@@ -67,7 +67,7 @@ function SalesPlayground() {
     try { return JSON.parse(SALES_TEMPLATE_TEXT); } catch { return null; }
   });
 
-  // Fetch vendas dashboard (dados reais)
+  // Fetch vendas (dados reais): lista + dashboard (kpis)
   React.useEffect(() => {
     let cancelled = false;
     async function load() {
@@ -78,10 +78,18 @@ function SalesPlayground() {
         const toISO = (d: Date) => d.toISOString().slice(0, 10);
         const de = toISO(firstDay);
         const ate = toISO(lastDay);
-        const res = await fetch(`/api/modulos/vendas/dashboard?de=${de}&ate=${ate}&limit=8`, { cache: 'no-store' });
-        if (res.ok) {
-          const j = await res.json();
-          setData((prev: any) => ({ ...(prev || {}), vendas: { ...(prev?.vendas || {}), dashboard: j?.charts || {}, kpis: j?.kpis || {} } }));
+        const [listRes, dashRes] = await Promise.allSettled([
+          fetch(`/api/modulos/vendas?view=pedidos&page=1&pageSize=1000`, { cache: 'no-store' }),
+          fetch(`/api/modulos/vendas/dashboard?de=${de}&ate=${ate}&limit=8`, { cache: 'no-store' }),
+        ]);
+        if (listRes.status === 'fulfilled' && listRes.value.ok) {
+          const j = await listRes.value.json();
+          const rows = Array.isArray(j?.rows) ? j.rows : [];
+          setData((prev: any) => ({ ...(prev || {}), vendas: { ...(prev?.vendas || {}), pedidos: rows } }));
+        }
+        if (dashRes.status === 'fulfilled' && dashRes.value.ok) {
+          const j = await dashRes.value.json();
+          setData((prev: any) => ({ ...(prev || {}), vendas: { ...(prev?.vendas || {}), kpis: j?.kpis || {} } }));
         }
       } catch {}
     }
@@ -166,4 +174,3 @@ export default function JsonRenderVendasPage() {
     </div>
   );
 }
-

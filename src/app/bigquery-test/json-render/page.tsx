@@ -21,41 +21,41 @@ const SAMPLE_TREE_TEXT = JSON.stringify([
         { type: "Button", props: { label: "Atualizar", action: { type: "refresh_data" } } }
       ]},
       { type: "Card", props: { title: "Financeiro: AP por Fornecedor" }, children: [
-        { type: "BarChart", props: { title: "AP por Fornecedor", dataPath: "financeiro.dashboard.ap.fornecedor", xKey: "label", yKey: "value", format: "currency", height: 200, nivo: { layout: 'horizontal' } } }
+        { type: "BarChart", props: { title: "AP por Fornecedor", dataPath: "financeiro.contas-a-pagar", xKey: "fornecedor", yKey: "SUM(valor_liquido)", format: "currency", height: 200, nivo: { layout: 'horizontal' } } }
       ]},
       { type: "Card", props: { title: "Financeiro: AR por Centro de Lucro" }, children: [
-        { type: "BarChart", props: { title: "AR por Centro de Lucro", dataPath: "financeiro.dashboard.ar.centro_lucro", xKey: "label", yKey: "value", format: "currency", height: 200, nivo: { layout: 'horizontal' } } }
+        { type: "BarChart", props: { title: "AR por Centro de Lucro", dataPath: "financeiro.contas-a-receber", xKey: "centro_lucro", yKey: "SUM(valor_liquido)", format: "currency", height: 200, nivo: { layout: 'horizontal' } } }
       ]},
-      { type: "Card", props: { title: "Financeiro: Top Títulos A Pagar" }, children: [
-        { type: "BarChart", props: { title: "Top 5 Títulos (AP)", dataPath: "financeiro.dashboard.ap.titulo", xKey: "label", yKey: "value", format: "currency", height: 200, nivo: { layout: 'horizontal' } } }
+      { type: "Card", props: { title: "Financeiro: Títulos A Pagar" }, children: [
+        { type: "BarChart", props: { title: "Títulos (por Valor)", dataPath: "financeiro.contas-a-pagar", xKey: "numero_documento", yKey: "SUM(valor_liquido)", format: "currency", height: 200, nivo: { layout: 'horizontal' } } }
       ]},
       { type: "Div", props: { direction: "row", gap: 12, justify: "between", align: "start" }, children: [
         { type: "Card", props: { title: "AP por Centro de Custo" }, children: [
-          { type: "BarChart", props: { title: "Centros de Custo", dataPath: "financeiro.dashboard.ap.centro_custo", xKey: "label", yKey: "value", format: "currency", height: 200, nivo: { layout: 'horizontal' } } }
+          { type: "BarChart", props: { title: "Centros de Custo", dataPath: "financeiro.contas-a-pagar", xKey: "centro_custo", yKey: "SUM(valor_liquido)", format: "currency", height: 200, nivo: { layout: 'horizontal' } } }
         ]},
         { type: "Card", props: { title: "AP por Categoria (Despesa)" }, children: [
-          { type: "BarChart", props: { title: "Categorias de Despesa", dataPath: "financeiro.dashboard.ap.categoria", xKey: "label", yKey: "value", format: "currency", height: 200, nivo: { layout: 'horizontal' } } }
+          { type: "BarChart", props: { title: "Categorias de Despesa", dataPath: "financeiro.contas-a-pagar", xKey: "categoria_despesa", yKey: "SUM(valor_liquido)", format: "currency", height: 200, nivo: { layout: 'horizontal' } } }
         ]},
         { type: "Card", props: { title: "AP por Departamento" }, children: [
-          { type: "BarChart", props: { title: "Departamentos", dataPath: "financeiro.dashboard.ap.departamento", xKey: "label", yKey: "value", format: "currency", height: 200, nivo: { layout: 'horizontal' } } }
+          { type: "BarChart", props: { title: "Departamentos", dataPath: "financeiro.contas-a-pagar", xKey: "departamento", yKey: "SUM(valor_liquido)", format: "currency", height: 200, nivo: { layout: 'horizontal' } } }
         ]}
       ]},
       { type: "Div", props: { direction: "row", gap: 12, justify: "between", align: "start" }, children: [
         { type: "Card", props: { title: "AR por Categoria (Receita)" }, children: [
-          { type: "BarChart", props: { title: "Categorias de Receita", dataPath: "financeiro.dashboard.ar.categoria", xKey: "label", yKey: "value", format: "currency", height: 200, nivo: { layout: 'horizontal' } } }
+          { type: "BarChart", props: { title: "Categorias de Receita", dataPath: "financeiro.contas-a-receber", xKey: "categoria_receita", yKey: "SUM(valor_liquido)", format: "currency", height: 200, nivo: { layout: 'horizontal' } } }
         ]},
         { type: "Card", props: { title: "AP por Filial" }, children: [
-          { type: "BarChart", props: { title: "Filiais", dataPath: "financeiro.dashboard.ap.filial", xKey: "label", yKey: "value", format: "currency", height: 200, nivo: { layout: 'horizontal' } } }
+          { type: "BarChart", props: { title: "Filiais", dataPath: "financeiro.contas-a-pagar", xKey: "filial", yKey: "SUM(valor_liquido)", format: "currency", height: 200, nivo: { layout: 'horizontal' } } }
         ]},
         { type: "Card", props: { title: "AP por Unidade de Negócio" }, children: [
-          { type: "BarChart", props: { title: "Unidades de Negócio", dataPath: "financeiro.dashboard.ap.unidade_negocio", xKey: "label", yKey: "value", format: "currency", height: 200, nivo: { layout: 'horizontal' } } }
+          { type: "BarChart", props: { title: "Unidades de Negócio", dataPath: "financeiro.contas-a-pagar", xKey: "unidade_negocio", yKey: "SUM(valor_liquido)", format: "currency", height: 200, nivo: { layout: 'horizontal' } } }
         ]}
       ]},
       { type: "Card", props: { title: "Vendas: Vendas por Canal" }, children: [
-        { type: "PieChart", props: { title: "Canais de Venda", dataPath: "vendas.dashboard.canais", xKey: "label", yKey: "value", format: "currency", height: 220, nivo: { innerRadius: 0.3 } } }
+        { type: "PieChart", props: { title: "Canais de Venda", dataPath: "vendas.pedidos", xKey: "canal_venda", yKey: "SUM(valor_total)", format: "currency", height: 220, nivo: { innerRadius: 0.3 } } }
       ]},
       { type: "Card", props: { title: "Compras: Gasto por Fornecedor" }, children: [
-        { type: "BarChart", props: { title: "Gasto por Fornecedor", dataPath: "compras.dashboard.fornecedores", xKey: "label", yKey: "value", format: "currency", height: 200 } }
+        { type: "BarChart", props: { title: "Gasto por Fornecedor", dataPath: "compras.compras", xKey: "fornecedor", yKey: "SUM(valor_total)", format: "currency", height: 200 } }
       ]}
     ]
   }
@@ -80,28 +80,51 @@ function Playground() {
         const toISO = (d: Date) => d.toISOString().slice(0, 10);
         const de = toISO(firstDay);
         const ate = toISO(lastDay);
-
-        const [finRes, venRes, comRes] = await Promise.allSettled([
+        const [finDash, venDash, comDash, finAp, finAr, venList, comList] = await Promise.allSettled([
           fetch(`/api/modulos/financeiro/dashboard?de=${de}&ate=${ate}&limit=6`, { cache: 'no-store' }),
           fetch(`/api/modulos/vendas/dashboard?de=${de}&ate=${ate}&limit=6`, { cache: 'no-store' }),
           fetch(`/api/modulos/compras/dashboard?de=${de}&ate=${ate}&limit=6`, { cache: 'no-store' }),
+          fetch(`/api/modulos/financeiro?view=contas-a-pagar&page=1&pageSize=1000`, { cache: 'no-store' }),
+          fetch(`/api/modulos/financeiro?view=contas-a-receber&page=1&pageSize=1000`, { cache: 'no-store' }),
+          fetch(`/api/modulos/vendas?view=pedidos&page=1&pageSize=1000`, { cache: 'no-store' }),
+          fetch(`/api/modulos/compras?view=compras&page=1&pageSize=1000`, { cache: 'no-store' }),
         ]);
 
         const next: Record<string, any> = {};
-        if (finRes.status === 'fulfilled' && finRes.value.ok) {
-          const j = await finRes.value.json();
+        if (finDash.status === 'fulfilled' && finDash.value.ok) {
+          const j = await finDash.value.json();
           next.financeiro = { ...(data?.financeiro || {}), dashboard: j?.charts || {} };
           if (j?.kpis) next.financeiro.kpis = j.kpis;
         }
-        if (venRes.status === 'fulfilled' && venRes.value.ok) {
-          const j = await venRes.value.json();
+        if (venDash.status === 'fulfilled' && venDash.value.ok) {
+          const j = await venDash.value.json();
           next.vendas = { ...(data?.vendas || {}), dashboard: j?.charts || {} };
           if (j?.kpis) next.vendas.kpis = j.kpis;
         }
-        if (comRes.status === 'fulfilled' && comRes.value.ok) {
-          const j = await comRes.value.json();
+        if (comDash.status === 'fulfilled' && comDash.value.ok) {
+          const j = await comDash.value.json();
           next.compras = { ...(data?.compras || {}), dashboard: j?.charts || {} };
           if (j?.kpis) next.compras.kpis = j.kpis;
+        }
+        if (finAp.status === 'fulfilled' && finAp.value.ok) {
+          const j = await finAp.value.json();
+          const rows = Array.isArray(j?.rows) ? j.rows : [];
+          next.financeiro = { ...(next.financeiro || data?.financeiro || {}), ['contas-a-pagar']: rows };
+        }
+        if (finAr.status === 'fulfilled' && finAr.value.ok) {
+          const j = await finAr.value.json();
+          const rows = Array.isArray(j?.rows) ? j.rows : [];
+          next.financeiro = { ...(next.financeiro || data?.financeiro || {}), ['contas-a-receber']: rows };
+        }
+        if (venList.status === 'fulfilled' && venList.value.ok) {
+          const j = await venList.value.json();
+          const rows = Array.isArray(j?.rows) ? j.rows : [];
+          next.vendas = { ...(next.vendas || data?.vendas || {}), pedidos: rows };
+        }
+        if (comList.status === 'fulfilled' && comList.value.ok) {
+          const j = await comList.value.json();
+          const rows = Array.isArray(j?.rows) ? j.rows : [];
+          next.compras = { ...(next.compras || data?.compras || {}), compras: rows };
         }
         if (!cancelled && Object.keys(next).length) {
           setData((prev: any) => ({ ...(prev || {}), ...next }));
@@ -230,7 +253,8 @@ export default function JsonRenderPage() {
           ],
           // Namespaces vazios a serem preenchidos pelo fetch em runtime
           financeiro: { dashboard: {} },
-          vendas: { dashboard: {} }
+          vendas: { dashboard: {} },
+          compras: { dashboard: {} }
         }}>
           <Playground />
         </DataProvider>
