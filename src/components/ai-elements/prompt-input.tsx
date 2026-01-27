@@ -235,21 +235,21 @@ export const PromptInputSubmit = ({
     status === 'submitted' || status === 'streaming'
       ? 'text-white'
       : isDisabled
-        ? 'text-gray-400'
+        ? 'text-gray-500'
         : 'text-blue-500';
 
   const bgClass = isDisabled ? 'bg-gray-100 border border-gray-200 hover:bg-gray-100' : 'bg-black hover:bg-black';
 
   return (
     <Button
-      className={cn('rounded-lg', bgClass, className)}
+      className={cn('rounded-lg size-8', bgClass, className)}
       size={size}
       type="submit"
       variant={variant}
       onClick={handleClick}
       {...props}
     >
-      {children ?? React.cloneElement(Icon as any, { className: cn('size-4', iconColor) })}
+      {children ?? React.cloneElement(Icon as any, { className: cn('size-4', iconColor), strokeWidth: 2.25 })}
     </Button>
   );
 };
