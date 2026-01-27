@@ -108,7 +108,7 @@ export async function POST(req: Request) {
       const id = genId()
       // Issue short-lived agent token (opaque) and store
       const { token, exp } = generateAgentToken(1800)
-      SESSIONS.set(id, { id, sandbox, createdAt: Date.now(), lastUsedAt: Date.now(), agentToken: token, agentTokenExp: exp, composioEnabled: false, model: 'claude-haiku-4-5-20250929' })
+      SESSIONS.set(id, { id, sandbox, createdAt: Date.now(), lastUsedAt: Date.now(), agentToken: token, agentTokenExp: exp, composioEnabled: false, model: 'claude-haiku-4-5-20251001' })
       setAgentToken(id, token, exp)
       return Response.json({ ok: true, chatId: id, timeline })
     } catch (e) {
@@ -372,14 +372,14 @@ catch(e){ console.error(String(e.message||e)); process.exit(1); }
     if (!sess) return Response.json({ ok: false, error: 'chat não encontrado' }, { status: 404 })
     const raw = (model || '').toString().trim().toLowerCase()
     const map: Record<string, string> = {
-      'sonnet': 'claude-sonnet-4-5-20250929',
-      'sonnet-4.5': 'claude-sonnet-4-5-20250929',
-      'claude-sonnet-4-5-20250929': 'claude-sonnet-4-5-20250929',
-      'haiku': 'claude-haiku-4-5-20250929',
-      'haiku-4.5': 'claude-haiku-4-5-20250929',
-      'claude-haiku-4-5-20250929': 'claude-haiku-4-5-20250929',
+      'sonnet': 'claude-sonnet-4-5-20251001',
+      'sonnet-4.5': 'claude-sonnet-4-5-20251001',
+      'claude-sonnet-4-5-20251001': 'claude-sonnet-4-5-20251001',
+      'haiku': 'claude-haiku-4-5-20251001',
+      'haiku-4.5': 'claude-haiku-4-5-20251001',
+      'claude-haiku-4-5-20251001': 'claude-haiku-4-5-20251001',
     }
-    const chosen = map[raw] || sess.model || 'claude-sonnet-4-5-20250929'
+    const chosen = map[raw] || sess.model || 'claude-haiku-4-5-20251001'
     sess.model = chosen
     sess.lastUsedAt = Date.now()
     return Response.json({ ok: true, model: chosen })

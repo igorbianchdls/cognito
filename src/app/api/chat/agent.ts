@@ -59,7 +59,7 @@ try {
     }
   }
 } catch {}
-const modelId = process.env.AGENT_MODEL || 'claude-haiku-4-5-20250929';
+const modelId = process.env.AGENT_MODEL || 'claude-haiku-4-5-20251001';
 const options = {
   model: modelId,
   pathToClaudeCodeExecutable: cli,
@@ -434,7 +434,7 @@ const prompt = process.argv[2] || '';
 const fs = require('fs');
 
 const agents = { uiScaffold: { description:'UI scaffold', tools:['Read','Write','Edit'], prompt:'Crie artefatos web mínimos.', model:'inherit' } };
-const modelId = process.env.AGENT_MODEL || 'claude-haiku-4-5-20250929';
+const modelId = process.env.AGENT_MODEL || 'claude-haiku-4-5-20251001';
 const baseOptions = {
   model: modelId,
   pathToClaudeCodeExecutable: cli,

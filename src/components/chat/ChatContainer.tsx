@@ -322,7 +322,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins }: { onOp
                     setModel(m)
                     try {
                       const id = await ensureStart();
-                      const modelId = m === 'haiku' ? 'claude-haiku-4-5-20250929' : 'claude-sonnet-4-5-20250929'
+                      const modelId = m === 'haiku' ? 'claude-haiku-4-5-20251001' : 'claude-sonnet-4-5-20251001'
                       await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'model-set', chatId: id, model: modelId }) })
                     } catch { /* ignore */ }
                   }}
@@ -363,7 +363,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins }: { onOp
             setModel(m)
             try {
               const id = await ensureStart();
-              const modelId = m === 'haiku' ? 'claude-haiku-4-5-20250929' : 'claude-sonnet-4-5-20250929'
+              const modelId = m === 'haiku' ? 'claude-haiku-4-5-20251001' : 'claude-sonnet-4-5-20251001'
               await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'model-set', chatId: id, model: modelId }) })
             } catch { /* ignore */ }
           }} onOpenSandbox={async () => {
