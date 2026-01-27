@@ -133,12 +133,26 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       height: styleVal(p.height),
     };
     const childGrow = Boolean(p.childGrow);
-    if (!childGrow) {
-      return <div style={style}>{children}</div>;
-    }
-    const wrapped = React.Children.toArray(children).map((c, i) => (
-      <div key={i} style={{ flex: '1 1 0%', minWidth: 0 }}>{c}</div>
-    ));
+    // Read per-child fr from raw element children definitions
+    const childDefs: any[] = Array.isArray((element as any)?.children) ? (element as any).children : [];
+    const frArr: number[] = childDefs.map((ch) => {
+      const w = Number((ch?.props as any)?.fr);
+      return Number.isFinite(w) && w > 0 ? w : (childGrow ? 1 : 0);
+    });
+
+    // If neither childGrow nor valid fr weights, render as-is
+    const hasWeights = frArr.some((w) => w > 0);
+    if (!hasWeights) return <div style={style}>{children}</div>;
+
+    const kids = React.Children.toArray(children);
+    const wrapped = kids.map((c, i) => {
+      const weight = frArr[i] && frArr[i] > 0 ? frArr[i] : 1;
+      return (
+        <div key={i} style={{ flexGrow: weight, flexShrink: 1, flexBasis: 0, minWidth: 0 }}>
+          {c}
+        </div>
+      );
+    });
     return <div style={style}>{wrapped}</div>;
   },
 
