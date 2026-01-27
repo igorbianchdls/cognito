@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import { Loader2Icon, ArrowUpIcon, SquareIcon, XIcon } from 'lucide-react';
 import type {
   ComponentProps,
