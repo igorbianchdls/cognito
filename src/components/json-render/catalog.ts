@@ -48,6 +48,7 @@ export const catalog = {
         wrap: z.boolean().optional(),
         justify: z.enum(["start","center","end","between","around","evenly"]).optional(),
         align: z.enum(["start","center","end","stretch"]).optional(),
+        childGrow: z.boolean().optional(),
         padding: z.union([z.number(), z.string()]).optional(),
         margin: z.union([z.number(), z.string()]).optional(),
         backgroundColor: z.string().optional(),
@@ -94,6 +95,7 @@ export const catalog = {
         height: z.number().optional(),
         colorScheme: z.union([z.string(), z.array(z.string())]).optional(),
         nivo: z.object({
+          layout: z.enum(["vertical","horizontal"]).optional(),
           padding: z.number().optional(),
           groupMode: z.enum(["grouped","stacked"]).optional(),
           gridX: z.boolean().optional(),
