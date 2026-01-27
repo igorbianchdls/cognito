@@ -15,7 +15,7 @@ import {
   PromptInputModelSelectContent,
   PromptInputModelSelectItem,
 } from '@/components/ai-elements/prompt-input';
-import { Plus, BarChart3, GlobeIcon, Plug } from 'lucide-react';
+import { Plus, BarChart3, Plug } from 'lucide-react';
 
 type Props = {
   value: string;
@@ -48,30 +48,12 @@ export default function InputArea({ value, onChange, onSubmit, status = 'idle', 
               <BarChart3 size={16} />
               <span>Artifact</span>
             </PromptInputButton>
-            <PromptInputButton>
-              <GlobeIcon size={16} />
-              <span>Search</span>
-            </PromptInputButton>
             {typeof onToggleComposio === 'function' && (
               <PromptInputButton onClick={() => onToggleComposio?.()} variant={composioEnabled ? 'default' : 'ghost'}>
                 <Plug size={16} />
                 <span>Composio {composioEnabled ? 'ON' : 'OFF'}</span>
               </PromptInputButton>
             )}
-
-            {/* Agentes (somente trigger visual) */}
-            <PromptInputModelSelect>
-              <PromptInputModelSelectTrigger className="text-gray-500 hover:text-gray-800">
-                <PromptInputModelSelectValue placeholder="Agentes" />
-              </PromptInputModelSelectTrigger>
-            </PromptInputModelSelect>
-
-            {/* Workflow (somente trigger visual) */}
-            <PromptInputModelSelect>
-              <PromptInputModelSelectTrigger className="text-gray-500 hover:text-gray-800">
-                <PromptInputModelSelectValue placeholder="Workflow" />
-              </PromptInputModelSelectTrigger>
-            </PromptInputModelSelect>
 
             {/* Model selector */}
             <PromptInputModelSelect value={model} onValueChange={(v: any) => onModelChange?.(v === 'haiku' ? 'haiku' : 'sonnet')}>
