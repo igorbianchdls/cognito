@@ -13,7 +13,7 @@ const SAMPLE_TREE_TEXT = JSON.stringify([
     children: [
       { type: "Header", props: { title: "Dashboard (Dados Reais)", subtitle: "Vendas, Compras e Financeiro", align: "center" } },
       { type: "Card", props: { title: "KPIs Financeiros" }, children: [
-        { type: "Div", props: { direction: "row", gap: 12, justify: "between", align: "center" }, children: [
+        { type: "Div", props: { direction: "row", gap: 12, justify: "start", align: "start", childGrow: true }, children: [
           { type: "Kpi", props: { label: "Recebidos (Período)", valuePath: "financeiro.kpis.recebidos_mes", format: "currency" } },
           { type: "Kpi", props: { label: "Pagos (Período)", valuePath: "financeiro.kpis.pagos_mes", format: "currency" } },
           { type: "Kpi", props: { label: "Geração de Caixa", valuePath: "financeiro.kpis.geracao_caixa", format: "currency" } }

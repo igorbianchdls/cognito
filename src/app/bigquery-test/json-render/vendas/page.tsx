@@ -20,7 +20,7 @@ const SALES_TEMPLATE_TEXT = JSON.stringify([
         ]}
       ]},
 
-      { type: "Div", props: { direction: "row", gap: 12, justify: "between", align: "start" }, children: [
+      { type: "Div", props: { direction: "row", gap: 12, justify: "start", align: "start", childGrow: true }, children: [
         { type: "Card", props: { title: "Vendas por Canal" }, children: [
           { type: "PieChart", props: { title: "Canais", dataPath: "vendas.pedidos", xKey: "canal_venda", yKey: "SUM(valor_total)", format: "currency", height: 240, nivo: { innerRadius: 0.35 } } }
         ]},
