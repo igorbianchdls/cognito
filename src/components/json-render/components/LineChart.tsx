@@ -3,6 +3,7 @@
 import React from "react";
 import { useData } from "@/components/json-render/context";
 import { ResponsiveLine } from "@nivo/line";
+import { aggregateByDimension, getByPath, parseMeasureSpec } from "@/components/json-render/helpers";
 
 type AnyRecord = Record<string, any>;
 
@@ -40,10 +41,17 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
     } catch { return []; }
   }, [data, dataPath]);
 
-  const seriesData = React.useMemo(() => [{
-    id: title || 'Series',
-    data: rows.map((r) => ({ x: String((r as AnyRecord)[xKey] ?? ''), y: Number((r as AnyRecord)[yKey] ?? 0) })),
-  }], [rows, xKey, yKey, title]);
+  const seriesData = React.useMemo(() => {
+    const spec = parseMeasureSpec(yKey);
+    if (spec) {
+      const agg = aggregateByDimension(rows as AnyRecord[], xKey, yKey);
+      return [{ id: title || 'Series', data: agg.map((d) => ({ x: d.label, y: d.value })) }];
+    }
+    return [{
+      id: title || 'Series',
+      data: (rows as AnyRecord[]).map((r) => ({ x: String(getByPath(r, xKey, '')), y: Number(getByPath(r, yKey, 0) ?? 0) })),
+    }];
+  }, [rows, xKey, yKey, title]);
 
   const colors = Array.isArray(colorScheme)
     ? colorScheme
@@ -111,4 +119,3 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
     </div>
   );
 }
-

@@ -27,6 +27,9 @@ const SAMPLE_TREE_TEXT = JSON.stringify([
       ]},
       { type: "Card", props: { title: "Participação por Categoria" }, children: [
         { type: "PieChart", props: { title: "Categorias", dataPath: "categoryShare", xKey: "category", yKey: "value", format: "percent", height: 220, nivo: { innerRadius: 0.3 } } }
+      ]},
+      { type: "Card", props: { title: "Financeiro: AP por Fornecedor (SUM)" }, children: [
+        { type: "BarChart", props: { title: "AP por Fornecedor", dataPath: "financeiro.contas-a-pagar", xKey: "fornecedor", yKey: "SUM(valor_liquido)", format: "currency", height: 200 } }
       ]}
     ]
   }
@@ -154,6 +157,14 @@ export default function JsonRenderPage() {
             { category: 'D', value: 0.12 },
             { category: 'E', value: 0.08 },
           ],
+          financeiro: {
+            'contas-a-pagar': [
+              { fornecedor: 'Fornecedor X', valor_liquido: 1200 },
+              { fornecedor: 'Fornecedor X', valor_liquido: 800 },
+              { fornecedor: 'Fornecedor Y', valor_liquido: 1500 },
+              { fornecedor: 'Fornecedor Z', valor_liquido: 500 },
+            ]
+          }
         }}>
           <Playground />
         </DataProvider>

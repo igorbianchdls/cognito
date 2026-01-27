@@ -3,6 +3,7 @@
 import React from "react";
 import { useData } from "@/components/json-render/context";
 import { ResponsiveBar } from "@nivo/bar";
+import { aggregateByDimension, getByPath, parseMeasureSpec } from "@/components/json-render/helpers";
 
 type AnyRecord = Record<string, any>;
 
@@ -40,10 +41,17 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
     } catch { return []; }
   }, [data, dataPath]);
 
-  const barData = React.useMemo(() => rows.map((r) => ({
-    label: String((r as AnyRecord)[xKey] ?? ''),
-    value: Number((r as AnyRecord)[yKey] ?? 0),
-  })), [rows, xKey, yKey]);
+  const barData = React.useMemo(() => {
+    const spec = parseMeasureSpec(yKey);
+    if (spec) {
+      return aggregateByDimension(rows as AnyRecord[], xKey, yKey);
+    }
+    // Non-aggregate: direct mapping with path support
+    return (rows as AnyRecord[]).map((r) => ({
+      label: String(getByPath(r, xKey, '')),
+      value: Number(getByPath(r, yKey, 0) ?? 0),
+    }));
+  }, [rows, xKey, yKey]);
 
   const colors = Array.isArray(colorScheme)
     ? colorScheme
@@ -115,4 +123,3 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
     </div>
   );
 }
-

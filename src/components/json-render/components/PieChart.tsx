@@ -3,6 +3,7 @@
 import React from "react";
 import { useData } from "@/components/json-render/context";
 import { ResponsivePie } from "@nivo/pie";
+import { aggregateByDimension, getByPath, parseMeasureSpec } from "@/components/json-render/helpers";
 
 type AnyRecord = Record<string, any>;
 
@@ -40,11 +41,18 @@ export default function JsonRenderPieChart({ element }: { element: any }) {
     } catch { return []; }
   }, [data, dataPath]);
 
-  const pieData = React.useMemo(() => rows.map((r) => ({
-    id: String((r as AnyRecord)[xKey] ?? ''),
-    label: String((r as AnyRecord)[xKey] ?? ''),
-    value: Number((r as AnyRecord)[yKey] ?? 0),
-  })), [rows, xKey, yKey]);
+  const pieData = React.useMemo(() => {
+    const spec = parseMeasureSpec(yKey);
+    if (spec) {
+      const agg = aggregateByDimension(rows as AnyRecord[], xKey, yKey);
+      return agg.map(d => ({ id: d.label, label: d.label, value: d.value }));
+    }
+    return (rows as AnyRecord[]).map((r) => ({
+      id: String(getByPath(r, xKey, '')),
+      label: String(getByPath(r, xKey, '')),
+      value: Number(getByPath(r, yKey, 0) ?? 0),
+    }));
+  }, [rows, xKey, yKey]);
 
   const colors = Array.isArray(colorScheme)
     ? colorScheme
@@ -97,4 +105,3 @@ export default function JsonRenderPieChart({ element }: { element: any }) {
     </div>
   );
 }
-
