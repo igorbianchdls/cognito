@@ -1,0 +1,169 @@
+"use client";
+
+import React, { useCallback, useMemo, useState } from "react";
+import { Renderer } from "@/components/json-render/renderer";
+import { registry } from "@/components/json-render/registry";
+import { DataProvider, useData } from "@/components/json-render/context";
+
+const SALES_TEMPLATE_TEXT = JSON.stringify([
+  {
+    type: "Theme",
+    props: { name: "light" },
+    children: [
+      { type: "Header", props: { title: "Dashboard de Vendas", subtitle: "Principais indicadores e cortes", align: "center" } },
+      { type: "Card", props: { title: "KPIs de Vendas" }, children: [
+        { type: "Div", props: { direction: "row", gap: 12, justify: "between", align: "center" }, children: [
+          { type: "Kpi", props: { label: "Vendas", valuePath: "vendas.kpis.vendas", format: "currency" } },
+          { type: "Kpi", props: { label: "Pedidos", valuePath: "vendas.kpis.pedidos", format: "number" } },
+          { type: "Kpi", props: { label: "Ticket Médio", valuePath: "vendas.kpis.ticketMedio", format: "currency" } },
+          { type: "Kpi", props: { label: "Margem Bruta", valuePath: "vendas.kpis.margemBruta", format: "currency" } }
+        ]}
+      ]},
+
+      { type: "Div", props: { direction: "row", gap: 12, justify: "between", align: "start" }, children: [
+        { type: "Card", props: { title: "Vendas por Canal" }, children: [
+          { type: "PieChart", props: { title: "Canais", dataPath: "vendas.dashboard.canais", xKey: "label", yKey: "value", format: "currency", height: 240, nivo: { innerRadius: 0.35 } } }
+        ]},
+        { type: "Card", props: { title: "Vendas por Categoria" }, children: [
+          { type: "BarChart", props: { title: "Categorias", dataPath: "vendas.dashboard.categorias", xKey: "label", yKey: "value", format: "currency", height: 240, nivo: { layout: 'horizontal' } } }
+        ]},
+        { type: "Card", props: { title: "Top Clientes (Receita)" }, children: [
+          { type: "BarChart", props: { title: "Clientes", dataPath: "vendas.dashboard.clientes", xKey: "cliente", yKey: "total", format: "currency", height: 240, nivo: { layout: 'horizontal' } } }
+        ]}
+      ]},
+
+      { type: "Div", props: { direction: "row", gap: 12, justify: "between", align: "start" }, children: [
+        { type: "Card", props: { title: "Vendas por Vendedor" }, children: [
+          { type: "BarChart", props: { title: "Vendedores", dataPath: "vendas.dashboard.vendedores", xKey: "label", yKey: "value", format: "currency", height: 220, nivo: { layout: 'horizontal' } } }
+        ]},
+        { type: "Card", props: { title: "Vendas por Filial" }, children: [
+          { type: "BarChart", props: { title: "Filiais", dataPath: "vendas.dashboard.filiais", xKey: "label", yKey: "value", format: "currency", height: 220, nivo: { layout: 'horizontal' } } }
+        ]},
+        { type: "Card", props: { title: "Vendas por Unidade de Negócio" }, children: [
+          { type: "BarChart", props: { title: "Unidades de Negócio", dataPath: "vendas.dashboard.unidades_negocio", xKey: "label", yKey: "value", format: "currency", height: 220, nivo: { layout: 'horizontal' } } }
+        ]}
+      ]},
+
+      { type: "Div", props: { direction: "row", gap: 12, justify: "between", align: "start" }, children: [
+        { type: "Card", props: { title: "Vendas por Território" }, children: [
+          { type: "BarChart", props: { title: "Territórios", dataPath: "vendas.dashboard.territorios", xKey: "label", yKey: "value", format: "currency", height: 220, nivo: { layout: 'horizontal' } } }
+        ]},
+        { type: "Card", props: { title: "Vendas por Categoria de Serviço" }, children: [
+          { type: "BarChart", props: { title: "Serviços/Categorias", dataPath: "vendas.dashboard.servicos_categorias_faturamento", xKey: "label", yKey: "value", format: "currency", height: 220, nivo: { layout: 'horizontal' } } }
+        ]},
+        { type: "Card", props: { title: "Devolução por Canal (%)" }, children: [
+          { type: "BarChart", props: { title: "Taxa de Devolução", dataPath: "vendas.dashboard.devolucao_canal", xKey: "label", yKey: "value", format: "percent", height: 220, nivo: { layout: 'horizontal' } } }
+        ]}
+      ]}
+    ]
+  }
+], null, 2);
+
+function SalesPlayground() {
+  const { data, setData } = useData();
+  const [jsonText, setJsonText] = useState<string>(SALES_TEMPLATE_TEXT);
+  const [parseError, setParseError] = useState<string | null>(null);
+  const [tree, setTree] = useState<any | any[] | null>(() => {
+    try { return JSON.parse(SALES_TEMPLATE_TEXT); } catch { return null; }
+  });
+
+  // Fetch vendas dashboard (dados reais)
+  React.useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      try {
+        const now = new Date();
+        const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+        const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        const toISO = (d: Date) => d.toISOString().slice(0, 10);
+        const de = toISO(firstDay);
+        const ate = toISO(lastDay);
+        const res = await fetch(`/api/modulos/vendas/dashboard?de=${de}&ate=${ate}&limit=8`, { cache: 'no-store' });
+        if (res.ok) {
+          const j = await res.json();
+          setData((prev: any) => ({ ...(prev || {}), vendas: { ...(prev?.vendas || {}), dashboard: j?.charts || {}, kpis: j?.kpis || {} } }));
+        }
+      } catch {}
+    }
+    load();
+    return () => { cancelled = true };
+  }, []);
+
+  const handleAction = useCallback((action: any) => {
+    if (action?.type === 'refresh_data') {
+      // Poderia refazer o fetch aqui, mantido simples
+      return;
+    }
+  }, []);
+
+  const onChangeText = useCallback((s: string) => {
+    setJsonText(s);
+    try { setTree(JSON.parse(s)); setParseError(null) } catch (e: any) { setParseError(e?.message ? String(e.message) : 'Invalid JSON') }
+  }, []);
+
+  const onFormat = useCallback(() => {
+    try { const t = JSON.parse(jsonText); setJsonText(JSON.stringify(t, null, 2)); setParseError(null) } catch (e: any) { setParseError(e?.message ? String(e.message) : 'Invalid JSON') }
+  }, [jsonText]);
+
+  const onReset = useCallback(() => {
+    setJsonText(SALES_TEMPLATE_TEXT);
+    try { setTree(JSON.parse(SALES_TEMPLATE_TEXT)); setParseError(null) } catch {}
+  }, []);
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+      <div>
+        <div className="mb-2 flex items-center justify-between">
+          <h2 className="text-sm font-medium text-gray-900">JSON</h2>
+          <div className="flex items-center gap-2">
+            <button onClick={onReset} className="text-xs rounded-md border border-gray-300 bg-white px-2 py-1 hover:bg-gray-50">Reset</button>
+            <button onClick={onFormat} className="text-xs rounded-md border border-gray-300 bg-white px-2 py-1 hover:bg-gray-50">Formatar</button>
+          </div>
+        </div>
+        <textarea
+          value={jsonText}
+          onChange={(e) => onChangeText(e.target.value)}
+          spellCheck={false}
+          className="w-full min-h-[420px] rounded-md border border-gray-300 bg-white p-3 font-mono text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        {parseError && (
+          <div className="mt-2 rounded border border-red-300 bg-red-50 px-2 py-1 text-xs text-red-700">{parseError}</div>
+        )}
+        <div className="mt-4 rounded-md bg-white p-3 border border-gray-200">
+          <h3 className="text-xs font-medium text-gray-900 mb-1">Dados atuais</h3>
+          <pre className="text-[11px] text-gray-700 whitespace-pre-wrap">{JSON.stringify(data, null, 2)}</pre>
+        </div>
+      </div>
+
+      <div>
+        <div className="mb-2 flex items-center justify-between">
+          <h2 className="text-sm font-medium text-gray-900">Preview</h2>
+          <div className="text-xs text-gray-500">Ações: Atualizar</div>
+        </div>
+        <div className="rounded-md border border-gray-200 bg-white p-4 min-h-[420px]">
+          {tree ? (
+            <Renderer tree={tree} registry={registry} onAction={handleAction} />
+          ) : (
+            <div className="text-sm text-gray-500">JSON inválido</div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function JsonRenderVendasPage() {
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="mx-auto max-w-6xl px-4 py-8">
+        <h1 className="text-2xl font-semibold text-gray-900 mb-1">JSON Render — Vendas</h1>
+        <p className="text-sm text-gray-600 mb-6">Template focado em Vendas com dados reais.</p>
+
+        <DataProvider initialData={{ vendas: { dashboard: {}, kpis: {} } }}>
+          <SalesPlayground />
+        </DataProvider>
+      </div>
+    </div>
+  );
+}
+
