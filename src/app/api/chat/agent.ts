@@ -59,8 +59,9 @@ try {
     }
   }
 } catch {}
+const modelId = process.env.AGENT_MODEL || 'claude-haiku-4-5-20250929';
 const options = {
-  model: 'claude-sonnet-4-5-20250929',
+  model: modelId,
   pathToClaudeCodeExecutable: cli,
   cwd: '/vercel/sandbox',
   additionalDirectories: ['/vercel/sandbox'],
@@ -433,8 +434,9 @@ const prompt = process.argv[2] || '';
 const fs = require('fs');
 
 const agents = { uiScaffold: { description:'UI scaffold', tools:['Read','Write','Edit'], prompt:'Crie artefatos web mínimos.', model:'inherit' } };
+const modelId = process.env.AGENT_MODEL || 'claude-haiku-4-5-20250929';
 const baseOptions = {
-  model: 'claude-sonnet-4-5-20250929',
+  model: modelId,
   pathToClaudeCodeExecutable: cli,
   cwd: '/vercel/sandbox',
   additionalDirectories: ['/vercel/sandbox'],

@@ -15,6 +15,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins }: { onOp
   const [chatId, setChatId] = useState<string | null>(null)
   const [status, setStatus] = useState<ChatStatus>('idle')
   const [composioEnabled, setComposioEnabled] = useState<boolean>(false)
+  const [model, setModel] = useState<'sonnet'|'haiku'>('haiku')
   const abortRef = useRef<AbortController | null>(null)
 
   const ensureStart = async () => {
@@ -308,12 +309,21 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins }: { onOp
                   onSubmit={handleSubmit}
                   status={status}
                   composioEnabled={composioEnabled}
+                  model={model}
                   onToggleComposio={async () => {
                     try {
                       const id = await ensureStart();
                       const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'mcp-toggle', chatId: id, enabled: !composioEnabled }) });
                       const data = await res.json().catch(() => ({})) as any;
                       if (res.ok && data && data.ok) setComposioEnabled(Boolean(data.enabled));
+                    } catch { /* ignore */ }
+                  }}
+                  onModelChange={async (m) => {
+                    setModel(m)
+                    try {
+                      const id = await ensureStart();
+                      const modelId = m === 'haiku' ? 'claude-haiku-4-5-20250929' : 'claude-sonnet-4-5-20250929'
+                      await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'model-set', chatId: id, model: modelId }) })
                     } catch { /* ignore */ }
                   }}
                   onOpenSandbox={async () => {
@@ -348,6 +358,13 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins }: { onOp
               const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'mcp-toggle', chatId: id, enabled: !composioEnabled }) });
               const data = await res.json().catch(() => ({})) as any;
               if (res.ok && data && data.ok) setComposioEnabled(Boolean(data.enabled));
+            } catch { /* ignore */ }
+          }} model={model} onModelChange={async (m) => {
+            setModel(m)
+            try {
+              const id = await ensureStart();
+              const modelId = m === 'haiku' ? 'claude-haiku-4-5-20250929' : 'claude-sonnet-4-5-20250929'
+              await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'model-set', chatId: id, model: modelId }) })
             } catch { /* ignore */ }
           }} onOpenSandbox={async () => {
             try { const id = await ensureStart(); onOpenSandbox?.(id); } catch { /* ignore */ }

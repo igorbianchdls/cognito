@@ -12,6 +12,8 @@ import {
   PromptInputModelSelect,
   PromptInputModelSelectTrigger,
   PromptInputModelSelectValue,
+  PromptInputModelSelectContent,
+  PromptInputModelSelectItem,
 } from '@/components/ai-elements/prompt-input';
 import { Plus, BarChart3, GlobeIcon, Plug } from 'lucide-react';
 
@@ -23,9 +25,11 @@ type Props = {
   onOpenSandbox?: () => void;
   composioEnabled?: boolean;
   onToggleComposio?: () => void;
+  model?: 'sonnet' | 'haiku';
+  onModelChange?: (m: 'sonnet' | 'haiku') => void;
 };
 
-export default function InputArea({ value, onChange, onSubmit, status = 'idle', onOpenSandbox, composioEnabled, onToggleComposio }: Props) {
+export default function InputArea({ value, onChange, onSubmit, status = 'idle', onOpenSandbox, composioEnabled, onToggleComposio, model = 'haiku', onModelChange }: Props) {
   return (
     <div className="pt-[var(--ui-pad-y)]">
       <PromptInput onSubmit={onSubmit} className="border-gray-100 ui-text">
@@ -67,6 +71,17 @@ export default function InputArea({ value, onChange, onSubmit, status = 'idle', 
               <PromptInputModelSelectTrigger className="text-gray-500 hover:text-gray-800">
                 <PromptInputModelSelectValue placeholder="Workflow" />
               </PromptInputModelSelectTrigger>
+            </PromptInputModelSelect>
+
+            {/* Model selector */}
+            <PromptInputModelSelect value={model} onValueChange={(v: any) => onModelChange?.(v === 'haiku' ? 'haiku' : 'sonnet')}>
+              <PromptInputModelSelectTrigger className="text-gray-500 hover:text-gray-800">
+                <PromptInputModelSelectValue placeholder="Modelo" />
+              </PromptInputModelSelectTrigger>
+              <PromptInputModelSelectContent>
+                <PromptInputModelSelectItem value="sonnet">Sonnet 4.5</PromptInputModelSelectItem>
+                <PromptInputModelSelectItem value="haiku">Haiku 4.5</PromptInputModelSelectItem>
+              </PromptInputModelSelectContent>
             </PromptInputModelSelect>
           </PromptInputTools>
           <PromptInputSubmit disabled={!value} status={status as ChatStatus} />
