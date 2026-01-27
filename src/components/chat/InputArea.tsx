@@ -42,7 +42,6 @@ export default function InputArea({ value, onChange, onSubmit, status = 'idle', 
           <PromptInputTools>
             <PromptInputButton>
               <Plus size={16} />
-              <span>Upload</span>
             </PromptInputButton>
             <PromptInputButton onClick={() => onOpenSandbox?.()}>
               <BarChart3 size={16} />

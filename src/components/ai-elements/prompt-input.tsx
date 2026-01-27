@@ -1,6 +1,6 @@
 'use client';
 
-import { Loader2Icon, SendIcon, SquareIcon, XIcon } from 'lucide-react';
+import { Loader2Icon, ArrowUpIcon, SquareIcon, XIcon } from 'lucide-react';
 import type {
   ComponentProps,
   HTMLAttributes,
@@ -211,7 +211,8 @@ export const PromptInputSubmit = ({
   onClick,
   ...props
 }: PromptInputSubmitProps) => {
-  let Icon = <SendIcon className="size-4" />;
+  const isDisabled = !!(props as any)?.disabled;
+  let Icon = <ArrowUpIcon className="size-4" />;
 
   if (status === 'submitted') {
     Icon = <Loader2Icon className="size-4 animate-spin" />;
@@ -229,16 +230,25 @@ export const PromptInputSubmit = ({
     }
   };
 
+  const iconColor =
+    status === 'submitted' || status === 'streaming'
+      ? 'text-white'
+      : isDisabled
+        ? 'text-gray-400'
+        : 'text-blue-500';
+
+  const bgClass = isDisabled ? 'bg-gray-100 border border-gray-200 hover:bg-gray-100' : 'bg-black hover:bg-black';
+
   return (
     <Button
-      className={cn('gap-1.5 rounded-lg', className)}
+      className={cn('rounded-lg', bgClass, className)}
       size={size}
       type="submit"
       variant={variant}
       onClick={handleClick}
       {...props}
     >
-      {children ?? Icon}
+      {children ?? React.cloneElement(Icon as any, { className: cn('size-4', iconColor) })}
     </Button>
   );
 };
