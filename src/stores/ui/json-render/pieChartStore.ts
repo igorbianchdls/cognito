@@ -1,9 +1,22 @@
 import { atom } from 'nanostores';
 import { updateAtomDeep } from './utils';
 
+export type TitleStyle = {
+  fontFamily?: string;
+  fontWeight?: string | number;
+  fontSize?: number | string;
+  color?: string;
+  letterSpacing?: number | string;
+  textTransform?: 'none'|'uppercase'|'lowercase'|'capitalize';
+  padding?: number | string;
+  margin?: number | string;
+  textAlign?: 'left'|'center'|'right';
+};
+
 export type PieChartDefaults = {
   height: number;
   format: 'currency'|'percent'|'number';
+  titleStyle?: TitleStyle;
   colorScheme?: string|string[];
   nivo?: {
     innerRadius?: number;
@@ -23,6 +36,16 @@ export type PieChartDefaults = {
 export const $pieChartDefaults = atom<PieChartDefaults>({
   height: 220,
   format: 'number',
+  titleStyle: {
+    fontFamily: 'Barlow',
+    fontWeight: 600,
+    fontSize: 14,
+    color: '#0f172a',
+    letterSpacing: '0.01em',
+    textTransform: 'none',
+    padding: 6,
+    textAlign: 'left',
+  },
   colorScheme: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'],
   nivo: {
     innerRadius: 0,
@@ -43,4 +66,3 @@ export const pieChartDefaultsActions = {
     updateAtomDeep($pieChartDefaults as any, partial as any);
   }
 };
-

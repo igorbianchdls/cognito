@@ -19,8 +19,8 @@ const SALES_TEMPLATE_TEXT = JSON.stringify([
       ]},
 
       { type: "Div", props: { direction: "row", gap: 12, padding: 16, justify: "start", align: "start", childGrow: true }, children: [
-        { type: "PieChart", props: { fr: 1, title: "Canais", dataPath: "vendas.pedidos", xKey: "canal_venda", yKey: "SUM(valor_total)", format: "currency", height: 240, nivo: { innerRadius: 0.35 } } },
-        { type: "BarChart", props: { fr: 2, title: "Categorias", dataPath: "vendas.pedidos", xKey: "categoria_receita", yKey: "SUM(valor_total)", format: "currency", height: 240, nivo: { layout: 'horizontal' } } },
+        { type: "PieChart", props: { fr: 1, title: "Canais", titleStyle: { fontFamily: "Barlow", fontWeight: 700, fontSize: 16, color: "#0f172a", letterSpacing: "0.02em", textTransform: "uppercase", padding: 8, textAlign: "left" }, dataPath: "vendas.pedidos", xKey: "canal_venda", yKey: "SUM(valor_total)", format: "currency", height: 240, nivo: { innerRadius: 0.35 } } },
+        { type: "BarChart", props: { fr: 2, title: "Categorias", titleStyle: { fontFamily: "Barlow", fontWeight: 600, fontSize: 14, color: "#334155", padding: 6 }, dataPath: "vendas.pedidos", xKey: "categoria_receita", yKey: "SUM(valor_total)", format: "currency", height: 240, nivo: { layout: 'horizontal' } } },
         { type: "BarChart", props: { fr: 2, title: "Clientes", dataPath: "vendas.pedidos", xKey: "cliente", yKey: "SUM(valor_total)", format: "currency", height: 240, nivo: { layout: 'horizontal' } } }
       ]},
 

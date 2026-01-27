@@ -129,3 +129,22 @@ export function aggregateByDimension(
   return out;
 }
 
+// Normalize title style coming from JSON props
+export function normalizeTitleStyle(style?: any): Record<string, any> | undefined {
+  if (!style || typeof style !== 'object') return undefined;
+  const out: Record<string, any> = {};
+  if (style.fontFamily) out.fontFamily = String(style.fontFamily);
+  if (style.fontWeight !== undefined) out.fontWeight = style.fontWeight as any;
+  if (style.fontSize !== undefined) out.fontSize =
+    typeof style.fontSize === 'number' ? `${style.fontSize}px` : String(style.fontSize);
+  if (style.color) out.color = String(style.color);
+  if (style.letterSpacing !== undefined) out.letterSpacing =
+    typeof style.letterSpacing === 'number' ? `${style.letterSpacing}px` : String(style.letterSpacing);
+  if (style.textTransform) out.textTransform = String(style.textTransform);
+  if (style.padding !== undefined) out.padding =
+    typeof style.padding === 'number' ? `${style.padding}px` : String(style.padding);
+  if (style.margin !== undefined) out.margin =
+    typeof style.margin === 'number' ? `${style.margin}px` : String(style.margin);
+  if (style.textAlign) out.textAlign = String(style.textAlign);
+  return out;
+}

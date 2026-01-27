@@ -1,11 +1,25 @@
 import { atom } from 'nanostores';
 import { updateAtomDeep } from './utils';
 
+export type TitleStyle = {
+  fontFamily?: string;
+  fontWeight?: string | number;
+  fontSize?: number | string;
+  color?: string;
+  letterSpacing?: number | string;
+  textTransform?: 'none'|'uppercase'|'lowercase'|'capitalize';
+  padding?: number | string;
+  margin?: number | string;
+  textAlign?: 'left'|'center'|'right';
+};
+
 export type BarChartDefaults = {
   height: number;
   format: 'currency'|'percent'|'number';
+  titleStyle?: TitleStyle;
   colorScheme?: string|string[];
   nivo?: {
+    layout?: 'vertical'|'horizontal';
     padding?: number;
     groupMode?: 'grouped'|'stacked';
     gridX?: boolean;
@@ -25,8 +39,19 @@ export type BarChartDefaults = {
 export const $barChartDefaults = atom<BarChartDefaults>({
   height: 220,
   format: 'number',
+  titleStyle: {
+    fontFamily: 'Barlow',
+    fontWeight: 700,
+    fontSize: 16,
+    color: '#0f172a',
+    letterSpacing: '0.02em',
+    textTransform: 'uppercase',
+    padding: 8,
+    textAlign: 'left',
+  },
   colorScheme: ['#3b82f6'],
   nivo: {
+    layout: 'vertical',
     padding: 0.3,
     groupMode: 'grouped',
     gridY: true,
@@ -43,4 +68,3 @@ export const barChartDefaultsActions = {
     updateAtomDeep($barChartDefaults as any, partial as any);
   }
 };
-

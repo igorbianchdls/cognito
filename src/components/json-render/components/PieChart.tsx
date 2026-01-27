@@ -3,7 +3,7 @@
 import React from "react";
 import { useData } from "@/components/json-render/context";
 import { ResponsivePie } from "@nivo/pie";
-import { aggregateByDimension, getByPath, parseMeasureSpec } from "@/components/json-render/helpers";
+import { aggregateByDimension, getByPath, parseMeasureSpec, normalizeTitleStyle } from "@/components/json-render/helpers";
 
 type AnyRecord = Record<string, any>;
 
@@ -30,6 +30,7 @@ export default function JsonRenderPieChart({ element }: { element: any }) {
   const height = (element?.props?.height as number | undefined) ?? 220;
   const colorScheme = element?.props?.colorScheme as string | string[] | undefined;
   const nivo = (element?.props?.nivo as AnyRecord | undefined) || {};
+  const titleStyle = normalizeTitleStyle((element?.props as AnyRecord)?.titleStyle);
 
   const rows: Array<Record<string, unknown>> = React.useMemo(() => {
     if (!dataPath) return [];
@@ -78,7 +79,7 @@ export default function JsonRenderPieChart({ element }: { element: any }) {
 
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-0 shadow-sm">
-      {title && <div className="text-sm font-medium text-gray-900 mb-2">{title}</div>}
+      {title && <div className="text-sm font-medium text-gray-900 mb-2" style={titleStyle}>{title}</div>}
       <div style={{ height }}>
         <ResponsivePie
           data={pieData}

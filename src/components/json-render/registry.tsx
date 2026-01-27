@@ -62,6 +62,19 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     const theme = useThemeOverrides();
     const p = deepMerge(theme.components?.Card || {}, element?.props || {}) as AnyRecord;
     const title = p.title ?? "";
+    const titleStyle = {
+      ...(p.titleStyle ? {
+        fontFamily: p.titleStyle.fontFamily,
+        fontWeight: p.titleStyle.fontWeight,
+        fontSize: typeof p.titleStyle.fontSize === 'number' ? `${p.titleStyle.fontSize}px` : p.titleStyle.fontSize,
+        color: p.titleStyle.color,
+        letterSpacing: typeof p.titleStyle.letterSpacing === 'number' ? `${p.titleStyle.letterSpacing}px` : p.titleStyle.letterSpacing,
+        textTransform: p.titleStyle.textTransform,
+        padding: typeof p.titleStyle.padding === 'number' ? `${p.titleStyle.padding}px` : p.titleStyle.padding,
+        margin: typeof p.titleStyle.margin === 'number' ? `${p.titleStyle.margin}px` : p.titleStyle.margin,
+        textAlign: p.titleStyle.textAlign,
+      } : {})
+    } as React.CSSProperties;
     const style: React.CSSProperties = {
       backgroundColor: p.backgroundColor,
       borderColor: p.borderColor,
@@ -72,7 +85,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     };
     return (
       <div className="rounded-lg shadow-sm" style={style}>
-        {title && <h3 className="text-base font-semibold text-gray-900 mb-2">{title}</h3>}
+        {title && <h3 className="text-base font-semibold text-gray-900 mb-2" style={titleStyle}>{title}</h3>}
         <div className="space-y-2">{children}</div>
       </div>
     );
