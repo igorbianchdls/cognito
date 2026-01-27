@@ -92,6 +92,8 @@ export const catalog = {
         label: z.string(),
         valuePath: z.string(),
         format: z.enum(["currency", "percent", "number"]).default("number"),
+        labelStyle: TitleStyleSchema.optional(),
+        valueStyle: TitleStyleSchema.optional(),
         unit: z.string().optional(),
         deltaPath: z.string().optional(),
         trend: z.enum(["up", "down", "flat"]).optional(),

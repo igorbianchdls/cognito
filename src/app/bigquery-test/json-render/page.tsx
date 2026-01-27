@@ -13,9 +13,9 @@ const SAMPLE_TREE_TEXT = JSON.stringify([
     children: [
       { type: "Header", props: { title: "Dashboard (Dados Reais)", subtitle: "Vendas, Compras e Financeiro", align: "center" } },
       { type: "Div", props: { direction: "row", gap: 12, padding: 16, justify: "start", align: "start", childGrow: true }, children: [
-        { type: "Kpi", props: { label: "Recebidos (Período)", valuePath: "financeiro.kpis.recebidos_mes", format: "currency" } },
+        { type: "Kpi", props: { label: "Recebidos (Período)", valuePath: "financeiro.kpis.recebidos_mes", format: "currency", labelStyle: { fontWeight: 600, fontSize: 12, color: "#64748b" }, valueStyle: { fontWeight: 700, fontSize: 24, color: "#0f172a" } } },
         { type: "Kpi", props: { label: "Pagos (Período)", valuePath: "financeiro.kpis.pagos_mes", format: "currency" } },
-        { type: "Kpi", props: { label: "Geração de Caixa", valuePath: "financeiro.kpis.geracao_caixa", format: "currency" } }
+        { type: "Kpi", props: { label: "Geração de Caixa", valuePath: "financeiro.kpis.geracao_caixa", format: "currency", valueStyle: { fontSize: 22 } } }
       ]},
       { type: "Div", props: { direction: "row", gap: 12, padding: 16, justify: "start", align: "start", childGrow: true }, children: [
         { type: "BarChart", props: { title: "AP por Fornecedor", dataPath: "financeiro.contas-a-pagar", xKey: "fornecedor", yKey: "SUM(valor_liquido)", format: "currency", height: 200, nivo: { layout: 'horizontal' } } },

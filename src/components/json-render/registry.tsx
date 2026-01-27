@@ -9,6 +9,7 @@ import { useDataValue, useData } from "@/components/json-render/context";
 import { useStore } from "@nanostores/react";
 import { deepMerge } from "@/stores/ui/json-render/utils";
 import { $kpiDefaults } from "@/stores/ui/json-render/kpiStore";
+import { normalizeTitleStyle } from "@/components/json-render/helpers";
 import { $barChartDefaults } from "@/stores/ui/json-render/barChartStore";
 import { $lineChartDefaults } from "@/stores/ui/json-render/lineChartStore";
 import { $pieChartDefaults } from "@/stores/ui/json-render/pieChartStore";
@@ -205,11 +206,13 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       ? (typeof deltaVal === 'number' ? (deltaVal > 0 ? 'up' : deltaVal < 0 ? 'down' : 'flat') : undefined)
       : (trendProp as any);
     const arrow = trend === 'up' ? '▲' : trend === 'down' ? '▼' : '■';
+    const labelStyle = normalizeTitleStyle(p.labelStyle);
+    const valueStyle = normalizeTitleStyle(p.valueStyle);
     return (
       <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-        <div className="text-xs text-gray-500 mb-1">{label}</div>
+        <div className="mb-1" style={labelStyle}>{label}</div>
         <div className="flex items-end gap-2">
-          <div className="text-2xl font-semibold text-gray-900">{formatValue(value, fmt)}{unit ? ` ${unit}` : ''}</div>
+          <div className="text-2xl font-semibold text-gray-900" style={valueStyle}>{formatValue(value, fmt)}{unit ? ` ${unit}` : ''}</div>
           {deltaVal !== undefined && (
             <div className={`text-xs ${trend === 'up' ? 'text-green-600' : trend === 'down' ? 'text-red-600' : 'text-gray-500'}`}>{arrow} {formatValue(Math.abs(deltaVal), fmt)}</div>
           )}

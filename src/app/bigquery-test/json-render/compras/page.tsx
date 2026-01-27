@@ -12,9 +12,9 @@ const COMPRAS_TEMPLATE_TEXT = JSON.stringify([
     children: [
       { type: "Header", props: { title: "Dashboard de Compras", subtitle: "Principais indicadores e cortes", align: "center" } },
       { type: "Div", props: { direction: "row", gap: 12, padding: 16, justify: "start", align: "start", childGrow: true }, children: [
-        { type: "Kpi", props: { label: "Gasto", valuePath: "compras.kpis.gasto", format: "currency" } },
+        { type: "Kpi", props: { label: "Gasto", valuePath: "compras.kpis.gasto", format: "currency", labelStyle: { fontWeight: 600, fontSize: 12, color: "#64748b" }, valueStyle: { fontWeight: 700, fontSize: 24, color: "#0f172a" } } },
         { type: "Kpi", props: { label: "Fornecedores", valuePath: "compras.kpis.fornecedores", format: "number" } },
-        { type: "Kpi", props: { label: "Pedidos", valuePath: "compras.kpis.pedidos", format: "number" } },
+        { type: "Kpi", props: { label: "Pedidos", valuePath: "compras.kpis.pedidos", format: "number", valueStyle: { fontSize: 22 } } },
         { type: "Kpi", props: { label: "Transações", valuePath: "compras.kpis.transacoes", format: "number" } }
       ]},
 
