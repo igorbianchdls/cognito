@@ -11,6 +11,18 @@ export const actions = {
 
 const ActionEnum = z.enum(Object.keys(actions) as [keyof typeof actions, ...Array<keyof typeof actions>]);
 
+const TitleStyleSchema = z.object({
+  fontFamily: z.string().optional(),
+  fontWeight: z.union([z.string(), z.number()]).optional(),
+  fontSize: z.union([z.number(), z.string()]).optional(),
+  color: z.string().optional(),
+  letterSpacing: z.union([z.number(), z.string()]).optional(),
+  textTransform: z.enum(["none","uppercase","lowercase","capitalize"]).optional(),
+  padding: z.union([z.number(), z.string()]).optional(),
+  margin: z.union([z.number(), z.string()]).optional(),
+  textAlign: z.enum(["left","center","right"]).optional(),
+}).partial();
+
 export const catalog = {
   components: {
     Theme: {
@@ -63,6 +75,7 @@ export const catalog = {
     Card: {
       props: z.object({
         title: z.string(),
+        titleStyle: TitleStyleSchema.optional(),
       }).strict(),
       hasChildren: true,
     },
@@ -88,6 +101,7 @@ export const catalog = {
     BarChart: {
       props: z.object({
         title: z.string().optional(),
+        titleStyle: TitleStyleSchema.optional(),
         dataPath: z.string(),
         xKey: z.string(),
         yKey: z.string(),
@@ -124,6 +138,7 @@ export const catalog = {
     LineChart: {
       props: z.object({
         title: z.string().optional(),
+        titleStyle: TitleStyleSchema.optional(),
         dataPath: z.string(),
         xKey: z.string(),
         yKey: z.string(),
@@ -156,6 +171,7 @@ export const catalog = {
     PieChart: {
       props: z.object({
         title: z.string().optional(),
+        titleStyle: TitleStyleSchema.optional(),
         dataPath: z.string(),
         xKey: z.string(),
         yKey: z.string(),
