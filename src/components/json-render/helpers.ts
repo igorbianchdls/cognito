@@ -148,3 +148,20 @@ export function normalizeTitleStyle(style?: any): Record<string, any> | undefine
   if (style.textAlign) out.textAlign = String(style.textAlign);
   return out;
 }
+
+export function normalizeContainerStyle(style?: any, borderless?: boolean): Record<string, any> | undefined {
+  if (!style && !borderless) return undefined;
+  const out: Record<string, any> = {};
+  if (style && typeof style === 'object') {
+    if (style.backgroundColor) out.backgroundColor = String(style.backgroundColor);
+    if (style.borderColor) out.borderColor = String(style.borderColor);
+    if (style.borderStyle) out.borderStyle = String(style.borderStyle);
+    if (style.borderWidth !== undefined) out.borderWidth = typeof style.borderWidth === 'number' ? style.borderWidth : String(style.borderWidth);
+    if (style.borderRadius !== undefined) out.borderRadius = typeof style.borderRadius === 'number' ? `${style.borderRadius}px` : String(style.borderRadius);
+    if (style.boxShadow) out.boxShadow = String(style.boxShadow);
+    if (style.padding !== undefined) out.padding = typeof style.padding === 'number' ? `${style.padding}px` : String(style.padding);
+    if (style.margin !== undefined) out.margin = typeof style.margin === 'number' ? `${style.margin}px` : String(style.margin);
+  }
+  if (borderless) out.borderWidth = 0;
+  return Object.keys(out).length ? out : undefined;
+}

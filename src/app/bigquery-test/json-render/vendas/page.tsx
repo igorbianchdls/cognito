@@ -19,21 +19,21 @@ const SALES_TEMPLATE_TEXT = JSON.stringify([
       ]},
 
       { type: "Div", props: { direction: "row", gap: 12, padding: 16, justify: "start", align: "start", childGrow: true }, children: [
-        { type: "PieChart", props: { fr: 1, title: "Canais", titleStyle: { fontFamily: "Barlow", fontWeight: 700, fontSize: 16, color: "#0f172a", letterSpacing: "0.02em", textTransform: "uppercase", padding: 8, textAlign: "left" }, dataPath: "vendas.pedidos", xKey: "canal_venda", yKey: "SUM(valor_total)", format: "currency", height: 240, nivo: { innerRadius: 0.35 } } },
-        { type: "BarChart", props: { fr: 2, title: "Categorias", titleStyle: { fontFamily: "Barlow", fontWeight: 600, fontSize: 14, color: "#334155", padding: 6 }, dataPath: "vendas.pedidos", xKey: "categoria_receita", yKey: "SUM(valor_total)", format: "currency", height: 240, nivo: { layout: 'horizontal' } } },
-        { type: "BarChart", props: { fr: 2, title: "Clientes", dataPath: "vendas.pedidos", xKey: "cliente", yKey: "SUM(valor_total)", format: "currency", height: 240, nivo: { layout: 'horizontal' } } }
+        { type: "PieChart", props: { fr: 1, title: "Canais", titleStyle: { fontFamily: "Barlow", fontWeight: 700, fontSize: 16, color: "#0f172a", letterSpacing: "0.02em", textTransform: "uppercase", padding: 8, textAlign: "left" }, containerStyle: { borderWidth: 2, borderColor: "#0ea5e9", borderRadius: 12 }, dataPath: "vendas.pedidos", xKey: "canal_venda", yKey: "SUM(valor_total)", format: "currency", height: 240, nivo: { innerRadius: 0.35 } } },
+        { type: "BarChart", props: { fr: 2, title: "Categorias", titleStyle: { fontFamily: "Barlow", fontWeight: 600, fontSize: 14, color: "#334155", padding: 6 }, containerStyle: { borderWidth: 2, borderColor: "#10b981", borderStyle: "dashed", borderRadius: 10 }, dataPath: "vendas.pedidos", xKey: "categoria_receita", yKey: "SUM(valor_total)", format: "currency", height: 240, nivo: { layout: 'horizontal' } } },
+        { type: "BarChart", props: { fr: 2, title: "Clientes", containerStyle: { borderWidth: 3, borderColor: "#f59e0b", borderStyle: "solid", borderRadius: 6, boxShadow: "none" }, dataPath: "vendas.pedidos", xKey: "cliente", yKey: "SUM(valor_total)", format: "currency", height: 240, nivo: { layout: 'horizontal' } } }
       ]},
 
       { type: "Div", props: { direction: "row", gap: 12, padding: 16, justify: "start", align: "start", childGrow: true }, children: [
-        { type: "BarChart", props: { fr: 1, title: "Vendedores", dataPath: "vendas.pedidos", xKey: "vendedor", yKey: "SUM(valor_total)", format: "currency", height: 220, nivo: { layout: 'horizontal' } } },
-        { type: "BarChart", props: { fr: 1, title: "Filiais", dataPath: "vendas.pedidos", xKey: "filial", yKey: "SUM(valor_total)", format: "currency", height: 220, nivo: { layout: 'horizontal' } } },
-        { type: "BarChart", props: { fr: 1, title: "Unidades de Negócio", dataPath: "vendas.pedidos", xKey: "unidade_negocio", yKey: "SUM(valor_total)", format: "currency", height: 220, nivo: { layout: 'horizontal' } } }
+        { type: "BarChart", props: { fr: 1, title: "Vendedores", containerStyle: { borderWidth: 2, borderColor: "#8b5cf6", borderRadius: 10 }, dataPath: "vendas.pedidos", xKey: "vendedor", yKey: "SUM(valor_total)", format: "currency", height: 220, nivo: { layout: 'horizontal' } } },
+        { type: "BarChart", props: { fr: 1, title: "Filiais", containerStyle: { borderWidth: 2, borderColor: "#ef4444", borderStyle: "dotted", borderRadius: 12 }, dataPath: "vendas.pedidos", xKey: "filial", yKey: "SUM(valor_total)", format: "currency", height: 220, nivo: { layout: 'horizontal' } } },
+        { type: "BarChart", props: { fr: 1, title: "Unidades de Negócio", containerStyle: { borderWidth: 1, borderColor: "#334155", borderStyle: "solid", borderRadius: 8 }, dataPath: "vendas.pedidos", xKey: "unidade_negocio", yKey: "SUM(valor_total)", format: "currency", height: 220, nivo: { layout: 'horizontal' } } }
       ]},
 
       { type: "Div", props: { direction: "row", gap: 12, padding: 16, justify: "start", align: "start", childGrow: true }, children: [
-        { type: "BarChart", props: { fr: 1, title: "Territórios", dataPath: "vendas.pedidos", xKey: "territorio", yKey: "SUM(valor_total)", format: "currency", height: 220, nivo: { layout: 'horizontal' } } },
-        { type: "BarChart", props: { fr: 1, title: "Serviços/Categorias", dataPath: "vendas.pedidos", xKey: "categoria_receita", yKey: "SUM(valor_total)", format: "currency", height: 220, nivo: { layout: 'horizontal' } } },
-        { type: "BarChart", props: { fr: 1, title: "Pedidos", dataPath: "vendas.pedidos", xKey: "canal_venda", yKey: "COUNT()", format: "number", height: 220, nivo: { layout: 'horizontal' } } }
+        { type: "BarChart", props: { fr: 1, title: "Territórios", containerStyle: { borderless: false, borderWidth: 2, borderColor: "#0ea5e9" }, dataPath: "vendas.pedidos", xKey: "territorio", yKey: "SUM(valor_total)", format: "currency", height: 220, nivo: { layout: 'horizontal' } } },
+        { type: "BarChart", props: { fr: 1, title: "Serviços/Categorias", containerStyle: { borderWidth: 2, borderColor: "#22c55e" }, dataPath: "vendas.pedidos", xKey: "categoria_receita", yKey: "SUM(valor_total)", format: "currency", height: 220, nivo: { layout: 'horizontal' } } },
+        { type: "BarChart", props: { fr: 1, title: "Pedidos", borderless: true, dataPath: "vendas.pedidos", xKey: "canal_venda", yKey: "COUNT()", format: "number", height: 220, nivo: { layout: 'horizontal' } } }
       ]}
     ]
   }

@@ -3,7 +3,7 @@
 import React from "react";
 import { useData } from "@/components/json-render/context";
 import { ResponsivePie } from "@nivo/pie";
-import { aggregateByDimension, getByPath, parseMeasureSpec, normalizeTitleStyle } from "@/components/json-render/helpers";
+import { aggregateByDimension, getByPath, parseMeasureSpec, normalizeTitleStyle, normalizeContainerStyle } from "@/components/json-render/helpers";
 
 type AnyRecord = Record<string, any>;
 
@@ -31,6 +31,8 @@ export default function JsonRenderPieChart({ element }: { element: any }) {
   const colorScheme = element?.props?.colorScheme as string | string[] | undefined;
   const nivo = (element?.props?.nivo as AnyRecord | undefined) || {};
   const titleStyle = normalizeTitleStyle((element?.props as AnyRecord)?.titleStyle);
+  const borderless = Boolean((element?.props as AnyRecord)?.borderless);
+  const containerStyle = normalizeContainerStyle((element?.props as AnyRecord)?.containerStyle, borderless);
 
   const rows: Array<Record<string, unknown>> = React.useMemo(() => {
     if (!dataPath) return [];
@@ -78,7 +80,7 @@ export default function JsonRenderPieChart({ element }: { element: any }) {
   const motionConfig = (typeof nivo?.motionConfig === 'string' ? nivo.motionConfig : 'gentle') as any;
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-0 shadow-sm">
+    <div className="rounded-lg border border-gray-200 bg-white p-0 shadow-sm" style={containerStyle}>
       {title && <div className="text-sm font-medium text-gray-900 mb-2" style={titleStyle}>{title}</div>}
       <div style={{ height }}>
         <ResponsivePie
