@@ -120,8 +120,8 @@ function ComprasPlayground() {
   }, []);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-      <div>
+    <div className="grid grid-cols-1 md:grid-cols-5 gap-6 items-start">
+      <div className="md:col-span-1">
         <div className="mb-2 flex items-center justify-between">
           <h2 className="text-sm font-medium text-gray-900">JSON</h2>
           <div className="flex items-center gap-2">
@@ -140,7 +140,7 @@ function ComprasPlayground() {
         )}
       </div>
 
-      <div>
+      <div className="md:col-span-4">
         <div className="mb-2 flex items-center justify-between">
           <h2 className="text-sm font-medium text-gray-900">Preview</h2>
         </div>

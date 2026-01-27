@@ -183,9 +183,9 @@ function Playground() {
   }, []);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+    <div className="grid grid-cols-1 md:grid-cols-5 gap-6 items-start">
       {/* Editor */}
-      <div>
+      <div className="md:col-span-1">
         <div className="mb-2 flex items-center justify-between">
           <h2 className="text-sm font-medium text-gray-900">JSON</h2>
           <div className="flex items-center gap-2">
@@ -211,7 +211,7 @@ function Playground() {
       </div>
 
       {/* Preview */}
-      <div>
+      <div className="md:col-span-4">
         <div className="mb-2 flex items-center justify-between">
           <h2 className="text-sm font-medium text-gray-900">Preview</h2>
           <div className="text-xs text-gray-500">Ações: Atualizar / Exportar PDF</div>
