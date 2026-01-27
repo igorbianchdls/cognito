@@ -12,20 +12,17 @@ const SAMPLE_TREE_TEXT = JSON.stringify([
     props: { name: "light" },
     children: [
       { type: "Header", props: { title: "Dashboard (Dados Reais)", subtitle: "Vendas, Compras e Financeiro", align: "center" } },
-      { type: "Card", props: { title: "KPIs Financeiros" }, children: [
-        { type: "Div", props: { direction: "row", gap: 12, justify: "start", align: "start", childGrow: true }, children: [
-          { type: "Kpi", props: { label: "Recebidos (Período)", valuePath: "financeiro.kpis.recebidos_mes", format: "currency" } },
-          { type: "Kpi", props: { label: "Pagos (Período)", valuePath: "financeiro.kpis.pagos_mes", format: "currency" } },
-          { type: "Kpi", props: { label: "Geração de Caixa", valuePath: "financeiro.kpis.geracao_caixa", format: "currency" } }
-        ]},
-        { type: "Button", props: { label: "Atualizar", action: { type: "refresh_data" } } }
+      { type: "Div", props: { direction: "row", gap: 12, padding: 16, justify: "start", align: "start", childGrow: true }, children: [
+        { type: "Kpi", props: { label: "Recebidos (Período)", valuePath: "financeiro.kpis.recebidos_mes", format: "currency" } },
+        { type: "Kpi", props: { label: "Pagos (Período)", valuePath: "financeiro.kpis.pagos_mes", format: "currency" } },
+        { type: "Kpi", props: { label: "Geração de Caixa", valuePath: "financeiro.kpis.geracao_caixa", format: "currency" } }
       ]},
-      { type: "Div", props: { direction: "row", gap: 12, padding: 8, justify: "start", align: "start", childGrow: true }, children: [
+      { type: "Div", props: { direction: "row", gap: 12, padding: 16, justify: "start", align: "start", childGrow: true }, children: [
         { type: "BarChart", props: { title: "AP por Fornecedor", dataPath: "financeiro.contas-a-pagar", xKey: "fornecedor", yKey: "SUM(valor_liquido)", format: "currency", height: 200, nivo: { layout: 'horizontal' } } },
         { type: "BarChart", props: { title: "AR por Centro de Lucro", dataPath: "financeiro.contas-a-receber", xKey: "centro_lucro", yKey: "SUM(valor_liquido)", format: "currency", height: 200, nivo: { layout: 'horizontal' } } },
         { type: "BarChart", props: { title: "Títulos (por Valor)", dataPath: "financeiro.contas-a-pagar", xKey: "numero_documento", yKey: "SUM(valor_liquido)", format: "currency", height: 200, nivo: { layout: 'horizontal' } } }
       ]},
-      { type: "Div", props: { direction: "row", gap: 12, padding: 8, justify: "start", align: "start", childGrow: true }, children: [
+      { type: "Div", props: { direction: "row", gap: 12, padding: 16, justify: "start", align: "start", childGrow: true }, children: [
         { type: "Card", props: { title: "AP por Centro de Custo" }, children: [
           { type: "BarChart", props: { title: "Centros de Custo", dataPath: "financeiro.contas-a-pagar", xKey: "centro_custo", yKey: "SUM(valor_liquido)", format: "currency", height: 200, nivo: { layout: 'horizontal' } } }
         ]},
@@ -36,7 +33,7 @@ const SAMPLE_TREE_TEXT = JSON.stringify([
           { type: "BarChart", props: { title: "Departamentos", dataPath: "financeiro.contas-a-pagar", xKey: "departamento", yKey: "SUM(valor_liquido)", format: "currency", height: 200, nivo: { layout: 'horizontal' } } }
         ]}
       ]},
-      { type: "Div", props: { direction: "row", gap: 12, padding: 8, justify: "start", align: "start", childGrow: true }, children: [
+      { type: "Div", props: { direction: "row", gap: 12, padding: 16, justify: "start", align: "start", childGrow: true }, children: [
         { type: "Card", props: { title: "AR por Categoria (Receita)" }, children: [
           { type: "BarChart", props: { title: "Categorias de Receita", dataPath: "financeiro.contas-a-receber", xKey: "categoria_receita", yKey: "SUM(valor_liquido)", format: "currency", height: 200, nivo: { layout: 'horizontal' } } }
         ]},

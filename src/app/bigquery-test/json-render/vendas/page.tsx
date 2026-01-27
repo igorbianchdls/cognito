@@ -11,28 +11,26 @@ const SALES_TEMPLATE_TEXT = JSON.stringify([
     props: { name: "light" },
     children: [
       { type: "Header", props: { title: "Dashboard de Vendas", subtitle: "Principais indicadores e cortes", align: "center" } },
-      { type: "Card", props: { title: "KPIs de Vendas" }, children: [
-        { type: "Div", props: { direction: "row", gap: 12, justify: "start", align: "start", childGrow: true }, children: [
-          { type: "Kpi", props: { label: "Vendas", valuePath: "vendas.kpis.vendas", format: "currency" } },
-          { type: "Kpi", props: { label: "Pedidos", valuePath: "vendas.kpis.pedidos", format: "number" } },
-          { type: "Kpi", props: { label: "Ticket Médio", valuePath: "vendas.kpis.ticketMedio", format: "currency" } },
-          { type: "Kpi", props: { label: "Margem Bruta", valuePath: "vendas.kpis.margemBruta", format: "currency" } }
-        ]}
+      { type: "Div", props: { direction: "row", gap: 12, padding: 16, justify: "start", align: "start", childGrow: true }, children: [
+        { type: "Kpi", props: { label: "Vendas", valuePath: "vendas.kpis.vendas", format: "currency" } },
+        { type: "Kpi", props: { label: "Pedidos", valuePath: "vendas.kpis.pedidos", format: "number" } },
+        { type: "Kpi", props: { label: "Ticket Médio", valuePath: "vendas.kpis.ticketMedio", format: "currency" } },
+        { type: "Kpi", props: { label: "Margem Bruta", valuePath: "vendas.kpis.margemBruta", format: "currency" } }
       ]},
 
-      { type: "Div", props: { direction: "row", gap: 12, padding: 8, justify: "start", align: "start", childGrow: true }, children: [
+      { type: "Div", props: { direction: "row", gap: 12, padding: 16, justify: "start", align: "start", childGrow: true }, children: [
         { type: "PieChart", props: { fr: 1, title: "Canais", dataPath: "vendas.pedidos", xKey: "canal_venda", yKey: "SUM(valor_total)", format: "currency", height: 240, nivo: { innerRadius: 0.35 } } },
         { type: "BarChart", props: { fr: 2, title: "Categorias", dataPath: "vendas.pedidos", xKey: "categoria_receita", yKey: "SUM(valor_total)", format: "currency", height: 240, nivo: { layout: 'horizontal' } } },
         { type: "BarChart", props: { fr: 2, title: "Clientes", dataPath: "vendas.pedidos", xKey: "cliente", yKey: "SUM(valor_total)", format: "currency", height: 240, nivo: { layout: 'horizontal' } } }
       ]},
 
-      { type: "Div", props: { direction: "row", gap: 12, padding: 8, justify: "start", align: "start", childGrow: true }, children: [
+      { type: "Div", props: { direction: "row", gap: 12, padding: 16, justify: "start", align: "start", childGrow: true }, children: [
         { type: "BarChart", props: { fr: 1, title: "Vendedores", dataPath: "vendas.pedidos", xKey: "vendedor", yKey: "SUM(valor_total)", format: "currency", height: 220, nivo: { layout: 'horizontal' } } },
         { type: "BarChart", props: { fr: 1, title: "Filiais", dataPath: "vendas.pedidos", xKey: "filial", yKey: "SUM(valor_total)", format: "currency", height: 220, nivo: { layout: 'horizontal' } } },
         { type: "BarChart", props: { fr: 1, title: "Unidades de Negócio", dataPath: "vendas.pedidos", xKey: "unidade_negocio", yKey: "SUM(valor_total)", format: "currency", height: 220, nivo: { layout: 'horizontal' } } }
       ]},
 
-      { type: "Div", props: { direction: "row", gap: 12, padding: 8, justify: "start", align: "start", childGrow: true }, children: [
+      { type: "Div", props: { direction: "row", gap: 12, padding: 16, justify: "start", align: "start", childGrow: true }, children: [
         { type: "BarChart", props: { fr: 1, title: "Territórios", dataPath: "vendas.pedidos", xKey: "territorio", yKey: "SUM(valor_total)", format: "currency", height: 220, nivo: { layout: 'horizontal' } } },
         { type: "BarChart", props: { fr: 1, title: "Serviços/Categorias", dataPath: "vendas.pedidos", xKey: "categoria_receita", yKey: "SUM(valor_total)", format: "currency", height: 220, nivo: { layout: 'horizontal' } } },
         { type: "BarChart", props: { fr: 1, title: "Pedidos", dataPath: "vendas.pedidos", xKey: "canal_venda", yKey: "COUNT()", format: "number", height: 220, nivo: { layout: 'horizontal' } } }

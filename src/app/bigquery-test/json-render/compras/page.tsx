@@ -11,22 +11,20 @@ const COMPRAS_TEMPLATE_TEXT = JSON.stringify([
     props: { name: "light" },
     children: [
       { type: "Header", props: { title: "Dashboard de Compras", subtitle: "Principais indicadores e cortes", align: "center" } },
-      { type: "Card", props: { title: "KPIs de Compras" }, children: [
-        { type: "Div", props: { direction: "row", gap: 12, justify: "start", align: "start", childGrow: true }, children: [
-          { type: "Kpi", props: { label: "Gasto", valuePath: "compras.kpis.gasto", format: "currency" } },
-          { type: "Kpi", props: { label: "Fornecedores", valuePath: "compras.kpis.fornecedores", format: "number" } },
-          { type: "Kpi", props: { label: "Pedidos", valuePath: "compras.kpis.pedidos", format: "number" } },
-          { type: "Kpi", props: { label: "Transações", valuePath: "compras.kpis.transacoes", format: "number" } }
-        ]}
+      { type: "Div", props: { direction: "row", gap: 12, padding: 16, justify: "start", align: "start", childGrow: true }, children: [
+        { type: "Kpi", props: { label: "Gasto", valuePath: "compras.kpis.gasto", format: "currency" } },
+        { type: "Kpi", props: { label: "Fornecedores", valuePath: "compras.kpis.fornecedores", format: "number" } },
+        { type: "Kpi", props: { label: "Pedidos", valuePath: "compras.kpis.pedidos", format: "number" } },
+        { type: "Kpi", props: { label: "Transações", valuePath: "compras.kpis.transacoes", format: "number" } }
       ]},
 
-      { type: "Div", props: { direction: "row", gap: 12, padding: 8, justify: "start", align: "start", childGrow: true }, children: [
+      { type: "Div", props: { direction: "row", gap: 12, padding: 16, justify: "start", align: "start", childGrow: true }, children: [
         { type: "BarChart", props: { fr: 1, title: "Fornecedores", dataPath: "compras.compras", xKey: "fornecedor", yKey: "SUM(valor_total)", format: "currency", height: 240, nivo: { layout: 'horizontal' } } },
         { type: "BarChart", props: { fr: 1, title: "Centros de Custo", dataPath: "compras.compras", xKey: "centro_custo", yKey: "SUM(valor_total)", format: "currency", height: 240, nivo: { layout: 'horizontal' } } },
         { type: "BarChart", props: { fr: 1, title: "Filiais", dataPath: "compras.compras", xKey: "filial", yKey: "SUM(valor_total)", format: "currency", height: 240, nivo: { layout: 'horizontal' } } }
       ]},
 
-      { type: "Div", props: { direction: "row", gap: 12, padding: 8, justify: "start", align: "start", childGrow: true }, children: [
+      { type: "Div", props: { direction: "row", gap: 12, padding: 16, justify: "start", align: "start", childGrow: true }, children: [
         { type: "BarChart", props: { fr: 1, title: "Categorias", dataPath: "compras.compras", xKey: "categoria_despesa", yKey: "SUM(valor_total)", format: "currency", height: 220, nivo: { layout: 'horizontal' } } },
         { type: "BarChart", props: { fr: 1, title: "Projetos", dataPath: "compras.compras", xKey: "projeto", yKey: "SUM(valor_total)", format: "currency", height: 220, nivo: { layout: 'horizontal' } } },
         { type: "BarChart", props: { fr: 1, title: "Status (Qtd)", dataPath: "compras.compras", xKey: "status", yKey: "COUNT()", format: "number", height: 220, nivo: { layout: 'horizontal' } } }
