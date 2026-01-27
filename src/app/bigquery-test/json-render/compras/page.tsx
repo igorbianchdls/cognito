@@ -21,32 +21,18 @@ const COMPRAS_TEMPLATE_TEXT = JSON.stringify([
       ]},
 
       { type: "Div", props: { direction: "row", gap: 12, justify: "start", align: "start", childGrow: true }, children: [
-        { type: "Card", props: { title: "Gasto por Fornecedor" }, children: [
-          { type: "BarChart", props: { title: "Fornecedores", dataPath: "compras.compras", xKey: "fornecedor", yKey: "SUM(valor_total)", format: "currency", height: 240, nivo: { layout: 'horizontal' } } }
-        ]},
-        { type: "Card", props: { title: "Gasto por Centro de Custo" }, children: [
-          { type: "BarChart", props: { title: "Centros de Custo", dataPath: "compras.compras", xKey: "centro_custo", yKey: "SUM(valor_total)", format: "currency", height: 240, nivo: { layout: 'horizontal' } } }
-        ]},
-        { type: "Card", props: { title: "Gasto por Filial" }, children: [
-          { type: "BarChart", props: { title: "Filiais", dataPath: "compras.compras", xKey: "filial", yKey: "SUM(valor_total)", format: "currency", height: 240, nivo: { layout: 'horizontal' } } }
-        ]}
+        { type: "BarChart", props: { title: "Fornecedores", dataPath: "compras.compras", xKey: "fornecedor", yKey: "SUM(valor_total)", format: "currency", height: 240, nivo: { layout: 'horizontal' } } },
+        { type: "BarChart", props: { title: "Centros de Custo", dataPath: "compras.compras", xKey: "centro_custo", yKey: "SUM(valor_total)", format: "currency", height: 240, nivo: { layout: 'horizontal' } } },
+        { type: "BarChart", props: { title: "Filiais", dataPath: "compras.compras", xKey: "filial", yKey: "SUM(valor_total)", format: "currency", height: 240, nivo: { layout: 'horizontal' } } }
       ]},
 
       { type: "Div", props: { direction: "row", gap: 12, justify: "start", align: "start", childGrow: true }, children: [
-        { type: "Card", props: { title: "Gasto por Categoria" }, children: [
-          { type: "BarChart", props: { title: "Categorias", dataPath: "compras.compras", xKey: "categoria_despesa", yKey: "SUM(valor_total)", format: "currency", height: 220, nivo: { layout: 'horizontal' } } }
-        ]},
-        { type: "Card", props: { title: "Gasto por Projeto" }, children: [
-          { type: "BarChart", props: { title: "Projetos", dataPath: "compras.compras", xKey: "projeto", yKey: "SUM(valor_total)", format: "currency", height: 220, nivo: { layout: 'horizontal' } } }
-        ]},
-        { type: "Card", props: { title: "Pedidos por Status" }, children: [
-          { type: "BarChart", props: { title: "Status (Qtd)", dataPath: "compras.compras", xKey: "status", yKey: "COUNT()", format: "number", height: 220, nivo: { layout: 'horizontal' } } }
-        ]}
+        { type: "BarChart", props: { title: "Categorias", dataPath: "compras.compras", xKey: "categoria_despesa", yKey: "SUM(valor_total)", format: "currency", height: 220, nivo: { layout: 'horizontal' } } },
+        { type: "BarChart", props: { title: "Projetos", dataPath: "compras.compras", xKey: "projeto", yKey: "SUM(valor_total)", format: "currency", height: 220, nivo: { layout: 'horizontal' } } },
+        { type: "BarChart", props: { title: "Status (Qtd)", dataPath: "compras.compras", xKey: "status", yKey: "COUNT()", format: "number", height: 220, nivo: { layout: 'horizontal' } } }
       ]},
 
-      { type: "Card", props: { title: "Pedidos por Status (Pizza)" }, children: [
-        { type: "PieChart", props: { title: "Status", dataPath: "compras.compras", xKey: "status", yKey: "COUNT()", format: "number", height: 260, nivo: { innerRadius: 0.35 } } }
-      ]}
+      { type: "PieChart", props: { title: "Status (Pizza)", dataPath: "compras.compras", xKey: "status", yKey: "COUNT()", format: "number", height: 260, nivo: { innerRadius: 0.35 } } }
     ]
   }
 ], null, 2);

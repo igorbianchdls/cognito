@@ -21,39 +21,21 @@ const SALES_TEMPLATE_TEXT = JSON.stringify([
       ]},
 
       { type: "Div", props: { direction: "row", gap: 12, justify: "start", align: "start", childGrow: true }, children: [
-        { type: "Card", props: { title: "Vendas por Canal" }, children: [
-          { type: "PieChart", props: { title: "Canais", dataPath: "vendas.pedidos", xKey: "canal_venda", yKey: "SUM(valor_total)", format: "currency", height: 240, nivo: { innerRadius: 0.35 } } }
-        ]},
-        { type: "Card", props: { title: "Vendas por Categoria" }, children: [
-          { type: "BarChart", props: { title: "Categorias", dataPath: "vendas.pedidos", xKey: "categoria_receita", yKey: "SUM(valor_total)", format: "currency", height: 240, nivo: { layout: 'horizontal' } } }
-        ]},
-        { type: "Card", props: { title: "Top Clientes (Receita)" }, children: [
-          { type: "BarChart", props: { title: "Clientes", dataPath: "vendas.pedidos", xKey: "cliente", yKey: "SUM(valor_total)", format: "currency", height: 240, nivo: { layout: 'horizontal' } } }
-        ]}
+        { type: "PieChart", props: { title: "Canais", dataPath: "vendas.pedidos", xKey: "canal_venda", yKey: "SUM(valor_total)", format: "currency", height: 240, nivo: { innerRadius: 0.35 } } },
+        { type: "BarChart", props: { title: "Categorias", dataPath: "vendas.pedidos", xKey: "categoria_receita", yKey: "SUM(valor_total)", format: "currency", height: 240, nivo: { layout: 'horizontal' } } },
+        { type: "BarChart", props: { title: "Clientes", dataPath: "vendas.pedidos", xKey: "cliente", yKey: "SUM(valor_total)", format: "currency", height: 240, nivo: { layout: 'horizontal' } } }
       ]},
 
       { type: "Div", props: { direction: "row", gap: 12, justify: "start", align: "start", childGrow: true }, children: [
-        { type: "Card", props: { title: "Vendas por Vendedor" }, children: [
-          { type: "BarChart", props: { title: "Vendedores", dataPath: "vendas.pedidos", xKey: "vendedor", yKey: "SUM(valor_total)", format: "currency", height: 220, nivo: { layout: 'horizontal' } } }
-        ]},
-        { type: "Card", props: { title: "Vendas por Filial" }, children: [
-          { type: "BarChart", props: { title: "Filiais", dataPath: "vendas.pedidos", xKey: "filial", yKey: "SUM(valor_total)", format: "currency", height: 220, nivo: { layout: 'horizontal' } } }
-        ]},
-        { type: "Card", props: { title: "Vendas por Unidade de Negócio" }, children: [
-          { type: "BarChart", props: { title: "Unidades de Negócio", dataPath: "vendas.pedidos", xKey: "unidade_negocio", yKey: "SUM(valor_total)", format: "currency", height: 220, nivo: { layout: 'horizontal' } } }
-        ]}
+        { type: "BarChart", props: { title: "Vendedores", dataPath: "vendas.pedidos", xKey: "vendedor", yKey: "SUM(valor_total)", format: "currency", height: 220, nivo: { layout: 'horizontal' } } },
+        { type: "BarChart", props: { title: "Filiais", dataPath: "vendas.pedidos", xKey: "filial", yKey: "SUM(valor_total)", format: "currency", height: 220, nivo: { layout: 'horizontal' } } },
+        { type: "BarChart", props: { title: "Unidades de Negócio", dataPath: "vendas.pedidos", xKey: "unidade_negocio", yKey: "SUM(valor_total)", format: "currency", height: 220, nivo: { layout: 'horizontal' } } }
       ]},
 
       { type: "Div", props: { direction: "row", gap: 12, justify: "start", align: "start", childGrow: true }, children: [
-        { type: "Card", props: { title: "Vendas por Território" }, children: [
-          { type: "BarChart", props: { title: "Territórios", dataPath: "vendas.pedidos", xKey: "territorio", yKey: "SUM(valor_total)", format: "currency", height: 220, nivo: { layout: 'horizontal' } } }
-        ]},
-        { type: "Card", props: { title: "Vendas por Categoria de Serviço" }, children: [
-          { type: "BarChart", props: { title: "Serviços/Categorias", dataPath: "vendas.pedidos", xKey: "categoria_receita", yKey: "SUM(valor_total)", format: "currency", height: 220, nivo: { layout: 'horizontal' } } }
-        ]},
-        { type: "Card", props: { title: "Pedidos por Canal" }, children: [
-          { type: "BarChart", props: { title: "Pedidos", dataPath: "vendas.pedidos", xKey: "canal_venda", yKey: "COUNT()", format: "number", height: 220, nivo: { layout: 'horizontal' } } }
-        ]}
+        { type: "BarChart", props: { title: "Territórios", dataPath: "vendas.pedidos", xKey: "territorio", yKey: "SUM(valor_total)", format: "currency", height: 220, nivo: { layout: 'horizontal' } } },
+        { type: "BarChart", props: { title: "Serviços/Categorias", dataPath: "vendas.pedidos", xKey: "categoria_receita", yKey: "SUM(valor_total)", format: "currency", height: 220, nivo: { layout: 'horizontal' } } },
+        { type: "BarChart", props: { title: "Pedidos", dataPath: "vendas.pedidos", xKey: "canal_venda", yKey: "COUNT()", format: "number", height: 220, nivo: { layout: 'horizontal' } } }
       ]}
     ]
   }
