@@ -109,9 +109,9 @@ export async function POST(req: NextRequest) {
       return Response.json({ success: false, message: `Model não suportado: ${rawModel}` }, { status: 400 })
     }
 
-    const dimKey = dimension.toLowerCase()
-    const dim = ctx.dimMap.get(dimKey)
-    if (!dim) {
+    const dimKey = (dimension || '').toLowerCase()
+    const dim = dimKey ? ctx.dimMap.get(dimKey) : undefined
+    if (dimKey && !dim) {
       return Response.json({ success: false, message: `Dimensão não suportada: ${dimension}` }, { status: 400 })
     }
 
@@ -158,18 +158,26 @@ export async function POST(req: NextRequest) {
     const whereSql = whereParts.length ? `WHERE ${whereParts.join(' AND ')}` : ''
 
     // Order by
-    const dir = (orderBy?.dir && orderBy.dir.toLowerCase() === 'asc') ? 'ASC' : 'DESC'
-    const obField = (orderBy?.field === 'dimension') ? '1' : '2'
-    const orderSql = `ORDER BY ${obField} ${dir}`
+    let sql: string
+    let execParams: unknown[]
+    if (!dim) {
+      // Aggregate only (KPI): no grouping
+      sql = `SELECT ${meas.expr} AS ${meas.alias} ${ctx.from} ${whereSql}`.replace(/\s+/g, ' ').trim()
+      execParams = params
+    } else {
+      const dir = (orderBy?.dir && orderBy.dir.toLowerCase() === 'asc') ? 'ASC' : 'DESC'
+      const obField = (orderBy?.field === 'dimension') ? '1' : '2'
+      const orderSql = `ORDER BY ${obField} ${dir}`
+      sql = `SELECT ${dim.expr} AS ${dim.alias}, ${meas.expr} AS ${meas.alias}
+             ${ctx.from}
+             ${whereSql}
+             GROUP BY 1
+             ${orderSql}
+             LIMIT $${params.length + 1}::int`.replace(/\s+/g, ' ').trim()
+      execParams = [...params, limit]
+    }
 
-    const sql = `SELECT ${dim.expr} AS ${dim.alias}, ${meas.expr} AS ${meas.alias}
-                 ${ctx.from}
-                 ${whereSql}
-                 GROUP BY 1
-                 ${orderSql}
-                 LIMIT $${params.length + 1}::int`.replace(/\s+/g, ' ').trim()
-
-    const rows = await runQuery<Record<string, unknown>>(sql, [...params, limit])
+    const rows = await runQuery<Record<string, unknown>>(sql, execParams)
     return Response.json({ success: true, rows, sql_query: sql, sql_params: [...params, limit] })
   } catch (error) {
     console.error('💸 API /api/modulos/financeiro/query error:', error)

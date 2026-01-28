@@ -12,10 +12,10 @@ const COMPRAS_TEMPLATE_TEXT = JSON.stringify([
     children: [
       { type: "Header", props: { title: "Dashboard de Compras", subtitle: "Principais indicadores e cortes", align: "center", datePicker: { visible: true, mode: "range", position: "right", storePath: "filters.dateRange", actionOnChange: { type: "refresh_data" }, style: { padding: 6, fontFamily: "Barlow", fontSize: 12 } } } },
       { type: "Div", props: { direction: "row", gap: 12, padding: 16, justify: "start", align: "start", childGrow: true }, children: [
-        { type: "Kpi", props: { label: "Gasto", valuePath: "compras.kpis.gasto", format: "currency", labelStyle: { fontWeight: 600, fontSize: 12, color: "#64748b" }, valueStyle: { fontWeight: 700, fontSize: 24, color: "#0f172a" } } },
-        { type: "Kpi", props: { label: "Fornecedores", valuePath: "compras.kpis.fornecedores", format: "number" } },
-        { type: "Kpi", props: { label: "Pedidos", valuePath: "compras.kpis.pedidos", format: "number", valueStyle: { fontSize: 22 } } },
-        { type: "Kpi", props: { label: "Transações", valuePath: "compras.kpis.transacoes", format: "number" } }
+        { type: "Kpi", props: { label: "Gasto", format: "currency", dataQuery: { model: "compras.compras", measure: "SUM(valor_total)", filters: { tenant_id: 1 } }, valueKey: "gasto_total", labelStyle: { fontWeight: 600, fontSize: 12, color: "#64748b" }, valueStyle: { fontWeight: 700, fontSize: 24, color: "#0f172a" } } },
+        { type: "Kpi", props: { label: "Fornecedores", format: "number", dataQuery: { model: "compras.compras", measure: "COUNT_DISTINCT(fornecedor_id)", filters: { tenant_id: 1 } }, valueKey: "count" } },
+        { type: "Kpi", props: { label: "Pedidos", format: "number", dataQuery: { model: "compras.compras", measure: "COUNT_DISTINCT(id)", filters: { tenant_id: 1 } }, valueKey: "count", valueStyle: { fontSize: 22 } } },
+        { type: "Kpi", props: { label: "Transações", format: "number", dataQuery: { model: "compras.recebimentos", measure: "COUNT()", filters: { tenant_id: 1 } }, valueKey: "count" } }
       ]},
 
       { type: "Div", props: { direction: "row", gap: 12, padding: 16, justify: "start", align: "start", childGrow: true }, children: [

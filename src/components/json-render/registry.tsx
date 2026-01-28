@@ -297,11 +297,72 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     const p = deepMerge(deepMerge(defs as any, (theme.components?.Kpi || {}) as any), (element?.props || {}) as any);
     const label = p.label ?? '';
     const valuePath = p.valuePath ?? '';
+    const valueKey = (p.valueKey ?? 'total') as string;
+    const dq = p.dataQuery as AnyRecord | undefined;
+    const { data } = useData();
+    const [serverValue, setServerValue] = React.useState<number | null>(null);
+    React.useEffect(() => {
+      let cancelled = false;
+      async function run() {
+        if (!dq || !dq.model || !dq.measure) { setServerValue(null); return; }
+        try {
+          const mod = String(dq.model).split('.')[0];
+          const filters = { ...(dq.filters || {}) } as AnyRecord;
+          const dr = (data as any)?.filters?.dateRange;
+          if (dr && !filters.de && !filters.ate) { if (dr.from) filters.de = dr.from; if (dr.to) filters.ate = dr.to; }
+          let rows: any[] = [];
+
+          // Decide endpoint: analytics if no dimension and mappable source; else module query
+          const hasDimension = Boolean(dq.dimension);
+          if (!hasDimension) {
+            const modelStr = String(dq.model || '');
+            const inferSource = (): string | null => {
+              if (modelStr.startsWith('vendas.')) return 'vd';
+              if (modelStr.startsWith('financeiro.')) return modelStr.includes('contas_receber') ? 'ar' : 'ap';
+              if (modelStr.startsWith('compras.')) return null; // fallback to module query
+              return null;
+            };
+            const source = (dq as any).source || inferSource();
+            if (source) {
+              const payload: AnyRecord = { source, measure: dq.measure };
+              if (typeof filters.de === 'string') payload.from = filters.de;
+              if (typeof filters.ate === 'string') payload.to = filters.ate;
+              if (typeof filters.tenant_id === 'number') payload.tenant_id = filters.tenant_id;
+              const res = await fetch('/api/analytics', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload) });
+              const j = await res.json();
+              rows = Array.isArray(j?.rows) ? j.rows : [];
+            } else {
+              const url = `/api/modulos/${mod}/query`;
+              const body = { dataQuery: { model: dq.model, dimension: undefined, measure: dq.measure, filters, orderBy: dq.orderBy, limit: dq.limit } };
+              const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+              const j = await res.json();
+              rows = Array.isArray(j?.rows) ? j.rows : [];
+            }
+          } else {
+            const url = `/api/modulos/${mod}/query`;
+            const body = { dataQuery: { model: dq.model, dimension: dq.dimension, measure: dq.measure, filters, orderBy: dq.orderBy, limit: dq.limit } };
+            const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+            const j = await res.json();
+            rows = Array.isArray(j?.rows) ? j.rows : [];
+          }
+          let val: number = 0;
+          if (rows.length > 0 && rows[0] && typeof rows[0] === 'object') {
+            const r0 = rows[0] as AnyRecord;
+            const keys = [valueKey, 'total', 'valor_total', 'faturamento_total', 'gasto_total', 'count', 'value'];
+            for (const k of keys) { if (r0[k] != null) { const n = Number(r0[k]); if (Number.isFinite(n)) { val = n; break; } } }
+          }
+          if (!cancelled) setServerValue(val);
+        } catch (e) { if (!cancelled) setServerValue(0); }
+      }
+      run();
+      return () => { cancelled = true };
+    }, [JSON.stringify(dq), JSON.stringify((data as any)?.filters?.dateRange)]);
     const unit = p.unit as string | undefined;
     const fmt = (p.format ?? 'number') as 'currency'|'percent'|'number';
     const deltaPath = p.deltaPath as string | undefined;
     const trendProp = p.trend as ('up'|'down'|'flat'|'auto') | undefined;
-    const value = useDataValue(valuePath, undefined);
+    const valueFromPath = useDataValue(valuePath, undefined);
+    const value = serverValue !== null ? serverValue : valueFromPath;
     const deltaVal = deltaPath ? useDataValue(deltaPath, undefined) : undefined;
     const trend: 'up'|'down'|'flat' | undefined = (trendProp === 'auto' || trendProp === undefined)
       ? (typeof deltaVal === 'number' ? (deltaVal > 0 ? 'up' : deltaVal < 0 ? 'down' : 'flat') : undefined)

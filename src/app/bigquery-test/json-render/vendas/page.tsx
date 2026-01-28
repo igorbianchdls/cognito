@@ -12,9 +12,9 @@ const SALES_TEMPLATE_TEXT = JSON.stringify([
     children: [
       { type: "Header", props: { title: "Dashboard de Vendas", subtitle: "Principais indicadores e cortes", align: "center", datePicker: { visible: true, mode: "range", position: "right", storePath: "filters.dateRange", actionOnChange: { type: "refresh_data" }, style: { padding: 6, fontFamily: "Barlow", fontSize: 12 } } } },
       { type: "Div", props: { direction: "row", gap: 12, padding: 16, justify: "start", align: "start", childGrow: true }, children: [
-        { type: "Kpi", props: { label: "Vendas", valuePath: "vendas.kpis.vendas", format: "currency", labelStyle: { fontWeight: 600, fontSize: 12, color: "#64748b" }, valueStyle: { fontWeight: 700, fontSize: 24, color: "#0f172a" }, containerStyle: { borderWidth: 2, borderColor: "#0ea5e9", borderRadius: 12 } } },
-        { type: "Kpi", props: { label: "Pedidos", valuePath: "vendas.kpis.pedidos", format: "number", containerStyle: { borderWidth: 2, borderColor: "#22c55e", borderStyle: "dashed", borderRadius: 10 } } },
-        { type: "Kpi", props: { label: "Ticket Médio", valuePath: "vendas.kpis.ticketMedio", format: "currency", labelStyle: { fontWeight: 600 }, valueStyle: { fontSize: 22 }, containerStyle: { borderWidth: 2, borderColor: "#f59e0b", borderStyle: "dotted", borderRadius: 8 } } },
+        { type: "Kpi", props: { label: "Vendas", format: "currency", dataQuery: { model: "vendas.pedidos", measure: "SUM(i.subtotal)", filters: { tenant_id: 1 } }, valueKey: "total", labelStyle: { fontWeight: 600, fontSize: 12, color: "#64748b" }, valueStyle: { fontWeight: 700, fontSize: 24, color: "#0f172a" }, containerStyle: { borderWidth: 2, borderColor: "#0ea5e9", borderRadius: 12 } } },
+        { type: "Kpi", props: { label: "Pedidos", format: "number", dataQuery: { model: "vendas.pedidos", measure: "COUNT_DISTINCT(p.id)", filters: { tenant_id: 1 } }, valueKey: "total", containerStyle: { borderWidth: 2, borderColor: "#22c55e", borderStyle: "dashed", borderRadius: 10 } } },
+        { type: "Kpi", props: { label: "Ticket Médio", format: "currency", dataQuery: { model: "vendas.pedidos", measure: "SUM(i.subtotal)/NULLIF(COUNT(DISTINCT p.id),0)", filters: { tenant_id: 1 } }, valueKey: "total", labelStyle: { fontWeight: 600 }, valueStyle: { fontSize: 22 }, containerStyle: { borderWidth: 2, borderColor: "#f59e0b", borderStyle: "dotted", borderRadius: 8 } } },
         { type: "Kpi", props: { label: "Margem Bruta", valuePath: "vendas.kpis.margemBruta", format: "currency", borderless: true } }
       ]},
 
