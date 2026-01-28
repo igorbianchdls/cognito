@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
     // Suportadas: fornecedor, centro_custo, filial, projeto, categoria_despesa, status, periodo (recebimentos: status, periodo)
     let dimExpr = ''
     let dimAlias = ''
-    if (dimension === 'fornecedor' && model === 'compras.compras') { dimExpr = "COALESCE(f.nome_fantasia, f.nome, '—')"; dimAlias = 'fornecedor' }
+    if (dimension === 'fornecedor' && model === 'compras.compras') { dimExpr = "COALESCE(f.nome_fantasia,'—')"; dimAlias = 'fornecedor' }
     else if (dimension === 'centro_custo' && model === 'compras.compras') { dimExpr = "COALESCE(cc.nome,'—')"; dimAlias = 'centro_custo' }
     else if (dimension === 'filial' && model === 'compras.compras') { dimExpr = "COALESCE(fil.nome,'—')"; dimAlias = 'filial' }
     else if (dimension === 'projeto' && model === 'compras.compras') { dimExpr = "COALESCE(pr.nome,'—')"; dimAlias = 'projeto' }
