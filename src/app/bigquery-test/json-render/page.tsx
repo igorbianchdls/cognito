@@ -18,34 +18,34 @@ const SAMPLE_TREE_TEXT = JSON.stringify([
         { type: "Kpi", props: { label: "Geração de Caixa", valuePath: "financeiro.kpis.geracao_caixa", format: "currency", valueStyle: { fontSize: 22 } } }
       ]},
       { type: "Div", props: { direction: "row", gap: 12, padding: 16, justify: "start", align: "start", childGrow: true }, children: [
-        { type: "BarChart", props: { title: "AP por Fornecedor", dataPath: "financeiro.contas-a-pagar", xKey: "fornecedor", yKey: "SUM(valor_liquido)", format: "currency", height: 200, nivo: { layout: 'horizontal' } } },
-        { type: "BarChart", props: { title: "AR por Centro de Lucro", dataPath: "financeiro.contas-a-receber", xKey: "centro_lucro", yKey: "SUM(valor_liquido)", format: "currency", height: 200, nivo: { layout: 'horizontal' } } },
-        { type: "BarChart", props: { title: "Títulos (por Valor)", dataPath: "financeiro.contas-a-pagar", xKey: "numero_documento", yKey: "SUM(valor_liquido)", format: "currency", height: 200, nivo: { layout: 'horizontal' } } }
+        { type: "BarChart", props: { title: "AP por Fornecedor", dataQuery: { model: "financeiro.contas_pagar", dimension: "fornecedor", measure: "SUM(valor_liquido)", filters: { tenant_id: 1 }, orderBy: { field: "measure", dir: "desc" }, limit: 6 }, xKey: "fornecedor", yKey: "valor_total", format: "currency", height: 200, nivo: { layout: 'horizontal' } } },
+        { type: "BarChart", props: { title: "AR por Centro de Lucro", dataQuery: { model: "financeiro.contas_receber", dimension: "centro_lucro", measure: "SUM(valor_liquido)", filters: { tenant_id: 1 }, orderBy: { field: "measure", dir: "desc" }, limit: 6 }, xKey: "centro_lucro", yKey: "valor_total", format: "currency", height: 200, nivo: { layout: 'horizontal' } } },
+        { type: "BarChart", props: { title: "Títulos (por Valor)", dataQuery: { model: "financeiro.contas_pagar", dimension: "titulo", measure: "SUM(valor_liquido)", filters: { tenant_id: 1 }, orderBy: { field: "measure", dir: "desc" }, limit: 6 }, xKey: "titulo", yKey: "valor_total", format: "currency", height: 200, nivo: { layout: 'horizontal' } } }
       ]},
       { type: "Div", props: { direction: "row", gap: 12, padding: 16, justify: "start", align: "start", childGrow: true }, children: [
         { type: "Card", props: { title: "AP por Centro de Custo" }, children: [
-          { type: "BarChart", props: { title: "Centros de Custo", dataPath: "financeiro.contas-a-pagar", xKey: "centro_custo", yKey: "SUM(valor_liquido)", format: "currency", height: 200, nivo: { layout: 'horizontal' } } }
+          { type: "BarChart", props: { title: "Centros de Custo", dataQuery: { model: "financeiro.contas_pagar", dimension: "centro_custo", measure: "SUM(valor_liquido)", filters: { tenant_id: 1 }, orderBy: { field: "measure", dir: "desc" }, limit: 6 }, xKey: "centro_custo", yKey: "valor_total", format: "currency", height: 200, nivo: { layout: 'horizontal' } } }
         ]},
         { type: "Card", props: { title: "AP por Categoria (Despesa)" }, children: [
-          { type: "BarChart", props: { title: "Categorias de Despesa", dataPath: "financeiro.contas-a-pagar", xKey: "categoria_despesa", yKey: "SUM(valor_liquido)", format: "currency", height: 200, nivo: { layout: 'horizontal' } } }
+          { type: "BarChart", props: { title: "Categorias de Despesa", dataQuery: { model: "financeiro.contas_pagar", dimension: "categoria_despesa", measure: "SUM(valor_liquido)", filters: { tenant_id: 1 }, orderBy: { field: "measure", dir: "desc" }, limit: 6 }, xKey: "categoria_despesa", yKey: "valor_total", format: "currency", height: 200, nivo: { layout: 'horizontal' } } }
         ]},
         { type: "Card", props: { title: "AP por Departamento" }, children: [
-          { type: "BarChart", props: { title: "Departamentos", dataPath: "financeiro.contas-a-pagar", xKey: "departamento", yKey: "SUM(valor_liquido)", format: "currency", height: 200, nivo: { layout: 'horizontal' } } }
+          { type: "BarChart", props: { title: "Departamentos", dataQuery: { model: "financeiro.contas_pagar", dimension: "departamento", measure: "SUM(valor_liquido)", filters: { tenant_id: 1 }, orderBy: { field: "measure", dir: "desc" }, limit: 6 }, xKey: "departamento", yKey: "valor_total", format: "currency", height: 200, nivo: { layout: 'horizontal' } } }
         ]}
       ]},
       { type: "Div", props: { direction: "row", gap: 12, padding: 16, justify: "start", align: "start", childGrow: true }, children: [
         { type: "Card", props: { title: "AR por Categoria (Receita)" }, children: [
-          { type: "BarChart", props: { title: "Categorias de Receita", dataPath: "financeiro.contas-a-receber", xKey: "categoria_receita", yKey: "SUM(valor_liquido)", format: "currency", height: 200, nivo: { layout: 'horizontal' } } }
+          { type: "BarChart", props: { title: "Categorias de Receita", dataQuery: { model: "financeiro.contas_receber", dimension: "categoria_receita", measure: "SUM(valor_liquido)", filters: { tenant_id: 1 }, orderBy: { field: "measure", dir: "desc" }, limit: 6 }, xKey: "categoria_receita", yKey: "valor_total", format: "currency", height: 200, nivo: { layout: 'horizontal' } } }
         ]},
         { type: "Card", props: { title: "AP por Filial" }, children: [
-          { type: "BarChart", props: { title: "Filiais", dataPath: "financeiro.contas-a-pagar", xKey: "filial", yKey: "SUM(valor_liquido)", format: "currency", height: 200, nivo: { layout: 'horizontal' } } }
+          { type: "BarChart", props: { title: "Filiais", dataQuery: { model: "financeiro.contas_pagar", dimension: "filial", measure: "SUM(valor_liquido)", filters: { tenant_id: 1 }, orderBy: { field: "measure", dir: "desc" }, limit: 6 }, xKey: "filial", yKey: "valor_total", format: "currency", height: 200, nivo: { layout: 'horizontal' } } }
         ]},
         { type: "Card", props: { title: "AP por Unidade de Negócio" }, children: [
-          { type: "BarChart", props: { title: "Unidades de Negócio", dataPath: "financeiro.contas-a-pagar", xKey: "unidade_negocio", yKey: "SUM(valor_liquido)", format: "currency", height: 200, nivo: { layout: 'horizontal' } } }
+          { type: "BarChart", props: { title: "Unidades de Negócio", dataQuery: { model: "financeiro.contas_pagar", dimension: "unidade_negocio", measure: "SUM(valor_liquido)", filters: { tenant_id: 1 }, orderBy: { field: "measure", dir: "desc" }, limit: 6 }, xKey: "unidade_negocio", yKey: "valor_total", format: "currency", height: 200, nivo: { layout: 'horizontal' } } }
         ]}
       ]},
-      { type: "PieChart", props: { title: "Canais de Venda", dataPath: "vendas.pedidos", xKey: "canal_venda", yKey: "SUM(valor_total)", format: "currency", height: 220, nivo: { innerRadius: 0.3 } } },
-      { type: "BarChart", props: { title: "Gasto por Fornecedor", dataPath: "compras.compras", xKey: "fornecedor", yKey: "SUM(valor_total)", format: "currency", height: 200 } }
+      { type: "PieChart", props: { title: "Canais de Venda", dataQuery: { model: "vendas.pedidos", dimension: "canal_venda", measure: "SUM(valor_total)", filters: { tenant_id: 1 }, orderBy: { field: "measure", dir: "desc" }, limit: 6 }, xKey: "canal_venda", yKey: "faturamento_total", format: "currency", height: 220, nivo: { innerRadius: 0.3 } } },
+      { type: "BarChart", props: { title: "Gasto por Fornecedor", dataQuery: { model: "compras.compras", dimension: "fornecedor", measure: "SUM(valor_total)", filters: { tenant_id: 1 }, orderBy: { field: "measure", dir: "desc" }, limit: 6 }, xKey: "fornecedor", yKey: "gasto_total", format: "currency", height: 200 } }
     ]
   }
 ], null, 2);

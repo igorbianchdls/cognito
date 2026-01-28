@@ -3,7 +3,7 @@
 import React from "react";
 import { useData } from "@/components/json-render/context";
 import { ResponsiveBar } from "@nivo/bar";
-import { aggregateByDimension, getByPath, parseMeasureSpec, normalizeTitleStyle, normalizeContainerStyle, buildNivoTheme } from "@/components/json-render/helpers";
+import { normalizeTitleStyle, normalizeContainerStyle, buildNivoTheme } from "@/components/json-render/helpers";
 
 type AnyRecord = Record<string, any>;
 
@@ -23,7 +23,6 @@ function formatValue(val: any, fmt: "currency" | "percent" | "number"): string {
 export default function JsonRenderBarChart({ element }: { element: any }) {
   const { data } = useData();
   const title = element?.props?.title as string | undefined;
-  const dataPath = element?.props?.dataPath as string;
   const xKey = element?.props?.xKey as string;
   const yKey = element?.props?.yKey as string;
   const fmt = (element?.props?.format ?? 'number') as 'currency'|'percent'|'number';
@@ -60,33 +59,13 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
     return () => { cancelled = true };
   }, [JSON.stringify(dq), JSON.stringify((data as any)?.filters?.dateRange)]);
 
-  const rows: Array<Record<string, unknown>> = React.useMemo(() => {
-    if (!dataPath) return [];
-    try {
-      const parts = dataPath.split('.').map((s: string) => s.trim()).filter(Boolean);
-      let curr: any = data;
-      for (const p of parts) { curr = curr?.[p]; }
-      return Array.isArray(curr) ? curr as Array<Record<string, unknown>> : [];
-    } catch { return []; }
-  }, [data, dataPath]);
-
   const barData = React.useMemo(() => {
-    if (serverRows) {
-      return serverRows.map((r) => ({
-        label: String((r as AnyRecord)[xKey] ?? ''),
-        value: Number((r as AnyRecord)[yKey] ?? 0),
-      }))
-    }
-    const spec = parseMeasureSpec(yKey);
-    if (spec) {
-      return aggregateByDimension(rows as AnyRecord[], xKey, yKey);
-    }
-    // Non-aggregate: direct mapping with path support
-    return (rows as AnyRecord[]).map((r) => ({
-      label: String(getByPath(r, xKey, '')),
-      value: Number(getByPath(r, yKey, 0) ?? 0),
+    const src = Array.isArray(serverRows) ? serverRows : [];
+    return src.map((r) => ({
+      label: String((r as AnyRecord)[xKey] ?? ''),
+      value: Number((r as AnyRecord)[yKey] ?? 0),
     }));
-  }, [rows, xKey, yKey, serverRows]);
+  }, [xKey, yKey, serverRows]);
 
   const colors = Array.isArray(colorScheme)
     ? colorScheme

@@ -3,7 +3,7 @@
 import React from "react";
 import { useData } from "@/components/json-render/context";
 import { ResponsiveLine } from "@nivo/line";
-import { aggregateByDimension, getByPath, parseMeasureSpec, normalizeTitleStyle, normalizeContainerStyle, buildNivoTheme } from "@/components/json-render/helpers";
+import { normalizeTitleStyle, normalizeContainerStyle, buildNivoTheme } from "@/components/json-render/helpers";
 
 type AnyRecord = Record<string, any>;
 
@@ -45,7 +45,6 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
     return () => { cancelled = true };
   }, [JSON.stringify(dq), JSON.stringify((data as any)?.filters?.dateRange)]);
   const title = element?.props?.title as string | undefined;
-  const dataPath = element?.props?.dataPath as string;
   const xKey = element?.props?.xKey as string;
   const yKey = element?.props?.yKey as string;
   const fmt = (element?.props?.format ?? 'number') as 'currency'|'percent'|'number';
@@ -56,30 +55,10 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
   const borderless = Boolean((element?.props as AnyRecord)?.borderless);
   const containerStyle = normalizeContainerStyle((element?.props as AnyRecord)?.containerStyle, borderless);
 
-  const rows: Array<Record<string, unknown>> = React.useMemo(() => {
-    if (!dataPath) return [];
-    try {
-      const parts = dataPath.split('.').map((s: string) => s.trim()).filter(Boolean);
-      let curr: any = data;
-      for (const p of parts) { curr = curr?.[p]; }
-      return Array.isArray(curr) ? curr as Array<Record<string, unknown>> : [];
-    } catch { return []; }
-  }, [data, dataPath]);
-
   const seriesData = React.useMemo(() => {
-    if (serverRows) {
-      return [{ id: title || 'Series', data: serverRows.map((r) => ({ x: String((r as AnyRecord)[xKey] ?? ''), y: Number((r as AnyRecord)[yKey] ?? 0) })) }]
-    }
-    const spec = parseMeasureSpec(yKey);
-    if (spec) {
-      const agg = aggregateByDimension(rows as AnyRecord[], xKey, yKey);
-      return [{ id: title || 'Series', data: agg.map((d) => ({ x: d.label, y: d.value })) }];
-    }
-    return [{
-      id: title || 'Series',
-      data: (rows as AnyRecord[]).map((r) => ({ x: String(getByPath(r, xKey, '')), y: Number(getByPath(r, yKey, 0) ?? 0) })),
-    }];
-  }, [rows, xKey, yKey, title, serverRows]);
+    const src = Array.isArray(serverRows) ? serverRows : [];
+    return [{ id: title || 'Series', data: src.map((r) => ({ x: String((r as AnyRecord)[xKey] ?? ''), y: Number((r as AnyRecord)[yKey] ?? 0) })) }];
+  }, [xKey, yKey, title, serverRows]);
 
   const colors = Array.isArray(colorScheme)
     ? colorScheme
