@@ -17,17 +17,17 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
-  const [activeItem, setActiveItem] = useState<string>('nexus');
+  const [activeItem, setActiveItem] = useState<string>('dashboards');
   const router = useRouter();
 
   const sidebarItems: SidebarItem[] = [
     {
-      id: 'nexus',
-      label: 'Nexus',
-      href: '/nexus',
+      id: 'dashboards',
+      label: 'Dashboards',
+      href: '/dashboards',
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 3h7v7H3V3zm0 11h7v7H3v-7zm11-11h7v11h-7V3zm0 13h7v5h-7v-5z" />
         </svg>
       )
     },

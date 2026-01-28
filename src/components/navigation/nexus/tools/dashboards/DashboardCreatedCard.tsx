@@ -75,7 +75,7 @@ export default function DashboardCreatedCard({ success, item, error }: Dashboard
           <Button size="sm" variant="secondary" onClick={handleCopyId}>
             <Copy className="w-3.5 h-3.5 mr-1" /> Copiar ID
           </Button>
-          <a href="/nexus" className="inline-flex"><Button size="sm" variant="secondary"><Eye className="w-3.5 h-3.5 mr-1" /> Abrir no Builder</Button></a>
+          <a href="/dashboards" className="inline-flex"><Button size="sm" variant="secondary"><Eye className="w-3.5 h-3.5 mr-1" /> Abrir no Builder</Button></a>
         </div>
       </div>
 

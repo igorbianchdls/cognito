@@ -32,7 +32,7 @@ const visibilityBadge = (v: Dashboard["visibility"]) => {
 export default function DashboardCard({ item, onOpen, onCopyId, onDeleted }: Props) {
   const handleOpen = () => {
     if (onOpen) onOpen(item.id);
-    else window.open(`/nexus?dashboardId=${item.id}`, "_self");
+    else window.open(`/dashboards/${item.id}/view?dashboardId=${item.id}`, "_self");
   };
   const handleCopy = async () => {
     try {

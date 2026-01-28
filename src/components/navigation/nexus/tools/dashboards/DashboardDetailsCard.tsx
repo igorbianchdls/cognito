@@ -132,7 +132,7 @@ export default function DashboardDetailsCard({ success, item, error }: Dashboard
           <Button size="sm" variant="secondary" onClick={copyCode}>
             <Copy className="w-3.5 h-3.5 mr-1" /> Copiar Código
           </Button>
-          <a href="/nexus" className="inline-flex"><Button size="sm" variant="secondary"><Eye className="w-3.5 h-3.5 mr-1" /> Abrir no Builder</Button></a>
+          <a href="/dashboards" className="inline-flex"><Button size="sm" variant="secondary"><Eye className="w-3.5 h-3.5 mr-1" /> Abrir no Builder</Button></a>
         </div>
       </div>
 

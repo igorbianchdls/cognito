@@ -189,7 +189,7 @@ export default function CreateDashboardResult({
 
             {isApplied && (
               <a
-                href="/nexus"
+                href="/dashboards"
                 className="px-3 py-1 bg-gray-700 text-white text-xs rounded hover:bg-gray-800 transition-colors flex items-center gap-1"
               >
                 <Eye className="w-3 h-3" />
