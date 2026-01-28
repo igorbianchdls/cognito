@@ -41,10 +41,16 @@ export async function POST(req: NextRequest) {
     }
 
     // Dimension mapping (whitelist)
-    // POC: cliente
+    // Suportadas: cliente, canal_venda, vendedor, filial, unidade_negocio, categoria_receita, territorio
     let dimExpr = ''
     let dimAlias = ''
     if (dimension === 'cliente') { dimExpr = 'c.nome_fantasia'; dimAlias = 'cliente' }
+    else if (dimension === 'canal_venda') { dimExpr = 'COALESCE(cv.nome,\'—\')'; dimAlias = 'canal_venda' }
+    else if (dimension === 'vendedor') { dimExpr = 'COALESCE(f.nome,\'—\')'; dimAlias = 'vendedor' }
+    else if (dimension === 'filial') { dimExpr = 'COALESCE(fil.nome,\'—\')'; dimAlias = 'filial' }
+    else if (dimension === 'unidade_negocio') { dimExpr = 'COALESCE(un.nome,\'—\')'; dimAlias = 'unidade_negocio' }
+    else if (dimension === 'categoria_receita') { dimExpr = 'COALESCE(cr.nome,\'—\')'; dimAlias = 'categoria_receita' }
+    else if (dimension === 'territorio') { dimExpr = 'COALESCE(t.nome,\'—\')'; dimAlias = 'territorio' }
     else {
       return Response.json({ success: false, message: `Dimensão não suportada: ${dimension}` }, { status: 400 })
     }
@@ -67,7 +73,15 @@ export async function POST(req: NextRequest) {
     // Base SQL
     let fromSql = `FROM vendas.pedidos p
                    JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
-                   JOIN entidades.clientes c ON c.id = p.cliente_id`
+                   JOIN entidades.clientes c ON c.id = p.cliente_id
+                   LEFT JOIN comercial.vendedores v ON v.id = p.vendedor_id
+                   LEFT JOIN entidades.funcionarios f ON f.id = v.funcionario_id
+                   LEFT JOIN comercial.territorios t ON t.id = p.territorio_id
+                   LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+                   LEFT JOIN financeiro.categorias_receita cr ON cr.id = p.categoria_receita_id
+                   LEFT JOIN empresa.centros_lucro cl ON cl.id = p.centro_lucro_id
+                   LEFT JOIN empresa.filiais fil ON fil.id = p.filial_id
+                   LEFT JOIN empresa.unidades_negocio un ON un.id = p.unidade_negocio_id`
 
     // Filters (whitelist)
     const params: unknown[] = []
@@ -97,4 +111,3 @@ export async function POST(req: NextRequest) {
     return Response.json({ success: false, message: 'Erro interno', error: error instanceof Error ? error.message : 'Erro desconhecido' }, { status: 500 })
   }
 }
-
