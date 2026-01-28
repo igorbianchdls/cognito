@@ -73,6 +73,9 @@ export async function POST(req: NextRequest) {
       if (m === 'sum(c.valor_total)' || m === 'sum(valor_total)') {
         measExpr = 'COALESCE(SUM(c.valor_total),0)::float'
         measAlias = 'gasto_total'
+      } else if (m === 'avg(c.valor_total)' || m === 'avg(valor_total)') {
+        measExpr = 'COALESCE(AVG(c.valor_total),0)::float'
+        measAlias = 'ticket_medio'
       } else if (m === 'count()') {
         measExpr = 'COUNT(*)::int'
         measAlias = 'count'
