@@ -31,6 +31,10 @@ const FINANCE_TEMPLATE_TEXT = JSON.stringify([
       ]},
 
       { type: "Div", props: { direction: "row", gap: 12, padding: 16, justify: "start", align: "start", childGrow: true }, children: [
+        { type: "LineChart", props: { fr: 3, title: "AP por Mês", dataQuery: { model: "financeiro.contas_pagar", dimension: "periodo", measure: "SUM(valor_liquido)", filters: { tenant_id: 1 }, orderBy: { field: "dimension", dir: "asc" }, limit: 12 }, xKey: "periodo", yKey: "valor_total", format: "currency", height: 240, nivo: { curve: 'monotoneX', area: true } } }
+      ]},
+
+      { type: "Div", props: { direction: "row", gap: 12, padding: 16, justify: "start", align: "start", childGrow: true }, children: [
         { type: "PieChart", props: { fr: 1, title: "AP por Status", dataQuery: { model: "financeiro.contas_pagar", dimension: "status", measure: "COUNT()", filters: { tenant_id: 1 }, orderBy: { field: "measure", dir: "desc" }, limit: 6 }, xKey: "status", yKey: "count", format: "number", height: 240, nivo: { innerRadius: 0.35 } } },
         { type: "PieChart", props: { fr: 1, title: "AR por Status", dataQuery: { model: "financeiro.contas_receber", dimension: "status", measure: "COUNT()", filters: { tenant_id: 1 }, orderBy: { field: "measure", dir: "desc" }, limit: 6 }, xKey: "status", yKey: "count", format: "number", height: 240, nivo: { innerRadius: 0.35 } } }
       ]}
@@ -118,4 +122,3 @@ export default function JsonRenderFinanceiroPage() {
     </div>
   );
 }
-

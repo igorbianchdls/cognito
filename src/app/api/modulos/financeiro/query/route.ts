@@ -67,6 +67,7 @@ export async function POST(req: NextRequest) {
           ['categoria', { expr: "COALESCE(cd.nome,'Sem categoria')", alias: 'categoria' }],
           ['status', { expr: "COALESCE(cp.status,'—')", alias: 'status' }],
           ['titulo', { expr: "COALESCE(NULLIF(TRIM(cp.numero_documento), ''), CONCAT('Conta #', cp.id::text))", alias: 'titulo' }],
+          ['periodo', { expr: "TO_CHAR(DATE_TRUNC('month', cp.data_vencimento), 'YYYY-MM')", alias: 'periodo' }],
         ]),
         measureMap: new Map([
           ['sum(valor_liquido)', { expr: 'COALESCE(SUM(cp.valor_liquido),0)::float', alias: 'valor_total' }],
@@ -96,6 +97,7 @@ export async function POST(req: NextRequest) {
           ['categoria', { expr: "COALESCE(crcat.nome,'Sem categoria')", alias: 'categoria' }],
           ['status', { expr: "COALESCE(cr.status,'—')", alias: 'status' }],
           ['titulo', { expr: "COALESCE(NULLIF(TRIM(cr.numero_documento), ''), CONCAT('Conta #', cr.id::text))", alias: 'titulo' }],
+          ['periodo', { expr: "TO_CHAR(DATE_TRUNC('month', cr.data_vencimento), 'YYYY-MM')", alias: 'periodo' }],
         ]),
         measureMap: new Map([
           ['sum(valor_liquido)', { expr: 'COALESCE(SUM(cr.valor_liquido),0)::float', alias: 'valor_total' }],

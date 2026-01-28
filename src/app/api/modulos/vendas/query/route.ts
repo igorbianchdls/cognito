@@ -50,6 +50,7 @@ export async function POST(req: NextRequest) {
     else if (dimension === 'filial') { dimExpr = 'COALESCE(fil.nome,\'—\')'; dimAlias = 'filial' }
     else if (dimension === 'unidade_negocio') { dimExpr = 'COALESCE(un.nome,\'—\')'; dimAlias = 'unidade_negocio' }
     else if (dimension === 'categoria_receita') { dimExpr = 'COALESCE(cr.nome,\'—\')'; dimAlias = 'categoria_receita' }
+    else if (dimension === 'periodo') { dimExpr = "TO_CHAR(DATE_TRUNC('month', p.data_pedido), 'YYYY-MM')"; dimAlias = 'periodo' }
     else if (dimension === 'territorio') { dimExpr = 'COALESCE(t.nome,\'—\')'; dimAlias = 'territorio' }
     else {
       return Response.json({ success: false, message: `Dimensão não suportada: ${dimension}` }, { status: 400 })

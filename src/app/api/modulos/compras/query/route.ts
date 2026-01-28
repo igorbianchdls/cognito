@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Dimension mapping (whitelist)
-    // Suportadas: fornecedor, centro_custo, filial, projeto, categoria_despesa, status (recebimentos: status)
+    // Suportadas: fornecedor, centro_custo, filial, projeto, categoria_despesa, status, periodo (recebimentos: status, periodo)
     let dimExpr = ''
     let dimAlias = ''
     if (dimension === 'fornecedor' && model === 'compras.compras') { dimExpr = "COALESCE(f.nome_fantasia, f.nome, '—')"; dimAlias = 'fornecedor' }
@@ -52,7 +52,9 @@ export async function POST(req: NextRequest) {
     else if (dimension === 'projeto' && model === 'compras.compras') { dimExpr = "COALESCE(pr.nome,'—')"; dimAlias = 'projeto' }
     else if (dimension === 'categoria_despesa' && model === 'compras.compras') { dimExpr = "COALESCE(cd.nome,'—')"; dimAlias = 'categoria_despesa' }
     else if (dimension === 'status' && model === 'compras.compras') { dimExpr = "COALESCE(c.status,'—')"; dimAlias = 'status' }
+    else if (dimension === 'periodo' && model === 'compras.compras') { dimExpr = "TO_CHAR(DATE_TRUNC('month', c.data_emissao), 'YYYY-MM')"; dimAlias = 'periodo' }
     else if (dimension === 'status' && model === 'compras.recebimentos') { dimExpr = "COALESCE(r.status,'—')"; dimAlias = 'status' }
+    else if (dimension === 'periodo' && model === 'compras.recebimentos') { dimExpr = "TO_CHAR(DATE_TRUNC('month', r.data_recebimento), 'YYYY-MM')"; dimAlias = 'periodo' }
     else if (dimension) {
       return Response.json({ success: false, message: `Dimensão não suportada: ${dimension}` }, { status: 400 })
     }
