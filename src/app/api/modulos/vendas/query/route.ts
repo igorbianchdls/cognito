@@ -67,12 +67,22 @@ export async function POST(req: NextRequest) {
     const m = measure.replace(/\s+/g, '').toLowerCase()
     let measExpr = ''
     let measAlias = ''
+    let overrideFromForPOnly = false
     if (m === 'sum(pi.subtotal)' || m === 'sum(itens.subtotal)' || m === 'sum(subtotal)') {
       measExpr = 'COALESCE(SUM(pi.subtotal),0)::float'
       measAlias = 'faturamento_total'
     } else if (m === 'count()') {
-      measExpr = 'COUNT(*)::int'
+      // Contar pedidos, não itens
+      measExpr = 'COUNT(DISTINCT p.id)::int'
       measAlias = 'count'
+    } else if (m === 'avg(p.valor_total)' || m === 'avg(valor_total)') {
+      measExpr = 'COALESCE(AVG(p.valor_total),0)::float'
+      measAlias = 'ticket_medio'
+      overrideFromForPOnly = true
+    } else if (m === 'sum(p.valor_total)' || m === 'sum(valor_total)') {
+      measExpr = 'COALESCE(SUM(p.valor_total),0)::float'
+      measAlias = 'faturamento_total'
+      overrideFromForPOnly = true
     } else {
       return Response.json({ success: false, message: `Medida não suportada: ${measure}` }, { status: 400 })
     }
@@ -89,6 +99,10 @@ export async function POST(req: NextRequest) {
                    LEFT JOIN empresa.centros_lucro cl ON cl.id = p.centro_lucro_id
                    LEFT JOIN empresa.filiais fil ON fil.id = p.filial_id
                    LEFT JOIN empresa.unidades_negocio un ON un.id = p.unidade_negocio_id`
+    if (overrideFromForPOnly && dimensionExprOverride) {
+      // Para medidas baseadas em p.* e dimensão declarada por expressão de p.*, simplifica FROM para evitar duplicação
+      fromSql = `FROM vendas.pedidos p`
+    }
 
     // Filters (whitelist)
     const params: unknown[] = []
