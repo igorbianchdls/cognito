@@ -31,6 +31,7 @@ export async function POST(req: NextRequest) {
     const rawModel = typeof dq.model === 'string' ? dq.model.trim() : ''
     const model = rawModel.replace(/-/g, '_') // permitir contas-a-pagar
     const dimension = typeof dq.dimension === 'string' ? dq.dimension.trim() : ''
+    const dimensionExprOverride = typeof (dq as any).dimensionExpr === 'string' ? (dq as any).dimensionExpr.trim() : ''
     const measure = typeof dq.measure === 'string' ? dq.measure.trim() : ''
     const filters = isObject(dq.filters) ? dq.filters : {}
     const orderBy = (isObject(dq.orderBy) ? dq.orderBy : {}) as OrderBy
@@ -112,9 +113,13 @@ export async function POST(req: NextRequest) {
     }
 
     const dimKey = (dimension || '').toLowerCase()
-    const dim = dimKey ? ctx.dimMap.get(dimKey) : undefined
-    if (dimKey && !dim) {
-      return Response.json({ success: false, message: `Dimensão não suportada: ${dimension}` }, { status: 400 })
+    let dim = dimKey ? ctx.dimMap.get(dimKey) : undefined
+    if (dimensionExprOverride) {
+      dim = { expr: dimensionExprOverride, alias: dimension || 'dimension' }
+    } else {
+      if (dimKey && !dim) {
+        return Response.json({ success: false, message: `Dimensão não suportada: ${dimension}` }, { status: 400 })
+      }
     }
 
     const mKey = measure.replace(/\s+/g, '').toLowerCase()

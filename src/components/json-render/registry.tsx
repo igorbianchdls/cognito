@@ -340,7 +340,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
             }
           } else {
             const url = `/api/modulos/${mod}/query`;
-            const body = { dataQuery: { model: dq.model, dimension: dq.dimension, measure: dq.measure, filters, orderBy: dq.orderBy, limit: dq.limit } };
+          const body = { dataQuery: { model: dq.model, dimension: dq.dimension, dimensionExpr: dq.dimensionExpr, measure: dq.measure, filters, orderBy: dq.orderBy, limit: dq.limit } };
             const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
             const j = await res.json();
             rows = Array.isArray(j?.rows) ? j.rows : [];

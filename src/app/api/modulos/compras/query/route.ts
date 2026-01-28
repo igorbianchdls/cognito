@@ -31,6 +31,7 @@ export async function POST(req: NextRequest) {
     const rawModel = typeof dq.model === 'string' ? dq.model.trim() : ''
     const model = rawModel.replace(/-/g, '_')
     const dimension = typeof dq.dimension === 'string' ? dq.dimension.trim() : ''
+    const dimensionExprOverride = typeof (dq as any).dimensionExpr === 'string' ? (dq as any).dimensionExpr.trim() : ''
     const measure = typeof dq.measure === 'string' ? dq.measure.trim() : ''
     const filters = isObject(dq.filters) ? dq.filters : {}
     const orderBy = (isObject(dq.orderBy) ? dq.orderBy : {}) as OrderBy
@@ -42,21 +43,26 @@ export async function POST(req: NextRequest) {
       return Response.json({ success: false, message: `Model não suportado: ${rawModel}` }, { status: 400 })
     }
 
-    // Dimension mapping (whitelist)
-    // Suportadas: fornecedor, centro_custo, filial, projeto, categoria_despesa, status, periodo (recebimentos: status, periodo)
+    // Dimension mapping (whitelist) with optional override via dimensionExpr
     let dimExpr = ''
     let dimAlias = ''
-    if (dimension === 'fornecedor' && model === 'compras.compras') { dimExpr = "COALESCE(f.nome_fantasia,'—')"; dimAlias = 'fornecedor' }
-    else if (dimension === 'centro_custo' && model === 'compras.compras') { dimExpr = "COALESCE(cc.nome,'—')"; dimAlias = 'centro_custo' }
-    else if (dimension === 'filial' && model === 'compras.compras') { dimExpr = "COALESCE(fil.nome,'—')"; dimAlias = 'filial' }
-    else if (dimension === 'projeto' && model === 'compras.compras') { dimExpr = "COALESCE(pr.nome,'—')"; dimAlias = 'projeto' }
-    else if (dimension === 'categoria_despesa' && model === 'compras.compras') { dimExpr = "COALESCE(cd.nome,'—')"; dimAlias = 'categoria_despesa' }
-    else if (dimension === 'status' && model === 'compras.compras') { dimExpr = "COALESCE(c.status,'—')"; dimAlias = 'status' }
-    else if (dimension === 'periodo' && model === 'compras.compras') { dimExpr = "TO_CHAR(DATE_TRUNC('month', c.data_emissao), 'YYYY-MM')"; dimAlias = 'periodo' }
-    else if (dimension === 'status' && model === 'compras.recebimentos') { dimExpr = "COALESCE(r.status,'—')"; dimAlias = 'status' }
-    else if (dimension === 'periodo' && model === 'compras.recebimentos') { dimExpr = "TO_CHAR(DATE_TRUNC('month', r.data_recebimento), 'YYYY-MM')"; dimAlias = 'periodo' }
-    else if (dimension) {
-      return Response.json({ success: false, message: `Dimensão não suportada: ${dimension}` }, { status: 400 })
+    if (dimensionExprOverride) {
+      dimExpr = dimensionExprOverride
+      dimAlias = dimension || 'dimension'
+    } else {
+      // Suportadas: fornecedor, centro_custo, filial, projeto, categoria_despesa, status, periodo (recebimentos: status, periodo)
+      if (dimension === 'fornecedor' && model === 'compras.compras') { dimExpr = "COALESCE(f.nome_fantasia,'—')"; dimAlias = 'fornecedor' }
+      else if (dimension === 'centro_custo' && model === 'compras.compras') { dimExpr = "COALESCE(cc.nome,'—')"; dimAlias = 'centro_custo' }
+      else if (dimension === 'filial' && model === 'compras.compras') { dimExpr = "COALESCE(fil.nome,'—')"; dimAlias = 'filial' }
+      else if (dimension === 'projeto' && model === 'compras.compras') { dimExpr = "COALESCE(pr.nome,'—')"; dimAlias = 'projeto' }
+      else if (dimension === 'categoria_despesa' && model === 'compras.compras') { dimExpr = "COALESCE(cd.nome,'—')"; dimAlias = 'categoria_despesa' }
+      else if (dimension === 'status' && model === 'compras.compras') { dimExpr = "COALESCE(c.status,'—')"; dimAlias = 'status' }
+      else if (dimension === 'periodo' && model === 'compras.compras') { dimExpr = "TO_CHAR(DATE_TRUNC('month', c.data_emissao), 'YYYY-MM')"; dimAlias = 'periodo' }
+      else if (dimension === 'status' && model === 'compras.recebimentos') { dimExpr = "COALESCE(r.status,'—')"; dimAlias = 'status' }
+      else if (dimension === 'periodo' && model === 'compras.recebimentos') { dimExpr = "TO_CHAR(DATE_TRUNC('month', r.data_recebimento), 'YYYY-MM')"; dimAlias = 'periodo' }
+      else if (dimension) {
+        return Response.json({ success: false, message: `Dimensão não suportada: ${dimension}` }, { status: 400 })
+      }
     }
 
     // Measure mapping (whitelist)
@@ -106,7 +112,7 @@ export async function POST(req: NextRequest) {
     // Order by
     let sql: string
     let execParams: unknown[]
-    if (!dimension) {
+    if (!dimension && !dimensionExprOverride) {
       // KPI (no dimension): single aggregate
       sql = `SELECT ${measExpr} AS ${measAlias} ${fromSql} ${whereSql}`.replace(/\s+/g, ' ').trim()
       execParams = params

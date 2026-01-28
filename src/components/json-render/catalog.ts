@@ -159,7 +159,14 @@ export const catalog = {
         titleStyle: TitleStyleSchema.optional(),
         dataQuery: z.object({
           model: z.string(),
-          dimension: z.string(),
+          dimension: z.string().optional(),
+          dimensionExpr: z.string().optional(),
+          time: z.object({
+            column: z.string(),
+            granularity: z.enum(["day","month","year"]).default("month"),
+            format: z.string().optional(),
+            alias: z.string().optional(),
+          }).strict().optional(),
           measure: z.string(),
           filters: z.record(z.any()).optional(),
           orderBy: z.object({ field: z.string().optional(), dir: z.enum(["asc","desc"]).optional() }).partial().optional(),
@@ -216,7 +223,14 @@ export const catalog = {
         titleStyle: TitleStyleSchema.optional(),
         dataQuery: z.object({
           model: z.string(),
-          dimension: z.string(),
+          dimension: z.string().optional(),
+          dimensionExpr: z.string().optional(),
+          time: z.object({
+            column: z.string(),
+            granularity: z.enum(["day","month","year"]).default("month"),
+            format: z.string().optional(),
+            alias: z.string().optional(),
+          }).strict().optional(),
           measure: z.string(),
           filters: z.record(z.any()).optional(),
           orderBy: z.object({ field: z.string().optional(), dir: z.enum(["asc","desc"]).optional() }).partial().optional(),
@@ -269,7 +283,14 @@ export const catalog = {
         titleStyle: TitleStyleSchema.optional(),
         dataQuery: z.object({
           model: z.string(),
-          dimension: z.string(),
+          dimension: z.string().optional(),
+          dimensionExpr: z.string().optional(),
+          time: z.object({
+            column: z.string(),
+            granularity: z.enum(["day","month","year"]).default("month"),
+            format: z.string().optional(),
+            alias: z.string().optional(),
+          }).strict().optional(),
           measure: z.string(),
           filters: z.record(z.any()).optional(),
           orderBy: z.object({ field: z.string().optional(), dir: z.enum(["asc","desc"]).optional() }).partial().optional(),

@@ -49,7 +49,7 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
           if (dr.from) filters.de = dr.from;
           if (dr.to) filters.ate = dr.to;
         }
-        const body = { dataQuery: { model: dq.model, dimension: dq.dimension, measure: dq.measure, filters, orderBy: dq.orderBy, limit: dq.limit } };
+        const body = { dataQuery: { model: dq.model, dimension: dq.dimension, dimensionExpr: dq.dimensionExpr, measure: dq.measure, filters, orderBy: dq.orderBy, limit: dq.limit } };
         const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
         const j = await res.json();
         const rows = Array.isArray(j?.rows) ? j.rows : [];

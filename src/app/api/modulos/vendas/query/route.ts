@@ -29,6 +29,7 @@ export async function POST(req: NextRequest) {
     }
     const model = typeof dq.model === 'string' ? dq.model.trim() : ''
     const dimension = typeof dq.dimension === 'string' ? dq.dimension.trim() : ''
+    const dimensionExprOverride = typeof (dq as any).dimensionExpr === 'string' ? (dq as any).dimensionExpr.trim() : ''
     const measure = typeof dq.measure === 'string' ? dq.measure.trim() : ''
     const filters = isObject(dq.filters) ? dq.filters : {}
     const orderBy = (isObject(dq.orderBy) ? dq.orderBy : {}) as OrderBy
@@ -40,20 +41,25 @@ export async function POST(req: NextRequest) {
       return Response.json({ success: false, message: `Model não suportado: ${model}` }, { status: 400 })
     }
 
-    // Dimension mapping (whitelist)
-    // Suportadas: cliente, canal_venda, vendedor, filial, unidade_negocio, categoria_receita, territorio
+    // Dimension mapping (whitelist) or override via dimensionExpr
     let dimExpr = ''
     let dimAlias = ''
-    if (dimension === 'cliente') { dimExpr = 'c.nome_fantasia'; dimAlias = 'cliente' }
-    else if (dimension === 'canal_venda') { dimExpr = 'COALESCE(cv.nome,\'—\')'; dimAlias = 'canal_venda' }
-    else if (dimension === 'vendedor') { dimExpr = 'COALESCE(f.nome,\'—\')'; dimAlias = 'vendedor' }
-    else if (dimension === 'filial') { dimExpr = 'COALESCE(fil.nome,\'—\')'; dimAlias = 'filial' }
-    else if (dimension === 'unidade_negocio') { dimExpr = 'COALESCE(un.nome,\'—\')'; dimAlias = 'unidade_negocio' }
-    else if (dimension === 'categoria_receita') { dimExpr = 'COALESCE(cr.nome,\'—\')'; dimAlias = 'categoria_receita' }
-    else if (dimension === 'periodo') { dimExpr = "TO_CHAR(DATE_TRUNC('month', p.data_pedido), 'YYYY-MM')"; dimAlias = 'periodo' }
-    else if (dimension === 'territorio') { dimExpr = 'COALESCE(t.nome,\'—\')'; dimAlias = 'territorio' }
-    else {
-      return Response.json({ success: false, message: `Dimensão não suportada: ${dimension}` }, { status: 400 })
+    if (dimensionExprOverride) {
+      dimExpr = dimensionExprOverride
+      dimAlias = dimension || 'dimension'
+    } else {
+      // Suportadas: cliente, canal_venda, vendedor, filial, unidade_negocio, categoria_receita, territorio, periodo
+      if (dimension === 'cliente') { dimExpr = 'c.nome_fantasia'; dimAlias = 'cliente' }
+      else if (dimension === 'canal_venda') { dimExpr = 'COALESCE(cv.nome,\'—\')'; dimAlias = 'canal_venda' }
+      else if (dimension === 'vendedor') { dimExpr = 'COALESCE(f.nome,\'—\')'; dimAlias = 'vendedor' }
+      else if (dimension === 'filial') { dimExpr = 'COALESCE(fil.nome,\'—\')'; dimAlias = 'filial' }
+      else if (dimension === 'unidade_negocio') { dimExpr = 'COALESCE(un.nome,\'—\')'; dimAlias = 'unidade_negocio' }
+      else if (dimension === 'categoria_receita') { dimExpr = 'COALESCE(cr.nome,\'—\')'; dimAlias = 'categoria_receita' }
+      else if (dimension === 'periodo') { dimExpr = "TO_CHAR(DATE_TRUNC('month', p.data_pedido), 'YYYY-MM')"; dimAlias = 'periodo' }
+      else if (dimension === 'territorio') { dimExpr = 'COALESCE(t.nome,\'—\')'; dimAlias = 'territorio' }
+      else {
+        return Response.json({ success: false, message: `Dimensão não suportada: ${dimension}` }, { status: 400 })
+      }
     }
 
     // Measure mapping (whitelist)
