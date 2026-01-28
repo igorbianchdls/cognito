@@ -22,6 +22,28 @@ function formatValue(val: any, fmt: "currency" | "percent" | "number"): string {
 
 export default function JsonRenderLineChart({ element }: { element: any }) {
   const { data } = useData();
+  const dq = (element?.props?.dataQuery as AnyRecord | undefined);
+  const [serverRows, setServerRows] = React.useState<Array<Record<string, unknown>> | null>(null);
+  React.useEffect(() => {
+    let cancelled = false;
+    async function run() {
+      if (!dq || !dq.model || !dq.dimension || !dq.measure) { setServerRows(null); return; }
+      try {
+        const mod = String(dq.model).split('.')[0];
+        const url = `/api/modulos/${mod}/query`;
+        const filters = { ...(dq.filters || {}) } as AnyRecord;
+        const dr = (data as any)?.filters?.dateRange;
+        if (dr && !filters.de && !filters.ate) { if (dr.from) filters.de = dr.from; if (dr.to) filters.ate = dr.to; }
+        const body = { dataQuery: { model: dq.model, dimension: dq.dimension, measure: dq.measure, filters, orderBy: dq.orderBy, limit: dq.limit } };
+        const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+        const j = await res.json();
+        const rows = Array.isArray(j?.rows) ? j.rows : [];
+        if (!cancelled) setServerRows(rows as any);
+      } catch (e) { if (!cancelled) setServerRows([]); }
+    }
+    run();
+    return () => { cancelled = true };
+  }, [JSON.stringify(dq), JSON.stringify((data as any)?.filters?.dateRange)]);
   const title = element?.props?.title as string | undefined;
   const dataPath = element?.props?.dataPath as string;
   const xKey = element?.props?.xKey as string;
@@ -45,6 +67,9 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
   }, [data, dataPath]);
 
   const seriesData = React.useMemo(() => {
+    if (serverRows) {
+      return [{ id: title || 'Series', data: serverRows.map((r) => ({ x: String((r as AnyRecord)[xKey] ?? ''), y: Number((r as AnyRecord)[yKey] ?? 0) })) }]
+    }
     const spec = parseMeasureSpec(yKey);
     if (spec) {
       const agg = aggregateByDimension(rows as AnyRecord[], xKey, yKey);

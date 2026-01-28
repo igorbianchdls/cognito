@@ -34,17 +34,50 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
   const borderless = Boolean((element?.props as AnyRecord)?.borderless);
   const containerStyle = normalizeContainerStyle((element?.props as AnyRecord)?.containerStyle, borderless);
 
+  const dq = (element?.props?.dataQuery as AnyRecord | undefined);
+  const { data } = useData();
+  const [serverRows, setServerRows] = React.useState<Array<Record<string, unknown>> | null>(null);
+  React.useEffect(() => {
+    let cancelled = false;
+    async function run() {
+      if (!dq || !dq.model || !dq.dimension || !dq.measure) { setServerRows(null); return; }
+      try {
+        const mod = String(dq.model).split('.')[0];
+        const url = `/api/modulos/${mod}/query`;
+        const filters = { ...(dq.filters || {}) } as AnyRecord;
+        const dr = (data as any)?.filters?.dateRange;
+        if (dr && !filters.de && !filters.ate) {
+          if (dr.from) filters.de = dr.from;
+          if (dr.to) filters.ate = dr.to;
+        }
+        const body = { dataQuery: { model: dq.model, dimension: dq.dimension, measure: dq.measure, filters, orderBy: dq.orderBy, limit: dq.limit } };
+        const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+        const j = await res.json();
+        const rows = Array.isArray(j?.rows) ? j.rows : [];
+        if (!cancelled) setServerRows(rows as any);
+      } catch (e) { if (!cancelled) setServerRows([]); }
+    }
+    run();
+    return () => { cancelled = true };
+  }, [JSON.stringify(dq), JSON.stringify((data as any)?.filters?.dateRange)]);
+
   const rows: Array<Record<string, unknown>> = React.useMemo(() => {
     if (!dataPath) return [];
     try {
       const parts = dataPath.split('.').map((s: string) => s.trim()).filter(Boolean);
-      let curr: any = data;
+      let curr: any = (useData() as any).data;
       for (const p of parts) { curr = curr?.[p]; }
       return Array.isArray(curr) ? curr as Array<Record<string, unknown>> : [];
     } catch { return []; }
-  }, [data, dataPath]);
+  }, [dataPath]);
 
   const barData = React.useMemo(() => {
+    if (serverRows) {
+      return serverRows.map((r) => ({
+        label: String((r as AnyRecord)[xKey] ?? ''),
+        value: Number((r as AnyRecord)[yKey] ?? 0),
+      }))
+    }
     const spec = parseMeasureSpec(yKey);
     if (spec) {
       return aggregateByDimension(rows as AnyRecord[], xKey, yKey);
