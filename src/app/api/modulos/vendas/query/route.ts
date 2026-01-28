@@ -45,7 +45,14 @@ export async function POST(req: NextRequest) {
     let dimExpr = ''
     let dimAlias = ''
     if (dimensionExprOverride) {
-      dimExpr = dimensionExprOverride
+      // Qualify known columns when no table prefix is provided
+      const qualifyDimExpr = (expr: string) => {
+        let e = expr
+        e = e.replace(/\bdata_pedido\b/g, 'p.data_pedido')
+        e = e.replace(/\bvalor_total\b/g, 'p.valor_total')
+        return e
+      }
+      dimExpr = qualifyDimExpr(dimensionExprOverride)
       dimAlias = dimension || 'dimension'
     } else {
       // Suportadas: cliente, canal_venda, vendedor, filial, unidade_negocio, categoria_receita, territorio, periodo

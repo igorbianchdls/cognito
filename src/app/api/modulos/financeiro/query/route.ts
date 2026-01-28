@@ -115,7 +115,15 @@ export async function POST(req: NextRequest) {
     const dimKey = (dimension || '').toLowerCase()
     let dim = dimKey ? ctx.dimMap.get(dimKey) : undefined
     if (dimensionExprOverride) {
-      dim = { expr: dimensionExprOverride, alias: dimension || 'dimension' }
+      const qualifyDimExpr = (expr: string) => {
+        const alias = ctx.from.includes(' cp') ? 'cp' : 'cr'
+        let e = expr
+        e = e.replace(/\bdata_vencimento\b/g, `${alias}.data_vencimento`)
+        e = e.replace(/\bvalor_liquido\b/g, `${alias}.valor_liquido`)
+        e = e.replace(/\bvalor\b/g, `${alias}.valor_liquido`)
+        return e
+      }
+      dim = { expr: qualifyDimExpr(dimensionExprOverride), alias: dimension || 'dimension' }
     } else {
       if (dimKey && !dim) {
         return Response.json({ success: false, message: `Dimensão não suportada: ${dimension}` }, { status: 400 })

@@ -47,7 +47,14 @@ export async function POST(req: NextRequest) {
     let dimExpr = ''
     let dimAlias = ''
     if (dimensionExprOverride) {
-      dimExpr = dimensionExprOverride
+      // Qualify known columns for compras when unqualified
+      const qualifyDimExpr = (expr: string) => {
+        let e = expr
+        e = e.replace(/\bdata_emissao\b/g, 'c.data_emissao')
+        e = e.replace(/\bvalor_total\b/g, 'c.valor_total')
+        return e
+      }
+      dimExpr = qualifyDimExpr(dimensionExprOverride)
       dimAlias = dimension || 'dimension'
     } else {
       // Suportadas: fornecedor, centro_custo, filial, projeto, categoria_despesa, status, periodo (recebimentos: status, periodo)
