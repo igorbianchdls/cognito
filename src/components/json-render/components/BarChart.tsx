@@ -35,7 +35,6 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
   const containerStyle = normalizeContainerStyle((element?.props as AnyRecord)?.containerStyle, borderless);
 
   const dq = (element?.props?.dataQuery as AnyRecord | undefined);
-  const { data } = useData();
   const [serverRows, setServerRows] = React.useState<Array<Record<string, unknown>> | null>(null);
   React.useEffect(() => {
     let cancelled = false;
@@ -65,11 +64,11 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
     if (!dataPath) return [];
     try {
       const parts = dataPath.split('.').map((s: string) => s.trim()).filter(Boolean);
-      let curr: any = (useData() as any).data;
+      let curr: any = data;
       for (const p of parts) { curr = curr?.[p]; }
       return Array.isArray(curr) ? curr as Array<Record<string, unknown>> : [];
     } catch { return []; }
-  }, [dataPath]);
+  }, [data, dataPath]);
 
   const barData = React.useMemo(() => {
     if (serverRows) {
