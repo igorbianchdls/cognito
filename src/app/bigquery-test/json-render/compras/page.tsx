@@ -19,18 +19,18 @@ const COMPRAS_TEMPLATE_TEXT = JSON.stringify([
       ]},
 
       { type: "Div", props: { direction: "row", gap: 12, padding: 16, justify: "start", align: "start", childGrow: true }, children: [
-        { type: "BarChart", props: { fr: 1, title: "Fornecedores", dataPath: "compras.compras", xKey: "fornecedor", yKey: "SUM(valor_total)", format: "currency", height: 240, nivo: { layout: 'horizontal' } } },
-        { type: "BarChart", props: { fr: 1, title: "Centros de Custo", dataPath: "compras.compras", xKey: "centro_custo", yKey: "SUM(valor_total)", format: "currency", height: 240, nivo: { layout: 'horizontal' } } },
-        { type: "BarChart", props: { fr: 1, title: "Filiais", dataPath: "compras.compras", xKey: "filial", yKey: "SUM(valor_total)", format: "currency", height: 240, nivo: { layout: 'horizontal' } } }
+        { type: "BarChart", props: { fr: 1, title: "Fornecedores", dataPath: "compras.compras", dataQuery: { model: "compras.compras", dimension: "fornecedor", measure: "SUM(valor_total)", filters: { tenant_id: 1 }, orderBy: { field: "measure", dir: "desc" }, limit: 8 }, xKey: "fornecedor", yKey: "gasto_total", format: "currency", height: 240, nivo: { layout: 'horizontal' } } },
+        { type: "BarChart", props: { fr: 1, title: "Centros de Custo", dataPath: "compras.compras", dataQuery: { model: "compras.compras", dimension: "centro_custo", measure: "SUM(valor_total)", filters: { tenant_id: 1 }, orderBy: { field: "measure", dir: "desc" }, limit: 8 }, xKey: "centro_custo", yKey: "gasto_total", format: "currency", height: 240, nivo: { layout: 'horizontal' } } },
+        { type: "BarChart", props: { fr: 1, title: "Filiais", dataPath: "compras.compras", dataQuery: { model: "compras.compras", dimension: "filial", measure: "SUM(valor_total)", filters: { tenant_id: 1 }, orderBy: { field: "measure", dir: "desc" }, limit: 8 }, xKey: "filial", yKey: "gasto_total", format: "currency", height: 240, nivo: { layout: 'horizontal' } } }
       ]},
 
       { type: "Div", props: { direction: "row", gap: 12, padding: 16, justify: "start", align: "start", childGrow: true }, children: [
-        { type: "BarChart", props: { fr: 1, title: "Categorias", dataPath: "compras.compras", xKey: "categoria_despesa", yKey: "SUM(valor_total)", format: "currency", height: 220, nivo: { layout: 'horizontal' } } },
-        { type: "BarChart", props: { fr: 1, title: "Projetos", dataPath: "compras.compras", xKey: "projeto", yKey: "SUM(valor_total)", format: "currency", height: 220, nivo: { layout: 'horizontal' } } },
-        { type: "BarChart", props: { fr: 1, title: "Status (Qtd)", dataPath: "compras.compras", xKey: "status", yKey: "COUNT()", format: "number", height: 220, nivo: { layout: 'horizontal' } } }
+        { type: "BarChart", props: { fr: 1, title: "Categorias", dataPath: "compras.compras", dataQuery: { model: "compras.compras", dimension: "categoria_despesa", measure: "SUM(valor_total)", filters: { tenant_id: 1 }, orderBy: { field: "measure", dir: "desc" }, limit: 8 }, xKey: "categoria_despesa", yKey: "gasto_total", format: "currency", height: 220, nivo: { layout: 'horizontal' } } },
+        { type: "BarChart", props: { fr: 1, title: "Projetos", dataPath: "compras.compras", dataQuery: { model: "compras.compras", dimension: "projeto", measure: "SUM(valor_total)", filters: { tenant_id: 1 }, orderBy: { field: "measure", dir: "desc" }, limit: 8 }, xKey: "projeto", yKey: "gasto_total", format: "currency", height: 220, nivo: { layout: 'horizontal' } } },
+        { type: "BarChart", props: { fr: 1, title: "Status (Qtd)", dataPath: "compras.compras", dataQuery: { model: "compras.compras", dimension: "status", measure: "COUNT()", filters: { tenant_id: 1 }, orderBy: { field: "measure", dir: "desc" }, limit: 8 }, xKey: "status", yKey: "count", format: "number", height: 220, nivo: { layout: 'horizontal' } } }
       ]},
 
-      { type: "PieChart", props: { fr: 1, title: "Status (Pizza)", dataPath: "compras.compras", xKey: "status", yKey: "COUNT()", format: "number", height: 260, nivo: { innerRadius: 0.35 } } }
+      { type: "PieChart", props: { fr: 1, title: "Status (Pizza)", dataPath: "compras.compras", dataQuery: { model: "compras.compras", dimension: "status", measure: "COUNT()", filters: { tenant_id: 1 }, orderBy: { field: "measure", dir: "desc" }, limit: 8 }, xKey: "status", yKey: "count", format: "number", height: 260, nivo: { innerRadius: 0.35 } } }
     ]
   }
 ], null, 2);
