@@ -31,12 +31,12 @@ const SALES_TEMPLATE_TEXT = JSON.stringify([
       ]},
 
       { type: "Div", props: { direction: "row", gap: 12, padding: 16, justify: "start", align: "start", childGrow: true }, children: [
-        { type: "LineChart", props: { fr: 3, title: "Faturamento por Mês", dataQuery: { model: "vendas.pedidos", dimension: "mes", dimensionExpr: "DATE_TRUNC('month', data_pedido)::date", measure: "SUM(itens.subtotal)", filters: { tenant_id: 1 }, orderBy: { field: "dimension", dir: "asc" }, limit: 12 }, xKey: "mes", yKey: "faturamento_total", format: "currency", height: 240, nivo: { curve: 'monotoneX', area: true } } }
+        { type: "LineChart", props: { fr: 3, title: "Faturamento por Mês", dataQuery: { model: "vendas.pedidos", dimension: "mes", dimensionExpr: "TO_CHAR(DATE_TRUNC('month', data_pedido), 'YYYY-MM')", measure: "SUM(itens.subtotal)", filters: { tenant_id: 1 }, orderBy: { field: "dimension", dir: "asc" }, limit: 12 }, xKey: "mes", yKey: "faturamento_total", format: "currency", height: 240, nivo: { curve: 'monotoneX', area: true } } }
       ]},
 
       { type: "Div", props: { direction: "row", gap: 12, padding: 16, justify: "start", align: "start", childGrow: true }, children: [
-        { type: "BarChart", props: { fr: 1, title: "Pedidos por Mês", dataQuery: { model: "vendas.pedidos", dimension: "mes", dimensionExpr: "DATE_TRUNC('month', data_pedido)::date", measure: "COUNT()", filters: { tenant_id: 1 }, orderBy: { field: "dimension", dir: "asc" }, limit: 12 }, xKey: "mes", yKey: "count", format: "number", height: 220, nivo: { layout: 'vertical' } } },
-        { type: "BarChart", props: { fr: 1, title: "Ticket Médio por Mês", dataQuery: { model: "vendas.pedidos", dimension: "mes", dimensionExpr: "DATE_TRUNC('month', data_pedido)::date", measure: "AVG(valor_total)", filters: { tenant_id: 1 }, orderBy: { field: "dimension", dir: "asc" }, limit: 12 }, xKey: "mes", yKey: "ticket_medio", format: "currency", height: 220, nivo: { layout: 'vertical' } } }
+        { type: "BarChart", props: { fr: 1, title: "Pedidos por Mês", dataQuery: { model: "vendas.pedidos", dimension: "mes", dimensionExpr: "TO_CHAR(DATE_TRUNC('month', data_pedido), 'YYYY-MM')", measure: "COUNT()", filters: { tenant_id: 1 }, orderBy: { field: "dimension", dir: "asc" }, limit: 12 }, xKey: "mes", yKey: "count", format: "number", height: 220, nivo: { layout: 'vertical' } } },
+        { type: "BarChart", props: { fr: 1, title: "Ticket Médio por Mês", dataQuery: { model: "vendas.pedidos", dimension: "mes", dimensionExpr: "TO_CHAR(DATE_TRUNC('month', data_pedido), 'YYYY-MM')", measure: "AVG(valor_total)", filters: { tenant_id: 1 }, orderBy: { field: "dimension", dir: "asc" }, limit: 12 }, xKey: "mes", yKey: "ticket_medio", format: "currency", height: 220, nivo: { layout: 'vertical' } } }
       ]},
 
       { type: "Div", props: { direction: "row", gap: 12, padding: 16, justify: "start", align: "start", childGrow: true }, children: [

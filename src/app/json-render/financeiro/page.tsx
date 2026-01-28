@@ -31,7 +31,7 @@ const FINANCE_TEMPLATE_TEXT = JSON.stringify([
       ]},
 
       { type: "Div", props: { direction: "row", gap: 12, padding: 16, justify: "start", align: "start", childGrow: true }, children: [
-        { type: "LineChart", props: { fr: 3, title: "AP por Mês", dataQuery: { model: "financeiro.contas_pagar", dimension: "mes", dimensionExpr: "DATE_TRUNC('month', data_vencimento)::date", measure: "SUM(valor_liquido)", filters: { tenant_id: 1 }, orderBy: { field: "dimension", dir: "asc" }, limit: 12 }, xKey: "mes", yKey: "valor_total", format: "currency", height: 240, nivo: { curve: 'monotoneX', area: true } } }
+        { type: "LineChart", props: { fr: 3, title: "AP por Mês", dataQuery: { model: "financeiro.contas_pagar", dimension: "mes", dimensionExpr: "TO_CHAR(DATE_TRUNC('month', data_vencimento), 'YYYY-MM')", measure: "SUM(valor_liquido)", filters: { tenant_id: 1 }, orderBy: { field: "dimension", dir: "asc" }, limit: 12 }, xKey: "mes", yKey: "valor_total", format: "currency", height: 240, nivo: { curve: 'monotoneX', area: true } } }
       ]},
 
       { type: "Div", props: { direction: "row", gap: 12, padding: 16, justify: "start", align: "start", childGrow: true }, children: [
