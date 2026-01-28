@@ -23,8 +23,6 @@ function formatValue(val: any, fmt: "currency" | "percent" | "number"): string {
 export default function JsonRenderBarChart({ element }: { element: any }) {
   const { data } = useData();
   const title = element?.props?.title as string | undefined;
-  const xKey = element?.props?.xKey as string;
-  const yKey = element?.props?.yKey as string;
   const fmt = (element?.props?.format ?? 'number') as 'currency'|'percent'|'number';
   const height = (element?.props?.height as number | undefined) ?? 220;
   const colorScheme = element?.props?.colorScheme as string | string[] | undefined;
@@ -62,10 +60,10 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
   const barData = React.useMemo(() => {
     const src = Array.isArray(serverRows) ? serverRows : [];
     return src.map((r) => ({
-      label: String((r as AnyRecord)[xKey] ?? ''),
-      value: Number((r as AnyRecord)[yKey] ?? 0),
+      label: String((r as AnyRecord).label ?? ''),
+      value: Number((r as AnyRecord).value ?? 0),
     }));
-  }, [xKey, yKey, serverRows]);
+  }, [serverRows]);
 
   const colors = Array.isArray(colorScheme)
     ? colorScheme

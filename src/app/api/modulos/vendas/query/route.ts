@@ -126,7 +126,7 @@ export async function POST(req: NextRequest) {
     const orderSql = `ORDER BY ${obField} ${dir}`
 
     // Build
-    const sql = `SELECT ${dimExpr} AS ${dimAlias}, ${measExpr} AS ${measAlias}
+    const sql = `SELECT ${dimExpr} AS label, ${measExpr} AS value
                  ${fromSql}
                  ${whereSql}
                  GROUP BY 1

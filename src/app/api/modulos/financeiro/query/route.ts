@@ -177,13 +177,13 @@ export async function POST(req: NextRequest) {
     let execParams: unknown[]
     if (!dim) {
       // Aggregate only (KPI): no grouping
-      sql = `SELECT ${meas.expr} AS ${meas.alias} ${ctx.from} ${whereSql}`.replace(/\s+/g, ' ').trim()
+      sql = `SELECT ${meas.expr} AS value ${ctx.from} ${whereSql}`.replace(/\s+/g, ' ').trim()
       execParams = params
     } else {
       const dir = (orderBy?.dir && orderBy.dir.toLowerCase() === 'asc') ? 'ASC' : 'DESC'
       const obField = (orderBy?.field === 'dimension') ? '1' : '2'
       const orderSql = `ORDER BY ${obField} ${dir}`
-      sql = `SELECT ${dim.expr} AS ${dim.alias}, ${meas.expr} AS ${meas.alias}
+      sql = `SELECT ${dim.expr} AS label, ${meas.expr} AS value
              ${ctx.from}
              ${whereSql}
              GROUP BY 1

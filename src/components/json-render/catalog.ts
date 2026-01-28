@@ -183,8 +183,7 @@ export const catalog = {
           margin: z.union([z.number(), z.string()]).optional(),
         }).partial().optional(),
         borderless: z.boolean().optional(),
-        xKey: z.string(),
-        yKey: z.string(),
+        // xKey/yKey removed — server returns { label, value }
         fr: z.number().optional(),
         format: z.enum(["currency", "percent", "number"]).default("number"),
         height: z.number().optional(),
@@ -246,8 +245,7 @@ export const catalog = {
           margin: z.union([z.number(), z.string()]).optional(),
         }).partial().optional(),
         borderless: z.boolean().optional(),
-        xKey: z.string(),
-        yKey: z.string(),
+        // xKey/yKey removed — server returns { label, value }
         fr: z.number().optional(),
         format: z.enum(["currency", "percent", "number"]).default("number"),
         height: z.number().optional(),
@@ -305,8 +303,7 @@ export const catalog = {
           margin: z.union([z.number(), z.string()]).optional(),
         }).partial().optional(),
         borderless: z.boolean().optional(),
-        xKey: z.string(),
-        yKey: z.string(),
+        // xKey/yKey removed — server returns { label, value }
         fr: z.number().optional(),
         format: z.enum(["currency", "percent", "number"]).default("number"),
         height: z.number().optional(),

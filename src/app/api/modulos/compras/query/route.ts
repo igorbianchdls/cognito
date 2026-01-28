@@ -124,13 +124,13 @@ export async function POST(req: NextRequest) {
     let execParams: unknown[]
     if (!dimension && !dimensionExprOverride) {
       // KPI (no dimension): single aggregate
-      sql = `SELECT ${measExpr} AS ${measAlias} ${fromSql} ${whereSql}`.replace(/\s+/g, ' ').trim()
+      sql = `SELECT ${measExpr} AS value ${fromSql} ${whereSql}`.replace(/\s+/g, ' ').trim()
       execParams = params
     } else {
       const dir = (orderBy?.dir && orderBy.dir.toLowerCase() === 'asc') ? 'ASC' : 'DESC'
       const obField = (orderBy?.field === 'dimension') ? '1' : '2' // 1: dimension expr, 2: measure expr
       const orderSql = `ORDER BY ${obField} ${dir}`
-      sql = `SELECT ${dimExpr} AS ${dimAlias}, ${measExpr} AS ${measAlias}
+      sql = `SELECT ${dimExpr} AS label, ${measExpr} AS value
              ${fromSql}
              ${whereSql}
              GROUP BY 1

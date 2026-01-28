@@ -45,8 +45,6 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
     return () => { cancelled = true };
   }, [JSON.stringify(dq), JSON.stringify((data as any)?.filters?.dateRange)]);
   const title = element?.props?.title as string | undefined;
-  const xKey = element?.props?.xKey as string;
-  const yKey = element?.props?.yKey as string;
   const fmt = (element?.props?.format ?? 'number') as 'currency'|'percent'|'number';
   const height = (element?.props?.height as number | undefined) ?? 220;
   const colorScheme = element?.props?.colorScheme as string | string[] | undefined;
@@ -57,8 +55,8 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
 
   const seriesData = React.useMemo(() => {
     const src = Array.isArray(serverRows) ? serverRows : [];
-    return [{ id: title || 'Series', data: src.map((r) => ({ x: String((r as AnyRecord)[xKey] ?? ''), y: Number((r as AnyRecord)[yKey] ?? 0) })) }];
-  }, [xKey, yKey, title, serverRows]);
+    return [{ id: title || 'Series', data: src.map((r) => ({ x: String((r as AnyRecord).label ?? ''), y: Number((r as AnyRecord).value ?? 0) })) }];
+  }, [title, serverRows]);
 
   const colors = Array.isArray(colorScheme)
     ? colorScheme
