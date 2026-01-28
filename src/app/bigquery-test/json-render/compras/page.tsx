@@ -10,7 +10,7 @@ const COMPRAS_TEMPLATE_TEXT = JSON.stringify([
     type: "Theme",
     props: { name: "light" },
     children: [
-      { type: "Header", props: { title: "Dashboard de Compras", subtitle: "Principais indicadores e cortes", align: "center" } },
+      { type: "Header", props: { title: "Dashboard de Compras", subtitle: "Principais indicadores e cortes", align: "center", datePicker: { visible: true, mode: "range", position: "right", storePath: "filters.dateRange", actionOnChange: { type: "refresh_data" }, style: { padding: 6, fontFamily: "Barlow", fontSize: 12 } } } },
       { type: "Div", props: { direction: "row", gap: 12, padding: 16, justify: "start", align: "start", childGrow: true }, children: [
         { type: "Kpi", props: { label: "Gasto", valuePath: "compras.kpis.gasto", format: "currency", labelStyle: { fontWeight: 600, fontSize: 12, color: "#64748b" }, valueStyle: { fontWeight: 700, fontSize: 24, color: "#0f172a" } } },
         { type: "Kpi", props: { label: "Fornecedores", valuePath: "compras.kpis.fornecedores", format: "number" } },
@@ -36,7 +36,7 @@ const COMPRAS_TEMPLATE_TEXT = JSON.stringify([
 ], null, 2);
 
 function ComprasPlayground() {
-  const { setData } = useData();
+  const { setData, getValueByPath } = useData();
   const [jsonText, setJsonText] = useState<string>(COMPRAS_TEMPLATE_TEXT);
   const [parseError, setParseError] = useState<string | null>(null);
   const [tree, setTree] = useState<any | any[] | null>(() => {
@@ -103,6 +103,37 @@ function ComprasPlayground() {
     try { setTree(JSON.parse(COMPRAS_TEMPLATE_TEXT)); setParseError(null) } catch {}
   }, []);
 
+  const handleAction = useCallback((action: any) => {
+    if (action?.type === 'refresh_data') {
+      (async () => {
+        try {
+          const dr = getValueByPath('filters.dateRange', undefined) as { from?: string; to?: string } | undefined;
+          const de = dr?.from;
+          const ate = dr?.to;
+          // Reusar fetchOnce
+          const qsDash = new URLSearchParams();
+          if (de) qsDash.set('de', de);
+          if (ate) qsDash.set('ate', ate);
+          qsDash.set('limit', '8');
+          const [listRes, dashRes] = await Promise.allSettled([
+            fetch(`/api/modulos/compras?view=compras&page=1&pageSize=1000`, { cache: 'no-store' }),
+            fetch(`/api/modulos/compras/dashboard?${qsDash.toString()}`, { cache: 'no-store' })
+          ]);
+          if (listRes.status === 'fulfilled' && listRes.value.ok) {
+            const j = await listRes.value.json();
+            const rows = Array.isArray(j?.rows) ? j.rows : [];
+            setData((prev: any) => ({ ...(prev || {}), compras: { ...(prev?.compras || {}), compras: rows } }));
+          }
+          if (dashRes.status === 'fulfilled' && dashRes.value.ok) {
+            const j = await dashRes.value.json();
+            setData((prev: any) => ({ ...(prev || {}), compras: { ...(prev?.compras || {}), kpis: j?.kpis || {}, dashboard: j?.charts || {} } }));
+          }
+        } catch {}
+      })();
+      return;
+    }
+  }, [getValueByPath, setData]);
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-5 gap-6 items-start">
       <div className="md:col-span-1">
@@ -130,7 +161,7 @@ function ComprasPlayground() {
         </div>
         <div className="rounded-md border border-gray-200 bg-white p-0 min-h-[420px]">
           {tree ? (
-            <Renderer tree={tree} registry={registry} />
+            <Renderer tree={tree} registry={registry} onAction={handleAction} />
           ) : (
             <div className="text-sm text-gray-500">JSON inválido</div>
           )}

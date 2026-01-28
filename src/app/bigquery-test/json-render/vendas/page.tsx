@@ -10,7 +10,7 @@ const SALES_TEMPLATE_TEXT = JSON.stringify([
     type: "Theme",
     props: { name: "light" },
     children: [
-      { type: "Header", props: { title: "Dashboard de Vendas", subtitle: "Principais indicadores e cortes", align: "center" } },
+      { type: "Header", props: { title: "Dashboard de Vendas", subtitle: "Principais indicadores e cortes", align: "center", datePicker: { visible: true, mode: "range", position: "right", storePath: "filters.dateRange", actionOnChange: { type: "refresh_data" }, style: { padding: 6, fontFamily: "Barlow", fontSize: 12 } } } },
       { type: "Div", props: { direction: "row", gap: 12, padding: 16, justify: "start", align: "start", childGrow: true }, children: [
         { type: "Kpi", props: { label: "Vendas", valuePath: "vendas.kpis.vendas", format: "currency", labelStyle: { fontWeight: 600, fontSize: 12, color: "#64748b" }, valueStyle: { fontWeight: 700, fontSize: 24, color: "#0f172a" }, containerStyle: { borderWidth: 2, borderColor: "#0ea5e9", borderRadius: 12 } } },
         { type: "Kpi", props: { label: "Pedidos", valuePath: "vendas.kpis.pedidos", format: "number", containerStyle: { borderWidth: 2, borderColor: "#22c55e", borderStyle: "dashed", borderRadius: 10 } } },
@@ -40,7 +40,7 @@ const SALES_TEMPLATE_TEXT = JSON.stringify([
 ], null, 2);
 
 function SalesPlayground() {
-  const { data, setData } = useData();
+  const { data, setData, getValueByPath } = useData();
   const [jsonText, setJsonText] = useState<string>(SALES_TEMPLATE_TEXT);
   const [parseError, setParseError] = useState<string | null>(null);
   const [tree, setTree] = useState<any | any[] | null>(() => {
@@ -79,10 +79,29 @@ function SalesPlayground() {
 
   const handleAction = useCallback((action: any) => {
     if (action?.type === 'refresh_data') {
-      // Poderia refazer o fetch aqui, mantido simples
+      (async () => {
+        try {
+          const dr = getValueByPath('filters.dateRange', undefined) as { from?: string; to?: string } | undefined;
+          const de = dr?.from || new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0,10);
+          const ate = dr?.to || new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString().slice(0,10);
+          const [listRes, dashRes] = await Promise.allSettled([
+            fetch(`/api/modulos/vendas?view=pedidos&page=1&pageSize=1000`, { cache: 'no-store' }),
+            fetch(`/api/modulos/vendas/dashboard?de=${de}&ate=${ate}&limit=8`, { cache: 'no-store' }),
+          ]);
+          if (listRes.status === 'fulfilled' && listRes.value.ok) {
+            const j = await listRes.value.json();
+            const rows = Array.isArray(j?.rows) ? j.rows : [];
+            setData((prev: any) => ({ ...(prev || {}), vendas: { ...(prev?.vendas || {}), pedidos: rows } }));
+          }
+          if (dashRes.status === 'fulfilled' && dashRes.value.ok) {
+            const j = await dashRes.value.json();
+            setData((prev: any) => ({ ...(prev || {}), vendas: { ...(prev?.vendas || {}), kpis: j?.kpis || {} } }));
+          }
+        } catch {}
+      })();
       return;
     }
-  }, []);
+  }, [getValueByPath, setData]);
 
   const onChangeText = useCallback((s: string) => {
     setJsonText(s);

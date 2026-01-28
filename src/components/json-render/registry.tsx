@@ -92,7 +92,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     );
   },
 
-  Header: ({ element, children }) => {
+  Header: ({ element, children, onAction }) => {
     const defs = useStore($headerDefaults);
     const p = deepMerge(defs as any, (element?.props || {}) as any) as AnyRecord;
     const align = (p.align ?? 'left') as 'left'|'center'|'right';
@@ -115,12 +115,107 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       height: styleVal(p.height),
       textAlign: align,
     };
+    const dp = p.datePicker || {};
+    const showPicker = Boolean(dp.visible);
+    const position = (dp.position ?? 'right') as 'left'|'right'|'below';
+    const mode = (dp.mode ?? 'range') as 'range'|'single';
+    const storePath = typeof dp.storePath === 'string' ? dp.storePath : undefined;
+    const format = (typeof dp.format === 'string' && dp.format) ? dp.format : 'YYYY-MM-DD';
+    const dateStyle: React.CSSProperties = {
+      padding: styleVal(dp.style?.padding),
+      margin: styleVal(dp.style?.margin),
+      fontFamily: dp.style?.fontFamily,
+      fontSize: typeof dp.style?.fontSize === 'number' ? `${dp.style?.fontSize}px` : dp.style?.fontSize,
+      color: dp.style?.color,
+    };
+    const { data, setData, getValueByPath } = useData();
+    function toISO(d: Date) { return d.toISOString().slice(0,10); }
+    function fmt(d?: string) { return d || ''; }
+    function getDefaultRange() {
+      const now = new Date();
+      const from = new Date(now.getFullYear(), now.getMonth(), 1);
+      const to = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      return { from: toISO(from), to: toISO(to) };
+    }
+    function setByPath(prev: any, path: string, value: any) {
+      if (!path) return prev;
+      const parts = path.split('.').map(s => s.trim()).filter(Boolean);
+      const root = Array.isArray(prev) ? [...prev] : { ...(prev || {}) };
+      let curr: any = root;
+      for (let i = 0; i < parts.length; i++) {
+        const k = parts[i];
+        if (i === parts.length - 1) {
+          curr[k] = value;
+        } else {
+          curr[k] = typeof curr[k] === 'object' && curr[k] !== null ? { ...curr[k] } : {};
+          curr = curr[k];
+        }
+      }
+      return root;
+    }
+    const stored = storePath ? getValueByPath(storePath, undefined) : undefined;
+    const currentRange = mode === 'range'
+      ? (stored && typeof stored === 'object' ? { from: fmt(stored.from), to: fmt(stored.to) } : getDefaultRange())
+      : (stored && typeof stored === 'string' ? stored : getDefaultRange().from);
+    const picker = showPicker ? (
+      <div className="flex items-center gap-2" style={dateStyle}>
+        {mode === 'range' ? (
+          <>
+            <input type="date" className="border border-gray-300 rounded px-2 py-1 text-xs"
+              value={currentRange.from}
+              onChange={(e) => {
+                if (!storePath) return;
+                const next = setByPath(data, storePath, { from: e.target.value, to: currentRange.to });
+                setData(next);
+                if (dp.actionOnChange && typeof dp.actionOnChange === 'object') onAction?.(dp.actionOnChange);
+              }} />
+            <span className="text-xs text-gray-500">até</span>
+            <input type="date" className="border border-gray-300 rounded px-2 py-1 text-xs"
+              value={currentRange.to}
+              onChange={(e) => {
+                if (!storePath) return;
+                const next = setByPath(data, storePath, { from: currentRange.from, to: e.target.value });
+                setData(next);
+                if (dp.actionOnChange && typeof dp.actionOnChange === 'object') onAction?.(dp.actionOnChange);
+              }} />
+          </>
+        ) : (
+          <input type="date" className="border border-gray-300 rounded px-2 py-1 text-xs"
+            value={currentRange as string}
+            onChange={(e) => {
+              if (!storePath) return;
+              const next = setByPath(data, storePath, e.target.value);
+              setData(next);
+              if (dp.actionOnChange && typeof dp.actionOnChange === 'object') onAction?.(dp.actionOnChange);
+            }} />
+        )}
+      </div>
+    ) : null;
+
     return (
       <div className="rounded-md" style={containerStyle}>
-        <div>
-          <div className="text-lg font-semibold" style={{ color: p.textColor }}>{p.title}</div>
-          {p.subtitle && <div className="text-sm" style={{ color: p.subtitleColor }}>{p.subtitle}</div>}
-        </div>
+        {position === 'below' ? (
+          <>
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-lg font-semibold" style={{ color: p.textColor }}>{p.title}</div>
+                {p.subtitle && <div className="text-sm" style={{ color: p.subtitleColor }}>{p.subtitle}</div>}
+              </div>
+            </div>
+            {picker && <div className="mt-2">{picker}</div>}
+          </>
+        ) : (
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              {position === 'left' && picker}
+              <div>
+                <div className="text-lg font-semibold" style={{ color: p.textColor }}>{p.title}</div>
+                {p.subtitle && <div className="text-sm" style={{ color: p.subtitleColor }}>{p.subtitle}</div>}
+              </div>
+            </div>
+            {position === 'right' && picker}
+          </div>
+        )}
         {children && <div className="mt-2">{children}</div>}
       </div>
     );

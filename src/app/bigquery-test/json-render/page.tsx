@@ -11,7 +11,7 @@ const SAMPLE_TREE_TEXT = JSON.stringify([
     type: "Theme",
     props: { name: "light" },
     children: [
-      { type: "Header", props: { title: "Dashboard (Dados Reais)", subtitle: "Vendas, Compras e Financeiro", align: "center" } },
+      { type: "Header", props: { title: "Dashboard (Dados Reais)", subtitle: "Vendas, Compras e Financeiro", align: "center", datePicker: { visible: true, mode: "range", position: "right", storePath: "filters.dateRange", actionOnChange: { type: "refresh_data" }, style: { padding: 6, fontFamily: "Barlow", fontSize: 12 } } } },
       { type: "Div", props: { direction: "row", gap: 12, padding: 16, justify: "start", align: "start", childGrow: true }, children: [
         { type: "Kpi", props: { label: "Recebidos (Período)", valuePath: "financeiro.kpis.recebidos_mes", format: "currency", labelStyle: { fontWeight: 600, fontSize: 12, color: "#64748b" }, valueStyle: { fontWeight: 700, fontSize: 24, color: "#0f172a" } } },
         { type: "Kpi", props: { label: "Pagos (Período)", valuePath: "financeiro.kpis.pagos_mes", format: "currency" } },
@@ -129,11 +129,31 @@ function Playground() {
   const handleAction = useCallback((action: any) => {
     const t = action?.type;
     if (t === "refresh_data") {
-      // Fake refresh: jitter values slightly
-      setData((prev: any) => ({
-        revenue: Math.round(prev.revenue * (0.98 + Math.random() * 0.04)),
-        growth: Math.max(0, Math.min(1, prev.growth + (Math.random() - 0.5) * 0.02)),
-      }));
+      (async () => {
+        try {
+          const dr = (data?.filters && (data as any).filters.dateRange) as { from?: string; to?: string } | undefined;
+          const de = dr?.from || new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0,10);
+          const ate = dr?.to || new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString().slice(0,10);
+          const [finDash, venDash, comDash, finAp, finAr, venList, comList] = await Promise.allSettled([
+            fetch(`/api/modulos/financeiro/dashboard?de=${de}&ate=${ate}&limit=6`, { cache: 'no-store' }),
+            fetch(`/api/modulos/vendas/dashboard?de=${de}&ate=${ate}&limit=6`, { cache: 'no-store' }),
+            fetch(`/api/modulos/compras/dashboard?de=${de}&ate=${ate}&limit=6`, { cache: 'no-store' }),
+            fetch(`/api/modulos/financeiro?view=contas-a-pagar&page=1&pageSize=1000`, { cache: 'no-store' }),
+            fetch(`/api/modulos/financeiro?view=contas-a-receber&page=1&pageSize=1000`, { cache: 'no-store' }),
+            fetch(`/api/modulos/vendas?view=pedidos&page=1&pageSize=1000`, { cache: 'no-store' }),
+            fetch(`/api/modulos/compras?view=compras&page=1&pageSize=1000`, { cache: 'no-store' }),
+          ]);
+          const next: Record<string, any> = {};
+          if (finDash.status === 'fulfilled' && finDash.value.ok) { const j = await finDash.value.json(); next.financeiro = { ...(data?.financeiro||{}), dashboard: j?.charts||{}, kpis: j?.kpis||{} } }
+          if (venDash.status === 'fulfilled' && venDash.value.ok) { const j = await venDash.value.json(); next.vendas = { ...(data?.vendas||{}), dashboard: j?.charts||{}, kpis: j?.kpis||{} } }
+          if (comDash.status === 'fulfilled' && comDash.value.ok) { const j = await comDash.value.json(); next.compras = { ...(data?.compras||{}), dashboard: j?.charts||{}, kpis: j?.kpis||{} } }
+          if (finAp.status === 'fulfilled' && finAp.value.ok) { const j = await finAp.value.json(); next.financeiro = { ...(next.financeiro||data?.financeiro||{}), ['contas-a-pagar']: Array.isArray(j?.rows)? j.rows: [] } }
+          if (finAr.status === 'fulfilled' && finAr.value.ok) { const j = await finAr.value.json(); next.financeiro = { ...(next.financeiro||data?.financeiro||{}), ['contas-a-receber']: Array.isArray(j?.rows)? j.rows: [] } }
+          if (venList.status === 'fulfilled' && venList.value.ok) { const j = await venList.value.json(); next.vendas = { ...(next.vendas||data?.vendas||{}), pedidos: Array.isArray(j?.rows)? j.rows: [] } }
+          if (comList.status === 'fulfilled' && comList.value.ok) { const j = await comList.value.json(); next.compras = { ...(next.compras||data?.compras||{}), compras: Array.isArray(j?.rows)? j.rows: [] } }
+          setData((prev: any) => ({ ...(prev||{}), ...next }));
+        } catch {}
+      })();
       return;
     }
     if (t === "export_report") {
