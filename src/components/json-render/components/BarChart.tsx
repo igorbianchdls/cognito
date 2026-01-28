@@ -86,7 +86,7 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
       label: String(getByPath(r, xKey, '')),
       value: Number(getByPath(r, yKey, 0) ?? 0),
     }));
-  }, [rows, xKey, yKey]);
+  }, [rows, xKey, yKey, serverRows]);
 
   const colors = Array.isArray(colorScheme)
     ? colorScheme

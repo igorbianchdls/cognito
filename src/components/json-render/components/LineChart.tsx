@@ -79,7 +79,7 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
       id: title || 'Series',
       data: (rows as AnyRecord[]).map((r) => ({ x: String(getByPath(r, xKey, '')), y: Number(getByPath(r, yKey, 0) ?? 0) })),
     }];
-  }, [rows, xKey, yKey, title]);
+  }, [rows, xKey, yKey, title, serverRows]);
 
   const colors = Array.isArray(colorScheme)
     ? colorScheme
