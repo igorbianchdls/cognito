@@ -154,43 +154,49 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       return root;
     }
     const stored = storePath ? getValueByPath(storePath, undefined) : undefined;
-    const currentRange = mode === 'range'
-      ? (stored && typeof stored === 'object' ? { from: fmt(stored.from), to: fmt(stored.to) } : getDefaultRange())
-      : (stored && typeof stored === 'string' ? stored : getDefaultRange().from);
-    const picker = showPicker ? (
-      <div className="flex items-center gap-2" style={dateStyle}>
-        {mode === 'range' ? (
-          <>
+    let picker: React.ReactNode = null;
+    if (showPicker) {
+      if (mode === 'range') {
+        const curr = (stored && typeof stored === 'object')
+          ? { from: fmt((stored as any).from), to: fmt((stored as any).to) }
+          : getDefaultRange();
+        picker = (
+          <div className="flex items-center gap-2" style={dateStyle}>
             <input type="date" className="border border-gray-300 rounded px-2 py-1 text-xs"
-              value={currentRange.from}
+              value={curr.from}
               onChange={(e) => {
                 if (!storePath) return;
-                const next = setByPath(data, storePath, { from: e.target.value, to: currentRange.to });
+                const next = setByPath(data, storePath, { from: e.target.value, to: curr.to });
                 setData(next);
                 if (dp.actionOnChange && typeof dp.actionOnChange === 'object') onAction?.(dp.actionOnChange);
               }} />
             <span className="text-xs text-gray-500">até</span>
             <input type="date" className="border border-gray-300 rounded px-2 py-1 text-xs"
-              value={currentRange.to}
+              value={curr.to}
               onChange={(e) => {
                 if (!storePath) return;
-                const next = setByPath(data, storePath, { from: currentRange.from, to: e.target.value });
+                const next = setByPath(data, storePath, { from: curr.from, to: e.target.value });
                 setData(next);
                 if (dp.actionOnChange && typeof dp.actionOnChange === 'object') onAction?.(dp.actionOnChange);
               }} />
-          </>
-        ) : (
-          <input type="date" className="border border-gray-300 rounded px-2 py-1 text-xs"
-            value={currentRange as string}
-            onChange={(e) => {
-              if (!storePath) return;
-              const next = setByPath(data, storePath, e.target.value);
-              setData(next);
-              if (dp.actionOnChange && typeof dp.actionOnChange === 'object') onAction?.(dp.actionOnChange);
-            }} />
-        )}
-      </div>
-    ) : null;
+          </div>
+        );
+      } else {
+        const curr = (stored && typeof stored === 'string') ? stored : getDefaultRange().from;
+        picker = (
+          <div className="flex items-center gap-2" style={dateStyle}>
+            <input type="date" className="border border-gray-300 rounded px-2 py-1 text-xs"
+              value={curr}
+              onChange={(e) => {
+                if (!storePath) return;
+                const next = setByPath(data, storePath, e.target.value);
+                setData(next);
+                if (dp.actionOnChange && typeof dp.actionOnChange === 'object') onAction?.(dp.actionOnChange);
+              }} />
+          </div>
+        );
+      }
+    }
 
     return (
       <div className="rounded-md" style={containerStyle}>
