@@ -19,16 +19,16 @@ export default function SandboxTabs() {
 
   return (
     <Tabs value={active} onValueChange={(v) => sandboxActions.setActiveTab(v as SandboxTab)}>
-      <TabsList className="!bg-transparent !p-0 gap-3 h-9">
+      <TabsList className="!bg-transparent !p-0 gap-2 h-8">
         {tabs.map(({ key, label, icon: Icon }) => (
           <div key={key} className="relative">
             <TabsTrigger
               value={key}
-              className={cn('h-9 px-3 rounded-xl text-sm font-medium transition-colors')}
-              activeClassName="!bg-gray-50 !text-gray-800 !shadow-none rounded-xl"
+              className={cn('h-8 px-2 rounded-xl text-sm font-medium transition-colors')}
+              activeClassName="!bg-gray-50 !text-gray-800 !shadow-none rounded-xl !px-2 !h-8"
               inactiveClassName="!text-gray-500 hover:!text-gray-700"
             >
-              <Icon className="w-5 h-5 mr-2" />
+              <Icon className="w-4 h-4 mr-1.5" />
               {label}
               {active === key && (
                 <DropdownMenu>
