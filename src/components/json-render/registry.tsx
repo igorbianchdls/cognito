@@ -135,7 +135,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     ) as React.CSSProperties;
     return (
       <div style={style}>
-        {title && <h3 className="text-base font-semibold text-gray-900 mb-2" style={titleStyle}>{title}</h3>}
+        {title && <h3 className="text-base font-semibold text-gray-900 mb-0" style={titleStyle}>{title}</h3>}
         <div className="space-y-2">{children}</div>
       </div>
     );
@@ -701,7 +701,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
 
     const card = (
       <div style={containerStyle}>
-        {title && <div className="mb-2" style={applyH1FromCssVars(undefined, theme.cssVars)}>{title}</div>}
+        {title && <div className="mb-0" style={applyH1FromCssVars(undefined, theme.cssVars)}>{title}</div>}
         <div className={(layout === 'horizontal' ? 'flex items-start gap-3 flex-wrap' : 'space-y-3') + ' p-2'}>
           {(() => {
             const f = (fields && fields.length > 0) ? fields[0] : undefined;

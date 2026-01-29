@@ -152,7 +152,7 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
   }
   return (
     <div style={containerStyle}>
-      {title && <div className="mb-2" style={titleStyle}>{title}</div>}
+      {title && <div className="mb-0" style={titleStyle}>{title}</div>}
       <div style={{ height }}>
         <ResponsiveLine
           data={seriesData}
