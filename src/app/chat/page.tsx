@@ -15,7 +15,7 @@ export default function ChatRoutePage() {
   return (
     <SidebarProvider>
       {/* Left sidebar with right border by default */}
-      <SidebarShadcn />
+      <SidebarShadcn showHeaderTrigger={false} />
       {/* Right content area */}
       <SidebarInset className="h-screen overflow-hidden">
         <div className="flex h-full overflow-hidden">

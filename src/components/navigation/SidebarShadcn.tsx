@@ -194,7 +194,7 @@ function SidebarHeaderCompact({
   )
 }
 
-export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle, sectionTitleStyle, style, borderless, headerBorderless, className, headerVariant = 'compact', ...props }: React.ComponentProps<typeof Sidebar> & { bgColor?: string; textColor?: string; itemTextColor?: string; itemTextStyle?: React.CSSProperties; sectionTitleStyle?: React.CSSProperties; borderless?: boolean; headerBorderless?: boolean; className?: string; headerVariant?: HeaderVariant }) {
+export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle, sectionTitleStyle, style, borderless, headerBorderless, className, headerVariant = 'compact', showHeaderTrigger = true, ...props }: React.ComponentProps<typeof Sidebar> & { bgColor?: string; textColor?: string; itemTextColor?: string; itemTextStyle?: React.CSSProperties; sectionTitleStyle?: React.CSSProperties; borderless?: boolean; headerBorderless?: boolean; className?: string; headerVariant?: HeaderVariant; showHeaderTrigger?: boolean }) {
   const pathname = usePathname()
 
   // Update active state based on current path
@@ -235,14 +235,14 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
         {headerVariant === 'compact' ? (
           <div className="h-full w-full flex items-center justify-between px-[var(--ui-pad-x)]">
             <SidebarHeaderCompact teams={dataWithActiveState.teams} />
-            <SidebarTrigger />
+            {showHeaderTrigger && <SidebarTrigger />}
           </div>
         ) : (
           <div className="h-full w-full flex items-center justify-between px-[var(--ui-pad-x)]">
             <div className="group-data-[collapsible=icon]:hidden">
               <TeamSwitcher teams={dataWithActiveState.teams} />
             </div>
-            <SidebarTrigger />
+            {showHeaderTrigger && <SidebarTrigger />}
           </div>
         )}
       </SidebarHeader>
