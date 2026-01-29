@@ -9,7 +9,7 @@ import { mapManagersToCssVars } from "@/components/json-render/theme/thememanage
 import { buildThemeVars } from "@/components/json-render/theme/themeAdapter";
 import { useDataValue, useData } from "@/components/json-render/context";
 import { deepMerge } from "@/stores/ui/json-render/utils";
-import { normalizeTitleStyle, normalizeContainerStyle, applyBorderFromCssVars, ensureSurfaceBackground, applyShadowFromCssVars, applyH1FromCssVars, applyKpiTitleFromCssVars, applyKpiValueFromCssVars } from "@/components/json-render/helpers";
+import { normalizeTitleStyle, normalizeContainerStyle, applyBorderFromCssVars, ensureSurfaceBackground, applyShadowFromCssVars, applyH1FromCssVars, applyKpiTitleFromCssVars, applyKpiValueFromCssVars, applySlicerLabelFromCssVars, applySlicerOptionFromCssVars } from "@/components/json-render/helpers";
 
 type AnyRecord = Record<string, any>;
 
