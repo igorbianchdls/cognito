@@ -167,6 +167,7 @@ function ComprasPlayground() {
         {parseError && (
           <div className="mt-2 rounded border border-red-300 bg-red-50 px-2 py-1 text-xs text-red-700">{parseError}</div>
         )}
+        <ManagersPanel jsonText={jsonText} setJsonText={setJsonText} setTree={setTree} disabled={!!parseError} />
       </div>
 
       <div className="md:col-span-4">
@@ -195,6 +196,145 @@ export default function JsonRenderComprasPage() {
         <DataProvider initialData={{ compras: { dashboard: {}, kpis: {} } }}>
           <ComprasPlayground />
         </DataProvider>
+      </div>
+    </div>
+  );
+}
+
+// Managers Panel (reuso simples — mesma implementação do de Vendas)
+type PanelProps = { jsonText: string; setJsonText: (s: string) => void; setTree: (t: any) => void; disabled?: boolean };
+function ManagersPanel({ jsonText, setJsonText, setTree, disabled }: PanelProps) {
+  const themeOptions = [
+    { value: 'light', label: 'Light' },
+    { value: 'blue', label: 'Blue' },
+    { value: 'dark', label: 'Dark' },
+    { value: 'black', label: 'Black' },
+  ];
+  const fontOptions = [
+    'Inter, ui-sans-serif, system-ui',
+    'Barlow, ui-sans-serif, system-ui',
+    'Geist, ui-sans-serif, system-ui',
+    'IBM Plex Sans, ui-sans-serif, system-ui',
+    'system-ui'
+  ];
+  const borderStyleOptions = ['none','solid','dashed','dotted'] as const;
+  const borderWidthOptions = ['0','1','2','3'];
+  const borderRadiusOptions = ['0','6','8','12'];
+  const borderColorOptions = ['#e5e7eb','#333333','#2563eb','#10b981','#ef4444'];
+  const colorPresets: Record<string, string[]> = {
+    sky: ['#38bdf8','#0ea5e9','#0284c7','#0369a1'],
+    emerald: ['#34d399','#10b981','#059669','#047857'],
+    vibrant: ['#22d3ee','#a78bfa','#34d399','#f59e0b','#ef4444'],
+    category10: ['#1f77b4','#ff7f0e','#2ca02c','#d62728','#9467bd','#8c564b','#e377c2','#7f7f7f','#bcbd22','#17becf'],
+  };
+
+  function readCurrent(): { name: string; managers: any } {
+    try {
+      const arr = JSON.parse(jsonText);
+      const nodes = Array.isArray(arr) ? arr : [arr];
+      const theme = nodes[0] && nodes[0].type === 'Theme' ? nodes[0] : null;
+      const name = String(theme?.props?.name || 'light');
+      const managers = (theme?.props?.managers && typeof theme.props.managers === 'object') ? theme.props.managers : {};
+      return { name, managers };
+    } catch { return { name: 'light', managers: {} } }
+  }
+  function updateTheme(mut: (t: any) => void) {
+    try {
+      const arr = JSON.parse(jsonText);
+      let nodes = Array.isArray(arr) ? arr : [arr];
+      if (!nodes[0] || nodes[0].type !== 'Theme') {
+        nodes = [{ type: 'Theme', props: { name: 'light' }, children: nodes }];
+      }
+      const theme = nodes[0];
+      if (!theme.props) theme.props = { name: 'light' };
+      mut(theme);
+      const pretty = JSON.stringify(nodes, null, 2);
+      setJsonText(pretty);
+      setTree(nodes);
+    } catch {}
+  }
+  const current = readCurrent();
+  const schemeToPreset = (arr?: string[]): string => {
+    if (!arr) return 'custom';
+    for (const [k, v] of Object.entries(colorPresets)) {
+      if (v.length === arr.length && v.every((c, i) => c.toLowerCase() === arr[i].toLowerCase())) return k;
+    }
+    return 'custom';
+  };
+  const currentPreset = schemeToPreset(current.managers?.color?.scheme);
+
+  return (
+    <div className="mt-4 rounded-md bg-white p-3 border border-gray-200">
+      <h3 className="text-xs font-medium text-gray-900 mb-2">Aparência (Managers)</h3>
+      <div className="space-y-3">
+        <div className="flex items-center gap-2">
+          <label className="text-xs text-gray-700 w-20">Tema</label>
+          <select disabled={disabled} className="text-xs border border-gray-300 rounded px-2 py-1" value={current.name}
+            onChange={(e) => updateTheme((th: any) => { if (!th.props) th.props = {}; th.props.name = e.target.value; })}>
+            {themeOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
+        </div>
+        <div className="flex items-center gap-2">
+          <label className="text-xs text-gray-700 w-20">Fonte</label>
+          <select disabled={disabled} className="text-xs border border-gray-300 rounded px-2 py-1" value={current.managers?.font || ''}
+            onChange={(e) => updateTheme((th: any) => { th.props.managers = th.props.managers || {}; if (e.target.value) th.props.managers.font = e.target.value; else delete th.props.managers.font; })}>
+            <option value="">(padrão do tema)</option>
+            {fontOptions.map(f => <option key={f} value={f}>{f}</option>)}
+          </select>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <div className="flex items-center gap-2">
+            <label className="text-xs text-gray-700 w-20">Borda</label>
+            <select disabled={disabled} className="text-xs border border-gray-300 rounded px-2 py-1" value={current.managers?.border?.style || ''}
+              onChange={(e) => updateTheme((th: any) => { th.props.managers = th.props.managers || {}; th.props.managers.border = th.props.managers.border || {}; const v = e.target.value; if (v) th.props.managers.border.style = v; else delete th.props.managers.border.style; })}>
+              <option value="">(padrão)</option>
+              {borderStyleOptions.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="text-xs text-gray-700 w-20">Largura</label>
+            <select disabled={disabled} className="text-xs border border-gray-300 rounded px-2 py-1" value={String(current.managers?.border?.width ?? '')}
+              onChange={(e) => updateTheme((th: any) => { th.props.managers = th.props.managers || {}; th.props.managers.border = th.props.managers.border || {}; const v = e.target.value; if (v !== '') th.props.managers.border.width = Number(v); else delete th.props.managers.border.width; })}>
+              <option value="">(padrão)</option>
+              {borderWidthOptions.map(w => <option key={w} value={w}>{w}px</option>)}
+            </select>
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="text-xs text-gray-700 w-20">Raio</label>
+            <select disabled={disabled} className="text-xs border border-gray-300 rounded px-2 py-1" value={String(current.managers?.border?.radius ?? '')}
+              onChange={(e) => updateTheme((th: any) => { th.props.managers = th.props.managers || {}; th.props.managers.border = th.props.managers.border || {}; const v = e.target.value; if (v !== '') th.props.managers.border.radius = Number(v); else delete th.props.managers.border.radius; })}>
+              <option value="">(padrão)</option>
+              {borderRadiusOptions.map(r => <option key={r} value={r}>{r}px</option>)}
+            </select>
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="text-xs text-gray-700 w-20">Cor</label>
+            <select disabled={disabled} className="text-xs border border-gray-300 rounded px-2 py-1" value={current.managers?.border?.color || ''}
+              onChange={(e) => updateTheme((th: any) => { th.props.managers = th.props.managers || {}; th.props.managers.border = th.props.managers.border || {}; const v = e.target.value; if (v) th.props.managers.border.color = v; else delete th.props.managers.border.color; })}>
+              <option value="">(padrão)</option>
+              {borderColorOptions.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <label className="text-xs text-gray-700 w-20">Cores</label>
+          <select disabled={disabled} className="text-xs border border-gray-300 rounded px-2 py-1" value={(() => {
+            const arr = current.managers?.color?.scheme as string[] | undefined;
+            if (!arr) return 'custom';
+            for (const [k, v] of Object.entries(colorPresets)) if (v.length === arr.length && v.every((c,i)=>c.toLowerCase()===arr[i].toLowerCase())) return k;
+            return 'custom';
+          })()}
+            onChange={(e) => updateTheme((th: any) => {
+              const preset = e.target.value;
+              th.props.managers = th.props.managers || {};
+              th.props.managers.color = th.props.managers.color || {};
+              if (preset === 'custom') delete th.props.managers.color.scheme;
+              else th.props.managers.color.scheme = colorPresets[preset];
+            })}>
+            <option value="custom">(padrão/props)</option>
+            {Object.keys(colorPresets).map(k => <option key={k} value={k}>{k}</option>)}
+          </select>
+        </div>
       </div>
     </div>
   );
