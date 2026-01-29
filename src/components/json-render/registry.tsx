@@ -5,6 +5,7 @@ import JsonRenderBarChart from "@/components/json-render/components/BarChart";
 import JsonRenderLineChart from "@/components/json-render/components/LineChart";
 import JsonRenderPieChart from "@/components/json-render/components/PieChart";
 import { ThemeProvider, useThemeOverrides } from "@/components/json-render/theme/ThemeContext";
+import { mapManagersToCssVars } from "@/components/json-render/theme/thememanagers";
 import { useDataValue, useData } from "@/components/json-render/context";
 import { deepMerge } from "@/stores/ui/json-render/utils";
 import { normalizeTitleStyle, normalizeContainerStyle, applyBorderFromCssVars, ensureSurfaceBackground, applyShadowFromCssVars, applyH1FromCssVars, applyKpiTitleFromCssVars, applyKpiValueFromCssVars } from "@/components/json-render/helpers";
@@ -821,42 +822,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
   Theme: ({ element, children }) => {
     const name = element?.props?.name as string | undefined;
     const mgr = (element?.props?.managers || {}) as AnyRecord;
-    const cssVars: Record<string, string> = {};
-    if (typeof mgr.font === 'string' && mgr.font) cssVars.fontFamily = mgr.font;
-    if (mgr.border && typeof mgr.border === 'object') {
-      if (mgr.border.style) cssVars.containerBorderStyle = String(mgr.border.style);
-      if (mgr.border.width !== undefined) cssVars.containerBorderWidth = String(mgr.border.width);
-      if (mgr.border.color) cssVars.containerBorderColor = String(mgr.border.color);
-      if (mgr.border.radius !== undefined) cssVars.containerRadius = String(mgr.border.radius);
-    }
-    if (mgr.color && Array.isArray(mgr.color.scheme)) cssVars.chartColorScheme = JSON.stringify(mgr.color.scheme);
-    if (typeof mgr.background === 'string' && mgr.background) cssVars.bg = mgr.background;
-    if (typeof mgr.surface === 'string' && mgr.surface) cssVars.surfaceBg = mgr.surface;
-    if (mgr.border && typeof mgr.border === 'object' && mgr.border.shadow) cssVars.containerShadow = String(mgr.border.shadow);
-    if (mgr.h1 && typeof mgr.h1 === 'object') {
-      if (mgr.h1.color) cssVars.h1Color = String(mgr.h1.color);
-      if (mgr.h1.weight !== undefined) cssVars.h1FontWeight = String(mgr.h1.weight);
-      if (mgr.h1.size !== undefined) cssVars.h1FontSize = String(mgr.h1.size);
-      if (mgr.h1.font) cssVars.h1FontFamily = String(mgr.h1.font);
-      if (mgr.h1.letterSpacing !== undefined) cssVars.h1LetterSpacing = String(mgr.h1.letterSpacing);
-      if (mgr.h1.padding !== undefined) cssVars.h1Padding = String(mgr.h1.padding);
-    }
-    if (mgr.kpi && typeof mgr.kpi === 'object') {
-      const t = mgr.kpi.title || {};
-      const v = mgr.kpi.value || {};
-      if (t.color) cssVars.kpiTitleColor = String(t.color);
-      if (t.weight !== undefined) cssVars.kpiTitleFontWeight = String(t.weight);
-      if (t.size !== undefined) cssVars.kpiTitleFontSize = String(t.size);
-      if (t.font) cssVars.kpiTitleFontFamily = String(t.font);
-      if (t.letterSpacing !== undefined) cssVars.kpiTitleLetterSpacing = String(t.letterSpacing);
-      if (t.padding !== undefined) cssVars.kpiTitlePadding = String(t.padding);
-      if (v.color) cssVars.kpiValueColor = String(v.color);
-      if (v.weight !== undefined) cssVars.kpiValueFontWeight = String(v.weight);
-      if (v.size !== undefined) cssVars.kpiValueFontSize = String(v.size);
-      if (v.font) cssVars.kpiValueFontFamily = String(v.font);
-      if (v.letterSpacing !== undefined) cssVars.kpiValueLetterSpacing = String(v.letterSpacing);
-      if (v.padding !== undefined) cssVars.kpiValuePadding = String(v.padding);
-    }
+    const cssVars = mapManagersToCssVars(mgr);
     return (
       <ThemeProvider name={name} cssVars={cssVars}>
         {children}
