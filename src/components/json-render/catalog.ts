@@ -44,7 +44,7 @@ export const catalog = {
   components: {
     Theme: {
       props: z.object({
-        name: z.enum(["black","light","blue","dark"]),
+        name: z.string(),
         managers: z.object({
           font: z.string().optional(),
           border: z.object({
