@@ -227,6 +227,9 @@ function ManagersPanel({ jsonText, setJsonText, setTree, disabled }: PanelProps)
     vibrant: ['#22d3ee','#a78bfa','#34d399','#f59e0b','#ef4444'],
     category10: ['#1f77b4','#ff7f0e','#2ca02c','#d62728','#9467bd','#8c564b','#e377c2','#7f7f7f','#bcbd22','#17becf'],
   };
+  const h1WeightOptions = ['400','500','600','700'];
+  const h1SizeOptions = ['12','14','16','18','20'];
+  const h1ColorOptions = ['#111827','#0f172a','#334155','#e5e7eb','#ffffff','#2563eb','#10b981','#ef4444'];
 
   function readCurrent(): { name: string; managers: any } {
     try {
@@ -362,6 +365,41 @@ function ManagersPanel({ jsonText, setJsonText, setTree, disabled }: PanelProps)
             <option value="">(padrão do tema)</option>
             {surfaceOptions.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
+        </div>
+        {/* H1 Title (charts/slicers) */}
+        <div className="grid grid-cols-2 gap-2">
+          <div className="flex items-center gap-2">
+            <label className="text-xs text-gray-700 w-20">H1 Cor</label>
+            <select disabled={disabled} className="text-xs border border-gray-300 rounded px-2 py-1" value={current.managers?.h1?.color || ''}
+              onChange={(e) => updateTheme((th: any) => { th.props.managers = th.props.managers || {}; th.props.managers.h1 = th.props.managers.h1 || {}; const v=e.target.value; if (v) th.props.managers.h1.color=v; else delete th.props.managers.h1.color; })}>
+              <option value="">(padrão)</option>
+              {h1ColorOptions.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="text-xs text-gray-700 w-20">H1 Peso</label>
+            <select disabled={disabled} className="text-xs border border-gray-300 rounded px-2 py-1" value={current.managers?.h1?.weight || ''}
+              onChange={(e) => updateTheme((th: any) => { th.props.managers = th.props.managers || {}; th.props.managers.h1 = th.props.managers.h1 || {}; const v=e.target.value; if (v) th.props.managers.h1.weight=v; else delete th.props.managers.h1.weight; })}>
+              <option value="">(padrão)</option>
+              {h1WeightOptions.map(w => <option key={w} value={w}>{w}</option>)}
+            </select>
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="text-xs text-gray-700 w-20">H1 Tam.</label>
+            <select disabled={disabled} className="text-xs border border-gray-300 rounded px-2 py-1" value={current.managers?.h1?.size || ''}
+              onChange={(e) => updateTheme((th: any) => { th.props.managers = th.props.managers || {}; th.props.managers.h1 = th.props.managers.h1 || {}; const v=e.target.value; if (v) th.props.managers.h1.size=v; else delete th.props.managers.h1.size; })}>
+              <option value="">(padrão)</option>
+              {h1SizeOptions.map(s => <option key={s} value={s}>{s}px</option>)}
+            </select>
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="text-xs text-gray-700 w-20">H1 Fonte</label>
+            <select disabled={disabled} className="text-xs border border-gray-300 rounded px-2 py-1" value={current.managers?.h1?.font || ''}
+              onChange={(e) => updateTheme((th: any) => { th.props.managers = th.props.managers || {}; th.props.managers.h1 = th.props.managers.h1 || {}; const v=e.target.value; if (v) th.props.managers.h1.font=v; else delete th.props.managers.h1.font; })}>
+              <option value="">(padrão)</option>
+              {fontOptions.map(f => <option key={f} value={f}>{f}</option>)}
+            </select>
+          </div>
         </div>
       </div>
     </div>

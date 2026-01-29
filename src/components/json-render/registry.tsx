@@ -7,7 +7,7 @@ import JsonRenderPieChart from "@/components/json-render/components/PieChart";
 import { ThemeProvider, useThemeOverrides } from "@/components/json-render/theme/ThemeContext";
 import { useDataValue, useData } from "@/components/json-render/context";
 import { deepMerge } from "@/stores/ui/json-render/utils";
-import { normalizeTitleStyle, normalizeContainerStyle, applyBorderFromCssVars, ensureSurfaceBackground, applyShadowFromCssVars } from "@/components/json-render/helpers";
+import { normalizeTitleStyle, normalizeContainerStyle, applyBorderFromCssVars, ensureSurfaceBackground, applyShadowFromCssVars, applyH1FromCssVars } from "@/components/json-render/helpers";
 
 type AnyRecord = Record<string, any>;
 
@@ -766,7 +766,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
 
     const card = (
       <div className="p-3" style={containerStyle}>
-        {title && <div className="text-sm font-medium text-gray-900 mb-2">{title}</div>}
+        {title && <div className="mb-2" style={applyH1FromCssVars(undefined, theme.cssVars)}>{title}</div>}
         <div className={layout === 'horizontal' ? 'flex items-start gap-3 flex-wrap' : 'space-y-3'}>
           {(() => {
             const f = (fields && fields.length > 0) ? fields[0] : undefined;
@@ -904,6 +904,12 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     if (typeof mgr.background === 'string' && mgr.background) cssVars.bg = mgr.background;
     if (typeof mgr.surface === 'string' && mgr.surface) cssVars.surfaceBg = mgr.surface;
     if (mgr.border && typeof mgr.border === 'object' && mgr.border.shadow) cssVars.containerShadow = String(mgr.border.shadow);
+    if (mgr.h1 && typeof mgr.h1 === 'object') {
+      if (mgr.h1.color) cssVars.h1Color = String(mgr.h1.color);
+      if (mgr.h1.weight !== undefined) cssVars.h1FontWeight = String(mgr.h1.weight);
+      if (mgr.h1.size !== undefined) cssVars.h1FontSize = String(mgr.h1.size);
+      if (mgr.h1.font) cssVars.h1FontFamily = String(mgr.h1.font);
+    }
     return (
       <ThemeProvider name={name} cssVars={cssVars}>
         {children}

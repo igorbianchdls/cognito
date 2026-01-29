@@ -3,7 +3,7 @@
 import React from "react";
 import { useData } from "@/components/json-render/context";
 import { ResponsiveLine } from "@nivo/line";
-import { normalizeTitleStyle, normalizeContainerStyle, buildNivoTheme, applyBorderFromCssVars, ensureSurfaceBackground, applyShadowFromCssVars } from "@/components/json-render/helpers";
+import { normalizeTitleStyle, normalizeContainerStyle, buildNivoTheme, applyBorderFromCssVars, ensureSurfaceBackground, applyShadowFromCssVars, applyH1FromCssVars } from "@/components/json-render/helpers";
 import { useThemeOverrides } from "@/components/json-render/theme/ThemeContext";
 
 type AnyRecord = Record<string, any>;
@@ -58,7 +58,7 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
   const height = (element?.props?.height as number | undefined) ?? 220;
   const colorScheme = element?.props?.colorScheme as string | string[] | undefined;
   const nivo = (element?.props?.nivo as AnyRecord | undefined) || {};
-  const titleStyle = normalizeTitleStyle((element?.props as AnyRecord)?.titleStyle);
+  const titleStyle = applyH1FromCssVars(normalizeTitleStyle((element?.props as AnyRecord)?.titleStyle), theme.cssVars);
   const borderless = Boolean((element?.props as AnyRecord)?.borderless);
   const containerStyle = ensureSurfaceBackground(applyShadowFromCssVars(applyBorderFromCssVars(normalizeContainerStyle((element?.props as AnyRecord)?.containerStyle, borderless), theme.cssVars), theme.cssVars), theme.cssVars);
 
@@ -124,7 +124,7 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
   }
   return (
     <div className="p-0" style={containerStyle}>
-      {title && <div className="text-sm font-medium text-gray-900 mb-2" style={titleStyle}>{title}</div>}
+      {title && <div className="mb-2" style={titleStyle}>{title}</div>}
       <div style={{ height }}>
         <ResponsiveLine
           data={seriesData}

@@ -59,6 +59,12 @@ export const catalog = {
           }).partial().optional(),
           background: z.string().optional(),
           surface: z.string().optional(),
+          h1: z.object({
+            color: z.string().optional(),
+            weight: z.union([z.string(), z.number()]).optional(),
+            size: z.union([z.string(), z.number()]).optional(),
+            font: z.string().optional(),
+          }).partial().optional(),
         }).partial().optional(),
       }).strict(),
       hasChildren: true,
