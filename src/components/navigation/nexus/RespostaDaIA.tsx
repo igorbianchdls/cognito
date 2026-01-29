@@ -35,10 +35,7 @@ import { GenerativeChart } from '@/components/tools/GenerativeChart';
 import { MultipleCharts } from '@/components/tools/MultipleCharts';
 import { MultipleSQL } from '@/components/tools/MultipleSQL';
 import CodeExecutionResult from '@/components/tools/CodeExecutionResult';
-import RenderDashboardCode from './tools/renderDashboardCode';
-import ApplyPatchResultCard from './tools/ApplyPatchResultCard';
-import CreateDashboardResult from './tools/CreateDashboardResult';
-import UpdateDashboardResult from './tools/UpdateDashboardResult';
+// Nexus-specific tool components removed
 import EmailResult from '@/components/tools/EmailResult';
 import YouTubeContentList from '@/components/tools/YouTubeContentList';
 import ReelsContentList from '@/components/tools/ReelsContentList';
@@ -58,7 +55,7 @@ import ContasAReceberResult from '@/components/tools/ContasAReceberResult';
 import ContasAPagarResult, { type ContaPagarRow } from '@/components/tools/ContasAPagarResult';
 import PagamentosRecebidosResult from '@/components/tools/PagamentosRecebidosResult';
 import PagamentosEfetuadosResult from '@/components/tools/PagamentosEfetuadosResult';
-import ArtifactToolCard from './tools/ArtifactToolCard';
+// ArtifactToolCard removed (Nexus tools)
 // import MovimentosResult, { type GetMovimentosOutput } from '../tools/MovimentosResult';
 // import MovimentosPorCentroCustoResult, { type GetMovimentosPorCentroCustoOutput } from '../tools/MovimentosPorCentroCustoResult';
 // import TransacoesExtratoResult, { type GetTransacoesExtratoOutput } from '../tools/TransacoesExtratoResult';
@@ -70,7 +67,7 @@ import ArtifactToolCard from './tools/ArtifactToolCard';
 // import OportunidadesResult from './tools/crm/OportunidadesResult';
 // import AtividadesResult from './tools/crm/AtividadesResult';
 // import type { GetCrmOportunidadesOutput, GetCrmAtividadesOutput } from '@/tools/crmTools';
-import MetasResult from './tools/vendas/MetasResult';
+// MetasResult removed (Nexus tools)
 // import DesempenhoResult from './tools/vendas/DesempenhoResult';
 import type { GetMetasOutput } from '@/tools/analistaVendasTools';
 import { BarChart3, DollarSign, LineChart, TrendingUp, AlertTriangle, FileText } from 'lucide-react';
@@ -143,11 +140,7 @@ import AnalisePerformanceCategoriaResult, { type AnalisePerformanceCategoriaRow 
 import DesempenhoCanalVendaResult, { type DesempenhoCanalVendaRow } from '@/components/tools/ecommerce/DesempenhoCanalVendaResult';
 import LTVClienteResult, { type LTVClienteRow } from '@/components/tools/ecommerce/LTVClienteResult';
 import TopClientesPorReceitaResult, { type TopClienteRow } from '@/components/tools/ecommerce/TopClientesPorReceitaResult';
-import ListDashboardsCard from './tools/dashboards/ListDashboardsCard';
-import DashboardDetailsCard from './tools/dashboards/DashboardDetailsCard';
-import DashboardCreatedCard from './tools/dashboards/DashboardCreatedCard';
-import DashboardCreatePreviewCard from './tools/dashboards/DashboardCreatePreviewCard';
-import PatchDashboardToolCard from './tools/dashboards/PatchDashboardToolCard';
+// Dashboard tools removidas (Nexus)
 import ValorVidaClienteResult, { type ValorVidaClienteRow } from '@/components/tools/ecommerce/ValorVidaClienteResult';
 import ClientesNovosRecorrentesResult, { type ClientesNovosRecorrentesRow } from '@/components/tools/ecommerce/ClientesNovosRecorrentesResult';
 import PerformanceLancamentoResult, { type PerformanceLancamentoRow } from '@/components/tools/ecommerce/PerformanceLancamentoResult';
@@ -3711,9 +3704,8 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
           const txt = (part as { type: 'text'; text?: string }).text ?? '';
           // Detecta um patch (*** Begin Patch ... *** End Patch) e mostra cartão com botão de aplicar
           if (typeof txt === 'string' && txt.includes('*** Begin Patch') && txt.includes('*** End Patch')) {
-            return (
-              <ApplyPatchResultCard key={`patch-preview-${index}`} input={{ patch: txt }} output={null} />
-            );
+            // Mostrar o patch como texto puro (tools do Nexus removidas)
+            return <Response key={index}>{txt}</Response>;
           }
           // Fallback: detectar blocos simulados de function_calls para buscarFornecedor e renderizar tabela real
           if (typeof txt === 'string' && txt.includes('function_calls') && txt.includes('buscarFornecedor') && txt.includes('<result>')) {
@@ -4697,11 +4689,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   )}
                 </ToolContent>
               </Tool>
-              {dashboardTool.state === 'output-available' && (
-                <RenderDashboardCode
-                  success={(dashboardTool.output as GetDashboardCodeToolOutput).success}
-                />
-              )}
+              {/* Saída específica removida com as ferramentas Nexus */}
             </div>
           );
         }
@@ -4727,17 +4715,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   )}
                 </ToolContent>
               </Tool>
-              {createTool.state === 'output-available' && (
-                <CreateDashboardResult
-                  success={(createTool.output as CreateDashboardToolOutput).success}
-                  description={(createTool.output as CreateDashboardToolOutput).description}
-                  totalWidgets={(createTool.output as CreateDashboardToolOutput).totalWidgets}
-                  dashboardConfig={(createTool.output as CreateDashboardToolOutput).dashboardConfig}
-                  generatedJson={(createTool.output as CreateDashboardToolOutput).generatedJson}
-                  message={(createTool.output as CreateDashboardToolOutput).message}
-                  error={(createTool.output as CreateDashboardToolOutput).error}
-                />
-              )}
+              {/* Saída específica removida com as ferramentas Nexus */}
             </div>
           );
         }
@@ -4763,14 +4741,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   )}
                 </ToolContent>
               </Tool>
-              {updateTool.state === 'output-available' && (
-                <UpdateDashboardResult
-                  success={(updateTool.output as UpdateDashboardToolOutput).success}
-                  updateJson={(updateTool.output as UpdateDashboardToolOutput).updateJson}
-                  description={(updateTool.output as UpdateDashboardToolOutput).description}
-                  message={(updateTool.output as UpdateDashboardToolOutput).message}
-                />
-              )}
+              {/* Saída específica removida com as ferramentas Nexus */}
             </div>
           );
         }
@@ -4874,15 +4845,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   )}
                 </ToolContent>
               </Tool>
-              {t.state === 'output-available' && (
-                <ListDashboardsCard
-                  success={(t.output as ListDashboardsToolOutput)?.success}
-                  items={(t.output as ListDashboardsToolOutput)?.items}
-                  count={(t.output as ListDashboardsToolOutput)?.count}
-                  input={t.input as ListDashboardsToolInput}
-                  error={(t.output as ListDashboardsToolOutput)?.error}
-                />
-              )}
+              {/* Saída específica removida com as ferramentas Nexus */}
             </div>
           );
         }
@@ -4912,13 +4875,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   )}
                 </ToolContent>
               </Tool>
-              {t.state === 'output-available' && (
-                <DashboardDetailsCard
-                  success={(t.output as GetDashboardToolOutput)?.success}
-                  item={(t.output as GetDashboardToolOutput)?.item}
-                  error={(t.output as GetDashboardToolOutput)?.error}
-                />
-              )}
+              {/* Saída específica removida com as ferramentas Nexus */}
             </div>
           );
         }
@@ -4950,13 +4907,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   )}
                 </ToolContent>
               </Tool>
-              {t.state === 'output-available' && (
-                <DashboardDetailsCard
-                  success={(t.output as UpdateDashboardWFOutput)?.success}
-                  item={(t.output as UpdateDashboardWFOutput)?.item}
-                  error={(t.output as UpdateDashboardWFOutput)?.error}
-                />
-              )}
+              {/* Saída específica removida com as ferramentas Nexus */}
             </div>
           );
         }
@@ -4988,24 +4939,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   )}
                 </ToolContent>
               </Tool>
-              {t.state === 'output-available' && (() => {
-                const out = t.output as CreateDashboardWFOutput;
-                if (out.preview) {
-                  const p = out.preview;
-                  return (
-                    <DashboardCreatePreviewCard
-                      title={p.title}
-                      description={p.description}
-                      sourcecode={p.sourcecode}
-                      visibility={p.visibility}
-                      version={p.version}
-                    />
-                  );
-                }
-                return (
-                  <DashboardCreatedCard success={out.success} item={out.item} error={out.error} />
-                );
-              })()}
+              {/* Saída específica removida com as ferramentas Nexus */}
             </div>
           );
         }
@@ -5027,15 +4961,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   )}
                 </ToolContent>
               </Tool>
-              {t.state === 'output-available' && (
-                <PatchDashboardToolCard
-                  success={(t.output as { success: boolean })?.success}
-                  previewDsl={(t.output as { previewDsl?: string })?.previewDsl}
-                  operations={(t.output as { operations?: PatchOperation[] })?.operations}
-                  message={(t.output as { message?: string })?.message}
-                  error={(t.output as { error?: string })?.error}
-                />
-              )}
+              {/* Saída específica removida com as ferramentas Nexus */}
             </div>
           );
         }
@@ -5106,13 +5032,12 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
             } catch {}
           };
 
-          const ArtifactToolCard = require('./tools/ArtifactToolCard').default; // local import to avoid top-level churn
-
           return (
             <div key={callId}>
               {headerBox}
               <div className="mt-2">
-                <ArtifactToolCard id={id} title={title} type={type || undefined} command={cmd} onOpen={openPanel} />
+                {/* Ferramenta de artifact removida; exibir ação simples */}
+                <button onClick={openPanel} className="text-sm text-blue-600 underline">Abrir artifact</button>
               </div>
             </div>
           );
@@ -8532,9 +8457,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
                 </ToolContent>
               </Tool>
-              {tool.state === 'output-available' && (
-                <MetasResult result={tool.output as GetMetasOutput} />
-              )}
+              {/* Saída específica removida com as ferramentas Nexus */}
             </div>
           );
         }
