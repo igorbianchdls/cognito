@@ -179,6 +179,35 @@ export const catalog = {
       }).strict().refine((p) => !!(p.valuePath || p.dataQuery), { message: 'Kpi requires either valuePath or dataQuery' }),
       hasChildren: false,
     },
+    KPI: {
+      props: z.object({
+        title: z.string(),
+        dataQuery: z.object({
+          model: z.string(),
+          measure: z.string(),
+          filters: z.record(z.any()).optional(),
+          orderBy: z.object({ field: z.string().optional(), dir: z.enum(["asc","desc"]).optional() }).partial().optional(),
+          limit: z.number().optional(),
+        }).strict(),
+        valueKey: z.string().optional(),
+        format: z.enum(["currency", "percent", "number"]).default("number"),
+        titleStyle: TitleStyleSchema.optional(),
+        valueStyle: TitleStyleSchema.optional(),
+        containerStyle: z.object({
+          backgroundColor: z.string().optional(),
+          borderColor: z.string().optional(),
+          borderStyle: z.string().optional(),
+          borderWidth: z.union([z.number(), z.string()]).optional(),
+          borderRadius: z.union([z.number(), z.string()]).optional(),
+          boxShadow: z.string().optional(),
+          padding: z.union([z.number(), z.string()]).optional(),
+          margin: z.union([z.number(), z.string()]).optional(),
+        }).partial().optional(),
+        borderless: z.boolean().optional(),
+        unit: z.string().optional(),
+      }).strict(),
+      hasChildren: false,
+    },
     BarChart: {
       props: z.object({
         title: z.string().optional(),

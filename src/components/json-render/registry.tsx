@@ -9,6 +9,7 @@ import { useDataValue, useData } from "@/components/json-render/context";
 import { useStore } from "@nanostores/react";
 import { deepMerge } from "@/stores/ui/json-render/utils";
 import { $kpiDefaults } from "@/stores/ui/json-render/kpiStore";
+import { $KPIDefaults } from "@/stores/ui/json-render/KPIStore";
 import { normalizeTitleStyle, normalizeContainerStyle } from "@/components/json-render/helpers";
 import { $barChartDefaults } from "@/stores/ui/json-render/barChartStore";
 import { $lineChartDefaults } from "@/stores/ui/json-render/lineChartStore";
@@ -544,6 +545,97 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       <ThemeProvider name={name}>
         {children}
       </ThemeProvider>
+    );
+  },
+  KPI: ({ element }) => {
+    const defs = useStore($KPIDefaults);
+    const theme = useThemeOverrides();
+    const p = deepMerge(deepMerge(defs as any, (theme.components?.KPI || {}) as any), (element?.props || {}) as any) as AnyRecord;
+    const title = p.title as string;
+    const dq = p.dataQuery as AnyRecord;
+    const valueKey = (p.valueKey ?? 'total') as string;
+    const { data } = useData();
+    const [serverValue, setServerValue] = React.useState<number>(0);
+    React.useEffect(() => {
+      let cancelled = false;
+      async function run() {
+        try {
+          if (!dq || !dq.model || !dq.measure) { if (!cancelled) setServerValue(0); return; }
+          const mod = String(dq.model).split('.')[0];
+          const filters = { ...(dq.filters || {}) } as AnyRecord;
+          const dr = (data as any)?.filters?.dateRange;
+          if (dr && !filters.de && !filters.ate) { if (dr.from) filters.de = dr.from; if (dr.to) filters.ate = dr.to; }
+          const globalFilters = (data as any)?.filters;
+          if (globalFilters && typeof globalFilters === 'object') {
+            for (const [k, v] of Object.entries(globalFilters)) {
+              if (k === 'dateRange') continue;
+              if (filters[k as any] === undefined) (filters as any)[k] = v as any;
+            }
+          }
+          let rows: any[] = [];
+          // Prefer analytics for vendas/financeiro when possible
+          const modelStr = String(dq.model || '');
+          const inferSource = (): string | null => {
+            if (modelStr.startsWith('vendas.')) return 'vd';
+            if (modelStr.startsWith('financeiro.')) return modelStr.includes('contas_receber') ? 'ar' : 'ap';
+            return null; // compras -> fallback module query
+          };
+          const source = (dq as any).source || inferSource();
+          if (source) {
+            const payload: AnyRecord = { source, measure: dq.measure };
+            if (typeof filters.de === 'string') payload.from = filters.de;
+            if (typeof filters.ate === 'string') payload.to = filters.ate;
+            if (typeof filters.tenant_id === 'number') payload.tenant_id = filters.tenant_id;
+            const whereRules: AnyRecord[] = [];
+            for (const [k, v] of Object.entries(filters)) {
+              if (k === 'de' || k === 'ate' || k === 'tenant_id') continue;
+              if (Array.isArray(v)) whereRules.push({ col: k, op: 'in', vals: v });
+              else whereRules.push({ col: k, op: '=', val: v });
+            }
+            if (whereRules.length) (payload as any).where = whereRules;
+            const res = await fetch('/api/analytics', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload) });
+            const j = await res.json();
+            rows = Array.isArray(j?.rows) ? j.rows : [];
+          } else {
+            const url = `/api/modulos/${mod}/query`;
+            const body = { dataQuery: { model: dq.model, dimension: undefined, measure: dq.measure, filters, orderBy: dq.orderBy, limit: dq.limit } };
+            const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+            const j = await res.json();
+            rows = Array.isArray(j?.rows) ? j.rows : [];
+          }
+          let val: number = 0;
+          if (rows.length > 0 && rows[0] && typeof rows[0] === 'object') {
+            const r0 = rows[0] as AnyRecord;
+            const keys = [valueKey, 'total', 'valor_total', 'faturamento_total', 'gasto_total', 'count', 'value'];
+            for (const k of keys) { if (r0[k] != null) { const n = Number(r0[k]); if (Number.isFinite(n)) { val = n; break; } } }
+          }
+          if (!cancelled) setServerValue(val);
+        } catch (e) {
+          if (!cancelled) setServerValue(0);
+        }
+      }
+      run();
+      return () => { cancelled = true };
+    }, [JSON.stringify(dq), JSON.stringify((data as any)?.filters)]);
+    const fmt = (p.format ?? 'number') as 'currency'|'percent'|'number';
+    const unit = p.unit as string | undefined;
+    const titleStyle = normalizeTitleStyle(p.titleStyle);
+    const valueStyle = normalizeTitleStyle(p.valueStyle);
+    const containerStyle = normalizeContainerStyle(p.containerStyle, Boolean(p.borderless));
+    function formatValue(val: any, fmt: 'currency'|'percent'|'number'): string {
+      const n = Number(val ?? 0);
+      if (!Number.isFinite(n)) return String(val ?? '');
+      switch (fmt) {
+        case 'currency': return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 2 }).format(n);
+        case 'percent': return `${(n * 100).toFixed(2)}%`;
+        default: return new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 2 }).format(n);
+      }
+    }
+    return (
+      <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm" style={containerStyle}>
+        <div className="mb-1" style={titleStyle}>{title}</div>
+        <div className="text-2xl font-semibold text-gray-900" style={valueStyle}>{formatValue(serverValue, fmt)}{unit ? ` ${unit}` : ''}</div>
+      </div>
     );
   },
 };
