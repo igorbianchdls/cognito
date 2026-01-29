@@ -1,24 +1,24 @@
 "use client";
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { MoreHorizontal, Code2, Monitor, Terminal } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-type TabKey = 'preview' | 'code' | 'console';
+import { useStore } from '@nanostores/react';
+import { $sandboxActiveTab, sandboxActions, type SandboxTab } from '@/stores/chat/sandboxStore';
 
 export default function SandboxTabs() {
-  const [active, setActive] = useState<TabKey>('preview');
+  const active = useStore($sandboxActiveTab);
 
-  const tabs: { key: TabKey; label: string; icon: React.ElementType }[] = [
+  const tabs: { key: SandboxTab; label: string; icon: React.ElementType }[] = [
     { key: 'preview', label: 'Preview', icon: Monitor },
     { key: 'code', label: 'Code', icon: Code2 },
     { key: 'console', label: 'Console', icon: Terminal },
   ];
 
   return (
-    <Tabs value={active} onValueChange={(v) => setActive(v as TabKey)}>
+    <Tabs value={active} onValueChange={(v) => sandboxActions.setActiveTab(v as SandboxTab)}>
       <TabsList className="!bg-transparent !p-0 gap-3 h-9">
         {tabs.map(({ key, label, icon: Icon }) => (
           <div key={key} className="relative">

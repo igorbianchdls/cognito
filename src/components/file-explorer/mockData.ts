@@ -70,10 +70,9 @@ export default {
 export function languageFromPath(path: string): string {
   if (path.endsWith('.tsx') || path.endsWith('.ts')) return 'typescript';
   if (path.endsWith('.js')) return 'javascript';
-  if (path.endsWith('.json')) return 'json';
+  if (path.endsWith('.json') || path.endsWith('.jsonr')) return 'json';
   if (path.endsWith('.css')) return 'css';
   if (path.endsWith('.html')) return 'html';
   if (path.endsWith('.md')) return 'markdown';
   return 'plaintext';
 }
-
