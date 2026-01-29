@@ -549,7 +549,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
   KPI: ({ element }) => {
     const defs = useStore($KPIDefaults);
     const theme = useThemeOverrides();
-    const p = deepMerge(deepMerge(defs as any, (theme.components?.KPI || {}) as any), (element?.props || {}) as any) as AnyRecord;
+    const p = deepMerge(deepMerge(defs as any, (theme.components?.Kpi || {}) as any), (element?.props || {}) as any) as AnyRecord;
     const title = p.title as string;
     const dq = p.dataQuery as AnyRecord;
     const valueKey = (p.valueKey ?? 'total') as string;
