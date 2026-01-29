@@ -17,7 +17,7 @@ export const builtInThemes: Record<string, ThemeOverrides> = {
   black: {
     components: {
       Card: { backgroundColor: 'var(--surfaceBg)', borderColor: 'var(--surfaceBorder)', borderWidth: 1 },
-      Header: { backgroundColor: '#000000', textColor: '#ffffff', subtitleColor: '#bbbbbb', borderColor: '#444444', borderWidth: 1 },
+      Header: { backgroundColor: '#000000', textColor: '#ffffff', subtitleColor: '#bbbbbb', borderColor: '#444444', borderWidth: 0, borderBottomWidth: 1, borderRadius: 0 },
       Kpi: { format: 'currency', containerStyle: { backgroundColor: 'var(--surfaceBg)', borderColor: 'var(--surfaceBorder)' } },
       Div: { gap: 12 },
       BarChart: { colorScheme: ['#ffffff'], containerStyle: { backgroundColor: 'var(--surfaceBg)', borderColor: 'var(--surfaceBorder)' }, nivo: { gridY: true } },
@@ -31,7 +31,7 @@ export const builtInThemes: Record<string, ThemeOverrides> = {
   dark: {
     components: {
       Card: { backgroundColor: 'var(--surfaceBg)', borderColor: 'var(--surfaceBorder)', borderWidth: 1, borderRadius: 8, padding: 12 },
-      Header: { backgroundColor: '#000000', textColor: '#e5e7eb', subtitleColor: '#a3a3a3', borderColor: '#222222', borderWidth: 1, borderRadius: 8, padding: 12 },
+      Header: { backgroundColor: '#000000', textColor: '#e5e7eb', subtitleColor: '#a3a3a3', borderColor: '#222222', borderWidth: 0, borderBottomWidth: 1, borderRadius: 0, padding: 12 },
       Kpi: { format: 'number', containerStyle: { backgroundColor: 'var(--surfaceBg)', borderColor: 'var(--surfaceBorder)' } },
       Div: { gap: 12 },
       BarChart: {
@@ -100,7 +100,7 @@ export const builtInThemes: Record<string, ThemeOverrides> = {
   light: {
     components: {
       Card: { backgroundColor: '#ffffff', borderColor: '#e5e7eb', borderWidth: 1, borderRadius: 8, padding: 12 },
-      Header: { backgroundColor: '#ffffff', textColor: '#111827', subtitleColor: '#6b7280', borderColor: '#e5e7eb', borderWidth: 1, borderRadius: 8, padding: 12 },
+      Header: { backgroundColor: '#ffffff', textColor: '#111827', subtitleColor: '#6b7280', borderColor: '#e5e7eb', borderWidth: 0, borderBottomWidth: 1, borderRadius: 0, padding: 12 },
       Kpi: { format: 'number' },
       Div: { gap: 12 },
       BarChart: { colorScheme: ['#3b82f6'], nivo: { gridY: true } },
@@ -114,7 +114,7 @@ export const builtInThemes: Record<string, ThemeOverrides> = {
   blue: {
     components: {
       Card: { backgroundColor: '#eff6ff', borderColor: '#93c5fd', borderWidth: 1, borderRadius: 8, padding: 12 },
-      Header: { backgroundColor: '#1e3a8a', textColor: '#ffffff', subtitleColor: '#c7d2fe', borderColor: '#1d4ed8', borderWidth: 1, borderRadius: 8, padding: 12 },
+      Header: { backgroundColor: '#1e3a8a', textColor: '#ffffff', subtitleColor: '#c7d2fe', borderColor: '#1d4ed8', borderWidth: 0, borderBottomWidth: 1, borderRadius: 0, padding: 12 },
       Kpi: { format: 'currency' },
       Div: { gap: 12 },
       BarChart: { colorScheme: ['#2563eb'], nivo: { gridY: true } },

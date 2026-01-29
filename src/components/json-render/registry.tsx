@@ -19,7 +19,8 @@ const defaultHeader = {
   subtitleColor: '#6b7280',
   padding: 12,
   borderColor: '#e5e7eb',
-  borderWidth: 1,
+  borderWidth: 0,
+  borderBottomWidth: 1,
   borderRadius: 0,
 } as const;
 
