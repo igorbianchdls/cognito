@@ -142,8 +142,6 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     );
   },
 
-};
-
 function DateFieldWithIcon({ value, onChange, fieldStyle }: { value: string; onChange: (v: string) => void; fieldStyle?: React.CSSProperties }) {
   const theme = useThemeOverrides();
   const ref = React.useRef<HTMLInputElement>(null);
