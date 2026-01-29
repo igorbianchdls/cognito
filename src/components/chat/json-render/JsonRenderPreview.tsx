@@ -40,6 +40,9 @@ export default function JsonRenderPreview({ chatId }: Props) {
         const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'fs-read', chatId, path: jsonrPath }) });
         const data = await res.json().catch(() => ({})) as { ok?: boolean; content?: string; isBinary?: boolean; error?: string };
         if (!res.ok || data.ok === false) {
+          // Fallback: tentar descobrir um .jsonr e usar o primeiro
+          const found = await refreshPaths();
+          if (found && found.length) { sandboxActions.setPreviewPath(found[0]); setError(null); return; }
           setError(data.error || `Falha ao ler arquivo ${jsonrPath}`);
           return;
         }
@@ -48,13 +51,15 @@ export default function JsonRenderPreview({ chatId }: Props) {
         setContent(txt);
         try { setTree(JSON.parse(txt)); } catch (e: any) { setError(e?.message ? String(e.message) : 'JSON inválido'); }
       } catch (e: any) {
+        const found = await refreshPaths();
+        if (found && found.length) { sandboxActions.setPreviewPath(found[0]); setError(null); return; }
         setError(e?.message ? String(e.message) : 'Erro ao buscar .jsonr');
       }
     })();
   }, [chatId, jsonrPath]);
 
   // Discover .jsonr files under /vercel/sandbox
-  const refreshPaths = React.useCallback(async () => {
+  const refreshPaths = React.useCallback(async (): Promise<string[]> => {
     if (!chatId) { setPathsError('chatId ausente'); return; }
     setLoadingPaths(true); setPathsError(null);
     try {
@@ -80,8 +85,10 @@ export default function JsonRenderPreview({ chatId }: Props) {
       }
       collected.sort();
       setPaths(collected);
+      return collected;
     } catch (e: any) {
       setPathsError(e?.message ? String(e.message) : 'Falha ao buscar arquivos .jsonr');
+      return [];
     } finally {
       setLoadingPaths(false);
     }
