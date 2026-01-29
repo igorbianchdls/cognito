@@ -25,6 +25,10 @@ const COMPRAS_TEMPLATE_TEXT = JSON.stringify([
       { type: "Div", props: { direction: "row", gap: 12, padding: 16, justify: "start", align: "start", childGrow: true }, children: [
         { type: "BarChart", props: { fr: 1, title: "Fornecedores", dataQuery: { model: "compras.compras", dimension: "fornecedor", measure: "SUM(valor_total)", filters: { tenant_id: 1 }, orderBy: { field: "measure", dir: "desc" }, limit: 8 }, format: "currency", height: 240, nivo: { layout: 'horizontal' } } },
         { type: "BarChart", props: { fr: 1, title: "Centros de Custo", dataQuery: { model: "compras.compras", dimension: "centro_custo", measure: "SUM(valor_total)", filters: { tenant_id: 1 }, orderBy: { field: "measure", dir: "desc" }, limit: 8 }, format: "currency", height: 240, nivo: { layout: 'horizontal' } } },
+        { type: "SlicerCard", props: { fr: 1, title: "Filtros (Row)", fields: [
+          { label: "Fornecedor", type: "dropdown", storePath: "filters.fornecedor_id", placeholder: "—", source: { type: "api", url: "/api/modulos/compras/options?field=fornecedor_id&limit=100" } },
+          { label: "Centro de Custo", type: "list", storePath: "filters.centro_custo_id", source: { type: "api", url: "/api/modulos/compras/options?field=centro_custo_id&limit=100" }, selectAll: true, search: true }
+        ], containerStyle: { borderWidth: 2, borderColor: "#e5e7eb", borderRadius: 12 } } },
         { type: "BarChart", props: { fr: 1, title: "Filiais", dataQuery: { model: "compras.compras", dimension: "filial", measure: "SUM(valor_total)", filters: { tenant_id: 1 }, orderBy: { field: "measure", dir: "desc" }, limit: 8 }, format: "currency", height: 240, nivo: { layout: 'horizontal' } } }
       ]},
 

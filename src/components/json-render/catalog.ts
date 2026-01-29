@@ -397,6 +397,59 @@ export const catalog = {
       }).strict(),
       hasChildren: false,
     },
+    SlicerCard: {
+      props: z.object({
+        title: z.string().optional(),
+        fr: z.number().optional(),
+        layout: z.enum(["vertical","horizontal"]).optional(),
+        applyMode: z.enum(["auto","manual"]).optional(),
+        actionOnApply: z.object({ type: z.string() }).partial().optional(),
+        containerStyle: z.object({
+          backgroundColor: z.string().optional(),
+          borderColor: z.string().optional(),
+          borderStyle: z.string().optional(),
+          borderWidth: z.union([z.number(), z.string()]).optional(),
+          borderRadius: z.union([z.number(), z.string()]).optional(),
+          boxShadow: z.string().optional(),
+          padding: z.union([z.number(), z.string()]).optional(),
+          margin: z.union([z.number(), z.string()]).optional(),
+        }).partial().optional(),
+        borderless: z.boolean().optional(),
+        fields: z.array(z.object({
+          label: z.string().optional(),
+          type: z.enum(["list","dropdown"]).default("list"),
+          storePath: z.string(),
+          placeholder: z.string().optional(),
+          clearable: z.boolean().optional(),
+          selectAll: z.boolean().optional(),
+          search: z.boolean().optional(),
+          width: z.union([z.number(), z.string()]).optional(),
+          source: z.union([
+            z.object({
+              type: z.literal('static'),
+              options: z.array(z.object({ value: z.union([z.number(), z.string()]), label: z.string() })).default([])
+            }).strict(),
+            z.object({
+              type: z.literal('api'),
+              url: z.string(),
+              method: z.enum(['GET','POST']).optional(),
+              valueField: z.string().optional(),
+              labelField: z.string().optional(),
+              params: z.record(z.any()).optional(),
+            }).strict(),
+            z.object({
+              type: z.literal('query'),
+              model: z.string(),
+              dimension: z.string(),
+              filters: z.record(z.any()).optional(),
+              limit: z.number().optional(),
+            }).strict(),
+          ]).optional(),
+          actionOnChange: z.object({ type: z.string() }).partial().optional(),
+        }).strict()).default([]),
+      }).strict(),
+      hasChildren: false,
+    },
     Button: {
       props: z.object({
         label: z.string(),

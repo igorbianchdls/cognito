@@ -556,6 +556,190 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     return <JsonRenderPieChart element={{ props: merged }} />;
   },
 
+  SlicerCard: ({ element, onAction }) => {
+    const p = (element?.props || {}) as AnyRecord;
+    const title = p.title as string | undefined;
+    const borderless = Boolean(p.borderless);
+    const containerStyle = normalizeContainerStyle(p.containerStyle, borderless);
+    const layout = (p.layout || 'vertical') as 'vertical'|'horizontal';
+    const applyMode = (p.applyMode || 'auto') as 'auto'|'manual';
+    const fields = Array.isArray(p.fields) ? (p.fields as AnyRecord[]) : [];
+    const { data, setData, getValueByPath } = useData();
+
+    type Opt = { value: string|number; label: string };
+    const [optionsMap, setOptionsMap] = React.useState<Record<number, Opt[]>>({});
+    const [searchMap, setSearchMap] = React.useState<Record<number, string>>({});
+    const [pendingMap, setPendingMap] = React.useState<Record<number, any>>({});
+
+    const effectiveGet = (idx: number, sp: string, isMulti: boolean) => {
+      if (applyMode === 'manual' && pendingMap.hasOwnProperty(idx)) return pendingMap[idx];
+      const v = getValueByPath(sp, undefined);
+      return isMulti ? (Array.isArray(v) ? v : []) : (v ?? '');
+    };
+
+    React.useEffect(() => {
+      let cancelled = false;
+      async function load() {
+        const tasks = await Promise.allSettled(fields.map(async (f, idx) => {
+          const src = f?.source;
+          if (!src || typeof src !== 'object') return { idx, opts: [] as Opt[] };
+          if (src.type === 'static') {
+            const opts = Array.isArray(src.options) ? src.options.map((o: any) => ({ value: o.value, label: String(o.label ?? o.value) })) : [];
+            return { idx, opts };
+          }
+          const term = searchMap[idx] || '';
+          if (src.type === 'api' && typeof src.url === 'string' && src.url) {
+            try {
+              const method = (src.method || 'GET').toUpperCase();
+              let url = src.url as string;
+              if (method === 'GET' && term) url += (url.includes('?') ? '&' : '?') + 'q=' + encodeURIComponent(term);
+              const res = await fetch(url, { method, headers: { 'content-type': 'application/json' }, ...(method === 'POST' ? { body: JSON.stringify({ ...(src.params||{}), ...(term ? { q: term } : {}) }) } : {}) });
+              const j = await res.json();
+              const raw = Array.isArray(j?.options) ? j.options : (Array.isArray(j?.rows) ? j.rows : []);
+              const vf = src.valueField || 'value';
+              const lf = src.labelField || 'label';
+              const opts = raw.map((r: any) => ({ value: (r?.[vf] ?? r?.value), label: String(r?.[lf] ?? r?.label ?? r?.name ?? r?.nome ?? '') }));
+              return { idx, opts };
+            } catch { return { idx, opts: [] as Opt[] } }
+          }
+          if (src.type === 'query' && typeof src.model === 'string' && typeof src.dimension === 'string') {
+            try {
+              const mod = String(src.model).split('.')[0];
+              const body = { dataQuery: { model: src.model, dimension: src.dimension, measure: 'COUNT()', filters: src.filters || {}, orderBy: { field: 'dimension', dir: 'asc' }, limit: src.limit || 100 } };
+              const res = await fetch(`/api/modulos/${mod}/query`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+              const j = await res.json();
+              const rows = Array.isArray(j?.rows) ? j.rows : [];
+              const opts = rows.map((r: any) => ({ value: (r?.label ?? ''), label: String(r?.label ?? '') }));
+              return { idx, opts };
+            } catch { return { idx, opts: [] as Opt[] } }
+          }
+          return { idx, opts: [] as Opt[] };
+        }))
+        if (cancelled) return;
+        const map: Record<number, Opt[]> = {};
+        for (const t of tasks) if (t.status === 'fulfilled') map[(t.value as any).idx] = (t.value as any).opts;
+        setOptionsMap(map);
+      }
+      load();
+      return () => { cancelled = true };
+    }, [JSON.stringify(fields), JSON.stringify(searchMap)]);
+
+    const onChangeField = (idx: number, sp: string, value: any, autoAction?: AnyRecord) => {
+      if (applyMode === 'manual') {
+        setPendingMap((prev) => ({ ...prev, [idx]: value }));
+      } else {
+        const next = setByPath(data, sp, value);
+        setData(next);
+        if (autoAction && typeof autoAction === 'object') onAction?.(autoAction);
+      }
+    };
+
+    const onApplyAll = () => {
+      let next = data;
+      for (let i = 0; i < fields.length; i++) {
+        const f = fields[i];
+        const sp = String(f?.storePath || '').trim();
+        if (!sp) continue;
+        if (pendingMap.hasOwnProperty(i)) next = setByPath(next, sp, pendingMap[i]);
+      }
+      setData(next);
+      if (p.actionOnApply && typeof p.actionOnApply === 'object') onAction?.(p.actionOnApply);
+    };
+
+    const card = (
+      <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-sm" style={containerStyle}>
+        {title && <div className="text-sm font-medium text-gray-900 mb-2">{title}</div>}
+        <div className={layout === 'horizontal' ? 'flex items-start gap-3 flex-wrap' : 'space-y-3'}>
+          {fields.map((f, idx) => {
+            const type = (f?.type || 'list') as 'list'|'dropdown';
+            const sp = String(f?.storePath || '').trim();
+            if (!sp) return null;
+            const lbl = typeof f?.label === 'string' ? f.label : undefined;
+            const opts = optionsMap[idx] || [];
+            const placeholder = typeof f?.placeholder === 'string' ? f.placeholder : undefined;
+            const width = (f?.width !== undefined) ? (typeof f.width === 'number' ? `${f.width}px` : f.width) : undefined;
+            const stored = effectiveGet(idx, sp, type === 'list');
+            const isMulti = type === 'list';
+            const clearable = (f?.clearable !== false);
+            const selectAll = Boolean(f?.selectAll);
+            const showSearch = Boolean(f?.search);
+            return (
+              <div key={idx} className={layout === 'horizontal' ? 'flex items-center gap-2' : 'space-y-1'} style={{ width }}>
+                {lbl && <div className="text-xs text-gray-600">{lbl}</div>}
+                {showSearch && (
+                  <input
+                    type="text"
+                    className="border border-gray-300 rounded px-2 py-1 text-xs"
+                    placeholder="Buscar..."
+                    value={searchMap[idx] || ''}
+                    onChange={(e) => setSearchMap((prev) => ({ ...prev, [idx]: e.target.value }))}
+                  />
+                )}
+                {type === 'list' ? (
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-3 flex-wrap">
+                      {opts.map((o) => (
+                        <label key={String(o.value)} className="inline-flex items-center gap-1 text-xs text-gray-700">
+                          <input
+                            type="checkbox"
+                            className="rounded border-gray-300"
+                            checked={Array.isArray(stored) && stored.includes(o.value)}
+                            onChange={(e) => {
+                              const arr = Array.isArray(stored) ? stored.slice() : [];
+                              const nextArr = e.target.checked ? [...arr, o.value] : arr.filter((v: any) => v !== o.value);
+                              onChangeField(idx, sp, nextArr, f.actionOnChange);
+                            }}
+                          />
+                          <span>{o.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {selectAll && (
+                        <button type="button" className="text-[11px] text-blue-600 hover:underline" onClick={() => onChangeField(idx, sp, opts.map(o => o.value), f.actionOnChange)}>Selecionar todos</button>
+                      )}
+                      {clearable && (
+                        <button type="button" className="text-[11px] text-blue-600 hover:underline" onClick={() => onChangeField(idx, sp, [], f.actionOnChange)}>Limpar</button>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <select
+                      className="border border-gray-300 rounded px-2 py-1 text-xs"
+                      value={stored as any}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        const cast = (String(Number(v)) === v ? Number(v) : v);
+                        onChangeField(idx, sp, cast, f.actionOnChange);
+                      }}
+                    >
+                      {placeholder && <option value="">{placeholder}</option>}
+                      {opts.map((o) => (
+                        <option key={String(o.value)} value={String(o.value)}>{o.label}</option>
+                      ))}
+                    </select>
+                    {clearable && (
+                      <button type="button" className="text-[11px] text-blue-600 hover:underline" onClick={() => onChangeField(idx, sp, undefined, f.actionOnChange)}>Limpar</button>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+        {applyMode === 'manual' && (
+          <div className="mt-2 flex justify-end">
+            <button type="button" onClick={onApplyAll} className="text-xs rounded-md border border-gray-300 bg-white px-2 py-1 hover:bg-gray-50">
+              Aplicar
+            </button>
+          </div>
+        )}
+      </div>
+    );
+    return card;
+  },
+
   Button: ({ element, onAction }) => {
     const label = element?.props?.label ?? "Button";
     const action = element?.props?.action ?? null;
