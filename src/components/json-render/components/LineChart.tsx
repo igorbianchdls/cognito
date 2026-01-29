@@ -86,6 +86,7 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
   const autoMargin = (nivo as AnyRecord)?.autoMargin !== false;
   const maxLabelClamp = typeof (nivo as AnyRecord)?.maxLabelWidth === 'number' ? (nivo as AnyRecord).maxLabelWidth : 220;
   const axisFontSize = typeof (nivo as AnyRecord)?.theme?.fontSize === 'number' ? (nivo as AnyRecord).theme.fontSize : 12;
+  const managerFont = (theme.cssVars || {} as any).fontFamily as string | undefined;
   const canvasMeasure = React.useMemo(() => {
     if (typeof document === 'undefined') return null as HTMLCanvasElement | null;
     const c = document.createElement('canvas');
@@ -135,7 +136,6 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
   const motionConfig = (typeof nivo?.motionConfig === 'string' ? nivo.motionConfig : 'gentle') as any;
 
   let nivoTheme = buildNivoTheme(nivo?.theme);
-  const managerFont = (theme.cssVars || {} as any).fontFamily as string | undefined;
   const fg = (theme.cssVars || {} as any).fg as string | undefined;
   if (managerFont || fg) {
     const t: any = { ...(nivoTheme || {}) };
