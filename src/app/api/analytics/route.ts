@@ -385,8 +385,23 @@ export async function POST(req: NextRequest) {
             default: return null
           }
         }
-        const colExpr = mapCol(c)
-        if (!colExpr) return
+        let colExpr = mapCol(c)
+        if (!colExpr) {
+          // Support ID-based filters on pedidos (p.*)
+          const idMap: Record<string, string> = {
+            'vendedor_id': 'p.vendedor_id',
+            'cliente_id': 'p.cliente_id',
+            'canal_venda_id': 'p.canal_venda_id',
+            'territorio_id': 'p.territorio_id',
+            'categoria_receita_id': 'p.categoria_receita_id',
+            'centro_lucro_id': 'p.centro_lucro_id',
+            'filial_id': 'p.filial_id',
+            'unidade_negocio_id': 'p.unidade_negocio_id',
+            'status': 'p.status',
+          }
+          colExpr = idMap[c] || null
+          if (!colExpr) return
+        }
         if (op === '=' && r.val !== undefined) { filters.push(`${colExpr} = $${idx++}`); params.push(r.val) }
         else if (op === 'in' && Array.isArray(r.vals) && r.vals.length) {
           const placeholders = r.vals.map(() => `$${idx++}`).join(',')

@@ -117,7 +117,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     };
     const dp = p.datePicker || {};
     const showPicker = Boolean(dp.visible);
-    const position = (dp.position ?? 'right') as 'left'|'right'|'below';
+    const controlsPosition = (p.controlsPosition ?? dp.position ?? 'right') as 'left'|'right'|'below';
     const mode = (dp.mode ?? 'range') as 'range'|'single';
     const storePath = typeof dp.storePath === 'string' ? dp.storePath : undefined;
     const format = (typeof dp.format === 'string' && dp.format) ? dp.format : 'YYYY-MM-DD';
@@ -198,9 +198,116 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       }
     }
 
+    // Slicers support
+    type Opt = { value: string | number; label: string };
+    const slicers = Array.isArray((p as AnyRecord).slicers) ? ((p as AnyRecord).slicers as AnyRecord[]) : [];
+    const [optionsMap, setOptionsMap] = React.useState<Record<number, Opt[]>>({});
+    React.useEffect(() => {
+      let cancelled = false;
+      async function run() {
+        const tasks = await Promise.allSettled((slicers || []).map(async (s, idx) => {
+          const src = s?.source;
+          if (!src || typeof src !== 'object') return { idx, opts: [] as Opt[] };
+          if (src.type === 'static') {
+            const opts = Array.isArray(src.options) ? src.options.map((o: any) => ({ value: o.value, label: String(o.label ?? o.value) })) : [];
+            return { idx, opts };
+          }
+          if (src.type === 'api' && typeof src.url === 'string' && src.url) {
+            try {
+              const method = (src.method || 'GET').toUpperCase();
+              const res = await fetch(src.url, { method, headers: { 'content-type': 'application/json' }, ...(method === 'POST' && src.params ? { body: JSON.stringify(src.params) } : {}) });
+              const j = await res.json();
+              const raw = Array.isArray(j?.options) ? j.options : (Array.isArray(j?.rows) ? j.rows : []);
+              const vf = src.valueField || 'value';
+              const lf = src.labelField || 'label';
+              const opts = raw.map((r: any) => ({ value: (r?.[vf] ?? r?.value), label: String(r?.[lf] ?? r?.label ?? r?.name ?? r?.nome ?? '') }));
+              return { idx, opts };
+            } catch {
+              return { idx, opts: [] as Opt[] };
+            }
+          }
+          return { idx, opts: [] as Opt[] };
+        }));
+        if (cancelled) return;
+        const map: Record<number, Opt[]> = {};
+        for (const t of tasks) if (t.status === 'fulfilled') { map[(t.value as any).idx] = (t.value as any).opts }
+        setOptionsMap(map);
+      }
+      run();
+      return () => { cancelled = true };
+    }, [JSON.stringify(slicers)]);
+
+    const controls = React.useMemo(() => {
+      const elems: React.ReactNode[] = [];
+      if (picker) elems.push(picker);
+      slicers.forEach((s, idx) => {
+        const sp = String(s?.storePath || '').trim();
+        if (!sp) return;
+        const lbl = typeof s?.label === 'string' ? s.label : undefined;
+        const type = (s?.type || 'dropdown') as 'dropdown'|'multi'|'list';
+        const placeholder = typeof s?.placeholder === 'string' ? s.placeholder : undefined;
+        const width = s?.width;
+        const opts = optionsMap[idx] || [];
+        const storedVal = getValueByPath(sp, undefined);
+        const onChangeValue = (val: any) => {
+          const next = setByPath(data, sp, val);
+          setData(next);
+          if (s?.actionOnChange && typeof s.actionOnChange === 'object') onAction?.(s.actionOnChange);
+        };
+        if (type === 'list') {
+          const arr = Array.isArray(storedVal) ? storedVal : [];
+          elems.push(
+            <div key={`slicer-${idx}`} className="flex items-center gap-2" style={{ width: styleVal(width) }}>
+              {lbl && <span className="text-xs text-gray-600">{lbl}:</span>}
+              <div className="flex items-center gap-2">
+                {opts.map((o) => (
+                  <label key={String(o.value)} className="inline-flex items-center gap-1 text-xs text-gray-700">
+                    <input type="checkbox" className="rounded border-gray-300" checked={arr.includes(o.value)} onChange={(e) => {
+                      const nextArr = e.target.checked ? [...arr, o.value] : arr.filter((v: any) => v !== o.value);
+                      onChangeValue(nextArr);
+                    }} />
+                    <span>{o.label}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          );
+        } else {
+          const isMulti = type === 'multi';
+          const val = isMulti ? (Array.isArray(storedVal) ? storedVal : []) : (storedVal ?? '');
+          elems.push(
+            <div key={`slicer-${idx}`} className="flex items-center gap-2" style={{ width: styleVal(width) }}>
+              {lbl && <span className="text-xs text-gray-600">{lbl}:</span>}
+              <select
+                multiple={isMulti}
+                className="border border-gray-300 rounded px-2 py-1 text-xs"
+                value={val as any}
+                onChange={(e) => {
+                  if (isMulti) {
+                    const selected: any[] = Array.from(e.target.selectedOptions).map((o) => (o as any).value).map((x) => (String(Number(x)) === x ? Number(x) : x));
+                    onChangeValue(selected);
+                  } else {
+                    const v = e.target.value;
+                    onChangeValue(String(Number(v)) === v ? Number(v) : v);
+                  }
+                }}
+              >
+                {!isMulti && placeholder && <option value="">{placeholder}</option>}
+                {opts.map((o) => (
+                  <option key={String(o.value)} value={String(o.value)}>{o.label}</option>
+                ))}
+              </select>
+            </div>
+          );
+        }
+      });
+      if (elems.length === 0) return null;
+      return <div className="flex items-center gap-2">{elems}</div>;
+    }, [picker, JSON.stringify(slicers), JSON.stringify(optionsMap), data]);
+
     return (
       <div className="rounded-md" style={containerStyle}>
-        {position === 'below' ? (
+        {controlsPosition === 'below' ? (
           <>
             <div className="flex items-center justify-between">
               <div>
@@ -208,18 +315,18 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
                 {p.subtitle && <div className="text-sm" style={{ color: p.subtitleColor }}>{p.subtitle}</div>}
               </div>
             </div>
-            {picker && <div className="mt-2">{picker}</div>}
+            {controls && <div className="mt-2">{controls}</div>}
           </>
         ) : (
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              {position === 'left' && picker}
+              {controlsPosition === 'left' && controls}
               <div>
                 <div className="text-lg font-semibold" style={{ color: p.textColor }}>{p.title}</div>
                 {p.subtitle && <div className="text-sm" style={{ color: p.subtitleColor }}>{p.subtitle}</div>}
               </div>
             </div>
-            {position === 'right' && picker}
+            {controlsPosition === 'right' && controls}
           </div>
         )}
         {children && <div className="mt-2">{children}</div>}
@@ -310,6 +417,13 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
           const filters = { ...(dq.filters || {}) } as AnyRecord;
           const dr = (data as any)?.filters?.dateRange;
           if (dr && !filters.de && !filters.ate) { if (dr.from) filters.de = dr.from; if (dr.to) filters.ate = dr.to; }
+          const globalFilters = (data as any)?.filters;
+          if (globalFilters && typeof globalFilters === 'object') {
+            for (const [k, v] of Object.entries(globalFilters)) {
+              if (k === 'dateRange') continue;
+              if (filters[k as any] === undefined) (filters as any)[k] = v as any;
+            }
+          }
           let rows: any[] = [];
 
           // Decide endpoint: analytics if no dimension and mappable source; else module query
@@ -328,6 +442,13 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
               if (typeof filters.de === 'string') payload.from = filters.de;
               if (typeof filters.ate === 'string') payload.to = filters.ate;
               if (typeof filters.tenant_id === 'number') payload.tenant_id = filters.tenant_id;
+              const whereRules: AnyRecord[] = [];
+              for (const [k, v] of Object.entries(filters)) {
+                if (k === 'de' || k === 'ate' || k === 'tenant_id') continue;
+                if (Array.isArray(v)) whereRules.push({ col: k, op: 'in', vals: v });
+                else whereRules.push({ col: k, op: '=', val: v });
+              }
+              if (whereRules.length) payload.where = whereRules;
               const res = await fetch('/api/analytics', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload) });
               const j = await res.json();
               rows = Array.isArray(j?.rows) ? j.rows : [];
@@ -356,7 +477,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       }
       run();
       return () => { cancelled = true };
-    }, [JSON.stringify(dq), JSON.stringify((data as any)?.filters?.dateRange)]);
+    }, [JSON.stringify(dq), JSON.stringify((data as any)?.filters)]);
     const unit = p.unit as string | undefined;
     const fmt = (p.format ?? 'number') as 'currency'|'percent'|'number';
     const deltaPath = p.deltaPath as string | undefined;

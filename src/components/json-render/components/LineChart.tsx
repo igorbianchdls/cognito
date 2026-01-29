@@ -34,6 +34,13 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
         const filters = { ...(dq.filters || {}) } as AnyRecord;
         const dr = (data as any)?.filters?.dateRange;
         if (dr && !filters.de && !filters.ate) { if (dr.from) filters.de = dr.from; if (dr.to) filters.ate = dr.to; }
+        const globalFilters = (data as any)?.filters;
+        if (globalFilters && typeof globalFilters === 'object') {
+          for (const [k, v] of Object.entries(globalFilters)) {
+            if (k === 'dateRange') continue;
+            if (filters[k as any] === undefined) (filters as any)[k] = v as any;
+          }
+        }
         const body = { dataQuery: { model: dq.model, dimension: dq.dimension, dimensionExpr: dq.dimensionExpr, measure: dq.measure, filters, orderBy: dq.orderBy, limit: dq.limit } };
         const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
         const j = await res.json();

@@ -118,6 +118,33 @@ export async function POST(req: NextRequest) {
     if (typeof filters.de === 'string') { whereParts.push(`p.data_pedido >= $${params.length + 1}`); params.push(filters.de) }
     if (typeof filters.ate === 'string') { whereParts.push(`p.data_pedido <= $${params.length + 1}`); params.push(filters.ate) }
     if (typeof filters.status === 'string') { whereParts.push(`LOWER(p.status) = LOWER($${params.length + 1})`); params.push(filters.status) }
+    if (Array.isArray((filters as any).status) && (filters as any).status.length) {
+      const vals = (filters as any).status as unknown[];
+      const placeholders = vals.map(() => `$${params.length + 1}`).join(',');
+      whereParts.push(`LOWER(p.status) IN (${placeholders})`);
+      params.push(...vals.map((v) => typeof v === 'string' ? v.toLowerCase() : String(v).toLowerCase()));
+    }
+
+    const addInFilter = (col: string, val: unknown) => {
+      if (Array.isArray(val)) {
+        const arr = val as unknown[];
+        if (!arr.length) return;
+        const placeholders = arr.map(() => `$${params.length + 1}`).join(',');
+        whereParts.push(`${col} IN (${placeholders})`);
+        params.push(...arr);
+      } else if (typeof val === 'number' || typeof val === 'string') {
+        whereParts.push(`${col} = $${params.length + 1}`);
+        params.push(val);
+      }
+    };
+    addInFilter('p.cliente_id', (filters as any).cliente_id);
+    addInFilter('p.vendedor_id', (filters as any).vendedor_id);
+    addInFilter('p.canal_venda_id', (filters as any).canal_venda_id);
+    addInFilter('p.filial_id', (filters as any).filial_id);
+    addInFilter('p.unidade_negocio_id', (filters as any).unidade_negocio_id);
+    addInFilter('p.territorio_id', (filters as any).territorio_id);
+    addInFilter('p.categoria_receita_id', (filters as any).categoria_receita_id);
+    addInFilter('p.centro_lucro_id', (filters as any).centro_lucro_id);
     const whereSql = whereParts.length ? `WHERE ${whereParts.join(' AND ')}` : ''
 
     // Order by
