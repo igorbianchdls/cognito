@@ -19,8 +19,8 @@ const SALES_TEMPLATE_TEXT = JSON.stringify([
       ]},
 
       { type: "Div", props: { direction: "row", gap: 12, padding: 16, justify: "start", align: "start", childGrow: true }, children: [
-        { type: "SlicerCard", props: { fr: 1, title: "Filtro de Status (Tile)", layout: "horizontal", fields: [
-          { label: "Status", type: "tile", storePath: "filters.status", clearable: true, source: { type: "api", url: "/api/modulos/vendas/options?field=status&limit=50" } }
+        { type: "SlicerCard", props: { fr: 1, title: "Filtro de Canais (Tile)", layout: "horizontal", fields: [
+          { label: "Canal", type: "tile-multi", storePath: "filters.canal_venda_id", selectAll: true, search: true, clearable: true, source: { type: "api", url: "/api/modulos/vendas/options?field=canal_venda_id&limit=50" } }
         ], containerStyle: { borderWidth: 2, borderColor: "#e5e7eb", borderRadius: 12 } } }
       ]},
 
