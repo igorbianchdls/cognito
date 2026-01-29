@@ -113,35 +113,7 @@ function mapAlign(v?: string): React.CSSProperties['alignItems'] | undefined {
   }
 }
 
-export const registry: Record<string, React.FC<{ element: any; children?: React.ReactNode; data?: AnyRecord; onAction?: (action: any) => void }>> = {
-  Card: ({ element, children }) => {
-    const theme = useThemeOverrides();
-    const p = deepMerge(theme.components?.Card || {}, element?.props || {}) as AnyRecord;
-    const title = p.title ?? "";
-    const titleStyle = applyH1FromCssVars(normalizeTitleStyle(p.titleStyle), theme.cssVars) as React.CSSProperties | undefined;
-    const styleBase: React.CSSProperties = {
-      backgroundColor: p.backgroundColor,
-      borderColor: p.borderColor,
-      borderWidth: p.borderWidth,
-      borderStyle: p.borderWidth ? 'solid' : undefined,
-      borderRadius: p.borderRadius,
-      padding: styleVal(p.padding) || undefined,
-    };
-    const style = ensureSurfaceBackground(
-      applyShadowFromCssVars(
-        applyBorderFromCssVars(styleBase as any, theme.cssVars),
-        theme.cssVars
-      ),
-      theme.cssVars
-    ) as React.CSSProperties;
-    return (
-      <div style={style}>
-        {title && <h3 className="text-base font-semibold text-gray-900 mb-0" style={titleStyle}>{title}</h3>}
-        <div className="space-y-2">{children}</div>
-      </div>
-    );
-  },
-
+// Themed Date input with custom icon
 function DateFieldWithIcon({ value, onChange, fieldStyle }: { value: string; onChange: (v: string) => void; fieldStyle?: React.CSSProperties }) {
   const theme = useThemeOverrides();
   const ref = React.useRef<HTMLInputElement>(null);
@@ -193,6 +165,35 @@ function DateFieldWithIcon({ value, onChange, fieldStyle }: { value: string; onC
     </div>
   );
 }
+
+export const registry: Record<string, React.FC<{ element: any; children?: React.ReactNode; data?: AnyRecord; onAction?: (action: any) => void }>> = {
+  Card: ({ element, children }) => {
+    const theme = useThemeOverrides();
+    const p = deepMerge(theme.components?.Card || {}, element?.props || {}) as AnyRecord;
+    const title = p.title ?? "";
+    const titleStyle = applyH1FromCssVars(normalizeTitleStyle(p.titleStyle), theme.cssVars) as React.CSSProperties | undefined;
+    const styleBase: React.CSSProperties = {
+      backgroundColor: p.backgroundColor,
+      borderColor: p.borderColor,
+      borderWidth: p.borderWidth,
+      borderStyle: p.borderWidth ? 'solid' : undefined,
+      borderRadius: p.borderRadius,
+      padding: styleVal(p.padding) || undefined,
+    };
+    const style = ensureSurfaceBackground(
+      applyShadowFromCssVars(
+        applyBorderFromCssVars(styleBase as any, theme.cssVars),
+        theme.cssVars
+      ),
+      theme.cssVars
+    ) as React.CSSProperties;
+    return (
+      <div style={style}>
+        {title && <h3 className="text-base font-semibold text-gray-900 mb-0" style={titleStyle}>{title}</h3>}
+        <div className="space-y-2">{children}</div>
+      </div>
+    );
+  },
 
   Header: ({ element, children, onAction }) => {
     const theme = useThemeOverrides();
