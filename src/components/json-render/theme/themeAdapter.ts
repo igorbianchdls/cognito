@@ -62,7 +62,8 @@ function buildChartScheme(tokens: DesignTokens): string[] {
 function buildManagersFromTokens(tokens: DesignTokens, name: ThemeName): Managers {
   const fontPrimary = tokens.typography?.fontFamily?.primary || 'Inter, ui-sans-serif, system-ui';
   const borderColor = (tokens.colors as AnyRecord)?.border || '#e5e7eb';
-  const borderWidth = tokens.borders?.width?.thin ?? 1;
+  // Force 2px borders across all containers (including KPI)
+  const borderWidth = 2;
   const borderRadius = tokens.borders?.radius?.md ?? 8;
   const textPrimary = tokens.colors?.text?.primary || '#111827';
   const textSecondary = tokens.colors?.text?.secondary || '#475569';
@@ -85,10 +86,11 @@ function buildManagersFromTokens(tokens: DesignTokens, name: ThemeName): Manager
     h1: {
       color: textPrimary,
       weight: tokens.typography?.fontWeight?.semibold ?? 600,
-      size: tokens.typography?.fontSize?.sm ?? 14,
+      // Slightly larger and more padded by default across all themes
+      size: tokens.typography?.fontSize?.md ?? 16,
       font: fontPrimary,
       letterSpacing: '-0.02em',
-      padding: 6,
+      padding: 10,
     },
     kpi: {
       title: {
