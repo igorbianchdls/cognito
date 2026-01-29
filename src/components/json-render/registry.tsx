@@ -543,7 +543,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
           <>
             <div className="flex items-center justify-between">
               <div style={{ padding: '3px 6px' }}>
-                <div className="text-lg font-semibold" style={{ ...(applyH1FromCssVars({ color: p.textColor }, theme.cssVars) || {}), fontSize: '18px' }}>{p.title}</div>
+                <div className="text-lg font-semibold" style={{ ...(applyH1FromCssVars({ color: p.textColor }, theme.cssVars) || {}), fontSize: '20px' }}>{p.title}</div>
                 {p.subtitle && <div className="text-sm" style={{ color: p.subtitleColor }}>{p.subtitle}</div>}
               </div>
             </div>
@@ -554,7 +554,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
             <div className="flex items-center gap-3">
               {controlsPosition === 'left' && controls}
               <div style={{ padding: '3px 6px' }}>
-                <div className="text-lg font-semibold" style={{ ...(applyH1FromCssVars({ color: p.textColor }, theme.cssVars) || {}), fontSize: '18px' }}>{p.title}</div>
+                <div className="text-lg font-semibold" style={{ ...(applyH1FromCssVars({ color: p.textColor }, theme.cssVars) || {}), fontSize: '20px' }}>{p.title}</div>
                 {p.subtitle && <div className="text-sm" style={{ color: p.subtitleColor }}>{p.subtitle}</div>}
               </div>
             </div>
