@@ -7,7 +7,7 @@ import JsonRenderPieChart from "@/components/json-render/components/PieChart";
 import { ThemeProvider, useThemeOverrides } from "@/components/json-render/theme/ThemeContext";
 import { useDataValue, useData } from "@/components/json-render/context";
 import { deepMerge } from "@/stores/ui/json-render/utils";
-import { normalizeTitleStyle, normalizeContainerStyle, applyBorderFromCssVars, ensureSurfaceBackground } from "@/components/json-render/helpers";
+import { normalizeTitleStyle, normalizeContainerStyle, applyBorderFromCssVars, ensureSurfaceBackground, applyShadowFromCssVars } from "@/components/json-render/helpers";
 
 type AnyRecord = Record<string, any>;
 
@@ -139,7 +139,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       borderRadius: p.borderRadius,
       padding: styleVal(p.padding) || undefined,
     };
-    const style = applyBorderFromCssVars(styleBase as any, theme.cssVars) as React.CSSProperties;
+    const style = applyShadowFromCssVars(applyBorderFromCssVars(styleBase as any, theme.cssVars), theme.cssVars) as React.CSSProperties;
     return (
       <div style={style}>
         {title && <h3 className="text-base font-semibold text-gray-900 mb-2" style={titleStyle}>{title}</h3>}
