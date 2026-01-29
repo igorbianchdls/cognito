@@ -98,26 +98,8 @@ export default function JsonRenderPreview({ chatId }: Props) {
 
   return (
     <div className="h-full w-full grid grid-rows-[auto_1fr] min-h-0">
-      <div className="flex items-center justify-between h-10 border-b px-3 bg-gray-50 text-xs text-gray-600">
+      <div className="flex items-center justify-between h-8 border-b px-3 bg-gray-50 text-xs text-gray-600">
         <div className="truncate">Preview • {jsonrPath || '(sem caminho)'}{content && (<span className="ml-2 text-gray-400">({content.length} bytes)</span>)}</div>
-        <div className="flex items-center gap-2">
-          <select
-            className="border border-gray-300 rounded px-2 py-1 text-xs bg-white"
-            value={jsonrPath}
-            onChange={(e) => sandboxActions.setPreviewPath(e.target.value)}
-          >
-            <option value="">— selecione um .jsonr —</option>
-            {paths.map(p => (
-              <option key={p} value={p}>{p.replace('/vercel/sandbox','')}</option>
-            ))}
-          </select>
-          <button
-            type="button"
-            className="border border-gray-300 rounded px-2 py-1 text-xs bg-white hover:bg-gray-50"
-            onClick={refreshPaths}
-            disabled={loadingPaths}
-          >{loadingPaths ? 'Atualizando...' : 'Atualizar'}</button>
-        </div>
       </div>
       <div className="min-h-0 overflow-auto p-2 bg-gray-50">
         {(pathsError && !error) && (

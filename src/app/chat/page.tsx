@@ -31,7 +31,7 @@ export default function ChatRoutePage() {
                   />
                 </div>
                 {/* Sandbox cell (kept mounted; hidden when closed) */}
-                <div className={!showSandbox ? 'hidden' : 'h-full min-h-0'}>
+                <div className={!showSandbox ? 'hidden' : 'h-full min-h-0 p-2'}>
                   <SandboxPanel
                     chatId={chatId ?? undefined}
                     onClose={() => { setShowSandbox(false); setSandboxExpanded(false); }}

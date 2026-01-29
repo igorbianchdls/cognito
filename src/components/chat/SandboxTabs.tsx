@@ -3,7 +3,7 @@
 import React from 'react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, Code2, Monitor, Terminal } from 'lucide-react';
+import { MoreHorizontal, Code2, Monitor, LayoutDashboard, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useStore } from '@nanostores/react';
 import { $sandboxActiveTab, sandboxActions, type SandboxTab } from '@/stores/chat/sandboxStore';
@@ -14,7 +14,7 @@ export default function SandboxTabs() {
   const tabs: { key: SandboxTab; label: string; icon: React.ElementType }[] = [
     { key: 'preview', label: 'Preview', icon: Monitor },
     { key: 'code', label: 'Code', icon: Code2 },
-    { key: 'console', label: 'Console', icon: Terminal },
+    { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   ];
 
   return (
@@ -30,6 +30,7 @@ export default function SandboxTabs() {
             >
               <Icon className="w-4 h-4 mr-1.5" />
               {label}
+              {key === 'dashboard' && <ChevronDown className="w-3.5 h-3.5 ml-1 opacity-70" />}
               {active === key && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>

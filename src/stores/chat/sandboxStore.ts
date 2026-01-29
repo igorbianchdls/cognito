@@ -1,6 +1,6 @@
 import { atom } from 'nanostores'
 
-export type SandboxTab = 'preview' | 'code' | 'console'
+export type SandboxTab = 'preview' | 'code' | 'dashboard'
 
 export const $sandboxActiveTab = atom<SandboxTab>('preview')
 

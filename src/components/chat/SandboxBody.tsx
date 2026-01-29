@@ -5,6 +5,7 @@ import FileExplorer from '../file-explorer/FileExplorer';
 import { useStore } from '@nanostores/react';
 import { $sandboxActiveTab } from '@/stores/chat/sandboxStore';
 import JsonRenderPreview from './json-render/JsonRenderPreview';
+import DashboardPicker from './json-render/DashboardPicker';
 
 type SandboxBodyProps = React.PropsWithChildren<{
   className?: string;
@@ -17,8 +18,8 @@ export default function SandboxBody({ className, style, children, chatId }: Sand
     <div className={`ui-text min-h-0 overflow-hidden ${className ?? ''}`} style={style}>
       {active === 'code' && <FileExplorer chatId={chatId} />}
       {active === 'preview' && <JsonRenderPreview chatId={chatId} />}
-      {active === 'console' && (
-        <div className="h-full flex items-center justify-center text-gray-500 text-sm">Console (em breve)</div>
+      {active === 'dashboard' && (
+        <DashboardPicker chatId={chatId} />
       )}
       {children}
     </div>
