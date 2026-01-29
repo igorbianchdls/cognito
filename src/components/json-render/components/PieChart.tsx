@@ -97,16 +97,18 @@ export default function JsonRenderPieChart({ element }: { element: any }) {
 
   let nivoTheme = buildNivoTheme(nivo?.theme);
   const managerFont = (theme.cssVars || {} as any).fontFamily as string | undefined;
-  if (managerFont) {
+  const fg = (theme.cssVars || {} as any).fg as string | undefined;
+  if (managerFont || fg) {
     const t: any = { ...(nivoTheme || {}) };
-    t.fontFamily = managerFont;
+    if (managerFont) t.fontFamily = managerFont;
+    if (!t.textColor && fg) t.textColor = fg;
     t.labels = t.labels || {};
-    t.labels.text = { ...(t.labels.text || {}), fontFamily: managerFont };
+    t.labels.text = { ...(t.labels.text || {}), ...(managerFont ? { fontFamily: managerFont } : {}), ...(fg ? { fill: fg } : {}) };
     t.axis = t.axis || {};
     t.axis.ticks = t.axis.ticks || {};
-    t.axis.ticks.text = { ...(t.axis.ticks.text || {}), fontFamily: managerFont };
+    t.axis.ticks.text = { ...(t.axis.ticks.text || {}), ...(managerFont ? { fontFamily: managerFont } : {}), ...(fg ? { fill: fg } : {}) };
     t.axis.legend = t.axis.legend || {};
-    t.axis.legend.text = { ...(t.axis.legend.text || {}), fontFamily: managerFont };
+    t.axis.legend.text = { ...(t.axis.legend.text || {}), ...(managerFont ? { fontFamily: managerFont } : {}), ...(fg ? { fill: fg } : {}) };
     nivoTheme = t;
   }
   return (

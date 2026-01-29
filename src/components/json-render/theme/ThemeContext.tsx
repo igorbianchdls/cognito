@@ -12,9 +12,19 @@ export function useThemeOverrides(): ThemeOverrides {
   return useContext(ThemeContext);
 }
 
+const BUILTIN_ALIASES: Record<string, string> = {
+  // Map token themes in PT to built-in UI presets
+  'branco': 'light',
+  'cinza-claro': 'blue',
+  'preto': 'black',
+  'cinza-escuro': 'dark',
+};
+
 export function ThemeProvider({ name, components, cssVars, children }: { name?: string; components?: ThemeOverrides['components']; cssVars?: Record<string,string>; children: React.ReactNode }) {
   const value = useMemo<ThemeOverrides>(() => {
-    const base = name && builtInThemes[name] ? builtInThemes[name] : { components: {}, cssVars: {} };
+    const mapped = name && BUILTIN_ALIASES[String(name).toLowerCase()];
+    const chosenName = mapped || name;
+    const base = chosenName && builtInThemes[chosenName] ? builtInThemes[chosenName] : { components: {}, cssVars: {} };
     const merged = {
       components: deepMerge(base.components || {}, components || {}),
       cssVars: { ...(base.cssVars || {}), ...(cssVars || {}) }

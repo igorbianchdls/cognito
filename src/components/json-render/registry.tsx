@@ -6,6 +6,7 @@ import JsonRenderLineChart from "@/components/json-render/components/LineChart";
 import JsonRenderPieChart from "@/components/json-render/components/PieChart";
 import { ThemeProvider, useThemeOverrides } from "@/components/json-render/theme/ThemeContext";
 import { mapManagersToCssVars } from "@/components/json-render/theme/thememanagers";
+import { buildThemeVars } from "@/components/json-render/theme/themeAdapter";
 import { useDataValue, useData } from "@/components/json-render/context";
 import { deepMerge } from "@/stores/ui/json-render/utils";
 import { normalizeTitleStyle, normalizeContainerStyle, applyBorderFromCssVars, ensureSurfaceBackground, applyShadowFromCssVars, applyH1FromCssVars, applyKpiTitleFromCssVars, applyKpiValueFromCssVars } from "@/components/json-render/helpers";
@@ -116,19 +117,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     const theme = useThemeOverrides();
     const p = deepMerge(theme.components?.Card || {}, element?.props || {}) as AnyRecord;
     const title = p.title ?? "";
-    const titleStyle = {
-      ...(p.titleStyle ? {
-        fontFamily: p.titleStyle.fontFamily,
-        fontWeight: p.titleStyle.fontWeight,
-        fontSize: typeof p.titleStyle.fontSize === 'number' ? `${p.titleStyle.fontSize}px` : p.titleStyle.fontSize,
-        color: p.titleStyle.color,
-        letterSpacing: typeof p.titleStyle.letterSpacing === 'number' ? `${p.titleStyle.letterSpacing}px` : p.titleStyle.letterSpacing,
-        textTransform: p.titleStyle.textTransform,
-        padding: typeof p.titleStyle.padding === 'number' ? `${p.titleStyle.padding}px` : p.titleStyle.padding,
-        margin: typeof p.titleStyle.margin === 'number' ? `${p.titleStyle.margin}px` : p.titleStyle.margin,
-        textAlign: p.titleStyle.textAlign,
-      } : {})
-    } as React.CSSProperties;
+    const titleStyle = applyH1FromCssVars(normalizeTitleStyle(p.titleStyle), theme.cssVars) as React.CSSProperties | undefined;
     const styleBase: React.CSSProperties = {
       backgroundColor: p.backgroundColor,
       borderColor: p.borderColor,
@@ -137,7 +126,13 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       borderRadius: p.borderRadius,
       padding: styleVal(p.padding) || undefined,
     };
-    const style = applyShadowFromCssVars(applyBorderFromCssVars(styleBase as any, theme.cssVars), theme.cssVars) as React.CSSProperties;
+    const style = ensureSurfaceBackground(
+      applyShadowFromCssVars(
+        applyBorderFromCssVars(styleBase as any, theme.cssVars),
+        theme.cssVars
+      ),
+      theme.cssVars
+    ) as React.CSSProperties;
     return (
       <div style={style}>
         {title && <h3 className="text-base font-semibold text-gray-900 mb-2" style={titleStyle}>{title}</h3>}
@@ -169,6 +164,13 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       height: styleVal(p.height),
       textAlign: align,
     };
+    const wrappedStyle = ensureSurfaceBackground(
+      applyShadowFromCssVars(
+        applyBorderFromCssVars(containerStyle as any, theme.cssVars),
+        theme.cssVars
+      ),
+      theme.cssVars
+    ) as React.CSSProperties;
     const dp = p.datePicker || {};
     const showPicker = Boolean(dp.visible);
     const controlsPosition = (p.controlsPosition ?? dp.position ?? 'right') as 'left'|'right'|'below';
@@ -477,12 +479,12 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     }, [picker, JSON.stringify(slicers), JSON.stringify(optionsMap), data]);
 
     return (
-      <div className="rounded-md" style={containerStyle}>
+      <div className="rounded-md" style={wrappedStyle}>
         {controlsPosition === 'below' ? (
           <>
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-lg font-semibold" style={{ color: p.textColor }}>{p.title}</div>
+                <div className="text-lg font-semibold" style={applyH1FromCssVars({ color: p.textColor }, theme.cssVars)}>{p.title}</div>
                 {p.subtitle && <div className="text-sm" style={{ color: p.subtitleColor }}>{p.subtitle}</div>}
               </div>
             </div>
@@ -493,7 +495,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
             <div className="flex items-center gap-3">
               {controlsPosition === 'left' && controls}
               <div>
-                <div className="text-lg font-semibold" style={{ color: p.textColor }}>{p.title}</div>
+                <div className="text-lg font-semibold" style={applyH1FromCssVars({ color: p.textColor }, theme.cssVars)}>{p.title}</div>
                 {p.subtitle && <div className="text-sm" style={{ color: p.subtitleColor }}>{p.subtitle}</div>}
               </div>
             </div>
@@ -822,7 +824,8 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
   Theme: ({ element, children }) => {
     const name = element?.props?.name as string | undefined;
     const mgr = (element?.props?.managers || {}) as AnyRecord;
-    const cssVars = mapManagersToCssVars(mgr);
+    const preset = buildThemeVars(name, mgr as any);
+    const cssVars = preset.cssVars || mapManagersToCssVars(mgr);
     return (
       <ThemeProvider name={name} cssVars={cssVars}>
         {children}
