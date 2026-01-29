@@ -667,21 +667,21 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-sm" style={containerStyle}>
         {title && <div className="text-sm font-medium text-gray-900 mb-2">{title}</div>}
         <div className={layout === 'horizontal' ? 'flex items-start gap-3 flex-wrap' : 'space-y-3'}>
-          {fields.map((f, idx) => {
-            const type = (f?.type || 'list') as 'list'|'dropdown';
+          {(() => {
+            const f = (fields && fields.length > 0) ? fields[0] : undefined;
+            if (!f) return null;
+            const idx = 0;
             const sp = String(f?.storePath || '').trim();
             if (!sp) return null;
             const lbl = typeof f?.label === 'string' ? f.label : undefined;
             const opts = optionsMap[idx] || [];
-            const placeholder = typeof f?.placeholder === 'string' ? f.placeholder : undefined;
             const width = (f?.width !== undefined) ? (typeof f.width === 'number' ? `${f.width}px` : f.width) : undefined;
-            const stored = effectiveGet(idx, sp, type === 'list');
-            const isMulti = type === 'list';
+            const stored = effectiveGet(idx, sp, true);
             const clearable = (f?.clearable !== false);
             const selectAll = Boolean(f?.selectAll);
             const showSearch = Boolean(f?.search);
             return (
-              <div key={idx} className={layout === 'horizontal' ? 'flex items-center gap-2' : 'space-y-1'} style={{ width }}>
+              <div className={layout === 'horizontal' ? 'flex items-center gap-2' : 'space-y-1'} style={{ width }}>
                 {lbl && <div className="text-xs text-gray-600">{lbl}</div>}
                 {showSearch && (
                   <input
@@ -692,58 +692,36 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
                     onChange={(e) => setSearchMap((prev) => ({ ...prev, [idx]: e.target.value }))}
                   />
                 )}
-                {type === 'list' ? (
-                  <div className="flex flex-col gap-1">
-                    <div className="flex items-center gap-3 flex-wrap">
-                      {opts.map((o) => (
-                        <label key={String(o.value)} className="inline-flex items-center gap-1 text-xs text-gray-700">
-                          <input
-                            type="checkbox"
-                            className="rounded border-gray-300"
-                            checked={Array.isArray(stored) && stored.includes(o.value)}
-                            onChange={(e) => {
-                              const arr = Array.isArray(stored) ? stored.slice() : [];
-                              const nextArr = e.target.checked ? [...arr, o.value] : arr.filter((v: any) => v !== o.value);
-                              onChangeField(idx, sp, nextArr, f.actionOnChange);
-                            }}
-                          />
-                          <span>{o.label}</span>
-                        </label>
-                      ))}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {selectAll && (
-                        <button type="button" className="text-[11px] text-blue-600 hover:underline" onClick={() => onChangeField(idx, sp, opts.map(o => o.value), f.actionOnChange)}>Selecionar todos</button>
-                      )}
-                      {clearable && (
-                        <button type="button" className="text-[11px] text-blue-600 hover:underline" onClick={() => onChangeField(idx, sp, [], f.actionOnChange)}>Limpar</button>
-                      )}
-                    </div>
+                <div className="flex flex-col gap-2">
+                  <div className="flex flex-col gap-1 max-h-48 overflow-y-auto pr-1">
+                    {opts.map((o) => (
+                      <label key={String(o.value)} className="inline-flex items-center gap-2 text-xs text-gray-700">
+                        <input
+                          type="checkbox"
+                          className="rounded border-gray-300"
+                          checked={Array.isArray(stored) && stored.includes(o.value)}
+                          onChange={(e) => {
+                            const arr = Array.isArray(stored) ? stored.slice() : [];
+                            const nextArr = e.target.checked ? [...arr, o.value] : arr.filter((v: any) => v !== o.value);
+                            onChangeField(idx, sp, nextArr, f.actionOnChange);
+                          }}
+                        />
+                        <span>{o.label}</span>
+                      </label>
+                    ))}
                   </div>
-                ) : (
                   <div className="flex items-center gap-2">
-                    <select
-                      className="border border-gray-300 rounded px-2 py-1 text-xs"
-                      value={stored as any}
-                      onChange={(e) => {
-                        const v = e.target.value;
-                        const cast = (String(Number(v)) === v ? Number(v) : v);
-                        onChangeField(idx, sp, cast, f.actionOnChange);
-                      }}
-                    >
-                      {placeholder && <option value="">{placeholder}</option>}
-                      {opts.map((o) => (
-                        <option key={String(o.value)} value={String(o.value)}>{o.label}</option>
-                      ))}
-                    </select>
+                    {selectAll && (
+                      <button type="button" className="text-[11px] text-blue-600 hover:underline" onClick={() => onChangeField(idx, sp, opts.map(o => o.value), f.actionOnChange)}>Selecionar todos</button>
+                    )}
                     {clearable && (
-                      <button type="button" className="text-[11px] text-blue-600 hover:underline" onClick={() => onChangeField(idx, sp, undefined, f.actionOnChange)}>Limpar</button>
+                      <button type="button" className="text-[11px] text-blue-600 hover:underline" onClick={() => onChangeField(idx, sp, [], f.actionOnChange)}>Limpar</button>
                     )}
                   </div>
-                )}
+                </div>
               </div>
             );
-          })}
+          })()}
         </div>
         {applyMode === 'manual' && (
           <div className="mt-2 flex justify-end">
