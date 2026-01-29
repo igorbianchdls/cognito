@@ -198,9 +198,11 @@ export function applyBorderFromCssVars(style: Record<string, any> | undefined, c
   const w = s.containerBorderWidth as any;
   const c = s.containerBorderColor as string | undefined;
   const r = s.containerRadius as any;
-  if (st === 'none') { out.borderWidth = 0; out.borderStyle = undefined; }
+  if (st === 'none') { out.borderWidth = 0; out.borderStyle = 'none'; }
   else if (st) { out.borderStyle = st; }
   if (w !== undefined) out.borderWidth = w;
+  // If width was provided (and not zero) but style not set, default to solid
+  if ((w !== undefined && String(w) !== '0') && !out.borderStyle) out.borderStyle = 'solid';
   if (c) out.borderColor = c;
   if (r !== undefined) out.borderRadius = typeof r === 'number' ? `${r}px` : r;
   return Object.keys(out).length ? out : undefined;
