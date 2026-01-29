@@ -301,7 +301,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
         const sp = String((s as any)?.storePath || '').trim();
         if (!sp) return;
         const lbl = typeof s?.label === 'string' ? s.label : undefined;
-        const type = (s?.type || 'dropdown') as 'dropdown'|'multi'|'list';
+        const type = (s?.type || 'dropdown') as 'dropdown'|'multi'|'list'|'tile'|'tile-multi';
         const placeholder = typeof s?.placeholder === 'string' ? s.placeholder : undefined;
         const width = s?.width;
         const opts = optionsMap[idx] || [];
@@ -311,6 +311,53 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
           setData(next);
           if (s?.actionOnChange && typeof s.actionOnChange === 'object') onAction?.(s.actionOnChange);
         };
+        // Tile (single) and Tile (multi)
+        if (type === 'tile' || type === 'tile-multi') {
+          const isMulti = type === 'tile-multi';
+          const clearable = ((s as any)?.clearable !== false);
+          const current = isMulti ? (Array.isArray(storedVal) ? storedVal : []) : (storedVal ?? undefined);
+          const onClear = () => {
+            if (isMulti) onChangeValue([]); else onChangeValue(undefined);
+          };
+          elems.push(
+            <div key={`slicer-${idx}`} className="flex items-center gap-2 flex-wrap" style={{ width: styleVal(width) }}>
+              {lbl && <span className="text-xs text-gray-600 mr-1">{lbl}:</span>}
+              <div className="flex items-center gap-2 flex-wrap">
+                {opts.map((o) => {
+                  const selected = isMulti ? (current as any[]).includes(o.value) : current === o.value;
+                  const base = 'text-xs border rounded-md px-2.5 py-1 transition-colors';
+                  const cls = selected
+                    ? 'bg-blue-600 text-white border-blue-600'
+                    : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50';
+                  return (
+                    <button
+                      key={String(o.value)}
+                      type="button"
+                      className={`${base} ${cls}`}
+                      onClick={() => {
+                        if (isMulti) {
+                          const arr = Array.isArray(current) ? current.slice() : [];
+                          const exists = arr.includes(o.value);
+                          const nextArr = exists ? arr.filter((v: any) => v !== o.value) : [...arr, o.value];
+                          onChangeValue(nextArr);
+                        } else {
+                          const nextVal = (current === o.value) ? (clearable ? undefined : o.value) : o.value;
+                          onChangeValue(nextVal);
+                        }
+                      }}
+                    >
+                      {o.label}
+                    </button>
+                  );
+                })}
+              </div>
+              {clearable && (
+                <button type="button" onClick={onClear} className="text-[11px] text-blue-600 hover:underline">Limpar</button>
+              )}
+            </div>
+          );
+          return;
+        }
         if (type === 'list') {
           const arr = Array.isArray(storedVal) ? storedVal : [];
           const onClear = () => {
@@ -676,10 +723,54 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
             const lbl = typeof f?.label === 'string' ? f.label : undefined;
             const opts = optionsMap[idx] || [];
             const width = (f?.width !== undefined) ? (typeof f.width === 'number' ? `${f.width}px` : f.width) : undefined;
-            const stored = effectiveGet(idx, sp, true);
+            const t = (f?.type || 'list') as 'list'|'dropdown'|'tile'|'tile-multi';
+            const isMulti = (t === 'tile-multi' || t === 'list');
+            const stored = effectiveGet(idx, sp, isMulti);
             const clearable = (f?.clearable !== false);
             const selectAll = Boolean(f?.selectAll);
             const showSearch = false;
+            if (t === 'tile' || t === 'tile-multi') {
+              const onClear = () => onChangeField(idx, sp, isMulti ? [] : undefined, f.actionOnChange);
+              return (
+                <div className={layout === 'horizontal' ? 'flex items-center gap-2' : 'space-y-1'} style={{ width }}>
+                  {lbl && <div className="text-xs text-gray-600">{lbl}</div>}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {opts.map((o) => {
+                      const selected = isMulti ? (Array.isArray(stored) && stored.includes(o.value)) : (stored === o.value);
+                      const base = 'text-xs border rounded-md px-2.5 py-1 transition-colors';
+                      const cls = selected ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50';
+                      return (
+                        <button
+                          key={String(o.value)}
+                          type="button"
+                          className={`${base} ${cls}`}
+                          onClick={() => {
+                            if (isMulti) {
+                              const arr = Array.isArray(stored) ? stored.slice() : [];
+                              const exists = arr.includes(o.value);
+                              const nextArr = exists ? arr.filter((v: any) => v !== o.value) : [...arr, o.value];
+                              onChangeField(idx, sp, nextArr, f.actionOnChange);
+                            } else {
+                              const nextVal = (stored === o.value) ? (clearable ? undefined : o.value) : o.value;
+                              onChangeField(idx, sp, nextVal, f.actionOnChange);
+                            }
+                          }}
+                        >{o.label}</button>
+                      );
+                    })}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {selectAll && isMulti && (
+                      <button type="button" className="text-[11px] text-blue-600 hover:underline" onClick={() => onChangeField(idx, sp, opts.map(o => o.value), f.actionOnChange)}>Selecionar todos</button>
+                    )}
+                    {clearable && (
+                      <button type="button" className="text-[11px] text-blue-600 hover:underline" onClick={onClear}>Limpar</button>
+                    )}
+                  </div>
+                </div>
+              );
+            }
+            // Default list (checkboxes)
             return (
               <div className={layout === 'horizontal' ? 'flex items-center gap-2' : 'space-y-1'} style={{ width }}>
                 {lbl && <div className="text-xs text-gray-600">{lbl}</div>}

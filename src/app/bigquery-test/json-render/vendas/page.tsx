@@ -19,6 +19,12 @@ const SALES_TEMPLATE_TEXT = JSON.stringify([
       ]},
 
       { type: "Div", props: { direction: "row", gap: 12, padding: 16, justify: "start", align: "start", childGrow: true }, children: [
+        { type: "SlicerCard", props: { fr: 1, title: "Filtro de Status (Tile)", layout: "horizontal", fields: [
+          { label: "Status", type: "tile", storePath: "filters.status", clearable: true, source: { type: "api", url: "/api/modulos/vendas/options?field=status&limit=50" } }
+        ], containerStyle: { borderWidth: 2, borderColor: "#e5e7eb", borderRadius: 12 } } }
+      ]},
+
+      { type: "Div", props: { direction: "row", gap: 12, padding: 16, justify: "start", align: "start", childGrow: true }, children: [
         { type: "PieChart", props: { fr: 1, title: "Canais", titleStyle: { fontFamily: "Barlow", fontWeight: 700, fontSize: 16, color: "#0f172a", letterSpacing: "0.02em", textTransform: "uppercase", padding: 8, textAlign: "left" }, containerStyle: { borderWidth: 2, borderColor: "#0ea5e9", borderRadius: 12 }, dataQuery: { model: "vendas.pedidos", dimension: "canal_venda", measure: "SUM(itens.subtotal)", filters: { tenant_id: 1 }, orderBy: { field: "measure", dir: "desc" }, limit: 6 }, format: "currency", height: 240, nivo: { innerRadius: 0.35, theme: { labels: { text: { fontFamily: "Avenir", fontSize: 12, fill: "#0f172a" } } } } } },
         { type: "BarChart", props: { fr: 2, title: "Categorias", titleStyle: { fontFamily: "Barlow", fontWeight: 600, fontSize: 14, color: "#334155", padding: 6 }, containerStyle: { borderWidth: 2, borderColor: "#10b981", borderStyle: "dashed", borderRadius: 10 }, dataQuery: { model: "vendas.pedidos", dimension: "categoria_receita", measure: "SUM(itens.subtotal)", filters: { tenant_id: 1 }, orderBy: { field: "measure", dir: "desc" }, limit: 6 }, format: "currency", height: 240, nivo: { layout: 'horizontal', theme: { axis: { ticks: { text: { fontFamily: "Geist", fontSize: 12, fill: "#334155" } }, legend: { text: { fontFamily: "Geist", fontSize: 12, fill: "#0f172a" } } } } } } },
         { type: "SlicerCard", props: { fr: 1, title: "Filtro de Canais", fields: [

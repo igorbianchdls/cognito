@@ -85,12 +85,12 @@ export const catalog = {
             color: z.string().optional(),
           }).partial().optional(),
         }).partial().optional(),
-        // Slicers (dropdown/list/multi)
+        // Slicers (dropdown/list/multi/tile/tile-multi)
         slicers: z.array(z.union([
           z.object({
             label: z.string().optional(),
             storePath: z.string(),
-            type: z.enum(["dropdown","multi","list"]).default("dropdown"),
+            type: z.enum(["dropdown","multi","list","tile","tile-multi"]).default("dropdown"),
             placeholder: z.string().optional(),
             clearable: z.boolean().optional(),
             width: z.union([z.number(), z.string()]).optional(),
@@ -417,7 +417,7 @@ export const catalog = {
         borderless: z.boolean().optional(),
         fields: z.array(z.object({
           label: z.string().optional(),
-          type: z.enum(["list","dropdown"]).default("list"),
+          type: z.enum(["list","dropdown","tile","tile-multi"]).default("list"),
           storePath: z.string(),
           placeholder: z.string().optional(),
           clearable: z.boolean().optional(),

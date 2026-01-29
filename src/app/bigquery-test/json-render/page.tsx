@@ -11,7 +11,14 @@ const SAMPLE_TREE_TEXT = JSON.stringify([
     type: "Theme",
     props: { name: "light" },
     children: [
-      { type: "Header", props: { title: "Dashboard (Dados Reais)", subtitle: "Vendas, Compras e Financeiro", align: "center", datePicker: { visible: true, mode: "range", position: "right", storePath: "filters.dateRange", actionOnChange: { type: "refresh_data" }, style: { padding: 6, fontFamily: "Barlow", fontSize: 12 } } } },
+      { type: "Header", props: { title: "Dashboard (Dados Reais)", subtitle: "Vendas, Compras e Financeiro", align: "center", datePicker: { visible: true, mode: "range", position: "right", storePath: "filters.dateRange", actionOnChange: { type: "refresh_data" }, style: { padding: 6, fontFamily: "Barlow", fontSize: 12 } }, slicers: [
+        { label: "Status", type: "tile", storePath: "filters.status", clearable: true, source: { type: 'static', options: [
+          { value: 'aberto', label: 'Aberto' }, { value: 'fechado', label: 'Fechado' }, { value: 'atrasado', label: 'Atrasado' }
+        ] } },
+        { label: "Filiais", type: "tile-multi", storePath: "filters.filiais", clearable: true, source: { type: 'static', options: [
+          { value: 'matriz', label: 'Matriz' }, { value: 'filial-1', label: 'Filial 1' }, { value: 'filial-2', label: 'Filial 2' }
+        ] } }
+      ] } },
       { type: "Div", props: { direction: "row", gap: 12, padding: 16, justify: "start", align: "start", childGrow: true }, children: [
         { type: "Kpi", props: { label: "Recebidos (Período)", valuePath: "financeiro.kpis.recebidos_mes", format: "currency", labelStyle: { fontWeight: 600, fontSize: 12, color: "#64748b" }, valueStyle: { fontWeight: 700, fontSize: 24, color: "#0f172a" } } },
         { type: "Kpi", props: { label: "Pagos (Período)", valuePath: "financeiro.kpis.pagos_mes", format: "currency" } },
