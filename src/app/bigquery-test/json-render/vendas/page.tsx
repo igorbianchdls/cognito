@@ -203,6 +203,10 @@ function ManagersPanel({ jsonText, setJsonText, setTree, disabled }: PanelProps)
     { value: 'blue', label: 'Blue' },
     { value: 'dark', label: 'Dark' },
     { value: 'black', label: 'Black' },
+    { value: 'slate', label: 'Slate' },
+    { value: 'navy', label: 'Navy' },
+    { value: 'sand', label: 'Sand' },
+    { value: 'charcoal', label: 'Charcoal' },
   ];
   const fontOptions = [
     'Inter, ui-sans-serif, system-ui',

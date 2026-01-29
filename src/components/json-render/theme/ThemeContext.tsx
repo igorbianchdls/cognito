@@ -18,6 +18,11 @@ const BUILTIN_ALIASES: Record<string, string> = {
   'cinza-claro': 'blue',
   'preto': 'black',
   'cinza-escuro': 'dark',
+  // New common elegant themes
+  'slate': 'dark',
+  'navy': 'dark',
+  'sand': 'light',
+  'charcoal': 'black',
 };
 
 export function ThemeProvider({ name, components, cssVars, children }: { name?: string; components?: ThemeOverrides['components']; cssVars?: Record<string,string>; children: React.ReactNode }) {

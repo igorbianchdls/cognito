@@ -25,6 +25,10 @@ const THEME_ALIASES: Record<string, ThemeName> = {
   // Black variations
   black: "preto",
   preto: "preto",
+  // New neutrals
+  navy: "cinza-escuro",
+  sand: "cinza-claro",
+  charcoal: "preto",
 };
 
 function resolveThemeName(name?: string): ThemeName {
@@ -117,7 +121,47 @@ export function buildThemeVars(name?: string, managersOverride?: Managers) {
   const resolved = resolveThemeName(name);
   const tokens = ThemeManager.getThemeTokens(resolved);
   const autoManagers = buildManagersFromTokens(tokens, resolved);
-  const managers: Managers = managersOverride ? deepMerge(autoManagers, managersOverride as AnyRecord) : autoManagers;
+  const n = String(name || '').toLowerCase();
+  let managers: Managers = autoManagers;
+  // Named overrides for common elegant themes
+  if (n === 'slate') {
+    managers = deepMerge(managers, {
+      background: '#1f2937',
+      surface: '#334155',
+      border: { color: '#374151' },
+      h1: { color: '#f8fafc' },
+      kpi: { title: { color: '#e2e8f0' }, value: { color: '#f8fafc' } },
+      color: { scheme: ['#60a5fa','#94a3b8','#64748b','#475569','#1f2937'] }
+    } as Managers);
+  } else if (n === 'navy') {
+    managers = deepMerge(managers, {
+      background: '#0b1220',
+      surface: '#111827',
+      border: { color: '#1f2937' },
+      h1: { color: '#e5e7eb' },
+      kpi: { title: { color: '#9ca3af' }, value: { color: '#e5e7eb' } },
+      color: { scheme: ['#3b82f6','#0ea5e9','#60a5fa','#22d3ee','#94a3b8'] }
+    } as Managers);
+  } else if (n === 'sand') {
+    managers = deepMerge(managers, {
+      background: '#f8f5f0',
+      surface: '#ffffff',
+      border: { color: '#e5e7eb' },
+      h1: { color: '#0f172a' },
+      kpi: { title: { color: '#475569' }, value: { color: '#0f172a' } },
+      color: { scheme: ['#2563eb','#0ea5e9','#10b981','#94a3b8','#64748b'] }
+    } as Managers);
+  } else if (n === 'charcoal') {
+    managers = deepMerge(managers, {
+      background: '#0f1115',
+      surface: '#16181d',
+      border: { color: '#23262b' },
+      h1: { color: '#e5e7eb' },
+      kpi: { title: { color: '#9ca3af' }, value: { color: '#e5e7eb' } },
+      color: { scheme: ['#60a5fa','#9ca3af','#6b7280','#374151','#111827'] }
+    } as Managers);
+  }
+  if (managersOverride) managers = deepMerge(managers, managersOverride as AnyRecord);
 
   // Map managers to css vars
   const cssVars = mapManagersToCssVars(managers);
@@ -125,11 +169,15 @@ export function buildThemeVars(name?: string, managersOverride?: Managers) {
   // Extra vars not covered by Managers schema
   const extraCss: Record<string, string> = {};
   const colors = (tokens.colors || {}) as AnyRecord;
+  // Base from tokens
   if (colors?.text?.primary) extraCss.fg = String(colors.text.primary);
   if (colors?.border) extraCss.surfaceBorder = String(colors.border);
+  // Override fg/surfaceBorder if managers defined custom ones via overrides above
+  if (managers?.kpi?.value?.color) extraCss.fg = String(managers.kpi.value.color);
+  if ((managers as AnyRecord)?.border?.color) extraCss.surfaceBorder = String((managers as AnyRecord).border.color);
 
   // If theme is "blue", push a stronger blue palette unless overridden
-  if (String(name || '').toLowerCase() === 'blue' && !cssVars.chartColorScheme) {
+  if (['blue','navy'].includes(n) && !cssVars.chartColorScheme) {
     extraCss.chartColorScheme = JSON.stringify(["#2563eb", "#60a5fa", "#0ea5e9", "#06b6d4", "#34d399"]);
   }
 
@@ -139,4 +187,3 @@ export function buildThemeVars(name?: string, managersOverride?: Managers) {
     cssVars: { ...extraCss, ...cssVars },
   };
 }
-
