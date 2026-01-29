@@ -85,6 +85,8 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
     ? managedScheme
     : (Array.isArray(colorScheme) ? colorScheme : (typeof colorScheme === 'string' ? [colorScheme] : ['#3b82f6']));
 
+  // Determine layout early (used by auto-margin)
+  const layout = (typeof (nivo as AnyRecord)?.layout === 'string' ? (nivo as AnyRecord).layout : 'vertical') as 'vertical'|'horizontal';
   // Base margins
   const baseMargin = {
     top: Number(nivo?.margin?.top ?? 10),
@@ -92,6 +94,7 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
     bottom: Number(nivo?.margin?.bottom ?? 40),
     left: Number(nivo?.margin?.left ?? 48),
   } as const;
+  const managerFont = (theme.cssVars || {} as any).fontFamily as string | undefined;
   // Auto‑margin to avoid clipping long axis labels
   const autoMargin = (nivo as AnyRecord)?.autoMargin !== false;
   const maxLabelClamp = typeof (nivo as AnyRecord)?.maxLabelWidth === 'number' ? (nivo as AnyRecord).maxLabelWidth : 220;
@@ -141,7 +144,6 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
 
   const padding = typeof nivo?.padding === 'number' ? nivo.padding : 0.3;
   const groupMode = (nivo?.groupMode === 'stacked' ? 'stacked' : 'grouped') as 'grouped'|'stacked';
-  const layout = (typeof (nivo as AnyRecord)?.layout === 'string' ? (nivo as AnyRecord).layout : 'vertical') as 'vertical'|'horizontal';
   const gridX = Boolean(nivo?.gridX ?? false);
   const gridY = Boolean(nivo?.gridY ?? true);
   const enableLabel = Boolean(nivo?.enableLabel ?? false);
@@ -151,7 +153,6 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
   const motionConfig = (typeof nivo?.motionConfig === 'string' ? nivo.motionConfig : 'gentle') as any;
 
   let nivoTheme = buildNivoTheme(nivo?.theme);
-  const managerFont = (theme.cssVars || {} as any).fontFamily as string | undefined;
   const fg = (theme.cssVars || {} as any).fg as string | undefined;
   if (managerFont || fg) {
     const t: any = { ...(nivoTheme || {}) };
