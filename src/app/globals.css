@@ -201,6 +201,11 @@ h1, h2, h3, h4, h5, h6 {
   letter-spacing: -0.01em;
 }
 
+/* Themed Date Picker: hide native indicator when using custom icon */
+.dp-themed input[type="date"]::-webkit-calendar-picker-indicator {
+  opacity: 0;
+}
+
 /* Smooth transitions for all interactive elements */
 button, input, textarea, select {
   transition: all 0.2s ease-in-out;

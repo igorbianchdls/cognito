@@ -117,11 +117,31 @@ export const catalog = {
           presets: z.array(z.enum(["today","week","month"]).optional()).optional(),
           actionOnChange: z.object({ type: z.string() }).partial().optional(),
           style: z.object({
+            // legacy
             padding: z.union([z.number(), z.string()]).optional(),
             margin: z.union([z.number(), z.string()]).optional(),
             fontFamily: z.string().optional(),
             fontSize: z.union([z.number(), z.string()]).optional(),
             color: z.string().optional(),
+            // themed
+            labelStyle: z.object({}).passthrough().optional(),
+            fieldStyle: z.object({
+              backgroundColor: z.string().optional(),
+              color: z.string().optional(),
+              borderColor: z.string().optional(),
+              borderWidth: z.union([z.number(), z.string()]).optional(),
+              borderRadius: z.union([z.number(), z.string()]).optional(),
+              paddingX: z.union([z.number(), z.string()]).optional(),
+              paddingY: z.union([z.number(), z.string()]).optional(),
+            }).partial().optional(),
+            iconStyle: z.object({
+              color: z.string().optional(),
+              backgroundColor: z.string().optional(),
+              size: z.union([z.number(), z.string()]).optional(),
+              padding: z.union([z.number(), z.string()]).optional(),
+              borderRadius: z.union([z.number(), z.string()]).optional(),
+              position: z.enum(["left","right"]).optional(),
+            }).partial().optional(),
           }).partial().optional(),
         }).partial().optional(),
         // Slicers (dropdown/list/multi/tile/tile-multi)

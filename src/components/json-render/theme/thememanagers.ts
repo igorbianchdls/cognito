@@ -53,6 +53,32 @@ export type Managers = {
     label?: SlicerTextManager
     option?: SlicerTextManager
   }
+  datePicker?: {
+    label?: SlicerTextManager
+    field?: {
+      font?: string
+      size?: string | number
+      color?: string
+      background?: string
+      borderColor?: string
+      borderWidth?: string | number
+      radius?: string | number
+      paddingX?: string | number
+      paddingY?: string | number
+      hoverBg?: string
+      focusBorderColor?: string
+      placeholderColor?: string
+      disabledOpacity?: string | number
+    }
+    icon?: {
+      color?: string
+      background?: string
+      size?: string | number
+      padding?: string | number
+      radius?: string | number
+      position?: 'left' | 'right'
+    }
+  }
 }
 
 // Normalize numeric -> px/em for fontSize/letterSpacing/padding
@@ -140,6 +166,42 @@ export function mapManagersToCssVars(managers: Managers | undefined): Record<str
     if (o.color) cssVars.slicerOptionColor = String(o.color)
     if (o.letterSpacing !== undefined) cssVars.slicerOptionLetterSpacing = String(o.letterSpacing)
     if (o.padding !== undefined) cssVars.slicerOptionPadding = String(o.padding)
+  }
+
+  // DatePicker
+  if (m.datePicker && typeof m.datePicker === 'object') {
+    const d = m.datePicker as AnyRecord
+    const l = (d.label && typeof d.label === 'object') ? d.label as AnyRecord : {}
+    const f = (d.field && typeof d.field === 'object') ? d.field as AnyRecord : {}
+    const i = (d.icon && typeof d.icon === 'object') ? d.icon as AnyRecord : {}
+    // Label
+    if (l.font) cssVars.dpLabelFontFamily = String(l.font)
+    if (l.weight !== undefined) cssVars.dpLabelFontWeight = String(l.weight)
+    if (l.size !== undefined) cssVars.dpLabelFontSize = String(l.size)
+    if (l.color) cssVars.dpLabelColor = String(l.color)
+    if (l.letterSpacing !== undefined) cssVars.dpLabelLetterSpacing = String(l.letterSpacing)
+    if (l.padding !== undefined) cssVars.dpLabelPadding = String(l.padding)
+    // Field
+    if (f.font) cssVars.dpFontFamily = String(f.font)
+    if (f.size !== undefined) cssVars.dpFontSize = String(f.size)
+    if (f.color) cssVars.dpColor = String(f.color)
+    if (f.background) cssVars.dpBg = String(f.background)
+    if (f.borderColor) cssVars.dpBorderColor = String(f.borderColor)
+    if (f.borderWidth !== undefined) cssVars.dpBorderWidth = String(f.borderWidth)
+    if (f.radius !== undefined) cssVars.dpRadius = String(f.radius)
+    if (f.paddingX !== undefined) cssVars.dpPx = String(f.paddingX)
+    if (f.paddingY !== undefined) cssVars.dpPy = String(f.paddingY)
+    if (f.hoverBg) cssVars.dpHoverBg = String(f.hoverBg)
+    if (f.focusBorderColor) cssVars.dpFocusBorder = String(f.focusBorderColor)
+    if (f.placeholderColor) cssVars.dpPlaceholder = String(f.placeholderColor)
+    if (f.disabledOpacity !== undefined) cssVars.dpDisabledOpacity = String(f.disabledOpacity)
+    // Icon
+    if (i.color) cssVars.dpIconColor = String(i.color)
+    if (i.background) cssVars.dpIconBg = String(i.background)
+    if (i.size !== undefined) cssVars.dpIconSize = String(i.size)
+    if (i.padding !== undefined) cssVars.dpIconPadding = String(i.padding)
+    if (i.radius !== undefined) cssVars.dpIconRadius = String(i.radius)
+    if (i.position) cssVars.dpIconPosition = String(i.position)
   }
 
   return cssVars

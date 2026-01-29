@@ -126,6 +126,40 @@ function buildManagersFromTokens(tokens: DesignTokens, name: ThemeName): Manager
         padding: 0,
       }
     }
+    ,
+    datePicker: {
+      label: {
+        font: fontPrimary,
+        weight: tokens.typography?.fontWeight?.medium ?? 500,
+        size: tokens.typography?.fontSize?.sm ?? 14,
+        color: textSecondary,
+        letterSpacing: '-0.01em',
+        padding: 2,
+      },
+      field: {
+        font: fontPrimary,
+        size: tokens.typography?.fontSize?.sm ?? 14,
+        color: textPrimary,
+        background: surface,
+        borderColor: borderColor,
+        borderWidth: 2,
+        radius: borderRadius,
+        paddingX: 10,
+        paddingY: 6,
+        hoverBg: surface,
+        focusBorderColor: (tokens.colors as AnyRecord)?.borderFocus || borderColor,
+        placeholderColor: textSecondary,
+        disabledOpacity: 0.6,
+      },
+      icon: {
+        color: textSecondary,
+        background: undefined,
+        size: 14,
+        padding: 0,
+        radius: 0,
+        position: 'right',
+      }
+    }
   };
 }
 

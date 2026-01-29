@@ -349,3 +349,46 @@ export function applySlicerOptionFromCssVars(style: Record<string, any> | undefi
   }, out);
   return Object.keys(out).length ? out : undefined;
 }
+
+export function applyDatePickerLabelFromCssVars(style: Record<string, any> | undefined, cssVars?: Record<string, string>) {
+  const out: Record<string, any> = { ...(style || {}) };
+  if (!cssVars) return Object.keys(out).length ? out : undefined;
+  _applyTextFrom(cssVars as any, {
+    color: 'dpLabelColor',
+    weight: 'dpLabelFontWeight',
+    size: 'dpLabelFontSize',
+    font: 'dpLabelFontFamily',
+    letter: 'dpLabelLetterSpacing',
+    padding: 'dpLabelPadding',
+  }, out);
+  return Object.keys(out).length ? out : undefined;
+}
+
+export function applyDatePickerFieldFromCssVars(style: Record<string, any> | undefined, cssVars?: Record<string, string>) {
+  const out: Record<string, any> = { ...(style || {}) };
+  if (!cssVars) return Object.keys(out).length ? out : undefined;
+  const s = cssVars as any;
+  if (s.dpBg) out.backgroundColor = s.dpBg;
+  if (s.dpColor) out.color = s.dpColor;
+  if (s.dpBorderColor) out.borderColor = s.dpBorderColor;
+  if (s.dpBorderWidth !== undefined) out.borderWidth = isNaN(Number(s.dpBorderWidth)) ? s.dpBorderWidth : Number(s.dpBorderWidth);
+  if (s.dpRadius !== undefined) out.borderRadius = isNaN(Number(s.dpRadius)) ? s.dpRadius : `${Number(s.dpRadius)}px`;
+  const px = s.dpPx !== undefined ? (isNaN(Number(s.dpPx)) ? s.dpPx : `${Number(s.dpPx)}px`) : undefined;
+  const py = s.dpPy !== undefined ? (isNaN(Number(s.dpPy)) ? s.dpPy : `${Number(s.dpPy)}px`) : undefined;
+  if (px || py) out.padding = `${py || 0} ${px || 0}`;
+  if (s.dpFontFamily) out.fontFamily = s.dpFontFamily;
+  if (s.dpFontSize !== undefined) out.fontSize = isNaN(Number(s.dpFontSize)) ? s.dpFontSize : `${Number(s.dpFontSize)}px`;
+  return Object.keys(out).length ? out : undefined;
+}
+
+export function applyDatePickerIconFromCssVars(style: Record<string, any> | undefined, cssVars?: Record<string, string>) {
+  const out: Record<string, any> = { ...(style || {}) };
+  if (!cssVars) return Object.keys(out).length ? out : undefined;
+  const s = cssVars as any;
+  if (s.dpIconBg) out.backgroundColor = s.dpIconBg;
+  if (s.dpIconColor) out.color = s.dpIconColor;
+  if (s.dpIconSize !== undefined) out.fontSize = isNaN(Number(s.dpIconSize)) ? s.dpIconSize : `${Number(s.dpIconSize)}px`;
+  if (s.dpIconPadding !== undefined) out.padding = isNaN(Number(s.dpIconPadding)) ? s.dpIconPadding : `${Number(s.dpIconPadding)}px`;
+  if (s.dpIconRadius !== undefined) out.borderRadius = isNaN(Number(s.dpIconRadius)) ? s.dpIconRadius : `${Number(s.dpIconRadius)}px`;
+  return Object.keys(out).length ? out : undefined;
+}

@@ -9,7 +9,8 @@ import { mapManagersToCssVars } from "@/components/json-render/theme/thememanage
 import { buildThemeVars } from "@/components/json-render/theme/themeAdapter";
 import { useDataValue, useData } from "@/components/json-render/context";
 import { deepMerge } from "@/stores/ui/json-render/utils";
-import { normalizeTitleStyle, normalizeContainerStyle, applyBorderFromCssVars, ensureSurfaceBackground, applyShadowFromCssVars, applyH1FromCssVars, applyKpiTitleFromCssVars, applyKpiValueFromCssVars, applySlicerLabelFromCssVars, applySlicerOptionFromCssVars } from "@/components/json-render/helpers";
+import { normalizeTitleStyle, normalizeContainerStyle, applyBorderFromCssVars, ensureSurfaceBackground, applyShadowFromCssVars, applyH1FromCssVars, applyKpiTitleFromCssVars, applyKpiValueFromCssVars, applySlicerLabelFromCssVars, applySlicerOptionFromCssVars, applyDatePickerIconFromCssVars, applyDatePickerFieldFromCssVars, applyDatePickerLabelFromCssVars } from "@/components/json-render/helpers";
+import { Calendar } from 'lucide-react';
 
 type AnyRecord = Record<string, any>;
 
@@ -141,6 +142,60 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     );
   },
 
+};
+
+function DateFieldWithIcon({ value, onChange, fieldStyle }: { value: string; onChange: (v: string) => void; fieldStyle?: React.CSSProperties }) {
+  const theme = useThemeOverrides();
+  const ref = React.useRef<HTMLInputElement>(null);
+  const iconVars = applyDatePickerIconFromCssVars(undefined, theme.cssVars) as React.CSSProperties | undefined;
+  const pos = ((theme.cssVars || {} as any).dpIconPosition as string) || 'right';
+  const sizeNum = (() => {
+    const fs = (iconVars as any)?.fontSize;
+    if (!fs) return 14;
+    const m = String(fs).match(/\d+/);
+    return m ? Number(m[0]) : 14;
+  })();
+  const color = (iconVars as any)?.color as string | undefined;
+  const iconStyle: React.CSSProperties = {
+    position: 'absolute',
+    top: '50%',
+    transform: 'translateY(-50%)',
+    right: pos === 'right' ? 6 : undefined,
+    left: pos === 'left' ? 6 : undefined,
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+    ...iconVars,
+  };
+  const wrapperStyle: React.CSSProperties = {
+    position: 'relative',
+    paddingRight: pos === 'right' ? 24 : undefined,
+    paddingLeft: pos === 'left' ? 24 : undefined,
+    ...fieldStyle,
+  };
+  return (
+    <div className="dp-themed flex items-center" style={wrapperStyle}>
+      <input
+        ref={ref}
+        type="date"
+        className="outline-none bg-transparent text-xs"
+        style={{ border: 'none', background: 'transparent' }}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+      />
+      <span
+        aria-label="Abrir seletor de data"
+        role="button"
+        style={iconStyle}
+        onClick={() => { (ref.current as any)?.showPicker?.(); ref.current?.focus(); }}
+      >
+        <Calendar size={sizeNum} color={color} />
+      </span>
+    </div>
+  );
+}
+
   Header: ({ element, children, onAction }) => {
     const theme = useThemeOverrides();
     const p = deepMerge(deepMerge(defaultHeader as any, (theme.components?.Header || {}) as any), (element?.props || {}) as any) as AnyRecord;
@@ -177,13 +232,9 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     const mode = (dp.mode ?? 'range') as 'range'|'single';
     const storePath = typeof dp.storePath === 'string' ? dp.storePath : undefined;
     const format = (typeof dp.format === 'string' && dp.format) ? dp.format : 'YYYY-MM-DD';
-    const dateStyle: React.CSSProperties = {
-      padding: styleVal(dp.style?.padding),
-      margin: styleVal(dp.style?.margin),
-      fontFamily: dp.style?.fontFamily,
-      fontSize: typeof dp.style?.fontSize === 'number' ? `${dp.style?.fontSize}px` : dp.style?.fontSize,
-      color: dp.style?.color,
-    };
+    const dateLabelStyle = applyDatePickerLabelFromCssVars(normalizeTitleStyle((dp.style as any)?.labelStyle), theme.cssVars) as React.CSSProperties | undefined;
+    const dateFieldStyle = applyDatePickerFieldFromCssVars(undefined, theme.cssVars) as React.CSSProperties | undefined;
+    const dateFieldOverride = applyDatePickerFieldFromCssVars((dp.style as any)?.fieldStyle, undefined) as React.CSSProperties | undefined;
     const { data, setData, getValueByPath } = useData();
     function toISO(d: Date) { return d.toISOString().slice(0,10); }
     function fmt(d?: string) { return d || ''; }
@@ -217,38 +268,44 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
           ? { from: fmt((stored as any).from), to: fmt((stored as any).to) }
           : getDefaultRange();
         picker = (
-          <div className="flex items-center gap-2" style={dateStyle}>
-            <input type="date" className="border border-gray-300 rounded px-2 py-1 text-xs"
+          <div className="flex items-center gap-2">
+            <DateFieldWithIcon
               value={curr.from}
-              onChange={(e) => {
+              onChange={(val: string) => {
                 if (!storePath) return;
-                const next = setByPath(data, storePath, { from: e.target.value, to: curr.to });
+                const next = setByPath(data, storePath, { from: val, to: curr.to });
                 setData(next);
                 if (dp.actionOnChange && typeof dp.actionOnChange === 'object') onAction?.(dp.actionOnChange);
-              }} />
-            <span className="text-xs text-gray-500">até</span>
-            <input type="date" className="border border-gray-300 rounded px-2 py-1 text-xs"
+              }}
+              fieldStyle={{ ...dateFieldStyle, ...dateFieldOverride }}
+            />
+            <span className="text-xs" style={dateLabelStyle}>até</span>
+            <DateFieldWithIcon
               value={curr.to}
-              onChange={(e) => {
+              onChange={(val: string) => {
                 if (!storePath) return;
-                const next = setByPath(data, storePath, { from: curr.from, to: e.target.value });
+                const next = setByPath(data, storePath, { from: curr.from, to: val });
                 setData(next);
                 if (dp.actionOnChange && typeof dp.actionOnChange === 'object') onAction?.(dp.actionOnChange);
-              }} />
+              }}
+              fieldStyle={{ ...dateFieldStyle, ...dateFieldOverride }}
+            />
           </div>
         );
       } else {
         const curr = (stored && typeof stored === 'string') ? stored : getDefaultRange().from;
         picker = (
-          <div className="flex items-center gap-2" style={dateStyle}>
-            <input type="date" className="border border-gray-300 rounded px-2 py-1 text-xs"
+          <div className="flex items-center gap-2">
+            <DateFieldWithIcon
               value={curr}
-              onChange={(e) => {
+              onChange={(val: string) => {
                 if (!storePath) return;
-                const next = setByPath(data, storePath, e.target.value);
+                const next = setByPath(data, storePath, val);
                 setData(next);
                 if (dp.actionOnChange && typeof dp.actionOnChange === 'object') onAction?.(dp.actionOnChange);
-              }} />
+              }}
+              fieldStyle={{ ...dateFieldStyle, ...dateFieldOverride }}
+            />
           </div>
         );
       }
