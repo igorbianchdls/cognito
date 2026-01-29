@@ -325,10 +325,10 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
               <div className="flex items-center gap-2 flex-wrap">
                 {opts.map((o) => {
                   const selected = isMulti ? (current as any[]).includes(o.value) : current === o.value;
-                  const base = 'text-xs border rounded-md px-2.5 py-1 transition-colors';
+                  const base = 'text-xs font-medium border rounded-md min-w-[110px] h-9 px-3 transition-all focus:outline-none focus:ring-2 focus:ring-sky-500 active:scale-[0.98] shadow-sm';
                   const cls = selected
-                    ? 'bg-blue-600 text-white border-blue-600'
-                    : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50';
+                    ? 'bg-sky-600 text-white border-sky-600 hover:bg-sky-700'
+                    : 'bg-slate-100 text-slate-800 border-slate-300 hover:bg-slate-200';
                   return (
                     <button
                       key={String(o.value)}
@@ -734,11 +734,11 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
               return (
                 <div className={layout === 'horizontal' ? 'flex items-center gap-2' : 'space-y-1'} style={{ width }}>
                   {lbl && <div className="text-xs text-gray-600">{lbl}</div>}
-                  <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex flex-wrap gap-2">
                     {opts.map((o) => {
                       const selected = isMulti ? (Array.isArray(stored) && stored.includes(o.value)) : (stored === o.value);
-                      const base = 'text-xs border rounded-md px-2.5 py-1 transition-colors';
-                      const cls = selected ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50';
+                      const base = 'text-xs font-medium border rounded-md min-w-[110px] h-9 px-3 transition-all focus:outline-none focus:ring-2 focus:ring-sky-500 active:scale-[0.98] shadow-sm';
+                      const cls = selected ? 'bg-sky-600 text-white border-sky-600 hover:bg-sky-700' : 'bg-slate-100 text-slate-800 border-slate-300 hover:bg-slate-200';
                       return (
                         <button
                           key={String(o.value)}
