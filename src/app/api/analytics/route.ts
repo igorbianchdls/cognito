@@ -327,9 +327,13 @@ export async function POST(req: NextRequest) {
     // Normalize fields for vendas view
     if (source === 'vd') {
       // Normalize common fields for sales view
+      // Protect already qualified i.subtotal to avoid double prefix
+      const SUB_PLACEHOLDER = '__I_SUBTOTAL__'
       measure = measure
-        .replace(/\bsubtotal\b/gi, 'i.subtotal')
+        .replace(/i\.subtotal/gi, SUB_PLACEHOLDER)
         .replace(/\bitem_subtotal\b/gi, 'i.subtotal')
+        .replace(/\bsubtotal\b/gi, 'i.subtotal')
+        .replace(new RegExp(SUB_PLACEHOLDER, 'g'), 'i.subtotal')
         .replace(/COUNT_DISTINCT\s*\(\s*([^)]+?)\s*\)/gi, 'COUNT(DISTINCT $1)')
         .replace(/\bpedido_id\b/gi, 'p.id');
       dateCol = dateCol.replace(/\bdata_pedido\b/gi, 'p.data_pedido')

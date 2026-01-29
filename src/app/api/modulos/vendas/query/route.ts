@@ -44,7 +44,68 @@ export async function POST(req: NextRequest) {
     // Dimension mapping (whitelist) or override via dimensionExpr
     let dimExpr = ''
     let dimAlias = ''
-    if (dimensionExprOverride) {
+    if (!dimension && !dimensionExprOverride) {
+      // KPI mode: no dimension -> single aggregate
+      // Measure mapping (reuse below logic)
+      const m = measure.replace(/\s+/g, '').toLowerCase()
+      let measExpr = ''
+      let overrideFromForPOnly = false
+      if (m === 'sum(pi.subtotal)' || m === 'sum(itens.subtotal)' || m === 'sum(subtotal)') {
+        measExpr = 'COALESCE(SUM(pi.subtotal),0)::float'
+      } else if (m === 'count()') {
+        measExpr = 'COUNT(DISTINCT p.id)::int'
+      } else if (m === 'avg(p.valor_total)' || m === 'avg(valor_total)') {
+        measExpr = 'COALESCE(AVG(p.valor_total),0)::float'
+        overrideFromForPOnly = true
+      } else if (m === 'sum(p.valor_total)' || m === 'sum(valor_total)') {
+        measExpr = 'COALESCE(SUM(p.valor_total),0)::float'
+        overrideFromForPOnly = true
+      } else {
+        return Response.json({ success: false, message: `Medida não suportada: ${measure}` }, { status: 400 })
+      }
+      let fromSql = `FROM vendas.pedidos p
+                     JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id`
+      if (overrideFromForPOnly) {
+        fromSql = `FROM vendas.pedidos p`
+      }
+      // Filters (same whitelist)
+      const params: unknown[] = []
+      const whereParts: string[] = []
+      if (typeof filters.tenant_id === 'number') { whereParts.push(`p.tenant_id = $${params.length + 1}`); params.push(filters.tenant_id) }
+      if (typeof filters.de === 'string') { whereParts.push(`p.data_pedido >= $${params.length + 1}`); params.push(filters.de) }
+      if (typeof filters.ate === 'string') { whereParts.push(`p.data_pedido <= $${params.length + 1}`); params.push(filters.ate) }
+      if (typeof (filters as any).status === 'string') { whereParts.push(`LOWER(p.status) = LOWER($${params.length + 1})`); params.push((filters as any).status) }
+      if (Array.isArray((filters as any).status) && (filters as any).status.length) {
+        const vals = (filters as any).status as unknown[];
+        const placeholders = vals.map(() => `$${params.length + 1}`).join(',');
+        whereParts.push(`LOWER(p.status) IN (${placeholders})`);
+        params.push(...vals.map((v) => typeof v === 'string' ? v.toLowerCase() : String(v).toLowerCase()));
+      }
+      const addInFilter = (col: string, val: unknown) => {
+        if (Array.isArray(val)) {
+          const arr = val as unknown[];
+          if (!arr.length) return;
+          const placeholders = arr.map(() => `$${params.length + 1}`).join(',');
+          whereParts.push(`${col} IN (${placeholders})`);
+          params.push(...arr);
+        } else if (typeof val === 'number' || typeof val === 'string') {
+          whereParts.push(`${col} = $${params.length + 1}`);
+          params.push(val);
+        }
+      };
+      addInFilter('p.cliente_id', (filters as any).cliente_id);
+      addInFilter('p.vendedor_id', (filters as any).vendedor_id);
+      addInFilter('p.canal_venda_id', (filters as any).canal_venda_id);
+      addInFilter('p.filial_id', (filters as any).filial_id);
+      addInFilter('p.unidade_negocio_id', (filters as any).unidade_negocio_id);
+      addInFilter('p.territorio_id', (filters as any).territorio_id);
+      addInFilter('p.categoria_receita_id', (filters as any).categoria_receita_id);
+      addInFilter('p.centro_lucro_id', (filters as any).centro_lucro_id);
+      const whereSql = whereParts.length ? `WHERE ${whereParts.join(' AND ')}` : ''
+      const sql = `SELECT ${measExpr} AS value ${fromSql} ${whereSql}`.replace(/\s+/g, ' ').trim()
+      const rows = await runQuery<Record<string, unknown>>(sql, params)
+      return Response.json({ success: true, rows, sql_query: sql, sql_params: params })
+    } else if (dimensionExprOverride) {
       // Qualify known columns when no table prefix is provided
       const qualifyDimExpr = (expr: string) => {
         let e = expr

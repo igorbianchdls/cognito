@@ -424,48 +424,11 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
               if (filters[k as any] === undefined) (filters as any)[k] = v as any;
             }
           }
-          let rows: any[] = [];
-
-          // Decide endpoint: analytics if no dimension and mappable source; else module query
-          const hasDimension = Boolean(dq.dimension);
-          if (!hasDimension) {
-            const modelStr = String(dq.model || '');
-            const inferSource = (): string | null => {
-              if (modelStr.startsWith('vendas.')) return 'vd';
-              if (modelStr.startsWith('financeiro.')) return modelStr.includes('contas_receber') ? 'ar' : 'ap';
-              if (modelStr.startsWith('compras.')) return null; // fallback to module query
-              return null;
-            };
-            const source = (dq as any).source || inferSource();
-            if (source) {
-              const payload: AnyRecord = { source, measure: dq.measure };
-              if (typeof filters.de === 'string') payload.from = filters.de;
-              if (typeof filters.ate === 'string') payload.to = filters.ate;
-              if (typeof filters.tenant_id === 'number') payload.tenant_id = filters.tenant_id;
-              const whereRules: AnyRecord[] = [];
-              for (const [k, v] of Object.entries(filters)) {
-                if (k === 'de' || k === 'ate' || k === 'tenant_id') continue;
-                if (Array.isArray(v)) whereRules.push({ col: k, op: 'in', vals: v });
-                else whereRules.push({ col: k, op: '=', val: v });
-              }
-              if (whereRules.length) payload.where = whereRules;
-              const res = await fetch('/api/analytics', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload) });
-              const j = await res.json();
-              rows = Array.isArray(j?.rows) ? j.rows : [];
-            } else {
-              const url = `/api/modulos/${mod}/query`;
-              const body = { dataQuery: { model: dq.model, dimension: undefined, measure: dq.measure, filters, orderBy: dq.orderBy, limit: dq.limit } };
-              const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
-              const j = await res.json();
-              rows = Array.isArray(j?.rows) ? j.rows : [];
-            }
-          } else {
-            const url = `/api/modulos/${mod}/query`;
-          const body = { dataQuery: { model: dq.model, dimension: dq.dimension, dimensionExpr: dq.dimensionExpr, measure: dq.measure, filters, orderBy: dq.orderBy, limit: dq.limit } };
-            const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
-            const j = await res.json();
-            rows = Array.isArray(j?.rows) ? j.rows : [];
-          }
+          const url = `/api/modulos/${mod}/query`;
+          const body = { dataQuery: { model: dq.model, dimension: dq.dimension, dimensionExpr: (dq as any).dimensionExpr, measure: dq.measure, filters, orderBy: dq.orderBy, limit: dq.limit } };
+          const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+          const j = await res.json();
+          const rows = Array.isArray(j?.rows) ? j.rows : [];
           let val: number = 0;
           if (rows.length > 0 && rows[0] && typeof rows[0] === 'object') {
             const r0 = rows[0] as AnyRecord;
@@ -571,37 +534,11 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
               if (filters[k as any] === undefined) (filters as any)[k] = v as any;
             }
           }
-          let rows: any[] = [];
-          // Prefer analytics for vendas/financeiro when possible
-          const modelStr = String(dq.model || '');
-          const inferSource = (): string | null => {
-            if (modelStr.startsWith('vendas.')) return 'vd';
-            if (modelStr.startsWith('financeiro.')) return modelStr.includes('contas_receber') ? 'ar' : 'ap';
-            return null; // compras -> fallback module query
-          };
-          const source = (dq as any).source || inferSource();
-          if (source) {
-            const payload: AnyRecord = { source, measure: dq.measure };
-            if (typeof filters.de === 'string') payload.from = filters.de;
-            if (typeof filters.ate === 'string') payload.to = filters.ate;
-            if (typeof filters.tenant_id === 'number') payload.tenant_id = filters.tenant_id;
-            const whereRules: AnyRecord[] = [];
-            for (const [k, v] of Object.entries(filters)) {
-              if (k === 'de' || k === 'ate' || k === 'tenant_id') continue;
-              if (Array.isArray(v)) whereRules.push({ col: k, op: 'in', vals: v });
-              else whereRules.push({ col: k, op: '=', val: v });
-            }
-            if (whereRules.length) (payload as any).where = whereRules;
-            const res = await fetch('/api/analytics', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload) });
-            const j = await res.json();
-            rows = Array.isArray(j?.rows) ? j.rows : [];
-          } else {
-            const url = `/api/modulos/${mod}/query`;
-            const body = { dataQuery: { model: dq.model, dimension: undefined, measure: dq.measure, filters, orderBy: dq.orderBy, limit: dq.limit } };
-            const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
-            const j = await res.json();
-            rows = Array.isArray(j?.rows) ? j.rows : [];
-          }
+          const url = `/api/modulos/${mod}/query`;
+          const body = { dataQuery: { model: dq.model, dimension: undefined, measure: dq.measure, filters, orderBy: dq.orderBy, limit: dq.limit } };
+          const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+          const j = await res.json();
+          const rows = Array.isArray(j?.rows) ? j.rows : [];
           let val: number = 0;
           if (rows.length > 0 && rows[0] && typeof rows[0] === 'object') {
             const r0 = rows[0] as AnyRecord;
