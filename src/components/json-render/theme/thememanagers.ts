@@ -1,5 +1,47 @@
 export type AnyRecord = Record<string, any>
 
+export type H1Manager = {
+  color?: string
+  weight?: string | number
+  size?: string | number
+  font?: string
+  letterSpacing?: string | number
+  padding?: string | number
+}
+
+export type KpiTextManager = {
+  font?: string
+  weight?: string | number
+  color?: string
+  letterSpacing?: string | number
+  padding?: string | number
+}
+
+export type BorderManager = {
+  style?: 'none' | 'solid' | 'dashed' | 'dotted'
+  width?: string | number
+  color?: string
+  radius?: string | number
+  shadow?: 'none' | 'sm' | 'md' | 'lg' | 'xl' | '2xl'
+}
+
+export type ColorManager = {
+  scheme?: string[]
+}
+
+export type Managers = {
+  font?: string
+  border?: BorderManager
+  color?: ColorManager
+  background?: string
+  surface?: string
+  h1?: H1Manager
+  kpi?: {
+    title?: KpiTextManager
+    value?: KpiTextManager
+  }
+}
+
 // Normalize numeric -> px/em for fontSize/letterSpacing/padding
 function toPx(v: unknown): string | undefined {
   if (v == null) return undefined
@@ -16,7 +58,7 @@ function toEm(v: unknown): string | undefined {
   return s
 }
 
-export function mapManagersToCssVars(managers: AnyRecord | undefined): Record<string, string> {
+export function mapManagersToCssVars(managers: Managers | undefined): Record<string, string> {
   const cssVars: Record<string, string> = {}
   const m = (managers && typeof managers === 'object') ? managers as AnyRecord : {}
 
@@ -70,4 +112,3 @@ export function mapManagersToCssVars(managers: AnyRecord | undefined): Record<st
 
   return cssVars
 }
-
