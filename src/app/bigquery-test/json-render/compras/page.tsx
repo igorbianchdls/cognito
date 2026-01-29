@@ -10,11 +10,7 @@ const COMPRAS_TEMPLATE_TEXT = JSON.stringify([
     type: "Theme",
     props: { name: "light" },
     children: [
-      { type: "Header", props: { title: "Dashboard de Compras", subtitle: "Principais indicadores e cortes", align: "center", controlsPosition: "right", datePicker: { visible: true, mode: "range", position: "right", storePath: "filters.dateRange", actionOnChange: { type: "refresh_data" }, style: { padding: 6, fontFamily: "Barlow", fontSize: 12 } }, slicers: [
-        { label: "Status", type: "dropdown", storePath: "filters.status", placeholder: "Todos", source: { type: "api", url: "/api/modulos/compras/options?field=status&limit=100" }, actionOnChange: { type: "refresh_data" } },
-        { label: "Fornecedor", type: "dropdown", storePath: "filters.fornecedor_id", placeholder: "Todos", source: { type: "api", url: "/api/modulos/compras/options?field=fornecedor_id&limit=100" }, actionOnChange: { type: "refresh_data" } },
-        { label: "Valor da Compra", type: "range", prefix: "R$", storeMinPath: "filters.valor_min", storeMaxPath: "filters.valor_max", step: 1, actionOnChange: { type: "refresh_data" } }
-      ] } },
+      { type: "Header", props: { title: "Dashboard de Compras", subtitle: "Principais indicadores e cortes", align: "center", controlsPosition: "right", datePicker: { visible: true, mode: "range", position: "right", storePath: "filters.dateRange", actionOnChange: { type: "refresh_data" }, style: { padding: 6, fontFamily: "Barlow", fontSize: 12 } } } },
       { type: "Div", props: { direction: "row", gap: 12, padding: 16, justify: "start", align: "start", childGrow: true }, children: [
         { type: "KPI", props: { title: "Gasto", format: "currency", dataQuery: { model: "compras.compras", measure: "SUM(valor_total)", filters: { tenant_id: 1 } }, titleStyle: { fontWeight: 600, fontSize: 12, color: "#64748b" }, valueStyle: { fontWeight: 700, fontSize: 24, color: "#0f172a" } } },
         { type: "KPI", props: { title: "Fornecedores", format: "number", dataQuery: { model: "compras.compras", measure: "COUNT_DISTINCT(fornecedor_id)", filters: { tenant_id: 1 } } } },

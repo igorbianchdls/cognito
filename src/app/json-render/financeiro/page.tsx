@@ -10,12 +10,7 @@ const FINANCE_TEMPLATE_TEXT = JSON.stringify([
     type: "Theme",
     props: { name: "light" },
     children: [
-      { type: "Header", props: { title: "Dashboard Financeiro", subtitle: "Contas a Pagar e Receber", align: "center", controlsPosition: "right", datePicker: { visible: true, mode: "range", position: "right", storePath: "filters.dateRange", actionOnChange: { type: "refresh_data" }, style: { padding: 6, fontFamily: "Barlow", fontSize: 12 } }, slicers: [
-        { label: "Status", type: "dropdown", storePath: "filters.status", placeholder: "Todos", source: { type: "api", url: "/api/modulos/financeiro/options?field=status&limit=100" }, actionOnChange: { type: "refresh_data" } },
-        { label: "Cliente", type: "dropdown", storePath: "filters.cliente_id", placeholder: "Todos", source: { type: "api", url: "/api/modulos/financeiro/options?field=cliente_id&limit=100" }, actionOnChange: { type: "refresh_data" } },
-        { label: "Centro de Lucro", type: "list", storePath: "filters.centro_lucro_id", source: { type: "api", url: "/api/modulos/financeiro/options?field=centro_lucro_id&limit=100" }, actionOnChange: { type: "refresh_data" } },
-        { label: "Valor do Título", type: "range", prefix: "R$", storeMinPath: "filters.valor_min", storeMaxPath: "filters.valor_max", step: 1, actionOnChange: { type: "refresh_data" } }
-      ] } },
+      { type: "Header", props: { title: "Dashboard Financeiro", subtitle: "Contas a Pagar e Receber", align: "center", controlsPosition: "right", datePicker: { visible: true, mode: "range", position: "right", storePath: "filters.dateRange", actionOnChange: { type: "refresh_data" }, style: { padding: 6, fontFamily: "Barlow", fontSize: 12 } } } },
       { type: "Div", props: { direction: "row", gap: 12, padding: 16, childGrow: true }, children: [
         { type: "KPI", props: { title: "AP (Período)", format: "currency", dataQuery: { model: "financeiro.contas_pagar", measure: "SUM(valor_liquido)", filters: { tenant_id: 1 } }, titleStyle: { fontWeight: 600, fontSize: 12, color: "#64748b" }, valueStyle: { fontWeight: 700, fontSize: 24, color: "#0f172a" } } },
         { type: "KPI", props: { title: "AR (Período)", format: "currency", dataQuery: { model: "financeiro.contas_receber", measure: "SUM(valor_liquido)", filters: { tenant_id: 1 } }, titleStyle: { fontWeight: 600, fontSize: 12, color: "#64748b" }, valueStyle: { fontWeight: 700, fontSize: 24, color: "#0f172a" } } }

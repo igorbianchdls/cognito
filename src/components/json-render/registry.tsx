@@ -679,19 +679,11 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
             const stored = effectiveGet(idx, sp, true);
             const clearable = (f?.clearable !== false);
             const selectAll = Boolean(f?.selectAll);
-            const showSearch = Boolean(f?.search);
+            const showSearch = false;
             return (
               <div className={layout === 'horizontal' ? 'flex items-center gap-2' : 'space-y-1'} style={{ width }}>
                 {lbl && <div className="text-xs text-gray-600">{lbl}</div>}
-                {showSearch && (
-                  <input
-                    type="text"
-                    className="border border-gray-300 rounded px-2 py-1 text-xs"
-                    placeholder="Buscar..."
-                    value={searchMap[idx] || ''}
-                    onChange={(e) => setSearchMap((prev) => ({ ...prev, [idx]: e.target.value }))}
-                  />
-                )}
+                {/* search input removido */}
                 <div className="flex flex-col gap-2">
                   <div className="flex flex-col gap-1 max-h-48 overflow-y-auto pr-1">
                     {opts.map((o) => (
