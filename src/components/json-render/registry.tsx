@@ -52,7 +52,7 @@ const defaultKPI = {
 const defaultBarChart = {
   height: 220,
   format: 'number' as 'currency'|'percent'|'number',
-  titleStyle: { fontFamily: 'Barlow', fontWeight: 700, fontSize: 16, color: '#0f172a', letterSpacing: '0.02em', textTransform: 'uppercase', padding: 8, textAlign: 'left' },
+  titleStyle: { padding: 8, textAlign: 'left' },
   colorScheme: ['#3b82f6'],
   nivo: { layout: 'vertical', padding: 0.3, groupMode: 'grouped', gridY: true, axisBottom: { tickRotation: 0, legendOffset: 32 }, axisLeft: { legendOffset: 40 }, margin: { top: 10, right: 10, bottom: 40, left: 48 }, animate: true, motionConfig: 'gentle' },
 } as const;
@@ -60,7 +60,7 @@ const defaultBarChart = {
 const defaultLineChart = {
   height: 220,
   format: 'number' as 'currency'|'percent'|'number',
-  titleStyle: { fontFamily: 'Barlow', fontWeight: 600, fontSize: 14, color: '#0f172a', letterSpacing: '0.01em', textTransform: 'none', padding: 6, textAlign: 'left' },
+  titleStyle: { padding: 6, textAlign: 'left' },
   colorScheme: ['#3b82f6'],
   nivo: { gridY: true, curve: 'linear', pointSize: 6, margin: { top: 10, right: 10, bottom: 40, left: 48 }, animate: true, motionConfig: 'gentle' },
 } as const;
@@ -68,7 +68,7 @@ const defaultLineChart = {
 const defaultPieChart = {
   height: 220,
   format: 'number' as 'currency'|'percent'|'number',
-  titleStyle: { fontFamily: 'Barlow', fontWeight: 600, fontSize: 14, color: '#0f172a', letterSpacing: '0.01em', textTransform: 'none', padding: 6, textAlign: 'left' },
+  titleStyle: { padding: 6, textAlign: 'left' },
   colorScheme: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'],
   nivo: { innerRadius: 0, padAngle: 0.7, cornerRadius: 3, activeOuterRadiusOffset: 8, enableArcLabels: true, arcLabelsSkipAngle: 10, arcLabelsTextColor: '#333333', margin: { top: 10, right: 10, bottom: 10, left: 10 }, animate: true, motionConfig: 'gentle' },
 } as const;

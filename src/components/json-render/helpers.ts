@@ -246,14 +246,14 @@ export function applyH1FromCssVars(style: Record<string, any> | undefined, cssVa
   const out: Record<string, any> = { ...(style || {}) };
   if (!cssVars) return Object.keys(out).length ? out : undefined;
   const s = cssVars as Record<string, any>;
-  if (out.color == null && s.h1Color) out.color = s.h1Color;
-  if (out.fontWeight == null && s.h1FontWeight) out.fontWeight = (isNaN(Number(s.h1FontWeight)) ? s.h1FontWeight : Number(s.h1FontWeight));
-  if (out.fontSize == null && s.h1FontSize) {
+  if (s.h1Color) out.color = s.h1Color;
+  if (s.h1FontWeight) out.fontWeight = (isNaN(Number(s.h1FontWeight)) ? s.h1FontWeight : Number(s.h1FontWeight));
+  if (s.h1FontSize) {
     const sz = s.h1FontSize;
     if (typeof sz === 'number') out.fontSize = `${sz}px`;
     else if (/^\d+(\.\d+)?$/.test(String(sz))) out.fontSize = `${Number(sz)}px`;
     else out.fontSize = sz;
   }
-  if (out.fontFamily == null && s.h1FontFamily) out.fontFamily = s.h1FontFamily;
+  if (s.h1FontFamily) out.fontFamily = s.h1FontFamily;
   return Object.keys(out).length ? out : undefined;
 }
