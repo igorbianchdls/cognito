@@ -220,13 +220,14 @@ export const catalog = {
     KPI: {
       props: z.object({
         title: z.string(),
+        valuePath: z.string().optional(),
         dataQuery: z.object({
           model: z.string(),
           measure: z.string(),
           filters: z.record(z.any()).optional(),
           orderBy: z.object({ field: z.string().optional(), dir: z.enum(["asc","desc"]).optional() }).partial().optional(),
           limit: z.number().optional(),
-        }).strict(),
+        }).strict().optional(),
         valueKey: z.string().optional(),
         format: z.enum(["currency", "percent", "number"]).default("number"),
         titleStyle: TitleStyleSchema.optional(),
@@ -243,7 +244,7 @@ export const catalog = {
         }).partial().optional(),
         borderless: z.boolean().optional(),
         unit: z.string().optional(),
-      }).strict(),
+      }).strict().refine((p) => !!(p.valuePath || p.dataQuery), { message: 'KPI requires either valuePath or dataQuery' }),
       hasChildren: false,
     },
     BarChart: {

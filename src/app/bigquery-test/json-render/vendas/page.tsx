@@ -15,7 +15,7 @@ const SALES_TEMPLATE_TEXT = JSON.stringify([
         { type: "KPI", props: { title: "Vendas", format: "currency", dataQuery: { model: "vendas.pedidos", measure: "SUM(p.valor_total)", filters: { tenant_id: 1 } } } },
         { type: "KPI", props: { title: "Pedidos", format: "number", dataQuery: { model: "vendas.pedidos", measure: "COUNT()", filters: { tenant_id: 1 } } } },
         { type: "KPI", props: { title: "Ticket Médio", format: "currency", dataQuery: { model: "vendas.pedidos", measure: "AVG(p.valor_total)", filters: { tenant_id: 1 } } } },
-        { type: "Kpi", props: { label: "Margem Bruta", valuePath: "vendas.kpis.margemBruta", format: "currency", borderless: true } }
+        { type: "KPI", props: { title: "Margem Bruta", valuePath: "vendas.kpis.margemBruta", format: "currency", borderless: true } }
       ]},
 
       { type: "Div", props: { direction: "row", gap: 12, padding: 16, justify: "start", align: "start", childGrow: true }, children: [

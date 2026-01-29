@@ -964,6 +964,8 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     const titleStyle = normalizeTitleStyle(p.titleStyle);
     const valueStyle = normalizeTitleStyle(p.valueStyle);
     const containerStyle = ensureSurfaceBackground(applyShadowFromCssVars(applyBorderFromCssVars(normalizeContainerStyle(p.containerStyle, Boolean(p.borderless)), theme.cssVars), theme.cssVars), theme.cssVars);
+    const valuePath = (p.valuePath as string | undefined) || undefined;
+    const valueFromPath = valuePath ? useDataValue(valuePath, undefined) : undefined;
     function formatValue(val: any, fmt: 'currency'|'percent'|'number'): string {
       const n = Number(val ?? 0);
       if (!Number.isFinite(n)) return String(val ?? '');
@@ -973,10 +975,11 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
         default: return new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 2 }).format(n);
       }
     }
+    const displayValue = (dq && dq.model && dq.measure) ? serverValue : (valueFromPath ?? 0);
     return (
-      <div className="rounded-lg border p-4 shadow-sm" style={containerStyle}>
+      <div className="p-4" style={containerStyle}>
         <div className="mb-1" style={titleStyle}>{title}</div>
-        <div className="text-2xl font-semibold text-gray-900" style={valueStyle}>{formatValue(serverValue, fmt)}{unit ? ` ${unit}` : ''}</div>
+        <div className="text-2xl font-semibold" style={valueStyle}>{formatValue(displayValue, fmt)}{unit ? ` ${unit}` : ''}</div>
       </div>
     );
   },
