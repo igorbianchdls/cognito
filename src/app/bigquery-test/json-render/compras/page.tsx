@@ -215,6 +215,9 @@ function ManagersPanel({ jsonText, setJsonText, setTree, disabled }: PanelProps)
     'Barlow, ui-sans-serif, system-ui',
     'Geist, ui-sans-serif, system-ui',
     'IBM Plex Sans, ui-sans-serif, system-ui',
+    'Space Mono, ui-monospace, monospace',
+    'Geist Mono, ui-monospace, monospace',
+    'IBM Plex Mono, ui-monospace, monospace',
     'system-ui'
   ];
   const borderStyleOptions = ['none','solid','dashed','dotted'] as const;

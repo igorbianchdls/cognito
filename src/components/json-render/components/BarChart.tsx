@@ -81,9 +81,9 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
     try { managedScheme = JSON.parse(rawVar); }
     catch { managedScheme = rawVar.split(',').map(s => s.trim()).filter(Boolean); }
   }
-  const colors = Array.isArray(colorScheme)
-    ? colorScheme
-    : (managedScheme || (typeof colorScheme === 'string' ? [colorScheme] : ['#3b82f6']));
+  const colors = (managedScheme && managedScheme.length)
+    ? managedScheme
+    : (Array.isArray(colorScheme) ? colorScheme : (typeof colorScheme === 'string' ? [colorScheme] : ['#3b82f6']));
 
   const margin = {
     top: Number(nivo?.margin?.top ?? 10),

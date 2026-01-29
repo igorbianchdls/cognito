@@ -626,7 +626,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     const arrow = trend === 'up' ? '▲' : trend === 'down' ? '▼' : '■';
     const labelStyle = normalizeTitleStyle(p.labelStyle);
     const valueStyle = normalizeTitleStyle(p.valueStyle);
-    const containerStyle = applyBorderFromCssVars(normalizeContainerStyle(p.containerStyle, Boolean(p.borderless)), theme.cssVars);
+    const containerStyle = ensureSurfaceBackground(applyBorderFromCssVars(normalizeContainerStyle(p.containerStyle, Boolean(p.borderless)), theme.cssVars), theme.cssVars);
     return (
       <div className="rounded-lg border p-4 shadow-sm" style={containerStyle}>
         <div className="mb-1" style={labelStyle}>{label}</div>
@@ -661,7 +661,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     const p = deepMerge((theme.components?.SlicerCard || {}) as AnyRecord, (element?.props || {}) as AnyRecord) as AnyRecord;
     const title = p.title as string | undefined;
     const borderless = Boolean(p.borderless);
-    const containerStyle = applyBorderFromCssVars(normalizeContainerStyle(p.containerStyle, borderless), theme.cssVars);
+    const containerStyle = ensureSurfaceBackground(applyBorderFromCssVars(normalizeContainerStyle(p.containerStyle, borderless), theme.cssVars), theme.cssVars);
     const layout = (p.layout || 'vertical') as 'vertical'|'horizontal';
     const applyMode = (p.applyMode || 'auto') as 'auto'|'manual';
     const fields = Array.isArray(p.fields) ? (p.fields as AnyRecord[]) : [];
@@ -956,7 +956,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     const unit = p.unit as string | undefined;
     const titleStyle = normalizeTitleStyle(p.titleStyle);
     const valueStyle = normalizeTitleStyle(p.valueStyle);
-    const containerStyle = applyBorderFromCssVars(normalizeContainerStyle(p.containerStyle, Boolean(p.borderless)), theme.cssVars);
+    const containerStyle = ensureSurfaceBackground(applyBorderFromCssVars(normalizeContainerStyle(p.containerStyle, Boolean(p.borderless)), theme.cssVars), theme.cssVars);
     function formatValue(val: any, fmt: 'currency'|'percent'|'number'): string {
       const n = Number(val ?? 0);
       if (!Number.isFinite(n)) return String(val ?? '');
