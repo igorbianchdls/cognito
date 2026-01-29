@@ -44,7 +44,7 @@ export const catalog = {
   components: {
     Theme: {
       props: z.object({
-        name: z.enum(["black","light","blue"]),
+        name: z.enum(["black","light","blue","dark"]),
       }).strict(),
       hasChildren: true,
     },
