@@ -50,7 +50,7 @@ export default function JsonRenderPieChart({ element }: { element: any }) {
     }
     run();
     return () => { cancelled = true };
-  }, [JSON.stringify(dq), JSON.stringify((data as any)?.filters?.dateRange)]);
+  }, [JSON.stringify(dq), JSON.stringify((data as any)?.filters)]);
   const title = element?.props?.title as string | undefined;
   const fmt = (element?.props?.format ?? 'number') as 'currency'|'percent'|'number';
   const height = (element?.props?.height as number | undefined) ?? 220;

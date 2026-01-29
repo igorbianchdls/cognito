@@ -62,7 +62,7 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
     }
     run();
     return () => { cancelled = true };
-  }, [JSON.stringify(dq), JSON.stringify((data as any)?.filters?.dateRange)]);
+  }, [JSON.stringify(dq), JSON.stringify((data as any)?.filters)]);
 
   const barData = React.useMemo(() => {
     const src = Array.isArray(serverRows) ? serverRows : [];
