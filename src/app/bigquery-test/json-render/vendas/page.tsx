@@ -230,6 +230,8 @@ function ManagersPanel({ jsonText, setJsonText, setTree, disabled }: PanelProps)
   const h1WeightOptions = ['400','500','600','700'];
   const h1SizeOptions = ['12','14','16','18','20'];
   const h1ColorOptions = ['#111827','#0f172a','#334155','#e5e7eb','#ffffff','#2563eb','#10b981','#ef4444'];
+  const h1SpacingOptions = ['-0.05em','-0.04em','-0.03em','-0.02em','-0.01em','0em','0.01em','0.02em','0.03em','0.04em','0.05em'];
+  const h1PaddingOptions = ['0','4','6','8','12'];
 
   function readCurrent(): { name: string; managers: any } {
     try {
@@ -393,11 +395,27 @@ function ManagersPanel({ jsonText, setJsonText, setTree, disabled }: PanelProps)
             </select>
           </div>
           <div className="flex items-center gap-2">
+            <label className="text-xs text-gray-700 w-20">H1 Espaço</label>
+            <select disabled={disabled} className="text-xs border border-gray-300 rounded px-2 py-1" value={current.managers?.h1?.letterSpacing || ''}
+              onChange={(e) => updateTheme((th: any) => { th.props.managers = th.props.managers || {}; th.props.managers.h1 = th.props.managers.h1 || {}; const v=e.target.value; if (v) th.props.managers.h1.letterSpacing=v; else delete th.props.managers.h1.letterSpacing; })}>
+              <option value="">(padrão)</option>
+              {h1SpacingOptions.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
+          <div className="flex items-center gap-2">
             <label className="text-xs text-gray-700 w-20">H1 Fonte</label>
             <select disabled={disabled} className="text-xs border border-gray-300 rounded px-2 py-1" value={current.managers?.h1?.font || ''}
               onChange={(e) => updateTheme((th: any) => { th.props.managers = th.props.managers || {}; th.props.managers.h1 = th.props.managers.h1 || {}; const v=e.target.value; if (v) th.props.managers.h1.font=v; else delete th.props.managers.h1.font; })}>
               <option value="">(padrão)</option>
               {fontOptions.map(f => <option key={f} value={f}>{f}</option>)}
+            </select>
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="text-xs text-gray-700 w-20">H1 Padding</label>
+            <select disabled={disabled} className="text-xs border border-gray-300 rounded px-2 py-1" value={current.managers?.h1?.padding || ''}
+              onChange={(e) => updateTheme((th: any) => { th.props.managers = th.props.managers || {}; th.props.managers.h1 = th.props.managers.h1 || {}; const v=e.target.value; if (v) th.props.managers.h1.padding=v; else delete th.props.managers.h1.padding; })}>
+              <option value="">(padrão)</option>
+              {h1PaddingOptions.map(p => <option key={p} value={p}>{p}px</option>)}
             </select>
           </div>
         </div>

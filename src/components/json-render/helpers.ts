@@ -255,5 +255,17 @@ export function applyH1FromCssVars(style: Record<string, any> | undefined, cssVa
     else out.fontSize = sz;
   }
   if (s.h1FontFamily) out.fontFamily = s.h1FontFamily;
+  if (s.h1LetterSpacing) {
+    const ls = s.h1LetterSpacing;
+    if (typeof ls === 'number') out.letterSpacing = `${ls}em`;
+    else if (/^-?\d+(\.\d+)?$/.test(String(ls))) out.letterSpacing = `${Number(ls)}em`;
+    else out.letterSpacing = ls; // e.g. '-0.02em'
+  }
+  if (s.h1Padding) {
+    const pd = s.h1Padding;
+    if (typeof pd === 'number') out.padding = `${pd}px`;
+    else if (/^\d+(\.\d+)?$/.test(String(pd))) out.padding = `${Number(pd)}px`;
+    else out.padding = pd; // e.g. '6px 8px'
+  }
   return Object.keys(out).length ? out : undefined;
 }

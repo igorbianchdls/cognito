@@ -35,11 +35,7 @@ const defaultDiv = {
   borderRadius: 0,
 } as const;
 
-const defaultKpi = {
-  format: 'number' as 'currency'|'percent'|'number',
-  labelStyle: { fontWeight: 600, fontSize: 12, color: '#64748b', textTransform: 'none', textAlign: 'left' },
-  valueStyle: { fontWeight: 700, fontSize: 22, color: '#0f172a', textTransform: 'none', textAlign: 'left' },
-} as const;
+// (removed old Kpi defaults)
 
 const defaultKPI = {
   format: 'number' as 'currency'|'percent'|'number',
@@ -571,74 +567,6 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     );
   },
 
-  Kpi: ({ element }) => {
-    const theme = useThemeOverrides();
-    const p = deepMerge(deepMerge(defaultKpi as any, (theme.components?.Kpi || {}) as any), (element?.props || {}) as any);
-    const label = p.label ?? '';
-    const valuePath = p.valuePath ?? '';
-    const valueKey = (p.valueKey ?? 'total') as string;
-    const dq = p.dataQuery as AnyRecord | undefined;
-    const { data } = useData();
-    const [serverValue, setServerValue] = React.useState<number | null>(null);
-    React.useEffect(() => {
-      let cancelled = false;
-      async function run() {
-        if (!dq || !dq.model || !dq.measure) { setServerValue(null); return; }
-        try {
-          const mod = String(dq.model).split('.')[0];
-          const filters = { ...(dq.filters || {}) } as AnyRecord;
-          const dr = (data as any)?.filters?.dateRange;
-          if (dr && !filters.de && !filters.ate) { if (dr.from) filters.de = dr.from; if (dr.to) filters.ate = dr.to; }
-          const globalFilters = (data as any)?.filters;
-          if (globalFilters && typeof globalFilters === 'object') {
-            for (const [k, v] of Object.entries(globalFilters)) {
-              if (k === 'dateRange') continue;
-              if (filters[k as any] === undefined) (filters as any)[k] = v as any;
-            }
-          }
-          const url = `/api/modulos/${mod}/query`;
-          const body = { dataQuery: { model: dq.model, dimension: dq.dimension, dimensionExpr: (dq as any).dimensionExpr, measure: dq.measure, filters, orderBy: dq.orderBy, limit: dq.limit } };
-          const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
-          const j = await res.json();
-          const rows = Array.isArray(j?.rows) ? j.rows : [];
-          let val: number = 0;
-          if (rows.length > 0 && rows[0] && typeof rows[0] === 'object') {
-            const r0 = rows[0] as AnyRecord;
-            const keys = [valueKey, 'total', 'valor_total', 'faturamento_total', 'gasto_total', 'count', 'value'];
-            for (const k of keys) { if (r0[k] != null) { const n = Number(r0[k]); if (Number.isFinite(n)) { val = n; break; } } }
-          }
-          if (!cancelled) setServerValue(val);
-        } catch (e) { if (!cancelled) setServerValue(0); }
-      }
-      run();
-      return () => { cancelled = true };
-    }, [JSON.stringify(dq), JSON.stringify((data as any)?.filters)]);
-    const unit = p.unit as string | undefined;
-    const fmt = (p.format ?? 'number') as 'currency'|'percent'|'number';
-    const deltaPath = p.deltaPath as string | undefined;
-    const trendProp = p.trend as ('up'|'down'|'flat'|'auto') | undefined;
-    const valueFromPath = useDataValue(valuePath, undefined);
-    const value = serverValue !== null ? serverValue : valueFromPath;
-    const deltaVal = deltaPath ? useDataValue(deltaPath, undefined) : undefined;
-    const trend: 'up'|'down'|'flat' | undefined = (trendProp === 'auto' || trendProp === undefined)
-      ? (typeof deltaVal === 'number' ? (deltaVal > 0 ? 'up' : deltaVal < 0 ? 'down' : 'flat') : undefined)
-      : (trendProp as any);
-    const arrow = trend === 'up' ? '▲' : trend === 'down' ? '▼' : '■';
-    const labelStyle = normalizeTitleStyle(p.labelStyle);
-    const valueStyle = normalizeTitleStyle(p.valueStyle);
-    const containerStyle = ensureSurfaceBackground(applyShadowFromCssVars(applyBorderFromCssVars(normalizeContainerStyle(p.containerStyle, Boolean(p.borderless)), theme.cssVars), theme.cssVars), theme.cssVars);
-    return (
-      <div className="p-4" style={containerStyle}>
-        <div className="mb-1" style={labelStyle}>{label}</div>
-        <div className="flex items-end gap-2">
-          <div className="text-2xl font-semibold text-gray-900" style={valueStyle}>{formatValue(value, fmt)}{unit ? ` ${unit}` : ''}</div>
-          {deltaVal !== undefined && (
-            <div className={`text-xs ${trend === 'up' ? 'text-green-600' : trend === 'down' ? 'text-red-600' : 'text-gray-500'}`}>{arrow} {formatValue(Math.abs(deltaVal), fmt)}</div>
-          )}
-        </div>
-      </div>
-    );
-  },
 
   BarChart: ({ element }) => {
     const theme = useThemeOverrides();
@@ -909,6 +837,8 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       if (mgr.h1.weight !== undefined) cssVars.h1FontWeight = String(mgr.h1.weight);
       if (mgr.h1.size !== undefined) cssVars.h1FontSize = String(mgr.h1.size);
       if (mgr.h1.font) cssVars.h1FontFamily = String(mgr.h1.font);
+      if (mgr.h1.letterSpacing !== undefined) cssVars.h1LetterSpacing = String(mgr.h1.letterSpacing);
+      if (mgr.h1.padding !== undefined) cssVars.h1Padding = String(mgr.h1.padding);
     }
     return (
       <ThemeProvider name={name} cssVars={cssVars}>
