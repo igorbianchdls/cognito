@@ -566,6 +566,23 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     const fields = Array.isArray(p.fields) ? (p.fields as AnyRecord[]) : [];
     const { data, setData, getValueByPath } = useData();
 
+    function setByPath(prev: any, path: string, value: any) {
+      if (!path) return prev;
+      const parts = path.split('.').map(s => s.trim()).filter(Boolean);
+      const root = Array.isArray(prev) ? [...prev] : { ...(prev || {}) };
+      let curr: any = root;
+      for (let i = 0; i < parts.length; i++) {
+        const k = parts[i];
+        if (i === parts.length - 1) {
+          curr[k] = value;
+        } else {
+          curr[k] = typeof curr[k] === 'object' && curr[k] !== null ? { ...curr[k] } : {};
+          curr = curr[k];
+        }
+      }
+      return root;
+    }
+
     type Opt = { value: string|number; label: string };
     const [optionsMap, setOptionsMap] = React.useState<Record<number, Opt[]>>({});
     const [searchMap, setSearchMap] = React.useState<Record<number, string>>({});
