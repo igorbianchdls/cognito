@@ -122,9 +122,9 @@ export async function POST(req: NextRequest) {
       if (Array.isArray(val)) {
         const arr = val as unknown[];
         if (!arr.length) return;
-        const placeholders = arr.map(() => `$${params.length + 1}`).join(',');
-        whereParts.push(`${col} IN (${placeholders})`);
-        params.push(...arr);
+        const ph: string[] = [];
+        for (const v of arr) { ph.push(`$${params.length + 1}`); params.push(v as any); }
+        whereParts.push(`${col} IN (${ph.join(',')})`);
       } else if (typeof val === 'number' || typeof val === 'string') {
         whereParts.push(`${col} = $${params.length + 1}`);
         params.push(val);
