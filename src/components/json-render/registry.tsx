@@ -7,7 +7,7 @@ import JsonRenderPieChart from "@/components/json-render/components/PieChart";
 import { ThemeProvider, useThemeOverrides } from "@/components/json-render/theme/ThemeContext";
 import { useDataValue, useData } from "@/components/json-render/context";
 import { deepMerge } from "@/stores/ui/json-render/utils";
-import { normalizeTitleStyle, normalizeContainerStyle, applyBorderFromCssVars } from "@/components/json-render/helpers";
+import { normalizeTitleStyle, normalizeContainerStyle, applyBorderFromCssVars, ensureSurfaceBackground } from "@/components/json-render/helpers";
 
 type AnyRecord = Record<string, any>;
 
