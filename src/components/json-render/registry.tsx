@@ -337,7 +337,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
             if (r?.actionOnChange && typeof r.actionOnChange === 'object') onAction?.(r.actionOnChange);
           };
           elems.push(
-            <div key={`slicer-${idx}`} className="flex items-center gap-2" style={{ width: styleVal(width) }}>
+            <div key={`slicer-${idx}`} className="flex items-center gap-2 p-2" style={{ width: styleVal(width) }}>
               {lbl && <span className="text-xs" style={lblStyle}>{lbl}:</span>}
               {prefix && <span className="text-xs text-gray-500">{prefix}</span>}
               <input type="number" step={step} placeholder={phMin} className="w-20 border border-gray-300 rounded px-2 py-1 text-xs"
@@ -378,8 +378,8 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
             if (isMulti) onChangeValue([]); else onChangeValue(undefined);
           };
           elems.push(
-            <div key={`slicer-${idx}`} className="flex items-center gap-2 flex-wrap" style={{ width: styleVal(width) }}>
-              {lbl && <span className="text-xs mr-1" style={lblStyle}>{lbl}:</span>}
+            <div key={`slicer-${idx}`} className="flex items-center gap-2 flex-wrap p-2" style={{ width: styleVal(width) }}>
+              {lbl && !p.title && <span className="text-xs mr-1" style={lblStyle}>{lbl}:</span>}
               <div className="flex items-center gap-2 flex-wrap">
                 {opts.map((o) => {
                   const selected = isMulti ? (current as any[]).includes(o.value) : current === o.value;
@@ -423,8 +423,8 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
             onChangeValue([]);
           };
           elems.push(
-            <div key={`slicer-${idx}`} className="flex items-center gap-2" style={{ width: styleVal(width) }}>
-              {lbl && <span className="text-xs" style={lblStyle}>{lbl}:</span>}
+            <div key={`slicer-${idx}`} className="flex items-center gap-2 p-2" style={{ width: styleVal(width) }}>
+              {lbl && !p.title && <span className="text-xs" style={lblStyle}>{lbl}:</span>}
               <div className="flex items-center gap-2">
                 {opts.map((o) => (
                   <label key={String(o.value)} className="inline-flex items-center gap-1 text-xs">
@@ -448,8 +448,8 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
             if (isMulti) onChangeValue([]); else onChangeValue(undefined);
           };
           elems.push(
-            <div key={`slicer-${idx}`} className="flex items-center gap-2" style={{ width: styleVal(width) }}>
-              {lbl && <span className="text-xs" style={lblStyle}>{lbl}:</span>}
+            <div key={`slicer-${idx}`} className="flex items-center gap-2 p-2" style={{ width: styleVal(width) }}>
+              {lbl && !p.title && <span className="text-xs" style={lblStyle}>{lbl}:</span>}
               <select
                 multiple={isMulti}
                 className="border border-gray-300 rounded px-2 py-1 text-xs"
@@ -478,7 +478,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
         }
       });
       if (elems.length === 0) return null;
-      return <div className="flex items-center gap-2">{elems}</div>;
+      return <div className="flex items-center gap-2 p-2">{elems}</div>;
     }, [picker, JSON.stringify(slicers), JSON.stringify(optionsMap), data]);
 
     return (
@@ -702,7 +702,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     const card = (
       <div style={containerStyle}>
         {title && <div className="mb-2" style={applyH1FromCssVars(undefined, theme.cssVars)}>{title}</div>}
-        <div className={layout === 'horizontal' ? 'flex items-start gap-3 flex-wrap' : 'space-y-3'}>
+        <div className={(layout === 'horizontal' ? 'flex items-start gap-3 flex-wrap' : 'space-y-3') + ' p-2'}>
           {(() => {
             const f = (fields && fields.length > 0) ? fields[0] : undefined;
             if (!f) return null;
@@ -723,7 +723,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
               const onClear = () => onChangeField(idx, sp, isMulti ? [] : undefined, f.actionOnChange);
               return (
                 <div className={layout === 'horizontal' ? 'flex items-center gap-2' : 'space-y-1'} style={{ width }}>
-                  {lbl && <div className="text-xs" style={lblStyle}>{lbl}</div>}
+                  {lbl && !title && <div className="text-xs" style={lblStyle}>{lbl}</div>}
                   <div className="flex flex-wrap gap-2">
                     {opts.map((o) => {
                       const selected = isMulti ? (Array.isArray(stored) && stored.includes(o.value)) : (stored === o.value);
@@ -767,9 +767,9 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
             // Default list (checkboxes)
             return (
               <div className={layout === 'horizontal' ? 'flex items-center gap-2' : 'space-y-1'} style={{ width }}>
-                {lbl && <div className="text-xs" style={lblStyle}>{lbl}</div>}
+                {lbl && !title && <div className="text-xs" style={lblStyle}>{lbl}</div>}
                 {/* search input removido */}
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-2 p-2">
                   <div className="flex flex-col gap-1 max-h-48 overflow-y-auto pr-1">
                     {opts.map((o) => (
                       <label key={String(o.value)} className="inline-flex items-center gap-2 text-xs">
