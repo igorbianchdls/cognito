@@ -110,7 +110,7 @@ export default function JsonRenderPieChart({ element }: { element: any }) {
     nivoTheme = t;
   }
   return (
-    <div className="p-0" style={containerStyle}>
+    <div style={containerStyle}>
       {title && <div className="mb-2" style={titleStyle}>{title}</div>}
       <div style={{ height }}>
         <ResponsivePie

@@ -67,6 +67,22 @@ export const catalog = {
             letterSpacing: z.union([z.string(), z.number()]).optional(),
             padding: z.union([z.string(), z.number()]).optional(),
           }).partial().optional(),
+          kpi: z.object({
+            title: z.object({
+              font: z.string().optional(),
+              weight: z.union([z.string(), z.number()]).optional(),
+              color: z.string().optional(),
+              letterSpacing: z.union([z.string(), z.number()]).optional(),
+              padding: z.union([z.string(), z.number()]).optional(),
+            }).partial().optional(),
+            value: z.object({
+              font: z.string().optional(),
+              weight: z.union([z.string(), z.number()]).optional(),
+              color: z.string().optional(),
+              letterSpacing: z.union([z.string(), z.number()]).optional(),
+              padding: z.union([z.string(), z.number()]).optional(),
+            }).partial().optional(),
+          }).partial().optional(),
         }).partial().optional(),
       }).strict(),
       hasChildren: true,

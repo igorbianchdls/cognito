@@ -232,6 +232,11 @@ function ManagersPanel({ jsonText, setJsonText, setTree, disabled }: PanelProps)
   const h1ColorOptions = ['#111827','#0f172a','#334155','#e5e7eb','#ffffff','#2563eb','#10b981','#ef4444'];
   const h1SpacingOptions = ['-0.05em','-0.04em','-0.03em','-0.02em','-0.01em','0em','0.01em','0.02em','0.03em','0.04em','0.05em'];
   const h1PaddingOptions = ['0','4','6','8','12'];
+  const kpiWeightOptions = ['400','500','600','700'];
+  const kpiSizeOptions = ['12','14','16','18','20','22','24'];
+  const kpiColorOptions = ['#111827','#0f172a','#334155','#e5e7eb','#ffffff','#2563eb','#10b981','#ef4444'];
+  const kpiSpacingOptions = ['-0.05em','-0.04em','-0.03em','-0.02em','-0.01em','0em','0.01em','0.02em','0.03em','0.04em','0.05em'];
+  const kpiPaddingOptions = ['0','4','6','8','12'];
 
   function readCurrent(): { name: string; managers: any } {
     try {
@@ -283,6 +288,95 @@ function ManagersPanel({ jsonText, setJsonText, setTree, disabled }: PanelProps)
             onChange={(e) => updateTheme((th: any) => { if (!th.props) th.props = {}; th.props.name = e.target.value; })}>
             {themeOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
+        </div>
+        {/* KPI Title / Value */}
+        <div className="mt-2 rounded border border-gray-200 p-2">
+          <div className="text-xs font-medium text-gray-700 mb-1">KPI — Título</div>
+          <div className="grid grid-cols-2 gap-2 mb-2">
+            <div className="flex items-center gap-2">
+              <label className="text-xs text-gray-700 w-20">Fonte</label>
+              <select disabled={disabled} className="text-xs border border-gray-300 rounded px-2 py-1" value={current.managers?.kpi?.title?.font || ''}
+                onChange={(e) => updateTheme((th: any) => { th.props.managers = th.props.managers || {}; th.props.managers.kpi = th.props.managers.kpi || {}; th.props.managers.kpi.title = th.props.managers.kpi.title || {}; const v=e.target.value; if (v) th.props.managers.kpi.title.font=v; else delete th.props.managers.kpi.title.font; })}>
+                <option value="">(padrão)</option>
+                {fontOptions.map(f => <option key={f} value={f}>{f}</option>)}
+              </select>
+            </div>
+            <div className="flex items-center gap-2">
+              <label className="text-xs text-gray-700 w-20">Peso</label>
+              <select disabled={disabled} className="text-xs border border-gray-300 rounded px-2 py-1" value={current.managers?.kpi?.title?.weight || ''}
+                onChange={(e) => updateTheme((th: any) => { th.props.managers = th.props.managers || {}; th.props.managers.kpi = th.props.managers.kpi || {}; th.props.managers.kpi.title = th.props.managers.kpi.title || {}; const v=e.target.value; if (v) th.props.managers.kpi.title.weight=v; else delete th.props.managers.kpi.title.weight; })}>
+                <option value="">(padrão)</option>
+                {kpiWeightOptions.map(w => <option key={w} value={w}>{w}</option>)}
+              </select>
+            </div>
+            <div className="flex items-center gap-2">
+              <label className="text-xs text-gray-700 w-20">Cor</label>
+              <select disabled={disabled} className="text-xs border border-gray-300 rounded px-2 py-1" value={current.managers?.kpi?.title?.color || ''}
+                onChange={(e) => updateTheme((th: any) => { th.props.managers = th.props.managers || {}; th.props.managers.kpi = th.props.managers.kpi || {}; th.props.managers.kpi.title = th.props.managers.kpi.title || {}; const v=e.target.value; if (v) th.props.managers.kpi.title.color=v; else delete th.props.managers.kpi.title.color; })}>
+                <option value="">(padrão)</option>
+                {kpiColorOptions.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+            <div className="flex items-center gap-2">
+              <label className="text-xs text-gray-700 w-20">Espaço</label>
+              <select disabled={disabled} className="text-xs border border-gray-300 rounded px-2 py-1" value={current.managers?.kpi?.title?.letterSpacing || ''}
+                onChange={(e) => updateTheme((th: any) => { th.props.managers = th.props.managers || {}; th.props.managers.kpi = th.props.managers.kpi || {}; th.props.managers.kpi.title = th.props.managers.kpi.title || {}; const v=e.target.value; if (v) th.props.managers.kpi.title.letterSpacing=v; else delete th.props.managers.kpi.title.letterSpacing; })}>
+                <option value="">(padrão)</option>
+                {kpiSpacingOptions.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
+            <div className="flex items-center gap-2">
+              <label className="text-xs text-gray-700 w-20">Padding</label>
+              <select disabled={disabled} className="text-xs border border-gray-300 rounded px-2 py-1" value={current.managers?.kpi?.title?.padding || ''}
+                onChange={(e) => updateTheme((th: any) => { th.props.managers = th.props.managers || {}; th.props.managers.kpi = th.props.managers.kpi || {}; th.props.managers.kpi.title = th.props.managers.kpi.title || {}; const v=e.target.value; if (v) th.props.managers.kpi.title.padding=v; else delete th.props.managers.kpi.title.padding; })}>
+                <option value="">(padrão)</option>
+                {kpiPaddingOptions.map(p => <option key={p} value={p}>{p}px</option>)}
+              </select>
+            </div>
+          </div>
+          <div className="text-xs font-medium text-gray-700 mb-1">KPI — Valor</div>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="flex items-center gap-2">
+              <label className="text-xs text-gray-700 w-20">Fonte</label>
+              <select disabled={disabled} className="text-xs border border-gray-300 rounded px-2 py-1" value={current.managers?.kpi?.value?.font || ''}
+                onChange={(e) => updateTheme((th: any) => { th.props.managers = th.props.managers || {}; th.props.managers.kpi = th.props.managers.kpi || {}; th.props.managers.kpi.value = th.props.managers.kpi.value || {}; const v=e.target.value; if (v) th.props.managers.kpi.value.font=v; else delete th.props.managers.kpi.value.font; })}>
+                <option value="">(padrão)</option>
+                {fontOptions.map(f => <option key={f} value={f}>{f}</option>)}
+              </select>
+            </div>
+            <div className="flex items-center gap-2">
+              <label className="text-xs text-gray-700 w-20">Peso</label>
+              <select disabled={disabled} className="text-xs border border-gray-300 rounded px-2 py-1" value={current.managers?.kpi?.value?.weight || ''}
+                onChange={(e) => updateTheme((th: any) => { th.props.managers = th.props.managers || {}; th.props.managers.kpi = th.props.managers.kpi || {}; th.props.managers.kpi.value = th.props.managers.kpi.value || {}; const v=e.target.value; if (v) th.props.managers.kpi.value.weight=v; else delete th.props.managers.kpi.value.weight; })}>
+                <option value="">(padrão)</option>
+                {kpiWeightOptions.map(w => <option key={w} value={w}>{w}</option>)}
+              </select>
+            </div>
+            <div className="flex items-center gap-2">
+              <label className="text-xs text-gray-700 w-20">Cor</label>
+              <select disabled={disabled} className="text-xs border border-gray-300 rounded px-2 py-1" value={current.managers?.kpi?.value?.color || ''}
+                onChange={(e) => updateTheme((th: any) => { th.props.managers = th.props.managers || {}; th.props.managers.kpi = th.props.managers.kpi || {}; th.props.managers.kpi.value = th.props.managers.kpi.value || {}; const v=e.target.value; if (v) th.props.managers.kpi.value.color=v; else delete th.props.managers.kpi.value.color; })}>
+                <option value="">(padrão)</option>
+                {kpiColorOptions.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+            <div className="flex items-center gap-2">
+              <label className="text-xs text-gray-700 w-20">Espaço</label>
+              <select disabled={disabled} className="text-xs border border-gray-300 rounded px-2 py-1" value={current.managers?.kpi?.value?.letterSpacing || ''}
+                onChange={(e) => updateTheme((th: any) => { th.props.managers = th.props.managers || {}; th.props.managers.kpi = th.props.managers.kpi || {}; th.props.managers.kpi.value = th.props.managers.kpi.value || {}; const v=e.target.value; if (v) th.props.managers.kpi.value.letterSpacing=v; else delete th.props.managers.kpi.value.letterSpacing; })}>
+                <option value="">(padrão)</option>
+                {kpiSpacingOptions.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
+            <div className="flex items-center gap-2">
+              <label className="text-xs text-gray-700 w-20">Padding</label>
+              <select disabled={disabled} className="text-xs border border-gray-300 rounded px-2 py-1" value={current.managers?.kpi?.value?.padding || ''}
+                onChange={(e) => updateTheme((th: any) => { th.props.managers = th.props.managers || {}; th.props.managers.kpi = th.props.managers.kpi || {}; th.props.managers.kpi.value = th.props.managers.kpi.value || {}; const v=e.target.value; if (v) th.props.managers.kpi.value.padding=v; else delete th.props.managers.kpi.value.padding; })}>
+                <option value="">(padrão)</option>
+                {kpiPaddingOptions.map(p => <option key={p} value={p}>{p}px</option>)}
+              </select>
+            </div>
+          </div>
         </div>
         {/* Fonte */}
         <div className="flex items-center gap-2">

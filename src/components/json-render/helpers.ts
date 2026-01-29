@@ -269,3 +269,55 @@ export function applyH1FromCssVars(style: Record<string, any> | undefined, cssVa
   }
   return Object.keys(out).length ? out : undefined;
 }
+
+function _applyTextFrom(css: Record<string, any>, keys: { color: string; weight: string; size: string; font: string; letter: string; padding: string }, out: Record<string, any>) {
+  if (css[keys.color]) out.color = css[keys.color];
+  if (css[keys.weight]) out.fontWeight = (isNaN(Number(css[keys.weight])) ? css[keys.weight] : Number(css[keys.weight]));
+  if (css[keys.size]) {
+    const sz = css[keys.size];
+    if (typeof sz === 'number') out.fontSize = `${sz}px`;
+    else if (/^\d+(\.\d+)?$/.test(String(sz))) out.fontSize = `${Number(sz)}px`;
+    else out.fontSize = sz;
+  }
+  if (css[keys.font]) out.fontFamily = css[keys.font];
+  if (css[keys.letter]) {
+    const ls = css[keys.letter];
+    if (typeof ls === 'number') out.letterSpacing = `${ls}em`;
+    else if (/^-?\d+(\.\d+)?$/.test(String(ls))) out.letterSpacing = `${Number(ls)}em`;
+    else out.letterSpacing = ls;
+  }
+  if (css[keys.padding]) {
+    const pd = css[keys.padding];
+    if (typeof pd === 'number') out.padding = `${pd}px`;
+    else if (/^\d+(\.\d+)?$/.test(String(pd))) out.padding = `${Number(pd)}px`;
+    else out.padding = pd;
+  }
+}
+
+export function applyKpiTitleFromCssVars(style: Record<string, any> | undefined, cssVars?: Record<string, string>) {
+  const out: Record<string, any> = { ...(style || {}) };
+  if (!cssVars) return Object.keys(out).length ? out : undefined;
+  _applyTextFrom(cssVars as any, {
+    color: 'kpiTitleColor',
+    weight: 'kpiTitleFontWeight',
+    size: 'kpiTitleFontSize',
+    font: 'kpiTitleFontFamily',
+    letter: 'kpiTitleLetterSpacing',
+    padding: 'kpiTitlePadding',
+  }, out);
+  return Object.keys(out).length ? out : undefined;
+}
+
+export function applyKpiValueFromCssVars(style: Record<string, any> | undefined, cssVars?: Record<string, string>) {
+  const out: Record<string, any> = { ...(style || {}) };
+  if (!cssVars) return Object.keys(out).length ? out : undefined;
+  _applyTextFrom(cssVars as any, {
+    color: 'kpiValueColor',
+    weight: 'kpiValueFontWeight',
+    size: 'kpiValueFontSize',
+    font: 'kpiValueFontFamily',
+    letter: 'kpiValueLetterSpacing',
+    padding: 'kpiValuePadding',
+  }, out);
+  return Object.keys(out).length ? out : undefined;
+}

@@ -7,7 +7,7 @@ import JsonRenderPieChart from "@/components/json-render/components/PieChart";
 import { ThemeProvider, useThemeOverrides } from "@/components/json-render/theme/ThemeContext";
 import { useDataValue, useData } from "@/components/json-render/context";
 import { deepMerge } from "@/stores/ui/json-render/utils";
-import { normalizeTitleStyle, normalizeContainerStyle, applyBorderFromCssVars, ensureSurfaceBackground, applyShadowFromCssVars, applyH1FromCssVars } from "@/components/json-render/helpers";
+import { normalizeTitleStyle, normalizeContainerStyle, applyBorderFromCssVars, ensureSurfaceBackground, applyShadowFromCssVars, applyH1FromCssVars, applyKpiTitleFromCssVars, applyKpiValueFromCssVars } from "@/components/json-render/helpers";
 
 type AnyRecord = Record<string, any>;
 
@@ -693,7 +693,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     };
 
     const card = (
-      <div className="p-3" style={containerStyle}>
+      <div style={containerStyle}>
         {title && <div className="mb-2" style={applyH1FromCssVars(undefined, theme.cssVars)}>{title}</div>}
         <div className={layout === 'horizontal' ? 'flex items-start gap-3 flex-wrap' : 'space-y-3'}>
           {(() => {
@@ -840,6 +840,22 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       if (mgr.h1.letterSpacing !== undefined) cssVars.h1LetterSpacing = String(mgr.h1.letterSpacing);
       if (mgr.h1.padding !== undefined) cssVars.h1Padding = String(mgr.h1.padding);
     }
+    if (mgr.kpi && typeof mgr.kpi === 'object') {
+      const t = mgr.kpi.title || {};
+      const v = mgr.kpi.value || {};
+      if (t.color) cssVars.kpiTitleColor = String(t.color);
+      if (t.weight !== undefined) cssVars.kpiTitleFontWeight = String(t.weight);
+      if (t.size !== undefined) cssVars.kpiTitleFontSize = String(t.size);
+      if (t.font) cssVars.kpiTitleFontFamily = String(t.font);
+      if (t.letterSpacing !== undefined) cssVars.kpiTitleLetterSpacing = String(t.letterSpacing);
+      if (t.padding !== undefined) cssVars.kpiTitlePadding = String(t.padding);
+      if (v.color) cssVars.kpiValueColor = String(v.color);
+      if (v.weight !== undefined) cssVars.kpiValueFontWeight = String(v.weight);
+      if (v.size !== undefined) cssVars.kpiValueFontSize = String(v.size);
+      if (v.font) cssVars.kpiValueFontFamily = String(v.font);
+      if (v.letterSpacing !== undefined) cssVars.kpiValueLetterSpacing = String(v.letterSpacing);
+      if (v.padding !== undefined) cssVars.kpiValuePadding = String(v.padding);
+    }
     return (
       <ThemeProvider name={name} cssVars={cssVars}>
         {children}
@@ -891,8 +907,8 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     }, [JSON.stringify(dq), JSON.stringify((data as any)?.filters)]);
     const fmt = (p.format ?? 'number') as 'currency'|'percent'|'number';
     const unit = p.unit as string | undefined;
-    const titleStyle = normalizeTitleStyle(p.titleStyle);
-    const valueStyle = normalizeTitleStyle(p.valueStyle);
+    const titleStyle = applyKpiTitleFromCssVars(normalizeTitleStyle(p.titleStyle), theme.cssVars);
+    const valueStyle = applyKpiValueFromCssVars(normalizeTitleStyle(p.valueStyle), theme.cssVars);
     const containerStyle = ensureSurfaceBackground(applyShadowFromCssVars(applyBorderFromCssVars(normalizeContainerStyle(p.containerStyle, Boolean(p.borderless)), theme.cssVars), theme.cssVars), theme.cssVars);
     const valuePath = (p.valuePath as string | undefined) || undefined;
     const valueFromPath = valuePath ? useDataValue(valuePath, undefined) : undefined;
@@ -907,7 +923,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     }
     const displayValue = (dq && dq.model && dq.measure) ? serverValue : (valueFromPath ?? 0);
     return (
-      <div className="p-4" style={containerStyle}>
+      <div style={containerStyle}>
         <div className="mb-1" style={titleStyle}>{title}</div>
         <div className="text-2xl font-semibold" style={valueStyle}>{formatValue(displayValue, fmt)}{unit ? ` ${unit}` : ''}</div>
       </div>
