@@ -14,10 +14,10 @@ const COMPRAS_TEMPLATE_TEXT = JSON.stringify([
         { label: "Status", type: "dropdown", storePath: "filters.status", placeholder: "Todos", source: { type: "api", method: "POST", url: "/api/modulos/compras/query", valueField: "label", labelField: "label", params: { dataQuery: { model: "compras.compras", dimension: "status", measure: "COUNT()", orderBy: { field: "dimension", dir: "asc" }, limit: 100 } } }, actionOnChange: { type: "refresh_data" } }
       ] } },
       { type: "Div", props: { direction: "row", gap: 12, padding: 16, justify: "start", align: "start", childGrow: true }, children: [
-        { type: "Kpi", props: { label: "Gasto", format: "currency", dataQuery: { model: "compras.compras", measure: "SUM(valor_total)", filters: { tenant_id: 1 } }, valueKey: "gasto_total", labelStyle: { fontWeight: 600, fontSize: 12, color: "#64748b" }, valueStyle: { fontWeight: 700, fontSize: 24, color: "#0f172a" } } },
-        { type: "Kpi", props: { label: "Fornecedores", format: "number", dataQuery: { model: "compras.compras", measure: "COUNT_DISTINCT(fornecedor_id)", filters: { tenant_id: 1 } }, valueKey: "count" } },
-        { type: "Kpi", props: { label: "Pedidos", format: "number", dataQuery: { model: "compras.compras", measure: "COUNT_DISTINCT(id)", filters: { tenant_id: 1 } }, valueKey: "count", valueStyle: { fontSize: 22 } } },
-        { type: "Kpi", props: { label: "Transações", format: "number", dataQuery: { model: "compras.recebimentos", measure: "COUNT()", filters: { tenant_id: 1 } }, valueKey: "count" } }
+        { type: "KPI", props: { title: "Gasto", format: "currency", dataQuery: { model: "compras.compras", measure: "SUM(valor_total)", filters: { tenant_id: 1 } }, titleStyle: { fontWeight: 600, fontSize: 12, color: "#64748b" }, valueStyle: { fontWeight: 700, fontSize: 24, color: "#0f172a" } } },
+        { type: "KPI", props: { title: "Fornecedores", format: "number", dataQuery: { model: "compras.compras", measure: "COUNT_DISTINCT(fornecedor_id)", filters: { tenant_id: 1 } } } },
+        { type: "KPI", props: { title: "Pedidos", format: "number", dataQuery: { model: "compras.compras", measure: "COUNT_DISTINCT(id)", filters: { tenant_id: 1 } }, valueStyle: { fontSize: 22 } } },
+        { type: "KPI", props: { title: "Transações", format: "number", dataQuery: { model: "compras.recebimentos", measure: "COUNT()", filters: { tenant_id: 1 } } } }
       ]},
 
       { type: "Div", props: { direction: "row", gap: 12, padding: 16, justify: "start", align: "start", childGrow: true }, children: [
