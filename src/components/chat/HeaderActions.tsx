@@ -3,8 +3,7 @@
 import React from 'react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Separator } from '@/components/ui/separator';
-import { Button } from '@/components/ui/button';
-import { Undo2, Redo2, ClipboardList, GitBranch, Upload, Triangle } from 'lucide-react';
+import { Undo2, Redo2, ClipboardList, GitBranch, Upload } from 'lucide-react';
 
 function IconButton({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -45,11 +44,7 @@ export default function HeaderActions() {
       <IconButton title="Upload">
         <Upload className="w-4 h-4" />
       </IconButton>
-      <Button className="ml-2 h-9 rounded-lg bg-black text-white hover:bg-black/90">
-        <Triangle className="w-4 h-4 mr-2" />
-        Deploy
-      </Button>
+      {/* Deploy button removido */}
     </div>
   );
 }
-
