@@ -60,7 +60,7 @@ export default function JsonRenderPreview({ chatId }: Props) {
 
   // Discover .jsonr files under /vercel/sandbox
   const refreshPaths = React.useCallback(async (): Promise<string[]> => {
-    if (!chatId) { setPathsError('chatId ausente'); return; }
+    if (!chatId) { setPathsError('chatId ausente'); return []; }
     setLoadingPaths(true); setPathsError(null);
     try {
       const collected: string[] = [];
