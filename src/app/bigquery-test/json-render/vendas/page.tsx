@@ -218,6 +218,7 @@ function ManagersPanel({ jsonText, setJsonText, setTree, disabled }: PanelProps)
   const borderWidthOptions = ['0','1','2','3'];
   const borderRadiusOptions = ['0','6','8','12'];
   const borderColorOptions = ['#e5e7eb','#333333','#2563eb','#10b981','#ef4444'];
+  const shadowOptions = ['none','sm','md','lg','xl','2xl'];
   const bgOptions = ['#ffffff','#f8fafc','#eff6ff','#000000','#0a0a0a'];
   const surfaceOptions = ['#ffffff','#f1f5f9','#eef2ff','#0b0b0b','#111214'];
   const colorPresets: Record<string, string[]> = {
@@ -319,6 +320,13 @@ function ManagersPanel({ jsonText, setJsonText, setTree, disabled }: PanelProps)
               onChange={(e) => updateTheme((th: any) => { th.props.managers = th.props.managers || {}; th.props.managers.border = th.props.managers.border || {}; const v = e.target.value; if (v) th.props.managers.border.color = v; else delete th.props.managers.border.color; })}>
               <option value="">(padrão)</option>
               {borderColorOptions.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
+          <div className="flex items-center gap-2 col-span-2">
+            <label className="text-xs text-gray-700 w-20">Sombra</label>
+            <select disabled={disabled} className="text-xs border border-gray-300 rounded px-2 py-1" value={current.managers?.border?.shadow || 'none'}
+              onChange={(e) => updateTheme((th: any) => { th.props.managers = th.props.managers || {}; th.props.managers.border = th.props.managers.border || {}; th.props.managers.border.shadow = e.target.value; })}>
+              {shadowOptions.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
           </div>
         </div>

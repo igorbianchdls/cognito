@@ -52,6 +52,7 @@ export const catalog = {
             width: z.union([z.number(), z.string()]).optional(),
             color: z.string().optional(),
             radius: z.union([z.number(), z.string()]).optional(),
+            shadow: z.enum(["none","sm","md","lg","xl","2xl"]).optional(),
           }).partial().optional(),
           color: z.object({
             scheme: z.array(z.string()).optional(),

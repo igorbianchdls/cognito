@@ -3,7 +3,7 @@
 import React from "react";
 import { useData } from "@/components/json-render/context";
 import { ResponsiveLine } from "@nivo/line";
-import { normalizeTitleStyle, normalizeContainerStyle, buildNivoTheme, applyBorderFromCssVars, ensureSurfaceBackground } from "@/components/json-render/helpers";
+import { normalizeTitleStyle, normalizeContainerStyle, buildNivoTheme, applyBorderFromCssVars, ensureSurfaceBackground, applyShadowFromCssVars } from "@/components/json-render/helpers";
 import { useThemeOverrides } from "@/components/json-render/theme/ThemeContext";
 
 type AnyRecord = Record<string, any>;
@@ -60,7 +60,7 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
   const nivo = (element?.props?.nivo as AnyRecord | undefined) || {};
   const titleStyle = normalizeTitleStyle((element?.props as AnyRecord)?.titleStyle);
   const borderless = Boolean((element?.props as AnyRecord)?.borderless);
-  const containerStyle = ensureSurfaceBackground(applyBorderFromCssVars(normalizeContainerStyle((element?.props as AnyRecord)?.containerStyle, borderless), theme.cssVars), theme.cssVars);
+  const containerStyle = ensureSurfaceBackground(applyShadowFromCssVars(applyBorderFromCssVars(normalizeContainerStyle((element?.props as AnyRecord)?.containerStyle, borderless), theme.cssVars), theme.cssVars), theme.cssVars);
 
   const seriesData = React.useMemo(() => {
     const src = Array.isArray(serverRows) ? serverRows : [];
@@ -108,9 +108,22 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
   const animate = Boolean(nivo?.animate ?? true);
   const motionConfig = (typeof nivo?.motionConfig === 'string' ? nivo.motionConfig : 'gentle') as any;
 
-  const nivoTheme = buildNivoTheme(nivo?.theme);
+  let nivoTheme = buildNivoTheme(nivo?.theme);
+  const managerFont = (theme.cssVars || {} as any).fontFamily as string | undefined;
+  if (managerFont) {
+    const t: any = { ...(nivoTheme || {}) };
+    t.fontFamily = managerFont;
+    t.axis = t.axis || {};
+    t.axis.ticks = t.axis.ticks || {};
+    t.axis.ticks.text = { ...(t.axis.ticks.text || {}), fontFamily: managerFont };
+    t.axis.legend = t.axis.legend || {};
+    t.axis.legend.text = { ...(t.axis.legend.text || {}), fontFamily: managerFont };
+    t.labels = t.labels || {};
+    t.labels.text = { ...(t.labels.text || {}), fontFamily: managerFont };
+    nivoTheme = t;
+  }
   return (
-    <div className="rounded-lg border p-0 shadow-sm" style={containerStyle}>
+    <div className="p-0" style={containerStyle}>
       {title && <div className="text-sm font-medium text-gray-900 mb-2" style={titleStyle}>{title}</div>}
       <div style={{ height }}>
         <ResponsiveLine

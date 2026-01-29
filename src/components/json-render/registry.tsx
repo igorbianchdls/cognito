@@ -37,14 +37,14 @@ const defaultDiv = {
 
 const defaultKpi = {
   format: 'number' as 'currency'|'percent'|'number',
-  labelStyle: { fontFamily: 'Barlow', fontWeight: 600, fontSize: 12, color: '#64748b', textTransform: 'none', textAlign: 'left' },
-  valueStyle: { fontFamily: 'Barlow', fontWeight: 700, fontSize: 22, color: '#0f172a', textTransform: 'none', textAlign: 'left' },
+  labelStyle: { fontWeight: 600, fontSize: 12, color: '#64748b', textTransform: 'none', textAlign: 'left' },
+  valueStyle: { fontWeight: 700, fontSize: 22, color: '#0f172a', textTransform: 'none', textAlign: 'left' },
 } as const;
 
 const defaultKPI = {
   format: 'number' as 'currency'|'percent'|'number',
-  titleStyle: { fontFamily: 'Barlow', fontWeight: 600, fontSize: 12, color: '#64748b', textTransform: 'none', textAlign: 'left' },
-  valueStyle: { fontFamily: 'Barlow', fontWeight: 700, fontSize: 24, color: '#0f172a', textTransform: 'none', textAlign: 'left' },
+  titleStyle: { fontWeight: 600, fontSize: 12, color: '#64748b', textTransform: 'none', textAlign: 'left' },
+  valueStyle: { fontWeight: 700, fontSize: 24, color: '#0f172a', textTransform: 'none', textAlign: 'left' },
   containerStyle: { borderColor: '#e5e7eb', borderWidth: 1, borderStyle: 'solid', borderRadius: 8, padding: 12 },
   borderless: false,
 } as const;
@@ -141,7 +141,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     };
     const style = applyBorderFromCssVars(styleBase as any, theme.cssVars) as React.CSSProperties;
     return (
-      <div className="rounded-lg shadow-sm" style={style}>
+      <div style={style}>
         {title && <h3 className="text-base font-semibold text-gray-900 mb-2" style={titleStyle}>{title}</h3>}
         <div className="space-y-2">{children}</div>
       </div>
@@ -382,7 +382,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
                 {opts.map((o) => {
                   const selected = isMulti ? (current as any[]).includes(o.value) : current === o.value;
                   const tileCfg = (((theme as any).components?.Slicer as any)?.tile) || {};
-                  const base = String(tileCfg.baseClass || 'text-xs font-medium border rounded-md min-w-[110px] h-9 px-3 transition-all focus:outline-none focus:ring-2 focus:ring-sky-500 active:scale-[0.98] shadow-sm');
+                      const base = String(tileCfg.baseClass || 'text-xs font-medium rounded-md min-w-[110px] h-9 px-3 transition-all focus:outline-none focus:ring-2 focus:ring-sky-500 active:scale-[0.98]');
                   const selectedClass = String(tileCfg.selectedClass || 'bg-sky-600 text-white border-sky-600 hover:bg-sky-700');
                   const unselectedClass = String(tileCfg.unselectedClass || 'bg-slate-100 text-slate-800 border-slate-300 hover:bg-slate-200');
                   const cls = selected ? selectedClass : unselectedClass;
@@ -628,7 +628,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     const valueStyle = normalizeTitleStyle(p.valueStyle);
     const containerStyle = ensureSurfaceBackground(applyBorderFromCssVars(normalizeContainerStyle(p.containerStyle, Boolean(p.borderless)), theme.cssVars), theme.cssVars);
     return (
-      <div className="rounded-lg border p-4 shadow-sm" style={containerStyle}>
+      <div className="p-4" style={containerStyle}>
         <div className="mb-1" style={labelStyle}>{label}</div>
         <div className="flex items-end gap-2">
           <div className="text-2xl font-semibold text-gray-900" style={valueStyle}>{formatValue(value, fmt)}{unit ? ` ${unit}` : ''}</div>
@@ -765,7 +765,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     };
 
     const card = (
-      <div className="rounded-lg border p-3 shadow-sm" style={containerStyle}>
+      <div className="p-3" style={containerStyle}>
         {title && <div className="text-sm font-medium text-gray-900 mb-2">{title}</div>}
         <div className={layout === 'horizontal' ? 'flex items-start gap-3 flex-wrap' : 'space-y-3'}>
           {(() => {
@@ -792,7 +792,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
                     {opts.map((o) => {
                       const selected = isMulti ? (Array.isArray(stored) && stored.includes(o.value)) : (stored === o.value);
                       const tileCfgCard = ((((theme as any).components?.SlicerCard as any)?.tile) || (((theme as any).components?.Slicer as any)?.tile) || {});
-                      const base = String(tileCfgCard.baseClass || 'text-xs font-medium border rounded-md min-w-[110px] h-9 px-3 transition-all focus:outline-none focus:ring-2 focus:ring-sky-500 active:scale-[0.98] shadow-sm');
+                      const base = String(tileCfgCard.baseClass || 'text-xs font-medium rounded-md min-w-[110px] h-9 px-3 transition-all focus:outline-none focus:ring-2 focus:ring-sky-500 active:scale-[0.98]');
                       const selectedClass = String(tileCfgCard.selectedClass || 'bg-sky-600 text-white border-sky-600 hover:bg-sky-700');
                       const unselectedClass = String(tileCfgCard.unselectedClass || 'bg-slate-100 text-slate-800 border-slate-300 hover:bg-slate-200');
                       const cls = selected ? selectedClass : unselectedClass;
@@ -903,6 +903,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     if (mgr.color && Array.isArray(mgr.color.scheme)) cssVars.chartColorScheme = JSON.stringify(mgr.color.scheme);
     if (typeof mgr.background === 'string' && mgr.background) cssVars.bg = mgr.background;
     if (typeof mgr.surface === 'string' && mgr.surface) cssVars.surfaceBg = mgr.surface;
+    if (mgr.border && typeof mgr.border === 'object' && mgr.border.shadow) cssVars.containerShadow = String(mgr.border.shadow);
     return (
       <ThemeProvider name={name} cssVars={cssVars}>
         {children}
