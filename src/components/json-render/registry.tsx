@@ -8,8 +8,7 @@ import { ThemeProvider, useThemeOverrides } from "@/components/json-render/theme
 import { useDataValue, useData } from "@/components/json-render/context";
 import { useStore } from "@nanostores/react";
 import { deepMerge } from "@/stores/ui/json-render/utils";
-import { $kpiDefaults } from "@/stores/ui/json-render/kpiStore";
-import { $KPIDefaults } from "@/stores/ui/json-render/KPIStore";
+import { $kpiDefaults, $KPIDefaults } from "@/stores/ui/json-render/kpiStore";
 import { normalizeTitleStyle, normalizeContainerStyle } from "@/components/json-render/helpers";
 import { $barChartDefaults } from "@/stores/ui/json-render/barChartStore";
 import { $lineChartDefaults } from "@/stores/ui/json-render/lineChartStore";

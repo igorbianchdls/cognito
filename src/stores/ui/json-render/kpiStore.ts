@@ -13,6 +13,43 @@ export type TitleStyle = {
   textAlign?: 'left'|'center'|'right';
 };
 
+// Old Kpi component defaults (label/value only)
+export type KpiDefaults = {
+  format: 'currency'|'percent'|'number';
+  unit?: string;
+  trend?: 'auto'|'up'|'down'|'flat';
+  labelStyle?: TitleStyle;
+  valueStyle?: TitleStyle;
+};
+
+export const $kpiDefaults = atom<KpiDefaults>({
+  format: 'number',
+  trend: 'auto',
+  labelStyle: {
+    fontFamily: 'Barlow',
+    fontWeight: 600,
+    fontSize: 12,
+    color: '#64748b',
+    textTransform: 'none',
+    textAlign: 'left',
+  },
+  valueStyle: {
+    fontFamily: 'Barlow',
+    fontWeight: 700,
+    fontSize: 22,
+    color: '#0f172a',
+    textTransform: 'none',
+    textAlign: 'left',
+  }
+});
+
+export const kpiDefaultsActions = {
+  set(partial: Partial<KpiDefaults>) {
+    updateAtomDeep($kpiDefaults as any, partial as any);
+  }
+};
+
+// New KPI component defaults (with container)
 export type ContainerStyle = {
   backgroundColor?: string;
   borderColor?: string;
@@ -67,4 +104,3 @@ export const KPIDefaultsActions = {
     updateAtomDeep($KPIDefaults as any, partial as any);
   }
 };
-
