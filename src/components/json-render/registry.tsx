@@ -6,17 +6,72 @@ import JsonRenderLineChart from "@/components/json-render/components/LineChart";
 import JsonRenderPieChart from "@/components/json-render/components/PieChart";
 import { ThemeProvider, useThemeOverrides } from "@/components/json-render/theme/ThemeContext";
 import { useDataValue, useData } from "@/components/json-render/context";
-import { useStore } from "@nanostores/react";
 import { deepMerge } from "@/stores/ui/json-render/utils";
-import { $kpiDefaults, $KPIDefaults } from "@/stores/ui/json-render/kpiStore";
 import { normalizeTitleStyle, normalizeContainerStyle } from "@/components/json-render/helpers";
-import { $barChartDefaults } from "@/stores/ui/json-render/barChartStore";
-import { $lineChartDefaults } from "@/stores/ui/json-render/lineChartStore";
-import { $pieChartDefaults } from "@/stores/ui/json-render/pieChartStore";
-import { $headerDefaults } from "@/stores/ui/json-render/headerStore";
-import { $divDefaults } from "@/stores/ui/json-render/divStore";
 
 type AnyRecord = Record<string, any>;
+
+// Defaults (local) — substituem stores globais
+const defaultHeader = {
+  align: 'left',
+  backgroundColor: 'transparent',
+  textColor: '#111827',
+  subtitleColor: '#6b7280',
+  padding: 12,
+  borderColor: '#e5e7eb',
+  borderWidth: 1,
+  borderRadius: 0,
+} as const;
+
+const defaultDiv = {
+  direction: 'column',
+  gap: 8,
+  wrap: false,
+  justify: 'start',
+  align: 'stretch',
+  padding: 0,
+  backgroundColor: 'transparent',
+  borderWidth: 0,
+  borderRadius: 0,
+} as const;
+
+const defaultKpi = {
+  format: 'number' as 'currency'|'percent'|'number',
+  labelStyle: { fontFamily: 'Barlow', fontWeight: 600, fontSize: 12, color: '#64748b', textTransform: 'none', textAlign: 'left' },
+  valueStyle: { fontFamily: 'Barlow', fontWeight: 700, fontSize: 22, color: '#0f172a', textTransform: 'none', textAlign: 'left' },
+} as const;
+
+const defaultKPI = {
+  format: 'number' as 'currency'|'percent'|'number',
+  titleStyle: { fontFamily: 'Barlow', fontWeight: 600, fontSize: 12, color: '#64748b', textTransform: 'none', textAlign: 'left' },
+  valueStyle: { fontFamily: 'Barlow', fontWeight: 700, fontSize: 24, color: '#0f172a', textTransform: 'none', textAlign: 'left' },
+  containerStyle: { backgroundColor: '#ffffff', borderColor: '#e5e7eb', borderWidth: 1, borderStyle: 'solid', borderRadius: 8, padding: 12 },
+  borderless: false,
+} as const;
+
+const defaultBarChart = {
+  height: 220,
+  format: 'number' as 'currency'|'percent'|'number',
+  titleStyle: { fontFamily: 'Barlow', fontWeight: 700, fontSize: 16, color: '#0f172a', letterSpacing: '0.02em', textTransform: 'uppercase', padding: 8, textAlign: 'left' },
+  colorScheme: ['#3b82f6'],
+  nivo: { layout: 'vertical', padding: 0.3, groupMode: 'grouped', gridY: true, axisBottom: { tickRotation: 0, legendOffset: 32 }, axisLeft: { legendOffset: 40 }, margin: { top: 10, right: 10, bottom: 40, left: 48 }, animate: true, motionConfig: 'gentle' },
+} as const;
+
+const defaultLineChart = {
+  height: 220,
+  format: 'number' as 'currency'|'percent'|'number',
+  titleStyle: { fontFamily: 'Barlow', fontWeight: 600, fontSize: 14, color: '#0f172a', letterSpacing: '0.01em', textTransform: 'none', padding: 6, textAlign: 'left' },
+  colorScheme: ['#3b82f6'],
+  nivo: { gridY: true, curve: 'linear', pointSize: 6, margin: { top: 10, right: 10, bottom: 40, left: 48 }, animate: true, motionConfig: 'gentle' },
+} as const;
+
+const defaultPieChart = {
+  height: 220,
+  format: 'number' as 'currency'|'percent'|'number',
+  titleStyle: { fontFamily: 'Barlow', fontWeight: 600, fontSize: 14, color: '#0f172a', letterSpacing: '0.01em', textTransform: 'none', padding: 6, textAlign: 'left' },
+  colorScheme: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'],
+  nivo: { innerRadius: 0, padAngle: 0.7, cornerRadius: 3, activeOuterRadiusOffset: 8, enableArcLabels: true, arcLabelsSkipAngle: 10, arcLabelsTextColor: '#333333', margin: { top: 10, right: 10, bottom: 10, left: 10 }, animate: true, motionConfig: 'gentle' },
+} as const;
 
 function formatValue(val: any, fmt: "currency" | "percent" | "number"): string {
   const n = Number(val ?? 0);
@@ -93,8 +148,8 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
   },
 
   Header: ({ element, children, onAction }) => {
-    const defs = useStore($headerDefaults);
-    const p = deepMerge(defs as any, (element?.props || {}) as any) as AnyRecord;
+    const theme = useThemeOverrides();
+    const p = deepMerge(deepMerge(defaultHeader as any, (theme.components?.Header || {}) as any), (element?.props || {}) as any) as AnyRecord;
     const align = (p.align ?? 'left') as 'left'|'center'|'right';
     const hasBorder = [p.borderWidth, p.borderTopWidth, p.borderRightWidth, p.borderBottomWidth, p.borderLeftWidth]
       .some((w: any) => typeof w === 'number' && w > 0);
@@ -325,10 +380,11 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
               <div className="flex items-center gap-2 flex-wrap">
                 {opts.map((o) => {
                   const selected = isMulti ? (current as any[]).includes(o.value) : current === o.value;
-                  const base = 'text-xs font-medium border rounded-md min-w-[110px] h-9 px-3 transition-all focus:outline-none focus:ring-2 focus:ring-sky-500 active:scale-[0.98] shadow-sm';
-                  const cls = selected
-                    ? 'bg-sky-600 text-white border-sky-600 hover:bg-sky-700'
-                    : 'bg-slate-100 text-slate-800 border-slate-300 hover:bg-slate-200';
+                  const tileCfg = (((theme as any).components?.Slicer as any)?.tile) || {};
+                  const base = String(tileCfg.baseClass || 'text-xs font-medium border rounded-md min-w-[110px] h-9 px-3 transition-all focus:outline-none focus:ring-2 focus:ring-sky-500 active:scale-[0.98] shadow-sm');
+                  const selectedClass = String(tileCfg.selectedClass || 'bg-sky-600 text-white border-sky-600 hover:bg-sky-700');
+                  const unselectedClass = String(tileCfg.unselectedClass || 'bg-slate-100 text-slate-800 border-slate-300 hover:bg-slate-200');
+                  const cls = selected ? selectedClass : unselectedClass;
                   return (
                     <button
                       key={String(o.value)}
@@ -451,8 +507,8 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
   },
 
   Div: ({ element, children }) => {
-    const defs = useStore($divDefaults);
-    const p = deepMerge(defs as any, (element?.props || {}) as any) as AnyRecord;
+    const theme = useThemeOverrides();
+    const p = deepMerge(deepMerge(defaultDiv as any, (theme.components?.Div || {}) as any), (element?.props || {}) as any) as AnyRecord;
     const style: React.CSSProperties = {
       display: 'flex',
       flexDirection: (p.direction ?? 'column') as any,
@@ -516,8 +572,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
 
   Kpi: ({ element }) => {
     const theme = useThemeOverrides();
-    const defs = useStore($kpiDefaults);
-    const p = deepMerge(deepMerge(defs as any, (theme.components?.Kpi || {}) as any), (element?.props || {}) as any);
+    const p = deepMerge(deepMerge(defaultKpi as any, (theme.components?.Kpi || {}) as any), (element?.props || {}) as any);
     const label = p.label ?? '';
     const valuePath = p.valuePath ?? '';
     const valueKey = (p.valueKey ?? 'total') as string;
@@ -586,24 +641,22 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
 
   BarChart: ({ element }) => {
     const theme = useThemeOverrides();
-    const defs = useStore($barChartDefaults);
-    const merged = deepMerge(deepMerge(defs as any, (theme.components?.BarChart || {}) as any), (element?.props || {}) as any);
+    const merged = deepMerge(deepMerge(defaultBarChart as any, (theme.components?.BarChart || {}) as any), (element?.props || {}) as any);
     return <JsonRenderBarChart element={{ props: merged }} />;
   },
   LineChart: ({ element }) => {
     const theme = useThemeOverrides();
-    const defs = useStore($lineChartDefaults);
-    const merged = deepMerge(deepMerge(defs as any, (theme.components?.LineChart || {}) as any), (element?.props || {}) as any);
+    const merged = deepMerge(deepMerge(defaultLineChart as any, (theme.components?.LineChart || {}) as any), (element?.props || {}) as any);
     return <JsonRenderLineChart element={{ props: merged }} />;
   },
   PieChart: ({ element }) => {
     const theme = useThemeOverrides();
-    const defs = useStore($pieChartDefaults);
-    const merged = deepMerge(deepMerge(defs as any, (theme.components?.PieChart || {}) as any), (element?.props || {}) as any);
+    const merged = deepMerge(deepMerge(defaultPieChart as any, (theme.components?.PieChart || {}) as any), (element?.props || {}) as any);
     return <JsonRenderPieChart element={{ props: merged }} />;
   },
 
   SlicerCard: ({ element, onAction }) => {
+    const theme = useThemeOverrides();
     const p = (element?.props || {}) as AnyRecord;
     const title = p.title as string | undefined;
     const borderless = Boolean(p.borderless);
@@ -734,11 +787,14 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
               return (
                 <div className={layout === 'horizontal' ? 'flex items-center gap-2' : 'space-y-1'} style={{ width }}>
                   {lbl && <div className="text-xs text-gray-600">{lbl}</div>}
-              <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-2">
                     {opts.map((o) => {
                       const selected = isMulti ? (Array.isArray(stored) && stored.includes(o.value)) : (stored === o.value);
-                      const base = 'text-xs font-medium border rounded-md min-w-[110px] h-9 px-3 transition-all focus:outline-none focus:ring-2 focus:ring-sky-500 active:scale-[0.98] shadow-sm';
-                      const cls = selected ? 'bg-sky-600 text-white border-sky-600 hover:bg-sky-700' : 'bg-slate-100 text-slate-800 border-slate-300 hover:bg-slate-200';
+                      const tileCfgCard = ((((theme as any).components?.SlicerCard as any)?.tile) || (((theme as any).components?.Slicer as any)?.tile) || {});
+                      const base = String(tileCfgCard.baseClass || 'text-xs font-medium border rounded-md min-w-[110px] h-9 px-3 transition-all focus:outline-none focus:ring-2 focus:ring-sky-500 active:scale-[0.98] shadow-sm');
+                      const selectedClass = String(tileCfgCard.selectedClass || 'bg-sky-600 text-white border-sky-600 hover:bg-sky-700');
+                      const unselectedClass = String(tileCfgCard.unselectedClass || 'bg-slate-100 text-slate-800 border-slate-300 hover:bg-slate-200');
+                      const cls = selected ? selectedClass : unselectedClass;
                       return (
                         <button
                           key={String(o.value)}
@@ -841,9 +897,8 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     );
   },
   KPI: ({ element }) => {
-    const defs = useStore($KPIDefaults);
     const theme = useThemeOverrides();
-    const p = deepMerge(deepMerge(defs as any, (theme.components?.Kpi || {}) as any), (element?.props || {}) as any) as AnyRecord;
+    const p = deepMerge(deepMerge(defaultKPI as any, (theme.components?.Kpi || {}) as any), (element?.props || {}) as any) as AnyRecord;
     const title = p.title as string;
     const dq = p.dataQuery as AnyRecord;
     const valueKey = (p.valueKey ?? 'total') as string;

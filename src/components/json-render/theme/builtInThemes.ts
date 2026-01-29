@@ -7,6 +7,8 @@ export type ThemeOverrides = {
     LineChart?: Record<string, unknown>;
     PieChart?: Record<string, unknown>;
     Div?: Record<string, unknown>;
+    Slicer?: Record<string, unknown>;
+    SlicerCard?: Record<string, unknown>;
   };
   cssVars?: Record<string, string>;
 };
@@ -21,6 +23,8 @@ export const builtInThemes: Record<string, ThemeOverrides> = {
       BarChart: { colorScheme: ['#ffffff'], nivo: { gridY: true } },
       LineChart: { colorScheme: ['#ffffff'], nivo: { gridY: true } },
       PieChart: { colorScheme: ['#ffffff','#aaaaaa','#666666'] },
+      Slicer: { tile: { baseClass: 'text-xs font-medium border rounded-md min-w-[110px] h-9 px-3 transition-all focus:outline-none focus:ring-2 focus:ring-sky-500 active:scale-[0.98] shadow-sm', selectedClass: 'bg-white text-black border-white hover:bg-gray-50', unselectedClass: 'bg-black text-white border-gray-700 hover:bg-gray-900' } },
+      SlicerCard: { tile: { baseClass: 'text-xs font-medium border rounded-md min-w-[110px] h-9 px-3 transition-all focus:outline-none focus:ring-2 focus:ring-sky-500 active:scale-[0.98] shadow-sm', selectedClass: 'bg-white text-black border-white hover:bg-gray-50', unselectedClass: 'bg-black text-white border-gray-700 hover:bg-gray-900' } },
     },
     cssVars: { bg: '#000000', fg: '#ffffff' }
   },
@@ -33,6 +37,8 @@ export const builtInThemes: Record<string, ThemeOverrides> = {
       BarChart: { colorScheme: ['#3b82f6'], nivo: { gridY: true } },
       LineChart: { colorScheme: ['#3b82f6'], nivo: { gridY: true, curve: 'monotoneX' } },
       PieChart: { colorScheme: ['#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6'] },
+      Slicer: { tile: { baseClass: 'text-xs font-medium border rounded-md min-w-[110px] h-9 px-3 transition-all focus:outline-none focus:ring-2 focus:ring-sky-500 active:scale-[0.98] shadow-sm', selectedClass: 'bg-sky-600 text-white border-sky-600 hover:bg-sky-700', unselectedClass: 'bg-slate-100 text-slate-800 border-slate-300 hover:bg-slate-200' } },
+      SlicerCard: { tile: { baseClass: 'text-xs font-medium border rounded-md min-w-[110px] h-9 px-3 transition-all focus:outline-none focus:ring-2 focus:ring-sky-500 active:scale-[0.98] shadow-sm', selectedClass: 'bg-sky-600 text-white border-sky-600 hover:bg-sky-700', unselectedClass: 'bg-slate-100 text-slate-800 border-slate-300 hover:bg-slate-200' } },
     },
     cssVars: { bg: '#ffffff', fg: '#111827' }
   },
@@ -45,6 +51,8 @@ export const builtInThemes: Record<string, ThemeOverrides> = {
       BarChart: { colorScheme: ['#2563eb'], nivo: { gridY: true } },
       LineChart: { colorScheme: ['#2563eb'], nivo: { gridY: true, curve: 'monotoneX' } },
       PieChart: { colorScheme: ['#2563eb','#10b981','#60a5fa','#0ea5e9','#06b6d4'] },
+      Slicer: { tile: { baseClass: 'text-xs font-medium border rounded-md min-w-[110px] h-9 px-3 transition-all focus:outline-none focus:ring-2 focus:ring-sky-500 active:scale-[0.98] shadow-sm', selectedClass: 'bg-white text-blue-900 border-white hover:bg-blue-50', unselectedClass: 'bg-blue-100 text-blue-900 border-blue-200 hover:bg-blue-200' } },
+      SlicerCard: { tile: { baseClass: 'text-xs font-medium border rounded-md min-w-[110px] h-9 px-3 transition-all focus:outline-none focus:ring-2 focus:ring-sky-500 active:scale-[0.98] shadow-sm', selectedClass: 'bg-white text-blue-900 border-white hover:bg-blue-50', unselectedClass: 'bg-blue-100 text-blue-900 border-blue-200 hover:bg-blue-200' } },
     },
     cssVars: { bg: '#eff6ff', fg: '#0f172a' }
   },
