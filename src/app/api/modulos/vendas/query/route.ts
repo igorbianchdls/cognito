@@ -75,19 +75,23 @@ export async function POST(req: NextRequest) {
       if (typeof filters.de === 'string') { whereParts.push(`p.data_pedido >= $${params.length + 1}`); params.push(filters.de) }
       if (typeof filters.ate === 'string') { whereParts.push(`p.data_pedido <= $${params.length + 1}`); params.push(filters.ate) }
       if (typeof (filters as any).status === 'string') { whereParts.push(`LOWER(p.status) = LOWER($${params.length + 1})`); params.push((filters as any).status) }
+      // numeric range (pedido total) for KPI mode as well
+      const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v))
+      if (num((filters as any).valor_min)) { whereParts.push(`p.valor_total >= $${params.length + 1}`); params.push((filters as any).valor_min as number) }
+      if (num((filters as any).valor_max)) { whereParts.push(`p.valor_total <= $${params.length + 1}`); params.push((filters as any).valor_max as number) }
       if (Array.isArray((filters as any).status) && (filters as any).status.length) {
         const vals = (filters as any).status as unknown[];
-        const placeholders = vals.map(() => `$${params.length + 1}`).join(',');
-        whereParts.push(`LOWER(p.status) IN (${placeholders})`);
-        params.push(...vals.map((v) => typeof v === 'string' ? v.toLowerCase() : String(v).toLowerCase()));
+        const ph: string[] = [];
+        for (const v of vals) { ph.push(`$${params.length + 1}`); params.push(typeof v === 'string' ? v.toLowerCase() : String(v).toLowerCase()); }
+        whereParts.push(`LOWER(p.status) IN (${ph.join(',')})`);
       }
       const addInFilter = (col: string, val: unknown) => {
         if (Array.isArray(val)) {
           const arr = val as unknown[];
           if (!arr.length) return;
-          const placeholders = arr.map(() => `$${params.length + 1}`).join(',');
-          whereParts.push(`${col} IN (${placeholders})`);
-          params.push(...arr);
+          const ph: string[] = [];
+          for (const v of arr) { ph.push(`$${params.length + 1}`); params.push(v as any); }
+          whereParts.push(`${col} IN (${ph.join(',')})`);
         } else if (typeof val === 'number' || typeof val === 'string') {
           whereParts.push(`${col} = $${params.length + 1}`);
           params.push(val);
