@@ -85,12 +85,43 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
     ? managedScheme
     : (Array.isArray(colorScheme) ? colorScheme : (typeof colorScheme === 'string' ? [colorScheme] : ['#3b82f6']));
 
-  const margin = {
+  // Base margins
+  const baseMargin = {
     top: Number(nivo?.margin?.top ?? 10),
     right: Number(nivo?.margin?.right ?? 10),
     bottom: Number(nivo?.margin?.bottom ?? 40),
     left: Number(nivo?.margin?.left ?? 48),
-  };
+  } as const;
+  // Auto‑margin to avoid clipping long axis labels
+  const autoMargin = (nivo as AnyRecord)?.autoMargin !== false;
+  const maxLabelClamp = typeof (nivo as AnyRecord)?.maxLabelWidth === 'number' ? (nivo as AnyRecord).maxLabelWidth : 220;
+  const axisFontSize = typeof (nivo as AnyRecord)?.theme?.fontSize === 'number' ? (nivo as AnyRecord).theme.fontSize : 12;
+  const canvasMeasure = React.useMemo(() => {
+    if (typeof document === 'undefined') return null as HTMLCanvasElement | null;
+    const c = document.createElement('canvas');
+    return c;
+  }, []);
+  function measureText(text: string): number {
+    if (!canvasMeasure) return Math.max(0, text?.length || 0) * (axisFontSize * 0.6);
+    const ctx = canvasMeasure.getContext('2d');
+    if (!ctx) return Math.max(0, text?.length || 0) * (axisFontSize * 0.6);
+    const firstFamily = (managerFont || 'Inter, sans-serif').split(',')[0];
+    ctx.font = `${axisFontSize}px ${firstFamily}`;
+    return ctx.measureText(String(text || '')).width;
+  }
+  const computedMargin = React.useMemo(() => {
+    const m = { ...baseMargin } as { top: number; right: number; bottom: number; left: number };
+    if (!autoMargin) return m;
+    const labels = barData.map(d => d.label || '');
+    const maxW = labels.length ? Math.max(...labels.map(measureText)) : 0;
+    const pad = 12;
+    if ((layout as any) === 'horizontal') {
+      m.left = Math.max(m.left, Math.min(maxLabelClamp, Math.ceil(maxW) + pad));
+    } else {
+      m.bottom = Math.max(m.bottom, Math.min(maxLabelClamp, Math.ceil(maxW) + pad));
+    }
+    return m;
+  }, [baseMargin.top, baseMargin.right, baseMargin.bottom, baseMargin.left, autoMargin, barData.map(d => d.label).join('|'), layout, axisFontSize, managerFont]);
 
   const axisBottom = {
     tickSize: 5,
@@ -136,14 +167,14 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
     nivoTheme = t;
   }
   return (
-    <div style={containerStyle}>
+    <div style={{ ...containerStyle, overflow: 'visible' }}>
       {title && <div className="mb-2" style={titleStyle}>{title}</div>}
       <div style={{ height }}>
         <ResponsiveBar
           data={barData}
           keys={["value"]}
           indexBy="label"
-          margin={margin}
+          margin={computedMargin}
           padding={padding}
           groupMode={groupMode}
           layout={layout as any}

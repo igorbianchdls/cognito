@@ -77,12 +77,38 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
     ? managedScheme
     : (Array.isArray(colorScheme) ? colorScheme : (typeof colorScheme === 'string' ? [colorScheme] : ['#3b82f6']));
 
-  const margin = {
+  const baseMargin = {
     top: Number(nivo?.margin?.top ?? 10),
     right: Number(nivo?.margin?.right ?? 10),
     bottom: Number(nivo?.margin?.bottom ?? 40),
     left: Number(nivo?.margin?.left ?? 48),
-  };
+  } as const;
+  const autoMargin = (nivo as AnyRecord)?.autoMargin !== false;
+  const maxLabelClamp = typeof (nivo as AnyRecord)?.maxLabelWidth === 'number' ? (nivo as AnyRecord).maxLabelWidth : 220;
+  const axisFontSize = typeof (nivo as AnyRecord)?.theme?.fontSize === 'number' ? (nivo as AnyRecord).theme.fontSize : 12;
+  const canvasMeasure = React.useMemo(() => {
+    if (typeof document === 'undefined') return null as HTMLCanvasElement | null;
+    const c = document.createElement('canvas');
+    return c;
+  }, []);
+  function measureText(text: string): number {
+    if (!canvasMeasure) return Math.max(0, text?.length || 0) * (axisFontSize * 0.6);
+    const ctx = canvasMeasure.getContext('2d');
+    if (!ctx) return Math.max(0, text?.length || 0) * (axisFontSize * 0.6);
+    const firstFamily = (managerFont || 'Inter, sans-serif').split(',')[0];
+    ctx.font = `${axisFontSize}px ${firstFamily}`;
+    return ctx.measureText(String(text || '')).width;
+  }
+  const computedMargin = React.useMemo(() => {
+    const m = { ...baseMargin } as { top: number; right: number; bottom: number; left: number };
+    if (!autoMargin) return m;
+    // Line x-axis labels are seriesData[0].data[].x
+    const labels = (seriesData[0]?.data || []).map((p: any) => String(p.x ?? ''));
+    const maxW = labels.length ? Math.max(...labels.map(measureText)) : 0;
+    const pad = 12;
+    m.bottom = Math.max(m.bottom, Math.min(maxLabelClamp, Math.ceil(maxW) + pad));
+    return m;
+  }, [baseMargin.top, baseMargin.right, baseMargin.bottom, baseMargin.left, autoMargin, JSON.stringify(seriesData[0]?.data || []), axisFontSize, managerFont]);
 
   const axisBottom = {
     tickSize: 5,
@@ -130,7 +156,7 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
       <div style={{ height }}>
         <ResponsiveLine
           data={seriesData}
-          margin={margin}
+          margin={computedMargin}
           xScale={{ type: 'point' }}
           yScale={{ type: 'linear', stacked: false, min: 'auto', max: 'auto' }}
           colors={colors as any}
