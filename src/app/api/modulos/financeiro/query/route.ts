@@ -147,25 +147,37 @@ export async function POST(req: NextRequest) {
     if (typeof f.status === 'string') { whereParts.push(`LOWER(${alias}.status) = LOWER($${params.length + 1})`); params.push(f.status) }
     // Common id filters
     const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v))
+    const addInFilter = (col: string, val: unknown) => {
+      if (Array.isArray(val)) {
+        const arr = val as unknown[];
+        if (!arr.length) return;
+        const placeholders = arr.map(() => `$${params.length + 1}`).join(',');
+        whereParts.push(`${col} IN (${placeholders})`);
+        params.push(...arr);
+      } else if (num(val)) {
+        whereParts.push(`${col} = $${params.length + 1}`);
+        params.push(val as number);
+      }
+    };
     if (alias === 'cp') {
-      if (num(f.fornecedor_id)) { whereParts.push(`cp.fornecedor_id = $${params.length + 1}`); params.push(f.fornecedor_id as number) }
-      if (num(f.categoria_despesa_id)) { whereParts.push(`cp.categoria_despesa_id = $${params.length + 1}`); params.push(f.categoria_despesa_id as number) }
-      if (num(f.centro_custo_id)) { whereParts.push(`cp.centro_custo_id = $${params.length + 1}`); params.push(f.centro_custo_id as number) }
-      if (num(f.departamento_id)) { whereParts.push(`cp.departamento_id = $${params.length + 1}`); params.push(f.departamento_id as number) }
-      if (num(f.unidade_negocio_id)) { whereParts.push(`cp.unidade_negocio_id = $${params.length + 1}`); params.push(f.unidade_negocio_id as number) }
-      if (num(f.filial_id)) { whereParts.push(`cp.filial_id = $${params.length + 1}`); params.push(f.filial_id as number) }
-      if (num(f.projeto_id)) { whereParts.push(`cp.projeto_id = $${params.length + 1}`); params.push(f.projeto_id as number) }
+      addInFilter('cp.fornecedor_id', f.fornecedor_id);
+      addInFilter('cp.categoria_despesa_id', f.categoria_despesa_id);
+      addInFilter('cp.centro_custo_id', f.centro_custo_id);
+      addInFilter('cp.departamento_id', f.departamento_id);
+      addInFilter('cp.unidade_negocio_id', f.unidade_negocio_id);
+      addInFilter('cp.filial_id', f.filial_id);
+      addInFilter('cp.projeto_id', f.projeto_id);
       if (typeof f.numero_documento === 'string' && f.numero_documento.trim()) { whereParts.push(`cp.numero_documento ILIKE '%' || $${params.length + 1} || '%'`); params.push(f.numero_documento) }
       if (num(f.valor_min)) { whereParts.push(`cp.valor_liquido >= $${params.length + 1}`); params.push(f.valor_min as number) }
       if (num(f.valor_max)) { whereParts.push(`cp.valor_liquido <= $${params.length + 1}`); params.push(f.valor_max as number) }
     } else {
-      if (num(f.cliente_id)) { whereParts.push(`cr.cliente_id = $${params.length + 1}`); params.push(f.cliente_id as number) }
-      if (num(f.categoria_receita_id)) { whereParts.push(`cr.categoria_receita_id = $${params.length + 1}`); params.push(f.categoria_receita_id as number) }
-      if (num(f.centro_lucro_id)) { whereParts.push(`cr.centro_lucro_id = $${params.length + 1}`); params.push(f.centro_lucro_id as number) }
-      if (num(f.departamento_id)) { whereParts.push(`cr.departamento_id = $${params.length + 1}`); params.push(f.departamento_id as number) }
-      if (num(f.unidade_negocio_id)) { whereParts.push(`cr.unidade_negocio_id = $${params.length + 1}`); params.push(f.unidade_negocio_id as number) }
-      if (num(f.filial_id)) { whereParts.push(`cr.filial_id = $${params.length + 1}`); params.push(f.filial_id as number) }
-      if (num(f.projeto_id)) { whereParts.push(`cr.projeto_id = $${params.length + 1}`); params.push(f.projeto_id as number) }
+      addInFilter('cr.cliente_id', f.cliente_id);
+      addInFilter('cr.categoria_receita_id', f.categoria_receita_id);
+      addInFilter('cr.centro_lucro_id', f.centro_lucro_id);
+      addInFilter('cr.departamento_id', f.departamento_id);
+      addInFilter('cr.unidade_negocio_id', f.unidade_negocio_id);
+      addInFilter('cr.filial_id', f.filial_id);
+      addInFilter('cr.projeto_id', f.projeto_id);
       if (typeof f.numero_documento === 'string' && f.numero_documento.trim()) { whereParts.push(`cr.numero_documento ILIKE '%' || $${params.length + 1} || '%'`); params.push(f.numero_documento) }
       if (num(f.valor_min)) { whereParts.push(`cr.valor_liquido >= $${params.length + 1}`); params.push(f.valor_min as number) }
       if (num(f.valor_max)) { whereParts.push(`cr.valor_liquido <= $${params.length + 1}`); params.push(f.valor_max as number) }

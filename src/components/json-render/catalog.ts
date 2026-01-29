@@ -86,29 +86,46 @@ export const catalog = {
           }).partial().optional(),
         }).partial().optional(),
         // Slicers (dropdown/list/multi)
-        slicers: z.array(z.object({
-          label: z.string().optional(),
-          storePath: z.string(),
-          type: z.enum(["dropdown","multi","list"]).default("dropdown"),
-          placeholder: z.string().optional(),
-          clearable: z.boolean().optional(),
-          width: z.union([z.number(), z.string()]).optional(),
-          source: z.union([
-            z.object({
-              type: z.literal('static'),
-              options: z.array(z.object({ value: z.union([z.number(), z.string()]), label: z.string() })).default([])
-            }).strict(),
-            z.object({
-              type: z.literal('api'),
-              url: z.string(),
-              method: z.enum(['GET','POST']).optional(),
-              valueField: z.string().optional(),
-              labelField: z.string().optional(),
-              params: z.record(z.any()).optional(),
-            }).strict()
-          ]).optional(),
-          actionOnChange: z.object({ type: z.string() }).partial().optional(),
-        }).strict()).optional(),
+        slicers: z.array(z.union([
+          z.object({
+            label: z.string().optional(),
+            storePath: z.string(),
+            type: z.enum(["dropdown","multi","list"]).default("dropdown"),
+            placeholder: z.string().optional(),
+            clearable: z.boolean().optional(),
+            width: z.union([z.number(), z.string()]).optional(),
+            source: z.union([
+              z.object({
+                type: z.literal('static'),
+                options: z.array(z.object({ value: z.union([z.number(), z.string()]), label: z.string() })).default([])
+              }).strict(),
+              z.object({
+                type: z.literal('api'),
+                url: z.string(),
+                method: z.enum(['GET','POST']).optional(),
+                valueField: z.string().optional(),
+                labelField: z.string().optional(),
+                params: z.record(z.any()).optional(),
+              }).strict()
+            ]).optional(),
+            actionOnChange: z.object({ type: z.string() }).partial().optional(),
+          }).strict(),
+          z.object({
+            label: z.string().optional(),
+            type: z.literal('range'),
+            storeMinPath: z.string(),
+            storeMaxPath: z.string(),
+            prefix: z.string().optional(),
+            suffix: z.string().optional(),
+            step: z.number().optional(),
+            decimals: z.number().optional(),
+            placeholderMin: z.string().optional(),
+            placeholderMax: z.string().optional(),
+            width: z.union([z.number(), z.string()]).optional(),
+            clearable: z.boolean().optional(),
+            actionOnChange: z.object({ type: z.string() }).partial().optional(),
+          }).strict()
+        ])).optional(),
       }).strict(),
       hasChildren: true,
     },

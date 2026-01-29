@@ -12,7 +12,8 @@ const SALES_TEMPLATE_TEXT = JSON.stringify([
     children: [
       { type: "Header", props: { title: "Dashboard de Vendas", subtitle: "Principais indicadores e cortes", align: "center", controlsPosition: "right", datePicker: { visible: true, mode: "range", position: "right", storePath: "filters.dateRange", actionOnChange: { type: "refresh_data" }, style: { padding: 6, fontFamily: "Barlow", fontSize: 12 } }, slicers: [
         { label: "Vendedor", type: "dropdown", storePath: "filters.vendedor_id", placeholder: "Todos", source: { type: "api", url: "/api/modulos/vendas/options?field=vendedor_id&limit=50" }, actionOnChange: { type: "refresh_data" } },
-        { label: "Canal", type: "multi", storePath: "filters.canal_venda_id", source: { type: "api", url: "/api/modulos/vendas/options?field=canal_venda_id&limit=50" }, actionOnChange: { type: "refresh_data" } }
+        { label: "Canal", type: "list", storePath: "filters.canal_venda_id", source: { type: "api", url: "/api/modulos/vendas/options?field=canal_venda_id&limit=50" }, actionOnChange: { type: "refresh_data" } },
+        { label: "Valor do Pedido", type: "range", prefix: "R$", storeMinPath: "filters.valor_min", storeMaxPath: "filters.valor_max", step: 1, actionOnChange: { type: "refresh_data" } }
       ] } },
       { type: "Div", props: { direction: "row", gap: 12, padding: 16, justify: "start", align: "start", childGrow: true }, children: [
         { type: "KPI", props: { title: "Vendas", format: "currency", dataQuery: { model: "vendas.pedidos", measure: "SUM(p.valor_total)", filters: { tenant_id: 1 } }, containerStyle: { borderWidth: 2, borderColor: "#0ea5e9", borderRadius: 12 }, titleStyle: { fontWeight: 600, fontSize: 12, color: "#64748b" }, valueStyle: { fontWeight: 700, fontSize: 24, color: "#0f172a" } } },

@@ -241,7 +241,64 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       const elems: React.ReactNode[] = [];
       if (picker) elems.push(picker);
       slicers.forEach((s, idx) => {
-        const sp = String(s?.storePath || '').trim();
+        // Numeric range slicer
+        if ((s as any)?.type === 'range') {
+          const r = s as AnyRecord;
+          const minPath = String(r.storeMinPath || '').trim();
+          const maxPath = String(r.storeMaxPath || '').trim();
+          if (!minPath || !maxPath) return;
+          const lbl = typeof r.label === 'string' ? r.label : undefined;
+          const step = typeof r.step === 'number' ? r.step : 1;
+          const prefix = typeof r.prefix === 'string' ? r.prefix : undefined;
+          const suffix = typeof r.suffix === 'string' ? r.suffix : undefined;
+          const phMin = typeof r.placeholderMin === 'string' ? r.placeholderMin : '';
+          const phMax = typeof r.placeholderMax === 'string' ? r.placeholderMax : '';
+          const width = r?.width;
+          const curMin = getValueByPath(minPath, undefined);
+          const curMax = getValueByPath(maxPath, undefined);
+          const parseNum = (v: string): number | undefined => {
+            if (v.trim() === '') return undefined;
+            const n = Number(v);
+            return Number.isFinite(n) ? n : undefined;
+          };
+          const onChangeMin = (val: string) => {
+            const nextVal = parseNum(val);
+            const next = setByPath(data, minPath, nextVal);
+            setData(next);
+            if (r?.actionOnChange && typeof r.actionOnChange === 'object') onAction?.(r.actionOnChange);
+          };
+          const onChangeMax = (val: string) => {
+            const nextVal = parseNum(val);
+            const next = setByPath(data, maxPath, nextVal);
+            setData(next);
+            if (r?.actionOnChange && typeof r.actionOnChange === 'object') onAction?.(r.actionOnChange);
+          };
+          const onClear = () => {
+            let next = setByPath(data, minPath, undefined);
+            next = setByPath(next, maxPath, undefined);
+            setData(next);
+            if (r?.actionOnChange && typeof r.actionOnChange === 'object') onAction?.(r.actionOnChange);
+          };
+          elems.push(
+            <div key={`slicer-${idx}`} className="flex items-center gap-2" style={{ width: styleVal(width) }}>
+              {lbl && <span className="text-xs text-gray-600">{lbl}:</span>}
+              {prefix && <span className="text-xs text-gray-500">{prefix}</span>}
+              <input type="number" step={step} placeholder={phMin} className="w-20 border border-gray-300 rounded px-2 py-1 text-xs"
+                value={curMin ?? ''}
+                onChange={(e) => onChangeMin(e.target.value)} />
+              <span className="text-xs text-gray-500">até</span>
+              <input type="number" step={step} placeholder={phMax} className="w-20 border border-gray-300 rounded px-2 py-1 text-xs"
+                value={curMax ?? ''}
+                onChange={(e) => onChangeMax(e.target.value)} />
+              {suffix && <span className="text-xs text-gray-500">{suffix}</span>}
+              {(r.clearable !== false) && (
+                <button type="button" onClick={onClear} className="text-[11px] text-blue-600 hover:underline">Limpar</button>
+              )}
+            </div>
+          );
+          return;
+        }
+        const sp = String((s as any)?.storePath || '').trim();
         if (!sp) return;
         const lbl = typeof s?.label === 'string' ? s.label : undefined;
         const type = (s?.type || 'dropdown') as 'dropdown'|'multi'|'list';
@@ -256,6 +313,9 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
         };
         if (type === 'list') {
           const arr = Array.isArray(storedVal) ? storedVal : [];
+          const onClear = () => {
+            onChangeValue([]);
+          };
           elems.push(
             <div key={`slicer-${idx}`} className="flex items-center gap-2" style={{ width: styleVal(width) }}>
               {lbl && <span className="text-xs text-gray-600">{lbl}:</span>}
@@ -270,11 +330,17 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
                   </label>
                 ))}
               </div>
+              {((s as any).clearable !== false) && (
+                <button type="button" onClick={onClear} className="text-[11px] text-blue-600 hover:underline">Limpar</button>
+              )}
             </div>
           );
         } else {
           const isMulti = type === 'multi';
           const val = isMulti ? (Array.isArray(storedVal) ? storedVal : []) : (storedVal ?? '');
+          const onClear = () => {
+            if (isMulti) onChangeValue([]); else onChangeValue(undefined);
+          };
           elems.push(
             <div key={`slicer-${idx}`} className="flex items-center gap-2" style={{ width: styleVal(width) }}>
               {lbl && <span className="text-xs text-gray-600">{lbl}:</span>}
@@ -297,6 +363,9 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
                   <option key={String(o.value)} value={String(o.value)}>{o.label}</option>
                 ))}
               </select>
+              {((s as any).clearable !== false) && (
+                <button type="button" onClick={onClear} className="text-[11px] text-blue-600 hover:underline">Limpar</button>
+              )}
             </div>
           );
         }

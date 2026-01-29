@@ -117,6 +117,28 @@ export async function POST(req: NextRequest) {
     if (typeof (filters as any).de === 'string') { whereParts.push(`${model==='compras.compras'?'c.data_emissao':'r.data_recebimento'} >= $${params.length + 1}`); params.push((filters as any).de) }
     if (typeof (filters as any).ate === 'string') { whereParts.push(`${model==='compras.compras'?'c.data_emissao':'r.data_recebimento'} <= $${params.length + 1}`); params.push((filters as any).ate) }
     if (typeof (filters as any).status === 'string') { const al = model==='compras.compras'?'c':'r'; whereParts.push(`LOWER(${al}.status) = LOWER($${params.length + 1})`); params.push((filters as any).status) }
+    // id filters and numeric range (only for compras.compras)
+    const addInFilter = (col: string, val: unknown) => {
+      if (Array.isArray(val)) {
+        const arr = val as unknown[];
+        if (!arr.length) return;
+        const placeholders = arr.map(() => `$${params.length + 1}`).join(',');
+        whereParts.push(`${col} IN (${placeholders})`);
+        params.push(...arr);
+      } else if (typeof val === 'number' || typeof val === 'string') {
+        whereParts.push(`${col} = $${params.length + 1}`);
+        params.push(val);
+      }
+    };
+    if (model === 'compras.compras') {
+      addInFilter('c.fornecedor_id', (filters as any).fornecedor_id);
+      addInFilter('c.filial_id', (filters as any).filial_id);
+      addInFilter('c.centro_custo_id', (filters as any).centro_custo_id);
+      addInFilter('c.categoria_despesa_id', (filters as any).categoria_despesa_id);
+      const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v));
+      if (num((filters as any).valor_min)) { whereParts.push(`c.valor_total >= $${params.length + 1}`); params.push((filters as any).valor_min as number) }
+      if (num((filters as any).valor_max)) { whereParts.push(`c.valor_total <= $${params.length + 1}`); params.push((filters as any).valor_max as number) }
+    }
     const whereSql = whereParts.length ? `WHERE ${whereParts.join(' AND ')}` : ''
 
     // Order by

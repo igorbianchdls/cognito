@@ -179,6 +179,10 @@ export async function POST(req: NextRequest) {
     if (typeof filters.de === 'string') { whereParts.push(`p.data_pedido >= $${params.length + 1}`); params.push(filters.de) }
     if (typeof filters.ate === 'string') { whereParts.push(`p.data_pedido <= $${params.length + 1}`); params.push(filters.ate) }
     if (typeof filters.status === 'string') { whereParts.push(`LOWER(p.status) = LOWER($${params.length + 1})`); params.push(filters.status) }
+    // numeric range on pedido total
+    const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v))
+    if (num((filters as any).valor_min)) { whereParts.push(`p.valor_total >= $${params.length + 1}`); params.push((filters as any).valor_min as number) }
+    if (num((filters as any).valor_max)) { whereParts.push(`p.valor_total <= $${params.length + 1}`); params.push((filters as any).valor_max as number) }
     if (Array.isArray((filters as any).status) && (filters as any).status.length) {
       const vals = (filters as any).status as unknown[];
       const placeholders = vals.map(() => `$${params.length + 1}`).join(',');
