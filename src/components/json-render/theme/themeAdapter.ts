@@ -29,6 +29,10 @@ const THEME_ALIASES: Record<string, ThemeName> = {
   navy: "cinza-escuro",
   sand: "cinza-claro",
   charcoal: "preto",
+  // New elegant themes
+  midnight: "cinza-escuro",
+  metro: "preto",
+  aero: "cinza-escuro",
 };
 
 function resolveThemeName(name?: string): ThemeName {
@@ -161,6 +165,36 @@ export function buildThemeVars(name?: string, managersOverride?: Managers) {
       color: { scheme: ['#60a5fa','#9ca3af','#6b7280','#374151','#111827'] }
     } as Managers);
   }
+  else if (n === 'midnight') {
+    managers = deepMerge(managers, {
+      background: '#0e1330',
+      surface: '#1a1f48',
+      border: { color: '#2a3060' },
+      h1: { color: '#e8eafd' },
+      kpi: { title: { color: '#a3a8c4' }, value: { color: '#ffffff' } },
+      color: { scheme: ['#7c83ff', '#a78bfa', '#22d3ee', '#60a5fa', '#94a3b8'] }
+    } as Managers);
+  }
+  else if (n === 'metro') {
+    managers = deepMerge(managers, {
+      background: '#0f1115',
+      surface: '#1a1d23',
+      border: { color: '#2a2f3a' },
+      h1: { color: '#e5e7eb' },
+      kpi: { title: { color: '#9ca3af' }, value: { color: '#e5e7eb' } },
+      color: { scheme: ['#f43f5e', '#10b981', '#f59e0b', '#3b82f6', '#94a3b8'] }
+    } as Managers);
+  }
+  else if (n === 'aero') {
+    managers = deepMerge(managers, {
+      background: '#0b1220',
+      surface: '#0f1b2e',
+      border: { color: '#1f2a3d' },
+      h1: { color: '#e6f0ff' },
+      kpi: { title: { color: '#9fb3d9' }, value: { color: '#ffffff' } },
+      color: { scheme: ['#22d3ee', '#0ea5e9', '#2563eb', '#fb923c', '#f59e0b'] }
+    } as Managers);
+  }
   if (managersOverride) managers = deepMerge(managers, managersOverride as AnyRecord);
 
   // Map managers to css vars
@@ -177,7 +211,7 @@ export function buildThemeVars(name?: string, managersOverride?: Managers) {
   if ((managers as AnyRecord)?.border?.color) extraCss.surfaceBorder = String((managers as AnyRecord).border.color);
 
   // If theme is "blue", push a stronger blue palette unless overridden
-  if (['blue','navy'].includes(n) && !cssVars.chartColorScheme) {
+  if (['blue','navy','midnight','aero'].includes(n) && !cssVars.chartColorScheme) {
     extraCss.chartColorScheme = JSON.stringify(["#2563eb", "#60a5fa", "#0ea5e9", "#06b6d4", "#34d399"]);
   }
 
