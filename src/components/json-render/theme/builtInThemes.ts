@@ -28,6 +28,71 @@ export const builtInThemes: Record<string, ThemeOverrides> = {
     },
     cssVars: { bg: '#000000', fg: '#ffffff' }
   },
+  dark: {
+    components: {
+      Card: { backgroundColor: '#000000', borderColor: '#222222', borderWidth: 1, borderRadius: 8, padding: 12 },
+      Header: { backgroundColor: '#000000', textColor: '#e5e7eb', subtitleColor: '#a3a3a3', borderColor: '#222222', borderWidth: 1, borderRadius: 8, padding: 12 },
+      Kpi: { format: 'number' },
+      Div: { gap: 12 },
+      BarChart: {
+        colorScheme: ['#22d3ee', '#a78bfa', '#34d399', '#f59e0b', '#ef4444'],
+        nivo: {
+          gridY: true,
+          theme: {
+            textColor: '#e5e7eb',
+            fontSize: 12,
+            axis: {
+              ticks: { text: { fill: '#e5e7eb', fontSize: 12 } },
+              legend: { text: { fill: '#e5e7eb', fontSize: 12 } },
+            },
+            labels: { text: { fill: '#e5e7eb', fontSize: 12 } },
+          },
+        },
+      },
+      LineChart: {
+        colorScheme: ['#22d3ee', '#a78bfa', '#34d399', '#f59e0b', '#ef4444'],
+        nivo: {
+          gridY: true,
+          curve: 'monotoneX',
+          theme: {
+            textColor: '#e5e7eb',
+            fontSize: 12,
+            axis: {
+              ticks: { text: { fill: '#e5e7eb', fontSize: 12 } },
+              legend: { text: { fill: '#e5e7eb', fontSize: 12 } },
+            },
+            labels: { text: { fill: '#e5e7eb', fontSize: 12 } },
+          },
+        },
+      },
+      PieChart: {
+        colorScheme: ['#22d3ee', '#a78bfa', '#34d399', '#f59e0b', '#ef4444'],
+        nivo: {
+          innerRadius: 0.35,
+          theme: {
+            textColor: '#e5e7eb',
+            fontSize: 12,
+            labels: { text: { fill: '#e5e7eb', fontSize: 12 } },
+          },
+        },
+      },
+      Slicer: {
+        tile: {
+          baseClass: 'text-xs font-medium border rounded-md min-w-[110px] h-9 px-3 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 active:scale-[0.98] shadow-sm',
+          selectedClass: 'bg-[#2563eb] text-white border-[#2563eb] hover:bg-[#1e40af]',
+          unselectedClass: 'bg-[#111111] text-[#e5e7eb] border-[#333333] hover:bg-[#161616]',
+        },
+      },
+      SlicerCard: {
+        tile: {
+          baseClass: 'text-xs font-medium border rounded-md min-w-[110px] h-9 px-3 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 active:scale-[0.98] shadow-sm',
+          selectedClass: 'bg-[#2563eb] text-white border-[#2563eb] hover:bg-[#1e40af]',
+          unselectedClass: 'bg-[#111111] text-[#e5e7eb] border-[#333333] hover:bg-[#161616]',
+        },
+      },
+    },
+    cssVars: { bg: '#000000', fg: '#e5e7eb' },
+  },
   light: {
     components: {
       Card: { backgroundColor: '#ffffff', borderColor: '#e5e7eb', borderWidth: 1, borderRadius: 8, padding: 12 },
