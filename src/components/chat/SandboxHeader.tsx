@@ -15,7 +15,7 @@ type Props = {
 
 export default function SandboxHeader({ onClose, onExpand, expanded }: Props) {
   return (
-    <div className="flex items-center justify-between border-b px-3 py-3 bg-white">
+    <div className="flex items-center justify-between border-b px-3 py-1 bg-white">
       {/* Left group: chevrons + tabs */}
       <div className="flex items-center gap-3 min-w-0">
         <button
