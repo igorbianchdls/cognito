@@ -12,7 +12,7 @@ const COMPRAS_TEMPLATE_TEXT = JSON.stringify([
     children: [
       { type: "Header", props: { title: "Dashboard de Compras", subtitle: "Principais indicadores e cortes", align: "center", controlsPosition: "right", datePicker: { visible: true, mode: "range", position: "right", storePath: "filters.dateRange", actionOnChange: { type: "refresh_data" }, style: { padding: 6, fontFamily: "Barlow", fontSize: 12 } } } },
       { type: "Div", props: { direction: "row", gap: 12, padding: 16, justify: "start", align: "start", childGrow: true }, children: [
-        { type: "KPI", props: { title: "Gasto", format: "currency", dataQuery: { model: "compras.compras", measure: "SUM(valor_total)", filters: { tenant_id: 1 } }, titleStyle: { fontWeight: 600, fontSize: 12, color: "#64748b" }, valueStyle: { fontWeight: 700, fontSize: 24, color: "#0f172a" } } },
+        { type: "KPI", props: { title: "Gasto", format: "currency", dataQuery: { model: "compras.compras", measure: "SUM(valor_total)", filters: { tenant_id: 1 } } } },
         { type: "KPI", props: { title: "Fornecedores", format: "number", dataQuery: { model: "compras.compras", measure: "COUNT_DISTINCT(fornecedor_id)", filters: { tenant_id: 1 } } } },
         { type: "KPI", props: { title: "Pedidos", format: "number", dataQuery: { model: "compras.compras", measure: "COUNT_DISTINCT(id)", filters: { tenant_id: 1 } }, valueStyle: { fontSize: 22 } } },
         { type: "KPI", props: { title: "Transações", format: "number", dataQuery: { model: "compras.recebimentos", measure: "COUNT()", filters: { tenant_id: 1 } } } }
@@ -21,7 +21,7 @@ const COMPRAS_TEMPLATE_TEXT = JSON.stringify([
       { type: "Div", props: { direction: "row", gap: 12, padding: 16, justify: "start", align: "start", childGrow: true }, children: [
         { type: "SlicerCard", props: { fr: 1, title: "Filtro de Fornecedor (Tile)", layout: "horizontal", fields: [
           { label: "Fornecedor", type: "tile-multi", storePath: "filters.fornecedor_id", clearable: true, selectAll: true, source: { type: "api", url: "/api/modulos/compras/options?field=fornecedor_id&limit=100" } }
-        ], containerStyle: { borderWidth: 2, borderColor: "#e5e7eb", borderRadius: 12 } } }
+        ] } }
       ]},
 
       { type: "Div", props: { direction: "row", gap: 12, padding: 16, justify: "start", align: "start", childGrow: true }, children: [
@@ -29,7 +29,7 @@ const COMPRAS_TEMPLATE_TEXT = JSON.stringify([
         { type: "BarChart", props: { fr: 1, title: "Centros de Custo", dataQuery: { model: "compras.compras", dimension: "centro_custo", measure: "SUM(valor_total)", filters: { tenant_id: 1 }, orderBy: { field: "measure", dir: "desc" }, limit: 8 }, format: "currency", height: 240, nivo: { layout: 'horizontal' } } },
         { type: "SlicerCard", props: { fr: 1, title: "Filtro Centro de Custo", fields: [
           { label: "Centro de Custo", type: "list", storePath: "filters.centro_custo_id", source: { type: "api", url: "/api/modulos/compras/options?field=centro_custo_id&limit=100" }, selectAll: true, search: true }
-        ], containerStyle: { borderWidth: 2, borderColor: "#e5e7eb", borderRadius: 12 } } },
+        ] } },
         { type: "BarChart", props: { fr: 1, title: "Filiais", dataQuery: { model: "compras.compras", dimension: "filial", measure: "SUM(valor_total)", filters: { tenant_id: 1 }, orderBy: { field: "measure", dir: "desc" }, limit: 8 }, format: "currency", height: 240, nivo: { layout: 'horizontal' } } }
       ]},
 

@@ -12,8 +12,8 @@ const FINANCE_TEMPLATE_TEXT = JSON.stringify([
     children: [
       { type: "Header", props: { title: "Dashboard Financeiro", subtitle: "Contas a Pagar e Receber", align: "center", controlsPosition: "right", datePicker: { visible: true, mode: "range", position: "right", storePath: "filters.dateRange", actionOnChange: { type: "refresh_data" }, style: { padding: 6, fontFamily: "Barlow", fontSize: 12 } } } },
       { type: "Div", props: { direction: "row", gap: 12, padding: 16, childGrow: true }, children: [
-        { type: "KPI", props: { title: "AP (Período)", format: "currency", dataQuery: { model: "financeiro.contas_pagar", measure: "SUM(valor_liquido)", filters: { tenant_id: 1 } }, titleStyle: { fontWeight: 600, fontSize: 12, color: "#64748b" }, valueStyle: { fontWeight: 700, fontSize: 24, color: "#0f172a" } } },
-        { type: "KPI", props: { title: "AR (Período)", format: "currency", dataQuery: { model: "financeiro.contas_receber", measure: "SUM(valor_liquido)", filters: { tenant_id: 1 } }, titleStyle: { fontWeight: 600, fontSize: 12, color: "#64748b" }, valueStyle: { fontWeight: 700, fontSize: 24, color: "#0f172a" } } }
+        { type: "KPI", props: { title: "AP (Período)", format: "currency", dataQuery: { model: "financeiro.contas_pagar", measure: "SUM(valor_liquido)", filters: { tenant_id: 1 } } } },
+        { type: "KPI", props: { title: "AR (Período)", format: "currency", dataQuery: { model: "financeiro.contas_receber", measure: "SUM(valor_liquido)", filters: { tenant_id: 1 } } } }
       ] },
 
       { type: "Div", props: { direction: "row", gap: 12, padding: 16, justify: "start", align: "start", childGrow: true }, children: [
@@ -26,7 +26,7 @@ const FINANCE_TEMPLATE_TEXT = JSON.stringify([
         { type: "BarChart", props: { fr: 1, title: "AP por Centro de Custo", dataQuery: { model: "financeiro.contas_pagar", dimension: "centro_custo", measure: "SUM(valor_liquido)", filters: { tenant_id: 1 }, orderBy: { field: "measure", dir: "desc" }, limit: 8 }, format: "currency", height: 220, nivo: { layout: 'horizontal' } } },
         { type: "SlicerCard", props: { fr: 1, title: "Filtro Centro de Lucro", fields: [
           { label: "Centro de Lucro", type: "list", storePath: "filters.centro_lucro_id", source: { type: "api", url: "/api/modulos/financeiro/options?field=centro_lucro_id&limit=100" }, selectAll: true, search: true }
-        ], containerStyle: { borderWidth: 2, borderColor: "#e5e7eb", borderRadius: 12 } } },
+        ] } },
         { type: "BarChart", props: { fr: 1, title: "AP por Departamento", dataQuery: { model: "financeiro.contas_pagar", dimension: "departamento", measure: "SUM(valor_liquido)", filters: { tenant_id: 1 }, orderBy: { field: "measure", dir: "desc" }, limit: 8 }, format: "currency", height: 220, nivo: { layout: 'horizontal' } } },
         { type: "BarChart", props: { fr: 1, title: "AP por Filial", dataQuery: { model: "financeiro.contas_pagar", dimension: "filial", measure: "SUM(valor_liquido)", filters: { tenant_id: 1 }, orderBy: { field: "measure", dir: "desc" }, limit: 8 }, format: "currency", height: 220, nivo: { layout: 'horizontal' } } }
       ]},
