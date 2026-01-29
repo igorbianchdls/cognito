@@ -209,7 +209,7 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
   }
 
   // Apply default values from financeiro dashboard
-  const finalBgColor = bgColor ?? '#f3f4f6'
+  const finalBgColor = bgColor ?? '#f9fafb'
   const finalTextColor = textColor ?? '#717171'
   const finalItemTextColor = itemTextColor ?? '#0f172a'
   const finalSectionTitleStyle = sectionTitleStyle ?? DEFAULT_SECTION_TITLE_STYLE
