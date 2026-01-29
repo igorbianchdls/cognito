@@ -205,3 +205,14 @@ export function applyBorderFromCssVars(style: Record<string, any> | undefined, c
   if (r !== undefined) out.borderRadius = typeof r === 'number' ? `${r}px` : r;
   return Object.keys(out).length ? out : undefined;
 }
+
+export function ensureSurfaceBackground(style: Record<string, any> | undefined, cssVars?: Record<string, string>): Record<string, any> | undefined {
+  const out: Record<string, any> = { ...(style || {}) };
+  if (!out.backgroundColor && cssVars && (cssVars as any).surfaceBg) {
+    out.backgroundColor = 'var(--surfaceBg)';
+  }
+  if (!out.borderColor && cssVars && (cssVars as any).surfaceBorder) {
+    out.borderColor = 'var(--surfaceBorder)';
+  }
+  return Object.keys(out).length ? out : undefined;
+}

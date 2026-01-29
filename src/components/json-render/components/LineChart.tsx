@@ -3,7 +3,7 @@
 import React from "react";
 import { useData } from "@/components/json-render/context";
 import { ResponsiveLine } from "@nivo/line";
-import { normalizeTitleStyle, normalizeContainerStyle, buildNivoTheme, applyBorderFromCssVars } from "@/components/json-render/helpers";
+import { normalizeTitleStyle, normalizeContainerStyle, buildNivoTheme, applyBorderFromCssVars, ensureSurfaceBackground } from "@/components/json-render/helpers";
 import { useThemeOverrides } from "@/components/json-render/theme/ThemeContext";
 
 type AnyRecord = Record<string, any>;
@@ -60,7 +60,7 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
   const nivo = (element?.props?.nivo as AnyRecord | undefined) || {};
   const titleStyle = normalizeTitleStyle((element?.props as AnyRecord)?.titleStyle);
   const borderless = Boolean((element?.props as AnyRecord)?.borderless);
-  const containerStyle = applyBorderFromCssVars(normalizeContainerStyle((element?.props as AnyRecord)?.containerStyle, borderless), theme.cssVars);
+  const containerStyle = ensureSurfaceBackground(applyBorderFromCssVars(normalizeContainerStyle((element?.props as AnyRecord)?.containerStyle, borderless), theme.cssVars), theme.cssVars);
 
   const seriesData = React.useMemo(() => {
     const src = Array.isArray(serverRows) ? serverRows : [];

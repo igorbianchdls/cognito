@@ -215,6 +215,8 @@ function ManagersPanel({ jsonText, setJsonText, setTree, disabled }: PanelProps)
   const borderWidthOptions = ['0','1','2','3'];
   const borderRadiusOptions = ['0','6','8','12'];
   const borderColorOptions = ['#e5e7eb','#333333','#2563eb','#10b981','#ef4444'];
+  const bgOptions = ['#ffffff','#f8fafc','#eff6ff','#000000','#0a0a0a'];
+  const surfaceOptions = ['#ffffff','#f1f5f9','#eef2ff','#0b0b0b','#111214'];
   const colorPresets: Record<string, string[]> = {
     sky: ['#38bdf8','#0ea5e9','#0284c7','#0369a1'],
     emerald: ['#34d399','#10b981','#059669','#047857'],
@@ -330,6 +332,24 @@ function ManagersPanel({ jsonText, setJsonText, setTree, disabled }: PanelProps)
             })}>
             <option value="custom">(padrão/props)</option>
             {Object.keys(colorPresets).map(k => <option key={k} value={k}>{k}</option>)}
+          </select>
+        </div>
+        {/* Fundo Dashboard */}
+        <div className="flex items-center gap-2">
+          <label className="text-xs text-gray-700 w-20">Fundo</label>
+          <select disabled={disabled} className="text-xs border border-gray-300 rounded px-2 py-1" value={current.managers?.background || ''}
+            onChange={(e) => updateTheme((th: any) => { th.props.managers = th.props.managers || {}; const v = e.target.value; if (v) th.props.managers.background = v; else delete th.props.managers.background; })}>
+            <option value="">(padrão do tema)</option>
+            {bgOptions.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+        </div>
+        {/* Fundo Containers */}
+        <div className="flex items-center gap-2">
+          <label className="text-xs text-gray-700 w-20">Containers</label>
+          <select disabled={disabled} className="text-xs border border-gray-300 rounded px-2 py-1" value={current.managers?.surface || ''}
+            onChange={(e) => updateTheme((th: any) => { th.props.managers = th.props.managers || {}; const v = e.target.value; if (v) th.props.managers.surface = v; else delete th.props.managers.surface; })}>
+            <option value="">(padrão do tema)</option>
+            {surfaceOptions.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
         </div>
       </div>

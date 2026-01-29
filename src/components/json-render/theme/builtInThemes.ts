@@ -16,27 +16,27 @@ export type ThemeOverrides = {
 export const builtInThemes: Record<string, ThemeOverrides> = {
   black: {
     components: {
-      Card: { backgroundColor: '#000000', borderColor: '#333333', borderWidth: 1 },
+      Card: { backgroundColor: 'var(--surfaceBg)', borderColor: 'var(--surfaceBorder)', borderWidth: 1 },
       Header: { backgroundColor: '#000000', textColor: '#ffffff', subtitleColor: '#bbbbbb', borderColor: '#444444', borderWidth: 1 },
-      Kpi: { format: 'currency', containerStyle: { backgroundColor: '#000000', borderColor: '#333333' } },
+      Kpi: { format: 'currency', containerStyle: { backgroundColor: 'var(--surfaceBg)', borderColor: 'var(--surfaceBorder)' } },
       Div: { gap: 12 },
-      BarChart: { colorScheme: ['#ffffff'], containerStyle: { backgroundColor: '#000000', borderColor: '#333333' }, nivo: { gridY: true } },
-      LineChart: { colorScheme: ['#ffffff'], containerStyle: { backgroundColor: '#000000', borderColor: '#333333' }, nivo: { gridY: true } },
-      PieChart: { colorScheme: ['#ffffff','#aaaaaa','#666666'], containerStyle: { backgroundColor: '#000000', borderColor: '#333333' } },
+      BarChart: { colorScheme: ['#ffffff'], containerStyle: { backgroundColor: 'var(--surfaceBg)', borderColor: 'var(--surfaceBorder)' }, nivo: { gridY: true } },
+      LineChart: { colorScheme: ['#ffffff'], containerStyle: { backgroundColor: 'var(--surfaceBg)', borderColor: 'var(--surfaceBorder)' }, nivo: { gridY: true } },
+      PieChart: { colorScheme: ['#ffffff','#aaaaaa','#666666'], containerStyle: { backgroundColor: 'var(--surfaceBg)', borderColor: 'var(--surfaceBorder)' } },
       Slicer: { tile: { baseClass: 'text-xs font-medium border rounded-md min-w-[110px] h-9 px-3 transition-all focus:outline-none focus:ring-2 focus:ring-sky-500 active:scale-[0.98] shadow-sm', selectedClass: 'bg-white text-black border-white hover:bg-gray-50', unselectedClass: 'bg-black text-white border-gray-700 hover:bg-gray-900' } },
-      SlicerCard: { tile: { baseClass: 'text-xs font-medium border rounded-md min-w-[110px] h-9 px-3 transition-all focus:outline-none focus:ring-2 focus:ring-sky-500 active:scale-[0.98] shadow-sm', selectedClass: 'bg-white text-black border-white hover:bg-gray-50', unselectedClass: 'bg-black text-white border-gray-700 hover:bg-gray-900' }, containerStyle: { backgroundColor: '#000000', borderColor: '#333333' } },
+      SlicerCard: { tile: { baseClass: 'text-xs font-medium border rounded-md min-w-[110px] h-9 px-3 transition-all focus:outline-none focus:ring-2 focus:ring-sky-500 active:scale-[0.98] shadow-sm', selectedClass: 'bg-white text-black border-white hover:bg-gray-50', unselectedClass: 'bg-black text-white border-gray-700 hover:bg-gray-900' }, containerStyle: { backgroundColor: 'var(--surfaceBg)', borderColor: 'var(--surfaceBorder)' } },
     },
-    cssVars: { bg: '#000000', fg: '#ffffff' }
+    cssVars: { bg: '#000000', fg: '#ffffff', surfaceBg: '#0b0b0b', surfaceBorder: '#333333' }
   },
   dark: {
     components: {
-      Card: { backgroundColor: '#000000', borderColor: '#222222', borderWidth: 1, borderRadius: 8, padding: 12 },
+      Card: { backgroundColor: 'var(--surfaceBg)', borderColor: 'var(--surfaceBorder)', borderWidth: 1, borderRadius: 8, padding: 12 },
       Header: { backgroundColor: '#000000', textColor: '#e5e7eb', subtitleColor: '#a3a3a3', borderColor: '#222222', borderWidth: 1, borderRadius: 8, padding: 12 },
-      Kpi: { format: 'number', containerStyle: { backgroundColor: '#000000', borderColor: '#222222' } },
+      Kpi: { format: 'number', containerStyle: { backgroundColor: 'var(--surfaceBg)', borderColor: 'var(--surfaceBorder)' } },
       Div: { gap: 12 },
       BarChart: {
         colorScheme: ['#22d3ee', '#a78bfa', '#34d399', '#f59e0b', '#ef4444'],
-        containerStyle: { backgroundColor: '#000000', borderColor: '#222222' },
+        containerStyle: { backgroundColor: 'var(--surfaceBg)', borderColor: 'var(--surfaceBorder)' },
         nivo: {
           gridY: true,
           theme: {
@@ -52,7 +52,7 @@ export const builtInThemes: Record<string, ThemeOverrides> = {
       },
       LineChart: {
         colorScheme: ['#22d3ee', '#a78bfa', '#34d399', '#f59e0b', '#ef4444'],
-        containerStyle: { backgroundColor: '#000000', borderColor: '#222222' },
+        containerStyle: { backgroundColor: 'var(--surfaceBg)', borderColor: 'var(--surfaceBorder)' },
         nivo: {
           gridY: true,
           curve: 'monotoneX',
@@ -69,7 +69,7 @@ export const builtInThemes: Record<string, ThemeOverrides> = {
       },
       PieChart: {
         colorScheme: ['#22d3ee', '#a78bfa', '#34d399', '#f59e0b', '#ef4444'],
-        containerStyle: { backgroundColor: '#000000', borderColor: '#222222' },
+        containerStyle: { backgroundColor: 'var(--surfaceBg)', borderColor: 'var(--surfaceBorder)' },
         nivo: {
           innerRadius: 0.35,
           theme: {
@@ -92,10 +92,10 @@ export const builtInThemes: Record<string, ThemeOverrides> = {
           selectedClass: 'bg-[#2563eb] text-white border-[#2563eb] hover:bg-[#1e40af]',
           unselectedClass: 'bg-[#111111] text-[#e5e7eb] border-[#333333] hover:bg-[#161616]',
         },
-        containerStyle: { backgroundColor: '#000000', borderColor: '#222222' },
+        containerStyle: { backgroundColor: 'var(--surfaceBg)', borderColor: 'var(--surfaceBorder)' },
       },
     },
-    cssVars: { bg: '#000000', fg: '#e5e7eb' },
+    cssVars: { bg: '#0a0a0a', fg: '#e5e7eb', surfaceBg: '#111214', surfaceBorder: '#222222' },
   },
   light: {
     components: {

@@ -901,6 +901,8 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       if (mgr.border.radius !== undefined) cssVars.containerRadius = String(mgr.border.radius);
     }
     if (mgr.color && Array.isArray(mgr.color.scheme)) cssVars.chartColorScheme = JSON.stringify(mgr.color.scheme);
+    if (typeof mgr.background === 'string' && mgr.background) cssVars.bg = mgr.background;
+    if (typeof mgr.surface === 'string' && mgr.surface) cssVars.surfaceBg = mgr.surface;
     return (
       <ThemeProvider name={name} cssVars={cssVars}>
         {children}

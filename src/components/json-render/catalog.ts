@@ -56,6 +56,8 @@ export const catalog = {
           color: z.object({
             scheme: z.array(z.string()).optional(),
           }).partial().optional(),
+          background: z.string().optional(),
+          surface: z.string().optional(),
         }).partial().optional(),
       }).strict(),
       hasChildren: true,
