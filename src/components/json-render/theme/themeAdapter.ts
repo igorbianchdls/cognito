@@ -107,6 +107,24 @@ function buildManagersFromTokens(tokens: DesignTokens, name: ThemeName): Manager
         letterSpacing: '-0.02em',
         padding: 0,
       }
+    },
+    slicer: {
+      label: {
+        font: fontPrimary,
+        weight: tokens.typography?.fontWeight?.medium ?? 500,
+        size: tokens.typography?.fontSize?.sm ?? 14,
+        color: textSecondary,
+        letterSpacing: '-0.01em',
+        padding: 2,
+      },
+      option: {
+        font: fontPrimary,
+        weight: tokens.typography?.fontWeight?.medium ?? 500,
+        size: tokens.typography?.fontSize?.sm ?? 13,
+        color: textPrimary,
+        letterSpacing: '-0.01em',
+        padding: 0,
+      }
     }
   };
 }

@@ -321,3 +321,31 @@ export function applyKpiValueFromCssVars(style: Record<string, any> | undefined,
   }, out);
   return Object.keys(out).length ? out : undefined;
 }
+
+export function applySlicerLabelFromCssVars(style: Record<string, any> | undefined, cssVars?: Record<string, string>) {
+  const out: Record<string, any> = { ...(style || {}) };
+  if (!cssVars) return Object.keys(out).length ? out : undefined;
+  _applyTextFrom(cssVars as any, {
+    color: 'slicerLabelColor',
+    weight: 'slicerLabelFontWeight',
+    size: 'slicerLabelFontSize',
+    font: 'slicerLabelFontFamily',
+    letter: 'slicerLabelLetterSpacing',
+    padding: 'slicerLabelPadding',
+  }, out);
+  return Object.keys(out).length ? out : undefined;
+}
+
+export function applySlicerOptionFromCssVars(style: Record<string, any> | undefined, cssVars?: Record<string, string>) {
+  const out: Record<string, any> = { ...(style || {}) };
+  if (!cssVars) return Object.keys(out).length ? out : undefined;
+  _applyTextFrom(cssVars as any, {
+    color: 'slicerOptionColor',
+    weight: 'slicerOptionFontWeight',
+    size: 'slicerOptionFontSize',
+    font: 'slicerOptionFontFamily',
+    letter: 'slicerOptionLetterSpacing',
+    padding: 'slicerOptionPadding',
+  }, out);
+  return Object.keys(out).length ? out : undefined;
+}

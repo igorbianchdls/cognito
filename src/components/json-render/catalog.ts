@@ -148,6 +148,8 @@ export const catalog = {
               }).strict()
             ]).optional(),
             actionOnChange: z.object({ type: z.string() }).partial().optional(),
+            labelStyle: TitleStyleSchema.optional(),
+            optionStyle: TitleStyleSchema.optional(),
           }).strict(),
           z.object({
             label: z.string().optional(),
@@ -163,6 +165,7 @@ export const catalog = {
             width: z.union([z.number(), z.string()]).optional(),
             clearable: z.boolean().optional(),
             actionOnChange: z.object({ type: z.string() }).partial().optional(),
+            labelStyle: TitleStyleSchema.optional(),
           }).strict()
         ])).optional(),
       }).strict(),

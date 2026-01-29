@@ -304,6 +304,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
           const maxPath = String(r.storeMaxPath || '').trim();
           if (!minPath || !maxPath) return;
           const lbl = typeof r.label === 'string' ? r.label : undefined;
+          const lblStyle = applySlicerLabelFromCssVars(normalizeTitleStyle((r as any)?.labelStyle), theme.cssVars);
           const step = typeof r.step === 'number' ? r.step : 1;
           const prefix = typeof r.prefix === 'string' ? r.prefix : undefined;
           const suffix = typeof r.suffix === 'string' ? r.suffix : undefined;
@@ -337,7 +338,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
           };
           elems.push(
             <div key={`slicer-${idx}`} className="flex items-center gap-2" style={{ width: styleVal(width) }}>
-              {lbl && <span className="text-xs text-gray-600">{lbl}:</span>}
+              {lbl && <span className="text-xs" style={lblStyle}>{lbl}:</span>}
               {prefix && <span className="text-xs text-gray-500">{prefix}</span>}
               <input type="number" step={step} placeholder={phMin} className="w-20 border border-gray-300 rounded px-2 py-1 text-xs"
                 value={curMin ?? ''}
@@ -357,6 +358,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
         const sp = String((s as any)?.storePath || '').trim();
         if (!sp) return;
         const lbl = typeof s?.label === 'string' ? s.label : undefined;
+        const lblStyle = applySlicerLabelFromCssVars(normalizeTitleStyle((s as any)?.labelStyle), theme.cssVars);
         const type = (s?.type || 'dropdown') as 'dropdown'|'multi'|'list'|'tile'|'tile-multi';
         const placeholder = typeof s?.placeholder === 'string' ? s.placeholder : undefined;
         const width = s?.width;
@@ -377,7 +379,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
           };
           elems.push(
             <div key={`slicer-${idx}`} className="flex items-center gap-2 flex-wrap" style={{ width: styleVal(width) }}>
-              {lbl && <span className="text-xs text-gray-600 mr-1">{lbl}:</span>}
+              {lbl && <span className="text-xs mr-1" style={lblStyle}>{lbl}:</span>}
               <div className="flex items-center gap-2 flex-wrap">
                 {opts.map((o) => {
                   const selected = isMulti ? (current as any[]).includes(o.value) : current === o.value;
@@ -403,7 +405,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
                         }
                       }}
                     >
-                      {o.label}
+                      <span style={(() => { const sopt = applySlicerOptionFromCssVars(undefined, theme.cssVars) || {}; delete (sopt as any).color; return sopt as any; })()}>{o.label}</span>
                     </button>
                   );
                 })}
@@ -422,15 +424,15 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
           };
           elems.push(
             <div key={`slicer-${idx}`} className="flex items-center gap-2" style={{ width: styleVal(width) }}>
-              {lbl && <span className="text-xs text-gray-600">{lbl}:</span>}
+              {lbl && <span className="text-xs" style={lblStyle}>{lbl}:</span>}
               <div className="flex items-center gap-2">
                 {opts.map((o) => (
-                  <label key={String(o.value)} className="inline-flex items-center gap-1 text-xs text-gray-700">
+                  <label key={String(o.value)} className="inline-flex items-center gap-1 text-xs">
                     <input type="checkbox" className="rounded border-gray-300" checked={arr.includes(o.value)} onChange={(e) => {
                       const nextArr = e.target.checked ? [...arr, o.value] : arr.filter((v: any) => v !== o.value);
                       onChangeValue(nextArr);
                     }} />
-                    <span>{o.label}</span>
+                    <span style={applySlicerOptionFromCssVars(normalizeTitleStyle((s as any)?.optionStyle), theme.cssVars)}>{o.label}</span>
                   </label>
                 ))}
               </div>
@@ -447,10 +449,11 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
           };
           elems.push(
             <div key={`slicer-${idx}`} className="flex items-center gap-2" style={{ width: styleVal(width) }}>
-              {lbl && <span className="text-xs text-gray-600">{lbl}:</span>}
+              {lbl && <span className="text-xs" style={lblStyle}>{lbl}:</span>}
               <select
                 multiple={isMulti}
                 className="border border-gray-300 rounded px-2 py-1 text-xs"
+                style={applySlicerOptionFromCssVars(normalizeTitleStyle((s as any)?.optionStyle), theme.cssVars) as any}
                 value={val as any}
                 onChange={(e) => {
                   if (isMulti) {
@@ -707,6 +710,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
             const sp = String(f?.storePath || '').trim();
             if (!sp) return null;
             const lbl = typeof f?.label === 'string' ? f.label : undefined;
+            const lblStyle = applySlicerLabelFromCssVars(normalizeTitleStyle((f as any)?.labelStyle), theme.cssVars);
             const opts = optionsMap[idx] || [];
             const width = (f?.width !== undefined) ? (typeof f.width === 'number' ? `${f.width}px` : f.width) : undefined;
             const t = (f?.type || 'list') as 'list'|'dropdown'|'tile'|'tile-multi';
@@ -719,7 +723,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
               const onClear = () => onChangeField(idx, sp, isMulti ? [] : undefined, f.actionOnChange);
               return (
                 <div className={layout === 'horizontal' ? 'flex items-center gap-2' : 'space-y-1'} style={{ width }}>
-                  {lbl && <div className="text-xs text-gray-600">{lbl}</div>}
+                  {lbl && <div className="text-xs" style={lblStyle}>{lbl}</div>}
                   <div className="flex flex-wrap gap-2">
                     {opts.map((o) => {
                       const selected = isMulti ? (Array.isArray(stored) && stored.includes(o.value)) : (stored === o.value);
@@ -744,6 +748,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
                               onChangeField(idx, sp, nextVal, f.actionOnChange);
                             }
                           }}
+                          style={(() => { const s = applySlicerOptionFromCssVars(undefined, theme.cssVars) || {}; delete (s as any).color; return s as any; })()}
                         >{o.label}</button>
                       );
                     })}
@@ -762,12 +767,12 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
             // Default list (checkboxes)
             return (
               <div className={layout === 'horizontal' ? 'flex items-center gap-2' : 'space-y-1'} style={{ width }}>
-                {lbl && <div className="text-xs text-gray-600">{lbl}</div>}
+                {lbl && <div className="text-xs" style={lblStyle}>{lbl}</div>}
                 {/* search input removido */}
                 <div className="flex flex-col gap-2">
                   <div className="flex flex-col gap-1 max-h-48 overflow-y-auto pr-1">
                     {opts.map((o) => (
-                      <label key={String(o.value)} className="inline-flex items-center gap-2 text-xs text-gray-700">
+                      <label key={String(o.value)} className="inline-flex items-center gap-2 text-xs">
                         <input
                           type="checkbox"
                           className="rounded border-gray-300"
@@ -778,7 +783,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
                             onChangeField(idx, sp, nextArr, f.actionOnChange);
                           }}
                         />
-                        <span>{o.label}</span>
+                        <span style={applySlicerOptionFromCssVars(normalizeTitleStyle((f as any)?.optionStyle), theme.cssVars)}>{o.label}</span>
                       </label>
                     ))}
                   </div>

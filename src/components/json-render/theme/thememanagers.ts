@@ -17,6 +17,15 @@ export type KpiTextManager = {
   padding?: string | number
 }
 
+export type SlicerTextManager = {
+  font?: string
+  weight?: string | number
+  size?: string | number
+  color?: string
+  letterSpacing?: string | number
+  padding?: string | number
+}
+
 export type BorderManager = {
   style?: 'none' | 'solid' | 'dashed' | 'dotted'
   width?: string | number
@@ -39,6 +48,10 @@ export type Managers = {
   kpi?: {
     title?: KpiTextManager
     value?: KpiTextManager
+  }
+  slicer?: {
+    label?: SlicerTextManager
+    option?: SlicerTextManager
   }
 }
 
@@ -108,6 +121,25 @@ export function mapManagersToCssVars(managers: Managers | undefined): Record<str
     if (v.color) cssVars.kpiValueColor = String(v.color)
     if (v.letterSpacing !== undefined) cssVars.kpiValueLetterSpacing = String(v.letterSpacing)
     if (v.padding !== undefined) cssVars.kpiValuePadding = String(v.padding)
+  }
+
+  // Slicer (label/option)
+  if (m.slicer && typeof m.slicer === 'object') {
+    const s = m.slicer as AnyRecord
+    const l = (s.label && typeof s.label === 'object') ? s.label as AnyRecord : {}
+    const o = (s.option && typeof s.option === 'object') ? s.option as AnyRecord : {}
+    if (l.font) cssVars.slicerLabelFontFamily = String(l.font)
+    if (l.weight !== undefined) cssVars.slicerLabelFontWeight = String(l.weight)
+    if (l.size !== undefined) cssVars.slicerLabelFontSize = String(l.size)
+    if (l.color) cssVars.slicerLabelColor = String(l.color)
+    if (l.letterSpacing !== undefined) cssVars.slicerLabelLetterSpacing = String(l.letterSpacing)
+    if (l.padding !== undefined) cssVars.slicerLabelPadding = String(l.padding)
+    if (o.font) cssVars.slicerOptionFontFamily = String(o.font)
+    if (o.weight !== undefined) cssVars.slicerOptionFontWeight = String(o.weight)
+    if (o.size !== undefined) cssVars.slicerOptionFontSize = String(o.size)
+    if (o.color) cssVars.slicerOptionColor = String(o.color)
+    if (o.letterSpacing !== undefined) cssVars.slicerOptionLetterSpacing = String(o.letterSpacing)
+    if (o.padding !== undefined) cssVars.slicerOptionPadding = String(o.padding)
   }
 
   return cssVars
