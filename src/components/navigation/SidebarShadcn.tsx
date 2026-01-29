@@ -231,7 +231,7 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
       className={cn('ui-text', borderless ? '!border-r-0 !border-l-0 !border-0' : undefined, className)}
       {...props}
     >
-      <SidebarHeader className={cn("h-16 bg-gray-50", headerBorderless ? undefined : "border-b") }>
+      <SidebarHeader className={cn("h-16")} style={{ backgroundColor: finalBgColor }}>
         {headerVariant === 'compact' ? (
           <div className="h-full w-full flex items-center justify-between px-[var(--ui-pad-x)]">
             <SidebarHeaderCompact teams={dataWithActiveState.teams} />
