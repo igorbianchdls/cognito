@@ -34,6 +34,9 @@ export function ThemeProvider({ name, components, cssVars, children }: { name?: 
   for (const k of Object.keys(combined.cssVars || {})) {
     (styleVars as any)[`--${k}`] = (combined.cssVars as any)[k];
   }
+  if ((combined.cssVars || {}).hasOwnProperty('fontFamily')) {
+    (styleVars as any).fontFamily = 'var(--fontFamily)';
+  }
 
   return (
     <ThemeContext.Provider value={combined}>
@@ -41,4 +44,3 @@ export function ThemeProvider({ name, components, cssVars, children }: { name?: 
     </ThemeContext.Provider>
   );
 }
-

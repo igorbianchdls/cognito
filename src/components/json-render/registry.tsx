@@ -7,7 +7,7 @@ import JsonRenderPieChart from "@/components/json-render/components/PieChart";
 import { ThemeProvider, useThemeOverrides } from "@/components/json-render/theme/ThemeContext";
 import { useDataValue, useData } from "@/components/json-render/context";
 import { deepMerge } from "@/stores/ui/json-render/utils";
-import { normalizeTitleStyle, normalizeContainerStyle } from "@/components/json-render/helpers";
+import { normalizeTitleStyle, normalizeContainerStyle, applyBorderFromCssVars } from "@/components/json-render/helpers";
 
 type AnyRecord = Record<string, any>;
 
@@ -131,7 +131,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
         textAlign: p.titleStyle.textAlign,
       } : {})
     } as React.CSSProperties;
-    const style: React.CSSProperties = {
+    const styleBase: React.CSSProperties = {
       backgroundColor: p.backgroundColor,
       borderColor: p.borderColor,
       borderWidth: p.borderWidth,
@@ -139,6 +139,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       borderRadius: p.borderRadius,
       padding: styleVal(p.padding) || undefined,
     };
+    const style = applyBorderFromCssVars(styleBase as any, theme.cssVars) as React.CSSProperties;
     return (
       <div className="rounded-lg shadow-sm" style={style}>
         {title && <h3 className="text-base font-semibold text-gray-900 mb-2" style={titleStyle}>{title}</h3>}
@@ -625,7 +626,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     const arrow = trend === 'up' ? '▲' : trend === 'down' ? '▼' : '■';
     const labelStyle = normalizeTitleStyle(p.labelStyle);
     const valueStyle = normalizeTitleStyle(p.valueStyle);
-    const containerStyle = normalizeContainerStyle(p.containerStyle, Boolean(p.borderless));
+    const containerStyle = applyBorderFromCssVars(normalizeContainerStyle(p.containerStyle, Boolean(p.borderless)), theme.cssVars);
     return (
       <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm" style={containerStyle}>
         <div className="mb-1" style={labelStyle}>{label}</div>
@@ -657,10 +658,10 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
 
   SlicerCard: ({ element, onAction }) => {
     const theme = useThemeOverrides();
-    const p = (element?.props || {}) as AnyRecord;
+    const p = deepMerge((theme.components?.SlicerCard || {}) as AnyRecord, (element?.props || {}) as AnyRecord) as AnyRecord;
     const title = p.title as string | undefined;
     const borderless = Boolean(p.borderless);
-    const containerStyle = normalizeContainerStyle(p.containerStyle, borderless);
+    const containerStyle = applyBorderFromCssVars(normalizeContainerStyle(p.containerStyle, borderless), theme.cssVars);
     const layout = (p.layout || 'vertical') as 'vertical'|'horizontal';
     const applyMode = (p.applyMode || 'auto') as 'auto'|'manual';
     const fields = Array.isArray(p.fields) ? (p.fields as AnyRecord[]) : [];
@@ -890,8 +891,18 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
 
   Theme: ({ element, children }) => {
     const name = element?.props?.name as string | undefined;
+    const mgr = (element?.props?.managers || {}) as AnyRecord;
+    const cssVars: Record<string, string> = {};
+    if (typeof mgr.font === 'string' && mgr.font) cssVars.fontFamily = mgr.font;
+    if (mgr.border && typeof mgr.border === 'object') {
+      if (mgr.border.style) cssVars.containerBorderStyle = String(mgr.border.style);
+      if (mgr.border.width !== undefined) cssVars.containerBorderWidth = String(mgr.border.width);
+      if (mgr.border.color) cssVars.containerBorderColor = String(mgr.border.color);
+      if (mgr.border.radius !== undefined) cssVars.containerRadius = String(mgr.border.radius);
+    }
+    if (mgr.color && Array.isArray(mgr.color.scheme)) cssVars.chartColorScheme = JSON.stringify(mgr.color.scheme);
     return (
-      <ThemeProvider name={name}>
+      <ThemeProvider name={name} cssVars={cssVars}>
         {children}
       </ThemeProvider>
     );
@@ -943,7 +954,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     const unit = p.unit as string | undefined;
     const titleStyle = normalizeTitleStyle(p.titleStyle);
     const valueStyle = normalizeTitleStyle(p.valueStyle);
-    const containerStyle = normalizeContainerStyle(p.containerStyle, Boolean(p.borderless));
+    const containerStyle = applyBorderFromCssVars(normalizeContainerStyle(p.containerStyle, Boolean(p.borderless)), theme.cssVars);
     function formatValue(val: any, fmt: 'currency'|'percent'|'number'): string {
       const n = Number(val ?? 0);
       if (!Number.isFinite(n)) return String(val ?? '');

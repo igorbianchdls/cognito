@@ -188,3 +188,20 @@ export function buildNivoTheme(input?: any): Record<string, any> | undefined {
   }
   return t;
 }
+
+// Apply border tokens from Theme cssVars into a container style
+export function applyBorderFromCssVars(style: Record<string, any> | undefined, cssVars?: Record<string, string>): Record<string, any> | undefined {
+  const out: Record<string, any> = { ...(style || {}) };
+  if (!cssVars) return Object.keys(out).length ? out : undefined;
+  const s = cssVars as Record<string, any>;
+  const st = s.containerBorderStyle as string | undefined;
+  const w = s.containerBorderWidth as any;
+  const c = s.containerBorderColor as string | undefined;
+  const r = s.containerRadius as any;
+  if (st === 'none') { out.borderWidth = 0; out.borderStyle = undefined; }
+  else if (st) { out.borderStyle = st; }
+  if (w !== undefined) out.borderWidth = w;
+  if (c) out.borderColor = c;
+  if (r !== undefined) out.borderRadius = typeof r === 'number' ? `${r}px` : r;
+  return Object.keys(out).length ? out : undefined;
+}

@@ -45,6 +45,18 @@ export const catalog = {
     Theme: {
       props: z.object({
         name: z.enum(["black","light","blue","dark"]),
+        managers: z.object({
+          font: z.string().optional(),
+          border: z.object({
+            style: z.enum(["none","solid","dashed","dotted"]).optional(),
+            width: z.union([z.number(), z.string()]).optional(),
+            color: z.string().optional(),
+            radius: z.union([z.number(), z.string()]).optional(),
+          }).partial().optional(),
+          color: z.object({
+            scheme: z.array(z.string()).optional(),
+          }).partial().optional(),
+        }).partial().optional(),
       }).strict(),
       hasChildren: true,
     },

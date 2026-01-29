@@ -3,7 +3,8 @@
 import React from "react";
 import { useData } from "@/components/json-render/context";
 import { ResponsiveLine } from "@nivo/line";
-import { normalizeTitleStyle, normalizeContainerStyle, buildNivoTheme } from "@/components/json-render/helpers";
+import { normalizeTitleStyle, normalizeContainerStyle, buildNivoTheme, applyBorderFromCssVars } from "@/components/json-render/helpers";
+import { useThemeOverrides } from "@/components/json-render/theme/ThemeContext";
 
 type AnyRecord = Record<string, any>;
 
@@ -22,6 +23,7 @@ function formatValue(val: any, fmt: "currency" | "percent" | "number"): string {
 
 export default function JsonRenderLineChart({ element }: { element: any }) {
   const { data } = useData();
+  const theme = useThemeOverrides();
   const dq = (element?.props?.dataQuery as AnyRecord | undefined);
   const [serverRows, setServerRows] = React.useState<Array<Record<string, unknown>> | null>(null);
   React.useEffect(() => {
@@ -58,16 +60,22 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
   const nivo = (element?.props?.nivo as AnyRecord | undefined) || {};
   const titleStyle = normalizeTitleStyle((element?.props as AnyRecord)?.titleStyle);
   const borderless = Boolean((element?.props as AnyRecord)?.borderless);
-  const containerStyle = normalizeContainerStyle((element?.props as AnyRecord)?.containerStyle, borderless);
+  const containerStyle = applyBorderFromCssVars(normalizeContainerStyle((element?.props as AnyRecord)?.containerStyle, borderless), theme.cssVars);
 
   const seriesData = React.useMemo(() => {
     const src = Array.isArray(serverRows) ? serverRows : [];
     return [{ id: title || 'Series', data: src.map((r) => ({ x: String((r as AnyRecord).label ?? ''), y: Number((r as AnyRecord).value ?? 0) })) }];
   }, [title, serverRows]);
 
+  let managedScheme: string[] | undefined = undefined;
+  const rawVar = (theme.cssVars || {}).chartColorScheme as unknown as string | undefined;
+  if (rawVar) {
+    try { managedScheme = JSON.parse(rawVar); }
+    catch { managedScheme = rawVar.split(',').map(s => s.trim()).filter(Boolean); }
+  }
   const colors = Array.isArray(colorScheme)
     ? colorScheme
-    : (typeof colorScheme === 'string' ? [colorScheme] : ['#3b82f6']);
+    : (managedScheme || (typeof colorScheme === 'string' ? [colorScheme] : ['#3b82f6']));
 
   const margin = {
     top: Number(nivo?.margin?.top ?? 10),
