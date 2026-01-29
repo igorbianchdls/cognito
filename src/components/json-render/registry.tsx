@@ -45,7 +45,7 @@ const defaultKPI = {
   format: 'number' as 'currency'|'percent'|'number',
   titleStyle: { fontFamily: 'Barlow', fontWeight: 600, fontSize: 12, color: '#64748b', textTransform: 'none', textAlign: 'left' },
   valueStyle: { fontFamily: 'Barlow', fontWeight: 700, fontSize: 24, color: '#0f172a', textTransform: 'none', textAlign: 'left' },
-  containerStyle: { backgroundColor: '#ffffff', borderColor: '#e5e7eb', borderWidth: 1, borderStyle: 'solid', borderRadius: 8, padding: 12 },
+  containerStyle: { borderColor: '#e5e7eb', borderWidth: 1, borderStyle: 'solid', borderRadius: 8, padding: 12 },
   borderless: false,
 } as const;
 
@@ -628,7 +628,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     const valueStyle = normalizeTitleStyle(p.valueStyle);
     const containerStyle = applyBorderFromCssVars(normalizeContainerStyle(p.containerStyle, Boolean(p.borderless)), theme.cssVars);
     return (
-      <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm" style={containerStyle}>
+      <div className="rounded-lg border p-4 shadow-sm" style={containerStyle}>
         <div className="mb-1" style={labelStyle}>{label}</div>
         <div className="flex items-end gap-2">
           <div className="text-2xl font-semibold text-gray-900" style={valueStyle}>{formatValue(value, fmt)}{unit ? ` ${unit}` : ''}</div>
@@ -765,7 +765,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     };
 
     const card = (
-      <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-sm" style={containerStyle}>
+      <div className="rounded-lg border p-3 shadow-sm" style={containerStyle}>
         {title && <div className="text-sm font-medium text-gray-900 mb-2">{title}</div>}
         <div className={layout === 'horizontal' ? 'flex items-start gap-3 flex-wrap' : 'space-y-3'}>
           {(() => {
@@ -965,7 +965,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       }
     }
     return (
-      <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm" style={containerStyle}>
+      <div className="rounded-lg border p-4 shadow-sm" style={containerStyle}>
         <div className="mb-1" style={titleStyle}>{title}</div>
         <div className="text-2xl font-semibold text-gray-900" style={valueStyle}>{formatValue(serverValue, fmt)}{unit ? ` ${unit}` : ''}</div>
       </div>

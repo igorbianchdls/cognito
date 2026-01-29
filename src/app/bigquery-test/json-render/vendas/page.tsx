@@ -167,7 +167,7 @@ function SalesPlayground() {
           <h2 className="text-sm font-medium text-gray-900">Preview</h2>
           <div className="text-xs text-gray-500">Ações: Atualizar</div>
         </div>
-        <div className="rounded-md border border-gray-200 bg-white p-0 min-h-[420px]">
+        <div className="rounded-md border border-gray-200 p-0 min-h-[420px]">
           {tree ? (
             <Renderer tree={tree} registry={registry} onAction={handleAction} />
           ) : (
@@ -181,7 +181,7 @@ function SalesPlayground() {
 
 export default function JsonRenderVendasPage() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <div className="w-full">
         <h1 className="text-2xl font-semibold text-gray-900 mb-1">JSON Render — Vendas</h1>
         <p className="text-sm text-gray-600 mb-6">Template focado em Vendas com dados reais.</p>

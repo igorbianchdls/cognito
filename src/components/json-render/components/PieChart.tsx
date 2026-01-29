@@ -97,7 +97,7 @@ export default function JsonRenderPieChart({ element }: { element: any }) {
 
   const nivoTheme = buildNivoTheme(nivo?.theme);
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-0 shadow-sm" style={containerStyle}>
+    <div className="rounded-lg border p-0 shadow-sm" style={containerStyle}>
       {title && <div className="text-sm font-medium text-gray-900 mb-2" style={titleStyle}>{title}</div>}
       <div style={{ height }}>
         <ResponsivePie

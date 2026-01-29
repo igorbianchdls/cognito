@@ -34,9 +34,10 @@ export function ThemeProvider({ name, components, cssVars, children }: { name?: 
   for (const k of Object.keys(combined.cssVars || {})) {
     (styleVars as any)[`--${k}`] = (combined.cssVars as any)[k];
   }
-  if ((combined.cssVars || {}).hasOwnProperty('fontFamily')) {
-    (styleVars as any).fontFamily = 'var(--fontFamily)';
-  }
+  const css = combined.cssVars || {};
+  if (css.hasOwnProperty('fontFamily')) (styleVars as any).fontFamily = 'var(--fontFamily)';
+  if (css.hasOwnProperty('bg')) (styleVars as any).backgroundColor = 'var(--bg)';
+  if (css.hasOwnProperty('fg')) (styleVars as any).color = 'var(--fg)';
 
   return (
     <ThemeContext.Provider value={combined}>

@@ -174,7 +174,7 @@ function ComprasPlayground() {
         <div className="mb-2 flex items-center justify-between">
           <h2 className="text-sm font-medium text-gray-900">Preview</h2>
         </div>
-        <div className="rounded-md border border-gray-200 bg-white p-0 min-h-[420px]">
+        <div className="rounded-md border border-gray-200 p-0 min-h-[420px]">
           {tree ? (
             <Renderer tree={tree} registry={registry} onAction={handleAction} />
           ) : (
@@ -188,7 +188,7 @@ function ComprasPlayground() {
 
 export default function JsonRenderComprasPage() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <div className="w-full">
         <h1 className="text-2xl font-semibold text-gray-900 mb-1">JSON Render — Compras</h1>
         <p className="text-sm text-gray-600 mb-6">Template focado em Compras com dados reais.</p>
