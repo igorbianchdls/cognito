@@ -12,9 +12,9 @@ const SALES_TEMPLATE_TEXT = JSON.stringify([
     children: [
       { type: "Header", props: { title: "Dashboard de Vendas", subtitle: "Principais indicadores e cortes", align: "center", controlsPosition: "right", datePicker: { visible: true, mode: "range", position: "right", storePath: "filters.dateRange", actionOnChange: { type: "refresh_data" }, style: { padding: 6, fontFamily: "Barlow", fontSize: 12 } } } },
       { type: "Div", props: { direction: "row", gap: 12, padding: 16, justify: "start", align: "start", childGrow: true }, children: [
-        { type: "KPI", props: { title: "Vendas", format: "currency", dataQuery: { model: "vendas.pedidos", measure: "SUM(p.valor_total)", filters: { tenant_id: 1 } } } },
-        { type: "KPI", props: { title: "Pedidos", format: "number", dataQuery: { model: "vendas.pedidos", measure: "COUNT()", filters: { tenant_id: 1 } } } },
-        { type: "KPI", props: { title: "Ticket Médio", format: "currency", dataQuery: { model: "vendas.pedidos", measure: "AVG(p.valor_total)", filters: { tenant_id: 1 } } } },
+        { type: "KPI", props: { title: "Vendas", format: "currency", borderless: true, dataQuery: { model: "vendas.pedidos", measure: "SUM(p.valor_total)", filters: { tenant_id: 1 } } } },
+        { type: "KPI", props: { title: "Pedidos", format: "number", borderless: true, dataQuery: { model: "vendas.pedidos", measure: "COUNT()", filters: { tenant_id: 1 } } } },
+        { type: "KPI", props: { title: "Ticket Médio", format: "currency", borderless: true, dataQuery: { model: "vendas.pedidos", measure: "AVG(p.valor_total)", filters: { tenant_id: 1 } } } },
         { type: "KPI", props: { title: "Margem Bruta", valuePath: "vendas.kpis.margemBruta", format: "currency", borderless: true } }
       ]},
 
