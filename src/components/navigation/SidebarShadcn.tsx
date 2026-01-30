@@ -231,18 +231,18 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
       className={cn('ui-text', borderless ? '!border-r-0 !border-l-0 !border-0' : undefined, className)}
       {...props}
     >
-      <SidebarHeader className={cn("h-16")} style={{ backgroundColor: finalBgColor }}>
+      <SidebarHeader className={cn("h-16 p-0")} style={{ backgroundColor: finalBgColor }}>
         {headerVariant === 'compact' ? (
-          <div className="h-full w-full flex items-center justify-between px-[var(--ui-pad-x)]">
+          <div className="h-full w-full flex items-center justify-start gap-2 px-2">
+            {showHeaderTrigger && <SidebarTrigger className="h-8 w-8" />}
             <SidebarHeaderCompact teams={dataWithActiveState.teams} />
-            {showHeaderTrigger && <SidebarTrigger />}
           </div>
         ) : (
-          <div className="h-full w-full flex items-center justify-between px-[var(--ui-pad-x)]">
+          <div className="h-full w-full flex items-center justify-start gap-2 px-2">
+            {showHeaderTrigger && <SidebarTrigger className="h-8 w-8" />}
             <div className="group-data-[collapsible=icon]:hidden">
               <TeamSwitcher teams={dataWithActiveState.teams} />
             </div>
-            {showHeaderTrigger && <SidebarTrigger />}
           </div>
         )}
       </SidebarHeader>
