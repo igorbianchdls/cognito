@@ -256,7 +256,7 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
             {navigationData.integrations.map((integration) => (
               <SidebarMenuItem key={integration.title}>
                 <SidebarMenuButton tooltip={integration.title}>
-                  <integration.icon className="w-4 h-4" backgroundColor="transparent" />
+                  <integration.icon className="w-3.5 h-3.5" backgroundColor="transparent" />
                   <span style={finalItemTextStyle}>{integration.title}</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
