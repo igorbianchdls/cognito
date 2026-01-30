@@ -30,7 +30,7 @@ export function NavModulos({ groupLabelStyle, itemTextStyle }: { groupLabelStyle
   return (
     <>
       <SidebarGroup>
-        <SidebarGroupLabel style={groupLabelStyle}>Gestão</SidebarGroupLabel>
+        <SidebarGroupLabel style={groupLabelStyle}>Gestão ERP</SidebarGroupLabel>
         <SidebarMenu>
           {/* Financeiro primeiro */}
           <Collapsible
@@ -102,33 +102,33 @@ export function NavModulos({ groupLabelStyle, itemTextStyle }: { groupLabelStyle
               </CollapsibleContent>
             </SidebarMenuItem>
           </Collapsible>
-          {/* Recursos Humanos abaixo de Contabilidade */}
+          {/* Compras */}
           <Collapsible
-            key="recursos-humanos"
+            key="compras"
             asChild
-            defaultOpen={pathname.startsWith("/modulos/recursos-humanos")}
+            defaultOpen={pathname.startsWith("/modulos/compras")}
             className="group/collapsible"
           >
             <SidebarMenuItem>
               <CollapsibleTrigger asChild>
-                <SidebarMenuButton tooltip="Recursos Humanos">
-                  <Briefcase className="w-3.5 h-3.5" />
-                  <span style={itemTextStyle}>Recursos Humanos</span>
+                <SidebarMenuButton tooltip="Compras">
+                  <ShoppingBag className="w-3.5 h-3.5" />
+                  <span style={itemTextStyle}>Compras</span>
                   <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                 </SidebarMenuButton>
               </CollapsibleTrigger>
               <CollapsibleContent>
                 <SidebarMenuSub>
                   <SidebarMenuSubItem>
-                    <SidebarMenuSubButton asChild isActive={pathname === "/modulos/recursos-humanos"}>
-                      <a href="/modulos/recursos-humanos">
+                    <SidebarMenuSubButton asChild isActive={pathname === "/modulos/compras"}>
+                      <a href="/modulos/compras">
                         <span style={itemTextStyle}>Gestão</span>
                       </a>
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
                   <SidebarMenuSubItem>
-                    <SidebarMenuSubButton asChild isActive={pathname === "/modulos/recursos-humanos/relatorio"}>
-                      <a href="/modulos/recursos-humanos/relatorio">
+                    <SidebarMenuSubButton asChild isActive={pathname === "/modulos/compras/relatorio"}>
+                      <a href="/modulos/compras/relatorio">
                         <span style={itemTextStyle}>Relatório</span>
                       </a>
                     </SidebarMenuSubButton>
@@ -138,46 +138,7 @@ export function NavModulos({ groupLabelStyle, itemTextStyle }: { groupLabelStyle
             </SidebarMenuItem>
           </Collapsible>
 
-          {/* Fiscal - removed globally */}
-
-          {/* Demais itens */}
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              tooltip="Empresa"
-              onClick={() => router.push("/modulos/empresa")}
-              isActive={pathname.startsWith("/modulos/empresa")}
-            >
-              <Building2 className="w-3.5 h-3.5" />
-              <span style={itemTextStyle}>Empresa</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          {/* Administrativo - removed globally */}
-          {/* Documentos - removed globally */}
-        </SidebarMenu>
-      </SidebarGroup>
-      <SidebarGroup>
-        <SidebarGroupLabel style={groupLabelStyle}>Vendas</SidebarGroupLabel>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              tooltip="Produtos"
-              onClick={() => router.push("/modulos/produtos")}
-              isActive={pathname.startsWith("/modulos/produtos")}
-            >
-              <Package className="w-3.5 h-3.5" />
-              <span style={itemTextStyle}>Produtos</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              tooltip="Serviços"
-              onClick={() => router.push("/modulos/servicos")}
-              isActive={pathname.startsWith("/modulos/servicos")}
-            >
-              <Wrench className="w-3.5 h-3.5" />
-              <span style={itemTextStyle}>Serviços</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+          {/* Vendas */}
           <Collapsible
             key="vendas"
             asChild
@@ -219,6 +180,85 @@ export function NavModulos({ groupLabelStyle, itemTextStyle }: { groupLabelStyle
               </CollapsibleContent>
             </SidebarMenuItem>
           </Collapsible>
+
+          {/* Produtos */}
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              tooltip="Produtos"
+              onClick={() => router.push("/modulos/produtos")}
+              isActive={pathname.startsWith("/modulos/produtos")}
+            >
+              <Package className="w-3.5 h-3.5" />
+              <span style={itemTextStyle}>Produtos</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+
+          {/* Serviços */}
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              tooltip="Serviços"
+              onClick={() => router.push("/modulos/servicos")}
+              isActive={pathname.startsWith("/modulos/servicos")}
+            >
+              <Wrench className="w-3.5 h-3.5" />
+              <span style={itemTextStyle}>Serviços</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+
+          {/* Estoque */}
+          <Collapsible
+            key="estoque"
+            asChild
+            defaultOpen={pathname.startsWith("/modulos/estoque")}
+            className="group/collapsible"
+          >
+            <SidebarMenuItem>
+              <CollapsibleTrigger asChild>
+                <SidebarMenuButton tooltip="Estoque">
+                  <Package className="w-3.5 h-3.5" />
+                  <span style={itemTextStyle}>Estoque</span>
+                  <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                </SidebarMenuButton>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <SidebarMenuSub>
+                  <SidebarMenuSubItem>
+                    <SidebarMenuSubButton asChild isActive={pathname === "/modulos/estoque"}>
+                      <a href="/modulos/estoque">
+                        <span style={itemTextStyle}>Gestão</span>
+                      </a>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                  <SidebarMenuSubItem>
+                    <SidebarMenuSubButton asChild isActive={pathname === "/modulos/estoque/relatorio"}>
+                      <a href="/modulos/estoque/relatorio">
+                        <span style={itemTextStyle}>Relatório</span>
+                      </a>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                </SidebarMenuSub>
+              </CollapsibleContent>
+            </SidebarMenuItem>
+          </Collapsible>
+
+          {/* Cadastros (antigo Empresa) */}
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              tooltip="Cadastros"
+              onClick={() => router.push("/modulos/empresa")}
+              isActive={pathname.startsWith("/modulos/empresa")}
+            >
+              <Building2 className="w-3.5 h-3.5" />
+              <span style={itemTextStyle}>Cadastros</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          {/* Administrativo - removed globally */}
+          {/* Documentos - removed globally */}
+        </SidebarMenu>
+      </SidebarGroup>
+      <SidebarGroup>
+        <SidebarGroupLabel style={groupLabelStyle}>Vendas</SidebarGroupLabel>
+        <SidebarMenu>
           <Collapsible
             key="crm"
             asChild
@@ -269,75 +309,6 @@ export function NavModulos({ groupLabelStyle, itemTextStyle }: { groupLabelStyle
       <SidebarGroup>
         <SidebarGroupLabel style={groupLabelStyle}>Supply Chain</SidebarGroupLabel>
         <SidebarMenu>
-          <Collapsible
-            key="estoque"
-            asChild
-            defaultOpen={pathname.startsWith("/modulos/estoque")}
-            className="group/collapsible"
-          >
-            <SidebarMenuItem>
-              <CollapsibleTrigger asChild>
-                <SidebarMenuButton tooltip="Estoque">
-                  <Package className="w-3.5 h-3.5" />
-                  <span style={itemTextStyle}>Estoque</span>
-                  <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                </SidebarMenuButton>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <SidebarMenuSub>
-                  <SidebarMenuSubItem>
-                    <SidebarMenuSubButton asChild isActive={pathname === "/modulos/estoque"}>
-                      <a href="/modulos/estoque">
-                        <span style={itemTextStyle}>Gestão</span>
-                      </a>
-                    </SidebarMenuSubButton>
-                  </SidebarMenuSubItem>
-                  <SidebarMenuSubItem>
-                    <SidebarMenuSubButton asChild isActive={pathname === "/modulos/estoque/relatorio"}>
-                      <a href="/modulos/estoque/relatorio">
-                        <span style={itemTextStyle}>Relatório</span>
-                      </a>
-                    </SidebarMenuSubButton>
-                  </SidebarMenuSubItem>
-                </SidebarMenuSub>
-              </CollapsibleContent>
-            </SidebarMenuItem>
-          </Collapsible>
-          {/* Compras dentro de Supply Chain */}
-          <Collapsible
-            key="compras"
-            asChild
-            defaultOpen={pathname.startsWith("/modulos/compras")}
-            className="group/collapsible"
-          >
-            <SidebarMenuItem>
-              <CollapsibleTrigger asChild>
-                <SidebarMenuButton tooltip="Compras">
-                  <ShoppingBag className="w-3.5 h-3.5" />
-                  <span style={itemTextStyle}>Compras</span>
-                  <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                </SidebarMenuButton>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <SidebarMenuSub>
-                  <SidebarMenuSubItem>
-                    <SidebarMenuSubButton asChild isActive={pathname === "/modulos/compras"}>
-                      <a href="/modulos/compras">
-                        <span style={itemTextStyle}>Gestão</span>
-                      </a>
-                    </SidebarMenuSubButton>
-                  </SidebarMenuSubItem>
-                  <SidebarMenuSubItem>
-                    <SidebarMenuSubButton asChild isActive={pathname === "/modulos/compras/relatorio"}>
-                      <a href="/modulos/compras/relatorio">
-                        <span style={itemTextStyle}>Relatório</span>
-                      </a>
-                    </SidebarMenuSubButton>
-                  </SidebarMenuSubItem>
-                </SidebarMenuSub>
-              </CollapsibleContent>
-            </SidebarMenuItem>
-          </Collapsible>
           <SidebarMenuItem>
             <SidebarMenuButton
               tooltip="Transportes"
