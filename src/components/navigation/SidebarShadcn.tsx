@@ -68,10 +68,10 @@ const DEFAULT_SECTION_TITLE_STYLE: React.CSSProperties = {
 
 const DEFAULT_ITEM_TEXT_STYLE: React.CSSProperties = {
   fontFamily: 'var(--ui-font-family)',
-  fontWeight: 400,
+  fontWeight: 500,
   fontSize: 'var(--ui-font-size)',
   color: 'rgb(64, 64, 64)',
-  letterSpacing: 'calc(var(--ui-tracking-pct) * 0.01em)',
+  letterSpacing: '-0.02em',
   textTransform: 'none',
 }
 
