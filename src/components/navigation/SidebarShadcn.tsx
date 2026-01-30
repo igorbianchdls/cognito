@@ -70,7 +70,7 @@ const DEFAULT_ITEM_TEXT_STYLE: React.CSSProperties = {
   fontFamily: 'var(--ui-font-family)',
   fontWeight: 500,
   fontSize: 'var(--ui-font-size)',
-  color: 'rgb(64, 64, 64)',
+  color: '#374151',
   letterSpacing: '-0.02em',
   textTransform: 'none',
 }
