@@ -31,7 +31,7 @@ export function NavModulos({ groupLabelStyle, itemTextStyle }: { groupLabelStyle
     <>
       <SidebarGroup>
         <SidebarGroupLabel style={groupLabelStyle}>Gestão ERP</SidebarGroupLabel>
-        <SidebarMenu>
+        <SidebarMenu className="gap-0.5">
           {/* Financeiro primeiro */}
           <Collapsible
             key="financeiro"
@@ -258,7 +258,7 @@ export function NavModulos({ groupLabelStyle, itemTextStyle }: { groupLabelStyle
       </SidebarGroup>
       <SidebarGroup>
         <SidebarGroupLabel style={groupLabelStyle}>Vendas</SidebarGroupLabel>
-        <SidebarMenu>
+        <SidebarMenu className="gap-0.5">
           <Collapsible
             key="crm"
             asChild
@@ -308,7 +308,7 @@ export function NavModulos({ groupLabelStyle, itemTextStyle }: { groupLabelStyle
       {/* Supply Chain moved directly below Vendas */}
       <SidebarGroup>
         <SidebarGroupLabel style={groupLabelStyle}>Supply Chain</SidebarGroupLabel>
-        <SidebarMenu>
+        <SidebarMenu className="gap-0.5">
           <SidebarMenuItem>
             <SidebarMenuButton
               tooltip="Transportes"
@@ -323,7 +323,7 @@ export function NavModulos({ groupLabelStyle, itemTextStyle }: { groupLabelStyle
       </SidebarGroup>
       <SidebarGroup>
         <SidebarGroupLabel style={groupLabelStyle}>Pós-Vendas</SidebarGroupLabel>
-        <SidebarMenu>
+        <SidebarMenu className="gap-0.5">
           <Collapsible
             key="servicos"
             asChild
@@ -423,7 +423,7 @@ export function NavModulos({ groupLabelStyle, itemTextStyle }: { groupLabelStyle
       </SidebarGroup>
       <SidebarGroup>
         <SidebarGroupLabel style={groupLabelStyle}>Marketing</SidebarGroupLabel>
-        <SidebarMenu>
+        <SidebarMenu className="gap-0.5">
           <Collapsible
             key="marketing"
             asChild

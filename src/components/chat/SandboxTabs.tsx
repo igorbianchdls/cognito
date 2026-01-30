@@ -24,12 +24,12 @@ export default function SandboxTabs() {
           <div key={key} className="relative">
             <TabsTrigger
               value={key}
-              className={cn('h-8 px-2 rounded-xl text-sm font-medium transition-colors')}
+              className={cn('h-8 px-2 rounded-xl font-medium transition-colors')}
               activeClassName="!bg-gray-50 !text-gray-800 !shadow-none rounded-xl !px-2 !h-8"
               inactiveClassName="!text-gray-500 hover:!text-gray-700"
             >
               <Icon className="w-4 h-4 mr-1.5" />
-              {label}
+              <span className="text-xs">{label}</span>
               {key === 'dashboard' && <ChevronDown className="w-3.5 h-3.5 ml-1 opacity-70" />}
               {active === key && (
                 <DropdownMenu>
