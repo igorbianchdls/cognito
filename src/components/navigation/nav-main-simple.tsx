@@ -42,7 +42,7 @@ export function NavMainSimple({
               onClick={() => handleNavigation(item.url)}
               isActive={item.isActive}
             >
-              {item.icon && <item.icon className="w-3.5 h-3.5" />}
+              {item.icon && <item.icon className="w-3 h-3" />}
               <span style={itemTextStyle}>{item.title}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
