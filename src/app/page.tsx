@@ -1,11 +1,11 @@
 'use client';
 
 import { useChat } from '@ai-sdk/react';
-import { DefaultChatTransport } from 'ai';
-import { useState, FormEvent, useMemo } from 'react';
+import { DefaultChatTransport, type UIMessage } from 'ai';
+import { useState, FormEvent, useMemo, useEffect, useRef } from 'react';
 import { useStore } from '@nanostores/react';
 import ChatContainer from '@/components/navigation/nexus/ChatContainer';
-import { currentAgent as agentStore, setCurrentAgent } from '@/stores/nexus/agentStore';
+import { currentAgent as agentStore } from '@/stores/nexus/agentStore';
 import type { AttachedFile } from '@/components/navigation/nexus/FileAttachmentPreview';
 
 export default function Home() {
@@ -37,6 +37,55 @@ export default function Home() {
   const [input, setInput] = useState('');
   const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([]);
 
+  // Persistência simples em localStorage
+  type PersistedSession = {
+    version: number;
+    messages: UIMessage[];
+    input: string;
+    selectedAgent: string | null;
+    updatedAt: number;
+  }
+  const LS_KEY = 'nexus:chat:session:v1';
+  const [persistedMessages, setPersistedMessages] = useState<UIMessage[]>([]);
+  const [hydrated, setHydrated] = useState(false);
+  const saveTimer = useRef<number | null>(null);
+
+  // Hidratar do localStorage na montagem
+  useEffect(() => {
+    try {
+      const raw = typeof window !== 'undefined' ? window.localStorage.getItem(LS_KEY) : null;
+      if (raw) {
+        const data = JSON.parse(raw) as PersistedSession;
+        if (data && Array.isArray(data.messages)) {
+          setPersistedMessages(data.messages);
+        }
+        if (typeof data?.input === 'string') setInput(data.input);
+        if (typeof data?.selectedAgent !== 'undefined') setSelectedAgent(data.selectedAgent);
+      }
+    } catch {}
+    setHydrated(true);
+  }, []);
+
+  // Escolhe qual lista de mensagens exibir: hook ou persistida
+  const viewMessages: UIMessage[] = (messages && messages.length > 0) ? messages : persistedMessages;
+
+  // Persistir com debounce quando algo relevante muda
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const payload: PersistedSession = {
+      version: 1,
+      messages: viewMessages,
+      input,
+      selectedAgent,
+      updatedAt: Date.now(),
+    };
+    if (saveTimer.current) window.clearTimeout(saveTimer.current);
+    saveTimer.current = window.setTimeout(() => {
+      try { window.localStorage.setItem(LS_KEY, JSON.stringify(payload)); } catch {}
+    }, 400) as unknown as number;
+    return () => { if (saveTimer.current) window.clearTimeout(saveTimer.current); };
+  }, [viewMessages, input, selectedAgent]);
+
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -67,7 +116,7 @@ export default function Home() {
   return (
     <div style={{ marginLeft: '24%', marginRight: '25%' }}>
       <ChatContainer
-        messages={messages}
+        messages={viewMessages}
         input={input}
         setInput={setInput}
         onSubmit={handleSubmit}
