@@ -97,28 +97,23 @@ export default function JsonRenderPreview({ chatId }: Props) {
   React.useEffect(() => { refreshPaths(); }, [refreshPaths]);
 
   return (
-    <div className="h-full w-full grid grid-rows-[auto_1fr] min-h-0">
-      <div className="flex items-center justify-between h-8 border-b px-3 bg-gray-50 text-xs text-gray-600">
-        <div className="truncate">Preview • {jsonrPath || '(sem caminho)'}{content && (<span className="ml-2 text-gray-400">({content.length} bytes)</span>)}</div>
-      </div>
-      <div className="min-h-0 overflow-auto p-2 bg-gray-50">
-        {(pathsError && !error) && (
-          <div className="rounded border border-yellow-300 bg-yellow-50 text-yellow-800 text-xs p-2 mb-2">{pathsError}</div>
-        )}
-        {error && (
-          <div className="rounded border border-red-300 bg-red-50 text-red-700 text-xs p-2">{error}</div>
-        )}
-        {!error && !tree && (
-          <div className="text-xs text-gray-500 p-2">Carregando...</div>
-        )}
-        {!error && tree && (
-          <div className="rounded border border-gray-200 bg-white p-0 min-h-[420px]">
-            <DataProvider initialData={{}}>
-              <Renderer tree={tree} registry={registry} />
-            </DataProvider>
-          </div>
-        )}
-      </div>
+    <div className="h-full w-full min-h-0 overflow-auto p-2 bg-gray-50">
+      {(pathsError && !error) && (
+        <div className="rounded border border-yellow-300 bg-yellow-50 text-yellow-800 text-xs p-2 mb-2">{pathsError}</div>
+      )}
+      {error && (
+        <div className="rounded border border-red-300 bg-red-50 text-red-700 text-xs p-2">{error}</div>
+      )}
+      {!error && !tree && (
+        <div className="text-xs text-gray-500 p-2">Carregando...</div>
+      )}
+      {!error && tree && (
+        <div className="rounded border border-gray-200 bg-white p-0 min-h-[420px]">
+          <DataProvider initialData={{}}>
+            <Renderer tree={tree} registry={registry} />
+          </DataProvider>
+        </div>
+      )}
     </div>
   );
 }
