@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, FormEvent, useRef } from 'react';
+import React, { useState, FormEvent, useRef, useEffect } from 'react';
 import type { UIMessage } from 'ai';
 import Header from './Header';
 import PerguntaDoUsuario from './PerguntaDoUsuario';
@@ -18,12 +18,39 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins }: { onOp
   const [model, setModel] = useState<'sonnet'|'haiku'>('haiku')
   const abortRef = useRef<AbortController | null>(null)
 
+  // LocalStorage persistence (simple): active chat id + state per chat
+  const LS_ACTIVE = 'chat:active_id'
+  const LS_STATE_PREFIX = 'chat:state:'
+  const saveTimerRef = useRef<number | null>(null)
+
+  // Hydrate from localStorage on mount
+  useEffect(() => {
+    try {
+      const activeId = typeof window !== 'undefined' ? window.localStorage.getItem(LS_ACTIVE) : null
+      if (activeId) {
+        setChatId(activeId)
+        const raw = window.localStorage.getItem(LS_STATE_PREFIX + activeId)
+        if (raw) {
+          const data = JSON.parse(raw) as { messages?: UIMessage[]; input?: string }
+          if (Array.isArray(data?.messages)) setMessages(data.messages)
+          if (typeof data?.input === 'string') setInput(data.input)
+        }
+      }
+    } catch {}
+  }, [])
+
   const ensureStart = async () => {
     if (chatId) return chatId
+    // Try reuse from localStorage if available
+    try {
+      const cachedId = typeof window !== 'undefined' ? window.localStorage.getItem(LS_ACTIVE) : null
+      if (cachedId) { setChatId(cachedId); return cachedId }
+    } catch {}
     const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'chat-start' }) })
     const data = await res.json().catch(() => ({})) as { ok?: boolean; chatId?: string; error?: string }
     if (!res.ok || data.ok === false || !data.chatId) throw new Error(data.error || 'chat-start failed')
     setChatId(data.chatId)
+    try { if (typeof window !== 'undefined') window.localStorage.setItem(LS_ACTIVE, data.chatId) } catch {}
     return data.chatId
   }
 
@@ -337,6 +364,21 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins }: { onOp
       </div>
     );
   }
+
+  // Persist to localStorage (debounced) when chatId/messages/input change
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (!chatId) return
+    const payload = { messages, input, updatedAt: Date.now() }
+    if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current)
+    saveTimerRef.current = window.setTimeout(() => {
+      try {
+        window.localStorage.setItem(LS_ACTIVE, chatId)
+        window.localStorage.setItem(LS_STATE_PREFIX + chatId, JSON.stringify(payload))
+      } catch {}
+    }, 400) as unknown as number
+    return () => { if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current) }
+  }, [chatId, messages, input])
 
   return (
     <div className="h-full grid grid-rows-[auto_1fr]">
