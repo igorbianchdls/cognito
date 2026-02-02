@@ -36,16 +36,31 @@ export async function POST(req: Request) {
     const timeline: Array<{ name: string; ms: number; ok: boolean; exitCode?: number }> = []
     const t0 = Date.now()
     try {
-      sandbox = await Sandbox.create({ runtime: 'node22', resources: { vcpus: 2 }, timeout: 600_000 })
-      timeline.push({ name: 'create-sandbox', ms: Date.now() - t0, ok: true })
-      const t1 = Date.now()
-      // Install Agent SDK + CLI + zod (for MCP schemas)
-      const install = await sandbox.runCommand({ cmd: 'npm', args: ['install', '@anthropic-ai/claude-agent-sdk', '@anthropic-ai/claude-code', 'zod', '@composio/core', '@composio/claude-agent-sdk'] })
-      timeline.push({ name: 'install', ms: Date.now() - t1, ok: install.exitCode === 0, exitCode: install.exitCode })
-      if (install.exitCode !== 0) {
-        const [o, e] = await Promise.all([install.stdout().catch(() => ''), install.stderr().catch(() => '')])
-        await sandbox.stop().catch(() => {})
-        return Response.json({ ok: false, error: 'install failed', stdout: o, stderr: e, timeline }, { status: 500 })
+      let usedSnapshot = false
+      const snapshotId = (process.env.SANDBOX_SNAPSHOT_ID || '').trim()
+      if (snapshotId) {
+        const tSnap = Date.now()
+        try {
+          sandbox = await Sandbox.create({ source: { type: 'snapshot', snapshotId }, resources: { vcpus: 2 }, timeout: 600_000 })
+          timeline.push({ name: 'create-from-snapshot', ms: Date.now() - tSnap, ok: true })
+          usedSnapshot = true
+        } catch (e) {
+          timeline.push({ name: 'create-from-snapshot', ms: Date.now() - tSnap, ok: false })
+        }
+      }
+      if (!sandbox) {
+        const tCreate = Date.now()
+        sandbox = await Sandbox.create({ runtime: 'node22', resources: { vcpus: 2 }, timeout: 600_000 })
+        timeline.push({ name: 'create-sandbox', ms: Date.now() - tCreate, ok: true })
+        const t1 = Date.now()
+        // Install Agent SDK + CLI + zod (for MCP schemas)
+        const install = await sandbox.runCommand({ cmd: 'npm', args: ['install', '@anthropic-ai/claude-agent-sdk', '@anthropic-ai/claude-code', 'zod', '@composio/core', '@composio/claude-agent-sdk'] })
+        timeline.push({ name: 'install', ms: Date.now() - t1, ok: install.exitCode === 0, exitCode: install.exitCode })
+        if (install.exitCode !== 0) {
+          const [o, e] = await Promise.all([install.stdout().catch(() => ''), install.stderr().catch(() => '')])
+          await sandbox.stop().catch(() => {})
+          return Response.json({ ok: false, error: 'install failed', stdout: o, stderr: e, timeline }, { status: 500 })
+        }
       }
       // Seed a single Tools Skill to document generic MCP tools
       try {
