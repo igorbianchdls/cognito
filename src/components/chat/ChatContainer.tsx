@@ -316,6 +316,24 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
   }
 
   const isEmpty = (messages || []).length === 0;
+  // Hydrate history when landing on /chat/[id] directly (no prefill auto-send)
+  useEffect(() => {
+    const shouldHydrate = Boolean(initialChatId) && isEmpty && !(autoSendPrefill && initialMessage)
+    if (!shouldHydrate) return
+    let cancelled = false
+    ;(async () => {
+      try {
+        const res = await fetch(`/api/chat/messages?chatId=${encodeURIComponent(initialChatId!)}&limit=50`, { cache: 'no-store' })
+        const data = await res.json().catch(() => ({})) as { ok?: boolean; items?: Array<{ id: string; role: 'user'|'assistant'|'tool'; content: string; created_at: string }> }
+        if (!cancelled && res.ok && data && data.ok && Array.isArray(data.items)) {
+          const mapped = data.items.map((r) => ({ id: r.id || `db-${r.created_at}`, role: (r.role === 'assistant' ? 'assistant' : 'user') as any, parts: [{ type: 'text', text: r.content }] as any }))
+          setMessages(mapped as any)
+        }
+      } catch { /* ignore */ }
+    })()
+    return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialChatId])
   // Auto-send prefilled first message when arriving at /chat/[id]
   useEffect(() => {
     if (autoSendPrefill && initialMessage && isEmpty && status === 'idle') {
