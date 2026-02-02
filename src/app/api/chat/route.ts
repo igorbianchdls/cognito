@@ -194,6 +194,20 @@ export async function POST(req: Request) {
       } catch (e) {
         timeline.push({ name: 'db_upsert_chat', ms: Date.now() - tDb, ok: false })
       }
+
+      // Set automatic title "Chat N" if missing (best-effort)
+      const tTitle = Date.now()
+      try {
+        // Ensure sequence exists (ignore errors if unsupported/exists)
+        try { await runQuery('CREATE SEQUENCE IF NOT EXISTS chat.chat_title_seq START WITH 1 INCREMENT BY 1') } catch {}
+        const updated = await runQuery<{ title: string }>(
+          "UPDATE chat.chats SET title = 'Chat ' || nextval('chat.chat_title_seq') WHERE id = $1 AND title IS NULL RETURNING title",
+          [id]
+        )
+        timeline.push({ name: 'db_set_title', ms: Date.now() - tTitle, ok: Array.isArray(updated) && updated.length > 0 })
+      } catch {
+        timeline.push({ name: 'db_set_title', ms: Date.now() - tTitle, ok: false })
+      }
       return Response.json({ ok: true, chatId: id, timeline })
     } catch (e) {
       try { await sandbox?.stop() } catch {}
