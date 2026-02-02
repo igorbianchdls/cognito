@@ -22,6 +22,7 @@ export default function ChatListaPage() {
   const [error, setError] = useState<string | null>(null);
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const load = async (reset = false) => {
     setLoading(true);
@@ -42,6 +43,24 @@ export default function ChatListaPage() {
   };
 
   useEffect(() => { load(true); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
+
+  const handleDelete = async (id: string) => {
+    if (!id) return;
+    const ok = window.confirm('Deseja deletar este chat? Esta ação é irreversível.');
+    if (!ok) return;
+    setDeletingId(id);
+    try {
+      const res = await fetch(`/api/chat/${encodeURIComponent(id)}`, { method: 'DELETE' });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data?.ok) throw new Error(data?.error || 'Falha ao deletar');
+      // Remover item localmente
+      setItems(prev => prev.filter(r => r.id !== id));
+    } catch (e: any) {
+      setError(e?.message || String(e));
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   return (
     <SidebarProvider>
@@ -68,6 +87,7 @@ export default function ChatListaPage() {
                           <th className="py-2 pr-2">Modelo</th>
                           <th className="py-2 pr-2">Composio</th>
                           <th className="py-2 pr-2">Atualizado</th>
+                          <th className="py-2 pr-2">Ações</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -82,6 +102,15 @@ export default function ChatListaPage() {
                             <td className="py-2 pr-2">{row.model}</td>
                             <td className="py-2 pr-2">{row.composio_enabled ? 'ON' : 'OFF'}</td>
                             <td className="py-2 pr-2">{new Date(row.updated_at).toLocaleString()}</td>
+                            <td className="py-2 pr-2">
+                              <button
+                                onClick={() => handleDelete(row.id)}
+                                disabled={deletingId === row.id}
+                                className="px-2 py-1 rounded bg-red-600 text-white text-xs disabled:opacity-50"
+                              >
+                                {deletingId === row.id ? 'Deletando...' : 'Deletar'}
+                              </button>
+                            </td>
                           </tr>
                         ))}
                         {!items.length && !loading && (
@@ -110,4 +139,3 @@ export default function ChatListaPage() {
     </SidebarProvider>
   );
 }
-
