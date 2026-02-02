@@ -262,6 +262,8 @@ export async function POST(req: Request) {
     const runner = getChatStreamRunnerScript()
     await sess.sandbox.writeFiles([{ path: '/vercel/sandbox/agent-chat-stream.mjs', content: Buffer.from(runner) }])
     let assistantTextBuf = ''
+    const assistantParts: any[] = []
+    let textSegBuf = ''
     const stream = new ReadableStream<Uint8Array>({
       start: async (controller) => {
         try {
@@ -298,6 +300,24 @@ export async function POST(req: Request) {
                   const evt = JSON.parse(line)
                   if (evt && evt.type === 'delta' && typeof evt.text === 'string') {
                     assistantTextBuf += evt.text
+                    textSegBuf += evt.text
+                  } else if (evt && evt.type === 'tool_done') {
+                    // flush pending text segment before tool output
+                    const seg = (textSegBuf || '').trim()
+                    if (seg) {
+                      assistantParts.push({ type: 'text', text: seg })
+                      textSegBuf = ''
+                    }
+                    const toolName = (evt.tool_name || 'generic') as string
+                    assistantParts.push({ type: `tool-${toolName}`, state: 'output-available', output: evt.output, tool_name: toolName })
+                  } else if (evt && evt.type === 'tool_error') {
+                    const seg = (textSegBuf || '').trim()
+                    if (seg) {
+                      assistantParts.push({ type: 'text', text: seg })
+                      textSegBuf = ''
+                    }
+                    const toolName = (evt.tool_name || 'generic') as string
+                    assistantParts.push({ type: `tool-${toolName}`, state: 'output-error', errorText: evt.error, tool_name: toolName })
                   }
                 } catch {}
                 controller.enqueue(enc.encode(`data: ${line}\n\n`))
@@ -307,16 +327,25 @@ export async function POST(req: Request) {
             }
           }
           if (errBuf) controller.enqueue(enc.encode(`event: stderr\ndata: ${JSON.stringify(errBuf)}\n\n`))
-          // Best-effort: persist assistant final message
+          // Best-effort: persist assistant final message (prefer parts when tools present)
           try {
-            const content = (assistantTextBuf || '').trim()
-            if (content) {
+            const seg = (textSegBuf || '').trim()
+            if (seg) assistantParts.push({ type: 'text', text: seg })
+            if (assistantParts.length > 0) {
               await runQuery(
-                `INSERT INTO chat.chat_messages (chat_id, role, content) VALUES ($1,'assistant',$2)`,
-                [chatId, content]
+                `INSERT INTO chat.chat_messages (chat_id, role, content, parts) VALUES ($1,'assistant','',$2)`,
+                [chatId, JSON.stringify(assistantParts)]
               )
-              try { await runQuery('UPDATE chat.chats SET last_message_at = now(), updated_at = now() WHERE id = $1', [chatId]) } catch {}
+            } else {
+              const content = (assistantTextBuf || '').trim()
+              if (content) {
+                await runQuery(
+                  `INSERT INTO chat.chat_messages (chat_id, role, content) VALUES ($1,'assistant',$2)`,
+                  [chatId, content]
+                )
+              }
             }
+            try { await runQuery('UPDATE chat.chats SET last_message_at = now(), updated_at = now() WHERE id = $1', [chatId]) } catch {}
           } catch {}
           controller.enqueue(enc.encode('event: end\ndata: done\n\n'))
           controller.close()

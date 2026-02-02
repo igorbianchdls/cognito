@@ -324,9 +324,15 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
     ;(async () => {
       try {
         const res = await fetch(`/api/chat/messages?chatId=${encodeURIComponent(initialChatId!)}&limit=50`, { cache: 'no-store' })
-        const data = await res.json().catch(() => ({})) as { ok?: boolean; items?: Array<{ id: string; role: 'user'|'assistant'|'tool'; content: string; created_at: string }> }
+        const data = await res.json().catch(() => ({})) as { ok?: boolean; items?: Array<{ id: string; role: 'user'|'assistant'|'tool'; content?: string; parts?: any; created_at: string }> }
         if (!cancelled && res.ok && data && data.ok && Array.isArray(data.items)) {
-          const mapped = data.items.map((r) => ({ id: r.id || `db-${r.created_at}`, role: (r.role === 'assistant' ? 'assistant' : 'user') as any, parts: [{ type: 'text', text: r.content }] as any }))
+          const mapped = data.items.map((r) => ({
+            id: r.id || `db-${r.created_at}`,
+            role: (r.role === 'assistant' ? 'assistant' : 'user') as any,
+            parts: (r.parts && Array.isArray(r.parts) && r.parts.length > 0)
+              ? (r.parts as any)
+              : ([{ type: 'text', text: r.content || '' }] as any)
+          }))
           setMessages(mapped as any)
         }
       } catch { /* ignore */ }
