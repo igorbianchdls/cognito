@@ -19,6 +19,33 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
   const [model, setModel] = useState<'sonnet'|'haiku'>('haiku')
   const abortRef = useRef<AbortController | null>(null)
   const router = useRouter()
+  const [menuBusy, setMenuBusy] = useState(false)
+
+  const startSandboxFromMenu = async () => {
+    setMenuBusy(true)
+    try { await ensureStart(); } catch {} finally { setMenuBusy(false) }
+  }
+  const stopSandboxFromMenu = async () => {
+    if (!chatId) return
+    setMenuBusy(true)
+    try {
+      const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'chat-stop', chatId }) })
+      const data = await res.json().catch(() => ({})) as any
+      if (res.ok && data && data.ok) {
+        setChatId(null)
+      }
+    } catch {} finally { setMenuBusy(false) }
+  }
+  const writeFilesFromMenu = async () => {
+    setMenuBusy(true)
+    try {
+      const id = await ensureStart()
+      const w1 = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'fs-write', chatId: id, path: '/vercel/sandbox/menu/hello.txt', content: 'Hello from menu' }) })
+      if (!w1.ok) throw new Error('write hello failed')
+      const w2 = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'fs-write', chatId: id, path: '/vercel/sandbox/menu/info.json', content: JSON.stringify({ when: new Date().toISOString(), via: 'menu' }) }) })
+      if (!w2.ok) throw new Error('write info failed')
+    } catch {} finally { setMenuBusy(false) }
+  }
 
   const ensureStart = async () => {
     if (chatId) return chatId
@@ -353,7 +380,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
   if (isEmpty) {
     return (
       <div className="h-full grid grid-rows-[auto_1fr]">
-        <Header />
+        <Header busy={menuBusy} hasSandbox={!!chatId} onStartSandbox={startSandboxFromMenu} onStopSandbox={stopSandboxFromMenu} onWriteFiles={writeFilesFromMenu} />
         <div className="h-full min-h-0" style={withSideMargins ? { marginLeft: '20%', marginRight: '20%' } : undefined}>
           <div className="h-full px-4">
             <div className="h-full flex items-center justify-center">
@@ -406,7 +433,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
 
   return (
     <div className="h-full grid grid-rows-[auto_1fr]">
-      <Header />
+      <Header busy={menuBusy} hasSandbox={!!chatId} onStartSandbox={startSandboxFromMenu} onStopSandbox={stopSandboxFromMenu} onWriteFiles={writeFilesFromMenu} />
       <div className="h-full grid grid-rows-[1fr_auto] min-h-0" style={withSideMargins ? { marginLeft: '20%', marginRight: '20%' } : undefined}>
         <div className="overflow-y-auto min-h-0 px-4 py-4">
           {messages.map((m) =>
