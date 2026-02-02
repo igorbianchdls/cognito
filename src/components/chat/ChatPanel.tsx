@@ -12,9 +12,10 @@ type ChatPanelProps = {
   redirectOnFirstMessage?: boolean;
   initialMessage?: string;
   autoSendPrefill?: boolean;
+  initialChatId?: string;
 };
 
-export default function ChatPanel({ className, style, onOpenSandbox, withSideMargins, redirectOnFirstMessage, initialMessage, autoSendPrefill }: ChatPanelProps) {
+export default function ChatPanel({ className, style, onOpenSandbox, withSideMargins, redirectOnFirstMessage, initialMessage, autoSendPrefill, initialChatId }: ChatPanelProps) {
   return (
     <div className={`ui-text h-full min-h-0 w-full overflow-hidden ${className ?? ''}`} style={style}>
       <ChatContainer
@@ -23,6 +24,7 @@ export default function ChatPanel({ className, style, onOpenSandbox, withSideMar
         redirectOnFirstMessage={redirectOnFirstMessage}
         initialMessage={initialMessage}
         autoSendPrefill={autoSendPrefill}
+        initialChatId={initialChatId}
       />
     </div>
   );

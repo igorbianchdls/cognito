@@ -10,7 +10,7 @@ import { useRouter } from 'next/navigation';
 
 type ChatStatus = 'idle' | 'submitted' | 'streaming' | 'error'
 
-export default function ChatContainer({ onOpenSandbox, withSideMargins, redirectOnFirstMessage, initialMessage, autoSendPrefill }: { onOpenSandbox?: (chatId: string) => void; withSideMargins?: boolean; redirectOnFirstMessage?: boolean; initialMessage?: string; autoSendPrefill?: boolean }) {
+export default function ChatContainer({ onOpenSandbox, withSideMargins, redirectOnFirstMessage, initialMessage, autoSendPrefill, initialChatId }: { onOpenSandbox?: (chatId: string) => void; withSideMargins?: boolean; redirectOnFirstMessage?: boolean; initialMessage?: string; autoSendPrefill?: boolean; initialChatId?: string }) {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<UIMessage[]>([])
   const [chatId, setChatId] = useState<string | null>(null)
@@ -22,7 +22,9 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
 
   const ensureStart = async () => {
     if (chatId) return chatId
-    const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'chat-start' }) })
+    const body: any = { action: 'chat-start' }
+    if (initialChatId && typeof initialChatId === 'string') body.chatId = initialChatId
+    const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
     const data = await res.json().catch(() => ({})) as { ok?: boolean; chatId?: string; error?: string }
     if (!res.ok || data.ok === false || !data.chatId) throw new Error(data.error || 'chat-start failed')
     setChatId(data.chatId)

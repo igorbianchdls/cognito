@@ -47,6 +47,7 @@ export default function ChatRoutePageWithId() {
                     redirectOnFirstMessage={false}
                     initialMessage={prefill}
                     autoSendPrefill={Boolean(prefill)}
+                    initialChatId={urlId}
                   />
                 </div>
                 <div className={!showSandbox ? 'hidden' : 'h-full min-h-0 p-2'}>
@@ -65,4 +66,3 @@ export default function ChatRoutePageWithId() {
     </SidebarProvider>
   );
 }
-
