@@ -48,6 +48,14 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
     } catch {} finally { setMenuBusy(false) }
   }
 
+  const openArtifactFromMenu = async () => {
+    setMenuBusy(true)
+    try {
+      const id = await ensureStart()
+      onOpenSandbox?.(id)
+    } catch {} finally { setMenuBusy(false) }
+  }
+
   const ensureStart = async () => {
     if (chatId) return chatId
     const body: any = { action: 'chat-start' }
@@ -406,7 +414,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
   if (isEmpty) {
     return (
       <div className="h-full grid grid-rows-[auto_1fr]">
-        <Header title={headerTitle || 'Chat'} busy={menuBusy} hasSandbox={!!chatId} onStartSandbox={startSandboxFromMenu} onStopSandbox={stopSandboxFromMenu} onWriteFiles={writeFilesFromMenu} />
+        <Header title={headerTitle || 'Chat'} busy={menuBusy} hasSandbox={!!chatId} onStartSandbox={startSandboxFromMenu} onStopSandbox={stopSandboxFromMenu} onWriteFiles={writeFilesFromMenu} onOpenArtifact={openArtifactFromMenu} />
         <div className="h-full min-h-0" style={withSideMargins ? { marginLeft: '20%', marginRight: '20%' } : undefined}>
           <div className="h-full px-4">
             <div className="h-full flex items-center justify-center">
@@ -459,7 +467,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
 
   return (
     <div className="h-full grid grid-rows-[auto_1fr]">
-      <Header title={headerTitle || 'Chat'} busy={menuBusy} hasSandbox={!!chatId} onStartSandbox={startSandboxFromMenu} onStopSandbox={stopSandboxFromMenu} onWriteFiles={writeFilesFromMenu} />
+      <Header title={headerTitle || 'Chat'} busy={menuBusy} hasSandbox={!!chatId} onStartSandbox={startSandboxFromMenu} onStopSandbox={stopSandboxFromMenu} onWriteFiles={writeFilesFromMenu} onOpenArtifact={openArtifactFromMenu} />
       <div className="h-full grid grid-rows-[1fr_auto] min-h-0" style={withSideMargins ? { marginLeft: '20%', marginRight: '20%' } : undefined}>
         <div className="overflow-y-auto min-h-0 px-4 py-4">
           {messages.map((m) =>

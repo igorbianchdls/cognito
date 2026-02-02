@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { MoreHorizontal, Lock, Play, Square, FilePlus2 } from 'lucide-react';
+import { MoreHorizontal, Lock, Play, Square, FilePlus2, BarChart3 } from 'lucide-react';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
@@ -11,11 +11,12 @@ type HeaderProps = {
   onStartSandbox?: () => Promise<void> | void;
   onStopSandbox?: () => Promise<void> | void;
   onWriteFiles?: () => Promise<void> | void;
+  onOpenArtifact?: () => Promise<void> | void;
   busy?: boolean;
   hasSandbox?: boolean;
 };
 
-export default function Header({ title = 'App from Mockup', privacy = 'Private', onStartSandbox, onStopSandbox, onWriteFiles, busy = false, hasSandbox = false }: HeaderProps) {
+export default function Header({ title = 'App from Mockup', privacy = 'Private', onStartSandbox, onStopSandbox, onWriteFiles, onOpenArtifact, busy = false, hasSandbox = false }: HeaderProps) {
   const handle = (fn?: () => Promise<void> | void, enabled = true) => async () => {
     if (!enabled || typeof fn !== 'function') return;
     try { await fn() } catch { /* noop */ }
@@ -43,6 +44,9 @@ export default function Header({ title = 'App from Mockup', privacy = 'Private',
           </DropdownMenuItem>
           <DropdownMenuItem onClick={handle(onStopSandbox, !busy && hasSandbox)} className={!hasSandbox || busy ? 'pointer-events-none opacity-50' : ''}>
             <Square className="w-4 h-4 mr-2" /> Fechar sandbox
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={handle(onOpenArtifact, !busy)} className={busy ? 'pointer-events-none opacity-50' : ''}>
+            <BarChart3 className="w-4 h-4 mr-2" /> Abrir Artifact
           </DropdownMenuItem>
           <DropdownMenuItem onClick={handle(onWriteFiles, !busy)} className={busy ? 'pointer-events-none opacity-50' : ''}>
             <FilePlus2 className="w-4 h-4 mr-2" /> Arquivos na Sandbox
