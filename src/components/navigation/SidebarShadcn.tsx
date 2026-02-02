@@ -253,15 +253,6 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
           <div className="h-full w-full flex items-center justify-start gap-2 px-2">
             {showHeaderTrigger && <SidebarTrigger className="h-8 w-8" />}
             <SidebarHeaderCompact teams={dataWithActiveState.teams} />
-            <button
-              type="button"
-              onClick={handleNewChat}
-              className="ml-auto inline-flex items-center gap-1 h-8 px-2 rounded-md bg-gray-900 text-white text-xs hover:bg-black group-data-[collapsible=icon]:px-1"
-              title="Novo Chat"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span className="group-data-[collapsible=icon]:hidden">Novo Chat</span>
-            </button>
           </div>
         ) : (
           <div className="h-full w-full flex items-center justify-start gap-2 px-2">
@@ -269,19 +260,21 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
             <div className="group-data-[collapsible=icon]:hidden">
               <TeamSwitcher teams={dataWithActiveState.teams} />
             </div>
-            <button
-              type="button"
-              onClick={handleNewChat}
-              className="ml-auto inline-flex items-center gap-1 h-8 px-2 rounded-md bg-gray-900 text-white text-xs hover:bg-black"
-              title="Novo Chat"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Novo Chat</span>
-            </button>
           </div>
         )}
       </SidebarHeader>
       <SidebarContent className="ui-text">
+        <div className="px-2 pt-2">
+          <button
+            type="button"
+            onClick={handleNewChat}
+            className="w-full h-9 inline-flex items-center justify-center gap-2 rounded-md bg-gray-900 text-white text-xs hover:bg-black"
+            title="Novo Chat"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Novo Chat</span>
+          </button>
+        </div>
         <NavMainSimple items={dataWithActiveState.navMain} groupLabelStyle={finalSectionTitleStyle} itemTextStyle={finalItemTextStyle} />
         <NavModulos groupLabelStyle={finalSectionTitleStyle} itemTextStyle={finalItemTextStyle} />
 
