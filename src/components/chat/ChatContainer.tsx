@@ -1,15 +1,16 @@
 "use client";
 
-import React, { useState, FormEvent, useRef } from 'react';
+import React, { useState, FormEvent, useRef, useEffect } from 'react';
 import type { UIMessage } from 'ai';
 import Header from './Header';
 import PerguntaDoUsuario from './PerguntaDoUsuario';
 import RespostaDaIa from './RespostaDaIa';
 import InputArea from './InputArea';
+import { useRouter } from 'next/navigation';
 
 type ChatStatus = 'idle' | 'submitted' | 'streaming' | 'error'
 
-export default function ChatContainer({ onOpenSandbox, withSideMargins }: { onOpenSandbox?: (chatId: string) => void; withSideMargins?: boolean }) {
+export default function ChatContainer({ onOpenSandbox, withSideMargins, redirectOnFirstMessage, initialMessage, autoSendPrefill }: { onOpenSandbox?: (chatId: string) => void; withSideMargins?: boolean; redirectOnFirstMessage?: boolean; initialMessage?: string; autoSendPrefill?: boolean }) {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<UIMessage[]>([])
   const [chatId, setChatId] = useState<string | null>(null)
@@ -17,6 +18,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins }: { onOp
   const [composioEnabled, setComposioEnabled] = useState<boolean>(false)
   const [model, setModel] = useState<'sonnet'|'haiku'>('haiku')
   const abortRef = useRef<AbortController | null>(null)
+  const router = useRouter()
 
   const ensureStart = async () => {
     if (chatId) return chatId
@@ -31,6 +33,22 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins }: { onOp
     e.preventDefault();
     const text = input.trim()
     if (!text) return
+    // If in first-message redirect mode and no chat started yet, redirect to /chat/[id]
+    if (redirectOnFirstMessage && !chatId) {
+      try {
+        const urlId = (typeof window !== 'undefined' && (window as any).crypto?.randomUUID)
+          ? (window as any).crypto.randomUUID()
+          : (Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2))
+        try { sessionStorage.setItem(`first:${urlId}`, text) } catch {}
+        setStatus('submitted')
+        setInput('')
+        router.replace(`/chat/${urlId}`)
+        return
+      } catch (err) {
+        console.error('redirect error', err)
+      }
+    }
+    // Normal path: send immediately
     send(text).catch(err => {
       console.error('chat send error', err)
       setStatus('error')
@@ -294,6 +312,16 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins }: { onOp
   }
 
   const isEmpty = (messages || []).length === 0;
+  // Auto-send prefilled first message when arriving at /chat/[id]
+  useEffect(() => {
+    if (autoSendPrefill && initialMessage && isEmpty && status === 'idle') {
+      send(initialMessage).catch(err => {
+        console.error('auto-send error', err)
+        setStatus('error')
+      })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoSendPrefill, initialMessage])
   if (isEmpty) {
     return (
       <div className="h-full grid grid-rows-[auto_1fr]">
@@ -311,6 +339,11 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins }: { onOp
                   composioEnabled={composioEnabled}
                   model={model}
                   onToggleComposio={async () => {
+                    // Avoid starting chat before first message when redirecting
+                    if (redirectOnFirstMessage && !chatId) {
+                      setComposioEnabled(!composioEnabled)
+                      return
+                    }
                     try {
                       const id = await ensureStart();
                       const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'mcp-toggle', chatId: id, enabled: !composioEnabled }) });
@@ -320,6 +353,9 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins }: { onOp
                   }}
                   onModelChange={async (m) => {
                     setModel(m)
+                    if (redirectOnFirstMessage && !chatId) {
+                      return
+                    }
                     try {
                       const id = await ensureStart();
                       const modelId = m === 'haiku' ? 'claude-haiku-4-5-20251001' : 'claude-sonnet-4-5-20251001'
@@ -327,6 +363,8 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins }: { onOp
                     } catch { /* ignore */ }
                   }}
                   onOpenSandbox={async () => {
+                    // Avoid starting chat before first message when redirecting
+                    if (redirectOnFirstMessage && !chatId) { return }
                     try { const id = await ensureStart(); onOpenSandbox?.(id); } catch { /* ignore */ }
                   }}
                 />
@@ -353,6 +391,10 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins }: { onOp
         </div>
         <div className="px-4 pb-3">
           <InputArea value={input} onChange={setInput} onSubmit={handleSubmit} status={status} composioEnabled={composioEnabled} onToggleComposio={async () => {
+            if (redirectOnFirstMessage && !chatId) {
+              setComposioEnabled(!composioEnabled)
+              return
+            }
             try {
               const id = await ensureStart();
               const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'mcp-toggle', chatId: id, enabled: !composioEnabled }) });
@@ -361,12 +403,16 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins }: { onOp
             } catch { /* ignore */ }
           }} model={model} onModelChange={async (m) => {
             setModel(m)
+            if (redirectOnFirstMessage && !chatId) {
+              return
+            }
             try {
               const id = await ensureStart();
               const modelId = m === 'haiku' ? 'claude-haiku-4-5-20251001' : 'claude-sonnet-4-5-20251001'
               await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'model-set', chatId: id, model: modelId }) })
             } catch { /* ignore */ }
           }} onOpenSandbox={async () => {
+            if (redirectOnFirstMessage && !chatId) { return }
             try { const id = await ensureStart(); onOpenSandbox?.(id); } catch { /* ignore */ }
           }} />
         </div>
