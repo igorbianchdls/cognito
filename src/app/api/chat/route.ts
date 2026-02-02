@@ -38,18 +38,25 @@ export async function POST(req: Request) {
     const timeline: Array<{ name: string; ms: number; ok: boolean; exitCode?: number }> = []
     const t0 = Date.now()
     try {
-      let usedSnapshot = false
-      const snapshotId = (process.env.SANDBOX_SNAPSHOT_ID || '').trim()
-      if (snapshotId) {
-        const tSnap = Date.now()
-        try {
-          sandbox = await Sandbox.create({ source: { type: 'snapshot', snapshotId }, resources: { vcpus: 2 }, timeout: 600_000 })
-          timeline.push({ name: 'create-from-snapshot', ms: Date.now() - tSnap, ok: true })
-          usedSnapshot = true
-        } catch (e) {
-          timeline.push({ name: 'create-from-snapshot', ms: Date.now() - tSnap, ok: false })
+      // Decide chat id upfront and prefer per-chat snapshot
+      // id already determined earlier
+
+      let usedChatSnapshot = false
+      try {
+        const rows = await runQuery<{ snapshot_id: string | null }>(`SELECT snapshot_id FROM chat.chats WHERE id = $1`, [id])
+        const snap = (rows && rows[0] && rows[0].snapshot_id) || null
+        if (snap && typeof snap === 'string' && snap.trim()) {
+          const tSnap = Date.now()
+          try {
+            sandbox = await Sandbox.create({ source: { type: 'snapshot', snapshotId: snap.trim() }, resources: { vcpus: 2 }, timeout: 600_000 })
+            timeline.push({ name: 'create-from-chat-snapshot', ms: Date.now() - tSnap, ok: true })
+            usedChatSnapshot = true
+          } catch (e) {
+            timeline.push({ name: 'create-from-chat-snapshot', ms: Date.now() - tSnap, ok: false })
+          }
         }
-      }
+      } catch {}
+
       if (!sandbox) {
         const tCreate = Date.now()
         sandbox = await Sandbox.create({ runtime: 'node22', resources: { vcpus: 2 }, timeout: 600_000 })
@@ -64,8 +71,8 @@ export async function POST(req: Request) {
           return Response.json({ ok: false, error: 'install failed', stdout: o, stderr: e, timeline }, { status: 500 })
         }
       }
-      // Seed a single Tools Skill to document generic MCP tools
-      try {
+      // Seed a single Tools Skill to document generic MCP tools (only when cold start)
+      if (!usedChatSnapshot) try {
         const mk = await sandbox.runCommand({ cmd: 'node', args: ['-e', `require('fs').mkdirSync('/vercel/sandbox/.claude/skills/Tools', { recursive: true });`] })
         timeline.push({ name: 'mkdir-skills-tools', ms: 0, ok: mk.exitCode === 0, exitCode: mk.exitCode })
         const skill = `---\nname: App MCP Tools\ndescription: Uso das tools genéricas via MCP (listar, criar, atualizar, deletar).\n---\n\nAs tools disponíveis (apenas via MCP):\n- listar(input: { resource: string, params?: object, actionSuffix?: string, method?: \"GET\"|\"POST\" })\n- criar(input: { resource: string, data?: object, actionSuffix?: string, method?: \"GET\"|\"POST\" })\n- atualizar(input: { resource: string, data?: object, actionSuffix?: string, method?: \"GET\"|\"POST\" })\n- deletar(input: { resource: string, data?: object, actionSuffix?: string, method?: \"GET\"|\"POST\" })\n\nRECURSOS (resource) SUPORTADOS (use exatamente estes caminhos; não invente nomes):\n- financeiro/contas-financeiras\n- financeiro/categorias-despesa\n- financeiro/categorias-receita\n- financeiro/clientes\n- financeiro/centros-custo\n- financeiro/centros-lucro\n- vendas/pedidos\n- compras/pedidos\n- contas-a-pagar\n- contas-a-receber\n\nRegras:\n- NUNCA use termos genéricos como \"categoria\" ou \"despesa\". Use os caminhos exatos, por exemplo \"financeiro/categorias-despesa\".\n- Prefixe corretamente com o módulo (ex.: \"financeiro/...\").\n- O \"resource\" não pode conter \"..\" e deve iniciar com um dos prefixos: financeiro, vendas, compras, contas-a-pagar, contas-a-receber, estoque, cadastros.\n- Por padrão, listar usa actionSuffix=\"listar\" e criar/atualizar/deletar usam seus sufixos homônimos.\n\nExemplos:\n- Listar contas financeiras:\n  { \"tool\": \"listar\", \"args\": { \"resource\": \"financeiro/contas-financeiras\", \"params\": { \"limit\": 50 } } }\n- Listar categorias de despesa (não use \"categoria\" sozinho):\n  { \"tool\": \"listar\", \"args\": { \"resource\": \"financeiro/categorias-despesa\", \"params\": { \"q\": \"marketing\" } } }\n- Criar centro de custo:\n  { \"tool\": \"criar\", \"args\": { \"resource\": \"financeiro/centros-custo\", \"data\": { \"nome\": \"Marketing\", \"codigo\": \"CC-001\" } } }\n- Atualizar centro de custo:\n  { \"tool\": \"atualizar\", \"args\": { \"resource\": \"financeiro/centros-custo\", \"data\": { \"id\": 123, \"nome\": \"Marketing & Growth\" } } }\n- Deletar centro de custo:\n  { \"tool\": \"deletar\", \"args\": { \"resource\": \"financeiro/centros-custo\", \"data\": { \"id\": 123 } } }\n\nAs chamadas são roteadas para /api/agent-tools/<resource>/<acao> usando as variáveis:\n- $AGENT_BASE_URL\n- $AGENT_TOOL_TOKEN\n- $AGENT_CHAT_ID\n`;
@@ -199,9 +206,18 @@ export async function POST(req: Request) {
     if (!chatId) return Response.json({ ok: false, error: 'chatId obrigatório' }, { status: 400 })
     const sess = SESSIONS.get(chatId)
     if (!sess) return Response.json({ ok: false, error: 'chat não encontrado' }, { status: 404 })
+    // Best-effort: snapshot before stopping to persist filesystem for this chat
+    let snapshotId: string | null = null
+    try {
+      const snap = await sess.sandbox.snapshot()
+      snapshotId = (snap as any)?.snapshotId || null
+      try {
+        if (snapshotId) await runQuery('UPDATE chat.chats SET snapshot_id = $1, snapshot_at = now() WHERE id = $2', [snapshotId, chatId])
+      } catch {}
+    } catch {}
     try { await sess.sandbox.stop() } catch {}
     SESSIONS.delete(chatId)
-    return Response.json({ ok: true })
+    return Response.json({ ok: true, snapshotId })
   }
 
   async function chatSendStream({ chatId, history, clientMessageId }: { chatId?: string; history?: Msg[]; clientMessageId?: string }) {

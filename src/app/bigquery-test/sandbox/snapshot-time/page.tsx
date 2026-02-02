@@ -76,4 +76,4 @@ export default function SnapshotTimePage() {
     </div>
   );
 }
-
+"use client";
