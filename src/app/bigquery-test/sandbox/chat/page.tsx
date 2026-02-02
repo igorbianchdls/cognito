@@ -179,4 +179,3 @@ export default function SandboxChatSnapshotTestPage() {
     </SidebarProvider>
   );
 }
-"use client";
