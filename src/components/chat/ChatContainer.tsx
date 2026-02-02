@@ -10,7 +10,7 @@ import { useRouter } from 'next/navigation';
 
 type ChatStatus = 'idle' | 'submitted' | 'streaming' | 'error'
 
-export default function ChatContainer({ onOpenSandbox, withSideMargins, redirectOnFirstMessage, initialMessage, autoSendPrefill, initialChatId }: { onOpenSandbox?: (chatId: string) => void; withSideMargins?: boolean; redirectOnFirstMessage?: boolean; initialMessage?: string; autoSendPrefill?: boolean; initialChatId?: string }) {
+export default function ChatContainer({ onOpenSandbox, withSideMargins, redirectOnFirstMessage, initialMessage, autoSendPrefill, initialChatId, autoStartSandbox }: { onOpenSandbox?: (chatId: string) => void; withSideMargins?: boolean; redirectOnFirstMessage?: boolean; initialMessage?: string; autoSendPrefill?: boolean; initialChatId?: string; autoStartSandbox?: boolean }) {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<UIMessage[]>([])
   const [chatId, setChatId] = useState<string | null>(null)
@@ -367,6 +367,14 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
     return () => { cancelled = true }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialChatId])
+
+  // Auto-start sandbox (no message) when requested via URL flag
+  useEffect(() => {
+    if (autoStartSandbox && initialChatId && !chatId) {
+      ensureStart().catch(() => {})
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoStartSandbox, initialChatId])
   // Auto-send prefilled first message when arriving at /chat/[id]
   useEffect(() => {
     if (autoSendPrefill && initialMessage && isEmpty && status === 'idle') {

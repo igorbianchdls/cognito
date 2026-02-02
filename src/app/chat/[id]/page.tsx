@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { SidebarShadcn } from "@/components/navigation/SidebarShadcn";
 import PageContainer from "@/components/chat/PageContainer";
@@ -11,6 +11,8 @@ import SandboxPanel from "@/components/chat/SandboxPanel";
 export default function ChatRoutePageWithId() {
   const params = useParams();
   const urlId = (typeof params?.id === 'string') ? params.id : Array.isArray(params?.id) ? params?.id?.[0] : undefined;
+  const search = useSearchParams();
+  const auto = search?.get('auto') === '1';
 
   const [showSandbox, setShowSandbox] = useState(false);
   const [sandboxExpanded, setSandboxExpanded] = useState(false);
@@ -48,6 +50,7 @@ export default function ChatRoutePageWithId() {
                     initialMessage={prefill}
                     autoSendPrefill={Boolean(prefill)}
                     initialChatId={urlId}
+                    autoStartSandbox={auto}
                   />
                 </div>
                 <div className={!showSandbox ? 'hidden' : 'h-full min-h-0 p-2'}>

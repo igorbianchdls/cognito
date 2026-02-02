@@ -207,10 +207,10 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
   const handleNewChat = () => {
     try {
       const id = (globalThis as any)?.crypto?.randomUUID?.() || (Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2))
-      router.replace(`/chat/${id}`)
+      router.replace(`/chat/${id}?auto=1`)
     } catch {
       const id = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2)
-      router.replace(`/chat/${id}`)
+      router.replace(`/chat/${id}?auto=1`)
     }
   }
 
