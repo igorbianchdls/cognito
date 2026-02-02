@@ -264,6 +264,9 @@ export async function POST(req: Request) {
     let assistantTextBuf = ''
     const assistantParts: any[] = []
     let textSegBuf = ''
+    let pendingToolName: string | null = null
+    let pendingToolInputStream = ''
+    let pendingToolInput: any = undefined
     const stream = new ReadableStream<Uint8Array>({
       start: async (controller) => {
         try {
@@ -301,6 +304,27 @@ export async function POST(req: Request) {
                   if (evt && evt.type === 'delta' && typeof evt.text === 'string') {
                     assistantTextBuf += evt.text
                     textSegBuf += evt.text
+                  } else if (evt && evt.type === 'tool_input_start') {
+                    // flush any text before tool input starts
+                    const seg = (textSegBuf || '').trim()
+                    if (seg) {
+                      assistantParts.push({ type: 'text', text: seg })
+                      textSegBuf = ''
+                    }
+                    pendingToolName = (evt.name || evt.tool_name || null) as any
+                    pendingToolInputStream = ''
+                    pendingToolInput = undefined
+                  } else if (evt && evt.type === 'tool_input_delta' && typeof evt.partial === 'string') {
+                    pendingToolInputStream += evt.partial
+                  } else if (evt && evt.type === 'tool_input_done') {
+                    try {
+                      if (typeof evt.input !== 'undefined') {
+                        pendingToolInput = evt.input
+                      } else if (pendingToolInputStream) {
+                        const s = pendingToolInputStream.trim()
+                        if (s) { try { pendingToolInput = JSON.parse(s) } catch { pendingToolInput = s } }
+                      }
+                    } catch {}
                   } else if (evt && evt.type === 'tool_done') {
                     // flush pending text segment before tool output
                     const seg = (textSegBuf || '').trim()
@@ -308,16 +332,18 @@ export async function POST(req: Request) {
                       assistantParts.push({ type: 'text', text: seg })
                       textSegBuf = ''
                     }
-                    const toolName = (evt.tool_name || 'generic') as string
-                    assistantParts.push({ type: `tool-${toolName}`, state: 'output-available', output: evt.output, tool_name: toolName })
+                    const toolName = ((evt.tool_name || pendingToolName || 'generic') as string)
+                    assistantParts.push({ type: `tool-${toolName}`, state: 'output-available', output: evt.output, input: pendingToolInput, tool_name: toolName })
+                    pendingToolName = null; pendingToolInputStream = ''; pendingToolInput = undefined
                   } else if (evt && evt.type === 'tool_error') {
                     const seg = (textSegBuf || '').trim()
                     if (seg) {
                       assistantParts.push({ type: 'text', text: seg })
                       textSegBuf = ''
                     }
-                    const toolName = (evt.tool_name || 'generic') as string
-                    assistantParts.push({ type: `tool-${toolName}`, state: 'output-error', errorText: evt.error, tool_name: toolName })
+                    const toolName = ((evt.tool_name || pendingToolName || 'generic') as string)
+                    assistantParts.push({ type: `tool-${toolName}`, state: 'output-error', errorText: evt.error, input: pendingToolInput, tool_name: toolName })
+                    pendingToolName = null; pendingToolInputStream = ''; pendingToolInput = undefined
                   }
                 } catch {}
                 controller.enqueue(enc.encode(`data: ${line}\n\n`))
