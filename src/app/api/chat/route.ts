@@ -264,9 +264,13 @@ export async function POST(req: Request) {
     let assistantTextBuf = ''
     const assistantParts: any[] = []
     let textSegBuf = ''
+    // Tool capture state
     let pendingToolName: string | null = null
     let pendingToolInputStream = ''
     let pendingToolInput: any = undefined
+    // Reasoning capture state
+    let reasoningActive = false
+    let reasoningBuf = ''
     const stream = new ReadableStream<Uint8Array>({
       start: async (controller) => {
         try {
@@ -325,6 +329,23 @@ export async function POST(req: Request) {
                         if (s) { try { pendingToolInput = JSON.parse(s) } catch { pendingToolInput = s } }
                       }
                     } catch {}
+                  } else if (evt && evt.type === 'reasoning_start') {
+                    // flush pending visible text before reasoning block
+                    const seg = (textSegBuf || '').trim()
+                    if (seg) {
+                      assistantParts.push({ type: 'text', text: seg })
+                      textSegBuf = ''
+                    }
+                    reasoningActive = true
+                    reasoningBuf = ''
+                  } else if (evt && evt.type === 'reasoning_delta' && typeof evt.text === 'string') {
+                    if (reasoningActive) reasoningBuf += evt.text
+                  } else if (evt && evt.type === 'reasoning_end') {
+                    if (reasoningActive) {
+                      assistantParts.push({ type: 'reasoning', content: reasoningBuf, state: 'done' })
+                      reasoningActive = false
+                      reasoningBuf = ''
+                    }
                   } else if (evt && evt.type === 'tool_done') {
                     // flush pending text segment before tool output
                     const seg = (textSegBuf || '').trim()
@@ -353,23 +374,27 @@ export async function POST(req: Request) {
             }
           }
           if (errBuf) controller.enqueue(enc.encode(`event: stderr\ndata: ${JSON.stringify(errBuf)}\n\n`))
-          // Best-effort: persist assistant final message (prefer parts when tools present)
+          // Best-effort: persist assistant final message (always parts, includes reasoning/tools when present)
           try {
+            // flush any open reasoning block
+            if (reasoningActive) {
+              assistantParts.push({ type: 'reasoning', content: reasoningBuf, state: 'done' })
+              reasoningActive = false
+              reasoningBuf = ''
+            }
+            // flush trailing text segment
             const seg = (textSegBuf || '').trim()
             if (seg) assistantParts.push({ type: 'text', text: seg })
+            // if still empty, fallback to single text part
+            if (assistantParts.length === 0) {
+              const onlyText = (assistantTextBuf || '').trim()
+              if (onlyText) assistantParts.push({ type: 'text', text: onlyText })
+            }
             if (assistantParts.length > 0) {
               await runQuery(
                 `INSERT INTO chat.chat_messages (chat_id, role, content, parts) VALUES ($1,'assistant','',$2)`,
                 [chatId, JSON.stringify(assistantParts)]
               )
-            } else {
-              const content = (assistantTextBuf || '').trim()
-              if (content) {
-                await runQuery(
-                  `INSERT INTO chat.chat_messages (chat_id, role, content) VALUES ($1,'assistant',$2)`,
-                  [chatId, content]
-                )
-              }
             }
             try { await runQuery('UPDATE chat.chats SET last_message_at = now(), updated_at = now() WHERE id = $1', [chatId]) } catch {}
           } catch {}
