@@ -29,6 +29,7 @@ export async function POST(req: Request) {
   if (action === 'fs-write') return fsWrite(payload as { chatId?: string; path?: string; content?: string })
   if (action === 'mcp-toggle') return mcpToggle(payload as { chatId?: string; enabled?: boolean })
   if (action === 'model-set') return modelSet(payload as { chatId?: string; model?: string })
+  if (action === 'chat-snapshot') return chatSnapshot(payload as { chatId?: string })
 
   return Response.json({ ok: false, error: `ação desconhecida: ${action}` }, { status: 400 })
 
@@ -553,6 +554,24 @@ catch(e){ console.error(String(e.message||e)); process.exit(1); }
     sess.composioEnabled = Boolean(enabled)
     sess.lastUsedAt = Date.now()
     return Response.json({ ok: true, enabled: sess.composioEnabled })
+  }
+
+  async function chatSnapshot({ chatId }: { chatId?: string }) {
+    if (!chatId) return Response.json({ ok: false, error: 'chatId obrigatório' }, { status: 400 })
+    const sess = SESSIONS.get(chatId)
+    if (!sess) return Response.json({ ok: false, error: 'chat não encontrado' }, { status: 404 })
+    try {
+      const t0 = Date.now()
+      const snap = await sess.sandbox.snapshot()
+      const snapshotId = (snap as any)?.snapshotId || null
+      const ms = Date.now() - t0
+      try {
+        if (snapshotId) await runQuery('UPDATE chat.chats SET snapshot_id = $1, snapshot_at = now() WHERE id = $2', [snapshotId, chatId])
+      } catch { /* ignore db errors */ }
+      return Response.json({ ok: true, snapshotId, ms })
+    } catch (e: any) {
+      return Response.json({ ok: false, error: e?.message || String(e) }, { status: 500 })
+    }
   }
 
   async function modelSet({ chatId, model }: { chatId?: string; model?: string }) {

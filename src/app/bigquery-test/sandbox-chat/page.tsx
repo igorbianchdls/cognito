@@ -1,187 +1,182 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
+import { useState } from 'react';
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
+import { SidebarShadcn } from "@/components/navigation/SidebarShadcn";
+import PageContainer from "@/components/chat/PageContainer";
 
-type Msg = { role: 'user'|'assistant'; content: string }
+type FsEntry = { name: string; type: 'dir'|'file' };
 
-export default function SandboxChatPage() {
-  const [chatId, setChatId] = useState<string | null>(null)
-  const [history, setHistory] = useState<Msg[]>([])
-  const [input, setInput] = useState('Olá!')
-  const [starting, setStarting] = useState(false)
-  const [sending, setSending] = useState(false)
-  const [streaming, setStreaming] = useState(false)
-  const [reasoningOpen, setReasoningOpen] = useState(false)
-  const [reasoningText, setReasoningText] = useState('')
-  const [toolsOpen, setToolsOpen] = useState(false)
-  const [toolsLog, setToolsLog] = useState<string[]>([])
+export default function SandboxChatSnapshotTestPage() {
+  const [chatId, setChatId] = useState<string>('');
+  const [snapshotId, setSnapshotId] = useState<string>('');
+  const [leftLog, setLeftLog] = useState<string>('');
+  const [rightLog, setRightLog] = useState<string>('');
+  const [leftEntries, setLeftEntries] = useState<FsEntry[]>([]);
+  const [rightEntries, setRightEntries] = useState<FsEntry[]>([]);
+  const [loadingLeft, setLoadingLeft] = useState(false);
+  const [loadingRight, setLoadingRight] = useState(false);
 
-  function formatToolEvent(kind: 'start'|'done'|'error', evt: { tool_name?: string; input?: any; output?: any; error?: string }) {
-    const name = evt.tool_name || 'Tool'
-    if (kind === 'start') {
-      if (name === 'Write' && evt.input && typeof evt.input === 'object') {
-        const p = evt.input.file_path || evt.input.path || ''
-        const size = typeof evt.input.content === 'string' ? evt.input.content.length : 0
-        return `▶️ Write: criando ${p} (${size} bytes)`
-      }
-      if (name === 'Edit' && evt.input && typeof evt.input === 'object') {
-        const p = evt.input.file_path || ''
-        return `▶️ Edit: modificando ${p}`
-      }
-      if (name === 'Bash' && evt.input && evt.input.command) {
-        return `▶️ Bash: ${evt.input.command}`
-      }
-      return `▶️ ${name}: iniciando`
+  const appendLeft = (s: string) => setLeftLog(prev => prev + (prev ? "\n" : "") + s);
+  const appendRight = (s: string) => setRightLog(prev => prev + (prev ? "\n" : "") + s);
+
+  const createChatWithFiles = async () => {
+    setLoadingLeft(true);
+    setLeftEntries([]);
+    setLeftLog('');
+    try {
+      appendLeft('→ chat-start (cold)');
+      const start = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'chat-start' }) });
+      const sdata = await start.json();
+      if (!start.ok || !sdata?.ok) throw new Error(sdata?.error || 'chat-start failed');
+      const id = sdata.chatId as string;
+      setChatId(id);
+      appendLeft(`✓ chatId=${id}`);
+      // write some files
+      const mk1 = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'fs-write', chatId: id, path: '/vercel/sandbox/demo/hello.txt', content: 'Hello from chat sandbox' }) });
+      if (!mk1.ok) throw new Error('fs-write hello failed');
+      const mk2 = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'fs-write', chatId: id, path: '/vercel/sandbox/demo/info.json', content: JSON.stringify({ t: Date.now(), note: 'test' }) }) });
+      if (!mk2.ok) throw new Error('fs-write info failed');
+      appendLeft('✓ arquivos escritos em /vercel/sandbox/demo');
+      await listCurrentFs();
+    } catch (e: any) {
+      appendLeft('✗ ' + (e?.message || String(e)));
+    } finally {
+      setLoadingLeft(false);
     }
-    if (kind === 'done') {
-      if (name === 'Write' && evt.output && typeof evt.output === 'object') {
-        const p = evt.output.filePath || evt.output.path || ''
-        return `✅ Write: ${p} criado`}
-      if (name === 'Edit') return `✅ Edit: concluído`
-      if (name === 'Bash') return `✅ Bash: concluído`
-      return `✅ ${name}: concluído`
+  };
+
+  const createMoreFiles = async () => {
+    if (!chatId) return appendLeft('✗ chatId vazio');
+    setLoadingLeft(true);
+    try {
+      const mk = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'fs-write', chatId, path: '/vercel/sandbox/demo/extra.txt', content: 'extra file ' + new Date().toISOString() }) });
+      if (!mk.ok) throw new Error('fs-write extra failed');
+      appendLeft('✓ extra.txt criado');
+      await listCurrentFs();
+    } catch (e: any) {
+      appendLeft('✗ ' + (e?.message || String(e)));
+    } finally {
+      setLoadingLeft(false);
     }
-    const err = (evt.error || '').toString()
-    return `❌ ${name}: ${err || 'erro'}`
-  }
-  const [error, setError] = useState<string | null>(null)
+  };
 
-  const start = async () => {
-    setStarting(true)
-    setError(null)
+  const listCurrentFs = async () => {
+    if (!chatId) return;
     try {
-      const res = await fetch('/api/sandbox', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'chat-start' }) })
-      const data = await res.json().catch(() => ({})) as { ok?: boolean; chatId?: string; error?: string }
-      if (!res.ok || data.ok === false || !data.chatId) throw new Error(data.error || `Erro ${res.status}`)
-      setChatId(data.chatId)
-      setHistory([])
-    } catch (e) {
-      setError((e as Error).message)
-    } finally { setStarting(false) }
-  }
+      const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'fs-list', chatId, path: '/vercel/sandbox/demo' }) });
+      const data = await res.json();
+      if (!res.ok || !data?.ok) throw new Error(data?.error || 'fs-list failed');
+      setLeftEntries(data.entries || []);
+    } catch (e: any) {
+      appendLeft('✗ ' + (e?.message || String(e)));
+    }
+  };
 
-  const stop = async () => {
-    if (!chatId) return
-    setStarting(true)
-    setError(null)
+  const saveSnapshot = async () => {
+    if (!chatId) return appendLeft('✗ chatId vazio');
+    setLoadingLeft(true);
     try {
-      await fetch('/api/sandbox', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'chat-stop', chatId }) })
-      setChatId(null)
-    } catch (e) { setError((e as Error).message) } finally { setStarting(false) }
-  }
+      appendLeft('→ snapshot...');
+      const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'chat-snapshot', chatId }) });
+      const data = await res.json();
+      if (!res.ok || !data?.ok) throw new Error(data?.error || 'snapshot failed');
+      setSnapshotId(data.snapshotId || '');
+      appendLeft('✓ snapshotId=' + (data.snapshotId || '(null)'));
+    } catch (e: any) {
+      appendLeft('✗ ' + (e?.message || String(e)));
+    } finally {
+      setLoadingLeft(false);
+    }
+  };
 
-  const send = async () => {
-    if (!chatId || !input.trim()) return
-    setSending(true); setError(null)
+  const loadSnapshotAndList = async () => {
+    const sid = snapshotId.trim();
+    if (!sid) return appendRight('✗ snapshotId vazio');
+    setLoadingRight(true);
+    setRightEntries([]);
+    setRightLog('');
     try {
-      const next = [...history, { role: 'user' as const, content: input }]
-      setHistory(next); setInput('')
-      const res = await fetch('/api/sandbox', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'chat-send', chatId, history: next }) })
-      const data = await res.json().catch(() => ({})) as { ok?: boolean; reply?: string; error?: string }
-      if (!res.ok || data.ok === false) throw new Error(data.error || `Erro ${res.status}`)
-      setHistory(h => [...h, { role: 'assistant', content: data.reply || '' }])
-    } catch (e) { setError((e as Error).message) } finally { setSending(false) }
-  }
-
-  const sendStream = async () => {
-    if (!chatId || !input.trim()) return
-    setStreaming(true); setError(null)
-    try {
-      const next = [...history, { role: 'user' as const, content: input }]
-      setHistory(next); setInput('')
-      const res = await fetch('/api/sandbox', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'chat-send-stream', chatId, history: next }) })
-      if (!res.ok || !res.body) throw new Error(await res.text().catch(() => `Erro ${res.status}`))
-      setHistory(h => [...h, { role: 'assistant', content: '' }])
-      const idx = history.length + 1
-      const reader = res.body.getReader(); const decoder = new TextDecoder()
-      let buf = ''
-      setReasoningOpen(false)
-      setReasoningText('')
-      setToolsOpen(false)
-      setToolsLog([])
-      while (true) {
-        const { value, done } = await reader.read(); if (done) break
-        buf += decoder.decode(value, { stream: true })
-        const frames = buf.split('\n\n'); buf = frames.pop() || ''
-        for (const f of frames) {
-          const line = f.split('\n').find(l => l.startsWith('data: ')); if (!line) continue
-          const payload = line.slice(6)
-          try {
-            const evt = JSON.parse(payload) as { type?: string; text?: string; tool_name?: string; input?: any; output?: any; error?: string }
-            if (evt.type === 'delta' && typeof evt.text === 'string') {
-              setHistory(h => { const copy = h.slice(); const cur = copy[idx]; if (cur && cur.role==='assistant') cur.content += evt.text; return copy })
-            } else if (evt.type === 'reasoning_start') {
-              setReasoningOpen(true)
-              setReasoningText('')
-            } else if (evt.type === 'reasoning_delta' && typeof evt.text === 'string') {
-              setReasoningOpen(true)
-              setReasoningText(prev => prev + evt.text)
-            } else if (evt.type === 'reasoning_end') {
-              // keep shown
-            } else if (evt.type === 'tool_start') {
-              setToolsOpen(true)
-              const detail = formatToolEvent('start', evt)
-              setToolsLog(prev => [...prev, detail])
-            } else if (evt.type === 'tool_done') {
-              setToolsOpen(true)
-              const detail = formatToolEvent('done', evt)
-              setToolsLog(prev => [...prev, detail])
-            } else if (evt.type === 'tool_error') {
-              setToolsOpen(true)
-              const detail = formatToolEvent('error', evt)
-              setToolsLog(prev => [...prev, detail])
-            }
-          } catch { /* ignore */ }
-        }
-      }
-    } catch (e) { setError((e as Error).message) } finally { setStreaming(false) }
-  }
+      appendRight('→ create from snapshot & list /vercel/sandbox/demo');
+      const res = await fetch('/api/sandbox/fs-from-snapshot', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ snapshotId: sid, path: '/vercel/sandbox/demo' }) });
+      const data = await res.json();
+      if (!res.ok || !data?.ok) throw new Error(data?.error || 'fs-from-snapshot failed');
+      appendRight(`✓ createMs=${data.createMs}ms path=${data.path}`);
+      setRightEntries(data.entries || []);
+    } catch (e: any) {
+      appendRight('✗ ' + (e?.message || String(e)));
+    } finally {
+      setLoadingRight(false);
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-xl mx-auto space-y-4">
-        <h1 className="text-2xl font-semibold text-gray-900">Sandbox Chat (Claude Agent SDK)</h1>
-        {reasoningOpen && (
-          <div className="mb-3 p-2 border border-amber-300 bg-amber-50 rounded text-sm text-amber-900">
-            <div className="flex items-center justify-between mb-1"><strong>Raciocínio</strong><button onClick={()=>setReasoningOpen(false)} className="text-xs text-amber-700 hover:underline">Ocultar</button></div>
-            <div className="whitespace-pre-wrap">{reasoningText || '…'}</div>
-          </div>
-        )}
-        {toolsOpen && (
-          <div className="mb-3 p-2 border border-indigo-300 bg-indigo-50 rounded text-sm text-indigo-900">
-            <div className="flex items-center justify-between mb-1"><strong>Ferramentas</strong><button onClick={()=>setToolsOpen(false)} className="text-xs text-indigo-700 hover:underline">Ocultar</button></div>
-            <div className="space-y-1 max-h-40 overflow-auto">
-              {toolsLog.length === 0 ? (
-                <div className="text-xs text-indigo-700">Aguardando eventos…</div>
-              ) : toolsLog.map((l, i)=> (
-                <div key={i} className="whitespace-pre-wrap break-all">{l}</div>
-              ))}
-            </div>
-          </div>
-        )}
-        <div className="flex gap-2">
-          <button onClick={start} disabled={starting || !!chatId} className={`px-3 py-2 rounded-md text-white ${starting||chatId?'bg-gray-400':'bg-emerald-600 hover:bg-emerald-700'}`}>Iniciar chat</button>
-          <button onClick={stop} disabled={starting || !chatId} className={`px-3 py-2 rounded-md text-white ${starting||!chatId?'bg-gray-400':'bg-rose-600 hover:bg-rose-700'}`}>Encerrar chat</button>
-          {chatId && <span className="text-sm text-gray-500">chatId: {chatId.slice(0,8)}…</span>}
-        </div>
-        <div className="space-y-2 p-3 bg-white border border-gray-200 rounded">
-          <div className="space-y-1 max-h-72 overflow-auto">
-            {history.length===0 && <div className="text-sm text-gray-500">Sem mensagens.</div>}
-            {history.map((m,i)=> (
-              <div key={i} className={m.role==='user'?'text-gray-900':'text-blue-700'}>
-                <span className="font-medium">{m.role==='user'?'Você':'Assistente'}: </span>
-                <span>{m.content}</span>
+    <SidebarProvider>
+      <SidebarShadcn />
+      <SidebarInset className="h-screen overflow-hidden">
+        <div className="flex h-full overflow-hidden">
+          <div className="flex-1">
+            <PageContainer>
+              <div className="grid grid-cols-1 md:grid-cols-2 h-full">
+                {/* Left: live chat sandbox */}
+                <div className="border-r min-h-0 flex flex-col">
+                  <div className="p-3 border-b">
+                    <h2 className="font-semibold">Sandbox do Chat (viva)</h2>
+                    <div className="text-xs text-gray-500">Cria chat, escreve arquivos e salva snapshot</div>
+                  </div>
+                  <div className="p-3 space-x-2">
+                    <button onClick={createChatWithFiles} disabled={loadingLeft} className="px-3 py-1.5 bg-black text-white rounded disabled:opacity-50">{loadingLeft ? 'Aguarde...' : 'Criar chat + arquivos'}</button>
+                    <button onClick={createMoreFiles} disabled={loadingLeft || !chatId} className="px-3 py-1.5 bg-gray-800 text-white rounded disabled:opacity-50">Criar novos arquivos</button>
+                    <button onClick={saveSnapshot} disabled={loadingLeft || !chatId} className="px-3 py-1.5 bg-indigo-700 text-white rounded disabled:opacity-50">Salvar snapshot</button>
+                  </div>
+                  <div className="p-3 text-sm space-y-1">
+                    <div>chatId: <span className="font-mono">{chatId || '-'}</span></div>
+                    <div>snapshotId: <input className="border rounded px-2 py-1 w-full md:w-auto" value={snapshotId} onChange={(e)=>setSnapshotId(e.target.value)} placeholder="snap_..." /></div>
+                  </div>
+                  <div className="p-3">
+                    <div className="text-xs text-gray-500 mb-1">/vercel/sandbox/demo</div>
+                    <ul className="text-sm list-disc pl-4">
+                      {leftEntries.map((e,i)=> (
+                        <li key={i}><span className="font-mono">{e.type}</span> {e.name}</li>
+                      ))}
+                      {leftEntries.length === 0 && <li className="text-gray-400">(vazio)</li>}
+                    </ul>
+                  </div>
+                  <div className="p-3">
+                    <div className="text-xs text-gray-500 mb-1">Log</div>
+                    <pre className="bg-gray-100 p-2 rounded text-[11px] leading-4 whitespace-pre-wrap">{leftLog || '(sem logs)'}</pre>
+                  </div>
+                </div>
+
+                {/* Right: restore from snapshot */}
+                <div className="min-h-0 flex flex-col">
+                  <div className="p-3 border-b">
+                    <h2 className="font-semibold">Restaurar do Snapshot</h2>
+                    <div className="text-xs text-gray-500">Cria sandbox do snapshot e lista arquivos</div>
+                  </div>
+                  <div className="p-3 space-x-2">
+                    <button onClick={loadSnapshotAndList} disabled={loadingRight || !snapshotId} className="px-3 py-1.5 bg-green-700 text-white rounded disabled:opacity-50">Carregar snapshot e listar FS</button>
+                  </div>
+                  <div className="p-3">
+                    <div className="text-xs text-gray-500 mb-1">/vercel/sandbox/demo</div>
+                    <ul className="text-sm list-disc pl-4">
+                      {rightEntries.map((e,i)=> (
+                        <li key={i}><span className="font-mono">{e.type}</span> {e.name}</li>
+                      ))}
+                      {rightEntries.length === 0 && <li className="text-gray-400">(vazio)</li>}
+                    </ul>
+                  </div>
+                  <div className="p-3">
+                    <div className="text-xs text-gray-500 mb-1">Log</div>
+                    <pre className="bg-gray-100 p-2 rounded text-[11px] leading-4 whitespace-pre-wrap">{rightLog || '(sem logs)'}</pre>
+                  </div>
+                </div>
               </div>
-            ))}
-          </div>
-          <div className="flex gap-2">
-            <input value={input} onChange={e=>setInput(e.target.value)} disabled={!chatId} className="flex-1 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Digite…" />
-            <button onClick={send} disabled={!chatId||sending||streaming||!input.trim()} className={`px-3 py-2 rounded-md text-white ${(!chatId||sending||streaming)?'bg-gray-400':'bg-teal-600 hover:bg-teal-700'}`}>{sending?'Enviando…':'Enviar (sync)'}</button>
-            <button onClick={sendStream} disabled={!chatId||streaming||sending||!input.trim()} className={`px-3 py-2 rounded-md text-white ${(!chatId||streaming||sending)?'bg-gray-400':'bg-indigo-600 hover:bg-indigo-700'}`}>{streaming?'Transmitindo…':'Enviar (stream)'}</button>
+            </PageContainer>
           </div>
         </div>
-        {error && <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded">Erro: {error}</div>}
-      </div>
-    </div>
-  )
+      </SidebarInset>
+    </SidebarProvider>
+  );
 }
+
