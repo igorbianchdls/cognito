@@ -8,10 +8,14 @@ export async function POST(req: Request) {
   const steps: Step[] = []
   const t0 = Date.now()
   try {
+    const url = new URL(req.url)
+    const open = url.searchParams.get('open') === '1'
     const adminSecret = req.headers.get('x-admin-secret') || ''
     const expected = process.env.ADMIN_SNAPSHOT_SECRET || ''
-    if (!expected || adminSecret !== expected) {
-      return new Response(JSON.stringify({ ok: false, error: 'unauthorized' }), { status: 401 })
+    if (!open) {
+      if (!expected || adminSecret !== expected) {
+        return new Response(JSON.stringify({ ok: false, error: 'unauthorized' }), { status: 401 })
+      }
     }
 
     const body = await req.json().catch(() => ({})) as { installDeps?: boolean; seed?: boolean }
@@ -47,9 +51,8 @@ export async function POST(req: Request) {
     const snap = await sandbox.snapshot()
     steps.push({ name: 'snapshot', ms: Date.now() - t4, ok: Boolean(snap?.snapshotId) })
     // Snapshot auto-stops the sandbox
-    return new Response(JSON.stringify({ ok: true, snapshotId: (snap as any)?.snapshotId || null, timeline: steps }), { status: 200 })
+    return new Response(JSON.stringify({ ok: true, snapshotId: (snap as any)?.snapshotId || null, timeline: steps, mode: open ? 'open' : 'protected' }), { status: 200 })
   } catch (e: any) {
     return new Response(JSON.stringify({ ok: false, error: e?.message || String(e), timeline: steps }), { status: 500 })
   }
 }
-

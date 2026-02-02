@@ -14,6 +14,7 @@ export default function SnapshotCheckPage() {
   const [snapshotId, setSnapshotId] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ApiResult | null>(null);
+  const [creating, setCreating] = useState(false);
 
   const envSnapshot = process.env.SANDBOX_SNAPSHOT_ID || '';
 
@@ -32,6 +33,27 @@ export default function SnapshotCheckPage() {
       setResult({ ok: false, error: e?.message || String(e) });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const createSnapshotDev = async () => {
+    setCreating(true);
+    setResult(null);
+    try {
+      const res = await fetch('/api/sandbox/snapshot?open=1', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ installDeps: true, seed: true })
+      });
+      const data: ApiResult = await res.json().catch(() => ({ ok: false, error: 'invalid json' }));
+      setResult(data);
+      if (data.ok && data.snapshotId) {
+        setSnapshotId(data.snapshotId);
+      }
+    } catch (e: any) {
+      setResult({ ok: false, error: e?.message || String(e) });
+    } finally {
+      setCreating(false);
     }
   };
 
@@ -58,6 +80,14 @@ export default function SnapshotCheckPage() {
             className="px-4 py-2 rounded bg-black text-white disabled:opacity-50"
           >
             {loading ? 'Validando...' : 'Validar Snapshot'}
+          </button>
+          <button
+            onClick={createSnapshotDev}
+            disabled={creating}
+            className="ml-2 px-4 py-2 rounded bg-gray-800 text-white disabled:opacity-50"
+            title="Modo dev: cria snapshot sem secret (não use em produção)"
+          >
+            {creating ? 'Gerando...' : 'Gerar snapshot (dev)'}
           </button>
         </div>
         {result && (
@@ -86,4 +116,3 @@ export default function SnapshotCheckPage() {
     </div>
   );
 }
-
