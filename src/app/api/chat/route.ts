@@ -22,7 +22,7 @@ export async function POST(req: Request) {
 
   if (action === 'chat-start') return chatStart(payload as { chatId?: string })
   if (action === 'chat-stop') return chatStop(payload as { chatId?: string })
-  if (action === 'chat-send-stream') return chatSendStream(payload as { chatId?: string; history?: Msg[] })
+  if (action === 'chat-send-stream') return chatSendStream(payload as { chatId?: string; history?: Msg[]; clientMessageId?: string })
   if (action === 'chat-slash') return chatSlash(payload as { chatId?: string; prompt?: string })
   if (action === 'fs-list') return fsList(payload as { chatId?: string; path?: string })
   if (action === 'fs-read') return fsRead(payload as { chatId?: string; path?: string })
@@ -203,12 +203,25 @@ export async function POST(req: Request) {
     return Response.json({ ok: true })
   }
 
-  async function chatSendStream({ chatId, history }: { chatId?: string; history?: Msg[] }) {
+  async function chatSendStream({ chatId, history, clientMessageId }: { chatId?: string; history?: Msg[]; clientMessageId?: string }) {
     if (!chatId) return new Response(JSON.stringify({ ok: false, error: 'chatId obrigatório' }), { status: 400 })
     if (!Array.isArray(history) || !history.length) return new Response(JSON.stringify({ ok: false, error: 'history vazio' }), { status: 400 })
     const sess = SESSIONS.get(chatId)
     if (!sess) return new Response(JSON.stringify({ ok: false, error: 'chat não encontrado' }), { status: 404 })
     sess.lastUsedAt = Date.now()
+    // Best-effort: persist last user message before streaming
+    try {
+      const lastUser = [...history].reverse().find(m => m.role === 'user')
+      if (lastUser && typeof lastUser.content === 'string' && lastUser.content.trim()) {
+        await runQuery(
+          `INSERT INTO chat.chat_messages (chat_id, role, content, client_message_id)
+           VALUES ($1,'user',$2,$3)
+           ON CONFLICT (client_message_id) DO NOTHING`,
+          [chatId, lastUser.content, clientMessageId || null]
+        )
+        try { await runQuery('UPDATE chat.chats SET last_message_at = now(), updated_at = now() WHERE id = $1', [chatId]) } catch {}
+      }
+    } catch {}
     const lines: string[] = []
     lines.push('You are a helpful assistant. Continue the conversation.')
     if (SESSIONS.get(chatId)?.composioEnabled) {
@@ -248,6 +261,7 @@ export async function POST(req: Request) {
     const prompt = lines.join('\n').slice(0, 6000)
     const runner = getChatStreamRunnerScript()
     await sess.sandbox.writeFiles([{ path: '/vercel/sandbox/agent-chat-stream.mjs', content: Buffer.from(runner) }])
+    let assistantTextBuf = ''
     const stream = new ReadableStream<Uint8Array>({
       start: async (controller) => {
         try {
@@ -279,6 +293,13 @@ export async function POST(req: Request) {
               while ((idx = outBuf.indexOf('\n')) >= 0) {
                 const line = outBuf.slice(0, idx).trim(); outBuf = outBuf.slice(idx + 1)
                 if (!line) continue
+                // Accumulate assistant text deltas for final persistence
+                try {
+                  const evt = JSON.parse(line)
+                  if (evt && evt.type === 'delta' && typeof evt.text === 'string') {
+                    assistantTextBuf += evt.text
+                  }
+                } catch {}
                 controller.enqueue(enc.encode(`data: ${line}\n\n`))
               }
             } else {
@@ -286,6 +307,17 @@ export async function POST(req: Request) {
             }
           }
           if (errBuf) controller.enqueue(enc.encode(`event: stderr\ndata: ${JSON.stringify(errBuf)}\n\n`))
+          // Best-effort: persist assistant final message
+          try {
+            const content = (assistantTextBuf || '').trim()
+            if (content) {
+              await runQuery(
+                `INSERT INTO chat.chat_messages (chat_id, role, content) VALUES ($1,'assistant',$2)`,
+                [chatId, content]
+              )
+              try { await runQuery('UPDATE chat.chats SET last_message_at = now(), updated_at = now() WHERE id = $1', [chatId]) } catch {}
+            }
+          } catch {}
           controller.enqueue(enc.encode('event: end\ndata: done\n\n'))
           controller.close()
         } catch (e: any) {

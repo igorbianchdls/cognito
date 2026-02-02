@@ -72,7 +72,9 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
 
     setStatus('submitted')
     const history = [...messages, userMsg].filter(m => m.role === 'user' || m.role === 'assistant').map(m => ({ role: m.role as 'user'|'assistant', content: m.parts?.find(p=>p.type==='text')?.text || '' }))
-    const body = isSlash ? { action: 'chat-slash', chatId: id, prompt: text } : { action: 'chat-send-stream', chatId: id, history }
+    const body = isSlash
+      ? { action: 'chat-slash', chatId: id, prompt: text }
+      : { action: 'chat-send-stream', chatId: id, history, clientMessageId: userMsg.id }
     const ac = new AbortController(); abortRef.current = ac
     const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal: ac.signal })
     if (!res.ok || !res.body) throw new Error(await res.text().catch(()=> 'HTTP error'))
