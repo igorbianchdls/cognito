@@ -97,6 +97,11 @@ const navigationData = {
       isActive: false, // Will be set dynamically
     },
     {
+      title: "Chats",
+      url: "/chat/lista",
+      icon: MessageSquare,
+    },
+    {
       title: "Dashboards",
       url: "/dashboards",
       icon: BarChart3,
