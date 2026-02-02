@@ -20,6 +20,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
   const abortRef = useRef<AbortController | null>(null)
   const router = useRouter()
   const [menuBusy, setMenuBusy] = useState(false)
+  const [headerTitle, setHeaderTitle] = useState<string | undefined>(undefined)
 
   const startSandboxFromMenu = async () => {
     setMenuBusy(true)
@@ -368,6 +369,23 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialChatId])
 
+  // Load chat metadata (title) to show in header
+  useEffect(() => {
+    let cancelled = false
+    if (!initialChatId) return
+    ;(async () => {
+      try {
+        const res = await fetch(`/api/chat/meta?chatId=${encodeURIComponent(initialChatId)}`, { cache: 'no-store' })
+        const data = await res.json().catch(()=> ({})) as any
+        if (!cancelled && res.ok && data && data.ok && data.chat) {
+          const t = (data.chat.title || '').toString()
+          if (t) setHeaderTitle(t)
+        }
+      } catch { /* ignore */ }
+    })()
+    return () => { cancelled = true }
+  }, [initialChatId])
+
   // Auto-start sandbox (no message) when requested via URL flag
   useEffect(() => {
     if (autoStartSandbox && initialChatId && !chatId) {
@@ -388,7 +406,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
   if (isEmpty) {
     return (
       <div className="h-full grid grid-rows-[auto_1fr]">
-        <Header busy={menuBusy} hasSandbox={!!chatId} onStartSandbox={startSandboxFromMenu} onStopSandbox={stopSandboxFromMenu} onWriteFiles={writeFilesFromMenu} />
+        <Header title={headerTitle || 'Chat'} busy={menuBusy} hasSandbox={!!chatId} onStartSandbox={startSandboxFromMenu} onStopSandbox={stopSandboxFromMenu} onWriteFiles={writeFilesFromMenu} />
         <div className="h-full min-h-0" style={withSideMargins ? { marginLeft: '20%', marginRight: '20%' } : undefined}>
           <div className="h-full px-4">
             <div className="h-full flex items-center justify-center">
@@ -441,7 +459,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
 
   return (
     <div className="h-full grid grid-rows-[auto_1fr]">
-      <Header busy={menuBusy} hasSandbox={!!chatId} onStartSandbox={startSandboxFromMenu} onStopSandbox={stopSandboxFromMenu} onWriteFiles={writeFilesFromMenu} />
+      <Header title={headerTitle || 'Chat'} busy={menuBusy} hasSandbox={!!chatId} onStartSandbox={startSandboxFromMenu} onStopSandbox={stopSandboxFromMenu} onWriteFiles={writeFilesFromMenu} />
       <div className="h-full grid grid-rows-[1fr_auto] min-h-0" style={withSideMargins ? { marginLeft: '20%', marginRight: '20%' } : undefined}>
         <div className="overflow-y-auto min-h-0 px-4 py-4">
           {messages.map((m) =>
