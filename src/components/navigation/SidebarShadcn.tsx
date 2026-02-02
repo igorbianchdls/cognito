@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import {
   MessageSquare,
   LayoutGrid,
@@ -9,6 +9,7 @@ import {
   Cpu,
   ChevronsUpDown,
   BarChart3,
+  Plus,
 } from "lucide-react"
 
 import MetaIcon from "@/components/icons/MetaIcon"
@@ -201,6 +202,17 @@ function SidebarHeaderCompact({
 
 export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle, sectionTitleStyle, style, borderless, headerBorderless, className, headerVariant = 'compact', showHeaderTrigger = true, ...props }: React.ComponentProps<typeof Sidebar> & { bgColor?: string; textColor?: string; itemTextColor?: string; itemTextStyle?: React.CSSProperties; sectionTitleStyle?: React.CSSProperties; borderless?: boolean; headerBorderless?: boolean; className?: string; headerVariant?: HeaderVariant; showHeaderTrigger?: boolean }) {
   const pathname = usePathname()
+  const router = useRouter()
+
+  const handleNewChat = () => {
+    try {
+      const id = (globalThis as any)?.crypto?.randomUUID?.() || (Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2))
+      router.replace(`/chat/${id}`)
+    } catch {
+      const id = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2)
+      router.replace(`/chat/${id}`)
+    }
+  }
 
   // Update active state based on current path
   const navMainWithActiveState = navigationData.navMain.map(item => ({
@@ -241,6 +253,15 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
           <div className="h-full w-full flex items-center justify-start gap-2 px-2">
             {showHeaderTrigger && <SidebarTrigger className="h-8 w-8" />}
             <SidebarHeaderCompact teams={dataWithActiveState.teams} />
+            <button
+              type="button"
+              onClick={handleNewChat}
+              className="ml-auto inline-flex items-center gap-1 h-8 px-2 rounded-md bg-gray-900 text-white text-xs hover:bg-black group-data-[collapsible=icon]:px-1"
+              title="Novo Chat"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span className="group-data-[collapsible=icon]:hidden">Novo Chat</span>
+            </button>
           </div>
         ) : (
           <div className="h-full w-full flex items-center justify-start gap-2 px-2">
@@ -248,6 +269,15 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
             <div className="group-data-[collapsible=icon]:hidden">
               <TeamSwitcher teams={dataWithActiveState.teams} />
             </div>
+            <button
+              type="button"
+              onClick={handleNewChat}
+              className="ml-auto inline-flex items-center gap-1 h-8 px-2 rounded-md bg-gray-900 text-white text-xs hover:bg-black"
+              title="Novo Chat"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Novo Chat</span>
+            </button>
           </div>
         )}
       </SidebarHeader>
