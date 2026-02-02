@@ -264,11 +264,11 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
         )}
       </SidebarHeader>
       <SidebarContent className="ui-text">
-        <div className="px-2 pt-2">
+        <div className="px-2 pt-1">
           <button
             type="button"
             onClick={handleNewChat}
-            className="w-full h-9 inline-flex items-center justify-center gap-2 rounded-md bg-white border border-gray-200 text-gray-500 text-xs hover:bg-gray-50"
+            className="w-full h-8 inline-flex items-center justify-center gap-2 rounded-md bg-white border border-gray-200 text-black text-sm hover:bg-gray-50"
             title="Novo Chat"
           >
             <Plus className="w-3.5 h-3.5" />
