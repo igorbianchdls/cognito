@@ -218,7 +218,6 @@ export default function IntegrationsPage() {
                                 {busySlug === t.slug ? 'Abrindo…' : isOn ? 'Reintegrar' : 'Integrar'}
                               </button>
                             )})()}
-                            </button>
                             <button onClick={() => fetchStatus(t.slug)} className="px-3 py-1.5 rounded border text-sm">Checar status</button>
                           </div>
                         </div>
