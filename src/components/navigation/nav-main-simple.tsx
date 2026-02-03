@@ -15,6 +15,7 @@ export function NavMainSimple({
   items,
   groupLabelStyle,
   itemTextStyle,
+  iconSizePx = 12,
 }: {
   items: {
     title: string
@@ -24,6 +25,7 @@ export function NavMainSimple({
   }[]
   groupLabelStyle?: React.CSSProperties
   itemTextStyle?: React.CSSProperties
+  iconSizePx?: number
 }) {
   const router = useRouter()
 
@@ -42,7 +44,7 @@ export function NavMainSimple({
               onClick={() => handleNavigation(item.url)}
               isActive={item.isActive}
             >
-              {item.icon && <item.icon className="w-3 h-3" />}
+              {item.icon && <item.icon style={{ width: iconSizePx, height: iconSizePx }} />}
               <span style={itemTextStyle}>{item.title}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>

@@ -200,7 +200,7 @@ function SidebarHeaderCompact({
   )
 }
 
-export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle, sectionTitleStyle, style, borderless, headerBorderless, className, headerVariant = 'compact', showHeaderTrigger = true, ...props }: React.ComponentProps<typeof Sidebar> & { bgColor?: string; textColor?: string; itemTextColor?: string; itemTextStyle?: React.CSSProperties; sectionTitleStyle?: React.CSSProperties; borderless?: boolean; headerBorderless?: boolean; className?: string; headerVariant?: HeaderVariant; showHeaderTrigger?: boolean }) {
+export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle, sectionTitleStyle, style, borderless, headerBorderless, className, headerVariant = 'compact', showHeaderTrigger = true, iconSizePx = 12, ...props }: React.ComponentProps<typeof Sidebar> & { bgColor?: string; textColor?: string; itemTextColor?: string; itemTextStyle?: React.CSSProperties; sectionTitleStyle?: React.CSSProperties; borderless?: boolean; headerBorderless?: boolean; className?: string; headerVariant?: HeaderVariant; showHeaderTrigger?: boolean; iconSizePx?: number }) {
   const pathname = usePathname()
   const router = useRouter()
 
@@ -275,7 +275,7 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
             <span>Novo Chat</span>
           </button>
         </div>
-        <NavMainSimple items={dataWithActiveState.navMain} groupLabelStyle={finalSectionTitleStyle} itemTextStyle={finalItemTextStyle} />
+        <NavMainSimple items={dataWithActiveState.navMain} groupLabelStyle={finalSectionTitleStyle} itemTextStyle={finalItemTextStyle} iconSizePx={iconSizePx} />
         <NavModulos groupLabelStyle={finalSectionTitleStyle} itemTextStyle={finalItemTextStyle} />
 
         <SidebarGroup>
@@ -284,7 +284,7 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
             {navigationData.integrations.map((integration) => (
               <SidebarMenuItem key={integration.title}>
                 <SidebarMenuButton tooltip={integration.title}>
-                  <integration.icon className="w-3 h-3" backgroundColor="transparent" />
+                  <integration.icon style={{ width: iconSizePx, height: iconSizePx }} backgroundColor="transparent" />
                   <span style={finalItemTextStyle}>{integration.title}</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>

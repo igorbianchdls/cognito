@@ -7,10 +7,12 @@ import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 type Config = {
   fontFamily: string;
   fontSize: number; // px
-  lineHeight: number; // unitless
+  letterSpacingEm: number; // em units (e.g., -0.02)
+  fontWeight: number; // 400..700
   paddingY: number; // px
   itemColor: string;
   bgColor: string;
+  iconSize: number; // px
 };
 
 const FONT_OPTIONS: Array<{ label: string; value: string; css: string }> = [
@@ -27,10 +29,12 @@ const FONT_OPTIONS: Array<{ label: string; value: string; css: string }> = [
 const DEFAULTS: Config = {
   fontFamily: FONT_OPTIONS[0].css,
   fontSize: 13,
-  lineHeight: 1.35,
+  letterSpacingEm: -0.02,
+  fontWeight: 500,
   paddingY: 2,
   itemColor: "#0f172a",
   bgColor: "#f9fafb",
+  iconSize: 12,
 };
 
 export default function SidebarConfiguratorPage() {
@@ -54,7 +58,8 @@ export default function SidebarConfiguratorPage() {
     fontFamily: cfg.fontFamily,
     fontSize: `${cfg.fontSize}px`,
     color: cfg.itemColor,
-    lineHeight: cfg.lineHeight,
+    fontWeight: cfg.fontWeight as React.CSSProperties["fontWeight"],
+    letterSpacing: `${cfg.letterSpacingEm}em`,
     paddingTop: `${cfg.paddingY}px`,
     paddingBottom: `${cfg.paddingY}px`,
   } as React.CSSProperties), [cfg]);
@@ -90,10 +95,27 @@ export default function SidebarConfiguratorPage() {
                   onChange={(e)=> setCfg(c => ({ ...c, fontSize: Number(e.target.value || 13) }))} />
               </div>
               <div>
-                <label className="block text-gray-600 mb-1">Espaçamento (line-height)</label>
-                <input type="number" min={1.0} max={2.0} step={0.05} className="w-full border rounded px-2 py-1" value={cfg.lineHeight}
-                  onChange={(e)=> setCfg(c => ({ ...c, lineHeight: Number(e.target.value || 1.35) }))} />
+                <label className="block text-gray-600 mb-1">Peso da fonte</label>
+                <select className="w-full border rounded px-2 py-1" value={cfg.fontWeight}
+                  onChange={(e)=> setCfg(c => ({ ...c, fontWeight: Number(e.target.value || 500) }))}>
+                  <option value={400}>Regular (400)</option>
+                  <option value={500}>Medium (500)</option>
+                  <option value={600}>Semibold (600)</option>
+                  <option value={700}>Bold (700)</option>
+                </select>
               </div>
+            </div>
+
+            <div>
+              <label className="block text-gray-600 mb-1">Espaçamento entre caracteres (letter-spacing, em)</label>
+              <input type="number" min={-0.1} max={0.25} step={0.005} className="w-full border rounded px-2 py-1" value={cfg.letterSpacingEm}
+                onChange={(e)=> setCfg(c => ({ ...c, letterSpacingEm: Number(e.target.value || 0) }))} />
+            </div>
+
+            <div>
+              <label className="block text-gray-600 mb-1">Tamanho dos ícones (px)</label>
+              <input type="number" min={10} max={32} step={1} className="w-full border rounded px-2 py-1" value={cfg.iconSize}
+                onChange={(e)=> setCfg(c => ({ ...c, iconSize: Number(e.target.value || 12) }))} />
             </div>
 
             <div>
@@ -130,6 +152,7 @@ export default function SidebarConfiguratorPage() {
                 bgColor={cfg.bgColor}
                 itemTextColor={cfg.itemColor}
                 itemTextStyle={itemTextStyle}
+                iconSizePx={cfg.iconSize}
                 showHeaderTrigger={false}
                 className="h-full"
               />
