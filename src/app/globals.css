@@ -79,8 +79,8 @@
     0 12px 32px -16px var(--gray-a5);
 
   /* UI Typography + Spacing Tokens */
-  /* Fonts: default Barlow; switch with .font-inter / .font-geist classes */
-  --ui-font-family: var(--font-barlow), Barlow, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  /* Fonts: default Geist; switchable via .font-barlow / .font-inter if needed */
+  --ui-font-family: var(--font-geist-sans), Geist, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
   --ui-font-size: 15px;
   --ui-line-height: 1.5;
   /* Tracking/letter-spacing in percent: -5 to 5 */
@@ -171,7 +171,7 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-barlow), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   font-size: 14px;
   line-height: 1.5;
   letter-spacing: -0.03em;
