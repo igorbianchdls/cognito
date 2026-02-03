@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { Composio } from '@composio/core'
+import { runQuery } from '@/lib/postgres'
 
 export const runtime = 'nodejs'
 
@@ -38,6 +39,17 @@ export async function POST(req: NextRequest) {
   const callbackUrl = `${origin}/integracoes/callback?toolkit=${encodeURIComponent(tk)}`
 
   try {
+    // Persist mapping on DB: set composio_user_id = userId for the selected user
+    try {
+      if (providedUserId && providedUserId.trim()) {
+        try {
+          await runQuery(`UPDATE shared.users SET composio_user_id = $1, composio_connected_at = now() WHERE id = $1`, [providedUserId.trim()])
+        } catch {
+          // Fallback in case composio_connected_at doesn't exist
+          try { await runQuery(`UPDATE shared.users SET composio_user_id = $1 WHERE id = $1`, [providedUserId.trim()]) } catch {}
+        }
+      }
+    } catch {}
     const composio = new Composio({ apiKey })
     // If we have a specific Auth Config ID env for this toolkit, prefer Connect Link with explicit callback
     const envKey = `COMPOSIO_${tk.toUpperCase()}_AUTH_CONFIG_ID`
@@ -53,7 +65,8 @@ export async function POST(req: NextRequest) {
     }
     if (!redirectUrl) return Response.json({ ok: false, error: 'redirectUrl vazio' }, { status: 500 })
     const res = Response.json({ ok: true, userId, redirectUrl, callbackUrl })
-    if (isNewUser) res.headers.set('Set-Cookie', `composio_uid=${encodeURIComponent(userId)}; Path=/; Max-Age=31536000; SameSite=Lax`)
+    // Always set cookie to reflect the selected user
+    res.headers.set('Set-Cookie', `composio_uid=${encodeURIComponent(userId)}; Path=/; Max-Age=31536000; SameSite=Lax`)
     return res
   } catch (e: any) {
     return Response.json({ ok: false, error: e?.message || String(e) }, { status: 500 })

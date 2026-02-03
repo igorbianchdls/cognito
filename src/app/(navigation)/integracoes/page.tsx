@@ -16,6 +16,8 @@ export default function IntegrationsPage() {
   const [busySlug, setBusySlug] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [tkStatus, setTkStatus] = useState<Record<string, boolean>>({})
+  const [userItems, setUserItems] = useState<Array<{ id: string; label: string }>>([])
+  const [selectedUserId, setSelectedUserId] = useState<string>("")
 
   const handleToggle = (id: string, connected: boolean) => {
     setIntegrationsState(prev => 
@@ -41,7 +43,10 @@ export default function IntegrationsPage() {
 
   const fetchStatus = async (slug?: string) => {
     try {
-      const qs = slug ? `?toolkit=${encodeURIComponent(slug)}` : ''
+      const parts: string[] = []
+      if (slug) parts.push(`toolkit=${encodeURIComponent(slug)}`)
+      if (selectedUserId) parts.push(`userId=${encodeURIComponent(selectedUserId)}`)
+      const qs = parts.length ? `?${parts.join('&')}` : ''
       const res = await fetch(`/api/integracoes/status${qs}`, { cache: 'no-store' })
       const data = await res.json().catch(()=> ({}))
       if (!res.ok || data?.ok === false) throw new Error(data?.error || 'Falha ao consultar status')
@@ -62,12 +67,28 @@ export default function IntegrationsPage() {
     }
   }
 
-  useEffect(() => { fetchStatus(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [])
+  useEffect(() => { fetchStatus(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [selectedUserId])
+
+  const loadUsers = async (q?: string) => {
+    try {
+      const qs = q ? `?q=${encodeURIComponent(q)}` : ''
+      const res = await fetch(`/api/integracoes/users${qs}`, { cache: 'no-store' })
+      const data = await res.json().catch(()=> ({}))
+      if (!res.ok || data?.ok === false) throw new Error(data?.error || 'Falha ao listar usuários')
+      setUserItems(Array.isArray(data.items) ? data.items : [])
+      if (!selectedUserId && Array.isArray(data.items) && data.items.length) setSelectedUserId(data.items[0].id)
+    } catch (e:any) {
+      setError(e?.message || String(e))
+    }
+  }
+
+  useEffect(() => { loadUsers(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [])
 
   const handleIntegrate = async (slug: string) => {
+    if (!selectedUserId) { setError('Selecione um usuário'); return }
     setBusySlug(slug); setError(null)
     try {
-      const res = await fetch('/api/integracoes/authorize', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ toolkit: slug }) })
+      const res = await fetch('/api/integracoes/authorize', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ toolkit: slug, userId: selectedUserId }) })
       const data = await res.json().catch(()=> ({}))
       if (!res.ok || data?.ok === false) throw new Error(data?.error || 'Falha ao iniciar autorização')
       const url = (data.redirectUrl || '').toString()
@@ -164,6 +185,16 @@ export default function IntegrationsPage() {
                     <p className="text-gray-600 text-lg mb-8">
                       Conecte facilmente seu número de telefone com seus aplicativos favoritos para automatizar fluxos de trabalho e se manter atualizado sobre chamadas e mensagens.
                     </p>
+                    {/* Select de usuários (não autenticado) */}
+                    <div className="mb-6 flex items-center gap-2">
+                      <label className="text-sm text-gray-700">Usuário:</label>
+                      <select value={selectedUserId} onChange={(e)=> setSelectedUserId(e.target.value)} className="border rounded px-2 py-1 text-sm">
+                        {userItems.map(u => (
+                          <option key={u.id} value={u.id}>{u.label} ({u.id})</option>
+                        ))}
+                      </select>
+                      <button onClick={() => loadUsers()} className="px-2 py-1 text-sm border rounded">Atualizar</button>
+                    </div>
                     {error && <div className="text-sm text-red-600 mb-3">{error}</div>}
                     {/* Composio minimal section */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
