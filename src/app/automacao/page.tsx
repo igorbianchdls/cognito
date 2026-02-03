@@ -58,6 +58,22 @@ export default function AutomacaoPage() {
             <IdeaCard emoji="📊" title="Prever fluxo de caixa com base em vendas e contas a pagar/receber" />
           </div>
 
+          {/* Exemplos avançados: múltiplos pontos de contato */}
+          <div className="mt-12 mb-2 text-center">
+            <h2 className="text-xl font-semibold tracking-tight">Exemplos avançados</h2>
+            <p className="text-gray-500 text-sm">Orquestrações com múltiplos pontos de contato</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <IdeaCard emoji="🛒" title="Carrinho abandonado: WhatsApp + e‑mail + retargeting; reservar item no ERP e liberar ao finalizar" />
+            <IdeaCard emoji="🎯" title="Pós‑venda proativo: NPS baixo ou SLA estourado → tarefa no CRM, mensagem no WhatsApp e follow‑up do gerente" />
+            <IdeaCard emoji="📈" title="Demanda omnicanal: ERP + Analytics + clima + Ads → previsão e geração automática de pedidos ao fornecedor" />
+            <IdeaCard emoji="💹" title="Margem dinâmica: Custo ERP + frete + CPC + conversão → ajustar preço no e‑commerce/marketplaces e pausar campanhas" />
+            <IdeaCard emoji="🎁" title="Fidelização: 30 dias sem compra → segmentar LTV, enviar cupom por e‑mail/WhatsApp e criar tarefa se não abrir" />
+            <IdeaCard emoji="🔁" title="RMA/Logística: atraso no rastreio → notificar cliente, abrir ticket, ajustar ERP; devolução → gerar RMA e baixa de estoque" />
+            <IdeaCard emoji="🧠" title="Leads: unificar formulários/site/WhatsApp, deduplicar e enriquecer; priorizar e criar oportunidades + agendar ligação" />
+            <IdeaCard emoji="📍" title="Omnichannel local: footfall/telemetria + POS + campanhas → sugerir escala e aumentar budget por loja/região" />
+          </div>
+
           <div className="text-center mt-8">
             <button className="text-gray-500 text-sm hover:text-gray-700">Explorar mais</button>
           </div>
