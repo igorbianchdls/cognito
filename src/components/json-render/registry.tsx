@@ -650,7 +650,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
 
   Gauge: ({ element }) => {
     const theme = useThemeOverrides();
-    const merged = deepMerge((theme.components?.Gauge || {}) as AnyRecord, (element?.props || {}) as any);
+    const merged = deepMerge(((theme.components as any)?.Gauge || {}) as AnyRecord, (element?.props || {}) as any);
     return <JsonRenderGauge element={{ props: merged }} />;
   },
 
