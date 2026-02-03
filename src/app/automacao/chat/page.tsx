@@ -18,32 +18,40 @@ export default function AutomacaoChatPage() {
   const [error, setError] = useState<string | null>(null)
   const eventsEndRef = useRef<HTMLDivElement | null>(null)
 
+  // Automação (agendamento local)
+  const [autoPrompt, setAutoPrompt] = useState<string>("Escreva um parágrafo introdutório sobre nossa empresa.")
+  const [autoDelaySec, setAutoDelaySec] = useState<number>(10)
+  const [scheduledAt, setScheduledAt] = useState<number | null>(null)
+  const [countdownMs, setCountdownMs] = useState<number>(0)
+  const scheduleTimerRef = useRef<number | null>(null)
+  const countdownTimerRef = useRef<number | null>(null)
+
   useEffect(() => {
     eventsEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [events])
 
   const appendEvent = (line: string) => setEvents(prev => [...prev.slice(-200), line])
 
+  // Garante que a sandbox está iniciada e retorna o chatId
+  const ensureStart = async (): Promise<string> => {
+    if (chatId) return chatId
+    const res = await fetch('/api/sandbox', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'chat-start' })
+    })
+    const data = await res.json().catch(() => ({})) as { ok?: boolean; chatId?: string; error?: string }
+    if (!res.ok || data.ok === false || !data.chatId) throw new Error(data.error || `Erro ${res.status}`)
+    setChatId(data.chatId)
+    setMessages([{ role: 'assistant', content: 'Sandbox iniciada. Envie sua mensagem.' }])
+    appendEvent('✅ Sandbox iniciada')
+    return data.chatId
+  }
+
   const handleStart = async () => {
     setStarting(true)
     setError(null)
-    try {
-      const res = await fetch('/api/sandbox', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'chat-start' })
-      })
-      const data = await res.json().catch(() => ({})) as { ok?: boolean; chatId?: string; error?: string }
-      if (!res.ok || data.ok === false || !data.chatId) throw new Error(data.error || `Erro ${res.status}`)
-      setChatId(data.chatId)
-      setMessages([{ role: 'assistant', content: 'Sandbox iniciada. Envie sua mensagem.' }])
-      appendEvent('✅ Sandbox iniciada')
-    } catch (e) {
-      setError((e as Error).message)
-      appendEvent(`❌ Erro ao iniciar: ${(e as Error).message}`)
-    } finally {
-      setStarting(false)
-    }
+    try { await ensureStart() } catch (e) { setError((e as Error).message); appendEvent(`❌ Erro ao iniciar: ${(e as Error).message}`) } finally { setStarting(false) }
   }
 
   const handleStop = async () => {
@@ -67,9 +75,10 @@ export default function AutomacaoChatPage() {
     }
   }
 
-  const handleSend = async () => {
-    const text = input.trim()
-    if (!text || !chatId) return
+  // Função utilitária para enviar texto arbitrário
+  const sendText = async (text: string) => {
+    if (!text) return
+    const id = chatId || await ensureStart()
     setSending(true)
     setError(null)
     const base = [...messages, { role: 'user' as const, content: text }]
@@ -81,12 +90,11 @@ export default function AutomacaoChatPage() {
     } else {
       setMessages(base)
     }
-    setInput('')
     try {
       const res = await fetch('/api/sandbox', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(isSlash ? { action: 'chat-slash', chatId, prompt: text } : { action: 'chat-send-stream', chatId, history: base })
+        body: JSON.stringify(isSlash ? { action: 'chat-slash', chatId: id, prompt: text } : { action: 'chat-send-stream', chatId: id, history: base })
       })
       if (!res.ok || !res.body) {
         const txt = await res.text().catch(() => '')
@@ -145,6 +153,52 @@ export default function AutomacaoChatPage() {
     }
   }
 
+  const handleSend = async () => {
+    const text = input.trim()
+    if (!text) return
+    setInput('')
+    await sendText(text)
+  }
+
+  // Automação (agendar)
+  const scheduleRun = async () => {
+    try {
+      const id = await ensureStart()
+      if (!id) throw new Error('Falha ao iniciar sandbox')
+      const delay = Math.max(1, Number(autoDelaySec) || 1)
+      const fireAt = Date.now() + delay * 1000
+      setScheduledAt(fireAt)
+      setCountdownMs(fireAt - Date.now())
+      if (scheduleTimerRef.current) { window.clearTimeout(scheduleTimerRef.current) }
+      scheduleTimerRef.current = window.setTimeout(async () => {
+        appendEvent(`⏱️ Disparando automação (delay ${delay}s)`)
+        await sendText(autoPrompt)
+        setScheduledAt(null)
+        if (countdownTimerRef.current) { window.clearInterval(countdownTimerRef.current) }
+        countdownTimerRef.current = null
+      }, delay * 1000) as unknown as number
+      // Atualiza countdown a cada 200ms
+      if (countdownTimerRef.current) window.clearInterval(countdownTimerRef.current)
+      countdownTimerRef.current = window.setInterval(() => {
+        setCountdownMs(Math.max(0, fireAt - Date.now()))
+      }, 200) as unknown as number
+      appendEvent(`🕒 Automação agendada para ${new Date(fireAt).toLocaleTimeString()}`)
+    } catch (e) {
+      setError((e as Error).message)
+      appendEvent(`❌ Falha ao agendar: ${(e as Error).message}`)
+    }
+  }
+
+  const cancelSchedule = () => {
+    if (scheduleTimerRef.current) window.clearTimeout(scheduleTimerRef.current)
+    scheduleTimerRef.current = null
+    if (countdownTimerRef.current) window.clearInterval(countdownTimerRef.current)
+    countdownTimerRef.current = null
+    setScheduledAt(null)
+    setCountdownMs(0)
+    appendEvent('⛔ Agendamento cancelado')
+  }
+
   return (
     <SidebarProvider>
       <SidebarShadcn showHeaderTrigger={false} />
@@ -160,8 +214,34 @@ export default function AutomacaoChatPage() {
               <button onClick={handleStop} disabled={starting || !chatId} className={`px-3 py-1.5 rounded text-white ${chatId ? 'bg-red-600 hover:bg-red-700' : 'bg-gray-400'}`}>Parar</button>
             </div>
           </div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 h-full min-h-0">
-            {/* Coluna esquerda: Chat */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-0 h-full min-h-0">
+            {/* Coluna esquerda: Automação */}
+            <div className="h-full flex flex-col bg-white border-r border-gray-200">
+              <div className="px-4 py-2 border-b border-gray-200 text-sm font-medium text-gray-700">Automação</div>
+              <div className="p-3 space-y-3 overflow-auto">
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">Prompt</label>
+                  <textarea value={autoPrompt} onChange={e=>setAutoPrompt(e.target.value)} className="w-full h-28 p-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">Atraso (segundos)</label>
+                  <input type="number" min={1} value={autoDelaySec} onChange={e=>setAutoDelaySec(Math.max(1, Number(e.target.value)||10))} className="w-32 p-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" />
+                </div>
+                <div className="flex items-center gap-2">
+                  <button onClick={scheduleRun} disabled={sending || starting} className="px-3 py-1.5 rounded text-white bg-emerald-600 hover:bg-emerald-700">Agendar</button>
+                  <button onClick={async ()=>{ await sendText(autoPrompt) }} disabled={sending || starting} className="px-3 py-1.5 rounded text-white bg-blue-600 hover:bg-blue-700">Executar agora</button>
+                  <button onClick={cancelSchedule} disabled={!scheduledAt} className={`px-3 py-1.5 rounded text-white ${scheduledAt? 'bg-orange-600 hover:bg-orange-700':'bg-gray-400'}`}>Cancelar</button>
+                </div>
+                <div className="text-xs text-gray-600">
+                  <div>Status: {chatId ? 'Sandbox ativa' : 'Sandbox inativa'}</div>
+                  <div>
+                    Próxima execução: {scheduledAt ? new Date(scheduledAt).toLocaleTimeString() : '—'} {scheduledAt ? ` (em ${(Math.ceil(countdownMs/1000))}s)` : ''}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Coluna central: Chat */}
             <div className="h-full flex flex-col bg-white border-r border-gray-200">
               <div className="flex-1 overflow-auto p-4 space-y-2">
                 {messages.map((m, i) => (
@@ -197,4 +277,3 @@ export default function AutomacaoChatPage() {
     </SidebarProvider>
   )
 }
-
