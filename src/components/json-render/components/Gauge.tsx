@@ -2,6 +2,7 @@
 
 import React from "react";
 import { useDataValue } from "@/components/json-render/context";
+import { useThemeOverrides } from "@/components/json-render/theme/ThemeContext";
 
 type AnyRecord = Record<string, any>;
 
@@ -11,8 +12,16 @@ export default function JsonRenderGauge({ element }: { element?: { props?: AnyRe
   const thickness = Math.max(4, Number(p.thickness ?? 14));
   const min = Number(p.min ?? 0);
   const max = Number(p.max ?? (p.format === 'percent' ? 1 : 100));
-  const trackColor = String(p.trackColor ?? '#e5e7eb');
-  const indicatorColor = String(p.indicatorColor ?? '#3b82f6');
+  const theme = useThemeOverrides();
+  // Theme-aware defaults
+  const scheme = (() => {
+    try { const raw = (theme.cssVars || {} as any).chartColorScheme; if (raw) return JSON.parse(String(raw)); } catch {}
+    return undefined as string[] | undefined;
+  })();
+  const defaultIndicator = p.indicatorColor || (scheme && scheme[0]) || '#3b82f6';
+  const surfaceBorder = (theme.cssVars as any)?.surfaceBorder || (theme.cssVars as any)?.containerBorderColor || '#e5e7eb';
+  const trackColor = String(p.trackColor ?? surfaceBorder);
+  const indicatorColor = String(defaultIndicator);
   const showValue = p.showValue !== false;
   const roundedCaps = p.roundedCaps !== false;
   const format = (p.format ?? 'number') as 'currency'|'percent'|'number';
@@ -70,16 +79,17 @@ export default function JsonRenderGauge({ element }: { element?: { props?: AnyRe
           />
         </svg>
         <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
-          {title && <div className="text-xs text-gray-500" style={{ marginBottom: 2 }}>{title}</div>}
-          {showValue && (
-            <div className="text-xl font-semibold text-gray-900">
-              {formatValue(val, format)}
-            </div>
+          {title && (
+            <div className="text-xs" style={{ marginBottom: 2, color: (theme.cssVars as any)?.kpiTitleColor || '#64748b' }}>{title}</div>
           )}
-          {label && <div className="text-xs text-gray-500" style={{ marginTop: 2 }}>{label}</div>}
+          {showValue && (
+            <div className="text-xl font-semibold" style={{ color: (theme.cssVars as any)?.kpiValueColor || '#0f172a' }}>{formatValue(val, format)}</div>
+          )}
+          {label && (
+            <div className="text-xs" style={{ marginTop: 2, color: (theme.cssVars as any)?.kpiTitleColor || '#64748b' }}>{label}</div>
+          )}
         </div>
       </div>
     </div>
   );
 }
-
