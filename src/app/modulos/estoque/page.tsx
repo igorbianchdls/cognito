@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useStore } from '@nanostores/react'
 import type { ColumnDef } from '@tanstack/react-table'
 
-import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
+import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
 import NexusPageContainer from '@/components/navigation/nexus/NexusPageContainer'
 
@@ -215,7 +215,7 @@ export default function ModulosEstoquePage() {
 
   return (
     <SidebarProvider>
-      <SidebarShadcn borderless headerBorderless />
+      <SidebarShadcn headerBorderless showHeaderTrigger={false} />
       <SidebarInset className="h-screen overflow-hidden">
         <div className="flex h-full overflow-hidden bg-gray-100">
           <div className="flex flex-col h-full w-full">

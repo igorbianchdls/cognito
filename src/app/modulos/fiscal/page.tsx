@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useStore } from '@nanostores/react'
 import type { ColumnDef } from '@tanstack/react-table'
 
-import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
+import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
 import NexusPageContainer from '@/components/navigation/nexus/NexusPageContainer'
 
@@ -123,13 +123,16 @@ export default function ModulosFiscalPage() {
 
   return (
     <SidebarProvider>
-      <SidebarShadcn borderless headerBorderless />
+      <SidebarShadcn headerBorderless showHeaderTrigger={false} />
       <SidebarInset className="h-screen overflow-hidden">
         <div className="flex h-full overflow-hidden bg-gray-100">
           <div className="flex flex-col h-full w-full">
             
-            <div className="flex-1 min-h-0 pl-2 pr-2 pt-2 pb-2" data-page="nexus">
+            <div className="flex-1 min-h-0 p-0 bg-white" data-page="nexus">
               <NexusPageContainer className="h-full">
+                <div className="h-10 flex items-center border-b border-gray-200 px-2">
+                  <SidebarTrigger className="h-8 w-8" />
+                </div>
                 <div style={{ marginBottom: layout.mbTitle }}>
                   <PageHeader
                     title={titulo.title}

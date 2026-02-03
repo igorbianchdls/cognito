@@ -13,7 +13,7 @@ import dynamic from 'next/dynamic'
 const CadastroPlanoContasSheet = dynamic(() => import('@/components/modulos/contabilidade/CadastroPlanoContasSheet').then(m => m.default), { ssr: false })
 const CadastroLancamentoContabilSheet = dynamic(() => import('@/components/modulos/contabilidade/CadastroLancamentoContabilSheet').then(m => m.default), { ssr: false })
 import DataTable, { type TableData } from '@/components/widgets/Table'
-import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
+import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
 import NexusPageContainer from '@/components/navigation/nexus/NexusPageContainer'
 import { FileText, Landmark, BarChart3, BookOpen, Wrench, Calendar, CalendarClock, CheckCircle2, DollarSign, Tag, Briefcase, ChevronRight, ChevronDown } from 'lucide-react'
@@ -295,7 +295,7 @@ export default function ModulosContabilidadePage() {
 
   return (
     <SidebarProvider>
-      <SidebarShadcn borderless headerBorderless />
+      <SidebarShadcn headerBorderless showHeaderTrigger={false} />
       <SidebarInset className="h-screen overflow-hidden">
         <div className="flex h-full overflow-hidden bg-gray-100">
           <div className="flex flex-col h-full w-full">
