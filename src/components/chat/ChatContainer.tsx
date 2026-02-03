@@ -454,6 +454,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
                     try { const id = await ensureStart(); onOpenSandbox?.(id); } catch { /* ignore */ }
                   }}
                 />
+                <p className="mt-2 text-xs text-gray-400">Claude é uma IA e pode cometer erros. Por favor, verifique as respostas.</p>
               </div>
             </div>
           </div>
@@ -501,6 +502,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
             if (redirectOnFirstMessage && !chatId) { return }
             try { const id = await ensureStart(); onOpenSandbox?.(id); } catch { /* ignore */ }
           }} />
+          <p className="mt-2 text-xs text-gray-400">Claude é uma IA e pode cometer erros. Por favor, verifique as respostas.</p>
         </div>
       </div>
     </div>
