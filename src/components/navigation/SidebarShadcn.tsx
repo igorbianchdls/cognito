@@ -204,6 +204,25 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
   const pathname = usePathname()
   const router = useRouter()
 
+  // Shared design config from localStorage (set via /bigquery-test/sidebar)
+  const [sharedCfg, setSharedCfg] = React.useState<null | {
+    fontFamily?: string
+    fontSize?: number
+    letterSpacingEm?: number
+    fontWeight?: number
+    paddingY?: number
+    itemColor?: string
+    bgColor?: string
+    iconSize?: number
+  }>(null)
+
+  React.useEffect(() => {
+    try {
+      const raw = localStorage.getItem('sidebarshadcn-config')
+      if (raw) setSharedCfg(JSON.parse(raw))
+    } catch {}
+  }, [])
+
   const handleNewChat = () => {
     try {
       const id = (globalThis as any)?.crypto?.randomUUID?.() || (Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2))
@@ -226,11 +245,26 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
   }
 
   // Apply default values from financeiro dashboard
-  const finalBgColor = bgColor ?? '#f9fafb'
+  const finalBgColor = bgColor ?? (sharedCfg?.bgColor || '#f9fafb')
   const finalTextColor = textColor ?? '#717171'
-  const finalItemTextColor = itemTextColor ?? '#0f172a'
+  const finalItemTextColor = itemTextColor ?? (sharedCfg?.itemColor || '#0f172a')
   const finalSectionTitleStyle = sectionTitleStyle ?? DEFAULT_SECTION_TITLE_STYLE
-  const finalItemTextStyle = itemTextStyle ?? DEFAULT_ITEM_TEXT_STYLE
+  const computedSharedItemStyle: React.CSSProperties | undefined = React.useMemo(() => {
+    if (!sharedCfg) return undefined
+    const st: React.CSSProperties = {}
+    if (sharedCfg.fontFamily) st.fontFamily = sharedCfg.fontFamily
+    if (sharedCfg.fontSize) st.fontSize = `${sharedCfg.fontSize}px`
+    if (sharedCfg.fontWeight) st.fontWeight = sharedCfg.fontWeight as any
+    if (typeof sharedCfg.letterSpacingEm === 'number') st.letterSpacing = `${sharedCfg.letterSpacingEm}em`
+    if (typeof sharedCfg.paddingY === 'number') {
+      st.paddingTop = `${sharedCfg.paddingY}px`
+      st.paddingBottom = `${sharedCfg.paddingY}px`
+    }
+    if (sharedCfg.itemColor) st.color = sharedCfg.itemColor
+    return st
+  }, [sharedCfg])
+  const finalItemTextStyle = itemTextStyle ?? (computedSharedItemStyle ? { ...DEFAULT_ITEM_TEXT_STYLE, ...computedSharedItemStyle } : DEFAULT_ITEM_TEXT_STYLE)
+  const finalIconSizePx = iconSizePx ?? (sharedCfg?.iconSize || 12)
 
   // Inline CSS variable overrides for sidebar theme
   const inlineStyle = {
@@ -275,7 +309,7 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
             <span>Novo Chat</span>
           </button>
         </div>
-        <NavMainSimple items={dataWithActiveState.navMain} groupLabelStyle={finalSectionTitleStyle} itemTextStyle={finalItemTextStyle} iconSizePx={iconSizePx} />
+        <NavMainSimple items={dataWithActiveState.navMain} groupLabelStyle={finalSectionTitleStyle} itemTextStyle={finalItemTextStyle} iconSizePx={finalIconSizePx} />
         <NavModulos groupLabelStyle={finalSectionTitleStyle} itemTextStyle={finalItemTextStyle} />
 
         <SidebarGroup>
@@ -284,7 +318,7 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
             {navigationData.integrations.map((integration) => (
               <SidebarMenuItem key={integration.title}>
                 <SidebarMenuButton tooltip={integration.title}>
-                  <span style={{ width: iconSizePx, height: iconSizePx }} className="inline-flex items-center justify-center">
+                  <span style={{ width: finalIconSizePx, height: finalIconSizePx }} className="inline-flex items-center justify-center">
                     <integration.icon className="w-full h-full" backgroundColor="transparent" />
                   </span>
                   <span style={finalItemTextStyle}>{integration.title}</span>
