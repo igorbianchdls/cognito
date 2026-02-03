@@ -107,11 +107,6 @@ const navigationData = {
       icon: BarChart3,
     },
     {
-      title: "Agentes",
-      url: "/agentes",
-      icon: LayoutGrid,
-    },
-    {
       title: "Integrações",
       url: "/integracoes",
       icon: Plug,
