@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { SidebarShadcn } from "@/components/navigation/SidebarShadcn";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 
 type Config = {
   fontFamily: string;
@@ -124,17 +125,20 @@ export default function SidebarConfiguratorPage() {
         <div className="bg-white border border-gray-200 rounded-md overflow-hidden">
           <div className="border-b px-3 py-2 text-sm text-gray-600">Pré-visualização</div>
           <div className="h-[520px]">
-            <SidebarShadcn
-              bgColor={cfg.bgColor}
-              itemTextColor={cfg.itemColor}
-              itemTextStyle={itemTextStyle}
-              showHeaderTrigger={false}
-              className="h-full"
-            />
+            <SidebarProvider>
+              <SidebarShadcn
+                bgColor={cfg.bgColor}
+                itemTextColor={cfg.itemColor}
+                itemTextStyle={itemTextStyle}
+                showHeaderTrigger={false}
+                className="h-full"
+              />
+              {/* Inset placeholder to satisfy layout; preview only */}
+              <SidebarInset className="h-full" />
+            </SidebarProvider>
           </div>
         </div>
       </div>
     </div>
   );
 }
-
