@@ -49,8 +49,12 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
   }
 
   const openArtifactFromMenu = async () => {
-    // Apenas abre o painel Artifact, sem iniciar sandbox
-    onOpenSandbox?.(chatId ?? undefined)
+    try {
+      const id = await ensureStart();
+      onOpenSandbox?.(id);
+    } catch {
+      onOpenSandbox?.(chatId ?? undefined)
+    }
   }
 
   const ensureStart = async () => {
