@@ -5,6 +5,8 @@ import { useStore } from '@nanostores/react'
 import type { ColumnDef } from '@tanstack/react-table'
 
 import NexusShell from '@/components/navigation/nexus/NexusShell'
+import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
+import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
 
 import PageHeader from '@/components/modulos/PageHeader'
 import TabsNav, { type Opcao } from '@/components/modulos/TabsNav'
@@ -394,7 +396,17 @@ export default function ModulosVendasPage() {
   }, [tabs.selected, page, pageSize, refreshKey])
 
   return (
-    <NexusShell>
+    <SidebarProvider>
+      <SidebarShadcn headerBorderless showHeaderTrigger={false} />
+      <SidebarInset className="h-screen overflow-hidden">
+        <div className="flex h-full overflow-hidden bg-gray-50">
+          <div className="flex flex-col h-full w-full">
+            <div className="flex-1 min-h-0 p-0 bg-white" data-page="nexus">
+              <div className="h-10 flex items-center border-b border-gray-200 px-2">
+                <SidebarTrigger className="h-8 w-8" />
+              </div>
+              <div className="p-2">
+                <NexusShell>
                 <div style={{ marginBottom: layout.mbTitle }}>
                   <PageHeader
                     title={titulo.title}
@@ -531,6 +543,12 @@ export default function ModulosVendasPage() {
             </div>
           </div>
         </div>
-    </NexusShell>
+                </NexusShell>
+              </div>
+            </div>
+          </div>
+        </div>
+      </SidebarInset>
+    </SidebarProvider>
   )
 }
