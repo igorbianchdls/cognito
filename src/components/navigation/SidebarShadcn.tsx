@@ -284,7 +284,9 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
             {navigationData.integrations.map((integration) => (
               <SidebarMenuItem key={integration.title}>
                 <SidebarMenuButton tooltip={integration.title}>
-                  <integration.icon style={{ width: iconSizePx, height: iconSizePx }} backgroundColor="transparent" />
+                  <span style={{ width: iconSizePx, height: iconSizePx }} className="inline-flex items-center justify-center">
+                    <integration.icon className="w-full h-full" backgroundColor="transparent" />
+                  </span>
                   <span style={finalItemTextStyle}>{integration.title}</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
