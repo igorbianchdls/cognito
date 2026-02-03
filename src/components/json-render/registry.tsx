@@ -50,6 +50,17 @@ const defaultKPI = {
   borderless: false,
 } as const;
 
+const defaultGauge = {
+  format: 'number' as 'currency'|'percent'|'number',
+  titleStyle: { fontWeight: 600, fontSize: 12, color: '#64748b', textTransform: 'none', textAlign: 'left' },
+  containerStyle: { borderColor: '#e5e7eb', borderWidth: 1, borderStyle: 'solid', borderRadius: 8, padding: 12 },
+  borderless: false,
+  size: 160,
+  thickness: 14,
+  trackColor: '#e5e7eb',
+  indicatorColor: '#3b82f6',
+} as const;
+
 const defaultBarChart = {
   height: 220,
   format: 'number' as 'currency'|'percent'|'number',
@@ -650,8 +661,19 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
 
   Gauge: ({ element }) => {
     const theme = useThemeOverrides();
-    const merged = deepMerge(((theme.components as any)?.Gauge || {}) as AnyRecord, (element?.props || {}) as any);
-    return <JsonRenderGauge element={{ props: merged }} />;
+    const p = deepMerge(deepMerge(defaultGauge as any, ((theme.components as any)?.Gauge || {}) as AnyRecord), (element?.props || {}) as any) as AnyRecord;
+    const containerStyle = ensureSurfaceBackground(
+      applyShadowFromCssVars(
+        applyBorderFromCssVars(normalizeContainerStyle(p.containerStyle, Boolean(p.borderless)), theme.cssVars),
+        theme.cssVars
+      ),
+      theme.cssVars
+    ) as React.CSSProperties;
+    return (
+      <div style={containerStyle}>
+        <JsonRenderGauge element={{ props: p }} />
+      </div>
+    );
   },
 
   SlicerCard: ({ element, onAction }) => {
