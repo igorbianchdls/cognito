@@ -28,7 +28,8 @@ export async function POST(req: NextRequest) {
 
   const apiKey = process.env.COMPOSIO_API_KEY || ''
   if (!apiKey) return Response.json({ ok: false, error: 'COMPOSIO_API_KEY ausente' }, { status: 400 })
-  const tk = (toolkit || '').trim().toLowerCase()
+  const raw = (toolkit || '').trim()
+  const tkLower = raw.toLowerCase()
   if (!tk) return Response.json({ ok: false, error: 'toolkit obrigatório' }, { status: 400 })
 
   const cookies = parseCookies(req)
@@ -36,7 +37,7 @@ export async function POST(req: NextRequest) {
   const isNewUser = !userId
   if (!userId) userId = 'user_' + Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2)
 
-  const callbackUrl = `${origin}/integracoes/callback?toolkit=${encodeURIComponent(tk)}`
+  const callbackUrl = `${origin}/integracoes/callback?toolkit=${encodeURIComponent(tkLower)}`
 
   try {
     // Persist mapping on DB: set composio_user_id = userId for the selected user
@@ -52,7 +53,7 @@ export async function POST(req: NextRequest) {
     } catch {}
     const composio = new Composio({ apiKey })
     // If we have a specific Auth Config ID env for this toolkit, prefer Connect Link with explicit callback
-    const envKey = `COMPOSIO_${tk.toUpperCase()}_AUTH_CONFIG_ID`
+    const envKey = `COMPOSIO_${tkLower.toUpperCase()}_AUTH_CONFIG_ID`
     const authConfigId = (process.env as any)[envKey] as string | undefined
     let redirectUrl = ''
     if (authConfigId && authConfigId.trim()) {
@@ -60,7 +61,8 @@ export async function POST(req: NextRequest) {
       redirectUrl = linkReq.redirectUrl || ''
     } else {
       const session = await composio.create(userId, { manageConnections: false })
-      const connectionRequest = await session.authorize(tk)
+      // Use o slug como foi selecionado na UI (raw), pois alguns toolkits são case-sensitive
+      const connectionRequest = await session.authorize(raw)
       redirectUrl = connectionRequest.redirectUrl || ''
     }
     if (!redirectUrl) return Response.json({ ok: false, error: 'redirectUrl vazio' }, { status: 500 })

@@ -38,8 +38,11 @@ export default function IntegrationsPage() {
   // --- Composio minimal UI helpers ---
   const TOOLKITS = React.useMemo(() => ([
     { slug: 'gmail', name: 'Gmail', description: 'Enviar e ler emails' },
-    // Composio toolkit slug para Google Drive confirmado como "GOOGLEDRIVE"
     { slug: 'GOOGLEDRIVE', name: 'Google Drive', description: 'Arquivos e pastas' },
+    { slug: 'GOOGLECALENDAR', name: 'Google Calendar', description: 'Agenda e eventos' },
+    { slug: 'GOOGLEDOCS', name: 'Google Docs', description: 'Documentos do Google' },
+    { slug: 'WHATSAPP', name: 'WhatsApp', description: 'Mensageria e notificações' },
+    { slug: 'NOTION', name: 'Notion', description: 'Blocos e páginas de notas' },
   ]), [])
 
   const fetchStatus = async (slug?: string) => {
