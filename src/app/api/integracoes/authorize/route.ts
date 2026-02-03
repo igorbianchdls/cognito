@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
   if (!apiKey) return Response.json({ ok: false, error: 'COMPOSIO_API_KEY ausente' }, { status: 400 })
   const raw = (toolkit || '').trim()
   const tkLower = raw.toLowerCase()
-  if (!tk) return Response.json({ ok: false, error: 'toolkit obrigatório' }, { status: 400 })
+  if (!raw) return Response.json({ ok: false, error: 'toolkit obrigatório' }, { status: 400 })
 
   const cookies = parseCookies(req)
   let userId = (providedUserId || cookies['composio_uid'] || '').trim()
