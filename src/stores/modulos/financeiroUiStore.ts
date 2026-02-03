@@ -133,7 +133,7 @@ const DEFAULT_TABS: TabsState = {
     { value: 'recebimentos', label: 'Recebimentos' },
   ],
   selected: 'visao',
-  fontFamily: 'Inter',
+  fontFamily: 'Geist',
   fontSize: 15,
   fontWeight: '400',
   color: 'rgb(128, 128, 128)',
@@ -159,9 +159,9 @@ const DEFAULT_TABELA_UI: TabelaUIState = {
   cellText: '#1f2937',
   headerFontSize: 13,
   cellFontSize: 13,
-  headerFontFamily: 'Inter',
+  headerFontFamily: 'Geist',
   headerFontWeight: '500',
-  cellFontFamily: 'Inter',
+  cellFontFamily: 'Geist',
   cellFontWeight: '400',
   headerLetterSpacing: -0.28,
   cellLetterSpacing: -0.28,
@@ -174,7 +174,7 @@ const DEFAULT_TABELA_UI: TabelaUIState = {
   defaultSortDirection: 'asc',
 }
 
-export const $titulo = atom<TituloState>({ ...DEFAULT_TITULO, subtitleFontFamily: 'Inter', subtitleLetterSpacing: -0.28 })
+export const $titulo = atom<TituloState>({ ...DEFAULT_TITULO, subtitleFontFamily: 'Geist', subtitleLetterSpacing: -0.28 })
 export const $tabs = atom<TabsState>({ ...DEFAULT_TABS })
 export const $tabelaUI = atom<TabelaUIState>({ ...DEFAULT_TABELA_UI })
 export const DEFAULT_TOOLBAR_UI: ToolbarUIState = {
