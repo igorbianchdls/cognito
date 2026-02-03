@@ -256,9 +256,11 @@ export function NavModulos({ groupLabelStyle, itemTextStyle }: { groupLabelStyle
           {/* Documentos - removed globally */}
         </SidebarMenu>
       </SidebarGroup>
+      {/* Outros: une Vendas, Supply Chain, Pós-Vendas e Marketing */}
       <SidebarGroup>
-        <SidebarGroupLabel style={groupLabelStyle}>Vendas</SidebarGroupLabel>
+        <SidebarGroupLabel style={groupLabelStyle}>Outros</SidebarGroupLabel>
         <SidebarMenu className="gap-0.5">
+          {/* Vendas */}
           <Collapsible
             key="crm"
             asChild
@@ -303,12 +305,8 @@ export function NavModulos({ groupLabelStyle, itemTextStyle }: { groupLabelStyle
               <span style={itemTextStyle}>Comercial</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarGroup>
-      {/* Supply Chain moved directly below Vendas */}
-      <SidebarGroup>
-        <SidebarGroupLabel style={groupLabelStyle}>Supply Chain</SidebarGroupLabel>
-        <SidebarMenu className="gap-0.5">
+
+          {/* Supply Chain */}
           <SidebarMenuItem>
             <SidebarMenuButton
               tooltip="Transportes"
@@ -319,11 +317,8 @@ export function NavModulos({ groupLabelStyle, itemTextStyle }: { groupLabelStyle
               <span style={itemTextStyle}>Transportes</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarGroup>
-      <SidebarGroup>
-        <SidebarGroupLabel style={groupLabelStyle}>Pós-Vendas</SidebarGroupLabel>
-        <SidebarMenu className="gap-0.5">
+
+          {/* Pós-Vendas */}
           <Collapsible
             key="servicos"
             asChild
@@ -419,11 +414,8 @@ export function NavModulos({ groupLabelStyle, itemTextStyle }: { groupLabelStyle
               </CollapsibleContent>
             </SidebarMenuItem>
           </Collapsible>
-        </SidebarMenu>
-      </SidebarGroup>
-      <SidebarGroup>
-        <SidebarGroupLabel style={groupLabelStyle}>Marketing</SidebarGroupLabel>
-        <SidebarMenu className="gap-0.5">
+
+          {/* Marketing */}
           <Collapsible
             key="marketing"
             asChild
