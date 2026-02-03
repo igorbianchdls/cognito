@@ -36,7 +36,7 @@ export function NavMainSimple({
   return (
     <SidebarGroup>
       <SidebarGroupLabel style={groupLabelStyle}>Navigation</SidebarGroupLabel>
-      <SidebarMenu>
+      <SidebarMenu className="gap-0.5">
         {items.map((item) => (
           <SidebarMenuItem key={item.title}>
             <SidebarMenuButton
