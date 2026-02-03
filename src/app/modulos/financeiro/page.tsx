@@ -829,11 +829,11 @@ export default function ModulosFinanceiroPage() {
 
   return (
     <SidebarProvider>
-      <SidebarShadcn borderless headerBorderless />
+      <SidebarShadcn headerBorderless />
       <SidebarInset className="h-screen overflow-hidden">
         <div className="flex h-full overflow-hidden bg-gray-50">
           <div className="flex flex-col h-full w-full">
-            <div className="flex-1 min-h-0 pl-2 pr-2 pt-2 pb-2" data-page="nexus">
+            <div className="flex-1 min-h-0 p-0" data-page="nexus">
               <NexusPageContainer className="h-full">
                 <div style={{ marginBottom: layout.mbTitle }}>
                   <PageHeader
