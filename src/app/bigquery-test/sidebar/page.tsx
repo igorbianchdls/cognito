@@ -27,14 +27,20 @@ const FONT_OPTIONS: Array<{ label: string; value: string; css: string }> = [
 ];
 
 const DEFAULTS: Config = {
-  fontFamily: FONT_OPTIONS[0].css,
-  fontSize: 13,
+  // Geist (como pedido)
+  fontFamily: FONT_OPTIONS.find(f => f.value === 'Geist')?.css || FONT_OPTIONS[0].css,
+  // Tamanho da fonte 14px
+  fontSize: 14,
+  // Espaçamento -0.02 (em)
   letterSpacingEm: -0.02,
   fontWeight: 500,
   paddingY: 2,
-  itemColor: "#0f172a",
-  bgColor: "#f9fafb",
-  iconSize: 12,
+  // Cor da fonte RGB(100,100,100)
+  itemColor: "#646464",
+  // Fundo RGB(253,253,253)
+  bgColor: "#fdfdfd",
+  // Tamanho dos ícones 14px
+  iconSize: 14,
 };
 
 export default function SidebarConfiguratorPage() {
