@@ -93,7 +93,7 @@ export type ToolbarUIState = {
 const DEFAULT_TITULO: TituloState = {
   title: 'Módulo',
   subtitle: 'Selecione uma opção para visualizar os dados',
-  titleFontFamily: 'Barlow',
+  titleFontFamily: 'Geist',
   titleFontSize: 42,
   titleFontWeight: '600',
   titleColor: '#111827',
@@ -103,7 +103,7 @@ const DEFAULT_TITULO: TituloState = {
 const DEFAULT_TABS: TabsState = {
   options: [],
   selected: 'default',
-  fontFamily: 'Barlow',
+  fontFamily: 'Geist',
   fontSize: 15,
   fontWeight: '400',
   color: 'rgb(99, 99, 99)',
@@ -129,9 +129,9 @@ const DEFAULT_TABELA_UI: TabelaUIState = {
   cellText: '#1f2937',
   headerFontSize: 14,
   cellFontSize: 14,
-  headerFontFamily: 'Barlow',
+  headerFontFamily: 'Geist',
   headerFontWeight: '500',
-  cellFontFamily: 'Barlow',
+  cellFontFamily: 'Geist',
   cellFontWeight: '400',
   headerLetterSpacing: -0.28,
   cellLetterSpacing: -0.28,
@@ -144,7 +144,7 @@ const DEFAULT_TABELA_UI: TabelaUIState = {
   defaultSortDirection: 'asc',
 }
 
-export const $titulo = atom<TituloState>({ ...DEFAULT_TITULO, subtitleFontFamily: 'Barlow', subtitleFontSize: 16, subtitleLetterSpacing: -0.28 })
+export const $titulo = atom<TituloState>({ ...DEFAULT_TITULO, subtitleFontFamily: 'Geist', subtitleFontSize: 16, subtitleLetterSpacing: -0.28 })
 export const $tabs = atom<TabsState>({ ...DEFAULT_TABS })
 export const $tabelaUI = atom<TabelaUIState>({ ...DEFAULT_TABELA_UI })
 export const $layout = atom<LayoutState>({ mbTitle: 16, mbTabs: 8, mbTable: 24, contentBg: 'rgb(243, 244, 246)', contentTopGap: 8 })
