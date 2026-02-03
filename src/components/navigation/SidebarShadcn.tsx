@@ -92,15 +92,14 @@ const navigationData = {
   ],
   navMain: [
     {
-      title: "Chat",
-      url: "/", // antigo /nexus removido
-      icon: MessageSquare,
-      isActive: false, // Will be set dynamically
-    },
-    {
       title: "Chats",
       url: "/chat/lista",
       icon: MessageSquare,
+    },
+    {
+      title: "Automacoes",
+      url: "/automacao",
+      icon: Cpu,
     },
     {
       title: "Dashboards",
