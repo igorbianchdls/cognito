@@ -39,10 +39,18 @@ export async function POST(req: NextRequest) {
 
   try {
     const composio = new Composio({ apiKey })
-    const session = await composio.create(userId, { manageConnections: false })
-    const connectionRequest = await session.authorize(tk)
-    // Fallback: if authorize didn’t set callback, keep default
-    const redirectUrl = connectionRequest.redirectUrl || ''
+    // If we have a specific Auth Config ID env for this toolkit, prefer Connect Link with explicit callback
+    const envKey = `COMPOSIO_${tk.toUpperCase()}_AUTH_CONFIG_ID`
+    const authConfigId = (process.env as any)[envKey] as string | undefined
+    let redirectUrl = ''
+    if (authConfigId && authConfigId.trim()) {
+      const linkReq = await composio.connectedAccounts.link(userId, authConfigId.trim(), { callbackUrl })
+      redirectUrl = linkReq.redirectUrl || ''
+    } else {
+      const session = await composio.create(userId, { manageConnections: false })
+      const connectionRequest = await session.authorize(tk)
+      redirectUrl = connectionRequest.redirectUrl || ''
+    }
     if (!redirectUrl) return Response.json({ ok: false, error: 'redirectUrl vazio' }, { status: 500 })
     const res = Response.json({ ok: true, userId, redirectUrl, callbackUrl })
     if (isNewUser) res.headers.set('Set-Cookie', `composio_uid=${encodeURIComponent(userId)}; Path=/; Max-Age=31536000; SameSite=Lax`)
@@ -51,4 +59,3 @@ export async function POST(req: NextRequest) {
     return Response.json({ ok: false, error: e?.message || String(e) }, { status: 500 })
   }
 }
-

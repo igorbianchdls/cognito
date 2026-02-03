@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import NexusShell from '@/components/navigation/nexus/NexusShell'
 import { IntegrationCard } from "@/components/navigation/integrations/IntegrationCard"
 import type { Integration } from "@/components/navigation/integrations/IntegrationCard"
@@ -12,6 +12,10 @@ export default function IntegrationsPage() {
   const [activeTab, setActiveTab] = useState<FilterTab>('all')
   // Fallback: no static integrations
   const [integrationsState, setIntegrationsState] = useState<Integration[]>([])
+  // Composio toolkits (minimal)
+  const [busySlug, setBusySlug] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [tkStatus, setTkStatus] = useState<Record<string, boolean>>({})
 
   const handleToggle = (id: string, connected: boolean) => {
     setIntegrationsState(prev => 
@@ -28,6 +32,51 @@ export default function IntegrationsPage() {
     if (activeTab === 'disconnected') return !integration.connected
     return true
   })
+
+  // --- Composio minimal UI helpers ---
+  const TOOLKITS = React.useMemo(() => ([
+    { slug: 'gmail', name: 'Gmail', description: 'Enviar e ler emails' },
+    { slug: 'google_drive', name: 'Google Drive', description: 'Arquivos e pastas' },
+  ]), [])
+
+  const fetchStatus = async (slug?: string) => {
+    try {
+      const qs = slug ? `?toolkit=${encodeURIComponent(slug)}` : ''
+      const res = await fetch(`/api/integracoes/status${qs}`, { cache: 'no-store' })
+      const data = await res.json().catch(()=> ({}))
+      if (!res.ok || data?.ok === false) throw new Error(data?.error || 'Falha ao consultar status')
+      if (slug && typeof data?.connected === 'boolean') {
+        setTkStatus(s => ({ ...s, [slug]: Boolean(data.connected) }))
+      } else if (!slug && Array.isArray(data?.items)) {
+        const map: Record<string, boolean> = {}
+        for (const it of data.items) {
+          const key = (it.slug || '').toLowerCase()
+          if (!key) continue
+          const connected = Boolean(it?.connection?.connectedAccount?.id || it?.connection?.isActive)
+          map[key] = connected
+        }
+        setTkStatus(s => ({ ...s, ...map }))
+      }
+    } catch (e:any) {
+      setError(e?.message || String(e))
+    }
+  }
+
+  useEffect(() => { fetchStatus(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [])
+
+  const handleIntegrate = async (slug: string) => {
+    setBusySlug(slug); setError(null)
+    try {
+      const res = await fetch('/api/integracoes/authorize', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ toolkit: slug }) })
+      const data = await res.json().catch(()=> ({}))
+      if (!res.ok || data?.ok === false) throw new Error(data?.error || 'Falha ao iniciar autorização')
+      const url = (data.redirectUrl || '').toString()
+      if (!url) throw new Error('Redirect URL vazio')
+      window.location.href = url
+    } catch (e:any) {
+      setError(e?.message || String(e))
+    } finally { setBusySlug(null) }
+  }
 
   const advertisingIntegrations = filteredIntegrations.filter(i => i.category === 'advertising')
   const analyticsIntegrations = filteredIntegrations.filter(i => i.category === 'analytics')
@@ -115,6 +164,29 @@ export default function IntegrationsPage() {
                     <p className="text-gray-600 text-lg mb-8">
                       Conecte facilmente seu número de telefone com seus aplicativos favoritos para automatizar fluxos de trabalho e se manter atualizado sobre chamadas e mensagens.
                     </p>
+                    {error && <div className="text-sm text-red-600 mb-3">{error}</div>}
+                    {/* Composio minimal section */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                      {TOOLKITS.map(t => (
+                        <div key={t.slug} className="border rounded p-4 bg-white">
+                          <div className="flex items-center justify-between mb-2">
+                            <div>
+                              <div className="font-medium">{t.name}</div>
+                              <div className="text-xs text-gray-500">{t.description}</div>
+                            </div>
+                            <div className={`text-xs px-2 py-0.5 rounded ${tkStatus[t.slug] ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+                              {tkStatus[t.slug] ? 'Integrado' : 'Não conectado'}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button onClick={() => handleIntegrate(t.slug)} disabled={busySlug === t.slug} className="px-3 py-1.5 rounded bg-black text-white text-sm disabled:opacity-50">
+                              {busySlug === t.slug ? 'Abrindo…' : tkStatus[t.slug] ? 'Reintegrar' : 'Integrar'}
+                            </button>
+                            <button onClick={() => fetchStatus(t.slug)} className="px-3 py-1.5 rounded border text-sm">Checar status</button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                     {/* Tabs */}
                     <div className="flex items-center space-x-2">
                       <TabButton tab="all" label="Todas as Aplicações" />
