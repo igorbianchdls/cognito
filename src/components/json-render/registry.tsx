@@ -4,6 +4,7 @@ import React from "react";
 import JsonRenderBarChart from "@/components/json-render/components/BarChart";
 import JsonRenderLineChart from "@/components/json-render/components/LineChart";
 import JsonRenderPieChart from "@/components/json-render/components/PieChart";
+import JsonRenderGauge from "@/components/json-render/components/Gauge";
 import { ThemeProvider, useThemeOverrides } from "@/components/json-render/theme/ThemeContext";
 import { mapManagersToCssVars } from "@/components/json-render/theme/thememanagers";
 import { buildThemeVars } from "@/components/json-render/theme/themeAdapter";
@@ -645,6 +646,12 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     const theme = useThemeOverrides();
     const merged = deepMerge(deepMerge(defaultPieChart as any, (theme.components?.PieChart || {}) as any), (element?.props || {}) as any);
     return <JsonRenderPieChart element={{ props: merged }} />;
+  },
+
+  Gauge: ({ element }) => {
+    const theme = useThemeOverrides();
+    const merged = deepMerge((theme.components?.Gauge || {}) as AnyRecord, (element?.props || {}) as any);
+    return <JsonRenderGauge element={{ props: merged }} />;
   },
 
   SlicerCard: ({ element, onAction }) => {
