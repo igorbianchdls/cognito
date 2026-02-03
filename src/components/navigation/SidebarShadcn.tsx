@@ -85,7 +85,7 @@ const navigationData = {
   },
   teams: [
     {
-      name: "Creatto",
+      name: "Otto",
       logo: Cpu,
       plan: "Professional",
     },
