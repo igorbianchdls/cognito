@@ -26,7 +26,7 @@ export default function ChatRoutePage() {
                 {/* Chat cell */}
                 <div className={sandboxExpanded ? 'hidden' : 'h-full min-h-0'}>
                   <ChatPanel
-                    onOpenSandbox={(id) => { setChatId(id); setShowSandbox(true); setSandboxExpanded(false); }}
+                    onOpenSandbox={(id) => { setChatId(id ?? null); setShowSandbox(true); setSandboxExpanded(false); }}
                     withSideMargins={!showSandbox}
                     // Redirect to /chat/[id] on first message
                     redirectOnFirstMessage={true}

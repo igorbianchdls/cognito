@@ -6,7 +6,7 @@ import ChatContainer from './ChatContainer';
 type ChatPanelProps = {
   className?: string;
   style?: React.CSSProperties;
-  onOpenSandbox?: (chatId: string) => void;
+  onOpenSandbox?: (chatId?: string) => void;
   withSideMargins?: boolean;
   // New props for routing/auto-send flow
   redirectOnFirstMessage?: boolean;

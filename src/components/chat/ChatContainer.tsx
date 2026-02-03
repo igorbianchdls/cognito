@@ -10,7 +10,7 @@ import { useRouter } from 'next/navigation';
 
 type ChatStatus = 'idle' | 'submitted' | 'streaming' | 'error'
 
-export default function ChatContainer({ onOpenSandbox, withSideMargins, redirectOnFirstMessage, initialMessage, autoSendPrefill, initialChatId, autoStartSandbox }: { onOpenSandbox?: (chatId: string) => void; withSideMargins?: boolean; redirectOnFirstMessage?: boolean; initialMessage?: string; autoSendPrefill?: boolean; initialChatId?: string; autoStartSandbox?: boolean }) {
+export default function ChatContainer({ onOpenSandbox, withSideMargins, redirectOnFirstMessage, initialMessage, autoSendPrefill, initialChatId, autoStartSandbox }: { onOpenSandbox?: (chatId?: string) => void; withSideMargins?: boolean; redirectOnFirstMessage?: boolean; initialMessage?: string; autoSendPrefill?: boolean; initialChatId?: string; autoStartSandbox?: boolean }) {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<UIMessage[]>([])
   const [chatId, setChatId] = useState<string | null>(null)
@@ -49,11 +49,8 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
   }
 
   const openArtifactFromMenu = async () => {
-    setMenuBusy(true)
-    try {
-      const id = await ensureStart()
-      onOpenSandbox?.(id)
-    } catch {} finally { setMenuBusy(false) }
+    // Apenas abre o painel Artifact, sem iniciar sandbox
+    onOpenSandbox?.(chatId ?? undefined)
   }
 
   const ensureStart = async () => {

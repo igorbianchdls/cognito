@@ -43,7 +43,7 @@ export default function ChatRoutePageWithId() {
               <div className={showSandbox && !sandboxExpanded ? 'grid h-full grid-cols-1 lg:grid-cols-[1fr_2fr]' : 'grid h-full grid-cols-1'}>
                 <div className={sandboxExpanded ? 'hidden' : 'h-full min-h-0'}>
                   <ChatPanel
-                    onOpenSandbox={(id) => { setChatId(id); setShowSandbox(true); setSandboxExpanded(false); }}
+                    onOpenSandbox={(id) => { setChatId(id ?? null); setShowSandbox(true); setSandboxExpanded(false); }}
                     withSideMargins={!showSandbox}
                     // do not redirect here; we're already in /chat/[id]
                     redirectOnFirstMessage={false}
