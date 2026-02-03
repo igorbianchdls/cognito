@@ -828,6 +828,7 @@ export default function ModulosFinanceiroPage() {
   }, [tabs.options])
 
   return (
+    <div className="font-geist" style={{ fontFamily: 'var(--font-geist-sans), Geist, sans-serif' }}>
     <SidebarProvider>
       <SidebarShadcn headerBorderless showHeaderTrigger={false} />
       <SidebarInset className="h-screen overflow-hidden">
@@ -1139,5 +1140,6 @@ export default function ModulosFinanceiroPage() {
         onSaved={() => setReloadKey(k => k + 1)}
       />
     </SidebarProvider>
+    </div>
   )
 }
