@@ -38,7 +38,8 @@ export default function IntegrationsPage() {
   // --- Composio minimal UI helpers ---
   const TOOLKITS = React.useMemo(() => ([
     { slug: 'gmail', name: 'Gmail', description: 'Enviar e ler emails' },
-    { slug: 'google_drive', name: 'Google Drive', description: 'Arquivos e pastas' },
+    // Composio toolkit slug para Google Drive confirmado como "GOOGLEDRIVE"
+    { slug: 'GOOGLEDRIVE', name: 'Google Drive', description: 'Arquivos e pastas' },
   ]), [])
 
   const fetchStatus = async (slug?: string) => {
@@ -205,13 +206,18 @@ export default function IntegrationsPage() {
                               <div className="font-medium">{t.name}</div>
                               <div className="text-xs text-gray-500">{t.description}</div>
                             </div>
-                            <div className={`text-xs px-2 py-0.5 rounded ${tkStatus[t.slug] ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
-                              {tkStatus[t.slug] ? 'Integrado' : 'Não conectado'}
-                            </div>
+                            {(() => { const k = t.slug; const kl = (k||'').toLowerCase(); const isOn = Boolean(tkStatus[k] ?? tkStatus[kl]); return (
+                              <div className={`text-xs px-2 py-0.5 rounded ${isOn ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+                                {isOn ? 'Integrado' : 'Não conectado'}
+                              </div>
+                            )})()}
                           </div>
                           <div className="flex items-center gap-2">
-                            <button onClick={() => handleIntegrate(t.slug)} disabled={busySlug === t.slug} className="px-3 py-1.5 rounded bg-black text-white text-sm disabled:opacity-50">
-                              {busySlug === t.slug ? 'Abrindo…' : tkStatus[t.slug] ? 'Reintegrar' : 'Integrar'}
+                            {(() => { const k = t.slug; const kl = (k||'').toLowerCase(); const isOn = Boolean(tkStatus[k] ?? tkStatus[kl]); return (
+                              <button onClick={() => handleIntegrate(t.slug)} disabled={busySlug === t.slug} className="px-3 py-1.5 rounded bg-black text-white text-sm disabled:opacity-50">
+                                {busySlug === t.slug ? 'Abrindo…' : isOn ? 'Reintegrar' : 'Integrar'}
+                              </button>
+                            )})()}
                             </button>
                             <button onClick={() => fetchStatus(t.slug)} className="px-3 py-1.5 rounded border text-sm">Checar status</button>
                           </div>
