@@ -17,6 +17,9 @@ export default function AutomacaoChatPage() {
   const [events, setEvents] = useState<string[]>([])
   const [error, setError] = useState<string | null>(null)
   const eventsEndRef = useRef<HTMLDivElement | null>(null)
+  const [automationId, setAutomationId] = useState<string | null>(null)
+  const pollRef = useRef<number | null>(null)
+  const lastTsRef = useRef<string | null>(null)
 
   // Automação (agendamento local)
   const [autoPrompt, setAutoPrompt] = useState<string>("Escreva um parágrafo introdutório sobre nossa empresa.")
@@ -182,6 +185,10 @@ export default function AutomacaoChatPage() {
       scheduleTimerRef.current = window.setTimeout(async () => {
         appendEvent(`⏱️ Disparando automação (delay ${delay}s) — preparando sandbox…`)
         try {
+          // Emit STARTED event (Inngest + log)
+          try {
+            await fetch('/api/automacao/events/emit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: 'automacao/sandbox/started', automationId: automationId || null, chatId }) })
+          } catch {}
           await ensureStart()
           await sendText(autoPrompt)
         } catch (e) {
@@ -197,6 +204,16 @@ export default function AutomacaoChatPage() {
       countdownTimerRef.current = window.setInterval(() => {
         setCountdownMs(Math.max(0, fireAt - Date.now()))
       }, 200) as unknown as number
+      // Create or reuse automationId
+      let idToUse = automationId
+      if (!idToUse) {
+        idToUse = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2)
+        setAutomationId(idToUse)
+      }
+      // Emit SCHEDULED event (Inngest + log)
+      try {
+        await fetch('/api/automacao/events/emit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: 'automacao/sandbox/scheduled', automationId: idToUse, chatId, data: { fire_at: new Date(fireAt).toISOString(), delay_sec: delay } }) })
+      } catch {}
       appendEvent(`🕒 Automação agendada para ${new Date(fireAt).toLocaleTimeString()}`)
     } catch (e) {
       setError((e as Error).message)
@@ -213,6 +230,46 @@ export default function AutomacaoChatPage() {
     setCountdownMs(0)
     appendEvent('⛔ Agendamento cancelado')
   }
+
+  // Poll de eventos do Inngest/DB
+  useEffect(() => {
+    // inicia polling quando houver automationId ou chatId
+    if (pollRef.current) { window.clearInterval(pollRef.current) }
+    if (!automationId && !chatId) return
+    const poll = async () => {
+      try {
+        const params = new URLSearchParams()
+        if (automationId) params.set('automationId', automationId)
+        if (chatId) params.set('chatId', chatId)
+        if (lastTsRef.current) params.set('after', lastTsRef.current)
+        params.set('limit', '100')
+        const res = await fetch(`/api/automacao/events/recent?${params.toString()}`, { cache: 'no-store' })
+        const j = await res.json().catch(() => ({})) as { ok?: boolean; rows?: Array<{ id:number; ts:string; event_name:string; source:string; data?: any }> }
+        if (res.ok && j.ok && Array.isArray(j.rows) && j.rows.length) {
+          const lines = j.rows.map(r => {
+            const when = new Date(r.ts).toLocaleTimeString()
+            const src = r.source || 'api'
+            return `🟣 [${when}] ${r.event_name} · ${src}`
+          })
+          setEvents(prev => [...prev.slice(-200), ...lines])
+          lastTsRef.current = j.rows[j.rows.length - 1].ts
+        }
+      } catch {}
+    }
+    pollRef.current = window.setInterval(poll, 2000) as unknown as number
+    // do an immediate fetch
+    void poll()
+    return () => { if (pollRef.current) window.clearInterval(pollRef.current); pollRef.current = null }
+  }, [automationId, chatId])
+
+  // Cleanup timers on unmount
+  useEffect(() => {
+    return () => {
+      if (scheduleTimerRef.current) window.clearTimeout(scheduleTimerRef.current)
+      if (countdownTimerRef.current) window.clearInterval(countdownTimerRef.current)
+      if (pollRef.current) window.clearInterval(pollRef.current)
+    }
+  }, [])
 
   return (
     <SidebarProvider>
