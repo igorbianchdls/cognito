@@ -32,20 +32,31 @@ export default function AutomacaoChatPage() {
 
   const appendEvent = (line: string) => setEvents(prev => [...prev.slice(-200), line])
 
-  // Garante que a sandbox está iniciada e retorna o chatId
+  // Garante que a sandbox está iniciada e retorna o chatId (com retry básico p/ 429)
   const ensureStart = async (): Promise<string> => {
     if (chatId) return chatId
-    const res = await fetch('/api/sandbox', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'chat-start' })
-    })
-    const data = await res.json().catch(() => ({})) as { ok?: boolean; chatId?: string; error?: string }
-    if (!res.ok || data.ok === false || !data.chatId) throw new Error(data.error || `Erro ${res.status}`)
-    setChatId(data.chatId)
-    setMessages([{ role: 'assistant', content: 'Sandbox iniciada. Envie sua mensagem.' }])
-    appendEvent('✅ Sandbox iniciada')
-    return data.chatId
+    const attempts = [0, 1000, 2000, 4000] // backoff (ms)
+    let lastErr: Error | null = null
+    for (let i = 0; i < attempts.length; i++) {
+      try {
+        const res = await fetch('/api/sandbox', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'chat-start' })
+        })
+        const data = await res.json().catch(() => ({})) as { ok?: boolean; chatId?: string; error?: string }
+        if (!res.ok || data.ok === false || !data.chatId) throw new Error(data.error || `Erro ${res.status}`)
+        setChatId(data.chatId)
+        setMessages([{ role: 'assistant', content: 'Sandbox iniciada. Envie sua mensagem.' }])
+        appendEvent('✅ Sandbox iniciada')
+        return data.chatId
+      } catch (e) {
+        lastErr = e as Error
+        // Se não for 429, não vale a pena retry; para mensagens genéricas, seguimos tentando curto
+        if (attempts[i] > 0) await new Promise(r => setTimeout(r, attempts[i]))
+      }
+    }
+    throw lastErr || new Error('Falha ao iniciar sandbox')
   }
 
   const handleStart = async () => {
@@ -163,16 +174,20 @@ export default function AutomacaoChatPage() {
   // Automação (agendar)
   const scheduleRun = async () => {
     try {
-      const id = await ensureStart()
-      if (!id) throw new Error('Falha ao iniciar sandbox')
       const delay = Math.max(1, Number(autoDelaySec) || 1)
       const fireAt = Date.now() + delay * 1000
       setScheduledAt(fireAt)
       setCountdownMs(fireAt - Date.now())
       if (scheduleTimerRef.current) { window.clearTimeout(scheduleTimerRef.current) }
       scheduleTimerRef.current = window.setTimeout(async () => {
-        appendEvent(`⏱️ Disparando automação (delay ${delay}s)`)
-        await sendText(autoPrompt)
+        appendEvent(`⏱️ Disparando automação (delay ${delay}s) — preparando sandbox…`)
+        try {
+          await ensureStart()
+          await sendText(autoPrompt)
+        } catch (e) {
+          setError((e as Error).message)
+          appendEvent(`❌ Falha na execução agendada: ${(e as Error).message}`)
+        }
         setScheduledAt(null)
         if (countdownTimerRef.current) { window.clearInterval(countdownTimerRef.current) }
         countdownTimerRef.current = null
