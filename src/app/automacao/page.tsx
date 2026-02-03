@@ -47,15 +47,15 @@ export default function AutomacaoPage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <IdeaCard emoji="🔵" title="Encontrar e corrigir um bug toda manhã com um pequeno resumo" />
-            <IdeaCard emoji="🌈" title="Todas as noites, revisar tópicos recentes e criar novas habilidades" />
-            <IdeaCard emoji="🧪" title="Toda noite, adicionar testes para as mudanças de código do dia" />
-            <IdeaCard emoji="💬" title="Revisar comentários de PR a cada hora e indicar próximos passos" />
-            <IdeaCard emoji="✏️" title="Rascunhar notas de versão semanalmente a partir das mudanças recentes" />
-            <IdeaCard emoji="📖" title="Toda segunda de manhã, resumir os PRs do time da semana passada" />
-            <IdeaCard emoji="📘" title="Atualizar o AGENTS.md toda semana com novos detalhes do projeto" />
-            <IdeaCard emoji="🚀" title="Analisar tickets recentes no Linear e abrir PRs simples" />
-            <IdeaCard emoji="🧾" title="Escrever notas de versão semanais para o build mais recente" />
+            <IdeaCard emoji="🧾" title="Consolidar vendas do ERP e enviar resumo diário por WhatsApp/E‑mail" />
+            <IdeaCard emoji="📦" title="Conciliar estoque ERP × e‑commerce/marketplaces e alertar divergências" />
+            <IdeaCard emoji="💸" title="Cobrança: lembrar boletos em aberto no WhatsApp e atualizar status no ERP" />
+            <IdeaCard emoji="📣" title="Avaliar Meta Ads/Google Ads e sugerir ajustes de orçamento todo dia" />
+            <IdeaCard emoji="🛰️" title="Telemetria: monitorar sensores (temperatura/GPS) e avisar desvios ao time" />
+            <IdeaCard emoji="🤝" title="Captar leads do site/WhatsApp e criar oportunidades no CRM automaticamente" />
+            <IdeaCard emoji="😊" title="Ler NPS e tickets; gerar lista de follow‑ups de pós‑venda no ERP" />
+            <IdeaCard emoji="🚚" title="Roteirizar pedidos atrasados e notificar clientes com previsão de entrega" />
+            <IdeaCard emoji="📊" title="Prever fluxo de caixa com base em vendas e contas a pagar/receber" />
           </div>
 
           <div className="text-center mt-8">
