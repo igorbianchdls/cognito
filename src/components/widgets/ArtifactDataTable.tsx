@@ -190,10 +190,7 @@ export default function ArtifactDataTable<TData extends Record<string, unknown>>
     return (
       <Artifact
         className="w-full border-red-200 bg-red-50 shadow-none"
-        style={{
-          fontFamily: "var(--font-geist-sans), Geist, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, Apple Color Emoji, Segoe UI Emoji",
-          boxShadow: "none",
-        }}
+        style={{ boxShadow: "none" }}
       >
         <ArtifactHeader>
           <div className="flex items-center gap-3">
@@ -214,10 +211,7 @@ export default function ArtifactDataTable<TData extends Record<string, unknown>>
   return (
     <Artifact
       className="w-full shadow-none"
-      style={{
-        fontFamily: "var(--font-geist-sans), Geist, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, Apple Color Emoji, Segoe UI Emoji",
-        boxShadow: "none",
-      }}
+      style={{ boxShadow: "none" }}
     >
       <ArtifactHeader>
         <div>
@@ -375,7 +369,10 @@ export default function ArtifactDataTable<TData extends Record<string, unknown>>
                   {reactTable.getHeaderGroups().map((headerGroup) => (
                     <TableRow key={headerGroup.id}>
                       {headerGroup.headers.map((header) => (
-                        <TableHead key={header.id}>
+                        <TableHead
+                          key={header.id}
+                          style={{ color: "rgb(80,80,80)", fontSize: "14px", fontWeight: 500, letterSpacing: "0em" }}
+                        >
                           {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                         </TableHead>
                       ))}
@@ -387,13 +384,18 @@ export default function ArtifactDataTable<TData extends Record<string, unknown>>
                     reactTable.getRowModel().rows.map((row) => (
                       <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'} className="bg-white">
                         {row.getVisibleCells().map((cell) => (
-                          <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
+                          <TableCell
+                            key={cell.id}
+                            style={{ color: "rgb(80,80,80)", fontSize: "13px", fontWeight: 400, letterSpacing: "0em" }}
+                          >
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          </TableCell>
                         ))}
                       </TableRow>
                     ))
                   ) : (
                     <TableRow className="bg-white">
-                      <TableCell colSpan={columns.length} className="h-24 text-center">
+                      <TableCell colSpan={columns.length} className="h-24 text-center" style={{ color: "rgb(80,80,80)", fontSize: "13px", fontWeight: 400, letterSpacing: "0em" }}>
                         Nenhum resultado encontrado.
                       </TableCell>
                     </TableRow>

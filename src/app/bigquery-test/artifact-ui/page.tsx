@@ -70,7 +70,7 @@ export default function ArtifactUiPlaygroundPage() {
   const [artifactSize, setArtifactSize] = useState<number>(14)
   const [artifactText, setArtifactText] = useState<string>("#0f172a") // slate-900
   const [artifactBg, setArtifactBg] = useState<string>("#ffffff")
-  const [artifactLetter, setArtifactLetter] = useState<string>("0em")
+  const [artifactLetter, setArtifactLetter] = useState<string>("-0.02em")
 
   // Header (barra superior do Artifact)
   const [hdrFont, setHdrFont] = useState<string>(artifactFont)
@@ -78,13 +78,13 @@ export default function ArtifactUiPlaygroundPage() {
   const [hdrSize, setHdrSize] = useState<number>(14)
   const [hdrText, setHdrText] = useState<string>("#0f172a")
   const [hdrBg, setHdrBg] = useState<string>("#ffffff")
-  const [hdrLetter, setHdrLetter] = useState<string>("0em")
+  const [hdrLetter, setHdrLetter] = useState<string>("-0.02em")
 
   // Tabela (thead)
   const [thFont, setThFont] = useState<string>(artifactFont)
-  const [thWeight, setThWeight] = useState<number>(600)
-  const [thSize, setThSize] = useState<number>(12)
-  const [thText, setThText] = useState<string>("#334155") // slate-700
+  const [thWeight, setThWeight] = useState<number>(500)
+  const [thSize, setThSize] = useState<number>(14)
+  const [thText, setThText] = useState<string>("#505050") // rgb(80,80,80)
   const [thBg, setThBg] = useState<string>("#fcfcfc") // rgb(252, 252, 252)
   const [thLetter, setThLetter] = useState<string>("0em")
 
@@ -92,7 +92,7 @@ export default function ArtifactUiPlaygroundPage() {
   const [rowFont, setRowFont] = useState<string>(artifactFont)
   const [rowWeight, setRowWeight] = useState<number>(400)
   const [rowSize, setRowSize] = useState<number>(13)
-  const [rowText, setRowText] = useState<string>("#0f172a")
+  const [rowText, setRowText] = useState<string>("#505050")
   const [rowBg, setRowBg] = useState<string>("#ffffff")
   const [rowZebra, setRowZebra] = useState<boolean>(true)
   const [rowZebraBg, setRowZebraBg] = useState<string>("#ffffff")
@@ -106,23 +106,23 @@ export default function ArtifactUiPlaygroundPage() {
     setArtifactSize(14)
     setArtifactText("#0f172a")
     setArtifactBg("#ffffff")
-    setArtifactLetter("0em")
+    setArtifactLetter("-0.02em")
     setHdrFont("Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, Apple Color Emoji, Segoe UI Emoji")
     setHdrWeight(600)
     setHdrSize(14)
     setHdrText("#0f172a")
     setHdrBg("#ffffff")
-    setHdrLetter("0em")
+    setHdrLetter("-0.02em")
     setThFont("Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, Apple Color Emoji, Segoe UI Emoji")
-    setThWeight(600)
-    setThSize(12)
-    setThText("#334155")
-    setThBg("#f8fafc")
+    setThWeight(500)
+    setThSize(14)
+    setThText("#505050")
+    setThBg("#fcfcfc")
     setThLetter("0em")
     setRowFont("Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, Apple Color Emoji, Segoe UI Emoji")
     setRowWeight(400)
     setRowSize(13)
-    setRowText("#0f172a")
+    setRowText("#505050")
     setRowBg("#ffffff")
     setRowZebra(true)
     setRowZebraBg("#ffffff")
@@ -388,27 +388,15 @@ export default function ArtifactUiPlaygroundPage() {
 
       {/* Estilos dinâmicos escopados à página */}
       <style jsx>{`
-        .artifact-playground {
-          font-family: var(--artifact-font) !important;
-          font-weight: var(--artifact-weight) !important;
-          font-size: var(--artifact-size) !important;
-          color: var(--artifact-text) !important;
-          letter-spacing: var(--artifact-letter) !important;
-        }
+        /* Mantém o padrão de tipografia do Artifact/Shadcn (sem overrides globais) */
+        .artifact-playground {}
         /* Fundo do container Artifact (usa bg-background) */
         .artifact-playground :global(.bg-background) {
           background-color: var(--artifact-bg) !important;
         }
-        /* Header do Artifact (div com border-b bg-white) */
+        /* Header do Artifact: apenas fundo, sem alterar tipografia */
         .artifact-playground :global(.border-b.bg-white) {
           background-color: var(--hdr-bg) !important;
-        }
-        .artifact-playground :global(.border-b.bg-white * ) {
-          color: var(--hdr-text) !important;
-          font-family: var(--hdr-font) !important;
-          font-weight: var(--hdr-weight) !important;
-          font-size: var(--hdr-size) !important;
-          letter-spacing: var(--hdr-letter) !important;
         }
         /* Thead */
         .artifact-playground :global(thead tr) {
