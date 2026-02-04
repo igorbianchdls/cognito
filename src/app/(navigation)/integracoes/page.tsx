@@ -7,6 +7,58 @@ import { IntegrationCard } from "@/components/navigation/integrations/Integratio
 import type { Integration } from "@/components/navigation/integrations/IntegrationCard"
 import { Icon, addCollection } from '@iconify/react'
 import { icons as simpleIcons } from '@iconify-json/simple-icons'
+import {
+  SiGmail,
+  SiGoogledrive,
+  SiGooglecalendar,
+  SiGoogledocs,
+  SiWhatsapp,
+  SiNotion,
+  SiGooglesheets,
+  SiGoogleslides,
+  SiGoogleanalytics,
+  SiGoogleads,
+  SiMeta,
+  SiSlack,
+  SiShopify,
+  SiHubspot,
+  SiFacebook,
+  SiInstagram,
+  SiAirtable,
+  SiSalesforce,
+  SiMailchimp,
+  SiCalendly,
+  SiCaldotcom,
+  SiCanva,
+  SiClickup,
+  SiClickhouse,
+  SiCoda,
+  SiDatabricks,
+  SiDiscord,
+  SiDropbox,
+  SiElevenlabs,
+  SiFigma,
+  SiGithub,
+  SiJira,
+  SiLinear,
+  SiMetabase,
+  SiMixpanel,
+  SiPosthog,
+  SiSendgrid,
+  SiSentry,
+  SiSnowflake,
+  SiStripe,
+  SiSupabase,
+  SiTelegram,
+  SiTiktok,
+  SiTrello,
+  SiTypeform,
+  SiVercel,
+  SiX,
+  SiYoutube,
+  SiZendesk,
+  SiZoom,
+} from '@icons-pack/react-simple-icons'
 
 type FilterTab = 'all' | 'connected' | 'disconnected'
 
@@ -114,6 +166,60 @@ export default function IntegrationsPage() {
     ACTIVE_CAMPAIGN: 'activecampaign',
   }), [])
 
+  // Ícones com cor (Simple Icons React) disponíveis neste pacote
+  const SIMPLE_ICON_BY_SLUG: Record<string, React.ComponentType<any>> = React.useMemo(() => ({
+    GMAIL: SiGmail,
+    GOOGLEDRIVE: SiGoogledrive,
+    GOOGLECALENDAR: SiGooglecalendar,
+    GOOGLEDOCS: SiGoogledocs,
+    WHATSAPP: SiWhatsapp,
+    NOTION: SiNotion,
+    GOOGLESHEETS: SiGooglesheets,
+    GOOGLESLIDES: SiGoogleslides,
+    GOOGLE_ANALYTICS: SiGoogleanalytics,
+    GOOGLEADS: SiGoogleads,
+    METAADS: SiMeta,
+    SLACK: SiSlack,
+    SHOPIFY: SiShopify,
+    HUBSPOT: SiHubspot,
+    FACEBOOK: SiFacebook,
+    INSTAGRAM: SiInstagram,
+    AIRTABLE: SiAirtable,
+    SALESFORCE: SiSalesforce,
+    MAILCHIMP: SiMailchimp,
+    CALENDLY: SiCalendly,
+    CAL: SiCaldotcom,
+    CANVA: SiCanva,
+    CLICKUP: SiClickup,
+    CLICKHOUSE: SiClickhouse,
+    CODA: SiCoda,
+    DATABRICKS: SiDatabricks,
+    DISCORD: SiDiscord,
+    DROPBOX: SiDropbox,
+    ELEVENLABS: SiElevenlabs,
+    FIGMA: SiFigma,
+    GITHUB: SiGithub,
+    JIRA: SiJira,
+    LINEAR: SiLinear,
+    METABASE: SiMetabase,
+    MIXPANEL: SiMixpanel,
+    POSTHOG: SiPosthog,
+    SENDGRID: SiSendgrid,
+    SENTRY: SiSentry,
+    SNOWFLAKE: SiSnowflake,
+    STRIPE: SiStripe,
+    SUPABASE: SiSupabase,
+    TELEGRAM: SiTelegram,
+    TIKTOK: SiTiktok,
+    TRELLO: SiTrello,
+    TYPEFORM: SiTypeform,
+    VERCEL: SiVercel,
+    TWITTER: SiX,
+    YOUTUBE: SiYoutube,
+    ZENDESK: SiZendesk,
+    ZOOM: SiZoom,
+  }), [])
+
   const hasIcon = (key: string | undefined) => {
     if (!key) return false
     const dict = (simpleIcons as any).icons || {}
@@ -122,6 +228,10 @@ export default function IntegrationsPage() {
 
   const renderLogo = (slug: string, name: string) => {
     const key = (slug || '').toUpperCase()
+    const SimpleComp = SIMPLE_ICON_BY_SLUG[key]
+    if (SimpleComp) {
+      return <SimpleComp size={32} color="default" title={`${name} logo`} />
+    }
     const iconKey = ICON_KEY_BY_SLUG[key]
     if (hasIcon(iconKey)) {
       return (
