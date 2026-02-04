@@ -383,7 +383,7 @@ export default function ArtifactDataTable<TData extends Record<string, unknown>>
                         {row.getVisibleCells().map((cell) => (
                           <TableCell
                             key={cell.id}
-                            style={{ color: "rgb(65,65,65)", fontSize: "13px", fontWeight: 400, letterSpacing: "0em" }}
+                            style={{ color: "rgb(65,65,65)", fontSize: "13px", fontWeight: 400, letterSpacing: "0em", padding: "12px" }}
                           >
                             {flexRender(cell.column.columnDef.cell, cell.getContext())}
                           </TableCell>
@@ -392,7 +392,7 @@ export default function ArtifactDataTable<TData extends Record<string, unknown>>
                     ))
                   ) : (
                     <TableRow className="bg-white">
-                      <TableCell colSpan={columns.length} className="h-24 text-center" style={{ color: "rgb(65,65,65)", fontSize: "13px", fontWeight: 400, letterSpacing: "0em" }}>
+                      <TableCell colSpan={columns.length} className="h-24 text-center" style={{ color: "rgb(65,65,65)", fontSize: "13px", fontWeight: 400, letterSpacing: "0em", padding: "12px" }}>
                         Nenhum resultado encontrado.
                       </TableCell>
                     </TableRow>
