@@ -84,8 +84,23 @@ export async function POST(req: NextRequest) {
     if (typeof q === 'string' && q) args['q'] = q
     if (Array.isArray(labelIds) && labelIds.length) args['labelIds'] = labelIds
 
+    // Try several strategies based on SDK shape
     let result: any = null
+    // 1) Try via tools registry with direct execute on the tool
     try {
+      const list = await (session as any).tools?.()
+      if (Array.isArray(list) && list.length) {
+        const pick = list.find((t: any) => {
+          const nm = (t?.tool?.name || t?.name || t?.tool_slug || t?.slug || '').toString().toUpperCase()
+          return nm === 'GMAIL_FETCH_EMAILS'
+        })
+        if (pick && typeof pick.execute === 'function') {
+          result = await pick.execute(args)
+        }
+      }
+    } catch {}
+    // 2) Try common session-level methods
+    if (!result) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const runner: any = (session as any)
       if (typeof runner.run === 'function') {
@@ -97,9 +112,6 @@ export async function POST(req: NextRequest) {
       } else {
         throw new Error('Método de execução da tool não disponível no SDK atual')
       }
-    } catch (e) {
-      // As fallback, return normalized shape with an error
-      throw e
     }
 
     // Normalize output to expected shape for the UI renderer
@@ -125,4 +137,3 @@ export async function POST(req: NextRequest) {
     return Response.json({ success: false, error: e?.message || String(e) }, { status: 500 })
   }
 }
-
