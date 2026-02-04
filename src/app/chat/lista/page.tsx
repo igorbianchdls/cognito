@@ -1,10 +1,13 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
+// no direct Link usage here; items use ChatListItem links
+import { useRouter } from 'next/navigation';
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { SidebarShadcn } from "@/components/navigation/SidebarShadcn";
 import PageContainer from "@/components/chat/PageContainer";
+import ChatListHeader from '@/components/chat/ChatListHeader';
+import ChatListItem from '@/components/chat/ChatListItem';
 
 type ChatRow = {
   id: string;
@@ -23,6 +26,10 @@ export default function ChatListaPage() {
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [query, setQuery] = useState('');
+  const [selectMode, setSelectMode] = useState(false);
+  const [selected, setSelected] = useState<Record<string, boolean>>({});
+  const router = useRouter();
 
   const load = async (reset = false) => {
     setLoading(true);
@@ -62,65 +69,57 @@ export default function ChatListaPage() {
     }
   };
 
+  const filtered = items.filter(i => {
+    const t = (i.title || '').toLowerCase();
+    return !query || t.includes(query.toLowerCase());
+  });
+
+  const handleNewChat = () => {
+    try {
+      const id = (globalThis as any)?.crypto?.randomUUID?.() || (Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2))
+      router.replace(`/chat/${id}?auto=1`)
+    } catch {
+      const id = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2)
+      router.replace(`/chat/${id}?auto=1`)
+    }
+  }
+
   return (
     <SidebarProvider>
       <SidebarShadcn />
       <SidebarInset className="h-screen overflow-hidden">
         <div className="flex h-full overflow-hidden">
           <div className="flex-1">
-            <PageContainer>
+            <PageContainer className="bg-[rgb(253,253,254)]">
               <div className="h-full grid grid-rows-[auto_1fr]">
-                <div className="px-4 py-3 border-b bg-white">
-                  <h1 className="text-lg font-semibold">Chats</h1>
-                  <p className="text-sm text-gray-500">Lista de conversas recentes</p>
-                </div>
+                <ChatListHeader
+                  value={query}
+                  onChange={setQuery}
+                  count={items.length}
+                  selectMode={selectMode}
+                  onToggleSelect={() => setSelectMode(!selectMode)}
+                  onNewChat={handleNewChat}
+                />
                 <div className="overflow-auto min-h-0">
-                  {error && (
-                    <div className="p-4 text-red-600 text-sm">{error}</div>
-                  )}
-                  <div className="p-4">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="text-left text-gray-500">
-                          <th className="py-2 pr-2">Chat ID</th>
-                          <th className="py-2 pr-2">Título</th>
-                          <th className="py-2 pr-2">Modelo</th>
-                          <th className="py-2 pr-2">Composio</th>
-                          <th className="py-2 pr-2">Atualizado</th>
-                          <th className="py-2 pr-2">Ações</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {items.map((row) => (
-                          <tr key={row.id} className="border-t">
-                            <td className="py-2 pr-2">
-                              <Link href={`/chat/${row.id}`} className="text-blue-600 hover:underline font-mono">
-                                {row.id}
-                              </Link>
-                            </td>
-                            <td className="py-2 pr-2">{row.title || '-'}</td>
-                            <td className="py-2 pr-2">{row.model}</td>
-                            <td className="py-2 pr-2">{row.composio_enabled ? 'ON' : 'OFF'}</td>
-                            <td className="py-2 pr-2">{new Date(row.updated_at).toLocaleString()}</td>
-                            <td className="py-2 pr-2">
-                              <button
-                                onClick={() => handleDelete(row.id)}
-                                disabled={deletingId === row.id}
-                                className="px-2 py-1 rounded bg-red-600 text-white text-xs disabled:opacity-50"
-                              >
-                                {deletingId === row.id ? 'Deletando...' : 'Deletar'}
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                        {!items.length && !loading && (
-                          <tr>
-                            <td className="py-4 text-gray-500" colSpan={5}>Nenhum chat encontrado.</td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-                    <div className="mt-4">
+                  {error && <div className="max-w-3xl mx-auto px-6 text-red-600 text-sm">{error}</div>}
+                  <div className="pb-6">
+                    {filtered.map(row => (
+                      <ChatListItem
+                        key={row.id}
+                        id={row.id}
+                        title={row.title}
+                        href={`/chat/${row.id}`}
+                        updatedAt={row.updated_at}
+                        lastMessageAt={row.last_message_at}
+                        selectable={selectMode}
+                        checked={!!selected[row.id]}
+                        onCheckChange={(v)=> setSelected(s=> ({...s, [row.id]: v}))}
+                      />
+                    ))}
+                    {!filtered.length && !loading && (
+                      <div className="max-w-3xl mx-auto px-6 text-gray-500">Nenhum chat encontrado.</div>
+                    )}
+                    <div className="max-w-3xl mx-auto px-6 mt-4">
                       <button
                         onClick={() => load(false)}
                         disabled={loading || !hasMore}
