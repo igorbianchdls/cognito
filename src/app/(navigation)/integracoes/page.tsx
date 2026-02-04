@@ -5,59 +5,8 @@ import { useEffect, useState } from "react"
 import NexusShell from '@/components/navigation/nexus/NexusShell'
 import { IntegrationCard } from "@/components/navigation/integrations/IntegrationCard"
 import type { Integration } from "@/components/navigation/integrations/IntegrationCard"
-import {
-  SiGmail,
-  SiGoogledrive,
-  SiGooglecalendar,
-  SiGoogledocs,
-  SiWhatsapp,
-  SiNotion,
-  SiGooglesheets,
-  SiGoogleslides,
-  SiGoogleanalytics,
-  SiGoogleads,
-  SiMeta,
-  SiSlack,
-  SiShopify,
-  SiHubspot,
-  SiFacebook,
-  SiInstagram,
-  SiAirtable,
-  SiSalesforce,
-  SiMailchimp,
-  SiCalendly,
-  SiCaldotcom,
-  SiCanva,
-  SiClickup,
-  SiClickhouse,
-  SiCoda,
-  SiDatabricks,
-  SiDiscord,
-  SiDropbox,
-  SiElevenlabs,
-  SiFigma,
-  SiGithub,
-  SiJira,
-  SiLinear,
-  SiMetabase,
-  SiMixpanel,
-  SiPosthog,
-  SiSendgrid,
-  SiSentry,
-  SiSnowflake,
-  SiStripe,
-  SiSupabase,
-  SiTelegram,
-  SiTiktok,
-  SiTrello,
-  SiTypeform,
-  SiVercel,
-  SiX,
-  SiYoutube,
-  SiZendesk,
-  SiZoom,
-} from '@icons-pack/react-simple-icons'
-import { Linkedin as LucideLinkedin } from 'lucide-react'
+import { Icon, addCollection } from '@iconify/react'
+import simpleIcons from '@iconify-json/simple-icons'
 
 type FilterTab = 'all' | 'connected' | 'disconnected'
 
@@ -88,75 +37,109 @@ export default function IntegrationsPage() {
     return true
   })
 
-  // --- Composio minimal UI helpers ---
-  // Render de ícones usando Simple Icons (fallback: Lucide/iniciais)
+  // Registrar coleção local do Simple Icons (Iconify)
+  addCollection(simpleIcons.icons as any)
+
+  // Mapa de slugs -> chave do Simple Icons
+  const ICON_KEY_BY_SLUG: Record<string, string> = React.useMemo(() => ({
+    GMAIL: 'gmail',
+    GOOGLEDRIVE: 'googledrive',
+    GOOGLECALENDAR: 'googlecalendar',
+    GOOGLEDOCS: 'googledocs',
+    WHATSAPP: 'whatsapp',
+    NOTION: 'notion',
+    GOOGLESHEETS: 'googlesheets',
+    GOOGLESLIDES: 'googleslides',
+    GOOGLE_ANALYTICS: 'googleanalytics',
+    GOOGLEADS: 'googleads',
+    METAADS: 'meta',
+    SLACK: 'slack',
+    SHOPIFY: 'shopify',
+    HUBSPOT: 'hubspot',
+    FACEBOOK: 'facebook',
+    INSTAGRAM: 'instagram',
+    AIRTABLE: 'airtable',
+    SALESFORCE: 'salesforce',
+    SALESFORCE_SERVICE_CLOUD: 'salesforce',
+    MAILCHIMP: 'mailchimp',
+    CALENDLY: 'calendly',
+    CAL: 'caldotcom',
+    CANVA: 'canva',
+    CLICKUP: 'clickup',
+    CLICKHOUSE: 'clickhouse',
+    CODA: 'coda',
+    DATABRICKS: 'databricks',
+    DISCORD: 'discord',
+    DOCUSIGN: 'docusign',
+    DROPBOX: 'dropbox',
+    DYNAMICS365: 'microsoftdynamics365',
+    ELEVENLABS: 'elevenlabs',
+    FIGMA: 'figma',
+    GITHUB: 'github',
+    GONG: 'gong',
+    JIRA: 'jira',
+    JOTFORM: 'jotform',
+    KOMMO: 'kommo',
+    LINKEDIN: 'linkedin',
+    LINEAR: 'linear',
+    METABASE: 'metabase',
+    MICROSOFT_CLARITY: 'microsoftclarity',
+    MICROSOFT_TEAMS: 'microsoftteams',
+    MIXPANEL: 'mixpanel',
+    MONDAY: 'mondaydotcom',
+    NETSUITE: 'netsuite',
+    ONE_DRIVE: 'microsoftonedrive',
+    OUTLOOK: 'microsoftoutlook',
+    PIPEDRIVE: 'pipedrive',
+    POSTHOG: 'posthog',
+    REMOVE_BG: 'removebg',
+    SENDGRID: 'sendgrid',
+    SENDLANE: 'sendlane',
+    SENTRY: 'sentry',
+    SERVICENOW: 'servicenow',
+    SNOWFLAKE: 'snowflake',
+    STRIPE: 'stripe',
+    SUPABASE: 'supabase',
+    TALLY: 'tally',
+    TELEGRAM: 'telegram',
+    TIKTOK: 'tiktok',
+    TRELLO: 'trello',
+    TWITTER: 'x',
+    TYPEFORM: 'typeform',
+    VERCEL: 'vercel',
+    YOUTUBE: 'youtube',
+    ZENDESK: 'zendesk',
+    ZOOM: 'zoom',
+    // extras
+    ACTIVE_CAMPAIGN: 'activecampaign',
+  }), [])
+
+  const hasIcon = (key: string | undefined) => {
+    if (!key) return false
+    const dict = (simpleIcons as any).icons?.icons || {}
+    return Boolean(dict[key])
+  }
+
   const renderLogo = (slug: string, name: string) => {
     const key = (slug || '').toUpperCase()
-    switch (key) {
-      case 'GMAIL': return <SiGmail size={32} color="default" title={`${name} logo`} />
-      case 'GOOGLEDRIVE': return <SiGoogledrive size={32} color="default" title={`${name} logo`} />
-      case 'GOOGLECALENDAR': return <SiGooglecalendar size={32} color="default" title={`${name} logo`} />
-      case 'GOOGLEDOCS': return <SiGoogledocs size={32} color="default" title={`${name} logo`} />
-      case 'WHATSAPP': return <SiWhatsapp size={32} color="default" title={`${name} logo`} />
-      case 'NOTION': return <SiNotion size={32} color="default" title={`${name} logo`} />
-      case 'GOOGLESHEETS': return <SiGooglesheets size={32} color="default" title={`${name} logo`} />
-      case 'GOOGLESLIDES': return <SiGoogleslides size={32} color="default" title={`${name} logo`} />
-      case 'GOOGLE_ANALYTICS': return <SiGoogleanalytics size={32} color="default" title={`${name} logo`} />
-      case 'GOOGLEADS': return <SiGoogleads size={32} color="default" title={`${name} logo`} />
-      case 'METAADS': return <SiMeta size={32} color="default" title={`${name} logo`} />
-      case 'SLACK': return <SiSlack size={32} color="default" title={`${name} logo`} />
-      case 'SHOPIFY': return <SiShopify size={32} color="default" title={`${name} logo`} />
-      case 'HUBSPOT': return <SiHubspot size={32} color="default" title={`${name} logo`} />
-      case 'FACEBOOK': return <SiFacebook size={32} color="default" title={`${name} logo`} />
-      case 'INSTAGRAM': return <SiInstagram size={32} color="default" title={`${name} logo`} />
-      case 'AIRTABLE': return <SiAirtable size={32} color="default" title={`${name} logo`} />
-      case 'SALESFORCE': return <SiSalesforce size={32} color="default" title={`${name} logo`} />
-      case 'SALESFORCE_SERVICE_CLOUD': return <SiSalesforce size={32} color="default" title={`${name} logo`} />
-      case 'MAILCHIMP': return <SiMailchimp size={32} color="default" title={`${name} logo`} />
-      case 'CALENDLY': return <SiCalendly size={32} color="default" title={`${name} logo`} />
-      case 'CAL': return <SiCaldotcom size={32} color="default" title={`${name} logo`} />
-      case 'CANVA': return <SiCanva size={32} color="default" title={`${name} logo`} />
-      case 'CLICKUP': return <SiClickup size={32} color="default" title={`${name} logo`} />
-      case 'CLICKHOUSE': return <SiClickhouse size={32} color="default" title={`${name} logo`} />
-      case 'CODA': return <SiCoda size={32} color="default" title={`${name} logo`} />
-      case 'DATABRICKS': return <SiDatabricks size={32} color="default" title={`${name} logo`} />
-      case 'DISCORD': return <SiDiscord size={32} color="default" title={`${name} logo`} />
-      case 'DROPBOX': return <SiDropbox size={32} color="default" title={`${name} logo`} />
-      case 'ELEVENLABS': return <SiElevenlabs size={32} color="default" title={`${name} logo`} />
-      case 'FIGMA': return <SiFigma size={32} color="default" title={`${name} logo`} />
-      case 'GITHUB': return <SiGithub size={32} color="default" title={`${name} logo`} />
-      case 'JIRA': return <SiJira size={32} color="default" title={`${name} logo`} />
-      case 'LINEAR': return <SiLinear size={32} color="default" title={`${name} logo`} />
-      case 'METABASE': return <SiMetabase size={32} color="default" title={`${name} logo`} />
-      case 'MIXPANEL': return <SiMixpanel size={32} color="default" title={`${name} logo`} />
-      case 'POSTHOG': return <SiPosthog size={32} color="default" title={`${name} logo`} />
-      case 'SENDGRID': return <SiSendgrid size={32} color="default" title={`${name} logo`} />
-      case 'SENTRY': return <SiSentry size={32} color="default" title={`${name} logo`} />
-      case 'SNOWFLAKE': return <SiSnowflake size={32} color="default" title={`${name} logo`} />
-      case 'STRIPE': return <SiStripe size={32} color="default" title={`${name} logo`} />
-      case 'SUPABASE': return <SiSupabase size={32} color="default" title={`${name} logo`} />
-      case 'TELEGRAM': return <SiTelegram size={32} color="default" title={`${name} logo`} />
-      case 'TIKTOK': return <SiTiktok size={32} color="default" title={`${name} logo`} />
-      case 'TRELLO': return <SiTrello size={32} color="default" title={`${name} logo`} />
-      case 'TWITTER': return <SiX size={32} color="default" title={`${name} logo`} />
-      case 'TYPEFORM': return <SiTypeform size={32} color="default" title={`${name} logo`} />
-      case 'VERCEL': return <SiVercel size={32} color="default" title={`${name} logo`} />
-      case 'YOUTUBE': return <SiYoutube size={32} color="default" title={`${name} logo`} />
-      case 'ZENDESK': return <SiZendesk size={32} color="default" title={`${name} logo`} />
-      case 'ZOOM': return <SiZoom size={32} color="default" title={`${name} logo`} />
-      case 'LINKEDIN': return <LucideLinkedin size={32} color="#0A66C2" />
-      // Slugs sem ícone disponível nesta lib: mostrar iniciais
-      // Exemplos: ACTIVE_CAMPAIGN, DOCUSIGN, DYNAMICS365, GONG, JOTFORM, KOMMO, MICROSOFT_CLARITY, MICROSOFT_TEAMS,
-      // MONDAY, NETSUITE, ONE_DRIVE, OUTLOOK, PIPEDRIVE, REMOVE_BG, SENDLANE, SERVICENOW, TALLY
-      default: {
-        const initials = (name || '?').trim().slice(0, 2).toUpperCase()
-        return (
-          <div className="h-8 w-8 rounded-md bg-gray-100 text-gray-700 text-xs grid place-items-center">
-            {initials}
-          </div>
-        )
-      }
+    const iconKey = ICON_KEY_BY_SLUG[key]
+    if (hasIcon(iconKey)) {
+      return (
+        <Icon
+          icon={`simple-icons:${iconKey}`}
+          width={32}
+          height={32}
+          aria-label={`${name} logo`}
+          className="shrink-0"
+        />
+      )
     }
+    const initials = (name || '?').trim().slice(0, 2).toUpperCase()
+    return (
+      <div className="h-8 w-8 rounded-md bg-gray-100 text-gray-700 text-xs grid place-items-center shrink-0">
+        {initials}
+      </div>
+    )
   }
 
   const TOOLKITS = React.useMemo(() => ([
