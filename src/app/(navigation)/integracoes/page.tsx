@@ -5,6 +5,7 @@ import { useEffect, useState } from "react"
 import NexusShell from '@/components/navigation/nexus/NexusShell'
 import { IntegrationCard } from "@/components/navigation/integrations/IntegrationCard"
 import type { Integration } from "@/components/navigation/integrations/IntegrationCard"
+import { SiFigma, SiGithub } from '@icons-pack/react-simple-icons'
 
 type FilterTab = 'all' | 'connected' | 'disconnected'
 
@@ -36,6 +37,20 @@ export default function IntegrationsPage() {
   })
 
   // --- Composio minimal UI helpers ---
+  // Render de ícones (somente 3 primeiros: FIGMA, GITHUB, GONG[sem ícone])
+  const renderLogo = (slug: string, name: string) => {
+    const key = (slug || '').toUpperCase()
+    if (key === 'FIGMA') return <SiFigma size={32} color="default" title={`${name} logo`} />
+    if (key === 'GITHUB') return <SiGithub size={32} color="default" title={`${name} logo`} />
+    // Fallback: iniciais quando não há ícone mapeado
+    const initials = (name || '?').trim().slice(0, 2).toUpperCase()
+    return (
+      <div className="h-8 w-8 rounded-md bg-gray-100 text-gray-700 text-xs grid place-items-center">
+        {initials}
+      </div>
+    )
+  }
+
   const TOOLKITS = React.useMemo(() => ([
     { slug: 'gmail', name: 'Gmail', description: 'Enviar e ler emails' },
     { slug: 'GOOGLEDRIVE', name: 'Google Drive', description: 'Arquivos e pastas' },
@@ -269,9 +284,12 @@ export default function IntegrationsPage() {
                       {TOOLKITS.map(t => (
                         <div key={t.slug} className="border rounded p-4 bg-white">
                           <div className="flex items-center justify-between mb-2">
-                            <div>
-                              <div className="font-medium">{t.name}</div>
-                              <div className="text-xs text-gray-500">{t.description}</div>
+                            <div className="flex items-center gap-3 min-w-0">
+                              {renderLogo(t.slug, t.name)}
+                              <div className="min-w-0">
+                                <div className="font-medium truncate">{t.name}</div>
+                                <div className="text-xs text-gray-500 truncate">{t.description}</div>
+                              </div>
                             </div>
                             {(() => { const k = t.slug; const kl = (k||'').toLowerCase(); const isOn = Boolean(tkStatus[k] ?? tkStatus[kl]); return (
                               <div className={`text-xs px-2 py-0.5 rounded ${isOn ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
