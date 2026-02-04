@@ -16,7 +16,6 @@ import {
   PromptInputModelSelectItem,
 } from '@/components/ai-elements/prompt-input';
 import { Plus, BarChart3, Plug } from 'lucide-react';
-import { Plug } from 'lucide-react';
 import BrandIcon from '@/components/icons/BrandIcon';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Input as UiInput } from '@/components/ui/input';
