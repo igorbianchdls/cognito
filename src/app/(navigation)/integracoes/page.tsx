@@ -469,7 +469,7 @@ export default function IntegrationsPage() {
           <div className="flex-1">
             <PageContainer className="bg-white">
               <div className="h-full overflow-auto">
-                <div className="px-5 py-6">
+                <div className="px-10 py-6">
                   {/* Header */}
                   <div className="mb-10">
                     <h1 className="text-3xl font-bold text-gray-900 mb-3">

@@ -14,8 +14,8 @@ type Props = {
 
 export default function ChatListHeader({ value, onChange, count, selectMode, onToggleSelect, onNewChat }: Props) {
   return (
-    <div className="px-3 mb-6">
-      <div className="max-w-3xl mx-auto">
+    <div className="mb-6">
+      <div>
         <div className="flex items-center justify-between gap-3 py-4">
           <h1 className="text-3xl font-semibold tracking-tight" style={{ color: '#111827' }}>Conversas</h1>
           <button

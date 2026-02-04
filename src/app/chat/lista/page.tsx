@@ -104,7 +104,7 @@ export default function ChatListaPage() {
         <div className="flex h-full overflow-hidden">
           <div className="flex-1">
             <PageContainer className="bg-white">
-              <div className="h-full grid grid-rows-[auto_1fr]">
+              <div className="h-full grid grid-rows-[auto_1fr] mx-auto max-w-3xl px-3">
                 <ChatListHeader
                   value={query}
                   onChange={setQuery}
@@ -114,7 +114,7 @@ export default function ChatListaPage() {
                   onNewChat={handleNewChat}
                 />
                 <div className="overflow-auto min-h-0">
-                  {error && <div className="max-w-3xl mx-auto px-3 text-red-600 text-sm">{error}</div>}
+                  {error && <div className="text-red-600 text-sm">{error}</div>}
                   <div className="pb-6">
                     {filtered.map(row => (
                       <ChatListItem
@@ -132,9 +132,9 @@ export default function ChatListaPage() {
                       />
                     ))}
                     {!filtered.length && !loading && (
-                      <div className="max-w-3xl mx-auto px-3 text-gray-500">Nenhum chat encontrado.</div>
+                      <div className="text-gray-500">Nenhum chat encontrado.</div>
                     )}
-                    <div className="max-w-3xl mx-auto px-3 mt-4">
+                    <div className="mt-4">
                       <button
                         onClick={() => load(false)}
                         disabled={loading || !hasMore}
