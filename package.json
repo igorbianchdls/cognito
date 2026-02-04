@@ -159,6 +159,7 @@
   },
   "overrides": {
     "@types/react": "19.2.7",
-    "@types/react-dom": "19.2.3"
+    "@types/react-dom": "19.2.3",
+    "react-beautiful-dnd": "npm:@hello-pangea/dnd@^16.6.0"
   }
 }
