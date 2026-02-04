@@ -481,34 +481,48 @@ export default function IntegrationsPage() {
                     </div>
                     {error && <div className="text-sm text-red-600 mb-3">{error}</div>}
                     {/* Composio minimal section */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-                      {TOOLKITS.map(t => (
-                        <div key={t.slug} className="border rounded p-4 bg-white">
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center gap-3 min-w-0">
-                              {renderLogo(t.slug, t.name)}
-                              <div className="min-w-0">
-                                <div className="font-medium truncate">{t.name}</div>
-                                <div className="text-xs text-gray-500 truncate">{t.description}</div>
+                    {(() => {
+                      const hasAnyIconForSlug = (slug: string) => {
+                        const key = (slug || '').toUpperCase()
+                        const SimpleComp = SIMPLE_ICON_BY_SLUG[key]
+                        if (SimpleComp) return true
+                        const iconKey = ICON_KEY_BY_SLUG[key]
+                        return hasIcon(iconKey)
+                      }
+                      const withIcon = TOOLKITS.filter(t => hasAnyIconForSlug(t.slug))
+                      const withoutIcon = TOOLKITS.filter(t => !hasAnyIconForSlug(t.slug))
+                      const ordered = [...withIcon, ...withoutIcon]
+                      return (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                          {ordered.map(t => (
+                          <div key={t.slug} className="border rounded p-4 bg-white">
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center gap-3 min-w-0">
+                                {renderLogo(t.slug, t.name)}
+                                <div className="min-w-0">
+                                  <div className="font-medium truncate">{t.name}</div>
+                                  <div className="text-xs text-gray-500 truncate">{t.description}</div>
+                                </div>
                               </div>
+                              {(() => { const k = t.slug; const kl = (k||'').toLowerCase(); const isOn = Boolean(tkStatus[k] ?? tkStatus[kl]); return (
+                                <div className={`text-xs px-2 py-0.5 rounded ${isOn ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+                                  {isOn ? 'Integrado' : 'Não conectado'}
+                                </div>
+                              )})()}
                             </div>
-                            {(() => { const k = t.slug; const kl = (k||'').toLowerCase(); const isOn = Boolean(tkStatus[k] ?? tkStatus[kl]); return (
-                              <div className={`text-xs px-2 py-0.5 rounded ${isOn ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
-                                {isOn ? 'Integrado' : 'Não conectado'}
-                              </div>
-                            )})()}
+                            <div className="flex items-center gap-2">
+                              {(() => { const k = t.slug; const kl = (k||'').toLowerCase(); const isOn = Boolean(tkStatus[k] ?? tkStatus[kl]); return (
+                                <button onClick={() => handleIntegrate(t.slug)} disabled={busySlug === t.slug} className="px-3 py-1.5 rounded bg-black text-white text-sm disabled:opacity-50">
+                                  {busySlug === t.slug ? 'Abrindo…' : isOn ? 'Reintegrar' : 'Integrar'}
+                                </button>
+                              )})()}
+                              <button onClick={() => fetchStatus(t.slug)} className="px-3 py-1.5 rounded border text-sm">Checar status</button>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            {(() => { const k = t.slug; const kl = (k||'').toLowerCase(); const isOn = Boolean(tkStatus[k] ?? tkStatus[kl]); return (
-                              <button onClick={() => handleIntegrate(t.slug)} disabled={busySlug === t.slug} className="px-3 py-1.5 rounded bg-black text-white text-sm disabled:opacity-50">
-                                {busySlug === t.slug ? 'Abrindo…' : isOn ? 'Reintegrar' : 'Integrar'}
-                              </button>
-                            )})()}
-                            <button onClick={() => fetchStatus(t.slug)} className="px-3 py-1.5 rounded border text-sm">Checar status</button>
-                          </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
+                      )
+                    })()}
                     {/* Tabs */}
                     <div className="flex items-center space-x-2">
                       <TabButton tab="all" label="Todas as Aplicações" />
