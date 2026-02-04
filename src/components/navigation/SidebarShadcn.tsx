@@ -71,7 +71,7 @@ const DEFAULT_ITEM_TEXT_STYLE: React.CSSProperties = {
   fontFamily: 'var(--ui-font-family)',
   fontWeight: 500,
   fontSize: 'var(--ui-font-size)',
-  color: '#6b7280',
+  color: 'var(--sidebar-accent-foreground)',
   letterSpacing: '-0.02em',
   textTransform: 'none',
 }
@@ -230,13 +230,13 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
   const finalIconSizePx = iconSizePx ?? 12
 
   // Inline CSS variable overrides for sidebar theme
-  const inlineStyle = {
+  const inlineStyle: React.CSSProperties = {
     ...(style || {}),
-    ["--sidebar"]: finalBgColor,
-    ["--sidebar-foreground"]: finalTextColor,
-    ["--sidebar-accent-foreground"]: finalItemTextColor,
-    ["--ui-font-size"]: '13px',
-  } as React.CSSProperties
+    // Only override CSS vars if explicit props are provided; otherwise inherit global (modern) theme tokens
+    ...(bgColor ? { ["--sidebar"]: finalBgColor } as React.CSSProperties : {}),
+    ...(textColor ? { ["--sidebar-foreground"]: finalTextColor } as React.CSSProperties : {}),
+    ...(itemTextColor ? { ["--sidebar-accent-foreground"]: finalItemTextColor } as React.CSSProperties : {}),
+  }
 
   return (
     <Sidebar
