@@ -59,7 +59,11 @@ export default function InputArea({ value, onChange, onSubmit, status = 'idle', 
 
   return (
     <div className="pt-[var(--ui-pad-y)]">
-      <PromptInput onSubmit={onSubmit} className="border-gray-100 ui-text">
+      <PromptInput
+        onSubmit={onSubmit}
+        className="border-gray-100 ui-text"
+        style={{ boxShadow: 'var(--shadow-3)' }}
+      >
         <PromptInputTextarea
           placeholder="Ask a follow up..."
           value={value}
