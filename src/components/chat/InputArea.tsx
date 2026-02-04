@@ -67,7 +67,11 @@ export default function InputArea({ value, onChange, onSubmit, status = 'idle', 
         />
         <PromptInputToolbar>
           <PromptInputTools>
-            {/* All Toolkits (UI only) */}
+            {/* Plus at extreme left */}
+            <PromptInputButton>
+              <Plus size={16} />
+            </PromptInputButton>
+            {/* All Toolkits (UI only) now to the right of + */}
             <Popover open={toolkitsOpen} onOpenChange={setToolkitsOpen}>
               <PopoverTrigger asChild>
                 <PromptInputButton variant="ghost" className="text-gray-500 hover:text-gray-800">
@@ -97,17 +101,15 @@ export default function InputArea({ value, onChange, onSubmit, status = 'idle', 
                 <div className="px-3 py-2 text-xs text-gray-500 border-t">All toolkits enabled</div>
               </PopoverContent>
             </Popover>
-            <PromptInputButton>
-              <Plus size={16} />
-            </PromptInputButton>
             <PromptInputButton onClick={() => onOpenSandbox?.()}>
               <BarChart3 size={16} />
               <span>Artifact</span>
             </PromptInputButton>
             {typeof onToggleComposio === 'function' && (
-              <PromptInputButton onClick={() => onToggleComposio?.()} variant={composioEnabled ? 'default' : 'ghost'}>
+              <PromptInputButton onClick={() => onToggleComposio?.()} variant="ghost" className="text-gray-500 hover:text-gray-800">
                 <Plug size={16} />
-                <span>Composio {composioEnabled ? 'ON' : 'OFF'}</span>
+                {/* Only change the text color when selected */}
+                <span className={composioEnabled ? 'text-blue-600' : undefined}>{composioEnabled ? 'ON' : 'OFF'}</span>
               </PromptInputButton>
             )}
 
