@@ -20,6 +20,7 @@ import PedidosCompraResult from '@/components/tools/compras/PedidosCompraResult'
 import ContasFinanceirasResult from '@/components/tools/financeiro/ContasFinanceirasResult';
 import CategoriasDespesaResult from '@/components/tools/financeiro/CategoriasDespesaResult';
 import CategoriasReceitaResult from '@/components/tools/financeiro/CategoriasReceitaResult';
+import ComposioGmailEmailsResult from '@/components/tools/mcp/ComposioGmailEmailsResult';
 // import CriarCentroCustoResult from '@/components/tools/financeiro/CriarCentroCustoResult';
 // Removed per request: do not render green client card
 // import CriarClienteResult from '@/components/tools/workflow/CriarClienteResult';
@@ -62,6 +63,31 @@ export default function RespostaDaIa({ message }: Props) {
             const output = (part as any).output;
             const errorText = (part as any).errorText as string | undefined;
             const toolType = (part as any).type as string;
+            // Special render: Composio Gmail fetch emails → ArtifactDataTable
+            {
+              const normalized = toolType.startsWith('tool-') ? toolType.slice(5) : toolType;
+              const lower = normalized.toLowerCase();
+              const isComposioGmailFetch = lower.includes('mcp__composio__gmail_fetch_emails') || /gmail[_-]?fetch[_-]?emails/i.test(lower);
+              if (isComposioGmailFetch) {
+                if (state === 'output-error') {
+                  return (
+                    <Tool key={`tool-${index}`}>
+                      <ToolHeader type={'tool-gmail_fetch_emails'} state={'output-error'} />
+                      <ToolContent>
+                        <ToolOutput output={null} errorText={errorText || 'Erro ao buscar emails'} />
+                      </ToolContent>
+                    </Tool>
+                  );
+                }
+                if (state === 'output-available') {
+                  return (
+                    <div key={`tool-${index}`} className="mb-3">
+                      <ComposioGmailEmailsResult output={output} />
+                    </div>
+                  );
+                }
+              }
+            }
             // Special render: generic MCP "listar" → ArtifactDataTable
             {
               const normalized = toolType.startsWith('tool-') ? toolType.slice(5) : toolType;
