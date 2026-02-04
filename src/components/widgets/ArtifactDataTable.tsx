@@ -368,7 +368,7 @@ export default function ArtifactDataTable<TData extends Record<string, unknown>>
                       {headerGroup.headers.map((header) => (
                         <TableHead
                           key={header.id}
-                          style={{ color: "rgb(65,65,65)", fontSize: "14px", fontWeight: 500, letterSpacing: "0em" }}
+                          style={{ color: "rgb(65,65,65)", fontSize: "14px", fontWeight: 500, letterSpacing: "0em", padding: "14px" }}
                         >
                           {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                         </TableHead>
