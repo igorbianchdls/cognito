@@ -102,10 +102,9 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
     setMessages(prev => [...prev, userMsg])
 
     const isSlash = text.startsWith('/')
-    if (!isSlash) {
-      const asstId = `a-${Date.now()}`
-      setMessages(prev => [...prev, { id: asstId, role: 'assistant', parts: [{ type: 'text', text: '' }] }])
-    }
+    // Do not pre-insert an empty assistant message; let the stream handlers
+    // (reasoning/text/tool events) create and populate the assistant message
+    // via ensureAssistantMessage/ensureTextPartAtEnd/ensureReasoningPart.
 
     setStatus('submitted')
     const history = [...messages, userMsg].filter(m => m.role === 'user' || m.role === 'assistant').map(m => ({ role: m.role as 'user'|'assistant', content: m.parts?.find(p=>p.type==='text')?.text || '' }))
