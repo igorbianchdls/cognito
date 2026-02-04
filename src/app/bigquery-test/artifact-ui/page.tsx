@@ -14,6 +14,19 @@ type Row = {
   criadoEm: string
 }
 
+const FONTS: Array<{ label: string; value: string }> = [
+  { label: "Inter (system)", value: "Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, Apple Color Emoji, Segoe UI Emoji" },
+  { label: "System UI", value: "system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, Apple Color Emoji, Segoe UI Emoji" },
+  { label: "Roboto", value: "Roboto, system-ui, -apple-system, Segoe UI, Helvetica, Arial, sans-serif" },
+  { label: "Source Sans Pro", value: "Source Sans Pro, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" },
+  { label: "Open Sans", value: "Open Sans, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" },
+  { label: "Poppins", value: "Poppins, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" },
+  { label: "Montserrat", value: "Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" },
+  { label: "DM Sans", value: "DM Sans, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" },
+  { label: "Nunito", value: "Nunito, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" },
+  { label: "Lato", value: "Lato, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" },
+]
+
 const sampleRows: Row[] = [
   { id: "1001", cliente: "ACME Ltd.", categoria: "SaaS", valor: 1299.9, status: "Ativo", criadoEm: "2024-11-10" },
   { id: "1002", cliente: "Bravo Co.", categoria: "Serviços", valor: 650.0, status: "Pendente", criadoEm: "2024-11-11" },
@@ -170,6 +183,10 @@ export default function ArtifactUiPlaygroundPage() {
           <div>
             <h3 className="text-sm font-semibold mb-2">Artifact (base)</h3>
             <div className="space-y-2">
+              <label className="block text-xs text-slate-600">Fonte (preset)</label>
+              <select className="w-full rounded border px-2 py-1 text-sm" value={artifactFont} onChange={(e) => setArtifactFont(e.target.value)}>
+                {FONTS.map(f => <option key={f.label} value={f.value}>{f.label}</option>)}
+              </select>
               <label className="block text-xs text-slate-600">Fonte (CSS font-family)</label>
               <input className="w-full rounded border px-2 py-1 text-sm" value={artifactFont} onChange={(e) => setArtifactFont(e.target.value)} />
 
@@ -198,7 +215,11 @@ export default function ArtifactUiPlaygroundPage() {
           <div>
             <h3 className="text-sm font-semibold mb-2">Header do Artifact</h3>
             <div className="space-y-2">
-              <label className="block text-xs text-slate-600">Fonte</label>
+              <label className="block text-xs text-slate-600">Fonte (preset)</label>
+              <select className="w-full rounded border px-2 py-1 text-sm" value={hdrFont} onChange={(e) => setHdrFont(e.target.value)}>
+                {FONTS.map(f => <option key={f.label} value={f.value}>{f.label}</option>)}
+              </select>
+              <label className="block text-xs text-slate-600">Fonte (CSS font-family)</label>
               <input className="w-full rounded border px-2 py-1 text-sm" value={hdrFont} onChange={(e) => setHdrFont(e.target.value)} />
 
               <label className="block text-xs text-slate-600 mt-2">Peso</label>
@@ -226,7 +247,11 @@ export default function ArtifactUiPlaygroundPage() {
           <div>
             <h3 className="text-sm font-semibold mb-2">Header da Tabela (thead)</h3>
             <div className="space-y-2">
-              <label className="block text-xs text-slate-600">Fonte</label>
+              <label className="block text-xs text-slate-600">Fonte (preset)</label>
+              <select className="w-full rounded border px-2 py-1 text-sm" value={thFont} onChange={(e) => setThFont(e.target.value)}>
+                {FONTS.map(f => <option key={f.label} value={f.value}>{f.label}</option>)}
+              </select>
+              <label className="block text-xs text-slate-600">Fonte (CSS font-family)</label>
               <input className="w-full rounded border px-2 py-1 text-sm" value={thFont} onChange={(e) => setThFont(e.target.value)} />
 
               <label className="block text-xs text-slate-600 mt-2">Peso</label>
@@ -256,7 +281,11 @@ export default function ArtifactUiPlaygroundPage() {
           <div>
             <h3 className="text-sm font-semibold mb-2">Rows (tbody)</h3>
             <div className="space-y-2">
-              <label className="block text-xs text-slate-600">Fonte</label>
+              <label className="block text-xs text-slate-600">Fonte (preset)</label>
+              <select className="w-full rounded border px-2 py-1 text-sm" value={rowFont} onChange={(e) => setRowFont(e.target.value)}>
+                {FONTS.map(f => <option key={f.label} value={f.value}>{f.label}</option>)}
+              </select>
+              <label className="block text-xs text-slate-600">Fonte (CSS font-family)</label>
               <input className="w-full rounded border px-2 py-1 text-sm" value={rowFont} onChange={(e) => setRowFont(e.target.value)} />
 
               <label className="block text-xs text-slate-600 mt-2">Peso</label>
@@ -369,4 +398,3 @@ export default function ArtifactUiPlaygroundPage() {
     </div>
   )
 }
-
