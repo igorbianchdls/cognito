@@ -104,7 +104,7 @@ export default function ChatListaPage() {
         <div className="flex h-full overflow-hidden">
           <div className="flex-1">
             <PageContainer className="bg-white">
-              <div className="h-full grid grid-rows-[auto_1fr] mx-auto max-w-3xl px-3">
+              <div className="h-full grid grid-rows-[auto_1fr] mx-auto max-w-3xl px-0">
                 <ChatListHeader
                   value={query}
                   onChange={setQuery}
