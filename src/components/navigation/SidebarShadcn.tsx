@@ -230,14 +230,14 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
   const finalIconSizePx = iconSizePx ?? 12
 
   // Inline CSS variable overrides for sidebar theme
-  const inlineStyle: React.CSSProperties = {
-    ...(style || {}),
-    // Defaults requested: font-size 14px, item color rgb(110,110,10), letter-spacing -0.02em, bg rgb(250,250,250)
-    ["--sidebar"]: 'rgb(250, 250, 250)',
-    ["--sidebar-accent-foreground"]: 'rgb(110, 110, 10)',
-    ["--ui-font-size"]: '14px',
-    ["--ui-tracking-pct"]: '-2',
-  }
+  // Inline style with custom CSS variables (typed safely)
+  const inlineStyleBase: React.CSSProperties = { ...(style || {}) }
+  const inlineStyle = inlineStyleBase as React.CSSProperties & Record<string, string | number>
+  // Defaults requested: font-size 14px, item color rgb(110,110,10), letter-spacing -0.02em, bg rgb(250,250,250)
+  inlineStyle['--sidebar'] = 'rgb(250, 250, 250)'
+  inlineStyle['--sidebar-accent-foreground'] = 'rgb(110, 110, 10)'
+  inlineStyle['--ui-font-size'] = '14px'
+  inlineStyle['--ui-tracking-pct'] = '-2'
 
   return (
     <Sidebar
