@@ -26,9 +26,9 @@ export default function ChatListItem({ id, title, href, updatedAt, lastMessageAt
       ? `Atualizado ${timeAgo(updatedAt)}`
       : ''
   return (
-    <div className="px-6">
+    <div className="px-4">
       <div className="max-w-3xl mx-auto">
-        <div className="flex items-start gap-3 p-4 rounded-lg bg-white mb-3" style={{ boxShadow: 'var(--shadow-2)' }}>
+        <div className="flex items-start gap-3 py-4 px-4 rounded-lg bg-white mb-3" style={{ boxShadow: 'var(--shadow-2)' }}>
           {selectable && (
             <input type="checkbox" className="mt-1" checked={!!checked} onChange={(e)=> onCheckChange?.(e.target.checked)} />
           )}
