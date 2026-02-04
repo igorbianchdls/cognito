@@ -34,7 +34,7 @@ export default function ComposioGmailTestPage() {
       const res = await fetch('/api/composio/gmail/fetch-emails', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
       const json = await res.json().catch(()=>({}))
       if (!res.ok || json?.success === false) throw new Error(json?.error || 'Falha na busca')
-      setData(prev => {
+      setData((prev: any) => {
         if (!merge) return json
         try {
           const prevMsgs = prev?.data?.results?.[0]?.response?.data?.messages || []
@@ -114,4 +114,3 @@ export default function ComposioGmailTestPage() {
     </div>
   )
 }
-
