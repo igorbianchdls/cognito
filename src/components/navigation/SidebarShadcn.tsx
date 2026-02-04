@@ -234,8 +234,8 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
   const inlineStyleBase: React.CSSProperties = { ...(style || {}) }
   const inlineStyle = inlineStyleBase as React.CSSProperties & Record<string, string | number>
   // Defaults requested: font-size 14px, item color rgb(110,110,10), letter-spacing -0.02em, bg rgb(250,250,250)
-  inlineStyle['--sidebar'] = 'rgb(250, 250, 250)'
-  inlineStyle['--sidebar-accent-foreground'] = 'rgb(110, 110, 10)'
+  inlineStyle['--sidebar'] = 'rgb(253, 253, 254)'
+  inlineStyle['--sidebar-accent-foreground'] = 'rgb(128, 128, 128)'
   inlineStyle['--ui-font-size'] = '14px'
   inlineStyle['--ui-tracking-pct'] = '-2'
 
@@ -246,7 +246,7 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
       className={cn('ui-text', borderless ? '!border-r-0 !border-l-0 !border-0' : undefined, className)}
       {...props}
     >
-      <SidebarHeader className={cn("h-16 p-0")} style={{ backgroundColor: finalBgColor }}>
+      <SidebarHeader className={cn("h-16 p-0")} style={{ backgroundColor: 'var(--sidebar)' }}>
         {headerVariant === 'compact' ? (
           <div className="h-full w-full flex items-center justify-start gap-2 px-2">
             {showHeaderTrigger && <SidebarTrigger className="h-8 w-8" />}
