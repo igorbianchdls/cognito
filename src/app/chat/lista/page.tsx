@@ -105,7 +105,7 @@ export default function ChatListaPage() {
           <div className="flex-1">
             <PageContainer className="bg-white">
               <div className="h-full overflow-auto">
-                <div className="px-14 py-6">
+                <div className="px-25 py-6">
                   <ChatListHeader
                     value={query}
                     onChange={setQuery}
