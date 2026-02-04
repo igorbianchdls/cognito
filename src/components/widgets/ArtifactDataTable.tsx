@@ -368,7 +368,8 @@ export default function ArtifactDataTable<TData extends Record<string, unknown>>
                       {headerGroup.headers.map((header) => (
                         <TableHead
                           key={header.id}
-                          style={{ color: "rgb(65,65,65)", fontSize: "14px", fontWeight: 500, letterSpacing: "0em", padding: "12px" }}
+                          className="whitespace-nowrap"
+                          style={{ color: "rgb(65,65,65)", fontSize: "14px", fontWeight: 500, letterSpacing: "0em", padding: "12px", whiteSpace: "nowrap" }}
                         >
                           {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                         </TableHead>
@@ -383,7 +384,8 @@ export default function ArtifactDataTable<TData extends Record<string, unknown>>
                         {row.getVisibleCells().map((cell) => (
                           <TableCell
                             key={cell.id}
-                            style={{ color: "rgb(65,65,65)", fontSize: "13px", fontWeight: 400, letterSpacing: "0em", padding: "12px" }}
+                            className="whitespace-nowrap"
+                            style={{ color: "rgb(65,65,65)", fontSize: "13px", fontWeight: 400, letterSpacing: "0em", padding: "12px", whiteSpace: "nowrap" }}
                           >
                             {flexRender(cell.column.columnDef.cell, cell.getContext())}
                           </TableCell>
@@ -392,7 +394,7 @@ export default function ArtifactDataTable<TData extends Record<string, unknown>>
                     ))
                   ) : (
                     <TableRow className="bg-white">
-                      <TableCell colSpan={columns.length} className="h-24 text-center" style={{ color: "rgb(65,65,65)", fontSize: "13px", fontWeight: 400, letterSpacing: "0em", padding: "12px" }}>
+                      <TableCell colSpan={columns.length} className="h-24 text-center whitespace-nowrap" style={{ color: "rgb(65,65,65)", fontSize: "13px", fontWeight: 400, letterSpacing: "0em", padding: "12px", whiteSpace: "nowrap" }}>
                         Nenhum resultado encontrado.
                       </TableCell>
                     </TableRow>
