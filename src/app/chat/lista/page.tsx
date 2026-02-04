@@ -104,44 +104,46 @@ export default function ChatListaPage() {
         <div className="flex h-full overflow-hidden">
           <div className="flex-1">
             <PageContainer className="bg-white">
-              <div className="h-full grid grid-rows-[auto_1fr] mx-auto max-w-3xl px-0">
-                <ChatListHeader
-                  value={query}
-                  onChange={setQuery}
-                  count={items.length}
-                  selectMode={selectMode}
-                  onToggleSelect={() => setSelectMode(!selectMode)}
-                  onNewChat={handleNewChat}
-                />
-                <div className="overflow-auto min-h-0">
-                  {error && <div className="text-red-600 text-sm">{error}</div>}
-                  <div className="pb-6">
-                    {filtered.map(row => (
-                      <ChatListItem
-                        key={row.id}
-                        id={row.id}
-                        title={row.title}
-                        href={`/chat/${row.id}`}
-                        updatedAt={row.updated_at}
-                        lastMessageAt={row.last_message_at}
-                        selectable={selectMode}
-                        checked={!!selected[row.id]}
-                        onCheckChange={(v)=> setSelected(s=> ({...s, [row.id]: v}))}
-                        onEdit={() => handleRename(row.id, row.title)}
-                        onDelete={() => handleDelete(row.id)}
-                      />
-                    ))}
-                    {!filtered.length && !loading && (
-                      <div className="text-gray-500">Nenhum chat encontrado.</div>
-                    )}
-                    <div className="mt-4">
-                      <button
-                        onClick={() => load(false)}
-                        disabled={loading || !hasMore}
-                        className="px-3 py-1.5 rounded bg-black text-white disabled:opacity-50"
-                      >
-                        {loading ? 'Carregando...' : hasMore ? 'Carregar mais' : 'Sem mais resultados'}
-                      </button>
+              <div className="h-full overflow-auto">
+                <div className="px-14 py-6">
+                  <ChatListHeader
+                    value={query}
+                    onChange={setQuery}
+                    count={items.length}
+                    selectMode={selectMode}
+                    onToggleSelect={() => setSelectMode(!selectMode)}
+                    onNewChat={handleNewChat}
+                  />
+                  <div>
+                    {error && <div className="text-red-600 text-sm">{error}</div>}
+                    <div className="pb-6">
+                      {filtered.map(row => (
+                        <ChatListItem
+                          key={row.id}
+                          id={row.id}
+                          title={row.title}
+                          href={`/chat/${row.id}`}
+                          updatedAt={row.updated_at}
+                          lastMessageAt={row.last_message_at}
+                          selectable={selectMode}
+                          checked={!!selected[row.id]}
+                          onCheckChange={(v)=> setSelected(s=> ({...s, [row.id]: v}))}
+                          onEdit={() => handleRename(row.id, row.title)}
+                          onDelete={() => handleDelete(row.id)}
+                        />
+                      ))}
+                      {!filtered.length && !loading && (
+                        <div className="text-gray-500">Nenhum chat encontrado.</div>
+                      )}
+                      <div className="mt-4">
+                        <button
+                          onClick={() => load(false)}
+                          disabled={loading || !hasMore}
+                          className="px-3 py-1.5 rounded bg-black text-white disabled:opacity-50"
+                        >
+                          {loading ? 'Carregando...' : hasMore ? 'Carregar mais' : 'Sem mais resultados'}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
