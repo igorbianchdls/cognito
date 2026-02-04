@@ -198,24 +198,7 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
   const pathname = usePathname()
   const router = useRouter()
 
-  // Shared design config from localStorage (set via /bigquery-test/sidebar)
-  const [sharedCfg, setSharedCfg] = React.useState<null | {
-    fontFamily?: string
-    fontSize?: number
-    letterSpacingEm?: number
-    fontWeight?: number
-    paddingY?: number
-    itemColor?: string
-    bgColor?: string
-    iconSize?: number
-  }>(null)
-
-  React.useEffect(() => {
-    try {
-      const raw = localStorage.getItem('sidebarshadcn-config')
-      if (raw) setSharedCfg(JSON.parse(raw))
-    } catch {}
-  }, [])
+  // Static defaults only (avoid visual flash on hydration)
 
   const handleNewChat = () => {
     try {
@@ -238,27 +221,13 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
     navMain: navMainWithActiveState
   }
 
-  // Apply default values from financeiro dashboard
-  const finalBgColor = bgColor ?? (sharedCfg?.bgColor || '#f9fafb')
+  // Apply default values consistently (no localStorage overrides)
+  const finalBgColor = bgColor ?? '#f9fafb'
   const finalTextColor = textColor ?? '#717171'
-  const finalItemTextColor = itemTextColor ?? (sharedCfg?.itemColor || '#0f172a')
+  const finalItemTextColor = itemTextColor ?? '#0f172a'
   const finalSectionTitleStyle = sectionTitleStyle ?? DEFAULT_SECTION_TITLE_STYLE
-  const computedSharedItemStyle: React.CSSProperties | undefined = React.useMemo(() => {
-    if (!sharedCfg) return undefined
-    const st: React.CSSProperties = {}
-    if (sharedCfg.fontFamily) st.fontFamily = sharedCfg.fontFamily
-    if (sharedCfg.fontSize) st.fontSize = `${sharedCfg.fontSize}px`
-    if (sharedCfg.fontWeight) st.fontWeight = sharedCfg.fontWeight as any
-    if (typeof sharedCfg.letterSpacingEm === 'number') st.letterSpacing = `${sharedCfg.letterSpacingEm}em`
-    if (typeof sharedCfg.paddingY === 'number') {
-      st.paddingTop = `${sharedCfg.paddingY}px`
-      st.paddingBottom = `${sharedCfg.paddingY}px`
-    }
-    if (sharedCfg.itemColor) st.color = sharedCfg.itemColor
-    return st
-  }, [sharedCfg])
-  const finalItemTextStyle = itemTextStyle ?? (computedSharedItemStyle ? { ...DEFAULT_ITEM_TEXT_STYLE, ...computedSharedItemStyle } : DEFAULT_ITEM_TEXT_STYLE)
-  const finalIconSizePx = iconSizePx ?? (sharedCfg?.iconSize || 12)
+  const finalItemTextStyle = itemTextStyle ?? DEFAULT_ITEM_TEXT_STYLE
+  const finalIconSizePx = iconSizePx ?? 12
 
   // Inline CSS variable overrides for sidebar theme
   const inlineStyle = {
