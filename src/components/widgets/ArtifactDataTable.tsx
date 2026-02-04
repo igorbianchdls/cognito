@@ -219,9 +219,6 @@ export default function ArtifactDataTable<TData extends Record<string, unknown>>
             <Icon className="h-5 w-5 text-gray-500" />
             <ArtifactTitle>{title}</ArtifactTitle>
           </div>
-          <ArtifactDescription className="mt-1">
-            {message} - Mostrando {reactTable.getRowModel().rows.length} de {count} registros
-          </ArtifactDescription>
         </div>
 
       <ArtifactActions>
@@ -371,7 +368,7 @@ export default function ArtifactDataTable<TData extends Record<string, unknown>>
                       {headerGroup.headers.map((header) => (
                         <TableHead
                           key={header.id}
-                          style={{ color: "rgb(80,80,80)", fontSize: "14px", fontWeight: 500, letterSpacing: "0em" }}
+                          style={{ color: "rgb(65,65,65)", fontSize: "14px", fontWeight: 500, letterSpacing: "0em" }}
                         >
                           {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                         </TableHead>
@@ -386,7 +383,7 @@ export default function ArtifactDataTable<TData extends Record<string, unknown>>
                         {row.getVisibleCells().map((cell) => (
                           <TableCell
                             key={cell.id}
-                            style={{ color: "rgb(80,80,80)", fontSize: "13px", fontWeight: 400, letterSpacing: "0em" }}
+                            style={{ color: "rgb(65,65,65)", fontSize: "13px", fontWeight: 400, letterSpacing: "0em" }}
                           >
                             {flexRender(cell.column.columnDef.cell, cell.getContext())}
                           </TableCell>
@@ -395,7 +392,7 @@ export default function ArtifactDataTable<TData extends Record<string, unknown>>
                     ))
                   ) : (
                     <TableRow className="bg-white">
-                      <TableCell colSpan={columns.length} className="h-24 text-center" style={{ color: "rgb(80,80,80)", fontSize: "13px", fontWeight: 400, letterSpacing: "0em" }}>
+                      <TableCell colSpan={columns.length} className="h-24 text-center" style={{ color: "rgb(65,65,65)", fontSize: "13px", fontWeight: 400, letterSpacing: "0em" }}>
                         Nenhum resultado encontrado.
                       </TableCell>
                     </TableRow>
