@@ -2,11 +2,14 @@
 
 import * as React from "react"
 import { useEffect, useState } from "react"
-import NexusShell from '@/components/navigation/nexus/NexusShell'
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
+import { SidebarShadcn } from "@/components/navigation/SidebarShadcn";
+import PageContainer from "@/components/chat/PageContainer";
 import { IntegrationCard } from "@/components/navigation/integrations/IntegrationCard"
 import type { Integration } from "@/components/navigation/integrations/IntegrationCard"
 import { Icon, addCollection } from '@iconify/react'
 import { icons as simpleIcons } from '@iconify-json/simple-icons'
+import { Switch } from '@/components/ui/switch'
 import {
   SiGmail,
   SiGoogledrive,
@@ -459,8 +462,14 @@ export default function IntegrationsPage() {
   }
 
   return (
-    <NexusShell outerBg="#fdfdfd">
-      <div className="mx-auto w-full max-w-5xl p-8">
+    <SidebarProvider>
+      <SidebarShadcn />
+      <SidebarInset className="h-screen overflow-hidden">
+        <div className="flex h-full overflow-hidden">
+          <div className="flex-1">
+            <PageContainer className="bg-white">
+              <div className="h-full overflow-auto">
+                <div>
                   {/* Header */}
                   <div className="mb-10">
                     <h1 className="text-3xl font-bold text-gray-900 mb-3">
@@ -495,30 +504,43 @@ export default function IntegrationsPage() {
                       return (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
                           {ordered.map(t => (
-                          <div key={t.slug} className="border rounded p-4 bg-white">
-                            <div className="flex items-center justify-between mb-2">
-                              <div className="flex items-center gap-3 min-w-0">
-                                {renderLogo(t.slug, t.name)}
-                                <div className="min-w-0">
-                                  <div className="font-medium truncate">{t.name}</div>
-                                  <div className="text-xs text-gray-500 truncate">{t.description}</div>
-                                </div>
+                        <div key={t.slug} className="border rounded p-4 bg-white">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-3 min-w-0">
+                              {renderLogo(t.slug, t.name)}
+                              <div className="min-w-0">
+                                <div className="font-medium truncate">{t.name}</div>
+                                <div className="text-xs text-gray-500 truncate">{t.description}</div>
                               </div>
-                              {(() => { const k = t.slug; const kl = (k||'').toLowerCase(); const isOn = Boolean(tkStatus[k] ?? tkStatus[kl]); return (
-                                <div className={`text-xs px-2 py-0.5 rounded ${isOn ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
-                                  {isOn ? 'Integrado' : 'Não conectado'}
+                            </div>
+                            {(() => {
+                              const k = t.slug; const kl = (k||'').toLowerCase();
+                              const isOn = Boolean(tkStatus[k] ?? tkStatus[kl]);
+                              return (
+                                <div className="flex items-center gap-2">
+                                  <div className={`text-xs px-2 py-0.5 rounded ${isOn ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+                                    {isOn ? 'Integrado' : 'Não conectado'}
+                                  </div>
+                                  <Switch
+                                    checked={isOn}
+                                    onCheckedChange={(v) => {
+                                      const current = Boolean(tkStatus[k] ?? tkStatus[kl])
+                                      if (v && !current) handleIntegrate(t.slug)
+                                      else if (!v && current) setError('Desconectar ainda não implementado')
+                                    }}
+                                  />
                                 </div>
-                              )})()}
-                            </div>
-                            <div className="flex items-center gap-2">
-                              {(() => { const k = t.slug; const kl = (k||'').toLowerCase(); const isOn = Boolean(tkStatus[k] ?? tkStatus[kl]); return (
-                                <button onClick={() => handleIntegrate(t.slug)} disabled={busySlug === t.slug} className="px-3 py-1.5 rounded bg-black text-white text-sm disabled:opacity-50">
-                                  {busySlug === t.slug ? 'Abrindo…' : isOn ? 'Reintegrar' : 'Integrar'}
-                                </button>
-                              )})()}
-                              <button onClick={() => fetchStatus(t.slug)} className="px-3 py-1.5 rounded border text-sm">Checar status</button>
-                            </div>
+                              )
+                            })()}
                           </div>
+                          <div className="flex items-center gap-2">
+                            {(() => { const k = t.slug; const kl = (k||'').toLowerCase(); const isOn = Boolean(tkStatus[k] ?? tkStatus[kl]); return (
+                              <button onClick={() => handleIntegrate(t.slug)} disabled={busySlug === t.slug} className="px-3 py-1.5 rounded bg-black text-white text-sm disabled:opacity-50">
+                                {busySlug === t.slug ? 'Abrindo…' : isOn ? 'Reintegrar' : 'Integrar'}
+                              </button>
+                            )})()}
+                          </div>
+                        </div>
                           ))}
                         </div>
                       )
@@ -553,7 +575,12 @@ export default function IntegrationsPage() {
                       integrations={financialIntegrations}
                     />
                   </div>
-      </div>
-    </NexusShell>
+                </div>
+              </div>
+            </PageContainer>
+          </div>
+        </div>
+      </SidebarInset>
+    </SidebarProvider>
   )
 }
