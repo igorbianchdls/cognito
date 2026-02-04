@@ -6,7 +6,7 @@ import NexusShell from '@/components/navigation/nexus/NexusShell'
 import { IntegrationCard } from "@/components/navigation/integrations/IntegrationCard"
 import type { Integration } from "@/components/navigation/integrations/IntegrationCard"
 import { Icon, addCollection } from '@iconify/react'
-import simpleIcons from '@iconify-json/simple-icons'
+import { icons as simpleIcons } from '@iconify-json/simple-icons'
 
 type FilterTab = 'all' | 'connected' | 'disconnected'
 
@@ -38,7 +38,7 @@ export default function IntegrationsPage() {
   })
 
   // Registrar coleção local do Simple Icons (Iconify)
-  addCollection(simpleIcons.icons as any)
+  addCollection(simpleIcons as any)
 
   // Mapa de slugs -> chave do Simple Icons
   const ICON_KEY_BY_SLUG: Record<string, string> = React.useMemo(() => ({
@@ -116,7 +116,7 @@ export default function IntegrationsPage() {
 
   const hasIcon = (key: string | undefined) => {
     if (!key) return false
-    const dict = (simpleIcons as any).icons?.icons || {}
+    const dict = (simpleIcons as any).icons || {}
     return Boolean(dict[key])
   }
 
