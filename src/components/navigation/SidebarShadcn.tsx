@@ -232,10 +232,11 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
   // Inline CSS variable overrides for sidebar theme
   const inlineStyle: React.CSSProperties = {
     ...(style || {}),
-    // Only override CSS vars if explicit props are provided; otherwise inherit global (modern) theme tokens
-    ...(bgColor ? { ["--sidebar"]: finalBgColor } as React.CSSProperties : {}),
-    ...(textColor ? { ["--sidebar-foreground"]: finalTextColor } as React.CSSProperties : {}),
-    ...(itemTextColor ? { ["--sidebar-accent-foreground"]: finalItemTextColor } as React.CSSProperties : {}),
+    // Defaults requested: font-size 14px, item color rgb(110,110,10), letter-spacing -0.02em, bg rgb(250,250,250)
+    ["--sidebar"]: 'rgb(250, 250, 250)',
+    ["--sidebar-accent-foreground"]: 'rgb(110, 110, 10)',
+    ["--ui-font-size"]: '14px',
+    ["--ui-tracking-pct"]: '-2',
   }
 
   return (
