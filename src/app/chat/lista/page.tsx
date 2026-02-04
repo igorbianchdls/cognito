@@ -103,7 +103,7 @@ export default function ChatListaPage() {
       <SidebarInset className="h-screen overflow-hidden">
         <div className="flex h-full overflow-hidden">
           <div className="flex-1">
-            <PageContainer className="bg-[rgb(254,254,254)]">
+            <PageContainer className="bg-white">
               <div className="h-full grid grid-rows-[auto_1fr]">
                 <ChatListHeader
                   value={query}
