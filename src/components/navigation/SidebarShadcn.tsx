@@ -69,7 +69,7 @@ const DEFAULT_SECTION_TITLE_STYLE: React.CSSProperties = {
 
 const DEFAULT_ITEM_TEXT_STYLE: React.CSSProperties = {
   fontFamily: 'var(--ui-font-family)',
-  fontWeight: 500,
+  fontWeight: 400,
   fontSize: 'var(--ui-font-size)',
   color: 'var(--sidebar-accent-foreground)',
   letterSpacing: '-0.02em',
