@@ -16,7 +16,8 @@ import {
   PromptInputModelSelectItem,
 } from '@/components/ai-elements/prompt-input';
 import { Plus, BarChart3, Plug } from 'lucide-react';
-import { Mail, Github, Calendar, FileText, Table } from 'lucide-react';
+import { Plug } from 'lucide-react';
+import BrandIcon from '@/components/icons/BrandIcon';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Input as UiInput } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
@@ -46,12 +47,12 @@ export default function InputArea({ value, onChange, onSubmit, status = 'idle', 
     gsheets: false,
   })
   const tkList = useMemo(() => ([
-    { key: 'gmail', label: 'Gmail', icon: <Mail className="size-4" /> },
+    { key: 'gmail', label: 'Gmail', icon: <BrandIcon brand="gmail" /> },
     { key: 'composio', label: 'Composio', icon: <Plug className="size-4" /> },
-    { key: 'github', label: 'GitHub', icon: <Github className="size-4" /> },
-    { key: 'gcal', label: 'Google Calendar', icon: <Calendar className="size-4" /> },
-    { key: 'notion', label: 'Notion', icon: <FileText className="size-4" /> },
-    { key: 'gsheets', label: 'Google Sheets', icon: <Table className="size-4" /> },
+    { key: 'github', label: 'GitHub', icon: <BrandIcon brand="github" /> },
+    { key: 'gcal', label: 'Google Calendar', icon: <BrandIcon brand="gcal" /> },
+    { key: 'notion', label: 'Notion', icon: <BrandIcon brand="notion" /> },
+    { key: 'gsheets', label: 'Google Sheets', icon: <BrandIcon brand="gsheets" /> },
   ]), [])
   const filteredTk = useMemo(() => (
     tkList.filter(t => t.label.toLowerCase().includes(tkSearch.toLowerCase()))
@@ -75,7 +76,7 @@ export default function InputArea({ value, onChange, onSubmit, status = 'idle', 
                   <span>All Toolkits</span>
                 </PromptInputButton>
               </PopoverTrigger>
-              <PopoverContent align="start" className="w-80 p-0">
+              <PopoverContent side="top" align="start" className="w-80 p-0">
                 <div className="p-2 border-b">
                   <UiInput placeholder="Search toolkits…" value={tkSearch} onChange={(e)=>setTkSearch(e.target.value)} className="h-8" />
                 </div>
