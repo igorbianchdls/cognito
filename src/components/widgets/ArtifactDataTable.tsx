@@ -188,7 +188,13 @@ export default function ArtifactDataTable<TData extends Record<string, unknown>>
 
   if (!success) {
     return (
-      <Artifact className="w-full border-red-200 bg-red-50">
+      <Artifact
+        className="w-full border-red-200 bg-red-50 shadow-none"
+        style={{
+          fontFamily: "var(--font-geist-sans), Geist, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, Apple Color Emoji, Segoe UI Emoji",
+          boxShadow: "none",
+        }}
+      >
         <ArtifactHeader>
           <div className="flex items-center gap-3">
             <AlertCircle className="h-5 w-5 text-red-600" />
@@ -206,7 +212,13 @@ export default function ArtifactDataTable<TData extends Record<string, unknown>>
   }
 
   return (
-    <Artifact className="w-full">
+    <Artifact
+      className="w-full shadow-none"
+      style={{
+        fontFamily: "var(--font-geist-sans), Geist, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, Apple Color Emoji, Segoe UI Emoji",
+        boxShadow: "none",
+      }}
+    >
       <ArtifactHeader>
         <div>
           <div className="flex items-center gap-2">
@@ -359,7 +371,7 @@ export default function ArtifactDataTable<TData extends Record<string, unknown>>
           <>
             <div className="border-b">
               <Table>
-                <TableHeader className="bg-gray-50">
+                <TableHeader className="bg-[#fcfcfc]">
                   {reactTable.getHeaderGroups().map((headerGroup) => (
                     <TableRow key={headerGroup.id}>
                       {headerGroup.headers.map((header) => (
@@ -373,14 +385,14 @@ export default function ArtifactDataTable<TData extends Record<string, unknown>>
                 <TableBody>
                   {reactTable.getRowModel().rows?.length ? (
                     reactTable.getRowModel().rows.map((row) => (
-                      <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
+                      <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'} className="bg-white">
                         {row.getVisibleCells().map((cell) => (
                           <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
                         ))}
                       </TableRow>
                     ))
                   ) : (
-                    <TableRow>
+                    <TableRow className="bg-white">
                       <TableCell colSpan={columns.length} className="h-24 text-center">
                         Nenhum resultado encontrado.
                       </TableCell>

@@ -15,6 +15,7 @@ type Row = {
 }
 
 const FONTS: Array<{ label: string; value: string }> = [
+  { label: "Geist (Next)", value: "var(--font-geist-sans), Geist, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, Apple Color Emoji, Segoe UI Emoji" },
   { label: "Inter (system)", value: "Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, Apple Color Emoji, Segoe UI Emoji" },
   { label: "System UI", value: "system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, Apple Color Emoji, Segoe UI Emoji" },
   { label: "Roboto", value: "Roboto, system-ui, -apple-system, Segoe UI, Helvetica, Arial, sans-serif" },
@@ -26,6 +27,8 @@ const FONTS: Array<{ label: string; value: string }> = [
   { label: "Nunito", value: "Nunito, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" },
   { label: "Lato", value: "Lato, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" },
 ]
+
+const LETTER_SPACING_VALUES: number[] = [-0.04, -0.03, -0.02, -0.01, 0, 0.01, 0.02, 0.03, 0.04]
 
 const sampleRows: Row[] = [
   { id: "1001", cliente: "ACME Ltd.", categoria: "SaaS", valor: 1299.9, status: "Ativo", criadoEm: "2024-11-10" },
@@ -62,11 +65,12 @@ export default function ArtifactUiPlaygroundPage() {
   ], [])
 
   // Artifact-level styles
-  const [artifactFont, setArtifactFont] = useState<string>("Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, Apple Color Emoji, Segoe UI Emoji")
+  const [artifactFont, setArtifactFont] = useState<string>("var(--font-geist-sans), Geist, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, Apple Color Emoji, Segoe UI Emoji")
   const [artifactWeight, setArtifactWeight] = useState<number>(400)
   const [artifactSize, setArtifactSize] = useState<number>(14)
   const [artifactText, setArtifactText] = useState<string>("#0f172a") // slate-900
   const [artifactBg, setArtifactBg] = useState<string>("#ffffff")
+  const [artifactLetter, setArtifactLetter] = useState<string>("0em")
 
   // Header (barra superior do Artifact)
   const [hdrFont, setHdrFont] = useState<string>(artifactFont)
@@ -74,13 +78,15 @@ export default function ArtifactUiPlaygroundPage() {
   const [hdrSize, setHdrSize] = useState<number>(14)
   const [hdrText, setHdrText] = useState<string>("#0f172a")
   const [hdrBg, setHdrBg] = useState<string>("#ffffff")
+  const [hdrLetter, setHdrLetter] = useState<string>("0em")
 
   // Tabela (thead)
   const [thFont, setThFont] = useState<string>(artifactFont)
   const [thWeight, setThWeight] = useState<number>(600)
   const [thSize, setThSize] = useState<number>(12)
   const [thText, setThText] = useState<string>("#334155") // slate-700
-  const [thBg, setThBg] = useState<string>("#f8fafc") // slate-50/gray-50
+  const [thBg, setThBg] = useState<string>("#fcfcfc") // rgb(252, 252, 252)
+  const [thLetter, setThLetter] = useState<string>("0em")
 
   // Tabela (tbody/rows)
   const [rowFont, setRowFont] = useState<string>(artifactFont)
@@ -89,9 +95,10 @@ export default function ArtifactUiPlaygroundPage() {
   const [rowText, setRowText] = useState<string>("#0f172a")
   const [rowBg, setRowBg] = useState<string>("#ffffff")
   const [rowZebra, setRowZebra] = useState<boolean>(true)
-  const [rowZebraBg, setRowZebraBg] = useState<string>("#f9fafb")
+  const [rowZebraBg, setRowZebraBg] = useState<string>("#ffffff")
   const [rowHoverBg, setRowHoverBg] = useState<string>("#f1f5f9")
   const [tblBorder, setTblBorder] = useState<string>("#e5e7eb")
+  const [rowLetter, setRowLetter] = useState<string>("0em")
 
   const resetAll = () => {
     setArtifactFont("Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, Apple Color Emoji, Segoe UI Emoji")
@@ -99,25 +106,29 @@ export default function ArtifactUiPlaygroundPage() {
     setArtifactSize(14)
     setArtifactText("#0f172a")
     setArtifactBg("#ffffff")
+    setArtifactLetter("0em")
     setHdrFont("Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, Apple Color Emoji, Segoe UI Emoji")
     setHdrWeight(600)
     setHdrSize(14)
     setHdrText("#0f172a")
     setHdrBg("#ffffff")
+    setHdrLetter("0em")
     setThFont("Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, Apple Color Emoji, Segoe UI Emoji")
     setThWeight(600)
     setThSize(12)
     setThText("#334155")
     setThBg("#f8fafc")
+    setThLetter("0em")
     setRowFont("Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, Apple Color Emoji, Segoe UI Emoji")
     setRowWeight(400)
     setRowSize(13)
     setRowText("#0f172a")
     setRowBg("#ffffff")
     setRowZebra(true)
-    setRowZebraBg("#f9fafb")
+    setRowZebraBg("#ffffff")
     setRowHoverBg("#f1f5f9")
     setTblBorder("#e5e7eb")
+    setRowLetter("0em")
   }
 
   return (
@@ -135,18 +146,21 @@ export default function ArtifactUiPlaygroundPage() {
           ["--artifact-size" as any]: `${artifactSize}px`,
           ["--artifact-text" as any]: artifactText,
           ["--artifact-bg" as any]: artifactBg,
+          ["--artifact-letter" as any]: artifactLetter,
           // Header do Artifact
           ["--hdr-font" as any]: hdrFont,
           ["--hdr-weight" as any]: String(hdrWeight),
           ["--hdr-size" as any]: `${hdrSize}px`,
           ["--hdr-text" as any]: hdrText,
           ["--hdr-bg" as any]: hdrBg,
+          ["--hdr-letter" as any]: hdrLetter,
           // Table header
           ["--tbl-head-font" as any]: thFont,
           ["--tbl-head-weight" as any]: String(thWeight),
           ["--tbl-head-size" as any]: `${thSize}px`,
           ["--tbl-head-text" as any]: thText,
           ["--tbl-head-bg" as any]: thBg,
+          ["--tbl-head-letter" as any]: thLetter,
           // Rows
           ["--row-font" as any]: rowFont,
           ["--row-weight" as any]: String(rowWeight),
@@ -155,6 +169,7 @@ export default function ArtifactUiPlaygroundPage() {
           ["--row-bg" as any]: rowBg,
           ["--row-zebra-bg" as any]: rowZebra ? rowZebraBg : rowBg,
           ["--row-hover-bg" as any]: rowHoverBg,
+          ["--row-letter" as any]: rowLetter,
           // Borders
           ["--tbl-border" as any]: tblBorder,
         } as React.CSSProperties}
@@ -208,6 +223,14 @@ export default function ArtifactUiPlaygroundPage() {
                   <input type="color" value={artifactBg} onChange={(e) => setArtifactBg(e.target.value)} />
                 </div>
               </div>
+
+              <label className="block text-xs text-slate-600 mt-2">Espaçamento (em)</label>
+              <select className="w-full rounded border px-2 py-1 text-sm" value={artifactLetter} onChange={(e) => setArtifactLetter(e.target.value)}>
+                {LETTER_SPACING_VALUES.map(v => {
+                  const val = `${v}em`
+                  return <option key={val} value={val}>{v.toFixed(2)}em</option>
+                })}
+              </select>
             </div>
           </div>
 
@@ -240,6 +263,14 @@ export default function ArtifactUiPlaygroundPage() {
                   <input type="color" value={hdrBg} onChange={(e) => setHdrBg(e.target.value)} />
                 </div>
               </div>
+
+              <label className="block text-xs text-slate-600 mt-2">Espaçamento (em)</label>
+              <select className="w-full rounded border px-2 py-1 text-sm" value={hdrLetter} onChange={(e) => setHdrLetter(e.target.value)}>
+                {LETTER_SPACING_VALUES.map(v => {
+                  const val = `${v}em`
+                  return <option key={val} value={val}>{v.toFixed(2)}em</option>
+                })}
+              </select>
             </div>
           </div>
 
@@ -272,6 +303,14 @@ export default function ArtifactUiPlaygroundPage() {
                   <input type="color" value={thBg} onChange={(e) => setThBg(e.target.value)} />
                 </div>
               </div>
+
+              <label className="block text-xs text-slate-600 mt-2">Espaçamento (em)</label>
+              <select className="w-full rounded border px-2 py-1 text-sm" value={thLetter} onChange={(e) => setThLetter(e.target.value)}>
+                {LETTER_SPACING_VALUES.map(v => {
+                  const val = `${v}em`
+                  return <option key={val} value={val}>{v.toFixed(2)}em</option>
+                })}
+              </select>
             </div>
           </div>
         </section>
@@ -306,6 +345,14 @@ export default function ArtifactUiPlaygroundPage() {
                   <input type="color" value={rowBg} onChange={(e) => setRowBg(e.target.value)} />
                 </div>
               </div>
+
+              <label className="block text-xs text-slate-600 mt-2">Espaçamento (em)</label>
+              <select className="w-full rounded border px-2 py-1 text-sm" value={rowLetter} onChange={(e) => setRowLetter(e.target.value)}>
+                {LETTER_SPACING_VALUES.map(v => {
+                  const val = `${v}em`
+                  return <option key={val} value={val}>{v.toFixed(2)}em</option>
+                })}
+              </select>
             </div>
           </div>
 
@@ -346,6 +393,7 @@ export default function ArtifactUiPlaygroundPage() {
           font-weight: var(--artifact-weight) !important;
           font-size: var(--artifact-size) !important;
           color: var(--artifact-text) !important;
+          letter-spacing: var(--artifact-letter) !important;
         }
         /* Fundo do container Artifact (usa bg-background) */
         .artifact-playground :global(.bg-background) {
@@ -360,6 +408,7 @@ export default function ArtifactUiPlaygroundPage() {
           font-family: var(--hdr-font) !important;
           font-weight: var(--hdr-weight) !important;
           font-size: var(--hdr-size) !important;
+          letter-spacing: var(--hdr-letter) !important;
         }
         /* Thead */
         .artifact-playground :global(thead tr) {
@@ -371,6 +420,7 @@ export default function ArtifactUiPlaygroundPage() {
           font-weight: var(--tbl-head-weight) !important;
           font-size: var(--tbl-head-size) !important;
           border-color: var(--tbl-border) !important;
+          letter-spacing: var(--tbl-head-letter) !important;
         }
         /* Rows */
         .artifact-playground :global(tbody tr) {
@@ -382,6 +432,7 @@ export default function ArtifactUiPlaygroundPage() {
           font-weight: var(--row-weight) !important;
           font-size: var(--row-size) !important;
           border-color: var(--tbl-border) !important;
+          letter-spacing: var(--row-letter) !important;
         }
         .artifact-playground :global(tbody tr:nth-child(odd)) {
           background-color: var(--row-zebra-bg) !important;
