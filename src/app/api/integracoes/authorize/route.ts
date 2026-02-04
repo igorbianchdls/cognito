@@ -40,14 +40,22 @@ export async function POST(req: NextRequest) {
   const callbackUrl = `${origin}/integracoes/callback?toolkit=${encodeURIComponent(tkLower)}`
 
   try {
-    // Persist mapping on DB: set composio_user_id = userId for the selected user
+    // Persist mapping on DB: set composio_user_id (Composio user) for the selected app user (providedUserId)
     try {
       if (providedUserId && providedUserId.trim()) {
         try {
-          await runQuery(`UPDATE shared.users SET composio_user_id = $1, composio_connected_at = now() WHERE id = $1`, [providedUserId.trim()])
+          await runQuery(
+            `UPDATE shared.users SET composio_user_id = $2, composio_connected_at = now() WHERE id = $1`,
+            [providedUserId.trim(), userId]
+          )
         } catch {
           // Fallback in case composio_connected_at doesn't exist
-          try { await runQuery(`UPDATE shared.users SET composio_user_id = $1 WHERE id = $1`, [providedUserId.trim()]) } catch {}
+          try {
+            await runQuery(
+              `UPDATE shared.users SET composio_user_id = $2 WHERE id = $1`,
+              [providedUserId.trim(), userId]
+            )
+          } catch {}
         }
       }
     } catch {}
