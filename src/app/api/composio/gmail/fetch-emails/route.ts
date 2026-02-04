@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { Composio } from '@composio/core'
+import { ClaudeAgentSDKProvider } from '@composio/claude-agent-sdk'
 import { createClient as createSupabaseServerClient } from '@/lib/supabase/server'
 
 export const runtime = 'nodejs'
@@ -64,7 +65,8 @@ export async function POST(req: NextRequest) {
   if (!composioUserId) return Response.json({ success: false, error: 'composio_user_id ausente (cookie composio_uid não definido e sem fallback)' }, { status: 400 })
 
   try {
-    const composio = new Composio({ apiKey })
+    const provider = new ClaudeAgentSDKProvider()
+    const composio = new Composio({ apiKey, provider })
     const session = await composio.create(String(composioUserId), {
       toolkits: ['gmail'],
       tools: { gmail: ['GMAIL_FETCH_EMAILS'] },
