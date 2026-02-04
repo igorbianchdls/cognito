@@ -22,9 +22,9 @@ export default function ChatListItem({ id, title, href, updatedAt, lastMessageAt
       ? `Atualizado ${timeAgo(updatedAt)}`
       : ''
   return (
-    <div className="px-6" style={{ backgroundColor: 'rgb(253,253,254)' }}>
+    <div className="px-6">
       <div className="max-w-3xl mx-auto">
-        <div className="flex items-start gap-3 py-4 border-b">
+        <div className="flex items-start gap-3 p-4 border rounded-lg bg-white mb-2">
           {selectable && (
             <input type="checkbox" className="mt-1" checked={!!checked} onChange={(e)=> onCheckChange?.(e.target.checked)} />
           )}
@@ -41,4 +41,3 @@ export default function ChatListItem({ id, title, href, updatedAt, lastMessageAt
     </div>
   )
 }
-
