@@ -126,6 +126,7 @@ export default function ComposioGmailEmailsResult({ output }: { output: any }) {
         <ToolContent>
           <ToolOutput
             output={<pre className="text-xs overflow-auto"><code>{typeof normalized === 'string' ? normalized : JSON.stringify(normalized, null, 2)}</code></pre>}
+            errorText={undefined}
           />
         </ToolContent>
       </Tool>
