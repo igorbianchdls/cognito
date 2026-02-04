@@ -2,6 +2,8 @@
 
 import * as React from 'react'
 import Link from 'next/link'
+import { MoreHorizontal, Pencil, Trash } from 'lucide-react'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { timeAgo } from '@/lib/date/relativeTime'
 
 type Props = {
@@ -13,9 +15,11 @@ type Props = {
   selectable?: boolean
   checked?: boolean
   onCheckChange?: (v: boolean) => void
+  onEdit?: () => void
+  onDelete?: () => void
 }
 
-export default function ChatListItem({ id, title, href, updatedAt, lastMessageAt, selectable, checked, onCheckChange }: Props) {
+export default function ChatListItem({ id, title, href, updatedAt, lastMessageAt, selectable, checked, onCheckChange, onEdit, onDelete }: Props) {
   const subtitle = lastMessageAt
     ? `Última mensagem ${timeAgo(lastMessageAt)}`
     : updatedAt
@@ -36,6 +40,23 @@ export default function ChatListItem({ id, title, href, updatedAt, lastMessageAt
               <div className="text-sm text-gray-500">{subtitle}</div>
             )}
           </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="p-1 rounded hover:bg-gray-100">
+                <MoreHorizontal className="w-5 h-5 text-gray-600" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="min-w-40">
+              <DropdownMenuItem onClick={onEdit} className="gap-2">
+                <Pencil className="w-4 h-4" />
+                Editar nome
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={onDelete} className="gap-2 text-red-600 focus:text-red-700">
+                <Trash className="w-4 h-4" />
+                Deletar
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </div>

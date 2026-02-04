@@ -69,6 +69,19 @@ export default function ChatListaPage() {
     }
   };
 
+  const handleRename = async (id: string, current?: string | null) => {
+    const title = window.prompt('Novo título do chat:', current || '')
+    if (title === null) return
+    try {
+      const res = await fetch(`/api/chat/${encodeURIComponent(id)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title }) })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok || data?.ok === false) throw new Error(data?.error || 'Falha ao renomear')
+      setItems(prev => prev.map(r => r.id === id ? { ...r, title } : r))
+    } catch (e: any) {
+      setError(e?.message || String(e))
+    }
+  }
+
   const filtered = items.filter(i => {
     const t = (i.title || '').toLowerCase();
     return !query || t.includes(query.toLowerCase());
@@ -90,7 +103,7 @@ export default function ChatListaPage() {
       <SidebarInset className="h-screen overflow-hidden">
         <div className="flex h-full overflow-hidden">
           <div className="flex-1">
-            <PageContainer>
+            <PageContainer className="bg-[rgb(254,254,254)]">
               <div className="h-full grid grid-rows-[auto_1fr]">
                 <ChatListHeader
                   value={query}
@@ -114,6 +127,8 @@ export default function ChatListaPage() {
                         selectable={selectMode}
                         checked={!!selected[row.id]}
                         onCheckChange={(v)=> setSelected(s=> ({...s, [row.id]: v}))}
+                        onEdit={() => handleRename(row.id, row.title)}
+                        onDelete={() => handleDelete(row.id)}
                       />
                     ))}
                     {!filtered.length && !loading && (
