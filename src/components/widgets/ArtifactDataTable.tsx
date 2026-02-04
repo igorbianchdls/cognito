@@ -228,9 +228,9 @@ export default function ArtifactDataTable<TData extends Record<string, unknown>>
               <ArtifactAction
                 icon={CalendarIcon}
                 tooltip="Período"
-                variant="ghost"
+                variant="outline"
                 size="icon"
-                className="text-slate-500 hover:text-slate-900 hover:bg-slate-100/70"
+                className="text-slate-600 hover:text-slate-900 hover:bg-gray-100"
               />
             </PopoverTrigger>
             <PopoverContent align="end" sideOffset={8} className="w-72 p-3">
@@ -286,24 +286,24 @@ export default function ArtifactDataTable<TData extends Record<string, unknown>>
           <ArtifactAction
             icon={TableIcon}
             tooltip="Ver tabela"
-            variant="ghost"
-              size="icon"
-              className={cn(
-                'text-slate-500 hover:text-slate-900 hover:bg-slate-100/70',
-                viewMode === 'table' ? 'bg-slate-200/80 text-slate-900' : ''
-              )}
-              onClick={() => setViewMode('table')}
-            />
-          )}
+            variant="outline"
+            size="icon"
+            className={cn(
+              'text-slate-600 hover:text-slate-900 hover:bg-gray-100',
+              viewMode === 'table' ? 'bg-gray-100' : ''
+            )}
+            onClick={() => setViewMode('table')}
+          />
+        )}
           {sqlQuery && (
             <ArtifactAction
               icon={Code}
               tooltip="Ver SQL"
-              variant="ghost"
+              variant="outline"
               size="icon"
               className={cn(
-                'text-slate-500 hover:text-slate-900 hover:bg-slate-100/70',
-                viewMode === 'sql' ? 'bg-slate-200/80 text-slate-900' : ''
+                'text-slate-600 hover:text-slate-900 hover:bg-gray-100',
+                viewMode === 'sql' ? 'bg-gray-100' : ''
               )}
               onClick={() => setViewMode('sql')}
             />
@@ -312,11 +312,11 @@ export default function ArtifactDataTable<TData extends Record<string, unknown>>
             <ArtifactAction
               icon={BarChart3}
               tooltip="Ver gráfico"
-              variant="ghost"
+              variant="outline"
               size="icon"
               className={cn(
-                'text-slate-500 hover:text-slate-900 hover:bg-slate-100/70',
-                viewMode === 'chart' ? 'bg-slate-200/80 text-slate-900' : ''
+                'text-slate-600 hover:text-slate-900 hover:bg-gray-100',
+                viewMode === 'chart' ? 'bg-gray-100' : ''
               )}
               onClick={() => setViewMode('chart')}
             />
