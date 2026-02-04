@@ -213,14 +213,19 @@ export const PromptInputSubmit = ({
   ...props
 }: PromptInputSubmitProps) => {
   const isDisabled = !!(props as any)?.disabled;
+  // Default icon is the arrow; make it slightly thicker
   let Icon = <ArrowUpIcon className="size-4" />;
+  let iconStrokeWidth = 2.5; // thicker arrow
 
   if (status === 'submitted') {
     Icon = <Loader2Icon className="size-4 animate-spin" />;
+    iconStrokeWidth = 2.25;
   } else if (status === 'streaming') {
     Icon = <SquareIcon className="size-4" />;
+    iconStrokeWidth = 2.25;
   } else if (status === 'error') {
     Icon = <XIcon className="size-4" />;
+    iconStrokeWidth = 2.25;
   }
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -239,14 +244,14 @@ export const PromptInputSubmit = ({
 
   return (
     <Button
-      className={cn('rounded-full size-8', bgClass, className)}
+      className={cn('rounded-full size-9', bgClass, className)}
       size={size}
       type="submit"
       variant={variant}
       onClick={handleClick}
       {...props}
     >
-      {children ?? React.cloneElement(Icon as any, { className: cn('size-4', iconColor), strokeWidth: 2.25 })}
+      {children ?? React.cloneElement(Icon as any, { className: cn('size-4', iconColor), strokeWidth: iconStrokeWidth })}
     </Button>
   );
 };
