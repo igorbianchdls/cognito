@@ -14,7 +14,7 @@ function getClient() {
 }
 
 async function transcribeWithAssembly(params: {
-  audio: string
+  audio: string | Buffer
   language_detection?: boolean
   speech_models?: string[]
 }) {
@@ -64,6 +64,37 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const ct = req.headers.get('content-type') || ''
+    if (ct.includes('multipart/form-data')) {
+      const fd = await req.formData()
+      const maybeFile = fd.get('file')
+      let audio: string | Buffer | null = null
+      if (maybeFile && maybeFile instanceof File) {
+        const ab = await maybeFile.arrayBuffer()
+        audio = Buffer.from(ab)
+        // size guard ~25MB
+        if ((maybeFile as any).size && (maybeFile as any).size > 25 * 1024 * 1024) {
+          return Response.json({ success: false, error: 'Arquivo muito grande (>25MB)' }, { status: 413 })
+        }
+      }
+      const url = fd.get('url')
+      if (!audio && typeof url === 'string' && url.trim()) audio = url.trim()
+      if (!audio) return Response.json({ success: false, error: 'Missing file or url' }, { status: 400 })
+
+      const ld = fd.get('language_detection')
+      const language_detection = typeof ld === 'string' ? ['1','true','yes','on'].includes(ld.toLowerCase()) : true
+      const models = fd.get('speech_models')
+      const speech_models = (typeof models === 'string' && models.trim())
+        ? models.split(',').map(s => s.trim()).filter(Boolean)
+        : ['universal-3-pro', 'universal-2']
+      const full = fd.get('full')
+      const includeRaw = typeof full === 'string' ? ['1','true','yes','on'].includes(full.toLowerCase()) : false
+
+      const r = await transcribeWithAssembly({ audio, language_detection, speech_models })
+      return Response.json({ success: true, transcript: shapeTranscript(r, includeRaw) })
+    }
+
+    // JSON fallback
     const body = await req.json().catch(() => ({})) as any
     const audio = body.audio || body.url || 'https://assembly.ai/wildfires.mp3'
     const language_detection = typeof body.language_detection === 'boolean' ? body.language_detection : true

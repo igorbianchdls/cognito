@@ -5,7 +5,8 @@ import React, { useMemo, useState } from 'react'
 type FetchState = 'idle' | 'loading' | 'error' | 'done'
 
 export default function AssemblySttTestPage() {
-  const [url, setUrl] = useState<string>('https://assembly.ai/wildfires.mp3')
+  const [file, setFile] = useState<File | null>(null)
+  const [url, setUrl] = useState<string>('')
   const [languageDetection, setLanguageDetection] = useState<boolean>(true)
   const [models, setModels] = useState<string>('universal-3-pro,universal-2')
   const [full, setFull] = useState<boolean>(false)
@@ -19,17 +20,29 @@ export default function AssemblySttTestPage() {
     e.preventDefault()
     setState('loading'); setError(''); setResult(null)
     try {
-      const body: any = {
-        url: url.trim(),
-        language_detection: languageDetection,
-        speech_models: models.split(',').map(s => s.trim()).filter(Boolean),
-        full,
+      const useMultipart = !!file || !url.trim()
+      let res: Response
+      if (useMultipart) {
+        const fd = new FormData()
+        if (file) fd.append('file', file)
+        if (!file && url.trim()) fd.append('url', url.trim())
+        fd.append('language_detection', String(languageDetection))
+        fd.append('speech_models', models)
+        if (full) fd.append('full', 'true')
+        res = await fetch('/api/bigquery-test/assembly', { method: 'POST', body: fd })
+      } else {
+        const body: any = {
+          url: url.trim(),
+          language_detection: languageDetection,
+          speech_models: models.split(',').map(s => s.trim()).filter(Boolean),
+          full,
+        }
+        res = await fetch('/api/bigquery-test/assembly', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        })
       }
-      const res = await fetch('/api/bigquery-test/assembly', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-      })
       const json = await res.json().catch(() => ({}))
       if (!res.ok || json?.success === false) {
         throw new Error(json?.error || `Falha: ${res.status}`)
@@ -44,6 +57,7 @@ export default function AssemblySttTestPage() {
 
   const loadSample = () => {
     setUrl('https://assembly.ai/wildfires.mp3')
+    setFile(null)
   }
 
   return (
@@ -55,7 +69,18 @@ export default function AssemblySttTestPage() {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="md:col-span-2">
+          <div>
+            <label className="block text-xs text-slate-600">Arquivo de áudio</label>
+            <input
+              type="file"
+              accept="audio/*"
+              disabled={formDisabled}
+              onChange={(e) => setFile(e.target.files?.[0] || null)}
+              className="w-full rounded border px-2 py-1 text-sm"
+            />
+            <div className="mt-1 text-xs text-slate-500">ou informe uma URL (ao lado)</div>
+          </div>
+          <div>
             <label className="block text-xs text-slate-600">URL do áudio</label>
             <input
               value={url}
