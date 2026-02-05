@@ -11,12 +11,14 @@ export default function AssemblyLiveChunkPage() {
   const [fullJson, setFullJson] = useState<boolean>(false)
   const [languageDetection, setLanguageDetection] = useState<boolean>(true)
   const [models, setModels] = useState<string>('universal-3-pro,universal-2')
+  const [events, setEvents] = useState<Array<{ id: number, size?: number, type?: string, ok: boolean, status: number, textLen: number }>>([])
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const queueRef = useRef<Blob[]>([])
   const uploadingRef = useRef<boolean>(false)
   const stoppedRef = useRef<boolean>(false)
+  const chunkIdRef = useRef<number>(0)
 
   const formDisabled = useMemo(() => state === 'stopping', [state])
 
@@ -70,8 +72,12 @@ export default function AssemblyLiveChunkPage() {
           }
           const text: string = json?.transcript?.text || ''
           if (text) setPartial(prev => (prev ? prev + '\n' : '') + text)
+          const id = (chunkIdRef.current += 1)
+          setEvents(prev => [...prev.slice(-40), { id, size: json?.meta?.size ?? blob.size, type: json?.meta?.type ?? blob.type, ok: res.ok, status: res.status, textLen: text.length }])
         } catch (e: any) {
           setError(e?.message || String(e))
+          const id = (chunkIdRef.current += 1)
+          setEvents(prev => [...prev.slice(-40), { id, size: blob.size, type: blob.type, ok: false, status: 0, textLen: 0 }])
           // keep going; this is best-effort streaming
         }
       }
@@ -111,7 +117,7 @@ export default function AssemblyLiveChunkPage() {
       })
 
       setState('recording')
-      mr.start(1500) // 1.5s chunks
+      mr.start(3000) // 3s chunks para melhorar a taxa de transcrição
       processQueue()
     } catch (e: any) {
       setError(e?.message || String(e))
@@ -157,7 +163,11 @@ export default function AssemblyLiveChunkPage() {
         <div className="text-xs text-slate-600 mb-1">Transcrição agregada</div>
         <pre className="text-sm overflow-auto bg-slate-50 p-3 rounded border min-h-[160px]"><code>{partial || '…'}</code></pre>
       </div>
+
+      <div>
+        <div className="text-xs text-slate-600 mb-1">Debug dos chunks</div>
+        <pre className="text-xs overflow-auto bg-slate-50 p-3 rounded border max-h-[200px]"><code>{events.map(e => `#${e.id} ${e.size ?? '?'} bytes ${e.type || ''} -> ${e.ok?'ok':'fail'} status=${e.status} textLen=${e.textLen}`).join('\n') || '…'}</code></pre>
+      </div>
     </div>
   )
 }
-

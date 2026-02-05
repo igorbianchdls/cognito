@@ -23,7 +23,14 @@ async function transcribeWithAssembly(params: {
   let audioParam: any = params.audio
   try {
     if (typeof Buffer !== 'undefined' && Buffer.isBuffer(audioParam)) {
-      audioParam = Readable.from(audioParam)
+      // Upload buffer and use returned URL for robust decoding on AssemblyAI side
+      try {
+        const uploadUrl = await client.files.upload(audioParam)
+        audioParam = uploadUrl
+      } catch {
+        // Fallback to Readable stream if upload API fails for algum motivo
+        audioParam = Readable.from(audioParam)
+      }
     }
   } catch {}
   const transcript = await client.transcripts.transcribe({
@@ -76,13 +83,16 @@ export async function POST(req: NextRequest) {
       const fd = await req.formData()
       const maybeFile = fd.get('file')
       let audio: string | Buffer | null = null
+      let size: number | undefined
+      let type: string | undefined
       try {
         // Accept File or Blob-like object (duck-typing arrayBuffer())
         if (maybeFile && typeof (maybeFile as any).arrayBuffer === 'function') {
           const ab = await (maybeFile as any).arrayBuffer()
           audio = Buffer.from(ab)
           // size guard ~25MB
-          const size = (maybeFile as any).size
+          size = (maybeFile as any).size
+          type = (maybeFile as any).type
           if (typeof size === 'number' && size > 25 * 1024 * 1024) {
             return Response.json({ success: false, error: 'Arquivo muito grande (>25MB)' }, { status: 413 })
           }
@@ -102,7 +112,7 @@ export async function POST(req: NextRequest) {
       const includeRaw = typeof full === 'string' ? ['1','true','yes','on'].includes(full.toLowerCase()) : false
 
       const r = await transcribeWithAssembly({ audio, language_detection, speech_models })
-      return Response.json({ success: true, transcript: shapeTranscript(r, includeRaw) })
+      return Response.json({ success: true, transcript: shapeTranscript(r, includeRaw), meta: { size, type, language_detection, speech_models } })
     }
 
     // JSON fallback
@@ -113,7 +123,7 @@ export async function POST(req: NextRequest) {
     const includeRaw = typeof body.full !== 'undefined' ? !!body.full : (typeof body.raw !== 'undefined' ? !!body.raw : false)
 
     const r = await transcribeWithAssembly({ audio, language_detection, speech_models })
-    return Response.json({ success: true, transcript: shapeTranscript(r, includeRaw) })
+    return Response.json({ success: true, transcript: shapeTranscript(r, includeRaw), meta: { mode: 'json', url: typeof audio === 'string' ? audio : undefined, language_detection, speech_models } })
   } catch (e: any) {
     const msg = e?.message || String(e)
     const status = /key|auth/i.test(msg) ? 401 : 500
