@@ -59,9 +59,12 @@ export async function POST(req: NextRequest) {
       const fd = await req.formData()
       const maybeFile = fd.get('file')
       let file: Blob | null = null
+      let size: number | undefined
+      let type: string | undefined
       if (maybeFile && typeof (maybeFile as any).arrayBuffer === 'function') {
         const ab = await (maybeFile as any).arrayBuffer()
-        const type = (maybeFile as any).type || 'audio/mpeg'
+        type = (maybeFile as any).type || 'audio/mpeg'
+        size = (maybeFile as any).size
         file = new Blob([ab], { type })
       }
       const url = fd.get('url')
@@ -80,7 +83,7 @@ export async function POST(req: NextRequest) {
         diarize,
         tagAudioEvents,
       } as any)
-      return Response.json({ success: true, transcription })
+      return Response.json({ success: true, transcription, meta: { size, type, modelId, languageCode: languageCode || undefined, diarize, tagAudioEvents } })
     }
 
     const body = await req.json().catch(() => ({})) as any
