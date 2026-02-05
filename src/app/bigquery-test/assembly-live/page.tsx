@@ -12,6 +12,9 @@ export default function AssemblyLiveChunkPage() {
   const [languageDetection, setLanguageDetection] = useState<boolean>(true)
   const [models, setModels] = useState<string>('universal-3-pro,universal-2')
   const [events, setEvents] = useState<Array<{ id: number, size?: number, type?: string, ok: boolean, status: number, textLen: number }>>([])
+  const [liveMode, setLiveMode] = useState<boolean>(false)
+  const recordedChunksRef = useRef<Blob[]>([])
+  const recordedMimeTypeRef = useRef<string>('')
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
@@ -25,16 +28,46 @@ export default function AssemblyLiveChunkPage() {
   const stopAll = useCallback(async () => {
     setState('stopping')
     stoppedRef.current = true
-    try {
-      mediaRecorderRef.current?.stop()
-    } catch {}
-    try {
-      streamRef.current?.getTracks().forEach(t => t.stop())
-    } catch {}
+    // Aguarda último chunk
+    const mr = mediaRecorderRef.current
+    if (mr) {
+      try {
+        try { (mr as any).requestData?.() } catch {}
+        const stopped = new Promise<void>((resolve) => mr.addEventListener('stop', () => resolve(), { once: true }))
+        try { mr.stop() } catch {}
+        await stopped
+      } catch {}
+    }
+    // Para microfone
+    try { streamRef.current?.getTracks().forEach(t => t.stop()) } catch {}
     mediaRecorderRef.current = null
     streamRef.current = null
+
+    // Se não for liveMode, envia arquivo único
+    if (!liveMode) {
+      try {
+        const type = recordedMimeTypeRef.current || (recordedChunksRef.current[0]?.type || 'audio/webm')
+        const fullBlob = new Blob(recordedChunksRef.current, { type })
+        // reset buffers
+        recordedChunksRef.current = []
+        recordedMimeTypeRef.current = ''
+        const fd = new FormData()
+        fd.append('file', fullBlob, 'recording.webm')
+        fd.append('language_detection', String(languageDetection))
+        fd.append('speech_models', models)
+        if (fullJson) fd.append('full', 'true')
+        const res = await fetch('/api/bigquery-test/assembly', { method: 'POST', body: fd })
+        const json = await res.json().catch(() => ({}))
+        if (!res.ok || json?.success === false) throw new Error(json?.error || `Falha: ${res.status}`)
+        const text: string = json?.transcript?.text || ''
+        if (text) setPartial(text)
+        setEvents(prev => [...prev, { id: (chunkIdRef.current += 1), size: fullBlob.size, type, ok: res.ok, status: res.status, textLen: text.length }])
+      } catch (e: any) {
+        setError(e?.message || String(e))
+      }
+    }
     setState('idle')
-  }, [])
+  }, [fullJson, languageDetection, liveMode, models])
 
   useEffect(() => {
     return () => { // cleanup on unmount
@@ -104,12 +137,16 @@ export default function AssemblyLiveChunkPage() {
       for (const m of mimeOptions) {
         if (MediaRecorder.isTypeSupported(m)) { mimeType = m; break }
       }
-      const mr = new MediaRecorder(stream, mimeType ? { mimeType } : undefined)
+      const mr = new MediaRecorder(stream, mimeType ? { mimeType, bitsPerSecond: 128000 } : { bitsPerSecond: 128000 })
       mediaRecorderRef.current = mr
+      recordedMimeTypeRef.current = mimeType
 
       mr.addEventListener('dataavailable', (ev) => {
         const b = ev.data
-        if (b && b.size > 0) queueRef.current.push(b)
+        if (b && b.size > 0) {
+          recordedChunksRef.current.push(b)
+          if (liveMode) queueRef.current.push(b)
+        }
       })
 
       mr.addEventListener('stop', () => {
@@ -117,8 +154,8 @@ export default function AssemblyLiveChunkPage() {
       })
 
       setState('recording')
-      mr.start(3000) // 3s chunks para melhorar a taxa de transcrição
-      processQueue()
+      mr.start(liveMode ? 5000 : 3000)
+      if (liveMode) processQueue()
     } catch (e: any) {
       setError(e?.message || String(e))
       setState('error')
@@ -138,6 +175,10 @@ export default function AssemblyLiveChunkPage() {
           <input value={models} onChange={e=> setModels(e.target.value)} disabled={formDisabled || state==='recording'} className="w-full rounded border px-2 py-1 text-sm" />
         </div>
         <div className="flex items-center gap-3">
+          <label className="text-xs text-slate-600 flex items-center gap-2">
+            <input type="checkbox" checked={liveMode} onChange={e=> setLiveMode(e.target.checked)} disabled={formDisabled || state==='recording'} />
+            Enviar enquanto grava (chunks)
+          </label>
           <label className="text-xs text-slate-600 flex items-center gap-2">
             <input type="checkbox" checked={languageDetection} onChange={e=> setLanguageDetection(e.target.checked)} disabled={formDisabled || state==='recording'} />
             language_detection
