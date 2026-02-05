@@ -27,7 +27,7 @@ export default function DriveFolderPage() {
       <SidebarInset className="h-screen overflow-hidden">
         <div className="h-full grid grid-rows-[auto_1fr]">
           <div className="border-b border-gray-200 bg-white/70 backdrop-blur supports-[backdrop-filter]:bg-white/60">
-            <div className="mx-auto max-w-[1400px] px-6 py-3">
+            <div className="px-3 md:px-4 py-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <button onClick={() => router.push('/drive')} className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50"><ArrowLeft className="mr-1 inline size-3" /> Voltar</button>
@@ -37,11 +37,11 @@ export default function DriveFolderPage() {
             </div>
           </div>
           <div className="min-h-0 overflow-y-auto">
-            <div className="px-3 md:px-4 py-4">
+            <div className="px-2 md:px-3 py-3">
               {files.length === 0 ? (
                 <div className="text-sm text-gray-500">Sem arquivos neste folder.</div>
               ) : (
-                <div className="overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-black/5">
+                <div className="bg-white">
                   <table className="w-full table-fixed text-sm">
                     <thead className="bg-gray-50/80 text-xs text-gray-500">
                       <tr>

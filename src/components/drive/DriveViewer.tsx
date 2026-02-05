@@ -29,7 +29,7 @@ export default function DriveViewer({
 
   return (
     <div className="fixed inset-0 z-50 grid grid-rows-[auto_1fr] bg-black/70 backdrop-blur-sm" onClick={onClose}>
-      <div className="pointer-events-none mx-auto mt-4 max-w-[1400px] px-4" onClick={(e)=> e.stopPropagation()}>
+      <div className="pointer-events-none mt-3 px-2" onClick={(e)=> e.stopPropagation()}>
         <div className="pointer-events-auto">
           <DriveViewerToolbar
             title={current?.name}
@@ -47,11 +47,11 @@ export default function DriveViewer({
         </div>
       </div>
       <div className="min-h-0 overflow-hidden" onClick={(e)=> e.stopPropagation()}>
-        <div className="mx-auto flex h-full max-w-[1400px] items-center justify-center px-4 py-6">
+        <div className="flex h-full items-center justify-center px-2 py-3">
           {/* side arrows */}
           <button onClick={goPrev} className="absolute left-0 top-1/2 z-[60] -translate-y-1/2 rounded-r-md bg-black/30 p-2 text-white hover:bg-black/40">‹</button>
           <button onClick={goNext} className="absolute right-0 top-1/2 z-[60] -translate-y-1/2 rounded-l-md bg-black/30 p-2 text-white hover:bg-black/40">›</button>
-          <div className="relative h-[84vh] w-full overflow-hidden rounded-2xl bg-neutral-950 shadow-2xl ring-1 ring-white/10">
+          <div className="relative h-[88vh] w-full overflow-hidden bg-neutral-950">
             <DriveViewerContent mime={current?.mime} url={current?.url} name={current?.name} register={(h) => { handlersRef.current = h; const z = h.getZoomText?.(); if (z) setZoomText(z); }} />
           </div>
         </div>
