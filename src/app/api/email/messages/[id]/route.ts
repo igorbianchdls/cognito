@@ -17,9 +17,11 @@ async function getClient() {
   return new AgentMailClient({ apiKey })
 }
 
-export async function GET(req: NextRequest, ctx: { params: { id: string } }) {
+export async function GET(req: NextRequest, context: any) {
   try {
-    const id = ctx.params?.id
+    const maybeParams = context?.params
+    const params = (maybeParams && typeof maybeParams.then === 'function') ? await maybeParams : maybeParams
+    const id = params?.id as string | undefined
     if (!id) return Response.json({ ok: false, error: 'Missing id' }, { status: 400 })
     const { searchParams } = new URL(req.url)
     const inboxId = searchParams.get('inboxId') || undefined
@@ -48,4 +50,3 @@ export async function GET(req: NextRequest, ctx: { params: { id: string } }) {
     return Response.json({ ok: false, error: msg }, { status })
   }
 }
-
