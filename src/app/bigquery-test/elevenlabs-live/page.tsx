@@ -10,7 +10,7 @@ export default function ElevenLabsLiveChunkPage() {
   const [partial, setPartial] = useState<string>('')
   const [fullJson, setFullJson] = useState<boolean>(false)
   const [modelId, setModelId] = useState<string>('scribe_v2')
-  const [languageCode, setLanguageCode] = useState<string>('eng')
+  const [languageCode, setLanguageCode] = useState<string>('por')
   const [diarize, setDiarize] = useState<boolean>(true)
   const [tagAudioEvents, setTagAudioEvents] = useState<boolean>(true)
   const [events, setEvents] = useState<Array<{ id: number, size?: number, type?: string, ok: boolean, status: number, textLen: number }>>([])

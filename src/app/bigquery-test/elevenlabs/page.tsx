@@ -8,7 +8,7 @@ export default function ElevenLabsSttTestPage() {
   const [file, setFile] = useState<File | null>(null)
   const [url, setUrl] = useState<string>('')
   const [modelId, setModelId] = useState<string>('scribe_v2')
-  const [languageCode, setLanguageCode] = useState<string>('eng')
+  const [languageCode, setLanguageCode] = useState<string>('por')
   const [diarize, setDiarize] = useState<boolean>(true)
   const [tagAudioEvents, setTagAudioEvents] = useState<boolean>(true)
   const [state, setState] = useState<FetchState>('idle')
@@ -114,7 +114,7 @@ export default function ElevenLabsSttTestPage() {
               onChange={(e)=> setLanguageCode(e.target.value)}
               disabled={formDisabled}
               className="w-full rounded border px-2 py-1 text-sm"
-              placeholder="eng (auto se vazio)"
+              placeholder="por (pt‑BR por padrão)"
             />
           </div>
 
@@ -148,4 +148,3 @@ export default function ElevenLabsSttTestPage() {
     </div>
   )
 }
-

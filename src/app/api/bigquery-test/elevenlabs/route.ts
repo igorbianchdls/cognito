@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url)
     const url = searchParams.get('url') || 'https://storage.googleapis.com/eleven-public-cdn/audio/marketing/nicole.mp3'
     const modelId = searchParams.get('modelId') || 'scribe_v2'
-    const languageCode = searchParams.get('languageCode') || undefined
+    const languageCode = searchParams.get('languageCode') || 'por'
     const diarize = parseBool(searchParams.get('diarize'), false)
     const tagAudioEvents = parseBool(searchParams.get('tagAudioEvents'), false)
 
@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
       if (!file) return Response.json({ success: false, error: 'Missing file or url' }, { status: 400 })
 
       const modelId = (fd.get('modelId') || fd.get('model_id') || 'scribe_v2') as string
-      const languageCode = (fd.get('languageCode') || fd.get('language_code') || '') as string
+      const languageCode = (fd.get('languageCode') || fd.get('language_code') || 'por') as string
       const diarize = parseBool(fd.get('diarize'), false)
       const tagAudioEvents = parseBool(fd.get('tagAudioEvents') || fd.get('tag_audio_events'), false)
 
@@ -89,7 +89,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json().catch(() => ({})) as any
     const url = body.url as string | undefined
     const modelId = (body.modelId || body.model_id || 'scribe_v2') as string
-    const languageCode = (body.languageCode || body.language_code) as string | undefined
+    const languageCode = ((body.languageCode || body.language_code) ?? 'por') as string | undefined
     const diarize = parseBool(body.diarize, false)
     const tagAudioEvents = parseBool(body.tagAudioEvents ?? body.tag_audio_events, false)
 
