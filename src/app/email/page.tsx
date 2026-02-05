@@ -3,7 +3,7 @@
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
-import React, { Suspense, useEffect, useMemo, useState } from 'react'
+import React, { Suspense, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { SidebarShadcn } from "@/components/navigation/SidebarShadcn";
@@ -17,6 +17,25 @@ const FOLDERS = [
   { key: 'archive', name: 'Archive', icon: Archive, count: 32 },
   { key: 'trash', name: 'Trash', icon: Trash2, count: 2 },
 ]
+
+function extractList(data: any): any[] {
+  if (Array.isArray(data)) return data
+  if (!data || typeof data !== 'object') return []
+
+  const directCandidates = [data.items, data.inboxes, data.messages, data.results, data.rows]
+  for (const candidate of directCandidates) {
+    if (Array.isArray(candidate)) return candidate
+  }
+
+  if (data.data && typeof data.data === 'object') {
+    const nested = [data.data.items, data.data.inboxes, data.data.messages, data.data.results, data.data.rows]
+    for (const candidate of nested) {
+      if (Array.isArray(candidate)) return candidate
+    }
+  }
+
+  return []
+}
 
 export default function EmailPage() {
   const router = useRouter()
@@ -49,7 +68,7 @@ export default function EmailPage() {
         const json = await res.json().catch(() => ({}))
         if (!ignore) {
           if (!res.ok || json?.ok === false) throw new Error(json?.error || `Falha inboxes: ${res.status}`)
-          const list = (json?.data?.items || json?.data || []) as any[]
+          const list = extractList(json?.data)
           setInboxes(list)
           // pick inbox from URL or storage or first
           const q = qsInboxId || ''
@@ -80,7 +99,7 @@ export default function EmailPage() {
         const json = await res.json().catch(() => ({}))
         if (!ignore) {
           if (!res.ok || json?.ok === false) throw new Error(json?.error || `Falha messages: ${res.status}`)
-          const list = (json?.data?.items || json?.data || []) as any[]
+          const list = extractList(json?.data)
           setMessages(list)
         }
       } catch (e: any) {
@@ -110,11 +129,16 @@ export default function EmailPage() {
                   <div className="relative">
                     <select value={activeInboxId} onChange={(e)=> setActiveInboxId(e.target.value)} className="h-9 rounded-lg border border-gray-200 bg-white px-2 text-sm outline-none">
                       <option value="" disabled>{loadingInboxes ? 'Carregando inboxes…' : 'Selecione uma inbox'}</option>
-                      {inboxes.map((ib: any) => (
-                        <option key={ib.inboxId || ib.id} value={ib.inboxId || ib.id}>
-                          {(ib.displayName || ib.username || ib.email || '').toString()}
-                        </option>
-                      ))}
+                      {(Array.isArray(inboxes) ? inboxes : []).map((ib: any, index: number) => {
+                        if (!ib || typeof ib !== 'object') return null
+                        const inboxValue = ib.inboxId || ib.id || ''
+                        const inboxLabel = (ib.displayName || ib.username || ib.email || '').toString()
+                        return (
+                          <option key={inboxValue || `inbox-${index}`} value={inboxValue}>
+                            {inboxLabel || `Inbox ${index + 1}`}
+                          </option>
+                        )
+                      })}
                     </select>
                   </div>
                   <button onClick={()=> activeInboxId && setActiveInboxId(activeInboxId)} title="Recarregar" className="hidden md:inline-flex items-center gap-1 rounded-md border border-gray-200 bg-white px-2 py-1.5 text-xs text-gray-700 hover:bg-gray-50"><RefreshCcw className="size-3.5" /> Atualizar</button>
@@ -167,10 +191,11 @@ export default function EmailPage() {
                   <tbody>
                     {loadingMessages ? (
                       <tr><td colSpan={6} className="px-3 py-6 text-center text-xs text-gray-500">Carregando mensagens…</td></tr>
-                    ) : messages.length === 0 ? (
+                    ) : !Array.isArray(messages) || messages.length === 0 ? (
                       <tr><td colSpan={6} className="px-3 py-6 text-center text-xs text-gray-500">Sem mensagens</td></tr>
                     ) : (
-                      messages.map((m: any) => {
+                      messages.map((m: any, index: number) => {
+                        if (!m || typeof m !== 'object') return null
                         const id = m.id || m.messageId || m.message_id
                         const fromName = m.from?.name || m.from_name || m.from || '—'
                         const subject = m.subject || '—'
@@ -180,7 +205,7 @@ export default function EmailPage() {
                         const starred = !!(m.starred || m.isStarred)
                         const unread = !!(m.unread || m.isUnread)
                         return (
-                          <tr key={id} onClick={() => id && router.push(`/email/${id}`)} className={`cursor-pointer border-b hover:bg-gray-50 ${unread?'font-medium':''}`}>
+                          <tr key={id || `msg-${index}`} onClick={() => id && router.push(`/email/${id}`)} className={`cursor-pointer border-b hover:bg-gray-50 ${unread?'font-medium':''}`}>
                             <td className="px-3 py-2"><input type="checkbox" className="size-4 rounded border-gray-300" /></td>
                             <td className="px-3 py-2 text-amber-500">{starred ? '★' : '☆'}</td>
                             <td className="truncate px-3 py-2 text-gray-900">{fromName}</td>
