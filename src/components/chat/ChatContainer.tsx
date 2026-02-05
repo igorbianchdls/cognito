@@ -18,6 +18,9 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
   const [composioEnabled, setComposioEnabled] = useState<boolean>(false)
   const [model, setModel] = useState<'sonnet'|'haiku'>('haiku')
   const abortRef = useRef<AbortController | null>(null)
+  // Track the assistant message for the current turn, so each user message
+  // gets its own assistant response instead of appending to the first one.
+  const currentAssistantIdRef = useRef<string | null>(null)
   const router = useRouter()
   const [menuBusy, setMenuBusy] = useState(false)
   const [headerTitle, setHeaderTitle] = useState<string | undefined>(undefined)
@@ -102,9 +105,10 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
     setMessages(prev => [...prev, userMsg])
 
     const isSlash = text.startsWith('/')
-    // Do not pre-insert an empty assistant message; let the stream handlers
-    // (reasoning/text/tool events) create and populate the assistant message
-    // via ensureAssistantMessage/ensureTextPartAtEnd/ensureReasoningPart.
+    // Pre-insert a new assistant placeholder for THIS turn and remember its id.
+    const assistantId = `a-${Date.now()}`
+    currentAssistantIdRef.current = assistantId
+    setMessages(prev => [...prev, { id: assistantId, role: 'assistant', parts: [] as any }])
 
     setStatus('submitted')
     const history = [...messages, userMsg].filter(m => m.role === 'user' || m.role === 'assistant').map(m => ({ role: m.role as 'user'|'assistant', content: m.parts?.find(p=>p.type==='text')?.text || '' }))
@@ -121,9 +125,14 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
     const ensureAssistantMessage = () => {
       setMessages(prev => {
         const copy = prev.slice()
-        const hasAssistant = copy.some(m => m.role === 'assistant')
-        if (!hasAssistant) {
-          copy.push({ id: `a-${Date.now()}`, role: 'assistant', parts: [] as any })
+        const targetId = currentAssistantIdRef.current
+        if (targetId) {
+          const exists = copy.some(m => m.id === targetId)
+          if (!exists) copy.push({ id: targetId, role: 'assistant', parts: [] as any })
+        } else {
+          const newId = `a-${Date.now()}`
+          currentAssistantIdRef.current = newId
+          copy.push({ id: newId, role: 'assistant', parts: [] as any })
         }
         return copy
       })
@@ -132,14 +141,14 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
       ensureAssistantMessage()
       setMessages(prev => {
         const copy = prev.slice()
-        for (let i = copy.length - 1; i >= 0; i--) {
-          if (copy[i].role === 'assistant') {
-            const parts = copy[i].parts || []
-            const last = parts[parts.length - 1]
-            if (!(last && (last as any).type === 'text')) {
-              copy[i] = { ...copy[i], parts: [...parts, { type: 'text', text: '' } as any] }
-            }
-            break
+        const targetId = currentAssistantIdRef.current
+        let idx = targetId ? copy.findIndex(m => m.id === targetId) : -1
+        if (idx === -1) idx = copy.findIndex(m => m.role === 'assistant')
+        if (idx !== -1) {
+          const parts = copy[idx].parts || []
+          const last = parts[parts.length - 1]
+          if (!(last && (last as any).type === 'text')) {
+            copy[idx] = { ...copy[idx], parts: [...parts, { type: 'text', text: '' } as any] }
           }
         }
         return copy
@@ -149,18 +158,18 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
       ensureAssistantMessage()
       setMessages(prev => {
         const copy = prev.slice()
-        for (let i = copy.length - 1; i >= 0; i--) {
-          if (copy[i].role === 'assistant') {
-            const parts = (copy[i].parts || []).slice()
-            if (parts.length === 0 || (parts[parts.length - 1] as any).type !== 'text') {
-              parts.push({ type: 'text', text: '' } as any)
-            }
-            const last = parts[parts.length - 1] as any
-            const cur = (last && last.text) || ''
-            parts[parts.length - 1] = { type: 'text', text: cur + delta } as any
-            copy[i] = { ...copy[i], parts }
-            break
+        const targetId = currentAssistantIdRef.current
+        let idx = targetId ? copy.findIndex(m => m.id === targetId) : -1
+        if (idx === -1) idx = copy.findIndex(m => m.role === 'assistant')
+        if (idx !== -1) {
+          const parts = (copy[idx].parts || []).slice()
+          if (parts.length === 0 || (parts[parts.length - 1] as any).type !== 'text') {
+            parts.push({ type: 'text', text: '' } as any)
           }
+          const last = parts[parts.length - 1] as any
+          const cur = (last && last.text) || ''
+          parts[parts.length - 1] = { type: 'text', text: cur + delta } as any
+          copy[idx] = { ...copy[idx], parts }
         }
         return copy
       })
@@ -169,15 +178,15 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
       ensureAssistantMessage()
       setMessages(prev => {
         const copy = prev.slice()
-        for (let i = copy.length - 1; i >= 0; i--) {
-          if (copy[i].role === 'assistant') {
-            const parts = copy[i].parts || []
-            const has = parts.some(p => (p as any).type === 'reasoning')
-            if (!has) {
-              const nextParts = [...parts, { type: 'reasoning', content: '', state: 'streaming' } as any]
-              copy[i] = { ...copy[i], parts: nextParts }
-            }
-            break
+        const targetId = currentAssistantIdRef.current
+        let idx = targetId ? copy.findIndex(m => m.id === targetId) : -1
+        if (idx === -1) idx = copy.findIndex(m => m.role === 'assistant')
+        if (idx !== -1) {
+          const parts = copy[idx].parts || []
+          const has = parts.some(p => (p as any).type === 'reasoning')
+          if (!has) {
+            const nextParts = [...parts, { type: 'reasoning', content: '', state: 'streaming' } as any]
+            copy[idx] = { ...copy[idx], parts: nextParts }
           }
         }
         return copy
@@ -187,18 +196,18 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
       ensureAssistantMessage()
       setMessages(prev => {
         const copy = prev.slice()
-        for (let i = copy.length - 1; i >= 0; i--) {
-          if (copy[i].role === 'assistant') {
-            const parts = (copy[i].parts || []).map(p => {
-              if ((p as any).type === 'reasoning') {
-                const cur = (p as any).content || (p as any).text || ''
-                return { ...(p as any), content: cur + delta, text: cur + delta }
-              }
-              return p
-            })
-            copy[i] = { ...copy[i], parts }
-            break
-          }
+        const targetId = currentAssistantIdRef.current
+        let idx = targetId ? copy.findIndex(m => m.id === targetId) : -1
+        if (idx === -1) idx = copy.findIndex(m => m.role === 'assistant')
+        if (idx !== -1) {
+          const parts = (copy[idx].parts || []).map(p => {
+            if ((p as any).type === 'reasoning') {
+              const cur = (p as any).content || (p as any).text || ''
+              return { ...(p as any), content: cur + delta, text: cur + delta }
+            }
+            return p
+          })
+          copy[idx] = { ...copy[idx], parts }
         }
         return copy
       })
@@ -207,17 +216,17 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
       ensureAssistantMessage()
       setMessages(prev => {
         const copy = prev.slice()
-        for (let i = copy.length - 1; i >= 0; i--) {
-          if (copy[i].role === 'assistant') {
-            const parts = (copy[i].parts || []).map(p => {
-              if ((p as any).type === 'reasoning') {
-                return { ...(p as any), state: 'done' }
-              }
-              return p
-            })
-            copy[i] = { ...copy[i], parts }
-            break
-          }
+        const targetId = currentAssistantIdRef.current
+        let idx = targetId ? copy.findIndex(m => m.id === targetId) : -1
+        if (idx === -1) idx = copy.findIndex(m => m.role === 'assistant')
+        if (idx !== -1) {
+          const parts = (copy[idx].parts || []).map(p => {
+            if ((p as any).type === 'reasoning') {
+              return { ...(p as any), state: 'done' }
+            }
+            return p
+          })
+          copy[idx] = { ...copy[idx], parts }
         }
         return copy
       })
@@ -226,27 +235,26 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
       ensureAssistantMessage()
       setMessages(prev => {
         const copy = prev.slice()
-        for (let i = copy.length - 1; i >= 0; i--) {
-          if (copy[i].role === 'assistant') {
-            const parts = (copy[i].parts || []).slice()
-            const idx = parts.findIndex(p => (p as any).toolCallId === callKey)
-            if (idx === -1) {
-              const newPart: any = {
-                type: `tool-${(toolName || 'generic').toString()}`,
-                state: (initialState as any) || 'input-streaming',
-                toolCallId: callKey,
-                inputStream: '',
-              }
-              // Insert before trailing text part (if any) to keep text at bottom
-              const last = parts[parts.length - 1]
-              if (last && (last as any).type === 'text') {
-                parts.splice(parts.length - 1, 0, newPart)
-              } else {
-                parts.push(newPart)
-              }
-              copy[i] = { ...copy[i], parts }
+        const targetId = currentAssistantIdRef.current
+        let i = targetId ? copy.findIndex(m => m.id === targetId) : -1
+        if (i === -1) i = copy.findIndex(m => m.role === 'assistant')
+        if (i !== -1) {
+          const parts = (copy[i].parts || []).slice()
+          const idx = parts.findIndex(p => (p as any).toolCallId === callKey)
+          if (idx === -1) {
+            const newPart: any = {
+              type: `tool-${(toolName || 'generic').toString()}`,
+              state: (initialState as any) || 'input-streaming',
+              toolCallId: callKey,
+              inputStream: '',
             }
-            break
+            const last = parts[parts.length - 1]
+            if (last && (last as any).type === 'text') {
+              parts.splice(parts.length - 1, 0, newPart)
+            } else {
+              parts.push(newPart)
+            }
+            copy[i] = { ...copy[i], parts }
           }
         }
         return copy
@@ -256,12 +264,12 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
       ensureAssistantMessage()
       setMessages(prev => {
         const copy = prev.slice()
-        for (let i = copy.length - 1; i >= 0; i--) {
-          if (copy[i].role === 'assistant') {
-            const parts = (copy[i].parts || []).map(p => ((p as any).toolCallId === callKey) ? { ...(p as any), ...patch } : p)
-            copy[i] = { ...copy[i], parts }
-            break
-          }
+        const targetId = currentAssistantIdRef.current
+        let i = targetId ? copy.findIndex(m => m.id === targetId) : -1
+        if (i === -1) i = copy.findIndex(m => m.role === 'assistant')
+        if (i !== -1) {
+          const parts = (copy[i].parts || []).map(p => ((p as any).toolCallId === callKey) ? { ...(p as any), ...patch } : p)
+          copy[i] = { ...copy[i], parts }
         }
         return copy
       })
