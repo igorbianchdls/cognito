@@ -11,6 +11,7 @@ import {
   BarChart3,
   Plus,
 } from "lucide-react"
+import { Folder as FolderIcon } from 'lucide-react'
 
 import MetaIcon from "@/components/icons/MetaIcon"
 import GoogleAdsIcon from "@/components/icons/GoogleAdsIcon"
@@ -105,6 +106,11 @@ const navigationData = {
       title: "Dashboards",
       url: "/dashboards",
       icon: BarChart3,
+    },
+    {
+      title: "Drive",
+      url: "/drive",
+      icon: FolderIcon,
     },
     {
       title: "Integrações",
