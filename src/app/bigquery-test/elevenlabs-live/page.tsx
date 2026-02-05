@@ -30,10 +30,24 @@ export default function ElevenLabsLiveChunkPage() {
   const stopAll = useCallback(async () => {
     setState('stopping')
     stoppedRef.current = true
-    try { mediaRecorderRef.current?.stop() } catch {}
+
+    // Aguarda o último chunk do MediaRecorder antes de montar o arquivo
+    const mr = mediaRecorderRef.current
+    if (mr) {
+      try {
+        // Força emissão do último chunk
+        try { mr.requestData?.() } catch {}
+        const stopped = new Promise<void>((resolve) => mr.addEventListener('stop', () => resolve(), { once: true }))
+        try { mr.stop() } catch {}
+        await stopped
+      } catch {}
+    }
+
+    // Para o microfone
     try { streamRef.current?.getTracks().forEach(t => t.stop()) } catch {}
     mediaRecorderRef.current = null
     streamRef.current = null
+
     // Se não for liveMode, envia tudo de uma vez
     if (!liveMode) {
       try {
@@ -59,6 +73,7 @@ export default function ElevenLabsLiveChunkPage() {
         setError(e?.message || String(e))
       }
     }
+
     setState('idle')
   }, [diarize, fullJson, languageCode, liveMode, modelId, tagAudioEvents])
 
