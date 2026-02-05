@@ -18,6 +18,7 @@ async function transcribeWithAssembly(params: {
   audio: string | Buffer
   language_detection?: boolean
   speech_models?: string[]
+  language_code?: string
 }) {
   const client = getClient()
   let audioParam: any = params.audio
@@ -37,6 +38,7 @@ async function transcribeWithAssembly(params: {
     audio: audioParam,
     language_detection: params.language_detection ?? true,
     speech_models: params.speech_models ?? ['universal-3-pro', 'universal-2'],
+    language_code: params.language_code,
   } as any)
   return transcript
 }
@@ -60,14 +62,17 @@ export async function GET(req: NextRequest) {
     const ld = searchParams.get('language_detection')
     const models = searchParams.get('speech_models')
     const rawParam = searchParams.get('raw') || searchParams.get('full')
+    const languageCode = searchParams.get('language_code') || searchParams.get('languageCode') || 'pt'
 
-    const language_detection = typeof ld === 'string' ? ['1','true','yes','on'].includes(ld.toLowerCase()) : true
+    const language_detection = typeof ld === 'string'
+      ? ['1','true','yes','on'].includes(ld.toLowerCase())
+      : (languageCode ? false : true)
     const speech_models = typeof models === 'string' && models.trim()
       ? models.split(',').map(s => s.trim()).filter(Boolean)
       : ['universal-3-pro', 'universal-2']
     const includeRaw = typeof rawParam === 'string' ? ['1','true','yes','on'].includes(rawParam.toLowerCase()) : false
 
-    const r = await transcribeWithAssembly({ audio, language_detection, speech_models })
+    const r = await transcribeWithAssembly({ audio, language_detection, speech_models, language_code: languageCode || undefined })
     return Response.json({ success: true, transcript: shapeTranscript(r, includeRaw) })
   } catch (e: any) {
     const msg = e?.message || String(e)
@@ -103,7 +108,10 @@ export async function POST(req: NextRequest) {
       if (!audio) return Response.json({ success: false, error: 'Missing file or url' }, { status: 400 })
 
       const ld = fd.get('language_detection')
-      const language_detection = typeof ld === 'string' ? ['1','true','yes','on'].includes(ld.toLowerCase()) : true
+      const languageCode = (fd.get('language_code') || fd.get('languageCode') || 'pt') as string
+      const language_detection = typeof ld === 'string'
+        ? ['1','true','yes','on'].includes(ld.toLowerCase())
+        : (languageCode ? false : true)
       const models = fd.get('speech_models')
       const speech_models = (typeof models === 'string' && models.trim())
         ? models.split(',').map(s => s.trim()).filter(Boolean)
@@ -111,19 +119,20 @@ export async function POST(req: NextRequest) {
       const full = fd.get('full')
       const includeRaw = typeof full === 'string' ? ['1','true','yes','on'].includes(full.toLowerCase()) : false
 
-      const r = await transcribeWithAssembly({ audio, language_detection, speech_models })
-      return Response.json({ success: true, transcript: shapeTranscript(r, includeRaw), meta: { size, type, language_detection, speech_models } })
+      const r = await transcribeWithAssembly({ audio, language_detection, speech_models, language_code: languageCode || undefined })
+      return Response.json({ success: true, transcript: shapeTranscript(r, includeRaw), meta: { size, type, language_detection, language_code: languageCode || undefined, speech_models } })
     }
 
     // JSON fallback
     const body = await req.json().catch(() => ({})) as any
     const audio = body.audio || body.url || 'https://assembly.ai/wildfires.mp3'
-    const language_detection = typeof body.language_detection === 'boolean' ? body.language_detection : true
+    const languageCode: string | undefined = body.language_code || body.languageCode || 'pt'
+    const language_detection = typeof body.language_detection === 'boolean' ? body.language_detection : (languageCode ? false : true)
     const speech_models = Array.isArray(body.speech_models) ? body.speech_models : ['universal-3-pro', 'universal-2']
     const includeRaw = typeof body.full !== 'undefined' ? !!body.full : (typeof body.raw !== 'undefined' ? !!body.raw : false)
 
-    const r = await transcribeWithAssembly({ audio, language_detection, speech_models })
-    return Response.json({ success: true, transcript: shapeTranscript(r, includeRaw), meta: { mode: 'json', url: typeof audio === 'string' ? audio : undefined, language_detection, speech_models } })
+    const r = await transcribeWithAssembly({ audio, language_detection, speech_models, language_code: languageCode || undefined })
+    return Response.json({ success: true, transcript: shapeTranscript(r, includeRaw), meta: { mode: 'json', url: typeof audio === 'string' ? audio : undefined, language_detection, language_code: languageCode || undefined, speech_models } })
   } catch (e: any) {
     const msg = e?.message || String(e)
     const status = /key|auth/i.test(msg) ? 401 : 500

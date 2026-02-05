@@ -9,7 +9,8 @@ export default function AssemblyLiveChunkPage() {
   const [error, setError] = useState<string>('')
   const [partial, setPartial] = useState<string>('')
   const [fullJson, setFullJson] = useState<boolean>(false)
-  const [languageDetection, setLanguageDetection] = useState<boolean>(true)
+  const [languageDetection, setLanguageDetection] = useState<boolean>(false)
+  const [languageCode, setLanguageCode] = useState<string>('pt')
   const [models, setModels] = useState<string>('universal-3-pro,universal-2')
   const [events, setEvents] = useState<Array<{ id: number, size?: number, type?: string, ok: boolean, status: number, textLen: number }>>([])
   const [liveMode, setLiveMode] = useState<boolean>(false)
@@ -54,6 +55,7 @@ export default function AssemblyLiveChunkPage() {
         const fd = new FormData()
         fd.append('file', fullBlob, 'recording.webm')
         fd.append('language_detection', String(languageDetection))
+        if (languageCode.trim()) fd.append('language_code', languageCode.trim())
         fd.append('speech_models', models)
         if (fullJson) fd.append('full', 'true')
         const res = await fetch('/api/bigquery-test/assembly', { method: 'POST', body: fd })
@@ -94,6 +96,7 @@ export default function AssemblyLiveChunkPage() {
         const fd = new FormData()
         fd.append('file', blob, 'chunk.webm')
         fd.append('language_detection', String(languageDetection))
+        if (languageCode.trim()) fd.append('language_code', languageCode.trim())
         fd.append('speech_models', models)
         if (fullJson) fd.append('full', 'true')
 
@@ -173,6 +176,10 @@ export default function AssemblyLiveChunkPage() {
         <div>
           <label className="block text-xs text-slate-600">Modelos (vírgula‑separados)</label>
           <input value={models} onChange={e=> setModels(e.target.value)} disabled={formDisabled || state==='recording'} className="w-full rounded border px-2 py-1 text-sm" />
+        </div>
+        <div>
+          <label className="block text-xs text-slate-600">Language code</label>
+          <input value={languageCode} onChange={e=> setLanguageCode(e.target.value)} disabled={formDisabled || state==='recording'} className="w-full rounded border px-2 py-1 text-sm" placeholder="pt (força PT‑BR)" />
         </div>
         <div className="flex items-center gap-3">
           <label className="text-xs text-slate-600 flex items-center gap-2">

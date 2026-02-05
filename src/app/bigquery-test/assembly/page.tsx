@@ -7,7 +7,8 @@ type FetchState = 'idle' | 'loading' | 'error' | 'done'
 export default function AssemblySttTestPage() {
   const [file, setFile] = useState<File | null>(null)
   const [url, setUrl] = useState<string>('')
-  const [languageDetection, setLanguageDetection] = useState<boolean>(true)
+  const [languageDetection, setLanguageDetection] = useState<boolean>(false)
+  const [languageCode, setLanguageCode] = useState<string>('pt')
   const [models, setModels] = useState<string>('universal-3-pro,universal-2')
   const [full, setFull] = useState<boolean>(false)
   const [state, setState] = useState<FetchState>('idle')
@@ -27,6 +28,7 @@ export default function AssemblySttTestPage() {
         if (file) fd.append('file', file)
         if (!file && url.trim()) fd.append('url', url.trim())
         fd.append('language_detection', String(languageDetection))
+        if (languageCode.trim()) fd.append('language_code', languageCode.trim())
         fd.append('speech_models', models)
         if (full) fd.append('full', 'true')
         res = await fetch('/api/bigquery-test/assembly', { method: 'POST', body: fd })
@@ -34,6 +36,7 @@ export default function AssemblySttTestPage() {
         const body: any = {
           url: url.trim(),
           language_detection: languageDetection,
+          language_code: languageCode.trim() || undefined,
           speech_models: models.split(',').map(s => s.trim()).filter(Boolean),
           full,
         }
@@ -79,8 +82,18 @@ export default function AssemblySttTestPage() {
               className="w-full rounded border px-2 py-1 text-sm"
             />
             <div className="mt-1 text-xs text-slate-500">ou informe uma URL (ao lado)</div>
-          </div>
-          <div>
+        </div>
+        <div>
+          <label className="block text-xs text-slate-600">Language code</label>
+          <input
+            value={languageCode}
+            onChange={(e)=> setLanguageCode(e.target.value)}
+            disabled={formDisabled}
+            className="w-full rounded border px-2 py-1 text-sm"
+            placeholder="pt (força PT‑BR)"
+          />
+        </div>
+        <div>
             <label className="block text-xs text-slate-600">URL do áudio</label>
             <input
               value={url}
