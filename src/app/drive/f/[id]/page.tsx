@@ -7,7 +7,7 @@ import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
 import DriveViewer from '@/components/drive/DriveViewer'
 import type { DriveItem } from '@/components/drive/types'
 import { folders, itemsByFolder } from '../../data.mock'
-import { Folder, ArrowLeft } from 'lucide-react'
+import { ArrowLeft, File, FileText, Image as ImageIcon, Video, Music, MoreHorizontal, Paperclip } from 'lucide-react'
 
 export default function DriveFolderPage() {
   const params = useParams<{ id: string }>()
@@ -37,24 +37,50 @@ export default function DriveFolderPage() {
             </div>
           </div>
           <div className="min-h-0 overflow-y-auto">
-            <div className="mx-auto max-w-[1400px] px-6 py-6">
+            <div className="px-3 md:px-4 py-4">
               {files.length === 0 ? (
                 <div className="text-sm text-gray-500">Sem arquivos neste folder.</div>
               ) : (
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {files.map((f, i) => (
-                    <button key={f.id} onClick={() => openViewer(i)} className="group rounded-2xl bg-gradient-to-b from-gray-50 to-white p-4 text-left shadow-sm ring-1 ring-black/5 transition hover:shadow-md">
-                      <div className="flex items-center gap-4">
-                        <div className="flex size-14 items-center justify-center rounded-xl bg-blue-50 text-blue-600 ring-1 ring-inset ring-blue-100">
-                          <Folder className="size-7" />
-                        </div>
-                        <div className="min-w-0">
-                          <div className="truncate text-sm font-medium text-gray-900 group-hover:underline">{f.name}</div>
-                          <div className="mt-0.5 text-xs text-gray-500">{f.mime}</div>
-                        </div>
-                      </div>
-                    </button>
-                  ))}
+                <div className="overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-black/5">
+                  <table className="w-full table-fixed text-sm">
+                    <thead className="bg-gray-50/80 text-xs text-gray-500">
+                      <tr>
+                        <th className="w-10 px-3 py-2 text-left"><input type="checkbox" className="size-4 rounded border-gray-300" /></th>
+                        <th className="px-3 py-2 text-left">Nome</th>
+                        <th className="w-40 px-3 py-2 text-left">Tipo</th>
+                        <th className="w-40 px-3 py-2 text-left">Proprietário</th>
+                        <th className="w-40 px-3 py-2 text-left">Local</th>
+                        <th className="w-24 px-3 py-2 text-right">Tamanho</th>
+                        <th className="w-10 px-3 py-2 text-right"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {files.map((f, i) => (
+                        <tr key={f.id} onClick={() => openViewer(i)} className="cursor-pointer border-t hover:bg-gray-50/60">
+                          <td className="px-3 py-2"><input type="checkbox" className="size-4 rounded border-gray-300" /></td>
+                          <td className="truncate px-3 py-2 text-gray-900">
+                            <span className="inline-flex items-center gap-2">
+                              <FileIcon mime={f.mime} />
+                              <span className="truncate">{f.name}</span>
+                              {f.url && <Paperclip className="size-3 text-gray-400" />}
+                            </span>
+                          </td>
+                          <td className="truncate px-3 py-2 text-gray-600">{f.mime || '—'}</td>
+                          <td className="px-3 py-2 text-gray-600">
+                            <span className="inline-flex items-center gap-2">
+                              <span className="inline-flex size-6 items-center justify-center rounded-full bg-gray-200 text-[10px] font-semibold text-gray-700">
+                                {(f.addedBy || 'eu').split(' ').map(s=>s[0]).join('').slice(0,2)}
+                              </span>
+                              {f.addedBy || 'eu'}
+                            </span>
+                          </td>
+                          <td className="px-3 py-2 text-gray-600">Meu Drive</td>
+                          <td className="px-3 py-2 text-right text-gray-600">{f.size || '—'}</td>
+                          <td className="px-3 py-2 text-right text-gray-500"><MoreHorizontal className="ml-auto size-4" /></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               )}
             </div>
@@ -68,3 +94,12 @@ export default function DriveFolderPage() {
   )
 }
 
+function FileIcon({ mime }: { mime?: string }) {
+  if (!mime) return <File className="size-4 text-gray-500" />
+  if (/^image\//i.test(mime)) return <ImageIcon className="size-4 text-blue-500" />
+  if (/^video\//i.test(mime)) return <Video className="size-4 text-purple-500" />
+  if (/^audio\//i.test(mime)) return <Music className="size-4 text-emerald-500" />
+  if (/pdf$/i.test(mime)) return <FileText className="size-4 text-red-500" />
+  if (/text\//i.test(mime)) return <FileText className="size-4 text-gray-500" />
+  return <File className="size-4 text-gray-500" />
+}

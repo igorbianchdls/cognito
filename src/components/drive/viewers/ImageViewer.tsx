@@ -1,14 +1,26 @@
+import { useEffect, useState } from 'react'
 import { useZoomPan } from '../hooks/useZoomPan'
+import type { ViewerHandlers } from '../DriveViewerContent'
 
-export default function ImageViewer({ src, alt }: { src?: string; alt?: string }) {
+export default function ImageViewer({ src, alt, register }: { src?: string; alt?: string; register?: (h: ViewerHandlers) => void }) {
   const z = useZoomPan(1)
+  const [rotate, setRotate] = useState(0)
+  useEffect(() => {
+    register?.({
+      zoomIn: () => z.setZoom(v => Math.min(5, Number((v + 0.1).toFixed(2)))) ,
+      zoomOut: () => z.setZoom(v => Math.max(0.25, Number((v - 0.1).toFixed(2)))) ,
+      resetZoom: () => z.reset(),
+      rotate: () => setRotate(r => (r + 90) % 360),
+      getZoomText: () => `${Math.round((z.zoom || 1) * 100)}%`,
+    })
+  }, [register, z])
   return (
     <div className="relative grid size-full place-items-center overflow-hidden bg-neutral-950" onWheel={z.onWheel} onMouseMove={z.onMouseMove} onMouseDown={z.onMouseDown} onMouseUp={z.onMouseUp} onMouseLeave={z.onMouseLeave}>
       {src ? (
         <img
           src={src}
           alt={alt || ''}
-          style={{ transform: `translate(${z.offset.x}px, ${z.offset.y}px) scale(${z.zoom})`, transformOrigin: 'center center' }}
+          style={{ transform: `translate(${z.offset.x}px, ${z.offset.y}px) scale(${z.zoom}) rotate(${rotate}deg)`, transformOrigin: 'center center' }}
           className="max-h-[82vh] select-none"
           draggable={false}
         />
@@ -18,4 +30,3 @@ export default function ImageViewer({ src, alt }: { src?: string; alt?: string }
     </div>
   )
 }
-
