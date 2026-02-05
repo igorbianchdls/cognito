@@ -113,3 +113,6 @@ export async function POST(req: NextRequest) {
   }
 }
 
+export async function GET() {
+  return Response.json({ ok: true, use: "POST multipart: file | or JSON: { url, model_id?, language_code?, diarize?, tag_audio_events? }" })
+}
