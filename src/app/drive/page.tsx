@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { SidebarShadcn } from "@/components/navigation/SidebarShadcn";
-import { Search, LayoutGrid, List, MoreHorizontal, FileText, Image as ImageIcon, Video, Music2, File } from 'lucide-react'
+import { Search, LayoutGrid, List, MoreHorizontal, FileText, Image as ImageIcon, Video, Music2, File, ChevronDown } from 'lucide-react'
 import DriveViewer from '@/components/drive/DriveViewer'
 import type { DriveItem } from '@/components/drive/types'
 import { folders as mockFolders, recentItems } from './data.mock'
@@ -15,6 +15,14 @@ const FALLBACK_OWNERS = [
   'igor@creatto.ai',
   'dani@workspace.com',
   'ops@team.io',
+]
+
+const WORKSPACES = [
+  'Documents',
+  'Design Vault',
+  'Contracts Hub',
+  'Marketing Space',
+  'Finance Board',
 ]
 
 function getItemType(item: DriveItem): 'image' | 'video' | 'audio' | 'pdf' | 'file' {
@@ -95,6 +103,8 @@ export default function DrivePage() {
   const [viewerOpen, setViewerOpen] = useState(false)
   const [viewerIndex, setViewerIndex] = useState(0)
   const [viewerItems, setViewerItems] = useState<DriveItem[]>([])
+  const [workspaceOpen, setWorkspaceOpen] = useState(false)
+  const [activeWorkspace, setActiveWorkspace] = useState(WORKSPACES[0])
 
   const openViewer = (items: DriveItem[], index: number) => {
     setViewerItems(items)
@@ -108,12 +118,35 @@ export default function DrivePage() {
       <SidebarInset className="h-screen overflow-hidden">
         <div className="h-full grid grid-rows-[auto_1fr]">
           {/* Top toolbar / breadcrumb */}
-          <div className="border-b border-gray-200 bg-white/70 backdrop-blur supports-[backdrop-filter]:bg-white/60">
+          <div className="bg-white">
             <div className="mx-auto max-w-[1400px] px-6 py-3">
               <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-xs text-gray-500">Docs / Workspace</div>
-                  <h1 className="text-2xl font-semibold tracking-tight text-gray-900">Documents</h1>
+                <div className="relative">
+                  <div className="flex items-center gap-1.5">
+                    <h1 className="text-lg font-semibold tracking-tight text-gray-900">{activeWorkspace}</h1>
+                    <button
+                      onClick={() => setWorkspaceOpen((v) => !v)}
+                      className="inline-flex items-center justify-center rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-500"
+                      aria-label="Selecionar workspace"
+                    >
+                      <ChevronDown className="size-4" />
+                    </button>
+                  </div>
+                  {workspaceOpen ? (
+                    <div className="absolute left-0 top-8 z-20 min-w-[190px] overflow-hidden rounded-md border border-gray-200 bg-white shadow-lg">
+                      {WORKSPACES.map((name) => (
+                        <button
+                          key={name}
+                          onClick={() => { setActiveWorkspace(name); setWorkspaceOpen(false) }}
+                          className={`block w-full px-3 py-2 text-left text-sm ${
+                            name === activeWorkspace ? 'bg-gray-100 text-gray-900' : 'text-gray-700 hover:bg-gray-50'
+                          }`}
+                        >
+                          {name}
+                        </button>
+                      ))}
+                    </div>
+                  ) : null}
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="relative">
@@ -142,24 +175,21 @@ export default function DrivePage() {
               <section>
                 <div className="mb-3 flex items-center justify-between">
                   <h2 className="text-sm font-semibold text-gray-800">Folders</h2>
-                  <button className="inline-flex items-center gap-1 rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-xs text-gray-700 hover:bg-gray-50">
+                  <button className="inline-flex items-center gap-1 rounded-md px-2 py-1.5 text-xs text-gray-500 hover:bg-gray-50">
                     <MoreHorizontal className="size-4" />
-                    Manage
                   </button>
                 </div>
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
                   {mockFolders.map((f) => (
                     <button
                       key={f.id}
                       onClick={() => router.push(`/drive/f/${f.id}`)}
-                      className="group rounded-xl border border-gray-200 bg-white p-3 text-left transition hover:border-gray-300 hover:shadow-sm"
+                      className="group px-1 py-2 text-center"
                     >
-                      <div className="rounded-lg border border-gray-100 bg-white p-1">
-                        <FolderArtwork className="h-40 w-full" />
-                      </div>
-                      <div className="mt-3 min-w-0">
-                        <div className="truncate text-[15px] font-semibold text-gray-900 group-hover:text-gray-700">{f.name}</div>
-                        <div className="mt-0.5 text-sm text-gray-500">
+                      <FolderArtwork className="mx-auto h-28 w-36 transition group-hover:scale-[1.02]" />
+                      <div className="mt-2 min-w-0">
+                        <div className="truncate text-center text-[14px] font-semibold text-gray-900">{f.name}</div>
+                        <div className="mt-0.5 text-center text-sm text-gray-500">
                           {f.filesCount.toLocaleString()} {f.filesCount === 1 ? 'file' : 'files'}
                         </div>
                       </div>
