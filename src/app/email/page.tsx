@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from 'react'
+import React, { Suspense, useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { SidebarShadcn } from "@/components/navigation/SidebarShadcn";
@@ -80,6 +80,7 @@ export default function EmailPage() {
   }, [activeInboxId])
 
   return (
+    <Suspense fallback={<div className="p-4 text-xs text-gray-500">Carregando…</div>}>
     <SidebarProvider>
       <SidebarShadcn showHeaderTrigger={false} />
       <SidebarInset className="h-screen overflow-hidden">
@@ -185,5 +186,6 @@ export default function EmailPage() {
         </div>
       </SidebarInset>
     </SidebarProvider>
+    </Suspense>
   )
 }
