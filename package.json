@@ -9,7 +9,11 @@
     "start": "next start",
     "lint": "next lint",
     "service:hello": "node services/hello-service.mjs",
-    "sandbox:agent-verify": "node scripts/sandbox-agent-verify.mjs"
+    "sandbox:agent-verify": "node scripts/sandbox-agent-verify.mjs",
+    "safe:npm": "node scripts/safe-npm-install.mjs",
+    "safe:install": "node scripts/safe-npm-install.mjs install",
+    "safe:add:assemblyai": "node scripts/safe-npm-install.mjs install assemblyai",
+    "safe:add:elevenlabs": "node scripts/safe-npm-install.mjs install @elevenlabs/elevenlabs-js"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^2.0.0",
@@ -100,6 +104,7 @@
     "ag-grid-react": "^34.1.1",
     "agentset": "^1.4.0",
     "ai": "^5.0.8",
+    "assemblyai": "^4.23.0",
     "autoprefixer": "^10.4.21",
     "axios": "^1.11.0",
     "class-variance-authority": "^0.7.1",
@@ -116,6 +121,7 @@
     "lucide-react": "^0.539.0",
     "nanostores": "^1.0.1",
     "next": "16.0.7",
+    "node-record-lpcm16": "^1.0.1",
     "papaparse": "^5.5.3",
     "pdfjs-dist": "^5.4.394",
     "pg": "^8.16.3",

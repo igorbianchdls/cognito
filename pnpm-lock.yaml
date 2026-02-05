@@ -272,6 +272,9 @@ importers:
       ai:
         specifier: ^5.0.8
         version: 5.0.86(zod@3.25.76)
+      assemblyai:
+        specifier: ^4.23.0
+        version: 4.23.0
       autoprefixer:
         specifier: ^10.4.21
         version: 10.4.21(postcss@8.5.6)
@@ -320,6 +323,9 @@ importers:
       next:
         specifier: 16.0.7
         version: 16.0.7(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.93.3)
+      node-record-lpcm16:
+        specifier: ^1.0.1
+        version: 1.0.1
       papaparse:
         specifier: ^5.5.3
         version: 5.5.3
@@ -4945,6 +4951,10 @@ packages:
     resolution: {integrity: sha512-tLkvA81vQG/XqE2mjDkGQHoOINtMHtysSnemrmoGe6PydDPMRbVugqyk4A6V/WDWEfm3l+0d8anA9r8cv/5Jaw==}
     engines: {node: '>=12'}
 
+  assemblyai@4.23.0:
+    resolution: {integrity: sha512-UtmCR4QD5qDy6uYLC+LJJmn8vcUrKOIXbS2VrciiPOSYrBoL+o18SbAZ/viwN4WoNAowKu9dPgvE+F7McebMgA==}
+    engines: {node: '>=18'}
+
   ast-types-flow@0.0.8:
     resolution: {integrity: sha512-OH/2E5Fg20h2aPrbe+QL8JZQFko0YZaF+j4mnQ7BGhfavO7OpSLa8a0y9sBwomHdSbkhTS8TQNayBfnW5DwbvQ==}
 
@@ -7027,6 +7037,9 @@ packages:
   node-fetch@3.3.2:
     resolution: {integrity: sha512-dRB78srN/l6gqWulah9SrxeYnxeddIG30+GOqK/9OlLVyLg3HPnr6SqOWTWOXKRwC2eGYCkZ59NNuSgvSrpgOA==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
+
+  node-record-lpcm16@1.0.1:
+    resolution: {integrity: sha512-H75GMOP8ErnF67m21+qSgj4USnzv5RLfm7OkEItdIi+soNKoJZpMQPX6umM8Cn9nVPSgd/dBUtc1msst5MmABA==}
 
   node-releases@2.0.27:
     resolution: {integrity: sha512-nmh3lCkYZ3grZvqcCH+fjmQ7X+H0OeZgP40OierEaAptX4XofMh5kwNbWh7lBduUzCcV/8kZ+NDLCwm2iorIlA==}
@@ -15214,6 +15227,13 @@ snapshots:
 
   arrify@3.0.0: {}
 
+  assemblyai@4.23.0:
+    dependencies:
+      ws: 8.18.3
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
+
   ast-types-flow@0.0.8: {}
 
   async-function@1.0.0: {}
@@ -17666,6 +17686,12 @@ snapshots:
       data-uri-to-buffer: 4.0.1
       fetch-blob: 3.2.0
       formdata-polyfill: 4.0.10
+
+  node-record-lpcm16@1.0.1:
+    dependencies:
+      debug: 2.6.9
+    transitivePeerDependencies:
+      - supports-color
 
   node-releases@2.0.27: {}
 

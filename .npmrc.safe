@@ -1,0 +1,6 @@
+registry=https://registry.npmjs.org/
+always-auth=false
+
+@elevenlabs:registry=https://registry.npmjs.org/
+@assemblyai:registry=https://registry.npmjs.org/
+
