@@ -17,6 +17,16 @@ export default function EmailReadPage() {
   const [error, setError] = useState<string>('')
   const [data, setData] = useState<any>(null)
 
+  // Read inboxId from query string (client only)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const v = new URL(window.location.href).searchParams.get('inboxId') || ''
+        setQsInboxId(v)
+      } catch {}
+    }
+  }, [])
+
   useEffect(() => {
     const id = params?.id
     if (!id) return
@@ -90,11 +100,3 @@ export default function EmailReadPage() {
     </Suspense>
   )
 }
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const v = new URL(window.location.href).searchParams.get('inboxId') || ''
-        setQsInboxId(v)
-      } catch {}
-    }
-  }, [])
