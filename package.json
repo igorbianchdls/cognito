@@ -51,6 +51,7 @@
     "@nivo/scatterplot": "^0.99.0",
     "@nivo/stream": "^0.99.0",
     "@nivo/treemap": "^0.99.0",
+    "@openai/codex": "^0.98.0",
     "@platejs/ai": "^49.2.15",
     "@platejs/basic-nodes": "^49.0.0",
     "@platejs/basic-styles": "^49.0.0",

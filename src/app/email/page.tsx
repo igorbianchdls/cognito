@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
 import React, { Suspense, useEffect, useMemo, useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { SidebarShadcn } from "@/components/navigation/SidebarShadcn";
 import { Inbox, Star, Send, FileText, Trash2, Archive, Tag, Plus, Search, Paperclip, RefreshCcw } from 'lucide-react'
@@ -20,7 +20,6 @@ const FOLDERS = [
 
 export default function EmailPage() {
   const router = useRouter()
-  const params = useSearchParams()
   const [folder, setFolder] = useState('inbox')
   const [inboxes, setInboxes] = useState<any[]>([])
   const [activeInboxId, setActiveInboxId] = useState<string>('')
@@ -28,6 +27,17 @@ export default function EmailPage() {
   const [messages, setMessages] = useState<any[]>([])
   const [loadingMessages, setLoadingMessages] = useState(false)
   const [error, setError] = useState<string>('')
+  const [qsInboxId, setQsInboxId] = useState<string>('')
+
+  // read query string (client only)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const v = new URL(window.location.href).searchParams.get('inboxId') || ''
+        setQsInboxId(v)
+      } catch {}
+    }
+  }, [])
 
   // load inboxes
   useEffect(() => {
@@ -42,7 +52,7 @@ export default function EmailPage() {
           const list = (json?.data?.items || json?.data || []) as any[]
           setInboxes(list)
           // pick inbox from URL or storage or first
-          const q = params?.get('inboxId') || ''
+          const q = qsInboxId || ''
           const stored = typeof window !== 'undefined' ? localStorage.getItem('email.activeInboxId') || '' : ''
           const chosen = q || stored || (list[0]?.inboxId || list[0]?.id || '')
           if (chosen) setActiveInboxId(chosen)
@@ -54,7 +64,7 @@ export default function EmailPage() {
       }
     })()
     return () => { ignore = true }
-  }, [])
+  }, [qsInboxId])
 
   // load messages when inbox changes
   useEffect(() => {

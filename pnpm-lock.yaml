@@ -107,6 +107,9 @@ importers:
       '@nivo/treemap':
         specifier: ^0.99.0
         version: 0.99.0(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
+      '@openai/codex':
+        specifier: ^0.98.0
+        version: 0.98.0
       '@platejs/ai':
         specifier: ^49.2.15
         version: 49.2.15(platejs@49.2.21(@types/react@19.2.7)(immer@10.2.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(scheduler@0.27.0)(use-sync-external-store@1.6.0(react@19.2.1)))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3)
@@ -1586,6 +1589,11 @@ packages:
   '@nolyfill/is-core-module@1.0.39':
     resolution: {integrity: sha512-nn5ozdjYQpUCZlWGuxcJY/KpxkWQs4DcbMCmKojjyrYDEAGy4Ce19NN4v5MduafTwJlbKc99UA8YhSVqq9yPZA==}
     engines: {node: '>=12.4.0'}
+
+  '@openai/codex@0.98.0':
+    resolution: {integrity: sha512-CKjrhAmzTvWn7Vbsi27iZRKBAJw9a7ZTTkWQDbLgQZP1weGbDIBk1r6wiLEp1ZmDO7w0fHPLYgnVspiOrYgcxg==}
+    engines: {node: '>=16'}
+    hasBin: true
 
   '@openrouter/ai-sdk-provider@1.2.0':
     resolution: {integrity: sha512-stuIwq7Yb7DNmk3GuCtz+oS3nZOY4TXEV3V5KsknDGQN7Fpu3KRMQVWRc1J073xKdf0FC9EHOctSyzsACmp5Ag==}
@@ -10260,6 +10268,8 @@ snapshots:
       fastq: 1.19.1
 
   '@nolyfill/is-core-module@1.0.39': {}
+
+  '@openai/codex@0.98.0': {}
 
   '@openrouter/ai-sdk-provider@1.2.0(ai@4.3.19(react@19.2.1)(zod@3.25.76))(zod@3.25.76)':
     dependencies:
