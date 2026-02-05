@@ -28,7 +28,7 @@ export default function ElevenLabsSttTestPage() {
       if (languageCode.trim()) fd.append('language_code', languageCode.trim())
       if (diarize) fd.append('diarize', 'true')
       if (tagAudioEvents) fd.append('tag_audio_events', 'true')
-      const res = await fetch('/bigquery-test/elevenlabs-stt/api', { method: 'POST', body: fd })
+      const res = await fetch('/api/elevenlabs-stt', { method: 'POST', body: fd })
       const json = await res.json().catch(() => ({}))
       if (!res.ok || json?.success === false) {
         throw new Error(json?.error || `Falha: ${res.status}`)
