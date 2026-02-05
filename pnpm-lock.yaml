@@ -269,6 +269,9 @@ importers:
       ag-grid-react:
         specifier: ^34.1.1
         version: 34.3.1(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
+      agentmail:
+        specifier: ^0.2.11
+        version: 0.2.11
       agentset:
         specifier: ^1.4.0
         version: 1.7.0
@@ -4855,6 +4858,10 @@ packages:
   agent-base@7.1.4:
     resolution: {integrity: sha512-MnA+YT8fwfJPgBx3m60MNqakm30XOkyIoH1y6huTQvC0PwZG7ki8NacLBcrPbNoo8vEZy7Jpuk7+jMO+CUovTQ==}
     engines: {node: '>= 14'}
+
+  agentmail@0.2.11:
+    resolution: {integrity: sha512-S3uirKtymfUewpvta5gAKyAh1XxBIJtUtEPKiemtJTD0iasz/j4IvnxvDX7wNa9ETgyF5jMiAK7j2h9WiE2Uyw==}
+    engines: {node: '>=18.0.0'}
 
   agentset@1.7.0:
     resolution: {integrity: sha512-1P/iHqVxvvguKdod5YiHEq4apRVgrG6fcoVqib8C9OpSTaepoIYAqNnuribYqgEGMJ6nf0p6zq6Vn/rBudr+EQ==}
@@ -15116,6 +15123,13 @@ snapshots:
       - supports-color
 
   agent-base@7.1.4: {}
+
+  agentmail@0.2.11:
+    dependencies:
+      ws: 8.18.3
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
 
   agentset@1.7.0: {}
 
