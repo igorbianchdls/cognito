@@ -1,4 +1,8 @@
-import { Folder, Search, LayoutGrid, List } from 'lucide-react'
+"use client"
+
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
+import { SidebarShadcn } from "@/components/navigation/SidebarShadcn";
+import { Folder, Search, LayoutGrid, List, MoreHorizontal } from 'lucide-react'
 
 type FolderItem = {
   id: string
@@ -34,98 +38,121 @@ const recent: RecentFile[] = [
 
 export default function DrivePage() {
   return (
-    <div className="h-full w-full px-6 py-5">
-      {/* Top bar */}
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div className="space-y-1">
-          <div className="text-xs text-gray-500">Docs / Workspace</div>
-          <h1 className="text-2xl font-semibold tracking-tight">Documents</h1>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="relative">
-            <Search className="absolute left-2 top-1/2 -translate-y-1/2 size-4 text-gray-400" />
-            <input
-              className="h-9 w-64 rounded-md border border-gray-200 pl-8 pr-3 text-sm outline-none ring-0 focus:border-gray-300"
-              placeholder="Search"
-            />
-          </div>
-          <div className="hidden items-center gap-1 rounded-md border border-gray-200 p-1 md:flex">
-            <button className="inline-flex items-center gap-1 rounded px-2 py-1.5 text-xs text-gray-700 hover:bg-gray-50">
-              <List className="size-4" />
-              List View
-            </button>
-            <button className="inline-flex items-center gap-1 rounded bg-gray-100 px-2 py-1.5 text-xs text-gray-900">
-              <LayoutGrid className="size-4" />
-              Grid
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div className="mt-6 grid gap-6 lg:grid-cols-[1fr]">
-        {/* Folders grid */}
-        <section>
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-sm font-medium text-gray-700">Recent Folders</h2>
-            <span className="text-xs text-gray-500">{folders.length} total</span>
-          </div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {folders.map((f) => (
-              <button key={f.id} className="group flex items-center gap-4 rounded-xl border border-gray-200 bg-white p-4 text-left shadow-sm transition hover:shadow-md">
-                <div className="flex size-12 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
-                  <Folder className="size-6" />
+    <SidebarProvider>
+      <SidebarShadcn showHeaderTrigger={false} />
+      <SidebarInset className="h-screen overflow-hidden">
+        <div className="h-full grid grid-rows-[auto_1fr]">
+          {/* Top toolbar / breadcrumb */}
+          <div className="border-b border-gray-200 bg-white/70 backdrop-blur supports-[backdrop-filter]:bg-white/60">
+            <div className="mx-auto max-w-[1400px] px-6 py-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-xs text-gray-500">Docs / Workspace</div>
+                  <h1 className="text-2xl font-semibold tracking-tight text-gray-900">Documents</h1>
                 </div>
-                <div className="min-w-0">
-                  <div className="truncate text-sm font-medium text-gray-900 group-hover:underline">
-                    {f.name}
+                <div className="flex items-center gap-2">
+                  <div className="relative">
+                    <Search className="absolute left-2 top-1/2 -translate-y-1/2 size-4 text-gray-400" />
+                    <input className="h-9 w-72 rounded-lg border border-gray-200 bg-white pl-8 pr-3 text-sm outline-none ring-0 placeholder:text-gray-400 focus:border-gray-300" placeholder="Search" />
                   </div>
-                  <div className="mt-0.5 text-xs text-gray-500">
-                    {f.files} {f.files === 1 ? 'file' : 'files'} • {f.size}
+                  <div className="hidden items-center gap-1 rounded-lg border border-gray-200 bg-white p-1 md:flex">
+                    <button className="inline-flex items-center gap-1 rounded px-2 py-1.5 text-xs text-gray-700 hover:bg-gray-50">
+                      <List className="size-4" />
+                      List View
+                    </button>
+                    <button className="inline-flex items-center gap-1 rounded bg-gray-100 px-2 py-1.5 text-xs text-gray-900">
+                      <LayoutGrid className="size-4" />
+                      Grid
+                    </button>
                   </div>
                 </div>
-              </button>
-            ))}
+              </div>
+            </div>
           </div>
-        </section>
 
-        {/* Recent files table */}
-        <section className="mt-2">
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-sm font-medium text-gray-700">Recent</h2>
-            <span className="text-xs text-gray-500">{recent.length} items</span>
+          {/* Content */}
+          <div className="min-h-0 overflow-y-auto">
+            <div className="mx-auto max-w-[1400px] px-6 py-6">
+              {/* Folders */}
+              <section>
+                <div className="mb-3 flex items-center justify-between">
+                  <h2 className="text-sm font-medium text-gray-700">Recent 6</h2>
+                  <button className="inline-flex items-center gap-1 rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-xs text-gray-700 hover:bg-gray-50">
+                    <MoreHorizontal className="size-4" />
+                    Manage
+                  </button>
+                </div>
+                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                  {folders.map((f) => (
+                    <button key={f.id} className="group rounded-2xl bg-gradient-to-b from-gray-50 to-white p-4 text-left shadow-sm ring-1 ring-black/5 transition hover:shadow-md">
+                      <div className="flex items-center gap-4">
+                        <div className="flex size-14 items-center justify-center rounded-xl bg-blue-50 text-blue-600 ring-1 ring-inset ring-blue-100">
+                          <Folder className="size-7" />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="truncate text-sm font-medium text-gray-900 group-hover:underline">
+                            {f.name}
+                          </div>
+                          <div className="mt-0.5 text-xs text-gray-500">
+                            {f.files.toLocaleString()} {f.files === 1 ? 'file' : 'files'} • {f.size}
+                          </div>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </section>
+
+              {/* Recent table */}
+              <section className="mt-6">
+                <div className="mb-3 flex items-center justify-between">
+                  <h2 className="text-sm font-medium text-gray-700">Recent</h2>
+                  <span className="text-xs text-gray-500">{recent.length} items</span>
+                </div>
+                <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
+                  <table className="w-full table-fixed text-sm">
+                    <thead className="bg-gray-50/70 text-xs text-gray-500">
+                      <tr>
+                        <th className="w-2/5 px-4 py-3 text-left font-medium">
+                          <span className="inline-flex items-center gap-2">
+                            <input type="checkbox" className="size-4 rounded border-gray-300" />
+                            File name
+                          </span>
+                        </th>
+                        <th className="w-1/5 px-4 py-3 text-left font-medium">Date added</th>
+                        <th className="w-1/5 px-4 py-3 text-left font-medium">Added by</th>
+                        <th className="w-1/5 px-4 py-3 text-left font-medium">Size</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {recent.map((r, i) => (
+                        <tr key={r.id} className="border-t border-gray-100 hover:bg-gray-50/60">
+                          <td className="px-4 py-3 text-gray-900">
+                            <span className="inline-flex items-center gap-2">
+                              <input type="checkbox" className="size-4 rounded border-gray-300" />
+                              <span className="truncate">{r.name}</span>
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-gray-600">{r.dateAdded}</td>
+                          <td className="px-4 py-3 text-gray-600">
+                            <span className="inline-flex items-center gap-2">
+                              <span className="inline-flex size-6 items-center justify-center rounded-full bg-gradient-to-br from-pink-200 to-violet-200 text-[10px] font-semibold text-gray-700 ring-1 ring-inset ring-white/60">
+                                {r.addedBy.split(' ').map(s=>s[0]).join('').slice(0,2)}
+                              </span>
+                              {r.addedBy}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-gray-600">{r.size}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            </div>
           </div>
-          <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-            <table className="w-full table-fixed text-sm">
-              <thead className="bg-gray-50 text-xs text-gray-500">
-                <tr>
-                  <th className="w-2/5 px-4 py-3 text-left font-medium">File name</th>
-                  <th className="w-1/5 px-4 py-3 text-left font-medium">Date added</th>
-                  <th className="w-1/5 px-4 py-3 text-left font-medium">Added by</th>
-                  <th className="w-1/5 px-4 py-3 text-left font-medium">Size</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recent.map((r, i) => (
-                  <tr key={r.id} className={i % 2 === 1 ? 'bg-white' : 'bg-gray-50/50'}>
-                    <td className="truncate px-4 py-3 text-gray-900">{r.name}</td>
-                    <td className="px-4 py-3 text-gray-600">{r.dateAdded}</td>
-                    <td className="px-4 py-3 text-gray-600">
-                      <span className="inline-flex items-center gap-2">
-                        <span className="inline-flex size-5 items-center justify-center rounded-full bg-gray-200 text-[10px] font-semibold text-gray-700">
-                          {r.addedBy.split(' ').map(s=>s[0]).join('').slice(0,2)}
-                        </span>
-                        {r.addedBy}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-gray-600">{r.size}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
-      </div>
-    </div>
+        </div>
+      </SidebarInset>
+    </SidebarProvider>
   )
 }
-
