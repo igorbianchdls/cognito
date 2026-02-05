@@ -27,7 +27,7 @@ export default function DriveFolderPage() {
       <SidebarInset className="h-screen overflow-hidden">
         <div className="h-full grid grid-rows-[auto_1fr]">
           <div className="border-b border-gray-200 bg-white/70 backdrop-blur supports-[backdrop-filter]:bg-white/60">
-            <div className="px-0 py-2">
+            <div className="px-2 md:px-3 py-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <button onClick={() => router.push('/drive')} className="rounded-md border border-gray-200 bg-white px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50"><ArrowLeft className="mr-1 inline size-3" /> Voltar</button>
