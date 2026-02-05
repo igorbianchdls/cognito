@@ -1,6 +1,6 @@
 "use client";
 
-import React, { FormEvent, useMemo, useState } from 'react';
+import React, { FormEvent, useMemo, useRef, useState } from 'react';
 import type { ChatStatus } from 'ai';
 import {
   PromptInput,
@@ -15,7 +15,7 @@ import {
   PromptInputModelSelectContent,
   PromptInputModelSelectItem,
 } from '@/components/ai-elements/prompt-input';
-import { Plus, BarChart3, Plug } from 'lucide-react';
+import { Plus, BarChart3, Plug, Mic, Square, Loader2 } from 'lucide-react';
 import BrandIcon from '@/components/icons/BrandIcon';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Input as UiInput } from '@/components/ui/input';
@@ -56,6 +56,91 @@ export default function InputArea({ value, onChange, onSubmit, status = 'idle', 
   const filteredTk = useMemo(() => (
     tkList.filter(t => t.label.toLowerCase().includes(tkSearch.toLowerCase()))
   ), [tkList, tkSearch])
+
+  // Audio capture + STT (ElevenLabs) — record → stop → send once → write text to input
+  type RecState = 'idle' | 'recording' | 'processing' | 'error'
+  const [recState, setRecState] = useState<RecState>('idle')
+  const [recError, setRecError] = useState<string>('')
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const streamRef = useRef<MediaStream | null>(null)
+  const recordedChunksRef = useRef<Blob[]>([])
+  const recordedMimeTypeRef = useRef<string>('')
+
+  const startRecording = async () => {
+    if (recState === 'recording' || recState === 'processing') return
+    setRecError('')
+    recordedChunksRef.current = []
+    recordedMimeTypeRef.current = ''
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      streamRef.current = stream
+      const mimeOptions = [
+        'audio/webm;codecs=opus',
+        'audio/webm',
+        'audio/ogg;codecs=opus',
+        'audio/ogg',
+      ]
+      let mimeType = ''
+      for (const m of mimeOptions) {
+        if ((window as any).MediaRecorder && MediaRecorder.isTypeSupported(m)) { mimeType = m; break }
+      }
+      const mr = new MediaRecorder(stream, mimeType ? { mimeType, bitsPerSecond: 128000 } : { bitsPerSecond: 128000 })
+      mediaRecorderRef.current = mr
+      recordedMimeTypeRef.current = mimeType
+      mr.addEventListener('dataavailable', (ev) => {
+        const b = ev.data
+        if (b && b.size > 0) recordedChunksRef.current.push(b)
+      })
+      mr.start(3000)
+      setRecState('recording')
+    } catch (e: any) {
+      setRecError(e?.message || String(e))
+      setRecState('error')
+    }
+  }
+
+  const stopRecording = async () => {
+    if (recState !== 'recording') return
+    setRecState('processing')
+    const mr = mediaRecorderRef.current
+    if (mr) {
+      try { (mr as any).requestData?.() } catch {}
+      const stopped = new Promise<void>((resolve) => mr.addEventListener('stop', () => resolve(), { once: true }))
+      try { mr.stop() } catch {}
+      await stopped
+    }
+    try { streamRef.current?.getTracks().forEach(t => t.stop()) } catch {}
+    mediaRecorderRef.current = null
+    streamRef.current = null
+
+    try {
+      const type = recordedMimeTypeRef.current || (recordedChunksRef.current[0]?.type || 'audio/webm')
+      const fullBlob = new Blob(recordedChunksRef.current, { type })
+      const fd = new FormData()
+      fd.append('file', fullBlob, 'recording.webm')
+      fd.append('modelId', 'scribe_v2')
+      fd.append('languageCode', 'por')
+      // Optional toggles (off by default for speed)
+      // fd.append('diarize', 'false')
+      // fd.append('tagAudioEvents', 'false')
+      const res = await fetch('/api/bigquery-test/elevenlabs', { method: 'POST', body: fd })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok || json?.success === false) {
+        throw new Error(json?.error || `Falha na transcrição (${res.status})`)
+      }
+      const text: string = json?.transcription?.text || ''
+      if (text) onChange(text)
+      setRecState('idle')
+    } catch (e: any) {
+      setRecError(e?.message || String(e))
+      setRecState('error')
+      // Auto-reset back to idle after a short delay so user can retry
+      setTimeout(() => setRecState('idle'), 2000)
+    } finally {
+      recordedChunksRef.current = []
+      recordedMimeTypeRef.current = ''
+    }
+  }
 
   return (
     <div className="pt-[var(--ui-pad-y)]">
@@ -128,9 +213,31 @@ export default function InputArea({ value, onChange, onSubmit, status = 'idle', 
               </PromptInputModelSelectContent>
             </PromptInputModelSelect>
           </PromptInputTools>
-          <PromptInputSubmit disabled={!value} status={status as ChatStatus} />
+          <div className="flex items-center gap-1">
+            {/* Mic control button */}
+            {recState === 'recording' ? (
+              <PromptInputButton onClick={stopRecording} className="text-red-600 hover:text-red-700" title="Parar gravação">
+                <Square size={16} />
+                <span>Parar</span>
+              </PromptInputButton>
+            ) : recState === 'processing' ? (
+              <PromptInputButton disabled className="text-gray-500" title="Transcrevendo…">
+                <Loader2 className="size-4 animate-spin" />
+                <span>Transcrevendo…</span>
+              </PromptInputButton>
+            ) : (
+              <PromptInputButton onClick={startRecording} variant="ghost" className="text-gray-500 hover:text-gray-800" title="Gravar áudio e transcrever">
+                <Mic size={16} />
+                <span>Microfone</span>
+              </PromptInputButton>
+            )}
+            <PromptInputSubmit disabled={!value || recState !== 'idle'} status={status as ChatStatus} />
+          </div>
         </PromptInputToolbar>
       </PromptInput>
+      {recError && (
+        <div className="px-2 pt-1 text-xs text-red-600">{recError}</div>
+      )}
     </div>
   );
 }
