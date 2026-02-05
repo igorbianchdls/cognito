@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server'
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
-type CreateInboxInput = { domain?: string }
+type CreateInboxInput = { domain?: string; username?: string; displayName?: string }
 type SendInput = { inboxId: string; to: string; subject: string; text?: string; html?: string }
 
 async function getAgentMailClient() {
@@ -35,8 +35,12 @@ export async function POST(req: NextRequest) {
     const client = await getAgentMailClient()
 
     if (action === 'createInbox') {
-      const input: CreateInboxInput = { domain: body?.domain ? String(body.domain) : undefined }
-      const inbox = await client.inboxes.create(input.domain)
+      const input: CreateInboxInput = {
+        domain: body?.domain ? String(body.domain) : undefined,
+        username: body?.username ? String(body.username) : undefined,
+        displayName: body?.displayName ? String(body.displayName) : undefined,
+      }
+      const inbox = await client.inboxes.create(input)
       return Response.json({ ok: true, inbox, inboxId: inbox?.inboxId, address: inbox?.email, domain: inbox?.domain })
     }
 
@@ -62,13 +66,15 @@ export async function POST(req: NextRequest) {
 
     if (action === 'createAndSend') {
       const domain = body?.domain ? String(body.domain) : undefined
+      const username = body?.username ? String(body.username) : undefined
+      const displayName = body?.displayName ? String(body.displayName) : undefined
       const to = String(body?.to || '')
       const subject = String(body?.subject || '')
       const text = typeof body?.text === 'string' ? body.text : undefined
       const html = typeof body?.html === 'string' ? body.html : undefined
       if (!to || !subject) return Response.json({ ok: false, error: 'Missing to or subject' }, { status: 400 })
 
-      const inbox = await client.inboxes.create(domain)
+      const inbox = await client.inboxes.create({ domain, username, displayName })
       const sent = await client.inboxes.messages.send(inbox.inboxId, { to, subject, text, html })
       return Response.json({ ok: true, inbox, sent })
     }
@@ -80,4 +86,3 @@ export async function POST(req: NextRequest) {
     return Response.json({ ok: false, error: msg }, { status })
   }
 }
-

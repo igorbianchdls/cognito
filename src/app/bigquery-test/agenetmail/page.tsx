@@ -11,6 +11,8 @@ export default function AgentMailUITest() {
 
   // Create Inbox
   const [domain, setDomain] = useState<string>('')
+  const [username, setUsername] = useState<string>('')
+  const [displayName, setDisplayName] = useState<string>('')
   const [inboxId, setInboxId] = useState<string>('')
   const [inboxAddress, setInboxAddress] = useState<string>('')
 
@@ -42,7 +44,7 @@ export default function AgentMailUITest() {
   }
 
   const createInbox = async () => {
-    const json = await callApi({ action: 'createInbox', domain: domain.trim() || undefined })
+    const json = await callApi({ action: 'createInbox', domain: domain.trim() || undefined, username: username.trim() || undefined, displayName: displayName.trim() || undefined })
     if (json?.inbox) {
       setInboxId(json.inbox.inboxId || '')
       setInboxAddress(json.inbox.email || json.inbox.address || '')
@@ -55,7 +57,7 @@ export default function AgentMailUITest() {
   }
 
   const createAndSend = async () => {
-    const json = await callApi({ action: 'createAndSend', domain: domain.trim() || undefined, to: to.trim(), subject: subject.trim(), text })
+    const json = await callApi({ action: 'createAndSend', domain: domain.trim() || undefined, username: username.trim() || undefined, displayName: displayName.trim() || undefined, to: to.trim(), subject: subject.trim(), text })
     if (json?.inbox) {
       setInboxId(json.inbox.inboxId || '')
       setInboxAddress(json.inbox.email || json.inbox.address || '')
@@ -79,6 +81,16 @@ export default function AgentMailUITest() {
               <label className="block text-xs text-slate-600">Domain (opcional)</label>
               <input value={domain} onChange={(e)=> setDomain(e.target.value)} disabled={disabled} className="w-full rounded border px-2 py-1.5 text-sm" placeholder="ex.: minhaempresa.com" />
               <div className="mt-1 text-[11px] text-slate-500">Se vazio, usa o domínio padrão @agentmail.to</div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              <div>
+                <label className="block text-xs text-slate-600">Username (opcional)</label>
+                <input value={username} onChange={(e)=> setUsername(e.target.value)} disabled={disabled} className="w-full rounded border px-2 py-1.5 text-sm" placeholder="ex.: compras" />
+              </div>
+              <div>
+                <label className="block text-xs text-slate-600">Display Name (opcional)</label>
+                <input value={displayName} onChange={(e)=> setDisplayName(e.target.value)} disabled={disabled} className="w-full rounded border px-2 py-1.5 text-sm" placeholder="ex.: Compras ACME" />
+              </div>
             </div>
             <div className="flex items-center gap-2">
               <button onClick={createInbox} disabled={disabled} className="rounded bg-black px-3 py-1.5 text-sm text-white disabled:opacity-60">Criar inbox</button>
@@ -127,4 +139,3 @@ export default function AgentMailUITest() {
     </div>
   )
 }
-
