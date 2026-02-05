@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { SidebarShadcn } from "@/components/navigation/SidebarShadcn";
-import { Folder, Search, LayoutGrid, List, MoreHorizontal, FileText, Image as ImageIcon, Video, Music2, File } from 'lucide-react'
+import { Search, LayoutGrid, List, MoreHorizontal, FileText, Image as ImageIcon, Video, Music2, File } from 'lucide-react'
 import DriveViewer from '@/components/drive/DriveViewer'
 import type { DriveItem } from '@/components/drive/types'
 import { folders as mockFolders, recentItems } from './data.mock'
@@ -75,6 +75,21 @@ function avatarInitial(email: string): string {
   return (email.trim()[0] || 'U').toUpperCase()
 }
 
+function FolderArtwork({ className = '' }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 512 512" className={className} aria-hidden="true">
+      <path
+        d="M12 128C12 93 41 64 76 64h101c14 0 27 6 36 17l19 23c8 9 19 14 31 14h186c35 0 63 28 63 63v200c0 36-28 64-63 64H76c-35 0-64-28-64-64V128z"
+        fill="#2F6DFF"
+      />
+      <path
+        d="M114 208c8-31 36-52 68-52h267c40 0 69 38 59 77l-44 170c-7 26-30 45-57 45H74c-38 0-66-36-55-73l95-167z"
+        fill="#4A98FF"
+      />
+    </svg>
+  )
+}
+
 export default function DrivePage() {
   const router = useRouter()
   const [viewerOpen, setViewerOpen] = useState(false)
@@ -139,25 +154,14 @@ export default function DrivePage() {
                       onClick={() => router.push(`/drive/f/${f.id}`)}
                       className="group rounded-xl border border-gray-200 bg-white p-3 text-left transition hover:border-gray-300 hover:shadow-sm"
                     >
-                      <div className="mb-3 rounded-lg bg-gradient-to-b from-gray-50 to-gray-100 p-3">
-                        <div className="flex size-16 items-center justify-center rounded-lg bg-white text-gray-600 ring-1 ring-black/5">
-                          <Folder className="size-8" />
-                        </div>
+                      <div className="rounded-lg border border-gray-100 bg-white p-1">
+                        <FolderArtwork className="h-40 w-full" />
                       </div>
-                      <div className="min-w-0">
-                        <div className="truncate text-sm font-semibold text-gray-900 group-hover:text-gray-700">
-                          {f.name}
-                        </div>
-                        <div className="mt-1 text-xs text-gray-500">
+                      <div className="mt-3 min-w-0">
+                        <div className="truncate text-[15px] font-semibold text-gray-900 group-hover:text-gray-700">{f.name}</div>
+                        <div className="mt-0.5 text-sm text-gray-500">
                           {f.filesCount.toLocaleString()} {f.filesCount === 1 ? 'file' : 'files'}
                         </div>
-                        <div className="text-xs text-gray-500">{f.size}</div>
-                      </div>
-                      <div className="mt-3 h-1 w-full rounded-full bg-gray-100">
-                        <div
-                          className="h-1 rounded-full bg-gray-400 transition-all group-hover:bg-gray-500"
-                          style={{ width: `${Math.min(100, 20 + f.filesCount * 8)}%` }}
-                        />
                       </div>
                     </button>
                   ))}
