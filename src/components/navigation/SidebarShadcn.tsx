@@ -99,16 +99,6 @@ const navigationData = {
       icon: MessageSquare,
     },
     {
-      title: "Email",
-      url: "/email",
-      icon: Inbox,
-    },
-    {
-      title: "WhatsApp",
-      url: "/whatsapp",
-      icon: MessageCircle,
-    },
-    {
       title: "Automacoes",
       url: "/automacao",
       icon: Cpu,
@@ -119,14 +109,25 @@ const navigationData = {
       icon: BarChart3,
     },
     {
+      title: "Integrações",
+      url: "/integracoes",
+      icon: Plug,
+    },
+    // Keep these three at the end, in order: WhatsApp, Drive, Email
+    {
+      title: "WhatsApp",
+      url: "/whatsapp",
+      icon: MessageCircle,
+    },
+    {
       title: "Drive",
       url: "/drive",
       icon: FolderIcon,
     },
     {
-      title: "Integrações",
-      url: "/integracoes",
-      icon: Plug,
+      title: "Email",
+      url: "/email",
+      icon: Inbox,
     },
   ],
   integrations: [
