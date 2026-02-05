@@ -30,8 +30,8 @@ export default function DriveFolderPage() {
             <div className="px-0 py-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <button onClick={() => router.push('/drive')} className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50"><ArrowLeft className="mr-1 inline size-3" /> Voltar</button>
-                  <h1 className="text-2xl font-semibold tracking-tight text-gray-900">{folder?.name || 'Folder'}</h1>
+                  <button onClick={() => router.push('/drive')} className="rounded-md border border-gray-200 bg-white px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50"><ArrowLeft className="mr-1 inline size-3" /> Voltar</button>
+                  <h1 className="text-lg font-semibold tracking-tight text-gray-900">{folder?.name || 'Folder'}</h1>
                 </div>
               </div>
             </div>
