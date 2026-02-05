@@ -12,7 +12,7 @@ import {
   Plus,
 } from "lucide-react"
 import { Folder as FolderIcon } from 'lucide-react'
-import { Inbox } from 'lucide-react'
+import { Inbox, MessageCircle } from 'lucide-react'
 
 import MetaIcon from "@/components/icons/MetaIcon"
 import GoogleAdsIcon from "@/components/icons/GoogleAdsIcon"
@@ -102,6 +102,11 @@ const navigationData = {
       title: "Email",
       url: "/email",
       icon: Inbox,
+    },
+    {
+      title: "WhatsApp",
+      url: "/whatsapp",
+      icon: MessageCircle,
     },
     {
       title: "Automacoes",
