@@ -14,6 +14,9 @@ export default function ElevenLabsLiveChunkPage() {
   const [diarize, setDiarize] = useState<boolean>(true)
   const [tagAudioEvents, setTagAudioEvents] = useState<boolean>(true)
   const [events, setEvents] = useState<Array<{ id: number, size?: number, type?: string, ok: boolean, status: number, textLen: number }>>([])
+  const [liveMode, setLiveMode] = useState<boolean>(false)
+  const recordedChunksRef = useRef<Blob[]>([])
+  const recordedMimeTypeRef = useRef<string>('')
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
@@ -31,8 +34,33 @@ export default function ElevenLabsLiveChunkPage() {
     try { streamRef.current?.getTracks().forEach(t => t.stop()) } catch {}
     mediaRecorderRef.current = null
     streamRef.current = null
+    // Se não for liveMode, envia tudo de uma vez
+    if (!liveMode) {
+      try {
+        const type = recordedMimeTypeRef.current || (recordedChunksRef.current[0]?.type || 'audio/webm')
+        const fullBlob = new Blob(recordedChunksRef.current, { type })
+        // reset buffers
+        recordedChunksRef.current = []
+        recordedMimeTypeRef.current = ''
+        const fd = new FormData()
+        fd.append('file', fullBlob, 'recording.webm')
+        fd.append('modelId', modelId)
+        if (languageCode.trim()) fd.append('languageCode', languageCode.trim())
+        if (diarize) fd.append('diarize', 'true')
+        if (tagAudioEvents) fd.append('tagAudioEvents', 'true')
+        if (fullJson) fd.append('full', 'true')
+        const res = await fetch('/api/bigquery-test/elevenlabs', { method: 'POST', body: fd })
+        const json = await res.json().catch(() => ({}))
+        if (!res.ok || json?.success === false) throw new Error(json?.error || `Falha: ${res.status}`)
+        const text: string = json?.transcription?.text || ''
+        if (text) setPartial(text)
+        setEvents(prev => [...prev, { id: (chunkIdRef.current += 1), size: fullBlob.size, type, ok: res.ok, status: res.status, textLen: text.length }])
+      } catch (e: any) {
+        setError(e?.message || String(e))
+      }
+    }
     setState('idle')
-  }, [])
+  }, [diarize, fullJson, languageCode, liveMode, modelId, tagAudioEvents])
 
   useEffect(() => {
     return () => {
@@ -103,17 +131,21 @@ export default function ElevenLabsLiveChunkPage() {
       for (const m of mimeOptions) {
         if (MediaRecorder.isTypeSupported(m)) { mimeType = m; break }
       }
-      const mr = new MediaRecorder(stream, mimeType ? { mimeType } : undefined)
+      const mr = new MediaRecorder(stream, mimeType ? { mimeType, bitsPerSecond: 128000 } : { bitsPerSecond: 128000 })
       mediaRecorderRef.current = mr
+      recordedMimeTypeRef.current = mimeType
 
       mr.addEventListener('dataavailable', (ev) => {
         const b = ev.data
-        if (b && b.size > 0) queueRef.current.push(b)
+        if (b && b.size > 0) {
+          recordedChunksRef.current.push(b)
+          if (liveMode) queueRef.current.push(b)
+        }
       })
 
       setState('recording')
-      mr.start(3000) // chunks de ~3s
-      processQueue()
+      mr.start(liveMode ? 5000 : 3000) // 5s no live para melhor decodificação
+      if (liveMode) processQueue()
     } catch (e: any) {
       setError(e?.message || String(e))
       setState('error')
@@ -174,4 +206,3 @@ export default function ElevenLabsLiveChunkPage() {
     </div>
   )
 }
-
