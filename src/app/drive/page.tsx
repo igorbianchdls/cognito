@@ -85,7 +85,7 @@ function avatarInitial(email: string): string {
 
 function FolderArtwork({ className = '' }: { className?: string }) {
   return (
-    <svg viewBox="0 0 512 512" className={className} aria-hidden="true">
+    <svg viewBox="12 64 500 384" preserveAspectRatio="none" className={className} aria-hidden="true">
       <path
         d="M12 128C12 93 41 64 76 64h101c14 0 27 6 36 17l19 23c8 9 19 14 31 14h186c35 0 63 28 63 63v200c0 36-28 64-63 64H76c-35 0-64-28-64-64V128z"
         fill="#2F6DFF"
@@ -174,19 +174,19 @@ export default function DrivePage() {
               {/* Folders */}
               <section>
                 <div className="mb-3 flex items-center justify-between">
-                  <h2 className="text-sm font-semibold text-gray-800">Folders</h2>
+                  <h2 className="text-base font-semibold text-gray-800">Folders</h2>
                   <button className="inline-flex items-center gap-1 rounded-md px-2 py-1.5 text-xs text-gray-500 hover:bg-gray-50">
                     <MoreHorizontal className="size-4" />
                   </button>
                 </div>
-                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+                <div className="grid grid-cols-2 gap-x-4 gap-y-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
                   {mockFolders.map((f) => (
                     <button
                       key={f.id}
                       onClick={() => router.push(`/drive/f/${f.id}`)}
-                      className="group px-1 py-2 text-center"
+                      className="group w-full py-2 text-center"
                     >
-                      <FolderArtwork className="mx-auto h-28 w-36 transition group-hover:scale-[1.02]" />
+                      <FolderArtwork className="h-32 w-full transition group-hover:scale-[1.02]" />
                       <div className="mt-2 min-w-0">
                         <div className="truncate text-center text-[14px] font-semibold text-gray-900">{f.name}</div>
                         <div className="mt-0.5 text-center text-sm text-gray-500">
@@ -201,7 +201,7 @@ export default function DrivePage() {
               {/* Recent table */}
               <section className="mt-5">
                 <div className="mb-3 flex items-center justify-between">
-                  <h2 className="text-sm font-semibold text-gray-800">Files</h2>
+                  <h2 className="text-base font-semibold text-gray-800">Files</h2>
                   <span className="text-xs text-gray-500">{recentItems.length} items</span>
                 </div>
                 <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">

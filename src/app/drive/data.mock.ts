@@ -25,6 +25,23 @@ const AUDIOS: DriveItem[] = [
   { id: 'aud1', name: 'Sample.mp3', mime: 'audio/mpeg', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3' },
 ]
 
+const RECENT_MOCKS: DriveItem[] = [
+  { id: 'rc1', name: 'Onboarding-Guide.pdf', mime: 'application/pdf', url: PDFS[0].url, size: '2.4 MB', addedAt: '2026-02-04T13:15:00Z', addedBy: 'kevin@mail.com' },
+  { id: 'rc2', name: 'Product-Roadmap.pdf', mime: 'application/pdf', url: PDFS[0].url, size: '4.7 MB', addedAt: '2026-02-04T09:48:00Z', addedBy: 'antowe@gmail.com' },
+  { id: 'rc3', name: 'Summer-Campaign.jpg', mime: 'image/jpeg', url: IMAGES[0].url, size: '6.1 MB', addedAt: '2026-02-03T17:20:00Z', addedBy: 'igor@creatto.ai' },
+  { id: 'rc4', name: 'Hero-Banner.png', mime: 'image/png', url: IMAGES[1].url, size: '3.8 MB', addedAt: '2026-02-03T11:03:00Z', addedBy: 'dani@workspace.com' },
+  { id: 'rc5', name: 'Launch-Teaser.mp4', mime: 'video/mp4', url: VIDEOS[0].url, size: '186 MB', addedAt: '2026-02-02T19:42:00Z', addedBy: 'ops@team.io' },
+  { id: 'rc6', name: 'Podcast-Ep07.mp3', mime: 'audio/mpeg', url: AUDIOS[0].url, size: '34 MB', addedAt: '2026-02-02T10:05:00Z', addedBy: 'kevin@mail.com' },
+  { id: 'rc7', name: 'Quarterly-Notes.txt', mime: 'text/plain', size: '88 KB', addedAt: '2026-02-01T15:00:00Z', addedBy: 'antowe@gmail.com' },
+  { id: 'rc8', name: 'Client-Checklist.pdf', mime: 'application/pdf', url: PDFS[0].url, size: '1.9 MB', addedAt: '2026-02-01T08:21:00Z', addedBy: 'igor@creatto.ai' },
+  { id: 'rc9', name: 'Moodboard-Set-A.jpg', mime: 'image/jpeg', url: IMAGES[0].url, size: '5.0 MB', addedAt: '2026-01-31T14:18:00Z', addedBy: 'dani@workspace.com' },
+  { id: 'rc10', name: 'Campaign-Storyboard.png', mime: 'image/png', url: IMAGES[1].url, size: '7.2 MB', addedAt: '2026-01-31T09:09:00Z', addedBy: 'ops@team.io' },
+  { id: 'rc11', name: 'Interview-Raw-Cut.mp4', mime: 'video/mp4', url: VIDEOS[0].url, size: '242 MB', addedAt: '2026-01-30T22:11:00Z', addedBy: 'kevin@mail.com' },
+  { id: 'rc12', name: 'Brand-Voice.mp3', mime: 'audio/mpeg', url: AUDIOS[0].url, size: '28 MB', addedAt: '2026-01-30T16:37:00Z', addedBy: 'antowe@gmail.com' },
+  { id: 'rc13', name: 'Pipeline-Export.csv', mime: 'text/csv', size: '540 KB', addedAt: '2026-01-29T12:05:00Z', addedBy: 'igor@creatto.ai' },
+  { id: 'rc14', name: 'Release-Checklist.pdf', mime: 'application/pdf', url: PDFS[0].url, size: '3.3 MB', addedAt: '2026-01-29T09:40:00Z', addedBy: 'dani@workspace.com' },
+]
+
 export const itemsByFolder: Record<string, DriveItem[]> = {
   f1: [...IMAGES, ...PDFS],
   f2: [...VIDEOS, ...IMAGES],
@@ -44,10 +61,5 @@ export const folders: DriveFolder[] = [
 ]
 
 export const recentItems: DriveItem[] = [
-  IMAGES[0],
-  PDFS[0],
-  VIDEOS[0],
-  IMAGES[1],
-  AUDIOS[0],
+  ...RECENT_MOCKS,
 ]
-
