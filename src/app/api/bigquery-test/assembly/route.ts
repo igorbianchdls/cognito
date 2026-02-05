@@ -1,5 +1,6 @@
 import type { NextRequest } from 'next/server'
 import { AssemblyAI } from 'assemblyai'
+import { Readable } from 'node:stream'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -19,8 +20,14 @@ async function transcribeWithAssembly(params: {
   speech_models?: string[]
 }) {
   const client = getClient()
+  let audioParam: any = params.audio
+  try {
+    if (typeof Buffer !== 'undefined' && Buffer.isBuffer(audioParam)) {
+      audioParam = Readable.from(audioParam)
+    }
+  } catch {}
   const transcript = await client.transcripts.transcribe({
-    audio: params.audio,
+    audio: audioParam,
     language_detection: params.language_detection ?? true,
     speech_models: params.speech_models ?? ['universal-3-pro', 'universal-2'],
   } as any)
@@ -69,14 +76,18 @@ export async function POST(req: NextRequest) {
       const fd = await req.formData()
       const maybeFile = fd.get('file')
       let audio: string | Buffer | null = null
-      if (maybeFile && maybeFile instanceof File) {
-        const ab = await maybeFile.arrayBuffer()
-        audio = Buffer.from(ab)
-        // size guard ~25MB
-        if ((maybeFile as any).size && (maybeFile as any).size > 25 * 1024 * 1024) {
-          return Response.json({ success: false, error: 'Arquivo muito grande (>25MB)' }, { status: 413 })
+      try {
+        // Accept File or Blob-like object (duck-typing arrayBuffer())
+        if (maybeFile && typeof (maybeFile as any).arrayBuffer === 'function') {
+          const ab = await (maybeFile as any).arrayBuffer()
+          audio = Buffer.from(ab)
+          // size guard ~25MB
+          const size = (maybeFile as any).size
+          if (typeof size === 'number' && size > 25 * 1024 * 1024) {
+            return Response.json({ success: false, error: 'Arquivo muito grande (>25MB)' }, { status: 413 })
+          }
         }
-      }
+      } catch {}
       const url = fd.get('url')
       if (!audio && typeof url === 'string' && url.trim()) audio = url.trim()
       if (!audio) return Response.json({ success: false, error: 'Missing file or url' }, { status: 400 })
