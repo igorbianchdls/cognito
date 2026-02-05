@@ -8,6 +8,7 @@ export default function AssemblySttTestPage() {
   const [url, setUrl] = useState<string>('https://assembly.ai/wildfires.mp3')
   const [languageDetection, setLanguageDetection] = useState<boolean>(true)
   const [models, setModels] = useState<string>('universal-3-pro,universal-2')
+  const [full, setFull] = useState<boolean>(false)
   const [state, setState] = useState<FetchState>('idle')
   const [error, setError] = useState<string>('')
   const [result, setResult] = useState<any>(null)
@@ -21,7 +22,8 @@ export default function AssemblySttTestPage() {
       const body: any = {
         url: url.trim(),
         language_detection: languageDetection,
-        speech_models: models.split(',').map(s => s.trim()).filter(Boolean)
+        speech_models: models.split(',').map(s => s.trim()).filter(Boolean),
+        full,
       }
       const res = await fetch('/api/bigquery-test/assembly', {
         method: 'POST',
@@ -78,6 +80,10 @@ export default function AssemblySttTestPage() {
             <input id="ld" type="checkbox" checked={languageDetection} onChange={(e)=> setLanguageDetection(e.target.checked)} disabled={formDisabled} />
             <label htmlFor="ld" className="text-xs text-slate-600">language_detection</label>
           </div>
+          <div className="flex items-center gap-2">
+            <input id="full" type="checkbox" checked={full} onChange={(e)=> setFull(e.target.checked)} disabled={formDisabled} />
+            <label htmlFor="full" className="text-xs text-slate-600">Resposta completa (raw)</label>
+          </div>
         </div>
 
         <div className="flex items-center gap-3">
@@ -99,4 +105,3 @@ export default function AssemblySttTestPage() {
     </div>
   )
 }
-
