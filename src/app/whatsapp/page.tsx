@@ -148,8 +148,8 @@ export default function WhatsappPage() {
             </div>
 
             {/* Messages */}
-            <div ref={listRef} className="flex-1 overflow-auto bg-[url('https://i.imgur.com/5Qv6b8G.png')] bg-fixed bg-repeat px-4 py-4">
-              <div className="mx-auto max-w-3xl space-y-2">
+            <div ref={listRef} className="flex-1 overflow-auto bg-[#efeae2] px-2 py-3 sm:px-4 sm:py-4">
+              <div className="w-full space-y-2">
                 {active.messages.map(m => (
                   <MessageBubble key={m.id} msg={m} />
                 ))}
@@ -174,7 +174,7 @@ function MessageBubble({ msg }: { msg: Msg }) {
   const mine = msg.from === 'me'
   return (
     <div className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
-      <div className={`max-w-[75%] rounded-lg px-3 py-2 shadow ${mine ? 'rounded-tr-sm bg-emerald-100' : 'rounded-tl-sm bg-white'}`}>
+      <div className={`max-w-[78%] rounded-lg px-3 py-2 shadow ${mine ? 'rounded-tr-sm bg-emerald-100' : 'rounded-tl-sm bg-white'}`}>
         {msg.imageUrl && (
           <img src={msg.imageUrl} alt="imagem" className="mb-1 max-h-72 w-full rounded-md object-cover" />
         )}
@@ -191,4 +191,3 @@ function MessageBubble({ msg }: { msg: Msg }) {
     </div>
   )
 }
-
