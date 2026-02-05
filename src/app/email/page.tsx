@@ -1,5 +1,8 @@
 "use client"
 
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
 import React, { Suspense, useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
