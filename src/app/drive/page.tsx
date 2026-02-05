@@ -1,42 +1,26 @@
 "use client"
 
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { SidebarShadcn } from "@/components/navigation/SidebarShadcn";
 import { Folder, Search, LayoutGrid, List, MoreHorizontal } from 'lucide-react'
-
-type FolderItem = {
-  id: string
-  name: string
-  files: number
-  size: string
-}
-
-type RecentFile = {
-  id: string
-  name: string
-  dateAdded: string
-  addedBy: string
-  size: string
-}
-
-const folders: FolderItem[] = [
-  { id: 'f1', name: 'Brand Assets', files: 12, size: '732 MB' },
-  { id: 'f2', name: 'Neuralink Space', files: 8020, size: '22.7 GB' },
-  { id: 'f3', name: 'Olympic Games', files: 78, size: '3.9 GB' },
-  { id: 'f4', name: 'Design System', files: 45, size: '1.4 GB' },
-  { id: 'f5', name: 'Contracts', files: 32, size: '918 MB' },
-  { id: 'f6', name: 'Sprint Docs', files: 21, size: '403 MB' },
-]
-
-const recent: RecentFile[] = [
-  { id: 'r1', name: 'Brand Book v2.1', dateAdded: 'Seg, 25 Ago 2025', addedBy: 'Alison C', size: '4.2 MB' },
-  { id: 'r2', name: 'UX Report Q3 2025', dateAdded: 'Sex, 01 Set 2025', addedBy: 'Jordan L', size: '3.1 MB' },
-  { id: 'r3', name: 'Market Analysis 2025', dateAdded: 'Ter, 05 Set 2025', addedBy: 'Sophia M', size: '1.8 MB' },
-  { id: 'r4', name: 'Roadmap Outline 2026', dateAdded: 'Qua, 10 Set 2025', addedBy: 'Michael S', size: '2.6 MB' },
-  { id: 'r5', name: 'Design Spec v3', dateAdded: 'Qui, 25 Set 2025', addedBy: 'Alex P', size: '5.0 MB' },
-]
+import DriveViewer from '@/components/drive/DriveViewer'
+import type { DriveItem } from '@/components/drive/types'
+import { folders as mockFolders, recentItems, itemsByFolder } from './data.mock'
 
 export default function DrivePage() {
+  const router = useRouter()
+  const [viewerOpen, setViewerOpen] = useState(false)
+  const [viewerIndex, setViewerIndex] = useState(0)
+  const [viewerItems, setViewerItems] = useState<DriveItem[]>([])
+
+  const openViewer = (items: DriveItem[], index: number) => {
+    setViewerItems(items)
+    setViewerIndex(index)
+    setViewerOpen(true)
+  }
+
   return (
     <SidebarProvider>
       <SidebarShadcn showHeaderTrigger={false} />
@@ -76,15 +60,15 @@ export default function DrivePage() {
               {/* Folders */}
               <section>
                 <div className="mb-3 flex items-center justify-between">
-                  <h2 className="text-sm font-medium text-gray-700">Recent 6</h2>
+                  <h2 className="text-sm font-medium text-gray-700">Recent {mockFolders.length}</h2>
                   <button className="inline-flex items-center gap-1 rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-xs text-gray-700 hover:bg-gray-50">
                     <MoreHorizontal className="size-4" />
                     Manage
                   </button>
                 </div>
                 <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                  {folders.map((f) => (
-                    <button key={f.id} className="group rounded-2xl bg-gradient-to-b from-gray-50 to-white p-4 text-left shadow-sm ring-1 ring-black/5 transition hover:shadow-md">
+                  {mockFolders.map((f) => (
+                    <button key={f.id} onClick={() => router.push(`/drive/f/${f.id}`)} className="group rounded-2xl bg-gradient-to-b from-gray-50 to-white p-4 text-left shadow-sm ring-1 ring-black/5 transition hover:shadow-md">
                       <div className="flex items-center gap-4">
                         <div className="flex size-14 items-center justify-center rounded-xl bg-blue-50 text-blue-600 ring-1 ring-inset ring-blue-100">
                           <Folder className="size-7" />
@@ -94,7 +78,7 @@ export default function DrivePage() {
                             {f.name}
                           </div>
                           <div className="mt-0.5 text-xs text-gray-500">
-                            {f.files.toLocaleString()} {f.files === 1 ? 'file' : 'files'} • {f.size}
+                            {f.filesCount.toLocaleString()} {f.filesCount === 1 ? 'file' : 'files'} • {f.size}
                           </div>
                         </div>
                       </div>
@@ -107,7 +91,7 @@ export default function DrivePage() {
               <section className="mt-6">
                 <div className="mb-3 flex items-center justify-between">
                   <h2 className="text-sm font-medium text-gray-700">Recent</h2>
-                  <span className="text-xs text-gray-500">{recent.length} items</span>
+                  <span className="text-xs text-gray-500">{recentItems.length} items</span>
                 </div>
                 <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
                   <table className="w-full table-fixed text-sm">
@@ -125,24 +109,17 @@ export default function DrivePage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {recent.map((r, i) => (
-                        <tr key={r.id} className="border-t border-gray-100 hover:bg-gray-50/60">
+                      {recentItems.map((r, i) => (
+                        <tr key={r.id} onClick={() => openViewer(recentItems, i)} className="cursor-pointer border-t border-gray-100 hover:bg-gray-50/60">
                           <td className="px-4 py-3 text-gray-900">
                             <span className="inline-flex items-center gap-2">
                               <input type="checkbox" className="size-4 rounded border-gray-300" />
                               <span className="truncate">{r.name}</span>
                             </span>
                           </td>
-                          <td className="px-4 py-3 text-gray-600">{r.dateAdded}</td>
-                          <td className="px-4 py-3 text-gray-600">
-                            <span className="inline-flex items-center gap-2">
-                              <span className="inline-flex size-6 items-center justify-center rounded-full bg-gradient-to-br from-pink-200 to-violet-200 text-[10px] font-semibold text-gray-700 ring-1 ring-inset ring-white/60">
-                                {r.addedBy.split(' ').map(s=>s[0]).join('').slice(0,2)}
-                              </span>
-                              {r.addedBy}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 text-gray-600">{r.size}</td>
+                          <td className="px-4 py-3 text-gray-600">—</td>
+                          <td className="px-4 py-3 text-gray-600">—</td>
+                          <td className="px-4 py-3 text-gray-600">{r.size ?? '—'}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -152,6 +129,14 @@ export default function DrivePage() {
             </div>
           </div>
         </div>
+        {viewerOpen && (
+          <DriveViewer
+            items={viewerItems}
+            index={viewerIndex}
+            onClose={() => setViewerOpen(false)}
+            onNavigate={(idx) => setViewerIndex(idx)}
+          />
+        )}
       </SidebarInset>
     </SidebarProvider>
   )
