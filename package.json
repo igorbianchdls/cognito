@@ -13,7 +13,8 @@
     "safe:npm": "node scripts/safe-npm-install.mjs",
     "safe:install": "node scripts/safe-npm-install.mjs install",
     "safe:add:assemblyai": "node scripts/safe-npm-install.mjs install assemblyai",
-    "safe:add:elevenlabs": "node scripts/safe-npm-install.mjs install @elevenlabs/elevenlabs-js"
+    "safe:add:elevenlabs": "node scripts/safe-npm-install.mjs install @elevenlabs/elevenlabs-js",
+    "stream:assembly": "node scripts/node/assemblyai-streaming.mjs"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^2.0.0",
