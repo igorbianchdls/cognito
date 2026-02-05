@@ -35,7 +35,13 @@ export async function GET(req: NextRequest) {
 
     const client = getClient()
     const file = await blobFromUrl(url)
-    const transcription = await client.speechToText.convert({ file, modelId, languageCode, diarize, tagAudioEvents })
+    const transcription = await client.speechToText.convert({
+      file,
+      modelId: modelId as any,
+      languageCode: languageCode as any,
+      diarize,
+      tagAudioEvents,
+    } as any)
     return Response.json({ success: true, transcription })
   } catch (e: any) {
     const msg = e?.message || String(e)
@@ -67,7 +73,13 @@ export async function POST(req: NextRequest) {
       const diarize = parseBool(fd.get('diarize'), false)
       const tagAudioEvents = parseBool(fd.get('tagAudioEvents') || fd.get('tag_audio_events'), false)
 
-      const transcription = await client.speechToText.convert({ file, modelId, languageCode: languageCode || undefined, diarize, tagAudioEvents })
+      const transcription = await client.speechToText.convert({
+        file,
+        modelId: modelId as any,
+        languageCode: (languageCode || undefined) as any,
+        diarize,
+        tagAudioEvents,
+      } as any)
       return Response.json({ success: true, transcription })
     }
 
@@ -80,7 +92,13 @@ export async function POST(req: NextRequest) {
 
     if (!url) return Response.json({ success: false, error: 'Missing url' }, { status: 400 })
     const file = await blobFromUrl(url)
-    const transcription = await client.speechToText.convert({ file, modelId, languageCode, diarize, tagAudioEvents })
+    const transcription = await client.speechToText.convert({
+      file,
+      modelId: modelId as any,
+      languageCode: languageCode as any,
+      diarize,
+      tagAudioEvents,
+    } as any)
     return Response.json({ success: true, transcription })
   } catch (e: any) {
     const msg = e?.message || String(e)
@@ -88,4 +106,3 @@ export async function POST(req: NextRequest) {
     return Response.json({ success: false, error: msg }, { status })
   }
 }
-
