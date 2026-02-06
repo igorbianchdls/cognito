@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { SidebarShadcn } from "@/components/navigation/SidebarShadcn";
-import { Search, LayoutGrid, List, MoreHorizontal, FileText, Image as ImageIcon, Video, Music2, File, ChevronDown, Upload } from 'lucide-react'
+import { Search, LayoutGrid, List, MoreHorizontal, FileText, Image as ImageIcon, Video, Music2, File, ChevronDown, Upload, FolderPlus } from 'lucide-react'
 import DriveViewer from '@/components/drive/DriveViewer'
 import type { DriveItem } from '@/components/drive/types'
 
@@ -128,6 +128,7 @@ export default function DrivePage() {
 
   const [isLoading, setIsLoading] = useState(true)
   const [isUploading, setIsUploading] = useState(false)
+  const [isCreatingFolder, setIsCreatingFolder] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const activeWorkspaceName = useMemo(() => {
@@ -185,6 +186,35 @@ export default function DrivePage() {
   const onUploadClick = () => {
     if (!activeWorkspaceId || isUploading) return
     inputRef.current?.click()
+  }
+
+  const onCreateFolder = async () => {
+    if (!activeWorkspaceId || isCreatingFolder) return
+    const rawName = window.prompt('Nome da pasta')
+    const name = String(rawName || '').trim()
+    if (!name) return
+
+    setIsCreatingFolder(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/drive/folders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          workspace_id: activeWorkspaceId,
+          name,
+        }),
+      })
+      const json = await res.json().catch(() => ({})) as { success?: boolean; message?: string }
+      if (!res.ok || !json?.success) {
+        throw new Error(json?.message || 'Falha ao criar pasta')
+      }
+      await loadDrive(activeWorkspaceId)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Falha ao criar pasta')
+    } finally {
+      setIsCreatingFolder(false)
+    }
   }
 
   const onUploadFiles = async (filesList: FileList | null) => {
@@ -295,9 +325,19 @@ export default function DrivePage() {
               <section>
                 <div className="mb-3 flex items-center justify-between">
                   <h2 className="text-base font-semibold text-gray-800">Folders</h2>
-                  <button className="inline-flex items-center gap-1 rounded-md px-2 py-1.5 text-xs text-gray-500 hover:bg-gray-50">
-                    <MoreHorizontal className="size-4" />
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={onCreateFolder}
+                      disabled={!activeWorkspaceId || isCreatingFolder}
+                      className="inline-flex items-center gap-1 rounded-md px-2 py-1.5 text-xs text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      <FolderPlus className="size-4" />
+                      {isCreatingFolder ? 'Criando...' : 'Nova pasta'}
+                    </button>
+                    <button className="inline-flex items-center gap-1 rounded-md px-2 py-1.5 text-xs text-gray-500 hover:bg-gray-50">
+                      <MoreHorizontal className="size-4" />
+                    </button>
+                  </div>
                 </div>
                 {isLoading ? (
                   <div className="py-10 text-sm text-gray-500">Carregando pastas...</div>
