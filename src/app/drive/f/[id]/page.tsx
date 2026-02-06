@@ -1,12 +1,12 @@
 "use client"
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
 import DriveViewer from '@/components/drive/DriveViewer'
 import type { DriveItem } from '@/components/drive/types'
-import { ArrowLeft, File, FileText, Image as ImageIcon, Video, Music, MoreHorizontal, Paperclip } from 'lucide-react'
+import { ArrowLeft, File, FileText, Image as ImageIcon, Video, Music, MoreHorizontal, Paperclip, Upload } from 'lucide-react'
 
 type FolderApiResponse = {
   success: boolean
@@ -31,16 +31,28 @@ export default function DriveFolderPage() {
   const params = useParams<{ id: string }>()
   const router = useRouter()
   const folderId = (params?.id as string) || ''
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   const [folderName, setFolderName] = useState('Folder')
+  const [folderWorkspaceId, setFolderWorkspaceId] = useState<string | null>(null)
   const [files, setFiles] = useState<DriveItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isUploading, setIsUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const [viewerOpen, setViewerOpen] = useState(false)
   const [viewerIndex, setViewerIndex] = useState(0)
 
   const openViewer = (index: number) => { setViewerIndex(index); setViewerOpen(true) }
+
+  const loadFolder = async (id: string) => {
+    const res = await fetch(`/api/drive/folders/${id}`, { cache: 'no-store' })
+    const json = await res.json() as FolderApiResponse
+    if (!res.ok || !json?.success) {
+      throw new Error(json?.message || `HTTP ${res.status}`)
+    }
+    return json
+  }
 
   useEffect(() => {
     if (!folderId) return
@@ -50,13 +62,10 @@ export default function DriveFolderPage() {
       setIsLoading(true)
       setError(null)
       try {
-        const res = await fetch(`/api/drive/folders/${folderId}`, { cache: 'no-store' })
-        const json = await res.json() as FolderApiResponse
-        if (!res.ok || !json?.success) {
-          throw new Error(json?.message || `HTTP ${res.status}`)
-        }
+        const json = await loadFolder(folderId)
         if (!cancelled) {
           setFolderName(json.folder?.name || 'Folder')
+          setFolderWorkspaceId(json.folder?.workspaceId || null)
           setFiles(Array.isArray(json.files) ? json.files : [])
         }
       } catch (e) {
@@ -75,6 +84,39 @@ export default function DriveFolderPage() {
 
   const filesCount = useMemo(() => files.length, [files])
 
+  const onUploadClick = () => {
+    if (!folderId || !folderWorkspaceId || isUploading) return
+    fileInputRef.current?.click()
+  }
+
+  const onUploadFiles = async (list: FileList | null) => {
+    if (!list?.length || !folderId || !folderWorkspaceId) return
+    setIsUploading(true)
+    setError(null)
+    try {
+      for (const file of Array.from(list)) {
+        const fd = new FormData()
+        fd.set('workspace_id', folderWorkspaceId)
+        fd.set('folder_id', folderId)
+        fd.set('file', file)
+        const res = await fetch('/api/drive/files/upload', { method: 'POST', body: fd })
+        const json = await res.json().catch(() => ({})) as { success?: boolean; message?: string }
+        if (!res.ok || !json?.success) {
+          throw new Error(json?.message || `Falha ao enviar ${file.name}`)
+        }
+      }
+      const fresh = await loadFolder(folderId)
+      setFolderName(fresh.folder?.name || 'Folder')
+      setFolderWorkspaceId(fresh.folder?.workspaceId || null)
+      setFiles(Array.isArray(fresh.files) ? fresh.files : [])
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Falha no upload')
+    } finally {
+      setIsUploading(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
+
   return (
     <SidebarProvider>
       <SidebarShadcn showHeaderTrigger={false} />
@@ -87,6 +129,23 @@ export default function DriveFolderPage() {
                   <button onClick={() => router.push('/drive')} className="rounded-md border border-gray-200 bg-white px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50"><ArrowLeft className="mr-1 inline size-3" /> Voltar</button>
                   <h1 className="text-lg font-semibold tracking-tight text-gray-900">{folderName}</h1>
                   <span className="text-xs text-gray-500">{filesCount} {filesCount === 1 ? 'item' : 'items'}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={onUploadClick}
+                    disabled={!folderWorkspaceId || isUploading}
+                    className="inline-flex items-center gap-1 rounded-md border border-gray-200 bg-white px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    <Upload className="size-3.5" />
+                    {isUploading ? 'Uploading...' : 'Upload'}
+                  </button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    className="hidden"
+                    onChange={(e) => onUploadFiles(e.target.files)}
+                  />
                 </div>
               </div>
             </div>

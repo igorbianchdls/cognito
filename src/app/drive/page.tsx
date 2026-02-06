@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation'
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { SidebarShadcn } from "@/components/navigation/SidebarShadcn";
 import { Search, LayoutGrid, List, MoreHorizontal, FileText, Image as ImageIcon, Video, Music2, File, ChevronDown, Upload, FolderPlus } from 'lucide-react'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 import DriveViewer from '@/components/drive/DriveViewer'
 import type { DriveItem } from '@/components/drive/types'
 
@@ -129,6 +132,8 @@ export default function DrivePage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isUploading, setIsUploading] = useState(false)
   const [isCreatingFolder, setIsCreatingFolder] = useState(false)
+  const [createFolderOpen, setCreateFolderOpen] = useState(false)
+  const [newFolderName, setNewFolderName] = useState('')
   const [error, setError] = useState<string | null>(null)
 
   const activeWorkspaceName = useMemo(() => {
@@ -190,8 +195,7 @@ export default function DrivePage() {
 
   const onCreateFolder = async () => {
     if (!activeWorkspaceId || isCreatingFolder) return
-    const rawName = window.prompt('Nome da pasta')
-    const name = String(rawName || '').trim()
+    const name = newFolderName.trim()
     if (!name) return
 
     setIsCreatingFolder(true)
@@ -209,6 +213,8 @@ export default function DrivePage() {
       if (!res.ok || !json?.success) {
         throw new Error(json?.message || 'Falha ao criar pasta')
       }
+      setCreateFolderOpen(false)
+      setNewFolderName('')
       await loadDrive(activeWorkspaceId)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Falha ao criar pasta')
@@ -327,12 +333,12 @@ export default function DrivePage() {
                   <h2 className="text-base font-semibold text-gray-800">Folders</h2>
                   <div className="flex items-center gap-1">
                     <button
-                      onClick={onCreateFolder}
+                      onClick={() => setCreateFolderOpen(true)}
                       disabled={!activeWorkspaceId || isCreatingFolder}
                       className="inline-flex items-center gap-1 rounded-md px-2 py-1.5 text-xs text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       <FolderPlus className="size-4" />
-                      {isCreatingFolder ? 'Criando...' : 'Nova pasta'}
+                      Nova pasta
                     </button>
                     <button className="inline-flex items-center gap-1 rounded-md px-2 py-1.5 text-xs text-gray-500 hover:bg-gray-50">
                       <MoreHorizontal className="size-4" />
@@ -441,6 +447,51 @@ export default function DrivePage() {
             onNavigate={(idx) => setViewerIndex(idx)}
           />
         )}
+        <Dialog open={createFolderOpen} onOpenChange={(open) => {
+          setCreateFolderOpen(open)
+          if (!open) setNewFolderName('')
+        }}>
+          <DialogContent className="sm:max-w-[440px]">
+            <DialogHeader>
+              <DialogTitle>Nova pasta</DialogTitle>
+            </DialogHeader>
+            <form
+              className="space-y-3"
+              onSubmit={(e) => {
+                e.preventDefault()
+                void onCreateFolder()
+              }}
+            >
+              <div className="space-y-1.5">
+                <label htmlFor="new-folder-name" className="text-sm font-medium text-gray-800">Nome</label>
+                <Input
+                  id="new-folder-name"
+                  placeholder="Ex: Contratos 2026"
+                  value={newFolderName}
+                  onChange={(e) => setNewFolderName(e.target.value)}
+                  maxLength={120}
+                  autoFocus
+                />
+              </div>
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setCreateFolderOpen(false)
+                    setNewFolderName('')
+                  }}
+                  disabled={isCreatingFolder}
+                >
+                  Cancelar
+                </Button>
+                <Button type="submit" disabled={isCreatingFolder || !newFolderName.trim()}>
+                  {isCreatingFolder ? 'Criando...' : 'Criar pasta'}
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
       </SidebarInset>
     </SidebarProvider>
   )
