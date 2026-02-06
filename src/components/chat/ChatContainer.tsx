@@ -111,7 +111,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
     setMessages(prev => [...prev, { id: assistantId, role: 'assistant', parts: [] as any }])
 
     setStatus('submitted')
-    // Stateless mode with short memory: keep only the last 3 user/assistant interactions.
+    // Stateless mode with short memory: keep only the last 5 user/assistant messages.
     const history = [...messages, userMsg]
       .filter(m => m.role === 'user' || m.role === 'assistant')
       .map((m) => {
@@ -123,7 +123,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
         return { role: m.role as 'user'|'assistant', content }
       })
       .filter((m) => m.content.length > 0)
-      .slice(-6)
+      .slice(-5)
     const body = isSlash
       ? { action: 'chat-slash', chatId: id, prompt: text }
       : { action: 'chat-send-stream', chatId: id, history, clientMessageId: userMsg.id }
