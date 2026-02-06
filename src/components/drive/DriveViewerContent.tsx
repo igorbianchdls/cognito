@@ -20,6 +20,6 @@ export default function DriveViewerContent({ mime, url, name, register }: { mime
   if (isPdf(mime)) return <PdfViewer url={url} register={register} />
   if (isVideo(mime)) return <VideoViewer src={url} register={register} />
   if (isAudio(mime)) return <AudioViewer src={url} />
-  if (isText(mime)) return <TextViewer content={`Preview de ${name || 'arquivo'}`} />
+  if (isText(mime, name)) return <TextViewer url={url} name={name} />
   return <UnsupportedViewer />
 }
