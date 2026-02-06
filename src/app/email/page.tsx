@@ -4,10 +4,9 @@ export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
 import React, { Suspense, useEffect, useMemo, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { SidebarShadcn } from "@/components/navigation/SidebarShadcn"
-import { Inbox, Star, Send, FileText, Trash2, Archive, Tag, Plus, Search, Paperclip, RefreshCcw, X } from 'lucide-react'
+import { Inbox, Star, Send, FileText, Trash2, Archive, Tag, Plus, Search, Paperclip, RefreshCcw, X, Reply, Forward, MoreVertical, Clock3, CornerDownLeft } from 'lucide-react'
 
 type FolderKey = 'inbox' | 'starred' | 'sent' | 'drafts' | 'archive' | 'trash'
 
@@ -125,9 +124,17 @@ function getSenderInitial(name: string): string {
   return (name.trim().charAt(0) || '?').toUpperCase()
 }
 
+function getMessageId(message: any): string {
+  return String(message?.id || message?.messageId || message?.message_id || '').trim()
+}
+
+function isUnread(message: any): boolean {
+  return Boolean(message?.unread || message?.isUnread)
+}
+
 export default function EmailPage() {
-  const router = useRouter()
   const [folder, setFolder] = useState<FolderKey>('inbox')
+  const [mailView, setMailView] = useState<'all' | 'unread'>('all')
   const [inboxes, setInboxes] = useState<any[]>([])
   const [activeInboxId, setActiveInboxId] = useState<string>('')
   const [loadingInboxes, setLoadingInboxes] = useState(false)
@@ -141,6 +148,10 @@ export default function EmailPage() {
   const [prevTokens, setPrevTokens] = useState<string[]>([])
   const [nextPageToken, setNextPageToken] = useState('')
   const [reloadKey, setReloadKey] = useState(0)
+  const [selectedMessageId, setSelectedMessageId] = useState('')
+  const [selectedMessage, setSelectedMessage] = useState<any>(null)
+  const [loadingSelectedMessage, setLoadingSelectedMessage] = useState(false)
+  const [selectedMessageError, setSelectedMessageError] = useState('')
 
   const [composeOpen, setComposeOpen] = useState(false)
   const [composeSending, setComposeSending] = useState(false)
@@ -191,6 +202,22 @@ export default function EmailPage() {
       return fromName.includes(q) || subject.includes(q) || snippet.includes(q)
     })
   }, [messages, folder, search])
+
+  const listedMessages = useMemo(() => {
+    if (mailView === 'unread') return visibleMessages.filter((m) => isUnread(m))
+    return visibleMessages
+  }, [visibleMessages, mailView])
+
+  const selectedListMessage = useMemo(() => {
+    if (!listedMessages.length) return null
+    return listedMessages.find((m: any) => getMessageId(m) === selectedMessageId) || listedMessages[0]
+  }, [listedMessages, selectedMessageId])
+
+  const selectedMessageView = useMemo(() => {
+    if (!selectedListMessage) return null
+    if (selectedMessage && getMessageId(selectedMessage) === getMessageId(selectedListMessage)) return selectedMessage
+    return selectedListMessage
+  }, [selectedListMessage, selectedMessage])
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -266,6 +293,46 @@ export default function EmailPage() {
     })()
     return () => { ignore = true }
   }, [activeInboxId, pageToken, labelsFilter, reloadKey])
+
+  useEffect(() => {
+    if (!listedMessages.length) {
+      setSelectedMessageId('')
+      setSelectedMessage(null)
+      setSelectedMessageError('')
+      return
+    }
+    const exists = listedMessages.some((m: any) => getMessageId(m) === selectedMessageId)
+    if (!exists) {
+      setSelectedMessageId(getMessageId(listedMessages[0]))
+      setSelectedMessage(null)
+      setSelectedMessageError('')
+    }
+  }, [listedMessages, selectedMessageId])
+
+  useEffect(() => {
+    if (!activeInboxId || !selectedMessageId) return
+    let ignore = false
+    ;(async () => {
+      setLoadingSelectedMessage(true)
+      setSelectedMessageError('')
+      try {
+        const res = await fetch(`/api/email/messages/${encodeURIComponent(selectedMessageId)}?inboxId=${encodeURIComponent(activeInboxId)}`, { cache: 'no-store' })
+        const json = await res.json().catch(() => ({}))
+        if (!ignore) {
+          if (!res.ok || json?.ok === false) throw new Error(json?.error || `Falha ao carregar mensagem: ${res.status}`)
+          setSelectedMessage(json?.data || null)
+        }
+      } catch (e: any) {
+        if (!ignore) {
+          setSelectedMessageError(e?.message || String(e))
+          setSelectedMessage(null)
+        }
+      } finally {
+        if (!ignore) setLoadingSelectedMessage(false)
+      }
+    })()
+    return () => { ignore = true }
+  }, [activeInboxId, selectedMessageId, reloadKey])
 
   function resetCompose() {
     setComposeError('')
@@ -360,105 +427,104 @@ export default function EmailPage() {
       <SidebarProvider>
         <SidebarShadcn showHeaderTrigger={false} />
         <SidebarInset className="h-screen overflow-hidden bg-white">
-          <div className="grid h-full min-h-0 grid-cols-1 md:grid-cols-[256px_minmax(0,1fr)]">
+          <div className="grid h-full min-h-0 grid-cols-1 md:grid-cols-[248px_minmax(0,1fr)]">
             <aside className="hidden h-full min-h-0 flex-col border-r border-neutral-200 bg-white md:flex">
-              <div className="border-b border-neutral-200 p-3">
+              <div className="p-3">
                 <button
                   onClick={() => { setComposeOpen(true); setComposeError('') }}
                   className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-neutral-900 px-3 py-2.5 text-sm font-medium text-white hover:bg-neutral-800"
                 >
                   <Plus className="size-4" /> Nova mensagem
                 </button>
-                <button
-                  onClick={() => setReloadKey((v) => v + 1)}
-                  title="Recarregar"
-                  className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-50"
-                >
-                  <RefreshCcw className="size-4" /> Atualizar
-                </button>
               </div>
 
-              <div className="min-h-0 flex-1 overflow-auto p-2">
+              <div className="min-h-0 flex-1 overflow-auto px-2 pb-2">
                 <div className="space-y-0.5">
                   {FOLDERS.map((f) => (
                     <button
                       key={f.key}
                       onClick={() => setFolder(f.key)}
-                      className={`flex w-full items-center justify-between rounded-md px-2.5 py-2 text-sm ${
+                      className={`flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-sm ${
                         folder === f.key
-                          ? 'bg-neutral-100 font-medium text-neutral-900'
-                          : 'text-neutral-700 hover:bg-neutral-50'
+                          ? 'bg-neutral-900 font-medium text-white'
+                          : 'text-neutral-700 hover:bg-neutral-100'
                       }`}
                     >
                       <span className="inline-flex items-center gap-2">
                         <f.icon className="size-4" />
                         {f.name}
                       </span>
-                      <span className="text-xs text-neutral-500">{folderCounts[f.key]}</span>
+                      <span className={`text-xs ${folder === f.key ? 'text-white/90' : 'text-neutral-500'}`}>
+                        {folderCounts[f.key]}
+                      </span>
                     </button>
                   ))}
                 </div>
 
                 <div className="mt-4 border-t border-neutral-200 pt-3">
-                  <div className="mb-1.5 px-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-neutral-400">Labels</div>
+                  <div className="mb-1.5 px-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-neutral-400">Categorias</div>
                   <div className="space-y-0.5">
-                    {['Work', 'Finance', 'Personal'].map((l) => (
-                      <button
-                        key={l}
-                        onClick={() => setLabelsFilter(l)}
-                        className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-sm text-neutral-700 hover:bg-neutral-50"
-                      >
-                        <Tag className="size-3.5" /> {l}
-                      </button>
-                    ))}
+                    {[
+                      { name: 'Social', labels: ['social'] },
+                      { name: 'Updates', labels: ['updates', 'update'] },
+                      { name: 'Forums', labels: ['forum', 'forums'] },
+                      { name: 'Promotions', labels: ['promo', 'promotion', 'promotions'] },
+                    ].map((item) => {
+                      const count = (Array.isArray(messages) ? messages : []).filter((m: any) => {
+                        const labels = asLowerLabels(m)
+                        return item.labels.some((label) => labels.has(label))
+                      }).length
+                      return (
+                        <button
+                          key={item.name}
+                          onClick={() => setLabelsFilter(item.labels[0])}
+                          className="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-sm text-neutral-700 hover:bg-neutral-100"
+                        >
+                          <span className="inline-flex items-center gap-2">
+                            <Tag className="size-3.5" />
+                            {item.name}
+                          </span>
+                          <span className="text-xs text-neutral-500">{count}</span>
+                        </button>
+                      )
+                    })}
                   </div>
                 </div>
               </div>
             </aside>
 
-            <section className="min-h-0 grid grid-rows-[auto_auto_1fr_auto] bg-white">
-              <header className="border-b border-neutral-200 bg-white px-3 py-3 md:px-4">
+            <section className="min-h-0 grid grid-rows-[auto_1fr] bg-white">
+              <header className="border-b border-neutral-200 px-3 py-3 md:px-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
-                    <h1 className="text-sm font-semibold text-neutral-900">Emails</h1>
-                    <span className="rounded-md bg-neutral-100 px-2 py-1 text-xs text-neutral-600">
-                      {FOLDERS.find((f) => f.key === folder)?.name || 'Inbox'}
-                    </span>
+                    <h1 className="text-base font-semibold text-neutral-900">Inbox</h1>
+                    <span className="rounded-md bg-neutral-100 px-2 py-1 text-xs text-neutral-600">{listedMessages.length} emails</span>
                     <button
                       onClick={() => { setComposeOpen(true); setComposeError('') }}
-                      className="inline-flex items-center gap-1.5 rounded-md bg-neutral-900 px-3 py-2 text-xs font-medium text-white hover:bg-neutral-800 md:hidden"
+                      className="inline-flex items-center gap-1.5 rounded-md bg-neutral-900 px-2.5 py-1.5 text-xs font-medium text-white hover:bg-neutral-800 md:hidden"
                     >
                       <Plus className="size-3.5" /> Nova
                     </button>
                   </div>
 
-                  <div className="flex min-w-[240px] flex-1 flex-wrap items-center justify-end gap-2">
+                  <div className="flex min-w-[240px] flex-wrap items-center justify-end gap-2">
                     <button
                       onClick={() => setReloadKey((v) => v + 1)}
                       title="Recarregar"
-                      className="inline-flex items-center gap-1.5 rounded-md border border-neutral-300 bg-white px-3 py-2 text-xs font-medium text-neutral-700 hover:bg-neutral-50 md:hidden"
+                      className="inline-flex items-center gap-1.5 rounded-md border border-neutral-300 bg-white px-3 py-2 text-xs font-medium text-neutral-700 hover:bg-neutral-50"
                     >
                       <RefreshCcw className="size-3.5" /> Atualizar
                     </button>
-                    <div className="relative">
-                      <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-neutral-400" />
-                      <input
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        className="h-10 w-[280px] max-w-full rounded-md border border-neutral-300 bg-white pl-8 pr-3 text-sm text-neutral-800 outline-none placeholder:text-neutral-400 focus:border-neutral-400"
-                        placeholder="Buscar"
-                      />
-                    </div>
                     <input
                       value={labelsFilter}
                       onChange={(e) => setLabelsFilter(e.target.value)}
-                      className="h-10 w-[180px] max-w-full rounded-md border border-neutral-300 bg-white px-3 text-sm text-neutral-800 outline-none placeholder:text-neutral-400 focus:border-neutral-400"
+                      className="h-9 w-[160px] max-w-full rounded-md border border-neutral-300 bg-white px-3 text-sm text-neutral-800 outline-none placeholder:text-neutral-400 focus:border-neutral-400"
                       placeholder="Labels"
                     />
                     <select
                       value={activeInboxId}
                       onChange={(e) => setActiveInboxId(e.target.value)}
-                      className="h-10 min-w-[220px] rounded-md border border-neutral-300 bg-white px-3 text-sm text-neutral-800 outline-none focus:border-neutral-400"
+                      className="h-9 min-w-[220px] rounded-md border border-neutral-300 bg-white px-3 text-sm text-neutral-800 outline-none focus:border-neutral-400"
                     >
                       <option value="" disabled>{loadingInboxes ? 'Carregando inboxes…' : 'Selecione uma inbox'}</option>
                       {(Array.isArray(inboxes) ? inboxes : []).map((ib: any, index: number) => {
@@ -474,128 +540,173 @@ export default function EmailPage() {
                     </select>
                   </div>
                 </div>
-
-                <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-neutral-500">
-                  <span>Inbox: {activeInboxLabel || 'não selecionada'}</span>
-                  <span>Mensagens: {visibleMessages.length}</span>
-                  <span>Página: {prevTokens.length + 1}</span>
-                </div>
+                <div className="mt-2 text-xs text-neutral-500">Inbox atual: {activeInboxLabel || 'não selecionada'}</div>
                 {error ? <div className="mt-2 text-xs text-red-700">{error}</div> : null}
               </header>
 
-              <div className="border-b border-neutral-200 px-3 py-2 md:hidden">
-                <div className="flex gap-1.5 overflow-x-auto pb-1">
-                  {FOLDERS.map((f) => (
-                    <button
-                      key={f.key}
-                      onClick={() => setFolder(f.key)}
-                      className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-medium ${
-                        folder === f.key ? 'bg-neutral-900 text-white' : 'bg-neutral-100 text-neutral-700'
-                      }`}
-                    >
-                      {f.name} ({folderCounts[f.key]})
-                    </button>
-                  ))}
-                </div>
-              </div>
+              <div className="min-h-0 grid grid-cols-1 lg:grid-cols-[380px_minmax(0,1fr)]">
+                <div className="min-h-0 border-r border-neutral-200 bg-white">
+                  <div className="border-b border-neutral-200 p-3">
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm font-semibold text-neutral-900">{FOLDERS.find((f) => f.key === folder)?.name || 'Inbox'}</div>
+                      <div className="inline-flex items-center rounded-md border border-neutral-200 bg-neutral-50 p-0.5">
+                        <button
+                          onClick={() => setMailView('all')}
+                          className={`rounded px-2 py-1 text-xs ${mailView === 'all' ? 'bg-white text-neutral-900 shadow-sm' : 'text-neutral-600'}`}
+                        >
+                          All mail
+                        </button>
+                        <button
+                          onClick={() => setMailView('unread')}
+                          className={`rounded px-2 py-1 text-xs ${mailView === 'unread' ? 'bg-white text-neutral-900 shadow-sm' : 'text-neutral-600'}`}
+                        >
+                          Unread
+                        </button>
+                      </div>
+                    </div>
+                    <div className="relative mt-2">
+                      <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-neutral-400" />
+                      <input
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        className="h-9 w-full rounded-md border border-neutral-300 bg-white pl-8 pr-3 text-sm text-neutral-800 outline-none placeholder:text-neutral-400 focus:border-neutral-400"
+                        placeholder="Search"
+                      />
+                    </div>
+                  </div>
 
-              <div className="min-h-0 overflow-auto">
-                <table className="w-full table-fixed text-sm">
-                  <thead className="sticky top-0 z-10 bg-white text-[11px] uppercase tracking-[0.06em] text-neutral-500">
-                    <tr className="border-b border-neutral-200">
-                      <th className="w-9 px-3 py-2 text-left"><input type="checkbox" className="size-4 rounded border-neutral-300" /></th>
-                      <th className="w-10 px-2 py-2 text-left">★</th>
-                      <th className="w-[260px] px-2 py-2 text-left">Remetente</th>
-                      <th className="px-2 py-2 text-left">Mensagem</th>
-                      <th className="w-12 px-2 py-2 text-right">📎</th>
-                      <th className="w-28 px-3 py-2 text-right">Data</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+                  <div className="min-h-0 space-y-2 overflow-auto p-3">
                     {loadingMessages ? (
-                      <tr>
-                        <td colSpan={6} className="px-3 py-10 text-center text-sm text-neutral-500">Carregando mensagens…</td>
-                      </tr>
-                    ) : visibleMessages.length === 0 ? (
-                      <tr>
-                        <td colSpan={6} className="px-3 py-10 text-center text-sm text-neutral-500">Nenhuma mensagem encontrada para esse filtro.</td>
-                      </tr>
+                      <div className="py-10 text-center text-sm text-neutral-500">Carregando mensagens…</div>
+                    ) : listedMessages.length === 0 ? (
+                      <div className="py-10 text-center text-sm text-neutral-500">Nenhuma mensagem encontrada.</div>
                     ) : (
-                      visibleMessages.map((m: any, index: number) => {
+                      listedMessages.map((m: any, index: number) => {
                         if (!m || typeof m !== 'object') return null
-                        const id = m.id || m.messageId || m.message_id
+                        const id = getMessageId(m)
                         const fromName = getSenderName(m)
-                        const senderInitial = getSenderInitial(fromName)
-                        const subject = m.subject || 'Sem assunto'
-                        const snippet = m.snippet || m.preview || ''
-                        const hasAttach = Array.isArray(m.attachments) ? m.attachments.length > 0 : (m.hasAttachments || false)
+                        const subject = String(m.subject || 'Sem assunto')
                         const date = formatDateLabel(m.date || m.createdAt || m.created_at || m.timestamp)
+                        const unread = isUnread(m)
+                        const selected = id && id === getMessageId(selectedListMessage)
                         const starred = !!(m.starred || m.isStarred)
-                        const unread = !!(m.unread || m.isUnread)
-                        const labels = Array.isArray(m.labels) ? m.labels : []
-                        const goto = id ? `/email/${encodeURIComponent(id)}?inboxId=${encodeURIComponent(activeInboxId)}` : ''
+
                         return (
-                          <tr
+                          <button
                             key={id || `msg-${index}`}
-                            onClick={() => goto && router.push(goto)}
-                            className={`cursor-pointer border-b border-neutral-100 hover:bg-neutral-50 ${unread ? 'bg-[#fcfcfd]' : 'bg-white'}`}
+                            onClick={() => id && setSelectedMessageId(id)}
+                            className={`w-full rounded-xl border px-3 py-3 text-left transition ${
+                              selected
+                                ? 'border-neutral-900 bg-neutral-50'
+                                : 'border-neutral-200 bg-white hover:border-neutral-300 hover:bg-neutral-50'
+                            }`}
                           >
-                            <td className="px-3 py-3 align-top"><input type="checkbox" className="size-4 rounded border-neutral-300" /></td>
-                            <td className="px-2 py-3 align-top text-amber-500">{starred ? '★' : '☆'}</td>
-                            <td className="px-2 py-3">
-                              <div className="flex items-center gap-2.5">
-                                <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${unread ? 'bg-neutral-900 text-white' : 'bg-neutral-200 text-neutral-700'}`}>
-                                  {senderInitial}
-                                </div>
-                                <div className="min-w-0">
-                                  <div className={`truncate text-sm ${unread ? 'font-semibold text-neutral-900' : 'font-medium text-neutral-800'}`}>{fromName}</div>
-                                  {m?.from?.email ? <div className="truncate text-xs text-neutral-500">{m.from.email}</div> : null}
-                                </div>
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="min-w-0">
+                                <div className={`truncate text-sm ${unread ? 'font-semibold text-neutral-900' : 'font-medium text-neutral-800'}`}>{fromName}</div>
+                                <div className={`mt-0.5 truncate text-sm ${unread ? 'font-semibold text-neutral-900' : 'text-neutral-700'}`}>{subject}</div>
                               </div>
-                            </td>
-                            <td className="px-2 py-3">
-                              <div className={`truncate text-sm ${unread ? 'font-semibold text-neutral-900' : 'font-medium text-neutral-800'}`}>{subject}</div>
-                              <div className="truncate text-xs text-neutral-500">{snippet || 'Sem prévia disponível'}</div>
-                              {labels.length > 0 ? (
-                                <div className="mt-1.5 inline-flex flex-wrap gap-1">
-                                  {labels.slice(0, 3).map((label: string) => (
-                                    <span key={label} className="rounded-sm border border-neutral-200 bg-neutral-50 px-1.5 py-0.5 text-[10px] font-medium text-neutral-600">
-                                      {label}
-                                    </span>
-                                  ))}
-                                </div>
-                              ) : null}
-                            </td>
-                            <td className="px-2 py-3 text-right align-top text-neutral-400">{hasAttach ? <Paperclip className="ml-auto size-4" /> : ''}</td>
-                            <td className="px-3 py-3 text-right align-top text-xs text-neutral-500">{date}</td>
-                          </tr>
+                              <div className="shrink-0 text-xs text-neutral-500">{date}</div>
+                            </div>
+                            <div className="mt-2 flex items-center justify-between text-xs text-neutral-500">
+                              <div className="inline-flex items-center gap-1">
+                                {starred ? <Star className="size-3.5 fill-amber-400 text-amber-400" /> : null}
+                                {unread ? <span className="h-2 w-2 rounded-full bg-blue-500" /> : null}
+                              </div>
+                              {Array.isArray(m.attachments) && m.attachments.length > 0 ? <Paperclip className="size-3.5" /> : null}
+                            </div>
+                          </button>
                         )
                       })
                     )}
-                  </tbody>
-                </table>
-              </div>
+                  </div>
 
-              <div className="flex items-center justify-between border-t border-neutral-200 bg-white px-3 py-2 text-xs text-neutral-600">
-                <div>
-                  Página {prevTokens.length + 1}
-                  {nextPageToken ? <span className="ml-1 text-neutral-400">• há próxima página</span> : null}
+                  <div className="flex items-center justify-between border-t border-neutral-200 bg-white px-3 py-2 text-xs text-neutral-600">
+                    <div>
+                      Página {prevTokens.length + 1}
+                      {nextPageToken ? <span className="ml-1 text-neutral-400">• há próxima página</span> : null}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        disabled={prevTokens.length === 0 || loadingMessages}
+                        onClick={goPrevPage}
+                        className="rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-50 disabled:opacity-50"
+                      >
+                        Anterior
+                      </button>
+                      <button
+                        disabled={!nextPageToken || loadingMessages}
+                        onClick={goNextPage}
+                        className="rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-50 disabled:opacity-50"
+                      >
+                        Próxima
+                      </button>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    disabled={prevTokens.length === 0 || loadingMessages}
-                    onClick={goPrevPage}
-                    className="rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-50 disabled:opacity-50"
-                  >
-                    Anterior
-                  </button>
-                  <button
-                    disabled={!nextPageToken || loadingMessages}
-                    onClick={goNextPage}
-                    className="rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-50 disabled:opacity-50"
-                  >
-                    Próxima
-                  </button>
+
+                <div className="hidden min-h-0 flex-col bg-white lg:flex">
+                  <div className="flex items-center justify-between border-b border-neutral-200 px-4 py-2.5">
+                    <div className="inline-flex items-center gap-2 text-neutral-600">
+                      <button className="rounded-md p-1.5 hover:bg-neutral-100" title="Reply"><Reply className="size-4" /></button>
+                      <button className="rounded-md p-1.5 hover:bg-neutral-100" title="Forward"><Forward className="size-4" /></button>
+                      <button className="rounded-md p-1.5 hover:bg-neutral-100" title="Later"><Clock3 className="size-4" /></button>
+                      <button className="rounded-md p-1.5 text-red-600 hover:bg-red-50" title="Delete"><Trash2 className="size-4" /></button>
+                    </div>
+                    <button className="rounded-md p-1.5 text-neutral-600 hover:bg-neutral-100" title="More"><MoreVertical className="size-4" /></button>
+                  </div>
+
+                  <div className="min-h-0 flex-1 overflow-auto p-4">
+                    {!selectedMessageView ? (
+                      <div className="grid h-full place-items-center text-sm text-neutral-500">Selecione um email para visualizar.</div>
+                    ) : (
+                      <div className="mx-auto w-full max-w-3xl space-y-4">
+                        <div className="space-y-1.5">
+                          <h2 className="text-xl font-semibold text-neutral-900">{String(selectedMessageView?.subject || 'Sem assunto')}</h2>
+                          <div className="text-xs text-neutral-500">
+                            {formatDateLabel(selectedMessageView?.date || selectedMessageView?.createdAt || selectedMessageView?.created_at || selectedMessageView?.timestamp)}
+                          </div>
+                        </div>
+
+                        <div className="flex items-start gap-3 border-y border-neutral-200 py-3">
+                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-xs font-semibold text-neutral-700">
+                            {getSenderInitial(getSenderName(selectedMessageView))}
+                          </div>
+                          <div className="min-w-0">
+                            <div className="truncate text-sm font-semibold text-neutral-900">{getSenderName(selectedMessageView)}</div>
+                            <div className="mt-0.5 text-xs text-neutral-500">Para: você</div>
+                          </div>
+                        </div>
+
+                        {loadingSelectedMessage ? (
+                          <div className="text-sm text-neutral-500">Carregando conteúdo…</div>
+                        ) : selectedMessageError ? (
+                          <div className="text-sm text-red-600">{selectedMessageError}</div>
+                        ) : (
+                          <div className="prose prose-sm max-w-none text-neutral-800">
+                            {String(selectedMessageView?.html || selectedMessageView?.bodyHtml || selectedMessageView?.body?.html || '').trim() ? (
+                              <div dangerouslySetInnerHTML={{ __html: String(selectedMessageView?.html || selectedMessageView?.bodyHtml || selectedMessageView?.body?.html || '') }} />
+                            ) : (
+                              <pre className="whitespace-pre-wrap break-words font-sans text-sm leading-relaxed text-neutral-800">
+                                {String(selectedMessageView?.text || selectedMessageView?.bodyText || selectedMessageView?.body?.text || selectedMessageView?.snippet || selectedMessageView?.preview || 'Sem conteúdo disponível')}
+                              </pre>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="border-t border-neutral-200 p-3">
+                    <div className="flex items-center gap-2 rounded-lg border border-neutral-300 px-3 py-2">
+                      <CornerDownLeft className="size-4 text-neutral-500" />
+                      <input
+                        className="w-full border-0 bg-transparent text-sm text-neutral-800 outline-none placeholder:text-neutral-400"
+                        placeholder="Reply..."
+                      />
+                      <button className="rounded-md bg-neutral-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-neutral-800">Send</button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </section>
