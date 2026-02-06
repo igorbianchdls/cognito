@@ -48,9 +48,12 @@ try {
     if (appToolsServerComposio) { mcpServers['composio'] = appToolsServerComposio; }
   }
 } catch {}
-// Build allowed tools list: ERP CRUD + all Composio tools
+// Build allowed tools list: ERP tools + all Composio tools
 const allowedToolsList = [];
-if (appToolsServerERP) allowedToolsList.push('mcp__ERP__crud');
+if (appToolsServerERP) {
+  allowedToolsList.push('mcp__ERP__crud');
+  allowedToolsList.push('mcp__ERP__workspace');
+}
 try {
   if (appToolsServerComposio && Array.isArray(appToolsServerComposio.tools)) {
     for (const t of appToolsServerComposio.tools) {
@@ -71,7 +74,7 @@ const options = {
   includePartialMessages: true,
   maxThinkingTokens: 2048,
   settingSources: ['project'],
-  // Allow ERP CRUD and Composio router tools
+  // Allow ERP tools and Composio router tools
   allowedTools: allowedToolsList,
   // Register only the ERP MCP server
   mcpServers: Object.keys(mcpServers).length ? mcpServers : undefined,

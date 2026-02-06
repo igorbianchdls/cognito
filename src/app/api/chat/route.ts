@@ -165,10 +165,14 @@ export async function POST(req: Request) {
             .replace("name: 'app-tools-generic2'", "name: 'ERP'")
             .replace('export const appToolsServerGeneric2', 'export const mcpERPServer')
             .replace('export default appToolsServerGeneric2', 'export default mcpERPServer');
+          mcpERP = mcpERP.replace(
+            'export const mcpERPServer = createSdkMcpServer({',
+            "async function callWorkspace(args){ const base = process.env.AGENT_BASE_URL || ''; const token = process.env.AGENT_TOOL_TOKEN || ''; const chatId = process.env.AGENT_CHAT_ID || ''; if (!base || !token || !chatId) { return { content: [{ type: 'text', text: JSON.stringify({ success:false, error:'configuração ausente', tool:'workspace' }) }] }; } try { const url = (base || '') + '/api/agent-tools/workspace/crud'; const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json', 'authorization': 'Bearer ' + token, 'x-chat-id': chatId, 'x-tenant-id': (process.env.AGENT_TENANT_ID || '1') }, body: JSON.stringify(args || {}) }); let raw = ''; try { raw = await res.text(); } catch {} let data = {}; try { data = JSON.parse(raw); } catch {} const out = (data && (data.result !== undefined ? data.result : data)) || {}; if (!res.ok) { const err = { success:false, status:res.status, error:(out?.error || out?.message || raw || res.statusText || 'workspace error') }; return { content: [{ type:'text', text: JSON.stringify(err) }] }; } return { content: [{ type:'text', text: JSON.stringify(out) }] }; } catch(e) { return { content: [{ type: 'text', text: JSON.stringify({ success:false, error:String(e?.message || e) }) }] }; } }\nexport const mcpERPServer = createSdkMcpServer({"
+          );
           // Inject unified CRUD tool into ERP server tools list (no other changes)
           mcpERP = mcpERP.replace(
             'tools: [',
-            "tools: [ tool('crud','Executa ações CRUD genéricas', { action: z.enum(['listar','criar','atualizar','deletar']), resource: z.string().optional(), path: z.string().optional(), params: z.any().optional(), data: z.any().optional(), actionSuffix: z.string().optional(), method: z.enum(['GET','POST']).optional(), }, async (args) => callBridge({ action: args.action, args })), "
+            "tools: [ tool('crud','Executa ações CRUD genéricas', { action: z.enum(['listar','criar','atualizar','deletar']), resource: z.string().optional(), path: z.string().optional(), params: z.any().optional(), data: z.any().optional(), actionSuffix: z.string().optional(), method: z.enum(['GET','POST']).optional(), }, async (args) => callBridge({ action: args.action, args })), tool('workspace','Acessa email/drive e leitura de arquivo do drive', { action: z.enum(['request','read_file']).default('request'), method: z.enum(['GET','POST','DELETE']).optional(), resource: z.string().optional(), params: z.any().optional(), data: z.any().optional(), file_id: z.string().optional(), mode: z.enum(['auto','text','binary']).optional(), }, async (args) => callWorkspace(args)), "
           );
           // (listar removida diretamente no template mcpGeneric2 abaixo)
           await sandbox.writeFiles([{ path: '/vercel/sandbox/.mcp/ERP.mjs', content: Buffer.from(mcpERP) }])
@@ -281,12 +285,13 @@ export async function POST(req: Request) {
     const lines: string[] = []
     lines.push('You are a helpful assistant. Continue the conversation.')
     if (SESSIONS.get(chatId)?.composioEnabled) {
-      lines.push('Prioritize the ERP MCP tool "crud" for ERP-related operations. You MAY also use the Composio MCP tools for external actions (e.g., email, calendar, SaaS integrations) when explicitly requested or clearly required.')
+      lines.push('Prioritize ERP MCP tool "crud" for ERP operations and ERP MCP tool "workspace" for app workspace operations (email/drive). You MAY also use Composio MCP tools for external actions (email/calendar/SaaS) when explicitly requested or clearly required.')
     } else {
-      lines.push('Use ONLY the ERP MCP tool "crud". Strictly follow the resource list and naming below. Do not invent resources.')
+      lines.push('Use ONLY ERP MCP tools "crud" and "workspace". Strictly follow the resource list and naming below. Do not invent resources.')
     }
-    lines.push('ERP Tool (invoke with tool_use):')
+    lines.push('ERP Tools (invoke with tool_use):')
     lines.push('- crud(input: { action: "listar"|"criar"|"atualizar"|"deletar", resource: string, params?: object, data?: object, actionSuffix?: string, method?: "GET"|"POST" })')
+    lines.push('- workspace(input: { action: "request"|"read_file", method?: "GET"|"POST"|"DELETE", resource?: string, params?: object, data?: object, file_id?: string, mode?: "auto"|"text"|"binary" })')
     lines.push('Allowed top-level ERP prefixes: financeiro, vendas, compras, contas-a-pagar, contas-a-receber, estoque, cadastros.')
     lines.push('Canonical ERP resources (use EXACT strings):')
     lines.push('- financeiro/contas-financeiras')
@@ -303,6 +308,11 @@ export async function POST(req: Request) {
     lines.push('- NEVER use vague terms like "categoria" or "despesa". Always use canonical paths (e.g., "financeiro/categorias-despesa").')
     lines.push('- Always include the correct module prefix (e.g., "financeiro/...").')
     lines.push('- resource must not contain ".." and must start with one of the allowed prefixes.')
+    lines.push('Workspace Tool Guidelines:')
+    lines.push('- Use workspace action="request" for /api/email and /api/drive operations (list/send/delete/create).')
+    lines.push('- Use workspace action="read_file" with file_id to read textual files from Drive.')
+    lines.push('- Workspace resources supported include: email/inboxes, email/messages, email/messages/{id}, drive, drive/folders, drive/folders/{id}, drive/files/{id}, drive/files/{id}/download, drive/files/prepare-upload, drive/files/complete-upload.')
+    lines.push('- For destructive actions (DELETE), confirm user intent when context is ambiguous.')
     if (SESSIONS.get(chatId)?.composioEnabled) {
       lines.push('Composio MCP (external tools) Guidelines:')
       lines.push('- Use Composio tools only for external actions (email/calendar/SaaS), not for ERP CRUD.')

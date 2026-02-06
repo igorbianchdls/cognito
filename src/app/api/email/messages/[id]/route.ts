@@ -155,3 +155,79 @@ export async function POST(req: NextRequest, context: any) {
     return Response.json({ ok: false, error: msg }, { status })
   }
 }
+
+export async function DELETE(req: NextRequest, context: any) {
+  try {
+    const maybeParams = context?.params
+    const params = (maybeParams && typeof maybeParams.then === 'function') ? await maybeParams : maybeParams
+    const id = params?.id as string | undefined
+    if (!id) return Response.json({ ok: false, error: 'Missing id' }, { status: 400 })
+
+    const { searchParams } = new URL(req.url)
+    const inboxId = searchParams.get('inboxId') || ''
+    if (!inboxId) return Response.json({ ok: false, error: 'Missing inboxId' }, { status: 400 })
+    const mode = (searchParams.get('mode') || 'trash').trim().toLowerCase()
+
+    const client = await getClient()
+    let data: any = null
+    let strategy = ''
+    let lastError: any = null
+
+    if (mode === 'delete') {
+      try {
+        if (typeof client?.inboxes?.messages?.delete === 'function') {
+          data = await client.inboxes.messages.delete(inboxId, id)
+          strategy = 'inboxes.messages.delete'
+        }
+      } catch (e) {
+        lastError = e
+      }
+      if (!data) {
+        try {
+          if (typeof client?.messages?.delete === 'function') {
+            data = await client.messages.delete(id)
+            strategy = 'messages.delete'
+          }
+        } catch (e) {
+          lastError = e
+        }
+      }
+    }
+
+    if (!data) {
+      const labelAttempts = [
+        { addLabels: ['trash'], removeLabels: ['inbox'] },
+        { addLabels: ['TRASH'], removeLabels: ['INBOX'] },
+        { addLabels: ['\\Trash'], removeLabels: ['\\Inbox'] },
+        { addLabels: ['trash'] },
+        { addLabels: ['TRASH'] },
+      ]
+      for (const labels of labelAttempts) {
+        try {
+          if (typeof client?.inboxes?.messages?.update !== 'function') continue
+          data = await client.inboxes.messages.update(inboxId, id, labels)
+          strategy = 'inboxes.messages.update(labels)'
+          break
+        } catch (e) {
+          lastError = e
+        }
+      }
+    }
+
+    if (!data) {
+      const msg = lastError?.message || 'Unable to delete/trash message with current SDK methods'
+      return Response.json({ ok: false, error: msg }, { status: 500 })
+    }
+
+    return Response.json({
+      ok: true,
+      data,
+      mode,
+      strategy,
+    })
+  } catch (e: any) {
+    const msg = e?.message || String(e)
+    const status = /key|auth/i.test(msg) ? 401 : 500
+    return Response.json({ ok: false, error: msg }, { status })
+  }
+}
