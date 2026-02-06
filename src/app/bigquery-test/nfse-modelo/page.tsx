@@ -100,10 +100,11 @@ export default function NfseModeloPage() {
 
             <div className="grid grid-cols-[94px_1fr_220px] border-b border-black">
               <div className="flex items-center justify-center border-r border-black p-2">
-                <div className="h-[72px] w-[72px] border border-black bg-zinc-100 text-center text-[10px] leading-tight">
-                  <div className="border-b border-black p-1 font-bold">BRASAO</div>
-                  <div className="p-1">PMSP</div>
-                </div>
+                <img
+                  src="/brasaoSP.png"
+                  alt="Brasao da Prefeitura de Sao Paulo"
+                  className="h-[84px] w-[72px] object-contain"
+                />
               </div>
 
               <div className="border-r border-black p-2 text-center">
