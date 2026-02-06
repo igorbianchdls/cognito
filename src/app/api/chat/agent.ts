@@ -7,7 +7,6 @@ import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
 const cli = require.resolve('@anthropic-ai/claude-code/cli.js');
 const prompt = process.argv[2] || '';
-const fs = require('fs');
 
 // Programmatic subagents (example set)
 const agents = {
@@ -89,16 +88,8 @@ const options = {
   },
 };
 
-// Try to resume a previous session to preserve state
-let resumeId = null;
-try {
-  const raw = fs.readFileSync('/vercel/sandbox/.session/session.json','utf8');
-  const parsed = JSON.parse(raw);
-  if (parsed && parsed.sessionId) resumeId = parsed.sessionId;
-} catch {}
-
-// Start query stream (simple prompt)
-const q = query({ prompt, options: Object.assign({}, options, resumeId ? { resume: resumeId, continue: true } : {}) });
+// Stateless mode: no session resume/continue.
+const q = query({ prompt, options });
 
 // Surface agents and slash commands early
 try { console.log(JSON.stringify({ type: 'agents_list', agents: Object.keys(agents) })); } catch {}
@@ -110,11 +101,6 @@ const toolMeta = {};
 for await (const msg of q) {
   if (msg && msg.type === 'system' && msg.subtype === 'init') {
     try {
-      const sid = msg.session_id || null;
-      if (sid) {
-        fs.mkdirSync('/vercel/sandbox/.session', { recursive: true });
-        fs.writeFileSync('/vercel/sandbox/.session/session.json', JSON.stringify({ sessionId: sid }));
-      }
       if (Array.isArray(msg.slash_commands)) {
         console.log(JSON.stringify({ type: 'slash_commands', commands: (msg.slash_commands || []).map((n)=>({ name:n })) }));
       }
@@ -434,7 +420,6 @@ import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
 const cli = require.resolve('@anthropic-ai/claude-code/cli.js');
 const prompt = process.argv[2] || '';
-const fs = require('fs');
 
 const agents = { uiScaffold: { description:'UI scaffold', tools:['Read','Write','Edit'], prompt:'Crie artefatos web mínimos.', model:'inherit' } };
 const modelId = process.env.AGENT_MODEL || 'claude-haiku-4-5-20251001';
@@ -454,13 +439,11 @@ const baseOptions = {
   agents,
   maxTurns: 1,
 };
-let resumeId = null;
-try { const raw = fs.readFileSync('/vercel/sandbox/.session/session.json','utf8'); const parsed = JSON.parse(raw); if (parsed && parsed.sessionId) resumeId = parsed.sessionId; } catch {}
-const q = query({ prompt, options: Object.assign({}, baseOptions, resumeId ? { resume: resumeId, continue: true } : {}) });
+const q = query({ prompt, options: baseOptions });
 try { const cmds = await q.supportedCommands(); console.log(JSON.stringify({ type: 'slash_commands', commands: cmds })); } catch {}
 for await (const msg of q) {
   if (msg && msg.type === 'system' && msg.subtype === 'init') {
-    try { const sid = msg.session_id || null; if (sid) { fs.mkdirSync('/vercel/sandbox/.session',{recursive:true}); fs.writeFileSync('/vercel/sandbox/.session/session.json', JSON.stringify({ sessionId: sid })); } } catch {}
+    // no-op
   } else if (msg.type === 'stream_event') {
     const ev = (msg as any).event;
     if (ev && ev.type === 'content_block_delta' && ev.delta && ev.delta.type === 'text_delta' && (ev.delta.text || ev.delta.text === '')) {

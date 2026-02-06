@@ -111,7 +111,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
     setMessages(prev => [...prev, { id: assistantId, role: 'assistant', parts: [] as any }])
 
     setStatus('submitted')
-    // Resume mode already preserves prior context in Claude session; send only the new user turn.
+    // Stateless mode: send only the current user turn.
     const history = [{ role: 'user' as const, content: text }]
     const body = isSlash
       ? { action: 'chat-slash', chatId: id, prompt: text }
