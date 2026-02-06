@@ -7,7 +7,8 @@ import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
 import DriveViewer from '@/components/drive/DriveViewer'
 import type { DriveItem } from '@/components/drive/types'
 import { uploadDriveFileDirect } from '../../upload.client'
-import { ArrowLeft, File, FileText, Image as ImageIcon, Video, Music, MoreHorizontal, Paperclip, Upload } from 'lucide-react'
+import { ArrowLeft, File, FileText, Image as ImageIcon, Video, Music, MoreHorizontal, Paperclip, Upload, Trash2 } from 'lucide-react'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 
 type FolderApiResponse = {
   success: boolean
@@ -39,6 +40,7 @@ export default function DriveFolderPage() {
   const [files, setFiles] = useState<DriveItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isUploading, setIsUploading] = useState(false)
+  const [deletingFileId, setDeletingFileId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const [viewerOpen, setViewerOpen] = useState(false)
@@ -111,6 +113,32 @@ export default function DriveFolderPage() {
     } finally {
       setIsUploading(false)
       if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
+
+  const onDeleteFile = async (file: DriveItem) => {
+    if (!folderWorkspaceId || deletingFileId) return
+    const ok = window.confirm(`Excluir o arquivo "${file.name}"?`)
+    if (!ok) return
+
+    setDeletingFileId(file.id)
+    setError(null)
+    try {
+      const res = await fetch(`/api/drive/files/${file.id}?workspace_id=${folderWorkspaceId}`, {
+        method: 'DELETE',
+      })
+      const json = await res.json().catch(() => ({})) as { success?: boolean; message?: string }
+      if (!res.ok || !json?.success) {
+        throw new Error(json?.message || 'Falha ao excluir arquivo')
+      }
+      const fresh = await loadFolder(folderId)
+      setFolderName(fresh.folder?.name || 'Folder')
+      setFolderWorkspaceId(fresh.folder?.workspaceId || null)
+      setFiles(Array.isArray(fresh.files) ? fresh.files : [])
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Falha ao excluir arquivo')
+    } finally {
+      setDeletingFileId(null)
     }
   }
 
@@ -201,7 +229,33 @@ export default function DriveFolderPage() {
                               </span>
                             </td>
                             <td className="px-3 py-3 text-right text-sm text-gray-600">{size}</td>
-                            <td className="px-3 py-3 text-right text-gray-500"><MoreHorizontal className="ml-auto size-4" /></td>
+                            <td className="px-3 py-3 text-right text-gray-500">
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <button
+                                    className="inline-flex items-center rounded-md p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                                    onClick={(e) => e.stopPropagation()}
+                                    aria-label={`Ações do arquivo ${f.name}`}
+                                  >
+                                    <MoreHorizontal className="ml-auto size-4" />
+                                  </button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem
+                                    variant="destructive"
+                                    disabled={deletingFileId === f.id}
+                                    onClick={(e) => {
+                                      e.preventDefault()
+                                      e.stopPropagation()
+                                      void onDeleteFile(f)
+                                    }}
+                                  >
+                                    <Trash2 className="size-4" />
+                                    {deletingFileId === f.id ? 'Excluindo...' : 'Excluir arquivo'}
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </td>
                           </tr>
                         )
                       })}

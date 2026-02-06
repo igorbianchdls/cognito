@@ -4,10 +4,11 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { SidebarShadcn } from "@/components/navigation/SidebarShadcn";
-import { Search, LayoutGrid, List, MoreHorizontal, FileText, Image as ImageIcon, Video, Music2, File, ChevronDown, Upload, FolderPlus } from 'lucide-react'
+import { Search, LayoutGrid, List, MoreHorizontal, FileText, Image as ImageIcon, Video, Music2, File, ChevronDown, Upload, FolderPlus, Trash2 } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import DriveViewer from '@/components/drive/DriveViewer'
 import type { DriveItem } from '@/components/drive/types'
 import { uploadDriveFileDirect } from './upload.client'
@@ -133,6 +134,8 @@ export default function DrivePage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isUploading, setIsUploading] = useState(false)
   const [isCreatingFolder, setIsCreatingFolder] = useState(false)
+  const [deletingFolderId, setDeletingFolderId] = useState<string | null>(null)
+  const [deletingFileId, setDeletingFileId] = useState<string | null>(null)
   const [createFolderOpen, setCreateFolderOpen] = useState(false)
   const [newFolderName, setNewFolderName] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -244,6 +247,52 @@ export default function DrivePage() {
     }
   }
 
+  const onDeleteFolder = async (folder: FolderItem) => {
+    if (!activeWorkspaceId || deletingFolderId) return
+    const ok = window.confirm(`Excluir a pasta "${folder.name}" e seus arquivos?`)
+    if (!ok) return
+
+    setDeletingFolderId(folder.id)
+    setError(null)
+    try {
+      const res = await fetch(`/api/drive/folders/${folder.id}?workspace_id=${activeWorkspaceId}`, {
+        method: 'DELETE',
+      })
+      const json = await res.json().catch(() => ({})) as { success?: boolean; message?: string }
+      if (!res.ok || !json?.success) {
+        throw new Error(json?.message || 'Falha ao excluir pasta')
+      }
+      await loadDrive(activeWorkspaceId)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Falha ao excluir pasta')
+    } finally {
+      setDeletingFolderId(null)
+    }
+  }
+
+  const onDeleteFile = async (file: DriveItem) => {
+    if (!activeWorkspaceId || deletingFileId) return
+    const ok = window.confirm(`Excluir o arquivo "${file.name}"?`)
+    if (!ok) return
+
+    setDeletingFileId(file.id)
+    setError(null)
+    try {
+      const res = await fetch(`/api/drive/files/${file.id}?workspace_id=${activeWorkspaceId}`, {
+        method: 'DELETE',
+      })
+      const json = await res.json().catch(() => ({})) as { success?: boolean; message?: string }
+      if (!res.ok || !json?.success) {
+        throw new Error(json?.message || 'Falha ao excluir arquivo')
+      }
+      await loadDrive(activeWorkspaceId)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Falha ao excluir arquivo')
+    } finally {
+      setDeletingFileId(null)
+    }
+  }
+
   return (
     <SidebarProvider>
       <SidebarShadcn showHeaderTrigger={false} />
@@ -349,19 +398,47 @@ export default function DrivePage() {
                 ) : (
                   <div className="grid grid-cols-2 gap-x-4 gap-y-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
                     {folders.map((f) => (
-                      <button
-                        key={f.id}
-                        onClick={() => router.push(`/drive/f/${f.id}`)}
-                        className="group w-full py-2 text-center"
-                      >
-                        <FolderArtwork className="h-32 w-full transition group-hover:scale-[1.02]" />
-                        <div className="mt-2 min-w-0">
-                          <div className="truncate text-center text-[14px] font-semibold text-gray-900">{f.name}</div>
-                          <div className="mt-0.5 text-center text-sm text-gray-500">
-                            {Number(f.filesCount || 0).toLocaleString()} {Number(f.filesCount || 0) === 1 ? 'file' : 'files'}
+                      <div key={f.id} className="group relative w-full py-1 text-center">
+                        <button
+                          onClick={() => router.push(`/drive/f/${f.id}`)}
+                          className="w-full"
+                        >
+                          <FolderArtwork className="h-24 w-full transition group-hover:scale-[1.02]" />
+                          <div className="mt-2 min-w-0">
+                            <div className="truncate text-center text-[14px] font-semibold text-gray-900">{f.name}</div>
+                            <div className="mt-0.5 text-center text-sm text-gray-500">
+                              {Number(f.filesCount || 0).toLocaleString()} {Number(f.filesCount || 0) === 1 ? 'file' : 'files'}
+                            </div>
                           </div>
+                        </button>
+                        <div className="absolute right-1 top-0 opacity-0 transition group-hover:opacity-100">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button
+                                className="inline-flex items-center rounded-md p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                                onClick={(e) => e.stopPropagation()}
+                                aria-label={`Ações da pasta ${f.name}`}
+                              >
+                                <MoreHorizontal className="size-4" />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                variant="destructive"
+                                disabled={deletingFolderId === f.id}
+                                onClick={(e) => {
+                                  e.preventDefault()
+                                  e.stopPropagation()
+                                  void onDeleteFolder(f)
+                                }}
+                              >
+                                <Trash2 className="size-4" />
+                                {deletingFolderId === f.id ? 'Excluindo...' : 'Excluir pasta'}
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
-                      </button>
+                      </div>
                     ))}
                   </div>
                 )}
@@ -385,16 +462,17 @@ export default function DrivePage() {
                         <th className="w-[20%] px-4 py-3 text-left font-medium">Date added</th>
                         <th className="w-[24%] px-4 py-3 text-left font-medium">Added by</th>
                         <th className="w-[12%] px-4 py-3 text-right font-medium">Size</th>
+                        <th className="w-12 px-2 py-3 text-right"></th>
                       </tr>
                     </thead>
                     <tbody>
                       {isLoading ? (
                         <tr>
-                          <td colSpan={4} className="px-4 py-8 text-center text-sm text-gray-500">Carregando arquivos...</td>
+                          <td colSpan={5} className="px-4 py-8 text-center text-sm text-gray-500">Carregando arquivos...</td>
                         </tr>
                       ) : visibleFiles.length === 0 ? (
                         <tr>
-                          <td colSpan={4} className="px-4 py-8 text-center text-sm text-gray-500">Nenhum arquivo encontrado.</td>
+                          <td colSpan={5} className="px-4 py-8 text-center text-sm text-gray-500">Nenhum arquivo encontrado.</td>
                         </tr>
                       ) : visibleFiles.map((r, i) => {
                         const TypeIcon = getTypeIcon(r)
@@ -426,6 +504,33 @@ export default function DrivePage() {
                               </span>
                             </td>
                             <td className="px-4 py-3 text-right text-sm text-gray-600">{size}</td>
+                            <td className="px-2 py-3 text-right">
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <button
+                                    className="inline-flex items-center rounded-md p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                                    onClick={(e) => e.stopPropagation()}
+                                    aria-label={`Ações do arquivo ${r.name}`}
+                                  >
+                                    <MoreHorizontal className="size-4" />
+                                  </button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem
+                                    variant="destructive"
+                                    disabled={deletingFileId === r.id}
+                                    onClick={(e) => {
+                                      e.preventDefault()
+                                      e.stopPropagation()
+                                      void onDeleteFile(r)
+                                    }}
+                                  >
+                                    <Trash2 className="size-4" />
+                                    {deletingFileId === r.id ? 'Excluindo...' : 'Excluir arquivo'}
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </td>
                           </tr>
                         )
                       })}
