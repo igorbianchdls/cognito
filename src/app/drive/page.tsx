@@ -103,7 +103,7 @@ function avatarInitial(email: string): string {
 
 function FolderArtwork({ className = '' }: { className?: string }) {
   return (
-    <svg viewBox="12 64 500 384" preserveAspectRatio="none" className={className} aria-hidden="true">
+    <svg viewBox="12 64 500 384" preserveAspectRatio="xMidYMid meet" className={className} aria-hidden="true">
       <path
         d="M12 128C12 93 41 64 76 64h101c14 0 27 6 36 17l19 23c8 9 19 14 31 14h186c35 0 63 28 63 63v200c0 36-28 64-63 64H76c-35 0-64-28-64-64V128z"
         fill="#2F6DFF"
@@ -347,7 +347,7 @@ export default function DrivePage() {
       <SidebarInset className="h-screen overflow-hidden">
         <div className="h-full grid grid-rows-[auto_1fr]">
           <div className="bg-white">
-            <div className="w-full px-12 py-3">
+            <div className="w-full px-6 py-3">
               <div className="flex items-center justify-between">
                 <div className="relative">
                   <div className="flex items-center gap-1.5">
@@ -417,7 +417,7 @@ export default function DrivePage() {
           </div>
 
           <div className="min-h-0 overflow-y-auto">
-            <div className="w-full px-12 py-6">
+            <div className="w-full px-6 py-6">
               {error ? (
                 <div className="mb-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>
               ) : null}
@@ -451,7 +451,7 @@ export default function DrivePage() {
                           onClick={() => router.push(`/drive/f/${f.id}`)}
                           className="w-full"
                         >
-                          <FolderArtwork className="h-32 w-full px-1 transition group-hover:scale-[1.02]" />
+                          <FolderArtwork className="mx-auto h-24 w-auto max-w-full transition group-hover:scale-[1.02]" />
                           <div className="mt-2 min-w-0">
                             <div className="truncate text-center text-[14px] font-semibold text-gray-900">{f.name}</div>
                             <div className="mt-0.5 text-center text-sm text-gray-500">
