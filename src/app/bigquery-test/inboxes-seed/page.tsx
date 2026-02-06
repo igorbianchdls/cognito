@@ -57,7 +57,10 @@ function getInboxId(inbox: any): string {
 }
 
 function getInboxAddress(inbox: any): string {
-  return String(inbox?.email || inbox?.address || "").trim()
+  const direct = String(inbox?.email || inbox?.address || "").trim()
+  if (direct) return direct
+  const fallback = String(inbox?.inboxId || "").trim()
+  return fallback.includes("@") ? fallback : ""
 }
 
 function getInboxLabel(inbox: any): string {
