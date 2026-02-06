@@ -299,7 +299,7 @@ export default function DrivePage() {
       <SidebarInset className="h-screen overflow-hidden">
         <div className="h-full grid grid-rows-[auto_1fr]">
           <div className="bg-white">
-            <div className="mx-auto max-w-[1400px] px-4 py-3">
+            <div className="mx-auto max-w-[1400px] px-2 py-3">
               <div className="flex items-center justify-between">
                 <div className="relative">
                   <div className="flex items-center gap-1.5">
@@ -369,7 +369,7 @@ export default function DrivePage() {
           </div>
 
           <div className="min-h-0 overflow-y-auto">
-            <div className="mx-auto max-w-[1400px] px-4 py-6">
+            <div className="mx-auto max-w-[1400px] px-2 py-6">
               {error ? (
                 <div className="mb-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>
               ) : null}
@@ -381,7 +381,7 @@ export default function DrivePage() {
                     <button
                       onClick={() => setCreateFolderOpen(true)}
                       disabled={!activeWorkspaceId || isCreatingFolder}
-                      className="inline-flex items-center gap-1 rounded-md px-2 py-1.5 text-xs text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="inline-flex h-9 items-center gap-1.5 rounded-md border border-gray-200 bg-gray-100 px-3 text-sm font-medium text-gray-700 hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       <FolderPlus className="size-4" />
                       Nova pasta
