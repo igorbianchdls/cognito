@@ -52,6 +52,15 @@ export function formatBytes(bytesRaw: number | string | null | undefined): strin
   return `${(n / 1024 ** 3).toFixed(1)} GB`
 }
 
+export function sanitizeDriveFileName(name: string): string {
+  return name
+    .normalize('NFKD')
+    .replace(/[^\w.\- ]+/g, '')
+    .trim()
+    .replace(/\s+/g, '-')
+    .slice(0, 120) || 'file'
+}
+
 export function buildUserLabel(createdBy: string | number | null | undefined): string {
   if (createdBy === null || createdBy === undefined || String(createdBy).trim() === '') return 'user'
   return `user-${String(createdBy)}`

@@ -6,6 +6,7 @@ import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
 import DriveViewer from '@/components/drive/DriveViewer'
 import type { DriveItem } from '@/components/drive/types'
+import { uploadDriveFileDirect } from '../../upload.client'
 import { ArrowLeft, File, FileText, Image as ImageIcon, Video, Music, MoreHorizontal, Paperclip, Upload } from 'lucide-react'
 
 type FolderApiResponse = {
@@ -95,15 +96,11 @@ export default function DriveFolderPage() {
     setError(null)
     try {
       for (const file of Array.from(list)) {
-        const fd = new FormData()
-        fd.set('workspace_id', folderWorkspaceId)
-        fd.set('folder_id', folderId)
-        fd.set('file', file)
-        const res = await fetch('/api/drive/files/upload', { method: 'POST', body: fd })
-        const json = await res.json().catch(() => ({})) as { success?: boolean; message?: string }
-        if (!res.ok || !json?.success) {
-          throw new Error(json?.message || `Falha ao enviar ${file.name}`)
-        }
+        await uploadDriveFileDirect({
+          workspaceId: folderWorkspaceId,
+          folderId,
+          file,
+        })
       }
       const fresh = await loadFolder(folderId)
       setFolderName(fresh.folder?.name || 'Folder')

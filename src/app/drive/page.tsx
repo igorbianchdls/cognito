@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import DriveViewer from '@/components/drive/DriveViewer'
 import type { DriveItem } from '@/components/drive/types'
+import { uploadDriveFileDirect } from './upload.client'
 
 type WorkspaceOption = {
   id: string
@@ -229,14 +230,10 @@ export default function DrivePage() {
     setError(null)
     try {
       for (const file of Array.from(filesList)) {
-        const fd = new FormData()
-        fd.set('workspace_id', activeWorkspaceId)
-        fd.set('file', file)
-        const res = await fetch('/api/drive/files/upload', { method: 'POST', body: fd })
-        const json = await res.json().catch(() => ({})) as { success?: boolean; message?: string }
-        if (!res.ok || !json?.success) {
-          throw new Error(json?.message || `Falha ao enviar ${file.name}`)
-        }
+        await uploadDriveFileDirect({
+          workspaceId: activeWorkspaceId,
+          file,
+        })
       }
       await loadDrive(activeWorkspaceId)
     } catch (e) {
