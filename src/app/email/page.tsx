@@ -6,6 +6,7 @@ export const runtime = 'nodejs'
 import React, { Suspense, useEffect, useMemo, useState } from 'react'
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { SidebarShadcn } from "@/components/navigation/SidebarShadcn"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import {
   Archive,
   ChevronDown,
@@ -90,6 +91,15 @@ function getMessageId(message: any): string {
   return String(message?.id || message?.messageId || message?.message_id || '').trim()
 }
 
+function getInboxId(inbox: any): string {
+  return String(inbox?.inboxId || inbox?.id || '').trim()
+}
+
+function getInboxLabel(inbox: any, index: number): string {
+  const label = String(inbox?.displayName || inbox?.username || inbox?.email || inbox?.inboxId || '').trim()
+  return label || `Inbox ${index + 1}`
+}
+
 function getSenderName(message: any): string {
   return String(message?.from?.name || message?.from_name || message?.from || 'Sem remetente')
 }
@@ -152,6 +162,8 @@ export default function EmailPage() {
   const [inboxes, setInboxes] = useState<any[]>([])
   const [activeInboxId, setActiveInboxId] = useState('')
   const [loadingInboxes, setLoadingInboxes] = useState(false)
+  const [inboxMenuOpen, setInboxMenuOpen] = useState(false)
+  const [deletingInboxId, setDeletingInboxId] = useState('')
 
   const [messages, setMessages] = useState<any[]>([])
   const [loadingMessages, setLoadingMessages] = useState(false)
@@ -169,9 +181,10 @@ export default function EmailPage() {
   const [muteThread, setMuteThread] = useState(false)
 
   const activeInboxLabel = useMemo(() => {
-    const current = inboxes.find((ib: any) => (ib?.inboxId || ib?.id) === activeInboxId)
+    const index = inboxes.findIndex((ib: any) => getInboxId(ib) === activeInboxId)
+    const current = index >= 0 ? inboxes[index] : null
     if (!current || typeof current !== 'object') return ''
-    return String(current.displayName || current.username || current.email || current.inboxId || '')
+    return getInboxLabel(current, index >= 0 ? index : 0)
   }, [inboxes, activeInboxId])
 
   const folderCounts = useMemo(() => {
@@ -359,6 +372,64 @@ export default function EmailPage() {
     return () => { ignore = true }
   }, [activeInboxId, selectedMessageId, reloadKey])
 
+  const handleDeleteInbox = async (inboxId: string, inboxLabel: string) => {
+    const id = String(inboxId || '').trim()
+    if (!id || deletingInboxId) return
+
+    const confirmed = typeof window === 'undefined'
+      ? false
+      : window.confirm(`Excluir inbox "${inboxLabel}"?\n\nEsta ação não pode ser desfeita.`)
+    if (!confirmed) return
+
+    setDeletingInboxId(id)
+    setError('')
+    try {
+      const res = await fetch('/api/email/inboxes', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ inboxId: id }),
+      })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok || json?.ok === false) throw new Error(json?.error || `Falha ao excluir inbox: ${res.status}`)
+
+      const nextInboxes = inboxes.filter((ib: any) => getInboxId(ib) !== id)
+      setInboxes(nextInboxes)
+      setInboxMenuOpen(false)
+
+      if (activeInboxId === id) {
+        const nextActive = getInboxId(nextInboxes[0])
+        setActiveInboxId(nextActive)
+
+        if (typeof window !== 'undefined') {
+          if (nextActive) {
+            localStorage.setItem('email.activeInboxId', nextActive)
+            const url = new URL(window.location.href)
+            url.searchParams.set('inboxId', nextActive)
+            history.replaceState(null, '', url.toString())
+          } else {
+            localStorage.removeItem('email.activeInboxId')
+            const url = new URL(window.location.href)
+            url.searchParams.delete('inboxId')
+            history.replaceState(null, '', url.toString())
+          }
+        }
+
+        if (!nextActive) {
+          setMessages([])
+          setSelectedMessageId('')
+          setSelectedMessage(null)
+          setSelectedMessageError('')
+        }
+      }
+
+      setReloadKey((k) => k + 1)
+    } catch (e: any) {
+      setError(e?.message || String(e))
+    } finally {
+      setDeletingInboxId('')
+    }
+  }
+
   return (
     <Suspense fallback={<div className="p-4 text-xs text-gray-500">Carregando…</div>}>
       <SidebarProvider>
@@ -367,27 +438,64 @@ export default function EmailPage() {
           <div className="grid h-full min-h-0 grid-cols-1 xl:grid-cols-[240px_380px_minmax(0,1fr)]">
             <aside className="hidden h-full min-h-0 flex-col border-r border-neutral-200 bg-white xl:flex">
               <div className="flex h-12 items-center border-b border-neutral-200 px-3">
-                <div className="relative w-full">
-                  <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[10px] text-neutral-700">▲</span>
-                  <select
-                    value={activeInboxId}
-                    onChange={(e) => setActiveInboxId(e.target.value)}
-                    className="h-8 w-full appearance-none rounded-lg border border-neutral-200 bg-white pl-7 pr-8 text-sm font-medium text-neutral-900 outline-none focus:border-neutral-300"
-                  >
-                    <option value="" disabled>{loadingInboxes ? 'Carregando inboxes…' : 'Selecione uma inbox'}</option>
-                    {(Array.isArray(inboxes) ? inboxes : []).map((ib: any, index: number) => {
-                      if (!ib || typeof ib !== 'object') return null
-                      const inboxValue = ib.inboxId || ib.id || ''
-                      const inboxLabel = (ib.displayName || ib.username || ib.email || ib.inboxId || '').toString()
-                      return (
-                        <option key={inboxValue || `inbox-${index}`} value={inboxValue}>
-                          {inboxLabel || `Inbox ${index + 1}`}
-                        </option>
-                      )
-                    })}
-                  </select>
-                  <ChevronDown className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-neutral-500" />
-                </div>
+                <DropdownMenu open={inboxMenuOpen} onOpenChange={setInboxMenuOpen}>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      type="button"
+                      className="flex h-8 w-full items-center justify-between rounded-lg border border-neutral-200 bg-white px-3 text-sm font-medium text-neutral-900 outline-none focus:border-neutral-300 disabled:cursor-not-allowed disabled:opacity-60"
+                      disabled={loadingInboxes || inboxes.length === 0}
+                    >
+                      <span className="inline-flex min-w-0 items-center gap-2">
+                        <span className="text-[10px] text-neutral-700">▲</span>
+                        <span className="truncate">{activeInboxLabel || (loadingInboxes ? 'Carregando inboxes…' : 'Selecione uma inbox')}</span>
+                      </span>
+                      <ChevronDown className="size-4 text-neutral-500" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" sideOffset={6} className="w-[320px] p-1">
+                    {loadingInboxes ? (
+                      <div className="px-2 py-2 text-xs text-neutral-500">Carregando inboxes…</div>
+                    ) : inboxes.length === 0 ? (
+                      <div className="px-2 py-2 text-xs text-neutral-500">Nenhuma inbox disponível.</div>
+                    ) : (
+                      inboxes.map((ib: any, index: number) => {
+                        if (!ib || typeof ib !== 'object') return null
+                        const inboxValue = getInboxId(ib)
+                        if (!inboxValue) return null
+                        const inboxLabel = getInboxLabel(ib, index)
+                        const selected = inboxValue === activeInboxId
+                        const deleting = deletingInboxId === inboxValue
+                        return (
+                          <div key={inboxValue || `inbox-${index}`} className={`flex items-center gap-1 rounded-md p-1 ${selected ? 'bg-neutral-100' : ''}`}>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setActiveInboxId(inboxValue)
+                                setInboxMenuOpen(false)
+                              }}
+                              className="min-w-0 flex-1 truncate rounded-sm px-2 py-1.5 text-left text-sm text-neutral-900 hover:bg-neutral-100"
+                            >
+                              {inboxLabel}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault()
+                                e.stopPropagation()
+                                handleDeleteInbox(inboxValue, inboxLabel)
+                              }}
+                              disabled={deletingInboxId.length > 0}
+                              className="inline-flex h-8 w-8 items-center justify-center rounded-sm text-neutral-500 hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-60"
+                              title={deleting ? 'Excluindo...' : 'Excluir inbox'}
+                            >
+                              <Trash2 className="size-4" />
+                            </button>
+                          </div>
+                        )
+                      })
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
 
               <div className="min-h-0 flex-1 overflow-auto">

@@ -20,7 +20,7 @@ type RouteRule = {
 }
 
 const RESOURCE_RULES: RouteRule[] = [
-  { pattern: /^email\/inboxes$/, methods: ['GET'] },
+  { pattern: /^email\/inboxes$/, methods: ['GET', 'DELETE'] },
   { pattern: /^email\/messages$/, methods: ['GET', 'POST'] },
   { pattern: /^email\/messages\/[^/]+$/, methods: ['GET', 'POST', 'DELETE'] },
   { pattern: /^email\/messages\/[^/]+\/attachments\/[^/]+$/, methods: ['GET'] },
@@ -303,4 +303,3 @@ export async function POST(req: NextRequest) {
     return Response.json({ ok: false, error: (e as Error).message }, { status: 500 })
   }
 }
-

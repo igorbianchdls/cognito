@@ -38,3 +38,26 @@ export async function GET(req: NextRequest) {
   }
 }
 
+export async function DELETE(req: NextRequest) {
+  try {
+    const url = new URL(req.url)
+    const body = await req.json().catch(() => ({}))
+    const inboxId = String(body?.inboxId || url.searchParams.get('inboxId') || '').trim()
+    if (!inboxId) return Response.json({ ok: false, error: 'Missing inboxId' }, { status: 400 })
+
+    const client = await getClient()
+    let data: any = null
+
+    if (typeof client?.inboxes?.delete === 'function') {
+      data = await client.inboxes.delete(inboxId)
+    } else {
+      throw new Error('Inbox delete is not available in current SDK client')
+    }
+
+    return Response.json({ ok: true, data: data ?? null })
+  } catch (e: any) {
+    const msg = e?.message || String(e)
+    const status = /key|auth/i.test(msg) ? 401 : 500
+    return Response.json({ ok: false, error: msg }, { status })
+  }
+}
