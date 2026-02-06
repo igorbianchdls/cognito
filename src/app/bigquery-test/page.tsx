@@ -36,6 +36,15 @@ export default function BigQueryTestPage() {
               Abrir modelo NFS-e
             </Link>
           </div>
+          <div className="rounded-xl border bg-white p-4">
+            <div className="text-sm font-medium text-gray-900 mb-2">Contratos</div>
+            <Link
+              href="/bigquery-test/contratos-modelo"
+              className="inline-flex rounded-md border border-gray-200 px-3 py-1.5 text-sm text-gray-800 hover:bg-gray-50"
+            >
+              Abrir modelo de contrato
+            </Link>
+          </div>
         </div>
       </div>
     </div>

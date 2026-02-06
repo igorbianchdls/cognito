@@ -1,3 +1,5 @@
+'use client'
+
 type NfsePrestadorTomador = {
   cpfCnpj: string
   inscricaoMunicipal?: string
@@ -90,9 +92,18 @@ export default function NfseModeloPage() {
   return (
     <div className="min-h-screen bg-zinc-200 p-4 md:p-8">
       <div className="mx-auto max-w-5xl space-y-4">
-        <h1 className="text-lg font-semibold text-zinc-900">Modelo NFS-e (fiel ao layout da imagem)</h1>
+        <div className="nfse-toolbar flex flex-wrap items-center justify-between gap-2">
+          <h1 className="text-lg font-semibold text-zinc-900">Modelo NFS-e (fiel ao layout da imagem)</h1>
+          <button
+            type="button"
+            onClick={() => window.print()}
+            className="inline-flex h-9 items-center rounded-md border border-zinc-300 bg-white px-3 text-sm text-zinc-800 hover:bg-zinc-50"
+          >
+            Baixar PDF
+          </button>
+        </div>
 
-        <div className="overflow-auto rounded-md border border-zinc-400 bg-zinc-300 p-4">
+        <div className="nfse-canvas overflow-auto rounded-md border border-zinc-400 bg-zinc-300 p-4">
           <div className="mx-auto w-[794px] min-h-[1123px] border-[1.5px] border-black bg-white text-black">
             <div className="border-b border-black px-2 py-1 text-[10px] leading-tight">
               Os dados da NFS-e abaixo sao ficticios. Documento visual de simulacao para interface.
@@ -201,13 +212,33 @@ export default function NfseModeloPage() {
           </div>
         </div>
 
-        <div className="rounded-md border border-zinc-300 bg-white p-3">
+        <div className="nfse-params rounded-md border border-zinc-300 bg-white p-3">
           <div className="mb-2 text-sm font-semibold text-zinc-800">Parametros do exemplo da nota fiscal</div>
           <pre className="overflow-auto rounded bg-zinc-100 p-3 text-xs text-zinc-800">
             <code>{JSON.stringify(nfseExemplo, null, 2)}</code>
           </pre>
         </div>
       </div>
+
+      <style jsx global>{`
+        @media print {
+          .nfse-toolbar {
+            display: none !important;
+          }
+          .nfse-params {
+            display: none !important;
+          }
+          .nfse-canvas {
+            border: none !important;
+            background: #fff !important;
+            padding: 0 !important;
+            overflow: visible !important;
+          }
+          body {
+            background: #fff !important;
+          }
+        }
+      `}</style>
     </div>
   )
 }
