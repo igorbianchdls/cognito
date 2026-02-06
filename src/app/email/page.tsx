@@ -367,7 +367,7 @@ export default function EmailPage() {
           <div className="grid h-full min-h-0 grid-cols-1 xl:grid-cols-[240px_380px_minmax(0,1fr)]">
             <aside className="hidden h-full min-h-0 flex-col border-r border-neutral-200 bg-white xl:flex">
               <div className="flex h-12 items-center border-b border-neutral-200 px-3">
-                <div className="relative">
+                <div className="relative w-full">
                   <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[10px] text-neutral-700">▲</span>
                   <select
                     value={activeInboxId}
@@ -489,8 +489,8 @@ export default function EmailPage() {
                           onClick={() => id && setSelectedMessageId(id)}
                           className={`w-full rounded-xl border px-3 py-3 text-left transition ${
                             selected
-                              ? 'border-neutral-300 bg-neutral-50'
-                              : 'border-neutral-200 bg-white hover:border-neutral-300 hover:bg-neutral-50'
+                              ? 'border-neutral-300 bg-white'
+                              : 'border-neutral-200 bg-white hover:border-neutral-300'
                           }`}
                         >
                           <div className="flex items-start justify-between gap-2">
