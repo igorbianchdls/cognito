@@ -12,7 +12,7 @@ export default function PdfViewer({ url, register }: { url?: string; register?: 
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    let cancelled = false
+    let cancelled = false;
     (async () => {
       try {
         const mod: any = await import('react-pdf')
