@@ -17,6 +17,8 @@ type ParsedResult = {
   error?: string
 }
 
+const HIDDEN_EMAIL_FIELDS = new Set(['organizationid', 'podid'])
+
 function toTitleCasePath(path?: string): string {
   if (!path) return 'Lista'
   try {
@@ -29,6 +31,16 @@ function toTitleCasePath(path?: string): string {
   } catch {
     return 'Lista'
   }
+}
+
+function normalizeResourcePath(input?: any): string {
+  if (!input || typeof input !== 'object') return ''
+  const raw = (input as any).resource || (input as any).path || (input as any).endpoint
+  return String(raw || '').replace(/^\/+|\/+$/g, '').toLowerCase()
+}
+
+function normalizeFieldKey(key: string): string {
+  return key.toLowerCase().replace(/[^a-z0-9]+/g, '')
 }
 
 function normalizeRows(data: unknown): AnyRow[] {
@@ -187,10 +199,24 @@ function parseResult(output: any, input?: any): ParsedResult {
 
 export default function ToolListResult({ output, input }: { output: any; input?: any }) {
   const result = useMemo(() => parseResult(output, input), [output, input])
+  const resourcePath = useMemo(() => normalizeResourcePath(input), [input])
+  const isEmailResource = resourcePath.startsWith('email/')
+  const visibleRows = useMemo(() => {
+    const src = Array.isArray(result.rows) ? result.rows : []
+    if (!isEmailResource) return src
+    return src.map((row) => {
+      const out: AnyRow = {}
+      for (const [key, value] of Object.entries(row)) {
+        if (HIDDEN_EMAIL_FIELDS.has(normalizeFieldKey(key))) continue
+        out[key] = value
+      }
+      return out
+    })
+  }, [isEmailResource, result.rows])
 
   const columns: ColumnDef<AnyRow>[] = useMemo(() => {
     const cols: ColumnDef<AnyRow>[] = []
-    const sample = (Array.isArray(result.rows) && result.rows[0]) || null
+    const sample = (Array.isArray(visibleRows) && visibleRows[0]) || null
     if (sample) {
       for (const key of Object.keys(sample)) {
         cols.push({
@@ -208,11 +234,11 @@ export default function ToolListResult({ output, input }: { output: any; input?:
       }
     }
     return cols
-  }, [result.rows])
+  }, [visibleRows])
 
   return (
     <ArtifactDataTable
-      data={Array.isArray(result.rows) ? result.rows : []}
+      data={visibleRows}
       columns={columns}
       title={result.title}
       icon={TableIcon}

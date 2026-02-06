@@ -94,6 +94,7 @@ export default function RespostaDaIa({ message }: Props) {
               // Detect CRUD with action 'listar' and workspace read requests
               let actionForCheck: string | undefined = undefined;
               let methodForCheck: string | undefined = undefined;
+              let resourceForCheck: string | undefined = undefined;
               let hasDataPayloadForCheck = false;
               let candidateForCheck: any = undefined;
               try {
@@ -112,6 +113,10 @@ export default function RespostaDaIa({ message }: Props) {
                 if (candidate && typeof candidate === 'object' && typeof (candidate as any).method === 'string') {
                   methodForCheck = String((candidate as any).method).toUpperCase();
                 }
+                if (candidate && typeof candidate === 'object') {
+                  if (typeof (candidate as any).resource === 'string') resourceForCheck = String((candidate as any).resource);
+                  else if (typeof (candidate as any).path === 'string') resourceForCheck = String((candidate as any).path);
+                }
                 if (candidate && typeof candidate === 'object' && (candidate as any).data !== undefined) {
                   const dataValue = (candidate as any).data;
                   if (dataValue && typeof dataValue === 'object') {
@@ -125,7 +130,13 @@ export default function RespostaDaIa({ message }: Props) {
               const isWorkspaceTool = normalized === 'workspace' || /__workspace$/i.test(normalized);
               const isWorkspaceRequest = actionForCheck === undefined || actionForCheck === 'request';
               const isWorkspaceReadMethod = methodForCheck === undefined || methodForCheck === 'GET';
-              const isWorkspaceGet = isWorkspaceTool && isWorkspaceRequest && isWorkspaceReadMethod && !hasDataPayloadForCheck;
+              const cleanResourceForCheck = String(resourceForCheck || '').replace(/^\/+|\/+$/g, '').toLowerCase();
+              const isWorkspaceListResource =
+                /^email\/inboxes$/.test(cleanResourceForCheck) ||
+                /^email\/messages$/.test(cleanResourceForCheck) ||
+                /^drive$/.test(cleanResourceForCheck) ||
+                /^drive\/folders\/[^/]+$/.test(cleanResourceForCheck);
+              const isWorkspaceGet = isWorkspaceTool && isWorkspaceRequest && isWorkspaceReadMethod && !hasDataPayloadForCheck && isWorkspaceListResource;
               const isGenericList = normalized === 'listar' || /__listar$/i.test(normalized) || isCrudList || isWorkspaceGet;
               if (isGenericList && (state === 'output-available' || state === 'output-error') && output) {
                 // Unwrap possible wrapped input (skill wrapper)
@@ -147,14 +158,30 @@ export default function RespostaDaIa({ message }: Props) {
                   const resRaw = (inputForDisplay && typeof (inputForDisplay as any).resource === 'string') ? String((inputForDisplay as any).resource) : (
                     (inputForDisplay && typeof (inputForDisplay as any).path === 'string') ? String((inputForDisplay as any).path) : undefined
                   );
-                  let seg = '';
-                  if (resRaw) {
-                    const clean = resRaw.replace(/^\/+|\/+$/g, '');
-                    const partsSeg = clean.split('/');
-                    seg = (partsSeg[partsSeg.length - 1] || '').toLowerCase();
-                  }
-                  const verb = act === 'request' && method ? method : act;
-                  if (verb) headerType = (`tool-${verb}${seg ? '_' + seg : ''}` as `tool-${string}`);
+                  const clean = String(resRaw || '').replace(/^\/+|\/+$/g, '').toLowerCase();
+                  const toSafeToken = (value: string) => value.replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+                  const routeToken = (() => {
+                    if (!clean) return '';
+                    if (/^email\/inboxes$/.test(clean)) return 'inboxes';
+                    if (/^email\/messages$/.test(clean)) return 'messages';
+                    if (/^email\/messages\/[^/]+$/.test(clean)) return 'message_content';
+                    if (/^email\/messages\/[^/]+\/attachments\/[^/]+$/.test(clean)) return 'attachment';
+                    if (/^drive$/.test(clean)) return 'drive';
+                    if (/^drive\/folders$/.test(clean)) return 'folders';
+                    if (/^drive\/folders\/[^/]+$/.test(clean)) return 'folder';
+                    if (/^drive\/files\/[^/]+$/.test(clean)) return 'file';
+                    if (/^drive\/files\/[^/]+\/download$/.test(clean)) return 'file_download';
+                    if (/^drive\/files\/prepare-upload$/.test(clean)) return 'prepare_upload';
+                    if (/^drive\/files\/complete-upload$/.test(clean)) return 'complete_upload';
+                    const partsSeg = clean.split('/').filter(Boolean);
+                    const last = partsSeg[partsSeg.length - 1] || '';
+                    const prev = partsSeg[partsSeg.length - 2] || '';
+                    const looksDynamic = /[@=+]/.test(last) || /^[0-9a-f-]{16,}$/i.test(last) || last.length > 24;
+                    return toSafeToken(looksDynamic ? prev : last);
+                  })();
+                  const isWorkspaceHeader = normalized === 'workspace' || /__workspace$/i.test(normalized);
+                  const verb = act === 'request' ? (method || (isWorkspaceHeader ? 'get' : act)) : act;
+                  if (verb) headerType = (`tool-${verb}${routeToken ? '_' + routeToken : ''}` as `tool-${string}`);
                 } catch {}
                 return (
                   <React.Fragment key={`tool-${index}-${state || 'unknown'}`}>
@@ -722,7 +749,8 @@ export default function RespostaDaIa({ message }: Props) {
             try {
               const normalized = toolType.startsWith('tool-') ? toolType.slice(5) : toolType;
               const looksCrud = normalized === 'crud' || /__crud$/i.test(normalized);
-              if (looksCrud) {
+              const looksWorkspace = normalized === 'workspace' || /__workspace$/i.test(normalized);
+              if (looksCrud || looksWorkspace) {
                 let candidate: any = input;
                 if (candidate && typeof candidate === 'object') {
                   const o: any = candidate;
@@ -733,16 +761,33 @@ export default function RespostaDaIa({ message }: Props) {
                 }
                 if (candidate && typeof candidate === 'object') {
                   const act = (typeof (candidate as any).action === 'string') ? String((candidate as any).action).toLowerCase() : undefined;
+                  const method = (typeof (candidate as any).method === 'string') ? String((candidate as any).method).toLowerCase() : undefined;
                   const resRaw = (typeof (candidate as any).resource === 'string') ? String((candidate as any).resource) : (
                     (typeof (candidate as any).path === 'string') ? String((candidate as any).path) : undefined
                   );
-                  let seg = '';
-                  if (resRaw) {
-                    const clean = resRaw.replace(/^\/+|\/+$/g, '');
-                    const partsSeg = clean.split('/');
-                    seg = (partsSeg[partsSeg.length - 1] || '').toLowerCase();
-                  }
-                  if (act) headerTypeGeneric = (`tool-${act}${seg ? '_' + seg : ''}` as `tool-${string}`);
+                  const clean = String(resRaw || '').replace(/^\/+|\/+$/g, '').toLowerCase();
+                  const toSafeToken = (value: string) => value.replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+                  const routeToken = (() => {
+                    if (!clean) return '';
+                    if (/^email\/inboxes$/.test(clean)) return 'inboxes';
+                    if (/^email\/messages$/.test(clean)) return 'messages';
+                    if (/^email\/messages\/[^/]+$/.test(clean)) return 'message_content';
+                    if (/^email\/messages\/[^/]+\/attachments\/[^/]+$/.test(clean)) return 'attachment';
+                    if (/^drive$/.test(clean)) return 'drive';
+                    if (/^drive\/folders$/.test(clean)) return 'folders';
+                    if (/^drive\/folders\/[^/]+$/.test(clean)) return 'folder';
+                    if (/^drive\/files\/[^/]+$/.test(clean)) return 'file';
+                    if (/^drive\/files\/[^/]+\/download$/.test(clean)) return 'file_download';
+                    if (/^drive\/files\/prepare-upload$/.test(clean)) return 'prepare_upload';
+                    if (/^drive\/files\/complete-upload$/.test(clean)) return 'complete_upload';
+                    const partsSeg = clean.split('/').filter(Boolean);
+                    const last = partsSeg[partsSeg.length - 1] || '';
+                    const prev = partsSeg[partsSeg.length - 2] || '';
+                    const looksDynamic = /[@=+]/.test(last) || /^[0-9a-f-]{16,}$/i.test(last) || last.length > 24;
+                    return toSafeToken(looksDynamic ? prev : last);
+                  })();
+                  const verb = act === 'request' ? (method || (looksWorkspace ? 'get' : act)) : act;
+                  if (verb) headerTypeGeneric = (`tool-${verb}${routeToken ? '_' + routeToken : ''}` as `tool-${string}`);
                 }
               }
             } catch {}
