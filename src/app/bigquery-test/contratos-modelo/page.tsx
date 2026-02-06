@@ -178,7 +178,7 @@ export default function ContratosModeloPage() {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-200 p-4">
+    <div className="contract-root min-h-screen bg-neutral-200 p-4">
       <div className="mx-auto flex max-w-[1500px] flex-col gap-4 xl:flex-row">
         <aside className="contract-editor-panel w-full shrink-0 xl:w-[380px]">
           <div className="rounded-xl border border-neutral-300 bg-white p-4 shadow-sm">
@@ -371,25 +371,42 @@ export default function ContratosModeloPage() {
 
       <style jsx global>{`
         @media print {
+          @page {
+            size: A4 portrait;
+            margin: 0;
+          }
+          html,
+          body {
+            margin: 0 !important;
+            padding: 0 !important;
+            background: white !important;
+            overflow: visible !important;
+          }
           .contract-editor-panel,
           .contract-topbar,
           .contract-json {
             display: none !important;
+          }
+          .contract-root,
+          .contract-root > div {
+            max-width: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            gap: 0 !important;
           }
           .contract-paper-wrap {
             border: none !important;
             background: white !important;
             padding: 0 !important;
             overflow: visible !important;
+            border-radius: 0 !important;
           }
           .contract-paper {
             width: 210mm !important;
             min-height: 297mm !important;
-            margin: 0 auto !important;
+            margin: 0 !important;
             box-shadow: none !important;
-          }
-          body {
-            background: white !important;
+            box-sizing: border-box !important;
           }
         }
       `}</style>

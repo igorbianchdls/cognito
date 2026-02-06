@@ -90,7 +90,7 @@ export default function NfseModeloPage() {
   const n = nfseExemplo
 
   return (
-    <div className="min-h-screen bg-zinc-200 p-4 md:p-8">
+    <div className="nfse-root min-h-screen bg-zinc-200 p-4 md:p-8">
       <div className="mx-auto max-w-5xl space-y-4">
         <div className="nfse-toolbar flex flex-wrap items-center justify-between gap-2">
           <h1 className="text-lg font-semibold text-zinc-900">Modelo NFS-e (fiel ao layout da imagem)</h1>
@@ -104,7 +104,7 @@ export default function NfseModeloPage() {
         </div>
 
         <div className="nfse-canvas overflow-auto rounded-md border border-zinc-400 bg-zinc-300 p-4">
-          <div className="mx-auto w-[794px] min-h-[1123px] border-[1.5px] border-black bg-white text-black">
+          <div className="nfse-paper mx-auto w-[794px] min-h-[1123px] border-[1.5px] border-black bg-white text-black">
             <div className="border-b border-black px-2 py-1 text-[10px] leading-tight">
               Os dados da NFS-e abaixo sao ficticios. Documento visual de simulacao para interface.
             </div>
@@ -222,20 +222,44 @@ export default function NfseModeloPage() {
 
       <style jsx global>{`
         @media print {
+          @page {
+            size: A4 portrait;
+            margin: 0;
+          }
+          html,
+          body {
+            margin: 0 !important;
+            padding: 0 !important;
+            background: #fff !important;
+            overflow: visible !important;
+          }
           .nfse-toolbar {
             display: none !important;
           }
           .nfse-params {
             display: none !important;
           }
+          .nfse-root,
+          .nfse-root > div {
+            max-width: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            gap: 0 !important;
+          }
           .nfse-canvas {
             border: none !important;
             background: #fff !important;
             padding: 0 !important;
             overflow: visible !important;
+            border-radius: 0 !important;
           }
-          body {
-            background: #fff !important;
+          .nfse-paper {
+            width: 210mm !important;
+            min-height: 297mm !important;
+            margin: 0 !important;
+            border: 1px solid #000 !important;
+            box-shadow: none !important;
+            box-sizing: border-box !important;
           }
         }
       `}</style>
