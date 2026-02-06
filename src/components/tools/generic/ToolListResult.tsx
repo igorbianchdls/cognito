@@ -85,6 +85,56 @@ function unwrapMcpLike(output: any): any {
   return res
 }
 
+function rowsFromObject(obj: any): AnyRow[] {
+  if (!obj || typeof obj !== 'object') return []
+
+  const preferredKeys = [
+    'rows',
+    'items',
+    'data',
+    'messages',
+    'inboxes',
+    'files',
+    'folders',
+    'recentFiles',
+    'workspaces',
+    'results',
+  ]
+
+  for (const key of preferredKeys) {
+    const v = (obj as any)[key]
+    if (Array.isArray(v)) return normalizeRows(v)
+  }
+
+  const dataObj = (obj as any).data
+  if (dataObj && typeof dataObj === 'object' && !Array.isArray(dataObj)) {
+    for (const key of preferredKeys) {
+      const v = (dataObj as any)[key]
+      if (Array.isArray(v)) return normalizeRows(v)
+    }
+  }
+
+  // Fallback: discover first useful array in nested objects.
+  const queue: any[] = [obj]
+  const visited = new Set<any>()
+  let depth = 0
+  while (queue.length > 0 && depth < 4) {
+    const levelSize = queue.length
+    for (let i = 0; i < levelSize; i += 1) {
+      const current = queue.shift()
+      if (!current || typeof current !== 'object' || visited.has(current)) continue
+      visited.add(current)
+      for (const value of Object.values(current)) {
+        if (Array.isArray(value) && value.length > 0) return normalizeRows(value as AnyRow[])
+        if (value && typeof value === 'object' && !Array.isArray(value)) queue.push(value)
+      }
+    }
+    depth += 1
+  }
+
+  return []
+}
+
 function parseResult(output: any, input?: any): ParsedResult {
   // Unwrap and try to standardize
   const unwrapped = unwrapMcpLike(output)
@@ -105,17 +155,17 @@ function parseResult(output: any, input?: any): ParsedResult {
       rows = normalizeRows(base)
       count = rows.length
     } else if (base && typeof base === 'object') {
-      // common shapes
-      if (Array.isArray((base as any).rows)) rows = normalizeRows((base as any).rows)
-      else if (Array.isArray((base as any).data)) rows = normalizeRows((base as any).data)
-      else if (Array.isArray((base as any).items)) rows = normalizeRows((base as any).items)
+      // common shapes (including nested data.* and workspace-style responses)
+      rows = rowsFromObject(base)
       success = (base as any).success !== undefined ? Boolean((base as any).success) : true
       message = String((base as any).message ?? '')
       title = String((base as any).title ?? '')
       sql_query = typeof (base as any).sql_query === 'string' ? (base as any).sql_query : undefined
-      error = (base as any).error as string | undefined
+      error = ((base as any).error ?? (base as any)?.data?.error) as string | undefined
       if (typeof (base as any).count === 'number') count = (base as any).count
       else if (typeof (base as any).total === 'number') count = (base as any).total
+      else if (typeof (base as any)?.data?.count === 'number') count = (base as any).data.count
+      else if (typeof (base as any)?.data?.total === 'number') count = (base as any).data.total
     }
   } catch {}
 

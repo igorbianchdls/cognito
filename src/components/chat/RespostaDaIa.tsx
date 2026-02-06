@@ -88,11 +88,14 @@ export default function RespostaDaIa({ message }: Props) {
                 }
               }
             }
-            // Special render: generic MCP "listar" → ArtifactDataTable
+            // Special render: MCP list-like outputs (listar/crud listar/workspace GET request) → ArtifactDataTable
             {
               const normalized = toolType.startsWith('tool-') ? toolType.slice(5) : toolType;
-              // Detect CRUD with action 'listar'
+              // Detect CRUD with action 'listar' and workspace read requests
               let actionForCheck: string | undefined = undefined;
+              let methodForCheck: string | undefined = undefined;
+              let hasDataPayloadForCheck = false;
+              let candidateForCheck: any = undefined;
               try {
                 let candidate: any = input;
                 if (candidate && typeof candidate === 'object') {
@@ -102,15 +105,31 @@ export default function RespostaDaIa({ message }: Props) {
                   const s = ((part as any).inputStream as string).trim();
                   if (s) { try { candidate = JSON.parse(s) } catch { /* ignore */ } }
                 }
+                candidateForCheck = candidate;
                 if (candidate && typeof candidate === 'object' && typeof (candidate as any).action === 'string') {
                   actionForCheck = String((candidate as any).action).toLowerCase();
                 }
+                if (candidate && typeof candidate === 'object' && typeof (candidate as any).method === 'string') {
+                  methodForCheck = String((candidate as any).method).toUpperCase();
+                }
+                if (candidate && typeof candidate === 'object' && (candidate as any).data !== undefined) {
+                  const dataValue = (candidate as any).data;
+                  if (dataValue && typeof dataValue === 'object') {
+                    hasDataPayloadForCheck = Array.isArray(dataValue) ? dataValue.length > 0 : Object.keys(dataValue).length > 0;
+                  } else {
+                    hasDataPayloadForCheck = dataValue !== null && dataValue !== '';
+                  }
+                }
               } catch {}
               const isCrudList = (normalized === 'crud' || /__crud$/i.test(normalized)) && actionForCheck === 'listar';
-              const isGenericList = normalized === 'listar' || /__listar$/i.test(normalized) || isCrudList;
+              const isWorkspaceTool = normalized === 'workspace' || /__workspace$/i.test(normalized);
+              const isWorkspaceRequest = actionForCheck === undefined || actionForCheck === 'request';
+              const isWorkspaceReadMethod = methodForCheck === undefined || methodForCheck === 'GET';
+              const isWorkspaceGet = isWorkspaceTool && isWorkspaceRequest && isWorkspaceReadMethod && !hasDataPayloadForCheck;
+              const isGenericList = normalized === 'listar' || /__listar$/i.test(normalized) || isCrudList || isWorkspaceGet;
               if (isGenericList && (state === 'output-available' || state === 'output-error') && output) {
                 // Unwrap possible wrapped input (skill wrapper)
-                let inputForDisplay: any = input;
+                let inputForDisplay: any = candidateForCheck ?? input;
                 try {
                   if (input && typeof input === 'object') {
                     const o: any = input as any;
@@ -124,6 +143,7 @@ export default function RespostaDaIa({ message }: Props) {
                 let headerType: `tool-${string}` = ((part as any).type as `tool-${string}`) || ('tool-generic' as `tool-${string}`);
                 try {
                   const act = (inputForDisplay && typeof (inputForDisplay as any).action === 'string') ? String((inputForDisplay as any).action).toLowerCase() : undefined;
+                  const method = (inputForDisplay && typeof (inputForDisplay as any).method === 'string') ? String((inputForDisplay as any).method).toLowerCase() : undefined;
                   const resRaw = (inputForDisplay && typeof (inputForDisplay as any).resource === 'string') ? String((inputForDisplay as any).resource) : (
                     (inputForDisplay && typeof (inputForDisplay as any).path === 'string') ? String((inputForDisplay as any).path) : undefined
                   );
@@ -133,7 +153,8 @@ export default function RespostaDaIa({ message }: Props) {
                     const partsSeg = clean.split('/');
                     seg = (partsSeg[partsSeg.length - 1] || '').toLowerCase();
                   }
-                  if (act) headerType = (`tool-${act}${seg ? '_' + seg : ''}` as `tool-${string}`);
+                  const verb = act === 'request' && method ? method : act;
+                  if (verb) headerType = (`tool-${verb}${seg ? '_' + seg : ''}` as `tool-${string}`);
                 } catch {}
                 return (
                   <React.Fragment key={`tool-${index}-${state || 'unknown'}`}>
