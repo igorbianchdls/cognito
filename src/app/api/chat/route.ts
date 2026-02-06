@@ -321,8 +321,8 @@ export async function POST(req: Request) {
       lines.push('- Keep outputs concise and relevant; include IDs/links returned by the tool when helpful.')
     }
     lines.push('')
-    lines.push('Conversation:')
-    for (const m of history.slice(-12)) lines.push(`${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`)
+    const lastUserTurn = [...history].reverse().find(m => m.role === 'user' && typeof m.content === 'string' && m.content.trim())
+    lines.push(`User: ${lastUserTurn?.content || ''}`)
     lines.push('Assistant:')
     const prompt = lines.join('\n').slice(0, 6000)
     const runner = getChatStreamRunnerScript()

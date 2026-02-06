@@ -111,7 +111,8 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
     setMessages(prev => [...prev, { id: assistantId, role: 'assistant', parts: [] as any }])
 
     setStatus('submitted')
-    const history = [...messages, userMsg].filter(m => m.role === 'user' || m.role === 'assistant').map(m => ({ role: m.role as 'user'|'assistant', content: m.parts?.find(p=>p.type==='text')?.text || '' }))
+    // Resume mode already preserves prior context in Claude session; send only the new user turn.
+    const history = [{ role: 'user' as const, content: text }]
     const body = isSlash
       ? { action: 'chat-slash', chatId: id, prompt: text }
       : { action: 'chat-send-stream', chatId: id, history, clientMessageId: userMsg.id }
