@@ -37,6 +37,8 @@ type ScenarioTemplate = {
   labels?: string[]
 }
 
+type RoleMap = Record<Role, InboxRef>
+
 function extractList(data: any): any[] {
   if (Array.isArray(data)) return data
   if (!data || typeof data !== "object") return []
@@ -134,42 +136,124 @@ async function fetchJson(path: string, init?: RequestInit) {
 
 function buildSmbTemplates(): ScenarioTemplate[] {
   const fiscal: Omit<ScenarioTemplate, "from">[] = [
-    { to: ["compras"], subject: "Aprovacao de pagamento - NF 4587", text: "Pagamento aprovado. Programar liquidacao para 12/02.", labels: ["fiscal", "financeiro"] },
-    { to: ["vendas"], subject: "Emissao de NF-e - Pedido PV-932", text: "NF-e emitida. Chave final 3124. Pode seguir com expedicao.", labels: ["fiscal", "vendas"] },
-    { to: ["compras", "vendas"], subject: "Fechamento mensal - documentos pendentes", text: "Enviar notas e comprovantes pendentes ate 17h para fechamento.", labels: ["fiscal", "fechamento"] },
-    { to: ["compras"], subject: "Conferencia de boletos do fornecedor Alfa", text: "Identifiquei divergencia de R$ 42,90. Revisar boleto de fevereiro.", labels: ["fiscal", "compras"] },
-    { to: ["vendas"], subject: "Tributacao de novo produto", text: "Validado NCM e aliquota para o item lancado nesta semana.", labels: ["fiscal", "vendas"] },
-    { to: ["compras"], subject: "Reembolso aprovado - viagem comercial", text: "Reembolso aprovado no valor de R$ 860,00. Seguir com pagamento.", labels: ["fiscal", "financeiro"] },
-    { to: ["vendas"], cc: ["compras"], subject: "Conciliacao de recebiveis - carteira fevereiro", text: "Conciliacao parcial concluida. Confirmar 3 recebimentos em aberto.", labels: ["fiscal", "financeiro"] },
-    { to: ["compras"], subject: "Retencoes de servico - validacao", text: "Aplicar retencoes no proximo pagamento de prestador PJ.", labels: ["fiscal", "compras"] },
-    { to: ["vendas"], subject: "Prazo de envio de XML para cliente", text: "Cliente solicitou XML ate 14h. Priorizar envio ainda hoje.", labels: ["fiscal", "vendas"] },
-    { to: ["compras", "vendas"], subject: "Checklist de auditoria interna", text: "Compartilhar contratos, pedidos e notas para auditoria trimestral.", labels: ["fiscal"] },
+    {
+      to: ["compras"],
+      subject: "Aprovacao de pagamentos da semana - fornecedores criticos",
+      text: "Time de Compras,\n\nRevisei o lote de contas com vencimento entre quarta e sexta e liberei os pagamentos dos fornecedores criticos (energia, internet e transporte).\n\nPor favor executar os pagamentos na sequencia abaixo:\n1. SulLog Transportes - R$ 4.820,00\n2. Energia Centro - R$ 2.145,34\n3. Link Business Internet - R$ 689,90\n\nApos liquidacao, anexar os comprovantes no drive da pasta Financeiro > Pagamentos > Semana 06.",
+      labels: ["fiscal", "financeiro"],
+    },
+    {
+      to: ["vendas"],
+      subject: "Janela de emissao de NF-e para pedidos confirmados hoje",
+      text: "Equipe Comercial,\n\nConseguimos abrir uma janela de emissao hoje entre 15h e 17h. Se houver pedidos com cadastro completo (CNPJ, IE e endereco fiscal), enviem no formato padrao ate 14h30.\n\nTudo que entrar nesse horario vai faturar no mesmo dia. Pedidos incompletos ficam para o proximo lote.",
+      labels: ["fiscal", "vendas"],
+    },
+    {
+      to: ["compras", "vendas"],
+      subject: "Fechamento mensal: pendencias obrigatorias ate 17h",
+      text: "Pessoal,\n\nPara fecharmos o mes sem retrabalho, preciso dos itens pendentes ate 17h de hoje:\n- Compras: XML e DANFE das notas de servico\n- Vendas: confirmacao de recebimentos e descontos aplicados fora da tabela\n\nSem esse material, o fechamento contabil fica parcial e pode impactar DRE e fluxo de caixa da semana que vem.",
+      labels: ["fiscal", "fechamento"],
+    },
+    {
+      to: ["compras"],
+      subject: "Divergencia tributaria em nota do fornecedor Orion",
+      text: "Compras,\n\nA nota 9811 do fornecedor Orion veio com base de calculo diferente da combinada em contrato e gerou imposto acima do previsto.\n\nAntes de pagar, peço contato com o fornecedor para carta de correcao ou nova emissao. Se precisarem, envio a memoria de calculo para apoiar a negociacao.",
+      labels: ["fiscal", "compras"],
+    },
+    {
+      to: ["vendas"],
+      cc: ["compras"],
+      subject: "Margem minima para descontos na campanha de fim de mes",
+      text: "Vendas,\n\nValidei a margem por linha de produto e precisamos manter desconto maximo de 12% nos itens da campanha para preservar contribuicao.\n\nCompras foi copiada para ajudar em eventual renegociacao com fornecedores de maior giro.",
+      labels: ["fiscal", "vendas"],
+    },
+    {
+      to: ["vendas"],
+      cc: ["compras"],
+      subject: "Fluxo de caixa projetado e prioridade de cobranca",
+      text: "Times,\n\nNo fluxo projetado dos proximos 10 dias teremos concentracao de saidas na proxima segunda. Para equilibrar caixa, precisamos priorizar cobranca de 5 clientes com boletos vencendo ate sexta.\n\nComercial: focar follow-up de recebimento.\nCompras: evitar novas compras nao urgentes ate atualizar o saldo de sexta.",
+      labels: ["fiscal", "financeiro"],
+    },
   ]
 
   const compras: Omit<ScenarioTemplate, "from">[] = [
-    { to: ["fiscal"], subject: "Solicitacao de aprovacao - NF 7721", text: "Preciso da aprovacao da NF 7721 para pagamento na sexta.", labels: ["compras", "financeiro"] },
-    { to: ["vendas"], subject: "Status de reposicao de estoque", text: "Toner, etiquetas e caixas com entrega prevista para amanha.", labels: ["compras", "operacao"] },
-    { to: ["fiscal"], subject: "Comprovante de pagamento - frete fevereiro", text: "Pagamento do frete realizado. Segue para conciliacao.", labels: ["compras", "financeiro"] },
-    { to: ["vendas"], subject: "Fornecedor homologado - embalagens", text: "Novo fornecedor homologado com custo 8% menor.", labels: ["compras"] },
-    { to: ["fiscal"], subject: "Pedido de adiantamento - material de escritorio", text: "Solicito adiantamento de R$ 1.200,00 para compra emergencial.", labels: ["compras", "financeiro"] },
-    { to: ["vendas"], cc: ["fiscal"], subject: "Atualizacao de prazo - pedido interno", text: "Entrega parcial hoje e saldo restante em 48h.", labels: ["compras", "vendas"] },
-    { to: ["fiscal"], subject: "Divergencia em nota de servico", text: "Valor de ISS veio acima do esperado. Preciso de orientacao.", labels: ["compras", "fiscal"] },
-    { to: ["vendas"], subject: "Cotacao aprovada - material promocional", text: "Aprovamos cotacao para panfletos e brindes do mes.", labels: ["compras", "marketing"] },
-    { to: ["fiscal"], subject: "Envio de XML - fornecedor Beta", text: "XML e DANFE enviados para arquivo fiscal.", labels: ["compras", "fiscal"] },
-    { to: ["vendas"], subject: "Reposicao urgente - etiquetas logisticas", text: "Solicitacao emergencial registrada com prioridade maxima.", labels: ["compras", "operacao"] },
+    {
+      to: ["fiscal"],
+      subject: "Solicitacao de aprovacao - lote de NFs com vencimento na sexta",
+      text: "Fiscal,\n\nMontei um lote com 7 notas para pagamento na sexta, totalizando R$ 18.430,22. Ja conferi pedido, recebimento e condicoes comerciais.\n\nSe estiver ok, preciso da aprovacao ate 12h para processar no banco ainda hoje.",
+      labels: ["compras", "financeiro"],
+    },
+    {
+      to: ["vendas"],
+      subject: "Status de reposicao de itens de alto giro",
+      text: "Comercial,\n\nAtualizando o estoque de apoio da operacao:\n- Etiquetas logisticas: entrega amanha ate 11h\n- Caixas P e M: entrega parcial hoje\n- Toner preto: fornecedor confirmou embarque para sexta\n\nSe houver campanha extra no fim de semana, me avisem para antecipar pedido.",
+      labels: ["compras", "operacao"],
+    },
+    {
+      to: ["fiscal"],
+      subject: "Comprovantes de pagamento de frete e armazenagem",
+      text: "Fiscal,\n\nSeguem pagamentos executados hoje:\n- Frete SulLog: R$ 4.820,00\n- Armazenagem CD Norte: R$ 1.970,00\n\nComprovantes ja anexados no drive. Se faltar algum documento para conciliacao, sinalizo ainda hoje.",
+      labels: ["compras", "financeiro"],
+    },
+    {
+      to: ["vendas"],
+      subject: "Fornecedor homologado para embalagem premium",
+      text: "Comercial,\n\nFinalizamos homologacao da EmbalaMais para linha premium. O contrato ficou 9% abaixo do fornecedor atual e com SLA melhor para reposicao.\n\nPodemos usar no proximo ciclo de pedidos sem risco de ruptura.",
+      labels: ["compras"],
+    },
+    {
+      to: ["fiscal"],
+      subject: "Reajuste contratual - manutencao de equipamentos",
+      text: "Fiscal,\n\nA empresa TecService pediu reajuste de 6,3% no contrato mensal de manutencao. Nosso limite orcado era 4,5%.\n\nAntes de fechar, queria sua avaliacao de impacto e eventual aprovacao para excecao.",
+      labels: ["compras", "fiscal"],
+    },
+    {
+      to: ["vendas"],
+      cc: ["fiscal"],
+      subject: "Compra emergencial de notebook para representante",
+      text: "Comercial,\n\nAbrimos compra emergencial de 1 notebook para o representante da regiao Sul, devido falha no equipamento atual durante visitas externas.\n\nFiscal em copia para validar classificacao contabil e depreciacao correta.",
+      labels: ["compras", "vendas"],
+    },
   ]
 
   const vendas: Omit<ScenarioTemplate, "from">[] = [
-    { to: ["fiscal"], subject: "Pedido PV-1054 confirmado", text: "Cliente confirmou pedido de R$ 12.450,00. Emitir nota fiscal.", labels: ["vendas", "fiscal"] },
-    { to: ["compras"], subject: "Reposicao de itens para kit promocional", text: "Precisamos de 200 unidades extras para campanha de fevereiro.", labels: ["vendas", "compras"] },
-    { to: ["fiscal"], subject: "Boleto recebido - cliente Horizonte", text: "Boleto recebido hoje. Favor registrar no financeiro.", labels: ["vendas", "financeiro"] },
-    { to: ["compras"], subject: "Solicitacao de amostras - novo fornecedor", text: "Equipe comercial precisa de amostras ate quarta-feira.", labels: ["vendas", "compras"] },
-    { to: ["fiscal"], subject: "Ajuste de cadastro fiscal - cliente Nova Era", text: "Cliente alterou IE estadual. Atualizar cadastro antes da emissao.", labels: ["vendas", "fiscal"] },
-    { to: ["compras"], subject: "Material de apoio para time externo", text: "Solicito reposicao de folders e banners para visitas comerciais.", labels: ["vendas", "operacao"] },
-    { to: ["fiscal"], cc: ["compras"], subject: "Recebimento parcial - pedido corporativo", text: "Recebemos sinal de 30%. Saldo previsto para 15 dias.", labels: ["vendas", "financeiro"] },
-    { to: ["compras"], subject: "Follow-up de prazo - embalagem personalizada", text: "Confirmar prazo final para envio ao cliente premium.", labels: ["vendas", "compras"] },
-    { to: ["fiscal"], subject: "Cancelamento de pedido PV-1041", text: "Cliente cancelou por duplicidade. Necessario estorno fiscal.", labels: ["vendas", "fiscal"] },
-    { to: ["compras"], subject: "Urgente: reposicao de caixa de envio", text: "Estoque de caixas acabou no CD. Repor hoje se possivel.", labels: ["vendas", "operacao"] },
+    {
+      to: ["fiscal"],
+      subject: "Pedido corporativo confirmado - faturamento solicitado para hoje",
+      text: "Fiscal,\n\nFechamos o pedido do cliente Nova Horizonte no valor de R$ 28.740,00, com pagamento em 21 dias. O cliente pediu emissao da nota ainda hoje para liberar recebimento no centro de distribuicao.\n\nDados fiscais completos ja conferidos no CRM.",
+      labels: ["vendas", "fiscal"],
+    },
+    {
+      to: ["compras"],
+      subject: "Reposicao para kits de campanha regional",
+      text: "Compras,\n\nA campanha da regional Sudeste acelerou acima do previsto. Precisamos de reposicao de 300 kits (caixa, etiqueta e folder) para nao quebrar entrega no inicio da proxima semana.\n\nSe conseguir, priorizar os itens com maior giro no CD principal.",
+      labels: ["vendas", "compras"],
+    },
+    {
+      to: ["fiscal"],
+      subject: "Recebimento de boleto - cliente Horizonte",
+      text: "Fiscal,\n\nConfirmamos recebimento do boleto do cliente Horizonte hoje as 10h12 no valor de R$ 9.480,00.\n\nPode registrar na conciliacao e liberar o status financeiro no pedido para seguirmos com nova venda.",
+      labels: ["vendas", "financeiro"],
+    },
+    {
+      to: ["compras"],
+      subject: "Solicitacao de amostras para rodada comercial",
+      text: "Compras,\n\nNosso time externo vai visitar 4 contas estrategicas semana que vem e precisa de amostras de 3 linhas novas.\n\nSe der, separar e enviar ate quinta no fim da tarde para embarque conjunto.",
+      labels: ["vendas", "compras"],
+    },
+    {
+      to: ["fiscal"],
+      cc: ["compras"],
+      subject: "Previsao de faturamento da semana e risco de atraso",
+      text: "Times,\n\nA previsao de faturamento da semana esta em R$ 146 mil, mas 2 pedidos dependem de confirmacao de estoque e documentacao final.\n\nSe conseguirmos resolver ate amanha 14h, mantemos meta sem impacto no caixa.",
+      labels: ["vendas", "financeiro"],
+    },
+    {
+      to: ["fiscal"],
+      subject: "Cancelamento parcial de pedido e necessidade de ajuste fiscal",
+      text: "Fiscal,\n\nO cliente Atlas pediu cancelamento parcial de 12 unidades por mudanca de escopo interno. Precisamos ajustar a base do pedido original e confirmar qual o procedimento fiscal correto para evitar retrabalho na faturacao.\n\nAssim que orientarem, o time atualiza o pedido no ERP.",
+      labels: ["vendas", "fiscal"],
+    },
   ]
 
   const templates: ScenarioTemplate[] = []
@@ -179,14 +263,30 @@ function buildSmbTemplates(): ScenarioTemplate[] {
   return templates
 }
 
-function buildSmbTemplatesFollowup(): ScenarioTemplate[] {
-  const runTag = new Date().toLocaleString("pt-BR")
-  return buildSmbTemplates().map((t, idx) => ({
-    ...t,
-    subject: `Follow-up ${idx + 1} - ${t.subject}`,
-    text: `Atualizacao automatica (${runTag}).\n\n${t.text}`,
-    labels: [...(t.labels || []), "followup"],
-  }))
+function buildSeedInboxItems() {
+  const suffix = Date.now().toString().slice(-6)
+  return [
+    { username: `fiscal-smb-${suffix}`, displayName: "Fiscal ACME" },
+    { username: `compras-smb-${suffix}`, displayName: "Compras ACME" },
+    { username: `vendas-smb-${suffix}`, displayName: "Vendas ACME" },
+  ]
+}
+
+function isManagedSmbInbox(inbox: any): boolean {
+  const text = norm([inbox?.displayName, inbox?.username, inbox?.email, inbox?.inboxId].filter(Boolean).join(" "))
+  const hasRole = text.includes("fiscal") || text.includes("compras") || text.includes("vendas")
+  const hasTag = text.includes("acme") || text.includes("-smb-")
+  return hasRole && hasTag
+}
+
+function resolveRoleMap(rawInboxes: any[]): RoleMap | null {
+  const { byRole, missing } = pickScenarioInboxes(rawInboxes)
+  if (missing.length > 0) return null
+  return {
+    fiscal: byRole.fiscal as InboxRef,
+    compras: byRole.compras as InboxRef,
+    vendas: byRole.vendas as InboxRef,
+  }
 }
 
 export default function InboxesSeedPage() {
@@ -271,19 +371,15 @@ export default function InboxesSeedPage() {
     })
   }
 
-  const runSimulation = async (templates: ScenarioTemplate[], modeLabel: string) => {
+  const runSimulation = async (templates: ScenarioTemplate[], modeLabel: string, fixedRoleMap?: RoleMap, extraMeta?: JsonValue) => {
     setStatus(`Preparando ${modeLabel}...`)
     const inboxes = await listAllInboxes()
-    const { byRole, missing } = pickScenarioInboxes(inboxes)
-    if (missing.length > 0) {
-      throw new Error("Faltam inboxes para a simulação (Fiscal/Compras/Vendas). Clique em 'Criar 3 inboxes' primeiro.")
+    const roleMap = fixedRoleMap || resolveRoleMap(inboxes)
+    if (!roleMap) {
+      throw new Error("Faltam inboxes para a simulacao (Fiscal/Compras/Vendas). Clique em 'Criar 3 inboxes' primeiro.")
     }
 
-    const fiscal = byRole.fiscal as InboxRef
-    const compras = byRole.compras as InboxRef
-    const vendas = byRole.vendas as InboxRef
-
-    const roleMap: Record<Role, InboxRef> = { fiscal, compras, vendas }
+    const { fiscal, compras, vendas } = roleMap
     const sent: Array<{
       ok: boolean
       index: number
@@ -361,6 +457,7 @@ export default function InboxesSeedPage() {
         compras: { inboxId: compras.inboxId, email: compras.address, label: compras.label },
         vendas: { inboxId: vendas.inboxId, email: vendas.address, label: vendas.label },
       },
+      ...(extraMeta && typeof extraMeta === "object" ? { meta: extraMeta } : {}),
       messages: sent,
     })
     setStatus(`${modeLabel} finalizada: ${success}/${sent.length} emails enviados.`)
@@ -372,9 +469,58 @@ export default function InboxesSeedPage() {
     })
   }
 
-  const simulateNewSMBEmails = async () => {
+  const resetAndRebuildScenario = async () => {
     await call(async () => {
-      await runSimulation(buildSmbTemplatesFollowup(), "novos emails SMB")
+      setStatus("Resetando inboxes da simulacao...")
+      const current = await listAllInboxes()
+      let candidates = current.filter((inbox: any) => isManagedSmbInbox(inbox))
+
+      if (candidates.length === 0) {
+        const fallback = resolveRoleMap(current)
+        if (fallback) candidates = [fallback.fiscal, fallback.compras, fallback.vendas]
+      }
+
+      const deleted: string[] = []
+      const deleteErrors: Array<{ inboxId: string; error: string }> = []
+      for (let i = 0; i < candidates.length; i += 1) {
+        const id = getInboxId(candidates[i])
+        if (!id) continue
+        setStatus(`Apagando inboxes antigas... ${i + 1}/${candidates.length}`)
+        try {
+          await fetchJson("/api/email/inboxes", {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ inboxId: id }),
+          })
+          deleted.push(id)
+        } catch (e: any) {
+          deleteErrors.push({ inboxId: id, error: e?.message || String(e) })
+        }
+      }
+
+      setStatus("Criando 3 novas inboxes...")
+      const createdPayload = await fetchJson("/api/email/inboxes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items: buildSeedInboxItems() }),
+      })
+      const createdRaw = Array.isArray(createdPayload?.created) ? createdPayload.created : []
+      let roleMap = resolveRoleMap(createdRaw)
+      if (!roleMap) {
+        const afterCreate = await listAllInboxes()
+        roleMap = resolveRoleMap(afterCreate)
+      }
+      if (!roleMap) {
+        throw new Error("Nao consegui resolver as 3 novas inboxes apos criacao.")
+      }
+
+      await runSimulation(buildSmbTemplates(), "cenario SMB completo", roleMap, {
+        reset: {
+          deletedCount: deleted.length,
+          deleteErrors,
+          createdCount: createdRaw.length,
+        },
+      })
     })
   }
 
@@ -394,7 +540,7 @@ export default function InboxesSeedPage() {
         <div>
           <h1 className="text-2xl font-semibold text-gray-900">Seed de Inboxes</h1>
           <p className="mt-1 text-sm text-gray-600">
-            Esta página cria 3 inboxes padrão para simulação SMB brasileira.
+            Use esta pagina para resetar e popular um cenario de email SMB brasileira.
           </p>
         </div>
 
@@ -427,10 +573,10 @@ export default function InboxesSeedPage() {
             <button
               type="button"
               disabled={disabled}
-              onClick={simulateNewSMBEmails}
+              onClick={resetAndRebuildScenario}
               className="rounded-md border border-gray-200 px-3 py-1.5 text-sm text-gray-800 disabled:opacity-60"
             >
-              Simular novos emails SMB
+              Resetar tudo + gerar 18 emails
             </button>
             <button
               type="button"
@@ -442,7 +588,7 @@ export default function InboxesSeedPage() {
             </button>
           </div>
           <p className="mt-2 text-xs text-gray-500">
-            Padrão: Fiscal ACME, Compras ACME e Vendas ACME.
+            Cenario alvo: 3 inboxes (Fiscal, Compras, Vendas) e 18 emails realistas (6 por inbox).
           </p>
           {status ? <p className="mt-2 text-xs text-gray-600">{status}</p> : null}
         </div>
@@ -452,7 +598,7 @@ export default function InboxesSeedPage() {
         <div className="rounded-xl border bg-white p-4">
           <div className="mb-3 text-xs font-medium text-gray-600">Preview por inbox</div>
           {previews.length === 0 ? (
-            <div className="text-xs text-gray-500">Sem preview ainda. Clique em "Listar inboxes" ou "Simular emails SMB".</div>
+            <div className="text-xs text-gray-500">Sem preview ainda. Clique em "Resetar tudo + gerar 18 emails" para montar o cenario completo.</div>
           ) : (
             <div className="grid gap-3 md:grid-cols-3">
               {previews.map((box) => (
