@@ -366,7 +366,7 @@ export default function EmailPage() {
         <SidebarInset className="h-screen overflow-hidden bg-white">
           <div className="grid h-full min-h-0 grid-cols-1 xl:grid-cols-[240px_380px_minmax(0,1fr)]">
             <aside className="hidden h-full min-h-0 flex-col border-r border-neutral-200 bg-white xl:flex">
-              <div className="p-3">
+              <div className="flex h-16 items-center border-b border-neutral-200 px-3">
                 <div className="relative">
                   <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[10px] text-neutral-700">▲</span>
                   <select
@@ -390,7 +390,7 @@ export default function EmailPage() {
                 </div>
               </div>
 
-              <div className="min-h-0 flex-1 overflow-auto border-t border-neutral-200">
+              <div className="min-h-0 flex-1 overflow-auto">
                 <div className="space-y-0.5 p-2">
                   {PRIMARY_FOLDERS.map((f) => (
                     <button
@@ -436,8 +436,8 @@ export default function EmailPage() {
 
             <section className="min-h-0 border-r border-neutral-200 bg-white">
               <div className="grid h-full min-h-0 grid-rows-[auto_auto_1fr]">
-                <div className="flex items-center justify-between border-b border-neutral-200 px-4 py-3">
-                  <div className="text-[34px] leading-none font-semibold tracking-tight text-neutral-900">Inbox</div>
+                <div className="flex h-16 items-center justify-between border-b border-neutral-200 px-4">
+                  <div className="text-2xl leading-none font-semibold tracking-tight text-neutral-900">Inbox</div>
                   <div className="inline-flex items-center rounded-lg border border-neutral-200 bg-neutral-50 p-0.5">
                     <button
                       onClick={() => setMailView('all')}
@@ -527,7 +527,7 @@ export default function EmailPage() {
             </section>
 
             <section className="hidden min-h-0 bg-white xl:flex xl:flex-col">
-              <div className="flex items-center justify-between border-b border-neutral-200 px-4 py-3">
+              <div className="flex h-16 items-center justify-between border-b border-neutral-200 px-4">
                 <div className="inline-flex items-center gap-2 text-neutral-700">
                   <button className="rounded-md p-1.5 hover:bg-neutral-100"><Archive className="size-4" /></button>
                   <button className="rounded-md p-1.5 hover:bg-neutral-100"><MailOpen className="size-4" /></button>
