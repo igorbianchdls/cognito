@@ -8,7 +8,6 @@ import {
   Plug,
   Cpu,
   ChevronsUpDown,
-  BarChart3,
   Plus,
 } from "lucide-react"
 import { Folder as FolderIcon } from 'lucide-react'
@@ -102,11 +101,6 @@ const navigationData = {
       title: "Automacoes",
       url: "/automacao",
       icon: Cpu,
-    },
-    {
-      title: "Dashboards",
-      url: "/dashboards",
-      icon: BarChart3,
     },
     {
       title: "Integrações",
