@@ -1,13 +1,23 @@
 "use client"
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
 import DriveViewer from '@/components/drive/DriveViewer'
 import type { DriveItem } from '@/components/drive/types'
-import { folders, itemsByFolder } from '../../data.mock'
 import { ArrowLeft, File, FileText, Image as ImageIcon, Video, Music, MoreHorizontal, Paperclip } from 'lucide-react'
+
+type FolderApiResponse = {
+  success: boolean
+  message?: string
+  folder?: {
+    id: string
+    name: string
+    workspaceId: string
+  }
+  files?: DriveItem[]
+}
 
 const FALLBACK_OWNERS = [
   'kevin@mail.com',
@@ -21,13 +31,49 @@ export default function DriveFolderPage() {
   const params = useParams<{ id: string }>()
   const router = useRouter()
   const folderId = (params?.id as string) || ''
-  const folder = useMemo(() => folders.find(f => f.id === folderId), [folderId])
-  const files = useMemo<DriveItem[]>(() => itemsByFolder[folderId] || [], [folderId])
+
+  const [folderName, setFolderName] = useState('Folder')
+  const [files, setFiles] = useState<DriveItem[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   const [viewerOpen, setViewerOpen] = useState(false)
   const [viewerIndex, setViewerIndex] = useState(0)
 
   const openViewer = (index: number) => { setViewerIndex(index); setViewerOpen(true) }
+
+  useEffect(() => {
+    if (!folderId) return
+    let cancelled = false
+
+    const load = async () => {
+      setIsLoading(true)
+      setError(null)
+      try {
+        const res = await fetch(`/api/drive/folders/${folderId}`, { cache: 'no-store' })
+        const json = await res.json() as FolderApiResponse
+        if (!res.ok || !json?.success) {
+          throw new Error(json?.message || `HTTP ${res.status}`)
+        }
+        if (!cancelled) {
+          setFolderName(json.folder?.name || 'Folder')
+          setFiles(Array.isArray(json.files) ? json.files : [])
+        }
+      } catch (e) {
+        if (!cancelled) {
+          setError(e instanceof Error ? e.message : 'Falha ao carregar pasta')
+          setFiles([])
+        }
+      } finally {
+        if (!cancelled) setIsLoading(false)
+      }
+    }
+
+    load()
+    return () => { cancelled = true }
+  }, [folderId])
+
+  const filesCount = useMemo(() => files.length, [files])
 
   return (
     <SidebarProvider>
@@ -35,18 +81,24 @@ export default function DriveFolderPage() {
       <SidebarInset className="h-screen overflow-hidden">
         <div className="h-full grid grid-rows-[auto_1fr]">
           <div className="border-b border-gray-200 bg-white/70 backdrop-blur supports-[backdrop-filter]:bg-white/60">
-            <div className="px-2 md:px-3 py-2">
+            <div className="px-2 py-2 md:px-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <button onClick={() => router.push('/drive')} className="rounded-md border border-gray-200 bg-white px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50"><ArrowLeft className="mr-1 inline size-3" /> Voltar</button>
-                  <h1 className="text-lg font-semibold tracking-tight text-gray-900">{folder?.name || 'Folder'}</h1>
+                  <h1 className="text-lg font-semibold tracking-tight text-gray-900">{folderName}</h1>
+                  <span className="text-xs text-gray-500">{filesCount} {filesCount === 1 ? 'item' : 'items'}</span>
                 </div>
               </div>
             </div>
           </div>
           <div className="min-h-0 overflow-y-auto">
             <div className="px-3 py-3 md:px-4 md:py-4">
-              {files.length === 0 ? (
+              {error ? (
+                <div className="mb-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>
+              ) : null}
+              {isLoading ? (
+                <div className="rounded-lg border border-gray-200 bg-white p-6 text-sm text-gray-500">Carregando arquivos...</div>
+              ) : files.length === 0 ? (
                 <div className="rounded-lg border border-gray-200 bg-white p-6 text-sm text-gray-500">Sem arquivos neste folder.</div>
               ) : (
                 <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">

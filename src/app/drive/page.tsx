@@ -1,13 +1,33 @@
 "use client"
 
-import { useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { SidebarShadcn } from "@/components/navigation/SidebarShadcn";
-import { Search, LayoutGrid, List, MoreHorizontal, FileText, Image as ImageIcon, Video, Music2, File, ChevronDown } from 'lucide-react'
+import { Search, LayoutGrid, List, MoreHorizontal, FileText, Image as ImageIcon, Video, Music2, File, ChevronDown, Upload } from 'lucide-react'
 import DriveViewer from '@/components/drive/DriveViewer'
 import type { DriveItem } from '@/components/drive/types'
-import { folders as mockFolders, recentItems } from './data.mock'
+
+type WorkspaceOption = {
+  id: string
+  name: string
+}
+
+type FolderItem = {
+  id: string
+  name: string
+  filesCount: number
+  size?: string
+}
+
+type DriveApiResponse = {
+  success: boolean
+  message?: string
+  workspaces?: WorkspaceOption[]
+  activeWorkspaceId?: string | null
+  folders?: FolderItem[]
+  recentFiles?: DriveItem[]
+}
 
 const FALLBACK_OWNERS = [
   'kevin@mail.com',
@@ -15,14 +35,6 @@ const FALLBACK_OWNERS = [
   'igor@creatto.ai',
   'dani@workspace.com',
   'ops@team.io',
-]
-
-const WORKSPACES = [
-  'Documents',
-  'Design Vault',
-  'Contracts Hub',
-  'Marketing Space',
-  'Finance Board',
 ]
 
 function getItemType(item: DriveItem): 'image' | 'video' | 'audio' | 'pdf' | 'file' {
@@ -100,11 +112,34 @@ function FolderArtwork({ className = '' }: { className?: string }) {
 
 export default function DrivePage() {
   const router = useRouter()
+  const inputRef = useRef<HTMLInputElement | null>(null)
+
   const [viewerOpen, setViewerOpen] = useState(false)
   const [viewerIndex, setViewerIndex] = useState(0)
   const [viewerItems, setViewerItems] = useState<DriveItem[]>([])
+
   const [workspaceOpen, setWorkspaceOpen] = useState(false)
-  const [activeWorkspace, setActiveWorkspace] = useState(WORKSPACES[0])
+  const [workspaces, setWorkspaces] = useState<WorkspaceOption[]>([])
+  const [activeWorkspaceId, setActiveWorkspaceId] = useState<string | null>(null)
+
+  const [folders, setFolders] = useState<FolderItem[]>([])
+  const [recentFiles, setRecentFiles] = useState<DriveItem[]>([])
+  const [search, setSearch] = useState('')
+
+  const [isLoading, setIsLoading] = useState(true)
+  const [isUploading, setIsUploading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const activeWorkspaceName = useMemo(() => {
+    if (!activeWorkspaceId) return 'Documents'
+    return workspaces.find((w) => w.id === activeWorkspaceId)?.name || 'Documents'
+  }, [activeWorkspaceId, workspaces])
+
+  const visibleFiles = useMemo(() => {
+    const q = search.trim().toLowerCase()
+    if (!q) return recentFiles
+    return recentFiles.filter((f) => f.name.toLowerCase().includes(q))
+  }, [recentFiles, search])
 
   const openViewer = (items: DriveItem[], index: number) => {
     setViewerItems(items)
@@ -112,18 +147,81 @@ export default function DrivePage() {
     setViewerOpen(true)
   }
 
+  const loadDrive = async (workspaceId?: string) => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      const params = new URLSearchParams()
+      if (workspaceId) params.set('workspace_id', workspaceId)
+      const res = await fetch(`/api/drive?${params.toString()}`, { cache: 'no-store' })
+      const json = await res.json() as DriveApiResponse
+      if (!res.ok || !json?.success) {
+        throw new Error(json?.message || `HTTP ${res.status}`)
+      }
+      const ws = Array.isArray(json.workspaces) ? json.workspaces : []
+      setWorkspaces(ws)
+      setActiveWorkspaceId(json.activeWorkspaceId || ws[0]?.id || null)
+      setFolders(Array.isArray(json.folders) ? json.folders : [])
+      setRecentFiles(Array.isArray(json.recentFiles) ? json.recentFiles : [])
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Falha ao carregar drive')
+      setFolders([])
+      setRecentFiles([])
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    loadDrive()
+  }, [])
+
+  const onWorkspaceSelect = async (workspaceId: string) => {
+    setWorkspaceOpen(false)
+    setActiveWorkspaceId(workspaceId)
+    await loadDrive(workspaceId)
+  }
+
+  const onUploadClick = () => {
+    if (!activeWorkspaceId || isUploading) return
+    inputRef.current?.click()
+  }
+
+  const onUploadFiles = async (filesList: FileList | null) => {
+    if (!filesList?.length || !activeWorkspaceId) return
+    setIsUploading(true)
+    setError(null)
+    try {
+      for (const file of Array.from(filesList)) {
+        const fd = new FormData()
+        fd.set('workspace_id', activeWorkspaceId)
+        fd.set('file', file)
+        const res = await fetch('/api/drive/files/upload', { method: 'POST', body: fd })
+        const json = await res.json().catch(() => ({})) as { success?: boolean; message?: string }
+        if (!res.ok || !json?.success) {
+          throw new Error(json?.message || `Falha ao enviar ${file.name}`)
+        }
+      }
+      await loadDrive(activeWorkspaceId)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Falha no upload')
+    } finally {
+      setIsUploading(false)
+      if (inputRef.current) inputRef.current.value = ''
+    }
+  }
+
   return (
     <SidebarProvider>
       <SidebarShadcn showHeaderTrigger={false} />
       <SidebarInset className="h-screen overflow-hidden">
         <div className="h-full grid grid-rows-[auto_1fr]">
-          {/* Top toolbar / breadcrumb */}
           <div className="bg-white">
             <div className="mx-auto max-w-[1400px] px-6 py-3">
               <div className="flex items-center justify-between">
                 <div className="relative">
                   <div className="flex items-center gap-1.5">
-                    <h1 className="text-lg font-semibold tracking-tight text-gray-900">{activeWorkspace}</h1>
+                    <h1 className="text-lg font-semibold tracking-tight text-gray-900">{activeWorkspaceName}</h1>
                     <button
                       onClick={() => setWorkspaceOpen((v) => !v)}
                       className="inline-flex items-center justify-center rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-500"
@@ -134,15 +232,15 @@ export default function DrivePage() {
                   </div>
                   {workspaceOpen ? (
                     <div className="absolute left-0 top-8 z-20 min-w-[190px] overflow-hidden rounded-md border border-gray-200 bg-white shadow-lg">
-                      {WORKSPACES.map((name) => (
+                      {workspaces.map((w) => (
                         <button
-                          key={name}
-                          onClick={() => { setActiveWorkspace(name); setWorkspaceOpen(false) }}
+                          key={w.id}
+                          onClick={() => onWorkspaceSelect(w.id)}
                           className={`block w-full px-3 py-2 text-left text-sm ${
-                            name === activeWorkspace ? 'bg-gray-100 text-gray-900' : 'text-gray-700 hover:bg-gray-50'
+                            w.id === activeWorkspaceId ? 'bg-gray-100 text-gray-900' : 'text-gray-700 hover:bg-gray-50'
                           }`}
                         >
-                          {name}
+                          {w.name}
                         </button>
                       ))}
                     </div>
@@ -151,8 +249,28 @@ export default function DrivePage() {
                 <div className="flex items-center gap-2">
                   <div className="relative">
                     <Search className="absolute left-2 top-1/2 -translate-y-1/2 size-4 text-gray-400" />
-                    <input className="h-9 w-72 rounded-lg border border-gray-200 bg-white pl-8 pr-3 text-sm outline-none ring-0 placeholder:text-gray-400 focus:border-gray-300" placeholder="Search" />
+                    <input
+                      className="h-9 w-72 rounded-lg border border-gray-200 bg-white pl-8 pr-3 text-sm outline-none ring-0 placeholder:text-gray-400 focus:border-gray-300"
+                      placeholder="Search"
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                    />
                   </div>
+                  <button
+                    onClick={onUploadClick}
+                    disabled={!activeWorkspaceId || isUploading}
+                    className="inline-flex h-9 items-center gap-1 rounded-lg border border-gray-200 bg-white px-3 text-xs text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    <Upload className="size-4" />
+                    {isUploading ? 'Uploading...' : 'Upload'}
+                  </button>
+                  <input
+                    ref={inputRef}
+                    type="file"
+                    multiple
+                    className="hidden"
+                    onChange={(e) => onUploadFiles(e.target.files)}
+                  />
                   <div className="hidden items-center gap-1 rounded-lg border border-gray-200 bg-white p-1 md:flex">
                     <button className="inline-flex items-center gap-1 rounded px-2 py-1.5 text-xs text-gray-700 hover:bg-gray-50">
                       <List className="size-4" />
@@ -168,10 +286,12 @@ export default function DrivePage() {
             </div>
           </div>
 
-          {/* Content */}
           <div className="min-h-0 overflow-y-auto">
             <div className="mx-auto max-w-[1400px] px-6 py-6">
-              {/* Folders */}
+              {error ? (
+                <div className="mb-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>
+              ) : null}
+
               <section>
                 <div className="mb-3 flex items-center justify-between">
                   <h2 className="text-base font-semibold text-gray-800">Folders</h2>
@@ -179,30 +299,35 @@ export default function DrivePage() {
                     <MoreHorizontal className="size-4" />
                   </button>
                 </div>
-                <div className="grid grid-cols-2 gap-x-4 gap-y-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-                  {mockFolders.map((f) => (
-                    <button
-                      key={f.id}
-                      onClick={() => router.push(`/drive/f/${f.id}`)}
-                      className="group w-full py-2 text-center"
-                    >
-                      <FolderArtwork className="h-32 w-full transition group-hover:scale-[1.02]" />
-                      <div className="mt-2 min-w-0">
-                        <div className="truncate text-center text-[14px] font-semibold text-gray-900">{f.name}</div>
-                        <div className="mt-0.5 text-center text-sm text-gray-500">
-                          {f.filesCount.toLocaleString()} {f.filesCount === 1 ? 'file' : 'files'}
+                {isLoading ? (
+                  <div className="py-10 text-sm text-gray-500">Carregando pastas...</div>
+                ) : folders.length === 0 ? (
+                  <div className="py-10 text-sm text-gray-500">Nenhuma pasta encontrada.</div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+                    {folders.map((f) => (
+                      <button
+                        key={f.id}
+                        onClick={() => router.push(`/drive/f/${f.id}`)}
+                        className="group w-full py-2 text-center"
+                      >
+                        <FolderArtwork className="h-32 w-full transition group-hover:scale-[1.02]" />
+                        <div className="mt-2 min-w-0">
+                          <div className="truncate text-center text-[14px] font-semibold text-gray-900">{f.name}</div>
+                          <div className="mt-0.5 text-center text-sm text-gray-500">
+                            {Number(f.filesCount || 0).toLocaleString()} {Number(f.filesCount || 0) === 1 ? 'file' : 'files'}
+                          </div>
                         </div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </section>
 
-              {/* Recent table */}
               <section className="mt-5">
                 <div className="mb-3 flex items-center justify-between">
                   <h2 className="text-base font-semibold text-gray-800">Files</h2>
-                  <span className="text-xs text-gray-500">{recentItems.length} items</span>
+                  <span className="text-xs text-gray-500">{visibleFiles.length} items</span>
                 </div>
                 <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
                   <table className="w-full table-fixed text-sm">
@@ -220,14 +345,22 @@ export default function DrivePage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {recentItems.map((r, i) => {
+                      {isLoading ? (
+                        <tr>
+                          <td colSpan={4} className="px-4 py-8 text-center text-sm text-gray-500">Carregando arquivos...</td>
+                        </tr>
+                      ) : visibleFiles.length === 0 ? (
+                        <tr>
+                          <td colSpan={4} className="px-4 py-8 text-center text-sm text-gray-500">Nenhum arquivo encontrado.</td>
+                        </tr>
+                      ) : visibleFiles.map((r, i) => {
                         const TypeIcon = getTypeIcon(r)
                         const typeLabel = getTypeLabel(r)
                         const addedBy = inferAddedBy(r, i)
                         const addedAt = inferAddedAt(r, i)
                         const size = inferSize(r, i)
                         return (
-                          <tr key={r.id} onClick={() => openViewer(recentItems, i)} className="cursor-pointer border-t border-gray-100 hover:bg-gray-50/70">
+                          <tr key={r.id} onClick={() => openViewer(visibleFiles, i)} className="cursor-pointer border-t border-gray-100 hover:bg-gray-50/70">
                             <td className="px-4 py-3 text-gray-900">
                               <span className="inline-flex min-w-0 items-center gap-2.5">
                                 <input type="checkbox" className="size-4 rounded border-gray-300" />
