@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
 import DriveViewer from '@/components/drive/DriveViewer'
+import DriveUploadPanel, { type DriveUploadPanelItem } from '@/components/drive/DriveUploadPanel'
 import type { DriveItem } from '@/components/drive/types'
 import { uploadDriveFileDirect } from '../../upload.client'
 import { ArrowLeft, File, FileText, Image as ImageIcon, Video, Music, MoreHorizontal, Paperclip, Upload, Trash2 } from 'lucide-react'
@@ -41,12 +42,22 @@ export default function DriveFolderPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isUploading, setIsUploading] = useState(false)
   const [deletingFileId, setDeletingFileId] = useState<string | null>(null)
+  const [uploadPanelOpen, setUploadPanelOpen] = useState(true)
+  const [uploadPanelItems, setUploadPanelItems] = useState<DriveUploadPanelItem[]>([])
   const [error, setError] = useState<string | null>(null)
 
   const [viewerOpen, setViewerOpen] = useState(false)
   const [viewerIndex, setViewerIndex] = useState(0)
 
   const openViewer = (index: number) => { setViewerIndex(index); setViewerOpen(true) }
+
+  const updateUploadItem = (id: string, patch: Partial<DriveUploadPanelItem>) => {
+    setUploadPanelItems((prev) => prev.map((item) => item.id === id ? { ...item, ...patch } : item))
+  }
+
+  const clearFinishedUploads = () => {
+    setUploadPanelItems((prev) => prev.filter((item) => item.status !== 'completed' && item.status !== 'error'))
+  }
 
   const loadFolder = async (id: string) => {
     const res = await fetch(`/api/drive/folders/${id}`, { cache: 'no-store' })
@@ -94,20 +105,56 @@ export default function DriveFolderPage() {
 
   const onUploadFiles = async (list: FileList | null) => {
     if (!list?.length || !folderId || !folderWorkspaceId) return
+    const files = Array.from(list)
+    const queuedItems: DriveUploadPanelItem[] = files.map((file, index) => ({
+      id: `${Date.now()}-${index}-${Math.random().toString(36).slice(2, 8)}`,
+      name: file.name,
+      status: 'queued',
+      progress: 0,
+      message: 'Na fila',
+    }))
+
+    setUploadPanelItems((prev) => [...queuedItems, ...prev].slice(0, 50))
+    setUploadPanelOpen(true)
     setIsUploading(true)
     setError(null)
+    let firstError: string | null = null
     try {
-      for (const file of Array.from(list)) {
-        await uploadDriveFileDirect({
-          workspaceId: folderWorkspaceId,
-          folderId,
-          file,
-        })
+      for (let i = 0; i < files.length; i += 1) {
+        const file = files[i]
+        const queueItem = queuedItems[i]
+        try {
+          await uploadDriveFileDirect({
+            workspaceId: folderWorkspaceId,
+            folderId,
+            file,
+            onProgress: (event) => {
+              updateUploadItem(queueItem.id, {
+                status: event.stage,
+                progress: event.progress,
+                message: event.message,
+              })
+            },
+          })
+          updateUploadItem(queueItem.id, {
+            status: 'completed',
+            progress: 100,
+            message: 'Upload concluído',
+          })
+        } catch (e) {
+          const message = e instanceof Error ? e.message : `Falha ao enviar ${file.name}`
+          if (!firstError) firstError = message
+          updateUploadItem(queueItem.id, {
+            status: 'error',
+            message,
+          })
+        }
       }
       const fresh = await loadFolder(folderId)
       setFolderName(fresh.folder?.name || 'Folder')
       setFolderWorkspaceId(fresh.folder?.workspaceId || null)
       setFiles(Array.isArray(fresh.files) ? fresh.files : [])
+      if (firstError) setError(firstError)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Falha no upload')
     } finally {
@@ -269,6 +316,12 @@ export default function DriveFolderPage() {
         {viewerOpen && (
           <DriveViewer items={files} index={viewerIndex} onClose={() => setViewerOpen(false)} onNavigate={setViewerIndex} />
         )}
+        <DriveUploadPanel
+          items={uploadPanelItems}
+          open={uploadPanelOpen}
+          onToggle={() => setUploadPanelOpen((v) => !v)}
+          onClearFinished={clearFinishedUploads}
+        />
       </SidebarInset>
     </SidebarProvider>
   )

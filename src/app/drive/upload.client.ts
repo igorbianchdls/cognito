@@ -24,15 +24,24 @@ type CompleteUploadResponse = {
   file?: DriveItem
 }
 
+export type DriveUploadProgressEvent = {
+  stage: 'preparing' | 'uploading' | 'finalizing' | 'completed'
+  progress: number
+  message: string
+}
+
 export async function uploadDriveFileDirect({
   workspaceId,
   folderId,
   file,
+  onProgress,
 }: {
   workspaceId: string
   folderId?: string
   file: File
+  onProgress?: (event: DriveUploadProgressEvent) => void
 }): Promise<DriveItem> {
+  onProgress?.({ stage: 'preparing', progress: 5, message: 'Preparando upload...' })
   const prepRes = await fetch('/api/drive/files/prepare-upload', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -54,6 +63,7 @@ export async function uploadDriveFileDirect({
     throw new Error('Resposta inválida ao preparar upload')
   }
 
+  onProgress?.({ stage: 'uploading', progress: 30, message: 'Enviando arquivo...' })
   const supabase = createClient()
   const { error: signedUploadError } = await supabase.storage
     .from(bucketId)
@@ -65,6 +75,7 @@ export async function uploadDriveFileDirect({
     throw new Error(`Falha no upload: ${signedUploadError.message}`)
   }
 
+  onProgress?.({ stage: 'finalizing', progress: 85, message: 'Finalizando upload...' })
   const completeRes = await fetch('/api/drive/files/complete-upload', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -83,6 +94,6 @@ export async function uploadDriveFileDirect({
     throw new Error(completeJson?.message || `Falha ao finalizar upload de ${file.name}`)
   }
 
+  onProgress?.({ stage: 'completed', progress: 100, message: 'Upload concluído' })
   return completeJson.file
 }
-

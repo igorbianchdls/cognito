@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import DriveViewer from '@/components/drive/DriveViewer'
+import DriveUploadPanel, { type DriveUploadPanelItem } from '@/components/drive/DriveUploadPanel'
 import type { DriveItem } from '@/components/drive/types'
 import { uploadDriveFileDirect } from './upload.client'
 
@@ -136,6 +137,8 @@ export default function DrivePage() {
   const [isCreatingFolder, setIsCreatingFolder] = useState(false)
   const [deletingFolderId, setDeletingFolderId] = useState<string | null>(null)
   const [deletingFileId, setDeletingFileId] = useState<string | null>(null)
+  const [uploadPanelOpen, setUploadPanelOpen] = useState(true)
+  const [uploadPanelItems, setUploadPanelItems] = useState<DriveUploadPanelItem[]>([])
   const [createFolderOpen, setCreateFolderOpen] = useState(false)
   const [newFolderName, setNewFolderName] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -155,6 +158,14 @@ export default function DrivePage() {
     setViewerItems(items)
     setViewerIndex(index)
     setViewerOpen(true)
+  }
+
+  const updateUploadItem = (id: string, patch: Partial<DriveUploadPanelItem>) => {
+    setUploadPanelItems((prev) => prev.map((item) => item.id === id ? { ...item, ...patch } : item))
+  }
+
+  const clearFinishedUploads = () => {
+    setUploadPanelItems((prev) => prev.filter((item) => item.status !== 'completed' && item.status !== 'error'))
   }
 
   const loadDrive = async (workspaceId?: string) => {
@@ -229,16 +240,53 @@ export default function DrivePage() {
 
   const onUploadFiles = async (filesList: FileList | null) => {
     if (!filesList?.length || !activeWorkspaceId) return
+    const files = Array.from(filesList)
+    const queuedItems: DriveUploadPanelItem[] = files.map((file, index) => ({
+      id: `${Date.now()}-${index}-${Math.random().toString(36).slice(2, 8)}`,
+      name: file.name,
+      status: 'queued',
+      progress: 0,
+      message: 'Na fila',
+    }))
+
+    setUploadPanelItems((prev) => [...queuedItems, ...prev].slice(0, 50))
+    setUploadPanelOpen(true)
     setIsUploading(true)
     setError(null)
+
+    let firstError: string | null = null
     try {
-      for (const file of Array.from(filesList)) {
-        await uploadDriveFileDirect({
-          workspaceId: activeWorkspaceId,
-          file,
-        })
+      for (let i = 0; i < files.length; i += 1) {
+        const file = files[i]
+        const queueItem = queuedItems[i]
+        try {
+          await uploadDriveFileDirect({
+            workspaceId: activeWorkspaceId,
+            file,
+            onProgress: (event) => {
+              updateUploadItem(queueItem.id, {
+                status: event.stage,
+                progress: event.progress,
+                message: event.message,
+              })
+            },
+          })
+          updateUploadItem(queueItem.id, {
+            status: 'completed',
+            progress: 100,
+            message: 'Upload concluído',
+          })
+        } catch (e) {
+          const message = e instanceof Error ? e.message : `Falha ao enviar ${file.name}`
+          if (!firstError) firstError = message
+          updateUploadItem(queueItem.id, {
+            status: 'error',
+            message,
+          })
+        }
       }
       await loadDrive(activeWorkspaceId)
+      if (firstError) setError(firstError)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Falha no upload')
     } finally {
@@ -549,6 +597,12 @@ export default function DrivePage() {
             onNavigate={(idx) => setViewerIndex(idx)}
           />
         )}
+        <DriveUploadPanel
+          items={uploadPanelItems}
+          open={uploadPanelOpen}
+          onToggle={() => setUploadPanelOpen((v) => !v)}
+          onClearFinished={clearFinishedUploads}
+        />
         <Dialog open={createFolderOpen} onOpenChange={(open) => {
           setCreateFolderOpen(open)
           if (!open) setNewFolderName('')
