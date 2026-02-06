@@ -232,8 +232,8 @@ export default function FaturaModeloPage() {
           </div>
 
           <div className="fatura-canvas overflow-auto rounded-xl border border-neutral-300 bg-neutral-300 p-4">
-            <article className="fatura-paper mx-auto bg-white text-black shadow-[0_10px_28px_rgba(0,0,0,0.15)]" style={{ width: '210mm', minHeight: '297mm' }}>
-              <div className="border border-black px-[14mm] py-[12mm] font-['Arial'] text-[12px] leading-[1.4]">
+            <article className="fatura-paper mx-auto border border-black bg-white text-black shadow-[0_10px_28px_rgba(0,0,0,0.15)]" style={{ width: '210mm', height: '297mm' }}>
+              <div className="h-full box-border px-[14mm] py-[12mm] font-['Arial'] text-[12px] leading-[1.4]">
                 <div className="flex items-start justify-between border-b border-black pb-2">
                   <div>
                     <div className="text-[22px] font-bold uppercase">Fatura</div>
@@ -368,6 +368,7 @@ export default function FaturaModeloPage() {
           }
           .fatura-paper {
             width: 210mm !important;
+            height: 297mm !important;
             min-height: 297mm !important;
             margin: 0 !important;
             border: 1px solid #000 !important;
@@ -379,4 +380,3 @@ export default function FaturaModeloPage() {
     </div>
   )
 }
-
